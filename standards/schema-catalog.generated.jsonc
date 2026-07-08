@@ -365,7 +365,9 @@
       "file": "packages/agents/client/src/Chat.atoms.ts",
       "symbol": "EditTarget",
       "kind": "schema-class",
-      "owner": "@beep/agents-client"
+      "owner": "@beep/agents-client",
+      "identity": "EditTarget",
+      "description": "When set, the composer is editing an existing turn's message."
     },
     {
       "file": "packages/agents/client/src/Chat.atoms.ts",
@@ -383,7 +385,9 @@
       "file": "packages/agents/client/src/Chat.atoms.ts",
       "symbol": "StreamingTurn",
       "kind": "schema-class",
-      "owner": "@beep/agents-client"
+      "owner": "@beep/agents-client",
+      "identity": "StreamingTurn",
+      "description": "A streaming assistant turn rendered optimistically while blocks arrive."
     },
     {
       "file": "packages/agents/client/src/Chat.atoms.ts",
@@ -1401,7 +1405,7 @@
       "kind": "schema-class",
       "owner": "@beep/box",
       "identity": "BoxApiFailureContext",
-      "description": "Sanitized key-value context copied from a Box API failure."
+      "description": "Sanitized JSON key-value context copied from a Box API failure."
     },
     {
       "file": "packages/drivers/box/src/Box.errors.ts",
@@ -7116,7 +7120,8 @@
       "symbol": "ExecutionMetrics",
       "kind": "schema-class",
       "owner": "@beep/nlp-processing",
-      "identity": "ExecutionMetrics"
+      "identity": "ExecutionMetrics",
+      "description": "Monoid of metrics accumulated while applying an operation to graph leaves."
     },
     {
       "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts",
@@ -9636,7 +9641,9 @@
       "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
       "symbol": "LexicalNode",
       "kind": "tagged-union",
-      "owner": "@beep/lexical-schema"
+      "owner": "@beep/lexical-schema",
+      "identity": "LexicalNode",
+      "description": "The tagged union of all v1 serialized Lexical nodes, discriminated by Lexical's own type key."
     },
     {
       "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
@@ -10396,6 +10403,14 @@
     },
     {
       "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+      "symbol": "DependencyToken",
+      "kind": "schema-class",
+      "owner": "@beep/nlp",
+      "identity": "DependencyToken",
+      "description": "Token reference (text + sentence position) used by dependency-arc endpoints."
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
       "symbol": "EntityNode",
       "kind": "schema-class",
       "owner": "@beep/nlp",
@@ -10433,6 +10448,22 @@
       "owner": "@beep/nlp",
       "identity": "RelationNode",
       "description": "Semantic relation node connecting a subject entity to an object entity via a typed predicate."
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+      "symbol": "RelationParticipant",
+      "kind": "schema-class",
+      "owner": "@beep/nlp",
+      "identity": "RelationParticipant",
+      "description": "Entity participant (text, type, and character span) referenced by a semantic relation."
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+      "symbol": "Span",
+      "kind": "schema-class",
+      "owner": "@beep/nlp",
+      "identity": "Span",
+      "description": "Character span (start/end offsets) within a piece of text."
     },
     {
       "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
@@ -11868,6 +11899,12 @@
     },
     {
       "file": "packages/foundation/modeling/schema/src/CardinalDirection/CardinalDirection.schema.ts",
+      "symbol": "Abbrev",
+      "kind": "literal-kit",
+      "owner": "@beep/schema"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/CardinalDirection/CardinalDirection.schema.ts",
       "symbol": "CardinalDirection",
       "kind": "literal-kit",
       "owner": "@beep/schema",
@@ -11881,6 +11918,12 @@
       "owner": "@beep/schema",
       "identity": "CardinalDirectionAbbrev",
       "description": "CardinalDirectionAbbrev - The abbreviated version of the CardinalDirection"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/CardinalDirection/CardinalDirection.schema.ts",
+      "symbol": "Schema",
+      "kind": "literal-kit",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/CauseTaggedError/CauseTaggedError.errors.ts",
@@ -12265,6 +12308,12 @@
       "description": "The value of the `Cross-Origin-Embedder-Policy` header."
     },
     {
+      "file": "packages/foundation/modeling/schema/src/CrossOriginEmbedderPolicy/CrossOriginEmbedderPolicy.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
       "file": "packages/foundation/modeling/schema/src/CrossOriginOpenerPolicy/CrossOriginOpenerPolicy.schema.ts",
       "symbol": "CoopValue",
       "kind": "literal-kit",
@@ -12297,6 +12346,12 @@
       "description": "The `Cross-Origin-Opener-Policy` response header."
     },
     {
+      "file": "packages/foundation/modeling/schema/src/CrossOriginOpenerPolicy/CrossOriginOpenerPolicy.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
       "file": "packages/foundation/modeling/schema/src/CrossOriginResourcePolicy/CrossOriginResourcePolicy.schema.ts",
       "symbol": "CorpValue",
       "kind": "literal-kit",
@@ -12327,6 +12382,12 @@
       "owner": "@beep/schema",
       "identity": "CrossOriginResourcePolicyResponseHeader",
       "description": "The `Cross-Origin-Resource-Policy` response header."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/CrossOriginResourcePolicy/CrossOriginResourcePolicy.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/CryptoTxnHash/CryptoTxnHash.schema.ts",
@@ -12433,11 +12494,23 @@
     },
     {
       "file": "packages/foundation/modeling/schema/src/Csp/Csp.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Csp/Csp.schema.ts",
       "symbol": "NavigationDirective",
       "kind": "schema-class",
       "owner": "@beep/schema",
       "identity": "NavigationDirective",
       "description": "CSP navigation directive fields and serialization helpers."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Csp/Csp.schema.ts",
+      "symbol": "Option",
+      "kind": "union",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/Csp/Csp.schema.ts",
@@ -12630,6 +12703,12 @@
       "description": "A unit of time measurement accepted by duration input schemas."
     },
     {
+      "file": "packages/foundation/modeling/schema/src/Duration/Duration.input.ts",
+      "symbol": "Input",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
       "file": "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.constructors.ts",
       "symbol": "int",
       "kind": "schema-const",
@@ -12776,6 +12855,18 @@
       "owner": "@beep/schema",
       "identity": "ExpectCTResponseHeader",
       "description": "The `Expect-CT` response header."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/ExpectCt/ExpectCt.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/ExpectCt/ExpectCt.schema.ts",
+      "symbol": "Option",
+      "kind": "union",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/FileDiff.schema.ts",
@@ -13066,6 +13157,18 @@
       "description": "The `Strict-Transport-Security` response header."
     },
     {
+      "file": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
+      "symbol": "Option",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
       "file": "packages/foundation/modeling/schema/src/FrameGuard/FrameGuard.schema.ts",
       "symbol": "FrameGuardAllowFrom",
       "kind": "schema-const",
@@ -13112,6 +13215,18 @@
       "owner": "@beep/schema",
       "identity": "FrameGuardResponseHeader",
       "description": "The `X-Frame-Options` response header."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/FrameGuard/FrameGuard.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/FrameGuard/FrameGuard.schema.ts",
+      "symbol": "Option",
+      "kind": "union",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/Glob/Glob.schema.ts",
@@ -13238,6 +13353,12 @@
       "owner": "@beep/schema",
       "identity": "HttpProtocol",
       "description": "An HTTP protocol (\"http\" or \"https\")"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/HttpProtocol/HttpProtocol.schema.ts",
+      "symbol": "Schema",
+      "kind": "literal-kit",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.category.ts",
@@ -14052,7 +14173,9 @@
       "file": "packages/foundation/modeling/schema/src/Model/Model.datetime.ts",
       "symbol": "Date",
       "kind": "codec",
-      "owner": "@beep/schema"
+      "owner": "@beep/schema",
+      "identity": "Date",
+      "description": "A DateTime.Utc serialized as a YYYY-MM-DD date string with time removed."
     },
     {
       "file": "packages/foundation/modeling/schema/src/NoOpen/NoOpen.schema.ts",
@@ -14085,6 +14208,12 @@
       "owner": "@beep/schema",
       "identity": "NoOpenValue",
       "description": "The supported `X-Download-Options` header values."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/NoSniff/NoSniff.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/NoSniff/NoSniff.schema.ts",
@@ -14166,6 +14295,18 @@
     },
     {
       "file": "packages/foundation/modeling/schema/src/PermissionsPolicy/PermissionsPolicy.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/PermissionsPolicy/PermissionsPolicy.schema.ts",
+      "symbol": "Option",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/PermissionsPolicy/PermissionsPolicy.schema.ts",
       "symbol": "PermissionsPolicyAllowlistedOrigin",
       "kind": "union",
       "owner": "@beep/schema",
@@ -14235,6 +14376,12 @@
       "owner": "@beep/schema",
       "identity": "PermissionsPolicyResponseHeader",
       "description": "The `Permissions-Policy` response header."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/PermittedCrossDomainPolicies/PermittedCrossDomainPolicies.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/PermittedCrossDomainPolicies/PermittedCrossDomainPolicies.schema.ts",
@@ -14315,6 +14462,18 @@
       "owner": "@beep/schema",
       "identity": "UnknownRecord",
       "description": "A record of unknown values"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/ReferrerPolicy/ReferrerPolicy.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/ReferrerPolicy/ReferrerPolicy.schema.ts",
+      "symbol": "Option",
+      "kind": "union",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/ReferrerPolicy/ReferrerPolicy.schema.ts",
@@ -14455,6 +14614,12 @@
       "owner": "@beep/schema",
       "identity": "SeverityLevel",
       "description": "Generic four-level severity scale shared across beep packages."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Sex/Sex.schema.ts",
+      "symbol": "Schema",
+      "kind": "literal-kit",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/Sex/Sex.schema.ts",
@@ -14695,6 +14860,18 @@
       "owner": "@beep/schema",
       "identity": "XmlTextToUnknown",
       "description": "Schema transformation that parses XML text into unknown values."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/XssProtection/XssProtection.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/XssProtection/XssProtection.schema.ts",
+      "symbol": "Option",
+      "kind": "union",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/XssProtection/XssProtection.schema.ts",
@@ -18153,7 +18330,9 @@
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
       "symbol": "SymbolCategory",
       "kind": "literal-kit",
-      "owner": "@beep/repo-utils"
+      "owner": "@beep/repo-utils",
+      "identity": "SymbolCategory",
+      "description": "Coarse symbol categories used by the TSMorph models."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
@@ -18191,7 +18370,9 @@
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
       "symbol": "SymbolKind",
       "kind": "literal-kit",
-      "owner": "@beep/repo-utils"
+      "owner": "@beep/repo-utils",
+      "identity": "SymbolKind",
+      "description": "Supported TypeScript declaration kinds for normalized symbols."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
@@ -18237,7 +18418,9 @@
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
       "symbol": "TsMorphDiagnosticCategory",
       "kind": "literal-kit",
-      "owner": "@beep/repo-utils"
+      "owner": "@beep/repo-utils",
+      "identity": "TsMorphDiagnosticCategory",
+      "description": "Supported normalized diagnostic categories."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
@@ -18299,7 +18482,9 @@
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
       "symbol": "TsMorphReferencePolicy",
       "kind": "literal-kit",
-      "owner": "@beep/repo-utils"
+      "owner": "@beep/repo-utils",
+      "identity": "TsMorphReferencePolicy",
+      "description": "Reference traversal policies for ts-morph scope resolution."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
@@ -18313,7 +18498,9 @@
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
       "symbol": "TsMorphScopeMode",
       "kind": "literal-kit",
-      "owner": "@beep/repo-utils"
+      "owner": "@beep/repo-utils",
+      "identity": "TsMorphScopeMode",
+      "description": "Supported ts-morph project scope modes."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
@@ -18431,7 +18618,9 @@
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
       "symbol": "TSMorphServiceError",
       "kind": "tagged-union",
-      "owner": "@beep/repo-utils"
+      "owner": "@beep/repo-utils",
+      "identity": "TSMorphServiceError",
+      "description": "Tagged union of all recoverable service errors emitted by TSMorphService."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
@@ -20483,6 +20672,14 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerRunpodEval.ts",
+      "symbol": "QualityWorkerRunpodEvalPodCreateOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "QualityWorkerRunpodEvalPodCreateOptions",
+      "description": "Pod image, template, GPU, and model selection for a Runpod create-pod body."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerRunpodEval.ts",
       "symbol": "RunDocgenQualityWorkerRunpodEvalOptions",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -21119,11 +21316,27 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyOps.ts",
+      "symbol": "ProxyRecoveryDecisionOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ProxyRecoveryDecisionOptions",
+      "description": "Recovery decision inputs for the Graphiti stack recovery routine."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyOps.ts",
       "symbol": "ProxyServiceConfig",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "ProxyServiceConfig",
       "description": "Configuration for managing the Graphiti proxy service."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyOps.ts",
+      "symbol": "ProxyServiceUnitCheckOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ProxyServiceUnitCheckOptions",
+      "description": "Current unit text and expected service invariants for a systemd-unit drift check."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyServices.ts",
@@ -21893,6 +22106,14 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/KnipRatchet.ts",
+      "symbol": "KnipNormalizationPolicy",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "KnipNormalizationPolicy",
+      "description": "Deterministic ordering and omission policy for a Knip regression baseline."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/KnipRatchet.ts",
       "symbol": "KnipRegressionBaseline",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -22333,6 +22554,38 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
+      "symbol": "CanonicalJsonPatch",
+      "kind": "union",
+      "owner": "@beep/repo-cli",
+      "identity": "CanonicalJsonPatch",
+      "description": "Canonical JSON Patch document describing structural drift for a sync target."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
+      "symbol": "JsonPatchAddOperation",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "JsonPatchAddOperation",
+      "description": "JSON Patch add operation."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
+      "symbol": "JsonPatchRemoveOperation",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "JsonPatchRemoveOperation",
+      "description": "JSON Patch remove operation."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
+      "symbol": "JsonPatchReplaceOperation",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "JsonPatchReplaceOperation",
+      "description": "JSON Patch replace operation."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
       "symbol": "SyncDataFileResult",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -22373,6 +22626,14 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
+      "symbol": "SyncDataTarget",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "SyncDataTarget",
+      "description": "Checked-in sync target definition."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
       "symbol": "SyncDataTargetAccess",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -22386,6 +22647,22 @@
       "owner": "@beep/repo-cli",
       "identity": "SyncDataTargetProjection",
       "description": "Rendered target projection ready to compare or write to disk."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
+      "symbol": "SyncDataTargetResult",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "SyncDataTargetResult",
+      "description": "Per-target command result after diffing or writing."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Source.ts",
+      "symbol": "SyncDataFetchedSource",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "SyncDataFetchedSource",
+      "description": "Raw fetched source with stable hash metadata."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",
@@ -22709,6 +22986,14 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Closeout.ts",
+      "symbol": "CloseoutGateStatesTestInput",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CloseoutGateStatesTestInput",
+      "description": "Test-only inputs for building durable PR closeout gate states."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Closeout.ts",
       "symbol": "GreptileSummary",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -22746,6 +23031,14 @@
       "owner": "@beep/repo-cli",
       "identity": "PrCloseoutWriteAction",
       "description": "One explicit review-thread write action performed during Yeet closeout."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "symbol": "BuildYeetRunPlanTestOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "BuildYeetRunPlanTestOptions",
+      "description": "Hydrated test context, optional message, and optional mode for building a Yeet run plan."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
@@ -22893,6 +23186,14 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "symbol": "BuildYeetVerdictInput",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "BuildYeetVerdictInput",
+      "description": "Run identity, outcome, planned steps, and executed results used to build the run verdict."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
       "symbol": "YeetBaseFreshness",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -22914,6 +23215,14 @@
       "owner": "@beep/repo-cli",
       "identity": "YeetLaneStatus",
       "description": "Execution status of one planned yeet lane."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "symbol": "YeetOutcome",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "YeetOutcome",
+      "description": "Terminal outcome for one yeet run."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",

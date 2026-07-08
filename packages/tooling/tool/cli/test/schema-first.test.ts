@@ -497,7 +497,11 @@ describe("R6-1: schema-infrastructure generic silent skip", () => {
 
     const classification = detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" });
 
-    expect(classification._tag).toBe("exception");
+    // R17-1: generics now get the same member-safety signal set as
+    // non-generics instead of an unconditional tracked exception; a
+    // protecting-signal-free pure-data generic is a live candidate (R11-4
+    // gate-strengthening), not a tolerated exception.
+    expect(classification._tag).toBe("candidate");
   });
 
   it("silently skips a generic interface extending declareConstructor with Rebuild: this", () => {
@@ -549,7 +553,9 @@ describe("R6-2/R11-2: all-function-member interface silent skip", () => {
     );
     const [declaration] = sourceFile.getInterfaces();
 
-    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("exception");
+    // R17-1: same "mixed shape, no protecting signal -> candidate" outcome a
+    // non-generic interface with this exact member set already gets.
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("candidate");
   });
 
   it("silently skips a non-generic all-function-member interface (extends R6-2 to non-generic)", () => {
@@ -561,6 +567,41 @@ describe("R6-2/R11-2: all-function-member interface silent skip", () => {
     const [declaration] = sourceFile.getInterfaces();
 
     expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("silent");
+  });
+});
+
+// R17-1: classifyGenericInterface previously only ever resolved to silent
+// (schema-infra escape hatches, R6-1/R6-2) or an unconditional tracked
+// exception -- it never composed members and consulted the R11
+// service-contract/curated-runtime-handle/render-boundary signal set the way
+// non-generic interfaces already do via classifyComposedMembers. This closed
+// that gap (ops/reports/SF-2/sf-2-tailb.md; R17, LOCKED).
+describe("R17-1: generic interface member-safety parity", () => {
+  it("silently skips a generic .tsx *Props interface via the R11-1 render-boundary signal (newly reachable for generics)", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.tsx",
+      ["export interface FieldProps<Value> {", "  readonly value: Value;", "  readonly label: string;", "}"].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    // Before R17-1 this was forced into the generic exception bucket
+    // regardless of file extension/name; classifyGenericInterface never ran
+    // isServiceContractShape at all.
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.tsx" })._tag).toBe("silent");
+  });
+
+  it("still classifies the identical shape as a candidate outside a .tsx *Props file", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      ["export interface FieldOptionLike<Value> {", "  readonly value: Value;", "  readonly label: string;", "}"].join(
+        "\n"
+      )
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("candidate");
   });
 });
 
@@ -787,10 +828,12 @@ describe("R14: categorical-generic family curated exclusion", () => {
     expect(detectInterfaceReason({ node: declaration, sourceFile, filePath })._tag).toBe("silent");
   });
 
-  it("still flags an unregistered generic interface with the identical pure-data shape", () => {
+  it("still flags an unregistered generic interface with the identical pure-data shape as a candidate", () => {
     // Same shape as GraphNode<A> above (one free-typed data field), but
     // neither the file path nor the symbol name is in
-    // PERMANENT_SCHEMA_FIRST_EXCLUSIONS.
+    // PERMANENT_SCHEMA_FIRST_EXCLUSIONS. R17-1: a mixed/pure-data generic
+    // with no protecting signal is a live candidate, not a tracked
+    // exception (parity with the non-generic gate-strengthening rule).
     const project = new Project({ useInMemoryFileSystem: true });
     const sourceFile = project.createSourceFile(
       "fixture.ts",
@@ -798,7 +841,7 @@ describe("R14: categorical-generic family curated exclusion", () => {
     );
     const [declaration] = sourceFile.getInterfaces();
 
-    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("exception");
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("candidate");
   });
 });
 
@@ -859,7 +902,7 @@ describe("R15-1: S.Codec/S.Union/VariantSchema.Overridable join the schema-infra
     expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("silent");
   });
 
-  it("still flags a generic interface extending an unrelated base with Rebuild: this", () => {
+  it("still flags a generic interface extending an unrelated base with Rebuild: this as a candidate", () => {
     const project = new Project({ useInMemoryFileSystem: true });
     const sourceFile = project.createSourceFile(
       "fixture.ts",
@@ -872,7 +915,9 @@ describe("R15-1: S.Codec/S.Union/VariantSchema.Overridable join the schema-infra
     );
     const [declaration] = sourceFile.getInterfaces();
 
-    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("exception");
+    // R17-1: mixed shape, no protecting signal -> candidate, not a tracked
+    // exception.
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("candidate");
   });
 });
 
@@ -891,7 +936,7 @@ describe("R15-2: empty-body carve-out reaches the generic branch", () => {
     expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("silent");
   });
 
-  it("still flags the same generic empty-body base with an added data member", () => {
+  it("still flags the same generic empty-body base with an added data member as a candidate", () => {
     const project = new Project({ useInMemoryFileSystem: true });
     const sourceFile = project.createSourceFile(
       "fixture.ts",
@@ -903,12 +948,11 @@ describe("R15-2: empty-body carve-out reaches the generic branch", () => {
     );
     const [declaration] = sourceFile.getInterfaces();
 
-    // Unlike the non-generic branch (which falls through to member
-    // composition and can land on "candidate"), the generic branch's only
-    // non-silent outcome is the tracked GENERIC_INTERFACE_EXCEPTION_REASON
-    // exception — a real added data member keeps it there, it just isn't
+    // R17-1: the generic branch now composes members and runs the same
+    // signal set as the non-generic branch — a real added data member with
+    // no protecting signal keeps it a live candidate, it just isn't
     // silenced by the empty-body carve-out anymore.
-    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("exception");
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("candidate");
   });
 });
 
@@ -932,7 +976,7 @@ describe("R15-3: one-level local-alias resolution for extends-clause targets", (
     expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("silent");
   });
 
-  it("still flags a generic interface extending a local alias of an unrelated base with Rebuild: this", () => {
+  it("still flags a generic interface extending a local alias of an unrelated base with Rebuild: this as a candidate", () => {
     const project = new Project({ useInMemoryFileSystem: true });
     const sourceFile = project.createSourceFile(
       "fixture.ts",
@@ -946,6 +990,8 @@ describe("R15-3: one-level local-alias resolution for extends-clause targets", (
     );
     const [declaration] = sourceFile.getInterfaces();
 
-    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("exception");
+    // R17-1: mixed shape, no protecting signal -> candidate, not a tracked
+    // exception.
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("candidate");
   });
 });

@@ -62,9 +62,10 @@ export const PatentNumber = S.String.check(
  *
  * @example
  * ```ts
- * import type { PatentNumber } from "@beep/law-practice-domain"
+ * import { PatentNumber } from "@beep/law-practice-domain"
+ * import * as S from "effect/Schema"
  *
- * declare const patentNumber: PatentNumber
+ * const patentNumber: PatentNumber = S.decodeUnknownSync(PatentNumber)("1234567890123")
  * console.log(patentNumber)
  * ```
  *

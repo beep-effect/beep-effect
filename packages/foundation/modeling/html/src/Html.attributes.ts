@@ -31,6 +31,13 @@ const $I = $HtmlId.create("Html.attributes");
 /**
  * `dir` global attribute value.
  *
+ * @example
+ * ```ts
+ * import { Dir } from "@beep/html/Html.attributes"
+ *
+ * console.log(Dir.is.ltr("ltr")) // true
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -38,7 +45,29 @@ export const Dir = LiteralKit(["ltr", "rtl", "auto"]).pipe(
   $I.annoteSchema("Dir", { description: "Text directionality." })
 );
 /**
+ * Decoded type of {@link Dir}.
+ *
+ * @example
+ * ```ts
+ * import type { Dir } from "@beep/html/Html.attributes"
+ *
+ * const dir: Dir = "ltr"
+ * console.log(dir)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type Dir = typeof Dir.Type;
+/**
  * `translate` global attribute value.
+ *
+ * @example
+ * ```ts
+ * import { Translate } from "@beep/html/Html.attributes"
+ *
+ * console.log(Translate.is.yes("yes")) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -47,7 +76,29 @@ export const Translate = LiteralKit(["yes", "no"]).pipe(
   $I.annoteSchema("Translate", { description: "Whether to translate the element's contents." })
 );
 /**
+ * Decoded type of {@link Translate}.
+ *
+ * @example
+ * ```ts
+ * import type { Translate } from "@beep/html/Html.attributes"
+ *
+ * const translate: Translate = "yes"
+ * console.log(translate)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type Translate = typeof Translate.Type;
+/**
  * `contenteditable` global attribute value.
+ *
+ * @example
+ * ```ts
+ * import { ContentEditable } from "@beep/html/Html.attributes"
+ *
+ * console.log(ContentEditable.is.true("true")) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -56,7 +107,29 @@ export const ContentEditable = LiteralKit(["", "true", "false", "plaintext-only"
   $I.annoteSchema("ContentEditable", { description: "Whether the element is editable." })
 );
 /**
+ * Decoded type of {@link ContentEditable}.
+ *
+ * @example
+ * ```ts
+ * import type { ContentEditable } from "@beep/html/Html.attributes"
+ *
+ * const contentEditable: ContentEditable = "true"
+ * console.log(contentEditable)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type ContentEditable = typeof ContentEditable.Type;
+/**
  * `draggable` global attribute value.
+ *
+ * @example
+ * ```ts
+ * import { Draggable } from "@beep/html/Html.attributes"
+ *
+ * console.log(Draggable.is.true("true")) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -65,7 +138,29 @@ export const Draggable = LiteralKit(["true", "false"]).pipe(
   $I.annoteSchema("Draggable", { description: "Whether the element is draggable." })
 );
 /**
+ * Decoded type of {@link Draggable}.
+ *
+ * @example
+ * ```ts
+ * import type { Draggable } from "@beep/html/Html.attributes"
+ *
+ * const draggable: Draggable = "true"
+ * console.log(draggable)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type Draggable = typeof Draggable.Type;
+/**
  * `spellcheck` global attribute value.
+ *
+ * @example
+ * ```ts
+ * import { SpellCheck } from "@beep/html/Html.attributes"
+ *
+ * console.log(SpellCheck.is.true("true")) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -74,7 +169,29 @@ export const SpellCheck = LiteralKit(["true", "false", ""]).pipe(
   $I.annoteSchema("SpellCheck", { description: "Whether spellchecking is enabled." })
 );
 /**
+ * Decoded type of {@link SpellCheck}.
+ *
+ * @example
+ * ```ts
+ * import type { SpellCheck } from "@beep/html/Html.attributes"
+ *
+ * const spellCheck: SpellCheck = "true"
+ * console.log(spellCheck)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type SpellCheck = typeof SpellCheck.Type;
+/**
  * `writingsuggestions` global attribute value.
+ *
+ * @example
+ * ```ts
+ * import { WritingSuggestions } from "@beep/html/Html.attributes"
+ *
+ * console.log(WritingSuggestions.is.true("true")) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -83,7 +200,29 @@ export const WritingSuggestions = LiteralKit(["true", "false"]).pipe(
   $I.annoteSchema("WritingSuggestions", { description: "Whether writing suggestions are enabled." })
 );
 /**
+ * Decoded type of {@link WritingSuggestions}.
+ *
+ * @example
+ * ```ts
+ * import type { WritingSuggestions } from "@beep/html/Html.attributes"
+ *
+ * const writingSuggestions: WritingSuggestions = "true"
+ * console.log(writingSuggestions)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type WritingSuggestions = typeof WritingSuggestions.Type;
+/**
  * `autocapitalize` global attribute value.
+ *
+ * @example
+ * ```ts
+ * import { AutoCapitalize } from "@beep/html/Html.attributes"
+ *
+ * console.log(AutoCapitalize.is.off("off")) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -92,7 +231,29 @@ export const AutoCapitalize = LiteralKit(["off", "none", "on", "sentences", "wor
   $I.annoteSchema("AutoCapitalize", { description: "Autocapitalization behavior." })
 );
 /**
+ * Decoded type of {@link AutoCapitalize}.
+ *
+ * @example
+ * ```ts
+ * import type { AutoCapitalize } from "@beep/html/Html.attributes"
+ *
+ * const autoCapitalize: AutoCapitalize = "off"
+ * console.log(autoCapitalize)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type AutoCapitalize = typeof AutoCapitalize.Type;
+/**
  * `autocorrect` global attribute value.
+ *
+ * @example
+ * ```ts
+ * import { AutoCorrect } from "@beep/html/Html.attributes"
+ *
+ * console.log(AutoCorrect.is.on("on")) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -101,7 +262,29 @@ export const AutoCorrect = LiteralKit(["on", "off"]).pipe(
   $I.annoteSchema("AutoCorrect", { description: "Autocorrection behavior." })
 );
 /**
+ * Decoded type of {@link AutoCorrect}.
+ *
+ * @example
+ * ```ts
+ * import type { AutoCorrect } from "@beep/html/Html.attributes"
+ *
+ * const autoCorrect: AutoCorrect = "on"
+ * console.log(autoCorrect)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type AutoCorrect = typeof AutoCorrect.Type;
+/**
  * `inputmode` global attribute value.
+ *
+ * @example
+ * ```ts
+ * import { InputMode } from "@beep/html/Html.attributes"
+ *
+ * console.log(InputMode.is.text("text")) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -110,7 +293,29 @@ export const InputMode = LiteralKit(["none", "text", "tel", "url", "email", "num
   $I.annoteSchema("InputMode", { description: "Virtual keyboard input mode hint." })
 );
 /**
+ * Decoded type of {@link InputMode}.
+ *
+ * @example
+ * ```ts
+ * import type { InputMode } from "@beep/html/Html.attributes"
+ *
+ * const inputMode: InputMode = "text"
+ * console.log(inputMode)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type InputMode = typeof InputMode.Type;
+/**
  * `enterkeyhint` global attribute value.
+ *
+ * @example
+ * ```ts
+ * import { EnterKeyHint } from "@beep/html/Html.attributes"
+ *
+ * console.log(EnterKeyHint.is.enter("enter")) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -119,7 +324,29 @@ export const EnterKeyHint = LiteralKit(["enter", "done", "go", "next", "previous
   $I.annoteSchema("EnterKeyHint", { description: "Enter-key action hint." })
 );
 /**
+ * Decoded type of {@link EnterKeyHint}.
+ *
+ * @example
+ * ```ts
+ * import type { EnterKeyHint } from "@beep/html/Html.attributes"
+ *
+ * const enterKeyHint: EnterKeyHint = "enter"
+ * console.log(enterKeyHint)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type EnterKeyHint = typeof EnterKeyHint.Type;
+/**
  * `hidden` global attribute value.
+ *
+ * @example
+ * ```ts
+ * import { Hidden } from "@beep/html/Html.attributes"
+ *
+ * console.log(Hidden.is.hidden("hidden")) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -128,7 +355,29 @@ export const Hidden = LiteralKit(["", "hidden", "until-found"]).pipe(
   $I.annoteSchema("Hidden", { description: "Hidden state of the element." })
 );
 /**
+ * Decoded type of {@link Hidden}.
+ *
+ * @example
+ * ```ts
+ * import type { Hidden } from "@beep/html/Html.attributes"
+ *
+ * const hidden: Hidden = "hidden"
+ * console.log(hidden)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type Hidden = typeof Hidden.Type;
+/**
  * `popover` global attribute value.
+ *
+ * @example
+ * ```ts
+ * import { Popover } from "@beep/html/Html.attributes"
+ *
+ * console.log(Popover.is.auto("auto")) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -137,7 +386,29 @@ export const Popover = LiteralKit(["auto", "manual", "hint"]).pipe(
   $I.annoteSchema("Popover", { description: "Popover behavior." })
 );
 /**
+ * Decoded type of {@link Popover}.
+ *
+ * @example
+ * ```ts
+ * import type { Popover } from "@beep/html/Html.attributes"
+ *
+ * const popover: Popover = "auto"
+ * console.log(popover)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type Popover = typeof Popover.Type;
+/**
  * `popovertargetaction` global attribute value.
+ *
+ * @example
+ * ```ts
+ * import { PopoverTargetAction } from "@beep/html/Html.attributes"
+ *
+ * console.log(PopoverTargetAction.is.toggle("toggle")) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -146,9 +417,32 @@ export const PopoverTargetAction = LiteralKit(["toggle", "show", "hide"]).pipe(
   $I.annoteSchema("PopoverTargetAction", { description: "Action a popover invoker performs." })
 );
 /**
+ * Decoded type of {@link PopoverTargetAction}.
+ *
+ * @example
+ * ```ts
+ * import type { PopoverTargetAction } from "@beep/html/Html.attributes"
+ *
+ * const action: PopoverTargetAction = "toggle"
+ * console.log(action)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type PopoverTargetAction = typeof PopoverTargetAction.Type;
+/**
  * An HTML boolean attribute value. The attribute's presence means `true`; the
  * spec permits both `true`/`false` and the empty-string presence form (`""`,
  * e.g. `disabled=""`) on the wire, so both are accepted.
+ *
+ * @example
+ * ```ts
+ * import { BooleanAttribute } from "@beep/html/Html.attributes"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(BooleanAttribute)(true)) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -157,6 +451,21 @@ export const BooleanAttribute = S.Union([S.Boolean, S.Literal("")]).pipe(
   $I.annoteSchema("BooleanAttribute", { description: "HTML boolean attribute (true/false or empty-string presence)." }),
   SchemaUtils.withCodecStatics
 );
+/**
+ * Decoded type of {@link BooleanAttribute}.
+ *
+ * @example
+ * ```ts
+ * import type { BooleanAttribute } from "@beep/html/Html.attributes"
+ *
+ * const value: BooleanAttribute = true
+ * console.log(value)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type BooleanAttribute = typeof BooleanAttribute.Type;
 
 // -----------------------------------------------------------------------------
 // field bundles
@@ -167,6 +476,15 @@ type Str = typeof Str;
 
 /**
  * The WHATWG global attributes (`dom.html#global-attributes`), value-typed.
+ *
+ * @example
+ * ```ts
+ * import { StandardGlobalAttributes } from "@beep/html/Html.attributes"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(StandardGlobalAttributes.lang)(O.none())) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -212,6 +530,15 @@ export const StandardGlobalAttributes = {
 /**
  * `data-*` custom data attributes, represented as the `dataset` record bag
  * (mirrors `HTMLElement.dataset`).
+ *
+ * @example
+ * ```ts
+ * import { DatasetAttribute } from "@beep/html/Html.attributes"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(DatasetAttribute.dataset)(O.none())) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -279,6 +606,15 @@ const ariaAttributeNames = [
 /**
  * `role` plus the WAI-ARIA `aria-*` state and property attributes. Universally
  * permitted; typed as optional strings.
+ *
+ * @example
+ * ```ts
+ * import { AriaAttributes } from "@beep/html/Html.attributes"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(AriaAttributes.role)(O.none())) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -369,6 +705,15 @@ const eventHandlerNames = [
  * The global event-handler content attributes (`on*`). Universally permitted;
  * typed as optional strings.
  *
+ * @example
+ * ```ts
+ * import { EventHandlerAttributes } from "@beep/html/Html.attributes"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(EventHandlerAttributes.onclick)(O.none())) // true
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -379,6 +724,15 @@ export const EventHandlerAttributes = Struct.fromEntries(A.map(eventHandlerNames
 /**
  * The complete global attribute bundle spread into every generated element
  * class: standard globals + `data-*` (`dataset`) + ARIA + event handlers.
+ *
+ * @example
+ * ```ts
+ * import { GlobalAttributes } from "@beep/html/Html.attributes"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(GlobalAttributes.id)(O.none())) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -395,23 +749,64 @@ export const GlobalAttributes = {
  * attribute decoded/encoded types referenced (by intersection) in every
  * generated element's companion namespace.
  *
+ * @example
+ * ```ts
+ * import { GlobalAttributesStruct } from "@beep/html/Html.attributes"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(GlobalAttributesStruct)({})) // false
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
 export const GlobalAttributesStruct = S.Struct(GlobalAttributes).pipe(
   $I.annoteSchema("GlobalAttributesStruct", { description: "Struct schema over the shared HTML global attributes." })
 );
-
 /**
- * Decoded type of the shared global attributes.
+ * Decoded type of {@link GlobalAttributesStruct}.
+ *
+ * @example
+ * ```ts
+ * import type { GlobalAttributesStruct } from "@beep/html/Html.attributes"
+ * import * as O from "effect/Option"
+ *
+ * const dir: GlobalAttributesStruct["dir"] = O.none()
+ * console.log(O.isNone(dir)) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export type GlobalAttributesType = typeof GlobalAttributesStruct.Type;
+export type GlobalAttributesStruct = typeof GlobalAttributesStruct.Type;
+
+/**
+ * Decoded type of the shared global attributes.
+ *
+ * @example
+ * ```ts
+ * import type { GlobalAttributesType } from "@beep/html/Html.attributes"
+ * import * as O from "effect/Option"
+ *
+ * const isHidden = (attrs: GlobalAttributesType): boolean => O.isSome(attrs.hidden)
+ * console.log(typeof isHidden) // "function"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type GlobalAttributesType = GlobalAttributesStruct;
 
 /**
  * Encoded type of the shared global attributes.
+ *
+ * @example
+ * ```ts
+ * import type { GlobalAttributesEncoded } from "@beep/html/Html.attributes"
+ *
+ * const getId = (attrs: GlobalAttributesEncoded): string | undefined => attrs.id
+ * console.log(typeof getId) // "function"
+ * ```
  *
  * @category schemas
  * @since 0.0.0

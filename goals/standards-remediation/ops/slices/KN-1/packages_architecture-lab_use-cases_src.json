@@ -1,0 +1,10 @@
+{
+  "scope": "packages/architecture-lab/use-cases/src",
+  "findings": [
+    {
+      "kind": "files",
+      "file": "packages/architecture-lab/use-cases/src/entities/index.ts",
+      "name": "packages/architecture-lab/use-cases/src/entities/index.ts"
+    }
+  ]
+}

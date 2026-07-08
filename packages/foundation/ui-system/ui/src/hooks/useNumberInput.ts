@@ -497,6 +497,15 @@ export const NumberInputEventType = LiteralKit(["change", "blur"]).pipe(
 /**
  * Runtime type for {@link NumberInputEventType}.
  *
+ * @example
+ * ```ts
+ * import type { NumberInputEventType } from "@beep/ui/hooks/useNumberInput"
+ *
+ * const eventType: NumberInputEventType = "change"
+ *
+ * console.log(eventType)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -523,6 +532,15 @@ export const NumberInputError = LiteralKit(["exceed-max", "below-min"]).pipe(
 
 /**
  * Runtime type for {@link NumberInputError}.
+ *
+ * @example
+ * ```ts
+ * import type { NumberInputError } from "@beep/ui/hooks/useNumberInput"
+ *
+ * const error: NumberInputError = "exceed-max"
+ *
+ * console.log(error)
+ * ```
  *
  * @category models
  * @since 0.0.0

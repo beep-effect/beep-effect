@@ -1,0 +1,45 @@
+{
+  "owner": "@beep/schema",
+  "entries": [
+    {
+      "file": "packages/foundation/modeling/schema/src/Graph/Graph.edge.ts",
+      "symbol": "Edge",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "symbol": "LiteralKit",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+      "symbol": "MappedLiteralKit",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Model/Model.variants.ts",
+      "symbol": "Overrideable",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.overridable.ts",
+      "symbol": "Overrideable",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    }
+  ]
+}

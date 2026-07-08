@@ -57,10 +57,12 @@ import {
   Path,
   Ref,
   Result,
+  SchemaTransformation,
   Stream,
 } from "effect";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { printLines } from "../../internal/cli/Printer.js";
@@ -542,17 +544,24 @@ const buildRestorationRecords = Effect.fn("CorpusCommandService.buildRestoration
   records: ReadonlyArray<CorpusCatalogSourceFileRecord>
 ): Effect.fn.Return<ReadonlyArray<CorpusRestorationRecord>, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
-  const destByLabelAndPath = new Map<string, string>();
-  const groups = new Map<string, { sourceLabel: string; entries: Array<RecycleBinScanEntry> }>();
+  const destByLabelAndPath = MutableHashMap.empty<string, string>();
+  const groups = MutableHashMap.empty<string, { sourceLabel: string; entries: Array<RecycleBinScanEntry> }>();
 
   for (const record of records) {
-    destByLabelAndPath.set(`${record.sourceLabel}\u0000${record.relativePath}`, record.referencedRawPath);
+    MutableHashMap.set(
+      destByLabelAndPath,
+      `${record.sourceLabel}\u0000${record.relativePath}`,
+      record.referencedRawPath
+    );
     const classified = classifyRecycleBinName(basenameOf(record.relativePath));
     if (O.isNone(classified)) {
       continue;
     }
     const groupKey = `${record.sourceLabel}\u0000${parentDirOf(record.relativePath)}`;
-    const group = groups.get(groupKey) ?? { entries: [], sourceLabel: record.sourceLabel };
+    const group = O.getOrElse(MutableHashMap.get(groups, groupKey), () => ({
+      entries: [] as Array<RecycleBinScanEntry>,
+      sourceLabel: record.sourceLabel,
+    }));
     group.entries.push(
       RecycleBinScanEntry.make({
         kind: classified.value.kind,
@@ -560,14 +569,14 @@ const buildRestorationRecords = Effect.fn("CorpusCommandService.buildRestoration
         relativePath: record.relativePath,
       })
     );
-    groups.set(groupKey, group);
+    MutableHashMap.set(groups, groupKey, group);
   }
 
   const parseMetadataAt = Effect.fn("CorpusCommandService.parseMetadataAt")(function* (
     sourceLabel: string,
     relativePath: string
   ) {
-    const destPath = destByLabelAndPath.get(`${sourceLabel}\u0000${relativePath}`);
+    const destPath = O.getOrUndefined(MutableHashMap.get(destByLabelAndPath, `${sourceLabel}\u0000${relativePath}`));
     if (destPath === undefined) {
       return yield* CorpusCommandError.make({
         message: `Recycle-bin metadata file "${relativePath}" is missing from the provenance manifest.`,
@@ -591,7 +600,7 @@ const buildRestorationRecords = Effect.fn("CorpusCommandService.buildRestoration
   });
 
   const groupResults = yield* Effect.forEach(
-    [...groups.values()],
+    [...MutableHashMap.values(groups)],
     Effect.fnUntraced(function* (group) {
       const pairing = pairRecycleBinEntries(group.entries);
       const matched = yield* Effect.forEach(pairing.matched, (pair) =>
@@ -861,6 +870,14 @@ const decodeSourceArtifact = S.decodeUnknownEffect(SourceArtifact);
 const encodeMetadataRecordJson = S.encodeUnknownEffect(S.fromJsonString(S.Record(S.String, S.String)));
 const operationTextEncoder = new TextEncoder();
 const jsonlTextEncoder = new TextEncoder();
+// SFV4-normalization: trim/case normalization moves through a schema
+// transformation instead of raw String.prototype calls, so the invariant
+// travels with the data (S.Trim is v4's native String -> Trimmed transform;
+// the lower/upper-case forms mirror @beep/schema's internal/email.ts
+// NormalizedString idiom). Decoding these never throws for string input.
+const decodeTrimmedString = S.decodeSync(S.Trim);
+const decodeLowercasedString = S.decodeSync(S.String.pipe(S.decode(SchemaTransformation.toLowerCase())));
+const decodeUppercasedString = S.decodeSync(S.String.pipe(S.decode(SchemaTransformation.toUpperCase())));
 
 const deriveCorpusOperationId = Effect.fn("CorpusCommandService.deriveCorpusOperationId")(function* (
   text: string
@@ -875,7 +892,7 @@ const deriveCorpusOperationId = Effect.fn("CorpusCommandService.deriveCorpusOper
 
 const extensionOf = (name: string): string | undefined => {
   const dot = name.lastIndexOf(".");
-  return dot <= 0 || dot === name.length - 1 ? undefined : name.slice(dot + 1).toLowerCase();
+  return dot <= 0 || dot === name.length - 1 ? undefined : decodeLowercasedString(name.slice(dot + 1));
 };
 
 // Fail-closed resolver for manifest-supplied paths: the provenance manifest is
@@ -2151,14 +2168,14 @@ const pipeDocket = (text: string): O.Option<{ readonly docket: string; readonly 
   O.fromNullishOr(docketPattern.exec(text)).pipe(
     O.flatMap((match) => O.fromNullishOr(match[1])),
     O.map((raw) => {
-      const docket = raw.toUpperCase();
+      const docket = decodeUppercasedString(raw);
       const family = docketFamilyPattern.exec(docket)?.[0] ?? docket;
       return { docket, family };
     })
   );
 
 const sanitizeSegment = (value: string): string => {
-  const cleaned = value.replaceAll(/[\\/\u0000]/gu, "_").trim();
+  const cleaned = decodeTrimmedString(value.replaceAll(/[\\/\u0000]/gu, "_"));
   return Str.isEmpty(cleaned) ? "_" : cleaned;
 };
 
@@ -2171,7 +2188,7 @@ const windowsPathDirectories = (originalPath: string): Array<string> => {
 const versionStem = (name: string): string => {
   const dot = name.lastIndexOf(".");
   const stem = dot <= 0 ? name : name.slice(0, dot);
-  return stem.toLowerCase().replaceAll(/\s+/gu, " ").trim();
+  return decodeTrimmedString(decodeLowercasedString(stem).replaceAll(/\s+/gu, " "));
 };
 
 const decodeRestorationRecordJson = S.decodeUnknownEffect(S.fromJsonString(CorpusRestorationRecord));
@@ -2241,7 +2258,11 @@ const prepareOrganizedRoot = Effect.fn("CorpusCommandService.prepareOrganizedRoo
 
 const loadMatchedRestorations = Effect.fn("CorpusCommandService.loadMatchedRestorations")(function* (
   restorationPath: string
-): Effect.fn.Return<Map<string, MatchedRestorationRecord>, CorpusCommandError, FileSystem.FileSystem> {
+): Effect.fn.Return<
+  MutableHashMap.MutableHashMap<string, MatchedRestorationRecord>,
+  CorpusCommandError,
+  FileSystem.FileSystem
+> {
   const fs = yield* FileSystem.FileSystem;
   const restorationText = yield* fs
     .readFileString(restorationPath)
@@ -2251,10 +2272,10 @@ const loadMatchedRestorations = Effect.fn("CorpusCommandService.loadMatchedResto
       CorpusCommandError.mapError("Restoration manifest line failed schema validation.")
     )
   );
-  const restoredByLabelPath = new Map<string, MatchedRestorationRecord>();
+  const restoredByLabelPath = MutableHashMap.empty<string, MatchedRestorationRecord>();
   for (const record of restorations) {
     if (record.matchStatus === "matched") {
-      restoredByLabelPath.set(labelPathKey(record.sourceLabel, record.contentRelativePath), record);
+      MutableHashMap.set(restoredByLabelPath, labelPathKey(record.sourceLabel, record.contentRelativePath), record);
     }
   }
   return restoredByLabelPath;
@@ -2262,8 +2283,8 @@ const loadMatchedRestorations = Effect.fn("CorpusCommandService.loadMatchedResto
 
 const loadClientMap = Effect.fn("CorpusCommandService.loadClientMap")(function* (
   clientMapPath: string | undefined
-): Effect.fn.Return<Map<string, string>, CorpusCommandError, FileSystem.FileSystem> {
-  const clientByLabel = new Map<string, string>();
+): Effect.fn.Return<MutableHashMap.MutableHashMap<string, string>, CorpusCommandError, FileSystem.FileSystem> {
+  const clientByLabel = MutableHashMap.empty<string, string>();
   if (clientMapPath === undefined) {
     return clientByLabel;
   }
@@ -2274,8 +2295,8 @@ const loadClientMap = Effect.fn("CorpusCommandService.loadClientMap")(function* 
   const clientMap = yield* decodeClientMapJson(clientMapText).pipe(
     CorpusCommandError.mapError("Client map failed schema validation.")
   );
-  for (const [label, client] of Object.entries(clientMap)) {
-    clientByLabel.set(label, sanitizeSegment(client));
+  for (const [label, client] of R.toEntries(clientMap)) {
+    MutableHashMap.set(clientByLabel, label, sanitizeSegment(client));
   }
   return clientByLabel;
 });
@@ -2339,15 +2360,15 @@ const planOrganizeRow = (
 
 const buildOrganizePlan = (
   allRecords: ReadonlyArray<CorpusProvenanceRecord>,
-  restoredByLabelPath: ReadonlyMap<string, MatchedRestorationRecord>,
-  clientByLabel: ReadonlyMap<string, string>
+  restoredByLabelPath: MutableHashMap.MutableHashMap<string, MatchedRestorationRecord>,
+  clientByLabel: MutableHashMap.MutableHashMap<string, string>
 ): { readonly duplicatesSkipped: number; readonly plan: ReadonlyArray<OrganizePlanRow> } => {
   const { duplicatesSkipped, kept } = dedupeBySha256(allRecords);
   const plan = A.map(kept, (record) =>
     planOrganizeRow(
       record,
-      restoredByLabelPath.get(labelPathKey(record.sourceLabel, record.relativePath)),
-      clientByLabel.get(record.sourceLabel)
+      O.getOrUndefined(MutableHashMap.get(restoredByLabelPath, labelPathKey(record.sourceLabel, record.relativePath))),
+      O.getOrUndefined(MutableHashMap.get(clientByLabel, record.sourceLabel))
     )
   );
 
@@ -2356,20 +2377,23 @@ const buildOrganizePlan = (
 
 const assignVersionIndexes = (
   plan: ReadonlyArray<OrganizePlanRow>
-): { readonly multiVersionGroups: number; readonly versionIndexByRow: ReadonlyMap<OrganizePlanRow, number> } => {
-  const versionIndexByRow = new Map<OrganizePlanRow, number>();
-  const versionGroups = new Map<string, Array<OrganizePlanRow>>();
+): {
+  readonly multiVersionGroups: number;
+  readonly versionIndexByRow: MutableHashMap.MutableHashMap<OrganizePlanRow, number>;
+} => {
+  const versionIndexByRow = MutableHashMap.empty<OrganizePlanRow, number>();
+  const versionGroups = MutableHashMap.empty<string, Array<OrganizePlanRow>>();
   for (const row of plan) {
     if (row.category !== "docket" || row.docket === undefined) {
       continue;
     }
     const groupKey = `${row.docket}\u0000${versionStem(row.effectiveName)}`;
-    const group = versionGroups.get(groupKey) ?? [];
+    const group = O.getOrElse(MutableHashMap.get(versionGroups, groupKey), (): Array<OrganizePlanRow> => []);
     group.push(row);
-    versionGroups.set(groupKey, group);
+    MutableHashMap.set(versionGroups, groupKey, group);
   }
   let multiVersionGroups = 0;
-  for (const group of versionGroups.values()) {
+  for (const group of MutableHashMap.values(versionGroups)) {
     if (A.length(group) < 2) {
       continue;
     }
@@ -2379,7 +2403,7 @@ const assignVersionIndexes = (
       Order.mapInput(Order.Number, (row: OrganizePlanRow) => row.mtimeEpoch)
     );
     ordered.forEach((row, index) => {
-      versionIndexByRow.set(row, index + 1);
+      MutableHashMap.set(versionIndexByRow, row, index + 1);
     });
   }
   return { multiVersionGroups, versionIndexByRow };
@@ -2404,8 +2428,12 @@ const organizedRelativeFor = (row: OrganizePlanRow, versionedName: string): stri
     Match.orElse(() => undefined)
   );
 
-const dedupeOrganizedTarget = (candidate: string, usedTargets: ReadonlySet<string>, digest: string): string => {
-  if (!usedTargets.has(candidate)) {
+const dedupeOrganizedTarget = (
+  candidate: string,
+  usedTargets: MutableHashSet.MutableHashSet<string>,
+  digest: string
+): string => {
+  if (!MutableHashSet.has(usedTargets, candidate)) {
     return candidate;
   }
   const digestSuffix = digest.slice("sha256:".length, "sha256:".length + 8);
@@ -2503,13 +2531,13 @@ const buildOrganizeSummary = (input: {
   readonly plan: ReadonlyArray<OrganizePlanRow>;
   readonly records: ReadonlyArray<CorpusOrganizeRecord>;
 }): CorpusOrganizeSummary => {
-  const docketFamilies = new Set(
+  const docketFamilies = MutableHashSet.fromIterable(
     A.flatMap(input.plan, (row) => (row.docketFamily === undefined ? [] : [row.docketFamily]))
   );
   return CorpusOrganizeSummary.make({
     canonicalArtifacts: NonNegativeInt.make(A.length(input.plan)),
     clientFiles: NonNegativeInt.make(input.counts.client),
-    docketFamilies: NonNegativeInt.make(docketFamilies.size),
+    docketFamilies: NonNegativeInt.make(MutableHashSet.size(docketFamilies)),
     docketFiles: NonNegativeInt.make(input.counts.docket),
     duplicatesSkipped: NonNegativeInt.make(input.duplicatesSkipped),
     emailArchives: NonNegativeInt.make(input.counts["email-archive"]),
@@ -2546,7 +2574,7 @@ const organizeCorpusImpl = Effect.fn("CorpusCommandService.organizeCorpus")(func
   const { duplicatesSkipped, plan } = buildOrganizePlan(allRecords, restoredByLabelPath, clientByLabel);
   const { multiVersionGroups, versionIndexByRow } = assignVersionIndexes(plan);
 
-  const usedTargets = new Set<string>();
+  const usedTargets = MutableHashSet.empty<string>();
   const records: Array<CorpusOrganizeRecord> = [];
   const counts: Record<CorpusOrganizeCategory, number> = {
     client: 0,
@@ -2559,7 +2587,7 @@ const organizeCorpusImpl = Effect.fn("CorpusCommandService.organizeCorpus")(func
 
   for (const row of plan) {
     counts[row.category] += 1;
-    const versionIndex = versionIndexByRow.get(row);
+    const versionIndex = O.getOrUndefined(MutableHashMap.get(versionIndexByRow, row));
     const versionedName =
       versionIndex === undefined ? row.effectiveName : `v${`${versionIndex}`.padStart(2, "0")}--${row.effectiveName}`;
     const candidate = organizedRelativeFor(row, versionedName);
@@ -2567,7 +2595,7 @@ const organizeCorpusImpl = Effect.fn("CorpusCommandService.organizeCorpus")(func
       candidate === undefined ? undefined : dedupeOrganizedTarget(candidate, usedTargets, row.digest);
 
     if (organizedRelative !== undefined) {
-      usedTargets.add(organizedRelative);
+      MutableHashSet.add(usedTargets, organizedRelative);
       yield* materializeOrganizedRow(rawRoot, organizedRoot, row, organizedRelative);
     }
 
@@ -2600,7 +2628,7 @@ const patentTextPattern = /\b(?:US[\s-]?)?(\d{1,2},\d{3},\d{3}|\d{7,8})(?:\s?[AB
 const applicationTextPattern = /\b(\d{2}\/\d{3},?\d{3})\b/gu;
 
 interface EnrichCandidate {
-  readonly docketFamilies: Set<string>;
+  readonly docketFamilies: MutableHashSet.MutableHashSet<string>;
   readonly kind: "application" | "patent";
   occurrenceCount: number;
 }
@@ -2624,24 +2652,27 @@ const insertEnrichmentStatement = `
 INSERT INTO corpus_enrichment VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`;
 
 interface EnrichCandidateCollector {
-  readonly candidates: Map<string, EnrichCandidate>;
+  readonly candidates: MutableHashMap.MutableHashMap<string, EnrichCandidate>;
   readonly scanText: (text: string, docketFamily: string | undefined) => void;
 }
 
 const makeEnrichCandidateCollector = (): EnrichCandidateCollector => {
-  const candidates = new Map<string, EnrichCandidate>();
+  const candidates = MutableHashMap.empty<string, EnrichCandidate>();
   const noteCandidate = (
     kind: "application" | "patent",
     normalized: string,
     docketFamily: string | undefined
   ): void => {
     const key = `${kind}:${normalized}`;
-    const existing = candidates.get(key) ?? { docketFamilies: new Set<string>(), kind, occurrenceCount: 0 };
+    const existing = O.getOrElse(
+      MutableHashMap.get(candidates, key),
+      (): EnrichCandidate => ({ docketFamilies: MutableHashSet.empty<string>(), kind, occurrenceCount: 0 })
+    );
     existing.occurrenceCount += 1;
     if (docketFamily !== undefined) {
-      existing.docketFamilies.add(docketFamily);
+      MutableHashSet.add(existing.docketFamilies, docketFamily);
     }
-    candidates.set(key, existing);
+    MutableHashMap.set(candidates, key, existing);
   };
   const scanText = (text: string, docketFamily: string | undefined): void => {
     for (const match of text.matchAll(patentTextPattern)) {
@@ -2679,16 +2710,20 @@ const loadEnrichOrganizeRecords = Effect.fn("CorpusCommandService.loadEnrichOrga
 const buildFamilyByTextName = Effect.fn("CorpusCommandService.buildFamilyByTextName")(function* (
   corpusRoot: string,
   organizeRecords: ReadonlyArray<CorpusOrganizeRecord>
-): Effect.fn.Return<ReadonlyMap<string, string>, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  MutableHashMap.MutableHashMap<string, string>,
+  CorpusCommandError,
+  FileSystem.FileSystem | Path.Path
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const familyByDigest = new Map<string, string>();
+  const familyByDigest = MutableHashMap.empty<string, string>();
   for (const record of organizeRecords) {
     if (record.docketFamily !== undefined) {
-      familyByDigest.set(record.digest, record.docketFamily);
+      MutableHashMap.set(familyByDigest, record.digest, record.docketFamily);
     }
   }
-  const familyByTextName = new Map<string, string>();
+  const familyByTextName = MutableHashMap.empty<string, string>();
   const sourcesPath = path.join(corpusRoot, "staging", "extract", "sources.jsonl");
   const sourcesExists = yield* fs
     .exists(sourcesPath)
@@ -2708,9 +2743,9 @@ const buildFamilyByTextName = Effect.fn("CorpusCommandService.buildFamilyByTextN
     if (row.status !== "succeeded" || row.textPath === undefined) {
       continue;
     }
-    const family = familyByDigest.get(row.digest);
+    const family = O.getOrUndefined(MutableHashMap.get(familyByDigest, row.digest));
     if (family !== undefined) {
-      familyByTextName.set(basenameOf(row.textPath), family);
+      MutableHashMap.set(familyByTextName, basenameOf(row.textPath), family);
     }
   }
   return familyByTextName;
@@ -2763,7 +2798,7 @@ const enrichCorpusImpl = Effect.fn("CorpusCommandService.enrichCorpus")(function
       textFiles,
       (name) =>
         fs.readFileString(path.join(textDir, name)).pipe(
-          Effect.map((text) => scanText(text, familyByTextName.get(name))),
+          Effect.map((text) => scanText(text, O.getOrUndefined(MutableHashMap.get(familyByTextName, name)))),
           CorpusCommandError.mapError(`Failed reading extracted text "${name}".`)
         ),
       { concurrency: 8 }
@@ -2771,13 +2806,13 @@ const enrichCorpusImpl = Effect.fn("CorpusCommandService.enrichCorpus")(function
   }
 
   const orderedCandidates = A.sort(
-    [...candidates.entries()],
+    [...candidates],
     Order.mapInput(
       Order.Number,
       (entry: readonly [string, EnrichCandidate]) =>
         // Docket-family-associated candidates first (filename-grounded, high
         // precision), then by corpus occurrence.
-        (entry[1].docketFamilies.size > 0 ? -1_000_000 : 0) - entry[1].occurrenceCount
+        (MutableHashSet.size(entry[1].docketFamilies) > 0 ? -1_000_000 : 0) - entry[1].occurrenceCount
     )
   );
   const limited =
@@ -2785,7 +2820,7 @@ const enrichCorpusImpl = Effect.fn("CorpusCommandService.enrichCorpus")(function
       ? orderedCandidates
       : A.take(orderedCandidates, Math.max(0, Math.floor(options.maxLookups)));
   yield* Console.log(
-    `corpus enrich: ${A.length(limited)}/${candidates.size} identifier candidates selected for USPTO lookup`
+    `corpus enrich: ${A.length(limited)}/${MutableHashMap.size(candidates)} identifier candidates selected for USPTO lookup`
   );
 
   const lookups = Effect.gen(function* () {

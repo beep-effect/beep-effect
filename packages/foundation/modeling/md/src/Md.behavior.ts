@@ -23,8 +23,20 @@ const youtubeWatchUrl = (videoId: string): string => `https://www.youtube.com/wa
  * The strategy consumed by {@link segmentInlineRuns}: the inline guard plus the
  * per-run and per-block renderers.
  *
- * @template I - Inline child element type.
- * @template B - Block child element type.
+ * @example
+ * ```ts
+ * import type { SegmentStrategy } from "@beep/md/Md.behavior"
+ *
+ * const strategy: SegmentStrategy<string, number> = {
+ *   isInline: (item): item is string => typeof item === "string",
+ *   renderBlock: (block) => `block:${block}`,
+ *   renderInlineRun: (run) => `inline:${run.join(",")}`,
+ * }
+ * console.log(strategy.renderBlock(1)) // "block:1"
+ * ```
+ *
+ * @typeParam I - Inline child element type.
+ * @typeParam B - Block child element type.
  * @category models
  * @since 0.0.0
  */
@@ -75,8 +87,8 @@ export interface SegmentStrategy<I, B> {
  * console.log(segments) // ["inline:2", "block:p"]
  * ```
  *
- * @template I - Inline child element type.
- * @template B - Block child element type.
+ * @typeParam I - Inline child element type.
+ * @typeParam B - Block child element type.
  * @param items - The list-item children to segment.
  * @param render - The segmentation {@link SegmentStrategy}.
  * @returns One rendered string per inline run and per block child, in order.

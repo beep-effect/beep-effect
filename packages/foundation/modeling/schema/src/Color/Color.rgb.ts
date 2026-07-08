@@ -46,6 +46,15 @@ export const RgbInputChannel = S.Finite.pipe(
 /**
  * Type for {@link RgbInputChannel}.
  *
+ * @example
+ * ```ts
+ * import { RgbInputChannel } from "@beep/schema/Color"
+ * import * as S from "effect/Schema"
+ *
+ * const value: RgbInputChannel = S.decodeUnknownSync(RgbInputChannel)(1.25)
+ * console.log(value)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -76,6 +85,15 @@ export const RgbChannel = RgbInputChannel.pipe(
 
 /**
  * Type for {@link RgbChannel}.
+ *
+ * @example
+ * ```ts
+ * import { RgbChannel } from "@beep/schema/Color"
+ * import * as S from "effect/Schema"
+ *
+ * const value: RgbChannel = S.decodeUnknownSync(RgbChannel)(0.5)
+ * console.log(value)
+ * ```
  *
  * @since 0.0.0
  * @category models

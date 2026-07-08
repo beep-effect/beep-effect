@@ -42,6 +42,14 @@ export const SimilarityMethod = SimilarityMethodKit.pipe(
 /**
  * Runtime TypeScript union decoded by {@link SimilarityMethod}.
  *
+ * @example
+ * ```ts
+ * import type { SimilarityMethod } from "@beep/nlp/Core/Similarity"
+ *
+ * const method: SimilarityMethod = "vector.cosine"
+ * console.log(method)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

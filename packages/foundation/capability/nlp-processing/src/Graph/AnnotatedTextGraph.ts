@@ -79,6 +79,22 @@ export const AnnotatedNode = S.Union([TextNode, POSNode, EntityNode, LemmaNode, 
 /**
  * Static TypeScript type for structural and linguistic annotation nodes.
  *
+ * @example
+ * ```ts
+ * import { POSNode } from "@beep/nlp/Graph/Schema"
+ * import type { AnnotatedNode } from "@beep/nlp-processing/Graph/AnnotatedTextGraph"
+ * import * as S from "effect/Schema"
+ *
+ * const node: AnnotatedNode = POSNode.make({
+ *   text: "runs",
+ *   tag: "VBZ",
+ *   position: 0,
+ *   timestamp: 0
+ * })
+ *
+ * console.log(S.is(POSNode)(node)) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

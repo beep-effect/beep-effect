@@ -20,8 +20,9 @@ import { cn } from "../lib/index.ts";
  * ```ts
  * import type { GraphNode } from "@beep/ui/components/knowledge-graph"
  *
- * const value = {} as GraphNode
- * console.log(value)
+ * const node: GraphNode = { id: "concept-1", label: "Prior Art", type: "concept" }
+ *
+ * console.log(node.label)
  * ```
  *
  * @category type-level
@@ -49,8 +50,9 @@ export interface GraphNode extends d3.SimulationNodeDatum {
  * ```ts
  * import type { GraphLink } from "@beep/ui/components/knowledge-graph"
  *
- * const value = {} as GraphLink
- * console.log(value)
+ * const link: GraphLink = { source: "concept-1", target: "concept-2" }
+ *
+ * console.log(link.source)
  * ```
  *
  * @category type-level
@@ -93,8 +95,13 @@ interface KnowledgeGraphProps {
  * ```ts
  * import type { KnowledgeGraphHandle } from "@beep/ui/components/knowledge-graph"
  *
- * const value = {} as KnowledgeGraphHandle
- * console.log(value)
+ * const handle: KnowledgeGraphHandle = {
+ *   exportAsPNG: () => undefined,
+ *   exportAsSVG: () => undefined,
+ *   resetZoom: () => undefined,
+ * }
+ *
+ * console.log(typeof handle.resetZoom)
  * ```
  *
  * @category type-level

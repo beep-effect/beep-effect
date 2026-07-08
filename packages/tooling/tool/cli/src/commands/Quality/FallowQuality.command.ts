@@ -205,21 +205,20 @@ class FallowEntryPointsRawReport extends S.Class<FallowEntryPointsRawReport>($I`
     description: "Raw Fallow entry point summary emitted by dead-code JSON output.",
   })
 ) {}
-const FallowAuditRawReport = S.Struct({
-  kind: S.Literal("audit"),
-  ...FallowVersionedRawFields,
-  command: S.Literal("audit"),
-  verdict: S.String,
-  changed_files_count: S.Finite,
-  base_ref: S.String,
-  summary: S.Struct({
+class FallowAuditSummary extends S.Class<FallowAuditSummary>($I`FallowAuditSummary`)(
+  {
     dead_code_issues: S.Finite,
     dead_code_has_errors: S.Boolean,
     complexity_findings: S.Finite,
     max_cyclomatic: S.NullOr(S.Finite),
     duplication_clone_groups: S.Finite,
-  }),
-  attribution: S.Struct({
+  },
+  $I.annote("FallowAuditSummary", {
+    description: "Raw Fallow audit summary counts nested in the audit JSON shape.",
+  })
+) {}
+class FallowAuditAttribution extends S.Class<FallowAuditAttribution>($I`FallowAuditAttribution`)(
+  {
     gate: S.String,
     dead_code_introduced: S.Finite,
     dead_code_inherited: S.Finite,
@@ -227,51 +226,63 @@ const FallowAuditRawReport = S.Struct({
     complexity_inherited: S.Finite,
     duplication_introduced: S.Finite,
     duplication_inherited: S.Finite,
-  }),
-}).pipe(
-  $I.annoteSchema("FallowAuditRawReport", {
+  },
+  $I.annote("FallowAuditAttribution", {
+    description: "Raw Fallow audit attribution counts nested in the audit JSON shape.",
+  })
+) {}
+class FallowAuditRawReport extends S.Class<FallowAuditRawReport>($I`FallowAuditRawReport`)(
+  {
+    kind: S.Literal("audit"),
+    ...FallowVersionedRawFields,
+    command: S.Literal("audit"),
+    verdict: S.String,
+    changed_files_count: S.Finite,
+    base_ref: S.String,
+    summary: FallowAuditSummary,
+    attribution: FallowAuditAttribution,
+  },
+  $I.annote("FallowAuditRawReport", {
     description: "Raw Fallow audit JSON shape accepted by the P1 wrapper.",
   })
-);
-const FallowDeadCodeRawReport = S.Struct({
-  kind: S.Literal("dead-code"),
-  ...FallowVersionedRawFields,
-  total_issues: S.Finite,
-  entry_points: FallowEntryPointsRawReport,
-  summary: FallowDeadCodeSummaryRawReport,
-  unused_files: FallowIssueArray,
-  unused_exports: FallowIssueArray,
-  unused_types: FallowIssueArray,
-  private_type_leaks: FallowIssueArray,
-  unused_dependencies: FallowIssueArray,
-  unused_dev_dependencies: FallowIssueArray,
-  unused_optional_dependencies: FallowIssueArray,
-  unused_enum_members: FallowIssueArray,
-  unused_class_members: FallowIssueArray,
-  unresolved_imports: FallowIssueArray,
-  unlisted_dependencies: FallowIssueArray,
-  duplicate_exports: FallowIssueArray,
-  type_only_dependencies: FallowIssueArray,
-  test_only_dependencies: FallowIssueArray,
-  circular_dependencies: FallowIssueArray,
-  re_export_cycles: FallowIssueArray,
-  boundary_violations: FallowIssueArray,
-  stale_suppressions: FallowIssueArray,
-  unused_catalog_entries: FallowIssueArray,
-  empty_catalog_groups: FallowIssueArray,
-  unresolved_catalog_references: FallowIssueArray,
-  unused_dependency_overrides: FallowIssueArray,
-  misconfigured_dependency_overrides: FallowIssueArray,
-}).pipe(
-  $I.annoteSchema("FallowDeadCodeRawReport", {
+) {}
+class FallowDeadCodeRawReport extends S.Class<FallowDeadCodeRawReport>($I`FallowDeadCodeRawReport`)(
+  {
+    kind: S.Literal("dead-code"),
+    ...FallowVersionedRawFields,
+    total_issues: S.Finite,
+    entry_points: FallowEntryPointsRawReport,
+    summary: FallowDeadCodeSummaryRawReport,
+    unused_files: FallowIssueArray,
+    unused_exports: FallowIssueArray,
+    unused_types: FallowIssueArray,
+    private_type_leaks: FallowIssueArray,
+    unused_dependencies: FallowIssueArray,
+    unused_dev_dependencies: FallowIssueArray,
+    unused_optional_dependencies: FallowIssueArray,
+    unused_enum_members: FallowIssueArray,
+    unused_class_members: FallowIssueArray,
+    unresolved_imports: FallowIssueArray,
+    unlisted_dependencies: FallowIssueArray,
+    duplicate_exports: FallowIssueArray,
+    type_only_dependencies: FallowIssueArray,
+    test_only_dependencies: FallowIssueArray,
+    circular_dependencies: FallowIssueArray,
+    re_export_cycles: FallowIssueArray,
+    boundary_violations: FallowIssueArray,
+    stale_suppressions: FallowIssueArray,
+    unused_catalog_entries: FallowIssueArray,
+    empty_catalog_groups: FallowIssueArray,
+    unresolved_catalog_references: FallowIssueArray,
+    unused_dependency_overrides: FallowIssueArray,
+    misconfigured_dependency_overrides: FallowIssueArray,
+  },
+  $I.annote("FallowDeadCodeRawReport", {
     description: "Raw Fallow dead-code JSON shape accepted by dead-code and boundary lanes.",
   })
-);
-const FallowHealthRawReport = S.Struct({
-  kind: S.Literal("health"),
-  ...FallowVersionedRawFields,
-  findings: S.Array(FallowHealthFinding),
-  summary: S.Struct({
+) {}
+class FallowHealthSummary extends S.Class<FallowHealthSummary>($I`FallowHealthSummary`)(
+  {
     files_analyzed: S.Finite,
     functions_analyzed: S.Finite,
     functions_above_threshold: S.Finite,
@@ -279,21 +290,32 @@ const FallowHealthRawReport = S.Struct({
     severity_critical_count: S.Finite,
     severity_high_count: S.Finite,
     severity_moderate_count: S.Finite,
-  }),
-}).pipe(
-  $I.annoteSchema("FallowHealthRawReport", {
+  },
+  $I.annote("FallowHealthSummary", {
+    description: "Raw Fallow health summary counts nested in the health JSON shape.",
+  })
+) {}
+class FallowHealthRawReport extends S.Class<FallowHealthRawReport>($I`FallowHealthRawReport`)(
+  {
+    kind: S.Literal("health"),
+    ...FallowVersionedRawFields,
+    findings: S.Array(FallowHealthFinding),
+    summary: FallowHealthSummary,
+  },
+  $I.annote("FallowHealthRawReport", {
     description: "Raw Fallow health JSON shape accepted by the P1 wrapper.",
   })
-);
-const FallowFlagsRawReport = S.Struct({
-  ...FallowVersionedRawFields,
-  feature_flags: S.Array(FallowFeatureFlagFinding),
-  total_flags: S.Finite,
-}).pipe(
-  $I.annoteSchema("FallowFlagsRawReport", {
+) {}
+class FallowFlagsRawReport extends S.Class<FallowFlagsRawReport>($I`FallowFlagsRawReport`)(
+  {
+    ...FallowVersionedRawFields,
+    feature_flags: S.Array(FallowFeatureFlagFinding),
+    total_flags: S.Finite,
+  },
+  $I.annote("FallowFlagsRawReport", {
     description: "Raw Fallow flags JSON shape accepted by the P1 wrapper.",
   })
-);
+) {}
 class FallowSecurityDetailedRawReport extends S.Class<FallowSecurityDetailedRawReport>(
   $I`FallowSecurityDetailedRawReport`
 )(
@@ -308,6 +330,16 @@ class FallowSecurityDetailedRawReport extends S.Class<FallowSecurityDetailedRawR
     description: "Detailed raw Fallow security JSON shape accepted by the P1 wrapper.",
   })
 ) {}
+class FallowSecuritySummaryCounts extends S.Class<FallowSecuritySummaryCounts>($I`FallowSecuritySummaryCounts`)(
+  {
+    security_findings: S.Finite,
+    unresolved_edge_files: S.Finite,
+    unresolved_callee_sites: S.Finite,
+  },
+  $I.annote("FallowSecuritySummaryCounts", {
+    description: "Raw Fallow security summary counts nested in the summary security JSON shape.",
+  })
+) {}
 class FallowSecuritySummaryRawReport extends S.Class<FallowSecuritySummaryRawReport>(
   $I`FallowSecuritySummaryRawReport`
 )(
@@ -316,11 +348,7 @@ class FallowSecuritySummaryRawReport extends S.Class<FallowSecuritySummaryRawRep
     schema_version: S.Union([S.Finite, S.String]),
     version: S.String,
     elapsed_ms: S.Finite,
-    summary: S.Struct({
-      security_findings: S.Finite,
-      unresolved_edge_files: S.Finite,
-      unresolved_callee_sites: S.Finite,
-    }),
+    summary: FallowSecuritySummaryCounts,
   },
   $I.annote("FallowSecuritySummaryRawReport", {
     description: "Summary raw Fallow security JSON shape accepted by the P1 wrapper.",
@@ -537,14 +565,31 @@ const auditFindingsForCount = (
 // boilerplate that fallow cannot selectively ignore; it is reported advisory
 // (inherited-adjacent) rather than blocking, while real source-code duplication
 // still blocks. See goals/desktop-chat-surface/history/2026-06-14-fallow-audit-investigation.md.
-const AuditDuplicationCloneGroups = S.Struct({
-  clone_groups: S.Array(
-    S.Struct({
-      introduced: S.optionalKey(S.Boolean),
-      instances: S.Array(S.Struct({ file: S.String })),
-    })
-  ),
-});
+class CloneGroupInstance extends S.Class<CloneGroupInstance>($I`CloneGroupInstance`)(
+  {
+    file: S.String,
+  },
+  $I.annote("CloneGroupInstance", {
+    description: "One file instance within a raw Fallow duplication clone group.",
+  })
+) {}
+class CloneGroupEntry extends S.Class<CloneGroupEntry>($I`CloneGroupEntry`)(
+  {
+    introduced: S.optionalKey(S.Boolean),
+    instances: S.Array(CloneGroupInstance),
+  },
+  $I.annote("CloneGroupEntry", {
+    description: "One raw Fallow duplication clone group with its file instances.",
+  })
+) {}
+class AuditDuplicationCloneGroups extends S.Class<AuditDuplicationCloneGroups>($I`AuditDuplicationCloneGroups`)(
+  {
+    clone_groups: S.Array(CloneGroupEntry),
+  },
+  $I.annote("AuditDuplicationCloneGroups", {
+    description: "Internal lenient decoder for fallow audit JSON clone-group source classification.",
+  })
+) {}
 const decodeAuditDuplicationOption = S.decodeUnknownOption(AuditDuplicationCloneGroups);
 
 const cloneGroupTouchesSource = (group: { readonly instances: ReadonlyArray<{ readonly file: string }> }): boolean =>
@@ -1503,7 +1548,11 @@ const checkPublicDispatchEnvelope = Effect.fn("FallowQuality.checkPublicDispatch
     O.map((mtime) => mtime.getTime()),
     O.getOrElse(() => -1)
   );
-  const envelopeGeneratedAtMillis = Date.parse(envelope.generatedAt);
+  const envelopeGeneratedAtMillis = pipe(
+    DateTime.make(envelope.generatedAt),
+    O.map(DateTime.toEpochMillis),
+    O.getOrElse(() => Number.NaN)
+  );
   const expectedCommand = renderWrapperCommand(feature, options, paths.relative);
   const rawOutputText = yield* fs.readFileString(rawOutputPath).pipe(Effect.option);
   const rawJsonText = pipe(rawOutputText, O.flatMap(extractJsonDocumentText), O.getOrUndefined);

@@ -9,8 +9,9 @@ import * as jsonc from "jsonc-parser";
 import { describe, expect, it } from "vitest";
 
 /**
- * Regression fixtures for three verified JSDoc inventory detector bugs
- * (goals/standards-remediation P1-B, rulings R2/R5/R3-J2/R3-J3):
+ * Regression fixtures for verified JSDoc inventory detector bugs
+ * (goals/standards-remediation P1-B/FINAL-A, rulings
+ * R2/R5/R3-J2/R3-J3/R20/R21/R9):
  *
  * 1. Re-export declarations must be exempt from requiredExportTags and
  *    missingSummary (they are graph edges, not symbol-quality subjects).
@@ -18,6 +19,14 @@ import { describe, expect, it } from "vitest";
  *    phantom workspace packages.
  * 3. Multi-line import continuation lines (`type X as Y,`) must not
  *    false-positive the no-type-assertions-in-examples scan.
+ * 4. `export default <CallExpression>` (the ESLint-rule module shape) must
+ *    attribute its doc block from the export-assignment node, not the inner
+ *    expression node (R20).
+ * 5. String literal contents inside an example must not false-positive the
+ *    declare/any/as-assertion unsafe-example scans (R20, R21).
+ * 6. A namespaced barrel's re-export target (`export * as Ns from "./mod"`)
+ *    must scan the target module's own declarations exactly like a flat
+ *    barrel target does; only the barrel line itself stays exempt (R9).
  */
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
@@ -433,6 +442,418 @@ export const realUnsafeExample = (): void => {};
             expect.arrayContaining(["no-declare-statements", "no-any-in-examples", "no-type-assertions-in-examples"])
           );
           expect(unsafeEntry?.unsafeExampleViolations.length).toBe(3);
+        })
+      )
+    ));
+
+  it("consolidates a documented-first-signature function-overload group into a single resolved entry (R19)", () =>
+    Effect.runPromise(
+      withFixtureRepo(
+        {
+          topoSortScript: "printf '@beep/demo\\n'",
+          packages: [
+            {
+              name: "@beep/demo",
+              dir: "demo",
+              files: [
+                [
+                  "src/index.ts",
+                  `/**
+ * Demo package documentation.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+/**
+ * Format a value as a display string.
+ *
+ * @example
+ * \`\`\`ts
+ * import { formatValue } from "@beep/demo"
+ *
+ * console.log(formatValue(1))
+ * \`\`\`
+ * @category helpers
+ * @since 0.0.0
+ */
+export function formatValue(value: number): string;
+export function formatValue(value: string): string;
+export function formatValue(value: number | string): string {
+  return String(value);
+}
+`,
+                ],
+              ],
+            },
+          ],
+        },
+        Effect.fnUntraced(function* (repoRoot) {
+          const inventory = yield* buildInventory(repoRoot);
+          const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+          expect(pkg).toBeDefined();
+
+          const groupEntries = pkg?.exports.filter((entry) => entry.symbolName === "formatValue") ?? [];
+          // One overload signature + one continuation signature + the
+          // implementation must score as ONE entry, not three.
+          expect(groupEntries.length).toBe(1);
+          expect(groupEntries[0]?.missingRequiredTags).toEqual([]);
+          expect(groupEntries[0]?.remediationStatus).toBe("resolved");
+        })
+      )
+    ));
+
+  it("consolidates a fully undocumented function-overload group into a single open entry (R19)", () =>
+    Effect.runPromise(
+      withFixtureRepo(
+        {
+          topoSortScript: "printf '@beep/demo\\n'",
+          packages: [
+            {
+              name: "@beep/demo",
+              dir: "demo",
+              files: [
+                [
+                  "src/index.ts",
+                  `/**
+ * Demo package documentation.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+/**
+ * Fully documented sibling constant (keeps the package doc comment from
+ * being misattributed to the first, otherwise-undocumented, declaration
+ * below).
+ *
+ * @example
+ * \`\`\`ts
+ * import { sibling } from "@beep/demo"
+ *
+ * console.log(sibling)
+ * \`\`\`
+ * @category constants
+ * @since 0.0.0
+ */
+export const sibling = "sibling";
+
+export function rawConvert(value: number): string;
+export function rawConvert(value: string): string;
+export function rawConvert(value: number | string): string {
+  return String(value);
+}
+`,
+                ],
+              ],
+            },
+          ],
+        },
+        Effect.fnUntraced(function* (repoRoot) {
+          const inventory = yield* buildInventory(repoRoot);
+          const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+          expect(pkg).toBeDefined();
+
+          const groupEntries = pkg?.exports.filter((entry) => entry.symbolName === "rawConvert") ?? [];
+          // Zero doc blocks anywhere in the group must still yield exactly
+          // ONE open entry (not one per signature/implementation line).
+          expect(groupEntries.length).toBe(1);
+          expect(groupEntries[0]?.missingRequiredTags).toEqual(
+            expect.arrayContaining(["@example", "@category", "@since"])
+          );
+          expect(groupEntries[0]?.remediationStatus).toBe("open");
+        })
+      )
+    ));
+
+  it("still flags a malformed doc block on a non-anchor overload signature (R19)", () =>
+    Effect.runPromise(
+      withFixtureRepo(
+        {
+          topoSortScript: "printf '@beep/demo\\n'",
+          packages: [
+            {
+              name: "@beep/demo",
+              dir: "demo",
+              files: [
+                [
+                  "src/index.ts",
+                  `/**
+ * Demo package documentation.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+/**
+ * Parse a value from its display string.
+ *
+ * @example
+ * \`\`\`ts
+ * import { parseValue } from "@beep/demo"
+ *
+ * console.log(parseValue("1"))
+ * \`\`\`
+ * @category helpers
+ * @since 0.0.0
+ */
+export function parseValue(value: string): number;
+/**
+ * @param {string} value - malformed conditional tag with a type blob.
+ */
+export function parseValue(value: string, radix: number): number;
+export function parseValue(value: string, radix?: number): number {
+  return Number.parseInt(value, radix);
+}
+`,
+                ],
+              ],
+            },
+          ],
+        },
+        Effect.fnUntraced(function* (repoRoot) {
+          const inventory = yield* buildInventory(repoRoot);
+          const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+          expect(pkg).toBeDefined();
+
+          const groupEntries = pkg?.exports.filter((entry) => entry.symbolName === "parseValue") ?? [];
+          expect(groupEntries.length).toBe(1);
+          // The anchor (first, documented) signature satisfies every
+          // required tag, but the second signature's malformed conditional
+          // tag must still surface and keep the group open.
+          expect(groupEntries[0]?.missingRequiredTags).toEqual([]);
+          expect(groupEntries[0]?.remediationStatus).toBe("open");
+        })
+      )
+    ));
+
+  it("attributes the doc block to the export assignment for a default-exported call expression while an undocumented sibling still opens (R20)", () =>
+    Effect.runPromise(
+      withFixtureRepo(
+        {
+          topoSortScript: "printf '@beep/demo\\n'",
+          packages: [
+            {
+              name: "@beep/demo",
+              dir: "demo",
+              files: [
+                [
+                  "src/index.ts",
+                  `/**
+ * Demo package documentation.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+export * from "./documentedRule.ts";
+export * from "./undocumentedRule.ts";
+`,
+                ],
+                [
+                  "src/documentedRule.ts",
+                  `/**
+ * Demo ESLint rule module, documented on its export assignment rather than
+ * the inner call expression (the shape \`export default rule(...)\` takes).
+ *
+ * @example
+ * \`\`\`ts
+ * import rule from "@beep/demo/documentedRule"
+ *
+ * console.log(rule.meta.type)
+ * \`\`\`
+ * @category tools
+ * @since 0.0.0
+ */
+export default defineRule({
+  meta: { type: "problem" },
+});
+`,
+                ],
+                [
+                  "src/undocumentedRule.ts",
+                  `export default defineRule({
+  meta: { type: "problem" },
+});
+`,
+                ],
+              ],
+            },
+          ],
+        },
+        Effect.fnUntraced(function* (repoRoot) {
+          const inventory = yield* buildInventory(repoRoot);
+          const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+          expect(pkg).toBeDefined();
+
+          const documented = pkg?.exports.find((entry) => entry.filePath === "src/documentedRule.ts");
+          expect(documented).toBeDefined();
+          expect(documented?.missingRequiredTags).toEqual([]);
+          expect(documented?.remediationStatus).toBe("resolved");
+
+          const undocumented = pkg?.exports.find((entry) => entry.filePath === "src/undocumentedRule.ts");
+          expect(undocumented).toBeDefined();
+          expect(undocumented?.missingRequiredTags).toEqual(
+            expect.arrayContaining(["@example", "@category", "@since"])
+          );
+          expect(undocumented?.remediationStatus).toBe("open");
+        })
+      )
+    ));
+
+  it("strips string literal contents before flagging declare/any/as-assertion patterns while real unsafe code outside strings still fires (R20, R21)", () =>
+    Effect.runPromise(
+      withFixtureRepo(
+        {
+          topoSortScript: "printf '@beep/demo\\n'",
+          packages: [
+            {
+              name: "@beep/demo",
+              dir: "demo",
+              files: [
+                [
+                  "src/index.ts",
+                  `/**
+ * Demo package documentation.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+/**
+ * Direct export whose example only mentions declare/as-assertion vocabulary
+ * inside ordinary string literals, never as real code.
+ *
+ * @example
+ * \`\`\`ts
+ * import { describeRuleExample } from "@beep/demo"
+ *
+ * const description = "documented as Effect helper, please declare victory"
+ *
+ * console.log(describeRuleExample(), description)
+ * \`\`\`
+ * @category helpers
+ * @since 0.0.0
+ */
+export const describeRuleExample = (): void => {};
+
+/**
+ * Direct export whose example uses a real declare statement, any, and a
+ * type assertion outside of any string literal.
+ *
+ * @example
+ * \`\`\`ts
+ * import { realUnsafeStringLiteralExample } from "@beep/demo"
+ *
+ * declare const externalValue: any
+ * const value = externalValue as Effect
+ *
+ * console.log(value, realUnsafeStringLiteralExample())
+ * \`\`\`
+ * @category helpers
+ * @since 0.0.0
+ */
+export const realUnsafeStringLiteralExample = (): void => {};
+`,
+                ],
+              ],
+            },
+          ],
+        },
+        Effect.fnUntraced(function* (repoRoot) {
+          const inventory = yield* buildInventory(repoRoot);
+          const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+          expect(pkg).toBeDefined();
+
+          const safeEntry = pkg?.exports.find((entry) => entry.symbolName === "describeRuleExample");
+          expect(safeEntry).toBeDefined();
+          expect(safeEntry?.unsafeExampleViolations).toEqual([]);
+          expect(safeEntry?.remediationStatus).toBe("resolved");
+
+          const unsafeEntry = pkg?.exports.find((entry) => entry.symbolName === "realUnsafeStringLiteralExample");
+          expect(unsafeEntry).toBeDefined();
+          const rules = unsafeEntry?.unsafeExampleViolations.map((violation) => violation.rule);
+          expect(rules).toEqual(
+            expect.arrayContaining(["no-declare-statements", "no-any-in-examples", "no-type-assertions-in-examples"])
+          );
+        })
+      )
+    ));
+
+  it("scans a namespaced-barrel target's own declarations exactly like a flat-barrel target, with only the barrel line itself exempt (R9)", () =>
+    Effect.runPromise(
+      withFixtureRepo(
+        {
+          topoSortScript: "printf '@beep/demo\\n'",
+          packages: [
+            {
+              name: "@beep/demo",
+              dir: "demo",
+              files: [
+                [
+                  "src/index.ts",
+                  `/**
+ * Demo package documentation.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+/**
+ * Namespaced barrel for the demo namespace target.
+ *
+ * @example
+ * \`\`\`ts
+ * import { Ns } from "@beep/demo"
+ *
+ * console.log(Ns.undocumentedNs)
+ * \`\`\`
+ * @category constants
+ * @since 0.0.0
+ */
+export * as Ns from "./nsTarget.ts";
+
+export * from "./flatTarget.ts";
+`,
+                ],
+                [
+                  "src/nsTarget.ts",
+                  `export const undocumentedNs = 1;
+`,
+                ],
+                [
+                  "src/flatTarget.ts",
+                  `export const undocumentedFlat = 1;
+`,
+                ],
+              ],
+            },
+          ],
+        },
+        Effect.fnUntraced(function* (repoRoot) {
+          const inventory = yield* buildInventory(repoRoot);
+          const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+          expect(pkg).toBeDefined();
+
+          const nsTargetEntry = pkg?.exports.find((entry) => entry.symbolName === "undocumentedNs");
+          expect(nsTargetEntry).toBeDefined();
+          expect(nsTargetEntry?.remediationStatus).toBe("open");
+          expect(nsTargetEntry?.missingRequiredTags).toEqual(
+            expect.arrayContaining(["@example", "@category", "@since"])
+          );
+
+          const flatTargetEntry = pkg?.exports.find((entry) => entry.symbolName === "undocumentedFlat");
+          expect(flatTargetEntry).toBeDefined();
+          expect(flatTargetEntry?.remediationStatus).toBe("open");
+          expect(flatTargetEntry?.missingRequiredTags).toEqual(
+            expect.arrayContaining(["@example", "@category", "@since"])
+          );
+
+          const namespacedBarrelLine = pkg?.exports.find(
+            (entry) => entry.exportKind === "re-export" && entry.symbolName?.includes("Ns")
+          );
+          expect(namespacedBarrelLine).toBeDefined();
+          expect(namespacedBarrelLine?.remediationStatus).toBe("resolved");
         })
       )
     ));

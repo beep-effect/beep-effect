@@ -104,6 +104,16 @@ export const HttpStatus4XX = MappedLiteralKit([
 /**
  * A namespace for {@link HttpStatus4XX} to contain the Encoded type
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HttpStatus4XX } from "@beep/schema/HttpStatus"
+ *
+ * const encoded: HttpStatus4XX.Encoded = "BadRequest"
+ * const status = S.decodeUnknownSync(HttpStatus4XX)(encoded)
+ * console.log(status) // 400
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -119,6 +129,14 @@ export declare namespace HttpStatus4XX {
 
 /**
  * {@inheritDoc HttpStatus4XX}
+ *
+ * @example
+ * ```ts
+ * import type { HttpStatus4XX } from "@beep/schema/HttpStatus"
+ *
+ * const status: HttpStatus4XX = 400
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation

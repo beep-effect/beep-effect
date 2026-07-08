@@ -86,6 +86,22 @@ export class CollectionContainer extends S.Class<CollectionContainer>($I`Collect
 /**
  * Companion namespace for {@link CollectionContainer} encoded helpers.
  *
+ * @example
+ * ```ts
+ * import { CollectionContainer } from "@beep/govinfo/domain/values/CollectionContainer/CollectionContainer.model";
+ * import * as S from "effect/Schema";
+ *
+ * const container: CollectionContainer = S.decodeUnknownSync(CollectionContainer)({
+ *   count: 1,
+ *   message: "",
+ *   nextPage: "",
+ *   packages: [],
+ *   previousPage: ""
+ * });
+ *
+ * console.log(container.count);
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */

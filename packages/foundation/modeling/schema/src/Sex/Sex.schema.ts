@@ -30,15 +30,38 @@ export const Sex = LiteralKit(["male", "female"]).pipe(
 /**
  * {@inheritDoc Sex}
  *
+ * @example
+ * ```ts
+ * import { Sex } from "@beep/schema/Sex"
+ *
+ * const sex: Sex = "female"
+ * console.log(Sex.Options.includes(sex))
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
 export type Sex = typeof Sex.Type;
 
 /**
- * Public aliases for concise namespace roles.
+ * {@inheritDoc Sex}
  *
- * @category schemas
+ * @example
+ * ```ts
+ * import { Schema } from "@beep/schema/Sex"
+ *
+ * console.log(Schema.Options.includes("female"))
+ * ```
+ *
+ * @category validation
  * @since 0.0.0
  */
-export { Sex as Schema };
+export const Schema = Sex;
+
+/**
+ * {@inheritDoc Sex}
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Schema = Sex;

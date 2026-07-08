@@ -10,7 +10,7 @@ import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/sc
 import { resolveWorkspaceDirs } from "@beep/repo-utils/Workspaces";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
-import { Console, Effect, FileSystem, flow, HashMap, Order, Path, pipe, SchemaGetter } from "effect";
+import { Console, Effect, FileSystem, flow, HashMap, MutableHashSet, Order, Path, pipe, SchemaGetter } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -842,7 +842,6 @@ const silentClassification: SchemaFirstMemberClassification = { _tag: "silent" }
 const candidateClassification: SchemaFirstMemberClassification = { _tag: "candidate" };
 const exceptionClassification = (reason: string): SchemaFirstMemberClassification => ({ _tag: "exception", reason });
 
-const GENERIC_INTERFACE_EXCEPTION_REASON = "Generic interface requires manual modeling and is tracked as an exception.";
 const GENERIC_TYPE_ALIAS_EXCEPTION_REASON =
   "Generic type alias requires manual modeling and is tracked as an exception.";
 
@@ -909,13 +908,15 @@ const composeOwnAndLocalExtendsMembers = (
   return [...node.getMembers(), ...inheritedMembers];
 };
 
-const captureContextServiceShapeNames = (sourceFile: import("ts-morph").SourceFile): ReadonlySet<string> => {
-  const names = new Set<string>();
+const captureContextServiceShapeNames = (
+  sourceFile: import("ts-morph").SourceFile
+): MutableHashSet.MutableHashSet<string> => {
+  const names = MutableHashSet.empty<string>();
   for (const classDeclaration of sourceFile.getClasses()) {
     const heritageText = classDeclaration.getExtends()?.getText() ?? "";
     const match = /\bContext\.Service<\s*[\w.$]+\s*,\s*([\w.$]+)\s*>/.exec(heritageText);
     if (match?.[1] !== undefined) {
-      names.add(match[1]);
+      MutableHashSet.add(names, match[1]);
     }
   }
   return names;
@@ -927,11 +928,11 @@ const captureContextServiceShapeNames = (sourceFile: import("ts-morph").SourceFi
 // BoxShape>()`.
 const isIntersectionAliasedServiceContractShapeMember = (
   sourceFile: import("ts-morph").SourceFile,
-  shapeNames: ReadonlySet<string>,
+  shapeNames: MutableHashSet.MutableHashSet<string>,
   name: string
 ): boolean =>
   A.some(sourceFile.getTypeAliases(), (aliasDeclaration) => {
-    if (!shapeNames.has(aliasDeclaration.getName())) {
+    if (!MutableHashSet.has(shapeNames, aliasDeclaration.getName())) {
       return false;
     }
     const typeNode = aliasDeclaration.getTypeNode();
@@ -958,7 +959,7 @@ const findLocalTypeShapeDeclaration = (
 // verified — a tractable, documented simplification (see the P25 report).
 const isServiceContractMethodParameterName = (
   sourceFile: import("ts-morph").SourceFile,
-  shapeNames: ReadonlySet<string>,
+  shapeNames: MutableHashSet.MutableHashSet<string>,
   name: string
 ): boolean => {
   const parameterPattern = new RegExp(`[(,<]\\s*\\w+\\s*:\\s*(?:ReadonlyArray<)?${name}\\b`);
@@ -997,9 +998,9 @@ const isServiceContractShape = (
   sourceFile: import("ts-morph").SourceFile,
   filePath: string,
   name: string,
-  shapeNames: ReadonlySet<string>
+  shapeNames: MutableHashSet.MutableHashSet<string>
 ): boolean =>
-  shapeNames.has(name) ||
+  MutableHashSet.has(shapeNames, name) ||
   isIntersectionAliasedServiceContractShapeMember(sourceFile, shapeNames, name) ||
   Str.endsWith(".ports.ts")(filePath) ||
   isServiceContractMethodParameterName(sourceFile, shapeNames, name) ||
@@ -1226,17 +1227,164 @@ const PERMANENT_SCHEMA_FIRST_EXCLUSIONS: ReadonlyArray<PermanentSchemaFirstExclu
     reason:
       'Inside makeLooseJsonObject: both a class-extends form (TS2509, generic Fields base unresolvable) and a non-extends S.Class<Self>(id)(fields) form (same "Missing Self generic" failure as makeTypeStruct) were reproduced via tsgo and reverted; strict is a leaf S.decodeUnknownEffect/S.encodeEffect use with no StructWithRest composition, so only the generic-Self limitation blocks it.',
   },
+  // R17 item 3 (ops/reports/SF-2/sf-2-tailb.md): unconvertible residue that
+  // survives the R17-1/R17-2 detector fixes above — driver-verified via the
+  // lane's real compile attempts / per-entry evidence table.
+  {
+    file: "packages/drivers/acp/src/AcpProtocol.service.ts",
+    symbol: "AcpPatchedProtocol",
+    reason:
+      'Runtime protocol handle: clientProtocol: RpcClient.Protocol["Service"], serverProtocol: RpcServer.Protocol["Service"], incoming: Stream.Stream<...>, notify/request dual-overload function members — the service-contract/runtime-handle sub-class named explicitly in p2-s2-signals.md.',
+  },
+  {
+    file: "packages/drivers/acp/src/AcpProtocol.service.ts",
+    symbol: "AcpPatchedProtocolOptions",
+    reason:
+      "Extends AcpProtocolLoggingOptions (already S.Class) plus 4 Effect-returning callback fields (logger?/onExtRequest?/onNotification?/onTermination?), a live stdio: Stdio.Stdio handle, and terminationError?: Effect.Effect<...>; S.extend does not exist in v4 and manual field-spread re-arrives at an S.declare-wrapped-function dead end (p2-s3-extends.md Attempt 3).",
+  },
+  {
+    file: "packages/drivers/acp/src/AcpTerminal.models.ts",
+    symbol: "AcpTerminal",
+    reason:
+      "All fields are bound Effect.Effect<...> operations over a live remote-terminal-process handle (kill/output/release/waitForExit) plus sessionId/terminalId strings — the 'processes' example from the SPEC's own unconvertible-signals class, verbatim (p2-s2-signals.md).",
+  },
+  {
+    file: "packages/drivers/acp/src/AcpTerminal.models.ts",
+    symbol: "MakeTerminalOptions",
+    reason: "Constructor options bag mirroring AcpTerminal's live-handle shape 1:1; same reasoning.",
+  },
+  {
+    file: "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    symbol: "FieldTierSet",
+    reason:
+      'Container of S.Struct instances (schema builders, not data) as fields; an S.declare-wrapped version compiles (0 tsgo errors) but S.toArbitrary throws "Unsupported AST Declaration" and encodeSync leaks the internal ~effect/Schema AST representation instead of data (p2-s1-generic.md Attempt 2).',
+  },
+  {
+    file: "packages/foundation/capability/mcp-kit/src/ToolkitComposition.ts",
+    symbol: "GatedLayer",
+    reason:
+      "layer: Layer.Layer<ROut, E, RIn> is a live Effect program-construction handle with no schema representation; registration is already schema-first and there is no second data field to extract — already the minimal decomposition (same conclusion as the ExportedTool precedent).",
+  },
+  {
+    file: "packages/drivers/box/src/Box.streaming.ts",
+    symbol: "BoxStreamingOperations",
+    reason:
+      "Nested groups of Effect/Stream-returning SDK operation methods (avatars.createUserAvatar, chunkedUploads.reducer, downloads.downloadFile, etc. — 11 methods, 100% function-typed, zero data fields); the member-safety check inspects only one level and the outer members (avatars, chunkedUploads, ...) are nested object-literal groupings rather than directly function-typed, so isSilentMemberShape cannot reach them without a deeper structural redesign (p2-s2-signals.md).",
+  },
+  {
+    file: "packages/foundation/capability/api-transport/src/Transport.ts",
+    symbol: "ApiTransport",
+    reason:
+      "100% behavioral: rateLimit: Effect.Effect<O.Option<RateLimitSnapshot>>, transformClient: (client) => HttpClient — zero data fields (p2-s2-signals.md service-contracts sub-class, named explicitly).",
+  },
+  {
+    file: "packages/foundation/capability/api-transport/src/Transport.ts",
+    symbol: "ApiTransportOptions",
+    reason:
+      "auth: ApiAuth is a Data.TaggedEnum, not a schema (redesigning ApiAuth itself is a different, unassigned symbol with its own $match blast radius); genuine options-bag with only 2 known call sites (govinfo/ecfr), both always constructing the full 3-field bag together — un-bundling doesn't help, same reasoning as PgliteSqlTestLayerOptions below.",
+  },
+  {
+    file: "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+    symbol: "PgliteTestcontainerResource",
+    reason:
+      "Live Testcontainer/Docker resource handle (container: StartedTestContainer), matching NON_SCHEMA_SIGNAL_PATTERN's curated StartedTestContainer signal (p2-s2-signals.md).",
+  },
+  {
+    file: "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+    symbol: "SqlTestHooks",
+    reason:
+      "Generic test-lifecycle callback bag (migrate?/seed?: Effect.Effect<void, E, SqlClient.SqlClient>), no data fields (p2-s2-signals.md).",
+  },
+  // Driver-verified via a live detectInterfaceReason probe against the real
+  // SqlTest.ts source after the R17-1 fix landed: both still resolve to
+  // "candidate", not "silent" (no isServiceContractShape signal matches
+  // their actual same-file usage), so the R17 item-3 conditional curation
+  // applies.
+  {
+    file: "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+    symbol: "PgliteSqlTestLayerOptions",
+    reason:
+      "external?/mode?/testcontainers? are genuinely schema-representable, but hooks?: SqlTestHooks<MigrateError, SeedError> is independently unconvertible (see SqlTestHooks above); makePgliteSqlTestLayer/makePgliteIntegrationGate construct this bag with 1-4 of its 4 optional fields across 6+ real call shapes with a genuine `= {}` default — a legitimate options-bag pattern (un-bundling is a pure ergonomic regression for zero schema gain, since hooks' Effect-valued members can't become data regardless of position).",
+  },
+  {
+    file: "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+    symbol: "SqlTestDriver",
+    reason:
+      "Strategy/driver-port object: makeLayer: (config) => Layer.Layer<Services, SqlTestHarnessError> (Layer isn't data), sqlClient: Context.Key<SqlService, SqlClient.SqlClient> (live service-tag handle), name (the one schema-typed field) — the same 'driver/strategy port' class as GatedLayer/BoxStreamingOperations above (R11-1 service-contract sub-class), but no same-file Context.Service/.ports.ts/capability-registry/tsx-Props signal actually matches its usage, so it does not resolve silent through classifyComposedMembers.",
+  },
+  {
+    file: "packages/foundation/ui-system/form/stories/fields/storyHelpers.tsx",
+    symbol: "assertUploadedPreview",
+    reason:
+      "Param bundles a live DOM node handle (canvasElement: HTMLElement) with two plain strings; HTMLElement is not schema-representable, independent of the SFV4-fn-schema .tsx exemption gap since a DOM handle can never be serializable (SFV4-fn-schema kind — this entry requires the fn-schema loop's permanent-exclusion check added alongside R17).",
+  },
+  // R15 correction + R18 (ops/reports/SF-2/sf-2-taila.md): R15 point 3's
+  // "covers 5" alias-resolution claim is only 3/5 under the landed detector
+  // (Edge/Overrideable x2 fixed in-package instead); LiteralKit and
+  // MappedLiteralKit resolve through the one-hop alias helper to text that
+  // does not match SCHEMA_INFRASTRUCTURE_EXTENDS_PATTERN and carry
+  // substantive custom helper members, so they need curation, not pattern
+  // matching. R18 also curates 3 fresh unconvertible reproductions from the
+  // same lane.
+  {
+    file: "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+    symbol: "LiteralKit",
+    reason:
+      "Schema-toolkit self-definition (R6-1 category): extends LiteralKitBase<L, M>, which one-hop-resolves to `S.Literals<L> & {...}` text that does not match SCHEMA_INFRASTRUCTURE_EXTENDS_PATTERN, plus 8 substantive own/inherited helper members (Options/is/Enum/pickOptions/omitOptions/$match/thunk/toTaggedUnion) beyond meta-only plumbing — a genuinely custom toolkit type, not a pure alias.",
+  },
+  {
+    file: "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+    symbol: "MappedLiteralKit",
+    reason:
+      "Same shape of finding as LiteralKit: extends MappedLiteralKitBase<M> (ForwardDirectionalKit<M> & {From, To, Pairs}, itself resolving through DirectionalKit<...>, not a schema-infra base), plus its own annotate(...)/Rebuild: MappedLiteralKit<M> members — genuinely custom mapped-literal toolkit type.",
+  },
+  {
+    file: "packages/foundation/modeling/utils/src/Event.ts",
+    symbol: "makeEventSchema",
+    reason:
+      "Generic factory parameterized over the abstract fields dictionary itself (TFields extends S.Struct.Fields, not a single field's schema value) — constructing an S.Class internally fails TS2509 \"Missing Self generic\"; third independent reproduction of the same TS limitation already ratified for TSConfig.ts's makeTypeStruct/makeEncodedStruct/strict above (R15 addendum).",
+  },
+  {
+    file: "packages/foundation/modeling/utils/src/DrainableWorker.ts",
+    symbol: "DrainableWorker",
+    reason:
+      'drain: Effect.Effect<void> and enqueue: (item: A) => Effect.Effect<void> are computation-valued, not decodable data; independently, an S.Class-backed instance over the class\'s own type parameter fails TS2562 "Base class expressions cannot reference class type parameters".',
+  },
+  {
+    file: "packages/foundation/modeling/md/src/Md.render.ts",
+    symbol: "PureRenderAdapter",
+    reason:
+      "Deliberate plugin-extension contract (documented: 'Future PDF and DOCX adapters can use this shape'); a descriptor/behavior split (the ExportedTool pattern) breaks 5+ flat-literal call sites (MarkdownAdapter/HtmlFragmentAdapter/PlainTextAdapter/renderEffectWith/renderWith) plus its own dtslint fixture asserting the exact flat shape — same deferral class as GraphOperation/OperationDefinition above.",
+  },
+  {
+    file: "packages/foundation/modeling/md/src/Md.render.ts",
+    symbol: "EffectRenderAdapter",
+    reason:
+      "Same descriptor/behavior-split attempt and same immediate TS2741 failure (renderEffectWith's adapter param); same verdict as PureRenderAdapter.",
+  },
+  {
+    file: "packages/foundation/modeling/identity/src/Id.ts",
+    symbol: "IdentityComposer",
+    reason:
+      "Callable template-tag call signature ((strings: TemplateStringsArray, ...) => IdentityString<...>) whose runtime value (createComposer) is a function with properties; an S.Class instance is a plain non-callable object, so no Effect Schema combinator can produce a callable-function-shaped decoded value — reproduced via tsgo (TS2740, missing annote/annoteHttp/annoteKey/annoteSchema and 6 more).",
+  },
 ] as const;
 
 const isPermanentlyExcludedSchemaFirstEntry = (file: string, symbol: string): boolean =>
   A.some(PERMANENT_SCHEMA_FIRST_EXCLUSIONS, (exclusion) => exclusion.file === file && exclusion.symbol === symbol);
 
-// R6-1/R6-2/R15: classification for an exported GENERIC interface — the
-// only two outcomes are silent (schema-infra escape hatches) or the tracked
-// GENERIC_INTERFACE_EXCEPTION_REASON exception; generics never reach member
-// composition below.
+// R6-1/R6-2/R15/R17-1: classification for an exported GENERIC interface.
+// Schema-infra escape hatches and all-function-member generics still
+// silent-skip first; anything else now composes its own members and runs
+// through the SAME member-safety signal set (service-contract shapes,
+// curated runtime-handle members, .tsx render-boundary names) that
+// non-generic interfaces already get via classifyComposedMembers, instead of
+// an unconditional tracked exception — generics previously never reached
+// member composition at all (ops/reports/SF-2/sf-2-tailb.md; R17, LOCKED).
 const classifyGenericInterface = (
   node: import("ts-morph").InterfaceDeclaration,
+  sourceFile: import("ts-morph").SourceFile,
+  filePath: string,
   extendsClauses: ReadonlyArray<import("ts-morph").ExpressionWithTypeArguments>
 ): SchemaFirstMemberClassification => {
   // R6-1: schema-infrastructure generic (extends declareConstructor/
@@ -1255,7 +1403,9 @@ const classifyGenericInterface = (
   if (isSilentMemberShape(node.getMembers())) {
     return silentClassification;
   }
-  return exceptionClassification(GENERIC_INTERFACE_EXCEPTION_REASON);
+  // R17-1: same silent/candidate treatment a non-generic interface with this
+  // exact composed member set would get — no bespoke generic-only exception.
+  return classifyComposedMembers(sourceFile, filePath, node.getName(), node.getMembers());
 };
 
 // R7/R13: classification for an exported non-generic interface that has at
@@ -1342,7 +1492,7 @@ export const detectInterfaceReason = (input: DetectInterfaceReasonInput): Schema
   const extendsClauses = node.getExtends();
 
   if (node.getTypeParameters().length > 0) {
-    return classifyGenericInterface(node, extendsClauses);
+    return classifyGenericInterface(node, sourceFile, filePath, extendsClauses);
   }
 
   if (!A.isReadonlyArrayEmpty(extendsClauses)) {
@@ -2147,10 +2297,10 @@ const isSchemaArbitraryCallExpression = (callExpression: import("ts-morph").Call
 
 const isSchemaArbitraryExpression = (
   expression: import("ts-morph").Expression,
-  schemaArbitraryIdentifiers: ReadonlySet<string>
+  schemaArbitraryIdentifiers: MutableHashSet.MutableHashSet<string>
 ): boolean => {
   if (Node.isIdentifier(expression)) {
-    return schemaArbitraryIdentifiers.has(expression.getText());
+    return MutableHashSet.has(schemaArbitraryIdentifiers, expression.getText());
   }
 
   if (Node.isCallExpression(expression)) {
@@ -2169,7 +2319,7 @@ const isSchemaArbitraryExpression = (
 
 const containsSchemaArbitraryExpression = (
   expression: import("ts-morph").Expression,
-  schemaArbitraryIdentifiers: ReadonlySet<string>
+  schemaArbitraryIdentifiers: MutableHashSet.MutableHashSet<string>
 ): boolean => {
   if (isSchemaArbitraryExpression(expression, schemaArbitraryIdentifiers)) {
     return true;
@@ -2186,7 +2336,7 @@ const containsSchemaArbitraryExpression = (
 
 const isFastCheckPropertyCallExpression = (
   callExpression: import("ts-morph").CallExpression,
-  schemaArbitraryIdentifiers: ReadonlySet<string>
+  schemaArbitraryIdentifiers: MutableHashSet.MutableHashSet<string>
 ): boolean => {
   const expression = callExpression.getExpression();
   if (Node.isPropertyAccessExpression(expression)) {
@@ -2209,8 +2359,10 @@ const isRepoSchemaArbitraryHelperCallExpression = (callExpression: import("ts-mo
   return Node.isIdentifier(expression) && literalMemberEquals(REPO_SCHEMA_ARBITRARY_HELPERS, expression.getText());
 };
 
-const sourceSchemaArbitraryIdentifiers = (sourceFile: import("ts-morph").SourceFile): ReadonlySet<string> => {
-  const identifiers = new Set<string>();
+const sourceSchemaArbitraryIdentifiers = (
+  sourceFile: import("ts-morph").SourceFile
+): MutableHashSet.MutableHashSet<string> => {
+  const identifiers = MutableHashSet.empty<string>();
   for (const variableDeclaration of sourceFile.getDescendantsOfKind(SyntaxKind.VariableDeclaration)) {
     const nameNode = variableDeclaration.getNameNode();
     const initializer = variableDeclaration.getInitializer();
@@ -2219,7 +2371,7 @@ const sourceSchemaArbitraryIdentifiers = (sourceFile: import("ts-morph").SourceF
       initializer !== undefined &&
       isSchemaArbitraryExpression(initializer, identifiers)
     ) {
-      identifiers.add(nameNode.getText());
+      MutableHashSet.add(identifiers, nameNode.getText());
     }
   }
   return identifiers;
@@ -2472,12 +2624,23 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
       ...sourceExportedArrowFunctions(sourceFile),
     ];
     const hasFnSchemaSignal = sourceHasFnSchemaSignal(sourceFile);
+    // R17-2: SFV4-fn-schema mirrors its null-return sibling's .tsx exemption
+    // (isNullReturnEligibleFilePath) — a React component's inline prop/return
+    // object is a render contract, not a schema contract; converting it to
+    // Fn(...)/S.Class is a category error (ops/reports/SF-2/sf-2-tailb.md;
+    // R17, LOCKED).
+    const isFnSchemaEligible = isNullReturnEligibleFilePath(filePath);
     const isNullReturnEligible = isNullReturnEligibleFilePath(filePath);
 
     for (const functionLike of functionLikeCandidates) {
-      if (hasFnSchemaSignal) {
+      if (hasFnSchemaSignal && isFnSchemaEligible) {
         const fnSchemaEntry = fnSchemaEntryFromFunctionLike(functionLike, { file: filePath, owner });
-        if (O.isSome(fnSchemaEntry)) {
+        // R17 item 3: extend the same curated-exclusion mechanism the
+        // object-struct-schema scan and detectInterfaceReason/
+        // detectTypeAliasReason already have to the fn-schema loop, so a
+        // driver-owned PERMANENT_SCHEMA_FIRST_EXCLUSIONS entry can cover a
+        // function-symbol finding too (e.g. assertUploadedPreview).
+        if (O.isSome(fnSchemaEntry) && !isPermanentlyExcludedSchemaFirstEntry(filePath, fnSchemaEntry.value.symbol)) {
           A.appendInPlace(entries, fnSchemaEntry.value);
         }
       }

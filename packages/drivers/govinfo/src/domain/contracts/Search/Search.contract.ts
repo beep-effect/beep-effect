@@ -222,6 +222,14 @@ export type Failure = typeof Failure.Type;
 /**
  * Companion namespace for {@link Failure}.
  *
+ * @example
+ * ```ts
+ * import type { Failure } from "@beep/govinfo/domain/contracts/Search/Search.contract"
+ *
+ * const tag: Failure["_tag"] = "FailureBadRequest"
+ * console.log(tag)
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */

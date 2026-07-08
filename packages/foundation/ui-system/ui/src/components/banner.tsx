@@ -51,28 +51,6 @@ type BannerRootProps = React.ComponentProps<"div"> &
     readonly icon?: React.ReactNode;
   };
 
-/**
- * Inline alert banner with variant-driven icon defaults.
- *
- * @example
- * ```tsx
- * import { Banner, BannerContent, BannerDescription, BannerTitle } from "@beep/ui/components/banner"
- *
- * export function MaintenanceBanner() {
- *   return (
- *     <Banner variant="warning">
- *       <BannerContent>
- *         <BannerTitle>Maintenance scheduled</BannerTitle>
- *         <BannerDescription>Exports pause at 8 PM Central.</BannerDescription>
- *       </BannerContent>
- *     </Banner>
- *   )
- * }
- * ```
- *
- * @category components
- * @since 0.0.0
- */
 function Banner({ className, variant = "default", icon, children, ...props }: BannerRootProps) {
   const defaultIcon = variantIcons[variant ?? "default"];
 
@@ -205,25 +183,23 @@ const BannerDismiss = ({ className, onDismiss, onClick, ...props }: BannerDismis
   </button>
 );
 
-Banner.Content = BannerContent;
-Banner.Title = BannerTitle;
-Banner.Description = BannerDescription;
-Banner.Dismiss = BannerDismiss;
-
 /**
- * Banner component suite exports.
+ * Inline alert banner with variant-driven icon defaults, composed with its
+ * content slots via `Banner.Content`, `Banner.Title`, `Banner.Description`,
+ * and `Banner.Dismiss`.
  *
  * @example
  * ```tsx
  * import { Banner } from "@beep/ui/components/banner"
  *
- * export function NamespacedBannerParts() {
+ * export function DismissibleWarningBanner() {
  *   return (
- *     <Banner>
+ *     <Banner variant="warning">
  *       <Banner.Content>
- *         <Banner.Title>Saved</Banner.Title>
- *         <Banner.Description>Your changes are available to the team.</Banner.Description>
+ *         <Banner.Title>Maintenance scheduled</Banner.Title>
+ *         <Banner.Description>Exports pause at 8 PM Central.</Banner.Description>
  *       </Banner.Content>
+ *       <Banner.Dismiss onDismiss={() => "dismissed"} />
  *     </Banner>
  *   )
  * }
@@ -232,4 +208,11 @@ Banner.Dismiss = BannerDismiss;
  * @category components
  * @since 0.0.0
  */
-export { Banner, BannerContent, BannerDescription, BannerDismiss, BannerTitle, bannerVariants };
+const BannerWithParts = Object.assign(Banner, {
+  Content: BannerContent,
+  Description: BannerDescription,
+  Dismiss: BannerDismiss,
+  Title: BannerTitle,
+});
+
+export { BannerContent, BannerDescription, BannerDismiss, BannerTitle, BannerWithParts as Banner, bannerVariants };

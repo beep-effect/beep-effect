@@ -152,17 +152,22 @@ export type ExecutionStrategy = typeof ExecutionStrategy.Type;
  * @since 0.0.0
  * @category models
  */
-export class ExecutionMetrics extends S.Class<ExecutionMetrics>($I`ExecutionMetrics`)({
-  cacheHits: NonNegativeInt,
-  cacheMisses: NonNegativeInt,
-  duration: S.Duration,
-  nodesCreated: NonNegativeInt,
-  nodesProcessed: NonNegativeInt,
-  /** Tokens consumed by LLM-backed operations. */
-  tokensConsumed: NonNegativeInt.annotateKey({
-    description: "Tokens consumed by LLM-backed operations.",
-  }),
-}) {
+export class ExecutionMetrics extends S.Class<ExecutionMetrics>($I`ExecutionMetrics`)(
+  {
+    cacheHits: NonNegativeInt,
+    cacheMisses: NonNegativeInt,
+    duration: S.Duration,
+    nodesCreated: NonNegativeInt,
+    nodesProcessed: NonNegativeInt,
+    /** Tokens consumed by LLM-backed operations. */
+    tokensConsumed: NonNegativeInt.annotateKey({
+      description: "Tokens consumed by LLM-backed operations.",
+    }),
+  },
+  $I.annote("ExecutionMetrics", {
+    description: "Monoid of metrics accumulated while applying an operation to graph leaves.",
+  })
+) {
   static readonly empty = () =>
     ExecutionMetrics.make({
       cacheHits: NonNegativeInt.make(0),

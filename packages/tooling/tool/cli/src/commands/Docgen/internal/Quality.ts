@@ -23,6 +23,7 @@ import {
   flow,
   identity,
   Match,
+  MutableHashSet,
   Order,
   Path,
   pipe,
@@ -915,7 +916,7 @@ const isDeclarationAlreadyExported = (declaration: Node): boolean => {
 const collectExportedDeclarationCandidates = (sourceFile: SourceFile): ReadonlyArray<ExportedDeclarationCandidate> => {
   let candidates = A.empty<ExportedDeclarationCandidate>();
   const localDeclarations = collectLocalDeclarations(sourceFile);
-  const documentedOverloadNames = new Set<string>();
+  const documentedOverloadNames = MutableHashSet.empty<string>();
   for (const statement of sourceFile.getStatements()) {
     if (
       Node.isFunctionDeclaration(statement) &&
@@ -924,7 +925,7 @@ const collectExportedDeclarationCandidates = (sourceFile: SourceFile): ReadonlyA
     ) {
       const name = statement.getName();
       if (name !== undefined) {
-        documentedOverloadNames.add(name);
+        MutableHashSet.add(documentedOverloadNames, name);
       }
     }
   }
@@ -994,7 +995,12 @@ const collectExportedDeclarationCandidates = (sourceFile: SourceFile): ReadonlyA
       if ((statement.isOverload() || !statement.hasBody()) && !hasOwnDocs) {
         continue;
       }
-      if (name !== undefined && documentedOverloadNames.has(name) && !statement.isOverload() && !hasOwnDocs) {
+      if (
+        name !== undefined &&
+        MutableHashSet.has(documentedOverloadNames, name) &&
+        !statement.isOverload() &&
+        !hasOwnDocs
+      ) {
         continue;
       }
     }

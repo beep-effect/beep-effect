@@ -45,6 +45,22 @@ export const TextNodeType = LiteralKit(["sentence", "token", "paragraph", "docum
 );
 
 /**
+ * Runtime TypeScript union decoded by {@link TextNodeType}.
+ *
+ * @example
+ * ```ts
+ * import type { TextNodeType } from "@beep/nlp/Graph/Schema"
+ *
+ * const kind: TextNodeType = "sentence"
+ * console.log(kind)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TextNodeType = typeof TextNodeType.Type;
+
+/**
  * Edge-relation vocabulary (structural + linguistic-annotation relations).
  *
  * @example
@@ -76,10 +92,23 @@ export const TextEdgeRelation = LiteralKit([
   })
 );
 
-type TextNodeKind = typeof TextNodeType.Type;
-type TextEdgeRelationKind = typeof TextEdgeRelation.Type;
+/**
+ * Runtime TypeScript union decoded by {@link TextEdgeRelation}.
+ *
+ * @example
+ * ```ts
+ * import type { TextEdgeRelation } from "@beep/nlp/Graph/Schema"
+ *
+ * const relation: TextEdgeRelation = "contains"
+ * console.log(relation)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TextEdgeRelation = typeof TextEdgeRelation.Type;
 
-const textNodeFields = <T extends TextNodeKind>(literal: S.Literal<T>) => ({
+const textNodeFields = <T extends TextNodeType>(literal: S.Literal<T>) => ({
   text: S.String,
   type: S.tag(literal.literal),
   operation: S.optionalKey(S.String),
@@ -164,14 +193,14 @@ export const TextNode = TextNodeType.mapMembers(
  */
 export type TextNode = typeof TextNode.Type;
 
-const textEdgeFields = <T extends TextEdgeRelationKind>(literal: S.Literal<T>) => ({
+const textEdgeFields = <T extends TextEdgeRelation>(literal: S.Literal<T>) => ({
   relation: S.tag(literal.literal),
   label: S.optionalKey(S.String),
   weight: S.optionalKey(S.Finite),
 });
 
 const textEdgeMember =
-  <T extends TextEdgeRelationKind>(name: string, description: string) =>
+  <T extends TextEdgeRelation>(name: string, description: string) =>
   (literal: S.Literal<T>) =>
     literal.pipe(textEdgeFields, S.Struct, $I.annoteSchema(name, { description }));
 
@@ -287,6 +316,27 @@ export class POSNode extends S.Class<POSNode>($I`POSNode`)(
 ) {}
 
 /**
+ * Character span (start/end offsets) within a piece of text.
+ *
+ * @example
+ * ```ts
+ * import { Span } from "@beep/nlp/Graph/Schema"
+ *
+ * const span = Span.make({ start: 0, end: 9 })
+ * console.log(span.end - span.start) // 9
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export class Span extends S.Class<Span>($I`Span`)(
+  { start: S.Finite, end: S.Finite },
+  $I.annote("Span", {
+    description: "Character span (start/end offsets) within a piece of text.",
+  })
+) {}
+
+/**
  * Named entity extracted from text (a functor `Text -> Entity`).
  *
  * @example
@@ -310,7 +360,7 @@ export class EntityNode extends S.Class<EntityNode>($I`EntityNode`)(
     text: S.String,
     entityType: S.String,
     confidence: S.optionalKey(S.Finite),
-    span: S.Struct({ start: S.Finite, end: S.Finite }),
+    span: Span,
     normalizedForm: S.optionalKey(S.String),
     timestamp: S.Finite,
     metadata: S.optionalKey(S.Record(S.String, S.Unknown)),
@@ -349,6 +399,27 @@ export class LemmaNode extends S.Class<LemmaNode>($I`LemmaNode`)(
 ) {}
 
 /**
+ * Token reference (text + sentence position) used by dependency-arc endpoints.
+ *
+ * @example
+ * ```ts
+ * import { DependencyToken } from "@beep/nlp/Graph/Schema"
+ *
+ * const token = DependencyToken.make({ text: "arrived", position: 2 })
+ * console.log(token.position) // 2
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export class DependencyToken extends S.Class<DependencyToken>($I`DependencyToken`)(
+  { text: S.String, position: S.Finite },
+  $I.annote("DependencyToken", {
+    description: "Token reference (text + sentence position) used by dependency-arc endpoints.",
+  })
+) {}
+
+/**
  * Syntactic dependency relation between two tokens.
  *
  * @example
@@ -371,14 +442,39 @@ export class LemmaNode extends S.Class<LemmaNode>($I`LemmaNode`)(
 export class DependencyNode extends S.Class<DependencyNode>($I`DependencyNode`)(
   {
     relation: S.String,
-    head: S.Struct({ text: S.String, position: S.Finite }),
-    dependent: S.Struct({ text: S.String, position: S.Finite }),
+    head: DependencyToken,
+    dependent: DependencyToken,
     distance: S.Finite,
     timestamp: S.Finite,
     metadata: S.optionalKey(S.Record(S.String, S.Unknown)),
   },
   $I.annote("DependencyNode", {
     description: "Syntactic dependency arc (Universal Dependencies relation) between a head and dependent token.",
+  })
+) {}
+
+/**
+ * Entity participant (text, type, and character span) referenced by a semantic relation.
+ *
+ * @example
+ * ```ts
+ * import { RelationParticipant } from "@beep/nlp/Graph/Schema"
+ *
+ * const participant = RelationParticipant.make({
+ *   text: "Acme",
+ *   entityType: "ORG",
+ *   span: { start: 0, end: 4 }
+ * })
+ * console.log(participant.entityType) // "ORG"
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export class RelationParticipant extends S.Class<RelationParticipant>($I`RelationParticipant`)(
+  { text: S.String, entityType: S.String, span: Span },
+  $I.annote("RelationParticipant", {
+    description: "Entity participant (text, type, and character span) referenced by a semantic relation.",
   })
 ) {}
 
@@ -404,16 +500,8 @@ export class DependencyNode extends S.Class<DependencyNode>($I`DependencyNode`)(
 export class RelationNode extends S.Class<RelationNode>($I`RelationNode`)(
   {
     relationType: S.String,
-    subject: S.Struct({
-      text: S.String,
-      entityType: S.String,
-      span: S.Struct({ start: S.Finite, end: S.Finite }),
-    }),
-    object: S.Struct({
-      text: S.String,
-      entityType: S.String,
-      span: S.Struct({ start: S.Finite, end: S.Finite }),
-    }),
+    subject: RelationParticipant,
+    object: RelationParticipant,
     trigger: S.optionalKey(S.String),
     confidence: S.optionalKey(S.Finite),
     timestamp: S.Finite,

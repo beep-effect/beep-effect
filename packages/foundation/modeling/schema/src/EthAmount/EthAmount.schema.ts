@@ -65,6 +65,15 @@ export const EthAmount = EthAmountInput.pipe(
 /**
  * Type for {@link EthAmount}.
  *
+ * @example
+ * ```ts
+ * import { EthAmount } from "@beep/schema/EthAmount"
+ * import * as S from "effect/Schema"
+ *
+ * const amount: EthAmount = S.decodeUnknownSync(EthAmount)(1.5)
+ * console.log(amount)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */

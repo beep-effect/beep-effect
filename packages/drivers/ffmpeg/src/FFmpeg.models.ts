@@ -62,9 +62,10 @@ export const PositiveFrameRate = S.Finite.check(
  *
  * @example
  * ```ts
- * import type { PositiveFrameRate } from "@beep/ffmpeg"
+ * import * as S from "effect/Schema"
+ * import { PositiveFrameRate } from "@beep/ffmpeg"
  *
- * const fps = 1 as PositiveFrameRate
+ * const fps: PositiveFrameRate = S.decodeUnknownSync(PositiveFrameRate)(1)
  * console.log(fps)
  * ```
  *
@@ -122,9 +123,10 @@ export const PositiveMilliseconds = S.Finite.check(
  *
  * @example
  * ```ts
- * import type { PositiveMilliseconds } from "@beep/ffmpeg"
+ * import * as S from "effect/Schema"
+ * import { PositiveMilliseconds } from "@beep/ffmpeg"
  *
- * const timeout = 2000 as PositiveMilliseconds
+ * const timeout: PositiveMilliseconds = S.decodeUnknownSync(PositiveMilliseconds)(2000)
  * console.log(timeout)
  * ```
  *
@@ -182,9 +184,10 @@ export const SafeFramePrefix = S.String.check(
  *
  * @example
  * ```ts
- * import type { SafeFramePrefix } from "@beep/ffmpeg"
+ * import * as S from "effect/Schema"
+ * import { SafeFramePrefix } from "@beep/ffmpeg"
  *
- * const prefix = "clip_frame" as SafeFramePrefix
+ * const prefix: SafeFramePrefix = S.decodeUnknownSync(SafeFramePrefix)("clip_frame")
  * console.log(prefix)
  * ```
  *

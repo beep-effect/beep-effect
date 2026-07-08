@@ -421,9 +421,31 @@ const gpuTypeIdsFor = ({
 const minRamPerGpuFor = (allow24GbFallback: boolean): number => (allow24GbFallback ? 24 : 48);
 
 /**
+ * Options for {@link makeQualityWorkerRunpodEvalPodCreateInput}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class QualityWorkerRunpodEvalPodCreateOptions extends S.Class<QualityWorkerRunpodEvalPodCreateOptions>(
+  $I`QualityWorkerRunpodEvalPodCreateOptions`
+)(
+  {
+    gpuTypeIds: S.Array(S.String),
+    imageName: S.optionalKey(S.String),
+    minRamPerGpuGb: S.Finite,
+    model: S.String,
+    podName: S.String,
+    templateId: S.optionalKey(S.String),
+  },
+  $I.annote("QualityWorkerRunpodEvalPodCreateOptions", {
+    description: "Pod image, template, GPU, and model selection for a Runpod create-pod body.",
+  })
+) {}
+
+/**
  * Build the Runpod create-pod body for an Ollama worker eval host.
  *
- * @param input - Pod image, template, GPU, and model selection.
+ * @param options - Pod image, template, GPU, and model selection.
  * @returns The typed Runpod create-pod input.
  * @example
  * ```ts
@@ -440,34 +462,24 @@ const minRamPerGpuFor = (allow24GbFallback: boolean): number => (allow24GbFallba
  * @category constructors
  * @since 0.0.0
  */
-export const makeQualityWorkerRunpodEvalPodCreateInput = ({
-  gpuTypeIds,
-  imageName = RUNPOD_PYTORCH_IMAGE,
-  minRamPerGpuGb,
-  model,
-  podName,
-  templateId,
-}: {
-  readonly gpuTypeIds: ReadonlyArray<string>;
-  readonly imageName?: string;
-  readonly minRamPerGpuGb: number;
-  readonly model: string;
-  readonly podName: string;
-  readonly templateId?: string;
-}): PodCreateInput =>
+export const makeQualityWorkerRunpodEvalPodCreateInput = (
+  options: QualityWorkerRunpodEvalPodCreateOptions
+): PodCreateInput =>
   PodCreateInput.make({
     cloudType: "COMMUNITY",
     computeType: "GPU",
     containerDiskInGb: 100,
-    dockerStartCmd: ollamaBootstrapCommand(model),
+    dockerStartCmd: ollamaBootstrapCommand(options.model),
     globalNetworking: true,
     gpuCount: 1,
-    gpuTypeIds,
+    gpuTypeIds: options.gpuTypeIds,
     gpuTypePriority: "availability",
-    ...(templateId === undefined ? { imageName } : { templateId }),
+    ...(options.templateId === undefined
+      ? { imageName: options.imageName ?? RUNPOD_PYTORCH_IMAGE }
+      : { templateId: options.templateId }),
     interruptible: false,
-    minRAMPerGPU: minRamPerGpuGb,
-    name: podName,
+    minRAMPerGPU: options.minRamPerGpuGb,
+    name: options.podName,
     ports: [OLLAMA_PORT_MAPPING],
     supportPublicIp: true,
     volumeInGb: 0,

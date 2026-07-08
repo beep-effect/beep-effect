@@ -16,6 +16,14 @@ const $I = $EcfrId.create("_generated/Ecfr.generated");
 /**
  * A single agency represented in the CFR, with the naming and slug metadata the eCFR versioner reports for it.
  *
+ * @example
+ * ```ts
+ * import { Agency } from "@beep/ecfr"
+ *
+ * const value = Agency.make({ "name": "example-name", "slug": "example-slug" })
+ * console.log(value.name)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -46,6 +54,14 @@ export class Agency extends S.Class<Agency>($I`Agency`)(
 /**
  * Response envelope for the eCFR agencies listing endpoint, wrapping the full roster of agencies represented in the CFR.
  *
+ * @example
+ * ```ts
+ * import { AgenciesResponse, Agency } from "@beep/ecfr"
+ *
+ * const value = AgenciesResponse.make({ "agencies": [Agency.make({ "name": "example-name", "slug": "example-slug" })] })
+ * console.log(value.agencies)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -65,6 +81,14 @@ export class AgenciesResponse extends S.Class<AgenciesResponse>($I`AgenciesRespo
 
 /**
  * A single CFR title with the currency metadata the eCFR versioner reports for it (identity plus the dates that describe how current the published content is).
+ *
+ * @example
+ * ```ts
+ * import { Title } from "@beep/ecfr"
+ *
+ * const value = Title.make({ "number": 1, "name": "example-name", "reserved": true })
+ * console.log(value.number)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -99,6 +123,14 @@ export class Title extends S.Class<Title>($I`Title`)(
 /**
  * Response envelope for the eCFR titles listing endpoint, wrapping the full catalog of CFR titles.
  *
+ * @example
+ * ```ts
+ * import { Title, TitlesResponse } from "@beep/ecfr"
+ *
+ * const value = TitlesResponse.make({ "titles": [Title.make({ "number": 1, "name": "example-name", "reserved": true })] })
+ * console.log(value.titles)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -115,6 +147,14 @@ export class TitlesResponse extends S.Class<TitlesResponse>($I`TitlesResponse`)(
 
 /**
  * Descriptor for a single eCFR REST operation.
+ *
+ * @example
+ * ```ts
+ * import { EcfrOperationDescriptor } from "@beep/ecfr"
+ *
+ * const descriptor = EcfrOperationDescriptor.make({ method: "GET", operationId: "example", path: "/example.json" })
+ * console.log(descriptor.path)
+ * ```
  *
  * @category endpoints
  * @since 0.0.0
@@ -133,6 +173,13 @@ export class EcfrOperationDescriptor extends S.Class<EcfrOperationDescriptor>($I
 /**
  * The `listAgencies` eCFR operation descriptor.
  *
+ * @example
+ * ```ts
+ * import { listAgenciesOperation } from "@beep/ecfr"
+ *
+ * console.log(listAgenciesOperation.path)
+ * ```
+ *
  * @category endpoints
  * @since 0.0.0
  */
@@ -145,6 +192,13 @@ export const listAgenciesOperation = EcfrOperationDescriptor.make({
 /**
  * The `listTitles` eCFR operation descriptor.
  *
+ * @example
+ * ```ts
+ * import { listTitlesOperation } from "@beep/ecfr"
+ *
+ * console.log(listTitlesOperation.path)
+ * ```
+ *
  * @category endpoints
  * @since 0.0.0
  */
@@ -156,6 +210,13 @@ export const listTitlesOperation = EcfrOperationDescriptor.make({
 
 /**
  * All generated eCFR operation descriptors keyed by operation id.
+ *
+ * @example
+ * ```ts
+ * import { ECFR_OPERATIONS } from "@beep/ecfr"
+ *
+ * console.log(ECFR_OPERATIONS.listAgencies.descriptor.path)
+ * ```
  *
  * @category endpoints
  * @since 0.0.0

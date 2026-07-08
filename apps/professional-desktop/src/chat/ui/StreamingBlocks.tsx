@@ -37,6 +37,17 @@ const KEY_SAMPLE_LIMIT = 4096;
  * distinct content sharing the same prefix still yields distinct keys. This
  * caps the per-render hashing work so untrusted content cannot force large
  * string materialization.
+ *
+ * @example
+ * ```ts
+ * import { boundedKey } from "@/chat/ui/StreamingBlocks"
+ *
+ * const key = boundedKey("paragraph:Hello world")
+ * console.log(boundedKey("paragraph:Hello world") === key) // true (deterministic)
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const boundedKey = (raw: string): string => {
   const sample = Str.length(raw) > KEY_SAMPLE_LIMIT ? Str.takeLeft(raw, KEY_SAMPLE_LIMIT) : raw;
@@ -48,6 +59,22 @@ export const boundedKey = (raw: string): string => {
  * a single pass. Replaces the previous per-item prior-scan that recomputed
  * `renderKey` for every earlier candidate (O(n^2) over untrusted content); a
  * running `MutableHashMap` count keeps this linear and the emitted keys bounded.
+ *
+ * @example
+ * ```ts
+ * import { stableOccurrenceKeys } from "@/chat/ui/StreamingBlocks"
+ *
+ * // data-first
+ * const keys = stableOccurrenceKeys(["a", "a", "b"], (item) => item)
+ * console.log(keys[0] !== keys[1]) // true — duplicate content disambiguated
+ *
+ * // data-last
+ * const keyer = stableOccurrenceKeys((item: string) => item)
+ * console.log(keyer(["a", "a", "b"]).length) // 3
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
  */
 export const stableOccurrenceKeys: {
   <Item>(renderKey: (item: Item) => string): (items: ReadonlyArray<Item>) => ReadonlyArray<string>;
@@ -77,6 +104,26 @@ const tableCellRenderKey = (cell: TableBlock["rows"][number]["cells"][number]): 
 const tableRowRenderKey = (row: TableBlock["rows"][number]): string =>
   `row:${A.join(A.map(row.cells, tableCellRenderKey), "|")}`;
 
+/**
+ * Derives a content-addressed render key for a single assistant block,
+ * dispatched by block variant.
+ *
+ * @example
+ * ```ts
+ * import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent"
+ * import * as S from "effect/Schema"
+ * import { blockRenderKey } from "@/chat/ui/StreamingBlocks"
+ *
+ * const block = S.decodeUnknownSync(AssistantBlock)({
+ *   type: "paragraph",
+ *   children: [{ type: "text", text: "Hello" }],
+ * })
+ * console.log(blockRenderKey(block).startsWith("paragraph:")) // true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const blockRenderKey = (block: AssistantBlock): string =>
   AssistantBlock.match(block, {
     paragraph: (b) => `paragraph:${inlinesRenderKey(b.children)}`,

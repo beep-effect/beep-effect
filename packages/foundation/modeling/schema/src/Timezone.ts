@@ -35,6 +35,15 @@ export const Timezone = LiteralKit(TimezonesData.TimezoneNameValues).pipe(
 /**
  * Runtime type for {@link Timezone}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Timezone } from "@beep/schema/Timezone"
+ *
+ * const tz: Timezone = S.decodeUnknownSync(Timezone)("America/New_York")
+ * console.log(tz)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */

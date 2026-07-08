@@ -52,6 +52,14 @@ const $I = $PandocAstId.create("Pandoc.codec");
 /**
  * Generic Pandoc constructor wire shape.
  *
+ * @example
+ * ```ts
+ * import { PandocConstructorWire } from "@beep/pandoc-ast/Pandoc.codec"
+ *
+ * const wire = PandocConstructorWire.make({ c: "hello", t: "Str" })
+ * console.log(wire.t) // "Str"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -71,6 +79,14 @@ export class PandocConstructorWire extends S.Class<PandocConstructorWire>($I`Pan
 
 /**
  * Companion namespace for {@link PandocConstructorWire}.
+ *
+ * @example
+ * ```ts
+ * import { PandocConstructorWire } from "@beep/pandoc-ast/Pandoc.codec"
+ *
+ * const wire: PandocConstructorWire.Type = PandocConstructorWire.make({ t: "Space" })
+ * console.log(wire.t) // "Space"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -125,6 +141,18 @@ export class PandocJsonWire extends S.Class<PandocJsonWire>($I`PandocJsonWire`)(
 /**
  * Companion namespace for {@link PandocJsonWire}.
  *
+ * @example
+ * ```ts
+ * import { PandocJsonWire } from "@beep/pandoc-ast/Pandoc.codec"
+ *
+ * const wire: PandocJsonWire.Type = PandocJsonWire.make({
+ *   "pandoc-api-version": [1, 23, 1],
+ *   blocks: [],
+ *   meta: {},
+ * })
+ * console.log(wire.blocks.length) // 0
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -147,6 +175,16 @@ export declare namespace PandocJsonWire {
 /**
  * Pandoc JSON string codec.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { PandocJsonFromString } from "@beep/pandoc-ast/Pandoc.codec"
+ *
+ * const decode = S.decodeUnknownSync(PandocJsonFromString)
+ * const wire = decode(`{"pandoc-api-version":[1,23,1],"meta":{},"blocks":[]}`)
+ * console.log(wire.blocks.length) // 0
+ * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -158,6 +196,18 @@ export const PandocJsonFromString = S.fromJsonString(PandocJsonWire).pipe(
 
 /**
  * Runtime type for {@link PandocJsonFromString}.
+ *
+ * @example
+ * ```ts
+ * import type { PandocJsonFromString } from "@beep/pandoc-ast/Pandoc.codec"
+ *
+ * const wire: PandocJsonFromString = {
+ *   "pandoc-api-version": [1, 23, 1],
+ *   blocks: [],
+ *   meta: {},
+ * }
+ * console.log(wire.blocks.length) // 0
+ * ```
  *
  * @category codecs
  * @since 0.0.0

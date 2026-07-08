@@ -152,6 +152,7 @@ to the user before anything remains.
 | `annotations` always present on AST nodes | **`annotations` needs `?.`** — optional access. |
 | v3 combinators (`Effect.catchAll`, `Schema.decode`, …) | v3 tells. Use v4 forms (`S.decodeUnknownEffect` / `S.decodeEffect`, `Effect.catch`, current error-handling combinators). |
 | `S.extend` merges two schemas | **`S.extend` does not exist in v4** (TS2551). `S.extendTo` is a different, derived-field combinator (`.repos/effect-v4/.../Schema.ts:3565`). Compose via `S.Class` field spread or struct-field spreading. |
+| `.annotate()` placement is order-independent | **Annotating AFTER `S.toTaggedUnion(...)` silently strips the kit's `.match` static** (proven twice by real test failures). Always annotate BEFORE `toTaggedUnion` in the pipe. |
 
 ## Lane report contract
 

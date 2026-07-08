@@ -46,6 +46,14 @@ export const FileProcessingOperationErrorReason = LiteralKit([
 /**
  * Type for {@link FileProcessingOperationErrorReason}.
  *
+ * @example
+ * ```ts
+ * import { FileProcessingOperationErrorReason } from "@beep/file-processing/Operation"
+ *
+ * const reason: FileProcessingOperationErrorReason = "engine-unavailable"
+ * console.log(FileProcessingOperationErrorReason.is["engine-unavailable"](reason)) // true
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */

@@ -44,6 +44,14 @@ export const PandocApiVersion = S.NonEmptyArray(S.Int.check(S.isGreaterThanOrEqu
 /**
  * Runtime type for {@link PandocApiVersion}.
  *
+ * @example
+ * ```ts
+ * import type { PandocApiVersion } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const version: PandocApiVersion = [1, 23, 1]
+ * console.log(version.length) // 3
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -51,6 +59,15 @@ export type PandocApiVersion = typeof PandocApiVersion.Type;
 
 /**
  * Pandoc attribute key/value pair.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { PandocKeyValue } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const decode = S.decodeUnknownSync(PandocKeyValue)
+ * console.log(decode(["data-foo", "bar"]))
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -63,6 +80,14 @@ export const PandocKeyValue = S.Tuple([S.String, S.String]).pipe(
 
 /**
  * Runtime type for {@link PandocKeyValue}.
+ *
+ * @example
+ * ```ts
+ * import type { PandocKeyValue } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const pair: PandocKeyValue = ["data-foo", "bar"]
+ * console.log(pair[0]) // "data-foo"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -106,6 +131,14 @@ export class PandocAttr extends S.Class<PandocAttr>($I`PandocAttr`)(
 
 /**
  * Companion namespace for {@link PandocAttr}.
+ *
+ * @example
+ * ```ts
+ * import { PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const attr: PandocAttr.Type = PandocAttr.make({ classes: ["note"], id: "n1", keyValues: [] })
+ * console.log(attr.classes[0]) // "note"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -157,6 +190,14 @@ export class PandocTarget extends S.Class<PandocTarget>($I`PandocTarget`)(
 /**
  * Companion namespace for {@link PandocTarget}.
  *
+ * @example
+ * ```ts
+ * import { PandocTarget } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const target: PandocTarget.Type = PandocTarget.make({ title: "Example", url: "https://example.com" })
+ * console.log(target.title) // "Example"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -197,6 +238,14 @@ export const PandocMathType = LiteralKit(["InlineMath", "DisplayMath"]).pipe(
 /**
  * Runtime type for {@link PandocMathType}.
  *
+ * @example
+ * ```ts
+ * import type { PandocMathType } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const mathType: PandocMathType = "InlineMath"
+ * console.log(mathType) // "InlineMath"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -232,6 +281,14 @@ export const PandocListNumberStyle = LiteralKit([
 /**
  * Runtime type for {@link PandocListNumberStyle}.
  *
+ * @example
+ * ```ts
+ * import type { PandocListNumberStyle } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const style: PandocListNumberStyle = "Decimal"
+ * console.log(style) // "Decimal"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -259,6 +316,14 @@ export const PandocListNumberDelimiter = LiteralKit(["DefaultDelim", "Period", "
 /**
  * Runtime type for {@link PandocListNumberDelimiter}.
  *
+ * @example
+ * ```ts
+ * import type { PandocListNumberDelimiter } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const delimiter: PandocListNumberDelimiter = "Period"
+ * console.log(delimiter) // "Period"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -266,6 +331,15 @@ export type PandocListNumberDelimiter = typeof PandocListNumberDelimiter.Type;
 
 /**
  * Recursive Pandoc inline child list.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { PandocInlineChildren } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const isInlineChildren = S.is(PandocInlineChildren)
+ * console.log(isInlineChildren([])) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -279,7 +353,31 @@ export const PandocInlineChildren = S.Array(
 );
 
 /**
+ * Runtime type for {@link PandocInlineChildren}.
+ *
+ * @example
+ * ```ts
+ * import type { PandocInlineChildren } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const children: PandocInlineChildren = []
+ * console.log(children.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PandocInlineChildren = typeof PandocInlineChildren.Type;
+
+/**
  * Companion namespace for {@link PandocInlineChildren}.
+ *
+ * @example
+ * ```ts
+ * import { PandocInlineChildren } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const children: PandocInlineChildren.Type = []
+ * console.log(children.length) // 0
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -299,6 +397,15 @@ export declare namespace PandocInlineChildren {
 /**
  * Recursive Pandoc block child list.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { PandocBlockChildren } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const isBlockChildren = S.is(PandocBlockChildren)
+ * console.log(isBlockChildren([])) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -311,7 +418,31 @@ export const PandocBlockChildren = S.Array(
 );
 
 /**
+ * Runtime type for {@link PandocBlockChildren}.
+ *
+ * @example
+ * ```ts
+ * import type { PandocBlockChildren } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const children: PandocBlockChildren = []
+ * console.log(children.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PandocBlockChildren = typeof PandocBlockChildren.Type;
+
+/**
  * Companion namespace for {@link PandocBlockChildren}.
+ *
+ * @example
+ * ```ts
+ * import { PandocBlockChildren } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const children: PandocBlockChildren.Type = []
+ * console.log(children.length) // 0
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -331,6 +462,15 @@ export declare namespace PandocBlockChildren {
 /**
  * One Pandoc list item as a list of blocks.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { PandocListItem } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const isListItem = S.is(PandocListItem)
+ * console.log(isListItem([])) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -345,6 +485,14 @@ export const PandocListItem = S.Array(
 /**
  * Runtime type for {@link PandocListItem}.
  *
+ * @example
+ * ```ts
+ * import type { PandocListItem } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const item: PandocListItem = []
+ * console.log(item.length) // 0
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -352,6 +500,15 @@ export type PandocListItem = typeof PandocListItem.Type;
 
 /**
  * Pandoc list items.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { PandocListItems } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const isListItems = S.is(PandocListItems)
+ * console.log(isListItems([])) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -365,6 +522,14 @@ export const PandocListItems = S.Array(PandocListItem).pipe(
 /**
  * Runtime type for {@link PandocListItems}.
  *
+ * @example
+ * ```ts
+ * import type { PandocListItems } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const items: PandocListItems = []
+ * console.log(items.length) // 0
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -372,6 +537,14 @@ export type PandocListItems = typeof PandocListItems.Type;
 
 /**
  * Plain text inline.
+ *
+ * @example
+ * ```ts
+ * import { Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Str.make({ text: "hello" })
+ * console.log(node._tag) // "str"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -390,6 +563,14 @@ export class Str extends S.TaggedClass<Str>($I`Str`)(
 
 /**
  * Companion namespace for {@link Str}.
+ *
+ * @example
+ * ```ts
+ * import { Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: Str.Type = Str.make({ text: "hello" })
+ * console.log(node.text) // "hello"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -412,6 +593,14 @@ export declare namespace Str {
 /**
  * Pandoc space inline.
  *
+ * @example
+ * ```ts
+ * import { Space } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Space.make()
+ * console.log(node._tag) // "space"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -425,6 +614,14 @@ export class Space extends S.TaggedClass<Space>($I`Space`)(
 
 /**
  * Companion namespace for {@link Space}.
+ *
+ * @example
+ * ```ts
+ * import { Space } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: Space.Type = Space.make()
+ * console.log(node._tag) // "space"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -446,6 +643,14 @@ export declare namespace Space {
 /**
  * Pandoc soft line break inline.
  *
+ * @example
+ * ```ts
+ * import { SoftBreak } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = SoftBreak.make()
+ * console.log(node._tag) // "softbreak"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -459,6 +664,14 @@ export class SoftBreak extends S.TaggedClass<SoftBreak>($I`SoftBreak`)(
 
 /**
  * Companion namespace for {@link SoftBreak}.
+ *
+ * @example
+ * ```ts
+ * import { SoftBreak } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: SoftBreak.Type = SoftBreak.make()
+ * console.log(node._tag) // "softbreak"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -480,6 +693,14 @@ export declare namespace SoftBreak {
 /**
  * Pandoc hard line break inline.
  *
+ * @example
+ * ```ts
+ * import { LineBreak } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = LineBreak.make()
+ * console.log(node._tag) // "linebreak"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -493,6 +714,14 @@ export class LineBreak extends S.TaggedClass<LineBreak>($I`LineBreak`)(
 
 /**
  * Companion namespace for {@link LineBreak}.
+ *
+ * @example
+ * ```ts
+ * import { LineBreak } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: LineBreak.Type = LineBreak.make()
+ * console.log(node._tag) // "linebreak"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -514,6 +743,14 @@ export declare namespace LineBreak {
 /**
  * Pandoc emphasis inline.
  *
+ * @example
+ * ```ts
+ * import { Emph, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Emph.make({ children: [Str.make({ text: "hi" })] })
+ * console.log(node.children.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -531,6 +768,14 @@ export class Emph extends S.TaggedClass<Emph>($I`Emph`)(
 
 /**
  * Companion namespace for {@link Emph}.
+ *
+ * @example
+ * ```ts
+ * import { Emph, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: Emph.Type = Emph.make({ children: [Str.make({ text: "hi" })] })
+ * console.log(node.children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -556,6 +801,14 @@ export declare namespace Emph {
 /**
  * Pandoc strong inline.
  *
+ * @example
+ * ```ts
+ * import { Strong, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Strong.make({ children: [Str.make({ text: "hi" })] })
+ * console.log(node.children.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -573,6 +826,14 @@ export class Strong extends S.TaggedClass<Strong>($I`Strong`)(
 
 /**
  * Companion namespace for {@link Strong}.
+ *
+ * @example
+ * ```ts
+ * import { Strong, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: Strong.Type = Strong.make({ children: [Str.make({ text: "hi" })] })
+ * console.log(node.children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -598,6 +859,14 @@ export declare namespace Strong {
 /**
  * Pandoc strikeout inline.
  *
+ * @example
+ * ```ts
+ * import { Strikeout, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Strikeout.make({ children: [Str.make({ text: "hi" })] })
+ * console.log(node.children.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -615,6 +884,14 @@ export class Strikeout extends S.TaggedClass<Strikeout>($I`Strikeout`)(
 
 /**
  * Companion namespace for {@link Strikeout}.
+ *
+ * @example
+ * ```ts
+ * import { Strikeout, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: Strikeout.Type = Strikeout.make({ children: [Str.make({ text: "hi" })] })
+ * console.log(node.children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -640,6 +917,14 @@ export declare namespace Strikeout {
 /**
  * Pandoc code inline.
  *
+ * @example
+ * ```ts
+ * import { Code, PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Code.make({ attr: PandocAttr.empty, text: "const x = 1" })
+ * console.log(node.text) // "const x = 1"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -660,6 +945,14 @@ export class Code extends S.TaggedClass<Code>($I`Code`)(
 
 /**
  * Companion namespace for {@link Code}.
+ *
+ * @example
+ * ```ts
+ * import { Code, PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: Code.Type = Code.make({ attr: PandocAttr.empty, text: "const x = 1" })
+ * console.log(node.text) // "const x = 1"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -687,6 +980,18 @@ export declare namespace Code {
 /**
  * Pandoc link inline.
  *
+ * @example
+ * ```ts
+ * import { Link, PandocAttr, PandocTarget, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Link.make({
+ *   attr: PandocAttr.empty,
+ *   children: [Str.make({ text: "example" })],
+ *   target: PandocTarget.make({ title: "", url: "https://example.com" }),
+ * })
+ * console.log(node.target.url) // "https://example.com"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -710,6 +1015,18 @@ export class Link extends S.TaggedClass<Link>($I`Link`)(
 
 /**
  * Companion namespace for {@link Link}.
+ *
+ * @example
+ * ```ts
+ * import { Link, PandocAttr, PandocTarget, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: Link.Type = Link.make({
+ *   attr: PandocAttr.empty,
+ *   children: [Str.make({ text: "example" })],
+ *   target: PandocTarget.make({ title: "", url: "https://example.com" }),
+ * })
+ * console.log(node.target.url) // "https://example.com"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -739,6 +1056,18 @@ export declare namespace Link {
 /**
  * Pandoc image inline.
  *
+ * @example
+ * ```ts
+ * import { Image, PandocAttr, PandocTarget, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Image.make({
+ *   attr: PandocAttr.empty,
+ *   children: [Str.make({ text: "alt text" })],
+ *   target: PandocTarget.make({ title: "", url: "https://example.com/logo.png" }),
+ * })
+ * console.log(node.target.url) // "https://example.com/logo.png"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -762,6 +1091,18 @@ export class Image extends S.TaggedClass<Image>($I`Image`)(
 
 /**
  * Companion namespace for {@link Image}.
+ *
+ * @example
+ * ```ts
+ * import { Image, PandocAttr, PandocTarget, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: Image.Type = Image.make({
+ *   attr: PandocAttr.empty,
+ *   children: [Str.make({ text: "alt text" })],
+ *   target: PandocTarget.make({ title: "", url: "https://example.com/logo.png" }),
+ * })
+ * console.log(node.target.url) // "https://example.com/logo.png"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -791,6 +1132,14 @@ export declare namespace Image {
 /**
  * Pandoc span inline.
  *
+ * @example
+ * ```ts
+ * import { Span, PandocAttr, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Span.make({ attr: PandocAttr.empty, children: [Str.make({ text: "hi" })] })
+ * console.log(node.children.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -811,6 +1160,14 @@ export class Span extends S.TaggedClass<Span>($I`Span`)(
 
 /**
  * Companion namespace for {@link Span}.
+ *
+ * @example
+ * ```ts
+ * import { Span, PandocAttr, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: Span.Type = Span.make({ attr: PandocAttr.empty, children: [Str.make({ text: "hi" })] })
+ * console.log(node.children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -838,6 +1195,14 @@ export declare namespace Span {
 /**
  * Pandoc footnote or endnote inline.
  *
+ * @example
+ * ```ts
+ * import { Note, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Note.make({ blocks: [Para.make({ children: [Str.make({ text: "note" })] })] })
+ * console.log(node.blocks.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -855,6 +1220,14 @@ export class Note extends S.TaggedClass<Note>($I`Note`)(
 
 /**
  * Companion namespace for {@link Note}.
+ *
+ * @example
+ * ```ts
+ * import { Note, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: Note.Type = Note.make({ blocks: [Para.make({ children: [Str.make({ text: "note" })] })] })
+ * console.log(node.blocks.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -880,6 +1253,14 @@ export declare namespace Note {
 /**
  * Pandoc math inline.
  *
+ * @example
+ * ```ts
+ * import { Math } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Math.make({ mathType: "InlineMath", text: "x^2" })
+ * console.log(node.text) // "x^2"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -900,6 +1281,14 @@ export class Math extends S.TaggedClass<Math>($I`Math`)(
 
 /**
  * Companion namespace for {@link Math}.
+ *
+ * @example
+ * ```ts
+ * import { Math } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: Math.Type = Math.make({ mathType: "InlineMath", text: "x^2" })
+ * console.log(node.mathType) // "InlineMath"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -923,6 +1312,14 @@ export declare namespace Math {
 /**
  * Pandoc inline constructor outside the supported v1 surface.
  *
+ * @example
+ * ```ts
+ * import { UnknownInline } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = UnknownInline.make({ constructor: "Cite", payload: { citations: [] } })
+ * console.log(node.constructor) // "Cite"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -943,6 +1340,14 @@ export class UnknownInline extends S.TaggedClass<UnknownInline>($I`UnknownInline
 
 /**
  * Companion namespace for {@link UnknownInline}.
+ *
+ * @example
+ * ```ts
+ * import { UnknownInline } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: UnknownInline.Type = UnknownInline.make({ constructor: "Cite", payload: { citations: [] } })
+ * console.log(node.constructor) // "Cite"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -965,6 +1370,14 @@ export declare namespace UnknownInline {
 
 /**
  * Pandoc inline union for the v1 compatibility slice.
+ *
+ * @example
+ * ```ts
+ * import { PandocInline, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const inline = Str.make({ text: "hi" })
+ * console.log(PandocInline.is(inline)) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -995,6 +1408,14 @@ export const PandocInline = S.Union([
 /**
  * Runtime type for {@link PandocInline}.
  *
+ * @example
+ * ```ts
+ * import { Str, type PandocInline } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const inline: PandocInline = Str.make({ text: "hi" })
+ * console.log(inline._tag) // "str"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1002,6 +1423,14 @@ export type PandocInline = typeof PandocInline.Type;
 
 /**
  * Companion namespace for {@link PandocInline}.
+ *
+ * @example
+ * ```ts
+ * import { PandocInline, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const inline: PandocInline.Type = Str.make({ text: "hi" })
+ * console.log(inline._tag) // "str"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1049,6 +1478,14 @@ export declare namespace PandocInline {
 /**
  * Pandoc plain block.
  *
+ * @example
+ * ```ts
+ * import { Plain, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Plain.make({ children: [Str.make({ text: "hi" })] })
+ * console.log(node.children.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1066,6 +1503,14 @@ export class Plain extends S.TaggedClass<Plain>($I`Plain`)(
 
 /**
  * Companion namespace for {@link Plain}.
+ *
+ * @example
+ * ```ts
+ * import { Plain, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: Plain.Type = Plain.make({ children: [Str.make({ text: "hi" })] })
+ * console.log(node.children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1091,6 +1536,14 @@ export declare namespace Plain {
 /**
  * Pandoc paragraph block.
  *
+ * @example
+ * ```ts
+ * import { Para, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Para.make({ children: [Str.make({ text: "hi" })] })
+ * console.log(node.children.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1108,6 +1561,14 @@ export class Para extends S.TaggedClass<Para>($I`Para`)(
 
 /**
  * Companion namespace for {@link Para}.
+ *
+ * @example
+ * ```ts
+ * import { Para, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: Para.Type = Para.make({ children: [Str.make({ text: "hi" })] })
+ * console.log(node.children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1133,6 +1594,14 @@ export declare namespace Para {
 /**
  * Pandoc header block.
  *
+ * @example
+ * ```ts
+ * import { Header, PandocAttr, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Header.make({ attr: PandocAttr.empty, children: [Str.make({ text: "Title" })], level: 1 })
+ * console.log(node.level) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1156,6 +1625,14 @@ export class Header extends S.TaggedClass<Header>($I`Header`)(
 
 /**
  * Companion namespace for {@link Header}.
+ *
+ * @example
+ * ```ts
+ * import { Header, PandocAttr, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: Header.Type = Header.make({ attr: PandocAttr.empty, children: [Str.make({ text: "Title" })], level: 1 })
+ * console.log(node.level) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1185,6 +1662,14 @@ export declare namespace Header {
 /**
  * Pandoc block quote.
  *
+ * @example
+ * ```ts
+ * import { BlockQuote, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = BlockQuote.make({ children: [Para.make({ children: [Str.make({ text: "quoted" })] })] })
+ * console.log(node.children.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1202,6 +1687,14 @@ export class BlockQuote extends S.TaggedClass<BlockQuote>($I`BlockQuote`)(
 
 /**
  * Companion namespace for {@link BlockQuote}.
+ *
+ * @example
+ * ```ts
+ * import { BlockQuote, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: BlockQuote.Type = BlockQuote.make({ children: [Para.make({ children: [Str.make({ text: "quoted" })] })] })
+ * console.log(node.children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1227,6 +1720,14 @@ export declare namespace BlockQuote {
 /**
  * Pandoc fenced code block.
  *
+ * @example
+ * ```ts
+ * import { CodeBlock, PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = CodeBlock.make({ attr: PandocAttr.empty, text: "const x = 1" })
+ * console.log(node.text) // "const x = 1"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1247,6 +1748,14 @@ export class CodeBlock extends S.TaggedClass<CodeBlock>($I`CodeBlock`)(
 
 /**
  * Companion namespace for {@link CodeBlock}.
+ *
+ * @example
+ * ```ts
+ * import { CodeBlock, PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: CodeBlock.Type = CodeBlock.make({ attr: PandocAttr.empty, text: "const x = 1" })
+ * console.log(node.text) // "const x = 1"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1274,6 +1783,14 @@ export declare namespace CodeBlock {
 /**
  * Pandoc bullet list block.
  *
+ * @example
+ * ```ts
+ * import { BulletList, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = BulletList.make({ items: [[Para.make({ children: [Str.make({ text: "item" })] })]] })
+ * console.log(node.items.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1291,6 +1808,14 @@ export class BulletList extends S.TaggedClass<BulletList>($I`BulletList`)(
 
 /**
  * Companion namespace for {@link BulletList}.
+ *
+ * @example
+ * ```ts
+ * import { BulletList, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: BulletList.Type = BulletList.make({ items: [[Para.make({ children: [Str.make({ text: "item" })] })]] })
+ * console.log(node.items.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1312,6 +1837,19 @@ export declare namespace BulletList {
 
 /**
  * Pandoc ordered list block.
+ *
+ * @example
+ * ```ts
+ * import { OrderedList, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = OrderedList.make({
+ *   delimiter: "Period",
+ *   items: [[Para.make({ children: [Str.make({ text: "item" })] })]],
+ *   start: 1,
+ *   style: "Decimal",
+ * })
+ * console.log(node.start) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1340,6 +1878,19 @@ export class OrderedList extends S.TaggedClass<OrderedList>($I`OrderedList`)(
 /**
  * Companion namespace for {@link OrderedList}.
  *
+ * @example
+ * ```ts
+ * import { OrderedList, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: OrderedList.Type = OrderedList.make({
+ *   delimiter: "Period",
+ *   items: [[Para.make({ children: [Str.make({ text: "item" })] })]],
+ *   start: 1,
+ *   style: "Decimal",
+ * })
+ * console.log(node.start) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1364,6 +1915,14 @@ export declare namespace OrderedList {
 /**
  * Pandoc horizontal rule block.
  *
+ * @example
+ * ```ts
+ * import { HorizontalRule } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = HorizontalRule.make({})
+ * console.log(node._tag) // "horizontalrule"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1377,6 +1936,14 @@ export class HorizontalRule extends S.TaggedClass<HorizontalRule>($I`HorizontalR
 
 /**
  * Companion namespace for {@link HorizontalRule}.
+ *
+ * @example
+ * ```ts
+ * import { HorizontalRule } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: HorizontalRule.Type = HorizontalRule.make({})
+ * console.log(node._tag) // "horizontalrule"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1398,6 +1965,17 @@ export declare namespace HorizontalRule {
 /**
  * Pandoc div block, including DOCX custom-style wrappers.
  *
+ * @example
+ * ```ts
+ * import { Div, Para, PandocAttr, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Div.make({
+ *   attr: PandocAttr.empty,
+ *   children: [Para.make({ children: [Str.make({ text: "hi" })] })],
+ * })
+ * console.log(node.children.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1418,6 +1996,17 @@ export class Div extends S.TaggedClass<Div>($I`Div`)(
 
 /**
  * Companion namespace for {@link Div}.
+ *
+ * @example
+ * ```ts
+ * import { Div, Para, PandocAttr, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: Div.Type = Div.make({
+ *   attr: PandocAttr.empty,
+ *   children: [Para.make({ children: [Str.make({ text: "hi" })] })],
+ * })
+ * console.log(node.children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1445,6 +2034,14 @@ export declare namespace Div {
 /**
  * Pandoc table block captured as an explicit gap node.
  *
+ * @example
+ * ```ts
+ * import { Table, PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = Table.make({ attr: PandocAttr.empty, caption: [], payload: {} })
+ * console.log(node._tag) // "table"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1468,6 +2065,14 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
 
 /**
  * Companion namespace for {@link Table}.
+ *
+ * @example
+ * ```ts
+ * import { Table, PandocAttr } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: Table.Type = Table.make({ attr: PandocAttr.empty, caption: [], payload: {} })
+ * console.log(node._tag) // "table"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1497,6 +2102,14 @@ export declare namespace Table {
 /**
  * Pandoc block constructor outside the supported v1 surface.
  *
+ * @example
+ * ```ts
+ * import { UnknownBlock } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node = UnknownBlock.make({ constructor: "Figure", payload: {} })
+ * console.log(node.constructor) // "Figure"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1517,6 +2130,14 @@ export class UnknownBlock extends S.TaggedClass<UnknownBlock>($I`UnknownBlock`)(
 
 /**
  * Companion namespace for {@link UnknownBlock}.
+ *
+ * @example
+ * ```ts
+ * import { UnknownBlock } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const node: UnknownBlock.Type = UnknownBlock.make({ constructor: "Figure", payload: {} })
+ * console.log(node.constructor) // "Figure"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1539,6 +2160,14 @@ export declare namespace UnknownBlock {
 
 /**
  * Pandoc block union for the v1 compatibility slice.
+ *
+ * @example
+ * ```ts
+ * import { PandocBlock, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const block = Para.make({ children: [Str.make({ text: "hi" })] })
+ * console.log(PandocBlock.is(block)) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1566,6 +2195,14 @@ export const PandocBlock = S.Union([
 /**
  * Runtime type for {@link PandocBlock}.
  *
+ * @example
+ * ```ts
+ * import { Para, Str, type PandocBlock } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const block: PandocBlock = Para.make({ children: [Str.make({ text: "hi" })] })
+ * console.log(block._tag) // "para"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1573,6 +2210,14 @@ export type PandocBlock = typeof PandocBlock.Type;
 
 /**
  * Companion namespace for {@link PandocBlock}.
+ *
+ * @example
+ * ```ts
+ * import { PandocBlock, Para, Str } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const block: PandocBlock.Type = Para.make({ children: [Str.make({ text: "hi" })] })
+ * console.log(block._tag) // "para"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1614,6 +2259,15 @@ export declare namespace PandocBlock {
 /**
  * Pandoc document metadata.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { PandocMeta } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const decode = S.decodeUnknownSync(PandocMeta)
+ * console.log(decode({ title: "Doc" }).title)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1625,6 +2279,14 @@ export const PandocMeta = S.Record(S.String, S.Unknown).pipe(
 
 /**
  * Runtime type for {@link PandocMeta}.
+ *
+ * @example
+ * ```ts
+ * import type { PandocMeta } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const meta: PandocMeta = { title: "Doc" }
+ * console.log(meta.title)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1665,6 +2327,14 @@ export class PandocDocument extends S.TaggedClass<PandocDocument>($I`PandocDocum
 
 /**
  * Companion namespace for {@link PandocDocument}.
+ *
+ * @example
+ * ```ts
+ * import { PandocDocument } from "@beep/pandoc-ast/Pandoc.model"
+ *
+ * const document: PandocDocument.Type = PandocDocument.make({ apiVersion: [1, 23, 1], blocks: [], meta: {} })
+ * console.log(document._tag) // "pandocDocument"
+ * ```
  *
  * @category models
  * @since 0.0.0

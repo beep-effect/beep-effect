@@ -135,6 +135,18 @@ export class YeetVerdictLane extends S.Class<YeetVerdictLane>($I`YeetVerdictLane
 ) {}
 
 /**
+ * Terminal outcome for one yeet run.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const YeetOutcome = LiteralKit(["success", "failure"]).pipe(
+  $I.annoteSchema("YeetOutcome", {
+    description: "Terminal outcome for one yeet run.",
+  })
+);
+
+/**
  * Machine-readable verdict for one yeet run.
  *
  * @example
@@ -172,7 +184,7 @@ export class YeetVerdict extends S.Class<YeetVerdict>($I`YeetVerdict`)(
     lanes: S.Array(YeetVerdictLane),
     message: S.String,
     mode: S.String,
-    outcome: LiteralKit(["success", "failure"]),
+    outcome: YeetOutcome,
     packetPaths: S.Array(S.String),
     pushed: S.Boolean,
     runId: S.String,
@@ -236,6 +248,34 @@ const laneFromPlanned = (step: RepoPlanStep): YeetVerdictLane =>
   });
 
 /**
+ * Run identity, outcome, planned steps, and executed results used to build the run verdict.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class BuildYeetVerdictInput extends S.Class<BuildYeetVerdictInput>($I`BuildYeetVerdictInput`)(
+  {
+    base: S.String,
+    baseFreshness: S.optional(YeetBaseFreshness),
+    branch: S.String,
+    createdAt: S.String,
+    executed: S.Array(YeetExecutedStep),
+    head: S.String,
+    indexPath: S.optional(S.String),
+    message: S.String,
+    mode: S.String,
+    outcome: YeetOutcome,
+    packetPaths: S.Array(S.String),
+    planned: S.Array(RepoPlanStep),
+    runId: S.String,
+    stash: S.optional(YeetStashState),
+  },
+  $I.annote("BuildYeetVerdictInput", {
+    description: "Run identity, outcome, planned steps, and executed results used to build the run verdict.",
+  })
+) {}
+
+/**
  * Build the run verdict from planned steps and executed results.
  *
  * @param input - Run identity, outcome, planned steps, and executed results.
@@ -262,22 +302,7 @@ const laneFromPlanned = (step: RepoPlanStep): YeetVerdictLane =>
  * @category constructors
  * @since 0.0.0
  */
-export const buildYeetVerdict = (input: {
-  readonly base: string;
-  readonly baseFreshness?: YeetBaseFreshness | undefined;
-  readonly branch: string;
-  readonly createdAt: string;
-  readonly executed: ReadonlyArray<YeetExecutedStep>;
-  readonly head: string;
-  readonly indexPath?: string | undefined;
-  readonly message: string;
-  readonly mode: string;
-  readonly outcome: "success" | "failure";
-  readonly packetPaths: ReadonlyArray<string>;
-  readonly planned: ReadonlyArray<RepoPlanStep>;
-  readonly runId: string;
-  readonly stash?: YeetStashState | undefined;
-}): YeetVerdict => {
+export const buildYeetVerdict = (input: BuildYeetVerdictInput): YeetVerdict => {
   const executedIds = pipe(
     input.executed,
     A.map((entry) => entry.step.id)

@@ -1,3 +1,11 @@
+/**
+ * Oxlint rule preventing net-new manual `Effect.run*`/`ManagedRuntime.make`
+ * calls in test files while preserving the current legacy baseline counts.
+ *
+ * @packageDocumentation
+ * @since 0.1.0
+ */
+
 import { defineRule } from "@oxlint/plugins";
 import { HashMap, HashSet, MutableHashSet } from "effect";
 import * as O from "effect/Option";

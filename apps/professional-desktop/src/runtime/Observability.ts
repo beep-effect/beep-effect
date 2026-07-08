@@ -91,6 +91,13 @@ const DevToolsLive: Layer.Layer<never> = Layer.unwrap(
 /**
  * Sidecar observability layer: OTLP export plus optional Effect DevTools.
  *
+ * @example
+ * ```ts
+ * import { ObservabilityLive } from "@/runtime/Observability"
+ *
+ * console.log(ObservabilityLive)
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */

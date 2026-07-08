@@ -82,6 +82,19 @@ const annotateDownload = (download: M365DriveItemDownloadType): Effect.Effect<M3
 /**
  * Live handler layer for the Microsoft 365 MCP toolkit.
  *
+ * @example
+ * ```ts
+ * import { M365ToolkitHandlersLive } from "@beep/m365-mcp"
+ * import { M365, M365ConfigInput } from "@beep/m365"
+ * import { Layer } from "effect"
+ *
+ * const layer = M365ToolkitHandlersLive.pipe(
+ *   Layer.provide(M365.makeLiveLayer(M365ConfigInput.make({ tenantId: "common", clientId: "client-id" })))
+ * )
+ * console.log(Layer.isLayer(layer))
+ * // true
+ * ```
+ *
  * @category layers
  * @since 0.1.0
  */

@@ -7,8 +7,9 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
-import type { Crypto, Effect, JsonPatch } from "effect";
+import type { Crypto } from "effect";
 import type { HttpClient } from "effect/unstable/http";
 import type { SyncDataToTsError } from "../SyncDataToTs.errors.js";
 
@@ -152,18 +153,40 @@ export class SyncDataTargetProjection extends S.Class<SyncDataTargetProjection>(
 export type SyncDataTargetServices = HttpClient.HttpClient | Crypto.Crypto;
 
 /**
+ * Opaque schema for the `acquire` Effect computation carried by a checked-in
+ * sync target. Validated structurally via `Effect.isEffect`; the computation
+ * itself is not schema-decodable data.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+const SyncDataTargetAcquire = S.declare(
+  (input): input is Effect.Effect<SyncDataTargetProjection, SyncDataToTsError, SyncDataTargetServices> =>
+    Effect.isEffect(input)
+).pipe(
+  $I.annoteSchema("SyncDataTargetAcquire", {
+    description: "Opaque Effect computation that acquires a sync target's rendered projection.",
+  })
+);
+
+/**
  * Checked-in sync target definition.
  *
  * @category models
  * @since 0.0.0
  */
-export interface SyncDataTarget {
-  readonly access: SyncDataTargetAccess;
-  readonly acquire: Effect.Effect<SyncDataTargetProjection, SyncDataToTsError, SyncDataTargetServices>;
-  readonly description: string;
-  readonly id: string;
-  readonly sourceUrls: ReadonlyArray<string>;
-}
+export class SyncDataTarget extends S.Class<SyncDataTarget>($I`SyncDataTarget`)(
+  {
+    access: SyncDataTargetAccess,
+    acquire: SyncDataTargetAcquire,
+    description: S.String,
+    id: S.String,
+    sourceUrls: S.Array(S.String),
+  },
+  $I.annote("SyncDataTarget", {
+    description: "Checked-in sync target definition.",
+  })
+) {}
 
 /**
  * Per-file command result after diffing or writing.
@@ -182,21 +205,106 @@ export class SyncDataFileResult extends S.Class<SyncDataFileResult>($I`SyncDataF
 ) {}
 
 /**
+ * A single RFC 6902-subset JSON Patch `add` operation, as produced by
+ * `effect`'s `JsonPatch.get`.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class JsonPatchAddOperation extends S.Class<JsonPatchAddOperation>($I`JsonPatchAddOperation`)(
+  {
+    op: S.Literal("add"),
+    path: S.String,
+    value: S.Json,
+    description: S.optionalKey(S.String),
+  },
+  $I.annote("JsonPatchAddOperation", {
+    description: "JSON Patch add operation.",
+  })
+) {}
+
+/**
+ * A single RFC 6902-subset JSON Patch `remove` operation, as produced by
+ * `effect`'s `JsonPatch.get`.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class JsonPatchRemoveOperation extends S.Class<JsonPatchRemoveOperation>($I`JsonPatchRemoveOperation`)(
+  {
+    op: S.Literal("remove"),
+    path: S.String,
+    description: S.optionalKey(S.String),
+  },
+  $I.annote("JsonPatchRemoveOperation", {
+    description: "JSON Patch remove operation.",
+  })
+) {}
+
+/**
+ * A single RFC 6902-subset JSON Patch `replace` operation, as produced by
+ * `effect`'s `JsonPatch.get`.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class JsonPatchReplaceOperation extends S.Class<JsonPatchReplaceOperation>($I`JsonPatchReplaceOperation`)(
+  {
+    op: S.Literal("replace"),
+    path: S.String,
+    value: S.Json,
+    description: S.optionalKey(S.String),
+  },
+  $I.annote("JsonPatchReplaceOperation", {
+    description: "JSON Patch replace operation.",
+  })
+) {}
+
+/**
+ * Canonical JSON Patch document describing structural drift between a sync
+ * target's previous and current canonical JSON.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CanonicalJsonPatch = S.Array(
+  S.Union([JsonPatchAddOperation, JsonPatchRemoveOperation, JsonPatchReplaceOperation])
+).pipe(
+  $I.annoteSchema("CanonicalJsonPatch", {
+    description: "Canonical JSON Patch document describing structural drift for a sync target.",
+  })
+);
+
+/**
+ * Canonical JSON Patch document describing structural drift between a sync
+ * target's previous and current canonical JSON.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CanonicalJsonPatch = typeof CanonicalJsonPatch.Type;
+
+/**
  * Per-target command result after diffing or writing.
  *
  * @category models
  * @since 0.0.0
  */
-export interface SyncDataTargetResult {
-  readonly canonicalPatch: JsonPatch.JsonPatch;
-  readonly canonicalPath: string;
-  readonly changed: boolean;
-  readonly changedFiles: ReadonlyArray<string>;
-  readonly fileResults: ReadonlyArray<SyncDataFileResult>;
-  readonly outputPaths: ReadonlyArray<string>;
-  readonly recordCount: number;
-  readonly sources: ReadonlyArray<SyncDataSourceMetadata>;
-  readonly sourceUrls: ReadonlyArray<string>;
-  readonly summary: string;
-  readonly targetId: string;
-}
+export class SyncDataTargetResult extends S.Class<SyncDataTargetResult>($I`SyncDataTargetResult`)(
+  {
+    canonicalPatch: CanonicalJsonPatch,
+    canonicalPath: S.String,
+    changed: S.Boolean,
+    changedFiles: S.Array(S.String),
+    fileResults: S.Array(SyncDataFileResult),
+    outputPaths: S.Array(S.String),
+    recordCount: S.Finite,
+    sources: S.Array(SyncDataSourceMetadata),
+    sourceUrls: S.Array(S.String),
+    summary: S.String,
+    targetId: S.String,
+  },
+  $I.annote("SyncDataTargetResult", {
+    description: "Per-target command result after diffing or writing.",
+  })
+) {}

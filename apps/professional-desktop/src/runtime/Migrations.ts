@@ -263,6 +263,13 @@ export const migrateProfessionalDesktopDatabase = (
  * The IPC stdio integration test waits for this marker instead of coupling to
  * the human-readable migration log line.
  *
+ * @example
+ * ```ts
+ * import { SidecarReadyMarker } from "@/runtime/Migrations"
+ *
+ * console.log(SidecarReadyMarker) // "BEEP_PROFESSIONAL_DESKTOP_SIDECAR_READY"
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */

@@ -205,6 +205,20 @@ export type TierGateVerdict = typeof TierGateVerdict.Type;
  * decide: the tool being invoked (carrying its `Tool.Destructive` and other
  * annotations) and an optional caller-supplied tool call identifier.
  *
+ * @example
+ * ```ts
+ * import type { ToolCallRequest } from "@beep/mcp-kit"
+ * import { Tool } from "effect/unstable/ai"
+ * import * as O from "effect/Option"
+ *
+ * const request: ToolCallRequest = {
+ *   tool: Tool.make("search_documents"),
+ *   toolCallId: O.none()
+ * }
+ * console.log(request.tool.name)
+ * // "search_documents"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -391,6 +405,25 @@ export const fromApprovedToolsPolicy = (policy: TierGatePolicy): TierGateShape =
  * record. The wrapped effect never runs on the refused path. Every dispatch
  * — approved or refused — carries an audit record (Q7).
  *
+ * @example
+ * ```ts
+ * import { TierGateAuditRecord, TierGateDispatchResult } from "@beep/mcp-kit"
+ * import * as O from "effect/Option"
+ *
+ * const audit = TierGateAuditRecord.make({
+ *   tool: "search_documents",
+ *   outcome: "approved",
+ *   reason: "Tool is not destructive; no approval required.",
+ *   destructive: false,
+ *   toolCallId: O.none(),
+ *   occurredAt: "2026-07-01T00:00:00.000Z"
+ * })
+ *
+ * const result: TierGateDispatchResult<string> = TierGateDispatchResult.Dispatched({ value: "deleted", audit })
+ * console.log(result._tag)
+ * // "Dispatched"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -405,6 +438,25 @@ interface TierGateDispatchResultDefinition extends Data.TaggedEnum.WithGenerics<
 
 /**
  * Tagged-enum constructors and matchers for {@link TierGateDispatchResult}.
+ *
+ * @example
+ * ```ts
+ * import { TierGateAuditRecord, TierGateDispatchResult } from "@beep/mcp-kit"
+ * import * as O from "effect/Option"
+ *
+ * const audit = TierGateAuditRecord.make({
+ *   tool: "delete_document",
+ *   outcome: "refused",
+ *   reason: "Tool is destructive and not present in the approved-tools policy.",
+ *   destructive: true,
+ *   toolCallId: O.none(),
+ *   occurredAt: "2026-07-01T00:00:00.000Z"
+ * })
+ *
+ * const result = TierGateDispatchResult.Refused({ audit })
+ * console.log(result._tag)
+ * // "Refused"
+ * ```
  *
  * @category constructors
  * @since 0.0.0

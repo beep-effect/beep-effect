@@ -9,10 +9,10 @@
     "P1": "done",
     "P2": "done",
     "P3": "done",
-    "P4": "wave-1-done",
-    "P5": "pending",
-    "P6": "pending",
-    "P7": "pending",
+    "P4": "wave-2-in-progress",
+    "P5": "in_progress",
+    "P6": "zero-pending-baseline-write",
+    "P7": "in_progress",
     "P8": "pending"
   },
   "rulings": {
@@ -30,35 +30,38 @@
       "R11",
       "R12",
       "R14",
-      "R15"
+      "R15",
+      "R16",
+      "R17",
+      "R18",
+      "R19",
+      "R20",
+      "R21",
+      "R22"
     ],
-    "pending": [
-      "R9"
-    ]
+    "pending": ["R9"]
   },
   "counters": {
-    "checkpoint": "2026-07-08 round-2 final",
+    "checkpoint": "2026-07-08 wave-3 regen",
     "dualArity": {
-      "candidates": 0,
-      "exceptions": 0,
-      "entries": 0
+      "entries": 3,
+      "note": "FINAL-B"
     },
     "schemaFirst": {
-      "entries": 90
+      "entries": 27,
+      "note": "6 convert + 13 curate + 5 cand + 3 adv -> FINAL lanes"
     },
     "jsdoc": {
-      "packagesNeedingRemediation": 45,
-      "missingExportExamples": 1215,
-      "missingExportCategories": 91,
-      "missingExportSince": 91,
-      "unsafeExampleFindings": 68,
-      "schemaAnnotationFindings": 126
+      "open": 121,
+      "note": "FINAL lanes + R9 surfaces ~192 after"
     },
     "knip": {
-      "findings": 73
+      "findings": 0,
+      "baseline": "written at 0"
     },
     "allowlist": {
-      "entries": 17
+      "entries": 3,
+      "note": "verified survivors; in-code migration at P8"
     }
   },
   "waves": {
@@ -242,9 +245,27 @@
       }
     },
     "SF-2": {
-      "status": "pending",
+      "status": "in_progress",
       "inventory": "schema-first",
-      "lanes": {}
+      "lanes": {
+        "sf-2-repocli": {
+          "scope": "@beep/repo-cli 26 SF + 8 allowlist",
+          "status": "dispatched",
+          "report": "ops/reports/SF-2/sf-2-repocli.md"
+        },
+        "sf-2-taila": {
+          "scope": "modeling tail: nlp 8, schema 5, identity 3, md 2, utils 2 (sequential)",
+          "status": "done",
+          "report": "ops/reports/SF-2/sf-2-taila.md",
+          "note": "13/20 fixed across 5 pkgs (nlp 8/8); 7 unconvertible -> R18 curation; R15 estimate corrected by live probes."
+        },
+        "sf-2-tailb": {
+          "scope": "acp 4, form 4, test-utils 4, mcp-kit 3, box 2, api-transport 2, langextract 2, ui 2+1AL (sequential)",
+          "status": "done",
+          "report": "ops/reports/SF-2/sf-2-tailb.md",
+          "note": "4 fixed, 14 unconvertible (cited verified classes), 6 -> R17 rules. All 8 pkgs green."
+        }
+      }
     },
     "SF-3": {
       "status": "pending",
@@ -257,10 +278,16 @@
       "lanes": {}
     },
     "JD-1": {
-      "status": "pending",
+      "status": "done",
       "inventory": "jsdoc",
-      "note": "pilot @beep/md + @beep/govinfo",
-      "lanes": {}
+      "lanes": {
+        "jd-1-pilot": {
+          "scope": "@beep/md 47+2+5, @beep/govinfo 14+1+1 \u2014 throughput calibration",
+          "status": "done",
+          "report": "ops/reports/JD-1/jd-1-pilot.md",
+          "note": "md + govinfo at ZERO; recipe + calibration ~190/hr (fixture-rich shape); slower where fixtures invented."
+        }
+      }
     },
     "JD-2": {
       "status": "pending",
@@ -275,10 +302,16 @@
       "lanes": {}
     },
     "JD-4": {
-      "status": "pending",
+      "status": "done",
       "inventory": "jsdoc",
-      "note": "@beep/html after generator fix",
-      "lanes": {}
+      "lanes": {
+        "jd-4-html": {
+          "scope": "@beep/html generator templates (331 ex + 16 annot) + 2 AL entries in generate.ts",
+          "status": "done",
+          "report": "ops/reports/JD-4/jd-4-html.md",
+          "note": "331->0 examples, 16->0 annotations, 2/2 AL converted; generate:check deterministic; docgen green."
+        }
+      }
     },
     "JD-5": {
       "status": "pending",
@@ -293,16 +326,32 @@
       "lanes": {}
     },
     "JD-7": {
-      "status": "pending",
+      "status": "done",
       "inventory": "jsdoc",
-      "note": "modeling rest",
-      "lanes": {}
+      "lanes": {
+        "jd-7a-modeling": {
+          "scope": "pandoc-ast 94, lexical-schema 50, data 36 (sequential)",
+          "status": "done",
+          "report": "ops/reports/JD-7/jd-7a.md",
+          "note": "180->0 across 3 pkgs. Generator-first on @beep/data (4 SyncDataToTs templates emit formatTsLiteral-derived examples; outputs synced). NOTE: crossed into repo-cli fence for the templates (right doctrine call; landed on top of sf2 worker's earlier edits without conflict \u2014 consolidated proof will validate)."
+        }
+      }
     },
     "JD-8": {
-      "status": "pending",
+      "status": "done",
       "inventory": "jsdoc",
-      "note": "drivers",
-      "lanes": {}
+      "lanes": {
+        "jd-8a-batch": {
+          "scope": "file-processing 18, m365-mcp 17, semantic-web 12, observability 11, phoenix 10, uspto-mcp 10, repo-docgen 9 (sequential)",
+          "status": "done",
+          "report": "ops/reports/JD-8/jd-8a.md",
+          "note": "87->0 across 7 pkgs; 492 docgen examples; 221/221 tests. Noted micro-gap: unsafe-example regex matched 'declare' inside a string literal (reworded; rule it if it recurs at scale)."
+        },
+        "jd-8b": {
+          "status": "done",
+          "note": "66/66 fixed (R21 registration completed: $AgentsClientId live, both classes on $I.annote; identifier+annotation migrated together). 0 phantoms, 0 blocked."
+        }
+      }
     },
     "JD-9": {
       "status": "pending",
@@ -311,14 +360,96 @@
       "lanes": {}
     },
     "KN-1": {
-      "status": "pending",
+      "status": "done",
       "inventory": "knip",
-      "lanes": {}
+      "lanes": {
+        "kn-1a-batch": {
+          "scope": "~63 conflict-free findings incl. tsconfig.test.json root-cause cluster; 10 conflicted deferred to KN-1b",
+          "status": "done",
+          "report": "ops/reports/KN-1/kn-1a.md",
+          "note": "73 -> 10 remaining (all conflicted-scope: 9 bun-types manifests + 1 rustc). ReviewGate deduped for real; ignoreExportsUsedInFile scoped to oip-web only (correct knip semantic). KN-1b mop-up queued behind owning lanes."
+        },
+        "kn-1b-mopup": {
+          "scope": "10 one-liners",
+          "status": "done",
+          "note": "KNIP AT ZERO real findings repo-wide (1 transient untracked probe from the repo-cli lane, self-cleaning)."
+        }
+      }
     },
     "AL-1": {
-      "status": "pending",
+      "status": "in_progress",
       "inventory": "allowlist",
-      "lanes": {}
+      "lanes": {
+        "al-1a-batch": {
+          "scope": "6 entries: chalk WeakMap, wink Set, ecfr x2, rdf, desktop script (sequential)",
+          "status": "done",
+          "report": "ops/reports/AL-1/al-1a.md",
+          "note": "6/6 adjudicated: ecfr x2 + desktop FIXED (in tree); chalk/wink/rdf verified-irreplaceable w/ benchmarks -> P8 in-code exclusions + corrected rdf reason."
+        }
+      }
+    },
+    "JD-S": {
+      "status": "done",
+      "inventory": "jsdoc",
+      "lanes": {
+        "jd-s1-headers": {
+          "scope": "@beep/schema shard: HttpStatus + security-header dirs (~175)",
+          "status": "done",
+          "report": "ops/reports/JD-S/jd-s1-headers.md",
+          "note": "~175 findings, 26 files; scoped docgen probe + biome + static audit (package-wide deferred to consolidated proof per fallback instruction)."
+        },
+        "jd-s2-model": {
+          "scope": "@beep/schema shard: Color/FilePath/Model/EntitySchema (~106)",
+          "status": "done",
+          "report": "ops/reports/JD-S/jd-s2-model.md",
+          "note": "106->0; final package-wide turbo docgen GREEN with all three shards combined: 1243 examples 0 errors, 617/617 tests \u2014 @beep/schema jsdoc 460->0 complete."
+        },
+        "jd-s3-tail": {
+          "scope": "@beep/schema shard: Graph + everything else (~180)",
+          "status": "done",
+          "report": "ops/reports/JD-S/jd-s3-tail.md",
+          "note": "tail shard done incl. BufferEncoding/Timestamp (the unnecessaryTypeofType sources)"
+        }
+      }
+    },
+    "JD-UI": {
+      "status": "done",
+      "inventory": "jsdoc",
+      "lanes": {
+        "jd-ui": {
+          "scope": "@beep/ui 110",
+          "status": "done",
+          "report": "ops/reports/JD-UI/jd-ui.md",
+          "note": "110->0 target; 15 files, 32/32 tests, biome clean; docgen end-to-end deferred to consolidated proof (upstream @beep/schema mid-edit by shard lanes, grep-confirmed zero own-path failures)."
+        }
+      }
+    },
+    "JD-MB": {
+      "status": "done",
+      "inventory": "jsdoc",
+      "lanes": {
+        "jd-modelingb": {
+          "scope": "identity 49, nlp 49, utils 46 (sequential; just-modified signatures)",
+          "status": "done",
+          "report": "ops/reports/JD-MB/jd-mb.md",
+          "note": "59 fixed (identity 17, nlp 25, utils 17) w/ live re-audit over stale coordinates; bootstrap-file annotation technique; all suites green. Assignment 2: 80 fixed across 6 pkgs; found R20 (default-export doc misattribution) + annotate-before-toTaggedUnion trap + 2 ecfr generator bugs."
+        }
+      }
+    },
+    "FINAL": {
+      "status": "in_progress",
+      "lanes": {
+        "final-a-repocli": {
+          "scope": "R20 x2 + R9 detector closures + 13 curated additions + repo-cli 58 jsdoc",
+          "status": "dispatched",
+          "report": "ops/reports/FINAL/final-a.md"
+        },
+        "final-b-mixed": {
+          "scope": "13-package sequential: 3 dual-arity + 11 SF converts + 3 advisories + ~60 jsdoc",
+          "status": "dispatched",
+          "report": "ops/reports/FINAL/final-b.md"
+        }
+      }
     }
   },
   "ciRounds": {
@@ -371,6 +502,10 @@
         ],
         "resolution": "git rm -r --cached docs/graphs (files preserved untracked), pushed ea2e954a11",
         "lesson": "verify staging exclusions actually held (git ls-tree HEAD <path> after commit) \u2014 a restore --staged followed by any later git add -A in another call silently re-sweeps; prefer explicit pathspec staging for wave commits"
+      },
+      {
+        "round": "post-rebase",
+        "result": "ALL GREEN \u2014 first fully green run on PR #326 (Lint Policy included). Rebased onto main 65002b47e9."
       }
     ]
   },
@@ -379,5 +514,17 @@
     "bun run changeset:status:since-main (pre-push, after any changeset edit)",
     "TURBO_FORCE=1 lint on touched packages pre-push",
     "beep lint policy pre-push when packet manifests change lifecycle"
-  ]
+  ],
+  "jsdocRemaining": {
+    "packages": 41,
+    "findings": 1200,
+    "bigRocks": {
+      "@beep/schema": 460,
+      "@beep/ui": 110,
+      "@beep/pandoc-ast": 94,
+      "@beep/repo-cli": 58,
+      "@beep/lexical-schema": 50
+    },
+    "note": "JD-schema (460, sharded x3-4) waits for sf2-taila to free the package; ui 110 waits for sf2-tailb; repo-cli 58 waits for sf2-repocli; desktop 35 + ecfr 9 wait for al1a; long tail after."
+  }
 }

@@ -59,6 +59,15 @@ export const UsptoToolErrorReason = UsptoToolErrorReasonBase.pipe(
 /**
  * Type for {@link UsptoToolErrorReason}.
  *
+ * @example
+ * ```ts
+ * import { UsptoToolErrorReason } from "@beep/uspto-mcp/UsptoTools"
+ *
+ * const reason: UsptoToolErrorReason = "transport"
+ * console.log(UsptoToolErrorReason.is.transport(reason))
+ * // true
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -132,6 +141,19 @@ export const UsptoMcpFailure = S.Union([ApiKeyRequiredFailure, UsptoToolError]).
 /**
  * Type for {@link UsptoMcpFailure}.
  *
+ * @example
+ * ```ts
+ * import { UsptoMcpFailure, UsptoToolError } from "@beep/uspto-mcp/UsptoTools"
+ *
+ * const failure: UsptoMcpFailure = UsptoToolError.make({
+ *   message: "USPTO request failed",
+ *   reason: "transport",
+ *   tool: "uspto_get_documents"
+ * })
+ * console.log(UsptoMcpFailure.is(failure))
+ * // true
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -139,6 +161,15 @@ export type UsptoMcpFailure = typeof UsptoMcpFailure.Type;
 
 /**
  * Parameters for {@link UsptoSearchApplicationsTool}.
+ *
+ * @example
+ * ```ts
+ * import { UsptoSearchApplicationsParams } from "@beep/uspto-mcp/UsptoTools"
+ *
+ * const params = UsptoSearchApplicationsParams.make({ query: "applicationMetaData.filingDate:2023-01-01" })
+ * console.log(params.query)
+ * // "applicationMetaData.filingDate:2023-01-01"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -160,6 +191,14 @@ export class UsptoSearchApplicationsParams extends S.Class<UsptoSearchApplicatio
  * Searches USPTO applications by an Open Data Portal query expression.
  * Returns the kit's `api_key_required` envelope when `USPTO_API_KEY` is
  * absent (Q6); returns real `@beep/uspto` results when present.
+ *
+ * @example
+ * ```ts
+ * import { UsptoSearchApplicationsTool } from "@beep/uspto-mcp/UsptoTools"
+ *
+ * console.log(UsptoSearchApplicationsTool.name)
+ * // "uspto_search_applications"
+ * ```
  *
  * @category tools
  * @since 0.0.0
@@ -216,6 +255,14 @@ export class UsptoGetDocumentsParams extends S.Class<UsptoGetDocumentsParams>($I
  * Gated on the same `USPTO_API_KEY` credential as
  * {@link UsptoSearchApplicationsTool}.
  *
+ * @example
+ * ```ts
+ * import { UsptoGetDocumentsTool } from "@beep/uspto-mcp/UsptoTools"
+ *
+ * console.log(UsptoGetDocumentsTool.name)
+ * // "uspto_get_documents"
+ * ```
+ *
  * @category tools
  * @since 0.0.0
  */
@@ -235,6 +282,14 @@ export const UsptoGetDocumentsTool = annotateFourHints(
  * The thin USPTO MCP proving-host toolkit: search plus document listing,
  * both gated on the same `USPTO_API_KEY` credential.
  *
+ * @example
+ * ```ts
+ * import { UsptoToolkit } from "@beep/uspto-mcp/UsptoTools"
+ *
+ * console.log(Object.keys(UsptoToolkit.tools))
+ * // ["uspto_search_applications", "uspto_get_documents"]
+ * ```
+ *
  * @category tools
  * @since 0.0.0
  */
@@ -242,6 +297,15 @@ export const UsptoToolkit = Toolkit.make(UsptoSearchApplicationsTool, UsptoGetDo
 
 /**
  * Type for {@link UsptoToolkit}.
+ *
+ * @example
+ * ```ts
+ * import { UsptoToolkit } from "@beep/uspto-mcp/UsptoTools"
+ *
+ * const toolkit: UsptoToolkit = UsptoToolkit
+ * console.log(Object.keys(toolkit.tools).length)
+ * // 2
+ * ```
  *
  * @category type-level
  * @since 0.0.0

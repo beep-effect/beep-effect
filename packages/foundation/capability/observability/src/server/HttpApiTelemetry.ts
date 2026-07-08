@@ -25,6 +25,16 @@ const resolveHttpApiStatus = SchemaAST.resolveAt<number>("httpApiStatus");
 /**
  * HTTP status code in the standard 100-599 range.
  *
+ * @example
+ * ```typescript
+ * import { HttpStatusCode } from "@beep/observability/server"
+ * import * as S from "effect/Schema"
+ *
+ * const status = S.decodeUnknownSync(HttpStatusCode)(404)
+ * console.log(status)
+ * // 404
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -37,6 +47,16 @@ export const HttpStatusCode = NonNegativeInt.check(S.isBetween({ minimum: 100, m
 
 /**
  * HTTP status code in the standard 100-599 range.
+ *
+ * @example
+ * ```typescript
+ * import { HttpStatusCode } from "@beep/observability/server"
+ * import * as S from "effect/Schema"
+ *
+ * const status: HttpStatusCode = S.decodeUnknownSync(HttpStatusCode)(404)
+ * console.log(status)
+ * // 404
+ * ```
  *
  * @category schemas
  * @since 0.0.0

@@ -330,3 +330,182 @@ and Class `.ast: Declaration` is incompatible with StructWithRest's
 `ast: Objects` constraint (independently reproduced by BOTH sf1-schema and
 sf1-repoutils). A wider makeLooseJsonObject redesign is out of initiative
 scope; the exclusion reasons cite it.
+
+## R16 — effect-laws allowlist adjudication, AL-1a (LOCKED, driver-verified 2026-07-08)
+
+Lane al1a-batch (report: `ops/reports/AL-1/al-1a.md`) challenged 6 entries
+with benchmark-grade evidence; driver spot-verified the two key claims
+(effect v4's own `Hash.ts:527-529`/`MutableHashMap.ts:295` use native
+WeakMap/WeakSet for the identical identity-cache problem; vendored
+`wink-nlp/utilities/similarity.js:111+` requires native-Set instance members).
+
+- **FIXED (3 rows removable)**: both ECFR generator entries (R.keys/values/
+  toEntries + MutableHashSet + A.dedupe; regenerated output byte-identical)
+  and the desktop sidecar native-error (Data.TaggedError, end-to-end verified
+  incl. failure path — the recorded "build-tool conventions" justification
+  was REFUTED by the sibling script's existing precedent).
+- **VERIFIED IRREPLACEABLE (3)**: chalk WeakMap (heap benchmark: 1.01MB vs
+  48.21MB retention over 200k discarded instances; unbounded public
+  constructor); wink native-Set bridge (third-party interface requires
+  instance members — TS2740 + runtime TypeError against the real module);
+  rdf WeakSet traversal — recorded GC reason is FALSE (set is per-call,
+  nothing retained); TRUE reason is identity-vs-structural equality
+  (8.8x-31.1x measured slowdown at depth 200-2000). Reason must be rewritten.
+- **End-state mechanism (P8)**: migrate the 3 survivors to an in-code curated
+  exclusion list in the native-runtime law checker (fixture pair; rdf entry
+  carries the corrected reason), then empty
+  standards/effect-laws.allowlist.jsonc. Escalated to the user with evidence
+  per SPEC scope rule; survivors remain only via the in-code mechanism.
+
+## R17 — generic-branch member-safety parity + fn-schema .tsx exemption (LOCKED, driver-verified 2026-07-08)
+
+Lane sf2-tailb flagged 6 entries with 2 root causes (report:
+`ops/reports/SF-2/sf-2-tailb.md`); driver verified both mechanisms directly:
+`classifyGenericInterface` (`SchemaFirst.ts:1236+`) documents that generics
+only resolve to silent-schema-infra or tracked exception — the R11 member
+carve-outs (service-contract signals, curated runtime-handle members,
+ReactNode/render-boundary members) never run for generics; and
+`fnSchemaEntryFromFunctionLike` has no `.tsx` exemption while its sibling
+null-return rule skips `.tsx` via `isNullReturnEligibleFilePath` (`:1882`).
+
+**AUTHORIZED (fixture pairs each):**
+1. Wire the R11 member-safety carve-outs into `classifyGenericInterface`
+   (compose own members; apply service-contract/runtime-handle/ReactNode
+   signals) so generics get the same silent/candidate treatment as
+   non-generics. Covers FieldOption(form), Step/Tour(ui),
+   PgliteSqlTestLayerOptions/SqlTestDriver(test-utils).
+2. Mirror the `.tsx` file exemption into the SFV4-fn-schema rule (React
+   component boundary — same rationale as the rule's own null-return
+   sibling and the original HeroVideo advisory). Covers
+   CountryFieldDemo/UploadFieldDemo.
+3. After regen, curate (R14 list) only the unconvertible residue that
+   survives R17 rules, with the lane's file:line evidence: acp x4 terminal/
+   protocol handles, mcp-kit FieldTierSet+GatedLayer, box
+   BoxStreamingOperations, api-transport x2, form assertUploadedPreview,
+   test-utils Pglite/SqlTestHooks residue.
+Also ratified: `S.declare(Effect.isEffect)` opaque-guard for inherently
+opaque runtime values follows the @beep/schema AbortSignal precedent and is
+an honest fix, not gate-dodging.
+
+## R15 correction + R18 — tail-a adjudication (LOCKED, 2026-07-08)
+
+Lane sf2-taila (report: `ops/reports/SF-2/sf-2-taila.md`) live-probe-corrected
+R15 item 3: alias resolution covers 3 of the estimated 5 — LiteralKit and
+MappedLiteralKit resolve to `S.Literals<L> & {...}` text with SUBSTANTIVE
+custom helper members (Options/Enum/is/$match/toTaggedUnion), not pure
+aliases. They are schema-toolkit types per the R6-1 category argument but
+need CURATED entries, not pattern matching. R15's estimate stands corrected.
+
+R18 — curated exclusion additions (R14 list; implementation rides
+sf2-repocli's R17 item-3 batch, evidence file:line in the tail-a report):
+- @beep/schema LiteralKit + MappedLiteralKit (schema-toolkit self-definitions
+  with helper members; R6-1 rationale).
+- @beep/utils makeEventSchema (THIRD independent reproduction of the TS2509
+  abstract-`Fields extends S.Struct.Fields` blocker — joins the R15-addendum
+  TSConfig.ts family) + DrainableWorker<A> (TS2562 base-class-expression
+  type-param blocker + Effect-values-not-data).
+- @beep/md PureRenderAdapter + EffectRenderAdapter (deliberate
+  plugin-extension contracts; descriptor/behavior split breaks 5 call sites +
+  dtslint — same deferral class as R14 GraphOperation/OperationDefinition).
+- @beep/identity IdentityComposer (TS2740: callable template-tag signature
+  unsatisfiable by any S.Class instance; reproduced probe).
+Also ratified: expand/contract null-return resolution by EXPORTING the
+existing Option-returning helpers and deleting the null fallback overloads —
+the strongest form of SFV4-null-return fix (API improved, not annotated).
+
+## R19 — jsdoc overload-group consolidation (LOCKED, driver-verified 2026-07-08)
+
+Background verification (empirical ts-morph probe + inventory JSON refs +
+clean-package precedent sweep): `exportedDeclarationsFor`
+(`JSDocDocumentationInventory.ts:645-681`) emits one scored entry PER overload
+signature line (key `name:getStart()`), and `getJsDocText` reads only that
+node's own docs — so a fully-documented overloaded function still yields open
+findings for every non-first signature AND the implementation line. The
+policy (.patterns/jsdoc-documentation.md) is SILENT on overloads; no
+overload-bearing package has ever reached clean; the universal repo practice
+documents the first signature (TSDoc/IDE convention).
+
+**Ruling: detector gap.** Consolidate function-overload groups into ONE
+scoring unit per exported name: the group is resolved when its doc block
+(conventionally on the first signature) satisfies the required tags; overload
+continuation signatures and the implementation line emit no independent
+findings. Malformed/forbidden-tag checks still apply to any doc block found
+on any signature. Fixture pair: documented-first-signature group → single
+resolved entry; fully undocumented group → one open entry (not N).
+Implementation: jsdoc detector owner (queued on sf2-repocli behind R17/R18).
+Affects: Predicate.chainRefinements (x12), Curie expand/contract/
+expandPredicate, Fn.schema Fn/ThunkOf, PatternBuilders pos/entity families.
+
+### R17 implementation note (ratified 2026-07-08)
+
+sf2-repocli's flagged extension is RATIFIED: PERMANENT_SCHEMA_FIRST_EXCLUSIONS
+was wired into the fn-schema loop (it existed only in the struct-scan and
+interface/type-alias paths), which the assertUploadedPreview curation entry
+requires to take effect — mechanical choke-point symmetry, not new judgment.
+Also noted: the lane empirically probe-verified all 19 interface/alias curated
+entries resolve silent and the 2 conditional entries (Pglite/SqlTestDriver)
+still resolve candidate before curating them — the probe-over-trace method is
+the preferred curation verification going forward.
+
+## R20 — jsdoc default-export call-expression misattribution (LOCKED, 2026-07-08)
+
+Lane jd-modelingb (Assignment 2, report: `ops/reports/JD-MB/jd-mb.md`) found
+six fully-documented @beep/lint-rules files still flagged: `export default
+<CallExpression>` (the ESLint-rule module shape) misattributes the doc block —
+the checker reads the inner expression node, not the export declaration
+carrying the docs. Same attribution-bug family as R19. **Ruling: detector
+fix authorized** (attribute docs from the export-assignment/declaration node
+for default-exported call expressions), fixture pair mandatory. Implementation
+rides the next repo-cli-owner lane (with the package's own 58-finding jsdoc
+pass). The 6 phantom findings reconcile at that regen.
+
+Also recorded as a repo lesson (annotate-before-toTaggedUnion): calling
+`.annotate(...)` AFTER `S.toTaggedUnion(...)` silently strips the `.match`
+static — proven by 12 real test failures and fixed by annotating first.
+Candidate for the SPEC API-corrections table in future initiatives.
+
+## R21 — agents-client identity registration + string-literal regex gap (LOCKED, 2026-07-08)
+
+Driver verified `packages/foundation/modeling/identity/src/packages.ts:66-68`
+registers agents-domain/use-cases/server but NOT agents-client — an omission
+(the sibling trio pattern), not a design choice. **Ruling: complete the
+registration** (add "agents-client" + export $AgentsClientId per the exact
+sibling pattern), then fix Chat.atoms.ts StreamingTurn/EditTarget with
+$I.annote. Unblocks the last 2 JD-8b findings.
+
+Also: SECOND independent instance of unsafe-example regexes matching inside
+string literals (" as Effect" in prose; earlier: "declare" in fixture data).
+**Added to the R20 detector batch**: strip string literals before the
+declare/any/as-assertion regex scans, fixture pair. And the
+annotate-before-toTaggedUnion trap was hit independently twice — promoted to
+the SPEC API-corrections table.
+
+## R22 — final-residue adjudication (LOCKED, 2026-07-08)
+
+Wave-3 regen residue (dual-arity 3, schema-first 27, jsdoc 121) adjudicated
+against established classes:
+- **CONVERT (FINAL-B lane)**: dual-arity projectWithinBudget (regression from
+  the un-bundle: 4 positional + invalid arity — restructure to dual(2/3) with
+  options), expandOption/contractOption dual(2) wraps; schema-first 5
+  candidates (box Box.config anonymous@63, file-processing Extraction
+  anonymous@111, identity Id.ts x2 + Vocab anonymous structs) + convertible
+  exceptions: GraphCollection (m365, P2-proven local-class), usptoDocumentFieldTiers,
+  Agent anonymous@65, AssistantContent anonymous@316, CreateThreadAtomInput
+  (P2-audited convertible), lint-rules anonymous@155; 3 advisories: ecfr +
+  html generator .toUpperCase -> Str.toUpperCase (Research.service precedent),
+  uspto R.getSomes -> O.getSomesStruct (Law 20/47).
+- **CURATE (FINAL-A lane, in-code list)**: WinkEngineRuntimeState (R11-3),
+  Step/Tour (ReactNode render boundary, non-generic — R17 class),
+  OfficeActionReviewDeps (service-shape DI container, R11-1 family),
+  MemberAccess (ESTree runtime handles), HubSpotErrorOptions.email
+  (SFV4-precision-audit intentional diagnostic), oipTwitterHandle
+  (SFV4-null-return Next.js Metadata contract), law-practice
+  fixture SFV4-arbitrary-tests (same class as the 6 curated),
+  PeerDependencyMetaEntry + PublishConfigBase (StructWithRest ast,
+  R15-addendum family), LocalDateFields (feeds-S.Class shape the existing
+  exclusion missed — note for the fixture), HtmlElementMeta (generated
+  lookup), GlobalAttributesStruct (toolkit-internal spread source).
+- **FINAL-A also lands**: repo-cli's 58 jsdoc findings, the R20 detector fixes
+  (default-export attribution + string-literal stripping before unsafe-example
+  regexes), and the R9 namespaced-barrel scan closure (scan `export * as`
+  targets as owning modules; expected +~192 findings absorbed by FINAL-B/C).

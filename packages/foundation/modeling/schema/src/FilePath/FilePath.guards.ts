@@ -45,6 +45,15 @@ export const HasNullByte = S.String.check(
 /**
  * Branded string type containing an embedded NUL byte.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HasNullByte } from "@beep/schema/FilePath"
+ *
+ * const value: HasNullByte = S.decodeUnknownSync(HasNullByte)("hello\x00world")
+ * console.log(value.length)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -84,6 +93,15 @@ export const SupportedWindowsNamespace = S.NonEmptyString.check(
 /**
  * Type for {@link SupportedWindowsNamespace}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { SupportedWindowsNamespace } from "@beep/schema/FilePath"
+ *
+ * const value: SupportedWindowsNamespace = S.decodeUnknownSync(SupportedWindowsNamespace)("C:\\Users\\Ada")
+ * console.log(value)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -121,6 +139,15 @@ export const UsesPosixSeparator = S.String.check(
 
 /**
  * Type for {@link UsesPosixSeparator}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { UsesPosixSeparator } from "@beep/schema/FilePath"
+ *
+ * const value: UsesPosixSeparator = S.decodeUnknownSync(UsesPosixSeparator)("src/index.ts")
+ * console.log(value)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -160,6 +187,15 @@ export const UsesWindowsSeparator = S.String.check(
 /**
  * Type for {@link UsesWindowsSeparator}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { UsesWindowsSeparator } from "@beep/schema/FilePath"
+ *
+ * const value: UsesWindowsSeparator = S.decodeUnknownSync(UsesWindowsSeparator)("C:\\Users\\Ada")
+ * console.log(value)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -197,6 +233,15 @@ export const EndsWithSeparator = S.String.check(
 
 /**
  * Type for {@link EndsWithSeparator}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { EndsWithSeparator } from "@beep/schema/FilePath"
+ *
+ * const value: EndsWithSeparator = S.decodeUnknownSync(EndsWithSeparator)("src/")
+ * console.log(value)
+ * ```
  *
  * @since 0.0.0
  * @category models

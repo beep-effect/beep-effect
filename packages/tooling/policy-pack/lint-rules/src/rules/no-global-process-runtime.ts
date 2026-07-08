@@ -1,3 +1,11 @@
+/**
+ * Oxlint rule blocking direct host platform/architecture reads outside the
+ * shared host-process reference module.
+ *
+ * @packageDocumentation
+ * @since 0.1.0
+ */
+
 import { defineRule } from "@oxlint/plugins";
 import { HashSet, MutableHashMap, MutableHashSet } from "effect";
 import * as O from "effect/Option";

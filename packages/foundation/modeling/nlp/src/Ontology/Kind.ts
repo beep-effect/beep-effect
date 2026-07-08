@@ -124,16 +124,20 @@ export const TextKindSchema: S.Schema<TextKind> = TextKind.pipe(
  * @category schemas
  * @since 0.0.0
  */
-export const TypedTextSchema = <K extends TextKind>(kind: S.Schema<K>) =>
-  S.Struct({
-    kind,
-    content: S.String,
-    metadata: S.optionalKey(S.Record(S.String, S.Unknown)),
-  }).pipe(
-    $I.annoteSchema("TypedTextSchema", {
+export const TypedTextSchema = <K extends TextKind>(kind: S.Schema<K>) => {
+  class TypedTextSchemaClass extends S.Class<TypedTextSchemaClass>($I`TypedTextSchema`)(
+    {
+      kind,
+      content: S.String,
+      metadata: S.optionalKey(S.Record(S.String, S.Unknown)),
+    },
+    $I.annote("TypedTextSchema", {
       description: "Generic schema for text content tagged with a supplied ontology kind.",
     })
-  );
+  ) {}
+
+  return TypedTextSchemaClass;
+};
 
 /**
  * Text content tagged with its ontological kind.

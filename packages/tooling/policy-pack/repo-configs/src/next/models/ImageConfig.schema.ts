@@ -32,6 +32,20 @@ export const LoaderValue = LiteralKit(["default", "imgix", "cloudinary", "akamai
   })
 );
 
+/**
+ * Literal union of valid Next.js image loader values.
+ *
+ * @example
+ * ```ts
+ * import type { LoaderValue } from "@beep/repo-configs/next/models/ImageConfig.schema"
+ * const loader: LoaderValue = "default"
+ * console.log(loader)
+ * ```
+ * @category schemas
+ * @since 0.0.0
+ */
+export type LoaderValue = typeof LoaderValue.Type;
+
 const ImageQuality = S.Int.check(S.isBetween({ minimum: 1, maximum: 100 })).pipe(
   $I.annoteSchema("ImageQuality", {
     description: "Next.js image quality value from 1 through 100.",

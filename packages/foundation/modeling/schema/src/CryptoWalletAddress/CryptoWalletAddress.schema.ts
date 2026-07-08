@@ -142,6 +142,17 @@ export const CryptoWalletAddress = S.NonEmptyString.check(CryptoWalletAddressChe
 /**
  * Type for {@link CryptoWalletAddress}.
  *
+ * @example
+ * ```ts
+ * import { CryptoWalletAddress } from "@beep/schema/CryptoWalletAddress"
+ * import * as S from "effect/Schema"
+ *
+ * const address: CryptoWalletAddress = S.decodeUnknownSync(CryptoWalletAddress)(
+ *   "0x0000000000000000000000000000000000000000"
+ * )
+ * console.log(address)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -173,6 +184,16 @@ export const CryptoWalletAddressRedacted = CryptoWalletAddress.pipe(
 
 /**
  * Type for {@link CryptoWalletAddressRedacted}.
+ *
+ * @example
+ * ```ts
+ * import { CryptoWalletAddressRedacted } from "@beep/schema/CryptoWalletAddress"
+ *
+ * const address: CryptoWalletAddressRedacted = CryptoWalletAddressRedacted.makeRedacted(
+ *   "0x0000000000000000000000000000000000000000"
+ * )
+ * console.log(address)
+ * ```
  *
  * @since 0.0.0
  * @category models

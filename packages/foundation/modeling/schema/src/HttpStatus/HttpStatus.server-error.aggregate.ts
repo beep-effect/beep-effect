@@ -58,6 +58,16 @@ export const HttpStatus5XX = MappedLiteralKit([
 /**
  * A namespace for {@link HttpStatus5XX} to contain the Encoded type
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HttpStatus5XX } from "@beep/schema/HttpStatus"
+ *
+ * const encoded: HttpStatus5XX.Encoded = "InternalServerError"
+ * const status = S.decodeUnknownSync(HttpStatus5XX)(encoded)
+ * console.log(status) // 500
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -73,6 +83,14 @@ export declare namespace HttpStatus5XX {
 
 /**
  * {@inheritDoc HttpStatus5XX}
+ *
+ * @example
+ * ```ts
+ * import type { HttpStatus5XX } from "@beep/schema/HttpStatus"
+ *
+ * const status: HttpStatus5XX = 500
+ * console.log(status)
+ * ```
  *
  * @category validation
  * @since 0.0.0

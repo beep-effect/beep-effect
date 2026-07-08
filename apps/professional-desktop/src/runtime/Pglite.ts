@@ -66,6 +66,13 @@ const ChatDbDataDir = Config.string("CHAT_DB_PATH").pipe(
  * embedded `@effect/sql-pglite` / `@electric-sql/pglite` line. Bump the marker
  * whenever that storage compatibility contract changes.
  *
+ * @example
+ * ```ts
+ * import { ChatDbCompatibilityMarker } from "@/runtime/Pglite"
+ *
+ * console.log(ChatDbCompatibilityMarker) // ".beep-pglite-inprocess-v1"
+ * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -105,6 +112,14 @@ const writeCompatibilityMarker = Effect.fn("ProfessionalDesktop.Pglite.writeComp
 
 /**
  * Mark a data directory after the in-process PGlite runtime has opened it.
+ *
+ * @example
+ * ```ts
+ * import { markCompatibleChatDbDataDir } from "@/runtime/Pglite"
+ *
+ * const program = markCompatibleChatDbDataDir("/tmp/example-chat-db")
+ * console.log(program)
+ * ```
  *
  * @category runtime
  * @since 0.0.0
@@ -165,6 +180,14 @@ const assertCanOpenInProcessPgliteDataDir = Effect.fn("ProfessionalDesktop.Pglit
  * {@link ChatDbCompatibilityMarker} after the real in-process PGlite layer opens
  * and its migrations apply successfully. Unreadable directories fail boot
  * instead of being quarantined.
+ *
+ * @example
+ * ```ts
+ * import { ensureCompatibleChatDbDataDir } from "@/runtime/Pglite"
+ *
+ * const program = ensureCompatibleChatDbDataDir("/tmp/example-chat-db")
+ * console.log(program)
+ * ```
  *
  * @category runtime
  * @since 0.0.0
@@ -246,6 +269,14 @@ const PgliteBinaryAssets = Effect.all([compileWasmFile(pgliteWasmPath), compileW
 /**
  * Build a PGlite layer with the desktop sidecar's bundled binary assets.
  *
+ * @example
+ * ```ts
+ * import { makeBundledPgliteLayer } from "@/runtime/Pglite"
+ *
+ * const layer = makeBundledPgliteLayer({ dataDir: "/tmp/example-chat-db" })
+ * console.log(layer)
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -259,6 +290,13 @@ const MigrationPlatformLive = Layer.mergeAll(BunFileSystem.layer, BunPath.layer)
  * database, with the sidecar migrations applied on boot. This is the shared
  * database every sidecar repository (the Drizzle ThreadStore, the Drizzle
  * usage-record sink) runs against.
+ *
+ * @example
+ * ```ts
+ * import { PgliteDrizzleLive } from "@/runtime/Pglite"
+ *
+ * console.log(PgliteDrizzleLive)
+ * ```
  *
  * @category layers
  * @since 0.0.0

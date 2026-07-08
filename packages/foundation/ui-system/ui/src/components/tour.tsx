@@ -177,8 +177,9 @@ function useTour() {
  * ```ts
  * import type { Step } from "@beep/ui/components/tour"
  *
- * const value = {} as Step
- * console.log(value)
+ * const step: Step = { id: "welcome", title: "Welcome", content: "Let's get started." }
+ *
+ * console.log(step.id)
  * ```
  *
  * @category type-level
@@ -204,10 +205,12 @@ interface Step {
  *
  * @example
  * ```ts
- * import type { Tour } from "@beep/ui/components/tour"
+ * import type { Step, Tour } from "@beep/ui/components/tour"
  *
- * const value = {} as Tour
- * console.log(value)
+ * const steps: Step[] = [{ id: "welcome", title: "Welcome", content: "Let's get started." }]
+ * const tour: Tour = { id: "onboarding", steps }
+ *
+ * console.log(tour.steps.length)
  * ```
  *
  * @category type-level

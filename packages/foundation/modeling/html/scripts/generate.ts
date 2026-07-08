@@ -20,7 +20,9 @@ import { $HtmlId } from "@beep/identity";
  */
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { Effect, FileSystem, Layer, Logger, Path } from "effect";
+import { Effect, FileSystem, Layer, Logger, MutableHashMap, MutableHashSet, Path } from "effect";
+import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { GlobalAttributes } from "../src/Html.attributes.ts";
 
@@ -35,7 +37,7 @@ const $I = $HtmlId.create("scripts/generate");
 // exports it imports from `Html.attributes` / `Html.nodes`. Collisions get an
 // `Element` suffix (`<s>` -> `SElement`, `<dir>` -> `DirElement`,
 // `<object>` -> `ObjectElement`); the `_tag` value is always the real tag name.
-const RESERVED = new Set([
+const RESERVED = MutableHashSet.fromIterable([
   "Object",
   "Function",
   "Array",
@@ -101,7 +103,7 @@ const RESERVED = new Set([
 
 const className = (tag: string): string => {
   const pascal = tag.charAt(0).toUpperCase() + tag.slice(1);
-  return RESERVED.has(pascal) ? `${pascal}Element` : pascal;
+  return MutableHashSet.has(RESERVED, pascal) ? `${pascal}Element` : pascal;
 };
 
 const CATEGORIES: ReadonlyArray<readonly [string, string]> = [
@@ -215,56 +217,56 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
 
   const elementDfns = dfns.filter((d) => d.type === "element");
   const elementNames: ReadonlyArray<string> = elementDfns.map((d) => d.linkingText[0]);
-  const elementNameSet = new Set(elementNames);
+  const elementNameSet = MutableHashSet.fromIterable(elementNames);
   const isObsolete = (d: Dfn | undefined): boolean => d !== undefined && /\/obsolete\.html/.test(d.href);
 
   // element -> specific attribute names (webref `for` arrays already expand
   // groups to concrete element names; the only non-element `for` tokens are the
   // global groups, which we skip).
-  const elemAttrs = new Map<string, Set<string>>();
-  for (const name of elementNames) elemAttrs.set(name, new Set());
+  const elemAttrs = MutableHashMap.empty<string, MutableHashSet.MutableHashSet<string>>();
+  for (const name of elementNames) MutableHashMap.set(elemAttrs, name, MutableHashSet.empty<string>());
   for (const ea of dfns.filter((d) => d.type === "element-attr")) {
     const attr = ea.linkingText[0];
     for (const f of ea.for ?? []) {
-      if (elementNameSet.has(f)) elemAttrs.get(f)!.add(attr);
+      if (MutableHashSet.has(elementNameSet, f)) {
+        const bucket = MutableHashMap.get(elemAttrs, f);
+        if (O.isSome(bucket)) MutableHashSet.add(bucket.value, attr);
+      }
     }
   }
 
   // "element/attr" (or "group/attr") -> permitted value keywords
-  const enumValues = new Map<string, Array<string>>();
+  const enumValues = MutableHashMap.empty<string, Array<string>>();
   for (const av of dfns.filter((d) => d.type === "attr-value")) {
     for (const f of av.for ?? []) {
-      let arr = enumValues.get(f);
-      if (arr === undefined) {
-        arr = [];
-        enumValues.set(f, arr);
-      }
+      const arr = MutableHashMap.get(enumValues, f).pipe(O.getOrElse((): Array<string> => []));
       arr.push(av.linkingText[0]);
+      MutableHashMap.set(enumValues, f, arr);
     }
   }
 
-  const interfaceByName = new Map<string, string>();
-  for (const e of elementsData) interfaceByName.set(e.name, e.interface);
+  const interfaceByName = MutableHashMap.empty<string, string>();
+  for (const e of elementsData) MutableHashMap.set(interfaceByName, e.name, e.interface);
 
-  const globalKeys = new Set(Object.keys(GlobalAttributes));
-  const booleanAttrs = new Set<string>(classification.booleanAttributes);
-  const numericAttrs = new Set<string>(classification.numericAttributes);
-  const voidEls = new Set<string>(classification.void);
-  const rawTextEls = new Set<string>(classification.rawText);
+  const globalKeys = MutableHashSet.fromIterable<string>(R.keys(GlobalAttributes));
+  const booleanAttrs = MutableHashSet.fromIterable(classification.booleanAttributes);
+  const numericAttrs = MutableHashSet.fromIterable(classification.numericAttributes);
+  const voidEls = MutableHashSet.fromIterable(classification.void);
+  const rawTextEls = MutableHashSet.fromIterable(classification.rawText);
 
   const valueSchema = (el: string, attr: string): AttributeSpec => {
     // HTML boolean attributes accept true/false and the empty-string presence
     // form (`disabled=""`); mirror the hand-authored `BooleanAttribute` overlay.
-    if (booleanAttrs.has(attr)) {
+    if (MutableHashSet.has(booleanAttrs, attr)) {
       return {
         runtime: optionalRuntime('S.Union([S.Boolean, S.Literal("")])'),
         type: 'O.Option<boolean | "">',
         encoded: 'boolean | ""',
       };
     }
-    const vals = enumValues.get(`${el}/${attr}`);
-    if (vals !== undefined && vals.length > 0) {
-      const uniq = [...new Set(vals)];
+    const valsOption = MutableHashMap.get(enumValues, `${el}/${attr}`);
+    if (O.isSome(valsOption) && valsOption.value.length > 0) {
+      const uniq = [...MutableHashSet.fromIterable(valsOption.value)];
       const schema =
         uniq.length === 1 ? `S.Literal(${JSON.stringify(uniq[0])})` : `S.Literals(${JSON.stringify(uniq)})`;
       const union = literalUnion(uniq);
@@ -274,7 +276,7 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
         encoded: union,
       };
     }
-    if (numericAttrs.has(attr)) {
+    if (MutableHashSet.has(numericAttrs, attr)) {
       return {
         runtime: optionalRuntime("S.Int"),
         type: "O.Option<number>",
@@ -291,7 +293,10 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
   // Generated runtime field body + TS type bodies for an element's specific
   // attributes (globals/`_tag`/children excluded).
   const specificBodies = (el: string): { encoded: string; runtime: string; type: string } => {
-    const attrs = [...elemAttrs.get(el)!].filter((a) => !globalKeys.has(a)).sort();
+    const attrBucket = MutableHashMap.get(elemAttrs, el).pipe(
+      O.getOrElse((): MutableHashSet.MutableHashSet<string> => MutableHashSet.empty())
+    );
+    const attrs = [...attrBucket].filter((a) => !MutableHashSet.has(globalKeys, a)).sort();
     if (attrs.length === 0) return { encoded: "", runtime: "", type: "" };
     const fields = attrs.map((attr) => [attr, valueSchema(el, attr)] as const);
     return {
@@ -302,12 +307,18 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
   };
 
   const interfaceOf = (name: string, obsolete: boolean): string =>
-    interfaceByName.get(name) ?? obsoleteInterfaces[name] ?? (obsolete ? "HTMLUnknownElement" : "HTMLElement");
+    MutableHashMap.get(interfaceByName, name).pipe(
+      O.getOrElse(() => obsoleteInterfaces[name] ?? (obsolete ? "HTMLUnknownElement" : "HTMLElement"))
+    );
 
   const els: ReadonlyArray<El> = [...elementNames].sort().map((tag): El => {
     const d = elementDfns.find((x) => x.linkingText[0] === tag);
     const obsolete = isObsolete(d);
-    const kind: Kind = voidEls.has(tag) ? "void" : rawTextEls.has(tag) ? "rawText" : "normal";
+    const kind: Kind = MutableHashSet.has(voidEls, tag)
+      ? "void"
+      : MutableHashSet.has(rawTextEls, tag)
+        ? "rawText"
+        : "normal";
     const { encoded, runtime, type } = specificBodies(tag);
     return {
       tag,
@@ -332,6 +343,18 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
         ? "    readonly content: string;"
         : `    readonly children: HtmlChildren.${encoded ? "Encoded" : "Type"};`;
 
+  // `.make()` call argument body for a class example, driven by element `kind`.
+  const exampleArgs = (kind: Kind): string =>
+    kind === "void" ? "{}" : kind === "rawText" ? '{ content: "" }' : "{ children: [] }";
+
+  // `Encoded`-literal body for a companion-namespace example, driven by element `kind`.
+  const exampleEncoded = (tag: string, kind: Kind): string =>
+    kind === "void"
+      ? `{ _tag: "${tag}" }`
+      : kind === "rawText"
+        ? `{ _tag: "${tag}", content: "" }`
+        : `{ _tag: "${tag}", children: [] }`;
+
   const elementBlock = (e: El): string => {
     const desc = `The <${e.tag}> element.${e.obsolete ? " Obsolete / non-conforming (WHATWG §16.2)." : ""}`;
     const runtimeFields = ["    ...GlobalAttributes,", e.runtime !== "" ? `    ${e.runtime},` : "", childField(e.kind)]
@@ -348,6 +371,14 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     return `/**
  * ${desc}
  *
+ * @example
+ * \`\`\`ts
+ * import { ${e.cls} } from "@beep/html/Html.model"
+ *
+ * const node = ${e.cls}.make(${exampleArgs(e.kind)})
+ * console.log(node._tag) // "${e.tag}"
+ * \`\`\`
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -360,6 +391,14 @@ ${runtimeFields}
 ) {}
 /**
  * Companion namespace for {@link ${e.cls}}.
+ *
+ * @example
+ * \`\`\`ts
+ * import { ${e.cls} } from "@beep/html/Html.model"
+ *
+ * const encoded: ${e.cls}.Encoded = ${exampleEncoded(e.tag, e.kind)}
+ * console.log(encoded._tag) // "${e.tag}"
+ * \`\`\`
  *
  * @category elements
  * @since 0.0.0
@@ -380,6 +419,14 @@ ${typeFields(true)}
     `/**
  * ${desc}
  *
+ * @example
+ * \`\`\`ts
+ * import { ${cls} } from "@beep/html/Html.model"
+ *
+ * const node = ${cls}.make(${exampleArgs("normal")})
+ * console.log(node._tag) // "${tag}"
+ * \`\`\`
+ *
  * @category models
  * @since 0.0.0
  */
@@ -390,6 +437,14 @@ export class ${cls} extends S.TaggedClass<${cls}>($I\`${cls}\`)(
 ) {}
 /**
  * Companion namespace for {@link ${cls}}.
+ *
+ * @example
+ * \`\`\`ts
+ * import { ${cls} } from "@beep/html/Html.model"
+ *
+ * const encoded: ${cls}.Encoded = ${exampleEncoded(tag, "normal")}
+ * console.log(encoded._tag) // "${tag}"
+ * \`\`\`
  *
  * @category models
  * @since 0.0.0
@@ -404,13 +459,23 @@ export declare namespace ${cls} {
   const unionMembers = [...els.map((e) => e.cls), "Text", "Comment", "Doctype", "Document", "Fragment"];
 
   const categoryUnion = (name: string, cat: string): string => {
-    const members = els.filter((e) => e.categories.includes(cat)).map((e) => e.cls);
-    if (members.length === 0) return "";
+    const matching = els.filter((e) => e.categories.includes(cat));
+    if (matching.length === 0) return "";
+    const members = matching.map((e) => e.cls);
     const types = members.map((m) => `${m}.Type`).join(" | ");
     const encodeds = members.map((m) => `${m}.Encoded`).join(" | ");
+    const representative = matching[0]!;
     return `/**
  * Advisory sub-union of elements in the "${cat}" content category. Non-normative
  * (derived from the WHATWG element index); see \`data/SOURCES.md\`.
+ *
+ * @example
+ * \`\`\`ts
+ * import { ${representative.cls}, ${name} } from "@beep/html/Html.model"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(${name})(${representative.cls}.make(${exampleArgs(representative.kind)}))) // true
+ * \`\`\`
  *
  * @category schemas
  * @since 0.0.0
@@ -467,6 +532,14 @@ const taggedUnion = <A, E>(id: string, description: string, members: ReadonlyArr
 /**
  * Recursive list of HTML AST child nodes (any {@link HtmlNode}).
  *
+ * @example
+ * \`\`\`ts
+ * import { HtmlChildren } from "@beep/html/Html.model"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HtmlChildren)([])) // true
+ * \`\`\`
+ *
  * @category models
  * @since 0.0.0
  */
@@ -474,7 +547,30 @@ export const HtmlChildren = S.Array(S.suspend((): S.Codec<HtmlNode.Type, HtmlNod
   $I.annoteSchema("HtmlChildren", { description: "Recursive list of HTML AST child nodes." })
 );
 /**
+ * Decoded type of {@link HtmlChildren}.
+ *
+ * @example
+ * \`\`\`ts
+ * import type { HtmlChildren } from "@beep/html/Html.model"
+ *
+ * const children: HtmlChildren = []
+ * console.log(children.length) // 0
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlChildren = typeof HtmlChildren.Type;
+/**
  * Companion namespace for {@link HtmlChildren}.
+ *
+ * @example
+ * \`\`\`ts
+ * import type { HtmlChildren } from "@beep/html/Html.model"
+ *
+ * const children: HtmlChildren.Type = []
+ * console.log(children.length) // 0
+ * \`\`\`
  *
  * @category models
  * @since 0.0.0
@@ -490,6 +586,14 @@ export declare namespace HtmlChildren {
  * Discriminated union of every HTML AST node — all ${els.length} elements plus the
  * text, comment, doctype, document, and fragment node kinds — keyed on \`_tag\`.
  *
+ * @example
+ * \`\`\`ts
+ * import { A, HtmlNode } from "@beep/html/Html.model"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HtmlNode)(A.make({ children: [] }))) // true
+ * \`\`\`
+ *
  * @category models
  * @since 0.0.0
  */
@@ -500,6 +604,15 @@ export const HtmlNode = taggedUnion<HtmlNode.Type, HtmlNode.Encoded>(
 );
 /**
  * Companion namespace for {@link HtmlNode}.
+ *
+ * @example
+ * \`\`\`ts
+ * import { A } from "@beep/html/Html.model"
+ * import type { HtmlNode } from "@beep/html/Html.model"
+ *
+ * const node: HtmlNode.Type = A.make({ children: [] })
+ * console.log(node._tag) // "a"
+ * \`\`\`
  *
  * @category models
  * @since 0.0.0
@@ -529,7 +642,9 @@ ${unionMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
     })
     .join("\n");
 
-  const categoryValues = JSON.stringify([...new Set(els.flatMap((element) => element.categories))].sort());
+  const categoryValues = JSON.stringify(
+    [...MutableHashSet.fromIterable(els.flatMap((element) => element.categories))].sort()
+  );
 
   const meta = `/**
  * GENERATED FILE — do not edit by hand. Run \`bun run generate\`.
@@ -582,6 +697,21 @@ export type HtmlCategory = typeof HtmlCategory.Type;
 /**
  * Schema describing one HTML element kind's metadata.
  *
+ * @example
+ * \`\`\`ts
+ * import { HtmlElementMeta } from "@beep/html/Html.meta"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HtmlElementMeta)({
+ *   tag: "div",
+ *   interface: "HTMLDivElement",
+ *   conformance: "conforming",
+ *   void: false,
+ *   rawText: false,
+ *   categories: ["flow"]
+ * })) // true
+ * \`\`\`
+ *
  * @category models
  * @since 0.0.0
  */
@@ -597,6 +727,21 @@ export const HtmlElementMeta = S.Struct({
 /**
  * Decoded type of {@link HtmlElementMeta}.
  *
+ * @example
+ * \`\`\`ts
+ * import type { HtmlElementMeta } from "@beep/html/Html.meta"
+ *
+ * const meta: HtmlElementMeta = {
+ *   tag: "div",
+ *   interface: "HTMLDivElement",
+ *   conformance: "conforming",
+ *   void: false,
+ *   rawText: false,
+ *   categories: ["flow"]
+ * }
+ * console.log(meta.tag) // "div"
+ * \`\`\`
+ *
  * @category models
  * @since 0.0.0
  */
@@ -604,6 +749,13 @@ export type HtmlElementMeta = typeof HtmlElementMeta.Type;
 
 /**
  * Metadata for every generated HTML element, keyed by tag name.
+ *
+ * @example
+ * \`\`\`ts
+ * import { ELEMENT_META } from "@beep/html/Html.meta"
+ *
+ * console.log(ELEMENT_META.div.interface) // "HTMLDivElement"
+ * \`\`\`
  *
  * @category models
  * @since 0.0.0

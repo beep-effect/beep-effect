@@ -99,6 +99,27 @@ export class SearchResult extends S.Class<SearchResult>($I`SearchResult`)(
 /**
  * Companion namespace for {@link SearchResult} encoded helpers.
  *
+ * @example
+ * ```ts
+ * import { SearchResult } from "@beep/govinfo/domain/values/SearchResult/SearchResult.model";
+ * import * as S from "effect/Schema";
+ *
+ * const result: SearchResult = S.decodeUnknownSync(SearchResult)({
+ *   collectionCode: "FR",
+ *   dateIngested: "2024-01-05T00:00:00Z",
+ *   dateIssued: "2024-01-04T00:00:00Z",
+ *   download: { pdfLink: "https://api.govinfo.gov/packages/FR-2024-01-04/pdf" },
+ *   governmentAuthor: ["National Archives and Records Administration"],
+ *   granuleId: "2024-00001",
+ *   lastModified: "2024-01-05T14:30:00Z",
+ *   packageId: "FR-2024-01-04",
+ *   resultLink: "https://api.govinfo.gov/packages/FR-2024-01-04/summary",
+ *   title: "Federal Register, Volume 89 Issue 2"
+ * });
+ *
+ * console.log(result.packageId);
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */

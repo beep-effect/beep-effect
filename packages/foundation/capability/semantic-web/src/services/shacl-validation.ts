@@ -53,6 +53,23 @@ export const ShaclSeverity = LiteralKit(["info", "warning", "violation"]).pipe(
 );
 
 /**
+ * Type for {@link ShaclSeverity}.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import { ShaclSeverity } from "@beep/semantic-web/services/shacl-validation"
+ *
+ * const severity: ShaclSeverity = "violation"
+ * strictEqual(ShaclSeverity.is.violation(severity), true)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type ShaclSeverity = typeof ShaclSeverity.Type;
+
+/**
  * SHACL property shape used by the bounded service contract.
  *
  * @example
@@ -248,6 +265,23 @@ export const ShaclValidationErrorReason = LiteralKit(["invalidShape", "engineFai
     semanticSchemaMetadata: serviceContractMetadata("ShaclValidationErrorReason", "SHACL validation error reason."),
   })
 );
+
+/**
+ * Type for {@link ShaclValidationErrorReason}.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import { ShaclValidationErrorReason } from "@beep/semantic-web/services/shacl-validation"
+ *
+ * const reason: ShaclValidationErrorReason = "invalidShape"
+ * strictEqual(ShaclValidationErrorReason.is.invalidShape(reason), true)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type ShaclValidationErrorReason = typeof ShaclValidationErrorReason.Type;
 
 /**
  * Typed SHACL validation error.

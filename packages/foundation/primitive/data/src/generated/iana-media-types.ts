@@ -12,6 +12,13 @@
 /**
  * Stable source metadata for the official IANA media type registry.
  *
+ * @example
+ * ```typescript
+ * import { OfficialMimeTypeDataMetadata } from "@beep/data/generated/iana-media-types"
+ *
+ * console.assert(OfficialMimeTypeDataMetadata.updated === "2026-06-12")
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -24,6 +31,13 @@ export const OfficialMimeTypeDataMetadata = {
 /**
  * Last updated date reported by the official IANA media type registry.
  *
+ * @example
+ * ```typescript
+ * import { OfficialMimeTypeDataUpdated } from "@beep/data/generated/iana-media-types"
+ *
+ * console.assert(OfficialMimeTypeDataUpdated === "2026-06-12")
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -31,6 +45,13 @@ export const OfficialMimeTypeDataUpdated = "2026-06-12" as const;
 
 /**
  * Official IANA media type registry source URL.
+ *
+ * @example
+ * ```typescript
+ * import { OfficialMimeTypeDataSourceUrl } from "@beep/data/generated/iana-media-types"
+ *
+ * console.assert(OfficialMimeTypeDataSourceUrl.endsWith("media-types.xml"))
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -40,6 +61,13 @@ export const OfficialMimeTypeDataSourceUrl = "https://www.iana.org/assignments/m
 /**
  * SHA-256 digest of the official source payload used for this generated module.
  *
+ * @example
+ * ```typescript
+ * import { OfficialMimeTypeDataSourceSha256 } from "@beep/data/generated/iana-media-types"
+ *
+ * console.assert(OfficialMimeTypeDataSourceSha256.length === 64)
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -47,6 +75,14 @@ export const OfficialMimeTypeDataSourceSha256 = "08ccc35c87a54045f7c09146778cddd
 
 /**
  * Normalized IANA media type entries.
+ *
+ * @example
+ * ```typescript
+ * import { OfficialMimeTypeDataValues } from "@beep/data/generated/iana-media-types"
+ *
+ * const sample = OfficialMimeTypeDataValues.find((entry) => entry.type === "application/1d-interleaved-parityfec")
+ * console.assert(sample?.topLevel === "application")
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -14734,6 +14770,13 @@ export const OfficialMimeTypeDataValues = [
 /**
  * Normalized IANA media type entries keyed by full media type.
  *
+ * @example
+ * ```typescript
+ * import { OfficialMimeTypeDataByType } from "@beep/data/generated/iana-media-types"
+ *
+ * console.assert(OfficialMimeTypeDataByType["application/1d-interleaved-parityfec"].name === "1d-interleaved-parityfec")
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -29420,6 +29463,13 @@ export const OfficialMimeTypeDataByType = {
 /**
  * IANA media type literal values.
  *
+ * @example
+ * ```typescript
+ * import { OfficialMimeTypeDataTypeValues } from "@beep/data/generated/iana-media-types"
+ *
+ * console.assert(OfficialMimeTypeDataTypeValues.includes("application/1d-interleaved-parityfec"))
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -31730,6 +31780,13 @@ export const OfficialMimeTypeDataTypeValues = [
 
 /**
  * IANA media type entries grouped for schema category helpers.
+ *
+ * @example
+ * ```typescript
+ * import { OfficialMimeTypeDataByTopLevel } from "@beep/data/generated/iana-media-types"
+ *
+ * console.assert(OfficialMimeTypeDataByTopLevel.application["application/1d-interleaved-parityfec"].name === "1d-interleaved-parityfec")
+ * ```
  *
  * @category constants
  * @since 0.0.0

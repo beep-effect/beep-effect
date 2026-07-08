@@ -425,7 +425,11 @@ export type SymbolQualifiedName = typeof SymbolQualifiedName.Type;
  * @category models
  * @since 0.0.0
  */
-export const SymbolKind = LiteralKit(symbolKindOptions);
+export const SymbolKind = LiteralKit(symbolKindOptions).pipe(
+  $I.annoteSchema("SymbolKind", {
+    description: "Supported TypeScript declaration kinds for normalized symbols.",
+  })
+);
 
 /**
  * Literal union of supported TypeScript declaration kinds.
@@ -452,7 +456,11 @@ export type SymbolKind = typeof SymbolKind.Type;
  * @category models
  * @since 0.0.0
  */
-export const SymbolCategory = LiteralKit(["function", "class", "member", "type"]);
+export const SymbolCategory = LiteralKit(["function", "class", "member", "type"]).pipe(
+  $I.annoteSchema("SymbolCategory", {
+    description: "Coarse symbol categories used by the TSMorph models.",
+  })
+);
 
 /**
  * Literal union of coarse TSMorph symbol categories.
@@ -741,7 +749,11 @@ export type ContentHash = typeof ContentHash.Type;
  * @category models
  * @since 0.0.0
  */
-export const TsMorphScopeMode = LiteralKit(["syntax", "semantic"]);
+export const TsMorphScopeMode = LiteralKit(["syntax", "semantic"]).pipe(
+  $I.annoteSchema("TsMorphScopeMode", {
+    description: "Supported ts-morph project scope modes.",
+  })
+);
 
 /**
  * Literal union of ts-morph project scope modes.
@@ -768,7 +780,11 @@ export type TsMorphScopeMode = typeof TsMorphScopeMode.Type;
  * @category models
  * @since 0.0.0
  */
-export const TsMorphReferencePolicy = LiteralKit(["workspaceOnly", "followReferences"]);
+export const TsMorphReferencePolicy = LiteralKit(["workspaceOnly", "followReferences"]).pipe(
+  $I.annoteSchema("TsMorphReferencePolicy", {
+    description: "Reference traversal policies for ts-morph scope resolution.",
+  })
+);
 
 /**
  * Literal union of ts-morph reference traversal policies.
@@ -1973,7 +1989,11 @@ export class TsMorphSymbolSourceResult extends S.Class<TsMorphSymbolSourceResult
  * @category models
  * @since 0.0.0
  */
-export const TsMorphDiagnosticCategory = LiteralKit(["error", "warning", "suggestion", "message"]);
+export const TsMorphDiagnosticCategory = LiteralKit(["error", "warning", "suggestion", "message"]).pipe(
+  $I.annoteSchema("TsMorphDiagnosticCategory", {
+    description: "Supported normalized diagnostic categories.",
+  })
+);
 
 /**
  * Literal union of normalized diagnostic categories.

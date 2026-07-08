@@ -62,6 +62,15 @@ export const DOMReactNode = S.declare(isReactNode).pipe(
 /**
  * Type for {@link DOMReactNode}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { DOMReactNode } from "@beep/schema/DomReactNode"
+ *
+ * const node: DOMReactNode = S.decodeUnknownSync(DOMReactNode)("hello")
+ * console.log(node)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */

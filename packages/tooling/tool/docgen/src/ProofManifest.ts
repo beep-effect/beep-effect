@@ -39,6 +39,15 @@ export const DocgenProofManifestStandard = LiteralKit(["docgen-proof-manifest"])
 /**
  * Type-level representation of the proof manifest format marker.
  *
+ * @example
+ * ```ts
+ * import { DocgenProofManifestStandard } from "@beep/repo-docgen/ProofManifest"
+ *
+ * const standard: DocgenProofManifestStandard = "docgen-proof-manifest"
+ * console.log(DocgenProofManifestStandard.is["docgen-proof-manifest"](standard))
+ * // true
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -65,6 +74,15 @@ export const DocgenProofManifestSchemaVersion = LiteralKit(["1"]).pipe(
 /**
  * Type-level representation of the proof manifest schema version.
  *
+ * @example
+ * ```ts
+ * import { DocgenProofManifestSchemaVersion } from "@beep/repo-docgen/ProofManifest"
+ *
+ * const version: DocgenProofManifestSchemaVersion = "1"
+ * console.log(DocgenProofManifestSchemaVersion.is["1"](version))
+ * // true
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -90,6 +108,15 @@ export const DocgenProofManifestStatus = LiteralKit(["current", "missing", "stal
 
 /**
  * Verification status for a package-local docgen proof manifest.
+ *
+ * @example
+ * ```ts
+ * import { DocgenProofManifestStatus } from "@beep/repo-docgen/ProofManifest"
+ *
+ * const status: DocgenProofManifestStatus = "current"
+ * console.log(DocgenProofManifestStatus.is.current(status))
+ * // true
+ * ```
  *
  * @category type-level
  * @since 0.0.0

@@ -59,6 +59,23 @@ export const JsonLdDocumentErrorReason = LiteralKit([
 );
 
 /**
+ * Type for {@link JsonLdDocumentErrorReason}.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import { JsonLdDocumentErrorReason } from "@beep/semantic-web/services/jsonld-document"
+ *
+ * const reason: JsonLdDocumentErrorReason = "loaderPolicyViolation"
+ * strictEqual(JsonLdDocumentErrorReason.is.loaderPolicyViolation(reason), true)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type JsonLdDocumentErrorReason = typeof JsonLdDocumentErrorReason.Type;
+
+/**
  * Typed JSON-LD document service error.
  *
  * @example

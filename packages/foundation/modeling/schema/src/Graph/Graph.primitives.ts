@@ -37,6 +37,15 @@ export const NodeIndex = S.Int.check(isNonNegative).pipe(
 /**
  * Branded node index type extracted from {@link NodeIndex}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { NodeIndex } from "@beep/schema/Graph"
+ *
+ * const idx: NodeIndex = S.decodeUnknownSync(NodeIndex)(0)
+ * console.log(idx) // 0
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -91,6 +100,15 @@ export const EdgeIndex = S.Int.check(isNonNegative).pipe(
 /**
  * Branded edge index type extracted from {@link EdgeIndex}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { EdgeIndex } from "@beep/schema/Graph"
+ *
+ * const idx: EdgeIndex = S.decodeUnknownSync(EdgeIndex)(1)
+ * console.log(idx)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -141,6 +159,15 @@ export const GraphKind = S.Literals(["directed", "undirected"]).pipe(
 
 /**
  * Graph kind discriminator type extracted from {@link GraphKind}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { GraphKind } from "@beep/schema/Graph"
+ *
+ * const kind: GraphKind = S.decodeUnknownSync(GraphKind)("directed")
+ * console.log(kind)
+ * ```
  *
  * @since 0.0.0
  * @category models

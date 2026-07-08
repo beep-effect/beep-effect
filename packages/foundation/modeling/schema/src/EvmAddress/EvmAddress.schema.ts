@@ -56,6 +56,15 @@ export const EvmAddress = S.NonEmptyString.check(EvmAddressChecks).pipe(
 /**
  * Type for {@link EvmAddress}.
  *
+ * @example
+ * ```ts
+ * import { EvmAddress } from "@beep/schema/EvmAddress"
+ * import * as S from "effect/Schema"
+ *
+ * const address: EvmAddress = S.decodeUnknownSync(EvmAddress)("0x0000000000000000000000000000000000000000")
+ * console.log(address)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -87,6 +96,14 @@ export const EvmAddressRedacted = EvmAddress.pipe(
 
 /**
  * Type for {@link EvmAddressRedacted}.
+ *
+ * @example
+ * ```ts
+ * import { EvmAddressRedacted } from "@beep/schema/EvmAddress"
+ *
+ * const address: EvmAddressRedacted = EvmAddressRedacted.makeRedacted("0x0000000000000000000000000000000000000000")
+ * console.log(address)
+ * ```
  *
  * @since 0.0.0
  * @category models

@@ -27,6 +27,13 @@ const AiEntitySourceKit = LiteralKit(["builtin", "custom"]).annotate(
 /**
  * LiteralKit backing schema for AI phonetic algorithm values.
  *
+ * @example
+ * ```ts
+ * import { AiPhoneticAlgorithmKit } from "@beep/nlp-processing/Tools/_schemas"
+ *
+ * console.log(AiPhoneticAlgorithmKit.is.soundex("soundex")) // true
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -35,6 +42,22 @@ export const AiPhoneticAlgorithmKit = LiteralKit(["soundex", "phonetize"]).annot
     description: "LiteralKit backing schema for AI phonetic algorithm values.",
   })
 );
+
+/**
+ * Type for {@link AiPhoneticAlgorithmKit}.
+ *
+ * @example
+ * ```ts
+ * import type { AiPhoneticAlgorithmKit } from "@beep/nlp-processing/Tools/_schemas"
+ *
+ * const algorithm: AiPhoneticAlgorithmKit = "soundex"
+ * console.log(algorithm)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type AiPhoneticAlgorithmKit = typeof AiPhoneticAlgorithmKit.Type;
 
 const AiEntitySource = AiEntitySourceKit.pipe(
   $I.annoteSchema("AiEntitySource", {
@@ -45,6 +68,13 @@ const AiEntitySource = AiEntitySourceKit.pipe(
 
 /**
  * Phonetic encoding algorithm used to compare text.
+ *
+ * @example
+ * ```ts
+ * import { AiPhoneticAlgorithm } from "@beep/nlp-processing/Tools/_schemas"
+ *
+ * console.log(AiPhoneticAlgorithm.is.phonetize("phonetize")) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0

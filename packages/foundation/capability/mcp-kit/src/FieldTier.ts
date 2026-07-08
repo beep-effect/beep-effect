@@ -217,7 +217,7 @@ const TIER_ORDER: ReadonlyArray<FieldTierName> = A.reverse(FieldTierName.Options
 
 /**
  * A payload too large for even the `minimal` tier, handed to the caller's
- * {@link ProjectWithinBudgetOptions.mintFetchableHandle} to become a
+ * `mintFetchableHandle` callback (see {@link projectWithinBudget}) to become a
  * {@link FetchableHandle}. The kit does not mint handles itself — UUID
  * generation, TTL policy, and out-of-band storage are consumer-owned.
  *
@@ -297,36 +297,6 @@ export class FetchableHandle extends S.Class<FetchableHandle>($I`FetchableHandle
 }
 
 /**
- * Options for {@link projectWithinBudget}.
- *
- * @example
- * ```ts
- * import { FetchableHandle, type ProjectWithinBudgetOptions } from "@beep/mcp-kit"
- * import { NonNegativeInt } from "@beep/schema"
- *
- * const options: ProjectWithinBudgetOptions = {
- *   budgetBytes: NonNegativeInt.make(64),
- *   mintFetchableHandle: (oversized) =>
- *     FetchableHandle.make({
- *       handleId: "5b1d6a3e-8f3e-4a1a-9c1e-2e6b7a2f9c10",
- *       expiresAt: "2026-07-01T01:00:00.000Z",
- *       sizeBytes: oversized.sizeBytes,
- *       tier: "minimal"
- *     })
- * }
- * console.log(options.budgetBytes)
- * // 64
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export interface ProjectWithinBudgetOptions {
-  readonly budgetBytes: NonNegativeInt;
-  readonly mintFetchableHandle: (oversized: OversizedFieldProjection) => FetchableHandle;
-}
-
-/**
  * The result of {@link projectWithinBudget}: `Inline` when some tier fit the
  * budget and its projected value is returned directly; `Fetchable` when even
  * `minimal` did not fit, carrying a {@link FetchableHandle} minted by the
@@ -387,6 +357,12 @@ export const FieldProjectionOutcome = LiteralKit(["Inline", "Fetchable"])
  */
 export type FieldProjectionOutcome = typeof FieldProjectionOutcome.Type;
 
+type ProjectWithinBudgetOptions = {
+  readonly tiers: FieldTierSet<S.Struct.Fields, S.Struct.Fields, S.Struct.Fields>;
+  readonly budgetBytes: NonNegativeInt;
+  readonly mintFetchableHandle: (oversized: OversizedFieldProjection) => FetchableHandle;
+};
+
 /**
  * Projects a payload to the most complete field tier that fits within
  * `options.budgetBytes`. When even the `minimal` tier does not fit, the
@@ -406,16 +382,20 @@ export type FieldProjectionOutcome = typeof FieldProjectionOutcome.Type;
  *   complete: S.Struct({ id: S.String, summary: S.String, body: S.String })
  * })
  *
- * const projected = projectWithinBudget({ id: "doc-1", summary: "s", body: "b".repeat(100) }, tiers, {
- *   budgetBytes: NonNegativeInt.make(40),
- *   mintFetchableHandle: (oversized) =>
- *     FetchableHandle.make({
- *       handleId: "5b1d6a3e-8f3e-4a1a-9c1e-2e6b7a2f9c10",
- *       expiresAt: "2026-07-01T01:00:00.000Z",
- *       sizeBytes: oversized.sizeBytes,
- *       tier: "minimal"
- *     })
- * })
+ * const projected = projectWithinBudget(
+ *   { id: "doc-1", summary: "s", body: "b".repeat(100) },
+ *   {
+ *     tiers,
+ *     budgetBytes: NonNegativeInt.make(40),
+ *     mintFetchableHandle: (oversized) =>
+ *       FetchableHandle.make({
+ *         handleId: "5b1d6a3e-8f3e-4a1a-9c1e-2e6b7a2f9c10",
+ *         expiresAt: "2026-07-01T01:00:00.000Z",
+ *         sizeBytes: oversized.sizeBytes,
+ *         tier: "minimal"
+ *       })
+ *   }
+ * )
  * console.log(projected._tag)
  * // "Fetchable"
  * ```
@@ -424,36 +404,22 @@ export type FieldProjectionOutcome = typeof FieldProjectionOutcome.Type;
  * @since 0.0.0
  */
 export const projectWithinBudget: {
-  (
-    value: Record<string, unknown>,
-    tiers: FieldTierSet<S.Struct.Fields, S.Struct.Fields, S.Struct.Fields>,
-    options: ProjectWithinBudgetOptions
-  ): FieldProjectionOutcome;
-  (
-    tiers: FieldTierSet<S.Struct.Fields, S.Struct.Fields, S.Struct.Fields>,
-    options: ProjectWithinBudgetOptions
-  ): (value: Record<string, unknown>) => FieldProjectionOutcome;
-} = dual(
-  3,
-  (
-    value: Record<string, unknown>,
-    tiers: FieldTierSet<S.Struct.Fields, S.Struct.Fields, S.Struct.Fields>,
-    options: ProjectWithinBudgetOptions
-  ): FieldProjectionOutcome => {
-    for (const tier of TIER_ORDER) {
-      const projected = projectFieldTier(value, tier, tiers);
-      if (estimateJsonSize(projected) <= options.budgetBytes) {
-        return FieldProjectionOutcome.make({ _tag: "Inline", tier, value: projected });
-      }
+  (value: Record<string, unknown>, options: ProjectWithinBudgetOptions): FieldProjectionOutcome;
+  (options: ProjectWithinBudgetOptions): (value: Record<string, unknown>) => FieldProjectionOutcome;
+} = dual(2, (value: Record<string, unknown>, options: ProjectWithinBudgetOptions): FieldProjectionOutcome => {
+  for (const tier of TIER_ORDER) {
+    const projected = projectFieldTier(value, tier, options.tiers);
+    if (estimateJsonSize(projected) <= options.budgetBytes) {
+      return FieldProjectionOutcome.make({ _tag: "Inline", tier, value: projected });
     }
-    const minimalProjected = projectFieldTier(value, "minimal", tiers);
-    const oversized = OversizedFieldProjection.make({
-      value: minimalProjected,
-      sizeBytes: NonNegativeInt.make(estimateJsonSize(minimalProjected)),
-    });
-    return FieldProjectionOutcome.make({ _tag: "Fetchable", handle: options.mintFetchableHandle(oversized) });
   }
-);
+  const minimalProjected = projectFieldTier(value, "minimal", options.tiers);
+  const oversized = OversizedFieldProjection.make({
+    value: minimalProjected,
+    sizeBytes: NonNegativeInt.make(estimateJsonSize(minimalProjected)),
+  });
+  return FieldProjectionOutcome.make({ _tag: "Fetchable", handle: options.mintFetchableHandle(oversized) });
+});
 
 /**
  * Columnar reshaping of row-oriented records: instead of repeating every

@@ -352,6 +352,16 @@ const redactCauseSummaryImpl = (summary: CauseSummary, options: RedactCauseOptio
 /**
  * Redact a cause summary's message, detail, and fingerprint for safe logging.
  *
+ * @example
+ * ```typescript
+ * import { Cause } from "effect"
+ * import { redactCauseSummary, summarizeCause } from "@beep/observability"
+ *
+ * const summary = summarizeCause(Cause.fail(new Error("boom")))
+ * const safe = redactCauseSummary(summary)
+ * console.log(safe.tag) // "failure"
+ * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

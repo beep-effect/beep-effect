@@ -173,6 +173,13 @@ type SecureHeadersConfigObjectInput = {
 /**
  * Constructor input accepted by direct secure-header helpers.
  *
+ * @example
+ * ```ts
+ * import type { SecureHeadersConfigInput } from "@beep/repo-configs/next/security"
+ * const disabled: SecureHeadersConfigInput = false
+ * const withSource: SecureHeadersConfigInput = { source: "/api/:path*" }
+ * console.log(disabled, withSource)
+ * ```
  * @category models
  * @since 0.0.0
  */

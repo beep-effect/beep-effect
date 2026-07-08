@@ -157,17 +157,36 @@ export const ToIsoStr = S.Union([ISOStr, S.Finite]).pipe(
  * @since 0.0.0
  * @category models
  */
-export type ToIsoString = typeof ToIsoStr.Type;
+export type ToIsoString = ToIsoStr;
+
+/**
+ * {@inheritDoc ToIsoString}
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ToIsoStr } from "@beep/schema/Timestamp"
+ *
+ * const iso: ToIsoStr = S.decodeUnknownSync(ToIsoStr)("2024-01-01T00:00:00.123Z")
+ * console.log(iso)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type ToIsoStr = typeof ToIsoStr.Type;
 
 /**
  * Namespace members for {@link ToIsoStr}.
  *
  * @example
  * ```ts
- * import type { ToIsoStr } from "@beep/schema/Timestamp"
+ * import * as S from "effect/Schema"
+ * import { ToIsoStr } from "@beep/schema/Timestamp"
  *
- * type EncodedTimestamp = ToIsoStr.Encoded
- * console.log({} as { encoded: EncodedTimestamp })
+ * const decoded = S.decodeUnknownSync(ToIsoStr)("2024-01-01T00:00:00.123Z")
+ * const encoded: ToIsoStr.Encoded = S.encodeSync(ToIsoStr)(decoded)
+ * console.log(encoded)
  * ```
  *
  * @since 0.0.0

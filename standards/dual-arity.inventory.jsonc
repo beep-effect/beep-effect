@@ -7,5 +7,42 @@
     "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
     "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts"
   ],
-  "entries": []
+  "entries": [
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+      "qualifiedName": "projectWithinBudget",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/mcp-kit",
+      "reason": "Public helper APIs may not expose more than 3 positional parameters. dual arity must match the public positional arity and may not exceed 3.",
+      "line": 398,
+      "column": 14,
+      "parameterCount": 4,
+      "diagnostics": ["too-many-positional-params", "invalid-dual-arity"]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/Curie.ts",
+      "qualifiedName": "contractOption",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/identity",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 106,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/Curie.ts",
+      "qualifiedName": "expandOption",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/identity",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 73,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    }
+  ]
 }

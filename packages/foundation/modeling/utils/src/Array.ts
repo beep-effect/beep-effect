@@ -619,12 +619,10 @@ export const fromIterableNonEmpty = <const TArray>(collection: Iterable<TArray>)
 /**
  * Creates an empty array.
  *
- * **When to use**
- *
+ * @remarks
  * Use to create a typed empty readonly array without allocating placeholder elements.
  *
- * **Example** (Creating an empty readonly array)
- *
+ * @example
  * ```ts
  * import { A } from "@beep/utils"
  *

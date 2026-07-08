@@ -69,6 +69,20 @@ export class SearchResponse extends S.Class<SearchResponse>($I`SearchResponse`)(
 /**
  * Companion namespace for {@link SearchResponse} encoded helpers.
  *
+ * @example
+ * ```ts
+ * import { SearchResponse } from "@beep/govinfo/domain/values/SearchResponse/SearchResponse.model";
+ * import * as S from "effect/Schema";
+ *
+ * const response: SearchResponse = S.decodeUnknownSync(SearchResponse)({
+ *   count: 1,
+ *   offsetMark: "next-cursor",
+ *   results: []
+ * });
+ *
+ * console.log(response.count);
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */

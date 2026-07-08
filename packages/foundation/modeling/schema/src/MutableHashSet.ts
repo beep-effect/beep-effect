@@ -65,6 +65,17 @@ export type MutableHashSetIso<Value extends S.Top> = ReadonlyArray<Value["Iso"]>
 /**
  * Schema for validating an existing `MutableHashSet` instance.
  *
+ * @example
+ * ```ts
+ * import { MutableHashSet } from "effect"
+ * import * as S from "effect/Schema"
+ * import { MutableHashSetFromSelf } from "@beep/schema/MutableHashSet"
+ *
+ * const SetSchema = MutableHashSetFromSelf(S.String)
+ * const set = MutableHashSet.fromIterable(["a", "b"])
+ * console.log(S.is(SetSchema)(set))
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -81,6 +92,16 @@ export interface MutableHashSetFromSelf<Value extends S.Top>
 
 /**
  * Schema for transforming arrays into `MutableHashSet` instances.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { MutableHashSet } from "@beep/schema/MutableHashSet"
+ *
+ * const StringSet = MutableHashSet(S.String)
+ * const decoded = S.decodeUnknownSync(StringSet)(["a", "b", "a"])
+ * console.log(decoded)
+ * ```
  *
  * @since 0.0.0
  * @category validation

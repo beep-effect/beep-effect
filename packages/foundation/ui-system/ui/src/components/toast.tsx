@@ -110,8 +110,9 @@ export const ToastVariant = LiteralKit(["default", "destructive"]).pipe(
  * ```ts
  * import type { ToastVariant } from "@beep/ui/components/toast"
  *
- * const value = {} as ToastVariant
- * console.log(value)
+ * const variant: ToastVariant = "destructive"
+ *
+ * console.log(variant)
  * ```
  *
  * @category type-level
@@ -277,8 +278,10 @@ ToastDescription.displayName = "ToastDescription";
  * ```ts
  * import type { ToastProps } from "@beep/ui/components/toast"
  *
- * const value = {} as ToastProps
- * console.log(value)
+ * const describe = (props: ToastProps): string =>
+ *   typeof props.className === "string" ? props.className : "unstyled"
+ *
+ * console.log(typeof describe)
  * ```
  *
  * @category type-level
@@ -293,8 +296,9 @@ type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>;
  * ```ts
  * import type { ToastActionElement } from "@beep/ui/components/toast"
  *
- * const value = {} as ToastActionElement
- * console.log(value)
+ * const describe = (element: ToastActionElement): React.Key | null => element.key
+ *
+ * console.log(typeof describe)
  * ```
  *
  * @category type-level

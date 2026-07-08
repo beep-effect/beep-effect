@@ -92,6 +92,14 @@ export const LinesOutput = S.Class<{
 /**
  * Type for {@link LinesOutput}.
  *
+ * @example
+ * ```ts
+ * import type { LinesOutput } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const output: LinesOutput = { count: 1, lines: ["hi"], truncated: false }
+ * console.log(output)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -143,6 +151,14 @@ export const FileInfoOutput = S.Class<{
 /**
  * Type for {@link FileInfoOutput}.
  *
+ * @example
+ * ```ts
+ * import type { FileInfoOutput } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const output: FileInfoOutput = { exists: true, lineCount: 3, sizeBytes: 12 }
+ * console.log(output)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -179,6 +195,21 @@ export const TextStatsOutput = TextStreamStats.mapFields((fields) => fields).pip
 
 /**
  * Type for {@link TextStatsOutput}.
+ *
+ * @example
+ * ```ts
+ * import type { TextStatsOutput } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const output: TextStatsOutput = {
+ *   avgLineLength: 4,
+ *   maxLineLength: 8,
+ *   minLineLength: 1,
+ *   nonEmptyLines: 2,
+ *   totalBytes: 12,
+ *   totalLines: 3
+ * }
+ * console.log(output)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -235,6 +266,14 @@ export const JsonlOutput = S.Class<{
 /**
  * Type for {@link JsonlOutput}.
  *
+ * @example
+ * ```ts
+ * import type { JsonlOutput } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const output: JsonlOutput = { count: 1, records: [{ id: 1 }], truncated: false }
+ * console.log(output)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -270,6 +309,19 @@ export const JsonlStatsOutput = JsonlStatsModel.mapFields((fields) => fields).pi
 /**
  * Type for {@link JsonlStatsOutput}.
  *
+ * @example
+ * ```ts
+ * import type { JsonlStatsOutput } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const output: JsonlStatsOutput = {
+ *   errorCount: 0,
+ *   skippedCount: 0,
+ *   successCount: 3,
+ *   totalLines: 3
+ * }
+ * console.log(output)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -304,6 +356,21 @@ export const DatasetMetaOutput = DatasetMeta.mapFields((fields) => fields).pipe(
 
 /**
  * Type for {@link DatasetMetaOutput}.
+ *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import type { DatasetMetaOutput } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const output: DatasetMetaOutput = {
+ *   format: "text",
+ *   loadedAt: 0,
+ *   location: "/tmp/data.txt",
+ *   sizeBytes: O.none(),
+ *   sourceType: "file"
+ * }
+ * console.log(output)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -355,6 +422,18 @@ export const DataOutput = S.Class<{
 /**
  * Type for {@link DataOutput}.
  *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import type { DataOutput } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const output: DataOutput = {
+ *   data: "hello",
+ *   meta: { format: "text", loadedAt: 0, location: "/tmp/data.txt", sizeBytes: O.none(), sourceType: "file" }
+ * }
+ * console.log(output)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -394,6 +473,21 @@ export const PipelineOutput = PipelineResult.mapFields((fields) => ({
 
 /**
  * Type for {@link PipelineOutput}.
+ *
+ * @example
+ * ```ts
+ * import type { PipelineOutput } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const output: PipelineOutput = {
+ *   durationMs: 1,
+ *   errors: [],
+ *   failed: 0,
+ *   processed: 2,
+ *   results: ["a", "b"],
+ *   skipped: 0
+ * }
+ * console.log(output)
+ * ```
  *
  * @since 0.0.0
  * @category models

@@ -282,6 +282,23 @@ export const JsonLdStreamParseErrorReason = LiteralKit([
 );
 
 /**
+ * Type for {@link JsonLdStreamParseErrorReason}.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import { JsonLdStreamParseErrorReason } from "@beep/semantic-web/services/jsonld-stream-parse"
+ *
+ * const reason: JsonLdStreamParseErrorReason = "parseFailure"
+ * strictEqual(JsonLdStreamParseErrorReason.is.parseFailure(reason), true)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type JsonLdStreamParseErrorReason = typeof JsonLdStreamParseErrorReason.Type;
+
+/**
  * Typed streaming parse error.
  *
  * @example

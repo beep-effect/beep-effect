@@ -9,6 +9,13 @@ import { $SchemaId } from "@beep/identity";
 /**
  * Internal identity composer.
  *
+ * @example
+ * ```ts
+ * import { $I } from "../../src/EntitySchema/EntitySchema.shared.ts"
+ *
+ * const identifier = $I`ExampleEntity`
+ * console.log(identifier)
+ * ```
  *
  * @internal
  * @category symbols
@@ -16,8 +23,14 @@ import { $SchemaId } from "@beep/identity";
  */
 export const $I = $SchemaId.create("EntitySchema");
 /**
- * Entity schema definition annotation key.
+ * Annotation key used to attach a schema's entity definition metadata.
  *
+ * @example
+ * ```ts
+ * import { DefinitionAnnotationKey } from "../../src/EntitySchema/EntitySchema.shared.ts"
+ *
+ * console.log(DefinitionAnnotationKey)
+ * ```
  *
  * @internal
  * @category symbols

@@ -699,6 +699,17 @@ export const getDocNode = (node: Node): Node => {
   if (Node.isExportSpecifier(node)) {
     return node.getParent();
   }
+  // `export default <expression>` (the ESLint-rule module shape, ruling R20)
+  // resolves the exported declaration to the expression node itself (for
+  // example the CallExpression in `export default defineRule({...})`), which
+  // is never JSDocable — the doc block lives on the enclosing ExportAssignment
+  // statement instead. A real default-exported declaration (`export default
+  // class Foo {}`) is already JSDocable and its parent is the SourceFile, so
+  // this branch only redirects the expression-export shape.
+  const parent = node.getParent();
+  if (parent !== undefined && Node.isExportAssignment(parent)) {
+    return parent;
+  }
   return node;
 };
 

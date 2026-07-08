@@ -652,11 +652,16 @@ const inferGreptileIssueCount = (summary: GreptileSummary, activeThreadCount: nu
     ? GreptileSummary.make({ ...summary, issueCount: activeThreadCount })
     : summary;
 
-type GreptileSummaryCommentInput = {
-  readonly authorLogin: string;
-  readonly body: string;
-  readonly url: string;
-};
+class GreptileSummaryCommentInput extends S.Class<GreptileSummaryCommentInput>($I`GreptileSummaryCommentInput`)(
+  {
+    authorLogin: S.String,
+    body: S.String,
+    url: S.String,
+  },
+  $I.annote("GreptileSummaryCommentInput", {
+    description: "Simplified test-only comment input used to build a Greptile summary or closeout gate state.",
+  })
+) {}
 
 /**
  * Parse the latest Greptile summary from simplified comment inputs.
@@ -862,6 +867,24 @@ const closeoutGateStates = (
 };
 
 /**
+ * Test-only inputs for building durable PR closeout gate states.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export class CloseoutGateStatesTestInput extends S.Class<CloseoutGateStatesTestInput>($I`CloseoutGateStatesTestInput`)(
+  {
+    options: PrCloseoutOptions,
+    actionableReviewThreadCount: S.Finite,
+    greptile: GreptileSummary,
+    botComments: S.Array(GreptileSummaryCommentInput),
+  },
+  $I.annote("CloseoutGateStatesTestInput", {
+    description: "Test-only inputs for building durable PR closeout gate states.",
+  })
+) {}
+
+/**
  * Build durable PR closeout gate states from simplified test inputs.
  *
  * @param input - Closeout test inputs controlling gate requirements.
@@ -887,12 +910,7 @@ const closeoutGateStates = (
  * @category testing
  * @since 0.0.0
  */
-export const closeoutGateStatesForTesting = (input: {
-  readonly options: PrCloseoutOptions;
-  readonly actionableReviewThreadCount: number;
-  readonly greptile: GreptileSummary;
-  readonly botComments: ReadonlyArray<GreptileSummaryCommentInput>;
-}): ReadonlyArray<PrCloseoutGateState> =>
+export const closeoutGateStatesForTesting = (input: CloseoutGateStatesTestInput): ReadonlyArray<PrCloseoutGateState> =>
   closeoutGateStates(
     input.options,
     input.actionableReviewThreadCount,

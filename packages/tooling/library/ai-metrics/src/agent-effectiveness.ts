@@ -99,6 +99,13 @@ export const AgentEffectivenessStatus = LiteralKit(["passed", "warning", "failed
 /**
  * Runtime type for `AgentEffectivenessStatus`.
  *
+ * @example
+ * ```ts
+ * import { AgentEffectivenessStatus } from "@beep/repo-ai-metrics"
+ *
+ * const status: AgentEffectivenessStatus = "passed"
+ * console.log(AgentEffectivenessStatus.is.passed(status))
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -126,6 +133,13 @@ export const AgentEffectivenessAnnotationValue = S.Union([S.String, S.Finite, S.
 /**
  * Runtime type for `AgentEffectivenessAnnotationValue`.
  *
+ * @example
+ * ```ts
+ * import { AgentEffectivenessAnnotationValue } from "@beep/repo-ai-metrics"
+ *
+ * const value: AgentEffectivenessAnnotationValue = 0.98
+ * console.log(AgentEffectivenessAnnotationValue.is(value))
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -910,6 +924,13 @@ export const AgentEffectivenessDatasetKind = LiteralKit([
 /**
  * Type for {@link AgentEffectivenessDatasetKind}.
  *
+ * @example
+ * ```ts
+ * import { AgentEffectivenessDatasetKind } from "@beep/repo-ai-metrics"
+ *
+ * const kind: AgentEffectivenessDatasetKind = "agent-loop-health"
+ * console.log(AgentEffectivenessDatasetKind.is["agent-loop-health"](kind))
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -1037,6 +1058,13 @@ export const AgentEffectivenessPromptRole = LiteralKit(["system", "user"]).pipe(
 /**
  * Type for {@link AgentEffectivenessPromptRole}.
  *
+ * @example
+ * ```ts
+ * import { AgentEffectivenessPromptRole } from "@beep/repo-ai-metrics"
+ *
+ * const role: AgentEffectivenessPromptRole = "user"
+ * console.log(AgentEffectivenessPromptRole.is.user(role))
+ * ```
  * @category models
  * @since 0.0.0
  */

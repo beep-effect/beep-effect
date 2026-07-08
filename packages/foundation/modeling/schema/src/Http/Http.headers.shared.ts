@@ -187,10 +187,10 @@ export const wrapArray = <T>(value: T | ReadonlyArray<T>): readonly T[] =>
  *
  * @example
  * ```ts
- * import * as Option from "effect/Option"
+ * import * as O from "effect/Option"
  * import { ResponseHeader } from "../../src/Http/Http.headers.shared.ts"
  *
- * const header = ResponseHeader.make({ name: "X-Test", value: Option.some("ok") })
+ * const header = ResponseHeader.make({ name: "X-Test", value: O.some("ok") })
  * console.log(header.name)
  * ```
  *
@@ -252,11 +252,11 @@ const makeResponseHeader: {
  *
  * @example
  * ```ts
- * import * as Option from "effect/Option"
+ * import * as O from "effect/Option"
  * import { makeResponseHeaderOption } from "../../src/Http/Http.headers.shared.ts"
  *
- * const header = makeResponseHeaderOption("X-Test", Option.some("ok"))
- * console.log(Option.isSome(header))
+ * const header = makeResponseHeaderOption("X-Test", O.some("ok"))
+ * console.log(O.isSome(header))
  * ```
  *
  * @category constructors

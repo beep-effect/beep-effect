@@ -33,6 +33,15 @@ const $I = $ObservabilityId.create("Metric");
 /**
  * Options for the trackDuration metric helper.
  *
+ * @example
+ * ```typescript
+ * import { TrackDurationOptions } from "@beep/observability"
+ *
+ * const options = TrackDurationOptions.make({ attributes: { op: "read" } })
+ * console.log(options.attributes)
+ * // { op: "read" }
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -49,6 +58,15 @@ export class TrackDurationOptions extends S.Class<TrackDurationOptions>($I`Track
 
 /**
  * Constructor input accepted by {@link trackDuration} before schema defaults are resolved.
+ *
+ * @example
+ * ```typescript
+ * import type { TrackDurationOptionsInput } from "@beep/observability"
+ *
+ * const input: TrackDurationOptionsInput = { attributes: { op: "read" } }
+ * console.log(input.attributes)
+ * // { op: "read" }
+ * ```
  *
  * @since 0.0.0
  * @category models

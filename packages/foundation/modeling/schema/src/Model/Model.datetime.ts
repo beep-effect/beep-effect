@@ -4,49 +4,57 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { $SchemaId } from "@beep/identity/packages";
 import { DateTime, Effect, SchemaGetter as Getter } from "effect";
 import * as S from "effect/Schema";
 import { Field, Overridable } from "./Model.variants.ts";
 import type * as VariantSchema from "../VariantSchema/index.ts";
-/**
- * Schema interface that decodes a `YYYY-MM-DD` string into `DateTime.Utc` with time removed.
- *
- * @example
- * ```ts
- * import * as Model from "@beep/schema/Model"
- *
- * const field: Model.Date = Model.Date
- * console.log(field)
- * ```
- *
- * @since 0.0.0
- * @category models
- */
-export interface Date extends S.decodeTo<S.instanceOf<DateTime.Utc>, S.String> {}
+
+const $I = $SchemaId.create("Model");
 
 /**
  * A schema for a `DateTime.Utc` that is serialized as a date string in the
- * format `YYYY-MM-DD`.
+ * format `YYYY-MM-DD`, with time removed.
  *
  * @example
  * ```ts
- * import * as Schema from "effect/Schema"
+ * import * as S from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
  *
- * class Event extends Model.Class<Event>("Event")({}) {}
- *
- * console.log(Event)
+ * const value: Model.Date = S.decodeUnknownSync(Model.Date)("2024-01-15")
+ * console.log(value)
  * ```
  *
  * @since 0.0.0
  * @category schemas
  */
-export const Date: Date = S.String.pipe(
+export const Date = S.String.pipe(
   S.decodeTo(S.DateTimeUtc, {
     decode: Getter.dateTimeUtcFromInput().map(DateTime.removeTime),
     encode: Getter.transform(DateTime.formatIsoDate),
+  }),
+  $I.annoteSchema("Date", {
+    description: "A DateTime.Utc serialized as a YYYY-MM-DD date string with time removed.",
   })
 );
+
+/**
+ * Type for {@link Date}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import * as Model from "@beep/schema/Model"
+ *
+ * const value: Model.Date = S.decodeUnknownSync(Model.Date)("2024-01-15")
+ * console.log(value.toString())
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type Date = typeof Date.Type;
 
 /**
  * Overridable date field that defaults to today's UTC date on insert.
@@ -145,12 +153,13 @@ export interface DateTimeInsert
  *
  * @example
  * ```ts
- * import * as Schema from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
  *
- * class Group extends Model.Class<Group>("Group")({}) {}
+ * class Group extends Model.Class<Group>("Group")({
+ *   createdAt: Model.DateTimeInsert
+ * }) {}
  *
- * console.log(Group)
+ * console.log(Group.fields.createdAt)
  * ```
  *
  * @since 0.0.0
@@ -191,12 +200,13 @@ export interface DateTimeInsertFromDate
  *
  * @example
  * ```ts
- * import * as Schema from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
  *
- * class Group extends Model.Class<Group>("Group")({}) {}
+ * class Group extends Model.Class<Group>("Group")({
+ *   createdAt: Model.DateTimeInsertFromDate
+ * }) {}
  *
- * console.log(Group)
+ * console.log(Group.fields.createdAt)
  * ```
  *
  * @since 0.0.0
@@ -237,12 +247,13 @@ export interface DateTimeInsertFromNumber
  *
  * @example
  * ```ts
- * import * as Schema from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
  *
- * class Group extends Model.Class<Group>("Group")({}) {}
+ * class Group extends Model.Class<Group>("Group")({
+ *   createdAt: Model.DateTimeInsertFromNumber
+ * }) {}
  *
- * console.log(Group)
+ * console.log(Group.fields.createdAt)
  * ```
  *
  * @since 0.0.0
@@ -285,12 +296,13 @@ export interface DateTimeUpdate
  *
  * @example
  * ```ts
- * import * as Schema from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
  *
- * class Group extends Model.Class<Group>("Group")({}) {}
+ * class Group extends Model.Class<Group>("Group")({
+ *   updatedAt: Model.DateTimeUpdate
+ * }) {}
  *
- * console.log(Group)
+ * console.log(Group.fields.updatedAt)
  * ```
  *
  * @since 0.0.0
@@ -334,12 +346,13 @@ export interface DateTimeUpdateFromDate
  *
  * @example
  * ```ts
- * import * as Schema from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
  *
- * class Group extends Model.Class<Group>("Group")({}) {}
+ * class Group extends Model.Class<Group>("Group")({
+ *   updatedAt: Model.DateTimeUpdateFromDate
+ * }) {}
  *
- * console.log(Group)
+ * console.log(Group.fields.updatedAt)
  * ```
  *
  * @since 0.0.0
@@ -383,12 +396,13 @@ export interface DateTimeUpdateFromNumber
  *
  * @example
  * ```ts
- * import * as Schema from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
  *
- * class Group extends Model.Class<Group>("Group")({}) {}
+ * class Group extends Model.Class<Group>("Group")({
+ *   updatedAt: Model.DateTimeUpdateFromNumber
+ * }) {}
  *
- * console.log(Group)
+ * console.log(Group.fields.updatedAt)
  * ```
  *
  * @since 0.0.0

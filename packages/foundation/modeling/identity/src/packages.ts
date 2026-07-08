@@ -66,6 +66,7 @@ const generatedComposers = $I.compose(
   "agents-domain",
   "agents-use-cases",
   "agents-server",
+  "agents-client",
   "epistemic-domain",
   "epistemic-use-cases",
   "law-practice-domain",
@@ -629,6 +630,21 @@ export const $AgentsServerId: Identity.IdentityComposer<"@beep/agents-server"> =
  * @since 0.0.0
  */
 export const $AgentsUseCasesId: Identity.IdentityComposer<"@beep/agents-use-cases"> = composers.$AgentsUseCasesId;
+
+/**
+ * Identity composer for the `@beep/agents-client` package.
+ *
+ * @example
+ * ```ts
+ * import { $AgentsClientId } from "@beep/identity"
+ *
+ * const id = $AgentsClientId.make("StreamingTurn")
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $AgentsClientId: Identity.IdentityComposer<"@beep/agents-client"> = composers.$AgentsClientId;
 
 /**
  * Identity composer for the `@beep/law-practice-domain` package.

@@ -69,6 +69,23 @@ export class SearchBody extends S.Class<SearchBody>($I`SearchBody`)(
 /**
  * Companion namespace for {@link SearchBody} encoded helpers.
  *
+ * @example
+ * ```ts
+ * import { SearchBody } from "@beep/govinfo/domain/values/SearchBody/SearchBody.model";
+ * import * as S from "effect/Schema";
+ *
+ * const body: SearchBody = S.decodeUnknownSync(SearchBody)({
+ *   historical: false,
+ *   offsetMark: "*",
+ *   pageSize: 10,
+ *   query: "collection:(CREC) congress:118",
+ *   resultLevel: "default",
+ *   sorts: [{ field: "publishdate", sortOrder: "DESC" }]
+ * });
+ *
+ * console.log(body.query);
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */

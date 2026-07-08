@@ -467,6 +467,15 @@ export const AnyFn = S.declare<Function>(isFunctionValue, anyFnAnnotations).pipe
 /**
  * Type for {@link AnyFn}.
  *
+ * @example
+ * ```ts
+ * import { AnyFn } from "@beep/schema"
+ * import * as S from "effect/Schema"
+ *
+ * const fn: AnyFn = S.decodeUnknownSync(AnyFn)(() => "hello")
+ * console.log(fn())
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */

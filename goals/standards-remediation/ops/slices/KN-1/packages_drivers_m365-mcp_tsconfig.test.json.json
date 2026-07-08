@@ -1,0 +1,10 @@
+{
+  "scope": "packages/drivers/m365-mcp/tsconfig.test.json",
+  "findings": [
+    {
+      "kind": "unresolved",
+      "file": "packages/drivers/m365-mcp/tsconfig.test.json",
+      "name": "bun-types"
+    }
+  ]
+}

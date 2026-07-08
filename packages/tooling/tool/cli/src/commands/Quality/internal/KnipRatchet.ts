@@ -185,6 +185,22 @@ export class KnipFindingSummary extends S.Class<KnipFindingSummary>($I`KnipFindi
 ) {}
 
 /**
+ * Deterministic ordering and omission policy for a Knip regression baseline.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class KnipNormalizationPolicy extends S.Class<KnipNormalizationPolicy>($I`KnipNormalizationPolicy`)(
+  {
+    ordering: S.String,
+    omitted_fields: S.Array(S.String),
+  },
+  $I.annote("KnipNormalizationPolicy", {
+    description: "Deterministic ordering and omission policy for a Knip regression baseline.",
+  })
+) {}
+
+/**
  * Committed Knip fail-on-growth baseline.
  *
  * @category models
@@ -197,10 +213,7 @@ export class KnipRegressionBaseline extends S.Class<KnipRegressionBaseline>($I`K
     regeneration_command: S.String,
     comparison: S.String,
     new_package_handling: S.String,
-    normalization: S.Struct({
-      ordering: S.String,
-      omitted_fields: S.Array(S.String),
-    }),
+    normalization: KnipNormalizationPolicy,
     check: KnipFindingSummary,
     findings: S.Array(KnipFinding),
   },

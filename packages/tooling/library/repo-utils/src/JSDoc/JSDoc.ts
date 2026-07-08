@@ -550,6 +550,14 @@ export const StructuralJSDoc = S.Union([
 );
 
 /**
+ * Runtime type for {@link StructuralJSDoc}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type StructuralJSDoc = typeof StructuralJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -569,7 +577,7 @@ export declare namespace StructuralJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof StructuralJSDoc.Type;
+  export type Type = StructuralJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -1192,6 +1200,14 @@ export const AccessModifierJSDoc = S.Union([
 ]).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema("AccessModifierJSDoc"));
 
 /**
+ * Runtime type for {@link AccessModifierJSDoc}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AccessModifierJSDoc = typeof AccessModifierJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -1211,7 +1227,7 @@ export declare namespace AccessModifierJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof AccessModifierJSDoc.Type;
+  export type Type = AccessModifierJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -1593,6 +1609,14 @@ export const DocumentationContentJSDoc = S.Union([
 ]).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema("DocumentationContentJSDoc"));
 
 /**
+ * Runtime type for {@link DocumentationContentJSDoc}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type DocumentationContentJSDoc = typeof DocumentationContentJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -1612,7 +1636,7 @@ export declare namespace DocumentationContentJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof DocumentationContentJSDoc.Type;
+  export type Type = DocumentationContentJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -2031,6 +2055,14 @@ export const TSDocSpecificJSDoc = S.Union([
 ]).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema("TSDocSpecificJSDoc"));
 
 /**
+ * Runtime type for {@link TSDocSpecificJSDoc}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TSDocSpecificJSDoc = typeof TSDocSpecificJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -2050,7 +2082,7 @@ export declare namespace TSDocSpecificJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof TSDocSpecificJSDoc.Type;
+  export type Type = TSDocSpecificJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -2151,6 +2183,14 @@ export const InlineJSDoc = S.Union([JSDocLink, JSDocInheritDoc]).pipe(
 );
 
 /**
+ * Runtime type for {@link InlineJSDoc}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type InlineJSDoc = typeof InlineJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -2170,7 +2210,7 @@ export declare namespace InlineJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof InlineJSDoc.Type;
+  export type Type = InlineJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -2449,6 +2489,14 @@ export const OrganizationalJSDoc = S.Union([
 ]).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema("OrganizationalJSDoc"));
 
 /**
+ * Runtime type for {@link OrganizationalJSDoc}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type OrganizationalJSDoc = typeof OrganizationalJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -2468,7 +2516,7 @@ export declare namespace OrganizationalJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof OrganizationalJSDoc.Type;
+  export type Type = OrganizationalJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -2637,6 +2685,14 @@ export const EventDependencyJSDoc = S.Union([JSDocFires, JSDocListens, JSDocEven
 );
 
 /**
+ * Runtime type for {@link EventDependencyJSDoc}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type EventDependencyJSDoc = typeof EventDependencyJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -2656,7 +2712,7 @@ export declare namespace EventDependencyJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof EventDependencyJSDoc.Type;
+  export type Type = EventDependencyJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -3401,6 +3457,14 @@ export const RemainingJSDoc = S.Union([
 ]).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema("RemainingJSDoc"));
 
 /**
+ * Runtime type for {@link RemainingJSDoc}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RemainingJSDoc = typeof RemainingJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -3420,7 +3484,7 @@ export declare namespace RemainingJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof RemainingJSDoc.Type;
+  export type Type = RemainingJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -3974,6 +4038,14 @@ export const ClosureSpecificJSDoc = S.Union([
 ]).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema("ClosureSpecificJSDoc"));
 
 /**
+ * Runtime type for {@link ClosureSpecificJSDoc}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ClosureSpecificJSDoc = typeof ClosureSpecificJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -3993,7 +4065,7 @@ export declare namespace ClosureSpecificJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof ClosureSpecificJSDoc.Type;
+  export type Type = ClosureSpecificJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -4372,6 +4444,14 @@ export const TypeDocSpecificJSDoc = S.Union([
 ]).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema("TypeDocSpecificJSDoc"));
 
 /**
+ * Runtime type for {@link TypeDocSpecificJSDoc}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TypeDocSpecificJSDoc = typeof TypeDocSpecificJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -4391,7 +4471,7 @@ export declare namespace TypeDocSpecificJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof TypeDocSpecificJSDoc.Type;
+  export type Type = TypeDocSpecificJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -4457,6 +4537,14 @@ export const TypeScriptSpecificJSDoc = S.Union([JSDocOverload]).pipe(
 );
 
 /**
+ * Runtime type for {@link TypeScriptSpecificJSDoc}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TypeScriptSpecificJSDoc = typeof TypeScriptSpecificJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -4476,7 +4564,7 @@ export declare namespace TypeScriptSpecificJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof TypeScriptSpecificJSDoc.Type;
+  export type Type = TypeScriptSpecificJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -4514,6 +4602,14 @@ export const JSDocTag = S.Union([
 ]).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema("JSDocTag"));
 
 /**
+ * Runtime type for {@link JSDocTag}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type JSDocTag = typeof JSDocTag.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -4533,7 +4629,7 @@ export declare namespace JSDocTag {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof JSDocTag.Type;
+  export type Type = JSDocTag;
   /**
    * JSDoc tag metadata export.
    *

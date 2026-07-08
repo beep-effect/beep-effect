@@ -114,11 +114,11 @@ export class IdentityInterpolationError extends S.TaggedErrorClass<IdentityInter
   "@beep/identity/errors/IdentityInterpolationError"
 )(
   "IdentityInterpolationError",
-  {},
-  {
+  S.Struct({}).annotate({
+    identifier: "@beep/identity/errors/IdentityInterpolationError",
     title: "Identity Interpolation Error",
     description: "Identity template tags do not allow interpolations.",
-  }
+  })
 ) {
   override get message() {
     return "Identity template tags do not allow interpolations.";
@@ -145,11 +145,11 @@ export class IdentitySegmentCountError extends S.TaggedErrorClass<IdentitySegmen
   "@beep/identity/errors/IdentitySegmentCountError"
 )(
   "IdentitySegmentCountError",
-  {},
-  {
+  S.Struct({}).annotate({
+    identifier: "@beep/identity/errors/IdentitySegmentCountError",
     title: "Identity Segment Count Error",
     description: "Identity template tags must use a single literal segment.",
-  }
+  })
 ) {
   /**
    * Human-readable error message.
@@ -484,9 +484,12 @@ export type TaggedAccessor<S extends TString.NonEmpty> = `$${ModuleAccessor<S>}`
  *
  * @example
  * ```ts
+ * import { make } from "@beep/identity"
  * import type { IdentityString } from "@beep/identity"
  *
- * declare const id: IdentityString<"@beep/utils/Service">
+ * const { $UtilsId } = make("utils")
+ * const id: IdentityString<string> = $UtilsId.string()
+ * console.log(id)// "@beep/utils"
  * ```
  *
  * @since 0.0.0
@@ -501,9 +504,12 @@ export type IdentityString<Value extends string> = Value & {
  *
  * @example
  * ```ts
+ * import { make } from "@beep/identity"
  * import type { IdentitySymbol } from "@beep/identity"
  *
- * declare const sym: IdentitySymbol<"@beep/utils">
+ * const { $UtilsId } = make("utils")
+ * const sym: IdentitySymbol<string> = $UtilsId.symbol()
+ * console.log(sym.description)// "@beep/utils"
  * ```
  *
  * @since 0.0.0

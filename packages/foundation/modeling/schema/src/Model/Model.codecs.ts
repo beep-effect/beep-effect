@@ -14,10 +14,10 @@ import type * as VariantSchema from "../VariantSchema/index.ts";
  *
  * @example
  * ```ts
- * import * as Schema from "effect/Schema"
+ * import * as S from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
  *
- * const field = Model.JsonFromString(Schema.Struct({ a: Schema.String }))
+ * const field = Model.JsonFromString(S.Struct({ a: S.String }))
  *
  * console.log(field)
  * ```
@@ -42,10 +42,12 @@ export interface JsonFromString<S extends S.Top>
  *
  * @example
  * ```ts
- * import * as Schema from "effect/Schema"
+ * import * as S from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
  *
- * class Record extends Model.Class<Record>("Record")({}) {}
+ * class Record extends Model.Class<Record>("Record")({
+ *   payload: Model.JsonFromString(S.Struct({ a: S.String }))
+ * }) {}
  *
  * console.log(Record)
  * ```

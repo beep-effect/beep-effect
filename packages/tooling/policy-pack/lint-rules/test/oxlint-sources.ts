@@ -13,7 +13,7 @@
 import type { OxlintRule } from "./oxlint-harness.ts";
 
 /** One fixture: a source, its expected finding count, and an optional path override. */
-export type OxlintCase = {
+type OxlintCase = {
   readonly source: string;
   readonly count: number;
   readonly filename?: string;

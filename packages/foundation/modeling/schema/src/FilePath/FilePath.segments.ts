@@ -42,6 +42,15 @@ export const WindowsDotSegment = WindowsDotSegmentKit.pipe(
 /**
  * Type for {@link WindowsDotSegment}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { WindowsDotSegment } from "@beep/schema/FilePath"
+ *
+ * const value: WindowsDotSegment = S.decodeUnknownSync(WindowsDotSegment)("..")
+ * console.log(value)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -102,6 +111,15 @@ export const ValidWindowsPlainPathSegment = S.NonEmptyString.check(
 /**
  * Type for {@link ValidWindowsPlainPathSegment}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ValidWindowsPlainPathSegment } from "@beep/schema/FilePath"
+ *
+ * const value: ValidWindowsPlainPathSegment = S.decodeUnknownSync(ValidWindowsPlainPathSegment)("documents")
+ * console.log(value)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -143,6 +161,15 @@ export const ValidWindowsRootSegment = ValidWindowsPlainPathSegment.check(
 /**
  * Type for {@link ValidWindowsRootSegment}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ValidWindowsRootSegment } from "@beep/schema/FilePath"
+ *
+ * const value: ValidWindowsRootSegment = S.decodeUnknownSync(ValidWindowsRootSegment)("fileserver")
+ * console.log(value)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -175,6 +202,15 @@ export const ValidWindowsPathSegment = S.Union([WindowsDotSegment, ValidWindowsP
 /**
  * Type for {@link ValidWindowsPathSegment}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ValidWindowsPathSegment } from "@beep/schema/FilePath"
+ *
+ * const value: ValidWindowsPathSegment = S.decodeUnknownSync(ValidWindowsPathSegment)(".")
+ * console.log(value)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -205,6 +241,15 @@ export const WindowsSegments = S.NonEmptyArray(ValidWindowsPathSegment).pipe(
 
 /**
  * Type for {@link WindowsSegments}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { WindowsSegments } from "@beep/schema/FilePath"
+ *
+ * const value: WindowsSegments = S.decodeUnknownSync(WindowsSegments)(["Users", "Ada"])
+ * console.log(value.length)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -237,6 +282,15 @@ export const ValidWindowsUncRest = S.NonEmptyArray(ValidWindowsPathSegment).pipe
 
 /**
  * Type for {@link ValidWindowsUncRest}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ValidWindowsUncRest } from "@beep/schema/FilePath"
+ *
+ * const value: ValidWindowsUncRest = S.decodeUnknownSync(ValidWindowsUncRest)(["folder", "file.txt"])
+ * console.log(value.length)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -271,6 +325,15 @@ export const ValidWindowsUncSegments = S.TupleWithRest(
 
 /**
  * Type for {@link ValidWindowsUncSegments}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ValidWindowsUncSegments } from "@beep/schema/FilePath"
+ *
+ * const value: ValidWindowsUncSegments = S.decodeUnknownSync(ValidWindowsUncSegments)(["server", "share", "folder"])
+ * console.log(value[0])
+ * ```
  *
  * @since 0.0.0
  * @category models

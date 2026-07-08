@@ -35,10 +35,13 @@ const $I = $EcfrId.create("Ecfr.service");
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
  * import type { EcfrShape } from "@beep/ecfr"
  *
- * type ListTitles = EcfrShape["listTitles"]
- * console.log({} as { listTitles: ListTitles })
+ * const shape: Pick<EcfrShape, "listTitles"> = {
+ *   listTitles: Effect.die("example")
+ * }
+ * console.log(typeof shape.listTitles)
  * ```
  *
  * @category services

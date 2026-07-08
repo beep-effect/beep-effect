@@ -38,6 +38,14 @@ export const BadRequest = S.Literal(400).pipe(
 /**
  * {@inheritDoc BadRequest}
  *
+ * @example
+ * ```ts
+ * import type { BadRequest } from "@beep/schema/HttpStatus"
+ *
+ * const status: BadRequest = 400
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -80,6 +88,14 @@ export const Unauthorized = S.Literal(401).pipe(
 /**
  * {@inheritDoc Unauthorized}
  *
+ * @example
+ * ```ts
+ * import type { Unauthorized } from "@beep/schema/HttpStatus"
+ *
+ * const status: Unauthorized = 401
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -110,6 +126,14 @@ export const PaymentRequired = S.Literal(402).pipe(
 
 /**
  * {@inheritDoc PaymentRequired}
+ *
+ * @example
+ * ```ts
+ * import type { PaymentRequired } from "@beep/schema/HttpStatus"
+ *
+ * const status: PaymentRequired = 402
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -147,6 +171,14 @@ export const Forbidden = S.Literal(403).pipe(
 /**
  * {@inheritDoc Forbidden}
  *
+ * @example
+ * ```ts
+ * import type { Forbidden } from "@beep/schema/HttpStatus"
+ *
+ * const status: Forbidden = 403
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -180,6 +212,14 @@ export const NotFound = S.Literal(404).pipe(
 /**
  * {@inheritDoc NotFound}
  *
+ * @example
+ * ```ts
+ * import type { NotFound } from "@beep/schema/HttpStatus"
+ *
+ * const status: NotFound = 404
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -209,6 +249,14 @@ export const MethodNotAllowed = S.Literal(405).pipe(
 
 /**
  * {@inheritDoc MethodNotAllowed}
+ *
+ * @example
+ * ```ts
+ * import type { MethodNotAllowed } from "@beep/schema/HttpStatus"
+ *
+ * const status: MethodNotAllowed = 405
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -240,6 +288,14 @@ export const NotAcceptable = S.Literal(406).pipe(
 /**
  * {@inheritDoc NotAcceptable}
  *
+ * @example
+ * ```ts
+ * import type { NotAcceptable } from "@beep/schema/HttpStatus"
+ *
+ * const status: NotAcceptable = 406
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -270,6 +326,14 @@ export const ProxyAuthenticationRequired = S.Literal(407).pipe(
 
 /**
  * {@inheritDoc ProxyAuthenticationRequired}
+ *
+ * @example
+ * ```ts
+ * import type { ProxyAuthenticationRequired } from "@beep/schema/HttpStatus"
+ *
+ * const status: ProxyAuthenticationRequired = 407
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -305,6 +369,14 @@ export const RequestTimeout = S.Literal(408).pipe(
 /**
  * {@inheritDoc RequestTimeout}
  *
+ * @example
+ * ```ts
+ * import type { RequestTimeout } from "@beep/schema/HttpStatus"
+ *
+ * const status: RequestTimeout = 408
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -336,6 +408,14 @@ export const Conflict = S.Literal(409).pipe(
 
 /**
  * {@inheritDoc Conflict}
+ *
+ * @example
+ * ```ts
+ * import type { Conflict } from "@beep/schema/HttpStatus"
+ *
+ * const status: Conflict = 409
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation

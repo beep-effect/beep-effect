@@ -73,6 +73,7 @@
   "devDependencies": {
     "@effect/vitest": "catalog:",
     "@microsoft/microsoft-graph-types": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "bun-types": "catalog:"
   }
 }

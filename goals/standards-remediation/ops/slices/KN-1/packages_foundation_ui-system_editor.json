@@ -1,0 +1,10 @@
+{
+  "scope": "packages/foundation/ui-system/editor",
+  "findings": [
+    {
+      "kind": "unresolved",
+      "file": "packages/foundation/ui-system/editor/tsconfig.test.json",
+      "name": "bun-types"
+    }
+  ]
+}

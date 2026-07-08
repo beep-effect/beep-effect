@@ -44,10 +44,17 @@ const $I = $GovinfoId.create("Govinfo.service");
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ * import { RateLimitSnapshot } from "@beep/api-transport"
  * import type { GovinfoShape } from "@beep/govinfo"
  *
- * type Search = GovinfoShape["search"]
- * console.log({} as { search: Search })
+ * const shape: GovinfoShape = {
+ *   rateLimit: Effect.succeed(O.some(RateLimitSnapshot.make({ limit: 1000, remaining: 999 }))),
+ *   search: () => Effect.die("not implemented"),
+ * }
+ *
+ * console.log(O.isSome(Effect.runSync(shape.rateLimit))) // true
  * ```
  *
  * @category services

@@ -1,0 +1,10 @@
+{
+  "scope": "packages/drivers/anthropic/package.json",
+  "findings": [
+    {
+      "kind": "devDependencies",
+      "file": "packages/drivers/anthropic/package.json",
+      "name": "bun-types"
+    }
+  ]
+}

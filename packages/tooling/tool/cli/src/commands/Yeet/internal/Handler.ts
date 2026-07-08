@@ -2815,6 +2815,33 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
 });
 
 /**
+ * Test-only inputs for building a Yeet run plan without reading repository state.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export class BuildYeetRunPlanTestOptions extends S.Class<BuildYeetRunPlanTestOptions>($I`BuildYeetRunPlanTestOptions`)(
+  {
+    amend: S.optionalKey(S.Boolean),
+    context: RepoRunContext,
+    fast: S.optionalKey(S.Boolean),
+    forceTurbo: S.optionalKey(S.Boolean),
+    message: S.Option(S.String),
+    mode: S.optionalKey(YeetRunMode),
+    monitor: S.optionalKey(S.Boolean),
+    noEdit: S.optionalKey(S.Boolean),
+    pr: S.optionalKey(S.Boolean),
+    pushOnly: S.optionalKey(S.Boolean),
+    remote: S.optionalKey(S.Boolean),
+    startPrEarly: S.optionalKey(S.Boolean),
+    tier: S.optionalKey(YeetProofTier),
+  },
+  $I.annote("BuildYeetRunPlanTestOptions", {
+    description: "Hydrated test context, optional message, and optional mode for building a Yeet run plan.",
+  })
+) {}
+
+/**
  * Build a plan for tests without reading repository state.
  *
  * @param options - Hydrated test context, optional message, and optional mode.
@@ -2822,21 +2849,7 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
  * @category testing
  * @since 0.0.0
  */
-export const buildYeetRunPlanForTesting = (options: {
-  readonly amend?: boolean;
-  readonly context: RepoRunContext;
-  readonly fast?: boolean;
-  readonly forceTurbo?: boolean;
-  readonly message: O.Option<string>;
-  readonly mode?: YeetRunMode;
-  readonly monitor?: boolean;
-  readonly noEdit?: boolean;
-  readonly pr?: boolean;
-  readonly pushOnly?: boolean;
-  readonly remote?: boolean;
-  readonly startPrEarly?: boolean;
-  readonly tier?: YeetProofTier;
-}): RepoRunPlan =>
+export const buildYeetRunPlanForTesting = (options: BuildYeetRunPlanTestOptions): RepoRunPlan =>
   buildYeetRunPlanWithMode(
     options.context,
     options.message,

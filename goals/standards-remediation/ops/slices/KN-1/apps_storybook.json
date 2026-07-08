@@ -1,0 +1,35 @@
+{
+  "scope": "apps/storybook",
+  "findings": [
+    {
+      "kind": "dependencies",
+      "file": "apps/storybook/package.json",
+      "name": "@beep/form"
+    },
+    {
+      "kind": "dependencies",
+      "file": "apps/storybook/package.json",
+      "name": "effect"
+    },
+    {
+      "kind": "dependencies",
+      "file": "apps/storybook/package.json",
+      "name": "emojibase-data"
+    },
+    {
+      "kind": "files",
+      "file": "apps/storybook/.storybook/utils-browser.ts",
+      "name": "apps/storybook/.storybook/utils-browser.ts"
+    },
+    {
+      "kind": "files",
+      "file": "apps/storybook/vitest.storybook.config.ts",
+      "name": "apps/storybook/vitest.storybook.config.ts"
+    },
+    {
+      "kind": "files",
+      "file": "apps/storybook/vitest.storybook.setup.ts",
+      "name": "apps/storybook/vitest.storybook.setup.ts"
+    }
+  ]
+}

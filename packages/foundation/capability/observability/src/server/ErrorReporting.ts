@@ -21,6 +21,15 @@ const writeErrorLine = (line: string): void => {
 /**
  * Options for the console-backed error reporter.
  *
+ * @example
+ * ```typescript
+ * import { ConsoleErrorReporterOptions } from "@beep/observability/server"
+ *
+ * const options = ConsoleErrorReporterOptions.make({ includeCause: false })
+ * console.log(options.includeCause)
+ * // false
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -37,6 +46,15 @@ export class ConsoleErrorReporterOptions extends S.Class<ConsoleErrorReporterOpt
 
 /**
  * Options for registering the console-backed error reporter layer.
+ *
+ * @example
+ * ```typescript
+ * import { ErrorReporterLayerOptions } from "@beep/observability/server"
+ *
+ * const options = ErrorReporterLayerOptions.make({ mergeWithExisting: false })
+ * console.log(options.mergeWithExisting)
+ * // false
+ * ```
  *
  * @since 0.0.0
  * @category models

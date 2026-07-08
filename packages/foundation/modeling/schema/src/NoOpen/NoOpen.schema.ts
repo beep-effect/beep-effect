@@ -46,6 +46,14 @@ export const NoOpenValue = NoOpenValueBase.pipe(
 /**
  * Type for the `X-Download-Options` header value.
  *
+ * @example
+ * ```ts
+ * import { NoOpenValue } from "@beep/schema/NoOpen"
+ *
+ * const value: NoOpenValue = "noopen"
+ * console.log(NoOpenValue.Options.includes(value))
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -76,6 +84,15 @@ export const NoOpenOption = NoOpenOptionBase.pipe(
 
 /**
  * Type for enabled or disabled `X-Download-Options` options.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { NoOpenOption } from "@beep/schema/NoOpen"
+ *
+ * const option: NoOpenOption = S.decodeUnknownSync(NoOpenOption)("noopen")
+ * console.log(option)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -185,6 +202,15 @@ export const NoOpenHeader = S.UndefinedOr(NoOpenOption).pipe(
 
 /**
  * Type for rendered `X-Download-Options` response headers.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { NoOpenHeader } from "@beep/schema/NoOpen"
+ *
+ * const header: NoOpenHeader = S.decodeUnknownSync(NoOpenHeader)("noopen")
+ * console.log(header.name)
+ * ```
  *
  * @category models
  * @since 0.0.0

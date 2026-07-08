@@ -38,6 +38,14 @@ export const Continue = S.Literal(100).pipe(
 /**
  * {@inheritDoc Continue}
  *
+ * @example
+ * ```ts
+ * import type { Continue } from "@beep/schema/HttpStatus"
+ *
+ * const status: Continue = 100
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -67,6 +75,14 @@ export const SwitchingProtocols = S.Literal(101).pipe(
 
 /**
  * {@inheritDoc SwitchingProtocols}
+ *
+ * @example
+ * ```ts
+ * import type { SwitchingProtocols } from "@beep/schema/HttpStatus"
+ *
+ * const status: SwitchingProtocols = 101
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -99,6 +115,14 @@ export const Processing = S.Literal(102).pipe(
 /**
  * {@inheritDoc Processing}
  *
+ * @example
+ * ```ts
+ * import type { Processing } from "@beep/schema/HttpStatus"
+ *
+ * const status: Processing = 102
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -128,6 +152,14 @@ export const EarlyHints = S.Literal(103).pipe(
 
 /**
  * {@inheritDoc EarlyHints}
+ *
+ * @example
+ * ```ts
+ * import type { EarlyHints } from "@beep/schema/HttpStatus"
+ *
+ * const status: EarlyHints = 103
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -164,6 +196,16 @@ export const HttpStatus1XX = MappedLiteralKit([
 /**
  * A namespace for {@link HttpStatus1XX} to contain the Encoded type
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HttpStatus1XX } from "@beep/schema/HttpStatus"
+ *
+ * const encoded: HttpStatus1XX.Encoded = "Continue"
+ * const status = S.decodeUnknownSync(HttpStatus1XX)(encoded)
+ * console.log(status) // 100
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -179,6 +221,14 @@ export declare namespace HttpStatus1XX {
 
 /**
  * {@inheritDoc HttpStatus1XX}
+ *
+ * @example
+ * ```ts
+ * import type { HttpStatus1XX } from "@beep/schema/HttpStatus"
+ *
+ * const status: HttpStatus1XX = 100
+ * console.log(status)
+ * ```
  *
  * @category validation
  * @since 0.0.0

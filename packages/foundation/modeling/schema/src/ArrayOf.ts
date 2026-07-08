@@ -34,6 +34,15 @@ export const ArrayOfStrings = S.Array(S.String).pipe(
 /**
  * Type for {@link ArrayOfStrings}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ArrayOfStrings } from "@beep/schema/ArrayOf"
+ *
+ * const decoded: ArrayOfStrings = S.decodeUnknownSync(ArrayOfStrings)(["a", "b"])
+ * console.log(decoded.length)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -62,6 +71,15 @@ export const NonEmptyArrayOfStrings = S.NonEmptyArray(S.String).pipe(
 
 /**
  * Type for {@link NonEmptyArrayOfStrings}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { NonEmptyArrayOfStrings } from "@beep/schema/ArrayOf"
+ *
+ * const decoded: NonEmptyArrayOfStrings = S.decodeUnknownSync(NonEmptyArrayOfStrings)(["hello"])
+ * console.log(decoded[0])
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -92,6 +110,15 @@ export const ArrayOfNonEmptyStrings = S.Array(S.NonEmptyString).pipe(
 /**
  * Type for {@link ArrayOfNonEmptyStrings}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ArrayOfNonEmptyStrings } from "@beep/schema/ArrayOf"
+ *
+ * const decoded: ArrayOfNonEmptyStrings = S.decodeUnknownSync(ArrayOfNonEmptyStrings)(["hello", "world"])
+ * console.log(decoded.length)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -120,6 +147,15 @@ export const NonEmptyArrayOfNonEmptyStrings = S.NonEmptyArray(S.NonEmptyString).
 
 /**
  * Type for {@link NonEmptyArrayOfNonEmptyStrings}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { NonEmptyArrayOfNonEmptyStrings } from "@beep/schema/ArrayOf"
+ *
+ * const decoded: NonEmptyArrayOfNonEmptyStrings = S.decodeUnknownSync(NonEmptyArrayOfNonEmptyStrings)(["hello"])
+ * console.log(decoded[0])
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -150,6 +186,15 @@ export const ArrayOfNumbers = S.Array(S.Finite).pipe(
 /**
  * Type for {@link ArrayOfNumbers}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ArrayOfNumbers } from "@beep/schema/ArrayOf"
+ *
+ * const decoded: ArrayOfNumbers = S.decodeUnknownSync(ArrayOfNumbers)([1, 2, 3])
+ * console.log(decoded.length)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -178,6 +223,15 @@ export const NonEmptyArrayOfNumbers = S.NonEmptyArray(S.Finite).pipe(
 
 /**
  * Type for {@link NonEmptyArrayOfNumbers}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { NonEmptyArrayOfNumbers } from "@beep/schema/ArrayOf"
+ *
+ * const decoded: NonEmptyArrayOfNumbers = S.decodeUnknownSync(NonEmptyArrayOfNumbers)([42])
+ * console.log(decoded[0])
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -208,6 +262,15 @@ export const ArrayOfInts = S.Array(S.Int).pipe(
 /**
  * Type for {@link ArrayOfInts}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ArrayOfInts } from "@beep/schema/ArrayOf"
+ *
+ * const decoded: ArrayOfInts = S.decodeUnknownSync(ArrayOfInts)([1, 2, 3])
+ * console.log(decoded.every(Number.isInteger))
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -236,6 +299,15 @@ export const NonEmptyArrayOfInts = S.NonEmptyArray(S.Int).pipe(
 
 /**
  * Type for {@link NonEmptyArrayOfInts}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { NonEmptyArrayOfInts } from "@beep/schema/ArrayOf"
+ *
+ * const decoded: NonEmptyArrayOfInts = S.decodeUnknownSync(NonEmptyArrayOfInts)([1])
+ * console.log(decoded[0])
+ * ```
  *
  * @since 0.0.0
  * @category models
