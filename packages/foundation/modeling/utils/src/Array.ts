@@ -262,7 +262,9 @@ export const flatMapNonEmptyReadonly: {
  * Finds the first index where `value` appears in `self`.
  *
  * Returns `Option.none()` when the value is absent instead of leaking the
- * native `-1` sentinel.
+ * native `-1` sentinel. The optional `fromIndex` is collapsed into an options
+ * object so the helper stays schema-shaped rather than mirroring the native
+ * positional overload.
  *
  * @example
  * ```ts
@@ -271,18 +273,21 @@ export const flatMapNonEmptyReadonly: {
  *
  * const index = pipe(["alpha", "beta"], A.indexOf("beta"))
  * console.log(O.getOrUndefined(index))
+ *
+ * const fromOffset = A.indexOf(["a", "b", "a"], "a", { fromIndex: 1 })
+ * console.log(O.getOrUndefined(fromOffset))
  * ```
  *
  * @category elements
  * @since 0.0.0
  */
 export const indexOf: {
-  <T>(value: T, fromIndex?: number): (self: ReadonlyArray<T>) => O.Option<number>;
-  <T>(self: ReadonlyArray<T>, value: T, fromIndex?: number): O.Option<number>;
+  <T>(value: T, options?: { readonly fromIndex?: number }): (self: ReadonlyArray<T>) => O.Option<number>;
+  <T>(self: ReadonlyArray<T>, value: T, options?: { readonly fromIndex?: number }): O.Option<number>;
 } = dual(
   (args) => args.length >= 2 && A.isArray(args[0]),
-  <T>(self: ReadonlyArray<T>, value: T, fromIndex?: number): O.Option<number> => {
-    const index = self.indexOf(value, fromIndex);
+  <T>(self: ReadonlyArray<T>, value: T, options?: { readonly fromIndex?: number }): O.Option<number> => {
+    const index = self.indexOf(value, options?.fromIndex);
     return index === -1 ? O.none() : O.some(index);
   }
 );
@@ -291,7 +296,9 @@ export const indexOf: {
  * Finds the last index where `value` appears in `self`.
  *
  * Returns `Option.none()` when the value is absent instead of leaking the
- * native `-1` sentinel.
+ * native `-1` sentinel. The optional `fromIndex` is collapsed into an options
+ * object so the helper stays schema-shaped rather than mirroring the native
+ * positional overload.
  *
  * @example
  * ```ts
@@ -300,18 +307,22 @@ export const indexOf: {
  *
  * const index = pipe(["a", "b", "a"], A.lastIndexOf("a"))
  * console.log(O.getOrUndefined(index))
+ *
+ * const fromOffset = A.lastIndexOf(["a", "b", "a"], "a", { fromIndex: 1 })
+ * console.log(O.getOrUndefined(fromOffset))
  * ```
  *
  * @category elements
  * @since 0.0.0
  */
 export const lastIndexOf: {
-  <T>(value: T, fromIndex?: number): (self: ReadonlyArray<T>) => O.Option<number>;
-  <T>(self: ReadonlyArray<T>, value: T, fromIndex?: number): O.Option<number>;
+  <T>(value: T, options?: { readonly fromIndex?: number }): (self: ReadonlyArray<T>) => O.Option<number>;
+  <T>(self: ReadonlyArray<T>, value: T, options?: { readonly fromIndex?: number }): O.Option<number>;
 } = dual(
   (args) => args.length >= 2 && A.isArray(args[0]),
-  <T>(self: ReadonlyArray<T>, value: T, fromIndex?: number): O.Option<number> => {
-    const index = fromIndex === undefined ? self.lastIndexOf(value) : self.lastIndexOf(value, fromIndex);
+  <T>(self: ReadonlyArray<T>, value: T, options?: { readonly fromIndex?: number }): O.Option<number> => {
+    const index =
+      options?.fromIndex === undefined ? self.lastIndexOf(value) : self.lastIndexOf(value, options.fromIndex);
     return index === -1 ? O.none() : O.some(index);
   }
 );
@@ -319,15 +330,16 @@ export const lastIndexOf: {
 /**
  * Returns an immutable copy of the selected range from `self`.
  *
- * This central wrapper preserves native `slice` range semantics while keeping
- * consumers on the Effect-first `A` helper surface.
+ * The `start`/`end` range is an options object rather than the native
+ * positional `slice(start, end)` overload, keeping the helper's public shape
+ * options-object-first per RC-DUAL rather than mirroring native call syntax.
  *
  * @example
  * ```ts
  * import { pipe } from "effect"
  * import { A } from "@beep/utils"
  *
- * const middle = pipe([1, 2, 3, 4], A.slice(1, 3))
+ * const middle = pipe([1, 2, 3, 4], A.slice({ start: 1, end: 3 }))
  * console.log(middle)
  * ```
  *
@@ -335,11 +347,12 @@ export const lastIndexOf: {
  * @since 0.0.0
  */
 export const slice: {
-  (start?: number, end?: number): <T>(self: ReadonlyArray<T>) => Array<T>;
-  <T>(self: ReadonlyArray<T>, start?: number, end?: number): Array<T>;
+  (options?: { readonly start?: number; readonly end?: number }): <T>(self: ReadonlyArray<T>) => Array<T>;
+  <T>(self: ReadonlyArray<T>, options?: { readonly start?: number; readonly end?: number }): Array<T>;
 } = dual(
   (args) => args.length >= 1 && A.isArray(args[0]),
-  <T>(self: ReadonlyArray<T>, start?: number, end?: number): Array<T> => self.slice(start, end)
+  <T>(self: ReadonlyArray<T>, options?: { readonly start?: number; readonly end?: number }): Array<T> =>
+    self.slice(options?.start, options?.end)
 );
 
 /**
@@ -486,17 +499,19 @@ export const sortInPlace: {
 /**
  * Removes and inserts items in a mutable array and returns the removed values.
  *
- * This intentionally mirrors native `splice` return semantics while keeping
- * mutation explicit and centralized. Prefer immutable composition with
- * `A.remove`, `A.insertAt`, `A.appendAll`, and `A.slice` when identity is not
- * required.
+ * The native `splice(start, deleteCount, ...items)` variadic-insert shape is
+ * collapsed into a single options object (`items` as an array field) so the
+ * helper stays object-shaped per RC-DUAL, at the cost of the native
+ * "just append more args" ergonomics for multi-item inserts. Prefer immutable
+ * composition with `A.remove`, `A.insertAt`, `A.appendAll`, and `A.slice` when
+ * identity is not required.
  *
  * @example
  * ```ts
  * import { A } from "@beep/utils"
  *
  * const values = ["a", "b", "c"]
- * const removed = A.spliceInPlace(values, 1, 1, "x")
+ * const removed = A.spliceInPlace(values, { start: 1, deleteCount: 1, items: ["x"] })
  *
  * console.log(removed)
  * console.log(values)
@@ -506,11 +521,22 @@ export const sortInPlace: {
  * @since 0.0.0
  */
 export const spliceInPlace: {
-  <T>(start: number, deleteCount?: number, ...items: Array<T>): (self: Array<T>) => Array<T>;
-  <T>(self: Array<T>, start: number, deleteCount?: number, ...items: Array<T>): Array<T>;
+  <T>(options: {
+    readonly start: number;
+    readonly deleteCount?: number;
+    readonly items?: ReadonlyArray<T>;
+  }): (self: Array<T>) => Array<T>;
+  <T>(
+    self: Array<T>,
+    options: { readonly start: number; readonly deleteCount?: number; readonly items?: ReadonlyArray<T> }
+  ): Array<T>;
 } = dual(
-  (args) => args.length >= 2 && A.isArray(args[0]),
-  <T>(self: Array<T>, start: number, deleteCount?: number, ...items: Array<T>): Array<T> => {
+  2,
+  <T>(
+    self: Array<T>,
+    options: { readonly start: number; readonly deleteCount?: number; readonly items?: ReadonlyArray<T> }
+  ): Array<T> => {
+    const { start, deleteCount, items = [] } = options;
     if (deleteCount === undefined) {
       return self.splice(start);
     }

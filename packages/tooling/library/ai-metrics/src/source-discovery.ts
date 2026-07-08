@@ -375,7 +375,7 @@ const makeDiscoveredTranscriptFile = Effect.fn("AiMetrics.makeDiscoveredTranscri
   const content = yield* readAttributionContent(fs, sourceKind, sourcePath).pipe(
     Effect.mapError((cause) => fileSystemFailure("Failed to read AI metrics source file.", cause))
   );
-  const relativePath = normalizedRelativePath(pathApi, root, sourcePath);
+  const relativePath = normalizedRelativePath(sourcePath, { pathApi, root });
   const attribution = yield* makeAiMetricsSourceAttribution({
     content,
     ...O.getSomesStruct({ hashSalt: O.fromUndefinedOr(hashSalt) }),

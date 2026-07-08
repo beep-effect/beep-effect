@@ -94,7 +94,10 @@ describe("PnLocal", () => {
 
   it("falls back to full IRI when a local cannot be emitted unescaped", () => {
     expect(
-      prefixedNameOrIri("beep", "Ontology.models/HttpUrl", "https://ns.beep.sh/ontology/Ontology.models/HttpUrl")
+      prefixedNameOrIri("Ontology.models/HttpUrl", {
+        prefix: "beep",
+        fullIri: "https://ns.beep.sh/ontology/Ontology.models/HttpUrl",
+      })
     ).toBe("<https://ns.beep.sh/ontology/Ontology.models/HttpUrl>");
   });
 });

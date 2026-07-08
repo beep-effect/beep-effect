@@ -22,6 +22,7 @@ import { $McpKitId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, SchemaUtils, UnknownRecord } from "@beep/schema";
 import { HashSet } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
@@ -392,7 +393,7 @@ export type FieldProjectionOutcome = typeof FieldProjectionOutcome.Type;
  *   complete: S.Struct({ id: S.String, summary: S.String, body: S.String })
  * })
  *
- * const projected = projectWithinBudget(tiers, { id: "doc-1", summary: "s", body: "b".repeat(100) }, {
+ * const projected = projectWithinBudget({ id: "doc-1", summary: "s", body: "b".repeat(100) }, tiers, {
  *   budgetBytes: NonNegativeInt.make(40),
  *   mintFetchableHandle: (oversized) =>
  *     FetchableHandle.make({
@@ -409,24 +410,37 @@ export type FieldProjectionOutcome = typeof FieldProjectionOutcome.Type;
  * @category combinators
  * @since 0.0.0
  */
-export const projectWithinBudget = (
-  tiers: FieldTierSet<S.Struct.Fields, S.Struct.Fields, S.Struct.Fields>,
-  value: Record<string, unknown>,
-  options: ProjectWithinBudgetOptions
-): FieldProjectionOutcome => {
-  for (const tier of TIER_ORDER) {
-    const projected = projectFieldTier(tiers, tier, value);
-    if (estimateJsonSize(projected) <= options.budgetBytes) {
-      return FieldProjectionOutcome.make({ _tag: "Inline", tier, value: projected });
+export const projectWithinBudget: {
+  (
+    value: Record<string, unknown>,
+    tiers: FieldTierSet<S.Struct.Fields, S.Struct.Fields, S.Struct.Fields>,
+    options: ProjectWithinBudgetOptions
+  ): FieldProjectionOutcome;
+  (
+    tiers: FieldTierSet<S.Struct.Fields, S.Struct.Fields, S.Struct.Fields>,
+    options: ProjectWithinBudgetOptions
+  ): (value: Record<string, unknown>) => FieldProjectionOutcome;
+} = dual(
+  3,
+  (
+    value: Record<string, unknown>,
+    tiers: FieldTierSet<S.Struct.Fields, S.Struct.Fields, S.Struct.Fields>,
+    options: ProjectWithinBudgetOptions
+  ): FieldProjectionOutcome => {
+    for (const tier of TIER_ORDER) {
+      const projected = projectFieldTier(tiers, tier, value);
+      if (estimateJsonSize(projected) <= options.budgetBytes) {
+        return FieldProjectionOutcome.make({ _tag: "Inline", tier, value: projected });
+      }
     }
+    const minimalProjected = projectFieldTier(tiers, "minimal", value);
+    const oversized = OversizedFieldProjection.make({
+      value: minimalProjected,
+      sizeBytes: NonNegativeInt.make(estimateJsonSize(minimalProjected)),
+    });
+    return FieldProjectionOutcome.make({ _tag: "Fetchable", handle: options.mintFetchableHandle(oversized) });
   }
-  const minimalProjected = projectFieldTier(tiers, "minimal", value);
-  const oversized = OversizedFieldProjection.make({
-    value: minimalProjected,
-    sizeBytes: NonNegativeInt.make(estimateJsonSize(minimalProjected)),
-  });
-  return FieldProjectionOutcome.make({ _tag: "Fetchable", handle: options.mintFetchableHandle(oversized) });
-};
+);
 
 /**
  * Columnar reshaping of row-oriented records: instead of repeating every

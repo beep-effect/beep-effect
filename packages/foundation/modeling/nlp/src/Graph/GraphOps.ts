@@ -23,9 +23,10 @@
 import { $NlpId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { A, O, thunkTrue } from "@beep/utils";
-import { Effect, flow, Graph, HashMap, HashSet, MutableHashMap, Stream } from "effect";
+import { Effect, Graph, HashMap, HashSet, MutableHashMap, Stream } from "effect";
 import { dual, identity } from "effect/Function";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 
 const $I = $NlpId.create("Graph/GraphOps");
 
@@ -141,6 +142,41 @@ export const TraversalOrder = LiteralKit(["dfs", "bfs", "topo"]).annotate(
  * @since 0.0.0
  */
 export type TraversalOrder = typeof TraversalOrder.Type;
+
+const NodeIndexSchema = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+  $I.annoteSchema("NodeIndexSchema", {
+    description: "Stable node index allocated by the backing effect/Graph.",
+  })
+);
+
+/**
+ * Traversal-start options shared by graph-walking helpers: which node indices
+ * to begin from and which traversal order to use.
+ *
+ * @example
+ * ```ts
+ * import { getRoots, singleton, TraversalStart } from "@beep/nlp/Graph/GraphOps"
+ *
+ * const graph = singleton<string, string>("root")
+ * const options = new TraversalStart({ start: getRoots(graph), order: "dfs" })
+ *
+ * console.log(options.order)
+ * // "dfs"
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export class TraversalStart extends S.Class<TraversalStart>($I`TraversalStart`)(
+  {
+    start: S.Array(NodeIndexSchema),
+    order: TraversalOrder,
+  },
+  $I.annote("TraversalStart", {
+    description:
+      "Traversal-start options shared by graph-walking helpers: which node indices to begin from and which traversal order to use.",
+  })
+) {}
 
 // =============================================================================
 // Internal: structural reconstruction with index remapping
@@ -386,7 +422,7 @@ export const foldNodes: {
  * import { foldTraversal, getRoots, singleton } from "@beep/nlp/Graph/GraphOps"
  *
  * const graph = singleton<string, string>("root")
- * const total = foldTraversal(graph, getRoots(graph), "dfs", 0, (sum, node) => sum + node.length)
+ * const total = foldTraversal(graph, { start: getRoots(graph), order: "dfs", initial: 0 }, (sum, node) => sum + node.length)
  * console.log(total) // 4
  * ```
  *
@@ -396,28 +432,24 @@ export const foldNodes: {
 export const foldTraversal: {
   <A, E, B>(
     graph: DirectedGraph<A, E>,
-    start: ReadonlyArray<NodeIndex>,
-    order: TraversalOrder,
-    initial: B,
+    options: TraversalStart & { readonly initial: B },
     f: (acc: B, node: A, index: NodeIndex) => B
   ): B;
   <A, E, B>(
-    start: ReadonlyArray<NodeIndex>,
-    order: TraversalOrder,
-    initial: B,
+    options: TraversalStart & { readonly initial: B },
     f: (acc: B, node: A, index: NodeIndex) => B
   ): (graph: DirectedGraph<A, E>) => B;
 } = dual(
-  5,
+  3,
   <A, E, B>(
     graph: DirectedGraph<A, E>,
-    start: ReadonlyArray<NodeIndex>,
-    order: TraversalOrder,
-    initial: B,
+    options: TraversalStart & { readonly initial: B },
     f: (acc: B, node: A, index: NodeIndex) => B
   ): B =>
-    A.reduce(A.fromIterable(Graph.entries(createWalker(graph, start, order))), initial, (acc, [index, node]) =>
-      f(acc, node, index)
+    A.reduce(
+      A.fromIterable(Graph.entries(createWalker(graph, options.start, options.order))),
+      options.initial,
+      (acc, [index, node]) => f(acc, node, index)
     )
 );
 
@@ -445,19 +477,21 @@ export const collectNodes = <A, E>(graph: DirectedGraph<A, E>): ReadonlyArray<A>
  * import { collectTraversal, getRoots, singleton } from "@beep/nlp/Graph/GraphOps"
  *
  * const graph = singleton<string, string>("root")
- * console.log(collectTraversal(graph, getRoots(graph), "dfs")) // ["root"]
+ * console.log(collectTraversal(graph, { start: getRoots(graph), order: "dfs" })) // ["root"]
  * ```
  *
  * @since 0.0.0
  * @category getters
  */
 export const collectTraversal: {
-  <A, E>(graph: DirectedGraph<A, E>, start: ReadonlyArray<NodeIndex>, order: TraversalOrder): ReadonlyArray<A>;
-  <A, E>(start: ReadonlyArray<NodeIndex>, order: TraversalOrder): (graph: DirectedGraph<A, E>) => ReadonlyArray<A>;
+  <A, E>(graph: DirectedGraph<A, E>, options: TraversalStart): ReadonlyArray<A>;
+  <A, E>(options: TraversalStart): (graph: DirectedGraph<A, E>) => ReadonlyArray<A>;
 } = dual(
-  3,
-  <A, E>(graph: DirectedGraph<A, E>, start: ReadonlyArray<NodeIndex>, order: TraversalOrder): ReadonlyArray<A> =>
-    foldTraversal(graph, start, order, A.empty<A>(), (acc, node) => A.append(acc, node))
+  2,
+  <A, E>(graph: DirectedGraph<A, E>, options: TraversalStart): ReadonlyArray<A> =>
+    foldTraversal(graph, { start: options.start, order: options.order, initial: A.empty<A>() }, (acc, node) =>
+      A.append(acc, node)
+    )
 );
 
 // =============================================================================
@@ -690,7 +724,7 @@ export const queryIndexIntersection: {
  * import { getRoots, singleton, traverseNodes } from "@beep/nlp/Graph/GraphOps"
  *
  * const graph = singleton<string, string>("root")
- * const program = traverseNodes(graph, getRoots(graph), "dfs", () => Effect.void)
+ * const program = traverseNodes(graph, { start: getRoots(graph), order: "dfs" }, () => Effect.void)
  *
  * console.log(Effect.runSync(program))
  * ```
@@ -701,25 +735,22 @@ export const queryIndexIntersection: {
 export const traverseNodes: {
   <A, E, R, Err>(
     graph: DirectedGraph<A, E>,
-    start: ReadonlyArray<NodeIndex>,
-    order: TraversalOrder,
+    options: TraversalStart,
     f: (node: A, index: NodeIndex) => Effect.Effect<void, Err, R>
   ): Effect.Effect<void, Err, R>;
   <A, E, R, Err>(
-    start: ReadonlyArray<NodeIndex>,
-    order: TraversalOrder,
+    options: TraversalStart,
     f: (node: A, index: NodeIndex) => Effect.Effect<void, Err, R>
   ): (graph: DirectedGraph<A, E>) => Effect.Effect<void, Err, R>;
 } = dual(
-  4,
+  3,
   <A, E, R, Err>(
     graph: DirectedGraph<A, E>,
-    start: ReadonlyArray<NodeIndex>,
-    order: TraversalOrder,
+    options: TraversalStart,
     f: (node: A, index: NodeIndex) => Effect.Effect<void, Err, R>
   ): Effect.Effect<void, Err, R> =>
     Effect.forEach(
-      A.fromIterable(Graph.entries(createWalker(graph, start, order))),
+      A.fromIterable(Graph.entries(createWalker(graph, options.start, options.order))),
       ([index, node]) => f(node, index),
       {
         discard: true,
@@ -736,7 +767,7 @@ export const traverseNodes: {
  * import { getRoots, singleton, traverseNodesCollect } from "@beep/nlp/Graph/GraphOps"
  *
  * const graph = singleton<string, string>("root")
- * const program = traverseNodesCollect(graph, getRoots(graph), "dfs", (node) =>
+ * const program = traverseNodesCollect(graph, { start: getRoots(graph), order: "dfs" }, (node) =>
  *   Effect.succeed(node.length)
  * )
  *
@@ -749,24 +780,23 @@ export const traverseNodes: {
 export const traverseNodesCollect: {
   <A, E, B, Err, R>(
     graph: DirectedGraph<A, E>,
-    start: ReadonlyArray<NodeIndex>,
-    order: TraversalOrder,
+    options: TraversalStart,
     f: (node: A, index: NodeIndex) => Effect.Effect<B, Err, R>
   ): Effect.Effect<ReadonlyArray<B>, Err, R>;
   <A, E, B, Err, R>(
-    start: ReadonlyArray<NodeIndex>,
-    order: TraversalOrder,
+    options: TraversalStart,
     f: (node: A, index: NodeIndex) => Effect.Effect<B, Err, R>
   ): (graph: DirectedGraph<A, E>) => Effect.Effect<ReadonlyArray<B>, Err, R>;
 } = dual(
-  4,
+  3,
   <A, E, B, Err, R>(
     graph: DirectedGraph<A, E>,
-    start: ReadonlyArray<NodeIndex>,
-    order: TraversalOrder,
+    options: TraversalStart,
     f: (node: A, index: NodeIndex) => Effect.Effect<B, Err, R>
   ): Effect.Effect<ReadonlyArray<B>, Err, R> =>
-    Effect.forEach(A.fromIterable(Graph.entries(createWalker(graph, start, order))), ([index, node]) => f(node, index))
+    Effect.forEach(A.fromIterable(Graph.entries(createWalker(graph, options.start, options.order))), ([index, node]) =>
+      f(node, index)
+    )
 );
 
 /**
@@ -843,7 +873,7 @@ export const mapNodesEffect: {
  * import { getRoots, singleton, streamNodes } from "@beep/nlp/Graph/GraphOps"
  *
  * const graph = singleton<string, string>("root")
- * const program = Stream.runCollect(streamNodes(graph, getRoots(graph), "dfs"))
+ * const program = Stream.runCollect(streamNodes(graph, { start: getRoots(graph), order: "dfs" }))
  *
  * console.log(Effect.runSync(program))
  * ```
@@ -852,12 +882,12 @@ export const mapNodesEffect: {
  * @category streams
  */
 export const streamNodes: {
-  <A, E>(graph: DirectedGraph<A, E>, start: ReadonlyArray<NodeIndex>, order: TraversalOrder): Stream.Stream<A>;
-  <A, E>(start: ReadonlyArray<NodeIndex>, order: TraversalOrder): (graph: DirectedGraph<A, E>) => Stream.Stream<A>;
+  <A, E>(graph: DirectedGraph<A, E>, options: TraversalStart): Stream.Stream<A>;
+  <A, E>(options: TraversalStart): (graph: DirectedGraph<A, E>) => Stream.Stream<A>;
 } = dual(
-  3,
-  <A, E>(graph: DirectedGraph<A, E>, start: ReadonlyArray<NodeIndex>, order: TraversalOrder): Stream.Stream<A> =>
-    Stream.fromIterable(Graph.values(createWalker(graph, start, order)))
+  2,
+  <A, E>(graph: DirectedGraph<A, E>, options: TraversalStart): Stream.Stream<A> =>
+    Stream.fromIterable(Graph.values(createWalker(graph, options.start, options.order)))
 );
 
 /**
@@ -869,7 +899,7 @@ export const streamNodes: {
  * import { getRoots, singleton, streamNodesWithIndex } from "@beep/nlp/Graph/GraphOps"
  *
  * const graph = singleton<string, string>("root")
- * const program = Stream.runCollect(streamNodesWithIndex(graph, getRoots(graph), "dfs"))
+ * const program = Stream.runCollect(streamNodesWithIndex(graph, { start: getRoots(graph), order: "dfs" }))
  *
  * console.log(Effect.runSync(program).length) // 1
  * ```
@@ -878,16 +908,13 @@ export const streamNodes: {
  * @category streams
  */
 export const streamNodesWithIndex: {
-  <A, E>(
-    graph: DirectedGraph<A, E>,
-    start: ReadonlyArray<NodeIndex>,
-    order: TraversalOrder
-  ): Stream.Stream<readonly [NodeIndex, A]>;
-  (
-    start: ReadonlyArray<NodeIndex>,
-    order: TraversalOrder
-  ): <A, E>(graph: DirectedGraph<A, E>) => Stream.Stream<readonly [NodeIndex, A]>;
-} = dual(3, flow(createWalker, Graph.entries, Stream.fromIterable));
+  <A, E>(graph: DirectedGraph<A, E>, options: TraversalStart): Stream.Stream<readonly [NodeIndex, A]>;
+  (options: TraversalStart): <A, E>(graph: DirectedGraph<A, E>) => Stream.Stream<readonly [NodeIndex, A]>;
+} = dual(
+  2,
+  <A, E>(graph: DirectedGraph<A, E>, options: TraversalStart): Stream.Stream<readonly [NodeIndex, A]> =>
+    Stream.fromIterable(Graph.entries(createWalker(graph, options.start, options.order)))
+);
 
 /**
  * Stream node payloads in fixed-size traversal batches.
@@ -898,7 +925,7 @@ export const streamNodesWithIndex: {
  * import { batchNodes, getRoots, singleton } from "@beep/nlp/Graph/GraphOps"
  *
  * const graph = singleton<string, string>("root")
- * const program = Stream.runCollect(batchNodes(graph, getRoots(graph), "dfs", 2))
+ * const program = Stream.runCollect(batchNodes(graph, { start: getRoots(graph), order: "dfs", batchSize: 2 }))
  *
  * console.log(Effect.runSync(program).length) // 1
  * ```
@@ -909,23 +936,18 @@ export const streamNodesWithIndex: {
 export const batchNodes: {
   <A, E>(
     graph: DirectedGraph<A, E>,
-    start: ReadonlyArray<NodeIndex>,
-    order: TraversalOrder,
-    batchSize: number
+    options: TraversalStart & { readonly batchSize: number }
   ): Stream.Stream<ReadonlyArray<A>>;
   <A, E>(
-    start: ReadonlyArray<NodeIndex>,
-    order: TraversalOrder,
-    batchSize: number
+    options: TraversalStart & { readonly batchSize: number }
   ): (graph: DirectedGraph<A, E>) => Stream.Stream<ReadonlyArray<A>>;
 } = dual(
-  4,
+  2,
   <A, E>(
     graph: DirectedGraph<A, E>,
-    start: ReadonlyArray<NodeIndex>,
-    order: TraversalOrder,
-    batchSize: number
-  ): Stream.Stream<ReadonlyArray<A>> => Stream.grouped(streamNodes(graph, start, order), batchSize)
+    options: TraversalStart & { readonly batchSize: number }
+  ): Stream.Stream<ReadonlyArray<A>> =>
+    Stream.grouped(streamNodes(graph, { start: options.start, order: options.order }), options.batchSize)
 );
 
 // =============================================================================

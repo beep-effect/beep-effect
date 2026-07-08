@@ -35,8 +35,9 @@ import {
   TextNode,
 } from "@beep/nlp/Graph/Schema";
 import { SchemaUtils } from "@beep/schema";
-import { A, dual, O as OptionUtils, P } from "@beep/utils";
+import { A, O as OptionUtils, P } from "@beep/utils";
 import { Clock, Effect, Graph } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Backend from "../Backend/NLPBackend.ts";

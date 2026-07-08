@@ -24,22 +24,6 @@
       "reason": "Next.js Metadata twitter fields accept undefined for omitted handles, so this helper is a React framework boundary adapter that preserves the required shape."
     },
     {
-      "file": "apps/professional-desktop/src/chat/UsageRecordSink.ts",
-      "symbol": "UsageRecordSinkShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/professional-desktop",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "infra/src/OipWeb.ts",
-      "symbol": "OipWebRuntimeSecrets",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/infra",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
-    },
-    {
       "file": "packages/agents/client/src/Chat.atoms.ts",
       "symbol": "CreateThreadAtomInput",
       "kind": "object-struct-schema",
@@ -62,110 +46,6 @@
       "status": "exception",
       "owner": "@beep/agents-domain",
       "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
-      "file": "packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.kernel.ts",
-      "symbol": "AgentTurnKernelShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/agents-use-cases",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.service.ts",
-      "symbol": "ProfessionalRuntimeSdk",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/agents-use-cases",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/architecture-lab/client/src/aggregates/WorkItem/WorkItem.client.ts",
-      "symbol": "WorkItemClientShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/architecture-lab-client",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/architecture-lab/client/src/aggregates/WorkItem/WorkItem.client.ts",
-      "symbol": "WorkItemClientTransport",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/architecture-lab-client",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.repository.ts",
-      "symbol": "WorkItemRepositoryShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/architecture-lab-use-cases",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.use-cases.ts",
-      "symbol": "WorkItemUseCasesShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/architecture-lab-use-cases",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/architecture-lab/use-cases/src/entities/Worker/Worker.repository.ts",
-      "symbol": "WorkerRepositoryShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/architecture-lab-use-cases",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/architecture-lab/use-cases/src/entities/Worker/Worker.use-cases.ts",
-      "symbol": "WorkerUseCasesShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/architecture-lab-use-cases",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/drivers/acp/src/AcpAgent.service.ts",
-      "symbol": "AcpAgentOptions",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/acp",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/drivers/acp/src/AcpAgent.service.ts",
-      "symbol": "AcpAgentShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/acp",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/drivers/acp/src/AcpClient.service.ts",
-      "symbol": "AcpClientOptions",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/acp",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/drivers/acp/src/AcpClient.service.ts",
-      "symbol": "AcpClientShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/acp",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
-      "symbol": "AcpExtensionRegistrars",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/acp",
-      "reason": "Registrar interface exposes extension handler functions and runtime refs; this is a service boundary, not a serializable data model."
     },
     {
       "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
@@ -216,38 +96,6 @@
       "reason": "Type alias contains non-schema signals such as function members or runtime handles."
     },
     {
-      "file": "packages/drivers/drizzle/src/Drizzle.service.ts",
-      "symbol": "DrizzleClient",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/drizzle",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/drivers/drizzle/src/Drizzle.service.ts",
-      "symbol": "DrizzleShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/drizzle",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/drivers/duckdb/src/DuckDb.service.ts",
-      "symbol": "DuckDbClient",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/duckdb",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/drivers/duckdb/src/DuckDb.service.ts",
-      "symbol": "DuckDbShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/duckdb",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
       "file": "packages/drivers/ecfr/scripts/generate.ts",
       "symbol": "operationsOf.toUpperCase",
       "kind": "schema-policy-advisory",
@@ -256,70 +104,6 @@
       "line": 121,
       "owner": "@beep/ecfr",
       "reason": "Codegen script uppercases HTTP method tokens while generating client operation identifiers; generator naming, not schema-bearing domain normalization."
-    },
-    {
-      "file": "packages/drivers/ecfr/src/Ecfr.service.ts",
-      "symbol": "EcfrShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/ecfr",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/drivers/face-detection/src/FaceDetection.service.ts",
-      "symbol": "FaceDetectionServiceShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/face-detection",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/drivers/face-detection/src/FaceDetection.service.ts",
-      "symbol": "LoadedFaceDetector",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/face-detection",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-      "symbol": "FFmpegShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/ffmpeg",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/drivers/firecrawl/src/Firecrawl.service.ts",
-      "symbol": "FirecrawlSdkClient",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/firecrawl",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/drivers/firecrawl/src/Firecrawl.service.ts",
-      "symbol": "FirecrawlSdkWatcher",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/firecrawl",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/drivers/firecrawl/src/Firecrawl.service.ts",
-      "symbol": "FirecrawlShape",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/firecrawl",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/drivers/govinfo/src/Govinfo.service.ts",
-      "symbol": "GovinfoShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/govinfo",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
       "file": "packages/drivers/hubspot/src/HubSpot.errors.ts",
@@ -332,36 +116,12 @@
       "reason": "Diagnostic error options intentionally preserve raw submitted email text from request-encoding failures, including values rejected before contact email normalization."
     },
     {
-      "file": "packages/drivers/hubspot/src/HubSpot.service.ts",
-      "symbol": "HubSpotShape",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/hubspot",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/drivers/m365/src/M365.auth.ts",
-      "symbol": "M365AuthShape",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/m365",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
-    },
-    {
       "file": "packages/drivers/m365/src/M365.schemas.ts",
       "symbol": "GraphCollection",
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/m365",
       "reason": "S.Struct with non-identifier or spread keys stays tracked as an exception."
-    },
-    {
-      "file": "packages/drivers/m365/src/M365.service.ts",
-      "symbol": "M365Shape",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/m365",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
     },
     {
       "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
@@ -484,60 +244,12 @@
       "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
     },
     {
-      "file": "packages/drivers/openai-compat/src/OpenAiCompatClient.service.ts",
-      "symbol": "OpenAiCompatClientShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/openai-compat",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/drivers/phoenix/src/Phoenix.service.ts",
-      "symbol": "PhoenixSdkShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/phoenix",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/drivers/phoenix/src/Phoenix.service.ts",
-      "symbol": "PhoenixShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/phoenix",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/drivers/runpod/src/Runpod.service.ts",
-      "symbol": "RunpodShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/runpod",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/drivers/sanity/src/Sanity.service.ts",
-      "symbol": "SanityShape",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/sanity",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
-    },
-    {
       "file": "packages/drivers/uspto-mcp/src/UsptoDocumentTiers.ts",
       "symbol": "usptoDocumentFieldTiers",
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/uspto-mcp",
       "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
-      "file": "packages/drivers/uspto/src/Uspto.service.ts",
-      "symbol": "UsptoShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/uspto",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
       "file": "packages/drivers/uspto/src/Uspto.service.ts",
@@ -558,54 +270,6 @@
       "reason": "Type alias contains non-schema signals such as function members or runtime handles."
     },
     {
-      "file": "packages/drivers/wink/src/WinkVectorizer.service.ts",
-      "symbol": "ScopedVectorizer",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/wink",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/drivers/wink/src/internal/bm25.ts",
-      "symbol": "BM25VectorizerInstance",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/wink",
-      "reason": "Third-party BM25 adapter interface exposes runtime methods and accessors; it is not a serializable data model."
-    },
-    {
-      "file": "packages/drivers/wink/src/internal/bm25.ts",
-      "symbol": "BM25VectorizerWithBowInstance",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/wink",
-      "reason": "Derived third-party BM25 adapter interface extends runtime methods and accessors; it is not a serializable data model."
-    },
-    {
-      "file": "packages/drivers/xai/src/XAi.service.ts",
-      "symbol": "XAiWebSocketSession",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/xai",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/epistemic/use-cases/src/ClaimGate/ClaimGate.ports.ts",
-      "symbol": "ClaimGateShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/epistemic-use-cases",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/epistemic/use-cases/src/ClaimLifecycle/ClaimLifecycle.service.ts",
-      "symbol": "ClaimTransitionShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/epistemic-use-cases",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
       "file": "packages/foundation/capability/api-transport/src/Transport.ts",
       "symbol": "ApiTransport",
       "kind": "exported-interface",
@@ -622,44 +286,12 @@
       "reason": "Constructor-options bag for makeApiTransport with effect-native members: an ApiAuth Data.TaggedEnum carrying Redacted secrets and a Duration.Input timing input, not a decode-from-wire boundary model."
     },
     {
-      "file": "packages/foundation/capability/chalk/src/Chalk.browser.ts",
-      "symbol": "ChalkInstance",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/chalk",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/foundation/capability/chalk/src/Chalk.ts",
-      "symbol": "ChalkInstance",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/chalk",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
       "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
       "symbol": "anonymous@103",
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/file-processing",
       "reason": "Inner S.Struct is load-bearing: S.Class requires the struct form to attach the cross-field TextSpanOffsetOrderCheck filter; the exported surface is the annotated TextSpan S.Class wrapping it."
-    },
-    {
-      "file": "packages/foundation/capability/file-processing/src/Service/index.ts",
-      "symbol": "FileProcessingEngineShape",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/file-processing",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/foundation/capability/file-processing/src/Service/index.ts",
-      "symbol": "FileProcessingServiceShape",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/file-processing",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
     },
     {
       "file": "packages/foundation/capability/langextract/src/Extraction/index.ts",
@@ -698,36 +330,12 @@
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
-      "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
-      "symbol": "TierGateShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/mcp-kit",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
-      "symbol": "ToolCallRequest",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/mcp-kit",
-      "reason": "The `tool` field carries an effect/unstable/ai Tool value (method members such as annotate/setSuccess/setFailure), a runtime handle rather than pure data; not schema-modelable."
-    },
-    {
       "file": "packages/foundation/capability/mcp-kit/src/ToolkitComposition.ts",
       "symbol": "GatedLayer",
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/mcp-kit",
       "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts",
-      "symbol": "NLPBackendShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/nlp-processing",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
       "file": "packages/foundation/capability/nlp-processing/src/Graph/EffectGraph.ts",
@@ -746,28 +354,12 @@
       "reason": "Generic interface requires manual modeling and is tracked as an exception."
     },
     {
-      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Executor.ts",
-      "symbol": "GraphExecutorShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/nlp-processing",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
       "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Operation.ts",
       "symbol": "GraphOperation",
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/nlp-processing",
       "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/ResultStore.ts",
-      "symbol": "ResultStoreShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/nlp-processing",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
       "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/ResultStore.ts",
@@ -795,23 +387,7 @@
     },
     {
       "file": "packages/foundation/capability/nlp-processing/src/Graph/TypeClass.ts",
-      "symbol": "Foldable",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/nlp-processing",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/capability/nlp-processing/src/Graph/TypeClass.ts",
       "symbol": "ForgetfulOperation",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/nlp-processing",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/capability/nlp-processing/src/Graph/TypeClass.ts",
-      "symbol": "Functor",
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/nlp-processing",
@@ -824,86 +400,6 @@
       "status": "exception",
       "owner": "@beep/nlp-processing",
       "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/capability/nlp-processing/src/NLPService.ts",
-      "symbol": "NLPServiceShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/nlp-processing",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/foundation/capability/nlp-processing/src/Tools/ToolExport.ts",
-      "symbol": "ExportedTool",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/nlp-processing",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/canonicalization.ts",
-      "symbol": "CanonicalizationServiceShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/semantic-web",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-context.ts",
-      "symbol": "JsonLdContextServiceShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/semantic-web",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "JsonLdDocumentServiceShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/semantic-web",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-parse.ts",
-      "symbol": "JsonLdStreamParseServiceShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/semantic-web",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-serialize.ts",
-      "symbol": "JsonLdStreamSerializeServiceShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/semantic-web",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
-      "symbol": "ProvenanceServiceShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/semantic-web",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
-      "symbol": "ShaclValidationServiceShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/semantic-web",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/sparql-query.ts",
-      "symbol": "SparqlQueryServiceShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/semantic-web",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
       "file": "packages/foundation/modeling/html/scripts/generate.ts",
@@ -960,14 +456,6 @@
       "reason": "Generic interface requires manual modeling and is tracked as an exception."
     },
     {
-      "file": "packages/foundation/modeling/md/src/Md.behavior.ts",
-      "symbol": "SegmentStrategy",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/md",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
       "file": "packages/foundation/modeling/md/src/Md.render.ts",
       "symbol": "EffectRenderAdapter",
       "kind": "exported-interface",
@@ -982,30 +470,6 @@
       "status": "exception",
       "owner": "@beep/md",
       "reason": "Generic render adapter interface contains function members and stays tracked as a runtime-boundary exception."
-    },
-    {
-      "file": "packages/foundation/modeling/md/src/Md.ts",
-      "symbol": "BlockContentBuilder",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/md",
-      "reason": "Generic public constructor overload helper contains function signatures and stays tracked as an API-boundary exception."
-    },
-    {
-      "file": "packages/foundation/modeling/md/src/Md.ts",
-      "symbol": "InlineContentBuilder",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/md",
-      "reason": "Generic public constructor overload helper contains function signatures and stays tracked as an API-boundary exception."
-    },
-    {
-      "file": "packages/foundation/modeling/md/src/Md.ts",
-      "symbol": "ListItemContentBuilder",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/md",
-      "reason": "Generic type alias requires manual modeling and is tracked as an exception."
     },
     {
       "file": "packages/foundation/modeling/nlp/src/Algebra/Monoid.ts",
@@ -1105,14 +569,6 @@
     },
     {
       "file": "packages/foundation/modeling/schema/src/CauseTaggedError/CauseTaggedError.errors.ts",
-      "symbol": "CauseTaggedErrorFactory",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/CauseTaggedError/CauseTaggedError.errors.ts",
       "symbol": "isExtras",
       "kind": "object-struct-schema",
       "status": "exception",
@@ -1176,22 +632,6 @@
       "reason": "Generic interface requires manual modeling and is tracked as an exception."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.edge.ts",
-      "symbol": "EdgeFromSelf",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.edge.ts",
-      "symbol": "EdgeTransform",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/Graph/Graph.encoded.ts",
       "symbol": "EdgeEncodedSchema",
       "kind": "exported-interface",
@@ -1202,86 +642,6 @@
     {
       "file": "packages/foundation/modeling/schema/src/Graph/Graph.encoded.ts",
       "symbol": "GraphEncodedSchema",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.from-self.ts",
-      "symbol": "DirectedGraphFromSelf",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.from-self.ts",
-      "symbol": "GraphFromSelf",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.from-self.ts",
-      "symbol": "MutableDirectedGraphFromSelf",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.from-self.ts",
-      "symbol": "MutableGraphFromSelf",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.from-self.ts",
-      "symbol": "MutableUndirectedGraphFromSelf",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.from-self.ts",
-      "symbol": "UndirectedGraphFromSelf",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.transforms.ts",
-      "symbol": "DirectedGraph",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.transforms.ts",
-      "symbol": "MutableDirectedGraph",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.transforms.ts",
-      "symbol": "MutableUndirectedGraph",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.transforms.ts",
-      "symbol": "UndirectedGraph",
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/schema",
@@ -1318,62 +678,6 @@
       "status": "exception",
       "owner": "@beep/schema",
       "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Model/Model.datetime.ts",
-      "symbol": "Date",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Model/Model.datetime.ts",
-      "symbol": "DateTimeInsert",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Model/Model.datetime.ts",
-      "symbol": "DateTimeInsertFromDate",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Model/Model.datetime.ts",
-      "symbol": "DateTimeInsertFromNumber",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Model/Model.datetime.ts",
-      "symbol": "DateTimeUpdate",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Model/Model.datetime.ts",
-      "symbol": "DateTimeUpdateFromDate",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Model/Model.datetime.ts",
-      "symbol": "DateTimeUpdateFromNumber",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
     },
     {
       "file": "packages/foundation/modeling/schema/src/Model/Model.fields.ts",
@@ -1416,14 +720,6 @@
       "reason": "Generic interface requires manual modeling and is tracked as an exception."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/Model/Model.sqlite.ts",
-      "symbol": "BooleanSqlite",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/Model/Model.uuid.ts",
       "symbol": "UuidV4Insert",
       "kind": "exported-interface",
@@ -1442,70 +738,6 @@
     {
       "file": "packages/foundation/modeling/schema/src/Model/Model.variants.ts",
       "symbol": "Overrideable",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/MutableHashMap.ts",
-      "symbol": "MutableHashMap",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/MutableHashMap.ts",
-      "symbol": "MutableHashMapFromSelf",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/MutableHashSet.ts",
-      "symbol": "MutableHashSet",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/MutableHashSet.ts",
-      "symbol": "MutableHashSetFromSelf",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/SchemaUtils/toEquivalence.ts",
-      "symbol": "DualEquivalence",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic type alias requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts",
-      "symbol": "CodecStatics",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/StatusCauseTaggedErrorClass/StatusCauseTaggedErrorClass.errors.ts",
-      "symbol": "StatusCauseTaggedErrorClassFactory",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/TaggedErrorClass/TaggedErrorClass.errors.ts",
-      "symbol": "TaggedErrorClassFactory",
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/schema",
@@ -1636,14 +868,6 @@
       "reason": "Generic interface requires manual modeling and is tracked as an exception."
     },
     {
-      "file": "packages/foundation/modeling/utils/src/Errors.ts",
-      "symbol": "ErrorMapper",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/utils",
-      "reason": "Generic type alias requires manual modeling and is tracked as an exception."
-    },
-    {
       "file": "packages/foundation/modeling/utils/src/Event.ts",
       "symbol": "makeEventSchema",
       "kind": "object-struct-schema",
@@ -1652,292 +876,12 @@
       "reason": "S.Struct with non-identifier or spread keys stays tracked as an exception."
     },
     {
-      "file": "packages/foundation/modeling/utils/src/Glob.ts",
-      "symbol": "Glob",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/utils",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/foundation/ui-system/editor/src/chat/atoms.ts",
-      "symbol": "SendHandlerBox",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/editor",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
-      "symbol": "ChatComposerProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/editor",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/components/Form.tsx",
-      "symbol": "FormProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/components/SubmitButton.tsx",
-      "symbol": "SubmitButtonProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/core/Errors.ts",
-      "symbol": "FieldErrorEntry",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "UI error presentation shape mirrors @beep/ui FieldError props; it is not a domain data model."
-    },
-    {
       "file": "packages/foundation/ui-system/form/src/core/Options.ts",
       "symbol": "FieldOption",
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/form",
       "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/AutocompleteField.tsx",
-      "symbol": "AutocompleteFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/CheckboxField.tsx",
-      "symbol": "CheckboxFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/ColorField.tsx",
-      "symbol": "ColorFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/ComboboxField.tsx",
-      "symbol": "ComboboxFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/CountryField.tsx",
-      "symbol": "CountryFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/DateField.tsx",
-      "symbol": "DateFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/DateTimeField.tsx",
-      "symbol": "DateTimeFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/EmojiField.tsx",
-      "symbol": "EmojiFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/MultiCheckboxField.tsx",
-      "symbol": "MultiCheckboxFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "React component props include labels, descriptions, and option presentation; not a domain data model."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/MultiSelectField.tsx",
-      "symbol": "MultiSelectFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/MultiSwitchField.tsx",
-      "symbol": "MultiSwitchFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "React component props include labels, descriptions, and option presentation; not a domain data model."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/NativeSelectField.tsx",
-      "symbol": "NativeSelectFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/NumberField.tsx",
-      "symbol": "NumberFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/OTPField.tsx",
-      "symbol": "OTPFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/PhoneField.tsx",
-      "symbol": "PhoneFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/RadioGroupField.tsx",
-      "symbol": "RadioGroupFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/RatingField.tsx",
-      "symbol": "RatingFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/SelectField.tsx",
-      "symbol": "SelectFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/SliderField.tsx",
-      "symbol": "SliderFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/SwitchField.tsx",
-      "symbol": "SwitchFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/TextField.tsx",
-      "symbol": "TextFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/TextareaField.tsx",
-      "symbol": "TextareaFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/TimeField.tsx",
-      "symbol": "TimeFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/ToggleField.tsx",
-      "symbol": "ToggleFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/ToggleGroupField.tsx",
-      "symbol": "ToggleGroupFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/UploadAvatarField.tsx",
-      "symbol": "UploadAvatarFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/UploadBoxField.tsx",
-      "symbol": "UploadBoxFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/fields/UploadField.tsx",
-      "symbol": "UploadFieldProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/form/src/internal/FieldShell.tsx",
-      "symbol": "FieldShellProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/form",
-      "reason": "Internal React shell props carry ReactNode slots and UI presentation state; not a domain data model."
     },
     {
       "file": "packages/foundation/ui-system/form/stories/fields/storyHelpers.tsx",
@@ -1970,86 +914,6 @@
       "reason": "Storybook play-test helper receives DOM and file-fixture inputs at the React test boundary, so the inline object is an interaction fixture rather than schema-bearing domain data."
     },
     {
-      "file": "packages/foundation/ui-system/ui/src/components/color-picker.tsx",
-      "symbol": "ColorPickerProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/ui",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/ui/src/components/country-select.tsx",
-      "symbol": "CountryOptionContentProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/ui",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/ui/src/components/country-select.tsx",
-      "symbol": "CountrySelectProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/ui",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/ui/src/components/emoji-picker.tsx",
-      "symbol": "EmojiPickerProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/ui",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/ui/src/components/knowledge-graph.tsx",
-      "symbol": "GraphLink",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/ui",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/ui/src/components/knowledge-graph.tsx",
-      "symbol": "GraphNode",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/ui",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/ui/src/components/knowledge-graph.tsx",
-      "symbol": "KnowledgeGraphHandle",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/ui",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/foundation/ui-system/ui/src/components/orb-background.tsx",
-      "symbol": "OrbBackgroundProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/ui",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/ui/src/components/phone-input.tsx",
-      "symbol": "PhoneInputProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/ui",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/ui/src/components/rating.tsx",
-      "symbol": "RatingProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/ui",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
       "file": "packages/foundation/ui-system/ui/src/components/tour.tsx",
       "symbol": "Step",
       "kind": "exported-interface",
@@ -2066,38 +930,6 @@
       "reason": "React tour configuration is coupled to Step render contracts containing ReactNode values, so it stays tracked as a UI boundary exception."
     },
     {
-      "file": "packages/foundation/ui-system/ui/src/components/upload.tsx",
-      "symbol": "UploadAvatarProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/ui",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/ui/src/components/upload.tsx",
-      "symbol": "UploadBoxProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/ui",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/ui-system/ui/src/components/upload.tsx",
-      "symbol": "UploadBoxRenderProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/ui",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/foundation/ui-system/ui/src/components/upload.tsx",
-      "symbol": "UploadProps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/ui",
-      "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
       "file": "packages/law-practice/server/test/fixture.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -2106,22 +938,6 @@
       "line": 51,
       "owner": "@beep/law-practice-server",
       "reason": "Synthetic golden fixture helper decodes branded file-processing IDs and PosixPath values for one deterministic office-action source artifact; property coverage belongs in the file-processing package schemas."
-    },
-    {
-      "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts",
-      "symbol": "LawEntities",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/law-practice-use-cases",
-      "reason": "Declaration-merged structural companion for the LawEntities S.Class: the explicit Self interface breaks a TS7056 inferred-type explosion, and merged declarations must share export-ness with the exported class, which IS the annotated schema."
-    },
-    {
-      "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.ports.ts",
-      "symbol": "OfficeActionReviewShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/law-practice-use-cases",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
       "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.service.ts",
@@ -2138,14 +954,6 @@
       "status": "exception",
       "owner": "@beep/shared-domain",
       "reason": "Internal S.Struct field block feeds an S.Class constructor and stays tied to the class model."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/FsUtils.ts",
-      "symbol": "FsUtilsShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/repo-utils",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
@@ -2176,14 +984,6 @@
       "line": 1377,
       "owner": "@beep/repo-utils",
       "reason": "Exception: thin branded-id constructor over already schema-validated symbol identity parts; wrapping this utility in Fn/S.Class would add no boundary validation."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
-      "symbol": "TSMorphServiceShape",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/repo-utils",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
@@ -2341,14 +1141,6 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-      "symbol": "CorpusCommandServiceShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
       "symbol": "extensionOf.toLowerCase",
       "kind": "schema-policy-advisory",
       "status": "exception",
@@ -2398,38 +1190,6 @@
       "reason": "Exception: version grouping key normalization for organized corpus filenames; the normalized string is an ephemeral grouping key, not persisted domain data."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/FileGenerationPlanService.ts",
-      "symbol": "FileGenerationPlanServiceShape",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/TemplateService.ts",
-      "symbol": "TemplateServiceShape",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/TsMorphIntegrationService.ts",
-      "symbol": "TsMorphIntegrationServiceShape",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/TsMorphIntegrationService.ts",
-      "symbol": "TsMorphMutationAdapter",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerRunpodEval.ts",
       "symbol": "makeQualityWorkerRunpodEvalPodCreateInput",
       "kind": "schema-policy-advisory",
@@ -2438,14 +1198,6 @@
       "line": 443,
       "owner": "@beep/repo-cli",
       "reason": "Exception: Runpod API body builder with defaults for an external service request; PodCreateInput is already schema-modeled at the output boundary."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-      "symbol": "FilesCommandServiceShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyOps.ts",
@@ -2466,14 +1218,6 @@
       "line": 1293,
       "owner": "@beep/repo-cli",
       "reason": "Exception: exported testing seam for pure recovery-branch decisions; inline input keeps the test helper lightweight and avoids promoting test-only data to a public schema."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Image/Image.service.ts",
-      "symbol": "ImageCommandServiceShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
@@ -2543,14 +1287,6 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Research/Research.service.ts",
-      "symbol": "ResearchCommandServiceShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Research/Research.service.ts",
       "symbol": "selected.toLowerCase",
       "kind": "schema-policy-advisory",
       "status": "exception",
@@ -2612,38 +1348,6 @@
       "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/CategorySelectionService.ts",
-      "symbol": "CategorySelectionServiceShape",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/ReportRendererService.ts",
-      "symbol": "ReportRendererServiceShape",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/ResolverService.ts",
-      "symbol": "ResolverServiceShape",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/UpdateApplierService.ts",
-      "symbol": "UpdateApplierServiceShape",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Closeout.ts",
       "symbol": "closeoutGateStatesForTesting",
       "kind": "schema-policy-advisory",
@@ -2682,14 +1386,6 @@
       "line": 23,
       "owner": "@beep/repo-cli",
       "reason": "Exception: CLI tsconfig-sync command-behavior test; Schema codecs are incidental JSON-boundary plumbing for tsconfig fixtures and CLI output, not schema-value laws."
-    },
-    {
-      "file": "packages/workspace/use-cases/src/aggregates/Thread/ThreadStore.ts",
-      "symbol": "ThreadStoreShape",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/workspace-use-cases",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
     }
   ]
 }

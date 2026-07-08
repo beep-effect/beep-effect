@@ -151,6 +151,7 @@ to the user before anything remains.
 | `S.TaggedUnion` / `S.toTaggedUnion` interchangeable | **Distinct:** `S.TaggedUnion` constructs; `.toTaggedUnion` derives from a kit. Verify per call site. |
 | `annotations` always present on AST nodes | **`annotations` needs `?.`** — optional access. |
 | v3 combinators (`Effect.catchAll`, `Schema.decode`, …) | v3 tells. Use v4 forms (`S.decodeUnknownEffect` / `S.decodeEffect`, `Effect.catch`, current error-handling combinators). |
+| `S.extend` merges two schemas | **`S.extend` does not exist in v4** (TS2551). `S.extendTo` is a different, derived-field combinator (`.repos/effect-v4/.../Schema.ts:3565`). Compose via `S.Class` field spread or struct-field spreading. |
 
 ## Lane report contract
 

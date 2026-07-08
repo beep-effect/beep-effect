@@ -1,0 +1,57 @@
+{
+  "scope": "packages/foundation/modeling/utils",
+  "entries": [
+    {
+      "file": "packages/foundation/modeling/utils/src/Array.ts",
+      "qualifiedName": "indexOf",
+      "kind": "exported-const-function",
+      "status": "exception",
+      "owner": "@beep/utils",
+      "reason": "Central Array.prototype.indexOf parity helper intentionally mirrors the native optional fromIndex positional API while returning Option for effect-first consumers.",
+      "issue": "UTILS-ARRAY-NATIVE-PARITY",
+      "line": 279,
+      "column": 14,
+      "parameterCount": 3,
+      "diagnostics": ["third-param-not-object-like"]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Array.ts",
+      "qualifiedName": "lastIndexOf",
+      "kind": "exported-const-function",
+      "status": "exception",
+      "owner": "@beep/utils",
+      "reason": "Central Array.prototype.lastIndexOf parity helper intentionally mirrors the native optional fromIndex positional API while returning Option for effect-first consumers.",
+      "issue": "UTILS-ARRAY-NATIVE-PARITY",
+      "line": 308,
+      "column": 14,
+      "parameterCount": 3,
+      "diagnostics": ["third-param-not-object-like"]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Array.ts",
+      "qualifiedName": "slice",
+      "kind": "exported-const-function",
+      "status": "exception",
+      "owner": "@beep/utils",
+      "reason": "Central Array.prototype.slice parity helper intentionally mirrors the native optional end positional API for behavior-preserving array-method migration.",
+      "issue": "UTILS-ARRAY-NATIVE-PARITY",
+      "line": 337,
+      "column": 14,
+      "parameterCount": 3,
+      "diagnostics": ["third-param-not-object-like"]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Array.ts",
+      "qualifiedName": "spliceInPlace",
+      "kind": "exported-const-function",
+      "status": "exception",
+      "owner": "@beep/utils",
+      "reason": "Explicit in-place Array.prototype.splice parity helper centralizes the rare identity-preserving mutation cases found by the native Array sweep.",
+      "issue": "UTILS-ARRAY-NATIVE-PARITY",
+      "line": 508,
+      "column": 14,
+      "parameterCount": 4,
+      "diagnostics": ["too-many-positional-params"]
+    }
+  ]
+}

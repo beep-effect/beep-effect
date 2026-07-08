@@ -1,4 +1,6 @@
 import {
+  detectInterfaceReason,
+  detectTypeAliasReason,
   fnSchemaEntryFromFunctionLike,
   getsomesStructEntryFromCallExpression,
   isSchemaCrispeningPolicyExempt,
@@ -481,5 +483,289 @@ describe("G4 foundation family-flip regression fixture", () => {
     const unassignedViolation = fnSchemaViolationForFile("scripts/OneOff.ts");
     expect(O.isNone(schemaCrispeningFamilyForFile("scripts/OneOff.ts"))).toBe(true);
     expect(isExempt(unassignedViolation)).toBe(true);
+  });
+});
+
+// R6-1: exported generic interface/type-alias whose extends clause resolves
+// to S.declareConstructor/S.decodeTo/S.Bottom/VariantSchema.Field AND
+// declares a Rebuild: this member goes silent (no inventory entry at all).
+describe("R6-1: schema-infrastructure generic silent skip", () => {
+  it("still flags a plain pure-data generic interface (no schema-base extends)", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile("fixture.ts", "export interface Box<A> { readonly value: A; }");
+    const [declaration] = sourceFile.getInterfaces();
+
+    const classification = detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" });
+
+    expect(classification._tag).toBe("exception");
+  });
+
+  it("silently skips a generic interface extending declareConstructor with Rebuild: this", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      [
+        "export interface FooFromSelf<Key, Value>",
+        "  extends S.declareConstructor<Foo<Key, Value>, Foo<Key, Value>, readonly [Key, Value], unknown> {",
+        "  readonly key: Key;",
+        "  readonly Rebuild: this;",
+        "  readonly value: Value;",
+        "}",
+      ].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    const classification = detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" });
+
+    expect(classification._tag).toBe("silent");
+  });
+});
+
+// R6-2 + R11-2: an exported generic OR non-generic interface/type-literal
+// whose every member is function/call-signature-typed (zero data fields)
+// goes silent.
+describe("R6-2/R11-2: all-function-member interface silent skip", () => {
+  it("silently skips an all-function-member generic interface", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      ["export interface Strategy<A> {", "  readonly run: (value: A) => string;", "}"].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("silent");
+  });
+
+  it("still flags a generic interface with one data-typed field", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      [
+        "export interface StrategyWithData<A> {",
+        "  readonly run: (value: A) => string;",
+        "  readonly label: string;",
+        "}",
+      ].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("exception");
+  });
+
+  it("silently skips a non-generic all-function-member interface (extends R6-2 to non-generic)", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      ["export interface SendHandlerBox {", "  readonly run: (state: unknown) => boolean;", "}"].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("silent");
+  });
+});
+
+// R7: detectInterfaceReason's extends-branch no longer unconditionally
+// short-circuits — it resolves extends targets and either silently skips
+// (external), stays a tracked exception (schema-authoring infrastructure
+// idiom), or composes own+inherited members and classifies exactly like a
+// non-extends interface.
+describe("R7: extends-clause resolution", () => {
+  it("silently skips an interface extending an external (node_modules) type", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    // A global ambient declaration (no import/export) placed under a
+    // node_modules-pathed file — isInNodeModules() is a path-string check
+    // (ts-morph), so this stands in for React/d3/frimousse-style third-party
+    // Props bases without needing a real npm install.
+    project.createSourceFile(
+      "/node_modules/external-lib/index.d.ts",
+      ["interface GlobalComponentProps {", "  readonly onClick: () => void;", "}"].join("\n")
+    );
+    const sourceFile = project.createSourceFile(
+      "fixture.tsx",
+      ["export interface FixtureProps extends GlobalComponentProps {}"].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.tsx" })._tag).toBe("silent");
+  });
+
+  it("classifies a repo-local pure-data extends target as a candidate", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      [
+        "export interface BaseData { readonly id: string; }",
+        "export interface DerivedData extends BaseData { readonly name: string; }",
+      ].join("\n")
+    );
+    const [, declaration] = sourceFile.getInterfaces();
+
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("candidate");
+  });
+
+  it("composes a repo-local extends target with function members and classifies by member safety (mixed -> candidate)", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      [
+        "export interface LocalPortShape { readonly identifier: string; readonly run: () => string; }",
+        "export interface Repro extends LocalPortShape {}",
+      ].join("\n")
+    );
+    const [, declaration] = sourceFile.getInterfaces();
+
+    // Composed members = Repro's own (none) + LocalPortShape's own
+    // (identifier: data, run: function) — a mixed shape with no
+    // service-contract/curated-runtime-handle signal, so R11-4's gate
+    // strengthening makes it a candidate (not the retired extends-clause
+    // exception, and not silent — it has a genuine data field).
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("candidate");
+  });
+
+  // R13 (driver-ratified refinement of R7's schema-meta idiom): an empty own
+  // body exists solely for the type/value dual-binding — driver-verified
+  // against the real DateTimeInsert (Model.datetime.ts:133) — so it is
+  // silent, not a tracked exception.
+  it("R13: silently skips the schema-meta named-generic-instantiation idiom with an empty own body", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      ["export interface DateTimeInsert extends VariantSchema.Field<{ select: unknown }> {}"].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    const classification = detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" });
+
+    expect(classification._tag).toBe("silent");
+  });
+
+  it("R13: still classifies the same schema-meta base with an added data member via member composition", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      [
+        "export interface DateTimeInsertWithExtra extends VariantSchema.Field<{ select: unknown }> {",
+        "  readonly extra: string;",
+        "}",
+      ].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    const classification = detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" });
+
+    expect(classification._tag).toBe("candidate");
+  });
+});
+
+// R11-1: isServiceContractShape runs BEFORE the member-safety/signals check.
+describe("R11-1: service-contract shape silent skip", () => {
+  it("silently skips a same-file Context.Service<Tag, Shape> shape", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      [
+        "export interface UsageRecordSinkShape { readonly id: string; readonly record: (event: unknown) => void; }",
+        "export class UsageRecordSink extends Context.Service<UsageRecordSink, UsageRecordSinkShape>() {}",
+      ].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("silent");
+  });
+
+  it("classifies the identical mixed shape without any service-contract signal", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      ["export interface NoSignalShape { readonly id: string; readonly record: (event: unknown) => void; }"].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("candidate");
+  });
+});
+
+// R11-4: mixed data+function interfaces with NO silent-skip signal are a
+// CANDIDATE — the gate is strengthened; they used to be tolerated
+// exceptions via the retired "non-schema signals" reason.
+describe("R11-4: mixed shape gate strengthening", () => {
+  it("classifies a mixed interface with no protecting signal as a candidate", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      ["export interface MixedNoSignal { readonly total: number; readonly recompute: () => number; }"].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("candidate");
+  });
+});
+
+// R11-3: curated vendor/live-resource signals (already in
+// NON_SCHEMA_SIGNAL_PATTERN) silently skip the whole interface when every
+// member is either function-like or a curated signal.
+describe("R11-3: curated runtime-handle silent skip", () => {
+  it("silently skips an interface carrying a WinkMethods handle", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      ["export interface WinkEngineRuntimeState { readonly nlp: WinkMethods; }"].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("silent");
+  });
+});
+
+// R11-5: Uint8Array removed from NON_SCHEMA_SIGNAL_PATTERN — a
+// Uint8Array-typed field is convertible schema data (S.Uint8Array exists
+// natively in v4), so it is now a candidate rather than a signals-exception.
+describe("R11-5: Uint8Array is no longer a non-schema signal", () => {
+  it("classifies a Uint8Array-field interface as a candidate", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      ["export interface BytesShape { readonly bytes: Uint8Array; }"].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("candidate");
+  });
+
+  it("classifies a Uint8Array-field type-literal alias as a candidate", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      "export type BytesAlias = { readonly bytes: Uint8Array };"
+    );
+    const [declaration] = sourceFile.getTypeAliases();
+
+    expect(detectTypeAliasReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("candidate");
+  });
+});
+
+// R11-6: member-type safety checks resolve one level of a local type alias
+// before the structural/textual tests — hiding a function type behind a
+// named alias must not silence the check.
+describe("R11-6: alias-indirection fix", () => {
+  it("still detects a function member hidden behind a local type alias", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      [
+        "type Handler = (value: string) => void;",
+        "export interface AllFunctionViaAlias {",
+        "  readonly onEvent: Handler;",
+        "  readonly onOther: () => void;",
+        "}",
+      ].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    // Without the one-level alias resolution, `onEvent: Handler` looks like
+    // a safe/data field (a bare type reference), making this shape mixed
+    // and thus a candidate; with the fix both members are function-like, so
+    // the whole interface goes silent.
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("silent");
   });
 });

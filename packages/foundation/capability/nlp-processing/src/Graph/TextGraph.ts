@@ -260,9 +260,11 @@ export const fromDocument = Effect.fn("fromDocument")(function* (
  *   O.match(A.head(getRoots(graph)), {
  *     onNone: () => Effect.succeed(graph),
  *     onSome: (root) =>
- *       addChildren(graph, root, [
- *         TextNode.make({ text: "Hello.", type: "sentence", timestamp: 0 })
- *       ], "contains")
+ *       addChildren(graph, {
+ *         parentIndex: root,
+ *         children: [TextNode.make({ text: "Hello.", type: "sentence", timestamp: 0 })],
+ *         relation: "contains"
+ *       })
  *   })
  * )
  *
@@ -275,22 +277,30 @@ export const fromDocument = Effect.fn("fromDocument")(function* (
 export const addChildren: {
   (
     graph: TextGraph,
-    parentIndex: Graph.NodeIndex,
-    children: ReadonlyArray<TextNode>,
-    relation: TextEdge["relation"]
+    options: {
+      readonly parentIndex: Graph.NodeIndex;
+      readonly children: ReadonlyArray<TextNode>;
+      readonly relation: TextEdge["relation"];
+    }
   ): Effect.Effect<TextGraph, GraphCycleError>;
-  (
-    parentIndex: Graph.NodeIndex,
-    children: ReadonlyArray<TextNode>,
-    relation: TextEdge["relation"]
-  ): (graph: TextGraph) => Effect.Effect<TextGraph, GraphCycleError>;
+  (options: {
+    readonly parentIndex: Graph.NodeIndex;
+    readonly children: ReadonlyArray<TextNode>;
+    readonly relation: TextEdge["relation"];
+  }): (graph: TextGraph) => Effect.Effect<TextGraph, GraphCycleError>;
 } = dual(
-  4,
+  2,
   (
     graph: TextGraph,
-    parentIndex: Graph.NodeIndex,
-    children: ReadonlyArray<TextNode>,
-    relation: TextEdge["relation"]
+    {
+      children,
+      parentIndex,
+      relation,
+    }: {
+      readonly parentIndex: Graph.NodeIndex;
+      readonly children: ReadonlyArray<TextNode>;
+      readonly relation: TextEdge["relation"];
+    }
   ): Effect.Effect<TextGraph, GraphCycleError> => {
     const candidate = Graph.mutate(graph, (mutable) => {
       A.forEach(children, (child) => {

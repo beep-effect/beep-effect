@@ -865,9 +865,11 @@ const runJsonSdkCall = <Payload, Success>(
   Effect.acquireUseRelease(
     Effect.sync(() => new AbortController()),
     (controller) =>
-      decodeWith(methodName, payloadSchema, payload, "request encoding").pipe(
+      decodeWith(payloadSchema, payload, { method: methodName, reason: "request encoding" }).pipe(
         Effect.flatMap((decoded) => invoke(decoded, controller.signal)),
-        Effect.flatMap((result) => decodeWith(methodName, successSchema, result, "response decoding")),
+        Effect.flatMap((result) =>
+          decodeWith(successSchema, result, { method: methodName, reason: "response decoding" })
+        ),
         Effect.tapError(logDriverFailure("box.streaming_json_failure")),
         Effect.withSpan(`box.${methodName}`, {
           attributes: {
@@ -889,7 +891,7 @@ const runByteStreamSdkCall = <Payload>(
     Effect.acquireUseRelease(
       Effect.sync(() => new AbortController()),
       (controller) =>
-        decodeWith(methodName, payloadSchema, payload, "request encoding").pipe(
+        decodeWith(payloadSchema, payload, { method: methodName, reason: "request encoding" }).pipe(
           Effect.flatMap((decoded) => invoke(decoded, controller.signal)),
           Effect.map((result) => byteStreamFromSdkValue(methodName, result, controller)),
           Effect.tapError(logDriverFailure("box.streaming_byte_failure")),
@@ -1005,7 +1007,7 @@ const runEventStreamSdkCall = <Payload>(
   invoke: (decoded: Payload) => Effect.Effect<unknown, BoxError>
 ): Stream.Stream<M.Event, BoxError> =>
   Stream.unwrap(
-    decodeWith(methodName, payloadSchema, payload, "request encoding").pipe(
+    decodeWith(payloadSchema, payload, { method: methodName, reason: "request encoding" }).pipe(
       Effect.flatMap(invoke),
       Effect.map((value) => eventStreamFromSdkValue(methodName, value)),
       Effect.tapError(logDriverFailure("box.event_stream_failure")),

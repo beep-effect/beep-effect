@@ -40,14 +40,16 @@ const runSdkCall: BoxRunSdkCall = (manager, method, methodName, payloadSchema, s
   Effect.acquireUseRelease(
     Effect.sync(() => new AbortController()),
     (controller) =>
-      decodeWith(methodName, payloadSchema, payload, "request encoding").pipe(
+      decodeWith(payloadSchema, payload, { method: methodName, reason: "request encoding" }).pipe(
         Effect.flatMap((decoded) =>
           Effect.tryPromise({
             try: () => invoke(decoded, controller.signal),
             catch: (cause) => BoxError.fromUnknown(methodName, cause),
           })
         ),
-        Effect.flatMap((result) => decodeWith(methodName, successSchema, result, "response decoding")),
+        Effect.flatMap((result) =>
+          decodeWith(successSchema, result, { method: methodName, reason: "response decoding" })
+        ),
         Effect.tapError(logDriverFailure("box.driver_failure")),
         Effect.withSpan(`box.${manager}.${method}`, {
           attributes: {

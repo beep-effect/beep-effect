@@ -6,9 +6,9 @@
   "umbrellaPr": 326,
   "phases": {
     "P0": "done",
-    "P1": "proving",
-    "P2": "pending",
-    "P3": "pending",
+    "P1": "done",
+    "P2": "done",
+    "P3": "wave-1-done",
     "P4": "pending",
     "P5": "pending",
     "P6": "pending",
@@ -17,17 +17,29 @@
   },
   "rulings": {
     "file": "research/decisions.md",
-    "locked": ["R1", "R2"],
-    "pending": ["R3", "R4"]
+    "locked": [
+      "R1",
+      "R2",
+      "R3",
+      "R4",
+      "R5",
+      "R6",
+      "R7",
+      "R8",
+      "R10",
+      "R11",
+      "R12"
+    ],
+    "pending": ["R9"]
   },
   "counters": {
-    "checkpoint": "2026-07-08 post-P1 regen",
+    "checkpoint": "2026-07-08 wave-2 landed",
     "dualArity": {
-      "candidates": 46,
-      "exceptions": 11
+      "candidates": 9,
+      "exceptions": 4
     },
     "schemaFirst": {
-      "entries": 326
+      "entries": 163
     },
     "jsdoc": {
       "packagesNeedingRemediation": 45,
@@ -48,7 +60,7 @@
   },
   "waves": {
     "P1-detectors": {
-      "status": "proving",
+      "status": "done",
       "inventory": "detectors",
       "lanes": {
         "p1-a-dualarity": {
@@ -75,19 +87,103 @@
       }
     },
     "P2-audits": {
-      "status": "pending",
+      "status": "done",
       "inventory": "rulings",
-      "lanes": {}
+      "lanes": {
+        "p2-s1-generic": {
+          "lane": "p2-s1-generic",
+          "scope": "S1 generic interfaces (73) \u2014 conversion attempts",
+          "status": "challenged",
+          "report": "ops/reports/P2-audits/p2-s1-generic.md",
+          "blocker": null
+        },
+        "p2-s2-signals": {
+          "lane": "p2-s2-signals",
+          "scope": "S2 non-schema-signal interfaces (85) \u2014 sub-class split",
+          "status": "challenged",
+          "report": "ops/reports/P2-audits/p2-s2-signals.md",
+          "blocker": null
+        },
+        "p2-s3-extends": {
+          "lane": "p2-s3-extends",
+          "scope": "S3 extends-derived interfaces (55) \u2014 external vs repo-local",
+          "status": "challenged",
+          "report": "ops/reports/P2-audits/p2-s3-extends.md",
+          "blocker": null
+        },
+        "p2-s7s9": {
+          "lane": "p2-s7s9",
+          "scope": "S7 struct oddballs (9) + S9 manual exceptions (37)",
+          "status": "challenged",
+          "report": "ops/reports/P2-audits/p2-s7s9.md",
+          "blocker": null
+        },
+        "p2-d5d8": {
+          "lane": "p2-d5d8",
+          "scope": "D5 too-many-positional (10) + D8 exceptions (11)",
+          "status": "challenged",
+          "report": "ops/reports/P2-audits/p2-d5d8.md",
+          "blocker": null
+        },
+        "p2-j5-html": {
+          "lane": "p2-j5-html",
+          "scope": "J5 Html.model.ts generator investigation",
+          "status": "challenged",
+          "report": "ops/reports/P2-audits/p2-j5-html.md",
+          "blocker": null
+        }
+      }
     },
     "DA-1": {
-      "status": "pending",
+      "status": "done",
       "inventory": "dual-arity",
-      "note": "foundation/modeling pilot \u2014 slice after P1 regen",
-      "lanes": {}
+      "lanes": {
+        "p25-detectors": {
+          "lane": "p25",
+          "scope": "@beep/repo-cli SchemaFirst.ts+DualArity.ts detector framework (R6/R7/R11/R12) + fixtures",
+          "status": "done",
+          "report": "ops/reports/P25-detectors/p25-detectors.md",
+          "blocker": null,
+          "note": "All R6/R7/R11/R12/R13 changes + 59/59 tests. Self-caught finding-swap fixed via named AST-input aliases."
+        },
+        "da-1-nlp": {
+          "lane": "da-1",
+          "scope": "@beep/nlp 19 candidates",
+          "status": "done",
+          "report": "ops/reports/DA-1/da-1-nlp.md",
+          "blocker": null,
+          "note": "19/19 + TraversalStart S.Class conversion (structural compat verified, 166/166, turbo 25/25 incl 296 docgen examples)."
+        },
+        "da-1-nlpproc": {
+          "lane": "da-1",
+          "scope": "@beep/nlp-processing 7 + @beep/wink 1 (granted)",
+          "status": "done",
+          "report": "ops/reports/DA-1/da-1-nlpproc.md",
+          "blocker": null,
+          "note": "8/8 + both options aliases inlined/deleted (no external refs); 68/68 + 45/45 green; repo grep empty."
+        },
+        "da-1-utils": {
+          "lane": "da-1",
+          "scope": "@beep/utils Array.ts natives 4 (cross-pkg sweep granted)",
+          "status": "done",
+          "report": "ops/reports/DA-1/da-1-utils.md",
+          "blocker": null,
+          "note": "3/4 fixed verified (157/157 utils, 120/120 cli, 15/15 acp, 20/20 repo-utils); spliceInPlace options diff DRIVER-ACCEPTED (rest-param loss theoretical, no call site uses it). Cross-pkg sweeps: cli bin-main + 3 tests, acp AcpClient."
+        },
+        "da-1-batch": {
+          "lane": "da-1",
+          "scope": "8 small packages sequential (~13 entries)",
+          "status": "done",
+          "report": "ops/reports/DA-1/da-1-batch.md",
+          "blocker": null,
+          "note": "12 fixed (incl 2 driver-challenged follow-ups), 2 blocked:ripple queued for DA-2. All 8 packages proven (tsgo+vitest+filtered turbo)."
+        }
+      }
     },
     "DA-2": {
       "status": "pending",
       "inventory": "dual-arity",
+      "note": "follow-up: @beep/repo-cli 6 candidates + rco-001..004 conversions (after p25 frees package); AgentEffectivenessPhoenixSyncInput.new (ai-metrics+repo-cli pair); projectFieldTier (mcp-kit+uspto-mcp pair)",
       "lanes": {}
     },
     "DA-3": {

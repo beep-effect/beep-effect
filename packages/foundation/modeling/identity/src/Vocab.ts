@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 /**
@@ -403,6 +404,15 @@ export type Expand<C extends string, V extends VocabShape> = C extends `${infer 
     : never
   : never;
 
+const mergeVocabImpl = <const Base extends VocabShape, const Extension extends VocabShape>(
+  base: Base,
+  extension: Extension
+) =>
+  ({
+    ...base,
+    ...extension,
+  }) satisfies VocabShape;
+
 /**
  * Merge a base registry with literal-preserving extension vocabulary data.
  *
@@ -423,11 +433,12 @@ export type Expand<C extends string, V extends VocabShape> = C extends `${infer 
  * @category combinators
  * @since 0.0.0
  */
-export const mergeVocab = <const Base extends VocabShape, const Extension extends VocabShape>(
-  base: Base,
-  extension: Extension
-) =>
-  ({
-    ...base,
-    ...extension,
-  }) satisfies VocabShape;
+export const mergeVocab: {
+  <const Base extends VocabShape, const Extension extends VocabShape>(
+    base: Base,
+    extension: Extension
+  ): ReturnType<typeof mergeVocabImpl<Base, Extension>>;
+  <const Extension extends VocabShape>(
+    extension: Extension
+  ): <const Base extends VocabShape>(base: Base) => ReturnType<typeof mergeVocabImpl<Base, Extension>>;
+} = dual(2, mergeVocabImpl);

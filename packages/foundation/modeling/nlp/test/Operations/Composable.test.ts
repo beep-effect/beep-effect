@@ -42,11 +42,8 @@ describe("Functor laws", () => {
   it.effect(
     "dual helper supports data-first and pipe-friendly data-last map",
     Effect.fnUntraced(function* () {
-      const dataFirst = Composable.map(len, (n) => n + 1, S.Finite);
-      const dataLast = pipe(
-        len,
-        Composable.map((n) => n * 2, S.Finite)
-      );
+      const dataFirst = Composable.map(len, { f: (n) => n + 1, outputSchema: S.Finite });
+      const dataLast = pipe(len, Composable.map({ f: (n) => n * 2, outputSchema: S.Finite }));
 
       expect(yield* dataFirst.run("abc")).toBe(4);
       expect(yield* dataLast.run("abc")).toBe(6);
@@ -105,8 +102,8 @@ describe("Applicative", () => {
       const lenB = Composable.makeOperation("lenB", S.String, S.Finite, (s) => Effect.succeed(s.length * 10));
       const outputSchema = S.Tuple([S.Finite, S.Finite]);
 
-      const dataFirst = Composable.product(lenA, lenB, outputSchema);
-      const dataLast = pipe(lenA, Composable.product(lenB, outputSchema));
+      const dataFirst = Composable.product(lenA, { that: lenB, outputSchema });
+      const dataLast = pipe(lenA, Composable.product({ that: lenB, outputSchema }));
 
       expect(yield* dataFirst.run("abc")).toEqual([3, 30]);
       expect(yield* dataLast.run("abc")).toEqual([3, 30]);
@@ -129,11 +126,8 @@ describe("Applicative", () => {
       const lenA = Composable.makeOperation("lenA", S.String, S.Finite, (s) => Effect.succeed(s.length));
       const lenB = Composable.makeOperation("lenB", S.String, S.Finite, (s) => Effect.succeed(s.length * 10));
 
-      const dataFirst = Composable.zipWith(lenA, lenB, (a, b) => a + b, S.Finite);
-      const dataLast = pipe(
-        lenA,
-        Composable.zipWith(lenB, (a, b) => a + b, S.Finite)
-      );
+      const dataFirst = Composable.zipWith(lenA, { that: lenB, f: (a, b) => a + b, resultSchema: S.Finite });
+      const dataLast = pipe(lenA, Composable.zipWith({ that: lenB, f: (a, b) => a + b, resultSchema: S.Finite }));
 
       expect(yield* dataFirst.run("abc")).toBe(33);
       expect(yield* dataLast.run("abc")).toBe(33);

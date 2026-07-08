@@ -173,7 +173,10 @@ export const trackNlpDuration: {
  * @category observability
  * @since 0.0.0
  */
-export const recordNlpCacheLookup = (hit: boolean, attributes: Record<string, string>): Effect.Effect<void> => {
+export const recordNlpCacheLookup: {
+  (hit: boolean, attributes: Record<string, string>): Effect.Effect<void>;
+  (attributes: Record<string, string>): (hit: boolean) => Effect.Effect<void>;
+} = dual(2, (hit: boolean, attributes: Record<string, string>): Effect.Effect<void> => {
   const metricAttributes = withPackageAttributes({
     ...attributes,
     cache_hit: hit ? "true" : "false",
@@ -182,7 +185,7 @@ export const recordNlpCacheLookup = (hit: boolean, attributes: Record<string, st
   return Metric.update(Metric.withAttributes(counter, metricAttributes), 1).pipe(
     Effect.andThen(Effect.annotateCurrentSpan(metricAttributes))
   );
-};
+});
 
 /**
  * Record and log a backend fallback event.
@@ -204,10 +207,10 @@ export const recordNlpCacheLookup = (hit: boolean, attributes: Record<string, st
  * @category observability
  * @since 0.0.0
  */
-export const recordNlpBackendFallback = <E>(
-  cause: Cause.Cause<E>,
-  attributes: Record<string, string>
-): Effect.Effect<void> => {
+export const recordNlpBackendFallback: {
+  <E>(cause: Cause.Cause<E>, attributes: Record<string, string>): Effect.Effect<void>;
+  (attributes: Record<string, string>): <E>(cause: Cause.Cause<E>) => Effect.Effect<void>;
+} = dual(2, <E>(cause: Cause.Cause<E>, attributes: Record<string, string>): Effect.Effect<void> => {
   const metricAttributes = withPackageAttributes({
     ...attributes,
     ...causeMetricAttributes(cause),
@@ -223,7 +226,7 @@ export const recordNlpBackendFallback = <E>(
       })
     )
   );
-};
+});
 
 /**
  * Record and log an NLP failure cause.
@@ -243,7 +246,10 @@ export const recordNlpBackendFallback = <E>(
  * @category observability
  * @since 0.0.0
  */
-export const recordNlpFailure = <E>(cause: Cause.Cause<E>, attributes: Record<string, string>): Effect.Effect<void> => {
+export const recordNlpFailure: {
+  <E>(cause: Cause.Cause<E>, attributes: Record<string, string>): Effect.Effect<void>;
+  (attributes: Record<string, string>): <E>(cause: Cause.Cause<E>) => Effect.Effect<void>;
+} = dual(2, <E>(cause: Cause.Cause<E>, attributes: Record<string, string>): Effect.Effect<void> => {
   const metricAttributes = withPackageAttributes({
     ...attributes,
     ...causeMetricAttributes(cause),
@@ -258,4 +264,4 @@ export const recordNlpFailure = <E>(cause: Cause.Cause<E>, attributes: Record<st
       })
     )
   );
-};
+});

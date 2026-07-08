@@ -1,0 +1,29 @@
+{
+  "scope": "packages/drivers/box/src",
+  "entries": [
+    {
+      "file": "packages/drivers/box/src/internal/Box.runtime.ts",
+      "qualifiedName": "decodeWith",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/box",
+      "reason": "Public helper APIs may not expose more than 3 positional parameters.",
+      "line": 13,
+      "column": 14,
+      "parameterCount": 4,
+      "diagnostics": ["too-many-positional-params"]
+    },
+    {
+      "file": "packages/drivers/box/src/internal/Box.runtime.ts",
+      "qualifiedName": "diagnosticsFor",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/box",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 34,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    }
+  ]
+}

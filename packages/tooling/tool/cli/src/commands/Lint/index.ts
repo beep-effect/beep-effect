@@ -43,6 +43,8 @@ export {
  * @since 0.0.0
  */
 export {
+  detectInterfaceReason,
+  detectTypeAliasReason,
   fnSchemaEntryFromFunctionLike,
   getsomesStructEntryFromCallExpression,
   isSchemaCrispeningPolicyExempt,

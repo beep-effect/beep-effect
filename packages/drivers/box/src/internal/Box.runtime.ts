@@ -1,4 +1,5 @@
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { BoxError } from "../Box.errors.ts";
@@ -11,16 +12,18 @@ import type { BoxMethodName } from "../_generated/Box.models.gen.ts";
  * @since 0.0.0
  */
 export const decodeWith = <A>(
-  method: BoxMethodName,
   schema: S.ConstraintDecoder<A>,
   value: unknown,
-  reason: "request encoding" | "response decoding"
+  options: {
+    readonly method: BoxMethodName;
+    readonly reason: "request encoding" | "response decoding";
+  }
 ): Effect.Effect<A, BoxError> =>
   S.decodeUnknownEffect(schema)(value).pipe(
     Effect.mapError((cause) =>
-      BoxError.fromReason(reason, {
+      BoxError.fromReason(options.reason, {
         cause,
-        method,
+        method: options.method,
       })
     )
   );
@@ -31,14 +34,20 @@ export const decodeWith = <A>(
  * @category utilities
  * @since 0.0.0
  */
-export const diagnosticsFor = (event: string, error: BoxError): Readonly<Record<string, unknown>> => ({
-  event,
-  method: O.getOrUndefined(error.method),
-  provider: "box",
-  reason: error.reason,
-  sdkVersion: error.sdkVersion,
-  status: O.getOrUndefined(error.status),
-});
+export const diagnosticsFor: {
+  (error: BoxError, event: string): Readonly<Record<string, unknown>>;
+  (event: string): (error: BoxError) => Readonly<Record<string, unknown>>;
+} = dual(
+  2,
+  (error: BoxError, event: string): Readonly<Record<string, unknown>> => ({
+    event,
+    method: O.getOrUndefined(error.method),
+    provider: "box",
+    reason: error.reason,
+    sdkVersion: error.sdkVersion,
+    status: O.getOrUndefined(error.status),
+  })
+);
 
 /**
  * Log a sanitized Box driver failure event.
@@ -49,4 +58,4 @@ export const diagnosticsFor = (event: string, error: BoxError): Readonly<Record<
 export const logDriverFailure =
   (event: string) =>
   (error: BoxError): Effect.Effect<void> =>
-    Effect.logDebug(diagnosticsFor(event, error));
+    Effect.logDebug(diagnosticsFor(error, event));

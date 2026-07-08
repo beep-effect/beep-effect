@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-08T02:24:53.010Z
+Generated: 2026-07-08T04:14:17.501Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 45 |
 | publicModules | 1617 |
-| publicExports | 14468 |
+| publicExports | 14471 |
 | openModules | 129 |
 | openExports | 1408 |
 | missingExportExamples | 1215 |
@@ -57,7 +57,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 14 | `@beep/discord` | `packages/drivers/discord` | clean | 4 | 15 | 0 | 0 |
 | 15 | `@beep/face-detection` | `packages/drivers/face-detection` | clean | 4 | 33 | 0 | 0 |
 | 16 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
-| 17 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 101 | 676 | 0 | 54 |
+| 17 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 101 | 678 | 0 | 54 |
 | 18 | `@beep/pglite` | `packages/drivers/pglite` | clean | 4 | 11 | 0 | 0 |
 | 19 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
 | 20 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 7 | 27 | 0 | 6 |
@@ -109,7 +109,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 66 | `@beep/firecrawl` | `packages/drivers/firecrawl` | needs-remediation | 5 | 267 | 0 | 3 |
 | 67 | `@beep/ecfr` | `packages/drivers/ecfr` | needs-remediation | 5 | 23 | 0 | 9 |
 | 68 | `@beep/acp` | `packages/drivers/acp` | clean | 10 | 410 | 0 | 0 |
-| 69 | `@beep/nlp` | `packages/foundation/modeling/nlp` | needs-remediation | 28 | 312 | 0 | 25 |
+| 69 | `@beep/nlp` | `packages/foundation/modeling/nlp` | needs-remediation | 28 | 313 | 0 | 25 |
 | 70 | `@beep/infra` | `infra` | clean | 5 | 34 | 0 | 0 |
 | 71 | `@beep/runpod` | `packages/drivers/runpod` | needs-remediation | 6 | 178 | 0 | 2 |
 | 72 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 649 | 2 | 18 |
@@ -225,10 +225,10 @@ Export findings:
 - `src/commands/Image/Image.schemas.ts:217` `ExtractFramesDirOutcome` (type) - missing @example
 - `src/commands/Image/Image.service.ts:55` `ImageCommandServiceShape` (interface) - 1 unsafe example violation(s)
 - `src/commands/Lint/SchemaCatalog.ts:50` `SchemaCatalogEntryKind` (const) - 1 schema annotation/type-alias gap(s)
-- `src/commands/Lint/SchemaFirst.ts:157` `SchemaFirstPolicyRuleId` (const) - missing @example; 1 schema annotation/type-alias gap(s)
-- `src/commands/Lint/SchemaFirst.ts:190` `SchemaFirstEntryKind` (const) - missing @example; 1 schema annotation/type-alias gap(s)
-- `src/commands/Lint/SchemaFirst.ts:208` `SchemaFirstEntryStatus` (const) - missing @example; 1 schema annotation/type-alias gap(s)
-- `src/commands/Lint/SchemaFirst.ts:346` `SchemaCrispeningFamily` (const) - missing @example; 1 schema annotation/type-alias gap(s)
+- `src/commands/Lint/SchemaFirst.ts:167` `SchemaFirstPolicyRuleId` (const) - missing @example; 1 schema annotation/type-alias gap(s)
+- `src/commands/Lint/SchemaFirst.ts:200` `SchemaFirstEntryKind` (const) - missing @example; 1 schema annotation/type-alias gap(s)
+- `src/commands/Lint/SchemaFirst.ts:218` `SchemaFirstEntryStatus` (const) - missing @example; 1 schema annotation/type-alias gap(s)
+- `src/commands/Lint/SchemaFirst.ts:356` `SchemaCrispeningFamily` (const) - missing @example; 1 schema annotation/type-alias gap(s)
 - `src/commands/Research/Research.service.ts:103` `ResearchCommandServiceShape` (interface) - missing @example
 - `src/commands/Skills/Skills.command.ts:222` `remoteSkillSources` (const) - missing @example
 - `src/commands/Skills/Skills.command.ts:707` `renderCodexConfigWithSkills` (const) - missing @example
@@ -555,7 +555,7 @@ Export findings:
 Path: `packages/foundation/modeling/utils`
 
 Export findings:
-- `src/Array.ts:605` `emptyReadonly` (const) - missing @example
+- `src/Array.ts:631` `emptyReadonly` (const) - missing @example
 - `src/Errors.ts:163` `mapToError` (function) - missing summary; missing @example, @category, @since
 - `src/Errors.ts:166` `mapToError` (function) - missing summary; missing @example, @category, @since
 - `src/FileSystem.ts:386` `readdirSync` (function) - missing summary; missing @example, @category, @since
@@ -621,9 +621,9 @@ Export findings:
 - `src/Id.ts:144` `IdentitySegmentCountError` (class) - 1 schema annotation/type-alias gap(s)
 - `src/Id.ts:495` `IdentityString` (type) - 1 unsafe example violation(s)
 - `src/Id.ts:512` `IdentitySymbol` (type) - 1 unsafe example violation(s)
-- `src/Vocab.ts:30` `VocabShape` (type) - 1 unsafe example violation(s)
-- `src/Vocab.ts:55` `VocabEntry` (class) - 1 schema annotation/type-alias gap(s)
-- `src/Vocab.ts:426` `mergeVocab` (const) - 1 unsafe example violation(s)
+- `src/Vocab.ts:31` `VocabShape` (type) - 1 unsafe example violation(s)
+- `src/Vocab.ts:56` `VocabEntry` (class) - 1 schema annotation/type-alias gap(s)
+- `src/Vocab.ts:436` `mergeVocab` (const) - 1 unsafe example violation(s)
 
 ### @beep/box
 
@@ -638,7 +638,7 @@ Export findings:
 Path: `packages/foundation/capability/nlp-processing`
 
 Export findings:
-- `src/Graph/AnnotatedTextGraph.ts:84` `AnnotatedNode` (type) - missing @example
+- `src/Graph/AnnotatedTextGraph.ts:85` `AnnotatedNode` (type) - missing @example
 - `src/Graph/GraphOperations/Types.ts:155` `ExecutionMetrics` (class) - 1 schema annotation/type-alias gap(s)
 - `src/Tools/_schemas.ts:33` `AiPhoneticAlgorithmKit` (const) - missing @example; 1 schema annotation/type-alias gap(s)
 - `src/Tools/_schemas.ts:52` `AiPhoneticAlgorithm` (const) - missing @example

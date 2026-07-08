@@ -56,9 +56,19 @@ export const SchemaFirstIncludedGlobs: ReadonlyArray<string> = A.fromIterable(IN
  */
 export const SchemaFirstSourceFileGlobs: ReadonlyArray<string> = A.fromIterable(SOURCE_FILE_GLOBS);
 const IDENTIFIER_PROPERTY_PATTERN = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
-const FUNCTION_LIKE_TEXT_PATTERN = /=>|\bEffect\.Effect</;
+// R11-5: `\bUint8Array\b` removed — effect v4 has a native `S.Uint8Array`
+// codec, so a Uint8Array-typed field is convertible schema data, not a
+// non-schema signal. R11-3: `Stream.Stream<` added — an ongoing/live
+// computation handle, the same "live resource" rationale as the NodeJS
+// Readable/WritableStream entries already below.
 const NON_SCHEMA_SIGNAL_PATTERN =
-  /\bEffect\.Success<|\bLayer\.Layer<|\bAbortSignal\b|\bAbortController\b|\bUint8Array\b|\bEventJournal\.Entry\b|\bZod\b|\bz\.|\bAtom\.|\bNodeJS\.(?:Readable|Writable)Stream\b|\bStartedTestContainer\b|\bpulumi\.Input<|\bWinkMethods\b|\b(?:Any)?OperationResult\b/;
+  /\bEffect\.Success<|\bLayer\.Layer<|\bAbortSignal\b|\bAbortController\b|\bEventJournal\.Entry\b|\bZod\b|\bz\.|\bAtom\.|\bNodeJS\.(?:Readable|Writable)Stream\b|\bStream\.Stream<|\bStartedTestContainer\b|\bpulumi\.Input<|\bWinkMethods\b|\b(?:Any)?OperationResult\b/;
+// R6-1/R7: schema-authoring infrastructure bases. An interface/type-alias
+// that extends one of these (the qualified `S.`/`Schema.` access forms
+// actually used in this repo) is a schema-combinator type, not decodable
+// data — see ops/reports/P2-audits/p2-s1-generic.md and p2-s3-extends.md.
+const SCHEMA_INFRASTRUCTURE_EXTENDS_PATTERN =
+  /\b(?:S|Schema)\.(?:declareConstructor|decodeTo|Bottom)\b|\bVariantSchema\.Field\b/;
 const SCHEMA_FIELDS_CALL_PATTERN = /\bS\.(?:Class|Struct|TaggedClass|TaggedStruct|ErrorClass|TaggedErrorClass)\b/;
 const SCHEMA_CLASS_FIELDS_CALL_PATTERN = /\bS\.(?:Class|TaggedClass|ErrorClass|TaggedErrorClass)\b/;
 const NUMERIC_DOMAIN_TOKENS = ["timeout", "count", "size", "rate", "limit", "ms", "seconds"] as const;
@@ -722,62 +732,433 @@ export const isSchemaCrispeningPolicyExempt =
       O.getOrElse(() => false)
     );
 
+// R11-6: resolve one level of a local type-alias indirection before running
+// the structural/textual member-safety tests below — hiding a function type
+// (or a curated runtime-handle type) behind a named alias identifier must
+// not silence the check (proven false-negative: p2-s2-signals.md's
+// MintFetchableHandle rejected-alternative). Single-hop only, matching the
+// same non-transitive-resolution posture as R7's extends composition.
+const resolveOneLevelLocalTypeAlias = (typeNode: Node): Node => {
+  if (!Node.isTypeReference(typeNode)) {
+    return typeNode;
+  }
+  const declarations = typeNode.getTypeName().getSymbol()?.getDeclarations() ?? [];
+  return pipe(
+    A.findFirst(declarations, Node.isTypeAliasDeclaration),
+    O.flatMap((declaration) => O.fromNullishOr(declaration.getTypeNode())),
+    O.getOrElse(() => typeNode)
+  );
+};
+
+// Structural function-likeness. Widened (beyond interface-style
+// MethodSignature/CallSignature/ConstructSignature/PropertySignature) to
+// also recognize class-style MethodDeclaration/PropertyDeclaration members,
+// needed so R7's own+inherited member composition classifies a repo-local
+// `declare abstract class` extends target (e.g. ChalkInstanceSurface) the
+// same way it classifies an interface extends target. A PropertySignature/
+// PropertyDeclaration typed exactly `this` (a self-referential chain
+// accessor, e.g. Chalk's `readonly red: this`) is also function-like: it is
+// definitionally not decodable schema data, the same reasoning R6-1 already
+// applies to `Rebuild: this`.
 const isFunctionLikeMember = (member: Node): boolean => {
   if (
     Node.isMethodSignature(member) ||
     Node.isCallSignatureDeclaration(member) ||
-    Node.isConstructSignatureDeclaration(member)
+    Node.isConstructSignatureDeclaration(member) ||
+    Node.isMethodDeclaration(member)
   ) {
     return true;
   }
-  if (Node.isPropertySignature(member)) {
-    const typeNode = member.getTypeNode();
-    return typeNode !== undefined && typeNode.getKind() === SyntaxKind.FunctionType;
+  if (Node.isPropertySignature(member) || Node.isPropertyDeclaration(member)) {
+    const rawTypeNode = member.getTypeNode();
+    if (rawTypeNode === undefined) {
+      return false;
+    }
+    const typeNode = resolveOneLevelLocalTypeAlias(rawTypeNode);
+    return typeNode.getKind() === SyntaxKind.FunctionType || typeNode.getKind() === SyntaxKind.ThisType;
   }
   return false;
 };
 
-const isTypeNodeUnsafe = (typeText: string): boolean =>
-  FUNCTION_LIKE_TEXT_PATTERN.test(typeText) || NON_SCHEMA_SIGNAL_PATTERN.test(typeText);
-
-const typeLiteralMembersUnsafe = (members: ReadonlyArray<Node>): boolean =>
-  A.some(members, (member) => {
-    if (isFunctionLikeMember(member)) {
-      return true;
-    }
-    if (Node.isPropertySignature(member)) {
-      const typeText = member.getTypeNode()?.getText() ?? "";
-      return isTypeNodeUnsafe(typeText);
-    }
+// R11-3: curated vendor/live-resource signal, kept explicit and separate
+// from the generic function-member check above (NON_SCHEMA_SIGNAL_PATTERN
+// only — not the retired function-like text pattern).
+const isCuratedRuntimeHandleMember = (member: Node): boolean => {
+  if (!Node.isPropertySignature(member) && !Node.isPropertyDeclaration(member)) {
     return false;
-  });
-
-const detectInterfaceReason = (node: import("ts-morph").InterfaceDeclaration): O.Option<string> => {
-  if (node.getTypeParameters().length > 0) {
-    return O.some("Generic interface requires manual modeling and is tracked as an exception.");
   }
-  if (node.getExtends().length > 0) {
-    return O.some("Derived interface with extends clauses is tracked as an exception.");
+  const rawTypeNode = member.getTypeNode();
+  if (rawTypeNode === undefined) {
+    return false;
   }
-  if (typeLiteralMembersUnsafe(node.getMembers())) {
-    return O.some("Interface contains non-schema signals such as function members or runtime handles.");
-  }
-  return O.none();
+  const typeText = resolveOneLevelLocalTypeAlias(rawTypeNode).getText();
+  return NON_SCHEMA_SIGNAL_PATTERN.test(typeText);
 };
 
-const detectTypeAliasReason = (node: import("ts-morph").TypeAliasDeclaration): O.Option<string> => {
+// R6-2/R11-2 + R11-3: every member is either structurally function-like or a
+// curated vendor/live-resource signal, i.e. zero schema-able data fields.
+// SPEC §5.3 (byte-identical encode + arbitrary round-trip) is unsatisfiable
+// for a pure behavior/handle record, so it is silently skipped rather than
+// tracked at all.
+const isSilentMemberShape = (members: ReadonlyArray<Node>): boolean =>
+  !A.isReadonlyArrayEmpty(members) &&
+  A.every(members, (member) => isFunctionLikeMember(member) || isCuratedRuntimeHandleMember(member));
+
+const isRebuildThisProperty = (member: Node): boolean => {
+  if (!Node.isPropertySignature(member)) {
+    return false;
+  }
+  const nameNode = member.getNameNode();
+  const typeNode = member.getTypeNode();
+  return (
+    Node.isIdentifier(nameNode) &&
+    nameNode.getText() === "Rebuild" &&
+    typeNode !== undefined &&
+    typeNode.getKind() === SyntaxKind.ThisType
+  );
+};
+
+const hasRebuildThisMember = (members: ReadonlyArray<Node>): boolean => A.some(members, isRebuildThisProperty);
+
+// R13: an own body that is empty, or carries only meta members (Rebuild:
+// this), exists solely for the schema-authoring type/value dual-binding —
+// driver-verified against DateTimeInsert (Model.datetime.ts:133, empty own
+// body). Any OTHER own member is real added data and must still surface via
+// member-safety composition.
+const isEmptyOrMetaOnlyOwnBody = (members: ReadonlyArray<Node>): boolean =>
+  A.isReadonlyArrayEmpty(members) || A.every(members, isRebuildThisProperty);
+
+// R11-3: an interface with its own call signature that also extends another
+// (local) type is a callable-instance mirror (e.g. `ChalkInstance extends
+// ChalkInstanceSurface { (...text): string }`, mirroring the chalk npm
+// package's own callable-instance type) — silently skipped without needing
+// to fully classify every inherited accessor/method.
+const hasOwnCallSignatureMember = (members: ReadonlyArray<Node>): boolean =>
+  A.some(members, (member) => Node.isCallSignatureDeclaration(member));
+
+type SchemaFirstMemberClassification =
+  | { readonly _tag: "silent" }
+  | { readonly _tag: "candidate" }
+  | { readonly _tag: "exception"; readonly reason: string };
+
+const silentClassification: SchemaFirstMemberClassification = { _tag: "silent" };
+const candidateClassification: SchemaFirstMemberClassification = { _tag: "candidate" };
+const exceptionClassification = (reason: string): SchemaFirstMemberClassification => ({ _tag: "exception", reason });
+
+const GENERIC_INTERFACE_EXCEPTION_REASON = "Generic interface requires manual modeling and is tracked as an exception.";
+const GENERIC_TYPE_ALIAS_EXCEPTION_REASON =
+  "Generic type alias requires manual modeling and is tracked as an exception.";
+
+const isRepoLocalMemberOwner = (
+  node: Node
+): node is import("ts-morph").InterfaceDeclaration | import("ts-morph").ClassDeclaration =>
+  Node.isInterfaceDeclaration(node) || Node.isClassDeclaration(node);
+
+const isExternalDeclarationNode = (declaration: Node): boolean => declaration.getSourceFile().isInNodeModules();
+
+// R7: single-hop resolution of an extends clause's symbol declarations.
+// node_modules (React/d3/frimousse/@base-ui/etc.) and the TypeScript
+// lib/DOM ambient declarations (lib.dom.d.ts, JSX) both live under
+// node_modules, so isInNodeModules() covers "node_modules/lib/React/JSX/DOM"
+// in one check. An unresolvable symbol (empty declarations) is treated as
+// NOT external — conservative, keeps the gate strict per fence 13.
+const extendsClauseResolvesExternal = (clause: import("ts-morph").ExpressionWithTypeArguments): boolean => {
+  const declarations = clause.getExpression().getSymbol()?.getDeclarations() ?? [];
+  return !A.isReadonlyArrayEmpty(declarations) && A.every(declarations, isExternalDeclarationNode);
+};
+
+const allExtendsClausesResolveExternal = (
+  extendsClauses: ReadonlyArray<import("ts-morph").ExpressionWithTypeArguments>
+): boolean => A.every(extendsClauses, extendsClauseResolvesExternal);
+
+const extendsSchemaInfrastructureBase = (
+  extendsClauses: ReadonlyArray<import("ts-morph").ExpressionWithTypeArguments>
+): boolean => A.some(extendsClauses, (clause) => SCHEMA_INFRASTRUCTURE_EXTENDS_PATTERN.test(clause.getText()));
+
+// R7: compose the interface's own members with the OWN (non-transitive)
+// members of every extends target that resolves to a repo-local
+// interface/class declaration, then classify the composed set exactly like
+// a non-extends interface. Single-hop by design — matches the audit's
+// no-transitive-resolution rule (p2-s3-extends.md).
+const composeOwnAndLocalExtendsMembers = (
+  node: import("ts-morph").InterfaceDeclaration,
+  extendsClauses: ReadonlyArray<import("ts-morph").ExpressionWithTypeArguments>
+): ReadonlyArray<Node> => {
+  const inheritedMembers = pipe(
+    extendsClauses,
+    A.flatMap((clause) => clause.getExpression().getSymbol()?.getDeclarations() ?? []),
+    A.filter(isRepoLocalMemberOwner),
+    A.flatMap((declaration) => declaration.getMembers())
+  );
+  return [...node.getMembers(), ...inheritedMembers];
+};
+
+const captureContextServiceShapeNames = (sourceFile: import("ts-morph").SourceFile): ReadonlySet<string> => {
+  const names = new Set<string>();
+  for (const classDeclaration of sourceFile.getClasses()) {
+    const heritageText = classDeclaration.getExtends()?.getText() ?? "";
+    const match = /\bContext\.Service<\s*[\w.$]+\s*,\s*([\w.$]+)\s*>/.exec(heritageText);
+    if (match?.[1] !== undefined) {
+      names.add(match[1]);
+    }
+  }
+  return names;
+};
+
+// R11-1 signal (1): same-file `Context.Service<Tag, X>()` through at most
+// one local alias intersection, e.g. `type BoxShape = BoxGeneratedOperations
+// & BoxStreamingOperations` then `Box extends Context.Service<Box,
+// BoxShape>()`.
+const isIntersectionAliasedServiceContractShapeMember = (
+  sourceFile: import("ts-morph").SourceFile,
+  shapeNames: ReadonlySet<string>,
+  name: string
+): boolean =>
+  A.some(sourceFile.getTypeAliases(), (aliasDeclaration) => {
+    if (!shapeNames.has(aliasDeclaration.getName())) {
+      return false;
+    }
+    const typeNode = aliasDeclaration.getTypeNode();
+    return (
+      typeNode !== undefined &&
+      Node.isIntersectionTypeNode(typeNode) &&
+      A.some(typeNode.getTypeNodes(), (member) => member.getText() === name)
+    );
+  });
+
+const findLocalTypeShapeDeclaration = (
+  sourceFile: import("ts-morph").SourceFile,
+  name: string
+): O.Option<import("ts-morph").InterfaceDeclaration | import("ts-morph").TypeAliasDeclaration> =>
+  pipe(
+    A.findFirst(sourceFile.getInterfaces(), (candidate) => candidate.getName() === name),
+    O.orElse(() => A.findFirst(sourceFile.getTypeAliases(), (candidate) => candidate.getName() === name))
+  );
+
+// R11-1 signal (2): the declaration is used as a parameter type of a method
+// belonging to another same-file shape that itself satisfies signal (1),
+// e.g. `ScopedVectorizer` passed to `WinkVectorizerShape.withFreshInstance`.
+// Textual (a same-file parameter-position match), not fully call-graph
+// verified — a tractable, documented simplification (see the P25 report).
+const isServiceContractMethodParameterName = (
+  sourceFile: import("ts-morph").SourceFile,
+  shapeNames: ReadonlySet<string>,
+  name: string
+): boolean => {
+  const parameterPattern = new RegExp(`[(,<]\\s*\\w+\\s*:\\s*(?:ReadonlyArray<)?${name}\\b`);
+  return A.some([...shapeNames], (shapeName) =>
+    pipe(
+      findLocalTypeShapeDeclaration(sourceFile, shapeName),
+      O.exists((declaration) => parameterPattern.test(declaration.getText()))
+    )
+  );
+};
+
+// R11-1 signal (4): the declaration is the element type of a
+// `ReadonlyArray<X>`/`Array<X>` capability-provider registry. Simplified to
+// a same-file textual presence check rather than verifying iteration plus
+// an invoked Effect/Stream-returning member — a tractable, documented
+// simplification (see the P25 report).
+const isCapabilityRegistryElementType = (sourceFile: import("ts-morph").SourceFile, name: string): boolean =>
+  new RegExp(`\\b(?:ReadonlyArray|Array)<${name}>`).test(sourceFile.getFullText());
+
+const PROPS_LIKE_NAME_PATTERN = /(?:Props|RenderProps)$/;
+
+// R11-1 signal (5): `.tsx` + `*Props`/`*RenderProps`, or the second type
+// argument to `forwardRef<Handle, Props>`.
+const isTsxServiceContractShapeName = (
+  sourceFile: import("ts-morph").SourceFile,
+  filePath: string,
+  name: string
+): boolean =>
+  Str.endsWith(".tsx")(filePath) &&
+  (PROPS_LIKE_NAME_PATTERN.test(name) || new RegExp(`forwardRef<[^,>]+,\\s*${name}>`).test(sourceFile.getFullText()));
+
+// R11-1: checked BEFORE the signals/member-safety check. Any one positive
+// signal silently skips a service-contract/port shape (fence 1) instead of
+// tracking it as an exception.
+const isServiceContractShape = (
+  sourceFile: import("ts-morph").SourceFile,
+  filePath: string,
+  name: string,
+  shapeNames: ReadonlySet<string>
+): boolean =>
+  shapeNames.has(name) ||
+  isIntersectionAliasedServiceContractShapeMember(sourceFile, shapeNames, name) ||
+  Str.endsWith(".ports.ts")(filePath) ||
+  isServiceContractMethodParameterName(sourceFile, shapeNames, name) ||
+  isCapabilityRegistryElementType(sourceFile, name) ||
+  isTsxServiceContractShapeName(sourceFile, filePath, name);
+
+const classifyComposedMembers = (
+  sourceFile: import("ts-morph").SourceFile,
+  filePath: string,
+  name: string,
+  members: ReadonlyArray<Node>
+): SchemaFirstMemberClassification => {
+  const shapeNames = captureContextServiceShapeNames(sourceFile);
+  if (isServiceContractShape(sourceFile, filePath, name, shapeNames)) {
+    return silentClassification;
+  }
+  if (isSilentMemberShape(members)) {
+    return silentClassification;
+  }
+  // R11-4: mixed data+function shapes with no protecting silent-skip signal
+  // are a CANDIDATE (gate strengthened), not a tolerated exception — fix by
+  // descriptor-extraction/splitting (the proven ExportedTool pattern).
+  return candidateClassification;
+};
+
+/**
+ * Input for {@link detectInterfaceReason}: the exported interface
+ * declaration under inspection plus its owning source file context.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+type DetectInterfaceReasonInput = {
+  readonly node: import("ts-morph").InterfaceDeclaration;
+  readonly sourceFile: import("ts-morph").SourceFile;
+  readonly filePath: string;
+};
+
+/**
+ * Classify an exported interface declaration for the schema-first inventory:
+ * silently skipped (schema-infrastructure generics, all-function-member
+ * shapes, curated runtime-handle shapes, service-contract/port shapes,
+ * external-extends shapes), a live candidate, or a tracked exception.
+ *
+ * @param input - `node` (exported `InterfaceDeclaration` candidate), `sourceFile` (its owning source file, for same-file service-contract signal resolution), and `filePath` (repo-relative posix path).
+ * @returns The resolved silent/candidate/exception classification.
+ * @example
+ * ```ts
+ * import { detectInterfaceReason } from "@beep/repo-cli/commands/Lint"
+ * import { Project } from "ts-morph"
+ *
+ * const project = new Project({ useInMemoryFileSystem: true })
+ * const sourceFile = project.createSourceFile(
+ *   "fixture.ts",
+ *   "export interface Logger { readonly log: (message: string) => void }"
+ * )
+ * const [declaration] = sourceFile.getInterfaces()
+ * const classification = detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })
+ *
+ * // All-function-member interfaces are silently skipped (R6-2/R11-2): a
+ * // pure behavior record has no schema-able data field.
+ * console.log(classification)
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+export const detectInterfaceReason = (input: DetectInterfaceReasonInput): SchemaFirstMemberClassification => {
+  const { node, sourceFile, filePath } = input;
+  const extendsClauses = node.getExtends();
+
   if (node.getTypeParameters().length > 0) {
-    return O.some("Generic type alias requires manual modeling and is tracked as an exception.");
+    // R6-1: schema-infrastructure generic (extends declareConstructor/
+    // decodeTo/Bottom/VariantSchema.Field AND declares Rebuild: this).
+    if (extendsSchemaInfrastructureBase(extendsClauses) && hasRebuildThisMember(node.getMembers())) {
+      return silentClassification;
+    }
+    // R6-2: all-function-member generic (no data fields).
+    if (isSilentMemberShape(node.getMembers())) {
+      return silentClassification;
+    }
+    return exceptionClassification(GENERIC_INTERFACE_EXCEPTION_REASON);
   }
+
+  if (!A.isReadonlyArrayEmpty(extendsClauses)) {
+    // R7: resolve extends targets before classifying.
+    if (allExtendsClausesResolveExternal(extendsClauses)) {
+      return silentClassification;
+    }
+    if (extendsSchemaInfrastructureBase(extendsClauses) && isEmptyOrMetaOnlyOwnBody(node.getMembers())) {
+      // R13 (driver-verified against DateTimeInsert, Model.datetime.ts:133):
+      // schema-meta "named generic instantiation" idiom (e.g. `DateTimeInsert
+      // extends VariantSchema.Field<{...}> {}`) with an empty (or
+      // meta-only) own body exists solely for the schema-authoring
+      // type/value dual-binding — silent, not a tracked exception. An
+      // extends of the same base WITH an added data member still falls
+      // through to member-safety composition below.
+      return silentClassification;
+    }
+    if (hasOwnCallSignatureMember(node.getMembers())) {
+      return silentClassification;
+    }
+    return classifyComposedMembers(
+      sourceFile,
+      filePath,
+      node.getName(),
+      composeOwnAndLocalExtendsMembers(node, extendsClauses)
+    );
+  }
+
+  return classifyComposedMembers(sourceFile, filePath, node.getName(), node.getMembers());
+};
+
+/**
+ * Input for {@link detectTypeAliasReason}: the exported type-alias
+ * declaration under inspection plus its owning source file context.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+type DetectTypeAliasReasonInput = {
+  readonly node: import("ts-morph").TypeAliasDeclaration;
+  readonly sourceFile: import("ts-morph").SourceFile;
+  readonly filePath: string;
+};
+
+/**
+ * Classify an exported type-alias-of-a-type-literal declaration for the
+ * schema-first inventory using the same silent/candidate/exception
+ * classification as {@link detectInterfaceReason}.
+ *
+ * @param input - `node` (exported `TypeAliasDeclaration` candidate), `sourceFile` (its owning source file, for same-file service-contract signal resolution), and `filePath` (repo-relative posix path).
+ * @returns The resolved silent/candidate/exception classification.
+ * @example
+ * ```ts
+ * import { detectTypeAliasReason } from "@beep/repo-cli/commands/Lint"
+ * import { Project } from "ts-morph"
+ *
+ * const project = new Project({ useInMemoryFileSystem: true })
+ * const sourceFile = project.createSourceFile(
+ *   "fixture.ts",
+ *   "export type PointLike = { readonly x: number; readonly y: number }"
+ * )
+ * const [declaration] = sourceFile.getTypeAliases()
+ * const classification = detectTypeAliasReason({ node: declaration, sourceFile, filePath: "fixture.ts" })
+ *
+ * // A pure-data type alias with no protecting silent-skip signal is a live
+ * // candidate that should be modeled as an annotated schema.
+ * console.log(classification)
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+export const detectTypeAliasReason = (input: DetectTypeAliasReasonInput): SchemaFirstMemberClassification => {
+  const { node, sourceFile, filePath } = input;
   const typeNode = node.getTypeNode();
+
+  if (node.getTypeParameters().length > 0) {
+    const isSchemaInfrastructureAliasBase =
+      typeNode !== undefined && SCHEMA_INFRASTRUCTURE_EXTENDS_PATTERN.test(typeNode.getText());
+    const members = Node.isTypeLiteral(typeNode) ? typeNode.getMembers() : A.empty<TypeElementTypes>();
+    if (isSchemaInfrastructureAliasBase && hasRebuildThisMember(members)) {
+      return silentClassification;
+    }
+    if (isSilentMemberShape(members)) {
+      return silentClassification;
+    }
+    return exceptionClassification(GENERIC_TYPE_ALIAS_EXCEPTION_REASON);
+  }
+
   if (typeNode === undefined || typeNode.getKind() !== SyntaxKind.TypeLiteral) {
-    return O.some("Non-literal type alias is out of scope for automatic schema-first enforcement.");
+    return exceptionClassification("Non-literal type alias is out of scope for automatic schema-first enforcement.");
   }
+
   const members = Node.isTypeLiteral(typeNode) ? typeNode.getMembers() : A.empty<TypeElementTypes>();
-  if (typeLiteralMembersUnsafe(members)) {
-    return O.some("Type alias contains non-schema signals such as function members or runtime handles.");
-  }
-  return O.none();
+  return classifyComposedMembers(sourceFile, filePath, node.getName(), members);
 };
 
 const isFunctionLocalNode = (node: Node): boolean =>
@@ -1684,16 +2065,18 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
       if (!declaration.isExported()) {
         continue;
       }
-      const reasonOption = detectInterfaceReason(declaration);
+      const classification = detectInterfaceReason({ node: declaration, sourceFile, filePath });
+      if (classification._tag === "silent") {
+        continue;
+      }
       pushEntry(
         filePath,
         declaration.getName(),
         "exported-interface",
-        O.match(reasonOption, {
-          onNone: thunkCandidate,
-          onSome: thunkException,
-        }),
-        O.getOrElse(reasonOption, () => "Exported pure-data interface should be modeled as an annotated schema."),
+        classification._tag === "candidate" ? "candidate" : "exception",
+        classification._tag === "exception"
+          ? classification.reason
+          : "Exported pure-data interface should be modeled as an annotated schema.",
         owner
       );
     }
@@ -1706,16 +2089,18 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
       if (typeNode === undefined || typeNode.getKind() !== SyntaxKind.TypeLiteral) {
         continue;
       }
-      const reasonOption = detectTypeAliasReason(declaration);
+      const classification = detectTypeAliasReason({ node: declaration, sourceFile, filePath });
+      if (classification._tag === "silent") {
+        continue;
+      }
       pushEntry(
         filePath,
         declaration.getName(),
         "exported-type-literal",
-        O.match(reasonOption, {
-          onNone: thunkCandidate,
-          onSome: thunkException,
-        }),
-        O.getOrElse(reasonOption, () => "Exported pure-data type alias should be modeled as an annotated schema."),
+        classification._tag === "candidate" ? "candidate" : "exception",
+        classification._tag === "exception"
+          ? classification.reason
+          : "Exported pure-data type alias should be modeled as an annotated schema.",
         owner
       );
     }

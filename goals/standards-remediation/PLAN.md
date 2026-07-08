@@ -26,15 +26,21 @@ Counters snapshot after every regen (source of truth: `ops/progress.json`).
 |---|---|---|
 | 2026-07-07 baseline | 107 | 13 |
 | 2026-07-08 after P1 | 46 | 11 |
+| 2026-07-08 after DA-1+P2.5 | 9 | 4 |
 | target | 0 | 0 |
+
+(Residue = DA-2 scope: 6 @beep/repo-cli candidates, box decodeWith dual wrap,
+2 ripple pairs, 4 rco helper exceptions.)
 
 ### schema-first (`beep lint schema-first`)
 
 | Checkpoint | entries (all exception) |
 |---|---|
 | 2026-07-07 baseline | 326 |
-| after P2 rulings | TBD |
+| 2026-07-08 after P2.5 detector framework | 163 |
 | target | 0 |
+
+(163 = 59 object-struct + 58 interface + 40 advisory + 6 type-literal → P4.)
 
 ### jsdoc (`beep quality jsdoc-ratchet`)
 

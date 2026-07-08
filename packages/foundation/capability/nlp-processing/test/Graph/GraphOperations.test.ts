@@ -163,13 +163,12 @@ describe("Operation constructors", () => {
 describe("ResultStore", () => {
   const mkResult = Effect.gen(function* () {
     const node = yield* EG.makeNode<unknown>("payload");
-    return yield* Types.makeOperationResult(
-      yield* Types.generateExecutionId,
-      O.none(),
-      [node],
-      [],
-      Types.ExecutionMetrics.empty()
-    );
+    return yield* Types.makeOperationResult(yield* Types.generateExecutionId, {
+      originalGraph: O.none(),
+      newNodes: [node],
+      errors: [],
+      metrics: Types.ExecutionMetrics.empty(),
+    });
   });
 
   it.effect(

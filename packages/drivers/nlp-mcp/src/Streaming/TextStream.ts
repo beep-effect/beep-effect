@@ -27,6 +27,7 @@ import {
   Stream,
 } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { Path } from "effect";
@@ -393,18 +394,30 @@ export const readTextFile = Effect.fn("TextStream.readTextFile")(function* (
  * ```ts
  * import { head } from "@beep/nlp-mcp/Streaming/TextStream"
  *
- * console.log(head("/tmp/data.txt", 5))
+ * console.log(head("/tmp/data.txt", { n: 5 }))
  * ```
  *
  * @since 0.0.0
  * @category utilities
  */
-export const head = (
-  filePath: string,
-  n: number,
-  options: (typeof TextReadOptions)["~type.make.in"] = {}
-): Effect.Effect<ReadonlyArray<string>, PlatformError, FileSystem.FileSystem | Path.Path> =>
-  readLines(filePath, { ...options, maxLines: n });
+export const head: {
+  (
+    filePath: string,
+    options: (typeof TextReadOptions)["~type.make.in"] & { readonly n: number }
+  ): Effect.Effect<ReadonlyArray<string>, PlatformError, FileSystem.FileSystem | Path.Path>;
+  (
+    options: (typeof TextReadOptions)["~type.make.in"] & { readonly n: number }
+  ): (filePath: string) => Effect.Effect<ReadonlyArray<string>, PlatformError, FileSystem.FileSystem | Path.Path>;
+} = dual(
+  2,
+  (
+    filePath: string,
+    options: (typeof TextReadOptions)["~type.make.in"] & { readonly n: number }
+  ): Effect.Effect<ReadonlyArray<string>, PlatformError, FileSystem.FileSystem | Path.Path> => {
+    const { n, ...rest } = options;
+    return readLines(filePath, { ...rest, maxLines: n });
+  }
+);
 
 /**
  * Read the last `n` processed lines of a text file.
@@ -413,18 +426,30 @@ export const head = (
  * ```ts
  * import { tail } from "@beep/nlp-mcp/Streaming/TextStream"
  *
- * console.log(tail("/tmp/data.txt", 5))
+ * console.log(tail("/tmp/data.txt", { n: 5 }))
  * ```
  *
  * @since 0.0.0
  * @category utilities
  */
-export const tail = (
-  filePath: string,
-  n: number,
-  options: (typeof TextReadOptions)["~type.make.in"] = {}
-): Effect.Effect<ReadonlyArray<string>, PlatformError, FileSystem.FileSystem | Path.Path> =>
-  Effect.map(readLines(filePath, options), A.takeRight(n));
+export const tail: {
+  (
+    filePath: string,
+    options: (typeof TextReadOptions)["~type.make.in"] & { readonly n: number }
+  ): Effect.Effect<ReadonlyArray<string>, PlatformError, FileSystem.FileSystem | Path.Path>;
+  (
+    options: (typeof TextReadOptions)["~type.make.in"] & { readonly n: number }
+  ): (filePath: string) => Effect.Effect<ReadonlyArray<string>, PlatformError, FileSystem.FileSystem | Path.Path>;
+} = dual(
+  2,
+  (
+    filePath: string,
+    options: (typeof TextReadOptions)["~type.make.in"] & { readonly n: number }
+  ): Effect.Effect<ReadonlyArray<string>, PlatformError, FileSystem.FileSystem | Path.Path> => {
+    const { n, ...rest } = options;
+    return Effect.map(readLines(filePath, rest), A.takeRight(n));
+  }
+);
 
 /**
  * Sample up to `sampleSize` processed lines uniformly at random.

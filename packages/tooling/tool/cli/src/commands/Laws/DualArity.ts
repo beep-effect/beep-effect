@@ -709,7 +709,38 @@ const hasJSDocCategory = (node: import("ts-morph").Node, category: string): bool
   return Str.includes(`@category ${category}`)(jsDocText);
 };
 
-const isFactoryReturnType = (type: Type): boolean => {
+// R12: an all-methods-record return type (e.g. `makeChatOperations`'s
+// `{ listThreads: (...) => Effect.Effect<...>; createThread: (...) => ...;
+// ... }`) is a legitimate tagged-constructor-factory return shape. Checked
+// via each property's OWN resolved type (not the return type's printed
+// text), so it never runs into DIRECT_EFFECT_OR_SCHEMA_TYPE_PATTERN's
+// false-positive substring match against a member's nested `Effect.Effect<`
+// signature (see isFactoryReturnType below).
+const isAllMethodMembersObjectType = (type: Type, contextNode: import("ts-morph").Node): boolean => {
+  const properties = type.getProperties();
+  return (
+    !A.isReadonlyArrayEmpty(properties) &&
+    A.isReadonlyArrayEmpty(type.getCallSignatures()) &&
+    A.every(
+      properties,
+      (property) => !A.isReadonlyArrayEmpty(property.getTypeAtLocation(contextNode).getCallSignatures())
+    )
+  );
+};
+
+// R12 diagnosed conjunct: DIRECT_EFFECT_OR_SCHEMA_TYPE_PATTERN.test(typeText)
+// tests the FULL printed text of the return type, which for an object
+// return type includes every member's own signature text. A record whose
+// methods return `Effect.Effect<...>` (e.g. makeChatOperations's
+// ChatOperations return type) therefore matched the pattern via substring
+// and was rejected before ever reaching isStrictObjectLikeType — the fix is
+// isAllMethodMembersObjectType above, checked first and bypassing the
+// textual pattern entirely for that shape.
+const isFactoryReturnType = (type: Type, contextNode: import("ts-morph").Node): boolean => {
+  if (isAllMethodMembersObjectType(type, contextNode)) {
+    return true;
+  }
+
   const typeText = type.getText();
   if (DIRECT_EFFECT_OR_SCHEMA_TYPE_PATTERN.test(typeText)) {
     return false;
@@ -732,7 +763,7 @@ const isLegitimateConstructorFactory = (
 ): boolean =>
   hasJSDocCategory(docNode, "constructors") &&
   hasMultiParameterCallableShape(callableType, parameterOwner) &&
-  A.some(callableType.getCallSignatures(), (signature) => isFactoryReturnType(signature.getReturnType()));
+  A.some(callableType.getCallSignatures(), (signature) => isFactoryReturnType(signature.getReturnType(), docNode));
 
 const isLegitimateConstructorVariableDeclaration = (
   filePath: string,
@@ -1221,11 +1252,33 @@ const collectCandidatesForSourceFile = (
   return { candidates, excludedLegitimate };
 };
 
+type PermanentDualArityExclusion = {
+  readonly file: string;
+  readonly qualifiedName: string;
+  readonly reason: string;
+};
+
+// R12: driver-verified holds where a mechanical dual() wrap provably breaks
+// a real call site, baked directly into the detector (stronger than a
+// standards/dual-arity.inventory.jsonc exception record — this file is
+// itself one of ENFORCED_ROOTS) instead of a standing tracked exception.
+const PERMANENT_EXCLUSIONS: ReadonlyArray<PermanentDualArityExclusion> = [
+  {
+    file: "packages/agents/server/src/AssistantTurn/ScanState.ts",
+    qualifiedName: "scanChunk",
+    reason:
+      "Fold-step consumed BY REFERENCE as Stream.mapAccum(() => initialScanState, scanChunk) (AnthropicTurnKernel.ts:143). A dual(2, ...) wrap breaks TypeScript overload resolution when the function is handed to a generic higher-order combinator positionally rather than invoked directly — driver-verified clean-before/broken-after compile diff (ops/reports/P2-audits/p2-d5d8.md, ruling R12).",
+  },
+] as const;
+
+const isPermanentlyExcludedCandidate = (file: string, qualifiedName: string): boolean =>
+  A.some(PERMANENT_EXCLUSIONS, (exclusion) => exclusion.file === file && exclusion.qualifiedName === qualifiedName);
+
 const makeInventoryEntry = (
   candidate: PublicApiCandidate,
   diagnostics: ReadonlyArray<typeof DualArityDiagnosticKind.Type>
 ): O.Option<DualArityInventoryEntry> => {
-  if (A.isReadonlyArrayEmpty(diagnostics)) {
+  if (A.isReadonlyArrayEmpty(diagnostics) || isPermanentlyExcludedCandidate(candidate.file, candidate.qualifiedName)) {
     return O.none();
   }
 

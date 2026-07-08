@@ -727,4 +727,105 @@ layer(testLayer)("dual arity laws", (it) => {
       })
     )
   );
+
+  // R12: PERMANENT_EXCLUSIONS is an in-code, driver-verified hold — stronger
+  // than a standards/dual-arity.inventory.jsonc exception record. scanChunk
+  // is consumed BY REFERENCE as a Stream.mapAccum fold step
+  // (AnthropicTurnKernel.ts:143); wrapping it with dual() breaks overload
+  // resolution (ops/reports/P2-audits/p2-d5d8.md). A sibling 2-param export
+  // NOT registered in PERMANENT_EXCLUSIONS must still fire.
+  it.effect(
+    "R12: permanently excludes the registered scanChunk fold-step while an unregistered sibling still fires",
+    () =>
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeProjectScaffold;
+          yield* writeProjectFile(
+            "packages/agents/server/src/AssistantTurn/ScanState.ts",
+            A.join(
+              [
+                "export interface ScanState { readonly buffer: string }",
+                "export const scanChunk = (state: ScanState, text: string): [ScanState, Array<string>] => {",
+                "  return [state, [text]];",
+                "};",
+                "",
+              ],
+              "\n"
+            )
+          );
+          yield* writeProjectFile(
+            "packages/demo/src/index.ts",
+            A.join(
+              [
+                "export function otherHelper(self: string, label: string): string {",
+                "  return `${self}:${label}`;",
+                "}",
+                "",
+              ],
+              "\n"
+            )
+          );
+
+          const summary = yield* runLaw();
+          const diagnostics = A.join(summary.diagnostics, "\n");
+
+          expect(diagnostics).not.toContain("scanChunk");
+          expect(diagnostics).toContain("otherHelper");
+          expect(summary.liveEntries).toBe(1);
+        })
+      )
+  );
+
+  // R12: isLegitimateConstructorFactory's failing conjunct was
+  // isFactoryReturnType — its DIRECT_EFFECT_OR_SCHEMA_TYPE_PATTERN check
+  // tests the full printed text of the return type, which for an
+  // all-methods-record return type includes every method's own
+  // `Effect.Effect<...>` signature text, so it rejected the shape before
+  // ever reaching isStrictObjectLikeType. isAllMethodMembersObjectType now
+  // accepts an object-like return whose every member resolves to a callable
+  // type, checked via each property's own resolved type instead of the
+  // return type's printed text.
+  it.effect(
+    "R12: silently excludes an all-methods-record @category constructors factory while the identical untagged shape still fires",
+    () =>
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeProjectScaffold;
+          yield* writeProjectFile(
+            "packages/demo/src/index.ts",
+            A.join(
+              [
+                "interface Store { readonly id: string }",
+                "interface Kernel { readonly id: string }",
+                "interface Usage { readonly id: string }",
+                "",
+                "/**",
+                " * @category constructors",
+                " */",
+                "export const makeTaggedOperations = (store: Store, kernel: Kernel, usage: Usage) => ({",
+                "  listThreads: (workspaceId: string): string => workspaceId,",
+                "  createThread: (name: string): string => name,",
+                "  sendMessage: (body: string): string => body,",
+                "});",
+                "",
+                "export const makeUntaggedOperations = (store: Store, kernel: Kernel, usage: Usage) => ({",
+                "  listThreads: (workspaceId: string): string => workspaceId,",
+                "  createThread: (name: string): string => name,",
+                "  sendMessage: (body: string): string => body,",
+                "});",
+                "",
+              ],
+              "\n"
+            )
+          );
+
+          const summary = yield* runLaw();
+          const diagnostics = A.join(summary.diagnostics, "\n");
+
+          expect(diagnostics).not.toContain("makeTaggedOperations");
+          expect(diagnostics).toContain("makeUntaggedOperations");
+          expect(diagnostics).toContain("missing-dual");
+        })
+      )
+  );
 });

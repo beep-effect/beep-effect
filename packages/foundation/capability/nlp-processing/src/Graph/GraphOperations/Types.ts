@@ -731,13 +731,12 @@ export interface OperationResult<B, E> {
  * import { Effect } from "effect"
  * import { ExecutionId, ExecutionMetrics, makeOperationResult } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
- * const program = makeOperationResult(
- *   ExecutionId.make("exec-example"),
- *   "source graph",
- *   [],
- *   [],
- *   ExecutionMetrics.empty()
- * )
+ * const program = makeOperationResult(ExecutionId.make("exec-example"), {
+ *   originalGraph: "source graph",
+ *   newNodes: [],
+ *   errors: [],
+ *   metrics: ExecutionMetrics.empty()
+ * })
  *
  * console.log(Effect.runSync(program).newNodes.length) // 0
  * ```
@@ -748,25 +747,34 @@ export interface OperationResult<B, E> {
 export const makeOperationResult: {
   <B, E>(
     executionId: ExecutionId,
-    originalGraph: unknown,
-    newNodes: ReadonlyArray<GraphNode<B>>,
-    errors: ReadonlyArray<E>,
-    metrics: ExecutionMetrics
+    options: {
+      readonly originalGraph: unknown;
+      readonly newNodes: ReadonlyArray<GraphNode<B>>;
+      readonly errors: ReadonlyArray<E>;
+      readonly metrics: ExecutionMetrics;
+    }
   ): Effect.Effect<OperationResult<B, E>>;
-  <B, E>(
-    originalGraph: unknown,
-    newNodes: ReadonlyArray<GraphNode<B>>,
-    errors: ReadonlyArray<E>,
-    metrics: ExecutionMetrics
-  ): (executionId: ExecutionId) => Effect.Effect<OperationResult<B, E>>;
+  <B, E>(options: {
+    readonly originalGraph: unknown;
+    readonly newNodes: ReadonlyArray<GraphNode<B>>;
+    readonly errors: ReadonlyArray<E>;
+    readonly metrics: ExecutionMetrics;
+  }): (executionId: ExecutionId) => Effect.Effect<OperationResult<B, E>>;
 } = dual(
-  5,
+  2,
   <B, E>(
     executionId: ExecutionId,
-    originalGraph: unknown,
-    newNodes: ReadonlyArray<GraphNode<B>>,
-    errors: ReadonlyArray<E>,
-    metrics: ExecutionMetrics
+    {
+      errors,
+      metrics,
+      newNodes,
+      originalGraph,
+    }: {
+      readonly originalGraph: unknown;
+      readonly newNodes: ReadonlyArray<GraphNode<B>>;
+      readonly errors: ReadonlyArray<E>;
+      readonly metrics: ExecutionMetrics;
+    }
   ): Effect.Effect<OperationResult<B, E>> =>
     Effect.map(
       Clock.currentTimeMillis,

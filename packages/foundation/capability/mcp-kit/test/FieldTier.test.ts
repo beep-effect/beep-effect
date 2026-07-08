@@ -79,7 +79,7 @@ describe("field-tier projector", () => {
 
     assert.isAbove(fullSize, budgetBytes);
 
-    const projected = projectWithinBudget(documentTiers, largeDocumentBagPayload, { budgetBytes, mintFetchableHandle });
+    const projected = projectWithinBudget(largeDocumentBagPayload, documentTiers, { budgetBytes, mintFetchableHandle });
 
     assert.strictEqual(projected._tag, "Inline");
     if (projected._tag === "Inline") {
@@ -101,7 +101,7 @@ describe("field-tier projector", () => {
 
     assert.isAbove(minimalProjectedSize, impossibleBudgetBytes);
 
-    const projected = projectWithinBudget(documentTiers, largeDocumentBagPayload, {
+    const projected = projectWithinBudget(largeDocumentBagPayload, documentTiers, {
       budgetBytes: impossibleBudgetBytes,
       mintFetchableHandle,
     });

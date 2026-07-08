@@ -40,7 +40,7 @@ describe("TextGraph acyclicity", () => {
       const g0 = yield* TG.singleton("doc", "document");
       const roots = TG.getRoots(g0);
       const child = TextNode.make({ text: "a sentence", type: "sentence", timestamp: 0 });
-      const g1 = yield* TG.addChildren(g0, roots[0]!, [child], "contains");
+      const g1 = yield* TG.addChildren(g0, { parentIndex: roots[0]!, children: [child], relation: "contains" });
       expect(TG.nodeCount(g1)).toBe(2);
       expect(TG.isAcyclic(g1)).toBe(true);
       expect(TG.getChildren(g1, roots[0]!)).toHaveLength(1);
@@ -79,7 +79,7 @@ describe("TextGraph traversal & queries", () => {
       const g0 = yield* TG.singleton("doc", "document");
       const root = TG.getRoots(g0)[0]!;
       const child = TextNode.make({ text: "leaf", type: "sentence", timestamp: 0 });
-      const g1 = yield* TG.addChildren(g0, root, [child], "contains");
+      const g1 = yield* TG.addChildren(g0, { parentIndex: root, children: [child], relation: "contains" });
       expect(TG.getRoots(g1)).toHaveLength(1);
       expect(TG.getLeaves(g1).length).toBeGreaterThanOrEqual(1);
     })
@@ -91,7 +91,7 @@ describe("TextGraph traversal & queries", () => {
       const g0 = yield* TG.singleton("doc", "document");
       const root = TG.getRoots(g0)[0]!;
       const child = TextNode.make({ text: "s", type: "sentence", timestamp: 0 });
-      const g1 = yield* TG.addChildren(g0, root, [child], "contains");
+      const g1 = yield* TG.addChildren(g0, { parentIndex: root, children: [child], relation: "contains" });
       const indices = A.fromIterable(g1.pipe(TG.topo, Graph.indices));
       expect(indices).toHaveLength(2);
     })

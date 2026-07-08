@@ -1,0 +1,102 @@
+{
+  "cluster": "S2-signals",
+  "totalCount": 85,
+  "sampled": [
+    {
+      "file": "apps/professional-desktop/src/chat/UsageRecordSink.ts",
+      "symbol": "UsageRecordSinkShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/professional-desktop",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/architecture-lab/use-cases/src/entities/Worker/Worker.repository.ts",
+      "symbol": "WorkerRepositoryShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/architecture-lab-use-cases",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/drivers/box/src/Box.streaming.ts",
+      "symbol": "BoxStreamingOperations",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/box",
+      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
+      "symbol": "FFmpegShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/ffmpeg",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/drivers/m365/src/M365.service.ts",
+      "symbol": "M365Shape",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/m365",
+      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/drivers/wink/src/WinkVectorizer.service.ts",
+      "symbol": "ScopedVectorizer",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/wink",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/foundation/capability/file-processing/src/Service/index.ts",
+      "symbol": "FileProcessingEngineShape",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/file-processing",
+      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/ResultStore.ts",
+      "symbol": "StoredResult",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/nlp-processing",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-serialize.ts",
+      "symbol": "JsonLdStreamSerializeServiceShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/semantic-web",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/knowledge-graph.tsx",
+      "symbol": "KnowledgeGraphHandle",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/ui",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+      "symbol": "CorpusCommandServiceShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Research/Research.service.ts",
+      "symbol": "ResearchCommandServiceShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    }
+  ]
+}

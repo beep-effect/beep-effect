@@ -236,7 +236,7 @@ const withRegisteredTarget = <A, E, R>(target: SyncDataTarget, use: Effect.Effec
         const index = O.getOrUndefined(A.findFirstIndex(targets, (candidate) => candidate.id === target.id));
 
         if (index !== undefined) {
-          A.spliceInPlace(targets, index, 1);
+          A.spliceInPlace(targets, { start: index, deleteCount: 1 });
         }
       })
   );

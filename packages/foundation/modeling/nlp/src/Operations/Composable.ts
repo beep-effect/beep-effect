@@ -329,8 +329,8 @@ export const makePureOperation = <A, B>(
  *
  * const length = makePureOperation("length", S.String, S.Finite, (input) => input.length)
  *
- * const dataFirst = map(length, (n) => n + 1, S.Finite)
- * const dataLast = pipe(length, map((n) => n * 2, S.Finite))
+ * const dataFirst = map(length, { f: (n) => n + 1, outputSchema: S.Finite })
+ * const dataLast = pipe(length, map({ f: (n) => n * 2, outputSchema: S.Finite }))
  *
  * Effect.runPromise(dataFirst.run("nlp")).then(console.log) // 4
  * Effect.runPromise(dataLast.run("nlp")).then(console.log) // 6
@@ -340,22 +340,20 @@ export const makePureOperation = <A, B>(
  * @category combinators
  */
 export const map: {
-  <B, C>(
-    f: (b: B) => C,
-    outputSchema: S.Schema<C>
-  ): <A, R, E>(self: OperationBuilder<A, B, R, E>) => OperationBuilder<A, C, R, E>;
+  <B, C>(options: {
+    readonly f: (b: B) => C;
+    readonly outputSchema: S.Schema<C>;
+  }): <A, R, E>(self: OperationBuilder<A, B, R, E>) => OperationBuilder<A, C, R, E>;
   <A, B, C, R, E>(
     self: OperationBuilder<A, B, R, E>,
-    f: (b: B) => C,
-    outputSchema: S.Schema<C>
+    options: { readonly f: (b: B) => C; readonly outputSchema: S.Schema<C> }
   ): OperationBuilder<A, C, R, E>;
 } = dual(
-  3,
+  2,
   <A, B, C, R, E>(
     self: OperationBuilder<A, B, R, E>,
-    f: (b: B) => C,
-    outputSchema: S.Schema<C>
-  ): OperationBuilder<A, C, R, E> => mapOperationBuilder(self, f, outputSchema)
+    options: { readonly f: (b: B) => C; readonly outputSchema: S.Schema<C> }
+  ): OperationBuilder<A, C, R, E> => mapOperationBuilder(self, options.f, options.outputSchema)
 );
 
 /**
@@ -371,8 +369,8 @@ export const map: {
  * const length = makePureOperation("length", S.String, S.Finite, (input) => input.length)
  * const upper = makePureOperation("upper", S.String, S.String, (input) => input.toUpperCase())
  *
- * const dataFirst = product(length, upper, S.Tuple([S.Finite, S.String]))
- * const dataLast = pipe(length, product(upper, S.Tuple([S.Finite, S.String])))
+ * const dataFirst = product(length, { that: upper, outputSchema: S.Tuple([S.Finite, S.String]) })
+ * const dataLast = pipe(length, product({ that: upper, outputSchema: S.Tuple([S.Finite, S.String]) }))
  *
  * Effect.runPromise(dataFirst.run("nlp")).then(console.log) // [3, "NLP"]
  * Effect.runPromise(dataLast.run("nlp")).then(console.log) // [3, "NLP"]
@@ -382,22 +380,21 @@ export const map: {
  * @category combinators
  */
 export const product: {
-  <A, B, C, R2, E2>(
-    that: OperationBuilder<A, C, R2, E2>,
-    outputSchema: S.Schema<readonly [B, C]>
-  ): <R1, E1>(self: OperationBuilder<A, B, R1, E1>) => OperationBuilder<A, readonly [B, C], R1 | R2, E1 | E2>;
+  <A, B, C, R2, E2>(options: {
+    readonly that: OperationBuilder<A, C, R2, E2>;
+    readonly outputSchema: S.Schema<readonly [B, C]>;
+  }): <R1, E1>(self: OperationBuilder<A, B, R1, E1>) => OperationBuilder<A, readonly [B, C], R1 | R2, E1 | E2>;
   <A, B, C, R1, E1, R2, E2>(
     self: OperationBuilder<A, B, R1, E1>,
-    that: OperationBuilder<A, C, R2, E2>,
-    outputSchema: S.Schema<readonly [B, C]>
+    options: { readonly that: OperationBuilder<A, C, R2, E2>; readonly outputSchema: S.Schema<readonly [B, C]> }
   ): OperationBuilder<A, readonly [B, C], R1 | R2, E1 | E2>;
 } = dual(
-  3,
+  2,
   <A, B, C, R1, E1, R2, E2>(
     self: OperationBuilder<A, B, R1, E1>,
-    that: OperationBuilder<A, C, R2, E2>,
-    outputSchema: S.Schema<readonly [B, C]>
-  ): OperationBuilder<A, readonly [B, C], R1 | R2, E1 | E2> => productOperationBuilder(self, that, outputSchema)
+    options: { readonly that: OperationBuilder<A, C, R2, E2>; readonly outputSchema: S.Schema<readonly [B, C]> }
+  ): OperationBuilder<A, readonly [B, C], R1 | R2, E1 | E2> =>
+    productOperationBuilder(self, options.that, options.outputSchema)
 );
 
 /**
@@ -413,8 +410,8 @@ export const product: {
  * const length = makePureOperation("length", S.String, S.Finite, (input) => input.length)
  * const upper = makePureOperation("upper", S.String, S.String, (input) => input.toUpperCase())
  *
- * const dataFirst = zipWith(length, upper, (size, text) => `${text}:${size}`, S.String)
- * const dataLast = pipe(length, zipWith(upper, (size, text) => `${text}:${size}`, S.String))
+ * const dataFirst = zipWith(length, { that: upper, f: (size, text) => `${text}:${size}`, resultSchema: S.String })
+ * const dataLast = pipe(length, zipWith({ that: upper, f: (size, text) => `${text}:${size}`, resultSchema: S.String }))
  *
  * Effect.runPromise(dataFirst.run("nlp")).then(console.log) // "NLP:3"
  * Effect.runPromise(dataLast.run("nlp")).then(console.log) // "NLP:3"
@@ -424,25 +421,30 @@ export const product: {
  * @category combinators
  */
 export const zipWith: {
-  <A, B, C, D, R2, E2>(
-    that: OperationBuilder<A, C, R2, E2>,
-    f: (b: B, c: C) => D,
-    resultSchema: S.Schema<D>
-  ): <R1, E1>(self: OperationBuilder<A, B, R1, E1>) => OperationBuilder<A, D, R1 | R2, E1 | E2>;
+  <A, B, C, D, R2, E2>(options: {
+    readonly that: OperationBuilder<A, C, R2, E2>;
+    readonly f: (b: B, c: C) => D;
+    readonly resultSchema: S.Schema<D>;
+  }): <R1, E1>(self: OperationBuilder<A, B, R1, E1>) => OperationBuilder<A, D, R1 | R2, E1 | E2>;
   <A, B, C, D, R1, E1, R2, E2>(
     self: OperationBuilder<A, B, R1, E1>,
-    that: OperationBuilder<A, C, R2, E2>,
-    f: (b: B, c: C) => D,
-    resultSchema: S.Schema<D>
+    options: {
+      readonly that: OperationBuilder<A, C, R2, E2>;
+      readonly f: (b: B, c: C) => D;
+      readonly resultSchema: S.Schema<D>;
+    }
   ): OperationBuilder<A, D, R1 | R2, E1 | E2>;
 } = dual(
-  4,
+  2,
   <A, B, C, D, R1, E1, R2, E2>(
     self: OperationBuilder<A, B, R1, E1>,
-    that: OperationBuilder<A, C, R2, E2>,
-    f: (b: B, c: C) => D,
-    resultSchema: S.Schema<D>
-  ): OperationBuilder<A, D, R1 | R2, E1 | E2> => zipWithOperationBuilder(self, that, f, resultSchema)
+    options: {
+      readonly that: OperationBuilder<A, C, R2, E2>;
+      readonly f: (b: B, c: C) => D;
+      readonly resultSchema: S.Schema<D>;
+    }
+  ): OperationBuilder<A, D, R1 | R2, E1 | E2> =>
+    zipWithOperationBuilder(self, options.that, options.f, options.resultSchema)
 );
 
 /**
@@ -537,7 +539,11 @@ export const traverse =
  * @since 0.0.0
  * @category folding
  */
-export const aggregate =
-  <A, M>(monoid: Monoid.Monoid<M>, f: (a: A) => M) =>
-  (values: ReadonlyArray<A>): M =>
-    A.reduce(values, monoid.empty, (acc, a) => monoid.combine(acc, f(a)));
+export const aggregate: {
+  <A, M>(monoid: Monoid.Monoid<M>, f: (a: A) => M): (values: ReadonlyArray<A>) => M;
+  <A, M>(values: ReadonlyArray<A>, monoid: Monoid.Monoid<M>, f: (a: A) => M): M;
+} = dual(
+  3,
+  <A, M>(values: ReadonlyArray<A>, monoid: Monoid.Monoid<M>, f: (a: A) => M): M =>
+    A.reduce(values, monoid.empty, (acc, a) => monoid.combine(acc, f(a)))
+);
