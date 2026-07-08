@@ -22,6 +22,7 @@
     "lint": "biome check .",
     "lint:fix": "biome check . --write",
     "test": "bunx --bun vitest run",
+    "test:property": "bunx --bun vitest run",
     "type-test": "bun run dtslint && bun run dtslint:exports"
   },
   "exports": {

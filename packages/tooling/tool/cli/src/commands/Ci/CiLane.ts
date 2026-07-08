@@ -151,6 +151,7 @@ export const CI_LANE_ID_VALUES = [
   "lint",
   "lint-policy",
   "nix",
+  "property",
   "repo-sanity",
   "sast",
   "secrets",
@@ -477,6 +478,16 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     replay: "exact",
     flags: [],
   }),
+  CiLaneDescriptor.make({
+    id: "property",
+    contextName: "Property Laws",
+    required: false,
+    laneClass: "cli-runnable",
+    replay: "exact",
+    flags: ["--affected", "--base", "--summarize", "--runs"],
+    notes:
+      "Added by one-round-loop P1 (D3): schema property laws at a 400-run PR floor via BEEP_FC_NUM_RUNS; lands non-required, flips to required at P4 after a stable green history.",
+  }),
 ];
 
 /**
@@ -514,6 +525,7 @@ export class CiLaneRunOptions extends S.Class<CiLaneRunOptions>($I`CiLaneRunOpti
     last: S.Boolean,
     changesetStatus: S.Boolean,
     validateEnvelopes: S.Boolean,
+    runs: S.optionalKey(S.String),
   },
   $I.annote("CiLaneRunOptions", {
     description: "Shape options for running one CI lane body.",
@@ -748,6 +760,18 @@ export const ciLaneStepsForTesting: {
           cwd: repoRoot,
         }),
       ],
+      property: () => [
+        QualityTaskStep.make({
+          label: "ci:property",
+          command: "bunx",
+          args: ["turbo", "run", "test:property", ...turboShapeArgs(options)],
+          cwd: repoRoot,
+          env: {
+            BEEP_FC_NUM_RUNS: options.runs ?? "400",
+            ...(options.affected ? { TURBO_SCM_BASE: options.base } : {}),
+          },
+        }),
+      ],
       "repo-sanity": () => [
         bunRunStep(repoRoot, "ci:repo-sanity", ["audit:github", "repo-sanity"]),
         ...(options.changesetStatus
@@ -954,13 +978,17 @@ export const ciLaneCommand = Command.make(
     validateEnvelopes: Flag.boolean("validate-envelopes").pipe(
       Flag.withDescription("Also replay the fallow envelope validation steps locally")
     ),
+    runs: Flag.string("runs").pipe(
+      Flag.withDefault("400"),
+      Flag.withDescription("BEEP_FC_NUM_RUNS floor for the property lane (values only raise, never lower)")
+    ),
     list: Flag.boolean("list").pipe(Flag.withDescription("Print the machine-readable lane inventory and exit")),
     lane: Argument.choice("lane", CI_LANE_ID_VALUES).pipe(
       Argument.withDescription("CI lane id to run"),
       Argument.optional
     ),
   },
-  ({ affected, base, changesetStatus, from, head, lane, last, list, mode, summarize, to, validateEnvelopes }) => {
+  ({ affected, base, changesetStatus, from, head, lane, last, list, mode, runs, summarize, to, validateEnvelopes }) => {
     const options = CiLaneRunOptions.make({
       affected,
       base,
@@ -972,6 +1000,7 @@ export const ciLaneCommand = Command.make(
       last,
       changesetStatus,
       validateEnvelopes,
+      runs,
     });
 
     if (list) {
@@ -1003,6 +1032,7 @@ const CI_LOCAL_DEFAULT_LANES: ReadonlyArray<CiLaneId> = [
   "build",
   "test-unit",
   "test-integration",
+  "property",
   "docgen",
   "coverage",
   "desktop-ipc",
@@ -1108,6 +1138,7 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     lint: () => affectedFlags,
     "lint-policy": A.empty<string>,
     nix: A.empty<string>,
+    property: () => affectedFlags,
     "repo-sanity": () => (plan.onMainBranch ? A.empty<string>() : ["--changeset-status"]),
     sast: A.empty<string>,
     secrets: A.empty<string>,

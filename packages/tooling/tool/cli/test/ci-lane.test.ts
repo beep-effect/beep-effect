@@ -59,7 +59,7 @@ describe("CI lane descriptors", () => {
   it("enumerates every check.yml lane exactly once", () => {
     const ids = A.map(CI_LANE_DESCRIPTORS, (descriptor) => descriptor.id);
     expect(A.length(A.dedupe(ids))).toBe(A.length(ids));
-    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(21);
+    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(22);
   });
 
   it("covers every runnable lane id", () => {
@@ -208,6 +208,18 @@ describe("ciLaneStepsForTesting", () => {
     expect(A.length(validated)).toBe(14);
     const lastLabel = lastOf(validated).label;
     expect(lastLabel).toBe("ci:fallow:envelope-check:dead-code");
+  });
+
+  it("builds the property lane with the 400-run floor and cache-partitioning env", () => {
+    const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "property", prShapeOptions));
+    expect(step.command).toBe("bunx");
+    expect([...step.args]).toEqual(["turbo", "run", "test:property", "--affected", "--summarize"]);
+    expect(step.env).toEqual({ BEEP_FC_NUM_RUNS: "400", TURBO_SCM_BASE: "origin/main" });
+
+    const deep = firstOf(
+      ciLaneStepsForTesting(REPO_ROOT, "property", CiLaneRunOptions.make({ ...baseOptions, runs: "1000" }))
+    );
+    expect(deep.env).toEqual({ BEEP_FC_NUM_RUNS: "1000" });
   });
 
   it("keeps the build lane's --summarize flag-driven", () => {

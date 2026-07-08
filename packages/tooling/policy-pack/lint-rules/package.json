@@ -11,6 +11,7 @@
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
+    "test:property": "bun run beep:test",
     "coverage": "bunx vitest run --coverage",
     "beep:build": "tsc -b tsconfig.json",
     "beep:check": "tsgo -b tsconfig.json",

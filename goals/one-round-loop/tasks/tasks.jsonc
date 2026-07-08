@@ -54,7 +54,7 @@
       "id": "orl-012",
       "rank": 6,
       "phase": "P1",
-      "status": "pending",
+      "status": "done",
       "blockedBy": ["orl-011"],
       "title": "PR-affected property lane + nightly full sweep",
       "detail": "A DEDICATED turbo task (own cache key: BEEP_FC_NUM_RUNS in task env, NOT passThroughEnv — otherwise low-run cached results satisfy the lane; never reuse the regular test task cache); CI lane at 400 runs, --affected, with a FROZEN context name (lands non-required; required flip is a P4 criterion per D3); nightly workflow with schedule + workflow_dispatch and issues:write permission at 1000+ over all suites, opening/updating ONE tracking issue (stable title key, label property-laws-nightly); verify the nightly via manual dispatch, not by waiting for cron. Seeded non-round-tripping fixture proof (Verification Matrix row 4)."

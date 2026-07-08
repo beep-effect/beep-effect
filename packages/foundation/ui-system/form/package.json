@@ -34,6 +34,7 @@
     "lint:fix": "bun run beep:lint:fix",
     "repo-exports:shard": "beep-cli quality repo-exports-catalog --package-shard",
     "test": "bun run beep:test",
+    "test:property": "bun run beep:test",
     "test:integration": "bun run beep:test:integration"
   },
   "exports": {

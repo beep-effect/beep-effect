@@ -109,6 +109,15 @@
         "!.beep/**"
       ]
     },
+    "test:property": {
+      "env": ["BEEP_FC_NUM_RUNS"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.setup.ts",
+        "!.beep/**"
+      ]
+    },
     "test:integration": {
       "cache": false,
       "dependsOn": ["^build"],
