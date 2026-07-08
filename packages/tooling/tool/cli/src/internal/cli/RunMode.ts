@@ -50,7 +50,7 @@ export const RunMode = RunModeKit.pipe(
  * ```ts
  * import { RunModeOptions } from "@beep/repo-cli/internal/cli/RunMode"
  *
- * console.log(RunModeOptions)
+ * console.log(RunModeOptions.includes("write")) // true
  * ```
  * @category models
  * @since 0.0.0

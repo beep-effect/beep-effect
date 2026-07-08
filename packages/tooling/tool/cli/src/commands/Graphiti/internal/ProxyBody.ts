@@ -55,9 +55,15 @@ const concatChunkedBody = (chunks: Chunk.Chunk<Uint8Array>, totalBytes: number):
  * @example
  * ```ts
  * import { readRequestBodyBytes } from "@beep/repo-cli/commands/Graphiti/internal/ProxyBody"
+ * import { Effect } from "effect"
+ * import * as HttpServerRequest from "effect/unstable/http/HttpServerRequest"
  *
- * const reader = readRequestBodyBytes
- * console.log(typeof reader === "function")
+ * // Read the current request body inside an HTTP handler, capped at 1 KiB.
+ * const program = Effect.gen(function* () {
+ *   const request = yield* HttpServerRequest.HttpServerRequest
+ *   return yield* readRequestBodyBytes(request, 1024)
+ * })
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category streams
  * @since 0.0.0

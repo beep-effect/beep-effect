@@ -68,10 +68,14 @@ const documentTitle = (success: FirecrawlScrapeSuccess): O.Option<string> =>
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
  * import { captureUrlImpl } from "@beep/repo-cli/commands/Research/internal/Capture"
+ * import { ResearchCaptureOptions } from "@beep/repo-cli/commands/Research"
  *
- * const operation = captureUrlImpl
- * console.log(typeof operation === "function")
+ * const program = captureUrlImpl(
+ *   ResearchCaptureOptions.make({ tags: ["ml"], url: "https://example.com/post", vaultRoot: "/repo/.research" })
+ * )
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category use-cases
  * @since 0.0.0

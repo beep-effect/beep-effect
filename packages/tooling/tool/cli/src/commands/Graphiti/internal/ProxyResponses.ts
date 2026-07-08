@@ -32,12 +32,20 @@ const matchHttpClientErrorToRes = Match.type<HttpClientError.HttpClientError["re
 /**
  * Convert an Effect HTTP client failure into a Graphiti proxy response.
  *
+ * @param error - The Effect HTTP client error whose `reason` selects the mapped status.
+ * @returns An HTTP server response carrying an `upstream_failure` error body and
+ * the status matched to the failure reason.
  * @example
  * ```ts
  * import { mapHttpClientErrorToResponse } from "@beep/repo-cli/commands/Graphiti/internal/ProxyResponses"
+ * import * as HttpClientError from "effect/unstable/http/HttpClientError"
+ * import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest"
  *
- * const mapper = mapHttpClientErrorToResponse
- * console.log(typeof mapper === "function")
+ * const request = HttpClientRequest.get("http://127.0.0.1:8000/mcp")
+ * const error = new HttpClientError.HttpClientError({
+ *   reason: new HttpClientError.TransportError({ request })
+ * })
+ * console.log(mapHttpClientErrorToResponse(error).status) // 502
  * ```
  * @category error-handling
  * @since 0.0.0
@@ -55,7 +63,10 @@ export const mapHttpClientErrorToResponse = (
  * @returns Http server response with JSON error body.
  * @example
  * ```ts
- * console.log("proxyErrorResponse")
+ * import { proxyErrorResponse } from "@beep/repo-cli/commands/Graphiti/internal/ProxyResponses"
+ *
+ * const response = proxyErrorResponse("queue_full", "Queue is full", { status: 503 })
+ * console.log(response.status) // 503
  * ```
  * @category models
  * @since 0.0.0
@@ -97,7 +108,23 @@ export const proxyErrorResponse: {
  * @returns Http server response with JSON health body.
  * @example
  * ```ts
- * console.log("proxyHealthResponse")
+ * import { proxyHealthResponse } from "@beep/repo-cli/commands/Graphiti/internal/ProxyResponses"
+ * import { ProxyHealthPayload } from "@beep/repo-cli/commands/Graphiti/internal/ProxySchemas"
+ *
+ * const payload = ProxyHealthPayload.make({
+ *   status: "ok",
+ *   active: 0,
+ *   queued: 0,
+ *   peakQueueDepth: 0,
+ *   processed: 0,
+ *   failed: 0,
+ *   rejected: 0,
+ *   concurrency: 1,
+ *   maxQueue: 10,
+ *   upstream: "http://127.0.0.1:8000/mcp",
+ *   dependencies: { falkor: "healthy", graphiti: "healthy" }
+ * })
+ * console.log(proxyHealthResponse(payload, 200).status) // 200
  * ```
  * @category models
  * @since 0.0.0
@@ -120,6 +147,11 @@ type ProxyHeaderOptions = {
 /**
  * Stamp proxy queue accounting headers onto a response.
  *
+ * @param response - The HTTP server response to decorate.
+ * @param options - Queue accounting values: current `active` and `queued` counts
+ * plus the serving `lane`.
+ * @returns The response with `x-graphiti-proxy-queued`, `-active`, and `-lane`
+ * headers applied.
  * @example
  * ```ts
  * import { addProxyHeaders, proxyHealthResponse } from "@beep/repo-cli/commands/Graphiti/internal/ProxyResponses"

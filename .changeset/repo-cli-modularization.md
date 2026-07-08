@@ -1,7 +1,6 @@
 ---
 "@beep/repo-cli": patch
 "@beep/repo-utils": patch
-"@beep/repo-ai-metrics": patch
 ---
 
 Modularize @beep/repo-cli: split monolith command files along natural seams

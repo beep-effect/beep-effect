@@ -34,10 +34,12 @@ const decodeDailySummary = S.decodeUnknownEffect(ResearchDailySummary);
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
  * import { commitVault } from "@beep/repo-cli/commands/Research/internal/Daily"
  *
- * const operation = commitVault
- * console.log(typeof operation === "function")
+ * // Stage and commit the research vault; provide the process spawner to run it.
+ * const program = commitVault("/repo/.research")
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category processes
  * @since 0.0.0
@@ -84,10 +86,20 @@ export const commitVault = Effect.fn("Research.commitVault")(function* (
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
  * import { dailyImpl } from "@beep/repo-cli/commands/Research/internal/Daily"
+ * import { ResearchDailyOptions } from "@beep/repo-cli/commands/Research"
+ * import { NonNegativeInt } from "@beep/schema"
  *
- * const operation = dailyImpl
- * console.log(typeof operation === "function")
+ * const program = dailyImpl(
+ *   ResearchDailyOptions.make({
+ *     browser: "all",
+ *     commit: false,
+ *     sinceDays: NonNegativeInt.make(7),
+ *     vaultRoot: "/repo/.research"
+ *   })
+ * )
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category workflows
  * @since 0.0.0

@@ -6,17 +6,22 @@ import {
   makeTaggedLogger,
   renderPrettyCommandJson,
 } from "@beep/repo-cli/test/Cli";
-import { Effect } from "effect";
+import { describe, expect, it } from "@effect/vitest";
+import { Effect, Layer } from "effect";
 import * as TestConsole from "effect/testing/TestConsole";
-import { describe, expect, it } from "vitest";
 
-const runWithConsole = <A, E>(effect: Effect.Effect<A, E, TestConsole.TestConsole>): Promise<ReadonlyArray<unknown>> =>
-  Effect.runPromise(
-    Effect.gen(function* () {
-      yield* effect;
-      return yield* TestConsole.logLines;
-    }).pipe(Effect.provide(TestConsole.layer))
-  );
+const provideScopedLayer =
+  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
+    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+
+const collectLines = <A, E>(
+  effect: Effect.Effect<A, E, TestConsole.TestConsole>
+): Effect.Effect<ReadonlyArray<unknown>, E> =>
+  Effect.gen(function* () {
+    yield* effect;
+    return yield* TestConsole.logLines;
+  }).pipe(provideScopedLayer(TestConsole.layer));
 
 describe("internal/cli/Json renderPrettyCommandJson", () => {
   it("pretty-formats a compact JSON payload with a trailing newline", () => {
@@ -84,18 +89,22 @@ describe("internal/cli/Printer formatDurationSeconds", () => {
 });
 
 describe("internal/cli/Printer tagged logging", () => {
-  it("prefixes messages with the tag", async () => {
-    const lines = await runWithConsole(
-      Effect.gen(function* () {
-        const log = makeTaggedLogger("ci");
-        yield* log("done");
-      })
-    );
-    expect(lines).toEqual(["[ci] done"]);
-  });
+  it.effect("prefixes messages with the tag", () =>
+    Effect.gen(function* () {
+      const lines = yield* collectLines(
+        Effect.gen(function* () {
+          const log = makeTaggedLogger("ci");
+          yield* log("done");
+        })
+      );
+      expect(lines).toEqual(["[ci] done"]);
+    })
+  );
 
-  it("logs record entries as [tag] key=value in insertion order", async () => {
-    const lines = await runWithConsole(logTaggedSummary("schema-first", { live_entries: 3, missing_entries: 0 }));
-    expect(lines).toEqual(["[schema-first] live_entries=3", "[schema-first] missing_entries=0"]);
-  });
+  it.effect("logs record entries as [tag] key=value in insertion order", () =>
+    Effect.gen(function* () {
+      const lines = yield* collectLines(logTaggedSummary("schema-first", { live_entries: 3, missing_entries: 0 }));
+      expect(lines).toEqual(["[schema-first] live_entries=3", "[schema-first] missing_entries=0"]);
+    })
+  );
 });

@@ -47,10 +47,12 @@ const wikilinkFor = (cardPath: string, title: string | null): string => {
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
  * import { digestImpl } from "@beep/repo-cli/commands/Research/internal/Digest"
+ * import { ResearchDigestOptions } from "@beep/repo-cli/commands/Research"
  *
- * const operation = digestImpl
- * console.log(typeof operation === "function")
+ * const program = digestImpl(ResearchDigestOptions.make({ vaultRoot: "/repo/.research" }))
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category use-cases
  * @since 0.0.0

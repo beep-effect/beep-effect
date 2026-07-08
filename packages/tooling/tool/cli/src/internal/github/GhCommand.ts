@@ -87,30 +87,27 @@ export interface GhOutputOptions<E> {
  * @category execution
  * @since 0.0.0
  */
-export const ghOutput = <E>(
-  options: GhOutputOptions<E>
-): Effect.Effect<string, E, ChildProcessSpawner.ChildProcessSpawner> =>
-  Effect.gen(function* () {
-    const command = A.join(["gh", ...options.args], " ");
-    const result = yield* runRepoCommandCapture("gh", options.args, options.cwd).pipe(
-      Effect.mapError((cause) => options.onFailure({ _tag: "spawn", label: options.label, command, cause }))
+export const ghOutput = Effect.fn("GhCommand.ghOutput")(function* <E>(options: GhOutputOptions<E>) {
+  const command = A.join(["gh", ...options.args], " ");
+  const result = yield* runRepoCommandCapture("gh", options.args, options.cwd).pipe(
+    Effect.mapError((cause) => options.onFailure({ _tag: "spawn", label: options.label, command, cause }))
+  );
+  if (result.exitCode !== 0) {
+    return yield* Effect.fail(
+      options.onFailure({
+        _tag: "nonzero-exit",
+        label: options.label,
+        command,
+        exitCode: result.exitCode,
+        output: result.output,
+      })
     );
-    if (result.exitCode !== 0) {
-      return yield* Effect.fail(
-        options.onFailure({
-          _tag: "nonzero-exit",
-          label: options.label,
-          command,
-          exitCode: result.exitCode,
-          output: result.output,
-        })
-      );
-    }
-    if (result.truncated) {
-      return yield* Effect.fail(options.onFailure({ _tag: "truncated", label: options.label, command }));
-    }
-    return result.output;
-  });
+  }
+  if (result.truncated) {
+    return yield* Effect.fail(options.onFailure({ _tag: "truncated", label: options.label, command }));
+  }
+  return result.output;
+});
 
 /**
  * Build the `-F cursor=<value>` argument pair for a GraphQL page request, or an

@@ -35,8 +35,7 @@ import type { DualArityRulesOptions } from "./Laws.schemas.js";
  * ```ts
  * import { DualArityEnforcedRoots } from "@beep/repo-cli/commands/Laws/DualArity"
  *
- * const example = DualArityEnforcedRoots
- * console.log(typeof example !== "undefined") // true
+ * console.log(DualArityEnforcedRoots[0]) // "packages/tooling/tool/cli/src/commands/Laws/DualArity.ts"
  * ```
  * @category configuration
  * @since 0.0.0
@@ -48,8 +47,7 @@ import type { DualArityRulesOptions } from "./Laws.schemas.js";
  * ```ts
  * import { DualArityIncludedGlobs } from "@beep/repo-cli/commands/Laws/DualArity"
  *
- * const example = DualArityIncludedGlobs
- * console.log(typeof example !== "undefined") // true
+ * console.log(DualArityIncludedGlobs.includes("packages/**\/*.{ts,tsx}")) // true
  * ```
  * @category configuration
  * @since 0.0.0
@@ -61,8 +59,8 @@ import type { DualArityRulesOptions } from "./Laws.schemas.js";
  * ```ts
  * import { DualArityInventoryDocument } from "@beep/repo-cli/commands/Laws/DualArity"
  *
- * const example = DualArityInventoryDocument
- * console.log(typeof example !== "undefined") // true
+ * const document = DualArityInventoryDocument.make({ version: 1, generatedOn: "2026-07-08" })
+ * console.log(document.version) // 1
  * ```
  * @category models
  * @since 0.0.0
@@ -73,9 +71,21 @@ import type { DualArityRulesOptions } from "./Laws.schemas.js";
  * @example
  * ```ts
  * import { DualArityInventoryEntry } from "@beep/repo-cli/commands/Laws/DualArity"
+ * import * as S from "effect/Schema"
  *
- * const example = DualArityInventoryEntry
- * console.log(typeof example !== "undefined") // true
+ * const entry = DualArityInventoryEntry.make({
+ *   column: 3,
+ *   diagnostics: [],
+ *   file: "packages/example/src/Foo.ts",
+ *   kind: "exported-function",
+ *   line: 12,
+ *   owner: "@beep/example",
+ *   parameterCount: 2,
+ *   qualifiedName: "mapFoo",
+ *   reason: "dual helper",
+ *   status: "candidate"
+ * })
+ * console.log(S.is(DualArityInventoryEntry)(entry)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -87,8 +97,8 @@ import type { DualArityRulesOptions } from "./Laws.schemas.js";
  * ```ts
  * import { DualArityRulesOptions } from "@beep/repo-cli/commands/Laws/DualArity"
  *
- * const example = DualArityRulesOptions
- * console.log(typeof example !== "undefined") // true
+ * const options = DualArityRulesOptions.make({ write: true, strictCheck: false, excludePaths: [] })
+ * console.log(options.write) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -100,8 +110,18 @@ import type { DualArityRulesOptions } from "./Laws.schemas.js";
  * ```ts
  * import { DualArityRulesSummary } from "@beep/repo-cli/commands/Laws/DualArity"
  *
- * const example = DualArityRulesSummary
- * console.log(typeof example !== "undefined") // true
+ * const summary = DualArityRulesSummary.make({
+ *   liveEntries: 3,
+ *   trackedEntries: 3,
+ *   missingEntries: 0,
+ *   staleEntries: 0,
+ *   enforcedCandidates: 1,
+ *   invalidExceptions: 0,
+ *   excludedLegitimate: 0,
+ *   wroteInventory: false,
+ *   strictFailure: false
+ * })
+ * console.log(summary.liveEntries) // 3
  * ```
  * @category models
  * @since 0.0.0
@@ -124,9 +144,11 @@ import type { DualArityRulesOptions } from "./Laws.schemas.js";
  * @example
  * ```ts
  * import { decodeDualArityProjectInspectionRequest } from "@beep/repo-cli/commands/Laws/DualArity"
+ * import { Effect } from "effect"
  *
- * const example = decodeDualArityProjectInspectionRequest
- * console.log(typeof example !== "undefined") // true
+ * // Decodes an unknown ts-morph inspection request; run the Effect to validate.
+ * const program = decodeDualArityProjectInspectionRequest({ tsConfigFilePath: "tsconfig.json" })
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category codecs
  * @since 0.0.0
@@ -136,10 +158,21 @@ import type { DualArityRulesOptions } from "./Laws.schemas.js";
  *
  * @example
  * ```ts
- * import { dualArityEntryOrder } from "@beep/repo-cli/commands/Laws/DualArity"
+ * import { DualArityInventoryEntry, dualArityEntryOrder } from "@beep/repo-cli/commands/Laws/DualArity"
  *
- * const example = dualArityEntryOrder
- * console.log(typeof example !== "undefined") // true
+ * const entry = DualArityInventoryEntry.make({
+ *   column: 3,
+ *   diagnostics: [],
+ *   file: "packages/example/src/Foo.ts",
+ *   kind: "exported-function",
+ *   line: 12,
+ *   owner: "@beep/example",
+ *   parameterCount: 2,
+ *   qualifiedName: "mapFoo",
+ *   reason: "dual helper",
+ *   status: "candidate"
+ * })
+ * console.log(dualArityEntryOrder(entry, entry)) // 0
  * ```
  * @category utilities
  * @since 0.0.0
@@ -149,10 +182,11 @@ import type { DualArityRulesOptions } from "./Laws.schemas.js";
  *
  * @example
  * ```ts
- * import { encodeDualArityInventoryDocument } from "@beep/repo-cli/commands/Laws/DualArity"
+ * import { DualArityInventoryDocument, encodeDualArityInventoryDocument } from "@beep/repo-cli/commands/Laws/DualArity"
+ * import { Effect } from "effect"
  *
- * const example = encodeDualArityInventoryDocument
- * console.log(typeof example !== "undefined") // true
+ * const document = DualArityInventoryDocument.make({ version: 1, generatedOn: "2026-07-08" })
+ * console.log(Effect.isEffect(encodeDualArityInventoryDocument(document))) // true
  * ```
  * @category codecs
  * @since 0.0.0

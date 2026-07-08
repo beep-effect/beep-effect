@@ -35,8 +35,7 @@ export const DualArityInventoryPath = "standards/dual-arity.inventory.jsonc";
  * ```ts
  * import { DualArityIncludedGlobs } from "@beep/repo-cli/commands/Laws/DualArity"
  *
- * const example = DualArityIncludedGlobs
- * console.log(typeof example !== "undefined") // true
+ * console.log(DualArityIncludedGlobs.includes("packages/**\/*.{ts,tsx}")) // true
  * ```
  * @category configuration
  * @since 0.0.0
@@ -54,8 +53,7 @@ export const DualArityIncludedGlobs: ReadonlyArray<string> = [
  * ```ts
  * import { DualArityEnforcedRoots } from "@beep/repo-cli/commands/Laws/DualArity"
  *
- * const example = DualArityEnforcedRoots
- * console.log(typeof example !== "undefined") // true
+ * console.log(DualArityEnforcedRoots[0]) // "packages/tooling/tool/cli/src/commands/Laws/DualArity.ts"
  * ```
  * @category configuration
  * @since 0.0.0
@@ -318,6 +316,8 @@ export const decodeDualArityProjectInspectionRequest = S.decodeUnknownEffect(TsM
 /**
  * Stable key used to reconcile live dual-arity scan results with the baseline.
  *
+ * @param entry - The dual-arity inventory entry to derive a reconciliation key for.
+ * @returns A stable string key combining the entry's file, qualified name, and kind.
  * @example
  * ```ts
  * import { makeDualArityEntryKey } from "@beep/repo-cli/commands/Laws/DualArity"
@@ -347,10 +347,21 @@ export const makeDualArityEntryKey = (entry: DualArityInventoryEntry): string =>
  *
  * @example
  * ```ts
- * import { dualArityEntryOrder } from "@beep/repo-cli/commands/Laws/DualArity"
+ * import { DualArityInventoryEntry, dualArityEntryOrder } from "@beep/repo-cli/commands/Laws/DualArity"
  *
- * const compareEntries = dualArityEntryOrder
- * console.log(typeof compareEntries === "function") // true
+ * const entry = DualArityInventoryEntry.make({
+ *   column: 3,
+ *   diagnostics: [],
+ *   file: "packages/example/src/Foo.ts",
+ *   kind: "exported-function",
+ *   line: 12,
+ *   owner: "@beep/example",
+ *   parameterCount: 2,
+ *   qualifiedName: "mapFoo",
+ *   reason: "dual helper",
+ *   status: "candidate"
+ * })
+ * console.log(dualArityEntryOrder(entry, entry)) // 0
  * ```
  * @category utilities
  * @since 0.0.0
@@ -363,6 +374,8 @@ export const dualArityEntryOrder: Order.Order<DualArityInventoryEntry> = Order.m
 /**
  * Sort dual-arity inventory entries in committed baseline order.
  *
+ * @param entries - The dual-arity inventory entries to reorder.
+ * @returns The entries sorted into committed baseline order via {@link dualArityEntryOrder}.
  * @example
  * ```ts
  * import { sortDualArityEntries } from "@beep/repo-cli/commands/Laws/DualArity"

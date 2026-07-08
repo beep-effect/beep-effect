@@ -16,9 +16,9 @@ import {
   safeOriginBranchFromBase,
   sortedUniquePaths,
 } from "@beep/repo-cli/test/RepoRun";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, Stream } from "effect";
 import * as O from "effect/Option";
-import { describe, expect, it } from "vitest";
 
 const encode = (value: string): Uint8Array => new TextEncoder().encode(value);
 
@@ -45,17 +45,19 @@ describe("StepExec bounded output fold", () => {
     expect(reduce(truncated, "ghi")).toBe(truncated);
   });
 
-  it("folds a byte stream into bounded text with the truncation notice", async () => {
-    const result = await Effect.runPromise(
-      collectBoundedText(bound)(Stream.fromIterable([encode("ab"), encode("cdef")]))
-    );
-    expect(result).toEqual(BoundedOutput.make({ text: "abcd!", truncated: true }));
-  });
+  it.effect("folds a byte stream into bounded text with the truncation notice", () =>
+    Effect.gen(function* () {
+      const result = yield* collectBoundedText(bound)(Stream.fromIterable([encode("ab"), encode("cdef")]));
+      expect(result).toEqual(BoundedOutput.make({ text: "abcd!", truncated: true }));
+    })
+  );
 
-  it("folds a short byte stream without truncating", async () => {
-    const result = await Effect.runPromise(collectBoundedText(bound)(Stream.fromIterable([encode("hi")])));
-    expect(result).toEqual(BoundedOutput.make({ text: "hi", truncated: false }));
-  });
+  it.effect("folds a short byte stream without truncating", () =>
+    Effect.gen(function* () {
+      const result = yield* collectBoundedText(bound)(Stream.fromIterable([encode("hi")]));
+      expect(result).toEqual(BoundedOutput.make({ text: "hi", truncated: false }));
+    })
+  );
 
   it("exposes the divergent repo-run and quality bounds", () => {
     expect(repoRunOutputBound.maxChars).toBe(512 * 1024);

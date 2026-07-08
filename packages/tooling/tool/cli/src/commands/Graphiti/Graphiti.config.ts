@@ -5,7 +5,6 @@
  * Every exported builder reads the ambient config provider at call time. Tests
  * mutate GRAPHITI_* variables between cases, so this module must not capture
  * environment values during module evaluation.
- *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -36,11 +35,13 @@ const GRAPHITI_MCP_SERVICE = "graphiti-mcp";
 /**
  * Read the current home directory from the ambient config provider at call time.
  *
+ * @returns The `HOME` value from the ambient config provider, or the current
+ * working directory when `HOME` is unset.
  * @example
  * ```ts
  * import { homeDirectory } from "@beep/repo-cli/commands/Graphiti/Graphiti.config"
  *
- * console.log(typeof homeDirectory())
+ * console.log(homeDirectory().length > 0) // true
  * ```
  * @category configuration
  * @since 0.0.0
@@ -64,6 +65,9 @@ const proxyPortFromUrl = (healthUrl: string): string => {
 /**
  * Resolve ensure-loop configuration from the current environment.
  *
+ * @param path - Effect `Path` service used to join state, runtime, and log paths.
+ * @returns The resolved ensure-loop configuration read from `GRAPHITI_*` and
+ * `XDG_*` environment variables.
  * @example
  * ```ts
  * import { proxyEnsureConfig } from "@beep/repo-cli/commands/Graphiti/Graphiti.config"
@@ -104,6 +108,11 @@ export const proxyEnsureConfig = (path: Path.Path): ProxyEnsureConfig => {
 /**
  * Resolve systemd service installation configuration from current inputs.
  *
+ * @param path - Effect `Path` service used to join systemd, config, and state paths.
+ * @param options - Install options; a non-empty `upstreamMcpUrl` overrides the
+ * environment-derived upstream URL.
+ * @returns The resolved systemd service configuration including service file
+ * location and upstream MCP URL.
  * @example
  * ```ts
  * import { proxyServiceConfig } from "@beep/repo-cli/commands/Graphiti/Graphiti.config"
@@ -176,6 +185,11 @@ export const resolveGraphitiStackDirForTesting: {
 /**
  * Resolve restore and verify configuration from flags and current environment.
  *
+ * @param path - Effect `Path` service used to resolve the stack directory and its children.
+ * @param options - Restore options; `stackDir` overrides the `GRAPHITI_STACK_DIR`
+ * environment value when provided.
+ * @returns The resolved restore/verify configuration including container names,
+ * compose file, backup root, and proxy URLs.
  * @example
  * ```ts
  * import { graphitiRestoreConfig } from "@beep/repo-cli/commands/Graphiti/Graphiti.config"

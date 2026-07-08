@@ -499,7 +499,7 @@ export const runTurboConfigProof = Effect.fn("TurboConfigProof.runTurboConfigPro
  *
  * @param report - Proof report to encode.
  * @returns JSON report text.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderTurboConfigProofReportJson = (
@@ -524,7 +524,7 @@ const countRecordSummary = (record: Readonly<Record<string, number>>): string =>
  *
  * @param report - Proof report to render.
  * @returns Human-readable summary text.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderTurboConfigProofReport = (report: TurboConfigProofReport): string =>

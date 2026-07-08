@@ -14,24 +14,18 @@ import { SyntaxKind } from "ts-morph";
 /**
  * Workspace package name for the identity composer package.
  *
- * @example
- * ```ts
- * import { IDENTITY_PACKAGE_NAME } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
- *
- * console.log(IDENTITY_PACKAGE_NAME)
- * ```
  * @category utilities
  * @since 0.0.0
  */
 export const IDENTITY_PACKAGE_NAME = "@beep/identity" as const;
 /**
- * Path segments for the @beep/identity package composer export file.
+ * Path segments for the `@beep/identity` package composer export file.
  *
  * @example
  * ```ts
  * import { IDENTITY_PACKAGES_EXPORT_PATH } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
  *
- * console.log(IDENTITY_PACKAGES_EXPORT_PATH)
+ * console.log(IDENTITY_PACKAGES_EXPORT_PATH.join("/")) // "src/packages.ts"
  * ```
  * @category utilities
  * @since 0.0.0
@@ -41,6 +35,8 @@ export const IDENTITY_PACKAGES_EXPORT_PATH = ["src", "packages.ts"] as const;
 /**
  * Build the identity composer accessor name for a package.
  *
+ * @param packageName - Workspace package name to derive the composer accessor from.
+ * @returns The PascalCase identity composer accessor name (e.g. `$RepoCliId`).
  * @example
  * ```ts
  * import { toIdentityAccessorName } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
@@ -56,6 +52,8 @@ const toIdentityAccessorName = (packageName: string): string => `$${Str.pascalCa
 /**
  * Render the typed identity composer export block for a package.
  *
+ * @param packageName - Workspace package name the exported identity composer targets.
+ * @returns The rendered TypeScript export block declaring the typed identity composer.
  * @example
  * ```ts
  * import { typedIdentityExportBlock } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
@@ -116,14 +114,19 @@ const resolveIdentityPackagesFilePath = Effect.fn(function* (repoRoot: string) {
 });
 
 /**
- * Add a package segment and typed identity export to @beep/identity.
+ * Add a package segment and typed identity export to `@beep/identity`.
  *
  * @example
  * ```ts
  * import { ensureIdentityPackageRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
+ * import { Effect } from "effect"
  *
- * const example = ensureIdentityPackageRegistration
- * console.log(typeof example !== "undefined") // true
+ * // Provide FileSystem to run the effect.
+ * const program = ensureIdentityPackageRegistration(
+ *   "packages/common/identity/src/registered-packages.ts",
+ *   "@beep/schema"
+ * )
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -152,7 +155,7 @@ const ensureIdentityPackageRegistration = Effect.fn(function* (identityPackagesF
 });
 
 /**
- * Check whether @beep/identity needs a package composer registration.
+ * Check whether `@beep/identity` needs a package composer registration.
  *
  * @example
  * ```ts

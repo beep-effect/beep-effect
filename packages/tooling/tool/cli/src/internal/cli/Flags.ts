@@ -18,7 +18,7 @@ import { Flag } from "effect/unstable/cli";
  * import { jsonFlagWith } from "@beep/repo-cli/internal/cli/Flags"
  *
  * const flag = jsonFlagWith("Emit the report as JSON")
- * console.log(typeof flag)
+ * console.log(flag.kind) // "flag"
  * ```
  * @category flags
  * @since 0.0.0
@@ -32,7 +32,7 @@ export const jsonFlagWith = (description: string) => Flag.boolean("json").pipe(F
  * ```ts
  * import { jsonFlag } from "@beep/repo-cli/internal/cli/Flags"
  *
- * console.log(typeof jsonFlag)
+ * console.log(jsonFlag.kind) // "flag"
  * ```
  * @category flags
  * @since 0.0.0
@@ -48,7 +48,7 @@ export const jsonFlag = jsonFlagWith("Emit machine-readable JSON output");
  * ```ts
  * import { packageFlag } from "@beep/repo-cli/internal/cli/Flags"
  *
- * console.log(typeof packageFlag())
+ * console.log(packageFlag().kind) // "flag"
  * ```
  * @category flags
  * @since 0.0.0
@@ -65,7 +65,7 @@ export const packageFlag = (description = "Target a workspace package by name or
  * ```ts
  * import { outputFlag } from "@beep/repo-cli/internal/cli/Flags"
  *
- * console.log(typeof outputFlag())
+ * console.log(outputFlag().kind) // "flag"
  * ```
  * @category flags
  * @since 0.0.0
@@ -82,7 +82,7 @@ export const outputFlag = (description = "Write output to a specific file path")
  * ```ts
  * import { verboseFlag } from "@beep/repo-cli/internal/cli/Flags"
  *
- * console.log(typeof verboseFlag())
+ * console.log(verboseFlag().kind) // "flag"
  * ```
  * @category flags
  * @since 0.0.0
@@ -99,7 +99,7 @@ export const verboseFlag = (description = "Print additional diagnostic output") 
  * ```ts
  * import { dryRunFlag } from "@beep/repo-cli/internal/cli/Flags"
  *
- * console.log(typeof dryRunFlag())
+ * console.log(dryRunFlag().kind) // "flag"
  * ```
  * @category flags
  * @since 0.0.0
@@ -116,7 +116,7 @@ export const dryRunFlag = (description = "Preview changes without writing files"
  * ```ts
  * import { forceFlag } from "@beep/repo-cli/internal/cli/Flags"
  *
- * console.log(typeof forceFlag())
+ * console.log(forceFlag().kind) // "flag"
  * ```
  * @category flags
  * @since 0.0.0
@@ -135,7 +135,7 @@ export const forceFlag = (description = "Overwrite existing output") =>
  * ```ts
  * import { csvValues } from "@beep/repo-cli/internal/cli/Flags"
  *
- * console.log(csvValues(" a , b , , c "))
+ * console.log(csvValues(" a , b , , c ")) // ["a", "b", "c"]
  * ```
  * @category coercion
  * @since 0.0.0
@@ -150,7 +150,7 @@ export const csvValues: (value: string) => ReadonlyArray<string> = Text.splitCom
  * ```ts
  * import { normalizedTokens } from "@beep/repo-cli/internal/cli/Flags"
  *
- * console.log(normalizedTokens(" Renovate , DEPENDABOT "))
+ * console.log(normalizedTokens(" Renovate , DEPENDABOT ")) // ["renovate", "dependabot"]
  * ```
  * @category coercion
  * @since 0.0.0
@@ -168,7 +168,7 @@ export const normalizedTokens: (value: string) => ReadonlyArray<string> = flow(
  * ```ts
  * import { variadicStrings } from "@beep/repo-cli/internal/cli/Flags"
  *
- * console.log(variadicStrings(["a", 1, "b", null]))
+ * console.log(variadicStrings(["a", 1, "b", null])) // ["a", "b"]
  * ```
  * @category coercion
  * @since 0.0.0

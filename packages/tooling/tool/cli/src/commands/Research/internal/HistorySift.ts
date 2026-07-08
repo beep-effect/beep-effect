@@ -101,10 +101,19 @@ const historyStubCard = (candidate: SiftCandidate, capturedAt: string, relativeP
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
  * import { historySiftImpl } from "@beep/repo-cli/commands/Research/internal/HistorySift"
+ * import { ResearchHistorySiftOptions } from "@beep/repo-cli/commands/Research"
+ * import { NonNegativeInt } from "@beep/schema"
  *
- * const operation = historySiftImpl
- * console.log(typeof operation === "function")
+ * const program = historySiftImpl(
+ *   ResearchHistorySiftOptions.make({
+ *     browser: "all",
+ *     sinceDays: NonNegativeInt.make(7),
+ *     vaultRoot: "/repo/.research"
+ *   })
+ * )
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category use-cases
  * @since 0.0.0

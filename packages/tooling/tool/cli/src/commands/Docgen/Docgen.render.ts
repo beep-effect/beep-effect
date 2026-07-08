@@ -7,10 +7,9 @@
 
 import { DomainError } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
-import { Console, Effect, pipe } from "effect";
+import { Console, Effect, pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { encodeCommandJson, renderPrettyCommandJson } from "../../internal/cli/Json.js";
 import { printLines } from "../../internal/cli/Printer.js";

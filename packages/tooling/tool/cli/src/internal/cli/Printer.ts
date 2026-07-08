@@ -16,13 +16,20 @@ import type { CliJsonError } from "./Json.js";
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
  * import { printLines } from "@beep/repo-cli/internal/cli/Printer"
+ * import * as TestConsole from "effect/testing/TestConsole"
  *
- * const program = printLines(["one", "two"])
+ * const program = Effect.gen(function* () {
+ *   yield* printLines(["one", "two"])
+ *   return yield* TestConsole.logLines
+ * })
  *
- * console.log(program)
+ * Effect.runPromise(program.pipe(Effect.provide(TestConsole.layer))).then((lines) => {
+ *   console.log(lines) // ["one", "two"]
+ * })
  * ```
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const printLines = Effect.fn("RepoCli.Printer.printLines")(function* (
@@ -40,14 +47,20 @@ export const printLines = Effect.fn("RepoCli.Printer.printLines")(function* (
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
  * import { printJsonOrLines } from "@beep/repo-cli/internal/cli/Printer"
+ * import * as TestConsole from "effect/testing/TestConsole"
  *
- * const asJson = printJsonOrLines(true, { count: 2 }, ["count: 2"])
- * const asLines = printJsonOrLines(false, { count: 2 }, ["count: 2"])
+ * const program = Effect.gen(function* () {
+ *   yield* printJsonOrLines(false, { count: 2 }, ["count: 2"])
+ *   return yield* TestConsole.logLines
+ * })
  *
- * console.log(typeof asJson, typeof asLines)
+ * Effect.runPromise(program.pipe(Effect.provide(TestConsole.layer))).then((lines) => {
+ *   console.log(lines) // ["count: 2"]
+ * })
  * ```
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const printJsonOrLines = Effect.fn("RepoCli.Printer.printJsonOrLines")(function* (
@@ -140,7 +153,7 @@ export const logTaggedSummary = Effect.fn("RepoCli.Printer.logTaggedSummary")(fu
  * const toOneDecimal = formatDurationSeconds(1)
  * console.log(toOneDecimal(1234)) // "1.2s" (data-last)
  * ```
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const formatDurationSeconds: {

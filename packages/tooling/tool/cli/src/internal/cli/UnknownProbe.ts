@@ -13,8 +13,8 @@
  */
 
 import { A, flow, O, P, pipe, R } from "@beep/utils";
+import { Order } from "effect";
 import { dual } from "effect/Function";
-import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 
 const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
@@ -35,7 +35,7 @@ const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unk
  * @category guards
  * @since 0.0.0
  */
-export const asRecord = (value: unknown): O.Option<Record<string, unknown>> => pipe(value, O.liftPredicate(P.isObject));
+export const asRecord: (value: unknown) => O.Option<Record<string, unknown>> = O.liftPredicate(P.isObject);
 
 /**
  * Type guard narrowing an unknown value to a readonly, non-array record.

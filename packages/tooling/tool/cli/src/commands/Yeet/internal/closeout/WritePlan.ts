@@ -99,7 +99,7 @@ const caseSensitiveTokens: (value: string) => ReadonlyArray<string> = flow(
  * strictEqual(O.isNone(plan.error), true)
  * strictEqual(plan.intents.length, 2)
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 export const closeoutWritePlan = (

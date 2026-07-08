@@ -40,6 +40,10 @@ const isWorkspacePatternArray = (value: PackageJsonWorkspaces): value is Readonl
  * Extract the workspace glob patterns declared in a `package.json` `workspaces`
  * field, normalizing the array and Yarn-object forms to a flat pattern list.
  *
+ * @param workspaces - The decoded `package.json` `workspaces` field, either the
+ *   array form, the Yarn `{ packages }` object form, or `undefined`/`None` when
+ *   the manifest declares no workspaces.
+ * @returns The flat list of workspace glob patterns, empty when none are declared.
  * @remarks
  * Returns an empty array when `workspaces` is absent or `None`. The Yarn-style
  * object form contributes its `packages` entry (or nothing when it is absent);

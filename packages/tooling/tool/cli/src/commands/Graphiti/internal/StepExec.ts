@@ -30,6 +30,8 @@ export const commandText = formatCommandLine;
 /**
  * Quote a string for POSIX shell interpolation.
  *
+ * @param value - The raw string to wrap in single quotes and escape.
+ * @returns The single-quoted, shell-safe form of `value`.
  * @example
  * ```ts
  * import { shellQuote } from "@beep/repo-cli/commands/Graphiti/internal/StepExec"
@@ -44,6 +46,8 @@ export const shellQuote = (value: string): string => `'${Str.replaceAll("'", "'\
 /**
  * Capture a Graphiti subprocess step with combined output trimmed.
  *
+ * @param step - The quality task step describing the command, args, and cwd to run.
+ * @returns An Effect yielding the step's exit code and its trimmed combined output.
  * @example
  * ```ts
  * import { collectStepOutput } from "@beep/repo-cli/commands/Graphiti/internal/StepExec"
@@ -67,6 +71,9 @@ export const collectStepOutput = (step: QualityTaskStep) =>
 /**
  * Capture a step and convert a nonzero exit into a Graphiti ops error.
  *
+ * @param step - The quality task step to run and capture.
+ * @returns An Effect yielding the captured output, failing with a
+ * `GraphitiProxyOpsError` when the step exits nonzero.
  * @example
  * ```ts
  * import { collectSuccessfulOutput } from "@beep/repo-cli/commands/Graphiti/internal/StepExec"
@@ -99,6 +106,9 @@ export const collectSuccessfulOutput = Effect.fn("GraphitiProxyOps.collectSucces
 /**
  * Run a Graphiti subprocess step with inherited stdio.
  *
+ * @param step - The quality task step to spawn with inherited stdin/stdout/stderr.
+ * @returns An Effect that completes when the step exits zero and fails with a
+ * `GraphitiProxyOpsError` on spawn failure or a nonzero exit.
  * @example
  * ```ts
  * import { runInheritedStep } from "@beep/repo-cli/commands/Graphiti/internal/StepExec"
@@ -140,6 +150,8 @@ export const runInheritedStep = Effect.fn("GraphitiProxyOps.runInheritedStep")(f
 /**
  * Probe the ensure-loop health endpoint from its resolved config.
  *
+ * @param config - The resolved ensure-loop config supplying the `healthUrl` to probe.
+ * @returns An Effect yielding `true` when the proxy health endpoint responds healthy.
  * @example
  * ```ts
  * import { checkProxyHealth } from "@beep/repo-cli/commands/Graphiti/internal/StepExec"
@@ -160,6 +172,8 @@ export const checkProxyHealth = Effect.fn("GraphitiProxyOps.checkProxyHealth")(f
 /**
  * Probe an arbitrary Graphiti proxy health URL with curl.
  *
+ * @param healthUrl - The health endpoint URL to probe with a 2-second curl timeout.
+ * @returns An Effect yielding `true` when curl exits zero, `false` otherwise.
  * @example
  * ```ts
  * import { checkProxyHealthUrl } from "@beep/repo-cli/commands/Graphiti/internal/StepExec"
@@ -185,6 +199,9 @@ export const checkProxyHealthUrl = Effect.fn("GraphitiProxyOps.checkProxyHealthU
 /**
  * Capture a best-effort subprocess step.
  *
+ * @param step - The quality task step to run without failing on error.
+ * @returns An Effect yielding the step's exit code and output, falling back to
+ * exit code `1` and empty output when the step fails.
  * @example
  * ```ts
  * import { collectOptionalOutput } from "@beep/repo-cli/commands/Graphiti/internal/StepExec"
@@ -207,6 +224,10 @@ export const collectOptionalOutput = (step: QualityTaskStep) =>
 /**
  * Require a filesystem path to exist for Graphiti preflight checks.
  *
+ * @param targetPath - The filesystem path that must exist.
+ * @param label - Human-readable label for `targetPath` used in the failure message.
+ * @returns An Effect that succeeds when the path exists and fails with a
+ * `GraphitiProxyOpsError` when it does not.
  * @example
  * ```ts
  * import { requireExistingPath } from "@beep/repo-cli/commands/Graphiti/internal/StepExec"
@@ -234,6 +255,8 @@ export const requireExistingPath = Effect.fn("GraphitiProxyOps.requireExistingPa
 /**
  * Test whether docker can be invoked from the repo root.
  *
+ * @param repoRoot - The repo root directory to use as the working directory for `docker --version`.
+ * @returns An Effect yielding `true` when `docker --version` exits zero.
  * @example
  * ```ts
  * import { dockerAvailable } from "@beep/repo-cli/commands/Graphiti/internal/StepExec"
@@ -261,6 +284,9 @@ export const dockerAvailable = Effect.fn("GraphitiProxyOps.dockerAvailable")(fun
 /**
  * Fail when docker is unavailable for restore or verify.
  *
+ * @param repoRoot - The repo root directory used to probe docker availability.
+ * @returns An Effect that succeeds when docker is available and fails with a
+ * `GraphitiProxyOpsError` when it is not.
  * @example
  * ```ts
  * import { dockerRequired } from "@beep/repo-cli/commands/Graphiti/internal/StepExec"

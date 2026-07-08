@@ -47,6 +47,8 @@ const MISSING_ENTRY_REMEDIATIONS: Readonly<Record<string, string>> = {
  * Resolve the remediation message for an untracked inventory entry, keyed by
  * its rule id with a generic fallback when the rule has no specific guidance.
  *
+ * @param entry - The untracked schema-first inventory entry whose rule id selects the guidance.
+ * @returns The rule-specific remediation message, or the default guidance when the rule has none.
  * @category utilities
  * @since 0.0.0
  */

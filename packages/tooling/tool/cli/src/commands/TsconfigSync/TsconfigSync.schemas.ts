@@ -17,12 +17,6 @@ const $I = $RepoCliId.create("commands/TsconfigSync/TsconfigSync.schemas");
 /**
  * Filename for package-local docgen configuration files.
  *
- * @example
- * ```ts
- * import { DOCGEN_CONFIG_FILENAME } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
- *
- * console.log(DOCGEN_CONFIG_FILENAME)
- * ```
  * @category utilities
  * @since 0.0.0
  */
@@ -30,12 +24,6 @@ export const DOCGEN_CONFIG_FILENAME = "docgen.json" as const;
 /**
  * Root tstyche tsconfig path managed by tsconfig-sync.
  *
- * @example
- * ```ts
- * import { ROOT_TSTYCHE_TSCONFIG } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
- *
- * console.log(ROOT_TSTYCHE_TSCONFIG)
- * ```
  * @category utilities
  * @since 0.0.0
  */
@@ -82,14 +70,15 @@ export const RootDepIndexKey = S.Literal(ROOT_DEP_INDEX_KEY).pipe(
 const CANONICAL_ALIAS_KEY_PATTERN = /^@beep\/[^/*]+(?:\/(?!\*)[^*]+)*(?:\/\*)?$/;
 
 /**
- * Schema for canonical @beep tsconfig alias keys.
+ * Schema for canonical `@beep` tsconfig alias keys.
  *
  * @example
  * ```ts
  * import { CanonicalAliasKey } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ * import * as S from "effect/Schema"
  *
- * const example = CanonicalAliasKey
- * console.log(typeof example !== "undefined") // true
+ * console.log(S.is(CanonicalAliasKey)("@beep/repo-cli/commands")) // true
+ * console.log(S.is(CanonicalAliasKey)("lodash")) // false
  * ```
  * @category utilities
  * @since 0.0.0
@@ -102,14 +91,15 @@ export const CanonicalAliasKey = S.String.check(S.isPattern(CANONICAL_ALIAS_KEY_
 );
 
 /**
- * Schema for @beep-scoped package names.
+ * Schema for `@beep`-scoped package names.
  *
  * @example
  * ```ts
  * import { BeepScopedPackageName } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ * import * as S from "effect/Schema"
  *
- * const example = BeepScopedPackageName
- * console.log(typeof example !== "undefined") // true
+ * console.log(S.is(BeepScopedPackageName)("@beep/schema")) // true
+ * console.log(S.is(BeepScopedPackageName)("effect")) // false
  * ```
  * @category utilities
  * @since 0.0.0
@@ -155,7 +145,7 @@ export const StringArray = S.Array(S.String).pipe(
  */
 export const isCanonicalAliasKey = S.is(CanonicalAliasKey);
 /**
- * Predicate derived from the @beep package-name schema.
+ * Predicate derived from the `@beep` package-name schema.
  *
  * @example
  * ```ts
@@ -187,8 +177,8 @@ export const isRootDepIndexKey = S.is(RootDepIndexKey);
  * ```ts
  * import { stringArrayEquivalence } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
  *
- * const example = stringArrayEquivalence
- * console.log(typeof example !== "undefined") // true
+ * console.log(stringArrayEquivalence(["a", "b"], ["a", "b"])) // true
+ * console.log(stringArrayEquivalence(["a"], ["a", "b"])) // false
  * ```
  * @category utilities
  * @since 0.0.0
@@ -241,12 +231,15 @@ const sourceOnlyTestKitAliasesForPackage = (packageName: string): ReadonlyArray<
 /**
  * Build source-only test-kit alias targets for a workspace package.
  *
+ * @param packageName - Workspace package whose source-only test-kit aliases are resolved.
+ * @param packageRelativePath - Repo-relative package directory used to build target paths.
+ * @returns A record mapping each source-only subpath alias key to its relative target file.
  * @example
  * ```ts
  * import { buildSourceOnlySubpathAliasTargets } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
  *
- * const example = buildSourceOnlySubpathAliasTargets
- * console.log(typeof example !== "undefined") // true
+ * const targets = buildSourceOnlySubpathAliasTargets("@beep/repo-cli", "packages/tooling/tool/cli")
+ * console.log(targets["@beep/repo-cli/test/Docgen"]) // "./packages/tooling/tool/cli/src/test/Docgen.test-kit.ts"
  * ```
  * @category utilities
  * @since 0.0.0
@@ -274,9 +267,10 @@ const TsconfigSyncModeKit = LiteralKit(["sync", "check", "dry-run"]);
  * @example
  * ```ts
  * import { TsconfigSyncMode } from "@beep/repo-cli/commands/TsconfigSync"
+ * import * as S from "effect/Schema"
  *
- * const example = TsconfigSyncMode
- * console.log(typeof example !== "undefined") // true
+ * console.log(S.is(TsconfigSyncMode)("check")) // true
+ * console.log(S.is(TsconfigSyncMode)("apply")) // false
  * ```
  * @category models
  * @since 0.0.0
@@ -293,8 +287,12 @@ export const TsconfigSyncMode = TsconfigSyncModeKit.pipe(
  * ```ts
  * import { TsconfigSyncModeMatch } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
  *
- * const example = TsconfigSyncModeMatch
- * console.log(typeof example !== "undefined") // true
+ * const describe = TsconfigSyncModeMatch({
+ *   sync: () => "write files",
+ *   check: () => "verify only",
+ *   "dry-run": () => "preview only"
+ * })
+ * console.log(describe("check")) // "verify only"
  * ```
  * @category models
  * @since 0.0.0
@@ -321,8 +319,8 @@ export type TsconfigSyncMode = typeof TsconfigSyncMode.Type;
  * ```ts
  * import { tsconfigSyncModeEquivalence } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
  *
- * const example = tsconfigSyncModeEquivalence
- * console.log(typeof example !== "undefined") // true
+ * console.log(tsconfigSyncModeEquivalence("check", "check")) // true
+ * console.log(tsconfigSyncModeEquivalence("check", "sync")) // false
  * ```
  * @category models
  * @since 0.0.0
@@ -349,8 +347,9 @@ export type TsconfigSyncModeFlags = readonly [check: boolean, dryRun: boolean, w
  * ```ts
  * import { isCheckModeFlags } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
  *
- * const example = isCheckModeFlags
- * console.log(typeof example !== "undefined") // true
+ * // flags are [check, dryRun, write]
+ * console.log(isCheckModeFlags([true, false, false])) // true
+ * console.log(isCheckModeFlags([false, true, false])) // false
  * ```
  * @category guards
  * @since 0.0.0
@@ -363,8 +362,9 @@ export const isCheckModeFlags = P.Tuple([P.isTruthy, P.isBoolean, P.isBoolean]);
  * ```ts
  * import { isDryRunModeFlags } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
  *
- * const example = isDryRunModeFlags
- * console.log(typeof example !== "undefined") // true
+ * // flags are [check, dryRun, write]
+ * console.log(isDryRunModeFlags([false, true, false])) // true
+ * console.log(isDryRunModeFlags([true, false, false])) // false
  * ```
  * @category guards
  * @since 0.0.0
@@ -377,8 +377,9 @@ export const isDryRunModeFlags = P.Tuple([P.not(P.isTruthy), P.isTruthy, P.isBoo
  * ```ts
  * import { isWriteModeFlags } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
  *
- * const example = isWriteModeFlags
- * console.log(typeof example !== "undefined") // true
+ * // flags are [check, dryRun, write]
+ * console.log(isWriteModeFlags([false, false, true])) // true
+ * console.log(isWriteModeFlags([true, false, false])) // false
  * ```
  * @category guards
  * @since 0.0.0
@@ -900,10 +901,19 @@ export class TsconfigWithPaths extends S.Class<TsconfigWithPaths>($I`TsconfigWit
  *
  * @example
  * ```ts
- * import { byWorkspaceRelativeDirAscending } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ * import { byWorkspaceRelativeDirAscending, WorkspaceDescriptor } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
  *
- * const compareWorkspaces = byWorkspaceRelativeDirAscending
- * console.log(typeof compareWorkspaces === "function") // true
+ * const descriptor = WorkspaceDescriptor.make({
+ *   packageName: "@beep/schema",
+ *   absoluteDir: "/repo/packages/schema",
+ *   relativeDir: "packages/schema",
+ *   ownerTsconfigPath: undefined,
+ *   hasProjectTsconfig: true,
+ *   hasDtslintDirectory: false,
+ *   hasDocgenConfig: true,
+ *   directWorkspaceDependencies: []
+ * })
+ * console.log(byWorkspaceRelativeDirAscending(descriptor, descriptor)) // 0
  * ```
  * @category utilities
  * @since 0.0.0
@@ -917,10 +927,16 @@ export const byWorkspaceRelativeDirAscending: Order.Order<WorkspaceDescriptor> =
  *
  * @example
  * ```ts
- * import { byPlannedChangeFileAscending } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ * import { byPlannedChangeFileAscending, PlannedFileChange } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ * import * as S from "effect/Schema"
  *
- * const compareChanges = byPlannedChangeFileAscending
- * console.log(typeof compareChanges === "function") // true
+ * const change = S.decodeUnknownSync(PlannedFileChange)({
+ *   section: "root-references",
+ *   filePath: "tsconfig.json",
+ *   summary: "sync references",
+ *   content: "{}"
+ * })
+ * console.log(byPlannedChangeFileAscending(change, change)) // 0
  * ```
  * @category utilities
  * @since 0.0.0
@@ -934,10 +950,16 @@ export const byPlannedChangeFileAscending: Order.Order<PlannedFileChange> = Orde
  *
  * @example
  * ```ts
- * import { byPlannedChangeSectionAscending } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ * import { byPlannedChangeSectionAscending, PlannedFileChange } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ * import * as S from "effect/Schema"
  *
- * const compareSections = byPlannedChangeSectionAscending
- * console.log(typeof compareSections === "function") // true
+ * const change = S.decodeUnknownSync(PlannedFileChange)({
+ *   section: "root-references",
+ *   filePath: "tsconfig.json",
+ *   summary: "sync references",
+ *   content: "{}"
+ * })
+ * console.log(byPlannedChangeSectionAscending(change, change)) // 0
  * ```
  * @category utilities
  * @since 0.0.0
@@ -951,10 +973,16 @@ export const byPlannedChangeSectionAscending: Order.Order<PlannedFileChange> = O
  *
  * @example
  * ```ts
- * import { byPlannedChangeAscending } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ * import { byPlannedChangeAscending, PlannedFileChange } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ * import * as S from "effect/Schema"
  *
- * const example = byPlannedChangeAscending
- * console.log(typeof example !== "undefined") // true
+ * const change = S.decodeUnknownSync(PlannedFileChange)({
+ *   section: "root-references",
+ *   filePath: "tsconfig.json",
+ *   summary: "sync references",
+ *   content: "{}"
+ * })
+ * console.log(byPlannedChangeAscending(change, change)) // 0
  * ```
  * @category utilities
  * @since 0.0.0

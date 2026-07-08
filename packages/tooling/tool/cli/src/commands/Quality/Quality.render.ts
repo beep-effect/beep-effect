@@ -16,6 +16,8 @@ import type { QualityProfileConfig, QualityProfileDetection } from "./Quality.sc
 /**
  * Render quality profile configuration as stable `key=value` lines.
  *
+ * @param config - Resolved quality profile whose fields are serialized into lines.
+ * @returns Stable `key=value` lines describing the profile configuration.
  * @example
  * ```ts
  * import { renderQualityProfileConfigLines } from "@beep/repo-cli/test/Quality"
@@ -29,7 +31,7 @@ import type { QualityProfileConfig, QualityProfileDetection } from "./Quality.sc
  *   notes: []
  * }))
  * ```
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderQualityProfileConfigLines = (config: QualityProfileConfig): ReadonlyArray<string> => [
@@ -59,7 +61,7 @@ export const renderQualityProfileConfigLines = (config: QualityProfileConfig): R
  * }, false)
  * console.log(Effect.isEffect(program)) // true
  * ```
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const printQualityProfileConfig: {
@@ -99,7 +101,7 @@ export const printQualityProfileConfig: {
  * }, false)
  * console.log(Effect.isEffect(program)) // true
  * ```
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const printQualityProfileDetection: {

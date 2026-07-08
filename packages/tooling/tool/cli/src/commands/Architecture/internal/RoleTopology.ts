@@ -27,6 +27,9 @@ const stageRank = (stage: ArchitecturePlanStage): number =>
 /**
  * Tests whether a proof file stage is included by a requested plan stage.
  *
+ * @param requested - Plan stage the caller asked to generate.
+ * @param fileStage - Stage a candidate proof file is tagged with.
+ * @returns `true` when the file stage is covered by the requested stage.
  * @example
  * ```ts
  * import { isStageIncluded } from "@beep/repo-cli/commands/Architecture/internal/RoleTopology"
@@ -62,6 +65,8 @@ const valueRoles: ReadonlyArray<ArchitectureSliceRole> = ["domain"];
 /**
  * Returns the architecture roles supported by a domain-kind archetype.
  *
+ * @param domainKind - Archetype (`aggregates`, `entities`, or `values`) to resolve roles for.
+ * @returns The slice roles that archetype scaffolds.
  * @example
  * ```ts
  * import { rolesForDomainKind } from "@beep/repo-cli/commands/Architecture/internal/RoleTopology"
@@ -80,6 +85,9 @@ export const rolesForDomainKind = (domainKind: ArchitectureDomainKind): Readonly
 /**
  * Tests whether a role belongs to a domain-kind archetype.
  *
+ * @param domainKind - Archetype whose allowed roles are checked.
+ * @param role - Slice role tested for membership in that archetype.
+ * @returns `true` when the role is scaffolded by the domain-kind archetype.
  * @example
  * ```ts
  * import { roleAllowedForDomainKind } from "@beep/repo-cli/commands/Architecture/internal/RoleTopology"
@@ -99,6 +107,8 @@ export const roleAllowedForDomainKind: {
 /**
  * Tests whether db-admin proof files apply to a target.
  *
+ * @param target - Plan target whose context, domain kind, and concept are inspected.
+ * @returns `true` only for the canonical WorkItem/Worker db-admin proof targets.
  * @example
  * ```ts
  * import { defaultArchitecturePlanTarget } from "@beep/repo-cli/commands/Architecture"
@@ -117,6 +127,9 @@ export const dbAdminProofTargetAllowed = (target: ArchitecturePlanTarget): boole
 /**
  * Tests whether a role is valid for a concrete architecture plan target.
  *
+ * @param target - Concrete plan target being scaffolded.
+ * @param role - Slice role tested against that target.
+ * @returns `true` when the role is allowed for the target's domain kind (and, for `db-admin`, its proof target).
  * @example
  * ```ts
  * import { defaultArchitecturePlanTarget } from "@beep/repo-cli/commands/Architecture"
@@ -139,6 +152,9 @@ export const roleAllowedForTarget: {
 /**
  * Derives the package name for an architecture role.
  *
+ * @param target - Plan target whose bounded context seeds the package name.
+ * @param role - Slice role that suffixes (or overrides) the package name.
+ * @returns The `@beep/*` workspace package name for the role.
  * @example
  * ```ts
  * import { defaultArchitecturePlanTarget } from "@beep/repo-cli/commands/Architecture"
@@ -161,6 +177,9 @@ export const packageNameForRole: {
 /**
  * Derives the repository path for an architecture role.
  *
+ * @param target - Plan target whose bounded context seeds the repository path.
+ * @param role - Slice role that determines the path segment (or override) used.
+ * @returns The repository-relative directory for the role package.
  * @example
  * ```ts
  * import { defaultArchitecturePlanTarget } from "@beep/repo-cli/commands/Architecture"
@@ -183,6 +202,9 @@ export const pathForRole: {
 /**
  * Derives public export subpaths for an architecture role.
  *
+ * @param target - Plan target whose concept path is woven into the export list.
+ * @param role - Slice role whose public subpath set is resolved.
+ * @returns The public export subpaths the role package exposes.
  * @example
  * ```ts
  * import { defaultArchitecturePlanTarget } from "@beep/repo-cli/commands/Architecture"
@@ -210,6 +232,9 @@ export const exportsForRole: {
 /**
  * Builds package metadata for one role in an operation plan.
  *
+ * @param target - Plan target describing the slice being scaffolded.
+ * @param role - Slice role whose package name, path, and exports are assembled.
+ * @returns Role plan metadata for one role in the operation plan.
  * @example
  * ```ts
  * import { defaultArchitecturePlanTarget } from "@beep/repo-cli/commands/Architecture"
@@ -231,6 +256,8 @@ export const rolePlanFor = (target: ArchitecturePlanTarget, role: ArchitectureSl
 /**
  * Tests whether a target is the canonical architecture-lab WorkItem target.
  *
+ * @param target - Plan target compared against the canonical WorkItem target.
+ * @returns `true` when the target matches the default architecture-lab WorkItem target.
  * @example
  * ```ts
  * import { defaultArchitecturePlanTarget } from "@beep/repo-cli/commands/Architecture"

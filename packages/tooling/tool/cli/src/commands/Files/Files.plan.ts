@@ -179,7 +179,7 @@ export const selectedCanonicalPathSet = (plan: ReadonlyArray<RenamePlanEntry>): 
  *
  * const allocated = uniqueNormalizeTargetName("image", "png", HashSet.empty())
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 export const uniqueNormalizeTargetName: {
@@ -228,7 +228,7 @@ export const uniqueNormalizeTargetName: {
  *
  * const allocated = uniqueArchiveTargetName("image", ".jpg", HashSet.empty())
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 export const uniqueArchiveTargetName: {

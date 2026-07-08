@@ -51,7 +51,7 @@ const stringifyJsonPretty = SchemaGetter.stringifyJson({ space: 2 });
  * const text = Effect.runSync(formatJsonc({ schema_version: 1 }))
  * console.log(text.endsWith("\n")) // true
  * ```
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const formatJsonc = Effect.fn("ArtifactIo.formatJsonc")(function* (value: unknown) {
@@ -89,17 +89,16 @@ export const formatJsonc = Effect.fn("ArtifactIo.formatJsonc")(function* (value:
  * @category filesystem
  * @since 0.0.0
  */
-export const readArtifact = <Schema extends S.Top, E>(input: {
+export const readArtifact = Effect.fn("ArtifactIo.readArtifact")(function* <Schema extends S.Top, E>(input: {
   readonly path: string;
   readonly schema: Schema;
   readonly onReadError: (cause: unknown) => E;
   readonly onDecodeError: (cause: unknown) => E;
-}): Effect.Effect<Schema["Type"], E, FileSystem.FileSystem | Schema["DecodingServices"]> =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const text = yield* fs.readFileString(input.path).pipe(Effect.mapError(input.onReadError));
-    return yield* decodeJsoncTextAs(input.schema)(text).pipe(Effect.mapError(input.onDecodeError));
-  });
+}) {
+  const fs = yield* FileSystem.FileSystem;
+  const text = yield* fs.readFileString(input.path).pipe(Effect.mapError(input.onReadError));
+  return yield* decodeJsoncTextAs(input.schema)(text).pipe(Effect.mapError(input.onDecodeError));
+});
 
 /**
  * Make the parent directory and write a committed artifact verbatim.
@@ -130,18 +129,17 @@ export const readArtifact = <Schema extends S.Top, E>(input: {
  * @category filesystem
  * @since 0.0.0
  */
-export const writeArtifact = <E>(input: {
+export const writeArtifact = Effect.fn("ArtifactIo.writeArtifact")(function* <E>(input: {
   readonly path: string;
   readonly header?: string;
   readonly body: string;
   readonly onError: (cause: unknown) => E;
-}): Effect.Effect<void, E, FileSystem.FileSystem | Path.Path> =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    yield* fs.makeDirectory(path.dirname(input.path), { recursive: true }).pipe(Effect.mapError(input.onError));
-    yield* fs.writeFileString(input.path, `${input.header ?? ""}${input.body}`).pipe(Effect.mapError(input.onError));
-  });
+}) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.makeDirectory(path.dirname(input.path), { recursive: true }).pipe(Effect.mapError(input.onError));
+  yield* fs.writeFileString(input.path, `${input.header ?? ""}${input.body}`).pipe(Effect.mapError(input.onError));
+});
 
 /**
  * Render a bounded list, appending a `... N more` line when it overflows.
@@ -166,7 +164,7 @@ export const writeArtifact = <E>(input: {
  * })
  * console.log(lines) // ["  - a", "  - b", "  - ... 1 more"]
  * ```
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderTruncatedLines = <Item>(input: {

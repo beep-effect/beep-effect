@@ -136,9 +136,11 @@ const readFileString = Effect.fn(function* (filePath: string) {
  * @example
  * ```ts
  * import { writeFileString } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
+ * import { Effect } from "effect"
  *
- * const example = writeFileString
- * console.log(typeof example !== "undefined") // true
+ * // Writes file content; provide FileSystem to run the effect.
+ * const program = writeFileString("/repo/tsconfig.json", "{}\n")
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -166,12 +168,20 @@ const applyJsoncModification = (
 /**
  * Render a file path relative to the repository root.
  *
+ * @param rootDir - Absolute repository root the path is made relative to.
+ * @param filePath - Absolute file path to render relative to the root.
+ * @param path - Effect `Path` service used to compute the relative path.
+ * @returns The POSIX-normalized path of `filePath` relative to `rootDir`.
  * @example
  * ```ts
  * import { relativeFromRoot } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
+ * import { Effect, Path } from "effect"
  *
- * const example = relativeFromRoot
- * console.log(typeof example !== "undefined") // true
+ * const program = Effect.gen(function* () {
+ *   const path = yield* Path.Path
+ *   return relativeFromRoot("/repo", "/repo/packages/schema/tsconfig.json", path)
+ * })
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -339,9 +349,11 @@ const workspaceContainsPath = (workspace: WorkspaceDescriptor, targetPath: strin
  * @example
  * ```ts
  * import { buildWorkspaceDescriptors } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
+ * import { Effect } from "effect"
  *
- * const example = buildWorkspaceDescriptors
- * console.log(typeof example !== "undefined") // true
+ * // Scans the repo for workspace descriptors; provide FileSystem/Path to run it.
+ * const program = buildWorkspaceDescriptors("/repo")
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -436,12 +448,15 @@ const buildWorkspaceDescriptors = Effect.fn(function* (rootDir: string) {
 /**
  * Build the workspace dependency adjacency map.
  *
+ * @param depIndex - Dependency index mapping each package to its workspace dependencies.
+ * @returns An adjacency map from each package name to the set of packages it depends on.
  * @example
  * ```ts
  * import { buildAdjacency } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
+ * import { HashMap } from "effect"
  *
- * const example = buildAdjacency
- * console.log(typeof example !== "undefined") // true
+ * // An empty dependency index yields an empty adjacency map.
+ * console.log(HashMap.size(buildAdjacency(HashMap.empty()))) // 0
  * ```
  * @category utilities
  * @since 0.0.0
@@ -495,9 +510,10 @@ const compareReferencePathsInOrder = (parsed: TsconfigWithReferences): ReadonlyA
  * @example
  * ```ts
  * import { planRootReferenceSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
+ * import { Effect } from "effect"
  *
- * const example = planRootReferenceSync
- * console.log(typeof example !== "undefined") // true
+ * const program = planRootReferenceSync("/repo", [])
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -607,9 +623,10 @@ const pathValuesEqual = (currentValue: unknown, expectedValue: ReadonlyArray<str
  * @example
  * ```ts
  * import { planRootAliasSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
+ * import { Effect } from "effect"
  *
- * const example = planRootAliasSync
- * console.log(typeof example !== "undefined") // true
+ * const program = planRootAliasSync("/repo", [])
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -678,9 +695,10 @@ const planRootAliasSync = Effect.fn(function* (rootDir: string, workspaces: Read
  * @example
  * ```ts
  * import { planRootTstycheSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
+ * import { Effect } from "effect"
  *
- * const example = planRootTstycheSync
- * console.log(typeof example !== "undefined") // true
+ * const program = planRootTstycheSync("/repo", [])
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -722,9 +740,10 @@ const planRootTstycheSync = Effect.fn(function* (rootDir: string, workspaces: Re
  * @example
  * ```ts
  * import { planRootSyncpackSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
+ * import { Effect } from "effect"
  *
- * const example = planRootSyncpackSync
- * console.log(typeof example !== "undefined") // true
+ * const program = planRootSyncpackSync("/repo")
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -853,9 +872,10 @@ const canonicalizeExistingRefTarget = Effect.fn(function* (
  * @example
  * ```ts
  * import { planPackageReferenceSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
+ * import { Effect, HashMap } from "effect"
  *
- * const example = planPackageReferenceSync
- * console.log(typeof example !== "undefined") // true
+ * const program = planPackageReferenceSync("/repo", [], HashMap.empty(), HashMap.empty())
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -982,9 +1002,10 @@ const planPackageReferenceSync = Effect.fn(function* (
  * @example
  * ```ts
  * import { planPackageDocgenSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
+ * import { Effect } from "effect"
  *
- * const example = planPackageDocgenSync
- * console.log(typeof example !== "undefined") // true
+ * const program = planPackageDocgenSync("/repo", [], undefined)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -1047,6 +1068,8 @@ const planPackageDocgenSync = Effect.fn(function* (
 /**
  * Sort planned file changes in deterministic report order.
  *
+ * @param changes - Planned file changes to order for reporting.
+ * @returns The planned changes sorted into deterministic report order.
  * @example
  * ```ts
  * import { sortChanges } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
@@ -1063,6 +1086,8 @@ const sortChanges = (changes: ReadonlyArray<PlannedFileChange>): ReadonlyArray<P
 /**
  * Convert an internal planned file change into the public report shape.
  *
+ * @param change - Internal planned file change to convert.
+ * @returns The public report shape describing the same file change.
  * @example
  * ```ts
  * import { toReportedChange } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"

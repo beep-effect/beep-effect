@@ -1056,7 +1056,7 @@
       "status": "candidate",
       "owner": "@beep/repo-utils",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 1163,
+      "line": 1164,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -1068,7 +1068,7 @@
       "status": "candidate",
       "owner": "@beep/repo-utils",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 1150,
+      "line": 1151,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -1080,7 +1080,7 @@
       "status": "candidate",
       "owner": "@beep/repo-utils",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 1137,
+      "line": 1138,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -1092,7 +1092,7 @@
       "status": "candidate",
       "owner": "@beep/repo-utils",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 1189,
+      "line": 1190,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -1104,7 +1104,7 @@
       "status": "candidate",
       "owner": "@beep/repo-utils",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 1176,
+      "line": 1177,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -1332,7 +1332,7 @@
       "status": "candidate",
       "owner": "@beep/repo-cli",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function. Public 3-parameter helper APIs must use a strict ObjectLike third parameter.",
-      "line": 633,
+      "line": 47,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual", "third-param-not-object-like"]
@@ -1344,7 +1344,7 @@
       "status": "candidate",
       "owner": "@beep/repo-cli",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 1017,
+      "line": 84,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual"]
@@ -1357,7 +1357,7 @@
       "owner": "@beep/repo-cli",
       "reason": "Schema-first advisory-entry AST detector: parameters are a ts-morph node plus the repo-relative file and owner package resolved per source file inside scanSchemaFirstInventory's scan loop, always invoked data-first; there is no pipeable data subject, so a data-first/data-last dual is meaningless. Exported solely so fixture tests can exercise the detector directly (rco-001..004, goals/repo-crispening-orchestration).",
       "issue": "REPO-CLI-SFV4-FN-SCHEMA-DETECTOR",
-      "line": 1118,
+      "line": 234,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual", "third-param-not-object-like"]
@@ -1370,7 +1370,7 @@
       "owner": "@beep/repo-cli",
       "reason": "Schema-first advisory-entry AST detector: parameters are a ts-morph node plus the repo-relative file and owner package resolved per source file inside scanSchemaFirstInventory's scan loop, always invoked data-first; there is no pipeable data subject, so a data-first/data-last dual is meaningless. Exported solely so fixture tests can exercise the detector directly (rco-001..004, goals/repo-crispening-orchestration).",
       "issue": "REPO-CLI-SFV4-GETSOMES-STRUCT-DETECTOR",
-      "line": 1282,
+      "line": 307,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual", "third-param-not-object-like"]
@@ -1383,7 +1383,7 @@
       "owner": "@beep/repo-cli",
       "reason": "Schema-first advisory-entry AST detector: parameters are a ts-morph node plus the repo-relative file and owner package resolved per source file inside scanSchemaFirstInventory's scan loop, always invoked data-first; there is no pipeable data subject, so a data-first/data-last dual is meaningless. Exported solely so fixture tests can exercise the detector directly (rco-001..004, goals/repo-crispening-orchestration).",
       "issue": "REPO-CLI-SFV4-NORMALIZATION-DETECTOR",
-      "line": 1226,
+      "line": 282,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual", "third-param-not-object-like"]
@@ -1396,7 +1396,7 @@
       "owner": "@beep/repo-cli",
       "reason": "Schema-first advisory-entry AST detector: parameters are a ts-morph node plus the repo-relative file and owner package resolved per source file inside scanSchemaFirstInventory's scan loop, always invoked data-first; there is no pipeable data subject, so a data-first/data-last dual is meaningless. Exported solely so fixture tests can exercise the detector directly (rco-001..004, goals/repo-crispening-orchestration).",
       "issue": "REPO-CLI-SFV4-NULL-RETURN-DETECTOR",
-      "line": 1169,
+      "line": 258,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual", "third-param-not-object-like"]

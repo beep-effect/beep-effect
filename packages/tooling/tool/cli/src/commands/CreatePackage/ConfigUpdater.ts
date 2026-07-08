@@ -320,9 +320,9 @@ const modifyFileString: {
  * @example
  * ```ts
  * import { updateTsconfigPackages } from "@beep/repo-cli/commands/CreatePackage"
+ * import { Effect } from "effect"
  *
- * const example = updateTsconfigPackages
- * console.log(typeof example !== "undefined") // true
+ * console.log(Effect.isEffect(updateTsconfigPackages("/repo", "packages/schema"))) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -367,10 +367,11 @@ export const updateTsconfigPackages: {
  * @depends FileSystem, Path
  * @example
  * ```ts
- * import { updateTsconfigPaths } from "@beep/repo-cli/commands/CreatePackage"
+ * import { updateTsconfigPaths, ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
+ * import { Effect } from "effect"
  *
- * const example = updateTsconfigPaths
- * console.log(typeof example !== "undefined") // true
+ * const target = ConfigUpdateTarget.make({ packageName: "@beep/schema", packagePath: "packages/schema" })
+ * console.log(Effect.isEffect(updateTsconfigPaths("/repo", target))) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -429,9 +430,9 @@ export const updateTsconfigPaths: {
  * @example
  * ```ts
  * import { updateTstycheConfig } from "@beep/repo-cli/commands/CreatePackage"
+ * import { Effect } from "effect"
  *
- * const example = updateTstycheConfig
- * console.log(typeof example !== "undefined") // true
+ * console.log(Effect.isEffect(updateTstycheConfig("/repo", "packages/schema"))) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -545,10 +546,11 @@ const checkConfigNeedsUpdateForTarget: {
  * @depends FileSystem, Path
  * @example
  * ```ts
- * import { updateRootConfigsForTargets } from "@beep/repo-cli/commands/CreatePackage"
+ * import { updateRootConfigsForTargets, ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
+ * import { Effect } from "effect"
  *
- * const example = updateRootConfigsForTargets
- * console.log(typeof example !== "undefined") // true
+ * const target = ConfigUpdateTarget.make({ packageName: "@beep/schema", packagePath: "packages/schema" })
+ * console.log(Effect.isEffect(updateRootConfigsForTargets("/repo", [target]))) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -592,10 +594,11 @@ export const updateRootConfigsForTargets: {
  * @depends FileSystem, Path
  * @example
  * ```ts
- * import { checkConfigNeedsUpdateForTargets } from "@beep/repo-cli/commands/CreatePackage"
+ * import { checkConfigNeedsUpdateForTargets, ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
+ * import { Effect } from "effect"
  *
- * const example = checkConfigNeedsUpdateForTargets
- * console.log(typeof example !== "undefined") // true
+ * const target = ConfigUpdateTarget.make({ packageName: "@beep/schema", packagePath: "packages/schema" })
+ * console.log(Effect.isEffect(checkConfigNeedsUpdateForTargets("/repo", [target]))) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -641,10 +644,11 @@ export const checkConfigNeedsUpdateForTargets: {
  * @depends FileSystem, Path
  * @example
  * ```ts
- * import { updateRootConfigs } from "@beep/repo-cli/commands/CreatePackage"
+ * import { updateRootConfigs, ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
+ * import { Effect } from "effect"
  *
- * const example = updateRootConfigs
- * console.log(typeof example !== "undefined") // true
+ * const target = ConfigUpdateTarget.make({ packageName: "@beep/schema", packagePath: "packages/schema" })
+ * console.log(Effect.isEffect(updateRootConfigs("/repo", target))) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -676,10 +680,11 @@ export const updateRootConfigs: {
  * @depends FileSystem, Path
  * @example
  * ```ts
- * import { checkConfigNeedsUpdate } from "@beep/repo-cli/commands/CreatePackage"
+ * import { checkConfigNeedsUpdate, ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
+ * import { Effect } from "effect"
  *
- * const example = checkConfigNeedsUpdate
- * console.log(typeof example !== "undefined") // true
+ * const target = ConfigUpdateTarget.make({ packageName: "@beep/schema", packagePath: "packages/schema" })
+ * console.log(Effect.isEffect(checkConfigNeedsUpdate("/repo", target))) // true
  * ```
  * @category utilities
  * @since 0.0.0

@@ -534,8 +534,8 @@ const resolveContainedSymlinkDestinationPath: {
  * ```ts
  * import { createFileGenerationPlanService } from "@beep/repo-cli/commands/CreatePackage"
  *
- * const example = createFileGenerationPlanService
- * console.log(typeof example !== "undefined") // true
+ * const service = createFileGenerationPlanService()
+ * console.log("createPlan" in service) // true
  * ```
  * @category models
  * @since 0.0.0

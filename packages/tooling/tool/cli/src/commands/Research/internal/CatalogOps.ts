@@ -22,10 +22,12 @@ const $I = $RepoCliId.create("commands/Research/internal/CatalogOps");
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
  * import { catalogDbPath } from "@beep/repo-cli/commands/Research/internal/CatalogOps"
  *
- * const operation = catalogDbPath
- * console.log(typeof operation === "function")
+ * // Resolve the catalog DuckDB path under a vault; provide FileSystem + Path to run it.
+ * const program = catalogDbPath("/repo/.research")
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category configuration
  * @since 0.0.0
@@ -86,10 +88,12 @@ export class CardPersistRow extends S.Class<CardPersistRow>($I`CardPersistRow`)(
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
  * import { persistCards } from "@beep/repo-cli/commands/Research/internal/CatalogOps"
  *
- * const operation = persistCards
- * console.log(typeof operation === "function")
+ * // Persist a (here empty) batch of capture cards into the catalog database.
+ * const program = persistCards("/repo/.research", "/repo/.research/.state/catalog.duckdb", "capture", [])
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category repositories
  * @since 0.0.0
@@ -148,10 +152,11 @@ const decodeSeenUrlRows = S.decodeUnknownEffect(S.Array(SeenUrlRow));
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
  * import { loadSeenUrls } from "@beep/repo-cli/commands/Research/internal/CatalogOps"
  *
- * const operation = loadSeenUrls
- * console.log(typeof operation === "function")
+ * const program = loadSeenUrls("/repo/.research/.state/catalog.duckdb")
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category queries
  * @since 0.0.0

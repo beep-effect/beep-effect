@@ -970,7 +970,7 @@ const recommendationFor = (
  * ```ts
  * import { requiredQualityWorkerRunpodEvalModel } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
- * console.log(requiredQualityWorkerRunpodEvalModel())
+ * console.log(requiredQualityWorkerRunpodEvalModel()) // "qwen3-coder:30b"
  * ```
  * @category constants
  * @since 0.0.0
@@ -985,7 +985,7 @@ export const requiredQualityWorkerRunpodEvalModel = (): string => REQUIRED_RUNPO
  * ```ts
  * import { defaultQualityWorkerRunpodEvalPacketLimit } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
- * console.log(defaultQualityWorkerRunpodEvalPacketLimit())
+ * console.log(defaultQualityWorkerRunpodEvalPacketLimit()) // 10
  * ```
  * @category constants
  * @since 0.0.0
@@ -1000,7 +1000,7 @@ export const defaultQualityWorkerRunpodEvalPacketLimit = (): number => DEFAULT_R
  * ```ts
  * import { defaultQualityWorkerRunpodEvalOtlpBaseUrl } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
- * console.log(defaultQualityWorkerRunpodEvalOtlpBaseUrl())
+ * console.log(defaultQualityWorkerRunpodEvalOtlpBaseUrl()) // "http://localhost:6006"
  * ```
  * @category constants
  * @since 0.0.0
@@ -1015,7 +1015,7 @@ export const defaultQualityWorkerRunpodEvalOtlpBaseUrl = (): string => DEFAULT_R
  * ```ts
  * import { defaultQualityWorkerRunpodEvalOtlpProject } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
- * console.log(defaultQualityWorkerRunpodEvalOtlpProject())
+ * console.log(defaultQualityWorkerRunpodEvalOtlpProject()) // "beep-jsdoc-worker-eval"
  * ```
  * @category constants
  * @since 0.0.0
@@ -1030,7 +1030,7 @@ export const defaultQualityWorkerRunpodEvalOtlpProject = (): string => DEFAULT_R
  * ```ts
  * import { defaultQualityWorkerRunpodEvalReadinessTimeoutMs } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
- * console.log(defaultQualityWorkerRunpodEvalReadinessTimeoutMs())
+ * console.log(defaultQualityWorkerRunpodEvalReadinessTimeoutMs()) // 1_800_000
  * ```
  * @category constants
  * @since 0.0.0
@@ -1048,11 +1048,9 @@ export const defaultQualityWorkerRunpodEvalReadinessTimeoutMs = (): number =>
  * - Optionally emits sanitized summary and hashed packet spans to Phoenix OTLP.
  * @example
  * ```ts
- * import {
- *   requiredQualityWorkerRunpodEvalModel,
- *   runDocgenQualityWorkerRunpodEval
- * } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
+ * import { requiredQualityWorkerRunpodEvalModel } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
+ * // `runDocgenQualityWorkerRunpodEval` backs this CLI subcommand:
  * const model = requiredQualityWorkerRunpodEvalModel()
  * const command = [
  *   "bun",
@@ -1066,8 +1064,8 @@ export const defaultQualityWorkerRunpodEvalReadinessTimeoutMs = (): number =>
  *   "--model",
  *   model
  * ]
+ * // "bun run beep docgen quality-worker-eval-runpod --confirm-runpod-eval --provider ollama --model qwen3-coder:30b"
  * console.log(command.join(" "))
- * console.log(typeof runDocgenQualityWorkerRunpodEval)
  * ```
  * @category use-cases
  * @since 0.0.0

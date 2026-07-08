@@ -32,11 +32,6 @@ const canonicalPath = "packages/foundation/primitive/data/src/generated/iso4217.
 /**
  * Official SIX XML source for ISO 4217 List One.
  *
- * @example
- * ```ts
- * import { ISO4217_SOURCE_URL } from "@beep/repo-cli/commands/SyncDataToTs"
- * console.log(ISO4217_SOURCE_URL)
- * ```
  * @category configuration
  * @since 0.0.0
  */
@@ -359,8 +354,7 @@ const acquireIso4217Projection = Effect.fn("SyncDataToTs.Iso4217.acquire")(funct
  * ```ts
  * import { iso4217Target } from "@beep/repo-cli/commands/SyncDataToTs"
  *
- * const example = iso4217Target
- * console.log(typeof example !== "undefined") // true
+ * console.log(iso4217Target.access) // "public"
  * ```
  * @category configuration
  * @since 0.0.0

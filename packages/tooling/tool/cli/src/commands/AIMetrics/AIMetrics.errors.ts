@@ -115,6 +115,8 @@ export const AiMetricsProgramError = S.Union([
 /**
  * Adapt an AI metrics command program to the CLI command runtime shape.
  *
+ * @param effect - AI metrics command effect after the command handler has built its typed program.
+ * @returns A command-runtime effect that preserves the original error and requirement channels while discarding success data.
  * @example
  * ```ts
  * import { runAiMetricsProgram } from "@beep/repo-cli/commands/AIMetrics/AIMetrics.errors"
@@ -123,8 +125,6 @@ export const AiMetricsProgramError = S.Union([
  * const program = runAiMetricsProgram(Effect.succeed("rendered"))
  * console.log(program.pipe !== undefined) // true
  * ```
- * @param effect - AI metrics command effect after the command handler has built its typed program.
- * @returns A command-runtime effect that preserves the original error and requirement channels while discarding success data.
  * @category errors
  * @since 0.0.0
  */

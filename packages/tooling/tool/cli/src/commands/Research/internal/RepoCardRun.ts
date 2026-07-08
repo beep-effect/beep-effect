@@ -123,10 +123,19 @@ const collectStarCards = Effect.fnUntraced(function* (
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
  * import { repoCardImpl } from "@beep/repo-cli/commands/Research/internal/RepoCardRun"
+ * import { ResearchRepoCardOptions } from "@beep/repo-cli/commands/Research"
  *
- * const operation = repoCardImpl
- * console.log(typeof operation === "function")
+ * const program = repoCardImpl(
+ *   ResearchRepoCardOptions.make({
+ *     force: false,
+ *     includeStars: true,
+ *     researchRoot: "/repo/research",
+ *     vaultRoot: "/repo/.research"
+ *   })
+ * )
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category use-cases
  * @since 0.0.0

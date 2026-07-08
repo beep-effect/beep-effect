@@ -160,8 +160,8 @@ const createHandlebarsEnvironment = () => {
  * ```ts
  * import { createTemplateService } from "@beep/repo-cli/commands/CreatePackage"
  *
- * const example = createTemplateService
- * console.log(typeof example !== "undefined") // true
+ * const service = createTemplateService()
+ * console.log("renderTemplates" in service) // true
  * ```
  * @category models
  * @since 0.0.0

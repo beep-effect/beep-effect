@@ -144,7 +144,7 @@ export const readOptionalRedactedConfigString = (key: string) =>
  * ```ts
  * import { envValue } from "@beep/repo-cli/internal/cli/EnvConfig"
  *
- * console.log(typeof envValue("DEFINITELY_UNSET_VAR", "default"))
+ * console.log(envValue("DEFINITELY_UNSET_VAR", "default")) // "default"
  * ```
  * @category configuration
  * @since 0.0.0

@@ -288,9 +288,9 @@ const makeImageCommandService = Effect.fn("ImageCommandService.make")(function* 
  * @example
  * ```ts
  * import { ImageCommandServiceLive } from "@beep/repo-cli/commands/Image"
+ * import { Layer } from "effect"
  *
- * const layer = ImageCommandServiceLive
- * console.log(typeof layer === "object") // true
+ * console.log(Layer.isLayer(ImageCommandServiceLive)) // true
  * ```
  * @category layers
  * @since 0.0.0

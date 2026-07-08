@@ -450,9 +450,14 @@ const sourceHasFnSchemaSignal = (sourceFile: import("ts-morph").SourceFile): boo
  * @example
  * ```ts
  * import { fnSchemaEntryFromFunctionLike } from "@beep/repo-cli/commands/Lint"
+ * import * as O from "effect/Option"
+ * import { Project } from "ts-morph"
  *
- * const example = fnSchemaEntryFromFunctionLike
- * console.log(typeof example !== "undefined") // true
+ * const project = new Project({ useInMemoryFileSystem: true })
+ * const sourceFile = project.createSourceFile("fixture.ts", "export function updateWidget(input: { id: string; name: string }): void {}")
+ * const [node] = sourceFile.getFunctions()
+ * const entry = fnSchemaEntryFromFunctionLike(node, "fixture.ts", "@beep/test")
+ * console.log(O.map(entry, (found) => found.symbol)) // Option.some("updateWidget")
  * ```
  * @category utilities
  * @since 0.0.0
@@ -503,9 +508,14 @@ const fnSchemaEntryFromFunctionLike = (
  * @example
  * ```ts
  * import { nullReturnEntryFromFunctionLike } from "@beep/repo-cli/commands/Lint"
+ * import * as O from "effect/Option"
+ * import { Project } from "ts-morph"
  *
- * const example = nullReturnEntryFromFunctionLike
- * console.log(typeof example !== "undefined") // true
+ * const project = new Project({ useInMemoryFileSystem: true })
+ * const sourceFile = project.createSourceFile("fixture.ts", "export function findUser(id: string): string | null {\n  return null\n}")
+ * const [node] = sourceFile.getFunctions()
+ * const entry = nullReturnEntryFromFunctionLike(node, "fixture.ts", "@beep/test")
+ * console.log(O.map(entry, (found) => found.symbol)) // Option.some("findUser")
  * ```
  * @category utilities
  * @since 0.0.0
@@ -562,9 +572,14 @@ const sourceHasNormalizationSignal = (sourceFile: import("ts-morph").SourceFile)
  * @example
  * ```ts
  * import { normalizationEntryFromCallExpression } from "@beep/repo-cli/commands/Lint"
+ * import * as O from "effect/Option"
+ * import { Project, SyntaxKind } from "ts-morph"
  *
- * const example = normalizationEntryFromCallExpression
- * console.log(typeof example !== "undefined") // true
+ * const project = new Project({ useInMemoryFileSystem: true })
+ * const sourceFile = project.createSourceFile("fixture.ts", "export function normalizeName(name: string): string {\n  return name.trim()\n}")
+ * const [node] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)
+ * const entry = normalizationEntryFromCallExpression(node, "fixture.ts", "@beep/test")
+ * console.log(O.map(entry, (found) => found.symbol)) // Option.some("normalizeName.trim")
  * ```
  * @category utilities
  * @since 0.0.0
@@ -620,9 +635,14 @@ const isGetSomesObjectName = (name: string): boolean =>
  * @example
  * ```ts
  * import { getsomesStructEntryFromCallExpression } from "@beep/repo-cli/commands/Lint"
+ * import * as O from "effect/Option"
+ * import { Project, SyntaxKind } from "ts-morph"
  *
- * const example = getsomesStructEntryFromCallExpression
- * console.log(typeof example !== "undefined") // true
+ * const project = new Project({ useInMemoryFileSystem: true })
+ * const sourceFile = project.createSourceFile("fixture.ts", "export function pickSomes() {\n  return R.getSomes({ a: 1, b: 2 })\n}")
+ * const [node] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)
+ * const entry = getsomesStructEntryFromCallExpression(node, "fixture.ts", "@beep/test")
+ * console.log(O.map(entry, (found) => found.symbol)) // Option.some("pickSomes.R.getSomes")
  * ```
  * @category utilities
  * @since 0.0.0
@@ -747,8 +767,13 @@ const equivalenceEntryFromVariableDeclaration = (
  * @example
  * ```ts
  * import { SchemaFirstDetectors } from "@beep/repo-cli/test/Lint"
+ * import * as O from "effect/Option"
+ * import { Project } from "ts-morph"
  *
- * console.log(typeof SchemaFirstDetectors.detectInterfaceReason)
+ * const project = new Project({ useInMemoryFileSystem: true })
+ * const sourceFile = project.createSourceFile("fixture.ts", "export interface Widget { id: string }")
+ * const [node] = sourceFile.getInterfaces()
+ * console.log(O.isOption(SchemaFirstDetectors.detectInterfaceReason(node))) // true
  * ```
  * @category utilities
  * @since 0.0.0
