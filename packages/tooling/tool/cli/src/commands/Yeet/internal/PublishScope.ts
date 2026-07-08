@@ -64,10 +64,10 @@ const protectedPublishBranches: ReadonlyArray<string> = ["main", "master", "HEAD
  * @category validation
  * @since 0.0.0
  */
-export const validatePublishBranch = (
-  context: RepoRunContext,
-  options: YeetRunOptions
-): Effect.Effect<void, YeetCommandError> => {
+export const validatePublishBranch: {
+  (context: RepoRunContext, options: YeetRunOptions): Effect.Effect<void, YeetCommandError>;
+  (options: YeetRunOptions): (context: RepoRunContext) => Effect.Effect<void, YeetCommandError>;
+} = dual(2, (context: RepoRunContext, options: YeetRunOptions): Effect.Effect<void, YeetCommandError> => {
   if (options.mode !== "publish" || !A.contains(protectedPublishBranches, context.branch)) {
     return Effect.void;
   }
@@ -79,7 +79,7 @@ export const validatePublishBranch = (
       exitCode: 1,
     })
   );
-};
+});
 
 /**
  * Expose the protected-branch publish guard for focused tests.
