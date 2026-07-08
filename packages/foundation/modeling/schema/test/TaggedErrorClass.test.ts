@@ -102,4 +102,22 @@ describe("TaggedErrorClass", () => {
     expect(error.beep).toBe("boop");
     expect(error.count).toBe(2);
   });
+
+  it("derives round-trip-safe equivalence from declared fields (ignores Error stack metadata)", () => {
+    // Tagged errors extend Error and carry transient stack/line/column metadata
+    // captured at the construction site. The default structural equivalence
+    // would include those, so `decode(encode(x))` — built on a different call
+    // path than `x` — would never compare equal, breaking round-trip property
+    // tests. TaggedErrorClass overrides `toEquivalence` to compare declared
+    // fields only; `Equal.equals`/`Hash` (identity) stay stack-sensitive.
+    const equivalence = S.toEquivalence(BeepError);
+    const made = BeepError.make({ beep: "boop" });
+    const encoded = S.encodeUnknownSync(BeepError)(made);
+    const roundTripped = S.decodeUnknownSync(BeepError)(encoded);
+
+    expect(roundTripped.beep).toBe("boop");
+    expect(equivalence(roundTripped, made)).toBe(true);
+    // sensitivity: a differing declared field is NOT equivalent
+    expect(equivalence(BeepError.make({ beep: "other" }), made)).toBe(false);
+  });
 });
