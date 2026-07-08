@@ -1,6 +1,0 @@
-error: Request failed after 3 retries in 9.5s
-  Caused by: Failed to fetch: `https://pypi.org/simple/skillopt/`
-  Caused by: error sending request for url (https://pypi.org/simple/skillopt/)
-  Caused by: client error (Connect)
-  Caused by: dns error
-  Caused by: failed to lookup address information: Temporary failure in name resolution

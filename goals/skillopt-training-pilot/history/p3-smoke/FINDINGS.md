@@ -43,7 +43,7 @@ see `../p1-spike/FINDINGS.md`.)
 ## Reproduce
 
 ```sh
-env UV_CACHE_DIR=/tmp/uv-cache-skillopt uv run --project tools/skillopt \
+env UV_CACHE_DIR=<tmp-uv-cache> uv run --project tools/skillopt \
   beep-skillopt-train --config tools/skillopt/configs/beeplaw.template.yaml \
   --cfg-options env.out_root=goals/skillopt-training-pilot/history/p3-smoke/out-real \
     env.limit=1 env.workers=1 train.train_size=1 train.num_epochs=1 \

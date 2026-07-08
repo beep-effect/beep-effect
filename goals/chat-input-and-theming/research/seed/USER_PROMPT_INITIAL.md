@@ -22,8 +22,8 @@ These goals and explorations where completed or are in progress and are relevant
 - [agent-chat-interface](./explorations/agent-chat-interface)
 
 **Relevant POC's and Ports:**
-- [effect-lexical-chat](/home/elpresidank/YeeBois/projects/effect-lexical-chat)
-- [trustgraph-ts-port](/home/elpresidank/YeeBois/dev/trustgraph/ts)
+- effect-lexical-chat (`<local-research-checkout>`)
+- trustgraph-ts-port (`<local-research-checkout>`)
 
 **Relevant Docs & Grounding:**
 - docs/BEEPGRAPH_ARCHITECTURE.md
@@ -64,12 +64,12 @@ My goal is essentially the user experience of the [`@lobehub/editor`](https://ed
 If you could use a sub-agent and claude in chrome and navigate to https://editor.lobehub.com/~demos/src-react-chat-input-demo-demos
 and map the features of this demo taking screenshots and writing thorough descriptions of the state transitions and 
 features that would help a great deal in us building out our own reusable chat input component based on the existing
-[@beep/editor](packages/foundation/ui-system/editor) component. I've cloned several `lobehub` repositories [here](/home/elpresidank/YeeBois/research/chat_interface/lobehub/)
+[@beep/editor](packages/foundation/ui-system/editor) component. Several local `lobehub` repository clones were available under `<local-research-checkout>`
 which might assist us in this endeavor.
 
 My vision is that we create a reusable lexical editor whith configurable feature flags that will allow us to control 
 what features are available based on use case. For example, while we might want a full feature set for a full 
-document editor like seen in https://playground.lexical.dev/ [lexicals playground](/home/elpresidank/YeeBois/dev/text_editor_ui/lexical/packages/lexical-playground)
+document editor like seen in https://playground.lexical.dev/ with a local Lexical playground checkout available under `<local-research-checkout>`
 we might only want a subset of those features for the agent chat input component.
 
 Looking at the [storybook](https://storybook.beep.localhost:1355/?path=/docs/editor-editorcomposer--docs) for the 

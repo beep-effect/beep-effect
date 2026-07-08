@@ -23,7 +23,7 @@ import {
   renderFencedCode,
   renderInlineCode,
 } from "./Md.escape.ts";
-import { Document as DocumentSchema, Inline as InlineSchema, TableCell, TableRow } from "./Md.model.ts";
+import { Document as DocumentSchema, HeadingLevel, Inline as InlineSchema, TableCell, TableRow } from "./Md.model.ts";
 import type { Block, Document, Heading, Inline, Li, ListItemChild, Table, TaskItem } from "./Md.model.ts";
 
 const $I = $MdId.create("Md.render");
@@ -243,8 +243,10 @@ const renderEscapedRawHtmlAsHtml = ({ value }: { readonly value: string }): stri
 const renderMarkdownHeading = (block: Heading): string =>
   `${pipe("#", Str.repeat(block.level))} ${renderMarkdownInlines(block.children)}`;
 
-const renderHtmlHeading = (block: Heading): string =>
-  `<h${block.level}>${renderHtmlInlines(block.children)}</h${block.level}>`;
+const renderHtmlHeading = (block: Heading): string => {
+  const tag = S.is(HeadingLevel)(block.level) ? `h${block.level}` : "h6";
+  return `<${tag}>${renderHtmlInlines(block.children)}</${tag}>`;
+};
 
 const indentContinuationLines = (text: string, indent: string): string =>
   pipe(

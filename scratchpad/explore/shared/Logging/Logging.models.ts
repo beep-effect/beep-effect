@@ -6,14 +6,11 @@
 import {$ScratchpadId} from "@beep/identity";
 import * as S from "effect/Schema";
 import {SchemaUtils} from "@beep/schema";
-import {O, Str} from '@beep/utils';
+import {O} from '@beep/utils';
 import NodeFS from "node:fs";
 import NodePath from "node:path";
-import * as ExploreId from "./Identity.ts";
-import {Model} from "effect/unstable/schema";
-import {FileSystem, identity, Path, Effect, Result} from "effect";
+import {Result} from "effect";
 import {
-	ReadRotatingFileSinkError,
 	RotatingFileSinkError,
 	isFileNotFoundError,
 	ReadRotatingFileSinkErrorMeta,
@@ -95,7 +92,7 @@ export class RotatingFileSink extends RotatingFileSinkOptions.extend<RotatingFil
 				meta: InitializeRotatingFileSinkErrorMeta.make({
 					filePath: sink.filePath,
 				}),
-				cause: O.some(cause),
+				cause,
 			}),
 		}).pipe(Result.map((sink) => {
 			sink.currentSize = sink.readCurrentSize()
@@ -106,61 +103,7 @@ export class RotatingFileSink extends RotatingFileSinkOptions.extend<RotatingFil
 	}
 
 	write(chunk: string | Buffer): void {
-		const sink = this
-		const effectFn = Effect.fn("RotatingFileSink.write")(function* (chunk: string | Buffer) {
-			const fs = yield* FileSystem.FileSystem;
-			const path = yield* Path.Path;
-
-			const l = O.some(chunk).pipe(
-				O.flatMap(O.liftPredicate(Str.isString)),
-				O.map(Buffer.from),
-				Result.fromOption(() => RotatingFileSinkError.make({
-					meta: InitializeRotatingFileSinkErrorMeta.make({
-						filePath: sink.filePath,
-					}),
-					cause: O.none(),
-				})),
-				Result.match({
-					onSuccess: Effect.fnUntraced(function* (buffer) {
-						if (buffer.length === 0) {
-							return sink
-						}
-						if (sink.currentSize > 0 && sink.currentSize + buffer.length > sink.maxBytes) {
-							sink.rotate();
-						}
-// NodeFS.appendFileSync(this.filePath, buffer);
-						sink.currentSize += buffer.length;
-
-						if (sink.currentSize > sink.maxBytes) {
-							sink.rotate()
-						}
-
-						return sink
-					}),
-					onFailure: (e) => {
-						if (RotatingFileSinkError.is(e)) {
-							return Effect.fail(e);
-						}
-						if (sink.throwOnError) {
-							return Effect.fail(RotatingFileSinkError.make({
-								meta: WriteRotatingFileSinkErrorMeta.make({
-									filePath: sink.filePath,
-								}),
-								cause: O.some(e),
-							}))
-						}
-
-						return E
-					}
-				}),
-
-			);
-
-
-			return effectFn(chunk)
-		})
-
-
+		const buffer = typeof chunk === "string" ? Buffer.from(chunk) : chunk;
 		if (buffer.length === 0) return;
 
 		try {

@@ -3,8 +3,10 @@ import {
   EscapedPnLocal,
   escapeLocal,
   isSafeLocal,
+  isSafePrefix,
   prefixedNameOrIri,
   SafePnLocal,
+  SafePnPrefix,
   unescapeLocal,
 } from "@beep/identity";
 import { describe, expect, it } from "@effect/vitest";
@@ -47,6 +49,14 @@ describe("PnLocal", () => {
     expect(isSafeLocal("claim#1")).toBe(false);
   });
 
+  it("recognizes safe unescaped Turtle PN_PREFIX values", () => {
+    expect(isSafePrefix("skos")).toBe(true);
+    expect(isSafePrefix("schema.org")).toBe(true);
+    expect(isSafePrefix("bad:prefix")).toBe(false);
+    expect(isSafePrefix("9lives")).toBe(false);
+    expect(isSafePrefix("bad.")).toBe(false);
+  });
+
   it("accepts escaped parser-side local names", () => {
     expect(acceptsEscapedLocal("Ontology.models\\/HttpUrl")).toBe(true);
     expect(acceptsEscapedLocal("claim\\#1")).toBe(true);
@@ -81,6 +91,17 @@ describe("PnLocal", () => {
     );
   });
 
+  it("round-trips generated safe PN_PREFIX schema values", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(SafePnPrefix), (prefix) => {
+        const decoded = O.flatMap(S.encodeOption(SafePnPrefix)(prefix), S.decodeUnknownOption(SafePnPrefix));
+
+        expect(O.exists(decoded, (value) => Equal.equals(value, prefix))).toBe(true);
+        expect(isSafePrefix(prefix)).toBe(true);
+      })
+    );
+  });
+
   it("round-trips generated escaped PN_LOCAL schema values", () => {
     fc.assert(
       fc.property(S.toArbitrary(EscapedPnLocal), (local) => {
@@ -99,5 +120,14 @@ describe("PnLocal", () => {
         fullIri: "https://ns.beep.sh/ontology/Ontology.models/HttpUrl",
       })
     ).toBe("<https://ns.beep.sh/ontology/Ontology.models/HttpUrl>");
+  });
+
+  it("does not interpolate unsafe prefixes or full IRI delimiters into Turtle", () => {
+    expect(
+      prefixedNameOrIri("safe", {
+        prefix: "bad:prefix",
+        fullIri: 'https://ns.beep.sh/x"> <urn:evil>',
+      })
+    ).toBe("<https://ns.beep.sh/x%22%3E%20%3Curn:evil%3E>");
   });
 });

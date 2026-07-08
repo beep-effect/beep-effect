@@ -40,6 +40,7 @@ type MockRequest = Parameters<Parameters<typeof HttpClient.make>[0]>[0];
 
 const MockIntFromString = S.FiniteFromString.pipe(S.check(S.isInt()), SchemaUtils.withCodecStatics);
 const encodeJsonString = S.encodeUnknownEffect(S.UnknownFromJsonString);
+const decodeJsonString = S.decodeUnknownEffect(S.UnknownFromJsonString);
 const decodeLogoutRequestJson = S.decodeUnknownEffect(S.fromJsonString(CsoLogoutRequest));
 
 /**
@@ -300,6 +301,7 @@ interface PacerMockRuntimeOptions {
   readonly logoutCount?: Ref.Ref<number>;
   readonly logoutTokens?: Ref.Ref<ReadonlyArray<string>>;
   readonly reportId?: number | string;
+  readonly requestBodies?: Ref.Ref<ReadonlyArray<unknown>>;
   readonly requestHeaders?: Ref.Ref<ReadonlyArray<Readonly<Record<string, string>>>>;
   readonly requireClientCode?: boolean;
   readonly rotateNextGenCso?: string;
@@ -334,8 +336,26 @@ const jsonResponse = (
     Effect.orDie
   );
 
-const tracedRequest = (options: PacerMockOptionsInput, request: MockRequest): Effect.Effect<void> =>
+const recordRequestHeaders = (options: PacerMockOptionsInput, request: MockRequest): Effect.Effect<void> =>
   options.requestHeaders === undefined ? Effect.void : Ref.update(options.requestHeaders, A.append(request.headers));
+
+const recordRequestBody = (options: PacerMockOptionsInput, request: MockRequest): Effect.Effect<void> =>
+  pipe(
+    O.fromUndefinedOr(options.requestBodies),
+    O.match({
+      onNone: () => Effect.void,
+      onSome: (bodies) =>
+        request.body._tag === "Uint8Array"
+          ? decodeJsonString(new TextDecoder().decode(request.body.body)).pipe(
+              Effect.flatMap((body) => Ref.update(bodies, A.append(body))),
+              Effect.orDie
+            )
+          : Effect.void,
+    })
+  );
+
+const tracedRequest = (options: PacerMockOptionsInput, request: MockRequest): Effect.Effect<void> =>
+  Effect.all([recordRequestHeaders(options, request), recordRequestBody(options, request)], { discard: true });
 
 const recordLogoutToken = (options: PacerMockOptionsInput, request: MockRequest): Effect.Effect<void> =>
   pipe(

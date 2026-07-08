@@ -5,15 +5,15 @@
 Worktree preflight passed:
 
 ```text
-/home/elpresidank/YeeBois/projects/beep-effect-worktrees/skillopt-p1-spike
+<local-worktree>
 writable
 ```
 
 No training run, commit, push, or GitHub API call was performed. Help output was inspected with:
 
 ```sh
-env UV_CACHE_DIR=/tmp/uv-cache-skillopt uv run --project tools/skillopt --offline skillopt-train --help
-env UV_CACHE_DIR=/tmp/uv-cache-skillopt uv run --project tools/skillopt --offline skillopt-eval --help
+env UV_CACHE_DIR=<tmp-uv-cache> uv run --project tools/skillopt --offline skillopt-train --help
+env UV_CACHE_DIR=<tmp-uv-cache> uv run --project tools/skillopt --offline skillopt-eval --help
 ```
 
 The installed package did not ship example YAML configs or example data files under `skillopt/`, `skillopt_sleep/`, or `scripts/`.
@@ -131,7 +131,7 @@ External-command scoring is not wired because `skillopt-train` does not expose a
 No `--dry-run` or `--validate` flag exists in `skillopt-train --help` or `skillopt-eval --help`. Best-effort validation used the package loader plus adapter setup:
 
 ```sh
-env UV_CACHE_DIR=/tmp/uv-cache-skillopt uv run --project tools/skillopt --offline python -c '...'
+env UV_CACHE_DIR=<tmp-uv-cache> uv run --project tools/skillopt --offline python -c '...'
 ```
 
 The loader flattened the structured YAML, resolved `out_root` and `skill_init`, and `SearchQAAdapter.setup` loaded `train=1`, `val=1`, `test=0` items without starting training.
@@ -141,7 +141,7 @@ The loader flattened the structured YAML, resolved `out_root` and `skill_init`, 
 Do not run this inside a Codex investigation lane. The orchestrator can launch the smoke with:
 
 ```sh
-env UV_CACHE_DIR=/tmp/uv-cache-skillopt \
+env UV_CACHE_DIR=<tmp-uv-cache> \
   uv run --project tools/skillopt --offline skillopt-train \
   --config goals/skillopt-training-pilot/history/p1-spike/config.smoke.yaml
 ```

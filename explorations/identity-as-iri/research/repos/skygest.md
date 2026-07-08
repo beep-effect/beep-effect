@@ -1,6 +1,6 @@
 # skygest repository mining report
 
-All skygest citations are relative to `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/skygest`.
+All skygest citations are relative to `<local-research-checkout>/skygest`.
 
 ## 1. Overview & purpose (what is skygest?)
 
@@ -192,10 +192,10 @@ We would keep Skygest's useful clean-room ideas but route them through the hando
 
 Comparison baseline read before mining:
 
-- /home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md
-- /home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/assets/exploration-report-2026-07-01.md
-- /home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/DECISIONS.md
-- /home/elpresidank/YeeBois/projects/beep-effect/scratchpad/identity/README.md
+- <repo-root>/explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md
+- <repo-root>/explorations/identity-as-iri/assets/exploration-report-2026-07-01.md
+- <repo-root>/explorations/identity-as-iri/DECISIONS.md
+- <repo-root>/scratchpad/identity/README.md
 
 Skygest files inspected:
 

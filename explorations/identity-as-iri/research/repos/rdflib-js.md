@@ -200,52 +200,52 @@ expect(triple.subject).to.have.property('value', 'http://ex.org/s')
 
 Baseline authority:
 
-- `/home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md:74-122`
-- `/home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md:126-200`
-- `/home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md:204-260`
-- `/home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md:337-409`
-- `/home/elpresidank/YeeBois/projects/beep-effect/scratchpad/identity/README.md:1-24`
+- `<repo-root>/explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md:74-122`
+- `<repo-root>/explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md:126-200`
+- `<repo-root>/explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md:204-260`
+- `<repo-root>/explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md:337-409`
+- `<repo-root>/scratchpad/identity/README.md:1-24`
 
 rdflib.js metadata and docs:
 
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/package.json:1-165`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/MIT-LICENSE.txt:1-21`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/README.md:1-115`
+- `<local-research-checkout>/rdflib.js/package.json:1-165`
+- `<local-research-checkout>/rdflib.js/MIT-LICENSE.txt:1-21`
+- `<local-research-checkout>/rdflib.js/README.md:1-115`
 
 rdflib.js core source:
 
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/named-node.ts:1-110`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/node-internal.ts:1-115`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/node.ts:1-47`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/namespace.ts:1-15`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/statement.ts:1-149`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/formula.ts:1-820`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/store.ts:1-1228`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/index.ts:1-138`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/serializer.js:1-1088`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/serialize.ts:1-112`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/literal.ts:1-190`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/factories/canonical-data-factory.ts:1-238`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/factories/extended-term-factory.ts:1-60`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/factories/rdflib-data-factory.ts:1-58`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/types.ts:1-103`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/tf-types.ts:1-183`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/xsd-internal.js:1-10`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/xsd.js:1-21`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/utils/terms.ts:1-142`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/parse.ts:1-145`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/n3parser.js:430-490`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/src/n3parser.js:1450-1555`
+- `<local-research-checkout>/rdflib.js/src/named-node.ts:1-110`
+- `<local-research-checkout>/rdflib.js/src/node-internal.ts:1-115`
+- `<local-research-checkout>/rdflib.js/src/node.ts:1-47`
+- `<local-research-checkout>/rdflib.js/src/namespace.ts:1-15`
+- `<local-research-checkout>/rdflib.js/src/statement.ts:1-149`
+- `<local-research-checkout>/rdflib.js/src/formula.ts:1-820`
+- `<local-research-checkout>/rdflib.js/src/store.ts:1-1228`
+- `<local-research-checkout>/rdflib.js/src/index.ts:1-138`
+- `<local-research-checkout>/rdflib.js/src/serializer.js:1-1088`
+- `<local-research-checkout>/rdflib.js/src/serialize.ts:1-112`
+- `<local-research-checkout>/rdflib.js/src/literal.ts:1-190`
+- `<local-research-checkout>/rdflib.js/src/factories/canonical-data-factory.ts:1-238`
+- `<local-research-checkout>/rdflib.js/src/factories/extended-term-factory.ts:1-60`
+- `<local-research-checkout>/rdflib.js/src/factories/rdflib-data-factory.ts:1-58`
+- `<local-research-checkout>/rdflib.js/src/types.ts:1-103`
+- `<local-research-checkout>/rdflib.js/src/tf-types.ts:1-183`
+- `<local-research-checkout>/rdflib.js/src/xsd-internal.js:1-10`
+- `<local-research-checkout>/rdflib.js/src/xsd.js:1-21`
+- `<local-research-checkout>/rdflib.js/src/utils/terms.ts:1-142`
+- `<local-research-checkout>/rdflib.js/src/parse.ts:1-145`
+- `<local-research-checkout>/rdflib.js/src/n3parser.js:430-490`
+- `<local-research-checkout>/rdflib.js/src/n3parser.js:1450-1555`
 
 rdflib.js tests and representative call sites:
 
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/tests/unit/namespace-test.js:1-31`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/tests/unit/formula-test.js:1-126`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/test/tc0003/test_identity.js:1-107`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/tests/unit/serialize-test.js:1-603`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/tests/unit/serializer-test.ts:1-53`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/tests/unit/named-node-test.js:1-17`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/tests/unit/dot-in-term-test.ts:1-243`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/tests/types/rdfjs-compatibility.ts:1-25`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/tests/unit/factories/canonical-data-factory-test.ts:1-65`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/rdflib.js/tests/unit/exports.js:1-25`
+- `<local-research-checkout>/rdflib.js/tests/unit/namespace-test.js:1-31`
+- `<local-research-checkout>/rdflib.js/tests/unit/formula-test.js:1-126`
+- `<local-research-checkout>/rdflib.js/test/tc0003/test_identity.js:1-107`
+- `<local-research-checkout>/rdflib.js/tests/unit/serialize-test.js:1-603`
+- `<local-research-checkout>/rdflib.js/tests/unit/serializer-test.ts:1-53`
+- `<local-research-checkout>/rdflib.js/tests/unit/named-node-test.js:1-17`
+- `<local-research-checkout>/rdflib.js/tests/unit/dot-in-term-test.ts:1-243`
+- `<local-research-checkout>/rdflib.js/tests/types/rdfjs-compatibility.ts:1-25`
+- `<local-research-checkout>/rdflib.js/tests/unit/factories/canonical-data-factory-test.ts:1-65`
+- `<local-research-checkout>/rdflib.js/tests/unit/exports.js:1-25`

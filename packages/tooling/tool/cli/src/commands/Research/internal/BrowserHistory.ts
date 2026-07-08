@@ -3,7 +3,7 @@
  * history-sift.
  *
  * Chromium locks its `History` sqlite file while the browser runs, so each
- * profile database is copied into the vault state directory before DuckDB's
+ * profile database is copied into a scoped OS temp directory before DuckDB's
  * sqlite scanner reads the copy.
  *
  * @internal
@@ -160,9 +160,10 @@ export const readProfileHistory = Effect.fn("BrowserHistory.readProfileHistory")
         }).pipe(Effect.provide(context))
       )
     )
-  ).pipe(ResearchCommandError.mapError(`Failed scanning history copy "${copyPath}".`));
-
-  yield* fs.remove(copyPath).pipe(Effect.ignore);
+  ).pipe(
+    ResearchCommandError.mapError(`Failed scanning history copy "${copyPath}".`),
+    Effect.ensuring(fs.remove(copyPath).pipe(Effect.ignore))
+  );
   return yield* decodeHistoryUrlRows(rows).pipe(
     ResearchCommandError.mapError(`History rows from "${profile.historyPath}" failed schema validation.`)
   );

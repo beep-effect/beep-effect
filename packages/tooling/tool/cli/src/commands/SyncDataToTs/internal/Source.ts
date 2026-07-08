@@ -13,7 +13,7 @@ import { XmlTextToUnknown } from "@beep/schema/Xml";
 import { A, Str } from "@beep/utils";
 import { cast } from "@beep/utils/Function";
 import { Crypto, Effect, Encoding, pipe, Result } from "effect";
-import { dual } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { HttpClient, HttpClientResponse } from "effect/unstable/http";
@@ -105,6 +105,19 @@ export const formatJson = (value: unknown): string => {
  */
 export const formatTsLiteral = (value: unknown): string =>
   pipe(formatJson(value).trimEnd(), Str.replaceAll(/"([A-Za-z_$][A-Za-z0-9_$]*)":/g, "$1:"));
+
+/**
+ * Render untrusted source metadata as a single safe JSDoc block-comment line.
+ *
+ * @param value - The upstream string to include in a generated comment.
+ * @returns A line-safe string that cannot terminate the surrounding comment.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const formatTsDocCommentValue: (value: string) => string = flow(
+  Str.replaceAll(/\*\//gu, "* /"),
+  Str.replaceAll(/\r?\n/gu, " ")
+);
 
 /**
  * Create a generated output file value.

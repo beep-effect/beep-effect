@@ -221,4 +221,4 @@ Migration cost estimate: 110 concrete production annotation attachments plus the
 - packages/foundation/capability/semantic-web/src/services/canonicalization.ts
 - packages/foundation/capability/semantic-web/test/InteropAndMetadata.test.ts
 - packages/tooling/policy-pack/repo-configs/src/internal/eslint/generated/EffectLawsAllowlistSnapshot.ts
-- /home/elpresidank/.codex/memories/MEMORY.md (workflow context check only; repo audit facts above are from live source files)
+- <local-memory-registry> (workflow context check only; repo audit facts above are from live source files)

@@ -17,10 +17,9 @@
 #       (the env expression then expands to "", which is required since GitHub
 #       Actions secrets cannot hold an empty string). Rotate to a
 #       password-protected key for production.
-#   Store signing secrets as repository or organization secrets. The
-#   `professional-desktop-release` environment is a single pre-matrix approval
-#   gate; matrix jobs intentionally do not target the environment so one tag does
-#   not require four separate native-build approvals.
+#   Store signing secrets in the `professional-desktop-release` environment so
+#   native signing and updater artifact publication cannot run before release
+#   approval.
 #   Source from 1Password:
 #     op://BEEP_SECRETS/BEEP_SECRETS/TAURI_SIGNING_PRIVATE_KEY
 #   The matching PUBLIC key must live in `src-tauri/tauri.conf.json`
@@ -78,34 +77,11 @@ jobs:
             exit 1
           fi
 
-      - name: Validate updater signing secret
-        shell: bash
-        env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-        run: |
-          if [[ -z "${TAURI_SIGNING_PRIVATE_KEY}" ]]; then
-            echo "::error::TAURI_SIGNING_PRIVATE_KEY must be configured as a repository or organization secret for updater signing. Matrix jobs intentionally stay behind the single professional-desktop-release approval gate and do not read environment-only secrets."
-            exit 1
-          fi
-
-  release-desktop-approval:
-    name: Approve desktop release signing
-    runs-on: ubuntu-22.04
-    needs: release-desktop-preflight
-    environment: professional-desktop-release
-    timeout-minutes: 10
-    env:
-      RELEASE_DESKTOP_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
-    steps:
-      - name: Record protected release approval
-        shell: bash
-        run: |
-          echo "::notice::Approved desktop release signing for ${RELEASE_DESKTOP_TAG}."
-
   release-desktop:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
-    needs: release-desktop-approval
+    needs: release-desktop-preflight
+    environment: professional-desktop-release
     timeout-minutes: 120
     env:
       RELEASE_DESKTOP_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
@@ -171,6 +147,16 @@ jobs:
             if (headCommit !== tagCommit) {
               throw new Error(`Checked out ${headCommit}, but ${tag} points to ${tagCommit}.`);
             }
+
+      - name: Validate updater signing secret
+        shell: bash
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          if [[ -z "${TAURI_SIGNING_PRIVATE_KEY}" ]]; then
+            echo "::error::TAURI_SIGNING_PRIVATE_KEY must be configured in the professional-desktop-release environment for updater signing."
+            exit 1
+          fi
 
       # Tauri v2 Linux prerequisites (webkit2gtk 4.1, gtk, rsvg, appindicator, …).
       - name: Install Tauri Linux system dependencies
@@ -369,11 +355,11 @@ jobs:
   release-desktop-ready:
     name: Desktop release draft ready
     runs-on: ubuntu-22.04
+    environment: professional-desktop-release
     permissions:
       actions: read
       contents: write
     needs:
-      - release-desktop-approval
       - release-desktop
     if: ${{ needs.release-desktop.result == 'success' }}
     env:

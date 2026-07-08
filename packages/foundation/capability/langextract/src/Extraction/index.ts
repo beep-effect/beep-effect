@@ -45,6 +45,7 @@ const MAX_REQUEST_EXAMPLES = 64;
  * @since 0.0.0
  */
 export const LangExtractErrorReason = LiteralKit([
+  "remote-policy-denied",
   "model-generation-failed",
   "model-generation-timeout",
   "model-output-parse-failed",

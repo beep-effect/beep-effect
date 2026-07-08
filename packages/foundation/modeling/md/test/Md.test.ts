@@ -389,6 +389,16 @@ ${Md.h3("Inside")}
     expect(renderMarkdownBlock(Md.table([["a\nb\rc"]], { headerRow: true }))).toBe("| a<br/>b<br/>c |\n| --- |");
   });
 
+  it("falls back to a closed heading tag for forged heading levels", () => {
+    const forgedHeading = {
+      _tag: "heading",
+      level: "1><script>alert(1)</script><h1",
+      children: [Text.make({ value: "Safe" })],
+    } as unknown as Block;
+
+    expect(renderHtmlBlock(forgedHeading)).toBe("<h6>Safe</h6>");
+  });
+
   it.effect(
     "constructs YouTube embeds without throwing at validation boundaries",
     Effect.fnUntraced(function* () {

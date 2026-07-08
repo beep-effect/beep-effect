@@ -1,5 +1,9 @@
 import { LangExtractRequest } from "@beep/langextract/Extraction";
-import { layer as LangExtractLayer, LangExtractService } from "@beep/langextract/Service";
+import {
+  layer as LangExtractLayer,
+  LangExtractService,
+  remoteExtractionPolicyFromConfig,
+} from "@beep/langextract/Service";
 import { Distinction, DistinctionDetail } from "@beep/law-practice-domain";
 import { LawPracticeServerLive } from "@beep/law-practice-server/layer";
 import { IrToLaw, IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw";
@@ -7,7 +11,7 @@ import { OfficeActionReview, officeActionExtractionTargets } from "@beep/law-pra
 import { DocumentId } from "@beep/nlp/Core";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer, Stream } from "effect";
+import { ConfigProvider, Effect, Layer, Stream } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
@@ -38,9 +42,12 @@ const makeLanguageModelLayer = (text: string): Layer.Layer<LanguageModel.Languag
     streamText: () => Stream.empty as never,
   } as LanguageModel.Service);
 
+const TestLangExtractLayer = LangExtractLayer.pipe(Layer.provide(remoteExtractionPolicyFromConfig));
+
 const makeLawPracticeServerTestLayer = (modelOutput: string) =>
-  Layer.mergeAll(LawPracticeServerLive, LangExtractLayer).pipe(
+  Layer.mergeAll(LawPracticeServerLive, TestLangExtractLayer).pipe(
     Layer.provide(makeLanguageModelLayer(modelOutput)),
+    Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_LANGEXTRACT_ALLOW_REMOTE: "true" }))),
     Layer.provide(BunCrypto.layer)
   );
 

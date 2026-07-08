@@ -465,13 +465,13 @@ const historyStubCard = (candidate: SiftCandidate, capturedAt: string, relativeP
 const historySiftImpl = Effect.fn("Research.historySiftImpl")(function* (
   options: ResearchHistorySiftOptions
 ): Effect.fn.Return<ResearchHistorySiftSummary, ResearchCommandError, ResearchCommandServiceRequirements> {
+  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const databasePath = yield* catalogDbPath(options.vaultRoot);
   const seen = yield* loadSeenUrls(databasePath);
   const profiles = yield* discoverProfiles(options.browser);
   const nowMillis = DateTime.toEpochMillis(yield* DateTime.now);
   const cutoff = unixSecondsToChromeMicros(nowMillis / 1000 - options.sinceDays * 86_400);
-  const scratchDir = path.join(options.vaultRoot, VAULT_DIRS.state, "tmp");
 
   const collection: SiftCollection = {
     byUrlNorm: MutableHashMap.empty<string, SiftCandidate>(),
@@ -479,10 +479,17 @@ const historySiftImpl = Effect.fn("Research.historySiftImpl")(function* (
     skippedSeen: 0,
     urlsScanned: 0,
   };
-  for (const profile of profiles) {
-    const rows = yield* readProfileHistory(profile, scratchDir, cutoff);
-    yield* Effect.forEach(rows, (row) => collectSiftRow(collection, seen, row), { discard: true });
-  }
+  yield* Effect.scoped(
+    Effect.gen(function* () {
+      const scratchDir = yield* fs
+        .makeTempDirectoryScoped({ prefix: "beep-research-history-" })
+        .pipe(ResearchCommandError.mapError("Failed creating browser history scratch directory."));
+      for (const profile of profiles) {
+        const rows = yield* readProfileHistory(profile, scratchDir, cutoff);
+        yield* Effect.forEach(rows, (row) => collectSiftRow(collection, seen, row), { discard: true });
+      }
+    })
+  );
 
   const capturedAt = DateTime.formatIso(yield* DateTime.now);
   const cards: Array<CardPersistRow> = A.map(A.fromIterable(MutableHashMap.values(collection.byUrlNorm)), (candidate) =>
@@ -931,7 +938,7 @@ const commitVault = Effect.fn("Research.commitVault")(function* (
           ResearchCommandError.make({ message: `git ${A.join(args, " ")} exited with ${exitCode} in the vault.` })
       )
     );
-  yield* run(["add", "-A"]);
+  yield* run(["add", "-A", "--", ".", `:(exclude)${VAULT_DIRS.state}/**`]);
   const status = yield* Effect.scoped(
     Effect.gen(function* () {
       const handle = yield* ChildProcess.make("git", ["diff", "--cached", "--quiet"], {

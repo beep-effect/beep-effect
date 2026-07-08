@@ -923,6 +923,22 @@ const resolveWithinRoot = Effect.fn("CorpusCommandService.resolveWithinRoot")(fu
   );
 });
 
+const extractOutputLabel = (outLabel: string | undefined): Effect.Effect<string, CorpusCommandError> => {
+  const label = outLabel ?? "extract";
+  return Str.isEmpty(Str.trim(label)) ||
+    label === "." ||
+    label === ".." ||
+    Str.includes("/")(label) ||
+    Str.includes("\\")(label) ||
+    Str.includes("\u0000")(label)
+    ? Effect.fail(
+        CorpusCommandError.make({
+          message: `Invalid corpus extract out-label "${label}"; use a single directory name under staging/.`,
+        })
+      )
+    : Effect.succeed(label);
+};
+
 const writeCorpusStringFile = Effect.fn("CorpusCommandService.writeCorpusStringFile")(function* (
   outputPath: string,
   content: string
@@ -1113,7 +1129,8 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
   const path = yield* Path.Path;
 
   const rawRoot = path.join(options.corpusRoot, "raw");
-  const outDir = path.join(options.corpusRoot, "staging", options.outLabel ?? "extract");
+  const outLabel = yield* extractOutputLabel(options.outLabel);
+  const outDir = path.join(options.corpusRoot, "staging", outLabel);
   const childrenRoot = path.join(outDir, "children");
   const concurrency = Math.max(1, Math.floor(options.concurrency ?? 4));
 

@@ -1,7 +1,7 @@
-import { renderCodexConfigWithSkills, skillsCommand } from "@beep/repo-cli/commands/Skills";
-import { A } from "@beep/utils";
+import { renderCodexConfigWithSkills, runSkillsUpdate, skillsCommand } from "@beep/repo-cli/commands/Skills";
+import { A, O } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Effect, FileSystem, Layer, Path, Result } from "effect";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/unstable/http";
@@ -37,6 +37,24 @@ const githubTreeFixture = `{
       "type": "blob",
       "sha": "skill-sha",
       "size": 142
+    }
+  ],
+  "truncated": false
+}`;
+
+const traversalGithubTreeFixture = `{
+  "tree": [
+    {
+      "path": "skills/productivity/grill-me/SKILL.md",
+      "type": "blob",
+      "sha": "skill-sha",
+      "size": 142
+    },
+    {
+      "path": "skills/productivity/grill-me/../../pwned.md",
+      "type": "blob",
+      "sha": "pwned-sha",
+      "size": 11
     }
   ],
   "truncated": false
@@ -83,6 +101,29 @@ const makeSkillsClient = () =>
           request.url ===
           "https://raw.githubusercontent.com/mattpocock/skills/main/skills/productivity/grill-me/SKILL.md"
         ) {
+          return new Response(remoteGrillMeSkill, {
+            status: 200,
+            headers: { "content-type": "text/markdown" },
+          });
+        }
+
+        return new Response("missing", { status: 404 });
+      })
+    )
+  );
+
+const makeTraversalSkillsClient = () =>
+  makeWebHandlerClient((request) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        if (request.url === "https://api.github.com/repos/mattpocock/skills/git/trees/main?recursive=1") {
+          return new Response(traversalGithubTreeFixture, {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          });
+        }
+
+        if (request.url.startsWith("https://raw.githubusercontent.com/mattpocock/skills/main/")) {
           return new Response(remoteGrillMeSkill, {
             status: 200,
             headers: { "content-type": "text/markdown" },
@@ -211,5 +252,22 @@ describe("skills command", () => {
         expect(agentsRealPath).toBe(claudeRealPath);
         expect(logs).toContain("skills:update: drift (4)");
       }).pipe(Effect.provideService(HttpClient.HttpClient, makeSkillsClient()), withTempRepoCommand)
+    ));
+
+  it("rejects traversal paths from remote GitHub trees", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        yield* writeProjectFile(".codex/config.toml", "[skills]\n  include_instructions = true\n");
+
+        const result = yield* Effect.result(runSkillsUpdate({ mode: "write", skill: O.some("grill-me") }));
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+
+        expect(Result.isFailure(result)).toBe(true);
+        if (Result.isFailure(result)) {
+          expect(result.failure.message).toContain("unsafe file path");
+        }
+        expect(yield* fs.exists(path.join(process.cwd(), ".claude", "pwned.md"))).toBe(false);
+      }).pipe(Effect.provideService(HttpClient.HttpClient, makeTraversalSkillsClient()), withTempRepoCommand)
     ));
 });

@@ -1,9 +1,0 @@
-[
-  {
-    "op": "insert_after",
-    "target": "- Prefer built-in schema constructors and checks before `S.makeFilter(...)`.",
-    "content_preview": "- When a task asks for an executable function contract alongside a schema-owned\n  input model (e.g. \"executable function contract\", \"function contract\",\n  \"implement/execute this against the schema\"),",
-    "status": "applied_insert_after",
-    "index": 1
-  }
-]

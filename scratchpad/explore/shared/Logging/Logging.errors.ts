@@ -7,7 +7,6 @@ import {$ScratchpadId} from "@beep/identity";
 import * as S from "effect/Schema";
 import {TaggedErrorClass} from "@beep/schema";
 import { P, Eq } from "@beep/utils";
-import { pipe } from "effect";
 
 
 const $I = $ScratchpadId.create("explore/shared/Logging/Logging.errors");
