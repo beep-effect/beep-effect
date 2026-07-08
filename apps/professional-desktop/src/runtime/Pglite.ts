@@ -5,8 +5,7 @@
  * In-process PGlite database provisioning for the desktop chat sidecar.
  *
  * Boots a file-backed {@link https://pglite.dev | PGlite} instance in-process via
- * `@effect/sql-pglite`, aliases the client under the `@effect/sql-pg` PgClient
- * tag for Drizzle compatibility, then layers the repo's
+ * `@beep/pglite`, then layers the repo's
  * {@link PostgresDrizzle} composition on top so every sidecar repository (the
  * Drizzle ThreadStore, the Drizzle usage-record sink) runs against the same
  * embedded database the integration tests prove. The sidecar's bundled Drizzle
@@ -19,7 +18,7 @@
  * socket-bridge store is not silently reset.
  *
  * The PGlite instance is owned by the layer {@link Scope}: it is acquired and
- * released (`pglite.close()`) by `@effect/sql-pglite` when the runtime scope closes, so
+ * released (`pglite.close()`) by `@beep/pglite` when the runtime scope closes, so
  * the sidecar leaves no open database handle behind. Provisioning failures are
  * unrecoverable at boot, so they are promoted to defects (`Layer.orDie`).
  *
@@ -28,17 +27,17 @@
  */
 
 import { fileURLToPath } from "node:url";
+import { makeLayer as makePgliteLayer } from "@beep/pglite";
 import { makeDrizzleLayer } from "@beep/postgres";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import * as Pg from "@effect/sql-pg/PgClient";
-import * as PgliteClient from "@effect/sql-pglite/PgliteClient";
 import { Clock, Config, Data, Effect, FileSystem, Layer, Path } from "effect";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import initdbWasmPath from "../../../../node_modules/@electric-sql/pglite/dist/initdb.wasm" with { type: "file" };
 import pgliteDataPath from "../../../../node_modules/@electric-sql/pglite/dist/pglite.data" with { type: "file" };
 import pgliteWasmPath from "../../../../node_modules/@electric-sql/pglite/dist/pglite.wasm" with { type: "file" };
 import { migrateOnBoot } from "./Migrations.js";
+import type { PgliteClientOptions } from "@beep/pglite";
 import type { PostgresDrizzle } from "@beep/postgres";
 import type { Context } from "effect";
 
@@ -64,7 +63,7 @@ const ChatDbDataDir = Config.string("CHAT_DB_PATH").pipe(
  * desktop PGlite runtime.
  *
  * The `v1` suffix is part of the on-disk compatibility contract for the
- * embedded `@effect/sql-pglite` / `@electric-sql/pglite` line. Bump the marker
+ * embedded `@beep/pglite` / `@electric-sql/pglite` line. Bump the marker
  * whenever that storage compatibility contract changes.
  *
  * @category configuration
@@ -244,23 +243,14 @@ const PgliteBinaryAssets = Effect.all([compileWasmFile(pgliteWasmPath), compileW
   }))
 );
 
-const asPgClient = (client: PgliteClient.PgliteClient): Pg.PgClient => client as unknown as Pg.PgClient;
-
 /**
  * Build a PGlite layer with the desktop sidecar's bundled binary assets.
  *
  * @category layers
  * @since 0.0.0
  */
-export const makeBundledPgliteLayer = (options: PgliteClient.PgliteClientConfig.Create = {}) =>
-  Layer.unwrap(
-    Effect.map(PgliteBinaryAssets, (assets) => {
-      const pgliteLayer = PgliteClient.layer({ ...options, ...assets });
-      const pgClientShim = Layer.effect(Pg.PgClient, Effect.map(Effect.service(PgliteClient.PgliteClient), asPgClient));
-
-      return pgClientShim.pipe(Layer.provideMerge(pgliteLayer));
-    })
-  );
+export const makeBundledPgliteLayer = (options: PgliteClientOptions = {}) =>
+  Layer.unwrap(Effect.map(PgliteBinaryAssets, (assets) => makePgliteLayer({ ...options, ...assets })));
 
 const MigrationPlatformLive = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
 
