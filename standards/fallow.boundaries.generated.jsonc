@@ -2168,14 +2168,12 @@
         "from": "@beep/test-utils",
         "allow": [
           "@beep/identity",
-          "@beep/pglite",
           "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
-          "@beep/pglite",
           "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"

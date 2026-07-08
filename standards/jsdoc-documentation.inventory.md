@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-08T15:53:20.505Z
+Generated: 2026-07-08T16:41:40.952Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 97 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 0 |
-| publicModules | 1618 |
-| publicExports | 14533 |
+| publicModules | 1620 |
+| publicExports | 14544 |
 | openModules | 0 |
 | openExports | 0 |
 | missingExportExamples | 0 |
@@ -122,7 +122,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 79 | `@beep/data` | `packages/foundation/primitive/data` | clean | 12 | 144 | 0 | 0 |
 | 80 | `@beep/xai` | `packages/drivers/xai` | clean | 7 | 70 | 0 | 0 |
 | 81 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | clean | 13 | 34 | 0 | 0 |
-| 82 | `@beep/duckdb` | `packages/drivers/duckdb` | clean | 4 | 17 | 0 | 0 |
+| 82 | `@beep/duckdb` | `packages/drivers/duckdb` | clean | 6 | 28 | 0 | 0 |
 | 83 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 4 | 54 | 0 | 0 |
 | 84 | `@beep/agents-client` | `packages/agents/client` | clean | 3 | 23 | 0 | 0 |
 | 85 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | clean | 7 | 30 | 0 | 0 |

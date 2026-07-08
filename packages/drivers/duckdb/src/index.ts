@@ -32,3 +32,10 @@ export * from "./DuckDb.models.ts";
  * @category services
  */
 export * from "./DuckDb.service.ts";
+/**
+ * Public DuckDB-backed Effect SQL client exports.
+ *
+ * @since 0.0.0
+ * @category services
+ */
+export * from "./DuckDbSqlClient.service.ts";

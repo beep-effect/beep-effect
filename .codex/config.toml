@@ -51,6 +51,9 @@
     name = "onepassword-secret-refs"
     enabled = true
   [[skills.config]]
+    name = "oracle"
+    enabled = true
+  [[skills.config]]
     name = "ponytail"
     enabled = true
   [[skills.config]]

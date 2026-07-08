@@ -47,7 +47,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1454,
+      "line": 1451,
       "owner": "@beep/test-utils",
       "reason": "Test-infrastructure gate: the optional `env` override reads driver/URL selection from Config at boot; it is a test-only branch-exercise bag (tests pass env to hit each path without mutating process env), not a persisted data contract. Fn({input,output})/S.Class modeling adds ceremony without executable value."
     }

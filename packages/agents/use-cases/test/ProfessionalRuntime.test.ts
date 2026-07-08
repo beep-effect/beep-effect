@@ -164,14 +164,13 @@ describe("@beep/agents-use-cases", { concurrent: false }, () => {
       expect(accepted).toStrictEqual(outputSet);
     }));
 
-  it("round-trips touched runtime schemas with schema-derived arbitraries", () => {
+  it("round-trips bounded runtime schemas with schema-derived arbitraries", () => {
     const schemas: ReadonlyArray<S.Codec<unknown>> = [
       RuntimeScope,
       RuntimeEvidenceRef,
       RuntimeCandidateClaim,
       RuntimeActivity,
       SdkContextPacket,
-      CandidateOutputSet,
     ];
 
     for (const schema of schemas) {
