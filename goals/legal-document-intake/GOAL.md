@@ -18,8 +18,9 @@ contract:
 - `goals/legal-document-intake/ops/manifest.json`
 - `goals/legal-document-intake/research/exploration-findings.md` (reuse map)
 
-Read those first, then `AGENTS.md`, `CLAUDE.md`, and the standards named by
-`SPEC.md`. Higher-priority repo standards outrank packet prose.
+Read those first, then `AGENTS.md` and the standards named by `SPEC.md`. If a
+repo-local `CLAUDE.md` exists, read it as an additional source.
+Higher-priority repo standards outrank packet prose.
 
 Scope:
 

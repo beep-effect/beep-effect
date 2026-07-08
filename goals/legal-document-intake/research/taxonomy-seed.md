@@ -207,4 +207,4 @@ No SPEC supersession is needed. D5 already says concepts align to FOLIO "where t
 - knowledge-based/inferred: Should P1 include IP prosecution as a first-class seed concept because this repo has strong law-practice patent precedent, or should it remain a law-practice extension layered over the generic document taxonomy?
 - knowledge-based/inferred: Should `email-and-messages` stay separate from `correspondence` in v1 filing, or should it be a narrower child only when imported from PST/M365 sources?
 - A future FOLIO class cache or checked-in fixture is needed before replacing `no FOLIO match` rows with exact `skos:exactMatch` or `skos:closeMatch` IRIs.
-- The default layout note (`research/folder-structure.md`) does not exist yet; reconcile its final matter-centric projection rule with this segment-only contract before P1 implementation.
+- Resolved by `research/folder-structure.md` and `SPEC.md` D5-S1: full vault paths are matter-centric, while this taxonomy note owns only the taxonomy-derived concept path segment contract.
