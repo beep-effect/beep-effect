@@ -19,7 +19,8 @@ Posture is aggressive conversion (SPEC D-A):
 1. Exported pure-data `interface`/type-literal → `S.Class` or named schema
    building block (prefer existing `@beep/schema` primitives; search before
    inventing — `repo-symbol-discovery` conventions).
-2. `extends` repo-local → `S.Class` field spread or `S.extend`.
+2. `extends` repo-local → `S.Class` field spread or struct-field spreading
+   (`S.extend` does not exist in Effect v4 — see SPEC API-corrections table).
 3. Inline nested `S.Struct` → extracted named class.
 4. Dictionary-shaped structs → `S.Record`; heterogeneous Option spreads →
    `O.getSomesStruct` (repo-added, `@beep/utils`).

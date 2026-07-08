@@ -98,7 +98,8 @@ Doctrine: `.claude/skills/schema-first-development` + crispen ladder. The
 entry's recorded exception `reason` is a hypothesis to *invalidate*: convert
 the shape so the detector stops seeing it. Known moves: exported pure-data
 interface/type-literal → `S.Class`/named schema; extends-repo-local →
-`S.Class` field spread or `S.extend`; inline nested `S.Struct` → extracted
+`S.Class` field spread or struct-field spreading (`S.extend` does not exist
+in v4 — see API-corrections table below); inline nested `S.Struct` → extracted
 named class; dictionaries → `S.Record`; SFV4 advisories → resolve the
 underlying issue. Every schema change carries the crispening §5.3 parity
 proof: byte-identical encoded/wire snapshot + one `S.toArbitrary` round-trip
