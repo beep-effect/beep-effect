@@ -13,7 +13,6 @@ import {
   DateTimeInputString,
   DateTimeUtcFromValid,
 } from "@beep/schema/DateTimeUtcFromValid";
-import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
 import * as Equal from "effect/Equal";
@@ -248,7 +247,7 @@ describe("DateTimeUtcFromValid", () => {
         expect(Equal.equals(encode(roundTripped), encoded)).toBe(true);
         expect(DateTime.toEpochMillis(roundTripped)).toBe(DateTime.toEpochMillis(utc));
       }),
-      fcRuns(50)
+      { numRuns: 50 }
     );
   });
 });

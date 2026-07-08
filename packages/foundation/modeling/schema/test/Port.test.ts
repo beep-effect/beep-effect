@@ -1,5 +1,4 @@
 import { Port, PortFromString } from "@beep/schema/Port";
-import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
 import * as S from "effect/Schema";
@@ -55,7 +54,7 @@ describe("Port", () => {
         expect(value).toBeGreaterThanOrEqual(portMinimum);
         expect(value).toBeLessThanOrEqual(portMaximum);
       }),
-      fcRuns(100)
+      { numRuns: 100 }
     );
   });
 });

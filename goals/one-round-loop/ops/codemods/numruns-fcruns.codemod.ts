@@ -34,6 +34,7 @@ import { NodeServices } from "@effect/platform-node";
 import { Console, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Str from "effect/String";
 import { Node, SyntaxKind } from "ts-morph";
 import type { TSMorphServiceError } from "@beep/repo-utils";
 import type { CallExpression, ObjectLiteralExpression, SourceFile } from "ts-morph";
@@ -41,6 +42,23 @@ import type { CallExpression, ObjectLiteralExpression, SourceFile } from "ts-mor
 const FAST_CHECK_MODULE = "effect/testing";
 const TEST_UTILS_MODULE = "@beep/test-utils";
 const HELPER_NAME = "fcRuns";
+
+/**
+ * Packages inside `@beep/test-utils`' own dependency closure. `@beep/test-utils`
+ * depends on `@beep/schema`, `@beep/utils`, and `@beep/pglite`, so migrating
+ * their test files to `fcRuns` would make them import the helper back out of a
+ * package that depends on them — a package cycle (greptile: "Cyclic Helper
+ * Import"). The codemod leaves their inline `numRuns` untouched; lift this
+ * carve-out by relocating `fcRuns` to a leaf package upstream of the closure.
+ */
+const TEST_UTILS_CLOSURE_MARKERS: ReadonlyArray<string> = [
+  "/foundation/modeling/schema/",
+  "/foundation/modeling/utils/",
+  "/drivers/pglite/",
+];
+
+const isTestUtilsClosureFile = (filePath: string): boolean =>
+  A.some(TEST_UTILS_CLOSURE_MARKERS, (marker) => Str.includes(marker)(filePath));
 
 /**
  * Per-file codemod outcome.
@@ -139,6 +157,10 @@ const ensureFcRunsImport = (sourceFile: SourceFile): void => {
 };
 
 const rewriteNumRunsToFcRuns = (sourceFile: SourceFile): boolean => {
+  if (isTestUtilsClosureFile(sourceFile.getFilePath())) {
+    return false;
+  }
+
   const fcAlias = resolveFastCheckAlias(sourceFile);
   if (O.isNone(fcAlias)) {
     return false;

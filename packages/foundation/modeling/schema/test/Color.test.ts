@@ -1,5 +1,4 @@
 import * as Color from "@beep/schema/Color";
-import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -60,7 +59,7 @@ describe("Color", () => {
         const rgb = decodeRgb(hex);
         expect(encodeHex({ r: rgb.r, g: rgb.g, b: rgb.b })).toBe(hex);
       }),
-      fcRuns(50)
+      { numRuns: 50 }
     );
   });
 
@@ -75,7 +74,7 @@ describe("Color", () => {
         expect(amount).toBeLessThanOrEqual(1);
         expect(decode(encode(amount))).toBe(amount);
       }),
-      fcRuns(25)
+      { numRuns: 25 }
     );
   });
 });

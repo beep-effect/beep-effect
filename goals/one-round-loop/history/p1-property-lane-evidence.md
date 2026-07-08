@@ -156,3 +156,45 @@ snapshot is correct) and accepts an explicit `env` override so the
 branch test injects each case directly — no env mutation, no Bun global,
 no suppression directives. Verified: oip-web build green, test-utils
 check green, `tsgo-rules` exit 0, `native-runtime` clean, SqlTest 14/14.
+
+
+## Final resolution (rebased onto main; supersedes the interim fixes above)
+
+After main advanced (Box product fix #331 merged), PR #327 was rebased
+and the two interim seed-exclusions were replaced with their proper
+forms. Both classes are now GREEN at the full env floor — no run-count
+pins remain anywhere in the lane.
+
+- **Empty-`Error` round-trip.**
+  - *Box*: `#331` fixed `BoxError`'s codec upstream, so the pin is gone —
+    `B.BoxError` runs at the full env floor via `assertSchemaRoundTrip`.
+    Verified 3× at `BEEP_FC_NUM_RUNS=1000` on fresh seeds, plus the full
+    file (18/18) at 400.
+  - *Runpod*: not yet fixed upstream, so the exclusion moved from a
+    run-count pin to an explicit **input** seed-exclusion — the error
+    arbitraries force `cause: O.none()` (the buggy field) so the lane
+    runs at the FULL env floor over every other field. Verified 3× at
+    1000 (7/7 at 400). Product codec fix filed as a follow-up task
+    (mirror #331).
+  - Net: `assertSchemaRoundTripPinned` deleted from both driver tests;
+    the SPEC's "seed-exclude explicitly" is now satisfied by excluding
+    the buggy INPUT, never by lowering a run count.
+
+- **Cyclic helper import (the 3 closure packages).** Greptile flagged the
+  undeclared `@beep/test-utils` import in `@beep/schema`, `@beep/utils`,
+  and `@beep/pglite` — packages inside test-utils's OWN dependency
+  closure, which cannot declare it without a cycle. Superseding the
+  interim "keep the undeclared import" waiver, all closure test files
+  were reverted from `fcRuns(N)` to their pre-P1 inline `{ numRuns: N }`
+  (schema **29** files, utils **1**, pglite **1**) — eliminating the
+  import entirely (no floor lowered; the base N is unchanged, the closure
+  simply opts out of the env-raise). The `numruns→fcRuns` codemod now
+  refuses these packages via `isTestUtilsClosureFile` (guard + a
+  dedicated closure-skip test), so a re-run cannot reintroduce the cycle.
+  Repo-wide invariant re-proved: every external `fcRuns` importer
+  declares `@beep/test-utils` (0 violations). Relocating `fcRuns` to an
+  upstream leaf so the closure can env-raise is filed as a follow-up.
+
+Local verification (all green): `@beep/schema` 69 files / 614 tests;
+Box 18/18 and Runpod 7/7 at 400; the 3 reverted closure files at 400;
+codemod golden-diff + idempotency + negative + closure-skip 4/4.

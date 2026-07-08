@@ -17,7 +17,7 @@
       "status": "done"
     },
     "C2_property_law_lane": {
-      "status": "done"
+      "status": "in_progress"
     },
     "C3_coverage_baseline_v2": {
       "status": "pending"
@@ -80,6 +80,25 @@
         "ciRounds": 2,
         "localProof": "same content as PR 323 (16/16)",
         "outcome": "merged; round 1 failed on stale fallow contract test (turbo cache-input gap, evidence \u00a77); round 2 green"
+      },
+      {
+        "pr": 325,
+        "title": "docs: p0 closeout \u2014 row-2 proven, ledger final",
+        "ciRounds": 1,
+        "localProof": "docs-only per D8 (--fast --affected)",
+        "outcome": "merged"
+      },
+      {
+        "pr": 327,
+        "title": "feat: p1 property-law lane (env-max floors, pr lane, nightly sweep)",
+        "ciRounds": 6,
+        "localProof": "full beep ci local battery (round 2 all lanes green); property lane surfaced two GENUINE pre-existing product bugs (Box + Runpod empty-Error round-trip) on P1's own PR \u2014 the packet thesis proving itself",
+        "outcome": "FAILED one-round proof (6 CI rounds); OPEN, rebased onto main post-#331, all surfaced classes now resolved and locally green",
+        "rootCause": "The env-max floor codemod + fcRuns migration added a shared @beep/test-utils dep across 55 packages. That single cross-package dep edit had a wide blast radius that tripped distinct structural gates SEQUENTIALLY across rounds: (1) turbo dep-cycle (test-utils closure: @beep/utils/@beep/schema/@beep/pglite), (2) tsconfig/config-sync references drift, (3) fallow-boundaries regen, (4) schema-first exported-type flag (PgliteIntegrationGateEnv), (5) native-runtime/processEnv laws on the SqlTest env bind, (6) seed-dependent property empty-Error round-trip (Box + Runpod), (7) greptile cyclic-helper-import on the 3 closure packages. Each round fixed one class, exposing the next.",
+        "localCatch": "All seven classes ARE caught by the full `beep ci local` battery (round 2 ran green after fixes). The gap was procedural, not a missing gate: incremental push-per-fix instead of one full-battery pass up front.",
+        "remediationForThesis": "P4: wide-blast-radius changes (cross-package dep edits) need the FULL battery run once up front, not incrementally. A pre-push rg-based precheck bundling dep-cycle + config-sync + fallow-boundary regen for any package.json dependency delta would collapse this class to one round.",
+        "resolution": "Empty-Error round-trip: Box un-pinned to full env floor (product bug fixed upstream in #331; verified 3x @1000, fresh seeds); Runpod error arbitraries force cause:O.none() as an explicit INPUT seed-exclusion (not a run-count pin) so the lane runs at full floor over every other field, product codec fix filed as follow-up. Cyclic-helper-import: the 3 closure packages (schema 29 files / utils 1 / pglite 1) reverted from fcRuns(N) to inline {numRuns:N} (pre-P1 form, no floor lowered), eliminating the undeclared import; the numruns->fcRuns codemod now skips the closure via isTestUtilsClosureFile (guard + test). fcRuns-to-leaf relocation filed as follow-up so the closure can env-raise later. Repo-wide invariant re-proved: every external fcRuns importer declares @beep/test-utils (0 violations).",
+        "resumeNext": "Commit + force-push rebased P1; beep ci local dogfood; yeet publish + monitor to green; resolve the 3 greptile cyclic-import threads (now fixed in code); then P4 required-check flip pending stable green history."
       }
     ]
   }

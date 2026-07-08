@@ -6,7 +6,6 @@ import {
   LiteralKitKeyCollisionError,
   LiteralNotInSetError,
 } from "@beep/schema/LiteralKit";
-import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -33,7 +32,7 @@ describe("LiteralKit", () => {
         expect(Status.Options).toContain(literal);
         expect(decode(encode(literal))).toBe(literal);
       }),
-      fcRuns(25)
+      { numRuns: 25 }
     );
   });
 

@@ -1,5 +1,4 @@
 import { makeLayer, PgliteClient, PgliteError, PgliteTestLayer } from "@beep/pglite";
-import { fcRuns } from "@beep/test-utils";
 import * as Pg from "@effect/sql-pg/PgClient";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Context, Effect, Exit, Layer, Result, Scope } from "effect";
@@ -30,7 +29,7 @@ describe("PgliteError", () => {
 
         expect(decoded).toEqual(error);
       }),
-      fcRuns(50)
+      { numRuns: 50 }
     ));
 });
 

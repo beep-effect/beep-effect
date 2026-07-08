@@ -5,7 +5,6 @@ import {
   EthereumValidatorPublicKeyRedacted,
 } from "@beep/schema/EthereumValidatorPublicKey";
 import { EvmAddressRedacted } from "@beep/schema/EvmAddress";
-import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Redacted } from "effect";
 import * as S from "effect/Schema";
@@ -42,7 +41,7 @@ describe("blockchain redacted schemas", () => {
       fc.property(validatorPublicKeyArbitrary, (value) => {
         expect(decodeValidatorPublicKey(value)).toBe(value);
       }),
-      fcRuns(50)
+      { numRuns: 50 }
     );
   });
 });

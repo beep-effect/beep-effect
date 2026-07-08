@@ -22,7 +22,6 @@ import {
   today,
   todayEffect,
 } from "@beep/schema/LocalDate";
-import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Duration, Effect, Equal, Exit } from "effect";
 import * as DateTime from "effect/DateTime";
@@ -557,7 +556,7 @@ describe("LocalDate", () => {
           expect(decoded).toBeInstanceOf(LocalDate);
           expect(equals(decoded, date)).toBe(true);
         }),
-        fcRuns(50)
+        { numRuns: 50 }
       ));
 
     it.effect(

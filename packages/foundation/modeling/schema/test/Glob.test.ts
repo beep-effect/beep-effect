@@ -1,6 +1,5 @@
 import * as GlobModule from "@beep/schema/Glob";
 import { Glob } from "@beep/schema/Glob";
-import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -55,7 +54,7 @@ describe("Glob", () => {
         expect(isGlob(pattern)).toBe(true);
         expect(decode(pattern)).toBe(pattern);
       }),
-      fcRuns(25)
+      { numRuns: 25 }
     );
   });
 

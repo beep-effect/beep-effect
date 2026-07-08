@@ -1,5 +1,4 @@
 import { isMutableHashMap, MutableHashMap, MutableHashMapFromSelf } from "@beep/schema/MutableHashMap";
-import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as MutableHashMap_ from "effect/MutableHashMap";
@@ -127,7 +126,7 @@ describe("MutableHashMap", () => {
         const decoded = decode(encoded);
         expect(equivalence(decoded, value)).toBe(true);
       }),
-      fcRuns(50)
+      { numRuns: 50 }
     );
   });
 });

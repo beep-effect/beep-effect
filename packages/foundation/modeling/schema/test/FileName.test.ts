@@ -1,5 +1,4 @@
 import { FileName } from "@beep/schema/FileName";
-import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -72,7 +71,7 @@ describe("FileName", () => {
         expect(isFileName(name)).toBe(true);
         expect(decode(name)).toBe(name);
       }),
-      fcRuns(50)
+      { numRuns: 50 }
     );
   });
 });

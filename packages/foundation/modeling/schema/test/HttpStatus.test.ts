@@ -1,5 +1,4 @@
 import * as HttpStatus from "@beep/schema/HttpStatus";
-import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -21,7 +20,7 @@ describe("HttpStatus", () => {
         expect(typeof name).toBe("string");
         expect(decode(name)).toBe(code);
       }),
-      fcRuns(50)
+      { numRuns: 50 }
     );
   });
 

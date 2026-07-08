@@ -4,7 +4,6 @@ import { optional } from "@beep/schema/SchemaUtils/optional";
 import { pluck } from "@beep/schema/SchemaUtils/pluck";
 import { split } from "@beep/schema/SchemaUtils/split";
 import { toEquivalence } from "@beep/schema/SchemaUtils/toEquivalence";
-import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, pipe } from "effect";
@@ -221,7 +220,7 @@ describe("withCodecStatics", () => {
         expect(Slug.fromUnknown(sampled)).toBe(sampled);
         expect(O.isSome(Slug.decodeOption(sampled))).toBe(true);
       }),
-      fcRuns(50)
+      { numRuns: 50 }
     );
   });
 
