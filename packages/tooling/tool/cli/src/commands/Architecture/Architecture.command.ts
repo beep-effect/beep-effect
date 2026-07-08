@@ -13,6 +13,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { printLines } from "../../internal/cli/Printer.js";
+import { makeArchitectureOperationPlan, makeArchitecturePackageOperationPlan } from "./Architecture.plan.js";
 import {
   ArchitectureDomainKind,
   ArchitecturePackageRole,
@@ -21,15 +22,13 @@ import {
   decodeCanonicalSliceOperationPlanJson,
   defaultArchitecturePlanTarget,
   encodeCanonicalSliceOperationPlanJson,
-  makeArchitectureOperationPlan,
-  makeArchitecturePackageOperationPlan,
-} from "./OperationPlan.js";
+} from "./Architecture.schemas.js";
 import { applyCanonicalSliceOperationPlan, checkCanonicalSliceOperationPlan } from "./OperationPlanExecution.js";
 import type {
   CanonicalSliceOperationPlan,
   OperationPlanApplyResult,
   OperationPlanCheckResult,
-} from "./OperationPlan.js";
+} from "./Architecture.schemas.js";
 
 const planFileFlag = Flag.string("file").pipe(
   Flag.withAlias("f"),

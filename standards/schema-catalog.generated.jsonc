@@ -19522,7 +19522,7 @@
       "description": "Result of a law evaluation."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "ArchitectureDomainKind",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -19530,13 +19530,13 @@
       "description": "Domain-kind folder used by canonical architecture operation plans."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "ArchitectureOperation",
       "kind": "union",
       "owner": "@beep/repo-cli"
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "ArchitectureOperationCheck",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19544,7 +19544,7 @@
       "description": "Per-operation idempotency result returned by architecture operation-plan checks."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "ArchitectureOperationCheckStatus",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -19552,7 +19552,7 @@
       "description": "Result assigned to one architecture operation during idempotency validation."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "ArchitectureOperationConflictPolicy",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -19560,7 +19560,7 @@
       "description": "Conflict behavior declared by an architecture operation before it touches the filesystem."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "ArchitectureOperationKind",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -19568,7 +19568,7 @@
       "description": "Operation discriminator emitted by schema-versioned architecture operation plans."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "ArchitectureOperationSource",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -19576,7 +19576,7 @@
       "description": "Origin of an architecture operation within the normalized plan factory."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "ArchitectureOperationWriteMode",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -19584,7 +19584,7 @@
       "description": "Filesystem write mode used by architecture operation-plan dry-run and check output."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "ArchitecturePackageRole",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -19592,7 +19592,7 @@
       "description": "Normal slice role package that can be created as a shell-only architecture package."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "ArchitecturePlanStage",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -19600,7 +19600,7 @@
       "description": "Stage selector for canonical slice operation-plan generation."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "ArchitecturePlanTarget",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19608,7 +19608,7 @@
       "description": "Normalized slice, concept, domain-kind, and stage selected by architecture commands."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "ArchitectureSliceRole",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -19616,7 +19616,7 @@
       "description": "Role package, proof app, or internal admin target represented in an architecture operation plan."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "ArchitectureSliceRolePlan",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19624,7 +19624,7 @@
       "description": "Package-level role metadata emitted by the architecture operation-plan factory."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "ArchitectureWriterKind",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -19632,7 +19632,7 @@
       "description": "Writer family selected for an architecture operation-plan file operation."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "CanonicalSliceOperationPlan",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19640,7 +19640,7 @@
       "description": "Decoded JSON plan used by beep architecture commands before any filesystem write."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "EnsureAbsentPathOperation",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19648,7 +19648,7 @@
       "description": "Operation asserting that a legacy architecture fixture path is absent."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "EnsureFileOperation",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19656,7 +19656,7 @@
       "description": "Operation asserting that a canonical slice file is materialized."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "OperationPlanApplyResult",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19664,7 +19664,7 @@
       "description": "Filesystem write summary for a decoded architecture operation plan."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "OperationPlanCheckResult",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19672,7 +19672,7 @@
       "description": "Filesystem validation result for a decoded architecture operation plan."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "WriteFileOperation",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19680,7 +19680,7 @@
       "description": "Operation that materializes a canonical architecture file with failsafe conflict behavior."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "WritePackageJsonOperation",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19688,16 +19688,24 @@
       "description": "Structured package.json operation selected by the architecture operation-plan factory."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "decodeCanonicalSliceOperationPlanJson",
       "kind": "codec",
       "owner": "@beep/repo-cli"
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "encodeCanonicalSliceOperationPlanJson",
       "kind": "codec",
       "owner": "@beep/repo-cli"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Architecture/internal/AcceptedProofManifest.ts",
+      "symbol": "AcceptedProofFile",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "AcceptedProofFile",
+      "description": "Internal descriptor for a canonical proof file used to generate architecture operation plans."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Ci/Ci.errors.ts",
