@@ -65,6 +65,7 @@ import {
   stageReviewedPublishIntent,
   stashUnstagedWorktree,
   validatePostCommitProofDidNotChangeWorktree,
+  validatePublishBranch,
   warnOnMismatchedPublishUpstream,
 } from "./PublishScope.js";
 import { ensurePullRequest } from "./PullRequest.js";
@@ -754,6 +755,7 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
 > {
   const message = yield* validateRequiredMessage(options);
   const context = yield* hydrateYeetRunContext(options);
+  yield* validatePublishBranch(context, options);
   yield* validateMonitorGuards(context, options);
   const forceTurbo =
     options.mode === "repair" || options.mode === "verify" || options.mode === "publish"

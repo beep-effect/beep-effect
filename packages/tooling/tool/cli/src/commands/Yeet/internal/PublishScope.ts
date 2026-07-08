@@ -34,6 +34,60 @@ import type { RepoRunContext } from "../../../internal/repo-run/index.js";
 import type { YeetRunOptions } from "../Yeet.schemas.js";
 
 const zeroGitSha = "0000000000000000000000000000000000000000" as const;
+const protectedPublishBranches: ReadonlyArray<string> = ["main", "master", "HEAD"];
+
+/**
+ * Refuse `yeet publish` from protected trunk branches before any publish plan
+ * can commit or push.
+ *
+ * @param context - Hydrated repo context containing the current branch name.
+ * @param options - Runtime options used to determine the Yeet mode.
+ * @returns Void when publishing is allowed, otherwise a command error.
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { defaultYeetRunOptions, RepoRunContext, validatePublishBranch } from "@beep/repo-cli/test/Yeet"
+ *
+ * const context = RepoRunContext.make({
+ *   base: "origin/main",
+ *   branch: "main",
+ *   cwd: ".",
+ *   head: "HEAD",
+ *   originalArgv: [],
+ *   packetDir: ".beep/yeet",
+ *   repoRoot: ".",
+ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ *
+ * const failure = validatePublishBranch(context, defaultYeetRunOptions()).pipe(Effect.flip)
+ * ```
+ * @category validation
+ * @since 0.0.0
+ */
+export const validatePublishBranch = (
+  context: RepoRunContext,
+  options: YeetRunOptions
+): Effect.Effect<void, YeetCommandError> => {
+  if (options.mode !== "publish" || !A.contains(protectedPublishBranches, context.branch)) {
+    return Effect.void;
+  }
+
+  return Effect.fail(
+    YeetCommandError.make({
+      message: `yeet publish is PR-branch-only; refusing to publish directly from "${context.branch}". Create a feature branch from ${context.base}, then rerun yeet publish.`,
+      command: `git switch -c <feature-branch> ${context.base}`,
+      exitCode: 1,
+    })
+  );
+};
+
+/**
+ * Expose the protected-branch publish guard for focused tests.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const validatePublishBranchForTesting = validatePublishBranch;
 
 /**
  * Parse non-delete local commit SHAs from Git pre-push hook stdin.

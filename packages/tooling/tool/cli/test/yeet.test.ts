@@ -52,6 +52,7 @@ import {
   TurboPlanSnapshot,
   TurboPlanTask,
   TurboWorkspacePackage,
+  validatePublishBranchForTesting,
   YeetCommandError,
   YeetExecutedStep,
   YeetProofLockStateForTesting,
@@ -1557,6 +1558,18 @@ describe("yeet status helpers", () => {
 });
 
 describe("yeet publish scope helpers", () => {
+  it("refuses publish on main before any publish plan can push", () =>
+    Effect.gen(function* () {
+      const mainContext = RepoRunContext.make({ ...context, branch: "main" });
+      const error = yield* validatePublishBranchForTesting(
+        mainContext,
+        defaultYeetRunOptions({ message: "ci(trunk): guard main publish" })
+      ).pipe(Effect.flip);
+
+      expect(error.message).toContain('yeet publish is PR-branch-only; refusing to publish directly from "main"');
+      expect(error.command).toBe("git switch -c <feature-branch> origin/main");
+    }));
+
   it("summarizes refused paths with counts, top-level entries, and capped examples", () => {
     const paths = pipe(
       A.makeBy(14, (index) => `generated/wiki/page-${Str.padStart(2, "0")(`${index}`)}.md`),
