@@ -3,7 +3,7 @@
   "initiative": {
     "id": "repo-cli-modularization",
     "title": "@beep/repo-cli Modularization",
-    "status": "active",
+    "status": "shelved",
     "created": "2026-07-07",
     "updated": "2026-07-08",
     "packetAnchorDocument": "SPEC.md"

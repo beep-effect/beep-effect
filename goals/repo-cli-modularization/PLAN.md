@@ -1,5 +1,17 @@
 # @beep/repo-cli Modularization Plan
 
+> **SHELVED (2026-07-08).** Waves P0–P9 landed and were `yeet verify`-green on
+> branch `repo-cli-modularization`, and PR #339 was opened. While it was open,
+> `main` merged #326 ("drive all standards inventories to zero") — a
+> comprehensive independent rewrite of **all 15** repo-cli command groups this
+> campaign restructured. It collides catastrophically with 11 of them (adopting
+> main's version of any split file, e.g. `Research.service.ts`, breaks that
+> group's whole `internal/` split at compile time), so reconciling would revert
+> well over half the campaign for a largely-redundant result against a `main`
+> actively rewriting this exact surface. PR #339 was closed in favor of #326;
+> the branch and this packet are preserved for reference. No history was
+> force-pushed.
+
 ## Status
 
 This plan executes [SPEC.md](./SPEC.md). Discovery is complete
