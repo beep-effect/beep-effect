@@ -11,6 +11,7 @@ import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Config, Context, Effect, Layer, Match, Redacted } from "effect";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
 import * as HttpClient from "effect/unstable/http/HttpClient";
@@ -140,7 +141,7 @@ const stringField = (record: Readonly<Record<string, unknown>>, key: string): O.
   O.fromUndefinedOr(record[key]).pipe(O.filter(P.isString));
 
 const optionalField = (record: Readonly<Record<string, unknown>>, key: string): Record<string, string> =>
-  O.getSomesStruct({ [key]: stringField(record, key) });
+  R.getSomes({ [key]: stringField(record, key) });
 
 type DownloadOptionRecord = Readonly<Record<string, unknown>> & {
   readonly downloadUrl: string;
