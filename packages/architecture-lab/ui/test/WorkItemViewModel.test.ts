@@ -6,6 +6,7 @@ import {
   WorkItemSummaryViewModel,
   WorkItemVisibleAction,
 } from "@beep/architecture-lab-ui/aggregates/WorkItem";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal } from "effect";
 import * as O from "effect/Option";
@@ -113,7 +114,7 @@ describe("WorkItem UI view model", () => {
           Equal.equals(S.decodeUnknownSync(WorkItemVisibleAction)(S.encodeSync(WorkItemVisibleAction)(value)), value)
         ).toBe(true);
       }),
-      { numRuns: 20 }
+      fcRuns(20)
     );
 
     fc.assert(
@@ -125,7 +126,7 @@ describe("WorkItem UI view model", () => {
           )
         ).toBe(true);
       }),
-      { numRuns: 20 }
+      fcRuns(20)
     );
   });
 
@@ -136,7 +137,7 @@ describe("WorkItem UI view model", () => {
       fc.property(WorkItemArbitrary, (workItem) => {
         expect(isSummary(toWorkItemSummaryViewModel(workItem, defaultWorkItemPublicConfig))).toBe(true);
       }),
-      { numRuns: 20 }
+      fcRuns(20)
     );
   });
 });

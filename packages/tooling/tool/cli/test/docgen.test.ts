@@ -33,6 +33,7 @@ import { Process } from "@beep/repo-docgen/Domain";
 import { verifyDocgenProofManifest, writeDocgenProofManifest } from "@beep/repo-docgen/ProofManifest";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { Pod, Runpod, Template } from "@beep/runpod";
+import { fcRuns } from "@beep/test-utils";
 import { A, O } from "@beep/utils";
 import { NodeChildProcessSpawner, NodeCrypto, NodeServices } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
@@ -161,7 +162,7 @@ describe("Docgen operations", () => {
       fc.property(arbitrary, (config) =>
         sameConfig(config, decodeDocgenConfigDocument(encodeDocgenConfigDocument(config)))
       ),
-      { numRuns: 16 }
+      fcRuns(16)
     );
   });
 
@@ -4236,7 +4237,7 @@ describe("DocgenQualityWorkerEvalReport schema", () => {
 
     fc.assert(
       fc.property(arbitrary, (report) => sameReport(report, decodeWorkerEvalReportJson(encodeReportJson(report)))),
-      { numRuns: 16 }
+      fcRuns(16)
     );
   });
 });

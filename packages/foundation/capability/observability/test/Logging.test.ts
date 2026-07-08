@@ -1,4 +1,5 @@
 import { PrettyLoggerConfig, RenderLogBannerOptions, renderLogBanner } from "@beep/observability";
+import { fcRuns } from "@beep/test-utils";
 import { Equal } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -28,7 +29,7 @@ describe("Logging", () => {
         );
         expect(O.exists(decoded, (value) => Equal.equals(value, pretty))).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 
@@ -41,7 +42,7 @@ describe("Logging", () => {
         );
         expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 

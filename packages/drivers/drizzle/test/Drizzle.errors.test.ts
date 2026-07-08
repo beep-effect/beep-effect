@@ -1,4 +1,5 @@
 import { Drizzle, DrizzleError, DrizzleErrorContext, DrizzleOperation, DrizzleRows } from "@beep/drizzle";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as assert from "@effect/vitest/utils";
@@ -339,7 +340,7 @@ describe("DrizzleError", () => {
 
         expect(Eq.equals(decoded, context)).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
 
     fc.assert(
@@ -354,7 +355,7 @@ describe("DrizzleError", () => {
         expect(Eq.equals(decoded.query, error.query)).toBe(true);
         expect(Eq.equals(decoded.params, error.params)).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
 
     fc.assert(
@@ -365,7 +366,7 @@ describe("DrizzleError", () => {
 
         expect(Eq.equals(decoded, rows)).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });

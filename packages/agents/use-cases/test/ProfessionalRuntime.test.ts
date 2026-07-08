@@ -9,6 +9,7 @@ import {
   SdkContextPacket,
 } from "@beep/agents-use-cases/public";
 import { makeInMemoryProfessionalRuntimeSdk, runRuntimeFixture } from "@beep/agents-use-cases/test";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
@@ -170,7 +171,7 @@ describe("@beep/agents-use-cases", () => {
     for (const schema of schemas) {
       fc.assert(
         fc.property(S.toArbitrary(schema), (value) => roundTrip(schema, value)),
-        { numRuns: 10 }
+        fcRuns(10)
       );
     }
   });

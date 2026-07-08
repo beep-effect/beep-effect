@@ -5,6 +5,7 @@ import { decodeJsonString } from "@beep/schema/Json";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { URLStr } from "@beep/schema/URL";
 import { parseYaml } from "@beep/schema/Yaml";
+import { fcRuns } from "@beep/test-utils";
 import { A, Str, thunkEmptyStr, thunkTrue } from "@beep/utils";
 import {
   VENICE_AI_OPERATION_DESCRIPTORS,
@@ -423,7 +424,7 @@ describe("@beep/venice-ai", () => {
         const decodedPromptBody = Effect.runSync(decodePromptBody(encodedPromptBody));
         expect(Effect.runSync(encodePromptBody(decodedPromptBody))).toEqual(encodedPromptBody);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     ));
 
   it("keeps crispened production schema encoded shapes stable", () => {
@@ -547,7 +548,7 @@ describe("@beep/venice-ai", () => {
           expectRoundTrip(error, encodeVeniceAIError, decodeVeniceAIError);
         }
       ),
-      { numRuns: 15 }
+      fcRuns(15)
     ));
 
   layer(makeVeniceAIUnitLayer())((it) =>

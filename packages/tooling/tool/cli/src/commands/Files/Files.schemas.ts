@@ -53,6 +53,13 @@ export const PositiveMediaDimension = S.Int.check(
 /**
  * Positive media dimension value.
  *
+ * @example
+ * ```ts
+ * import type { PositiveMediaDimension } from "@beep/repo-cli/commands/Files"
+ *
+ * const height: PositiveMediaDimension = 1080
+ * console.log(height)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -85,6 +92,13 @@ export const FileSha256Hash = S.String.check(
 /**
  * SHA-256 hash recorded for normalized file bytes.
  *
+ * @example
+ * ```ts
+ * import type { FileSha256Hash } from "@beep/repo-cli/commands/Files"
+ *
+ * const hash: FileSha256Hash = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ * console.log(hash)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -126,6 +140,13 @@ export const NonNegativePixelOffset = S.Int.check(
 /**
  * Non-negative pixel offset value.
  *
+ * @example
+ * ```ts
+ * import type { NonNegativePixelOffset } from "@beep/repo-cli/commands/Files"
+ *
+ * const offset: NonNegativePixelOffset = 0
+ * console.log(offset)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -151,6 +172,13 @@ export const MediaKind = LiteralKit(["image", "video"]).pipe(
 /**
  * Media kind for selected dataset files.
  *
+ * @example
+ * ```ts
+ * import type { MediaKind } from "@beep/repo-cli/commands/Files"
+ *
+ * const kind: MediaKind = "image"
+ * console.log(kind)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -176,6 +204,13 @@ export const SupportedMetadataImageExtension = LiteralKit(["avif", "jpeg", "jpg"
 /**
  * Image extension supported by metadata stripping.
  *
+ * @example
+ * ```ts
+ * import type { SupportedMetadataImageExtension } from "@beep/repo-cli/commands/Files"
+ *
+ * const extension: SupportedMetadataImageExtension = "png"
+ * console.log(extension)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -201,6 +236,13 @@ export const NormalizeImageFormatInput = LiteralKit(["png", "jpg", "jpeg", "webp
 /**
  * CLI image format accepted by `files normalize`.
  *
+ * @example
+ * ```ts
+ * import type { NormalizeImageFormatInput } from "@beep/repo-cli/commands/Files"
+ *
+ * const format: NormalizeImageFormatInput = "png"
+ * console.log(format)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -226,6 +268,13 @@ export const NormalizeImageFormat = LiteralKit(["png", "jpg", "webp"]).pipe(
 /**
  * Canonical image output format emitted by `files normalize`.
  *
+ * @example
+ * ```ts
+ * import type { NormalizeImageFormat } from "@beep/repo-cli/commands/Files"
+ *
+ * const format: NormalizeImageFormat = "png"
+ * console.log(format)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -259,6 +308,13 @@ export const NormalizeSkippedReason = LiteralKit([
 /**
  * Reason a direct directory entry was skipped by `files normalize`.
  *
+ * @example
+ * ```ts
+ * import type { NormalizeSkippedReason } from "@beep/repo-cli/commands/Files"
+ *
+ * const reason: NormalizeSkippedReason = "duplicate"
+ * console.log(reason)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -293,6 +349,13 @@ export const CreateCaptionFilesSkippedReason = LiteralKit([
 /**
  * Reason a direct directory entry was skipped by `files create-captions`.
  *
+ * @example
+ * ```ts
+ * import type { CreateCaptionFilesSkippedReason } from "@beep/repo-cli/commands/Files"
+ *
+ * const reason: CreateCaptionFilesSkippedReason = "directory"
+ * console.log(reason)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -318,6 +381,13 @@ export const BorderSide = LiteralKit(["top", "right", "bottom", "left"]).pipe(
 /**
  * Side of an image edge scanned for a solid border.
  *
+ * @example
+ * ```ts
+ * import type { BorderSide } from "@beep/repo-cli/commands/Files"
+ *
+ * const side: BorderSide = "top"
+ * console.log(side)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -343,6 +413,13 @@ export const BorderDetectionKind = LiteralKit(["none", "canvas-edge", "pillarbox
 /**
  * Classified border layout for an analyzed image.
  *
+ * @example
+ * ```ts
+ * import type { BorderDetectionKind } from "@beep/repo-cli/commands/Files"
+ *
+ * const kind: BorderDetectionKind = "none"
+ * console.log(kind)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -376,6 +453,13 @@ export const DetectBordersSkippedReason = LiteralKit([
 /**
  * Reason a direct directory entry was skipped by `files detect-borders`.
  *
+ * @example
+ * ```ts
+ * import type { DetectBordersSkippedReason } from "@beep/repo-cli/commands/Files"
+ *
+ * const reason: DetectBordersSkippedReason = "directory"
+ * console.log(reason)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -410,6 +494,13 @@ export const DetectFacesSkippedReason = LiteralKit([
 /**
  * Reason a direct directory entry was skipped by `files detect-faces`.
  *
+ * @example
+ * ```ts
+ * import type { DetectFacesSkippedReason } from "@beep/repo-cli/commands/Files"
+ *
+ * const reason: DetectFacesSkippedReason = "directory"
+ * console.log(reason)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -441,6 +532,13 @@ export const DetectFacesFlag = LiteralKit([
 /**
  * Triage flag emitted by `files detect-faces`.
  *
+ * @example
+ * ```ts
+ * import type { DetectFacesFlag } from "@beep/repo-cli/commands/Files"
+ *
+ * const flag: DetectFacesFlag = "has-face"
+ * console.log(flag)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -466,6 +564,13 @@ export const CandidateAssessmentProfile = LiteralKit(["character-lora"]).pipe(
 /**
  * Dataset profile used by candidate-quality triage.
  *
+ * @example
+ * ```ts
+ * import type { CandidateAssessmentProfile } from "@beep/repo-cli/commands/Files"
+ *
+ * const profile: CandidateAssessmentProfile = "character-lora"
+ * console.log(profile)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -491,6 +596,13 @@ export const CandidateAssessmentDecision = LiteralKit(["archive", "keep"]).pipe(
 /**
  * Candidate-quality decision produced by `files archive-poor-candidates`.
  *
+ * @example
+ * ```ts
+ * import type { CandidateAssessmentDecision } from "@beep/repo-cli/commands/Files"
+ *
+ * const decision: CandidateAssessmentDecision = "keep"
+ * console.log(decision)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -520,6 +632,13 @@ export const CandidateAssessmentReason = LiteralKit([
 /**
  * Hard-threshold reason that can cause an image to be archived.
  *
+ * @example
+ * ```ts
+ * import type { CandidateAssessmentReason } from "@beep/repo-cli/commands/Files"
+ *
+ * const reason: CandidateAssessmentReason = "short-edge-too-small"
+ * console.log(reason)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -553,6 +672,13 @@ export const ArchivePoorCandidatesSkippedReason = LiteralKit([
 /**
  * Reason a direct directory entry was skipped by `files archive-poor-candidates`.
  *
+ * @example
+ * ```ts
+ * import type { ArchivePoorCandidatesSkippedReason } from "@beep/repo-cli/commands/Files"
+ *
+ * const reason: ArchivePoorCandidatesSkippedReason = "directory"
+ * console.log(reason)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -585,6 +711,13 @@ export const CandidateRatioThreshold = S.Finite.check(
 /**
  * Numeric threshold ratio used by candidate-quality triage.
  *
+ * @example
+ * ```ts
+ * import type { CandidateRatioThreshold } from "@beep/repo-cli/commands/Files"
+ *
+ * const ratio: CandidateRatioThreshold = 1.5
+ * console.log(ratio)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -632,6 +765,13 @@ export const BorderDetectionPercentage = S.Finite.check(
 /**
  * Percentage threshold used by border detection options.
  *
+ * @example
+ * ```ts
+ * import type { BorderDetectionPercentage } from "@beep/repo-cli/commands/Files"
+ *
+ * const percentage: BorderDetectionPercentage = 10
+ * console.log(percentage)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -679,6 +819,13 @@ export const BorderDetectionMaxScanPercentage = S.Finite.check(
 /**
  * Maximum scan percentage accepted by border detection.
  *
+ * @example
+ * ```ts
+ * import type { BorderDetectionMaxScanPercentage } from "@beep/repo-cli/commands/Files"
+ *
+ * const percentage: BorderDetectionMaxScanPercentage = 25
+ * console.log(percentage)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -726,6 +873,13 @@ export const BorderDetectionTolerance = S.Finite.check(
 /**
  * RGB channel tolerance accepted by border detection.
  *
+ * @example
+ * ```ts
+ * import type { BorderDetectionTolerance } from "@beep/repo-cli/commands/Files"
+ *
+ * const tolerance: BorderDetectionTolerance = 10
+ * console.log(tolerance)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -773,6 +927,13 @@ export const RgbChannel = S.Int.check(
 /**
  * Integer RGB channel value.
  *
+ * @example
+ * ```ts
+ * import type { RgbChannel } from "@beep/repo-cli/commands/Files"
+ *
+ * const channel: RgbChannel = 128
+ * console.log(channel)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -917,6 +1078,13 @@ export const SafeFilePrefix = S.NonEmptyString.check(
 /**
  * Safe prefix accepted by `files sort-and-rename`.
  *
+ * @example
+ * ```ts
+ * import type { SafeFilePrefix } from "@beep/repo-cli/commands/Files"
+ *
+ * const prefix: SafeFilePrefix = "dataset-001"
+ * console.log(prefix)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -2250,6 +2418,13 @@ export const ProcessFilesFailurePolicy = LiteralKit(["continue", "fail-on-error"
 /**
  * Failure policy for `files process`.
  *
+ * @example
+ * ```ts
+ * import type { ProcessFilesFailurePolicy } from "@beep/repo-cli/commands/Files"
+ *
+ * const policy: ProcessFilesFailurePolicy = "continue"
+ * console.log(policy)
+ * ```
  * @category models
  * @since 0.0.0
  */

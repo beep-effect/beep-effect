@@ -10,7 +10,7 @@
 
 import * as EG from "@beep/nlp-processing/Graph/EffectGraph";
 import { Errors, Executor, Operation, ResultStore, Types } from "@beep/nlp-processing/Graph/GraphOperations";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -42,7 +42,7 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, n
     fc.property(arbitrary, (value) => {
       expect(equals(decode(encode(value)), value)).toBe(true);
     }),
-    { numRuns: 50 }
+    fcRuns(50)
   );
 };
 

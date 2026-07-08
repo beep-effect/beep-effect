@@ -3,6 +3,7 @@ import { Sentence, SentenceIndex } from "@beep/nlp/Core/Sentence";
 import { SimilarityScore } from "@beep/nlp/Core/Similarity";
 import { CharPosition, Token, TokenIndex } from "@beep/nlp/Core/Token";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { Chunk, Effect, pipe } from "effect";
 import * as O from "effect/Option";
@@ -167,7 +168,7 @@ describe("Core models", () => {
           expect(Effect.runSync(S.decodeUnknownEffect(SimilarityScore)(encodedSimilarity))).toEqual(similarity);
         }
       ),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 

@@ -18,6 +18,19 @@ import type * as AST from "effect/SchemaAST";
 
 const $I = $FileProcessingId.create("Extraction");
 
+const TextSpanShape = S.Struct({
+  endOffset: NonNegativeInt,
+  startOffset: NonNegativeInt,
+  text: S.String,
+}).check(
+  S.makeFilter(({ endOffset, startOffset }) => endOffset >= startOffset, {
+    identifier: $I`TextSpanOffsetOrderCheck`,
+    title: "Text Span Offset Order",
+    description: "Checks that a text span's end offset is greater than or equal to its start offset.",
+    message: "Expected endOffset to be greater than or equal to startOffset.",
+  })
+);
+
 type JsonEncodeEffect<Input> = {
   (options: AST.ParseOptions): (input: Input) => Effect.Effect<string, S.SchemaError>;
   (input: Input, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
@@ -108,18 +121,7 @@ export class TextArtifactReference extends S.Class<TextArtifactReference>($I`Tex
  * @since 0.0.0
  */
 export class TextSpan extends S.Class<TextSpan>($I`TextSpan`)(
-  S.Struct({
-    endOffset: NonNegativeInt,
-    startOffset: NonNegativeInt,
-    text: S.String,
-  }).check(
-    S.makeFilter(({ endOffset, startOffset }) => endOffset >= startOffset, {
-      identifier: $I`TextSpanOffsetOrderCheck`,
-      title: "Text Span Offset Order",
-      description: "Checks that a text span's end offset is greater than or equal to its start offset.",
-      message: "Expected endOffset to be greater than or equal to startOffset.",
-    })
-  ),
+  TextSpanShape,
   $I.annote("TextSpan", {
     description: "Extracted text span with byte or character offsets supplied by the engine.",
   })

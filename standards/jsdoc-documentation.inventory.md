@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-08T09:15:57.939Z
+Generated: 2026-07-08T09:47:28.451Z
 
 ## Scope
 
@@ -14,18 +14,18 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 87 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 10 |
-| publicModules | 1617 |
-| publicExports | 14511 |
+| publicModules | 1618 |
+| publicExports | 14516 |
 | openModules | 120 |
-| openExports | 91 |
-| missingExportExamples | 84 |
-| missingExportCategories | 14 |
-| missingExportSince | 14 |
+| openExports | 88 |
+| missingExportExamples | 78 |
+| missingExportCategories | 8 |
+| missingExportSince | 8 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
 | exampleImportFindings | 0 |
 | unsafeExampleFindings | 3 |
-| schemaAnnotationFindings | 6 |
+| schemaAnnotationFindings | 9 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -69,7 +69,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 26 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | clean | 9 | 82 | 0 | 0 |
 | 27 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | clean | 8 | 94 | 0 | 0 |
 | 28 | `@beep/ai-provider-cli` | `packages/drivers/ai-provider-cli` | clean | 4 | 14 | 0 | 0 |
-| 29 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 8 | 31 | 0 | 6 |
+| 29 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | clean | 8 | 31 | 0 | 0 |
 | 30 | `@beep/colors` | `packages/foundation/capability/colors` | clean | 1 | 9 | 0 | 0 |
 | 31 | `@beep/agents-use-cases` | `packages/agents/use-cases` | clean | 23 | 79 | 0 | 0 |
 | 32 | `@beep/m365-mcp` | `packages/drivers/m365-mcp` | clean | 4 | 21 | 0 | 0 |
@@ -77,7 +77,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 34 | `@beep/chalk` | `packages/foundation/capability/chalk` | clean | 1 | 35 | 0 | 0 |
 | 35 | `@beep/uspto` | `packages/drivers/uspto` | clean | 5 | 26 | 0 | 0 |
 | 36 | `@beep/phoenix` | `packages/drivers/phoenix` | clean | 5 | 50 | 0 | 0 |
-| 37 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | clean | 5 | 32 | 0 | 0 |
+| 37 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | clean | 6 | 37 | 0 | 0 |
 | 38 | `@beep/types` | `packages/foundation/primitive/types` | clean | 5 | 10 | 0 | 0 |
 | 39 | `@beep/oip-web` | `apps/oip-web` | needs-remediation | 31 | 83 | 1 | 0 |
 | 40 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
@@ -96,7 +96,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 53 | `@beep/libpff` | `packages/drivers/libpff` | clean | 4 | 19 | 0 | 0 |
 | 54 | `@beep/venice-ai` | `packages/drivers/venice-ai` | clean | 3 | 35 | 0 | 0 |
 | 55 | `@beep/form` | `packages/foundation/ui-system/form` | clean | 42 | 114 | 0 | 0 |
-| 56 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 6 | 155 | 0 | 0 |
+| 56 | `@beep/identity` | `packages/foundation/modeling/identity` | needs-remediation | 6 | 155 | 0 | 3 |
 | 57 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 4 | 17 | 0 | 0 |
 | 58 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | clean | 2 | 8 | 0 | 0 |
 | 59 | `@beep/box` | `packages/drivers/box` | clean | 103 | 4497 | 0 | 0 |
@@ -211,24 +211,21 @@ Export findings:
 - `src/commands/TsconfigSync/TsconfigSync.command.ts:516` `PlannedFileChange` (type) - missing @example
 - `src/commands/TsconfigSync/TsconfigSync.command.ts:578` `TsconfigSyncResult` (type) - missing @example
 
-### @beep/lint-rules
-
-Path: `packages/tooling/policy-pack/lint-rules`
-
-Export findings:
-- `src/rules/index.ts:49` `default` (CallExpression) - missing summary; missing @example, @category, @since
-- `src/rules/namespace-node-imports.ts:67` `default` (CallExpression) - missing summary; missing @example, @category, @since
-- `src/rules/no-global-process-runtime.ts:61` `default` (CallExpression) - missing summary; missing @example, @category, @since
-- `src/rules/no-inline-schema-compile.ts:93` `default` (CallExpression) - missing summary; missing @example, @category, @since
-- `src/rules/no-manual-effect-runtime-in-tests.ts:160` `default` (CallExpression) - missing summary; missing @example, @category, @since
-- `src/rules/no-opaque-instance-fields.ts:46` `default` (CallExpression) - missing summary; missing @example, @category, @since
-
 ### @beep/oip-web
 
 Path: `apps/oip-web`
 
 Module findings:
 - `src/components/MattersCarousel.tsx:1` (none) - missing summary; missing @since
+
+### @beep/identity
+
+Path: `packages/foundation/modeling/identity`
+
+Export findings:
+- `src/Id.ts:113` `IdentityInterpolationError` (class) - 1 schema annotation/type-alias gap(s)
+- `src/Id.ts:145` `IdentitySegmentCountError` (class) - 1 schema annotation/type-alias gap(s)
+- `src/Vocab.ts:56` `VocabEntry` (class) - 1 schema annotation/type-alias gap(s)
 
 ### @beep/professional-desktop
 

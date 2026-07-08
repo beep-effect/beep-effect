@@ -1,5 +1,6 @@
 import { ArchitectureLabProofResult, runArchitectureLabProof } from "@beep/architecture-lab-proof";
 import { ArchitectureLabServerLive } from "@beep/architecture-lab-server/layer";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as Equal from "effect/Equal";
@@ -47,7 +48,7 @@ describe("architecture lab proof app", () => {
           )
         ).toBe(true);
       }),
-      { numRuns: 20 }
+      fcRuns(20)
     );
   });
 });

@@ -10,6 +10,7 @@ import {
   PackageJson,
   packageJsonJsonSchema,
 } from "@beep/repo-utils";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, Order, pipe } from "effect";
@@ -48,7 +49,7 @@ describe("PackageJson schema", () => {
           expect(S.is(PackageJson)(decoded)).toBe(true);
           expect(decoded.name).toBe(name);
         }),
-        { numRuns: 20 }
+        fcRuns(20)
       );
     });
 
@@ -60,7 +61,7 @@ describe("PackageJson schema", () => {
 
           expect(decoded).toEqual(value);
         }),
-        { numRuns: 20 }
+        fcRuns(20)
       );
     });
 
@@ -72,7 +73,7 @@ describe("PackageJson schema", () => {
 
           expect(decoded).toEqual(value);
         }),
-        { numRuns: 20 }
+        fcRuns(20)
       );
     });
 

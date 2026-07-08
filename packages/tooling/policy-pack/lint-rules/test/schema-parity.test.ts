@@ -1,4 +1,5 @@
 import { ImportBinding } from "@beep/lint-rules/oxlint";
+import { fcRuns } from "@beep/test-utils";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
@@ -29,7 +30,7 @@ describe("crispened schema parity", () => {
           })
         ).toBe(binding.local);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 
@@ -49,7 +50,7 @@ describe("crispened schema parity", () => {
           }
         }
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 
@@ -66,7 +67,7 @@ describe("crispened schema parity", () => {
           }
         }
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });

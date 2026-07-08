@@ -36,6 +36,7 @@
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
+    "test:property": "bun run beep:test",
     "test:integration": "bun run beep:test:integration",
     "validate": "bun run ai-sync validate"
   },
@@ -70,6 +71,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/test-utils": "workspace:^",
     "@beep/types": "workspace:^",
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",

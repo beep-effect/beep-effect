@@ -54,14 +54,15 @@ export type VocabShape = Readonly<
  * @since 0.0.0
  */
 export class VocabEntry extends S.Class<VocabEntry>("@beep/identity/Vocab/VocabEntry")(
-  S.Struct({
+  {
     iri: S.String,
     terms: S.Array(S.String),
-  }).annotate({
+  },
+  {
     identifier: "@beep/identity/Vocab/VocabEntry",
     title: "Vocabulary Entry",
     description: "One namespace IRI and term list inside an identity vocabulary registry.",
-  })
+  }
 ) {}
 
 /**

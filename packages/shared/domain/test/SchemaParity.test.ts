@@ -11,7 +11,7 @@ import * as ClaimLifecycle from "@beep/shared-domain/values/ClaimLifecycle";
 import { fromString, LocalDateFromString, Model as LocalDateModel } from "@beep/shared-domain/values/LocalDate";
 import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
 import * as Rule from "@beep/shared-domain/values/Rule/Rule.model";
-import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
+import { assertSchemaArbitraryDecodesToSelf, fcRuns } from "@beep/test-utils";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { Effect, Equal } from "effect";
 import * as O from "effect/Option";
@@ -37,9 +37,7 @@ const assertCodecRoundTrip = <A, I>(schema: S.Codec<A, I, never, never>, options
 
   fc.assert(
     fc.property(arbitrary, (value) => equivalent(decode(encode(value)), value)),
-    {
-      numRuns: options?.numRuns ?? 50,
-    }
+    fcRuns(options?.numRuns ?? 50)
   );
 };
 

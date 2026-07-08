@@ -302,6 +302,58 @@ jobs:
         if: steps.lane-gate.outputs.should_run != 'true'
         run: echo "Skipping desktop IPC stdio proof for this change set."
 
+  property-laws:
+    # one-round-loop P1 (D3): schema property laws for affected packages at a
+    # 400-run floor. Lands NON-required; the required flip (ruleset 10240248
+    # addition) is a P4 close criterion after a stable green history. The
+    # nightly sweep (property-laws-nightly.yml) covers ALL suites at 1000+.
+    name: Property Laws
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      # Same CSF-001 posture as the verify matrix: read-only remote cache on
+      # same-repo PRs, nothing for forks, read-write on push.
+      TURBO_TOKEN: ${{ (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && secrets.TURBO_TOKEN || '' }}
+      TURBO_TEAM: ${{ (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
+      TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw,remote:r' || '' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch pull request base
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "true"
+          cache-write: "false"
+
+      - name: Run property laws lane
+        shell: bash
+        run: |
+          set -euo pipefail
+          shape_args=()
+
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")
+          fi
+
+          shape_args+=(--summarize)
+
+          bun run beep ci lane property "${shape_args[@]}"
+
+      - name: Append Turbo summary
+        if: always()
+        run: bun run beep ci append-turbo-summary
+
   fallow-advisory:
     name: Fallow Advisory Envelopes
     runs-on: blacksmith-4vcpu-ubuntu-2404

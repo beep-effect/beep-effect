@@ -1,4 +1,5 @@
 import { RateLimitSnapshot } from "@beep/api-transport";
+import { fcRuns } from "@beep/test-utils";
 import { O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
@@ -60,7 +61,7 @@ describe("@beep/api-transport", () => {
         expect(reencoded).toEqual(encoded);
         expect(RateLimitSnapshotEquivalence(decoded, snapshot)).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   it("round-trips parseable schema-derived snapshots through rate-limit headers", () =>
@@ -73,7 +74,7 @@ describe("@beep/api-transport", () => {
           onSome: (value) => expect(RateLimitSnapshotEquivalence(value, snapshot)).toBe(true),
         });
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   it("parses rate-limit aliases and ignores non-numeric headers", () => {

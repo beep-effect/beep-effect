@@ -7,6 +7,7 @@ import {
   UserTurnHistoryItem,
 } from "@beep/agents-use-cases/public";
 import { FixtureTurnKernel, fixtureBlocksFor } from "@beep/agents-use-cases/test";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result, Stream } from "effect";
 import * as Equal from "effect/Equal";
@@ -62,7 +63,7 @@ describe("@beep/agents-use-cases AssistantTurn", () => {
     for (const schema of schemas) {
       fc.assert(
         fc.property(S.toArbitrary(schema), (value) => roundTrip(schema, value)),
-        { numRuns: 10 }
+        fcRuns(10)
       );
     }
   });

@@ -39,11 +39,11 @@
     },
     {
       "file": "packages/drivers/box/src/Box.config.ts",
-      "symbol": "anonymous@63",
+      "symbol": "BoxCcgConfigShape",
       "kind": "object-struct-schema",
-      "status": "candidate",
+      "status": "exception",
       "owner": "@beep/box",
-      "reason": "Object schema should prefer an annotated S.Class over S.Struct."
+      "reason": "Internal S.Struct field block feeds an S.Class constructor and stays tied to the class model."
     },
     {
       "file": "packages/drivers/ecfr/scripts/generate.ts",
@@ -230,6 +230,16 @@
       "status": "exception",
       "owner": "@beep/lint-rules",
       "reason": "Type alias holds non-schema runtime handles (Option<AstNode> plus the raw ESTree property node from oxlint member-access traversal); it is an internal AST-visitor return shape, not decodable domain data."
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+      "symbol": "makePgliteIntegrationGate",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-fn-schema",
+      "line": 1454,
+      "owner": "@beep/test-utils",
+      "reason": "Exported function \"makePgliteIntegrationGate\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     }
   ]
 }

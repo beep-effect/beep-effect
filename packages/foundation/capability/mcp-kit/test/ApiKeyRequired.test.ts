@@ -11,6 +11,7 @@ import {
   resolveSourceCredential,
   SourceAuthRegistration,
 } from "@beep/mcp-kit";
+import { fcRuns } from "@beep/test-utils";
 import { assert, describe, it, layer } from "@effect/vitest";
 import { ConfigProvider, Effect, Layer } from "effect";
 import * as O from "effect/Option";
@@ -66,7 +67,7 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, n
     fc.property(arbitrary, (value) => {
       assert.isTrue(equals(decode(encode(value)), value));
     }),
-    { numRuns: 50 }
+    fcRuns(50)
   );
 };
 

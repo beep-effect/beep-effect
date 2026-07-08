@@ -8,6 +8,7 @@ import {
   DuckDbRow,
   DuckDbRows,
 } from "@beep/duckdb";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal, Exit, FileSystem, Layer, Path } from "effect";
@@ -51,7 +52,7 @@ const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
       const decoded = Effect.runSync(decode(encoded));
       return Equal.equals(decoded, value);
     }),
-    { numRuns: options?.numRuns ?? 20 }
+    fcRuns(options?.numRuns ?? 20)
   );
 };
 

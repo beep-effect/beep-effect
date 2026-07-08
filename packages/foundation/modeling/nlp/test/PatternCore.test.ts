@@ -36,6 +36,7 @@ import {
   withMark,
 } from "@beep/nlp/Core/index";
 import { NonNegativeInt } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { Str } from "@beep/utils";
 import { Chunk, Effect, Schema } from "effect";
 import * as O from "effect/Option";
@@ -177,7 +178,7 @@ describe("Core Pattern", () => {
           expect(Pattern.Literal.toBracketString(decodedLiteralOption)).toEqual(expect.stringMatching(/^\[.*\]$/));
         }
       ),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   it("parses mixed pattern strings in order", () => {

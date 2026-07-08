@@ -10,6 +10,7 @@ import {
   AiMetricsWeeklyReportResult,
 } from "@beep/repo-ai-metrics";
 import { aiMetricsCommand } from "@beep/repo-cli/commands/AIMetrics";
+import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import {
@@ -285,7 +286,7 @@ describe("ai-metrics command", () => {
           expect(Effect.runSync(encodeWeeklyReport(decodedWeeklyReport))).toBe(encodedWeeklyReport);
         }
       ),
-      { numRuns: 25 }
+      fcRuns(25)
     ));
 
   it("emits ingest JSON without raw local paths or Claude private identifiers", () =>

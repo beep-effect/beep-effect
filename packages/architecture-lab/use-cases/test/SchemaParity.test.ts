@@ -2,6 +2,7 @@ import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkIt
 import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import { Worker, WorkItem } from "@beep/architecture-lab-use-cases/public";
 import * as UseCaseServer from "@beep/architecture-lab-use-cases/server";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as O from "effect/Option";
@@ -43,7 +44,7 @@ describe("@beep/architecture-lab-use-cases schema parity", () => {
 
           expect(equivalent(decoded, value)).toBe(true);
         }),
-        { numRuns: 10 }
+        fcRuns(10)
       );
     }
   });

@@ -34,6 +34,7 @@
     "lint:fix": "bun run beep:lint:fix",
     "dtslint": "bunx tstyche dtslint/Lexical.tst.ts",
     "test": "bun run beep:test",
+    "test:property": "bun run beep:test",
     "test:integration": "bun run beep:test:integration",
     "type-test": "bun run dtslint"
   },
@@ -69,6 +70,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@lexical/code": "catalog:",
     "@lexical/link": "catalog:",

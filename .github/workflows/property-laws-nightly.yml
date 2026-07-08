@@ -1,0 +1,98 @@
+# one-round-loop P1 (D3): nightly full property-law sweep. Runs EVERY
+# test:property suite (no --affected) at a 1000-run floor so
+# seed-dependent law failures surface here instead of detonating on
+# unrelated PRs. Failures open/update ONE tracking issue (stable title,
+# label property-laws-nightly); triage owner is the packet operator
+# until P4, then the repo default.
+#
+# Verify after merging via manual dispatch (workflow_dispatch) — do not
+# wait for cron.
+
+name: Property Laws Nightly
+
+on:
+  schedule:
+    - cron: "17 9 * * *"
+  workflow_dispatch:
+    inputs:
+      runs:
+        description: "BEEP_FC_NUM_RUNS floor for the sweep"
+        required: false
+        default: "1000"
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  property-sweep:
+    name: Property Laws Sweep
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 90
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM || secrets.TURBO_TEAM }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "true"
+          cache-write: "false"
+
+      - name: Run full property sweep
+        shell: bash
+        run: bun run beep ci lane property --runs "${{ inputs.runs || '1000' }}" --summarize
+
+      - name: Append Turbo summary
+        if: always()
+        run: bun run beep ci append-turbo-summary
+
+      - name: Open or update the tracking issue
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = "Nightly property-law sweep failures";
+            const label = "property-laws-nightly";
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const body = [
+              `Nightly sweep failed on ${context.sha} (run: ${runUrl}).`,
+              "",
+              "Seed-dependent property-law failures belong to the PR that",
+              "introduced the schema, not to unrelated later PRs — triage the",
+              "failing suite, reproduce with the logged seed, and fix or",
+              "seed-exclude with a ledger note",
+              "(goals/one-round-loop/SPEC.md stop conditions).",
+            ].join("\n");
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: label,
+              state: "open",
+              per_page: 1,
+            });
+            if (existing.data.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.data[0].number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                labels: [label],
+                body,
+              });
+            }

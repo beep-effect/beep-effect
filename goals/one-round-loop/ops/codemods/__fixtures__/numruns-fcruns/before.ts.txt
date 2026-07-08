@@ -1,0 +1,37 @@
+import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
+import { expect, it } from "vitest";
+
+const Status = S.Literal("ready");
+const inlineRuns = 12;
+
+it("rewrites the bare numRuns options object", () => {
+  fc.assert(
+    fc.property(fc.integer(), (value) => value === value),
+    { numRuns: 40 }
+  );
+});
+
+it("spreads fcRuns ahead of sibling options", () => {
+  fc.assert(
+    fc.property(fc.integer(), (value) => value === value),
+    { numRuns: 25, endOnFailure: true }
+  );
+});
+
+it("leaves options-less asserts to the configureGlobal floor", () => {
+  fc.assert(fc.property(fc.integer(), (value) => value === value));
+});
+
+it("leaves the schema helper untouched (fcRuns is applied internally)", () => {
+  assertSchemaArbitraryDecodesToSelf(Status, { numRuns: 4 });
+});
+
+it("leaves non-literal numRuns for the post-sweep ledger", () => {
+  fc.assert(
+    fc.property(fc.integer(), (value) => value === value),
+    { numRuns: inlineRuns }
+  );
+  expect(inlineRuns).toBe(12);
+});

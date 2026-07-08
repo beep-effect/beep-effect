@@ -19,6 +19,7 @@ import {
 import { PosInt } from "@beep/schema/Int";
 import { NonNegativeInt } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { expect, layer } from "@effect/vitest";
 import { Effect, Layer, pipe, Redacted, Ref, Result, Stream } from "effect";
@@ -230,7 +231,7 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
           assertRoundTrip(encodeChunk, decodeChunk, chunk);
         }
       ),
-      { numRuns: 25 }
+      fcRuns(25)
     ));
 
   it.effect(

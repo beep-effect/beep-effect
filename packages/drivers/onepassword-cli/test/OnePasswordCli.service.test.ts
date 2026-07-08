@@ -11,6 +11,7 @@ import {
 } from "@beep/onepassword-cli";
 import { NonNegativeInt } from "@beep/schema";
 import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, Redacted, Result } from "effect";
 import * as A from "effect/Array";
@@ -207,7 +208,7 @@ describe("@beep/onepassword-cli", () => {
           ).toBe(true);
         }
       ),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   layer(OnePasswordCli.makeLayerFromRunner(successRunner))((it) => {

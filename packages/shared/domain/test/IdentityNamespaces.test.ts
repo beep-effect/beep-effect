@@ -1,5 +1,6 @@
 import { $SharedDomainId, make } from "@beep/identity";
 import * as Identity from "@beep/shared-domain/identity";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
 import { cast } from "effect/Function";
@@ -284,7 +285,7 @@ describe("P3 identity namespaces", () => {
           expect(encoded, spec.label).toBe(id);
           expect(spec.schema.equivalence(cast(decoded), cast(id)), spec.label).toBe(true);
         }),
-        { numRuns: 10 }
+        fcRuns(10)
       );
     }
   });

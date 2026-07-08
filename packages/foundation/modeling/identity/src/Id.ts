@@ -114,11 +114,12 @@ export class IdentityInterpolationError extends S.TaggedErrorClass<IdentityInter
   "@beep/identity/errors/IdentityInterpolationError"
 )(
   "IdentityInterpolationError",
-  S.Struct({}).annotate({
+  {},
+  {
     identifier: "@beep/identity/errors/IdentityInterpolationError",
     title: "Identity Interpolation Error",
     description: "Identity template tags do not allow interpolations.",
-  })
+  }
 ) {
   override get message() {
     return "Identity template tags do not allow interpolations.";
@@ -145,11 +146,12 @@ export class IdentitySegmentCountError extends S.TaggedErrorClass<IdentitySegmen
   "@beep/identity/errors/IdentitySegmentCountError"
 )(
   "IdentitySegmentCountError",
-  S.Struct({}).annotate({
+  {},
+  {
     identifier: "@beep/identity/errors/IdentitySegmentCountError",
     title: "Identity Segment Count Error",
     description: "Identity template tags must use a single literal segment.",
-  })
+  }
 ) {
   /**
    * Human-readable error message.

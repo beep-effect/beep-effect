@@ -6,6 +6,7 @@ import {
   AgentEffectivenessPromptBundle,
 } from "@beep/repo-ai-metrics";
 import { agentEffectivenessCommand } from "@beep/repo-cli/commands/AgentEffectiveness";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -132,7 +133,7 @@ describe("agent-effectiveness command", () => {
           expect(Effect.runSync(encodePromptBundle(decodedPromptBundle))).toBe(encodedPromptBundle);
         }
       ),
-      { numRuns: 25 }
+      fcRuns(25)
     ));
 
   it.effect("emits report-only doctor JSON with offline Phoenix", () =>

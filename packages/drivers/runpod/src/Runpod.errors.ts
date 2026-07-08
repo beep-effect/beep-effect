@@ -179,11 +179,14 @@ export class RunpodError extends TaggedErrorClass<RunpodError>($I`RunpodError`)(
    * @since 0.1.0
    */
   static readonly fromDescriptor: {
-    (descriptor: RunpodOperationDescriptor, reason: RunpodErrorReason, options?: RunpodErrorOptions): RunpodError;
-    (reason: RunpodErrorReason, options?: RunpodErrorOptions): (descriptor: RunpodOperationDescriptor) => RunpodError;
+    (descriptor: RunpodOperationDescriptor, reason: RunpodErrorReason, options?: RunpodErrorOptionsInput): RunpodError;
+    (
+      reason: RunpodErrorReason,
+      options?: RunpodErrorOptionsInput
+    ): (descriptor: RunpodOperationDescriptor) => RunpodError;
   } = dual(
     (args) => args.length >= 2 && RunpodOperationDescriptor.is(args[0]),
-    (descriptor: RunpodOperationDescriptor, reason: RunpodErrorReason, options: RunpodErrorOptions = {}) =>
+    (descriptor: RunpodOperationDescriptor, reason: RunpodErrorReason, options: RunpodErrorOptionsInput = {}) =>
       RunpodError.make({
         method: O.some(descriptor.method),
         methodName: O.some(descriptor.methodName),
@@ -255,7 +258,10 @@ export class RunpodDocsError extends TaggedErrorClass<RunpodDocsError>($I`Runpod
    * @category constructors
    * @since 0.1.0
    */
-  static readonly fromReason = (reason: RunpodDocsErrorReason, options: RunpodDocsErrorOptions = {}): RunpodDocsError =>
+  static readonly fromReason = (
+    reason: RunpodDocsErrorReason,
+    options: RunpodDocsErrorOptionsInput = {}
+  ): RunpodDocsError =>
     RunpodDocsError.make({
       cause: causeFromUnknown(options.cause),
       reason,
@@ -270,9 +276,10 @@ export class RunpodDocsError extends TaggedErrorClass<RunpodDocsError>($I`Runpod
  * @example
  * ```ts
  * import { RunpodErrorOptions } from "@beep/runpod"
+ * import * as O from "effect/Option"
  *
- * const options = RunpodErrorOptions.make({ status: 401 })
- * console.log(options.status)
+ * const options = RunpodErrorOptions.make({ cause: O.some("timeout") })
+ * console.log(O.getOrUndefined(options.cause))
  * ```
  *
  * @category models
@@ -280,11 +287,24 @@ export class RunpodDocsError extends TaggedErrorClass<RunpodDocsError>($I`Runpod
  */
 export class RunpodErrorOptions extends S.Class<RunpodErrorOptions>($I`RunpodErrorOptions`)(
   {
+    // Sanitized string label so the exported options schema round-trips
+    // deterministically. Raw thrown causes are accepted via the private
+    // `RunpodErrorOptionsInput` and normalized through `causeFromUnknown`.
+    cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
+  },
+  $I.annote("RunpodErrorOptions", {
+    description: "Sanitized options for configuring RunpodError instances.",
+  })
+) {}
+
+class RunpodErrorOptionsInput extends S.Class<RunpodErrorOptionsInput>($I`RunpodErrorOptionsInput`)(
+  {
     cause: S.optionalKey(S.Defect({ includeStack: true })),
     status: S.optionalKey(RunpodHttpStatusCode),
   },
-  $I.annote("RunpodErrorOptions", {
-    description: "Options for configuring RunpodError instances.",
+  $I.annote("RunpodErrorOptionsInput", {
+    description: "Raw option input accepted by RunpodError constructors before schema-owned normalization.",
   })
 ) {}
 
@@ -325,11 +345,12 @@ export class RunpodRawErrorOptions extends S.Class<RunpodRawErrorOptions>($I`Run
  * @example
  * ```ts
  * import { RunpodDocsErrorOptions } from "@beep/runpod"
+ * import * as O from "effect/Option"
  *
  * const options = RunpodDocsErrorOptions.make({
- *   url: "https://docs.runpod.io/llms.txt"
+ *   url: O.some("https://docs.runpod.io/llms.txt")
  * })
- * console.log(options.url)
+ * console.log(O.getOrUndefined(options.url))
  * ```
  *
  * @category models
@@ -337,12 +358,26 @@ export class RunpodRawErrorOptions extends S.Class<RunpodRawErrorOptions>($I`Run
  */
 export class RunpodDocsErrorOptions extends S.Class<RunpodDocsErrorOptions>($I`RunpodDocsErrorOptions`)(
   {
+    // Sanitized string label so the exported options schema round-trips
+    // deterministically. Raw thrown causes are accepted via the private
+    // `RunpodDocsErrorOptionsInput` and normalized through `causeFromUnknown`.
+    cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
+    url: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+  },
+  $I.annote("RunpodDocsErrorOptions", {
+    description: "Sanitized options for configuring RunpodDocsError instances.",
+  })
+) {}
+
+class RunpodDocsErrorOptionsInput extends S.Class<RunpodDocsErrorOptionsInput>($I`RunpodDocsErrorOptionsInput`)(
+  {
     cause: S.optionalKey(S.Defect({ includeStack: true })),
     status: S.optionalKey(RunpodHttpStatusCode),
     url: S.optionalKey(S.String),
   },
-  $I.annote("RunpodDocsErrorOptions", {
-    description: "Options for configuring RunpodDocsError instances.",
+  $I.annote("RunpodDocsErrorOptionsInput", {
+    description: "Raw option input accepted by RunpodDocsError constructors before schema-owned normalization.",
   })
 ) {}
 

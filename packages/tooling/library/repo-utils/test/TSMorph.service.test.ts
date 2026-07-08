@@ -15,6 +15,7 @@ import {
   TsMorphSymbolSourceRequest,
   TsMorphUnsupportedFileError,
 } from "@beep/repo-utils";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, FileSystem, Order, Path, pipe } from "effect";
@@ -92,7 +93,7 @@ describe("SymbolId schema arbitrary", () => {
         const decoded = decodeSymbolId(symbolId);
         expect(encodeSymbolId(decoded)).toBe(symbolId);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });

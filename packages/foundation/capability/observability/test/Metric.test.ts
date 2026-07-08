@@ -5,6 +5,7 @@ import {
   statusClass,
   TrackDurationOptions,
 } from "@beep/observability";
+import { fcRuns } from "@beep/test-utils";
 import { Effect, Equal, Metric } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -37,7 +38,7 @@ describe("Metric", () => {
         );
         expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 

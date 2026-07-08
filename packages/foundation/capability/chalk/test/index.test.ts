@@ -16,6 +16,7 @@ import browserChalk, {
 } from "@beep/chalk/Chalk.browser";
 import { AnsiRenderLevel, ColorModelName, StyleChannel, StyleName } from "@beep/chalk/internal/ChalkSchema";
 import { createSupportsColor } from "@beep/chalk/internal/SupportsColor";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
@@ -191,7 +192,7 @@ describe("@beep/chalk", () => {
         fc.property(arbitrary, (value) => {
           expect(Equal.equals(decode(encode(value)), value)).toBe(true);
         }),
-        { numRuns: 50 }
+        fcRuns(50)
       );
     }
   });

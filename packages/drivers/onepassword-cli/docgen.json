@@ -478,6 +478,12 @@
       "@beep/shared-domain/values/OnePasswordReference": [
         "../../../packages/shared/domain/src/values/OnePasswordReference/index.ts"
       ],
+      "@beep/test-utils": [
+        "../../../packages/tooling/test-kit/test-utils/src/index.ts"
+      ],
+      "@beep/test-utils/*": [
+        "../../../packages/tooling/test-kit/test-utils/src/*.ts"
+      ],
       "@beep/utils": [
         "../../../packages/foundation/modeling/utils/src/index.ts"
       ],

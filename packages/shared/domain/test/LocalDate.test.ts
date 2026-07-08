@@ -25,6 +25,7 @@ import {
   today,
   todayEffect,
 } from "@beep/shared-domain/values/LocalDate";
+import { fcRuns } from "@beep/test-utils";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { Effect, Equal, Exit } from "effect";
 import * as DateTime from "effect/DateTime";
@@ -93,7 +94,7 @@ describe("LocalDate.Model", () => {
         assert.strictEqual(encodedString, date.toISOString());
         assert.strictEqual(equals(decodedString, date), true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   it.effect("rejects impossible calendar dates at the schema boundary", () =>

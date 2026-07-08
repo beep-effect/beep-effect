@@ -10,6 +10,7 @@ import {
   RepairError,
 } from "@beep/anthropic";
 import { PosInt } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as S from "effect/Schema";
@@ -108,6 +109,6 @@ describe("@beep/anthropic", () => {
           ).toBe(true);
         }
       ),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 });

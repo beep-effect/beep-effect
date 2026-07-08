@@ -1368,6 +1368,92 @@ const PERMANENT_SCHEMA_FIRST_EXCLUSIONS: ReadonlyArray<PermanentSchemaFirstExclu
     reason:
       "Callable template-tag call signature ((strings: TemplateStringsArray, ...) => IdentityString<...>) whose runtime value (createComposer) is a function with properties; an S.Class instance is a plain non-callable object, so no Effect Schema combinator can produce a callable-function-shaped decoded value — reproduced via tsgo (TS2740, missing annote/annoteHttp/annoteKey/annoteSchema and 6 more).",
   },
+  // R22: final-residue curated additions (LOCKED 2026-07-08). Each of these
+  // already carries a human-authored "exception" reason in the standing
+  // standards/schema-first.inventory.jsonc tracked ledger — that reason only
+  // survives because it is merged back in on every regen; a clean-checkout
+  // regen with no existing document would re-derive whatever the live
+  // detector currently classifies it as. Promoting them here makes the
+  // detector itself never emit the finding, which is regen-invariant (the
+  // R14/R15 upgrade path). FINAL-A re-verified each shape directly against
+  // its current source before promoting it.
+  {
+    file: "packages/drivers/wink/src/Wink.service.ts",
+    symbol: "WinkEngineRuntimeState",
+    reason:
+      "nlp: WinkMethods is the live wink-nlp runtime object; the type's own doc comment says it intentionally includes the live wink-nlp runtime object and is therefore not serializable (WinkEngineState is the serializable metadata sibling) — a runtime-handle type alias, R11-3 class.",
+  },
+  {
+    file: "packages/foundation/ui-system/ui/src/components/tour.tsx",
+    symbol: "Step",
+    reason:
+      "content/title/nextLabel/previousLabel are React.ReactNode render-boundary fields; ReactNode has no schema representation. Step is non-generic, so it never reaches the R17 classifyGenericInterface member-safety wiring (that carve-out only fires for generic interfaces) — same ReactNode/render-boundary class R17 authorizes for generics, curated directly here instead.",
+  },
+  {
+    file: "packages/foundation/ui-system/ui/src/components/tour.tsx",
+    symbol: "Tour",
+    reason: "steps: Step[] is a direct container of Step; inherits Step's ReactNode-render-boundary disqualification.",
+  },
+  {
+    file: "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.service.ts",
+    symbol: "OfficeActionReviewDeps",
+    reason:
+      "Dependency-injection container bundling FileProcessingServiceShape/ClaimGateShape/IrToLawShape/ClaimTransitionShape plus a langExtract.extract Effect-returning function member — a wiring bundle of injected service shapes, not serializable data (R11-1 service-contract-shape DI-container family, same class as GatedLayer/SqlTestDriver above).",
+  },
+  {
+    file: "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
+    symbol: "MemberAccess",
+    reason:
+      "object: O.Option<AstNode> and property: MaybeNode hold peeled ESTree runtime nodes from the oxlint/GritQL member-access traversal — an internal AST-visitor return shape, not decodable domain data.",
+  },
+  {
+    file: "packages/drivers/hubspot/src/HubSpot.errors.ts",
+    symbol: "HubSpotErrorOptions.email",
+    reason:
+      "SFV4-precision-audit flags the broad S.optionalKey(S.String) email field, but it deliberately preserves raw submitted email text from request-encoding failures — including values already rejected by contact-email normalization — for diagnostic context; narrowing to @beep/schema Email would reject the exact malformed input this field exists to capture.",
+  },
+  {
+    file: "apps/oip-web/src/content/OipSeo.ts",
+    symbol: "oipTwitterHandle",
+    reason:
+      "SFV4-null-return flags the string | undefined return, but Next.js Metadata twitter fields accept undefined for an omitted handle — this helper is a React/Next.js framework-boundary adapter preserving that exact contract, not an internal API that should return O.Option.",
+  },
+  {
+    file: "packages/law-practice/server/test/fixture.ts",
+    symbol: "schema-codec-tests",
+    reason:
+      "Synthetic golden-fixture helper decodes branded file-processing IDs and PosixPath values for one deterministic office-action source artifact; property coverage belongs in the file-processing package's own schema tests, not this fixture — same class as the 6 schema-package test files curated above.",
+  },
+  {
+    file: "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
+    symbol: "PeerDependencyMetaEntry",
+    reason:
+      "Fed directly into S.StructWithRest(PeerDependencyMetaEntry, [...]) at its PeerDependenciesMeta call site — same TSConfig.ts makeTypeStruct/makeEncodedStruct/strict blocker as the R15 addendum above: S.Class's ast: Declaration is incompatible with StructWithRest's ast: Objects constraint.",
+  },
+  {
+    file: "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
+    symbol: "PublishConfigBase",
+    reason:
+      "Same StructWithRest blocker as PeerDependencyMetaEntry above: fed into S.StructWithRest(PublishConfigBase, [...]) at its PublishConfig call site.",
+  },
+  {
+    file: "packages/shared/domain/src/values/LocalDate/LocalDate.model.ts",
+    symbol: "LocalDateFields",
+    reason:
+      "S.Struct(CalendarParts.fields).check(...) feeds directly into S.Class<Model>(...)'s fields argument — a genuine feeds-an-S.Class-constructor shape, but CalendarParts.fields is a property-access reference rather than an inline object literal, so detectStructReason's non-object-literal-first-argument branch fires before isStructFieldsInputForSchemaClass ever runs; the feeds-S.Class detector heuristic misses this exact shape, which is why this entry is promoted rather than left to the generic branch.",
+  },
+  {
+    file: "packages/foundation/modeling/html/src/Html.meta.ts",
+    symbol: "HtmlElementMeta",
+    reason:
+      "Plain-object-literal S.Struct with no S.Class consumer, no nested-property-assignment context, and no function-local wrapper — none of detectStructReason's exception branches match, so it live-classifies as a candidate without this entry. Generated metadata-lookup schema for the ELEMENT_META table (not a domain entity); an annotated S.Struct with a derived type alias is intentional over S.Class here.",
+  },
+  {
+    file: "packages/foundation/modeling/html/src/Html.attributes.ts",
+    symbol: "GlobalAttributesStruct",
+    reason:
+      "S.Struct(GlobalAttributes) wraps the same fields dictionary the file's own header comment documents as the shared field bundle spread into every element class — GlobalAttributes must stay a plain fields object (not a class) so it can keep being spread into every generated element's S.Class; GlobalAttributesStruct exists solely to expose a standalone Type/Encoded pair over that shared bundle.",
+  },
 ] as const;
 
 const isPermanentlyExcludedSchemaFirstEntry = (file: string, symbol: string): boolean =>
@@ -2646,7 +2732,13 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
       }
       if (isNullReturnEligible) {
         const nullReturnEntry = nullReturnEntryFromFunctionLike(functionLike, { file: filePath, owner });
-        if (O.isSome(nullReturnEntry)) {
+        // R22: same curated-exclusion mechanism as the fn-schema loop above
+        // (e.g. oipTwitterHandle's documented Next.js Metadata undefined-
+        // handle contract).
+        if (
+          O.isSome(nullReturnEntry) &&
+          !isPermanentlyExcludedSchemaFirstEntry(filePath, nullReturnEntry.value.symbol)
+        ) {
           A.appendInPlace(entries, nullReturnEntry.value);
         }
       }
@@ -2658,7 +2750,10 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
         A.appendInPlace(entries, entry.value);
       }
       const precisionEntry = precisionAuditEntryFromProperty(property, filePath, owner);
-      if (O.isSome(precisionEntry)) {
+      // R22: same curated-exclusion mechanism as the fn-schema loop above
+      // (e.g. HubSpotErrorOptions.email's documented diagnostic-preservation
+      // reason).
+      if (O.isSome(precisionEntry) && !isPermanentlyExcludedSchemaFirstEntry(filePath, precisionEntry.value.symbol)) {
         A.appendInPlace(entries, precisionEntry.value);
       }
     }

@@ -24,7 +24,7 @@ import {
   RejectionGround,
 } from "@beep/law-practice-domain";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import { assertSchemaArbitraryDecodesToSelf, baseEntityFixtureInput } from "@beep/test-utils";
+import { assertSchemaArbitraryDecodesToSelf, baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -102,7 +102,7 @@ describe("@beep/law-practice-domain", () => {
       fc.property(S.toArbitrary(PatentNumber), (patentNumber) => {
         expect(S.is(PatentNumber)(patentNumber)).toBe(true);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     );
   });
 

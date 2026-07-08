@@ -3,6 +3,7 @@ import {
   EffectLawsAllowlistDocument,
   EffectLawsAllowlistSnapshot,
 } from "@beep/repo-configs/internal/eslint/EffectLawsAllowlistSchemas";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as Equal from "effect/Equal";
@@ -47,13 +48,13 @@ describe("Effect laws allowlist schemas", () => {
       fc.property(S.toArbitrary(EffectLawsAllowlistDocument), (value) =>
         expectRoundTrip(EffectLawsAllowlistDocument, value)
       ),
-      { numRuns: 25 }
+      fcRuns(25)
     );
     fc.assert(
       fc.property(S.toArbitrary(EffectLawsAllowlistSnapshot), (value) =>
         expectRoundTrip(EffectLawsAllowlistSnapshot, value)
       ),
-      { numRuns: 25 }
+      fcRuns(25)
     );
   });
 });

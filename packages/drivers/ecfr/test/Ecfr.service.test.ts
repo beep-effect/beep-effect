@@ -1,6 +1,7 @@
 import { ECFR_API_URL, Ecfr, EcfrConfigInput, EcfrError, EcfrErrorOptions, EcfrErrorReason } from "@beep/ecfr";
 import { $EcfrId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { O } from "@beep/utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Context, Effect, Layer, pipe, Ref, Result } from "effect";
@@ -137,7 +138,7 @@ describe("@beep/ecfr", () => {
           expectRoundTrip(EcfrError, error);
         }
       ),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   layer(makeEcfrUnitLayer())((it) =>

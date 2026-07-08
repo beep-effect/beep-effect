@@ -68,7 +68,13 @@
       "@beep/architecture-lab-domain/values/WorkPriority": [
         "../../../packages/architecture-lab/domain/src/values/WorkPriority/index.ts"
       ],
-      "@beep/drizzle": ["../../../packages/drivers/drizzle/src/index.ts"]
+      "@beep/drizzle": ["../../../packages/drivers/drizzle/src/index.ts"],
+      "@beep/test-utils": [
+        "../../../packages/tooling/test-kit/test-utils/src/index.ts"
+      ],
+      "@beep/test-utils/*": [
+        "../../../packages/tooling/test-kit/test-utils/src/*.ts"
+      ]
     }
   }
 }

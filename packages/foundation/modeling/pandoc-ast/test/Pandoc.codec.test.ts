@@ -14,6 +14,7 @@ import {
   PandocTarget,
   Str,
 } from "@beep/pandoc-ast/Pandoc.model";
+import { fcRuns } from "@beep/test-utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -159,7 +160,7 @@ describe("Pandoc.codec", () => {
           expect(PandocDocumentEquivalence(decoded, document)).toBe(true);
         }
       ),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   it("keeps DOCX-style gap constructs decodable as explicit model nodes", () =>
