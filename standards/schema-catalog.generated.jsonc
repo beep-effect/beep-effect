@@ -22826,47 +22826,79 @@
       "description": "Failure raised while planning or executing a yeet run."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Closeout.ts",
-      "symbol": "GreptileSummary",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts",
+      "symbol": "PackageQualityReport",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
-      "identity": "GreptileSummary",
-      "description": "Greptile score and issue count parsed from PR comments."
+      "identity": "PackageQualityReport",
+      "description": "Package-grouped view of yeet quality issues."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Closeout.ts",
-      "symbol": "PrCloseoutGateState",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts",
+      "symbol": "QualityIssue",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
-      "identity": "PrCloseoutGateState",
-      "description": "Durable state for one PR closeout gate."
+      "identity": "QualityIssue",
+      "description": "One normalized quality issue captured by yeet."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Closeout.ts",
-      "symbol": "PrCloseoutOptions",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts",
+      "symbol": "QualityIssueAttribution",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "QualityIssueAttribution",
+      "description": "Attribution class for advisory analyzer issues normalized into Yeet packets."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts",
+      "symbol": "QualityIssueCategory",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "QualityIssueCategory",
+      "description": "Category for a normalized yeet quality issue."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts",
+      "symbol": "QualityIssueConfidence",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "QualityIssueConfidence",
+      "description": "Confidence level for a yeet quality issue parser result."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts",
+      "symbol": "QualityIssueIndex",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
-      "identity": "PrCloseoutOptions",
-      "description": "Runtime closeout gates accepted by Yeet."
+      "identity": "QualityIssueIndex",
+      "description": "Schema-first collection of issues and package packet summaries for yeet."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Closeout.ts",
-      "symbol": "PrCloseoutReport",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts",
+      "symbol": "QualityIssueRouting",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
-      "identity": "PrCloseoutReport",
-      "description": "Structured PR closeout result emitted by Yeet."
+      "identity": "QualityIssueRouting",
+      "description": "Suggested specialist skill or agent route for a quality issue."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Closeout.ts",
-      "symbol": "PrCloseoutWriteAction",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts",
+      "symbol": "QualityIssueSeverity",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "QualityIssueSeverity",
+      "description": "Severity assigned to a yeet quality issue."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts",
+      "symbol": "YeetPublishIntent",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
-      "identity": "PrCloseoutWriteAction",
-      "description": "One explicit review-thread write action performed during Yeet closeout."
+      "identity": "YeetPublishIntent",
+      "description": "Reviewed Git index paths that yeet is allowed to publish."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts",
       "symbol": "YeetRunOptions",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -22874,7 +22906,7 @@
       "description": "Runtime options accepted by the yeet handler."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts",
       "symbol": "YeetRunResult",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -22904,70 +22936,6 @@
       "owner": "@beep/repo-cli",
       "identity": "YeetRunPlanModeOptions",
       "description": "Options for building a Yeet run plan in a specific mode."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/QualityIssueIndex.ts",
-      "symbol": "PackageQualityReport",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "PackageQualityReport",
-      "description": "Package-grouped view of yeet quality issues."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/QualityIssueIndex.ts",
-      "symbol": "QualityIssue",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "QualityIssue",
-      "description": "One normalized quality issue captured by yeet."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/QualityIssueIndex.ts",
-      "symbol": "QualityIssueAttribution",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "QualityIssueAttribution",
-      "description": "Attribution class for advisory analyzer issues normalized into Yeet packets."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/QualityIssueIndex.ts",
-      "symbol": "QualityIssueCategory",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "QualityIssueCategory",
-      "description": "Category for a normalized yeet quality issue."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/QualityIssueIndex.ts",
-      "symbol": "QualityIssueConfidence",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "QualityIssueConfidence",
-      "description": "Confidence level for a yeet quality issue parser result."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/QualityIssueIndex.ts",
-      "symbol": "QualityIssueIndex",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "QualityIssueIndex",
-      "description": "Schema-first collection of issues and package packet summaries for yeet."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/QualityIssueIndex.ts",
-      "symbol": "QualityIssueRouting",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "QualityIssueRouting",
-      "description": "Suggested specialist skill or agent route for a quality issue."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/QualityIssueIndex.ts",
-      "symbol": "QualityIssueSeverity",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "QualityIssueSeverity",
-      "description": "Severity assigned to a yeet quality issue."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
@@ -23056,6 +23024,260 @@
       "owner": "@beep/repo-cli",
       "identity": "YeetVerdictLane",
       "description": "One planned yeet lane with its execution status and repair command."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
+      "symbol": "GreptileSummary",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GreptileSummary",
+      "description": "Greptile score and issue count parsed from PR comments."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
+      "symbol": "PrCloseoutGateState",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "PrCloseoutGateState",
+      "description": "Durable state for one PR closeout gate."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
+      "symbol": "PrCloseoutOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "PrCloseoutOptions",
+      "description": "Runtime closeout gates accepted by Yeet."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
+      "symbol": "PrCloseoutReport",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "PrCloseoutReport",
+      "description": "Structured PR closeout result emitted by Yeet."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
+      "symbol": "PrCloseoutWriteAction",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "PrCloseoutWriteAction",
+      "description": "One explicit review-thread write action performed during Yeet closeout."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhCloseoutPullRequest",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhCloseoutPullRequest",
+      "description": "Pull request GraphQL payload used by Yeet closeout."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhCommentsData",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhCommentsData",
+      "description": "GraphQL data wrapper for pull request comment pages."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhCommentsDocument",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhCommentsDocument",
+      "description": "GitHub GraphQL response document for pull request comment pages."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhCommentsPullRequest",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhCommentsPullRequest",
+      "description": "Pull request top-level comment page payload."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhCommentsRepository",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhCommentsRepository",
+      "description": "Repository wrapper for pull request comment page payload."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhInlineReviewComment",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhInlineReviewComment",
+      "description": "Inline review comment returned by GitHub GraphQL."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhInlineReviewCommentConnection",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhInlineReviewCommentConnection",
+      "description": "Inline review comment connection."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhPullRequestCommentConnection",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhPullRequestCommentConnection",
+      "description": "Pull request top-level comment connection."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhRepoOwner",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhRepoOwner",
+      "description": "GitHub repository owner."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhRepoView",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhRepoView",
+      "description": "GitHub repository metadata for GraphQL queries."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhReview",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhReview",
+      "description": "Pull request review returned by GitHub GraphQL."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhReviewConnection",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhReviewConnection",
+      "description": "Pull request review connection."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhReviewThread",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhReviewThread",
+      "description": "Pull request review thread returned by GitHub GraphQL."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhReviewThreadCommentConnection",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhReviewThreadCommentConnection",
+      "description": "Review thread comment connection."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhReviewThreadConnection",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhReviewThreadConnection",
+      "description": "Review thread connection."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhReviewThreadsData",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhReviewThreadsData",
+      "description": "GraphQL data wrapper for pull request review thread pages."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhReviewThreadsDocument",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhReviewThreadsDocument",
+      "description": "GitHub GraphQL response document for pull request review thread pages."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhReviewThreadsPullRequest",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhReviewThreadsPullRequest",
+      "description": "Pull request review thread page payload."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhReviewThreadsRepository",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhReviewThreadsRepository",
+      "description": "Repository wrapper for pull request review thread page payload."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhReviewsData",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhReviewsData",
+      "description": "GraphQL data wrapper for pull request review pages."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhReviewsDocument",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhReviewsDocument",
+      "description": "GitHub GraphQL response document for pull request review pages."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhReviewsPullRequest",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhReviewsPullRequest",
+      "description": "Pull request review page payload."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "GhReviewsRepository",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhReviewsRepository",
+      "description": "Repository wrapper for pull request review page payload."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "decodeGhCommentsDocument",
+      "kind": "codec",
+      "owner": "@beep/repo-cli"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "decodeGhPrView",
+      "kind": "codec",
+      "owner": "@beep/repo-cli"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "decodeGhRepoView",
+      "kind": "codec",
+      "owner": "@beep/repo-cli"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "decodeGhReviewThreadsDocument",
+      "kind": "codec",
+      "owner": "@beep/repo-cli"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+      "symbol": "decodeGhReviewsDocument",
+      "kind": "codec",
+      "owner": "@beep/repo-cli"
     },
     {
       "file": "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts",

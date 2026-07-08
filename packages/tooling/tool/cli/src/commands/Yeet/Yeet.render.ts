@@ -15,7 +15,7 @@ import type { RenderError } from "@beep/md";
 import type { Document } from "@beep/md/Md.model";
 import type { Markdown } from "@beep/schema";
 import type * as Result from "effect/Result";
-import type { PackageQualityReport, QualityIssue, QualityIssueCategory } from "./QualityIssueIndex.js";
+import type { PackageQualityReport, QualityIssue, QualityIssueCategory } from "./Yeet.schemas.js";
 
 const issueCategoryOrder: Order.Order<QualityIssueCategory> = Order.String;
 const issueFileOrder: Order.Order<string> = Order.String;

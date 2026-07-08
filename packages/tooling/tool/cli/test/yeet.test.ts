@@ -1835,7 +1835,12 @@ describe("yeet publish scope helpers", () => {
 
   it("plans closeout write actions only for known thread ids with a paired body", () => {
     const known = ["PRRT_a", "PRRT_b"];
-    const ok = closeoutWritePlanForTesting("PRRT_a", "Fixed in abc123.", "PRRT_a,PRRT_b", known);
+    const ok = closeoutWritePlanForTesting({
+      knownThreadIds: known,
+      replyBody: "Fixed in abc123.",
+      replyThread: "PRRT_a",
+      resolveThreads: "PRRT_a,PRRT_b",
+    });
     expect(O.isNone(ok.error)).toBe(true);
     expect(ok.intents.map((intent) => `${intent.kind}:${intent.threadId}`)).toEqual([
       "reply:PRRT_a",
@@ -1843,19 +1848,39 @@ describe("yeet publish scope helpers", () => {
       "resolve:PRRT_b",
     ]);
 
-    const unknown = closeoutWritePlanForTesting("", "", "PRRT_missing", known);
+    const unknown = closeoutWritePlanForTesting({
+      knownThreadIds: known,
+      replyBody: "",
+      replyThread: "",
+      resolveThreads: "PRRT_missing",
+    });
     expect(O.isSome(unknown.error)).toBe(true);
     if (O.isSome(unknown.error)) {
       expect(unknown.error.value).toContain("PRRT_missing");
     }
 
-    const unpaired = closeoutWritePlanForTesting("PRRT_a", "", "", known);
+    const unpaired = closeoutWritePlanForTesting({
+      knownThreadIds: known,
+      replyBody: "",
+      replyThread: "PRRT_a",
+      resolveThreads: "",
+    });
     expect(O.isSome(unpaired.error)).toBe(true);
 
-    const orphanBody = closeoutWritePlanForTesting("", "orphan body without a thread", "", known);
+    const orphanBody = closeoutWritePlanForTesting({
+      knownThreadIds: known,
+      replyBody: "orphan body without a thread",
+      replyThread: "",
+      resolveThreads: "",
+    });
     expect(O.isSome(orphanBody.error)).toBe(true);
 
-    const oversized = closeoutWritePlanForTesting("PRRT_a", "x".repeat(17 * 1024), "", known);
+    const oversized = closeoutWritePlanForTesting({
+      knownThreadIds: known,
+      replyBody: "x".repeat(17 * 1024),
+      replyThread: "PRRT_a",
+      resolveThreads: "",
+    });
     expect(O.isSome(oversized.error)).toBe(true);
   });
 

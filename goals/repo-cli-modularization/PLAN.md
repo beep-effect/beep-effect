@@ -137,10 +137,10 @@ Largest offender (13k LOC, four 1000+ files) and the package dependency hub.
 Strongest behavioral invariants (publish scope, stash restore, proof locks);
 goes after its dependencies are battle-tested.
 
-- [ ] `Yeet.schemas.ts` extraction; `internal/Handler.ts` (2897) split
+- [x] `Yeet.schemas.ts` extraction; `internal/Handler.ts` (2897) split
   (TurboQuery, PublishScope, ProofState, PullRequest) adopting GitExec/gh/JSON
   helpers.
-- [ ] `internal/QualityIssueIndex.ts` adopts the wire contract;
+- [x] `internal/QualityIssueIndex.ts` adopts the wire contract;
   `internal/Closeout.ts` (1316) split; `PacketRenderer` -> `Yeet.render.ts`;
   test-kit updates.
 

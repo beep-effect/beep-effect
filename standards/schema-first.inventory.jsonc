@@ -2642,26 +2642,6 @@
       "reason": "Type alias contains non-schema signals such as function members or runtime handles."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Closeout.ts",
-      "symbol": "closeoutGateStatesForTesting",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-fn-schema",
-      "line": 890,
-      "owner": "@beep/repo-cli",
-      "reason": "Exception: exported testing seam that adapts simplified test inputs into closeout gate states; inline shape avoids promoting test-only fixtures to schema models."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
-      "symbol": "buildYeetRunPlanForTesting",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-fn-schema",
-      "line": 2825,
-      "owner": "@beep/repo-cli",
-      "reason": "Exception: exported testing seam for yeet plan construction; inline option bag mirrors CLI flags and avoids promoting test-only fixture data to a public schema."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
       "symbol": "buildYeetVerdict",
       "kind": "schema-policy-advisory",

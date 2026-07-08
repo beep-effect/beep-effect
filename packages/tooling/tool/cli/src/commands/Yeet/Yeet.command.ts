@@ -14,8 +14,9 @@ import {
   runYeetFallowFixtureCheck,
   runYeetPlanContractCheck,
 } from "./internal/FallowFeedback.js";
-import { runYeet, YeetRunOptions } from "./internal/Handler.js";
+import { runYeet } from "./internal/Handler.js";
 import { DEFAULT_YEET_PACKET_DIR, YeetProofTier } from "./internal/Planner.js";
+import { YeetRunOptions } from "./Yeet.schemas.js";
 import type { YeetRunMode } from "./internal/Planner.js";
 
 const $I = $RepoCliId.create("commands/Yeet/Yeet.command");
