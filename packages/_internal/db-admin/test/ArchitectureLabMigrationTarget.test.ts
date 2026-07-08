@@ -1,5 +1,6 @@
 import { DbAdminMigrationTargets, WorkspaceThreadMigrationTarget } from "@beep/db-admin";
 import { ArchitectureLabMigrationTarget, DbAdminMigrationTarget } from "@beep/db-admin/migrations/ArchitectureLab";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as Eq from "effect/Equal";
@@ -46,7 +47,7 @@ describe("db-admin migration targets", () => {
 
         expect(Eq.equals(decoded, target)).toBe(true);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     );
   });
 

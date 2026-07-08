@@ -20,6 +20,7 @@ import {
   RunpodRawResponse,
 } from "@beep/runpod";
 import { decodeJsonString } from "@beep/schema/Json";
+import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { describe, expect, layer } from "@effect/vitest";
 import { Context, Effect, Equal, Layer, pipe, Redacted, Ref, Result } from "effect";
@@ -90,7 +91,7 @@ const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
     fc.property(arbitrary, (value) => {
       expectRoundTrip(schema, value);
     }),
-    { numRuns: 25 }
+    fcRuns(25)
   );
 };
 
@@ -452,7 +453,7 @@ describe("@beep/runpod", () => {
         fc.property(S.toArbitrary(RunpodConfigInput), (value) => {
           expectRoundTrip(RunpodConfigInput, value);
         }),
-        { numRuns: 25 }
+        fcRuns(25)
       );
       assertSchemaRoundTrip(RunpodDocsConfigInput);
       expect(encode(RunpodRawRequest, RunpodRawRequest.make({ method: "GET", path: "future" }))).toMatchObject({

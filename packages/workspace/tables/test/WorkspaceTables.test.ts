@@ -1,4 +1,4 @@
-import { baseEntityFixtureInput } from "@beep/test-utils";
+import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
 import { CandidateDraft as CandidateDraftModel } from "@beep/workspace-domain/entities/CandidateDraft";
 import { CandidateProject as CandidateProjectModel } from "@beep/workspace-domain/entities/CandidateProject";
 import { Message as MessageModel } from "@beep/workspace-domain/entities/Message";
@@ -160,6 +160,6 @@ describe("WorkspaceTables", () => {
           )
         ).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 });

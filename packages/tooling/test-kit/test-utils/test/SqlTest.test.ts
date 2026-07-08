@@ -1,6 +1,7 @@
 import {
   assertSchemaArbitraryDecodesToSelf,
   BunSqliteTestDriver,
+  fcRuns,
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
   makeSqlTestLayer,
@@ -441,7 +442,7 @@ describe("SqlTest", () => {
         expect(SqlTestHarnessError.is(decoded)).toBe(true);
         expect(Effect.runSync(encode(decoded))).toEqual(encoded);
       }),
-      { numRuns: 10 }
+      fcRuns(10)
     );
   });
 

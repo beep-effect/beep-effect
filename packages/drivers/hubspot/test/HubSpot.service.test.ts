@@ -8,6 +8,7 @@ import {
   HubSpotUpsertContactRequest,
   HubSpotUpsertContactResponse,
 } from "@beep/hubspot";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Cause, Context, Effect, Exit, Layer, Redacted, Ref, Result } from "effect";
@@ -248,7 +249,7 @@ describe("@beep/hubspot", () => {
           expectRoundTrip(HubSpotError, error);
         }
       ),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   layer(TestLayer)((it) => {

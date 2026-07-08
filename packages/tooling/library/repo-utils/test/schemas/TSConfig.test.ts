@@ -8,6 +8,7 @@ import {
   jsonParse,
   TSConfig,
 } from "@beep/repo-utils";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit } from "effect";
 import * as O from "effect/Option";
@@ -38,7 +39,7 @@ describe("TSConfig schema", () => {
 
           expect(decoded).toEqual(value);
         }),
-        { numRuns: 20 }
+        fcRuns(20)
       );
     });
 

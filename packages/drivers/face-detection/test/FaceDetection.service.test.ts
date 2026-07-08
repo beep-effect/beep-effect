@@ -18,6 +18,7 @@ import {
   RawFaceDetectionConfidence,
   withDetector,
 } from "@beep/face-detection";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal, Layer, Result } from "effect";
 import * as O from "effect/Option";
@@ -205,7 +206,7 @@ describe("@beep/face-detection", () => {
           expectCodecIdentity(FaceDetectionError, error);
         }
       ),
-      { numRuns: 20 }
+      fcRuns(20)
     ));
 
   it("normalizes raw model confidence at the schema boundary", () => {

@@ -1,4 +1,5 @@
 import * as Duration from "@beep/schema/Duration";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as D from "effect/Duration";
 import * as O from "effect/Option";
@@ -90,7 +91,7 @@ describe("DurationFromInput", () => {
 
     fc.assert(
       fc.property(arbitrary, (value) => D.isDuration(value) && isDuration(value)),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });

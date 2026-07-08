@@ -7,6 +7,7 @@ import {
   observeHttpApiEffect,
   observeHttpApiHandler,
 } from "@beep/observability/server";
+import { fcRuns } from "@beep/test-utils";
 import { Effect, Equal, Metric } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -29,7 +30,7 @@ describe("HttpApiTelemetry", () => {
         const decoded = O.flatMap(S.encodeOption(HttpStatusCode)(status), S.decodeUnknownOption(HttpStatusCode));
         expect(O.exists(decoded, (value) => Equal.equals(value, status))).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 

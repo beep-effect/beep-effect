@@ -27,6 +27,7 @@ import { PermittedCrossDomainPoliciesHeader } from "@beep/schema/PermittedCrossD
 import { ReferrerPolicyHeader } from "@beep/schema/ReferrerPolicy";
 import { createHeadersObject, createSecureHeaders, SecureHeaderOptions } from "@beep/schema/SecureHeaderOptions";
 import { XSSProtectionHeader } from "@beep/schema/XssProtection";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, pipe } from "effect";
@@ -121,7 +122,7 @@ describe("Secure header schemas", () => {
           P.isString(option) ? option : undefined
         );
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     );
   });
 
@@ -150,7 +151,7 @@ describe("Secure header schemas", () => {
           fc.property(testCase.optionArbitrary, (option) => {
             expectHeader(testCase.decodeOption(option), testCase.headerName, P.isString(option) ? option : undefined);
           }),
-          { numRuns: 25 }
+          fcRuns(25)
         );
       });
 

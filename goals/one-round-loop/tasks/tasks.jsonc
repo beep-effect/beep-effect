@@ -36,7 +36,7 @@
       "id": "orl-010",
       "rank": 4,
       "phase": "P1",
-      "status": "in_progress",
+      "status": "done",
       "blockedBy": ["orl-003"],
       "title": "Env-max property options helper + configureGlobal floor",
       "detail": "@beep/test-utils helper: effective numRuns = max(BEEP_FC_NUM_RUNS, inline ?? default); model on assertSchemaArbitraryDecodesToSelf. fc.configureGlobal floor in vitest.setup.ts for options-less asserts. Existing inline values are floors (fence 3)."
@@ -45,7 +45,7 @@
       "id": "orl-011",
       "rank": 5,
       "phase": "P1",
-      "status": "pending",
+      "status": "done",
       "blockedBy": ["orl-010"],
       "title": "numRuns codemod sweep (~278 sites, ~157 files)",
       "detail": "ts-morph codemod in ops/codemods/ with golden-diff test, following the crispening codemod harness. Scope from a FRESH rg inventory at execution time (2026-07-07 live: 287 numRuns lines / 161 files, 264 fc.assert sites, 53 assertSchemaArbitraryDecodesToSelf calls) and MUST include it.prop/test.prop sites (e.g. drivers/pacer) whose fastCheck params also override globals — migrate or explicitly ledger each. Codex-lane friendly (mechanical). Post-sweep proof: every migrated site's effective runs >= previous inline value."

@@ -80,6 +80,7 @@ import {
   writeAiMetricsDerivedStorage,
 } from "@beep/repo-ai-metrics";
 import { NonEmptyTrimmedStr } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
@@ -141,7 +142,7 @@ const assertSchemaEncodeDecodeRoundTrip = <Schema extends S.Codec<unknown>>(
 
       return Equal.equals(decoded, value) || equivalent(decoded, value);
     }),
-    { numRuns: options?.numRuns ?? 12 }
+    fcRuns(options?.numRuns ?? 12)
   );
 };
 

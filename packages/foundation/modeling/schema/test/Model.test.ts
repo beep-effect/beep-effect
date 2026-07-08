@@ -1,4 +1,5 @@
 import * as Model from "@beep/schema/Model";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Effect, SchemaParser } from "effect";
 import * as O from "effect/Option";
@@ -33,7 +34,7 @@ describe("Model optional helpers", () => {
       fc.property(arbitrary, (value) => {
         expect(decode(encode(value))).toEqual(value);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });

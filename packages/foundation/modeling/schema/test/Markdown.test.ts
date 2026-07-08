@@ -1,5 +1,6 @@
 import { decodeMarkdownTextAs, Markdown, MarkdownTextToHtml } from "@beep/schema/Markdown";
 import { loadMarkdownGfmModule, loadMarkdownModule, makeParseMarkdownForSchema } from "@beep/schema/test/Markdown";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit, Result } from "effect";
 import * as P from "effect/Predicate";
@@ -53,7 +54,7 @@ describe("Markdown", () => {
       fc.property(markdownArbitrary, (document) => {
         expect(decodeMarkdown(document)).toBe(document);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     );
   });
 

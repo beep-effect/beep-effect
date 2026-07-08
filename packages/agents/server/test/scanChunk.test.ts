@@ -5,6 +5,7 @@
  */
 
 import { initialScanState, scanChunk } from "@beep/agents-server/AssistantTurn";
+import { fcRuns } from "@beep/test-utils";
 import { FastCheck as fc } from "effect/testing";
 import { describe, expect, test } from "vitest";
 import type { ScanState } from "@beep/agents-server/AssistantTurn";
@@ -45,7 +46,7 @@ describe("scanChunk", () => {
           expect(JSON.parse(slice)).toEqual(blocks[index]);
         });
       }),
-      { numRuns: 200 }
+      fcRuns(200)
     );
   });
 

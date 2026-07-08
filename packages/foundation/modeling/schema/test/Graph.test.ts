@@ -1,4 +1,5 @@
 import * as GraphSchema from "@beep/schema/Graph";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Graph_ from "effect/Graph";
@@ -38,7 +39,7 @@ describe("Graph indices", () => {
         expect(S.is(GraphSchema.EdgeIndex)(edgeIndex)).toBe(true);
         expect(S.is(GraphSchema.GraphKind)(graphKind)).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });

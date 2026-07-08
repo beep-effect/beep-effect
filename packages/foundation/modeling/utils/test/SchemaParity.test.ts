@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/test-utils";
 import { AppendFileSyncOptions, ReaddirSyncOptions, RmSyncOptions } from "@beep/utils/FileSystem";
 import { GlobOptions, Pattern } from "@beep/utils/Glob";
 import { PathInput } from "@beep/utils/Struct";
@@ -25,7 +26,7 @@ const expectSchemaRoundTrips = <C extends S.Codec<unknown, unknown>>(schema: C):
     fc.property(arbitrary, (value) => {
       expectRoundTrip(schema, value);
     }),
-    { numRuns: 50 }
+    fcRuns(50)
   );
 };
 

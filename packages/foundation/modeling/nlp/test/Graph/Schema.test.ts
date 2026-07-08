@@ -8,6 +8,7 @@
  */
 
 import * as GraphSchema from "@beep/nlp/Graph/Schema";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -86,7 +87,7 @@ describe("Schema-derived graph payloads", () => {
           expect(Effect.runSync(S.decodeUnknownEffect(GraphSchema.NLPAnalysis)(encodedAnalysis))).toEqual(analysis);
         }
       ),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 });
 

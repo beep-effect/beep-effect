@@ -15,7 +15,7 @@ import {
 } from "@beep/libpff";
 import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
@@ -97,7 +97,7 @@ describe("@beep/libpff", () => {
         const decodedExportOperation = Effect.runSync(decodeExportArchiveOperation(encodedExportOperation));
         expect(Effect.runSync(encodeExportArchiveOperation(decodedExportOperation))).toEqual(encodedExportOperation);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     ));
 
   it("round-trips libpff-owned schema-derived data through encoded shapes", () =>
@@ -120,7 +120,7 @@ describe("@beep/libpff", () => {
           expect(Effect.runSync(encodeLibpffError(decodedError))).toEqual(encodedError);
         }
       ),
-      { numRuns: 25 }
+      fcRuns(25)
     ));
 
   it("preserves encoded libpff shapes for schema-owned defaults and option fields", () => {

@@ -19,7 +19,7 @@ import {
 } from "@beep/agents-domain/values/AssistantContent";
 import * as Md from "@beep/md/Md.model";
 import * as Agents from "@beep/shared-domain/identity/Agents";
-import { baseEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
+import { baseEntityFixtureInput, fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Path } from "effect";
@@ -113,7 +113,7 @@ describe("@beep/agents-domain", () => {
         expect(encoded).toBe(mode);
         expect(AgentMode.is.deterministic_fixture(decoded)).toBe(true);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     ));
 
   it("preserves assistant content exports from the canonical value-object path", () => {
@@ -187,7 +187,7 @@ describe("@beep/agents-domain", () => {
     for (const schema of schemas) {
       fc.assert(
         fc.property(S.toArbitrary(schema), (value) => roundTrip(schema, value)),
-        { numRuns: 10 }
+        fcRuns(10)
       );
     }
   });

@@ -1,5 +1,6 @@
 import { formOptionsWithDefaults, makeFormOptions, ValidateOn } from "@beep/form/core/FormOptions";
 import { withKeyDefaults } from "@beep/schema/SchemaUtils";
+import { fcRuns } from "@beep/test-utils";
 import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -63,6 +64,6 @@ describe("@beep/form FormOptions", () => {
         expect(encoded).toBe(value);
         expect(decoded).toBe(value);
       }),
-      { numRuns: 20 }
+      fcRuns(20)
     ));
 });

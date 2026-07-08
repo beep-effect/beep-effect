@@ -1,4 +1,5 @@
 import { ConsoleErrorReporterOptions, ErrorReporterLayerOptions } from "@beep/observability/server";
+import { fcRuns } from "@beep/test-utils";
 import { Equal } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -21,7 +22,7 @@ describe("ErrorReporting", () => {
         );
         expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 
@@ -34,7 +35,7 @@ describe("ErrorReporting", () => {
         );
         expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });

@@ -9,6 +9,7 @@ import {
   ScanState,
   scanChunk,
 } from "@beep/agents-server/AssistantTurn";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as Equal from "effect/Equal";
@@ -74,7 +75,7 @@ describe("@beep/agents-server schema parity", () => {
     for (const schema of schemas) {
       fc.assert(
         fc.property(S.toArbitrary(schema), (value) => roundTrip(schema, value)),
-        { numRuns: 25 }
+        fcRuns(25)
       );
     }
   });

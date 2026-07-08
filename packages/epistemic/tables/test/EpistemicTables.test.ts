@@ -1,7 +1,7 @@
 import { UsageRecord as UsageRecordModel } from "@beep/epistemic-domain/entities/UsageRecord";
 import { DbSchema, Entities } from "@beep/epistemic-tables";
 import * as UsageRecord from "@beep/epistemic-tables/entities/UsageRecord";
-import { baseEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
+import { baseEntityFixtureInput, fcRuns, systemPrincipal } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
@@ -112,6 +112,6 @@ describe("EpistemicTables", () => {
 
         expect(UsageRecordEquivalence(decoded, record)).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 });

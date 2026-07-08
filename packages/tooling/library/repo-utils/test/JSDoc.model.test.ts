@@ -4,6 +4,7 @@ import {
   TSCategoryDefinition,
 } from "@beep/repo-utils/JSDoc/models/TSCategory.model";
 import { TagName, TagValue } from "@beep/repo-utils/JSDoc/models/tag-values";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -23,7 +24,7 @@ describe("JSDoc schema models", () => {
 
         expect(decoded).toEqual(value);
       }),
-      { numRuns: 20 }
+      fcRuns(20)
     );
   });
 
@@ -35,7 +36,7 @@ describe("JSDoc schema models", () => {
 
         expect(decoded).toEqual(value);
       }),
-      { numRuns: 20 }
+      fcRuns(20)
     );
   });
 
@@ -49,7 +50,7 @@ describe("JSDoc schema models", () => {
         expect(value.documentationPriority).toBeGreaterThanOrEqual(1);
         expect(value.documentationPriority).toBeLessThanOrEqual(99);
       }),
-      { numRuns: 20 }
+      fcRuns(20)
     );
   });
 
@@ -61,7 +62,7 @@ describe("JSDoc schema models", () => {
 
         expect(decoded).toEqual(value);
       }),
-      { numRuns: 20 }
+      fcRuns(20)
     );
     fc.assert(
       fc.property(ScoredCategoryCandidateArbitrary, (value) => {
@@ -70,7 +71,7 @@ describe("JSDoc schema models", () => {
 
         expect(decoded).toEqual(value);
       }),
-      { numRuns: 20 }
+      fcRuns(20)
     );
   });
 });

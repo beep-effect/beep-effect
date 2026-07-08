@@ -3,6 +3,7 @@ import { Readable } from "node:stream";
 import { text as readableText } from "node:stream/consumers";
 import * as B from "@beep/box";
 import { HttpsUrl, NonNegativeInt } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import {
   Cause,
@@ -184,7 +185,7 @@ const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: 
     fc.property(S.toArbitrary(schema), (value) => {
       expectRoundTrip(schema, value);
     }),
-    { numRuns: 25 }
+    fcRuns(25)
   );
 };
 
@@ -196,7 +197,7 @@ const assertSchemaRoundTripWithArbitrary = <Codec extends S.Codec<unknown, unkno
     fc.property(arbitrary, (value) => {
       expectRoundTrip(schema, value);
     }),
-    { numRuns: 25 }
+    fcRuns(25)
   );
 };
 

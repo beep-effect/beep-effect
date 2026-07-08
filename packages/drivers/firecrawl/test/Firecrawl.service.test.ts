@@ -1,4 +1,5 @@
 import * as F from "@beep/firecrawl";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Cause, Effect, Equal, Exit, Stream } from "effect";
 import * as A from "effect/Array";
@@ -170,7 +171,7 @@ const assertRoundTrip = <SchemaT extends S.ConstraintCodec<unknown, unknown, nev
     fc.property(S.toArbitrary(schema), (value) => {
       expect(Equal.equals(decode(encode(value)), value)).toBe(true);
     }),
-    { numRuns: 25 }
+    fcRuns(25)
   );
 };
 

@@ -1,4 +1,5 @@
 import * as FilePathSchema from "@beep/schema/FilePath";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -60,7 +61,7 @@ describe("FilePath part schemas", () => {
         expect(decode(value)).toBe(value);
         expect(value).toMatch(/^[A-Za-z]:[\\/]?$/);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 

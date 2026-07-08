@@ -2,6 +2,7 @@ import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkIt
 import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import * as WorkPriority from "@beep/architecture-lab-domain/values/WorkPriority";
 import { fromWorkItemRow, toWorkItemInsert, workItemTable } from "@beep/architecture-lab-tables/aggregates/WorkItem";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns, getTableName } from "drizzle-orm";
 import { DateTime, Effect, Option as O } from "effect";
@@ -77,6 +78,6 @@ describe("WorkItem table", () => {
 
         expect(WorkItemEquivalence(decoded, workItem)).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 });

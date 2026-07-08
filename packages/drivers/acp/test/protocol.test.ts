@@ -1,4 +1,5 @@
 import { Errors as AcpError, Protocol as AcpProtocol, Schema as AcpSchema } from "@beep/acp";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as NodeServices from "@effect/platform-node/NodeServices";
@@ -102,7 +103,7 @@ it("round-trips schema-derived JSON-RPC notifications and responses through JSON
         );
       }
     ),
-    { numRuns: 25 }
+    fcRuns(25)
   ));
 
 it("keeps handwritten ACP schema encoded shapes byte-identical", () => {
@@ -191,7 +192,7 @@ it("round-trips handwritten ACP schemas through encoded form", () =>
         assertEncodedRoundTrip(AcpError.AcpError, error, { compareDecoded: false });
       }
     ),
-    { numRuns: 25 }
+    fcRuns(25)
   ));
 
 it.layer(NodeServices.layer)("effect-acp protocol", (it) => {

@@ -29,6 +29,7 @@ import {
 } from "@beep/m365";
 import { NonNegativeInt, PosInt } from "@beep/schema";
 import { HttpStatus } from "@beep/schema/HttpStatus";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Cause, Context, Duration, Effect, Exit, Fiber, Layer, pipe, Redacted, Ref, Result } from "effect";
 import * as A from "effect/Array";
@@ -377,7 +378,7 @@ describe("@beep/m365 service", () => {
           ).toBe(true);
         }
       ),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   layer(makeTestLayer())((it) => {

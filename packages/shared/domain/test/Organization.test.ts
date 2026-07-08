@@ -1,6 +1,7 @@
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import * as Organization from "@beep/shared-domain/entities/Organization";
 import * as Shared from "@beep/shared-domain/identity/Shared";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
@@ -93,7 +94,7 @@ describe("Organization", () => {
         assert.strictEqual(decodedSettings.allowAgentActions, settings.allowAgentActions);
         assert.strictEqual(decodedSettings.defaultRetentionDays, settings.defaultRetentionDays);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   it.effect(

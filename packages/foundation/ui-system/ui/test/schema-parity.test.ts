@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/test-utils";
 import { normalizeHexColorInput } from "@beep/ui/components/color-picker";
 import { CountryCode } from "@beep/ui/components/country-select";
 import { NotificationAction } from "@beep/ui/components/notification-card";
@@ -66,7 +67,7 @@ describe("@beep/ui schema parity", () => {
           expect(Equal.equals(roundTrippedInvariantError, invariantError)).toBe(true);
         }
       ),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 

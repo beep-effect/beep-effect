@@ -1,4 +1,5 @@
 import { OptionFromOptionalNullishKey } from "@beep/schema/Options";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -63,7 +64,7 @@ describe("OptionFromOptionalNullishKey", () => {
       fc.property(arbitrary, (payload) => {
         expect(decode(encode(payload))).toEqual(payload);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });

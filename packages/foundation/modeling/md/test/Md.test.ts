@@ -36,6 +36,7 @@ import {
   renderWithUnsafe,
 } from "@beep/md/Md.render";
 import { HtmlFragment, Markdown } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit, Result } from "effect";
 import * as O from "effect/Option";
@@ -168,7 +169,7 @@ https://www.youtube.com/watch?v=dQw4w9WgXcQ
         expect(renderMarkdownBlock(decodedBlock)).toEqual(expect.any(String));
         expect(Result.isSuccess(Md.render(decodedDocument))).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   it("encoded documents survive a JSON boundary (jsonb columns, rpc/ndjson wire)", () => {
@@ -204,7 +205,7 @@ https://www.youtube.com/watch?v=dQw4w9WgXcQ
 
         expect(Result.getOrThrow(decodeDocumentJsonResult(json))).toEqual(document);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   it("renders inline Markdown and HTML variants with escaped text by default", () => {
