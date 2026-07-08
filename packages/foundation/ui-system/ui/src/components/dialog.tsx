@@ -295,6 +295,10 @@ const DialogWithParts = Object.assign(Dialog, {
   Trigger: DialogTrigger,
 });
 
+/**
+ * @category components
+ * @since 0.0.0
+ */
 export {
   DialogClose,
   DialogContent,

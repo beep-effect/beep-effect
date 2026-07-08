@@ -221,4 +221,8 @@ const BannerWithParts = Object.assign(Banner, {
   Title: BannerTitle,
 });
 
+/**
+ * @category components
+ * @since 0.0.0
+ */
 export { BannerContent, BannerDescription, BannerDismiss, BannerTitle, BannerWithParts as Banner, bannerVariants };

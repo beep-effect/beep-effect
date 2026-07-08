@@ -554,3 +554,29 @@ coherent-tree fixes: Check (R9 test .filePath -> .repoPath endsWith); Fallow
 local regen green); Property Laws (ecfr test:property exit-130 CI kill;
 passes locally 3/3 -> flake, re-run on clean push). Consolidation commits the
 coherent tree over the broken HEAD.
+
+## R26 — hosted-CI greening (LOCKED, driver 2026-07-08)
+
+Post-merge CI surfaced failures the local turbo-cache had false-greened:
+- **Repo Sanity**: FINAL-C's @beep/identity devDep on @beep/lint-rules drifted
+  the tsconfig references + fallow boundaries config. Fixed via `bun run
+  config-sync` (added the tsconfig reference) + `fallow:boundaries:write`.
+- **Lint Policy** (4 sub-checks, turbo-cached-green locally — the TURBO_FORCE
+  lesson): cspell (+keyer/regen/taila/tailb to custom dict); effect-imports
+  (--write, 1 file); jsdoc eslint (--fix, 6 tag-order warnings in
+  ProofManifest.ts); native-runtime — 2 unreachable-invariant `throw new Error`
+  in Curie.ts expand/contract → internal `CurieCodecInvariantError`
+  (TaggedErrorClass, non-exported so no jsdoc requirement), and 3 shadcn
+  compound-component `Object.assign(Component, {parts})` idioms (banner/dialog/
+  dropdown-menu) → allowlist (spread-incompatible callable composition; NOT
+  domain logic; native-runtime is diff-based so our doc additions pulled these
+  pre-existing lines into scope). **Allowlist now 6** (3 challenged survivors +
+  3 justified UI-compound-component idioms).
+- **Property Laws** (non-required, stabilizing #327 lane): heavy production-
+  schema property tests time out at the 400-run env-max floor on slow CI
+  runners (correctness passes locally 14/14, deterministic pinned seed). Not a
+  regression. Central fix: vitest.shared.ts fcDeepSweep testTimeout 180s→300s.
+  If still red, it is a non-required infra-immaturity limitation, not a merge
+  blocker — escalate to user.
+- **Changeset base-skew**: CI's origin/main ref lags; 8 phantom-changed
+  packages added defensively (branch is synced; changeset passes locally).

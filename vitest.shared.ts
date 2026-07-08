@@ -38,7 +38,7 @@ const parsedFcNumRuns = pipe(
   O.map(Number),
   O.getOrElse(() => 0)
 );
-const fcDeepSweepActive = Number.isInteger(parsedFcNumRuns) && parsedFcNumRuns > 0;
+export const fcDeepSweepActive = Number.isInteger(parsedFcNumRuns) && parsedFcNumRuns > 0;
 // Fixed global coverage floors are retired (quality-gate-ratchets, 2026-07-06):
 // the committed per-package baseline compare (standards/coverage.regression-baseline.jsonc,
 // fail-on-drop) is the sole coverage judge. Package-local floors (e.g.

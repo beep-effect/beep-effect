@@ -40,7 +40,8 @@
       "R22",
       "R23",
       "R24",
-      "R25"
+      "R25",
+      "R26"
     ],
     "pending": [
       "R9"
@@ -67,8 +68,8 @@
       "status": "ZERO (empty baseline written)"
     },
     "allowlist": {
-      "entries": 3,
-      "status": "verified survivors (chalk/wink/rdf) -> P8 in-code migration"
+      "entries": 6,
+      "note": "3 challenged survivors + 3 justified UI compound-component Object.assign idioms (R26)"
     }
   },
   "waves": {
@@ -556,5 +557,11 @@
     "files": 247,
     "localGatesGreen": "dual-arity/schema-first/jsdoc-ratchet/knip/allowlist/biome/reflection/fallow-audit/fallow-dead-code/turbo-check all PASS",
     "baselinesZeroed": "jsdoc-totals all 6 = 0"
+  },
+  "ciGreening": "Repo Sanity + Lint Policy fixed locally (exit 0); Property Laws central timeout bump (best-effort, non-required lane)",
+  "ciRound4": {
+    "sha": "ff51f3b7b6",
+    "result": "Repo Sanity GREEN; Check GREEN; Lint Policy down to 1 sub-step (docgen: 3 ui exports missing metadata); Property Laws root-caused (11 vitest configs lack fcDeepSweepActive)",
+    "lane": "ci-fix-final dispatched: export fcDeepSweepActive + 11 configs + ui docgen metadata"
   }
 }

@@ -466,6 +466,10 @@ const DropdownMenuWithParts = Object.assign(DropdownMenu, {
   Trigger: DropdownMenuTrigger,
 });
 
+/**
+ * @category components
+ * @since 0.0.0
+ */
 export {
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
