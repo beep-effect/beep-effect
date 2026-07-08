@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { $RepoCliId, $SchemaId } from "@beep/identity";
 import {
   LiteralKit,
@@ -32,7 +33,7 @@ describe("LiteralKit", () => {
         expect(Status.Options).toContain(literal);
         expect(decode(encode(literal))).toBe(literal);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     );
   });
 

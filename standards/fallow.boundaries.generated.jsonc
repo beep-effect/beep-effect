@@ -210,6 +210,12 @@
         ]
       },
       {
+        "name": "@beep/fc-runs",
+        "patterns": [
+          "packages/tooling/test-kit/fc-runs/src/**"
+        ]
+      },
+      {
         "name": "@beep/federal-register",
         "patterns": [
           "packages/drivers/federal-register/src/**"
@@ -1194,6 +1200,15 @@
         ]
       },
       {
+        "from": "@beep/fc-runs",
+        "allow": [
+          "@beep/fc-runs"
+        ],
+        "allowTypeOnly": [
+          "@beep/fc-runs"
+        ]
+      },
+      {
         "from": "@beep/federal-register",
         "allow": [
           "@beep/federal-register"
@@ -1757,12 +1772,14 @@
       {
         "from": "@beep/pglite",
         "allow": [
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/pglite",
           "@beep/schema",
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/pglite",
           "@beep/schema",
@@ -2068,6 +2085,7 @@
         "from": "@beep/schema",
         "allow": [
           "@beep/data",
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
           "@beep/types",
@@ -2075,6 +2093,7 @@
         ],
         "allowTypeOnly": [
           "@beep/data",
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
           "@beep/types",
@@ -2167,12 +2186,14 @@
       {
         "from": "@beep/test-utils",
         "allow": [
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/schema",
           "@beep/test-utils",
@@ -2261,11 +2282,13 @@
       {
         "from": "@beep/utils",
         "allow": [
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/types",
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/fc-runs",
           "@beep/identity",
           "@beep/types",
           "@beep/utils"

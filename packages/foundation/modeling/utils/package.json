@@ -36,6 +36,7 @@
     "picomatch": "catalog:"
   },
   "devDependencies": {
+    "@beep/fc-runs": "workspace:^",
     "@beep/types": "workspace:^",
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",

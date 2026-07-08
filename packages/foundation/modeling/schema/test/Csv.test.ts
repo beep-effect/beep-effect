@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { $SchemaId } from "@beep/identity";
 import { CSV } from "@beep/schema/Csv";
 import { describe, expect, it } from "@effect/vitest";
@@ -160,7 +161,7 @@ describe("CSV", () => {
 
         expect(decoded).toEqual(rows);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     );
   });
 

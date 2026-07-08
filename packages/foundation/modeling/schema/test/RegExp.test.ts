@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { RegExpFromStr, RegExpStr } from "@beep/schema/RegExp";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
@@ -25,7 +26,7 @@ describe("RegExpStr", () => {
         new globalThis.RegExp(value);
         return S.is(RegExpStr)(value) && decode(value) === value;
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });
@@ -60,7 +61,7 @@ describe("RegExpFromStr", () => {
 
     fc.assert(
       fc.property(arbitrary, (value) => value instanceof RegExp && S.is(S.RegExp)(value)),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });
