@@ -127,6 +127,23 @@ fixture branch itself):
   structural identity (the local lane runs the byte-identical CI
   command, per the D9 echo evidence) with expected PASS/PASS.
 
+**SAST-hardening resolution (2026-07-08, PR
+[#330](https://github.com/beep-effect/beep-effect/pull/330), merge
+`57f04df05f`).** The root cause was deeper than rule coverage:
+`semgrep scan` ran without `--error`, so the lane exited 0 even on
+*blocking* findings — the gate could not fail on anything. Empirically
+the community `p/secrets` pack *does* detect a hardcoded private key;
+the RSA-PEM fixture "passed" only because of the missing `--error`, not
+the thin subset. Fix: add `--error` plus a vendored, offline ruleset
+(`.semgrep/first-party.yml`) closing the genuine coverage gaps — dynamic
+`eval`, dynamic `child_process` exec/execSync (named, namespace, and
+default import forms), and hardcoded private keys incl. encrypted
+PKCS#8. Vendored rather than a `SEMGREP_APP_TOKEN` so the lane stays
+verdict-identical between CI and the local replay (a token would exist
+only in CI and break that parity). Locally-constructible failing
+fixtures now exist and fire (exit 1), so the "no-constructible-fixture"
+premise above no longer holds going forward.
+
 **Round-3/4 same-SHA verdict table.** PR A's merge to main made the
 fixture PR CONFLICTING → GitHub cannot build refs/pull/N/merge →
 pull_request runs silently stop triggering (a distinct S4-adjacent
