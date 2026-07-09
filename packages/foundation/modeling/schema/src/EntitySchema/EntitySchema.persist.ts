@@ -74,6 +74,7 @@ export type StorageKind = typeof StorageKind.Type;
  */
 export const ValueStrategy = LiteralKit([
   "computedByService",
+  "computedByServiceOnInsert",
   "defaultedOnInsert",
   "derived",
   "generatedOnInsert",

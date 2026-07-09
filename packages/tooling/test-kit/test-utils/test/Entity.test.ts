@@ -9,6 +9,7 @@ describe("entity test helpers", () => {
       entityType: "Example",
       id: 41,
       orgId: 1,
+      publicId: "example_a41",
       rowVersion: 1,
       schemaVersion: "0.0.0",
       source: "System",

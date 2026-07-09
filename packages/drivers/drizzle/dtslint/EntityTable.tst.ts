@@ -30,6 +30,7 @@ const Fixture = EntitySchema.ClassFactory($I`Fixture`)(
       name: S.String,
       optionalName: S.String.pipe(S.OptionFromNullOr),
       payload: S.Record(S.String, S.Unknown),
+      publicId: S.String,
       rowVersion: EntitySchema.int,
     },
     persisted: {
@@ -44,6 +45,11 @@ const Fixture = EntitySchema.ClassFactory($I`Fixture`)(
         columnName: "optional_name",
       }),
       payload: EntitySchema.persist.jsonb(),
+      publicId: EntitySchema.persist.text({
+        columnName: "public_id",
+        indexHints: [EntitySchema.IndexHint.unique],
+        valueStrategy: "computedByServiceOnInsert",
+      }),
       rowVersion: EntitySchema.persist.int({
         columnName: "row_version",
         valueStrategy: "incrementedOnWrite",
@@ -100,6 +106,7 @@ describe("EntityTable types", () => {
     expect<typeof Table.definition.entityId.entityType>().type.toBe<"Fixture">();
     expect<typeof Table.definition.persisted.id.storageKind>().type.toBe<"entityId">();
     expect<typeof Table.definition.persisted.id.valueStrategy>().type.toBe<"generatedOnInsert">();
+    expect<typeof Table.definition.persisted.publicId.valueStrategy>().type.toBe<"computedByServiceOnInsert">();
     expect<typeof Table.definition.persisted.payload.storageKind>().type.toBe<"jsonb">();
     expect<typeof Table.entitySchema>().type.toBe<typeof Fixture>();
   });
@@ -109,6 +116,7 @@ describe("EntityTable types", () => {
     expect<typeof Columns.isActive.name>().type.toBe<string>();
     expect<typeof Columns.optionalName.name>().type.toBe<string>();
     expect<typeof Columns.payload.name>().type.toBe<string>();
+    expect<typeof Columns.publicId.name>().type.toBe<string>();
     expect<typeof ExplicitColumns.occurredAt.name>().type.toBe<string>();
     expect<typeof ExplicitTable.definition.persisted.occurredAt.storageKind>().type.toBe<"timestampDate">();
     expect<typeof ExplicitTable.definition.persisted.payloadText.storageKind>().type.toBe<"text">();

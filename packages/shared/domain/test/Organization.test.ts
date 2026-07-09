@@ -33,6 +33,7 @@ const organizationInput = {
   name: "Acme",
   orgId: 1,
   parentOrgId: null,
+  publicId: "shared_organization_a1",
   rowVersion: 1,
   schemaVersion: "0.0.0",
   settings: {
@@ -127,6 +128,7 @@ describe("Organization", () => {
       "slug",
       "entityType",
       "id",
+      "publicId",
     ]);
     expect(definition.persisted.slug.indexHints?.[0]?.kind).toBe("unique");
     expect(definition.persisted.licenseTier.storageKind).toBe("literal");
@@ -142,6 +144,8 @@ describe("Organization", () => {
 
       expect(Organization.Model.definition.entityId).toBe(Shared.OrganizationId);
       expect(Organization.Model.definition.persisted.id.valueStrategy).toBe("generatedOnInsert");
+      expect(Organization.Model.definition.persisted.publicId.columnName).toBe("public_id");
+      expect(Organization.Model.definition.persisted.publicId.indexHints?.[0]?.kind).toBe("unique");
       expect(Organization.Model.definition.persisted.orgId.storageKind).toBe("entityId");
       expect(EntitySchema.columnNameFor("slug", Organization.Model.definition.persisted.slug)).toBe("slug");
       expect(Organization.Model.fields.slug).toBeDefined();

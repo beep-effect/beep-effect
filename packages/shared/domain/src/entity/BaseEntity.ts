@@ -14,7 +14,9 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Shared from "../identity/Shared.js";
 import { Principal } from "./Principal.js";
+import * as PublicEntityId from "./PublicEntityId.js";
 import { SourceKind } from "./SourceKind.js";
+import type * as EntityId from "./EntityId.js";
 
 const $I = $SharedDomainId.create("entity/BaseEntity");
 
@@ -33,23 +35,30 @@ type EntityInput<
   Persisted extends EntitySchema.PersistedFor<FieldMap>,
 > = Omit<EntitySchema.ClassInput<FieldMap, Persisted>, "entityId" | "tableName">;
 
-type EntityIdentityFields<Entity extends EntitySchema.EntityIdLike> = {
+type EntityIdentityFields<Entity extends EntityId.Any> = {
   readonly entityType: S.Literal<Entity["entityType"]>;
   readonly id: Entity;
+  readonly publicId: PublicEntityId.PublicEntityId<Entity>;
 };
 
 type EntityIdentityPersisted = {
   readonly entityType: EntitySchema.PersistDescriptor<"literal", "derived", "entity_type", undefined>;
   readonly id: EntitySchema.PersistDescriptor<"entityId", "generatedOnInsert", undefined, undefined>;
+  readonly publicId: EntitySchema.PersistDescriptor<
+    "text",
+    "computedByServiceOnInsert",
+    "public_id",
+    readonly [typeof EntitySchema.IndexHint.unique]
+  >;
 };
 
 type EntityFieldsFor<
-  Entity extends EntitySchema.EntityIdLike,
+  Entity extends EntityId.Any,
   ChildFields extends EntitySchema.EntityFieldInputs,
 > = EntitySchema.Assign<ChildFields, EntityIdentityFields<Entity>>;
 
 type EntityPersistedFor<
-  Entity extends EntitySchema.EntityIdLike,
+  Entity extends EntityId.Any,
   ChildFields extends EntitySchema.EntityFieldInputs,
   ChildPersisted extends EntitySchema.PersistedFor<ChildFields>,
 > = EntitySchema.AssignedPersisted<ChildFields, ChildPersisted, EntityIdentityFields<Entity>, EntityIdentityPersisted>;
@@ -133,11 +142,10 @@ const BaseEntityCore = EntitySchema.ClassFactory($I`BaseEntity`)(
 
 const BaseEntityCoreClass = BaseEntityCore.Class;
 
-const identityFields = <const Entity extends EntitySchema.EntityIdLike>(
-  entityId: Entity
-): EntityIdentityFields<Entity> => ({
+const identityFields = <const Entity extends EntityId.Any>(entityId: Entity): EntityIdentityFields<Entity> => ({
   entityType: EntitySchema.literal(entityId.entityType),
   id: entityId,
+  publicId: PublicEntityId.factory(entityId),
 });
 
 const identityPersisted = {
@@ -148,10 +156,15 @@ const identityPersisted = {
   id: EntitySchema.persist.entityId({
     valueStrategy: "generatedOnInsert",
   }),
+  publicId: EntitySchema.persist.text({
+    columnName: "public_id",
+    indexHints: [EntitySchema.IndexHint.unique],
+    valueStrategy: "computedByServiceOnInsert",
+  }),
 } as const satisfies EntityIdentityPersisted;
 
 const entityPartsFor = <
-  const Entity extends EntitySchema.EntityIdLike,
+  const Entity extends EntityId.Any,
   const ChildFields extends EntitySchema.EntityFieldInputs,
   const ChildPersisted extends EntitySchema.PersistedFor<ChildFields>,
 >(
@@ -171,7 +184,7 @@ const entityPartsFor = <
 const Class =
   <Child = never>(identifier: string) =>
   <
-    const Entity extends EntitySchema.EntityIdLike,
+    const Entity extends EntityId.Any,
     const ChildFields extends EntitySchema.EntityFieldInputs,
     const ChildPersisted extends EntitySchema.PersistedFor<ChildFields>,
   >(

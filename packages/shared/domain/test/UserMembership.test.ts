@@ -11,12 +11,16 @@ const systemPrincipal = {
   kind: "System",
 } as const;
 
+const publicIdFor = (entityType: string, id: number) =>
+  `${entityType.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase()}_a${id}`;
+
 const baseEntityInput = (entityType: string, id: number) => ({
   createdAt: id,
   createdByPrincipal: systemPrincipal,
   entityType,
   id,
   orgId: 1,
+  publicId: publicIdFor(entityType, id),
   rowVersion: 1,
   schemaVersion: "0.0.0",
   source: "Application",

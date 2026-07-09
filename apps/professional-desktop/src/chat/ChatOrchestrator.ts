@@ -182,6 +182,7 @@ const fixtureUsageRecord = appendTurnFinalizationUsageRecord(
     entityType: "EpistemicUsageRecord",
     id: 1,
     orgId: 1,
+    publicId: "epistemic_usage_record_a1",
     rowVersion: 1,
     schemaVersion: "0.0.0",
     source: "System",

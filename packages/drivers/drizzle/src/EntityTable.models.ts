@@ -280,6 +280,7 @@ function entityIdColumn(
     Match.withReturnType<EntityIdColumnBuilderRuntimeBaseFor<EntityIdDescriptor>>(),
     Match.discriminatorsExhaustive("valueStrategy")({
       computedByService: () => integer(columnName),
+      computedByServiceOnInsert: () => integer(columnName),
       defaultedOnInsert: () => integer(columnName),
       derived: () => integer(columnName),
       generatedOnInsert: () => serial(columnName),

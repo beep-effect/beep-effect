@@ -8,6 +8,7 @@ import * as EntityId from "@beep/shared-domain/entity/EntityId";
 import * as EntityRef from "@beep/shared-domain/entity/EntityRef";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "tstyche";
+import type * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import type * as Shared from "@beep/shared-domain/identity/Shared";
 import type * as O from "effect/Option";
 
@@ -87,6 +88,8 @@ describe("shared entity kernel types", () => {
     expect<typeof Document.definition.entityId.tableName>().type.toBe<"shared_document">();
     expect<typeof Document.definition.persisted.id.storageKind>().type.toBe<"entityId">();
     expect<typeof Document.definition.persisted.id.valueStrategy>().type.toBe<"generatedOnInsert">();
+    expect<typeof Document.definition.persisted.publicId.columnName>().type.toBe<"public_id">();
+    expect<typeof Document.definition.persisted.publicId.valueStrategy>().type.toBe<"computedByServiceOnInsert">();
     expect<typeof Document.definition.persisted.note.columnName>().type.toBe<"note">();
     expect<typeof Document.definition.persisted.note.storageKind>().type.toBe<"text">();
     expect<typeof Document.definition.persisted.optionalNote.columnName>().type.toBe<"optional_note">();
@@ -96,11 +99,15 @@ describe("shared entity kernel types", () => {
 
   it("preserves decoded field types and generated variants", () => {
     expect<Document["id"]>().type.toBe<typeof DocumentId.Type>();
+    expect<Document["publicId"]>().type.toBe<PublicEntityId.PublicEntityIdFor<typeof DocumentId>>();
     expect<Document["orgId"]>().type.toBe<Shared.OrganizationId>();
     expect<Document["optionalNote"]>().type.toBe<O.Option<string>>();
     expect<ConfidentialDocument["optionalSecret"]>().type.toBe<O.Option<string>>();
     expect<typeof Document.fields.optionalNote.Type>().type.toBe<O.Option<string>>();
     expect<"id">().type.not.toBeAssignableTo<keyof S.Schema.Type<typeof Document.insert>>();
+    expect<"publicId">().type.toBeAssignableTo<keyof S.Schema.Type<typeof Document.insert>>();
+    expect<"publicId">().type.not.toBeAssignableTo<keyof S.Schema.Type<typeof Document.update>>();
+    expect<"publicId">().type.not.toBeAssignableTo<keyof S.Schema.Type<typeof Document.jsonCreate>>();
     expect<"entityType">().type.toBeAssignableTo<keyof S.Schema.Type<typeof Document.insert>>();
     expect<"note">().type.toBeAssignableTo<keyof S.Schema.Type<typeof Document.insert>>();
     expect<"secret">().type.not.toBeAssignableTo<keyof S.Schema.Type<typeof ConfidentialDocument.json>>();
@@ -110,6 +117,7 @@ describe("shared entity kernel types", () => {
     expect(EntityBarrel.BaseEntity.BaseEntity).type.toBe<typeof BaseEntity.BaseEntity>();
     expect(EntityBarrel.EntityId.EntityIdValue).type.toBe<typeof EntityId.EntityIdValue>();
     expect(EntityBarrel.EntityRef.EntityRef).type.toBe<typeof EntityRef.EntityRef>();
+    expect(EntityBarrel.PublicEntityId.factory).type.toBe<typeof PublicEntityId.factory>();
     expect(DomainBarrel.Identity.Shared.OrganizationId).type.toBe<typeof Shared.OrganizationId>();
     expect(DomainBarrel.BaseEntity.BaseEntity).type.toBe<typeof BaseEntity.BaseEntity>();
   });

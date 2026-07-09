@@ -82,6 +82,7 @@ const explicitFields = {
   createdAt: Model.DateTimeInsertFromNumber,
   generatedValue: Model.Generated(S.String),
   happenedAt: Model.DateTimeInsertFromDate,
+  insertCode: Model.GeneratedByAppOnInsert(S.String),
   optionalName: Model.FieldOption(S.String),
   payloadText: Model.JsonFromString(
     S.Struct({
@@ -109,6 +110,9 @@ const ExplicitFixture = EntitySchema.ClassFactory($I`ExplicitFixture`)({
     }),
     happenedAt: EntitySchema.persist.timestampDate({
       valueStrategy: "defaultedOnInsert",
+    }),
+    insertCode: EntitySchema.persist.text({
+      valueStrategy: "computedByServiceOnInsert",
     }),
     optionalName: EntitySchema.persist.text(),
     payloadText: EntitySchema.persist.text(),
@@ -215,6 +219,7 @@ describe("EntitySchema", () => {
       "createdAt",
       "generatedValue",
       "happenedAt",
+      "insertCode",
       "optionalName",
       "payloadText",
       "secret",
@@ -225,6 +230,7 @@ describe("EntitySchema", () => {
       "binaryUuid",
       "createdAt",
       "happenedAt",
+      "insertCode",
       "optionalName",
       "payloadText",
       "secret",
@@ -245,6 +251,7 @@ describe("EntitySchema", () => {
       "createdAt",
       "generatedValue",
       "happenedAt",
+      "insertCode",
       "optionalName",
       "payloadText",
       "updatedAt",
@@ -301,5 +308,17 @@ describe("EntitySchema", () => {
         },
       } as never)
     ).toThrow("generatedOnInsert");
+    expect(() =>
+      EntitySchema.ClassFactory($I`ComputedByServiceOnInsertContradiction`)({
+        fields: {
+          value: Model.GeneratedByApp(S.String),
+        },
+        persisted: {
+          value: EntitySchema.persist.text({
+            valueStrategy: "computedByServiceOnInsert",
+          }),
+        },
+      } as never)
+    ).toThrow("computedByServiceOnInsert");
   });
 });

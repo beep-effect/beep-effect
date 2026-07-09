@@ -13,6 +13,7 @@ type BaseEntityFixtureInput = {
   readonly entityType: string;
   readonly id: number;
   readonly orgId: number;
+  readonly publicId: string;
   readonly rowVersion: number;
   readonly schemaVersion: string;
   readonly source: "System";
@@ -36,6 +37,9 @@ export const systemPrincipal = {
   component: "Runtime",
   kind: "System",
 } as const;
+
+const publicIdFor = (entityType: string, id: number) =>
+  `${entityType.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase()}_a${id}`;
 
 /**
  * Build the common BaseEntity fields used by model decode tests.
@@ -62,6 +66,7 @@ export const baseEntityFixtureInput: {
     entityType,
     id,
     orgId: 1,
+    publicId: publicIdFor(entityType, id),
     rowVersion: 1,
     schemaVersion: "0.0.0",
     source: "System",

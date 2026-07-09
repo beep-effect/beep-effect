@@ -1,8 +1,16 @@
 import { Md } from "@beep/md";
-import { renderPlainTextBlocks } from "@beep/md/Md.behavior";
 import {
+  renderPlainTextBlock,
+  renderPlainTextBlocks,
+  renderPlainTextInline,
+  segmentInlineRuns,
+} from "@beep/md/Md.behavior";
+import {
+  BrowserSafeUrlPolicy,
   escapeHtmlUrlAttribute,
+  escapeHtmlUrlAttributeWithPolicy,
   escapeMarkdownDestination,
+  escapeMarkdownDestinationWithPolicy,
   escapeMarkdownText,
   isStringArray,
   joinBlocks,
@@ -10,7 +18,9 @@ import {
   prefixLines,
   renderFencedCode,
   renderInlineCode,
+  StrictWebUrlPolicy,
   sanitizeUrlDestination,
+  sanitizeUrlDestinationWithPolicy,
 } from "@beep/md/Md.escape";
 import { Block, CodeFenceLanguage, Document, Inline, Pre, Table, TableCell, TableRow, Text } from "@beep/md/Md.model";
 import {
@@ -19,6 +29,8 @@ import {
   DocumentToPlainText,
   HtmlFragmentAdapter,
   MarkdownAdapter,
+  makeHtmlFragmentAdapter,
+  makeMarkdownAdapter,
   PlainTextAdapter,
   renderEffectWith,
   renderEffectWithUnsafe,
@@ -43,6 +55,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { EffectRenderAdapter, PureRenderAdapter, RenderError } from "@beep/md/Md.render";
+import type { JsonObject } from "@beep/schema";
 
 const InlineArbitrary = S.toArbitrary(Inline);
 const BlockArbitrary = S.toArbitrary(Block);
@@ -51,6 +64,32 @@ const DocumentArbitrary = S.toArbitrary(Document);
 const markdownHtmlDoc = (): Document => Md.make([Md.h1("Hello"), Md.p("World")]);
 const encodeJsonResult = S.encodeUnknownResult(S.UnknownFromJsonString);
 const decodeDocumentJsonResult = S.decodeUnknownResult(S.fromJsonString(Document));
+
+const isJsonObject = (value: S.Json): value is JsonObject =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const normalizeJsonBoundaryObject = (value: JsonObject): JsonObject =>
+  Object.fromEntries(Object.entries(value).map(([key, item]) => [key, normalizeJsonBoundaryValue(item)] as const));
+
+const normalizeJsonBoundaryValue = (value: S.Json): S.Json => {
+  if (typeof value === "number") {
+    return Object.is(value, -0) ? 0 : value;
+  }
+  if (Array.isArray(value)) {
+    return value.map(normalizeJsonBoundaryValue);
+  }
+  if (isJsonObject(value)) {
+    return normalizeJsonBoundaryObject(value);
+  }
+  return value;
+};
+
+const normalizeDocumentForJsonBoundary = (document: Document): Document =>
+  O.match(document.frontmatter, {
+    onNone: () => document,
+    onSome: (frontmatter) =>
+      Document.make({ children: document.children, frontmatter: O.some(normalizeJsonBoundaryObject(frontmatter)) }),
+  });
 
 const expectRenderFailure = <Output>(
   result: Result.Result<Output, RenderError>,
@@ -203,7 +242,9 @@ https://www.youtube.com/watch?v=dQw4w9WgXcQ
         const encoded = Result.getOrThrow(S.encodeResult(Document)(document));
         const json = Result.getOrThrow(encodeJsonResult(encoded));
 
-        expect(Result.getOrThrow(decodeDocumentJsonResult(json))).toEqual(document);
+        // JavaScript JSON stringification normalizes -0 to 0, so compare against
+        // the exact document value representable after the JSON boundary.
+        expect(Result.getOrThrow(decodeDocumentJsonResult(json))).toEqual(normalizeDocumentForJsonBoundary(document));
       }),
       fcRuns(50)
     ));
@@ -371,6 +412,174 @@ ${Md.h3("Inside")}
     expect(renderHtmlBlock(Md.pre("<x>", { language: "ts bad" }))).toBe("<pre><code>&lt;x&gt;</code></pre>");
     expect(renderHtmlBlock(Md.pre("<x>"))).toBe("<pre><code>&lt;x&gt;</code></pre>");
     expect(renderHtmlBlock(Md.hr)).toBe("<hr />");
+  });
+
+  it("projects inline and block nodes to escaping-free plain text", () => {
+    expect(renderPlainTextInline(Md.text("Text"))).toBe("Text");
+    expect(renderPlainTextInline(Md.rawMarkdown("**Raw**"))).toBe("**Raw**");
+    expect(renderPlainTextInline(Md.rawHtml("<b>Raw</b>"))).toBe("<b>Raw</b>");
+    expect(renderPlainTextInline(Md.strong([Md.text("Strong"), Md.em("Em")]))).toBe("StrongEm");
+    expect(renderPlainTextInline(Md.em("Em"))).toBe("Em");
+    expect(renderPlainTextInline(Md.del("Del"))).toBe("Del");
+    expect(renderPlainTextInline(Md.code("code"))).toBe("code");
+    expect(renderPlainTextInline(Md.a("https://example.com", [Md.text("Example"), Md.code("1")]))).toBe("Example1");
+    expect(renderPlainTextInline(Md.img("/img.png", "Alt"))).toBe("");
+    expect(renderPlainTextInline(Md.br)).toBe("");
+    expect(renderPlainTextInline(Md.inlineMath("a+b"))).toBe("a+b");
+    expect(renderPlainTextInline(Md.footnoteRef("note"))).toBe("note");
+
+    expect(
+      segmentInlineRuns([Md.text("a"), Md.code("b"), Md.p("block"), Md.em("c")], {
+        isInline: Inline.is,
+        renderInlineRun: (run) => `inline:${run.length}`,
+        renderBlock: (block) => `block:${block._tag}`,
+      })
+    ).toEqual(["inline:2", "block:p", "inline:1"]);
+    expect(
+      segmentInlineRuns({
+        isInline: (value): value is string => typeof value === "string",
+        renderInlineRun: (run) => run.join(""),
+        renderBlock: (value: number) => `#${value}`,
+      })([])
+    ).toEqual([]);
+
+    const table = Md.table(
+      [
+        ["Name", "Value"],
+        ["Language", Md.code("ts")],
+      ],
+      { headerRow: true }
+    );
+    const blocks = [
+      Md.h1("Heading"),
+      Md.p([Md.text("Paragraph"), Md.br, Md.text("Text")]),
+      Md.blockquote([Md.p("Quoted"), Md.ul(["Nested"])]),
+      Md.pre("const x = 1"),
+      Md.ul([Md.li([Md.text("Inline"), Md.p("Block")])]),
+      Md.ol(["First", "Second"]),
+      Md.taskList([{ text: "Done", checked: true }, "Todo"]),
+      table,
+      Md.youtubeUnsafe("dQw4w9WgXcQ"),
+      Md.mathBlock("a=b"),
+      Md.footnoteDef("note", [Md.p("Footnote")]),
+      Md.admonition("tip", [Md.p("Admonition")]),
+      Md.embed("video", "https://example.com/demo", { title: "Demo" }),
+      Md.embed("video", "https://example.com/fallback"),
+      Md.hr,
+    ];
+
+    expect(blocks.map(renderPlainTextBlock)).toEqual([
+      "Heading",
+      "ParagraphText",
+      "Quoted\nNested",
+      "const x = 1",
+      "Inline\nBlock",
+      "First\nSecond",
+      "Done\nTodo",
+      "Name\tValue\nLanguage\tts",
+      "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "a=b",
+      "Footnote",
+      "Admonition",
+      "Demo",
+      "https://example.com/fallback",
+      "",
+    ]);
+  });
+
+  it("renders core parity, rich extension, frontmatter, and URL policy additions", () => {
+    const richDocument = Md.make(
+      [
+        Md.h1("Rich"),
+        Md.p(["Formula ", Md.inlineMath("a^2"), Md.footnoteRef("eq")]),
+        Md.ol(["Three", "Four"], { start: 3 }),
+        Md.table(
+          [
+            ["Left", "Center", "Right"],
+            ["A", "B", "C"],
+          ],
+          { headerRow: true, align: ["left", "center", "right"] }
+        ),
+        Md.mathBlock("a=b"),
+        Md.footnoteDef("eq", "Equation note"),
+        Md.admonition("warning", "Body", { title: "Pay attention" }),
+        Md.embed("video", "https://example.com/demo", { title: "Demo", description: "Demo video" }),
+      ],
+      { frontmatter: { z: false, title: "Doc", count: 2, nested: { b: "bee", a: [1, null] } } }
+    );
+
+    expect(renderUnsafe(richDocument)).toBe(`---json
+{"count":2,"nested":{"a":[1,null],"b":"bee"},"title":"Doc","z":false}
+---
+
+# Rich
+
+Formula $a^2$[^eq]
+
+3. Three
+4. Four
+
+| Left | Center | Right |
+| :--- | :---: | ---: |
+| A | B | C |
+
+$$
+a=b
+$$
+
+[^eq]: Equation note
+
+> [!WARNING] Pay attention
+> Body
+
+[Demo](https://example.com/demo "Demo")
+
+Demo video`);
+
+    expect(renderHtmlInline(Md.a("https://example.com", "Example", { title: '"Title"' }))).toBe(
+      '<a href="https://example.com" title="&quot;Title&quot;">Example</a>'
+    );
+    expect(renderMarkdownInline(Md.img("/logo.png", "Logo", { title: '"Logo"' }))).toBe(
+      '![Logo](/logo.png "\\"Logo\\"")'
+    );
+    expect(renderHtmlBlock(Md.ol(["Three"], { start: 3 }))).toBe('<ol start="3"><li>Three</li></ol>');
+    expect(renderHtmlBlock(Md.mathBlock("<x>"))).toBe('<div class="math math-display">&lt;x&gt;</div>');
+    expect(renderHtmlBlock(Md.admonition("note", "Body"))).toBe(
+      '<aside class="admonition admonition-note"><p>Body</p></aside>'
+    );
+    expect(renderHtmlBlock(Md.embed("video", "https://example.com/demo", { title: "Demo" }))).toBe(
+      '<figure data-embed-kind="video"><a href="https://example.com/demo">Demo</a></figure>'
+    );
+
+    expect(sanitizeUrlDestination("file:///tmp/a")).toBe("file:///tmp/a");
+    expect(sanitizeUrlDestinationWithPolicy("file:///tmp/a", BrowserSafeUrlPolicy)).toBe("#");
+    expect(sanitizeUrlDestinationWithPolicy("artifact:abc", BrowserSafeUrlPolicy)).toBe("artifact:abc");
+    expect(sanitizeUrlDestinationWithPolicy("artifact:abc", StrictWebUrlPolicy)).toBe("#");
+    expect(sanitizeUrlDestinationWithPolicy("//example.com", BrowserSafeUrlPolicy)).toBe("#");
+    expect(sanitizeUrlDestinationWithPolicy("\\relative", BrowserSafeUrlPolicy)).toBe("#");
+    expect(escapeMarkdownDestinationWithPolicy("file:///tmp/a", BrowserSafeUrlPolicy)).toBe("#");
+    expect(escapeHtmlUrlAttributeWithPolicy("artifact:abc", StrictWebUrlPolicy)).toBe("#");
+    expect(escapeHtmlUrlAttribute("file:///tmp/a")).toBe("#");
+
+    const markdownAdapter = makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicy });
+    expect(Result.getOrThrow(renderWith(markdownAdapter, Md.make([Md.p(Md.a("file:///tmp/a", "File"))])))).toBe(
+      "[File](#)"
+    );
+
+    const htmlAdapter = makeHtmlFragmentAdapter({ urlPolicy: StrictWebUrlPolicy });
+    expect(Result.getOrThrow(renderWith(htmlAdapter, Md.make([Md.p(Md.a("artifact:abc", "Artifact"))])))).toBe(
+      '<p><a href="#">Artifact</a></p>'
+    );
+
+    const markedInspiredEvasions = [
+      "java\u0000script:alert(1)",
+      "jav&#x61;%73cript:alert(1)",
+      "%26%23x6a%3Bavascript:alert(1)",
+    ];
+    for (const destination of markedInspiredEvasions) {
+      expect(sanitizeUrlDestination(destination)).toBe("#");
+      expect(sanitizeUrlDestinationWithPolicy(destination, BrowserSafeUrlPolicy)).toBe("#");
+    }
   });
 
   it("renders later table rows when the first row has no cells", () => {

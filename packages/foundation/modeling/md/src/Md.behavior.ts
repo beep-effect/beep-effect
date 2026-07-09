@@ -18,6 +18,11 @@ import type { Block, Inline, Li, ListItemChild, Table, TaskItem } from "./Md.mod
 
 const joinEmpty = A.join("");
 const youtubeWatchUrl = (videoId: string): string => `https://www.youtube.com/watch?v=${videoId}`;
+const embedTitle = (embed: { readonly src: string; readonly title: O.Option<string> }): string =>
+  pipe(
+    embed.title,
+    O.getOrElse(() => embed.src)
+  );
 
 /**
  * The strategy consumed by {@link segmentInlineRuns}: the inline guard plus the
@@ -160,6 +165,8 @@ const renderPlainTextInlineMatcher = Match.type<Inline>().pipe(
     a: ({ children }) => renderPlainTextInlines(children),
     img: thunkEmptyStr,
     br: thunkEmptyStr,
+    inlineMath: ({ value }) => value,
+    footnoteReference: ({ identifier }) => identifier,
   })
 );
 
@@ -206,6 +213,10 @@ export const renderPlainTextBlock: (block: Block) => string = Match.type<Block>(
     taskList: (block) => pipe(block.children, A.map(renderPlainTextTaskItem), A.join("\n")),
     table: renderPlainTextTable,
     youtube: (block) => youtubeWatchUrl(block.videoId),
+    mathBlock: (block) => block.value,
+    footnoteDefinition: (block) => renderPlainTextBlocks(block.children),
+    admonition: (block) => renderPlainTextBlocks(block.children),
+    embed: embedTitle,
     hr: thunkEmptyStr,
   })
 );

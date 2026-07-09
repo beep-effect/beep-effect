@@ -1361,7 +1361,10 @@
         "./packages/epistemic/domain/src/values/EpistemicFixtureKey/index.ts"
       ],
       "@beep/fc-runs": ["./packages/tooling/test-kit/fc-runs/src/index.ts"],
-      "@beep/fc-runs/*": ["./packages/tooling/test-kit/fc-runs/src/*"]
+      "@beep/fc-runs/*": ["./packages/tooling/test-kit/fc-runs/src/*"],
+      "@beep/shared-domain/entity/PublicEntityId": [
+        "./packages/shared/domain/src/entity/PublicEntityId.ts"
+      ]
     }
   }
 }

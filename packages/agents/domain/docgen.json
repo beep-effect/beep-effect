@@ -465,6 +465,9 @@
       "@beep/shared-domain/entity/EntityRef": [
         "../../../packages/shared/domain/src/entity/EntityRef.ts"
       ],
+      "@beep/shared-domain/entity/PublicEntityId": [
+        "../../../packages/shared/domain/src/entity/PublicEntityId.ts"
+      ],
       "@beep/shared-domain/entity/Principal": [
         "../../../packages/shared/domain/src/entity/Principal.ts"
       ],

@@ -1985,11 +1985,11 @@
     "@effect/sql-pglite": "4.0.0-beta.93",
     "@effect/sql-sqlite-bun": "4.0.0-beta.93",
     "@effect/sql-sqlite-node": "4.0.0-beta.93",
-    "@effect/tsgo": "0.16.0",
+    "@effect/tsgo": "0.16.2",
     "@effect/vitest": "4.0.0-beta.93",
     "@electric-sql/pglite": "0.5.4",
     "@electric-sql/pglite-socket": "0.2.7",
-    "@elevenlabs/client": "^1.14.0",
+    "@elevenlabs/client": "^1.14.1",
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
@@ -2081,7 +2081,7 @@
     "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^8.63.0",
     "@typescript-eslint/parser": "^8.63.0",
-    "@typescript/native-preview": "^7.0.0-dev.20260706.1",
+    "@typescript/native-preview": "^7.0.0-dev.20260707.2",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "@vitejs/plugin-react": "^6.0.3",
@@ -2129,7 +2129,7 @@
     "jsonld": "^9.0.0",
     "jsonld-streaming-parser": "^5.0.1",
     "jsonld-streaming-serializer": "^4.0.0",
-    "knip": "^6.24.0",
+    "knip": "^6.25.0",
     "konva": "^10.3.0",
     "lefthook": "^2.1.9",
     "lexical": "^0.46.0",
@@ -2819,21 +2819,21 @@
 
     "@effect/sql-sqlite-node": ["@effect/sql-sqlite-node@4.0.0-beta.93", "", { "dependencies": { "better-sqlite3": "^12.9.0" }, "peerDependencies": { "effect": "^4.0.0-beta.93" } }, "sha512-vbrKxueuKubQ6YqVKvX3SBVHKKeUtmZT7dmqwkwz6gs1/M1YYYb9S3Y5DNDReLnwnQUuwDm/kyKRJ3B/NNlb9A=="],
 
-    "@effect/tsgo": ["@effect/tsgo@0.16.0", "", { "optionalDependencies": { "@effect/tsgo-darwin-arm64": "0.16.0", "@effect/tsgo-darwin-x64": "0.16.0", "@effect/tsgo-linux-arm": "0.16.0", "@effect/tsgo-linux-arm64": "0.16.0", "@effect/tsgo-linux-x64": "0.16.0", "@effect/tsgo-win32-arm64": "0.16.0", "@effect/tsgo-win32-x64": "0.16.0" }, "bin": { "effect-tsgo": "dist/effect-tsgo.js" } }, "sha512-UrSx8nNZyMKAODLAV8iTYUAr1IvviLdPRjBop+Xw8G+gtV2VQOAEIxo5R4/YZWtyugt8GyxgGy57/VvzCNCOdg=="],
+    "@effect/tsgo": ["@effect/tsgo@0.16.2", "", { "optionalDependencies": { "@effect/tsgo-darwin-arm64": "0.16.2", "@effect/tsgo-darwin-x64": "0.16.2", "@effect/tsgo-linux-arm": "0.16.2", "@effect/tsgo-linux-arm64": "0.16.2", "@effect/tsgo-linux-x64": "0.16.2", "@effect/tsgo-win32-arm64": "0.16.2", "@effect/tsgo-win32-x64": "0.16.2" }, "bin": { "effect-tsgo": "dist/effect-tsgo.js" } }, "sha512-eQAKeFdYIWyjTLAN2Mge81Wf4KLNSyi/oRYo1gAMaX4dcI1VEgBWnqlc+47K389klHcdR0q8eZdnrdlhYDtaEw=="],
 
-    "@effect/tsgo-darwin-arm64": ["@effect/tsgo-darwin-arm64@0.16.0", "", { "os": "darwin", "cpu": "arm64" }, "sha512-S/2GeP9TLdvcmWQZMKhMZtjlWAcmlsTWAiu6lC5NJHbK6vkxuI3FgJOjg75sobGPN99J3g0xhtiRvRVijvcQRA=="],
+    "@effect/tsgo-darwin-arm64": ["@effect/tsgo-darwin-arm64@0.16.2", "", { "os": "darwin", "cpu": "arm64" }, "sha512-ChJ4fUKPaKIU+qcq3KHnxLG3LpqZB9W3WRqpEeI9eHbBAnLKjo3y6jul6luGVjxGznGc/z3mYzHai3OCoC7Lew=="],
 
-    "@effect/tsgo-darwin-x64": ["@effect/tsgo-darwin-x64@0.16.0", "", { "os": "darwin", "cpu": "x64" }, "sha512-7HBwb7tDo9pQyqkrunMkpRy+EhGhGZJurum7tvGgzBVoULw7k3dbR2H33Nhi9SARLMk22CaLR/zqcTRKzYByng=="],
+    "@effect/tsgo-darwin-x64": ["@effect/tsgo-darwin-x64@0.16.2", "", { "os": "darwin", "cpu": "x64" }, "sha512-8ZSJzRF/HZRS64bmgj5bzOE39snc0K7ik0eMOCpEWYL++Z1LhT6U2lR+Cd9s5zSmPQocqyoVc/iykevbOGRzQw=="],
 
-    "@effect/tsgo-linux-arm": ["@effect/tsgo-linux-arm@0.16.0", "", { "os": "linux", "cpu": "arm" }, "sha512-gtXOtac9wRYccVHrLJ1Qwd1S8y4Gl+0oY7K1cYNgtEdYOEQ63kMh1gK6axelDfL7eTP7dMXeyZLPnv8R/kno7Q=="],
+    "@effect/tsgo-linux-arm": ["@effect/tsgo-linux-arm@0.16.2", "", { "os": "linux", "cpu": "arm" }, "sha512-zGlSwwJqf4EhyDIPy0PoZTEnBNJeyAL2T9BOCuAT2L6DfZVhv3BfXfOPfVRJp4rCR50uSBmq2+8vfQYJ6wN36A=="],
 
-    "@effect/tsgo-linux-arm64": ["@effect/tsgo-linux-arm64@0.16.0", "", { "os": "linux", "cpu": "arm64" }, "sha512-6HSMwoy+GDTSpRAeODezFr8ISc5+otSoDBn+uqt5YOWZd04Qoz9phxD8CPMfGP5iE59QscCVR2hxfidNk+OdTg=="],
+    "@effect/tsgo-linux-arm64": ["@effect/tsgo-linux-arm64@0.16.2", "", { "os": "linux", "cpu": "arm64" }, "sha512-lUJnvzW7jRFP0EIVj4mxfPzcjszSSJxUizcXHsaOSbWuA3MAfKZItKZEerZgfJu8GMdwMoZJAECnkwOyyH7WkQ=="],
 
-    "@effect/tsgo-linux-x64": ["@effect/tsgo-linux-x64@0.16.0", "", { "os": "linux", "cpu": "x64" }, "sha512-oIFE3EcTBtIzNpuDYTEqIBAgBajyyYrIMVdesAXltaoRbmog8nzwwU+K8p9/3YfD+wwZYTg+llyME6McRD4qwA=="],
+    "@effect/tsgo-linux-x64": ["@effect/tsgo-linux-x64@0.16.2", "", { "os": "linux", "cpu": "x64" }, "sha512-DYQyYu1xxwrGgAYhNqnJ/3oFwfNfhBjrcXyJCr9LvvAcFOvLotCdWG8KGCZ1MAXxA3TXuOaZliRFZCAcpGU4nA=="],
 
-    "@effect/tsgo-win32-arm64": ["@effect/tsgo-win32-arm64@0.16.0", "", { "os": "win32", "cpu": "arm64" }, "sha512-E33q0CTt9ZiemYcOSg9ESmi12Uor+JIXIsnISmfTnZ9xrIhBz/n2rohIZYnsCEHe874zeFC0mkp6XsGnNyrTTQ=="],
+    "@effect/tsgo-win32-arm64": ["@effect/tsgo-win32-arm64@0.16.2", "", { "os": "win32", "cpu": "arm64" }, "sha512-LOar36BHv165lroDk86BrhDalxOPsIbn0+tG+bMgsap3E2P5pnPbOvZFz27QyZFuXqe1m0JOtQGknpHssR5XcA=="],
 
-    "@effect/tsgo-win32-x64": ["@effect/tsgo-win32-x64@0.16.0", "", { "os": "win32", "cpu": "x64" }, "sha512-IKBGvi3vsqHuzTyFpsE9gYIKxN3VBc9GGPUlz1GvhDpMgIggqXiFbKH0GAW78ygbzSGpdk0fQj/GfOja3NuJkg=="],
+    "@effect/tsgo-win32-x64": ["@effect/tsgo-win32-x64@0.16.2", "", { "os": "win32", "cpu": "x64" }, "sha512-roR6wiKQUHpUhVaQmmx65zM6JsPBMHRd1jzQ8N+dGQjw5VLt1LmpjkQLxZskz3jSB9kZBM75Mom7JyI8pc8Khw=="],
 
     "@effect/vitest": ["@effect/vitest@4.0.0-beta.93", "", { "peerDependencies": { "effect": "^4.0.0-beta.93", "vitest": "^3.0.0 || ^4.0.0" } }, "sha512-gMAnZ9PiMeJMDED9s0jWgCOhc2JccrTCxowhur/KriImsHnHIRj4VG/vK0xLw0Axe4AkTWzXNdRsFrYOjBTl3A=="],
 
@@ -2841,9 +2841,9 @@
 
     "@electric-sql/pglite-legacy-053": ["@electric-sql/pglite@0.5.3", "", {}, "sha512-iTTYbA5Uesrl+N7zss0J5LopT7KE4j9aymYo+EZZh+rZbARQCUQOs+n2pay64JRUpc3fCkpfrniTNJnvYzOE+g=="],
 
-    "@elevenlabs/client": ["@elevenlabs/client@1.14.0", "", { "dependencies": { "@elevenlabs/types": "0.16.0", "livekit-client": "2.16.1" } }, "sha512-6p16krEwhRQpMidOhpcJk9o7cu3hihnAHenlLxQj9DMa+LPLx/IILsOArNDZpq0DOXrfQ72njludoTl1dlUkCQ=="],
+    "@elevenlabs/client": ["@elevenlabs/client@1.14.1", "", { "dependencies": { "@elevenlabs/types": "0.17.0", "livekit-client": "2.16.1" } }, "sha512-aTd2Dfd9E8UfwKoJhepDe7SjIwsB7UwfloYrsnQIyBrhfqjSouU0tqE1Y8nE+G2BdVUt4eLqxtc2yifYxqkhuQ=="],
 
-    "@elevenlabs/types": ["@elevenlabs/types@0.16.0", "", {}, "sha512-3afZEP+SxbD1CYbZtX6+7G0VPGfcR/z3XUNBeiXOm9/goOSFiJ2LRP9B8TMWLamZ1QpWT3UM6O82S/TUaF9f0w=="],
+    "@elevenlabs/types": ["@elevenlabs/types@0.17.0", "", {}, "sha512-6Dw8yVJC2uzomwDLwVCoq5VLfcLdLVemLE7A+7rmqnV50fK+U5G61t+oYY42800pq4jxfmrgkPMm3blw8DY/ng=="],
 
     "@emnapi/core": ["@emnapi/core@1.11.1", "", { "dependencies": { "@emnapi/wasi-threads": "1.2.2", "tslib": "^2.4.0" } }, "sha512-RSvbQmHzdKzNsLYa/wHrbc3KN4sYLKAdPZxqiM2HATqv/SBk2/ENSHpvXGaLOMcsAyz0poEGqkmmKYG3OWiJEQ=="],
 
@@ -5055,7 +5055,7 @@
 
     "kleur": ["kleur@4.1.5", "", {}, "sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ=="],
 
-    "knip": ["knip@6.24.0", "", { "dependencies": { "fdir": "^6.5.0", "formatly": "^0.3.0", "get-tsconfig": "4.14.0", "jiti": "^2.7.0", "oxc-parser": "^0.137.0", "oxc-resolver": "11.21.3", "picomatch": "^4.0.4", "smol-toml": "^1.6.1", "strip-json-comments": "5.0.3", "tinyglobby": "^0.2.17", "unbash": "^4.0.1", "yaml": "^2.9.0", "zod": "^4.1.11" }, "bin": { "knip": "bin/knip.js", "knip-bun": "bin/knip-bun.js" } }, "sha512-PokLlgeEjLh1rAsB7ts+52wZ37HBr1nDhE6NNONwEaXdeZGCJOkP7ZlIAI2Gtu8xohquzTWy75bc/1diI9shQw=="],
+    "knip": ["knip@6.25.0", "", { "dependencies": { "fdir": "^6.5.0", "formatly": "^0.3.0", "get-tsconfig": "4.14.0", "jiti": "^2.7.0", "oxc-parser": "^0.137.0", "oxc-resolver": "11.21.3", "picomatch": "^4.0.4", "smol-toml": "^1.6.1", "strip-json-comments": "5.0.3", "tinyglobby": "^0.2.17", "unbash": "^4.0.1", "yaml": "^2.9.0", "zod": "^4.1.11" }, "bin": { "knip": "bin/knip.js", "knip-bun": "bin/knip-bun.js" } }, "sha512-Q3n41VjOOB/aqsbxb8kallAcFKrUz3b2S5fD5pTODljVpP01t+rvAgy2x3j0Cq8yEpRRHNdar1vHuqFfGuIakQ=="],
 
     "kolorist": ["kolorist@1.8.0", "", {}, "sha512-Y+60/zizpJ3HRH8DCss+q95yr6145JXZo46OTpFvDZWLfRCE4qChOyk1b26nMaNpfHHgxagk9dXT5OP0Tfe+dQ=="],
 

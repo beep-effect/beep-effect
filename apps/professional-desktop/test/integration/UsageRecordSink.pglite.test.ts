@@ -32,6 +32,7 @@ const usageAppendInput = {
   orgId: 1,
   outputTokens: 34,
   provider: "fixture",
+  publicId: "epistemic_usage_record_a1",
   rowVersion: 1,
   schemaVersion: "0.0.0",
   source: "System",

@@ -32,6 +32,9 @@ const expectBaseProjectionColumns = (table: typeof CandidateDraft.Table | typeof
   expect(columns.id.columnType).toBe("PgSerial");
   expect(columns.entityType.name).toBe("entity_type");
   expect(columns.entityType.notNull).toBe(true);
+  expect(columns.publicId.name).toBe("public_id");
+  expect(columns.publicId.columnType).toBe("PgText");
+  expect(columns.publicId.notNull).toBe(true);
   expect(columns.fixtureKey.name).toBe("fixture_key");
   expect(columns.fixtureKey.columnType).toBe("PgText");
   expect(columns.lifecycle.name).toBe("lifecycle");

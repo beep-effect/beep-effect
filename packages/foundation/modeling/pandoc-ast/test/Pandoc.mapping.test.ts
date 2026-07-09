@@ -10,6 +10,7 @@ import {
   PandocMappingIssue,
   profileFromIssues,
 } from "@beep/pandoc-ast/Pandoc.report";
+import { PosInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
@@ -18,6 +19,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
@@ -185,9 +187,14 @@ describe("Pandoc.mapping", () => {
         const constructs = A.map(result.report.issues, (entry) => entry.construct);
 
         expect(result.report.profile).toBe("gap");
-        expect(constructs).toEqual(expect.arrayContaining(["Div", "Span", "Math", "Note", "Table"]));
+        expect(constructs).toEqual(expect.arrayContaining(["Div", "Span", "Note", "Table"]));
+        expect(constructs).not.toContain("Math");
         expect(result.report.issues[0]?.pointer).toBe("/blocks/0/children/0/children/0");
         expect(A.map(result.document.children, (block) => block._tag)).toEqual(["blockquote", "p"]);
+        const blockquote = result.document.children[0];
+        if (blockquote?._tag === "blockquote" && blockquote.children[0]?._tag === "p") {
+          expect(A.map(blockquote.children[0].children, (inline) => inline._tag)).toContain("inlineMath");
+        }
       })
     ));
 
@@ -296,6 +303,69 @@ describe("Pandoc.mapping", () => {
 
         const youtubeLink = expectLink(expectPara(result.pandoc.blocks[1]).children[0]);
         expect(youtubeLink.target.url).toBe("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+      })
+    ));
+
+  it("preserves @beep/md titles, ordered starts, and math in Pandoc projection", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const document = Md.Document.make({
+          children: [
+            Md.P.make({
+              children: [
+                Md.A.make({
+                  children: [text("docs")],
+                  href: "https://example.com",
+                  title: O.some("Docs title"),
+                }),
+                Md.Img.make({
+                  alt: "Diagram",
+                  src: "diagram.png",
+                  title: O.some("Diagram title"),
+                }),
+                Md.InlineMath.make({ value: "x + y" }),
+              ],
+            }),
+            Md.Ol.make({
+              children: [Md.Li.make({ children: [text("third")] })],
+              start: PosInt.make(3),
+            }),
+            Md.MathBlock.make({ value: "a^2 + b^2 = c^2" }),
+          ],
+        });
+
+        const result = yield* documentToPandoc(document);
+
+        expect(result.report.issues).toEqual([]);
+        expect(result.pandoc.blocks.map((block) => block._tag)).toEqual(["para", "orderedlist", "para"]);
+
+        const paragraph = expectPara(result.pandoc.blocks[0]);
+        const link = expectLink(paragraph.children[0]);
+        expect(link.target.title).toBe("Docs title");
+
+        const image = paragraph.children[1];
+        expect(image?._tag).toBe("image");
+        if (image?._tag === "image") {
+          expect(image.target.title).toBe("Diagram title");
+        }
+
+        const inlineMath = paragraph.children[2];
+        expect(inlineMath?._tag).toBe("math");
+        if (inlineMath?._tag === "math") {
+          expect(inlineMath.mathType).toBe("InlineMath");
+        }
+
+        const list = result.pandoc.blocks[1];
+        expect(list?._tag).toBe("orderedlist");
+        if (list?._tag === "orderedlist") {
+          expect(list.start).toBe(3);
+        }
+
+        const displayMath = expectPara(result.pandoc.blocks[2]).children[0];
+        expect(displayMath?._tag).toBe("math");
+        if (displayMath?._tag === "math") {
+          expect(displayMath.mathType).toBe("DisplayMath");
+        }
       })
     ));
 
@@ -443,7 +513,7 @@ describe("Pandoc.mapping", () => {
       })
     ));
 
-  it("reports nested image-alt compatibility issues before flattening alt text", () =>
+  it("preserves supported nested image-alt math before flattening alt text", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const pandoc = yield* decodePandocJson({
@@ -464,8 +534,8 @@ describe("Pandoc.mapping", () => {
         const result = yield* pandocToDocument(pandoc);
         const paragraph = result.document.children[0];
 
-        expect(result.report.profile).toBe("gap");
-        expect(A.map(result.report.issues, (entry) => entry.construct)).toContain("Math");
+        expect(result.report.profile).toBe("supported");
+        expect(result.report.issues).toEqual([]);
         expect(paragraph?._tag).toBe("p");
         if (paragraph?._tag !== "p") {
           return;

@@ -8,10 +8,14 @@ CREATE TABLE architecture_lab_worker (
   updated_at BIGINT NOT NULL,
   updated_by_principal JSONB NOT NULL,
   display_name TEXT NOT NULL,
+  public_id TEXT NOT NULL,
   status TEXT NOT NULL,
   entity_type TEXT NOT NULL,
   id SERIAL PRIMARY KEY
 );
+
+CREATE UNIQUE INDEX architecture_lab_worker_public_id_unique_idx
+  ON architecture_lab_worker (public_id);
 
 ALTER TABLE architecture_lab_work_item
   ADD COLUMN assignee_id INTEGER,

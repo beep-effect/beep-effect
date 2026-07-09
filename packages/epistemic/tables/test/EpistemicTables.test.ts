@@ -42,6 +42,8 @@ describe("EpistemicTables", () => {
     expect(columns.id.primary).toBe(true);
     expect(columns.id.columnType).toBe("PgSerial");
     expect(columns.entityType.name).toBe("entity_type");
+    expect(columns.publicId.name).toBe("public_id");
+    expect(columns.publicId.columnType).toBe("PgText");
     expect(columns.activityId.name).toBe("activity_id");
     expect(columns.activityId.columnType).toBe("PgInteger");
     expect(columns.actor.columnType).toBe("PgJsonb");

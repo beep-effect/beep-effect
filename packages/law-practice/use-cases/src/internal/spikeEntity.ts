@@ -23,6 +23,7 @@
 
 import { $LawPracticeUseCasesId } from "@beep/identity";
 import { NonNegativeInt, PosInt } from "@beep/schema";
+import { Str } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
@@ -37,6 +38,8 @@ class SystemPrincipal extends S.Class<SystemPrincipal>($I`SystemPrincipal`)(
     description: "System principal stamped on spike entity audit envelopes.",
   })
 ) {}
+
+const publicIdFor = (entityType: string, id: number) => `${Str.snakeCase(entityType)}_a${id}`;
 
 /**
  * Build the BaseEntity audit envelope for a spike entity decode.
@@ -64,6 +67,7 @@ export const spikeEntityInput: {
       entityType,
       id: PosInt.make(id),
       orgId: 1,
+      publicId: publicIdFor(entityType, id),
       rowVersion: 1,
       schemaVersion: "0.0.0",
       source: "System",
@@ -102,6 +106,9 @@ export class EntityInput extends S.Class<EntityInput>($I`EntityInput`)(
     }),
     orgId: S.tag(1).annotateKey({
       description: "Synthetic organization id for spike entity construction.",
+    }),
+    publicId: S.NonEmptyString.annotateKey({
+      description: "Synthetic public entity id for spike entity construction.",
     }),
     rowVersion: S.tag(1).annotateKey({
       description: "Initial persisted row version for spike entity construction.",

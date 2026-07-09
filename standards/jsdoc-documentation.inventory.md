@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-08T20:44:55.792Z
+Generated: 2026-07-09T00:15:34.217Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 98 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 0 |
-| publicModules | 1654 |
-| publicExports | 14672 |
+| publicModules | 1655 |
+| publicExports | 14722 |
 | openModules | 0 |
 | openExports | 0 |
 | missingExportExamples | 0 |
@@ -53,7 +53,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 10 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | clean | 8 | 56 | 0 | 0 |
 | 11 | `@beep/law-practice-server` | `packages/law-practice/server` | clean | 2 | 3 | 0 | 0 |
 | 12 | `@beep/db-admin` | `packages/_internal/db-admin` | clean | 7 | 13 | 0 | 0 |
-| 13 | `@beep/shared-domain` | `packages/shared/domain` | clean | 40 | 225 | 0 | 0 |
+| 13 | `@beep/shared-domain` | `packages/shared/domain` | clean | 41 | 237 | 0 | 0 |
 | 14 | `@beep/discord` | `packages/drivers/discord` | clean | 4 | 15 | 0 | 0 |
 | 15 | `@beep/face-detection` | `packages/drivers/face-detection` | clean | 4 | 33 | 0 | 0 |
 | 16 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
@@ -85,7 +85,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 42 | `@beep/langextract` | `packages/foundation/capability/langextract` | clean | 6 | 34 | 0 | 0 |
 | 43 | `@beep/shared-tables` | `packages/shared/tables` | clean | 11 | 14 | 0 | 0 |
 | 44 | `@beep/scratchpad` | `scratchpad` | no-public-src-surface | 0 | 0 | 0 | 0 |
-| 45 | `@beep/md` | `packages/foundation/modeling/md` | clean | 6 | 175 | 0 | 0 |
+| 45 | `@beep/md` | `packages/foundation/modeling/md` | clean | 6 | 211 | 0 | 0 |
 | 46 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | clean | 12 | 30 | 0 | 0 |
 | 47 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 27 | 60 | 0 | 0 |
 | 48 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 28 | 119 | 0 | 0 |
@@ -114,7 +114,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 71 | `@beep/runpod` | `packages/drivers/runpod` | clean | 6 | 179 | 0 | 0 |
 | 72 | `@beep/fc-runs` | `packages/tooling/test-kit/fc-runs` | clean | 2 | 5 | 0 | 0 |
 | 73 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | clean | 63 | 677 | 0 | 0 |
-| 74 | `@beep/schema` | `packages/foundation/modeling/schema` | clean | 241 | 1567 | 0 | 0 |
+| 74 | `@beep/schema` | `packages/foundation/modeling/schema` | clean | 241 | 1569 | 0 | 0 |
 | 75 | `@beep/epistemic-server` | `packages/epistemic/server` | clean | 2 | 3 | 0 | 0 |
 | 76 | `@beep/rdf` | `packages/foundation/modeling/rdf` | clean | 17 | 208 | 0 | 0 |
 | 77 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |

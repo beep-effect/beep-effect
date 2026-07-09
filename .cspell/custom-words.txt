@@ -331,6 +331,7 @@ unwired
 USPTO
 UTBMS
 vaultctx
+vbscript
 verbis
 vertexai
 VLAIR
