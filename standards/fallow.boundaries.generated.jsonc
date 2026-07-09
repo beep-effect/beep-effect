@@ -426,6 +426,12 @@
         ]
       },
       {
+        "name": "@beep/protobuf",
+        "patterns": [
+          "packages/drivers/protobuf/src/**"
+        ]
+      },
+      {
         "name": "@beep/provenance",
         "patterns": [
           "packages/foundation/modeling/provenance/src/**"
@@ -1865,6 +1871,15 @@
           "@beep/workspace-domain",
           "@beep/workspace-server",
           "@beep/workspace-use-cases"
+        ]
+      },
+      {
+        "from": "@beep/protobuf",
+        "allow": [
+          "@beep/protobuf"
+        ],
+        "allowTypeOnly": [
+          "@beep/protobuf"
         ]
       },
       {

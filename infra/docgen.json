@@ -65,6 +65,9 @@
       "@beep/schema/BufferEncoding": [
         "../packages/foundation/modeling/schema/src/BufferEncoding.ts"
       ],
+      "@beep/schema/Bytes": [
+        "../packages/foundation/modeling/schema/src/Bytes.ts"
+      ],
       "@beep/schema/CardinalDirection": [
         "../packages/foundation/modeling/schema/src/CardinalDirection/index.ts"
       ],
@@ -132,6 +135,9 @@
         "../packages/foundation/modeling/schema/src/DateTimeUtcFromValid/index.ts"
       ],
       "@beep/schema/Did": ["../packages/foundation/modeling/schema/src/Did.ts"],
+      "@beep/schema/Double": [
+        "../packages/foundation/modeling/schema/src/Double.ts"
+      ],
       "@beep/schema/DomCssProperties": [
         "../packages/foundation/modeling/schema/src/DomCssProperties/index.ts"
       ],
@@ -185,6 +191,15 @@
       ],
       "@beep/schema/FilePath": [
         "../packages/foundation/modeling/schema/src/FilePath/index.ts"
+      ],
+      "@beep/schema/Fixed32": [
+        "../packages/foundation/modeling/schema/src/Fixed32.ts"
+      ],
+      "@beep/schema/Fixed64": [
+        "../packages/foundation/modeling/schema/src/Fixed64.ts"
+      ],
+      "@beep/schema/Float": [
+        "../packages/foundation/modeling/schema/src/Float.ts"
       ],
       "@beep/schema/Float16Array": [
         "../packages/foundation/modeling/schema/src/Float16Array.ts"
@@ -340,6 +355,18 @@
       "@beep/schema/Sha256": [
         "../packages/foundation/modeling/schema/src/Sha256.ts"
       ],
+      "@beep/schema/Sfixed32": [
+        "../packages/foundation/modeling/schema/src/Sfixed32.ts"
+      ],
+      "@beep/schema/Sfixed64": [
+        "../packages/foundation/modeling/schema/src/Sfixed64.ts"
+      ],
+      "@beep/schema/Sint32": [
+        "../packages/foundation/modeling/schema/src/Sint32.ts"
+      ],
+      "@beep/schema/Sint64": [
+        "../packages/foundation/modeling/schema/src/Sint64.ts"
+      ],
       "@beep/schema/Slug": [
         "../packages/foundation/modeling/schema/src/Slug.ts"
       ],
@@ -382,6 +409,12 @@
       "@beep/schema/URL": ["../packages/foundation/modeling/schema/src/URL.ts"],
       "@beep/schema/UnitInterval": [
         "../packages/foundation/modeling/schema/src/UnitInterval.ts"
+      ],
+      "@beep/schema/Uint32": [
+        "../packages/foundation/modeling/schema/src/Uint32.ts"
+      ],
+      "@beep/schema/Uint64": [
+        "../packages/foundation/modeling/schema/src/Uint64.ts"
       ],
       "@beep/schema/VariantSchema": [
         "../packages/foundation/modeling/schema/src/VariantSchema/index.ts"

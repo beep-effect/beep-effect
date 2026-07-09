@@ -53,6 +53,11 @@ export * from "./BufferEncoding.ts";
  * @since 0.0.0
  * @category validation
  */
+export * from "./Bytes.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
 export * from "./CauseTaggedError/index.ts";
 /**
  * @since 0.0.0
@@ -104,6 +109,11 @@ export * from "./Did.ts";
  * @category validation
  */
 export * as DomainModel from "./DomainModel.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
+export * from "./Double.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -160,6 +170,21 @@ export * from "./FilePath/index.ts";
  * @since 0.0.0
  * @category validation
  */
+export * from "./Fixed32.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
+export * from "./Fixed64.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
+export * from "./Float.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
 export * from "./Float16Array.ts";
 /**
  * @since 0.0.0
@@ -196,6 +221,11 @@ export * from "./Html.ts";
  * @category validation
  */
 export * from "./Int.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
+export * from "./Int64.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -342,7 +372,27 @@ export * from "./SeverityLevel.ts";
  * @since 0.0.0
  * @category validation
  */
+export * from "./Sfixed32.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
+export * from "./Sfixed64.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
 export * from "./Sha256.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
+export * from "./Sint32.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
+export * from "./Sint64.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -393,6 +443,16 @@ export * from "./Toml.ts";
  * @category validation
  */
 export * from "./Transformations.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
+export * from "./Uint32.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
+export * from "./Uint64.ts";
 /**
  * @since 0.0.0
  * @category validation
