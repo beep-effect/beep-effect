@@ -1,0 +1,80 @@
+{
+  "$schema": "../../../packages/tooling/tool/docgen/schema.json",
+  "exclude": ["src/internal/**/*.ts"],
+  "srcLink": "https://github.com/beep-effect/beep-effect/tree/main/packages/ontology/server/src/",
+  "examplesCompilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "module": "es2022",
+    "target": "es2022",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "rewriteRelativeImportExtensions": true,
+    "allowImportingTsExtensions": true,
+    "moduleDetection": "force",
+    "verbatimModuleSyntax": true,
+    "allowJs": false,
+    "erasableSyntaxOnly": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "exactOptionalPropertyTypes": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "stripInternal": false,
+    "noErrorTruncation": true,
+    "types": [],
+    "jsx": "react-jsx",
+    "paths": {
+      "@beep/ontology-server": [
+        "../../../packages/ontology/server/src/index.ts"
+      ],
+      "@beep/ontology-server/layer": [
+        "../../../packages/ontology/server/src/Layer.ts"
+      ],
+      "@beep/ontology-server/test": [
+        "../../../packages/ontology/server/src/test.ts"
+      ],
+      "@beep/ontology-server/aggregates/Session": [
+        "../../../packages/ontology/server/src/aggregates/Session/index.ts"
+      ],
+      "@beep/n3": ["../../../packages/drivers/n3/src/index.ts"],
+      "@beep/ontology-use-cases": [
+        "../../../packages/ontology/use-cases/src/index.ts"
+      ],
+      "@beep/ontology-use-cases/public": [
+        "../../../packages/ontology/use-cases/src/public.ts"
+      ],
+      "@beep/ontology-use-cases/server": [
+        "../../../packages/ontology/use-cases/src/server.ts"
+      ],
+      "@beep/ontology-use-cases/aggregates/Session": [
+        "../../../packages/ontology/use-cases/src/aggregates/Session/index.ts"
+      ],
+      "@beep/ontology-use-cases/aggregates/Session/server": [
+        "../../../packages/ontology/use-cases/src/aggregates/Session/server.ts"
+      ],
+      "@beep/rdf-canonize": [
+        "../../../packages/drivers/rdf-canonize/src/index.ts"
+      ],
+      "@beep/rdf-canonize/*": [
+        "../../../packages/drivers/rdf-canonize/src/*.ts"
+      ],
+      "@beep/semantic-web": [
+        "../../../packages/foundation/capability/semantic-web/src/index.ts"
+      ],
+      "@beep/semantic-web/*": [
+        "../../../packages/foundation/capability/semantic-web/src/*.ts"
+      ],
+      "@beep/test-utils": [
+        "../../../packages/tooling/test-kit/test-utils/src/index.ts"
+      ],
+      "@beep/test-utils/*": [
+        "../../../packages/tooling/test-kit/test-utils/src/*.ts"
+      ]
+    }
+  }
+}

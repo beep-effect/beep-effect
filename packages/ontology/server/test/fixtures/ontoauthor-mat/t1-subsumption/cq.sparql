@@ -1,0 +1,9 @@
+# CQ1: Is AISI304 a Metal? (requires transitive subsumption via reasoning)
+ASK {
+  <http://example.org/materials#AISI304> a <http://example.org/materials#Metal> .
+}
+
+# CQ2: Is AISI304 a Material? (requires full chain)
+ASK {
+  <http://example.org/materials#AISI304> a <http://example.org/materials#Material> .
+}

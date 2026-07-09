@@ -1,0 +1,54 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix mat: <http://example.org/materials#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<urn:shape:supplier-class>
+    a sh:NodeShape ;
+    sh:targetNode mat:Supplier ;
+    sh:property [
+        sh:path rdf:type ;
+        sh:hasValue owl:Class ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:certified-material-subclass>
+    a sh:NodeShape ;
+    sh:targetNode mat:CertifiedMaterial ;
+    sh:property [
+        sh:path rdfs:subClassOf ;
+        sh:hasValue mat:Material ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:supplies-prop>
+    a sh:NodeShape ;
+    sh:targetNode mat:supplies ;
+    sh:property [
+        sh:path rdf:type ;
+        sh:hasValue owl:ObjectProperty ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:certified-supplier-exists>
+    a sh:NodeShape ;
+    sh:targetNode mat:CertifiedSupplier ;
+    sh:property [
+        sh:path rdf:type ;
+        sh:hasValue owl:Class ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:acme-supplier>
+    a sh:NodeShape ;
+    sh:targetNode mat:AcmeMetals ;
+    sh:property [
+        sh:path rdf:type ;
+        sh:hasValue mat:Supplier ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path mat:supplies ;
+        sh:minCount 1 ;
+    ] .

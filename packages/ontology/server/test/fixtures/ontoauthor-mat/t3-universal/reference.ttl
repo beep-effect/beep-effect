@@ -1,0 +1,30 @@
+@prefix mat: <http://example.org/materials#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+mat:Supplier a owl:Class .
+mat:Material a owl:Class .
+mat:CertifiedMaterial a owl:Class ;
+    rdfs:subClassOf mat:Material .
+
+mat:supplies a owl:ObjectProperty .
+
+mat:CertifiedSupplier a owl:Class ;
+    owl:equivalentClass [
+        a owl:Class ;
+        owl:intersectionOf (
+            mat:Supplier
+            [ a owl:Restriction ;
+              owl:onProperty mat:supplies ;
+              owl:allValuesFrom mat:CertifiedMaterial ]
+        )
+    ] .
+
+mat:ISO9001Steel a mat:CertifiedMaterial .
+
+mat:AcmeMetals a mat:Supplier ;
+    mat:supplies mat:ISO9001Steel ;
+    a [ a owl:Restriction ;
+        owl:onProperty mat:supplies ;
+        owl:allValuesFrom mat:CertifiedMaterial ] .

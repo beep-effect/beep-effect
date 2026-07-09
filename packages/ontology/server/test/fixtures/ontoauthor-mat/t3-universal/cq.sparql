@@ -1,0 +1,10 @@
+# CQ1: Is AcmeMetals a CertifiedSupplier? (requires universal restriction reasoning)
+ASK {
+  <http://example.org/materials#AcmeMetals> a <http://example.org/materials#CertifiedSupplier> .
+}
+
+# CQ2: Does AcmeMetals supply a CertifiedMaterial?
+ASK {
+  <http://example.org/materials#AcmeMetals> <http://example.org/materials#supplies> ?m .
+  ?m a <http://example.org/materials#CertifiedMaterial> .
+}

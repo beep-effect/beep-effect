@@ -1,0 +1,17 @@
+@prefix mat: <http://example.org/materials#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+mat:Material a owl:Class .
+mat:Metal a owl:Class ;
+    rdfs:subClassOf mat:Material ;
+    owl:disjointWith mat:Ceramic , mat:Polymer .
+mat:Ceramic a owl:Class ;
+    rdfs:subClassOf mat:Material ;
+    owl:disjointWith mat:Polymer .
+mat:Polymer a owl:Class ;
+    rdfs:subClassOf mat:Material .
+
+mat:Aluminium a mat:Metal .
+mat:Zirconia a mat:Ceramic .

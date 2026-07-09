@@ -1,0 +1,52 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix mat: <http://example.org/materials#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<urn:shape:steel-hierarchy>
+    a sh:NodeShape ;
+    sh:targetNode mat:Steel ;
+    sh:property [
+        sh:path rdfs:subClassOf ;
+        sh:hasValue mat:Metal ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:metal-hierarchy>
+    a sh:NodeShape ;
+    sh:targetNode mat:Metal ;
+    sh:property [
+        sh:path rdfs:subClassOf ;
+        sh:hasValue mat:Material ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:s355-en>
+    a sh:NodeShape ;
+    sh:targetNode mat:S355_EN ;
+    sh:property [
+        sh:path rdf:type ;
+        sh:hasValue mat:Steel ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path mat:yieldStrength ;
+        sh:datatype xsd:integer ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:s355-astm>
+    a sh:NodeShape ;
+    sh:targetNode mat:S355_ASTM ;
+    sh:property [
+        sh:path rdf:type ;
+        sh:hasValue mat:Steel ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path owl:sameAs ;
+        sh:hasValue mat:S355_EN ;
+        sh:minCount 1 ;
+    ] .

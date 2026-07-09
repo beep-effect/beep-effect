@@ -342,6 +342,12 @@
         ]
       },
       {
+        "name": "@beep/n3",
+        "patterns": [
+          "packages/drivers/n3/src/**"
+        ]
+      },
+      {
         "name": "@beep/nlp",
         "patterns": [
           "packages/foundation/modeling/nlp/src/**"
@@ -381,6 +387,24 @@
         "name": "@beep/ontology",
         "patterns": [
           "packages/foundation/modeling/ontology/src/**"
+        ]
+      },
+      {
+        "name": "@beep/ontology-domain",
+        "patterns": [
+          "packages/ontology/domain/src/**"
+        ]
+      },
+      {
+        "name": "@beep/ontology-server",
+        "patterns": [
+          "packages/ontology/server/src/**"
+        ]
+      },
+      {
+        "name": "@beep/ontology-use-cases",
+        "patterns": [
+          "packages/ontology/use-cases/src/**"
         ]
       },
       {
@@ -1580,6 +1604,25 @@
         ]
       },
       {
+        "from": "@beep/n3",
+        "allow": [
+          "@beep/identity",
+          "@beep/n3",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/n3",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
         "from": "@beep/nlp",
         "allow": [
           "@beep/identity",
@@ -1715,6 +1758,61 @@
         ],
         "allowTypeOnly": [
           "@beep/ontology",
+          "@beep/test-utils"
+        ]
+      },
+      {
+        "from": "@beep/ontology-domain",
+        "allow": [
+          "@beep/identity",
+          "@beep/ontology-domain",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/ontology-domain",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/ontology-server",
+        "allow": [
+          "@beep/n3",
+          "@beep/ontology-server",
+          "@beep/ontology-use-cases",
+          "@beep/rdf-canonize",
+          "@beep/semantic-web",
+          "@beep/test-utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/n3",
+          "@beep/ontology-server",
+          "@beep/ontology-use-cases",
+          "@beep/rdf-canonize",
+          "@beep/semantic-web",
+          "@beep/test-utils"
+        ]
+      },
+      {
+        "from": "@beep/ontology-use-cases",
+        "allow": [
+          "@beep/identity",
+          "@beep/ontology-domain",
+          "@beep/ontology-use-cases",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/test-utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/ontology-domain",
+          "@beep/ontology-use-cases",
+          "@beep/rdf",
+          "@beep/schema",
           "@beep/test-utils"
         ]
       },

@@ -1,0 +1,92 @@
+/**
+ * Ontology session use-case service.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { make as makeIdentity } from "@beep/identity";
+import {
+  CreateSessionInput,
+  createSession,
+  deriveSessionGraphPartitions,
+} from "@beep/ontology-domain/aggregates/Session";
+import { Context, Effect, Layer } from "effect";
+import { OpenOntologyFileResult, SaveOntologyFileResult } from "./Session.commands.js";
+import {
+  OntologyFileStore,
+  ParseTurtleRequest,
+  ReadOntologyFileRequest,
+  SerializeTurtleRequest,
+  TurtleCodec,
+  WriteOntologyFileRequest,
+} from "./Session.ports.js";
+import type { OpenOntologyFileCommand, SaveOntologyFileCommand } from "./Session.commands.js";
+import type { OntologyFileStoreError, TurtleCodecError } from "./Session.ports.js";
+
+const { $OntologyUseCasesId } = makeIdentity("ontology-use-cases");
+const $I = $OntologyUseCasesId.create("aggregates/Session/Session.service");
+
+/**
+ * Ontology session use-case service shape.
+ *
+ * @since 0.0.0
+ * @category services
+ */
+interface SessionUseCasesShape {
+  readonly openFile: (
+    command: OpenOntologyFileCommand
+  ) => Effect.Effect<OpenOntologyFileResult, OntologyFileStoreError | TurtleCodecError>;
+  readonly saveFile: (
+    command: SaveOntologyFileCommand
+  ) => Effect.Effect<SaveOntologyFileResult, OntologyFileStoreError | TurtleCodecError>;
+}
+
+/**
+ * Build the ontology session use-case implementation from ports.
+ *
+ * @since 0.0.0
+ * @category services
+ */
+export const makeSessionUseCases = Effect.fn("Ontology.SessionUseCases.make")(function* () {
+  const fileStore = yield* OntologyFileStore;
+  const turtle = yield* TurtleCodec;
+
+  return {
+    openFile: Effect.fn("Ontology.SessionUseCases.openFile")(function* (command: OpenOntologyFileCommand) {
+      const file = yield* fileStore.read(ReadOntologyFileRequest.make({ path: command.path }));
+      const parsed = yield* turtle.parse(ParseTurtleRequest.make({ source: file.source, baseIri: command.baseIri }));
+      const session = createSession(CreateSessionInput.make({ id: command.sessionId, baseDataset: parsed.dataset }));
+
+      return OpenOntologyFileResult.make({
+        session,
+        path: file.path,
+      });
+    }),
+    saveFile: Effect.fn("Ontology.SessionUseCases.saveFile")(function* (command: SaveOntologyFileCommand) {
+      const asserted = deriveSessionGraphPartitions(command.session).asserted;
+      const serialized = yield* turtle.serialize(SerializeTurtleRequest.make({ dataset: asserted }));
+      yield* fileStore.write(WriteOntologyFileRequest.make({ path: command.path, source: serialized.source }));
+
+      return SaveOntologyFileResult.make({
+        path: command.path,
+      });
+    }),
+  } satisfies SessionUseCasesShape;
+});
+
+/**
+ * Ontology session use-case service tag.
+ *
+ * @since 0.0.0
+ * @category services
+ */
+export class SessionUseCases extends Context.Service<SessionUseCases, SessionUseCasesShape>()($I`SessionUseCases`) {}
+
+/**
+ * Layer for ontology session use cases.
+ *
+ * @since 0.0.0
+ * @category layers
+ */
+export const SessionUseCasesLayer = Layer.effect(SessionUseCases, makeSessionUseCases());

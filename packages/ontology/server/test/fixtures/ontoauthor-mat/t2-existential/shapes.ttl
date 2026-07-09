@@ -1,0 +1,55 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix mat: <http://example.org/materials#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<urn:shape:composite-subclass>
+    a sh:NodeShape ;
+    sh:targetNode mat:Composite ;
+    sh:property [
+        sh:path rdfs:subClassOf ;
+        sh:hasValue mat:Material ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:has-constituent-prop>
+    a sh:NodeShape ;
+    sh:targetNode mat:hasConstituent ;
+    sh:property [
+        sh:path rdf:type ;
+        sh:hasValue owl:ObjectProperty ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:fiber-reinforced-exists>
+    a sh:NodeShape ;
+    sh:targetNode mat:FiberReinforced ;
+    sh:property [
+        sh:path rdf:type ;
+        sh:hasValue owl:Class ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:cfrp-instance>
+    a sh:NodeShape ;
+    sh:targetNode mat:CFRP ;
+    sh:property [
+        sh:path rdf:type ;
+        sh:hasValue mat:Composite ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path mat:hasConstituent ;
+        sh:hasValue mat:CarbonFiber ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:carbon-fiber-instance>
+    a sh:NodeShape ;
+    sh:targetNode mat:CarbonFiber ;
+    sh:property [
+        sh:path rdf:type ;
+        sh:hasValue mat:Fiber ;
+        sh:minCount 1 ;
+    ] .

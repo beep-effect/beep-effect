@@ -35,10 +35,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Foundation - next concrete action: scaffold the minimum legal `ontology`
-slice roles (`domain`, `use-cases`, `server`), build on the confirmed
-`@beep/rdf`, `@beep/semantic-web`, and `@beep/rdf-canonize` surfaces, and start
-the fixture round-trip proof.
+P1 Foundation - implementation complete in the branch; host verification is
+pending for `bun install` and package-local Vitest lanes because the sandbox
+blocked network package resolution and Bun/Vitest workers failed before test
+import.
 
 ## Latest Evidence
 
@@ -46,6 +46,10 @@ the fixture round-trip proof.
   [`history/2026-07-08-p0-bootstrap.md`](./history/2026-07-08-p0-bootstrap.md)
   - live package surfaces confirmed, no decision-invalidating drift recorded,
   and P1 risks listed.
+- P1 Foundation evidence:
+  [`history/2026-07-09-p1-foundation.md`](./history/2026-07-09-p1-foundation.md)
+  - ontology slice + N3 driver implemented; package `check`/`lint` passed;
+  FOAF + ontoauthor Turtle fixtures round-tripped by `rdfc-1.0` fingerprint.
 
 ## Notes
 
