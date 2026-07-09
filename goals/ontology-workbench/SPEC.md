@@ -19,6 +19,13 @@ deterministic Turtle that Protégé and ROBOT parse.
 - Full OWL 2 DL reasoning (HermiT-class). Reasoning is bounded to
   domain-native structural inference (see Constraints).
 - Server-backed or multi-user workspaces. Files on disk are the only truth.
+- An MCP/agent tool surface for the workbench. The slice must be agent-ready
+  by construction (Constraint 16), but exposing tools to agents is a named
+  follow-up packet (`ontology-agent-tools`; blueprint: ontosphere's 43-tool
+  MCP manifest — see `research/SOURCES.md`).
+- Term-reuse search before IRI minting and namespace legend / guarded bulk
+  URI rename — evaluated against ontosphere and deferred
+  (see `research/SOURCES.md` evaluated-and-deferred ledger).
 - Fixing the existing chat feature's app-local UI drift.
 - Replacing or extending `@beep/ontology` (foundation FOLIO models) or the
   `identity-as-iri` authoring surface — this workbench edits **user ontology
@@ -45,6 +52,9 @@ Higher sources outrank lower sources when they conflict.
 - `packages/drivers/cosmos` (new: `@cosmos.gl/graph` wrapper, browser-safe).
 - `packages/drivers/oxigraph` (new: Oxigraph WASM implementing the existing
   `@beep/semantic-web` SPARQL contract).
+- `packages/drivers/shacl` (new: SHACL validation engine implementing the
+  existing `@beep/semantic-web` SHACL contract; engine chosen at P5 —
+  candidates `rdf-validate-shacl`, `shacl-engine`).
 - `apps/professional-desktop` (navigation shell, RuntimeLive additions,
   sidecar RPC registration only).
 - `packages/foundation/modeling/ontology/README.md` +
@@ -92,6 +102,37 @@ Higher sources outrank lower sources when they conflict.
     validation script); its data model and hand-rolled parser are explicitly
     not templates.
 
+Constraints 13–18 were locked in a second grilling round (2026-07-08,
+9 decisions) after exploring ontosphere (Apache-2.0 reference implementation;
+see `research/SOURCES.md`):
+
+13. Session dataset partitions: the in-memory session is partitioned into
+    derived named graphs (asserted data / loaded ontologies / inferred /
+    shapes / provenance) with ONE shared exclusion rule consumed by reasoning,
+    SPARQL projection, exports, and viz. Partitions are rebuildable indexes;
+    Turtle files + the typed change log remain the only truth (Constraint 2).
+14. Typed worker protocol: every worker boundary (parse, diff, search index,
+    layout, cluster) uses Effect Schema-validated command payloads.
+15. Inference invalidation discipline: incremental structural inference tracks
+    the full changed signature (subjects + predicate/object), recomputes
+    module-scoped, and fails closed to a full recompute after a bounded drift
+    cap or on any inconsistency. The reasoner port stays open; Konclude-WASM
+    (SharedArrayBuffer/COOP/COEP caveat) and eyereasoner are recorded
+    candidate drivers.
+16. Agent-ready by construction: batch operations return real added/removed
+    deltas; SPARQL execution applies safeguards (prefix normalization, parse
+    validation, LIMIT injection when absent, result truncation); every
+    mutation flows through typed change operations. No agent/MCP tool surface
+    ships in this packet (see Non-Goals).
+17. SHACL validation implements the existing `@beep/semantic-web` SHACL
+    contract via a driver; validation covers asserted + inferred data. Repair
+    suggestions are verified against the session before being offered and are
+    applied as undoable typed change operations.
+18. ontosphere (Apache-2.0) may be ported from with attribution: the
+    ontoauthor-mat benchmark fixtures, demo ontologies (pizza/FOAF), and the
+    named patterns in `research/SOURCES.md`. Its Reactodia renderer, Comunica
+    engine, and Konclude-baseline reasoning are explicitly not templates.
+
 ## Acceptance Criteria
 
 - [ ] A real BFO-aligned knowledge-graph ontology can be authored end-to-end
@@ -108,6 +149,17 @@ Higher sources outrank lower sources when they conflict.
 - [ ] SPARQL panel executes SELECT and CONSTRUCT over the loaded ontology.
 - [ ] Inferred-view toggle shows derived hierarchy/types and flags
       disjointness violations.
+- [ ] ABox/TBox view modes stay consistent across explorer, search, and
+      viewport (one shared classification rule).
+- [ ] SHACL loop: loading shapes renders violations with focus-node
+      navigation; applying a suggested (verified) repair resolves the
+      violation; undo restores the prior state.
+- [ ] The six ported ontoauthor-mat competency tasks pass in slice tests:
+      each `cq.sparql` returns the expected result over its reference
+      ontology and its shapes validate.
+- [ ] PROV-O journal export derives from the typed change log; VoID/DCAT
+      dataset description is produced at export.
+- [ ] Metrics panel renders worker-computed counts and quality heuristics.
 - [ ] Slice tests run with only its own Layers + shared test-kit + driver
       test Layers (no app runtime boot).
 - [ ] No unrelated refactors or formatting churn.
@@ -123,6 +175,8 @@ Higher sources outrank lower sources when they conflict.
 | Slice tests | slice + driver test suites (exact filter recorded in PLAN as they land) | Green |
 | Round-trip proof | fixture-ontology round-trip test (P1) + external check: fixture opens in Protégé / `robot --input` without error (recorded in `history/`) | Passes |
 | Scale benchmark | synthetic 100k-element benchmark note under `history/` (P3) | Interactive per acceptance |
+| Competency fixtures | ontoauthor-mat t1–t6 (ported, Apache-2.0 attribution) run in slice tests (P6) | Green |
+| SHACL loop | violation → verified repair → undo test (P5) | Green |
 
 ## Stop Conditions
 
