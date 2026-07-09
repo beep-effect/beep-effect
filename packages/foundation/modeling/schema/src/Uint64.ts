@@ -7,6 +7,7 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import { decodeProtobufInt64InputTransformation, ProtobufInt64Input } from "./internal/ProtobufInt64Input.ts";
 
 const $I = $SchemaId.create("Uint64");
 
@@ -27,14 +28,16 @@ const Uint64Range = S.isBetweenBigInt(
   }
 );
 
+const Uint64BigInt = S.BigInt.check(Uint64Range);
+
 /**
  * Branded schema for protobuf `uint64` values.
  *
  * @remarks
- * Protobufjs writes `uint64` from `Long`, `number`, or decimal `string`
- * inputs. This schema represents the full protobuf range as `bigint` so values
- * above JavaScript's safe integer range are not silently narrowed before a
- * writer adapter converts them to a protobufjs-compatible representation.
+ * Protobufjs writes and can expose `uint64` from `Long`, `number`, decimal
+ * `string`, or `bigint` values. This schema accepts those protobufjs-compatible
+ * input shapes and normalizes them to `bigint` before enforcing the unsigned
+ * 64-bit range.
  *
  * @example
  * ```ts
@@ -42,7 +45,7 @@ const Uint64Range = S.isBetweenBigInt(
  * import * as S from "effect/Schema"
  * import { Uint64 } from "@beep/schema/Uint64"
  *
- * const value = await Effect.runPromise(S.decodeUnknownEffect(Uint64)(BigInt("18446744073709551615")))
+ * const value = await Effect.runPromise(S.decodeUnknownEffect(Uint64)("18446744073709551615"))
  * console.log(value.toString()) // "18446744073709551615"
  * ```
  *
@@ -50,10 +53,10 @@ const Uint64Range = S.isBetweenBigInt(
  * @category validation
  * @since 0.0.0
  */
-export const Uint64 = S.BigInt.annotate({
-  toArbitrary: () => (fc) => fc.bigInt({ min: uint64Minimum, max: uint64Maximum }),
-})
-  .check(Uint64Range)
+export const Uint64 = ProtobufInt64Input.pipe(S.decodeTo(Uint64BigInt, decodeProtobufInt64InputTransformation))
+  .annotate({
+    toArbitrary: () => (fc) => fc.bigInt({ min: uint64Minimum, max: uint64Maximum }),
+  })
   .pipe(
     S.brand("Uint64"),
     $I.annoteSchema("Uint64", {

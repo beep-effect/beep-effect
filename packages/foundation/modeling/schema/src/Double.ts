@@ -6,15 +6,29 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
 const $I = $SchemaId.create("Double");
 
-const DoubleFinite = S.isFinite({
-  identifier: $I`DoubleFiniteCheck`,
-  title: "Protobuf double Finite",
-  description: "A protobuf double schema value must be finite at the validation boundary.",
-  message: "Expected a finite protobuf double number",
+const isProtobufDoubleValue = (value: number) =>
+  globalThis.Number.isNaN(value) ||
+  value === globalThis.Number.POSITIVE_INFINITY ||
+  value === globalThis.Number.NEGATIVE_INFINITY ||
+  (value >= -globalThis.Number.MAX_VALUE && value <= globalThis.Number.MAX_VALUE);
+
+const DoubleChecks = S.makeFilter(isProtobufDoubleValue, {
+  identifier: $I`DoubleValueCheck`,
+  title: "Protobuf double Value",
+  description: "A protobuf double value is any IEEE-754 binary64 JavaScript number, including NaN and infinities.",
+  expected: "a protobuf double number",
+  message: "Expected a protobuf double number",
+});
+
+const ProtobufNumber = S.declare<number>(P.isNumber, {
+  description: "A JavaScript number, including IEEE-754 special values accepted by protobuf.",
+  identifier: $I`ProtobufNumber`,
+  title: "Protobuf Number",
 });
 
 /**
@@ -22,8 +36,8 @@ const DoubleFinite = S.isFinite({
  *
  * @remarks
  * Protobufjs writes `double` as IEEE-754 binary64 and exposes the JavaScript
- * value as a `number`. This schema rejects `NaN` and infinities at the
- * validation boundary.
+ * value as a `number`. IEEE-754 special values are valid protobuf scalar
+ * payloads, so this schema accepts `NaN`, `Infinity`, and `-Infinity`.
  *
  * @example
  * ```ts
@@ -35,18 +49,24 @@ const DoubleFinite = S.isFinite({
  * console.log(value) // 1.25
  * ```
  *
- * @invariant Values are finite JavaScript numbers.
+ * @invariant Values are JavaScript numbers in the protobuf `double` domain, including IEEE-754 special values.
  * @category validation
  * @since 0.0.0
  */
-export const Double = S.Finite.annotate({
-  toArbitrary: () => (fc) => fc.double({ noDefaultInfinity: true, noNaN: true }),
+export const Double = ProtobufNumber.annotate({
+  toArbitrary: () => (fc) =>
+    fc.oneof(
+      fc.double({ noDefaultInfinity: true, noNaN: true }),
+      fc.constant(globalThis.Number.NaN),
+      fc.constant(globalThis.Number.POSITIVE_INFINITY),
+      fc.constant(globalThis.Number.NEGATIVE_INFINITY)
+    ),
 })
-  .check(DoubleFinite)
+  .check(DoubleChecks)
   .pipe(
     S.brand("Double"),
     $I.annoteSchema("Double", {
-      description: "A finite protobuf double number represented as an IEEE-754 binary64 JavaScript number.",
+      description: "A protobuf double number represented as an IEEE-754 binary64 JavaScript number.",
     })
   );
 

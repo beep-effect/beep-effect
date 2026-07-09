@@ -7,6 +7,7 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import { decodeProtobufInt64InputTransformation, ProtobufInt64Input } from "./internal/ProtobufInt64Input.ts";
 
 const $I = $SchemaId.create("Sfixed64");
 
@@ -27,14 +28,16 @@ const Sfixed64Range = S.isBetweenBigInt(
   }
 );
 
+const Sfixed64BigInt = S.BigInt.check(Sfixed64Range);
+
 /**
  * Branded schema for protobuf `sfixed64` values.
  *
  * @remarks
- * Protobufjs writes `sfixed64` as eight fixed bytes from `Long`, `number`, or
- * decimal `string` inputs. This schema represents the full protobuf range as
- * `bigint` so values above JavaScript's safe integer range are not silently
- * narrowed before a writer adapter converts them.
+ * Protobufjs writes and can expose `sfixed64` as eight fixed bytes from `Long`,
+ * `number`, decimal `string`, or `bigint` values. This schema accepts those
+ * protobufjs-compatible input shapes and normalizes them to `bigint` before
+ * enforcing the signed fixed-width 64-bit range.
  *
  * @example
  * ```ts
@@ -42,7 +45,7 @@ const Sfixed64Range = S.isBetweenBigInt(
  * import * as S from "effect/Schema"
  * import { Sfixed64 } from "@beep/schema/Sfixed64"
  *
- * const value = await Effect.runPromise(S.decodeUnknownEffect(Sfixed64)(-BigInt("9223372036854775808")))
+ * const value = await Effect.runPromise(S.decodeUnknownEffect(Sfixed64)("-9223372036854775808"))
  * console.log(value.toString()) // "-9223372036854775808"
  * ```
  *
@@ -50,10 +53,10 @@ const Sfixed64Range = S.isBetweenBigInt(
  * @category validation
  * @since 0.0.0
  */
-export const Sfixed64 = S.BigInt.annotate({
-  toArbitrary: () => (fc) => fc.bigInt({ min: sfixed64Minimum, max: sfixed64Maximum }),
-})
-  .check(Sfixed64Range)
+export const Sfixed64 = ProtobufInt64Input.pipe(S.decodeTo(Sfixed64BigInt, decodeProtobufInt64InputTransformation))
+  .annotate({
+    toArbitrary: () => (fc) => fc.bigInt({ min: sfixed64Minimum, max: sfixed64Maximum }),
+  })
   .pipe(
     S.brand("Sfixed64"),
     $I.annoteSchema("Sfixed64", {

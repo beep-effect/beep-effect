@@ -42,6 +42,15 @@ import type { Uint64, Uint64 as Uint64Type } from "@beep/schema/Uint64";
 import type { Effect } from "effect";
 import type * as Brand from "effect/Brand";
 
+interface ProtobufLongLike {
+  readonly high: number;
+  readonly low: number;
+  toString(): string;
+  readonly unsigned?: boolean;
+}
+
+type ProtobufInt64Input = bigint | number | string | ProtobufLongLike;
+
 describe("protobuf scalar schemas", () => {
   it("preserves the branded 32-bit number schema surfaces", () => {
     expect<Uint32>().type.toBe<number & Brand.Brand<"Uint32">>();
@@ -72,10 +81,10 @@ describe("protobuf scalar schemas", () => {
     expect<Sint64>().type.toBe<bigint & Brand.Brand<"Sint64">>();
     expect<Fixed64>().type.toBe<bigint & Brand.Brand<"Fixed64">>();
     expect<Sfixed64>().type.toBe<bigint & Brand.Brand<"Sfixed64">>();
-    expect<typeof Uint64.Encoded>().type.toBe<bigint>();
-    expect<typeof Sint64.Encoded>().type.toBe<bigint>();
-    expect<typeof Fixed64.Encoded>().type.toBe<bigint>();
-    expect<typeof Sfixed64.Encoded>().type.toBe<bigint>();
+    expect<typeof Uint64.Encoded>().type.toBe<ProtobufInt64Input>();
+    expect<typeof Sint64.Encoded>().type.toBe<ProtobufInt64Input>();
+    expect<typeof Fixed64.Encoded>().type.toBe<ProtobufInt64Input>();
+    expect<typeof Sfixed64.Encoded>().type.toBe<ProtobufInt64Input>();
     expect<Uint64Type>().type.toBe<bigint & Brand.Brand<"Uint64">>();
     expect<Sint64Type>().type.toBe<bigint & Brand.Brand<"Sint64">>();
     expect<Fixed64Type>().type.toBe<bigint & Brand.Brand<"Fixed64">>();
@@ -96,6 +105,7 @@ describe("protobuf scalar schemas", () => {
 
     expect(decodeUint32(1)).type.toBe<Effect.Effect<Uint32Type, S.SchemaError, never>>();
     expect(decodeSint64(BigInt(1))).type.toBe<Effect.Effect<Sint64Type, S.SchemaError, never>>();
+    expect(decodeSint64("1")).type.toBe<Effect.Effect<Sint64Type, S.SchemaError, never>>();
     expect(decodeFloat(1.5)).type.toBe<Effect.Effect<FloatType, S.SchemaError, never>>();
     expect(decodeBytes(new Uint8Array())).type.toBe<Effect.Effect<BytesType, S.SchemaError, never>>();
   });

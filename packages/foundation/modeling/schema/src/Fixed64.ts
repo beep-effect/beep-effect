@@ -7,6 +7,7 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import { decodeProtobufInt64InputTransformation, ProtobufInt64Input } from "./internal/ProtobufInt64Input.ts";
 
 const $I = $SchemaId.create("Fixed64");
 
@@ -27,14 +28,16 @@ const Fixed64Range = S.isBetweenBigInt(
   }
 );
 
+const Fixed64BigInt = S.BigInt.check(Fixed64Range);
+
 /**
  * Branded schema for protobuf `fixed64` values.
  *
  * @remarks
- * Protobufjs writes `fixed64` as eight fixed bytes from `Long`, `number`, or
- * decimal `string` inputs. This schema represents the full protobuf range as
- * `bigint` so values above JavaScript's safe integer range are not silently
- * narrowed before a writer adapter converts them.
+ * Protobufjs writes and can expose `fixed64` as eight fixed bytes from `Long`,
+ * `number`, decimal `string`, or `bigint` values. This schema accepts those
+ * protobufjs-compatible input shapes and normalizes them to `bigint` before
+ * enforcing the unsigned fixed-width 64-bit range.
  *
  * @example
  * ```ts
@@ -42,7 +45,7 @@ const Fixed64Range = S.isBetweenBigInt(
  * import * as S from "effect/Schema"
  * import { Fixed64 } from "@beep/schema/Fixed64"
  *
- * const value = await Effect.runPromise(S.decodeUnknownEffect(Fixed64)(BigInt("18446744073709551615")))
+ * const value = await Effect.runPromise(S.decodeUnknownEffect(Fixed64)("18446744073709551615"))
  * console.log(value.toString()) // "18446744073709551615"
  * ```
  *
@@ -50,10 +53,10 @@ const Fixed64Range = S.isBetweenBigInt(
  * @category validation
  * @since 0.0.0
  */
-export const Fixed64 = S.BigInt.annotate({
-  toArbitrary: () => (fc) => fc.bigInt({ min: fixed64Minimum, max: fixed64Maximum }),
-})
-  .check(Fixed64Range)
+export const Fixed64 = ProtobufInt64Input.pipe(S.decodeTo(Fixed64BigInt, decodeProtobufInt64InputTransformation))
+  .annotate({
+    toArbitrary: () => (fc) => fc.bigInt({ min: fixed64Minimum, max: fixed64Maximum }),
+  })
   .pipe(
     S.brand("Fixed64"),
     $I.annoteSchema("Fixed64", {

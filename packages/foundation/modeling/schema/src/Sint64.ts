@@ -7,6 +7,7 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import { decodeProtobufInt64InputTransformation, ProtobufInt64Input } from "./internal/ProtobufInt64Input.ts";
 
 const $I = $SchemaId.create("Sint64");
 
@@ -27,14 +28,16 @@ const Sint64Range = S.isBetweenBigInt(
   }
 );
 
+const Sint64BigInt = S.BigInt.check(Sint64Range);
+
 /**
  * Branded schema for protobuf `sint64` values.
  *
  * @remarks
- * Protobufjs writes `sint64` as a zig-zag encoded 64-bit varint from `Long`,
- * `number`, or decimal `string` inputs. This schema represents the full
- * protobuf range as `bigint` so values above JavaScript's safe integer range
- * are not silently narrowed before a writer adapter converts them.
+ * Protobufjs writes and can expose `sint64` as a zig-zag encoded 64-bit varint
+ * from `Long`, `number`, decimal `string`, or `bigint` values. This schema
+ * accepts those protobufjs-compatible input shapes and normalizes them to
+ * `bigint` before enforcing the signed 64-bit range.
  *
  * @example
  * ```ts
@@ -42,7 +45,7 @@ const Sint64Range = S.isBetweenBigInt(
  * import * as S from "effect/Schema"
  * import { Sint64 } from "@beep/schema/Sint64"
  *
- * const value = await Effect.runPromise(S.decodeUnknownEffect(Sint64)(-BigInt("9223372036854775808")))
+ * const value = await Effect.runPromise(S.decodeUnknownEffect(Sint64)("-9223372036854775808"))
  * console.log(value.toString()) // "-9223372036854775808"
  * ```
  *
@@ -50,10 +53,10 @@ const Sint64Range = S.isBetweenBigInt(
  * @category validation
  * @since 0.0.0
  */
-export const Sint64 = S.BigInt.annotate({
-  toArbitrary: () => (fc) => fc.bigInt({ min: sint64Minimum, max: sint64Maximum }),
-})
-  .check(Sint64Range)
+export const Sint64 = ProtobufInt64Input.pipe(S.decodeTo(Sint64BigInt, decodeProtobufInt64InputTransformation))
+  .annotate({
+    toArbitrary: () => (fc) => fc.bigInt({ min: sint64Minimum, max: sint64Maximum }),
+  })
   .pipe(
     S.brand("Sint64"),
     $I.annoteSchema("Sint64", {
