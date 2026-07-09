@@ -42,7 +42,9 @@ export default defineConfig({
     // keep cosmos itself un-prebundled, interop-wrap seedrandom, and route
     // gl-bench at its shipped ESM build (the package's `module` field is
     // ignored by the optimizer, which picks the default-less UMD `main`).
-    exclude: ["@cosmos.gl/graph"],
+    // Oxigraph is a WASM-backed sidecar driver; do not let the web optimizer
+    // initialize or prebundle it if a future webview path imports the package.
+    exclude: ["@cosmos.gl/graph", "oxigraph"],
     include: ["seedrandom"],
   },
   build: {

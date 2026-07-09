@@ -1,6 +1,9 @@
 import {
+  applyChangeOperationsWithDelta,
+  ChangeOperation,
   CreateSessionInput,
   createSession,
+  graphPartitionIri,
   SessionChangeDelta,
   SessionId,
 } from "@beep/ontology-domain/aggregates/Session";
@@ -9,14 +12,18 @@ import {
   applyOntologyGraphProjectionDelta,
   buildOntologyGraphProjection,
   buildOntologySnapshot,
+  buildOntologySnapshotWithInference,
   defaultOntologyGraphProjectionOptions,
   graphGestureChangeOperations,
+  InferOntologySessionInput,
   makeSessionUseCases,
   OntologyFilePath,
   OntologyFileStore,
   OntologyGraphGesture,
   OntologyGraphProjectionOptions,
   OntologyMetrics,
+  OntologyReasoner,
+  OntologyReasonerLive,
   OntologyRelationshipSummary,
   OntologyResourceSummary,
   OntologySnapshot,
@@ -29,14 +36,15 @@ import {
   searchOntologyResources,
   TurtleCodec,
 } from "@beep/ontology-use-cases/aggregates/Session";
-import { makeDataset, makeLiteral, makeNamedNode, makeQuad, PrefixMap } from "@beep/rdf/Rdf";
+import { makeDataset, makeLiteral, makeNamedNode, makeQuad, PrefixMap, serializeQuad } from "@beep/rdf/Rdf";
 import { OWL_CLASS } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
-import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
+import { RDFS_LABEL, RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { fcRuns } from "@beep/test-utils";
+import { O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Equal, Result } from "effect";
+import { Effect, Equal, Layer, Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
@@ -49,6 +57,11 @@ const dataset = makeDataset([
     makeLiteral("Alice", XSD_STRING.value)
   ),
 ]);
+
+const provideScopedLayer =
+  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
+  <A2, E, R>(effect: Effect.Effect<A2, E, R>): Effect.Effect<A2, E | E2, RIn | Exclude<R, ROut>> =>
+    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 describe("Session use-cases", () => {
   it.effect(
@@ -146,6 +159,138 @@ describe("Session use-cases", () => {
       expect(opened.session.prefixes).toEqual({ ex: "https://example.test/" });
       expect(serializedPrefixes).toEqual({ ex: "https://example.test/" });
     })
+  );
+
+  it.effect(
+    "seeds structural inference on open and invalidates subclass closure incrementally",
+    Effect.fnUntraced(function* () {
+      const pizza = makeNamedNode("https://example.org/pizza#Pizza");
+      const margherita = makeNamedNode("https://example.org/pizza#Margherita");
+      const neapolitanMargherita = makeNamedNode("https://example.org/pizza#NeapolitanMargherita");
+      const m1 = makeNamedNode("https://example.org/pizza#m1");
+      const food = makeNamedNode("https://example.org/pizza#Food");
+      const subClassOf = makeNamedNode(`${RDFS_NAMESPACE}subClassOf`);
+      const inferredGraph = makeNamedNode(graphPartitionIri("inferred"));
+      const openedDataset = makeDataset([
+        makeQuad(pizza, RDF_TYPE, OWL_CLASS),
+        makeQuad(margherita, RDF_TYPE, OWL_CLASS),
+        makeQuad(margherita, subClassOf, pizza),
+        makeQuad(neapolitanMargherita, RDF_TYPE, OWL_CLASS),
+        makeQuad(neapolitanMargherita, subClassOf, margherita),
+        makeQuad(m1, RDF_TYPE, neapolitanMargherita),
+      ]);
+      const inferredQuad = (subject: typeof pizza, predicate: typeof subClassOf, object: typeof pizza) =>
+        serializeQuad(
+          makeQuad(subject, predicate, {
+            object,
+            graph: inferredGraph,
+          })
+        );
+      const fileStore = OntologyFileStore.of({
+        read: Effect.fn("OntologyFileStore.read")((request) =>
+          Effect.succeed(
+            ReadOntologyFileResult.make({
+              path: request.path,
+              source: "@prefix : <https://example.org/pizza#> .",
+            })
+          )
+        ),
+        write: Effect.fn("OntologyFileStore.write")(() => Effect.void),
+      });
+      const turtle = TurtleCodec.of({
+        parse: Effect.fn("TurtleCodec.parse")(() =>
+          Effect.succeed(
+            ParseTurtleResult.make({
+              dataset: openedDataset,
+              prefixes: S.decodeUnknownSync(PrefixMap)({
+                pizza: "https://example.org/pizza#",
+              }),
+            })
+          )
+        ),
+        serialize: Effect.fn("TurtleCodec.serialize")(() => Effect.succeed(SerializeTurtleResult.make({ source: "" }))),
+      });
+      const useCases = yield* makeSessionUseCases().pipe(
+        Effect.provideService(OntologyFileStore, fileStore),
+        Effect.provideService(TurtleCodec, turtle)
+      );
+      const reasoner = yield* OntologyReasoner;
+      const opened = yield* useCases.openFile(OpenOntologyFileCommand.make({ sessionId, path: fixturePath }));
+      const initial = yield* reasoner.infer(InferOntologySessionInput.make({ session: opened.session }));
+
+      const initialQuads = initial.inferredDataset.quads.map(serializeQuad);
+      expect(initial.fullRecompute).toBe(true);
+      expect(initial.processedChangeCount).toBe(0);
+      expect(initial.inferredDataset.quads).toHaveLength(3);
+      expect(initialQuads).toEqual(
+        expect.arrayContaining([
+          inferredQuad(neapolitanMargherita, subClassOf, pizza),
+          inferredQuad(m1, RDF_TYPE, margherita),
+          inferredQuad(m1, RDF_TYPE, pizza),
+        ])
+      );
+      expect(buildOntologySnapshotWithInference(opened.session, initial).metrics.quadCount).toBe(9);
+
+      const pizzaFood = makeQuad(pizza, subClassOf, food);
+      const added = applyChangeOperationsWithDelta(opened.session, [
+        ChangeOperation.make({
+          kind: "addQuad",
+          partition: "asserted",
+          quad: pizzaFood,
+        }),
+      ]);
+      const addedInference = yield* reasoner.infer(
+        InferOntologySessionInput.make({
+          session: added.session,
+          previous: O.some(initial),
+        })
+      );
+      const addedQuads = addedInference.inferredDataset.quads.map(serializeQuad);
+
+      expect(added.delta.added).toHaveLength(1);
+      expect(addedInference.fullRecompute).toBe(false);
+      expect(addedInference.processedChangeCount).toBe(1);
+      expect(addedInference.modules.find((entry) => entry.module === "closure")?.mode).toBe("incremental");
+      expect(addedInference.inferredDataset.quads).toHaveLength(6);
+      expect(addedQuads).toEqual(
+        expect.arrayContaining([
+          inferredQuad(margherita, subClassOf, food),
+          inferredQuad(neapolitanMargherita, subClassOf, food),
+          inferredQuad(m1, RDF_TYPE, food),
+        ])
+      );
+      expect(buildOntologySnapshotWithInference(added.session, addedInference).metrics.quadCount).toBe(13);
+
+      const removed = applyChangeOperationsWithDelta(added.session, [
+        ChangeOperation.make({
+          kind: "removeQuad",
+          partition: "asserted",
+          quad: pizzaFood,
+        }),
+      ]);
+      const removedInference = yield* reasoner.infer(
+        InferOntologySessionInput.make({
+          session: removed.session,
+          previous: O.some(addedInference),
+        })
+      );
+      const removedQuads = removedInference.inferredDataset.quads.map(serializeQuad);
+
+      expect(removed.delta.removed).toHaveLength(1);
+      expect(removedInference.fullRecompute).toBe(false);
+      expect(removedInference.processedChangeCount).toBe(2);
+      expect(removedInference.modules.find((entry) => entry.module === "closure")?.mode).toBe("incremental");
+      expect(removedInference.inferredDataset.quads).toHaveLength(3);
+      expect(removedQuads).toEqual(
+        expect.arrayContaining([
+          inferredQuad(neapolitanMargherita, subClassOf, pizza),
+          inferredQuad(m1, RDF_TYPE, margherita),
+          inferredQuad(m1, RDF_TYPE, pizza),
+        ])
+      );
+      expect(removedQuads).not.toContain(inferredQuad(m1, RDF_TYPE, food));
+      expect(buildOntologySnapshotWithInference(removed.session, removedInference).metrics.quadCount).toBe(9);
+    }, provideScopedLayer(OntologyReasonerLive))
   );
 
   it.effect(

@@ -75,6 +75,7 @@
       "@beep/ontology-server/layer": [
         "../../packages/ontology/server/src/Layer.ts"
       ],
+      "@beep/oxigraph": ["../../packages/drivers/oxigraph/src/index.ts"],
       "@beep/ontology-ui": ["../../packages/ontology/ui/src/index.ts"],
       "@beep/ontology-use-cases/aggregates/Session": [
         "../../packages/ontology/use-cases/src/aggregates/Session/index.ts"
@@ -192,6 +193,9 @@
     },
     {
       "path": "../../packages/workspace/use-cases/tsconfig.json"
+    },
+    {
+      "path": "../../packages/drivers/oxigraph/tsconfig.json"
     },
     {
       "path": "../../packages/drivers/anthropic/tsconfig.json"

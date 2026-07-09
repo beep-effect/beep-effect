@@ -10,7 +10,9 @@ import {
   ApplyOntologyBatchResult,
   buildOntologySnapshot,
   OntologyActionError,
+  OntologyReasoner,
   OntologyRpcs,
+  OntologySparqlRunner,
   OpenOntologyDocumentResult,
   OpenOntologyFileCommand,
   PreviewOntologyTurtleResult,
@@ -36,7 +38,11 @@ const toOntologyActionError =
 /**
  * Build ontology sidecar operations over the session use-case service.
  */
-const makeOntologyOperations = (useCases: SessionUseCases["Service"]) => ({
+const makeOntologyOperations = (
+  useCases: SessionUseCases["Service"],
+  reasoner: OntologyReasoner["Service"],
+  sparql: OntologySparqlRunner["Service"]
+) => ({
   openDocument: (
     command: OpenOntologyFileCommand
   ): Effect.Effect<OpenOntologyDocumentResultType, OntologyActionError> =>
@@ -84,6 +90,14 @@ const makeOntologyOperations = (useCases: SessionUseCases["Service"]) => ({
 
   getSnapshot: (session: SerializeOntologySessionCommand["session"]) =>
     Effect.sync(() => buildOntologySnapshot(session)).pipe(Effect.withSpan("ontology.get_snapshot")),
+
+  runInference: (input: Parameters<OntologyReasoner["Service"]["infer"]>[0]) =>
+    reasoner.infer(input).pipe(Effect.withSpan("ontology.run_inference")),
+
+  runSparql: (input: Parameters<OntologySparqlRunner["Service"]["run"]>[0]) =>
+    sparql
+      .run(input)
+      .pipe(Effect.catch(toOntologyActionError("RunOntologySparql")), Effect.withSpan("ontology.run_sparql")),
 });
 
 /**
@@ -111,6 +125,8 @@ const makeOntologyHandlers = (operations: OntologyOperations) =>
     PreviewOntologyTurtle: ({ session }) => operations.previewTurtle(session),
     ApplyOntologyBatch: (payload) => operations.applyBatch(payload),
     GetOntologySnapshot: ({ session }) => operations.getSnapshot(session),
+    RunOntologyInference: (payload) => operations.runInference(payload),
+    RunOntologySparql: (payload) => operations.runSparql(payload),
   });
 
 /**
@@ -129,6 +145,8 @@ const makeOntologyHandlers = (operations: OntologyOperations) =>
 export const OntologyHandlersLive = OntologyRpcs.toLayer(
   Effect.gen(function* () {
     const useCases = yield* SessionUseCases;
-    return makeOntologyHandlers(makeOntologyOperations(useCases));
+    const reasoner = yield* OntologyReasoner;
+    const sparql = yield* OntologySparqlRunner;
+    return makeOntologyHandlers(makeOntologyOperations(useCases, reasoner, sparql));
   })
 );

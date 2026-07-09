@@ -130,6 +130,9 @@
       "path": "packages/drivers/openai-compat"
     },
     {
+      "path": "packages/drivers/oxigraph"
+    },
+    {
       "path": "packages/drivers/pacer"
     },
     {

@@ -10,6 +10,7 @@ import { make as makeIdentity } from "@beep/identity";
 import {
   appendChange,
   ChangeOperation,
+  deriveSessionGraphPartitions,
   invertChangeOperation,
   Session,
   SessionId,
@@ -17,8 +18,11 @@ import {
 import {
   ApplyOntologyBatchCommand,
   buildOntologySnapshot,
+  buildOntologySnapshotWithInference,
   defaultOntologyGraphProjectionOptions,
+  defaultOntologySparqlQuery,
   graphGestureChangeOperations,
+  InferOntologySessionInput,
   OntologyActionError,
   OntologyFilePath,
   OntologyGraphGesture,
@@ -26,15 +30,18 @@ import {
   OntologyMetrics,
   OntologyRpcs,
   OntologySnapshot,
+  ontologySparqlExamples,
   predicateAutocompleteSuggestions,
+  RunOntologySparqlInput,
   resourceVisibleInViewMode,
   searchOntologyResources,
   WorkerCommand,
   WorkerResult,
 } from "@beep/ontology-use-cases/aggregates/Session";
+import { serializeQuad } from "@beep/rdf/Rdf";
 import { SchemaUtils } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
-import { Effect, Layer, pipe } from "effect";
+import { Effect, Layer, Order, pipe } from "effect";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
 import { Atom, AtomRpc, Reactivity } from "effect/unstable/reactivity";
@@ -44,7 +51,10 @@ import type { SessionChangeDelta } from "@beep/ontology-domain/aggregates/Sessio
 import type {
   OntologyFoldLevel,
   OntologyGraphProjection,
+  OntologyInferenceResult,
+  OntologySparqlPanelProfile,
   OntologyViewMode,
+  RunOntologySparqlResult,
 } from "@beep/ontology-use-cases/aggregates/Session";
 
 const { $OntologyClientId } = makeIdentity("ontology-client");
@@ -114,6 +124,8 @@ export class OntologyClient extends AtomRpc.Service<OntologyClient>()("OntologyC
 const SESSION_KEY = "ontology-session" as const;
 const SOURCE_KEY = "ontology-source" as const;
 const GRAPH_KEY = "ontology-graph" as const;
+const INFERENCE_KEY = "ontology-inference" as const;
+const SPARQL_KEY = "ontology-sparql" as const;
 
 /**
  * Open ontology document payload for the client atom.
@@ -352,6 +364,175 @@ export const ontologyViewModeAtom = Atom.make<OntologyViewMode>("all");
 export const ontologyFoldLevelAtom = Atom.make<OntologyFoldLevel>("L2");
 
 /**
+ * Whether explorer projections include the derived inferred graph partition.
+ *
+ * @example
+ * ```ts
+ * import { ontologyInferredViewAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyInferredViewAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyInferredViewAtom = Atom.make(false);
+
+/**
+ * Latest structural inference result for the open session.
+ *
+ * @example
+ * ```ts
+ * import { ontologyInferenceResultAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyInferenceResultAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyInferenceResultAtom = Atom.make<O.Option<OntologyInferenceResult>>(O.none());
+
+const ontologyInferenceInputSignatureAtom = Atom.make<O.Option<string>>(O.none());
+
+/**
+ * Latest structural inference failure, if any.
+ *
+ * @example
+ * ```ts
+ * import { ontologyInferenceErrorAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyInferenceErrorAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyInferenceErrorAtom = Atom.make<O.Option<string>>(O.none());
+
+const inferenceInputSignature = (session: Session): string => {
+  const partitions = deriveSessionGraphPartitions(session);
+  const quads = pipe(
+    partitions.asserted.quads,
+    A.appendAll(partitions.ontologies.quads),
+    A.map(serializeQuad),
+    A.sort(Order.String)
+  );
+
+  return pipe([session.id, `changes:${session.changeLog.length}`, ...quads], A.join("\n"));
+};
+
+const resetOntologyInference = (ctx: Atom.FnContext): void => {
+  ctx.set(ontologyInferenceResultAtom, O.none());
+  ctx.set(ontologyInferenceInputSignatureAtom, O.none());
+  ctx.set(ontologyInferenceErrorAtom, O.none());
+};
+
+const ensureOntologyInference = Effect.fn("ensureOntologyInference")(function* (
+  client: OntologyClient["Service"],
+  session: Session,
+  ctx: Atom.FnContext
+) {
+  const signature = inferenceInputSignature(session);
+  const previousSignature = ctx(ontologyInferenceInputSignatureAtom);
+  const previous = ctx(ontologyInferenceResultAtom);
+
+  if (O.isSome(previousSignature) && previousSignature.value === signature && O.isSome(previous)) {
+    return previous.value;
+  }
+
+  const inference = yield* Reactivity.mutation(
+    client(
+      "RunOntologyInference",
+      InferOntologySessionInput.make({
+        session,
+        previous,
+      })
+    ),
+    [INFERENCE_KEY, GRAPH_KEY]
+  );
+  ctx.set(ontologyInferenceResultAtom, O.some(inference));
+  ctx.set(ontologyInferenceInputSignatureAtom, O.some(signature));
+  ctx.set(ontologyInferenceErrorAtom, O.none());
+  return inference;
+});
+
+/**
+ * Current SPARQL panel profile.
+ *
+ * @example
+ * ```ts
+ * import { ontologySparqlProfileAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologySparqlProfileAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologySparqlProfileAtom = Atom.make<OntologySparqlPanelProfile>("select");
+
+/**
+ * Current SPARQL query text.
+ *
+ * @example
+ * ```ts
+ * import { ontologySparqlQueryAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologySparqlQueryAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologySparqlQueryAtom = Atom.make("SELECT ?s ?p ?o WHERE {\n  ?s ?p ?o\n}");
+
+/**
+ * Built-in SPARQL example library for the workbench panel.
+ *
+ * @example
+ * ```ts
+ * import { ontologySparqlExamplesAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologySparqlExamplesAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologySparqlExamplesAtom = Atom.make(ontologySparqlExamples());
+
+/**
+ * Latest safeguarded SPARQL query result.
+ *
+ * @example
+ * ```ts
+ * import { ontologySparqlResultAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologySparqlResultAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologySparqlResultAtom = Atom.make<O.Option<RunOntologySparqlResult>>(O.none());
+
+/**
+ * Latest SPARQL query failure, if any.
+ *
+ * @example
+ * ```ts
+ * import { ontologySparqlErrorAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologySparqlErrorAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologySparqlErrorAtom = Atom.make<O.Option<string>>(O.none());
+
+/**
  * Current resource search query.
  *
  * @example
@@ -485,6 +666,7 @@ export const emptyOntologySnapshot = (): OntologySnapshot =>
       individualCount: 0,
       tboxCount: 0,
       aboxCount: 0,
+      disjointnessViolationCount: 0,
     }),
   });
 
@@ -502,7 +684,16 @@ export const emptyOntologySnapshot = (): OntologySnapshot =>
  * @since 0.0.0
  */
 export const ontologySnapshotAtom = Atom.make((get) =>
-  pipe(get(ontologySessionAtom), O.map(buildOntologySnapshot), O.getOrElse(emptyOntologySnapshot))
+  pipe(
+    get(ontologySessionAtom),
+    O.map((session) => {
+      const inference = get(ontologyInferenceResultAtom);
+      return get(ontologyInferredViewAtom) && O.isSome(inference)
+        ? buildOntologySnapshotWithInference(session, inference.value)
+        : buildOntologySnapshot(session);
+    }),
+    O.getOrElse(emptyOntologySnapshot)
+  )
 );
 
 /**
@@ -828,6 +1019,110 @@ export const ontologyGraphRenderBridgeAtom = Atom.make((get) => {
 const noOpenSessionError = OntologyActionError.new("No ontology session is open.");
 
 /**
+ * Toggle inferred view and refresh inference when enabling it.
+ *
+ * @example
+ * ```ts
+ * import { toggleOntologyInferredViewAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(toggleOntologyInferredViewAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const toggleOntologyInferredViewAtom = OntologyClient.runtime.fn<boolean>()(
+  Effect.fn("toggleOntologyInferredView")(function* (enabled, ctx) {
+    ctx.set(ontologyInferredViewAtom, enabled);
+    ctx.set(ontologyGraphProjectionAtom, O.none());
+    ctx.set(ontologyGraphDeltaAtom, O.none());
+
+    if (!enabled) {
+      ctx.set(ontologyInferenceErrorAtom, O.none());
+      return;
+    }
+
+    const client = yield* OntologyClient;
+    const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+    yield* ensureOntologyInference(client, session, ctx);
+  })
+);
+
+/**
+ * Apply a built-in SPARQL example to the query editor.
+ *
+ * @example
+ * ```ts
+ * import { applyOntologySparqlExampleAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(applyOntologySparqlExampleAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const applyOntologySparqlExampleAtom = OntologyClient.runtime.fn<string>()(
+  Effect.fn("applyOntologySparqlExample")(function* (id, ctx) {
+    yield* pipe(
+      ctx(ontologySparqlExamplesAtom),
+      A.findFirst((example) => example.id === id),
+      O.match({
+        onNone: () => Effect.void,
+        onSome: (example) =>
+          Effect.sync(() => {
+            ctx.set(ontologySparqlProfileAtom, example.profile);
+            ctx.set(ontologySparqlQueryAtom, example.query);
+            ctx.set(ontologySparqlResultAtom, O.none());
+            ctx.set(ontologySparqlErrorAtom, O.none());
+          }),
+      })
+    );
+  })
+);
+
+/**
+ * Execute the current SPARQL query through the sidecar safeguards.
+ *
+ * @example
+ * ```ts
+ * import { runOntologySparqlAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(runOntologySparqlAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const runOntologySparqlAtom = OntologyClient.runtime.fn<void>()(
+  Effect.fn("runOntologySparql")(function* (_, ctx) {
+    const client = yield* OntologyClient;
+    const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+    let inference = ctx(ontologyInferenceResultAtom);
+
+    if (ctx(ontologyInferredViewAtom)) {
+      const refreshed = yield* ensureOntologyInference(client, session, ctx);
+      inference = O.some(refreshed);
+    }
+
+    const result = yield* Reactivity.mutation(
+      client(
+        "RunOntologySparql",
+        RunOntologySparqlInput.make({
+          session,
+          profile: ctx(ontologySparqlProfileAtom),
+          query: ctx(ontologySparqlQueryAtom),
+          includeInferred: ctx(ontologyInferredViewAtom),
+          inference,
+        })
+      ),
+      [SPARQL_KEY]
+    );
+    ctx.set(ontologySparqlResultAtom, O.some(result));
+    ctx.set(ontologySparqlErrorAtom, O.none());
+  })
+);
+
+/**
  * Open a Turtle document through the sidecar.
  *
  * @example
@@ -852,6 +1147,13 @@ export const openOntologyDocumentAtom = OntologyClient.runtime.fn<OpenOntologyDo
     ctx.set(selectedOntologyResourceIriAtom, O.none());
     ctx.set(ontologyGraphProjectionAtom, O.none());
     ctx.set(ontologyGraphDeltaAtom, O.none());
+    resetOntologyInference(ctx);
+    ctx.set(ontologySparqlQueryAtom, defaultOntologySparqlQuery(opened.session));
+    ctx.set(ontologySparqlResultAtom, O.none());
+    ctx.set(ontologySparqlErrorAtom, O.none());
+    if (ctx(ontologyInferredViewAtom)) {
+      yield* ensureOntologyInference(client, opened.session, ctx);
+    }
   })
 );
 
@@ -927,7 +1229,15 @@ export const applyOntologyBatchAtom = OntologyClient.runtime.fn<ApplyOntologyBat
     );
     ctx.set(ontologySessionAtom, O.some(applied.session));
     ctx.set(ontologyRedoStackAtom, []);
-    ctx.set(ontologyGraphDeltaAtom, O.some(applied.delta));
+    ctx.set(ontologySparqlResultAtom, O.none());
+    if (ctx(ontologyInferredViewAtom)) {
+      yield* ensureOntologyInference(client, applied.session, ctx);
+      ctx.set(ontologyGraphProjectionAtom, O.none());
+      ctx.set(ontologyGraphDeltaAtom, O.none());
+    } else {
+      resetOntologyInference(ctx);
+      ctx.set(ontologyGraphDeltaAtom, O.some(applied.delta));
+    }
   })
 );
 
@@ -955,7 +1265,15 @@ export const applyOntologyGraphGestureAtom = OntologyClient.runtime.fn<ApplyOnto
     );
     ctx.set(ontologySessionAtom, O.some(applied.session));
     ctx.set(ontologyRedoStackAtom, []);
-    ctx.set(ontologyGraphDeltaAtom, O.some(applied.delta));
+    ctx.set(ontologySparqlResultAtom, O.none());
+    if (ctx(ontologyInferredViewAtom)) {
+      yield* ensureOntologyInference(client, applied.session, ctx);
+      ctx.set(ontologyGraphProjectionAtom, O.none());
+      ctx.set(ontologyGraphDeltaAtom, O.none());
+    } else {
+      resetOntologyInference(ctx);
+      ctx.set(ontologyGraphDeltaAtom, O.some(applied.delta));
+    }
   })
 );
 
@@ -974,26 +1292,28 @@ export const applyOntologyGraphGestureAtom = OntologyClient.runtime.fn<ApplyOnto
  */
 export const undoOntologyChangeAtom = OntologyClient.runtime.fn<void>()(
   Effect.fn("undoOntologyChange")(function* (_, ctx) {
+    const client = yield* OntologyClient;
     const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
     yield* pipe(
       A.last(session.changeLog),
       O.match({
         onNone: () => Effect.void,
-        onSome: (change) =>
-          Effect.sync(() => {
-            ctx.set(
-              ontologySessionAtom,
-              O.some(
-                Session.make({
-                  ...session,
-                  changeLog: A.dropRight(session.changeLog, 1),
-                })
-              )
-            );
-            ctx.set(ontologyRedoStackAtom, pipe(ctx(ontologyRedoStackAtom), A.prepend(change)));
-            ctx.set(ontologyGraphProjectionAtom, O.none());
-            ctx.set(ontologyGraphDeltaAtom, O.none());
-          }),
+        onSome: Effect.fn("undoOntologyChange.onSome")(function* (change) {
+          const nextSession = Session.make({
+            ...session,
+            changeLog: A.dropRight(session.changeLog, 1),
+          });
+          ctx.set(ontologySessionAtom, O.some(nextSession));
+          ctx.set(ontologyRedoStackAtom, pipe(ctx(ontologyRedoStackAtom), A.prepend(change)));
+          ctx.set(ontologySparqlResultAtom, O.none());
+          ctx.set(ontologyGraphProjectionAtom, O.none());
+          ctx.set(ontologyGraphDeltaAtom, O.none());
+          if (ctx(ontologyInferredViewAtom)) {
+            yield* ensureOntologyInference(client, nextSession, ctx);
+          } else {
+            resetOntologyInference(ctx);
+          }
+        }),
       })
     );
   })
@@ -1014,18 +1334,25 @@ export const undoOntologyChangeAtom = OntologyClient.runtime.fn<void>()(
  */
 export const redoOntologyChangeAtom = OntologyClient.runtime.fn<void>()(
   Effect.fn("redoOntologyChange")(function* (_, ctx) {
+    const client = yield* OntologyClient;
     const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
     yield* pipe(
       A.head(ctx(ontologyRedoStackAtom)),
       O.match({
         onNone: () => Effect.void,
-        onSome: (change) =>
-          Effect.sync(() => {
-            ctx.set(ontologySessionAtom, O.some(appendChange(session, change)));
-            ctx.set(ontologyRedoStackAtom, A.drop(ctx(ontologyRedoStackAtom), 1));
-            ctx.set(ontologyGraphProjectionAtom, O.none());
-            ctx.set(ontologyGraphDeltaAtom, O.none());
-          }),
+        onSome: Effect.fn("redoOntologyChange.onSome")(function* (change) {
+          const nextSession = appendChange(session, change);
+          ctx.set(ontologySessionAtom, O.some(nextSession));
+          ctx.set(ontologyRedoStackAtom, A.drop(ctx(ontologyRedoStackAtom), 1));
+          ctx.set(ontologySparqlResultAtom, O.none());
+          ctx.set(ontologyGraphProjectionAtom, O.none());
+          ctx.set(ontologyGraphDeltaAtom, O.none());
+          if (ctx(ontologyInferredViewAtom)) {
+            yield* ensureOntologyInference(client, nextSession, ctx);
+          } else {
+            resetOntologyInference(ctx);
+          }
+        }),
       })
     );
   })

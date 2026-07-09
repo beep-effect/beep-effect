@@ -14,6 +14,8 @@ import * as Rpc from "effect/unstable/rpc/Rpc";
 import * as RpcGroup from "effect/unstable/rpc/RpcGroup";
 import { OntologyFilePath, TurtleDocumentText } from "./Session.ports.js";
 import { OntologySnapshot } from "./Session.projections.js";
+import { InferOntologySessionInput, OntologyInferenceResult } from "./Session.reasoner.js";
+import { RunOntologySparqlInput, RunOntologySparqlResult } from "./Session.sparql.js";
 
 const { $OntologyUseCasesId } = makeIdentity("ontology-use-cases");
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.rpc");
@@ -376,6 +378,44 @@ export const GetOntologySnapshotRpc = Rpc.make("GetOntologySnapshot", {
 });
 
 /**
+ * Runs structural inference over an ontology session.
+ *
+ * @example
+ * ```ts
+ * import { RunOntologyInferenceRpc } from "@beep/ontology-use-cases/aggregates/Session"
+ *
+ * console.log(RunOntologyInferenceRpc)
+ * ```
+ *
+ * @since 0.0.0
+ * @category protocols
+ */
+export const RunOntologyInferenceRpc = Rpc.make("RunOntologyInference", {
+  payload: InferOntologySessionInput,
+  success: OntologyInferenceResult,
+  error: OntologyActionError,
+});
+
+/**
+ * Executes a safeguarded SPARQL query over an ontology session.
+ *
+ * @example
+ * ```ts
+ * import { RunOntologySparqlRpc } from "@beep/ontology-use-cases/aggregates/Session"
+ *
+ * console.log(RunOntologySparqlRpc)
+ * ```
+ *
+ * @since 0.0.0
+ * @category protocols
+ */
+export const RunOntologySparqlRpc = Rpc.make("RunOntologySparql", {
+  payload: RunOntologySparqlInput,
+  success: RunOntologySparqlResult,
+  error: OntologyActionError,
+});
+
+/**
  * Ontology workbench RPC group registered by the desktop sidecar.
  *
  * @example
@@ -393,5 +433,7 @@ export const OntologyRpcs = RpcGroup.make(
   SaveOntologyDocumentRpc,
   PreviewOntologyTurtleRpc,
   ApplyOntologyBatchRpc,
-  GetOntologySnapshotRpc
+  GetOntologySnapshotRpc,
+  RunOntologyInferenceRpc,
+  RunOntologySparqlRpc
 );

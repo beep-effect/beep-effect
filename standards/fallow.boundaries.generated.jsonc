@@ -432,6 +432,12 @@
         ]
       },
       {
+        "name": "@beep/oxigraph",
+        "patterns": [
+          "packages/drivers/oxigraph/src/**"
+        ]
+      },
+      {
         "name": "@beep/pacer",
         "patterns": [
           "packages/drivers/pacer/src/**"
@@ -1840,6 +1846,7 @@
           "@beep/n3",
           "@beep/ontology-server",
           "@beep/ontology-use-cases",
+          "@beep/oxigraph",
           "@beep/rdf-canonize",
           "@beep/semantic-web",
           "@beep/test-utils"
@@ -1848,6 +1855,7 @@
           "@beep/n3",
           "@beep/ontology-server",
           "@beep/ontology-use-cases",
+          "@beep/oxigraph",
           "@beep/rdf-canonize",
           "@beep/semantic-web",
           "@beep/test-utils"
@@ -1886,6 +1894,7 @@
           "@beep/ontology-use-cases",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/semantic-web",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -1894,6 +1903,7 @@
           "@beep/ontology-use-cases",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/semantic-web",
           "@beep/test-utils"
         ]
       },
@@ -1910,6 +1920,27 @@
           "@beep/identity",
           "@beep/openai-compat",
           "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/oxigraph",
+        "allow": [
+          "@beep/identity",
+          "@beep/oxigraph",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/semantic-web",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/oxigraph",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/semantic-web",
           "@beep/test-utils",
           "@beep/utils"
         ]

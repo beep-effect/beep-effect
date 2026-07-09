@@ -6,11 +6,7 @@
  */
 
 import { make as makeIdentity } from "@beep/identity";
-import {
-  deriveSessionGraphPartitions,
-  GraphPartition,
-  isExcludedFromReasoning,
-} from "@beep/ontology-domain/aggregates/Session";
+import { deriveSessionGraphPartitions, GraphPartition } from "@beep/ontology-domain/aggregates/Session";
 import { makeNamedNode, ObjectTerm, Subject } from "@beep/rdf/Rdf";
 import { OWL_CLASS, OWL_DATATYPE_PROPERTY, OWL_NAMESPACE, OWL_OBJECT_PROPERTY } from "@beep/rdf/Vocab/Owl";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
@@ -20,8 +16,10 @@ import { A, O, Str } from "@beep/utils";
 import { Effect, MutableHashMap, MutableHashSet, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import type { Session } from "@beep/ontology-domain/aggregates/Session";
+import { inferredSessionGraphPartitions } from "./Session.reasoner.js";
+import type { Session, SessionGraphPartitions } from "@beep/ontology-domain/aggregates/Session";
 import type { Quad } from "@beep/rdf/Rdf";
+import type { OntologyInferenceResult } from "./Session.reasoner.js";
 
 const { $OntologyUseCasesId } = makeIdentity("ontology-use-cases");
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.projections");
@@ -190,6 +188,10 @@ export class OntologyMetrics extends S.Class<OntologyMetrics>($I`OntologyMetrics
     individualCount: S.Int,
     tboxCount: S.Int,
     aboxCount: S.Int,
+    disjointnessViolationCount: S.Int.pipe(
+      S.withConstructorDefault(Effect.succeed(0)),
+      S.withDecodingDefaultKey(Effect.succeed(0))
+    ),
   },
   $I.annote("OntologyMetrics", {
     description: "Ontology workbench metrics computed from the authoring graph.",
@@ -364,7 +366,8 @@ const RDF_PROPERTY_IRI: string = RDF_PROPERTY.value;
 const OWL_ANNOTATION_PROPERTY_IRI: string = OWL_ANNOTATION_PROPERTY.value;
 const OWL_NAMED_INDIVIDUAL_IRI: string = OWL_NAMED_INDIVIDUAL.value;
 
-const AUTHORING_PARTITIONS: ReadonlyArray<GraphPartition> = ["asserted", "ontologies"];
+const ASSERTED_VIEW_PARTITIONS: ReadonlyArray<GraphPartition> = ["asserted", "ontologies"];
+const INFERRED_VIEW_PARTITIONS: ReadonlyArray<GraphPartition> = ["asserted", "ontologies", "inferred"];
 
 const sameIri = (left: string, right: string): boolean => left === right;
 
@@ -544,7 +547,11 @@ export const classifyOntologyResource = (kind: OntologyResourceKind): OntologyRe
     unknown: () => "abox",
   }) as OntologyResourceClassification;
 
-const metricsFor = (quads: ReadonlyArray<Quad>, resources: ReadonlyArray<OntologyResourceSummary>): OntologyMetrics =>
+const metricsFor = (
+  quads: ReadonlyArray<Quad>,
+  resources: ReadonlyArray<OntologyResourceSummary>,
+  disjointnessViolationCount = 0
+): OntologyMetrics =>
   OntologyMetrics.make({
     quadCount: quads.length,
     resourceCount: resources.length,
@@ -568,34 +575,24 @@ const metricsFor = (quads: ReadonlyArray<Quad>, resources: ReadonlyArray<Ontolog
       resources,
       A.filter((resource) => resource.classification === "abox")
     ).length,
+    disjointnessViolationCount,
   });
 
-/**
- * Build an ontology snapshot from the current authoring graph.
- *
- * @example
- * ```ts
- * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
- * import { buildOntologySnapshot } from "@beep/ontology-use-cases/aggregates/Session"
- * import { makeDataset } from "@beep/rdf/Rdf"
- * import * as S from "effect/Schema"
- *
- * const session = createSession(
- *   CreateSessionInput.make({
- *     id: S.decodeUnknownSync(SessionId)("session-1"),
- *     baseDataset: makeDataset([])
- *   })
- * )
- * const snapshot = buildOntologySnapshot(session)
- *
- * console.log(snapshot.metrics.quadCount)
- * ```
- *
- * @since 0.0.0
- * @category read-models
- */
-export const buildOntologySnapshot = (session: Session): OntologySnapshot => {
-  const partitions = deriveSessionGraphPartitions(session);
+type BuildOntologySnapshotOptions = {
+  readonly disjointnessViolationCount: number;
+  readonly includedPartitions: ReadonlyArray<GraphPartition>;
+};
+
+const defaultSnapshotOptions = (): BuildOntologySnapshotOptions => ({
+  disjointnessViolationCount: 0,
+  includedPartitions: ASSERTED_VIEW_PARTITIONS,
+});
+
+const buildOntologySnapshotFromPartitions = (
+  session: Session,
+  partitions: SessionGraphPartitions,
+  options: BuildOntologySnapshotOptions
+): OntologySnapshot => {
   const resources = MutableHashSet.empty<string>();
   const labels = MutableHashMap.empty<string, string>();
   const types = MutableHashMap.empty<string, ReadonlyArray<string>>();
@@ -608,15 +605,13 @@ export const buildOntologySnapshot = (session: Session): OntologySnapshot => {
   const individualIris = MutableHashSet.empty<string>();
 
   const quads = pipe(
-    AUTHORING_PARTITIONS,
+    options.includedPartitions,
     A.flatMap((partition) =>
-      isExcludedFromReasoning(partition)
-        ? []
-        : pipe(
-            partitions,
-            (current) => current[partition].quads,
-            A.map((quad) => ({ partition, quad }))
-          )
+      pipe(
+        partitions,
+        (current) => current[partition].quads,
+        A.map((quad) => ({ partition, quad }))
+      )
     )
   );
 
@@ -798,10 +793,84 @@ export const buildOntologySnapshot = (session: Session): OntologySnapshot => {
         quads,
         A.map(({ quad }) => quad)
       ),
-      resourceSummaries
+      resourceSummaries,
+      options.disjointnessViolationCount
     ),
   });
 };
+
+/**
+ * Build an ontology snapshot from the current authoring graph.
+ *
+ * @example
+ * ```ts
+ * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
+ * import { buildOntologySnapshot } from "@beep/ontology-use-cases/aggregates/Session"
+ * import { makeDataset } from "@beep/rdf/Rdf"
+ * import * as S from "effect/Schema"
+ *
+ * const session = createSession(
+ *   CreateSessionInput.make({
+ *     id: S.decodeUnknownSync(SessionId)("session-1"),
+ *     baseDataset: makeDataset([])
+ *   })
+ * )
+ * const snapshot = buildOntologySnapshot(session)
+ *
+ * console.log(snapshot.metrics.quadCount)
+ * ```
+ *
+ * @since 0.0.0
+ * @category read-models
+ */
+export const buildOntologySnapshot = (session: Session): OntologySnapshot =>
+  buildOntologySnapshotFromPartitions(session, deriveSessionGraphPartitions(session), defaultSnapshotOptions());
+
+/**
+ * Build an ontology snapshot that includes derived inferred graph quads.
+ *
+ * @example
+ * ```ts
+ * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
+ * import { buildOntologySnapshotWithInference, OntologyInferenceResult } from "@beep/ontology-use-cases/aggregates/Session"
+ * import { makeDataset } from "@beep/rdf/Rdf"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
+ *
+ * const session = createSession(
+ *   CreateSessionInput.make({
+ *     id: S.decodeUnknownSync(SessionId)("session-1"),
+ *     baseDataset: makeDataset([])
+ *   })
+ * )
+ * const inference = OntologyInferenceResult.make({
+ *   processedChangeCount: 0,
+ *   driftCap: NonNegativeInt.make(64),
+ *   drifted: false,
+ *   fullRecompute: true,
+ *   changedSignatures: [],
+ *   modules: [],
+ *   disjointnessViolations: [],
+ *   inferredDataset: makeDataset([])
+ * })
+ *
+ * console.log(buildOntologySnapshotWithInference(session, inference).metrics.disjointnessViolationCount)
+ * ```
+ *
+ * @since 0.0.0
+ * @category read-models
+ */
+export const buildOntologySnapshotWithInference: {
+  (inference: OntologyInferenceResult): (session: Session) => OntologySnapshot;
+  (session: Session, inference: OntologyInferenceResult): OntologySnapshot;
+} = dual(
+  2,
+  (session: Session, inference: OntologyInferenceResult): OntologySnapshot =>
+    buildOntologySnapshotFromPartitions(session, inferredSessionGraphPartitions(session, inference), {
+      disjointnessViolationCount: inference.disjointnessViolations.length,
+      includedPartitions: INFERRED_VIEW_PARTITIONS,
+    })
+);
 
 /**
  * Shared explorer/search view-mode predicate.

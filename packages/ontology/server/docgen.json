@@ -60,6 +60,7 @@
       "@beep/ontology-use-cases/aggregates/Session/server": [
         "../../../packages/ontology/use-cases/src/aggregates/Session/server.ts"
       ],
+      "@beep/oxigraph": ["../../../packages/drivers/oxigraph/src/index.ts"],
       "@beep/rdf-canonize": [
         "../../../packages/drivers/rdf-canonize/src/index.ts"
       ],

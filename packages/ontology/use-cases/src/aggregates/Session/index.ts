@@ -34,12 +34,26 @@ export * from "./Session.ports.js";
  */
 export * from "./Session.projections.js";
 /**
+ * Session structural inference exports.
+ *
+ * @category read-models
+ * @since 0.0.0
+ */
+export * from "./Session.reasoner.js";
+/**
  * Session RPC protocol exports.
  *
  * @category protocols
  * @since 0.0.0
  */
 export * from "./Session.rpc.js";
+/**
+ * Session SPARQL query exports.
+ *
+ * @category queries
+ * @since 0.0.0
+ */
+export * from "./Session.sparql.js";
 /**
  * Session public use-case contract exports.
  *

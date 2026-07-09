@@ -78,8 +78,8 @@
     {
       "id": "P4",
       "name": "SPARQL + Reasoning",
-      "status": "pending",
-      "exit": "drivers/oxigraph implements the @beep/semantic-web SPARQL contract; query panel executes SELECT/CONSTRUCT with safeguards UX; inferred-view toggle shows closure/type/disjointness signals under the invalidation discipline."
+      "status": "host-verification-required",
+      "exit": "drivers/oxigraph implements the @beep/semantic-web SPARQL contract; query panel executes SELECT/CONSTRUCT with safeguards UX; inferred-view toggle shows closure/type/disjointness signals under the invalidation discipline; local quality gates and node-backed Vitest proof passed, with host install/browser proof still required. Evidence: history/2026-07-09-p4-sparql-reasoning.md."
     },
     {
       "id": "P5",

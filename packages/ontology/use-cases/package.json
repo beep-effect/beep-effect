@@ -68,6 +68,7 @@
     "@beep/ontology-domain": "workspace:^",
     "@beep/rdf": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/semantic-web": "workspace:^",
     "effect": "catalog:"
   },
   "devDependencies": {

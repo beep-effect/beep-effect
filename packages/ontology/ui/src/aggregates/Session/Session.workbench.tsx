@@ -12,6 +12,7 @@ import {
   ApplyOntologyGraphGestureInput,
   applyOntologyBatchAtom,
   applyOntologyGraphGestureAtom,
+  applyOntologySparqlExampleAtom,
   OpenOntologyDocumentInput,
   ontologyDirtyAtom,
   ontologyFoldLevelAtom,
@@ -21,6 +22,9 @@ import {
   ontologyGraphProjectionAtom,
   ontologyGraphRenderBridgeAtom,
   ontologyGraphWorkerBridgeAtom,
+  ontologyInferenceErrorAtom,
+  ontologyInferenceResultAtom,
+  ontologyInferredViewAtom,
   ontologyPathAtom,
   ontologyPredicateSuggestionsAtom,
   ontologyRedoStackAtom,
@@ -29,58 +33,58 @@ import {
   ontologySessionAtom,
   ontologySnapshotAtom,
   ontologySourceAtom,
+  ontologySparqlErrorAtom,
+  ontologySparqlExamplesAtom,
+  ontologySparqlProfileAtom,
+  ontologySparqlQueryAtom,
+  ontologySparqlResultAtom,
   ontologyViewModeAtom,
   openOntologyDocumentAtom,
   previewOntologyTurtleAtom,
   redoOntologyChangeAtom,
+  runOntologySparqlAtom,
   SaveOntologyDocumentInput,
   saveOntologyDocumentAtom,
   selectedOntologyResourceAtom,
   selectedOntologyResourceIriAtom,
+  toggleOntologyInferredViewAtom,
   undoOntologyChangeAtom,
   visibleOntologyResourcesAtom,
 } from "@beep/ontology-client/aggregates/Session";
 import { ChangeOperation, SessionId } from "@beep/ontology-domain/aggregates/Session";
-import {
-  OntologyFilePath,
-  OntologyGraphGesture,
-  resourceVisibleInViewMode,
-} from "@beep/ontology-use-cases/aggregates/Session";
-import { makeLiteral, makeNamedNode, makeQuad, serializeTerm } from "@beep/rdf/Rdf";
+import { OntologyFilePath, OntologyGraphGesture } from "@beep/ontology-use-cases/aggregates/Session";
+import { makeLiteral, makeNamedNode, makeQuad, serializeQuad, serializeTerm } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { Badge } from "@beep/ui/components/badge";
 import { Button } from "@beep/ui/components/button";
 import { Input } from "@beep/ui/components/input";
 import { NativeSelect, NativeSelectOption } from "@beep/ui/components/native-select";
+import { Switch } from "@beep/ui/components/switch";
 import { Textarea } from "@beep/ui/components/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@beep/ui/components/tooltip";
-import { A, O, Str } from "@beep/utils";
+import { A, O, R, Str } from "@beep/utils";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { RichTreeView } from "@mui/x-tree-view/RichTreeView";
-import { MutableHashMap, MutableHashSet, pipe } from "effect";
+import { pipe } from "effect";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
+import { ontologyTreeItemsFor } from "./Session.tree.js";
 import type {
   OntologyFoldLevel,
+  OntologyInferenceResult,
   OntologyResourceSummary,
   OntologySnapshot,
+  OntologySparqlPanelProfile,
   OntologyViewMode,
+  RunOntologySparqlResult,
 } from "@beep/ontology-use-cases/aggregates/Session";
-import type { ChangeEvent, JSX } from "react";
+import type { ChangeEvent, JSX, KeyboardEvent } from "react";
 
 const openPathInputAtom = Atom.make("tmp/ontology-workbench/pizza-tutorial.ttl");
 const subjectInputAtom = Atom.make("https://example.org/pizza#Pizza");
 const predicateInputAtom = Atom.make("http://www.w3.org/2000/01/rdf-schema#label");
 const objectInputAtom = Atom.make("Pizza");
 const objectKindAtom = Atom.make<"iri" | "literal">("literal");
-
-const emptyStrings: () => ReadonlyArray<string> = A.empty;
-
-type TreeItem = {
-  readonly id: string;
-  readonly label: string;
-  readonly children?: ReadonlyArray<TreeItem>;
-};
 
 const sourceViewerState = S.decodeUnknownSync(SerializedEditorState)({
   root: {
@@ -111,35 +115,6 @@ const sessionIdFromPath = (path: OntologyFilePath): SessionId => SessionId.fromU
 const valueFromEvent = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>): string =>
   event.target.value;
 
-const treeItemsFor = (snapshot: OntologySnapshot, mode: OntologyViewMode): ReadonlyArray<TreeItem> => {
-  const visible = A.filter(snapshot.resources, (resource) => resourceVisibleInViewMode(resource, mode));
-  const visibleIds = MutableHashSet.fromIterable(A.map(visible, (resource) => resource.iri));
-  const resourcesByIri = MutableHashMap.fromIterable(A.map(visible, (resource) => [resource.iri, resource] as const));
-  const childrenByIri = MutableHashMap.fromIterable(
-    A.map(snapshot.hierarchy, (entry) => [entry.iri, entry.childIris] as const)
-  );
-
-  const toItem = (resource: OntologyResourceSummary): TreeItem => {
-    const children = pipe(
-      MutableHashMap.get(childrenByIri, resource.iri),
-      O.getOrElse(emptyStrings),
-      A.filter((childIri) => MutableHashSet.has(visibleIds, childIri))
-    );
-    const childItems = A.flatMap(children, (childIri) =>
-      pipe(MutableHashMap.get(resourcesByIri, childIri), O.map(toItem), O.toArray)
-    );
-    return childItems.length === 0
-      ? { id: resource.iri, label: resource.label }
-      : { id: resource.iri, label: resource.label, children: childItems };
-  };
-
-  return pipe(
-    visible,
-    A.filter((resource) => !A.some(resource.parentIris, (parentIri) => MutableHashSet.has(visibleIds, parentIri))),
-    A.map(toItem)
-  );
-};
-
 const statItems = (snapshot: OntologySnapshot) =>
   [
     ["Quads", snapshot.metrics.quadCount],
@@ -149,6 +124,7 @@ const statItems = (snapshot: OntologySnapshot) =>
     ["Individuals", snapshot.metrics.individualCount],
     ["TBox", snapshot.metrics.tboxCount],
     ["ABox", snapshot.metrics.aboxCount],
+    ["Disjoint", snapshot.metrics.disjointnessViolationCount],
   ] as const;
 
 const resourceBadgeVariant = (resource: OntologyResourceSummary): "default" | "secondary" =>
@@ -159,6 +135,89 @@ const changeTargetLabel = (change: ChangeOperation): string =>
     addQuad: ({ quad }) => `${serializeTerm(quad.subject)} ${serializeTerm(quad.predicate)}`,
     removeQuad: ({ quad }) => `${serializeTerm(quad.subject)} ${serializeTerm(quad.predicate)}`,
   });
+
+const sparqlResultPreview = (result: RunOntologySparqlResult): JSX.Element => {
+  if (result.result.profile === "select") {
+    return (
+      <div className="space-y-2">
+        {result.result.rows.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No rows.</p>
+        ) : (
+          A.map(A.take(result.result.rows, 8), (row, index) => (
+            <div key={index} className="rounded-md border p-2 font-mono text-[11px]">
+              {A.map(R.toEntries(row), ([name, term]) => (
+                <div key={name} className="grid grid-cols-[70px_minmax(0,1fr)] gap-2">
+                  <span className="text-muted-foreground">?{name}</span>
+                  <span className="break-all">{serializeTerm(term)}</span>
+                </div>
+              ))}
+            </div>
+          ))
+        )}
+      </div>
+    );
+  }
+
+  if (result.result.profile === "construct") {
+    return (
+      <div className="space-y-2">
+        {result.result.dataset.quads.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No quads.</p>
+        ) : (
+          A.map(A.take(result.result.dataset.quads, 8), (quad, index) => (
+            <div key={`${index}-${serializeQuad(quad)}`} className="rounded-md border p-2 font-mono text-[11px]">
+              {serializeQuad(quad)}
+            </div>
+          ))
+        )}
+      </div>
+    );
+  }
+
+  return <p className="text-sm text-muted-foreground">Unsupported result.</p>;
+};
+
+const noSparqlResult = (): JSX.Element => <p className="text-sm text-muted-foreground">No query result.</p>;
+
+const sparqlErrorView = (error: string): JSX.Element => <p className="text-sm text-destructive">{error}</p>;
+
+const sparqlResultView = (result: RunOntologySparqlResult): JSX.Element => (
+  <div className="space-y-2">
+    <div className="flex flex-wrap gap-1">
+      <Badge variant="outline">LIMIT {result.effectiveLimit}</Badge>
+      {result.limitInjected ? <Badge variant="secondary">injected</Badge> : null}
+      {result.truncated ? <Badge variant="destructive">truncated</Badge> : null}
+    </div>
+    {sparqlResultPreview(result)}
+  </div>
+);
+
+const sparqlResultPanel = (error: O.Option<string>, result: O.Option<RunOntologySparqlResult>): JSX.Element =>
+  pipe(
+    error,
+    O.map(sparqlErrorView),
+    O.getOrElse(() => pipe(result, O.map(sparqlResultView), O.getOrElse(noSparqlResult)))
+  );
+
+const noInferenceResult = (): JSX.Element => <p className="text-muted-foreground">No inferred graph.</p>;
+
+const inferenceErrorView = (error: string): JSX.Element => <p className="text-destructive">{error}</p>;
+
+const inferenceResultView = (result: OntologyInferenceResult): JSX.Element => (
+  <div className="grid grid-cols-2 gap-x-3 gap-y-1 font-mono">
+    <span>quads {result.inferredDataset.quads.length}</span>
+    <span>drift {result.drifted ? "full" : "ok"}</span>
+    <span>changes {result.processedChangeCount}</span>
+    <span>violations {result.disjointnessViolations.length}</span>
+  </div>
+);
+
+const inferenceResultPanel = (error: O.Option<string>, result: O.Option<OntologyInferenceResult>): JSX.Element =>
+  pipe(
+    error,
+    O.map(inferenceErrorView),
+    O.getOrElse(() => pipe(result, O.map(inferenceResultView), O.getOrElse(noInferenceResult)))
+  );
 
 /**
  * Ontology explorer/editor workbench screen.
@@ -185,9 +244,17 @@ export function OntologyWorkbench(): JSX.Element {
   const session = useAtomValue(ontologySessionAtom);
   const mode = useAtomValue(ontologyViewModeAtom);
   const foldLevel = useAtomValue(ontologyFoldLevelAtom);
+  const inferredView = useAtomValue(ontologyInferredViewAtom);
+  const inferenceResult = useAtomValue(ontologyInferenceResultAtom);
+  const inferenceError = useAtomValue(ontologyInferenceErrorAtom);
   const searchQuery = useAtomValue(ontologySearchQueryAtom);
   const searchResults = useAtomValue(ontologySearchResultsAtom);
   const predicateSuggestions = useAtomValue(ontologyPredicateSuggestionsAtom);
+  const sparqlProfile = useAtomValue(ontologySparqlProfileAtom);
+  const sparqlQuery = useAtomValue(ontologySparqlQueryAtom);
+  const sparqlExamples = useAtomValue(ontologySparqlExamplesAtom);
+  const sparqlResult = useAtomValue(ontologySparqlResultAtom);
+  const sparqlError = useAtomValue(ontologySparqlErrorAtom);
   const selected = useAtomValue(selectedOntologyResourceAtom);
   const selectedIri = useAtomValue(selectedOntologyResourceIriAtom);
   const visibleResources = useAtomValue(visibleOntologyResourcesAtom);
@@ -199,7 +266,10 @@ export function OntologyWorkbench(): JSX.Element {
   const setPathInput = useAtomSet(openPathInputAtom);
   const setMode = useAtomSet(ontologyViewModeAtom);
   const setFoldLevel = useAtomSet(ontologyFoldLevelAtom);
+  const toggleInferredView = useAtomSet(toggleOntologyInferredViewAtom);
   const setSearchQuery = useAtomSet(ontologySearchQueryAtom);
+  const setSparqlProfile = useAtomSet(ontologySparqlProfileAtom);
+  const setSparqlQuery = useAtomSet(ontologySparqlQueryAtom);
   const setSelectedIri = useAtomSet(selectedOntologyResourceIriAtom);
   const setGraphContainer = useAtomSet(ontologyGraphContainerAtom);
   const setSubject = useAtomSet(subjectInputAtom);
@@ -211,14 +281,17 @@ export function OntologyWorkbench(): JSX.Element {
   const previewTurtle = useAtomSet(previewOntologyTurtleAtom);
   const applyBatch = useAtomSet(applyOntologyBatchAtom);
   const applyGraphGesture = useAtomSet(applyOntologyGraphGestureAtom);
+  const applySparqlExample = useAtomSet(applyOntologySparqlExampleAtom);
+  const runSparql = useAtomSet(runOntologySparqlAtom);
   const undoChange = useAtomSet(undoOntologyChangeAtom);
   const redoChange = useAtomSet(redoOntologyChangeAtom);
   useAtomValue(ontologyGraphWorkerBridgeAtom);
   useAtomValue(ontologyGraphRenderBridgeAtom);
-  const treeItems = treeItemsFor(snapshot, mode);
+  const treeItems = ontologyTreeItemsFor(snapshot, mode);
   const canApplyTriple =
     Str.isNonEmpty(Str.trim(subject)) && Str.isNonEmpty(Str.trim(predicate)) && Str.isNonEmpty(Str.trim(object));
   const canApplyGraphGesture = canApplyTriple && objectKind === "iri";
+  const canRunSparql = O.isSome(session) && Str.isNonEmpty(Str.trim(sparqlQuery));
   const canUndo = O.match(session, { onNone: () => false, onSome: (openSession) => openSession.changeLog.length > 0 });
   const canRedo = redoStack.length > 0;
   const changeLog = O.match(session, {
@@ -350,6 +423,21 @@ export function OntologyWorkbench(): JSX.Element {
     );
   };
 
+  const runSparqlFromKeyboard = (event: KeyboardEvent<HTMLTextAreaElement>): void => {
+    if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+      event.preventDefault();
+      if (canRunSparql) {
+        runSparql(undefined);
+      }
+    }
+  };
+
+  const selectSparqlExample = (exampleId: string): void => {
+    if (Str.isNonEmpty(exampleId)) {
+      applySparqlExample(exampleId);
+    }
+  };
+
   const graphContainerRef = (element: HTMLDivElement | null): void => {
     setGraphContainer(O.fromNullishOr(element));
   };
@@ -432,6 +520,16 @@ export function OntologyWorkbench(): JSX.Element {
             <NativeSelectOption value="L2">L2</NativeSelectOption>
             <NativeSelectOption value="L3">L3</NativeSelectOption>
           </NativeSelect>
+          <div className="flex items-center gap-2 rounded-md border px-2 py-1">
+            <Switch
+              aria-label="Toggle inferred view"
+              size="sm"
+              checked={inferredView}
+              disabled={O.isNone(session)}
+              onCheckedChange={(checked) => toggleInferredView(checked)}
+            />
+            <span className="text-xs">Inferred</span>
+          </div>
           <Badge variant={dirty ? "destructive" : "secondary"}>{dirty ? "Dirty" : "Saved"}</Badge>
         </div>
 
@@ -609,6 +707,67 @@ export function OntologyWorkbench(): JSX.Element {
 
             <section className="border-b p-3">
               <div className="mb-2 flex items-center justify-between">
+                <h2 className="text-sm font-semibold">SPARQL</h2>
+                <Badge variant={inferredView ? "secondary" : "outline"}>{inferredView ? "inferred" : "asserted"}</Badge>
+              </div>
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <NativeSelect
+                    aria-label="SPARQL profile"
+                    value={sparqlProfile}
+                    onChange={(event) => setSparqlProfile(valueFromEvent(event) as OntologySparqlPanelProfile)}
+                  >
+                    <NativeSelectOption value="select">SELECT</NativeSelectOption>
+                    <NativeSelectOption value="construct">CONSTRUCT</NativeSelectOption>
+                  </NativeSelect>
+                  <NativeSelect
+                    aria-label="SPARQL examples"
+                    value=""
+                    onChange={(event) => selectSparqlExample(valueFromEvent(event))}
+                  >
+                    <NativeSelectOption value="">Examples</NativeSelectOption>
+                    {A.map(sparqlExamples, (example) => (
+                      <NativeSelectOption key={example.id} value={example.id}>
+                        {example.label}
+                      </NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                </div>
+                <Textarea
+                  aria-label="SPARQL query"
+                  className="h-40 resize-none font-mono text-xs leading-5"
+                  value={sparqlQuery}
+                  onChange={(event) => setSparqlQuery(valueFromEvent(event))}
+                  onKeyDown={runSparqlFromKeyboard}
+                />
+                <Button
+                  className="w-full"
+                  size="sm"
+                  type="button"
+                  disabled={!canRunSparql}
+                  onClick={() => runSparql(undefined)}
+                >
+                  Run
+                </Button>
+                <div className="rounded-md border p-2 text-xs">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="font-medium">Result</span>
+                    {O.match(sparqlResult, {
+                      onNone: () => <Badge variant="outline">empty</Badge>,
+                      onSome: (result) => (
+                        <Badge variant={result.truncated ? "destructive" : "secondary"}>
+                          {result.displayedResultCount}/{result.rawResultCount}
+                        </Badge>
+                      ),
+                    })}
+                  </div>
+                  {sparqlResultPanel(sparqlError, sparqlResult)}
+                </div>
+              </div>
+            </section>
+
+            <section className="border-b p-3">
+              <div className="mb-2 flex items-center justify-between">
                 <h2 className="text-sm font-semibold">Change Log</h2>
                 <Badge variant="outline">
                   {undoPosition}/{totalChangeCount}
@@ -637,6 +796,13 @@ export function OntologyWorkbench(): JSX.Element {
 
             <section className="min-h-0 flex-1 overflow-auto p-3">
               <h2 className="mb-2 text-sm font-semibold">Worker Metrics</h2>
+              <div className="mb-3 rounded-md border p-2 text-xs">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="font-medium">Inference</span>
+                  <Badge variant={inferredView ? "secondary" : "outline"}>{inferredView ? "on" : "off"}</Badge>
+                </div>
+                {inferenceResultPanel(inferenceError, inferenceResult)}
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 {A.map(statItems(snapshot), ([label, value]) => (
                   <div key={label} className="rounded-md border p-2">

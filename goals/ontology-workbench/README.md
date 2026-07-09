@@ -35,9 +35,9 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Visualizer - local integration is complete on the cosmos path. Host
-re-verification is pending for the folded 100k webkitgtk interactive proof via
-the spike contract.
+P4 SPARQL + Reasoning - local integration is complete. Host verification is
+pending for install metadata refresh plus running browser/Tauri SPARQL and
+inferred-view proof.
 
 ## Latest Evidence
 
@@ -61,6 +61,11 @@ the spike contract.
   viewport integration, halo gesture change-op wiring, worker-backed folded
   spike contract, local proof results, and host webkitgtk re-proof commands
   recorded.
+- P4 SPARQL + Reasoning evidence:
+  [`history/2026-07-09-p4-sparql-reasoning.md`](./history/2026-07-09-p4-sparql-reasoning.md)
+  - Oxigraph driver, structural inference, SPARQL runner, inferred graph
+  projection, query/result UI, desktop RPC wiring, full local gate sweep,
+  node-backed Vitest proof, and host-side follow-up commands recorded.
 
 ## Notes
 

@@ -8,12 +8,15 @@
 import { N3ParseTurtleRequest, N3SerializeTurtleRequest, N3TurtleCodec, N3TurtleCodecLive } from "@beep/n3";
 import {
   OntologyFileStore,
+  OntologyReasonerLive,
+  OntologySparqlRunnerLive,
   ParseTurtleResult,
   SerializeTurtleResult,
   SessionUseCasesLayer,
   TurtleCodec,
   TurtleCodecError,
 } from "@beep/ontology-use-cases/aggregates/Session";
+import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import { Effect, Layer } from "effect";
 import { makeFileSystemOntologyFileStore } from "./Session.file-store.js";
 import type { N3TurtleCodecError } from "@beep/n3";
@@ -81,6 +84,36 @@ export const TurtleCodecLayer = Layer.effect(TurtleCodec, makeTurtleCodec()).pip
 export const OntologyFileStoreLayer = Layer.effect(OntologyFileStore, makeFileSystemOntologyFileStore());
 
 /**
+ * Domain-native ontology reasoner port layer.
+ *
+ * @example
+ * ```ts
+ * import { OntologyReasonerLayer } from "@beep/ontology-server/aggregates/Session"
+ *
+ * console.log(OntologyReasonerLayer)
+ * ```
+ *
+ * @since 0.0.0
+ * @category layers
+ */
+export const OntologyReasonerLayer = OntologyReasonerLive;
+
+/**
+ * Oxigraph-backed SPARQL runner port layer.
+ *
+ * @example
+ * ```ts
+ * import { OntologySparqlRunnerLayer } from "@beep/ontology-server/aggregates/Session"
+ *
+ * console.log(OntologySparqlRunnerLayer)
+ * ```
+ *
+ * @since 0.0.0
+ * @category layers
+ */
+export const OntologySparqlRunnerLayer = OntologySparqlRunnerLive.pipe(Layer.provide(OxigraphSparqlQueryServiceLive));
+
+/**
  * Live session server layer for the P1 ontology foundation.
  *
  * @example
@@ -95,5 +128,7 @@ export const OntologyFileStoreLayer = Layer.effect(OntologyFileStore, makeFileSy
  */
 export const SessionServerLayer = SessionUseCasesLayer.pipe(
   Layer.provideMerge(TurtleCodecLayer),
-  Layer.provideMerge(OntologyFileStoreLayer)
+  Layer.provideMerge(OntologyFileStoreLayer),
+  Layer.merge(OntologyReasonerLayer),
+  Layer.merge(OntologySparqlRunnerLayer)
 );
