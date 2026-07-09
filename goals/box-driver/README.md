@@ -2,7 +2,16 @@
 
 ## Status
 
-Pending implementation. Packet authored on 2026-06-04.
+Partially implemented; status was stale. Packet authored on 2026-06-04 as
+"pending implementation", but as of 2026-07-08 `packages/drivers/box/src`
+already ships a substantial surface: `Box.service.ts`, `Box.streaming.ts`,
+generated operations/models (`_generated/Box.operations.gen.ts`,
+`Box.models.gen.ts`), upload sessions
+(`experimental/domain/entities/UploadSession`), folder operations, events, and
+webhooks. Reconcile the remaining packet phases against actual source before
+executing this packet (drift found during the
+[`legal-document-intake`](../legal-document-intake/README.md) exploration,
+which consumes this driver's write surface in its Box-sync phase).
 
 ## Mission
 
