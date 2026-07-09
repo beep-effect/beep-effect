@@ -18,9 +18,14 @@ describe("db-admin migration targets", () => {
     expect(ArchitectureLabMigrationTarget.tables).toContain("architecture_lab_worker");
   });
 
-  it("registers the workspace Thread, Turn, and Message tables", () => {
+  it("registers the workspace Workspace, Thread, Turn, and Message tables", () => {
     expect(DbAdminMigrationTargets).toContain(WorkspaceThreadMigrationTarget);
-    expect(WorkspaceThreadMigrationTarget.tables).toEqual(["workspace_thread", "workspace_turn", "workspace_message"]);
+    expect(WorkspaceThreadMigrationTarget.tables).toEqual([
+      "workspace_workspace",
+      "workspace_thread",
+      "workspace_turn",
+      "workspace_message",
+    ]);
   });
 
   it("preserves encoded migration target wire shapes", () => {
@@ -35,7 +40,7 @@ describe("db-admin migration targets", () => {
       drizzleSchema: WorkspaceThreadMigrationTarget.drizzleSchema,
       name: "workspace-thread",
       schemaName: "workspace",
-      tables: ["workspace_thread", "workspace_turn", "workspace_message"],
+      tables: ["workspace_workspace", "workspace_thread", "workspace_turn", "workspace_message"],
     });
   });
 

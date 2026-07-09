@@ -15,9 +15,12 @@ import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client
 import { Toaster } from "@beep/ui/components/sonner";
 import { useAtomMount, useAtomValue } from "@effect/atom-react";
 import { Cause, Effect } from "effect";
+import * as O from "effect/Option";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
+import { DocumentIntakeTarget } from "./intake/DocumentIntakeTarget.tsx";
+import { makeDesktopHttpProtocolLive } from "./transport/DesktopHttpProtocol.ts";
 import { IpcChatProtocolLive } from "./transport/IpcChatClient.ts";
 import { IpcSpikePanel } from "./transport/IpcSpikePanel.tsx";
 import { SidecarTransport } from "./transport/SidecarTransport.ts";
@@ -52,7 +55,15 @@ const protocolLayerBindingAtom = Atom.make((get) => {
   const apply = (): void => {
     const result = get.once(sidecarTransportAtom);
     if (AsyncResult.isSuccess(result)) {
-      get.set(chatProtocolLayerAtom, result.value.ipc ? IpcChatProtocolLive : HttpChatProtocolLive);
+      get.set(
+        chatProtocolLayerAtom,
+        result.value.ipc
+          ? IpcChatProtocolLive
+          : O.match(O.fromUndefinedOr(result.value.rpcSessionToken), {
+              onNone: () => HttpChatProtocolLive,
+              onSome: makeDesktopHttpProtocolLive,
+            })
+      );
     }
   };
   apply();
@@ -112,7 +123,9 @@ export function App(): JSX.Element {
     ),
     onSuccess: (success) => (
       <>
-        <ChatApp />
+        <DocumentIntakeTarget>
+          <ChatApp />
+        </DocumentIntakeTarget>
         <ChatTurnErrorToasts />
         <Toaster richColors />
         {success.value.ipc && hasIpcSpikeFlag() ? <IpcSpikePanel /> : null}

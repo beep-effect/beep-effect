@@ -366,3 +366,4 @@ Retargets
 retargeted
 Unredacted
 PRRC
+slugifies

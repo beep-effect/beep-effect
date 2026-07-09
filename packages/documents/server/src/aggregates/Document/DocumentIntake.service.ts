@@ -1,0 +1,130 @@
+/**
+ * Document intake server service.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { Document, DocumentContentDigest } from "@beep/documents-domain/aggregates/Document";
+import {
+  legalDocumentTaxonomy,
+  ProjectFiledDocumentPathInput,
+  projectFiledDocumentPath,
+} from "@beep/documents-domain/values/Taxonomy";
+import * as DocumentUseCases from "@beep/documents-use-cases/server";
+import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
+import { $DocumentsServerId } from "@beep/identity/packages";
+import { sha256 } from "@noble/hashes/sha2.js";
+import { bytesToHex } from "@noble/hashes/utils.js";
+import { Effect, FileSystem, Layer, Path, pipe } from "effect";
+import * as S from "effect/Schema";
+import { FilingDecisionHeuristicLayer } from "./FilingDecisionHeuristic.js";
+
+const $I = $DocumentsServerId.create("aggregates/Document/DocumentIntake.service");
+
+const DocumentIntake = DocumentUseCases.Document.DocumentIntake;
+const FilingDecision = DocumentUseCases.Document.FilingDecision;
+
+const materializationFailed = (reason: string) =>
+  DocumentUseCases.Document.DocumentMaterializationFailed.make({ reason });
+
+const isDocumentMaterializationFailed = S.is(DocumentUseCases.Document.DocumentMaterializationFailed);
+
+const toMaterializationFailed = (error: unknown): DocumentUseCases.Document.DocumentMaterializationFailed =>
+  isDocumentMaterializationFailed(error) ? error : materializationFailed(String(error));
+
+const contentDigest = (bytes: Uint8Array): DocumentContentDigest =>
+  DocumentContentDigest.make(bytesToHex(sha256(bytes)));
+
+const resolveVaultPath = (
+  fs: FileSystem.FileSystem,
+  path: Path.Path,
+  vaultRootPath: string,
+  relativePath: string
+): Effect.Effect<string, DocumentUseCases.Document.DocumentMaterializationFailed> =>
+  resolvePathWithinRoot({ root: vaultRootPath, candidate: relativePath }).pipe(
+    Effect.provideService(FileSystem.FileSystem, fs),
+    Effect.provideService(Path.Path, path),
+    Effect.mapError((error) => materializationFailed(error.message))
+  );
+
+const materializeAtomically = (
+  fs: FileSystem.FileSystem,
+  path: Path.Path,
+  vaultRootPath: string,
+  relativeSegments: ReadonlyArray<string>,
+  bytes: Uint8Array,
+  digest: DocumentContentDigest
+): Effect.Effect<string, DocumentUseCases.Document.DocumentMaterializationFailed> =>
+  Effect.gen(function* () {
+    const relativePath = path.join(...relativeSegments);
+    const targetPath = yield* resolveVaultPath(fs, path, vaultRootPath, relativePath);
+    const targetDir = path.dirname(targetPath);
+    yield* fs.makeDirectory(targetDir, { recursive: true });
+    const checkedTargetPath = yield* resolveVaultPath(fs, path, vaultRootPath, relativePath);
+    const checkedTargetDir = path.dirname(checkedTargetPath);
+    const tempPath = path.join(checkedTargetDir, `.${path.basename(checkedTargetPath)}.tmp-${digest.slice(0, 12)}`);
+    yield* fs.writeFile(tempPath, bytes);
+    yield* fs
+      .rename(tempPath, checkedTargetPath)
+      .pipe(Effect.tapError(() => fs.remove(tempPath, { force: true }).pipe(Effect.ignore)));
+    return checkedTargetPath;
+  }).pipe(Effect.mapError(toMaterializationFailed));
+
+/**
+ * Builds the document intake service from filesystem, path, and filing-decision dependencies.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const makeDocumentIntake = Effect.fn($I`makeDocumentIntake`)(function* () {
+  const filingDecision = yield* FilingDecision;
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+
+  return DocumentIntake.of({
+    intakeDroppedFile: Effect.fn($I`intakeDroppedFile`)(function* (input) {
+      const digest = contentDigest(input.content);
+      const decision = yield* filingDecision.decide({
+        contentDigest: digest,
+        originalFileName: input.originalFileName,
+      });
+      const vaultPath = yield* projectFiledDocumentPath(
+        ProjectFiledDocumentPathInput.make({
+          contentDigest: digest,
+          context: input.filingContext,
+          originalFileName: input.originalFileName,
+          taxonomy: legalDocumentTaxonomy,
+          taxonomyConceptId: decision.taxonomyConceptId,
+        })
+      ).pipe(
+        Effect.mapError((error) =>
+          DocumentUseCases.Document.DocumentMaterializationFailed.make({ reason: error.reason })
+        )
+      );
+      yield* materializeAtomically(fs, path, input.vaultRootPath, vaultPath.segments, input.content, digest);
+      return Document.make({
+        contentDigest: digest,
+        originalFileName: input.originalFileName,
+        taxonomyConceptId: decision.taxonomyConceptId,
+        vaultPath,
+      });
+    }),
+  });
+});
+
+/**
+ * Layer providing the document intake service.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const DocumentIntakeLayer = Layer.effect(DocumentIntake, makeDocumentIntake());
+
+/**
+ * Documents server layer with deterministic P1 filing decisions.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const DocumentsServerLayer = pipe(DocumentIntakeLayer, Layer.provide(FilingDecisionHeuristicLayer));

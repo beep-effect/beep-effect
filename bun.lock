@@ -117,6 +117,9 @@
         "@beep/agents-domain": "workspace:^",
         "@beep/agents-server": "workspace:^",
         "@beep/agents-use-cases": "workspace:^",
+        "@beep/documents-domain": "workspace:^",
+        "@beep/documents-server": "workspace:^",
+        "@beep/documents-use-cases": "workspace:^",
         "@beep/editor": "workspace:^",
         "@beep/epistemic-domain": "workspace:^",
         "@beep/epistemic-tables": "workspace:^",
@@ -412,6 +415,59 @@
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+      },
+    },
+    "packages/documents/domain": {
+      "name": "@beep/documents-domain",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/rdf": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
+    "packages/documents/server": {
+      "name": "@beep/documents-server",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/documents-domain": "workspace:^",
+        "@beep/documents-use-cases": "workspace:^",
+        "@beep/file-processing": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "@noble/hashes": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-utils": "workspace:^",
+        "@effect/platform-bun": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
+    "packages/documents/use-cases": {
+      "name": "@beep/documents-use-cases",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/documents-domain": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/drivers/acp": {
@@ -1881,6 +1937,7 @@
       },
       "devDependencies": {
         "@beep/test-utils": "workspace:^",
+        "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
       },
@@ -2346,6 +2403,12 @@
     "@beep/db-admin": ["@beep/db-admin@workspace:packages/_internal/db-admin"],
 
     "@beep/discord": ["@beep/discord@workspace:packages/drivers/discord"],
+
+    "@beep/documents-domain": ["@beep/documents-domain@workspace:packages/documents/domain"],
+
+    "@beep/documents-server": ["@beep/documents-server@workspace:packages/documents/server"],
+
+    "@beep/documents-use-cases": ["@beep/documents-use-cases@workspace:packages/documents/use-cases"],
 
     "@beep/dol": ["@beep/dol@workspace:packages/drivers/dol"],
 

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-08",
+  "generatedOn": "2026-07-09",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
@@ -91,6 +91,22 @@
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/architecture-lab-use-cases",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Document/DocumentIntake.ts",
+      "symbol": "DocumentIntakeShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/documents-use-cases",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Document/FilingDecision.ts",
+      "symbol": "FilingDecisionShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/documents-use-cases",
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
@@ -2148,6 +2164,14 @@
     {
       "file": "packages/workspace/use-cases/src/aggregates/Thread/ThreadStore.ts",
       "symbol": "ThreadStoreShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/workspace-use-cases",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/workspace/use-cases/src/aggregates/Workspace/WorkspaceVault.ts",
+      "symbol": "WorkspaceVaultStoreShape",
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/workspace-use-cases",

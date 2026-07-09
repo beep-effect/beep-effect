@@ -150,6 +150,24 @@
         ]
       },
       {
+        "name": "@beep/documents-domain",
+        "patterns": [
+          "packages/documents/domain/src/**"
+        ]
+      },
+      {
+        "name": "@beep/documents-server",
+        "patterns": [
+          "packages/documents/server/src/**"
+        ]
+      },
+      {
+        "name": "@beep/documents-use-cases",
+        "patterns": [
+          "packages/documents/use-cases/src/**"
+        ]
+      },
+      {
         "name": "@beep/dol",
         "patterns": [
           "packages/drivers/dol/src/**"
@@ -1032,6 +1050,63 @@
         ]
       },
       {
+        "from": "@beep/documents-domain",
+        "allow": [
+          "@beep/documents-domain",
+          "@beep/identity",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/shared-domain",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/documents-domain",
+          "@beep/identity",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/shared-domain",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/documents-server",
+        "allow": [
+          "@beep/documents-domain",
+          "@beep/documents-server",
+          "@beep/documents-use-cases",
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/documents-domain",
+          "@beep/documents-server",
+          "@beep/documents-use-cases",
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/documents-use-cases",
+        "allow": [
+          "@beep/documents-domain",
+          "@beep/documents-use-cases",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/shared-domain"
+        ],
+        "allowTypeOnly": [
+          "@beep/documents-domain",
+          "@beep/documents-use-cases",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/shared-domain"
+        ]
+      },
+      {
         "from": "@beep/dol",
         "allow": [
           "@beep/dol"
@@ -1827,6 +1902,9 @@
           "@beep/agents-domain",
           "@beep/agents-server",
           "@beep/agents-use-cases",
+          "@beep/documents-domain",
+          "@beep/documents-server",
+          "@beep/documents-use-cases",
           "@beep/editor",
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
@@ -1849,6 +1927,9 @@
           "@beep/agents-domain",
           "@beep/agents-server",
           "@beep/agents-use-cases",
+          "@beep/documents-domain",
+          "@beep/documents-server",
+          "@beep/documents-use-cases",
           "@beep/editor",
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",

@@ -72,6 +72,9 @@ const generatedComposers = $I.compose(
   "law-practice-domain",
   "law-practice-use-cases",
   "law-practice-server",
+  "documents-domain",
+  "documents-use-cases",
+  "documents-server",
   "professional-desktop",
   "workspace-domain",
 
@@ -968,6 +971,55 @@ export const $WorkspaceUseCasesId: Identity.IdentityComposer<"@beep/workspace-us
  * @category configuration
  */
 export const $WorkspaceServerId: Identity.IdentityComposer<"@beep/workspace-server"> = composers.$WorkspaceServerId;
+
+/**
+ * Identity composer for `@beep/documents-domain`.
+ *
+ * @example
+ * ```ts
+ * import { $DocumentsDomainId } from "@beep/identity"
+ *
+ * const id = $DocumentsDomainId.make("LegalDocumentTaxonomy")
+ * console.log(id)
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $DocumentsDomainId: Identity.IdentityComposer<"@beep/documents-domain"> = composers.$DocumentsDomainId;
+
+/**
+ * Identity composer for `@beep/documents-use-cases`.
+ *
+ * @example
+ * ```ts
+ * import { $DocumentsUseCasesId } from "@beep/identity"
+ *
+ * const id = $DocumentsUseCasesId.make("FilingDecision")
+ * console.log(id)
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $DocumentsUseCasesId: Identity.IdentityComposer<"@beep/documents-use-cases"> =
+  composers.$DocumentsUseCasesId;
+
+/**
+ * Identity composer for `@beep/documents-server`.
+ *
+ * @example
+ * ```ts
+ * import { $DocumentsServerId } from "@beep/identity"
+ *
+ * const id = $DocumentsServerId.make("DocumentsServerLive")
+ * console.log(id)
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $DocumentsServerId: Identity.IdentityComposer<"@beep/documents-server"> = composers.$DocumentsServerId;
 
 /**
  * Identity composer for `@beep/architecture-lab-domain`.

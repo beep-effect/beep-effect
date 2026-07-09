@@ -1364,6 +1364,47 @@
       "@beep/fc-runs/*": ["./packages/tooling/test-kit/fc-runs/src/*"],
       "@beep/shared-domain/entity/PublicEntityId": [
         "./packages/shared/domain/src/entity/PublicEntityId.ts"
+      ],
+      "@beep/documents-domain": ["./packages/documents/domain/src/index.ts"],
+      "@beep/documents-domain/aggregates": [
+        "./packages/documents/domain/src/aggregates/index.ts"
+      ],
+      "@beep/documents-domain/entities": [
+        "./packages/documents/domain/src/entities/index.ts"
+      ],
+      "@beep/documents-domain/identity": [
+        "./packages/documents/domain/src/identity/index.ts"
+      ],
+      "@beep/documents-domain/values": [
+        "./packages/documents/domain/src/values/index.ts"
+      ],
+      "@beep/documents-server": ["./packages/documents/server/src/index.ts"],
+      "@beep/documents-server/layer": [
+        "./packages/documents/server/src/Layer.ts"
+      ],
+      "@beep/documents-server/test": [
+        "./packages/documents/server/src/test.ts"
+      ],
+      "@beep/documents-use-cases": [
+        "./packages/documents/use-cases/src/index.ts"
+      ],
+      "@beep/documents-use-cases/public": [
+        "./packages/documents/use-cases/src/public.ts"
+      ],
+      "@beep/documents-use-cases/server": [
+        "./packages/documents/use-cases/src/server.ts"
+      ],
+      "@beep/workspace-server/aggregates/Workspace": [
+        "./packages/workspace/server/src/aggregates/Workspace/index.ts"
+      ],
+      "@beep/workspace-tables/entities/Workspace": [
+        "./packages/workspace/tables/src/entities/Workspace/index.ts"
+      ],
+      "@beep/workspace-use-cases/aggregates/Workspace": [
+        "./packages/workspace/use-cases/src/aggregates/Workspace/index.ts"
+      ],
+      "@beep/workspace-use-cases/aggregates/Workspace/server": [
+        "./packages/workspace/use-cases/src/aggregates/Workspace/server.ts"
       ]
     }
   }

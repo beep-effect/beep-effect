@@ -5,12 +5,14 @@ import type * as CandidateProject from "@beep/workspace-domain/entities/Candidat
 import type * as Message from "@beep/workspace-domain/entities/Message";
 import type * as Thread from "@beep/workspace-domain/entities/Thread";
 import type * as Turn from "@beep/workspace-domain/entities/Turn";
+import type * as Workspace from "@beep/workspace-domain/entities/Workspace";
 import type { DbSchema } from "@beep/workspace-tables";
 import type * as CandidateDraftTables from "@beep/workspace-tables/entities/CandidateDraft";
 import type * as CandidateProjectTables from "@beep/workspace-tables/entities/CandidateProject";
 import type * as MessageTables from "@beep/workspace-tables/entities/Message";
 import type * as ThreadTables from "@beep/workspace-tables/entities/Thread";
 import type * as TurnTables from "@beep/workspace-tables/entities/Turn";
+import type * as WorkspaceTables from "@beep/workspace-tables/entities/Workspace";
 
 describe("WorkspaceTables types", () => {
   it("exports the DbSchema type from the package entrypoint", () => {
@@ -20,6 +22,7 @@ describe("WorkspaceTables types", () => {
       readonly message: typeof MessageTables.Table;
       readonly thread: typeof ThreadTables.Table;
       readonly turn: typeof TurnTables.Table;
+      readonly workspace: typeof WorkspaceTables.Table;
     }>();
   });
 
@@ -56,5 +59,12 @@ describe("WorkspaceTables types", () => {
     expect<typeof MessageTables.Table>().type.toBeAssignableTo<EntityTable.TableFor<typeof Message.Message>>();
     expect<typeof MessageTables.Table.definition.tableName>().type.toBe<"workspace_message">();
     expect<typeof MessageTables.Table.definition.persisted.content.storageKind>().type.toBe<"jsonb">();
+  });
+
+  it("preserves Workspace table metadata literals", () => {
+    expect<typeof WorkspaceTables.Table>().type.toBeAssignableTo<EntityTable.TableFor<typeof Workspace.Workspace>>();
+    expect<typeof WorkspaceTables.Table.definition.tableName>().type.toBe<"workspace_workspace">();
+    expect<typeof WorkspaceTables.Table.definition.entityId.entityType>().type.toBe<"WorkspaceWorkspace">();
+    expect<typeof WorkspaceTables.Table.definition.persisted.vaultRootPath.storageKind>().type.toBe<"text">();
   });
 });

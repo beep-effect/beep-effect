@@ -58,6 +58,15 @@
       "path": "packages/architecture-lab/use-cases"
     },
     {
+      "path": "packages/documents/domain"
+    },
+    {
+      "path": "packages/documents/server"
+    },
+    {
+      "path": "packages/documents/use-cases"
+    },
+    {
       "path": "packages/drivers/acp"
     },
     {
