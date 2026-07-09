@@ -32,6 +32,7 @@ import {
   runQualityTask,
   runQualityTaskStepGroupForTesting,
   runQualityTaskStreamingStepGroupForTesting,
+  runRootLintPolicyTask,
   runSqlIntegrationTestLaneForTesting,
   sqlIntegrationConnectionUriFromEnvForTesting,
   sqlIntegrationStepForTesting,
@@ -885,6 +886,37 @@ describe("quality task adapter", () => {
     expect(steps.find((step) => step.label === "lint:jsdoc")?.args).toEqual(["eslint", ".", "--max-warnings=0"]);
   });
 
+  it("runs repo-wide root lint policy with hosted-stable concurrency", () =>
+    Effect.runPromise(
+      withTempRepo(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const tmpDir = process.cwd();
+          const binDir = path.join(tmpDir, "bin");
+          const fakeBunxPath = path.join(binDir, "bunx");
+          const fakeBunPath = path.join(binDir, "bun");
+
+          yield* fs.makeDirectory(binDir, { recursive: true });
+          yield* fs.writeFileString(fakeBunxPath, ["#!/usr/bin/env sh", "exit 0", ""].join("\n"));
+          yield* fs.writeFileString(fakeBunPath, ["#!/usr/bin/env sh", "exit 0", ""].join("\n"));
+          yield* fs.chmod(fakeBunxPath, 0o755);
+          yield* fs.chmod(fakeBunPath, 0o755);
+
+          const exit = yield* withEnvVarEffect(
+            "PATH",
+            `${binDir}:${Bun.env.PATH ?? ""}`,
+            Effect.exit(runRootLintPolicyTask)
+          );
+
+          expect(Exit.isSuccess(exit)).toBe(true);
+
+          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          expect(logText).toContain("[beep-cli] lint:policy: running 19 step(s) with concurrency 3");
+        })
+      )
+    ));
+
   it("applies Biome lint fixes in the changed-file lint fix fast path", () => {
     const step = lintFixChangedStepForTesting("/repo", ["packages/example/src/index.ts"]);
 
@@ -1320,6 +1352,9 @@ describe("quality task adapter", () => {
           expect(commandLog).toContain("bun run beep laws effect-imports --check");
           expect(commandLog).toContain("bun run beep docgen check --reuse-proof-manifest");
           expect(commandLog).toContain("bunx typos");
+
+          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          expect(logText).toContain("[beep-cli] lint: running 20 step(s) with concurrency 3");
         })
       )
     ));
