@@ -35,14 +35,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Bootstrap — next concrete action: branch from fresh `origin/main`, confirm
-the `@beep/rdf` / `@beep/semantic-web` / `@beep/rdf-canonize` surfaces still
-match `research/beep-repo-capability-report.md`, then scaffold the slice
-(`bun run beep architecture create slice`).
+P1 Foundation - next concrete action: scaffold the minimum legal `ontology`
+slice roles (`domain`, `use-cases`, `server`), build on the confirmed
+`@beep/rdf`, `@beep/semantic-web`, and `@beep/rdf-canonize` surfaces, and start
+the fixture round-trip proof.
 
 ## Latest Evidence
 
-Not started.
+- P0 Bootstrap evidence:
+  [`history/2026-07-08-p0-bootstrap.md`](./history/2026-07-08-p0-bootstrap.md)
+  - live package surfaces confirmed, no decision-invalidating drift recorded,
+  and P1 risks listed.
 
 ## Notes
 
