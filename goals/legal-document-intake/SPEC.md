@@ -52,7 +52,9 @@ Changing one requires updating this table with a dated superseding entry.
 ## Source Hierarchy
 
 1. User objective that created this packet (2026-07-08 design session).
-2. `AGENTS.md`, `CLAUDE.md`, and required skills.
+2. `AGENTS.md`, required skills, and optional-if-present repo-local
+   `CLAUDE.md` (if a repo-local `CLAUDE.md` exists, read it as an additional
+   source).
 3. `standards/ARCHITECTURE.md` and `standards/architecture/*` (notably 01, 02,
    03, 05, 06, 09, 10).
 4. This `SPEC.md`.

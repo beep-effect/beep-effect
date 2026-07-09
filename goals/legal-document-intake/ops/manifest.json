@@ -35,7 +35,6 @@
   ],
   "currentSourceOfTruth": [
     "AGENTS.md",
-    "CLAUDE.md",
     "goals/legal-document-intake/README.md",
     "goals/legal-document-intake/SPEC.md",
     "goals/legal-document-intake/PLAN.md",
