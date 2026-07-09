@@ -58,14 +58,12 @@
     "@effect/sql-pglite": "catalog:",
     "@effect/sql-sqlite-bun": "catalog:",
     "@effect/sql-sqlite-node": "catalog:",
-    "better-sqlite3": "catalog:",
     "effect": "catalog:",
     "pg": "^8.20.0",
     "testcontainers": "catalog:"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",
-    "@types/better-sqlite3": "catalog:",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
     "@types/pg": "^8.20.0"

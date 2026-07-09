@@ -795,12 +795,6 @@ const loadNodeSqliteClientModule = Effect.tryPromise({
     ),
 }).pipe(Effect.withSpan("SqlTest.NodeSqliteTestDriver.loadSqliteClient"));
 
-const loadBetterSqlite3Module = Effect.tryPromise({
-  try: () => import("better-sqlite3"),
-  catch: (cause) =>
-    toHarnessError("node-sqlite", "provision", "Failed to load better-sqlite3 native binding for SQL tests.", cause),
-}).pipe(Effect.withSpan("SqlTest.NodeSqliteTestDriver.loadBetterSqlite3"));
-
 const loadPgModule = Effect.tryPromise({
   try: () => import("pg"),
   catch: (cause) => toHarnessError("pg-external", "provision", "Failed to load pg support for SQL tests.", cause),
@@ -1280,7 +1274,6 @@ const makeNodeTempDirectory = Effect.fn("SqlTest.makeNodeTempDirectory")(functio
 });
 
 const buildNodeSqliteLayer = Effect.gen(function* () {
-  yield* loadBetterSqlite3Module;
   const SqliteClient = yield* loadNodeSqliteClientModule;
   const { path, tempDir } = yield* makeNodeTempDirectory(
     "node-sqlite",
