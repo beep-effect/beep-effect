@@ -56,7 +56,7 @@ type OntologyTreeItem = {
  * console.log(items.length)
  * ```
  *
- * @category view-models
+ * @category components
  * @since 0.0.0
  */
 export const ontologyTreeItemsFor: {

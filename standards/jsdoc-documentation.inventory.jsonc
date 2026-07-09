@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-07-09T17:06:44.885Z",
+  "generatedAt": "2026-07-09T18:32:32.121Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -107864,10 +107864,10 @@
           "exportKind": "re-export",
           "filePath": "src/aggregates/Session/tree/index.ts",
           "repoPath": "packages/ontology/ui/src/aggregates/Session/tree/index.ts",
-          "line": 8,
-          "anchor": "packages-ontology-ui-src-aggregates-session-tree-index-ts-8-export-from-session-tree-js",
+          "line": 14,
+          "anchor": "packages-ontology-ui-src-aggregates-session-tree-index-ts-14-export-from-session-tree-js",
           "currentTags": [
-            "@packageDocumentation",
+            "@category",
             "@since"
           ],
           "missingRequiredTags": [],
