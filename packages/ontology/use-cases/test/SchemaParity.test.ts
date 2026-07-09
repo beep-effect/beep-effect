@@ -3,14 +3,19 @@ import {
   ApplyOntologyBatchCommand,
   ApplyOntologyBatchResult,
   DiffWorkerResult,
+  ExportOntologyProvenanceCommand,
+  ExportOntologyProvenanceResult,
   OntologyActionError,
   OntologyFilePath,
+  OntologyRepairProposal,
   OntologySnapshot,
   OpenOntologyDocumentResult,
   OpenOntologyFileCommand,
   ParseTurtleRequest,
   ParseTurtleResult,
   PreviewOntologyTurtleResult,
+  RunOntologyValidationInput,
+  RunOntologyValidationResult,
   SaveOntologyDocumentResult,
   SerializeTurtleRequest,
   TurtleCodecError,
@@ -55,6 +60,11 @@ describe("@beep/ontology-use-cases schema parity", () => {
     assertRoundTrips(PreviewOntologyTurtleResult);
     assertRoundTrips(ApplyOntologyBatchCommand);
     assertRoundTrips(ApplyOntologyBatchResult);
+    assertRoundTrips(OntologyRepairProposal);
+    assertRoundTrips(RunOntologyValidationInput);
+    assertRoundTrips(RunOntologyValidationResult);
+    assertRoundTrips(ExportOntologyProvenanceCommand);
+    assertRoundTrips(ExportOntologyProvenanceResult);
     assertRoundTrips(OntologyActionError);
     assertRoundTrips(OntologySnapshot);
     assertRoundTrips(WorkerCommand);

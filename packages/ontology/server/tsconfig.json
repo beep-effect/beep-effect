@@ -7,7 +7,8 @@
     "outDir": "dist",
     "rootDir": "src",
     "paths": {
-      "@beep/oxigraph": ["../../drivers/oxigraph/src/index.ts"]
+      "@beep/oxigraph": ["../../drivers/oxigraph/src/index.ts"],
+      "@beep/shacl": ["../../drivers/shacl/src/index.ts"]
     }
   },
   "references": [
@@ -19,6 +20,9 @@
     },
     {
       "path": "../../drivers/rdf-canonize/tsconfig.json"
+    },
+    {
+      "path": "../../drivers/shacl/tsconfig.json"
     },
     {
       "path": "../../foundation/capability/semantic-web/tsconfig.json"

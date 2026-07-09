@@ -12,7 +12,9 @@ import {
   ApplyOntologyGraphGestureInput,
   applyOntologyBatchAtom,
   applyOntologyGraphGestureAtom,
+  applyOntologyRepairAtom,
   applyOntologySparqlExampleAtom,
+  exportOntologyProvenanceAtom,
   OpenOntologyDocumentInput,
   ontologyDirtyAtom,
   ontologyFoldLevelAtom,
@@ -27,6 +29,7 @@ import {
   ontologyInferredViewAtom,
   ontologyPathAtom,
   ontologyPredicateSuggestionsAtom,
+  ontologyProvenanceExportAtom,
   ontologyRedoStackAtom,
   ontologySearchQueryAtom,
   ontologySearchResultsAtom,
@@ -38,11 +41,15 @@ import {
   ontologySparqlProfileAtom,
   ontologySparqlQueryAtom,
   ontologySparqlResultAtom,
+  ontologyValidationErrorAtom,
+  ontologyValidationResultAtom,
+  ontologyValidationStatusAtom,
   ontologyViewModeAtom,
   openOntologyDocumentAtom,
   previewOntologyTurtleAtom,
   redoOntologyChangeAtom,
   runOntologySparqlAtom,
+  runOntologyValidationAtom,
   SaveOntologyDocumentInput,
   saveOntologyDocumentAtom,
   selectedOntologyResourceAtom,
@@ -65,18 +72,21 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@beep/
 import { A, O, R, Str } from "@beep/utils";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { RichTreeView } from "@mui/x-tree-view/RichTreeView";
-import { pipe } from "effect";
+import { flow, pipe } from "effect";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
 import { ontologyTreeItemsFor } from "./Session.tree.js";
+import type { OntologyValidationStatus } from "@beep/ontology-client/aggregates/Session";
 import type {
   OntologyFoldLevel,
   OntologyInferenceResult,
+  OntologyRepairProposal,
   OntologyResourceSummary,
   OntologySnapshot,
   OntologySparqlPanelProfile,
   OntologyViewMode,
   RunOntologySparqlResult,
+  RunOntologyValidationResult,
 } from "@beep/ontology-use-cases/aggregates/Session";
 import type { ChangeEvent, JSX, KeyboardEvent } from "react";
 
@@ -115,7 +125,12 @@ const sessionIdFromPath = (path: OntologyFilePath): SessionId => SessionId.fromU
 const valueFromEvent = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>): string =>
   event.target.value;
 
-const statItems = (snapshot: OntologySnapshot) =>
+const validationViolationCount = flow(
+  O.map((current: RunOntologyValidationResult) => current.validation.violations.length),
+  O.getOrElse(() => 0)
+);
+
+const statItems = (snapshot: OntologySnapshot, validationResult: O.Option<RunOntologyValidationResult>) =>
   [
     ["Quads", snapshot.metrics.quadCount],
     ["Resources", snapshot.metrics.resourceCount],
@@ -125,6 +140,7 @@ const statItems = (snapshot: OntologySnapshot) =>
     ["TBox", snapshot.metrics.tboxCount],
     ["ABox", snapshot.metrics.aboxCount],
     ["Disjoint", snapshot.metrics.disjointnessViolationCount],
+    ["SHACL", validationViolationCount(validationResult)],
   ] as const;
 
 const resourceBadgeVariant = (resource: OntologyResourceSummary): "default" | "secondary" =>
@@ -219,6 +235,133 @@ const inferenceResultPanel = (error: O.Option<string>, result: O.Option<Ontology
     O.getOrElse(() => pipe(result, O.map(inferenceResultView), O.getOrElse(noInferenceResult)))
   );
 
+const severityVariant = (severity: string): "default" | "secondary" | "destructive" | "outline" =>
+  severity === "violation" ? "destructive" : severity === "warning" ? "default" : "secondary";
+
+const repairsForViolation = (
+  result: RunOntologyValidationResult,
+  violationIndex: number
+): ReadonlyArray<OntologyRepairProposal> =>
+  pipe(
+    result.repairs,
+    A.filter((proposal) => proposal.violationIndex === violationIndex)
+  );
+
+const noValidationResult = (): JSX.Element => <p className="text-sm text-muted-foreground">No validation run.</p>;
+
+const validationMessageView = (status: OntologyValidationStatus, message: string): JSX.Element => (
+  <p className={status === "blocked" ? "text-sm text-muted-foreground" : "text-sm text-destructive"}>{message}</p>
+);
+
+const validationRunningView = (): JSX.Element => <p className="text-sm text-muted-foreground">Validation running.</p>;
+
+const validationResultView = (
+  result: RunOntologyValidationResult,
+  selectFocus: (iri: string) => void,
+  applyRepair: (proposal: OntologyRepairProposal) => void
+): JSX.Element => (
+  <div className="space-y-2">
+    <div className="flex flex-wrap gap-1">
+      <Badge variant={result.validation.conforms ? "secondary" : "destructive"}>
+        {result.validation.conforms ? "conforms" : "violations"}
+      </Badge>
+      <Badge variant="outline">{result.shapeCount} shapes</Badge>
+      <Badge variant="outline">{result.dataQuadCount} data quads</Badge>
+      {result.validation.truncated ? <Badge variant="destructive">truncated</Badge> : null}
+    </div>
+    {result.validation.violations.length === 0 ? (
+      <p className="text-sm text-muted-foreground">No violations.</p>
+    ) : (
+      <div className="max-h-56 space-y-2 overflow-auto pr-1">
+        {A.map(result.validation.violations, (violation, index) => {
+          const repairs = repairsForViolation(result, index);
+          return (
+            <div
+              key={`${index}-${violation.focusNode}-${violation.path.value}`}
+              className="rounded-md border p-2 text-xs"
+            >
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <Badge variant={severityVariant(violation.severity)}>{violation.severity}</Badge>
+                <Button size="sm" type="button" variant="ghost" onClick={() => selectFocus(violation.focusNode)}>
+                  Focus
+                </Button>
+              </div>
+              <div className="break-all font-mono text-muted-foreground">{violation.focusNode}</div>
+              <div className="mt-1 break-all font-mono">{violation.path.value}</div>
+              <p className="mt-1 text-muted-foreground">{violation.message}</p>
+              {repairs.length === 0 ? (
+                <p className="mt-2 text-muted-foreground">No verified repair.</p>
+              ) : (
+                <div className="mt-2 space-y-1">
+                  {A.map(repairs, (proposal) => (
+                    <Button
+                      key={proposal.id}
+                      className="w-full justify-start"
+                      size="sm"
+                      type="button"
+                      variant="outline"
+                      onClick={() => applyRepair(proposal)}
+                    >
+                      Apply verified repair
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+);
+
+const validationPanel = (
+  status: OntologyValidationStatus,
+  error: O.Option<string>,
+  result: O.Option<RunOntologyValidationResult>,
+  selectFocus: (iri: string) => void,
+  applyRepair: (proposal: OntologyRepairProposal) => void
+): JSX.Element =>
+  status === "running"
+    ? validationRunningView()
+    : pipe(
+        error,
+        O.map((message) => validationMessageView(status, message)),
+        O.getOrElse(() =>
+          pipe(
+            result,
+            O.map((current) => validationResultView(current, selectFocus, applyRepair)),
+            O.getOrElse(noValidationResult)
+          )
+        )
+      );
+
+const validationStatusBadge = (
+  status: OntologyValidationStatus,
+  result: O.Option<RunOntologyValidationResult>
+): JSX.Element => {
+  if (status === "running") {
+    return <Badge variant="outline">running</Badge>;
+  }
+
+  if (status === "blocked") {
+    return <Badge variant="outline">blocked</Badge>;
+  }
+
+  if (status === "failed") {
+    return <Badge variant="destructive">failed</Badge>;
+  }
+
+  return O.match(result, {
+    onNone: () => <Badge variant="outline">not run</Badge>,
+    onSome: (current) => (
+      <Badge variant={current.validation.conforms ? "secondary" : "destructive"}>
+        {current.validation.violations.length}
+      </Badge>
+    ),
+  });
+};
+
 /**
  * Ontology explorer/editor workbench screen.
  *
@@ -255,6 +398,10 @@ export function OntologyWorkbench(): JSX.Element {
   const sparqlExamples = useAtomValue(ontologySparqlExamplesAtom);
   const sparqlResult = useAtomValue(ontologySparqlResultAtom);
   const sparqlError = useAtomValue(ontologySparqlErrorAtom);
+  const validationResult = useAtomValue(ontologyValidationResultAtom);
+  const validationError = useAtomValue(ontologyValidationErrorAtom);
+  const validationStatus = useAtomValue(ontologyValidationStatusAtom);
+  const provenanceExport = useAtomValue(ontologyProvenanceExportAtom);
   const selected = useAtomValue(selectedOntologyResourceAtom);
   const selectedIri = useAtomValue(selectedOntologyResourceIriAtom);
   const visibleResources = useAtomValue(visibleOntologyResourcesAtom);
@@ -281,8 +428,11 @@ export function OntologyWorkbench(): JSX.Element {
   const previewTurtle = useAtomSet(previewOntologyTurtleAtom);
   const applyBatch = useAtomSet(applyOntologyBatchAtom);
   const applyGraphGesture = useAtomSet(applyOntologyGraphGestureAtom);
+  const applyRepair = useAtomSet(applyOntologyRepairAtom);
   const applySparqlExample = useAtomSet(applyOntologySparqlExampleAtom);
   const runSparql = useAtomSet(runOntologySparqlAtom);
+  const runValidation = useAtomSet(runOntologyValidationAtom);
+  const exportProvenance = useAtomSet(exportOntologyProvenanceAtom);
   const undoChange = useAtomSet(undoOntologyChangeAtom);
   const redoChange = useAtomSet(redoOntologyChangeAtom);
   useAtomValue(ontologyGraphWorkerBridgeAtom);
@@ -292,6 +442,7 @@ export function OntologyWorkbench(): JSX.Element {
     Str.isNonEmpty(Str.trim(subject)) && Str.isNonEmpty(Str.trim(predicate)) && Str.isNonEmpty(Str.trim(object));
   const canApplyGraphGesture = canApplyTriple && objectKind === "iri";
   const canRunSparql = O.isSome(session) && Str.isNonEmpty(Str.trim(sparqlQuery));
+  const canRunValidation = O.isSome(session);
   const canUndo = O.match(session, { onNone: () => false, onSome: (openSession) => openSession.changeLog.length > 0 });
   const canRedo = redoStack.length > 0;
   const changeLog = O.match(session, {
@@ -436,6 +587,11 @@ export function OntologyWorkbench(): JSX.Element {
     if (Str.isNonEmpty(exampleId)) {
       applySparqlExample(exampleId);
     }
+  };
+
+  const selectValidationFocus = (iri: string): void => {
+    setSelectedIri(O.some(iri));
+    setSearchQuery(iri);
   };
 
   const graphContainerRef = (element: HTMLDivElement | null): void => {
@@ -768,6 +924,46 @@ export function OntologyWorkbench(): JSX.Element {
 
             <section className="border-b p-3">
               <div className="mb-2 flex items-center justify-between">
+                <h2 className="text-sm font-semibold">Validation</h2>
+                {validationStatusBadge(validationStatus, validationResult)}
+              </div>
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button size="sm" type="button" disabled={!canRunValidation} onClick={() => runValidation(undefined)}>
+                    Validate
+                  </Button>
+                  <Button
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                    disabled={!canRunValidation}
+                    onClick={() => exportProvenance(undefined)}
+                  >
+                    Export
+                  </Button>
+                </div>
+                {validationPanel(
+                  validationStatus,
+                  validationError,
+                  validationResult,
+                  selectValidationFocus,
+                  applyRepair
+                )}
+                {O.match(provenanceExport, {
+                  onNone: () => null,
+                  onSome: (exported) => (
+                    <div className="rounded-md border p-2 text-xs">
+                      <div className="mb-1 font-medium">Exports</div>
+                      <div className="break-all font-mono text-muted-foreground">{exported.provPath}</div>
+                      <div className="break-all font-mono text-muted-foreground">{exported.datasetPath}</div>
+                    </div>
+                  ),
+                })}
+              </div>
+            </section>
+
+            <section className="border-b p-3">
+              <div className="mb-2 flex items-center justify-between">
                 <h2 className="text-sm font-semibold">Change Log</h2>
                 <Badge variant="outline">
                   {undoPosition}/{totalChangeCount}
@@ -804,7 +1000,7 @@ export function OntologyWorkbench(): JSX.Element {
                 {inferenceResultPanel(inferenceError, inferenceResult)}
               </div>
               <div className="grid grid-cols-2 gap-2">
-                {A.map(statItems(snapshot), ([label, value]) => (
+                {A.map(statItems(snapshot, validationResult), ([label, value]) => (
                   <div key={label} className="rounded-md border p-2">
                     <div className="text-xs text-muted-foreground">{label}</div>
                     <div className="text-lg font-semibold tabular-nums">{value}</div>

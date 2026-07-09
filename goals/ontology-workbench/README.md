@@ -35,9 +35,9 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P4 SPARQL + Reasoning - local integration is complete. Host verification is
-pending for install metadata refresh plus running browser/Tauri SPARQL and
-inferred-view proof.
+P5 Validation + Provenance - local integration is complete. Host verification
+is pending for registry/install metadata refresh, Bun/Vitest test reruns, and
+running browser/Tauri validation, verified repair, undo, and export proof.
 
 ## Latest Evidence
 
@@ -66,6 +66,12 @@ inferred-view proof.
   - Oxigraph driver, structural inference, SPARQL runner, inferred graph
   projection, query/result UI, desktop RPC wiring, full local gate sweep,
   node-backed Vitest proof, and host-side follow-up commands recorded.
+- P5 Validation + Provenance evidence:
+  [`history/2026-07-09-p5-validation-provenance.md`](./history/2026-07-09-p5-validation-provenance.md)
+  - SHACL driver, asserted-plus-inferred validation runner, verified repair
+  proposals, focus-node validation UI, real metrics wiring, PROV-O journal
+  export, VoID/DCAT dataset export, local proof results, and host-side follow-up
+  commands recorded.
 
 ## Notes
 

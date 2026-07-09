@@ -170,9 +170,12 @@ describe("Services and Surface", () => {
     expect(encodedPropertyShape).not.toHaveProperty("minCount");
     expect(encodedPropertyShape).not.toHaveProperty("maxCount");
     expect(encodedPropertyShape).not.toHaveProperty("datatype");
+    expect(encodedPropertyShape).not.toHaveProperty("hasValue");
     expect(encodedNodeShape).not.toHaveProperty("id");
+    expect(encodedNodeShape).not.toHaveProperty("targetNode");
     expect(encodedNodeShape).not.toHaveProperty("targetClass");
     expect(encodedValidationRequest).not.toHaveProperty("maxResults");
+    expect(encodedValidationRequest).not.toHaveProperty("shapesDataset");
     expect(encodedSparqlRequest).not.toHaveProperty("timeoutMs");
   });
 

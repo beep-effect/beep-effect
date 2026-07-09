@@ -154,6 +154,9 @@
       "path": "packages/drivers/sanity"
     },
     {
+      "path": "packages/drivers/shacl"
+    },
+    {
       "path": "packages/drivers/tika"
     },
     {

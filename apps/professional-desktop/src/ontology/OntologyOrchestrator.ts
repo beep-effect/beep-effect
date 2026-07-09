@@ -13,6 +13,7 @@ import {
   OntologyReasoner,
   OntologyRpcs,
   OntologySparqlRunner,
+  OntologyValidationRunner,
   OpenOntologyDocumentResult,
   OpenOntologyFileCommand,
   PreviewOntologyTurtleResult,
@@ -41,7 +42,8 @@ const toOntologyActionError =
 const makeOntologyOperations = (
   useCases: SessionUseCases["Service"],
   reasoner: OntologyReasoner["Service"],
-  sparql: OntologySparqlRunner["Service"]
+  sparql: OntologySparqlRunner["Service"],
+  validation: OntologyValidationRunner["Service"]
 ) => ({
   openDocument: (
     command: OpenOntologyFileCommand
@@ -98,6 +100,19 @@ const makeOntologyOperations = (
     sparql
       .run(input)
       .pipe(Effect.catch(toOntologyActionError("RunOntologySparql")), Effect.withSpan("ontology.run_sparql")),
+
+  runValidation: (input: Parameters<OntologyValidationRunner["Service"]["run"]>[0]) =>
+    validation
+      .run(input)
+      .pipe(Effect.catch(toOntologyActionError("RunOntologyValidation")), Effect.withSpan("ontology.run_validation")),
+
+  exportProvenance: (command: Parameters<OntologyValidationRunner["Service"]["exportProvenance"]>[0]) =>
+    validation
+      .exportProvenance(command)
+      .pipe(
+        Effect.catch(toOntologyActionError("ExportOntologyProvenance")),
+        Effect.withSpan("ontology.export_provenance")
+      ),
 });
 
 /**
@@ -127,6 +142,8 @@ const makeOntologyHandlers = (operations: OntologyOperations) =>
     GetOntologySnapshot: ({ session }) => operations.getSnapshot(session),
     RunOntologyInference: (payload) => operations.runInference(payload),
     RunOntologySparql: (payload) => operations.runSparql(payload),
+    RunOntologyValidation: (payload) => operations.runValidation(payload),
+    ExportOntologyProvenance: (payload) => operations.exportProvenance(payload),
   });
 
 /**
@@ -147,6 +164,7 @@ export const OntologyHandlersLive = OntologyRpcs.toLayer(
     const useCases = yield* SessionUseCases;
     const reasoner = yield* OntologyReasoner;
     const sparql = yield* OntologySparqlRunner;
-    return makeOntologyHandlers(makeOntologyOperations(useCases, reasoner, sparql));
+    const validation = yield* OntologyValidationRunner;
+    return makeOntologyHandlers(makeOntologyOperations(useCases, reasoner, sparql, validation));
   })
 );

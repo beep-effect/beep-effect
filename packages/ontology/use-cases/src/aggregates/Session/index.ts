@@ -62,6 +62,13 @@ export * from "./Session.sparql.js";
  */
 export * from "./Session.use-cases.js";
 /**
+ * Session SHACL validation and provenance exports.
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export * from "./Session.validation.js";
+/**
  * Session visualizer projection exports.
  *
  * @category read-models

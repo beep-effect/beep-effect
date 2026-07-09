@@ -21,6 +21,7 @@ import {
   buildOntologySnapshotWithInference,
   defaultOntologyGraphProjectionOptions,
   defaultOntologySparqlQuery,
+  ExportOntologyProvenanceCommand,
   graphGestureChangeOperations,
   InferOntologySessionInput,
   OntologyActionError,
@@ -33,15 +34,16 @@ import {
   ontologySparqlExamples,
   predicateAutocompleteSuggestions,
   RunOntologySparqlInput,
+  RunOntologyValidationInput,
   resourceVisibleInViewMode,
   searchOntologyResources,
   WorkerCommand,
   WorkerResult,
 } from "@beep/ontology-use-cases/aggregates/Session";
 import { serializeQuad } from "@beep/rdf/Rdf";
-import { SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
-import { Effect, Layer, Order, pipe } from "effect";
+import { Cause, Effect, Layer, Order, pipe } from "effect";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
 import { Atom, AtomRpc, Reactivity } from "effect/unstable/reactivity";
@@ -49,12 +51,15 @@ import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
 import type { CosmosBackend, CosmosRenderHandle } from "@beep/cosmos";
 import type { SessionChangeDelta } from "@beep/ontology-domain/aggregates/Session";
 import type {
+  ExportOntologyProvenanceResult,
   OntologyFoldLevel,
   OntologyGraphProjection,
   OntologyInferenceResult,
+  OntologyRepairProposal,
   OntologySparqlPanelProfile,
   OntologyViewMode,
   RunOntologySparqlResult,
+  RunOntologyValidationResult,
 } from "@beep/ontology-use-cases/aggregates/Session";
 
 const { $OntologyClientId } = makeIdentity("ontology-client");
@@ -126,6 +131,9 @@ const SOURCE_KEY = "ontology-source" as const;
 const GRAPH_KEY = "ontology-graph" as const;
 const INFERENCE_KEY = "ontology-inference" as const;
 const SPARQL_KEY = "ontology-sparql" as const;
+const VALIDATION_KEY = "ontology-validation" as const;
+const PROVENANCE_KEY = "ontology-provenance" as const;
+const NO_SHAPES_DETECTED_MESSAGE = "No SHACL shapes detected in this document.";
 
 /**
  * Open ontology document payload for the client atom.
@@ -257,6 +265,24 @@ export class ApplyOntologyGraphGestureInput extends S.Class<ApplyOntologyGraphGe
     description: "Graph gesture payload converted into ontology change operations.",
   })
 ) {}
+
+const OntologyValidationStatus = LiteralKit(["idle", "running", "blocked", "failed", "complete"]);
+/**
+ * Current lifecycle state for ontology validation workbench actions.
+ *
+ * @example
+ * ```ts
+ * import type { OntologyValidationStatus } from "@beep/ontology-client/aggregates/Session"
+ *
+ * const status: OntologyValidationStatus = "idle"
+ *
+ * console.log(status)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type OntologyValidationStatus = typeof OntologyValidationStatus.Type;
 
 /**
  * Current open ontology session, if any.
@@ -428,6 +454,24 @@ const resetOntologyInference = (ctx: Atom.FnContext): void => {
   ctx.set(ontologyInferenceErrorAtom, O.none());
 };
 
+const resetOntologyValidation = (ctx: Atom.FnContext): void => {
+  ctx.set(ontologyValidationStatusAtom, "idle");
+  ctx.set(ontologyValidationResultAtom, O.none());
+  ctx.set(ontologyValidationErrorAtom, O.none());
+};
+
+const validationFailureMessage = (label: string, cause: Cause.Cause<unknown>): string =>
+  `${label} failed: ${Cause.pretty(cause)}`;
+
+const setValidationFailure = (ctx: Atom.FnContext, label: string, cause: Cause.Cause<unknown>): void => {
+  ctx.set(ontologyValidationStatusAtom, "failed");
+  ctx.set(ontologyValidationResultAtom, O.none());
+  ctx.set(ontologyValidationErrorAtom, O.some(validationFailureMessage(label, cause)));
+};
+
+const hasValidationShapes = (session: Session): boolean =>
+  deriveSessionGraphPartitions(session).shapes.quads.length > 0;
+
 const ensureOntologyInference = Effect.fn("ensureOntologyInference")(function* (
   client: OntologyClient["Service"],
   session: Session,
@@ -531,6 +575,66 @@ export const ontologySparqlResultAtom = Atom.make<O.Option<RunOntologySparqlResu
  * @since 0.0.0
  */
 export const ontologySparqlErrorAtom = Atom.make<O.Option<string>>(O.none());
+
+/**
+ * Latest SHACL validation result, if one has been requested.
+ *
+ * @example
+ * ```ts
+ * import { ontologyValidationResultAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyValidationResultAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyValidationResultAtom = Atom.make<O.Option<RunOntologyValidationResult>>(O.none());
+
+/**
+ * Current SHACL validation panel state.
+ *
+ * @example
+ * ```ts
+ * import { ontologyValidationStatusAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyValidationStatusAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyValidationStatusAtom = Atom.make<OntologyValidationStatus>("idle");
+
+/**
+ * Latest SHACL validation failure, if any.
+ *
+ * @example
+ * ```ts
+ * import { ontologyValidationErrorAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyValidationErrorAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyValidationErrorAtom = Atom.make<O.Option<string>>(O.none());
+
+/**
+ * Latest provenance export result, if one has been produced.
+ *
+ * @example
+ * ```ts
+ * import { ontologyProvenanceExportAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyProvenanceExportAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyProvenanceExportAtom = Atom.make<O.Option<ExportOntologyProvenanceResult>>(O.none());
 
 /**
  * Current resource search query.
@@ -1123,6 +1227,139 @@ export const runOntologySparqlAtom = OntologyClient.runtime.fn<void>()(
 );
 
 /**
+ * Run SHACL validation over asserted and inferred graphs.
+ *
+ * @example
+ * ```ts
+ * import { runOntologyValidationAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(runOntologyValidationAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const runOntologyValidationAtom = OntologyClient.runtime.fn<void>()(
+  Effect.fn("runOntologyValidation")(function* (_, ctx) {
+    yield* pipe(
+      Effect.gen(function* () {
+        const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+        if (!hasValidationShapes(session)) {
+          ctx.set(ontologyValidationStatusAtom, "blocked");
+          ctx.set(ontologyValidationResultAtom, O.none());
+          ctx.set(ontologyValidationErrorAtom, O.some(NO_SHAPES_DETECTED_MESSAGE));
+          return;
+        }
+
+        ctx.set(ontologyValidationStatusAtom, "running");
+        ctx.set(ontologyValidationResultAtom, O.none());
+        ctx.set(ontologyValidationErrorAtom, O.none());
+        const client = yield* OntologyClient;
+        const inference = yield* ensureOntologyInference(client, session, ctx);
+        const result = yield* Reactivity.mutation(
+          client(
+            "RunOntologyValidation",
+            RunOntologyValidationInput.make({
+              session,
+              inference: O.some(inference),
+            })
+          ),
+          [VALIDATION_KEY]
+        );
+        ctx.set(ontologyValidationStatusAtom, "complete");
+        ctx.set(ontologyValidationResultAtom, O.some(result));
+        ctx.set(ontologyValidationErrorAtom, O.none());
+      }),
+      Effect.catchCause((cause) => Effect.sync(() => setValidationFailure(ctx, "Validation", cause)))
+    );
+  })
+);
+
+/**
+ * Apply one verified SHACL repair through the standard batch change pipeline.
+ *
+ * @example
+ * ```ts
+ * import { applyOntologyRepairAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(applyOntologyRepairAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const applyOntologyRepairAtom = OntologyClient.runtime.fn<OntologyRepairProposal>()(
+  Effect.fn("applyOntologyRepair")(function* (proposal, ctx) {
+    const client = yield* OntologyClient;
+    const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+    const applied = yield* Reactivity.mutation(
+      client("ApplyOntologyBatch", ApplyOntologyBatchCommand.make({ session, operations: proposal.operations })),
+      [SESSION_KEY, GRAPH_KEY, VALIDATION_KEY]
+    );
+    ctx.set(ontologySessionAtom, O.some(applied.session));
+    ctx.set(ontologyRedoStackAtom, []);
+    ctx.set(ontologySparqlResultAtom, O.none());
+    ctx.set(ontologyGraphProjectionAtom, O.none());
+    ctx.set(ontologyGraphDeltaAtom, O.none());
+    const inference = yield* ensureOntologyInference(client, applied.session, ctx);
+    const validation = yield* Reactivity.mutation(
+      client(
+        "RunOntologyValidation",
+        RunOntologyValidationInput.make({
+          session: applied.session,
+          inference: O.some(inference),
+        })
+      ),
+      [VALIDATION_KEY]
+    );
+    ctx.set(ontologyValidationStatusAtom, "complete");
+    ctx.set(ontologyValidationResultAtom, O.some(validation));
+    ctx.set(ontologyValidationErrorAtom, O.none());
+  })
+);
+
+/**
+ * Export PROV-O journal and VoID/DCAT dataset description files.
+ *
+ * @example
+ * ```ts
+ * import { exportOntologyProvenanceAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(exportOntologyProvenanceAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const exportOntologyProvenanceAtom = OntologyClient.runtime.fn<void>()(
+  Effect.fn("exportOntologyProvenance")(function* (_, ctx) {
+    yield* pipe(
+      Effect.gen(function* () {
+        const client = yield* OntologyClient;
+        const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+        const basePath = O.getOrElse(ctx(ontologyPathAtom), () =>
+          OntologyFilePath.fromUnknown(`tmp/${session.id}.ttl`)
+        );
+        const exported = yield* Reactivity.mutation(
+          client(
+            "ExportOntologyProvenance",
+            ExportOntologyProvenanceCommand.make({
+              session,
+              provPath: OntologyFilePath.fromUnknown(`${basePath}.prov.ttl`),
+              datasetPath: OntologyFilePath.fromUnknown(`${basePath}.dataset.ttl`),
+            })
+          ),
+          [PROVENANCE_KEY]
+        );
+        ctx.set(ontologyProvenanceExportAtom, O.some(exported));
+        ctx.set(ontologyValidationErrorAtom, O.none());
+      }),
+      Effect.catchCause((cause) => Effect.sync(() => setValidationFailure(ctx, "Export", cause)))
+    );
+  })
+);
+
+/**
  * Open a Turtle document through the sidecar.
  *
  * @example
@@ -1151,6 +1388,8 @@ export const openOntologyDocumentAtom = OntologyClient.runtime.fn<OpenOntologyDo
     ctx.set(ontologySparqlQueryAtom, defaultOntologySparqlQuery(opened.session));
     ctx.set(ontologySparqlResultAtom, O.none());
     ctx.set(ontologySparqlErrorAtom, O.none());
+    resetOntologyValidation(ctx);
+    ctx.set(ontologyProvenanceExportAtom, O.none());
     if (ctx(ontologyInferredViewAtom)) {
       yield* ensureOntologyInference(client, opened.session, ctx);
     }
@@ -1230,6 +1469,7 @@ export const applyOntologyBatchAtom = OntologyClient.runtime.fn<ApplyOntologyBat
     ctx.set(ontologySessionAtom, O.some(applied.session));
     ctx.set(ontologyRedoStackAtom, []);
     ctx.set(ontologySparqlResultAtom, O.none());
+    resetOntologyValidation(ctx);
     if (ctx(ontologyInferredViewAtom)) {
       yield* ensureOntologyInference(client, applied.session, ctx);
       ctx.set(ontologyGraphProjectionAtom, O.none());
@@ -1266,6 +1506,7 @@ export const applyOntologyGraphGestureAtom = OntologyClient.runtime.fn<ApplyOnto
     ctx.set(ontologySessionAtom, O.some(applied.session));
     ctx.set(ontologyRedoStackAtom, []);
     ctx.set(ontologySparqlResultAtom, O.none());
+    resetOntologyValidation(ctx);
     if (ctx(ontologyInferredViewAtom)) {
       yield* ensureOntologyInference(client, applied.session, ctx);
       ctx.set(ontologyGraphProjectionAtom, O.none());
@@ -1306,6 +1547,7 @@ export const undoOntologyChangeAtom = OntologyClient.runtime.fn<void>()(
           ctx.set(ontologySessionAtom, O.some(nextSession));
           ctx.set(ontologyRedoStackAtom, pipe(ctx(ontologyRedoStackAtom), A.prepend(change)));
           ctx.set(ontologySparqlResultAtom, O.none());
+          resetOntologyValidation(ctx);
           ctx.set(ontologyGraphProjectionAtom, O.none());
           ctx.set(ontologyGraphDeltaAtom, O.none());
           if (ctx(ontologyInferredViewAtom)) {
@@ -1345,6 +1587,7 @@ export const redoOntologyChangeAtom = OntologyClient.runtime.fn<void>()(
           ctx.set(ontologySessionAtom, O.some(nextSession));
           ctx.set(ontologyRedoStackAtom, A.drop(ctx(ontologyRedoStackAtom), 1));
           ctx.set(ontologySparqlResultAtom, O.none());
+          resetOntologyValidation(ctx);
           ctx.set(ontologyGraphProjectionAtom, O.none());
           ctx.set(ontologyGraphDeltaAtom, O.none());
           if (ctx(ontologyInferredViewAtom)) {

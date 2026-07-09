@@ -10,7 +10,17 @@
  */
 
 import { make as makeIdentity } from "@beep/identity";
-import { Dataset, makeDataset, makeNamedNode, NamedNode, PrefixMap, Quad, serializeQuad } from "@beep/rdf/Rdf";
+import {
+  Dataset,
+  makeDataset,
+  makeNamedNode,
+  NamedNode,
+  PrefixMap,
+  Quad,
+  serializeQuad,
+  serializeTerm,
+} from "@beep/rdf/Rdf";
+import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A } from "@beep/utils";
@@ -18,11 +28,15 @@ import { Effect, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { GraphPartition, graphPartitionIri, isExcludedFromReasoning, SessionId } from "./Session.values.js";
+import type { Subject } from "@beep/rdf/Rdf";
 
 const { $OntologyDomainId } = makeIdentity("ontology-domain");
 const $I = $OntologyDomainId.create("aggregates/Session/Session.model");
 
 const ChangeOperationKind = LiteralKit(["addQuad", "removeQuad"]);
+const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;
+const SH_NODE_SHAPE = makeNamedNode(`${SHACL_NAMESPACE}NodeShape`);
+const SH_PROPERTY = makeNamedNode(`${SHACL_NAMESPACE}property`);
 
 /**
  * Typed ontology change operation over RDF quads.
@@ -353,6 +367,56 @@ const removeQuad = (dataset: Dataset, target: Quad): Dataset =>
       A.filter((quad) => !sameQuad(quad, target))
     )
   );
+
+const subjectKey = (subject: Subject): string => serializeTerm(subject);
+const quadSubjectKey = (quad: Quad): string => subjectKey(quad.subject);
+
+const objectSubjectKeys = (quad: Quad): ReadonlyArray<string> =>
+  quad.object.termType === "NamedNode" || quad.object.termType === "BlankNode" ? [subjectKey(quad.object)] : [];
+
+const hasSubjectKey = (keys: ReadonlyArray<string>, quad: Quad): boolean =>
+  pipe(keys, A.contains(quadSubjectKey(quad)));
+
+const nodeShapeSubjectKeys = (dataset: Dataset): ReadonlyArray<string> =>
+  pipe(
+    dataset.quads,
+    A.filter((quad) => quad.predicate.value === RDF_TYPE.value),
+    A.filter((quad) => quad.object.termType === "NamedNode" && quad.object.value === SH_NODE_SHAPE.value),
+    A.map(quadSubjectKey),
+    A.dedupe
+  );
+
+const propertyShapeSubjectKeys = (dataset: Dataset, shapeSubjectKeys: ReadonlyArray<string>): ReadonlyArray<string> =>
+  pipe(
+    dataset.quads,
+    A.filter((quad) => hasSubjectKey(shapeSubjectKeys, quad)),
+    A.filter((quad) => quad.predicate.value === SH_PROPERTY.value),
+    A.flatMap(objectSubjectKeys),
+    A.dedupe
+  );
+
+const baseShapeSubjectKeys = (dataset: Dataset): ReadonlyArray<string> => {
+  const nodeShapes = nodeShapeSubjectKeys(dataset);
+  return pipe(nodeShapes, A.appendAll(propertyShapeSubjectKeys(dataset, nodeShapes)), A.dedupe);
+};
+
+const partitionBaseDataset = (dataset: Dataset): Pick<SessionGraphPartitions, "asserted" | "shapes"> => {
+  const shapeSubjectKeys = baseShapeSubjectKeys(dataset);
+  return {
+    asserted: makeDataset(
+      pipe(
+        dataset.quads,
+        A.filter((quad) => !hasSubjectKey(shapeSubjectKeys, quad))
+      )
+    ),
+    shapes: makeDataset(
+      pipe(
+        dataset.quads,
+        A.filter((quad) => hasSubjectKey(shapeSubjectKeys, quad))
+      )
+    ),
+  };
+};
 
 /**
  * Read the dataset for a partition.
@@ -709,17 +773,20 @@ export const invertChangeOperation = (change: ChangeOperation): ChangeOperation 
  * @since 0.0.0
  * @category utilities
  */
-export const deriveSessionGraphPartitions = (session: Session): SessionGraphPartitions =>
-  pipe(
+export const deriveSessionGraphPartitions = (session: Session): SessionGraphPartitions => {
+  const base = partitionBaseDataset(session.baseDataset);
+  return pipe(
     session.changeLog,
     A.reduce(
       SessionGraphPartitions.make({
         ...emptySessionGraphPartitions(),
-        asserted: session.baseDataset,
+        asserted: base.asserted,
+        shapes: base.shapes,
       }),
       applyChangeToPartitions
     )
   );
+};
 
 /**
  * Apply a batch of operations and return the updated session plus real delta.

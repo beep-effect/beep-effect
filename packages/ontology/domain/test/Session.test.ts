@@ -9,7 +9,8 @@ import {
   isExcludedFromReasoning,
   SessionId,
 } from "@beep/ontology-domain/aggregates/Session";
-import { makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
+import { makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad, serializeQuad } from "@beep/rdf/Rdf";
+import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
@@ -26,6 +27,10 @@ const knowsQuad = makeQuad(
   makeNamedNode("https://example.test/knows"),
   makeNamedNode("https://example.test/bob")
 );
+const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;
+const SH_NODE_SHAPE = makeNamedNode(`${SHACL_NAMESPACE}NodeShape`);
+const SH_PROPERTY = makeNamedNode(`${SHACL_NAMESPACE}property`);
+const SH_PATH = makeNamedNode(`${SHACL_NAMESPACE}path`);
 
 describe("Ontology Session aggregate", () => {
   it("derives asserted and authored partitions from base plus change log", () => {
@@ -48,6 +53,28 @@ describe("Ontology Session aggregate", () => {
     expect(partitions.asserted.quads).toHaveLength(1);
     expect(partitions.ontologies.quads).toHaveLength(1);
     expect(partitions.inferred.quads).toHaveLength(0);
+  });
+
+  it("routes opened SHACL node and property shapes into the shapes partition", () => {
+    const shape = makeNamedNode("urn:shape:alice-name");
+    const property = makeBlankNode("alice-name-property");
+    const path = makeNamedNode("https://example.test/name");
+    const shapeQuads = [
+      makeQuad(shape, RDF_TYPE, SH_NODE_SHAPE),
+      makeQuad(shape, SH_PROPERTY, property),
+      makeQuad(property, SH_PATH, path),
+    ];
+    const session = createSession(
+      CreateSessionInput.make({
+        id: sessionId,
+        baseDataset: makeDataset([nameQuad, ...shapeQuads]),
+      })
+    );
+
+    const partitions = deriveSessionGraphPartitions(session);
+
+    expect(partitions.asserted.quads.map(serializeQuad)).toEqual([serializeQuad(nameQuad)]);
+    expect(partitions.shapes.quads.map(serializeQuad)).toEqual(shapeQuads.map(serializeQuad));
   });
 
   it("applies remove operations without mutating other partitions", () => {

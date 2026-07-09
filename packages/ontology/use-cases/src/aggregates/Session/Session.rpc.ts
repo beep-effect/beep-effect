@@ -16,6 +16,12 @@ import { OntologyFilePath, TurtleDocumentText } from "./Session.ports.js";
 import { OntologySnapshot } from "./Session.projections.js";
 import { InferOntologySessionInput, OntologyInferenceResult } from "./Session.reasoner.js";
 import { RunOntologySparqlInput, RunOntologySparqlResult } from "./Session.sparql.js";
+import {
+  ExportOntologyProvenanceCommand,
+  ExportOntologyProvenanceResult,
+  RunOntologyValidationInput,
+  RunOntologyValidationResult,
+} from "./Session.validation.js";
 
 const { $OntologyUseCasesId } = makeIdentity("ontology-use-cases");
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.rpc");
@@ -416,6 +422,44 @@ export const RunOntologySparqlRpc = Rpc.make("RunOntologySparql", {
 });
 
 /**
+ * Runs SHACL validation and returns verified repair proposals.
+ *
+ * @example
+ * ```ts
+ * import { RunOntologyValidationRpc } from "@beep/ontology-use-cases/aggregates/Session"
+ *
+ * console.log(RunOntologyValidationRpc)
+ * ```
+ *
+ * @since 0.0.0
+ * @category protocols
+ */
+export const RunOntologyValidationRpc = Rpc.make("RunOntologyValidation", {
+  payload: RunOntologyValidationInput,
+  success: RunOntologyValidationResult,
+  error: OntologyActionError,
+});
+
+/**
+ * Exports PROV-O journal and VoID/DCAT dataset description artifacts.
+ *
+ * @example
+ * ```ts
+ * import { ExportOntologyProvenanceRpc } from "@beep/ontology-use-cases/aggregates/Session"
+ *
+ * console.log(ExportOntologyProvenanceRpc)
+ * ```
+ *
+ * @since 0.0.0
+ * @category protocols
+ */
+export const ExportOntologyProvenanceRpc = Rpc.make("ExportOntologyProvenance", {
+  payload: ExportOntologyProvenanceCommand,
+  success: ExportOntologyProvenanceResult,
+  error: OntologyActionError,
+});
+
+/**
  * Ontology workbench RPC group registered by the desktop sidecar.
  *
  * @example
@@ -435,5 +479,7 @@ export const OntologyRpcs = RpcGroup.make(
   ApplyOntologyBatchRpc,
   GetOntologySnapshotRpc,
   RunOntologyInferenceRpc,
-  RunOntologySparqlRpc
+  RunOntologySparqlRpc,
+  RunOntologyValidationRpc,
+  ExportOntologyProvenanceRpc
 );

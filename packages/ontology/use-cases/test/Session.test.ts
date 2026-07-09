@@ -36,7 +36,15 @@ import {
   searchOntologyResources,
   TurtleCodec,
 } from "@beep/ontology-use-cases/aggregates/Session";
-import { makeDataset, makeLiteral, makeNamedNode, makeQuad, PrefixMap, serializeQuad } from "@beep/rdf/Rdf";
+import {
+  makeBlankNode,
+  makeDataset,
+  makeLiteral,
+  makeNamedNode,
+  makeQuad,
+  PrefixMap,
+  serializeQuad,
+} from "@beep/rdf/Rdf";
 import { OWL_CLASS } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL, RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
@@ -50,13 +58,16 @@ import { FastCheck as fc } from "effect/testing";
 
 const sessionId = S.decodeUnknownSync(SessionId)("session-1");
 const fixturePath = S.decodeUnknownSync(OntologyFilePath)("fixtures/demo.ttl");
-const dataset = makeDataset([
-  makeQuad(
-    makeNamedNode("https://example.test/alice"),
-    makeNamedNode("https://example.test/name"),
-    makeLiteral("Alice", XSD_STRING.value)
-  ),
-]);
+const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;
+const SH_NODE_SHAPE = makeNamedNode(`${SHACL_NAMESPACE}NodeShape`);
+const SH_PROPERTY = makeNamedNode(`${SHACL_NAMESPACE}property`);
+const SH_PATH = makeNamedNode(`${SHACL_NAMESPACE}path`);
+const aliceNameQuad = makeQuad(
+  makeNamedNode("https://example.test/alice"),
+  makeNamedNode("https://example.test/name"),
+  makeLiteral("Alice", XSD_STRING.value)
+);
+const dataset = makeDataset([aliceNameQuad]);
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -158,6 +169,46 @@ describe("Session use-cases", () => {
       expect(saved.source).toBe("serialized turtle");
       expect(opened.session.prefixes).toEqual({ ex: "https://example.test/" });
       expect(serializedPrefixes).toEqual({ ex: "https://example.test/" });
+    })
+  );
+
+  it.effect(
+    "serializes opened SHACL shapes with asserted data",
+    Effect.fnUntraced(function* () {
+      let serializedQuads: ReadonlyArray<string> = [];
+      const shape = makeNamedNode("urn:shape:alice-name");
+      const property = makeBlankNode("alice-name-property");
+      const shapeQuads = [
+        makeQuad(shape, RDF_TYPE, SH_NODE_SHAPE),
+        makeQuad(shape, SH_PROPERTY, property),
+        makeQuad(property, SH_PATH, makeNamedNode("https://example.test/name")),
+      ];
+      const fileStore = OntologyFileStore.of({
+        read: Effect.fn("OntologyFileStore.read")((request) =>
+          Effect.succeed(ReadOntologyFileResult.make({ path: request.path, source: "" }))
+        ),
+        write: Effect.fn("OntologyFileStore.write")(() => Effect.void),
+      });
+      const turtle = TurtleCodec.of({
+        parse: Effect.fn("TurtleCodec.parse")(() =>
+          Effect.succeed(ParseTurtleResult.make({ dataset: makeDataset([aliceNameQuad, ...shapeQuads]) }))
+        ),
+        serialize: Effect.fn("TurtleCodec.serialize")((request) =>
+          Effect.sync(() => {
+            serializedQuads = request.dataset.quads.map(serializeQuad);
+            return SerializeTurtleResult.make({ source: "serialized turtle" });
+          })
+        ),
+      });
+      const useCases = yield* makeSessionUseCases().pipe(
+        Effect.provideService(OntologyFileStore, fileStore),
+        Effect.provideService(TurtleCodec, turtle)
+      );
+      const opened = yield* useCases.openFile(OpenOntologyFileCommand.make({ sessionId, path: fixturePath }));
+
+      yield* useCases.saveFile(SaveOntologyFileCommand.make({ path: fixturePath, session: opened.session }));
+
+      expect(serializedQuads).toEqual([serializeQuad(aliceNameQuad), ...shapeQuads.map(serializeQuad)]);
     })
   );
 

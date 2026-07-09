@@ -1368,6 +1368,7 @@
       "@beep/cosmos": ["./packages/drivers/cosmos/src/index.ts"],
       "@beep/oxigraph": ["./packages/drivers/oxigraph/src/index.ts"],
       "@beep/n3": ["./packages/drivers/n3/src/index.ts"],
+      "@beep/shacl": ["./packages/drivers/shacl/src/index.ts"],
       "@beep/ontology-domain": ["./packages/ontology/domain/src/index.ts"],
       "@beep/ontology-domain/aggregates": [
         "./packages/ontology/domain/src/aggregates/index.ts"

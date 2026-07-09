@@ -69,6 +69,7 @@ const config = {
     "packages/drivers/cosmos/package.json",
     "packages/drivers/oxigraph/package.json",
     "packages/drivers/n3/package.json",
+    "packages/drivers/shacl/package.json",
     "packages/drivers/wink/package.json",
     "packages/drivers/tika/package.json",
     "packages/drivers/libpff/package.json",

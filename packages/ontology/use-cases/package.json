@@ -72,6 +72,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/shacl": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:"

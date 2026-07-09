@@ -2,6 +2,7 @@
  * Ontology Session tree view-model exports.
  *
  * @packageDocumentation
+ * @category models
  * @since 0.0.0
  */
 

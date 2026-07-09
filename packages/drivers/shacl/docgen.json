@@ -1,7 +1,11 @@
 {
   "$schema": "../../../packages/tooling/tool/docgen/schema.json",
-  "exclude": ["src/internal/**/*.ts"],
-  "srcLink": "https://github.com/beep-effect/beep-effect/tree/main/packages/ontology/use-cases/src/",
+  "entryPoints": ["src/index.ts"],
+  "out": "docs",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "includeVersion": true,
+  "srcLink": "https://github.com/beep-effect/beep-effect/tree/main/packages/drivers/shacl/src/",
   "examplesCompilerOptions": {
     "noEmit": true,
     "strict": true,
@@ -29,24 +33,7 @@
     "types": [],
     "jsx": "react-jsx",
     "paths": {
-      "@beep/ontology-use-cases": [
-        "../../../packages/ontology/use-cases/src/index.ts"
-      ],
-      "@beep/ontology-use-cases/public": [
-        "../../../packages/ontology/use-cases/src/public.ts"
-      ],
-      "@beep/ontology-use-cases/server": [
-        "../../../packages/ontology/use-cases/src/server.ts"
-      ],
-      "@beep/ontology-use-cases/aggregates/Session": [
-        "../../../packages/ontology/use-cases/src/aggregates/Session/index.ts"
-      ],
-      "@beep/ontology-use-cases/aggregates/Session/worker": [
-        "../../../packages/ontology/use-cases/src/aggregates/Session/worker.ts"
-      ],
-      "@beep/ontology-use-cases/aggregates/Session/server": [
-        "../../../packages/ontology/use-cases/src/aggregates/Session/server.ts"
-      ],
+      "@beep/shacl": ["../../../packages/drivers/shacl/src/index.ts"],
       "@beep/identity": [
         "../../../packages/foundation/modeling/identity/src/index.ts"
       ],
@@ -55,15 +42,6 @@
       ],
       "@beep/identity/packages": [
         "../../../packages/foundation/modeling/identity/src/packages.ts"
-      ],
-      "@beep/ontology-domain": [
-        "../../../packages/ontology/domain/src/index.ts"
-      ],
-      "@beep/ontology-domain/aggregates": [
-        "../../../packages/ontology/domain/src/aggregates/index.ts"
-      ],
-      "@beep/ontology-domain/aggregates/Session": [
-        "../../../packages/ontology/domain/src/aggregates/Session/index.ts"
       ],
       "@beep/rdf": ["../../../packages/foundation/modeling/rdf/src/index.ts"],
       "@beep/rdf/*": ["../../../packages/foundation/modeling/rdf/src/*.ts"],
@@ -439,13 +417,17 @@
       "@beep/semantic-web/*": [
         "../../../packages/foundation/capability/semantic-web/src/*.ts"
       ],
-      "@beep/shacl": ["../../../packages/drivers/shacl/src/index.ts"],
       "@beep/test-utils": [
         "../../../packages/tooling/test-kit/test-utils/src/index.ts"
       ],
       "@beep/test-utils/*": [
         "../../../packages/tooling/test-kit/test-utils/src/*.ts"
-      ]
+      ],
+      "@beep/utils": [
+        "../../../packages/foundation/modeling/utils/src/index.ts"
+      ],
+      "@beep/utils/*": ["../../../packages/foundation/modeling/utils/src/*.ts"]
     }
-  }
+  },
+  "exclude": ["src/internal/**/*.ts"]
 }

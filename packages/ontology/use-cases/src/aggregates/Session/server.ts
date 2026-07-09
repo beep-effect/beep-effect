@@ -33,3 +33,10 @@ export * from "./Session.service.js";
  * @since 0.0.0
  */
 export * from "./Session.sparql.js";
+/**
+ * Session validation service exports for server wiring.
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export * from "./Session.validation.js";

@@ -11,7 +11,9 @@ import {
   createSession,
   deriveSessionGraphPartitions,
 } from "@beep/ontology-domain/aggregates/Session";
-import { Context, Effect, Layer } from "effect";
+import { makeDataset } from "@beep/rdf/Rdf";
+import { A } from "@beep/utils";
+import { Context, Effect, Layer, pipe } from "effect";
 import {
   OpenOntologyFileResult,
   SaveOntologyFileResult,
@@ -31,6 +33,13 @@ import type { OntologyFileStoreError, TurtleCodecError } from "./Session.ports.j
 
 const { $OntologyUseCasesId } = makeIdentity("ontology-use-cases");
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.service");
+
+const serializableSessionDataset = (session: SerializeOntologySessionCommand["session"]) => {
+  const partitions = deriveSessionGraphPartitions(session);
+  return makeDataset(
+    pipe(partitions.asserted.quads, A.appendAll(partitions.ontologies.quads), A.appendAll(partitions.shapes.quads))
+  );
+};
 
 /**
  * Ontology session use-case service shape.
@@ -71,9 +80,11 @@ export const makeSessionUseCases = Effect.fn("Ontology.SessionUseCases.make")(fu
   const serializeSession = Effect.fn("Ontology.SessionUseCases.serialize")(function* (
     command: SerializeOntologySessionCommand
   ) {
-    const asserted = deriveSessionGraphPartitions(command.session).asserted;
     const serialized = yield* turtle.serialize(
-      SerializeTurtleRequest.make({ dataset: asserted, prefixes: command.session.prefixes })
+      SerializeTurtleRequest.make({
+        dataset: serializableSessionDataset(command.session),
+        prefixes: command.session.prefixes,
+      })
     );
 
     return SerializeOntologySessionResult.make({

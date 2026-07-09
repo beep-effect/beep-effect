@@ -2178,6 +2178,34 @@
       "reason": "Generic interface requires manual modeling and is tracked as an exception."
     },
     {
+      "file": "apps/professional-desktop/test/ontology-sidecar-registration.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 25,
+      "owner": "@beep/professional-desktop",
+      "reason": "Sidecar registration regression decodes fixed RPC payload/result envelopes to prove wiring; schema-derived arbitrary coverage belongs with the use-case schemas."
+    },
+    {
+      "file": "packages/ontology/client/test/Session.atoms.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 36,
+      "owner": "@beep/ontology-client",
+      "reason": "Atom regression uses fixed protocol payloads to prove UI state transitions and RPC calls; schema-derived arbitrary coverage belongs with the use-case schemas."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.validation.ts",
+      "symbol": "OntologyValidationRunnerShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/ontology-use-cases",
+      "reason": "Service shape contains Effect-returning operations and runtime ports; Context.Service owns the boundary rather than a data schema."
+    },
+    {
       "file": "packages/workspace/use-cases/src/aggregates/Thread/ThreadStore.ts",
       "symbol": "ThreadStoreShape",
       "kind": "exported-interface",

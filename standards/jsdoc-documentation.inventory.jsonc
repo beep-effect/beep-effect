@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-07-09T18:32:32.121Z",
+  "generatedAt": "2026-07-09T19:57:37.092Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -61,12 +61,12 @@
     "status": "resolved"
   },
   "totals": {
-    "packages": 109,
-    "cleanPackages": 106,
+    "packages": 110,
+    "cleanPackages": 107,
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 0,
-    "publicModules": 1707,
-    "publicExports": 15010,
+    "publicModules": 1711,
+    "publicExports": 15038,
     "openModules": 0,
     "openExports": 0,
     "missingExportExamples": 0,
@@ -16032,9 +16032,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 18,
-        "publicModuleCount": 18,
-        "publicExportCount": 138
+        "sourceFileCount": 19,
+        "publicModuleCount": 19,
+        "publicExportCount": 151
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -16200,7 +16200,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 14,
+          "exportCount": 16,
           "remediationStatus": "resolved"
         },
         {
@@ -16268,6 +16268,27 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/aggregates/Session/Session.validation.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.validation.ts",
+          "line": 1,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-validation-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 9,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/aggregates/Session/Session.visualizer.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.visualizer.ts",
           "line": 1,
@@ -16326,7 +16347,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 11,
+          "exportCount": 12,
           "remediationStatus": "resolved"
         },
         {
@@ -16347,7 +16368,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 4,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -17761,8 +17782,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.rpc.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
-          "line": 38,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-38-ontologyactionerror",
+          "line": 44,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-44-ontologyactionerror",
           "currentTags": [
             "@example",
             "@since",
@@ -17783,8 +17804,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.rpc.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
-          "line": 95,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-95-openontologydocumentresult",
+          "line": 101,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-101-openontologydocumentresult",
           "currentTags": [
             "@example",
             "@since",
@@ -17805,8 +17826,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.rpc.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
-          "line": 126,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-126-saveontologydocumentresult",
+          "line": 132,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-132-saveontologydocumentresult",
           "currentTags": [
             "@example",
             "@since",
@@ -17827,8 +17848,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.rpc.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
-          "line": 153,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-153-previewontologyturtleresult",
+          "line": 159,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-159-previewontologyturtleresult",
           "currentTags": [
             "@example",
             "@since",
@@ -17849,8 +17870,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.rpc.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
-          "line": 198,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-198-applyontologybatchcommand",
+          "line": 204,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-204-applyontologybatchcommand",
           "currentTags": [
             "@example",
             "@since",
@@ -17871,8 +17892,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.rpc.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
-          "line": 235,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-235-applyontologybatchresult",
+          "line": 241,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-241-applyontologybatchresult",
           "currentTags": [
             "@example",
             "@since",
@@ -17893,8 +17914,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.rpc.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
-          "line": 298,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-298-openontologydocumentrpc",
+          "line": 304,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-304-openontologydocumentrpc",
           "currentTags": [
             "@example",
             "@since",
@@ -17915,8 +17936,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.rpc.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
-          "line": 317,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-317-saveontologydocumentrpc",
+          "line": 323,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-323-saveontologydocumentrpc",
           "currentTags": [
             "@example",
             "@since",
@@ -17937,8 +17958,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.rpc.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
-          "line": 336,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-336-previewontologyturtlerpc",
+          "line": 342,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-342-previewontologyturtlerpc",
           "currentTags": [
             "@example",
             "@since",
@@ -17959,8 +17980,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.rpc.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
-          "line": 355,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-355-applyontologybatchrpc",
+          "line": 361,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-361-applyontologybatchrpc",
           "currentTags": [
             "@example",
             "@since",
@@ -17981,8 +18002,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.rpc.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
-          "line": 374,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-374-getontologysnapshotrpc",
+          "line": 380,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-380-getontologysnapshotrpc",
           "currentTags": [
             "@example",
             "@since",
@@ -18003,8 +18024,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.rpc.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
-          "line": 393,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-393-runontologyinferencerpc",
+          "line": 399,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-399-runontologyinferencerpc",
           "currentTags": [
             "@example",
             "@since",
@@ -18025,8 +18046,52 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.rpc.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
-          "line": 412,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-412-runontologysparqlrpc",
+          "line": 418,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-418-runontologysparqlrpc",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RunOntologyValidationRpc",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.rpc.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+          "line": 437,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-437-runontologyvalidationrpc",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ExportOntologyProvenanceRpc",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.rpc.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+          "line": 456,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-456-exportontologyprovenancerpc",
           "currentTags": [
             "@example",
             "@since",
@@ -18047,8 +18112,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.rpc.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
-          "line": 431,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-431-ontologyrpcs",
+          "line": 475,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-475-ontologyrpcs",
           "currentTags": [
             "@example",
             "@since",
@@ -18069,8 +18134,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.service.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.service.ts",
-          "line": 68,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-service-ts-68-makesessionusecases",
+          "line": 77,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-service-ts-77-makesessionusecases",
           "currentTags": [
             "@example",
             "@since",
@@ -18091,8 +18156,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.service.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.service.ts",
-          "line": 134,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-service-ts-134-sessionusecases",
+          "line": 145,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-service-ts-145-sessionusecases",
           "currentTags": [
             "@example",
             "@since",
@@ -18113,8 +18178,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.service.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.service.ts",
-          "line": 149,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-service-ts-149-sessionusecaseslayer",
+          "line": 160,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-service-ts-160-sessionusecaseslayer",
           "currentTags": [
             "@example",
             "@since",
@@ -18424,6 +18489,204 @@
           "line": 14,
           "anchor": "packages-ontology-use-cases-src-aggregates-session-session-use-cases-ts-14-export-from-session-service-js",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyRepairProposal",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.validation.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.validation.ts",
+          "line": 120,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-validation-ts-120-ontologyrepairproposal",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RunOntologyValidationInput",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.validation.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.validation.ts",
+          "line": 160,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-validation-ts-160-runontologyvalidationinput",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "RunOntologyValidationResult",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.validation.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.validation.ts",
+          "line": 196,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-validation-ts-196-runontologyvalidationresult",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ExportOntologyProvenanceCommand",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.validation.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.validation.ts",
+          "line": 236,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-validation-ts-236-exportontologyprovenancecommand",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ExportOntologyProvenanceResult",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.validation.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.validation.ts",
+          "line": 270,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-validation-ts-270-exportontologyprovenanceresult",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyValidationError",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.validation.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.validation.ts",
+          "line": 302,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-validation-ts-302-ontologyvalidationerror",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyValidationRunnerShape",
+          "exportKind": "interface",
+          "filePath": "src/aggregates/Session/Session.validation.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.validation.ts",
+          "line": 332,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-validation-ts-332-ontologyvalidationrunnershape",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyValidationRunner",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.validation.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.validation.ts",
+          "line": 692,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-validation-ts-692-ontologyvalidationrunner",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyValidationRunnerLive",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.validation.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.validation.ts",
+          "line": 710,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-validation-ts-710-ontologyvalidationrunnerlive",
+          "currentTags": [
+            "@example",
             "@category",
             "@since"
           ],
@@ -19177,12 +19440,33 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./Session.visualizer.js\";",
+          "symbolName": "export * from \"./Session.validation.js\";",
           "exportKind": "re-export",
           "filePath": "src/aggregates/Session/index.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/index.ts",
           "line": 70,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-index-ts-70-export-from-session-visualizer-js",
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-index-ts-70-export-from-session-validation-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Session.visualizer.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/aggregates/Session/index.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/index.ts",
+          "line": 77,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-index-ts-77-export-from-session-visualizer-js",
           "currentTags": [
             "@category",
             "@since"
@@ -19202,8 +19486,8 @@
           "exportKind": "re-export",
           "filePath": "src/aggregates/Session/index.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/index.ts",
-          "line": 77,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-index-ts-77-export-from-session-worker-protocol-js",
+          "line": 84,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-index-ts-84-export-from-session-worker-protocol-js",
           "currentTags": [
             "@category",
             "@since"
@@ -19288,6 +19572,27 @@
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/server.ts",
           "line": 35,
           "anchor": "packages-ontology-use-cases-src-aggregates-session-server-ts-35-export-from-session-sparql-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Session.validation.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/aggregates/Session/server.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/server.ts",
+          "line": 42,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-server-ts-42-export-from-session-validation-js",
           "currentTags": [
             "@category",
             "@since"
@@ -59076,7 +59381,7 @@
         "srcDir": "src",
         "sourceFileCount": 6,
         "publicModuleCount": 6,
-        "publicExportCount": 13
+        "publicExportCount": 14
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -59159,7 +59464,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 5,
+          "exportCount": 6,
           "remediationStatus": "resolved"
         },
         {
@@ -59278,8 +59583,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.layer.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
-          "line": 69,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-69-turtlecodeclayer",
+          "line": 71,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-71-turtlecodeclayer",
           "currentTags": [
             "@example",
             "@since",
@@ -59300,8 +59605,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.layer.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
-          "line": 84,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-84-ontologyfilestorelayer",
+          "line": 86,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-86-ontologyfilestorelayer",
           "currentTags": [
             "@example",
             "@since",
@@ -59322,8 +59627,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.layer.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
-          "line": 99,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-99-ontologyreasonerlayer",
+          "line": 101,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-101-ontologyreasonerlayer",
           "currentTags": [
             "@example",
             "@since",
@@ -59344,8 +59649,30 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.layer.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
-          "line": 114,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-114-ontologysparqlrunnerlayer",
+          "line": 116,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-116-ontologysparqlrunnerlayer",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyValidationRunnerLayer",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.layer.ts",
+          "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
+          "line": 131,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-131-ontologyvalidationrunnerlayer",
           "currentTags": [
             "@example",
             "@since",
@@ -59366,8 +59693,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.layer.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
-          "line": 129,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-129-sessionserverlayer",
+          "line": 150,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-150-sessionserverlayer",
           "currentTags": [
             "@example",
             "@since",
@@ -70612,8 +70939,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 51,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-51-changeoperation",
+          "line": 65,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-65-changeoperation",
           "currentTags": [
             "@example",
             "@since",
@@ -70634,8 +70961,8 @@
           "exportKind": "type",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 91,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-91-changeoperation",
+          "line": 105,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-105-changeoperation",
           "currentTags": [
             "@example",
             "@since",
@@ -70656,8 +70983,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 108,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-108-sessiongraphpartitions",
+          "line": 122,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-122-sessiongraphpartitions",
           "currentTags": [
             "@example",
             "@since",
@@ -70678,8 +71005,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 142,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-142-namedgraphpartition",
+          "line": 156,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-156-namedgraphpartition",
           "currentTags": [
             "@example",
             "@since",
@@ -70700,8 +71027,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 172,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-172-sessionchangedelta",
+          "line": 186,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-186-sessionchangedelta",
           "currentTags": [
             "@example",
             "@since",
@@ -70722,8 +71049,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 210,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-210-session",
+          "line": 224,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-224-session",
           "currentTags": [
             "@example",
             "@since",
@@ -70744,8 +71071,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 249,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-249-sessionchangeapplication",
+          "line": 263,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-263-sessionchangeapplication",
           "currentTags": [
             "@example",
             "@since",
@@ -70766,8 +71093,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 280,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-280-createsessioninput",
+          "line": 294,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-294-createsessioninput",
           "currentTags": [
             "@example",
             "@since",
@@ -70788,8 +71115,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 308,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-308-emptysessionchangedelta",
+          "line": 322,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-322-emptysessionchangedelta",
           "currentTags": [
             "@example",
             "@since",
@@ -70810,8 +71137,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 329,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-329-emptysessiongraphpartitions",
+          "line": 343,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-343-emptysessiongraphpartitions",
           "currentTags": [
             "@example",
             "@since",
@@ -70832,8 +71159,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 372,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-372-datasetforpartition",
+          "line": 436,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-436-datasetforpartition",
           "currentTags": [
             "@example",
             "@since",
@@ -70854,8 +71181,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 424,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-424-combinesessionchangedelta",
+          "line": 488,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-488-combinesessionchangedelta",
           "currentTags": [
             "@example",
             "@since",
@@ -70876,8 +71203,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 463,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-463-changedeltaforoperation",
+          "line": 527,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-527-changedeltaforoperation",
           "currentTags": [
             "@example",
             "@since",
@@ -70898,8 +71225,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 513,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-513-applychangetopartitions",
+          "line": 577,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-577-applychangetopartitions",
           "currentTags": [
             "@example",
             "@since",
@@ -70920,8 +71247,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 548,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-548-createsession",
+          "line": 612,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-612-createsession",
           "currentTags": [
             "@example",
             "@since",
@@ -70942,8 +71269,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 590,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-590-appendchange",
+          "line": 654,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-654-appendchange",
           "currentTags": [
             "@example",
             "@since",
@@ -70964,8 +71291,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 635,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-635-appendchanges",
+          "line": 699,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-699-appendchanges",
           "currentTags": [
             "@example",
             "@since",
@@ -70986,8 +71313,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 673,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-673-invertchangeoperation",
+          "line": 737,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-737-invertchangeoperation",
           "currentTags": [
             "@example",
             "@since",
@@ -71008,8 +71335,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 712,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-712-derivesessiongraphpartitions",
+          "line": 776,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-776-derivesessiongraphpartitions",
           "currentTags": [
             "@example",
             "@since",
@@ -71030,8 +71357,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 757,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-757-applychangeoperationswithdelta",
+          "line": 824,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-824-applychangeoperationswithdelta",
           "currentTags": [
             "@example",
             "@since",
@@ -71052,8 +71379,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 814,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-814-derivenamedgraphs",
+          "line": 881,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-881-derivenamedgraphs",
           "currentTags": [
             "@example",
             "@since",
@@ -83745,8 +84072,8 @@
           "exportKind": "const",
           "filePath": "src/adapters/shacl-engine.ts",
           "repoPath": "packages/foundation/capability/semantic-web/src/adapters/shacl-engine.ts",
-          "line": 65,
-          "anchor": "packages-foundation-capability-semantic-web-src-adapters-shacl-engine-ts-65-boundedshaclvalidationservicelive",
+          "line": 73,
+          "anchor": "packages-foundation-capability-semantic-web-src-adapters-shacl-engine-ts-73-boundedshaclvalidationservicelive",
           "currentTags": [
             "@example",
             "@category",
@@ -83767,8 +84094,8 @@
           "exportKind": "const",
           "filePath": "src/adapters/shacl-engine.ts",
           "repoPath": "packages/foundation/capability/semantic-web/src/adapters/shacl-engine.ts",
-          "line": 207,
-          "anchor": "packages-foundation-capability-semantic-web-src-adapters-shacl-engine-ts-207-shaclvalidationservicelive",
+          "line": 239,
+          "anchor": "packages-foundation-capability-semantic-web-src-adapters-shacl-engine-ts-239-shaclvalidationservicelive",
           "currentTags": [
             "@example",
             "@category",
@@ -85611,8 +85938,8 @@
           "exportKind": "class",
           "filePath": "src/services/shacl-validation.ts",
           "repoPath": "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
-          "line": 131,
-          "anchor": "packages-foundation-capability-semantic-web-src-services-shacl-validation-ts-131-shaclnodeshape",
+          "line": 132,
+          "anchor": "packages-foundation-capability-semantic-web-src-services-shacl-validation-ts-132-shaclnodeshape",
           "currentTags": [
             "@example",
             "@category",
@@ -85633,8 +85960,8 @@
           "exportKind": "class",
           "filePath": "src/services/shacl-validation.ts",
           "repoPath": "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
-          "line": 167,
-          "anchor": "packages-foundation-capability-semantic-web-src-services-shacl-validation-ts-167-shaclvalidationviolation",
+          "line": 169,
+          "anchor": "packages-foundation-capability-semantic-web-src-services-shacl-validation-ts-169-shaclvalidationviolation",
           "currentTags": [
             "@example",
             "@category",
@@ -85655,8 +85982,8 @@
           "exportKind": "class",
           "filePath": "src/services/shacl-validation.ts",
           "repoPath": "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
-          "line": 200,
-          "anchor": "packages-foundation-capability-semantic-web-src-services-shacl-validation-ts-200-shaclvalidationrequest",
+          "line": 203,
+          "anchor": "packages-foundation-capability-semantic-web-src-services-shacl-validation-ts-203-shaclvalidationrequest",
           "currentTags": [
             "@example",
             "@category",
@@ -85677,8 +86004,8 @@
           "exportKind": "class",
           "filePath": "src/services/shacl-validation.ts",
           "repoPath": "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
-          "line": 234,
-          "anchor": "packages-foundation-capability-semantic-web-src-services-shacl-validation-ts-234-shaclvalidationresult",
+          "line": 238,
+          "anchor": "packages-foundation-capability-semantic-web-src-services-shacl-validation-ts-238-shaclvalidationresult",
           "currentTags": [
             "@example",
             "@category",
@@ -85699,8 +86026,8 @@
           "exportKind": "const",
           "filePath": "src/services/shacl-validation.ts",
           "repoPath": "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
-          "line": 262,
-          "anchor": "packages-foundation-capability-semantic-web-src-services-shacl-validation-ts-262-shaclvalidationerrorreason",
+          "line": 266,
+          "anchor": "packages-foundation-capability-semantic-web-src-services-shacl-validation-ts-266-shaclvalidationerrorreason",
           "currentTags": [
             "@example",
             "@category",
@@ -85721,8 +86048,8 @@
           "exportKind": "type",
           "filePath": "src/services/shacl-validation.ts",
           "repoPath": "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
-          "line": 284,
-          "anchor": "packages-foundation-capability-semantic-web-src-services-shacl-validation-ts-284-shaclvalidationerrorreason",
+          "line": 288,
+          "anchor": "packages-foundation-capability-semantic-web-src-services-shacl-validation-ts-288-shaclvalidationerrorreason",
           "currentTags": [
             "@example",
             "@category",
@@ -85743,8 +86070,8 @@
           "exportKind": "class",
           "filePath": "src/services/shacl-validation.ts",
           "repoPath": "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
-          "line": 304,
-          "anchor": "packages-foundation-capability-semantic-web-src-services-shacl-validation-ts-304-shaclvalidationerror",
+          "line": 308,
+          "anchor": "packages-foundation-capability-semantic-web-src-services-shacl-validation-ts-308-shaclvalidationerror",
           "currentTags": [
             "@example",
             "@category",
@@ -85765,8 +86092,8 @@
           "exportKind": "interface",
           "filePath": "src/services/shacl-validation.ts",
           "repoPath": "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
-          "line": 330,
-          "anchor": "packages-foundation-capability-semantic-web-src-services-shacl-validation-ts-330-shaclvalidationserviceshape",
+          "line": 334,
+          "anchor": "packages-foundation-capability-semantic-web-src-services-shacl-validation-ts-334-shaclvalidationserviceshape",
           "currentTags": [
             "@example",
             "@since",
@@ -85787,8 +86114,8 @@
           "exportKind": "class",
           "filePath": "src/services/shacl-validation.ts",
           "repoPath": "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
-          "line": 372,
-          "anchor": "packages-foundation-capability-semantic-web-src-services-shacl-validation-ts-372-shaclvalidationservice",
+          "line": 376,
+          "anchor": "packages-foundation-capability-semantic-web-src-services-shacl-validation-ts-376-shaclvalidationservice",
           "currentTags": [
             "@example",
             "@category",
@@ -107735,6 +108062,7 @@
           "anchor": "packages-ontology-ui-src-aggregates-session-tree-index-ts-1-module",
           "currentTags": [
             "@packageDocumentation",
+            "@category",
             "@since"
           ],
           "missingRequiredTags": [],
@@ -107800,8 +108128,8 @@
           "exportKind": "function",
           "filePath": "src/aggregates/Session/Session.workbench.tsx",
           "repoPath": "packages/ontology/ui/src/aggregates/Session/Session.workbench.tsx",
-          "line": 235,
-          "anchor": "packages-ontology-ui-src-aggregates-session-session-workbench-tsx-235-ontologyworkbench",
+          "line": 378,
+          "anchor": "packages-ontology-ui-src-aggregates-session-session-workbench-tsx-378-ontologyworkbench",
           "currentTags": [
             "@example",
             "@category",
@@ -107864,8 +108192,8 @@
           "exportKind": "re-export",
           "filePath": "src/aggregates/Session/tree/index.ts",
           "repoPath": "packages/ontology/ui/src/aggregates/Session/tree/index.ts",
-          "line": 14,
-          "anchor": "packages-ontology-ui-src-aggregates-session-tree-index-ts-14-export-from-session-tree-js",
+          "line": 15,
+          "anchor": "packages-ontology-ui-src-aggregates-session-tree-index-ts-15-export-from-session-tree-js",
           "currentTags": [
             "@category",
             "@since"
@@ -210705,9 +211033,238 @@
       ]
     },
     {
+      "packageName": "@beep/shacl",
+      "packagePath": "packages/drivers/shacl",
+      "topoOrder": 66,
+      "status": "clean",
+      "sourceCoverage": {
+        "srcDir": "src",
+        "sourceFileCount": 3,
+        "publicModuleCount": 3,
+        "publicExportCount": 6
+      },
+      "docgenCoverage": {
+        "hasDocgenConfig": true,
+        "enforceDescriptions": false,
+        "enforceExamples": false,
+        "enforceVersion": true
+      },
+      "counts": {
+        "openModules": 0,
+        "openExports": 0,
+        "missingExportExamples": 0,
+        "missingExportCategories": 0,
+        "missingExportSince": 0,
+        "missingExportSummaries": 0,
+        "forbiddenTagFindings": 0,
+        "malformedConditionalTagFindings": 0,
+        "exampleImportFindings": 0,
+        "unsafeExampleFindings": 0,
+        "schemaAnnotationFindings": 0
+      },
+      "modules": [
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Shacl.errors.ts",
+          "repoPath": "packages/drivers/shacl/src/Shacl.errors.ts",
+          "line": 1,
+          "anchor": "packages-drivers-shacl-src-shacl-errors-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 3,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Shacl.validation.ts",
+          "repoPath": "packages/drivers/shacl/src/Shacl.validation.ts",
+          "line": 1,
+          "anchor": "packages-drivers-shacl-src-shacl-validation-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/shacl/src/index.ts",
+          "line": 1,
+          "anchor": "packages-drivers-shacl-src-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        }
+      ],
+      "exports": [
+        {
+          "symbolName": "ShaclEngineErrorReason",
+          "exportKind": "const",
+          "filePath": "src/Shacl.errors.ts",
+          "repoPath": "packages/drivers/shacl/src/Shacl.errors.ts",
+          "line": 30,
+          "anchor": "packages-drivers-shacl-src-shacl-errors-ts-30-shaclengineerrorreason",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ShaclEngineErrorReason",
+          "exportKind": "type",
+          "filePath": "src/Shacl.errors.ts",
+          "repoPath": "packages/drivers/shacl/src/Shacl.errors.ts",
+          "line": 56,
+          "anchor": "packages-drivers-shacl-src-shacl-errors-ts-56-shaclengineerrorreason",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ShaclEngineError",
+          "exportKind": "class",
+          "filePath": "src/Shacl.errors.ts",
+          "repoPath": "packages/drivers/shacl/src/Shacl.errors.ts",
+          "line": 76,
+          "anchor": "packages-drivers-shacl-src-shacl-errors-ts-76-shaclengineerror",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ShaclValidationServiceLive",
+          "exportKind": "const",
+          "filePath": "src/Shacl.validation.ts",
+          "repoPath": "packages/drivers/shacl/src/Shacl.validation.ts",
+          "line": 404,
+          "anchor": "packages-drivers-shacl-src-shacl-validation-ts-404-shaclvalidationservicelive",
+          "currentTags": [
+            "@remarks",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Shacl.errors.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/shacl/src/index.ts",
+          "line": 14,
+          "anchor": "packages-drivers-shacl-src-index-ts-14-export-from-shacl-errors-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Shacl.validation.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/shacl/src/index.ts",
+          "line": 21,
+          "anchor": "packages-drivers-shacl-src-index-ts-21-export-from-shacl-validation-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        }
+      ]
+    },
+    {
       "packageName": "@beep/nlp-processing",
       "packagePath": "packages/foundation/capability/nlp-processing",
-      "topoOrder": 66,
+      "topoOrder": 67,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -218667,7 +219224,7 @@
     {
       "packageName": "@beep/anthropic",
       "packagePath": "packages/drivers/anthropic",
-      "topoOrder": 67,
+      "topoOrder": 68,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -219387,7 +219944,7 @@
     {
       "packageName": "@beep/professional-desktop",
       "packagePath": "apps/professional-desktop",
-      "topoOrder": 68,
+      "topoOrder": 69,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -220577,8 +221134,8 @@
           "exportKind": "const",
           "filePath": "src/ontology/OntologyOrchestrator.ts",
           "repoPath": "apps/professional-desktop/src/ontology/OntologyOrchestrator.ts",
-          "line": 145,
-          "anchor": "apps-professional-desktop-src-ontology-ontologyorchestrator-ts-145-ontologyhandlerslive",
+          "line": 162,
+          "anchor": "apps-professional-desktop-src-ontology-ontologyorchestrator-ts-162-ontologyhandlerslive",
           "currentTags": [
             "@example",
             "@category",
@@ -221149,7 +221706,7 @@
     {
       "packageName": "@beep/epistemic-domain",
       "packagePath": "packages/epistemic/domain",
-      "topoOrder": 69,
+      "topoOrder": 70,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -222614,13 +223171,13 @@
     {
       "packageName": "@beep/ontology-client",
       "packagePath": "packages/ontology/client",
-      "topoOrder": 70,
+      "topoOrder": 71,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
         "sourceFileCount": 4,
         "publicModuleCount": 3,
-        "publicExportCount": 53
+        "publicExportCount": 61
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -222660,7 +223217,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 50,
+          "exportCount": 58,
           "remediationStatus": "resolved"
         },
         {
@@ -222713,8 +223270,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 86,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-86-httpontologyprotocollive",
+          "line": 91,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-91-httpontologyprotocollive",
           "currentTags": [
             "@example",
             "@category",
@@ -222735,8 +223292,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 103,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-103-ontologyprotocollayeratom",
+          "line": 108,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-108-ontologyprotocollayeratom",
           "currentTags": [
             "@example",
             "@category",
@@ -222757,8 +223314,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 119,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-119-ontologyclient",
+          "line": 124,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-124-ontologyclient",
           "currentTags": [
             "@example",
             "@category",
@@ -222779,8 +223336,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 151,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-151-openontologydocumentinput",
+          "line": 159,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-159-openontologydocumentinput",
           "currentTags": [
             "@example",
             "@category",
@@ -222801,8 +223358,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 181,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-181-saveontologydocumentinput",
+          "line": 189,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-189-saveontologydocumentinput",
           "currentTags": [
             "@example",
             "@category",
@@ -222823,8 +223380,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 219,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-219-applyontologybatchinput",
+          "line": 227,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-227-applyontologybatchinput",
           "currentTags": [
             "@example",
             "@category",
@@ -222845,8 +223402,30 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 250,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-250-applyontologygraphgestureinput",
+          "line": 258,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-258-applyontologygraphgestureinput",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyValidationStatus",
+          "exportKind": "type",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 285,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-285-ontologyvalidationstatus",
           "currentTags": [
             "@example",
             "@category",
@@ -222867,8 +223446,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 274,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-274-ontologysessionatom",
+          "line": 300,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-300-ontologysessionatom",
           "currentTags": [
             "@example",
             "@category",
@@ -222889,8 +223468,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 289,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-289-ontologypathatom",
+          "line": 315,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-315-ontologypathatom",
           "currentTags": [
             "@example",
             "@category",
@@ -222911,8 +223490,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 304,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-304-ontologysourceatom",
+          "line": 330,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-330-ontologysourceatom",
           "currentTags": [
             "@example",
             "@category",
@@ -222933,8 +223512,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 319,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-319-ontologysavedchangecountatom",
+          "line": 345,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-345-ontologysavedchangecountatom",
           "currentTags": [
             "@example",
             "@category",
@@ -222955,8 +223534,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 334,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-334-ontologyredostackatom",
+          "line": 360,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-360-ontologyredostackatom",
           "currentTags": [
             "@example",
             "@category",
@@ -222977,8 +223556,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 349,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-349-ontologyviewmodeatom",
+          "line": 375,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-375-ontologyviewmodeatom",
           "currentTags": [
             "@example",
             "@category",
@@ -222999,8 +223578,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 364,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-364-ontologyfoldlevelatom",
+          "line": 390,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-390-ontologyfoldlevelatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223021,8 +223600,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 379,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-379-ontologyinferredviewatom",
+          "line": 405,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-405-ontologyinferredviewatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223043,8 +223622,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 394,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-394-ontologyinferenceresultatom",
+          "line": 420,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-420-ontologyinferenceresultatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223065,8 +223644,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 411,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-411-ontologyinferenceerroratom",
+          "line": 437,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-437-ontologyinferenceerroratom",
           "currentTags": [
             "@example",
             "@category",
@@ -223087,8 +223666,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 473,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-473-ontologysparqlprofileatom",
+          "line": 517,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-517-ontologysparqlprofileatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223109,8 +223688,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 488,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-488-ontologysparqlqueryatom",
+          "line": 532,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-532-ontologysparqlqueryatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223131,8 +223710,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 503,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-503-ontologysparqlexamplesatom",
+          "line": 547,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-547-ontologysparqlexamplesatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223153,8 +223732,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 518,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-518-ontologysparqlresultatom",
+          "line": 562,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-562-ontologysparqlresultatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223175,8 +223754,96 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 533,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-533-ontologysparqlerroratom",
+          "line": 577,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-577-ontologysparqlerroratom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ontologyValidationResultAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 592,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-592-ontologyvalidationresultatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ontologyValidationStatusAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 607,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-607-ontologyvalidationstatusatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ontologyValidationErrorAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 622,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-622-ontologyvalidationerroratom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ontologyProvenanceExportAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 637,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-637-ontologyprovenanceexportatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223197,8 +223864,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 548,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-548-ontologysearchqueryatom",
+          "line": 652,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-652-ontologysearchqueryatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223219,8 +223886,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 563,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-563-selectedontologyresourceiriatom",
+          "line": 667,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-667-selectedontologyresourceiriatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223241,8 +223908,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 578,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-578-ontologygraphprojectionatom",
+          "line": 682,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-682-ontologygraphprojectionatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223263,8 +223930,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 593,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-593-ontologygraphdeltaatom",
+          "line": 697,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-697-ontologygraphdeltaatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223285,8 +223952,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 608,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-608-ontologygraphcontaineratom",
+          "line": 712,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-712-ontologygraphcontaineratom",
           "currentTags": [
             "@example",
             "@category",
@@ -223307,8 +223974,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 623,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-623-ontologygraphbackendatom",
+          "line": 727,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-727-ontologygraphbackendatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223329,8 +223996,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 638,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-638-ontologygrapherroratom",
+          "line": 742,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-742-ontologygrapherroratom",
           "currentTags": [
             "@example",
             "@category",
@@ -223351,8 +224018,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 655,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-655-emptyontologysnapshot",
+          "line": 759,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-759-emptyontologysnapshot",
           "currentTags": [
             "@example",
             "@category",
@@ -223373,8 +224040,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 686,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-686-ontologysnapshotatom",
+          "line": 790,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-790-ontologysnapshotatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223395,8 +224062,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 712,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-712-ontologydirtyatom",
+          "line": 816,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-816-ontologydirtyatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223417,8 +224084,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 735,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-735-ontologysearchresultsatom",
+          "line": 839,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-839-ontologysearchresultsatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223439,8 +224106,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 755,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-755-selectedontologyresourceatom",
+          "line": 859,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-859-selectedontologyresourceatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223461,8 +224128,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 780,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-780-visibleontologyresourcesatom",
+          "line": 884,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-884-visibleontologyresourcesatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223483,8 +224150,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 800,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-800-ontologygraphprojectionoptionsatom",
+          "line": 904,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-904-ontologygraphprojectionoptionsatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223505,8 +224172,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 822,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-822-ontologypredicatesuggestionsatom",
+          "line": 926,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-926-ontologypredicatesuggestionsatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223527,8 +224194,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 853,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-853-ontologygraphworkerbridgeatom",
+          "line": 957,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-957-ontologygraphworkerbridgeatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223549,8 +224216,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 967,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-967-ontologygraphrenderbridgeatom",
+          "line": 1071,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1071-ontologygraphrenderbridgeatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223571,8 +224238,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1034,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1034-toggleontologyinferredviewatom",
+          "line": 1138,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1138-toggleontologyinferredviewatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223593,8 +224260,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1064,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1064-applyontologysparqlexampleatom",
+          "line": 1168,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1168-applyontologysparqlexampleatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223615,8 +224282,74 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1096,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1096-runontologysparqlatom",
+          "line": 1200,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1200-runontologysparqlatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "runOntologyValidationAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 1242,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1242-runontologyvalidationatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "applyOntologyRepairAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 1291,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1291-applyontologyrepairatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "exportOntologyProvenanceAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 1334,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1334-exportontologyprovenanceatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223637,8 +224370,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1138,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1138-openontologydocumentatom",
+          "line": 1375,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1375-openontologydocumentatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223659,8 +224392,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1173,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1173-saveontologydocumentatom",
+          "line": 1412,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1412-saveontologydocumentatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223681,8 +224414,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1200,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1200-previewontologyturtleatom",
+          "line": 1439,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1439-previewontologyturtleatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223703,8 +224436,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1222,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1222-applyontologybatchatom",
+          "line": 1461,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1461-applyontologybatchatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223725,8 +224458,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1257,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1257-applyontologygraphgestureatom",
+          "line": 1497,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1497-applyontologygraphgestureatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223747,8 +224480,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1293,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1293-undoontologychangeatom",
+          "line": 1534,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1534-undoontologychangeatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223769,8 +224502,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1335,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1335-redoontologychangeatom",
+          "line": 1577,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1577-redoontologychangeatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223791,8 +224524,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1388,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1388-invertontologychange",
+          "line": 1631,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1631-invertontologychange",
           "currentTags": [
             "@example",
             "@category",
@@ -223877,7 +224610,7 @@
     {
       "packageName": "@beep/architecture-lab-use-cases",
       "packagePath": "packages/architecture-lab/use-cases",
-      "topoOrder": 71,
+      "topoOrder": 72,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -225702,7 +226435,7 @@
     {
       "packageName": "@beep/firecrawl",
       "packagePath": "packages/drivers/firecrawl",
-      "topoOrder": 72,
+      "topoOrder": 73,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -231716,7 +232449,7 @@
     {
       "packageName": "@beep/ecfr",
       "packagePath": "packages/drivers/ecfr",
-      "topoOrder": 73,
+      "topoOrder": 74,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -232357,7 +233090,7 @@
     {
       "packageName": "@beep/oxigraph",
       "packagePath": "packages/drivers/oxigraph",
-      "topoOrder": 74,
+      "topoOrder": 75,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -232586,7 +233319,7 @@
     {
       "packageName": "@beep/acp",
       "packagePath": "packages/drivers/acp",
-      "topoOrder": 75,
+      "topoOrder": 76,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -241854,7 +242587,7 @@
     {
       "packageName": "@beep/nlp",
       "packagePath": "packages/foundation/modeling/nlp",
-      "topoOrder": 76,
+      "topoOrder": 77,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -249314,7 +250047,7 @@
     {
       "packageName": "@beep/infra",
       "packagePath": "infra",
-      "topoOrder": 77,
+      "topoOrder": 78,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -250202,7 +250935,7 @@
     {
       "packageName": "@beep/runpod",
       "packagePath": "packages/drivers/runpod",
-      "topoOrder": 78,
+      "topoOrder": 79,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -254297,7 +255030,7 @@
     {
       "packageName": "@beep/fc-runs",
       "packagePath": "packages/tooling/test-kit/fc-runs",
-      "topoOrder": 79,
+      "topoOrder": 80,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -254490,7 +255223,7 @@
     {
       "packageName": "@beep/repo-utils",
       "packagePath": "packages/tooling/library/repo-utils",
-      "topoOrder": 80,
+      "topoOrder": 81,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -270880,7 +271613,7 @@
     {
       "packageName": "@beep/schema",
       "packagePath": "packages/foundation/modeling/schema",
-      "topoOrder": 81,
+      "topoOrder": 82,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -310532,7 +311265,7 @@
     {
       "packageName": "@beep/epistemic-server",
       "packagePath": "packages/epistemic/server",
-      "topoOrder": 82,
+      "topoOrder": 83,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -310676,7 +311409,7 @@
     {
       "packageName": "@beep/rdf",
       "packagePath": "packages/foundation/modeling/rdf",
-      "topoOrder": 83,
+      "topoOrder": 84,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -315680,7 +316413,7 @@
     {
       "packageName": "@beep/onepassword-cli",
       "packagePath": "packages/drivers/onepassword-cli",
-      "topoOrder": 84,
+      "topoOrder": 85,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -316148,7 +316881,7 @@
     {
       "packageName": "@beep/architecture-lab-config",
       "packagePath": "packages/architecture-lab/config",
-      "topoOrder": 85,
+      "topoOrder": 86,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -316830,7 +317563,7 @@
     {
       "packageName": "@beep/govinfo",
       "packagePath": "packages/drivers/govinfo",
-      "topoOrder": 86,
+      "topoOrder": 87,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -319410,7 +320143,7 @@
     {
       "packageName": "@beep/data",
       "packagePath": "packages/foundation/primitive/data",
-      "topoOrder": 87,
+      "topoOrder": 88,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -322865,7 +323598,7 @@
     {
       "packageName": "@beep/xai",
       "packagePath": "packages/drivers/xai",
-      "topoOrder": 88,
+      "topoOrder": 89,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -324590,7 +325323,7 @@
     {
       "packageName": "@beep/architecture-lab-server",
       "packagePath": "packages/architecture-lab/server",
-      "topoOrder": 89,
+      "topoOrder": 90,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -325655,7 +326388,7 @@
     {
       "packageName": "@beep/duckdb",
       "packagePath": "packages/drivers/duckdb",
-      "topoOrder": 90,
+      "topoOrder": 91,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -326446,7 +327179,7 @@
     {
       "packageName": "@beep/ffmpeg",
       "packagePath": "packages/drivers/ffmpeg",
-      "topoOrder": 91,
+      "topoOrder": 92,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -327750,7 +328483,7 @@
     {
       "packageName": "@beep/agents-client",
       "packagePath": "packages/agents/client",
-      "topoOrder": 92,
+      "topoOrder": 93,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -328368,7 +329101,7 @@
     {
       "packageName": "@beep/uspto-mcp",
       "packagePath": "packages/drivers/uspto-mcp",
-      "topoOrder": 93,
+      "topoOrder": 94,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -329205,7 +329938,7 @@
     {
       "packageName": "@beep/architecture-lab-proof",
       "packagePath": "apps/architecture-lab-proof",
-      "topoOrder": 94,
+      "topoOrder": 95,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -329307,7 +330040,7 @@
     {
       "packageName": "@beep/epistemic-use-cases",
       "packagePath": "packages/epistemic/use-cases",
-      "topoOrder": 95,
+      "topoOrder": 96,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -329972,7 +330705,7 @@
     {
       "packageName": "@beep/m365",
       "packagePath": "packages/drivers/m365",
-      "topoOrder": 96,
+      "topoOrder": 97,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -331757,7 +332490,7 @@
     {
       "packageName": "@beep/observability",
       "packagePath": "packages/foundation/capability/observability",
-      "topoOrder": 97,
+      "topoOrder": 98,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -335793,7 +336526,7 @@
     {
       "packageName": "@beep/html",
       "packagePath": "packages/foundation/modeling/html",
-      "topoOrder": 98,
+      "topoOrder": 99,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -343741,7 +344474,7 @@
     {
       "packageName": "@beep/n3",
       "packagePath": "packages/drivers/n3",
-      "topoOrder": 99,
+      "topoOrder": 100,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -344079,7 +344812,7 @@
     {
       "packageName": "@beep/ui",
       "packagePath": "packages/foundation/ui-system/ui",
-      "topoOrder": 100,
+      "topoOrder": 101,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -359039,7 +359772,7 @@
     {
       "packageName": "@beep/pandoc-ast",
       "packagePath": "packages/foundation/modeling/pandoc-ast",
-      "topoOrder": 101,
+      "topoOrder": 102,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -361841,7 +362574,7 @@
     {
       "packageName": "@beep/repo-configs",
       "packagePath": "packages/tooling/policy-pack/repo-configs",
-      "topoOrder": 102,
+      "topoOrder": 103,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -365495,7 +366228,7 @@
     {
       "packageName": "@beep/wink",
       "packagePath": "packages/drivers/wink",
-      "topoOrder": 103,
+      "topoOrder": 104,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -367377,7 +368110,7 @@
     {
       "packageName": "@beep/postgres",
       "packagePath": "packages/drivers/postgres",
-      "topoOrder": 104,
+      "topoOrder": 105,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -368347,7 +369080,7 @@
     {
       "packageName": "@beep/architecture-lab-domain",
       "packagePath": "packages/architecture-lab/domain",
-      "topoOrder": 105,
+      "topoOrder": 106,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -369839,7 +370572,7 @@
     {
       "packageName": "@beep/provenance",
       "packagePath": "packages/foundation/modeling/provenance",
-      "topoOrder": 106,
+      "topoOrder": 107,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -370025,7 +370758,7 @@
     {
       "packageName": "@beep/epistemic-tables",
       "packagePath": "packages/epistemic/tables",
-      "topoOrder": 107,
+      "topoOrder": 108,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -370450,7 +371183,7 @@
     {
       "packageName": "@beep/federal-register",
       "packagePath": "packages/drivers/federal-register",
-      "topoOrder": 108,
+      "topoOrder": 109,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -370531,7 +371264,7 @@
     {
       "packageName": "@beep/sanity",
       "packagePath": "packages/drivers/sanity",
-      "topoOrder": 109,
+      "topoOrder": 110,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",

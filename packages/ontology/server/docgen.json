@@ -73,6 +73,7 @@
       "@beep/semantic-web/*": [
         "../../../packages/foundation/capability/semantic-web/src/*.ts"
       ],
+      "@beep/shacl": ["../../../packages/drivers/shacl/src/index.ts"],
       "@beep/test-utils": [
         "../../../packages/tooling/test-kit/test-utils/src/index.ts"
       ],

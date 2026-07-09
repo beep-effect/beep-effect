@@ -84,8 +84,8 @@
     {
       "id": "P5",
       "name": "Validation + Provenance",
-      "status": "pending",
-      "exit": "drivers/shacl implements the @beep/semantic-web SHACL contract; SHACL violation -> verified repair -> undo acceptance passes; PROV-O journal and VoID/DCAT exports produced from the change log."
+      "status": "host-verification-required",
+      "exit": "drivers/shacl implements the @beep/semantic-web SHACL contract; validation runs over asserted plus inferred graphs; verified repair proposals are typed undoable change operations; validation metrics, focus-node navigation, PROV-O journal export, and VoID/DCAT dataset export are implemented. Local package checks and formatting passed; host must verify npm registry pins, install, rerun tests, and complete browser acceptance. Evidence: history/2026-07-09-p5-validation-provenance.md."
     },
     {
       "id": "P6",

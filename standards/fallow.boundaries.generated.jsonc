@@ -552,6 +552,12 @@
         ]
       },
       {
+        "name": "@beep/shacl",
+        "patterns": [
+          "packages/drivers/shacl/src/**"
+        ]
+      },
+      {
         "name": "@beep/shared-domain",
         "patterns": [
           "packages/shared/domain/src/**"
@@ -1849,6 +1855,7 @@
           "@beep/oxigraph",
           "@beep/rdf-canonize",
           "@beep/semantic-web",
+          "@beep/shacl",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -1858,6 +1865,7 @@
           "@beep/oxigraph",
           "@beep/rdf-canonize",
           "@beep/semantic-web",
+          "@beep/shacl",
           "@beep/test-utils"
         ]
       },
@@ -1895,6 +1903,7 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
+          "@beep/shacl",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -1904,6 +1913,7 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
+          "@beep/shacl",
           "@beep/test-utils"
         ]
       },
@@ -2358,6 +2368,27 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/shacl",
+        "allow": [
+          "@beep/identity",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/semantic-web",
+          "@beep/shacl",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/semantic-web",
+          "@beep/shacl",
           "@beep/test-utils",
           "@beep/utils"
         ]
