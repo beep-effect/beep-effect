@@ -66,8 +66,8 @@
     {
       "id": "P2",
       "name": "Explorer + Editor",
-      "status": "pending",
-      "exit": "client + ui packages land; author-edit-save loop works in the running desktop app with undo/redo, change log, ABox/TBox view modes, and metrics panel."
+      "status": "host-reverification-required",
+      "exit": "client + ui packages landed with sidecar RPCs, atom client state, workbench UI, real batch deltas, shared ABox/TBox classification/search, pizza tutorial typed ops, change-log panel, fixed tooltip button markup, and prefix-preserving Turtle save behavior; live proof covered core flows, and host must rerun bun-backed tests plus the running desktop author-edit-save proof."
     },
     {
       "id": "P3",

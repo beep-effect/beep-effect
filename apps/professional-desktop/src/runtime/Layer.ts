@@ -30,10 +30,13 @@
 
 import { AnthropicTurnKernel } from "@beep/agents-server/AnthropicTurnKernel";
 import { FixtureTurnKernel } from "@beep/agents-use-cases/proof";
+import { OntologyServerLive } from "@beep/ontology-server/layer";
 import { Thread } from "@beep/workspace-server";
+import { BunServices } from "@effect/platform-bun";
 import { Config, Effect, Layer } from "effect";
 import { ChatHandlersLive } from "@/chat/ChatOrchestrator";
 import { UsageRecordSinkDrizzle, UsageRecordSinkInMemory } from "@/chat/UsageRecordSink";
+import { OntologyHandlersLive } from "@/ontology/OntologyOrchestrator";
 import { ObservabilityLive } from "@/runtime/Observability";
 import { PgliteDrizzleLive } from "@/runtime/Pglite";
 import type { AgentTurnKernel } from "@beep/agents-use-cases/public";
@@ -46,16 +49,18 @@ import type { AgentTurnKernel } from "@beep/agents-use-cases/public";
  *
  * @example
  * ```ts
- * import type { ChatHandlersLayer } from "@/runtime/Layer"
+ * import type { DesktopHandlersLayer } from "@/runtime/Layer"
  * import type { RuntimeLive } from "@/runtime/Layer"
  *
- * type Check = typeof RuntimeLive extends ChatHandlersLayer ? true : false
+ * type Check = typeof RuntimeLive extends DesktopHandlersLayer ? true : false
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type ChatHandlersLayer = Layer.Layer<Layer.Success<typeof ChatHandlersLive>>;
+export type DesktopHandlersLayer = Layer.Layer<
+  Layer.Success<typeof ChatHandlersLive> | Layer.Success<typeof OntologyHandlersLive>
+>;
 
 /**
  * Select the assistant-turn kernel from the `CHAT_AGENT` env flag. `anthropic`
@@ -75,14 +80,20 @@ const TurnKernelLive: Layer.Layer<AgentTurnKernel> = Layer.unwrap(
   }).pipe(Effect.orDie)
 );
 
+const ChatRuntimeLive = ChatHandlersLive.pipe(
+  Layer.provide([TurnKernelLive, Thread.ThreadStoreDrizzleLayer, UsageRecordSinkDrizzle]),
+  Layer.provide(PgliteDrizzleLive),
+  Layer.provideMerge(ObservabilityLive)
+);
+
+const OntologyRuntimeLive = OntologyHandlersLive.pipe(
+  Layer.provide(OntologyServerLive),
+  Layer.provide(BunServices.layer),
+  Layer.provideMerge(ObservabilityLive)
+);
+
 /**
- * App-local live runtime Layer: the fully-provided `ChatRpcs` handler group
- * backed by the live assistant-turn kernel, the Drizzle ThreadStore, and the
- * Drizzle usage-record sink — all over one shared PGlite-backed
- * {@link PgliteDrizzleLive} database, with env-gated observability merged in.
- *
- * This is the thing the sidecar launches; its only remaining requirement is the
- * rpc/http transport the sidecar provides on top.
+ * App-local live runtime Layer for chat and ontology sidecar handlers.
  *
  * @example
  * ```ts
@@ -94,17 +105,19 @@ const TurnKernelLive: Layer.Layer<AgentTurnKernel> = Layer.unwrap(
  * @category layers
  * @since 0.0.0
  */
-export const RuntimeLive: ChatHandlersLayer = ChatHandlersLive.pipe(
-  Layer.provide([TurnKernelLive, Thread.ThreadStoreDrizzleLayer, UsageRecordSinkDrizzle]),
-  Layer.provide(PgliteDrizzleLive),
-  Layer.provideMerge(ObservabilityLive)
+export const RuntimeLive: DesktopHandlersLayer = Layer.merge(ChatRuntimeLive, OntologyRuntimeLive);
+
+const ChatRuntimeTest = ChatHandlersLive.pipe(
+  Layer.provide([FixtureTurnKernel, Thread.ThreadStoreInMemoryLayer, UsageRecordSinkInMemory])
+);
+
+const OntologyRuntimeTest = OntologyHandlersLive.pipe(
+  Layer.provide(OntologyServerLive),
+  Layer.provide(BunServices.layer)
 );
 
 /**
- * App-local fixture runtime Layer for smoke/dev: the deterministic keyless
- * {@link FixtureTurnKernel}, the in-memory ThreadStore, and the in-memory
- * usage-record sink — no database, no API key, no external dependency. Mirrors
- * the wiring exercised by the app-level chat contract test.
+ * App-local fixture runtime Layer for smoke/dev chat and ontology handlers.
  *
  * @example
  * ```ts
@@ -116,6 +129,4 @@ export const RuntimeLive: ChatHandlersLayer = ChatHandlersLive.pipe(
  * @category layers
  * @since 0.0.0
  */
-export const RuntimeTest: ChatHandlersLayer = ChatHandlersLive.pipe(
-  Layer.provide([FixtureTurnKernel, Thread.ThreadStoreInMemoryLayer, UsageRecordSinkInMemory])
-);
+export const RuntimeTest: DesktopHandlersLayer = Layer.merge(ChatRuntimeTest, OntologyRuntimeTest);

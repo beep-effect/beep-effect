@@ -18,6 +18,13 @@ import type * as N3 from "n3";
 const { $N3Id } = makeIdentity("n3");
 const $I = $N3Id.create("N3.service");
 
+const emptyPrefixMap = (): Rdf.PrefixMap => ({});
+
+const PrefixMapWithEmptyDefault = Rdf.PrefixMap.pipe(
+  S.withConstructorDefault(Effect.succeed(emptyPrefixMap())),
+  S.withDecodingDefaultKey(Effect.succeed(emptyPrefixMap()))
+);
+
 /**
  * N3 Turtle parse request.
  *
@@ -66,6 +73,7 @@ export class N3ParseTurtleRequest extends S.Class<N3ParseTurtleRequest>($I`N3Par
 export class N3ParseTurtleResult extends S.Class<N3ParseTurtleResult>($I`N3ParseTurtleResult`)(
   {
     dataset: Rdf.Dataset,
+    prefixes: PrefixMapWithEmptyDefault,
   },
   $I.annote("N3ParseTurtleResult", {
     description: "N3 Turtle parse result.",
@@ -93,6 +101,7 @@ export class N3ParseTurtleResult extends S.Class<N3ParseTurtleResult>($I`N3Parse
 export class N3SerializeTurtleRequest extends S.Class<N3SerializeTurtleRequest>($I`N3SerializeTurtleRequest`)(
   {
     dataset: Rdf.Dataset,
+    prefixes: PrefixMapWithEmptyDefault,
   },
   $I.annote("N3SerializeTurtleRequest", {
     description: "N3 Turtle serialize request.",
@@ -255,27 +264,44 @@ const toN3Quad = Effect.fn("N3.toN3Quad")(function* (quad: Rdf.Quad) {
 });
 
 const parseTurtle = Effect.fn("N3.parseTurtle")(function* (request: N3ParseTurtleRequest) {
+  const prefixes: Record<string, string> = {};
   const quads = yield* Effect.try({
-    try: () =>
-      new Parser({
+    try: () => {
+      const parser = new Parser({
         format: "Turtle",
         ...O.getSomesStruct({
           baseIRI: request.baseIri,
         }),
-      }).parse(request.source),
+      });
+      return parser.parse(request.source, null, (prefix, prefixNode) => {
+        if (Rdf.PrefixLabel.is(prefix)) {
+          prefixes[prefix] = prefixNode.value;
+        }
+      });
+    },
     catch: parseFailure,
   });
   const decoded = yield* Effect.forEach(quads, fromN3Quad);
+  const decodedPrefixes = yield* S.decodeUnknownEffect(Rdf.PrefixMap)(prefixes).pipe(Effect.mapError(parseFailure));
 
   return N3ParseTurtleResult.make({
     dataset: Rdf.makeDataset(decoded),
+    prefixes: decodedPrefixes,
   });
 });
 
 const serializeTurtle = Effect.fn("N3.serializeTurtle")(function* (request: N3SerializeTurtleRequest) {
   const quads = yield* Effect.forEach(request.dataset.quads, toN3Quad);
   const source = yield* Effect.try({
-    try: () => new Writer({ format: "Turtle" }).quadsToString(A.fromIterable(quads)),
+    try: () => {
+      let source = "";
+      const writer = new Writer({ format: "Turtle", prefixes: request.prefixes });
+      writer.addQuads(A.fromIterable(quads));
+      writer.end((_error, output) => {
+        source = output ?? "";
+      });
+      return source;
+    },
     catch: serializeFailure,
   });
 

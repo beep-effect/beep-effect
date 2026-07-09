@@ -436,6 +436,8 @@
     "packages/ontology/domain",
     "packages/ontology/use-cases",
     "packages/ontology/server",
+    "packages/ontology/client",
+    "packages/ontology/ui",
     "packages/architecture-lab/domain",
     "packages/architecture-lab/use-cases",
     "packages/architecture-lab/config",

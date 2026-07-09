@@ -1395,7 +1395,9 @@
       ],
       "@beep/ontology-use-cases/server": [
         "./packages/ontology/use-cases/src/server.ts"
-      ]
+      ],
+      "@beep/ontology-client": ["./packages/ontology/client/src/index.ts"],
+      "@beep/ontology-ui": ["./packages/ontology/ui/src/index.ts"]
     }
   }
 }

@@ -35,10 +35,9 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Foundation - implementation complete in the branch; host verification is
-pending for `bun install` and package-local Vitest lanes because the sandbox
-blocked network package resolution and Bun/Vitest workers failed before test
-import.
+P2 Explorer + Editor - local polish fixes are complete after the live app proof.
+Host re-verification is pending for bun-backed tests and the running desktop
+author-edit-save proof rerun.
 
 ## Latest Evidence
 
@@ -50,6 +49,12 @@ import.
   [`history/2026-07-09-p1-foundation.md`](./history/2026-07-09-p1-foundation.md)
   - ontology slice + N3 driver implemented; package `check`/`lint` passed;
   FOAF + ontoauthor Turtle fixtures round-tripped by `rdfc-1.0` fingerprint.
+- P2 Explorer + Editor evidence:
+  [`history/2026-07-09-p2-explorer-editor.md`](./history/2026-07-09-p2-explorer-editor.md)
+  - ontology client/ui packages, sidecar RPCs, app navigation, real batch
+  deltas, shared ABox/TBox classification, pizza tutorial typed operation
+  flow, live app proof observations, change-log panel, tooltip button fix, and
+  prefix-preserving Turtle save behavior recorded.
 
 ## Notes
 

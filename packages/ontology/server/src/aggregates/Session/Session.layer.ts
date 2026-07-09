@@ -35,11 +35,12 @@ const makeTurtleCodec = Effect.fn("Ontology.TurtleCodec.makeN3")(function* () {
 
       return ParseTurtleResult.make({
         dataset: parsed.dataset,
+        prefixes: parsed.prefixes,
       });
     }),
     serialize: Effect.fn("Ontology.TurtleCodec.serialize")(function* (request) {
       const serialized = yield* n3
-        .serialize(N3SerializeTurtleRequest.make({ dataset: request.dataset }))
+        .serialize(N3SerializeTurtleRequest.make({ dataset: request.dataset, prefixes: request.prefixes }))
         .pipe(Effect.mapError(toTurtleCodecError));
 
       return SerializeTurtleResult.make({

@@ -9,7 +9,7 @@ import { make as makeIdentity } from "@beep/identity";
 import { Session, SessionId } from "@beep/ontology-domain/aggregates/Session";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { OntologyFilePath } from "./Session.ports.js";
+import { OntologyFilePath, TurtleDocumentText } from "./Session.ports.js";
 
 const { $OntologyUseCasesId } = makeIdentity("ontology-use-cases");
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.commands");
@@ -62,7 +62,8 @@ export class OpenOntologyFileCommand extends S.Class<OpenOntologyFileCommand>($I
  *       baseDataset: makeDataset([])
  *     })
  *   ),
- *   path: S.decodeUnknownSync(OntologyFilePath)("fixtures/demo.ttl")
+ *   path: S.decodeUnknownSync(OntologyFilePath)("fixtures/demo.ttl"),
+ *   source: "@prefix ex: <https://example.test/> ."
  * })
  *
  * console.log(result.session.id)
@@ -75,9 +76,74 @@ export class OpenOntologyFileResult extends S.Class<OpenOntologyFileResult>($I`O
   {
     session: Session,
     path: OntologyFilePath,
+    source: TurtleDocumentText,
   },
   $I.annote("OpenOntologyFileResult", {
     description: "Result of opening a Turtle document into an ontology session.",
+  })
+) {}
+
+/**
+ * Command to serialize a session's asserted graph without writing it.
+ *
+ * @example
+ * ```ts
+ * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
+ * import { SerializeOntologySessionCommand } from "@beep/ontology-use-cases/aggregates/Session"
+ * import { makeDataset } from "@beep/rdf/Rdf"
+ * import * as S from "effect/Schema"
+ *
+ * const command = SerializeOntologySessionCommand.make({
+ *   session: createSession(
+ *     CreateSessionInput.make({
+ *       id: S.decodeUnknownSync(SessionId)("session-1"),
+ *       baseDataset: makeDataset([])
+ *     })
+ *   )
+ * })
+ *
+ * console.log(command.session.id)
+ * ```
+ *
+ * @since 0.0.0
+ * @category commands
+ */
+export class SerializeOntologySessionCommand extends S.Class<SerializeOntologySessionCommand>(
+  $I`SerializeOntologySessionCommand`
+)(
+  {
+    session: Session,
+  },
+  $I.annote("SerializeOntologySessionCommand", {
+    description: "Command to serialize an ontology session's asserted graph without writing it.",
+  })
+) {}
+
+/**
+ * Result of serializing a session's asserted graph.
+ *
+ * @example
+ * ```ts
+ * import { SerializeOntologySessionResult } from "@beep/ontology-use-cases/aggregates/Session"
+ *
+ * const result = SerializeOntologySessionResult.make({
+ *   source: "@prefix ex: <https://example.test/> ."
+ * })
+ *
+ * console.log(result.source)
+ * ```
+ *
+ * @since 0.0.0
+ * @category commands
+ */
+export class SerializeOntologySessionResult extends S.Class<SerializeOntologySessionResult>(
+  $I`SerializeOntologySessionResult`
+)(
+  {
+    source: TurtleDocumentText,
+  },
+  $I.annote("SerializeOntologySessionResult", {
+    description: "Result of serializing an ontology session's asserted graph.",
   })
 ) {}
 
@@ -126,7 +192,8 @@ export class SaveOntologyFileCommand extends S.Class<SaveOntologyFileCommand>($I
  * import * as S from "effect/Schema"
  *
  * const result = SaveOntologyFileResult.make({
- *   path: S.decodeUnknownSync(OntologyFilePath)("fixtures/demo.ttl")
+ *   path: S.decodeUnknownSync(OntologyFilePath)("fixtures/demo.ttl"),
+ *   source: "@prefix ex: <https://example.test/> ."
  * })
  *
  * console.log(result.path)
@@ -138,6 +205,7 @@ export class SaveOntologyFileCommand extends S.Class<SaveOntologyFileCommand>($I
 export class SaveOntologyFileResult extends S.Class<SaveOntologyFileResult>($I`SaveOntologyFileResult`)(
   {
     path: OntologyFilePath,
+    source: TurtleDocumentText,
   },
   $I.annote("SaveOntologyFileResult", {
     description: "Result of saving a session's asserted graph to Turtle.",

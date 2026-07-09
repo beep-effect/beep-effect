@@ -32,6 +32,8 @@
     "packages/ontology/domain/dtslint/**/*.tst.*",
     "packages/ontology/use-cases/dtslint/**/*.tst.*",
     "packages/ontology/server/dtslint/**/*.tst.*",
+    "packages/ontology/client/dtslint/**/*.tst.*",
+    "packages/ontology/ui/dtslint/**/*.tst.*",
     "packages/architecture-lab/domain/dtslint/**/*.tst.*",
     "packages/architecture-lab/use-cases/dtslint/**/*.tst.*",
     "packages/architecture-lab/config/dtslint/**/*.tst.*",

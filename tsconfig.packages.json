@@ -262,10 +262,16 @@
       "path": "packages/law-practice/use-cases"
     },
     {
+      "path": "packages/ontology/client"
+    },
+    {
       "path": "packages/ontology/domain"
     },
     {
       "path": "packages/ontology/server"
+    },
+    {
+      "path": "packages/ontology/ui"
     },
     {
       "path": "packages/ontology/use-cases"

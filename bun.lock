@@ -123,6 +123,11 @@
         "@beep/identity": "workspace:^",
         "@beep/lexical-schema": "workspace:^",
         "@beep/md": "workspace:^",
+        "@beep/ontology-client": "workspace:^",
+        "@beep/ontology-domain": "workspace:^",
+        "@beep/ontology-server": "workspace:^",
+        "@beep/ontology-ui": "workspace:^",
+        "@beep/ontology-use-cases": "workspace:^",
         "@beep/pglite": "workspace:^",
         "@beep/postgres": "workspace:^",
         "@beep/shared-domain": "workspace:^",
@@ -1617,6 +1622,22 @@
         "@types/node": "catalog:",
       },
     },
+    "packages/ontology/client": {
+      "name": "@beep/ontology-client",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/ontology-domain": "workspace:^",
+        "@beep/ontology-use-cases": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+      },
+    },
     "packages/ontology/domain": {
       "name": "@beep/ontology-domain",
       "version": "0.0.2",
@@ -1647,6 +1668,33 @@
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+      },
+    },
+    "packages/ontology/ui": {
+      "name": "@beep/ontology-ui",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/editor": "workspace:^",
+        "@beep/lexical-schema": "workspace:^",
+        "@beep/ontology-client": "workspace:^",
+        "@beep/ontology-domain": "workspace:^",
+        "@beep/ontology-use-cases": "workspace:^",
+        "@beep/rdf": "workspace:^",
+        "@beep/ui": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "@effect/atom-react": "catalog:",
+        "@mui/x-tree-view": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
+      },
+      "peerDependencies": {
+        "react": "^19",
+        "react-dom": "^19",
       },
     },
     "packages/ontology/use-cases": {
@@ -2494,9 +2542,13 @@
 
     "@beep/ontology": ["@beep/ontology@workspace:packages/foundation/modeling/ontology"],
 
+    "@beep/ontology-client": ["@beep/ontology-client@workspace:packages/ontology/client"],
+
     "@beep/ontology-domain": ["@beep/ontology-domain@workspace:packages/ontology/domain"],
 
     "@beep/ontology-server": ["@beep/ontology-server@workspace:packages/ontology/server"],
+
+    "@beep/ontology-ui": ["@beep/ontology-ui@workspace:packages/ontology/ui"],
 
     "@beep/ontology-use-cases": ["@beep/ontology-use-cases@workspace:packages/ontology/use-cases"],
 

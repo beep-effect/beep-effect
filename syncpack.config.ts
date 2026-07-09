@@ -47,6 +47,8 @@ const config = {
     "packages/ontology/domain/package.json",
     "packages/ontology/use-cases/package.json",
     "packages/ontology/server/package.json",
+    "packages/ontology/client/package.json",
+    "packages/ontology/ui/package.json",
     "packages/architecture-lab/domain/package.json",
     "packages/architecture-lab/use-cases/package.json",
     "packages/architecture-lab/config/package.json",

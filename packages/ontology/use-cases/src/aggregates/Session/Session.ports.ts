@@ -6,14 +6,20 @@
  */
 
 import { make as makeIdentity } from "@beep/identity";
-import { Dataset } from "@beep/rdf/Rdf";
+import { Dataset, PrefixMap } from "@beep/rdf/Rdf";
 import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
-import { Context } from "effect";
+import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
-import type { Effect } from "effect";
 
 const { $OntologyUseCasesId } = makeIdentity("ontology-use-cases");
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.ports");
+
+const emptyPrefixMap = (): PrefixMap => ({});
+
+const PrefixMapWithEmptyDefault = PrefixMap.pipe(
+  S.withConstructorDefault(Effect.succeed(emptyPrefixMap())),
+  S.withDecodingDefaultKey(Effect.succeed(emptyPrefixMap()))
+);
 
 /**
  * Filesystem path for sidecar ontology documents.
@@ -213,6 +219,7 @@ export class ParseTurtleRequest extends S.Class<ParseTurtleRequest>($I`ParseTurt
 export class ParseTurtleResult extends S.Class<ParseTurtleResult>($I`ParseTurtleResult`)(
   {
     dataset: Dataset,
+    prefixes: PrefixMapWithEmptyDefault,
   },
   $I.annote("ParseTurtleResult", {
     description: "Turtle parse result.",
@@ -240,6 +247,7 @@ export class ParseTurtleResult extends S.Class<ParseTurtleResult>($I`ParseTurtle
 export class SerializeTurtleRequest extends S.Class<SerializeTurtleRequest>($I`SerializeTurtleRequest`)(
   {
     dataset: Dataset,
+    prefixes: PrefixMapWithEmptyDefault,
   },
   $I.annote("SerializeTurtleRequest", {
     description: "Turtle serialize request.",

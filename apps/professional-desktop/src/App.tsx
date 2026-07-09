@@ -12,8 +12,11 @@
  */
 
 import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client";
+import { HttpOntologyProtocolLive, ontologyProtocolLayerAtom } from "@beep/ontology-client";
+import { OntologyWorkbench } from "@beep/ontology-ui";
+import { Button } from "@beep/ui/components/button";
 import { Toaster } from "@beep/ui/components/sonner";
-import { useAtomMount, useAtomValue } from "@effect/atom-react";
+import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Cause, Effect } from "effect";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { ChatApp } from "./chat/ui/ChatApp.tsx";
@@ -43,6 +46,7 @@ const readSidecarTransport = Effect.suspend(() =>
 // AsyncResult<SidecarTransport>: Initial = checking, Failure = unavailable,
 // Success = ready. Replaces the useState/useEffect transport probe.
 const sidecarTransportAtom = Atom.make(readSidecarTransport);
+const desktopSurfaceAtom = Atom.make<"chat" | "ontology">("chat");
 
 // atom-first: when the probe resolves, point the rpc client at the matching
 // protocol layer (IPC in the desktop shell, HTTP in the browser). A mounted
@@ -53,6 +57,7 @@ const protocolLayerBindingAtom = Atom.make((get) => {
     const result = get.once(sidecarTransportAtom);
     if (AsyncResult.isSuccess(result)) {
       get.set(chatProtocolLayerAtom, result.value.ipc ? IpcChatProtocolLive : HttpChatProtocolLive);
+      get.set(ontologyProtocolLayerAtom, result.value.ipc ? IpcChatProtocolLive : HttpOntologyProtocolLive);
     }
   };
   apply();
@@ -71,6 +76,38 @@ const TransportLoading = (): JSX.Element => (
     </div>
   </div>
 );
+
+const DesktopShell = ({ transport }: { readonly transport: SidecarTransport }): JSX.Element => {
+  const surface = useAtomValue(desktopSurfaceAtom);
+  const setSurface = useAtomSet(desktopSurfaceAtom);
+
+  return (
+    <div className="flex h-screen min-h-0 w-full flex-col bg-background text-foreground">
+      <div className="flex h-10 shrink-0 items-center gap-1 border-b px-2">
+        <Button
+          size="sm"
+          type="button"
+          variant={surface === "chat" ? "default" : "ghost"}
+          onClick={() => setSurface("chat")}
+        >
+          Chat
+        </Button>
+        <Button
+          size="sm"
+          type="button"
+          variant={surface === "ontology" ? "default" : "ghost"}
+          onClick={() => setSurface("ontology")}
+        >
+          Workbench
+        </Button>
+      </div>
+      <div className="min-h-0 flex-1">{surface === "chat" ? <ChatApp /> : <OntologyWorkbench />}</div>
+      <ChatTurnErrorToasts />
+      <Toaster richColors />
+      {transport.ipc && hasIpcSpikeFlag() ? <IpcSpikePanel /> : null}
+    </div>
+  );
+};
 
 /**
  * The desktop application root. A thin wrapper that mounts the chat surface.
@@ -110,13 +147,6 @@ export function App(): JSX.Element {
         <Toaster richColors />
       </>
     ),
-    onSuccess: (success) => (
-      <>
-        <ChatApp />
-        <ChatTurnErrorToasts />
-        <Toaster richColors />
-        {success.value.ipc && hasIpcSpikeFlag() ? <IpcSpikePanel /> : null}
-      </>
-    ),
+    onSuccess: (success) => <DesktopShell transport={success.value} />,
   });
 }

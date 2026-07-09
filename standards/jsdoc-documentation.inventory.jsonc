@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-07-09T06:12:31.063Z",
+  "generatedAt": "2026-07-09T08:04:23.722Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -61,12 +61,12 @@
     "status": "resolved"
   },
   "totals": {
-    "packages": 105,
-    "cleanPackages": 102,
+    "packages": 107,
+    "cleanPackages": 104,
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 0,
-    "publicModules": 1681,
-    "publicExports": 14820,
+    "publicModules": 1691,
+    "publicExports": 14895,
     "openModules": 0,
     "openExports": 0,
     "missingExportExamples": 0,
@@ -16032,9 +16032,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 11,
-        "publicModuleCount": 11,
-        "publicExportCount": 46
+        "sourceFileCount": 14,
+        "publicModuleCount": 14,
+        "publicExportCount": 78
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -16074,7 +16074,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 4,
+          "exportCount": 6,
           "remediationStatus": "resolved"
         },
         {
@@ -16100,6 +16100,27 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/aggregates/Session/Session.pizza-tutorial.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.pizza-tutorial.ts",
+          "line": 1,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-pizza-tutorial-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
           "line": 1,
@@ -16117,6 +16138,48 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "exportCount": 20,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/aggregates/Session/Session.projections.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+          "line": 1,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-projections-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 14,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/aggregates/Session/Session.rpc.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+          "line": 1,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 12,
           "remediationStatus": "resolved"
         },
         {
@@ -16200,7 +16263,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 5,
+          "exportCount": 8,
           "remediationStatus": "resolved"
         },
         {
@@ -16317,8 +16380,52 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.commands.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.commands.ts",
-          "line": 74,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-commands-ts-74-openontologyfileresult",
+          "line": 75,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-commands-ts-75-openontologyfileresult",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SerializeOntologySessionCommand",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.commands.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.commands.ts",
+          "line": 111,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-commands-ts-111-serializeontologysessioncommand",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SerializeOntologySessionResult",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.commands.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.commands.ts",
+          "line": 139,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-commands-ts-139-serializeontologysessionresult",
           "currentTags": [
             "@example",
             "@since",
@@ -16339,8 +16446,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.commands.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.commands.ts",
-          "line": 110,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-commands-ts-110-saveontologyfilecommand",
+          "line": 176,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-commands-ts-176-saveontologyfilecommand",
           "currentTags": [
             "@example",
             "@since",
@@ -16361,8 +16468,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.commands.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.commands.ts",
-          "line": 138,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-commands-ts-138-saveontologyfileresult",
+          "line": 205,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-commands-ts-205-saveontologyfileresult",
           "currentTags": [
             "@example",
             "@since",
@@ -16421,12 +16528,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "pizzaTutorialChangeOperations",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.pizza-tutorial.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.pizza-tutorial.ts",
+          "line": 118,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-pizza-tutorial-ts-118-pizzatutorialchangeoperations",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "OntologyFilePath",
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
-          "line": 34,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-34-ontologyfilepath",
+          "line": 40,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-40-ontologyfilepath",
           "currentTags": [
             "@example",
             "@since",
@@ -16447,8 +16576,8 @@
           "exportKind": "type",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
-          "line": 58,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-58-ontologyfilepath",
+          "line": 64,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-64-ontologyfilepath",
           "currentTags": [
             "@example",
             "@since",
@@ -16469,8 +16598,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
-          "line": 76,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-76-turtledocumenttext",
+          "line": 82,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-82-turtledocumenttext",
           "currentTags": [
             "@example",
             "@since",
@@ -16491,8 +16620,8 @@
           "exportKind": "type",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
-          "line": 98,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-98-turtledocumenttext",
+          "line": 104,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-104-turtledocumenttext",
           "currentTags": [
             "@example",
             "@since",
@@ -16513,8 +16642,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
-          "line": 116,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-116-turtlecodecerrorreason",
+          "line": 122,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-122-turtlecodecerrorreason",
           "currentTags": [
             "@example",
             "@since",
@@ -16535,8 +16664,8 @@
           "exportKind": "type",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
-          "line": 137,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-137-turtlecodecerrorreason",
+          "line": 143,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-143-turtlecodecerrorreason",
           "currentTags": [
             "@example",
             "@since",
@@ -16557,8 +16686,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
-          "line": 157,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-157-turtlecodecerror",
+          "line": 163,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-163-turtlecodecerror",
           "currentTags": [
             "@example",
             "@since",
@@ -16579,8 +16708,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
-          "line": 185,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-185-parseturtlerequest",
+          "line": 191,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-191-parseturtlerequest",
           "currentTags": [
             "@example",
             "@since",
@@ -16601,8 +16730,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
-          "line": 213,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-213-parseturtleresult",
+          "line": 219,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-219-parseturtleresult",
           "currentTags": [
             "@example",
             "@since",
@@ -16623,8 +16752,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
-          "line": 240,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-240-serializeturtlerequest",
+          "line": 247,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-247-serializeturtlerequest",
           "currentTags": [
             "@example",
             "@since",
@@ -16645,8 +16774,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
-          "line": 266,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-266-serializeturtleresult",
+          "line": 274,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-274-serializeturtleresult",
           "currentTags": [
             "@example",
             "@since",
@@ -16667,8 +16796,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
-          "line": 305,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-305-turtlecodec",
+          "line": 313,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-313-turtlecodec",
           "currentTags": [
             "@example",
             "@since",
@@ -16689,8 +16818,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
-          "line": 323,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-323-ontologyfilestoreerrorreason",
+          "line": 331,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-331-ontologyfilestoreerrorreason",
           "currentTags": [
             "@example",
             "@since",
@@ -16711,8 +16840,8 @@
           "exportKind": "type",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
-          "line": 344,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-344-ontologyfilestoreerrorreason",
+          "line": 352,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-352-ontologyfilestoreerrorreason",
           "currentTags": [
             "@example",
             "@since",
@@ -16733,8 +16862,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
-          "line": 366,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-366-ontologyfilestoreerror",
+          "line": 374,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-374-ontologyfilestoreerror",
           "currentTags": [
             "@example",
             "@since",
@@ -16755,8 +16884,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
-          "line": 396,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-396-readontologyfilerequest",
+          "line": 404,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-404-readontologyfilerequest",
           "currentTags": [
             "@example",
             "@since",
@@ -16777,8 +16906,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
-          "line": 424,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-424-readontologyfileresult",
+          "line": 432,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-432-readontologyfileresult",
           "currentTags": [
             "@example",
             "@since",
@@ -16799,8 +16928,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
-          "line": 453,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-453-writeontologyfilerequest",
+          "line": 461,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-461-writeontologyfilerequest",
           "currentTags": [
             "@example",
             "@since",
@@ -16821,8 +16950,8 @@
           "exportKind": "interface",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
-          "line": 489,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-489-ontologyfilestoreshape",
+          "line": 497,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-497-ontologyfilestoreshape",
           "currentTags": [
             "@example",
             "@since",
@@ -16843,8 +16972,580 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.ports.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
-          "line": 513,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-513-ontologyfilestore",
+          "line": 521,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-ports-ts-521-ontologyfilestore",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyViewMode",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.projections.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+          "line": 55,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-projections-ts-55-ontologyviewmode",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyViewMode",
+          "exportKind": "type",
+          "filePath": "src/aggregates/Session/Session.projections.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+          "line": 76,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-projections-ts-76-ontologyviewmode",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyResourceClassification",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.projections.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+          "line": 93,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-projections-ts-93-ontologyresourceclassification",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyResourceClassification",
+          "exportKind": "type",
+          "filePath": "src/aggregates/Session/Session.projections.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+          "line": 114,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-projections-ts-114-ontologyresourceclassification",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyResourceKind",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.projections.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+          "line": 131,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-projections-ts-131-ontologyresourcekind",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyResourceKind",
+          "exportKind": "type",
+          "filePath": "src/aggregates/Session/Session.projections.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+          "line": 159,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-projections-ts-159-ontologyresourcekind",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyMetrics",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.projections.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+          "line": 184,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-projections-ts-184-ontologymetrics",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyResourceSummary",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.projections.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+          "line": 222,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-projections-ts-222-ontologyresourcesummary",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyHierarchyEntry",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.projections.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+          "line": 256,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-projections-ts-256-ontologyhierarchyentry",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologySnapshot",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.projections.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+          "line": 295,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-projections-ts-295-ontologysnapshot",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "classifyOntologyResource",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.projections.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+          "line": 492,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-projections-ts-492-classifyontologyresource",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "buildOntologySnapshot",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.projections.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+          "line": 552,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-projections-ts-552-buildontologysnapshot",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "resourceVisibleInViewMode",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.projections.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+          "line": 757,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-projections-ts-757-resourcevisibleinviewmode",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "searchOntologyResources",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.projections.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+          "line": 812,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-projections-ts-812-searchontologyresources",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyActionError",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.rpc.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+          "line": 36,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-36-ontologyactionerror",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OpenOntologyDocumentResult",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.rpc.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+          "line": 93,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-93-openontologydocumentresult",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SaveOntologyDocumentResult",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.rpc.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+          "line": 124,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-124-saveontologydocumentresult",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "PreviewOntologyTurtleResult",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.rpc.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+          "line": 151,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-151-previewontologyturtleresult",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ApplyOntologyBatchCommand",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.rpc.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+          "line": 196,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-196-applyontologybatchcommand",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ApplyOntologyBatchResult",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.rpc.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+          "line": 233,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-233-applyontologybatchresult",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OpenOntologyDocumentRpc",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.rpc.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+          "line": 296,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-296-openontologydocumentrpc",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SaveOntologyDocumentRpc",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.rpc.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+          "line": 315,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-315-saveontologydocumentrpc",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "PreviewOntologyTurtleRpc",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.rpc.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+          "line": 334,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-334-previewontologyturtlerpc",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ApplyOntologyBatchRpc",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.rpc.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+          "line": 353,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-353-applyontologybatchrpc",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GetOntologySnapshotRpc",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.rpc.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+          "line": 372,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-372-getontologysnapshotrpc",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyRpcs",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.rpc.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+          "line": 391,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-rpc-ts-391-ontologyrpcs",
           "currentTags": [
             "@example",
             "@since",
@@ -16865,8 +17566,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.service.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.service.ts",
-          "line": 60,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-service-ts-60-makesessionusecases",
+          "line": 68,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-service-ts-68-makesessionusecases",
           "currentTags": [
             "@example",
             "@since",
@@ -16887,8 +17588,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.service.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.service.ts",
-          "line": 106,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-service-ts-106-sessionusecases",
+          "line": 134,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-service-ts-134-sessionusecases",
           "currentTags": [
             "@example",
             "@since",
@@ -16909,8 +17610,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.service.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.service.ts",
-          "line": 121,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-service-ts-121-sessionusecaseslayer",
+          "line": 149,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-service-ts-149-sessionusecaseslayer",
           "currentTags": [
             "@example",
             "@since",
@@ -16952,8 +17653,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.worker-protocol.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.worker-protocol.ts",
-          "line": 40,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-worker-protocol-ts-40-workercommand",
+          "line": 61,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-worker-protocol-ts-61-workercommand",
           "currentTags": [
             "@example",
             "@since",
@@ -16974,8 +17675,8 @@
           "exportKind": "type",
           "filePath": "src/aggregates/Session/Session.worker-protocol.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.worker-protocol.ts",
-          "line": 75,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-worker-protocol-ts-75-workercommand",
+          "line": 99,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-worker-protocol-ts-99-workercommand",
           "currentTags": [
             "@example",
             "@since",
@@ -16996,8 +17697,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.worker-protocol.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.worker-protocol.ts",
-          "line": 94,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-worker-protocol-ts-94-diffworkerresult",
+          "line": 118,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-worker-protocol-ts-118-diffworkerresult",
           "currentTags": [
             "@example",
             "@since",
@@ -17018,8 +17719,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.worker-protocol.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.worker-protocol.ts",
-          "line": 126,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-worker-protocol-ts-126-workerresult",
+          "line": 175,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-worker-protocol-ts-175-workerresult",
           "currentTags": [
             "@example",
             "@since",
@@ -17040,8 +17741,8 @@
           "exportKind": "type",
           "filePath": "src/aggregates/Session/Session.worker-protocol.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/Session.worker-protocol.ts",
-          "line": 160,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-worker-protocol-ts-160-workerresult",
+          "line": 212,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-session-worker-protocol-ts-212-workerresult",
           "currentTags": [
             "@example",
             "@since",
@@ -17100,12 +17801,75 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./Session.ports.js\";",
+          "symbolName": "export * from \"./Session.pizza-tutorial.js\";",
           "exportKind": "re-export",
           "filePath": "src/aggregates/Session/index.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/index.ts",
           "line": 21,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-index-ts-21-export-from-session-ports-js",
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-index-ts-21-export-from-session-pizza-tutorial-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Session.ports.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/aggregates/Session/index.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/index.ts",
+          "line": 28,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-index-ts-28-export-from-session-ports-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Session.projections.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/aggregates/Session/index.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/index.ts",
+          "line": 35,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-index-ts-35-export-from-session-projections-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Session.rpc.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/aggregates/Session/index.ts",
+          "repoPath": "packages/ontology/use-cases/src/aggregates/Session/index.ts",
+          "line": 42,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-index-ts-42-export-from-session-rpc-js",
           "currentTags": [
             "@category",
             "@since"
@@ -17125,8 +17889,8 @@
           "exportKind": "re-export",
           "filePath": "src/aggregates/Session/index.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/index.ts",
-          "line": 28,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-index-ts-28-export-from-session-use-cases-js",
+          "line": 49,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-index-ts-49-export-from-session-use-cases-js",
           "currentTags": [
             "@category",
             "@since"
@@ -17146,8 +17910,8 @@
           "exportKind": "re-export",
           "filePath": "src/aggregates/Session/index.ts",
           "repoPath": "packages/ontology/use-cases/src/aggregates/Session/index.ts",
-          "line": 35,
-          "anchor": "packages-ontology-use-cases-src-aggregates-session-index-ts-35-export-from-session-worker-protocol-js",
+          "line": 56,
+          "anchor": "packages-ontology-use-cases-src-aggregates-session-index-ts-56-export-from-session-worker-protocol-js",
           "currentTags": [
             "@category",
             "@since"
@@ -57117,8 +57881,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.layer.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
-          "line": 65,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-65-turtlecodeclayer",
+          "line": 66,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-66-turtlecodeclayer",
           "currentTags": [
             "@example",
             "@since",
@@ -57139,8 +57903,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.layer.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
-          "line": 80,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-80-ontologyfilestorelayer",
+          "line": 81,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-81-ontologyfilestorelayer",
           "currentTags": [
             "@example",
             "@since",
@@ -57161,8 +57925,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.layer.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
-          "line": 95,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-95-sessionserverlayer",
+          "line": 96,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-96-sessionserverlayer",
           "currentTags": [
             "@example",
             "@since",
@@ -67630,7 +68394,7 @@
         "srcDir": "src",
         "sourceFileCount": 6,
         "publicModuleCount": 6,
-        "publicExportCount": 30
+        "publicExportCount": 38
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -67692,7 +68456,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 13,
+          "exportCount": 21,
           "remediationStatus": "resolved"
         },
         {
@@ -67937,12 +68701,56 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "SessionChangeDelta",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.model.ts",
+          "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
+          "line": 171,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-171-sessionchangedelta",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "Session",
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 174,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-174-session",
+          "line": 209,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-209-session",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SessionChangeApplication",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.model.ts",
+          "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
+          "line": 248,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-248-sessionchangeapplication",
           "currentTags": [
             "@example",
             "@since",
@@ -67963,8 +68771,30 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 205,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-205-createsessioninput",
+          "line": 279,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-279-createsessioninput",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "emptySessionChangeDelta",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.model.ts",
+          "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
+          "line": 307,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-307-emptysessionchangedelta",
           "currentTags": [
             "@example",
             "@since",
@@ -67985,8 +68815,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 232,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-232-emptysessiongraphpartitions",
+          "line": 328,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-328-emptysessiongraphpartitions",
           "currentTags": [
             "@example",
             "@since",
@@ -68007,8 +68837,52 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 275,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-275-datasetforpartition",
+          "line": 371,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-371-datasetforpartition",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "combineSessionChangeDelta",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.model.ts",
+          "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
+          "line": 423,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-423-combinesessionchangedelta",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "changeDeltaForOperation",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.model.ts",
+          "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
+          "line": 462,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-462-changedeltaforoperation",
           "currentTags": [
             "@example",
             "@since",
@@ -68029,8 +68903,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 336,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-336-applychangetopartitions",
+          "line": 512,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-512-applychangetopartitions",
           "currentTags": [
             "@example",
             "@since",
@@ -68051,8 +68925,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 371,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-371-createsession",
+          "line": 547,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-547-createsession",
           "currentTags": [
             "@example",
             "@since",
@@ -68073,8 +68947,52 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 412,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-412-appendchange",
+          "line": 589,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-589-appendchange",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "appendChanges",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.model.ts",
+          "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
+          "line": 634,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-634-appendchanges",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "invertChangeOperation",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.model.ts",
+          "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
+          "line": 672,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-672-invertchangeoperation",
           "currentTags": [
             "@example",
             "@since",
@@ -68095,8 +69013,30 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 447,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-447-derivesessiongraphpartitions",
+          "line": 711,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-711-derivesessiongraphpartitions",
+          "currentTags": [
+            "@example",
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "applyChangeOperationsWithDelta",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.model.ts",
+          "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
+          "line": 756,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-756-applychangeoperationswithdelta",
           "currentTags": [
             "@example",
             "@since",
@@ -68117,8 +69057,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.model.ts",
           "repoPath": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
-          "line": 490,
-          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-490-derivenamedgraphs",
+          "line": 813,
+          "anchor": "packages-ontology-domain-src-aggregates-session-session-model-ts-813-derivenamedgraphs",
           "currentTags": [
             "@example",
             "@since",
@@ -104699,9 +105639,194 @@
       ]
     },
     {
+      "packageName": "@beep/ontology-ui",
+      "packagePath": "packages/ontology/ui",
+      "topoOrder": 61,
+      "status": "clean",
+      "sourceCoverage": {
+        "srcDir": "src",
+        "sourceFileCount": 3,
+        "publicModuleCount": 3,
+        "publicExportCount": 4
+      },
+      "docgenCoverage": {
+        "hasDocgenConfig": true,
+        "enforceDescriptions": false,
+        "enforceExamples": false,
+        "enforceVersion": true
+      },
+      "counts": {
+        "openModules": 0,
+        "openExports": 0,
+        "missingExportExamples": 0,
+        "missingExportCategories": 0,
+        "missingExportSince": 0,
+        "missingExportSummaries": 0,
+        "forbiddenTagFindings": 0,
+        "malformedConditionalTagFindings": 0,
+        "exampleImportFindings": 0,
+        "unsafeExampleFindings": 0,
+        "schemaAnnotationFindings": 0
+      },
+      "modules": [
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/aggregates/Session/Session.workbench.tsx",
+          "repoPath": "packages/ontology/ui/src/aggregates/Session/Session.workbench.tsx",
+          "line": 1,
+          "anchor": "packages-ontology-ui-src-aggregates-session-session-workbench-tsx-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/aggregates/Session/index.ts",
+          "repoPath": "packages/ontology/ui/src/aggregates/Session/index.ts",
+          "line": 1,
+          "anchor": "packages-ontology-ui-src-aggregates-session-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/ontology/ui/src/index.ts",
+          "line": 1,
+          "anchor": "packages-ontology-ui-src-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        }
+      ],
+      "exports": [
+        {
+          "symbolName": "OntologyWorkbench",
+          "exportKind": "function",
+          "filePath": "src/aggregates/Session/Session.workbench.tsx",
+          "repoPath": "packages/ontology/ui/src/aggregates/Session/Session.workbench.tsx",
+          "line": 161,
+          "anchor": "packages-ontology-ui-src-aggregates-session-session-workbench-tsx-161-ontologyworkbench",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Session.workbench.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/aggregates/Session/index.ts",
+          "repoPath": "packages/ontology/ui/src/aggregates/Session/index.ts",
+          "line": 14,
+          "anchor": "packages-ontology-ui-src-aggregates-session-index-ts-14-export-from-session-workbench-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./aggregates/Session/index.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/ontology/ui/src/index.ts",
+          "line": 30,
+          "anchor": "packages-ontology-ui-src-index-ts-30-export-from-aggregates-session-index-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "VERSION",
+          "exportKind": "const",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/ontology/ui/src/index.ts",
+          "line": 22,
+          "anchor": "packages-ontology-ui-src-index-ts-22-version",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        }
+      ]
+    },
+    {
       "packageName": "@beep/api-transport",
       "packagePath": "packages/foundation/capability/api-transport",
-      "topoOrder": 61,
+      "topoOrder": 62,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -104953,7 +106078,7 @@
     {
       "packageName": "@beep/box",
       "packagePath": "packages/drivers/box",
-      "topoOrder": 62,
+      "topoOrder": 63,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -206173,7 +207298,7 @@
     {
       "packageName": "@beep/openai-compat",
       "packagePath": "packages/drivers/openai-compat",
-      "topoOrder": 63,
+      "topoOrder": 64,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -207480,7 +208605,7 @@
     {
       "packageName": "@beep/nlp-processing",
       "packagePath": "packages/foundation/capability/nlp-processing",
-      "topoOrder": 64,
+      "topoOrder": 65,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -215440,7 +216565,7 @@
     {
       "packageName": "@beep/anthropic",
       "packagePath": "packages/drivers/anthropic",
-      "topoOrder": 65,
+      "topoOrder": 66,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -216160,13 +217285,13 @@
     {
       "packageName": "@beep/professional-desktop",
       "packagePath": "apps/professional-desktop",
-      "topoOrder": 66,
+      "topoOrder": 67,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 26,
-        "publicModuleCount": 25,
-        "publicExportCount": 48
+        "sourceFileCount": 27,
+        "publicModuleCount": 26,
+        "publicExportCount": 49
       },
       "docgenCoverage": {
         "hasDocgenConfig": false,
@@ -216495,6 +217620,27 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/ontology/OntologyOrchestrator.ts",
+          "repoPath": "apps/professional-desktop/src/ontology/OntologyOrchestrator.ts",
+          "line": 1,
+          "anchor": "apps-professional-desktop-src-ontology-ontologyorchestrator-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/runtime/Layer.ts",
           "repoPath": "apps/professional-desktop/src/runtime/Layer.ts",
           "line": 1,
@@ -216735,8 +217881,8 @@
           "exportKind": "function",
           "filePath": "src/App.tsx",
           "repoPath": "apps/professional-desktop/src/App.tsx",
-          "line": 88,
-          "anchor": "apps-professional-desktop-src-app-tsx-88-app",
+          "line": 125,
+          "anchor": "apps-professional-desktop-src-app-tsx-125-app",
           "currentTags": [
             "@example",
             "@category",
@@ -217281,12 +218427,34 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "ChatHandlersLayer",
+          "symbolName": "OntologyHandlersLive",
+          "exportKind": "const",
+          "filePath": "src/ontology/OntologyOrchestrator.ts",
+          "repoPath": "apps/professional-desktop/src/ontology/OntologyOrchestrator.ts",
+          "line": 129,
+          "anchor": "apps-professional-desktop-src-ontology-ontologyorchestrator-ts-129-ontologyhandlerslive",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DesktopHandlersLayer",
           "exportKind": "type",
           "filePath": "src/runtime/Layer.ts",
           "repoPath": "apps/professional-desktop/src/runtime/Layer.ts",
-          "line": 58,
-          "anchor": "apps-professional-desktop-src-runtime-layer-ts-58-chathandlerslayer",
+          "line": 61,
+          "anchor": "apps-professional-desktop-src-runtime-layer-ts-61-desktophandlerslayer",
           "currentTags": [
             "@example",
             "@category",
@@ -217307,8 +218475,8 @@
           "exportKind": "const",
           "filePath": "src/runtime/Layer.ts",
           "repoPath": "apps/professional-desktop/src/runtime/Layer.ts",
-          "line": 97,
-          "anchor": "apps-professional-desktop-src-runtime-layer-ts-97-runtimelive",
+          "line": 108,
+          "anchor": "apps-professional-desktop-src-runtime-layer-ts-108-runtimelive",
           "currentTags": [
             "@example",
             "@category",
@@ -217329,8 +218497,8 @@
           "exportKind": "const",
           "filePath": "src/runtime/Layer.ts",
           "repoPath": "apps/professional-desktop/src/runtime/Layer.ts",
-          "line": 119,
-          "anchor": "apps-professional-desktop-src-runtime-layer-ts-119-runtimetest",
+          "line": 132,
+          "anchor": "apps-professional-desktop-src-runtime-layer-ts-132-runtimetest",
           "currentTags": [
             "@example",
             "@category",
@@ -217791,7 +218959,7 @@
     {
       "packageName": "@beep/epistemic-domain",
       "packagePath": "packages/epistemic/domain",
-      "topoOrder": 67,
+      "topoOrder": 68,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -219254,9 +220422,766 @@
       ]
     },
     {
+      "packageName": "@beep/ontology-client",
+      "packagePath": "packages/ontology/client",
+      "topoOrder": 69,
+      "status": "clean",
+      "sourceCoverage": {
+        "srcDir": "src",
+        "sourceFileCount": 3,
+        "publicModuleCount": 3,
+        "publicExportCount": 30
+      },
+      "docgenCoverage": {
+        "hasDocgenConfig": true,
+        "enforceDescriptions": false,
+        "enforceExamples": false,
+        "enforceVersion": true
+      },
+      "counts": {
+        "openModules": 0,
+        "openExports": 0,
+        "missingExportExamples": 0,
+        "missingExportCategories": 0,
+        "missingExportSince": 0,
+        "missingExportSummaries": 0,
+        "forbiddenTagFindings": 0,
+        "malformedConditionalTagFindings": 0,
+        "exampleImportFindings": 0,
+        "unsafeExampleFindings": 0,
+        "schemaAnnotationFindings": 0
+      },
+      "modules": [
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 1,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 27,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/aggregates/Session/index.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/index.ts",
+          "line": 1,
+          "anchor": "packages-ontology-client-src-aggregates-session-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/ontology/client/src/index.ts",
+          "line": 1,
+          "anchor": "packages-ontology-client-src-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        }
+      ],
+      "exports": [
+        {
+          "symbolName": "HttpOntologyProtocolLive",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 62,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-62-httpontologyprotocollive",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ontologyProtocolLayerAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 79,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-79-ontologyprotocollayeratom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyClient",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 95,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-95-ontologyclient",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OpenOntologyDocumentInput",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 124,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-124-openontologydocumentinput",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SaveOntologyDocumentInput",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 154,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-154-saveontologydocumentinput",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ApplyOntologyBatchInput",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 192,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-192-applyontologybatchinput",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ontologySessionAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 214,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-214-ontologysessionatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ontologyPathAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 229,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-229-ontologypathatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ontologySourceAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 244,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-244-ontologysourceatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ontologySavedChangeCountAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 259,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-259-ontologysavedchangecountatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ontologyRedoStackAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 274,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-274-ontologyredostackatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ontologyViewModeAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 289,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-289-ontologyviewmodeatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ontologySearchQueryAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 304,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-304-ontologysearchqueryatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "selectedOntologyResourceIriAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 319,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-319-selectedontologyresourceiriatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "emptyOntologySnapshot",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 336,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-336-emptyontologysnapshot",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ontologySnapshotAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 365,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-365-ontologysnapshotatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ontologyDirtyAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 382,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-382-ontologydirtyatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ontologySearchResultsAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 405,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-405-ontologysearchresultsatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "selectedOntologyResourceAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 425,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-425-selectedontologyresourceatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "visibleOntologyResourcesAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 450,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-450-visibleontologyresourcesatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "openOntologyDocumentAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 472,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-472-openontologydocumentatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "saveOntologyDocumentAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 498,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-498-saveontologydocumentatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "previewOntologyTurtleAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 525,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-525-previewontologyturtleatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "applyOntologyBatchAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 547,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-547-applyontologybatchatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "undoOntologyChangeAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 573,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-573-undoontologychangeatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "redoOntologyChangeAtom",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 611,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-611-redoontologychangeatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "invertOntologyChange",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Session/Session.atoms.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+          "line": 655,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-655-invertontologychange",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Session.atoms.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/aggregates/Session/index.ts",
+          "repoPath": "packages/ontology/client/src/aggregates/Session/index.ts",
+          "line": 14,
+          "anchor": "packages-ontology-client-src-aggregates-session-index-ts-14-export-from-session-atoms-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./aggregates/Session/index.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/ontology/client/src/index.ts",
+          "line": 30,
+          "anchor": "packages-ontology-client-src-index-ts-30-export-from-aggregates-session-index-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "VERSION",
+          "exportKind": "const",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/ontology/client/src/index.ts",
+          "line": 22,
+          "anchor": "packages-ontology-client-src-index-ts-22-version",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        }
+      ]
+    },
+    {
       "packageName": "@beep/architecture-lab-use-cases",
       "packagePath": "packages/architecture-lab/use-cases",
-      "topoOrder": 68,
+      "topoOrder": 70,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -221081,7 +223006,7 @@
     {
       "packageName": "@beep/firecrawl",
       "packagePath": "packages/drivers/firecrawl",
-      "topoOrder": 69,
+      "topoOrder": 71,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -227095,7 +229020,7 @@
     {
       "packageName": "@beep/ecfr",
       "packagePath": "packages/drivers/ecfr",
-      "topoOrder": 70,
+      "topoOrder": 72,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -227736,7 +229661,7 @@
     {
       "packageName": "@beep/acp",
       "packagePath": "packages/drivers/acp",
-      "topoOrder": 71,
+      "topoOrder": 73,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -237004,7 +238929,7 @@
     {
       "packageName": "@beep/nlp",
       "packagePath": "packages/foundation/modeling/nlp",
-      "topoOrder": 72,
+      "topoOrder": 74,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -244464,7 +246389,7 @@
     {
       "packageName": "@beep/infra",
       "packagePath": "infra",
-      "topoOrder": 73,
+      "topoOrder": 75,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -245352,7 +247277,7 @@
     {
       "packageName": "@beep/runpod",
       "packagePath": "packages/drivers/runpod",
-      "topoOrder": 74,
+      "topoOrder": 76,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -249447,7 +251372,7 @@
     {
       "packageName": "@beep/fc-runs",
       "packagePath": "packages/tooling/test-kit/fc-runs",
-      "topoOrder": 75,
+      "topoOrder": 77,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -249640,7 +251565,7 @@
     {
       "packageName": "@beep/repo-utils",
       "packagePath": "packages/tooling/library/repo-utils",
-      "topoOrder": 76,
+      "topoOrder": 78,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -266030,7 +267955,7 @@
     {
       "packageName": "@beep/schema",
       "packagePath": "packages/foundation/modeling/schema",
-      "topoOrder": 77,
+      "topoOrder": 79,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -305682,7 +307607,7 @@
     {
       "packageName": "@beep/epistemic-server",
       "packagePath": "packages/epistemic/server",
-      "topoOrder": 78,
+      "topoOrder": 80,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -305826,7 +307751,7 @@
     {
       "packageName": "@beep/rdf",
       "packagePath": "packages/foundation/modeling/rdf",
-      "topoOrder": 79,
+      "topoOrder": 81,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -310830,7 +312755,7 @@
     {
       "packageName": "@beep/onepassword-cli",
       "packagePath": "packages/drivers/onepassword-cli",
-      "topoOrder": 80,
+      "topoOrder": 82,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -311298,7 +313223,7 @@
     {
       "packageName": "@beep/architecture-lab-config",
       "packagePath": "packages/architecture-lab/config",
-      "topoOrder": 81,
+      "topoOrder": 83,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -311980,7 +313905,7 @@
     {
       "packageName": "@beep/govinfo",
       "packagePath": "packages/drivers/govinfo",
-      "topoOrder": 82,
+      "topoOrder": 84,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -314560,7 +316485,7 @@
     {
       "packageName": "@beep/data",
       "packagePath": "packages/foundation/primitive/data",
-      "topoOrder": 83,
+      "topoOrder": 85,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -318015,7 +319940,7 @@
     {
       "packageName": "@beep/xai",
       "packagePath": "packages/drivers/xai",
-      "topoOrder": 84,
+      "topoOrder": 86,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -319740,7 +321665,7 @@
     {
       "packageName": "@beep/architecture-lab-server",
       "packagePath": "packages/architecture-lab/server",
-      "topoOrder": 85,
+      "topoOrder": 87,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -320805,7 +322730,7 @@
     {
       "packageName": "@beep/duckdb",
       "packagePath": "packages/drivers/duckdb",
-      "topoOrder": 86,
+      "topoOrder": 88,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -321596,7 +323521,7 @@
     {
       "packageName": "@beep/ffmpeg",
       "packagePath": "packages/drivers/ffmpeg",
-      "topoOrder": 87,
+      "topoOrder": 89,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -322900,7 +324825,7 @@
     {
       "packageName": "@beep/agents-client",
       "packagePath": "packages/agents/client",
-      "topoOrder": 88,
+      "topoOrder": 90,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -323518,7 +325443,7 @@
     {
       "packageName": "@beep/uspto-mcp",
       "packagePath": "packages/drivers/uspto-mcp",
-      "topoOrder": 89,
+      "topoOrder": 91,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -324355,7 +326280,7 @@
     {
       "packageName": "@beep/architecture-lab-proof",
       "packagePath": "apps/architecture-lab-proof",
-      "topoOrder": 90,
+      "topoOrder": 92,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -324457,7 +326382,7 @@
     {
       "packageName": "@beep/epistemic-use-cases",
       "packagePath": "packages/epistemic/use-cases",
-      "topoOrder": 91,
+      "topoOrder": 93,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -325122,7 +327047,7 @@
     {
       "packageName": "@beep/m365",
       "packagePath": "packages/drivers/m365",
-      "topoOrder": 92,
+      "topoOrder": 94,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -326907,7 +328832,7 @@
     {
       "packageName": "@beep/observability",
       "packagePath": "packages/foundation/capability/observability",
-      "topoOrder": 93,
+      "topoOrder": 95,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -330943,7 +332868,7 @@
     {
       "packageName": "@beep/html",
       "packagePath": "packages/foundation/modeling/html",
-      "topoOrder": 94,
+      "topoOrder": 96,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -338891,7 +340816,7 @@
     {
       "packageName": "@beep/n3",
       "packagePath": "packages/drivers/n3",
-      "topoOrder": 95,
+      "topoOrder": 97,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -339055,8 +340980,8 @@
           "exportKind": "class",
           "filePath": "src/N3.service.ts",
           "repoPath": "packages/drivers/n3/src/N3.service.ts",
-          "line": 38,
-          "anchor": "packages-drivers-n3-src-n3-service-ts-38-n3parseturtlerequest",
+          "line": 45,
+          "anchor": "packages-drivers-n3-src-n3-service-ts-45-n3parseturtlerequest",
           "currentTags": [
             "@example",
             "@since",
@@ -339077,8 +341002,8 @@
           "exportKind": "class",
           "filePath": "src/N3.service.ts",
           "repoPath": "packages/drivers/n3/src/N3.service.ts",
-          "line": 66,
-          "anchor": "packages-drivers-n3-src-n3-service-ts-66-n3parseturtleresult",
+          "line": 73,
+          "anchor": "packages-drivers-n3-src-n3-service-ts-73-n3parseturtleresult",
           "currentTags": [
             "@example",
             "@since",
@@ -339099,8 +341024,8 @@
           "exportKind": "class",
           "filePath": "src/N3.service.ts",
           "repoPath": "packages/drivers/n3/src/N3.service.ts",
-          "line": 93,
-          "anchor": "packages-drivers-n3-src-n3-service-ts-93-n3serializeturtlerequest",
+          "line": 101,
+          "anchor": "packages-drivers-n3-src-n3-service-ts-101-n3serializeturtlerequest",
           "currentTags": [
             "@example",
             "@since",
@@ -339121,8 +341046,8 @@
           "exportKind": "class",
           "filePath": "src/N3.service.ts",
           "repoPath": "packages/drivers/n3/src/N3.service.ts",
-          "line": 119,
-          "anchor": "packages-drivers-n3-src-n3-service-ts-119-n3serializeturtleresult",
+          "line": 128,
+          "anchor": "packages-drivers-n3-src-n3-service-ts-128-n3serializeturtleresult",
           "currentTags": [
             "@example",
             "@since",
@@ -339143,8 +341068,8 @@
           "exportKind": "class",
           "filePath": "src/N3.service.ts",
           "repoPath": "packages/drivers/n3/src/N3.service.ts",
-          "line": 306,
-          "anchor": "packages-drivers-n3-src-n3-service-ts-306-n3turtlecodec",
+          "line": 332,
+          "anchor": "packages-drivers-n3-src-n3-service-ts-332-n3turtlecodec",
           "currentTags": [
             "@example",
             "@since",
@@ -339165,8 +341090,8 @@
           "exportKind": "const",
           "filePath": "src/N3.service.ts",
           "repoPath": "packages/drivers/n3/src/N3.service.ts",
-          "line": 321,
-          "anchor": "packages-drivers-n3-src-n3-service-ts-321-n3turtlecodeclive",
+          "line": 347,
+          "anchor": "packages-drivers-n3-src-n3-service-ts-347-n3turtlecodeclive",
           "currentTags": [
             "@example",
             "@since",
@@ -339229,7 +341154,7 @@
     {
       "packageName": "@beep/ui",
       "packagePath": "packages/foundation/ui-system/ui",
-      "topoOrder": 96,
+      "topoOrder": 98,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -354189,7 +356114,7 @@
     {
       "packageName": "@beep/pandoc-ast",
       "packagePath": "packages/foundation/modeling/pandoc-ast",
-      "topoOrder": 97,
+      "topoOrder": 99,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -356991,7 +358916,7 @@
     {
       "packageName": "@beep/repo-configs",
       "packagePath": "packages/tooling/policy-pack/repo-configs",
-      "topoOrder": 98,
+      "topoOrder": 100,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -360645,7 +362570,7 @@
     {
       "packageName": "@beep/wink",
       "packagePath": "packages/drivers/wink",
-      "topoOrder": 99,
+      "topoOrder": 101,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -362527,7 +364452,7 @@
     {
       "packageName": "@beep/postgres",
       "packagePath": "packages/drivers/postgres",
-      "topoOrder": 100,
+      "topoOrder": 102,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -363497,7 +365422,7 @@
     {
       "packageName": "@beep/architecture-lab-domain",
       "packagePath": "packages/architecture-lab/domain",
-      "topoOrder": 101,
+      "topoOrder": 103,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -364989,7 +366914,7 @@
     {
       "packageName": "@beep/provenance",
       "packagePath": "packages/foundation/modeling/provenance",
-      "topoOrder": 102,
+      "topoOrder": 104,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -365175,7 +367100,7 @@
     {
       "packageName": "@beep/epistemic-tables",
       "packagePath": "packages/epistemic/tables",
-      "topoOrder": 103,
+      "topoOrder": 105,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -365600,7 +367525,7 @@
     {
       "packageName": "@beep/federal-register",
       "packagePath": "packages/drivers/federal-register",
-      "topoOrder": 104,
+      "topoOrder": 106,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -365681,7 +367606,7 @@
     {
       "packageName": "@beep/sanity",
       "packagePath": "packages/drivers/sanity",
-      "topoOrder": 105,
+      "topoOrder": 107,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",

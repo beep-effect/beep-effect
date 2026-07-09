@@ -1,5 +1,6 @@
 import {
   appendChange,
+  applyChangeOperationsWithDelta,
   ChangeOperation,
   CreateSessionInput,
   createSession,
@@ -11,6 +12,7 @@ import {
 import { makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const sessionId = S.decodeUnknownSync(SessionId)("session-1");
@@ -82,4 +84,33 @@ describe("Ontology Session aggregate", () => {
     expect(isExcludedFromReasoning("provenance")).toBe(true);
     expect(namedGraphs).toHaveLength(5);
   });
+
+  it.effect(
+    "returns real deltas for batch operations",
+    Effect.fnUntraced(function* () {
+      const session = createSession(
+        CreateSessionInput.make({
+          id: sessionId,
+          baseDataset: makeDataset([nameQuad]),
+        })
+      );
+      const applied = applyChangeOperationsWithDelta(session, [
+        ChangeOperation.make({
+          kind: "addQuad",
+          partition: "asserted",
+          quad: knowsQuad,
+        }),
+        ChangeOperation.make({
+          kind: "removeQuad",
+          partition: "asserted",
+          quad: nameQuad,
+        }),
+      ]);
+
+      expect(applied.delta.added).toHaveLength(1);
+      expect(applied.delta.removed).toHaveLength(1);
+      expect(deriveSessionGraphPartitions(applied.session).asserted.quads).toHaveLength(1);
+      yield* Effect.void;
+    })
+  );
 });

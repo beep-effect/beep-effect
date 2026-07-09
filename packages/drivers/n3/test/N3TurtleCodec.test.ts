@@ -19,9 +19,14 @@ describe("N3TurtleCodec", () => {
         `;
       const codec = yield* N3TurtleCodec;
       const parsed = yield* codec.parse(N3ParseTurtleRequest.make({ source }));
-      const serialized = yield* codec.serialize(N3SerializeTurtleRequest.make({ dataset: parsed.dataset }));
+      const serialized = yield* codec.serialize(
+        N3SerializeTurtleRequest.make({ dataset: parsed.dataset, prefixes: parsed.prefixes })
+      );
 
       expect(parsed.dataset.quads).toHaveLength(1);
+      expect(parsed.prefixes).toEqual({ ex: "https://example.test/" });
+      expect(serialized.source).toContain("@prefix ex:");
+      expect(serialized.source).toContain("ex:alice");
       expect(serialized.source).toContain("Alice");
     }, provideScopedLayer(N3TurtleCodecLive))
   );

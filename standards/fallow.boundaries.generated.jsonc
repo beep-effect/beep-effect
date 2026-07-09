@@ -390,6 +390,12 @@
         ]
       },
       {
+        "name": "@beep/ontology-client",
+        "patterns": [
+          "packages/ontology/client/src/**"
+        ]
+      },
+      {
         "name": "@beep/ontology-domain",
         "patterns": [
           "packages/ontology/domain/src/**"
@@ -399,6 +405,12 @@
         "name": "@beep/ontology-server",
         "patterns": [
           "packages/ontology/server/src/**"
+        ]
+      },
+      {
+        "name": "@beep/ontology-ui",
+        "patterns": [
+          "packages/ontology/ui/src/**"
         ]
       },
       {
@@ -1762,6 +1774,25 @@
         ]
       },
       {
+        "from": "@beep/ontology-client",
+        "allow": [
+          "@beep/identity",
+          "@beep/ontology-client",
+          "@beep/ontology-domain",
+          "@beep/ontology-use-cases",
+          "@beep/schema",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/ontology-client",
+          "@beep/ontology-domain",
+          "@beep/ontology-use-cases",
+          "@beep/schema",
+          "@beep/utils"
+        ]
+      },
+      {
         "from": "@beep/ontology-domain",
         "allow": [
           "@beep/identity",
@@ -1795,6 +1826,31 @@
           "@beep/rdf-canonize",
           "@beep/semantic-web",
           "@beep/test-utils"
+        ]
+      },
+      {
+        "from": "@beep/ontology-ui",
+        "allow": [
+          "@beep/editor",
+          "@beep/lexical-schema",
+          "@beep/ontology-client",
+          "@beep/ontology-domain",
+          "@beep/ontology-ui",
+          "@beep/ontology-use-cases",
+          "@beep/rdf",
+          "@beep/ui",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/editor",
+          "@beep/lexical-schema",
+          "@beep/ontology-client",
+          "@beep/ontology-domain",
+          "@beep/ontology-ui",
+          "@beep/ontology-use-cases",
+          "@beep/rdf",
+          "@beep/ui",
+          "@beep/utils"
         ]
       },
       {
@@ -1931,6 +1987,11 @@
           "@beep/identity",
           "@beep/lexical-schema",
           "@beep/md",
+          "@beep/ontology-client",
+          "@beep/ontology-domain",
+          "@beep/ontology-server",
+          "@beep/ontology-ui",
+          "@beep/ontology-use-cases",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/professional-desktop",
@@ -1953,6 +2014,11 @@
           "@beep/identity",
           "@beep/lexical-schema",
           "@beep/md",
+          "@beep/ontology-client",
+          "@beep/ontology-domain",
+          "@beep/ontology-server",
+          "@beep/ontology-ui",
+          "@beep/ontology-use-cases",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/professional-desktop",

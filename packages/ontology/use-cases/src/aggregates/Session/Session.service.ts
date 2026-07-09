@@ -12,7 +12,12 @@ import {
   deriveSessionGraphPartitions,
 } from "@beep/ontology-domain/aggregates/Session";
 import { Context, Effect, Layer } from "effect";
-import { OpenOntologyFileResult, SaveOntologyFileResult } from "./Session.commands.js";
+import {
+  OpenOntologyFileResult,
+  SaveOntologyFileResult,
+  SerializeOntologySessionCommand,
+  SerializeOntologySessionResult,
+} from "./Session.commands.js";
 import {
   OntologyFileStore,
   ParseTurtleRequest,
@@ -40,6 +45,9 @@ interface SessionUseCasesShape {
   readonly saveFile: (
     command: SaveOntologyFileCommand
   ) => Effect.Effect<SaveOntologyFileResult, OntologyFileStoreError | TurtleCodecError>;
+  readonly serialize: (
+    command: SerializeOntologySessionCommand
+  ) => Effect.Effect<SerializeOntologySessionResult, TurtleCodecError>;
 }
 
 /**
@@ -60,25 +68,45 @@ interface SessionUseCasesShape {
 export const makeSessionUseCases = Effect.fn("Ontology.SessionUseCases.make")(function* () {
   const fileStore = yield* OntologyFileStore;
   const turtle = yield* TurtleCodec;
+  const serializeSession = Effect.fn("Ontology.SessionUseCases.serialize")(function* (
+    command: SerializeOntologySessionCommand
+  ) {
+    const asserted = deriveSessionGraphPartitions(command.session).asserted;
+    const serialized = yield* turtle.serialize(
+      SerializeTurtleRequest.make({ dataset: asserted, prefixes: command.session.prefixes })
+    );
+
+    return SerializeOntologySessionResult.make({
+      source: serialized.source,
+    });
+  });
 
   return {
     openFile: Effect.fn("Ontology.SessionUseCases.openFile")(function* (command: OpenOntologyFileCommand) {
       const file = yield* fileStore.read(ReadOntologyFileRequest.make({ path: command.path }));
       const parsed = yield* turtle.parse(ParseTurtleRequest.make({ source: file.source, baseIri: command.baseIri }));
-      const session = createSession(CreateSessionInput.make({ id: command.sessionId, baseDataset: parsed.dataset }));
+      const session = createSession(
+        CreateSessionInput.make({
+          id: command.sessionId,
+          baseDataset: parsed.dataset,
+          prefixes: parsed.prefixes,
+        })
+      );
 
       return OpenOntologyFileResult.make({
         session,
         path: file.path,
+        source: file.source,
       });
     }),
+    serialize: serializeSession,
     saveFile: Effect.fn("Ontology.SessionUseCases.saveFile")(function* (command: SaveOntologyFileCommand) {
-      const asserted = deriveSessionGraphPartitions(command.session).asserted;
-      const serialized = yield* turtle.serialize(SerializeTurtleRequest.make({ dataset: asserted }));
+      const serialized = yield* serializeSession(SerializeOntologySessionCommand.make({ session: command.session }));
       yield* fileStore.write(WriteOntologyFileRequest.make({ path: command.path, source: serialized.source }));
 
       return SaveOntologyFileResult.make({
         path: command.path,
+        source: serialized.source,
       });
     }),
   } satisfies SessionUseCasesShape;
