@@ -81,11 +81,11 @@ const isProtobufLongLike = (input: unknown): input is ProtobufLongLike => {
   );
 };
 
+const isSafeIntegerInput = (input: unknown): input is number =>
+  P.isNumber(input) && globalThis.Number.isSafeInteger(input);
+
 const isProtobufInt64Input = (input: unknown): input is ProtobufInt64Input =>
-  P.isBigInt(input) ||
-  P.isString(input) ||
-  (P.isNumber(input) && globalThis.Number.isFinite(input) && globalThis.Number.isInteger(input)) ||
-  isProtobufLongLike(input);
+  P.isBigInt(input) || P.isString(input) || isSafeIntegerInput(input) || isProtobufLongLike(input);
 
 const parseDecimalBigInt = (input: unknown, decimal: string) => {
   if (!decimalIntegerPattern.test(decimal)) {
@@ -103,6 +103,10 @@ const decodeProtobufInt64Input = (input: ProtobufInt64Input) =>
       }
 
       if (P.isNumber(input)) {
+        if (!globalThis.Number.isSafeInteger(input)) {
+          throw invalidProtobufInt64Input(input, "Expected a safe protobuf 64-bit integer number");
+        }
+
         return BigInt(input);
       }
 
@@ -116,10 +120,10 @@ const decodeProtobufInt64Input = (input: ProtobufInt64Input) =>
  * Schema for protobufjs 64-bit integer input values.
  *
  * @remarks
- * This schema accepts decimal strings, JavaScript integer numbers, `bigint`,
- * and protobufjs `Long`-like objects. Downstream scalar schemas decode these
- * inputs into branded `bigint` values before applying signed or unsigned range
- * checks.
+ * This schema accepts decimal strings, safe JavaScript integer numbers,
+ * `bigint`, and protobufjs `Long`-like objects. Downstream scalar schemas
+ * decode these inputs into branded `bigint` values before applying signed or
+ * unsigned range checks.
  *
  * @example
  * ```ts

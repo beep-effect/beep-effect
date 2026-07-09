@@ -248,18 +248,24 @@ describe("protobuf 64-bit integer scalar schemas", () => {
       const decodeSint64 = S.decodeUnknownEffect(Sint64);
       const decodeFixed64 = S.decodeUnknownEffect(Fixed64);
       const decodeSfixed64 = S.decodeUnknownEffect(Sfixed64);
+      const unsafePositive64Number = Number.MAX_SAFE_INTEGER + 1;
+      const unsafeNegative64Number = Number.MIN_SAFE_INTEGER - 1;
 
       expect(Exit.isFailure(yield* Effect.exit(decodeUint64(-BigInt(1))))).toBe(true);
       expect(Exit.isFailure(yield* Effect.exit(decodeUint64(uint64Maximum + BigInt(1))))).toBe(true);
       expect(Exit.isFailure(yield* Effect.exit(decodeUint64(1.5)))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeUint64(unsafePositive64Number)))).toBe(true);
       expect(Exit.isFailure(yield* Effect.exit(decodeUint64("1.5")))).toBe(true);
       expect(Exit.isFailure(yield* Effect.exit(decodeFixed64(-BigInt(1))))).toBe(true);
       expect(Exit.isFailure(yield* Effect.exit(decodeFixed64(uint64Maximum + BigInt(1))))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeFixed64(unsafePositive64Number)))).toBe(true);
       expect(Exit.isFailure(yield* Effect.exit(decodeSint64(sint64Minimum - BigInt(1))))).toBe(true);
       expect(Exit.isFailure(yield* Effect.exit(decodeSint64(sint64Maximum + BigInt(1))))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeSint64(unsafeNegative64Number)))).toBe(true);
       expect(Exit.isFailure(yield* Effect.exit(decodeSint64("1.5")))).toBe(true);
       expect(Exit.isFailure(yield* Effect.exit(decodeSfixed64(sint64Minimum - BigInt(1))))).toBe(true);
       expect(Exit.isFailure(yield* Effect.exit(decodeSfixed64(sint64Maximum + BigInt(1))))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeSfixed64(unsafeNegative64Number)))).toBe(true);
     })
   );
 
