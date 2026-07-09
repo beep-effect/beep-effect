@@ -1,0 +1,104 @@
+{
+  "schemaVersion": "initiative-manifest/v1",
+  "initiative": {
+    "id": "ontology-workbench",
+    "title": "Ontology Workbench",
+    "status": "active",
+    "created": "2026-07-08",
+    "updated": "2026-07-08",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/ontology-workbench",
+  "lifecycle": "active",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": null,
+    "authoredDirectly": true,
+    "note": "Authored directly from a /grill-with-docs interview (2026-07-08, 13 locked decisions) plus three Codex research reports (Ontology-Playground survey, beep repo capability inventory, graph rendering performance landscape) saved verbatim under research/."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as PRs driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor); each phase lands through yeet and P5's PR must be mergeable.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/ontology-workbench/README.md",
+    "goals/ontology-workbench/SPEC.md",
+    "goals/ontology-workbench/PLAN.md",
+    "goals/ontology-workbench/GOAL.md",
+    "goals/ontology-workbench/research/SOURCES.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/ontology-playground-report.md",
+    "research/beep-repo-capability-report.md",
+    "research/graph-performance-report.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/ontology-workbench/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Bootstrap",
+      "status": "pending",
+      "exit": "Branch from fresh origin/main; packet sources confirmed; capability-report facts re-verified or drift recorded."
+    },
+    {
+      "id": "P1",
+      "name": "Foundation",
+      "status": "pending",
+      "exit": "ontology slice (domain+use-cases+server) and drivers/n3 land; fixture ontologies round-trip by rdf-canonize fingerprint; slice tests green in isolation."
+    },
+    {
+      "id": "P2",
+      "name": "Explorer + Editor",
+      "status": "pending",
+      "exit": "client + ui packages land; author-edit-save loop works in the running desktop app with undo/redo and change log."
+    },
+    {
+      "id": "P3",
+      "name": "Visualizer",
+      "status": "pending",
+      "exit": "drivers/cosmos viewport with worker projection, focus-neighborhood, light editing; synthetic 100k-element ontology interactive on webkitgtk with benchmark note in history/."
+    },
+    {
+      "id": "P4",
+      "name": "SPARQL + Reasoning",
+      "status": "pending",
+      "exit": "drivers/oxigraph implements the @beep/semantic-web SPARQL contract; query panel executes SELECT/CONSTRUCT; inferred-view toggle shows closure/type/disjointness signals."
+    },
+    {
+      "id": "P5",
+      "name": "Harden + Close",
+      "status": "pending",
+      "exit": "Protege/ROBOT interop evidence recorded; all SPEC acceptance criteria pass; disambiguation notes added; closeout reflection exists; final PR mergeable."
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/ontology-workbench/GOAL.md)\" -le 4000",
+    "jq . goals/ontology-workbench/ops/manifest.json",
+    "rg -n \"ontology-workbench|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/ontology-workbench",
+    "git diff --check -- goals/ontology-workbench",
+    "bun run beep yeet verify",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation.",
+    "cosmos.gl proves non-viable on webkitgtk during the P3 spike (pre-approved fallback: sigma.js v3 + graphology)."
+  ]
+}
