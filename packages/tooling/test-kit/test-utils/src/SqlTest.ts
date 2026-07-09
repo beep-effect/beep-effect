@@ -1282,11 +1282,26 @@ const buildNodeSqliteLayer = Effect.gen(function* () {
   );
   const databasePath = path.join(tempDir, "test.db");
 
-  return Layer.mergeAll(
-    NodeFileSystem.layer,
-    NodePath.layer,
-    SqliteClient.layer({ filename: databasePath }),
-    Layer.succeed(TestDatabaseInfo, makeNoNetworkInfo("node-sqlite", databasePath, tempDir))
+  return Layer.effectContext(
+    Layer.build(
+      Layer.mergeAll(
+        NodeFileSystem.layer,
+        NodePath.layer,
+        SqliteClient.layer({ filename: databasePath }),
+        Layer.succeed(TestDatabaseInfo, makeNoNetworkInfo("node-sqlite", databasePath, tempDir))
+      )
+    ).pipe(
+      Effect.catchCause((cause) =>
+        Effect.fail(
+          toHarnessError(
+            "node-sqlite",
+            "provision",
+            "Failed to provision the Node SQLite test driver. Ensure the current Node.js runtime includes node:sqlite support before selecting NodeSqliteTestDriver.",
+            cause
+          )
+        )
+      )
+    )
   );
 }).pipe(
   Effect.mapError((cause) =>
