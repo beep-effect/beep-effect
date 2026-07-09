@@ -16,6 +16,15 @@ const $I = $OntologyDomainId.create("aggregates/Session/Session.errors");
 /**
  * Reasons an ontology session change can be rejected.
  *
+ * @example
+ * ```ts
+ * import { SessionChangeRejectedReason } from "@beep/ontology-domain/aggregates/Session"
+ *
+ * const reason = SessionChangeRejectedReason.make("invalidChange")
+ *
+ * console.log(reason)
+ * ```
+ *
  * @since 0.0.0
  * @category errors
  */
@@ -28,6 +37,15 @@ export const SessionChangeRejectedReason = LiteralKit(["unknownPartition", "inva
 /**
  * Type for {@link SessionChangeRejectedReason}.
  *
+ * @example
+ * ```ts
+ * import { SessionChangeRejectedReason } from "@beep/ontology-domain/aggregates/Session"
+ *
+ * const reason: SessionChangeRejectedReason = "unknownPartition"
+ *
+ * console.log(reason)
+ * ```
+ *
  * @since 0.0.0
  * @category errors
  */
@@ -35,6 +53,20 @@ export type SessionChangeRejectedReason = typeof SessionChangeRejectedReason.Typ
 
 /**
  * Typed domain error for rejected ontology session changes.
+ *
+ * @example
+ * ```ts
+ * import { SessionChangeRejected, SessionId } from "@beep/ontology-domain/aggregates/Session"
+ * import * as S from "effect/Schema"
+ *
+ * const error = SessionChangeRejected.make({
+ *   sessionId: S.decodeUnknownSync(SessionId)("session-1"),
+ *   reason: "invalidChange",
+ *   message: "The change could not be applied."
+ * })
+ *
+ * console.log(error.reason)
+ * ```
  *
  * @since 0.0.0
  * @category errors

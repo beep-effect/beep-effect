@@ -21,6 +21,17 @@ const $I = $N3Id.create("N3.service");
 /**
  * N3 Turtle parse request.
  *
+ * @example
+ * ```ts
+ * import { N3ParseTurtleRequest } from "@beep/n3"
+ *
+ * const request = N3ParseTurtleRequest.make({
+ *   source: "@prefix ex: <https://example.test/> ."
+ * })
+ *
+ * console.log(request.source)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -37,6 +48,18 @@ export class N3ParseTurtleRequest extends S.Class<N3ParseTurtleRequest>($I`N3Par
 /**
  * N3 Turtle parse result.
  *
+ * @example
+ * ```ts
+ * import { N3ParseTurtleResult } from "@beep/n3"
+ * import { makeDataset } from "@beep/rdf/Rdf"
+ *
+ * const result = N3ParseTurtleResult.make({
+ *   dataset: makeDataset([])
+ * })
+ *
+ * console.log(result.dataset.quads.length)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -52,6 +75,18 @@ export class N3ParseTurtleResult extends S.Class<N3ParseTurtleResult>($I`N3Parse
 /**
  * N3 Turtle serialize request.
  *
+ * @example
+ * ```ts
+ * import { N3SerializeTurtleRequest } from "@beep/n3"
+ * import { makeDataset } from "@beep/rdf/Rdf"
+ *
+ * const request = N3SerializeTurtleRequest.make({
+ *   dataset: makeDataset([])
+ * })
+ *
+ * console.log(request.dataset.quads.length)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -66,6 +101,17 @@ export class N3SerializeTurtleRequest extends S.Class<N3SerializeTurtleRequest>(
 
 /**
  * N3 Turtle serialize result.
+ *
+ * @example
+ * ```ts
+ * import { N3SerializeTurtleResult } from "@beep/n3"
+ *
+ * const result = N3SerializeTurtleResult.make({
+ *   source: "@prefix ex: <https://example.test/> ."
+ * })
+ *
+ * console.log(result.source)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -241,6 +287,19 @@ const serializeTurtle = Effect.fn("N3.serializeTurtle")(function* (request: N3Se
 /**
  * N3 Turtle codec service tag.
  *
+ * @example
+ * ```ts
+ * import { N3TurtleCodec } from "@beep/n3"
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const codec = yield* N3TurtleCodec
+ *   return codec
+ * })
+ *
+ * console.log(program)
+ * ```
+ *
  * @since 0.0.0
  * @category services
  */
@@ -248,6 +307,13 @@ export class N3TurtleCodec extends Context.Service<N3TurtleCodec, N3TurtleCodecS
 
 /**
  * Live N3 Turtle codec layer.
+ *
+ * @example
+ * ```ts
+ * import { N3TurtleCodecLive } from "@beep/n3"
+ *
+ * console.log(N3TurtleCodecLive)
+ * ```
  *
  * @since 0.0.0
  * @category layers

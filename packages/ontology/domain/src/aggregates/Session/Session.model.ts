@@ -26,6 +26,24 @@ const ChangeOperationKind = LiteralKit(["addQuad", "removeQuad"]);
 /**
  * Typed ontology change operation over RDF quads.
  *
+ * @example
+ * ```ts
+ * import { ChangeOperation } from "@beep/ontology-domain/aggregates/Session"
+ * import { makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
+ *
+ * const change = ChangeOperation.make({
+ *   kind: "addQuad",
+ *   partition: "asserted",
+ *   quad: makeQuad(
+ *     makeNamedNode("https://example.test/alice"),
+ *     makeNamedNode("https://example.test/knows"),
+ *     makeNamedNode("https://example.test/bob")
+ *   )
+ * })
+ *
+ * console.log(change.kind)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -48,6 +66,24 @@ export const ChangeOperation = ChangeOperationKind.toTaggedUnion("kind")({
 /**
  * Type for {@link ChangeOperation}.
  *
+ * @example
+ * ```ts
+ * import { ChangeOperation } from "@beep/ontology-domain/aggregates/Session"
+ * import { makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
+ *
+ * const change: ChangeOperation = ChangeOperation.make({
+ *   kind: "removeQuad",
+ *   partition: "asserted",
+ *   quad: makeQuad(
+ *     makeNamedNode("https://example.test/alice"),
+ *     makeNamedNode("https://example.test/knows"),
+ *     makeNamedNode("https://example.test/bob")
+ *   )
+ * })
+ *
+ * console.log(change.partition)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -55,6 +91,15 @@ export type ChangeOperation = typeof ChangeOperation.Type;
 
 /**
  * Derived RDF datasets for every ontology session named graph partition.
+ *
+ * @example
+ * ```ts
+ * import { emptySessionGraphPartitions } from "@beep/ontology-domain/aggregates/Session"
+ *
+ * const partitions = emptySessionGraphPartitions()
+ *
+ * console.log(partitions.asserted.quads.length)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -75,6 +120,21 @@ export class SessionGraphPartitions extends S.Class<SessionGraphPartitions>($I`S
 /**
  * Named graph view derived from a session partition.
  *
+ * @example
+ * ```ts
+ * import { NamedGraphPartition } from "@beep/ontology-domain/aggregates/Session"
+ * import { makeDataset, makeNamedNode } from "@beep/rdf/Rdf"
+ *
+ * const namedGraph = NamedGraphPartition.make({
+ *   partition: "asserted",
+ *   graph: makeNamedNode("urn:beep:ontology:graph:asserted"),
+ *   dataset: makeDataset([]),
+ *   excludedFromReasoning: false
+ * })
+ *
+ * console.log(namedGraph.graph.value)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -93,6 +153,21 @@ export class NamedGraphPartition extends S.Class<NamedGraphPartition>($I`NamedGr
 /**
  * Ontology workbench session with base dataset and ordered change log.
  *
+ * @example
+ * ```ts
+ * import { Session, SessionId } from "@beep/ontology-domain/aggregates/Session"
+ * import { makeDataset } from "@beep/rdf/Rdf"
+ * import * as S from "effect/Schema"
+ *
+ * const session = Session.make({
+ *   id: S.decodeUnknownSync(SessionId)("session-1"),
+ *   baseDataset: makeDataset([]),
+ *   changeLog: []
+ * })
+ *
+ * console.log(session.changeLog.length)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -109,6 +184,20 @@ export class Session extends S.Class<Session>($I`Session`)(
 
 /**
  * Input for creating an ontology session.
+ *
+ * @example
+ * ```ts
+ * import { CreateSessionInput, SessionId } from "@beep/ontology-domain/aggregates/Session"
+ * import { makeDataset } from "@beep/rdf/Rdf"
+ * import * as S from "effect/Schema"
+ *
+ * const input = CreateSessionInput.make({
+ *   id: S.decodeUnknownSync(SessionId)("session-1"),
+ *   baseDataset: makeDataset([])
+ * })
+ *
+ * console.log(input.baseDataset.quads.length)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -127,6 +216,15 @@ const emptyDataset = () => makeDataset([]);
 
 /**
  * Empty partition set.
+ *
+ * @example
+ * ```ts
+ * import { emptySessionGraphPartitions } from "@beep/ontology-domain/aggregates/Session"
+ *
+ * const partitions = emptySessionGraphPartitions()
+ *
+ * console.log(partitions.inferred.quads.length)
+ * ```
  *
  * @since 0.0.0
  * @category utilities
@@ -161,6 +259,15 @@ const removeQuad = (dataset: Dataset, target: Quad): Dataset =>
 
 /**
  * Read the dataset for a partition.
+ *
+ * @example
+ * ```ts
+ * import { datasetForPartition, emptySessionGraphPartitions } from "@beep/ontology-domain/aggregates/Session"
+ *
+ * const asserted = datasetForPartition(emptySessionGraphPartitions(), "asserted")
+ *
+ * console.log(asserted.quads.length)
+ * ```
  *
  * @since 0.0.0
  * @category utilities
@@ -202,6 +309,27 @@ const applyChangeToDataset = (dataset: Dataset, change: ChangeOperation): Datase
 /**
  * Apply one change operation to partitioned session datasets.
  *
+ * @example
+ * ```ts
+ * import { applyChangeToPartitions, ChangeOperation, emptySessionGraphPartitions } from "@beep/ontology-domain/aggregates/Session"
+ * import { makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
+ *
+ * const next = applyChangeToPartitions(
+ *   emptySessionGraphPartitions(),
+ *   ChangeOperation.make({
+ *     kind: "addQuad",
+ *     partition: "ontologies",
+ *     quad: makeQuad(
+ *       makeNamedNode("https://example.test/alice"),
+ *       makeNamedNode("https://example.test/knows"),
+ *       makeNamedNode("https://example.test/bob")
+ *     )
+ *   })
+ * )
+ *
+ * console.log(next.ontologies.quads.length)
+ * ```
+ *
  * @since 0.0.0
  * @category utilities
  */
@@ -221,6 +349,22 @@ export const applyChangeToPartitions: {
 /**
  * Create an ontology session from a base asserted dataset.
  *
+ * @example
+ * ```ts
+ * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
+ * import { makeDataset } from "@beep/rdf/Rdf"
+ * import * as S from "effect/Schema"
+ *
+ * const session = createSession(
+ *   CreateSessionInput.make({
+ *     id: S.decodeUnknownSync(SessionId)("session-1"),
+ *     baseDataset: makeDataset([])
+ *   })
+ * )
+ *
+ * console.log(session.id)
+ * ```
+ *
  * @since 0.0.0
  * @category constructors
  */
@@ -233,6 +377,34 @@ export const createSession = (input: CreateSessionInput): Session =>
 
 /**
  * Append a typed change operation to a session.
+ *
+ * @example
+ * ```ts
+ * import { appendChange, ChangeOperation, CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
+ * import { makeDataset, makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
+ * import * as S from "effect/Schema"
+ *
+ * const session = createSession(
+ *   CreateSessionInput.make({
+ *     id: S.decodeUnknownSync(SessionId)("session-1"),
+ *     baseDataset: makeDataset([])
+ *   })
+ * )
+ * const updated = appendChange(
+ *   session,
+ *   ChangeOperation.make({
+ *     kind: "addQuad",
+ *     partition: "asserted",
+ *     quad: makeQuad(
+ *       makeNamedNode("https://example.test/alice"),
+ *       makeNamedNode("https://example.test/knows"),
+ *       makeNamedNode("https://example.test/bob")
+ *     )
+ *   })
+ * )
+ *
+ * console.log(updated.changeLog.length)
+ * ```
  *
  * @since 0.0.0
  * @category utilities
@@ -251,6 +423,23 @@ export const appendChange: {
 
 /**
  * Derive named graph partition datasets from session base and change log.
+ *
+ * @example
+ * ```ts
+ * import { CreateSessionInput, createSession, deriveSessionGraphPartitions, SessionId } from "@beep/ontology-domain/aggregates/Session"
+ * import { makeDataset } from "@beep/rdf/Rdf"
+ * import * as S from "effect/Schema"
+ *
+ * const session = createSession(
+ *   CreateSessionInput.make({
+ *     id: S.decodeUnknownSync(SessionId)("session-1"),
+ *     baseDataset: makeDataset([])
+ *   })
+ * )
+ * const partitions = deriveSessionGraphPartitions(session)
+ *
+ * console.log(partitions.asserted.quads.length)
+ * ```
  *
  * @since 0.0.0
  * @category utilities
@@ -277,6 +466,23 @@ const makeNamedGraphPartition = (partitions: SessionGraphPartitions, partition: 
 
 /**
  * Derive all named graph views for a session.
+ *
+ * @example
+ * ```ts
+ * import { CreateSessionInput, createSession, deriveNamedGraphs, SessionId } from "@beep/ontology-domain/aggregates/Session"
+ * import { makeDataset } from "@beep/rdf/Rdf"
+ * import * as S from "effect/Schema"
+ *
+ * const session = createSession(
+ *   CreateSessionInput.make({
+ *     id: S.decodeUnknownSync(SessionId)("session-1"),
+ *     baseDataset: makeDataset([])
+ *   })
+ * )
+ * const namedGraphs = deriveNamedGraphs(session)
+ *
+ * console.log(namedGraphs.length)
+ * ```
  *
  * @since 0.0.0
  * @category utilities

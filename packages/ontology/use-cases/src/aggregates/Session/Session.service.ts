@@ -45,6 +45,15 @@ interface SessionUseCasesShape {
 /**
  * Build the ontology session use-case implementation from ports.
  *
+ * @example
+ * ```ts
+ * import { makeSessionUseCases } from "@beep/ontology-use-cases/aggregates/Session"
+ *
+ * const useCases = makeSessionUseCases()
+ *
+ * console.log(useCases)
+ * ```
+ *
  * @since 0.0.0
  * @category services
  */
@@ -78,6 +87,19 @@ export const makeSessionUseCases = Effect.fn("Ontology.SessionUseCases.make")(fu
 /**
  * Ontology session use-case service tag.
  *
+ * @example
+ * ```ts
+ * import { SessionUseCases } from "@beep/ontology-use-cases/aggregates/Session"
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const useCases = yield* SessionUseCases
+ *   return useCases
+ * })
+ *
+ * console.log(program)
+ * ```
+ *
  * @since 0.0.0
  * @category services
  */
@@ -85,6 +107,13 @@ export class SessionUseCases extends Context.Service<SessionUseCases, SessionUse
 
 /**
  * Layer for ontology session use cases.
+ *
+ * @example
+ * ```ts
+ * import { SessionUseCasesLayer } from "@beep/ontology-use-cases/aggregates/Session"
+ *
+ * console.log(SessionUseCasesLayer)
+ * ```
  *
  * @since 0.0.0
  * @category layers

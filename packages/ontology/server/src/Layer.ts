@@ -2,6 +2,7 @@
  * Ontology server layer.
  *
  * @packageDocumentation
+ * @category layers
  * @since 0.0.0
  */
 

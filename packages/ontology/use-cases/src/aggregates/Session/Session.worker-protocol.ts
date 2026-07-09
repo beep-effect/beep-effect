@@ -20,6 +20,20 @@ const WorkerCommandKind = LiteralKit(["parseTurtle", "diffDatasets"]);
 /**
  * Worker command envelope.
  *
+ * @example
+ * ```ts
+ * import { ParseTurtleRequest, WorkerCommand } from "@beep/ontology-use-cases/aggregates/Session"
+ *
+ * const command = WorkerCommand.make({
+ *   kind: "parseTurtle",
+ *   request: ParseTurtleRequest.make({
+ *     source: "@prefix ex: <https://example.test/> ."
+ *   })
+ * })
+ *
+ * console.log(command.kind)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -41,6 +55,20 @@ export const WorkerCommand = WorkerCommandKind.toTaggedUnion("kind")({
 /**
  * Type for {@link WorkerCommand}.
  *
+ * @example
+ * ```ts
+ * import { ParseTurtleRequest, WorkerCommand } from "@beep/ontology-use-cases/aggregates/Session"
+ *
+ * const command: WorkerCommand = WorkerCommand.make({
+ *   kind: "parseTurtle",
+ *   request: ParseTurtleRequest.make({
+ *     source: "@prefix ex: <https://example.test/> ."
+ *   })
+ * })
+ *
+ * console.log(command.kind)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -48,6 +76,17 @@ export type WorkerCommand = typeof WorkerCommand.Type;
 
 /**
  * Diff worker result.
+ *
+ * @example
+ * ```ts
+ * import { DiffWorkerResult } from "@beep/ontology-use-cases/aggregates/Session"
+ *
+ * const result = DiffWorkerResult.make({
+ *   operations: []
+ * })
+ *
+ * console.log(result.operations.length)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -65,6 +104,21 @@ const WorkerResultKind = LiteralKit(["parseTurtleSucceeded", "diffDatasetsSuccee
 
 /**
  * Worker result envelope.
+ *
+ * @example
+ * ```ts
+ * import { ParseTurtleResult, WorkerResult } from "@beep/ontology-use-cases/aggregates/Session"
+ * import { makeDataset } from "@beep/rdf/Rdf"
+ *
+ * const result = WorkerResult.make({
+ *   kind: "parseTurtleSucceeded",
+ *   result: ParseTurtleResult.make({
+ *     dataset: makeDataset([])
+ *   })
+ * })
+ *
+ * console.log(result.kind)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -85,6 +139,20 @@ export const WorkerResult = WorkerResultKind.toTaggedUnion("kind")({
 
 /**
  * Type for {@link WorkerResult}.
+ *
+ * @example
+ * ```ts
+ * import { DiffWorkerResult, WorkerResult } from "@beep/ontology-use-cases/aggregates/Session"
+ *
+ * const result: WorkerResult = WorkerResult.make({
+ *   kind: "diffDatasetsSucceeded",
+ *   result: DiffWorkerResult.make({
+ *     operations: []
+ *   })
+ * })
+ *
+ * console.log(result.kind)
+ * ```
  *
  * @since 0.0.0
  * @category models

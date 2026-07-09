@@ -52,6 +52,13 @@ const makeTurtleCodec = Effect.fn("Ontology.TurtleCodec.makeN3")(function* () {
 /**
  * N3-backed Turtle codec port layer.
  *
+ * @example
+ * ```ts
+ * import { TurtleCodecLayer } from "@beep/ontology-server/aggregates/Session"
+ *
+ * console.log(TurtleCodecLayer)
+ * ```
+ *
  * @since 0.0.0
  * @category layers
  */
@@ -60,6 +67,13 @@ export const TurtleCodecLayer = Layer.effect(TurtleCodec, makeTurtleCodec()).pip
 /**
  * FileSystem-backed ontology file-store port layer.
  *
+ * @example
+ * ```ts
+ * import { OntologyFileStoreLayer } from "@beep/ontology-server/aggregates/Session"
+ *
+ * console.log(OntologyFileStoreLayer)
+ * ```
+ *
  * @since 0.0.0
  * @category layers
  */
@@ -67,6 +81,13 @@ export const OntologyFileStoreLayer = Layer.effect(OntologyFileStore, makeFileSy
 
 /**
  * Live session server layer for the P1 ontology foundation.
+ *
+ * @example
+ * ```ts
+ * import { SessionServerLayer } from "@beep/ontology-server/aggregates/Session"
+ *
+ * console.log(SessionServerLayer)
+ * ```
  *
  * @since 0.0.0
  * @category layers

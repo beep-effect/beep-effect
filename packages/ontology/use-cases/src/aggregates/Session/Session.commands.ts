@@ -17,6 +17,20 @@ const $I = $OntologyUseCasesId.create("aggregates/Session/Session.commands");
 /**
  * Command to open a Turtle document into a session.
  *
+ * @example
+ * ```ts
+ * import { SessionId } from "@beep/ontology-domain/aggregates/Session"
+ * import { OntologyFilePath, OpenOntologyFileCommand } from "@beep/ontology-use-cases/aggregates/Session"
+ * import * as S from "effect/Schema"
+ *
+ * const command = OpenOntologyFileCommand.make({
+ *   sessionId: S.decodeUnknownSync(SessionId)("session-1"),
+ *   path: S.decodeUnknownSync(OntologyFilePath)("fixtures/demo.ttl")
+ * })
+ *
+ * console.log(command.path)
+ * ```
+ *
  * @since 0.0.0
  * @category commands
  */
@@ -34,6 +48,26 @@ export class OpenOntologyFileCommand extends S.Class<OpenOntologyFileCommand>($I
 /**
  * Result of opening a Turtle document into a session.
  *
+ * @example
+ * ```ts
+ * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
+ * import { OntologyFilePath, OpenOntologyFileResult } from "@beep/ontology-use-cases/aggregates/Session"
+ * import { makeDataset } from "@beep/rdf/Rdf"
+ * import * as S from "effect/Schema"
+ *
+ * const result = OpenOntologyFileResult.make({
+ *   session: createSession(
+ *     CreateSessionInput.make({
+ *       id: S.decodeUnknownSync(SessionId)("session-1"),
+ *       baseDataset: makeDataset([])
+ *     })
+ *   ),
+ *   path: S.decodeUnknownSync(OntologyFilePath)("fixtures/demo.ttl")
+ * })
+ *
+ * console.log(result.session.id)
+ * ```
+ *
  * @since 0.0.0
  * @category commands
  */
@@ -50,6 +84,26 @@ export class OpenOntologyFileResult extends S.Class<OpenOntologyFileResult>($I`O
 /**
  * Command to serialize a session's asserted graph to a Turtle document.
  *
+ * @example
+ * ```ts
+ * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
+ * import { OntologyFilePath, SaveOntologyFileCommand } from "@beep/ontology-use-cases/aggregates/Session"
+ * import { makeDataset } from "@beep/rdf/Rdf"
+ * import * as S from "effect/Schema"
+ *
+ * const command = SaveOntologyFileCommand.make({
+ *   path: S.decodeUnknownSync(OntologyFilePath)("fixtures/demo.ttl"),
+ *   session: createSession(
+ *     CreateSessionInput.make({
+ *       id: S.decodeUnknownSync(SessionId)("session-1"),
+ *       baseDataset: makeDataset([])
+ *     })
+ *   )
+ * })
+ *
+ * console.log(command.session.changeLog.length)
+ * ```
+ *
  * @since 0.0.0
  * @category commands
  */
@@ -65,6 +119,18 @@ export class SaveOntologyFileCommand extends S.Class<SaveOntologyFileCommand>($I
 
 /**
  * Result of saving a session's asserted graph.
+ *
+ * @example
+ * ```ts
+ * import { OntologyFilePath, SaveOntologyFileResult } from "@beep/ontology-use-cases/aggregates/Session"
+ * import * as S from "effect/Schema"
+ *
+ * const result = SaveOntologyFileResult.make({
+ *   path: S.decodeUnknownSync(OntologyFilePath)("fixtures/demo.ttl")
+ * })
+ *
+ * console.log(result.path)
+ * ```
  *
  * @since 0.0.0
  * @category commands

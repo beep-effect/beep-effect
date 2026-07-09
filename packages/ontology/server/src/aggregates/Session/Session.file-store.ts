@@ -30,6 +30,15 @@ const writeFailure = (path: WriteOntologyFileRequest["path"]) => (): OntologyFil
 /**
  * Build the FileSystem-backed ontology file-store port implementation.
  *
+ * @example
+ * ```ts
+ * import { makeFileSystemOntologyFileStore } from "@beep/ontology-server/aggregates/Session"
+ *
+ * const fileStore = makeFileSystemOntologyFileStore()
+ *
+ * console.log(fileStore)
+ * ```
+ *
  * @since 0.0.0
  * @category services
  */
