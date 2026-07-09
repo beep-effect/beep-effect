@@ -173,7 +173,11 @@ describe("WorkspaceTables", () => {
     expect(workspaceInsert.ownerPrincipalFixtureKey).toBe("principal.default");
     expect(workspaceInsert.vaultRootPath).toBe("/tmp/beep-workspace-vault");
 
-    const roundTripped = Workspace.fromWorkspaceRow({ ...workspaceInsert, id: 40 });
+    const roundTripped = Workspace.fromWorkspaceRow({
+      ...workspaceInsert,
+      id: 40,
+      vaultRootPath: workspaceInsert.vaultRootPath ?? null,
+    });
 
     expect(roundTripped.name).toBe("Default Workspace");
     expect(O.getOrUndefined(roundTripped.vaultRootPath)).toBe("/tmp/beep-workspace-vault");
@@ -205,7 +209,14 @@ describe("WorkspaceTables", () => {
             )
           ).toBe(true);
           expect(
-            WorkspaceEquivalence(Workspace.fromWorkspaceRow({ ...workspaceInsert, id: workspace.id }), workspace)
+            WorkspaceEquivalence(
+              Workspace.fromWorkspaceRow({
+                ...workspaceInsert,
+                id: workspace.id,
+                vaultRootPath: workspaceInsert.vaultRootPath ?? null,
+              }),
+              workspace
+            )
           ).toBe(true);
         }
       ),
