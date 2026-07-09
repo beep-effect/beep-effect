@@ -11,13 +11,13 @@ import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { O, Str } from "@beep/utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { SqliteClient as NodeSqliteClient } from "@effect/sql-sqlite-node";
 import { Config, Context, Duration, Effect, FileSystem, Layer, Path, pipe, Redacted, Schedule } from "effect";
 import * as S from "effect/Schema";
 import * as Reactivity from "effect/unstable/reactivity/Reactivity";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import { ConnectionError, SqlError } from "effect/unstable/sql/SqlError";
 import type * as PgClient from "@effect/sql-pg/PgClient";
+import type * as NodeSqliteClient from "@effect/sql-sqlite-node/SqliteClient";
 import type { GenericContainer, StartedTestContainer } from "testcontainers";
 
 const $I = $TestUtilsId.create("SqlTest");
@@ -784,6 +784,17 @@ const loadPgliteClientModule = Effect.tryPromise({
     ),
 }).pipe(Effect.withSpan("SqlTest.PgliteInProcess.loadPgliteClient"));
 
+const loadNodeSqliteClientModule = Effect.tryPromise({
+  try: () => import("@effect/sql-sqlite-node/SqliteClient"),
+  catch: (cause) =>
+    toHarnessError(
+      "node-sqlite",
+      "provision",
+      "Failed to load @effect/sql-sqlite-node driver support for SQL tests.",
+      cause
+    ),
+}).pipe(Effect.withSpan("SqlTest.NodeSqliteTestDriver.loadSqliteClient"));
+
 const loadPgModule = Effect.tryPromise({
   try: () => import("pg"),
   catch: (cause) => toHarnessError("pg-external", "provision", "Failed to load pg support for SQL tests.", cause),
@@ -1263,6 +1274,7 @@ const makeNodeTempDirectory = Effect.fn("SqlTest.makeNodeTempDirectory")(functio
 });
 
 const buildNodeSqliteLayer = Effect.gen(function* () {
+  const SqliteClient = yield* loadNodeSqliteClientModule;
   const { path, tempDir } = yield* makeNodeTempDirectory(
     "node-sqlite",
     "beep-sql-test-",
@@ -1273,7 +1285,7 @@ const buildNodeSqliteLayer = Effect.gen(function* () {
   return Layer.mergeAll(
     NodeFileSystem.layer,
     NodePath.layer,
-    NodeSqliteClient.layer({ filename: databasePath }),
+    SqliteClient.layer({ filename: databasePath }),
     Layer.succeed(TestDatabaseInfo, makeNoNetworkInfo("node-sqlite", databasePath, tempDir))
   );
 }).pipe(
