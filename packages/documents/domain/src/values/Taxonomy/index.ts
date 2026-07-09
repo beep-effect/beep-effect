@@ -22,7 +22,7 @@ export * from "./Taxonomy.projection.js";
 /**
  * Taxonomy seed exports.
  *
- * @category seed-data
+ * @category constants
  * @since 0.0.0
  */
 export * from "./Taxonomy.seed.js";

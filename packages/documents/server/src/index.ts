@@ -9,6 +9,13 @@
 /**
  * Package version for `@beep/documents-server`.
  *
+ * @example
+ * ```ts
+ * import { VERSION } from "@beep/documents-server"
+ *
+ * console.log(VERSION)
+ * ```
+ *
  * @category handlers
  * @since 0.0.0
  */

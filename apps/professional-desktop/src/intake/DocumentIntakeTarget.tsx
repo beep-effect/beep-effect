@@ -41,6 +41,21 @@ const droppedFiles = (event: DragEvent<HTMLElement>): ReadonlyArray<File> => A.f
 const batchIdFor = (files: ReadonlyArray<File>): string =>
   `batch-${files.length}-${slugVaultSegment(files[0]?.name ?? "drop")}`;
 
+/**
+ * Full-screen drag-and-drop boundary that onboards a workspace vault and intakes dropped documents.
+ *
+ * @example
+ * ```ts
+ * import { DocumentIntakeTarget } from "@/intake/DocumentIntakeTarget"
+ * import { createElement } from "react"
+ *
+ * const element = createElement(DocumentIntakeTarget, { children: null })
+ * console.log(element.type)
+ * ```
+ *
+ * @category components
+ * @since 0.0.0
+ */
 export function DocumentIntakeTarget({ children }: { readonly children: ReactNode }): JSX.Element {
   const vaultConfig = useAtomValue(workspaceVaultConfigAtom(DEFAULT_WORKSPACE_ID));
   const configureVault = useAtomSet(configureWorkspaceVaultAtom);

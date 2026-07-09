@@ -25,6 +25,14 @@ const SHORT_DIGEST_LENGTH = 12;
 /**
  * Failure raised when deterministic vault path projection cannot complete.
  *
+ * @example
+ * ```ts
+ * import { TaxonomyProjectionError } from "@beep/documents-domain/values/Taxonomy"
+ *
+ * const error = TaxonomyProjectionError.make({ reason: "unknown taxonomy concept" })
+ * console.log(error._tag)
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -42,6 +50,24 @@ export class TaxonomyProjectionError extends TaggedErrorClass<TaxonomyProjection
 
 /**
  * Input accepted by deterministic filed-document path projection.
+ *
+ * @example
+ * ```ts
+ * import {
+ *   DefaultVaultFilingContext,
+ *   legalDocumentTaxonomy,
+ *   ProjectFiledDocumentPathInput
+ * } from "@beep/documents-domain/values/Taxonomy"
+ *
+ * const input = ProjectFiledDocumentPathInput.make({
+ *   contentDigest: "abc123",
+ *   context: DefaultVaultFilingContext,
+ *   originalFileName: "complaint.pdf",
+ *   taxonomy: legalDocumentTaxonomy,
+ *   taxonomyConceptId: "pleadings"
+ * })
+ * console.log(input.originalFileName)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -73,6 +99,20 @@ export class ProjectFiledDocumentPathInput extends S.Class<ProjectFiledDocumentP
 
 /**
  * Deterministic relative vault path for a filed document.
+ *
+ * @example
+ * ```ts
+ * import { ProjectedVaultPath } from "@beep/documents-domain/values/Taxonomy"
+ * import * as S from "effect/Schema"
+ *
+ * const path = S.decodeUnknownSync(ProjectedVaultPath)({
+ *   fileName: "complaint--abc123.pdf",
+ *   relativePath: "matters/client-default/matter-general/01-pleadings/complaint--abc123.pdf",
+ *   segments: ["matters", "client-default", "matter-general", "01-pleadings", "complaint--abc123.pdf"],
+ *   taxonomySegments: ["01-pleadings"]
+ * })
+ * console.log(path.fileName)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -163,6 +203,26 @@ const projectedFileName = (
 /**
  * Projects a taxonomy concept decision into a deterministic vault-relative file path.
  *
+ * @example
+ * ```ts
+ * import {
+ *   DefaultVaultFilingContext,
+ *   legalDocumentTaxonomy,
+ *   ProjectFiledDocumentPathInput,
+ *   projectFiledDocumentPath
+ * } from "@beep/documents-domain/values/Taxonomy"
+ * import { Effect } from "effect"
+ *
+ * const path = Effect.runSync(projectFiledDocumentPath(ProjectFiledDocumentPathInput.make({
+ *   contentDigest: "abc123",
+ *   context: DefaultVaultFilingContext,
+ *   originalFileName: "complaint.pdf",
+ *   taxonomy: legalDocumentTaxonomy,
+ *   taxonomyConceptId: "pleadings"
+ * })))
+ * console.log(path.relativePath)
+ * ```
+ *
  * @category projections
  * @since 0.0.0
  */
@@ -188,6 +248,15 @@ export const projectFiledDocumentPath = Effect.fn("Documents.Taxonomy.projectFil
 /**
  * Projects an intake batch id into the deterministic inbox path.
  *
+ * @example
+ * ```ts
+ * import { projectIntakeInboxPath } from "@beep/documents-domain/values/Taxonomy"
+ * import { Effect } from "effect"
+ *
+ * const inboxPath = Effect.runSync(projectIntakeInboxPath("batch-20260709"))
+ * console.log(inboxPath)
+ * ```
+ *
  * @category projections
  * @since 0.0.0
  */
@@ -196,6 +265,13 @@ export const projectIntakeInboxPath = (intakeBatchId: string): Effect.Effect<str
 
 /**
  * Slugifies a display value for use in vault path segments.
+ *
+ * @example
+ * ```ts
+ * import { slugVaultSegment } from "@beep/documents-domain/values/Taxonomy"
+ *
+ * console.log(slugVaultSegment("General Matter"))
+ * ```
  *
  * @category projections
  * @since 0.0.0

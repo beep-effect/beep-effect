@@ -11,6 +11,14 @@ import { Workspace } from "@beep/workspace-domain/entities/Workspace";
 /**
  * Workspace persistence table.
  *
+ * @example
+ * ```ts
+ * import { Table } from "@beep/workspace-tables/entities/Workspace"
+ *
+ * const tableName: "workspace_workspace" = Table.definition.tableName
+ * console.log(tableName)
+ * ```
+ *
  * @category tables
  * @since 0.0.0
  */

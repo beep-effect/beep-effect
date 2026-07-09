@@ -26,6 +26,19 @@ const toDocumentIntakeActionError =
       Effect.andThen(DocumentIntakeActionError.failEffect(context))
     );
 
+/**
+ * RPC handler layer for workspace vault configuration commands.
+ *
+ * @example
+ * ```ts
+ * import { WorkspaceVaultHandlersLive } from "@/intake/DocumentIntakeOrchestrator"
+ *
+ * console.log(WorkspaceVaultHandlersLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const WorkspaceVaultHandlersLive = WorkspaceVaultRpcs.toLayer(
   Effect.gen(function* () {
     const store = yield* WorkspaceUseCases.Workspace.WorkspaceVaultStore;
@@ -38,6 +51,19 @@ export const WorkspaceVaultHandlersLive = WorkspaceVaultRpcs.toLayer(
   })
 );
 
+/**
+ * RPC handler layer for dropped legal document intake commands.
+ *
+ * @example
+ * ```ts
+ * import { DocumentIntakeHandlersLive } from "@/intake/DocumentIntakeOrchestrator"
+ *
+ * console.log(DocumentIntakeHandlersLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const DocumentIntakeHandlersLive = DocumentsRpcs.toLayer(
   Effect.gen(function* () {
     const workspaceVaultStore = yield* WorkspaceUseCases.Workspace.WorkspaceVaultStore;

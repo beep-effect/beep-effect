@@ -14,6 +14,15 @@ const $I = $DocumentsDomainId.create("aggregates/Document/Document.model");
 /**
  * Stable SHA-256 digest for filed document bytes.
  *
+ * @example
+ * ```ts
+ * import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document"
+ * import * as S from "effect/Schema"
+ *
+ * const digest = S.decodeUnknownSync(DocumentContentDigest)("abc123")
+ * console.log(digest)
+ * ```
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -27,6 +36,15 @@ export const DocumentContentDigest = S.NonEmptyString.pipe(
 /**
  * Stable SHA-256 digest for filed document bytes.
  *
+ * @example
+ * ```ts
+ * import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document"
+ * import * as S from "effect/Schema"
+ *
+ * const digest: DocumentContentDigest = S.decodeUnknownSync(DocumentContentDigest)("abc123")
+ * console.log(digest)
+ * ```
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -34,6 +52,25 @@ export type DocumentContentDigest = typeof DocumentContentDigest.Type;
 
 /**
  * A document materialized into the workspace vault.
+ *
+ * @example
+ * ```ts
+ * import { Document } from "@beep/documents-domain/aggregates/Document"
+ * import * as S from "effect/Schema"
+ *
+ * const document = S.decodeUnknownSync(Document)({
+ *   contentDigest: "abc123",
+ *   originalFileName: "complaint.pdf",
+ *   taxonomyConceptId: "pleadings",
+ *   vaultPath: {
+ *     fileName: "complaint--abc123.pdf",
+ *     relativePath: "matters/client-default/matter-general/01-pleadings/complaint--abc123.pdf",
+ *     segments: ["matters", "client-default", "matter-general", "01-pleadings", "complaint--abc123.pdf"],
+ *     taxonomySegments: ["01-pleadings"]
+ *   }
+ * })
+ * console.log(document.originalFileName)
+ * ```
  *
  * @category aggregates
  * @since 0.0.0

@@ -74,6 +74,13 @@ const materializeAtomically = (
 /**
  * Builds the document intake service from filesystem, path, and filing-decision dependencies.
  *
+ * @example
+ * ```ts
+ * import { makeDocumentIntake } from "@beep/documents-server/aggregates/Document"
+ *
+ * console.log(makeDocumentIntake)
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -116,6 +123,13 @@ export const makeDocumentIntake = Effect.fn($I`makeDocumentIntake`)(function* ()
 /**
  * Layer providing the document intake service.
  *
+ * @example
+ * ```ts
+ * import { DocumentIntakeLayer } from "@beep/documents-server/aggregates/Document"
+ *
+ * console.log(DocumentIntakeLayer)
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -123,6 +137,13 @@ export const DocumentIntakeLayer = Layer.effect(DocumentIntake, makeDocumentInta
 
 /**
  * Documents server layer with deterministic P1 filing decisions.
+ *
+ * @example
+ * ```ts
+ * import { DocumentsServerLayer } from "@beep/documents-server/aggregates/Document"
+ *
+ * console.log(DocumentsServerLayer)
+ * ```
  *
  * @category layers
  * @since 0.0.0

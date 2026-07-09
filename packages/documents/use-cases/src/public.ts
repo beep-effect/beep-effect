@@ -16,7 +16,7 @@ export * from "./aggregates/Document/Document.errors.js";
 /**
  * Document intake RPC exports.
  *
- * @category rpcs
+ * @category protocols
  * @since 0.0.0
  */
 export * from "./aggregates/Document/Document.rpc.js";

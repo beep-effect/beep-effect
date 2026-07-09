@@ -25,7 +25,14 @@ const noFolioConcept = {
 /**
  * JSON-LD context for the repo-owned legal document taxonomy seed.
  *
- * @category seed-data
+ * @example
+ * ```ts
+ * import { legalDocumentTaxonomyJsonLdContext } from "@beep/documents-domain/values/Taxonomy"
+ *
+ * console.log(legalDocumentTaxonomyJsonLdContext.skos)
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const legalDocumentTaxonomyJsonLdContext = {
@@ -38,7 +45,14 @@ export const legalDocumentTaxonomyJsonLdContext = {
 /**
  * Repo-owned deterministic legal document taxonomy seed.
  *
- * @category seed-data
+ * @example
+ * ```ts
+ * import { legalDocumentTaxonomy } from "@beep/documents-domain/values/Taxonomy"
+ *
+ * console.log(legalDocumentTaxonomy.concepts[0]?.id)
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const legalDocumentTaxonomy = S.decodeUnknownSync(LegalDocumentTaxonomy)({
@@ -327,7 +341,14 @@ export const legalDocumentTaxonomy = S.decodeUnknownSync(LegalDocumentTaxonomy)(
 /**
  * JSON-LD projection of the deterministic legal document taxonomy seed.
  *
- * @category seed-data
+ * @example
+ * ```ts
+ * import { legalDocumentTaxonomyJsonLd } from "@beep/documents-domain/values/Taxonomy"
+ *
+ * console.log(legalDocumentTaxonomyJsonLd["@type"])
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const legalDocumentTaxonomyJsonLd = {

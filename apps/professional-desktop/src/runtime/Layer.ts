@@ -61,6 +61,22 @@ import type { AgentTurnKernel } from "@beep/agents-use-cases/public";
  */
 const DesktopHandlersLive = Layer.mergeAll(ChatHandlersLive, WorkspaceVaultHandlersLive, DocumentIntakeHandlersLive);
 
+/**
+ * Type of the fully-provided RPC handler layer served by the desktop sidecar.
+ *
+ * @example
+ * ```ts
+ * import type { ChatHandlersLayer } from "@/runtime/Layer"
+ * import { RuntimeLive } from "@/runtime/Layer"
+ *
+ * type RuntimeProvidesHandlers = typeof RuntimeLive extends ChatHandlersLayer ? true : false
+ * const runtimeProvidesHandlers: RuntimeProvidesHandlers = true
+ * console.log(runtimeProvidesHandlers)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type ChatHandlersLayer = Layer.Layer<Layer.Success<typeof DesktopHandlersLive>>;
 
 /**

@@ -25,6 +25,14 @@ const SERVER_URL = ((): string => {
  * Build the desktop HTTP RPC protocol, optionally carrying the shell-issued
  * per-launch bearer token required when HTTP exposes vault/document RPCs.
  *
+ * @example
+ * ```ts
+ * import { makeDesktopHttpProtocolLive } from "@/transport/DesktopHttpProtocol"
+ *
+ * const layer = makeDesktopHttpProtocolLive("session-token")
+ * console.log(layer)
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */

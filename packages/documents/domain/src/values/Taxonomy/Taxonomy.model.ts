@@ -16,6 +16,15 @@ const $I = $DocumentsDomainId.create("values/Taxonomy/Taxonomy.model");
 /**
  * Stable concept identifiers in the P1 legal document taxonomy seed.
  *
+ * @example
+ * ```ts
+ * import { LegalDocumentConceptId } from "@beep/documents-domain/values/Taxonomy"
+ * import * as S from "effect/Schema"
+ *
+ * const id = S.decodeUnknownSync(LegalDocumentConceptId)("pleadings")
+ * console.log(id)
+ * ```
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -54,6 +63,15 @@ export const LegalDocumentConceptId = LiteralKit([
 /**
  * Stable concept identifiers in the P1 legal document taxonomy seed.
  *
+ * @example
+ * ```ts
+ * import { LegalDocumentConceptId } from "@beep/documents-domain/values/Taxonomy"
+ * import * as S from "effect/Schema"
+ *
+ * const id: LegalDocumentConceptId = S.decodeUnknownSync(LegalDocumentConceptId)("pleadings")
+ * console.log(id)
+ * ```
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -61,6 +79,15 @@ export type LegalDocumentConceptId = typeof LegalDocumentConceptId.Type;
 
 /**
  * FOLIO alignment confidence for a legal document taxonomy concept.
+ *
+ * @example
+ * ```ts
+ * import { FolioAlignmentKind } from "@beep/documents-domain/values/Taxonomy"
+ * import * as S from "effect/Schema"
+ *
+ * const kind = S.decodeUnknownSync(FolioAlignmentKind)("none")
+ * console.log(kind)
+ * ```
  *
  * @category value-objects
  * @since 0.0.0
@@ -74,6 +101,15 @@ export const FolioAlignmentKind = LiteralKit(["exact", "close", "none"]).pipe(
 /**
  * FOLIO alignment confidence for a legal document taxonomy concept.
  *
+ * @example
+ * ```ts
+ * import { FolioAlignmentKind } from "@beep/documents-domain/values/Taxonomy"
+ * import * as S from "effect/Schema"
+ *
+ * const kind: FolioAlignmentKind = S.decodeUnknownSync(FolioAlignmentKind)("none")
+ * console.log(kind)
+ * ```
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -81,6 +117,19 @@ export type FolioAlignmentKind = typeof FolioAlignmentKind.Type;
 
 /**
  * FOLIO mapping metadata for a seed taxonomy concept.
+ *
+ * @example
+ * ```ts
+ * import { FolioAlignment } from "@beep/documents-domain/values/Taxonomy"
+ * import * as S from "effect/Schema"
+ *
+ * const alignment = S.decodeUnknownSync(FolioAlignment)({
+ *   conceptIri: null,
+ *   kind: "none",
+ *   sourceIris: ["https://github.com/filipdbrskja/FOLIO"]
+ * })
+ * console.log(alignment.kind)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -104,6 +153,25 @@ export class FolioAlignment extends S.Class<FolioAlignment>($I`FolioAlignment`)(
 
 /**
  * One SKOS-style legal document taxonomy concept.
+ *
+ * @example
+ * ```ts
+ * import { LegalDocumentTaxonomyConcept } from "@beep/documents-domain/values/Taxonomy"
+ * import * as S from "effect/Schema"
+ *
+ * const concept = S.decodeUnknownSync(LegalDocumentTaxonomyConcept)({
+ *   definition: "Documents that frame claims and defenses.",
+ *   folderSegment: "pleadings",
+ *   folioAlignment: { conceptIri: null, kind: "none", sourceIris: [] },
+ *   heuristicTokens: ["complaint"],
+ *   id: "pleadings",
+ *   iri: "https://ns.beep.sh/documents/taxonomy/legal-document#pleadings",
+ *   parentId: null,
+ *   prefLabel: "Pleadings",
+ *   sortKey: "01"
+ * })
+ * console.log(concept.prefLabel)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -148,6 +216,14 @@ export class LegalDocumentTaxonomyConcept extends S.Class<LegalDocumentTaxonomyC
 /**
  * Repo-owned legal document taxonomy seed.
  *
+ * @example
+ * ```ts
+ * import { LegalDocumentTaxonomy, legalDocumentTaxonomy } from "@beep/documents-domain/values/Taxonomy"
+ *
+ * const taxonomy = LegalDocumentTaxonomy.make(legalDocumentTaxonomy)
+ * console.log(taxonomy.concepts.length)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -173,6 +249,20 @@ export class LegalDocumentTaxonomy extends S.Class<LegalDocumentTaxonomy>($I`Leg
 
 /**
  * Client and matter context used to project filed documents into a vault.
+ *
+ * @example
+ * ```ts
+ * import { VaultFilingContext } from "@beep/documents-domain/values/Taxonomy"
+ * import * as S from "effect/Schema"
+ *
+ * const context = S.decodeUnknownSync(VaultFilingContext)({
+ *   clientDisplayName: "Default Client",
+ *   clientStableKey: "client-default",
+ *   matterDisplayName: "General Matter",
+ *   matterStableKey: "matter-general"
+ * })
+ * console.log(context.matterStableKey)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -200,7 +290,14 @@ export class VaultFilingContext extends S.Class<VaultFilingContext>($I`VaultFili
 /**
  * Default filing context used before matter resolution exists.
  *
- * @category defaults
+ * @example
+ * ```ts
+ * import { DefaultVaultFilingContext } from "@beep/documents-domain/values/Taxonomy"
+ *
+ * console.log(DefaultVaultFilingContext.clientStableKey)
+ * ```
+ *
+ * @category constants
  * @since 0.0.0
  */
 export const DefaultVaultFilingContext = S.decodeUnknownSync(VaultFilingContext)({

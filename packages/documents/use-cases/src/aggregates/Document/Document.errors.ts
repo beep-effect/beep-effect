@@ -15,6 +15,14 @@ const $I = $DocumentsUseCasesId.create("aggregates/Document/Document.errors");
 /**
  * Raised when the FilingDecision port cannot classify a document.
  *
+ * @example
+ * ```ts
+ * import { FilingDecisionUnavailable } from "@beep/documents-use-cases/public"
+ *
+ * const error = FilingDecisionUnavailable.make({ reason: "classifier unavailable" })
+ * console.log(error._tag)
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -32,6 +40,14 @@ export class FilingDecisionUnavailable extends TaggedErrorClass<FilingDecisionUn
 
 /**
  * Raised when workspace vault materialization fails.
+ *
+ * @example
+ * ```ts
+ * import { DocumentMaterializationFailed } from "@beep/documents-use-cases/public"
+ *
+ * const error = DocumentMaterializationFailed.make({ reason: "vault write failed" })
+ * console.log(error.reason)
+ * ```
  *
  * @category errors
  * @since 0.0.0
@@ -51,6 +67,17 @@ export class DocumentMaterializationFailed extends TaggedErrorClass<DocumentMate
 /**
  * Internal typed failure raised by document intake.
  *
+ * @example
+ * ```ts
+ * import { DocumentIntakeError, FilingDecisionUnavailable } from "@beep/documents-use-cases/public"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownSync(DocumentIntakeError)(
+ *   FilingDecisionUnavailable.make({ reason: "classifier unavailable" })
+ * )
+ * console.log(decoded._tag)
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -65,6 +92,15 @@ export const DocumentIntakeError = S.Union([FilingDecisionUnavailable, DocumentM
 /**
  * Internal typed failure raised by document intake.
  *
+ * @example
+ * ```ts
+ * import type { DocumentIntakeError } from "@beep/documents-use-cases/public"
+ * import { FilingDecisionUnavailable } from "@beep/documents-use-cases/public"
+ *
+ * const error: DocumentIntakeError = FilingDecisionUnavailable.make({ reason: "classifier unavailable" })
+ * console.log(error._tag)
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -72,6 +108,14 @@ export type DocumentIntakeError = typeof DocumentIntakeError.Type;
 
 /**
  * Client-safe failure raised when dropped-file intake cannot complete.
+ *
+ * @example
+ * ```ts
+ * import { DocumentIntakeActionError } from "@beep/documents-use-cases/public"
+ *
+ * const error = DocumentIntakeActionError.new("Workspace vault is not configured.")
+ * console.log(error.message)
+ * ```
  *
  * @category errors
  * @since 0.0.0

@@ -9,6 +9,13 @@
 /**
  * Package version for `@beep/documents-use-cases`.
  *
+ * @example
+ * ```ts
+ * import { VERSION } from "@beep/documents-use-cases"
+ *
+ * console.log(VERSION)
+ * ```
+ *
  * @category use-cases
  * @since 0.0.0
  */

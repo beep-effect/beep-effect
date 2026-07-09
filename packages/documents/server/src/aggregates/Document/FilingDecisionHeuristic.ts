@@ -48,6 +48,13 @@ const decideFromTaxonomy = (fileName: string) =>
 /**
  * Deterministic FilingDecision layer used by P1.
  *
+ * @example
+ * ```ts
+ * import { FilingDecisionHeuristicLayer } from "@beep/documents-server/aggregates/Document"
+ *
+ * console.log(FilingDecisionHeuristicLayer)
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */

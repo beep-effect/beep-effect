@@ -15,6 +15,15 @@ const $I = $DocumentsDomainId.create("aggregates/IntakeBatch/IntakeBatch.model")
 /**
  * Stable intake batch identifier supplied by the intake boundary.
  *
+ * @example
+ * ```ts
+ * import { IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch"
+ * import * as S from "effect/Schema"
+ *
+ * const id = S.decodeUnknownSync(IntakeBatchId)("batch-20260709")
+ * console.log(id)
+ * ```
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -28,6 +37,15 @@ export const IntakeBatchId = S.NonEmptyString.pipe(
 /**
  * Stable intake batch identifier supplied by the intake boundary.
  *
+ * @example
+ * ```ts
+ * import { IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch"
+ * import * as S from "effect/Schema"
+ *
+ * const id: IntakeBatchId = S.decodeUnknownSync(IntakeBatchId)("batch-20260709")
+ * console.log(id)
+ * ```
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -35,6 +53,20 @@ export type IntakeBatchId = typeof IntakeBatchId.Type;
 
 /**
  * Deterministic local intake batch metadata.
+ *
+ * @example
+ * ```ts
+ * import { IntakeBatch, IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch"
+ * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
+ * import * as S from "effect/Schema"
+ *
+ * const batch = S.decodeUnknownSync(IntakeBatch)({
+ *   fileCount: 2,
+ *   id: S.decodeUnknownSync(IntakeBatchId)("batch-20260709"),
+ *   workspaceId: S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(1)
+ * })
+ * console.log(batch.fileCount)
+ * ```
  *
  * @category aggregates
  * @since 0.0.0
