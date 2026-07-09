@@ -6,7 +6,8 @@
  */
 
 import { make as makeIdentity } from "@beep/identity";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import * as S from "effect/Schema";
 import { SessionId } from "./Session.values.js";
 

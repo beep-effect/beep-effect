@@ -32,6 +32,7 @@
       "@beep/ontology-client": [
         "../../../packages/ontology/client/src/index.ts"
       ],
+      "@beep/cosmos": ["../../../packages/drivers/cosmos/src/index.ts"],
       "@beep/identity": [
         "../../../packages/foundation/modeling/identity/src/index.ts"
       ],
@@ -61,6 +62,9 @@
       ],
       "@beep/ontology-use-cases/aggregates/Session": [
         "../../../packages/ontology/use-cases/src/aggregates/Session/index.ts"
+      ],
+      "@beep/ontology-use-cases/aggregates/Session/worker": [
+        "../../../packages/ontology/use-cases/src/aggregates/Session/worker.ts"
       ],
       "@beep/ontology-use-cases/aggregates/Session/server": [
         "../../../packages/ontology/use-cases/src/aggregates/Session/server.ts"

@@ -126,6 +126,12 @@
         ]
       },
       {
+        "name": "@beep/cosmos",
+        "patterns": [
+          "packages/drivers/cosmos/src/**"
+        ]
+      },
+      {
         "name": "@beep/courtlistener",
         "patterns": [
           "packages/drivers/courtlistener/src/**"
@@ -1012,6 +1018,23 @@
         ]
       },
       {
+        "from": "@beep/cosmos",
+        "allow": [
+          "@beep/cosmos",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/cosmos",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
         "from": "@beep/courtlistener",
         "allow": [
           "@beep/courtlistener"
@@ -1776,6 +1799,7 @@
       {
         "from": "@beep/ontology-client",
         "allow": [
+          "@beep/cosmos",
           "@beep/identity",
           "@beep/ontology-client",
           "@beep/ontology-domain",
@@ -1784,6 +1808,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/cosmos",
           "@beep/identity",
           "@beep/ontology-client",
           "@beep/ontology-domain",
@@ -1981,6 +2006,7 @@
           "@beep/agents-domain",
           "@beep/agents-server",
           "@beep/agents-use-cases",
+          "@beep/cosmos",
           "@beep/editor",
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
@@ -1995,6 +2021,7 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/professional-desktop",
+          "@beep/rdf",
           "@beep/shared-domain",
           "@beep/test-utils",
           "@beep/ui",
@@ -2008,6 +2035,7 @@
           "@beep/agents-domain",
           "@beep/agents-server",
           "@beep/agents-use-cases",
+          "@beep/cosmos",
           "@beep/editor",
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
@@ -2022,6 +2050,7 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/professional-desktop",
+          "@beep/rdf",
           "@beep/shared-domain",
           "@beep/test-utils",
           "@beep/ui",

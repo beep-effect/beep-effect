@@ -48,6 +48,13 @@ export * from "./Session.rpc.js";
  */
 export * from "./Session.use-cases.js";
 /**
+ * Session visualizer projection exports.
+ *
+ * @category read-models
+ * @since 0.0.0
+ */
+export * from "./Session.visualizer.js";
+/**
  * Session worker protocol exports.
  *
  * @category models

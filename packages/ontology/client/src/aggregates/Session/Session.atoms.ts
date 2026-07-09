@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { CosmosGraphProjection, renderCosmosGraph } from "@beep/cosmos";
 import { make as makeIdentity } from "@beep/identity";
 import {
   appendChange,
@@ -16,22 +17,35 @@ import {
 import {
   ApplyOntologyBatchCommand,
   buildOntologySnapshot,
+  defaultOntologyGraphProjectionOptions,
+  graphGestureChangeOperations,
   OntologyActionError,
   OntologyFilePath,
+  OntologyGraphGesture,
+  OntologyGraphProjectionOptions,
   OntologyMetrics,
   OntologyRpcs,
   OntologySnapshot,
+  predicateAutocompleteSuggestions,
   resourceVisibleInViewMode,
   searchOntologyResources,
+  WorkerCommand,
+  WorkerResult,
 } from "@beep/ontology-use-cases/aggregates/Session";
 import { SchemaUtils } from "@beep/schema";
-import { A, O, Str } from "@beep/utils";
+import { A, O, P, Str } from "@beep/utils";
 import { Effect, Layer, pipe } from "effect";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
 import { Atom, AtomRpc, Reactivity } from "effect/unstable/reactivity";
 import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
-import type { OntologyViewMode } from "@beep/ontology-use-cases/aggregates/Session";
+import type { CosmosBackend, CosmosRenderHandle } from "@beep/cosmos";
+import type { SessionChangeDelta } from "@beep/ontology-domain/aggregates/Session";
+import type {
+  OntologyFoldLevel,
+  OntologyGraphProjection,
+  OntologyViewMode,
+} from "@beep/ontology-use-cases/aggregates/Session";
 
 const { $OntologyClientId } = makeIdentity("ontology-client");
 const $I = $OntologyClientId.create("aggregates/Session/Session.atoms");
@@ -99,6 +113,7 @@ export class OntologyClient extends AtomRpc.Service<OntologyClient>()("OntologyC
 
 const SESSION_KEY = "ontology-session" as const;
 const SOURCE_KEY = "ontology-source" as const;
+const GRAPH_KEY = "ontology-graph" as const;
 
 /**
  * Open ontology document payload for the client atom.
@@ -199,6 +214,39 @@ export class ApplyOntologyBatchInput extends S.Class<ApplyOntologyBatchInput>($I
 ) {}
 
 /**
+ * Graph gesture payload for the client mutation atom.
+ *
+ * @example
+ * ```ts
+ * import { ApplyOntologyGraphGestureInput } from "@beep/ontology-client/aggregates/Session"
+ * import { OntologyGraphGesture } from "@beep/ontology-use-cases/aggregates/Session"
+ *
+ * const input = ApplyOntologyGraphGestureInput.make({
+ *   gesture: OntologyGraphGesture.make({
+ *     kind: "instantiate",
+ *     classIri: "https://example.test/Pizza",
+ *     instanceIri: "https://example.test/Margherita"
+ *   })
+ * })
+ *
+ * console.log(input.gesture.kind)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ApplyOntologyGraphGestureInput extends S.Class<ApplyOntologyGraphGestureInput>(
+  $I`ApplyOntologyGraphGestureInput`
+)(
+  {
+    gesture: OntologyGraphGesture,
+  },
+  $I.annote("ApplyOntologyGraphGestureInput", {
+    description: "Graph gesture payload converted into ontology change operations.",
+  })
+) {}
+
+/**
  * Current open ontology session, if any.
  *
  * @example
@@ -289,6 +337,21 @@ export const ontologyRedoStackAtom = Atom.make<ReadonlyArray<ChangeOperation>>([
 export const ontologyViewModeAtom = Atom.make<OntologyViewMode>("all");
 
 /**
+ * Current visualizer fold level.
+ *
+ * @example
+ * ```ts
+ * import { ontologyFoldLevelAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyFoldLevelAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyFoldLevelAtom = Atom.make<OntologyFoldLevel>("L2");
+
+/**
  * Current resource search query.
  *
  * @example
@@ -319,6 +382,81 @@ export const ontologySearchQueryAtom = Atom.make("");
 export const selectedOntologyResourceIriAtom = Atom.make<O.Option<string>>(O.none());
 
 /**
+ * Latest worker graph projection, if one has completed.
+ *
+ * @example
+ * ```ts
+ * import { ontologyGraphProjectionAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyGraphProjectionAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyGraphProjectionAtom = Atom.make<O.Option<OntologyGraphProjection>>(O.none());
+
+/**
+ * Latest session delta available for incremental graph projection.
+ *
+ * @example
+ * ```ts
+ * import { ontologyGraphDeltaAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyGraphDeltaAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyGraphDeltaAtom = Atom.make<O.Option<SessionChangeDelta>>(O.none());
+
+/**
+ * Visualizer mount container supplied by the UI package.
+ *
+ * @example
+ * ```ts
+ * import { ontologyGraphContainerAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyGraphContainerAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyGraphContainerAtom = Atom.make<O.Option<HTMLElement>>(O.none());
+
+/**
+ * Current visualizer backend selected by capability detection.
+ *
+ * @example
+ * ```ts
+ * import { ontologyGraphBackendAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyGraphBackendAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyGraphBackendAtom = Atom.make<O.Option<CosmosBackend>>(O.none());
+
+/**
+ * Latest visualizer worker failure, if worker setup or message transfer failed.
+ *
+ * @example
+ * ```ts
+ * import { ontologyGraphErrorAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyGraphErrorAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyGraphErrorAtom = Atom.make<O.Option<string>>(O.none());
+
+/**
  * Empty ontology snapshot used before a document is opened.
  *
  * @example
@@ -338,6 +476,7 @@ export const emptyOntologySnapshot = (): OntologySnapshot =>
     sessionId: "",
     resources: [],
     hierarchy: [],
+    relationships: [],
     metrics: OntologyMetrics.make({
       quadCount: 0,
       resourceCount: 0,
@@ -454,6 +593,238 @@ export const visibleOntologyResourcesAtom = Atom.make((get) =>
   )
 );
 
+/**
+ * Worker graph projection options derived from current viewport state.
+ *
+ * @example
+ * ```ts
+ * import { ontologyGraphProjectionOptionsAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyGraphProjectionOptionsAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyGraphProjectionOptionsAtom = Atom.make((get) =>
+  OntologyGraphProjectionOptions.make({
+    ...defaultOntologyGraphProjectionOptions(),
+    viewMode: get(ontologyViewModeAtom),
+    foldLevel: get(ontologyFoldLevelAtom),
+    focusIri: get(selectedOntologyResourceIriAtom),
+  })
+);
+
+/**
+ * Predicate suggestions for graph halo autocomplete.
+ *
+ * @example
+ * ```ts
+ * import { ontologyPredicateSuggestionsAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyPredicateSuggestionsAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyPredicateSuggestionsAtom = Atom.make((get) =>
+  predicateAutocompleteSuggestions(get(ontologySnapshotAtom), get(ontologySearchQueryAtom))
+);
+
+const graphRequestAtom = Atom.make((get) => ({
+  snapshot: get(ontologySnapshotAtom),
+  options: get(ontologyGraphProjectionOptionsAtom),
+  delta: get(ontologyGraphDeltaAtom),
+}));
+
+const graphWorkerErrorMessage = (event: ErrorEvent): string =>
+  Str.isNonEmpty(event.message) ? event.message : "Ontology graph worker failed.";
+
+const graphWorkerMessageError = (event: MessageEvent<unknown>): string =>
+  P.hasProperty(event, "type") && event.type === "messageerror"
+    ? "Ontology graph worker message failed to deserialize."
+    : "Ontology graph worker failed.";
+
+/**
+ * Side-effect atom that owns the visualizer projection worker.
+ *
+ * @example
+ * ```ts
+ * import { ontologyGraphWorkerBridgeAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyGraphWorkerBridgeAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
+  const WorkerCtor = globalThis.Worker;
+
+  if (P.isUndefined(WorkerCtor)) {
+    return;
+  }
+
+  const worker = new WorkerCtor(new URL("./Session.visualizer.worker.ts", import.meta.url), { type: "module" });
+  let previousProjection: O.Option<OntologyGraphProjection> = O.none();
+  let workerFailed = false;
+
+  const failWorker = (message: string): void => {
+    workerFailed = true;
+    previousProjection = O.none();
+    get.set(ontologyGraphProjectionAtom, O.none());
+    get.set(ontologyGraphDeltaAtom, O.none());
+    get.set(ontologyGraphBackendAtom, O.none());
+    get.set(ontologyGraphErrorAtom, O.some(message));
+    worker.terminate();
+  };
+
+  worker.addEventListener("message", (event: MessageEvent<WorkerResult>) => {
+    WorkerResult.match(event.data, {
+      parseTurtleSucceeded: () => undefined,
+      diffDatasetsSucceeded: () => undefined,
+      computeSnapshotSucceeded: () => undefined,
+      projectGraphSucceeded: ({ result }) => {
+        get.set(ontologyGraphErrorAtom, O.none());
+        previousProjection = O.some(result);
+        get.set(ontologyGraphProjectionAtom, O.some(result));
+      },
+      applyGraphDeltaSucceeded: ({ result }) => {
+        get.set(ontologyGraphErrorAtom, O.none());
+        previousProjection = O.some(result);
+        get.set(ontologyGraphProjectionAtom, O.some(result));
+      },
+    });
+  });
+  worker.addEventListener("error", (event) => {
+    event.preventDefault();
+    failWorker(graphWorkerErrorMessage(event));
+  });
+  worker.addEventListener("messageerror", (event) => {
+    failWorker(graphWorkerMessageError(event));
+  });
+
+  get.subscribe(
+    graphRequestAtom,
+    ({ snapshot, options, delta }) => {
+      if (workerFailed) {
+        return;
+      }
+
+      const command = pipe(
+        previousProjection,
+        O.flatMap((previous) =>
+          pipe(
+            delta,
+            O.map((currentDelta) =>
+              WorkerCommand.make({
+                kind: "applyGraphDelta",
+                snapshot,
+                previous,
+                delta: currentDelta,
+                options,
+              })
+            )
+          )
+        ),
+        O.getOrElse(() =>
+          WorkerCommand.make({
+            kind: "projectGraph",
+            snapshot,
+            options,
+          })
+        )
+      );
+      get.set(ontologyGraphErrorAtom, O.none());
+      worker.postMessage(command);
+      get.set(ontologyGraphDeltaAtom, O.none());
+    },
+    { immediate: true }
+  );
+
+  get.addFinalizer(() => worker.terminate());
+});
+
+const cosmosProjectionFromOntology = (projection: OntologyGraphProjection): CosmosGraphProjection =>
+  CosmosGraphProjection.make({
+    nodeCount: projection.nodeCount,
+    edgeCount: projection.edgeCount,
+    nodeIds: projection.nodeIds,
+    pointPositions: projection.pointPositions,
+    links: projection.links,
+  });
+
+const renderRequestAtom = Atom.make((get) => ({
+  container: get(ontologyGraphContainerAtom),
+  projection: get(ontologyGraphProjectionAtom),
+}));
+
+/**
+ * Side-effect atom that mounts and updates the cosmos viewport.
+ *
+ * @example
+ * ```ts
+ * import { ontologyGraphRenderBridgeAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyGraphRenderBridgeAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyGraphRenderBridgeAtom = Atom.make((get) => {
+  let handle: O.Option<CosmosRenderHandle> = O.none();
+  let renderToken = 0;
+
+  get.subscribe(
+    renderRequestAtom,
+    ({ container, projection }) => {
+      if (O.isNone(container) || O.isNone(projection)) {
+        pipe(handle, O.match({ onNone: () => undefined, onSome: (mounted) => mounted.destroy() }));
+        handle = O.none();
+        get.set(ontologyGraphBackendAtom, O.none());
+        return;
+      }
+
+      const cosmosProjection = cosmosProjectionFromOntology(projection.value);
+
+      pipe(
+        handle,
+        O.match({
+          onNone: () => {
+            renderToken += 1;
+            const token = renderToken;
+            void Effect.runPromise(renderCosmosGraph(container.value, cosmosProjection)).then(
+              (mounted) => {
+                if (token !== renderToken) {
+                  mounted.destroy();
+                  return;
+                }
+                handle = O.some(mounted);
+                get.set(ontologyGraphBackendAtom, O.some(mounted.backend));
+              },
+              () => {
+                if (token === renderToken) {
+                  handle = O.none();
+                  get.set(ontologyGraphBackendAtom, O.none());
+                }
+              }
+            );
+          },
+          onSome: (mounted) => mounted.update(cosmosProjection),
+        })
+      );
+    },
+    { immediate: true }
+  );
+
+  get.addFinalizer(() => {
+    renderToken += 1;
+    pipe(handle, O.match({ onNone: () => undefined, onSome: (mounted) => mounted.destroy() }));
+  });
+});
+
 const noOpenSessionError = OntologyActionError.new("No ontology session is open.");
 
 /**
@@ -479,6 +850,8 @@ export const openOntologyDocumentAtom = OntologyClient.runtime.fn<OpenOntologyDo
     ctx.set(ontologySavedChangeCountAtom, opened.session.changeLog.length);
     ctx.set(ontologyRedoStackAtom, []);
     ctx.set(selectedOntologyResourceIriAtom, O.none());
+    ctx.set(ontologyGraphProjectionAtom, O.none());
+    ctx.set(ontologyGraphDeltaAtom, O.none());
   })
 );
 
@@ -550,10 +923,39 @@ export const applyOntologyBatchAtom = OntologyClient.runtime.fn<ApplyOntologyBat
     const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
     const applied = yield* Reactivity.mutation(
       client("ApplyOntologyBatch", ApplyOntologyBatchCommand.make({ session, operations: input.operations })),
-      [SESSION_KEY]
+      [SESSION_KEY, GRAPH_KEY]
     );
     ctx.set(ontologySessionAtom, O.some(applied.session));
     ctx.set(ontologyRedoStackAtom, []);
+    ctx.set(ontologyGraphDeltaAtom, O.some(applied.delta));
+  })
+);
+
+/**
+ * Apply a graph halo gesture through the same batch change pipeline as inspector edits.
+ *
+ * @example
+ * ```ts
+ * import { applyOntologyGraphGestureAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(applyOntologyGraphGestureAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const applyOntologyGraphGestureAtom = OntologyClient.runtime.fn<ApplyOntologyGraphGestureInput>()(
+  Effect.fn("applyOntologyGraphGesture")(function* (input, ctx) {
+    const client = yield* OntologyClient;
+    const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+    const operations = graphGestureChangeOperations(input.gesture);
+    const applied = yield* Reactivity.mutation(
+      client("ApplyOntologyBatch", ApplyOntologyBatchCommand.make({ session, operations })),
+      [SESSION_KEY, GRAPH_KEY]
+    );
+    ctx.set(ontologySessionAtom, O.some(applied.session));
+    ctx.set(ontologyRedoStackAtom, []);
+    ctx.set(ontologyGraphDeltaAtom, O.some(applied.delta));
   })
 );
 
@@ -589,6 +991,8 @@ export const undoOntologyChangeAtom = OntologyClient.runtime.fn<void>()(
               )
             );
             ctx.set(ontologyRedoStackAtom, pipe(ctx(ontologyRedoStackAtom), A.prepend(change)));
+            ctx.set(ontologyGraphProjectionAtom, O.none());
+            ctx.set(ontologyGraphDeltaAtom, O.none());
           }),
       })
     );
@@ -619,6 +1023,8 @@ export const redoOntologyChangeAtom = OntologyClient.runtime.fn<void>()(
           Effect.sync(() => {
             ctx.set(ontologySessionAtom, O.some(appendChange(session, change)));
             ctx.set(ontologyRedoStackAtom, A.drop(ctx(ontologyRedoStackAtom), 1));
+            ctx.set(ontologyGraphProjectionAtom, O.none());
+            ctx.set(ontologyGraphDeltaAtom, O.none());
           }),
       })
     );

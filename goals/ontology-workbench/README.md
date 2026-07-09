@@ -35,9 +35,9 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Explorer + Editor - local polish fixes are complete after the live app proof.
-Host re-verification is pending for bun-backed tests and the running desktop
-author-edit-save proof rerun.
+P3 Visualizer - local integration is complete on the cosmos path. Host
+re-verification is pending for the folded 100k webkitgtk interactive proof via
+the spike contract.
 
 ## Latest Evidence
 
@@ -55,6 +55,12 @@ author-edit-save proof rerun.
   deltas, shared ABox/TBox classification, pizza tutorial typed operation
   flow, live app proof observations, change-log panel, tooltip button fix, and
   prefix-preserving Turtle save behavior recorded.
+- P3 Visualizer evidence:
+  [`history/2026-07-09-p3-visualizer.md`](./history/2026-07-09-p3-visualizer.md)
+  - cosmos worker projection, incremental graph deltas, L0-L3 folds, workbench
+  viewport integration, halo gesture change-op wiring, worker-backed folded
+  spike contract, local proof results, and host webkitgtk re-proof commands
+  recorded.
 
 ## Notes
 

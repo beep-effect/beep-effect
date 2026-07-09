@@ -15,9 +15,9 @@ import { makeNamedNode, ObjectTerm, Subject } from "@beep/rdf/Rdf";
 import { OWL_CLASS, OWL_DATATYPE_PROPERTY, OWL_NAMESPACE, OWL_OBJECT_PROPERTY } from "@beep/rdf/Vocab/Owl";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_CLASS, RDFS_LABEL, RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A, O, Str } from "@beep/utils";
-import { MutableHashMap, MutableHashSet, Order, pipe } from "effect";
+import { Effect, MutableHashMap, MutableHashSet, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type { Session } from "@beep/ontology-domain/aggregates/Session";
@@ -265,6 +265,47 @@ export class OntologyHierarchyEntry extends S.Class<OntologyHierarchyEntry>($I`O
 ) {}
 
 /**
+ * Predicate relationship row used by graph and search projections.
+ *
+ * @example
+ * ```ts
+ * import { OntologyRelationshipSummary } from "@beep/ontology-use-cases/aggregates/Session"
+ *
+ * const relationship = OntologyRelationshipSummary.make({
+ *   sourceIri: "https://example.test/Margherita",
+ *   predicateIri: "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+ *   objectIri: "https://example.test/Pizza",
+ *   label: "type",
+ *   sourcePartitions: ["asserted"]
+ * })
+ *
+ * console.log(relationship.label)
+ * ```
+ *
+ * @since 0.0.0
+ * @category read-models
+ */
+export class OntologyRelationshipSummary extends S.Class<OntologyRelationshipSummary>($I`OntologyRelationshipSummary`)(
+  {
+    sourceIri: S.String,
+    predicateIri: S.String,
+    objectIri: S.String,
+    label: S.String,
+    sourcePartitions: S.Array(GraphPartition),
+  },
+  $I.annote("OntologyRelationshipSummary", {
+    description: "Predicate relationship row used by the ontology graph viewport.",
+  })
+) {}
+
+const emptyRelationshipSummaries = (): ReadonlyArray<OntologyRelationshipSummary> => [];
+
+const RelationshipSummariesWithEmptyDefault = S.Array(OntologyRelationshipSummary).pipe(
+  S.withConstructorDefault(Effect.succeed(emptyRelationshipSummaries())),
+  S.withDecodingDefaultKey(Effect.succeed(emptyRelationshipSummaries()))
+);
+
+/**
  * Complete ontology read model for explorer/editor surfaces.
  *
  * @example
@@ -297,6 +338,7 @@ export class OntologySnapshot extends S.Class<OntologySnapshot>($I`OntologySnaps
     sessionId: S.String,
     resources: S.Array(OntologyResourceSummary),
     hierarchy: S.Array(OntologyHierarchyEntry),
+    relationships: RelationshipSummariesWithEmptyDefault,
     metrics: OntologyMetrics,
   },
   $I.annote("OntologySnapshot", {
@@ -407,6 +449,9 @@ const labelFor = (labels: MutableHashMap.MutableHashMap<string, string>, iri: st
     MutableHashMap.get(labels, iri),
     O.getOrElse(() => lastIriSegment(iri))
   );
+
+const relationshipKey = (relationship: OntologyRelationshipSummary): string =>
+  `${relationship.sourceIri}\n${relationship.predicateIri}\n${relationship.objectIri}`;
 
 const isVocabularyIri = (iri: string): boolean =>
   Str.startsWith(iri, RDF_NAMESPACE) || Str.startsWith(iri, RDFS_NAMESPACE) || Str.startsWith(iri, OWL_NAMESPACE);
@@ -557,6 +602,7 @@ export const buildOntologySnapshot = (session: Session): OntologySnapshot => {
   const parents = MutableHashMap.empty<string, ReadonlyArray<string>>();
   const children = MutableHashMap.empty<string, ReadonlyArray<string>>();
   const resourcePartitions = MutableHashMap.empty<string, ReadonlyArray<GraphPartition>>();
+  let relationships: ReadonlyArray<OntologyRelationshipSummary> = [];
   const classIris = MutableHashSet.empty<string>();
   const propertyIris = MutableHashSet.empty<string>();
   const individualIris = MutableHashSet.empty<string>();
@@ -673,6 +719,27 @@ export const buildOntologySnapshot = (session: Session): OntologySnapshot => {
     if (isNamedNodeObject(quad.object) && !isVocabularyIri(quad.object.value)) {
       MutableHashSet.add(resources, quad.object.value);
       upsertPartition(resourcePartitions, quad.object.value, partition);
+      pipe(
+        subjectIri(quad.subject),
+        O.filter((iri) => !isVocabularyIri(iri)),
+        O.match({
+          onNone: () => undefined,
+          onSome: (sourceIri) => {
+            relationships = pipe(
+              relationships,
+              A.append(
+                OntologyRelationshipSummary.make({
+                  sourceIri,
+                  predicateIri: quad.predicate.value,
+                  objectIri: quad.object.value,
+                  label: labelFor(labels, quad.predicate.value),
+                  sourcePartitions: [partition],
+                })
+              )
+            );
+          },
+        })
+      );
     }
   }
 
@@ -721,6 +788,11 @@ export const buildOntologySnapshot = (session: Session): OntologySnapshot => {
     sessionId: session.id,
     resources: resourceSummaries,
     hierarchy,
+    relationships: pipe(
+      relationships,
+      A.dedupeWith((left, right) => relationshipKey(left) === relationshipKey(right)),
+      A.sortWith((relationship) => relationship.label, Order.String)
+    ),
     metrics: metricsFor(
       pipe(
         quads,

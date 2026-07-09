@@ -6,17 +6,25 @@
  */
 
 import { make as makeIdentity } from "@beep/identity";
-import { ChangeOperation, Session } from "@beep/ontology-domain/aggregates/Session";
+import { ChangeOperation, Session, SessionChangeDelta } from "@beep/ontology-domain/aggregates/Session";
 import { Dataset } from "@beep/rdf/Rdf";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as S from "effect/Schema";
 import { ParseTurtleRequest, ParseTurtleResult } from "./Session.ports.js";
 import { OntologySnapshot } from "./Session.projections.js";
+import { OntologyGraphProjection, OntologyGraphProjectionOptions } from "./Session.visualizer.js";
 
 const { $OntologyUseCasesId } = makeIdentity("ontology-use-cases");
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.worker-protocol");
 
-const WorkerCommandKind = LiteralKit(["parseTurtle", "diffDatasets", "computeSnapshot"]);
+const WorkerCommandKind = LiteralKit([
+  "parseTurtle",
+  "diffDatasets",
+  "computeSnapshot",
+  "projectGraph",
+  "applyGraphDelta",
+]);
 
 /**
  * Worker command envelope.
@@ -68,6 +76,16 @@ export const WorkerCommand = WorkerCommandKind.toTaggedUnion("kind")({
   },
   computeSnapshot: {
     session: Session,
+  },
+  projectGraph: {
+    snapshot: OntologySnapshot,
+    options: OntologyGraphProjectionOptions,
+  },
+  applyGraphDelta: {
+    snapshot: OntologySnapshot,
+    delta: SessionChangeDelta,
+    previous: OntologyGraphProjection,
+    options: OntologyGraphProjectionOptions,
   },
 }).pipe(
   $I.annoteSchema("WorkerCommand", {
@@ -124,7 +142,13 @@ export class DiffWorkerResult extends S.Class<DiffWorkerResult>($I`DiffWorkerRes
   })
 ) {}
 
-const WorkerResultKind = LiteralKit(["parseTurtleSucceeded", "diffDatasetsSucceeded", "computeSnapshotSucceeded"]);
+const WorkerResultKind = LiteralKit([
+  "parseTurtleSucceeded",
+  "diffDatasetsSucceeded",
+  "computeSnapshotSucceeded",
+  "projectGraphSucceeded",
+  "applyGraphDeltaSucceeded",
+]);
 
 /**
  * Worker result envelope.
@@ -181,6 +205,12 @@ export const WorkerResult = WorkerResultKind.toTaggedUnion("kind")({
   },
   computeSnapshotSucceeded: {
     result: OntologySnapshot,
+  },
+  projectGraphSucceeded: {
+    result: OntologyGraphProjection,
+  },
+  applyGraphDeltaSucceeded: {
+    result: OntologyGraphProjection,
   },
 }).pipe(
   $I.annoteSchema("WorkerResult", {

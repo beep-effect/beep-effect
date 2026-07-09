@@ -11,7 +11,8 @@
 
 import { make as makeIdentity } from "@beep/identity";
 import { Dataset, makeDataset, makeNamedNode, NamedNode, PrefixMap, Quad, serializeQuad } from "@beep/rdf/Rdf";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A } from "@beep/utils";
 import { Effect, pipe } from "effect";
 import { dual } from "effect/Function";

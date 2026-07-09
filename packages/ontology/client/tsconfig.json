@@ -9,6 +9,9 @@
   },
   "references": [
     {
+      "path": "../../drivers/cosmos/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/identity/tsconfig.json"
     },
     {

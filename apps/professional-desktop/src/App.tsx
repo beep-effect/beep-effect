@@ -18,9 +18,11 @@ import { Button } from "@beep/ui/components/button";
 import { Toaster } from "@beep/ui/components/sonner";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Cause, Effect } from "effect";
+import * as P from "effect/Predicate";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
+import { CosmosSpike } from "./spikes/CosmosSpike.tsx";
 import { IpcChatProtocolLive } from "./transport/IpcChatClient.ts";
 import { IpcSpikePanel } from "./transport/IpcSpikePanel.tsx";
 import { SidecarTransport } from "./transport/SidecarTransport.ts";
@@ -67,6 +69,18 @@ const protocolLayerBindingAtom = Atom.make((get) => {
 
 const hasIpcSpikeFlag = (): boolean =>
   typeof window !== "undefined" && new URLSearchParams(window.location.search).has("ipc");
+
+const isDevMode = (): boolean => {
+  // biome-ignore lint/suspicious/noUndeclaredEnvVars: Vite injects DEV on import.meta.env.
+  const value = import.meta.env.DEV;
+
+  return P.isBoolean(value) ? value : value === "true";
+};
+
+const hasCosmosSpikeFlag = (): boolean =>
+  isDevMode() &&
+  (import.meta.env.VITE_COSMOS_SPIKE === "1" ||
+    (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("cosmos-spike")));
 
 const TransportLoading = (): JSX.Element => (
   <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
@@ -126,6 +140,10 @@ export function App(): JSX.Element {
   const transport = useAtomValue(sidecarTransportAtom);
   // bind the rpc protocol layer to the resolved transport (see binding above).
   useAtomMount(protocolLayerBindingAtom);
+
+  if (hasCosmosSpikeFlag()) {
+    return <CosmosSpike />;
+  }
 
   return AsyncResult.match(transport, {
     onInitial: () => (

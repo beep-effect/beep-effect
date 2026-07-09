@@ -72,8 +72,8 @@
     {
       "id": "P3",
       "name": "Visualizer",
-      "status": "pending",
-      "exit": "drivers/cosmos viewport with worker projection, focus-neighborhood, fold levels L0-L3 with clustering, halo light-editing gestures, pinned-node layouts; synthetic 100k-element ontology interactive on webkitgtk with benchmark note in history/."
+      "status": "host-verification-required",
+      "exit": "drivers/cosmos viewport with worker projection, incremental graph deltas, focus-neighborhood, fold levels L0-L3 with clustering, halo light-editing gestures, pinned-node layouts, sigma fallback preservation, and folded worker-backed spike contract implemented locally; host must rerun the synthetic 100k-element ontology interactive proof on webkitgtk with folds active. Evidence: history/2026-07-09-p3-visualizer.md."
     },
     {
       "id": "P4",

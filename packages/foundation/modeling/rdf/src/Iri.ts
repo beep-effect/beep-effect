@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $RdfId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A, Str } from "@beep/utils";
 import { pipe } from "effect";
 import * as O from "effect/Option";

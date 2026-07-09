@@ -66,6 +66,7 @@ const config = {
     "packages/drivers/phoenix/package.json",
     "packages/drivers/nlp-mcp/package.json",
     "packages/drivers/rdf-canonize/package.json",
+    "packages/drivers/cosmos/package.json",
     "packages/drivers/n3/package.json",
     "packages/drivers/wink/package.json",
     "packages/drivers/tika/package.json",

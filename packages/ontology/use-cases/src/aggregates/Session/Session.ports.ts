@@ -7,7 +7,9 @@
 
 import { make as makeIdentity } from "@beep/identity";
 import { Dataset, PrefixMap } from "@beep/rdf/Rdf";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 

@@ -6,7 +6,7 @@
  */
 
 import { $RdfId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A, R, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Match, Order, pipe, Result } from "effect";

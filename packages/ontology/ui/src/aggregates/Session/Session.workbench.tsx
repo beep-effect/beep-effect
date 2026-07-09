@@ -9,10 +9,20 @@ import { EditorViewer } from "@beep/editor";
 import { SerializedEditorState } from "@beep/lexical-schema";
 import {
   ApplyOntologyBatchInput,
+  ApplyOntologyGraphGestureInput,
   applyOntologyBatchAtom,
+  applyOntologyGraphGestureAtom,
   OpenOntologyDocumentInput,
   ontologyDirtyAtom,
+  ontologyFoldLevelAtom,
+  ontologyGraphBackendAtom,
+  ontologyGraphContainerAtom,
+  ontologyGraphErrorAtom,
+  ontologyGraphProjectionAtom,
+  ontologyGraphRenderBridgeAtom,
+  ontologyGraphWorkerBridgeAtom,
   ontologyPathAtom,
+  ontologyPredicateSuggestionsAtom,
   ontologyRedoStackAtom,
   ontologySearchQueryAtom,
   ontologySearchResultsAtom,
@@ -31,7 +41,11 @@ import {
   visibleOntologyResourcesAtom,
 } from "@beep/ontology-client/aggregates/Session";
 import { ChangeOperation, SessionId } from "@beep/ontology-domain/aggregates/Session";
-import { OntologyFilePath, resourceVisibleInViewMode } from "@beep/ontology-use-cases/aggregates/Session";
+import {
+  OntologyFilePath,
+  OntologyGraphGesture,
+  resourceVisibleInViewMode,
+} from "@beep/ontology-use-cases/aggregates/Session";
 import { makeLiteral, makeNamedNode, makeQuad, serializeTerm } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { Badge } from "@beep/ui/components/badge";
@@ -47,6 +61,7 @@ import { MutableHashMap, MutableHashSet, pipe } from "effect";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
 import type {
+  OntologyFoldLevel,
   OntologyResourceSummary,
   OntologySnapshot,
   OntologyViewMode,
@@ -162,12 +177,17 @@ export function OntologyWorkbench(): JSX.Element {
   const pathInput = useAtomValue(openPathInputAtom);
   const snapshot = useAtomValue(ontologySnapshotAtom);
   const source = useAtomValue(ontologySourceAtom);
+  const graphProjection = useAtomValue(ontologyGraphProjectionAtom);
+  const graphBackend = useAtomValue(ontologyGraphBackendAtom);
+  const graphError = useAtomValue(ontologyGraphErrorAtom);
   const dirty = useAtomValue(ontologyDirtyAtom);
   const path = useAtomValue(ontologyPathAtom);
   const session = useAtomValue(ontologySessionAtom);
   const mode = useAtomValue(ontologyViewModeAtom);
+  const foldLevel = useAtomValue(ontologyFoldLevelAtom);
   const searchQuery = useAtomValue(ontologySearchQueryAtom);
   const searchResults = useAtomValue(ontologySearchResultsAtom);
+  const predicateSuggestions = useAtomValue(ontologyPredicateSuggestionsAtom);
   const selected = useAtomValue(selectedOntologyResourceAtom);
   const selectedIri = useAtomValue(selectedOntologyResourceIriAtom);
   const visibleResources = useAtomValue(visibleOntologyResourcesAtom);
@@ -178,8 +198,10 @@ export function OntologyWorkbench(): JSX.Element {
   const objectKind = useAtomValue(objectKindAtom);
   const setPathInput = useAtomSet(openPathInputAtom);
   const setMode = useAtomSet(ontologyViewModeAtom);
+  const setFoldLevel = useAtomSet(ontologyFoldLevelAtom);
   const setSearchQuery = useAtomSet(ontologySearchQueryAtom);
   const setSelectedIri = useAtomSet(selectedOntologyResourceIriAtom);
+  const setGraphContainer = useAtomSet(ontologyGraphContainerAtom);
   const setSubject = useAtomSet(subjectInputAtom);
   const setPredicate = useAtomSet(predicateInputAtom);
   const setObject = useAtomSet(objectInputAtom);
@@ -188,11 +210,15 @@ export function OntologyWorkbench(): JSX.Element {
   const saveDocument = useAtomSet(saveOntologyDocumentAtom);
   const previewTurtle = useAtomSet(previewOntologyTurtleAtom);
   const applyBatch = useAtomSet(applyOntologyBatchAtom);
+  const applyGraphGesture = useAtomSet(applyOntologyGraphGestureAtom);
   const undoChange = useAtomSet(undoOntologyChangeAtom);
   const redoChange = useAtomSet(redoOntologyChangeAtom);
+  useAtomValue(ontologyGraphWorkerBridgeAtom);
+  useAtomValue(ontologyGraphRenderBridgeAtom);
   const treeItems = treeItemsFor(snapshot, mode);
   const canApplyTriple =
     Str.isNonEmpty(Str.trim(subject)) && Str.isNonEmpty(Str.trim(predicate)) && Str.isNonEmpty(Str.trim(object));
+  const canApplyGraphGesture = canApplyTriple && objectKind === "iri";
   const canUndo = O.match(session, { onNone: () => false, onSome: (openSession) => openSession.changeLog.length > 0 });
   const canRedo = redoStack.length > 0;
   const changeLog = O.match(session, {
@@ -201,6 +227,30 @@ export function OntologyWorkbench(): JSX.Element {
   });
   const undoPosition = changeLog.length;
   const totalChangeCount = undoPosition + redoStack.length;
+  const graphBackendBadge: JSX.Element = O.isSome(graphError) ? (
+    <Badge variant="destructive">failed</Badge>
+  ) : (
+    O.match(graphBackend, {
+      onNone: () => <Badge variant="outline">pending</Badge>,
+      onSome: (backend) => <Badge variant="outline">{backend}</Badge>,
+    })
+  );
+  const graphProjectionSummary = O.match(graphProjection, {
+    onNone: () => <span className="text-muted-foreground">Worker projection pending</span>,
+    onSome: (projection) => (
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1 font-mono">
+        <span>nodes {projection.nodeCount}</span>
+        <span>edges {projection.edgeCount}</span>
+        <span>folded {projection.stats.foldedResourceCount}</span>
+        <span>labels {projection.labelDetail}</span>
+      </div>
+    ),
+  });
+  const graphProjectionOverlay: JSX.Element = O.isSome(graphError) ? (
+    <span className="block max-w-[44ch] text-destructive">Worker projection failed: {graphError.value}</span>
+  ) : (
+    graphProjectionSummary
+  );
 
   const runOpen = (): void => {
     pipe(
@@ -247,6 +297,61 @@ export function OntologyWorkbench(): JSX.Element {
         ],
       })
     );
+  };
+
+  const runGraphGesture = (gesture: OntologyGraphGesture): void => {
+    applyGraphGesture(ApplyOntologyGraphGestureInput.make({ gesture }));
+  };
+
+  const runConnect = (): void => {
+    if (!canApplyGraphGesture) return;
+    runGraphGesture(
+      OntologyGraphGesture.make({
+        kind: "connect",
+        sourceIri: Str.trim(subject),
+        predicateIri: Str.trim(predicate),
+        targetIri: Str.trim(object),
+      })
+    );
+  };
+
+  const runDelete = (): void => {
+    if (!canApplyGraphGesture) return;
+    runGraphGesture(
+      OntologyGraphGesture.make({
+        kind: "delete",
+        sourceIri: Str.trim(subject),
+        predicateIri: Str.trim(predicate),
+        targetIri: Str.trim(object),
+      })
+    );
+  };
+
+  const runExpand = (): void => {
+    if (!canApplyGraphGesture) return;
+    runGraphGesture(
+      OntologyGraphGesture.make({
+        kind: "expand",
+        sourceIri: Str.trim(subject),
+        predicateIri: Str.trim(predicate),
+        targetIri: Str.trim(object),
+      })
+    );
+  };
+
+  const runInstantiate = (): void => {
+    if (!canApplyGraphGesture) return;
+    runGraphGesture(
+      OntologyGraphGesture.make({
+        kind: "instantiate",
+        classIri: Str.trim(subject),
+        instanceIri: Str.trim(object),
+      })
+    );
+  };
+
+  const graphContainerRef = (element: HTMLDivElement | null): void => {
+    setGraphContainer(O.fromNullishOr(element));
   };
 
   return (
@@ -316,6 +421,17 @@ export function OntologyWorkbench(): JSX.Element {
             <NativeSelectOption value="tbox">TBox</NativeSelectOption>
             <NativeSelectOption value="abox">ABox</NativeSelectOption>
           </NativeSelect>
+          <NativeSelect
+            aria-label="Graph fold level"
+            size="sm"
+            value={foldLevel}
+            onChange={(event) => setFoldLevel(valueFromEvent(event) as OntologyFoldLevel)}
+          >
+            <NativeSelectOption value="L0">L0</NativeSelectOption>
+            <NativeSelectOption value="L1">L1</NativeSelectOption>
+            <NativeSelectOption value="L2">L2</NativeSelectOption>
+            <NativeSelectOption value="L3">L3</NativeSelectOption>
+          </NativeSelect>
           <Badge variant={dirty ? "destructive" : "secondary"}>{dirty ? "Dirty" : "Saved"}</Badge>
         </div>
 
@@ -346,18 +462,32 @@ export function OntologyWorkbench(): JSX.Element {
             <div className="flex h-10 shrink-0 items-center justify-between border-b px-3">
               <div className="flex items-center gap-2">
                 <EditorViewer state={sourceViewerState} className="text-sm font-medium" />
-                <Badge variant="outline">Turtle</Badge>
+                <Badge variant="outline">Graph</Badge>
+                <Badge variant="secondary">{foldLevel}</Badge>
+                {graphBackendBadge}
               </div>
               <span className="max-w-[45ch] truncate font-mono text-xs text-muted-foreground">
                 {O.getOrElse(path, () => "No file open")}
               </span>
             </div>
-            <Textarea
-              aria-label="Turtle source"
-              className="min-h-0 flex-1 resize-none rounded-none border-0 font-mono text-xs leading-5 shadow-none focus-visible:ring-0"
-              readOnly
-              value={source}
-            />
+            <div className="relative min-h-0 flex-[3] bg-background">
+              <div ref={graphContainerRef} className="h-full w-full" />
+              <div className="pointer-events-none absolute left-3 top-3 rounded-md border bg-background/95 px-3 py-2 text-xs shadow-sm">
+                {graphProjectionOverlay}
+              </div>
+            </div>
+            <section className="flex h-48 shrink-0 flex-col border-t">
+              <div className="flex h-8 shrink-0 items-center justify-between border-b px-3">
+                <span className="text-xs font-medium">Turtle source</span>
+                <Badge variant="outline">{snapshot.metrics.quadCount} quads</Badge>
+              </div>
+              <Textarea
+                aria-label="Turtle source"
+                className="min-h-0 flex-1 resize-none rounded-none border-0 font-mono text-xs leading-5 shadow-none focus-visible:ring-0"
+                readOnly
+                value={source}
+              />
+            </section>
           </main>
 
           <aside className="flex min-h-0 flex-col border-l">
@@ -400,9 +530,17 @@ export function OntologyWorkbench(): JSX.Element {
                 />
                 <Input
                   aria-label="Predicate IRI"
+                  list="ontology-predicate-suggestions"
                   value={predicate}
                   onChange={(event) => setPredicate(valueFromEvent(event))}
                 />
+                <datalist id="ontology-predicate-suggestions">
+                  {A.map(predicateSuggestions, (suggestion) => (
+                    <option key={suggestion.iri} value={suggestion.iri}>
+                      {suggestion.label}
+                    </option>
+                  ))}
+                </datalist>
                 <div className="flex gap-2">
                   <NativeSelect
                     aria-label="Object type"
@@ -428,6 +566,44 @@ export function OntologyWorkbench(): JSX.Element {
                 >
                   Apply
                 </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                    disabled={!canApplyGraphGesture}
+                    onClick={runConnect}
+                  >
+                    Connect
+                  </Button>
+                  <Button
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                    disabled={!canApplyGraphGesture}
+                    onClick={runDelete}
+                  >
+                    Delete
+                  </Button>
+                  <Button
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                    disabled={!canApplyGraphGesture}
+                    onClick={runExpand}
+                  >
+                    Expand
+                  </Button>
+                  <Button
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                    disabled={!canApplyGraphGesture}
+                    onClick={runInstantiate}
+                  >
+                    Instantiate
+                  </Button>
+                </div>
               </div>
             </section>
 

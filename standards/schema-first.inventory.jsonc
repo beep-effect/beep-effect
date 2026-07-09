@@ -182,6 +182,14 @@
       "reason": "Type alias contains non-schema signals such as function members or runtime handles."
     },
     {
+      "file": "packages/drivers/cosmos/src/Cosmos.renderer.ts",
+      "symbol": "CosmosRenderHandle",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/cosmos",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
       "file": "packages/drivers/drizzle/src/Drizzle.service.ts",
       "symbol": "DrizzleClient",
       "kind": "exported-interface",
@@ -1276,16 +1284,6 @@
       "line": 10,
       "owner": "@beep/schema",
       "reason": "Exception: PromiseSchema is a pure S.declare<globalThis.Promise<unknown>> identity declaration (Type === Encoded === a native Promise, no codec transform). S.toArbitrary throws 'Unsupported AST Declaration', and a Promise cannot be meaningfully round-tripped (decode/encode are identity, equivalence is reference equality), so any property law would be vacuous. Cross-realm acceptance and thenable-impostor rejection are covered by example-based unit tests."
-    },
-    {
-      "file": "packages/ontology/use-cases/test/Session.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 24,
-      "owner": "@beep/ontology-use-cases",
-      "reason": "Exception: the three decodeUnknownSync calls are fixture setup (SessionId, OntologyFilePath, PrefixMap) for use-case port tests exercising open/save orchestration through fake FileStore/TurtleCodec services, not codec assertions. Schema-derived property coverage for this package's schemas lives in test/SchemaParity.test.ts."
     },
     {
       "file": "packages/foundation/modeling/schema/test/TerritoryCode.test.ts",

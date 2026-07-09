@@ -38,6 +38,7 @@
       "@beep/agents-use-cases/proof": [
         "../../packages/agents/use-cases/src/proof.ts"
       ],
+      "@beep/cosmos": ["../../packages/drivers/cosmos/src/index.ts"],
       "@beep/editor": [
         "../../packages/foundation/ui-system/editor/src/index.ts"
       ],
@@ -48,6 +49,8 @@
         "../../packages/epistemic/tables/src/entities/UsageRecord/index.ts"
       ],
       "@beep/postgres": ["../../packages/drivers/postgres/src/index.ts"],
+      "@beep/rdf": ["../../packages/foundation/modeling/rdf/src/index.ts"],
+      "@beep/rdf/*": ["../../packages/foundation/modeling/rdf/src/*"],
       "@beep/identity": [
         "../../packages/foundation/modeling/identity/src/index.ts"
       ],
@@ -75,6 +78,9 @@
       "@beep/ontology-ui": ["../../packages/ontology/ui/src/index.ts"],
       "@beep/ontology-use-cases/aggregates/Session": [
         "../../packages/ontology/use-cases/src/aggregates/Session/index.ts"
+      ],
+      "@beep/ontology-use-cases/aggregates/Session/worker": [
+        "../../packages/ontology/use-cases/src/aggregates/Session/worker.ts"
       ],
       "@beep/shared-domain/identity/Workspace": [
         "../../packages/shared/domain/src/identity/Workspace.ts"
@@ -122,6 +128,9 @@
       "path": "../../packages/agents/use-cases/tsconfig.json"
     },
     {
+      "path": "../../packages/drivers/cosmos/tsconfig.json"
+    },
+    {
       "path": "../../packages/drivers/pglite/tsconfig.json"
     },
     {
@@ -141,6 +150,9 @@
     },
     {
       "path": "../../packages/foundation/modeling/md/tsconfig.json"
+    },
+    {
+      "path": "../../packages/foundation/modeling/rdf/tsconfig.json"
     },
     {
       "path": "../../packages/foundation/modeling/utils/tsconfig.json"
@@ -180,9 +192,6 @@
     },
     {
       "path": "../../packages/workspace/use-cases/tsconfig.json"
-    },
-    {
-      "path": "../../packages/foundation/modeling/rdf/tsconfig.json"
     },
     {
       "path": "../../packages/drivers/anthropic/tsconfig.json"

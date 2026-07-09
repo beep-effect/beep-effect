@@ -42,6 +42,7 @@
     "@beep/agents-domain": "workspace:^",
     "@beep/agents-server": "workspace:^",
     "@beep/agents-use-cases": "workspace:^",
+    "@beep/cosmos": "workspace:^",
     "@beep/editor": "workspace:^",
     "@beep/epistemic-domain": "workspace:^",
     "@beep/epistemic-tables": "workspace:^",
@@ -55,6 +56,7 @@
     "@beep/ontology-use-cases": "workspace:^",
     "@beep/pglite": "workspace:^",
     "@beep/postgres": "workspace:^",
+    "@beep/rdf": "workspace:^",
     "@beep/shared-domain": "workspace:^",
     "@beep/ui": "workspace:^",
     "@beep/utils": "workspace:^",
@@ -81,6 +83,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
+    "gl-bench": "catalog:",
     "jsdom": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:"

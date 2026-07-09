@@ -1365,6 +1365,7 @@
       "@beep/shared-domain/entity/PublicEntityId": [
         "./packages/shared/domain/src/entity/PublicEntityId.ts"
       ],
+      "@beep/cosmos": ["./packages/drivers/cosmos/src/index.ts"],
       "@beep/n3": ["./packages/drivers/n3/src/index.ts"],
       "@beep/ontology-domain": ["./packages/ontology/domain/src/index.ts"],
       "@beep/ontology-domain/aggregates": [
@@ -1397,7 +1398,10 @@
         "./packages/ontology/use-cases/src/server.ts"
       ],
       "@beep/ontology-client": ["./packages/ontology/client/src/index.ts"],
-      "@beep/ontology-ui": ["./packages/ontology/ui/src/index.ts"]
+      "@beep/ontology-ui": ["./packages/ontology/ui/src/index.ts"],
+      "@beep/ontology-use-cases/aggregates/Session/worker": [
+        "./packages/ontology/use-cases/src/aggregates/Session/worker.ts"
+      ]
     }
   }
 }
