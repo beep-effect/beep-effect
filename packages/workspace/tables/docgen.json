@@ -50,6 +50,9 @@
       "@beep/workspace-tables/entities/Turn": [
         "../../../packages/workspace/tables/src/entities/Turn/index.ts"
       ],
+      "@beep/workspace-tables/entities/Workspace": [
+        "../../../packages/workspace/tables/src/entities/Workspace/index.ts"
+      ],
       "@beep/drizzle": ["../../../packages/drivers/drizzle/src/index.ts"],
       "@beep/test-utils": [
         "../../../packages/tooling/test-kit/test-utils/src/index.ts"

@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `pending` (P1 Vault + deterministic intake is the open phase)
+Status: `active` (P2 LLM filing agent is the open phase)
 
 Each phase below ships as its own mergeable PR via `/yeet` (completion gate).
 Phase content is normatively bounded by `SPEC.md` decisions D1–D11.
@@ -12,7 +12,7 @@ Phase content is normatively bounded by `SPEC.md` decisions D1–D11.
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Close the five research questions below; no feature code. | Freshness-dated notes under `research/` answer each question with sources; SPEC updated if a decision needs a superseding entry. |
-| P1 Vault + deterministic intake | pending | Workspace vault onboarding, app-level DnD, taxonomy seed, heuristic filing to local FS. | A dropped file lands at a taxonomy-valid vault path atomically; onboarding persists vault choice in a workspace table; deterministic tests green. |
+| P1 Vault + deterministic intake | complete | Workspace vault onboarding, app-level DnD, taxonomy seed, heuristic filing to local FS. | A dropped file lands at a taxonomy-valid vault path atomically; onboarding persists vault choice in a workspace table; deterministic tests green. |
 | P2 LLM filing agent | pending | Live AgentMode; filing agent in the sidecar behind RPC; taxonomy validation before placement. | LLM proposes, taxonomy validates, file placed; fixture-mode Layer keeps tests deterministic; same FilingDecision port as P1. |
 | P3 Box sync | pending | One-way push sync process, durable sync state, remote-drift detection, Box OAuth setup UX. | Vault → Box mirror converges for create/move/rename; drift surfaces as conflict records; sync survives app restart via durable cursors. |
 | P4 Extraction → KG loop | pending | file-processing + langextract on filed docs; librarian proposes epistemic candidates; LLM critic + extended ClaimGate; configurable turns. | Admitted claims materialize as KG node/edge rows with DMS link + span provenance; rejected submissions leave an auditable trail; turn count is config. |

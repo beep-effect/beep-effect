@@ -4,12 +4,14 @@ import { CandidateProject as CandidateProjectModel } from "@beep/workspace-domai
 import { Message as MessageModel } from "@beep/workspace-domain/entities/Message";
 import { Thread as ThreadModel } from "@beep/workspace-domain/entities/Thread";
 import { Turn as TurnModel } from "@beep/workspace-domain/entities/Turn";
+import { Workspace as WorkspaceModel } from "@beep/workspace-domain/entities/Workspace";
 import { DbSchema, Entities } from "@beep/workspace-tables";
 import * as CandidateDraft from "@beep/workspace-tables/entities/CandidateDraft";
 import * as CandidateProject from "@beep/workspace-tables/entities/CandidateProject";
 import * as Message from "@beep/workspace-tables/entities/Message";
 import * as Thread from "@beep/workspace-tables/entities/Thread";
 import * as Turn from "@beep/workspace-tables/entities/Turn";
+import * as Workspace from "@beep/workspace-tables/entities/Workspace";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
@@ -23,6 +25,8 @@ const MessageArbitrary = S.toArbitrary(MessageModel);
 const MessageEquivalence = S.toEquivalence(MessageModel);
 const TurnArbitrary = S.toArbitrary(TurnModel);
 const TurnEquivalence = S.toEquivalence(TurnModel);
+const WorkspaceArbitrary = S.toArbitrary(WorkspaceModel);
+const WorkspaceEquivalence = S.toEquivalence(WorkspaceModel);
 
 const expectBaseProjectionColumns = (table: typeof CandidateDraft.Table | typeof CandidateProject.Table) => {
   const columns = getColumns(table);
@@ -70,11 +74,13 @@ describe("WorkspaceTables", () => {
     expect(DbSchema.message).toBe(Message.Table);
     expect(DbSchema.thread).toBe(Thread.Table);
     expect(DbSchema.turn).toBe(Turn.Table);
+    expect(DbSchema.workspace).toBe(Workspace.Table);
     expect(Entities.CandidateDraft.Table).toBe(CandidateDraft.Table);
     expect(Entities.CandidateProject.Table).toBe(CandidateProject.Table);
     expect(Entities.Message.Table).toBe(Message.Table);
     expect(Entities.Thread.Table).toBe(Thread.Table);
     expect(Entities.Turn.Table).toBe(Turn.Table);
+    expect(Entities.Workspace.Table).toBe(Workspace.Table);
   });
 
   it("materializes Thread, Turn, and Message metadata without executing a live database", () => {
@@ -91,6 +97,10 @@ describe("WorkspaceTables", () => {
     expect(Message.Table.entitySchema).toBe(MessageModel);
     expect(getColumns(Message.Table).content.columnType).toBe("PgJsonb");
     expect(getColumns(Message.Table).role.name).toBe("role");
+
+    expect(getTableConfig(Workspace.Table).name).toBe("workspace_workspace");
+    expect(Workspace.Table.entitySchema).toBe(WorkspaceModel);
+    expect(getColumns(Workspace.Table).vaultRootPath.name).toBe("vault_root_path");
   });
 
   it("round-trips Thread, Turn, and Message rows through the converters", () => {
@@ -143,26 +153,73 @@ describe("WorkspaceTables", () => {
     expect(O.isNone(roundTripped.parentTurnId)).toBe(true);
   });
 
-  it("round-trips schema-derived Thread, Message, and Turn entities through the row converters", () =>
-    fc.assert(
-      fc.property(ThreadArbitrary, MessageArbitrary, TurnArbitrary, (thread, message, turn) => {
-        const threadInsert = Thread.toThreadInsert(thread);
-        const messageInsert = Message.toMessageInsert(message);
-        const turnInsert = Turn.toTurnInsert(turn);
+  it("round-trips Workspace rows through the converters", () => {
+    const workspace = S.decodeUnknownSync(WorkspaceModel)({
+      ...baseEntityFixtureInput("WorkspaceWorkspace", 40),
+      fixtureKey: "workspace.default",
+      name: "Default Workspace",
+      organizationFixtureKey: "organization.default",
+      ownerPrincipalFixtureKey: "principal.default",
+      vaultRootPath: "/tmp/beep-workspace-vault",
+    });
 
-        expect(ThreadEquivalence(Thread.fromThreadRow({ ...threadInsert, id: thread.id }), thread)).toBe(true);
-        expect(MessageEquivalence(Message.fromMessageRow({ ...messageInsert, id: message.id }), message)).toBe(true);
-        expect(
-          TurnEquivalence(
-            Turn.fromTurnRow({
-              ...turnInsert,
-              id: turn.id,
-              parentTurnId: turnInsert.parentTurnId ?? null,
-            }),
-            turn
-          )
-        ).toBe(true);
-      }),
+    const workspaceInsert = Workspace.toWorkspaceInsert(workspace);
+
+    expect("id" in workspaceInsert).toBe(false);
+    expect(workspaceInsert.entityType).toBe("WorkspaceWorkspace");
+    expect(workspaceInsert.fixtureKey).toBe("workspace.default");
+    expect(workspaceInsert.name).toBe("Default Workspace");
+    expect(workspaceInsert.organizationFixtureKey).toBe("organization.default");
+    expect(workspaceInsert.ownerPrincipalFixtureKey).toBe("principal.default");
+    expect(workspaceInsert.vaultRootPath).toBe("/tmp/beep-workspace-vault");
+
+    const roundTripped = Workspace.fromWorkspaceRow({
+      ...workspaceInsert,
+      id: 40,
+      vaultRootPath: workspaceInsert.vaultRootPath ?? null,
+    });
+
+    expect(roundTripped.name).toBe("Default Workspace");
+    expect(O.getOrUndefined(roundTripped.vaultRootPath)).toBe("/tmp/beep-workspace-vault");
+  });
+
+  it("round-trips schema-derived Thread, Message, Turn, and Workspace entities through the row converters", () =>
+    fc.assert(
+      fc.property(
+        ThreadArbitrary,
+        MessageArbitrary,
+        TurnArbitrary,
+        WorkspaceArbitrary,
+        (thread, message, turn, workspace) => {
+          const threadInsert = Thread.toThreadInsert(thread);
+          const messageInsert = Message.toMessageInsert(message);
+          const turnInsert = Turn.toTurnInsert(turn);
+          const workspaceInsert = Workspace.toWorkspaceInsert(workspace);
+
+          expect(ThreadEquivalence(Thread.fromThreadRow({ ...threadInsert, id: thread.id }), thread)).toBe(true);
+          expect(MessageEquivalence(Message.fromMessageRow({ ...messageInsert, id: message.id }), message)).toBe(true);
+          expect(
+            TurnEquivalence(
+              Turn.fromTurnRow({
+                ...turnInsert,
+                id: turn.id,
+                parentTurnId: turnInsert.parentTurnId ?? null,
+              }),
+              turn
+            )
+          ).toBe(true);
+          expect(
+            WorkspaceEquivalence(
+              Workspace.fromWorkspaceRow({
+                ...workspaceInsert,
+                id: workspace.id,
+                vaultRootPath: workspaceInsert.vaultRootPath ?? null,
+              }),
+              workspace
+            )
+          ).toBe(true);
+        }
+      ),
       fcRuns(50)
     ));
 });

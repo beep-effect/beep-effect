@@ -30,6 +30,9 @@ const config = {
     "packages/law-practice/domain/package.json",
     "packages/law-practice/use-cases/package.json",
     "packages/law-practice/server/package.json",
+    "packages/documents/domain/package.json",
+    "packages/documents/use-cases/package.json",
+    "packages/documents/server/package.json",
     "packages/workspace/domain/package.json",
     "packages/drivers/drizzle/package.json",
     "packages/drivers/duckdb/package.json",
@@ -81,6 +84,7 @@ const config = {
     "packages/drivers/courtlistener/package.json",
     "packages/drivers/uspto-mcp/package.json",
     "packages/drivers/pacer/package.json",
+    "packages/drivers/protobuf/package.json",
   ],
   customTypes: {
     catalog: {

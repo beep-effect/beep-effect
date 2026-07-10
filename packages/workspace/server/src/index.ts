@@ -29,6 +29,13 @@ export const VERSION = "0.0.0" as const;
  */
 export * as Thread from "./aggregates/Thread/index.ts";
 /**
+ * Workspace vault exports.
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export * as Workspace from "./aggregates/Workspace/index.js";
+/**
  * Workspace server layer export.
  *
  * @category layers

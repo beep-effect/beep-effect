@@ -36,6 +36,7 @@
     "./layer": "./src/Layer.ts",
     "./test": "./src/test.ts",
     "./aggregates/Thread": "./src/aggregates/Thread/index.ts",
+    "./aggregates/Workspace": "./src/aggregates/Workspace/index.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -55,6 +56,7 @@
       "./layer": "./dist/Layer.js",
       "./test": "./dist/test.js",
       "./aggregates/Thread": "./dist/aggregates/Thread/index.js",
+      "./aggregates/Workspace": "./dist/aggregates/Workspace/index.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }
@@ -72,6 +74,7 @@
   },
   "devDependencies": {
     "@beep/test-utils": "workspace:^",
+    "@effect/platform-bun": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:"
   }

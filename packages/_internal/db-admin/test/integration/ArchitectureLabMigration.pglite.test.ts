@@ -72,6 +72,48 @@ if (!shouldRunPgliteIntegration) {
           `;
 
           yield* sql`
+            INSERT INTO workspace_workspace (
+              created_at,
+              created_by_principal,
+              org_id,
+              public_id,
+              row_version,
+              schema_version,
+              source,
+              updated_at,
+              updated_by_principal,
+              fixture_key,
+              name,
+              organization_fixture_key,
+              owner_principal_fixture_key,
+              vault_root_path,
+              entity_type,
+              id
+            )
+            VALUES (
+              0,
+              '{"kind":"System","component":"WorkspaceVault"}'::jsonb,
+              1,
+              'workspace_workspace_a1',
+              1,
+              '0.1.0',
+              'Application',
+              0,
+              '{"kind":"System","component":"WorkspaceVault"}'::jsonb,
+              'workspace.default',
+              'Default Workspace',
+              'organization.default',
+              'principal.default',
+              '/tmp/beep-vault',
+              'WorkspaceWorkspace',
+              1
+            )
+          `;
+          const workspaceRows = yield* sql<{ readonly vault_root_path: string | null }>`
+            SELECT vault_root_path FROM workspace_workspace ORDER BY id ASC
+          `;
+
+          yield* sql`
             INSERT INTO workspace_thread (
               created_at,
               created_by_principal,
@@ -284,6 +326,7 @@ if (!shouldRunPgliteIntegration) {
               A.map((row) => row.display_name)
             )
           ).toEqual(["Ada Lovelace"]);
+          expect(workspaceRows).toEqual([{ vault_root_path: "/tmp/beep-vault" }]);
           expect(turnRows).toEqual([
             { id: 11, parent_turn_id: null },
             { id: 12, parent_turn_id: 11 },

@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 
+import { Layer } from "effect";
 import { ThreadStoreInMemoryLayer } from "./aggregates/Thread/index.ts";
 import {
   InMemoryState,
@@ -13,6 +14,7 @@ import {
   ThreadEntityInput,
   TurnEntityInput,
 } from "./aggregates/Thread/ThreadStore.repo.internal.ts";
+import { WorkspaceVaultStoreInMemoryLayer } from "./aggregates/Workspace/index.js";
 
 /**
  * In-memory workspace server layer for tests.
@@ -27,7 +29,7 @@ import {
  * @category testing
  * @since 0.0.0
  */
-export const WorkspaceServerTest = ThreadStoreInMemoryLayer;
+export const WorkspaceServerTest = Layer.mergeAll(ThreadStoreInMemoryLayer, WorkspaceVaultStoreInMemoryLayer);
 
 /**
  * ThreadStore repository schemas exposed for package-local parity tests.

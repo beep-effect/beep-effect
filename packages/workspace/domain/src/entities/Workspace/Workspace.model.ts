@@ -5,10 +5,12 @@
  * @since 0.0.0
  */
 import { $WorkspaceDomainId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
+import { WorkspaceVaultRootPath } from "./Workspace.values.js";
 
 const $I = $WorkspaceDomainId.create("entities/Workspace/Workspace.model");
 
@@ -41,6 +43,9 @@ export class Workspace extends BaseEntity.Class<Workspace>($I`Workspace`)(
       ownerPrincipalFixtureKey: S.NonEmptyString.annotateKey({
         description: "Stable fixture key for the owner principal.",
       }),
+      vaultRootPath: S.OptionFromNullOr(WorkspaceVaultRootPath).pipe(SchemaUtils.withNoneDefault).annotateKey({
+        description: "Configured local filesystem vault root, absent until onboarding completes.",
+      }),
     },
     persisted: {
       fixtureKey: EntitySchema.persist.text({
@@ -54,6 +59,9 @@ export class Workspace extends BaseEntity.Class<Workspace>($I`Workspace`)(
       }),
       ownerPrincipalFixtureKey: EntitySchema.persist.text({
         columnName: "owner_principal_fixture_key",
+      }),
+      vaultRootPath: EntitySchema.persist.text({
+        columnName: "vault_root_path",
       }),
     },
   },

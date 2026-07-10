@@ -5,7 +5,7 @@
     "title": "Legal Document Intake",
     "status": "active",
     "created": "2026-07-08",
-    "updated": "2026-07-08",
+    "updated": "2026-07-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/legal-document-intake",
@@ -63,7 +63,7 @@
     {
       "id": "P1",
       "name": "Vault + deterministic intake",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
