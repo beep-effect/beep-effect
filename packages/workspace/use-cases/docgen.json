@@ -44,6 +44,12 @@
       "@beep/workspace-use-cases/aggregates/Thread/server": [
         "../../../packages/workspace/use-cases/src/aggregates/Thread/server.ts"
       ],
+      "@beep/workspace-use-cases/aggregates/Workspace": [
+        "../../../packages/workspace/use-cases/src/aggregates/Workspace/index.ts"
+      ],
+      "@beep/workspace-use-cases/aggregates/Workspace/server": [
+        "../../../packages/workspace/use-cases/src/aggregates/Workspace/server.ts"
+      ],
       "@beep/identity": [
         "../../../packages/foundation/modeling/identity/src/index.ts"
       ],

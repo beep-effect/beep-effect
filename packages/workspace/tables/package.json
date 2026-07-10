@@ -39,6 +39,7 @@
     "./entities/Message": "./src/entities/Message/index.ts",
     "./entities/Thread": "./src/entities/Thread/index.ts",
     "./entities/Turn": "./src/entities/Turn/index.ts",
+    "./entities/Workspace": "./src/entities/Workspace/index.ts",
     "./package.json": "./package.json"
   },
   "files": [
@@ -60,6 +61,7 @@
       "./entities/Message": "./dist/entities/Message/index.js",
       "./entities/Thread": "./dist/entities/Thread/index.js",
       "./entities/Turn": "./dist/entities/Turn/index.js",
+      "./entities/Workspace": "./dist/entities/Workspace/index.js",
       "./package.json": "./package.json"
     }
   },

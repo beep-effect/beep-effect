@@ -4,8 +4,10 @@ use std::sync::{
     Arc, Mutex, MutexGuard,
 };
 use tauri::{AppHandle, Emitter, Manager, RunEvent};
+use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
+use uuid::Uuid;
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -21,6 +23,7 @@ struct ProfessionalDesktopHealth {
 #[serde(rename_all = "camelCase")]
 struct SidecarTransport {
     ipc: bool,
+    rpc_session_token: String,
 }
 
 #[derive(Clone, Serialize)]
@@ -43,11 +46,37 @@ fn professional_desktop_health() -> ProfessionalDesktopHealth {
     }
 }
 
+#[derive(Clone)]
+struct RpcSession {
+    token: String,
+}
+
+const RPC_SESSION_TOKEN_ENV: &str = "BEEP_DESKTOP_RPC_SESSION_TOKEN";
+
 #[tauri::command]
-fn sidecar_transport() -> SidecarTransport {
+fn sidecar_transport(state: tauri::State<'_, RpcSession>) -> SidecarTransport {
     SidecarTransport {
         ipc: ipc_transport(),
+        rpc_session_token: state.token.clone(),
     }
+}
+
+#[tauri::command]
+async fn select_vault_directory(app: AppHandle) -> Result<Option<String>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        app.dialog()
+            .file()
+            .set_title("Select workspace vault")
+            .blocking_pick_folder()
+            .map(|path| {
+                path.into_path()
+                    .map(|path| path.to_string_lossy().to_string())
+                    .map_err(|err| err.to_string())
+            })
+            .transpose()
+    })
+    .await
+    .map_err(|err| err.to_string())?
 }
 
 /// The bundled rpc sidecar process, killed when the app exits.
@@ -97,6 +126,10 @@ fn ipc_transport() -> bool {
     std::env::var("CHAT_TRANSPORT")
         .map(|value| value == "ipc")
         .unwrap_or(false)
+}
+
+fn rpc_session_token() -> String {
+    std::env::var(RPC_SESSION_TOKEN_ENV).unwrap_or_else(|_| Uuid::new_v4().to_string())
 }
 
 fn recover_lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
@@ -332,7 +365,16 @@ fn bridge_sidecar_events(
 /// verbatim. `async` so Tauri runs it off the UI thread — `CommandChild::write`
 /// blocks on a full stdin pipe, which must never stall the webview.
 #[tauri::command]
-async fn sidecar_send(state: tauri::State<'_, Sidecar>, frame: String) -> Result<(), String> {
+async fn sidecar_send(
+    state: tauri::State<'_, Sidecar>,
+    session: tauri::State<'_, RpcSession>,
+    frame: String,
+    rpc_session_token: String,
+) -> Result<(), String> {
+    if rpc_session_token != session.token {
+        return Err("unauthorized sidecar rpc session".to_string());
+    }
+
     // Reject oversized frames before touching stdin, mirroring the inbound stdout
     // cap, so a buggy or hostile webview cannot block/kill the IPC transport.
     if frame.len() > MAX_IPC_FRAME_BYTES {
@@ -393,11 +435,16 @@ async fn check_for_update(app: AppHandle) -> Result<Option<String>, String> {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(RpcSession {
+            token: rpc_session_token(),
+        })
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             professional_desktop_health,
             sidecar_transport,
+            select_vault_directory,
             sidecar_ipc_ready,
             sidecar_send,
             check_for_update
@@ -421,6 +468,7 @@ pub fn run() {
             // exists).
             if ipc || !cfg!(debug_assertions) {
                 let mut command = app.shell().sidecar("sidecar")?;
+                let rpc_session_token = app.state::<RpcSession>().token.clone();
 
                 if cfg!(debug_assertions) {
                     // Dev + ipc: keyless fixture kernel; the sidecar falls back to
@@ -447,6 +495,7 @@ pub fn run() {
                 } else {
                     command = command.env("CHAT_TRANSPORT", "http");
                 }
+                command = command.env(RPC_SESSION_TOKEN_ENV, rpc_session_token);
 
                 let (events, child) = command.spawn()?;
                 let sidecar = Sidecar {

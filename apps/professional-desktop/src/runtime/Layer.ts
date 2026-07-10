@@ -30,10 +30,14 @@
 
 import { AnthropicTurnKernel } from "@beep/agents-server/AnthropicTurnKernel";
 import { FixtureTurnKernel } from "@beep/agents-use-cases/proof";
-import { Thread } from "@beep/workspace-server";
+import { DocumentsServerLive } from "@beep/documents-server/layer";
+import { Thread, Workspace } from "@beep/workspace-server";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
+import * as BunPath from "@effect/platform-bun/BunPath";
 import { Config, Effect, Layer } from "effect";
 import { ChatHandlersLive } from "@/chat/ChatOrchestrator";
 import { UsageRecordSinkDrizzle, UsageRecordSinkInMemory } from "@/chat/UsageRecordSink";
+import { DocumentIntakeHandlersLive, WorkspaceVaultHandlersLive } from "@/intake/DocumentIntakeOrchestrator";
 import { ObservabilityLive } from "@/runtime/Observability";
 import { PgliteDrizzleLive } from "@/runtime/Pglite";
 import type { AgentTurnKernel } from "@beep/agents-use-cases/public";
@@ -55,7 +59,25 @@ import type { AgentTurnKernel } from "@beep/agents-use-cases/public";
  * @category models
  * @since 0.0.0
  */
-export type ChatHandlersLayer = Layer.Layer<Layer.Success<typeof ChatHandlersLive>>;
+const DesktopHandlersLive = Layer.mergeAll(ChatHandlersLive, WorkspaceVaultHandlersLive, DocumentIntakeHandlersLive);
+
+/**
+ * Type of the fully-provided RPC handler layer served by the desktop sidecar.
+ *
+ * @example
+ * ```ts
+ * import type { ChatHandlersLayer } from "@/runtime/Layer"
+ * import { RuntimeLive } from "@/runtime/Layer"
+ *
+ * type RuntimeProvidesHandlers = typeof RuntimeLive extends ChatHandlersLayer ? true : false
+ * const runtimeProvidesHandlers: RuntimeProvidesHandlers = true
+ * console.log(runtimeProvidesHandlers)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ChatHandlersLayer = Layer.Layer<Layer.Success<typeof DesktopHandlersLive>>;
 
 /**
  * Select the assistant-turn kernel from the `CHAT_AGENT` env flag. `anthropic`
@@ -94,9 +116,16 @@ const TurnKernelLive: Layer.Layer<AgentTurnKernel> = Layer.unwrap(
  * @category layers
  * @since 0.0.0
  */
-export const RuntimeLive: ChatHandlersLayer = ChatHandlersLive.pipe(
-  Layer.provide([TurnKernelLive, Thread.ThreadStoreDrizzleLayer, UsageRecordSinkDrizzle]),
+export const RuntimeLive: ChatHandlersLayer = DesktopHandlersLive.pipe(
+  Layer.provide([
+    TurnKernelLive,
+    Thread.ThreadStoreDrizzleLayer,
+    Workspace.WorkspaceVaultStoreDrizzleLayer,
+    UsageRecordSinkDrizzle,
+    DocumentsServerLive,
+  ]),
   Layer.provide(PgliteDrizzleLive),
+  Layer.provideMerge(Layer.mergeAll(BunFileSystem.layer, BunPath.layer)),
   Layer.provideMerge(ObservabilityLive)
 );
 
@@ -116,6 +145,13 @@ export const RuntimeLive: ChatHandlersLayer = ChatHandlersLive.pipe(
  * @category layers
  * @since 0.0.0
  */
-export const RuntimeTest: ChatHandlersLayer = ChatHandlersLive.pipe(
-  Layer.provide([FixtureTurnKernel, Thread.ThreadStoreInMemoryLayer, UsageRecordSinkInMemory])
+export const RuntimeTest: ChatHandlersLayer = DesktopHandlersLive.pipe(
+  Layer.provide([
+    FixtureTurnKernel,
+    Thread.ThreadStoreInMemoryLayer,
+    Workspace.WorkspaceVaultStoreInMemoryLayer,
+    UsageRecordSinkInMemory,
+    DocumentsServerLive,
+  ]),
+  Layer.provideMerge(Layer.mergeAll(BunFileSystem.layer, BunPath.layer))
 );

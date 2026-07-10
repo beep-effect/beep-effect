@@ -26,6 +26,7 @@ export const WorkspaceThreadMigrationTarget: DbAdminMigrationTarget = DbAdminMig
   name: "workspace-thread",
   schemaName: "workspace",
   tables: [
+    WorkspaceDbSchema.workspace.definition.tableName,
     WorkspaceDbSchema.thread.definition.tableName,
     WorkspaceDbSchema.turn.definition.tableName,
     WorkspaceDbSchema.message.definition.tableName,
@@ -34,5 +35,6 @@ export const WorkspaceThreadMigrationTarget: DbAdminMigrationTarget = DbAdminMig
     message: WorkspaceDbSchema.message,
     thread: WorkspaceDbSchema.thread,
     turn: WorkspaceDbSchema.turn,
+    workspace: WorkspaceDbSchema.workspace,
   },
 });

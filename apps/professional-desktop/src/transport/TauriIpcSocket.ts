@@ -37,6 +37,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Socket } from "effect/unstable/socket";
+import { SidecarTransport } from "./SidecarTransport.js";
 import type { UnlistenFn } from "@tauri-apps/api/event";
 import type * as Cause from "effect/Cause";
 import type * as Scope from "effect/Scope";
@@ -184,6 +185,11 @@ const unknownToMessage = (cause: unknown): string => (cause instanceof Error ? c
 const toSocketError = (cause: unknown): Socket.SocketError =>
   Socket.isSocketError(cause) ? cause : Socket.SocketError.make({ reason: Socket.SocketReadError.make({ cause }) });
 
+const toSidecarSendError = (cause: unknown): SidecarSendError => {
+  const causeMessage = unknownToMessage(cause);
+  return SidecarSendError.make({ causeMessage, message: `sidecar send failed: ${causeMessage}` });
+};
+
 /**
  * A raw inbound Tauri event, tagged by its source channel. The event payloads
  * stay `unknown` here and are decoded downstream in the stream pipeline, so the
@@ -294,14 +300,34 @@ const inboundFrames = (onOpen: O.Option<Effect.Effect<void>>): Stream.Stream<Inb
  * stdin via the `sidecar_send` command. The frame already carries its ndjson
  * framing, so it is written verbatim.
  */
-const sendFrame = (frame: string): Effect.Effect<void, SidecarSendError> =>
-  Effect.tryPromise({
-    try: () => invoke<void>("sidecar_send", { frame }),
+const sendFrame = Effect.fn("sendFrame")(function* (frame: string): Effect.fn.Return<void, SidecarSendError> {
+  const transport = yield* Effect.tryPromise({
+    try: () => invoke<unknown>("sidecar_transport"),
+    catch: (cause) => {
+      const causeMessage = unknownToMessage(cause);
+      return SidecarSendError.make({ causeMessage, message: `sidecar transport probe failed: ${causeMessage}` });
+    },
+  }).pipe(Effect.flatMap(SidecarTransport.decodeUnknownEffect), Effect.mapError(toSidecarSendError));
+
+  const rpcSessionToken = yield* O.match(O.fromUndefinedOr(transport.rpcSessionToken), {
+    onNone: () =>
+      Effect.fail(
+        SidecarSendError.make({
+          causeMessage: "missing RPC session token",
+          message: "sidecar transport did not provide an RPC session token for IPC send",
+        })
+      ),
+    onSome: Effect.succeed,
+  });
+
+  yield* Effect.tryPromise({
+    try: () => invoke<void>("sidecar_send", { frame, rpcSessionToken }),
     catch: (cause) => {
       const causeMessage = unknownToMessage(cause);
       return SidecarSendError.make({ causeMessage, message: `sidecar send failed: ${causeMessage}` });
     },
   });
+});
 
 /**
  * Flush every complete (newline-terminated) frame currently buffered, leaving

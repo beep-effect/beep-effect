@@ -29,36 +29,55 @@
 import "./IpcStdoutGuard.prelude.ts";
 
 import { ChatRpcs } from "@beep/agents-use-cases/public";
+import { DocumentsRpcs } from "@beep/documents-use-cases/public";
+import { WorkspaceVaultRpcs } from "@beep/workspace-use-cases/public";
 import { BunHttpServer, BunRuntime } from "@effect/platform-bun";
 import { Config, Effect, Layer, Logger } from "effect";
+import * as O from "effect/Option";
 import { HttpRouter } from "effect/unstable/http";
 import { RpcSerialization, RpcServer } from "effect/unstable/rpc";
 import { RuntimeLive } from "@/runtime/Layer";
 import { ipcTransport, SidecarStdioLive } from "./IpcStdoutGuard.ts";
+import { DesktopRpcSessionToken, RpcSessionAuthLayer } from "./RpcSessionAuth.ts";
+import type { Redacted } from "effect";
 
 // Loopback rpc port; defaults to 3939 (the desktop chat surface's sidecar
 // port). Configurable via CHAT_SIDECAR_PORT for tests/dev that need a free port.
 const PORT = Effect.runSync(Config.port("CHAT_SIDECAR_PORT").pipe(Config.withDefault(3939)));
+const RPC_SESSION_TOKEN = Effect.runSync(DesktopRpcSessionToken);
 
-// The ChatRpcs handler group backed by the app-local runtime. RuntimeLive fully
-// provides the group (AgentTurnKernel | ThreadStore | UsageRecordSink), so each
-// transport below only adds its own protocol + serialization layers. Shared so the
-// rpc/runtime wiring lives in exactly one place.
-const ChatRpcServer = RpcServer.layer(ChatRpcs).pipe(Layer.provide(RuntimeLive));
+const DesktopRpcs = ChatRpcs.merge(WorkspaceVaultRpcs, DocumentsRpcs);
+
+// The full desktop group includes write-capable workspace vault and document
+// intake RPCs. HTTP only exposes that group when the per-launch bearer token is
+// configured; otherwise dev HTTP falls back to chat-only RPCs so loopback HTTP
+// never exposes vault/document writes without an unguessable shell-issued token.
+// IPC keeps the full group because it is reachable only through the Tauri shell
+// bridge, where `sidecar_send` also requires the same per-launch token.
+const DesktopRpcServer = RpcServer.layer(DesktopRpcs).pipe(Layer.provide(RuntimeLive));
+const ChatOnlyRpcServer = RpcServer.layer(ChatRpcs).pipe(Layer.provide(RuntimeLive));
 
 // HTTP transport (default): one HttpRouter carries the rpc protocol and the CORS
 // middleware via layer memoization, served by HttpRouter.serve.
 const httpMain = (): Layer.Layer<never> => {
   const Protocol = RpcServer.layerProtocolHttp({ path: "/rpc" }).pipe(Layer.provide(HttpRouter.layer));
+  const RpcServerLive: Layer.Layer<never, never, RpcServer.Protocol> = O.isSome(RPC_SESSION_TOKEN)
+    ? DesktopRpcServer
+    : ChatOnlyRpcServer;
+  const Auth = O.match(RPC_SESSION_TOKEN, {
+    onNone: () => Layer.empty,
+    onSome: (token: Redacted.Redacted<string>) => RpcSessionAuthLayer(token).pipe(Layer.provide(HttpRouter.layer)),
+  });
   const App = Layer.mergeAll(
     Protocol,
+    Auth,
     HttpRouter.cors({
       allowedOrigins: ["*"],
-      allowedMethods: ["GET", "POST", "OPTIONS"],
+      allowedMethods: ["POST", "OPTIONS"],
       allowedHeaders: ["*"],
     }).pipe(Layer.provide(HttpRouter.layer))
   );
-  return ChatRpcServer.pipe(
+  return RpcServerLive.pipe(
     Layer.provideMerge(App),
     Layer.provide(HttpRouter.serve(App)),
     // Bun's default 10s idleTimeout severs streamed responses during the silent
@@ -73,7 +92,7 @@ const httpMain = (): Layer.Layer<never> => {
 // the Tauri Rust shell). Logs are pinned to stderr so they never interleave with
 // the stdout frame stream the bridge parses.
 const ipcMain = (): Layer.Layer<never> =>
-  ChatRpcServer.pipe(
+  DesktopRpcServer.pipe(
     Layer.provide(RpcServer.layerProtocolStdio),
     Layer.provide(SidecarStdioLive),
     Layer.provide(RpcSerialization.layerNdjson),

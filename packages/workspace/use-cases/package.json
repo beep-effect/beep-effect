@@ -37,6 +37,8 @@
     "./server": "./src/server.ts",
     "./aggregates/Thread": "./src/aggregates/Thread/index.ts",
     "./aggregates/Thread/server": "./src/aggregates/Thread/server.ts",
+    "./aggregates/Workspace": "./src/aggregates/Workspace/index.ts",
+    "./aggregates/Workspace/server": "./src/aggregates/Workspace/server.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -57,6 +59,8 @@
       "./server": "./dist/server.js",
       "./aggregates/Thread": "./dist/aggregates/Thread/index.js",
       "./aggregates/Thread/server": "./dist/aggregates/Thread/server.js",
+      "./aggregates/Workspace": "./dist/aggregates/Workspace/index.js",
+      "./aggregates/Workspace/server": "./dist/aggregates/Workspace/server.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }
