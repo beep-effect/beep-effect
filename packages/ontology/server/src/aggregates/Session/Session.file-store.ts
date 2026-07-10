@@ -108,7 +108,7 @@ const writeAtomically = (
 export const makeFileSystemOntologyFileStore = Effect.fn("Ontology.FileStore.makeFileSystem")(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* OntologyWorkspaceRoot;
+  const root = yield* Effect.orDie(OntologyWorkspaceRoot);
 
   return OntologyFileStore.of({
     read: Effect.fn("Ontology.FileStore.read")(function* (request: ReadOntologyFileRequest) {
