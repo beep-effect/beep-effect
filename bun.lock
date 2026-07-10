@@ -1722,6 +1722,7 @@
       "name": "@beep/ontology-server",
       "version": "0.0.2",
       "dependencies": {
+        "@beep/file-processing": "workspace:^",
         "@beep/n3": "workspace:^",
         "@beep/ontology-use-cases": "workspace:^",
         "effect": "catalog:",

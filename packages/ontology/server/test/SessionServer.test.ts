@@ -7,12 +7,15 @@ import {
   ReadOntologyFileRequest,
   SerializeTurtleRequest,
   TurtleCodec,
+  WriteOntologyFileRequest,
 } from "@beep/ontology-use-cases/aggregates/Session";
 import { CanonicalizationServiceLive } from "@beep/rdf-canonize/adapters/canonicalization";
 import { CanonicalizationService, FingerprintDatasetRequest } from "@beep/semantic-web/services/canonicalization";
 import { NodeServices } from "@effect/platform-node";
+import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { ConfigProvider, Effect, FileSystem, Layer, Path } from "effect";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import type { Dataset } from "@beep/rdf/Rdf";
 
@@ -25,6 +28,21 @@ const TestLayer = Layer.mergeAll(
   OntologyServerTest.pipe(Layer.provide(NodeServices.layer)),
   CanonicalizationServiceLive
 );
+
+const ontologyServerTestLayerForRoot = (root: string) =>
+  OntologyServerTest.pipe(
+    Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ ONTOLOGY_WORKSPACE_ROOT: root }))),
+    Layer.provide(NodeServices.layer)
+  );
+
+const ontologyServerTestLayerForRootWithFileSystem = (
+  root: string,
+  fileSystemLayer: Layer.Layer<FileSystem.FileSystem>
+) =>
+  OntologyServerTest.pipe(
+    Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ ONTOLOGY_WORKSPACE_ROOT: root }))),
+    Layer.provide(Layer.mergeAll(fileSystemLayer, NodePath.layer))
+  );
 
 const fixturePath = (relativePath: string): OntologyFilePath =>
   S.decodeUnknownSync(OntologyFilePath)(fileURLToPath(new URL(`./fixtures/${relativePath}`, import.meta.url)));
@@ -83,5 +101,63 @@ describe("Ontology server Turtle round-trip", () => {
         expect(result.after.fingerprint).toBe(result.before.fingerprint);
       }
     }, provideScopedLayer(TestLayer))
+  );
+
+  it.effect(
+    "rejects ontology file paths that escape the configured workspace root",
+    Effect.fnUntraced(function* () {
+      const fileSystem = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-ontology-root-" });
+      const outside = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-ontology-outside-" });
+      const escapingPath = S.decodeUnknownSync(OntologyFilePath)(path.join("..", path.basename(outside), "escape.ttl"));
+      const error = yield* Effect.gen(function* () {
+        const fileStore = yield* OntologyFileStore;
+        return yield* fileStore.read(ReadOntologyFileRequest.make({ path: escapingPath })).pipe(Effect.flip);
+      }).pipe(provideScopedLayer(ontologyServerTestLayerForRoot(root)));
+
+      expect(error.reason).toBe("readFailed");
+      expect(error.message).toContain("escapes the allowed root");
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect(
+    "keeps the original Turtle file intact when atomic rename fails",
+    Effect.fnUntraced(function* () {
+      const fileSystem = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-ontology-root-" });
+      const target = path.join(root, "session.ttl");
+      yield* fileSystem.writeFileString(target, "original turtle");
+      const failingRenameFileSystem = {
+        ...fileSystem,
+        rename: () =>
+          Effect.fail(
+            PlatformError.badArgument({
+              description: "simulated rename failure",
+              method: "rename",
+              module: "FileSystem",
+            })
+          ),
+      };
+      const failingFileSystemLayer = Layer.succeed(FileSystem.FileSystem, failingRenameFileSystem);
+      const error = yield* Effect.gen(function* () {
+        const fileStore = yield* OntologyFileStore;
+        return yield* fileStore
+          .write(
+            WriteOntologyFileRequest.make({
+              path: S.decodeUnknownSync(OntologyFilePath)("session.ttl"),
+              source: "new turtle",
+            })
+          )
+          .pipe(Effect.flip);
+      }).pipe(provideScopedLayer(ontologyServerTestLayerForRootWithFileSystem(root, failingFileSystemLayer)));
+      const restored = yield* fileSystem.readFileString(target);
+      const entries = yield* fileSystem.readDirectory(root);
+
+      expect(error.reason).toBe("writeFailed");
+      expect(restored).toBe("original turtle");
+      expect(entries).toEqual(["session.ttl"]);
+    }, provideScopedLayer(NodeServices.layer))
   );
 });

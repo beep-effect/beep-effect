@@ -10,7 +10,16 @@
  */
 
 import { make as makeIdentity } from "@beep/identity";
-import { Dataset, makeDataset, makeNamedNode, NamedNode, PrefixMap, Quad, serializeQuad } from "@beep/rdf/Rdf";
+import {
+  Dataset,
+  GraphTerm,
+  makeDataset,
+  makeNamedNode,
+  NamedNode,
+  PrefixMap,
+  Quad,
+  serializeQuad,
+} from "@beep/rdf/Rdf";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect, pipe } from "effect";
@@ -22,6 +31,41 @@ const { $OntologyDomainId } = makeIdentity("ontology-domain");
 const $I = $OntologyDomainId.create("aggregates/Session/Session.model");
 
 const ChangeOperationKind = LiteralKit(["addQuad", "removeQuad"]);
+
+type PartitionedQuad = {
+  readonly partition: GraphPartition;
+  readonly quad: Quad;
+};
+
+const isDefaultGraph = (graph: GraphTerm): boolean =>
+  GraphTerm.match(graph, {
+    DefaultGraph: () => true,
+    NamedNode: () => false,
+    BlankNode: () => false,
+  });
+
+const graphIsCanonicalPartition = (graph: GraphTerm, partition: Exclude<GraphPartition, "asserted">): boolean =>
+  GraphTerm.match(graph, {
+    DefaultGraph: () => false,
+    NamedNode: (node) => node.value === graphPartitionIri(partition),
+    BlankNode: () => false,
+  });
+
+const graphMatchesPartition = (change: PartitionedQuad): boolean =>
+  GraphPartition.$match(change.partition, {
+    asserted: () => isDefaultGraph(change.quad.graph),
+    ontologies: () => graphIsCanonicalPartition(change.quad.graph, "ontologies"),
+    inferred: () => graphIsCanonicalPartition(change.quad.graph, "inferred"),
+    shapes: () => graphIsCanonicalPartition(change.quad.graph, "shapes"),
+    provenance: () => graphIsCanonicalPartition(change.quad.graph, "provenance"),
+  });
+
+const PartitionGraphCoherenceCheck = S.makeFilter(graphMatchesPartition, {
+  identifier: $I`PartitionGraphCoherenceCheck`,
+  title: "Partition Graph Coherence",
+  description: "Change operation quad graph must match the declared session partition.",
+  message: "Change operation quad graph must match the declared session partition",
+});
 
 /**
  * Typed ontology change operation over RDF quads.
@@ -47,7 +91,7 @@ const ChangeOperationKind = LiteralKit(["addQuad", "removeQuad"]);
  * @since 0.0.0
  * @category models
  */
-export const ChangeOperation = ChangeOperationKind.toTaggedUnion("kind")({
+const ChangeOperationBase = ChangeOperationKind.toTaggedUnion("kind")({
   addQuad: {
     partition: GraphPartition,
     quad: Quad,
@@ -56,11 +100,19 @@ export const ChangeOperation = ChangeOperationKind.toTaggedUnion("kind")({
     partition: GraphPartition,
     quad: Quad,
   },
-}).pipe(
-  $I.annoteSchema("ChangeOperation", {
-    description: "Typed change operation applied to an ontology session partition.",
-  }),
-  SchemaUtils.withCodecStatics
+});
+
+export const ChangeOperation = Object.assign(
+  ChangeOperationBase.pipe(
+    S.check(PartitionGraphCoherenceCheck),
+    $I.annoteSchema("ChangeOperation", {
+      description: "Typed change operation applied to an ontology session partition.",
+    }),
+    SchemaUtils.withCodecStatics
+  ),
+  {
+    match: ChangeOperationBase.match,
+  }
 );
 
 /**
@@ -487,7 +539,7 @@ export const changeDeltaForOperation: {
  *
  * @example
  * ```ts
- * import { applyChangeToPartitions, ChangeOperation, emptySessionGraphPartitions } from "@beep/ontology-domain/aggregates/Session"
+ * import { applyChangeToPartitions, ChangeOperation, emptySessionGraphPartitions, graphPartitionIri } from "@beep/ontology-domain/aggregates/Session"
  * import { makeNamedNode, makeQuad } from "@beep/rdf/Rdf"
  *
  * const next = applyChangeToPartitions(
@@ -498,7 +550,10 @@ export const changeDeltaForOperation: {
  *     quad: makeQuad(
  *       makeNamedNode("https://example.test/alice"),
  *       makeNamedNode("https://example.test/knows"),
- *       makeNamedNode("https://example.test/bob")
+ *       {
+ *         object: makeNamedNode("https://example.test/bob"),
+ *         graph: makeNamedNode(graphPartitionIri("ontologies"))
+ *       }
  *     )
  *   })
  * )

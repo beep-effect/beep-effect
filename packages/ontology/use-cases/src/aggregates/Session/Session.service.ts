@@ -10,8 +10,10 @@ import {
   CreateSessionInput,
   createSession,
   deriveSessionGraphPartitions,
+  GraphPartition,
 } from "@beep/ontology-domain/aggregates/Session";
 import { Context, Effect, Layer } from "effect";
+import * as A from "effect/Array";
 import {
   OpenOntologyFileResult,
   SaveOntologyFileResult,
@@ -24,13 +26,34 @@ import {
   ReadOntologyFileRequest,
   SerializeTurtleRequest,
   TurtleCodec,
+  TurtleCodecError,
   WriteOntologyFileRequest,
 } from "./Session.ports.js";
+import type { ChangeOperation } from "@beep/ontology-domain/aggregates/Session";
 import type { OpenOntologyFileCommand, SaveOntologyFileCommand } from "./Session.commands.js";
-import type { OntologyFileStoreError, TurtleCodecError } from "./Session.ports.js";
+import type { OntologyFileStoreError } from "./Session.ports.js";
 
 const { $OntologyUseCasesId } = makeIdentity("ontology-use-cases");
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.service");
+
+const isPersistableTurtleChange = (change: ChangeOperation): boolean =>
+  GraphPartition.$match(change.partition, {
+    asserted: () => true,
+    ontologies: () => false,
+    inferred: () => false,
+    shapes: () => false,
+    provenance: () => false,
+  });
+
+const unsupportedPartitionSave = (): TurtleCodecError =>
+  TurtleCodecError.make({
+    reason: "unsupportedPartition",
+    message:
+      "Cannot serialize ontology sessions with non-asserted partition changes to Turtle; persist the typed change log or clear derived partition edits first.",
+  });
+
+const ensureTurtlePersistable = (command: SerializeOntologySessionCommand): Effect.Effect<void, TurtleCodecError> =>
+  A.every(command.session.changeLog, isPersistableTurtleChange) ? Effect.void : Effect.fail(unsupportedPartitionSave());
 
 /**
  * Ontology session use-case service shape.
@@ -71,6 +94,7 @@ export const makeSessionUseCases = Effect.fn("Ontology.SessionUseCases.make")(fu
   const serializeSession = Effect.fn("Ontology.SessionUseCases.serialize")(function* (
     command: SerializeOntologySessionCommand
   ) {
+    yield* ensureTurtlePersistable(command);
     const asserted = deriveSessionGraphPartitions(command.session).asserted;
     const serialized = yield* turtle.serialize(
       SerializeTurtleRequest.make({ dataset: asserted, prefixes: command.session.prefixes })

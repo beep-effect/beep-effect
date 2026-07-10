@@ -1,4 +1,11 @@
-import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session";
+import {
+  appendChange,
+  ChangeOperation,
+  CreateSessionInput,
+  createSession,
+  graphPartitionIri,
+  SessionId,
+} from "@beep/ontology-domain/aggregates/Session";
 import {
   buildOntologySnapshot,
   makeSessionUseCases,
@@ -110,6 +117,58 @@ describe("Session use-cases", () => {
       expect(saved.source).toBe("serialized turtle");
       expect(opened.session.prefixes).toEqual({ ex: "https://example.test/" });
       expect(serializedPrefixes).toEqual({ ex: "https://example.test/" });
+    })
+  );
+
+  it.effect(
+    "fails closed instead of silently dropping non-asserted partition changes on save",
+    Effect.fnUntraced(function* () {
+      let serialized = false;
+      let written = false;
+      const fileStore = OntologyFileStore.of({
+        read: Effect.fn("OntologyFileStore.read")((request) =>
+          Effect.succeed(ReadOntologyFileResult.make({ path: request.path, source: "" }))
+        ),
+        write: Effect.fn("OntologyFileStore.write")(() =>
+          Effect.sync(() => {
+            written = true;
+          })
+        ),
+      });
+      const turtle = TurtleCodec.of({
+        parse: Effect.fn("TurtleCodec.parse")(() => Effect.succeed(ParseTurtleResult.make({ dataset }))),
+        serialize: Effect.fn("TurtleCodec.serialize")(() =>
+          Effect.sync(() => {
+            serialized = true;
+            return SerializeTurtleResult.make({ source: "serialized turtle" });
+          })
+        ),
+      });
+      const useCases = yield* makeSessionUseCases().pipe(
+        Effect.provideService(OntologyFileStore, fileStore),
+        Effect.provideService(TurtleCodec, turtle)
+      );
+      const session = appendChange(
+        createSession(CreateSessionInput.make({ id: sessionId, baseDataset: dataset })),
+        ChangeOperation.make({
+          kind: "addQuad",
+          partition: "ontologies",
+          quad: makeQuad(makeNamedNode("https://example.test/alice"), makeNamedNode("https://example.test/knows"), {
+            object: makeNamedNode("https://example.test/bob"),
+            graph: makeNamedNode(graphPartitionIri("ontologies")),
+          }),
+        })
+      );
+
+      const error = yield* useCases
+        .saveFile(SaveOntologyFileCommand.make({ path: fixturePath, session }))
+        .pipe(Effect.flip);
+
+      expect(error).toMatchObject({
+        reason: "unsupportedPartition",
+      });
+      expect(serialized).toBe(false);
+      expect(written).toBe(false);
     })
   );
 

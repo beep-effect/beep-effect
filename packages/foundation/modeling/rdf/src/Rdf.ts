@@ -127,11 +127,12 @@ const datasetMetadata = makeSemanticSchemaMetadata({
 
 const PrefixLabelChecks = S.makeFilterGroup(
   [
-    S.isPattern(/^[A-Za-z][A-Za-z0-9._-]*$/, {
+    S.isPattern(/^(?:|[A-Za-z][A-Za-z0-9._-]*)$/, {
       identifier: $I`PrefixLabelPatternCheck`,
       title: "Prefix Label Pattern",
-      description: "A prefixed-name label used in RDF namespace bindings.",
-      message: "Prefix labels must begin with an ASCII letter and then use letters, digits, dot, underscore, or hyphen",
+      description: "A prefixed-name label or empty default-prefix label used in RDF namespace bindings.",
+      message:
+        "Prefix labels must be empty for the default prefix or begin with an ASCII letter and then use letters, digits, dot, underscore, or hyphen",
     }),
   ],
   {
@@ -211,7 +212,9 @@ const BlankNodeLabel = S.String.check(BlankNodeLabelChecks).pipe(
  * import { PrefixLabel } from "@beep/rdf/Rdf"
  *
  * const decoded = S.decodeUnknownSync(PrefixLabel)("schema")
+ * const defaultPrefix = S.decodeUnknownSync(PrefixLabel)("")
  * console.log(decoded) // "schema"
+ * console.log(defaultPrefix) // ""
  * ```
  *
  * @since 0.0.0
@@ -232,7 +235,7 @@ export const PrefixLabel = S.String.check(PrefixLabelChecks).pipe(
           disposition: "informative",
         },
       ],
-      equivalenceBasis: "Exact string equality.",
+      equivalenceBasis: "Exact string equality; the empty string denotes the default prefix.",
     }),
   }),
   SchemaUtils.withCodecStatics
@@ -264,7 +267,7 @@ const PrefixMapKeyChecks = S.makeFilterGroup(
         title: "Prefix Map Keys",
         description: "Prefix maps must use RDF prefix labels for every key.",
         message:
-          "Prefix labels must begin with an ASCII letter and then use letters, digits, dot, underscore, or hyphen",
+          "Prefix labels must be empty for the default prefix or begin with an ASCII letter and then use letters, digits, dot, underscore, or hyphen",
       }
     ),
   ],

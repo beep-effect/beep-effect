@@ -441,9 +441,12 @@ describe("@beep/rdf RDF term and dataset models", () => {
 
   it("decodes scalar RDF helpers and rejects malformed labels", () => {
     expect(PrefixLabel.fromUnknown("schema")).toBe("schema");
+    expect(PrefixLabel.fromUnknown("")).toBe("");
     expect(Curie.fromUnknown("schema:Thing")).toBe("schema:Thing");
     expect(LanguageTag.fromUnknown("en-US")).toBe("en-US");
-    expect(() => PrefixLabel.fromUnknown("bad prefix")).toThrow("Prefix labels must begin with an ASCII letter");
+    expect(() => PrefixLabel.fromUnknown("bad prefix")).toThrow(
+      "Prefix labels must be empty for the default prefix or begin with an ASCII letter"
+    );
     expect(() => S.decodeUnknownSync(Curie)("missing-colon")).toThrow("CURIE values must be of the form");
     expect(() => LanguageTag.fromUnknown("en_US")).toThrow("Language tags must use alphanumeric subtags");
     expect(() => makeBlankNode("")).toThrow("Blank node labels must not be empty");
@@ -523,6 +526,7 @@ describe("@beep/rdf RDF term and dataset models", () => {
 
   it("decodes namespace bindings and prefix maps", () => {
     const prefixMap = {
+      "": "https://default.example/",
       ex: "https://example.com/",
       schema: "https://schema.org/",
     };
@@ -533,7 +537,7 @@ describe("@beep/rdf RDF term and dataset models", () => {
     expect(decodePrefixMap(prefixMap)).toEqual(prefixMap);
     expect(encodePrefixMap(decodePrefixMap(prefixMap))).toEqual(prefixMap);
     expect(() => decodePrefixMap({ "bad prefix": "https://example.com/" })).toThrow(
-      "Prefix labels must begin with an ASCII letter"
+      "Prefix labels must be empty for the default prefix or begin with an ASCII letter"
     );
   });
 });
