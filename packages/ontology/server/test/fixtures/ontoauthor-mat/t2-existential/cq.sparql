@@ -1,0 +1,10 @@
+# CQ1: Is CFRP a FiberReinforced material? (requires existential reasoning)
+ASK {
+  <http://example.org/materials#CFRP> a <http://example.org/materials#FiberReinforced> .
+}
+
+# CQ2: Does CFRP have a constituent that is a Fiber?
+ASK {
+  <http://example.org/materials#CFRP> <http://example.org/materials#hasConstituent> ?c .
+  ?c a <http://example.org/materials#Fiber> .
+}

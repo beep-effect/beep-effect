@@ -1,0 +1,20 @@
+@prefix mat: <http://example.org/materials#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+mat:Material a owl:Class .
+mat:Metal a owl:Class ;
+    rdfs:subClassOf mat:Material .
+mat:Steel a owl:Class ;
+    rdfs:subClassOf mat:Metal .
+
+mat:yieldStrength a owl:DatatypeProperty .
+
+mat:S355_EN a mat:Steel ;
+    mat:yieldStrength "355"^^xsd:integer .
+
+mat:S355_ASTM a mat:Steel ;
+    mat:yieldStrength "355"^^xsd:integer ;
+    owl:sameAs mat:S355_EN .

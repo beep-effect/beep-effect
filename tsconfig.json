@@ -1398,6 +1398,37 @@
       "@beep/shared-domain/entity/PublicEntityId": [
         "./packages/shared/domain/src/entity/PublicEntityId.ts"
       ],
+      "@beep/n3": ["./packages/drivers/n3/src/index.ts"],
+      "@beep/ontology-domain": ["./packages/ontology/domain/src/index.ts"],
+      "@beep/ontology-domain/aggregates": [
+        "./packages/ontology/domain/src/aggregates/index.ts"
+      ],
+      "@beep/ontology-domain/aggregates/Session": [
+        "./packages/ontology/domain/src/aggregates/Session/index.ts"
+      ],
+      "@beep/ontology-server": ["./packages/ontology/server/src/index.ts"],
+      "@beep/ontology-server/aggregates/Session": [
+        "./packages/ontology/server/src/aggregates/Session/index.ts"
+      ],
+      "@beep/ontology-server/layer": [
+        "./packages/ontology/server/src/Layer.ts"
+      ],
+      "@beep/ontology-server/test": ["./packages/ontology/server/src/test.ts"],
+      "@beep/ontology-use-cases": [
+        "./packages/ontology/use-cases/src/index.ts"
+      ],
+      "@beep/ontology-use-cases/aggregates/Session": [
+        "./packages/ontology/use-cases/src/aggregates/Session/index.ts"
+      ],
+      "@beep/ontology-use-cases/aggregates/Session/server": [
+        "./packages/ontology/use-cases/src/aggregates/Session/server.ts"
+      ],
+      "@beep/ontology-use-cases/public": [
+        "./packages/ontology/use-cases/src/public.ts"
+      ],
+      "@beep/ontology-use-cases/server": [
+        "./packages/ontology/use-cases/src/server.ts"
+      ],
       "@beep/documents-domain": ["./packages/documents/domain/src/index.ts"],
       "@beep/documents-domain/aggregates": [
         "./packages/documents/domain/src/aggregates/index.ts"

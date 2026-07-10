@@ -1,0 +1,61 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix mat: <http://example.org/materials#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+# Verify class hierarchy exists
+<urn:shape:material-class>
+    a sh:NodeShape ;
+    sh:targetNode mat:Material ;
+    sh:property [
+        sh:path rdf:type ;
+        sh:hasValue owl:Class ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:metal-subclass>
+    a sh:NodeShape ;
+    sh:targetNode mat:Metal ;
+    sh:property [
+        sh:path rdfs:subClassOf ;
+        sh:hasValue mat:Material ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:steel-subclass>
+    a sh:NodeShape ;
+    sh:targetNode mat:Steel ;
+    sh:property [
+        sh:path rdfs:subClassOf ;
+        sh:hasValue mat:Metal ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:stainless-subclass>
+    a sh:NodeShape ;
+    sh:targetNode mat:StainlessSteel ;
+    sh:property [
+        sh:path rdfs:subClassOf ;
+        sh:hasValue mat:Steel ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:austenitic-subclass>
+    a sh:NodeShape ;
+    sh:targetNode mat:AusteniticSteel ;
+    sh:property [
+        sh:path rdfs:subClassOf ;
+        sh:hasValue mat:StainlessSteel ;
+        sh:minCount 1 ;
+    ] .
+
+# Verify individual
+<urn:shape:aisi304-instance>
+    a sh:NodeShape ;
+    sh:targetNode mat:AISI304 ;
+    sh:property [
+        sh:path rdf:type ;
+        sh:hasValue mat:AusteniticSteel ;
+        sh:minCount 1 ;
+    ] .

@@ -1,0 +1,27 @@
+@prefix mat: <http://example.org/materials#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+mat:Material a owl:Class .
+mat:Composite a owl:Class ;
+    rdfs:subClassOf mat:Material .
+mat:Fiber a owl:Class .
+mat:Matrix a owl:Class .
+
+mat:hasConstituent a owl:ObjectProperty .
+
+mat:FiberReinforced a owl:Class ;
+    owl:equivalentClass [
+        a owl:Class ;
+        owl:intersectionOf (
+            mat:Composite
+            [ a owl:Restriction ;
+              owl:onProperty mat:hasConstituent ;
+              owl:someValuesFrom mat:Fiber ]
+        )
+    ] .
+
+mat:CarbonFiber a mat:Fiber .
+mat:CFRP a mat:Composite ;
+    mat:hasConstituent mat:CarbonFiber .

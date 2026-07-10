@@ -1,0 +1,12 @@
+# CQ1: Are Metal and Ceramic declared disjoint?
+ASK {
+  <http://example.org/materials#Metal> <http://www.w3.org/2002/07/owl#disjointWith>
+    <http://example.org/materials#Ceramic> .
+}
+
+# CQ2: Is the ontology consistent? (should be true — no individual is both Metal and Ceramic)
+# Note: consistency is checked via reasoning, not SPARQL. This query verifies structural correctness.
+ASK {
+  <http://example.org/materials#Aluminium> a <http://example.org/materials#Metal> .
+  <http://example.org/materials#Zirconia> a <http://example.org/materials#Ceramic> .
+}

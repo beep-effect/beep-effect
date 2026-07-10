@@ -124,6 +124,9 @@
       "path": "packages/drivers/m365-mcp"
     },
     {
+      "path": "packages/drivers/n3"
+    },
+    {
       "path": "packages/drivers/nlp-mcp"
     },
     {
@@ -269,6 +272,15 @@
     },
     {
       "path": "packages/law-practice/use-cases"
+    },
+    {
+      "path": "packages/ontology/domain"
+    },
+    {
+      "path": "packages/ontology/server"
+    },
+    {
+      "path": "packages/ontology/use-cases"
     },
     {
       "path": "packages/shared/domain"

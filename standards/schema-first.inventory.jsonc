@@ -1798,6 +1798,14 @@
       "reason": "Dependency-injection container of Effect service shapes (FileProcessingService/ClaimGate/IrToLaw/ClaimTransition); a wiring bundle of function-bearing services, not serializable data."
     },
     {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
+      "symbol": "OntologyFileStoreShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/ontology-use-cases",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
       "file": "packages/shared/domain/src/values/LocalDate/LocalDate.model.ts",
       "symbol": "LocalDateFields",
       "kind": "object-struct-schema",

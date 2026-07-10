@@ -12,7 +12,7 @@
     "@effect/platform-bun": "catalog:",
     "effect": "catalog:",
     "lexical": "catalog:",
-    "n3": "^2.1.0"
+    "n3": "catalog:"
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",

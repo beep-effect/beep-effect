@@ -1,0 +1,11 @@
+# CQ1: Are S355_EN and S355_ASTM the same individual?
+ASK {
+  <http://example.org/materials#S355_ASTM> <http://www.w3.org/2002/07/owl#sameAs>
+    <http://example.org/materials#S355_EN> .
+}
+
+# CQ2: Do both entries have yieldStrength 355?
+ASK {
+  <http://example.org/materials#S355_EN> <http://example.org/materials#yieldStrength> ?v1 .
+  <http://example.org/materials#S355_ASTM> <http://example.org/materials#yieldStrength> ?v2 .
+}

@@ -1,0 +1,55 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix mat: <http://example.org/materials#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<urn:shape:metal-class>
+    a sh:NodeShape ;
+    sh:targetNode mat:Metal ;
+    sh:property [
+        sh:path rdfs:subClassOf ;
+        sh:hasValue mat:Material ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path owl:disjointWith ;
+        sh:hasValue mat:Ceramic ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:ceramic-class>
+    a sh:NodeShape ;
+    sh:targetNode mat:Ceramic ;
+    sh:property [
+        sh:path rdfs:subClassOf ;
+        sh:hasValue mat:Material ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:polymer-class>
+    a sh:NodeShape ;
+    sh:targetNode mat:Polymer ;
+    sh:property [
+        sh:path rdfs:subClassOf ;
+        sh:hasValue mat:Material ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:aluminium-instance>
+    a sh:NodeShape ;
+    sh:targetNode mat:Aluminium ;
+    sh:property [
+        sh:path rdf:type ;
+        sh:hasValue mat:Metal ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:zirconia-instance>
+    a sh:NodeShape ;
+    sh:targetNode mat:Zirconia ;
+    sh:property [
+        sh:path rdf:type ;
+        sh:hasValue mat:Ceramic ;
+        sh:minCount 1 ;
+    ] .

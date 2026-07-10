@@ -1,0 +1,16 @@
+@prefix mat: <http://example.org/materials#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+mat:Material a owl:Class .
+mat:Metal a owl:Class ;
+    rdfs:subClassOf mat:Material .
+mat:Steel a owl:Class ;
+    rdfs:subClassOf mat:Metal .
+mat:StainlessSteel a owl:Class ;
+    rdfs:subClassOf mat:Steel .
+mat:AusteniticSteel a owl:Class ;
+    rdfs:subClassOf mat:StainlessSteel .
+
+mat:AISI304 a mat:AusteniticSteel .

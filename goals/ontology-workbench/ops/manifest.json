@@ -5,7 +5,7 @@
     "title": "Ontology Workbench",
     "status": "active",
     "created": "2026-07-08",
-    "updated": "2026-07-08",
+    "updated": "2026-07-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ontology-workbench",
@@ -60,8 +60,8 @@
     {
       "id": "P1",
       "name": "Foundation",
-      "status": "pending",
-      "exit": "ontology slice (domain+use-cases+server) and drivers/n3 land with partitioned session design and Effect-Schema worker protocol; ontoauthor-mat + pizza/FOAF fixtures ported; fixture ontologies round-trip by rdf-canonize fingerprint; slice tests green in isolation."
+      "status": "host-verification-required",
+      "exit": "ontology slice (domain+use-cases+server) and drivers/n3 land with partitioned session design and Effect-Schema worker protocol; ontoauthor-mat + pizza/FOAF fixtures ported; direct fixture round-trip by rdf-canonize fingerprint passed in sandbox; host must run install and Vitest slice tests."
     },
     {
       "id": "P2",

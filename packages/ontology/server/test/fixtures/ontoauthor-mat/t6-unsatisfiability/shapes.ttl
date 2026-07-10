@@ -1,0 +1,37 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix mat: <http://example.org/materials#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+<urn:shape:metal-disjoint>
+    a sh:NodeShape ;
+    sh:targetNode mat:Metal ;
+    sh:property [
+        sh:path owl:disjointWith ;
+        sh:hasValue mat:Ceramic ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:ceramic-class>
+    a sh:NodeShape ;
+    sh:targetNode mat:Ceramic ;
+    sh:property [
+        sh:path rdfs:subClassOf ;
+        sh:hasValue mat:Material ;
+        sh:minCount 1 ;
+    ] .
+
+<urn:shape:cermet-dual-type>
+    a sh:NodeShape ;
+    sh:targetNode mat:Cermet ;
+    sh:property [
+        sh:path rdf:type ;
+        sh:hasValue mat:Metal ;
+        sh:minCount 1 ;
+    ] ;
+    sh:property [
+        sh:path rdf:type ;
+        sh:hasValue mat:Ceramic ;
+        sh:minCount 1 ;
+    ] .

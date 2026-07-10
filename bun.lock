@@ -765,6 +765,25 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/drivers/n3": {
+      "name": "@beep/n3",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/rdf": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "effect": "catalog:",
+        "n3": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/n3": "catalog:",
+        "@types/node": "catalog:",
+        "vitest": "catalog:",
+      },
+    },
     "packages/drivers/nlp-mcp": {
       "name": "@beep/nlp-mcp",
       "version": "0.0.0",
@@ -1663,6 +1682,54 @@
         "@types/node": "catalog:",
       },
     },
+    "packages/ontology/domain": {
+      "name": "@beep/ontology-domain",
+      "version": "0.0.2",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/rdf": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+      },
+    },
+    "packages/ontology/server": {
+      "name": "@beep/ontology-server",
+      "version": "0.0.2",
+      "dependencies": {
+        "@beep/n3": "workspace:^",
+        "@beep/ontology-use-cases": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/rdf-canonize": "workspace:^",
+        "@beep/semantic-web": "workspace:^",
+        "@beep/test-utils": "workspace:^",
+        "@effect/platform-node": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+      },
+    },
+    "packages/ontology/use-cases": {
+      "name": "@beep/ontology-use-cases",
+      "version": "0.0.2",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/ontology-domain": "workspace:^",
+        "@beep/rdf": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+      },
+    },
     "packages/shared/domain": {
       "name": "@beep/shared-domain",
       "version": "0.0.2",
@@ -1995,7 +2062,7 @@
         "@effect/platform-bun": "catalog:",
         "effect": "catalog:",
         "lexical": "catalog:",
-        "n3": "^2.1.0",
+        "n3": "catalog:",
       },
       "devDependencies": {
         "@effect/vitest": "catalog:",
@@ -2483,6 +2550,8 @@
 
     "@beep/md": ["@beep/md@workspace:packages/foundation/modeling/md"],
 
+    "@beep/n3": ["@beep/n3@workspace:packages/drivers/n3"],
+
     "@beep/nlp": ["@beep/nlp@workspace:packages/foundation/modeling/nlp"],
 
     "@beep/nlp-mcp": ["@beep/nlp-mcp@workspace:packages/drivers/nlp-mcp"],
@@ -2496,6 +2565,12 @@
     "@beep/onepassword-cli": ["@beep/onepassword-cli@workspace:packages/drivers/onepassword-cli"],
 
     "@beep/ontology": ["@beep/ontology@workspace:packages/foundation/modeling/ontology"],
+
+    "@beep/ontology-domain": ["@beep/ontology-domain@workspace:packages/ontology/domain"],
+
+    "@beep/ontology-server": ["@beep/ontology-server@workspace:packages/ontology/server"],
+
+    "@beep/ontology-use-cases": ["@beep/ontology-use-cases@workspace:packages/ontology/use-cases"],
 
     "@beep/openai-compat": ["@beep/openai-compat@workspace:packages/drivers/openai-compat"],
 
@@ -5463,7 +5538,7 @@
 
     "multipasta": ["multipasta@0.2.7", "", {}, "sha512-KPA58d68KgGil15oDqXjkUBEBYc00XvbPj5/X+dyzeo/lWm9Nc25pQRlf1D+gv4OpK7NM0J1odrbu9JNNGvynA=="],
 
-    "n3": ["n3@2.1.0", "", { "dependencies": { "buffer": "^6.0.3", "readable-stream": "^4.0.0" } }, "sha512-+05H/h40wRyROglcVGrNZAwBu0Nc87luKhiTV95aGBGX1YyITtpwftHwyhT5YoZr4soXJWrzxqC1CHPdGqV63g=="],
+    "n3": ["n3@2.1.1", "", { "dependencies": { "buffer": "^6.0.3", "readable-stream": "^4.0.0" } }, "sha512-kqg8ers6Lc+uAmHeS+ycd3b8mC4x8wr8V8Fi6+w7l4hX6b0KZ5bT05Tf49qM2mujwaqZT3+08zcgtXgfxivbVQ=="],
 
     "nan": ["nan@2.28.0", "", {}, "sha512-fTsDz99OTq2sVePhGdp4qQhggZFtKr64ZNVyVajRKtMOkJxYekplBh577PiJB12v/D3s2E5cGtOI45LWp6rnLQ=="],
 
