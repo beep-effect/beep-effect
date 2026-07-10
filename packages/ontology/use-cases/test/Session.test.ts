@@ -24,9 +24,11 @@ import { OWL_CLASS } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 const sessionId = S.decodeUnknownSync(SessionId)("session-1");
 const fixturePath = S.decodeUnknownSync(OntologyFilePath)("fixtures/demo.ttl");
@@ -198,4 +200,27 @@ describe("Session use-cases", () => {
       yield* Effect.void;
     })
   );
+});
+
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
+  const decode = S.decodeUnknownResult(schema);
+  const encode = S.encodeResult(schema);
+  const equivalent = S.toEquivalence(schema);
+
+  fc.assert(
+    fc.property(S.toArbitrary(schema), (value) => {
+      const encoded = Result.getOrThrow(encode(value));
+      const decoded = Result.getOrThrow(decode(encoded));
+
+      expect(equivalent(decoded, value)).toBe(true);
+    }),
+    fcRuns(10)
+  );
+};
+
+describe("Session use-case schema round-trips", () => {
+  it("round-trips session schemas with schema-derived arbitraries", () => {
+    assertSchemaRoundTrip(CreateSessionInput);
+    assertSchemaRoundTrip(ChangeOperation);
+  });
 });

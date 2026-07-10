@@ -11,12 +11,14 @@ import {
 } from "@beep/ontology-use-cases/aggregates/Session";
 import { CanonicalizationServiceLive } from "@beep/rdf-canonize/adapters/canonicalization";
 import { CanonicalizationService, FingerprintDatasetRequest } from "@beep/semantic-web/services/canonicalization";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Effect, FileSystem, Layer, Path } from "effect";
+import { ConfigProvider, Effect, FileSystem, Layer, Path, Result } from "effect";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import type { Dataset } from "@beep/rdf/Rdf";
 
 const provideScopedLayer =
@@ -160,4 +162,28 @@ describe("Ontology server Turtle round-trip", () => {
       expect(entries).toEqual(["session.ttl"]);
     }, provideScopedLayer(NodeServices.layer))
   );
+});
+
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
+  const decode = S.decodeUnknownResult(schema);
+  const encode = S.encodeResult(schema);
+  const equivalent = S.toEquivalence(schema);
+
+  fc.assert(
+    fc.property(S.toArbitrary(schema), (value) => {
+      const encoded = Result.getOrThrow(encode(value));
+      const decoded = Result.getOrThrow(decode(encoded));
+
+      expect(equivalent(decoded, value)).toBe(true);
+    }),
+    fcRuns(10)
+  );
+};
+
+describe("Session server schema round-trips", () => {
+  it("round-trips file-store and codec request schemas with schema-derived arbitraries", () => {
+    assertSchemaRoundTrip(ReadOntologyFileRequest);
+    assertSchemaRoundTrip(WriteOntologyFileRequest);
+    assertSchemaRoundTrip(ParseTurtleRequest);
+  });
 });

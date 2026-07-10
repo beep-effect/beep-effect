@@ -67,6 +67,17 @@ const PartitionGraphCoherenceCheck = S.makeFilter(graphMatchesPartition, {
   message: "Change operation quad graph must match the declared session partition",
 });
 
+const ChangeOperationBase = ChangeOperationKind.toTaggedUnion("kind")({
+  addQuad: {
+    partition: GraphPartition,
+    quad: Quad,
+  },
+  removeQuad: {
+    partition: GraphPartition,
+    quad: Quad,
+  },
+});
+
 /**
  * Typed ontology change operation over RDF quads.
  *
@@ -91,17 +102,6 @@ const PartitionGraphCoherenceCheck = S.makeFilter(graphMatchesPartition, {
  * @since 0.0.0
  * @category models
  */
-const ChangeOperationBase = ChangeOperationKind.toTaggedUnion("kind")({
-  addQuad: {
-    partition: GraphPartition,
-    quad: Quad,
-  },
-  removeQuad: {
-    partition: GraphPartition,
-    quad: Quad,
-  },
-});
-
 export const ChangeOperation = Object.assign(
   ChangeOperationBase.pipe(
     S.check(PartitionGraphCoherenceCheck),

@@ -15,6 +15,9 @@
       "path": "../../drivers/rdf-canonize/tsconfig.json"
     },
     {
+      "path": "../../foundation/capability/file-processing/tsconfig.json"
+    },
+    {
       "path": "../../foundation/capability/semantic-web/tsconfig.json"
     },
     {
