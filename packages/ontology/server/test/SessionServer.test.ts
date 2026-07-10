@@ -181,7 +181,9 @@ describe("Ontology server Turtle round-trip", () => {
       const path = yield* Path.Path;
       const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-ontology-root-" });
       const outside = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-ontology-outside-" });
-      const escapingPath = S.decodeUnknownSync(OntologyFilePath)(path.join("..", path.basename(outside), "escape.ttl"));
+      const escapingPath = yield* S.decodeUnknownEffect(OntologyFilePath)(
+        path.join("..", path.basename(outside), "escape.ttl")
+      );
       const error = yield* Effect.gen(function* () {
         const fileStore = yield* OntologyFileStore;
         return yield* fileStore.read(ReadOntologyFileRequest.make({ path: escapingPath })).pipe(Effect.flip);
@@ -214,10 +216,11 @@ describe("Ontology server Turtle round-trip", () => {
       const failingFileSystemLayer = Layer.succeed(FileSystem.FileSystem, failingRenameFileSystem);
       const error = yield* Effect.gen(function* () {
         const fileStore = yield* OntologyFileStore;
+        const sessionPath = yield* S.decodeUnknownEffect(OntologyFilePath)("session.ttl");
         return yield* fileStore
           .write(
             WriteOntologyFileRequest.make({
-              path: S.decodeUnknownSync(OntologyFilePath)("session.ttl"),
+              path: sessionPath,
               source: "new turtle",
             })
           )

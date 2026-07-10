@@ -54,6 +54,7 @@ import { OWL_CLASS, OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL, RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { NonNegativeInt } from "@beep/schema";
 import { SparqlQueryService, SparqlSelectResult } from "@beep/semantic-web/services/sparql-query";
 import { fcRuns } from "@beep/test-utils";
 import { O } from "@beep/utils";
@@ -506,7 +507,7 @@ describe("Session use-cases", () => {
             session,
             profile: "select",
             query,
-            safeguards: OntologySparqlSafeguards.make({ defaultLimit: 10 }),
+            safeguards: OntologySparqlSafeguards.make({ defaultLimit: NonNegativeInt.make(10) }),
           })
         );
 

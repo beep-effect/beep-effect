@@ -1899,6 +1899,7 @@
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -1909,6 +1910,7 @@
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
