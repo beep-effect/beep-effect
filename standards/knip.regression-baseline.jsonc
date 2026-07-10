@@ -11,10 +11,10 @@
     "omitted_fields": ["line", "col", "pos"]
   },
   "check": {
-    "total_findings": 6,
-    "binaries": 1,
+    "total_findings": 4,
+    "binaries": 0,
     "dependencies": 0,
-    "devDependencies": 1,
+    "devDependencies": 0,
     "enumMembers": 0,
     "exports": 3,
     "files": 1,
@@ -25,16 +25,6 @@
     "unresolved": 0
   },
   "findings": [
-    {
-      "kind": "binaries",
-      "file": "package.json",
-      "name": "inspeffct"
-    },
-    {
-      "kind": "devDependencies",
-      "file": "package.json",
-      "name": "inspeffct"
-    },
     {
       "kind": "exports",
       "file": "packages/tooling/tool/cli/src/internal/tsmorph/JsDoc.ts",

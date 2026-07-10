@@ -15,13 +15,13 @@
   "provenance": {
     "exploration": null,
     "authoredDirectly": true,
-    "note": "Authored directly from a /grill-with-docs interview (2026-07-08, 13 locked decisions) plus three Codex research reports (Ontology-Playground survey, beep repo capability inventory, graph rendering performance landscape) saved verbatim under research/."
+    "note": "Authored directly from a /grill-with-docs interview (2026-07-08, 13 locked decisions) plus three Codex research reports (Ontology-Playground survey, beep repo capability inventory, graph rendering performance landscape) saved verbatim under research/. Amended same day after a second grilling round (9 locked decisions) informed by two Codex reports on the ontosphere reference repo (Apache-2.0): SHACL+verified repairs, session graph partitions, typed worker protocol, ABox/TBox view modes, fold levels/clustering, agent-ready ops, PROV-O + VoID/DCAT exports, ontoauthor-mat fixtures; phases restructured P0-P6."
   },
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until this goal's work ships as PRs driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor); each phase lands through yeet and P5's PR must be mergeable.",
+    "statement": "Not achieved until this goal's work ships as PRs driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor); each phase lands through yeet and P6's PR must be mergeable.",
     "grandfathered": false
   },
   "currentSourceOfTruth": [
@@ -37,7 +37,9 @@
     "research/SOURCES.md",
     "research/ontology-playground-report.md",
     "research/beep-repo-capability-report.md",
-    "research/graph-performance-report.md"
+    "research/graph-performance-report.md",
+    "research/ontosphere-survey-report.md",
+    "research/ontosphere-delta-report.md"
   ],
   "agentLaunchers": [
     {
@@ -52,38 +54,44 @@
     {
       "id": "P0",
       "name": "Bootstrap",
-      "status": "pending",
+      "status": "complete",
       "exit": "Branch from fresh origin/main; packet sources confirmed; capability-report facts re-verified or drift recorded."
     },
     {
       "id": "P1",
       "name": "Foundation",
       "status": "pending",
-      "exit": "ontology slice (domain+use-cases+server) and drivers/n3 land; fixture ontologies round-trip by rdf-canonize fingerprint; slice tests green in isolation."
+      "exit": "ontology slice (domain+use-cases+server) and drivers/n3 land with partitioned session design and Effect-Schema worker protocol; ontoauthor-mat + pizza/FOAF fixtures ported; fixture ontologies round-trip by rdf-canonize fingerprint; slice tests green in isolation."
     },
     {
       "id": "P2",
       "name": "Explorer + Editor",
       "status": "pending",
-      "exit": "client + ui packages land; author-edit-save loop works in the running desktop app with undo/redo and change log."
+      "exit": "client + ui packages land; author-edit-save loop works in the running desktop app with undo/redo, change log, ABox/TBox view modes, and metrics panel."
     },
     {
       "id": "P3",
       "name": "Visualizer",
       "status": "pending",
-      "exit": "drivers/cosmos viewport with worker projection, focus-neighborhood, light editing; synthetic 100k-element ontology interactive on webkitgtk with benchmark note in history/."
+      "exit": "drivers/cosmos viewport with worker projection, focus-neighborhood, fold levels L0-L3 with clustering, halo light-editing gestures, pinned-node layouts; synthetic 100k-element ontology interactive on webkitgtk with benchmark note in history/."
     },
     {
       "id": "P4",
       "name": "SPARQL + Reasoning",
       "status": "pending",
-      "exit": "drivers/oxigraph implements the @beep/semantic-web SPARQL contract; query panel executes SELECT/CONSTRUCT; inferred-view toggle shows closure/type/disjointness signals."
+      "exit": "drivers/oxigraph implements the @beep/semantic-web SPARQL contract; query panel executes SELECT/CONSTRUCT with safeguards UX; inferred-view toggle shows closure/type/disjointness signals under the invalidation discipline."
     },
     {
       "id": "P5",
+      "name": "Validation + Provenance",
+      "status": "pending",
+      "exit": "drivers/shacl implements the @beep/semantic-web SHACL contract; SHACL violation -> verified repair -> undo acceptance passes; PROV-O journal and VoID/DCAT exports produced from the change log."
+    },
+    {
+      "id": "P6",
       "name": "Harden + Close",
       "status": "pending",
-      "exit": "Protege/ROBOT interop evidence recorded; all SPEC acceptance criteria pass; disambiguation notes added; closeout reflection exists; final PR mergeable."
+      "exit": "Protege/ROBOT interop evidence recorded; ontoauthor-mat competency tasks t1-t6 pass; all SPEC acceptance criteria pass; disambiguation notes added; closeout reflection exists; final PR mergeable."
     }
   ],
   "verificationCommands": [

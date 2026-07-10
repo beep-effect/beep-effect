@@ -145,6 +145,9 @@
       "path": "packages/drivers/postgres"
     },
     {
+      "path": "packages/drivers/protobuf"
+    },
+    {
       "path": "packages/drivers/rdf-canonize"
     },
     {

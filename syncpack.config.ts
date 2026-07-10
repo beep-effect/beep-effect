@@ -80,6 +80,7 @@ const config = {
     "packages/drivers/courtlistener/package.json",
     "packages/drivers/uspto-mcp/package.json",
     "packages/drivers/pacer/package.json",
+    "packages/drivers/protobuf/package.json",
   ],
   customTypes: {
     catalog: {

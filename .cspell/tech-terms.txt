@@ -354,6 +354,8 @@ worktree
 worktrees
 xhigh
 xlink
+sfixed
+sint
 tsmorph
 canonicalise
 centralises

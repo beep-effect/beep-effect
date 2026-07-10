@@ -839,6 +839,9 @@
       "@beep/schema/BufferEncoding": [
         "./packages/foundation/modeling/schema/src/BufferEncoding.ts"
       ],
+      "@beep/schema/Bytes": [
+        "./packages/foundation/modeling/schema/src/Bytes.ts"
+      ],
       "@beep/schema/CauseTaggedError": [
         "./packages/foundation/modeling/schema/src/CauseTaggedError/index.ts"
       ],
@@ -854,6 +857,9 @@
       "@beep/schema/DateTimeUtcFromValid": [
         "./packages/foundation/modeling/schema/src/DateTimeUtcFromValid/index.ts"
       ],
+      "@beep/schema/Double": [
+        "./packages/foundation/modeling/schema/src/Double.ts"
+      ],
       "@beep/schema/DomainModel": [
         "./packages/foundation/modeling/schema/src/DomainModel.ts"
       ],
@@ -868,6 +874,15 @@
       ],
       "@beep/schema/FileName": [
         "./packages/foundation/modeling/schema/src/FileName.ts"
+      ],
+      "@beep/schema/Fixed32": [
+        "./packages/foundation/modeling/schema/src/Fixed32.ts"
+      ],
+      "@beep/schema/Fixed64": [
+        "./packages/foundation/modeling/schema/src/Fixed64.ts"
+      ],
+      "@beep/schema/Float": [
+        "./packages/foundation/modeling/schema/src/Float.ts"
       ],
       "@beep/schema/Float16Array": [
         "./packages/foundation/modeling/schema/src/Float16Array.ts"
@@ -951,6 +966,18 @@
       "@beep/schema/Sha256": [
         "./packages/foundation/modeling/schema/src/Sha256.ts"
       ],
+      "@beep/schema/Sfixed32": [
+        "./packages/foundation/modeling/schema/src/Sfixed32.ts"
+      ],
+      "@beep/schema/Sfixed64": [
+        "./packages/foundation/modeling/schema/src/Sfixed64.ts"
+      ],
+      "@beep/schema/Sint32": [
+        "./packages/foundation/modeling/schema/src/Sint32.ts"
+      ],
+      "@beep/schema/Sint64": [
+        "./packages/foundation/modeling/schema/src/Sint64.ts"
+      ],
       "@beep/schema/Slug": [
         "./packages/foundation/modeling/schema/src/Slug.ts"
       ],
@@ -985,6 +1012,12 @@
         "./packages/foundation/modeling/schema/src/Transformations.ts"
       ],
       "@beep/schema/URL": ["./packages/foundation/modeling/schema/src/URL.ts"],
+      "@beep/schema/Uint32": [
+        "./packages/foundation/modeling/schema/src/Uint32.ts"
+      ],
+      "@beep/schema/Uint64": [
+        "./packages/foundation/modeling/schema/src/Uint64.ts"
+      ],
       "@beep/schema/Xml": ["./packages/foundation/modeling/schema/src/Xml.ts"],
       "@beep/schema/Yaml": [
         "./packages/foundation/modeling/schema/src/Yaml.ts"
@@ -1405,7 +1438,9 @@
       ],
       "@beep/workspace-use-cases/aggregates/Workspace/server": [
         "./packages/workspace/use-cases/src/aggregates/Workspace/server.ts"
-      ]
+      ],
+      "@beep/protobuf": ["./packages/drivers/protobuf/src/index.ts"],
+      "@beep/protobuf/*": ["./packages/drivers/protobuf/src/*"]
     }
   }
 }

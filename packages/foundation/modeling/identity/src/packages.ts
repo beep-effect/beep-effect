@@ -150,7 +150,8 @@ const generatedComposers = $I.compose(
   "mcp-kit",
   "uspto-mcp",
   "pacer",
-  "fc-runs"
+  "fc-runs",
+  "protobuf"
 );
 
 const composers = {
@@ -1732,3 +1733,19 @@ export const $PacerId: Identity.IdentityComposer<"@beep/pacer"> = composers.$Pac
  * @category configuration
  */
 export const $FcRunsId: Identity.IdentityComposer<"@beep/fc-runs"> = composers.$FcRunsId;
+
+/**
+ * Identity composer for `@beep/protobuf`.
+ *
+ * @example
+ * ```typescript
+ * import { $ProtobufId } from "@beep/identity"
+ *
+ * const id = $ProtobufId.make("Protobuf")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $ProtobufId: Identity.IdentityComposer<"@beep/protobuf"> = composers.$ProtobufId;
