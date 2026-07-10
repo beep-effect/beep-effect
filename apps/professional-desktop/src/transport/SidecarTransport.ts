@@ -28,6 +28,7 @@ const $I = $ProfessionalDesktopId.create("transport/SidecarTransport");
 export class SidecarTransport extends S.Class<SidecarTransport>($I`SidecarTransport`)(
   {
     ipc: S.Boolean,
+    rpcSessionToken: S.optionalKey(S.NonEmptyString),
   },
   $I.annote("SidecarTransport", {
     description: "The transport used to communicate with the sidecar.",

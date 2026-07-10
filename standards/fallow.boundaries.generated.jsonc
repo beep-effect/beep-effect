@@ -150,6 +150,24 @@
         ]
       },
       {
+        "name": "@beep/documents-domain",
+        "patterns": [
+          "packages/documents/domain/src/**"
+        ]
+      },
+      {
+        "name": "@beep/documents-server",
+        "patterns": [
+          "packages/documents/server/src/**"
+        ]
+      },
+      {
+        "name": "@beep/documents-use-cases",
+        "patterns": [
+          "packages/documents/use-cases/src/**"
+        ]
+      },
+      {
         "name": "@beep/dol",
         "patterns": [
           "packages/drivers/dol/src/**"
@@ -390,12 +408,6 @@
         ]
       },
       {
-        "name": "@beep/ontology-client",
-        "patterns": [
-          "packages/ontology/client/src/**"
-        ]
-      },
-      {
         "name": "@beep/ontology-domain",
         "patterns": [
           "packages/ontology/domain/src/**"
@@ -405,12 +417,6 @@
         "name": "@beep/ontology-server",
         "patterns": [
           "packages/ontology/server/src/**"
-        ]
-      },
-      {
-        "name": "@beep/ontology-ui",
-        "patterns": [
-          "packages/ontology/ui/src/**"
         ]
       },
       {
@@ -459,6 +465,12 @@
         "name": "@beep/professional-desktop",
         "patterns": [
           "apps/professional-desktop/src/**"
+        ]
+      },
+      {
+        "name": "@beep/protobuf",
+        "patterns": [
+          "packages/drivers/protobuf/src/**"
         ]
       },
       {
@@ -1065,6 +1077,63 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/test-utils"
+        ]
+      },
+      {
+        "from": "@beep/documents-domain",
+        "allow": [
+          "@beep/documents-domain",
+          "@beep/identity",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/shared-domain",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/documents-domain",
+          "@beep/identity",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/shared-domain",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/documents-server",
+        "allow": [
+          "@beep/documents-domain",
+          "@beep/documents-server",
+          "@beep/documents-use-cases",
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/documents-domain",
+          "@beep/documents-server",
+          "@beep/documents-use-cases",
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/documents-use-cases",
+        "allow": [
+          "@beep/documents-domain",
+          "@beep/documents-use-cases",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/shared-domain"
+        ],
+        "allowTypeOnly": [
+          "@beep/documents-domain",
+          "@beep/documents-use-cases",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/shared-domain"
         ]
       },
       {
@@ -1774,25 +1843,6 @@
         ]
       },
       {
-        "from": "@beep/ontology-client",
-        "allow": [
-          "@beep/identity",
-          "@beep/ontology-client",
-          "@beep/ontology-domain",
-          "@beep/ontology-use-cases",
-          "@beep/schema",
-          "@beep/utils"
-        ],
-        "allowTypeOnly": [
-          "@beep/identity",
-          "@beep/ontology-client",
-          "@beep/ontology-domain",
-          "@beep/ontology-use-cases",
-          "@beep/schema",
-          "@beep/utils"
-        ]
-      },
-      {
         "from": "@beep/ontology-domain",
         "allow": [
           "@beep/identity",
@@ -1826,31 +1876,6 @@
           "@beep/rdf-canonize",
           "@beep/semantic-web",
           "@beep/test-utils"
-        ]
-      },
-      {
-        "from": "@beep/ontology-ui",
-        "allow": [
-          "@beep/editor",
-          "@beep/lexical-schema",
-          "@beep/ontology-client",
-          "@beep/ontology-domain",
-          "@beep/ontology-ui",
-          "@beep/ontology-use-cases",
-          "@beep/rdf",
-          "@beep/ui",
-          "@beep/utils"
-        ],
-        "allowTypeOnly": [
-          "@beep/editor",
-          "@beep/lexical-schema",
-          "@beep/ontology-client",
-          "@beep/ontology-domain",
-          "@beep/ontology-ui",
-          "@beep/ontology-use-cases",
-          "@beep/rdf",
-          "@beep/ui",
-          "@beep/utils"
         ]
       },
       {
@@ -1981,17 +2006,15 @@
           "@beep/agents-domain",
           "@beep/agents-server",
           "@beep/agents-use-cases",
+          "@beep/documents-domain",
+          "@beep/documents-server",
+          "@beep/documents-use-cases",
           "@beep/editor",
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
           "@beep/identity",
           "@beep/lexical-schema",
           "@beep/md",
-          "@beep/ontology-client",
-          "@beep/ontology-domain",
-          "@beep/ontology-server",
-          "@beep/ontology-ui",
-          "@beep/ontology-use-cases",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/professional-desktop",
@@ -2008,17 +2031,15 @@
           "@beep/agents-domain",
           "@beep/agents-server",
           "@beep/agents-use-cases",
+          "@beep/documents-domain",
+          "@beep/documents-server",
+          "@beep/documents-use-cases",
           "@beep/editor",
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
           "@beep/identity",
           "@beep/lexical-schema",
           "@beep/md",
-          "@beep/ontology-client",
-          "@beep/ontology-domain",
-          "@beep/ontology-server",
-          "@beep/ontology-ui",
-          "@beep/ontology-use-cases",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/professional-desktop",
@@ -2029,6 +2050,15 @@
           "@beep/workspace-domain",
           "@beep/workspace-server",
           "@beep/workspace-use-cases"
+        ]
+      },
+      {
+        "from": "@beep/protobuf",
+        "allow": [
+          "@beep/protobuf"
+        ],
+        "allowTypeOnly": [
+          "@beep/protobuf"
         ]
       },
       {

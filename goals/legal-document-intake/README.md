@@ -53,11 +53,18 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Vault + deterministic intake. Next concrete action: implement the P1 exit
-criteria in [`PLAN.md`](./PLAN.md): workspace vault onboarding, app-level DnD,
-taxonomy seed, and heuristic filing to local FS.
+P2 LLM filing agent. Next concrete action: replace the deterministic P1
+FilingDecision Layer with an LLM-backed implementation behind the same port.
 
 ## Latest Evidence
+
+P1 Vault + deterministic intake completed 2026-07-09. Evidence: new
+`documents` domain/use-cases/server packages, workspace vault table and store,
+desktop vault onboarding plus DnD intake target, deterministic taxonomy
+projection tests, workspace vault tests, migration/schema parity tests, full
+`docgen:local --full`, affected lint/check/type-test, and targeted Vitest
+lanes. `bun run beep yeet repair` / `verify` were attempted, but this managed
+worktree blocks Yeet's required `git fetch` writes under `.git`.
 
 P0 Research completed 2026-07-08. Evidence:
 [`research/folder-structure.md`](./research/folder-structure.md),

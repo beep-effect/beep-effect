@@ -18,9 +18,12 @@ import { Button } from "@beep/ui/components/button";
 import { Toaster } from "@beep/ui/components/sonner";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Cause, Effect } from "effect";
+import * as O from "effect/Option";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
+import { DocumentIntakeTarget } from "./intake/DocumentIntakeTarget.tsx";
+import { makeDesktopHttpProtocolLive } from "./transport/DesktopHttpProtocol.ts";
 import { IpcChatProtocolLive } from "./transport/IpcChatClient.ts";
 import { IpcSpikePanel } from "./transport/IpcSpikePanel.tsx";
 import { SidecarTransport } from "./transport/SidecarTransport.ts";
@@ -56,8 +59,19 @@ const protocolLayerBindingAtom = Atom.make((get) => {
   const apply = (): void => {
     const result = get.once(sidecarTransportAtom);
     if (AsyncResult.isSuccess(result)) {
-      get.set(chatProtocolLayerAtom, result.value.ipc ? IpcChatProtocolLive : HttpChatProtocolLive);
-      get.set(ontologyProtocolLayerAtom, result.value.ipc ? IpcChatProtocolLive : HttpOntologyProtocolLive);
+      const protocolLayer = result.value.ipc
+        ? IpcChatProtocolLive
+        : O.match(O.fromUndefinedOr(result.value.rpcSessionToken), {
+            onNone: () => HttpChatProtocolLive,
+            onSome: makeDesktopHttpProtocolLive,
+          });
+      get.set(
+        ontologyProtocolLayerAtom,
+        result.value.ipc || O.isSome(O.fromUndefinedOr(result.value.rpcSessionToken))
+          ? protocolLayer
+          : HttpOntologyProtocolLive
+      );
+      get.set(chatProtocolLayerAtom, protocolLayer);
     }
   };
   apply();
@@ -82,30 +96,34 @@ const DesktopShell = ({ transport }: { readonly transport: SidecarTransport }): 
   const setSurface = useAtomSet(desktopSurfaceAtom);
 
   return (
-    <div className="flex h-screen min-h-0 w-full flex-col bg-background text-foreground">
-      <div className="flex h-10 shrink-0 items-center gap-1 border-b px-2">
-        <Button
-          size="sm"
-          type="button"
-          variant={surface === "chat" ? "default" : "ghost"}
-          onClick={() => setSurface("chat")}
-        >
-          Chat
-        </Button>
-        <Button
-          size="sm"
-          type="button"
-          variant={surface === "ontology" ? "default" : "ghost"}
-          onClick={() => setSurface("ontology")}
-        >
-          Workbench
-        </Button>
-      </div>
-      <div className="min-h-0 flex-1">{surface === "chat" ? <ChatApp /> : <OntologyWorkbench />}</div>
+    <>
+      <DocumentIntakeTarget>
+        <div className="flex h-screen min-h-0 w-full flex-col bg-background text-foreground">
+          <div className="flex h-10 shrink-0 items-center gap-1 border-b px-2">
+            <Button
+              size="sm"
+              type="button"
+              variant={surface === "chat" ? "default" : "ghost"}
+              onClick={() => setSurface("chat")}
+            >
+              Chat
+            </Button>
+            <Button
+              size="sm"
+              type="button"
+              variant={surface === "ontology" ? "default" : "ghost"}
+              onClick={() => setSurface("ontology")}
+            >
+              Workbench
+            </Button>
+          </div>
+          <div className="min-h-0 flex-1">{surface === "chat" ? <ChatApp /> : <OntologyWorkbench />}</div>
+        </div>
+      </DocumentIntakeTarget>
       <ChatTurnErrorToasts />
       <Toaster richColors />
       {transport.ipc && hasIpcSpikeFlag() ? <IpcSpikePanel /> : null}
-    </div>
+    </>
   );
 };
 
