@@ -4,6 +4,14 @@
   "entries": [
     {
       "rule": "beep-laws/no-native-runtime",
+      "file": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
+      "kind": "object-method",
+      "reason": "ChangeOperation must keep the tagged-union match statics across a schema pipe; Object.assign merges the piped schema with the base statics and no Effect helper performs a static-preserving schema merge.",
+      "owner": "@beep/ontology-domain",
+      "issue": "ONTOLOGY-CHANGE-OPERATION-STATICS-MERGE"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/capability/chalk/src/internal/ChalkRuntime.ts",
       "kind": "new-map-set",
       "reason": "Chalk memoizes builder metadata by function identity and needs weak-key semantics to avoid retaining builders.",

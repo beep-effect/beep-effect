@@ -6,6 +6,7 @@ import {
   createSession,
   deriveNamedGraphs,
   deriveSessionGraphPartitions,
+  graphPartitionIri,
   isExcludedFromReasoning,
   SessionId,
 } from "@beep/ontology-domain/aggregates/Session";
@@ -31,6 +32,14 @@ const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;
 const SH_NODE_SHAPE = makeNamedNode(`${SHACL_NAMESPACE}NodeShape`);
 const SH_PROPERTY = makeNamedNode(`${SHACL_NAMESPACE}property`);
 const SH_PATH = makeNamedNode(`${SHACL_NAMESPACE}path`);
+const ontologyGraphQuad = makeQuad(
+  makeNamedNode("https://example.test/alice"),
+  makeNamedNode("https://example.test/knows"),
+  {
+    object: makeNamedNode("https://example.test/bob"),
+    graph: makeNamedNode(graphPartitionIri("ontologies")),
+  }
+);
 
 describe("Ontology Session aggregate", () => {
   it("derives asserted and authored partitions from base plus change log", () => {
@@ -44,7 +53,7 @@ describe("Ontology Session aggregate", () => {
       ChangeOperation.make({
         kind: "addQuad",
         partition: "ontologies",
-        quad: knowsQuad,
+        quad: ontologyGraphQuad,
       })
     );
 
@@ -93,6 +102,23 @@ describe("Ontology Session aggregate", () => {
     );
 
     expect(deriveSessionGraphPartitions(session).asserted.quads).toHaveLength(1);
+  });
+
+  it("rejects change operations whose quad graph diverges from the partition", () => {
+    expect(() =>
+      ChangeOperation.make({
+        kind: "addQuad",
+        partition: "ontologies",
+        quad: knowsQuad,
+      })
+    ).toThrow("Change operation quad graph must match the declared session partition");
+    expect(() =>
+      ChangeOperation.make({
+        kind: "addQuad",
+        partition: "asserted",
+        quad: ontologyGraphQuad,
+      })
+    ).toThrow("Change operation quad graph must match the declared session partition");
   });
 
   it("keeps one shared reasoning-exclusion rule across named graphs", () => {

@@ -18,6 +18,7 @@ import {
   TurnItem,
   TurnItems,
   Workspace as WorkspaceEntity,
+  WorkspaceVaultRootPath,
 } from "@beep/workspace-domain";
 import { describe, expect, it } from "@effect/vitest";
 import * as O from "effect/Option";
@@ -110,6 +111,7 @@ describe("@beep/workspace-domain", () => {
       name: "Acme Workspace",
       organizationFixtureKey: "org.acme",
       ownerPrincipalFixtureKey: "principal.owner",
+      vaultRootPath: null,
     });
     const constructed = WorkspaceEntity.make(decoded);
 
@@ -120,6 +122,16 @@ describe("@beep/workspace-domain", () => {
     expect(constructed.ownerPrincipalFixtureKey).toBe("principal.owner");
   });
 
+  it("rejects relative, tilde, and blank workspace vault roots", () => {
+    const decode = S.decodeUnknownSync(WorkspaceVaultRootPath);
+
+    expect(() => decode("vault")).toThrow();
+    expect(() => decode("C:relative-vault")).toThrow();
+    expect(() => decode("~/Vault")).toThrow();
+    expect(() => decode(" ")).toThrow();
+    expect(decode("C:\\Vault")).toBe("C:\\Vault");
+  });
+
   it("preserves crispened workspace and email wire shapes", () => {
     const workspaceWire = {
       ...baseEntityInput("WorkspaceWorkspace", 20),
@@ -127,6 +139,7 @@ describe("@beep/workspace-domain", () => {
       name: "Acme Workspace",
       organizationFixtureKey: "org.acme",
       ownerPrincipalFixtureKey: "principal.owner",
+      vaultRootPath: null,
     };
     const emailWire = {
       ...baseEntityInput("WorkspaceEmailArtifact", 21),

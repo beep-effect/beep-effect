@@ -129,6 +129,15 @@
       "path": "../../packages/agents/use-cases/tsconfig.json"
     },
     {
+      "path": "../../packages/documents/domain/tsconfig.json"
+    },
+    {
+      "path": "../../packages/documents/server/tsconfig.json"
+    },
+    {
+      "path": "../../packages/documents/use-cases/tsconfig.json"
+    },
+    {
       "path": "../../packages/drivers/cosmos/tsconfig.json"
     },
     {

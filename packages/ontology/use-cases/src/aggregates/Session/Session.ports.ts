@@ -121,7 +121,12 @@ export type TurtleDocumentText = typeof TurtleDocumentText.Type;
  * @since 0.0.0
  * @category errors
  */
-export const TurtleCodecErrorReason = LiteralKit(["parseFailed", "serializeFailed", "unsupportedGraph"]).pipe(
+export const TurtleCodecErrorReason = LiteralKit([
+  "parseFailed",
+  "serializeFailed",
+  "unsupportedGraph",
+  "unsupportedPartition",
+]).pipe(
   $I.annoteSchema("TurtleCodecErrorReason", {
     description: "Turtle codec failure reason.",
   })

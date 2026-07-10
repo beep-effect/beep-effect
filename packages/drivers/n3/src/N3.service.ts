@@ -169,6 +169,8 @@ const unsupportedGraph = (graph: Rdf.GraphTerm): N3TurtleCodecError =>
     message: `Turtle serialization only supports default graph quads; found ${Rdf.serializeTerm(graph)}.`,
   });
 
+const isPrefixLabel = (prefix: string): boolean => prefix === "" || Rdf.PrefixLabel.is(prefix);
+
 const fromN3Subject = (subject: N3.Quad_Subject): Effect.Effect<Rdf.Subject, N3TurtleCodecError> =>
   Match.value(subject).pipe(
     Match.withReturnType<Effect.Effect<Rdf.Subject, N3TurtleCodecError>>(),
@@ -274,7 +276,7 @@ const parseTurtle = Effect.fn("N3.parseTurtle")(function* (request: N3ParseTurtl
         }),
       });
       return parser.parse(request.source, null, (prefix, prefixNode) => {
-        if (Rdf.PrefixLabel.is(prefix)) {
+        if (isPrefixLabel(prefix)) {
           prefixes[prefix] = prefixNode.value;
         }
       });
@@ -292,17 +294,23 @@ const parseTurtle = Effect.fn("N3.parseTurtle")(function* (request: N3ParseTurtl
 
 const serializeTurtle = Effect.fn("N3.serializeTurtle")(function* (request: N3SerializeTurtleRequest) {
   const quads = yield* Effect.forEach(request.dataset.quads, toN3Quad);
-  const source = yield* Effect.try({
+  const output = yield* Effect.try({
     try: () => {
       let source = "";
+      let failure: O.Option<Error> = O.none();
       const writer = new Writer({ format: "Turtle", prefixes: request.prefixes });
       writer.addQuads(A.fromIterable(quads));
-      writer.end((_error, output) => {
+      writer.end((error, output) => {
+        failure = O.fromNullishOr(error);
         source = output ?? "";
       });
-      return source;
+      return { failure, source };
     },
     catch: serializeFailure,
+  });
+  const source = yield* O.match(output.failure, {
+    onNone: () => Effect.succeed(output.source),
+    onSome: (error) => Effect.fail(serializeFailure(error)),
   });
 
   return N3SerializeTurtleResult.make({

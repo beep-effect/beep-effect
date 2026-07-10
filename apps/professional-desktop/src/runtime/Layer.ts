@@ -30,12 +30,14 @@
 
 import { AnthropicTurnKernel } from "@beep/agents-server/AnthropicTurnKernel";
 import { FixtureTurnKernel } from "@beep/agents-use-cases/proof";
+import { DocumentsServerLive } from "@beep/documents-server/layer";
 import { OntologyServerLive } from "@beep/ontology-server/layer";
-import { Thread } from "@beep/workspace-server";
+import { Thread, Workspace } from "@beep/workspace-server";
 import { BunServices } from "@effect/platform-bun";
 import { Config, Effect, Layer } from "effect";
 import { ChatHandlersLive } from "@/chat/ChatOrchestrator";
 import { UsageRecordSinkDrizzle, UsageRecordSinkInMemory } from "@/chat/UsageRecordSink";
+import { DocumentIntakeHandlersLive, WorkspaceVaultHandlersLive } from "@/intake/DocumentIntakeOrchestrator";
 import { OntologyHandlersLive } from "@/ontology/OntologyOrchestrator";
 import { ObservabilityLive } from "@/runtime/Observability";
 import { PgliteDrizzleLive } from "@/runtime/Pglite";
@@ -58,9 +60,30 @@ import type { AgentTurnKernel } from "@beep/agents-use-cases/public";
  * @category models
  * @since 0.0.0
  */
-export type DesktopHandlersLayer = Layer.Layer<
-  Layer.Success<typeof ChatHandlersLive> | Layer.Success<typeof OntologyHandlersLive>
->;
+const DesktopHandlersLive = Layer.mergeAll(
+  ChatHandlersLive,
+  WorkspaceVaultHandlersLive,
+  DocumentIntakeHandlersLive,
+  OntologyHandlersLive
+);
+
+/**
+ * Type of the fully-provided RPC handler layer served by the desktop sidecar.
+ *
+ * @example
+ * ```ts
+ * import type { ChatHandlersLayer } from "@/runtime/Layer"
+ * import { RuntimeLive } from "@/runtime/Layer"
+ *
+ * type RuntimeProvidesHandlers = typeof RuntimeLive extends ChatHandlersLayer ? true : false
+ * const runtimeProvidesHandlers: RuntimeProvidesHandlers = true
+ * console.log(runtimeProvidesHandlers)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type DesktopHandlersLayer = Layer.Layer<Layer.Success<typeof DesktopHandlersLive>>;
 
 /**
  * Select the assistant-turn kernel from the `CHAT_AGENT` env flag. `anthropic`
@@ -80,18 +103,6 @@ const TurnKernelLive: Layer.Layer<AgentTurnKernel> = Layer.unwrap(
   }).pipe(Effect.orDie)
 );
 
-const ChatRuntimeLive = ChatHandlersLive.pipe(
-  Layer.provide([TurnKernelLive, Thread.ThreadStoreDrizzleLayer, UsageRecordSinkDrizzle]),
-  Layer.provide(PgliteDrizzleLive),
-  Layer.provideMerge(ObservabilityLive)
-);
-
-const OntologyRuntimeLive = OntologyHandlersLive.pipe(
-  Layer.provide(OntologyServerLive),
-  Layer.provide(BunServices.layer),
-  Layer.provideMerge(ObservabilityLive)
-);
-
 /**
  * App-local live runtime Layer for chat and ontology sidecar handlers.
  *
@@ -105,15 +116,18 @@ const OntologyRuntimeLive = OntologyHandlersLive.pipe(
  * @category layers
  * @since 0.0.0
  */
-export const RuntimeLive: DesktopHandlersLayer = Layer.merge(ChatRuntimeLive, OntologyRuntimeLive);
-
-const ChatRuntimeTest = ChatHandlersLive.pipe(
-  Layer.provide([FixtureTurnKernel, Thread.ThreadStoreInMemoryLayer, UsageRecordSinkInMemory])
-);
-
-const OntologyRuntimeTest = OntologyHandlersLive.pipe(
-  Layer.provide(OntologyServerLive),
-  Layer.provide(BunServices.layer)
+export const RuntimeLive: DesktopHandlersLayer = DesktopHandlersLive.pipe(
+  Layer.provide([
+    TurnKernelLive,
+    Thread.ThreadStoreDrizzleLayer,
+    Workspace.WorkspaceVaultStoreDrizzleLayer,
+    UsageRecordSinkDrizzle,
+    DocumentsServerLive,
+    OntologyServerLive,
+  ]),
+  Layer.provide(PgliteDrizzleLive),
+  Layer.provideMerge(BunServices.layer),
+  Layer.provideMerge(ObservabilityLive)
 );
 
 /**
@@ -129,4 +143,14 @@ const OntologyRuntimeTest = OntologyHandlersLive.pipe(
  * @category layers
  * @since 0.0.0
  */
-export const RuntimeTest: DesktopHandlersLayer = Layer.merge(ChatRuntimeTest, OntologyRuntimeTest);
+export const RuntimeTest: DesktopHandlersLayer = DesktopHandlersLive.pipe(
+  Layer.provide([
+    FixtureTurnKernel,
+    Thread.ThreadStoreInMemoryLayer,
+    Workspace.WorkspaceVaultStoreInMemoryLayer,
+    UsageRecordSinkInMemory,
+    DocumentsServerLive,
+    OntologyServerLive,
+  ]),
+  Layer.provideMerge(BunServices.layer)
+);

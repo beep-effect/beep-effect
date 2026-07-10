@@ -356,6 +356,8 @@ worktree
 worktrees
 xhigh
 xlink
+sfixed
+sint
 tsmorph
 canonicalise
 centralises
@@ -368,3 +370,4 @@ Retargets
 retargeted
 Unredacted
 PRRC
+slugifies

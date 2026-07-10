@@ -75,3 +75,10 @@ export * as Thread from "./Thread/index.ts";
  * @since 0.0.0
  */
 export * as Turn from "./Turn/index.ts";
+/**
+ * Workspace table metadata namespace.
+ *
+ * @category tables
+ * @since 0.0.0
+ */
+export * as Workspace from "./Workspace/index.ts";

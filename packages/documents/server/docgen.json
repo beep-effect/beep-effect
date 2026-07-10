@@ -1,0 +1,113 @@
+{
+  "$schema": "../../../packages/tooling/tool/docgen/schema.json",
+  "exclude": ["src/internal/**/*.ts"],
+  "srcLink": "https://github.com/beep-effect/beep-effect/tree/main/packages/documents/server/src/",
+  "examplesCompilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "module": "es2022",
+    "target": "es2022",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "rewriteRelativeImportExtensions": true,
+    "allowImportingTsExtensions": true,
+    "moduleDetection": "force",
+    "verbatimModuleSyntax": true,
+    "allowJs": false,
+    "erasableSyntaxOnly": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "exactOptionalPropertyTypes": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "stripInternal": false,
+    "noErrorTruncation": true,
+    "types": [],
+    "jsx": "react-jsx",
+    "paths": {
+      "@beep/documents-server": [
+        "../../../packages/documents/server/src/index.ts"
+      ],
+      "@beep/documents-server/layer": [
+        "../../../packages/documents/server/src/Layer.ts"
+      ],
+      "@beep/documents-server/test": [
+        "../../../packages/documents/server/src/test.ts"
+      ],
+      "@beep/documents-domain": [
+        "../../../packages/documents/domain/src/index.ts"
+      ],
+      "@beep/documents-domain/aggregates": [
+        "../../../packages/documents/domain/src/aggregates/index.ts"
+      ],
+      "@beep/documents-domain/entities": [
+        "../../../packages/documents/domain/src/entities/index.ts"
+      ],
+      "@beep/documents-domain/identity": [
+        "../../../packages/documents/domain/src/identity/index.ts"
+      ],
+      "@beep/documents-domain/values": [
+        "../../../packages/documents/domain/src/values/index.ts"
+      ],
+      "@beep/documents-use-cases": [
+        "../../../packages/documents/use-cases/src/index.ts"
+      ],
+      "@beep/documents-use-cases/public": [
+        "../../../packages/documents/use-cases/src/public.ts"
+      ],
+      "@beep/documents-use-cases/server": [
+        "../../../packages/documents/use-cases/src/server.ts"
+      ],
+      "@beep/file-processing": [
+        "../../../packages/foundation/capability/file-processing/src/index.ts"
+      ],
+      "@beep/file-processing/*": [
+        "../../../packages/foundation/capability/file-processing/src/*.ts"
+      ],
+      "@beep/file-processing/Artifact": [
+        "../../../packages/foundation/capability/file-processing/src/Artifact/index.ts"
+      ],
+      "@beep/file-processing/Extraction": [
+        "../../../packages/foundation/capability/file-processing/src/Extraction/index.ts"
+      ],
+      "@beep/file-processing/Operation": [
+        "../../../packages/foundation/capability/file-processing/src/Operation/index.ts"
+      ],
+      "@beep/file-processing/PathSafety": [
+        "../../../packages/foundation/capability/file-processing/src/PathSafety/index.ts"
+      ],
+      "@beep/file-processing/Service": [
+        "../../../packages/foundation/capability/file-processing/src/Service/index.ts"
+      ],
+      "@beep/file-processing/Strategy": [
+        "../../../packages/foundation/capability/file-processing/src/Strategy/index.ts"
+      ],
+      "@beep/file-processing/test": [
+        "../../../packages/foundation/capability/file-processing/src/test.ts"
+      ],
+      "@beep/identity": [
+        "../../../packages/foundation/modeling/identity/src/index.ts"
+      ],
+      "@beep/identity/*": [
+        "../../../packages/foundation/modeling/identity/src/*.ts"
+      ],
+      "@beep/identity/packages": [
+        "../../../packages/foundation/modeling/identity/src/packages.ts"
+      ],
+      "@beep/test-utils": [
+        "../../../packages/tooling/test-kit/test-utils/src/index.ts"
+      ],
+      "@beep/test-utils/*": [
+        "../../../packages/tooling/test-kit/test-utils/src/*.ts"
+      ],
+      "@beep/utils": [
+        "../../../packages/foundation/modeling/utils/src/index.ts"
+      ],
+      "@beep/utils/*": ["../../../packages/foundation/modeling/utils/src/*.ts"]
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import {
+  appendChange,
   applyChangeOperationsWithDelta,
   ChangeOperation,
   CreateSessionInput,
@@ -209,6 +210,58 @@ describe("Session use-cases", () => {
       yield* useCases.saveFile(SaveOntologyFileCommand.make({ path: fixturePath, session: opened.session }));
 
       expect(serializedQuads).toEqual([serializeQuad(aliceNameQuad), ...shapeQuads.map(serializeQuad)]);
+    })
+  );
+
+  it.effect(
+    "fails closed instead of silently dropping non-asserted partition changes on save",
+    Effect.fnUntraced(function* () {
+      let serialized = false;
+      let written = false;
+      const fileStore = OntologyFileStore.of({
+        read: Effect.fn("OntologyFileStore.read")((request) =>
+          Effect.succeed(ReadOntologyFileResult.make({ path: request.path, source: "" }))
+        ),
+        write: Effect.fn("OntologyFileStore.write")(() =>
+          Effect.sync(() => {
+            written = true;
+          })
+        ),
+      });
+      const turtle = TurtleCodec.of({
+        parse: Effect.fn("TurtleCodec.parse")(() => Effect.succeed(ParseTurtleResult.make({ dataset }))),
+        serialize: Effect.fn("TurtleCodec.serialize")(() =>
+          Effect.sync(() => {
+            serialized = true;
+            return SerializeTurtleResult.make({ source: "serialized turtle" });
+          })
+        ),
+      });
+      const useCases = yield* makeSessionUseCases().pipe(
+        Effect.provideService(OntologyFileStore, fileStore),
+        Effect.provideService(TurtleCodec, turtle)
+      );
+      const session = appendChange(
+        createSession(CreateSessionInput.make({ id: sessionId, baseDataset: dataset })),
+        ChangeOperation.make({
+          kind: "addQuad",
+          partition: "ontologies",
+          quad: makeQuad(makeNamedNode("https://example.test/alice"), makeNamedNode("https://example.test/knows"), {
+            object: makeNamedNode("https://example.test/bob"),
+            graph: makeNamedNode(graphPartitionIri("ontologies")),
+          }),
+        })
+      );
+
+      const error = yield* useCases
+        .saveFile(SaveOntologyFileCommand.make({ path: fixturePath, session }))
+        .pipe(Effect.flip);
+
+      expect(error).toMatchObject({
+        reason: "unsupportedPartition",
+      });
+      expect(serialized).toBe(false);
+      expect(written).toBe(false);
     })
   );
 
@@ -583,4 +636,27 @@ describe("Session use-cases", () => {
       yield* Effect.void;
     })
   );
+});
+
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
+  const decode = S.decodeUnknownResult(schema);
+  const encode = S.encodeResult(schema);
+  const equivalent = S.toEquivalence(schema);
+
+  fc.assert(
+    fc.property(S.toArbitrary(schema), (value) => {
+      const encoded = Result.getOrThrow(encode(value));
+      const decoded = Result.getOrThrow(decode(encoded));
+
+      expect(equivalent(decoded, value)).toBe(true);
+    }),
+    fcRuns(10)
+  );
+};
+
+describe("Session use-case schema round-trips", () => {
+  it("round-trips session schemas with schema-derived arbitraries", () => {
+    assertSchemaRoundTrip(CreateSessionInput);
+    assertSchemaRoundTrip(ChangeOperation);
+  });
 });

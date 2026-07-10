@@ -5,6 +5,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { DerivedThreadTitle } from "@/chat/DerivedThreadTitle";
+import { ConfigureWorkspaceVaultInput, DEFAULT_WORKSPACE_ID, DroppedDocumentInput } from "@/intake/Intake.atoms";
 import { ProfessionalDesktopMigrationOptions } from "@/runtime/Migrations";
 import { SidecarTransport } from "@/transport/SidecarTransport";
 import { InboundEvent, InboundFrame, SidecarClosedPayload } from "@/transport/TauriIpcSocket";
@@ -68,6 +69,32 @@ describe("@beep/professional-desktop schema parity", () => {
 
       const withDefault = ProfessionalDesktopMigrationOptions.make({});
       expect(withDefault.migrationsSchema).toBe("drizzle");
+    })
+  );
+
+  it.effect("preserves document intake onboarding and drop wire shapes", () =>
+    Effect.gen(function* () {
+      const configure = ConfigureWorkspaceVaultInput.make({
+        vaultRootPath: "/tmp/beep-documents-vault",
+        workspaceId: DEFAULT_WORKSPACE_ID,
+      });
+      expect(yield* S.encodeUnknownEffect(ConfigureWorkspaceVaultInput)(configure)).toStrictEqual({
+        vaultRootPath: "/tmp/beep-documents-vault",
+        workspaceId: 1,
+      });
+
+      const dropped = DroppedDocumentInput.make({
+        content: new Uint8Array([1, 2, 3]),
+        intakeBatchId: "batch-1",
+        originalFileName: "Complaint.pdf",
+        workspaceId: DEFAULT_WORKSPACE_ID,
+      });
+      expect(yield* S.encodeUnknownEffect(DroppedDocumentInput)(dropped)).toStrictEqual({
+        content: "AQID",
+        intakeBatchId: "batch-1",
+        originalFileName: "Complaint.pdf",
+        workspaceId: 1,
+      });
     })
   );
 

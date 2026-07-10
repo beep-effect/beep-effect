@@ -1365,10 +1365,7 @@
       "@beep/shared-domain/entity/PublicEntityId": [
         "./packages/shared/domain/src/entity/PublicEntityId.ts"
       ],
-      "@beep/cosmos": ["./packages/drivers/cosmos/src/index.ts"],
-      "@beep/oxigraph": ["./packages/drivers/oxigraph/src/index.ts"],
       "@beep/n3": ["./packages/drivers/n3/src/index.ts"],
-      "@beep/shacl": ["./packages/drivers/shacl/src/index.ts"],
       "@beep/ontology-domain": ["./packages/ontology/domain/src/index.ts"],
       "@beep/ontology-domain/aggregates": [
         "./packages/ontology/domain/src/aggregates/index.ts"
@@ -1401,9 +1398,88 @@
       ],
       "@beep/ontology-client": ["./packages/ontology/client/src/index.ts"],
       "@beep/ontology-ui": ["./packages/ontology/ui/src/index.ts"],
+      "@beep/documents-domain": ["./packages/documents/domain/src/index.ts"],
+      "@beep/documents-domain/aggregates": [
+        "./packages/documents/domain/src/aggregates/index.ts"
+      ],
+      "@beep/documents-domain/entities": [
+        "./packages/documents/domain/src/entities/index.ts"
+      ],
+      "@beep/documents-domain/identity": [
+        "./packages/documents/domain/src/identity/index.ts"
+      ],
+      "@beep/documents-domain/values": [
+        "./packages/documents/domain/src/values/index.ts"
+      ],
+      "@beep/documents-server": ["./packages/documents/server/src/index.ts"],
+      "@beep/documents-server/layer": [
+        "./packages/documents/server/src/Layer.ts"
+      ],
+      "@beep/documents-server/test": [
+        "./packages/documents/server/src/test.ts"
+      ],
+      "@beep/documents-use-cases": [
+        "./packages/documents/use-cases/src/index.ts"
+      ],
+      "@beep/documents-use-cases/public": [
+        "./packages/documents/use-cases/src/public.ts"
+      ],
+      "@beep/documents-use-cases/server": [
+        "./packages/documents/use-cases/src/server.ts"
+      ],
+      "@beep/protobuf": ["./packages/drivers/protobuf/src/index.ts"],
+      "@beep/protobuf/*": ["./packages/drivers/protobuf/src/*"],
+      "@beep/schema/Bytes": [
+        "./packages/foundation/modeling/schema/src/Bytes.ts"
+      ],
+      "@beep/schema/Double": [
+        "./packages/foundation/modeling/schema/src/Double.ts"
+      ],
+      "@beep/schema/Fixed32": [
+        "./packages/foundation/modeling/schema/src/Fixed32.ts"
+      ],
+      "@beep/schema/Fixed64": [
+        "./packages/foundation/modeling/schema/src/Fixed64.ts"
+      ],
+      "@beep/schema/Float": [
+        "./packages/foundation/modeling/schema/src/Float.ts"
+      ],
+      "@beep/schema/Sfixed32": [
+        "./packages/foundation/modeling/schema/src/Sfixed32.ts"
+      ],
+      "@beep/schema/Sfixed64": [
+        "./packages/foundation/modeling/schema/src/Sfixed64.ts"
+      ],
+      "@beep/schema/Sint32": [
+        "./packages/foundation/modeling/schema/src/Sint32.ts"
+      ],
+      "@beep/schema/Sint64": [
+        "./packages/foundation/modeling/schema/src/Sint64.ts"
+      ],
+      "@beep/schema/Uint32": [
+        "./packages/foundation/modeling/schema/src/Uint32.ts"
+      ],
+      "@beep/schema/Uint64": [
+        "./packages/foundation/modeling/schema/src/Uint64.ts"
+      ],
+      "@beep/workspace-server/aggregates/Workspace": [
+        "./packages/workspace/server/src/aggregates/Workspace/index.ts"
+      ],
+      "@beep/workspace-tables/entities/Workspace": [
+        "./packages/workspace/tables/src/entities/Workspace/index.ts"
+      ],
+      "@beep/workspace-use-cases/aggregates/Workspace": [
+        "./packages/workspace/use-cases/src/aggregates/Workspace/index.ts"
+      ],
+      "@beep/workspace-use-cases/aggregates/Workspace/server": [
+        "./packages/workspace/use-cases/src/aggregates/Workspace/server.ts"
+      ],
+      "@beep/cosmos": ["./packages/drivers/cosmos/src/index.ts"],
       "@beep/ontology-use-cases/aggregates/Session/worker": [
         "./packages/ontology/use-cases/src/aggregates/Session/worker.ts"
-      ]
+      ],
+      "@beep/oxigraph": ["./packages/drivers/oxigraph/src/index.ts"],
+      "@beep/shacl": ["./packages/drivers/shacl/src/index.ts"]
     }
   }
 }
