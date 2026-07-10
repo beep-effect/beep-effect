@@ -7,12 +7,14 @@
 
 "use client";
 
+import { IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch";
 import { slugVaultSegment } from "@beep/documents-domain/values/Taxonomy";
 import { Button } from "@beep/ui/components/button";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { AsyncResult } from "effect/unstable/reactivity";
 import { useState } from "react";
@@ -41,6 +43,51 @@ const droppedFiles = (event: DragEvent<HTMLElement>): ReadonlyArray<File> => A.f
 const batchIdFor = (files: ReadonlyArray<File>): string =>
   `batch-${files.length}-${slugVaultSegment(files[0]?.name ?? "drop")}`;
 
+const vaultConfigurationFailureMessage = (cause: unknown): string =>
+  P.isError(cause) && cause.message.length > 0
+    ? cause.message
+    : P.isObject(cause) && P.hasProperty(cause, "message") && P.isString(cause.message) && cause.message.length > 0
+      ? cause.message
+      : "Unable to save workspace vault.";
+
+/**
+ * Persist one selected workspace vault path and reflect success/failure in UI status.
+ *
+ * @example
+ * ```ts
+ * import { configureSelectedWorkspaceVault } from "@/intake/DocumentIntakeTarget"
+ * import { Effect } from "effect"
+ *
+ * const statuses: Array<string | null> = []
+ * Effect.runPromise(configureSelectedWorkspaceVault("/tmp/vault", async () => undefined, (status) => statuses.push(status)))
+ * ```
+ *
+ * @category effects
+ * @since 0.0.0
+ */
+export const configureSelectedWorkspaceVault = Effect.fn("configureSelectedWorkspaceVault")(function* (
+  selected: string | null,
+  configureVault: (input: ConfigureWorkspaceVaultInput) => Promise<unknown>,
+  setStatus: (status: string | null) => void
+) {
+  if (selected === null || selected.trim().length === 0) return;
+  const input = yield* S.decodeUnknownEffect(ConfigureWorkspaceVaultInput)({
+    vaultRootPath: selected,
+    workspaceId: DEFAULT_WORKSPACE_ID,
+  }).pipe(Effect.mapError(() => "Invalid workspace vault path."));
+
+  yield* Effect.sync(() => setStatus("Saving workspace vault"));
+  yield* Effect.tryPromise({
+    try: () => configureVault(input),
+    catch: vaultConfigurationFailureMessage,
+  }).pipe(
+    Effect.matchEffect({
+      onFailure: (message) => Effect.sync(() => setStatus(message)),
+      onSuccess: () => Effect.sync(() => setStatus(null)),
+    })
+  );
+});
+
 /**
  * Full-screen drag-and-drop boundary that onboards a workspace vault and intakes dropped documents.
  *
@@ -58,7 +105,7 @@ const batchIdFor = (files: ReadonlyArray<File>): string =>
  */
 export function DocumentIntakeTarget({ children }: { readonly children: ReactNode }): JSX.Element {
   const vaultConfig = useAtomValue(workspaceVaultConfigAtom(DEFAULT_WORKSPACE_ID));
-  const configureVault = useAtomSet(configureWorkspaceVaultAtom);
+  const configureVault = useAtomSet(configureWorkspaceVaultAtom, { mode: "promise" });
   const intakeDroppedDocument = useAtomSet(intakeDroppedDocumentAtom);
   const [isDragging, setIsDragging] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -71,32 +118,24 @@ export function DocumentIntakeTarget({ children }: { readonly children: ReactNod
 
   const chooseVault = Effect.gen(function* () {
     const selected = yield* pickVaultDirectory;
-    if (selected === null || selected.trim().length === 0) return;
-    const input = yield* S.decodeUnknownEffect(ConfigureWorkspaceVaultInput)({
-      vaultRootPath: selected,
-      workspaceId: DEFAULT_WORKSPACE_ID,
-    }).pipe(Effect.orDie);
-    yield* Effect.sync(() => {
-      configureVault(input);
-      setStatus("Saving workspace vault");
-    });
+    yield* configureSelectedWorkspaceVault(selected, configureVault, setStatus);
   });
 
   const intakeFiles = Effect.fnUntraced(function* (files: ReadonlyArray<File>) {
     if (files.length === 0) return;
-    const intakeBatchId = batchIdFor(files);
+    const intakeBatchId = yield* S.decodeUnknownEffect(IntakeBatchId)(batchIdFor(files)).pipe(Effect.orDie);
     yield* Effect.sync(() => setStatus(`Filing ${files.length} document${files.length === 1 ? "" : "s"}`));
     yield* Effect.forEach(files, (file) =>
       Effect.tryPromise(() => file.arrayBuffer()).pipe(
         Effect.map((buffer) => new Uint8Array(buffer)),
         Effect.flatMap(
           Effect.fnUntraced(function* (content: Uint8Array) {
-            const input = yield* S.decodeUnknownEffect(DroppedDocumentInput)({
+            const input = DroppedDocumentInput.make({
               content,
               intakeBatchId,
               originalFileName: file.name || "document",
               workspaceId: DEFAULT_WORKSPACE_ID,
-            }).pipe(Effect.orDie);
+            });
             yield* Effect.sync(() => intakeDroppedDocument(input));
           })
         ),

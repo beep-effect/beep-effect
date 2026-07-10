@@ -61,10 +61,10 @@ const graphIsCanonicalPartition = (graph: GraphTerm, partition: Exclude<GraphPar
 const graphMatchesPartition = (change: PartitionedQuad): boolean =>
   GraphPartition.$match(change.partition, {
     asserted: () => isDefaultGraph(change.quad.graph),
-    ontologies: () => graphIsCanonicalPartition(change.quad.graph, "ontologies"),
-    inferred: () => graphIsCanonicalPartition(change.quad.graph, "inferred"),
-    shapes: () => graphIsCanonicalPartition(change.quad.graph, "shapes"),
-    provenance: () => graphIsCanonicalPartition(change.quad.graph, "provenance"),
+    ontologies: () => isDefaultGraph(change.quad.graph) || graphIsCanonicalPartition(change.quad.graph, "ontologies"),
+    inferred: () => isDefaultGraph(change.quad.graph) || graphIsCanonicalPartition(change.quad.graph, "inferred"),
+    shapes: () => isDefaultGraph(change.quad.graph) || graphIsCanonicalPartition(change.quad.graph, "shapes"),
+    provenance: () => isDefaultGraph(change.quad.graph) || graphIsCanonicalPartition(change.quad.graph, "provenance"),
   });
 
 const PartitionGraphCoherenceCheck = S.makeFilter(graphMatchesPartition, {
@@ -418,6 +418,9 @@ const quadSubjectKey = (quad: Quad): string => subjectKey(quad.subject);
 const objectSubjectKeys = (quad: Quad): ReadonlyArray<string> =>
   quad.object.termType === "NamedNode" || quad.object.termType === "BlankNode" ? [subjectKey(quad.object)] : [];
 
+const blankObjectSubjectKeys = (quad: Quad): ReadonlyArray<string> =>
+  quad.object.termType === "BlankNode" ? [subjectKey(quad.object)] : [];
+
 const hasSubjectKey = (keys: ReadonlyArray<string>, quad: Quad): boolean =>
   pipe(keys, A.contains(quadSubjectKey(quad)));
 
@@ -441,7 +444,29 @@ const propertyShapeSubjectKeys = (dataset: Dataset, shapeSubjectKeys: ReadonlyAr
 
 const baseShapeSubjectKeys = (dataset: Dataset): ReadonlyArray<string> => {
   const nodeShapes = nodeShapeSubjectKeys(dataset);
-  return pipe(nodeShapes, A.appendAll(propertyShapeSubjectKeys(dataset, nodeShapes)), A.dedupe);
+  const seeds = pipe(nodeShapes, A.appendAll(propertyShapeSubjectKeys(dataset, nodeShapes)), A.dedupe);
+  let visited: ReadonlyArray<string> = [];
+  let frontier = seeds;
+
+  while (frontier.length > 0) {
+    const current = frontier[0];
+    frontier = pipe(frontier, A.drop(1));
+    if (current === undefined || pipe(visited, A.contains(current))) {
+      continue;
+    }
+
+    visited = pipe(visited, A.append(current));
+    const next = pipe(
+      dataset.quads,
+      A.filter((quad) => quadSubjectKey(quad) === current),
+      A.flatMap(blankObjectSubjectKeys),
+      A.filter((key) => !pipe(visited, A.contains(key))),
+      A.filter((key) => !pipe(frontier, A.contains(key)))
+    );
+    frontier = pipe(frontier, A.appendAll(next));
+  }
+
+  return visited;
 };
 
 const partitionBaseDataset = (dataset: Dataset): Pick<SessionGraphPartitions, "asserted" | "shapes"> => {

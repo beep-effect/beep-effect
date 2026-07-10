@@ -32,6 +32,7 @@ const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;
 const SH_NODE_SHAPE = makeNamedNode(`${SHACL_NAMESPACE}NodeShape`);
 const SH_PROPERTY = makeNamedNode(`${SHACL_NAMESPACE}property`);
 const SH_PATH = makeNamedNode(`${SHACL_NAMESPACE}path`);
+const SH_NODE = makeNamedNode(`${SHACL_NAMESPACE}node`);
 const ontologyGraphQuad = makeQuad(
   makeNamedNode("https://example.test/alice"),
   makeNamedNode("https://example.test/knows"),
@@ -67,11 +68,16 @@ describe("Ontology Session aggregate", () => {
   it("routes opened SHACL node and property shapes into the shapes partition", () => {
     const shape = makeNamedNode("urn:shape:alice-name");
     const property = makeBlankNode("alice-name-property");
+    const nestedShape = makeBlankNode("alice-name-nested-shape");
+    const nestedProperty = makeBlankNode("alice-name-nested-property");
     const path = makeNamedNode("https://example.test/name");
     const shapeQuads = [
       makeQuad(shape, RDF_TYPE, SH_NODE_SHAPE),
       makeQuad(shape, SH_PROPERTY, property),
       makeQuad(property, SH_PATH, path),
+      makeQuad(property, SH_NODE, nestedShape),
+      makeQuad(nestedShape, SH_PROPERTY, nestedProperty),
+      makeQuad(nestedProperty, SH_PATH, path),
     ];
     const session = createSession(
       CreateSessionInput.make({
@@ -104,14 +110,17 @@ describe("Ontology Session aggregate", () => {
     expect(deriveSessionGraphPartitions(session).asserted.quads).toHaveLength(1);
   });
 
-  it("rejects change operations whose quad graph diverges from the partition", () => {
-    expect(() =>
-      ChangeOperation.make({
-        kind: "addQuad",
-        partition: "ontologies",
-        quad: knowsQuad,
-      })
-    ).toThrow("Change operation quad graph must match the declared session partition");
+  it("accepts default-graph quads for non-asserted partitions", () => {
+    const change = ChangeOperation.make({
+      kind: "addQuad",
+      partition: "shapes",
+      quad: knowsQuad,
+    });
+
+    expect(change.partition).toBe("shapes");
+  });
+
+  it("rejects change operations whose named quad graph diverges from the partition", () => {
     expect(() =>
       ChangeOperation.make({
         kind: "addQuad",

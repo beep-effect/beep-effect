@@ -1753,6 +1753,7 @@
       "name": "@beep/ontology-client",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/agents-client": "workspace:^",
         "@beep/cosmos": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/ontology-domain": "workspace:^",
@@ -1762,6 +1763,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
       },

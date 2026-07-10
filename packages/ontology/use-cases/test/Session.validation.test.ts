@@ -31,8 +31,13 @@ import {
 import { OWL_CLASS } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_INTEGER } from "@beep/rdf/Vocab/Xsd";
+import {
+  ShaclValidationResult,
+  ShaclValidationService,
+  ShaclValidationViolation,
+} from "@beep/semantic-web/services/shacl-validation";
 import { ShaclValidationServiceLive } from "@beep/shacl";
-import { A } from "@beep/utils";
+import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, pipe } from "effect";
 import * as S from "effect/Schema";
@@ -108,12 +113,97 @@ describe("Ontology validation and provenance", () => {
       )
     )
   );
-  const runWithValidationLayer = <A2, E>(
+  const runWithLayer = <A2, E>(
+    layer: Layer.Layer<OntologyValidationRunner, never, never>,
     effect: Effect.Effect<A2, E, OntologyValidationRunner>
   ): Effect.Effect<A2, E, never> =>
-    Effect.scoped(
-      Layer.build(ValidationTestLayer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context))))
-    );
+    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+
+  const runWithValidationLayer = <A2, E>(
+    effect: Effect.Effect<A2, E, OntologyValidationRunner>
+  ): Effect.Effect<A2, E, never> => runWithLayer(ValidationTestLayer, effect);
+
+  it.effect(
+    "matches hasValue repairs to the violation source shape when targetNode is absent",
+    Effect.fnUntraced(function* () {
+      yield* Effect.gen(function* () {
+        const requiredA = makeNamedNode("https://example.test/required-a");
+        const requiredB = makeNamedNode("https://example.test/required-b");
+        const shapeA = makeNamedNode("urn:shape:marker-a");
+        const shapeB = makeNamedNode("urn:shape:marker-b");
+        const propertyA = makeBlankNode("marker-a-property");
+        const propertyB = makeBlankNode("marker-b-property");
+        const repairQuad = makeQuad(material, marker, requiredB);
+        const session = applyChangeOperationsWithDelta(
+          createSession(
+            CreateSessionInput.make({
+              id: sessionId,
+              baseDataset: makeDataset([makeQuad(material, marker, markerValue)]),
+            })
+          ),
+          [
+            makeQuad(shapeA, RDF_TYPE, SH_NODE_SHAPE),
+            makeQuad(shapeA, SH_PROPERTY, propertyA),
+            makeQuad(propertyA, SH_PATH, marker),
+            makeQuad(propertyA, SH_HAS_VALUE, requiredA),
+            makeQuad(shapeB, RDF_TYPE, SH_NODE_SHAPE),
+            makeQuad(shapeB, SH_PROPERTY, propertyB),
+            makeQuad(propertyB, SH_PATH, marker),
+            makeQuad(propertyB, SH_HAS_VALUE, requiredB),
+          ].map((quad) =>
+            ChangeOperation.make({
+              kind: "addQuad",
+              partition: "shapes",
+              quad,
+            })
+          )
+        ).session;
+        const shacl = ShaclValidationService.of({
+          validate: Effect.fn("ShaclValidationService.validate")((request) => {
+            const repaired = request.dataset.quads.map(serializeQuad).includes(serializeQuad(repairQuad));
+            return Effect.succeed(
+              ShaclValidationResult.make({
+                conforms: repaired,
+                truncated: false,
+                violations: repaired
+                  ? []
+                  : [
+                      ShaclValidationViolation.make({
+                        focusNode: material.value,
+                        path: marker,
+                        message: "Expected marker B.",
+                        severity: "violation",
+                        sourceShape: O.some(shapeB),
+                      }),
+                    ],
+              })
+            );
+          }),
+        });
+        const layer = OntologyValidationRunnerLive.pipe(
+          Layer.provide(
+            Layer.mergeAll(
+              Layer.succeed(ShaclValidationService, shacl),
+              Layer.succeed(TurtleCodec, turtle),
+              Layer.succeed(OntologyFileStore, fileStore)
+            )
+          )
+        );
+        const result = yield* runWithLayer(
+          layer,
+          Effect.gen(function* () {
+            const runner = yield* OntologyValidationRunner;
+            return yield* runner.run(RunOntologyValidationInput.make({ session }));
+          })
+        );
+
+        expect(result.repairs).toHaveLength(1);
+        expect(result.repairs[0]?.operations.map((operation) => serializeQuad(operation.quad))).toEqual([
+          serializeQuad(repairQuad),
+        ]);
+      });
+    })
+  );
 
   it.effect(
     "verifies SHACL repairs, accepts undo, and exports provenance artifacts",

@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client";
 import { CosmosGraphProjection, renderCosmosGraph } from "@beep/cosmos";
 import { make as makeIdentity } from "@beep/identity";
 import {
@@ -43,11 +44,9 @@ import {
 import { serializeQuad } from "@beep/rdf/Rdf";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
-import { Cause, Effect, Layer, Order, pipe } from "effect";
+import { Cause, Effect, flow, Order, pipe } from "effect";
 import * as S from "effect/Schema";
-import { FetchHttpClient } from "effect/unstable/http";
 import { Atom, AtomRpc, Reactivity } from "effect/unstable/reactivity";
-import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
 import type { CosmosBackend, CosmosRenderHandle } from "@beep/cosmos";
 import type { SessionChangeDelta } from "@beep/ontology-domain/aggregates/Session";
 import type {
@@ -61,19 +60,11 @@ import type {
   RunOntologySparqlResult,
   RunOntologyValidationResult,
 } from "@beep/ontology-use-cases/aggregates/Session";
+import type { Layer } from "effect";
+import type { RpcClient } from "effect/unstable/rpc";
 
 const { $OntologyClientId } = makeIdentity("ontology-client");
 const $I = $OntologyClientId.create("aggregates/Session/Session.atoms");
-
-const SERVER_URL = ((): string => {
-  if (typeof window !== "undefined") {
-    const origin = window.location.origin;
-    if (Str.startsWith(origin, "http://") || Str.startsWith(origin, "https://")) {
-      return new URL("/rpc", origin).toString();
-    }
-  }
-  return "http://127.0.0.1:3939/rpc";
-})();
 
 /**
  * Default HTTP protocol used by browser and non-IPC desktop sessions.
@@ -88,9 +79,7 @@ const SERVER_URL = ((): string => {
  * @category layers
  * @since 0.0.0
  */
-export const HttpOntologyProtocolLive: Layer.Layer<RpcClient.Protocol> = RpcClient.layerProtocolHttp({
-  url: SERVER_URL,
-}).pipe(Layer.provide([RpcSerialization.layerNdjson, FetchHttpClient.layer]));
+export const HttpOntologyProtocolLive: Layer.Layer<RpcClient.Protocol> = HttpChatProtocolLive;
 
 /**
  * Writable transport selector consumed by {@link OntologyClient}.
@@ -105,8 +94,7 @@ export const HttpOntologyProtocolLive: Layer.Layer<RpcClient.Protocol> = RpcClie
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyProtocolLayerAtom: Atom.Writable<Layer.Layer<RpcClient.Protocol>> =
-  Atom.make(HttpOntologyProtocolLive);
+export const ontologyProtocolLayerAtom: Atom.Writable<Layer.Layer<RpcClient.Protocol>> = chatProtocolLayerAtom;
 
 /**
  * Flattened RPC client for {@link OntologyRpcs}, integrated with atom reactivity.
@@ -343,6 +331,26 @@ export const ontologySourceAtom = Atom.make("");
  * @since 0.0.0
  */
 export const ontologySavedChangeCountAtom = Atom.make(0);
+
+const changeLogSignature: (changes: ReadonlyArray<ChangeOperation>) => string = flow(
+  A.map((change: ChangeOperation) => `${change.kind}:${change.partition}:${serializeQuad(change.quad)}`),
+  A.join("\n")
+);
+
+/**
+ * Change-log signature after the last successful save/open.
+ *
+ * @example
+ * ```ts
+ * import { ontologySavedChangeLogSignatureAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologySavedChangeLogSignatureAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologySavedChangeLogSignatureAtom = Atom.make(changeLogSignature([]));
 
 /**
  * Redo stack for client-local undo/redo.
@@ -818,7 +826,7 @@ export const ontologyDirtyAtom = Atom.make((get) =>
     get(ontologySessionAtom),
     O.match({
       onNone: () => false,
-      onSome: (session) => session.changeLog.length !== get(ontologySavedChangeCountAtom),
+      onSome: (session) => changeLogSignature(session.changeLog) !== get(ontologySavedChangeLogSignatureAtom),
     })
   )
 );
@@ -961,52 +969,66 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
     return;
   }
 
-  const worker = new WorkerCtor(new URL("./Session.visualizer.worker.ts", import.meta.url), { type: "module" });
+  let worker: O.Option<Worker> = O.none();
   let previousProjection: O.Option<OntologyGraphProjection> = O.none();
-  let workerFailed = false;
+
+  const terminateWorker = (): void => {
+    pipe(worker, O.match({ onNone: () => undefined, onSome: (currentWorker) => currentWorker.terminate() }));
+    worker = O.none();
+  };
 
   const failWorker = (message: string): void => {
-    workerFailed = true;
     previousProjection = O.none();
     get.set(ontologyGraphProjectionAtom, O.none());
     get.set(ontologyGraphDeltaAtom, O.none());
     get.set(ontologyGraphBackendAtom, O.none());
     get.set(ontologyGraphErrorAtom, O.some(message));
-    worker.terminate();
+    terminateWorker();
   };
 
-  worker.addEventListener("message", (event: MessageEvent<WorkerResult>) => {
-    WorkerResult.match(event.data, {
-      parseTurtleSucceeded: () => undefined,
-      diffDatasetsSucceeded: () => undefined,
-      computeSnapshotSucceeded: () => undefined,
-      projectGraphSucceeded: ({ result }) => {
-        get.set(ontologyGraphErrorAtom, O.none());
-        previousProjection = O.some(result);
-        get.set(ontologyGraphProjectionAtom, O.some(result));
-      },
-      applyGraphDeltaSucceeded: ({ result }) => {
-        get.set(ontologyGraphErrorAtom, O.none());
-        previousProjection = O.some(result);
-        get.set(ontologyGraphProjectionAtom, O.some(result));
-      },
+  const makeWorker = (): Worker => {
+    const nextWorker = new WorkerCtor(new URL("./Session.visualizer.worker.ts", import.meta.url), { type: "module" });
+    nextWorker.addEventListener("message", (event: MessageEvent<WorkerResult>) => {
+      WorkerResult.match(event.data, {
+        parseTurtleSucceeded: () => undefined,
+        diffDatasetsSucceeded: () => undefined,
+        computeSnapshotSucceeded: () => undefined,
+        projectGraphSucceeded: ({ result }) => {
+          get.set(ontologyGraphErrorAtom, O.none());
+          previousProjection = O.some(result);
+          get.set(ontologyGraphProjectionAtom, O.some(result));
+        },
+        applyGraphDeltaSucceeded: ({ result }) => {
+          get.set(ontologyGraphErrorAtom, O.none());
+          previousProjection = O.some(result);
+          get.set(ontologyGraphProjectionAtom, O.some(result));
+        },
+      });
     });
-  });
-  worker.addEventListener("error", (event) => {
-    event.preventDefault();
-    failWorker(graphWorkerErrorMessage(event));
-  });
-  worker.addEventListener("messageerror", (event) => {
-    failWorker(graphWorkerMessageError(event));
-  });
+    nextWorker.addEventListener("error", (event) => {
+      event.preventDefault();
+      failWorker(graphWorkerErrorMessage(event));
+    });
+    nextWorker.addEventListener("messageerror", (event) => {
+      failWorker(graphWorkerMessageError(event));
+    });
+    return nextWorker;
+  };
+
+  const currentWorker = (): Worker =>
+    pipe(
+      worker,
+      O.getOrElse(() => {
+        const nextWorker = makeWorker();
+        worker = O.some(nextWorker);
+        return nextWorker;
+      })
+    );
 
   get.subscribe(
     graphRequestAtom,
     ({ snapshot, options, delta }) => {
-      if (workerFailed) {
-        return;
-      }
-
+      const activeWorker = currentWorker();
       const command = pipe(
         previousProjection,
         O.flatMap((previous) =>
@@ -1032,13 +1054,13 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
         )
       );
       get.set(ontologyGraphErrorAtom, O.none());
-      worker.postMessage(command);
+      activeWorker.postMessage(command);
       get.set(ontologyGraphDeltaAtom, O.none());
     },
     { immediate: true }
   );
 
-  get.addFinalizer(() => worker.terminate());
+  get.addFinalizer(terminateWorker);
 });
 
 const cosmosProjectionFromOntology = (projection: OntologyGraphProjection): CosmosGraphProjection =>
@@ -1380,10 +1402,12 @@ export const openOntologyDocumentAtom = OntologyClient.runtime.fn<OpenOntologyDo
     ctx.set(ontologyPathAtom, O.some(opened.path));
     ctx.set(ontologySourceAtom, opened.source);
     ctx.set(ontologySavedChangeCountAtom, opened.session.changeLog.length);
+    ctx.set(ontologySavedChangeLogSignatureAtom, changeLogSignature(opened.session.changeLog));
     ctx.set(ontologyRedoStackAtom, []);
     ctx.set(selectedOntologyResourceIriAtom, O.none());
     ctx.set(ontologyGraphProjectionAtom, O.none());
     ctx.set(ontologyGraphDeltaAtom, O.none());
+    ctx.set(ontologyGraphErrorAtom, O.none());
     resetOntologyInference(ctx);
     ctx.set(ontologySparqlQueryAtom, defaultOntologySparqlQuery(opened.session));
     ctx.set(ontologySparqlResultAtom, O.none());
@@ -1420,6 +1444,7 @@ export const saveOntologyDocumentAtom = OntologyClient.runtime.fn<SaveOntologyDo
     ctx.set(ontologyPathAtom, O.some(saved.path));
     ctx.set(ontologySourceAtom, saved.source);
     ctx.set(ontologySavedChangeCountAtom, session.changeLog.length);
+    ctx.set(ontologySavedChangeLogSignatureAtom, changeLogSignature(session.changeLog));
   })
 );
 

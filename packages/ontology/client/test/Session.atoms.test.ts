@@ -1,7 +1,13 @@
+import { chatProtocolLayerAtom } from "@beep/agents-client";
 import {
   OntologyClient,
   OpenOntologyDocumentInput,
+  ontologyDirtyAtom,
+  ontologyGraphErrorAtom,
+  ontologyGraphWorkerBridgeAtom,
   ontologyInferenceResultAtom,
+  ontologyProtocolLayerAtom,
+  ontologySessionAtom,
   ontologySnapshotAtom,
   ontologyValidationErrorAtom,
   ontologyValidationResultAtom,
@@ -10,7 +16,13 @@ import {
   runOntologyValidationAtom,
   toggleOntologyInferredViewAtom,
 } from "@beep/ontology-client/aggregates/Session";
-import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session";
+import {
+  applyChangeOperationsWithDelta,
+  ChangeOperation,
+  CreateSessionInput,
+  createSession,
+  SessionId,
+} from "@beep/ontology-domain/aggregates/Session";
 import {
   buildOntologySnapshot,
   OntologyFilePath,
@@ -23,11 +35,14 @@ import { makeBlankNode, makeDataset, makeNamedNode, makeQuad } from "@beep/rdf/R
 import { OWL_CLASS } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
+import { fcRuns } from "@beep/test-utils";
 import { O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Result } from "effect";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import { AtomRegistry, Reactivity } from "effect/unstable/reactivity";
+import { vi } from "vitest";
 import type {
   InferOntologySessionInput,
   RunOntologyValidationInput,
@@ -71,6 +86,128 @@ const openRegistrySession = Effect.fn("openRegistrySession")(function* (
 });
 
 describe("Session atoms", () => {
+  it("shares the chat transport selector for ontology RPCs", () => {
+    expect(ontologyProtocolLayerAtom).toBe(chatProtocolLayerAtom);
+  });
+
+  it.effect(
+    "detects dirty change-log divergence at the saved length",
+    Effect.fnUntraced(function* () {
+      const predicate = makeNamedNode("https://example.test/p");
+      const a = ChangeOperation.make({
+        kind: "addQuad",
+        partition: "asserted",
+        quad: makeQuad(makeNamedNode("https://example.test/a"), predicate, makeNamedNode("https://example.test/1")),
+      });
+      const b = ChangeOperation.make({
+        kind: "addQuad",
+        partition: "asserted",
+        quad: makeQuad(makeNamedNode("https://example.test/b"), predicate, makeNamedNode("https://example.test/2")),
+      });
+      const c = ChangeOperation.make({
+        kind: "addQuad",
+        partition: "asserted",
+        quad: makeQuad(makeNamedNode("https://example.test/c"), predicate, makeNamedNode("https://example.test/3")),
+      });
+      const d = ChangeOperation.make({
+        kind: "addQuad",
+        partition: "asserted",
+        quad: makeQuad(makeNamedNode("https://example.test/d"), predicate, makeNamedNode("https://example.test/4")),
+      });
+      const base = createSession(CreateSessionInput.make({ id: sessionId, baseDataset: makeDataset([]) }));
+      const saved = applyChangeOperationsWithDelta(base, [a, b, c]).session;
+      const diverged = applyChangeOperationsWithDelta(base, [a, b, d]).session;
+      const client = OntologyClient.of(((tag: string) =>
+        tag === "OpenOntologyDocument"
+          ? Effect.succeed(
+              OpenOntologyDocumentResult.make({
+                session: saved,
+                path: fixturePath,
+                source: "",
+                snapshot: buildOntologySnapshot(saved),
+              })
+            )
+          : Effect.die(`unexpected ontology RPC: ${tag}`)) as unknown as OntologyClient["Service"]);
+      const registry = registryWithClient(client);
+
+      yield* openRegistrySession(registry, saved, fixturePath);
+      expect(registry.get(ontologyDirtyAtom)).toBe(false);
+
+      registry.set(ontologySessionAtom, O.some(diverged));
+
+      expect(registry.get(ontologyDirtyAtom)).toBe(true);
+      registry.dispose();
+    })
+  );
+
+  it("retries graph worker projection after a transient worker failure", () => {
+    class FakeWorker {
+      readonly messages: Array<unknown> = [];
+      private readonly listeners = new Map<string, Array<(event: Event) => void>>();
+      terminated = false;
+
+      constructor() {
+        workers.push(this);
+      }
+
+      addEventListener(type: string, listener: EventListener): void {
+        const listeners = this.listeners.get(type) ?? [];
+        listeners.push((event) => listener.call(this, event));
+        this.listeners.set(type, listeners);
+      }
+
+      emitError(message: string): void {
+        for (const listener of this.listeners.get("error") ?? []) {
+          listener({
+            message,
+            preventDefault: () => undefined,
+          } as ErrorEvent);
+        }
+      }
+
+      postMessage(message: unknown): void {
+        this.messages.push(message);
+      }
+
+      terminate(): void {
+        this.terminated = true;
+      }
+    }
+    const workers: Array<FakeWorker> = [];
+    vi.stubGlobal("Worker", FakeWorker);
+    try {
+      const registry = AtomRegistry.make();
+      registry.get(ontologyGraphWorkerBridgeAtom);
+
+      expect(workers).toHaveLength(1);
+      expect(workers[0]?.messages).toHaveLength(1);
+
+      workers[0]?.emitError("worker crashed");
+
+      expect(workers[0]?.terminated).toBe(true);
+      expect(O.isSome(registry.get(ontologyGraphErrorAtom))).toBe(true);
+
+      registry.set(
+        ontologySessionAtom,
+        O.some(
+          createSession(
+            CreateSessionInput.make({
+              id: sessionId,
+              baseDataset: makeDataset([makeQuad(makeNamedNode("https://example.test/a"), RDF_TYPE, OWL_CLASS)]),
+            })
+          )
+        )
+      );
+
+      expect(workers).toHaveLength(2);
+      expect(workers[1]?.messages).toHaveLength(1);
+      expect(O.isNone(registry.get(ontologyGraphErrorAtom))).toBe(true);
+      registry.dispose();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it.effect(
     "settles inferred view without reinvoking inference for an unchanged session signature",
     Effect.fnUntraced(function* () {
@@ -269,4 +406,28 @@ describe("Session atoms", () => {
       registry.dispose();
     })
   );
+});
+
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
+  const decode = S.decodeUnknownResult(schema);
+  const encode = S.encodeResult(schema);
+  const equivalent = S.toEquivalence(schema);
+
+  fc.assert(
+    fc.property(S.toArbitrary(schema), (value) => {
+      const encoded = Result.getOrThrow(encode(value));
+      const decoded = Result.getOrThrow(decode(encoded));
+
+      expect(equivalent(decoded, value)).toBe(true);
+    }),
+    fcRuns(10)
+  );
+};
+
+describe("Session atoms schema round-trips", () => {
+  it("round-trips session client schemas with schema-derived arbitraries", () => {
+    assertSchemaRoundTrip(OpenOntologyDocumentInput);
+    assertSchemaRoundTrip(ChangeOperation);
+    assertSchemaRoundTrip(CreateSessionInput);
+  });
 });

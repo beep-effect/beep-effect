@@ -381,6 +381,7 @@ const queryWithoutPrefixLines = (query: string): string =>
     Str.split(query, "\n"),
     A.map(Str.trim),
     A.filter((line) => !Str.startsWith(Str.toUpperCase(line), "PREFIX ")),
+    A.filter((line) => !Str.startsWith(line, "#")),
     A.filter(Str.isNonEmpty),
     A.join("\n")
   );
@@ -405,13 +406,8 @@ const validateProfile = (
 };
 
 const queryHasLimit = (query: string): boolean => {
-  const upper = Str.toUpperCase(query);
-  return (
-    pipe(upper, Str.includes(" LIMIT ")) ||
-    pipe(upper, Str.includes("\nLIMIT ")) ||
-    pipe(upper, Str.includes("\nLIMIT\n")) ||
-    pipe(upper, Str.endsWith(" LIMIT"))
-  );
+  const limitPattern = /(^|\s)LIMIT\s+($|\S)/i;
+  return limitPattern.test(query);
 };
 
 const injectLimit = (query: string, limit: number): { readonly query: string; readonly injected: boolean } =>

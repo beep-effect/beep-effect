@@ -1,3 +1,5 @@
+import { IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch";
+import { IntakeDroppedFilePayload } from "@beep/documents-use-cases/public";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
@@ -5,7 +7,13 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { DerivedThreadTitle } from "@/chat/DerivedThreadTitle";
-import { ConfigureWorkspaceVaultInput, DEFAULT_WORKSPACE_ID, DroppedDocumentInput } from "@/intake/Intake.atoms";
+import { configureSelectedWorkspaceVault } from "@/intake/DocumentIntakeTarget";
+import {
+  ConfigureWorkspaceVaultInput,
+  DEFAULT_WORKSPACE_ID,
+  DroppedDocumentInput,
+  intakeDroppedFilePayload,
+} from "@/intake/Intake.atoms";
 import { ProfessionalDesktopMigrationOptions } from "@/runtime/Migrations";
 import { SidecarTransport } from "@/transport/SidecarTransport";
 import { InboundEvent, InboundFrame, SidecarClosedPayload } from "@/transport/TauriIpcSocket";
@@ -85,7 +93,7 @@ describe("@beep/professional-desktop schema parity", () => {
 
       const dropped = DroppedDocumentInput.make({
         content: new Uint8Array([1, 2, 3]),
-        intakeBatchId: "batch-1",
+        intakeBatchId: yield* S.decodeUnknownEffect(IntakeBatchId)("batch-1"),
         originalFileName: "Complaint.pdf",
         workspaceId: DEFAULT_WORKSPACE_ID,
       });
@@ -95,6 +103,39 @@ describe("@beep/professional-desktop schema parity", () => {
         originalFileName: "Complaint.pdf",
         workspaceId: 1,
       });
+    })
+  );
+
+  it.effect("constructs dropped-file RPC payloads from raw Uint8Array inputs", () =>
+    Effect.gen(function* () {
+      const payload = intakeDroppedFilePayload(
+        DroppedDocumentInput.make({
+          content: new Uint8Array([1, 2, 3]),
+          intakeBatchId: yield* S.decodeUnknownEffect(IntakeBatchId)("batch-raw"),
+          originalFileName: "Raw.pdf",
+          workspaceId: DEFAULT_WORKSPACE_ID,
+        })
+      );
+
+      expect(payload.content).toEqual(new Uint8Array([1, 2, 3]));
+      expect(yield* S.encodeUnknownEffect(IntakeDroppedFilePayload)(payload)).toMatchObject({
+        content: "AQID",
+        originalFileName: "Raw.pdf",
+      });
+    })
+  );
+
+  it.effect("surfaces workspace vault configuration failures and allows retry status", () =>
+    Effect.gen(function* () {
+      const statuses: Array<string | null> = [];
+
+      yield* configureSelectedWorkspaceVault(
+        "/tmp/rejected-vault",
+        () => Promise.reject({ message: "vault path rejected" }),
+        (status) => statuses.push(status)
+      );
+
+      expect(statuses).toEqual(["Saving workspace vault", "vault path rejected"]);
     })
   );
 

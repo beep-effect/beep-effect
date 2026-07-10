@@ -55,6 +55,11 @@ const RPC_SESSION_TOKEN_ENV: &str = "BEEP_DESKTOP_RPC_SESSION_TOKEN";
 
 #[tauri::command]
 fn sidecar_transport(state: tauri::State<'_, RpcSession>) -> SidecarTransport {
+    // Threat model: this token is intentionally delivered to the trusted Tauri
+    // webview so the frontend can authorize loopback HTTP and IPC calls to its
+    // own sidecar. It is not an XSS boundary inside the app webview; it prevents
+    // unrelated local processes or external web pages from reaching the
+    // write-capable sidecar RPC surface.
     SidecarTransport {
         ipc: ipc_transport(),
         rpc_session_token: state.token.clone(),
@@ -130,6 +135,22 @@ fn ipc_transport() -> bool {
 
 fn rpc_session_token() -> String {
     std::env::var(RPC_SESSION_TOKEN_ENV).unwrap_or_else(|_| Uuid::new_v4().to_string())
+}
+
+fn authorize_sidecar_send(
+    ipc_enabled: bool,
+    provided_token: &str,
+    expected_token: &str,
+) -> Result<(), String> {
+    if !ipc_enabled {
+        return Err("sidecar IPC transport is not enabled".to_string());
+    }
+
+    if provided_token != expected_token {
+        return Err("unauthorized sidecar rpc session".to_string());
+    }
+
+    Ok(())
 }
 
 fn recover_lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
@@ -371,9 +392,11 @@ async fn sidecar_send(
     frame: String,
     rpc_session_token: String,
 ) -> Result<(), String> {
-    if rpc_session_token != session.token {
-        return Err("unauthorized sidecar rpc session".to_string());
-    }
+    // The token check protects the sidecar from non-webview callers that can
+    // reach the command/HTTP boundary. The legitimate webview client receives
+    // the token from `sidecar_transport`; script integrity inside that webview
+    // is handled by the Tauri app/CSP boundary, not by hiding this value.
+    authorize_sidecar_send(ipc_transport(), &rpc_session_token, &session.token)?;
 
     // Reject oversized frames before touching stdin, mirroring the inbound stdout
     // cap, so a buggy or hostile webview cannot block/kill the IPC transport.
@@ -544,7 +567,7 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
-    use super::is_blank_ipc_stdout_frame;
+    use super::{authorize_sidecar_send, is_blank_ipc_stdout_frame};
 
     #[test]
     fn detects_blank_ipc_stdout_frames() {
@@ -557,5 +580,18 @@ mod tests {
     fn preserves_ndjson_ipc_stdout_frames() {
         assert!(!is_blank_ipc_stdout_frame(br#"{"jsonrpc":"2.0"}"#));
         assert!(!is_blank_ipc_stdout_frame(b"{\"jsonrpc\":\"2.0\"}\n"));
+    }
+
+    #[test]
+    fn authorizes_sidecar_send_only_for_ipc_with_matching_token() {
+        assert!(authorize_sidecar_send(true, "token", "token").is_ok());
+        assert_eq!(
+            authorize_sidecar_send(false, "token", "token"),
+            Err("sidecar IPC transport is not enabled".to_string())
+        );
+        assert_eq!(
+            authorize_sidecar_send(true, "wrong", "token"),
+            Err("unauthorized sidecar rpc session".to_string())
+        );
     }
 }

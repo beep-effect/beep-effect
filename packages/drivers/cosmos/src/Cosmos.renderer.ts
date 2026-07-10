@@ -63,6 +63,7 @@ type GraphologyGraph = {
       readonly y: number;
     }
   ) => void;
+  readonly clear: () => void;
 };
 
 type GraphologyConstructor = new (options: GraphologyOptions) => GraphologyGraph;
@@ -270,40 +271,44 @@ const renderWithSigma = Effect.fn("Cosmos.renderWithSigma")(function* (
   const graphology = yield* loadGraphologyModule;
   const sigma = yield* loadSigmaModule;
   const graph = new graphology.default({ multi: true, type: "directed" });
-  let nodeIndex = 0;
+  const populateGraph = (nextProjection: CosmosGraphProjection): void => {
+    let nodeIndex = 0;
 
-  while (nodeIndex < projection.nodeCount) {
-    const positionOffset = nodeIndex * 2;
-    const nodeId = `n${projection.nodeIds[nodeIndex]}`;
+    while (nodeIndex < nextProjection.nodeCount) {
+      const positionOffset = nodeIndex * 2;
+      const nodeId = `n${nextProjection.nodeIds[nodeIndex]}`;
 
-    graph.addNode(nodeId, {
-      x: projection.pointPositions[positionOffset],
-      y: projection.pointPositions[positionOffset + 1],
-      label: nodeId,
-      size: 2,
-      color: "#38bdf8",
-    });
-    nodeIndex += 1;
-  }
+      graph.addNode(nodeId, {
+        x: nextProjection.pointPositions[positionOffset],
+        y: nextProjection.pointPositions[positionOffset + 1],
+        label: nodeId,
+        size: 2,
+        color: "#38bdf8",
+      });
+      nodeIndex += 1;
+    }
 
-  let edgeIndex = 0;
+    let edgeIndex = 0;
 
-  while (edgeIndex < projection.edgeCount) {
-    const linkOffset = edgeIndex * 2;
-    const sourceIndex = projection.links[linkOffset] % projection.nodeCount;
-    const targetIndex = projection.links[linkOffset + 1] % projection.nodeCount;
+    while (edgeIndex < nextProjection.edgeCount) {
+      const linkOffset = edgeIndex * 2;
+      const sourceIndex = nextProjection.links[linkOffset] % nextProjection.nodeCount;
+      const targetIndex = nextProjection.links[linkOffset + 1] % nextProjection.nodeCount;
 
-    graph.addDirectedEdgeWithKey(
-      `e${edgeIndex}`,
-      `n${projection.nodeIds[sourceIndex]}`,
-      `n${projection.nodeIds[targetIndex]}`,
-      {
-        size: 1,
-        color: "#94a3b8",
-      }
-    );
-    edgeIndex += 1;
-  }
+      graph.addDirectedEdgeWithKey(
+        `e${edgeIndex}`,
+        `n${nextProjection.nodeIds[sourceIndex]}`,
+        `n${nextProjection.nodeIds[targetIndex]}`,
+        {
+          size: 1,
+          color: "#94a3b8",
+        }
+      );
+      edgeIndex += 1;
+    }
+  };
+
+  populateGraph(projection);
 
   const renderer = yield* Effect.try({
     try: () => new sigma.default(graph, container),
@@ -319,7 +324,9 @@ const renderWithSigma = Effect.fn("Cosmos.renderWithSigma")(function* (
   return {
     backend: "sigma",
     fps: sampler.fps,
-    update: () => {
+    update: (nextProjection) => {
+      graph.clear();
+      populateGraph(nextProjection);
       if (P.isFunction(renderer.refresh)) {
         renderer.refresh();
       }

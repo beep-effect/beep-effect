@@ -725,6 +725,46 @@ const reusedModuleQuads = (
     O.map((result) => result.inferredQuads)
   );
 
+const inferredTypeKeys: (quads: ReadonlyArray<Quad>) => ReadonlyArray<string> = flow(
+  A.filter((quad: Quad) => quad.predicate.value === RDF_TYPE.value),
+  A.map(tripleKey),
+  A.dedupe,
+  A.sort(Order.String)
+);
+
+const sameTypeKeys = (left: ReadonlyArray<string>, right: ReadonlyArray<string>): boolean =>
+  left.length === right.length &&
+  pipe(
+    left,
+    A.every((key, index) => right[index] === key)
+  );
+
+const moduleTypeKeys: (module: O.Option<OntologyInferenceModuleResult>) => ReadonlyArray<string> = flow(
+  O.map((result: OntologyInferenceModuleResult) => inferredTypeKeys(result.inferredQuads)),
+  O.getOrElse(A.empty)
+);
+
+const typeBearingInferenceChanged = (
+  previousClosure: O.Option<OntologyInferenceModuleResult>,
+  closure: ReadonlyArray<Quad>,
+  previousDomainRange: O.Option<OntologyInferenceModuleResult>,
+  domainRange: ReadonlyArray<Quad>
+): boolean => {
+  const previousKeys = pipe(
+    moduleTypeKeys(previousClosure),
+    A.appendAll(moduleTypeKeys(previousDomainRange)),
+    A.dedupe,
+    A.sort(Order.String)
+  );
+  const nextKeys = pipe(
+    inferredTypeKeys(closure),
+    A.appendAll(inferredTypeKeys(domainRange)),
+    A.dedupe,
+    A.sort(Order.String)
+  );
+  return !sameTypeKeys(previousKeys, nextKeys);
+};
+
 const inferOntologySession = Effect.fn("Ontology.Reasoner.infer")(function* (input: InferOntologySessionInput) {
   const changedOperations = changedOperationWindow(input);
   const changedSignatures = changedSignaturesFor(changedOperations);
@@ -754,7 +794,8 @@ const inferOntologySession = Effect.fn("Ontology.Reasoner.infer")(function* (inp
   );
   const disjointnessMode = recomputeMode(
     fullRecompute,
-    disjointnessAffected(changedSignatures),
+    disjointnessAffected(changedSignatures) ||
+      typeBearingInferenceChanged(previousClosure, closure, previousDomainRange, domainRange),
     previousModule(previous, "disjointness")
   );
   const violations =

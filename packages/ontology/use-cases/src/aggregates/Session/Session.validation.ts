@@ -345,6 +345,8 @@ type ShapeRepairTarget = {
 };
 
 const sameNamedNode = (left: NamedNode, right: NamedNode): boolean => left.value === right.value;
+const sameViolationDetails = (left: ShaclValidationViolation, right: ShaclValidationViolation): boolean =>
+  left.message === right.message && left.severity === right.severity;
 const hasPredicate = (quad: Quad, predicate: NamedNode): boolean => quad.predicate.value === predicate.value;
 
 const objectNamedNode = (quad: Quad): O.Option<NamedNode> =>
@@ -470,12 +472,23 @@ const matchingRepairTarget = (
     shapes,
     A.flatMap((shape) => A.map(shape.properties, (property) => ({ shape, property }))),
     A.findFirst(({ shape, property }) => {
-      const targetMatches = pipe(
-        shape.targetNode,
-        O.map((targetNode) => targetNode.value === violation.focusNode),
-        O.getOrElse(() => true)
+      const shapeMatches = pipe(
+        violation.sourceShape,
+        O.match({
+          onNone: () =>
+            pipe(
+              shape.targetNode,
+              O.map((targetNode) => targetNode.value === violation.focusNode),
+              O.getOrElse(() => true)
+            ),
+          onSome: (sourceShape) =>
+            pipe(
+              shape.id,
+              O.exists((id) => sameNamedNode(id, sourceShape))
+            ),
+        })
       );
-      return targetMatches && property.path.value === violation.path.value && O.isSome(property.hasValue);
+      return shapeMatches && property.path.value === violation.path.value && O.isSome(property.hasValue);
     })
   );
 
@@ -496,8 +509,14 @@ const sameViolation = (left: ShaclValidationViolation, right: ShaclValidationVio
   left.path.value === right.path.value &&
   pipe(
     left.sourceShape,
-    O.zipWith(right.sourceShape, sameNamedNode),
-    O.getOrElse(() => true)
+    O.match({
+      onNone: () => O.isNone(right.sourceShape) && sameViolationDetails(left, right),
+      onSome: (leftSourceShape) =>
+        pipe(
+          right.sourceShape,
+          O.exists((rightSourceShape) => sameNamedNode(leftSourceShape, rightSourceShape))
+        ),
+    })
   );
 
 const verifyRepair = Effect.fn("Ontology.Validation.verifyRepair")(function* (
