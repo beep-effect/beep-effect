@@ -54,7 +54,7 @@
     {
       "id": "P0",
       "name": "Bootstrap",
-      "status": "pending",
+      "status": "complete",
       "exit": "Branch from fresh origin/main; packet sources confirmed; capability-report facts re-verified or drift recorded."
     },
     {
