@@ -5,12 +5,11 @@
  * @since 0.0.0
  */
 
-import { make as makeIdentity } from "@beep/identity";
+import { $CosmosId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { P } from "@beep/utils";
 import * as S from "effect/Schema";
 
-const { $CosmosId } = makeIdentity("cosmos");
 const $I = $CosmosId.create("Cosmos.backend");
 
 /**

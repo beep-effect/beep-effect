@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { make as makeIdentity } from "@beep/identity";
+import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { ChangeOperation, SessionChangeDelta } from "@beep/ontology-domain/aggregates/Session";
 import { makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
@@ -27,7 +27,6 @@ import {
 } from "./Session.projections.js";
 import type { Quad } from "@beep/rdf/Rdf";
 
-const { $OntologyUseCasesId } = makeIdentity("ontology-use-cases");
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.visualizer");
 
 const RDFS_SUB_CLASS_OF = makeNamedNode(`${RDFS_NAMESPACE}subClassOf`);

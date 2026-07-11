@@ -30,7 +30,6 @@
     "@effect/vitest": "catalog:",
     "@oxlint/plugins": "catalog:",
     "@types/node": "catalog:",
-    "@typescript/native-preview": "catalog:",
     "effect": "catalog:",
     "oxlint": "catalog:"
   },

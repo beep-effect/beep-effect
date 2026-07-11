@@ -70,13 +70,13 @@ const ChatDbDataDir = Config.string("CHAT_DB_PATH").pipe(
  * ```ts
  * import { ChatDbCompatibilityMarker } from "@/runtime/Pglite"
  *
- * console.log(ChatDbCompatibilityMarker) // ".beep-pglite-inprocess-v1"
+ * console.log(ChatDbCompatibilityMarker) // ".beep-pglite-inprocess-v2"
  * ```
  *
  * @category configuration
  * @since 0.0.0
  */
-export const ChatDbCompatibilityMarker = ".beep-pglite-inprocess-v1";
+export const ChatDbCompatibilityMarker = ".beep-pglite-inprocess-v2";
 
 const PgliteDataDirRequiredEntries = ["PG_VERSION", "base", "global"] as const;
 
@@ -106,7 +106,7 @@ const writeCompatibilityMarker = Effect.fn("ProfessionalDesktop.Pglite.writeComp
   const createdAtMillis = yield* Clock.currentTimeMillis;
   yield* fs.writeFileString(
     path.join(dataDir, ChatDbCompatibilityMarker),
-    ["runtime=professional-desktop-pglite-inprocess", "version=1", `createdAtMillis=${createdAtMillis}`, ""].join("\n")
+    ["runtime=professional-desktop-pglite-inprocess", "version=2", `createdAtMillis=${createdAtMillis}`, ""].join("\n")
   );
 });
 

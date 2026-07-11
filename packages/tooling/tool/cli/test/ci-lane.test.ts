@@ -191,8 +191,8 @@ describe("ciLaneStepsForTesting", () => {
   it("plans the fallow lane as promoted blocking, advisory, then optional validation", () => {
     const runPhase = A.map(ciLaneStepsForTesting(REPO_ROOT, "fallow", baseOptions), (step) => step.label);
     expect(runPhase).toEqual([
-      "ci:fallow:dead-code",
       "ci:fallow:audit",
+      "ci:fallow:dead-code",
       "ci:fallow:health",
       "ci:fallow:boundaries",
       "ci:fallow:flags",

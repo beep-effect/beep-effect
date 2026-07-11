@@ -5,11 +5,10 @@
  * @since 0.0.0
  */
 
-import { make as makeIdentity } from "@beep/identity";
+import { $OxigraphId } from "@beep/identity/packages";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
 
-const { $OxigraphId } = makeIdentity("oxigraph");
 const $I = $OxigraphId.create("Oxigraph.errors");
 
 /**

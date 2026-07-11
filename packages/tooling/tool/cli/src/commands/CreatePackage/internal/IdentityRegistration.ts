@@ -5,10 +5,10 @@
  * @since 0.0.0
  */
 
-import { DomainError, getWorkspaceDir, TSMorphService } from "@beep/repo-utils";
+import { DomainError, getWorkspaceDir, resolveWorkspaceDirs, TSMorphService } from "@beep/repo-utils";
 import { A, Str, Text } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, FileSystem, Path, pipe } from "effect";
+import { Effect, FileSystem, Order, Path, pipe } from "effect";
 import { SyntaxKind } from "ts-morph";
 
 /**
@@ -183,6 +183,124 @@ const identityPackageRegistrationNeeded = Effect.fn(function* (
   return !Str.includes(`"${packageName}"`)(content) || !Str.includes(`export const ${accessorName}`)(content);
 });
 
+const BEEP_SCOPE_PREFIX = "@beep/";
+
+/**
+ * Match a dedicated composer export for a package, tolerating manual casing
+ * aliases such as `$LangExtractId` for the mechanical `$LangextractId`.
+ *
+ * @param packageName - Workspace package slug (without the `@beep/` scope).
+ * @returns A case-insensitive pattern matching the dedicated export statement.
+ * @example
+ * ```ts
+ * import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
+ *
+ * const pattern = CreatePackageIdentityRegistration.accessorExportPattern("repo-cli")
+ * console.log(pattern.test("export const $RepoCliId")) // true
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+const accessorExportPattern = (packageName: string): RegExp =>
+  new RegExp(`export const \\$${Str.pascalCase(packageName)}Id\\b`, "i");
+
+/**
+ * Filter workspace package slugs missing either their `$I.compose(...)`
+ * segment or dedicated export in the identity registry content.
+ *
+ * @param registryContent - Current text of the identity `packages.ts` file.
+ * @param packageNames - Workspace package slugs to check.
+ * @returns The slugs that still need registration.
+ * @example
+ * ```ts
+ * import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
+ *
+ * const missing = CreatePackageIdentityRegistration.missingIdentityRegistrations("export {}", ["repo-cli"])
+ * console.log(missing) // ["repo-cli"]
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+const missingIdentityRegistrations = (
+  registryContent: string,
+  packageNames: ReadonlyArray<string>
+): ReadonlyArray<string> =>
+  A.filter(
+    packageNames,
+    (name) => !Str.includes(`"${name}"`)(registryContent) || !accessorExportPattern(name).test(registryContent)
+  );
+
+/**
+ * Enumerate every `@beep/*` workspace package as `[slug, directory]` entries,
+ * sorted by slug.
+ *
+ * @example
+ * ```ts
+ * import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
+ * import { Effect } from "effect"
+ *
+ * const program = CreatePackageIdentityRegistration.collectWorkspaceIdentityEntries("/repo")
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+const collectWorkspaceIdentityEntries = Effect.fn("IdentityRegistration.collectWorkspaceIdentityEntries")(function* (
+  repoRoot: string
+) {
+  const workspaces = yield* resolveWorkspaceDirs(repoRoot);
+  let entries = A.empty<readonly [slug: string, dir: string]>();
+
+  for (const [name, dir] of workspaces) {
+    if (Str.startsWith(BEEP_SCOPE_PREFIX)(name)) {
+      entries = A.append(entries, [Str.replace(BEEP_SCOPE_PREFIX, Str.empty)(name), dir] as const);
+    }
+  }
+
+  return A.sort(
+    entries,
+    Order.mapInput(Order.String, ([slug]: readonly [slug: string, dir: string]) => slug)
+  );
+});
+
+/**
+ * Register every workspace package missing from the identity composer
+ * registry, returning the slugs that were registered.
+ *
+ * @example
+ * ```ts
+ * import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
+ * import { Effect } from "effect"
+ *
+ * const program = CreatePackageIdentityRegistration.registerMissingWorkspaceIdentityPackages("/repo")
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+const registerMissingWorkspaceIdentityPackages = Effect.fn(
+  "IdentityRegistration.registerMissingWorkspaceIdentityPackages"
+)(function* (repoRoot: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const identityPackagesFilePath = yield* resolveIdentityPackagesFilePath(repoRoot);
+  const entries = yield* collectWorkspaceIdentityEntries(repoRoot);
+  const absolutePath = path.join(repoRoot, identityPackagesFilePath);
+  const registryContent = yield* fs
+    .readFileString(absolutePath)
+    .pipe(Effect.mapError(DomainError.newCause(`Failed to read "${absolutePath}"`)));
+  const missing = missingIdentityRegistrations(
+    registryContent,
+    A.map(entries, ([slug]) => slug)
+  );
+
+  for (const slug of missing) {
+    yield* ensureIdentityPackageRegistration(identityPackagesFilePath, slug);
+  }
+
+  return missing;
+});
+
 /**
  * Internal identity registration surface used by the create-package command.
  *
@@ -196,8 +314,12 @@ const identityPackageRegistrationNeeded = Effect.fn(function* (
  * @since 0.0.0
  */
 export const CreatePackageIdentityRegistration = {
+  accessorExportPattern,
+  collectWorkspaceIdentityEntries,
   ensureIdentityPackageRegistration,
   identityPackageRegistrationNeeded,
+  missingIdentityRegistrations,
+  registerMissingWorkspaceIdentityPackages,
   resolveIdentityPackagesFilePath,
   toIdentityAccessorName,
   typedIdentityExportBlock,

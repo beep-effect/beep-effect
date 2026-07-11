@@ -5,7 +5,7 @@
     "title": "Gov/Legal Data Driver Codegen",
     "status": "active",
     "created": "2026-06-29",
-    "updated": "2026-06-30",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/gov-legal-data-driver-codegen",
@@ -58,7 +58,8 @@
     {
       "id": "P2",
       "name": "authed-drivers (gated on data-terms matrix)",
-      "status": "pending"
+      "status": "superseded",
+      "supersededBy": "goals/gov-legal-data-driver-delivery"
     },
     {
       "id": "P3",

@@ -406,6 +406,33 @@ const textDecoder = new TextDecoder();
 
 const textFromWire = (value: string | Uint8Array): string => (P.isString(value) ? value : textDecoder.decode(value));
 
+// effect 4.0.0-beta.97 made the JSON-RPC serializer pass request ids through
+// verbatim; earlier releases coerced outbound ids with `Number(...)` and
+// inbound ids with `String(...)`. The ACP wire contract requires numeric
+// JSON-RPC ids while this protocol keys pending requests by string ids, so
+// those coercions are restored at the parser boundary.
+type AcpWireMessage = RpcMessage.FromClientEncoded | RpcMessage.FromServerEncoded;
+
+const toWireId = (id: string | number): string | number => (id === "" ? id : Number(id));
+
+const toWireMessage: (message: AcpWireMessage) => AcpWireMessage = Match.type<AcpWireMessage>().pipe(
+  Match.tags({
+    Request: (message): AcpWireMessage => ({ ...message, id: toWireId(message.id) }),
+    Chunk: (message): AcpWireMessage => ({ ...message, requestId: toWireId(message.requestId) }),
+    Exit: (message): AcpWireMessage => ({ ...message, requestId: toWireId(message.requestId) }),
+  }),
+  Match.orElse((message) => message)
+);
+
+const fromWireMessage: (message: AcpWireMessage) => AcpWireMessage = Match.type<AcpWireMessage>().pipe(
+  Match.tags({
+    Request: (message): AcpWireMessage => ({ ...message, id: String(message.id) }),
+    Chunk: (message): AcpWireMessage => ({ ...message, requestId: String(message.requestId) }),
+    Exit: (message): AcpWireMessage => ({ ...message, requestId: String(message.requestId) }),
+  }),
+  Match.orElse((message) => ("requestId" in message ? { ...message, requestId: String(message.requestId) } : message))
+);
+
 /**
  * Builds the patched ACP protocol over an Effect `Stdio` transport.
  *
@@ -441,7 +468,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
   const outgoing = yield* Queue.bounded<string | Uint8Array, Cause.Done>(ACP_PROTOCOL_QUEUE_CAPACITY);
   const nextRequestId = yield* Ref.make(BigInt(1));
   const terminationHandled = yield* Ref.make(false);
-  const extPending = yield* Ref.make(HashMap.empty<string, Deferred.Deferred<unknown, AcpError.AcpError>>());
+  const extPending = yield* Ref.make(HashMap.empty<string | number, Deferred.Deferred<unknown, AcpError.AcpError>>());
 
   const logProtocol = Effect.fn($I`logProtocol`)((event: AcpProtocolLogEvent) => {
     const emit = () =>
@@ -462,7 +489,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     });
 
     const encoded = yield* Effect.try({
-      try: () => parser.encode(message),
+      try: () => parser.encode(toWireMessage(message)),
       catch: (cause) =>
         AcpError.AcpProtocolParseError.make({
           cause: O.some(cause),
@@ -482,7 +509,10 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
   });
 
   const resolveExtPending = Effect.fn($I`resolveExtPending`)(
-    (requestId: string, onFound: (deferred: Deferred.Deferred<unknown, AcpError.AcpError>) => Effect.Effect<void>) =>
+    (
+      requestId: string | number,
+      onFound: (deferred: Deferred.Deferred<unknown, AcpError.AcpError>) => Effect.Effect<void>
+    ) =>
       Ref.modify(extPending, (pending) => {
         const deferred = HashMap.get(pending, requestId);
         if (O.isNone(deferred)) {
@@ -497,15 +527,16 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
   );
 
   const completeExtPendingFailure = Effect.fn($I`completeExtPendingFailure`)(
-    (requestId: string, error: AcpError.AcpError) =>
+    (requestId: string | number, error: AcpError.AcpError) =>
       resolveExtPending(requestId, (deferred) => Deferred.fail(deferred, error))
   );
 
-  const completeExtPendingSuccess = Effect.fn($I`completeExtPendingSuccess`)((requestId: string, value: unknown) =>
-    resolveExtPending(requestId, (deferred) => Deferred.succeed(deferred, value))
+  const completeExtPendingSuccess = Effect.fn($I`completeExtPendingSuccess`)(
+    (requestId: string | number, value: unknown) =>
+      resolveExtPending(requestId, (deferred) => Deferred.succeed(deferred, value))
   );
 
-  const handlePendingExit = (requestId: string) =>
+  const handlePendingExit = (requestId: string | number) =>
     Match.type<RpcMessage.ExitEncoded<unknown, unknown>>().pipe(
       Match.tagsExhaustive({
         Success: (exit) => completeExtPendingSuccess(requestId, exit.value),
@@ -576,7 +607,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     }).pipe(Effect.flatten)
   );
 
-  const respondWithSuccess = Effect.fn($I`respondWithSuccess`)((requestId: string, value: unknown) =>
+  const respondWithSuccess = Effect.fn($I`respondWithSuccess`)((requestId: string | number, value: unknown) =>
     offerOutgoing({
       _tag: "Exit",
       exit: {
@@ -587,20 +618,21 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     })
   );
 
-  const respondWithError = Effect.fn($I`respondWithError`)((requestId: string, error: AcpError.AcpRequestError) =>
-    offerOutgoing({
-      _tag: "Exit",
-      exit: {
-        _tag: "Failure",
-        cause: [
-          {
-            _tag: "Fail",
-            error: error.toProtocolError(),
-          },
-        ],
-      },
-      requestId,
-    })
+  const respondWithError = Effect.fn($I`respondWithError`)(
+    (requestId: string | number, error: AcpError.AcpRequestError) =>
+      offerOutgoing({
+        _tag: "Exit",
+        exit: {
+          _tag: "Failure",
+          cause: [
+            {
+              _tag: "Fail",
+              error: error.toProtocolError(),
+            },
+          ],
+        },
+        requestId,
+      })
   );
 
   const handleExtRequest = Effect.fn($I`handleExtRequest`)((message: RpcMessage.RequestEncoded) => {
@@ -726,8 +758,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
       }).pipe(
         Effect.flatMap(() =>
           Effect.try({
-            try: () =>
-              parser.decode(data) as ReadonlyArray<RpcMessage.FromClientEncoded | RpcMessage.FromServerEncoded>,
+            try: () => A.map(parser.decode(data) as ReadonlyArray<AcpWireMessage>, fromWireMessage),
             catch: (cause) =>
               AcpError.AcpProtocolParseError.make({
                 cause: O.some(cause),

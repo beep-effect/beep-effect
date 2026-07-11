@@ -631,7 +631,7 @@ const waitForOllamaReady = Effect.fn("DocgenQualityWorkerRunpodEval.waitForOllam
         ? Effect.succeed(true)
         : Effect.fail(DomainError.make({ message: `Ollama model "${model}" is not ready at ${baseUrl}.` }))
     ),
-    Effect.retry(Schedule.both(Schedule.spaced(Duration.seconds(5)), Schedule.recurs(attempts))),
+    Effect.retry(Schedule.max([Schedule.spaced(Duration.seconds(5)), Schedule.recurs(attempts)])),
     Effect.timeoutOrElse({
       duration: timeout,
       orElse: () =>

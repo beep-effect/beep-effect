@@ -618,6 +618,12 @@
         ]
       },
       {
+        "name": "@beep/tsgo-shim",
+        "patterns": [
+          "tools/tsgo-shim/src/**"
+        ]
+      },
+      {
         "name": "@beep/types",
         "patterns": [
           "packages/foundation/primitive/types/src/**"
@@ -2593,6 +2599,15 @@
           "@beep/test-utils",
           "@beep/tika",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/tsgo-shim",
+        "allow": [
+          "@beep/tsgo-shim"
+        ],
+        "allowTypeOnly": [
+          "@beep/tsgo-shim"
         ]
       },
       {

@@ -9,7 +9,7 @@
  * @since 0.0.0
  */
 
-import { make as makeIdentity } from "@beep/identity";
+import { $OntologyDomainId } from "@beep/identity/packages";
 import {
   Dataset,
   GraphTerm,
@@ -31,7 +31,6 @@ import * as S from "effect/Schema";
 import { GraphPartition, graphPartitionIri, isExcludedFromReasoning, SessionId } from "./Session.values.js";
 import type { Subject } from "@beep/rdf/Rdf";
 
-const { $OntologyDomainId } = makeIdentity("ontology-domain");
 const $I = $OntologyDomainId.create("aggregates/Session/Session.model");
 
 const ChangeOperationKind = LiteralKit(["addQuad", "removeQuad"]);

@@ -47,7 +47,6 @@
     "@serwist/next": "catalog:",
     "@types/estree": "catalog:",
     "@types/node": "catalog:",
-    "@typescript/native-preview": "catalog:",
     "next": "catalog:"
   },
   "peerDependencies": {

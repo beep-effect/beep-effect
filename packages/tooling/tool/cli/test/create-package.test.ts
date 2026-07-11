@@ -380,14 +380,6 @@ describe("create-package", { concurrent: false }, () => {
     syncpackSources: ["package.json", "packages/foundation/*/*/package.json"],
   } satisfies RootConfigOptions;
 
-  const AppOnlyRootConfig = {
-    workspaces: [],
-    references: [],
-    paths: {},
-    testFileMatch: [],
-    syncpackSources: ["package.json"],
-  } satisfies RootConfigOptions;
-
   const IdentityOnlyRootConfig = {
     workspaces: ["packages/foundation/modeling/identity"],
     references: ["packages/foundation/modeling/identity"],
@@ -555,8 +547,10 @@ describe("create-package", { concurrent: false }, () => {
     "creates Next.js apps without package API boilerplate",
     () =>
       Effect.runPromise(
-        withBootstrappedRootConfig(AppOnlyRootConfig, ({ fs, path, rootDir }) =>
+        withBootstrappedRootConfig(IdentityOnlyRootConfig, ({ fs, path, rootDir }) =>
           Effect.gen(function* () {
+            yield* bootstrapIdentityWorkspace(rootDir);
+
             yield* runCreatePackageCommand([
               "marketing-web",
               "--type",
@@ -600,10 +594,12 @@ describe("create-package", { concurrent: false }, () => {
             expect(rootTsconfig.compilerOptions.paths["@beep/marketing-web/*"]).toBeUndefined();
 
             const tstycheConfig = decodeTstycheConfig(yield* readJsonFile(path.join(rootDir, "tstyche.json")));
-            expect(tstycheConfig.testFileMatch).toEqual([]);
+            expect(tstycheConfig.testFileMatch).toEqual(["packages/foundation/modeling/identity/dtslint/**/*.tst.*"]);
 
             const syncpackConfig = yield* fs.readFileString(path.join(rootDir, "syncpack.config.ts"));
             expect(syncpackConfig).toContain(`"apps/marketing-web/package.json"`);
+
+            yield* expectIdentityRegistration({ fs, path, rootDir }, "marketing-web", "MarketingWeb");
           })
         )
       ),
@@ -614,8 +610,10 @@ describe("create-package", { concurrent: false }, () => {
     "creates Tauri apps without package API boilerplate",
     () =>
       Effect.runPromise(
-        withBootstrappedRootConfig(AppOnlyRootConfig, ({ fs, path, rootDir }) =>
+        withBootstrappedRootConfig(IdentityOnlyRootConfig, ({ fs, path, rootDir }) =>
           Effect.gen(function* () {
+            yield* bootstrapIdentityWorkspace(rootDir);
+
             yield* runCreatePackageCommand([
               "desktop-shell",
               "--type",
@@ -665,7 +663,9 @@ describe("create-package", { concurrent: false }, () => {
             expect(rootTsconfig.compilerOptions.paths["@beep/desktop-shell/*"]).toBeUndefined();
 
             const tstycheConfig = decodeTstycheConfig(yield* readJsonFile(path.join(rootDir, "tstyche.json")));
-            expect(tstycheConfig.testFileMatch).toEqual([]);
+            expect(tstycheConfig.testFileMatch).toEqual(["packages/foundation/modeling/identity/dtslint/**/*.tst.*"]);
+
+            yield* expectIdentityRegistration({ fs, path, rootDir }, "desktop-shell", "DesktopShell");
           })
         )
       ),

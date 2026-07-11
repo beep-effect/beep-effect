@@ -5,11 +5,10 @@
  * @since 0.0.0
  */
 
-import { make as makeIdentity } from "@beep/identity";
+import { $ShaclId } from "@beep/identity/packages";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
 
-const { $ShaclId } = makeIdentity("shacl");
 const $I = $ShaclId.create("Shacl.errors");
 
 /**

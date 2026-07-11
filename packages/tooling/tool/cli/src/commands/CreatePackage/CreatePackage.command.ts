@@ -511,8 +511,6 @@ const appKindIs = (appKind: O.Option<AppKind>, kind: AppKind): boolean =>
 const isRealAppKind = (appKind: O.Option<AppKind>): boolean =>
   O.isSome(appKind) && !appKindEquivalence(appKind.value, "runtime-proof");
 
-const shouldRegisterIdentityFor = (appKind: O.Option<AppKind>): boolean => !isRealAppKind(appKind);
-
 const templateService = createTemplateService();
 const fileGenerationPlanService = createFileGenerationPlanService();
 // ── Template context ──────────────────────────────────────────────────────────
@@ -863,7 +861,6 @@ export const createPackageCommand = Command.make(
     const appKind: O.Option<AppKind> = Str.isNonEmpty(appKindOption)
       ? O.some(yield* decodeAppKindEffect(appKindOption))
       : O.none();
-    const shouldRegisterIdentity = shouldRegisterIdentityFor(appKind);
 
     // ── Validate family/kind ──────────────────────────────────────────
     if (Str.isNonEmpty(familyOption) && P.not(isPackageFamily)(familyOption)) {
@@ -1019,7 +1016,7 @@ export const createPackageCommand = Command.make(
 
     // ── Discover repo root ─────────────────────────────────────────────
     const repoRoot = yield* findRepoRoot();
-    const identityPackagesFilePath = shouldRegisterIdentity ? yield* resolveIdentityPackagesFilePath(repoRoot) : "";
+    const identityPackagesFilePath = yield* resolveIdentityPackagesFilePath(repoRoot);
 
     // ── Determine output directory ─────────────────────────────────────
     const outputDir = path.join(repoRoot, packagePath);
@@ -1037,9 +1034,11 @@ export const createPackageCommand = Command.make(
     // ── Dry-run: preview output and bootstrap repo mutations ───────────
     if (dryRun) {
       const workspaceEntryNeeded = yield* rootWorkspaceEntryNeeded(repoRoot, packagePath);
-      const identityRegistrationMissing = shouldRegisterIdentity
-        ? yield* identityPackageRegistrationNeeded(repoRoot, identityPackagesFilePath, name)
-        : false;
+      const identityRegistrationMissing = yield* identityPackageRegistrationNeeded(
+        repoRoot,
+        identityPackagesFilePath,
+        name
+      );
 
       yield* Console.log(`[dry-run] Would create package @beep/${name} (type: ${type})`);
       if (O.isSome(appKind)) {
@@ -1061,12 +1060,10 @@ export const createPackageCommand = Command.make(
         ...A.map(filesFor(appKind, withStoriesTsconfig), (file) => `  - ${file}`),
         `[dry-run] Root bootstrap updates:`,
         `  - package.json workspaces: ${workspaceEntryNeeded ? `Add "${packagePath}"` : "SKIP (already covered by an existing workspace entry)"}`,
-        `  - ${shouldRegisterIdentity ? identityPackagesFilePath : "@beep/identity package registration"}: ${
-          shouldRegisterIdentity
-            ? identityRegistrationMissing
-              ? `Register "${name}" and export ${toIdentityAccessorName(name)}`
-              : "SKIP (already registered)"
-            : "SKIP (real app scaffold does not register package identity composers)"
+        `  - ${identityPackagesFilePath}: ${
+          identityRegistrationMissing
+            ? `Register "${name}" and export ${toIdentityAccessorName(name)}`
+            : "SKIP (already registered)"
         }`,
         `[dry-run] Derived repo configs: shared sync runs after scaffolding to update tsconfig references, aliases, tstyche, syncpack, and docgen`,
         `[dry-run] Lockfile: ${skipLockfile ? "SKIP (--skip-lockfile)" : "bun install --lockfile-only"}`,
@@ -1157,9 +1154,7 @@ export const createPackageCommand = Command.make(
     yield* fileGenerationPlanService.executePlan(plan);
 
     const workspaceUpdated = yield* ensureRootWorkspaceEntry(repoRoot, packagePath);
-    const identityUpdated = shouldRegisterIdentity
-      ? yield* ensureIdentityPackageRegistration(identityPackagesFilePath, name)
-      : false;
+    const identityUpdated = yield* ensureIdentityPackageRegistration(identityPackagesFilePath, name);
     const syncResult = yield* syncTsconfigAtRoot(repoRoot, {
       mode: "sync",
       filter: undefined,

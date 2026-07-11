@@ -252,7 +252,7 @@ const waitForCapturedOtlpTraceRequest = (
   requests: ReadonlyArray<CapturedOtlpRequest>
 ): Effect.Effect<CapturedOtlpRequest, string> =>
   findCapturedOtlpTraceRequest(requests).pipe(
-    Effect.retry(Schedule.both(Schedule.spaced(Duration.millis(25)), Schedule.recurs(200)))
+    Effect.retry(Schedule.max([Schedule.spaced(Duration.millis(25)), Schedule.recurs(200)]))
   );
 
 describe("ai-metrics command", () => {

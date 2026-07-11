@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { make as makeIdentity } from "@beep/identity";
+import { $OntologyUseCasesId } from "@beep/identity/packages";
 import {
   deriveSessionGraphPartitions,
   graphPartitionIri,
@@ -34,7 +34,6 @@ import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type { NamedNode } from "@beep/rdf/Rdf";
 
-const { $OntologyUseCasesId } = makeIdentity("ontology-use-cases");
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.reasoner");
 
 const RDFS_SUB_CLASS_OF = makeNamedNode(`${RDFS_NAMESPACE}subClassOf`);

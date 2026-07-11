@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { make as makeIdentity } from "@beep/identity";
+import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { deriveSessionGraphPartitions, graphPartitionIri, Session } from "@beep/ontology-domain/aggregates/Session";
 import { makeDataset, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
@@ -24,7 +24,6 @@ import type { GraphPartition } from "@beep/ontology-domain/aggregates/Session";
 import type { Dataset, PrefixMap, Quad } from "@beep/rdf/Rdf";
 import type { SparqlQueryError } from "@beep/semantic-web/services/sparql-query";
 
-const { $OntologyUseCasesId } = makeIdentity("ontology-use-cases");
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.sparql");
 
 /**

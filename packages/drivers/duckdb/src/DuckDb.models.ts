@@ -10,11 +10,10 @@
  * @since 0.0.0
  */
 
-import { make } from "@beep/identity";
+import { $DuckdbId } from "@beep/identity/packages";
 import { JsonObject, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
-const { $DuckdbId } = make("duckdb");
 const $I = $DuckdbId.create("DuckDb.models");
 
 /**

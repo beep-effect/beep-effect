@@ -5,6 +5,7 @@ const config = {
     "package.json",
     "infra/package.json",
     "scratchpad/package.json",
+    "tools/tsgo-shim/package.json",
     "packages/_internal/*/package.json",
     "packages/foundation/capability/*/package.json",
     "packages/foundation/modeling/*/package.json",
