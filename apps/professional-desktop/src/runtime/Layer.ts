@@ -31,24 +31,38 @@
 import { AnthropicTurnKernel } from "@beep/agents-server/AnthropicTurnKernel";
 import { FixtureTurnKernel } from "@beep/agents-use-cases/proof";
 import { AnthropicLanguageModelOptions, AnthropicLive, makeAnthropicLanguageModelLayer } from "@beep/anthropic";
+import { Box, BoxDeveloperTokenConfig } from "@beep/box";
 import { DocTextFileProcessingEngine } from "@beep/doc-text";
 import {
   FILING_DECISION_DEFAULT_MODEL,
   FILING_DECISION_MODEL_ENV,
   FilingDecisionLlmConfigLayer,
 } from "@beep/documents-server/aggregates/Document";
-import { DocumentsServerLive, DocumentsServerLlmLive } from "@beep/documents-server/layer";
+import {
+  BoxMirrorConfigLayer,
+  DmsMirrorAvailabilityBoxLayer,
+  DmsMirrorBoxLive,
+} from "@beep/documents-server/aggregates/Sync";
+import {
+  DocumentsServerLive,
+  DocumentsServerLlmLive,
+  DocumentsSyncDrizzleLive,
+  DocumentsSyncFixtureLive,
+} from "@beep/documents-server/layer";
 import { makeFileProcessingServiceLayer } from "@beep/file-processing/Service";
 import { OntologyServerLive } from "@beep/ontology-server/layer";
 import { Thread, Workspace } from "@beep/workspace-server";
 import { BunServices } from "@effect/platform-bun";
 import { Config, Effect, Layer } from "effect";
+import * as O from "effect/Option";
 import { ChatHandlersLive } from "@/chat/ChatOrchestrator";
 import { UsageRecordSinkDrizzle, UsageRecordSinkInMemory } from "@/chat/UsageRecordSink";
 import { DocumentIntakeHandlersLive, WorkspaceVaultHandlersLive } from "@/intake/DocumentIntakeOrchestrator";
 import { OntologyHandlersLive } from "@/ontology/OntologyOrchestrator";
 import { ObservabilityLive } from "@/runtime/Observability";
 import { PgliteDrizzleLive } from "@/runtime/Pglite";
+import { DmsMirrorAvailabilityDisconnectedLayer, DmsMirrorDisconnectedLayer } from "@/sync/DmsMirrorDisconnected";
+import { VaultSyncHandlersLive } from "@/sync/VaultSyncOrchestrator";
 import type { AgentTurnKernel } from "@beep/agents-use-cases/public";
 import type { ThreadStoreUnavailable } from "@beep/workspace-use-cases/aggregates/Thread/server";
 import type * as PlatformError from "effect/PlatformError";
@@ -74,6 +88,7 @@ const DesktopHandlersLive = Layer.mergeAll(
   ChatHandlersLive,
   WorkspaceVaultHandlersLive,
   DocumentIntakeHandlersLive,
+  VaultSyncHandlersLive,
   OntologyHandlersLive
 );
 
@@ -112,6 +127,37 @@ export type DesktopStartupError = Config.ConfigError | PlatformError.PlatformErr
 export type DesktopHandlersLayer = Layer.Layer<Layer.Success<typeof DesktopHandlersLive>, DesktopStartupError>;
 
 /**
+ * The `CHAT_AGENT` env flag: `anthropic` (default) selects the live layers,
+ * `fixture` selects the deterministic keyless ones.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+const chatAgentMode = Config.literals(["anthropic", "fixture"], "CHAT_AGENT").pipe(
+  Config.withDefault("anthropic" as const)
+);
+
+/**
+ * Select a layer from {@link chatAgentMode}: `fixture` short-circuits to
+ * `onFixture`; otherwise `onLive` is run to assemble the live layer. Config
+ * failures (from reading the flag or from `onLive`) become defects via `orDie`,
+ * matching the runtime's typed-startup posture.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+const selectByChatAgent = <A, E, R>(
+  onFixture: Layer.Layer<A, E, R>,
+  onLive: Effect.Effect<Layer.Layer<A, E, R>, Config.ConfigError>
+): Layer.Layer<A, E, R> =>
+  Layer.unwrap(
+    Effect.gen(function* () {
+      const agent = yield* chatAgentMode;
+      return agent === "fixture" ? onFixture : yield* onLive;
+    }).pipe(Effect.orDie)
+  );
+
+/**
  * Select the assistant-turn kernel from the `CHAT_AGENT` env flag. `anthropic`
  * (default) uses the live {@link AnthropicTurnKernel} (resolves
  * `AI_ANTHROPIC_API_KEY` itself); `fixture` uses the deterministic keyless
@@ -120,13 +166,9 @@ export type DesktopHandlersLayer = Layer.Layer<Layer.Success<typeof DesktopHandl
  * @category layers
  * @since 0.0.0
  */
-const TurnKernelLive: Layer.Layer<AgentTurnKernel> = Layer.unwrap(
-  Effect.gen(function* () {
-    const agent = yield* Config.literals(["anthropic", "fixture"], "CHAT_AGENT").pipe(
-      Config.withDefault("anthropic" as const)
-    );
-    return agent === "fixture" ? FixtureTurnKernel : AnthropicTurnKernel;
-  }).pipe(Effect.orDie)
+const TurnKernelLive: Layer.Layer<AgentTurnKernel> = selectByChatAgent(
+  FixtureTurnKernel,
+  Effect.succeed(AnthropicTurnKernel)
 );
 
 /**
@@ -139,14 +181,9 @@ const TurnKernelLive: Layer.Layer<AgentTurnKernel> = Layer.unwrap(
  * @category layers
  * @since 0.0.0
  */
-const DocumentsFilingLive = Layer.unwrap(
+const DocumentsFilingLive = selectByChatAgent(
+  DocumentsServerLive,
   Effect.gen(function* () {
-    const agent = yield* Config.literals(["anthropic", "fixture"], "CHAT_AGENT").pipe(
-      Config.withDefault("anthropic" as const)
-    );
-    if (agent === "fixture") {
-      return DocumentsServerLive;
-    }
     const model = yield* Config.nonEmptyString(FILING_DECISION_MODEL_ENV).pipe(
       Config.withDefault(FILING_DECISION_DEFAULT_MODEL)
     );
@@ -156,7 +193,39 @@ const DocumentsFilingLive = Layer.unwrap(
       Layer.provide(AnthropicLive),
       Layer.provide(makeFileProcessingServiceLayer([DocTextFileProcessingEngine]))
     );
-  }).pipe(Effect.orDie)
+  })
+);
+
+/**
+ * Select the documents vault-sync engine layer. `CHAT_AGENT=fixture` keeps the
+ * fully deterministic keyless engine (in-memory repos + fixture mirror);
+ * otherwise the Drizzle-backed engine runs against the Box mirror when
+ * `CLOUD_BOX_TOKEN` is configured, or against the app-local disconnected
+ * mirror layers (typed `DmsMirrorUnavailable` + probe `connected: false`)
+ * when it is not — the honest not-connected state while the Box test tenant
+ * is not provisioned.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+const DocumentsSyncLive = selectByChatAgent(
+  DocumentsSyncFixtureLive,
+  Effect.gen(function* () {
+    const token = yield* Config.option(Config.redacted("CLOUD_BOX_TOKEN"));
+    return O.match(token, {
+      onNone: () =>
+        DocumentsSyncDrizzleLive.pipe(
+          Layer.provide([DmsMirrorDisconnectedLayer, DmsMirrorAvailabilityDisconnectedLayer])
+        ),
+      onSome: (boxToken) =>
+        DocumentsSyncDrizzleLive.pipe(
+          // The availability probe resolves the mirror root itself, so it needs
+          // the Box driver and mirror config just like the mirror layer.
+          Layer.provide([DmsMirrorBoxLive, DmsMirrorAvailabilityBoxLayer.pipe(Layer.provide(BoxMirrorConfigLayer))]),
+          Layer.provide(Box.makeLayer(BoxDeveloperTokenConfig.make({ token: boxToken })))
+        ),
+    });
+  })
 );
 
 /**
@@ -179,6 +248,7 @@ export const RuntimeLive: DesktopHandlersLayer = DesktopHandlersLive.pipe(
     Workspace.WorkspaceVaultStoreDrizzleLayer,
     UsageRecordSinkDrizzle,
     DocumentsFilingLive,
+    DocumentsSyncLive,
     OntologyServerLive,
   ]),
   Layer.provide(PgliteDrizzleLive),
@@ -206,6 +276,7 @@ export const RuntimeTest: DesktopHandlersLayer = DesktopHandlersLive.pipe(
     Workspace.WorkspaceVaultStoreInMemoryLayer,
     UsageRecordSinkInMemory,
     DocumentsServerLive,
+    DocumentsSyncFixtureLive,
     OntologyServerLive,
   ]),
   Layer.provideMerge(BunServices.layer)

@@ -8,12 +8,19 @@
 
 import { Effect } from "effect";
 import { ArchitectureLabMigrationTarget } from "./migrations/ArchitectureLab.js";
+import { DocumentsSyncMigrationTarget } from "./migrations/DocumentsSync.js";
 import { EpistemicUsageMigrationTarget } from "./migrations/EpistemicUsage.js";
 import { WorkspaceThreadMigrationTarget } from "./migrations/WorkspaceThread.js";
 import type { DbAdminMigrationTarget } from "./migrations/ArchitectureLab.js";
 
 /**
  * Architecture lab migration target export.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+/**
+ * Documents sync migration target export.
  *
  * @category configuration
  * @since 0.0.0
@@ -30,7 +37,12 @@ import type { DbAdminMigrationTarget } from "./migrations/ArchitectureLab.js";
  * @category configuration
  * @since 0.0.0
  */
-export { ArchitectureLabMigrationTarget, EpistemicUsageMigrationTarget, WorkspaceThreadMigrationTarget };
+export {
+  ArchitectureLabMigrationTarget,
+  DocumentsSyncMigrationTarget,
+  EpistemicUsageMigrationTarget,
+  WorkspaceThreadMigrationTarget,
+};
 
 /**
  * All db-admin migration targets owned by the current repo.
@@ -40,7 +52,7 @@ export { ArchitectureLabMigrationTarget, EpistemicUsageMigrationTarget, Workspac
  * import { DbAdminMigrationTargets } from "@beep/db-admin/targets"
  *
  * const targetNames = DbAdminMigrationTargets.map((target) => target.name)
- * console.log(targetNames) // ["architecture-lab", "workspace-thread", "epistemic-usage"]
+ * console.log(targetNames) // ["architecture-lab", "workspace-thread", "epistemic-usage", "documents-sync"]
  * ```
  *
  * @category configuration
@@ -50,6 +62,7 @@ export const DbAdminMigrationTargets = [
   ArchitectureLabMigrationTarget,
   WorkspaceThreadMigrationTarget,
   EpistemicUsageMigrationTarget,
+  DocumentsSyncMigrationTarget,
 ] as const;
 
 /**
@@ -65,7 +78,7 @@ export const DbAdminMigrationTargets = [
  *     Effect.map((targets) => targets.map((target) => target.name))
  *   )
  * )
- * console.log(targetNames) // ["architecture-lab", "workspace-thread", "epistemic-usage"]
+ * console.log(targetNames) // ["architecture-lab", "workspace-thread", "epistemic-usage", "documents-sync"]
  * ```
  *
  * @effects

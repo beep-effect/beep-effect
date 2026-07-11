@@ -435,6 +435,7 @@
     "packages/documents/domain",
     "packages/documents/use-cases",
     "packages/documents/server",
+    "packages/documents/tables",
     "packages/workspace/domain",
     "packages/drivers/drizzle",
     "packages/drivers/duckdb",

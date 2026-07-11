@@ -34,6 +34,7 @@ const config = {
     "packages/documents/domain/package.json",
     "packages/documents/use-cases/package.json",
     "packages/documents/server/package.json",
+    "packages/documents/tables/package.json",
     "packages/workspace/domain/package.json",
     "packages/drivers/drizzle/package.json",
     "packages/drivers/duckdb/package.json",

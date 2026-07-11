@@ -19,6 +19,7 @@
     "packages/documents/domain/dtslint/**/*.tst.*",
     "packages/documents/use-cases/dtslint/**/*.tst.*",
     "packages/documents/server/dtslint/**/*.tst.*",
+    "packages/documents/tables/dtslint/**/*.tst.*",
     "packages/workspace/domain/dtslint/**/*.tst.*",
     "packages/drivers/drizzle/dtslint/**/*.tst.*",
     "packages/drivers/face-detection/dtslint/**/*.tst.*",

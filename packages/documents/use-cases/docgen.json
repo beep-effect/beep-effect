@@ -50,6 +50,9 @@
       "@beep/documents-domain/identity": [
         "../../../packages/documents/domain/src/identity/index.ts"
       ],
+      "@beep/documents-domain/identity/Documents": [
+        "../../../packages/documents/domain/src/identity/Documents.ts"
+      ],
       "@beep/documents-domain/values": [
         "../../../packages/documents/domain/src/values/index.ts"
       ],
