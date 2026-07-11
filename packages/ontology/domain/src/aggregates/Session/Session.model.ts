@@ -24,7 +24,7 @@ import {
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { A } from "@beep/utils";
+import { A, O } from "@beep/utils";
 import { Effect, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -42,6 +42,38 @@ type PartitionedQuad = {
   readonly partition: GraphPartition;
   readonly quad: Quad;
 };
+
+/** Authenticated actor IRI retained on an ontology change journal entry.
+ * @example
+ * ```ts
+ * import { OntologyChangeActor } from "@beep/ontology-domain/aggregates/Session"
+ * const actor = OntologyChangeActor.make("urn:beep:desktop-mcp-client:1")
+ * console.log(actor)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const OntologyChangeActor = S.NonEmptyString.pipe(
+  S.brand("OntologyChangeActor"),
+  $I.annoteSchema("OntologyChangeActor", {
+    description: "Authenticated actor IRI retained on an ontology change journal entry.",
+  })
+);
+
+/** Type for {@link OntologyChangeActor}.
+ * @example
+ * ```ts
+ * import { OntologyChangeActor } from "@beep/ontology-domain/aggregates/Session"
+ * import type { OntologyChangeActor as OntologyChangeActorType } from "@beep/ontology-domain/aggregates/Session"
+ * const actor: OntologyChangeActorType = OntologyChangeActor.make("urn:beep:desktop-mcp-client:1")
+ * console.log(actor)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type OntologyChangeActor = typeof OntologyChangeActor.Type;
+
+const OptionalOntologyChangeActor = S.optionalKey(OntologyChangeActor);
 
 const isDefaultGraph = (graph: GraphTerm): boolean =>
   GraphTerm.match(graph, {
@@ -77,10 +109,12 @@ const ChangeOperationBase = ChangeOperationKind.toTaggedUnion("kind")({
   addQuad: {
     partition: GraphPartition,
     quad: Quad,
+    actor: OptionalOntologyChangeActor,
   },
   removeQuad: {
     partition: GraphPartition,
     quad: Quad,
+    actor: OptionalOntologyChangeActor,
   },
 });
 
@@ -826,17 +860,19 @@ export const appendChanges: {
  */
 export const invertChangeOperation = (change: ChangeOperation): ChangeOperation =>
   ChangeOperation.match(change, {
-    addQuad: ({ partition, quad }) =>
+    addQuad: ({ actor, partition, quad }) =>
       ChangeOperation.make({
         kind: "removeQuad",
         partition,
         quad,
+        ...O.getSomesStruct({ actor: O.fromUndefinedOr(actor) }),
       }),
-    removeQuad: ({ partition, quad }) =>
+    removeQuad: ({ actor, partition, quad }) =>
       ChangeOperation.make({
         kind: "addQuad",
         partition,
         quad,
+        ...O.getSomesStruct({ actor: O.fromUndefinedOr(actor) }),
       }),
   });
 

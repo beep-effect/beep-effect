@@ -16,6 +16,7 @@ import {
 } from "@beep/semantic-web/services/sparql-query";
 import { A, O, P, R } from "@beep/utils";
 import { Effect, Layer, Match, pipe } from "effect";
+import * as Str from "effect/String";
 import { OxigraphSparqlError } from "./Oxigraph.errors.js";
 import type { SparqlQueryRequest, SparqlQueryResult } from "@beep/semantic-web/services/sparql-query";
 import type * as Oxigraph from "oxigraph";
@@ -141,7 +142,7 @@ const fromOxigraphObject = (object: Oxigraph.Object): Rdf.ObjectTerm =>
       Literal: (value) =>
         Rdf.makeLiteral(value.value, value.datatype.value, {
           ...O.getSomesStruct({
-            language: O.fromUndefinedOr(value.language),
+            language: pipe(value.language, O.fromUndefinedOr, O.filter(Str.isNonEmpty)),
           }),
         }),
     })

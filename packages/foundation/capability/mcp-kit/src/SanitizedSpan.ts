@@ -20,17 +20,20 @@
  * @since 0.0.0
  */
 
-import { Cause, Context, Effect, Layer, Sink, Stream } from "effect";
+import { NonNegativeInt } from "@beep/schema";
+import { Context, Effect, Layer, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
-import { CallToolResult, Tool as WireTool } from "effect/unstable/ai/McpSchema";
+import * as S from "effect/Schema";
+import { CallToolResult, McpServerClient, Tool as WireTool } from "effect/unstable/ai/McpSchema";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import * as AiTool from "effect/unstable/ai/Tool";
+import { ApiKeyRequiredFailure } from "./ApiKeyRequired.js";
+import { CurrentMcpCaller, McpCallerIdentity } from "./McpCaller.js";
 import type * as Tracer from "effect/Tracer";
-import type { McpServerClient } from "effect/unstable/ai/McpSchema";
 import type * as Toolkit from "effect/unstable/ai/Toolkit";
 
 /**
@@ -188,6 +191,8 @@ export const withSanitizedToolSpan: {
 type JsonObject = Readonly<Record<string, unknown>>;
 
 const localDefsRefPrefix = "#/$defs/";
+const toolBoundaryFailureText = "Tool call failed before producing a structured result.";
+const isApiKeyRequiredFailure = S.is(ApiKeyRequiredFailure);
 
 const isJsonObject = (value: unknown): value is JsonObject => P.isObject(value) && !A.isArray(value);
 
@@ -245,24 +250,45 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
       // parameter position (mirrors upstream McpServer.registerToolkit,
       // effect/unstable/ai/McpServer.ts:711); dispatch is looked up by tool
       // name at runtime, so no narrower parameter type is available here.
-      handle: (payload) =>
-        withSanitizedToolSpan(built.handle(tool.name, payload), `mcp.tool.call.${tool.name}`).pipe(
+      handle: Effect.fn("McpKit.handle")(function* (payload) {
+        const client = yield* Effect.serviceOption(McpServerClient);
+        const requestServices = Context.add(
+          services,
+          CurrentMcpCaller,
+          O.map(client, (current) => McpCallerIdentity.make({ clientId: NonNegativeInt.make(current.clientId) }))
+        );
+        return yield* withSanitizedToolSpan(built.handle(tool.name, payload), `mcp.tool.call.${tool.name}`).pipe(
           Stream.unwrap,
           Stream.run(Sink.last()),
           Effect.flatMap(Effect.fromOption),
-          Effect.provideContext(services),
-          Effect.matchCause({
-            onFailure: (cause) =>
-              CallToolResult.make({ isError: true, content: [{ type: "text", text: Cause.pretty(cause) }] }),
-            onSuccess: (result: { readonly encodedResult: unknown }) =>
-              CallToolResult.make({
-                isError: false,
-                structuredContent: P.isObject(result.encodedResult) ? result.encodedResult : undefined,
-                content: [{ type: "text", text: JSON.stringify(result.encodedResult) }],
-              }),
-          }),
-          Effect.tapCause(Effect.log)
-        ) as Effect.Effect<CallToolResult, never, McpServerClient>,
+          Effect.provideContext(requestServices),
+          Effect.tapCause(Effect.log),
+          Effect.matchCauseEffect({
+            onFailure: () =>
+              Effect.succeed(
+                CallToolResult.make({ isError: true, content: [{ type: "text", text: toolBoundaryFailureText }] })
+              ),
+            onSuccess: (result: {
+              readonly encodedResult: unknown;
+              readonly isFailure: boolean;
+              readonly result: unknown;
+            }) =>
+              S.encodeUnknownEffect(S.UnknownFromJsonString)(result.encodedResult).pipe(
+                Effect.tapCause(Effect.log),
+                Effect.matchCause({
+                  onFailure: () =>
+                    CallToolResult.make({ isError: true, content: [{ type: "text", text: toolBoundaryFailureText }] }),
+                  onSuccess: (text) =>
+                    CallToolResult.make({
+                      isError: result.isFailure && !isApiKeyRequiredFailure(result.result),
+                      structuredContent: P.isObject(result.encodedResult) ? result.encodedResult : undefined,
+                      content: [{ type: "text", text }],
+                    }),
+                })
+              ),
+          })
+        );
+      }),
     });
   }
 });

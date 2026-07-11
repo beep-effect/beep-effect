@@ -1,0 +1,20 @@
+[11:53:21.598] INFO (#1909): initialize {
+  protocolVersion: "2025-06-18",
+  server: "beep-ontology",
+}
+[11:53:21.615] INFO (#1909): tools/list {
+  tools: [ "ontology_open_inspect", "ontology_snapshot_describe", "ontology_search", "ontology_sparql_query",
+    "ontology_validate", "ontology_capability_metadata"
+  ],
+}
+[11:53:21.679] INFO (#1909): tools/call ontology_capability_metadata {
+  isError: false,
+  maxQueryResults: 200,
+  reasonerProfile: "structural-rdfs-owl-rl-subset",
+}
+[11:53:21.842] INFO (#1909): tools/call ontology_sparql_query {
+  displayedResultCount: 2,
+  effectiveLimit: 200,
+  isError: false,
+  truncated: false,
+}
