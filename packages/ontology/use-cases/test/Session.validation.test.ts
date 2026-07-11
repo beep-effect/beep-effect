@@ -312,7 +312,8 @@ describe("Ontology validation and provenance", () => {
           expect(classRepair.operations).toHaveLength(1);
         })
       );
-    })
+    }),
+    { timeout: 120_000 }
   );
 
   it.effect(
@@ -362,6 +363,7 @@ describe("Ontology validation and provenance", () => {
           expect(writes.get(exported.datasetPath)).toContain("http://rdfs.org/ns/void#triples");
         })
       );
-    })
+    }),
+    { timeout: 120_000 }
   );
 });

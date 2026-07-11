@@ -50,6 +50,16 @@
       "reason": "Type alias contains non-schema signals such as function members or runtime handles."
     },
     {
+      "file": "packages/_internal/db-admin/test/integration/DocumentsSyncMigration.pglite.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 19,
+      "owner": "@beep/db-admin",
+      "reason": "Migration regression decodes fixed fixture rows to prove the documents-sync target SQL and unique-index enforcement; schema-derived arbitrary round-trips for the Sync* entities live with the domain model tests (packages/documents/domain/test/Sync*.test.ts)."
+    },
+    {
       "file": "packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.kernel.ts",
       "symbol": "AgentTurnKernelShape",
       "kind": "exported-interface",
@@ -122,6 +132,14 @@
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
+      "file": "packages/documents/server/src/aggregates/Sync/DmsMirrorFixture.ts",
+      "symbol": "DmsMirrorFixtureHandleShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/documents-server",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
       "file": "packages/documents/use-cases/src/aggregates/Document/DocumentIntake.ts",
       "symbol": "DocumentIntakeShape",
       "kind": "exported-interface",
@@ -132,6 +150,62 @@
     {
       "file": "packages/documents/use-cases/src/aggregates/Document/FilingDecision.ts",
       "symbol": "FilingDecisionShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/documents-use-cases",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts",
+      "symbol": "DmsMirrorAvailabilityShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/documents-use-cases",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts",
+      "symbol": "DmsMirrorShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/documents-use-cases",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/VaultSyncEngine.ts",
+      "symbol": "VaultSyncEngineShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/documents-use-cases",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncConflict/SyncConflict.repository.ts",
+      "symbol": "SyncConflictRepositoryShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/documents-use-cases",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncCursor/SyncCursor.repository.ts",
+      "symbol": "SyncCursorRepositoryShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/documents-use-cases",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncItem/SyncItem.repository.ts",
+      "symbol": "SyncItemRepositoryShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/documents-use-cases",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncOperation/SyncOperation.repository.ts",
+      "symbol": "SyncOperationRepositoryShape",
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/documents-use-cases",

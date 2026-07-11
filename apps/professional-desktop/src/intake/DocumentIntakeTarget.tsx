@@ -15,10 +15,10 @@ import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { AsyncResult } from "effect/unstable/reactivity";
 import { Fragment, useState } from "react";
+import { failureMessageOr } from "@/lib/failureMessage";
 import {
   ConfigureWorkspaceVaultInput,
   configureWorkspaceVaultAtom,
@@ -44,15 +44,6 @@ const droppedFiles = (event: DragEvent<HTMLElement>): ReadonlyArray<File> => A.f
 
 const batchIdFor = (files: ReadonlyArray<File>): string =>
   `batch-${files.length}-${slugVaultSegment(files[0]?.name ?? "drop")}`;
-
-const failureMessageOr =
-  (fallback: string) =>
-  (cause: unknown): string =>
-    P.isError(cause) && cause.message.length > 0
-      ? cause.message
-      : P.isObject(cause) && P.hasProperty(cause, "message") && P.isString(cause.message) && cause.message.length > 0
-        ? cause.message
-        : fallback;
 
 const vaultConfigurationFailureMessage = failureMessageOr("Unable to save workspace vault.");
 

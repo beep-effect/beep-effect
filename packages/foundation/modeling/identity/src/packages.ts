@@ -168,6 +168,8 @@ const generatedComposers = $I.compose(
   "storybook",
   "tsgo-shim",
   "doc-text",
+  "doc-text",
+  "documents-tables",
   "tailscale"
 );
 
@@ -401,7 +403,7 @@ export const $TestUtilsId = composers.$TestUtilsId;
  * ```ts
  * import { $SharedDomainId } from "@beep/identity"
  *
- * const id = $SharedDomainId.make("TenantId")
+"tailscale" * const id = $SharedDomainId.make("TenantId")
  * ```
  *
  * @since 0.0.0
@@ -2038,6 +2040,22 @@ export const $TsgoShimId: Identity.IdentityComposer<"@beep/tsgo-shim"> = compose
  * @category configuration
  */
 export const $DocTextId: Identity.IdentityComposer<"@beep/doc-text"> = composers.$DocTextId;
+
+/**
+ * Identity composer for `@beep/documents-tables`.
+ *
+ * @example
+ * ```typescript
+ * import { $DocumentsTablesId } from "@beep/identity"
+ *
+ * const id = $DocumentsTablesId.make("DocumentsTables")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $DocumentsTablesId: Identity.IdentityComposer<"@beep/documents-tables"> = composers.$DocumentsTablesId;
 
 /**
  * Identity composer for `@beep/tailscale`.

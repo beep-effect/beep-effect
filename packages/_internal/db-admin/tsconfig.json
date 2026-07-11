@@ -12,6 +12,9 @@
       "path": "../../architecture-lab/tables/tsconfig.json"
     },
     {
+      "path": "../../documents/tables/tsconfig.json"
+    },
+    {
       "path": "../../drivers/postgres/tsconfig.json"
     },
     {

@@ -1,4 +1,4 @@
-import { DbAdminMigrationTargets, WorkspaceThreadMigrationTarget } from "@beep/db-admin";
+import { DbAdminMigrationTargets, DocumentsSyncMigrationTarget, WorkspaceThreadMigrationTarget } from "@beep/db-admin";
 import { ArchitectureLabMigrationTarget, DbAdminMigrationTarget } from "@beep/db-admin/migrations/ArchitectureLab";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -25,6 +25,16 @@ describe("db-admin migration targets", () => {
       "workspace_thread",
       "workspace_turn",
       "workspace_message",
+    ]);
+  });
+
+  it("registers the documents SyncItem, SyncOperation, SyncCursor, and SyncConflict tables", () => {
+    expect(DbAdminMigrationTargets).toContain(DocumentsSyncMigrationTarget);
+    expect(DocumentsSyncMigrationTarget.tables).toEqual([
+      "documents_sync_item",
+      "documents_sync_operation",
+      "documents_sync_cursor",
+      "documents_sync_conflict",
     ]);
   });
 

@@ -64,6 +64,9 @@
       "path": "packages/documents/server"
     },
     {
+      "path": "packages/documents/tables"
+    },
+    {
       "path": "packages/documents/use-cases"
     },
     {

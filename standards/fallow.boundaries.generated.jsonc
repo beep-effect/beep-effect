@@ -174,6 +174,12 @@
         ]
       },
       {
+        "name": "@beep/documents-tables",
+        "patterns": [
+          "packages/documents/tables/src/**"
+        ]
+      },
+      {
         "name": "@beep/documents-use-cases",
         "patterns": [
           "packages/documents/use-cases/src/**"
@@ -1119,6 +1125,7 @@
         "allow": [
           "@beep/architecture-lab-tables",
           "@beep/db-admin",
+          "@beep/documents-tables",
           "@beep/epistemic-tables",
           "@beep/postgres",
           "@beep/test-utils",
@@ -1128,6 +1135,7 @@
         "allowTypeOnly": [
           "@beep/architecture-lab-tables",
           "@beep/db-admin",
+          "@beep/documents-tables",
           "@beep/epistemic-tables",
           "@beep/postgres",
           "@beep/test-utils",
@@ -1193,24 +1201,47 @@
       {
         "from": "@beep/documents-server",
         "allow": [
+          "@beep/box",
           "@beep/documents-domain",
           "@beep/documents-server",
+          "@beep/documents-tables",
           "@beep/documents-use-cases",
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/postgres",
           "@beep/schema",
+          "@beep/shared-domain",
           "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/box",
           "@beep/documents-domain",
           "@beep/documents-server",
+          "@beep/documents-tables",
           "@beep/documents-use-cases",
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/postgres",
           "@beep/schema",
+          "@beep/shared-domain",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/documents-tables",
+        "allow": [
+          "@beep/documents-domain",
+          "@beep/documents-tables",
+          "@beep/drizzle",
+          "@beep/test-utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/documents-domain",
+          "@beep/documents-tables",
+          "@beep/drizzle",
+          "@beep/test-utils"
         ]
       },
       {

@@ -1505,6 +1505,25 @@
       "@beep/ontology-use-cases/tools": [
         "./packages/ontology/use-cases/src/tools/index.ts"
       ],
+      "@beep/documents-domain/identity/Documents": [
+        "./packages/documents/domain/src/identity/Documents.ts"
+      ],
+      "@beep/documents-tables": ["./packages/documents/tables/src/index.ts"],
+      "@beep/documents-tables/entities/SyncConflict": [
+        "./packages/documents/tables/src/entities/SyncConflict/index.ts"
+      ],
+      "@beep/documents-tables/entities/SyncCursor": [
+        "./packages/documents/tables/src/entities/SyncCursor/index.ts"
+      ],
+      "@beep/documents-tables/entities/SyncItem": [
+        "./packages/documents/tables/src/entities/SyncItem/index.ts"
+      ],
+      "@beep/documents-tables/entities/SyncOperation": [
+        "./packages/documents/tables/src/entities/SyncOperation/index.ts"
+      ],
+      "@beep/documents-tables/tables": [
+        "./packages/documents/tables/src/tables.ts"
+      ],
       "@beep/tailscale": ["./packages/drivers/tailscale/src/index.ts"],
       "@beep/tailscale/*": ["./packages/drivers/tailscale/src/*"]
     }

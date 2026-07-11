@@ -25,6 +25,7 @@ import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
 import { DocumentIntakeTarget } from "./intake/DocumentIntakeTarget.tsx";
 import { CosmosSpike } from "./spikes/CosmosSpike.tsx";
+import { VaultSyncPanel } from "./sync/VaultSyncPanel.tsx";
 import { makeDesktopHttpProtocolLive } from "./transport/DesktopHttpProtocol.ts";
 import { IpcChatProtocolLive } from "./transport/IpcChatClient.ts";
 import { IpcSpikePanel } from "./transport/IpcSpikePanel.tsx";
@@ -151,6 +152,7 @@ const DesktopShell = ({ transport }: { readonly transport: SidecarTransport }): 
           <div className="min-h-0 flex-1">{surface === "chat" ? <ChatApp /> : <OntologyWorkbench />}</div>
         </div>
       </DocumentIntakeTarget>
+      <VaultSyncPanel />
       <ChatTurnErrorToasts />
       <Toaster richColors />
       {transport.ipc && hasIpcSpikeFlag() ? <IpcSpikePanel /> : null}

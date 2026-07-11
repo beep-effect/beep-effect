@@ -204,12 +204,36 @@
       "description": "Trimmed, non-empty, sidebar-bounded title derived from user message text."
     },
     {
+      "file": "apps/professional-desktop/src/intake/Intake.atoms.ts",
+      "symbol": "ConfigureWorkspaceVaultInput",
+      "kind": "schema-class",
+      "owner": "@beep/professional-desktop",
+      "identity": "ConfigureWorkspaceVaultInput",
+      "description": "Browser-side workspace vault configuration input."
+    },
+    {
+      "file": "apps/professional-desktop/src/intake/Intake.atoms.ts",
+      "symbol": "DroppedDocumentInput",
+      "kind": "schema-class",
+      "owner": "@beep/professional-desktop",
+      "identity": "DroppedDocumentInput",
+      "description": "Browser-side dropped document input."
+    },
+    {
       "file": "apps/professional-desktop/src/runtime/Migrations.ts",
       "symbol": "ProfessionalDesktopMigrationOptions",
       "kind": "schema-class",
       "owner": "@beep/professional-desktop",
       "identity": "ProfessionalDesktopMigrationOptions",
       "description": "Options accepted when applying the Professional Desktop runtime migrations."
+    },
+    {
+      "file": "apps/professional-desktop/src/spikes/CosmosSpike.worker.ts",
+      "symbol": "SyntheticProjectionResponse",
+      "kind": "schema-class",
+      "owner": "@beep/professional-desktop",
+      "identity": "SyntheticProjectionResponse",
+      "description": "Response posted from the synthetic cosmos projection worker."
     },
     {
       "file": "apps/professional-desktop/src/transport/SidecarTransport.ts",
@@ -358,14 +382,18 @@
     {
       "file": "packages/agents/client/src/Chat.atoms.ts",
       "symbol": "CreateThreadAtomInput",
-      "kind": "struct-const",
-      "owner": "@beep/agents-client"
+      "kind": "schema-class",
+      "owner": "@beep/agents-client",
+      "identity": "CreateThreadAtomInput",
+      "description": "Write payload for the client thread-creation atom."
     },
     {
       "file": "packages/agents/client/src/Chat.atoms.ts",
       "symbol": "EditTarget",
       "kind": "schema-class",
-      "owner": "@beep/agents-client"
+      "owner": "@beep/agents-client",
+      "identity": "EditTarget",
+      "description": "When set, the composer is editing an existing turn's message."
     },
     {
       "file": "packages/agents/client/src/Chat.atoms.ts",
@@ -383,7 +411,9 @@
       "file": "packages/agents/client/src/Chat.atoms.ts",
       "symbol": "StreamingTurn",
       "kind": "schema-class",
-      "owner": "@beep/agents-client"
+      "owner": "@beep/agents-client",
+      "identity": "StreamingTurn",
+      "description": "A streaming assistant turn rendered optimistically while blocks arrive."
     },
     {
       "file": "packages/agents/client/src/Chat.atoms.ts",
@@ -476,6 +506,14 @@
       "owner": "@beep/agents-domain",
       "identity": "ListBlock",
       "description": "A flat list of items."
+    },
+    {
+      "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
+      "symbol": "ListItem",
+      "kind": "schema-class",
+      "owner": "@beep/agents-domain",
+      "identity": "ListItem",
+      "description": "A single item within a list block."
     },
     {
       "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
@@ -1244,6 +1282,684 @@
       "description": "The Worker repository could not serve the request."
     },
     {
+      "file": "packages/documents/domain/src/aggregates/Document/Document.model.ts",
+      "symbol": "Document",
+      "kind": "schema-class",
+      "owner": "@beep/documents-domain",
+      "identity": "Document",
+      "description": "A document materialized into the workspace vault."
+    },
+    {
+      "file": "packages/documents/domain/src/aggregates/Document/Document.model.ts",
+      "symbol": "DocumentContentDigest",
+      "kind": "brand",
+      "owner": "@beep/documents-domain",
+      "identity": "DocumentContentDigest",
+      "description": "Deterministic content digest for a source document."
+    },
+    {
+      "file": "packages/documents/domain/src/aggregates/Document/Document.model.ts",
+      "symbol": "InboxedFilingReason",
+      "kind": "literal-kit",
+      "owner": "@beep/documents-domain",
+      "identity": "InboxedFilingReason",
+      "description": "Reason a document was routed to the intake inbox instead of a taxonomy folder."
+    },
+    {
+      "file": "packages/documents/domain/src/aggregates/IntakeBatch/IntakeBatch.model.ts",
+      "symbol": "IntakeBatch",
+      "kind": "schema-class",
+      "owner": "@beep/documents-domain",
+      "identity": "IntakeBatch",
+      "description": "A deterministic local intake batch."
+    },
+    {
+      "file": "packages/documents/domain/src/aggregates/IntakeBatch/IntakeBatch.model.ts",
+      "symbol": "IntakeBatchId",
+      "kind": "brand",
+      "owner": "@beep/documents-domain",
+      "identity": "IntakeBatchId",
+      "description": "Stable intake batch id supplied by the app intake boundary."
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncConflict/SyncConflict.model.ts",
+      "symbol": "SyncConflictKind",
+      "kind": "literal-kit",
+      "owner": "@beep/documents-domain",
+      "identity": "SyncConflictKind",
+      "description": "Kind of remote drift detected against the one-way mirror."
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncConflict/SyncConflict.model.ts",
+      "symbol": "SyncConflictResolution",
+      "kind": "literal-kit",
+      "owner": "@beep/documents-domain",
+      "identity": "SyncConflictResolution",
+      "description": "Review status for a surfaced remote-drift record."
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncCursor/SyncCursor.model.ts",
+      "symbol": "SyncCursorStatus",
+      "kind": "literal-kit",
+      "owner": "@beep/documents-domain",
+      "identity": "SyncCursorStatus",
+      "description": "Health status for a remote-event stream cursor."
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncItem/SyncItem.model.ts",
+      "symbol": "SyncItemState",
+      "kind": "literal-kit",
+      "owner": "@beep/documents-domain",
+      "identity": "SyncItemState",
+      "description": "Reconciliation state for one mirrored vault item."
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncOperation/SyncOperation.model.ts",
+      "symbol": "SyncOperationStatus",
+      "kind": "literal-kit",
+      "owner": "@beep/documents-domain",
+      "identity": "SyncOperationStatus",
+      "description": "Outbox lifecycle status for a queued push operation."
+    },
+    {
+      "file": "packages/documents/domain/src/entities/SyncOperation/SyncOperation.model.ts",
+      "symbol": "SyncOperationType",
+      "kind": "literal-kit",
+      "owner": "@beep/documents-domain",
+      "identity": "SyncOperationType",
+      "description": "Kind of one-way push performed against the DMS mirror."
+    },
+    {
+      "file": "packages/documents/domain/src/values/Sync/Sync.values.ts",
+      "symbol": "DmsProvider",
+      "kind": "literal-kit",
+      "owner": "@beep/documents-domain",
+      "identity": "DmsProvider",
+      "description": "Document management system provider receiving the one-way vault mirror."
+    },
+    {
+      "file": "packages/documents/domain/src/values/Sync/Sync.values.ts",
+      "symbol": "RemoteItemId",
+      "kind": "brand",
+      "owner": "@beep/documents-domain",
+      "identity": "RemoteItemId",
+      "description": "Provider-neutral identifier for an item stored in the remote DMS."
+    },
+    {
+      "file": "packages/documents/domain/src/values/Sync/Sync.values.ts",
+      "symbol": "SyncItemKind",
+      "kind": "literal-kit",
+      "owner": "@beep/documents-domain",
+      "identity": "SyncItemKind",
+      "description": "Kind of vault item mirrored to the DMS."
+    },
+    {
+      "file": "packages/documents/domain/src/values/Sync/Sync.values.ts",
+      "symbol": "VaultRelPath",
+      "kind": "brand",
+      "owner": "@beep/documents-domain",
+      "identity": "VaultRelPath",
+      "description": "Vault-root-relative POSIX path; never absolute."
+    },
+    {
+      "file": "packages/documents/domain/src/values/Taxonomy/Taxonomy.model.ts",
+      "symbol": "FolioAlignment",
+      "kind": "schema-class",
+      "owner": "@beep/documents-domain",
+      "identity": "FolioAlignment",
+      "description": "FOLIO mapping metadata for a seed taxonomy concept."
+    },
+    {
+      "file": "packages/documents/domain/src/values/Taxonomy/Taxonomy.model.ts",
+      "symbol": "FolioAlignmentKind",
+      "kind": "literal-kit",
+      "owner": "@beep/documents-domain",
+      "identity": "FolioAlignmentKind",
+      "description": "FOLIO alignment confidence for a legal document taxonomy concept."
+    },
+    {
+      "file": "packages/documents/domain/src/values/Taxonomy/Taxonomy.model.ts",
+      "symbol": "LegalDocumentConceptId",
+      "kind": "literal-kit",
+      "owner": "@beep/documents-domain",
+      "identity": "LegalDocumentConceptId",
+      "description": "Stable concept identifiers in the P1 legal document taxonomy seed."
+    },
+    {
+      "file": "packages/documents/domain/src/values/Taxonomy/Taxonomy.model.ts",
+      "symbol": "LegalDocumentTaxonomy",
+      "kind": "schema-class",
+      "owner": "@beep/documents-domain",
+      "identity": "LegalDocumentTaxonomy",
+      "description": "Repo-owned legal document taxonomy seed."
+    },
+    {
+      "file": "packages/documents/domain/src/values/Taxonomy/Taxonomy.model.ts",
+      "symbol": "LegalDocumentTaxonomyConcept",
+      "kind": "schema-class",
+      "owner": "@beep/documents-domain",
+      "identity": "LegalDocumentTaxonomyConcept",
+      "description": "One SKOS-style legal document taxonomy concept."
+    },
+    {
+      "file": "packages/documents/domain/src/values/Taxonomy/Taxonomy.model.ts",
+      "symbol": "VaultFilingContext",
+      "kind": "schema-class",
+      "owner": "@beep/documents-domain",
+      "identity": "VaultFilingContext",
+      "description": "Vault filing context supplied by the app or matter-resolution flow."
+    },
+    {
+      "file": "packages/documents/domain/src/values/Taxonomy/Taxonomy.projection.ts",
+      "symbol": "ProjectFiledDocumentPathInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-domain",
+      "identity": "ProjectFiledDocumentPathInput",
+      "description": "Input accepted by deterministic filed-document path projection."
+    },
+    {
+      "file": "packages/documents/domain/src/values/Taxonomy/Taxonomy.projection.ts",
+      "symbol": "ProjectInboxDocumentPathInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-domain",
+      "identity": "ProjectInboxDocumentPathInput",
+      "description": "Input accepted by deterministic inbox document path projection."
+    },
+    {
+      "file": "packages/documents/domain/src/values/Taxonomy/Taxonomy.projection.ts",
+      "symbol": "ProjectedVaultPath",
+      "kind": "schema-class",
+      "owner": "@beep/documents-domain",
+      "identity": "ProjectedVaultPath",
+      "description": "Deterministic relative vault path for a filed document."
+    },
+    {
+      "file": "packages/documents/domain/src/values/Taxonomy/Taxonomy.projection.ts",
+      "symbol": "TaxonomyProjectionError",
+      "kind": "tagged-error",
+      "owner": "@beep/documents-domain",
+      "identity": "TaxonomyProjectionError",
+      "description": "Failure raised when deterministic vault path projection cannot be completed."
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Document/FilingDecisionLlm.config.ts",
+      "symbol": "FilingDecisionLlmConfigValue",
+      "kind": "schema-class",
+      "owner": "@beep/documents-server",
+      "identity": "FilingDecisionLlmConfigValue",
+      "description": "Resolved configuration value for LLM-backed document filing."
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Document/FilingTextExtraction.ts",
+      "symbol": "FilingTextExtractionInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-server",
+      "identity": "FilingTextExtractionInput",
+      "description": "Input supplied to the optional filing text-extraction seam."
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Sync/DmsMirrorBox.ts",
+      "symbol": "BoxMirrorConfigValue",
+      "kind": "schema-class",
+      "owner": "@beep/documents-server",
+      "identity": "BoxMirrorConfigValue",
+      "description": "Resolved configuration value for the Box DMS mirror adapter."
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Sync/DmsMirrorFixture.ts",
+      "symbol": "DmsMirrorFixtureCounts",
+      "kind": "schema-class",
+      "owner": "@beep/documents-server",
+      "identity": "DmsMirrorFixtureCounts",
+      "description": "Per-verb call counts observed by the fixture since construction."
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Sync/DmsMirrorFixture.ts",
+      "symbol": "DmsMirrorFixtureNode",
+      "kind": "schema-class",
+      "owner": "@beep/documents-server",
+      "identity": "DmsMirrorFixtureNode",
+      "description": "One node of the fixture's synthetic remote tree keyed by mirror-root-relative path."
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Sync/DmsMirrorFixture.ts",
+      "symbol": "DmsMirrorFixtureVerb",
+      "kind": "literal-kit",
+      "owner": "@beep/documents-server",
+      "identity": "DmsMirrorFixtureVerb",
+      "description": "Mirror verb addressed by fixture call counts and failure injection."
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Sync/VaultSync.config.ts",
+      "symbol": "VaultSyncConfigValue",
+      "kind": "schema-class",
+      "owner": "@beep/documents-server",
+      "identity": "VaultSyncConfigValue",
+      "description": "Resolved configuration value for the vault sync engine."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Document/Document.errors.ts",
+      "symbol": "DocumentIntakeActionError",
+      "kind": "tagged-error",
+      "owner": "@beep/documents-use-cases",
+      "identity": "DocumentIntakeActionError",
+      "description": "Client-safe failure raised when dropped-file intake cannot complete."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Document/Document.errors.ts",
+      "symbol": "DocumentIntakeError",
+      "kind": "tagged-union",
+      "owner": "@beep/documents-use-cases",
+      "identity": "DocumentIntakeError",
+      "description": "Internal typed failure raised by document intake."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Document/Document.errors.ts",
+      "symbol": "DocumentMaterializationFailed",
+      "kind": "tagged-error",
+      "owner": "@beep/documents-use-cases",
+      "identity": "DocumentMaterializationFailed",
+      "description": "The workspace vault materialization write failed."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Document/Document.errors.ts",
+      "symbol": "FilingDecisionUnavailable",
+      "kind": "tagged-error",
+      "owner": "@beep/documents-use-cases",
+      "identity": "FilingDecisionUnavailable",
+      "description": "The FilingDecision port could not decide a taxonomy concept."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Document/DocumentIntake.ts",
+      "symbol": "IntakeDroppedFileInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "IntakeDroppedFileInput",
+      "description": "Server-side input for dropped-file intake after workspace vault resolution."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Document/DocumentIntake.ts",
+      "symbol": "IntakeDroppedFilePayload",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "IntakeDroppedFilePayload",
+      "description": "Client payload for app-level dropped-file intake."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Document/FilingDecision.ts",
+      "symbol": "FilingDecisionInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "FilingDecisionInput",
+      "description": "Input supplied to the FilingDecision port."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts",
+      "symbol": "DmsEventPage",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "DmsEventPage",
+      "description": "One page of remote events plus the stream position to resume from."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts",
+      "symbol": "DmsEventType",
+      "kind": "literal-kit",
+      "owner": "@beep/documents-use-cases",
+      "identity": "DmsEventType",
+      "description": "Provider-neutral kind of remote change reported by the DMS event stream."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts",
+      "symbol": "DmsMirrorProbe",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "DmsMirrorProbe",
+      "description": "Connectivity probe result for one DMS mirror adapter."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts",
+      "symbol": "DmsRemoteEvent",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "DmsRemoteEvent",
+      "description": "One provider-neutral remote event observed on the DMS event stream."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts",
+      "symbol": "DmsRemoteItem",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "DmsRemoteItem",
+      "description": "Provider-neutral view of one item stored in the remote DMS."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts",
+      "symbol": "EnsureFolderInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "EnsureFolderInput",
+      "description": "Input for idempotent remote folder creation."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts",
+      "symbol": "MoveItemInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "MoveItemInput",
+      "description": "Input for moving a remote item to a new parent folder."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts",
+      "symbol": "PollEventsInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "PollEventsInput",
+      "description": "Input for polling one page of remote events."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts",
+      "symbol": "RenameItemInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "RenameItemInput",
+      "description": "Input for renaming a remote item in place."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts",
+      "symbol": "UploadFileInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "UploadFileInput",
+      "description": "Input for uploading a new remote file."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts",
+      "symbol": "UploadFileVersionInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "UploadFileVersionInput",
+      "description": "Input for uploading a new version of an existing remote file."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/Sync.errors.ts",
+      "symbol": "DmsMirrorUnavailable",
+      "kind": "tagged-error",
+      "owner": "@beep/documents-use-cases",
+      "identity": "DmsMirrorUnavailable",
+      "description": "The DMS mirror adapter could not complete a remote operation."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/Sync.errors.ts",
+      "symbol": "VaultScanFailed",
+      "kind": "tagged-error",
+      "owner": "@beep/documents-use-cases",
+      "identity": "VaultScanFailed",
+      "description": "Scanning the local workspace vault failed."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/Sync.errors.ts",
+      "symbol": "VaultSyncActionError",
+      "kind": "tagged-error",
+      "owner": "@beep/documents-use-cases",
+      "identity": "VaultSyncActionError",
+      "description": "Client-safe failure raised when a vault sync action cannot complete."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/Sync.rpc.ts",
+      "symbol": "ListVaultSyncConflictsRpc",
+      "kind": "schema-const",
+      "owner": "@beep/documents-use-cases"
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/Sync.rpc.ts",
+      "symbol": "MarkVaultSyncConflictReviewedPayload",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "MarkVaultSyncConflictReviewedPayload",
+      "description": "Payload for marking one vault sync drift record as reviewed."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/Sync.rpc.ts",
+      "symbol": "VaultSyncWorkspacePayload",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "VaultSyncWorkspacePayload",
+      "description": "Workspace-scoped payload shared by the vault sync RPCs."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/VaultSyncEngine.ts",
+      "symbol": "ListOpenConflictsInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "ListOpenConflictsInput",
+      "description": "Input for listing the open drift records of one workspace."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/VaultSyncEngine.ts",
+      "symbol": "MarkConflictReviewedInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "MarkConflictReviewedInput",
+      "description": "Input for marking one drift record as reviewed."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/VaultSyncEngine.ts",
+      "symbol": "SyncOnceInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "SyncOnceInput",
+      "description": "Input for one full push-and-poll sync pass over a workspace vault."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/VaultSyncEngine.ts",
+      "symbol": "VaultSyncError",
+      "kind": "tagged-union",
+      "owner": "@beep/documents-use-cases",
+      "identity": "VaultSyncError",
+      "description": "Internal typed failure raised by the vault sync engine."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/VaultSyncEngine.ts",
+      "symbol": "VaultSyncStatus",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "VaultSyncStatus",
+      "description": "Point-in-time vault sync status read model for one workspace mirror."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/VaultSyncEngine.ts",
+      "symbol": "VaultSyncStatusInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "VaultSyncStatusInput",
+      "description": "Input for reading the current vault sync status of one workspace."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncConflict/SyncConflict.repository.ts",
+      "symbol": "ListOpenSyncConflictsInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "ListOpenSyncConflictsInput",
+      "description": "Listing input addressing the open drift records of one workspace mirror."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncConflict/SyncConflict.repository.ts",
+      "symbol": "MarkSyncConflictReviewedInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "MarkSyncConflictReviewedInput",
+      "description": "Review input addressing one drift record by identity."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncConflict/SyncConflict.repository.ts",
+      "symbol": "SyncConflictRepositoryNotFound",
+      "kind": "tagged-error",
+      "owner": "@beep/documents-use-cases",
+      "identity": "SyncConflictRepositoryNotFound",
+      "description": "The SyncConflict repository could not find the requested entity."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncConflict/SyncConflict.repository.ts",
+      "symbol": "SyncConflictRepositoryUnavailable",
+      "kind": "tagged-error",
+      "owner": "@beep/documents-use-cases",
+      "identity": "SyncConflictRepositoryUnavailable",
+      "description": "The SyncConflict repository could not serve the request."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncConflict/SyncConflict.repository.ts",
+      "symbol": "SyncConflictSeed",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "SyncConflictSeed",
+      "description": "Creation input for one remote-drift record, excluding BaseEntity bookkeeping fields."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncCursor/SyncCursor.repository.ts",
+      "symbol": "FindSyncCursorInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "FindSyncCursorInput",
+      "description": "Lookup input addressing the cursor of one workspace mirror."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncCursor/SyncCursor.repository.ts",
+      "symbol": "SyncCursorRepositoryUnavailable",
+      "kind": "tagged-error",
+      "owner": "@beep/documents-use-cases",
+      "identity": "SyncCursorRepositoryUnavailable",
+      "description": "The SyncCursor repository could not serve the request."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncCursor/SyncCursor.repository.ts",
+      "symbol": "SyncCursorSeed",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "SyncCursorSeed",
+      "description": "Upsert input for one remote-event stream cursor, excluding BaseEntity bookkeeping fields."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncItem/SyncItem.repository.ts",
+      "symbol": "FindSyncItemByPathInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "FindSyncItemByPathInput",
+      "description": "Lookup input addressing one sync-tracking row by vault-relative path."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncItem/SyncItem.repository.ts",
+      "symbol": "FindSyncItemByRemoteIdInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "FindSyncItemByRemoteIdInput",
+      "description": "Lookup input addressing one sync-tracking row by provider remote id."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncItem/SyncItem.repository.ts",
+      "symbol": "ListSyncItemsByWorkspaceInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "ListSyncItemsByWorkspaceInput",
+      "description": "Listing input addressing every sync-tracking row of one workspace mirror."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncItem/SyncItem.repository.ts",
+      "symbol": "SyncItemRepositoryConflict",
+      "kind": "tagged-error",
+      "owner": "@beep/documents-use-cases",
+      "identity": "SyncItemRepositoryConflict",
+      "description": "The SyncItem repository rejected a conflicting write."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncItem/SyncItem.repository.ts",
+      "symbol": "SyncItemRepositoryNotFound",
+      "kind": "tagged-error",
+      "owner": "@beep/documents-use-cases",
+      "identity": "SyncItemRepositoryNotFound",
+      "description": "The SyncItem repository could not find the requested entity."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncItem/SyncItem.repository.ts",
+      "symbol": "SyncItemRepositoryUnavailable",
+      "kind": "tagged-error",
+      "owner": "@beep/documents-use-cases",
+      "identity": "SyncItemRepositoryUnavailable",
+      "description": "The SyncItem repository could not serve the request."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncItem/SyncItem.repository.ts",
+      "symbol": "SyncItemSeed",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "SyncItemSeed",
+      "description": "Creation input for one sync-tracking row, excluding BaseEntity bookkeeping fields."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncOperation/SyncOperation.repository.ts",
+      "symbol": "ListQueuedSyncOperationsForItemInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "ListQueuedSyncOperationsForItemInput",
+      "description": "Listing input addressing the queued operations of one sync-tracking row."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncOperation/SyncOperation.repository.ts",
+      "symbol": "ListQueuedSyncOperationsInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "ListQueuedSyncOperationsInput",
+      "description": "Listing input addressing the queued operations of one workspace mirror."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncOperation/SyncOperation.repository.ts",
+      "symbol": "ListSyncOperationsByStatusInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "ListSyncOperationsByStatusInput",
+      "description": "Listing input addressing the operations of one workspace mirror by status."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncOperation/SyncOperation.repository.ts",
+      "symbol": "RequeueLeasedSyncOperationsInput",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "RequeueLeasedSyncOperationsInput",
+      "description": "Recovery input addressing the leased operations of one workspace mirror."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncOperation/SyncOperation.repository.ts",
+      "symbol": "SyncOperationRepositoryConflict",
+      "kind": "tagged-error",
+      "owner": "@beep/documents-use-cases",
+      "identity": "SyncOperationRepositoryConflict",
+      "description": "The SyncOperation repository rejected a duplicate idempotency key."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncOperation/SyncOperation.repository.ts",
+      "symbol": "SyncOperationRepositoryNotFound",
+      "kind": "tagged-error",
+      "owner": "@beep/documents-use-cases",
+      "identity": "SyncOperationRepositoryNotFound",
+      "description": "The SyncOperation repository could not find the requested entity."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncOperation/SyncOperation.repository.ts",
+      "symbol": "SyncOperationRepositoryUnavailable",
+      "kind": "tagged-error",
+      "owner": "@beep/documents-use-cases",
+      "identity": "SyncOperationRepositoryUnavailable",
+      "description": "The SyncOperation repository could not serve the request."
+    },
+    {
+      "file": "packages/documents/use-cases/src/entities/SyncOperation/SyncOperation.repository.ts",
+      "symbol": "SyncOperationSeed",
+      "kind": "schema-class",
+      "owner": "@beep/documents-use-cases",
+      "identity": "SyncOperationSeed",
+      "description": "Creation input for one push-outbox operation, excluding BaseEntity bookkeeping fields."
+    },
+    {
       "file": "packages/drivers/acp/src/Acp.errors.ts",
       "symbol": "AcpError",
       "kind": "tagged-union",
@@ -1956,6 +2672,70 @@
       "description": "Experimental value object for an uploaded chunk in a Box chunked upload session."
     },
     {
+      "file": "packages/drivers/cosmos/src/Cosmos.backend.ts",
+      "symbol": "CosmosBackend",
+      "kind": "literal-kit",
+      "owner": "@beep/cosmos",
+      "identity": "CosmosBackend",
+      "description": "Graph viewport backend selected by the cosmos driver capability probe."
+    },
+    {
+      "file": "packages/drivers/cosmos/src/Cosmos.backend.ts",
+      "symbol": "CosmosBackendSelection",
+      "kind": "schema-class",
+      "owner": "@beep/cosmos",
+      "identity": "CosmosBackendSelection",
+      "description": "Backend chosen from a runtime WebGL2 capability probe."
+    },
+    {
+      "file": "packages/drivers/cosmos/src/Cosmos.backend.ts",
+      "symbol": "CosmosCapabilityProbe",
+      "kind": "schema-class",
+      "owner": "@beep/cosmos",
+      "identity": "CosmosCapabilityProbe",
+      "description": "Runtime WebGL2 capability probe result for the ontology visualizer spike."
+    },
+    {
+      "file": "packages/drivers/cosmos/src/Cosmos.backend.ts",
+      "symbol": "ProbeWebGl2Options",
+      "kind": "schema-class",
+      "owner": "@beep/cosmos",
+      "identity": "ProbeWebGl2Options",
+      "description": "Optional canvas override for probing WebGL2 without creating a document element."
+    },
+    {
+      "file": "packages/drivers/cosmos/src/Cosmos.errors.ts",
+      "symbol": "CosmosDriverError",
+      "kind": "tagged-error",
+      "owner": "@beep/cosmos",
+      "identity": "CosmosDriverError",
+      "description": "Typed error raised by cosmos and sigma graph render adapters."
+    },
+    {
+      "file": "packages/drivers/cosmos/src/Cosmos.errors.ts",
+      "symbol": "CosmosDriverErrorReason",
+      "kind": "literal-kit",
+      "owner": "@beep/cosmos",
+      "identity": "CosmosDriverErrorReason",
+      "description": "Failure reason emitted by the cosmos graph driver."
+    },
+    {
+      "file": "packages/drivers/cosmos/src/Cosmos.projection.ts",
+      "symbol": "CosmosGraphProjection",
+      "kind": "schema-class",
+      "owner": "@beep/cosmos",
+      "identity": "CosmosGraphProjection",
+      "description": "Typed-array graph projection containing node ids, point positions, and source-target link pairs."
+    },
+    {
+      "file": "packages/drivers/cosmos/src/Cosmos.projection.ts",
+      "symbol": "SyntheticOntologyGraphOptions",
+      "kind": "schema-class",
+      "owner": "@beep/cosmos",
+      "identity": "SyntheticOntologyGraphOptions",
+      "description": "Deterministic synthetic ontology graph generation options."
+    },
+    {
       "file": "packages/drivers/discord/src/Discord.errors.ts",
       "symbol": "DiscordError",
       "kind": "tagged-error",
@@ -2010,6 +2790,30 @@
       "owner": "@beep/discord",
       "identity": "DiscordMessageProof",
       "description": "Sanitized metadata returned after a successful proof message creation."
+    },
+    {
+      "file": "packages/drivers/doc-text/src/DocText.errors.ts",
+      "symbol": "DocTextError",
+      "kind": "tagged-error",
+      "owner": "@beep/doc-text",
+      "identity": "DocTextError",
+      "description": "Redacted technical failure raised inside the JS-native document text driver boundary."
+    },
+    {
+      "file": "packages/drivers/doc-text/src/DocText.errors.ts",
+      "symbol": "DocTextErrorOptions",
+      "kind": "schema-class",
+      "owner": "@beep/doc-text",
+      "identity": "DocTextErrorOptions",
+      "description": "Options for configuring DocTextError instances."
+    },
+    {
+      "file": "packages/drivers/doc-text/src/DocText.errors.ts",
+      "symbol": "DocTextErrorReason",
+      "kind": "literal-kit",
+      "owner": "@beep/doc-text",
+      "identity": "DocTextErrorReason",
+      "description": "Redacted technical error reasons emitted by the JS-native document text driver."
     },
     {
       "file": "packages/drivers/drizzle/src/Drizzle.errors.ts",
@@ -2122,6 +2926,54 @@
       "owner": "@beep/ecfr",
       "identity": "EcfrErrorReason",
       "description": "Redacted technical error reasons emitted by the eCFR REST API driver."
+    },
+    {
+      "file": "packages/drivers/ecfr/src/Ecfr.service.ts",
+      "symbol": "EcfrCorrectionsParams",
+      "kind": "schema-class",
+      "owner": "@beep/ecfr",
+      "identity": "EcfrCorrectionsParams",
+      "description": "Optional title and ISO-date filters for eCFR corrections."
+    },
+    {
+      "file": "packages/drivers/ecfr/src/Ecfr.service.ts",
+      "symbol": "EcfrDatedTitleParams",
+      "kind": "schema-class",
+      "owner": "@beep/ecfr",
+      "identity": "EcfrDatedTitleParams",
+      "description": "Dated CFR title path parameters for eCFR versioner requests without hierarchy selectors."
+    },
+    {
+      "file": "packages/drivers/ecfr/src/Ecfr.service.ts",
+      "symbol": "EcfrSearchParams",
+      "kind": "schema-class",
+      "owner": "@beep/ecfr",
+      "identity": "EcfrSearchParams",
+      "description": "Filters, ordering, and page controls shared by eCFR search endpoints."
+    },
+    {
+      "file": "packages/drivers/ecfr/src/Ecfr.service.ts",
+      "symbol": "EcfrTitleParams",
+      "kind": "schema-class",
+      "owner": "@beep/ecfr",
+      "identity": "EcfrTitleParams",
+      "description": "Path parameters identifying one CFR title."
+    },
+    {
+      "file": "packages/drivers/ecfr/src/Ecfr.service.ts",
+      "symbol": "EcfrVersionerParams",
+      "kind": "schema-class",
+      "owner": "@beep/ecfr",
+      "identity": "EcfrVersionerParams",
+      "description": "Dated CFR title path and optional hierarchy selectors for eCFR versioner requests."
+    },
+    {
+      "file": "packages/drivers/ecfr/src/Ecfr.service.ts",
+      "symbol": "EcfrVersionsParams",
+      "kind": "schema-class",
+      "owner": "@beep/ecfr",
+      "identity": "EcfrVersionsParams",
+      "description": "Issue-date, page, and hierarchy filters for one CFR title's content versions."
     },
     {
       "file": "packages/drivers/face-detection/src/FaceDetection.errors.ts",
@@ -4180,6 +5032,54 @@
       "description": "Drive item content skipped because it appears protected or encrypted."
     },
     {
+      "file": "packages/drivers/n3/src/N3.errors.ts",
+      "symbol": "N3TurtleCodecError",
+      "kind": "tagged-error",
+      "owner": "@beep/n3",
+      "identity": "N3TurtleCodecError",
+      "description": "Typed N3 Turtle codec error."
+    },
+    {
+      "file": "packages/drivers/n3/src/N3.errors.ts",
+      "symbol": "N3TurtleCodecErrorReason",
+      "kind": "literal-kit",
+      "owner": "@beep/n3",
+      "identity": "N3TurtleCodecErrorReason",
+      "description": "N3 Turtle codec failure reason."
+    },
+    {
+      "file": "packages/drivers/n3/src/N3.service.ts",
+      "symbol": "N3ParseTurtleRequest",
+      "kind": "schema-class",
+      "owner": "@beep/n3",
+      "identity": "N3ParseTurtleRequest",
+      "description": "N3 Turtle parse request."
+    },
+    {
+      "file": "packages/drivers/n3/src/N3.service.ts",
+      "symbol": "N3ParseTurtleResult",
+      "kind": "schema-class",
+      "owner": "@beep/n3",
+      "identity": "N3ParseTurtleResult",
+      "description": "N3 Turtle parse result."
+    },
+    {
+      "file": "packages/drivers/n3/src/N3.service.ts",
+      "symbol": "N3SerializeTurtleRequest",
+      "kind": "schema-class",
+      "owner": "@beep/n3",
+      "identity": "N3SerializeTurtleRequest",
+      "description": "N3 Turtle serialize request."
+    },
+    {
+      "file": "packages/drivers/n3/src/N3.service.ts",
+      "symbol": "N3SerializeTurtleResult",
+      "kind": "schema-class",
+      "owner": "@beep/n3",
+      "identity": "N3SerializeTurtleResult",
+      "description": "N3 Turtle serialize result."
+    },
+    {
       "file": "packages/drivers/nlp-mcp/src/Server.ts",
       "symbol": "NlpMcpServerConfig",
       "kind": "schema-class",
@@ -4349,6 +5249,22 @@
     },
     {
       "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "CountJsonlOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "CountJsonlOptions",
+      "description": "Optional controls for counting JSONL records in a file."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "CountLinesOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "CountLinesOptions",
+      "description": "Optional controls for counting lines in a file."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
       "symbol": "DataOutput",
       "kind": "schema-class",
       "owner": "@beep/nlp-mcp",
@@ -4357,11 +5273,27 @@
     },
     {
       "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "ExtractMatchesOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "ExtractMatchesOptions",
+      "description": "Optional controls for extracting regex matches from a file."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
       "symbol": "FileInfoOutput",
       "kind": "schema-class",
       "owner": "@beep/nlp-mcp",
       "identity": "FileInfoOutput",
       "description": "File existence with optional line count and byte size."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "FilterLinesOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "FilterLinesOptions",
+      "description": "Optional controls for filtering lines by a regex pattern."
     },
     {
       "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
@@ -4381,11 +5313,99 @@
     },
     {
       "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "LoadJsonOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "LoadJsonOptions",
+      "description": "Optional controls for loading JSON from a file or URL."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "LoadJsonlOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "LoadJsonlOptions",
+      "description": "Optional controls for loading JSONL from a file or URL."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "LoadLinesOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "LoadLinesOptions",
+      "description": "Optional controls for loading lines from a file or URL."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "LoadTextOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "LoadTextOptions",
+      "description": "Optional controls for loading text from a file or URL."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
       "symbol": "PipelineOutput",
       "kind": "schema-const",
       "owner": "@beep/nlp-mcp",
       "identity": "PipelineOutput",
       "description": "Result of running a line-transform pipeline over a file."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "ProcessFileOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "ProcessFileOptions",
+      "description": "Optional controls for running a line-transform pipeline."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "ReadJsonlOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "ReadJsonlOptions",
+      "description": "Optional controls for reading JSONL records."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "ReadLinesOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "ReadLinesOptions",
+      "description": "Optional windowing, encoding, and trimming controls for reading lines."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "SampleJsonlOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "SampleJsonlOptions",
+      "description": "Optional controls for sampling JSONL records."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "SampleLinesOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "SampleLinesOptions",
+      "description": "Optional line-normalization controls for sampling text lines."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "TextStatsOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "TextStatsOptions",
+      "description": "Optional line-normalization controls for computing text statistics."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "ValidateJsonlOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "ValidateJsonlOptions",
+      "description": "Optional caps for validating a JSONL file."
     },
     {
       "file": "packages/drivers/onepassword-cli/src/OnePasswordCli.errors.ts",
@@ -4674,6 +5694,22 @@
       "owner": "@beep/openai-compat",
       "identity": "OpenAiCompatLanguageModelConfig",
       "description": "Request-time tuning options shared by OpenAI-compatible language-model adapters."
+    },
+    {
+      "file": "packages/drivers/oxigraph/src/Oxigraph.errors.ts",
+      "symbol": "OxigraphSparqlError",
+      "kind": "tagged-error",
+      "owner": "@beep/oxigraph",
+      "identity": "OxigraphSparqlError",
+      "description": "Typed Oxigraph SPARQL driver error."
+    },
+    {
+      "file": "packages/drivers/oxigraph/src/Oxigraph.errors.ts",
+      "symbol": "OxigraphSparqlErrorReason",
+      "kind": "literal-kit",
+      "owner": "@beep/oxigraph",
+      "identity": "OxigraphSparqlErrorReason",
+      "description": "Oxigraph SPARQL driver failure reason."
     },
     {
       "file": "packages/drivers/pacer/src/CsoAuth.models.ts",
@@ -5402,6 +6438,22 @@
       "owner": "@beep/sanity",
       "identity": "SanityQueryResponse",
       "description": "Sanity query response containing the raw result payload."
+    },
+    {
+      "file": "packages/drivers/shacl/src/Shacl.errors.ts",
+      "symbol": "ShaclEngineError",
+      "kind": "tagged-error",
+      "owner": "@beep/shacl",
+      "identity": "ShaclEngineError",
+      "description": "Typed shacl-engine driver error."
+    },
+    {
+      "file": "packages/drivers/shacl/src/Shacl.errors.ts",
+      "symbol": "ShaclEngineErrorReason",
+      "kind": "literal-kit",
+      "owner": "@beep/shacl",
+      "identity": "ShaclEngineErrorReason",
+      "description": "shacl-engine driver failure reason."
     },
     {
       "file": "packages/drivers/tika/src/Tika.errors.ts",
@@ -6416,14 +7468,6 @@
       "description": "Reference to a text artifact emitted for one extraction operation."
     },
     {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
-      "symbol": "TextSpan",
-      "kind": "schema-class",
-      "owner": "@beep/file-processing",
-      "identity": "TextSpan",
-      "description": "Extracted text span with byte or character offsets supplied by the engine."
-    },
-    {
       "file": "packages/foundation/capability/file-processing/src/Operation/index.ts",
       "symbol": "DetectFileOperation",
       "kind": "schema-class",
@@ -6493,7 +7537,7 @@
       "kind": "literal-kit",
       "owner": "@beep/file-processing",
       "identity": "PathSafetyViolationReason",
-      "description": "Fail-closed reasons a candidate path was rejected: it escapes the allowed root, or the root or candidate could not be canonicalized."
+      "description": "Fail-closed reasons a candidate path was rejected: it escapes the allowed root, the pinned canonical root is not absolute, or the root or candidate could not be canonicalized."
     },
     {
       "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
@@ -6752,6 +7796,14 @@
       "description": "A minimal-tier projection that still exceeds the caller's size budget."
     },
     {
+      "file": "packages/foundation/capability/mcp-kit/src/McpCaller.ts",
+      "symbol": "McpCallerIdentity",
+      "kind": "schema-class",
+      "owner": "@beep/mcp-kit",
+      "identity": "McpCallerIdentity",
+      "description": "Initialized MCP caller identity assigned by the server transport."
+    },
+    {
       "file": "packages/foundation/capability/mcp-kit/src/SourceAuth.ts",
       "symbol": "SourceAuthGate",
       "kind": "literal-kit",
@@ -6996,7 +8048,8 @@
       "symbol": "ExecutionMetrics",
       "kind": "schema-class",
       "owner": "@beep/nlp-processing",
-      "identity": "ExecutionMetrics"
+      "identity": "ExecutionMetrics",
+      "description": "Monoid of metrics accumulated while applying an operation to graph leaves."
     },
     {
       "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts",
@@ -9412,19 +10465,25 @@
       "file": "packages/foundation/modeling/identity/src/Id.ts",
       "symbol": "IdentityInterpolationError",
       "kind": "tagged-error",
-      "owner": "@beep/identity"
+      "owner": "@beep/identity",
+      "identity": "@beep/identity/errors/IdentityInterpolationError",
+      "description": "Identity template tags do not allow interpolations."
     },
     {
       "file": "packages/foundation/modeling/identity/src/Id.ts",
       "symbol": "IdentitySegmentCountError",
       "kind": "tagged-error",
-      "owner": "@beep/identity"
+      "owner": "@beep/identity",
+      "identity": "@beep/identity/errors/IdentitySegmentCountError",
+      "description": "Identity template tags must use a single literal segment."
     },
     {
       "file": "packages/foundation/modeling/identity/src/Vocab.ts",
       "symbol": "VocabEntry",
       "kind": "schema-class",
-      "owner": "@beep/identity"
+      "owner": "@beep/identity",
+      "identity": "VocabEntry",
+      "description": "One namespace IRI and term list inside an identity vocabulary registry."
     },
     {
       "file": "packages/foundation/modeling/identity/src/Vocab.ts",
@@ -9516,7 +10575,9 @@
       "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
       "symbol": "LexicalNode",
       "kind": "tagged-union",
-      "owner": "@beep/lexical-schema"
+      "owner": "@beep/lexical-schema",
+      "identity": "LexicalNode",
+      "description": "The tagged union of all v1 serialized Lexical nodes, discriminated by Lexical's own type key."
     },
     {
       "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
@@ -9651,12 +10712,36 @@
       "description": "Lexical text node editability mode: normal text, indivisible token text, or segmented text."
     },
     {
+      "file": "packages/foundation/modeling/md/src/Md.escape.ts",
+      "symbol": "UrlPolicy",
+      "kind": "schema-class",
+      "owner": "@beep/md",
+      "identity": "UrlPolicy",
+      "description": "URL destination policy for a rendering sink."
+    },
+    {
       "file": "packages/foundation/modeling/md/src/Md.model.ts",
       "symbol": "A",
       "kind": "tagged-class",
       "owner": "@beep/md",
       "identity": "A",
       "description": "Inline hyperlink."
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.model.ts",
+      "symbol": "Admonition",
+      "kind": "tagged-class",
+      "owner": "@beep/md",
+      "identity": "Admonition",
+      "description": "Typed admonition block."
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.model.ts",
+      "symbol": "AdmonitionKind",
+      "kind": "literal-kit",
+      "owner": "@beep/md",
+      "identity": "AdmonitionKind",
+      "description": "Common typed Markdown admonition kind."
     },
     {
       "file": "packages/foundation/modeling/md/src/Md.model.ts",
@@ -9724,6 +10809,38 @@
     },
     {
       "file": "packages/foundation/modeling/md/src/Md.model.ts",
+      "symbol": "Embed",
+      "kind": "tagged-class",
+      "owner": "@beep/md",
+      "identity": "Embed",
+      "description": "Safe generalized block embed rendered by built-in adapters as inert link or figure content."
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.model.ts",
+      "symbol": "EmbedKind",
+      "kind": "literal-kit",
+      "owner": "@beep/md",
+      "identity": "EmbedKind",
+      "description": "Generic Markdown block embed kind."
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.model.ts",
+      "symbol": "FootnoteDefinition",
+      "kind": "tagged-class",
+      "owner": "@beep/md",
+      "identity": "FootnoteDefinition",
+      "description": "Footnote definition block."
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.model.ts",
+      "symbol": "FootnoteReference",
+      "kind": "tagged-class",
+      "owner": "@beep/md",
+      "identity": "FootnoteReference",
+      "description": "Inline footnote reference."
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.model.ts",
       "symbol": "Heading",
       "kind": "tagged-class",
       "owner": "@beep/md",
@@ -9772,6 +10889,14 @@
     },
     {
       "file": "packages/foundation/modeling/md/src/Md.model.ts",
+      "symbol": "InlineMath",
+      "kind": "tagged-class",
+      "owner": "@beep/md",
+      "identity": "InlineMath",
+      "description": "Inline TeX math content."
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.model.ts",
       "symbol": "Li",
       "kind": "tagged-class",
       "owner": "@beep/md",
@@ -9801,6 +10926,14 @@
       "owner": "@beep/md",
       "identity": "ListItemChildren",
       "description": "Inline and block children rendered inside a Markdown list item."
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.model.ts",
+      "symbol": "MathBlock",
+      "kind": "tagged-class",
+      "owner": "@beep/md",
+      "identity": "MathBlock",
+      "description": "Display TeX math block."
     },
     {
       "file": "packages/foundation/modeling/md/src/Md.model.ts",
@@ -9857,6 +10990,14 @@
       "owner": "@beep/md",
       "identity": "Table",
       "description": "Markdown table block with inline cell content."
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.model.ts",
+      "symbol": "TableAlignment",
+      "kind": "literal-kit",
+      "owner": "@beep/md",
+      "identity": "TableAlignment",
+      "description": "Markdown table column alignment."
     },
     {
       "file": "packages/foundation/modeling/md/src/Md.model.ts",
@@ -9953,6 +11094,14 @@
       "owner": "@beep/md",
       "identity": "RenderError",
       "description": "Typed error raised when a Markdown render adapter fails."
+    },
+    {
+      "file": "packages/foundation/modeling/md/src/Md.render.ts",
+      "symbol": "UrlRenderOptions",
+      "kind": "schema-class",
+      "owner": "@beep/md",
+      "identity": "UrlRenderOptions",
+      "description": "URL policy options accepted by built-in render adapter factories."
     },
     {
       "file": "packages/foundation/modeling/nlp/src/Algebra/NLPMonoid.ts",
@@ -10259,12 +11408,28 @@
       "description": "Graph traversal order for ordered folds and walkers."
     },
     {
+      "file": "packages/foundation/modeling/nlp/src/Graph/GraphOps.ts",
+      "symbol": "TraversalStart",
+      "kind": "schema-class",
+      "owner": "@beep/nlp",
+      "identity": "TraversalStart",
+      "description": "Traversal-start options shared by graph-walking helpers: which node indices to begin from and which traversal order to use."
+    },
+    {
       "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
       "symbol": "DependencyNode",
       "kind": "schema-class",
       "owner": "@beep/nlp",
       "identity": "DependencyNode",
       "description": "Syntactic dependency arc (Universal Dependencies relation) between a head and dependent token."
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+      "symbol": "DependencyToken",
+      "kind": "schema-class",
+      "owner": "@beep/nlp",
+      "identity": "DependencyToken",
+      "description": "Token reference (text + sentence position) used by dependency-arc endpoints."
     },
     {
       "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
@@ -10305,6 +11470,22 @@
       "owner": "@beep/nlp",
       "identity": "RelationNode",
       "description": "Semantic relation node connecting a subject entity to an object entity via a typed predicate."
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+      "symbol": "RelationParticipant",
+      "kind": "schema-class",
+      "owner": "@beep/nlp",
+      "identity": "RelationParticipant",
+      "description": "Entity participant (text, type, and character span) referenced by a semantic relation."
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+      "symbol": "Span",
+      "kind": "schema-class",
+      "owner": "@beep/nlp",
+      "identity": "Span",
+      "description": "Character span (start/end offsets) within a piece of text."
     },
     {
       "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
@@ -11739,6 +12920,20 @@
       "description": "A BufferEncoding string literal"
     },
     {
+      "file": "packages/foundation/modeling/schema/src/Bytes.ts",
+      "symbol": "Bytes",
+      "kind": "brand",
+      "owner": "@beep/schema",
+      "identity": "Bytes",
+      "description": "A protobuf bytes value represented as a branded Uint8Array."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/CardinalDirection/CardinalDirection.schema.ts",
+      "symbol": "Abbrev",
+      "kind": "literal-kit",
+      "owner": "@beep/schema"
+    },
+    {
       "file": "packages/foundation/modeling/schema/src/CardinalDirection/CardinalDirection.schema.ts",
       "symbol": "CardinalDirection",
       "kind": "literal-kit",
@@ -11753,6 +12948,12 @@
       "owner": "@beep/schema",
       "identity": "CardinalDirectionAbbrev",
       "description": "CardinalDirectionAbbrev - The abbreviated version of the CardinalDirection"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/CardinalDirection/CardinalDirection.schema.ts",
+      "symbol": "Schema",
+      "kind": "literal-kit",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/CauseTaggedError/CauseTaggedError.errors.ts",
@@ -12137,6 +13338,12 @@
       "description": "The value of the `Cross-Origin-Embedder-Policy` header."
     },
     {
+      "file": "packages/foundation/modeling/schema/src/CrossOriginEmbedderPolicy/CrossOriginEmbedderPolicy.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
       "file": "packages/foundation/modeling/schema/src/CrossOriginOpenerPolicy/CrossOriginOpenerPolicy.schema.ts",
       "symbol": "CoopValue",
       "kind": "literal-kit",
@@ -12169,6 +13376,12 @@
       "description": "The `Cross-Origin-Opener-Policy` response header."
     },
     {
+      "file": "packages/foundation/modeling/schema/src/CrossOriginOpenerPolicy/CrossOriginOpenerPolicy.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
       "file": "packages/foundation/modeling/schema/src/CrossOriginResourcePolicy/CrossOriginResourcePolicy.schema.ts",
       "symbol": "CorpValue",
       "kind": "literal-kit",
@@ -12199,6 +13412,12 @@
       "owner": "@beep/schema",
       "identity": "CrossOriginResourcePolicyResponseHeader",
       "description": "The `Cross-Origin-Resource-Policy` response header."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/CrossOriginResourcePolicy/CrossOriginResourcePolicy.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/CryptoTxnHash/CryptoTxnHash.schema.ts",
@@ -12274,7 +13493,7 @@
     {
       "file": "packages/foundation/modeling/schema/src/Csp/Csp.schema.ts",
       "symbol": "CspDirectives",
-      "kind": "struct-const",
+      "kind": "schema-class",
       "owner": "@beep/schema",
       "identity": "CspDirectives",
       "description": "The complete normalized field set for all supported CSP directives."
@@ -12305,11 +13524,23 @@
     },
     {
       "file": "packages/foundation/modeling/schema/src/Csp/Csp.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Csp/Csp.schema.ts",
       "symbol": "NavigationDirective",
       "kind": "schema-class",
       "owner": "@beep/schema",
       "identity": "NavigationDirective",
       "description": "CSP navigation directive fields and serialization helpers."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Csp/Csp.schema.ts",
+      "symbol": "Option",
+      "kind": "union",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/Csp/Csp.schema.ts",
@@ -12470,6 +13701,14 @@
       "description": "A W3C DID Core Decentralized Identifier string constrained to generic DID syntax, excluding DID URL path, query, and fragment components."
     },
     {
+      "file": "packages/foundation/modeling/schema/src/Double.ts",
+      "symbol": "Double",
+      "kind": "brand",
+      "owner": "@beep/schema",
+      "identity": "Double",
+      "description": "A protobuf double number represented as an IEEE-754 binary64 JavaScript number."
+    },
+    {
       "file": "packages/foundation/modeling/schema/src/Duration/Duration.input.ts",
       "symbol": "DurationFromInput",
       "kind": "codec",
@@ -12500,6 +13739,12 @@
       "owner": "@beep/schema",
       "identity": "DurationUnit",
       "description": "A unit of time measurement accepted by duration input schemas."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Duration/Duration.input.ts",
+      "symbol": "Input",
+      "kind": "union",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.constructors.ts",
@@ -12648,6 +13893,18 @@
       "owner": "@beep/schema",
       "identity": "ExpectCTResponseHeader",
       "description": "The `Expect-CT` response header."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/ExpectCt/ExpectCt.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/ExpectCt/ExpectCt.schema.ts",
+      "symbol": "Option",
+      "kind": "union",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/FileDiff.schema.ts",
@@ -12874,6 +14131,30 @@
       "description": "A Windows UNC file path with valid server, share, and leaf segments."
     },
     {
+      "file": "packages/foundation/modeling/schema/src/Fixed32.ts",
+      "symbol": "Fixed32",
+      "kind": "brand",
+      "owner": "@beep/schema",
+      "identity": "Fixed32",
+      "description": "A protobuf fixed32 number in the inclusive unsigned 32-bit range."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Fixed64.ts",
+      "symbol": "Fixed64",
+      "kind": "brand",
+      "owner": "@beep/schema",
+      "identity": "Fixed64",
+      "description": "A protobuf fixed64 bigint in the inclusive unsigned 64-bit range."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Float.ts",
+      "symbol": "Float",
+      "kind": "brand",
+      "owner": "@beep/schema",
+      "identity": "Float",
+      "description": "A protobuf float number in the IEEE-754 binary32 range, including valid special values."
+    },
+    {
       "file": "packages/foundation/modeling/schema/src/Float16Array.ts",
       "symbol": "Float16ArrayFromArray",
       "kind": "codec",
@@ -12938,6 +14219,18 @@
       "description": "The `Strict-Transport-Security` response header."
     },
     {
+      "file": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
+      "symbol": "Option",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
       "file": "packages/foundation/modeling/schema/src/FrameGuard/FrameGuard.schema.ts",
       "symbol": "FrameGuardAllowFrom",
       "kind": "schema-const",
@@ -12984,6 +14277,18 @@
       "owner": "@beep/schema",
       "identity": "FrameGuardResponseHeader",
       "description": "The `X-Frame-Options` response header."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/FrameGuard/FrameGuard.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/FrameGuard/FrameGuard.schema.ts",
+      "symbol": "Option",
+      "kind": "union",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/Glob/Glob.schema.ts",
@@ -13110,6 +14415,12 @@
       "owner": "@beep/schema",
       "identity": "HttpProtocol",
       "description": "An HTTP protocol (\"http\" or \"https\")"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/HttpProtocol/HttpProtocol.schema.ts",
+      "symbol": "Schema",
+      "kind": "literal-kit",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.category.ts",
@@ -13772,22 +15083,6 @@
     },
     {
       "file": "packages/foundation/modeling/schema/src/Int.ts",
-      "symbol": "Int64",
-      "kind": "brand",
-      "owner": "@beep/schema",
-      "identity": "Int64",
-      "description": "A signed 64-bit integer represented as a BigInt."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Int.ts",
-      "symbol": "Int64FromString",
-      "kind": "codec",
-      "owner": "@beep/schema",
-      "identity": "Int64FromString",
-      "description": "A decimal string codec for signed 64-bit integer BigInt values."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Int.ts",
       "symbol": "NegInt",
       "kind": "brand",
       "owner": "@beep/schema",
@@ -13817,6 +15112,22 @@
       "owner": "@beep/schema",
       "identity": "PostgresSerialInt",
       "description": "A positive integer in the PostgreSQL serial int4 range."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Int64.ts",
+      "symbol": "Int64",
+      "kind": "brand",
+      "owner": "@beep/schema",
+      "identity": "Int64",
+      "description": "A signed 64-bit integer represented as a BigInt."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Int64.ts",
+      "symbol": "Int64FromString",
+      "kind": "codec",
+      "owner": "@beep/schema",
+      "identity": "Int64FromString",
+      "description": "A decimal string codec for signed 64-bit integer BigInt values."
     },
     {
       "file": "packages/foundation/modeling/schema/src/Json.ts",
@@ -13924,7 +15235,9 @@
       "file": "packages/foundation/modeling/schema/src/Model/Model.datetime.ts",
       "symbol": "Date",
       "kind": "codec",
-      "owner": "@beep/schema"
+      "owner": "@beep/schema",
+      "identity": "Date",
+      "description": "A DateTime.Utc serialized as a YYYY-MM-DD date string with time removed."
     },
     {
       "file": "packages/foundation/modeling/schema/src/NoOpen/NoOpen.schema.ts",
@@ -13957,6 +15270,12 @@
       "owner": "@beep/schema",
       "identity": "NoOpenValue",
       "description": "The supported `X-Download-Options` header values."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/NoSniff/NoSniff.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/NoSniff/NoSniff.schema.ts",
@@ -14038,6 +15357,18 @@
     },
     {
       "file": "packages/foundation/modeling/schema/src/PermissionsPolicy/PermissionsPolicy.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/PermissionsPolicy/PermissionsPolicy.schema.ts",
+      "symbol": "Option",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/PermissionsPolicy/PermissionsPolicy.schema.ts",
       "symbol": "PermissionsPolicyAllowlistedOrigin",
       "kind": "union",
       "owner": "@beep/schema",
@@ -14107,6 +15438,12 @@
       "owner": "@beep/schema",
       "identity": "PermissionsPolicyResponseHeader",
       "description": "The `Permissions-Policy` response header."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/PermittedCrossDomainPolicies/PermittedCrossDomainPolicies.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/PermittedCrossDomainPolicies/PermittedCrossDomainPolicies.schema.ts",
@@ -14187,6 +15524,18 @@
       "owner": "@beep/schema",
       "identity": "UnknownRecord",
       "description": "A record of unknown values"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/ReferrerPolicy/ReferrerPolicy.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/ReferrerPolicy/ReferrerPolicy.schema.ts",
+      "symbol": "Option",
+      "kind": "union",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/ReferrerPolicy/ReferrerPolicy.schema.ts",
@@ -14330,11 +15679,33 @@
     },
     {
       "file": "packages/foundation/modeling/schema/src/Sex/Sex.schema.ts",
+      "symbol": "Schema",
+      "kind": "literal-kit",
+      "owner": "@beep/schema"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Sex/Sex.schema.ts",
       "symbol": "Sex",
       "kind": "literal-kit",
       "owner": "@beep/schema",
       "identity": "Sex",
       "description": "The sex of a person (\"male\" or \"female\")."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Sfixed32.ts",
+      "symbol": "Sfixed32",
+      "kind": "brand",
+      "owner": "@beep/schema",
+      "identity": "Sfixed32",
+      "description": "A protobuf sfixed32 number in the inclusive signed 32-bit range."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Sfixed64.ts",
+      "symbol": "Sfixed64",
+      "kind": "brand",
+      "owner": "@beep/schema",
+      "identity": "Sfixed64",
+      "description": "A protobuf sfixed64 bigint in the inclusive signed 64-bit range."
     },
     {
       "file": "packages/foundation/modeling/schema/src/Sha256.ts",
@@ -14359,6 +15730,22 @@
       "owner": "@beep/schema",
       "identity": "Sha256HexFromHexBytes",
       "description": "A one-way schema that hashes hex-encoded bytes into a canonical lowercase SHA-256 hex digest."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Sint32.ts",
+      "symbol": "Sint32",
+      "kind": "brand",
+      "owner": "@beep/schema",
+      "identity": "Sint32",
+      "description": "A protobuf sint32 number in the inclusive signed 32-bit range."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Sint64.ts",
+      "symbol": "Sint64",
+      "kind": "brand",
+      "owner": "@beep/schema",
+      "identity": "Sint64",
+      "description": "A protobuf sint64 bigint in the inclusive signed 64-bit range."
     },
     {
       "file": "packages/foundation/modeling/schema/src/Slug.ts",
@@ -14541,6 +15928,22 @@
       "description": "A URL encoded as a string"
     },
     {
+      "file": "packages/foundation/modeling/schema/src/Uint32.ts",
+      "symbol": "Uint32",
+      "kind": "brand",
+      "owner": "@beep/schema",
+      "identity": "Uint32",
+      "description": "A protobuf uint32 number in the inclusive unsigned 32-bit range."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Uint64.ts",
+      "symbol": "Uint64",
+      "kind": "brand",
+      "owner": "@beep/schema",
+      "identity": "Uint64",
+      "description": "A protobuf uint64 bigint in the inclusive unsigned 64-bit range."
+    },
+    {
       "file": "packages/foundation/modeling/schema/src/UnitInterval.ts",
       "symbol": "UnitInterval",
       "kind": "brand",
@@ -14567,6 +15970,18 @@
       "owner": "@beep/schema",
       "identity": "XmlTextToUnknown",
       "description": "Schema transformation that parses XML text into unknown values."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/XssProtection/XssProtection.schema.ts",
+      "symbol": "Header",
+      "kind": "union",
+      "owner": "@beep/schema"
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/XssProtection/XssProtection.schema.ts",
+      "symbol": "Option",
+      "kind": "union",
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/XssProtection/XssProtection.schema.ts",
@@ -15163,6 +16578,902 @@
       "owner": "@beep/law-practice-use-cases",
       "identity": "EntityInput",
       "description": "Input for constructing a spike entity"
+    },
+    {
+      "file": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+      "symbol": "ApplyOntologyBatchInput",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-client",
+      "identity": "ApplyOntologyBatchInput",
+      "description": "Batch operation payload for the client mutation atom."
+    },
+    {
+      "file": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+      "symbol": "ApplyOntologyGraphGestureInput",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-client",
+      "identity": "ApplyOntologyGraphGestureInput",
+      "description": "Graph gesture payload converted into ontology change operations."
+    },
+    {
+      "file": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+      "symbol": "OpenOntologyDocumentInput",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-client",
+      "identity": "OpenOntologyDocumentInput",
+      "description": "Open ontology document payload for the client atom."
+    },
+    {
+      "file": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
+      "symbol": "SaveOntologyDocumentInput",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-client",
+      "identity": "SaveOntologyDocumentInput",
+      "description": "Save ontology document payload for the client atom."
+    },
+    {
+      "file": "packages/ontology/config/src/ServerConfig.ts",
+      "symbol": "OntologyServerConfig",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-config",
+      "identity": "OntologyServerConfig",
+      "description": "Server-only filesystem authority settings for ontology documents."
+    },
+    {
+      "file": "packages/ontology/domain/src/aggregates/Session/Session.errors.ts",
+      "symbol": "SessionChangeRejected",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-domain",
+      "identity": "SessionChangeRejected",
+      "description": "Typed domain error for rejected ontology session changes."
+    },
+    {
+      "file": "packages/ontology/domain/src/aggregates/Session/Session.errors.ts",
+      "symbol": "SessionChangeRejectedReason",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology-domain",
+      "identity": "SessionChangeRejectedReason",
+      "description": "Reason an ontology session change was rejected."
+    },
+    {
+      "file": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
+      "symbol": "CreateSessionInput",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-domain",
+      "identity": "CreateSessionInput",
+      "description": "Input for creating an ontology session."
+    },
+    {
+      "file": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
+      "symbol": "NamedGraphPartition",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-domain",
+      "identity": "NamedGraphPartition",
+      "description": "Named graph view derived from a session partition."
+    },
+    {
+      "file": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
+      "symbol": "OntologyChangeActor",
+      "kind": "brand",
+      "owner": "@beep/ontology-domain",
+      "identity": "OntologyChangeActor",
+      "description": "Authenticated actor IRI retained on an ontology change journal entry."
+    },
+    {
+      "file": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
+      "symbol": "Session",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-domain",
+      "identity": "Session",
+      "description": "Ontology workbench session with base dataset and ordered change log."
+    },
+    {
+      "file": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
+      "symbol": "SessionChangeApplication",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-domain",
+      "identity": "SessionChangeApplication",
+      "description": "Applied session batch containing the updated session and real dataset delta."
+    },
+    {
+      "file": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
+      "symbol": "SessionChangeDelta",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-domain",
+      "identity": "SessionChangeDelta",
+      "description": "Real RDF quad delta produced by applying ontology change operations."
+    },
+    {
+      "file": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
+      "symbol": "SessionGraphPartitions",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-domain",
+      "identity": "SessionGraphPartitions",
+      "description": "Derived RDF datasets for every ontology session named graph partition."
+    },
+    {
+      "file": "packages/ontology/domain/src/aggregates/Session/Session.values.ts",
+      "symbol": "GraphPartition",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology-domain",
+      "identity": "GraphPartition",
+      "description": "Derived ontology session named graph partition."
+    },
+    {
+      "file": "packages/ontology/domain/src/aggregates/Session/Session.values.ts",
+      "symbol": "SessionId",
+      "kind": "brand",
+      "owner": "@beep/ontology-domain",
+      "identity": "SessionId",
+      "description": "Stable id for an ontology workbench session."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.commands.ts",
+      "symbol": "OpenOntologyFileCommand",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OpenOntologyFileCommand",
+      "description": "Command to open a Turtle document into an ontology session."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.commands.ts",
+      "symbol": "OpenOntologyFileResult",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OpenOntologyFileResult",
+      "description": "Result of opening a Turtle document into an ontology session."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.commands.ts",
+      "symbol": "SaveOntologyFileCommand",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "SaveOntologyFileCommand",
+      "description": "Command to serialize an ontology session's asserted graph to Turtle."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.commands.ts",
+      "symbol": "SaveOntologyFileResult",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "SaveOntologyFileResult",
+      "description": "Result of saving a session's asserted graph to Turtle."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.commands.ts",
+      "symbol": "SerializeOntologySessionCommand",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "SerializeOntologySessionCommand",
+      "description": "Command to serialize an ontology session's asserted graph without writing it."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.commands.ts",
+      "symbol": "SerializeOntologySessionResult",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "SerializeOntologySessionResult",
+      "description": "Result of serializing an ontology session's asserted graph."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
+      "symbol": "OntologyFilePath",
+      "kind": "brand",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyFilePath",
+      "description": "Filesystem path for sidecar ontology documents."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
+      "symbol": "OntologyFileStoreError",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyFileStoreError",
+      "description": "Typed sidecar file-store error."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
+      "symbol": "OntologyFileStoreErrorReason",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyFileStoreErrorReason",
+      "description": "Ontology sidecar file-store failure reason."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
+      "symbol": "ParseTurtleRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ParseTurtleRequest",
+      "description": "Turtle parse request."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
+      "symbol": "ParseTurtleResult",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ParseTurtleResult",
+      "description": "Turtle parse result."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
+      "symbol": "ReadOntologyFileRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ReadOntologyFileRequest",
+      "description": "Read ontology file request."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
+      "symbol": "ReadOntologyFileResult",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ReadOntologyFileResult",
+      "description": "Read ontology file result."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
+      "symbol": "SerializeTurtleRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "SerializeTurtleRequest",
+      "description": "Turtle serialize request."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
+      "symbol": "SerializeTurtleResult",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "SerializeTurtleResult",
+      "description": "Turtle serialize result."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
+      "symbol": "TurtleCodecError",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "TurtleCodecError",
+      "description": "Typed Turtle codec error exposed at the use-case boundary."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
+      "symbol": "TurtleCodecErrorReason",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "TurtleCodecErrorReason",
+      "description": "Turtle codec failure reason."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
+      "symbol": "TurtleDocumentText",
+      "kind": "schema-const",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "TurtleDocumentText",
+      "description": "Turtle source text."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
+      "symbol": "WriteOntologyFileRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "WriteOntologyFileRequest",
+      "description": "Write ontology file request."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+      "symbol": "OntologyHierarchyEntry",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyHierarchyEntry",
+      "description": "Flat hierarchy row used to build ontology tree-view items."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+      "symbol": "OntologyMetrics",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyMetrics",
+      "description": "Ontology workbench metrics computed from the authoring graph."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+      "symbol": "OntologyRelationshipSummary",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyRelationshipSummary",
+      "description": "Predicate relationship row used by the ontology graph viewport."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+      "symbol": "OntologyResourceClassification",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyResourceClassification",
+      "description": "Shared ontology resource classification for explorer filtering and search."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+      "symbol": "OntologyResourceKind",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyResourceKind",
+      "description": "Ontology resource kind derived from RDF/OWL typing and hierarchy predicates."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+      "symbol": "OntologyResourceSummary",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyResourceSummary",
+      "description": "Ontology resource summary shared by hierarchy explorer, inspector, and search."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+      "symbol": "OntologySnapshot",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologySnapshot",
+      "description": "Complete ontology read model for explorer and editor surfaces."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.projections.ts",
+      "symbol": "OntologyViewMode",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyViewMode",
+      "description": "Ontology explorer view mode shared by tree and search projections."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.reasoner.ts",
+      "symbol": "InferOntologySessionInput",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "InferOntologySessionInput",
+      "description": "Input for structural inference over an ontology session."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.reasoner.ts",
+      "symbol": "OntologyDisjointnessViolation",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyDisjointnessViolation",
+      "description": "Structural disjointness violation derived from asserted plus inferred types."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.reasoner.ts",
+      "symbol": "OntologyInferenceChangedSignature",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyInferenceChangedSignature",
+      "description": "Signature touched by the session change log since the last inference pass."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.reasoner.ts",
+      "symbol": "OntologyInferenceModule",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyInferenceModule",
+      "description": "Structural inference module."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.reasoner.ts",
+      "symbol": "OntologyInferenceModuleResult",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyInferenceModuleResult",
+      "description": "Result for one structural inference module."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.reasoner.ts",
+      "symbol": "OntologyInferenceRecomputeMode",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyInferenceRecomputeMode",
+      "description": "Inference recompute mode for a module."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.reasoner.ts",
+      "symbol": "OntologyInferenceResult",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyInferenceResult",
+      "description": "Complete structural inference result for an ontology session."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.reasoner.ts",
+      "symbol": "OntologyInferenceSignatureRole",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyInferenceSignatureRole",
+      "description": "Changed signature role used by inference invalidation."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+      "symbol": "ApplyOntologyBatchCommand",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ApplyOntologyBatchCommand",
+      "description": "Batch operation payload accepted by the ontology sidecar."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+      "symbol": "ApplyOntologyBatchResult",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ApplyOntologyBatchResult",
+      "description": "Batch operation result carrying the updated session and real RDF delta."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+      "symbol": "OntologyActionError",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyActionError",
+      "description": "Client-safe failure raised when an ontology workbench action cannot be completed."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+      "symbol": "OpenOntologyDocumentResult",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OpenOntologyDocumentResult",
+      "description": "Result returned after opening a Turtle document through the sidecar."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+      "symbol": "PreviewOntologyTurtleResult",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "PreviewOntologyTurtleResult",
+      "description": "Result returned after previewing Turtle serialization."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.rpc.ts",
+      "symbol": "SaveOntologyDocumentResult",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "SaveOntologyDocumentResult",
+      "description": "Result returned after saving a Turtle document through the sidecar."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.sparql.ts",
+      "symbol": "OntologySparqlError",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologySparqlErrorReason",
+      "description": "SPARQL safeguard validation failure reason."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.sparql.ts",
+      "symbol": "OntologySparqlExample",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologySparqlExample",
+      "description": "SPARQL panel example query."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.sparql.ts",
+      "symbol": "OntologySparqlPanelProfile",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologySparqlPanelProfile",
+      "description": "SPARQL query profiles exposed by the ontology workbench panel."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.sparql.ts",
+      "symbol": "OntologySparqlSafeguards",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologySparqlSafeguards",
+      "description": "SPARQL query safeguard envelope."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.sparql.ts",
+      "symbol": "RunOntologySparqlInput",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "RunOntologySparqlInput",
+      "description": "SPARQL execution input for an ontology session."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.sparql.ts",
+      "symbol": "RunOntologySparqlResult",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "RunOntologySparqlResult",
+      "description": "SPARQL execution result with applied safeguards."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.validation.ts",
+      "symbol": "ExportOntologyProvenanceCommand",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ExportOntologyProvenanceCommand",
+      "description": "Provenance and dataset-description export command."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.validation.ts",
+      "symbol": "ExportOntologyProvenanceResult",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ExportOntologyProvenanceResult",
+      "description": "Provenance and dataset-description export result."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.validation.ts",
+      "symbol": "OntologyRepairProposal",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyRepairProposal",
+      "description": "Verified ontology repair proposal generated from a SHACL violation."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.validation.ts",
+      "symbol": "OntologyValidationError",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyValidationError",
+      "description": "Ontology validation failure."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.validation.ts",
+      "symbol": "RunOntologyValidationInput",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "RunOntologyValidationInput",
+      "description": "Validation request for an ontology session."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.validation.ts",
+      "symbol": "RunOntologyValidationResult",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "RunOntologyValidationResult",
+      "description": "Validation result with verified repair proposals."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.visualizer.ts",
+      "symbol": "ApplyOntologyGraphProjectionDeltaInput",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ApplyOntologyGraphProjectionDeltaInput",
+      "description": "Worker-safe input for applying a session delta to a graph projection."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.visualizer.ts",
+      "symbol": "OntologyFoldLevel",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyFoldLevel",
+      "description": "Visualizer fold level from full detail through community clusters."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.visualizer.ts",
+      "symbol": "OntologyGraphCluster",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyGraphCluster",
+      "description": "Worker-computed folded cluster summary."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.visualizer.ts",
+      "symbol": "OntologyGraphEdge",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyGraphEdge",
+      "description": "Graph edge metadata paired with worker-produced link buffers."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.visualizer.ts",
+      "symbol": "OntologyGraphGesture",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyGraphGesture",
+      "description": "Typed visualizer halo gesture converted into ontology change operations."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.visualizer.ts",
+      "symbol": "OntologyGraphNode",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyGraphNode",
+      "description": "Graph node metadata paired with worker-produced typed arrays."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.visualizer.ts",
+      "symbol": "OntologyGraphProjection",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyGraphProjection",
+      "description": "Worker-owned ontology graph projection with typed node and edge buffers."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.visualizer.ts",
+      "symbol": "OntologyGraphProjectionOptions",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyGraphProjectionOptions",
+      "description": "Fold, focus, filter, label, and pinning options for worker graph projection."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.visualizer.ts",
+      "symbol": "OntologyGraphProjectionStats",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyGraphProjectionStats",
+      "description": "Worker-computed graph projection counts for benchmark and UI readouts."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.visualizer.ts",
+      "symbol": "OntologyLabelLevelOfDetail",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyLabelLevelOfDetail",
+      "description": "Viewport label density chosen by projected graph size."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.visualizer.ts",
+      "symbol": "OntologyPinnedNode",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyPinnedNode",
+      "description": "Pinned node position preserved by worker-side graph projection."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.visualizer.ts",
+      "symbol": "OntologyPredicateSuggestion",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyPredicateSuggestion",
+      "description": "Predicate autocomplete suggestion for graph halo gestures."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.worker-protocol.ts",
+      "symbol": "DiffWorkerResult",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "DiffWorkerResult",
+      "description": "Diff worker result expressed as typed change operations."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "CapabilityMetadataRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "CapabilityMetadataRequest",
+      "description": "Request ontology toolkit capability metadata."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "CapabilityMetadataResponse",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "CapabilityMetadataResponse",
+      "description": "Actual ontology toolkit limits and semantics."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "ExportProvenanceRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ExportProvenanceRequest",
+      "description": "Export PROV-O and dataset-description Turtle sidecars."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "ExportProvenanceResponse",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ExportProvenanceResponse",
+      "description": "Written ontology provenance sidecar locations."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyActorIdentityRefusal",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyActorIdentityRefusal",
+      "description": "Recoverable refusal when authenticated caller identity is unavailable for mutation attribution."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyBudgetKind",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyBudgetKind",
+      "description": "Server-owned ontology budget family."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyBudgetRefusal",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyBudgetRefusal",
+      "description": "Recoverable refusal when a server-owned ontology budget is exceeded."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyCasConflict",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyCasConflict",
+      "description": "Recoverable rdfc-1.0 compare-and-set conflict."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyFingerprint",
+      "kind": "brand",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyFingerprint",
+      "description": "Semantic rdfc-1.0 fingerprint used by stateless ontology compare-and-set writes."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyNoOpRefusal",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyNoOpRefusal",
+      "description": "Visible refusal for an ontology mutation that would have no effect."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyReasonerDriftRefusal",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyReasonerDriftRefusal",
+      "description": "Recoverable refusal that prevents an unbounded reasoner recompute."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologySearchRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologySearchRequest",
+      "description": "Search resources in a saved Turtle ontology."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologySearchResponse",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologySearchResponse",
+      "description": "Server-bounded ontology resource search results."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologySparqlQueryRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologySparqlQueryRequest",
+      "description": "Run a bounded SPARQL query over a saved Turtle ontology."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologySparqlQueryResponse",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologySparqlQueryResponse",
+      "description": "Bounded SPARQL result with the source semantic fingerprint."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyTierGateRefusal",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyTierGateRefusal",
+      "description": "Recoverable fail-closed refusal returned when TierGate does not approve an ontology mutation."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyToolBudgets",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyToolBudgets",
+      "description": "Server-owned static ceilings for ontology tools."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyToolCapability",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyToolCapability",
+      "description": "Advertised ontology agent tool capability."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyToolExecutionError",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyToolExecutionError",
+      "description": "Typed safe execution failure returned by an ontology tool."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyToolFailure",
+      "kind": "union",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyToolFailure",
+      "description": "Failure returned by the ontology agent toolkit."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OpenInspectRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OpenInspectRequest",
+      "description": "Open and inspect a saved Turtle ontology."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OpenInspectResponse",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OpenInspectResponse",
+      "description": "Inspection metadata for a saved Turtle ontology."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "ProposeChangeBatchRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ProposeChangeBatchRequest",
+      "description": "Apply and CAS-save a typed ontology change batch."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "ProposeChangeBatchResponse",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ProposeChangeBatchResponse",
+      "description": "Saved ontology change batch with real added and removed deltas."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "RepairOntologyRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "RepairOntologyRequest",
+      "description": "Revalidate, select, apply, and CAS-save a P0-registry verified repair proposal."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "RepairOntologyResponse",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "RepairOntologyResponse",
+      "description": "Applied verified repair with post-save SHACL validation."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "SnapshotDescribeRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "SnapshotDescribeRequest",
+      "description": "Describe the read model of a saved Turtle ontology."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "SnapshotDescribeResponse",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "SnapshotDescribeResponse",
+      "description": "Ontology snapshot with the source semantic fingerprint."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "ValidateOntologyRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ValidateOntologyRequest",
+      "description": "Run bounded real-engine SHACL validation."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "ValidateOntologyResponse",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ValidateOntologyResponse",
+      "description": "Bounded SHACL validation result and verified repair proposals."
     },
     {
       "file": "packages/shared/domain/src/entities/Membership/Membership.values.ts",
@@ -17983,6 +20294,14 @@
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
+      "symbol": "ProjectIdentityParts",
+      "kind": "schema-class",
+      "owner": "@beep/repo-utils",
+      "identity": "ProjectIdentityParts",
+      "description": "Structural identity parts for a resolved ts-morph project scope or cache key."
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
       "symbol": "ProjectScopeId",
       "kind": "brand",
       "owner": "@beep/repo-utils",
@@ -18017,7 +20336,9 @@
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
       "symbol": "SymbolCategory",
       "kind": "literal-kit",
-      "owner": "@beep/repo-utils"
+      "owner": "@beep/repo-utils",
+      "identity": "SymbolCategory",
+      "description": "Coarse symbol categories used by the TSMorph models."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
@@ -18037,6 +20358,14 @@
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
+      "symbol": "SymbolIdentityParts",
+      "kind": "schema-class",
+      "owner": "@beep/repo-utils",
+      "identity": "SymbolIdentityParts",
+      "description": "Structural identity parts for a stable symbol identity."
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
       "symbol": "SymbolInit",
       "kind": "schema-class",
       "owner": "@beep/repo-utils",
@@ -18047,7 +20376,9 @@
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
       "symbol": "SymbolKind",
       "kind": "literal-kit",
-      "owner": "@beep/repo-utils"
+      "owner": "@beep/repo-utils",
+      "identity": "SymbolKind",
+      "description": "Supported TypeScript declaration kinds for normalized symbols."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
@@ -18093,7 +20424,9 @@
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
       "symbol": "TsMorphDiagnosticCategory",
       "kind": "literal-kit",
-      "owner": "@beep/repo-utils"
+      "owner": "@beep/repo-utils",
+      "identity": "TsMorphDiagnosticCategory",
+      "description": "Supported normalized diagnostic categories."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
@@ -18155,7 +20488,9 @@
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
       "symbol": "TsMorphReferencePolicy",
       "kind": "literal-kit",
-      "owner": "@beep/repo-utils"
+      "owner": "@beep/repo-utils",
+      "identity": "TsMorphReferencePolicy",
+      "description": "Reference traversal policies for ts-morph scope resolution."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
@@ -18169,7 +20504,9 @@
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
       "symbol": "TsMorphScopeMode",
       "kind": "literal-kit",
-      "owner": "@beep/repo-utils"
+      "owner": "@beep/repo-utils",
+      "identity": "TsMorphScopeMode",
+      "description": "Supported ts-morph project scope modes."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
@@ -18287,7 +20624,9 @@
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
       "symbol": "TSMorphServiceError",
       "kind": "tagged-union",
-      "owner": "@beep/repo-utils"
+      "owner": "@beep/repo-utils",
+      "identity": "TSMorphServiceError",
+      "description": "Tagged union of all recoverable service errors emitted by TSMorphService."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
@@ -18414,6 +20753,14 @@
       "owner": "@beep/repo-utils",
       "identity": "CanonicalDocgenConfigInput",
       "description": "Input used to build the canonical repo docgen config for a package."
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
+      "symbol": "CanonicalDocgenConfigJsonShape",
+      "kind": "schema-class",
+      "owner": "@beep/repo-utils",
+      "identity": "CanonicalDocgenConfigJsonShape",
+      "description": "JSON-compatible mirror of CanonicalDocgenConfig, returned by toCanonicalDocgenConfigJson."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
@@ -18633,14 +20980,6 @@
     },
     {
       "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-      "symbol": "TSConfigCompilerOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-utils",
-      "identity": "TSConfigCompilerOptions",
-      "description": "Strict TypeScript compilerOptions section derived from the official SchemaStore tsconfig schema."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
       "symbol": "TSConfigReference",
       "kind": "schema-class",
       "owner": "@beep/repo-utils",
@@ -18699,7 +21038,9 @@
       "file": "packages/tooling/policy-pack/lint-rules/src/index.ts",
       "symbol": "RuleRegistrySchema",
       "kind": "schema-class",
-      "owner": "@beep/lint-rules"
+      "owner": "@beep/lint-rules",
+      "identity": "RuleRegistrySchema",
+      "description": "Schema for the finite rule registry keyed by rule slug."
     },
     {
       "file": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
@@ -19231,7 +21572,9 @@
       "file": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.errors.ts",
       "symbol": "AiMetricsProgramError",
       "kind": "tagged-union",
-      "owner": "@beep/repo-cli"
+      "owner": "@beep/repo-cli",
+      "identity": "AiMetricsProgramError",
+      "description": "Unified typed failure channel for AI metrics command programs."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.errors.ts",
@@ -19533,7 +21876,9 @@
       "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
       "symbol": "ArchitectureOperation",
       "kind": "union",
-      "owner": "@beep/repo-cli"
+      "owner": "@beep/repo-cli",
+      "identity": "ArchitectureOperation",
+      "description": "Canonical operation-plan operation."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
@@ -21200,6 +23545,158 @@
       "description": "Image file extensions that the metadata-strip command normalizes through sharp."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
+      "symbol": "GoalDoctorClassification",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GoalDoctorClassification",
+      "description": "Baseline-ratchet classification: introduced blocks, inherited stays advisory, resolved shrinks."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
+      "symbol": "GoalDoctorFinding",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GoalDoctorFinding",
+      "description": "One goals-doctor finding with a stable baseline-membership key."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
+      "symbol": "GoalDoctorFindingKind",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "GoalDoctorFindingKind",
+      "description": "Finding kinds emitted by beep goals doctor (blocking and advisory)."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Goals.errors.ts",
+      "symbol": "GoalManifestInvalidError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-cli",
+      "identity": "GoalManifestInvalidError",
+      "description": "A goal manifest failed JSON parsing or GoalManifest decoding."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Goals.errors.ts",
+      "symbol": "GoalPacketNotFoundError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-cli",
+      "identity": "GoalPacketNotFoundError",
+      "description": "A goal packet directory or its manifest could not be found."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Goals.errors.ts",
+      "symbol": "GoalReadmeStatusLineError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-cli",
+      "identity": "GoalReadmeStatusLineError",
+      "description": "A packet README lacks a recognizable Lifecycle: status line to rewrite."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Goals.errors.ts",
+      "symbol": "GoalStatusInputError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-cli",
+      "identity": "GoalStatusInputError",
+      "description": "Invalid slug/status input for beep goals set-status."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Goals.errors.ts",
+      "symbol": "GoalsGitError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-cli",
+      "identity": "GoalsGitError",
+      "description": "A git command backing a goals-doctor advisory failed (recovered, never blocking)."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+      "symbol": "GoalCompletionGate",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GoalCompletionGate",
+      "description": "Declared completion gate of a goal packet (yeet PR-to-mergeable unless grandfathered)."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+      "symbol": "GoalInitiative",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GoalInitiative",
+      "description": "Goal-manifest identity block: required id and canonical status plus optional metadata."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+      "symbol": "GoalManifest",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GoalManifest",
+      "description": "Canonical goal-packet manifest with a lenient decoder for legacy wire shapes."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+      "symbol": "GoalManifestSchemaVersion",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "GoalManifestSchemaVersion",
+      "description": "Known goal-manifest schema versions (v2 canonical, v1 and 1.0.0 legacy)."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+      "symbol": "GoalPhase",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GoalPhase",
+      "description": "One goal-manifest phase entry with a normalized status."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+      "symbol": "GoalPhaseStatus",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "GoalPhaseStatus",
+      "description": "Canonical normalized goal-phase status domain (superseded = moved to another packet)."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+      "symbol": "GoalStatus",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "GoalStatus",
+      "description": "Canonical 5-state goal-packet lifecycle domain."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts",
+      "symbol": "GoalPacketRecord",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GoalPacketRecord",
+      "description": "One scanned goal-packet directory with raw manifest/README/launcher surfaces."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration.ts",
+      "symbol": "GoalManifestBackfill",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GoalManifestBackfill",
+      "description": "Recorded backfill decision for a manifest-less goal packet (status from README evidence)."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/Migration.ts",
+      "symbol": "GoalPacketMigration",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GoalPacketMigration",
+      "description": "Planned mechanical migration outcome for one goal packet."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
+      "symbol": "PortfolioIndexRow",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "PortfolioIndexRow",
+      "description": "One rendered goals-index row (slug, title, status, phase progress, updated, mission)."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Graphiti/Graphiti.errors.ts",
       "symbol": "GraphitiProxyConfigLoadError",
       "kind": "tagged-error",
@@ -22275,6 +24772,14 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/KnipRatchet.ts",
+      "symbol": "KnipNormalizationPolicy",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "KnipNormalizationPolicy",
+      "description": "Deterministic ordering and omission policy for a Knip regression baseline."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/KnipRatchet.ts",
       "symbol": "KnipRegressionBaseline",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -22770,6 +25275,14 @@
       "description": "Rendered target projection ready to compare or write to disk."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Source.ts",
+      "symbol": "SyncDataFetchedSource",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "SyncDataFetchedSource",
+      "description": "Raw fetched source with stable hash metadata."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.errors.ts",
       "symbol": "TsconfigSyncCycleError",
       "kind": "tagged-error",
@@ -23210,6 +25723,14 @@
       "description": "Execution result and artifact paths emitted by yeet."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "symbol": "BuildYeetRunPlanTestOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "BuildYeetRunPlanTestOptions",
+      "description": "Hydrated test context, optional message, and optional mode for building a Yeet run plan."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Planner.ts",
       "symbol": "YeetProofTier",
       "kind": "literal-kit",
@@ -23275,6 +25796,14 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "symbol": "BuildYeetVerdictInput",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "BuildYeetVerdictInput",
+      "description": "Run identity, outcome, planned steps, and executed results used to build the run verdict."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
       "symbol": "YeetBaseFreshness",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -23296,6 +25825,14 @@
       "owner": "@beep/repo-cli",
       "identity": "YeetLaneStatus",
       "description": "Execution status of one planned yeet lane."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "symbol": "YeetOutcome",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "YeetOutcome",
+      "description": "Terminal outcome for one yeet run."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
@@ -24110,6 +26647,22 @@
       "description": "Ordered typed item held by a turn aggregate."
     },
     {
+      "file": "packages/workspace/domain/src/entities/Workspace/Workspace.model.ts",
+      "symbol": "Workspace",
+      "kind": "schema-const",
+      "owner": "@beep/workspace-domain",
+      "identity": "Workspace",
+      "description": "User or team work area participating in a runtime scenario."
+    },
+    {
+      "file": "packages/workspace/domain/src/entities/Workspace/Workspace.values.ts",
+      "symbol": "WorkspaceVaultRootPath",
+      "kind": "brand",
+      "owner": "@beep/workspace-domain",
+      "identity": "WorkspaceVaultRootPath",
+      "description": "Absolute local filesystem path configured as the workspace vault root."
+    },
+    {
       "file": "packages/workspace/domain/src/values/ApprovalDecision/ApprovalDecision.model.ts",
       "symbol": "ApprovalDecision",
       "kind": "literal-kit",
@@ -24260,6 +26813,54 @@
       "owner": "@beep/workspace-use-cases",
       "identity": "TimelineTurn",
       "description": "Projected turn within a thread timeline, ordered by turn index, with placeholder cost rollup."
+    },
+    {
+      "file": "packages/workspace/use-cases/src/aggregates/Workspace/WorkspaceVault.ts",
+      "symbol": "SetWorkspaceVaultInput",
+      "kind": "schema-class",
+      "owner": "@beep/workspace-use-cases",
+      "identity": "SetWorkspaceVaultInput",
+      "description": "Input accepted when persisting a workspace vault root."
+    },
+    {
+      "file": "packages/workspace/use-cases/src/aggregates/Workspace/WorkspaceVault.ts",
+      "symbol": "WorkspaceVaultActionError",
+      "kind": "tagged-error",
+      "owner": "@beep/workspace-use-cases",
+      "identity": "WorkspaceVaultActionError",
+      "description": "Client-safe workspace vault configuration failure."
+    },
+    {
+      "file": "packages/workspace/use-cases/src/aggregates/Workspace/WorkspaceVault.ts",
+      "symbol": "WorkspaceVaultConfig",
+      "kind": "schema-class",
+      "owner": "@beep/workspace-use-cases",
+      "identity": "WorkspaceVaultConfig",
+      "description": "Workspace vault configuration read model."
+    },
+    {
+      "file": "packages/workspace/use-cases/src/aggregates/Workspace/WorkspaceVault.ts",
+      "symbol": "WorkspaceVaultRootInvalid",
+      "kind": "tagged-error",
+      "owner": "@beep/workspace-use-cases",
+      "identity": "WorkspaceVaultRootInvalid",
+      "description": "The selected workspace vault root is not an existing writable directory."
+    },
+    {
+      "file": "packages/workspace/use-cases/src/aggregates/Workspace/WorkspaceVault.ts",
+      "symbol": "WorkspaceVaultStoreError",
+      "kind": "tagged-union",
+      "owner": "@beep/workspace-use-cases",
+      "identity": "WorkspaceVaultStoreError",
+      "description": "Internal typed workspace vault store failure."
+    },
+    {
+      "file": "packages/workspace/use-cases/src/aggregates/Workspace/WorkspaceVault.ts",
+      "symbol": "WorkspaceVaultStoreUnavailable",
+      "kind": "tagged-error",
+      "owner": "@beep/workspace-use-cases",
+      "identity": "WorkspaceVaultStoreUnavailable",
+      "description": "The workspace vault store could not serve the request."
     }
   ]
 }

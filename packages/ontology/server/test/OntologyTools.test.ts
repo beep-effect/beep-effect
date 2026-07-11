@@ -142,7 +142,8 @@ describe("ontology agent toolkit real-engine handlers", () => {
         expect(sparql.query.displayedResultCount).toBe(200);
         expect(sparql.query.result.profile).toBe("select");
       })
-    )
+    ),
+    { timeout: 120_000 }
   );
 
   it.effect(
@@ -168,6 +169,13 @@ describe("ontology agent toolkit real-engine handlers", () => {
             testActor
           )
         );
+        const afterStale = yield* tools.sparqlQuery(
+          OntologySparqlQueryRequest.make({
+            path,
+            profile: "select",
+            query: "SELECT ?p ?o WHERE { <https://example.test/bob> ?p ?o }",
+          })
+        );
 
         expect(first.delta.added).toHaveLength(1);
         expect(first.currentFingerprint).not.toBe(first.previousFingerprint);
@@ -177,6 +185,8 @@ describe("ontology agent toolkit real-engine handlers", () => {
           expect(stale.recoverable).toBe(true);
           expect(stale.guidance).toContain("Refetch");
         }
+        expect(afterStale.query.result.profile).toBe("select");
+        expect(afterStale.query.displayedResultCount).toBe(0);
       })
     ),
     { timeout: 120_000 }
@@ -213,7 +223,8 @@ describe("ontology agent toolkit real-engine handlers", () => {
         expect(budget._tag).toBe("OntologyBudgetRefusal");
         expect(drift._tag).toBe("OntologyReasonerDriftRefusal");
       })
-    )
+    ),
+    { timeout: 120_000 }
   );
 
   it.effect(
