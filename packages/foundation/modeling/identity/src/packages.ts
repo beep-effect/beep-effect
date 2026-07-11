@@ -403,7 +403,7 @@ export const $TestUtilsId = composers.$TestUtilsId;
  * ```ts
  * import { $SharedDomainId } from "@beep/identity"
  *
-"tailscale" * const id = $SharedDomainId.make("TenantId")
+ * const id = $SharedDomainId.make("TenantId")
  * ```
  *
  * @since 0.0.0
