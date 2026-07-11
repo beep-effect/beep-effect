@@ -2,9 +2,20 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+### Closeout reconciliation (2026-07-11)
+
+The work shipped weeks ago but the packet paperwork drifted.
+`packages/drivers/uspto-mcp` landed on `main` via `e9cce72e6f`
+("feat(uspto-mcp): ship thin USPTO MCP proving host") as part of the
+`feat/mcp-kit-proving-slice` direct merge `8dbd778313` (2026-07-01, which
+pre-dates the PR-only ruleset), and the package has been built/tested/green
+since 2026-07-01. P3 is marked complete as satisfied by that direct merge
+rather than a PR; P4 Close is completed with this reconciliation and the
+closeout reflection in `history/reflections/2026-07-11-claude.md`.
 
 ## Mission
 
@@ -35,9 +46,9 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Verify complete. `packages/drivers/uspto-mcp` is built, tested, and green;
-next is P3 Yeet (PR to mergeable, coordinated with `mcp-host-retrofit` on the
-shared branch).
+Closed. All phases complete; P3 was satisfied by the direct merge
+`8dbd778313` (2026-07-01) rather than a PR (see Closeout reconciliation
+above).
 
 ## Latest Evidence
 

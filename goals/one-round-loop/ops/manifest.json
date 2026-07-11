@@ -5,7 +5,7 @@
     "title": "One-Round Loop",
     "status": "active",
     "created": "2026-07-07",
-    "updated": "2026-07-07",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/one-round-loop",
@@ -51,12 +51,14 @@
     {
       "id": "P0",
       "name": "CI-lane inversion",
-      "status": "pending"
+      "status": "complete",
+      "notes": "Shipped via merged PRs #321-#336 (2026-07-07/08): beep ci lane + check.yml thinning (e.g. #327 merged as 64b7e44d88). Status reconciled retroactively on 2026-07-11."
     },
     {
       "id": "P1",
       "name": "Property-law lane",
-      "status": "pending"
+      "status": "complete",
+      "notes": "Shipped via merged PRs #321-#336 (2026-07-07/08): property-law lane, SAST gate, env-max floors. Status reconciled retroactively on 2026-07-11."
     },
     {
       "id": "P2",

@@ -34,11 +34,29 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-`P6 yeet-to-mergeable` - all legitimate maintained-code findings are remediated locally; next action is Yeet verify/publish/monitor, then merge and post-merge Codex closure.
+`P8 close-remediated` - the fix PR is merged; next actions are closing the 30
+remediated findings in the Codex scanner UI (P8), then zero-open verification
+(P9).
 
 ## Latest Evidence
 
 `2026-07-08` - branch synced to current `origin/main`; 45 findings captured, 15 invalid/already-fixed findings closed in Codex, and 30 legitimate findings remediated locally pending Yeet PR merge.
+
+`2026-07-11` - fix PR #338 merged to main 2026-07-08 as `c9ca7734e5`; P6 and P7 reconciled to complete.
+
+## Closeout reconciliation (2026-07-11)
+
+Retroactive paperwork reconciliation: the fix PR #338 merged to main on
+2026-07-08 as `c9ca7734e5`, but the manifest still showed P6 as `active` and
+P7 as `pending`. Both are now marked `complete` with that evidence. The packet
+stays `active` because P8 (close the 30 remediated findings in the Codex
+scanner UI) and P9 (zero-open verification) have not been performed.
+
+Important for P9: the zero-open check must account for a NEWER 2026-07-10
+Codex scan batch that has no packet of its own. Those findings were already
+fixed via PR #362 (merged 2026-07-11 as `831410b492`), so "zero open" for this
+packet means the 30 findings tracked here are closed and any remaining open
+items belong to (and are covered by) the 2026-07-10 batch remediated in #362.
 
 ## Notes
 

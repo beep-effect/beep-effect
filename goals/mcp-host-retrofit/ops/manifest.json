@@ -3,13 +3,13 @@
   "initiative": {
     "id": "mcp-host-retrofit",
     "title": "MCP Host Retrofit",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-01",
-    "updated": "2026-07-01",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/mcp-host-retrofit",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -69,12 +69,13 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete",
+      "note": "Satisfied by direct merge of feat/mcp-kit-proving-slice to main via merge commit 8dbd778313 on 2026-07-01, pre-dating the 2026-07-06 PR-only ruleset; no separate PR was opened."
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

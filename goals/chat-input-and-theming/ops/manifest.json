@@ -3,13 +3,13 @@
   "initiative": {
     "id": "chat-input-and-theming",
     "title": "Chat Input & Green Workbench Theming",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-06-20",
-    "updated": "2026-06-21",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/chat-input-and-theming",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
@@ -55,7 +55,7 @@
     {
       "id": "P3",
       "name": "Close",
-      "status": "in_progress"
+      "status": "completed"
     }
   ],
   "verificationCommands": [

@@ -2,9 +2,20 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+### Closeout reconciliation (2026-07-11)
+
+`@beep/pandoc-ast` has been live on main at
+`packages/foundation/modeling/pandoc-ast` since 2026-06-15, landed via direct
+commit `d22d97bb29` ("feat(pandoc-ast): add foundation package"). That commit
+predates the PR-only ruleset, so no PR exists; the yeet PR-mergeable gate is
+grandfathered rather than retroactively enforced. The manifest phases had
+drifted (P3 Close stayed `pending` after the work shipped); this reconciliation
+flips P3 to `completed`, sets the packet to `completed-retained`, and adds the
+closeout reflection.
 
 ## Mission
 
@@ -34,9 +45,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Close is pending. P0 research, P1 implementation, and P2 package-local
-verification are complete for the first slice; full packet closeout still needs
-the reflection workflow if the packet is marked closed.
+All phases are complete. P0 research, P1 implementation, and P2 package-local
+verification finished with the 2026-06-15 landing; P3 Close was reconciled
+retroactively on 2026-07-11 with the closeout reflection in
+[`history/reflections/`](./history/reflections/).
 
 ## Latest Evidence
 

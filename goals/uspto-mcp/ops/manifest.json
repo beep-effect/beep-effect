@@ -3,13 +3,13 @@
   "initiative": {
     "id": "uspto-mcp",
     "title": "USPTO MCP",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-01",
-    "updated": "2026-07-01",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/uspto-mcp",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -69,12 +69,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

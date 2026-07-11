@@ -2,7 +2,20 @@
 
 ## Status
 
-Active
+Superseded — the repo-exports catalog was retired; discovery moved to live
+search (`rg` over live source and barrels) plus the `repo-symbol-discovery`
+skill. Manifest: `initiative.status: superseded`, `lifecycle: reference`.
+
+### Closeout reconciliation (2026-07-11)
+
+The Phase 1 artifact (`standards/repo-exports.catalog.jsonc`/`.md`) shipped on
+2026-05-14 (`af57941c10` added the generator, `ff1445f6c2` surfaced the
+catalog to agents, and PR #148 — merged 2026-05-14 — landed the
+`repo-symbol-discovery` skill). The generated catalog was later deleted in
+`8852619f04` (2026-06-18) and formally retired in CLAUDE.md, which now
+directs agents to live ripgrep search and the `repo-symbol-discovery` skill
+instead. This packet is retained as reference for the context-topology idea;
+the manifest was reconciled to `superseded` on 2026-07-11.
 
 ## Mission
 

@@ -2,9 +2,24 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+### Closeout reconciliation (2026-07-11)
+
+Retroactive closeout: the work shipped weeks ago but the manifest stayed at
+"P4 Implement in-progress" since 2026-06-07. Git evidence:
+
+- `@beep/langextract` landed on main 2026-06-07/08
+  (`3961138de6` feat(langextract) plus hardening fixes through `33b0e0b378`)
+  with source, tests, and docs at `packages/foundation/capability/langextract`.
+- It is consumed in production by the office-action extraction rung
+  (PR #265, merged 2026-06-18).
+- P5 (quality review fix loop) is marked completed because the repo-wide
+  crispening/standards remediation waves (PRs #294-#326, with ratchets now
+  blocking) ran over this package and subsume the planned packet-local review
+  loop.
 
 ## Mission
 
@@ -38,11 +53,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P4 Implement.
-
-Next action: implement the accepted proposal in
-[`research/synthesis.md`](./research/synthesis.md), starting with required
-`@beep/nlp` primitive promotions before scaffolding `@beep/langextract`.
+Closed (all phases completed; see Closeout reconciliation above).
 
 ## Latest Evidence
 
