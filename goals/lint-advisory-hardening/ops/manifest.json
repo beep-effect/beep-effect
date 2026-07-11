@@ -3,13 +3,14 @@
   "initiative": {
     "id": "lint-advisory-hardening",
     "title": "Lint Advisory Hardening",
-    "status": "active",
+    "status": "paused",
     "created": "2026-06-12",
-    "updated": "2026-06-12",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/lint-advisory-hardening",
-  "lifecycle": "active",
+  "lifecycle": "paused",
+  "statusNote": "Parked by docs/ROADMAP.md (2026-07-11); resumes when advisory noise measurably slows lane agents, or the post-P5 platform window opens.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {

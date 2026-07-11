@@ -3,13 +3,14 @@
   "initiative": {
     "id": "fallow-advisory-ratchets",
     "title": "Fallow Advisory Ratchets",
-    "status": "active",
+    "status": "paused",
     "created": "2026-06-11",
-    "updated": "2026-06-11",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/fallow-advisory-ratchets",
-  "lifecycle": "active",
+  "lifecycle": "paused",
+  "statusNote": "Parked by docs/ROADMAP.md (2026-07-11); resumes when a Fallow advisory lane regresses, or the post-P5 platform window opens.",
   "executionCapable": true,
   "completionGate": {
     "operator": "yeet",

@@ -2,7 +2,11 @@
 
 ## Status
 
-**ACTIVE — P1/P2 complete; P3 ready**
+Lifecycle: `completed-retained`
+
+Source: [`ops/manifest.json`](./ops/manifest.json)
+
+All phases (P1–P3) complete.
 
 ## Owner
 

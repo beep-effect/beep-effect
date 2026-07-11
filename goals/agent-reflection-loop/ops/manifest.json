@@ -3,13 +3,14 @@
   "initiative": {
     "id": "agent-reflection-loop",
     "title": "Agent Reflection Loop",
-    "status": "active",
+    "status": "paused",
     "created": "2026-06-09",
-    "updated": "2026-06-09",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agent-reflection-loop",
-  "lifecycle": "active",
+  "lifecycle": "paused",
+  "statusNote": "Parked by docs/ROADMAP.md (2026-07-11); resumes when a packet closes without usable reflections.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {

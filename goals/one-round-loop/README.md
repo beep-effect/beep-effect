@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active` — P0 and P1 complete; P2–P4 pending.
+Lifecycle: `paused` — P0 and P1 complete; P2–P4 pending.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

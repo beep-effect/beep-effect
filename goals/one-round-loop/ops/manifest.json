@@ -3,13 +3,14 @@
   "initiative": {
     "id": "one-round-loop",
     "title": "One-Round Loop",
-    "status": "active",
+    "status": "paused",
     "created": "2026-07-07",
     "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/one-round-loop",
-  "lifecycle": "active",
+  "lifecycle": "paused",
+  "statusNote": "Parked by docs/ROADMAP.md (2026-07-11); resumes when CI round-trips bottleneck a lane (median PR needs >1 round).",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

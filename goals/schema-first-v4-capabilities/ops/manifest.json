@@ -3,13 +3,14 @@
   "initiative": {
     "id": "schema-first-v4-capabilities",
     "title": "Schema-First V4 Capabilities",
-    "status": "active",
+    "status": "paused",
     "created": "2026-06-08",
-    "updated": "2026-06-08",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/schema-first-v4-capabilities",
-  "lifecycle": "active",
+  "lifecycle": "paused",
+  "statusNote": "Parked by docs/ROADMAP.md (2026-07-11); resumes when a schema-heavy wave hits a v4-feature gap.",
   "executionCapable": true,
   "completionGate": {
     "operator": "yeet",

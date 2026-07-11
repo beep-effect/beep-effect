@@ -3,9 +3,9 @@
   "initiative": {
     "id": "beep-schema-topology",
     "title": "@beep/schema Topology",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-05-22",
-    "updated": "2026-05-28",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "mission": "Canonize and migrate @beep/schema to namespace-first concept modules with small role files, exact PascalCase public subpaths, retired suite aggregators, and lint-enforced topology closure.",
