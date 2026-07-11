@@ -14,6 +14,7 @@
 
 import { A, O, pipe, Str } from "@beep/utils";
 import { Console, DateTime, Effect, FileSystem, Path } from "effect";
+import * as R from "effect/Record";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
 import { applyJsoncModification } from "../../internal/cli/Jsonc.js";
@@ -124,7 +125,7 @@ const setStatusForSlug = Effect.fn("Goals.setStatusForSlug")(function* (slug: st
   const today = pipe(DateTime.formatIso(now), Str.slice(0, 10));
 
   let nextManifest = applyJsoncModification({ content: manifestText, path: ["initiative", "status"], value: status });
-  if (Object.hasOwn(manifest, "lifecycle")) {
+  if (R.has(manifest, "lifecycle")) {
     nextManifest = applyJsoncModification({ content: nextManifest, path: ["lifecycle"], value: status });
   }
   nextManifest = applyJsoncModification({ content: nextManifest, path: ["initiative", "updated"], value: today });

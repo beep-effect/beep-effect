@@ -115,17 +115,14 @@ describe("classifyGoalDoctorFindings", () => {
     });
 
   it("splits current findings into introduced and inherited, and reports resolved keys", () => {
-    const result = classifyGoalDoctorFindings({
-      current: [findingFor("demo a"), findingFor("demo b")],
-      baselineKeys: ["demo b", "demo gone"],
-    });
+    const result = classifyGoalDoctorFindings([findingFor("demo a"), findingFor("demo b")], ["demo b", "demo gone"]);
     expect(result.introduced.map((item) => item.key)).toEqual(["demo a"]);
     expect(result.inherited.map((item) => item.key)).toEqual(["demo b"]);
     expect(result.resolved).toEqual(["demo gone"]);
   });
 
   it("treats an empty baseline as all-new", () => {
-    const result = classifyGoalDoctorFindings({ current: [findingFor("demo a")], baselineKeys: [] });
+    const result = classifyGoalDoctorFindings([findingFor("demo a")], []);
     expect(result.introduced.length).toBe(1);
     expect(result.inherited.length).toBe(0);
     expect(result.resolved).toEqual([]);

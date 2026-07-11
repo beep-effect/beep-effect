@@ -15,6 +15,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
 import { Console, Effect, FileSystem, Order } from "effect";
+import { flow } from "effect/Function";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
@@ -85,8 +86,7 @@ const rowBySlug = Order.mapInput(Order.String, (row: PortfolioIndexRow) => row.s
 
 const MISSION_CELL_MAX = 120;
 
-const sanitizeCell = (text: string): string =>
-  pipe(text, Str.replace(/\|/g, "\\|"), Str.replace(/\s+/g, " "), Str.trim);
+const sanitizeCell = flow(Str.replace(/\|/g, "\\|"), Str.replace(/\s+/g, " "), Str.trim);
 
 const truncateCell = (text: string): string =>
   Str.length(text) <= MISSION_CELL_MAX ? text : `${pipe(text, Str.slice(0, MISSION_CELL_MAX - 1))}…`;

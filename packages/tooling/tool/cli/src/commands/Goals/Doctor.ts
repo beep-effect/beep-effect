@@ -19,7 +19,9 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, O, pipe, Str, thunkEmptyStr } from "@beep/utils";
-import { Console, Effect, FileSystem, Order, Path, SchemaGetter } from "effect";
+import { Console, Effect, FileSystem, HashSet, Order, Path, SchemaGetter } from "effect";
+import { flow } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
@@ -176,13 +178,38 @@ const finding = (
   });
 
 /**
+ * Result of ratcheting current blocking findings against the baseline.
+ *
+ * @example
+ * ```ts
+ * import { GoalDoctorClassification } from "@beep/repo-cli/commands/Goals/Doctor"
+ *
+ * const result = GoalDoctorClassification.make({ introduced: [], inherited: [], resolved: [] })
+ * console.log(result.introduced.length) // 0
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class GoalDoctorClassification extends S.Class<GoalDoctorClassification>($I`GoalDoctorClassification`)(
+  {
+    introduced: S.Array(GoalDoctorFinding),
+    inherited: S.Array(GoalDoctorFinding),
+    resolved: S.Array(S.String),
+  },
+  $I.annote("GoalDoctorClassification", {
+    description: "Baseline-ratchet classification: introduced blocks, inherited stays advisory, resolved shrinks.",
+  })
+) {}
+
+/**
  * Classify current blocking findings against the committed baseline keys.
  *
  * Pure fallow-ratchet core: `introduced` (not in the baseline) is the failure
  * signal, `inherited` stays advisory, `resolved` is the shrink-the-baseline
  * nudge.
  *
- * @param input - Current blocking findings and the baseline keys.
+ * @param current - Current blocking findings.
+ * @param baselineKeys - Committed baseline finding keys.
  * @returns Introduced/inherited findings plus resolved baseline keys.
  * @example
  * ```ts
@@ -195,40 +222,32 @@ const finding = (
  *   key: "demo goal-md-oversize",
  *   message: "GOAL.md exceeds 4000 chars.",
  * })
- * const result = classifyGoalDoctorFindings({ current: [current], baselineKeys: [] })
+ * const result = classifyGoalDoctorFindings([current], [])
  * console.log(result.introduced.length) // 1
  * ```
  * @category utilities
  * @since 0.0.0
  */
-export const classifyGoalDoctorFindings = (input: {
-  readonly current: ReadonlyArray<GoalDoctorFinding>;
-  readonly baselineKeys: ReadonlyArray<string>;
-}): {
-  readonly introduced: ReadonlyArray<GoalDoctorFinding>;
-  readonly inherited: ReadonlyArray<GoalDoctorFinding>;
-  readonly resolved: ReadonlyArray<string>;
-} => {
-  const currentKeys = A.map(input.current, (item) => item.key);
+export const classifyGoalDoctorFindings = (
+  current: ReadonlyArray<GoalDoctorFinding>,
+  baselineKeys: ReadonlyArray<string>
+): GoalDoctorClassification => {
   const diff = diffMembership({
-    current: currentKeys,
-    baseline: input.baselineKeys,
+    current: A.map(current, (item) => item.key),
+    baseline: baselineKeys,
     equivalence: (left, right) => left === right,
     order: Order.String,
   });
-  const introducedKeys = new Set(diff.introduced);
-  return {
-    introduced: A.filter(input.current, (item) => introducedKeys.has(item.key)),
-    inherited: A.filter(input.current, (item) => !introducedKeys.has(item.key)),
+  const introducedKeys = HashSet.fromIterable(diff.introduced);
+  return GoalDoctorClassification.make({
+    introduced: A.filter(current, (item) => HashSet.has(introducedKeys, item.key)),
+    inherited: A.filter(current, (item) => !HashSet.has(introducedKeys, item.key)),
     resolved: diff.resolved,
-  };
+  });
 };
 
 const stringAt = (value: Readonly<Record<string, unknown>>, key: string): O.Option<string> =>
-  pipe(
-    R.get(value, key),
-    O.filter((candidate): candidate is string => typeof candidate === "string")
-  );
+  pipe(R.get(value, key), O.filter(P.isString));
 
 const hasSupersessionPointer = (raw: Readonly<Record<string, unknown>>): boolean => {
   const topLevel = O.isSome(stringAt(raw, "supersededBy")) || O.isSome(stringAt(raw, "supersededNote"));
@@ -252,7 +271,7 @@ const packetFindings = Effect.fn("Goals.packetFindings")(function* (record: Goal
   if (reflectionsDirExists) {
     const files = yield* fs.readDirectory(reflectionsDir).pipe(Effect.orElseSucceed(A.empty<string>));
     for (const file of A.sort(A.filter(files, reflectionFileNameIsArtifact), Order.String)) {
-      const raw = yield* fs.readFileString(path.join(reflectionsDir, file)).pipe(Effect.orElseSucceed(() => ""));
+      const raw = yield* fs.readFileString(path.join(reflectionsDir, file)).pipe(Effect.orElseSucceed(thunkEmptyStr));
       const valid = yield* reflectionFrontmatterIsValid(raw);
       if (!valid) {
         push(
@@ -449,20 +468,13 @@ const gitAdvisories = Effect.fn("Goals.gitAdvisories")(function* (
     "goals/",
   ]);
   if (O.isSome(recentPaths)) {
-    const touched = new Set(
+    const touched = HashSet.fromIterable(
       pipe(
         recentPaths.value,
         Str.split("\n"),
         A.map(Str.trim),
-        A.filter((line) => Str.startsWith("goals/")(line)),
-        A.map((line) =>
-          pipe(
-            line,
-            Str.split("/"),
-            A.get(1),
-            O.getOrElse(() => "")
-          )
-        )
+        A.filter(Str.startsWith("goals/")),
+        A.map(flow(Str.split("/"), A.get(1), O.getOrElse(thunkEmptyStr)))
       )
     );
     for (const packet of packets) {
@@ -472,7 +484,11 @@ const gitAdvisories = Effect.fn("Goals.gitAdvisories")(function* (
       const manifest = packet.manifest.value;
       const hasContext =
         manifest.statusNote !== undefined || (manifest.blockedBy !== undefined && A.length(manifest.blockedBy) > 0);
-      if (GoalStatus.is.active(manifest.initiative.status) && !touched.has(packet.record.slug) && !hasContext) {
+      if (
+        GoalStatus.is.active(manifest.initiative.status) &&
+        !HashSet.has(touched, packet.record.slug) &&
+        !hasContext
+      ) {
         findings = A.append(
           findings,
           finding(
@@ -591,33 +607,24 @@ export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (optio
   const baselineText = yield* fs
     .readFileString(GOALS_DOCTOR_BASELINE_PATH)
     .pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
-  const baselineKeys = yield* pipe(
-    baselineText,
-    O.match({
-      onNone: () => Effect.succeed(A.empty<string>()),
-      onSome: (text) =>
-        pipe(
-          parseGoalManifestText(text),
-          O.match({
-            onNone: () =>
-              Console.error(`[goals:doctor] ${GOALS_DOCTOR_BASELINE_PATH} does not parse as JSONC.`).pipe(
-                Effect.andThen(failWithReportedExit("goals doctor: baseline unreadable.", 2))
-              ),
-            onSome: (value) =>
-              decodeBaseline(value).pipe(
-                Effect.map((baseline) => baseline.findings),
-                Effect.catchTag("SchemaError", (error) =>
-                  Console.error(`[goals:doctor] baseline does not decode: ${error.message}`).pipe(
-                    Effect.andThen(failWithReportedExit("goals doctor: baseline invalid.", 2))
-                  )
-                )
-              ),
-          })
-        ),
-    })
-  );
+  let baselineKeys: ReadonlyArray<string> = A.empty<string>();
+  if (O.isSome(baselineText)) {
+    const parsedBaseline = parseGoalManifestText(baselineText.value);
+    if (O.isNone(parsedBaseline)) {
+      yield* Console.error(`[goals:doctor] ${GOALS_DOCTOR_BASELINE_PATH} does not parse as JSONC.`);
+      return yield* failWithReportedExit("goals doctor: baseline unreadable.", 2);
+    }
+    baselineKeys = yield* decodeBaseline(parsedBaseline.value).pipe(
+      Effect.map((baseline) => baseline.findings),
+      Effect.catchTag("SchemaError", (error) =>
+        Console.error(`[goals:doctor] baseline does not decode: ${error.message}`).pipe(
+          Effect.andThen(failWithReportedExit("goals doctor: baseline invalid.", 2))
+        )
+      )
+    );
+  }
 
-  const classified = classifyGoalDoctorFindings({ current: blocking, baselineKeys });
+  const classified = classifyGoalDoctorFindings(blocking, baselineKeys);
 
   yield* Console.log(
     `[goals:doctor] packets=${A.length(records)} blocking_new=${A.length(classified.introduced)} blocking_inherited=${A.length(classified.inherited)} baseline_resolved=${A.length(classified.resolved)} advisories=${A.length(advisories)}`
