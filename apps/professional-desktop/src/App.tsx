@@ -33,6 +33,13 @@ import type { JSX } from "react";
 
 const hasTauriRuntime = (): boolean => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
+const isDevMode = (): boolean => {
+  // biome-ignore lint/suspicious/noUndeclaredEnvVars: Vite injects DEV on import.meta.env.
+  const value = import.meta.env.DEV;
+
+  return P.isBoolean(value) ? value : value === "true";
+};
+
 // Dev-only browser-mode session token: lets the agent-run browser smoke reach
 // the full desktop RPC group over HTTP (the shell normally injects this through
 // the Tauri `sidecar_transport` probe). Gated on Vite DEV so production web
@@ -40,7 +47,7 @@ const hasTauriRuntime = (): boolean => typeof window !== "undefined" && "__TAURI
 const devRpcSessionToken = (): string | undefined => {
   // biome-ignore lint/suspicious/noUndeclaredEnvVars: Vite injects VITE_* on import.meta.env.
   const token: unknown = import.meta.env.VITE_BEEP_DESKTOP_RPC_SESSION_TOKEN;
-  return import.meta.env.DEV && typeof token === "string" && token.length > 0 ? token : undefined;
+  return isDevMode() && typeof token === "string" && token.length > 0 ? token : undefined;
 };
 
 const browserSidecarTransport = (): SidecarTransport => {
@@ -100,13 +107,6 @@ const protocolLayerBindingAtom = Atom.make((get) => {
 
 const hasIpcSpikeFlag = (): boolean =>
   typeof window !== "undefined" && new URLSearchParams(window.location.search).has("ipc");
-
-const isDevMode = (): boolean => {
-  // biome-ignore lint/suspicious/noUndeclaredEnvVars: Vite injects DEV on import.meta.env.
-  const value = import.meta.env.DEV;
-
-  return P.isBoolean(value) ? value : value === "true";
-};
 
 const hasCosmosSpikeFlag = (): boolean =>
   isDevMode() &&

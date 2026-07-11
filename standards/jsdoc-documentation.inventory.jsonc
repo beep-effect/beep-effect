@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-07-11T00:48:23.311Z",
+  "generatedAt": "2026-07-11T05:10:36.177Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -61,12 +61,12 @@
     "status": "resolved"
   },
   "totals": {
-    "packages": 114,
-    "cleanPackages": 111,
+    "packages": 116,
+    "cleanPackages": 113,
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 0,
-    "publicModules": 1765,
-    "publicExports": 15208,
+    "publicModules": 1777,
+    "publicExports": 15261,
     "openModules": 0,
     "openExports": 0,
     "missingExportExamples": 0,
@@ -56552,7 +56552,7 @@
         "srcDir": "src",
         "sourceFileCount": 8,
         "publicModuleCount": 8,
-        "publicExportCount": 95
+        "publicExportCount": 98
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -56655,7 +56655,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 6,
+          "exportCount": 9,
           "remediationStatus": "resolved"
         },
         {
@@ -57872,8 +57872,8 @@
           "exportKind": "const",
           "filePath": "src/PathSafety/index.ts",
           "repoPath": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
-          "line": 52,
-          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-52-pathsafetyviolationreason",
+          "line": 57,
+          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-57-pathsafetyviolationreason",
           "currentTags": [
             "@example",
             "@category",
@@ -57894,8 +57894,8 @@
           "exportKind": "type",
           "filePath": "src/PathSafety/index.ts",
           "repoPath": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
-          "line": 77,
-          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-77-pathsafetyviolationreason",
+          "line": 83,
+          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-83-pathsafetyviolationreason",
           "currentTags": [
             "@example",
             "@category",
@@ -57916,8 +57916,8 @@
           "exportKind": "class",
           "filePath": "src/PathSafety/index.ts",
           "repoPath": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
-          "line": 100,
-          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-100-pathsafetyerror",
+          "line": 106,
+          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-106-pathsafetyerror",
           "currentTags": [
             "@example",
             "@category",
@@ -57938,8 +57938,8 @@
           "exportKind": "const",
           "filePath": "src/PathSafety/index.ts",
           "repoPath": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
-          "line": 211,
-          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-211-ispathwithinroot",
+          "line": 248,
+          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-248-ispathwithinroot",
           "currentTags": [
             "@example",
             "@category",
@@ -57960,8 +57960,8 @@
           "exportKind": "const",
           "filePath": "src/PathSafety/index.ts",
           "repoPath": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
-          "line": 254,
-          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-254-validateresolvedpath",
+          "line": 303,
+          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-303-validateresolvedpath",
           "currentTags": [
             "@example",
             "@category",
@@ -57982,8 +57982,77 @@
           "exportKind": "const",
           "filePath": "src/PathSafety/index.ts",
           "repoPath": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
-          "line": 304,
-          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-304-resolvepathwithinroot",
+          "line": 353,
+          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-353-resolvepathwithinroot",
+          "currentTags": [
+            "@example",
+            "@effects",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "resolvePathWithinCanonicalRoot",
+          "exportKind": "const",
+          "filePath": "src/PathSafety/index.ts",
+          "repoPath": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
+          "line": 478,
+          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-478-resolvepathwithincanonicalroot",
+          "currentTags": [
+            "@example",
+            "@effects",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "writeFileWithinCanonicalRootAtomically",
+          "exportKind": "const",
+          "filePath": "src/PathSafety/index.ts",
+          "repoPath": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
+          "line": 591,
+          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-591-writefilewithincanonicalrootatomically",
+          "currentTags": [
+            "@example",
+            "@effects",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "writeFileWithinRootAtomically",
+          "exportKind": "const",
+          "filePath": "src/PathSafety/index.ts",
+          "repoPath": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
+          "line": 642,
+          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-642-writefilewithinrootatomically",
           "currentTags": [
             "@example",
             "@effects",
@@ -58840,9 +58909,413 @@
       ]
     },
     {
+      "packageName": "@beep/ontology-config",
+      "packagePath": "packages/ontology/config",
+      "topoOrder": 30,
+      "status": "clean",
+      "sourceCoverage": {
+        "srcDir": "src",
+        "sourceFileCount": 8,
+        "publicModuleCount": 6,
+        "publicExportCount": 11
+      },
+      "docgenCoverage": {
+        "hasDocgenConfig": true,
+        "enforceDescriptions": false,
+        "enforceExamples": false,
+        "enforceVersion": true
+      },
+      "counts": {
+        "openModules": 0,
+        "openExports": 0,
+        "missingExportExamples": 0,
+        "missingExportCategories": 0,
+        "missingExportSince": 0,
+        "missingExportSummaries": 0,
+        "forbiddenTagFindings": 0,
+        "malformedConditionalTagFindings": 0,
+        "exampleImportFindings": 0,
+        "unsafeExampleFindings": 0,
+        "schemaAnnotationFindings": 0
+      },
+      "modules": [
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/ServerConfig.ts",
+          "repoPath": "packages/ontology/config/src/ServerConfig.ts",
+          "line": 1,
+          "anchor": "packages-ontology-config-src-serverconfig-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 4,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/TestLayer.ts",
+          "repoPath": "packages/ontology/config/src/TestLayer.ts",
+          "line": 1,
+          "anchor": "packages-ontology-config-src-testlayer-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/ontology/config/src/index.ts",
+          "line": 1,
+          "anchor": "packages-ontology-config-src-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/layer.ts",
+          "repoPath": "packages/ontology/config/src/layer.ts",
+          "line": 1,
+          "anchor": "packages-ontology-config-src-layer-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/server.ts",
+          "repoPath": "packages/ontology/config/src/server.ts",
+          "line": 1,
+          "anchor": "packages-ontology-config-src-server-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/test.ts",
+          "repoPath": "packages/ontology/config/src/test.ts",
+          "line": 1,
+          "anchor": "packages-ontology-config-src-test-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        }
+      ],
+      "exports": [
+        {
+          "symbolName": "OntologyWorkspaceRootConfig",
+          "exportKind": "const",
+          "filePath": "src/ServerConfig.ts",
+          "repoPath": "packages/ontology/config/src/ServerConfig.ts",
+          "line": 37,
+          "anchor": "packages-ontology-config-src-serverconfig-ts-37-ontologyworkspacerootconfig",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyServerConfig",
+          "exportKind": "class",
+          "filePath": "src/ServerConfig.ts",
+          "repoPath": "packages/ontology/config/src/ServerConfig.ts",
+          "line": 53,
+          "anchor": "packages-ontology-config-src-serverconfig-ts-53-ontologyserverconfig",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyConfigShape",
+          "exportKind": "type",
+          "filePath": "src/ServerConfig.ts",
+          "repoPath": "packages/ontology/config/src/ServerConfig.ts",
+          "line": 82,
+          "anchor": "packages-ontology-config-src-serverconfig-ts-82-ontologyconfigshape",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyConfig",
+          "exportKind": "class",
+          "filePath": "src/ServerConfig.ts",
+          "repoPath": "packages/ontology/config/src/ServerConfig.ts",
+          "line": 102,
+          "anchor": "packages-ontology-config-src-serverconfig-ts-102-ontologyconfig",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeOntologyConfigTest",
+          "exportKind": "const",
+          "filePath": "src/TestLayer.ts",
+          "repoPath": "packages/ontology/config/src/TestLayer.ts",
+          "line": 29,
+          "anchor": "packages-ontology-config-src-testlayer-ts-29-makeontologyconfigtest",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./public.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/ontology/config/src/index.ts",
+          "line": 31,
+          "anchor": "packages-ontology-config-src-index-ts-31-export-from-public-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "VERSION",
+          "exportKind": "const",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/ontology/config/src/index.ts",
+          "line": 23,
+          "anchor": "packages-ontology-config-src-index-ts-23-version",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyConfigLive",
+          "exportKind": "const",
+          "filePath": "src/layer.ts",
+          "repoPath": "packages/ontology/config/src/layer.ts",
+          "line": 46,
+          "anchor": "packages-ontology-config-src-layer-ts-46-ontologyconfiglive",
+          "currentTags": [
+            "@example",
+            "@effects",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export {\n  OntologyConfig,\n  type OntologyConfigShape,\n  OntologyServerConfig,\n  OntologyWorkspaceRootConfig,\n} from \"./ServerConfig.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/server.ts",
+          "repoPath": "packages/ontology/config/src/server.ts",
+          "line": 9,
+          "anchor": "packages-ontology-config-src-server-ts-9-export-ontologyconfig-type-ontologyconfigshape-ontologyserverconfig-ontologyworkspacerootconfig-from-serverconfig-js",
+          "currentTags": [
+            "@packageDocumentation",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export { OntologyConfig, type OntologyConfigShape, OntologyServerConfig } from \"./ServerConfig.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/test.ts",
+          "repoPath": "packages/ontology/config/src/test.ts",
+          "line": 15,
+          "anchor": "packages-ontology-config-src-test-ts-15-export-ontologyconfig-type-ontologyconfigshape-ontologyserverconfig-from-serverconfig-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export { makeOntologyConfigTest } from \"./TestLayer.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/test.ts",
+          "repoPath": "packages/ontology/config/src/test.ts",
+          "line": 22,
+          "anchor": "packages-ontology-config-src-test-ts-22-export-makeontologyconfigtest-from-testlayer-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        }
+      ]
+    },
+    {
       "packageName": "@beep/ai-provider-cli",
       "packagePath": "packages/drivers/ai-provider-cli",
-      "topoOrder": 30,
+      "topoOrder": 31,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -59278,7 +59751,7 @@
     {
       "packageName": "@beep/lint-rules",
       "packagePath": "packages/tooling/policy-pack/lint-rules",
-      "topoOrder": 31,
+      "topoOrder": 32,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -60184,7 +60657,7 @@
     {
       "packageName": "@beep/ontology-server",
       "packagePath": "packages/ontology/server",
-      "topoOrder": 32,
+      "topoOrder": 33,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -60370,12 +60843,14 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.file-store.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.file-store.ts",
-          "line": 108,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-file-store-ts-108-makefilesystemontologyfilestore",
+          "line": 212,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-file-store-ts-212-makefilesystemontologyfilestore",
           "currentTags": [
+            "@remarks",
             "@example",
-            "@since",
-            "@category"
+            "@effects",
+            "@category",
+            "@since"
           ],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -60392,8 +60867,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.layer.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
-          "line": 71,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-71-turtlecodeclayer",
+          "line": 72,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-72-turtlecodeclayer",
           "currentTags": [
             "@example",
             "@since",
@@ -60414,12 +60889,13 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.layer.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
-          "line": 86,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-86-ontologyfilestorelayer",
+          "line": 102,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-102-ontologyfilestorelayer",
           "currentTags": [
             "@example",
-            "@since",
-            "@category"
+            "@effects",
+            "@category",
+            "@since"
           ],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -60436,8 +60912,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.layer.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
-          "line": 101,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-101-ontologyreasonerlayer",
+          "line": 119,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-119-ontologyreasonerlayer",
           "currentTags": [
             "@example",
             "@since",
@@ -60458,8 +60934,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.layer.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
-          "line": 116,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-116-ontologysparqlrunnerlayer",
+          "line": 134,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-134-ontologysparqlrunnerlayer",
           "currentTags": [
             "@example",
             "@since",
@@ -60480,8 +60956,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.layer.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
-          "line": 131,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-131-ontologyvalidationrunnerlayer",
+          "line": 149,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-149-ontologyvalidationrunnerlayer",
           "currentTags": [
             "@example",
             "@since",
@@ -60502,8 +60978,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.layer.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
-          "line": 150,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-150-sessionserverlayer",
+          "line": 168,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-168-sessionserverlayer",
           "currentTags": [
             "@example",
             "@since",
@@ -60652,7 +61128,7 @@
     {
       "packageName": "@beep/colors",
       "packagePath": "packages/foundation/capability/colors",
-      "topoOrder": 33,
+      "topoOrder": 34,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -60911,7 +61387,7 @@
     {
       "packageName": "@beep/agents-use-cases",
       "packagePath": "packages/agents/use-cases",
-      "topoOrder": 34,
+      "topoOrder": 35,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -63179,7 +63655,7 @@
     {
       "packageName": "@beep/m365-mcp",
       "packagePath": "packages/drivers/m365-mcp",
-      "topoOrder": 35,
+      "topoOrder": 36,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -63761,7 +64237,7 @@
     {
       "packageName": "@beep/cosmos",
       "packagePath": "packages/drivers/cosmos",
-      "topoOrder": 36,
+      "topoOrder": 37,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -64315,7 +64791,7 @@
     {
       "packageName": "@beep/workspace-server",
       "packagePath": "packages/workspace/server",
-      "topoOrder": 37,
+      "topoOrder": 38,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -64612,8 +65088,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Thread/Thread.layer.ts",
           "repoPath": "packages/workspace/server/src/aggregates/Thread/Thread.layer.ts",
-          "line": 28,
-          "anchor": "packages-workspace-server-src-aggregates-thread-thread-layer-ts-28-threadstoreinmemorylayer",
+          "line": 46,
+          "anchor": "packages-workspace-server-src-aggregates-thread-thread-layer-ts-46-threadstoreinmemorylayer",
           "currentTags": [
             "@example",
             "@category",
@@ -64634,8 +65110,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Thread/Thread.layer.ts",
           "repoPath": "packages/workspace/server/src/aggregates/Thread/Thread.layer.ts",
-          "line": 43,
-          "anchor": "packages-workspace-server-src-aggregates-thread-thread-layer-ts-43-threadstoredrizzlelayer",
+          "line": 64,
+          "anchor": "packages-workspace-server-src-aggregates-thread-thread-layer-ts-64-threadstoredrizzlelayer",
           "currentTags": [
             "@example",
             "@category",
@@ -64656,8 +65132,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Thread/Thread.layer.ts",
           "repoPath": "packages/workspace/server/src/aggregates/Thread/Thread.layer.ts",
-          "line": 58,
-          "anchor": "packages-workspace-server-src-aggregates-thread-thread-layer-ts-58-threadstorelive",
+          "line": 81,
+          "anchor": "packages-workspace-server-src-aggregates-thread-thread-layer-ts-81-threadstorelive",
           "currentTags": [
             "@example",
             "@category",
@@ -64766,10 +65242,11 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Thread/ThreadStore.repo.ts",
           "repoPath": "packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts",
-          "line": 165,
-          "anchor": "packages-workspace-server-src-aggregates-thread-threadstore-repo-ts-165-makeinmemorythreadstore",
+          "line": 226,
+          "anchor": "packages-workspace-server-src-aggregates-thread-threadstore-repo-ts-226-makeinmemorythreadstore",
           "currentTags": [
             "@example",
+            "@effects",
             "@category",
             "@since"
           ],
@@ -64788,10 +65265,11 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Thread/ThreadStore.repo.ts",
           "repoPath": "packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts",
-          "line": 300,
-          "anchor": "packages-workspace-server-src-aggregates-thread-threadstore-repo-ts-300-makedrizzlethreadstore",
+          "line": 387,
+          "anchor": "packages-workspace-server-src-aggregates-thread-threadstore-repo-ts-387-makedrizzlethreadstore",
           "currentTags": [
             "@example",
+            "@effects",
             "@category",
             "@since"
           ],
@@ -64810,10 +65288,11 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Thread/ThreadStore.repo.ts",
           "repoPath": "packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts",
-          "line": 488,
-          "anchor": "packages-workspace-server-src-aggregates-thread-threadstore-repo-ts-488-makethreadstore",
+          "line": 599,
+          "anchor": "packages-workspace-server-src-aggregates-thread-threadstore-repo-ts-599-makethreadstore",
           "currentTags": [
             "@example",
+            "@effects",
             "@category",
             "@since"
           ],
@@ -65177,7 +65656,7 @@
     {
       "packageName": "@beep/chalk",
       "packagePath": "packages/foundation/capability/chalk",
-      "topoOrder": 38,
+      "topoOrder": 39,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -66004,7 +66483,7 @@
     {
       "packageName": "@beep/uspto",
       "packagePath": "packages/drivers/uspto",
-      "topoOrder": 39,
+      "topoOrder": 40,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -66716,7 +67195,7 @@
     {
       "packageName": "@beep/phoenix",
       "packagePath": "packages/drivers/phoenix",
-      "topoOrder": 40,
+      "topoOrder": 41,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -67956,7 +68435,7 @@
     {
       "packageName": "@beep/test-utils",
       "packagePath": "packages/tooling/test-kit/test-utils",
-      "topoOrder": 41,
+      "topoOrder": 42,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -68873,7 +69352,7 @@
     {
       "packageName": "@beep/types",
       "packagePath": "packages/foundation/primitive/types",
-      "topoOrder": 42,
+      "topoOrder": 43,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -69237,7 +69716,7 @@
     {
       "packageName": "@beep/oip-web",
       "packagePath": "apps/oip-web",
-      "topoOrder": 43,
+      "topoOrder": 44,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -71746,7 +72225,7 @@
     {
       "packageName": "@beep/storybook",
       "packagePath": "apps/storybook",
-      "topoOrder": 44,
+      "topoOrder": 45,
       "status": "no-public-src-surface",
       "sourceCoverage": {
         "srcDir": "src",
@@ -71779,7 +72258,7 @@
     {
       "packageName": "@beep/ontology-domain",
       "packagePath": "packages/ontology/domain",
-      "topoOrder": 45,
+      "topoOrder": 46,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -72771,7 +73250,7 @@
     {
       "packageName": "@beep/lexical-schema",
       "packagePath": "packages/foundation/modeling/lexical",
-      "topoOrder": 46,
+      "topoOrder": 47,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -75229,7 +75708,7 @@
     {
       "packageName": "@beep/langextract",
       "packagePath": "packages/foundation/capability/langextract",
-      "topoOrder": 47,
+      "topoOrder": 48,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -76135,7 +76614,7 @@
     {
       "packageName": "@beep/shared-tables",
       "packagePath": "packages/shared/tables",
-      "topoOrder": 48,
+      "topoOrder": 49,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -76704,7 +77183,7 @@
     {
       "packageName": "@beep/scratchpad",
       "packagePath": "scratchpad",
-      "topoOrder": 49,
+      "topoOrder": 50,
       "status": "no-public-src-surface",
       "sourceCoverage": {
         "srcDir": "src",
@@ -76737,7 +77216,7 @@
     {
       "packageName": "@beep/md",
       "packagePath": "packages/foundation/modeling/md",
-      "topoOrder": 50,
+      "topoOrder": 51,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -81544,7 +82023,7 @@
     {
       "packageName": "@beep/law-practice-use-cases",
       "packagePath": "packages/law-practice/use-cases",
-      "topoOrder": 51,
+      "topoOrder": 52,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -82497,7 +82976,7 @@
     {
       "packageName": "@beep/workspace-domain",
       "packagePath": "packages/workspace/domain",
-      "topoOrder": 52,
+      "topoOrder": 53,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -84485,7 +84964,7 @@
     {
       "packageName": "@beep/semantic-web",
       "packagePath": "packages/foundation/capability/semantic-web",
-      "topoOrder": 53,
+      "topoOrder": 54,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -87733,7 +88212,7 @@
     {
       "packageName": "@beep/utils",
       "packagePath": "packages/foundation/modeling/utils",
-      "topoOrder": 54,
+      "topoOrder": 55,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -92727,7 +93206,7 @@
     {
       "packageName": "@beep/repo-ai-metrics",
       "packagePath": "packages/tooling/library/ai-metrics",
-      "topoOrder": 55,
+      "topoOrder": 56,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -98981,7 +99460,7 @@
     {
       "packageName": "@beep/architecture-lab-tables",
       "packagePath": "packages/architecture-lab/tables",
-      "topoOrder": 56,
+      "topoOrder": 57,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -99624,7 +100103,7 @@
     {
       "packageName": "@beep/tika",
       "packagePath": "packages/drivers/tika",
-      "topoOrder": 57,
+      "topoOrder": 58,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -100093,7 +100572,7 @@
     {
       "packageName": "@beep/libpff",
       "packagePath": "packages/drivers/libpff",
-      "topoOrder": 58,
+      "topoOrder": 59,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -100628,7 +101107,7 @@
     {
       "packageName": "@beep/venice-ai",
       "packagePath": "packages/drivers/venice-ai",
-      "topoOrder": 59,
+      "topoOrder": 60,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -101496,7 +101975,7 @@
     {
       "packageName": "@beep/form",
       "packagePath": "packages/foundation/ui-system/form",
-      "topoOrder": 60,
+      "topoOrder": 61,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -104933,7 +105412,7 @@
     {
       "packageName": "@beep/identity",
       "packagePath": "packages/foundation/modeling/identity",
-      "topoOrder": 61,
+      "topoOrder": 62,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -108684,7 +109163,7 @@
     {
       "packageName": "@beep/drizzle",
       "packagePath": "packages/drivers/drizzle",
-      "topoOrder": 62,
+      "topoOrder": 63,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -109186,7 +109665,7 @@
     {
       "packageName": "@beep/ontology-ui",
       "packagePath": "packages/ontology/ui",
-      "topoOrder": 63,
+      "topoOrder": 64,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -109479,7 +109958,7 @@
     {
       "packageName": "@beep/api-transport",
       "packagePath": "packages/foundation/capability/api-transport",
-      "topoOrder": 64,
+      "topoOrder": 65,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -109731,7 +110210,7 @@
     {
       "packageName": "@beep/box",
       "packagePath": "packages/drivers/box",
-      "topoOrder": 65,
+      "topoOrder": 66,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -210951,7 +211430,7 @@
     {
       "packageName": "@beep/openai-compat",
       "packagePath": "packages/drivers/openai-compat",
-      "topoOrder": 66,
+      "topoOrder": 67,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -212258,7 +212737,7 @@
     {
       "packageName": "@beep/shacl",
       "packagePath": "packages/drivers/shacl",
-      "topoOrder": 67,
+      "topoOrder": 68,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -212487,13 +212966,13 @@
     {
       "packageName": "@beep/documents-server",
       "packagePath": "packages/documents/server",
-      "topoOrder": 68,
+      "topoOrder": 69,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 6,
-        "publicModuleCount": 6,
-        "publicExportCount": 11
+        "sourceFileCount": 9,
+        "publicModuleCount": 9,
+        "publicExportCount": 30
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -212534,7 +213013,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 1,
+          "exportCount": 2,
           "remediationStatus": "resolved"
         },
         {
@@ -212555,7 +213034,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 3,
+          "exportCount": 4,
           "remediationStatus": "resolved"
         },
         {
@@ -212581,6 +213060,69 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/aggregates/Document/FilingDecisionLlm.config.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/FilingDecisionLlm.config.ts",
+          "line": 1,
+          "anchor": "packages-documents-server-src-aggregates-document-filingdecisionllm-config-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 8,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/aggregates/Document/FilingDecisionLlm.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/FilingDecisionLlm.ts",
+          "line": 1,
+          "anchor": "packages-documents-server-src-aggregates-document-filingdecisionllm-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/aggregates/Document/FilingTextExtraction.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/FilingTextExtraction.ts",
+          "line": 1,
+          "anchor": "packages-documents-server-src-aggregates-document-filingtextextraction-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 5,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/aggregates/Document/index.ts",
           "repoPath": "packages/documents/server/src/aggregates/Document/index.ts",
           "line": 1,
@@ -212597,7 +213139,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 2,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -212669,14 +213211,37 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "DocumentsServerLlmLive",
+          "exportKind": "const",
+          "filePath": "src/Layer.ts",
+          "repoPath": "packages/documents/server/src/Layer.ts",
+          "line": 39,
+          "anchor": "packages-documents-server-src-layer-ts-39-documentsserverllmlive",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "makeDocumentIntake",
           "exportKind": "const",
           "filePath": "src/aggregates/Document/DocumentIntake.service.ts",
           "repoPath": "packages/documents/server/src/aggregates/Document/DocumentIntake.service.ts",
-          "line": 87,
-          "anchor": "packages-documents-server-src-aggregates-document-documentintake-service-ts-87-makedocumentintake",
+          "line": 94,
+          "anchor": "packages-documents-server-src-aggregates-document-documentintake-service-ts-94-makedocumentintake",
           "currentTags": [
             "@example",
+            "@effects",
             "@category",
             "@since"
           ],
@@ -212695,8 +213260,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Document/DocumentIntake.service.ts",
           "repoPath": "packages/documents/server/src/aggregates/Document/DocumentIntake.service.ts",
-          "line": 136,
-          "anchor": "packages-documents-server-src-aggregates-document-documentintake-service-ts-136-documentintakelayer",
+          "line": 165,
+          "anchor": "packages-documents-server-src-aggregates-document-documentintake-service-ts-165-documentintakelayer",
           "currentTags": [
             "@example",
             "@category",
@@ -212717,8 +213282,30 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Document/DocumentIntake.service.ts",
           "repoPath": "packages/documents/server/src/aggregates/Document/DocumentIntake.service.ts",
-          "line": 151,
-          "anchor": "packages-documents-server-src-aggregates-document-documentintake-service-ts-151-documentsserverlayer",
+          "line": 180,
+          "anchor": "packages-documents-server-src-aggregates-document-documentintake-service-ts-180-documentsserverlayer",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DocumentsServerLlmLayer",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Document/DocumentIntake.service.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/DocumentIntake.service.ts",
+          "line": 199,
+          "anchor": "packages-documents-server-src-aggregates-document-documentintake-service-ts-199-documentsserverllmlayer",
           "currentTags": [
             "@example",
             "@category",
@@ -212739,8 +213326,316 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Document/FilingDecisionHeuristic.ts",
           "repoPath": "packages/documents/server/src/aggregates/Document/FilingDecisionHeuristic.ts",
-          "line": 61,
-          "anchor": "packages-documents-server-src-aggregates-document-filingdecisionheuristic-ts-61-filingdecisionheuristiclayer",
+          "line": 66,
+          "anchor": "packages-documents-server-src-aggregates-document-filingdecisionheuristic-ts-66-filingdecisionheuristiclayer",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FILING_DECISION_MODEL_ENV",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Document/FilingDecisionLlm.config.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/FilingDecisionLlm.config.ts",
+          "line": 29,
+          "anchor": "packages-documents-server-src-aggregates-document-filingdecisionllm-config-ts-29-filing-decision-model-env",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FILING_DECISION_CONFIDENCE_THRESHOLD_ENV",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Document/FilingDecisionLlm.config.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/FilingDecisionLlm.config.ts",
+          "line": 44,
+          "anchor": "packages-documents-server-src-aggregates-document-filingdecisionllm-config-ts-44-filing-decision-confidence-threshold-env",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FILING_DECISION_MAX_EXCERPT_CHARS_ENV",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Document/FilingDecisionLlm.config.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/FilingDecisionLlm.config.ts",
+          "line": 59,
+          "anchor": "packages-documents-server-src-aggregates-document-filingdecisionllm-config-ts-59-filing-decision-max-excerpt-chars-env",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FILING_DECISION_DEFAULT_MODEL",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Document/FilingDecisionLlm.config.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/FilingDecisionLlm.config.ts",
+          "line": 74,
+          "anchor": "packages-documents-server-src-aggregates-document-filingdecisionllm-config-ts-74-filing-decision-default-model",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FILING_DECISION_DEFAULT_CONFIDENCE_THRESHOLD",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Document/FilingDecisionLlm.config.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/FilingDecisionLlm.config.ts",
+          "line": 89,
+          "anchor": "packages-documents-server-src-aggregates-document-filingdecisionllm-config-ts-89-filing-decision-default-confidence-threshold",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FilingDecisionLlmConfigValue",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Document/FilingDecisionLlm.config.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/FilingDecisionLlm.config.ts",
+          "line": 117,
+          "anchor": "packages-documents-server-src-aggregates-document-filingdecisionllm-config-ts-117-filingdecisionllmconfigvalue",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FilingDecisionLlmConfig",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Document/FilingDecisionLlm.config.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/FilingDecisionLlm.config.ts",
+          "line": 143,
+          "anchor": "packages-documents-server-src-aggregates-document-filingdecisionllm-config-ts-143-filingdecisionllmconfig",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FilingDecisionLlmConfigLayer",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Document/FilingDecisionLlm.config.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/FilingDecisionLlm.config.ts",
+          "line": 174,
+          "anchor": "packages-documents-server-src-aggregates-document-filingdecisionllm-config-ts-174-filingdecisionllmconfiglayer",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FilingDecisionLlmLayer",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Document/FilingDecisionLlm.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/FilingDecisionLlm.ts",
+          "line": 114,
+          "anchor": "packages-documents-server-src-aggregates-document-filingdecisionllm-ts-114-filingdecisionllmlayer",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FilingTextExtractionInput",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Document/FilingTextExtraction.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/FilingTextExtraction.ts",
+          "line": 41,
+          "anchor": "packages-documents-server-src-aggregates-document-filingtextextraction-ts-41-filingtextextractioninput",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FilingTextExtractionShape",
+          "exportKind": "interface",
+          "filePath": "src/aggregates/Document/FilingTextExtraction.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/FilingTextExtraction.ts",
+          "line": 68,
+          "anchor": "packages-documents-server-src-aggregates-document-filingtextextraction-ts-68-filingtextextractionshape",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FilingTextExtraction",
+          "exportKind": "class",
+          "filePath": "src/aggregates/Document/FilingTextExtraction.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/FilingTextExtraction.ts",
+          "line": 85,
+          "anchor": "packages-documents-server-src-aggregates-document-filingtextextraction-ts-85-filingtextextraction",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FilingTextExtractionNoopLayer",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Document/FilingTextExtraction.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/FilingTextExtraction.ts",
+          "line": 102,
+          "anchor": "packages-documents-server-src-aggregates-document-filingtextextraction-ts-102-filingtextextractionnooplayer",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FilingTextExtractionLiveLayer",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Document/FilingTextExtraction.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/FilingTextExtraction.ts",
+          "line": 146,
+          "anchor": "packages-documents-server-src-aggregates-document-filingtextextraction-ts-146-filingtextextractionlivelayer",
           "currentTags": [
             "@example",
             "@category",
@@ -212784,6 +213679,69 @@
           "repoPath": "packages/documents/server/src/aggregates/Document/index.ts",
           "line": 21,
           "anchor": "packages-documents-server-src-aggregates-document-index-ts-21-export-from-filingdecisionheuristic-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./FilingDecisionLlm.config.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/aggregates/Document/index.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/index.ts",
+          "line": 28,
+          "anchor": "packages-documents-server-src-aggregates-document-index-ts-28-export-from-filingdecisionllm-config-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./FilingDecisionLlm.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/aggregates/Document/index.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/index.ts",
+          "line": 35,
+          "anchor": "packages-documents-server-src-aggregates-document-index-ts-35-export-from-filingdecisionllm-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./FilingTextExtraction.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/aggregates/Document/index.ts",
+          "repoPath": "packages/documents/server/src/aggregates/Document/index.ts",
+          "line": 42,
+          "anchor": "packages-documents-server-src-aggregates-document-index-ts-42-export-from-filingtextextraction-js",
           "currentTags": [
             "@category",
             "@since"
@@ -212889,7 +213847,7 @@
     {
       "packageName": "@beep/nlp-processing",
       "packagePath": "packages/foundation/capability/nlp-processing",
-      "topoOrder": 69,
+      "topoOrder": 70,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -220849,7 +221807,7 @@
     {
       "packageName": "@beep/anthropic",
       "packagePath": "packages/drivers/anthropic",
-      "topoOrder": 70,
+      "topoOrder": 71,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -221569,13 +222527,13 @@
     {
       "packageName": "@beep/professional-desktop",
       "packagePath": "apps/professional-desktop",
-      "topoOrder": 71,
+      "topoOrder": 72,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
         "sourceFileCount": 33,
         "publicModuleCount": 32,
-        "publicExportCount": 63
+        "publicExportCount": 64
       },
       "docgenCoverage": {
         "hasDocgenConfig": false,
@@ -222004,7 +222962,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 3,
+          "exportCount": 4,
           "remediationStatus": "resolved"
         },
         {
@@ -222294,8 +223252,8 @@
           "exportKind": "function",
           "filePath": "src/App.tsx",
           "repoPath": "apps/professional-desktop/src/App.tsx",
-          "line": 157,
-          "anchor": "apps-professional-desktop-src-app-tsx-157-app",
+          "line": 174,
+          "anchor": "apps-professional-desktop-src-app-tsx-174-app",
           "currentTags": [
             "@example",
             "@category",
@@ -222888,8 +223846,8 @@
           "exportKind": "function",
           "filePath": "src/intake/DocumentIntakeTarget.tsx",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntakeTarget.tsx",
-          "line": 106,
-          "anchor": "apps-professional-desktop-src-intake-documentintaketarget-tsx-106-documentintaketarget",
+          "line": 152,
+          "anchor": "apps-professional-desktop-src-intake-documentintaketarget-tsx-152-documentintaketarget",
           "currentTags": [
             "@example",
             "@category",
@@ -222910,8 +223868,8 @@
           "exportKind": "const",
           "filePath": "src/intake/DocumentIntakeTarget.tsx",
           "repoPath": "apps/professional-desktop/src/intake/DocumentIntakeTarget.tsx",
-          "line": 68,
-          "anchor": "apps-professional-desktop-src-intake-documentintaketarget-tsx-68-configureselectedworkspacevault",
+          "line": 114,
+          "anchor": "apps-professional-desktop-src-intake-documentintaketarget-tsx-114-configureselectedworkspacevault",
           "currentTags": [
             "@example",
             "@category",
@@ -223064,8 +224022,8 @@
           "exportKind": "const",
           "filePath": "src/intake/Intake.atoms.ts",
           "repoPath": "apps/professional-desktop/src/intake/Intake.atoms.ts",
-          "line": 183,
-          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-183-intakedroppeddocumentatom",
+          "line": 184,
+          "anchor": "apps-professional-desktop-src-intake-intake-atoms-ts-184-intakedroppeddocumentatom",
           "currentTags": [
             "@example",
             "@category",
@@ -223104,12 +224062,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "DesktopStartupError",
+          "exportKind": "type",
+          "filePath": "src/runtime/Layer.ts",
+          "repoPath": "apps/professional-desktop/src/runtime/Layer.ts",
+          "line": 94,
+          "anchor": "apps-professional-desktop-src-runtime-layer-ts-94-desktopstartuperror",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "DesktopHandlersLayer",
           "exportKind": "type",
           "filePath": "src/runtime/Layer.ts",
           "repoPath": "apps/professional-desktop/src/runtime/Layer.ts",
-          "line": 86,
-          "anchor": "apps-professional-desktop-src-runtime-layer-ts-86-desktophandlerslayer",
+          "line": 112,
+          "anchor": "apps-professional-desktop-src-runtime-layer-ts-112-desktophandlerslayer",
           "currentTags": [
             "@example",
             "@category",
@@ -223130,8 +224110,8 @@
           "exportKind": "const",
           "filePath": "src/runtime/Layer.ts",
           "repoPath": "apps/professional-desktop/src/runtime/Layer.ts",
-          "line": 119,
-          "anchor": "apps-professional-desktop-src-runtime-layer-ts-119-runtimelive",
+          "line": 175,
+          "anchor": "apps-professional-desktop-src-runtime-layer-ts-175-runtimelive",
           "currentTags": [
             "@example",
             "@category",
@@ -223152,8 +224132,8 @@
           "exportKind": "const",
           "filePath": "src/runtime/Layer.ts",
           "repoPath": "apps/professional-desktop/src/runtime/Layer.ts",
-          "line": 146,
-          "anchor": "apps-professional-desktop-src-runtime-layer-ts-146-runtimetest",
+          "line": 202,
+          "anchor": "apps-professional-desktop-src-runtime-layer-ts-202-runtimetest",
           "currentTags": [
             "@example",
             "@category",
@@ -223680,7 +224660,7 @@
     {
       "packageName": "@beep/epistemic-domain",
       "packagePath": "packages/epistemic/domain",
-      "topoOrder": 72,
+      "topoOrder": 73,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -225145,7 +226125,7 @@
     {
       "packageName": "@beep/ontology-client",
       "packagePath": "packages/ontology/client",
-      "topoOrder": 73,
+      "topoOrder": 74,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -226212,8 +227192,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1122,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1122-ontologygraphrenderbridgeatom",
+          "line": 1116,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1116-ontologygraphrenderbridgeatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226234,8 +227214,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1189,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1189-toggleontologyinferredviewatom",
+          "line": 1183,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1183-toggleontologyinferredviewatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226256,8 +227236,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1219,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1219-applyontologysparqlexampleatom",
+          "line": 1213,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1213-applyontologysparqlexampleatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226278,8 +227258,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1251,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1251-runontologysparqlatom",
+          "line": 1245,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1245-runontologysparqlatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226300,8 +227280,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1293,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1293-runontologyvalidationatom",
+          "line": 1287,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1287-runontologyvalidationatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226322,8 +227302,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1342,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1342-applyontologyrepairatom",
+          "line": 1336,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1336-applyontologyrepairatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226344,8 +227324,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1385,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1385-exportontologyprovenanceatom",
+          "line": 1379,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1379-exportontologyprovenanceatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226366,8 +227346,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1426,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1426-openontologydocumentatom",
+          "line": 1420,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1420-openontologydocumentatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226388,8 +227368,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1465,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1465-saveontologydocumentatom",
+          "line": 1459,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1459-saveontologydocumentatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226410,8 +227390,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1493,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1493-previewontologyturtleatom",
+          "line": 1487,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1487-previewontologyturtleatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226432,8 +227412,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1515,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1515-applyontologybatchatom",
+          "line": 1509,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1509-applyontologybatchatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226454,8 +227434,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1551,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1551-applyontologygraphgestureatom",
+          "line": 1545,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1545-applyontologygraphgestureatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226476,8 +227456,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1588,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1588-undoontologychangeatom",
+          "line": 1582,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1582-undoontologychangeatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226498,8 +227478,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1631,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1631-redoontologychangeatom",
+          "line": 1625,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1625-redoontologychangeatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226520,8 +227500,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1685,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1685-invertontologychange",
+          "line": 1679,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1679-invertontologychange",
           "currentTags": [
             "@example",
             "@category",
@@ -226606,7 +227586,7 @@
     {
       "packageName": "@beep/architecture-lab-use-cases",
       "packagePath": "packages/architecture-lab/use-cases",
-      "topoOrder": 74,
+      "topoOrder": 75,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -228431,7 +229411,7 @@
     {
       "packageName": "@beep/firecrawl",
       "packagePath": "packages/drivers/firecrawl",
-      "topoOrder": 75,
+      "topoOrder": 76,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -234445,7 +235425,7 @@
     {
       "packageName": "@beep/ecfr",
       "packagePath": "packages/drivers/ecfr",
-      "topoOrder": 76,
+      "topoOrder": 77,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -235086,7 +236066,7 @@
     {
       "packageName": "@beep/oxigraph",
       "packagePath": "packages/drivers/oxigraph",
-      "topoOrder": 77,
+      "topoOrder": 78,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -235315,7 +236295,7 @@
     {
       "packageName": "@beep/acp",
       "packagePath": "packages/drivers/acp",
-      "topoOrder": 78,
+      "topoOrder": 79,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -244583,7 +245563,7 @@
     {
       "packageName": "@beep/nlp",
       "packagePath": "packages/foundation/modeling/nlp",
-      "topoOrder": 79,
+      "topoOrder": 80,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -252043,7 +253023,7 @@
     {
       "packageName": "@beep/infra",
       "packagePath": "infra",
-      "topoOrder": 80,
+      "topoOrder": 81,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -252931,7 +253911,7 @@
     {
       "packageName": "@beep/runpod",
       "packagePath": "packages/drivers/runpod",
-      "topoOrder": 81,
+      "topoOrder": 82,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -257026,7 +258006,7 @@
     {
       "packageName": "@beep/fc-runs",
       "packagePath": "packages/tooling/test-kit/fc-runs",
-      "topoOrder": 82,
+      "topoOrder": 83,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -257219,7 +258199,7 @@
     {
       "packageName": "@beep/repo-utils",
       "packagePath": "packages/tooling/library/repo-utils",
-      "topoOrder": 83,
+      "topoOrder": 84,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -273609,13 +274589,13 @@
     {
       "packageName": "@beep/documents-domain",
       "packagePath": "packages/documents/domain",
-      "topoOrder": 84,
+      "topoOrder": 85,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
         "sourceFileCount": 13,
         "publicModuleCount": 11,
-        "publicExportCount": 39
+        "publicExportCount": 45
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -273655,7 +274635,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 3,
+          "exportCount": 7,
           "remediationStatus": "resolved"
         },
         {
@@ -273804,7 +274784,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 6,
+          "exportCount": 8,
           "remediationStatus": "resolved"
         },
         {
@@ -273874,12 +274854,100 @@
       ],
       "exports": [
         {
+          "symbolName": "InboxedFilingReason",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Document/Document.model.ts",
+          "repoPath": "packages/documents/domain/src/aggregates/Document/Document.model.ts",
+          "line": 33,
+          "anchor": "packages-documents-domain-src-aggregates-document-document-model-ts-33-inboxedfilingreason",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "InboxedFilingReason",
+          "exportKind": "type",
+          "filePath": "src/aggregates/Document/Document.model.ts",
+          "repoPath": "packages/documents/domain/src/aggregates/Document/Document.model.ts",
+          "line": 53,
+          "anchor": "packages-documents-domain-src-aggregates-document-document-model-ts-53-inboxedfilingreason",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FilingOutcome",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Document/Document.model.ts",
+          "repoPath": "packages/documents/domain/src/aggregates/Document/Document.model.ts",
+          "line": 86,
+          "anchor": "packages-documents-domain-src-aggregates-document-document-model-ts-86-filingoutcome",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FilingOutcome",
+          "exportKind": "type",
+          "filePath": "src/aggregates/Document/Document.model.ts",
+          "repoPath": "packages/documents/domain/src/aggregates/Document/Document.model.ts",
+          "line": 112,
+          "anchor": "packages-documents-domain-src-aggregates-document-document-model-ts-112-filingoutcome",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "DocumentContentDigest",
           "exportKind": "const",
           "filePath": "src/aggregates/Document/Document.model.ts",
           "repoPath": "packages/documents/domain/src/aggregates/Document/Document.model.ts",
-          "line": 29,
-          "anchor": "packages-documents-domain-src-aggregates-document-document-model-ts-29-documentcontentdigest",
+          "line": 129,
+          "anchor": "packages-documents-domain-src-aggregates-document-document-model-ts-129-documentcontentdigest",
           "currentTags": [
             "@example",
             "@category",
@@ -273900,8 +274968,8 @@
           "exportKind": "type",
           "filePath": "src/aggregates/Document/Document.model.ts",
           "repoPath": "packages/documents/domain/src/aggregates/Document/Document.model.ts",
-          "line": 51,
-          "anchor": "packages-documents-domain-src-aggregates-document-document-model-ts-51-documentcontentdigest",
+          "line": 151,
+          "anchor": "packages-documents-domain-src-aggregates-document-document-model-ts-151-documentcontentdigest",
           "currentTags": [
             "@example",
             "@category",
@@ -273922,8 +274990,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Document/Document.model.ts",
           "repoPath": "packages/documents/domain/src/aggregates/Document/Document.model.ts",
-          "line": 78,
-          "anchor": "packages-documents-domain-src-aggregates-document-document-model-ts-78-document",
+          "line": 183,
+          "anchor": "packages-documents-domain-src-aggregates-document-document-model-ts-183-document",
           "currentTags": [
             "@example",
             "@category",
@@ -274524,12 +275592,56 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "ProjectInboxDocumentPathInput",
+          "exportKind": "class",
+          "filePath": "src/values/Taxonomy/Taxonomy.projection.ts",
+          "repoPath": "packages/documents/domain/src/values/Taxonomy/Taxonomy.projection.ts",
+          "line": 266,
+          "anchor": "packages-documents-domain-src-values-taxonomy-taxonomy-projection-ts-266-projectinboxdocumentpathinput",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "projectInboxDocumentPath",
+          "exportKind": "const",
+          "filePath": "src/values/Taxonomy/Taxonomy.projection.ts",
+          "repoPath": "packages/documents/domain/src/values/Taxonomy/Taxonomy.projection.ts",
+          "line": 304,
+          "anchor": "packages-documents-domain-src-values-taxonomy-taxonomy-projection-ts-304-projectinboxdocumentpath",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "projectIntakeInboxPath",
           "exportKind": "const",
           "filePath": "src/values/Taxonomy/Taxonomy.projection.ts",
           "repoPath": "packages/documents/domain/src/values/Taxonomy/Taxonomy.projection.ts",
-          "line": 263,
-          "anchor": "packages-documents-domain-src-values-taxonomy-taxonomy-projection-ts-263-projectintakeinboxpath",
+          "line": 334,
+          "anchor": "packages-documents-domain-src-values-taxonomy-taxonomy-projection-ts-334-projectintakeinboxpath",
           "currentTags": [
             "@example",
             "@category",
@@ -274550,8 +275662,8 @@
           "exportKind": "const",
           "filePath": "src/values/Taxonomy/Taxonomy.projection.ts",
           "repoPath": "packages/documents/domain/src/values/Taxonomy/Taxonomy.projection.ts",
-          "line": 279,
-          "anchor": "packages-documents-domain-src-values-taxonomy-taxonomy-projection-ts-279-slugvaultsegment",
+          "line": 350,
+          "anchor": "packages-documents-domain-src-values-taxonomy-taxonomy-projection-ts-350-slugvaultsegment",
           "currentTags": [
             "@example",
             "@category",
@@ -274722,7 +275834,7 @@
     {
       "packageName": "@beep/schema",
       "packagePath": "packages/foundation/modeling/schema",
-      "topoOrder": 85,
+      "topoOrder": 86,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -315405,7 +316517,7 @@
     {
       "packageName": "@beep/epistemic-server",
       "packagePath": "packages/epistemic/server",
-      "topoOrder": 86,
+      "topoOrder": 87,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -315549,7 +316661,7 @@
     {
       "packageName": "@beep/rdf",
       "packagePath": "packages/foundation/modeling/rdf",
-      "topoOrder": 87,
+      "topoOrder": 88,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -320553,7 +321665,7 @@
     {
       "packageName": "@beep/onepassword-cli",
       "packagePath": "packages/drivers/onepassword-cli",
-      "topoOrder": 88,
+      "topoOrder": 89,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -321021,7 +322133,7 @@
     {
       "packageName": "@beep/architecture-lab-config",
       "packagePath": "packages/architecture-lab/config",
-      "topoOrder": 89,
+      "topoOrder": 90,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -321703,7 +322815,7 @@
     {
       "packageName": "@beep/govinfo",
       "packagePath": "packages/drivers/govinfo",
-      "topoOrder": 90,
+      "topoOrder": 91,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -324283,7 +325395,7 @@
     {
       "packageName": "@beep/data",
       "packagePath": "packages/foundation/primitive/data",
-      "topoOrder": 91,
+      "topoOrder": 92,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -327738,7 +328850,7 @@
     {
       "packageName": "@beep/xai",
       "packagePath": "packages/drivers/xai",
-      "topoOrder": 92,
+      "topoOrder": 93,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -329463,7 +330575,7 @@
     {
       "packageName": "@beep/architecture-lab-server",
       "packagePath": "packages/architecture-lab/server",
-      "topoOrder": 93,
+      "topoOrder": 94,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -330528,7 +331640,7 @@
     {
       "packageName": "@beep/duckdb",
       "packagePath": "packages/drivers/duckdb",
-      "topoOrder": 94,
+      "topoOrder": 95,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -331319,7 +332431,7 @@
     {
       "packageName": "@beep/ffmpeg",
       "packagePath": "packages/drivers/ffmpeg",
-      "topoOrder": 95,
+      "topoOrder": 96,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -332623,7 +333735,7 @@
     {
       "packageName": "@beep/agents-client",
       "packagePath": "packages/agents/client",
-      "topoOrder": 96,
+      "topoOrder": 97,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -333241,7 +334353,7 @@
     {
       "packageName": "@beep/uspto-mcp",
       "packagePath": "packages/drivers/uspto-mcp",
-      "topoOrder": 97,
+      "topoOrder": 98,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -334078,7 +335190,7 @@
     {
       "packageName": "@beep/architecture-lab-proof",
       "packagePath": "apps/architecture-lab-proof",
-      "topoOrder": 98,
+      "topoOrder": 99,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -334180,7 +335292,7 @@
     {
       "packageName": "@beep/epistemic-use-cases",
       "packagePath": "packages/epistemic/use-cases",
-      "topoOrder": 99,
+      "topoOrder": 100,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -334845,7 +335957,7 @@
     {
       "packageName": "@beep/m365",
       "packagePath": "packages/drivers/m365",
-      "topoOrder": 100,
+      "topoOrder": 101,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -336630,7 +337742,7 @@
     {
       "packageName": "@beep/observability",
       "packagePath": "packages/foundation/capability/observability",
-      "topoOrder": 101,
+      "topoOrder": 102,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -340666,7 +341778,7 @@
     {
       "packageName": "@beep/html",
       "packagePath": "packages/foundation/modeling/html",
-      "topoOrder": 102,
+      "topoOrder": 103,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -348614,7 +349726,7 @@
     {
       "packageName": "@beep/n3",
       "packagePath": "packages/drivers/n3",
-      "topoOrder": 103,
+      "topoOrder": 104,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -348952,7 +350064,7 @@
     {
       "packageName": "@beep/ui",
       "packagePath": "packages/foundation/ui-system/ui",
-      "topoOrder": 104,
+      "topoOrder": 105,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -363912,7 +365024,7 @@
     {
       "packageName": "@beep/pandoc-ast",
       "packagePath": "packages/foundation/modeling/pandoc-ast",
-      "topoOrder": 105,
+      "topoOrder": 106,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -366714,7 +367826,7 @@
     {
       "packageName": "@beep/repo-configs",
       "packagePath": "packages/tooling/policy-pack/repo-configs",
-      "topoOrder": 106,
+      "topoOrder": 107,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -370368,7 +371480,7 @@
     {
       "packageName": "@beep/wink",
       "packagePath": "packages/drivers/wink",
-      "topoOrder": 107,
+      "topoOrder": 108,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -372250,7 +373362,7 @@
     {
       "packageName": "@beep/postgres",
       "packagePath": "packages/drivers/postgres",
-      "topoOrder": 108,
+      "topoOrder": 109,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -373220,7 +374332,7 @@
     {
       "packageName": "@beep/architecture-lab-domain",
       "packagePath": "packages/architecture-lab/domain",
-      "topoOrder": 109,
+      "topoOrder": 110,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -374712,7 +375824,7 @@
     {
       "packageName": "@beep/provenance",
       "packagePath": "packages/foundation/modeling/provenance",
-      "topoOrder": 110,
+      "topoOrder": 111,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -374898,7 +376010,7 @@
     {
       "packageName": "@beep/epistemic-tables",
       "packagePath": "packages/epistemic/tables",
-      "topoOrder": 111,
+      "topoOrder": 112,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -375323,7 +376435,7 @@
     {
       "packageName": "@beep/federal-register",
       "packagePath": "packages/drivers/federal-register",
-      "topoOrder": 112,
+      "topoOrder": 113,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -375402,15 +376514,355 @@
       ]
     },
     {
+      "packageName": "@beep/doc-text",
+      "packagePath": "packages/drivers/doc-text",
+      "topoOrder": 114,
+      "status": "clean",
+      "sourceCoverage": {
+        "srcDir": "src",
+        "sourceFileCount": 3,
+        "publicModuleCount": 3,
+        "publicExportCount": 11
+      },
+      "docgenCoverage": {
+        "hasDocgenConfig": true,
+        "enforceDescriptions": false,
+        "enforceExamples": false,
+        "enforceVersion": true
+      },
+      "counts": {
+        "openModules": 0,
+        "openExports": 0,
+        "missingExportExamples": 0,
+        "missingExportCategories": 0,
+        "missingExportSince": 0,
+        "missingExportSummaries": 0,
+        "forbiddenTagFindings": 0,
+        "malformedConditionalTagFindings": 0,
+        "exampleImportFindings": 0,
+        "unsafeExampleFindings": 0,
+        "schemaAnnotationFindings": 0
+      },
+      "modules": [
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/DocText.errors.ts",
+          "repoPath": "packages/drivers/doc-text/src/DocText.errors.ts",
+          "line": 1,
+          "anchor": "packages-drivers-doc-text-src-doctext-errors-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 5,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/DocText.service.ts",
+          "repoPath": "packages/drivers/doc-text/src/DocText.service.ts",
+          "line": 1,
+          "anchor": "packages-drivers-doc-text-src-doctext-service-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 3,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/doc-text/src/index.ts",
+          "line": 1,
+          "anchor": "packages-drivers-doc-text-src-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 3,
+          "remediationStatus": "resolved"
+        }
+      ],
+      "exports": [
+        {
+          "symbolName": "DocTextErrorReason",
+          "exportKind": "const",
+          "filePath": "src/DocText.errors.ts",
+          "repoPath": "packages/drivers/doc-text/src/DocText.errors.ts",
+          "line": 29,
+          "anchor": "packages-drivers-doc-text-src-doctext-errors-ts-29-doctexterrorreason",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DocTextErrorReason",
+          "exportKind": "type",
+          "filePath": "src/DocText.errors.ts",
+          "repoPath": "packages/drivers/doc-text/src/DocText.errors.ts",
+          "line": 50,
+          "anchor": "packages-drivers-doc-text-src-doctext-errors-ts-50-doctexterrorreason",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DocTextErrorOptions",
+          "exportKind": "class",
+          "filePath": "src/DocText.errors.ts",
+          "repoPath": "packages/drivers/doc-text/src/DocText.errors.ts",
+          "line": 66,
+          "anchor": "packages-drivers-doc-text-src-doctext-errors-ts-66-doctexterroroptions",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DocTextError",
+          "exportKind": "class",
+          "filePath": "src/DocText.errors.ts",
+          "repoPath": "packages/drivers/doc-text/src/DocText.errors.ts",
+          "line": 91,
+          "anchor": "packages-drivers-doc-text-src-doctext-errors-ts-91-doctexterror",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeDocTextError",
+          "exportKind": "const",
+          "filePath": "src/DocText.errors.ts",
+          "repoPath": "packages/drivers/doc-text/src/DocText.errors.ts",
+          "line": 146,
+          "anchor": "packages-drivers-doc-text-src-doctext-errors-ts-146-makedoctexterror",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DocTextFileProcessingEngineDescriptor",
+          "exportKind": "const",
+          "filePath": "src/DocText.service.ts",
+          "repoPath": "packages/drivers/doc-text/src/DocText.service.ts",
+          "line": 41,
+          "anchor": "packages-drivers-doc-text-src-doctext-service-ts-41-doctextfileprocessingenginedescriptor",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeDocTextFileProcessingEngine",
+          "exportKind": "const",
+          "filePath": "src/DocText.service.ts",
+          "repoPath": "packages/drivers/doc-text/src/DocText.service.ts",
+          "line": 148,
+          "anchor": "packages-drivers-doc-text-src-doctext-service-ts-148-makedoctextfileprocessingengine",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DocTextFileProcessingEngine",
+          "exportKind": "const",
+          "filePath": "src/DocText.service.ts",
+          "repoPath": "packages/drivers/doc-text/src/DocText.service.ts",
+          "line": 209,
+          "anchor": "packages-drivers-doc-text-src-doctext-service-ts-209-doctextfileprocessingengine",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./DocText.errors.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/doc-text/src/index.ts",
+          "line": 21,
+          "anchor": "packages-drivers-doc-text-src-index-ts-21-export-from-doctext-errors-ts",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./DocText.service.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/doc-text/src/index.ts",
+          "line": 35,
+          "anchor": "packages-drivers-doc-text-src-index-ts-35-export-from-doctext-service-ts",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "VERSION",
+          "exportKind": "const",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/doc-text/src/index.ts",
+          "line": 50,
+          "anchor": "packages-drivers-doc-text-src-index-ts-50-version",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        }
+      ]
+    },
+    {
       "packageName": "@beep/documents-use-cases",
       "packagePath": "packages/documents/use-cases",
-      "topoOrder": 113,
+      "topoOrder": 115,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
         "sourceFileCount": 9,
         "publicModuleCount": 9,
-        "publicExportCount": 29
+        "publicExportCount": 31
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -375513,7 +376965,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 4,
+          "exportCount": 6,
           "remediationStatus": "resolved"
         },
         {
@@ -375869,12 +377321,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "FilingDecisionInput",
-          "exportKind": "class",
+          "symbolName": "FILING_TEXT_EXCERPT_MAX_LENGTH",
+          "exportKind": "const",
           "filePath": "src/aggregates/Document/FilingDecision.ts",
           "repoPath": "packages/documents/use-cases/src/aggregates/Document/FilingDecision.ts",
-          "line": 37,
-          "anchor": "packages-documents-use-cases-src-aggregates-document-filingdecision-ts-37-filingdecisioninput",
+          "line": 32,
+          "anchor": "packages-documents-use-cases-src-aggregates-document-filingdecision-ts-32-filing-text-excerpt-max-length",
           "currentTags": [
             "@example",
             "@category",
@@ -375891,12 +377343,56 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "FilingDecisionResult",
+          "symbolName": "FilingTextExcerpt",
+          "exportKind": "const",
+          "filePath": "src/aggregates/Document/FilingDecision.ts",
+          "repoPath": "packages/documents/use-cases/src/aggregates/Document/FilingDecision.ts",
+          "line": 49,
+          "anchor": "packages-documents-use-cases-src-aggregates-document-filingdecision-ts-49-filingtextexcerpt",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FilingTextExcerpt",
+          "exportKind": "type",
+          "filePath": "src/aggregates/Document/FilingDecision.ts",
+          "repoPath": "packages/documents/use-cases/src/aggregates/Document/FilingDecision.ts",
+          "line": 70,
+          "anchor": "packages-documents-use-cases-src-aggregates-document-filingdecision-ts-70-filingtextexcerpt",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FilingDecisionInput",
           "exportKind": "class",
           "filePath": "src/aggregates/Document/FilingDecision.ts",
           "repoPath": "packages/documents/use-cases/src/aggregates/Document/FilingDecision.ts",
-          "line": 68,
-          "anchor": "packages-documents-use-cases-src-aggregates-document-filingdecision-ts-68-filingdecisionresult",
+          "line": 91,
+          "anchor": "packages-documents-use-cases-src-aggregates-document-filingdecision-ts-91-filingdecisioninput",
           "currentTags": [
             "@example",
             "@category",
@@ -375917,8 +377413,8 @@
           "exportKind": "interface",
           "filePath": "src/aggregates/Document/FilingDecision.ts",
           "repoPath": "packages/documents/use-cases/src/aggregates/Document/FilingDecision.ts",
-          "line": 103,
-          "anchor": "packages-documents-use-cases-src-aggregates-document-filingdecision-ts-103-filingdecisionshape",
+          "line": 131,
+          "anchor": "packages-documents-use-cases-src-aggregates-document-filingdecision-ts-131-filingdecisionshape",
           "currentTags": [
             "@example",
             "@category",
@@ -375939,8 +377435,8 @@
           "exportKind": "class",
           "filePath": "src/aggregates/Document/FilingDecision.ts",
           "repoPath": "packages/documents/use-cases/src/aggregates/Document/FilingDecision.ts",
-          "line": 131,
-          "anchor": "packages-documents-use-cases-src-aggregates-document-filingdecision-ts-131-filingdecision",
+          "line": 161,
+          "anchor": "packages-documents-use-cases-src-aggregates-document-filingdecision-ts-161-filingdecision",
           "currentTags": [
             "@example",
             "@category",
@@ -376256,7 +377752,7 @@
     {
       "packageName": "@beep/sanity",
       "packagePath": "packages/drivers/sanity",
-      "topoOrder": 114,
+      "topoOrder": 116,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
