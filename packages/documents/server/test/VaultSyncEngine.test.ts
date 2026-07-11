@@ -357,6 +357,40 @@ describe("@beep/documents-server VaultSyncEngine", () => {
     }).pipe(provideScopedLayer(SyncEngineTestLayer))
   );
 
+  it.effect("heals a pending item stranded by a crash after its operation succeeded", () =>
+    Effect.gen(function* () {
+      const engine = yield* VaultSyncEngine;
+      const handle = yield* DmsMirrorFixtureHandle;
+      const itemRepository = yield* SyncItemRepository;
+      const operationRepository = yield* SyncOperationRepository;
+      const root = yield* makeVaultRoot();
+      yield* writeVaultFile(root, "orphan.txt", "orphan body");
+      // A crash marked the upload succeeded but never wrote the item row: the
+      // item stays pending with only a succeeded operation and no remote id.
+      const seeded = yield* itemRepository.create(rootFileSeed("orphan.txt", "orphan body"));
+      yield* operationRepository.enqueue(rootUploadSeed(seeded.id, "orphan.txt", "orphan body", "succeeded"));
+
+      const status = yield* engine.syncOnce(syncInput(root));
+      const counts = yield* handle.counts;
+      const tree = yield* handle.snapshotTree;
+      const succeeded = yield* listOperationsByStatus("succeeded");
+      const tracked = yield* itemRepository.findByPath(
+        FindSyncItemByPathInput.make({ localRelPath: decodeVaultRelPath("orphan.txt"), provider: "box", workspaceId })
+      );
+
+      expect(counts.uploadFile).toBe(1);
+      expect(nodeDigest(tree["orphan.txt"])).toBe(digestOf("orphan body"));
+      expect(O.map(tracked, (item) => item.syncState)).toEqual(O.some("current"));
+      // The crash-window success plus the healing push are both recorded.
+      expect(A.length(succeeded)).toBe(2);
+      expect(status.currentItems).toBe(1);
+      expect(status.pendingItems).toBe(0);
+      expect(status.queuedOperations).toBe(0);
+      expect(status.failedOperations).toBe(0);
+      expect(status.openConflicts).toBe(0);
+    }).pipe(provideScopedLayer(SyncEngineTestLayer))
+  );
+
   it.effect("reports an idle status snapshot before any sync pass", () =>
     Effect.gen(function* () {
       const engine = yield* VaultSyncEngine;

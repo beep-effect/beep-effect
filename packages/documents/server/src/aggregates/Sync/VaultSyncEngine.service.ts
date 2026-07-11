@@ -210,6 +210,24 @@ const requiresRemoteId = (operationType: DomainSyncOperation.SyncOperationType):
     uploadFileVersion: F.constTrue,
   });
 
+/**
+ * Fresh push verb that re-converges a `pending` item stranded with no active
+ * operation (the crash window between marking an operation `succeeded` and
+ * writing the item row). A folder needs `createFolder` only while it has no
+ * remote id; a file uploads its first version (`uploadFile`) or a new version
+ * (`uploadFileVersion`) once it has one. A folder that already has a remote id
+ * is fully pushed, so it yields `none`.
+ */
+const stalledOperationType = (item: DomainSyncItem.SyncItem): O.Option<DomainSyncOperation.SyncOperationType> =>
+  SyncItemKind.$match(item.itemKind, {
+    file: () =>
+      O.some(O.isNone(item.remoteId) ? SyncOperationType.Enum.uploadFile : SyncOperationType.Enum.uploadFileVersion),
+    folder: () =>
+      O.isNone(item.remoteId)
+        ? O.some(SyncOperationType.Enum.createFolder)
+        : O.none<DomainSyncOperation.SyncOperationType>(),
+  });
+
 const knownItemConflictKind = (eventType: DmsEventType): DomainSyncConflict.SyncConflictKind =>
   DmsEventType.$match(eventType, {
     created: () => SyncConflictKind.Enum.remoteEdit,
@@ -1137,31 +1155,20 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
   });
 
   /**
-   * Terminal-failure recovery: while the mirror probe reports connected, a
-   * failed operation whose item still exists locally at the operation's target
-   * path (and has no queued or leased replacement of the same type, and whose
-   * type still matches the item kind) is revived to `queued` with a fresh
-   * attempt budget, and its item returns from `error` to `pending`. One bad
-   * window (expired token, brief outage) therefore never permanently blocks
-   * convergence.
+   * Revive terminally-failed operations: while connected, a `failed` operation
+   * whose item still exists locally at the operation's target path (with no
+   * queued or leased twin of the same type, and a type still matching the item
+   * kind) is revived to `queued` with a fresh attempt budget, and its item
+   * returns from `error` to `pending`. One bad window (expired token, brief
+   * outage) therefore never permanently blocks convergence.
    */
-  const recoverFailedOperations = Effect.fn($I`recoverFailedOperations`)(function* (
+  const reviveFailedOperations = Effect.fn($I`reviveFailedOperations`)(function* (
     input: SyncOnceInput,
-    connected: boolean
+    itemsById: HashMap.HashMap<DomainSyncItem.SyncItemId, DomainSyncItem.SyncItem>
   ) {
-    if (!connected) {
-      return;
-    }
     const failed = yield* operationRepository.listByStatus(
       ListSyncOperationsByStatusInput.make({ provider: BOX_PROVIDER, status: "failed", workspaceId: input.workspaceId })
     );
-    if (failed.length === 0) {
-      return;
-    }
-    const trackedItems = yield* itemRepository.listByWorkspace(
-      ListSyncItemsByWorkspaceInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
-    );
-    const itemsById = HashMap.fromIterable(A.map(trackedItems, (item) => [item.id, item] as const));
     for (const operation of failed) {
       const tracked = HashMap.get(itemsById, operation.syncItemId);
       if (O.isNone(tracked)) {
@@ -1186,6 +1193,57 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
         );
       }
     }
+  });
+
+  /**
+   * Heal the succeeded-op/stale-item crash window: leased ops were already
+   * requeued this pass and a failed op leaves its item in `error`, so a
+   * `pending` item with no queued op has no active operation at all. It gets a
+   * fresh convergent push ({@link stalledOperationType}); the re-run verb is
+   * idempotent, so a push that already landed remotely converges rather than
+   * duplicating.
+   */
+  const healOrphanedPendingItems = Effect.fn($I`healOrphanedPendingItems`)(function* (
+    trackedItems: ReadonlyArray<DomainSyncItem.SyncItem>
+  ) {
+    for (const item of trackedItems) {
+      if (!SyncItemState.is.pending(item.syncState)) {
+        continue;
+      }
+      const healType = stalledOperationType(item);
+      if (O.isNone(healType)) {
+        continue;
+      }
+      const queued = yield* queuedOperationsFor(item);
+      if (A.isReadonlyArrayNonEmpty(queued)) {
+        continue;
+      }
+      yield* enqueueOrSquash(
+        item,
+        healType.value,
+        SyncOperationType.is.createFolder(healType.value) ? O.none() : item.contentDigest
+      );
+    }
+  });
+
+  /**
+   * Stalled-operation recovery, run while the mirror probe reports connected:
+   * revive terminally-failed operations, then heal the succeeded-op/stale-item
+   * crash window, over one shared tracked-item snapshot.
+   */
+  const recoverStalledOperations = Effect.fn($I`recoverStalledOperations`)(function* (
+    input: SyncOnceInput,
+    connected: boolean
+  ) {
+    if (!connected) {
+      return;
+    }
+    const trackedItems = yield* itemRepository.listByWorkspace(
+      ListSyncItemsByWorkspaceInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+    );
+    const itemsById = HashMap.fromIterable(A.map(trackedItems, (item) => [item.id, item] as const));
+    yield* reviveFailedOperations(input, itemsById);
+    yield* healOrphanedPendingItems(trackedItems);
   });
 
   const readStatus = Effect.fn($I`readStatus`)(function* (input: VaultSyncStatusInput) {
@@ -1247,7 +1305,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
       yield* operationRepository.requeueLeased(
         RequeueLeasedSyncOperationsInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
       );
-      yield* recoverFailedOperations(input, probe.connected);
+      yield* recoverStalledOperations(input, probe.connected);
       yield* scanVault(input);
       const pushRecords = yield* pumpQueue(input);
       yield* pollRemoteEvents(input, pushRecords).pipe(

@@ -31,13 +31,14 @@ import {
 } from "@beep/documents-use-cases/aggregates/Sync/server";
 import { $DocumentsServerId } from "@beep/identity/packages";
 import { UnknownRecord } from "@beep/schema";
-import { Config, Context, Effect, identity, Layer, Match, pipe, Ref, SchemaTransformation } from "effect";
+import { getSomesStruct } from "@beep/utils/Option";
+import { Config, Context, Effect, flow, identity, Layer, Match, pipe, Ref, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import type { BoxError, BoxShape } from "@beep/box";
+import type { BoxError, Item as BoxItem, BoxShape } from "@beep/box";
 import type {
   EnsureFolderInput,
   MoveItemInput,
@@ -319,6 +320,20 @@ const isBoxFile = S.is(BoxFile);
 const isBoxFolder = S.is(BoxFolder);
 const isBoxFolderMini = S.is(BoxFolderMini);
 
+/**
+ * First folder-items entry passing `guard` whose remote name equals `name`,
+ * projected to its Box id. Used to resolve an item that a create/upload
+ * conflict (or a paginated listing) revealed already exists under the parent.
+ */
+const findNamedId = (
+  guard: (candidate: BoxItem) => boolean,
+  name: string
+): ((entries: ReadonlyArray<BoxItem>) => O.Option<string>) =>
+  flow(
+    A.findFirst((entry: BoxItem) => guard(entry) && entry.name === name),
+    O.map((entry) => entry.id)
+  );
+
 const sourceInfo: (source: NonNullable<BoxEventModel["source"]>) => BoxSourceInfo = Match.type<
   NonNullable<BoxEventModel["source"]>
 >().pipe(
@@ -381,22 +396,52 @@ const remoteEventFromEntry = (entry: BoxEventModel): Effect.Effect<O.Option<DmsR
   });
 
 const makeMirrorRootResolver = (box: BoxShape, config: BoxMirrorConfigValue) => {
-  const lookupFolderId = (parentId: string, name: string): Effect.Effect<O.Option<string>, DmsMirrorUnavailable> =>
+  const listFolderPage = (parentId: string, marker: O.Option<string>) =>
     box.folders
       .getFolderItems({
         folderId: parentId,
-        optionalsInput: { queryParams: { limit: FOLDER_LOOKUP_LIMIT } },
+        optionalsInput: {
+          queryParams: {
+            limit: FOLDER_LOOKUP_LIMIT,
+            usemarker: true,
+            ...getSomesStruct({ marker }),
+          },
+        },
       })
-      .pipe(
-        Effect.mapError(boxUnavailable),
-        Effect.map((items) =>
+      .pipe(Effect.mapError(boxUnavailable));
+
+  /**
+   * Walk the marker-paginated folder listing until `find` matches or the pages
+   * are exhausted, so a target beyond the first page is still resolved.
+   */
+  const lookupItemId = (
+    parentId: string,
+    find: (entries: ReadonlyArray<BoxItem>) => O.Option<string>
+  ): Effect.Effect<O.Option<string>, DmsMirrorUnavailable> => {
+    const page = (marker: O.Option<string>): Effect.Effect<O.Option<string>, DmsMirrorUnavailable> =>
+      listFolderPage(parentId, marker).pipe(
+        Effect.flatMap((items) =>
           pipe(
-            O.fromUndefinedOr(items.entries),
-            O.flatMap(A.findFirst((entry): entry is BoxFolderMini => isBoxFolderMini(entry) && entry.name === name)),
-            O.map((entry) => entry.id)
+            find(pipe(O.fromUndefinedOr(items.entries), O.getOrElse(A.empty<BoxItem>))),
+            O.map(Effect.succeedSome),
+            O.getOrElse(() =>
+              O.match(nonEmptyStringOption(items.nextMarker), {
+                onNone: () => Effect.succeedNone,
+                onSome: (next) => page(O.some(next)),
+              })
+            )
           )
         )
       );
+
+    return page(O.none());
+  };
+
+  const lookupFolderId = (parentId: string, name: string): Effect.Effect<O.Option<string>, DmsMirrorUnavailable> =>
+    lookupItemId(parentId, findNamedId(isBoxFolderMini, name));
+
+  const lookupFileId = (parentId: string, name: string): Effect.Effect<O.Option<string>, DmsMirrorUnavailable> =>
+    lookupItemId(parentId, findNamedId(isBoxFile, name));
 
   const createRemoteFolder = (parentId: string, name: string) =>
     box.folders.createFolder({ requestBody: { name, parent: { id: parentId } } });
@@ -404,17 +449,32 @@ const makeMirrorRootResolver = (box: BoxShape, config: BoxMirrorConfigValue) => 
   const resolveMirrorRootId = Effect.gen(function* () {
     const existing = yield* lookupFolderId(BOX_ROOT_FOLDER_ID, config.mirrorRootName);
 
-    return yield* O.match(existing, {
-      onNone: () =>
+    // A concurrent creator (or a listing that missed the folder) turns the
+    // create into a name conflict; recover by re-resolving the existing id,
+    // exactly like ensureFolder's conflict recovery.
+    return yield* pipe(
+      existing,
+      O.map(Effect.succeed),
+      O.getOrElse(() =>
         createRemoteFolder(BOX_ROOT_FOLDER_ID, config.mirrorRootName).pipe(
-          Effect.mapError(boxUnavailable),
-          Effect.map((folder) => folder.id)
-        ),
-      onSome: Effect.succeed,
-    });
+          Effect.map((folder) => folder.id),
+          Effect.catchIf(isNameConflict, (error) =>
+            lookupFolderId(BOX_ROOT_FOLDER_ID, config.mirrorRootName).pipe(
+              Effect.flatMap(
+                O.match({
+                  onNone: () => Effect.fail(boxUnavailable(error)),
+                  onSome: Effect.succeed,
+                })
+              )
+            )
+          ),
+          Effect.catchTag("BoxError", (error) => Effect.fail(boxUnavailable(error)))
+        )
+      )
+    );
   }).pipe(Effect.withSpan($I`resolveMirrorRootId`));
 
-  return { createRemoteFolder, lookupFolderId, resolveMirrorRootId };
+  return { createRemoteFolder, lookupFileId, lookupFolderId, resolveMirrorRootId };
 };
 
 /**
@@ -438,7 +498,7 @@ export const makeDmsMirrorBox = Effect.fn($I`makeDmsMirrorBox`)(function* () {
   const box = yield* Box;
   const config = yield* BoxMirrorConfig;
   const mirrorRootIdRef = yield* Ref.make(O.none<string>());
-  const { createRemoteFolder, lookupFolderId, resolveMirrorRootId } = makeMirrorRootResolver(box, config);
+  const { createRemoteFolder, lookupFileId, lookupFolderId, resolveMirrorRootId } = makeMirrorRootResolver(box, config);
 
   const ensureMirrorRootId: Effect.Effect<string, DmsMirrorUnavailable> = Ref.get(mirrorRootIdRef).pipe(
     Effect.flatMap(
@@ -527,7 +587,28 @@ export const makeDmsMirrorBox = Effect.fn($I`makeDmsMirrorBox`)(function* () {
           file: input.content,
         },
       })
-      .pipe(Effect.mapError(boxUnavailable));
+      .pipe(
+        // A name conflict means the file already exists under the parent (a
+        // retried upload after a crash). Look up its id and converge by
+        // uploading a new version of the same content instead of failing.
+        Effect.catchIf(isNameConflict, (error) =>
+          lookupFileId(parentId, input.name).pipe(
+            Effect.flatMap(
+              O.match({
+                onNone: () => Effect.fail(boxUnavailable(error)),
+                onSome: (existingId) =>
+                  box.uploads
+                    .uploadFileVersion({
+                      fileId: existingId,
+                      requestBody: { attributes: { name: input.name }, file: input.content },
+                    })
+                    .pipe(Effect.mapError(boxUnavailable)),
+              })
+            )
+          )
+        ),
+        Effect.catchTag("BoxError", (error) => Effect.fail(boxUnavailable(error)))
+      );
     const fields = yield* firstUploadedFileFields(files);
 
     return yield* remoteItem(mirrorRootId, fields);

@@ -77,6 +77,16 @@ type FakeEventsQueryParams = {
   readonly streamType?: string | undefined;
 };
 
+type FakeFolderItemsQueryParams = {
+  readonly limit?: number | undefined;
+  readonly marker?: string | undefined;
+  readonly usemarker?: boolean | undefined;
+};
+
+type FakeFolderItemsOptionals = {
+  readonly queryParams?: FakeFolderItemsQueryParams | undefined;
+};
+
 type FakeBoxClient = {
   readonly events: {
     readonly getEvents: (
@@ -90,7 +100,7 @@ type FakeBoxClient = {
   };
   readonly folders: {
     readonly createFolder: (requestBody: FakeCreateFolderRequestBody, optionalsInput: unknown) => Promise<unknown>;
-    readonly getFolderItems: (folderId: string, optionalsInput: unknown) => Promise<unknown>;
+    readonly getFolderItems: (folderId: string, optionalsInput: FakeFolderItemsOptionals) => Promise<unknown>;
     readonly updateFolderById: (folderId: string, optionalsInput: FakeUpdateOptionals) => Promise<unknown>;
   };
   readonly uploads: {
@@ -161,6 +171,12 @@ const makeFakeBox = (overrides: FakeBoxOverrides = {}) => {
   const seedFolder = (parentId: string, name: string): string => {
     const id = nextId("folder");
     items.set(id, { content: "", id, name, parentId, type: "folder", version: 1 });
+    return id;
+  };
+
+  const seedFile = (parentId: string, name: string, content: string): string => {
+    const id = nextId("file");
+    items.set(id, { content, id, name, parentId, type: "file", version: 1 });
     return id;
   };
 
@@ -273,7 +289,7 @@ const makeFakeBox = (overrides: FakeBoxOverrides = {}) => {
     uploads: { ...base.uploads, ...overrides.uploads },
   };
 
-  return { client, counts, eventLog, items, receivedEventQueries, seedEvents, seedFolder };
+  return { client, counts, eventLog, items, receivedEventQueries, seedEvents, seedFile, seedFolder };
 };
 
 type FakeBoxHarness = ReturnType<typeof makeFakeBox>;
@@ -295,6 +311,13 @@ const fileSource = (id: string, name: string, parentId: string) => ({
   name,
   parent: { id: parentId, type: "folder" },
   type: "file",
+});
+
+const folderSource = (id: string, name: string, parentId: string) => ({
+  id,
+  name,
+  parent: { id: parentId, type: "folder" },
+  type: "folder",
 });
 
 const staleRemoteFileId = S.decodeUnknownSync(RemoteItemId)("file-9");
@@ -380,6 +403,81 @@ describe("@beep/documents-server DmsMirrorBox", () => {
     })
   );
 
+  it.effect("resolves a mirror root that only appears on a later folder-items page", () =>
+    Effect.gen(function* () {
+      const rootId = "folder-root-page-2";
+      const markers: Array<string | undefined> = [];
+      const fake = makeFakeBox({
+        folders: {
+          getFolderItems: (folderId, optionalsInput) => {
+            if (folderId !== "0") {
+              return Promise.resolve({ entries: [] });
+            }
+            const marker = optionalsInput.queryParams?.marker;
+            markers.push(marker);
+            return marker === undefined
+              ? Promise.resolve({
+                  entries: [folderSource("folder-decoy", "other-vault", "0")],
+                  nextMarker: "page-2",
+                })
+              : Promise.resolve({
+                  entries: [folderSource(rootId, BOX_MIRROR_DEFAULT_ROOT_NAME, "0")],
+                  nextMarker: null,
+                });
+          },
+        },
+      });
+
+      const probe = yield* Effect.gen(function* () {
+        const availability = yield* DmsMirrorAvailability;
+        return yield* availability.probe;
+      }).pipe(provideScopedLayer(availabilityLayer(fake)));
+
+      expect(probe.connected).toBe(true);
+      expect(probe.rootRemoteId).toEqual(O.some(rootId));
+      // The first page (no marker) missed the root; the second page found it.
+      expect(markers).toEqual([undefined, "page-2"]);
+      expect(fake.counts.createFolder).toBe(0);
+    })
+  );
+
+  it.effect("recovers the mirror root from a create name conflict by re-resolving the existing id", () =>
+    Effect.gen(function* () {
+      const rootId = "folder-root-conflict";
+      let rootVisible = false;
+      let getFolderItemsCalls = 0;
+      let createFolderCalls = 0;
+      const fake = makeFakeBox({
+        folders: {
+          getFolderItems: (folderId) => {
+            getFolderItemsCalls += 1;
+            return Promise.resolve({
+              entries: rootVisible && folderId === "0" ? [folderSource(rootId, BOX_MIRROR_DEFAULT_ROOT_NAME, "0")] : [],
+            });
+          },
+          createFolder: () => {
+            // A concurrent creator won the race: our create conflicts and the
+            // root is now visible to the recovery lookup.
+            createFolderCalls += 1;
+            rootVisible = true;
+            return Promise.reject(nameConflictRejection);
+          },
+        },
+      });
+
+      const probe = yield* Effect.gen(function* () {
+        const availability = yield* DmsMirrorAvailability;
+        return yield* availability.probe;
+      }).pipe(provideScopedLayer(availabilityLayer(fake)));
+
+      expect(probe.connected).toBe(true);
+      expect(probe.rootRemoteId).toEqual(O.some(rootId));
+      expect(createFolderCalls).toBe(1);
+      // One lookup found nothing, the create conflicted, the recovery lookup won.
+      expect(getFolderItemsCalls).toBe(2);
+    })
+  );
+
   it.effect("uploads a file and maps the remote item", () =>
     Effect.gen(function* () {
       const fake = makeFakeBox();
@@ -438,6 +536,30 @@ describe("@beep/documents-server DmsMirrorBox", () => {
       expect(versioned.itemKind).toBe("file");
       expect(fake.items.get(uploaded.remoteId)?.content).toBe("complaint-v2");
       expect(fake.items.get(uploaded.remoteId)?.version).toBe(2);
+      expect(fake.counts.uploadFileVersion).toBe(1);
+    })
+  );
+
+  it.effect("recovers an upload name conflict by versioning the existing file", () =>
+    Effect.gen(function* () {
+      const fake = makeFakeBox({
+        uploads: { uploadFile: () => Promise.reject(nameConflictRejection) },
+      });
+      const rootId = fake.seedFolder("0", BOX_MIRROR_DEFAULT_ROOT_NAME);
+      const existingFileId = fake.seedFile(rootId, "complaint.pdf", "complaint-v1");
+
+      const versioned = yield* Effect.gen(function* () {
+        const mirror = yield* DmsMirror;
+        return yield* mirror.uploadFile(
+          UploadFileInput.make({ content: Buffer.from("complaint-v2"), name: "complaint.pdf" })
+        );
+      }).pipe(provideScopedLayer(mirrorLayer(fake)));
+
+      expect(versioned.remoteId).toBe(existingFileId);
+      expect(versioned.itemKind).toBe("file");
+      expect(versioned.name).toBe("complaint.pdf");
+      expect(fake.items.get(existingFileId)?.content).toBe("complaint-v2");
+      expect(fake.items.get(existingFileId)?.version).toBe(2);
       expect(fake.counts.uploadFileVersion).toBe(1);
     })
   );
