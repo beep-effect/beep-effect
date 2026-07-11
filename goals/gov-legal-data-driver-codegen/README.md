@@ -50,9 +50,13 @@ unknown-license = reimplement-don't-copy).
 
 ## Current Phase
 
-**Substrate delivered (P0 + P1 + P3 complete).** P2 (CourtListener + DOL) remains
-**gated-pending** on the data/source-terms matrix (Q8 default-deny) — do not start
-until the matrix exists. The remaining open work in this packet is P2 only.
+**Substrate delivered (P0 + P1 + P3 complete); P2 superseded.** As of
+2026-07-11, P2 (CourtListener + DOL) is superseded by
+[`goals/gov-legal-data-driver-delivery`](../gov-legal-data-driver-delivery),
+which owns the data/source-terms matrix (its P0) and the DOL + CourtListener
+drivers (its P3–P5) under the same Q8 default-deny gate. No implementation
+work remains in this packet; final status closure happens at the delivery
+packet's P6.
 
 ## Latest Evidence
 

@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "initiative-manifest/v1",
+  "initiative": {
+    "id": "gov-legal-data-driver-delivery",
+    "title": "Gov/Legal Data Driver Delivery",
+    "status": "active",
+    "created": "2026-07-11",
+    "updated": "2026-07-11",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/gov-legal-data-driver-delivery",
+  "lifecycle": "active",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "designSession": "2026-07-11 grilled design session (grill-with-docs, claude); delivery follow-on to goals/gov-legal-data-driver-codegen, no explorations/ packet",
+    "supersedes": "goals/gov-legal-data-driver-codegen P2 (authed-drivers)",
+    "graduated": "2026-07-11"
+  },
+  "dependencies": ["goals/gov-legal-data-driver-codegen"],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor). Each PLAN.md phase is its own PR under this gate.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "standards/architecture/03-driver-boundaries.md",
+    "standards/architecture/07-non-slice-families.md",
+    "standards/architecture/09-errors-across-boundaries.md",
+    "goals/gov-legal-data-driver-delivery/README.md",
+    "goals/gov-legal-data-driver-delivery/SPEC.md",
+    "goals/gov-legal-data-driver-delivery/PLAN.md",
+    "goals/gov-legal-data-driver-delivery/GOAL.md",
+    "goals/gov-legal-data-driver-delivery/research/SOURCES.md",
+    "goals/gov-legal-data-driver-codegen/SPEC.md",
+    "goals/gov-legal-data-driver-codegen/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/gov-legal-data-driver-delivery/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "research: data/source-terms matrix + committed specs",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "ecfr breadth (2->15 operations)",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "federal-register keyless driver",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "dol keyed driver (gated on data-terms matrix)",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "courtlistener core (gated on data-terms matrix)",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "courtlistener long tail (full official-schema parity)",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/gov-legal-data-driver-delivery/GOAL.md)\" -le 4000",
+    "jq . goals/gov-legal-data-driver-delivery/ops/manifest.json",
+    "rg -n \"gov-legal-data-driver-delivery|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/gov-legal-data-driver-delivery",
+    "git diff --check -- goals/gov-legal-data-driver-delivery",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope (gov-legal-mcp, PatentsView/patents, XML/CSV parsing, /browser entrypoints, govinfo or api-transport rewrites).",
+    "DOL or CourtListener work is reached before the per-upstream data/source-terms matrix exists (SPEC D2, inherited Q8 default-deny).",
+    "The data/source-terms matrix reveals prohibitive terms for an upstream; record and halt that driver rather than working around the terms.",
+    "A committed spec drifts beyond what the bespoke renderer can express; record the delta and fallback decision under research/ first.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
