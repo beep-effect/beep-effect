@@ -74,27 +74,27 @@
     {
       "id": "P0",
       "name": "Lanes",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Proofs",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Ship",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Ruleset",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "completed"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

@@ -3,13 +3,13 @@
   "initiative": {
     "id": "mcp-kit",
     "title": "MCP Kit",
-    "status": "complete",
+    "status": "completed-retained",
     "created": "2026-07-01",
     "updated": "2026-07-01",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/mcp-kit",
-  "lifecycle": "complete",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -86,5 +86,6 @@
     "effect/unstable/ai internals have drifted from the verified 2026-07-01 baseline in a way that invalidates a resolved decision.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "statusNote": "legacy status: complete"
 }

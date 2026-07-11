@@ -3,7 +3,7 @@
   "initiative": {
     "id": "schema-first-zero-actionables",
     "title": "Schema-First Zero Actionables",
-    "status": "complete",
+    "status": "completed-retained",
     "created": "2026-06-11",
     "updated": "2026-07-07",
     "packetAnchorDocument": "SPEC.md"
@@ -95,9 +95,8 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "supersededBy": {
-    "packet": "goals/standards-remediation",
-    "scope": "remaining exception ledger to zero entries",
-    "date": "2026-07-07"
-  }
+  "supersededBy": "standards-remediation",
+  "statusNote": "legacy status: complete",
+  "supersededNote": "remaining exception ledger to zero entries (2026-07-07)",
+  "mission": "Drive repo schema-first governance to zero actionable findings and publish the result as a mergeable PR. Actionable means every non-exception candidate and active advisory is either remediated, eliminated by detector improvements, or reclassified with a durable non-actionable rationale."
 }

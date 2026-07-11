@@ -1,33 +1,32 @@
 {
   "slug": "nlp-adjunct-port",
   "title": "NLP Adjunct Port & MCP Toolkit Expansion",
-  "status": "DONE",
   "created": "2026-06-02",
   "updated": "2026-06-02",
   "phases": {
     "landed": {
       "name": "Adjunct -> @beep/nlp v4 port (categorical spine, graph IR, tools, wink driver, MCP MVP)",
-      "status": "DONE",
+      "status": "complete",
       "summary": "Shipped via PR #199 (2026-05-30) + quality follow-ups 140ac179c8 / f3e0c3078f (2026-06-01). @beep/nlp categorical spine + Handoff IR + 19-tool NlpToolkit; @beep/wink driver; @beep/nlp-mcp 5-tool stdio MVP."
     },
     "p1": {
       "name": "Converge @beep/nlp-mcp onto the canonical NlpToolkit (5 -> 19 tools)",
-      "status": "DONE",
+      "status": "complete",
       "summary": "Replaced the driver's hand-rolled 5-tool system with McpServer.toolkit(@beep/nlp NlpToolkit) backed by @beep/wink WinkNlpToolkitLive; deleted src/Tools.ts + src/Schemas.ts. Surfaced and fixed two latent bugs (see reflection log)."
     },
     "p2": {
       "name": "Adjunct-parity NLP tools (+6: Paragraphize, Stem, RemoveStopWords, WordCount, BagOfWords, Analyze)",
-      "status": "DONE",
+      "status": "complete",
       "summary": "New tool defs in @beep/nlp/Tools + handlers in @beep/wink WinkNlpToolkitLive; surface auto-flows to MCP (-> 25 tools)."
     },
     "p3": {
       "name": "Streaming/file-IO suite (TextStream, Jsonl, DatasetLoader, Pipeline + 17 tools)",
-      "status": "DONE",
+      "status": "complete",
       "summary": "v4 port of adjunct Mcp/Streaming into @beep/nlp-mcp over effect/FileSystem + effect/Stream + HttpClient; line-based JSONL parser (S.UnknownFromJsonString) rather than Ndjson. Mounted as a second toolkit (StreamingToolkit + StreamingToolkitHandlersLive); regex compilation hardened to a tagged InvalidPatternError. 18 integration tests over synthetic temp fixtures; counts/path_length/size_bytes-only span attributes."
     },
     "p4": {
       "name": "Register, verify, document",
-      "status": "DONE",
+      "status": "complete",
       "summary": "Registered nlp-mcp in .mcp.json (nlp stdio server); verified 42 tools live over stdio via a JSON-RPC tools/list probe. Green across @beep/nlp, @beep/wink, @beep/nlp-mcp: check/test/test:integration/lint/build (TURBO_FORCE) + docgen + repo-exports:catalog:check. READMEs/CLAUDE.md surface maps + changeset added."
     }
   },
@@ -43,5 +42,11 @@
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
-  }
+  },
+  "initiative": {
+    "id": "nlp-adjunct-port",
+    "title": "NLP Adjunct Port & MCP Toolkit Expansion",
+    "status": "completed-retained"
+  },
+  "statusNote": "legacy status: DONE"
 }

@@ -41,32 +41,32 @@
     {
       "id": "P0",
       "name": "Salvage & Inventory",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Catalog & Exact Dedupe",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Extraction",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Organization",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Enrichment",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Close",
-      "status": "completed"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

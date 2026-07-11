@@ -52,27 +52,27 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "completed"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -88,5 +88,6 @@
     "Authority host remains unconfirmed at merge time.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "mission": "Rewrite `@beep/identity` in place so identity paths double as literal-typed IRIs/CURIEs: root authority binding, exact-literal `.iri`/`.curie` projections, baked-in CURIE vocabulary types, expand/contract + PN_LOCAL codecs — shape-stable surface, zero call-site changes repo-wide."
 }

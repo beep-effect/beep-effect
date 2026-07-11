@@ -1,6 +1,5 @@
 {
   "id": "oip-web-production-hardening",
-  "status": "local_hardening_and_oip_s3_rename_applied_provider_dns_gates_remaining",
   "owner": "@beep-team",
   "app": "@beep/oip-web",
   "dependsOn": ["oip-web-launch"],
@@ -106,5 +105,11 @@
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
-  }
+  },
+  "initiative": {
+    "id": "oip-web-production-hardening",
+    "title": "OIP Web Production Hardening",
+    "status": "paused"
+  },
+  "statusNote": "legacy status: local_hardening_and_oip_s3_rename_applied_provider_dns_gates_remaining"
 }

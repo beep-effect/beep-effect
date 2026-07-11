@@ -3,7 +3,7 @@
   "initiative": {
     "id": "agent-effectiveness-loop",
     "title": "Agent Effectiveness Loop",
-    "status": "phase1-complete",
+    "status": "completed-retained",
     "created": "2026-05-16",
     "updated": "2026-05-20",
     "packetAnchorDocument": "SPEC.md"
@@ -84,5 +84,6 @@
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
-  }
+  },
+  "statusNote": "legacy status: phase1-complete"
 }

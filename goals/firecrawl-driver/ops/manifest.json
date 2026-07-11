@@ -218,54 +218,54 @@
     {
       "id": "P0",
       "name": "Packet Bootstrap",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Refresh Firecrawl Inventory",
-      "status": "completed",
+      "status": "complete",
       "note": "Reconciled 2026-07-11: research/firecrawl-sdk-inventory.md exists and captures the SDK/docs/source inventory."
     },
     {
       "id": "P2",
       "name": "Scaffold Package",
-      "status": "completed",
+      "status": "complete",
       "note": "Reconciled 2026-07-11: packages/drivers/firecrawl exists on main with full package metadata (AGENTS.md, docgen.json, tsconfigs, vitest config)."
     },
     {
       "id": "P3",
       "name": "Schema-First Models And Errors",
-      "status": "completed",
+      "status": "complete",
       "note": "Reconciled 2026-07-11: Firecrawl.models.ts (~4700 lines of payload/success/failure schemas) and Firecrawl.errors.ts (typed FirecrawlError variants) shipped in PR #210."
     },
     {
       "id": "P4",
       "name": "Effect Service And Layers",
-      "status": "completed",
+      "status": "complete",
       "note": "Reconciled 2026-07-11: Firecrawl.service.ts exposes the in-scope method surface with Firecrawl.layer (Config-backed live), makeLayer, and makeLayerFromClient (fake/test)."
     },
     {
       "id": "P5",
       "name": "Watcher Stream",
-      "status": "completed",
+      "status": "complete",
       "note": "Reconciled 2026-07-11: watcher returns Stream.Stream<FirecrawlWatcherEvent, FirecrawlError> with queue-backed event bridging in Firecrawl.service.ts."
     },
     {
       "id": "P6",
       "name": "Tests Docs And Live Smoke",
-      "status": "completed",
+      "status": "complete",
       "note": "Reconciled 2026-07-11: test/Firecrawl.service.test.ts, test/integration/Firecrawl.live.test.ts (env-gated live smoke), dtslint/Firecrawl.tst.ts, and docgen docs/ all exist."
     },
     {
       "id": "P7",
       "name": "Export Catalog And Local Quality Closure",
-      "status": "completed",
+      "status": "complete",
       "note": "Reconciled 2026-07-11: quality closure was proven for the PR #210 merge; the repo-exports catalog mechanism was retired repo-wide on 2026-06-18, so catalog steps are no longer re-verifiable or applicable."
     },
     {
       "id": "P8",
       "name": "Commit PR CI Review Greptile",
-      "status": "completed",
+      "status": "complete",
       "note": "Reconciled 2026-07-11: PR #210 (feat: add firecrawl driver and ontology modeling foundations) merged to main 2026-06-04. The Greptile 5/5 score is not re-verifiable retroactively from git evidence; the substantive gate (merged, CI-green PR) is satisfied."
     }
   ],

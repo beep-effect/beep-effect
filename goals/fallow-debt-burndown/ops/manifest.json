@@ -70,32 +70,32 @@
     {
       "id": "P0",
       "name": "Packet Authoring",
-      "status": "done"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Boundary Burn-Down",
-      "status": "selected"
+      "status": "in-progress"
     },
     {
       "id": "P2",
       "name": "Health Burn-Down",
-      "status": "seeded"
+      "status": "pending"
     },
     {
       "id": "P3",
       "name": "Security Triage",
-      "status": "seeded"
+      "status": "pending"
     },
     {
       "id": "P4",
       "name": "Dupes Cleanup",
-      "status": "seeded"
+      "status": "pending"
     },
     {
       "id": "P5",
       "name": "Ratchet Wiring",
-      "status": "seeded"
+      "status": "pending"
     }
   ],
   "verificationCommands": [
@@ -117,5 +117,6 @@
     "Do not promote lanes with unresolved false positives or doctrine gaps.",
     "Do not make all current advisory findings fail.",
     "Do not resolve findings primarily by adding inline fallow-ignore suppressions."
-  ]
+  ],
+  "mission": "Turn the current advisory Fallow output into a remediation queue. This packet is about fixing selected Fallow-identified debt and wiring narrow repo checks after the relevant debt class is understood, not leaving issues advisory forever and not making every inherited finding fail."
 }

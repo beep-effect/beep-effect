@@ -3,7 +3,7 @@
   "initiative": {
     "id": "canvas",
     "title": "@beep/canvas",
-    "status": "active-p3-ready",
+    "status": "active",
     "created": "2026-05-16",
     "updated": "2026-05-21",
     "packetAnchorDocument": "SPEC.md"
@@ -70,21 +70,21 @@
     {
       "id": "P0",
       "name": "Boundary-aligned scaffold cleanup",
-      "status": "completed",
+      "status": "complete",
       "output": "goals/canvas/PLAN.md",
       "exitCriteriaSummary": "Packages and exports are coherent with architecture laws and existing files."
     },
     {
       "id": "P1",
       "name": "Tauri shell bootstrap",
-      "status": "completed",
+      "status": "complete",
       "output": "apps/canvas",
       "exitCriteriaSummary": "apps/canvas bootstraps and exposes typed scene commands."
     },
     {
       "id": "P2",
       "name": "End-to-end contract proof",
-      "status": "completed",
+      "status": "complete",
       "output": "history/outputs/p1-p2-contract-proof.md",
       "exitCriteriaSummary": "Roundtrip create/list/get/save/load works through boundary translations."
     }
@@ -116,5 +116,6 @@
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
-  }
+  },
+  "statusNote": "legacy status: active-p3-ready"
 }

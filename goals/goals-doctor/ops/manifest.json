@@ -94,5 +94,6 @@
     "The implementation would exceed named scope (archive moves, cron automation, packet triage beyond mechanical migration).",
     "A legacy manifest cannot be mapped mechanically and needs a human status decision — record it, park that packet's migration, continue.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "mission": "Make `goals/` lifecycle machine-truthful: a canonical `GoalManifest` schema, a generated `goals/INDEX.md`, a `beep goals doctor` that diffs manifest claims against git evidence, and a single-writer `beep goals set-status` — all wired into `yeet verify` so packet drift blocks instead of accumulating."
 }

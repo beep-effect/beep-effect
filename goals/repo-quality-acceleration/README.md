@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `reference`
+Lifecycle: `superseded`
 
 Status: `superseded`
 

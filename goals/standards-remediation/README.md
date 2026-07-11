@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `complete` — merged 2026-07-08 via PR
+Lifecycle: `completed-retained` — merged 2026-07-08 via PR
 [#326](https://github.com/beep-effect/beep-effect/pull/326) (squash
 `705647b8d0`), all 17 required ruleset checks green.
 

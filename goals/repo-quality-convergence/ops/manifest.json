@@ -1,6 +1,5 @@
 {
   "name": "repo-quality-convergence",
-  "status": "local-proof-complete",
   "created": "2026-05-16",
   "owner": "@beep-team",
   "targetScore": 90,
@@ -36,5 +35,12 @@
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
-  }
+  },
+  "initiative": {
+    "id": "repo-quality-convergence",
+    "title": "repo-quality-convergence",
+    "status": "completed-retained"
+  },
+  "statusNote": "legacy status: local-proof-complete",
+  "mission": "Bring the repository to a defensible **9/10 repo-health score** by closing current quality blockers, adding durable release and governance guardrails, and recording the evidence needed to prove the claim."
 }

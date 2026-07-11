@@ -3,13 +3,13 @@
   "initiative": {
     "id": "repo-quality-acceleration",
     "title": "Repo Quality Acceleration",
-    "status": "superseded-reference",
+    "status": "superseded",
     "created": "2026-05-16",
     "updated": "2026-06-06",
     "packetAnchorDocument": "SPEC.md",
     "supersededBy": "goals/repo-quality-throughput"
   },
-  "lifecycle": "reference",
+  "lifecycle": "superseded",
   "executionCapable": false,
   "completionGate": {
     "operator": "yeet",
@@ -68,5 +68,6 @@
     "moving repo-operational quality ownership outside tooling",
     "committing to symbol-level docgen selectivity before feasibility proof"
   ],
-  "nextAction": "Use goals/repo-quality-throughput for active execution. Retain this packet as prior research evidence."
+  "nextAction": "Use goals/repo-quality-throughput for active execution. Retain this packet as prior research evidence.",
+  "statusNote": "legacy status: superseded-reference"
 }

@@ -50,22 +50,22 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Close",
-      "status": "completed"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

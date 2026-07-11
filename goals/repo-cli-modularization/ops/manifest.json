@@ -3,7 +3,7 @@
   "initiative": {
     "id": "repo-cli-modularization",
     "title": "@beep/repo-cli Modularization",
-    "status": "complete",
+    "status": "completed-retained",
     "created": "2026-07-07",
     "updated": "2026-07-08",
     "packetAnchorDocument": "SPEC.md"
@@ -57,61 +57,61 @@
     {
       "id": "P0",
       "name": "Packet, agents, clean tree",
-      "status": "completed",
+      "status": "complete",
       "exitCriteriaSummary": "Dirty edits landed, packet + agents committed, changeset present, test baseline recorded (fully green: 39 files / 547 tests)."
     },
     {
       "id": "P1",
       "name": "In-package shared substrate",
-      "status": "completed",
+      "status": "complete",
       "exitCriteriaSummary": "internal/process, internal/repo-run/GitExec, internal/cli extensions landed additively with unit tests, rubric JSDoc, and pilot adoptions."
     },
     {
       "id": "P2",
       "name": "Cross-package seeds and contracts",
-      "status": "completed",
+      "status": "complete",
       "exitCriteriaSummary": "repo-utils/ai-metrics extensions, ratchet engine, wire contract, gh plumbing, JSONC/env kits landed; emitted formats unchanged."
     },
     {
       "id": "P3",
       "name": "Pilot groups Files + Docgen",
-      "status": "completed",
+      "status": "complete",
       "exitCriteriaSummary": "Both groups fully role-compliant, tests migrated to facades/test-kits, playbook proven."
     },
     {
       "id": "P4",
       "name": "Quality family",
-      "status": "completed",
+      "status": "complete",
       "exitCriteriaSummary": "Tasks/Quality.command/FallowQuality re-seamed; QualityTaskStep consumers on internal/process; ratchets on the shared engine."
     },
     {
       "id": "P5",
       "name": "Lint + Laws",
-      "status": "completed",
+      "status": "complete",
       "exitCriteriaSummary": "ts-morph kit extracted; SchemaFirst and DualArity split; wire contract emitter stable."
     },
     {
       "id": "P6",
       "name": "Yeet",
-      "status": "completed",
+      "status": "complete",
       "exitCriteriaSummary": "Handler/Closeout/QualityIssueIndex split onto shared substrate with publish invariants proven by existing tests."
     },
     {
       "id": "P7",
       "name": "Metrics/data family",
-      "status": "completed",
+      "status": "complete",
       "exitCriteriaSummary": "AIMetrics/AgentEffectiveness/Corpus decomposed onto shared DuckDb/exec/wire modules."
     },
     {
       "id": "P8",
       "name": "Config-sync family",
-      "status": "completed",
+      "status": "complete",
       "exitCriteriaSummary": "TsconfigSync/CreatePackage/VersionSync/SyncDataToTs role-compliant; identity test rewritten."
     },
     {
       "id": "P9",
       "name": "Long tail + closing sweep",
-      "status": "completed",
+      "status": "complete",
       "exitCriteriaSummary": "Splits landed; JSDoc quality sweep complete; schema-primitives sweep explicitly deferred as opt-in; final main reconciliation closed stale inventory and allowlist drift; yeet verify green across build, check, knip, jsdoc, lint, docgen, tests, type-tests, integration, fallow, repo sanity, secrets, security, SAST, and Nix; reflection recorded."
     }
   ],
@@ -129,5 +129,6 @@
     "requiresMergeable": true,
     "statement": "Not achieved until the campaign branch ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --message -> monitor).",
     "grandfathered": false
-  }
+  },
+  "statusNote": "legacy status: complete"
 }

@@ -85,37 +85,37 @@
     {
       "id": "P0",
       "name": "Provisioning + skeleton",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Vertical slice (n=1)",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Corpus",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Scorer + runner hardening",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Ship harness",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Training run",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P6",
       "name": "Stretch + close",
-      "status": "completed"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

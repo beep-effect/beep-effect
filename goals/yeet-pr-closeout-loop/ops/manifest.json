@@ -9,7 +9,7 @@
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/yeet-pr-closeout-loop",
-  "lifecycle": "active",
+  "lifecycle": "superseded",
   "executionCapable": true,
   "completionGate": {
     "operator": "yeet",
