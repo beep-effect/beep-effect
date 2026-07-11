@@ -124,23 +124,13 @@ if (!shouldRunPgliteIntegration) {
             db.insert(DocumentsDbSchema.syncOperation).values(toSyncOperationInsert(duplicateOperation))
           );
 
+          // The duplicate probe stays LAST: the migration property under test
+          // is the unique index rejecting the duplicate (asserted via the
+          // violation naming it). What happens to sibling rows afterwards is
+          // driver transaction semantics — implicit-transaction pglite hosts
+          // roll the whole session chain back — so no statement may follow the
+          // intentional failure.
           expect(inspect(uniqueViolation, { depth: 10 })).toContain(
-            "documents_sync_operation_idempotency_key_unique_idx"
-          );
-
-          // Driver transaction semantics differ across pglite hosts: an
-          // implicit-transaction driver rolls the earlier insert back together
-          // with the failed duplicate, an auto-commit driver keeps it. The
-          // migration property under test is the unique index itself, so
-          // normalize the row state before asserting single-row survival.
-          yield* db.delete(DocumentsDbSchema.syncOperation);
-          yield* db.insert(DocumentsDbSchema.syncOperation).values(toSyncOperationInsert(syncOperation));
-          const survivingOperations = yield* db.select().from(DocumentsDbSchema.syncOperation);
-          expect(survivingOperations).toHaveLength(1);
-          const repeatedViolation = yield* Effect.flip(
-            db.insert(DocumentsDbSchema.syncOperation).values(toSyncOperationInsert(duplicateOperation))
-          );
-          expect(inspect(repeatedViolation, { depth: 10 })).toContain(
             "documents_sync_operation_idempotency_key_unique_idx"
           );
         }),
