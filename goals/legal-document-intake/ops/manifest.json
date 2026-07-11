@@ -5,7 +5,7 @@
     "title": "Legal Document Intake",
     "status": "active",
     "created": "2026-07-08",
-    "updated": "2026-07-09",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/legal-document-intake",
@@ -68,7 +68,7 @@
     {
       "id": "P2",
       "name": "LLM filing agent",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",

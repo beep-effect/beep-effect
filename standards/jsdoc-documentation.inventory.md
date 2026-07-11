@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-11T09:16:51.852Z
+Generated: 2026-07-11T11:33:31.442Z
 
 ## Scope
 
@@ -10,12 +10,12 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 
 | Metric | Count |
 |---|---:|
-| packages | 115 |
-| cleanPackages | 112 |
-| packagesWithoutPublicSrcSurface | 3 |
+| packages | 117 |
+| cleanPackages | 113 |
+| packagesWithoutPublicSrcSurface | 4 |
 | packagesNeedingRemediation | 0 |
-| publicModules | 1780 |
-| publicExports | 15289 |
+| publicModules | 1787 |
+| publicExports | 15348 |
 | openModules | 0 |
 | openExports | 0 |
 | missingExportExamples | 0 |
@@ -59,7 +59,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 16 | `@beep/face-detection` | `packages/drivers/face-detection` | clean | 4 | 33 | 0 | 0 |
 | 17 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | clean | 19 | 151 | 0 | 0 |
 | 18 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
-| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | clean | 141 | 860 | 0 | 0 |
+| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | clean | 142 | 864 | 0 | 0 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | clean | 4 | 11 | 0 | 0 |
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | clean | 7 | 27 | 0 | 0 |
@@ -102,14 +102,14 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 59 | `@beep/libpff` | `packages/drivers/libpff` | clean | 4 | 19 | 0 | 0 |
 | 60 | `@beep/venice-ai` | `packages/drivers/venice-ai` | clean | 3 | 35 | 0 | 0 |
 | 61 | `@beep/form` | `packages/foundation/ui-system/form` | clean | 42 | 114 | 0 | 0 |
-| 62 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 6 | 163 | 0 | 0 |
+| 62 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 6 | 180 | 0 | 0 |
 | 63 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 4 | 17 | 0 | 0 |
 | 64 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 5 | 7 | 0 | 0 |
 | 65 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | clean | 2 | 8 | 0 | 0 |
 | 66 | `@beep/box` | `packages/drivers/box` | clean | 103 | 4497 | 0 | 0 |
 | 67 | `@beep/openai-compat` | `packages/drivers/openai-compat` | clean | 4 | 54 | 0 | 0 |
 | 68 | `@beep/shacl` | `packages/drivers/shacl` | clean | 3 | 6 | 0 | 0 |
-| 69 | `@beep/documents-server` | `packages/documents/server` | clean | 6 | 11 | 0 | 0 |
+| 69 | `@beep/documents-server` | `packages/documents/server` | clean | 9 | 30 | 0 | 0 |
 | 70 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | clean | 48 | 312 | 0 | 0 |
 | 71 | `@beep/anthropic` | `packages/drivers/anthropic` | clean | 5 | 26 | 0 | 0 |
 | 72 | `@beep/professional-desktop` | `apps/professional-desktop` | clean | 32 | 64 | 0 | 0 |
@@ -125,7 +125,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 82 | `@beep/runpod` | `packages/drivers/runpod` | clean | 6 | 179 | 0 | 0 |
 | 83 | `@beep/fc-runs` | `packages/tooling/test-kit/fc-runs` | clean | 2 | 5 | 0 | 0 |
 | 84 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | clean | 63 | 677 | 0 | 0 |
-| 85 | `@beep/documents-domain` | `packages/documents/domain` | clean | 11 | 39 | 0 | 0 |
+| 85 | `@beep/documents-domain` | `packages/documents/domain` | clean | 11 | 45 | 0 | 0 |
 | 86 | `@beep/schema` | `packages/foundation/modeling/schema` | clean | 253 | 1604 | 0 | 0 |
 | 87 | `@beep/epistemic-server` | `packages/epistemic/server` | clean | 2 | 3 | 0 | 0 |
 | 88 | `@beep/rdf` | `packages/foundation/modeling/rdf` | clean | 17 | 208 | 0 | 0 |
@@ -143,18 +143,20 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 100 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | clean | 10 | 19 | 0 | 0 |
 | 101 | `@beep/m365` | `packages/drivers/m365` | clean | 6 | 74 | 0 | 0 |
 | 102 | `@beep/observability` | `packages/foundation/capability/observability` | clean | 24 | 159 | 0 | 0 |
-| 103 | `@beep/html` | `packages/foundation/modeling/html` | clean | 5 | 355 | 0 | 0 |
-| 104 | `@beep/n3` | `packages/drivers/n3` | clean | 3 | 11 | 0 | 0 |
-| 105 | `@beep/ui` | `packages/foundation/ui-system/ui` | clean | 132 | 551 | 0 | 0 |
-| 106 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | clean | 5 | 121 | 0 | 0 |
-| 107 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | clean | 25 | 139 | 0 | 0 |
-| 108 | `@beep/wink` | `packages/drivers/wink` | clean | 14 | 71 | 0 | 0 |
-| 109 | `@beep/postgres` | `packages/drivers/postgres` | clean | 7 | 36 | 0 | 0 |
-| 110 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 52 | 0 | 0 |
-| 111 | `@beep/provenance` | `packages/foundation/modeling/provenance` | clean | 2 | 5 | 0 | 0 |
-| 112 | `@beep/epistemic-tables` | `packages/epistemic/tables` | clean | 6 | 12 | 0 | 0 |
-| 113 | `@beep/federal-register` | `packages/drivers/federal-register` | clean | 1 | 1 | 0 | 0 |
-| 114 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 9 | 29 | 0 | 0 |
-| 115 | `@beep/sanity` | `packages/drivers/sanity` | clean | 4 | 16 | 0 | 0 |
+| 103 | `@beep/tsgo-shim` | `tools/tsgo-shim` | no-public-src-surface | 0 | 0 | 0 | 0 |
+| 104 | `@beep/html` | `packages/foundation/modeling/html` | clean | 5 | 355 | 0 | 0 |
+| 105 | `@beep/n3` | `packages/drivers/n3` | clean | 3 | 11 | 0 | 0 |
+| 106 | `@beep/ui` | `packages/foundation/ui-system/ui` | clean | 132 | 551 | 0 | 0 |
+| 107 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | clean | 5 | 121 | 0 | 0 |
+| 108 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | clean | 25 | 139 | 0 | 0 |
+| 109 | `@beep/wink` | `packages/drivers/wink` | clean | 14 | 71 | 0 | 0 |
+| 110 | `@beep/postgres` | `packages/drivers/postgres` | clean | 7 | 36 | 0 | 0 |
+| 111 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 52 | 0 | 0 |
+| 112 | `@beep/provenance` | `packages/foundation/modeling/provenance` | clean | 2 | 5 | 0 | 0 |
+| 113 | `@beep/epistemic-tables` | `packages/epistemic/tables` | clean | 6 | 12 | 0 | 0 |
+| 114 | `@beep/federal-register` | `packages/drivers/federal-register` | clean | 1 | 1 | 0 | 0 |
+| 115 | `@beep/doc-text` | `packages/drivers/doc-text` | clean | 3 | 11 | 0 | 0 |
+| 116 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 9 | 31 | 0 | 0 |
+| 117 | `@beep/sanity` | `packages/drivers/sanity` | clean | 4 | 16 | 0 | 0 |
 
 ## Open Findings

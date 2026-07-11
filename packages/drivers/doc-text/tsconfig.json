@@ -9,19 +9,16 @@
   },
   "references": [
     {
-      "path": "../../foundation/modeling/identity/tsconfig.json"
+      "path": "../../foundation/capability/file-processing/tsconfig.json"
     },
     {
-      "path": "../../foundation/modeling/rdf/tsconfig.json"
+      "path": "../../foundation/modeling/identity/tsconfig.json"
     },
     {
       "path": "../../foundation/modeling/schema/tsconfig.json"
     },
     {
       "path": "../../foundation/modeling/utils/tsconfig.json"
-    },
-    {
-      "path": "../../shared/domain/tsconfig.json"
     },
     {
       "path": "../../tooling/test-kit/test-utils/tsconfig.json"

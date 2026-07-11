@@ -1,15 +1,18 @@
 {
-  "name": "@beep/documents-use-cases",
+  "name": "@beep/doc-text",
   "version": "0.0.0",
-  "description": "documents use-case contract package.",
+  "description": "JS-native document text extraction driver (unpdf PDF text layer, mammoth DOCX) for the file-processing capability",
   "license": "MIT",
   "private": true,
   "type": "module",
-  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/packages/documents/use-cases",
+  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/packages/drivers/doc-text",
   "repository": {
     "type": "git",
     "url": "git@github.com:beep-effect/beep-effect.git",
-    "directory": "packages/documents/use-cases"
+    "directory": "packages/drivers/doc-text"
+  },
+  "beep": {
+    "family": "drivers"
   },
   "scripts": {
     "audit": "bun run --if-present beep:audit",
@@ -29,16 +32,12 @@
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
+    "test:property": "bun run beep:test",
     "test:integration": "bun run beep:test:integration"
   },
   "exports": {
     ".": "./src/index.ts",
-    "./public": "./src/public.ts",
-    "./server": "./src/server.ts",
-    "./aggregates/*": "./src/aggregates/*/index.ts",
-    "./aggregates/*/server": "./src/aggregates/*/server.ts",
-    "./entities/*": "./src/entities/*/index.ts",
-    "./entities/*/server": "./src/entities/*/server.ts",
+    "./*": "./src/*.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -55,27 +54,26 @@
     "provenance": true,
     "exports": {
       ".": "./dist/index.js",
-      "./public": "./dist/public.js",
-      "./server": "./dist/server.js",
-      "./aggregates/*": "./dist/aggregates/*/index.js",
-      "./aggregates/*/server": "./dist/aggregates/*/server.js",
-      "./entities/*": "./dist/entities/*/index.js",
-      "./entities/*/server": "./dist/entities/*/server.js",
+      "./*": "./dist/*.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }
   },
   "dependencies": {
-    "@beep/documents-domain": "workspace:^",
+    "@beep/file-processing": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
-    "@beep/shared-domain": "workspace:^",
-    "effect": "catalog:"
+    "@beep/utils": "workspace:^",
+    "effect": "catalog:",
+    "mammoth": "catalog:",
+    "unpdf": "catalog:"
   },
   "devDependencies": {
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
-    "bun-types": "catalog:"
+    "bun-types": "catalog:",
+    "docx": "catalog:",
+    "pdf-lib": "catalog:"
   }
 }

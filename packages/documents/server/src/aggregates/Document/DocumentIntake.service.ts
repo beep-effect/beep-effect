@@ -5,11 +5,13 @@
  * @since 0.0.0
  */
 
-import { Document, DocumentContentDigest } from "@beep/documents-domain/aggregates/Document";
+import { Document, DocumentContentDigest, FilingOutcome } from "@beep/documents-domain/aggregates/Document";
 import {
   legalDocumentTaxonomy,
   ProjectFiledDocumentPathInput,
+  ProjectInboxDocumentPathInput,
   projectFiledDocumentPath,
+  projectInboxDocumentPath,
 } from "@beep/documents-domain/values/Taxonomy";
 import * as DocumentUseCases from "@beep/documents-use-cases/server";
 import { writeFileWithinRootAtomically } from "@beep/file-processing/PathSafety";
@@ -19,6 +21,13 @@ import { bytesToHex } from "@noble/hashes/utils.js";
 import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as S from "effect/Schema";
 import { FilingDecisionHeuristicLayer } from "./FilingDecisionHeuristic.js";
+import { FilingDecisionLlmLayer } from "./FilingDecisionLlm.js";
+import {
+  FilingTextExtraction,
+  FilingTextExtractionInput,
+  FilingTextExtractionLiveLayer,
+  FilingTextExtractionNoopLayer,
+} from "./FilingTextExtraction.js";
 
 const $I = $DocumentsServerId.create("aggregates/Document/DocumentIntake.service");
 
@@ -62,13 +71,14 @@ const materializeAtomically = (
  * import * as BunPath from "@effect/platform-bun/BunPath"
  * import {
  *   FilingDecisionHeuristicLayer,
+ *   FilingTextExtractionNoopLayer,
  *   makeDocumentIntake
  * } from "@beep/documents-server/aggregates/Document"
  * import { Effect, Layer } from "effect"
  *
  * const program = makeDocumentIntake().pipe(
  *   Effect.provide(
- *     Layer.mergeAll(BunFileSystem.layer, BunPath.layer, FilingDecisionHeuristicLayer)
+ *     Layer.mergeAll(BunFileSystem.layer, BunPath.layer, FilingDecisionHeuristicLayer, FilingTextExtractionNoopLayer)
  *   ),
  *   Effect.map((service) => typeof service.intakeDroppedFile === "function")
  * )
@@ -84,25 +94,47 @@ const materializeAtomically = (
  */
 export const makeDocumentIntake = Effect.fn($I`makeDocumentIntake`)(function* () {
   const filingDecision = yield* FilingDecision;
+  const filingTextExtraction = yield* FilingTextExtraction;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
 
   return DocumentIntake.of({
     intakeDroppedFile: Effect.fn($I`intakeDroppedFile`)(function* (input) {
       const digest = contentDigest(input.content);
-      const decision = yield* filingDecision.decide({
-        contentDigest: digest,
-        originalFileName: input.originalFileName,
-      });
-      const vaultPath = yield* projectFiledDocumentPath(
-        ProjectFiledDocumentPathInput.make({
+      const textExcerpt = yield* filingTextExtraction.extract(
+        FilingTextExtractionInput.make({
+          content: input.content,
           contentDigest: digest,
-          context: input.filingContext,
           originalFileName: input.originalFileName,
-          taxonomy: legalDocumentTaxonomy,
-          taxonomyConceptId: decision.taxonomyConceptId,
         })
-      ).pipe(
+      );
+      const decision = yield* filingDecision.decide(
+        DocumentUseCases.Document.FilingDecisionInput.make({
+          contentDigest: digest,
+          originalFileName: input.originalFileName,
+          textExcerpt,
+        })
+      );
+      const vaultPath = yield* FilingOutcome.match(decision, {
+        filed: (filed) =>
+          projectFiledDocumentPath(
+            ProjectFiledDocumentPathInput.make({
+              contentDigest: digest,
+              context: input.filingContext,
+              originalFileName: input.originalFileName,
+              taxonomy: legalDocumentTaxonomy,
+              taxonomyConceptId: filed.taxonomyConceptId,
+            })
+          ),
+        inboxed: () =>
+          projectInboxDocumentPath(
+            ProjectInboxDocumentPathInput.make({
+              contentDigest: digest,
+              intakeBatchId: input.intakeBatchId,
+              originalFileName: input.originalFileName,
+            })
+          ),
+      }).pipe(
         Effect.mapError((error) =>
           DocumentUseCases.Document.DocumentMaterializationFailed.make({ reason: error.reason })
         )
@@ -110,8 +142,8 @@ export const makeDocumentIntake = Effect.fn($I`makeDocumentIntake`)(function* ()
       yield* materializeAtomically(fs, path, input.vaultRootPath, vaultPath.segments, input.content);
       return Document.make({
         contentDigest: digest,
+        filing: decision,
         originalFileName: input.originalFileName,
-        taxonomyConceptId: decision.taxonomyConceptId,
         vaultPath,
       });
     }),
@@ -146,4 +178,26 @@ export const DocumentIntakeLayer = Layer.effect(DocumentIntake, makeDocumentInta
  * @category layers
  * @since 0.0.0
  */
-export const DocumentsServerLayer = pipe(DocumentIntakeLayer, Layer.provide(FilingDecisionHeuristicLayer));
+export const DocumentsServerLayer = pipe(
+  DocumentIntakeLayer,
+  Layer.provide(Layer.merge(FilingDecisionHeuristicLayer, FilingTextExtractionNoopLayer))
+);
+
+/**
+ * Documents server layer with live LLM filing and optional file-processing extraction.
+ * The app runtime supplies its Anthropic LanguageModel and file-processing driver layers.
+ *
+ * @example
+ * ```ts
+ * import { DocumentsServerLlmLayer } from "@beep/documents-server/aggregates/Document"
+ *
+ * console.log(DocumentsServerLlmLayer)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const DocumentsServerLlmLayer = pipe(
+  DocumentIntakeLayer,
+  Layer.provide(Layer.merge(FilingDecisionLlmLayer, FilingTextExtractionLiveLayer))
+);

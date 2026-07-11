@@ -1494,6 +1494,8 @@
         "./packages/ontology/config/src/server.ts"
       ],
       "@beep/ontology-config/test": ["./packages/ontology/config/src/test.ts"],
+      "@beep/doc-text": ["./packages/drivers/doc-text/src/index.ts"],
+      "@beep/doc-text/*": ["./packages/drivers/doc-text/src/*"],
       "@beep/repo-cli/commands/Goals": [
         "./packages/tooling/tool/cli/src/commands/Goals/index.ts"
       ]
