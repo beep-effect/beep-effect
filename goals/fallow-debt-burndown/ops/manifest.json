@@ -3,13 +3,14 @@
   "initiative": {
     "id": "fallow-debt-burndown",
     "title": "Fallow Debt Burn-Down",
-    "status": "active",
+    "status": "paused",
     "created": "2026-06-11",
-    "updated": "2026-06-11",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/fallow-debt-burndown",
-  "lifecycle": "active",
+  "lifecycle": "paused",
+  "statusNote": "Parked by docs/ROADMAP.md (2026-07-11); resumes when fallow-advisory-ratchets resumes (same program).",
   "executionCapable": true,
   "completionGate": {
     "operator": "yeet",

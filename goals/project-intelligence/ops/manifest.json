@@ -3,13 +3,14 @@
   "initiative": {
     "id": "project-intelligence",
     "title": "Project Intelligence",
-    "status": "active",
+    "status": "paused",
     "created": "2026-07-11",
     "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/project-intelligence",
-  "lifecycle": "active",
+  "lifecycle": "paused",
+  "statusNote": "Parked by docs/ROADMAP.md (2026-07-11); resumes when research-on-cron delegation is worth a lane slot (earliest: post portal P5).",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

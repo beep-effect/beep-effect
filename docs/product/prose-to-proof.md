@@ -143,7 +143,7 @@ certification. (Mirrors `SPEC.md` and `runtime-data-loop.md` non-goals.)
 | **P0 — loop (done/spec)** | Runtime data loop on email fixtures | Candidate claims/tasks/draft + approval + SDK packet, deterministic |
 | **P1 — document portal (this PRD)** | Extend loop to documents; editor portal | Real matter docs → grounded candidates → approve → local proven store |
 | **P2 — librarian** | Ingest the corpus | AI librarian organizes `oppold-corpus` output into candidate claims at scale |
-| **P3 — graph & ask** | Projection + retrieval | FalkorDB projection, GraphRAG ask-and-check, cross-matter conflict checks |
+| **P3 — graph & ask** | Projection + retrieval | Graph-&-ask over the Postgres/PGlite projection (per `legal-document-intake` D6; dedicated graph DB deferred behind the port), GraphRAG ask-and-check, cross-matter conflict checks |
 | **P4 — reason & wall** | Logic family | OWL 2 EL/RL reasoner over the TBox; enforced matter walls; bitemporal store |
 | **P5 — sync & scale** | DMS completeness | Sync engine (FS ↔ Box/S3/local), Box Events → ingest |
 

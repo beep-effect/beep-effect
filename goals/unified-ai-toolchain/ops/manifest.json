@@ -3,13 +3,13 @@
   "initiative": {
     "id": "unified-ai-toolchain",
     "title": "Unified AI Toolchain",
-    "status": "active",
+    "status": "paused",
     "created": "2026-05-22",
-    "updated": "2026-06-07",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/unified-ai-toolchain",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "executionCapable": true,
   "completionGate": {
     "operator": "yeet",
@@ -252,5 +252,5 @@
     "Required source files are missing or materially contradictory."
   ],
   "nextAction": "Implement V2.1 Operator CLI in @beep/repo-cli, backed by @beep/ai-sync report and validation primitives.",
-  "statusNote": "legacy status: v2-active"
+  "statusNote": "Parked by docs/ROADMAP.md (2026-07-11); resumes when agent-config drift next causes a real incident. (previously: legacy status: v2-active)"
 }

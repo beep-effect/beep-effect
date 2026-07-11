@@ -3,11 +3,13 @@
   "initiative": {
     "id": "repo-codegraph",
     "title": "Repo Codegraph",
-    "status": "active",
+    "status": "paused",
     "created": "2026-05-20",
-    "updated": "2026-05-20",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
+  "lifecycle": "paused",
+  "statusNote": "Parked by docs/ROADMAP.md (2026-07-11); resumes when symbol-discovery friction demonstrably blocks lane work.",
   "mission": "Build a deterministic-first repo codegraph lookup and retrieval surface for coding agents.",
   "phase1": {
     "id": "deterministic-export-lookup",

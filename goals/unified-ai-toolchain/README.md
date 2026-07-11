@@ -2,7 +2,11 @@
 
 ## Status
 
-V1 complete; V2 active; V3 planned.
+Lifecycle: `paused`
+
+Source: [`ops/manifest.json`](./ops/manifest.json)
+
+V1 complete; V2 in progress at park time; V3 planned.
 
 ## Overview
 

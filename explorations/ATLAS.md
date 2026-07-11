@@ -164,14 +164,14 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Parked
 
-- [`effect-capability-kg`](./effect-capability-kg/README.md) (parked 2026-06-17) —
+- `effect-capability-kg` (parked 2026-06-17; packet removed 2026-06-18) —
   tooling-first deterministic Effect v4 capability graph (JSDoc-derived ontology,
-  specialist profiles, judge routing, advisory hook backpressure). Seed goal
-  [`effect-capability-kg-seed`](../goals/effect-capability-kg-seed/README.md) shipped
-  (`completed-retained`); later router/CLI/hook/ratchet candidates deferred. Parked as a
-  dev-tooling track that is not the current product focus — see its `DECISIONS.md` and
-  `standards/memory-architecture/04-decision-log.md` (2026-06-17). Resume on an explicit
-  decision to invest in agent capability guidance.
+  specialist profiles, judge routing, advisory hook backpressure). The exploration
+  directory and its `effect-capability-kg-seed` goal packet were deleted in commit
+  `8852619f04` (`chore: remove repo-exports catalog + Reuse + effect-capability-kg`),
+  so no packet artifacts remain in-tree; history lives in git and in
+  `standards/memory-architecture/04-decision-log.md` (2026-06-17). Resume on an
+  explicit decision to invest in agent capability guidance, as a fresh packet.
 
 ### Graduated
 
