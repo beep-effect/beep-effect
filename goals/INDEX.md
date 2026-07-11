@@ -15,7 +15,7 @@ drifts from the manifests, and merge conflicts are resolved by regenerating.
 | [codex-security-findings-2026-07-08](./codex-security-findings-2026-07-08/README.md) | Codex Security Findings (2026-07-08) | 8/10 | 2026-07-11 | Capture, triage, remediate, and close every open Codex Cloud security finding for `beep-effect` in one PR on `security/… |
 | [file-processing-capability](./file-processing-capability/README.md) | File Processing Capability | 3/7 | 2026-06-18 | Define and implement a product-neutral schema-first file processing capability with driver-backed extraction and repo C… |
 | [gov-legal-data-driver-codegen](./gov-legal-data-driver-codegen/README.md) | Gov/Legal Data Driver Codegen | 3/4 | 2026-07-11 | — |
-| [legal-document-intake](./legal-document-intake/README.md) | Legal Document Intake | 3/8 | 2026-07-11 | — |
+| [legal-document-intake](./legal-document-intake/README.md) | Legal Document Intake | 4/8 | 2026-07-11 | — |
 | [semantic-foundation](./semantic-foundation/README.md) | Semantic Foundation | 0/6 | 2026-07-08 | — |
 
 ## Paused (22)
