@@ -239,11 +239,11 @@ const echoClassForOperation = (operationType: DomainSyncOperation.SyncOperationT
 const echoClassForEvent = (eventType: DmsEventType): O.Option<EchoClass> =>
   DmsEventType.$match(eventType, {
     created: () => O.some<EchoClass>("content"),
-    deleted: () => O.none<EchoClass>(),
+    deleted: O.none<EchoClass>,
     edited: () => O.some<EchoClass>("content"),
     moved: () => O.some<EchoClass>("moved"),
     renamed: () => O.some<EchoClass>("renamed"),
-    unknown: () => O.none<EchoClass>(),
+    unknown: O.none<EchoClass>,
   });
 
 /**
@@ -974,7 +974,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
         A.filter((item) => SyncItemKind.is.folder(item.itemKind)),
         A.flatMap((item) =>
           O.match(item.remoteId, {
-            onNone: () => A.empty<readonly [RemoteItemId, boolean]>(),
+            onNone: A.empty<readonly [RemoteItemId, boolean]>,
             onSome: (remoteId) => [[remoteId, true] as const],
           })
         )

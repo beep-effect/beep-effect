@@ -26,9 +26,8 @@ import { $DocumentsServerId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import { Context, Effect, HashMap, Layer, pipe, Ref } from "effect";
+import { Context, Effect, HashMap, Layer, Number as N, pipe, Ref } from "effect";
 import * as A from "effect/Array";
-import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -521,14 +520,7 @@ export const makeDmsMirrorFixture = Effect.fn($I`makeDmsMirrorFixture`)(function
     }),
     failNext: Effect.fn($I`fixtureFailNext`)(function* (verb: DmsMirrorFixtureVerb, retryable: boolean) {
       yield* Ref.update(failuresRef, (failures) =>
-        HashMap.set(
-          failures,
-          verb,
-          A.append(
-            O.getOrElse(HashMap.get(failures, verb), () => A.empty<boolean>()),
-            retryable
-          )
-        )
+        HashMap.set(failures, verb, A.append(O.getOrElse(HashMap.get(failures, verb), A.empty<boolean>), retryable))
       );
     }),
     injectRemoteEvent: Effect.fn($I`fixtureInjectRemoteEvent`)(function* (event: DmsRemoteEvent) {

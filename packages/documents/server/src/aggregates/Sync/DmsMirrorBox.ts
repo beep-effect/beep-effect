@@ -576,10 +576,7 @@ export const makeDmsMirrorBox = Effect.fn($I`makeDmsMirrorBox`)(function* () {
       })
       .pipe(Effect.mapError(boxUnavailable));
     const nextStreamPosition = yield* decodeStreamPosition(page.nextStreamPosition).pipe(orResponseMappingFailure);
-    const entries = pipe(
-      O.fromUndefinedOr(page.entries),
-      O.getOrElse(() => A.empty<BoxEventModel>())
-    );
+    const entries = pipe(O.fromUndefinedOr(page.entries), O.getOrElse(A.empty<BoxEventModel>));
     const events = yield* Effect.forEach(entries, remoteEventFromEntry);
 
     return DmsEventPage.make({ entries: A.getSomes(events), nextStreamPosition });
