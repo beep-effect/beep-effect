@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "initiative-manifest/v1",
+  "initiative": {
+    "id": "trademark-docketing-domain",
+    "title": "Trademark Docketing Domain",
+    "status": "deferred/blocked",
+    "created": "2026-07-08",
+    "updated": "2026-07-08",
+    "packetAnchorDocument": "README.md"
+  },
+  "packetPath": "goals/trademark-docketing-domain",
+  "lifecycle": "paused",
+  "executionCapable": false,
+  "reflectionRequired": false,
+  "nonExecutableRationale": "Deferred stub only. Blocks on goals/semantic-foundation M3 vocabulary contracts; no GOAL.md until unblocked.",
+  "mission": "Define law-practice slice domain entities for trademark practice: TrademarkAsset, docketing obligations, and Nice classification attachment.",
+  "provenance": {
+    "exploration": "explorations/legal-ontology-landscape",
+    "stubCreated": "2026-07-08",
+    "links": [
+      "explorations/legal-ontology-landscape/DECISIONS.md",
+      "explorations/legal-ontology-landscape/MAP.md",
+      "explorations/legal-ontology-landscape/research/01-direction-grounding.md"
+    ],
+    "notes": [
+      "DECISIONS.md records the 2026-07-08 slice-split decision.",
+      "01-direction-grounding.md CQs 8 and 9 define trademark docketing obligations and Nice classification attachment."
+    ]
+  },
+  "blockingDependencies": [
+    {
+      "id": "semantic-foundation",
+      "path": "goals/semantic-foundation",
+      "gate": "M3",
+      "requiredContracts": [
+        "docketing/deadline vocabulary",
+        "party-role vocabulary",
+        "enduring party identity separated from time-bounded legal roles"
+      ]
+    }
+  ],
+  "deferredScope": [
+    "TrademarkAsset",
+    "application, office-action, statement-of-use, opposition, section 8-9-15, and renewal docketing obligations",
+    "Nice classification attachment"
+  ],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/README.md",
+    "goals/trademark-docketing-domain/README.md",
+    "goals/trademark-docketing-domain/ops/manifest.json",
+    "goals/semantic-foundation/SPEC.md",
+    "explorations/legal-ontology-landscape/DECISIONS.md",
+    "explorations/legal-ontology-landscape/research/01-direction-grounding.md"
+  ],
+  "researchReports": [
+    "../../explorations/legal-ontology-landscape/research/01-direction-grounding.md"
+  ],
+  "agentLaunchers": [],
+  "phases": [
+    {
+      "id": "S0",
+      "name": "Deferred Stub",
+      "status": "blocked",
+      "exitCriteria": "goals/semantic-foundation M3 vocabulary contracts are stable and this packet is expanded into an execution-capable goal."
+    }
+  ],
+  "verificationCommands": [
+    "jq . goals/trademark-docketing-domain/ops/manifest.json",
+    "rg -n \"trademark-docketing-domain|executionCapable|semantic-foundation|CQs 8|CQs 9|Nice\" goals/trademark-docketing-domain explorations/legal-ontology-landscape/MAP.md",
+    "git diff --check -- goals/trademark-docketing-domain explorations/legal-ontology-landscape/MAP.md"
+  ],
+  "stopConditions": [
+    "semantic-foundation M3 vocabulary contracts are missing or unstable.",
+    "The work starts implementing TrademarkAsset or docketing entities before the blocker clears.",
+    "The packet needs law-practice source changes before it has an execution-capable SPEC.md.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval."
+  ]
+}

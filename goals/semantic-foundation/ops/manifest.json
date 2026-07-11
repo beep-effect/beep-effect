@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "initiative-manifest/v1",
+  "initiative": {
+    "id": "semantic-foundation",
+    "title": "Semantic Foundation",
+    "status": "active",
+    "created": "2026-07-08",
+    "updated": "2026-07-08",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/semantic-foundation",
+  "lifecycle": "active",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/legal-ontology-landscape",
+    "graduated": "2026-07-08",
+    "links": [
+      "explorations/legal-ontology-landscape/DECISIONS.md",
+      "explorations/legal-ontology-landscape/BRIEF.md",
+      "explorations/legal-ontology-landscape/MAP.md",
+      "explorations/legal-ontology-landscape/research/"
+    ]
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/semantic-foundation/README.md",
+    "goals/semantic-foundation/SPEC.md",
+    "goals/semantic-foundation/PLAN.md",
+    "goals/semantic-foundation/GOAL.md",
+    "goals/semantic-foundation/research/README.md",
+    "explorations/legal-ontology-landscape/DECISIONS.md",
+    "explorations/legal-ontology-landscape/BRIEF.md",
+    "explorations/legal-ontology-landscape/MAP.md"
+  ],
+  "researchReports": [
+    "../../explorations/legal-ontology-landscape/research/README.md",
+    "../../explorations/legal-ontology-landscape/research/01-direction-grounding.md",
+    "../../explorations/legal-ontology-landscape/research/"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/semantic-foundation/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "M1",
+      "name": "Intake-Serving Semantic Seed",
+      "status": "pending"
+    },
+    {
+      "id": "M2",
+      "name": "Classification Schemes",
+      "status": "gated"
+    },
+    {
+      "id": "M3",
+      "name": "Docketing and Party Roles",
+      "status": "gated"
+    },
+    {
+      "id": "M4",
+      "name": "ClaimGate Shapes",
+      "status": "gated"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/semantic-foundation/GOAL.md)\" -le 4000",
+    "jq . goals/semantic-foundation/ops/manifest.json",
+    "rg -n \"semantic-foundation|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/semantic-foundation",
+    "git diff --check -- goals/semantic-foundation explorations/legal-ontology-landscape explorations/ATLAS.md",
+    "bun run beep yeet verify",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed M1 or pull M2-M4 work forward without the named gate.",
+    "The work requires editing goals/ip-law-knowledge-graph, law-practice domain entities, document-intake workflow code, graph-store wiring, or SPARQL engine wiring.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
