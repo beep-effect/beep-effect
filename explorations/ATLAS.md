@@ -39,15 +39,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 ## Explorations
 
 ### Active
-- [`ontology-agent-surface`](./ontology-agent-surface/README.md) — agent/MCP
-  tool surface for the ontology workbench (stage `shape`): the named
-  follow-up from [`goals/ontology-workbench`](../goals/ontology-workbench/README.md)
-  (completed-retained). Thin-adapter thesis over the SPEC 13-16 agent-ready
-  plumbing (partitioned session graphs, schema-typed protocol, real batch
-  deltas, query safeguards), folding in the retrospective's hardening pre-work
-  (repair-strategy registry, ROBOT validation, base-prefix codec fidelity) and
-  architecture consolidations (single partition-ingestion pipeline, worker-safe
-  entrypoint convention, shared action-state helper).
 - [`atlas-synthesis`](./atlas-synthesis/README.md) — grounding/context packet
   (stage `research`): a maximal-fan-out synthesis of current repo state vs.
   goals/vision, centered on a gap map
@@ -176,6 +167,14 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`ontology-agent-surface`](./ontology-agent-surface/README.md) — graduated
+  2026-07-11 into
+  [`ontology-agent-surface`](../goals/ontology-agent-surface/README.md): a
+  curated ontology MCP toolkit on the professional-desktop sidecar, stateless
+  over saved Turtle files with fingerprint CAS and guarded by authenticated
+  streamable HTTP, TierGate, per-change attribution, and static budgets. First
+  live slice: `capability-metadata` + `sparql-query` from an actual MCP client;
+  P0 folds in verified-repair, base-prefix, and ROBOT hardening.
 - [`skillopt-training-pilot`](./skillopt-training-pilot/README.md) — graduated
   2026-07-06 (same-day compressed ceremony; BRIEF signed off) into
   [`skillopt-training-pilot`](../goals/skillopt-training-pilot/README.md):
