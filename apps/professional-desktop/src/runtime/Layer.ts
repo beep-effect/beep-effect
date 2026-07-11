@@ -30,7 +30,15 @@
 
 import { AnthropicTurnKernel } from "@beep/agents-server/AnthropicTurnKernel";
 import { FixtureTurnKernel } from "@beep/agents-use-cases/proof";
-import { DocumentsServerLive } from "@beep/documents-server/layer";
+import { AnthropicLanguageModelOptions, AnthropicLive, makeAnthropicLanguageModelLayer } from "@beep/anthropic";
+import { DocTextFileProcessingEngine } from "@beep/doc-text";
+import {
+  FILING_DECISION_DEFAULT_MODEL,
+  FILING_DECISION_MODEL_ENV,
+  FilingDecisionLlmConfigLayer,
+} from "@beep/documents-server/aggregates/Document";
+import { DocumentsServerLive, DocumentsServerLlmLive } from "@beep/documents-server/layer";
+import { makeFileProcessingServiceLayer } from "@beep/file-processing/Service";
 import { OntologyServerLive } from "@beep/ontology-server/layer";
 import { Thread, Workspace } from "@beep/workspace-server";
 import { BunServices } from "@effect/platform-bun";
@@ -122,6 +130,36 @@ const TurnKernelLive: Layer.Layer<AgentTurnKernel> = Layer.unwrap(
 );
 
 /**
+ * Select the documents filing layer from the same `CHAT_AGENT` env flag.
+ * `anthropic` (default) composes the live LLM FilingDecision (model from
+ * `DOCUMENTS_FILING_MODEL`) with doc-text extraction (unpdf PDF text layer +
+ * mammoth DOCX) behind the file-processing capability; `fixture` keeps the
+ * deterministic keyless heuristic + no-op extraction (D8-S1 fixture mode).
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+const DocumentsFilingLive = Layer.unwrap(
+  Effect.gen(function* () {
+    const agent = yield* Config.literals(["anthropic", "fixture"], "CHAT_AGENT").pipe(
+      Config.withDefault("anthropic" as const)
+    );
+    if (agent === "fixture") {
+      return DocumentsServerLive;
+    }
+    const model = yield* Config.nonEmptyString(FILING_DECISION_MODEL_ENV).pipe(
+      Config.withDefault(FILING_DECISION_DEFAULT_MODEL)
+    );
+    return DocumentsServerLlmLive.pipe(
+      Layer.provide(FilingDecisionLlmConfigLayer),
+      Layer.provide(makeAnthropicLanguageModelLayer(AnthropicLanguageModelOptions.make({ model }))),
+      Layer.provide(AnthropicLive),
+      Layer.provide(makeFileProcessingServiceLayer([DocTextFileProcessingEngine]))
+    );
+  }).pipe(Effect.orDie)
+);
+
+/**
  * App-local live runtime Layer for chat and ontology sidecar handlers.
  *
  * @example
@@ -140,7 +178,7 @@ export const RuntimeLive: DesktopHandlersLayer = DesktopHandlersLive.pipe(
     Thread.ThreadStoreDrizzleLayer,
     Workspace.WorkspaceVaultStoreDrizzleLayer,
     UsageRecordSinkDrizzle,
-    DocumentsServerLive,
+    DocumentsFilingLive,
     OntologyServerLive,
   ]),
   Layer.provide(PgliteDrizzleLive),

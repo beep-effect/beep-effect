@@ -138,7 +138,13 @@
       "path": "../../packages/documents/use-cases/tsconfig.json"
     },
     {
+      "path": "../../packages/drivers/anthropic/tsconfig.json"
+    },
+    {
       "path": "../../packages/drivers/cosmos/tsconfig.json"
+    },
+    {
+      "path": "../../packages/drivers/doc-text/tsconfig.json"
     },
     {
       "path": "../../packages/drivers/pglite/tsconfig.json"
@@ -151,6 +157,9 @@
     },
     {
       "path": "../../packages/epistemic/tables/tsconfig.json"
+    },
+    {
+      "path": "../../packages/foundation/capability/file-processing/tsconfig.json"
     },
     {
       "path": "../../packages/foundation/modeling/identity/tsconfig.json"
@@ -205,9 +214,6 @@
     },
     {
       "path": "../../packages/drivers/oxigraph/tsconfig.json"
-    },
-    {
-      "path": "../../packages/drivers/anthropic/tsconfig.json"
     }
   ]
 }
