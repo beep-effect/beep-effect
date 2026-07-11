@@ -28,12 +28,32 @@ import { decodeGoalManifest, GoalStatus, isGoalStatus } from "./Goals.schemas.js
 import { listGoalPackets, parseGoalManifestText, rewriteReadmeLifecycleToken } from "./Inventory.js";
 import { planGoalPacketMigration } from "./Migration.js";
 import { PORTFOLIO_INDEX_PATH, writePortfolioIndex } from "./PortfolioIndex.js";
+import type { GoalPacketRecord } from "./Inventory.js";
+import type { GoalPacketMigration } from "./Migration.js";
 
 const STATUS_DOMAIN = A.join(GoalStatus.Options, " | ");
 
+const applyMigrationPlan = Effect.fn("Goals.applyMigrationPlan")(function* (
+  record: GoalPacketRecord,
+  plan: GoalPacketMigration,
+  write: boolean
+) {
+  for (const edit of plan.edits) {
+    yield* Console.log(`[goals:migrate] ${plan.slug}: ${edit}`);
+  }
+  if (write && plan.manifestText !== undefined) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    yield* fs.makeDirectory(path.dirname(record.manifestPath), { recursive: true });
+    yield* fs.writeFileString(record.manifestPath, plan.manifestText);
+  }
+  if (write && plan.readmeText !== undefined) {
+    const fs = yield* FileSystem.FileSystem;
+    yield* fs.writeFileString(record.readmePath, plan.readmeText);
+  }
+});
+
 const runGoalsMigration = Effect.fn("Goals.runGoalsMigration")(function* (options: { readonly write: boolean }) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const records = yield* listGoalPackets();
 
   let changedManifests = 0;
@@ -48,26 +68,17 @@ const runGoalsMigration = Effect.fn("Goals.runGoalsMigration")(function* (option
       yield* Console.error(`[goals:migrate] PARKED ${plan.slug}: ${plan.parked}`);
       continue;
     }
-    for (const edit of plan.edits) {
-      yield* Console.log(`[goals:migrate] ${plan.slug}: ${edit}`);
-    }
     if (plan.manifestText !== undefined) {
       if (plan.isBackfill === true) {
         backfills += 1;
       } else {
         changedManifests += 1;
       }
-      if (options.write) {
-        yield* fs.makeDirectory(path.dirname(record.manifestPath), { recursive: true });
-        yield* fs.writeFileString(record.manifestPath, plan.manifestText);
-      }
     }
     if (plan.readmeText !== undefined) {
       changedReadmes += 1;
-      if (options.write) {
-        yield* fs.writeFileString(record.readmePath, plan.readmeText);
-      }
     }
+    yield* applyMigrationPlan(record, plan, options.write);
   }
 
   const mode = options.write ? "applied" : "planned (dry-run; rerun with --write to apply)";

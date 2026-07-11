@@ -344,6 +344,145 @@ const slugFromPacketPath = (packetPath: string): string =>
     O.getOrElse(() => packetPath)
   );
 
+type ManifestEdit = (path: ReadonlyArray<string | number>, value: unknown, description: string) => void;
+
+const planBackfill = (record: GoalPacketRecord, readmeText: O.Option<string>): GoalPacketMigration =>
+  pipe(
+    backfillFor(record.slug),
+    O.match({
+      onNone: () => parkedPlan(record.slug, "manifest missing and no recorded backfill decision in the P0 census"),
+      onSome: (backfill) =>
+        GoalPacketMigration.make({
+          slug: record.slug,
+          edits: [`backfill v2 manifest (status ${backfill.status})`],
+          manifestText: buildBackfillManifestText(backfill, readmeText),
+          isBackfill: true,
+        }),
+    })
+  );
+
+const planInitiativeStatusEdit = (input: {
+  readonly record: GoalPacketRecord;
+  readonly manifest: Readonly<Record<string, unknown>>;
+  readonly readmeText: O.Option<string>;
+  readonly canonical: GoalStatus;
+  readonly edit: ManifestEdit;
+}): void => {
+  const initiative = recordField(input.manifest, "initiative");
+  const initiativeStatus = O.flatMap(initiative, (block) => stringField(block, "status"));
+  const bareStatus = stringField(input.manifest, "status");
+
+  if (O.isNone(initiative)) {
+    const title = pipe(
+      stringField(input.manifest, "title"),
+      O.orElse(() => stringField(input.manifest, "name")),
+      O.orElse(() => O.flatMap(input.readmeText, readmeTitle)),
+      O.getOrElse(() => input.record.slug)
+    );
+    input.edit(
+      ["initiative"],
+      { id: input.record.slug, title, status: input.canonical },
+      `create initiative block (status ${input.canonical})`
+    );
+  } else if (O.isNone(initiativeStatus)) {
+    input.edit(["initiative", "status"], input.canonical, `set initiative.status ${input.canonical}`);
+  } else if (initiativeStatus.value !== input.canonical) {
+    input.edit(
+      ["initiative", "status"],
+      input.canonical,
+      `initiative.status ${initiativeStatus.value} -> ${input.canonical}`
+    );
+  }
+
+  const movedFromBareStatus = O.isNone(initiative) || O.isNone(initiativeStatus);
+  if (movedFromBareStatus && O.isSome(bareStatus)) {
+    input.edit(["status"], undefined, "remove bare top-level status");
+  }
+};
+
+const planStatusEdits = (input: {
+  readonly record: GoalPacketRecord;
+  readonly manifest: Readonly<Record<string, unknown>>;
+  readonly readmeText: O.Option<string>;
+  readonly rawStatus: string;
+  readonly canonical: GoalStatus;
+  readonly edit: ManifestEdit;
+}): void => {
+  planInitiativeStatusEdit(input);
+
+  if (input.rawStatus !== input.canonical && O.isNone(stringField(input.manifest, "statusNote"))) {
+    input.edit(["statusNote"], `legacy status: ${input.rawStatus}`, "record legacy token in statusNote");
+  }
+
+  const lifecycle = stringField(input.manifest, "lifecycle");
+  if (O.isSome(lifecycle) && lifecycle.value !== input.canonical) {
+    input.edit(["lifecycle"], input.canonical, `lifecycle ${lifecycle.value} -> ${input.canonical}`);
+  }
+};
+
+const planSupersededByEdits = (manifest: Readonly<Record<string, unknown>>, edit: ManifestEdit): void => {
+  const supersededBy = recordField(manifest, "supersededBy");
+  if (O.isNone(supersededBy)) {
+    return;
+  }
+  const packetSlug = pipe(
+    stringField(supersededBy.value, "packet"),
+    O.map(slugFromPacketPath),
+    O.getOrElse(() => JSON.stringify(supersededBy.value))
+  );
+  edit(["supersededBy"], packetSlug, `normalize object supersededBy -> "${packetSlug}"`);
+  if (O.isSome(stringField(manifest, "supersededNote"))) {
+    return;
+  }
+  const scope = stringField(supersededBy.value, "scope");
+  const date = stringField(supersededBy.value, "date");
+  const note = O.map(scope, (scopeText) =>
+    pipe(
+      date,
+      O.match({
+        onNone: () => scopeText,
+        onSome: (dateText) => `${scopeText} (${dateText})`,
+      })
+    )
+  );
+  if (O.isSome(note)) {
+    edit(["supersededNote"], note.value, "record supersededBy scope in supersededNote");
+  }
+};
+
+const planPhaseEntryEdit = (
+  entry: Readonly<Record<string, unknown>>,
+  path: ReadonlyArray<string | number>,
+  label: string,
+  edit: ManifestEdit
+): void => {
+  const status = stringField(entry, "status");
+  const mapped = O.flatMap(status, migrateGoalPhaseStatusToken);
+  if (O.isSome(status) && O.isSome(mapped) && mapped.value !== status.value) {
+    edit(path, mapped.value, `${label}.status ${status.value} -> ${mapped.value}`);
+  }
+};
+
+const planPhaseEdits = (manifest: Readonly<Record<string, unknown>>, edit: ManifestEdit): void => {
+  const phases = R.get(manifest, "phases");
+  if (O.isSome(phases) && A.isArray(phases.value)) {
+    phases.value.forEach((entry: unknown, index: number) => {
+      if (isJsonRecord(entry)) {
+        planPhaseEntryEdit(entry, ["phases", index, "status"], `phases[${index}]`, edit);
+      }
+    });
+    return;
+  }
+  if (O.isSome(phases) && isJsonRecord(phases.value)) {
+    for (const key of R.keys(phases.value)) {
+      const entry = recordField(phases.value, key);
+      if (O.isSome(entry)) {
+        planPhaseEntryEdit(entry.value, ["phases", key, "status"], `phases.${key}`, edit);
+      }
+    }
+  }
+};
+
 /**
  * Plan the mechanical migration for one scanned packet.
  *
@@ -376,19 +515,7 @@ export const planGoalPacketMigration = (record: GoalPacketRecord): GoalPacketMig
   const readmeText = O.fromUndefinedOr(record.readmeText);
 
   if (record.manifestText === undefined) {
-    return pipe(
-      backfillFor(record.slug),
-      O.match({
-        onNone: () => parkedPlan(record.slug, "manifest missing and no recorded backfill decision in the P0 census"),
-        onSome: (backfill) =>
-          GoalPacketMigration.make({
-            slug: record.slug,
-            edits: [`backfill v2 manifest (status ${backfill.status})`],
-            manifestText: buildBackfillManifestText(backfill, readmeText),
-            isBackfill: true,
-          }),
-      })
-    );
+    return planBackfill(record, readmeText);
   }
 
   const originalText = record.manifestText;
@@ -397,11 +524,11 @@ export const planGoalPacketMigration = (record: GoalPacketRecord): GoalPacketMig
     return parkedPlan(record.slug, "manifest does not parse as JSON");
   }
   const manifest = parsed.value as Readonly<Record<string, unknown>>;
-  const initiative = recordField(manifest, "initiative");
-  const initiativeStatus = O.flatMap(initiative, (block) => stringField(block, "status"));
-  const bareStatus = stringField(manifest, "status");
-  const rawStatus = O.orElse(initiativeStatus, () => bareStatus);
-
+  const rawStatus = pipe(
+    recordField(manifest, "initiative"),
+    O.flatMap((block) => stringField(block, "status")),
+    O.orElse(() => stringField(manifest, "status"))
+  );
   if (O.isNone(rawStatus)) {
     return parkedPlan(record.slug, "no status token found on initiative.status or top-level status");
   }
@@ -412,111 +539,19 @@ export const planGoalPacketMigration = (record: GoalPacketRecord): GoalPacketMig
 
   let text = originalText;
   let edits = A.empty<string>();
-  const applyEdit = (path: ReadonlyArray<string | number>, value: unknown, description: string): void => {
+  const edit: ManifestEdit = (path, value, description) => {
     text = applyJsoncModification({ content: text, path, value });
     edits = A.append(edits, description);
   };
 
-  if (O.isNone(initiative)) {
-    const title = pipe(
-      stringField(manifest, "title"),
-      O.orElse(() => stringField(manifest, "name")),
-      O.orElse(() => O.flatMap(readmeText, readmeTitle)),
-      O.getOrElse(() => record.slug)
-    );
-    applyEdit(
-      ["initiative"],
-      { id: record.slug, title, status: canonical.value },
-      `create initiative block (status ${canonical.value})`
-    );
-    if (O.isSome(bareStatus)) {
-      applyEdit(["status"], undefined, "remove bare top-level status");
-    }
-  } else if (O.isNone(initiativeStatus)) {
-    applyEdit(["initiative", "status"], canonical.value, `set initiative.status ${canonical.value}`);
-    if (O.isSome(bareStatus)) {
-      applyEdit(["status"], undefined, "remove bare top-level status");
-    }
-  } else if (initiativeStatus.value !== canonical.value) {
-    applyEdit(
-      ["initiative", "status"],
-      canonical.value,
-      `initiative.status ${initiativeStatus.value} -> ${canonical.value}`
-    );
-  }
-
-  if (rawStatus.value !== canonical.value && O.isNone(stringField(manifest, "statusNote"))) {
-    applyEdit(["statusNote"], `legacy status: ${rawStatus.value}`, "record legacy token in statusNote");
-  }
-
-  const lifecycle = stringField(manifest, "lifecycle");
-  if (O.isSome(lifecycle) && lifecycle.value !== canonical.value) {
-    applyEdit(["lifecycle"], canonical.value, `lifecycle ${lifecycle.value} -> ${canonical.value}`);
-  }
-
-  const supersededBy = recordField(manifest, "supersededBy");
-  if (O.isSome(supersededBy)) {
-    const packetSlug = pipe(
-      stringField(supersededBy.value, "packet"),
-      O.map(slugFromPacketPath),
-      O.getOrElse(() => JSON.stringify(supersededBy.value))
-    );
-    applyEdit(["supersededBy"], packetSlug, `normalize object supersededBy -> "${packetSlug}"`);
-    if (O.isNone(stringField(manifest, "supersededNote"))) {
-      const scope = stringField(supersededBy.value, "scope");
-      const date = stringField(supersededBy.value, "date");
-      const note = pipe(
-        scope,
-        O.map((scopeText) =>
-          pipe(
-            date,
-            O.match({
-              onNone: () => scopeText,
-              onSome: (dateText) => `${scopeText} (${dateText})`,
-            })
-          )
-        )
-      );
-      if (O.isSome(note)) {
-        applyEdit(["supersededNote"], note.value, "record supersededBy scope in supersededNote");
-      }
-    }
-  }
-
-  const phases = R.get(manifest, "phases");
-  if (O.isSome(phases) && A.isArray(phases.value)) {
-    phases.value.forEach((entry: unknown, index: number) => {
-      if (!isJsonRecord(entry)) {
-        return;
-      }
-      const status = stringField(entry, "status");
-      const mapped = O.flatMap(status, migrateGoalPhaseStatusToken);
-      if (O.isSome(status) && O.isSome(mapped) && mapped.value !== status.value) {
-        applyEdit(
-          ["phases", index, "status"],
-          mapped.value,
-          `phases[${index}].status ${status.value} -> ${mapped.value}`
-        );
-      }
-    });
-  } else if (O.isSome(phases) && isJsonRecord(phases.value)) {
-    for (const key of R.keys(phases.value)) {
-      const entry = recordField(phases.value, key);
-      if (O.isNone(entry)) {
-        continue;
-      }
-      const status = stringField(entry.value, "status");
-      const mapped = O.flatMap(status, migrateGoalPhaseStatusToken);
-      if (O.isSome(status) && O.isSome(mapped) && mapped.value !== status.value) {
-        applyEdit(["phases", key, "status"], mapped.value, `phases.${key}.status ${status.value} -> ${mapped.value}`);
-      }
-    }
-  }
+  planStatusEdits({ record, manifest, readmeText, rawStatus: rawStatus.value, canonical: canonical.value, edit });
+  planSupersededByEdits(manifest, edit);
+  planPhaseEdits(manifest, edit);
 
   if (O.isNone(R.get(manifest, "mission"))) {
     const mission = O.flatMap(readmeText, readmeMissionLine);
     if (O.isSome(mission)) {
-      applyEdit(["mission"], mission.value, "backfill one-line mission from README");
+      edit(["mission"], mission.value, "backfill one-line mission from README");
     }
   }
 

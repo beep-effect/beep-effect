@@ -18,7 +18,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { A, O, pipe, Str, thunkEmptyStr } from "@beep/utils";
+import { A, O, pipe, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import { Console, Effect, FileSystem, HashSet, Order, Path, SchemaGetter } from "effect";
 import { flow } from "effect/Function";
 import * as P from "effect/Predicate";
@@ -271,79 +271,45 @@ const hasSupersessionPointer = (raw: Readonly<Record<string, unknown>>): boolean
   return topLevel || nested;
 };
 
-const packetFindings = Effect.fn("Goals.packetFindings")(function* (record: GoalPacketRecord) {
+const reflectionArtifactFindings = Effect.fn("Goals.reflectionArtifactFindings")(function* (record: GoalPacketRecord) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  // Reflection frontmatter must decode in ANY packet (the PR #365 YAML traps
+  // hid in the completed-only gap).
+  const reflectionsDir = path.join(record.packetPath, "history", "reflections");
+  const reflectionsDirExists = yield* fs.exists(reflectionsDir).pipe(Effect.orElseSucceed(thunkFalse));
+  if (!reflectionsDirExists) {
+    return A.empty<GoalDoctorFinding>();
+  }
+  let findings = A.empty<GoalDoctorFinding>();
+  const files = yield* fs.readDirectory(reflectionsDir).pipe(Effect.orElseSucceed(A.empty<string>));
+  for (const file of A.sort(A.filter(files, reflectionFileNameIsArtifact), Order.String)) {
+    const raw = yield* fs.readFileString(path.join(reflectionsDir, file)).pipe(Effect.orElseSucceed(thunkEmptyStr));
+    const valid = yield* reflectionFrontmatterIsValid(raw);
+    if (!valid) {
+      findings = A.append(
+        findings,
+        finding(
+          record.slug,
+          "reflection-frontmatter-invalid",
+          "blocking",
+          `history/reflections/${file} has missing or invalid ReflectionFrontmatter.`,
+          file
+        )
+      );
+    }
+  }
+  return findings;
+});
+
+const statusConsistencyFindings = (
+  record: GoalPacketRecord,
+  manifest: GoalManifest
+): ReadonlyArray<GoalDoctorFinding> => {
   let findings = A.empty<GoalDoctorFinding>();
   const push = (item: GoalDoctorFinding): void => {
     findings = A.append(findings, item);
   };
-
-  // Reflection frontmatter must decode in ANY packet (the PR #365 YAML traps
-  // hid in the completed-only gap).
-  const reflectionsDir = path.join(record.packetPath, "history", "reflections");
-  const reflectionsDirExists = yield* fs.exists(reflectionsDir).pipe(Effect.orElseSucceed(() => false));
-  if (reflectionsDirExists) {
-    const files = yield* fs.readDirectory(reflectionsDir).pipe(Effect.orElseSucceed(A.empty<string>));
-    for (const file of A.sort(A.filter(files, reflectionFileNameIsArtifact), Order.String)) {
-      const raw = yield* fs.readFileString(path.join(reflectionsDir, file)).pipe(Effect.orElseSucceed(thunkEmptyStr));
-      const valid = yield* reflectionFrontmatterIsValid(raw);
-      if (!valid) {
-        push(
-          finding(
-            record.slug,
-            "reflection-frontmatter-invalid",
-            "blocking",
-            `history/reflections/${file} has missing or invalid ReflectionFrontmatter.`,
-            file
-          )
-        );
-      }
-    }
-  }
-
-  if (record.goalMdChars !== undefined && record.goalMdChars > GOAL_MD_MAX_CHARS) {
-    push(
-      finding(
-        record.slug,
-        "goal-md-oversize",
-        "blocking",
-        `GOAL.md is ${record.goalMdChars} chars (hard maximum ${GOAL_MD_MAX_CHARS}).`
-      )
-    );
-  }
-
-  if (record.manifestText === undefined) {
-    push(finding(record.slug, "manifest-missing", "blocking", "ops/manifest.json is missing."));
-    return { findings, manifest: O.none<GoalManifest>() };
-  }
-  const parsed = parseGoalManifestText(record.manifestText);
-  if (O.isNone(parsed)) {
-    push(finding(record.slug, "manifest-invalid", "blocking", "ops/manifest.json does not parse as JSON."));
-    return { findings, manifest: O.none<GoalManifest>() };
-  }
-  const raw = parsed.value as Readonly<Record<string, unknown>>;
-  const decoded = yield* decodeGoalManifest(parsed.value).pipe(
-    Effect.map(O.some),
-    Effect.orElseSucceed(O.none<GoalManifest>)
-  );
-  if (O.isNone(decoded)) {
-    const issue = yield* decodeGoalManifest(parsed.value).pipe(
-      Effect.flip,
-      Effect.map((error) => error.message),
-      Effect.orElseSucceed(() => "unknown decode failure")
-    );
-    push(
-      finding(
-        record.slug,
-        "manifest-invalid",
-        "blocking",
-        `ops/manifest.json does not decode as GoalManifest: ${pipe(issue, Str.replace(/\s+/g, " "), Str.slice(0, 200))}`
-      )
-    );
-    return { findings, manifest: O.none<GoalManifest>() };
-  }
-  const manifest = decoded.value;
   const status = manifest.initiative.status;
 
   if (manifest.lifecycle !== undefined && manifest.lifecycle !== status) {
@@ -394,6 +360,20 @@ const packetFindings = Effect.fn("Goals.packetFindings")(function* (record: Goal
     );
   }
 
+  return findings;
+};
+
+const manifestAdvisoryFindings = (
+  record: GoalPacketRecord,
+  manifest: GoalManifest,
+  raw: Readonly<Record<string, unknown>>
+): ReadonlyArray<GoalDoctorFinding> => {
+  let findings = A.empty<GoalDoctorFinding>();
+  const push = (item: GoalDoctorFinding): void => {
+    findings = A.append(findings, item);
+  };
+  const status = manifest.initiative.status;
+
   if (GoalStatus.is.active(status) && record.goalMdChars === undefined) {
     push(finding(record.slug, "active-missing-goal-md", "advisory", "active packet has no GOAL.md launcher."));
   }
@@ -420,23 +400,96 @@ const packetFindings = Effect.fn("Goals.packetFindings")(function* (record: Goal
     );
   }
 
+  return findings;
+};
+
+const decodedManifestFindings = (
+  record: GoalPacketRecord,
+  manifest: GoalManifest,
+  raw: Readonly<Record<string, unknown>>
+): ReadonlyArray<GoalDoctorFinding> =>
+  A.appendAll(statusConsistencyFindings(record, manifest), manifestAdvisoryFindings(record, manifest, raw));
+
+const explorationBacklinkFindings = Effect.fn("Goals.explorationBacklinkFindings")(function* (
+  record: GoalPacketRecord,
+  raw: Readonly<Record<string, unknown>>
+) {
+  const fs = yield* FileSystem.FileSystem;
   const provenance = pipe(R.get(raw, "provenance"), O.filter(isJsonRecord));
   const exploration = O.flatMap(provenance, (block) => stringAt(block, "exploration"));
-  if (O.isSome(exploration)) {
-    const exists = yield* fs.exists(exploration.value).pipe(Effect.orElseSucceed(() => false));
-    if (!exists) {
-      push(
-        finding(
-          record.slug,
-          "exploration-backlink-missing",
-          "advisory",
-          `provenance.exploration "${exploration.value}" does not exist in the working tree.`
-        )
-      );
-    }
+  if (O.isNone(exploration)) {
+    return A.empty<GoalDoctorFinding>();
+  }
+  const exists = yield* fs.exists(exploration.value).pipe(Effect.orElseSucceed(thunkFalse));
+  if (exists) {
+    return A.empty<GoalDoctorFinding>();
+  }
+  return A.of(
+    finding(
+      record.slug,
+      "exploration-backlink-missing",
+      "advisory",
+      `provenance.exploration "${exploration.value}" does not exist in the working tree.`
+    )
+  );
+});
+
+const packetFindings = Effect.fn("Goals.packetFindings")(function* (record: GoalPacketRecord) {
+  let findings = yield* reflectionArtifactFindings(record);
+
+  if (record.goalMdChars !== undefined && record.goalMdChars > GOAL_MD_MAX_CHARS) {
+    findings = A.append(
+      findings,
+      finding(
+        record.slug,
+        "goal-md-oversize",
+        "blocking",
+        `GOAL.md is ${record.goalMdChars} chars (hard maximum ${GOAL_MD_MAX_CHARS}).`
+      )
+    );
   }
 
-  return { findings, manifest: O.some(manifest) };
+  if (record.manifestText === undefined) {
+    findings = A.append(
+      findings,
+      finding(record.slug, "manifest-missing", "blocking", "ops/manifest.json is missing.")
+    );
+    return { findings, manifest: O.none<GoalManifest>() };
+  }
+  const parsed = parseGoalManifestText(record.manifestText);
+  if (O.isNone(parsed)) {
+    findings = A.append(
+      findings,
+      finding(record.slug, "manifest-invalid", "blocking", "ops/manifest.json does not parse as JSON.")
+    );
+    return { findings, manifest: O.none<GoalManifest>() };
+  }
+  const raw = parsed.value as Readonly<Record<string, unknown>>;
+  const decoded = yield* decodeGoalManifest(parsed.value).pipe(
+    Effect.map(O.some),
+    Effect.orElseSucceed(O.none<GoalManifest>)
+  );
+  if (O.isNone(decoded)) {
+    const issue = yield* decodeGoalManifest(parsed.value).pipe(
+      Effect.flip,
+      Effect.map((error) => error.message),
+      Effect.orElseSucceed(() => "unknown decode failure")
+    );
+    findings = A.append(
+      findings,
+      finding(
+        record.slug,
+        "manifest-invalid",
+        "blocking",
+        `ops/manifest.json does not decode as GoalManifest: ${pipe(issue, Str.replace(/\s+/g, " "), Str.slice(0, 200))}`
+      )
+    );
+    return { findings, manifest: O.none<GoalManifest>() };
+  }
+
+  findings = A.appendAll(findings, decodedManifestFindings(record, decoded.value, raw));
+  findings = A.appendAll(findings, yield* explorationBacklinkFindings(record, raw));
+  return { findings, manifest: O.some(decoded.value) };
 });
 
 const gitAdapter: GitCommandErrorAdapter<GoalsGitError> = {
@@ -449,13 +502,85 @@ const gitOutputOrNone = Effect.fn("Goals.gitOutputOrNone")(function* (args: Read
   return yield* runGitOutput(".", args, gitAdapter).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
 });
 
-const gitAdvisories = Effect.fn("Goals.gitAdvisories")(function* (
-  packets: ReadonlyArray<{
-    readonly record: GoalPacketRecord;
-    readonly manifest: O.Option<GoalManifest>;
-    readonly raw: O.Option<Readonly<Record<string, unknown>>>;
-  }>
-) {
+type DoctorPacket = {
+  readonly record: GoalPacketRecord;
+  readonly manifest: O.Option<GoalManifest>;
+  readonly raw: O.Option<Readonly<Record<string, unknown>>>;
+};
+
+const stalenessAdvisories = (
+  packets: ReadonlyArray<DoctorPacket>,
+  recentPathsText: string
+): ReadonlyArray<GoalDoctorFinding> => {
+  const touched = HashSet.fromIterable(
+    pipe(
+      recentPathsText,
+      Str.split("\n"),
+      A.map(Str.trim),
+      A.filter(Str.startsWith("goals/")),
+      A.map(flow(Str.split("/"), A.get(1), O.getOrElse(thunkEmptyStr)))
+    )
+  );
+  let findings = A.empty<GoalDoctorFinding>();
+  for (const packet of packets) {
+    if (O.isNone(packet.manifest)) {
+      continue;
+    }
+    const manifest = packet.manifest.value;
+    const hasContext =
+      manifest.statusNote !== undefined || (manifest.blockedBy !== undefined && A.length(manifest.blockedBy) > 0);
+    if (GoalStatus.is.active(manifest.initiative.status) && !HashSet.has(touched, packet.record.slug) && !hasContext) {
+      findings = A.append(
+        findings,
+        finding(
+          packet.record.slug,
+          "stale-active",
+          "advisory",
+          `active packet untouched for ${STALE_ACTIVE_DAYS}+ days with no blockedBy/statusNote.`
+        )
+      );
+    }
+  }
+  return findings;
+};
+
+const completionGateAdvisories = (
+  packets: ReadonlyArray<DoctorPacket>,
+  subjectsText: string
+): ReadonlyArray<GoalDoctorFinding> => {
+  let findings = A.empty<GoalDoctorFinding>();
+  for (const packet of packets) {
+    if (O.isNone(packet.manifest)) {
+      continue;
+    }
+    const manifest = packet.manifest.value;
+    if (!GoalStatus.is["completed-retained"](manifest.initiative.status) || manifest.completionGate.grandfathered) {
+      continue;
+    }
+    const prNumber = pipe(
+      packet.raw,
+      O.flatMap((raw) => R.get(raw, "mergedPullRequest")),
+      O.map((value) => `#${String(value)}`)
+    );
+    const cited =
+      Str.includes(packet.record.slug)(subjectsText) ||
+      (O.isSome(prNumber) && Str.includes(prNumber.value)(subjectsText));
+    if (!cited) {
+      findings = A.append(
+        findings,
+        finding(
+          packet.record.slug,
+          "completion-gate-unsatisfied",
+          "advisory",
+          "completed-retained but no merge/squash commit cites the packet (completionGate not grandfathered)."
+        )
+      );
+    }
+  }
+  return findings;
+};
+
+const gitAdvisories = Effect.fn("Goals.gitAdvisories")(function* (packets: ReadonlyArray<DoctorPacket>) {
   let findings = A.empty<GoalDoctorFinding>();
   let notes = A.empty<string>();
 
@@ -483,38 +608,7 @@ const gitAdvisories = Effect.fn("Goals.gitAdvisories")(function* (
     "goals/",
   ]);
   if (O.isSome(recentPaths)) {
-    const touched = HashSet.fromIterable(
-      pipe(
-        recentPaths.value,
-        Str.split("\n"),
-        A.map(Str.trim),
-        A.filter(Str.startsWith("goals/")),
-        A.map(flow(Str.split("/"), A.get(1), O.getOrElse(thunkEmptyStr)))
-      )
-    );
-    for (const packet of packets) {
-      if (O.isNone(packet.manifest)) {
-        continue;
-      }
-      const manifest = packet.manifest.value;
-      const hasContext =
-        manifest.statusNote !== undefined || (manifest.blockedBy !== undefined && A.length(manifest.blockedBy) > 0);
-      if (
-        GoalStatus.is.active(manifest.initiative.status) &&
-        !HashSet.has(touched, packet.record.slug) &&
-        !hasContext
-      ) {
-        findings = A.append(
-          findings,
-          finding(
-            packet.record.slug,
-            "stale-active",
-            "advisory",
-            `active packet untouched for ${STALE_ACTIVE_DAYS}+ days with no blockedBy/statusNote.`
-          )
-        );
-      }
-    }
+    findings = A.appendAll(findings, stalenessAdvisories(packets, recentPaths.value));
   } else {
     notes = A.append(notes, "git log for staleness failed; staleness advisories skipped.");
   }
@@ -523,35 +617,7 @@ const gitAdvisories = Effect.fn("Goals.gitAdvisories")(function* (
   // packet slug or the packet's recorded PR number.
   const subjects = yield* gitOutputOrNone(["log", "--format=%s", "-n", "4000"]);
   if (O.isSome(subjects)) {
-    for (const packet of packets) {
-      if (O.isNone(packet.manifest)) {
-        continue;
-      }
-      const manifest = packet.manifest.value;
-      const gate = manifest.completionGate;
-      if (!GoalStatus.is["completed-retained"](manifest.initiative.status) || gate.grandfathered) {
-        continue;
-      }
-      const prNumber = pipe(
-        packet.raw,
-        O.flatMap((raw) => R.get(raw, "mergedPullRequest")),
-        O.map((value) => `#${String(value)}`)
-      );
-      const cited =
-        Str.includes(packet.record.slug)(subjects.value) ||
-        (O.isSome(prNumber) && Str.includes(prNumber.value)(subjects.value));
-      if (!cited) {
-        findings = A.append(
-          findings,
-          finding(
-            packet.record.slug,
-            "completion-gate-unsatisfied",
-            "advisory",
-            "completed-retained but no merge/squash commit cites the packet (completionGate not grandfathered)."
-          )
-        );
-      }
-    }
+    findings = A.appendAll(findings, completionGateAdvisories(packets, subjects.value));
   } else {
     notes = A.append(notes, "git log for completion gates failed; completion-gate advisories skipped.");
   }
@@ -575,18 +641,100 @@ const findingLine = (item: GoalDoctorFinding): string => `- ${item.slug} [${item
  * @category use-cases
  * @since 0.0.0
  */
+const writeDoctorBaseline = Effect.fn("Goals.writeDoctorBaseline")(function* (
+  blocking: ReadonlyArray<GoalDoctorFinding>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const baseline = GoalsDoctorBaseline.make({
+    schemaVersion: "goals-doctor-baseline/v1",
+    note: "Inherited goals-doctor findings (advisory). New findings block. This baseline may only shrink; regenerate with bun run beep goals doctor --write-baseline after burning findings down.",
+    findings: A.sort(
+      A.map(blocking, (item) => item.key),
+      Order.String
+    ),
+  });
+  const encoded = yield* encodeBaseline(baseline);
+  const rendered = yield* stringifyBaseline.run(O.some(encoded), {});
+  yield* fs.writeFileString(GOALS_DOCTOR_BASELINE_PATH, `${O.getOrElse(rendered, thunkEmptyStr)}\n`);
+  yield* Console.log(`[goals:doctor] wrote ${GOALS_DOCTOR_BASELINE_PATH} with ${A.length(blocking)} finding key(s).`);
+});
+
+const loadDoctorBaselineKeys = Effect.fn("Goals.loadDoctorBaselineKeys")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const baselineText = yield* fs
+    .readFileString(GOALS_DOCTOR_BASELINE_PATH)
+    .pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+  if (O.isNone(baselineText)) {
+    return A.empty<string>();
+  }
+  const parsedBaseline = parseGoalManifestText(baselineText.value);
+  if (O.isNone(parsedBaseline)) {
+    yield* Console.error(`[goals:doctor] ${GOALS_DOCTOR_BASELINE_PATH} does not parse as JSONC.`);
+    return yield* failWithReportedExit("goals doctor: baseline unreadable.", 2);
+  }
+  return yield* decodeBaseline(parsedBaseline.value).pipe(
+    Effect.map((baseline) => baseline.findings),
+    Effect.catchTag("SchemaError", (error) =>
+      Console.error(`[goals:doctor] baseline does not decode: ${error.message}`).pipe(
+        Effect.andThen(failWithReportedExit("goals doctor: baseline invalid.", 2))
+      )
+    )
+  );
+});
+
+const printNonFatalFindings = Effect.fn("Goals.printNonFatalFindings")(function* (input: {
+  readonly notes: ReadonlyArray<string>;
+  readonly advisories: ReadonlyArray<GoalDoctorFinding>;
+  readonly classified: GoalDoctorClassification;
+}) {
+  for (const note of input.notes) {
+    yield* Console.log(`[goals:doctor] note: ${note}`);
+  }
+
+  if (A.isReadonlyArrayNonEmpty(input.advisories)) {
+    yield* Console.error("[goals:doctor] advisories (non-fatal):");
+    for (const item of input.advisories) {
+      yield* Console.error(findingLine(item));
+    }
+  }
+
+  if (A.isReadonlyArrayNonEmpty(input.classified.inherited)) {
+    yield* Console.error("[goals:doctor] inherited baseline findings (non-fatal, burn down over time):");
+    for (const item of input.classified.inherited) {
+      yield* Console.error(findingLine(item));
+    }
+  }
+
+  if (A.isReadonlyArrayNonEmpty(input.classified.resolved)) {
+    yield* Console.error(
+      `[goals:doctor] ${A.length(input.classified.resolved)} baseline finding(s) resolved — shrink the baseline with --write-baseline:`
+    );
+    for (const key of input.classified.resolved) {
+      yield* Console.error(`- ${key}`);
+    }
+  }
+});
+
+/**
+ * Run the goals doctor: collect findings, ratchet blocking ones against the
+ * committed baseline, and fail on new blocking findings.
+ *
+ * @example
+ * ```ts
+ * import { runGoalsDoctor } from "@beep/repo-cli/commands/Goals/Doctor"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(runGoalsDoctor({ writeBaseline: false })))
+ * ```
+ * @category use-cases
+ * @since 0.0.0
+ */
 export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (options: {
   readonly writeBaseline: boolean;
 }) {
-  const fs = yield* FileSystem.FileSystem;
   const records = yield* listGoalPackets();
 
-  const packets: Array<{
-    readonly record: GoalPacketRecord;
-    readonly manifest: O.Option<GoalManifest>;
-    readonly raw: O.Option<Readonly<Record<string, unknown>>>;
-    readonly findings: ReadonlyArray<GoalDoctorFinding>;
-  }> = [];
+  const packets: Array<DoctorPacket & { readonly findings: ReadonlyArray<GoalDoctorFinding> }> = [];
   for (const record of records) {
     const result = yield* packetFindings(record);
     const raw = pipe(
@@ -603,74 +751,16 @@ export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (optio
   const advisories = A.filter(allFindings, (item) => item.severity === "advisory");
 
   if (options.writeBaseline) {
-    const baseline = GoalsDoctorBaseline.make({
-      schemaVersion: "goals-doctor-baseline/v1",
-      note: "Inherited goals-doctor findings (advisory). New findings block. This baseline may only shrink; regenerate with bun run beep goals doctor --write-baseline after burning findings down.",
-      findings: A.sort(
-        A.map(blocking, (item) => item.key),
-        Order.String
-      ),
-    });
-    const encoded = yield* encodeBaseline(baseline);
-    const rendered = yield* stringifyBaseline.run(O.some(encoded), {});
-    const content = `${O.getOrElse(rendered, thunkEmptyStr)}\n`;
-    yield* fs.writeFileString(GOALS_DOCTOR_BASELINE_PATH, content);
-    yield* Console.log(`[goals:doctor] wrote ${GOALS_DOCTOR_BASELINE_PATH} with ${A.length(blocking)} finding key(s).`);
-    return;
+    return yield* writeDoctorBaseline(blocking);
   }
 
-  const baselineText = yield* fs
-    .readFileString(GOALS_DOCTOR_BASELINE_PATH)
-    .pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
-  let baselineKeys: ReadonlyArray<string> = A.empty<string>();
-  if (O.isSome(baselineText)) {
-    const parsedBaseline = parseGoalManifestText(baselineText.value);
-    if (O.isNone(parsedBaseline)) {
-      yield* Console.error(`[goals:doctor] ${GOALS_DOCTOR_BASELINE_PATH} does not parse as JSONC.`);
-      return yield* failWithReportedExit("goals doctor: baseline unreadable.", 2);
-    }
-    baselineKeys = yield* decodeBaseline(parsedBaseline.value).pipe(
-      Effect.map((baseline) => baseline.findings),
-      Effect.catchTag("SchemaError", (error) =>
-        Console.error(`[goals:doctor] baseline does not decode: ${error.message}`).pipe(
-          Effect.andThen(failWithReportedExit("goals doctor: baseline invalid.", 2))
-        )
-      )
-    );
-  }
-
+  const baselineKeys = yield* loadDoctorBaselineKeys();
   const classified = classifyGoalDoctorFindings(blocking, baselineKeys);
 
   yield* Console.log(
     `[goals:doctor] packets=${A.length(records)} blocking_new=${A.length(classified.introduced)} blocking_inherited=${A.length(classified.inherited)} baseline_resolved=${A.length(classified.resolved)} advisories=${A.length(advisories)}`
   );
-
-  for (const note of advisoriesFromGit.notes) {
-    yield* Console.log(`[goals:doctor] note: ${note}`);
-  }
-
-  if (A.isReadonlyArrayNonEmpty(advisories)) {
-    yield* Console.error("[goals:doctor] advisories (non-fatal):");
-    for (const item of advisories) {
-      yield* Console.error(findingLine(item));
-    }
-  }
-
-  if (A.isReadonlyArrayNonEmpty(classified.inherited)) {
-    yield* Console.error("[goals:doctor] inherited baseline findings (non-fatal, burn down over time):");
-    for (const item of classified.inherited) {
-      yield* Console.error(findingLine(item));
-    }
-  }
-
-  if (A.isReadonlyArrayNonEmpty(classified.resolved)) {
-    yield* Console.error(
-      `[goals:doctor] ${A.length(classified.resolved)} baseline finding(s) resolved — shrink the baseline with --write-baseline:`
-    );
-    for (const key of classified.resolved) {
-      yield* Console.error(`- ${key}`);
-    }
-  }
+  yield* printNonFatalFindings({ notes: advisoriesFromGit.notes, advisories, classified });
 
   if (A.isReadonlyArrayNonEmpty(classified.introduced)) {
     yield* Console.error("[goals:doctor] NEW blocking findings (not in baseline):");
