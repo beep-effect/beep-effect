@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` (P2 LLM filing agent is the open phase)
+Status: `active` (P3 Box sync is the open phase)
 
 Each phase below ships as its own mergeable PR via `/yeet` (completion gate).
 Phase content is normatively bounded by `SPEC.md` decisions D1–D11.
@@ -13,7 +13,7 @@ Phase content is normatively bounded by `SPEC.md` decisions D1–D11.
 | --- | --- | --- | --- |
 | P0 Research | complete | Close the five research questions below; no feature code. | Freshness-dated notes under `research/` answer each question with sources; SPEC updated if a decision needs a superseding entry. |
 | P1 Vault + deterministic intake | complete | Workspace vault onboarding, app-level DnD, taxonomy seed, heuristic filing to local FS. | A dropped file lands at a taxonomy-valid vault path atomically; onboarding persists vault choice in a workspace table; deterministic tests green. |
-| P2 LLM filing agent | pending | Content-aware filing per D8-S1: JS-native PDF/docx text-extraction driver; optional text excerpt on the FilingDecision port; LLM filing layer in `documents/server` (single-shot structured call; typed config for model, confidence threshold, excerpt length); auto-file with visible rationale, uncertain → `00-inbox`. | LLM proposes from document text, taxonomy validates, file placed or inboxed with rationale surfaced in the intake UI; heuristic stays the deterministic fixture Layer; agent-run browser-smoke evidence in the PR. |
+| P2 LLM filing agent | complete | Content-aware filing per D8-S1: JS-native PDF/docx text-extraction driver; optional text excerpt on the FilingDecision port; LLM filing layer in `documents/server` (single-shot structured call; typed config for model, confidence threshold, excerpt length); auto-file with visible rationale, uncertain → `00-inbox`. | LLM proposes from document text, taxonomy validates, file placed or inboxed with rationale surfaced in the intake UI; heuristic stays the deterministic fixture Layer; agent-run browser-smoke evidence in the PR. |
 | P3 Box sync | pending | One-way push sync process, durable sync state, remote-drift detection, Box OAuth setup UX. | Vault → Box mirror converges for create/move/rename; drift surfaces as conflict records; sync survives app restart via durable cursors. |
 | P4 Extraction → KG loop | pending | file-processing + langextract on filed docs; librarian proposes epistemic candidates; LLM critic + extended ClaimGate (real `@beep/shacl` validator per D7-S1); configurable turns. | Admitted claims materialize as KG node/edge rows with DMS link + span provenance; rejected submissions leave an auditable trail; turn count is config. |
 | P5 Retrieval + viewer | pending | Local embedding driver + pgvector; two-hop query; dock panel with span highlight (shell per D9-S1); open-in-Word. | NL query → semantic entry → recursive-SQL traversal → document opens at highlighted span; DMS link clickable; OS handoff to Word works. |
