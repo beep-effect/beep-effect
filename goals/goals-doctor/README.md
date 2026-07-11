@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -34,15 +34,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P4 Yeet: PR to mergeable — ship via yeet (repair → verify → publish → monitor).
+Closed. All phases complete; shipped via
+[PR #373](https://github.com/beep-effect/beep-effect/pull/373).
 
 ## Latest Evidence
 
-P0 census committed 2026-07-11
-([`research/status-token-census.md`](./research/status-token-census.md),
-oracle in [`history/p0-oracle.md`](./history/p0-oracle.md)): 83 packets,
-78 manifests, 14+7 status tokens, 12 phase tokens, 10 status↔lifecycle
-disagreements — audit confirmed with fresh deltas.
+Shipped 2026-07-11 via [PR #373](https://github.com/beep-effect/beep-effect/pull/373)
+(all checks green, MERGEABLE). Phase oracles in [`history/`](./history):
+P0 census, P1 migration convergence (83/83 manifests decode), P2 index
+drift check, P3 doctor + verify wiring, P4 PR-to-mergeable. Closeout
+reflection in
+[`history/reflections/2026-07-11-claude.md`](./history/reflections/2026-07-11-claude.md);
+packet closed with `bun run beep goals set-status goals-doctor
+completed-retained` (dogfood).
 
 ## Notes
 

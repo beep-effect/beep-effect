@@ -3,13 +3,13 @@
   "initiative": {
     "id": "goals-doctor",
     "title": "Goals Doctor & Index",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-11",
     "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/goals-doctor",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -71,13 +71,13 @@
     {
       "id": "P4",
       "name": "Yeet: PR to mergeable",
-      "status": "pending",
+      "status": "complete",
       "exit": "PR open with all required checks green and MERGEABLE."
     },
     {
       "id": "P5",
       "name": "Close",
-      "status": "pending",
+      "status": "complete",
       "exit": "Closeout reflection validates; packet closed via beep goals set-status goals-doctor completed-retained (dogfood)."
     }
   ],
