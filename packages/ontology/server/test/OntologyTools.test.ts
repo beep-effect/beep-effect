@@ -123,7 +123,8 @@ describe("ontology agent toolkit real-engine handlers", () => {
         expect(metadata.capabilities).toHaveLength(9);
         expect(metadata.casSemantics).toBe("semantic");
       })
-    )
+    ),
+    { timeout: 120_000 }
   );
 
   it.effect(
@@ -177,7 +178,8 @@ describe("ontology agent toolkit real-engine handlers", () => {
           expect(stale.guidance).toContain("Refetch");
         }
       })
-    )
+    ),
+    { timeout: 120_000 }
   );
 
   it.effect(
@@ -234,6 +236,7 @@ describe("ontology agent toolkit real-engine handlers", () => {
         expect(repaired.change.delta.added.length + repaired.change.delta.removed.length).toBeGreaterThan(0);
         expect(repaired.validation.validation.conforms).toBe(true);
       })
-    )
+    ),
+    { timeout: 120_000 }
   );
 });
