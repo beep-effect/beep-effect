@@ -28,7 +28,7 @@
 
 import { $FileProcessingId } from "@beep/identity";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
-import { Effect, FileSystem, Path, Result } from "effect";
+import { Effect, Exit, FileSystem, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { dual, flow } from "effect/Function";
@@ -536,7 +536,18 @@ const writeWithinCanonicalRootAtomically: (
         yield* fs.rename(temporaryPath, finalTarget);
         return finalTarget;
       }),
-      (temporaryDirectory) => fs.remove(temporaryDirectory, { force: true, recursive: true })
+      (temporaryDirectory, exit) => {
+        const cleanup = fs.remove(temporaryDirectory, { force: true, recursive: true });
+        return Exit.isSuccess(exit)
+          ? cleanup.pipe(
+              Effect.catch(() =>
+                Effect.logWarning(
+                  "Failed to remove a committed atomic-write temporary directory; the target remains committed."
+                )
+              )
+            )
+          : cleanup;
+      }
     );
   }
 );
@@ -573,7 +584,7 @@ const writeWithinCanonicalRootAtomically: (
  * Effect.runPromise(program).then(console.log)
  * ```
  *
- * @effects Canonicalizes candidate paths, creates destination directories and a private temporary directory, writes a new file exclusively, atomically renames it, and removes temporary artifacts; never re-canonicalizes the authority root.
+ * @effects Canonicalizes candidate paths, creates destination directories and a private temporary directory, writes a new file exclusively, atomically renames it, and attempts to remove temporary artifacts; cleanup failure after a committed rename is logged without changing the successful result, and the authority root is never re-canonicalized.
  * @category resource-management
  * @since 0.0.0
  */
@@ -597,7 +608,10 @@ export const writeFileWithinCanonicalRootAtomically: (options: {
  * creation. The bytes are then written with exclusive creation and mode
  * `0o600` inside an unpredictable temporary directory beside the destination,
  * before an atomic rename promotes them into place. Temporary artifacts are
- * removed on success, failure, or interruption.
+ * removed on success, failure, or interruption. Cleanup remains fail-closed
+ * before promotion. After the rename commits the target, cleanup is
+ * best-effort so a leftover empty temporary directory cannot make callers
+ * treat the committed write as failed and retry it.
  *
  * This prevents writes through a pre-positioned predictable temporary-file
  * symlink. Callers that allow another principal to rename entries in the
@@ -621,7 +635,7 @@ export const writeFileWithinCanonicalRootAtomically: (options: {
  * Effect.runPromise(program).then(console.log)
  * ```
  *
- * @effects Canonicalizes paths, creates destination directories and a private temporary directory, writes a new file exclusively, atomically renames it, and removes temporary artifacts.
+ * @effects Canonicalizes paths, creates destination directories and a private temporary directory, writes a new file exclusively, atomically renames it, and attempts to remove temporary artifacts; cleanup failure after a committed rename is logged without changing the successful result.
  * @category resource-management
  * @since 0.0.0
  */

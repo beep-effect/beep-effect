@@ -102,7 +102,37 @@ describe("@beep/file-processing PathSafety", () => {
     }).pipe(provideScopedLayer(PathSafetyTestLayer))
   );
 
-  it.effect("fails with the cleanup PlatformError when temporary artifact removal fails", () =>
+  it.effect("keeps the committed target successful when post-rename cleanup fails", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-path-safety-" });
+      const cleanupAttempts = yield* Ref.make(0);
+      const cleanupFailure = PlatformError.systemError({
+        _tag: "PermissionDenied",
+        module: "FileSystem",
+        method: "remove",
+        description: "simulated temporary-directory cleanup failure",
+      });
+      const failingCleanupFileSystem: FileSystem.FileSystem = {
+        ...fs,
+        remove: () =>
+          Ref.update(cleanupAttempts, (count) => count + 1).pipe(Effect.andThen(Effect.fail(cleanupFailure))),
+      };
+
+      const target = yield* writeFileWithinRootAtomically({
+        root,
+        candidate: "result.bin",
+        bytes: payload,
+      }).pipe(Effect.provideService(FileSystem.FileSystem, failingCleanupFileSystem));
+
+      expect(target).toBe(path.join(root, "result.bin"));
+      expect(yield* Ref.get(cleanupAttempts)).toBe(1);
+      expect(yield* fs.readFileString(target)).toBe("safe payload");
+    }).pipe(provideScopedLayer(PathSafetyTestLayer))
+  );
+
+  it.effect("surfaces cleanup failure when promotion has not committed", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-path-safety-" });
@@ -119,15 +149,16 @@ describe("@beep/file-processing PathSafety", () => {
           Ref.update(cleanupAttempts, (count) => count + 1).pipe(Effect.andThen(Effect.fail(cleanupFailure))),
       };
 
+      yield* fs.makeDirectory(`${root}/blocked`);
       const error = yield* writeFileWithinRootAtomically({
         root,
-        candidate: "result.bin",
+        candidate: "blocked",
         bytes: payload,
       }).pipe(Effect.provideService(FileSystem.FileSystem, failingCleanupFileSystem), Effect.flip);
 
       expect(error).toBe(cleanupFailure);
       expect(yield* Ref.get(cleanupAttempts)).toBe(1);
-      expect(yield* fs.readFileString(`${root}/result.bin`)).toBe("safe payload");
+      expect((yield* fs.stat(`${root}/blocked`)).type).toBe("Directory");
     }).pipe(provideScopedLayer(PathSafetyTestLayer))
   );
 
