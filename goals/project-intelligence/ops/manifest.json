@@ -1,0 +1,109 @@
+{
+  "schemaVersion": "initiative-manifest/v1",
+  "initiative": {
+    "id": "project-intelligence",
+    "title": "Project Intelligence",
+    "status": "active",
+    "created": "2026-07-11",
+    "updated": "2026-07-11",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/project-intelligence",
+  "lifecycle": "active",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": null,
+    "authoredDirectly": true,
+    "note": "Authored 2026-07-11 from a sanitized operator assignment brief (local, uncommitted) via a grilled design session (grill-with-docs) backed by read-only recon workflow wf_24cbd840-0ff; seven design decisions locked with the operator are recorded as SPEC.md D1-D7."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor). Each PLAN.md phase is its own PR under this gate.",
+    "grandfathered": false
+  },
+  "dependencies": [
+    "goals/firecrawl-driver",
+    "goals/epistemic-claim-lifecycle-gate",
+    "goals/provenance-shared-claim-kernel",
+    "goals/official-data-sync-foundation",
+    "goals/file-processing-capability",
+    "goals/agentic-professional-runtime"
+  ],
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/project-intelligence/README.md",
+    "goals/project-intelligence/SPEC.md",
+    "goals/project-intelligence/PLAN.md",
+    "goals/project-intelligence/GOAL.md",
+    "goals/project-intelligence/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md", "research/recon-findings.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/project-intelligence/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research: recon, product, architecture, ADR, threat model",
+      "status": "pending",
+      "exit": "research/ holds the recon report, interest taxonomy + seed watchlist, product definition, architecture proposal, technology ADR, and untrusted-ingestion threat model; every SPEC.md deferred decision is resolved or explicitly stopped-and-documented."
+    },
+    {
+      "id": "P1",
+      "name": "Proof specification",
+      "status": "pending",
+      "exit": "research/proof-spec.md names scenario, inputs and fixtures, expected authoritative records, expected projections, package ownership, failure cases, invariants, acceptance tests, and explicitly deferred capabilities."
+    },
+    {
+      "id": "P2",
+      "name": "Implement first vertical proof",
+      "status": "pending",
+      "exit": "The first vertical proof is implemented per proof-spec.md with deterministic fixtures, no live network or LLM calls in tests, and a sample daily brief generated from fixtures."
+    },
+    {
+      "id": "P3",
+      "name": "Verify",
+      "status": "pending",
+      "exit": "Proof tests are green including idempotent reruns, retry behavior, provenance traceability, and projection delete-and-rebuild; repo quality lanes are green for the affected scope."
+    },
+    {
+      "id": "P4",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending",
+      "exit": "Each phase PR is open with all required checks green and MERGEABLE."
+    },
+    {
+      "id": "P5",
+      "name": "Close",
+      "status": "pending",
+      "exit": "Closeout reflection passes bun run beep lint reflection-artifacts; the staged capability roadmap is recorded; the next vertical proof is recommended with evidence."
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/project-intelligence/GOAL.md)\" -le 4000",
+    "jq . goals/project-intelligence/ops/manifest.json",
+    "rg -n \"project-intelligence|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/project-intelligence",
+    "git diff --check -- goals/project-intelligence",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "A step would create difficult-to-reverse package or slice topology before its P0 decision gate is resolved.",
+    "A step would introduce a major external dependency or vendor commitment before the technology ADR is accepted.",
+    "A step would broaden access to private or privileged data beyond the explicit source allowlist.",
+    "A conclusion would conflict with an authoritative repository specification.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
