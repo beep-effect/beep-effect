@@ -286,12 +286,20 @@ sha256(
 
 The tuple is encoded canonically before hashing. A snapshot row is append-only;
 different raw content, revision, or safety-policy version produces a different
-ID. The same tuple is an idempotent no-op. A content-addressed payload store
-deduplicates identical accepted bytes globally by `contentHash`, while separate
-snapshot envelopes preserve source, revision, terms, and attribution
-provenance. Claims deduplicate by a
-separate versioned hash of normalized claim meaning plus the ordered evidence
-IDs; wording normalization is never borrowed from URL normalization.
+ID. The same tuple is an idempotent no-op. `captureGrantId` is itself
+deterministic: registering a source establishes its implicit initial grant (a
+versioned constant, `grant-0`), and later grants exist only as explicit,
+recorded reacquisition authorizations numbered in sequence per source
+(`grant-1`, `grant-2`, ...) in the authority store — never derived from clocks
+or randomness — so identical fixtures produce identical snapshot IDs on cold
+runs and clean-store rebuilds. A content-addressed payload store deduplicates
+identical accepted bytes globally by `contentHash`, while separate snapshot
+envelopes preserve source, revision, terms, and attribution provenance. Claims deduplicate by a
+separate versioned hash of normalized claim meaning plus the evidence IDs in
+their canonical total order — a byte-wise lexicographic sort of the IDs
+applied immediately before hashing, never insertion, extraction, or query
+order — so the same evidence set always yields the same claim ID; wording
+normalization is never borrowed from URL normalization.
 
 ### Retention and purge
 
@@ -311,10 +319,20 @@ Purge is a state machine, not an unrecorded file deletion:
 
 1. append `purge_pending` and make the payload ineligible for reads or
    projections;
-2. remove the physical payload and any prohibited quote-bearing evidence;
+2. sever the purged snapshot's payload reference and remove any prohibited
+   quote-bearing evidence; the physical bytes are deleted once no other
+   authorized snapshot references that `contentHash`, and otherwise remain
+   solely for the surviving authorized references while the purged snapshot's
+   reads fail closed;
 3. append `purged`, retaining IDs, content/quote hashes, offsets, terms revision,
    reason, actor provenance, and time;
 4. rebuild every affected projection from the surviving authority.
+
+Content-addressed deduplication therefore never weakens erasure: payload
+authorization is per snapshot reference, physical deletion follows the last
+severed reference, and a terms revocation cascades to every snapshot whose
+authorization derives from the revoked source, so revoked content cannot
+survive behind another of that source's snapshots.
 
 Failure between steps leaves `purge_pending`, which is already fail-closed and
 retryable. Reacquisition is forbidden until a new terms revision explicitly
@@ -446,7 +464,12 @@ Minimum schema:
 Decode rejects unknown provider tags, malformed coordinates, duplicate
 provider/coordinate entries, an empty enabled set, unsupported artifact kinds,
 and unknown schema versions. Entries are sorted by provider and normalized
-coordinate before resolution. The file hash and decoded schema version are
+coordinate before resolution. Duplicate detection runs twice: literal
+provider/coordinate duplicates fail schema decode, and after resolution the
+run rejects (as `WatchlistRejected`) any two entries that resolve to the same
+`SourceIdentity` — for example an old and a new name for the same repository
+after a rename — so aliases cannot smuggle conflicting settings for one
+source. The file hash and decoded schema version are
 recorded in `ResearchRun` provenance, but the local path is not a source
 identity.
 
