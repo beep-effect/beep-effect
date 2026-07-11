@@ -442,7 +442,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
 
   /**
    * Kind-change rule: queued operations enqueued for the previous item kind
-   * are unexecutable against the new kind, so they fail in place with an
+   * cannot execute against the new kind, so they fail in place with an
    * explanatory reason instead of being retargeted.
    */
   const supersedeQueuedOperations = Effect.fn($I`supersedeQueuedOperations`)(function* (

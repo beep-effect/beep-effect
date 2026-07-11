@@ -50,5 +50,5 @@ expect<
   SyncOperationServer.SyncOperationRepository["Service"]
 >().type.toBe<SyncOperationServer.SyncOperationRepositoryShape>();
 
-expect<"SyncOperationRepository">().type.not.toBeAssignableTo<keyof typeof SyncOperationPublic>();
-expect<"SyncOperationSeed">().type.not.toBeAssignableTo<keyof typeof SyncOperationPublic>();
+// The public barrel is a documented-empty module: server-only ports never leak.
+expect<keyof typeof SyncOperationPublic>().type.toBe<never>();

@@ -20,7 +20,7 @@ import type * as O from "effect/Option";
 const $I = $DocumentsUseCasesId.create("entities/SyncItem/SyncItem.repository");
 
 /**
- * Creation input for one sync-tracking row, excluding BaseEntity administrivia.
+ * Creation input for one sync-tracking row, excluding BaseEntity bookkeeping fields.
  *
  * @example
  * ```ts
@@ -90,7 +90,7 @@ export class SyncItemSeed extends S.Class<SyncItemSeed>($I`SyncItemSeed`)(
     }),
   },
   $I.annote("SyncItemSeed", {
-    description: "Creation input for one sync-tracking row, excluding BaseEntity administrivia.",
+    description: "Creation input for one sync-tracking row, excluding BaseEntity bookkeeping fields.",
   })
 ) {}
 

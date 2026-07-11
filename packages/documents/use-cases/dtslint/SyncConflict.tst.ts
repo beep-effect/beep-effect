@@ -26,5 +26,5 @@ expect<
   SyncConflictServer.SyncConflictRepository["Service"]
 >().type.toBe<SyncConflictServer.SyncConflictRepositoryShape>();
 
-expect<"SyncConflictRepository">().type.not.toBeAssignableTo<keyof typeof SyncConflictPublic>();
-expect<"SyncConflictSeed">().type.not.toBeAssignableTo<keyof typeof SyncConflictPublic>();
+// The public barrel is a documented-empty module: server-only ports never leak.
+expect<keyof typeof SyncConflictPublic>().type.toBe<never>();

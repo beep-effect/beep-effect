@@ -18,5 +18,5 @@ expect(repository.upsert(seed)).type.toBe<
 
 expect<SyncCursorServer.SyncCursorRepository["Service"]>().type.toBe<SyncCursorServer.SyncCursorRepositoryShape>();
 
-expect<"SyncCursorRepository">().type.not.toBeAssignableTo<keyof typeof SyncCursorPublic>();
-expect<"SyncCursorSeed">().type.not.toBeAssignableTo<keyof typeof SyncCursorPublic>();
+// The public barrel is a documented-empty module: server-only ports never leak.
+expect<keyof typeof SyncCursorPublic>().type.toBe<never>();

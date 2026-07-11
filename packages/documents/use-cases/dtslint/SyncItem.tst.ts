@@ -36,5 +36,5 @@ expect(repository.listByWorkspace(byWorkspace)).type.toBe<
 
 expect<SyncItemServer.SyncItemRepository["Service"]>().type.toBe<SyncItemServer.SyncItemRepositoryShape>();
 
-expect<"SyncItemRepository">().type.not.toBeAssignableTo<keyof typeof SyncItemPublic>();
-expect<"SyncItemSeed">().type.not.toBeAssignableTo<keyof typeof SyncItemPublic>();
+// The public barrel is a documented-empty module: server-only ports never leak.
+expect<keyof typeof SyncItemPublic>().type.toBe<never>();

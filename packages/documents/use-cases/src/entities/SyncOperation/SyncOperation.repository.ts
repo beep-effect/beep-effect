@@ -20,7 +20,7 @@ import type { Effect } from "effect";
 const $I = $DocumentsUseCasesId.create("entities/SyncOperation/SyncOperation.repository");
 
 /**
- * Creation input for one push-outbox operation, excluding BaseEntity administrivia.
+ * Creation input for one push-outbox operation, excluding BaseEntity bookkeeping fields.
  *
  * @example
  * ```ts
@@ -92,7 +92,7 @@ export class SyncOperationSeed extends S.Class<SyncOperationSeed>($I`SyncOperati
     }),
   },
   $I.annote("SyncOperationSeed", {
-    description: "Creation input for one push-outbox operation, excluding BaseEntity administrivia.",
+    description: "Creation input for one push-outbox operation, excluding BaseEntity bookkeeping fields.",
   })
 ) {}
 

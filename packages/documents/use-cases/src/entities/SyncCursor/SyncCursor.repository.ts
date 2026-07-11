@@ -19,7 +19,7 @@ import type * as O from "effect/Option";
 const $I = $DocumentsUseCasesId.create("entities/SyncCursor/SyncCursor.repository");
 
 /**
- * Upsert input for one remote-event stream cursor, excluding BaseEntity administrivia.
+ * Upsert input for one remote-event stream cursor, excluding BaseEntity bookkeeping fields.
  *
  * @example
  * ```ts
@@ -61,7 +61,7 @@ export class SyncCursorSeed extends S.Class<SyncCursorSeed>($I`SyncCursorSeed`)(
     }),
   },
   $I.annote("SyncCursorSeed", {
-    description: "Upsert input for one remote-event stream cursor, excluding BaseEntity administrivia.",
+    description: "Upsert input for one remote-event stream cursor, excluding BaseEntity bookkeeping fields.",
   })
 ) {}
 

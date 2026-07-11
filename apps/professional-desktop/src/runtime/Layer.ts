@@ -181,7 +181,7 @@ const DocumentsFilingLive = Layer.unwrap(
  * `CLOUD_BOX_TOKEN` is configured, or against the app-local disconnected
  * mirror layers (typed `DmsMirrorUnavailable` + probe `connected: false`)
  * when it is not — the honest not-connected state while the Box test tenant
- * is unprovisioned.
+ * is not provisioned.
  *
  * @category layers
  * @since 0.0.0

@@ -1813,7 +1813,7 @@
       "kind": "schema-class",
       "owner": "@beep/documents-use-cases",
       "identity": "SyncConflictSeed",
-      "description": "Creation input for one remote-drift record, excluding BaseEntity administrivia."
+      "description": "Creation input for one remote-drift record, excluding BaseEntity bookkeeping fields."
     },
     {
       "file": "packages/documents/use-cases/src/entities/SyncCursor/SyncCursor.repository.ts",
@@ -1837,7 +1837,7 @@
       "kind": "schema-class",
       "owner": "@beep/documents-use-cases",
       "identity": "SyncCursorSeed",
-      "description": "Upsert input for one remote-event stream cursor, excluding BaseEntity administrivia."
+      "description": "Upsert input for one remote-event stream cursor, excluding BaseEntity bookkeeping fields."
     },
     {
       "file": "packages/documents/use-cases/src/entities/SyncItem/SyncItem.repository.ts",
@@ -1893,7 +1893,7 @@
       "kind": "schema-class",
       "owner": "@beep/documents-use-cases",
       "identity": "SyncItemSeed",
-      "description": "Creation input for one sync-tracking row, excluding BaseEntity administrivia."
+      "description": "Creation input for one sync-tracking row, excluding BaseEntity bookkeeping fields."
     },
     {
       "file": "packages/documents/use-cases/src/entities/SyncOperation/SyncOperation.repository.ts",
@@ -1957,7 +1957,7 @@
       "kind": "schema-class",
       "owner": "@beep/documents-use-cases",
       "identity": "SyncOperationSeed",
-      "description": "Creation input for one push-outbox operation, excluding BaseEntity administrivia."
+      "description": "Creation input for one push-outbox operation, excluding BaseEntity bookkeeping fields."
     },
     {
       "file": "packages/drivers/acp/src/Acp.errors.ts",
