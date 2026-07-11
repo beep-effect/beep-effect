@@ -56,14 +56,24 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research. Next concrete action: launch a P0 session via the `/goal`
-command above — start from `research/recon-findings.md`, then close gates
-G1–G7 (PLAN.md P0 checklist) beginning with the corpus reconnaissance and
-interest taxonomy.
+P0 Research completed 2026-07-11: gates G1–G6 `accepted`, G7
+`deferred-nonblocking` (SPEC decisions D9–D17). The packet is parked
+(`lifecycle: paused`) per `docs/ROADMAP.md` and the manifest `statusNote`. On
+resume, the next concrete action is a P1 session via the `/goal` command
+above, authoring `research/proof-spec.md` per the PLAN.md P1 checklist over
+the accepted `landscape` architecture
+(`research/architecture-proposal.md`) and repo-native technology decision
+(`research/technology-adr.md`).
 
 ## Latest Evidence
 
-Not started (packet authored 2026-07-11; P0 pending).
+[`history/P0-evidence.md`](./history/P0-evidence.md) (2026-07-11) — P0 exit
+evidence: seven research artifacts under [`research/`](./research/)
+(recon-report, interest-taxonomy-watchlist, product-definition,
+architecture-proposal, technology-adr, prototype-disposition, threat-model),
+gate resolutions D9–D17 in [`SPEC.md`](./SPEC.md), recorded freshness check
+(no drift), corpus reconnaissance within the operator allowlist, and the
+manual sanitization review.
 
 ## Notes
 

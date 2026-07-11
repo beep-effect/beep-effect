@@ -18,6 +18,7 @@ doctrine constraints) behind SPEC decisions D1–D7.
 |--------|-------|-----------------|----------|-------|-------------|
 | `assignment-brief` | Operator assignment brief: "Project Intelligence" mission, phases, first-proof preference, non-goals, success criteria | n/a (operator document) | local, uncommitted (D2: absorbed sanitized into SPEC/PLAN/GOAL) | research-intelligence loop | absorbed, not vendored |
 | `recon-findings` | Distilled repo reconnaissance | this repo | [`recon-findings.md`](./recon-findings.md) | prior art, gaps, doctrine | primary evidence for D1–D7, G1–G7 |
+| `corpus-sweep-2026-07-11` | Read-only corpus reconnaissance aggregates (allowlisted operator projects collection + knowledge vault; frontmatter/metadata only) | n/a (operator corpus) | local, uncommitted (D2: session-only working data; coarsened conclusions in [`recon-report.md`](./recon-report.md)) | interest taxonomy, watchlist seeds, pain points | absorbed, coarsened per D2 |
 
 **How these inform implementation:** the brief fixes the loop's product shape
 and first-proof preference (GitHub watchlist, deterministic fixtures); the
@@ -26,14 +27,32 @@ driver/fixture/markdown bricks) so P0 composes instead of rebuilding.
 
 ## 2. Upstream repositories & licenses
 
-None yet. Candidates enter this table during P0's technology ADR (gate G2:
-Cognee, Zep/Graphiti, TrustGraph, mem0) with SPDX license and port discipline
-recorded before any evaluation code is written.
+Recorded by the G2 technology ADR
+([`technology-adr.md`](./technology-adr.md)); licenses web-verified
+2026-07-11 from upstream license metadata/files. No evaluation code is
+authorized: G2 selected the repo-native relational baseline, so these are
+donor/reference upstreams only.
+
+| Upstream (repo) | SPDX license | Port discipline |
+| --- | --- | --- |
+| `topoteretes/cognee` | Apache-2.0 | Donor or rebuildable cache only; any integration via a product-neutral `drivers/*` wrapper; never owns claims or lifecycle. |
+| `getzep/graphiti` | Apache-2.0 | Port temporal contracts or use as a bounded projection only; graph-backend licenses reviewed at selection time (the FalkorDB backend is SSPLv1). |
+| `trustgraph-ai/trustgraph` | Apache-2.0 | Port provenance/explainability capabilities, not service topology or product authority. |
+| `mem0ai/mem0` | Apache-2.0 | Port extraction/retrieval discipline or use as a cache; mutation and approval semantics stay repo-owned. |
 
 ## 3. External research sources
 
-None yet — populated by P0 corpus reconnaissance and the technology ADR.
-Never invent entries; only sources that actually appear on disk.
+Consulted during P0 (each entry names what it evidences; retrieval date
+2026-07-11). Only sources actually consulted are listed.
+
+| Source | Evidences |
+| --- | --- |
+| GitHub machine-readable license/repo metadata (four upstreams above plus the twenty watchlist candidates) | SPDX license, existence, archived state, rename resolution ([`interest-taxonomy-watchlist.md`](./interest-taxonomy-watchlist.md)) |
+| Cognee documentation, "main operations: add" page (`docs.cognee.ai`) | content-hash deduplication behavior of the add operation |
+| Graphiti upstream documentation (`getzep/graphiti`) | supported graph backends (Neo4j default, FalkorDB incl. embedded, Amazon Neptune; Kuzu deprecated), self-hosting shape |
+| mem0 documentation (`docs.mem0.ai`) | single-pass ADD-only open-source algorithm; hosted-platform-only "Graph Memory" |
+| Zep help documentation, "zep-vs-graphiti" page (`help.getzep.com`) | managed Zep vs open-source Graphiti distinction |
+| FalkorDB upstream license file (`FalkorDB/FalkorDB`) | SSPLv1 license text |
 
 ## 4. In-repo capability references
 
