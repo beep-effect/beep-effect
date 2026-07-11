@@ -1,0 +1,911 @@
+{
+  "swagger": "2.0",
+  "info": { "title": "eCFR API Documentation" },
+  "host": "www.ecfr.gov",
+  "tags": [
+    {
+      "name": "Admin Service",
+      "description": "Access eCFR metadata through JSON"
+    },
+    {
+      "name": "Search Service",
+      "description": "Historical search of the eCFR"
+    },
+    {
+      "name": "Versioner Service",
+      "description": "Access CFR content and structure files through JSON and XML"
+    }
+  ],
+  "paths": {
+    "/api/admin/v1/agencies.json": {
+      "get": {
+        "summary": "Agencies",
+        "description": "All top-level agencies in name order with children also in name order",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "```json\n  {\n    \"agencies\": [\n      {\n        \"name\": \"Administrative Conference of the United States\",\n        \"short_name\": \"ACUS\",\n        \"display_name\": \"Administrative Conference of the United States\",\n        \"sortable_name\": \"Administrative Conference of the United States\",\n        \"slug\": \"administrative-conference-of-the-united-states\",\n        \"children\": [],\n        \"cfr_references\": [\n          {\n            \"title\": 1,\n            \"chapter\": \"III\"\n          }\n        ]\n      },\n  ...\n      {\n        \"name\": \"Department of Agriculture\",\n        \"short_name\": \"USDA\",\n        \"display_name\": \"Department of Agriculture\",\n        \"sortable_name\": \"Agriculture, Department of\",\n        \"slug\": \"agriculture-department\",\n        \"children\": [\n          {\n          \"name\": \"Agricultural Marketing Service\",\n          \"short_name\": \"AMS\",\n          \"display_name\": \"Agricultural Marketing Service, Department of Agriculture\",\n          \"sortable_name\": \"Agricultural Marketing Service\",\n          \"slug\": \"agricultural-marketing-service\",\n          \"cfr_references\": [\n            {\n              \"title\": 7,\n              \"chapter\": \"I\"\n            },\n            ...\n          ],\n        \"cfr_references\": [\n          {\n            \"title\": 2,\n            \"chapter\": \"IV\",\n          },\n          ...\n        ]\n      },\n  ...\n      {\n        \"name\": \"World Agricultural Outlook Board\",\n        \"short_name\": \"WAOB\",\n        \"display_name\": \"World Agricultural Outlook Board\",\n        \"sortable_name\": \"World Agricultural Outlook Board\",\n        \"slug\": \"world-agricultural-outlook-board\",\n        \"cfr_references\": [\n          {\n            \"title\": 7,\n            \"chapter\": \"XXXVIII\"\n          }\n        ]\n      }\n    ]\n  }\n```\n"
+          }
+        },
+        "tags": ["Admin Service"]
+      }
+    },
+    "/api/admin/v1/corrections.json": {
+      "get": {
+        "summary": "Corrections route returns all eCFR corrections.",
+        "description": "The Corrections service can be used to determine all corrections or can be filtered by title, effective date, or correction date.\n",
+        "parameters": [
+          {
+            "name": "date",
+            "description": "Restricts results to eCFR corrections that occurred on or before the specified date and that were corrected on or after the specified date. Format: YYYY-MM-DD",
+            "in": "query",
+            "type": "string",
+            "format": "date",
+            "required": false
+          },
+          {
+            "name": "title",
+            "description": "Restricts results to the given title number: Format: '1', '2', '50', etc",
+            "in": "query",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "error_corrected_date",
+            "description": "Returns only corrections that were corrected on the given date. Format: YYYY-MM-DD",
+            "in": "query",
+            "type": "string",
+            "format": "date",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "```json\n  \"ecfr_corrections\": [\n    {\n      \"id\": 1,\n      \"cfr_references\": [\n        {\n          \"cfr_reference\": \"7 CFR 2.80\",\n          \"hierarchy\": {\n            \"title\": \"7\",\n            \"subtitle\": \"A\",\n            \"part\": \"2\",\n            \"subpart\": \"N\",\n            \"section\": \"2.80\"\n          }\n        }\n      ],\n      \"corrective_action\": \"Amended\",\n      \"error_corrected\": \"2005-12-02\",\n      \"error_occurred\": \"2005-09-23\",\n      \"fr_citation\": \"70 FR 55706\",\n      \"position\": 1,\n      \"display_in_toc\": false,\n      \"title\": 7,\n      \"year\": 2005,\n      \"last_modified\": \"2021-12-22\"\n    },\n...\n    {\n        \"id\": 3858,\n        \"cfr_references\": [\n          {\n            \"cfr_reference\": \"50 CFR 660.71\",\n            \"hierarchy\": {\n              \"title\": \"50\",\n              \"part\": \"660\",\n              \"section\": \"660.71\"\n            }\n          }\n        ],\n        \"corrective_action\": \" (e)(398) and (399) correctly designated as (e)(298) and (299)\\r\\n           \\r\\n\",\n        \"error_corrected\": \"2023-01-09\",\n        \"error_occurred\": \"2023-01-01\",\n        \"fr_citation\": \"87 FR 77015\",\n        \"position\": 3,\n        \"display_in_toc\": false,\n        \"title\": 50,\n        \"year\": 2023,\n        \"last_modified\": \"2023-01-31\"\n      }\n    ]\n  ```\n"
+          },
+          "400": { "description": "null // Bad request" },
+          "404": { "description": "Title not found" }
+        },
+        "tags": ["Admin Service"]
+      }
+    },
+    "/api/admin/v1/corrections/title/{title}.json": {
+      "get": {
+        "summary": "Corrections title route returns all corrections for the supplied title.",
+        "description": "The Corrections service can be used to determine all corrections for the given title.",
+        "parameters": [
+          {
+            "name": "title",
+            "description": "Restricts results to the given title number: Format: '1', '2', '50', etc",
+            "in": "path",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "```json\n  {\n    \"ecfr_corrections\": [\n      {\n        \"id\": 1473,\n        \"cfr_references\": [\n          {\n            \"cfr_reference\": \"6 CFR Part 5\",\n            \"hierarchy\": {\n              \"title\": \"6\",\n              \"chapter\": \"I\",\n              \"part\": \"5\"\n            }\n          }\n        ],\n        \"corrective_action\": \"Paragraph 72 added\",\n        \"error_corrected\": \"2014-11-12\",\n        \"error_occurred\": \"2014-04-02\",\n        \"fr_citation\": \"79 FR 18441\",\n        \"position\": 1,\n        \"display_in_toc\": false,\n        \"title\": 6,\n        \"year\": 2014,\n        \"last_modified\": \"2021-12-22\"\n      },\n      {\n        \"id\": 2252,\n        \"cfr_references\": [\n          {\n            \"cfr_reference\": \"6 CFR 1001.6\",\n            \"hierarchy\": {\n              \"title\": \"6\",\n              \"chapter\": \"X\",\n              \"part\": \"1001\",\n              \"section\": \"1001.6\"\n            }\n          }\n        ],\n        \"corrective_action\": \"(b)(4) amended\",\n        \"error_corrected\": \"2018-01-16\",\n        \"error_occurred\": \"2017-08-28\",\n        \"fr_citation\": \"82 FR 34836\",\n        \"position\": 1,\n        \"display_in_toc\": false,\n        \"title\": 6,\n        \"year\": 2018,\n        \"last_modified\": \"2021-12-22\"\n      }\n    ]\n  }\n```\n"
+          },
+          "404": { "descripton": "Not Found" }
+        },
+        "tags": ["Admin Service"]
+      }
+    },
+    "/api/search/v1/results": {
+      "get": {
+        "summary": "Search results",
+        "parameters": [
+          {
+            "name": "query",
+            "description": "Search term; searches the headings and the full text",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "agency_slugs[]",
+            "description": "limit to content currently associated with these agencies (see AdminService agencies endpoint to retrieve a list of agency slugs)",
+            "in": "query",
+            "type": "array",
+            "items": { "type": "string" },
+            "style": "form",
+            "explode": true,
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "date",
+            "description": "limit to content present on this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_after",
+            "description": "limit to content last modified after this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_on_or_after",
+            "description": "limit to content last modified on or after this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_before",
+            "description": "limit to content last modified before this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_on_or_before",
+            "description": "limit to content last modified on or before this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "per_page",
+            "description": "number of results per page; max of 1,000",
+            "default": 20,
+            "in": "query",
+            "type": "integer"
+          },
+          {
+            "name": "page",
+            "description": "page of results; can't paginate beyond 10,000 total results",
+            "default": 1,
+            "in": "query",
+            "type": "integer"
+          },
+          {
+            "name": "order",
+            "description": "order of results",
+            "in": "query",
+            "type": "string",
+            "default": "relevance",
+            "enum": [
+              "citations",
+              "relevance",
+              "hierarchy",
+              "newest_first",
+              "oldest_first",
+              "suggestions"
+            ]
+          },
+          {
+            "name": "paginate_by",
+            "description": "how results should be paginated - 'date' will group results so that all results from a date appear on the same page of pagination. If 'date' is chosen then one of the last_modified_* options is required.",
+            "in": "query",
+            "type": "string",
+            "default": "results",
+            "enum": ["date", "results"]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "results": {
+                  "type": "array",
+                  "description": "A set of sections and appendices that match the provided query params"
+                },
+                "meta": {
+                  "type": "object",
+                  "properties": {
+                    "description": {
+                      "type": "string",
+                      "description": "description of the search results"
+                    },
+                    "current_page": {
+                      "type": "integer",
+                      "description": "current page of results"
+                    },
+                    "total_count": {
+                      "type": "integer",
+                      "description": "total count of matching results across all pages"
+                    },
+                    "total_pages": {
+                      "type": "integer",
+                      "description": "total number of pages in the search results"
+                    },
+                    "max_score": {
+                      "type": "number",
+                      "format": "float",
+                      "description": "the maximum score of any match in the search"
+                    },
+                    "min_date": {
+                      "type": "string",
+                      "format": "date",
+                      "description": "the minimum date of all returned results (returned when paginate_by=date option is provided)"
+                    },
+                    "max_date": {
+                      "type": "string",
+                      "format": "date",
+                      "description": "the maximum date of all returned results (returned when paginate_by=date option is provided)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "405": { "description": "Invalid input" }
+        },
+        "tags": ["Search Service"]
+      }
+    },
+    "/api/search/v1/count": {
+      "get": {
+        "summary": "Search result count",
+        "parameters": [
+          {
+            "name": "query",
+            "description": "Search term; searches the headings and the full text",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "agency_slugs[]",
+            "description": "limit to content currently associated with these agencies (see AdminService agencies endpoint to retrieve a list of agency slugs)",
+            "in": "query",
+            "type": "array",
+            "items": { "type": "string" },
+            "style": "form",
+            "explode": true,
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "date",
+            "description": "limit to content present on this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_after",
+            "description": "limit to content last modified after this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_on_or_after",
+            "description": "limit to content last modified on or after this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_before",
+            "description": "limit to content last modified before this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_on_or_before",
+            "description": "limit to content last modified on or before this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Success" },
+          "405": { "description": "Invalid input" }
+        },
+        "tags": ["Search Service"]
+      }
+    },
+    "/api/search/v1/summary": {
+      "get": {
+        "summary": "Search summary details",
+        "parameters": [
+          {
+            "name": "query",
+            "description": "Search term; searches the headings and the full text",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "agency_slugs[]",
+            "description": "limit to content currently associated with these agencies (see AdminService agencies endpoint to retrieve a list of agency slugs)",
+            "in": "query",
+            "type": "array",
+            "items": { "type": "string" },
+            "style": "form",
+            "explode": true,
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "date",
+            "description": "limit to content present on this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_after",
+            "description": "limit to content last modified after this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_on_or_after",
+            "description": "limit to content last modified on or after this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_before",
+            "description": "limit to content last modified before this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_on_or_before",
+            "description": "limit to content last modified on or before this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Success" },
+          "405": { "description": "Invalid input" }
+        },
+        "tags": ["Search Service"]
+      }
+    },
+    "/api/search/v1/counts/daily": {
+      "get": {
+        "summary": "Search result counts by date",
+        "parameters": [
+          {
+            "name": "query",
+            "description": "Search term; searches the headings and the full text",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "agency_slugs[]",
+            "description": "limit to content currently associated with these agencies (see AdminService agencies endpoint to retrieve a list of agency slugs)",
+            "in": "query",
+            "type": "array",
+            "items": { "type": "string" },
+            "style": "form",
+            "explode": true,
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "date",
+            "description": "limit to content present on this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_after",
+            "description": "limit to content last modified after this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_on_or_after",
+            "description": "limit to content last modified on or after this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_before",
+            "description": "limit to content last modified before this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_on_or_before",
+            "description": "limit to content last modified on or before this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Success" },
+          "405": { "description": "Invalid input" }
+        },
+        "tags": ["Search Service"]
+      }
+    },
+    "/api/search/v1/counts/titles": {
+      "get": {
+        "summary": "Search result counts by title",
+        "parameters": [
+          {
+            "name": "query",
+            "description": "Search term; searches the headings and the full text",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "agency_slugs[]",
+            "description": "limit to content currently associated with these agencies (see AdminService agencies endpoint to retrieve a list of agency slugs)",
+            "in": "query",
+            "type": "array",
+            "items": { "type": "string" },
+            "style": "form",
+            "explode": true,
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "date",
+            "description": "limit to content present on this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_after",
+            "description": "limit to content last modified after this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_on_or_after",
+            "description": "limit to content last modified on or after this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_before",
+            "description": "limit to content last modified before this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_on_or_before",
+            "description": "limit to content last modified on or before this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Success" },
+          "405": { "description": "Invalid input" }
+        },
+        "tags": ["Search Service"]
+      }
+    },
+    "/api/search/v1/counts/hierarchy": {
+      "get": {
+        "summary": "Search result counts by hierarchy",
+        "parameters": [
+          {
+            "name": "query",
+            "description": "Search term; searches the headings and the full text",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "agency_slugs[]",
+            "description": "limit to content currently associated with these agencies (see AdminService agencies endpoint to retrieve a list of agency slugs)",
+            "in": "query",
+            "type": "array",
+            "items": { "type": "string" },
+            "style": "form",
+            "explode": true,
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "date",
+            "description": "limit to content present on this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_after",
+            "description": "limit to content last modified after this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_on_or_after",
+            "description": "limit to content last modified on or after this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_before",
+            "description": "limit to content last modified before this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_on_or_before",
+            "description": "limit to content last modified on or before this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Success" },
+          "405": { "description": "Invalid input" }
+        },
+        "tags": ["Search Service"]
+      }
+    },
+    "/api/search/v1/suggestions": {
+      "get": {
+        "summary": "Search suggestions",
+        "parameters": [
+          {
+            "name": "query",
+            "description": "Search term; searches the headings and the full text",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "agency_slugs[]",
+            "description": "limit to content currently associated with these agencies (see AdminService agencies endpoint to retrieve a list of agency slugs)",
+            "in": "query",
+            "type": "array",
+            "items": { "type": "string" },
+            "style": "form",
+            "explode": true,
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "date",
+            "description": "limit to content present on this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_after",
+            "description": "limit to content last modified after this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_on_or_after",
+            "description": "limit to content last modified on or after this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_before",
+            "description": "limit to content last modified before this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          },
+          {
+            "name": "last_modified_on_or_before",
+            "description": "limit to content last modified on or before this date (YYYY-MM-DD)",
+            "in": "query",
+            "type": "string",
+            "format": "date"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Success" },
+          "405": { "description": "Invalid input" }
+        },
+        "tags": ["Search Service"]
+      }
+    },
+    "/api/versioner/v1/ancestry/{date}/title-{title}.json": {
+      "get": {
+        "summary": "Ancestors route returns all ancestors (including self) from a given level through the top title node.",
+        "description": "The Ancestry service can be used to determine the complete ancestry to a leaf node at a specific point in time.\n### Example\nThe complete hierarchy for **2 CFR 1532.137** is\n```\nTitle 2\n  Subtitle B\n    Chapter XV\n      Part 1532\n        Subpart A\n          Section 1532.137\n```\nTo retrieve this complete hierarchy you can use the ancestry endpoint and provide a Title, Part and Section (you can provide additional layers of the hierarchy) to retrieve a full ancestry.\nSee sample json responses below.\n",
+        "parameters": [
+          {
+            "name": "date",
+            "description": "YYYY-MM-DD",
+            "in": "path",
+            "type": "string",
+            "format": "date",
+            "required": "true"
+          },
+          {
+            "name": "title",
+            "description": "Title Number: '1', '2', '50', etc",
+            "in": "path",
+            "type": "string",
+            "required": "true"
+          },
+          {
+            "name": "subtitle",
+            "description": "Uppercase letter. 'A', 'B', 'C'",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "chapter",
+            "description": "Roman Numerals and digits 0-9. 'I', 'X', '1'",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "subchapter",
+            "description": "A SUBCHAPTER REQUIRES A CHAPTER. Uppercase letters with optional underscore or dash. 'A', 'B', 'I'",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "part",
+            "description": "Uppercase letters with optional underscore or dash. 'A', 'B', 'I'",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "subpart",
+            "description": "A SUBPART REQUIRES A PART. Generally an uppercase letter. 'A', 'B', 'C'",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "section",
+            "description": "A SECTION REQUIRES A PART. Generally a number followed by a dot and another number. '121.1', '13.4', '1.9'",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "appendix",
+            "description": "AN APPENDIX REQUIRES A SUBTITLE, CHAPTER or PART. Multiple formats. 'A', 'III', 'App. A'",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "```json\n  [\n    {\n        \"type\": \"title\",\n        \"label\": \"Title 2 - Federal Financial Assistance\",\n        \"label_level\": \"Title 2\",\n        \"label_description\": \"Federal Financial Assistance\",\n        \"identifier\": \"2\"\n    },\n    {\n        \"type\": \"subtitle\",\n        \"label\": \"Subtitle B - Federal Agency Regulations for Grants and Agreements\",\n        \"label_level\": \"Subtitle B\",\n        \"label_description\": \"Federal Agency Regulations for Grants and Agreements\",\n        \"identifier\": \"B\",\n        \"reserved\": false,\n        \"section_range\": \"§§ 300.1 – 5900.101\"\n    },\n    {\n        \"type\": \"chapter\",\n        \"label\": \"Chapter XV - Environmental Protection Agency\",\n        \"label_level\": \"Chapter XV\",\n        \"label_description\": \"Environmental Protection Agency\",\n        \"identifier\": \"XV\",\n        \"reserved\": false,\n        \"section_range\": \"§§ 1500.1 – 1536.505\"\n    },\n    {\n        \"type\": \"part\",\n        \"label\": \"Part 1532 - Nonprocurement Debarment and Suspension\",\n        \"label_level\": \"Part 1532\",\n        \"label_description\": \"Nonprocurement Debarment and Suspension\",\n        \"identifier\": \"1532\",\n        \"reserved\": false,\n        \"section_range\": \"§§ 1532.10 – 1532.1600\"\n    },\n    {\n        \"type\": \"subpart\",\n        \"label\": \"Subpart A - General\",\n        \"label_level\": \"Subpart A\",\n        \"label_description\": \"General\",\n        \"identifier\": \"A\",\n        \"reserved\": false,\n        \"section_range\": \"§ 1532.137\"\n    },\n    {\n        \"type\": \"section\",\n        \"label\": \"§ 1532.137 Who in the EPA may grant an exception to let an excluded person participate in a covered transaction?\",\n        \"label_level\": \"§ 1532.137\",\n        \"label_description\": \"Who in the EPA may grant an exception to let an excluded person participate in a covered transaction?\",\n        \"identifier\": \"1532.137\",\n        \"reserved\": false\n    }\n  ]\n```\n"
+          },
+          "404": {
+            "description": "null // Invalid input or missing some hierarchy"
+          }
+        },
+        "tags": ["Versioner Service"]
+      }
+    },
+    "/api/versioner/v1/full/{date}/title-{title}.xml": {
+      "get": {
+        "description": "The title source route can be used to retrieve the source xml for a complete title or subset. The subset of xml is determined by the lowest leaf node given. For example, if you request Title 1, Chapter I, Part 1, you'll receive the XML only for Part 1 and its children.\nIf you request a section you'll receive the section XML inside its parent Part as well as relevant non-section sibling nodes (Auth, Source, etc).\nThe largest title source xml files can be dozens of megabytes.\n\n[GPO eCFR XML User guide](https://github.com/usgpo/bulk-data/blob/master/ECFR-XML-User-Guide.md)\n",
+        "summary": "Source XML for a title or subset of a title. Requests can be for entire titles or part level and below.  Downloadable XML document is returned for title requests.  Processed XML is returned if part, subpart, section, or appendix is requested.",
+        "parameters": [
+          {
+            "name": "date",
+            "description": "YYYY-MM-DD",
+            "in": "path",
+            "type": "string",
+            "format": "date",
+            "required": "true"
+          },
+          {
+            "name": "title",
+            "description": "Title Number: '1', '2', '50', etc",
+            "in": "path",
+            "type": "string",
+            "required": "true"
+          },
+          {
+            "name": "subtitle",
+            "description": "Uppercase letter. 'A', 'B', 'C'",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "chapter",
+            "description": "Roman Numerals and digits 0-9. 'I', 'X', '1'",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "subchapter",
+            "description": "A SUBCHAPTER REQUIRES A CHAPTER. Uppercase letters with optional underscore or dash. 'A', 'B', 'I'",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "part",
+            "description": "Uppercase letters with optional underscore or dash. 'A', 'B', 'I'",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "subpart",
+            "description": "A SUBPART REQUIRES A PART. Generally an uppercase letter. 'A', 'B', 'C'",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "section",
+            "description": "A SECTION REQUIRES A PART. Generally a number followed by a dot and another number. '121.1', '13.4', '1.9'",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "appendix",
+            "description": "AN APPENDIX REQUIRES A SUBTITLE, CHAPTER or PART. Multiple formats. 'A', 'III', 'App. A'",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "produces": ["application/xml"],
+        "responses": {
+          "200": {
+            "description": "A downloadable Title XML document for entire Title requests or processed XML for part level and below requests.",
+            "headers": { "Content-Type": "application/xml" }
+          },
+          "400": { "description": "Bad parameter: invalid date." },
+          "404": { "description": "No matching content found." }
+        },
+        "tags": ["Versioner Service"]
+      }
+    },
+    "/api/versioner/v1/structure/{date}/title-{title}.json": {
+      "get": {
+        "summary": "Structure JSON for a title",
+        "parameters": [
+          {
+            "name": "date",
+            "description": "YYYY-MM-DD",
+            "in": "path",
+            "type": "string",
+            "format": "date",
+            "required": "true"
+          },
+          {
+            "name": "title",
+            "description": "Title Number: '1', '2', '50', etc",
+            "in": "path",
+            "type": "string",
+            "required": "true"
+          }
+        ],
+        "description": "The structure JSON endpoint returns the complete structure of a title back as json. This format does not include the content of the title but does include all structure and content nodes as well as their meta data including their type, label, description, identifier and children.",
+        "responses": {
+          "200": {
+            "description": "```json\n  {\n    \"type\": \"title\",\n    \"label\": \"Title 3 - The President\",\n    \"label_level\": \"Title 3\",\n    \"label_description\": \"The President\",\n    \"identifier\": \"3\",\n    \"children\": [\n      {\n        \"type\": \"chapter\",\n        \"label\": \"Chapter I - Executive Office of the President\",\n        \"label_level\": \"Chapter I\",\n        \"label_description\": \"Executive Office of the President\",\n        \"identifier\": \"I\",\n        \"reserved\": false,\n        \"children\": [\n          {\n            \"type\": \"part\",\n            \"label\": \"Part 100 - Standards of Conduct\",\n            \"label_level\": \"Part 100\",\n            \"label_description\": \"Standards of Conduct\",\n            \"identifier\": \"100\",\n            \"reserved\": false,\n            \"children\": [\n              {\n                \"type\": \"section\",\n                \"label\": \"§ 100.1 Ethical conduct standards and financial disclosure regulations.\",\n                \"label_level\": \"§ 100.1\",\n                \"label_description\": \"Ethical conduct standards and financial disclosure regulations.\",\n                \"identifier\": \"100.1\",\n                \"reserved\": false\n              }\n            ],\n            \"section_range\": \"§ 100.1\"\n          },\n        ],\n      }\n    ]\n  }\n```|\n"
+          },
+          "404": { "description": "Invalid input." }
+        },
+        "tags": ["Versioner Service"]
+      }
+    },
+    "/api/versioner/v1/titles.json": {
+      "get": {
+        "summary": "Summary information about each title",
+        "description": "The Title service can be used to determine the status of each individual title and of the overall status of title imports and reprocessings. It returns an array of all titles containing a hash for each with the name of the title, the latest amended date, latest issue date, up-to-date date, reserved status, and if applicable, processing in progress status. The meta data returned indicates the latest issue date and whether titles are currently being reprocessed.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "```json\n  {\n    \"titles\": [\n      {\n        \"number\": 1,\n        \"name\": \"General Provisions\",\n        \"latest_amended_on\": \"2022-05-04\",\n        \"latest_issue_date\": \"2022-05-04\",\n        \"up_to_date_as_of\": \"2022-07-28\",\n        \"reserved\": false\n      },\n      {\n        \"number\": 2,\n        \"name\": \"Federal Financial Assistance\",\n        \"latest_amended_on\": \"2022-05-19\",\n        \"latest_issue_date\": \"2022-06-03\",\n        \"up_to_date_as_of\": \"2022-07-28\",\n        \"reserved\": false,\n        \"processing_in_progress\": true\n      },\n      {\n        \"number\": 3,\n        \"name\": \"The President\",\n        \"latest_amended_on\": \"2015-03-17\",\n        \"latest_issue_date\": \"2019-06-27\",\n        \"up_to_date_as_of\": \"2022-07-28\",\n        \"reserved\": false\n      },\n      ...\n    ],\n    meta\": {\n      \"date\": \"2022-07-29\",\n      \"import_in_progress\": true\n    }\n  }\n```\n"
+          }
+        },
+        "tags": ["Versioner Service"]
+      }
+    },
+    "/api/versioner/v1/versions/title-{title}.json": {
+      "get": {
+        "summary": "Returns an array of all sections and appendices inside a title.",
+        "description": "Returns the content versions meeting the specified criteria. Each content object includes its identifier, parent hierarchy, last amendment date and issue date it was last updated. Queries return content versions `on` an issue date, or before or on a specific issue date `lte` or on or after `gte` a specific issue date. At least one issue date parameter must be provided. The `gte` and `lte` parameters may be combined. Use of the `on` parameter precludes use of `gte` or `lte`. Responses are paginated at 1000 records per page. In the response, the `date` field is identical to `amendment_date` and is deprecated.\n\u003cbr\u003e\nA response of `400 Bad Request` indicates that your request could not be processed. If possible the response will include a message indicating the problem.\n\u003cbr\u003e\nA response of `503 Service Unavailable` indicates that the title is currently unavailable, typlically because it is currently being processed. The value of the `Retry-After` header suggests a number of seconds to wait before retrying the request.\n",
+        "parameters": [
+          {
+            "name": "title",
+            "description": "Title Number: '1', '2', '50', etc",
+            "in": "path",
+            "type": "string",
+            "required": "true"
+          },
+          {
+            "name": "issue_date[on]",
+            "in": "query",
+            "type": "string",
+            "format": "date",
+            "description": "One issue date is required. Select content added on the supplied issue date"
+          },
+          {
+            "name": "issue_date[lte]",
+            "in": "query",
+            "type": "string",
+            "format": "date",
+            "description": "One issue date is required. Select content added on or before the supplied issue date"
+          },
+          {
+            "name": "issue_date[gte]",
+            "in": "query",
+            "type": "string",
+            "format": "date",
+            "description": "One issue date is required. Select content added on or after the supplied issue date"
+          },
+          {
+            "name": "page",
+            "description": "Page number for paginated content version responses. Upto 1000 results are returned at a time.",
+            "in": "query",
+            "type": "integer"
+          },
+          {
+            "name": "subtitle",
+            "description": "Uppercase letter. 'A', 'B', 'C'",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "chapter",
+            "description": "Roman Numerals and digits 0-9. 'I', 'X', '1'",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "subchapter",
+            "description": "A SUBCHAPTER REQUIRES A CHAPTER. Uppercase letters with optional underscore or dash. 'A', 'B', 'I'",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "part",
+            "description": "Uppercase letters with optional underscore or dash. 'A', 'B', 'I'",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "subpart",
+            "description": "A SUBPART REQUIRES A PART. Generally an uppercase letter. 'A', 'B', 'C'",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "section",
+            "description": "A SECTION REQUIRES A PART. Generally a number followed by a dot and another number. '121.1', '13.4', '1.9'",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "appendix",
+            "description": "AN APPENDIX REQUIRES A SUBTITLE, CHAPTER or PART. Multiple formats. 'A', 'III', 'App. A'",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "x-required-one-of": [
+          ["issue_date[on]", "issue_date[lte]", "issue_date[gte]"]
+        ],
+        "responses": {
+          "200": {
+            "description": "```json\n{\n  \"content_versions\": [\n    {\n      \"date\": \"2017-01-19\",\n      \"amendment_date\": \"2017-01-19\",\n      \"issue_date\": \"2017-01-19\",\n      \"identifier\": \"3474.20\",\n      \"name\": \"§ 3474.20   xxx\",\n      \"part\": \"3474\",\n      \"substantive\": true,\n      \"removed\": false,\n      \"subpart\": null,\n      \"title\": \"2\",\n      \"type\": \"section\"\n    },\n    {\n      \"date\": \"2017-03-21\",\n      \"amendment_date\": \"2017-03-21\",\n      \"issue_date\": \"2017-03-21\",\n      \"identifier\": \"3474.20\",\n      \"name\": \"§ 3474.20   xxx\",\n      \"part\": \"3474\",\n      \"substantive\": true,\n      \"removed\": false,\n      \"subpart\": null,\n      \"title\": \"2\",\n      \"type\": \"section\"\n    },\n    {\n      \"date\": \"2017-05-17\",\n      \"amendment_date\": \"2017-05-17\",\n      \"issue_date\": \"2017-05-17\",\n      \"identifier\": \"200.110\",\n      \"name\": \"§ 200.110   Effective/applicability date.\",\n      \"part\": \"200\",\n      \"substantive\": true,\n      \"removed\": false,\n      \"subpart\": \"B\",\n      \"title\": \"2\",\n      \"type\": \"section\"\n    },\n    {\n      \"date\": \"2017-05-22\",\n      \"amendment_date\": \"2017-05-22\",\n      \"issue_date\": \"2017-05-22\",\n      \"identifier\": \"3474.20\",\n      \"name\": \"§ 3474.20   Open licensing requirement for competitive grant programs.\",\n      \"part\": \"3474\",\n      \"substantive\": true,\n      \"removed\": false,\n      \"subpart\": null,\n      \"title\": \"2\",\n      \"type\": \"section\"\n    }\n  ],\n  \"meta\": {\n    \"title\": \"2\",\n    \"result_count\": \"4\",\n    \"issue_date\": {\n      \"lte\": \"2018-01-01\",\n      \"gte\": \"2017-01-01\"\n    },\n    \"latest_amendment_date\": \"2017-05-22\",\n    \"latest_issue_date\": \"2017-05-22\"\n  }\n}\n```\n"
+          },
+          "400": {
+            "description": "```json\n{\n  \"error\": \"Bad date: '2025-16-01'\"\n}\n\n# or\n\n{\n  \"error\": \"Found unpermitted parameter: :iss_date.\"\n}\n\n# or\n\n{\n  \"errors\": \"Bad parameters: An issue_date parameter must be provided.\"\n}\n```\n"
+          },
+          "503": {
+            "description": "```json\n{\n  \"message\": \"Title 2 currently unavailable\"\n}\n```\n"
+          }
+        },
+        "tags": ["Versioner Service"]
+      }
+    }
+  }
+}
