@@ -94,6 +94,7 @@ export const GOAL_PHASE_STATUS_MIGRATIONS: Readonly<Record<string, GoalPhaseStat
   planned: "pending",
   seeded: "pending",
   gated: "pending",
+  blocked: "pending",
   in_progress: "in-progress",
   active: "in-progress",
   selected: "in-progress",

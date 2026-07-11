@@ -90,6 +90,7 @@ describe("goals status migration mapping", () => {
       ["planned", "pending"],
       ["seeded", "pending"],
       ["gated", "pending"],
+      ["blocked", "pending"],
       ["in_progress", "in-progress"],
       ["in-progress", "in-progress"],
       ["active", "in-progress"],

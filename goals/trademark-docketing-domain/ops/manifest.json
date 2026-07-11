@@ -69,7 +69,7 @@
     {
       "id": "S0",
       "name": "Deferred Stub",
-      "status": "blocked",
+      "status": "pending",
       "exitCriteria": "goals/semantic-foundation M3 vocabulary contracts are stable and this packet is expanded into an execution-capable goal."
     }
   ],
