@@ -151,6 +151,16 @@ type VaultScanObservation = {
   readonly folders: ReadonlyArray<ObservedFolder>;
 };
 
+/**
+ * Threaded reconciliation state for the vault scan's file pass: the tracked
+ * items keyed by local path, plus the still-missing file rows that remain
+ * move/rename candidates.
+ */
+type ScanFileState = {
+  readonly itemsByPath: HashMap.HashMap<string, DomainSyncItem.SyncItem>;
+  readonly missingFileItems: ReadonlyArray<DomainSyncItem.SyncItem>;
+};
+
 const emptyObservation: VaultScanObservation = { files: [], folders: [] };
 
 const mergeObservations = (observations: ReadonlyArray<VaultScanObservation>): VaultScanObservation => ({
@@ -387,14 +397,17 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
       return mergeObservations(observations);
     }).pipe(Effect.withSpan($I`walkDirectory`));
 
+  const queuedOperationsFor = (item: DomainSyncItem.SyncItem) =>
+    operationRepository.listQueuedForItem(
+      ListQueuedSyncOperationsForItemInput.make({ syncItemId: item.id, workspaceId: item.workspaceId })
+    );
+
   const enqueueOrSquash = Effect.fn($I`enqueueOrSquash`)(function* (
     item: DomainSyncItem.SyncItem,
     operationType: DomainSyncOperation.SyncOperationType,
     inputContentDigest: O.Option<DocumentContentDigest>
   ) {
-    const queued = yield* operationRepository.listQueuedForItem(
-      ListQueuedSyncOperationsForItemInput.make({ syncItemId: item.id, workspaceId: item.workspaceId })
-    );
+    const queued = yield* queuedOperationsFor(item);
     const existing = A.findFirst(queued, (operation) => operation.operationType === operationType);
 
     yield* O.match(existing, {
@@ -450,9 +463,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     item: DomainSyncItem.SyncItem,
     reason: string
   ) {
-    const queued = yield* operationRepository.listQueuedForItem(
-      ListQueuedSyncOperationsForItemInput.make({ syncItemId: item.id, workspaceId: item.workspaceId })
-    );
+    const queued = yield* queuedOperationsFor(item);
     yield* Effect.forEach(queued, (operation) =>
       operationRepository.update(
         DomainSyncOperation.SyncOperation.make({ ...operation, lastError: O.some(reason), status: "failed" })
@@ -465,9 +476,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
    * its updated path and generation instead of enqueueing a duplicate.
    */
   const retargetQueuedOperations = Effect.fn($I`retargetQueuedOperations`)(function* (item: DomainSyncItem.SyncItem) {
-    const queued = yield* operationRepository.listQueuedForItem(
-      ListQueuedSyncOperationsForItemInput.make({ syncItemId: item.id, workspaceId: item.workspaceId })
-    );
+    const queued = yield* queuedOperationsFor(item);
     yield* Effect.forEach(queued, (operation) =>
       operationRepository.update(
         DomainSyncOperation.SyncOperation.make({
@@ -480,6 +489,180 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
         })
       )
     );
+  });
+
+  /**
+   * Reconcile one observed folder against the tracked items, returning the
+   * updated `itemsByPath`. A brand-new folder is tracked and its createFolder
+   * op queued; a folder that replaced a tracked file repoints the row to the
+   * folder kind, supersedes the file's queued ops, and pushes the folder.
+   */
+  const reconcileObservedFolder = Effect.fn($I`reconcileObservedFolder`)(function* (
+    input: SyncOnceInput,
+    folder: ObservedFolder,
+    itemsByPath: HashMap.HashMap<string, DomainSyncItem.SyncItem>
+  ) {
+    const trackedAtPath = HashMap.get(itemsByPath, folder.relPath);
+    if (O.isNone(trackedAtPath)) {
+      const created = yield* itemRepository.create(
+        SyncItemSeed.make({
+          itemKind: SyncItemKind.Enum.folder,
+          localGeneration: GENERATION_ONE,
+          localRelPath: folder.relPath,
+          provider: BOX_PROVIDER,
+          syncState: SyncItemState.Enum.pending,
+          workspaceId: input.workspaceId,
+        })
+      );
+      const nextItemsByPath = HashMap.set(itemsByPath, folder.relPath, created);
+      yield* enqueueOrSquash(created, SyncOperationType.Enum.createFolder, O.none());
+      return nextItemsByPath;
+    }
+    if (SyncItemKind.is.file(trackedAtPath.value.itemKind)) {
+      // A folder replaced a tracked file at the same path: repoint the row
+      // to the new kind, drop the stale remote linkage, and push the folder.
+      const replaced = yield* itemRepository.update(
+        DomainSyncItem.SyncItem.make({
+          ...trackedAtPath.value,
+          contentDigest: O.none(),
+          contentSizeBytes: O.none(),
+          itemKind: SyncItemKind.Enum.folder,
+          lastPushedDigest: O.none(),
+          lastPushedGeneration: O.none(),
+          localGeneration: NonNegativeInt.make(trackedAtPath.value.localGeneration + 1),
+          remoteId: O.none(),
+          remoteName: O.none(),
+          remoteParentId: O.none(),
+          syncState: SyncItemState.Enum.pending,
+        })
+      );
+      const nextItemsByPath = HashMap.set(itemsByPath, folder.relPath, replaced);
+      yield* supersedeQueuedOperations(replaced, `superseded: ${folder.relPath} changed kind to folder`);
+      yield* enqueueOrSquash(replaced, SyncOperationType.Enum.createFolder, O.none());
+      return nextItemsByPath;
+    }
+    return itemsByPath;
+  });
+
+  /**
+   * Queue the remote deltas for a moved/renamed file once it exists remotely:
+   * a parent change queues `moveItem`, a base-name change queues `renameItem`
+   * (a move that also renames queues both). A row with no remote id yet is a
+   * no-op — the delta rides the eventual first upload.
+   */
+  const enqueueMoveDeltas = Effect.fn($I`enqueueMoveDeltas`)(function* (
+    moved: DomainSyncItem.SyncItem,
+    previousRelPath: VaultRelPath,
+    nextRelPath: VaultRelPath
+  ) {
+    if (O.isNone(moved.remoteId)) {
+      return;
+    }
+    const parentChanged = O.getOrNull(parentRelPathOf(previousRelPath)) !== O.getOrNull(parentRelPathOf(nextRelPath));
+    const nameChanged = baseNameOf(previousRelPath) !== baseNameOf(nextRelPath);
+    if (parentChanged) {
+      yield* enqueueOrSquash(moved, SyncOperationType.Enum.moveItem, moved.contentDigest);
+    }
+    if (nameChanged) {
+      yield* enqueueOrSquash(moved, SyncOperationType.Enum.renameItem, moved.contentDigest);
+    }
+  });
+
+  /**
+   * Reconcile one observed file against the threaded scan state, returning the
+   * updated state. Branches, in order: a file that replaced a tracked folder
+   * (repoint + supersede + upload); a same-path digest change (edit + upload);
+   * a move/rename of a locally missing row (repoint + retarget + move/rename
+   * deltas once remote); otherwise a brand-new file (track + initial upload).
+   */
+  const reconcileObservedFile = Effect.fn($I`reconcileObservedFile`)(function* (
+    input: SyncOnceInput,
+    file: ObservedFile,
+    state: ScanFileState
+  ) {
+    const tracked = HashMap.get(state.itemsByPath, file.relPath);
+    if (O.isSome(tracked) && SyncItemKind.is.folder(tracked.value.itemKind)) {
+      // A file replaced a tracked folder at the same path: repoint the row
+      // to the new kind, drop the stale remote linkage, and push the file.
+      const replaced = yield* itemRepository.update(
+        DomainSyncItem.SyncItem.make({
+          ...tracked.value,
+          contentDigest: O.some(file.digest),
+          contentSizeBytes: O.some(file.sizeBytes),
+          itemKind: SyncItemKind.Enum.file,
+          lastPushedDigest: O.none(),
+          lastPushedGeneration: O.none(),
+          localGeneration: NonNegativeInt.make(tracked.value.localGeneration + 1),
+          remoteId: O.none(),
+          remoteName: O.none(),
+          remoteParentId: O.none(),
+          syncState: SyncItemState.Enum.pending,
+        })
+      );
+      const nextItemsByPath = HashMap.set(state.itemsByPath, file.relPath, replaced);
+      yield* supersedeQueuedOperations(replaced, `superseded: ${file.relPath} changed kind to file`);
+      yield* enqueueOrSquash(replaced, SyncOperationType.Enum.uploadFile, O.some(file.digest));
+      return { itemsByPath: nextItemsByPath, missingFileItems: state.missingFileItems };
+    }
+    if (O.isSome(tracked)) {
+      // Same path: only a digest change queues a push.
+      const item = tracked.value;
+      if (O.exists(item.contentDigest, (digest) => digest === file.digest)) {
+        return state;
+      }
+      const edited = yield* itemRepository.update(
+        DomainSyncItem.SyncItem.make({
+          ...item,
+          contentDigest: O.some(file.digest),
+          contentSizeBytes: O.some(file.sizeBytes),
+          localGeneration: NonNegativeInt.make(item.localGeneration + 1),
+        })
+      );
+      const nextItemsByPath = HashMap.set(state.itemsByPath, file.relPath, edited);
+      const operationType = O.isSome(edited.remoteId)
+        ? SyncOperationType.Enum.uploadFileVersion
+        : SyncOperationType.Enum.uploadFile;
+      yield* enqueueOrSquash(edited, operationType, O.some(file.digest));
+      return { itemsByPath: nextItemsByPath, missingFileItems: state.missingFileItems };
+    }
+
+    const candidate = pickMoveCandidate(state.missingFileItems, file);
+    if (O.isSome(candidate)) {
+      // Move/rename: repoint the row, retarget queued ops, and (once the
+      // item exists remotely) queue moveItem/renameItem for the delta.
+      const source = candidate.value;
+      const nextMissingFileItems = A.filter(state.missingFileItems, (item) => item.id !== source.id);
+      const previousRelPath = source.localRelPath;
+      const moved = yield* itemRepository.update(
+        DomainSyncItem.SyncItem.make({
+          ...source,
+          contentSizeBytes: O.some(file.sizeBytes),
+          localGeneration: NonNegativeInt.make(source.localGeneration + 1),
+          localRelPath: file.relPath,
+        })
+      );
+      const nextItemsByPath = HashMap.set(HashMap.remove(state.itemsByPath, previousRelPath), file.relPath, moved);
+      yield* retargetQueuedOperations(moved);
+      yield* enqueueMoveDeltas(moved, previousRelPath, file.relPath);
+      return { itemsByPath: nextItemsByPath, missingFileItems: nextMissingFileItems };
+    }
+
+    // Brand-new file: track it and queue the initial upload.
+    const created = yield* itemRepository.create(
+      SyncItemSeed.make({
+        contentDigest: O.some(file.digest),
+        contentSizeBytes: O.some(file.sizeBytes),
+        itemKind: SyncItemKind.Enum.file,
+        localGeneration: GENERATION_ONE,
+        localRelPath: file.relPath,
+        provider: BOX_PROVIDER,
+        syncState: SyncItemState.Enum.pending,
+        workspaceId: input.workspaceId,
+      })
+    );
+    const nextItemsByPath = HashMap.set(state.itemsByPath, file.relPath, created);
+    yield* enqueueOrSquash(created, SyncOperationType.Enum.uploadFile, O.some(file.digest));
+    return { itemsByPath: nextItemsByPath, missingFileItems: state.missingFileItems };
   });
 
   const scanVault = Effect.fn($I`scanVault`)(function* (input: SyncOnceInput) {
@@ -504,143 +687,20 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     // Ancestor folders first, depth order, so createFolder ops enqueue before
     // the uploads beneath them and FIFO pumping resolves parents first.
     for (const folder of A.sort(observation.folders, folderDepthOrder)) {
-      const trackedAtPath = HashMap.get(itemsByPath, folder.relPath);
-      if (O.isNone(trackedAtPath)) {
-        const created = yield* itemRepository.create(
-          SyncItemSeed.make({
-            itemKind: SyncItemKind.Enum.folder,
-            localGeneration: GENERATION_ONE,
-            localRelPath: folder.relPath,
-            provider: BOX_PROVIDER,
-            syncState: SyncItemState.Enum.pending,
-            workspaceId: input.workspaceId,
-          })
-        );
-        itemsByPath = HashMap.set(itemsByPath, folder.relPath, created);
-        yield* enqueueOrSquash(created, SyncOperationType.Enum.createFolder, O.none());
-      } else if (SyncItemKind.is.file(trackedAtPath.value.itemKind)) {
-        // A folder replaced a tracked file at the same path: repoint the row
-        // to the new kind, drop the stale remote linkage, and push the folder.
-        const replaced = yield* itemRepository.update(
-          DomainSyncItem.SyncItem.make({
-            ...trackedAtPath.value,
-            contentDigest: O.none(),
-            contentSizeBytes: O.none(),
-            itemKind: SyncItemKind.Enum.folder,
-            lastPushedDigest: O.none(),
-            lastPushedGeneration: O.none(),
-            localGeneration: NonNegativeInt.make(trackedAtPath.value.localGeneration + 1),
-            remoteId: O.none(),
-            remoteName: O.none(),
-            remoteParentId: O.none(),
-            syncState: SyncItemState.Enum.pending,
-          })
-        );
-        itemsByPath = HashMap.set(itemsByPath, folder.relPath, replaced);
-        yield* supersedeQueuedOperations(replaced, `superseded: ${folder.relPath} changed kind to folder`);
-        yield* enqueueOrSquash(replaced, SyncOperationType.Enum.createFolder, O.none());
-      }
+      itemsByPath = yield* reconcileObservedFolder(input, folder, itemsByPath);
     }
 
     // Locally missing file rows are move/rename candidates; anything left
     // unmatched stays untouched (one-way push: no remote delete, SPEC D4).
-    let missingFileItems = A.filter(
+    let missingFileItems: ReadonlyArray<DomainSyncItem.SyncItem> = A.filter(
       trackedItems,
       (item) => SyncItemKind.is.file(item.itemKind) && O.isNone(HashMap.get(observedPathKeys, item.localRelPath))
     );
 
     for (const file of A.sort(observation.files, fileRelPathOrder)) {
-      const tracked = HashMap.get(itemsByPath, file.relPath);
-      if (O.isSome(tracked) && SyncItemKind.is.folder(tracked.value.itemKind)) {
-        // A file replaced a tracked folder at the same path: repoint the row
-        // to the new kind, drop the stale remote linkage, and push the file.
-        const replaced = yield* itemRepository.update(
-          DomainSyncItem.SyncItem.make({
-            ...tracked.value,
-            contentDigest: O.some(file.digest),
-            contentSizeBytes: O.some(file.sizeBytes),
-            itemKind: SyncItemKind.Enum.file,
-            lastPushedDigest: O.none(),
-            lastPushedGeneration: O.none(),
-            localGeneration: NonNegativeInt.make(tracked.value.localGeneration + 1),
-            remoteId: O.none(),
-            remoteName: O.none(),
-            remoteParentId: O.none(),
-            syncState: SyncItemState.Enum.pending,
-          })
-        );
-        itemsByPath = HashMap.set(itemsByPath, file.relPath, replaced);
-        yield* supersedeQueuedOperations(replaced, `superseded: ${file.relPath} changed kind to file`);
-        yield* enqueueOrSquash(replaced, SyncOperationType.Enum.uploadFile, O.some(file.digest));
-        continue;
-      }
-      if (O.isSome(tracked)) {
-        // Same path: only a digest change queues a push.
-        const item = tracked.value;
-        if (!O.exists(item.contentDigest, (digest) => digest === file.digest)) {
-          const edited = yield* itemRepository.update(
-            DomainSyncItem.SyncItem.make({
-              ...item,
-              contentDigest: O.some(file.digest),
-              contentSizeBytes: O.some(file.sizeBytes),
-              localGeneration: NonNegativeInt.make(item.localGeneration + 1),
-            })
-          );
-          itemsByPath = HashMap.set(itemsByPath, file.relPath, edited);
-          const operationType = O.isSome(edited.remoteId)
-            ? SyncOperationType.Enum.uploadFileVersion
-            : SyncOperationType.Enum.uploadFile;
-          yield* enqueueOrSquash(edited, operationType, O.some(file.digest));
-        }
-        continue;
-      }
-
-      const candidate = pickMoveCandidate(missingFileItems, file);
-      if (O.isSome(candidate)) {
-        // Move/rename: repoint the row, retarget queued ops, and (once the
-        // item exists remotely) queue moveItem/renameItem for the delta.
-        const source = candidate.value;
-        missingFileItems = A.filter(missingFileItems, (item) => item.id !== source.id);
-        const previousRelPath = source.localRelPath;
-        const moved = yield* itemRepository.update(
-          DomainSyncItem.SyncItem.make({
-            ...source,
-            contentSizeBytes: O.some(file.sizeBytes),
-            localGeneration: NonNegativeInt.make(source.localGeneration + 1),
-            localRelPath: file.relPath,
-          })
-        );
-        itemsByPath = HashMap.set(HashMap.remove(itemsByPath, previousRelPath), file.relPath, moved);
-        yield* retargetQueuedOperations(moved);
-        if (O.isSome(moved.remoteId)) {
-          const parentChanged =
-            O.getOrNull(parentRelPathOf(previousRelPath)) !== O.getOrNull(parentRelPathOf(file.relPath));
-          const nameChanged = baseNameOf(previousRelPath) !== baseNameOf(file.relPath);
-          if (parentChanged) {
-            yield* enqueueOrSquash(moved, SyncOperationType.Enum.moveItem, moved.contentDigest);
-          }
-          if (nameChanged) {
-            yield* enqueueOrSquash(moved, SyncOperationType.Enum.renameItem, moved.contentDigest);
-          }
-        }
-        continue;
-      }
-
-      // Brand-new file: track it and queue the initial upload.
-      const created = yield* itemRepository.create(
-        SyncItemSeed.make({
-          contentDigest: O.some(file.digest),
-          contentSizeBytes: O.some(file.sizeBytes),
-          itemKind: SyncItemKind.Enum.file,
-          localGeneration: GENERATION_ONE,
-          localRelPath: file.relPath,
-          provider: BOX_PROVIDER,
-          syncState: SyncItemState.Enum.pending,
-          workspaceId: input.workspaceId,
-        })
-      );
-      itemsByPath = HashMap.set(itemsByPath, file.relPath, created);
-      yield* enqueueOrSquash(created, SyncOperationType.Enum.uploadFile, O.some(file.digest));
+      const next = yield* reconcileObservedFile(input, file, { itemsByPath, missingFileItems });
+      itemsByPath = next.itemsByPath;
+      missingFileItems = next.missingFileItems;
     }
   });
 
@@ -1048,6 +1108,35 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
   });
 
   /**
+   * Revive-eligibility for a failed operation: its item still sits at the
+   * operation's target path, its type still matches the item kind, no queued
+   * twin of the same type already exists, and the target file is still present
+   * on disk. Each `false` mirrors a skip branch of the recovery loop, in order.
+   */
+  const reviveEligibility = Effect.fn($I`reviveEligibility`)(function* (
+    input: SyncOnceInput,
+    item: DomainSyncItem.SyncItem,
+    operation: DomainSyncOperation.SyncOperation
+  ) {
+    const typeMatchesKind = SyncItemKind.is.folder(item.itemKind)
+      ? SyncOperationType.is.createFolder(operation.operationType) ||
+        SyncOperationType.is.moveItem(operation.operationType) ||
+        SyncOperationType.is.renameItem(operation.operationType)
+      : !SyncOperationType.is.createFolder(operation.operationType);
+    if (item.localRelPath !== operation.targetRelPath || !typeMatchesKind) {
+      return false;
+    }
+    const pending = yield* queuedOperationsFor(item);
+    if (A.some(pending, (candidate) => candidate.operationType === operation.operationType)) {
+      return false;
+    }
+    const stillPresent = yield* Effect.result(
+      fs.stat(path.join(input.vaultRootPath, ...relPathSegments(operation.targetRelPath)))
+    );
+    return Result.isSuccess(stillPresent);
+  });
+
+  /**
    * Terminal-failure recovery: while the mirror probe reports connected, a
    * failed operation whose item still exists locally at the operation's target
    * path (and has no queued or leased replacement of the same type, and whose
@@ -1079,24 +1168,8 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
         continue;
       }
       const item = tracked.value;
-      const typeMatchesKind = SyncItemKind.is.folder(item.itemKind)
-        ? SyncOperationType.is.createFolder(operation.operationType) ||
-          SyncOperationType.is.moveItem(operation.operationType) ||
-          SyncOperationType.is.renameItem(operation.operationType)
-        : !SyncOperationType.is.createFolder(operation.operationType);
-      if (item.localRelPath !== operation.targetRelPath || !typeMatchesKind) {
-        continue;
-      }
-      const pending = yield* operationRepository.listQueuedForItem(
-        ListQueuedSyncOperationsForItemInput.make({ syncItemId: item.id, workspaceId: item.workspaceId })
-      );
-      if (A.some(pending, (candidate) => candidate.operationType === operation.operationType)) {
-        continue;
-      }
-      const stillPresent = yield* Effect.result(
-        fs.stat(path.join(input.vaultRootPath, ...relPathSegments(operation.targetRelPath)))
-      );
-      if (Result.isFailure(stillPresent)) {
+      const eligible = yield* reviveEligibility(input, item, operation);
+      if (!eligible) {
         continue;
       }
       yield* operationRepository.update(

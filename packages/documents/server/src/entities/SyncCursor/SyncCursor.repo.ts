@@ -23,16 +23,12 @@ import { and, eq } from "drizzle-orm";
 import { Effect, HashMap, pipe, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.js";
 import type { DmsProvider } from "@beep/documents-domain/values/Sync";
 import type { SyncCursorSeed } from "@beep/documents-use-cases/entities/SyncCursor/server";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 
 const decodeSyncCursor = S.decodeUnknownSync(DomainSyncCursor.SyncCursor);
-
-const SYSTEM_PRINCIPAL = { component: "Runtime", kind: "System" } as const;
-
-const nextEntityId = (rows: ReadonlyArray<{ readonly id: number }>): number =>
-  A.reduce(rows, 0, (max, row) => N.max(max, row.id)) + 1;
 
 /**
  * Build a full SyncCursor entity from an upsert seed and an assigned id.
@@ -105,9 +101,9 @@ const matchesMirror = (input: MirrorScope) => (cursor: DomainSyncCursor.SyncCurs
  * @since 0.0.0
  */
 export const makeInMemorySyncCursorRepository = Effect.fn("Documents.SyncCursorRepository.makeInMemory")(function* () {
-  const store = yield* Ref.make(HashMap.empty<DomainSyncCursor.SyncCursorId, DomainSyncCursor.SyncCursor>());
-  const counter = yield* Ref.make(1);
-  const snapshot = Effect.map(Ref.get(store), (cursors) => A.fromIterable(HashMap.values(cursors)));
+  const { counter, snapshot, store } = yield* makeEntityStore(
+    HashMap.empty<DomainSyncCursor.SyncCursorId, DomainSyncCursor.SyncCursor>()
+  );
 
   return SyncCursorRepository.of({
     find: Effect.fn("Documents.SyncCursorRepository.find")(function* (input) {

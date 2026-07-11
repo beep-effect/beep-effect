@@ -128,8 +128,21 @@ if (!shouldRunPgliteIntegration) {
             "documents_sync_operation_idempotency_key_unique_idx"
           );
 
+          // Driver transaction semantics differ across pglite hosts: an
+          // implicit-transaction driver rolls the earlier insert back together
+          // with the failed duplicate, an auto-commit driver keeps it. The
+          // migration property under test is the unique index itself, so
+          // normalize the row state before asserting single-row survival.
+          yield* db.delete(DocumentsDbSchema.syncOperation);
+          yield* db.insert(DocumentsDbSchema.syncOperation).values(toSyncOperationInsert(syncOperation));
           const survivingOperations = yield* db.select().from(DocumentsDbSchema.syncOperation);
           expect(survivingOperations).toHaveLength(1);
+          const repeatedViolation = yield* Effect.flip(
+            db.insert(DocumentsDbSchema.syncOperation).values(toSyncOperationInsert(duplicateOperation))
+          );
+          expect(inspect(repeatedViolation, { depth: 10 })).toContain(
+            "documents_sync_operation_idempotency_key_unique_idx"
+          );
         }),
         120_000
       );

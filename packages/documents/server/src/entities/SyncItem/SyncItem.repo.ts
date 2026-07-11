@@ -22,21 +22,15 @@ import {
 import { PostgresDrizzle } from "@beep/postgres";
 import { A, N } from "@beep/utils";
 import { and, asc, eq } from "drizzle-orm";
-import { Effect, HashMap, Order, pipe, Ref } from "effect";
+import { Effect, HashMap, pipe, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { byIdAscending, makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.js";
 import type { DmsProvider, RemoteItemId, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import type { SyncItemSeed } from "@beep/documents-use-cases/entities/SyncItem/server";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 
 const decodeSyncItem = S.decodeUnknownSync(DomainSyncItem.SyncItem);
-
-const SYSTEM_PRINCIPAL = { component: "Runtime", kind: "System" } as const;
-
-const byIdAscending = Order.mapInput(Order.Number, (syncItem: DomainSyncItem.SyncItem) => syncItem.id);
-
-const nextEntityId = (rows: ReadonlyArray<{ readonly id: number }>): number =>
-  A.reduce(rows, 0, (max, row) => N.max(max, row.id)) + 1;
 
 /**
  * Build a full SyncItem entity from a creation seed and an assigned id.
@@ -114,9 +108,9 @@ const duplicatePathConflict = (seed: SyncItemSeed): SyncItemRepositoryConflict =
  * @since 0.0.0
  */
 export const makeInMemorySyncItemRepository = Effect.fn("Documents.SyncItemRepository.makeInMemory")(function* () {
-  const store = yield* Ref.make(HashMap.empty<DomainSyncItem.SyncItemId, DomainSyncItem.SyncItem>());
-  const counter = yield* Ref.make(1);
-  const snapshot = Effect.map(Ref.get(store), (syncItems) => A.fromIterable(HashMap.values(syncItems)));
+  const { counter, snapshot, store } = yield* makeEntityStore(
+    HashMap.empty<DomainSyncItem.SyncItemId, DomainSyncItem.SyncItem>()
+  );
 
   return SyncItemRepository.of({
     create: Effect.fn("Documents.SyncItemRepository.create")(function* (seed) {
@@ -139,7 +133,7 @@ export const makeInMemorySyncItemRepository = Effect.fn("Documents.SyncItemRepos
     }),
     listByWorkspace: Effect.fn("Documents.SyncItemRepository.listByWorkspace")(function* (input) {
       const syncItems = yield* snapshot;
-      return pipe(syncItems, A.filter(matchesMirror(input)), A.sort(byIdAscending));
+      return pipe(syncItems, A.filter(matchesMirror(input)), A.sort(byIdAscending<DomainSyncItem.SyncItem>()));
     }),
     update: Effect.fn("Documents.SyncItemRepository.update")(function* (syncItem) {
       const syncItems = yield* Ref.get(store);

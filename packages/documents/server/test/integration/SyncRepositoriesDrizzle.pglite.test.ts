@@ -170,17 +170,13 @@ if (!shouldRunPgliteIntegration) {
       );
 
       it.effect(
-        "enqueues FIFO, rejects duplicate idempotency keys, and requeues leases",
+        "enqueues FIFO and requeues leases",
         Effect.fnUntraced(function* () {
           yield* migrateDocumentsSync();
           const repository = yield* makeDrizzleSyncOperationRepository();
 
           const first = yield* repository.enqueue(operationSeed("item-1:uploadFile:1"));
           const second = yield* repository.enqueue(operationSeed("item-1:uploadFile:2"));
-
-          const duplicate = yield* Effect.flip(repository.enqueue(operationSeed("item-1:uploadFile:1")));
-          expect(SyncOperationRepositoryConflict.is(duplicate)).toBe(true);
-          expect(duplicate._tag).toBe("SyncOperationRepositoryConflict");
 
           const queued = yield* repository.listQueued(
             ListQueuedSyncOperationsInput.make({ provider: "box", workspaceId })
@@ -267,6 +263,24 @@ if (!shouldRunPgliteIntegration) {
             ListOpenSyncConflictsInput.make({ provider: "box", workspaceId })
           );
           expect(openAfterReview).toEqual([]);
+        }),
+        pgliteIntegrationTimeoutMillis
+      );
+
+      // Keep this test LAST: on implicit-transaction pglite hosts the failed
+      // duplicate statement aborts the shared session's transaction chain, so
+      // no other suite statement may follow it.
+      it.effect(
+        "rejects duplicate idempotency keys at the database boundary",
+        Effect.fnUntraced(function* () {
+          yield* migrateDocumentsSync();
+          const repository = yield* makeDrizzleSyncOperationRepository();
+
+          yield* repository.enqueue(operationSeed("item-9:uploadFile:1"));
+          const duplicate = yield* Effect.flip(repository.enqueue(operationSeed("item-9:uploadFile:1")));
+
+          expect(SyncOperationRepositoryConflict.is(duplicate)).toBe(true);
+          expect(duplicate._tag).toBe("SyncOperationRepositoryConflict");
         }),
         pgliteIntegrationTimeoutMillis
       );

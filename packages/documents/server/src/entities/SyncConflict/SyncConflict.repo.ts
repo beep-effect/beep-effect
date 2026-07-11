@@ -21,19 +21,13 @@ import {
 import { PostgresDrizzle } from "@beep/postgres";
 import { A, N } from "@beep/utils";
 import { and, asc, eq } from "drizzle-orm";
-import { Effect, HashMap, Order, pipe, Ref } from "effect";
+import { Effect, HashMap, pipe, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { byIdAscending, makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.js";
 import type { SyncConflictSeed } from "@beep/documents-use-cases/entities/SyncConflict/server";
 
 const decodeSyncConflict = S.decodeUnknownSync(DomainSyncConflict.SyncConflict);
-
-const SYSTEM_PRINCIPAL = { component: "Runtime", kind: "System" } as const;
-
-const byIdAscending = Order.mapInput(Order.Number, (conflict: DomainSyncConflict.SyncConflict) => conflict.id);
-
-const nextEntityId = (rows: ReadonlyArray<{ readonly id: number }>): number =>
-  A.reduce(rows, 0, (max, row) => N.max(max, row.id)) + 1;
 
 /**
  * Build a full SyncConflict entity from a drift seed and an assigned id.
@@ -100,9 +94,9 @@ const matchesRemoteEvent =
  */
 export const makeInMemorySyncConflictRepository = Effect.fn("Documents.SyncConflictRepository.makeInMemory")(
   function* () {
-    const store = yield* Ref.make(HashMap.empty<DomainSyncConflict.SyncConflictId, DomainSyncConflict.SyncConflict>());
-    const counter = yield* Ref.make(1);
-    const snapshot = Effect.map(Ref.get(store), (conflicts) => A.fromIterable(HashMap.values(conflicts)));
+    const { counter, snapshot, store } = yield* makeEntityStore(
+      HashMap.empty<DomainSyncConflict.SyncConflictId, DomainSyncConflict.SyncConflict>()
+    );
 
     return SyncConflictRepository.of({
       listOpen: Effect.fn("Documents.SyncConflictRepository.listOpen")(function* (input) {
@@ -115,7 +109,7 @@ export const makeInMemorySyncConflictRepository = Effect.fn("Documents.SyncConfl
               conflict.provider === input.provider &&
               DomainSyncConflict.SyncConflictResolution.is.open(conflict.resolutionStatus)
           ),
-          A.sort(byIdAscending)
+          A.sort(byIdAscending<DomainSyncConflict.SyncConflict>())
         );
       }),
       markReviewed: Effect.fn("Documents.SyncConflictRepository.markReviewed")(function* (input) {

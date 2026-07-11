@@ -12,10 +12,10 @@ import { Button } from "@beep/ui/components/button";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Effect } from "effect";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import { AsyncResult } from "effect/unstable/reactivity";
 import { useState } from "react";
 import { DEFAULT_WORKSPACE_ID } from "@/intake/Intake.atoms";
+import { failureMessageOr } from "@/lib/failureMessage";
 import {
   markVaultSyncConflictReviewedAtom,
   triggerVaultSyncAtom,
@@ -25,15 +25,6 @@ import {
 import type { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
 import type { VaultSyncStatus } from "@beep/documents-use-cases/public";
 import type { JSX } from "react";
-
-const failureMessageOr =
-  (fallback: string) =>
-  (cause: unknown): string =>
-    P.isError(cause) && cause.message.length > 0
-      ? cause.message
-      : P.isObject(cause) && P.hasProperty(cause, "message") && P.isString(cause.message) && cause.message.length > 0
-        ? cause.message
-        : fallback;
 
 const syncFailureMessage = failureMessageOr("Vault sync failed.");
 
@@ -67,6 +58,77 @@ const ConnectionBadge = ({ connected }: { readonly connected: boolean }): JSX.El
     {connected ? "connected" : "disconnected"}
   </span>
 );
+
+const VaultSyncStatusView = ({
+  status,
+}: {
+  readonly status: AsyncResult.AsyncResult<VaultSyncStatus, unknown>;
+}): JSX.Element =>
+  AsyncResult.match(status, {
+    onInitial: () => (
+      <p className="mt-2 text-xs text-muted-foreground" data-testid="vault-sync-status">
+        Loading sync status
+      </p>
+    ),
+    onFailure: () => (
+      <p className="mt-2 text-xs text-destructive" data-testid="vault-sync-status">
+        Sync status is unavailable.
+      </p>
+    ),
+    onSuccess: (success) => (
+      <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1" data-testid="vault-sync-status">
+        {statusCounts(success.value).map((entry) => (
+          <div key={entry.key} className="flex items-center justify-between gap-2">
+            <dt className="text-xs text-muted-foreground">{entry.label}</dt>
+            <dd className="text-xs font-medium" data-testid={`vault-sync-count-${entry.key}`}>
+              {entry.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    ),
+  });
+
+const VaultSyncConflictsList = ({
+  conflicts,
+  onReview,
+  reviewingId,
+}: {
+  readonly conflicts: AsyncResult.AsyncResult<ReadonlyArray<SyncConflict>, unknown>;
+  readonly onReview: (conflict: SyncConflict) => void;
+  readonly reviewingId: SyncConflict["id"] | null;
+}): JSX.Element | null =>
+  AsyncResult.isSuccess(conflicts) && conflicts.value.length > 0 ? (
+    <ul className="mt-3 space-y-2" data-testid="vault-sync-conflicts">
+      {conflicts.value.map((conflict) => (
+        <li
+          key={conflict.id}
+          className="rounded-sm border border-amber-500/40 p-2"
+          data-testid="vault-sync-conflict-row"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="font-medium">{conflict.conflictKind}</span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => onReview(conflict)}
+              disabled={reviewingId !== null}
+              data-testid="vault-sync-conflict-review"
+            >
+              Mark reviewed
+            </Button>
+          </div>
+          <p className="mt-1 break-all text-xs text-muted-foreground">
+            {O.getOrElse(conflict.localRelPath, () => "(no local path)")}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            event {O.getOrElse(conflict.remoteEventId, () => "(none)")}
+          </p>
+        </li>
+      ))}
+    </ul>
+  ) : null;
 
 /**
  * Floating vault sync status surface: provider connection badge, sync trigger,
@@ -150,30 +212,7 @@ export function VaultSyncPanel(): JSX.Element {
           <ConnectionBadge connected={connected} />
         </div>
       </div>
-      {AsyncResult.match(status, {
-        onInitial: () => (
-          <p className="mt-2 text-xs text-muted-foreground" data-testid="vault-sync-status">
-            Loading sync status
-          </p>
-        ),
-        onFailure: () => (
-          <p className="mt-2 text-xs text-destructive" data-testid="vault-sync-status">
-            Sync status is unavailable.
-          </p>
-        ),
-        onSuccess: (success) => (
-          <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1" data-testid="vault-sync-status">
-            {statusCounts(success.value).map((entry) => (
-              <div key={entry.key} className="flex items-center justify-between gap-2">
-                <dt className="text-xs text-muted-foreground">{entry.label}</dt>
-                <dd className="text-xs font-medium" data-testid={`vault-sync-count-${entry.key}`}>
-                  {entry.value}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        ),
-      })}
+      <VaultSyncStatusView status={status} />
       {AsyncResult.isSuccess(status) && !status.value.connected ? (
         <p
           className="mt-2 rounded-sm border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-600"
@@ -199,37 +238,7 @@ export function VaultSyncPanel(): JSX.Element {
           </span>
         )}
       </div>
-      {AsyncResult.isSuccess(conflicts) && conflicts.value.length > 0 ? (
-        <ul className="mt-3 space-y-2" data-testid="vault-sync-conflicts">
-          {conflicts.value.map((conflict) => (
-            <li
-              key={conflict.id}
-              className="rounded-sm border border-amber-500/40 p-2"
-              data-testid="vault-sync-conflict-row"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-medium">{conflict.conflictKind}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => reviewConflict(conflict)}
-                  disabled={reviewingId !== null}
-                  data-testid="vault-sync-conflict-review"
-                >
-                  Mark reviewed
-                </Button>
-              </div>
-              <p className="mt-1 break-all text-xs text-muted-foreground">
-                {O.getOrElse(conflict.localRelPath, () => "(no local path)")}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                event {O.getOrElse(conflict.remoteEventId, () => "(none)")}
-              </p>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      <VaultSyncConflictsList conflicts={conflicts} onReview={reviewConflict} reviewingId={reviewingId} />
     </section>
   );
 }

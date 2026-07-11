@@ -22,23 +22,17 @@ import {
 import { extractPostgresDiagnostics, PostgresDrizzle, PostgresErrorCodeByName } from "@beep/postgres";
 import { A, N } from "@beep/utils";
 import { and, asc, eq } from "drizzle-orm";
-import { Effect, HashMap, Order, pipe, Ref } from "effect";
+import { Effect, HashMap, pipe, Ref } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { byIdAscending, makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.js";
 import type { DmsProvider } from "@beep/documents-domain/values/Sync";
 import type { SyncOperationSeed } from "@beep/documents-use-cases/entities/SyncOperation/server";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 
 const decodeSyncOperation = S.decodeUnknownSync(DomainSyncOperation.SyncOperation);
-
-const SYSTEM_PRINCIPAL = { component: "Runtime", kind: "System" } as const;
-
-const byIdAscending = Order.mapInput(Order.Number, (operation: DomainSyncOperation.SyncOperation) => operation.id);
-
-const nextEntityId = (rows: ReadonlyArray<{ readonly id: number }>): number =>
-  A.reduce(rows, 0, (max, row) => N.max(max, row.id)) + 1;
 
 /**
  * Build a full SyncOperation entity from an enqueue seed and an assigned id.
@@ -110,11 +104,9 @@ const duplicateIdempotencyKeyConflict = (idempotencyKey: string): SyncOperationR
  */
 export const makeInMemorySyncOperationRepository = Effect.fn("Documents.SyncOperationRepository.makeInMemory")(
   function* () {
-    const store = yield* Ref.make(
+    const { counter, snapshot, store } = yield* makeEntityStore(
       HashMap.empty<DomainSyncOperation.SyncOperationId, DomainSyncOperation.SyncOperation>()
     );
-    const counter = yield* Ref.make(1);
-    const snapshot = Effect.map(Ref.get(store), (operations) => A.fromIterable(HashMap.values(operations)));
 
     return SyncOperationRepository.of({
       enqueue: Effect.fn("Documents.SyncOperationRepository.enqueue")(function* (seed) {
@@ -132,7 +124,7 @@ export const makeInMemorySyncOperationRepository = Effect.fn("Documents.SyncOper
         return pipe(
           operations,
           A.filter((operation) => matchesMirror(input)(operation) && operation.status === input.status),
-          A.sort(byIdAscending)
+          A.sort(byIdAscending<DomainSyncOperation.SyncOperation>())
         );
       }),
       listQueued: Effect.fn("Documents.SyncOperationRepository.listQueued")(function* (input) {
@@ -143,7 +135,7 @@ export const makeInMemorySyncOperationRepository = Effect.fn("Documents.SyncOper
             (operation) =>
               matchesMirror(input)(operation) && DomainSyncOperation.SyncOperationStatus.is.queued(operation.status)
           ),
-          A.sort(byIdAscending)
+          A.sort(byIdAscending<DomainSyncOperation.SyncOperation>())
         );
       }),
       listQueuedForItem: Effect.fn("Documents.SyncOperationRepository.listQueuedForItem")(function* (input) {
@@ -156,7 +148,7 @@ export const makeInMemorySyncOperationRepository = Effect.fn("Documents.SyncOper
               operation.syncItemId === input.syncItemId &&
               DomainSyncOperation.SyncOperationStatus.is.queued(operation.status)
           ),
-          A.sort(byIdAscending)
+          A.sort(byIdAscending<DomainSyncOperation.SyncOperation>())
         );
       }),
       requeueLeased: Effect.fn("Documents.SyncOperationRepository.requeueLeased")(function* (input) {

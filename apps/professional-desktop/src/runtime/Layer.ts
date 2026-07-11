@@ -127,6 +127,37 @@ export type DesktopStartupError = Config.ConfigError | PlatformError.PlatformErr
 export type DesktopHandlersLayer = Layer.Layer<Layer.Success<typeof DesktopHandlersLive>, DesktopStartupError>;
 
 /**
+ * The `CHAT_AGENT` env flag: `anthropic` (default) selects the live layers,
+ * `fixture` selects the deterministic keyless ones.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+const chatAgentMode = Config.literals(["anthropic", "fixture"], "CHAT_AGENT").pipe(
+  Config.withDefault("anthropic" as const)
+);
+
+/**
+ * Select a layer from {@link chatAgentMode}: `fixture` short-circuits to
+ * `onFixture`; otherwise `onLive` is run to assemble the live layer. Config
+ * failures (from reading the flag or from `onLive`) become defects via `orDie`,
+ * matching the runtime's typed-startup posture.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+const selectByChatAgent = <A, E, R>(
+  onFixture: Layer.Layer<A, E, R>,
+  onLive: Effect.Effect<Layer.Layer<A, E, R>, Config.ConfigError>
+): Layer.Layer<A, E, R> =>
+  Layer.unwrap(
+    Effect.gen(function* () {
+      const agent = yield* chatAgentMode;
+      return agent === "fixture" ? onFixture : yield* onLive;
+    }).pipe(Effect.orDie)
+  );
+
+/**
  * Select the assistant-turn kernel from the `CHAT_AGENT` env flag. `anthropic`
  * (default) uses the live {@link AnthropicTurnKernel} (resolves
  * `AI_ANTHROPIC_API_KEY` itself); `fixture` uses the deterministic keyless
@@ -135,13 +166,9 @@ export type DesktopHandlersLayer = Layer.Layer<Layer.Success<typeof DesktopHandl
  * @category layers
  * @since 0.0.0
  */
-const TurnKernelLive: Layer.Layer<AgentTurnKernel> = Layer.unwrap(
-  Effect.gen(function* () {
-    const agent = yield* Config.literals(["anthropic", "fixture"], "CHAT_AGENT").pipe(
-      Config.withDefault("anthropic" as const)
-    );
-    return agent === "fixture" ? FixtureTurnKernel : AnthropicTurnKernel;
-  }).pipe(Effect.orDie)
+const TurnKernelLive: Layer.Layer<AgentTurnKernel> = selectByChatAgent(
+  FixtureTurnKernel,
+  Effect.succeed(AnthropicTurnKernel)
 );
 
 /**
@@ -154,14 +181,9 @@ const TurnKernelLive: Layer.Layer<AgentTurnKernel> = Layer.unwrap(
  * @category layers
  * @since 0.0.0
  */
-const DocumentsFilingLive = Layer.unwrap(
+const DocumentsFilingLive = selectByChatAgent(
+  DocumentsServerLive,
   Effect.gen(function* () {
-    const agent = yield* Config.literals(["anthropic", "fixture"], "CHAT_AGENT").pipe(
-      Config.withDefault("anthropic" as const)
-    );
-    if (agent === "fixture") {
-      return DocumentsServerLive;
-    }
     const model = yield* Config.nonEmptyString(FILING_DECISION_MODEL_ENV).pipe(
       Config.withDefault(FILING_DECISION_DEFAULT_MODEL)
     );
@@ -171,7 +193,7 @@ const DocumentsFilingLive = Layer.unwrap(
       Layer.provide(AnthropicLive),
       Layer.provide(makeFileProcessingServiceLayer([DocTextFileProcessingEngine]))
     );
-  }).pipe(Effect.orDie)
+  })
 );
 
 /**
@@ -186,14 +208,9 @@ const DocumentsFilingLive = Layer.unwrap(
  * @category layers
  * @since 0.0.0
  */
-const DocumentsSyncLive = Layer.unwrap(
+const DocumentsSyncLive = selectByChatAgent(
+  DocumentsSyncFixtureLive,
   Effect.gen(function* () {
-    const agent = yield* Config.literals(["anthropic", "fixture"], "CHAT_AGENT").pipe(
-      Config.withDefault("anthropic" as const)
-    );
-    if (agent === "fixture") {
-      return DocumentsSyncFixtureLive;
-    }
     const token = yield* Config.option(Config.redacted("CLOUD_BOX_TOKEN"));
     return O.match(token, {
       onNone: () =>
@@ -208,7 +225,7 @@ const DocumentsSyncLive = Layer.unwrap(
           Layer.provide(Box.makeLayer(BoxDeveloperTokenConfig.make({ token: boxToken })))
         ),
     });
-  }).pipe(Effect.orDie)
+  })
 );
 
 /**
