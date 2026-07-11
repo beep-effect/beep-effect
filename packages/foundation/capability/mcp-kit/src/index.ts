@@ -34,7 +34,7 @@ export * from "./FieldTier.ts";
  * Request-local initialized MCP caller identity populated during toolkit dispatch.
  *
  * @since 0.0.0
- * @category context
+ * @category services
  */
 export * from "./McpCaller.ts";
 /**

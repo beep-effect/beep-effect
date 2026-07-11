@@ -31,6 +31,7 @@ import * as S from "effect/Schema";
 import { CallToolResult, McpServerClient, Tool as WireTool } from "effect/unstable/ai/McpSchema";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import * as AiTool from "effect/unstable/ai/Tool";
+import { ApiKeyRequiredFailure } from "./ApiKeyRequired.js";
 import { CurrentMcpCaller, McpCallerIdentity } from "./McpCaller.js";
 import type * as Tracer from "effect/Tracer";
 import type * as Toolkit from "effect/unstable/ai/Toolkit";
@@ -191,6 +192,7 @@ type JsonObject = Readonly<Record<string, unknown>>;
 
 const localDefsRefPrefix = "#/$defs/";
 const toolBoundaryFailureText = "Tool call failed before producing a structured result.";
+const isApiKeyRequiredFailure = S.is(ApiKeyRequiredFailure);
 
 const isJsonObject = (value: unknown): value is JsonObject => P.isObject(value) && !A.isArray(value);
 
@@ -266,7 +268,11 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
               Effect.succeed(
                 CallToolResult.make({ isError: true, content: [{ type: "text", text: toolBoundaryFailureText }] })
               ),
-            onSuccess: (result: { readonly encodedResult: unknown; readonly isFailure: boolean }) =>
+            onSuccess: (result: {
+              readonly encodedResult: unknown;
+              readonly isFailure: boolean;
+              readonly result: unknown;
+            }) =>
               S.encodeUnknownEffect(S.UnknownFromJsonString)(result.encodedResult).pipe(
                 Effect.tapCause(Effect.log),
                 Effect.matchCause({
@@ -274,7 +280,7 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
                     CallToolResult.make({ isError: true, content: [{ type: "text", text: toolBoundaryFailureText }] }),
                   onSuccess: (text) =>
                     CallToolResult.make({
-                      isError: result.isFailure,
+                      isError: result.isFailure && !isApiKeyRequiredFailure(result.result),
                       structuredContent: P.isObject(result.encodedResult) ? result.encodedResult : undefined,
                       content: [{ type: "text", text }],
                     }),

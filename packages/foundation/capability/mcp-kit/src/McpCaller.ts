@@ -38,7 +38,7 @@ export class McpCallerIdentity extends S.Class<McpCallerIdentity>($I`McpCallerId
  * import { Effect } from "effect"
  * console.log(Effect.runSync(CurrentMcpCaller))
  * ```
- * @category references
+ * @category services
  * @since 0.0.0
  */
 export const CurrentMcpCaller = Context.Reference<O.Option<McpCallerIdentity>>($I`CurrentMcpCaller`, {
