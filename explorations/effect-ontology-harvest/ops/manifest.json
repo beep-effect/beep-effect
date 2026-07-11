@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "effect-ontology-harvest",
+    "title": "effect-ontology @core-v2 Harvest",
+    "status": "active",
+    "stage": "research",
+    "openQuestions": [
+      "Which NET-NEW foundation packages (LLM governance, generic CAS/cache, workflow substrate) are worth creating vs deferring?",
+      "Which design-comparison findings should feed back into @beep/ontology / @beep/rdf / ontology-slice CAS?"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [
+        "ontology-agent-surface",
+        "semantic-foundation",
+        "agentic-professional-runtime",
+        "unified-ai-toolchain",
+        "ip-law-knowledge-graph",
+        "trustgraph-port"
+      ],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-11",
+    "updated": "2026-07-11"
+  }
+}
