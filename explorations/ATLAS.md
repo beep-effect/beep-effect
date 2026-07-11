@@ -40,7 +40,7 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 - [`ontology-agent-surface`](./ontology-agent-surface/README.md) — agent/MCP
-  tool surface for the ontology workbench (stage `align`): the named
+  tool surface for the ontology workbench (stage `shape`): the named
   follow-up from [`goals/ontology-workbench`](../goals/ontology-workbench/README.md)
   (completed-retained). Thin-adapter thesis over the SPEC 13-16 agent-ready
   plumbing (partitioned session graphs, schema-typed protocol, real batch
