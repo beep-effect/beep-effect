@@ -140,7 +140,7 @@ describe("Session atoms", () => {
     })
   );
 
-  it("retries graph worker projection after a transient worker failure", () => {
+  it("requeues the in-flight projection after a transient worker failure and guards against retry storms", () => {
     class FakeWorker {
       readonly messages: Array<unknown> = [];
       private readonly listeners = new Map<string, Array<(event: Event) => void>>();
@@ -181,10 +181,20 @@ describe("Session atoms", () => {
 
       expect(workers).toHaveLength(1);
       expect(workers[0]?.messages).toHaveLength(1);
+      const initialRequest = workers[0]?.messages[0];
 
       workers[0]?.emitError("worker crashed");
 
       expect(workers[0]?.terminated).toBe(true);
+      expect(O.isSome(registry.get(ontologyGraphErrorAtom))).toBe(true);
+      expect(workers).toHaveLength(2);
+      expect(workers[1]?.messages).toHaveLength(1);
+      expect(workers[1]?.messages[0]).toStrictEqual(initialRequest);
+
+      workers[1]?.emitError("worker crashed again");
+
+      expect(workers[1]?.terminated).toBe(true);
+      expect(workers).toHaveLength(2);
       expect(O.isSome(registry.get(ontologyGraphErrorAtom))).toBe(true);
 
       registry.set(
@@ -199,8 +209,8 @@ describe("Session atoms", () => {
         )
       );
 
-      expect(workers).toHaveLength(2);
-      expect(workers[1]?.messages).toHaveLength(1);
+      expect(workers).toHaveLength(3);
+      expect(workers[2]?.messages).toHaveLength(1);
       expect(O.isNone(registry.get(ontologyGraphErrorAtom))).toBe(true);
       registry.dispose();
     } finally {
