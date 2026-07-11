@@ -35,3 +35,13 @@ Screenshots: 01-loaded, 02-onboarding, 03-vault-set, 04-sync-panel,
   per-client-group first-connect handshake behavior in the pre-existing RPC
   protocol layer (also rejects `/` and `/favicon.ico`); auth is enforced and
   every driven flow succeeded. Not introduced by P3.
+
+## Post-review re-run (same day)
+
+After the adversarial review round (20 confirmed findings fixed — echo
+suppression rewrite, idempotency key item-identity, pump wedge fix, terminal
+failure recovery, symlink skip, event filtering + payload caps), the smoke was
+re-run against the fixed engine reusing the previous run's durable PGlite state
+across a sidecar restart: SMOKE PASS with identical converged counts
+(current 6, zero errors/conflicts/queued) and idempotent second sync — no
+false conflicts from the new echo model over pre-existing durable rows.
