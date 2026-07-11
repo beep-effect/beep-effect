@@ -1,7 +1,11 @@
 {
   "version": 1,
   "generatedOn": "2026-07-11",
-  "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
+  "scope": [
+    "apps/**/*.{ts,tsx}",
+    "packages/**/*.{ts,tsx}",
+    "infra/**/*.ts"
+  ],
   "entries": [
     {
       "file": "apps/oip-web/src/content/OipSeo.ts",
@@ -101,6 +105,14 @@
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/architecture-lab-use-cases",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/documents/server/src/aggregates/Document/FilingTextExtraction.ts",
+      "symbol": "FilingTextExtractionShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/documents-server",
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {

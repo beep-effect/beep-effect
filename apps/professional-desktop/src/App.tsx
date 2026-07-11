@@ -33,6 +33,30 @@ import type { JSX } from "react";
 
 const hasTauriRuntime = (): boolean => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
+const isDevMode = (): boolean => {
+  // biome-ignore lint/suspicious/noUndeclaredEnvVars: Vite injects DEV on import.meta.env.
+  const value = import.meta.env.DEV;
+
+  return P.isBoolean(value) ? value : value === "true";
+};
+
+// Dev-only browser-mode session token: lets the agent-run browser smoke reach
+// the full desktop RPC group over HTTP (the shell normally injects this through
+// the Tauri `sidecar_transport` probe). Gated on Vite DEV so production web
+// builds never embed a token; without it browser HTTP stays chat-only.
+const devRpcSessionToken = (): string | undefined => {
+  // biome-ignore lint/suspicious/noUndeclaredEnvVars: Vite injects VITE_* on import.meta.env.
+  const token: unknown = import.meta.env.VITE_BEEP_DESKTOP_RPC_SESSION_TOKEN;
+  return isDevMode() && P.isString(token) && token.length > 0 ? token : undefined;
+};
+
+const browserSidecarTransport = (): SidecarTransport => {
+  const token = devRpcSessionToken();
+  return token === undefined
+    ? SidecarTransport.make({ ipc: false })
+    : SidecarTransport.make({ ipc: false, rpcSessionToken: token });
+};
+
 // effect-first: probe which transport the sidecar speaks. In a Tauri webview
 // this invokes the Rust `sidecar_transport` command — bridged through Effect at
 // the Tauri Promise boundary and schema-decoded — and in a plain browser it is
@@ -45,7 +69,7 @@ const readSidecarTransport = Effect.suspend(() =>
         Effect.flatMap(({ invoke }) => Effect.tryPromise(() => invoke("sidecar_transport"))),
         Effect.flatMap(SidecarTransport.decodeUnknownEffect)
       )
-    : Effect.succeed(SidecarTransport.make({ ipc: false }))
+    : Effect.sync(browserSidecarTransport)
 );
 
 // AsyncResult<SidecarTransport>: Initial = checking, Failure = unavailable,
@@ -83,13 +107,6 @@ const protocolLayerBindingAtom = Atom.make((get) => {
 
 const hasIpcSpikeFlag = (): boolean =>
   typeof window !== "undefined" && new URLSearchParams(window.location.search).has("ipc");
-
-const isDevMode = (): boolean => {
-  // biome-ignore lint/suspicious/noUndeclaredEnvVars: Vite injects DEV on import.meta.env.
-  const value = import.meta.env.DEV;
-
-  return P.isBoolean(value) ? value : value === "true";
-};
 
 const hasCosmosSpikeFlag = (): boolean =>
   isDevMode() &&

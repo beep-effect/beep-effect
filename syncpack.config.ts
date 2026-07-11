@@ -77,6 +77,7 @@ const config = {
     "packages/drivers/shacl/package.json",
     "packages/drivers/wink/package.json",
     "packages/drivers/tika/package.json",
+    "packages/drivers/doc-text/package.json",
     "packages/drivers/libpff/package.json",
     "packages/drivers/box/package.json",
     "packages/drivers/firecrawl/package.json",

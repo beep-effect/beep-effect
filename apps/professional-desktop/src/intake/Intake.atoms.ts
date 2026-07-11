@@ -168,7 +168,8 @@ export const intakeDroppedFilePayload = (input: DroppedDocumentInput): IntakeDro
   });
 
 /**
- * Mutation atom that sends one dropped document to the intake RPC.
+ * Mutation atom that sends one dropped document to the intake RPC and returns
+ * the materialized document (vault path + filing outcome) for the intake UI.
  *
  * @example
  * ```ts
@@ -184,6 +185,6 @@ export const intakeDroppedDocumentAtom = DesktopIntakeClient.runtime.fn<DroppedD
   Effect.fn("intakeDroppedDocument")(function* (input) {
     const client = yield* DesktopIntakeClient;
     const payload = intakeDroppedFilePayload(input);
-    yield* Reactivity.mutation(client("IntakeDroppedFile", payload), [workspaceVaultKey(input.workspaceId)]);
+    return yield* Reactivity.mutation(client("IntakeDroppedFile", payload), [workspaceVaultKey(input.workspaceId)]);
   })
 );

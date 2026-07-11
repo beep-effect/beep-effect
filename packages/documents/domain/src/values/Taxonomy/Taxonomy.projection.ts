@@ -246,6 +246,77 @@ export const projectFiledDocumentPath = Effect.fn("Documents.Taxonomy.projectFil
 });
 
 /**
+ * Input accepted by deterministic inbox document path projection.
+ *
+ * @example
+ * ```ts
+ * import { ProjectInboxDocumentPathInput } from "@beep/documents-domain/values/Taxonomy"
+ *
+ * const input = ProjectInboxDocumentPathInput.make({
+ *   contentDigest: "abc123",
+ *   intakeBatchId: "batch-20260709",
+ *   originalFileName: "scan.pdf"
+ * })
+ * console.log(input.intakeBatchId)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ProjectInboxDocumentPathInput extends S.Class<ProjectInboxDocumentPathInput>(
+  $I`ProjectInboxDocumentPathInput`
+)(
+  {
+    contentDigest: S.NonEmptyString.annotateKey({
+      description: "Full deterministic content digest for filename disambiguation.",
+    }),
+    intakeBatchId: S.NonEmptyString.annotateKey({
+      description: "Intake batch id owning the inbox folder.",
+    }),
+    originalFileName: S.NonEmptyString.annotateKey({
+      description: "Original source filename.",
+    }),
+  },
+  $I.annote("ProjectInboxDocumentPathInput", {
+    description: "Input accepted by deterministic inbox document path projection.",
+  })
+) {}
+
+/**
+ * Projects an unfiled intake document into the deterministic inbox vault path.
+ *
+ * @example
+ * ```ts
+ * import { ProjectInboxDocumentPathInput, projectInboxDocumentPath } from "@beep/documents-domain/values/Taxonomy"
+ * import { Effect } from "effect"
+ *
+ * const path = Effect.runSync(projectInboxDocumentPath(ProjectInboxDocumentPathInput.make({
+ *   contentDigest: "abc123",
+ *   intakeBatchId: "batch-20260709",
+ *   originalFileName: "scan.pdf"
+ * })))
+ * console.log(path.relativePath)
+ * ```
+ *
+ * @category projections
+ * @since 0.0.0
+ */
+export const projectInboxDocumentPath = Effect.fn("Documents.Taxonomy.projectInboxDocumentPath")(function* (
+  input: ProjectInboxDocumentPathInput
+) {
+  const inboxSegment = yield* decodeSegment(INBOX_SEGMENT);
+  const batchSegment = yield* decodeSegment(asciiSlug(input.intakeBatchId));
+  const fileName = yield* projectedFileName(input.originalFileName, input.contentDigest);
+  const segments = [inboxSegment, batchSegment, fileName];
+  return ProjectedVaultPath.make({
+    fileName,
+    relativePath: segments.join("/"),
+    segments,
+    taxonomySegments: [],
+  });
+});
+
+/**
  * Projects an intake batch id into the deterministic inbox path.
  *
  * @example

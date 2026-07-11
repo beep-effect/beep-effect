@@ -88,6 +88,9 @@
       "path": "packages/drivers/discord"
     },
     {
+      "path": "packages/drivers/doc-text"
+    },
+    {
       "path": "packages/drivers/dol"
     },
     {

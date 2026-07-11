@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` (P2 LLM filing agent is the open phase)
+Status: `active` (P3 Box sync is the open phase)
 
 Each phase below ships as its own mergeable PR via `/yeet` (completion gate).
 Phase content is normatively bounded by `SPEC.md` decisions D1–D11.
@@ -13,10 +13,10 @@ Phase content is normatively bounded by `SPEC.md` decisions D1–D11.
 | --- | --- | --- | --- |
 | P0 Research | complete | Close the five research questions below; no feature code. | Freshness-dated notes under `research/` answer each question with sources; SPEC updated if a decision needs a superseding entry. |
 | P1 Vault + deterministic intake | complete | Workspace vault onboarding, app-level DnD, taxonomy seed, heuristic filing to local FS. | A dropped file lands at a taxonomy-valid vault path atomically; onboarding persists vault choice in a workspace table; deterministic tests green. |
-| P2 LLM filing agent | pending | Live AgentMode; filing agent in the sidecar behind RPC; taxonomy validation before placement. | LLM proposes, taxonomy validates, file placed; fixture-mode Layer keeps tests deterministic; same FilingDecision port as P1. |
+| P2 LLM filing agent | complete | Content-aware filing per D8-S1: JS-native PDF/docx text-extraction driver; optional text excerpt on the FilingDecision port; LLM filing layer in `documents/server` (single-shot structured call; typed config for model, confidence threshold, excerpt length); auto-file with visible rationale, uncertain → `00-inbox`. | LLM proposes from document text, taxonomy validates, file placed or inboxed with rationale surfaced in the intake UI; heuristic stays the deterministic fixture Layer; agent-run browser-smoke evidence in the PR. |
 | P3 Box sync | pending | One-way push sync process, durable sync state, remote-drift detection, Box OAuth setup UX. | Vault → Box mirror converges for create/move/rename; drift surfaces as conflict records; sync survives app restart via durable cursors. |
-| P4 Extraction → KG loop | pending | file-processing + langextract on filed docs; librarian proposes epistemic candidates; LLM critic + extended ClaimGate; configurable turns. | Admitted claims materialize as KG node/edge rows with DMS link + span provenance; rejected submissions leave an auditable trail; turn count is config. |
-| P5 Retrieval + viewer | pending | Local embedding driver + pgvector; two-hop query; dockview panel with span highlight; open-in-Word. | NL query → semantic entry → recursive-SQL traversal → document opens at highlighted span; DMS link clickable; OS handoff to Word works. |
+| P4 Extraction → KG loop | pending | file-processing + langextract on filed docs; librarian proposes epistemic candidates; LLM critic + extended ClaimGate (real `@beep/shacl` validator per D7-S1); configurable turns. | Admitted claims materialize as KG node/edge rows with DMS link + span provenance; rejected submissions leave an auditable trail; turn count is config. |
+| P5 Retrieval + viewer | pending | Local embedding driver + pgvector; two-hop query; dock panel with span highlight (shell per D9-S1); open-in-Word. | NL query → semantic entry → recursive-SQL traversal → document opens at highlighted span; DMS link clickable; OS handoff to Word works. |
 | P6 M365 write + dual DMS | pending | Upload/folder-create/move verbs in `@beep/m365`; second adapter on the same DMS port. | Same sync suite passes against OneDrive; port abstraction unchanged. |
 | P7 Close | pending | Program closeout: statuses, evidence, reflection. | README/manifest updated; closeout reflection exists; lint green. |
 
@@ -91,6 +91,10 @@ Before marking the packet closed (and `status` → `completed-retained` /
 ## Execution Notes
 
 - Preserve unrelated worktree changes.
+- Every phase PR includes evidence of an agent-run browser smoke: frontend +
+  sidecar over HTTP against a temp vault, driving the phase's real user flow
+  end to end (added 2026-07-10; P1's drop path shipped broken despite green
+  unit tests).
 - Keep `SPEC.md` normative; decision changes get dated superseding entries in
   the D1–D11 table.
 - Skills support rides P4+ and is gated on `mcp-kit` / `mcp-host-retrofit`

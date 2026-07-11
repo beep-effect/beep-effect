@@ -66,6 +66,7 @@
     "@beep/documents-use-cases": "workspace:^",
     "@beep/file-processing": "workspace:^",
     "@beep/identity": "workspace:^",
+    "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
     "@noble/hashes": "catalog:",
     "effect": "catalog:"

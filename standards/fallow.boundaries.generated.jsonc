@@ -156,6 +156,12 @@
         ]
       },
       {
+        "name": "@beep/doc-text",
+        "patterns": [
+          "packages/drivers/doc-text/src/**"
+        ]
+      },
+      {
         "name": "@beep/documents-domain",
         "patterns": [
           "packages/documents/domain/src/**"
@@ -1139,6 +1145,25 @@
         ]
       },
       {
+        "from": "@beep/doc-text",
+        "allow": [
+          "@beep/doc-text",
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/doc-text",
+          "@beep/file-processing",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
         "from": "@beep/documents-domain",
         "allow": [
           "@beep/documents-domain",
@@ -1146,6 +1171,7 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -1154,6 +1180,7 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1165,6 +1192,7 @@
           "@beep/documents-use-cases",
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1174,6 +1202,7 @@
           "@beep/documents-use-cases",
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1185,14 +1214,16 @@
           "@beep/documents-use-cases",
           "@beep/identity",
           "@beep/schema",
-          "@beep/shared-domain"
+          "@beep/shared-domain",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/documents-domain",
           "@beep/documents-use-cases",
           "@beep/identity",
           "@beep/schema",
-          "@beep/shared-domain"
+          "@beep/shared-domain",
+          "@beep/test-utils"
         ]
       },
       {
@@ -2159,13 +2190,16 @@
           "@beep/agents-domain",
           "@beep/agents-server",
           "@beep/agents-use-cases",
+          "@beep/anthropic",
           "@beep/cosmos",
+          "@beep/doc-text",
           "@beep/documents-domain",
           "@beep/documents-server",
           "@beep/documents-use-cases",
           "@beep/editor",
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
+          "@beep/file-processing",
           "@beep/identity",
           "@beep/lexical-schema",
           "@beep/md",
@@ -2191,13 +2225,16 @@
           "@beep/agents-domain",
           "@beep/agents-server",
           "@beep/agents-use-cases",
+          "@beep/anthropic",
           "@beep/cosmos",
+          "@beep/doc-text",
           "@beep/documents-domain",
           "@beep/documents-server",
           "@beep/documents-use-cases",
           "@beep/editor",
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
+          "@beep/file-processing",
           "@beep/identity",
           "@beep/lexical-schema",
           "@beep/md",
