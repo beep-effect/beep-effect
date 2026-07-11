@@ -35,13 +35,13 @@ export const DEFAULT_TAILSCALE_SERVE_PORT = 443;
  * import { TAILSCALE_STATUS_TIMEOUT } from "@beep/tailscale/Tailscale.config"
  * import * as Duration from "effect/Duration"
  *
- * console.log(Duration.toMillis(TAILSCALE_STATUS_TIMEOUT)) // 1500
+ * console.log(Duration.toSeconds(TAILSCALE_STATUS_TIMEOUT)) // 10
  * ```
  *
  * @category configuration
  * @since 0.0.0
  */
-export const TAILSCALE_STATUS_TIMEOUT = Duration.millis(1_500);
+export const TAILSCALE_STATUS_TIMEOUT = Duration.seconds(10);
 
 /**
  * Maximum time allowed for a Tailscale Serve mutation.

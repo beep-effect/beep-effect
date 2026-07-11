@@ -71,15 +71,15 @@ export type TailnetIpv4Address = typeof TailnetIpv4Address.Type;
  */
 export class TailscaleStatusSelf extends S.Class<TailscaleStatusSelf>($I`TailscaleStatusSelf`)(
   {
-    DNSName: S.Unknown.pipe(S.optionalKey).annotateKey({
+    DNSName: S.String.pipe(S.optionalKey).annotateKey({
       description: "MagicDNS name reported for the local Tailscale node, when present.",
     }),
-    TailscaleIPs: S.Unknown.pipe(S.Array, S.optionalKey).annotateKey({
-      description: "Untrusted IP address values reported for the local Tailscale node.",
+    TailscaleIPs: S.String.pipe(S.Array, S.optionalKey).annotateKey({
+      description: "IP address strings reported for the local Tailscale node.",
     }),
   },
   $I.annote("TailscaleStatusSelf", {
-    description: "Untrusted local-node payload from `tailscale status --json`.",
+    description: "Validated local-node subset of the `tailscale status --json` payload.",
   })
 ) {}
 

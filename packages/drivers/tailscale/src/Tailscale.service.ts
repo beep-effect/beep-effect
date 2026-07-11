@@ -9,7 +9,6 @@ import { Duration, Effect, flow, Number as N, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { HttpClient, HttpClientRequest } from "effect/unstable/http";
@@ -43,15 +42,15 @@ const collectStderr = collectStdout;
 const decodeTailscaleStatusJson = S.decodeEffect(S.fromJsonString(TailscaleStatusJson));
 
 function normalizeMagicDnsName(status: TailscaleStatusJson): O.Option<string> {
-  const dnsName = status.Self?.DNSName;
-  if (!P.isString(dnsName)) {
-    return O.none<string>();
-  }
-
-  return pipe(dnsName, Str.trim, Str.replace(/\.$/u, ""), O.liftPredicate(Str.isNonEmpty));
+  return pipe(
+    status.Self?.DNSName,
+    O.fromUndefinedOr,
+    O.map(flow(Str.trim, Str.replace(/\.$/u, ""))),
+    O.filter(Str.isNonEmpty)
+  );
 }
 
-const tailnetIpv4AddressOption = flow(O.liftPredicate(P.isString), O.filter(S.is(TailnetIpv4Address)));
+const tailnetIpv4AddressOption = O.liftPredicate(S.is(TailnetIpv4Address));
 
 /**
  * Decode and normalize the local node's MagicDNS name.

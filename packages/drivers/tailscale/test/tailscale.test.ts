@@ -116,6 +116,24 @@ describe("tailscale", () => {
     })
   );
 
+  it.effect("rejects malformed MagicDNS status fields", () =>
+    Effect.gen(function* () {
+      const error = yield* parseTailscaleStatus('{"Self":{"DNSName":42}}').pipe(Effect.flip);
+
+      assert.instanceOf(error, TailscaleStatusParseError);
+      assert.equal(error.message, "Failed to decode tailscale status JSON.");
+    })
+  );
+
+  it.effect("rejects malformed Tailscale IP status fields", () =>
+    Effect.gen(function* () {
+      const error = yield* parseTailscaleStatus('{"Self":{"TailscaleIPs":["100.100.100.100",42]}}').pipe(Effect.flip);
+
+      assert.instanceOf(error, TailscaleStatusParseError);
+      assert.equal(error.message, "Failed to decode tailscale status JSON.");
+    })
+  );
+
   it.effect("builds clean HTTPS base URLs", () =>
     Effect.sync(() => {
       assert.equal(buildTailscaleHttpsBaseUrl({ magicDnsName: "desktop.tail.ts.net" }), "https://desktop.tail.ts.net/");
@@ -222,9 +240,9 @@ describe("tailscale", () => {
         assert.equal(error.executable, "tailscale");
         assert.equal(error.subcommand, "status");
         assert.equal(error.argumentCount, 2);
-        assert.equal(error.timeoutMs, 1_500);
+        assert.equal(error.timeoutMs, 10_000);
         assert.isTrue(Cause.isTimeoutError(error.cause));
-        assert.equal(error.message, "tailscale status timed out after 1500ms.");
+        assert.equal(error.message, "tailscale status timed out after 10000ms.");
       })
     );
   });
