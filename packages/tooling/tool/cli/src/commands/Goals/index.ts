@@ -12,7 +12,6 @@
  * @since 0.0.0
  */
 export * from "./Doctor.js";
-
 /**
  * Goals command group root.
  *
@@ -20,7 +19,6 @@ export * from "./Doctor.js";
  * @since 0.0.0
  */
 export * from "./Goals.command.js";
-
 /**
  * Goals tagged errors.
  *
@@ -28,7 +26,6 @@ export * from "./Goals.command.js";
  * @since 0.0.0
  */
 export * from "./Goals.errors.js";
-
 /**
  * GoalManifest v2 schema surface.
  *
@@ -36,7 +33,6 @@ export * from "./Goals.errors.js";
  * @since 0.0.0
  */
 export * from "./Goals.schemas.js";
-
 /**
  * Packet inventory scan and README/manifest text helpers.
  *
@@ -44,7 +40,6 @@ export * from "./Goals.schemas.js";
  * @since 0.0.0
  */
 export * from "./Inventory.js";
-
 /**
  * Mechanical status-migration engine.
  *
@@ -52,7 +47,6 @@ export * from "./Inventory.js";
  * @since 0.0.0
  */
 export * from "./Migration.js";
-
 /**
  * Generated goals index command.
  *
@@ -60,7 +54,6 @@ export * from "./Migration.js";
  * @since 0.0.0
  */
 export * from "./PortfolioIndex.js";
-
 /**
  * Single-writer set-status command.
  *
