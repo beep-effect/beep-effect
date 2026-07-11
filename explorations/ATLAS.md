@@ -39,6 +39,15 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 ## Explorations
 
 ### Active
+- [`ontology-agent-surface`](./ontology-agent-surface/README.md) — agent/MCP
+  tool surface for the ontology workbench (stage `align`): the named
+  follow-up from [`goals/ontology-workbench`](../goals/ontology-workbench/README.md)
+  (completed-retained). Thin-adapter thesis over the SPEC 13-16 agent-ready
+  plumbing (partitioned session graphs, schema-typed protocol, real batch
+  deltas, query safeguards), folding in the retrospective's hardening pre-work
+  (repair-strategy registry, ROBOT validation, base-prefix codec fidelity) and
+  architecture consolidations (single partition-ingestion pipeline, worker-safe
+  entrypoint convention, shared action-state helper).
 - [`atlas-synthesis`](./atlas-synthesis/README.md) — grounding/context packet
   (stage `research`): a maximal-fan-out synthesis of current repo state vs.
   goals/vision, centered on a gap map
