@@ -163,4 +163,9 @@ rendering, with attribution. P4/P5 parity is the reconciled live inventory:
 official 47-key root plus available official `OPTIONS` metadata, minus the two
 recorded deprecated visualization endpoints, with authenticated resources
 validated through official documentation and offline fixtures rather than
-treated as absent after anonymous `401` responses.
+treated as absent after anonymous `401` responses. The seven donor-only roots
+listed above (including `processing-queue`) are **excluded from generation**:
+they do not exist on the live API root, so generating them would ship
+operations that always fail. P4 encodes this reconciliation as the committed
+operation inventory required by SPEC D4's P0 correction, and P5 extends only
+resources present in that inventory.
