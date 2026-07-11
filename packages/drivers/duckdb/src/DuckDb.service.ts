@@ -11,7 +11,7 @@
  * @since 0.0.0
  */
 
-import { make } from "@beep/identity";
+import { $DuckdbId } from "@beep/identity/packages";
 import { A, O } from "@beep/utils";
 import { DuckDBInstance, quotedIdentifier, quotedString } from "@duckdb/node-api";
 import { Context, Effect, Exit, Layer, Scope, Semaphore } from "effect";
@@ -22,7 +22,6 @@ import type { DuckDBConnection, DuckDBValue } from "@duckdb/node-api";
 import type { DuckDbOperation } from "./DuckDb.errors.ts";
 import type { DuckDbConnectionOptions, DuckDbParquetExport } from "./DuckDb.models.ts";
 
-const { $DuckdbId } = make("duckdb");
 const $I = $DuckdbId.create("DuckDb.service");
 
 /**

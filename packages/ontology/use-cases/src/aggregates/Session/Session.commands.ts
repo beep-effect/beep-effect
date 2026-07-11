@@ -5,13 +5,12 @@
  * @since 0.0.0
  */
 
-import { make as makeIdentity } from "@beep/identity";
+import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { Session, SessionId } from "@beep/ontology-domain/aggregates/Session";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { OntologyFilePath, TurtleDocumentText } from "./Session.ports.js";
 
-const { $OntologyUseCasesId } = makeIdentity("ontology-use-cases");
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.commands");
 
 /**

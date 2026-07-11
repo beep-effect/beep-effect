@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { make as makeIdentity } from "@beep/identity";
+import { $N3Id } from "@beep/identity/packages";
 import * as Rdf from "@beep/rdf/Rdf";
 import { SchemaUtils } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
@@ -15,7 +15,6 @@ import { DataFactory, Parser, Writer } from "n3";
 import { N3TurtleCodecError } from "./N3.errors.js";
 import type * as N3 from "n3";
 
-const { $N3Id } = makeIdentity("n3");
 const $I = $N3Id.create("N3.service");
 
 const emptyPrefixMap = (): Rdf.PrefixMap => ({});

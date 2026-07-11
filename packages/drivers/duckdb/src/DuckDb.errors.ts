@@ -10,13 +10,12 @@
  * @since 0.0.0
  */
 
-import { make } from "@beep/identity";
+import { $DuckdbId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { O, P } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
-const { $DuckdbId } = make("duckdb");
 const $I = $DuckdbId.create("DuckDb.errors");
 const DuckDbDefect = S.Defect({ includeStack: true });
 

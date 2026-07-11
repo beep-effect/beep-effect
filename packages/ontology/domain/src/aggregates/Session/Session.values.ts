@@ -5,12 +5,11 @@
  * @since 0.0.0
  */
 
-import { make as makeIdentity } from "@beep/identity";
+import { $OntologyDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as S from "effect/Schema";
 
-const { $OntologyDomainId } = makeIdentity("ontology-domain");
 const $I = $OntologyDomainId.create("aggregates/Session/Session.values");
 
 /**

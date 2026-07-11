@@ -72,7 +72,7 @@ const formatServerReportDeletePathSegment = (reportId: ReportIdValue): O.Option<
 /** Max status polls before a batch download is treated as timed out (~10s at 200ms). */
 const POLL_MAX_ATTEMPTS = 50;
 
-const POLL_SCHEDULE = Schedule.spaced(Duration.millis(200)).pipe(Schedule.take(POLL_MAX_ATTEMPTS));
+const POLL_SCHEDULE = Schedule.spaced(Duration.millis(200)).pipe(Schedule.upTo({ times: POLL_MAX_ATTEMPTS }));
 
 /** Per-request timeout so a hung PACER endpoint can never block the program forever. */
 const REQUEST_TIMEOUT = Duration.seconds(30);

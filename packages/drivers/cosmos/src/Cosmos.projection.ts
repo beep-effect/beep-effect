@@ -5,11 +5,10 @@
  * @since 0.0.0
  */
 
-import { make as makeIdentity } from "@beep/identity";
+import { $CosmosId } from "@beep/identity/packages";
 import { Float32Arr } from "@beep/schema/Float32Array";
 import * as S from "effect/Schema";
 
-const { $CosmosId } = makeIdentity("cosmos");
 const $I = $CosmosId.create("Cosmos.projection");
 
 const Uint32Arr = S.instanceOf<globalThis.Uint32ArrayConstructor, globalThis.Uint32Array>(globalThis.Uint32Array).pipe(
