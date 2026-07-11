@@ -1055,6 +1055,17 @@
         "vitest": "catalog:",
       },
     },
+    "packages/drivers/tailscale": {
+      "name": "@beep/tailscale",
+      "version": "0.0.0",
+      "dependencies": {
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+      },
+    },
     "packages/drivers/tika": {
       "name": "@beep/tika",
       "version": "0.0.0",
@@ -2810,6 +2821,8 @@
     "@beep/shared-tables": ["@beep/shared-tables@workspace:packages/shared/tables"],
 
     "@beep/storybook": ["@beep/storybook@workspace:apps/storybook"],
+
+    "@beep/tailscale": ["@beep/tailscale@workspace:packages/drivers/tailscale"],
 
     "@beep/test-utils": ["@beep/test-utils@workspace:packages/tooling/test-kit/test-utils"],
 

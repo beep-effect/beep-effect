@@ -172,6 +172,9 @@
       "path": "packages/drivers/shacl"
     },
     {
+      "path": "packages/drivers/tailscale"
+    },
+    {
       "path": "packages/drivers/tika"
     },
     {

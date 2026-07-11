@@ -493,6 +493,7 @@
     "packages/drivers/courtlistener",
     "packages/drivers/uspto-mcp",
     "packages/drivers/pacer",
-    "packages/drivers/protobuf"
+    "packages/drivers/protobuf",
+    "packages/drivers/tailscale"
   ]
 }

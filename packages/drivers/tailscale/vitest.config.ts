@@ -5,8 +5,7 @@ export default mergeConfig(
   shared,
   defineConfig({
     test: {
-      environment: "happy-dom",
-      testTimeout: 30_000,
+      // Package-specific overrides
     },
   })
 );

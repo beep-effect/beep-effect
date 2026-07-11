@@ -44,6 +44,7 @@ declare module "graphology" {
         readonly y: number;
       }
     ) => void;
+    readonly clear: () => void;
   }
 }
 

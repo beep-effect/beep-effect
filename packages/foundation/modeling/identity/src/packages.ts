@@ -167,7 +167,8 @@ const generatedComposers = $I.compose(
   "shacl",
   "storybook",
   "tsgo-shim",
-  "doc-text"
+  "doc-text",
+  "tailscale"
 );
 
 const composers = {
@@ -2037,3 +2038,19 @@ export const $TsgoShimId: Identity.IdentityComposer<"@beep/tsgo-shim"> = compose
  * @category configuration
  */
 export const $DocTextId: Identity.IdentityComposer<"@beep/doc-text"> = composers.$DocTextId;
+
+/**
+ * Identity composer for `@beep/tailscale`.
+ *
+ * @example
+ * ```typescript
+ * import { $TailscaleId } from "@beep/identity"
+ *
+ * const id = $TailscaleId.make("Tailscale")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $TailscaleId: Identity.IdentityComposer<"@beep/tailscale"> = composers.$TailscaleId;

@@ -1498,7 +1498,9 @@
       "@beep/doc-text/*": ["./packages/drivers/doc-text/src/*"],
       "@beep/repo-cli/commands/Goals": [
         "./packages/tooling/tool/cli/src/commands/Goals/index.ts"
-      ]
+      ],
+      "@beep/tailscale": ["./packages/drivers/tailscale/src/index.ts"],
+      "@beep/tailscale/*": ["./packages/drivers/tailscale/src/*"]
     }
   }
 }
