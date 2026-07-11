@@ -30,8 +30,11 @@ Changing one requires updating this table with a dated superseding entry.
 | D5-S1 | Taxonomy projection default (2026-07-08 superseding entry) | Supersedes only D5's working hypothesis: the default vault projection is matter-centric: `{vaultRoot}/matters/{clientSegment}/{matterSegment}/{taxonomyConceptPath}/{documentFileName}`, with `00-inbox/{intakeBatchId}/` reserved for unfiled intake artifacts. D5's repo-owned SKOS-style taxonomy and deterministic projection requirements remain unchanged; taxonomy concepts remain the only document-class folder source. Evidence: [`research/folder-structure.md`](./research/folder-structure.md). |
 | D6 | KG storage | Postgres/PGlite projection: nodes/edges as schema-first tables; embeddings via pgvector; two-hop traversal via recursive SQL. Resolves `ip-law-knowledge-graph`'s FalkorDB-vs-projection P0 in favor of projection. Dedicated graph DB stays a later optimization behind the same port. |
 | D7 | Critic loop | KG submissions are epistemic claims. Librarian proposes candidates; the loop composes a new LLM critic with the extended symbolic ClaimGate (validates against the D5 taxonomy); only admitted claims materialize as KG nodes/edges. Turn count is a typed config contract, not a constant. |
+| D7-S1 | Critic-loop validator (2026-07-10 superseding entry) | Supersedes only D7's validator: the extended ClaimGate targets the real `@beep/shacl` driver (`ShaclValidationServiceLive`, already live in the ontology sidecar) instead of the bounded `@beep/semantic-web` validator. The taxonomy→RDF glue this needs (JSON-LD→quads or a Turtle projection of the seed, plus placement shapes) is P4 work. Librarian/critic semantics and the typed turns contract are unchanged. |
 | D8 | Phase-1 cut | Vault onboarding + app-level DnD + taxonomy seed + deterministic (heuristic) filing writing local FS. The LLM agent swaps in at P2 behind the same FilingDecision port (law-practice rung-0 precedent). |
+| D8-S1 | P2 content-aware cut (2026-07-10 superseding entry) | Extends D8's P2 swap: `FilingDecisionInput` gains an optional bounded text excerpt, and a JS-native PDF/docx text-extraction driver (no JVM Tika server; OCR stays out of scope) ships in the bun sidecar behind the `@beep/file-processing` engine contract — pulled forward from P4 so the filing LLM classifies on content, not filenames. Trust model: auto-file with the rationale visible in the intake surface; LLM-unavailable or low-confidence documents land in `00-inbox/{intakeBatchId}/` (D5-S1), never a guessed folder. The heuristic impl remains the deterministic fixture/test layer. The live Anthropic turn stack already ships for chat, so P2 adds a filing use case in `documents/server`, not new agent plumbing. |
 | D9 | Dock UI | Adopt the `dockview` npm package app-local in `apps/professional-desktop` (framework wrappers stay app-local, per the `TauriIpcSocket.ts` precedent). Promote to `foundation/ui-system` only when a second app needs it. Line highlight builds on langextract span/Alignment types. |
+| D9-S1 | Dock UI re-evaluation (2026-07-10 superseding entry) | The ontology workbench landed as a custom CSS-grid shell (`packages/ontology/ui`), not dockview. P5 must evaluate extending that shell before adopting `dockview`; two docking paradigms in one app is the failure mode. D9's app-local wrapper and promotion rules stand for whichever shell P5 picks. |
 | D10 | Privacy posture | Cloud LLM allowed (Anthropic; the Tauri shell already resolves the API key). Embeddings run locally via an ONNX driver (bge-m3 / nomic-embed candidates; P0 bake-off decides) so bulk privileged text does not transit an embedding vendor and search works offline. |
 | D11 | Agent runtime | Filing/librarian/critic agents execute in the bun sidecar behind ChatRpcs-style RPC contracts. The webview stays a thin client. |
 
@@ -70,12 +73,15 @@ Higher sources outrank lower sources when they conflict.
   tables, client, ui as needed), scaffolded via `bun run beep architecture`.
 - `packages/workspace/*` — Workspace gains a vault directory path and a real
   workspace table; per-workspace config contract.
-- `packages/agents/*` — live LLM AgentMode; filing/librarian/critic agent
-  services; configurable-turns config contract.
+- `packages/agents/*` — librarian/critic agent services (P4+);
+  configurable-turns config contract. The P2 filing LLM layer lives in
+  `packages/documents/server` per D8-S1.
 - `packages/epistemic/*` — LLM critic composition with ClaimGate; taxonomy
   validation hook; KG node/edge materialization from admitted claims.
 - `packages/drivers/m365` — write verbs (P6 only).
 - NET-NEW local embedding driver package under `packages/drivers/`.
+- NET-NEW JS-native text-extraction driver package under `packages/drivers/`
+  (P2, per D8-S1).
 - `apps/professional-desktop` — onboarding flow, DnD intake surface, dockview
   panel, document viewer with span highlight, Box OAuth integration setup UX,
   sidecar RPC wiring.
@@ -115,8 +121,8 @@ Per-phase exit criteria live in `PLAN.md`. Program-level acceptance:
       gate loop with configurable turns produces only admitted claims as KG
       nodes/edges, each carrying a DMS link and source span provenance.
 - [ ] A natural-language query resolves via semantic entry + two-hop graph
-      traversal and opens the document in a dockview panel with the exact span
-      highlighted; open-in-Word handoff works.
+      traversal and opens the document in a dock panel (shell per D9-S1) with
+      the exact span highlighted; open-in-Word handoff works.
 - [ ] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
@@ -128,6 +134,7 @@ Per-phase exit criteria live in `PLAN.md`. Program-level acceptance:
 | Whitespace | `git diff --check -- goals/legal-document-intake` | Passes |
 | Repo quality | `bun run beep yeet repair` then `... verify` on each phase branch | Green |
 | Slice isolation | Each phase's tests run with own Layers + shared test-kit + driver test Layers only | Passes |
+| Live smoke | Agent-run browser smoke — frontend + sidecar over HTTP against a temp vault, driving the phase's real user flow — evidence linked in each phase PR | Present per phase |
 | Reflections | `bun run beep lint reflection-artifacts` at each phase close | Passes |
 
 ## Stop Conditions
