@@ -55,10 +55,21 @@ only.
 
 ## Current Phase
 
-**P1 — ecfr breadth (2→15 operations).** P0 (matrix + specs) completed
-2026-07-11.
+**Parked** (docs/ROADMAP.md, 2026-07-11) after landing P0 (matrix + specs)
+and P1 (ecfr breadth), both completed 2026-07-11. Next phase on resume:
+P2 — federal-register keyless driver. Resume condition: a product feature
+pulls a named gov driver (per-driver, not batch).
 
 ## Latest Evidence
+
+P1 (2026-07-11): `@beep/ecfr` at 15/15 official operations (admin, search,
+versioner families; `basePath ""` with family-prefixed paths; agencies
+corrected to admin; full-title XML as typed raw string per D7;
+`searchResultsAll` via `Stream.paginate` per D5), 30 generated models,
+byte-deterministic regenerate, offline fake-HttpClient tests for every
+endpoint group + multi-page search stream, docgen green. Official spec
+authority committed at
+[`research/specs/ecfr-official-v1.json`](./research/specs/ecfr-official-v1.json).
 
 P0 (2026-07-11):
 

@@ -149,6 +149,17 @@ the live replacement. The bundle publishes the query-parameter auth examples
 and hardcoded routes but no official OpenAPI document, so the pinned donor MIT
 spec remains the bootstrap described in §1.
 
+### P1 eCFR endpoint breadth (2026-07-11)
+
+| Source or decision | Provenance | P1 disposition |
+| --- | --- | --- |
+| Official eCFR Swagger 2.0 artifact | `research/specs/ecfr-official-v1.json`, fetched 2026-07-11 from https://www.ecfr.gov/developers/documentation/api/v1.json; biome pretty-print only | Authority for the 15 GET operations across admin, search, and versioner |
+| Multi-family URL layout | Official paths already include `/api/<family>/v1`; the prior package spec used `basePath: /api/versioner/v1` | Set the hand-maintained package spec `basePath` to `""` and retain full official paths so one origin serves all three families |
+| Agencies family correction | Official path is `/api/admin/v1/agencies.json`; the prior two-operation subset placed it under versioner | Corrected to the admin path and changed the default technical API URL to the shared `https://www.ecfr.gov` origin |
+| Search response modeling | Only search results has an official response schema; the remaining search endpoints leave 200 response schemas unspecified | Named stable known envelope fields conservatively and kept every inferred field optional (required-minimal) |
+| Full-title payload | Official `/full/{date}/title-{title}.xml` response is XML; SPEC D7 excludes XML parsing | Modeled the 200 body as a typed raw string and decoded it with the HTTP text body accessor |
+| Donor diff reference | MIT `us-legal-tools/packages/ecfr-sdk/v1-openapi3.json` | Used only to compare paths, parameters, media types, and descriptions; no donor axios/zod runtime was ported |
+
 ## 4. In-repo capability references
 
 The `@beep/*` bricks this packet composes:
