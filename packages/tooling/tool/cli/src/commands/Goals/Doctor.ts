@@ -106,6 +106,21 @@ export const GoalDoctorFindingKind = LiteralKit([
   })
 );
 
+/**
+ * Finding kind emitted by `beep goals doctor`.
+ *
+ * @example
+ * ```ts
+ * import type { GoalDoctorFindingKind } from "@beep/repo-cli/commands/Goals/Doctor"
+ *
+ * const kind: GoalDoctorFindingKind = "lifecycle-mismatch"
+ * console.log(kind)
+ * ```
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GoalDoctorFindingKind = typeof GoalDoctorFindingKind.Type;
+
 const GoalDoctorSeverity = LiteralKit(["blocking", "advisory"]).pipe(
   $I.annoteSchema("GoalDoctorSeverity", {
     description: "Severity of a goals-doctor finding: blocking checks ratchet against the baseline.",
@@ -164,7 +179,7 @@ const stringifyBaseline = SchemaGetter.stringifyJson({ space: 2 });
 
 const finding = (
   slug: string,
-  kind: typeof GoalDoctorFindingKind.Type,
+  kind: GoalDoctorFindingKind,
   severity: typeof GoalDoctorSeverity.Type,
   message: string,
   keySuffix = ""

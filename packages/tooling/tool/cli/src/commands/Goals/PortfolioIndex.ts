@@ -22,7 +22,6 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
 import { optionalProp } from "../../internal/cli/OptionRecord.js";
 import { decodeGoalManifest, GoalPhaseStatus, GoalStatus } from "./Goals.schemas.js";
 import { goalManifestPhases, listGoalPackets, parseGoalManifestText, readmeMissionLine } from "./Inventory.js";
-import type { GoalStatusValue } from "./Goals.schemas.js";
 
 const $I = $RepoCliId.create("commands/Goals/PortfolioIndex");
 
@@ -40,7 +39,7 @@ const $I = $RepoCliId.create("commands/Goals/PortfolioIndex");
  */
 export const PORTFOLIO_INDEX_PATH = "goals/INDEX.md";
 
-const GROUP_TITLES: Readonly<Record<GoalStatusValue, string>> = {
+const GROUP_TITLES: Readonly<Record<GoalStatus, string>> = {
   active: "Active",
   paused: "Paused",
   "completed-retained": "Completed (retained)",

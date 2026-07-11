@@ -49,15 +49,15 @@ export const GoalStatus = LiteralKit(["active", "paused", "completed-retained", 
  *
  * @example
  * ```ts
- * import type { GoalStatusValue } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ * import type { GoalStatus } from "@beep/repo-cli/commands/Goals/Goals.schemas"
  *
- * const status: GoalStatusValue = "completed-retained"
+ * const status: GoalStatus = "completed-retained"
  * console.log(status)
  * ```
  * @category type-level
  * @since 0.0.0
  */
-export type GoalStatusValue = typeof GoalStatus.Type;
+export type GoalStatus = typeof GoalStatus.Type;
 
 /**
  * Derived guard for {@link GoalStatus}.
@@ -97,15 +97,15 @@ export const GoalPhaseStatus = LiteralKit(["pending", "in-progress", "complete"]
  *
  * @example
  * ```ts
- * import type { GoalPhaseStatusValue } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ * import type { GoalPhaseStatus } from "@beep/repo-cli/commands/Goals/Goals.schemas"
  *
- * const status: GoalPhaseStatusValue = "in-progress"
+ * const status: GoalPhaseStatus = "in-progress"
  * console.log(status)
  * ```
  * @category type-level
  * @since 0.0.0
  */
-export type GoalPhaseStatusValue = typeof GoalPhaseStatus.Type;
+export type GoalPhaseStatus = typeof GoalPhaseStatus.Type;
 
 /**
  * Derived guard for {@link GoalPhaseStatus}.
@@ -143,6 +143,21 @@ export const GoalManifestSchemaVersion = LiteralKit(["initiative-manifest/v2", "
     description: "Known goal-manifest schema versions (v2 canonical, v1 and 1.0.0 legacy).",
   })
 );
+
+/**
+ * Known goal-manifest schema version.
+ *
+ * @example
+ * ```ts
+ * import type { GoalManifestSchemaVersion } from "@beep/repo-cli/commands/Goals/Goals.schemas"
+ *
+ * const version: GoalManifestSchemaVersion = "initiative-manifest/v2"
+ * console.log(version)
+ * ```
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GoalManifestSchemaVersion = typeof GoalManifestSchemaVersion.Type;
 
 /**
  * The declared completion gate of a goal packet.

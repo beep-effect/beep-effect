@@ -30,7 +30,7 @@ import {
   readmeTitle,
   rewriteReadmeLifecycleToken,
 } from "./Inventory.js";
-import type { GoalPhaseStatusValue, GoalStatusValue } from "./Goals.schemas.js";
+import type { GoalPhaseStatus } from "./Goals.schemas.js";
 import type { GoalPacketRecord } from "./Inventory.js";
 
 const $I = $RepoCliId.create("commands/Goals/Migration");
@@ -51,7 +51,7 @@ const $I = $RepoCliId.create("commands/Goals/Migration");
  * @category configuration
  * @since 0.0.0
  */
-export const GOAL_STATUS_MIGRATIONS: Readonly<Record<string, GoalStatusValue>> = {
+export const GOAL_STATUS_MIGRATIONS: Readonly<Record<string, GoalStatus>> = {
   complete: "completed-retained",
   completed: "completed-retained",
   done: "completed-retained",
@@ -85,7 +85,7 @@ export const GOAL_STATUS_MIGRATIONS: Readonly<Record<string, GoalStatusValue>> =
  * @category configuration
  * @since 0.0.0
  */
-export const GOAL_PHASE_STATUS_MIGRATIONS: Readonly<Record<string, GoalPhaseStatusValue>> = {
+export const GOAL_PHASE_STATUS_MIGRATIONS: Readonly<Record<string, GoalPhaseStatus>> = {
   completed: "complete",
   done: "complete",
   DONE: "complete",
@@ -115,7 +115,7 @@ export const GOAL_PHASE_STATUS_MIGRATIONS: Readonly<Record<string, GoalPhaseStat
  * @category mapping
  * @since 0.0.0
  */
-export const migrateGoalStatusToken = (token: string): O.Option<GoalStatusValue> =>
+export const migrateGoalStatusToken = (token: string): O.Option<GoalStatus> =>
   isGoalStatus(token) ? O.some(token) : R.get(GOAL_STATUS_MIGRATIONS, token);
 
 /**
@@ -134,7 +134,7 @@ export const migrateGoalStatusToken = (token: string): O.Option<GoalStatusValue>
  * @category mapping
  * @since 0.0.0
  */
-export const migrateGoalPhaseStatusToken = (token: string): O.Option<GoalPhaseStatusValue> =>
+export const migrateGoalPhaseStatusToken = (token: string): O.Option<GoalPhaseStatus> =>
   isGoalPhaseStatus(token) ? O.some(token) : R.get(GOAL_PHASE_STATUS_MIGRATIONS, token);
 
 /**

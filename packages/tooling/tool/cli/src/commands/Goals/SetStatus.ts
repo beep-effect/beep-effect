@@ -28,7 +28,6 @@ import { decodeGoalManifest, GoalStatus, isGoalStatus } from "./Goals.schemas.js
 import { listGoalPackets, parseGoalManifestText, rewriteReadmeLifecycleToken } from "./Inventory.js";
 import { planGoalPacketMigration } from "./Migration.js";
 import { PORTFOLIO_INDEX_PATH, writePortfolioIndex } from "./PortfolioIndex.js";
-import type { GoalStatusValue } from "./Goals.schemas.js";
 
 const STATUS_DOMAIN = A.join(GoalStatus.Options, " | ");
 
@@ -77,7 +76,7 @@ const runGoalsMigration = Effect.fn("Goals.runGoalsMigration")(function* (option
   );
 });
 
-const setStatusForSlug = Effect.fn("Goals.setStatusForSlug")(function* (slug: string, status: GoalStatusValue) {
+const setStatusForSlug = Effect.fn("Goals.setStatusForSlug")(function* (slug: string, status: GoalStatus) {
   const fs = yield* FileSystem.FileSystem;
   const records = yield* listGoalPackets();
   const record = yield* pipe(

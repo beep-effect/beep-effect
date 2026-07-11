@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-07-11T00:48:23.311Z",
+  "generatedAt": "2026-07-11T09:16:51.852Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -61,12 +61,12 @@
     "status": "resolved"
   },
   "totals": {
-    "packages": 114,
-    "cleanPackages": 111,
+    "packages": 115,
+    "cleanPackages": 112,
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 0,
-    "publicModules": 1765,
-    "publicExports": 15208,
+    "publicModules": 1780,
+    "publicExports": 15289,
     "openModules": 0,
     "openExports": 0,
     "missingExportExamples": 0,
@@ -20341,9 +20341,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 134,
-        "publicModuleCount": 132,
-        "publicExportCount": 794
+        "sourceFileCount": 143,
+        "publicModuleCount": 141,
+        "publicExportCount": 860
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -21467,6 +21467,195 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/commands/Goals/Doctor.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 9,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Goals/Goals.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.command.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-command-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Goals/Goals.errors.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.errors.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-errors-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 5,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Goals/Goals.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 13,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Goals/Inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-inventory-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 11,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Goals/Migration.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Migration.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-migration-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 10,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Goals/PortfolioIndex.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 6,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Goals/SetStatus.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/SetStatus.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-setstatus-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Goals/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 8,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/commands/Graphiti/Graphiti.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Graphiti/Graphiti.command.ts",
           "line": 1,
@@ -22030,7 +22219,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 3,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -29877,6 +30066,1432 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "GOALS_DOCTOR_BASELINE_PATH",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Doctor.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
+          "line": 59,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-59-goals-doctor-baseline-path",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GOAL_MD_MAX_CHARS",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Doctor.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
+          "line": 73,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-73-goal-md-max-chars",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDoctorFindingKind",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Doctor.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
+          "line": 89,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-89-goaldoctorfindingkind",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDoctorFindingKind",
+          "exportKind": "type",
+          "filePath": "src/commands/Goals/Doctor.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
+          "line": 122,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-122-goaldoctorfindingkind",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDoctorFinding",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Doctor.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
+          "line": 152,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-152-goaldoctorfinding",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalDoctorClassification",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Doctor.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
+          "line": 208,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-208-goaldoctorclassification",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "classifyGoalDoctorFindings",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Doctor.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
+          "line": 246,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-246-classifygoaldoctorfindings",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "runGoalsDoctor",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Doctor.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
+          "line": 578,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-578-rungoalsdoctor",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "goalsDoctorCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Doctor.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Doctor.ts",
+          "line": 702,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-doctor-ts-702-goalsdoctorcommand",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "goalsCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Goals.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.command.ts",
+          "line": 30,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-command-ts-30-goalscommand",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalPacketNotFoundError",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Goals.errors.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.errors.ts",
+          "line": 27,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-errors-ts-27-goalpacketnotfounderror",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalManifestInvalidError",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Goals.errors.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.errors.ts",
+          "line": 55,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-errors-ts-55-goalmanifestinvaliderror",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalReadmeStatusLineError",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Goals.errors.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.errors.ts",
+          "line": 83,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-errors-ts-83-goalreadmestatuslineerror",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalsGitError",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Goals.errors.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.errors.ts",
+          "line": 114,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-errors-ts-114-goalsgiterror",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalStatusInputError",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Goals.errors.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.errors.ts",
+          "line": 140,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-errors-ts-140-goalstatusinputerror",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalStatus",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Goals.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+          "line": 41,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-41-goalstatus",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalStatus",
+          "exportKind": "type",
+          "filePath": "src/commands/Goals/Goals.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+          "line": 60,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-60-goalstatus",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "isGoalStatus",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Goals.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+          "line": 75,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-75-isgoalstatus",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalPhaseStatus",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Goals.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+          "line": 89,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-89-goalphasestatus",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalPhaseStatus",
+          "exportKind": "type",
+          "filePath": "src/commands/Goals/Goals.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+          "line": 108,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-108-goalphasestatus",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "isGoalPhaseStatus",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Goals.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+          "line": 123,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-123-isgoalphasestatus",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalManifestSchemaVersion",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Goals.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+          "line": 141,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-141-goalmanifestschemaversion",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalManifestSchemaVersion",
+          "exportKind": "type",
+          "filePath": "src/commands/Goals/Goals.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+          "line": 160,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-160-goalmanifestschemaversion",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalCompletionGate",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Goals.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+          "line": 185,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-185-goalcompletiongate",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalInitiative",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Goals.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+          "line": 216,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-216-goalinitiative",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalPhase",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Goals.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+          "line": 246,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-246-goalphase",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalManifest",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Goals.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+          "line": 286,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-286-goalmanifest",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "decodeGoalManifest",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Goals.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts",
+          "line": 323,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-goals-schemas-ts-323-decodegoalmanifest",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GOALS_DIR",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts",
+          "line": 38,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-inventory-ts-38-goals-dir",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "TEMPLATE_SLUG",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts",
+          "line": 52,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-inventory-ts-52-template-slug",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalPacketRecord",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts",
+          "line": 75,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-inventory-ts-75-goalpacketrecord",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "listGoalPackets",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts",
+          "line": 111,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-inventory-ts-111-listgoalpackets",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "isJsonRecord",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts",
+          "line": 164,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-inventory-ts-164-isjsonrecord",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "parseGoalManifestText",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts",
+          "line": 184,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-inventory-ts-184-parsegoalmanifesttext",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "readmeLifecycleToken",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts",
+          "line": 212,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-inventory-ts-212-readmelifecycletoken",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "rewriteReadmeLifecycleToken",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts",
+          "line": 235,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-inventory-ts-235-rewritereadmelifecycletoken",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "readmeTitle",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts",
+          "line": 262,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-inventory-ts-262-readmetitle",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "readmeMissionLine",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts",
+          "line": 287,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-inventory-ts-287-readmemissionline",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "goalManifestPhases",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Inventory.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Inventory.ts",
+          "line": 345,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-inventory-ts-345-goalmanifestphases",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GOAL_STATUS_MIGRATIONS",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Migration.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Migration.ts",
+          "line": 53,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-migration-ts-53-goal-status-migrations",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GOAL_PHASE_STATUS_MIGRATIONS",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Migration.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Migration.ts",
+          "line": 87,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-migration-ts-87-goal-phase-status-migrations",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "migrateGoalStatusToken",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Migration.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Migration.ts",
+          "line": 117,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-migration-ts-117-migrategoalstatustoken",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "migrateGoalPhaseStatusToken",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Migration.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Migration.ts",
+          "line": 136,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-migration-ts-136-migrategoalphasestatustoken",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "COMPLETION_GATE_STATEMENT",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Migration.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Migration.ts",
+          "line": 151,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-migration-ts-151-completion-gate-statement",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalManifestBackfill",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Migration.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Migration.ts",
+          "line": 172,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-migration-ts-172-goalmanifestbackfill",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GOAL_MANIFEST_BACKFILLS",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Migration.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Migration.ts",
+          "line": 199,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-migration-ts-199-goal-manifest-backfills",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "buildBackfillManifestText",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Migration.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Migration.ts",
+          "line": 264,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-migration-ts-264-buildbackfillmanifesttext",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GoalPacketMigration",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/Migration.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Migration.ts",
+          "line": 313,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-migration-ts-313-goalpacketmigration",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "planGoalPacketMigration",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/Migration.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Migration.ts",
+          "line": 374,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-migration-ts-374-plangoalpacketmigration",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "PORTFOLIO_INDEX_PATH",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/PortfolioIndex.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
+          "line": 40,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-40-portfolio-index-path",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "PortfolioIndexRow",
+          "exportKind": "class",
+          "filePath": "src/commands/Goals/PortfolioIndex.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
+          "line": 69,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-69-portfolioindexrow",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "renderPortfolioIndex",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/PortfolioIndex.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
+          "line": 113,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-113-renderportfolioindex",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "buildPortfolioIndexContent",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/PortfolioIndex.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
+          "line": 175,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-175-buildportfolioindexcontent",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "writePortfolioIndex",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/PortfolioIndex.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
+          "line": 226,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-226-writeportfolioindex",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "goalsIndexCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/PortfolioIndex.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts",
+          "line": 284,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-portfolioindex-ts-284-goalsindexcommand",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "goalsSetStatusCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/Goals/SetStatus.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/SetStatus.ts",
+          "line": 167,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-setstatus-ts-167-goalssetstatuscommand",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Doctor.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Goals/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
+          "line": 14,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-14-export-from-doctor-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Goals.command.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Goals/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
+          "line": 21,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-21-export-from-goals-command-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Goals.errors.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Goals/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
+          "line": 28,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-28-export-from-goals-errors-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Goals.schemas.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Goals/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
+          "line": 35,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-35-export-from-goals-schemas-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Inventory.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Goals/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
+          "line": 42,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-42-export-from-inventory-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Migration.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Goals/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
+          "line": 49,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-49-export-from-migration-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./PortfolioIndex.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Goals/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
+          "line": 56,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-56-export-from-portfolioindex-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./SetStatus.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Goals/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Goals/index.ts",
+          "line": 63,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-index-ts-63-export-from-setstatus-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "graphitiCommand",
           "exportKind": "const",
           "filePath": "src/commands/Graphiti/Graphiti.command.ts",
@@ -32097,8 +33712,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts",
-          "line": 132,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-command-ts-132-collecttypescriptfiles",
+          "line": 133,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-command-ts-133-collecttypescriptfiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -32121,8 +33736,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts",
-          "line": 566,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-command-ts-566-lintcommand",
+          "line": 582,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-command-ts-582-lintcommand",
           "currentTags": [
             "@example",
             "@category",
@@ -32789,9 +34404,57 @@
           "exportKind": "namespace",
           "filePath": "src/commands/Lint/ReflectionArtifact.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
-          "line": 104,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-104-reflectionfinding",
+          "line": 108,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-108-reflectionfinding",
           "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "reflectionFrontmatterIsValid",
+          "exportKind": "const",
+          "filePath": "src/commands/Lint/ReflectionArtifact.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
+          "line": 203,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-203-reflectionfrontmatterisvalid",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "reflectionFileNameIsArtifact",
+          "exportKind": "const",
+          "filePath": "src/commands/Lint/ReflectionArtifact.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
+          "line": 221,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-221-reflectionfilenameisartifact",
+          "currentTags": [
+            "@param",
+            "@returns",
             "@example",
             "@category",
             "@since"
@@ -32811,8 +34474,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/ReflectionArtifact.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
-          "line": 220,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-220-runreflectionartifactlint",
+          "line": 263,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-263-runreflectionartifactlint",
           "currentTags": [
             "@example",
             "@category",
@@ -32833,8 +34496,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/ReflectionArtifact.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts",
-          "line": 308,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-308-lintreflectionartifactscommand",
+          "line": 366,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-reflectionartifact-ts-366-lintreflectionartifactscommand",
           "currentTags": [
             "@example",
             "@category",
@@ -34843,8 +36506,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 131,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-131-lintpolicysubcommand",
+          "line": 132,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-132-lintpolicysubcommand",
           "currentTags": [
             "@example",
             "@category",
@@ -34865,8 +36528,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 145,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-145-rootauditmode",
+          "line": 146,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-146-rootauditmode",
           "currentTags": [
             "@example",
             "@category",
@@ -34887,8 +36550,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 164,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-164-rootauditmode",
+          "line": 165,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-165-rootauditmode",
           "currentTags": [
             "@example",
             "@category",
@@ -34909,8 +36572,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 183,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-183-packagetaskprofile",
+          "line": 184,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-184-packagetaskprofile",
           "currentTags": [
             "@example",
             "@category",
@@ -34931,8 +36594,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 211,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-211-qualitytaskinvocation",
+          "line": 212,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-212-qualitytaskinvocation",
           "currentTags": [
             "@example",
             "@category",
@@ -34953,8 +36616,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 235,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-235-packagejsonworkspacesdocument",
+          "line": 236,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-236-packagejsonworkspacesdocument",
           "currentTags": [
             "@example",
             "@category",
@@ -34975,8 +36638,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 259,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-259-packagejsondocument",
+          "line": 260,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-260-packagejsondocument",
           "currentTags": [
             "@example",
             "@category",
@@ -34997,8 +36660,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 284,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-284-decodepackagejsondocument",
+          "line": 285,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-285-decodepackagejsondocument",
           "currentTags": [
             "@example",
             "@category",
@@ -35019,8 +36682,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 298,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-298-qualityhardwareprofile",
+          "line": 299,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-299-qualityhardwareprofile",
           "currentTags": [
             "@example",
             "@category",
@@ -35041,8 +36704,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 317,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-317-qualityhardwareprofile",
+          "line": 318,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-318-qualityhardwareprofile",
           "currentTags": [
             "@example",
             "@category",
@@ -35063,8 +36726,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 339,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-339-qualityprofileconfig",
+          "line": 340,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-340-qualityprofileconfig",
           "currentTags": [
             "@example",
             "@category",
@@ -35085,8 +36748,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 378,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-378-qualityprofiledetection",
+          "line": 379,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-379-qualityprofiledetection",
           "currentTags": [
             "@example",
             "@category",
@@ -35107,8 +36770,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 403,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-403-qualityprofiledetectioninput",
+          "line": 404,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-404-qualityprofiledetectioninput",
           "currentTags": [
             "@example",
             "@category",
@@ -35129,8 +36792,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 428,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-428-githubcheckmode",
+          "line": 429,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-429-githubcheckmode",
           "currentTags": [
             "@example",
             "@category",
@@ -35151,8 +36814,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 443,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-443-githubcheckmode",
+          "line": 444,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-444-githubcheckmode",
           "currentTags": [
             "@example",
             "@category",
@@ -35173,8 +36836,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 457,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-457-githubcheckmodeflagchoices",
+          "line": 458,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-458-githubcheckmodeflagchoices",
           "currentTags": [
             "@example",
             "@category",
@@ -35195,8 +36858,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 474,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-474-fallowqualityfeaturefamily",
+          "line": 475,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-475-fallowqualityfeaturefamily",
           "currentTags": [
             "@example",
             "@category",
@@ -35217,8 +36880,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 503,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-503-fallowqualityfeaturefamily",
+          "line": 504,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-504-fallowqualityfeaturefamily",
           "currentTags": [
             "@example",
             "@category",
@@ -35239,8 +36902,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 517,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-517-fallowqualitycimode",
+          "line": 518,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-518-fallowqualitycimode",
           "currentTags": [
             "@example",
             "@category",
@@ -35261,8 +36924,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 536,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-536-fallowqualitycimode",
+          "line": 537,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-537-fallowqualitycimode",
           "currentTags": [
             "@example",
             "@category",
@@ -35283,8 +36946,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 550,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-550-fallowqualitypromotionstatus",
+          "line": 551,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-551-fallowqualitypromotionstatus",
           "currentTags": [
             "@example",
             "@category",
@@ -35305,8 +36968,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 576,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-576-fallowqualitypromotionstatus",
+          "line": 577,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-577-fallowqualitypromotionstatus",
           "currentTags": [
             "@example",
             "@category",
@@ -35327,8 +36990,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 595,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-595-githubchecksfallowfeaturematrixrow",
+          "line": 596,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-596-githubchecksfallowfeaturematrixrow",
           "currentTags": [
             "@example",
             "@category",
@@ -35349,8 +37012,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 621,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-621-githubchecksfallowfeaturematrix",
+          "line": 622,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-622-githubchecksfallowfeaturematrix",
           "currentTags": [
             "@example",
             "@category",
@@ -35371,8 +37034,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 646,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-646-decodegithubchecksfallowfeaturematrix",
+          "line": 647,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-647-decodegithubchecksfallowfeaturematrix",
           "currentTags": [
             "@example",
             "@category",
@@ -35393,8 +37056,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 660,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-660-githubchecklanestage",
+          "line": 661,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-661-githubchecklanestage",
           "currentTags": [
             "@example",
             "@category",
@@ -35415,8 +37078,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 679,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-679-githubchecklanestage",
+          "line": 680,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-680-githubchecklanestage",
           "currentTags": [
             "@example",
             "@category",
@@ -35437,8 +37100,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Quality/Quality.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
-          "line": 700,
-          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-700-githubchecklanespec",
+          "line": 701,
+          "anchor": "packages-tooling-tool-cli-src-commands-quality-quality-schemas-ts-701-githubchecklanespec",
           "currentTags": [
             "@example",
             "@category",
@@ -36685,8 +38348,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Root.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Root.ts",
-          "line": 50,
-          "anchor": "packages-tooling-tool-cli-src-commands-root-ts-50-rootcommand",
+          "line": 51,
+          "anchor": "packages-tooling-tool-cli-src-commands-root-ts-51-rootcommand",
           "currentTags": [
             "@internal",
             "@example",
@@ -56552,7 +58215,7 @@
         "srcDir": "src",
         "sourceFileCount": 8,
         "publicModuleCount": 8,
-        "publicExportCount": 95
+        "publicExportCount": 98
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -56655,7 +58318,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 6,
+          "exportCount": 9,
           "remediationStatus": "resolved"
         },
         {
@@ -57872,8 +59535,8 @@
           "exportKind": "const",
           "filePath": "src/PathSafety/index.ts",
           "repoPath": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
-          "line": 52,
-          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-52-pathsafetyviolationreason",
+          "line": 57,
+          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-57-pathsafetyviolationreason",
           "currentTags": [
             "@example",
             "@category",
@@ -57894,8 +59557,8 @@
           "exportKind": "type",
           "filePath": "src/PathSafety/index.ts",
           "repoPath": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
-          "line": 77,
-          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-77-pathsafetyviolationreason",
+          "line": 83,
+          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-83-pathsafetyviolationreason",
           "currentTags": [
             "@example",
             "@category",
@@ -57916,8 +59579,8 @@
           "exportKind": "class",
           "filePath": "src/PathSafety/index.ts",
           "repoPath": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
-          "line": 100,
-          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-100-pathsafetyerror",
+          "line": 106,
+          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-106-pathsafetyerror",
           "currentTags": [
             "@example",
             "@category",
@@ -57938,8 +59601,8 @@
           "exportKind": "const",
           "filePath": "src/PathSafety/index.ts",
           "repoPath": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
-          "line": 211,
-          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-211-ispathwithinroot",
+          "line": 248,
+          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-248-ispathwithinroot",
           "currentTags": [
             "@example",
             "@category",
@@ -57960,8 +59623,8 @@
           "exportKind": "const",
           "filePath": "src/PathSafety/index.ts",
           "repoPath": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
-          "line": 254,
-          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-254-validateresolvedpath",
+          "line": 303,
+          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-303-validateresolvedpath",
           "currentTags": [
             "@example",
             "@category",
@@ -57982,8 +59645,77 @@
           "exportKind": "const",
           "filePath": "src/PathSafety/index.ts",
           "repoPath": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
-          "line": 304,
-          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-304-resolvepathwithinroot",
+          "line": 353,
+          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-353-resolvepathwithinroot",
+          "currentTags": [
+            "@example",
+            "@effects",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "resolvePathWithinCanonicalRoot",
+          "exportKind": "const",
+          "filePath": "src/PathSafety/index.ts",
+          "repoPath": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
+          "line": 478,
+          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-478-resolvepathwithincanonicalroot",
+          "currentTags": [
+            "@example",
+            "@effects",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "writeFileWithinCanonicalRootAtomically",
+          "exportKind": "const",
+          "filePath": "src/PathSafety/index.ts",
+          "repoPath": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
+          "line": 591,
+          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-591-writefilewithincanonicalrootatomically",
+          "currentTags": [
+            "@example",
+            "@effects",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "writeFileWithinRootAtomically",
+          "exportKind": "const",
+          "filePath": "src/PathSafety/index.ts",
+          "repoPath": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
+          "line": 642,
+          "anchor": "packages-foundation-capability-file-processing-src-pathsafety-index-ts-642-writefilewithinrootatomically",
           "currentTags": [
             "@example",
             "@effects",
@@ -58840,9 +60572,413 @@
       ]
     },
     {
+      "packageName": "@beep/ontology-config",
+      "packagePath": "packages/ontology/config",
+      "topoOrder": 30,
+      "status": "clean",
+      "sourceCoverage": {
+        "srcDir": "src",
+        "sourceFileCount": 8,
+        "publicModuleCount": 6,
+        "publicExportCount": 11
+      },
+      "docgenCoverage": {
+        "hasDocgenConfig": true,
+        "enforceDescriptions": false,
+        "enforceExamples": false,
+        "enforceVersion": true
+      },
+      "counts": {
+        "openModules": 0,
+        "openExports": 0,
+        "missingExportExamples": 0,
+        "missingExportCategories": 0,
+        "missingExportSince": 0,
+        "missingExportSummaries": 0,
+        "forbiddenTagFindings": 0,
+        "malformedConditionalTagFindings": 0,
+        "exampleImportFindings": 0,
+        "unsafeExampleFindings": 0,
+        "schemaAnnotationFindings": 0
+      },
+      "modules": [
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/ServerConfig.ts",
+          "repoPath": "packages/ontology/config/src/ServerConfig.ts",
+          "line": 1,
+          "anchor": "packages-ontology-config-src-serverconfig-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 4,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/TestLayer.ts",
+          "repoPath": "packages/ontology/config/src/TestLayer.ts",
+          "line": 1,
+          "anchor": "packages-ontology-config-src-testlayer-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/ontology/config/src/index.ts",
+          "line": 1,
+          "anchor": "packages-ontology-config-src-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/layer.ts",
+          "repoPath": "packages/ontology/config/src/layer.ts",
+          "line": 1,
+          "anchor": "packages-ontology-config-src-layer-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/server.ts",
+          "repoPath": "packages/ontology/config/src/server.ts",
+          "line": 1,
+          "anchor": "packages-ontology-config-src-server-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/test.ts",
+          "repoPath": "packages/ontology/config/src/test.ts",
+          "line": 1,
+          "anchor": "packages-ontology-config-src-test-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        }
+      ],
+      "exports": [
+        {
+          "symbolName": "OntologyWorkspaceRootConfig",
+          "exportKind": "const",
+          "filePath": "src/ServerConfig.ts",
+          "repoPath": "packages/ontology/config/src/ServerConfig.ts",
+          "line": 37,
+          "anchor": "packages-ontology-config-src-serverconfig-ts-37-ontologyworkspacerootconfig",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyServerConfig",
+          "exportKind": "class",
+          "filePath": "src/ServerConfig.ts",
+          "repoPath": "packages/ontology/config/src/ServerConfig.ts",
+          "line": 53,
+          "anchor": "packages-ontology-config-src-serverconfig-ts-53-ontologyserverconfig",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyConfigShape",
+          "exportKind": "type",
+          "filePath": "src/ServerConfig.ts",
+          "repoPath": "packages/ontology/config/src/ServerConfig.ts",
+          "line": 82,
+          "anchor": "packages-ontology-config-src-serverconfig-ts-82-ontologyconfigshape",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyConfig",
+          "exportKind": "class",
+          "filePath": "src/ServerConfig.ts",
+          "repoPath": "packages/ontology/config/src/ServerConfig.ts",
+          "line": 102,
+          "anchor": "packages-ontology-config-src-serverconfig-ts-102-ontologyconfig",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeOntologyConfigTest",
+          "exportKind": "const",
+          "filePath": "src/TestLayer.ts",
+          "repoPath": "packages/ontology/config/src/TestLayer.ts",
+          "line": 29,
+          "anchor": "packages-ontology-config-src-testlayer-ts-29-makeontologyconfigtest",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./public.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/ontology/config/src/index.ts",
+          "line": 31,
+          "anchor": "packages-ontology-config-src-index-ts-31-export-from-public-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "VERSION",
+          "exportKind": "const",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/ontology/config/src/index.ts",
+          "line": 23,
+          "anchor": "packages-ontology-config-src-index-ts-23-version",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "OntologyConfigLive",
+          "exportKind": "const",
+          "filePath": "src/layer.ts",
+          "repoPath": "packages/ontology/config/src/layer.ts",
+          "line": 46,
+          "anchor": "packages-ontology-config-src-layer-ts-46-ontologyconfiglive",
+          "currentTags": [
+            "@example",
+            "@effects",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export {\n  OntologyConfig,\n  type OntologyConfigShape,\n  OntologyServerConfig,\n  OntologyWorkspaceRootConfig,\n} from \"./ServerConfig.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/server.ts",
+          "repoPath": "packages/ontology/config/src/server.ts",
+          "line": 9,
+          "anchor": "packages-ontology-config-src-server-ts-9-export-ontologyconfig-type-ontologyconfigshape-ontologyserverconfig-ontologyworkspacerootconfig-from-serverconfig-js",
+          "currentTags": [
+            "@packageDocumentation",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export { OntologyConfig, type OntologyConfigShape, OntologyServerConfig } from \"./ServerConfig.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/test.ts",
+          "repoPath": "packages/ontology/config/src/test.ts",
+          "line": 15,
+          "anchor": "packages-ontology-config-src-test-ts-15-export-ontologyconfig-type-ontologyconfigshape-ontologyserverconfig-from-serverconfig-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export { makeOntologyConfigTest } from \"./TestLayer.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/test.ts",
+          "repoPath": "packages/ontology/config/src/test.ts",
+          "line": 22,
+          "anchor": "packages-ontology-config-src-test-ts-22-export-makeontologyconfigtest-from-testlayer-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        }
+      ]
+    },
+    {
       "packageName": "@beep/ai-provider-cli",
       "packagePath": "packages/drivers/ai-provider-cli",
-      "topoOrder": 30,
+      "topoOrder": 31,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -59278,7 +61414,7 @@
     {
       "packageName": "@beep/lint-rules",
       "packagePath": "packages/tooling/policy-pack/lint-rules",
-      "topoOrder": 31,
+      "topoOrder": 32,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -60184,7 +62320,7 @@
     {
       "packageName": "@beep/ontology-server",
       "packagePath": "packages/ontology/server",
-      "topoOrder": 32,
+      "topoOrder": 33,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -60370,12 +62506,14 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.file-store.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.file-store.ts",
-          "line": 108,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-file-store-ts-108-makefilesystemontologyfilestore",
+          "line": 212,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-file-store-ts-212-makefilesystemontologyfilestore",
           "currentTags": [
+            "@remarks",
             "@example",
-            "@since",
-            "@category"
+            "@effects",
+            "@category",
+            "@since"
           ],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -60392,8 +62530,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.layer.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
-          "line": 71,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-71-turtlecodeclayer",
+          "line": 72,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-72-turtlecodeclayer",
           "currentTags": [
             "@example",
             "@since",
@@ -60414,12 +62552,13 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.layer.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
-          "line": 86,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-86-ontologyfilestorelayer",
+          "line": 102,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-102-ontologyfilestorelayer",
           "currentTags": [
             "@example",
-            "@since",
-            "@category"
+            "@effects",
+            "@category",
+            "@since"
           ],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -60436,8 +62575,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.layer.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
-          "line": 101,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-101-ontologyreasonerlayer",
+          "line": 119,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-119-ontologyreasonerlayer",
           "currentTags": [
             "@example",
             "@since",
@@ -60458,8 +62597,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.layer.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
-          "line": 116,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-116-ontologysparqlrunnerlayer",
+          "line": 134,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-134-ontologysparqlrunnerlayer",
           "currentTags": [
             "@example",
             "@since",
@@ -60480,8 +62619,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.layer.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
-          "line": 131,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-131-ontologyvalidationrunnerlayer",
+          "line": 149,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-149-ontologyvalidationrunnerlayer",
           "currentTags": [
             "@example",
             "@since",
@@ -60502,8 +62641,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.layer.ts",
           "repoPath": "packages/ontology/server/src/aggregates/Session/Session.layer.ts",
-          "line": 150,
-          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-150-sessionserverlayer",
+          "line": 168,
+          "anchor": "packages-ontology-server-src-aggregates-session-session-layer-ts-168-sessionserverlayer",
           "currentTags": [
             "@example",
             "@since",
@@ -60652,7 +62791,7 @@
     {
       "packageName": "@beep/colors",
       "packagePath": "packages/foundation/capability/colors",
-      "topoOrder": 33,
+      "topoOrder": 34,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -60911,7 +63050,7 @@
     {
       "packageName": "@beep/agents-use-cases",
       "packagePath": "packages/agents/use-cases",
-      "topoOrder": 34,
+      "topoOrder": 35,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -63179,7 +65318,7 @@
     {
       "packageName": "@beep/m365-mcp",
       "packagePath": "packages/drivers/m365-mcp",
-      "topoOrder": 35,
+      "topoOrder": 36,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -63761,7 +65900,7 @@
     {
       "packageName": "@beep/cosmos",
       "packagePath": "packages/drivers/cosmos",
-      "topoOrder": 36,
+      "topoOrder": 37,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -64315,7 +66454,7 @@
     {
       "packageName": "@beep/workspace-server",
       "packagePath": "packages/workspace/server",
-      "topoOrder": 37,
+      "topoOrder": 38,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -64612,8 +66751,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Thread/Thread.layer.ts",
           "repoPath": "packages/workspace/server/src/aggregates/Thread/Thread.layer.ts",
-          "line": 28,
-          "anchor": "packages-workspace-server-src-aggregates-thread-thread-layer-ts-28-threadstoreinmemorylayer",
+          "line": 46,
+          "anchor": "packages-workspace-server-src-aggregates-thread-thread-layer-ts-46-threadstoreinmemorylayer",
           "currentTags": [
             "@example",
             "@category",
@@ -64634,8 +66773,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Thread/Thread.layer.ts",
           "repoPath": "packages/workspace/server/src/aggregates/Thread/Thread.layer.ts",
-          "line": 43,
-          "anchor": "packages-workspace-server-src-aggregates-thread-thread-layer-ts-43-threadstoredrizzlelayer",
+          "line": 64,
+          "anchor": "packages-workspace-server-src-aggregates-thread-thread-layer-ts-64-threadstoredrizzlelayer",
           "currentTags": [
             "@example",
             "@category",
@@ -64656,8 +66795,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Thread/Thread.layer.ts",
           "repoPath": "packages/workspace/server/src/aggregates/Thread/Thread.layer.ts",
-          "line": 58,
-          "anchor": "packages-workspace-server-src-aggregates-thread-thread-layer-ts-58-threadstorelive",
+          "line": 81,
+          "anchor": "packages-workspace-server-src-aggregates-thread-thread-layer-ts-81-threadstorelive",
           "currentTags": [
             "@example",
             "@category",
@@ -64766,10 +66905,11 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Thread/ThreadStore.repo.ts",
           "repoPath": "packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts",
-          "line": 165,
-          "anchor": "packages-workspace-server-src-aggregates-thread-threadstore-repo-ts-165-makeinmemorythreadstore",
+          "line": 226,
+          "anchor": "packages-workspace-server-src-aggregates-thread-threadstore-repo-ts-226-makeinmemorythreadstore",
           "currentTags": [
             "@example",
+            "@effects",
             "@category",
             "@since"
           ],
@@ -64788,10 +66928,11 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Thread/ThreadStore.repo.ts",
           "repoPath": "packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts",
-          "line": 300,
-          "anchor": "packages-workspace-server-src-aggregates-thread-threadstore-repo-ts-300-makedrizzlethreadstore",
+          "line": 387,
+          "anchor": "packages-workspace-server-src-aggregates-thread-threadstore-repo-ts-387-makedrizzlethreadstore",
           "currentTags": [
             "@example",
+            "@effects",
             "@category",
             "@since"
           ],
@@ -64810,10 +66951,11 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Thread/ThreadStore.repo.ts",
           "repoPath": "packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts",
-          "line": 488,
-          "anchor": "packages-workspace-server-src-aggregates-thread-threadstore-repo-ts-488-makethreadstore",
+          "line": 599,
+          "anchor": "packages-workspace-server-src-aggregates-thread-threadstore-repo-ts-599-makethreadstore",
           "currentTags": [
             "@example",
+            "@effects",
             "@category",
             "@since"
           ],
@@ -65177,7 +67319,7 @@
     {
       "packageName": "@beep/chalk",
       "packagePath": "packages/foundation/capability/chalk",
-      "topoOrder": 38,
+      "topoOrder": 39,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -66004,7 +68146,7 @@
     {
       "packageName": "@beep/uspto",
       "packagePath": "packages/drivers/uspto",
-      "topoOrder": 39,
+      "topoOrder": 40,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -66716,7 +68858,7 @@
     {
       "packageName": "@beep/phoenix",
       "packagePath": "packages/drivers/phoenix",
-      "topoOrder": 40,
+      "topoOrder": 41,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -67956,7 +70098,7 @@
     {
       "packageName": "@beep/test-utils",
       "packagePath": "packages/tooling/test-kit/test-utils",
-      "topoOrder": 41,
+      "topoOrder": 42,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -68873,7 +71015,7 @@
     {
       "packageName": "@beep/types",
       "packagePath": "packages/foundation/primitive/types",
-      "topoOrder": 42,
+      "topoOrder": 43,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -69237,7 +71379,7 @@
     {
       "packageName": "@beep/oip-web",
       "packagePath": "apps/oip-web",
-      "topoOrder": 43,
+      "topoOrder": 44,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -71746,7 +73888,7 @@
     {
       "packageName": "@beep/storybook",
       "packagePath": "apps/storybook",
-      "topoOrder": 44,
+      "topoOrder": 45,
       "status": "no-public-src-surface",
       "sourceCoverage": {
         "srcDir": "src",
@@ -71779,7 +73921,7 @@
     {
       "packageName": "@beep/ontology-domain",
       "packagePath": "packages/ontology/domain",
-      "topoOrder": 45,
+      "topoOrder": 46,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -72771,7 +74913,7 @@
     {
       "packageName": "@beep/lexical-schema",
       "packagePath": "packages/foundation/modeling/lexical",
-      "topoOrder": 46,
+      "topoOrder": 47,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -75229,7 +77371,7 @@
     {
       "packageName": "@beep/langextract",
       "packagePath": "packages/foundation/capability/langextract",
-      "topoOrder": 47,
+      "topoOrder": 48,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -76135,7 +78277,7 @@
     {
       "packageName": "@beep/shared-tables",
       "packagePath": "packages/shared/tables",
-      "topoOrder": 48,
+      "topoOrder": 49,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -76704,7 +78846,7 @@
     {
       "packageName": "@beep/scratchpad",
       "packagePath": "scratchpad",
-      "topoOrder": 49,
+      "topoOrder": 50,
       "status": "no-public-src-surface",
       "sourceCoverage": {
         "srcDir": "src",
@@ -76737,7 +78879,7 @@
     {
       "packageName": "@beep/md",
       "packagePath": "packages/foundation/modeling/md",
-      "topoOrder": 50,
+      "topoOrder": 51,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -81544,7 +83686,7 @@
     {
       "packageName": "@beep/law-practice-use-cases",
       "packagePath": "packages/law-practice/use-cases",
-      "topoOrder": 51,
+      "topoOrder": 52,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -82497,7 +84639,7 @@
     {
       "packageName": "@beep/workspace-domain",
       "packagePath": "packages/workspace/domain",
-      "topoOrder": 52,
+      "topoOrder": 53,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -84485,7 +86627,7 @@
     {
       "packageName": "@beep/semantic-web",
       "packagePath": "packages/foundation/capability/semantic-web",
-      "topoOrder": 53,
+      "topoOrder": 54,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -87733,7 +89875,7 @@
     {
       "packageName": "@beep/utils",
       "packagePath": "packages/foundation/modeling/utils",
-      "topoOrder": 54,
+      "topoOrder": 55,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -92727,7 +94869,7 @@
     {
       "packageName": "@beep/repo-ai-metrics",
       "packagePath": "packages/tooling/library/ai-metrics",
-      "topoOrder": 55,
+      "topoOrder": 56,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -98981,7 +101123,7 @@
     {
       "packageName": "@beep/architecture-lab-tables",
       "packagePath": "packages/architecture-lab/tables",
-      "topoOrder": 56,
+      "topoOrder": 57,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -99624,7 +101766,7 @@
     {
       "packageName": "@beep/tika",
       "packagePath": "packages/drivers/tika",
-      "topoOrder": 57,
+      "topoOrder": 58,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -100093,7 +102235,7 @@
     {
       "packageName": "@beep/libpff",
       "packagePath": "packages/drivers/libpff",
-      "topoOrder": 58,
+      "topoOrder": 59,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -100628,7 +102770,7 @@
     {
       "packageName": "@beep/venice-ai",
       "packagePath": "packages/drivers/venice-ai",
-      "topoOrder": 59,
+      "topoOrder": 60,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -101496,7 +103638,7 @@
     {
       "packageName": "@beep/form",
       "packagePath": "packages/foundation/ui-system/form",
-      "topoOrder": 60,
+      "topoOrder": 61,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -104933,7 +107075,7 @@
     {
       "packageName": "@beep/identity",
       "packagePath": "packages/foundation/modeling/identity",
-      "topoOrder": 61,
+      "topoOrder": 62,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -108684,7 +110826,7 @@
     {
       "packageName": "@beep/drizzle",
       "packagePath": "packages/drivers/drizzle",
-      "topoOrder": 62,
+      "topoOrder": 63,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -109186,7 +111328,7 @@
     {
       "packageName": "@beep/ontology-ui",
       "packagePath": "packages/ontology/ui",
-      "topoOrder": 63,
+      "topoOrder": 64,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -109479,7 +111621,7 @@
     {
       "packageName": "@beep/api-transport",
       "packagePath": "packages/foundation/capability/api-transport",
-      "topoOrder": 64,
+      "topoOrder": 65,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -109731,7 +111873,7 @@
     {
       "packageName": "@beep/box",
       "packagePath": "packages/drivers/box",
-      "topoOrder": 65,
+      "topoOrder": 66,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -210951,7 +213093,7 @@
     {
       "packageName": "@beep/openai-compat",
       "packagePath": "packages/drivers/openai-compat",
-      "topoOrder": 66,
+      "topoOrder": 67,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -212258,7 +214400,7 @@
     {
       "packageName": "@beep/shacl",
       "packagePath": "packages/drivers/shacl",
-      "topoOrder": 67,
+      "topoOrder": 68,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -212487,7 +214629,7 @@
     {
       "packageName": "@beep/documents-server",
       "packagePath": "packages/documents/server",
-      "topoOrder": 68,
+      "topoOrder": 69,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -212673,10 +214815,11 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Document/DocumentIntake.service.ts",
           "repoPath": "packages/documents/server/src/aggregates/Document/DocumentIntake.service.ts",
-          "line": 87,
-          "anchor": "packages-documents-server-src-aggregates-document-documentintake-service-ts-87-makedocumentintake",
+          "line": 85,
+          "anchor": "packages-documents-server-src-aggregates-document-documentintake-service-ts-85-makedocumentintake",
           "currentTags": [
             "@example",
+            "@effects",
             "@category",
             "@since"
           ],
@@ -212695,8 +214838,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Document/DocumentIntake.service.ts",
           "repoPath": "packages/documents/server/src/aggregates/Document/DocumentIntake.service.ts",
-          "line": 136,
-          "anchor": "packages-documents-server-src-aggregates-document-documentintake-service-ts-136-documentintakelayer",
+          "line": 134,
+          "anchor": "packages-documents-server-src-aggregates-document-documentintake-service-ts-134-documentintakelayer",
           "currentTags": [
             "@example",
             "@category",
@@ -212717,8 +214860,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Document/DocumentIntake.service.ts",
           "repoPath": "packages/documents/server/src/aggregates/Document/DocumentIntake.service.ts",
-          "line": 151,
-          "anchor": "packages-documents-server-src-aggregates-document-documentintake-service-ts-151-documentsserverlayer",
+          "line": 149,
+          "anchor": "packages-documents-server-src-aggregates-document-documentintake-service-ts-149-documentsserverlayer",
           "currentTags": [
             "@example",
             "@category",
@@ -212889,7 +215032,7 @@
     {
       "packageName": "@beep/nlp-processing",
       "packagePath": "packages/foundation/capability/nlp-processing",
-      "topoOrder": 69,
+      "topoOrder": 70,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -220849,7 +222992,7 @@
     {
       "packageName": "@beep/anthropic",
       "packagePath": "packages/drivers/anthropic",
-      "topoOrder": 70,
+      "topoOrder": 71,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -221569,13 +223712,13 @@
     {
       "packageName": "@beep/professional-desktop",
       "packagePath": "apps/professional-desktop",
-      "topoOrder": 71,
+      "topoOrder": 72,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
         "sourceFileCount": 33,
         "publicModuleCount": 32,
-        "publicExportCount": 63
+        "publicExportCount": 64
       },
       "docgenCoverage": {
         "hasDocgenConfig": false,
@@ -222004,7 +224147,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 3,
+          "exportCount": 4,
           "remediationStatus": "resolved"
         },
         {
@@ -223104,12 +225247,34 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "DesktopHandlersLayer",
+          "symbolName": "DesktopStartupError",
           "exportKind": "type",
           "filePath": "src/runtime/Layer.ts",
           "repoPath": "apps/professional-desktop/src/runtime/Layer.ts",
           "line": 86,
-          "anchor": "apps-professional-desktop-src-runtime-layer-ts-86-desktophandlerslayer",
+          "anchor": "apps-professional-desktop-src-runtime-layer-ts-86-desktopstartuperror",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DesktopHandlersLayer",
+          "exportKind": "type",
+          "filePath": "src/runtime/Layer.ts",
+          "repoPath": "apps/professional-desktop/src/runtime/Layer.ts",
+          "line": 104,
+          "anchor": "apps-professional-desktop-src-runtime-layer-ts-104-desktophandlerslayer",
           "currentTags": [
             "@example",
             "@category",
@@ -223130,8 +225295,8 @@
           "exportKind": "const",
           "filePath": "src/runtime/Layer.ts",
           "repoPath": "apps/professional-desktop/src/runtime/Layer.ts",
-          "line": 119,
-          "anchor": "apps-professional-desktop-src-runtime-layer-ts-119-runtimelive",
+          "line": 137,
+          "anchor": "apps-professional-desktop-src-runtime-layer-ts-137-runtimelive",
           "currentTags": [
             "@example",
             "@category",
@@ -223152,8 +225317,8 @@
           "exportKind": "const",
           "filePath": "src/runtime/Layer.ts",
           "repoPath": "apps/professional-desktop/src/runtime/Layer.ts",
-          "line": 146,
-          "anchor": "apps-professional-desktop-src-runtime-layer-ts-146-runtimetest",
+          "line": 164,
+          "anchor": "apps-professional-desktop-src-runtime-layer-ts-164-runtimetest",
           "currentTags": [
             "@example",
             "@category",
@@ -223680,7 +225845,7 @@
     {
       "packageName": "@beep/epistemic-domain",
       "packagePath": "packages/epistemic/domain",
-      "topoOrder": 72,
+      "topoOrder": 73,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -225145,7 +227310,7 @@
     {
       "packageName": "@beep/ontology-client",
       "packagePath": "packages/ontology/client",
-      "topoOrder": 73,
+      "topoOrder": 74,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -226212,8 +228377,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1122,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1122-ontologygraphrenderbridgeatom",
+          "line": 1116,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1116-ontologygraphrenderbridgeatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226234,8 +228399,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1189,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1189-toggleontologyinferredviewatom",
+          "line": 1183,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1183-toggleontologyinferredviewatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226256,8 +228421,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1219,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1219-applyontologysparqlexampleatom",
+          "line": 1213,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1213-applyontologysparqlexampleatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226278,8 +228443,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1251,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1251-runontologysparqlatom",
+          "line": 1245,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1245-runontologysparqlatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226300,8 +228465,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1293,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1293-runontologyvalidationatom",
+          "line": 1287,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1287-runontologyvalidationatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226322,8 +228487,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1342,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1342-applyontologyrepairatom",
+          "line": 1336,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1336-applyontologyrepairatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226344,8 +228509,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1385,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1385-exportontologyprovenanceatom",
+          "line": 1379,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1379-exportontologyprovenanceatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226366,8 +228531,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1426,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1426-openontologydocumentatom",
+          "line": 1420,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1420-openontologydocumentatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226388,8 +228553,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1465,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1465-saveontologydocumentatom",
+          "line": 1459,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1459-saveontologydocumentatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226410,8 +228575,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1493,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1493-previewontologyturtleatom",
+          "line": 1487,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1487-previewontologyturtleatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226432,8 +228597,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1515,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1515-applyontologybatchatom",
+          "line": 1509,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1509-applyontologybatchatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226454,8 +228619,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1551,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1551-applyontologygraphgestureatom",
+          "line": 1545,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1545-applyontologygraphgestureatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226476,8 +228641,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1588,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1588-undoontologychangeatom",
+          "line": 1582,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1582-undoontologychangeatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226498,8 +228663,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1631,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1631-redoontologychangeatom",
+          "line": 1625,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1625-redoontologychangeatom",
           "currentTags": [
             "@example",
             "@category",
@@ -226520,8 +228685,8 @@
           "exportKind": "const",
           "filePath": "src/aggregates/Session/Session.atoms.ts",
           "repoPath": "packages/ontology/client/src/aggregates/Session/Session.atoms.ts",
-          "line": 1685,
-          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1685-invertontologychange",
+          "line": 1679,
+          "anchor": "packages-ontology-client-src-aggregates-session-session-atoms-ts-1679-invertontologychange",
           "currentTags": [
             "@example",
             "@category",
@@ -226606,7 +228771,7 @@
     {
       "packageName": "@beep/architecture-lab-use-cases",
       "packagePath": "packages/architecture-lab/use-cases",
-      "topoOrder": 74,
+      "topoOrder": 75,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -228431,7 +230596,7 @@
     {
       "packageName": "@beep/firecrawl",
       "packagePath": "packages/drivers/firecrawl",
-      "topoOrder": 75,
+      "topoOrder": 76,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -234445,7 +236610,7 @@
     {
       "packageName": "@beep/ecfr",
       "packagePath": "packages/drivers/ecfr",
-      "topoOrder": 76,
+      "topoOrder": 77,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -235086,7 +237251,7 @@
     {
       "packageName": "@beep/oxigraph",
       "packagePath": "packages/drivers/oxigraph",
-      "topoOrder": 77,
+      "topoOrder": 78,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -235315,7 +237480,7 @@
     {
       "packageName": "@beep/acp",
       "packagePath": "packages/drivers/acp",
-      "topoOrder": 78,
+      "topoOrder": 79,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -244583,7 +246748,7 @@
     {
       "packageName": "@beep/nlp",
       "packagePath": "packages/foundation/modeling/nlp",
-      "topoOrder": 79,
+      "topoOrder": 80,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -252043,7 +254208,7 @@
     {
       "packageName": "@beep/infra",
       "packagePath": "infra",
-      "topoOrder": 80,
+      "topoOrder": 81,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -252931,7 +255096,7 @@
     {
       "packageName": "@beep/runpod",
       "packagePath": "packages/drivers/runpod",
-      "topoOrder": 81,
+      "topoOrder": 82,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -257026,7 +259191,7 @@
     {
       "packageName": "@beep/fc-runs",
       "packagePath": "packages/tooling/test-kit/fc-runs",
-      "topoOrder": 82,
+      "topoOrder": 83,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -257219,7 +259384,7 @@
     {
       "packageName": "@beep/repo-utils",
       "packagePath": "packages/tooling/library/repo-utils",
-      "topoOrder": 83,
+      "topoOrder": 84,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -273609,7 +275774,7 @@
     {
       "packageName": "@beep/documents-domain",
       "packagePath": "packages/documents/domain",
-      "topoOrder": 84,
+      "topoOrder": 85,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -274722,7 +276887,7 @@
     {
       "packageName": "@beep/schema",
       "packagePath": "packages/foundation/modeling/schema",
-      "topoOrder": 85,
+      "topoOrder": 86,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -315405,7 +317570,7 @@
     {
       "packageName": "@beep/epistemic-server",
       "packagePath": "packages/epistemic/server",
-      "topoOrder": 86,
+      "topoOrder": 87,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -315549,7 +317714,7 @@
     {
       "packageName": "@beep/rdf",
       "packagePath": "packages/foundation/modeling/rdf",
-      "topoOrder": 87,
+      "topoOrder": 88,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -320553,7 +322718,7 @@
     {
       "packageName": "@beep/onepassword-cli",
       "packagePath": "packages/drivers/onepassword-cli",
-      "topoOrder": 88,
+      "topoOrder": 89,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -321021,7 +323186,7 @@
     {
       "packageName": "@beep/architecture-lab-config",
       "packagePath": "packages/architecture-lab/config",
-      "topoOrder": 89,
+      "topoOrder": 90,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -321703,7 +323868,7 @@
     {
       "packageName": "@beep/govinfo",
       "packagePath": "packages/drivers/govinfo",
-      "topoOrder": 90,
+      "topoOrder": 91,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -324283,7 +326448,7 @@
     {
       "packageName": "@beep/data",
       "packagePath": "packages/foundation/primitive/data",
-      "topoOrder": 91,
+      "topoOrder": 92,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -327738,7 +329903,7 @@
     {
       "packageName": "@beep/xai",
       "packagePath": "packages/drivers/xai",
-      "topoOrder": 92,
+      "topoOrder": 93,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -329463,7 +331628,7 @@
     {
       "packageName": "@beep/architecture-lab-server",
       "packagePath": "packages/architecture-lab/server",
-      "topoOrder": 93,
+      "topoOrder": 94,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -330528,7 +332693,7 @@
     {
       "packageName": "@beep/duckdb",
       "packagePath": "packages/drivers/duckdb",
-      "topoOrder": 94,
+      "topoOrder": 95,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -331319,7 +333484,7 @@
     {
       "packageName": "@beep/ffmpeg",
       "packagePath": "packages/drivers/ffmpeg",
-      "topoOrder": 95,
+      "topoOrder": 96,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -332623,7 +334788,7 @@
     {
       "packageName": "@beep/agents-client",
       "packagePath": "packages/agents/client",
-      "topoOrder": 96,
+      "topoOrder": 97,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -333241,7 +335406,7 @@
     {
       "packageName": "@beep/uspto-mcp",
       "packagePath": "packages/drivers/uspto-mcp",
-      "topoOrder": 97,
+      "topoOrder": 98,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -334078,7 +336243,7 @@
     {
       "packageName": "@beep/architecture-lab-proof",
       "packagePath": "apps/architecture-lab-proof",
-      "topoOrder": 98,
+      "topoOrder": 99,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -334180,7 +336345,7 @@
     {
       "packageName": "@beep/epistemic-use-cases",
       "packagePath": "packages/epistemic/use-cases",
-      "topoOrder": 99,
+      "topoOrder": 100,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -334845,7 +337010,7 @@
     {
       "packageName": "@beep/m365",
       "packagePath": "packages/drivers/m365",
-      "topoOrder": 100,
+      "topoOrder": 101,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -336630,7 +338795,7 @@
     {
       "packageName": "@beep/observability",
       "packagePath": "packages/foundation/capability/observability",
-      "topoOrder": 101,
+      "topoOrder": 102,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -340666,7 +342831,7 @@
     {
       "packageName": "@beep/html",
       "packagePath": "packages/foundation/modeling/html",
-      "topoOrder": 102,
+      "topoOrder": 103,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -348614,7 +350779,7 @@
     {
       "packageName": "@beep/n3",
       "packagePath": "packages/drivers/n3",
-      "topoOrder": 103,
+      "topoOrder": 104,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -348952,7 +351117,7 @@
     {
       "packageName": "@beep/ui",
       "packagePath": "packages/foundation/ui-system/ui",
-      "topoOrder": 104,
+      "topoOrder": 105,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -363912,7 +366077,7 @@
     {
       "packageName": "@beep/pandoc-ast",
       "packagePath": "packages/foundation/modeling/pandoc-ast",
-      "topoOrder": 105,
+      "topoOrder": 106,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -366714,7 +368879,7 @@
     {
       "packageName": "@beep/repo-configs",
       "packagePath": "packages/tooling/policy-pack/repo-configs",
-      "topoOrder": 106,
+      "topoOrder": 107,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -370368,7 +372533,7 @@
     {
       "packageName": "@beep/wink",
       "packagePath": "packages/drivers/wink",
-      "topoOrder": 107,
+      "topoOrder": 108,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -372250,7 +374415,7 @@
     {
       "packageName": "@beep/postgres",
       "packagePath": "packages/drivers/postgres",
-      "topoOrder": 108,
+      "topoOrder": 109,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -373220,7 +375385,7 @@
     {
       "packageName": "@beep/architecture-lab-domain",
       "packagePath": "packages/architecture-lab/domain",
-      "topoOrder": 109,
+      "topoOrder": 110,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -374712,7 +376877,7 @@
     {
       "packageName": "@beep/provenance",
       "packagePath": "packages/foundation/modeling/provenance",
-      "topoOrder": 110,
+      "topoOrder": 111,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -374898,7 +377063,7 @@
     {
       "packageName": "@beep/epistemic-tables",
       "packagePath": "packages/epistemic/tables",
-      "topoOrder": 111,
+      "topoOrder": 112,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -375323,7 +377488,7 @@
     {
       "packageName": "@beep/federal-register",
       "packagePath": "packages/drivers/federal-register",
-      "topoOrder": 112,
+      "topoOrder": 113,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -375404,7 +377569,7 @@
     {
       "packageName": "@beep/documents-use-cases",
       "packagePath": "packages/documents/use-cases",
-      "topoOrder": 113,
+      "topoOrder": 114,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -376256,7 +378421,7 @@
     {
       "packageName": "@beep/sanity",
       "packagePath": "packages/drivers/sanity",
-      "topoOrder": 114,
+      "topoOrder": 115,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
