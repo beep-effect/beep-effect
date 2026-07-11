@@ -53,7 +53,7 @@
     {
       "id": "P1",
       "name": "Schema + set-status + migrate",
-      "status": "pending",
+      "status": "complete",
       "exit": "All manifests decode via GoalManifest v2 after --migrate; zero unknown status tokens; 5 missing manifests backfilled; mapping unit tests pass."
     },
     {
