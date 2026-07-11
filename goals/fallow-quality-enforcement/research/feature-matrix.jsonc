@@ -1,7 +1,7 @@
 {
   "$schema": "./feature-matrix.schema.json",
   "schemaVersion": "fallow-quality-enforcement/feature-matrix/v1",
-  "updated": "2026-06-11",
+  "updated": "2026-07-09",
   "validatorVersion": "fallow-quality-enforcement-validator/v1",
   "features": [
     {
@@ -65,11 +65,11 @@
         "category": "repo-law",
         "parser": "fallow/audit/v1",
         "subCategoryPrefix": "fallow:audit",
-        "blockingDefault": false,
+        "blockingDefault": true,
         "routingSkills": ["quality-review-fix-loop"]
       },
-      "ciMode": "advisory-artifact",
-      "promotionStatus": "advisory",
+      "ciMode": "blocking-check",
+      "promotionStatus": "blocking",
       "promotionCriteria": {
         "requiredCommands": [
           "bun goals/fallow-quality-enforcement/ops/validate-fallow-audit-baseline.ts",
@@ -87,7 +87,7 @@
       "acceptanceCommands": [
         "bun goals/fallow-quality-enforcement/ops/validate-fallow-audit-baseline.ts"
       ],
-      "rollbackNotes": "Restore ciMode to blocking-check and promotionStatus to blocking to re-enable the pre-push gate.",
+      "rollbackNotes": "Restore ciMode to advisory-artifact and promotionStatus to advisory to demote the pre-push gate.",
       "evidenceRefs": [
         "research/audit.md",
         "standards/fallow.pilot.inventory.jsonc"

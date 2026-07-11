@@ -55,6 +55,7 @@ BA = "BA"
 # GES: Ant Group's Graph Engine Service algorithm library (docs/graphs/graph-databases.md), not a typo.
 GES = "GES"
 PN = "PN"
+AKS = "AKS"
 mis = "mis"
 
 # MIME/file-extension tokens and generated doc anchors.
