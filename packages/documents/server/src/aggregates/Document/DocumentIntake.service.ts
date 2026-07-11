@@ -21,6 +21,13 @@ import { bytesToHex } from "@noble/hashes/utils.js";
 import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as S from "effect/Schema";
 import { FilingDecisionHeuristicLayer } from "./FilingDecisionHeuristic.js";
+import { FilingDecisionLlmLayer } from "./FilingDecisionLlm.js";
+import {
+  FilingTextExtraction,
+  FilingTextExtractionInput,
+  FilingTextExtractionLiveLayer,
+  FilingTextExtractionNoopLayer,
+} from "./FilingTextExtraction.js";
 
 const $I = $DocumentsServerId.create("aggregates/Document/DocumentIntake.service");
 
@@ -86,18 +93,25 @@ const materializeAtomically = (
  */
 export const makeDocumentIntake = Effect.fn($I`makeDocumentIntake`)(function* () {
   const filingDecision = yield* FilingDecision;
+  const filingTextExtraction = yield* FilingTextExtraction;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
 
   return DocumentIntake.of({
     intakeDroppedFile: Effect.fn($I`intakeDroppedFile`)(function* (input) {
       const digest = contentDigest(input.content);
-      // textExcerpt defaults to none until the doc-text extraction engine threads
-      // extracted text through this seam (D8-S1).
+      const textExcerpt = yield* filingTextExtraction.extract(
+        FilingTextExtractionInput.make({
+          content: input.content,
+          contentDigest: digest,
+          originalFileName: input.originalFileName,
+        })
+      );
       const decision = yield* filingDecision.decide(
         DocumentUseCases.Document.FilingDecisionInput.make({
           contentDigest: digest,
           originalFileName: input.originalFileName,
+          textExcerpt,
         })
       );
       const vaultPath = yield* FilingOutcome.match(decision, {
@@ -163,4 +177,26 @@ export const DocumentIntakeLayer = Layer.effect(DocumentIntake, makeDocumentInta
  * @category layers
  * @since 0.0.0
  */
-export const DocumentsServerLayer = pipe(DocumentIntakeLayer, Layer.provide(FilingDecisionHeuristicLayer));
+export const DocumentsServerLayer = pipe(
+  DocumentIntakeLayer,
+  Layer.provide(Layer.merge(FilingDecisionHeuristicLayer, FilingTextExtractionNoopLayer))
+);
+
+/**
+ * Documents server layer with live LLM filing and optional file-processing extraction.
+ * The app runtime supplies its Anthropic LanguageModel and file-processing driver layers.
+ *
+ * @example
+ * ```ts
+ * import { DocumentsServerLlmLayer } from "@beep/documents-server/aggregates/Document"
+ *
+ * console.log(DocumentsServerLlmLayer)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const DocumentsServerLlmLayer = pipe(
+  DocumentIntakeLayer,
+  Layer.provide(Layer.merge(FilingDecisionLlmLayer, FilingTextExtractionLiveLayer))
+);
