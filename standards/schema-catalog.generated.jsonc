@@ -17172,6 +17172,230 @@
       "description": "Diff worker result expressed as typed change operations."
     },
     {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "CapabilityMetadataRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "CapabilityMetadataRequest",
+      "description": "Request ontology toolkit capability metadata."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "CapabilityMetadataResponse",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "CapabilityMetadataResponse",
+      "description": "Actual ontology toolkit limits and semantics."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "ExportProvenanceRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ExportProvenanceRequest",
+      "description": "Export PROV-O and dataset-description Turtle sidecars."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "ExportProvenanceResponse",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ExportProvenanceResponse",
+      "description": "Written ontology provenance sidecar locations."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyBudgetKind",
+      "kind": "literal-kit",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyBudgetKind",
+      "description": "Server-owned ontology budget family."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyBudgetRefusal",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyBudgetRefusal",
+      "description": "Recoverable refusal when a server-owned ontology budget is exceeded."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyCasConflict",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyCasConflict",
+      "description": "Recoverable rdfc-1.0 compare-and-set conflict."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyFingerprint",
+      "kind": "brand",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyFingerprint",
+      "description": "Semantic rdfc-1.0 fingerprint used by stateless ontology compare-and-set writes."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyNoOpRefusal",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyNoOpRefusal",
+      "description": "Visible refusal for an ontology mutation that would have no effect."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyReasonerDriftRefusal",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyReasonerDriftRefusal",
+      "description": "Recoverable refusal that prevents an unbounded reasoner recompute."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologySearchRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologySearchRequest",
+      "description": "Search resources in a saved Turtle ontology."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologySearchResponse",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologySearchResponse",
+      "description": "Server-bounded ontology resource search results."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologySparqlQueryRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologySparqlQueryRequest",
+      "description": "Run a bounded SPARQL query over a saved Turtle ontology."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologySparqlQueryResponse",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologySparqlQueryResponse",
+      "description": "Bounded SPARQL result with the source semantic fingerprint."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyToolBudgets",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyToolBudgets",
+      "description": "Server-owned static ceilings for ontology tools."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyToolCapability",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyToolCapability",
+      "description": "Advertised ontology agent tool capability."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyToolExecutionError",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyToolExecutionError",
+      "description": "Typed safe execution failure returned by an ontology tool."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyToolFailure",
+      "kind": "union",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyToolFailure",
+      "description": "Failure returned by the ontology agent toolkit."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OpenInspectRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OpenInspectRequest",
+      "description": "Open and inspect a saved Turtle ontology."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OpenInspectResponse",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OpenInspectResponse",
+      "description": "Inspection metadata for a saved Turtle ontology."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "ProposeChangeBatchRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ProposeChangeBatchRequest",
+      "description": "Apply and CAS-save a typed ontology change batch."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "ProposeChangeBatchResponse",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ProposeChangeBatchResponse",
+      "description": "Saved ontology change batch with real added and removed deltas."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "RepairOntologyRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "RepairOntologyRequest",
+      "description": "Revalidate, select, apply, and CAS-save a P0-registry verified repair proposal."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "RepairOntologyResponse",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "RepairOntologyResponse",
+      "description": "Applied verified repair with post-save SHACL validation."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "SnapshotDescribeRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "SnapshotDescribeRequest",
+      "description": "Describe the read model of a saved Turtle ontology."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "SnapshotDescribeResponse",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "SnapshotDescribeResponse",
+      "description": "Ontology snapshot with the source semantic fingerprint."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "ValidateOntologyRequest",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ValidateOntologyRequest",
+      "description": "Run bounded real-engine SHACL validation."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "ValidateOntologyResponse",
+      "kind": "schema-class",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "ValidateOntologyResponse",
+      "description": "Bounded SHACL validation result and verified repair proposals."
+    },
+    {
       "file": "packages/shared/domain/src/entities/Membership/Membership.values.ts",
       "symbol": "Role",
       "kind": "literal-kit",
