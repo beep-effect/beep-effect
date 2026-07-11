@@ -308,7 +308,7 @@ export class ExportOntologyProvenanceResult extends S.Class<ExportOntologyProven
 export class OntologyValidationError extends TaggedErrorClass<OntologyValidationError>($I`OntologyValidationError`)(
   "OntologyValidationError",
   {
-    reason: LiteralKit(["shaclFailed", "repairVerificationFailed"]),
+    reason: LiteralKit(["shaclFailed", "repairVerificationFailed", "actorIdentityMissing"]),
     message: S.String,
   },
   $I.annote("OntologyValidationError", {
@@ -338,7 +338,10 @@ export class OntologyValidationError extends TaggedErrorClass<OntologyValidation
 export interface OntologyValidationRunnerShape {
   readonly exportProvenance: (
     command: ExportOntologyProvenanceCommand
-  ) => Effect.Effect<ExportOntologyProvenanceResult, OntologyFileStoreError | TurtleCodecError>;
+  ) => Effect.Effect<
+    ExportOntologyProvenanceResult,
+    OntologyFileStoreError | OntologyValidationError | TurtleCodecError
+  >;
   readonly run: (
     input: RunOntologyValidationInput
   ) => Effect.Effect<RunOntologyValidationResult, OntologyValidationError>;
@@ -729,30 +732,49 @@ const integer = (value: number) => makeLiteral(`${value}`, XSD_INTEGER.value);
 const sessionIri = (session: Session, suffix: string): NamedNode =>
   makeNamedNode(`urn:beep:ontology:session:${encodeURIComponent(session.id)}:${suffix}`);
 
-const provenanceDataset = (session: Session): Dataset => {
+const provenanceDataset = (session: Session): Effect.Effect<Dataset, OntologyValidationError> => {
   const journal = sessionIri(session, "journal");
-  const agent = sessionIri(session, "agent:workbench");
+  const actorIris = pipe(
+    session.changeLog,
+    A.map((change) => O.fromUndefinedOr(change.actor)),
+    O.all,
+    O.map(A.dedupe)
+  );
+  if (O.isNone(actorIris)) {
+    return Effect.fail(
+      OntologyValidationError.make({
+        reason: "actorIdentityMissing",
+        message: "Every ontology change must carry an authenticated actor before PROV-O export.",
+      })
+    );
+  }
   const baseQuads: ReadonlyArray<Quad> = [
     makeQuad(journal, RDF_TYPE, PROV_ENTITY),
-    makeQuad(agent, RDF_TYPE, PROV_AGENT),
     makeQuad(journal, dcterms("title"), literal(`Ontology workbench change journal for ${session.id}`)),
   ];
+  const agentQuads = pipe(
+    actorIris.value,
+    A.map((actor) => makeQuad(makeNamedNode(actor), RDF_TYPE, PROV_AGENT))
+  );
   const changeQuads = pipe(
     session.changeLog,
     A.flatMap((change, index) => {
       const activity = sessionIri(session, `change:${index + 1}`);
-      return [
-        makeQuad(activity, RDF_TYPE, PROV_ACTIVITY),
-        makeQuad(activity, PROV_USED, journal),
-        makeQuad(journal, PROV_WAS_GENERATED_BY, activity),
-        makeQuad(activity, prov("wasAssociatedWith"), agent),
-        makeQuad(activity, dcterms("identifier"), integer(index + 1)),
-        makeQuad(activity, dcterms("type"), literal(change.kind)),
-        makeQuad(activity, dcterms("description"), literal(serializeQuad(change.quad))),
-      ];
+      return O.match(O.fromUndefinedOr(change.actor), {
+        onNone: A.empty<Quad>,
+        onSome: (actor) => [
+          makeQuad(activity, RDF_TYPE, PROV_ACTIVITY),
+          makeQuad(activity, PROV_USED, journal),
+          makeQuad(journal, PROV_WAS_GENERATED_BY, activity),
+          makeQuad(activity, prov("wasAssociatedWith"), makeNamedNode(actor)),
+          makeQuad(activity, dcterms("identifier"), integer(index + 1)),
+          makeQuad(activity, dcterms("type"), literal(change.kind)),
+          makeQuad(activity, dcterms("description"), literal(serializeQuad(change.quad))),
+        ],
+      });
     })
   );
-  return makeDataset(pipe(baseQuads, A.appendAll(changeQuads)));
+  return Effect.succeed(makeDataset(pipe(baseQuads, A.appendAll(agentQuads), A.appendAll(changeQuads))));
 };
 
 const datasetDescriptionDataset = (session: Session): Dataset => {
@@ -792,9 +814,10 @@ const exportOntologyProvenance = Effect.fn("Ontology.Validation.exportProvenance
   const turtle = yield* TurtleCodec;
   const fileStore = yield* OntologyFileStore;
   const prefixes = exportPrefixes();
+  const provenance = yield* provenanceDataset(command.session);
   const provSerialized = yield* turtle.serialize(
     SerializeTurtleRequest.make({
-      dataset: provenanceDataset(command.session),
+      dataset: provenance,
       prefixes,
     })
   );

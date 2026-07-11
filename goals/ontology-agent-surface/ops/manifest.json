@@ -63,8 +63,9 @@
     {
       "id": "P2",
       "name": "Transport + Safety",
-      "status": "pending",
-      "exit": "Authenticated loopback /mcp passes a real client initialize/list/call proof for capability-metadata plus bounded sparql-query, and every enabled mutation is gated, attributed, and budgeted."
+      "status": "in-progress",
+      "exit": "Local in-memory HTTP proof covers authenticated initialize/list/call, first-slice Oxigraph, TierGate refusal, actor attribution, budgets, and CAS. Node socket and live-sidecar client proof remain host-gated after sandbox listen EPERM. Evidence: history/2026-07-11-p2-transport.md.",
+      "evidence": "history/2026-07-11-p2-transport.md"
     },
     {
       "id": "P3",

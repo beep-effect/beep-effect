@@ -9,6 +9,7 @@
  * @since 0.0.0
  */
 import { sanitizedToolkit } from "@beep/mcp-kit";
+import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import { assert, describe, layer } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as S from "effect/Schema";
@@ -21,6 +22,17 @@ const FixtureTool = Tool.make("fixture_tool", {
   success: S.String,
 });
 
+class ExpectedFixtureFailure extends TaggedErrorClass<ExpectedFixtureFailure>("ExpectedFixtureFailure")(
+  "ExpectedFixtureFailure",
+  { message: S.String }
+) {}
+
+const ExpectedFailureTool = Tool.make("expected_failure_tool", {
+  failure: ExpectedFixtureFailure,
+  failureMode: "return",
+  success: S.String,
+});
+
 class RefParameters extends S.Class<RefParameters>("RefParameters")({
   secret: S.String,
 }) {}
@@ -30,10 +42,11 @@ const RefTool = Tool.make("ref_tool", {
   success: S.String,
 });
 
-const FixtureToolkit = Toolkit.make(FixtureTool);
+const FixtureToolkit = Toolkit.make(FixtureTool, ExpectedFailureTool);
 const RefToolkit = Toolkit.make(RefTool);
 
 const FixtureHandlersLive = FixtureToolkit.toLayer({
+  expected_failure_tool: () => Effect.fail(ExpectedFixtureFailure.make({ message: "expected refusal" })),
   fixture_tool: (params: { readonly secret: string }) => Effect.succeed(`ok:${params.secret}`),
 });
 
@@ -102,6 +115,33 @@ describe("sanitizedToolkit", () => {
         const [first] = result.content;
         assert.strictEqual(first?.type, "text");
         assert.strictEqual((first as { readonly text: string }).text, '"ok:value"');
+      })
+    );
+
+    it.effect("keeps typed failures other than api_key_required classified as tool errors", () =>
+      Effect.gen(function* () {
+        const server = yield* McpServer.McpServer;
+        const result = yield* server.callTool({ name: "expected_failure_tool", arguments: {} });
+        const failure = yield* S.decodeUnknownEffect(ExpectedFixtureFailure)(result.structuredContent);
+
+        assert.isTrue(result.isError);
+        assert.strictEqual(failure._tag, "ExpectedFixtureFailure");
+        assert.strictEqual(failure.message, "expected refusal");
+      })
+    );
+
+    it.effect("does not expose schema stacks or local paths in boundary error text", () =>
+      Effect.gen(function* () {
+        const server = yield* McpServer.McpServer;
+        const result = yield* server.callTool({ name: "fixture_tool", arguments: { secret: 1 } });
+        const [first] = result.content;
+
+        assert.isTrue(result.isError);
+        assert.strictEqual(first?.type, "text");
+        assert.strictEqual(
+          (first as { readonly text: string }).text,
+          "Tool call failed before producing a structured result."
+        );
       })
     );
   });

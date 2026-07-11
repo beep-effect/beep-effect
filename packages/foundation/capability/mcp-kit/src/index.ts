@@ -31,6 +31,13 @@ export * from "./ApiKeyRequired.ts";
  */
 export * from "./FieldTier.ts";
 /**
+ * Request-local initialized MCP caller identity populated during toolkit dispatch.
+ *
+ * @since 0.0.0
+ * @category services
+ */
+export * from "./McpCaller.ts";
+/**
  * Sanitized-span wrapper: suppresses raw tool `parameters` from reaching
  * span attributes.
  *
