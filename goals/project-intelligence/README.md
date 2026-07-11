@@ -45,14 +45,14 @@ Use this command for execution-capable sessions:
 
 ## Dependency Packets
 
-| Packet | Relationship |
-| --- | --- |
-| [`firecrawl-driver`](../firecrawl-driver/README.md) | `@beep/firecrawl` scrape/search + Monitor/Watcher — the discover/ingest brick and change-feed prior art. |
-| [`epistemic-claim-lifecycle-gate`](../epistemic-claim-lifecycle-gate/README.md) | Shipped claim/evidence/provenance kernel (ClaimLifecycle, ClaimGate, ClaimProjection, EvidenceSpan) this packet consumes per the 2026-06-18 boundary decision. |
-| [`provenance-shared-claim-kernel`](../provenance-shared-claim-kernel/README.md) | Substrate routing precedent: `@beep/provenance` TextAnchor, `@beep/schema` UnitInterval, shared ClaimLifecycle vocabulary. |
-| [`official-data-sync-foundation`](../official-data-sync-foundation/README.md) | Snapshot + drift-detection + report-backed-PR pattern to generalize. |
-| [`file-processing-capability`](../file-processing-capability/README.md) | Extraction substrate for later roadmap stages (local corpus ingestion). |
-| [`agentic-professional-runtime`](../agentic-professional-runtime/README.md) | Deterministic runtime-data-loop fixture catalog — structural precedent for the first proof (gate G5). |
+| Packet | Relationship | Needed by |
+| --- | --- | --- |
+| [`firecrawl-driver`](../firecrawl-driver/README.md) | `@beep/firecrawl` scrape/search + Monitor/Watcher — the discover/ingest brick and change-feed prior art. | G3 evidence; web roadmap stages |
+| [`epistemic-claim-lifecycle-gate`](../epistemic-claim-lifecycle-gate/README.md) | Shipped claim/evidence/provenance kernel (ClaimLifecycle, ClaimGate, ClaimProjection, EvidenceSpan). Mechanism consumption is a G1 candidate, not a pre-decision — selecting it requires an Exception Ledger entry per the 2026-06-18 boundary decision. | P0 (G1) → P2 |
+| [`provenance-shared-claim-kernel`](../provenance-shared-claim-kernel/README.md) | Substrate routing precedent: `@beep/provenance` TextAnchor, `@beep/schema` UnitInterval, shared ClaimLifecycle vocabulary. | P2 |
+| [`official-data-sync-foundation`](../official-data-sync-foundation/README.md) | Snapshot + drift-detection + report-backed-PR pattern to generalize. | P1 (pattern) |
+| [`file-processing-capability`](../file-processing-capability/README.md) | Extraction substrate for later roadmap stages (local corpus ingestion). | roadmap only |
+| [`agentic-professional-runtime`](../agentic-professional-runtime/README.md) | Deterministic runtime-data-loop fixture catalog — structural precedent for the first proof (gate G5). | P0 (G5) → P1 |
 
 ## Current Phase
 
@@ -73,9 +73,9 @@ Not started (packet authored 2026-07-11; P0 pending).
 - The `beep research` CLI
   (`packages/tooling/tool/cli/src/commands/Research/`) is a working prototype
   of much of this loop (Firecrawl capture, vault cards, DuckDB dedup catalog,
-  daily digest, repo cards, graph-memory clients). It is governing prior art;
-  gate G3 decides promote/reuse/retire per mechanism — do not build a
-  parallel copy of what it proves.
+  daily digest, repo cards, graph-memory clients, systemd user timers). It
+  is governing prior art; gate G3 decides promote/reuse/retire/defer (per
+  SPEC D8) per mechanism — do not build a parallel copy of what it proves.
 - Sanitization is binding on every committed artifact (SPEC D2): no personal
   metadata, no local absolute paths, no operator-corpus specifics.
 - Adjacent explorations to cross-link, not duplicate:

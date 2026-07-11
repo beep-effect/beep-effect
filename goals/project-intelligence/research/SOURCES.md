@@ -39,11 +39,11 @@ Never invent entries; only sources that actually appear on disk.
 
 | Brick | Path | Status |
 | --- | --- | --- |
-| Epistemic kernel (CandidateClaim, Evidence, EvidenceSpan, ClaimLifecycle, ClaimGate, ClaimProjection, EpistemicFixtureKey) | `packages/epistemic/{domain,use-cases,tables,server}` | reuse (per 2026-06-18 boundary decision) |
+| Epistemic kernel (CandidateClaim, Evidence, EvidenceSpan, ClaimLifecycle, ClaimGate, ClaimProjection, EpistemicFixtureKey) | `packages/epistemic/{domain,use-cases,tables,server}` | G1 candidate: mechanism/live-Layer consumption requires an Exception Ledger entry per the 2026-06-18 boundary decision; substrate/vocabulary reuse is unconditional |
 | Provenance substrate (TextAnchor) | `packages/foundation/modeling/provenance` | reuse |
 | UnitInterval, schema substrate | `packages/foundation/modeling/schema` | reuse |
 | Markdown rendering (`renderMarkdownBlocks`) | `packages/foundation/modeling/md` | reuse |
-| `beep research` prototype (capture, vault cards, DuckDB dedup catalog, digest, repo cards, Cognee/Graphiti clients) | `packages/tooling/tool/cli/src/commands/Research/` | gate G3: promote / reuse / retire |
+| `beep research` prototype (capture, vault cards, DuckDB dedup catalog, digest, repo cards, Cognee/Graphiti clients, systemd user timers) | `packages/tooling/tool/cli/src/commands/Research/` | gate G3: promote / reuse / retire / defer (SPEC D8) |
 | Firecrawl driver incl. Monitor/Watcher | `packages/drivers/firecrawl` | reuse (later web stages; monitor-shape prior art) |
 | DuckDB driver | `packages/drivers/duckdb` | candidate (G2/G3) |
 | Gov/legal HTTP driver triads (config/errors/service) | `packages/drivers/{courtlistener,govinfo,federal-register,ecfr,dol,uspto,pacer}` | template for the net-new GitHub driver |
@@ -51,9 +51,10 @@ Never invent entries; only sources that actually appear on disk.
 | Snapshot + drift + report-backed PR | `goals/official-data-sync-foundation`, `packages/tooling/tool/cli/src/commands/SyncDataToTs/` | pattern |
 | File processing capability | `packages/foundation/capability/file-processing` | reuse (roadmap stages) |
 | MCP host kit | `packages/foundation/capability/mcp-kit` | deferred adapter candidate (gate G7) |
+| SSRF-safe host validation (`SafeRemoteHost`) | `packages/foundation/modeling/schema/src/SafeRemoteHost.ts` (consumers: box, nlp-mcp drivers) | reuse — P0 threat model assesses fit + residual risks (e.g. DNS rebinding) |
 | GitHub API driver | — | NET-NEW (no driver exists; `gh` shell-out only) |
 | Watchlist / daily-brief domain concepts | — | NET-NEW (zero code hits) |
-| Scheduler / unattended worker | — | NET-NEW, deferred to roadmap |
+| Scheduler / unattended worker | tooling-level systemd user timers exist (`beep research install-timers`; AI-metrics install tooling) | NET-NEW only at slice/runtime level; tooling timers are G3 scope; deferred to roadmap |
 
 ## 5. Cross-links & provenance
 
