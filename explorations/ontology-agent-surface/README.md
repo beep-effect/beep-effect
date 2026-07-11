@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `align`
+Stage: `shape`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -17,10 +17,9 @@ workbench retrospective's hardening pre-work and architecture consolidations.
 
 ## Next Open Question
 
-Transport/placement (first of 5 in the manifest queue): streamable-HTTP `/mcp`
-endpoint on the existing sidecar vs a stdio headless launcher — research found
-sidecar stdio is already occupied by Effect RPC framing, and a separate process
-cannot see unsaved UI session state.
+BRIEF.md is drafted from the five resolved decisions — does it match the
+picture in the user's head? (Shape-stage exit gate: user sign-off, then
+decompose.)
 
 ## Read This First
 
@@ -33,6 +32,11 @@ cannot see unsaved UI session state.
 
 ## Trail
 
+- 2026-07-10: align completed — all 5 queued questions resolved in one
+  grilling pass (HTTP-on-sidecar transport; stateless+fingerprint-CAS session
+  model; TierGate+attribution+budgets launch-blocking; curated ~10-tool
+  vocabulary; hardening folded into P0/P1). BRIEF.md drafted; manifest
+  advanced to `shape`. Stopped awaiting brief sign-off.
 - 2026-07-10: research stage completed both halves — codex in-repo inventory
   (9 wire-ready RPCs; m365-mcp as MCP template; TierGate in mcp-kit; gaps: no
   two-writer session contract, no mutation budgets/attribution, no mountable

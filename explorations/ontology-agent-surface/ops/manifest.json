@@ -4,14 +4,8 @@
     "slug": "ontology-agent-surface",
     "title": "Ontology Agent Surface",
     "status": "active",
-    "stage": "align",
-    "openQuestions": [
-      "Transport/placement: streamable-HTTP /mcp endpoint on the existing sidecar vs stdio headless launcher (sidecar stdio is occupied by Effect RPC; a separate process cannot see unsaved UI state)?",
-      "Session ownership: introduce a sidecar session repository with revisions and a two-writer contract, or v1 agent tools operate stateless on saved files only?",
-      "Mutation safety scope for v1: TierGate wiring, mutation budgets, and per-change actor attribution \u2014 which are launch-blocking vs follow-up?",
-      "Tool vocabulary: expose the 9 wire-ready RPCs as-is, or curate an agent-first tool set (open-ontologies' 70+ tools as breadth reference)?",
-      "Confirm folding the retrospective hardening pre-work (repair strategy registry, ROBOT validation, base-prefix codec fidelity) into this packet's P0/P1."
-    ],
+    "stage": "shape",
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
       "goals": [],
