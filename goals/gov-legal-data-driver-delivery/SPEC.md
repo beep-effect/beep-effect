@@ -153,8 +153,10 @@ entry below supersedes it.
   with attribution in `research/SOURCES.md`; never port the
   Orval/axios/zod runtime. AGPL upstreams (courtlistener, mike) remain
   clean-room pattern references only.
-- **Changesets.** Every phase branch carries its own committed non-empty
-  changeset listing the changed packages.
+- **Changesets.** Every package-changing phase branch (P1–P5) carries its
+  own committed non-empty changeset listing the changed packages.
+  Version-neutral, goals-only branches (this packet's own PR, P0, P6) carry
+  a committed empty changeset (`bunx changeset add --empty`) instead.
 - **Scoped diffs.** Changed files confined to Target Surfaces + this packet
   (+ the named predecessor cross-links); no formatting-only churn.
 
