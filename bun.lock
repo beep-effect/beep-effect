@@ -1849,11 +1849,11 @@
         "@beep/ontology-config": "workspace:^",
         "@beep/ontology-use-cases": "workspace:^",
         "@beep/oxigraph": "workspace:^",
+        "@beep/rdf-canonize": "workspace:^",
         "@beep/shacl": "workspace:^",
         "effect": "catalog:",
       },
       "devDependencies": {
-        "@beep/rdf-canonize": "workspace:^",
         "@beep/semantic-web": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
@@ -1893,6 +1893,7 @@
       "version": "0.0.2",
       "dependencies": {
         "@beep/identity": "workspace:^",
+        "@beep/mcp-kit": "workspace:^",
         "@beep/ontology-domain": "workspace:^",
         "@beep/rdf": "workspace:^",
         "@beep/schema": "workspace:^",

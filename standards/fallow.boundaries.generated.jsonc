@@ -2047,6 +2047,7 @@
         "from": "@beep/ontology-use-cases",
         "allow": [
           "@beep/identity",
+          "@beep/mcp-kit",
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
           "@beep/rdf",
@@ -2057,6 +2058,7 @@
         ],
         "allowTypeOnly": [
           "@beep/identity",
+          "@beep/mcp-kit",
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
           "@beep/rdf",

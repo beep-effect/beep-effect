@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `paused`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

@@ -3,9 +3,9 @@
   "initiative": {
     "id": "stack-installer",
     "title": "Stack Installer",
-    "status": "active",
+    "status": "paused",
     "created": "2026-05-14",
-    "updated": "2026-05-20",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "currentSourceOfTruth": "SPEC.md",
@@ -485,5 +485,6 @@
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
   },
-  "statusNote": "legacy status: active-p1d-with-open-p1-windows-proof-debt"
+  "lifecycle": "paused",
+  "statusNote": "Parked by docs/ROADMAP.md (2026-07-11); resumes when the distribution phase opens (LATER: sync and scale; a second non-technical user). (previously: legacy status: active-p1d-with-open-p1-windows-proof-debt)"
 }

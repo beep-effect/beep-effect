@@ -49,14 +49,16 @@
     {
       "id": "P0",
       "name": "Bootstrap + Hardening",
-      "status": "pending",
-      "exit": "Live capability facts and package placement confirmed; verified repair registry, base-prefix fidelity, and ROBOT interop evidence land or a host-only blocker is recorded."
+      "status": "in-progress",
+      "exit": "Live capability facts and package placement confirmed; verified repair registry and base-prefix fidelity pass locally; ROBOT remains host-gated. Evidence: history/2026-07-11-p0-hardening.md.",
+      "evidence": "history/2026-07-11-p0-hardening.md"
     },
     {
       "id": "P1",
       "name": "Toolkit Definition",
-      "status": "pending",
-      "exit": "Curated schemas and thin handlers are real-engine tested; stateless CAS rejects stale writes recoverably; budgets and typed errors are server-enforced without a session repository or silent cache."
+      "status": "complete",
+      "exit": "Curated schemas and thin handlers are real-engine tested; stateless CAS rejects stale writes recoverably; budgets and typed errors are server-enforced without a session repository or silent cache. Evidence: history/2026-07-11-p1-toolkit.md.",
+      "evidence": "history/2026-07-11-p1-toolkit.md"
     },
     {
       "id": "P2",

@@ -3,14 +3,15 @@
   "initiative": {
     "id": "knowledge-workspace",
     "title": "Knowledge Workspace",
-    "status": "active",
-    "packetAnchorDocument": "SPEC.md"
+    "status": "paused",
+    "packetAnchorDocument": "SPEC.md",
+    "updated": "2026-07-11"
   },
   "packetPath": "goals/knowledge-workspace",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "executionCapable": false,
   "reflectionRequired": false,
-  "statusNote": "backfilled from README evidence: Active",
+  "statusNote": "Parked by docs/ROADMAP.md (2026-07-11); resumes when portal P5 has shipped and the epistemic store holds real user data. (previously: backfilled from README evidence: Active)",
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,

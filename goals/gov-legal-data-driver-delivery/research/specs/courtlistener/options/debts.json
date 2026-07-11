@@ -1,0 +1,160 @@
+{
+  "name": "Debt List",
+  "description": "",
+  "renders": ["application/json", "text/html", "application/xml"],
+  "parses": [
+    "application/json",
+    "application/x-www-form-urlencoded",
+    "multipart/form-data",
+    "application/xml"
+  ],
+  "actions": {
+    "POST": {
+      "resource_uri": {
+        "type": "field",
+        "required": false,
+        "read_only": true,
+        "label": "Resource uri"
+      },
+      "id": {
+        "type": "field",
+        "required": false,
+        "read_only": true,
+        "label": "Id"
+      },
+      "date_created": {
+        "type": "datetime",
+        "required": false,
+        "read_only": true,
+        "label": "Date created",
+        "help_text": "The moment when the item was created."
+      },
+      "date_modified": {
+        "type": "datetime",
+        "required": false,
+        "read_only": true,
+        "label": "Date modified",
+        "help_text": "The last moment when the item was modified. A value in year 1750 indicates the value is unknown"
+      },
+      "creditor_name": {
+        "type": "string",
+        "required": false,
+        "read_only": false,
+        "label": "Creditor name",
+        "help_text": "Liability/Debt creditor"
+      },
+      "description": {
+        "type": "string",
+        "required": false,
+        "read_only": false,
+        "label": "Description",
+        "help_text": "Description of the debt"
+      },
+      "value_code": {
+        "type": "choice",
+        "required": false,
+        "read_only": false,
+        "label": "Value code",
+        "help_text": "Form code for the value of the judicial debt.",
+        "choices": [
+          { "value": "J", "display_name": "1 - 15,000" },
+          { "value": "K", "display_name": "15,001 - 50,000" },
+          { "value": "L", "display_name": "50,001 - 100,000" },
+          { "value": "M", "display_name": "100,001 - 250,000" },
+          { "value": "N", "display_name": "250,001 - 500,000" },
+          { "value": "O", "display_name": "500,001 - 1,000,000" },
+          { "value": "P1", "display_name": "1,000,001 - 5,000,000" },
+          { "value": "P2", "display_name": "5,000,001 - 25,000,000" },
+          { "value": "P3", "display_name": "25,000,001 - 50,000,000" },
+          { "value": "P4", "display_name": "50,000,001 - " },
+          { "value": "-1", "display_name": "Failed Extraction" }
+        ]
+      },
+      "redacted": {
+        "type": "boolean",
+        "required": false,
+        "read_only": false,
+        "label": "Redacted",
+        "help_text": "Does the debt row contain redaction(s)?"
+      },
+      "financial_disclosure": {
+        "type": "field",
+        "required": true,
+        "read_only": false,
+        "label": "Financial disclosure",
+        "help_text": "The financial disclosure associated with this debt."
+      }
+    }
+  },
+  "filters": {
+    "id": {
+      "type": "NumberFilter",
+      "lookup_types": ["exact", "gte", "gt", "lte", "lt", "range"]
+    },
+    "date_created": {
+      "type": "IsoDateTimeFilter",
+      "lookup_types": [
+        "exact",
+        "gte",
+        "gt",
+        "lte",
+        "lt",
+        "range",
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second"
+      ]
+    },
+    "date_modified": {
+      "type": "IsoDateTimeFilter",
+      "lookup_types": [
+        "exact",
+        "gte",
+        "gt",
+        "lte",
+        "lt",
+        "range",
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second"
+      ]
+    },
+    "redacted": { "type": "BooleanFilter", "lookup_types": ["exact"] },
+    "creditor_name": {
+      "type": "CharFilter",
+      "lookup_types": ["exact", "iexact", "startswith", "istartswith"]
+    },
+    "description": {
+      "type": "CharFilter",
+      "lookup_types": ["exact", "iexact", "startswith", "istartswith"]
+    },
+    "value_code": {
+      "type": "ChoiceFilter",
+      "lookup_types": ["exact"],
+      "choices": [
+        { "value": "J", "display_name": "1 - 15,000" },
+        { "value": "K", "display_name": "15,001 - 50,000" },
+        { "value": "L", "display_name": "50,001 - 100,000" },
+        { "value": "M", "display_name": "100,001 - 250,000" },
+        { "value": "N", "display_name": "250,001 - 500,000" },
+        { "value": "O", "display_name": "500,001 - 1,000,000" },
+        { "value": "P1", "display_name": "1,000,001 - 5,000,000" },
+        { "value": "P2", "display_name": "5,000,001 - 25,000,000" },
+        { "value": "P3", "display_name": "25,000,001 - 50,000,000" },
+        { "value": "P4", "display_name": "50,000,001 - " },
+        { "value": "-1", "display_name": "Failed Extraction" }
+      ]
+    },
+    "financial_disclosure": {
+      "type": "RelatedFilter",
+      "lookup_types": "See available filters for 'Financial Disclosures'"
+    }
+  },
+  "ordering": ["id", "date_created", "date_modified"]
+}

@@ -1,5 +1,11 @@
 # Schema-First V4 Capabilities
 
+## Status
+
+Lifecycle: `paused`
+
+Source: [`ops/manifest.json`](./ops/manifest.json)
+
 This packet turns a research finding into a repo initiative: we already require
 schema-first development, but we are underusing Effect v4 Schema features that
 make that law more valuable and more enforceable.

@@ -9,6 +9,34 @@ are grounded in RESEARCH.md (cited inline) — starting positions to grill, not
 settled decisions. Do not over-specify; these forks shape the goal, not the code.
 -->
 
+## Research input (2026-07-08 run, recorded 2026-07-11) — forks remain open
+
+The 13-lane memory-stack research
+([`docs/agent-memory-infra/00-recommendation.md`](../../docs/agent-memory-infra/00-recommendation.md))
+bears directly on four forks below; its findings strengthen the recommended
+answers but do NOT close them — resolve via `/grill-with-docs` as designed:
+
+- **Q1 (sourcing/licensing):** borrow shapes from Apache-2.0 Graphiti only
+  (file-level citations in `graphiti-clone.md`: `edges.py:263-285`,
+  `nodes.py:318-351`, `edge_operations.py:538-847`); no SSPL code paths —
+  FalkorDB is SSPLv1, and Graphiti-with-FalkorDB bundles inherit the flag.
+- **Q2 (own vs consume/defer):** unchanged; FalkorDB/GraphRAG stay deferred to
+  `goals/trustgraph-port`; NEW consume-idea — Cognee's relational rollback
+  ledger for projection rebuild/undo.
+- **Q4 (durable truth):** reaffirmed by all thirteen lanes — Postgres
+  repo-native via `@beep/epistemic-tables` + `@beep/drizzle`; no external
+  graph vendor in the authority path.
+- **Q6 (CONTRADICTS edge):** adopt Graphiti's invalidate-don't-delete
+  semantics as the reference shape; add the Oracle's review-state enum
+  (`candidate`/`machine-extracted`/`human-reviewed`/`authoritative`) to the
+  edge lifecycle schema.
+
+Also note: this packet's port is now load-bearing for dev tooling — Graphiti's
+deployment is write-frozen and decommissions only after this port lands
+(`standards/memory-architecture/04-decision-log.md`, 2026-07-08 entry).
+
+---
+
 ## Q1: How do we source the borrowed memory primitives — port-with-attribution, reference-only, or clean-room?
 
 **Recommended:** Reimplement everything in Effect-Schema and take **no runtime

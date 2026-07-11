@@ -3,9 +3,9 @@
   "initiative": {
     "id": "canvas",
     "title": "@beep/canvas",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-05-16",
-    "updated": "2026-05-21",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "currentSourceOfTruth": "SPEC.md",

@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `paused`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -55,14 +55,28 @@ only.
 
 ## Current Phase
 
-**P0 — matrix + specs.** Next concrete action: author
-`research/data-source-terms-matrix.md` (five upstream rows, D2 columns),
-commit the official FedReg/CourtListener specs, verify the DOL auth
-mechanism, and land the predecessor cross-links.
+**P1 — ecfr breadth (2→15 operations).** P0 (matrix + specs) completed
+2026-07-11.
 
 ## Latest Evidence
 
-Not started.
+P0 (2026-07-11):
+
+- [`research/data-source-terms-matrix.md`](./research/data-source-terms-matrix.md)
+  — five upstream rows, D2 columns, per-upstream verdicts + propagation
+  obligations; registered in manifest `currentSourceOfTruth[]`.
+- [`research/specs/`](./research/specs/) — official FedReg OpenAPI
+  (14 operations, fetched from federalregister.gov) and the CourtListener
+  official machine-readable capture (v4 API root, 47 endpoints; 23
+  anonymous OPTIONS docs; access map).
+- DOL auth mechanism verified against the live portal
+  (dataportal.dol.gov; developer.dol.gov is dead): `X-API-KEY` is a
+  **query parameter** → P3 wires `ApiKeyQueryAuth`.
+- [`research/courtlistener-deltas.md`](./research/courtlistener-deltas.md)
+  — CourtListener publishes **no official OpenAPI schema endpoint** (dated
+  D4 correction in `SPEC.md`); SCOTUS visualizations officially deprecated
+  → excluded from P4/P5 generation; v4.3/v4.4/v4.5 change-log deltas.
+- Predecessor cross-links (P2 supersession) verified already landed.
 
 ## Notes
 

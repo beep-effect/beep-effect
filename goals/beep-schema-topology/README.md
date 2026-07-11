@@ -2,7 +2,11 @@
 
 ## Status
 
-**ACTIVE - Suite aggregator retirement implemented**
+Lifecycle: `completed-retained`
+
+Source: [`ops/manifest.json`](./ops/manifest.json)
+
+Suite aggregator retirement implemented.
 
 ## Owner
 

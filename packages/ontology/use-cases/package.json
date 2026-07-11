@@ -35,6 +35,7 @@
     ".": "./src/index.ts",
     "./public": "./src/public.ts",
     "./server": "./src/server.ts",
+    "./tools": "./src/tools/index.ts",
     "./aggregates/Session": "./src/aggregates/Session/index.ts",
     "./aggregates/Session/worker": "./src/aggregates/Session/worker.ts",
     "./aggregates/Session/server": "./src/aggregates/Session/server.ts",
@@ -56,6 +57,7 @@
       ".": "./dist/index.ts",
       "./public": "./dist/public.js",
       "./server": "./dist/server.js",
+      "./tools": "./dist/tools/index.js",
       "./aggregates/Session": "./dist/aggregates/Session/index.js",
       "./aggregates/Session/worker": "./dist/aggregates/Session/worker.js",
       "./aggregates/Session/server": "./dist/aggregates/Session/server.js",
@@ -65,6 +67,7 @@
   },
   "dependencies": {
     "@beep/identity": "workspace:^",
+    "@beep/mcp-kit": "workspace:^",
     "@beep/ontology-domain": "workspace:^",
     "@beep/rdf": "workspace:^",
     "@beep/schema": "workspace:^",

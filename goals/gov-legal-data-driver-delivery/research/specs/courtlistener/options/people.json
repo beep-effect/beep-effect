@@ -1,0 +1,1091 @@
+{
+  "name": "Person List",
+  "description": "",
+  "renders": ["application/json", "text/html", "application/xml"],
+  "parses": [
+    "application/json",
+    "application/x-www-form-urlencoded",
+    "multipart/form-data",
+    "application/xml"
+  ],
+  "actions": {
+    "POST": {
+      "resource_uri": {
+        "type": "field",
+        "required": false,
+        "read_only": true,
+        "label": "Resource uri"
+      },
+      "id": {
+        "type": "field",
+        "required": false,
+        "read_only": true,
+        "label": "Id"
+      },
+      "race": {
+        "type": "field",
+        "required": true,
+        "read_only": false,
+        "label": "Race"
+      },
+      "sources": {
+        "type": "field",
+        "required": false,
+        "read_only": true,
+        "label": "Sources",
+        "child": {
+          "type": "nested object",
+          "required": false,
+          "read_only": true,
+          "children": {
+            "resource_uri": {
+              "type": "field",
+              "required": false,
+              "read_only": true,
+              "label": "Resource uri"
+            },
+            "id": {
+              "type": "field",
+              "required": false,
+              "read_only": true,
+              "label": "Id"
+            },
+            "person": {
+              "type": "field",
+              "required": true,
+              "read_only": false,
+              "label": "Person"
+            },
+            "date_created": {
+              "type": "datetime",
+              "required": false,
+              "read_only": true,
+              "label": "Date created",
+              "help_text": "The moment when the item was created."
+            },
+            "date_modified": {
+              "type": "datetime",
+              "required": false,
+              "read_only": true,
+              "label": "Date modified",
+              "help_text": "The last moment when the item was modified. A value in year 1750 indicates the value is unknown"
+            },
+            "url": {
+              "type": "url",
+              "required": false,
+              "read_only": false,
+              "label": "Url",
+              "help_text": "The URL where this data was gathered.",
+              "max_length": 2000
+            },
+            "date_accessed": {
+              "type": "date",
+              "required": false,
+              "read_only": false,
+              "label": "Date accessed",
+              "help_text": "The date the data was gathered."
+            },
+            "notes": {
+              "type": "string",
+              "required": false,
+              "read_only": false,
+              "label": "Notes",
+              "help_text": "Any additional notes about the data's provenance, in Markdown format."
+            }
+          }
+        }
+      },
+      "aba_ratings": {
+        "type": "field",
+        "required": false,
+        "read_only": true,
+        "label": "Aba ratings",
+        "child": {
+          "type": "nested object",
+          "required": false,
+          "read_only": true,
+          "children": {
+            "resource_uri": {
+              "type": "field",
+              "required": false,
+              "read_only": true,
+              "label": "Resource uri"
+            },
+            "id": {
+              "type": "field",
+              "required": false,
+              "read_only": true,
+              "label": "Id"
+            },
+            "person": {
+              "type": "field",
+              "required": true,
+              "read_only": false,
+              "label": "Person"
+            },
+            "date_created": {
+              "type": "datetime",
+              "required": false,
+              "read_only": true,
+              "label": "Date created",
+              "help_text": "The moment when the item was created."
+            },
+            "date_modified": {
+              "type": "datetime",
+              "required": false,
+              "read_only": true,
+              "label": "Date modified",
+              "help_text": "The last moment when the item was modified. A value in year 1750 indicates the value is unknown"
+            },
+            "year_rated": {
+              "type": "integer",
+              "required": false,
+              "read_only": false,
+              "label": "Year rated",
+              "help_text": "The year of the rating.",
+              "min_value": 0,
+              "max_value": 32767
+            },
+            "rating": {
+              "type": "choice",
+              "required": true,
+              "read_only": false,
+              "label": "Rating",
+              "help_text": "The rating given to the person.",
+              "choices": [
+                {
+                  "value": "ewq",
+                  "display_name": "Exceptionally Well Qualified"
+                },
+                { "value": "wq", "display_name": "Well Qualified" },
+                { "value": "q", "display_name": "Qualified" },
+                { "value": "nq", "display_name": "Not Qualified" },
+                {
+                  "value": "nqa",
+                  "display_name": "Not Qualified By Reason of Age"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "educations": {
+        "type": "field",
+        "required": false,
+        "read_only": true,
+        "label": "Educations",
+        "child": {
+          "type": "nested object",
+          "required": false,
+          "read_only": true,
+          "children": {
+            "resource_uri": {
+              "type": "field",
+              "required": false,
+              "read_only": true,
+              "label": "Resource uri"
+            },
+            "id": {
+              "type": "field",
+              "required": false,
+              "read_only": true,
+              "label": "Id"
+            },
+            "school": {
+              "type": "nested object",
+              "required": false,
+              "read_only": true,
+              "label": "School",
+              "children": {
+                "resource_uri": {
+                  "type": "field",
+                  "required": false,
+                  "read_only": true,
+                  "label": "Resource uri"
+                },
+                "id": {
+                  "type": "field",
+                  "required": false,
+                  "read_only": true,
+                  "label": "Id"
+                },
+                "is_alias_of": {
+                  "type": "field",
+                  "required": true,
+                  "read_only": false,
+                  "label": "Is alias of"
+                },
+                "date_created": {
+                  "type": "datetime",
+                  "required": false,
+                  "read_only": true,
+                  "label": "Date created",
+                  "help_text": "The moment when the item was created."
+                },
+                "date_modified": {
+                  "type": "datetime",
+                  "required": false,
+                  "read_only": true,
+                  "label": "Date modified",
+                  "help_text": "The last moment when the item was modified. A value in year 1750 indicates the value is unknown"
+                },
+                "name": {
+                  "type": "string",
+                  "required": true,
+                  "read_only": false,
+                  "label": "Name",
+                  "help_text": "The name of the school or alias",
+                  "max_length": 120
+                },
+                "ein": {
+                  "type": "integer",
+                  "required": false,
+                  "read_only": false,
+                  "label": "Ein",
+                  "help_text": "The EIN assigned by the IRS",
+                  "min_value": -2147483648,
+                  "max_value": 2147483647
+                }
+              }
+            },
+            "person": {
+              "type": "field",
+              "required": true,
+              "read_only": false,
+              "label": "Person"
+            },
+            "date_created": {
+              "type": "datetime",
+              "required": false,
+              "read_only": true,
+              "label": "Date created",
+              "help_text": "The moment when the item was created."
+            },
+            "date_modified": {
+              "type": "datetime",
+              "required": false,
+              "read_only": true,
+              "label": "Date modified",
+              "help_text": "The last moment when the item was modified. A value in year 1750 indicates the value is unknown"
+            },
+            "degree_level": {
+              "type": "choice",
+              "required": false,
+              "read_only": false,
+              "label": "Degree level",
+              "help_text": "Normalized degree level, e.g. BA, JD.",
+              "choices": [
+                { "value": "ba", "display_name": "Bachelor's (e.g. B.A.)" },
+                { "value": "ma", "display_name": "Master's (e.g. M.A.)" },
+                { "value": "jd", "display_name": "Juris Doctor (J.D.)" },
+                { "value": "llm", "display_name": "Master of Laws (LL.M)" },
+                {
+                  "value": "llb",
+                  "display_name": "Bachelor of Laws (e.g. LL.B)"
+                },
+                { "value": "jsd", "display_name": "Doctor of Law (J.S.D)" },
+                {
+                  "value": "phd",
+                  "display_name": "Doctor of Philosophy (PhD)"
+                },
+                { "value": "aa", "display_name": "Associate (e.g. A.A.)" },
+                { "value": "md", "display_name": "Medical Degree (M.D.)" },
+                {
+                  "value": "mba",
+                  "display_name": "Master of Business Administration (M.B.A.)"
+                },
+                {
+                  "value": "cfa",
+                  "display_name": "Accounting Certification (C.P.A., C.M.A., C.F.A.)"
+                },
+                { "value": "cert", "display_name": "Certificate" }
+              ]
+            },
+            "degree_detail": {
+              "type": "string",
+              "required": false,
+              "read_only": false,
+              "label": "Degree detail",
+              "help_text": "Detailed degree description, e.g. including major.",
+              "max_length": 100
+            },
+            "degree_year": {
+              "type": "integer",
+              "required": false,
+              "read_only": false,
+              "label": "Degree year",
+              "help_text": "The year the degree was awarded.",
+              "min_value": 0,
+              "max_value": 32767
+            }
+          }
+        }
+      },
+      "positions": {
+        "type": "field",
+        "required": true,
+        "read_only": false,
+        "label": "Positions"
+      },
+      "political_affiliations": {
+        "type": "field",
+        "required": false,
+        "read_only": true,
+        "label": "Political affiliations",
+        "child": {
+          "type": "nested object",
+          "required": false,
+          "read_only": true,
+          "children": {
+            "resource_uri": {
+              "type": "field",
+              "required": false,
+              "read_only": true,
+              "label": "Resource uri"
+            },
+            "id": {
+              "type": "field",
+              "required": false,
+              "read_only": true,
+              "label": "Id"
+            },
+            "person": {
+              "type": "field",
+              "required": true,
+              "read_only": false,
+              "label": "Person"
+            },
+            "date_created": {
+              "type": "datetime",
+              "required": false,
+              "read_only": true,
+              "label": "Date created",
+              "help_text": "The moment when the item was created."
+            },
+            "date_modified": {
+              "type": "datetime",
+              "required": false,
+              "read_only": true,
+              "label": "Date modified",
+              "help_text": "The last moment when the item was modified. A value in year 1750 indicates the value is unknown"
+            },
+            "political_party": {
+              "type": "choice",
+              "required": true,
+              "read_only": false,
+              "label": "Political party",
+              "help_text": "The political party the person is affiliated with.",
+              "choices": [
+                { "value": "d", "display_name": "Democratic" },
+                { "value": "r", "display_name": "Republican" },
+                { "value": "i", "display_name": "Independent" },
+                { "value": "g", "display_name": "Green" },
+                { "value": "l", "display_name": "Libertarian" },
+                { "value": "f", "display_name": "Federalist" },
+                { "value": "w", "display_name": "Whig" },
+                { "value": "j", "display_name": "Jeffersonian Republican" },
+                { "value": "u", "display_name": "National Union" },
+                { "value": "z", "display_name": "Reform Party" }
+              ]
+            },
+            "source": {
+              "type": "choice",
+              "required": false,
+              "read_only": false,
+              "label": "Source",
+              "help_text": "The source of the political affiliation -- where it is documented that this affiliation exists.",
+              "choices": [
+                { "value": "b", "display_name": "Ballot" },
+                { "value": "a", "display_name": "Appointer" },
+                { "value": "o", "display_name": "Other" }
+              ]
+            },
+            "date_start": {
+              "type": "date",
+              "required": false,
+              "read_only": false,
+              "label": "Date start",
+              "help_text": "The date the political affiliation was first documented"
+            },
+            "date_granularity_start": {
+              "type": "choice",
+              "required": false,
+              "read_only": false,
+              "label": "Date granularity start",
+              "choices": [
+                { "value": "%Y", "display_name": "Year" },
+                { "value": "%Y-%m", "display_name": "Month" },
+                { "value": "%Y-%m-%d", "display_name": "Day" }
+              ]
+            },
+            "date_end": {
+              "type": "date",
+              "required": false,
+              "read_only": false,
+              "label": "Date end",
+              "help_text": "The date the affiliation ended."
+            },
+            "date_granularity_end": {
+              "type": "choice",
+              "required": false,
+              "read_only": false,
+              "label": "Date granularity end",
+              "choices": [
+                { "value": "%Y", "display_name": "Year" },
+                { "value": "%Y-%m", "display_name": "Month" },
+                { "value": "%Y-%m-%d", "display_name": "Day" }
+              ]
+            }
+          }
+        }
+      },
+      "is_alias_of": {
+        "type": "field",
+        "required": true,
+        "read_only": false,
+        "label": "Is alias of"
+      },
+      "date_created": {
+        "type": "datetime",
+        "required": false,
+        "read_only": true,
+        "label": "Date created",
+        "help_text": "The moment when the item was created."
+      },
+      "date_modified": {
+        "type": "datetime",
+        "required": false,
+        "read_only": true,
+        "label": "Date modified",
+        "help_text": "The last moment when the item was modified. A value in year 1750 indicates the value is unknown"
+      },
+      "date_completed": {
+        "type": "datetime",
+        "required": false,
+        "read_only": false,
+        "label": "Date completed",
+        "help_text": "Whenever an editor last decided that a profile was complete in some sense."
+      },
+      "fjc_id": {
+        "type": "integer",
+        "required": false,
+        "read_only": false,
+        "label": "Fjc id",
+        "help_text": "The ID of a judge as assigned by the Federal Judicial Center.",
+        "min_value": -2147483648,
+        "max_value": 2147483647
+      },
+      "slug": {
+        "type": "slug",
+        "required": true,
+        "read_only": false,
+        "label": "Slug",
+        "help_text": "A generated path for this item as used in CourtListener URLs",
+        "max_length": 158
+      },
+      "name_first": {
+        "type": "string",
+        "required": true,
+        "read_only": false,
+        "label": "Name first",
+        "help_text": "The first name of this person.",
+        "max_length": 50
+      },
+      "name_middle": {
+        "type": "string",
+        "required": false,
+        "read_only": false,
+        "label": "Name middle",
+        "help_text": "The middle name or names of this person",
+        "max_length": 50
+      },
+      "name_last": {
+        "type": "string",
+        "required": true,
+        "read_only": false,
+        "label": "Name last",
+        "help_text": "The last name of this person",
+        "max_length": 50
+      },
+      "name_suffix": {
+        "type": "choice",
+        "required": false,
+        "read_only": false,
+        "label": "Name suffix",
+        "help_text": "Any suffixes that this person's name may have",
+        "choices": [
+          { "value": "jr", "display_name": "Jr." },
+          { "value": "sr", "display_name": "Sr." },
+          { "value": "1", "display_name": "I" },
+          { "value": "2", "display_name": "II" },
+          { "value": "3", "display_name": "III" },
+          { "value": "4", "display_name": "IV" }
+        ]
+      },
+      "date_dob": {
+        "type": "date",
+        "required": false,
+        "read_only": false,
+        "label": "Date dob",
+        "help_text": "The date of birth for the person"
+      },
+      "date_granularity_dob": {
+        "type": "choice",
+        "required": false,
+        "read_only": false,
+        "label": "Date granularity dob",
+        "choices": [
+          { "value": "%Y", "display_name": "Year" },
+          { "value": "%Y-%m", "display_name": "Month" },
+          { "value": "%Y-%m-%d", "display_name": "Day" }
+        ]
+      },
+      "date_dod": {
+        "type": "date",
+        "required": false,
+        "read_only": false,
+        "label": "Date dod",
+        "help_text": "The date of death for the person"
+      },
+      "date_granularity_dod": {
+        "type": "choice",
+        "required": false,
+        "read_only": false,
+        "label": "Date granularity dod",
+        "choices": [
+          { "value": "%Y", "display_name": "Year" },
+          { "value": "%Y-%m", "display_name": "Month" },
+          { "value": "%Y-%m-%d", "display_name": "Day" }
+        ]
+      },
+      "dob_city": {
+        "type": "string",
+        "required": false,
+        "read_only": false,
+        "label": "Dob city",
+        "help_text": "The city where the person was born.",
+        "max_length": 50
+      },
+      "dob_state": {
+        "type": "choice",
+        "required": false,
+        "read_only": false,
+        "label": "Dob state",
+        "help_text": "The state where the person was born.",
+        "choices": [
+          { "value": "AL", "display_name": "Alabama" },
+          { "value": "AK", "display_name": "Alaska" },
+          { "value": "AS", "display_name": "American Samoa" },
+          { "value": "AZ", "display_name": "Arizona" },
+          { "value": "AR", "display_name": "Arkansas" },
+          { "value": "AA", "display_name": "Armed Forces Americas" },
+          { "value": "AE", "display_name": "Armed Forces Europe" },
+          { "value": "AP", "display_name": "Armed Forces Pacific" },
+          { "value": "CA", "display_name": "California" },
+          { "value": "CO", "display_name": "Colorado" },
+          { "value": "CT", "display_name": "Connecticut" },
+          { "value": "DE", "display_name": "Delaware" },
+          { "value": "DC", "display_name": "District of Columbia" },
+          { "value": "FL", "display_name": "Florida" },
+          { "value": "GA", "display_name": "Georgia" },
+          { "value": "GU", "display_name": "Guam" },
+          { "value": "HI", "display_name": "Hawaii" },
+          { "value": "ID", "display_name": "Idaho" },
+          { "value": "IL", "display_name": "Illinois" },
+          { "value": "IN", "display_name": "Indiana" },
+          { "value": "IA", "display_name": "Iowa" },
+          { "value": "KS", "display_name": "Kansas" },
+          { "value": "KY", "display_name": "Kentucky" },
+          { "value": "LA", "display_name": "Louisiana" },
+          { "value": "ME", "display_name": "Maine" },
+          { "value": "MD", "display_name": "Maryland" },
+          { "value": "MA", "display_name": "Massachusetts" },
+          { "value": "MI", "display_name": "Michigan" },
+          { "value": "MN", "display_name": "Minnesota" },
+          { "value": "MS", "display_name": "Mississippi" },
+          { "value": "MO", "display_name": "Missouri" },
+          { "value": "MT", "display_name": "Montana" },
+          { "value": "NE", "display_name": "Nebraska" },
+          { "value": "NV", "display_name": "Nevada" },
+          { "value": "NH", "display_name": "New Hampshire" },
+          { "value": "NJ", "display_name": "New Jersey" },
+          { "value": "NM", "display_name": "New Mexico" },
+          { "value": "NY", "display_name": "New York" },
+          { "value": "NC", "display_name": "North Carolina" },
+          { "value": "ND", "display_name": "North Dakota" },
+          { "value": "MP", "display_name": "Northern Mariana Islands" },
+          { "value": "OH", "display_name": "Ohio" },
+          { "value": "OK", "display_name": "Oklahoma" },
+          { "value": "OR", "display_name": "Oregon" },
+          { "value": "PA", "display_name": "Pennsylvania" },
+          { "value": "PR", "display_name": "Puerto Rico" },
+          { "value": "RI", "display_name": "Rhode Island" },
+          { "value": "SC", "display_name": "South Carolina" },
+          { "value": "SD", "display_name": "South Dakota" },
+          { "value": "TN", "display_name": "Tennessee" },
+          { "value": "TX", "display_name": "Texas" },
+          { "value": "UT", "display_name": "Utah" },
+          { "value": "VT", "display_name": "Vermont" },
+          { "value": "VI", "display_name": "Virgin Islands" },
+          { "value": "VA", "display_name": "Virginia" },
+          { "value": "WA", "display_name": "Washington" },
+          { "value": "WV", "display_name": "West Virginia" },
+          { "value": "WI", "display_name": "Wisconsin" },
+          { "value": "WY", "display_name": "Wyoming" }
+        ]
+      },
+      "dob_country": {
+        "type": "string",
+        "required": false,
+        "read_only": false,
+        "label": "Dob country",
+        "help_text": "The country where the person was born.",
+        "max_length": 50
+      },
+      "dod_city": {
+        "type": "string",
+        "required": false,
+        "read_only": false,
+        "label": "Dod city",
+        "help_text": "The city where the person died.",
+        "max_length": 50
+      },
+      "dod_state": {
+        "type": "choice",
+        "required": false,
+        "read_only": false,
+        "label": "Dod state",
+        "help_text": "The state where the person died.",
+        "choices": [
+          { "value": "AL", "display_name": "Alabama" },
+          { "value": "AK", "display_name": "Alaska" },
+          { "value": "AS", "display_name": "American Samoa" },
+          { "value": "AZ", "display_name": "Arizona" },
+          { "value": "AR", "display_name": "Arkansas" },
+          { "value": "AA", "display_name": "Armed Forces Americas" },
+          { "value": "AE", "display_name": "Armed Forces Europe" },
+          { "value": "AP", "display_name": "Armed Forces Pacific" },
+          { "value": "CA", "display_name": "California" },
+          { "value": "CO", "display_name": "Colorado" },
+          { "value": "CT", "display_name": "Connecticut" },
+          { "value": "DE", "display_name": "Delaware" },
+          { "value": "DC", "display_name": "District of Columbia" },
+          { "value": "FL", "display_name": "Florida" },
+          { "value": "GA", "display_name": "Georgia" },
+          { "value": "GU", "display_name": "Guam" },
+          { "value": "HI", "display_name": "Hawaii" },
+          { "value": "ID", "display_name": "Idaho" },
+          { "value": "IL", "display_name": "Illinois" },
+          { "value": "IN", "display_name": "Indiana" },
+          { "value": "IA", "display_name": "Iowa" },
+          { "value": "KS", "display_name": "Kansas" },
+          { "value": "KY", "display_name": "Kentucky" },
+          { "value": "LA", "display_name": "Louisiana" },
+          { "value": "ME", "display_name": "Maine" },
+          { "value": "MD", "display_name": "Maryland" },
+          { "value": "MA", "display_name": "Massachusetts" },
+          { "value": "MI", "display_name": "Michigan" },
+          { "value": "MN", "display_name": "Minnesota" },
+          { "value": "MS", "display_name": "Mississippi" },
+          { "value": "MO", "display_name": "Missouri" },
+          { "value": "MT", "display_name": "Montana" },
+          { "value": "NE", "display_name": "Nebraska" },
+          { "value": "NV", "display_name": "Nevada" },
+          { "value": "NH", "display_name": "New Hampshire" },
+          { "value": "NJ", "display_name": "New Jersey" },
+          { "value": "NM", "display_name": "New Mexico" },
+          { "value": "NY", "display_name": "New York" },
+          { "value": "NC", "display_name": "North Carolina" },
+          { "value": "ND", "display_name": "North Dakota" },
+          { "value": "MP", "display_name": "Northern Mariana Islands" },
+          { "value": "OH", "display_name": "Ohio" },
+          { "value": "OK", "display_name": "Oklahoma" },
+          { "value": "OR", "display_name": "Oregon" },
+          { "value": "PA", "display_name": "Pennsylvania" },
+          { "value": "PR", "display_name": "Puerto Rico" },
+          { "value": "RI", "display_name": "Rhode Island" },
+          { "value": "SC", "display_name": "South Carolina" },
+          { "value": "SD", "display_name": "South Dakota" },
+          { "value": "TN", "display_name": "Tennessee" },
+          { "value": "TX", "display_name": "Texas" },
+          { "value": "UT", "display_name": "Utah" },
+          { "value": "VT", "display_name": "Vermont" },
+          { "value": "VI", "display_name": "Virgin Islands" },
+          { "value": "VA", "display_name": "Virginia" },
+          { "value": "WA", "display_name": "Washington" },
+          { "value": "WV", "display_name": "West Virginia" },
+          { "value": "WI", "display_name": "Wisconsin" },
+          { "value": "WY", "display_name": "Wyoming" }
+        ]
+      },
+      "dod_country": {
+        "type": "string",
+        "required": false,
+        "read_only": false,
+        "label": "Dod country",
+        "help_text": "The country where the person died.",
+        "max_length": 50
+      },
+      "gender": {
+        "type": "choice",
+        "required": false,
+        "read_only": false,
+        "label": "Gender",
+        "help_text": "The person's gender",
+        "choices": [
+          { "value": "m", "display_name": "Male" },
+          { "value": "f", "display_name": "Female" },
+          { "value": "o", "display_name": "Other" }
+        ]
+      },
+      "religion": {
+        "type": "choice",
+        "required": false,
+        "read_only": false,
+        "label": "Religion",
+        "help_text": "The religion of a person",
+        "choices": [
+          { "value": "ca", "display_name": "Catholic" },
+          { "value": "pr", "display_name": "Protestant" },
+          { "value": "je", "display_name": "Jewish" },
+          { "value": "mu", "display_name": "Muslim" },
+          { "value": "at", "display_name": "Atheist" },
+          { "value": "ag", "display_name": "Agnostic" },
+          { "value": "mo", "display_name": "Mormon" },
+          { "value": "bu", "display_name": "Buddhist" },
+          { "value": "hi", "display_name": "Hindu" },
+          { "value": "ep", "display_name": "Episcopalian" },
+          { "value": "ro", "display_name": "Roman Catholic" },
+          { "value": "me", "display_name": "Methodist" },
+          { "value": "pe", "display_name": "Presbyterian" },
+          { "value": "un", "display_name": "Unitarian" }
+        ]
+      },
+      "ftm_total_received": {
+        "type": "float",
+        "required": false,
+        "read_only": false,
+        "label": "Ftm total received",
+        "help_text": "The amount of money received by this person and logged by Follow the Money."
+      },
+      "ftm_eid": {
+        "type": "string",
+        "required": false,
+        "read_only": false,
+        "label": "Ftm eid",
+        "help_text": "The ID of a judge as assigned by the Follow the Money database.",
+        "max_length": 30
+      },
+      "has_photo": {
+        "type": "boolean",
+        "required": false,
+        "read_only": false,
+        "label": "Has photo",
+        "help_text": "Whether there is a photo corresponding to this person in the judge pics project."
+      }
+    }
+  },
+  "filters": {
+    "id": {
+      "type": "NumberFilter",
+      "lookup_types": ["exact", "gte", "gt", "lte", "lt", "range"]
+    },
+    "date_created": {
+      "type": "IsoDateTimeFilter",
+      "lookup_types": [
+        "exact",
+        "gte",
+        "gt",
+        "lte",
+        "lt",
+        "range",
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second"
+      ]
+    },
+    "date_modified": {
+      "type": "IsoDateTimeFilter",
+      "lookup_types": [
+        "exact",
+        "gte",
+        "gt",
+        "lte",
+        "lt",
+        "range",
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second"
+      ]
+    },
+    "date_dob": {
+      "type": "DateFilter",
+      "lookup_types": [
+        "exact",
+        "gte",
+        "gt",
+        "lte",
+        "lt",
+        "range",
+        "year",
+        "month",
+        "day"
+      ]
+    },
+    "date_dod": {
+      "type": "DateFilter",
+      "lookup_types": [
+        "exact",
+        "gte",
+        "gt",
+        "lte",
+        "lt",
+        "range",
+        "year",
+        "month",
+        "day"
+      ]
+    },
+    "name_first": {
+      "type": "CharFilter",
+      "lookup_types": ["exact", "iexact", "startswith", "istartswith"]
+    },
+    "name_middle": {
+      "type": "CharFilter",
+      "lookup_types": ["exact", "iexact", "startswith", "istartswith"]
+    },
+    "name_last": {
+      "type": "CharFilter",
+      "lookup_types": ["exact", "iexact", "startswith", "istartswith"]
+    },
+    "name_suffix": {
+      "type": "ChoiceFilter",
+      "lookup_types": ["exact", "iexact", "startswith", "istartswith"],
+      "choices": [
+        { "value": "jr", "display_name": "Jr." },
+        { "value": "sr", "display_name": "Sr." },
+        { "value": "1", "display_name": "I" },
+        { "value": "2", "display_name": "II" },
+        { "value": "3", "display_name": "III" },
+        { "value": "4", "display_name": "IV" }
+      ]
+    },
+    "is_alias_of": { "type": "ModelChoiceFilter", "lookup_types": ["exact"] },
+    "fjc_id": { "type": "NumberFilter", "lookup_types": ["exact"] },
+    "ftm_eid": { "type": "CharFilter", "lookup_types": ["exact"] },
+    "dob_city": {
+      "type": "CharFilter",
+      "lookup_types": ["exact", "iexact", "startswith", "istartswith"]
+    },
+    "dob_state": {
+      "type": "ChoiceFilter",
+      "lookup_types": ["exact", "iexact", "startswith", "istartswith"],
+      "choices": [
+        { "value": "AL", "display_name": "Alabama" },
+        { "value": "AK", "display_name": "Alaska" },
+        { "value": "AS", "display_name": "American Samoa" },
+        { "value": "AZ", "display_name": "Arizona" },
+        { "value": "AR", "display_name": "Arkansas" },
+        { "value": "AA", "display_name": "Armed Forces Americas" },
+        { "value": "AE", "display_name": "Armed Forces Europe" },
+        { "value": "AP", "display_name": "Armed Forces Pacific" },
+        { "value": "CA", "display_name": "California" },
+        { "value": "CO", "display_name": "Colorado" },
+        { "value": "CT", "display_name": "Connecticut" },
+        { "value": "DE", "display_name": "Delaware" },
+        { "value": "DC", "display_name": "District of Columbia" },
+        { "value": "FL", "display_name": "Florida" },
+        { "value": "GA", "display_name": "Georgia" },
+        { "value": "GU", "display_name": "Guam" },
+        { "value": "HI", "display_name": "Hawaii" },
+        { "value": "ID", "display_name": "Idaho" },
+        { "value": "IL", "display_name": "Illinois" },
+        { "value": "IN", "display_name": "Indiana" },
+        { "value": "IA", "display_name": "Iowa" },
+        { "value": "KS", "display_name": "Kansas" },
+        { "value": "KY", "display_name": "Kentucky" },
+        { "value": "LA", "display_name": "Louisiana" },
+        { "value": "ME", "display_name": "Maine" },
+        { "value": "MD", "display_name": "Maryland" },
+        { "value": "MA", "display_name": "Massachusetts" },
+        { "value": "MI", "display_name": "Michigan" },
+        { "value": "MN", "display_name": "Minnesota" },
+        { "value": "MS", "display_name": "Mississippi" },
+        { "value": "MO", "display_name": "Missouri" },
+        { "value": "MT", "display_name": "Montana" },
+        { "value": "NE", "display_name": "Nebraska" },
+        { "value": "NV", "display_name": "Nevada" },
+        { "value": "NH", "display_name": "New Hampshire" },
+        { "value": "NJ", "display_name": "New Jersey" },
+        { "value": "NM", "display_name": "New Mexico" },
+        { "value": "NY", "display_name": "New York" },
+        { "value": "NC", "display_name": "North Carolina" },
+        { "value": "ND", "display_name": "North Dakota" },
+        { "value": "MP", "display_name": "Northern Mariana Islands" },
+        { "value": "OH", "display_name": "Ohio" },
+        { "value": "OK", "display_name": "Oklahoma" },
+        { "value": "OR", "display_name": "Oregon" },
+        { "value": "PA", "display_name": "Pennsylvania" },
+        { "value": "PR", "display_name": "Puerto Rico" },
+        { "value": "RI", "display_name": "Rhode Island" },
+        { "value": "SC", "display_name": "South Carolina" },
+        { "value": "SD", "display_name": "South Dakota" },
+        { "value": "TN", "display_name": "Tennessee" },
+        { "value": "TX", "display_name": "Texas" },
+        { "value": "UT", "display_name": "Utah" },
+        { "value": "VT", "display_name": "Vermont" },
+        { "value": "VI", "display_name": "Virgin Islands" },
+        { "value": "VA", "display_name": "Virginia" },
+        { "value": "WA", "display_name": "Washington" },
+        { "value": "WV", "display_name": "West Virginia" },
+        { "value": "WI", "display_name": "Wisconsin" },
+        { "value": "WY", "display_name": "Wyoming" }
+      ]
+    },
+    "dod_city": {
+      "type": "CharFilter",
+      "lookup_types": ["exact", "iexact", "startswith", "istartswith"]
+    },
+    "dod_state": {
+      "type": "ChoiceFilter",
+      "lookup_types": ["exact", "iexact", "startswith", "istartswith"],
+      "choices": [
+        { "value": "AL", "display_name": "Alabama" },
+        { "value": "AK", "display_name": "Alaska" },
+        { "value": "AS", "display_name": "American Samoa" },
+        { "value": "AZ", "display_name": "Arizona" },
+        { "value": "AR", "display_name": "Arkansas" },
+        { "value": "AA", "display_name": "Armed Forces Americas" },
+        { "value": "AE", "display_name": "Armed Forces Europe" },
+        { "value": "AP", "display_name": "Armed Forces Pacific" },
+        { "value": "CA", "display_name": "California" },
+        { "value": "CO", "display_name": "Colorado" },
+        { "value": "CT", "display_name": "Connecticut" },
+        { "value": "DE", "display_name": "Delaware" },
+        { "value": "DC", "display_name": "District of Columbia" },
+        { "value": "FL", "display_name": "Florida" },
+        { "value": "GA", "display_name": "Georgia" },
+        { "value": "GU", "display_name": "Guam" },
+        { "value": "HI", "display_name": "Hawaii" },
+        { "value": "ID", "display_name": "Idaho" },
+        { "value": "IL", "display_name": "Illinois" },
+        { "value": "IN", "display_name": "Indiana" },
+        { "value": "IA", "display_name": "Iowa" },
+        { "value": "KS", "display_name": "Kansas" },
+        { "value": "KY", "display_name": "Kentucky" },
+        { "value": "LA", "display_name": "Louisiana" },
+        { "value": "ME", "display_name": "Maine" },
+        { "value": "MD", "display_name": "Maryland" },
+        { "value": "MA", "display_name": "Massachusetts" },
+        { "value": "MI", "display_name": "Michigan" },
+        { "value": "MN", "display_name": "Minnesota" },
+        { "value": "MS", "display_name": "Mississippi" },
+        { "value": "MO", "display_name": "Missouri" },
+        { "value": "MT", "display_name": "Montana" },
+        { "value": "NE", "display_name": "Nebraska" },
+        { "value": "NV", "display_name": "Nevada" },
+        { "value": "NH", "display_name": "New Hampshire" },
+        { "value": "NJ", "display_name": "New Jersey" },
+        { "value": "NM", "display_name": "New Mexico" },
+        { "value": "NY", "display_name": "New York" },
+        { "value": "NC", "display_name": "North Carolina" },
+        { "value": "ND", "display_name": "North Dakota" },
+        { "value": "MP", "display_name": "Northern Mariana Islands" },
+        { "value": "OH", "display_name": "Ohio" },
+        { "value": "OK", "display_name": "Oklahoma" },
+        { "value": "OR", "display_name": "Oregon" },
+        { "value": "PA", "display_name": "Pennsylvania" },
+        { "value": "PR", "display_name": "Puerto Rico" },
+        { "value": "RI", "display_name": "Rhode Island" },
+        { "value": "SC", "display_name": "South Carolina" },
+        { "value": "SD", "display_name": "South Dakota" },
+        { "value": "TN", "display_name": "Tennessee" },
+        { "value": "TX", "display_name": "Texas" },
+        { "value": "UT", "display_name": "Utah" },
+        { "value": "VT", "display_name": "Vermont" },
+        { "value": "VI", "display_name": "Virgin Islands" },
+        { "value": "VA", "display_name": "Virginia" },
+        { "value": "WA", "display_name": "Washington" },
+        { "value": "WV", "display_name": "West Virginia" },
+        { "value": "WI", "display_name": "Wisconsin" },
+        { "value": "WY", "display_name": "Wyoming" }
+      ]
+    },
+    "gender": {
+      "type": "ChoiceFilter",
+      "lookup_types": ["exact"],
+      "choices": [
+        { "value": "m", "display_name": "Male" },
+        { "value": "f", "display_name": "Female" },
+        { "value": "o", "display_name": "Other" }
+      ]
+    },
+    "educations": {
+      "type": "RelatedFilter",
+      "lookup_types": "See available filters for 'Educations'"
+    },
+    "political_affiliations": {
+      "type": "RelatedFilter",
+      "lookup_types": "See available filters for 'Political Affiliations'"
+    },
+    "sources": {
+      "type": "RelatedFilter",
+      "lookup_types": "See available filters for 'Sources'"
+    },
+    "aba_ratings": {
+      "type": "RelatedFilter",
+      "lookup_types": "See available filters for 'American Bar Association Ratings'"
+    },
+    "positions": {
+      "type": "RelatedFilter",
+      "lookup_types": "See available filters for 'Positions'"
+    },
+    "opinion_clusters_participating_judges": {
+      "type": "RelatedFilter",
+      "lookup_types": "See available filters for 'Opinion Clusters'"
+    },
+    "opinion_clusters_non_participating_judges": {
+      "type": "RelatedFilter",
+      "lookup_types": "See available filters for 'Opinion Clusters'"
+    },
+    "opinions_written": {
+      "type": "RelatedFilter",
+      "lookup_types": "See available filters for 'Opinions'"
+    },
+    "opinions_joined": {
+      "type": "RelatedFilter",
+      "lookup_types": "See available filters for 'Opinions'"
+    },
+    "race": {
+      "type": "MultipleChoiceFilter",
+      "lookup_types": ["exact"],
+      "choices": [
+        { "value": "w", "display_name": "White" },
+        { "value": "b", "display_name": "Black or African American" },
+        { "value": "i", "display_name": "American Indian or Alaska Native" },
+        { "value": "a", "display_name": "Asian" },
+        {
+          "value": "p",
+          "display_name": "Native Hawaiian or Other Pacific Islander"
+        },
+        { "value": "mena", "display_name": "Middle Eastern/North African" },
+        { "value": "h", "display_name": "Hispanic/Latino" },
+        { "value": "o", "display_name": "Other" }
+      ]
+    }
+  },
+  "ordering": [
+    "id",
+    "date_created",
+    "date_modified",
+    "date_dob",
+    "date_dod",
+    "name_last"
+  ]
+}

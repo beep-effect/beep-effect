@@ -38,6 +38,9 @@
       "@beep/ontology-use-cases/server": [
         "../../../packages/ontology/use-cases/src/server.ts"
       ],
+      "@beep/ontology-use-cases/tools": [
+        "../../../packages/ontology/use-cases/src/tools/index.ts"
+      ],
       "@beep/ontology-use-cases/aggregates/Session": [
         "../../../packages/ontology/use-cases/src/aggregates/Session/index.ts"
       ],
@@ -55,6 +58,12 @@
       ],
       "@beep/identity/packages": [
         "../../../packages/foundation/modeling/identity/src/packages.ts"
+      ],
+      "@beep/mcp-kit": [
+        "../../../packages/foundation/capability/mcp-kit/src/index.ts"
+      ],
+      "@beep/mcp-kit/*": [
+        "../../../packages/foundation/capability/mcp-kit/src/*.ts"
       ],
       "@beep/ontology-domain": [
         "../../../packages/ontology/domain/src/index.ts"

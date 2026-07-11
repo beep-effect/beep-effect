@@ -2,14 +2,14 @@
 
 ## Status
 
-Status: `pending`
+Status: `active` — P1 is complete locally; the inherited P0 ROBOT host gate remains open.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Bootstrap + Hardening | pending | Re-verify the exploration inventory against live source; generalize verified repairs beyond `sh:hasValue`; preserve empty/base prefixes; run ROBOT host validation. Confirm exact toolkit/driver placement and record any decision-invalidating drift. | Capability facts and package placement are recorded; supported repair strategies retain verify-then-offer proof; base-prefix fingerprint fixtures pass; ROBOT interop evidence is archived or an explicit host blocker is recorded. |
-| P1 Toolkit Definition | pending | Define the curated agent-first schemas and thin handlers; implement stateless open/apply/CAS-save, real deltas, server-owned budgets, typed CAS/drift errors, and the shared ingestion classifier where touched. Resolve semantic-vs-byte CAS semantics before freezing the save contract. | Required tool capabilities are schema-typed and real-engine tested; stateless CAS rejects stale writes recoverably; operation/result ceilings cannot be overridden by callers; no session repository or silent cache exists. |
+| P0 Bootstrap + Hardening | in-progress (host verification required) | Re-verify the exploration inventory against live source; generalize verified repairs beyond `sh:hasValue`; preserve empty/base prefixes; run ROBOT host validation. Confirm exact toolkit/driver placement and record any decision-invalidating drift. | Capability facts and package placement are recorded; supported repair strategies retain verify-then-offer proof; base-prefix fingerprint fixtures pass; ROBOT interop evidence is archived or an explicit host blocker is recorded. Evidence: [`history/2026-07-11-p0-hardening.md`](./history/2026-07-11-p0-hardening.md). |
+| P1 Toolkit Definition | complete | Define the curated agent-first schemas and thin handlers; implement stateless open/apply/CAS-save, real deltas, server-owned budgets, typed CAS/drift errors, and the shared ingestion classifier where touched. Resolve semantic-vs-byte CAS semantics before freezing the save contract. | Required tool capabilities are schema-typed and real-engine tested; stateless CAS rejects stale writes recoverably; operation/result ceilings cannot be overridden by callers; no session repository or silent cache exists. Evidence: [`history/2026-07-11-p1-toolkit.md`](./history/2026-07-11-p1-toolkit.md). |
 | P2 Transport + Safety | pending | Mount authenticated, Origin-validated streamable HTTP `/mcp` on the loopback sidecar; wire TierGate fail-closed and per-change actor attribution. Land the `capability-metadata` + `sparql-query` first slice as live proof before enabling mutation. | An actual MCP client completes `initialize` → `tools/list` → `tools/call` against `/mcp`; the first slice returns bounded Oxigraph results; every mutation is gated, attributed, budgeted, and covered by typed refusal/conflict proof. |
 | P3 Harden + Close | pending | Benchmark stateless parse/open at 1k/10k/100k, finish tool/capability documentation and real-stack acceptance, drive Yeet to mergeable, and close with reflection. | Benchmarks and acceptance evidence are archived; reasoner/tool limits are documented; `bun run beep yeet` reports the PR work mergeable; README/manifest are current; a valid closeout reflection exists and reflection lint passes. |
 

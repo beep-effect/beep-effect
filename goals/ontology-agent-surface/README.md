@@ -35,15 +35,18 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Bootstrap + Hardening is pending. Re-verify the exploration's capability
-inventory against the live checkout, then harden repair strategies, base-prefix
-codec fidelity, and ROBOT interop evidence before defining the toolkit.
+P1 Toolkit Definition is complete locally. The nine worker-safe schema tools,
+thin real-engine handlers, semantic rdfc-1.0 CAS, static budgets, typed
+recoverable refusals, and shared ingestion classifier are implemented and
+tested. P0's ROBOT interop command remains an inherited host gate; P2 transport,
+TierGate, and authenticated actor attribution have not begun.
 
 ## Latest Evidence
 
-Graduated on 2026-07-11 from
-[`explorations/ontology-agent-surface`](../../explorations/ontology-agent-surface/README.md);
-implementation has not started.
+[`history/2026-07-11-p1-toolkit.md`](./history/2026-07-11-p1-toolkit.md)
+records the P1 contracts, semantic CAS decision, budgets, typed errors,
+real-engine proof, local gates, and P2 risks. P0 ROBOT evidence remains in
+[`history/2026-07-11-p0-hardening.md`](./history/2026-07-11-p0-hardening.md).
 
 ## Notes
 

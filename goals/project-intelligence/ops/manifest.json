@@ -3,13 +3,14 @@
   "initiative": {
     "id": "project-intelligence",
     "title": "Project Intelligence",
-    "status": "active",
+    "status": "paused",
     "created": "2026-07-11",
     "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/project-intelligence",
-  "lifecycle": "active",
+  "lifecycle": "paused",
+  "statusNote": "Parked by docs/ROADMAP.md (2026-07-11); resumes when research-on-cron delegation is worth a lane slot (earliest: post portal P5).",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -39,9 +40,21 @@
     "goals/project-intelligence/SPEC.md",
     "goals/project-intelligence/PLAN.md",
     "goals/project-intelligence/GOAL.md",
-    "goals/project-intelligence/research/SOURCES.md"
+    "goals/project-intelligence/research/SOURCES.md",
+    "goals/project-intelligence/research/architecture-proposal.md",
+    "goals/project-intelligence/research/technology-adr.md"
   ],
-  "researchReports": ["research/SOURCES.md", "research/recon-findings.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/recon-findings.md",
+    "research/recon-report.md",
+    "research/interest-taxonomy-watchlist.md",
+    "research/product-definition.md",
+    "research/architecture-proposal.md",
+    "research/technology-adr.md",
+    "research/prototype-disposition.md",
+    "research/threat-model.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -55,7 +68,7 @@
     {
       "id": "P0",
       "name": "Research: recon, product, architecture, ADR, prototype disposition, threat model",
-      "status": "pending",
+      "status": "complete",
       "exit": "Corpus reconnaissance stayed within the operator-provided session-only allowlist (PLAN P0 preflight; allowlist never committed); research/ holds the recon report (with recorded freshness check), interest taxonomy + seed watchlist, product definition, architecture proposal, technology ADR, prototype-disposition matrix, and untrusted-ingestion threat model, all registered in researchReports, and history/P0-evidence.md records the manual sanitization review; gates G1-G6 are accepted and G7 is accepted or deferred-nonblocking (a blocked gate keeps P0 open); sanitization is clean (mechanical check + recorded manual review); the P0 PR is driven to mergeable via bun run beep yeet."
     },
     {

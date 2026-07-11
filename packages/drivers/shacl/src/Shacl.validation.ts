@@ -15,7 +15,7 @@ import {
   ShaclValidationService,
   ShaclValidationViolation,
 } from "@beep/semantic-web/services/shacl-validation";
-import { A, O, P } from "@beep/utils";
+import { A, O, P, Str } from "@beep/utils";
 import { Effect, Layer, Match, pipe } from "effect";
 import { ShaclEngineError } from "./Shacl.errors.js";
 import type {
@@ -53,6 +53,7 @@ const SH_TARGET_NODE = Rdf.makeNamedNode(`${SHACL_NAMESPACE}targetNode`);
 const SH_MIN_COUNT = Rdf.makeNamedNode(`${SHACL_NAMESPACE}minCount`);
 const SH_MAX_COUNT = Rdf.makeNamedNode(`${SHACL_NAMESPACE}maxCount`);
 const SH_DATATYPE = Rdf.makeNamedNode(`${SHACL_NAMESPACE}datatype`);
+const SH_CLASS = Rdf.makeNamedNode(`${SHACL_NAMESPACE}class`);
 const SH_HAS_VALUE = Rdf.makeNamedNode(`${SHACL_NAMESPACE}hasValue`);
 const SH_INFO = `${SHACL_NAMESPACE}Info`;
 const SH_WARNING = `${SHACL_NAMESPACE}Warning`;
@@ -195,6 +196,33 @@ const namedNodeLikeFromUnknown = (value: unknown): O.Option<Rdf.NamedNode> =>
     O.orElse(() => pipe(property(value, "ptr"), O.flatMap(namedNodeLikeFromUnknown)))
   );
 
+const objectTermFromUnknown = (value: unknown): O.Option<Rdf.ObjectTerm> =>
+  pipe(
+    stringProperty(value, "termType"),
+    O.flatMap((termType) =>
+      Match.value(termType).pipe(
+        Match.when("NamedNode", () => pipe(termValue(value), O.map(Rdf.makeNamedNode))),
+        Match.when("BlankNode", () => pipe(termValue(value), O.map(Rdf.makeBlankNode))),
+        Match.when("Literal", () =>
+          pipe(
+            O.all({
+              datatype: pipe(property(value, "datatype"), O.flatMap(namedNodeLikeFromUnknown)),
+              lexical: termValue(value),
+            }),
+            O.map(({ datatype, lexical }) =>
+              Rdf.makeLiteral(lexical, datatype.value, {
+                ...O.getSomesStruct({ language: pipe(stringProperty(value, "language"), O.filter(Str.isNonEmpty)) }),
+              })
+            )
+          )
+        ),
+        Match.orElse(O.none<Rdf.ObjectTerm>)
+      )
+    ),
+    O.orElse(() => pipe(property(value, "term"), O.flatMap(objectTermFromUnknown))),
+    O.orElse(() => pipe(property(value, "ptr"), O.flatMap(objectTermFromUnknown)))
+  );
+
 const focusNodeFromUnknown = (value: unknown): O.Option<string> =>
   pipe(property(value, "focusNode"), O.flatMap(termValue));
 
@@ -222,6 +250,12 @@ const sourceShapeFromUnknown = (value: unknown): O.Option<Rdf.NamedNode> =>
     O.orElse(() => property(value, "shape")),
     O.flatMap(namedNodeLikeFromUnknown)
   );
+
+const sourceConstraintComponentFromUnknown = (value: unknown): O.Option<Rdf.NamedNode> =>
+  pipe(property(value, "constraintComponent"), O.flatMap(namedNodeLikeFromUnknown));
+
+const resultValueFromUnknown = (value: unknown): O.Option<Rdf.ObjectTerm> =>
+  pipe(property(value, "value"), O.flatMap(objectTermFromUnknown));
 
 const severityFromUnknown = (value: unknown): ShaclValidationViolation["severity"] =>
   pipe(
@@ -272,6 +306,8 @@ const violationFromUnknown = (value: unknown): ShaclValidationViolation =>
     message: messageFromUnknown(value),
     severity: severityFromUnknown(value),
     sourceShape: sourceShapeFromUnknown(value),
+    sourceConstraintComponent: sourceConstraintComponentFromUnknown(value),
+    value: resultValueFromUnknown(value),
   });
 
 const shapeSubject = (shape: ShaclNodeShape, index: number): Rdf.Subject =>
@@ -309,6 +345,11 @@ const typedPropertyShapeQuads = (
       ...pipe(
         propertyShape.datatype,
         O.map((datatype) => [Rdf.makeQuad(propertyNode, SH_DATATYPE, datatype)]),
+        O.getOrElse(A.empty<Rdf.Quad>)
+      ),
+      ...pipe(
+        propertyShape.class,
+        O.map((classNode) => [Rdf.makeQuad(propertyNode, SH_CLASS, classNode)]),
         O.getOrElse(A.empty<Rdf.Quad>)
       ),
       ...pipe(

@@ -73,22 +73,32 @@ Ship reliable code with effect-first and schema-first patterns.
   `/explore` skill; crystallized work graduates into `goals/` packets and
   `docs/product/` prose.
 
-## Graphiti Memory
+## Agent Memory
 
-- `graphiti-memory` is the primary durable repo knowledge base. MCP clients
-  use the queue proxy `http://localhost:8123/mcp` (`:8000` is the backing
-  upstream). Helpers: `bun run graphiti:proxy`, `bun run graphiti:proxy:ensure`.
-- If unavailable in-session, fall back to repo-local docs, code search, and
-  this file.
-- Prefer `get_status`, narrow `get_episodes`, and scoped
-  `search_memory_facts` with small limits over broad startup searches.
-- Startup gotcha: the server expects `group_ids` as a list — if the wrapper
-  types it `string`, pass a JSON array literal containing `beep_dev`.
+- Cognee (`beepintir` MCP + cognee-memory plugin hooks/skills) is the sole
+  always-on durable dev-memory (2026-07-08 decision,
+  `standards/memory-architecture/04-decision-log.md`). It is OPERATOR-LEVEL
+  config (user plugin + user MCP settings), not provisioned by this repo's
+  `.mcp.json` — checkouts without it fall back to file memory and repo docs,
+  by design. Bounded use only: embedded/local or all-Postgres profile;
+  semantic memory is a managed cache (TTL, pruning, consolidation, node-set
+  scoping) — never source of truth. No uncited LLM output crosses the
+  authority boundary.
+- File memory (this file via the `CLAUDE.md` symlink, auto-memory
+  `MEMORY.md`) remains Layer 1 for durable curated knowledge.
+- `graphiti-memory` is DEPRECATED: write-frozen, read-available for
+  historical context only until the `@beep/epistemic-tables` bitemporal port
+  lands, then decommissioned. Read helpers until then:
+  `bun run graphiti:proxy`, `bun run graphiti:proxy:ensure`; `group_ids`
+  must be a JSON array containing `beep_dev`.
+- If memory is unavailable in-session, fall back to repo-local docs, code
+  search, and this file.
 
 ## Tool Routing
 
 - effect v3↔v4 differences: prefer the `effect-v4-imports` skill; reach for
-  `graphiti-memory` only for historical context.
+  Cognee recall (or read-frozen `graphiti-memory`) only for historical
+  context.
 - shadcn: editor app = app workspace, shared UI package = shared base; prefer
   the shadcn skill + shadcn MCP for registry discovery and installs.
 - MUI: prefer `mui-mcp` — `useMuiDocs` first, then `fetchDocs` only with URLs
@@ -100,7 +110,7 @@ Ship reliable code with effect-first and schema-first patterns.
   enabled tools before working, not mid-task.
 - Always-loaded files (this file, skill frontmatter, settings) are the prompt
   cache prefix: batch edits to them, keep them lean; durable cross-session
-  knowledge belongs in file-memory or Graphiti, not here.
+  knowledge belongs in file-memory or Cognee, not here.
 - Front-load stable context; let volatile per-task detail arrive later in the
   conversation.
 - Continue related follow-ups on an existing subagent (SendMessage) instead

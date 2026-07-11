@@ -17,4 +17,18 @@ describe("@beep/ontology-use-cases worker import graph", () => {
       expect(worker.applyOntologyGraphProjectionDelta).toBeDefined();
     })
   );
+
+  it.effect(
+    "imports the ontology toolkit entrypoint without DOM globals",
+    Effect.fnUntraced(function* () {
+      expect("document" in globalThis).toBe(false);
+      expect("window" in globalThis).toBe(false);
+
+      const tools = yield* Effect.promise(() => import("@beep/ontology-use-cases/tools"));
+
+      expect(tools.OntologyToolkit).toBeDefined();
+      expect(tools.OntologyToolService).toBeDefined();
+      expect(Object.keys(tools.OntologyToolkit.tools)).toHaveLength(9);
+    })
+  );
 });

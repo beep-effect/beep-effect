@@ -1,6 +1,12 @@
 # Agent Reflection Loop
 
-Status: `active` — P1 (goal-closeout reflection system) in progress.
+## Status
+
+Lifecycle: `paused`
+
+Source: [`ops/manifest.json`](./ops/manifest.json)
+
+P1 (goal-closeout reflection system) in progress.
 
 ## Mission
 
