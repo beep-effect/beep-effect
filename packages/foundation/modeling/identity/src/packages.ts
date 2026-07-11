@@ -151,7 +151,21 @@ const generatedComposers = $I.compose(
   "uspto-mcp",
   "pacer",
   "fc-runs",
-  "protobuf"
+  "protobuf",
+  "cosmos",
+  "epistemic-server",
+  "epistemic-tables",
+  "lint-rules",
+  "n3",
+  "ontology-client",
+  "ontology-config",
+  "ontology-domain",
+  "ontology-server",
+  "ontology-ui",
+  "ontology-use-cases",
+  "oxigraph",
+  "shacl",
+  "storybook"
 );
 
 const composers = {
@@ -1749,3 +1763,243 @@ export const $FcRunsId: Identity.IdentityComposer<"@beep/fc-runs"> = composers.$
  * @category configuration
  */
 export const $ProtobufId: Identity.IdentityComposer<"@beep/protobuf"> = composers.$ProtobufId;
+
+/**
+ * Identity composer for `@beep/cosmos`.
+ *
+ * @example
+ * ```typescript
+ * import { $CosmosId } from "@beep/identity"
+ *
+ * const id = $CosmosId.make("Cosmos")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $CosmosId: Identity.IdentityComposer<"@beep/cosmos"> = composers.$CosmosId;
+
+/**
+ * Identity composer for `@beep/db-admin`.
+ *
+ * @example
+ * ```typescript
+ * import { $DbAdminId } from "@beep/identity"
+ *
+ * const id = $DbAdminId.make("DbAdmin")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $DbAdminId: Identity.IdentityComposer<"@beep/db-admin"> = composers.$DbAdminId;
+
+/**
+ * Identity composer for `@beep/epistemic-server`.
+ *
+ * @example
+ * ```typescript
+ * import { $EpistemicServerId } from "@beep/identity"
+ *
+ * const id = $EpistemicServerId.make("EpistemicServer")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $EpistemicServerId: Identity.IdentityComposer<"@beep/epistemic-server"> = composers.$EpistemicServerId;
+
+/**
+ * Identity composer for `@beep/epistemic-tables`.
+ *
+ * @example
+ * ```typescript
+ * import { $EpistemicTablesId } from "@beep/identity"
+ *
+ * const id = $EpistemicTablesId.make("EpistemicTables")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $EpistemicTablesId: Identity.IdentityComposer<"@beep/epistemic-tables"> = composers.$EpistemicTablesId;
+
+/**
+ * Identity composer for `@beep/lint-rules`.
+ *
+ * @example
+ * ```typescript
+ * import { $LintRulesId } from "@beep/identity"
+ *
+ * const id = $LintRulesId.make("LintRules")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $LintRulesId: Identity.IdentityComposer<"@beep/lint-rules"> = composers.$LintRulesId;
+
+/**
+ * Identity composer for `@beep/n3`.
+ *
+ * @example
+ * ```typescript
+ * import { $N3Id } from "@beep/identity"
+ *
+ * const id = $N3Id.make("N3")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $N3Id: Identity.IdentityComposer<"@beep/n3"> = composers.$N3Id;
+
+/**
+ * Identity composer for `@beep/ontology-client`.
+ *
+ * @example
+ * ```typescript
+ * import { $OntologyClientId } from "@beep/identity"
+ *
+ * const id = $OntologyClientId.make("OntologyClient")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $OntologyClientId: Identity.IdentityComposer<"@beep/ontology-client"> = composers.$OntologyClientId;
+
+/**
+ * Identity composer for `@beep/ontology-config`.
+ *
+ * @example
+ * ```typescript
+ * import { $OntologyConfigId } from "@beep/identity"
+ *
+ * const id = $OntologyConfigId.make("OntologyConfig")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $OntologyConfigId: Identity.IdentityComposer<"@beep/ontology-config"> = composers.$OntologyConfigId;
+
+/**
+ * Identity composer for `@beep/ontology-domain`.
+ *
+ * @example
+ * ```typescript
+ * import { $OntologyDomainId } from "@beep/identity"
+ *
+ * const id = $OntologyDomainId.make("OntologyDomain")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $OntologyDomainId: Identity.IdentityComposer<"@beep/ontology-domain"> = composers.$OntologyDomainId;
+
+/**
+ * Identity composer for `@beep/ontology-server`.
+ *
+ * @example
+ * ```typescript
+ * import { $OntologyServerId } from "@beep/identity"
+ *
+ * const id = $OntologyServerId.make("OntologyServer")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $OntologyServerId: Identity.IdentityComposer<"@beep/ontology-server"> = composers.$OntologyServerId;
+
+/**
+ * Identity composer for `@beep/ontology-ui`.
+ *
+ * @example
+ * ```typescript
+ * import { $OntologyUiId } from "@beep/identity"
+ *
+ * const id = $OntologyUiId.make("OntologyUi")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $OntologyUiId: Identity.IdentityComposer<"@beep/ontology-ui"> = composers.$OntologyUiId;
+
+/**
+ * Identity composer for `@beep/ontology-use-cases`.
+ *
+ * @example
+ * ```typescript
+ * import { $OntologyUseCasesId } from "@beep/identity"
+ *
+ * const id = $OntologyUseCasesId.make("OntologyUseCases")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $OntologyUseCasesId: Identity.IdentityComposer<"@beep/ontology-use-cases"> = composers.$OntologyUseCasesId;
+
+/**
+ * Identity composer for `@beep/oxigraph`.
+ *
+ * @example
+ * ```typescript
+ * import { $OxigraphId } from "@beep/identity"
+ *
+ * const id = $OxigraphId.make("Oxigraph")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $OxigraphId: Identity.IdentityComposer<"@beep/oxigraph"> = composers.$OxigraphId;
+
+/**
+ * Identity composer for `@beep/shacl`.
+ *
+ * @example
+ * ```typescript
+ * import { $ShaclId } from "@beep/identity"
+ *
+ * const id = $ShaclId.make("Shacl")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $ShaclId: Identity.IdentityComposer<"@beep/shacl"> = composers.$ShaclId;
+
+/**
+ * Identity composer for `@beep/storybook`.
+ *
+ * @example
+ * ```typescript
+ * import { $StorybookId } from "@beep/identity"
+ *
+ * const id = $StorybookId.make("Storybook")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $StorybookId: Identity.IdentityComposer<"@beep/storybook"> = composers.$StorybookId;

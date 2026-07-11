@@ -7,7 +7,7 @@
 
 import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client";
 import { CosmosGraphProjection, renderCosmosGraph } from "@beep/cosmos";
-import { make as makeIdentity } from "@beep/identity";
+import { $OntologyClientId } from "@beep/identity/packages";
 import {
   appendChange,
   ChangeOperation,
@@ -63,7 +63,6 @@ import type {
 import type { Layer } from "effect";
 import type { RpcClient } from "effect/unstable/rpc";
 
-const { $OntologyClientId } = makeIdentity("ontology-client");
 const $I = $OntologyClientId.create("aggregates/Session/Session.atoms");
 
 /**

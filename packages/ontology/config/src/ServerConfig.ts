@@ -5,11 +5,10 @@
  * @since 0.0.0
  */
 
-import { make as makeIdentity } from "@beep/identity";
+import { $OntologyConfigId } from "@beep/identity/packages";
 import { Config, Context } from "effect";
 import * as S from "effect/Schema";
 
-const { $OntologyConfigId } = makeIdentity("ontology-config");
 const $I = $OntologyConfigId.create("ServerConfig");
 
 /**

@@ -24,7 +24,7 @@ import {
   TableBlock,
   YouTubeBlock,
 } from "@beep/agents-domain/values/AssistantContent";
-import { make } from "@beep/identity";
+import { $AgentsServerId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { thunkFalse } from "@beep/utils";
 import { flow, pipe } from "effect";
@@ -36,7 +36,6 @@ import { AnthropicStructuredOutput } from "effect/unstable/ai";
 
 // cspell:words gantt
 
-const { $AgentsServerId } = make("agents-server");
 const $I = $AgentsServerId.create("AssistantTurn/AnthropicTurnCodec");
 
 /**

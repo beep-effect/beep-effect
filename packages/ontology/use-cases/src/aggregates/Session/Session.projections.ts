@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { make as makeIdentity } from "@beep/identity";
+import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { deriveSessionGraphPartitions, GraphPartition } from "@beep/ontology-domain/aggregates/Session";
 import { makeNamedNode, ObjectTerm, Subject } from "@beep/rdf/Rdf";
 import { OWL_CLASS, OWL_DATATYPE_PROPERTY, OWL_NAMESPACE, OWL_OBJECT_PROPERTY } from "@beep/rdf/Vocab/Owl";
@@ -21,7 +21,6 @@ import type { Session, SessionGraphPartitions } from "@beep/ontology-domain/aggr
 import type { Quad } from "@beep/rdf/Rdf";
 import type { OntologyInferenceResult } from "./Session.reasoner.js";
 
-const { $OntologyUseCasesId } = makeIdentity("ontology-use-cases");
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.projections");
 
 /**

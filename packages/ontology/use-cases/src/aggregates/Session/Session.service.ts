@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { make as makeIdentity } from "@beep/identity";
+import { $OntologyUseCasesId } from "@beep/identity/packages";
 import {
   CreateSessionInput,
   createSession,
@@ -34,7 +34,6 @@ import type { ChangeOperation } from "@beep/ontology-domain/aggregates/Session";
 import type { OpenOntologyFileCommand, SaveOntologyFileCommand } from "./Session.commands.js";
 import type { OntologyFileStoreError } from "./Session.ports.js";
 
-const { $OntologyUseCasesId } = makeIdentity("ontology-use-cases");
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.service");
 
 const serializableSessionDataset = (session: SerializeOntologySessionCommand["session"]) => {

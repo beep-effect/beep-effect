@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { make as makeIdentity } from "@beep/identity";
+import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { Dataset, PrefixMap } from "@beep/rdf/Rdf";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
@@ -13,7 +13,6 @@ import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 
-const { $OntologyUseCasesId } = makeIdentity("ontology-use-cases");
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.ports");
 
 const emptyPrefixMap = (): PrefixMap => ({});

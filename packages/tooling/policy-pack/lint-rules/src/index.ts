@@ -11,10 +11,9 @@
  * @since 0.1.0
  */
 
-import { make } from "@beep/identity";
+import { $LintRulesId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 
-const { $LintRulesId } = make("lint-rules");
 const $I = $LintRulesId;
 
 /**

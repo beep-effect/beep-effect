@@ -9,7 +9,7 @@ import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
 import { IndexedBlock } from "@beep/agents-use-cases/public";
 import { BlockRepairFailed } from "@beep/agents-use-cases/server";
 import { generateAnthropicToolJson } from "@beep/anthropic";
-import { make } from "@beep/identity";
+import { $AgentsServerId } from "@beep/identity/packages";
 import { redactString } from "@beep/observability";
 import { isNonNegative } from "@beep/schema/Number";
 import { Effect, JsonPatch, Metric } from "effect";
@@ -20,7 +20,6 @@ import { AnthropicStructuredOutput, Tool, Toolkit } from "effect/unstable/ai";
 import { assistantBlockOutput } from "./AnthropicTurnCodec.ts";
 import type { RepairError } from "@beep/anthropic";
 
-const { $AgentsServerId } = make("agents-server");
 const $I = $AgentsServerId.create("AssistantTurn/BlockRepair");
 
 const REPAIR_ATTEMPTS = 2;
