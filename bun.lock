@@ -232,6 +232,7 @@
       "version": "0.0.2",
       "dependencies": {
         "@beep/architecture-lab-tables": "workspace:^",
+        "@beep/documents-tables": "workspace:^",
         "@beep/epistemic-tables": "workspace:^",
         "@beep/postgres": "workspace:^",
         "@beep/workspace-tables": "workspace:^",
@@ -451,13 +452,18 @@
       "name": "@beep/documents-server",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/box": "workspace:^",
         "@beep/documents-domain": "workspace:^",
+        "@beep/documents-tables": "workspace:^",
         "@beep/documents-use-cases": "workspace:^",
         "@beep/file-processing": "workspace:^",
         "@beep/identity": "workspace:^",
+        "@beep/postgres": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
         "@beep/utils": "workspace:^",
         "@noble/hashes": "catalog:",
+        "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -466,6 +472,21 @@
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
+      },
+    },
+    "packages/documents/tables": {
+      "name": "@beep/documents-tables",
+      "version": "0.0.2",
+      "dependencies": {
+        "@beep/documents-domain": "workspace:^",
+        "@beep/drizzle": "workspace:^",
+        "drizzle-orm": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
       },
     },
     "packages/documents/use-cases": {
@@ -2665,6 +2686,8 @@
     "@beep/documents-domain": ["@beep/documents-domain@workspace:packages/documents/domain"],
 
     "@beep/documents-server": ["@beep/documents-server@workspace:packages/documents/server"],
+
+    "@beep/documents-tables": ["@beep/documents-tables@workspace:packages/documents/tables"],
 
     "@beep/documents-use-cases": ["@beep/documents-use-cases@workspace:packages/documents/use-cases"],
 

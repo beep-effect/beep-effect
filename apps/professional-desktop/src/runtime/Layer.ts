@@ -31,24 +31,34 @@
 import { AnthropicTurnKernel } from "@beep/agents-server/AnthropicTurnKernel";
 import { FixtureTurnKernel } from "@beep/agents-use-cases/proof";
 import { AnthropicLanguageModelOptions, AnthropicLive, makeAnthropicLanguageModelLayer } from "@beep/anthropic";
+import { Box, BoxDeveloperTokenConfig } from "@beep/box";
 import { DocTextFileProcessingEngine } from "@beep/doc-text";
 import {
   FILING_DECISION_DEFAULT_MODEL,
   FILING_DECISION_MODEL_ENV,
   FilingDecisionLlmConfigLayer,
 } from "@beep/documents-server/aggregates/Document";
-import { DocumentsServerLive, DocumentsServerLlmLive } from "@beep/documents-server/layer";
+import { DmsMirrorAvailabilityBoxLayer, DmsMirrorBoxLive } from "@beep/documents-server/aggregates/Sync";
+import {
+  DocumentsServerLive,
+  DocumentsServerLlmLive,
+  DocumentsSyncDrizzleLive,
+  DocumentsSyncFixtureLive,
+} from "@beep/documents-server/layer";
 import { makeFileProcessingServiceLayer } from "@beep/file-processing/Service";
 import { OntologyServerLive } from "@beep/ontology-server/layer";
 import { Thread, Workspace } from "@beep/workspace-server";
 import { BunServices } from "@effect/platform-bun";
 import { Config, Effect, Layer } from "effect";
+import * as O from "effect/Option";
 import { ChatHandlersLive } from "@/chat/ChatOrchestrator";
 import { UsageRecordSinkDrizzle, UsageRecordSinkInMemory } from "@/chat/UsageRecordSink";
 import { DocumentIntakeHandlersLive, WorkspaceVaultHandlersLive } from "@/intake/DocumentIntakeOrchestrator";
 import { OntologyHandlersLive } from "@/ontology/OntologyOrchestrator";
 import { ObservabilityLive } from "@/runtime/Observability";
 import { PgliteDrizzleLive } from "@/runtime/Pglite";
+import { DmsMirrorAvailabilityDisconnectedLayer, DmsMirrorDisconnectedLayer } from "@/sync/DmsMirrorDisconnected";
+import { VaultSyncHandlersLive } from "@/sync/VaultSyncOrchestrator";
 import type { AgentTurnKernel } from "@beep/agents-use-cases/public";
 import type { ThreadStoreUnavailable } from "@beep/workspace-use-cases/aggregates/Thread/server";
 import type * as PlatformError from "effect/PlatformError";
@@ -74,6 +84,7 @@ const DesktopHandlersLive = Layer.mergeAll(
   ChatHandlersLive,
   WorkspaceVaultHandlersLive,
   DocumentIntakeHandlersLive,
+  VaultSyncHandlersLive,
   OntologyHandlersLive
 );
 
@@ -160,6 +171,41 @@ const DocumentsFilingLive = Layer.unwrap(
 );
 
 /**
+ * Select the documents vault-sync engine layer. `CHAT_AGENT=fixture` keeps the
+ * fully deterministic keyless engine (in-memory repos + fixture mirror);
+ * otherwise the Drizzle-backed engine runs against the Box mirror when
+ * `CLOUD_BOX_TOKEN` is configured, or against the app-local disconnected
+ * mirror layers (typed `DmsMirrorUnavailable` + probe `connected: false`)
+ * when it is not — the honest not-connected state while the Box test tenant
+ * is unprovisioned.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+const DocumentsSyncLive = Layer.unwrap(
+  Effect.gen(function* () {
+    const agent = yield* Config.literals(["anthropic", "fixture"], "CHAT_AGENT").pipe(
+      Config.withDefault("anthropic" as const)
+    );
+    if (agent === "fixture") {
+      return DocumentsSyncFixtureLive;
+    }
+    const token = yield* Config.option(Config.redacted("CLOUD_BOX_TOKEN"));
+    return O.match(token, {
+      onNone: () =>
+        DocumentsSyncDrizzleLive.pipe(
+          Layer.provide([DmsMirrorDisconnectedLayer, DmsMirrorAvailabilityDisconnectedLayer])
+        ),
+      onSome: (boxToken) =>
+        DocumentsSyncDrizzleLive.pipe(
+          Layer.provide([DmsMirrorBoxLive, DmsMirrorAvailabilityBoxLayer]),
+          Layer.provide(Box.makeLayer(BoxDeveloperTokenConfig.make({ token: boxToken })))
+        ),
+    });
+  }).pipe(Effect.orDie)
+);
+
+/**
  * App-local live runtime Layer for chat and ontology sidecar handlers.
  *
  * @example
@@ -179,6 +225,7 @@ export const RuntimeLive: DesktopHandlersLayer = DesktopHandlersLive.pipe(
     Workspace.WorkspaceVaultStoreDrizzleLayer,
     UsageRecordSinkDrizzle,
     DocumentsFilingLive,
+    DocumentsSyncLive,
     OntologyServerLive,
   ]),
   Layer.provide(PgliteDrizzleLive),
@@ -206,6 +253,7 @@ export const RuntimeTest: DesktopHandlersLayer = DesktopHandlersLive.pipe(
     Workspace.WorkspaceVaultStoreInMemoryLayer,
     UsageRecordSinkInMemory,
     DocumentsServerLive,
+    DocumentsSyncFixtureLive,
     OntologyServerLive,
   ]),
   Layer.provideMerge(BunServices.layer)

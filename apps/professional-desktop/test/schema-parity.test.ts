@@ -1,8 +1,15 @@
 import { IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch";
-import { IntakeDroppedFilePayload } from "@beep/documents-use-cases/public";
+import {
+  IntakeDroppedFilePayload,
+  MarkVaultSyncConflictReviewedPayload,
+  VaultSyncRpcs,
+  VaultSyncStatus,
+  VaultSyncWorkspacePayload,
+} from "@beep/documents-use-cases/public";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -139,6 +146,57 @@ describe("@beep/professional-desktop schema parity", () => {
     })
   );
 
+  it.effect("preserves vault sync wire shapes", () =>
+    Effect.gen(function* () {
+      const workspacePayload = VaultSyncWorkspacePayload.make({ workspaceId: DEFAULT_WORKSPACE_ID });
+      expect(yield* S.encodeUnknownEffect(VaultSyncWorkspacePayload)(workspacePayload)).toStrictEqual({
+        workspaceId: 1,
+      });
+
+      const reviewedWire = { conflictId: 7, workspaceId: 1 };
+      const reviewed = yield* S.decodeUnknownEffect(MarkVaultSyncConflictReviewedPayload)(reviewedWire);
+      expect(yield* S.encodeUnknownEffect(MarkVaultSyncConflictReviewedPayload)(reviewed)).toStrictEqual(reviewedWire);
+
+      const bootstrapStatusWire = {
+        conflictItems: 0,
+        connected: false,
+        currentItems: 0,
+        cursorPosition: null,
+        errorItems: 0,
+        failedOperations: 0,
+        openConflicts: 0,
+        pendingItems: 0,
+        provider: "box",
+        queuedOperations: 0,
+      };
+      const bootstrapStatus = yield* S.decodeUnknownEffect(VaultSyncStatus)(bootstrapStatusWire);
+      expect(O.isNone(bootstrapStatus.cursorPosition)).toBe(true);
+      expect(yield* S.encodeUnknownEffect(VaultSyncStatus)(bootstrapStatus)).toStrictEqual(bootstrapStatusWire);
+
+      const activeStatusWire = {
+        conflictItems: 1,
+        connected: true,
+        currentItems: 3,
+        cursorPosition: "now",
+        errorItems: 0,
+        failedOperations: 2,
+        openConflicts: 1,
+        pendingItems: 4,
+        provider: "box",
+        queuedOperations: 5,
+      };
+      const activeStatus = yield* S.decodeUnknownEffect(VaultSyncStatus)(activeStatusWire);
+      expect(yield* S.encodeUnknownEffect(VaultSyncStatus)(activeStatus)).toStrictEqual(activeStatusWire);
+    })
+  );
+
+  it("registers the vault sync RPC group requests", () => {
+    const names = ["GetVaultSyncStatus", "ListVaultSyncConflicts", "MarkVaultSyncConflictReviewed", "TriggerVaultSync"];
+
+    expect(VaultSyncRpcs.requests.size).toBe(4);
+    expect(A.every(names, (name) => VaultSyncRpcs.requests.has(name))).toBe(true);
+  });
+
   it("normalizes derived titles through the schema", () => {
     const decodeTitle = S.decodeUnknownOption(DerivedThreadTitle);
     const longTitle = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-title";
@@ -157,5 +215,8 @@ describe("@beep/professional-desktop schema parity", () => {
     assertSchemaEncodeDecodeRoundTrip(SidecarClosedPayload, { numRuns: 25 });
     assertSchemaEncodeDecodeRoundTrip(ProfessionalDesktopMigrationOptions, { numRuns: 25 });
     assertSchemaEncodeDecodeRoundTrip(DerivedThreadTitle, { numRuns: 25 });
+    assertSchemaEncodeDecodeRoundTrip(VaultSyncWorkspacePayload, { numRuns: 25 });
+    assertSchemaEncodeDecodeRoundTrip(MarkVaultSyncConflictReviewedPayload, { numRuns: 25 });
+    assertSchemaEncodeDecodeRoundTrip(VaultSyncStatus, { numRuns: 25 });
   });
 });

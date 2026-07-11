@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@beep/architecture-lab-tables": "workspace:^",
+    "@beep/documents-tables": "workspace:^",
     "@beep/epistemic-tables": "workspace:^",
     "@beep/postgres": "workspace:^",
     "@beep/workspace-tables": "workspace:^",
