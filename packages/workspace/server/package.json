@@ -64,6 +64,7 @@
   "dependencies": {
     "@beep/md": "workspace:^",
     "@beep/postgres": "workspace:^",
+    "@beep/schema": "workspace:^",
     "@beep/shared-domain": "workspace:^",
     "@beep/utils": "workspace:^",
     "@beep/workspace-domain": "workspace:^",

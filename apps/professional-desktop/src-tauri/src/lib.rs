@@ -1,4 +1,5 @@
 use serde::Serialize;
+use std::path::Path;
 use std::sync::{
     atomic::{AtomicBool, Ordering},
     Arc, Mutex, MutexGuard,
@@ -52,6 +53,30 @@ struct RpcSession {
 }
 
 const RPC_SESSION_TOKEN_ENV: &str = "BEEP_DESKTOP_RPC_SESSION_TOKEN";
+const ONTOLOGY_WORKSPACE_ROOT_ENV: &str = "ONTOLOGY_WORKSPACE_ROOT";
+
+fn ensure_private_directory(path: &Path) -> std::io::Result<()> {
+    std::fs::create_dir_all(path)?;
+    let metadata = std::fs::symlink_metadata(path)?;
+    if !metadata.file_type().is_dir() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            format!(
+                "private directory path is not a directory: {}",
+                path.display()
+            ),
+        ));
+    }
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+
+        std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o700))?;
+    }
+
+    Ok(())
+}
 
 #[tauri::command]
 fn sidecar_transport(state: tauri::State<'_, RpcSession>) -> SidecarTransport {
@@ -492,13 +517,19 @@ pub fn run() {
             if ipc || !cfg!(debug_assertions) {
                 let mut command = app.shell().sidecar("sidecar")?;
                 let rpc_session_token = app.state::<RpcSession>().token.clone();
+                let data_dir = app.path().app_data_dir()?;
+                let ontology_workspace_root = data_dir.join("ontology-workspace");
+                ensure_private_directory(&ontology_workspace_root)?;
+                command = command.env(
+                    ONTOLOGY_WORKSPACE_ROOT_ENV,
+                    ontology_workspace_root.to_string_lossy().to_string(),
+                );
 
                 if cfg!(debug_assertions) {
                     // Dev + ipc: keyless fixture kernel; the sidecar falls back to
                     // its repo-local PGlite dir when CHAT_DB_PATH is unset.
                     command = command.env("CHAT_AGENT", "fixture");
                 } else {
-                    let data_dir = app.path().app_data_dir()?;
                     std::fs::create_dir_all(&data_dir)?;
                     // CHAT_DB_PATH is a directory PGlite persists into (see the
                     // sidecar's ChatDbConfig), not a single file.
@@ -567,7 +598,54 @@ pub fn run() {
 
 #[cfg(test)]
 mod tests {
-    use super::{authorize_sidecar_send, is_blank_ipc_stdout_frame};
+    use super::{authorize_sidecar_send, ensure_private_directory, is_blank_ipc_stdout_frame};
+    use uuid::Uuid;
+
+    #[test]
+    fn creates_private_ontology_workspace_directory() {
+        let root = std::env::temp_dir().join(format!("beep-ontology-root-{}", Uuid::new_v4()));
+        let workspace = root.join("ontology-workspace");
+
+        ensure_private_directory(&workspace)
+            .expect("ontology workspace directory should be created");
+        assert!(workspace.is_dir());
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+
+            let permissions = std::fs::metadata(&workspace)
+                .expect("ontology workspace metadata should be readable")
+                .permissions();
+            assert_eq!(permissions.mode() & 0o777, 0o700);
+        }
+
+        std::fs::remove_dir_all(root).expect("ontology workspace fixture should be removed");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn rejects_symlinked_ontology_workspace_directory() {
+        use std::os::unix::fs::{symlink, PermissionsExt};
+
+        let root = std::env::temp_dir().join(format!("beep-ontology-symlink-{}", Uuid::new_v4()));
+        let target = root.join("target");
+        let workspace = root.join("ontology-workspace");
+        std::fs::create_dir_all(&target).expect("ontology symlink target should be created");
+        std::fs::set_permissions(&target, std::fs::Permissions::from_mode(0o755))
+            .expect("ontology symlink target permissions should be set");
+        symlink(&target, &workspace).expect("ontology workspace symlink should be created");
+
+        let error = ensure_private_directory(&workspace)
+            .expect_err("symlinked ontology workspace should be rejected");
+        assert_eq!(error.kind(), std::io::ErrorKind::InvalidInput);
+        let target_permissions = std::fs::metadata(&target)
+            .expect("ontology symlink target metadata should be readable")
+            .permissions();
+        assert_eq!(target_permissions.mode() & 0o777, 0o755);
+
+        std::fs::remove_dir_all(root).expect("ontology workspace fixture should be removed");
+    }
 
     #[test]
     fn detects_blank_ipc_stdout_frames() {

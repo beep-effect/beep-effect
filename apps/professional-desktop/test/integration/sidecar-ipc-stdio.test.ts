@@ -96,6 +96,10 @@ const ipcStdioProgram = Effect.gen(function* () {
   const dbDir = yield* Effect.acquireRelease(fs.makeTempDirectory({ prefix: "ipc-stdio-" }), (path) =>
     fs.remove(path, { force: true, recursive: true }).pipe(Effect.ignore)
   );
+  const ontologyWorkspaceRoot = yield* Effect.acquireRelease(
+    fs.makeTempDirectory({ prefix: "ipc-stdio-ontology-" }),
+    (path) => fs.remove(path, { force: true, recursive: true }).pipe(Effect.ignore)
+  );
 
   // Boot the real sidecar; kill it when the scope closes.
   const sidecarBinaryPath = yield* resolveSidecarBinaryPath;
@@ -103,7 +107,13 @@ const ipcStdioProgram = Effect.gen(function* () {
     Effect.sync(() =>
       Bun.spawn([sidecarBinaryPath], {
         cwd: process.cwd(),
-        env: { ...process.env, CHAT_TRANSPORT: "ipc", CHAT_AGENT: "fixture", CHAT_DB_PATH: dbDir },
+        env: {
+          ...process.env,
+          CHAT_TRANSPORT: "ipc",
+          CHAT_AGENT: "fixture",
+          CHAT_DB_PATH: dbDir,
+          ONTOLOGY_WORKSPACE_ROOT: ontologyWorkspaceRoot,
+        },
         stdin: "pipe",
         stdout: "pipe",
         stderr: "pipe",

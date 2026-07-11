@@ -420,6 +420,12 @@
         ]
       },
       {
+        "name": "@beep/ontology-config",
+        "patterns": [
+          "packages/ontology/config/src/**"
+        ]
+      },
+      {
         "name": "@beep/ontology-domain",
         "patterns": [
           "packages/ontology/domain/src/**"
@@ -1915,6 +1921,17 @@
         ]
       },
       {
+        "from": "@beep/ontology-config",
+        "allow": [
+          "@beep/identity",
+          "@beep/ontology-config"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/ontology-config"
+        ]
+      },
+      {
         "from": "@beep/ontology-domain",
         "allow": [
           "@beep/identity",
@@ -1936,6 +1953,7 @@
         "allow": [
           "@beep/file-processing",
           "@beep/n3",
+          "@beep/ontology-config",
           "@beep/ontology-server",
           "@beep/ontology-use-cases",
           "@beep/oxigraph",
@@ -1947,6 +1965,7 @@
         "allowTypeOnly": [
           "@beep/file-processing",
           "@beep/n3",
+          "@beep/ontology-config",
           "@beep/ontology-server",
           "@beep/ontology-use-cases",
           "@beep/oxigraph",
@@ -2717,6 +2736,7 @@
         "allow": [
           "@beep/md",
           "@beep/postgres",
+          "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-utils",
           "@beep/utils",
@@ -2728,6 +2748,7 @@
         "allowTypeOnly": [
           "@beep/md",
           "@beep/postgres",
+          "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-utils",
           "@beep/utils",

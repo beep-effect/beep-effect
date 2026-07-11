@@ -11,8 +11,12 @@ bun add @beep/ontology-server
 
 ## Usage
 
+`ONTOLOGY_WORKSPACE_ROOT` is required and must identify an existing directory.
+Ontology file-store requests use traversal-safe paths relative to that root and
+accept only files ending in lower-case `.ttl`.
+
 ```ts
-import { VERSION } from "@beep/ontology-server"
+import { OntologyServerLive } from "@beep/ontology-server/layer"
 ```
 
 ## Development

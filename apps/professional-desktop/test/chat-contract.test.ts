@@ -16,6 +16,7 @@ import { Thread } from "@beep/workspace-use-cases/server";
 import { describe, expect, it } from "@effect/vitest";
 import { Deferred, Effect, Fiber, Layer, Ref, Stream } from "effect";
 import * as A from "effect/Array";
+import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -32,7 +33,15 @@ const makeStack = Effect.gen(function* () {
   return { operations: makeChatOperations(store, kernel, sink), usageRef: ref };
 });
 
-const StackLayer = Layer.merge(ThreadStoreInMemoryLayer, FixtureTurnKernel);
+const TestCryptoLayer = Layer.succeed(
+  Crypto.Crypto,
+  Crypto.make({
+    digest: (_algorithm, data) => Effect.succeed(data),
+    randomBytes: (size) => new Uint8Array(size).fill(1),
+  })
+);
+const ThreadStoreTestLayer = ThreadStoreInMemoryLayer.pipe(Layer.provide(TestCryptoLayer));
+const StackLayer = Layer.merge(ThreadStoreTestLayer, FixtureTurnKernel);
 
 type MessageItem = { readonly role: Thread.TimelineMessageItem["role"]; readonly content: Md.Document.Type };
 
@@ -307,7 +316,7 @@ describe("@beep/professional-desktop chat contract", () => {
 
         yield* Stream.runDrain(operations.sendMessage(thread.id, userDocument("first")));
         yield* Stream.runDrain(operations.sendMessage(thread.id, userDocument("second")));
-      }).pipe(provideScopedLayer(Layer.merge(ThreadStoreInMemoryLayer, CaptureKernel)));
+      }).pipe(provideScopedLayer(Layer.merge(ThreadStoreTestLayer, CaptureKernel)));
 
       const history = yield* Ref.get(historyRef);
       const firstAssistantText = documentToPlainText(

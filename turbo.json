@@ -21,6 +21,7 @@
       "TURBO_TEAM",
       "NODE_TLS_REJECT_UNAUTHORIZED",
       "CHAT_TRANSPORT",
+      "ONTOLOGY_WORKSPACE_ROOT",
       "PORTLESS_*",
       "AWS_*",
       "SST_*"

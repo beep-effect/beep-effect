@@ -12,7 +12,7 @@ import {
   projectFiledDocumentPath,
 } from "@beep/documents-domain/values/Taxonomy";
 import * as DocumentUseCases from "@beep/documents-use-cases/server";
-import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
+import { writeFileWithinRootAtomically } from "@beep/file-processing/PathSafety";
 import { $DocumentsServerId } from "@beep/identity/packages";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
@@ -36,51 +36,49 @@ const toMaterializationFailed = (error: unknown): DocumentUseCases.Document.Docu
 const contentDigest = (bytes: Uint8Array): DocumentContentDigest =>
   DocumentContentDigest.make(bytesToHex(sha256(bytes)));
 
-const resolveVaultPath = (
-  fs: FileSystem.FileSystem,
-  path: Path.Path,
-  vaultRootPath: string,
-  relativePath: string
-): Effect.Effect<string, DocumentUseCases.Document.DocumentMaterializationFailed> =>
-  resolvePathWithinRoot({ root: vaultRootPath, candidate: relativePath }).pipe(
-    Effect.provideService(FileSystem.FileSystem, fs),
-    Effect.provideService(Path.Path, path),
-    Effect.mapError((error) => materializationFailed(error.message))
-  );
-
 const materializeAtomically = (
   fs: FileSystem.FileSystem,
   path: Path.Path,
   vaultRootPath: string,
   relativeSegments: ReadonlyArray<string>,
-  bytes: Uint8Array,
-  digest: DocumentContentDigest
+  bytes: Uint8Array
 ): Effect.Effect<string, DocumentUseCases.Document.DocumentMaterializationFailed> =>
-  Effect.gen(function* () {
-    const relativePath = path.join(...relativeSegments);
-    const targetPath = yield* resolveVaultPath(fs, path, vaultRootPath, relativePath);
-    const targetDir = path.dirname(targetPath);
-    yield* fs.makeDirectory(targetDir, { recursive: true });
-    const checkedTargetPath = yield* resolveVaultPath(fs, path, vaultRootPath, relativePath);
-    const checkedTargetDir = path.dirname(checkedTargetPath);
-    const tempPath = path.join(checkedTargetDir, `.${path.basename(checkedTargetPath)}.tmp-${digest.slice(0, 12)}`);
-    yield* fs.writeFile(tempPath, bytes);
-    yield* fs
-      .rename(tempPath, checkedTargetPath)
-      .pipe(Effect.tapError(() => fs.remove(tempPath, { force: true }).pipe(Effect.ignore)));
-    return checkedTargetPath;
-  }).pipe(Effect.mapError(toMaterializationFailed));
+  writeFileWithinRootAtomically({
+    root: vaultRootPath,
+    candidate: path.join(...relativeSegments),
+    bytes,
+  }).pipe(
+    Effect.provideService(FileSystem.FileSystem, fs),
+    Effect.provideService(Path.Path, path),
+    Effect.mapError(toMaterializationFailed)
+  );
 
 /**
  * Builds the document intake service from filesystem, path, and filing-decision dependencies.
  *
  * @example
  * ```ts
- * import { makeDocumentIntake } from "@beep/documents-server/aggregates/Document"
+ * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
+ * import * as BunPath from "@effect/platform-bun/BunPath"
+ * import {
+ *   FilingDecisionHeuristicLayer,
+ *   makeDocumentIntake
+ * } from "@beep/documents-server/aggregates/Document"
+ * import { Effect, Layer } from "effect"
  *
- * console.log(makeDocumentIntake)
+ * const program = makeDocumentIntake().pipe(
+ *   Effect.provide(
+ *     Layer.mergeAll(BunFileSystem.layer, BunPath.layer, FilingDecisionHeuristicLayer)
+ *   ),
+ *   Effect.map((service) => typeof service.intakeDroppedFile === "function")
+ * )
+ *
+ * Effect.runPromise(program).then(console.log) // true
  * ```
  *
+ * @effects Acquires filing-decision, filesystem, and path services. Each
+ * returned intake operation computes the content digest and taxonomy path,
+ * then atomically materializes the bytes beneath the supplied vault root.
  * @category layers
  * @since 0.0.0
  */
@@ -109,7 +107,7 @@ export const makeDocumentIntake = Effect.fn($I`makeDocumentIntake`)(function* ()
           DocumentUseCases.Document.DocumentMaterializationFailed.make({ reason: error.reason })
         )
       );
-      yield* materializeAtomically(fs, path, input.vaultRootPath, vaultPath.segments, input.content, digest);
+      yield* materializeAtomically(fs, path, input.vaultRootPath, vaultPath.segments, input.content);
       return Document.make({
         contentDigest: digest,
         originalFileName: input.originalFileName,

@@ -29,6 +29,7 @@ import { makeDrizzleLayer } from "@beep/postgres";
 import { makePgliteIntegrationGate, makePgliteSqlTestLayer } from "@beep/test-utils";
 import { Thread as ThreadLayers } from "@beep/workspace-server";
 import { Thread } from "@beep/workspace-use-cases/server";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect, layer } from "@effect/vitest";
@@ -53,7 +54,11 @@ const ChatPersistLayer = Layer.mergeAll(
   FixtureTurnKernel,
   BunFileSystem.layer,
   BunPath.layer
-).pipe(Layer.provideMerge(makeDrizzleLayer()), Layer.provideMerge(makeInProcessPgliteLayer()));
+).pipe(
+  Layer.provideMerge(makeDrizzleLayer()),
+  Layer.provideMerge(makeInProcessPgliteLayer()),
+  Layer.provideMerge(BunCrypto.layer)
+);
 
 if (!shouldRunPgliteIntegration) {
   describe.skip("Professional desktop chat persistence PgLite integration", () => {});

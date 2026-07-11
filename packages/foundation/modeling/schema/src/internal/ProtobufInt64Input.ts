@@ -9,6 +9,7 @@ import { Effect, SchemaGetter, SchemaIssue } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 /**
  * Protobufjs-compatible `Long` object shape for 64-bit integer fields.
@@ -58,6 +59,7 @@ interface ProtobufLongLike {
  */
 export type ProtobufInt64Input = bigint | number | string | ProtobufLongLike;
 
+const maximumDecimalLength = 20;
 const decimalIntegerPattern = /^-?(?:0|[1-9]\d*)$/;
 
 const invalidProtobufInt64Input = (input: unknown, message: string) =>
@@ -87,8 +89,8 @@ const isSafeIntegerInput = (input: unknown): input is number =>
 const isProtobufInt64Input = (input: unknown): input is ProtobufInt64Input =>
   P.isBigInt(input) || P.isString(input) || isSafeIntegerInput(input) || isProtobufLongLike(input);
 
-const parseDecimalBigInt = (input: unknown, decimal: string) => {
-  if (!decimalIntegerPattern.test(decimal)) {
+const parseDecimalBigInt = (input: unknown, decimal: unknown) => {
+  if (!P.isString(decimal) || Str.length(decimal) > maximumDecimalLength || !decimalIntegerPattern.test(decimal)) {
     throw invalidProtobufInt64Input(input, "Expected a protobuf 64-bit integer decimal string");
   }
 

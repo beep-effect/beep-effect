@@ -47,6 +47,7 @@ const config = {
     "packages/workspace/tables/package.json",
     "packages/workspace/use-cases/package.json",
     "packages/workspace/server/package.json",
+    "packages/ontology/config/package.json",
     "packages/ontology/domain/package.json",
     "packages/ontology/use-cases/package.json",
     "packages/ontology/server/package.json",

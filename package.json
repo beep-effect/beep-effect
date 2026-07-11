@@ -443,6 +443,7 @@
     "packages/workspace/tables",
     "packages/workspace/use-cases",
     "packages/workspace/server",
+    "packages/ontology/config",
     "packages/ontology/domain",
     "packages/ontology/use-cases",
     "packages/ontology/server",

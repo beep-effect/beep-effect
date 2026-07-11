@@ -18,8 +18,8 @@
  * The ThreadStore and usage sink share one PGlite-backed
  * {@link PgliteDrizzleLive} database (migrations applied on boot); observability
  * is env-gated. The composed {@link RuntimeLive} resolves the handler group's
- * three requirements to `never`, so the sidecar only has to add the rpc/http
- * transport on top.
+ * service requirements while preserving typed startup failures for the
+ * sidecar entrypoint to report.
  *
  * A {@link RuntimeTest} variant (fixture kernel + in-memory store + in-memory
  * sink, no database, no key) is provided for smoke/dev.
@@ -42,6 +42,8 @@ import { OntologyHandlersLive } from "@/ontology/OntologyOrchestrator";
 import { ObservabilityLive } from "@/runtime/Observability";
 import { PgliteDrizzleLive } from "@/runtime/Pglite";
 import type { AgentTurnKernel } from "@beep/agents-use-cases/public";
+import type { ThreadStoreUnavailable } from "@beep/workspace-use-cases/aggregates/Thread/server";
+import type * as PlatformError from "effect/PlatformError";
 
 /**
  * The fully-provided `ChatRpcs` handler layer that the sidecar serves. All of
@@ -68,22 +70,38 @@ const DesktopHandlersLive = Layer.mergeAll(
 );
 
 /**
- * Type of the fully-provided RPC handler layer served by the desktop sidecar.
+ * Typed startup failures preserved by the desktop runtime.
  *
  * @example
  * ```ts
- * import type { ChatHandlersLayer } from "@/runtime/Layer"
- * import { RuntimeLive } from "@/runtime/Layer"
+ * import type { DesktopStartupError } from "@/runtime/Layer"
  *
- * type RuntimeProvidesHandlers = typeof RuntimeLive extends ChatHandlersLayer ? true : false
- * const runtimeProvidesHandlers: RuntimeProvidesHandlers = true
- * console.log(runtimeProvidesHandlers)
+ * const startupFailureTag = (error: DesktopStartupError) => error._tag
+ * console.log(typeof startupFailureTag) // "function"
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type DesktopHandlersLayer = Layer.Layer<Layer.Success<typeof DesktopHandlersLive>>;
+export type DesktopStartupError = Config.ConfigError | PlatformError.PlatformError | ThreadStoreUnavailable;
+
+/**
+ * Fully-provided desktop handler layer with recoverable startup failures.
+ *
+ * @example
+ * ```ts
+ * import type { DesktopHandlersLayer } from "@/runtime/Layer"
+ * import { RuntimeLive } from "@/runtime/Layer"
+ *
+ * type RuntimeProvidesHandlers = typeof RuntimeLive extends DesktopHandlersLayer ? true : false
+ * const runtimeProvidesHandlers: RuntimeProvidesHandlers = true
+ * console.log(runtimeProvidesHandlers) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type DesktopHandlersLayer = Layer.Layer<Layer.Success<typeof DesktopHandlersLive>, DesktopStartupError>;
 
 /**
  * Select the assistant-turn kernel from the `CHAT_AGENT` env flag. `anthropic`

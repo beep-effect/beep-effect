@@ -1,5 +1,5 @@
 /**
- * Shared path-traversal safety guard for local file reads and writes.
+ * Shared path-traversal safety guards and atomic writes for local files.
  *
  * Given an allowed root directory and a candidate path, this module resolves
  * the real, canonical absolute path and fails closed (typed
@@ -7,15 +7,20 @@
  * absolute path outside the root, a `..` traversal, or a symlink that points
  * outside the root.
  *
- * The Effect-returning guard ({@link resolvePathWithinRoot}) uses the
+ * The Effect-returning guards ({@link resolvePathWithinRoot} and
+ * {@link resolvePathWithinCanonicalRoot}) use the
  * runtime-neutral `FileSystem` and `Path` services from the main `effect`
  * package so callers supply the platform implementation (for example
  * `@effect/platform-node`) through a layer. A pure validation
  * ({@link validateResolvedPath} / {@link isPathWithinRoot}) is provided for
  * already-resolved absolute strings where the filesystem is not consulted.
  *
- * Rejecting non-regular or device files is intentionally out of scope for this
- * helper; callers stat and reject those after the path is proven in-root.
+ * {@link writeFileWithinRootAtomically} and
+ * {@link writeFileWithinCanonicalRootAtomically} build on the containment
+ * guard with a private, unpredictable temporary directory and exclusive
+ * payload creation.
+ * Rejecting non-regular or device files is intentionally out of scope for
+ * reads; callers stat and reject those after the path is proven in-root.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -23,7 +28,7 @@
 
 import { $FileProcessingId } from "@beep/identity";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
-import { Effect, FileSystem, Path, Result } from "effect";
+import { Effect, Exit, FileSystem, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { dual, flow } from "effect/Function";
@@ -51,12 +56,13 @@ const $I = $FileProcessingId.create("PathSafety");
  */
 export const PathSafetyViolationReason = LiteralKit([
   "escapes-root",
+  "canonical-root-not-absolute",
   "root-not-resolvable",
   "candidate-not-resolvable",
 ]).pipe(
   $I.annoteSchema("PathSafetyViolationReason", {
     description:
-      "Fail-closed reasons a candidate path was rejected: it escapes the allowed root, or the root or candidate could not be canonicalized.",
+      "Fail-closed reasons a candidate path was rejected: it escapes the allowed root, the pinned canonical root is not absolute, or the root or candidate could not be canonicalized.",
   })
 );
 
@@ -153,6 +159,25 @@ export class PathSafetyError extends TaggedErrorClass<PathSafetyError>($I`PathSa
     });
 
   /**
+   * Construct a `canonical-root-not-absolute` violation.
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly canonicalRootNotAbsolute = (options: {
+    readonly root: string;
+    readonly candidate: string;
+  }): PathSafetyError =>
+    PathSafetyError.make({
+      candidate: options.candidate,
+      cause: O.none(),
+      message: `Pinned canonical root "${options.root}" must be an absolute path.`,
+      reason: "canonical-root-not-absolute",
+      resolved: O.none(),
+      root: options.root,
+    });
+
+  /**
    * Construct a `candidate-not-resolvable` violation.
    *
    * @category constructors
@@ -174,13 +199,22 @@ export class PathSafetyError extends TaggedErrorClass<PathSafetyError>($I`PathSa
 }
 
 /**
- * Normalize a path for comparison: collapse Windows-style separators to POSIX
- * separators and drop a single trailing separator. Drive letters and casing
- * are preserved so this stays a pure, lossless containment comparison.
+ * Detect roots that unambiguously use Windows drive or backslash syntax.
  */
-const normalizeForComparison: (value: string) => string = flow(Str.replaceAll("\\", "/"), (forward) =>
-  Str.length(forward) > 1 && Str.endsWith("/")(forward) ? Str.slice(0, Str.length(forward) - 1)(forward) : forward
-);
+const isWindowsStyleRoot = (root: string): boolean =>
+  Str.startsWith("\\")(root) || Eq.equals(Str.slice(1, 3)(root), ":\\") || Eq.equals(Str.slice(1, 3)(root), ":/");
+
+/**
+ * Normalize a pure path string according to its root's detected path style and
+ * drop a single trailing separator. POSIX roots deliberately preserve literal
+ * backslashes; Windows-style roots collapse them to forward slashes.
+ */
+const normalizeForComparison = (value: string, windowsStyle: boolean): string => {
+  const forward = windowsStyle ? Str.replaceAll("\\", "/")(value) : value;
+  return Str.length(forward) > 1 && Str.endsWith("/")(forward)
+    ? Str.slice(0, Str.length(forward) - 1)(forward)
+    : forward;
+};
 
 /**
  * Split a normalized path into non-empty segments.
@@ -192,9 +226,12 @@ const segmentsOf: (normalized: string) => ReadonlyArray<string> = flow(Str.split
  *
  * Returns `true` when `candidate` is the root itself or a descendant of it.
  * This consults no filesystem; it only compares canonicalized strings, so the
- * caller must pass paths that have already been resolved (for example by
- * {@link resolvePathWithinRoot}). A `..` segment surviving in `candidate`
- * always fails containment.
+ * caller must pass paths that have already been resolved. Windows drive and
+ * backslash roots normalize Windows separators, while a root beginning with
+ * `/` uses POSIX semantics and treats a backslash as a literal filename
+ * character. A `..` segment surviving in `candidate` always fails
+ * containment. Filesystem operations use their platform `Path` service rather
+ * than this style-inference helper.
  *
  * @example
  * ```ts
@@ -212,8 +249,9 @@ export const isPathWithinRoot: {
   (root: string, candidate: string): boolean;
   (candidate: string): (root: string) => boolean;
 } = dual(2, (root: string, candidate: string): boolean => {
-  const normalizedRoot = normalizeForComparison(root);
-  const normalizedCandidate = normalizeForComparison(candidate);
+  const windowsStyle = isWindowsStyleRoot(root);
+  const normalizedRoot = normalizeForComparison(root, windowsStyle);
+  const normalizedCandidate = normalizeForComparison(candidate, windowsStyle);
 
   if (A.some(segmentsOf(normalizedCandidate), Eq.equals(".."))) {
     return false;
@@ -226,6 +264,17 @@ export const isPathWithinRoot: {
   const rootPrefix = Str.endsWith("/")(normalizedRoot) ? normalizedRoot : `${normalizedRoot}/`;
   return Str.startsWith(rootPrefix)(normalizedCandidate);
 });
+
+/**
+ * Platform-aware containment for canonical absolute filesystem paths.
+ */
+const isResolvedPathWithinRoot = (path: Path.Path, root: string, candidate: string): boolean => {
+  const relative = path.relative(root, candidate);
+  return (
+    Eq.equals(relative, "") ||
+    (!path.isAbsolute(relative) && !Eq.equals(relative, "..") && !Str.startsWith(`..${path.sep}`)(relative))
+  );
+};
 
 /**
  * Pure, fail-closed validation for an already-resolved candidate path.
@@ -318,28 +367,7 @@ export const resolvePathWithinRoot: (options: {
       )
     );
 
-  // Resolve the candidate against the canonical root so a relative candidate
-  // is anchored in-root and an absolute candidate stays absolute.
-  const anchored = path.resolve(canonicalRoot, options.candidate);
-
-  // Canonicalize the deepest existing ancestor (following symlinks), then
-  // re-attach any not-yet-created suffix. This lets write targets that don't
-  // exist yet still be guarded without a realPath failure on the missing leaf.
-  const canonicalCandidate = yield* canonicalizeExisting(fs, path, anchored).pipe(
-    Effect.mapError((cause) =>
-      PathSafetyError.candidateNotResolvable({ root: options.root, candidate: options.candidate, cause })
-    )
-  );
-
-  if (!isPathWithinRoot(canonicalRoot, canonicalCandidate)) {
-    return yield* PathSafetyError.escapesRoot({
-      root: canonicalRoot,
-      candidate: options.candidate,
-      resolved: canonicalCandidate,
-    });
-  }
-
-  return canonicalCandidate;
+  return yield* resolveCandidateWithinCanonicalRoot(fs, path, canonicalRoot, options.candidate);
 });
 
 /**
@@ -375,4 +403,257 @@ const canonicalizeExisting: (
     suffix = A.prepend(suffix, path.basename(current));
     current = parent;
   }
+});
+
+/**
+ * Resolve a candidate against a root that has already been canonicalized.
+ * Keeping this separate lets multi-step operations bind their authority root
+ * once instead of following a caller-controlled root symlink at every check.
+ */
+const resolveCandidateWithinCanonicalRoot: (
+  fs: FileSystem.FileSystem,
+  path: Path.Path,
+  canonicalRoot: string,
+  candidate: string
+) => Effect.Effect<string, PathSafetyError> = Effect.fnUntraced(function* (fs, path, canonicalRoot, candidate) {
+  if (!path.isAbsolute(canonicalRoot)) {
+    return yield* PathSafetyError.canonicalRootNotAbsolute({ root: canonicalRoot, candidate });
+  }
+
+  // Resolve the candidate against the canonical root so a relative candidate
+  // is anchored in-root and an absolute candidate stays absolute.
+  const anchored = path.resolve(canonicalRoot, candidate);
+
+  // Canonicalize the deepest existing ancestor (following symlinks), then
+  // re-attach any not-yet-created suffix. This lets write targets that don't
+  // exist yet still be guarded without a realPath failure on the missing leaf.
+  const canonicalCandidate = yield* canonicalizeExisting(fs, path, anchored).pipe(
+    Effect.mapError((cause) => PathSafetyError.candidateNotResolvable({ root: canonicalRoot, candidate, cause }))
+  );
+
+  if (!isResolvedPathWithinRoot(path, canonicalRoot, canonicalCandidate)) {
+    return yield* PathSafetyError.escapesRoot({
+      root: canonicalRoot,
+      candidate,
+      resolved: canonicalCandidate,
+    });
+  }
+
+  return canonicalCandidate;
+});
+
+/**
+ * Resolve a candidate beneath a root that the caller already canonicalized.
+ *
+ * Unlike {@link resolvePathWithinRoot}, this guard deliberately does not call
+ * `FileSystem.realPath` on `canonicalRoot`. This lets a long-lived service pin
+ * its authority boundary during layer construction: if the lexical root is
+ * later replaced by a symlink, the candidate canonicalizes outside the pinned
+ * root and is rejected instead of silently transferring authority.
+ *
+ * The caller must supply an absolute path previously returned by
+ * `FileSystem.realPath`. Candidate paths and their deepest existing ancestors
+ * are still canonicalized on every invocation.
+ *
+ * @example
+ * ```ts
+ * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
+ * import * as BunPath from "@effect/platform-bun/BunPath"
+ * import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety"
+ * import { Effect, FileSystem, Layer } from "effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const fs = yield* FileSystem.FileSystem
+ *   const canonicalRoot = yield* fs.realPath(".")
+ *   return yield* resolvePathWithinCanonicalRoot({ canonicalRoot, candidate: "README.md" })
+ * }).pipe(Effect.provide(Layer.mergeAll(BunFileSystem.layer, BunPath.layer)))
+ *
+ * Effect.runPromise(program).then(console.log)
+ * ```
+ *
+ * @effects Canonicalizes the candidate path through `FileSystem.realPath` and depends on the platform `Path` service for candidate resolution; never re-canonicalizes the authority root.
+ * @category guards
+ * @since 0.0.0
+ */
+export const resolvePathWithinCanonicalRoot: (options: {
+  readonly canonicalRoot: string;
+  readonly candidate: string;
+}) => Effect.Effect<string, PathSafetyError, FileSystem.FileSystem | Path.Path> = Effect.fn(
+  "PathSafety.resolvePathWithinCanonicalRoot"
+)(function* (options) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+
+  return yield* resolveCandidateWithinCanonicalRoot(fs, path, options.canonicalRoot, options.candidate);
+});
+
+/**
+ * Shared implementation for atomic writes beneath an already-canonical root.
+ */
+const writeWithinCanonicalRootAtomically: (
+  fs: FileSystem.FileSystem,
+  path: Path.Path,
+  canonicalRoot: string,
+  candidate: string,
+  bytes: Uint8Array
+) => Effect.Effect<string, PathSafetyError | PlatformError> = Effect.fnUntraced(
+  function* (fs, path, canonicalRoot, candidate, bytes) {
+    const initialTarget = yield* resolveCandidateWithinCanonicalRoot(fs, path, canonicalRoot, candidate);
+    const initialTargetDirectory = yield* resolveCandidateWithinCanonicalRoot(
+      fs,
+      path,
+      canonicalRoot,
+      path.dirname(initialTarget)
+    );
+
+    yield* fs.makeDirectory(initialTargetDirectory, { recursive: true });
+
+    const checkedTarget = yield* resolveCandidateWithinCanonicalRoot(fs, path, canonicalRoot, candidate);
+    const checkedTargetDirectory = yield* resolveCandidateWithinCanonicalRoot(
+      fs,
+      path,
+      canonicalRoot,
+      path.dirname(checkedTarget)
+    );
+
+    return yield* Effect.acquireUseRelease(
+      fs.makeTempDirectory({
+        directory: checkedTargetDirectory,
+        prefix: `.${path.basename(checkedTarget)}.tmp-`,
+      }),
+      Effect.fnUntraced(function* (temporaryDirectory) {
+        const checkedTemporaryDirectory = yield* resolveCandidateWithinCanonicalRoot(
+          fs,
+          path,
+          checkedTargetDirectory,
+          temporaryDirectory
+        );
+        const temporaryPath = path.join(checkedTemporaryDirectory, "payload");
+
+        yield* fs.writeFile(temporaryPath, bytes, { flag: "wx", mode: 0o600 });
+
+        const finalTarget = yield* resolveCandidateWithinCanonicalRoot(fs, path, canonicalRoot, candidate);
+        yield* fs.rename(temporaryPath, finalTarget);
+        return finalTarget;
+      }),
+      (temporaryDirectory, exit) => {
+        const cleanup = fs.remove(temporaryDirectory, { force: true, recursive: true });
+        return Exit.isSuccess(exit)
+          ? cleanup.pipe(
+              Effect.catch(() =>
+                Effect.logWarning(
+                  "Failed to remove a committed atomic-write temporary directory; the target remains committed."
+                )
+              )
+            )
+          : cleanup;
+      }
+    );
+  }
+);
+
+/**
+ * Write bytes atomically beneath a root that the caller already canonicalized.
+ *
+ * This is the mutation counterpart to
+ * {@link resolvePathWithinCanonicalRoot}: it never re-canonicalizes
+ * `canonicalRoot`, so a long-lived service does not transfer its authority if
+ * the configured root path is later replaced by a symlink. All candidate,
+ * parent, temporary-directory, and pre-rename containment checks still run.
+ *
+ * The caller must supply an absolute path previously returned by
+ * `FileSystem.realPath`.
+ *
+ * @example
+ * ```ts
+ * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
+ * import * as BunPath from "@effect/platform-bun/BunPath"
+ * import { writeFileWithinCanonicalRootAtomically } from "@beep/file-processing/PathSafety"
+ * import { Effect, FileSystem, Layer } from "effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const fs = yield* FileSystem.FileSystem
+ *   const canonicalRoot = yield* fs.realPath(".")
+ *   return yield* writeFileWithinCanonicalRootAtomically({
+ *     canonicalRoot,
+ *     candidate: "artifacts/report.txt",
+ *     bytes: new TextEncoder().encode("ready")
+ *   })
+ * }).pipe(Effect.provide(Layer.mergeAll(BunFileSystem.layer, BunPath.layer)))
+ *
+ * Effect.runPromise(program).then(console.log)
+ * ```
+ *
+ * @effects Canonicalizes candidate paths, creates destination directories and a private temporary directory, writes a new file exclusively, atomically renames it, and attempts to remove temporary artifacts; cleanup failure after a committed rename is logged without changing the successful result, and the authority root is never re-canonicalized.
+ * @category resource-management
+ * @since 0.0.0
+ */
+export const writeFileWithinCanonicalRootAtomically: (options: {
+  readonly canonicalRoot: string;
+  readonly candidate: string;
+  readonly bytes: Uint8Array;
+}) => Effect.Effect<string, PathSafetyError | PlatformError, FileSystem.FileSystem | Path.Path> = Effect.fn(
+  "PathSafety.writeFileWithinCanonicalRootAtomically"
+)(function* (options) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+
+  return yield* writeWithinCanonicalRootAtomically(fs, path, options.canonicalRoot, options.candidate, options.bytes);
+});
+
+/**
+ * Write bytes atomically to a root-contained destination.
+ *
+ * The destination is containment-checked before and after parent-directory
+ * creation. The bytes are then written with exclusive creation and mode
+ * `0o600` inside an unpredictable temporary directory beside the destination,
+ * before an atomic rename promotes them into place. Temporary artifacts are
+ * removed on success, failure, or interruption. Cleanup remains fail-closed
+ * before promotion. After the rename commits the target, cleanup is
+ * best-effort so a leftover empty temporary directory cannot make callers
+ * treat the committed write as failed and retry it.
+ *
+ * This prevents writes through a pre-positioned predictable temporary-file
+ * symlink. Callers that allow another principal to rename entries in the
+ * destination directory still need an operating-system boundary with
+ * directory-handle-relative operations for complete concurrent-adversary
+ * protection.
+ *
+ * @example
+ * ```ts
+ * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
+ * import * as BunPath from "@effect/platform-bun/BunPath"
+ * import { writeFileWithinRootAtomically } from "@beep/file-processing/PathSafety"
+ * import { Effect, Layer } from "effect"
+ *
+ * const program = writeFileWithinRootAtomically({
+ *   root: ".",
+ *   candidate: "artifacts/report.txt",
+ *   bytes: new TextEncoder().encode("ready")
+ * }).pipe(Effect.provide(Layer.mergeAll(BunFileSystem.layer, BunPath.layer)))
+ *
+ * Effect.runPromise(program).then(console.log)
+ * ```
+ *
+ * @effects Canonicalizes paths, creates destination directories and a private temporary directory, writes a new file exclusively, atomically renames it, and attempts to remove temporary artifacts; cleanup failure after a committed rename is logged without changing the successful result.
+ * @category resource-management
+ * @since 0.0.0
+ */
+export const writeFileWithinRootAtomically: (options: {
+  readonly root: string;
+  readonly candidate: string;
+  readonly bytes: Uint8Array;
+}) => Effect.Effect<string, PathSafetyError | PlatformError, FileSystem.FileSystem | Path.Path> = Effect.fn(
+  "PathSafety.writeFileWithinRootAtomically"
+)(function* (options) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const canonicalRoot = yield* fs
+    .realPath(options.root)
+    .pipe(
+      Effect.mapError((cause) =>
+        PathSafetyError.rootNotResolvable({ root: options.root, candidate: options.candidate, cause })
+      )
+    );
+  return yield* writeWithinCanonicalRootAtomically(fs, path, canonicalRoot, options.candidate, options.bytes);
 });
