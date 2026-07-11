@@ -1074,13 +1074,7 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
           })
         )
       );
-      lastProjectionRequest = O.some(
-        WorkerCommand.make({
-          kind: "projectGraph",
-          snapshot,
-          options,
-        })
-      );
+      lastProjectionRequest = O.some(command);
       requeuedAfterFailure = false;
       get.set(ontologyGraphErrorAtom, O.none());
       activeWorker.postMessage(command);
