@@ -1924,13 +1924,11 @@
         "from": "@beep/ontology-config",
         "allow": [
           "@beep/identity",
-          "@beep/ontology-config",
-          "@beep/schema"
+          "@beep/ontology-config"
         ],
         "allowTypeOnly": [
           "@beep/identity",
-          "@beep/ontology-config",
-          "@beep/schema"
+          "@beep/ontology-config"
         ]
       },
       {
