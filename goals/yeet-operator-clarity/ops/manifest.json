@@ -9,7 +9,7 @@
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/yeet-operator-clarity",
-  "lifecycle": "active",
+  "lifecycle": "superseded",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
@@ -60,32 +60,32 @@
     {
       "id": "P0",
       "name": "Grounding",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Packet",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Status",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Summaries and Hints",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Docs and Proof",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Closeout",
-      "status": "in_progress"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [

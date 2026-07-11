@@ -3,13 +3,13 @@
   "initiative": {
     "id": "codex-security-findings-2026-06-17",
     "title": "Codex Security Findings (2026-06-17)",
-    "status": "complete",
+    "status": "completed-retained",
     "created": "2026-06-17",
     "updated": "2026-06-18",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-06-17",
-  "lifecycle": "complete",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
@@ -289,5 +289,7 @@
     "mergeCommit": "dc2e44fb70773cb3b4498fa767d85e467ad733d5",
     "mergedAt": "2026-06-18T09:03:34Z",
     "findingsClosedAt": "2026-06-18"
-  }
+  },
+  "statusNote": "legacy status: complete",
+  "mission": "Triage, remediate-by-default, and close all 71 Codex Cloud security findings from scan `f4128216e9c08191b0431ea2a05322bb` in a single, mergeable PR on `security/6-17-2026`. Every finding ends Closed in Codex with the correct reason (`False positive` / `Won't fix` / `Already fixed`)."
 }

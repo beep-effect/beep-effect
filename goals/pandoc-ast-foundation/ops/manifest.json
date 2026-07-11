@@ -44,22 +44,22 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Close",
-      "status": "completed"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -81,5 +81,6 @@
     "The implementation would exceed named scope.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "mission": "Graduate the first DOCX round-trip interop slice into a pure schema-first `@beep/pandoc-ast` foundation package. The package models Pandoc JSON, maps the supported Md-core profile to and from `@beep/md`, and records DOCX-origin gaps as structured compatibility issues."
 }

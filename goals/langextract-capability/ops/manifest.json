@@ -63,39 +63,39 @@
     {
       "id": "P0",
       "name": "Packet Bootstrap",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Parallel Research",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Research Synthesis",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Packet Finalization",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Implement",
-      "status": "completed",
+      "status": "complete",
       "note": "@beep/langextract shipped on main 2026-06-07/08 (3961138de6 + hardening fixes through 33b0e0b378) with source, tests, and docs at packages/foundation/capability/langextract."
     },
     {
       "id": "P5",
       "name": "Quality Review Fix Loop",
-      "status": "completed",
+      "status": "complete",
       "note": "Subsumed by the repo-wide crispening/standards remediation waves (PRs #294-#326) that ran over this package with ratchets now blocking; a packet-local review loop would duplicate that coverage."
     },
     {
       "id": "P6",
       "name": "Yeet And PR Babysitting",
-      "status": "completed",
+      "status": "complete",
       "note": "Capability is consumed in production by the office-action extraction rung (PR #265, merged 2026-06-18); packet closed retroactively 2026-07-11."
     }
   ],
@@ -150,5 +150,6 @@
     "The same blocker repeats after reasonable investigation.",
     "Provider-specific runtime work starts entering the foundation package.",
     "Research proves the foundation capability route needs a standards decision."
-  ]
+  ],
+  "mission": "Deliver a canonical research-first execution packet for `@beep/langextract`, an Effect v4-native foundation capability for LLM-powered structured extraction with source-grounded character spans."
 }

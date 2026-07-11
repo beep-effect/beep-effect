@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -34,14 +34,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — re-verify the audit inventory (status-token census, manifest-less
-packets, GOAL.md violations) and commit it as the migration's ground truth.
+Closed. All phases complete; shipped via
+[PR #373](https://github.com/beep-effect/beep-effect/pull/373).
 
 ## Latest Evidence
 
-Not started. Packet authored 2026-07-11 from the goals-system recommendations
-and the PR #365 housekeeping sweep, which demonstrated every targeted failure
-mode by hand before this packet automates it.
+Shipped 2026-07-11 via [PR #373](https://github.com/beep-effect/beep-effect/pull/373)
+(all checks green, MERGEABLE). Phase oracles in [`history/`](./history):
+P0 census, P1 migration convergence (83/83 manifests decode), P2 index
+drift check, P3 doctor + verify wiring, P4 PR-to-mergeable. Closeout
+reflection in
+[`history/reflections/2026-07-11-claude.md`](./history/reflections/2026-07-11-claude.md);
+packet closed with `bun run beep goals set-status goals-doctor
+completed-retained` (dogfood).
 
 ## Notes
 

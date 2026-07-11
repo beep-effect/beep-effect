@@ -208,5 +208,6 @@
       "findings/CSF-011-redacted-medium-finding.md",
       "findings/CSF-012-redacted-medium-finding.md"
     ]
-  }
+  },
+  "mission": "Triage, remediate-by-default, and close all 52 Codex Cloud security findings from scan `5138685acf488191ad6a5ee51a84452d` (3 High / 15 Medium / 18 Low / 16 Informational) in a single, mergeable PR on `@slop/june-8-2026`."
 }

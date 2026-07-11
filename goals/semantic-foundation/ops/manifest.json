@@ -64,17 +64,17 @@
     {
       "id": "M2",
       "name": "Classification Schemes",
-      "status": "gated"
+      "status": "pending"
     },
     {
       "id": "M3",
       "name": "Docketing and Party Roles",
-      "status": "gated"
+      "status": "pending"
     },
     {
       "id": "M4",
       "name": "ClaimGate Shapes",
-      "status": "gated"
+      "status": "pending"
     },
     {
       "id": "P3",

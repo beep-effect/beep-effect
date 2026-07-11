@@ -238,19 +238,19 @@
     {
       "id": "P0",
       "name": "Packet Bootstrap",
-      "status": "completed",
+      "status": "complete",
       "exitCriteriaSummary": "Goal packet created with package topology, operation model, driver split, CLI proof, and V1 cutline."
     },
     {
       "id": "P0.5",
       "name": "Packet Hardening",
-      "status": "completed",
+      "status": "complete",
       "exitCriteriaSummary": "Goal packet hardened with architecture precedence, vertical proof sequencing, engine matrix, manifest contract, and error boundaries."
     },
     {
       "id": "P1",
       "name": "Minimum Vertical File-Processing Proof",
-      "status": "completed",
+      "status": "complete",
       "exitCriteriaSummary": "@beep/file-processing is scaffolded and imported by @beep/tika, @beep/libpff, @beep/repo-cli, and law-practice; P1 driver and CLI manifest proofs landed in PR #262."
     },
     {

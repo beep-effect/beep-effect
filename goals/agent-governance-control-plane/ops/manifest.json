@@ -1,6 +1,5 @@
 {
   "spec": "agent-governance-control-plane",
-  "status": "pending",
   "stage": "spec-package-bootstrap",
   "created": "2026-03-31",
   "updated": "2026-03-31",
@@ -99,5 +98,11 @@
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
-  }
+  },
+  "initiative": {
+    "id": "agent-governance-control-plane",
+    "title": "Agent Governance Control Plane",
+    "status": "paused"
+  },
+  "statusNote": "legacy status: pending"
 }

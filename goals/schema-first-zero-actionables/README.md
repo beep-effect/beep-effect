@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `completed` (2026-07-07)
+Lifecycle: `completed-retained` (2026-07-07)
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

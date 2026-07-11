@@ -71,32 +71,32 @@
     {
       "id": "P0",
       "name": "Gate & Quick Strikes",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Agent Effectiveness",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Pipeline rqt-011+ (Fable-direct)",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Worktrees",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Yeet: PR to mergeable",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Close",
-      "status": "completed"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

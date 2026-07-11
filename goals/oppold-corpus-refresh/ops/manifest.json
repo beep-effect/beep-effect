@@ -43,32 +43,32 @@
     {
       "id": "P0",
       "name": "Source Map & Guardrails",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Tooling",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Salvage, Catalog & Dedupe",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Archive Move",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Verify",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Close",
-      "status": "completed"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -86,5 +86,6 @@
     "The implementation would exceed salvage, catalog, dedupe, and archive-move scope.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "mission": "Consolidate the post-June exports/downloads from the user's data-home boundary into the existing governed corpus home at `<CORPUS_ROOT>`, append them under a new run-scoped raw subtree, catalog and dedupe them against prior runs, then archive-move the verified originals."
 }
