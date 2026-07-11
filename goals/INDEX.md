@@ -23,7 +23,7 @@ drifts from the manifests, and merge conflicts are resolved by regenerating.
 | [gov-legal-data-driver-codegen](./gov-legal-data-driver-codegen/README.md) | Gov/Legal Data Driver Codegen | 3/4 | 2026-07-11 | — |
 | [gov-legal-data-driver-delivery](./gov-legal-data-driver-delivery/README.md) | Gov/Legal Data Driver Delivery | 0/7 | 2026-07-11 | — |
 | [knowledge-workspace](./knowledge-workspace/README.md) | Knowledge Workspace | — | — | — |
-| [legal-document-intake](./legal-document-intake/README.md) | Legal Document Intake | 2/8 | 2026-07-09 | — |
+| [legal-document-intake](./legal-document-intake/README.md) | Legal Document Intake | 3/8 | 2026-07-11 | — |
 | [lint-advisory-hardening](./lint-advisory-hardening/README.md) | Lint Advisory Hardening | 1/4 | 2026-06-12 | Make root lint advisory output actionable by eliminating the current nonfatal backlog, hardening false-positive-prone c… |
 | [one-round-loop](./one-round-loop/README.md) | One-Round Loop | 2/5 | 2026-07-11 | — |
 | [ontology-agent-surface](./ontology-agent-surface/README.md) | Ontology Agent Surface | 0/4 | 2026-07-11 | Expose the ontology workbench to agents through a curated, task-oriented MCP toolkit on the professional-desktop sideca… |
