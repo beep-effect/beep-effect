@@ -11,8 +11,12 @@ description: "DEPRECATED (2026-07-08 memory decision): Graphiti is write-frozen,
 > use Cognee for durable dev-memory.
 
 ## Use When
-- You need cross-session memory lookup or writeback.
+- You need READ-ONLY historical lookup of pre-freeze Graphiti memory.
 - You see Graphiti MCP startup or handshake failures.
+
+Never select this skill for memory WRITEBACK: the write path is frozen
+(2026-07-08 decision). Route new durable memory to Cognee
+(`cognee-memory:cognee-remember`).
 
 ## Quick Smoke
 1. Call `mcp__graphiti-memory__get_status`.
@@ -21,7 +25,7 @@ description: "DEPRECATED (2026-07-08 memory decision): Graphiti is write-frozen,
 ## Representative Calls
 - Read status: `get_status`.
 - Recall facts: `search_memory_facts`.
-- Save findings: `add_memory`.
+- Save findings: FROZEN — do not call `add_memory`; use Cognee instead.
 
 ## Common Failures
 - `group_ids` type error.

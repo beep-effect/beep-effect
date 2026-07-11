@@ -52,7 +52,10 @@ degradation history, operational direction of travel, and ontology alignment.
   entries added to 05).
 - `AGENTS.md`/`CLAUDE.md` name Cognee (bounded) as the durable dev-memory;
   Graphiti demoted to read-only donor pending the port milestone.
-- `.mcp.json` keeps graphiti-memory until the port lands (write-freeze only).
+- Both memory servers are operator-level MCP config, not repo `.mcp.json`
+  (which carries no memory server). The operator's config keeps
+  graphiti-memory read-available until the port lands (write-freeze only);
+  Cognee likewise runs from the operator's plugin/user settings.
 - `explorations/agent-memory-tiers-bitemporal-edges` receives the research
   input for its open forks (Apache-2.0 Graphiti shapes only; Postgres-native
   reaffirmed; invalidate-don't-delete; review-state enum).

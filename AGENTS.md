@@ -77,10 +77,13 @@ Ship reliable code with effect-first and schema-first patterns.
 
 - Cognee (`beepintir` MCP + cognee-memory plugin hooks/skills) is the sole
   always-on durable dev-memory (2026-07-08 decision,
-  `standards/memory-architecture/04-decision-log.md`). Bounded use only:
-  embedded/local or all-Postgres profile; semantic memory is a managed cache
-  (TTL, pruning, consolidation, node-set scoping) — never source of truth.
-  No uncited LLM output crosses the authority boundary.
+  `standards/memory-architecture/04-decision-log.md`). It is OPERATOR-LEVEL
+  config (user plugin + user MCP settings), not provisioned by this repo's
+  `.mcp.json` — checkouts without it fall back to file memory and repo docs,
+  by design. Bounded use only: embedded/local or all-Postgres profile;
+  semantic memory is a managed cache (TTL, pruning, consolidation, node-set
+  scoping) — never source of truth. No uncited LLM output crosses the
+  authority boundary.
 - File memory (this file via the `CLAUDE.md` symlink, auto-memory
   `MEMORY.md`) remains Layer 1 for durable curated knowledge.
 - `graphiti-memory` is DEPRECATED: write-frozen, read-available for
