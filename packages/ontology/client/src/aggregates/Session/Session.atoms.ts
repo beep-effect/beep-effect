@@ -971,6 +971,8 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
 
   let worker: O.Option<Worker> = O.none();
   let previousProjection: O.Option<OntologyGraphProjection> = O.none();
+  let lastProjectionRequest: O.Option<WorkerCommand> = O.none();
+  let requeuedAfterFailure = false;
 
   const terminateWorker = (): void => {
     pipe(worker, O.match({ onNone: () => undefined, onSome: (currentWorker) => currentWorker.terminate() }));
@@ -984,6 +986,7 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
     get.set(ontologyGraphBackendAtom, O.none());
     get.set(ontologyGraphErrorAtom, O.some(message));
     terminateWorker();
+    requeueLastProjectionRequest();
   };
 
   const makeWorker = (): Worker => {
@@ -994,11 +997,13 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
         diffDatasetsSucceeded: () => undefined,
         computeSnapshotSucceeded: () => undefined,
         projectGraphSucceeded: ({ result }) => {
+          requeuedAfterFailure = false;
           get.set(ontologyGraphErrorAtom, O.none());
           previousProjection = O.some(result);
           get.set(ontologyGraphProjectionAtom, O.some(result));
         },
         applyGraphDeltaSucceeded: ({ result }) => {
+          requeuedAfterFailure = false;
           get.set(ontologyGraphErrorAtom, O.none());
           previousProjection = O.some(result);
           get.set(ontologyGraphProjectionAtom, O.some(result));
@@ -1024,6 +1029,22 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
         return nextWorker;
       })
     );
+
+  const requeueLastProjectionRequest = (): void => {
+    if (requeuedAfterFailure) {
+      return;
+    }
+    pipe(
+      lastProjectionRequest,
+      O.match({
+        onNone: () => undefined,
+        onSome: (command) => {
+          requeuedAfterFailure = true;
+          currentWorker().postMessage(command);
+        },
+      })
+    );
+  };
 
   get.subscribe(
     graphRequestAtom,
@@ -1053,6 +1074,8 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
           })
         )
       );
+      lastProjectionRequest = O.some(command);
+      requeuedAfterFailure = false;
       get.set(ontologyGraphErrorAtom, O.none());
       activeWorker.postMessage(command);
       get.set(ontologyGraphDeltaAtom, O.none());
