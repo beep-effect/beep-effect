@@ -37,7 +37,7 @@ drifts from the manifests, and merge conflicts are resolved by regenerating.
 | [oip-web-launch](./oip-web-launch/README.md) | OIP Web Launch | — | — | — |
 | [oip-web-production-hardening](./oip-web-production-hardening/README.md) | OIP Web Production Hardening | — | — | — |
 | [one-round-loop](./one-round-loop/README.md) | One-Round Loop | 2/5 | 2026-07-11 | — |
-| [project-intelligence](./project-intelligence/README.md) | Project Intelligence | 0/6 | 2026-07-11 | — |
+| [project-intelligence](./project-intelligence/README.md) | Project Intelligence | 1/6 | 2026-07-11 | — |
 | [repo-codegraph](./repo-codegraph/README.md) | Repo Codegraph | — | 2026-07-11 | Build a deterministic-first repo codegraph lookup and retrieval surface for coding agents. |
 | [schema-first-v4-capabilities](./schema-first-v4-capabilities/README.md) | Schema-First V4 Capabilities | 3/6 | 2026-07-11 | — |
 | [stack-installer](./stack-installer/README.md) | Stack Installer | 1/7 | 2026-07-11 | — |
