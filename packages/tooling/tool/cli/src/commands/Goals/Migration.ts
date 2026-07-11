@@ -112,7 +112,7 @@ export const GOAL_PHASE_STATUS_MIGRATIONS: Readonly<Record<string, GoalPhaseStat
  * console.log(O.getOrNull(migrateGoalStatusToken("active"))) // "active"
  * console.log(O.isNone(migrateGoalStatusToken("wat"))) // true
  * ```
- * @category migration
+ * @category mapping
  * @since 0.0.0
  */
 export const migrateGoalStatusToken = (token: string): O.Option<GoalStatusValue> =>
@@ -131,7 +131,7 @@ export const migrateGoalStatusToken = (token: string): O.Option<GoalStatusValue>
  * console.log(O.getOrNull(migrateGoalPhaseStatusToken("done"))) // "complete"
  * console.log(O.isNone(migrateGoalPhaseStatusToken("wat"))) // true
  * ```
- * @category migration
+ * @category mapping
  * @since 0.0.0
  */
 export const migrateGoalPhaseStatusToken = (token: string): O.Option<GoalPhaseStatusValue> =>
@@ -259,7 +259,7 @@ const backfillFor = (slug: string): O.Option<GoalManifestBackfill> =>
  * const text = buildBackfillManifestText(backfill, O.none())
  * console.log(text.includes('"initiative-manifest/v2"')) // true
  * ```
- * @category migration
+ * @category constructors
  * @since 0.0.0
  */
 export const buildBackfillManifestText = (backfill: GoalManifestBackfill, readmeText: O.Option<string>): string => {
@@ -369,7 +369,7 @@ const slugFromPacketPath = (packetPath: string): string =>
  * )
  * console.log(plan.edits.length > 0) // true
  * ```
- * @category migration
+ * @category use-cases
  * @since 0.0.0
  */
 export const planGoalPacketMigration = (record: GoalPacketRecord): GoalPacketMigration => {

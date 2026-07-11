@@ -108,7 +108,7 @@ const truncateCell = (text: string): string =>
  * const content = renderPortfolioIndex([], [])
  * console.log(content.startsWith("# Goals Index")) // true
  * ```
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderPortfolioIndex = (
@@ -170,7 +170,7 @@ export const renderPortfolioIndex = (
  *
  * console.log(Effect.isEffect(buildPortfolioIndexContent()))
  * ```
- * @category rendering
+ * @category queries
  * @since 0.0.0
  */
 export const buildPortfolioIndexContent = Effect.fn("Goals.buildPortfolioIndexContent")(function* () {

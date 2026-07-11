@@ -198,7 +198,7 @@ const finding = (
  * const result = classifyGoalDoctorFindings({ current: [current], baselineKeys: [] })
  * console.log(result.introduced.length) // 1
  * ```
- * @category classification
+ * @category utilities
  * @since 0.0.0
  */
 export const classifyGoalDoctorFindings = (input: {

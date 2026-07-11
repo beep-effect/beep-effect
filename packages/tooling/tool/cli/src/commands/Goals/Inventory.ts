@@ -105,7 +105,7 @@ const readOptionalFile = Effect.fn("Goals.readOptionalFile")(function* (filePath
  *
  * console.log(Effect.isEffect(listGoalPackets()))
  * ```
- * @category discovery
+ * @category queries
  * @since 0.0.0
  */
 export const listGoalPackets = Effect.fn("Goals.listGoalPackets")(function* () {
@@ -204,7 +204,7 @@ const MISSION_MAX_CHARS = 300;
  *
  * console.log(O.getOrNull(readmeLifecycleToken("Lifecycle: `active`"))) // "active"
  * ```
- * @category readme
+ * @category parsing
  * @since 0.0.0
  */
 export const readmeLifecycleToken = (readme: string): O.Option<string> => {
@@ -227,7 +227,7 @@ export const readmeLifecycleToken = (readme: string): O.Option<string> => {
  * const next = rewriteReadmeLifecycleToken("Lifecycle: `active`", "paused")
  * console.log(O.getOrNull(next)) // "Lifecycle: `paused`"
  * ```
- * @category readme
+ * @category formatting
  * @since 0.0.0
  */
 export const rewriteReadmeLifecycleToken = (readme: string, token: string): O.Option<string> => {
@@ -254,7 +254,7 @@ export const rewriteReadmeLifecycleToken = (readme: string, token: string): O.Op
  *
  * console.log(O.getOrNull(readmeTitle("# Goals Doctor\n"))) // "Goals Doctor"
  * ```
- * @category readme
+ * @category parsing
  * @since 0.0.0
  */
 export const readmeTitle = (readme: string): O.Option<string> => {
@@ -279,7 +279,7 @@ export const readmeTitle = (readme: string): O.Option<string> => {
  * const readme = "# Title\n\n## Mission\n\nShip the thing.\n\n## Next\n"
  * console.log(O.getOrNull(readmeMissionLine(readme))) // "Ship the thing."
  * ```
- * @category readme
+ * @category parsing
  * @since 0.0.0
  */
 export const readmeMissionLine = (readme: string): O.Option<string> => {
@@ -309,6 +309,10 @@ export const readmeMissionLine = (readme: string): O.Option<string> => {
   return mission !== "" && Str.length(mission) <= MISSION_MAX_CHARS ? O.some(mission) : O.none();
 };
 
+const isPhaseArray = (
+  phases: ReadonlyArray<GoalPhase> | Readonly<Record<string, GoalPhase>>
+): phases is ReadonlyArray<GoalPhase> => A.isArray(phases);
+
 /**
  * Flatten a manifest's phases into entries regardless of wire shape
  * (array-shaped or record-shaped `phases`).
@@ -333,13 +337,9 @@ export const readmeMissionLine = (readme: string): O.Option<string> => {
  * })
  * console.log(goalManifestPhases(manifest).length) // 1
  * ```
- * @category manifests
+ * @category getters
  * @since 0.0.0
  */
-const isPhaseArray = (
-  phases: ReadonlyArray<GoalPhase> | Readonly<Record<string, GoalPhase>>
-): phases is ReadonlyArray<GoalPhase> => A.isArray(phases);
-
 export const goalManifestPhases = (manifest: GoalManifest): ReadonlyArray<GoalPhase> => {
   const phases = manifest.phases;
   if (phases === undefined) {
