@@ -7,7 +7,7 @@ import {
 } from "@beep/documents-domain/values/Taxonomy";
 import { DocumentsServerLive } from "@beep/documents-server/layer";
 import { Document } from "@beep/documents-use-cases/server";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect, it } from "@effect/vitest";
@@ -17,6 +17,7 @@ import { Effect, FileSystem, Layer, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { FastCheck as fc } from "effect/testing";
 
 const DocumentsIntakeTestLayer = DocumentsServerLive.pipe(
   Layer.provideMerge(BunFileSystem.layer),
@@ -42,6 +43,22 @@ const filedConceptId = (filing: FilingOutcome) =>
   });
 
 describe("@beep/documents-server DocumentIntake", () => {
+  it("round-trips dropped-file bytes through the Base64 wire codec with schema-derived arbitraries", () => {
+    const decode = S.decodeUnknownResult(S.Uint8ArrayFromBase64);
+    const encode = S.encodeResult(S.Uint8ArrayFromBase64);
+    const equivalent = S.toEquivalence(S.Uint8ArrayFromBase64);
+
+    fc.assert(
+      fc.property(S.toArbitrary(S.Uint8ArrayFromBase64), (bytes) => {
+        const encoded = Result.getOrThrow(encode(bytes));
+        const decoded = Result.getOrThrow(decode(encoded));
+
+        expect(equivalent(decoded, bytes)).toBe(true);
+      }),
+      fcRuns(10)
+    );
+  });
+
   it.effect("materializes a dropped file atomically into the deterministic taxonomy path", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
