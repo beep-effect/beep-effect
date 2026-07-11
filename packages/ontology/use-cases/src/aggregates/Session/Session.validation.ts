@@ -18,6 +18,7 @@ import {
   makeNamedNode,
   makeQuad,
   NamedNode,
+  ObjectTerm,
   PrefixMap,
   serializeQuad,
   serializeTerm,
@@ -54,7 +55,7 @@ import {
 } from "./Session.ports.js";
 import { inferredSessionGraphPartitions, OntologyInferenceResult } from "./Session.reasoner.js";
 import type { SessionGraphPartitions } from "@beep/ontology-domain/aggregates/Session";
-import type { Dataset, ObjectTerm, Quad, Subject } from "@beep/rdf/Rdf";
+import type { Dataset, Quad, Subject } from "@beep/rdf/Rdf";
 import type { ShaclValidationError, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import type { OntologyFileStoreError, TurtleCodecError } from "./Session.ports.js";
 
@@ -71,7 +72,12 @@ const SH_TARGET_NODE = makeNamedNode(`${SHACL_NAMESPACE}targetNode`);
 const SH_MIN_COUNT = makeNamedNode(`${SHACL_NAMESPACE}minCount`);
 const SH_MAX_COUNT = makeNamedNode(`${SHACL_NAMESPACE}maxCount`);
 const SH_DATATYPE = makeNamedNode(`${SHACL_NAMESPACE}datatype`);
+const SH_CLASS = makeNamedNode(`${SHACL_NAMESPACE}class`);
 const SH_HAS_VALUE = makeNamedNode(`${SHACL_NAMESPACE}hasValue`);
+const SH_MIN_COUNT_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}MinCountConstraintComponent`);
+const SH_DATATYPE_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}DatatypeConstraintComponent`);
+const SH_CLASS_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}ClassConstraintComponent`);
+const SH_HAS_VALUE_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}HasValueConstraintComponent`);
 const VOID_DATASET = makeNamedNode(`${VOID_NAMESPACE}Dataset`);
 const VOID_TRIPLES = makeNamedNode(`${VOID_NAMESPACE}triples`);
 const DCAT_DATASET = makeNamedNode(`${DCAT_NAMESPACE}Dataset`);
@@ -408,6 +414,7 @@ const propertyShapesFor = (dataset: Dataset, shapeSubject: Subject): ReadonlyArr
                 minCount: firstObjectInteger(dataset, propertySubject, SH_MIN_COUNT),
                 maxCount: firstObjectInteger(dataset, propertySubject, SH_MAX_COUNT),
                 datatype: firstObjectNamedNode(dataset, propertySubject, SH_DATATYPE),
+                class: firstObjectNamedNode(dataset, propertySubject, SH_CLASS),
                 hasValue: firstObjectTerm(dataset, propertySubject, SH_HAS_VALUE),
               })
             )
@@ -487,25 +494,142 @@ const matchingRepairTarget = (
             ),
         })
       );
-      return shapeMatches && property.path.value === violation.path.value && O.isSome(property.hasValue);
+      return shapeMatches && property.path.value === violation.path.value;
     })
   );
 
-const repairOperation = (violation: ShaclValidationViolation, target: ShapeRepairTarget): O.Option<ChangeOperation> =>
+type RepairSafety = "additive" | "corrective";
+
+type RepairCandidate = {
+  readonly operations: ReadonlyArray<ChangeOperation>;
+  readonly safety: RepairSafety;
+};
+
+type RepairStrategy = {
+  readonly component: NamedNode;
+  readonly propose: (violation: ShaclValidationViolation, target: ShapeRepairTarget) => O.Option<RepairCandidate>;
+};
+
+const assertedAdd = (subject: Subject, predicate: NamedNode, object: ObjectTerm): ChangeOperation =>
+  ChangeOperation.make({
+    kind: "addQuad",
+    partition: "asserted",
+    quad: makeQuad(subject, predicate, object),
+  });
+
+const additiveValueCandidate = (
+  violation: ShaclValidationViolation,
+  target: ShapeRepairTarget
+): O.Option<RepairCandidate> =>
   pipe(
     target.property.hasValue,
-    O.map((hasValue) =>
-      ChangeOperation.make({
-        kind: "addQuad",
-        partition: "asserted",
-        quad: makeQuad(makeNamedNode(violation.focusNode), target.property.path, hasValue),
-      })
+    O.map(
+      (hasValue) =>
+        ({
+          operations: [assertedAdd(makeNamedNode(violation.focusNode), target.property.path, hasValue)],
+          safety: "additive",
+        }) satisfies RepairCandidate
     )
+  );
+
+const literalWithDatatype = (value: ObjectTerm, datatype: NamedNode): O.Option<ObjectTerm> =>
+  ObjectTerm.match(value, {
+    BlankNode: O.none<ObjectTerm>,
+    Literal: (literalValue) =>
+      pipe(
+        literalValue.language,
+        O.match({
+          onNone: () => O.some(makeLiteral(literalValue.value, datatype.value)),
+          onSome: O.none<ObjectTerm>,
+        })
+      ),
+    NamedNode: O.none<ObjectTerm>,
+  });
+
+const datatypeCandidate = (violation: ShaclValidationViolation, target: ShapeRepairTarget): O.Option<RepairCandidate> =>
+  pipe(
+    O.all({ datatype: target.property.datatype, value: violation.value }),
+    O.flatMap(({ datatype, value }) =>
+      pipe(
+        literalWithDatatype(value, datatype),
+        O.map((replacement) => {
+          const subject = makeNamedNode(violation.focusNode);
+          return {
+            operations: [
+              ChangeOperation.make({
+                kind: "removeQuad",
+                partition: "asserted",
+                quad: makeQuad(subject, target.property.path, value),
+              }),
+              assertedAdd(subject, target.property.path, replacement),
+            ],
+            safety: "corrective",
+          } satisfies RepairCandidate;
+        })
+      )
+    )
+  );
+
+const objectSubjectTerm = (value: ObjectTerm): O.Option<Subject> =>
+  ObjectTerm.match(value, {
+    BlankNode: O.some<Subject>,
+    Literal: O.none<Subject>,
+    NamedNode: O.some<Subject>,
+  });
+
+const classCandidate = (violation: ShaclValidationViolation, target: ShapeRepairTarget): O.Option<RepairCandidate> =>
+  pipe(
+    O.all({ classNode: target.property.class, value: violation.value }),
+    O.flatMap(({ classNode, value }) =>
+      pipe(
+        objectSubjectTerm(value),
+        O.map(
+          (subject) =>
+            ({
+              operations: [assertedAdd(subject, RDF_TYPE, classNode)],
+              safety: "additive",
+            }) satisfies RepairCandidate
+        )
+      )
+    )
+  );
+
+const repairStrategies: ReadonlyArray<RepairStrategy> = [
+  { component: SH_HAS_VALUE_COMPONENT, propose: additiveValueCandidate },
+  { component: SH_MIN_COUNT_COMPONENT, propose: additiveValueCandidate },
+  { component: SH_DATATYPE_COMPONENT, propose: datatypeCandidate },
+  { component: SH_CLASS_COMPONENT, propose: classCandidate },
+];
+
+const repairCandidate = (violation: ShaclValidationViolation, target: ShapeRepairTarget): O.Option<RepairCandidate> =>
+  pipe(
+    violation.sourceConstraintComponent,
+    O.flatMap((component) =>
+      pipe(
+        repairStrategies,
+        A.findFirst((strategy) => sameNamedNode(strategy.component, component)),
+        O.flatMap((strategy) => strategy.propose(violation, target))
+      )
+    )
+  );
+
+const sameOptionalNamedNode = (left: O.Option<NamedNode>, right: O.Option<NamedNode>): boolean =>
+  pipe(
+    left,
+    O.match({
+      onNone: () => O.isNone(right),
+      onSome: (leftNode) =>
+        pipe(
+          right,
+          O.exists((rightNode) => sameNamedNode(leftNode, rightNode))
+        ),
+    })
   );
 
 const sameViolation = (left: ShaclValidationViolation, right: ShaclValidationViolation): boolean =>
   left.focusNode === right.focusNode &&
   left.path.value === right.path.value &&
+  sameOptionalNamedNode(left.sourceConstraintComponent, right.sourceConstraintComponent) &&
   pipe(
     left.sourceShape,
     O.match({
@@ -521,11 +645,11 @@ const sameViolation = (left: ShaclValidationViolation, right: ShaclValidationVio
 const verifyRepair = Effect.fn("Ontology.Validation.verifyRepair")(function* (
   input: RunOntologyValidationInput,
   violation: ShaclValidationViolation,
-  operation: ChangeOperation,
+  operations: ReadonlyArray<ChangeOperation>,
   shacl: ShaclValidationService["Service"],
   shapes: ReadonlyArray<ShaclNodeShape>
 ) {
-  const applied = applyChangeOperationsWithDelta(input.session, [operation]);
+  const applied = applyChangeOperationsWithDelta(input.session, operations);
   const nextInput = RunOntologyValidationInput.make({
     session: applied.session,
     inference: input.inference,
@@ -548,25 +672,29 @@ const repairProposal = Effect.fn("Ontology.Validation.repairProposal")(function*
   violation: ShaclValidationViolation,
   violationIndex: number
 ) {
-  const operation = pipe(
+  const candidate = pipe(
     matchingRepairTarget(shapes, violation),
-    O.flatMap((target) => repairOperation(violation, target))
+    O.flatMap((target) => repairCandidate(violation, target))
   );
   return yield* pipe(
-    operation,
+    candidate,
     O.match({
       onNone: () => Effect.succeed(O.none<OntologyRepairProposal>()),
-      onSome: Effect.fn("Ontology.Validation.repairProposal.operation")(function* (operation) {
-        const verified = yield* verifyRepair(input, violation, operation, shacl, shapes);
+      onSome: Effect.fn("Ontology.Validation.repairProposal.candidate")(function* (candidate) {
+        const verified = yield* verifyRepair(input, violation, candidate.operations, shacl, shapes);
         return verified
           ? O.some(
               OntologyRepairProposal.make({
-                id: `repair:${violationIndex}:${serializeQuad(operation.quad)}`,
+                id: `repair:${violationIndex}:${pipe(
+                  candidate.operations,
+                  A.map((operation) => serializeQuad(operation.quad)),
+                  A.join("|")
+                )}`,
                 violationIndex: NonNegativeInt.make(violationIndex),
                 focusNode: violation.focusNode,
                 path: violation.path,
-                message: `Add ${serializeQuad(operation.quad)} to the asserted graph.`,
-                operations: [operation],
+                message: `${candidate.safety} repair verified against the SHACL engine.`,
+                operations: candidate.operations,
                 verified,
               })
             )

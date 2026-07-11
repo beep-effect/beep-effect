@@ -13,6 +13,7 @@ import {
   OpenOntologyFileCommand,
   ParseTurtleRequest,
   ReadOntologyFileRequest,
+  SaveOntologyFileCommand,
   SerializeOntologySessionCommand,
   SerializeTurtleRequest,
   SessionUseCases,
@@ -126,6 +127,49 @@ const roundTripFixture = Effect.fn("roundTripFixture")(function* (path: Ontology
 });
 
 describe("Ontology server Turtle round-trip", () => {
+  it.effect(
+    "preserves the empty base prefix through session open and save with a stable fingerprint",
+    Effect.fnUntraced(function* () {
+      const fileSystem = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-ontology-prefix-round-trip-" });
+      const source = yield* fileSystem.readFileString(path.join(fixturesRoot, "base-prefix/round-trip.ttl"));
+      yield* fileSystem.writeFileString(path.join(root, "round-trip.ttl"), source);
+
+      const result = yield* Effect.gen(function* () {
+        const useCases = yield* SessionUseCases;
+        const fileStore = yield* OntologyFileStore;
+        const turtle = yield* TurtleCodec;
+        const documentPath = yield* S.decodeUnknownEffect(OntologyFilePath)("round-trip.ttl");
+        const roundTripSessionId = yield* S.decodeUnknownEffect(SessionId)("base-prefix-round-trip");
+        const opened = yield* useCases.openFile(
+          OpenOntologyFileCommand.make({ sessionId: roundTripSessionId, path: documentPath })
+        );
+        const before = yield* fingerprintDataset(opened.session.baseDataset);
+        const saved = yield* useCases.saveFile(
+          SaveOntologyFileCommand.make({ session: opened.session, path: documentPath })
+        );
+        const persisted = yield* fileStore.read(ReadOntologyFileRequest.make({ path: documentPath }));
+        const reparsed = yield* turtle.parse(ParseTurtleRequest.make({ source: persisted.source }));
+        const after = yield* fingerprintDataset(reparsed.dataset);
+
+        return { after, before, opened, reparsed, saved };
+      }).pipe(provideScopedLayer(Layer.merge(ontologyServerTestLayerForRoot(root), CanonicalizationServiceLive)));
+
+      expect(result.opened.session.prefixes).toMatchObject({
+        "": "https://example.test/base/",
+        schema: "https://schema.org/",
+      });
+      expect(result.reparsed.prefixes).toMatchObject({
+        "": "https://example.test/base/",
+        schema: "https://schema.org/",
+      });
+      expect(result.saved.source).toContain("@prefix :");
+      expect(result.saved.source).toContain("@prefix schema:");
+      expect(result.after.fingerprint).toBe(result.before.fingerprint);
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
   it.effect(
     "round-trips fixture ontologies by canonical fingerprint with preserved prefixes",
     Effect.fnUntraced(function* () {

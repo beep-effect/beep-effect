@@ -41,6 +41,7 @@ import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, pipe } from "effect";
 import * as S from "effect/Schema";
+import type { Quad } from "@beep/rdf/Rdf";
 
 const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;
 const SH_NODE_SHAPE = makeNamedNode(`${SHACL_NAMESPACE}NodeShape`);
@@ -48,7 +49,13 @@ const SH_PROPERTY = makeNamedNode(`${SHACL_NAMESPACE}property`);
 const SH_PATH = makeNamedNode(`${SHACL_NAMESPACE}path`);
 const SH_TARGET_NODE = makeNamedNode(`${SHACL_NAMESPACE}targetNode`);
 const SH_MIN_COUNT = makeNamedNode(`${SHACL_NAMESPACE}minCount`);
+const SH_DATATYPE = makeNamedNode(`${SHACL_NAMESPACE}datatype`);
+const SH_CLASS = makeNamedNode(`${SHACL_NAMESPACE}class`);
 const SH_HAS_VALUE = makeNamedNode(`${SHACL_NAMESPACE}hasValue`);
+const SH_MIN_COUNT_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}MinCountConstraintComponent`);
+const SH_DATATYPE_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}DatatypeConstraintComponent`);
+const SH_CLASS_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}ClassConstraintComponent`);
+const SH_HAS_VALUE_COMPONENT = makeNamedNode(`${SHACL_NAMESPACE}HasValueConstraintComponent`);
 
 const sessionId = S.decodeUnknownSync(SessionId)("session-validation");
 const material = makeNamedNode("https://example.test/materials#Material");
@@ -173,6 +180,7 @@ describe("Ontology validation and provenance", () => {
                       message: "Expected marker B.",
                       severity: "violation",
                       sourceShape: O.some(shapeB),
+                      sourceConstraintComponent: O.some(SH_HAS_VALUE_COMPONENT),
                     }),
                   ],
             })
@@ -200,6 +208,107 @@ describe("Ontology validation and provenance", () => {
       expect(result.repairs[0]?.operations.map((operation) => serializeQuad(operation.quad))).toEqual([
         serializeQuad(repairQuad),
       ]);
+    })
+  );
+
+  it.effect(
+    "offers verified minCount, datatype, and class repairs from the real SHACL engine",
+    Effect.fnUntraced(function* () {
+      yield* runWithValidationLayer(
+        Effect.gen(function* () {
+          const requiredPath = makeNamedNode("https://example.test/required");
+          const agePath = makeNamedNode("https://example.test/age");
+          const relatedPath = makeNamedNode("https://example.test/related");
+          const relatedValue = makeNamedNode("https://example.test/related-value");
+          const stringDatatype = makeNamedNode("http://www.w3.org/2001/XMLSchema#string");
+
+          const runScenario = Effect.fn("OntologyValidationTest.runRepairScenario")(function* (
+            data: ReadonlyArray<Quad>,
+            propertyQuads: ReadonlyArray<Quad>,
+            component: ReturnType<typeof makeNamedNode>
+          ) {
+            const propertyNode = makeBlankNode(`property-${component.value}`);
+            const scenarioShape = makeNamedNode(`urn:shape:${component.value}`);
+            const session = applyChangeOperationsWithDelta(
+              createSession(
+                CreateSessionInput.make({
+                  id: sessionId,
+                  baseDataset: makeDataset(data),
+                })
+              ),
+              pipe(
+                [
+                  makeQuad(scenarioShape, RDF_TYPE, SH_NODE_SHAPE),
+                  makeQuad(scenarioShape, SH_TARGET_NODE, material),
+                  makeQuad(scenarioShape, SH_PROPERTY, propertyNode),
+                  ...pipe(
+                    propertyQuads,
+                    A.map((quad) => makeQuad(propertyNode, quad.predicate, quad.object))
+                  ),
+                ],
+                A.map((quad) =>
+                  ChangeOperation.make({
+                    kind: "addQuad",
+                    partition: "shapes",
+                    quad,
+                  })
+                )
+              )
+            ).session;
+            const runner = yield* OntologyValidationRunner;
+            const result = yield* runner.run(RunOntologyValidationInput.make({ session }));
+            const repair = yield* pipe(
+              result.repairs,
+              A.findFirst((proposal) =>
+                pipe(
+                  A.get(result.validation.violations, proposal.violationIndex),
+                  O.flatMap((violation) => violation.sourceConstraintComponent),
+                  O.exists((candidate) => candidate.value === component.value)
+                )
+              ),
+              O.match({
+                onNone: () => Effect.die(`Missing repair for ${component.value}.`),
+                onSome: Effect.succeed,
+              })
+            );
+            const repaired = applyChangeOperationsWithDelta(session, repair.operations).session;
+            const verified = yield* runner.run(RunOntologyValidationInput.make({ session: repaired }));
+
+            expect(repair.verified).toBe(true);
+            expect(verified.validation.conforms).toBe(true);
+            return repair;
+          });
+
+          const minCountRepair = yield* runScenario(
+            [makeQuad(material, marker, markerValue)],
+            [
+              makeQuad(material, SH_PATH, requiredPath),
+              makeQuad(material, SH_MIN_COUNT, makeLiteral("1", XSD_INTEGER.value)),
+              makeQuad(material, SH_HAS_VALUE, markerValue),
+            ],
+            SH_MIN_COUNT_COMPONENT
+          );
+          const datatypeRepair = yield* runScenario(
+            [makeQuad(material, agePath, makeLiteral("7", stringDatatype.value))],
+            [makeQuad(material, SH_PATH, agePath), makeQuad(material, SH_DATATYPE, XSD_INTEGER)],
+            SH_DATATYPE_COMPONENT
+          );
+          const classRepair = yield* runScenario(
+            [makeQuad(material, relatedPath, relatedValue)],
+            [makeQuad(material, SH_PATH, relatedPath), makeQuad(material, SH_CLASS, OWL_CLASS)],
+            SH_CLASS_COMPONENT
+          );
+
+          expect(minCountRepair.operations).toHaveLength(1);
+          expect(
+            pipe(
+              datatypeRepair.operations,
+              A.map((operation) => operation.kind)
+            )
+          ).toEqual(["removeQuad", "addQuad"]);
+          expect(classRepair.operations).toHaveLength(1);
+        })
+      );
     })
   );
 
