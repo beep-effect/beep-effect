@@ -53,10 +53,35 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 LLM filing agent. Next concrete action: replace the deterministic P1
-FilingDecision Layer with an LLM-backed implementation behind the same port.
+P4 Extraction → KG loop (pending P3 PR merge). P3 shipped 2026-07-11 with the
+live-Box verification lanes and OAuth connect flow deferred per the SPEC
+Exception Ledger — the Box test tenant is still not provisioned. To remove the
+exception: provision a Box developer/test tenant, set `CLOUD_BOX_TOKEN` in
+`.env`, run the env-gated live lanes
+(`packages/drivers/box/test/integration/Box.live.test.ts` and a live sync
+round-trip), and replace the desktop env-token setup path with the OAuth flow.
 
 ## Latest Evidence
+
+P3 Box sync completed 2026-07-11 (PR pending merge). Evidence: schema-first
+sync entities (SyncItem/SyncOperation/SyncCursor/SyncConflict) with
+`@beep/documents-tables` projections and the `documents_sync_state` db-admin
+migration proven on pglite; provider-neutral `DmsMirror`/`VaultSyncEngine`
+use-cases ports with `VaultSyncRpcs`; outbox-driven one-way push engine with
+squash/retry/leased-recovery, drift classification with echo suppression, and
+restart-safe durable cursors (15 dedicated engine/drift tests incl. a
+two-instantiation restart-survival proof); Box adapter over `@beep/box`
+unit-verified against a fake SDK client (17 tests); desktop vault-sync panel,
+sidecar RPC wiring, and env-driven connected/disconnected layer selection.
+Live-Box round-trip + OAuth flow deferred per the SPEC Exception Ledger (Box
+tenant not provisioned).
+
+P2 LLM filing agent completed 2026-07-11 via PR #370 (merged to `main` as
+`61aeca13b2`). Evidence per the PLAN.md P2 row: JS-native text-extraction
+driver behind the `@beep/file-processing` engine contract, optional bounded
+text excerpt on the FilingDecision port, LLM filing layer in
+`documents/server` with typed config, auto-file with visible rationale,
+uncertain → `00-inbox`, heuristic retained as the deterministic fixture Layer.
 
 P1 Vault + deterministic intake completed 2026-07-09. Evidence: new
 `documents` domain/use-cases/server packages, workspace vault table and store,

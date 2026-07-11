@@ -153,4 +153,4 @@ Per-phase exit criteria live in `PLAN.md`. Program-level acceptance:
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| None | N/A | N/A | N/A | N/A |
+| P3 live-Box verification + OAuth setup UX deferred (2026-07-11) | P3 only: live vault→Box round-trip evidence and the Box OAuth connect flow. All P3 sync behavior ships verified against the deterministic DmsMirror fixture + pglite lanes; the Box adapter is unit-verified against a fake SDK client; live lanes stay env-gated on `CLOUD_BOX_TOKEN`; the desktop surface ships a connection-status/setup panel with the env-token path. | benjamintoppold | Stop condition hit: Box test tenant was not arranged before P3 execution and must not be improvised. | Provision the Box test tenant, set `CLOUD_BOX_TOKEN`, run the env-gated live lanes (`packages/drivers/box/test/integration/Box.live.test.ts` plus a live sync round-trip), and replace the env-token setup path with the OAuth flow. |
