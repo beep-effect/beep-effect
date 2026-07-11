@@ -71,13 +71,14 @@ const materializeAtomically = (
  * import * as BunPath from "@effect/platform-bun/BunPath"
  * import {
  *   FilingDecisionHeuristicLayer,
+ *   FilingTextExtractionNoopLayer,
  *   makeDocumentIntake
  * } from "@beep/documents-server/aggregates/Document"
  * import { Effect, Layer } from "effect"
  *
  * const program = makeDocumentIntake().pipe(
  *   Effect.provide(
- *     Layer.mergeAll(BunFileSystem.layer, BunPath.layer, FilingDecisionHeuristicLayer)
+ *     Layer.mergeAll(BunFileSystem.layer, BunPath.layer, FilingDecisionHeuristicLayer, FilingTextExtractionNoopLayer)
  *   ),
  *   Effect.map((service) => typeof service.intakeDroppedFile === "function")
  * )

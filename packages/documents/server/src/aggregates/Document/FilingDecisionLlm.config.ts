@@ -102,8 +102,9 @@ const ConfiguredExcerptLength = S.Int.check(
  * @example
  * ```ts
  * import { FilingDecisionLlmConfigValue } from "@beep/documents-server/aggregates/Document"
+ * import * as S from "effect/Schema"
  *
- * const config = FilingDecisionLlmConfigValue.make({
+ * const config = S.decodeUnknownSync(FilingDecisionLlmConfigValue)({
  *   confidenceThreshold: 0.6,
  *   maxExcerptChars: 8000,
  *   model: "claude-haiku-4-5"
