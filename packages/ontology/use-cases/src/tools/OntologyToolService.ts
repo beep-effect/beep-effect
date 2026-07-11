@@ -9,6 +9,7 @@
 import { $OntologyUseCasesId } from "@beep/identity/packages";
 import {
   applyChangeOperationsWithDelta,
+  ChangeOperation,
   classifySessionDatasetPartitions,
   deriveSessionGraphPartitions,
   SessionId,
@@ -23,6 +24,7 @@ import {
   buildOntologySnapshot,
   ExportOntologyProvenanceCommand,
   InferOntologySessionInput,
+  OntologyFilePath,
   OntologyReasoner,
   OntologySparqlRunner,
   OntologySparqlSafeguards,
@@ -54,7 +56,7 @@ import {
   SnapshotDescribeResponse,
   ValidateOntologyResponse,
 } from "./OntologyToolkit.js";
-import type { ChangeOperation, Session, SessionChangeApplication } from "@beep/ontology-domain/aggregates/Session";
+import type { OntologyChangeActor, Session, SessionChangeApplication } from "@beep/ontology-domain/aggregates/Session";
 import type {
   CapabilityMetadataRequest,
   ExportProvenanceRequest,
@@ -215,13 +217,15 @@ const ensureSharedPartitionClassification = (
 
 const applyAndSave = Effect.fn("Ontology.Tools.applyAndSave")(function* (
   request: ProposeChangeBatchRequest,
-  opened: OpenedOntology
+  opened: OpenedOntology,
+  actor: OntologyChangeActor
 ) {
   yield* ensureCas(request.expectedFingerprint, opened.fingerprint);
   yield* ensureBatchBudget(request.operations);
   yield* ensureReasonerDriftCap(request.operations);
   yield* ensurePersistableOperations(request.operations);
-  const application = applyChangeOperationsWithDelta(opened.session, request.operations);
+  const attributedOperations = A.map(request.operations, (operation) => ChangeOperation.make({ ...operation, actor }));
+  const application = applyChangeOperationsWithDelta(opened.session, attributedOperations);
   yield* ensureRealDelta(application);
   yield* ensureSharedPartitionClassification(application, request.operations);
 
@@ -230,12 +234,22 @@ const applyAndSave = Effect.fn("Ontology.Tools.applyAndSave")(function* (
     .saveFile(SaveOntologyFileCommand.make({ path: request.path, session: application.session }))
     .pipe(Effect.mapError(mapLayerError("save")));
   const saved = yield* openSavedOntology(request);
+  const validation = yield* OntologyValidationRunner;
+  const provPath = yield* S.decodeUnknownEffect(OntologyFilePath)(`${request.path}.${saved.fingerprint}.prov.ttl`).pipe(
+    Effect.mapError(mapLayerError("provenance-journal-path"))
+  );
+  const datasetPath = yield* S.decodeUnknownEffect(OntologyFilePath)(
+    `${request.path}.${saved.fingerprint}.dataset.ttl`
+  ).pipe(Effect.mapError(mapLayerError("provenance-journal-path")));
+  yield* validation
+    .exportProvenance(ExportOntologyProvenanceCommand.make({ session: application.session, provPath, datasetPath }))
+    .pipe(Effect.mapError(mapLayerError("provenance-journal")));
 
   return ProposeChangeBatchResponse.make({
     path: request.path,
     previousFingerprint: opened.fingerprint,
     currentFingerprint: saved.fingerprint,
-    appliedOperations: request.operations,
+    appliedOperations: attributedOperations,
     delta: application.delta,
   });
 });
@@ -304,9 +318,13 @@ export interface OntologyToolServiceShape {
   ) => Effect.Effect<ExportProvenanceResponse, OntologyToolFailure>;
   readonly openInspect: (request: OpenInspectRequest) => Effect.Effect<OpenInspectResponse, OntologyToolFailure>;
   readonly proposeChangeBatch: (
-    request: ProposeChangeBatchRequest
+    request: ProposeChangeBatchRequest,
+    actor: OntologyChangeActor
   ) => Effect.Effect<ProposeChangeBatchResponse, OntologyToolFailure>;
-  readonly repair: (request: RepairOntologyRequest) => Effect.Effect<RepairOntologyResponse, OntologyToolFailure>;
+  readonly repair: (
+    request: RepairOntologyRequest,
+    actor: OntologyChangeActor
+  ) => Effect.Effect<RepairOntologyResponse, OntologyToolFailure>;
   readonly search: (request: OntologySearchRequest) => Effect.Effect<OntologySearchResponse, OntologyToolFailure>;
   readonly snapshotDescribe: (
     request: SnapshotDescribeRequest
@@ -338,6 +356,9 @@ const makeOntologyToolService = Effect.gen(function* () {
   const validation = yield* OntologyValidationRunner;
   const canonicalization = yield* CanonicalizationService;
   const reasoner = yield* OntologyReasoner;
+  // The desktop sidecar is the sole v1 write authority for files exposed via
+  // /mcp. This semaphore closes compare/apply/write TOCTOU inside that process;
+  // deliberately no cross-process lock or stateful session repository exists.
   const mutationSemaphore = yield* Semaphore.make(1);
   const provideDependencies = <A2, E>(
     effect: Effect.Effect<
@@ -437,9 +458,11 @@ const makeOntologyToolService = Effect.gen(function* () {
         })
       )
     ),
-    proposeChangeBatch: Effect.fn("Ontology.Tools.proposeChangeBatch")((request) =>
+    proposeChangeBatch: Effect.fn("Ontology.Tools.proposeChangeBatch")((request, actor) =>
       mutationSemaphore.withPermit(
-        provideDependencies(openSavedOntology(request).pipe(Effect.flatMap((opened) => applyAndSave(request, opened))))
+        provideDependencies(
+          openSavedOntology(request).pipe(Effect.flatMap((opened) => applyAndSave(request, opened, actor)))
+        )
       )
     ),
     validate: Effect.fn("Ontology.Tools.validate")((request) =>
@@ -451,7 +474,7 @@ const makeOntologyToolService = Effect.gen(function* () {
         })
       )
     ),
-    repair: Effect.fn("Ontology.Tools.repair")((request) =>
+    repair: Effect.fn("Ontology.Tools.repair")((request, actor) =>
       mutationSemaphore.withPermit(
         provideDependencies(
           Effect.gen(function* () {
@@ -490,7 +513,7 @@ const makeOntologyToolService = Effect.gen(function* () {
               expectedFingerprint: request.expectedFingerprint,
               operations,
             });
-            const change = yield* applyAndSave(changeRequest, opened);
+            const change = yield* applyAndSave(changeRequest, opened, actor);
             const saved = yield* openSavedOntology(request);
             const after = yield* validateSession(saved.session, false);
             return RepairOntologyResponse.make({ proposal, change, validation: after });

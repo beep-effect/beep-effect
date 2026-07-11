@@ -10,6 +10,7 @@ import {
   apiKeyRequiredFailure,
   resolveSourceCredential,
   SourceAuthRegistration,
+  sanitizedToolkit,
 } from "@beep/mcp-kit";
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe, it, layer } from "@effect/vitest";
@@ -45,7 +46,7 @@ const SoftToolkitHandlersLive = SoftToolkit.toLayer({
   }),
 });
 
-const softSourceLayer = McpServer.toolkit(SoftToolkit).pipe(Layer.provide(SoftToolkitHandlersLive));
+const softSourceLayer = sanitizedToolkit(SoftToolkit).pipe(Layer.provide(SoftToolkitHandlersLive));
 
 // The credential read happens per tool call (inside the handler), not while
 // this layer builds, so the fixture ConfigProvider can be a sibling: by the

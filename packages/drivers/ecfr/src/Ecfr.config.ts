@@ -12,7 +12,7 @@ import * as S from "effect/Schema";
 const $I = $EcfrId.create("Ecfr.config");
 
 /**
- * Default eCFR versioner API base URL (keyless, 17 U.S.C. 105 public domain).
+ * Default eCFR API origin shared by the admin, search, and versioner families.
  *
  * @example
  * ```ts
@@ -24,7 +24,7 @@ const $I = $EcfrId.create("Ecfr.config");
  * @category constants
  * @since 0.0.0
  */
-export const ECFR_API_URL = "https://www.ecfr.gov/api/versioner/v1";
+export const ECFR_API_URL = "https://www.ecfr.gov";
 
 /**
  * Conservative self-imposed request budget for the keyless eCFR API.
@@ -63,7 +63,7 @@ export const ECFR_RATE_LIMIT_WINDOW = "1 minute";
  * ```ts
  * import { EcfrConfigInput } from "@beep/ecfr"
  *
- * const config = EcfrConfigInput.make({ apiUrl: "https://www.ecfr.gov/api/versioner/v1" })
+ * const config = EcfrConfigInput.make({ apiUrl: "https://www.ecfr.gov" })
  * console.log(config.apiUrl)
  * ```
  *
@@ -75,7 +75,7 @@ export class EcfrConfigInput extends S.Class<EcfrConfigInput>($I`EcfrConfigInput
     apiUrl: S.String.pipe(
       SchemaUtils.withKeyDefaults(ECFR_API_URL),
       S.annotateKey({
-        description: "Base URL for the eCFR versioner API.",
+        description: "Base origin for the eCFR admin, search, and versioner API families.",
       })
     ),
   },

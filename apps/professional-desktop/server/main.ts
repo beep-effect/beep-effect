@@ -31,14 +31,16 @@ import "./IpcStdoutGuard.prelude.ts";
 import { ChatRpcs } from "@beep/agents-use-cases/public";
 import { DocumentsRpcs } from "@beep/documents-use-cases/public";
 import { OntologyRpcs } from "@beep/ontology-use-cases/aggregates/Session";
+import { ExportProvenanceTool, ProposeChangeBatchTool, RepairOntologyTool } from "@beep/ontology-use-cases/tools";
 import { WorkspaceVaultRpcs } from "@beep/workspace-use-cases/public";
 import { BunHttpServer, BunRuntime } from "@effect/platform-bun";
 import { Config, Effect, Layer, Logger } from "effect";
 import * as O from "effect/Option";
-import { HttpRouter } from "effect/unstable/http";
+import { HttpMiddleware, HttpRouter, HttpServerResponse } from "effect/unstable/http";
 import { RpcSerialization, RpcServer } from "effect/unstable/rpc";
 import { RuntimeLive } from "@/runtime/Layer";
 import { ipcTransport, SidecarStdioLive } from "./IpcStdoutGuard.ts";
+import { makeOntologyMcpTransportLayer } from "./OntologyMcpTransport.ts";
 import { DesktopRpcSessionToken, RpcSessionAuthLayer } from "./RpcSessionAuth.ts";
 import type { Redacted } from "effect";
 import type { DesktopStartupError } from "@/runtime/Layer";
@@ -47,6 +49,12 @@ import type { DesktopStartupError } from "@/runtime/Layer";
 // port). Configurable via CHAT_SIDECAR_PORT for tests/dev that need a free port.
 const PORT = Effect.runSync(Config.port("CHAT_SIDECAR_PORT").pipe(Config.withDefault(3939)));
 const RPC_SESSION_TOKEN = Effect.runSync(DesktopRpcSessionToken);
+const ONTOLOGY_MCP_MUTATIONS_ENABLED = Effect.runSync(
+  Config.boolean("ONTOLOGY_MCP_MUTATIONS_ENABLED").pipe(Config.withDefault(false))
+);
+const APPROVED_ONTOLOGY_MUTATION_TOOLS = ONTOLOGY_MCP_MUTATIONS_ENABLED
+  ? [ProposeChangeBatchTool.name, RepairOntologyTool.name, ExportProvenanceTool.name]
+  : [];
 
 const DesktopRpcs = ChatRpcs.merge(WorkspaceVaultRpcs, DocumentsRpcs, OntologyRpcs);
 
@@ -63,7 +71,21 @@ const ChatOnlyRpcServer = RpcServer.layer(ChatRpcs).pipe(Layer.provide(RuntimeLi
 // HTTP transport (default): one HttpRouter carries the rpc protocol and the CORS
 // middleware via layer memoization, served by HttpRouter.serve.
 const httpMain = (): Layer.Layer<never, DesktopStartupError> => {
-  const Protocol = RpcServer.layerProtocolHttp({ path: "/rpc" }).pipe(Layer.provide(HttpRouter.layer));
+  const RpcCors = HttpRouter.middleware(
+    HttpMiddleware.cors({
+      allowedOrigins: ["*"],
+      allowedMethods: ["POST", "OPTIONS"],
+      allowedHeaders: ["*"],
+    })
+  );
+  const Protocol = RpcServer.layerProtocolHttp({ path: "/rpc" }).pipe(
+    Layer.provide(RpcCors.layer),
+    Layer.provide(HttpRouter.layer)
+  );
+  const RpcPreflight = HttpRouter.add("OPTIONS", "/rpc", HttpServerResponse.empty({ status: 204 })).pipe(
+    Layer.provide(RpcCors.layer),
+    Layer.provide(HttpRouter.layer)
+  );
   const RpcServerLive: Layer.Layer<never, DesktopStartupError, RpcServer.Protocol> = O.isSome(RPC_SESSION_TOKEN)
     ? DesktopRpcServer
     : ChatOnlyRpcServer;
@@ -71,22 +93,23 @@ const httpMain = (): Layer.Layer<never, DesktopStartupError> => {
     onNone: () => Layer.empty,
     onSome: (token: Redacted.Redacted<string>) => RpcSessionAuthLayer(token).pipe(Layer.provide(HttpRouter.layer)),
   });
-  const App = Layer.mergeAll(
-    Protocol,
-    Auth,
-    HttpRouter.cors({
-      allowedOrigins: ["*"],
-      allowedMethods: ["POST", "OPTIONS"],
-      allowedHeaders: ["*"],
-    }).pipe(Layer.provide(HttpRouter.layer))
-  );
+  const OntologyMcp = O.match(RPC_SESSION_TOKEN, {
+    onNone: () => Layer.empty,
+    onSome: (token: Redacted.Redacted<string>) =>
+      makeOntologyMcpTransportLayer({
+        token,
+        mutationsEnabled: ONTOLOGY_MCP_MUTATIONS_ENABLED,
+        approvedMutationTools: APPROVED_ONTOLOGY_MUTATION_TOOLS,
+      }).pipe(Layer.provide(HttpRouter.layer)),
+  });
+  const App = Layer.mergeAll(Protocol, RpcPreflight, Auth, OntologyMcp);
   return RpcServerLive.pipe(
     Layer.provideMerge(App),
     Layer.provide(HttpRouter.serve(App)),
     // Bun's default 10s idleTimeout severs streamed responses during the silent
     // tail of a turn (no bytes flow while the kernel thinks); 255s is Bun's max
     // and covers the turn budget. Mirrors the POC.
-    Layer.provide(BunHttpServer.layer({ port: PORT, idleTimeout: 255 })),
+    Layer.provide(BunHttpServer.layer({ hostname: "127.0.0.1", port: PORT, idleTimeout: 255 })),
     Layer.provide(RpcSerialization.layerNdjson)
   );
 };

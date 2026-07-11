@@ -57,7 +57,7 @@ const schemaExpr = (schema: JsonSchema): string => {
     Match.when("integer", () => "S.Int"),
     Match.when("number", () => "S.Finite"),
     Match.when("boolean", () => "S.Boolean"),
-    Match.when("array", () => `S.Array(${schemaExpr(schema.items ?? { type: "string" })})`),
+    Match.when("array", () => `${schemaExpr(schema.items ?? { type: "string" })}.pipe(S.Array)`),
     Match.orElse(() => "S.String")
   );
 };
@@ -180,7 +180,7 @@ const firstRequiredFieldName = (
 
 const exampleAccessorFor = (fieldName: string | undefined): string => (fieldName === undefined ? "" : `.${fieldName}`);
 
-const renderModel = (name: string, schema: JsonSchema, definitions: Record<string, JsonSchema>): string => {
+const renderObjectModel = (name: string, schema: JsonSchema, definitions: Record<string, JsonSchema>): string => {
   const required = requiredFieldSet(schema);
   const props = renderModelFields(schema, required);
   const description = modelDescription(name, schema);
@@ -210,6 +210,53 @@ ${props}
 ) { static readonly is = S.is(${name}); }`;
 };
 
+const renderArrayModel = (name: string, schema: JsonSchema, definitions: Record<string, JsonSchema>): string => {
+  const description = modelDescription(name, schema);
+  const item = schema.items ?? { type: "string" };
+  const exampleImports = A.dedupe([name, ...exampleRefsOfArrayItems(schema, definitions)]).sort();
+  return `/**
+ * ${description}
+ *
+ * @example
+ * \`\`\`ts
+ * import { ${exampleImports.join(", ")} } from "@beep/ecfr"
+ * import * as S from "effect/Schema"
+ *
+ * const value = S.decodeUnknownEffect(${name})([${exampleValueExpr(item, "item", definitions)}])
+ * console.log(value)
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ${name} = ${schemaExpr(item)}.pipe(
+  S.Array,
+  $I.annoteSchema(${JSON.stringify(name)}, { description: ${JSON.stringify(description)} })
+);
+
+/**
+ * Type for {@link ${name}}.
+ *
+ * @example
+ * \`\`\`ts
+ * import type { ${name} } from "@beep/ecfr"
+ *
+ * const value: ${name} = []
+ * console.log(value.length)
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ${name} = typeof ${name}.Type;`;
+};
+
+const renderModel = (name: string, schema: JsonSchema, definitions: Record<string, JsonSchema>): string =>
+  Match.value(schema.type).pipe(
+    Match.when("array", () => renderArrayModel(name, schema, definitions)),
+    Match.orElse(() => renderObjectModel(name, schema, definitions))
+  );
+
 const operationsOf = (
   spec: Spec
 ): ReadonlyArray<{ readonly op: Operation; readonly method: string; readonly path: string }> =>
@@ -221,7 +268,7 @@ const operationsOf = (
 
 const responseModel = (op: Operation): string => {
   const schema = op.responses["200"]?.schema;
-  return schema?.$ref !== undefined ? refName(schema.$ref) : "S.Unknown";
+  return schema === undefined ? "S.Unknown" : schemaExpr(schema);
 };
 
 const renderOperationConst = (entry: {

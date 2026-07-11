@@ -1,122 +1,1050 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "eCFR Versioner API (checked-in subset)",
+    "title": "eCFR API",
     "version": "v1",
-    "description": "Hand-maintained Swagger 2.0 subset of the public, keyless eCFR versioner API (17 U.S.C. 105 public domain). Exposes the two currency-metadata listing endpoints the driver consumes: the CFR titles catalog and the CFR agencies catalog. Source of record for the bespoke code generator; the eCFR site does not publish a cleanly machine-fetchable spec (see the P1 generator spike)."
+    "description": "Hand-maintained Swagger 2.0 description of the 15-operation public, keyless eCFR API surface. Paths span the admin, search, and versioner service families, so basePath is empty and every operation records its full /api/<family>/v1 path. The official eCFR Swagger document is the authority; response definitions preserve stable documented envelope fields conservatively where the official response schema is unspecified."
   },
   "host": "www.ecfr.gov",
-  "basePath": "/api/versioner/v1",
+  "basePath": "",
   "schemes": ["https"],
   "paths": {
-    "/titles.json": {
+    "/api/admin/v1/agencies.json": {
       "get": {
-        "operationId": "listTitles",
-        "summary": "List all CFR titles and their currency metadata.",
+        "operationId": "listAgencies",
+        "summary": "List all top-level eCFR agencies and their children in name order.",
         "responses": {
           "200": {
-            "description": "Titles listing",
+            "description": "Agency roster envelope.",
+            "schema": { "$ref": "#/definitions/AgenciesResponse" }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/corrections.json": {
+      "get": {
+        "operationId": "listCorrections",
+        "summary": "List eCFR corrections, optionally filtered by title or date.",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "type": "string",
+            "format": "date",
+            "required": false,
+            "description": "Returns corrections spanning the specified ISO date."
+          },
+          {
+            "name": "title",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "Restricts corrections to one CFR title number."
+          },
+          {
+            "name": "error_corrected_date",
+            "in": "query",
+            "type": "string",
+            "format": "date",
+            "required": false,
+            "description": "Returns corrections corrected on the specified ISO date."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Corrections envelope.",
+            "schema": { "$ref": "#/definitions/CorrectionsResponse" }
+          }
+        }
+      }
+    },
+    "/api/admin/v1/corrections/title/{title}.json": {
+      "get": {
+        "operationId": "listTitleCorrections",
+        "summary": "List all eCFR corrections for a CFR title.",
+        "parameters": [
+          {
+            "name": "title",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "CFR title number."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Corrections envelope for the requested title.",
+            "schema": { "$ref": "#/definitions/CorrectionsResponse" }
+          }
+        }
+      }
+    },
+    "/api/search/v1/results": {
+      "get": {
+        "operationId": "searchResults",
+        "summary": "Search eCFR headings and full text.",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "type": "string",
+            "required": false,
+            "description": "Search term applied to headings and full text."
+          },
+          {
+            "name": "agency_slugs[]",
+            "in": "query",
+            "type": "array",
+            "items": { "type": "string" },
+            "collectionFormat": "multi",
+            "required": false,
+            "description": "Agency slugs used to restrict matching content."
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "type": "string",
+            "format": "date",
+            "required": false,
+            "description": "Restricts content to the specified ISO date."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "default": 1,
+            "required": false,
+            "description": "One-based results page; pagination cannot exceed 10,000 matches."
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "type": "integer",
+            "default": 20,
+            "required": false,
+            "description": "Results per page, up to 1,000."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated search-result envelope.",
+            "schema": { "$ref": "#/definitions/SearchResultsResponse" }
+          }
+        }
+      }
+    },
+    "/api/search/v1/count": {
+      "get": {
+        "operationId": "searchCount",
+        "summary": "Count eCFR search matches.",
+        "responses": {
+          "200": {
+            "description": "Search count envelope.",
+            "schema": { "$ref": "#/definitions/SearchCountResponse" }
+          }
+        }
+      }
+    },
+    "/api/search/v1/summary": {
+      "get": {
+        "operationId": "searchSummary",
+        "summary": "Return summary details for an eCFR search.",
+        "responses": {
+          "200": {
+            "description": "Search summary envelope with stable known fields modeled conservatively.",
+            "schema": { "$ref": "#/definitions/SearchSummaryResponse" }
+          }
+        }
+      }
+    },
+    "/api/search/v1/counts/daily": {
+      "get": {
+        "operationId": "searchDailyCounts",
+        "summary": "Return eCFR search-result counts by date.",
+        "responses": {
+          "200": {
+            "description": "Daily search-count envelope.",
+            "schema": { "$ref": "#/definitions/SearchDailyCountsResponse" }
+          }
+        }
+      }
+    },
+    "/api/search/v1/counts/titles": {
+      "get": {
+        "operationId": "searchTitleCounts",
+        "summary": "Return eCFR search-result counts by CFR title.",
+        "responses": {
+          "200": {
+            "description": "Per-title search-count envelope.",
+            "schema": { "$ref": "#/definitions/SearchTitleCountsResponse" }
+          }
+        }
+      }
+    },
+    "/api/search/v1/counts/hierarchy": {
+      "get": {
+        "operationId": "searchHierarchyCounts",
+        "summary": "Return eCFR search-result counts by hierarchy node.",
+        "responses": {
+          "200": {
+            "description": "Hierarchy search-count envelope.",
+            "schema": { "$ref": "#/definitions/SearchHierarchyCountsResponse" }
+          }
+        }
+      }
+    },
+    "/api/search/v1/suggestions": {
+      "get": {
+        "operationId": "searchSuggestions",
+        "summary": "Return eCFR search suggestions.",
+        "responses": {
+          "200": {
+            "description": "Search-suggestion envelope.",
+            "schema": { "$ref": "#/definitions/SearchSuggestionsResponse" }
+          }
+        }
+      }
+    },
+    "/api/versioner/v1/ancestry/{date}/title-{title}.json": {
+      "get": {
+        "operationId": "getAncestry",
+        "summary": "Return the ancestry of a CFR hierarchy node on a date.",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "path",
+            "type": "string",
+            "format": "date",
+            "required": true,
+            "description": "Content date in ISO YYYY-MM-DD form."
+          },
+          {
+            "name": "title",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "CFR title number."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ordered ancestry nodes from title to the requested leaf.",
+            "schema": { "$ref": "#/definitions/AncestryResponse" }
+          }
+        }
+      }
+    },
+    "/api/versioner/v1/full/{date}/title-{title}.xml": {
+      "get": {
+        "operationId": "getFullTitleXml",
+        "summary": "Return source XML for a complete CFR title or hierarchy subset.",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "path",
+            "type": "string",
+            "format": "date",
+            "required": true,
+            "description": "Content date in ISO YYYY-MM-DD form."
+          },
+          {
+            "name": "title",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "CFR title number."
+          }
+        ],
+        "produces": ["application/xml", "text/xml"],
+        "responses": {
+          "200": {
+            "description": "Raw regulation XML; parsing is intentionally outside the v1 driver.",
+            "schema": { "type": "string", "description": "Raw XML payload." }
+          }
+        }
+      }
+    },
+    "/api/versioner/v1/structure/{date}/title-{title}.json": {
+      "get": {
+        "operationId": "getStructure",
+        "summary": "Return the complete structure tree for a CFR title on a date.",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "path",
+            "type": "string",
+            "format": "date",
+            "required": true,
+            "description": "Content date in ISO YYYY-MM-DD form."
+          },
+          {
+            "name": "title",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "CFR title number."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CFR hierarchy tree without regulation text.",
+            "schema": { "$ref": "#/definitions/StructureNode" }
+          }
+        }
+      }
+    },
+    "/api/versioner/v1/titles.json": {
+      "get": {
+        "operationId": "listTitles",
+        "summary": "List CFR titles and currency metadata.",
+        "responses": {
+          "200": {
+            "description": "Titles listing envelope.",
             "schema": { "$ref": "#/definitions/TitlesResponse" }
           }
         }
       }
     },
-    "/agencies.json": {
+    "/api/versioner/v1/versions/title-{title}.json": {
       "get": {
-        "operationId": "listAgencies",
-        "summary": "List all agencies represented in the CFR.",
+        "operationId": "listVersions",
+        "summary": "List content versions within a CFR title.",
+        "parameters": [
+          {
+            "name": "title",
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "description": "CFR title number."
+          },
+          {
+            "name": "issue_date[on]",
+            "in": "query",
+            "type": "string",
+            "format": "date",
+            "required": false,
+            "description": "Selects content added on this issue date."
+          },
+          {
+            "name": "issue_date[lte]",
+            "in": "query",
+            "type": "string",
+            "format": "date",
+            "required": false,
+            "description": "Selects content added on or before this issue date."
+          },
+          {
+            "name": "issue_date[gte]",
+            "in": "query",
+            "type": "string",
+            "format": "date",
+            "required": false,
+            "description": "Selects content added on or after this issue date."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "integer",
+            "required": false,
+            "description": "One-based content-version page."
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Agencies listing",
-            "schema": { "$ref": "#/definitions/AgenciesResponse" }
+            "description": "Content-version listing envelope.",
+            "schema": { "$ref": "#/definitions/VersionsResponse" }
           }
         }
       }
     }
   },
   "definitions": {
-    "Title": {
+    "CfrReference": {
       "type": "object",
-      "description": "A single CFR title with the currency metadata the eCFR versioner reports for it (identity plus the dates that describe how current the published content is).",
-      "required": ["number", "name", "reserved"],
+      "description": "A CFR title and chapter reference associated with an agency.",
+      "required": ["title", "chapter"],
       "properties": {
-        "number": {
-          "type": "integer",
-          "description": "The CFR title number (1 through 50) that uniquely identifies the title."
-        },
-        "name": {
+        "title": { "type": "integer", "description": "CFR title number." },
+        "chapter": {
           "type": "string",
-          "description": "The official name of the CFR title."
-        },
-        "latest_amended_on": {
-          "type": "string",
-          "format": "date",
-          "description": "Date on which the title's regulatory content was most recently amended (ISO YYYY-MM-DD)."
-        },
-        "latest_issue_date": {
-          "type": "string",
-          "format": "date",
-          "description": "Date of the most recent published issue of the title in eCFR (ISO YYYY-MM-DD)."
-        },
-        "up_to_date_as_of": {
-          "type": "string",
-          "format": "date",
-          "description": "Date through which the title's content is confirmed current in eCFR (ISO YYYY-MM-DD)."
-        },
-        "reserved": {
-          "type": "boolean",
-          "description": "Whether the title number is reserved, meaning it carries no current regulatory content."
+          "description": "Chapter identifier within the title."
         }
       }
     },
-    "TitlesResponse": {
+    "AgencyChild": {
       "type": "object",
-      "description": "Response envelope for the eCFR titles listing endpoint, wrapping the full catalog of CFR titles.",
-      "required": ["titles"],
+      "description": "A child agency represented in the CFR agency roster.",
+      "required": ["name", "slug"],
       "properties": {
-        "titles": {
+        "name": {
+          "type": "string",
+          "description": "Full official agency name."
+        },
+        "short_name": {
+          "type": "string",
+          "description": "Agency abbreviation when supplied."
+        },
+        "display_name": {
+          "type": "string",
+          "description": "Human-readable agency display name."
+        },
+        "sortable_name": {
+          "type": "string",
+          "description": "Agency name normalized for alphabetical sorting."
+        },
+        "slug": {
+          "type": "string",
+          "description": "URL-safe agency identifier."
+        },
+        "cfr_references": {
           "type": "array",
-          "description": "The catalog of CFR titles, each with its currency metadata.",
-          "items": { "$ref": "#/definitions/Title" }
+          "items": { "$ref": "#/definitions/CfrReference" },
+          "description": "CFR chapters assigned to the child agency."
         }
       }
     },
     "Agency": {
       "type": "object",
-      "description": "A single agency represented in the CFR, with the naming and slug metadata the eCFR versioner reports for it.",
+      "description": "A top-level agency represented in the CFR, including child agencies and CFR references.",
       "required": ["name", "slug"],
       "properties": {
         "name": {
           "type": "string",
-          "description": "The full, official name of the agency."
+          "description": "Full official agency name."
         },
         "short_name": {
           "type": "string",
-          "description": "Abbreviated form of the agency name, when eCFR provides one."
+          "description": "Agency abbreviation when supplied."
         },
         "display_name": {
           "type": "string",
-          "description": "Human-readable agency name intended for presentation in UI."
+          "description": "Human-readable agency display name."
         },
         "sortable_name": {
           "type": "string",
-          "description": "Agency name normalized for alphabetical sorting (e.g. leading articles removed)."
+          "description": "Agency name normalized for alphabetical sorting."
         },
         "slug": {
           "type": "string",
-          "description": "URL-safe identifier for the agency, used as its key in eCFR API paths."
+          "description": "URL-safe agency identifier."
+        },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/AgencyChild" },
+          "description": "Child agencies in name order."
+        },
+        "cfr_references": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/CfrReference" },
+          "description": "CFR chapters assigned directly to the agency."
         }
       }
     },
     "AgenciesResponse": {
       "type": "object",
-      "description": "Response envelope for the eCFR agencies listing endpoint, wrapping the full roster of agencies represented in the CFR.",
+      "description": "Response envelope containing the agency roster.",
       "required": ["agencies"],
       "properties": {
         "agencies": {
           "type": "array",
-          "description": "The roster of agencies represented in the CFR, each with its naming and slug metadata.",
-          "items": { "$ref": "#/definitions/Agency" }
+          "items": { "$ref": "#/definitions/Agency" },
+          "description": "Top-level agencies in name order."
+        }
+      }
+    },
+    "CorrectionHierarchy": {
+      "type": "object",
+      "description": "Known CFR hierarchy identifiers locating corrected content.",
+      "properties": {
+        "title": { "type": "string", "description": "CFR title identifier." },
+        "subtitle": {
+          "type": "string",
+          "description": "Subtitle identifier when present."
+        },
+        "chapter": {
+          "type": "string",
+          "description": "Chapter identifier when present."
+        },
+        "subchapter": {
+          "type": "string",
+          "description": "Subchapter identifier when present."
+        },
+        "part": {
+          "type": "string",
+          "description": "Part identifier when present."
+        },
+        "subpart": {
+          "type": "string",
+          "description": "Subpart identifier when present."
+        },
+        "section": {
+          "type": "string",
+          "description": "Section identifier when present."
+        },
+        "appendix": {
+          "type": "string",
+          "description": "Appendix identifier when present."
+        }
+      }
+    },
+    "CorrectionReference": {
+      "type": "object",
+      "description": "Human-readable and structured CFR location for a correction.",
+      "required": ["cfr_reference", "hierarchy"],
+      "properties": {
+        "cfr_reference": {
+          "type": "string",
+          "description": "Human-readable CFR citation for the corrected content."
+        },
+        "hierarchy": {
+          "$ref": "#/definitions/CorrectionHierarchy",
+          "description": "Structured hierarchy identifiers for the corrected content."
+        }
+      }
+    },
+    "Correction": {
+      "type": "object",
+      "description": "An eCFR editorial correction and its affected CFR locations.",
+      "required": ["id", "title"],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "Stable correction record identifier."
+        },
+        "cfr_references": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/CorrectionReference" },
+          "description": "CFR locations affected by the correction."
+        },
+        "corrective_action": {
+          "type": "string",
+          "description": "Description of the corrective editorial action."
+        },
+        "error_corrected": {
+          "type": "string",
+          "format": "date",
+          "description": "Date the error was corrected."
+        },
+        "error_occurred": {
+          "type": "string",
+          "format": "date",
+          "description": "Date the error entered the eCFR material."
+        },
+        "fr_citation": {
+          "type": "string",
+          "description": "Federal Register citation associated with the correction."
+        },
+        "position": {
+          "type": "integer",
+          "description": "Display order among corrections for the same source."
+        },
+        "display_in_toc": {
+          "type": "boolean",
+          "description": "Whether the correction is displayed in the table of contents."
+        },
+        "title": {
+          "type": "integer",
+          "description": "Affected CFR title number."
+        },
+        "year": {
+          "type": "integer",
+          "description": "Calendar year associated with the correction."
+        },
+        "last_modified": {
+          "type": "string",
+          "format": "date",
+          "description": "Date the correction record was last modified."
+        }
+      }
+    },
+    "CorrectionsResponse": {
+      "type": "object",
+      "description": "Response envelope containing eCFR correction records.",
+      "required": ["ecfr_corrections"],
+      "properties": {
+        "ecfr_corrections": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Correction" },
+          "description": "Correction records matching the request."
+        }
+      }
+    },
+    "SearchResult": {
+      "type": "object",
+      "description": "A section or appendix matching an eCFR search.",
+      "properties": {
+        "title": {
+          "type": "integer",
+          "description": "CFR title number containing the match."
+        },
+        "type": {
+          "type": "string",
+          "description": "Hierarchy node type of the matching content."
+        },
+        "hierarchy_headings": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Ordered headings locating the match in the CFR hierarchy."
+        },
+        "headings": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Headings associated with the matching content."
+        },
+        "full_text_excerpt": {
+          "type": "string",
+          "description": "Highlighted excerpt surrounding the matching text."
+        },
+        "score": {
+          "type": "number",
+          "description": "Search relevance score when supplied."
+        }
+      }
+    },
+    "SearchMeta": {
+      "type": "object",
+      "description": "Pagination and score metadata for eCFR search results.",
+      "required": ["current_page", "total_count", "total_pages"],
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of the search results."
+        },
+        "current_page": {
+          "type": "integer",
+          "description": "One-based current result page."
+        },
+        "total_count": {
+          "type": "integer",
+          "description": "Total number of matching results across all pages."
+        },
+        "total_pages": {
+          "type": "integer",
+          "description": "Total number of result pages."
+        },
+        "max_score": {
+          "type": "number",
+          "description": "Maximum relevance score among matches."
+        },
+        "min_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Minimum result date when paginating by date."
+        },
+        "max_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Maximum result date when paginating by date."
+        }
+      }
+    },
+    "SearchResultsResponse": {
+      "type": "object",
+      "description": "Paginated eCFR search-results envelope.",
+      "required": ["results", "meta"],
+      "properties": {
+        "results": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/SearchResult" },
+          "description": "Sections and appendices matching the request."
+        },
+        "meta": {
+          "$ref": "#/definitions/SearchMeta",
+          "description": "Pagination metadata for the result set."
+        }
+      }
+    },
+    "SearchCountResponse": {
+      "type": "object",
+      "description": "Conservative envelope for the eCFR search count endpoint.",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "Number of matching search results when supplied by the service."
+        },
+        "total_count": {
+          "type": "integer",
+          "description": "Total matching result count when supplied under the paginated-result field name."
+        }
+      }
+    },
+    "SearchSummaryResponse": {
+      "type": "object",
+      "description": "Conservative envelope for eCFR search summary details; all known fields remain optional because the official spec leaves the response schema unspecified.",
+      "properties": {
+        "description": {
+          "type": "string",
+          "description": "Human-readable search summary."
+        },
+        "count": {
+          "type": "integer",
+          "description": "Matching result count when included."
+        }
+      }
+    },
+    "DailyCount": {
+      "type": "object",
+      "description": "Search-result count associated with one date.",
+      "properties": {
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "ISO date represented by the bucket."
+        },
+        "count": {
+          "type": "integer",
+          "description": "Number of matches in the date bucket."
+        }
+      }
+    },
+    "SearchDailyCountsResponse": {
+      "type": "object",
+      "description": "Conservative envelope for daily eCFR search counts.",
+      "properties": {
+        "counts": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/DailyCount" },
+          "description": "Daily result-count buckets when supplied."
+        }
+      }
+    },
+    "TitleCount": {
+      "type": "object",
+      "description": "Search-result count associated with one CFR title.",
+      "properties": {
+        "title": {
+          "type": "integer",
+          "description": "CFR title number represented by the bucket."
+        },
+        "count": {
+          "type": "integer",
+          "description": "Number of matches in the title bucket."
+        }
+      }
+    },
+    "SearchTitleCountsResponse": {
+      "type": "object",
+      "description": "Conservative envelope for per-title eCFR search counts.",
+      "properties": {
+        "counts": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/TitleCount" },
+          "description": "Per-title result-count buckets when supplied."
+        }
+      }
+    },
+    "HierarchyCount": {
+      "type": "object",
+      "description": "Search-result count associated with one CFR hierarchy node.",
+      "properties": {
+        "label": {
+          "type": "string",
+          "description": "Human-readable hierarchy label."
+        },
+        "identifier": {
+          "type": "string",
+          "description": "Hierarchy node identifier."
+        },
+        "count": {
+          "type": "integer",
+          "description": "Number of matches in the hierarchy bucket."
+        }
+      }
+    },
+    "SearchHierarchyCountsResponse": {
+      "type": "object",
+      "description": "Conservative envelope for hierarchy-level eCFR search counts.",
+      "properties": {
+        "counts": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/HierarchyCount" },
+          "description": "Hierarchy result-count buckets when supplied."
+        }
+      }
+    },
+    "SearchSuggestionsResponse": {
+      "type": "object",
+      "description": "Conservative envelope for eCFR search suggestions.",
+      "properties": {
+        "suggestions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Suggested search strings when supplied."
+        }
+      }
+    },
+    "HierarchyNode": {
+      "type": "object",
+      "description": "A CFR hierarchy node returned in an ancestry response.",
+      "required": ["type", "label", "identifier"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Hierarchy level such as title, chapter, part, or section."
+        },
+        "label": {
+          "type": "string",
+          "description": "Complete human-readable node label."
+        },
+        "label_level": {
+          "type": "string",
+          "description": "Hierarchy level portion of the label."
+        },
+        "label_description": {
+          "type": "string",
+          "description": "Descriptive portion of the label."
+        },
+        "identifier": {
+          "type": "string",
+          "description": "Identifier within the node's hierarchy level."
+        },
+        "reserved": {
+          "type": "boolean",
+          "description": "Whether the hierarchy node is reserved."
+        },
+        "section_range": {
+          "type": "string",
+          "description": "Section range covered by the node when supplied."
+        }
+      }
+    },
+    "AncestryResponse": {
+      "type": "array",
+      "description": "Ordered CFR hierarchy nodes from title through the requested leaf.",
+      "items": { "$ref": "#/definitions/HierarchyNode" }
+    },
+    "StructureChild": {
+      "type": "object",
+      "description": "A direct child in an eCFR structure tree.",
+      "required": ["type", "label", "identifier"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Hierarchy level of the child node."
+        },
+        "label": {
+          "type": "string",
+          "description": "Complete human-readable child label."
+        },
+        "label_level": {
+          "type": "string",
+          "description": "Hierarchy level portion of the child label."
+        },
+        "label_description": {
+          "type": "string",
+          "description": "Descriptive portion of the child label."
+        },
+        "identifier": {
+          "type": "string",
+          "description": "Identifier within the hierarchy level."
+        },
+        "reserved": {
+          "type": "boolean",
+          "description": "Whether the child node is reserved."
+        },
+        "section_range": {
+          "type": "string",
+          "description": "Section range covered by the child node."
+        }
+      }
+    },
+    "StructureNode": {
+      "type": "object",
+      "description": "Root of a CFR title structure tree without regulation text.",
+      "required": ["type", "label", "identifier"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Hierarchy level of the root node."
+        },
+        "label": {
+          "type": "string",
+          "description": "Complete human-readable root label."
+        },
+        "label_level": {
+          "type": "string",
+          "description": "Hierarchy level portion of the root label."
+        },
+        "label_description": {
+          "type": "string",
+          "description": "Descriptive portion of the root label."
+        },
+        "identifier": {
+          "type": "string",
+          "description": "Identifier within the hierarchy level."
+        },
+        "reserved": {
+          "type": "boolean",
+          "description": "Whether the root node is reserved."
+        },
+        "section_range": {
+          "type": "string",
+          "description": "Section range covered by the root node."
+        },
+        "children": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/StructureChild" },
+          "description": "Direct child nodes. Deeper tree parsing is intentionally conservative in v1."
+        }
+      }
+    },
+    "Title": {
+      "type": "object",
+      "description": "A CFR title with currency and processing metadata.",
+      "required": ["number", "name", "reserved"],
+      "properties": {
+        "number": {
+          "type": "integer",
+          "description": "CFR title number, from 1 through 50."
+        },
+        "name": { "type": "string", "description": "Official CFR title name." },
+        "latest_amended_on": {
+          "type": "string",
+          "format": "date",
+          "description": "Most recent amendment date."
+        },
+        "latest_issue_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Most recent published issue date."
+        },
+        "up_to_date_as_of": {
+          "type": "string",
+          "format": "date",
+          "description": "Date through which the title is confirmed current."
+        },
+        "reserved": {
+          "type": "boolean",
+          "description": "Whether the title number is reserved."
+        },
+        "processing_in_progress": {
+          "type": "boolean",
+          "description": "Whether title processing is currently in progress."
+        }
+      }
+    },
+    "TitlesMeta": {
+      "type": "object",
+      "description": "Import status metadata accompanying the CFR titles catalog.",
+      "properties": {
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "Metadata snapshot date."
+        },
+        "import_in_progress": {
+          "type": "boolean",
+          "description": "Whether an eCFR title import is in progress."
+        }
+      }
+    },
+    "TitlesResponse": {
+      "type": "object",
+      "description": "Response envelope containing the CFR titles catalog and import metadata.",
+      "required": ["titles"],
+      "properties": {
+        "titles": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/Title" },
+          "description": "CFR titles and their currency metadata."
+        },
+        "meta": {
+          "$ref": "#/definitions/TitlesMeta",
+          "description": "Catalog import status when supplied."
+        }
+      }
+    },
+    "ContentVersion": {
+      "type": "object",
+      "description": "A dated version of one CFR section or appendix.",
+      "required": ["identifier", "title", "type"],
+      "properties": {
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "Deprecated alias of amendment_date retained by the API."
+        },
+        "amendment_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Date the content was amended."
+        },
+        "issue_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Issue date on which this content version appeared."
+        },
+        "identifier": {
+          "type": "string",
+          "description": "Section or appendix identifier."
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable content name."
+        },
+        "part": {
+          "type": "string",
+          "description": "Containing CFR part identifier."
+        },
+        "substantive": {
+          "type": "boolean",
+          "description": "Whether the change is substantive."
+        },
+        "removed": {
+          "type": "boolean",
+          "description": "Whether the content was removed in this version."
+        },
+        "subpart": {
+          "type": "string",
+          "description": "Containing subpart identifier when present."
+        },
+        "title": {
+          "type": "string",
+          "description": "Containing CFR title identifier."
+        },
+        "type": {
+          "type": "string",
+          "description": "Content type, normally section or appendix."
+        }
+      }
+    },
+    "VersionsMeta": {
+      "type": "object",
+      "description": "Query and currency metadata for a content-version response.",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Requested CFR title identifier."
+        },
+        "result_count": {
+          "type": "string",
+          "description": "Number of content versions returned, as encoded by the upstream API."
+        },
+        "latest_amendment_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Latest amendment date among returned versions."
+        },
+        "latest_issue_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Latest issue date among returned versions."
+        }
+      }
+    },
+    "VersionsResponse": {
+      "type": "object",
+      "description": "Response envelope containing CFR content versions and query metadata.",
+      "required": ["content_versions", "meta"],
+      "properties": {
+        "content_versions": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/ContentVersion" },
+          "description": "Content versions matching the request."
+        },
+        "meta": {
+          "$ref": "#/definitions/VersionsMeta",
+          "description": "Query and currency metadata."
         }
       }
     }

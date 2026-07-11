@@ -30,7 +30,7 @@ drifts from the manifests, and merge conflicts are resolved by regenerating.
 | [effect-native-migration](./effect-native-migration/README.md) | Effect-Native Migration | 1/5 | 2026-05-20 | Migrate native JS Map/Set/String/Object/Date/JSON/Array usage in first-party packages/** and apps/** to Effect-native e… |
 | [fallow-advisory-ratchets](./fallow-advisory-ratchets/README.md) | Fallow Advisory Ratchets | 2/5 | 2026-07-11 | Implement the next phase after Fallow Quality Enforcement: selected advisory lanes become narrow, policy-backed ratchet… |
 | [fallow-debt-burndown](./fallow-debt-burndown/README.md) | Fallow Debt Burn-Down | 1/6 | 2026-07-11 | Turn the current advisory Fallow output into a remediation queue. This packet is about fixing selected Fallow-identifie… |
-| [gov-legal-data-driver-delivery](./gov-legal-data-driver-delivery/README.md) | Gov/Legal Data Driver Delivery | 1/7 | 2026-07-11 | — |
+| [gov-legal-data-driver-delivery](./gov-legal-data-driver-delivery/README.md) | Gov/Legal Data Driver Delivery | 2/7 | 2026-07-11 | — |
 | [ip-law-knowledge-graph](./ip-law-knowledge-graph/README.md) | IP Law Knowledge Graph | 0/5 | — | — |
 | [knowledge-workspace](./knowledge-workspace/README.md) | Knowledge Workspace | — | 2026-07-11 | — |
 | [lint-advisory-hardening](./lint-advisory-hardening/README.md) | Lint Advisory Hardening | 1/4 | 2026-07-11 | Make root lint advisory output actionable by eliminating the current nonfatal backlog, hardening false-positive-prone c… |

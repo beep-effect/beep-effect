@@ -258,6 +258,10 @@ Each `SourceSnapshot` records:
   (redaction/normalization) applied to the raw bytes;
 - the versioned content-safety/canonicalization policy identifier
   (`safetyPolicyVersion`) that produced the accepted bytes;
+- the exact `captureGrantId` under which the bytes were acquired (the
+  versioned initial grant or a recorded reacquisition grant), persisted in
+  the immutable envelope so clean-store rebuilds hash the stored grant value
+  rather than re-deriving it;
 - acquisition time from `Clock`, terms revision, attribution, and provenance;
 - accepted payload reference and payload-availability state.
 

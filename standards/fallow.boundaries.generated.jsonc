@@ -1995,6 +1995,7 @@
         "from": "@beep/ontology-server",
         "allow": [
           "@beep/file-processing",
+          "@beep/mcp-kit",
           "@beep/n3",
           "@beep/ontology-config",
           "@beep/ontology-server",
@@ -2007,6 +2008,7 @@
         ],
         "allowTypeOnly": [
           "@beep/file-processing",
+          "@beep/mcp-kit",
           "@beep/n3",
           "@beep/ontology-config",
           "@beep/ontology-server",
@@ -2210,6 +2212,7 @@
           "@beep/file-processing",
           "@beep/identity",
           "@beep/lexical-schema",
+          "@beep/mcp-kit",
           "@beep/md",
           "@beep/ontology-client",
           "@beep/ontology-domain",
@@ -2245,6 +2248,7 @@
           "@beep/file-processing",
           "@beep/identity",
           "@beep/lexical-schema",
+          "@beep/mcp-kit",
           "@beep/md",
           "@beep/ontology-client",
           "@beep/ontology-domain",

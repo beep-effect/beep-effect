@@ -60,10 +60,17 @@ export const isAuthorizedRpcSessionRequest = (
 /**
  * HTTP middleware requiring the active desktop RPC session token.
  *
+ * @example
+ * ```ts
+ * import { Redacted } from "effect"
+ * import { requireRpcSessionToken } from "./RpcSessionAuth.ts"
+ * console.log(requireRpcSessionToken(Redacted.make("test-token")))
+ * ```
+ *
  * @category auth
  * @since 0.0.0
  */
-const requireRpcSessionToken = (token: Redacted.Redacted<string>) =>
+export const requireRpcSessionToken = (token: Redacted.Redacted<string>) =>
   HttpMiddleware.make(
     <E, R>(
       effect: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R | HttpServerRequest.HttpServerRequest>

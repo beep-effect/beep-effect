@@ -210,6 +210,44 @@ export class OntologyNoOpRefusal extends TaggedErrorClass<OntologyNoOpRefusal>($
   })
 ) {}
 
+/** Recoverable refusal when authenticated caller identity is unavailable.
+ * @example
+ * ```ts
+ * import { OntologyActorIdentityRefusal } from "@beep/ontology-use-cases/tools"
+ * const error = OntologyActorIdentityRefusal.make({ guidance: "Initialize an authenticated MCP session and retry.", recoverable: true })
+ * console.log(error._tag)
+ * ```
+ * @category errors
+ * @since 0.0.0
+ */
+export class OntologyActorIdentityRefusal extends TaggedErrorClass<OntologyActorIdentityRefusal>(
+  $I`OntologyActorIdentityRefusal`
+)(
+  "OntologyActorIdentityRefusal",
+  { guidance: S.NonEmptyString, recoverable: S.Literal(true) },
+  $I.annote("OntologyActorIdentityRefusal", {
+    description: "Recoverable refusal when authenticated caller identity is unavailable for mutation attribution.",
+  })
+) {}
+
+/** Recoverable refusal returned when TierGate does not approve a mutation.
+ * @example
+ * ```ts
+ * import { OntologyTierGateRefusal } from "@beep/ontology-use-cases/tools"
+ * const error = OntologyTierGateRefusal.make({ guidance: "Resolve the mutation tier and retry.", recoverable: true })
+ * console.log(error._tag)
+ * ```
+ * @category errors
+ * @since 0.0.0
+ */
+export class OntologyTierGateRefusal extends TaggedErrorClass<OntologyTierGateRefusal>($I`OntologyTierGateRefusal`)(
+  "OntologyTierGateRefusal",
+  { guidance: S.NonEmptyString, recoverable: S.Literal(true) },
+  $I.annote("OntologyTierGateRefusal", {
+    description: "Recoverable fail-closed refusal returned when TierGate does not approve an ontology mutation.",
+  })
+) {}
+
 /** Typed execution failure from a real ontology layer.
  * @example
  * ```ts
@@ -242,6 +280,8 @@ export const OntologyToolFailure = S.Union([
   OntologyBudgetRefusal,
   OntologyReasonerDriftRefusal,
   OntologyNoOpRefusal,
+  OntologyActorIdentityRefusal,
+  OntologyTierGateRefusal,
   OntologyToolExecutionError,
 ]).pipe($I.annoteSchema("OntologyToolFailure", { description: "Failure returned by the ontology agent toolkit." }));
 
@@ -778,6 +818,35 @@ export const OntologyToolkit = Toolkit.make(
   ExportProvenanceTool,
   CapabilityMetadataTool
 );
+
+/** Read-only ontology toolkit registered independently of mutation enablement.
+ * @example
+ * ```ts
+ * import { OntologyReadOnlyToolkit } from "@beep/ontology-use-cases/tools"
+ * console.log(Object.keys(OntologyReadOnlyToolkit.tools).includes("ontology_sparql_query"))
+ * ```
+ * @category tools
+ * @since 0.0.0
+ */
+export const OntologyReadOnlyToolkit = Toolkit.make(
+  OpenInspectTool,
+  SnapshotDescribeTool,
+  OntologySearchTool,
+  OntologySparqlQueryTool,
+  ValidateOntologyTool,
+  CapabilityMetadataTool
+);
+
+/** Mutation toolkit registered only when the sidecar mutation feature gate is enabled.
+ * @example
+ * ```ts
+ * import { OntologyMutationToolkit } from "@beep/ontology-use-cases/tools"
+ * console.log(Object.keys(OntologyMutationToolkit.tools).includes("ontology_repair"))
+ * ```
+ * @category tools
+ * @since 0.0.0
+ */
+export const OntologyMutationToolkit = Toolkit.make(ProposeChangeBatchTool, RepairOntologyTool, ExportProvenanceTool);
 
 /** Type for {@link OntologyToolkit}.
  * @example

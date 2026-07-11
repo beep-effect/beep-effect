@@ -3,6 +3,7 @@ import {
   ChangeOperation,
   CreateSessionInput,
   createSession,
+  OntologyChangeActor,
   Session,
   SessionId,
 } from "@beep/ontology-domain/aggregates/Session";
@@ -63,6 +64,7 @@ const marker = makeNamedNode("https://example.test/marker");
 const markerValue = makeNamedNode("https://example.test/marker-value");
 const shape = makeNamedNode("urn:shape:material-class");
 const property = makeBlankNode("shape-material-class-property");
+const testActor = OntologyChangeActor.make("urn:beep:test:validation-actor");
 
 const shapeOperations = (): ReadonlyArray<ChangeOperation> =>
   [
@@ -77,6 +79,7 @@ const shapeOperations = (): ReadonlyArray<ChangeOperation> =>
       kind: "addQuad",
       partition: "shapes",
       quad,
+      actor: testActor,
     })
   );
 
@@ -328,7 +331,10 @@ describe("Ontology validation and provenance", () => {
 
           const repair = violationResult.repairs[0];
           expect(repair?.verified).toBe(true);
-          const repaired = applyChangeOperationsWithDelta(initial, repair?.operations ?? []).session;
+          const repaired = applyChangeOperationsWithDelta(
+            initial,
+            A.map(repair?.operations ?? [], (operation) => ChangeOperation.make({ ...operation, actor: testActor }))
+          ).session;
           const repairedResult = yield* runner.run(RunOntologyValidationInput.make({ session: repaired }));
 
           expect(repairedResult.validation.conforms).toBe(true);
