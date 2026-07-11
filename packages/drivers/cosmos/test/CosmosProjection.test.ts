@@ -2,22 +2,29 @@ import {
   CosmosCapabilityProbe,
   CosmosGraphProjection,
   generateSyntheticOntologyProjection,
+  ProbeWebGl2Options,
   renderCosmosGraph,
   SyntheticOntologyGraphOptions,
   selectCosmosBackend,
 } from "@beep/cosmos";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as O from "effect/Option";
 import { vi } from "vitest";
 
-const graphologyState = vi.hoisted(() => ({
-  graphs: [] as Array<{
-    readonly clearCount: () => number;
-    readonly edgeKeys: () => ReadonlyArray<string>;
-    readonly nodeKeys: () => ReadonlyArray<string>;
-  }>,
-  refreshCount: 0,
-}));
+const graphologyState = vi.hoisted(
+  (): {
+    readonly graphs: Array<{
+      readonly clearCount: () => number;
+      readonly edgeKeys: () => ReadonlyArray<string>;
+      readonly nodeKeys: () => ReadonlyArray<string>;
+    }>;
+    refreshCount: number;
+  } => ({
+    graphs: [],
+    refreshCount: 0,
+  })
+);
 
 vi.mock("graphology", () => ({
   default: class {
@@ -89,6 +96,25 @@ describe("cosmos driver projection and capability detection", () => {
     })
   );
 
+  it.effect("normalizes synthetic graph counts without a parallel defaults object", () =>
+    Effect.sync(() => {
+      const projection = generateSyntheticOntologyProjection(
+        SyntheticOntologyGraphOptions.make({ nodeCount: 0, edgeCount: -1, seed: 0 })
+      );
+
+      expect(projection.nodeCount).toBe(1);
+      expect(projection.edgeCount).toBe(0);
+      expect(projection.nodeIds).toHaveLength(1);
+      expect(projection.links).toHaveLength(0);
+    })
+  );
+
+  it.effect("models an omitted WebGL canvas as Option none", () =>
+    Effect.sync(() => {
+      expect(O.isNone(ProbeWebGl2Options.make({}).canvas)).toBe(true);
+    })
+  );
+
   it.effect(
     "rebuilds the sigma graphology graph from the incoming update projection",
     Effect.fnUntraced(function* () {
@@ -108,7 +134,7 @@ describe("cosmos driver projection and capability detection", () => {
         pointPositions: new Float32Array([0, 0, 1, 1, 2, 2]),
         links: new Float32Array([0, 1, 1, 2]),
       });
-      const container = globalThis.document?.createElement("div") ?? ({} as HTMLElement);
+      const container = globalThis.document.createElement("div");
       const handle = yield* renderCosmosGraph(container, initial);
       const graph = graphologyState.graphs[0];
 

@@ -1523,7 +1523,9 @@
       ],
       "@beep/documents-tables/tables": [
         "./packages/documents/tables/src/tables.ts"
-      ]
+      ],
+      "@beep/tailscale": ["./packages/drivers/tailscale/src/index.ts"],
+      "@beep/tailscale/*": ["./packages/drivers/tailscale/src/*"]
     }
   }
 }

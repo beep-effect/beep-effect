@@ -7,6 +7,7 @@
 
 import { $CosmosId } from "@beep/identity/packages";
 import { Float32Arr } from "@beep/schema/Float32Array";
+import { Number as N } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $CosmosId.create("Cosmos.projection");
@@ -83,9 +84,6 @@ export class SyntheticOntologyGraphOptions extends S.Class<SyntheticOntologyGrap
   })
 ) {}
 
-const positiveCount = (value: number): number => (value > 0 ? value : 1);
-const nonNegativeCount = (value: number): number => (value > 0 ? value : 0);
-const positiveSeed = (value: number): number => (value > 0 ? value : 1);
 const nextSeed = (value: number): number => (value * 1_664_525 + 1_013_904_223) % 4_294_967_296;
 const gridColumns = 512;
 const positionScale = 3;
@@ -108,11 +106,13 @@ const positionScale = 3;
  * @since 0.0.0
  */
 export const generateSyntheticOntologyProjection = (options: SyntheticOntologyGraphOptions): CosmosGraphProjection => {
-  const nodeCount = positiveCount(options.nodeCount);
-  const edgeCount = nonNegativeCount(options.edgeCount);
+  const nodeCount = N.max(options.nodeCount, 1);
+  const edgeCount = N.max(options.edgeCount, 0);
   const nodeIds = new Uint32Array(nodeCount);
   const pointPositions = new Float32Array(nodeCount * 2);
   const links = new Float32Array(edgeCount * 2);
+  // crispen: kept imperative to fill typed arrays without allocating intermediate arrays;
+  // move to schema-derived collection combinators if the benchmark no longer requires this hot path.
   let nodeIndex = 0;
 
   while (nodeIndex < nodeCount) {
@@ -127,7 +127,7 @@ export const generateSyntheticOntologyProjection = (options: SyntheticOntologyGr
   }
 
   let edgeIndex = 0;
-  let state = positiveSeed(options.seed);
+  let state = N.max(options.seed, 1);
 
   while (edgeIndex < edgeCount) {
     state = nextSeed(state);

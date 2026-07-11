@@ -168,7 +168,9 @@ const generatedComposers = $I.compose(
   "storybook",
   "tsgo-shim",
   "doc-text",
-  "documents-tables"
+  "doc-text",
+  "documents-tables",
+  "tailscale"
 );
 
 const composers = {
@@ -2054,3 +2056,19 @@ export const $DocTextId: Identity.IdentityComposer<"@beep/doc-text"> = composers
  * @category configuration
  */
 export const $DocumentsTablesId: Identity.IdentityComposer<"@beep/documents-tables"> = composers.$DocumentsTablesId;
+
+/**
+ * Identity composer for `@beep/tailscale`.
+ *
+ * @example
+ * ```typescript
+ * import { $TailscaleId } from "@beep/identity"
+ *
+ * const id = $TailscaleId.make("Tailscale")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $TailscaleId: Identity.IdentityComposer<"@beep/tailscale"> = composers.$TailscaleId;

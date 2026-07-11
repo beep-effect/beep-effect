@@ -94,6 +94,7 @@ const config = {
     "packages/drivers/uspto-mcp/package.json",
     "packages/drivers/pacer/package.json",
     "packages/drivers/protobuf/package.json",
+    "packages/drivers/tailscale/package.json",
   ],
   customTypes: {
     catalog: {

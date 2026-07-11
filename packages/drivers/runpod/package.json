@@ -19,7 +19,8 @@
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "beep:audit": "bun run generate && bun run beep:build && bun run beep:check && bun run type-test && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
     "beep:build": "tsc -b tsconfig.json && bun run babel",
-    "beep:check": "tsgo -b tsconfig.json",
+    "beep:check": "tsgo -b tsconfig.json && bun run beep:check:scripts",
+    "beep:check:scripts": "tsgo -p tsconfig.scripts.json --noEmit",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
@@ -67,11 +68,13 @@
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
+    "@effect/platform-bun": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "bun-types": "catalog:"
   }
 }

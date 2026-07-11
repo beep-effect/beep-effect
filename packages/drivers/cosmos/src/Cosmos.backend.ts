@@ -6,8 +6,9 @@
  */
 
 import { $CosmosId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { P } from "@beep/utils";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const $I = $CosmosId.create("Cosmos.backend");
@@ -27,8 +28,8 @@ const $I = $CosmosId.create("Cosmos.backend");
  * @category models
  * @since 0.0.0
  */
-export const CosmosBackend = LiteralKit(["cosmos", "sigma"]).pipe(
-  $I.annoteSchema("CosmosBackend", {
+export const CosmosBackend = LiteralKit(["cosmos", "sigma"]).annotate(
+  $I.annote("CosmosBackend", {
     description: "Graph viewport backend selected by the cosmos driver capability probe.",
   })
 );
@@ -128,7 +129,7 @@ const HtmlCanvasElementLike = S.declare<HTMLCanvasElement>(isHtmlCanvasElement).
  *
  * const options = ProbeWebGl2Options.make({})
  *
- * console.log(options.canvas)
+ * console.log(options.canvas._tag)
  * ```
  *
  * @category diagnostics
@@ -136,7 +137,7 @@ const HtmlCanvasElementLike = S.declare<HTMLCanvasElement>(isHtmlCanvasElement).
  */
 export class ProbeWebGl2Options extends S.Class<ProbeWebGl2Options>($I`ProbeWebGl2Options`)(
   {
-    canvas: S.optionalKey(HtmlCanvasElementLike),
+    canvas: S.OptionFromOptionalKey(HtmlCanvasElementLike).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("ProbeWebGl2Options", {
     description: "Optional canvas override for probing WebGL2 without creating a document element.",
@@ -162,7 +163,7 @@ export class ProbeWebGl2Options extends S.Class<ProbeWebGl2Options>($I`ProbeWebG
  */
 export const selectCosmosBackend = (probe: CosmosCapabilityProbe): CosmosBackendSelection =>
   CosmosBackendSelection.make({
-    backend: probe.webGl2 ? "cosmos" : "sigma",
+    backend: probe.webGl2 ? CosmosBackend.Enum.cosmos : CosmosBackend.Enum.sigma,
     webGl2: probe.webGl2,
     reason: probe.reason,
   });
@@ -183,27 +184,32 @@ export const selectCosmosBackend = (probe: CosmosCapabilityProbe): CosmosBackend
  * @since 0.0.0
  */
 export const probeWebGl2 = (options: ProbeWebGl2Options = ProbeWebGl2Options.make({})): CosmosCapabilityProbe => {
-  const runtimeDocument = globalThis.document;
+  const canvas = options.canvas.pipe(
+    O.orElse(() =>
+      O.fromUndefinedOr(globalThis.document).pipe(O.map((runtimeDocument) => runtimeDocument.createElement("canvas")))
+    )
+  );
 
-  if (P.isUndefined(runtimeDocument) && P.isUndefined(options?.canvas)) {
-    return CosmosCapabilityProbe.make({
-      webGl2: false,
-      reason: "document unavailable",
-    });
-  }
-
-  const canvas = options?.canvas ?? runtimeDocument.createElement("canvas");
-  const context = canvas.getContext("webgl2", {
-    failIfMajorPerformanceCaveat: true,
-  });
-
-  return P.isNotNull(context)
-    ? CosmosCapabilityProbe.make({
-        webGl2: true,
-        reason: "WebGL2 context created",
-      })
-    : CosmosCapabilityProbe.make({
+  return O.match(canvas, {
+    onNone: () =>
+      CosmosCapabilityProbe.make({
         webGl2: false,
-        reason: "WebGL2 context unavailable",
+        reason: "document unavailable",
+      }),
+    onSome: (runtimeCanvas) => {
+      const context = runtimeCanvas.getContext("webgl2", {
+        failIfMajorPerformanceCaveat: true,
       });
+
+      return P.isNotNull(context)
+        ? CosmosCapabilityProbe.make({
+            webGl2: true,
+            reason: "WebGL2 context created",
+          })
+        : CosmosCapabilityProbe.make({
+            webGl2: false,
+            reason: "WebGL2 context unavailable",
+          });
+    },
+  });
 };
