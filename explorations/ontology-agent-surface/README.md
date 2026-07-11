@@ -2,8 +2,8 @@
 
 ## Status
 
-Stage: `shape`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -17,9 +17,9 @@ workbench retrospective's hardening pre-work and architecture consolidations.
 
 ## Next Open Question
 
-BRIEF.md is drafted from the five resolved decisions — does it match the
-picture in the user's head? (Shape-stage exit gate: user sign-off, then
-decompose.)
+None — graduated.
+
+Goal: [`goals/ontology-agent-surface`](../../goals/ontology-agent-surface/README.md).
 
 ## Read This First
 
@@ -32,6 +32,10 @@ decompose.)
 
 ## Trail
 
+- 2026-07-11: definition-of-ready passed after user sign-off and MAP
+  decomposition; graduated the single candidate into
+  `goals/ontology-agent-surface`, carried the provenance ledger, cross-linked
+  both manifests, and moved this packet to ATLAS Graduated.
 - 2026-07-10: align completed — all 5 queued questions resolved in one
   grilling pass (HTTP-on-sidecar transport; stateless+fingerprint-CAS session
   model; TierGate+attribution+budgets launch-blocking; curated ~10-tool
