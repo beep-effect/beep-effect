@@ -21,7 +21,9 @@ import {
   SyncItemSeed,
 } from "@beep/documents-use-cases/entities/SyncItem/server";
 import {
+  ListQueuedSyncOperationsForItemInput,
   ListQueuedSyncOperationsInput,
+  ListSyncOperationsByStatusInput,
   RequeueLeasedSyncOperationsInput,
   SyncOperationRepositoryConflict,
   SyncOperationSeed,
@@ -195,6 +197,21 @@ if (!shouldRunPgliteIntegration) {
             ListQueuedSyncOperationsInput.make({ provider: "box", workspaceId })
           );
           expect(A.map(afterRecovery, (operation) => operation.id)).toEqual([first.id, second.id]);
+
+          const forItem = yield* repository.listQueuedForItem(
+            ListQueuedSyncOperationsForItemInput.make({ syncItemId: syncItemOne, workspaceId })
+          );
+          expect(A.map(forItem, (operation) => operation.id)).toEqual([first.id, second.id]);
+
+          yield* repository.update(DomainSyncOperation.SyncOperation.make({ ...second, status: "failed" }));
+          const failedOperations = yield* repository.listByStatus(
+            ListSyncOperationsByStatusInput.make({ provider: "box", status: "failed", workspaceId })
+          );
+          expect(A.map(failedOperations, (operation) => operation.id)).toEqual([second.id]);
+          const queuedAfterFailure = yield* repository.listByStatus(
+            ListSyncOperationsByStatusInput.make({ provider: "box", status: "queued", workspaceId })
+          );
+          expect(A.map(queuedAfterFailure, (operation) => operation.id)).toEqual([first.id]);
         }),
         pgliteIntegrationTimeoutMillis
       );

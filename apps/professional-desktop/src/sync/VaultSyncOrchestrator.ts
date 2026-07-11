@@ -55,9 +55,9 @@ export const VaultSyncHandlersLive = VaultSyncRpcs.toLayer(
         engine
           .listOpenConflicts(ListOpenConflictsInput.make({ workspaceId }))
           .pipe(Effect.catch(toVaultSyncActionError("ListVaultSyncConflicts"))),
-      MarkVaultSyncConflictReviewed: ({ conflictId }) =>
+      MarkVaultSyncConflictReviewed: ({ conflictId, workspaceId }) =>
         engine
-          .markConflictReviewed(MarkConflictReviewedInput.make({ conflictId }))
+          .markConflictReviewed(MarkConflictReviewedInput.make({ conflictId, workspaceId }))
           .pipe(Effect.catch(toVaultSyncActionError("MarkVaultSyncConflictReviewed"))),
       TriggerVaultSync: Effect.fn("TriggerVaultSync")(function* (payload) {
         const config = yield* workspaceVaultStore

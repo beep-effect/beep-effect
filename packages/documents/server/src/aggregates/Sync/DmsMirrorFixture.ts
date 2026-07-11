@@ -547,8 +547,27 @@ export const makeDmsMirrorFixture = Effect.fn($I`makeDmsMirrorFixture`)(function
   return { handle, mirror };
 });
 
+/**
+ * Stable synthetic remote id the fixture probe reports as its mirror root.
+ * Tests injecting foreign events "under the mirror root" use this as the
+ * event's `parentRemoteId`.
+ *
+ * @example
+ * ```ts
+ * import { DMS_MIRROR_FIXTURE_ROOT_ID } from "@beep/documents-server/aggregates/Sync"
+ *
+ * console.log(DMS_MIRROR_FIXTURE_ROOT_ID) // "fx-root"
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const DMS_MIRROR_FIXTURE_ROOT_ID = RemoteItemId.make("fx-root");
+
 const connectedAvailability = DmsMirrorAvailability.of({
-  probe: Effect.succeed(DmsMirrorProbe.make({ connected: true, provider: "box" })),
+  probe: Effect.succeed(
+    DmsMirrorProbe.make({ connected: true, provider: "box", rootRemoteId: O.some(DMS_MIRROR_FIXTURE_ROOT_ID) })
+  ),
 });
 
 /**

@@ -1,5 +1,9 @@
 import { RemoteItemId, VaultRelPath } from "@beep/documents-domain/values/Sync";
-import { DmsMirrorFixtureHandle, makeVaultSyncEngine } from "@beep/documents-server/aggregates/Sync";
+import {
+  DMS_MIRROR_FIXTURE_ROOT_ID,
+  DmsMirrorFixtureHandle,
+  makeVaultSyncEngine,
+} from "@beep/documents-server/aggregates/Sync";
 import { DocumentsSyncFixtureLive } from "@beep/documents-server/layer";
 import {
   DmsRemoteEvent,
@@ -69,20 +73,34 @@ describe("@beep/documents-server VaultSyncEngine drift detection", () => {
       expect(pushStatus.openConflicts).toBe(0);
 
       const tracked = yield* findTrackedItem("watched.txt");
-      // Foreign edit of a remote item the mirror never pushed.
+      // Foreign edit of an unknown remote item under the mirror root.
       yield* handle.injectRemoteEvent(
         DmsRemoteEvent.make({
           eventId: "foreign-evt-create",
           eventType: "edited",
           itemKind: O.some("file"),
           name: O.some("mystery.txt"),
+          parentRemoteId: O.some(DMS_MIRROR_FIXTURE_ROOT_ID),
           payload: { origin: "test" },
           remoteId: O.some(RemoteItemId.make("fx-9999")),
         })
       );
-      // Remote event without any item identifier.
+      // Remote event without any item identifier: unattributable account
+      // noise, ignored by design (never recorded as a conflict).
       yield* handle.injectRemoteEvent(
         DmsRemoteEvent.make({ eventId: "foreign-evt-unknown", eventType: "unknown", payload: { origin: "test" } })
+      );
+      // Unknown remote item whose parent is outside the mirror: invisible.
+      yield* handle.injectRemoteEvent(
+        DmsRemoteEvent.make({
+          eventId: "foreign-evt-outside",
+          eventType: "created",
+          itemKind: O.some("file"),
+          name: O.some("elsewhere.txt"),
+          parentRemoteId: O.some(RemoteItemId.make("fx-elsewhere")),
+          payload: { origin: "test" },
+          remoteId: O.some(RemoteItemId.make("fx-8888")),
+        })
       );
       // Remote rename of the tracked item that mismatches our pushed state.
       yield* handle.injectRemoteEvent(
@@ -103,11 +121,13 @@ describe("@beep/documents-server VaultSyncEngine drift detection", () => {
         conflict.conflictKind,
       ]);
 
-      expect(status.openConflicts).toBe(3);
+      expect(status.openConflicts).toBe(2);
       expect(status.conflictItems).toBe(1);
       expect(kindByEventId).toContainEqual(["foreign-evt-create", "remoteCreate"]);
-      expect(kindByEventId).toContainEqual(["foreign-evt-unknown", "remoteUnknown"]);
       expect(kindByEventId).toContainEqual(["foreign-evt-rename", "remoteRename"]);
+      // Unattributable and outside-mirror events never become conflicts.
+      expect(A.map(kindByEventId, ([eventId]) => eventId)).not.toContain("foreign-evt-unknown");
+      expect(A.map(kindByEventId, ([eventId]) => eventId)).not.toContain("foreign-evt-outside");
       const renameConflict = yield* Effect.fromOption(
         A.findFirst(conflicts, (conflict) => O.contains(conflict.remoteEventId, "foreign-evt-rename"))
       );
@@ -126,7 +146,7 @@ describe("@beep/documents-server VaultSyncEngine drift detection", () => {
         })
       );
       const replayStatus = yield* engine.syncOnce(syncInput(root));
-      expect(replayStatus.openConflicts).toBe(3);
+      expect(replayStatus.openConflicts).toBe(2);
     }).pipe(provideScopedLayer(SyncDriftTestLayer))
   );
 
@@ -186,7 +206,9 @@ describe("@beep/documents-server VaultSyncEngine drift detection", () => {
       const conflict = yield* Effect.fromOption(A.head(open));
       expect(conflict.conflictKind).toBe("remoteMove");
 
-      const reviewed = yield* engine.markConflictReviewed(MarkConflictReviewedInput.make({ conflictId: conflict.id }));
+      const reviewed = yield* engine.markConflictReviewed(
+        MarkConflictReviewedInput.make({ conflictId: conflict.id, workspaceId })
+      );
 
       expect(reviewed.resolutionStatus).toBe("reviewed");
       expect(yield* engine.listOpenConflicts(listConflictsInput)).toEqual([]);

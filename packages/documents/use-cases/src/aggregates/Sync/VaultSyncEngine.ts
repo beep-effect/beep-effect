@@ -248,14 +248,21 @@ export class ListOpenConflictsInput extends S.Class<ListOpenConflictsInput>($I`L
 /**
  * Input for marking one drift record as reviewed.
  *
+ * @remarks
+ * `workspaceId` scopes the review: the engine verifies the drift record belongs
+ * to this workspace before marking it, so a conflict id from one workspace
+ * cannot be reviewed under another workspace's request.
+ *
  * @example
  * ```ts
  * import * as Documents from "@beep/documents-domain/identity/Documents"
  * import { MarkConflictReviewedInput } from "@beep/documents-use-cases/aggregates/Sync/server"
+ * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
  * import * as S from "effect/Schema"
  *
  * const input = MarkConflictReviewedInput.make({
- *   conflictId: S.decodeUnknownSync(Documents.SyncConflictId)(1)
+ *   conflictId: S.decodeUnknownSync(Documents.SyncConflictId)(1),
+ *   workspaceId: S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(1)
  * })
  * console.log(input.conflictId)
  * ```
@@ -267,6 +274,9 @@ export class MarkConflictReviewedInput extends S.Class<MarkConflictReviewedInput
   {
     conflictId: Documents.SyncConflictId.annotateKey({
       description: "Drift record to mark as reviewed.",
+    }),
+    workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({
+      description: "Workspace that must own the drift record for the review to apply.",
     }),
   },
   $I.annote("MarkConflictReviewedInput", {

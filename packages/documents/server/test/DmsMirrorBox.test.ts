@@ -285,6 +285,11 @@ const mirrorLayer = (fake: FakeBoxHarness, config: BoxMirrorConfigValue = defaul
     Layer.provide(Layer.merge(Box.makeLayerFromClient(fake.client), BoxMirrorConfig.layerConfig(config)))
   );
 
+const availabilityLayer = (fake: FakeBoxHarness, config: BoxMirrorConfigValue = defaultConfig) =>
+  DmsMirrorAvailabilityBoxLayer.pipe(
+    Layer.provide(Layer.merge(Box.makeLayerFromClient(fake.client), BoxMirrorConfig.layerConfig(config)))
+  );
+
 const fileSource = (id: string, name: string, parentId: string) => ({
   id,
   name,
@@ -706,15 +711,32 @@ describe("@beep/documents-server DmsMirrorBox", () => {
     })
   );
 
-  it.effect("probes the Box availability layer as connected", () =>
+  it.effect("probes the Box availability layer as connected with the resolved mirror root", () =>
     Effect.gen(function* () {
+      const fake = makeFakeBox();
       const probe = yield* Effect.gen(function* () {
         const availability = yield* DmsMirrorAvailability;
         return yield* availability.probe;
-      }).pipe(provideScopedLayer(DmsMirrorAvailabilityBoxLayer));
+      }).pipe(provideScopedLayer(availabilityLayer(fake)));
 
       expect(probe.connected).toBe(true);
       expect(probe.provider).toBe("box");
+      expect(O.isSome(probe.rootRemoteId)).toBe(true);
+    })
+  );
+
+  it.effect("probes the Box availability layer as disconnected when the driver fails", () =>
+    Effect.gen(function* () {
+      const failing = makeFakeBox({
+        folders: { getFolderItems: () => Promise.reject("box is down") },
+      });
+      const probe = yield* Effect.gen(function* () {
+        const availability = yield* DmsMirrorAvailability;
+        return yield* availability.probe;
+      }).pipe(provideScopedLayer(availabilityLayer(failing)));
+
+      expect(probe.connected).toBe(false);
+      expect(O.isNone(probe.rootRemoteId)).toBe(true);
     })
   );
 });

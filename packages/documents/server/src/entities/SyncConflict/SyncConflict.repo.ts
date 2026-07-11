@@ -72,15 +72,18 @@ const syncConflictFromSeed = (id: number, seed: SyncConflictSeed): DomainSyncCon
 const reviewedConflict = (conflict: DomainSyncConflict.SyncConflict): DomainSyncConflict.SyncConflict =>
   DomainSyncConflict.SyncConflict.make({ ...conflict, resolutionStatus: "reviewed" });
 
-const matchesRemoteEvent = (provider: string, remoteEventId: string) => (conflict: DomainSyncConflict.SyncConflict) =>
-  conflict.provider === provider && O.exists(conflict.remoteEventId, (candidate) => candidate === remoteEventId);
+const matchesRemoteEvent =
+  (workspaceId: number, provider: string, remoteEventId: string) => (conflict: DomainSyncConflict.SyncConflict) =>
+    conflict.workspaceId === workspaceId &&
+    conflict.provider === provider &&
+    O.exists(conflict.remoteEventId, (candidate) => candidate === remoteEventId);
 
 /**
  * Build the in-memory SyncConflict repository used by deterministic sync tests.
  *
- * `record` deduplicates by provider event: when the seed's `remoteEventId` is
- * present and a record already exists for the same provider and event, that
- * record is returned unchanged.
+ * `record` deduplicates by provider event within one workspace: when the
+ * seed's `remoteEventId` is present and a record already exists for the same
+ * workspace, provider, and event, that record is returned unchanged.
  *
  * @example
  * ```ts
@@ -128,7 +131,7 @@ export const makeInMemorySyncConflictRepository = Effect.fn("Documents.SyncConfl
       record: Effect.fn("Documents.SyncConflictRepository.record")(function* (seed) {
         const conflicts = yield* snapshot;
         const existing = O.flatMap(seed.remoteEventId, (remoteEventId) =>
-          A.findFirst(conflicts, matchesRemoteEvent(seed.provider, remoteEventId))
+          A.findFirst(conflicts, matchesRemoteEvent(seed.workspaceId, seed.provider, remoteEventId))
         );
         if (O.isSome(existing)) {
           return existing.value;
@@ -227,6 +230,7 @@ export const makeDrizzleSyncConflictRepository = Effect.fn("Documents.SyncConfli
             .from(syncConflictTable)
             .where(
               and(
+                eq(syncConflictTable.workspaceId, seed.workspaceId),
                 eq(syncConflictTable.provider, seed.provider),
                 eq(syncConflictTable.remoteEventId, seed.remoteEventId.value)
               )

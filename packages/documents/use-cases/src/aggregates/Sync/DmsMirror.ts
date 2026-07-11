@@ -470,12 +470,22 @@ export class DmsMirror extends Context.Service<DmsMirror, DmsMirrorShape>()($I`D
 /**
  * Connectivity probe result for one DMS mirror adapter.
  *
+ * @remarks
+ * `rootRemoteId` carries the provider identifier of the resolved mirror-root
+ * folder when the adapter could resolve it: the Box adapter reports the ensured
+ * root folder id, the deterministic fixture reports its root node, and the
+ * app-side disconnected layer reports `none`. Drift detection uses it to
+ * normalize root-level parent references (an item directly under the mirror
+ * root stores `none` for its parent while the provider event carries the root
+ * id).
+ *
  * @example
  * ```ts
  * import { DmsMirrorProbe } from "@beep/documents-use-cases/aggregates/Sync/server"
+ * import * as O from "effect/Option"
  *
  * const probe = DmsMirrorProbe.make({ connected: true, provider: "box" })
- * console.log(probe.connected)
+ * console.log(probe.connected && O.isNone(probe.rootRemoteId))
  * ```
  *
  * @category ports
@@ -488,6 +498,9 @@ export class DmsMirrorProbe extends S.Class<DmsMirrorProbe>($I`DmsMirrorProbe`)(
     }),
     provider: DmsProvider.annotateKey({
       description: "DMS provider the probe describes.",
+    }),
+    rootRemoteId: S.Option(RemoteItemId).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Provider identifier of the resolved mirror-root folder; none when it could not be resolved.",
     }),
   },
   $I.annote("DmsMirrorProbe", {

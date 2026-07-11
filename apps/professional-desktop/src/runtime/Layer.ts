@@ -38,7 +38,11 @@ import {
   FILING_DECISION_MODEL_ENV,
   FilingDecisionLlmConfigLayer,
 } from "@beep/documents-server/aggregates/Document";
-import { DmsMirrorAvailabilityBoxLayer, DmsMirrorBoxLive } from "@beep/documents-server/aggregates/Sync";
+import {
+  BoxMirrorConfigLayer,
+  DmsMirrorAvailabilityBoxLayer,
+  DmsMirrorBoxLive,
+} from "@beep/documents-server/aggregates/Sync";
 import {
   DocumentsServerLive,
   DocumentsServerLlmLive,
@@ -198,7 +202,9 @@ const DocumentsSyncLive = Layer.unwrap(
         ),
       onSome: (boxToken) =>
         DocumentsSyncDrizzleLive.pipe(
-          Layer.provide([DmsMirrorBoxLive, DmsMirrorAvailabilityBoxLayer]),
+          // The availability probe resolves the mirror root itself, so it needs
+          // the Box driver and mirror config just like the mirror layer.
+          Layer.provide([DmsMirrorBoxLive, DmsMirrorAvailabilityBoxLayer.pipe(Layer.provide(BoxMirrorConfigLayer))]),
           Layer.provide(Box.makeLayer(BoxDeveloperTokenConfig.make({ token: boxToken })))
         ),
     });

@@ -37,7 +37,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import type { BoxError } from "@beep/box";
+import type { BoxError, BoxShape } from "@beep/box";
 import type {
   EnsureFolderInput,
   MoveItemInput,
@@ -380,28 +380,7 @@ const remoteEventFromEntry = (entry: BoxEventModel): Effect.Effect<O.Option<DmsR
       ),
   });
 
-/**
- * Build the Box-backed {@link DmsMirror} implementation.
- *
- * The mirror root folder (named by {@link BoxMirrorConfig}) is ensured lazily
- * under the Box root on the first remote operation and cached for the life of
- * the service. A `none` parent in port inputs addresses that mirror root.
- *
- * @example
- * ```ts
- * import { makeDmsMirrorBox } from "@beep/documents-server/aggregates/Sync"
- *
- * console.log(makeDmsMirrorBox)
- * ```
- *
- * @category constructors
- * @since 0.0.0
- */
-export const makeDmsMirrorBox = Effect.fn($I`makeDmsMirrorBox`)(function* () {
-  const box = yield* Box;
-  const config = yield* BoxMirrorConfig;
-  const mirrorRootIdRef = yield* Ref.make(O.none<string>());
-
+const makeMirrorRootResolver = (box: BoxShape, config: BoxMirrorConfigValue) => {
   const lookupFolderId = (parentId: string, name: string): Effect.Effect<O.Option<string>, DmsMirrorUnavailable> =>
     box.folders
       .getFolderItems({
@@ -434,6 +413,32 @@ export const makeDmsMirrorBox = Effect.fn($I`makeDmsMirrorBox`)(function* () {
       onSome: Effect.succeed,
     });
   }).pipe(Effect.withSpan($I`resolveMirrorRootId`));
+
+  return { createRemoteFolder, lookupFolderId, resolveMirrorRootId };
+};
+
+/**
+ * Build the Box-backed {@link DmsMirror} implementation.
+ *
+ * The mirror root folder (named by {@link BoxMirrorConfig}) is ensured lazily
+ * under the Box root on the first remote operation and cached for the life of
+ * the service. A `none` parent in port inputs addresses that mirror root.
+ *
+ * @example
+ * ```ts
+ * import { makeDmsMirrorBox } from "@beep/documents-server/aggregates/Sync"
+ *
+ * console.log(makeDmsMirrorBox)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makeDmsMirrorBox = Effect.fn($I`makeDmsMirrorBox`)(function* () {
+  const box = yield* Box;
+  const config = yield* BoxMirrorConfig;
+  const mirrorRootIdRef = yield* Ref.make(O.none<string>());
+  const { createRemoteFolder, lookupFolderId, resolveMirrorRootId } = makeMirrorRootResolver(box, config);
 
   const ensureMirrorRootId: Effect.Effect<string, DmsMirrorUnavailable> = Ref.get(mirrorRootIdRef).pipe(
     Effect.flatMap(
@@ -622,10 +627,12 @@ export const DmsMirrorBoxLayer = Layer.effect(DmsMirror, makeDmsMirrorBox());
 export const DmsMirrorBoxLive = DmsMirrorBoxLayer.pipe(Layer.provide(BoxMirrorConfigLayer));
 
 /**
- * Availability layer reporting the Box mirror adapter as connected.
+ * Availability layer probing the Box mirror adapter.
  *
- * Applications supply their own disconnected variant when no Box credentials
- * are configured.
+ * The probe resolves (and caches) the mirror-root folder id: success reports
+ * `connected: true` with `rootRemoteId` set; any driver failure reports
+ * `connected: false` without failing the probe. Applications supply their own
+ * disconnected variant when no Box credentials are configured.
  *
  * @example
  * ```ts
@@ -637,9 +644,36 @@ export const DmsMirrorBoxLive = DmsMirrorBoxLayer.pipe(Layer.provide(BoxMirrorCo
  * @category layers
  * @since 0.0.0
  */
-export const DmsMirrorAvailabilityBoxLayer = Layer.succeed(
+export const DmsMirrorAvailabilityBoxLayer = Layer.effect(
   DmsMirrorAvailability,
-  DmsMirrorAvailability.of({
-    probe: Effect.succeed(DmsMirrorProbe.make({ connected: true, provider: "box" })),
+  Effect.gen(function* () {
+    const box = yield* Box;
+    const config = yield* BoxMirrorConfig;
+    const rootRef = yield* Ref.make(O.none<RemoteItemId>());
+    const { resolveMirrorRootId } = makeMirrorRootResolver(box, config);
+
+    const resolveOnce = Ref.get(rootRef).pipe(
+      Effect.flatMap(
+        O.match({
+          onNone: () =>
+            resolveMirrorRootId.pipe(
+              Effect.flatMap(decodeRemoteItemId),
+              Effect.tap((id) => Ref.set(rootRef, O.some(id)))
+            ),
+          onSome: Effect.succeed,
+        })
+      )
+    );
+
+    return DmsMirrorAvailability.of({
+      probe: resolveOnce.pipe(
+        Effect.match({
+          onFailure: () => DmsMirrorProbe.make({ connected: false, provider: "box", rootRemoteId: O.none() }),
+          onSuccess: (rootRemoteId) =>
+            DmsMirrorProbe.make({ connected: true, provider: "box", rootRemoteId: O.some(rootRemoteId) }),
+        }),
+        Effect.withSpan($I`DmsMirrorAvailabilityBoxProbe`)
+      ),
+    });
   })
 );
