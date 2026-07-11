@@ -12,7 +12,7 @@ import { ProcessFileOperation } from "@beep/file-processing/Operation";
 import { FileProcessingService } from "@beep/file-processing/Service";
 import { $DocumentsServerId } from "@beep/identity/packages";
 import { A, O } from "@beep/utils";
-import { Cause, Context, Effect, Layer, pipe } from "effect";
+import { Cause, Context, Effect, flow, Layer, pipe } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FilingDecisionLlmConfig } from "./FilingDecisionLlm.config.js";
@@ -108,8 +108,12 @@ export const FilingTextExtractionNoopLayer = Layer.succeed(
   })
 );
 
-const extensionFrom = (fileName: string): O.Option<string> =>
-  pipe(fileName, Str.split("."), A.tail, O.flatMap(A.last), O.map(Str.toLowerCase));
+const extensionFrom: (fileName: string) => O.Option<string> = flow(
+  Str.split("."),
+  A.tail,
+  O.flatMap(A.last),
+  O.map(Str.toLowerCase)
+);
 
 const decodeProcessFileOperation = S.decodeUnknownEffect(ProcessFileOperation);
 const decodeFilingTextExcerpt = S.decodeUnknownEffect(FilingTextExcerpt);

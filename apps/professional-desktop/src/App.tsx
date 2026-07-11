@@ -47,7 +47,7 @@ const isDevMode = (): boolean => {
 const devRpcSessionToken = (): string | undefined => {
   // biome-ignore lint/suspicious/noUndeclaredEnvVars: Vite injects VITE_* on import.meta.env.
   const token: unknown = import.meta.env.VITE_BEEP_DESKTOP_RPC_SESSION_TOKEN;
-  return isDevMode() && typeof token === "string" && token.length > 0 ? token : undefined;
+  return isDevMode() && P.isString(token) && token.length > 0 ? token : undefined;
 };
 
 const browserSidecarTransport = (): SidecarTransport => {

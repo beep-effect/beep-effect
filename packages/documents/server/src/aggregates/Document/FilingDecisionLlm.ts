@@ -11,8 +11,7 @@ import * as DocumentUseCases from "@beep/documents-use-cases/server";
 import { $DocumentsServerId } from "@beep/identity/packages";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A } from "@beep/utils";
-import { Cause, Duration, Effect, Layer, pipe } from "effect";
-import * as N from "effect/Number";
+import { Cause, Duration, Effect, Layer, Number as N, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
@@ -51,7 +50,7 @@ const promptFor = (input: DocumentUseCases.Document.FilingDecisionInput): string
       "",
       `Filename: ${input.originalFileName}`,
       ...O.match(input.textExcerpt, {
-        onNone: () => A.empty<string>(),
+        onNone: A.empty<string>,
         onSome: (textExcerpt) => ["", "Document text excerpt:", textExcerpt],
       }),
     ],
