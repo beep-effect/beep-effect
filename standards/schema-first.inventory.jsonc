@@ -22,6 +22,16 @@
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
+      "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 135,
+      "owner": "@beep/professional-desktop",
+      "reason": "Golden HTTP protocol regression coverage: schemas decode real MCP structuredContent; arbitrary schema laws belong to the schema-owning packages."
+    },
+    {
       "file": "apps/professional-desktop/test/ontology-sidecar-registration.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -1829,9 +1839,9 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 63,
+      "line": 65,
       "owner": "@beep/ontology-server",
-      "reason": "Real-engine tool integration suite; the codec assertions are S.decodeUnknownEffect boundary decodes of branded OntologyFilePath fixture values, not schema round-trip coverage. Schema-derived arbitrary coverage for the tool request/response schemas belongs with the toolkit schema tests in @beep/ontology-use-cases."
+      "reason": "Real-engine orchestration regression coverage; schema-derived property laws belong to the schema-owning ontology use-cases package."
     },
     {
       "file": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",

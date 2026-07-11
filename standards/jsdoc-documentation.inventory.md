@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-11T14:41:18.026Z
+Generated: 2026-07-11T16:11:43.578Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 113 |
 | packagesWithoutPublicSrcSurface | 4 |
 | packagesNeedingRemediation | 0 |
-| publicModules | 1792 |
-| publicExports | 15400 |
+| publicModules | 1793 |
+| publicExports | 15413 |
 | openModules | 0 |
 | openExports | 0 |
 | missingExportExamples | 0 |
@@ -51,13 +51,13 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 8 | `@beep/root` | `.` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 9 | `@beep/pacer` | `packages/drivers/pacer` | clean | 13 | 89 | 0 | 0 |
 | 10 | `@beep/workspace-tables` | `packages/workspace/tables` | clean | 19 | 42 | 0 | 0 |
-| 11 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | clean | 8 | 56 | 0 | 0 |
+| 11 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | clean | 9 | 59 | 0 | 0 |
 | 12 | `@beep/law-practice-server` | `packages/law-practice/server` | clean | 2 | 3 | 0 | 0 |
 | 13 | `@beep/db-admin` | `packages/_internal/db-admin` | clean | 7 | 13 | 0 | 0 |
 | 14 | `@beep/shared-domain` | `packages/shared/domain` | clean | 41 | 237 | 0 | 0 |
 | 15 | `@beep/discord` | `packages/drivers/discord` | clean | 4 | 15 | 0 | 0 |
 | 16 | `@beep/face-detection` | `packages/drivers/face-detection` | clean | 4 | 33 | 0 | 0 |
-| 17 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | clean | 22 | 199 | 0 | 0 |
+| 17 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | clean | 22 | 203 | 0 | 0 |
 | 18 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
 | 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | clean | 142 | 864 | 0 | 0 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | clean | 4 | 11 | 0 | 0 |
@@ -73,7 +73,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 30 | `@beep/ontology-config` | `packages/ontology/config` | clean | 6 | 11 | 0 | 0 |
 | 31 | `@beep/ai-provider-cli` | `packages/drivers/ai-provider-cli` | clean | 4 | 14 | 0 | 0 |
 | 32 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | clean | 8 | 31 | 0 | 0 |
-| 33 | `@beep/ontology-server` | `packages/ontology/server` | clean | 8 | 17 | 0 | 0 |
+| 33 | `@beep/ontology-server` | `packages/ontology/server` | clean | 8 | 21 | 0 | 0 |
 | 34 | `@beep/colors` | `packages/foundation/capability/colors` | clean | 1 | 9 | 0 | 0 |
 | 35 | `@beep/agents-use-cases` | `packages/agents/use-cases` | clean | 23 | 79 | 0 | 0 |
 | 36 | `@beep/m365-mcp` | `packages/drivers/m365-mcp` | clean | 4 | 21 | 0 | 0 |
@@ -86,7 +86,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 43 | `@beep/types` | `packages/foundation/primitive/types` | clean | 5 | 10 | 0 | 0 |
 | 44 | `@beep/oip-web` | `apps/oip-web` | clean | 31 | 83 | 0 | 0 |
 | 45 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
-| 46 | `@beep/ontology-domain` | `packages/ontology/domain` | clean | 6 | 39 | 0 | 0 |
+| 46 | `@beep/ontology-domain` | `packages/ontology/domain` | clean | 6 | 41 | 0 | 0 |
 | 47 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | clean | 5 | 105 | 0 | 0 |
 | 48 | `@beep/langextract` | `packages/foundation/capability/langextract` | clean | 6 | 34 | 0 | 0 |
 | 49 | `@beep/shared-tables` | `packages/shared/tables` | clean | 11 | 14 | 0 | 0 |

@@ -1,4 +1,4 @@
-import { ChangeOperation } from "@beep/ontology-domain/aggregates/Session";
+import { ChangeOperation, OntologyChangeActor } from "@beep/ontology-domain/aggregates/Session";
 import { OntologyToolsLive } from "@beep/ontology-server/tools";
 import { OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session";
 import {
@@ -41,6 +41,8 @@ ex:PersonShape a sh:NodeShape ;
 ex:alice a ex:Person .
 ${fixtureResources}
 `;
+
+const testActor = OntologyChangeActor.make("urn:beep:test:ontology-tool-actor");
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -125,6 +127,24 @@ describe("ontology agent toolkit real-engine handlers", () => {
   );
 
   it.effect(
+    "returns plain literals from a real-engine SELECT through the ontology tool path",
+    withToolkit((tools, path) =>
+      Effect.gen(function* () {
+        const sparql = yield* tools.sparqlQuery(
+          OntologySparqlQueryRequest.make({
+            path,
+            profile: "select",
+            query: "SELECT ?s ?p ?o WHERE { ?s ?p ?o }",
+          })
+        );
+
+        expect(sparql.query.displayedResultCount).toBe(200);
+        expect(sparql.query.result.profile).toBe("select");
+      })
+    )
+  );
+
+  it.effect(
     "CAS-saves real deltas and rejects a stale semantic fingerprint recoverably",
     withToolkit((tools, path) =>
       Effect.gen(function* () {
@@ -134,7 +154,8 @@ describe("ontology agent toolkit real-engine handlers", () => {
             path,
             expectedFingerprint: opened.fingerprint,
             operations: [addName("alice", "Alice")],
-          })
+          }),
+          testActor
         );
         const stale = yield* Effect.flip(
           tools.proposeChangeBatch(
@@ -142,7 +163,8 @@ describe("ontology agent toolkit real-engine handlers", () => {
               path,
               expectedFingerprint: opened.fingerprint,
               operations: [addName("bob", "Robert")],
-            })
+            }),
+            testActor
           )
         );
 
@@ -171,7 +193,8 @@ describe("ontology agent toolkit real-engine handlers", () => {
               path,
               expectedFingerprint: opened.fingerprint,
               operations: budgetOperations,
-            })
+            }),
+            testActor
           )
         );
         const drift = yield* Effect.flip(
@@ -180,7 +203,8 @@ describe("ontology agent toolkit real-engine handlers", () => {
               path,
               expectedFingerprint: opened.fingerprint,
               operations: driftOperations,
-            })
+            }),
+            testActor
           )
         );
 
@@ -202,7 +226,8 @@ describe("ontology agent toolkit real-engine handlers", () => {
             path,
             expectedFingerprint: opened.fingerprint,
             proposalId: proposal.id,
-          })
+          }),
+          testActor
         );
 
         expect(repaired.proposal.verified).toBe(true);

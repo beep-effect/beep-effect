@@ -71,6 +71,12 @@
       "@beep/file-processing/test": [
         "../../../packages/foundation/capability/file-processing/src/test.ts"
       ],
+      "@beep/mcp-kit": [
+        "../../../packages/foundation/capability/mcp-kit/src/index.ts"
+      ],
+      "@beep/mcp-kit/*": [
+        "../../../packages/foundation/capability/mcp-kit/src/*.ts"
+      ],
       "@beep/n3": ["../../../packages/drivers/n3/src/index.ts"],
       "@beep/ontology-config": [
         "../../../packages/ontology/config/src/index.ts"

@@ -104,6 +104,21 @@ describe("sanitizedToolkit", () => {
         assert.strictEqual((first as { readonly text: string }).text, '"ok:value"');
       })
     );
+
+    it.effect("does not expose schema stacks or local paths in boundary error text", () =>
+      Effect.gen(function* () {
+        const server = yield* McpServer.McpServer;
+        const result = yield* server.callTool({ name: "fixture_tool", arguments: { secret: 1 } });
+        const [first] = result.content;
+
+        assert.isTrue(result.isError);
+        assert.strictEqual(first?.type, "text");
+        assert.strictEqual(
+          (first as { readonly text: string }).text,
+          "Tool call failed before producing a structured result."
+        );
+      })
+    );
   });
 
   layer(refFullLayer)("with a named schema parameter toolkit registered via sanitizedToolkit", (it) => {

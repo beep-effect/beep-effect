@@ -35,17 +35,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Toolkit Definition is complete locally. The nine worker-safe schema tools,
-thin real-engine handlers, semantic rdfc-1.0 CAS, static budgets, typed
-recoverable refusals, and shared ingestion classifier are implemented and
-tested. P0's ROBOT interop command remains an inherited host gate; P2 transport,
-TierGate, and authenticated actor attribution have not begun.
+P2 Transport + Safety is complete locally. The sidecar mounts strict-Origin,
+bearer-authenticated `/mcp`; read-only registration is independent of the
+mutation feature gate; TierGate fails mutations closed; and authenticated MCP
+caller identity is retained in each mutation's PROV-O journal. The sandbox
+blocked node socket listen with `EPERM`, so the node-socket and live-sidecar
+client transcripts remain host gates alongside P0's inherited ROBOT command.
 
 ## Latest Evidence
 
-[`history/2026-07-11-p1-toolkit.md`](./history/2026-07-11-p1-toolkit.md)
-records the P1 contracts, semantic CAS decision, budgets, typed errors,
-real-engine proof, local gates, and P2 risks. P0 ROBOT evidence remains in
+[`history/2026-07-11-p2-transport.md`](./history/2026-07-11-p2-transport.md)
+records the mount policy, first-slice gate, TierGate precedent, attribution
+path, HTTP fallback proof, host commands, and P3 risks. P1 evidence remains in
+[`history/2026-07-11-p1-toolkit.md`](./history/2026-07-11-p1-toolkit.md), and P0 ROBOT evidence remains in
 [`history/2026-07-11-p0-hardening.md`](./history/2026-07-11-p0-hardening.md).
 
 ## Notes
