@@ -28,6 +28,9 @@
       "path": "../../foundation/capability/file-processing/tsconfig.json"
     },
     {
+      "path": "../../foundation/capability/mcp-kit/tsconfig.json"
+    },
+    {
       "path": "../../foundation/capability/semantic-web/tsconfig.json"
     },
     {

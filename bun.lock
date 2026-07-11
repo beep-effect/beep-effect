@@ -130,6 +130,7 @@
         "@beep/file-processing": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/lexical-schema": "workspace:^",
+        "@beep/mcp-kit": "workspace:^",
         "@beep/md": "workspace:^",
         "@beep/ontology-client": "workspace:^",
         "@beep/ontology-domain": "workspace:^",
@@ -147,6 +148,7 @@
         "@beep/workspace-use-cases": "workspace:^",
         "@effect/atom-react": "catalog:",
         "@effect/platform-bun": "catalog:",
+        "@effect/platform-node": "catalog:",
         "@tauri-apps/api": "catalog:",
         "effect": "catalog:",
         "react": "catalog:",
@@ -1850,6 +1852,7 @@
       "version": "0.0.2",
       "dependencies": {
         "@beep/file-processing": "workspace:^",
+        "@beep/mcp-kit": "workspace:^",
         "@beep/n3": "workspace:^",
         "@beep/ontology-config": "workspace:^",
         "@beep/ontology-use-cases": "workspace:^",

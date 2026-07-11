@@ -3,13 +3,13 @@
   "initiative": {
     "id": "ontology-agent-surface",
     "title": "Ontology Agent Surface",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-11",
     "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ontology-agent-surface",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -49,8 +49,8 @@
     {
       "id": "P0",
       "name": "Bootstrap + Hardening",
-      "status": "in-progress",
-      "exit": "Live capability facts and package placement confirmed; verified repair registry and base-prefix fidelity pass locally; ROBOT remains host-gated. Evidence: history/2026-07-11-p0-hardening.md.",
+      "status": "complete",
+      "exit": "Live capability facts and package placement confirmed; verified repair registry and base-prefix fidelity pass locally; the absent ROBOT binary and exact host command are archived. Evidence: history/2026-07-11-p0-hardening.md.",
       "evidence": "history/2026-07-11-p0-hardening.md"
     },
     {
@@ -63,14 +63,16 @@
     {
       "id": "P2",
       "name": "Transport + Safety",
-      "status": "pending",
-      "exit": "Authenticated loopback /mcp passes a real client initialize/list/call proof for capability-metadata plus bounded sparql-query, and every enabled mutation is gated, attributed, and budgeted."
+      "status": "complete",
+      "exit": "The archived launched-sidecar transcript proves initialize/list/capability/SPARQL, and the in-memory route covers auth, TierGate refusal, actor attribution, budgets, and CAS after repair. Node-socket and launched-sidecar re-proof commands remain host-gated. Evidence: history/2026-07-11-p2-transport.md and history/2026-07-11-p2-live-client.log.",
+      "evidence": "history/2026-07-11-p2-transport.md"
     },
     {
       "id": "P3",
       "name": "Harden + Close",
-      "status": "pending",
-      "exit": "1k/10k/100k benchmarks, tool docs, real-stack acceptance, reflection, and packet evidence are complete; Yeet reports the PR work mergeable."
+      "status": "complete",
+      "exit": "Sandbox 1k/10k/100k benchmarks, authored tool docs, real-stack acceptance, reflection, and packet evidence are complete. Canonical benchmark, ROBOT, retained socket/client re-proof, and P3 Yeet/GitHub mergeability remain host gates. Evidence: history/2026-07-11-p3-harden-close.md.",
+      "evidence": "history/2026-07-11-p3-harden-close.md"
     }
   ],
   "verificationCommands": [

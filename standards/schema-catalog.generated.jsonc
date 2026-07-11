@@ -2928,6 +2928,54 @@
       "description": "Redacted technical error reasons emitted by the eCFR REST API driver."
     },
     {
+      "file": "packages/drivers/ecfr/src/Ecfr.service.ts",
+      "symbol": "EcfrCorrectionsParams",
+      "kind": "schema-class",
+      "owner": "@beep/ecfr",
+      "identity": "EcfrCorrectionsParams",
+      "description": "Optional title and ISO-date filters for eCFR corrections."
+    },
+    {
+      "file": "packages/drivers/ecfr/src/Ecfr.service.ts",
+      "symbol": "EcfrDatedTitleParams",
+      "kind": "schema-class",
+      "owner": "@beep/ecfr",
+      "identity": "EcfrDatedTitleParams",
+      "description": "Dated CFR title path parameters for eCFR versioner requests without hierarchy selectors."
+    },
+    {
+      "file": "packages/drivers/ecfr/src/Ecfr.service.ts",
+      "symbol": "EcfrSearchParams",
+      "kind": "schema-class",
+      "owner": "@beep/ecfr",
+      "identity": "EcfrSearchParams",
+      "description": "Filters, ordering, and page controls shared by eCFR search endpoints."
+    },
+    {
+      "file": "packages/drivers/ecfr/src/Ecfr.service.ts",
+      "symbol": "EcfrTitleParams",
+      "kind": "schema-class",
+      "owner": "@beep/ecfr",
+      "identity": "EcfrTitleParams",
+      "description": "Path parameters identifying one CFR title."
+    },
+    {
+      "file": "packages/drivers/ecfr/src/Ecfr.service.ts",
+      "symbol": "EcfrVersionerParams",
+      "kind": "schema-class",
+      "owner": "@beep/ecfr",
+      "identity": "EcfrVersionerParams",
+      "description": "Dated CFR title path and optional hierarchy selectors for eCFR versioner requests."
+    },
+    {
+      "file": "packages/drivers/ecfr/src/Ecfr.service.ts",
+      "symbol": "EcfrVersionsParams",
+      "kind": "schema-class",
+      "owner": "@beep/ecfr",
+      "identity": "EcfrVersionsParams",
+      "description": "Issue-date, page, and hierarchy filters for one CFR title's content versions."
+    },
+    {
       "file": "packages/drivers/face-detection/src/FaceDetection.errors.ts",
       "symbol": "FaceDetectionError",
       "kind": "tagged-error",
@@ -7746,6 +7794,14 @@
       "owner": "@beep/mcp-kit",
       "identity": "OversizedFieldProjection",
       "description": "A minimal-tier projection that still exceeds the caller's size budget."
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/McpCaller.ts",
+      "symbol": "McpCallerIdentity",
+      "kind": "schema-class",
+      "owner": "@beep/mcp-kit",
+      "identity": "McpCallerIdentity",
+      "description": "Initialized MCP caller identity assigned by the server transport."
     },
     {
       "file": "packages/foundation/capability/mcp-kit/src/SourceAuth.ts",
@@ -16597,6 +16653,14 @@
     },
     {
       "file": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
+      "symbol": "OntologyChangeActor",
+      "kind": "brand",
+      "owner": "@beep/ontology-domain",
+      "identity": "OntologyChangeActor",
+      "description": "Authenticated actor IRI retained on an ontology change journal entry."
+    },
+    {
+      "file": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
       "symbol": "Session",
       "kind": "schema-class",
       "owner": "@beep/ontology-domain",
@@ -17205,6 +17269,14 @@
     },
     {
       "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyActorIdentityRefusal",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyActorIdentityRefusal",
+      "description": "Recoverable refusal when authenticated caller identity is unavailable for mutation attribution."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
       "symbol": "OntologyBudgetKind",
       "kind": "literal-kit",
       "owner": "@beep/ontology-use-cases",
@@ -17282,6 +17354,14 @@
       "owner": "@beep/ontology-use-cases",
       "identity": "OntologySparqlQueryResponse",
       "description": "Bounded SPARQL result with the source semantic fingerprint."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",
+      "symbol": "OntologyTierGateRefusal",
+      "kind": "tagged-error",
+      "owner": "@beep/ontology-use-cases",
+      "identity": "OntologyTierGateRefusal",
+      "description": "Recoverable fail-closed refusal returned when TierGate does not approve an ontology mutation."
     },
     {
       "file": "packages/ontology/use-cases/src/tools/OntologyToolkit.ts",

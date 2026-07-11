@@ -2,7 +2,8 @@
 
 ## Status
 
-Status: `pending` (next action: launch P0)
+Status: `paused` (P0 complete 2026-07-11; parked per `docs/ROADMAP.md` — see
+manifest `statusNote`; on resume, next action: launch P1)
 
 ## PR lifecycle
 
@@ -37,7 +38,7 @@ Two rules apply to every phase transition:
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Close gates G1–G7 with evidence: recon, product definition, architecture proposal, technology ADR, prototype disposition, threat model. | Seven `research/` artifacts committed and registered in the manifest, plus one `history/` phase evidence note; G1–G6 `accepted`, G7 `accepted`/`deferred-nonblocking`; freshness check recorded; sanitization (mechanical + manual review) clean; P0 PR mergeable via yeet. |
+| P0 Research | complete | Close gates G1–G7 with evidence: recon, product definition, architecture proposal, technology ADR, prototype disposition, threat model. | Seven `research/` artifacts committed and registered in the manifest, plus one `history/` phase evidence note; G1–G6 `accepted`, G7 `accepted`/`deferred-nonblocking`; freshness check recorded; sanitization (mechanical + manual review) clean; P0 PR mergeable via yeet. |
 | P1 Proof spec | pending | Write the deterministic first-proof specification. | `research/proof-spec.md` complete per SPEC P1 acceptance (invocation contract, determinism scenario matrix, grounded brief schema, adversarial fixtures); P1 PR mergeable via yeet. |
 | P2 Implement | pending | Implement the first vertical proof and minimum durable architecture it requires. | The named proof command runs end to end from a clean checkout against fixtures (transcript recorded); sample daily brief generated; SPEC constraints honored; P2 PR mergeable via yeet. |
 | P3 Verify | pending | Prove the determinism scenario matrix, adversarial outcomes, provenance, rebuildability; run repo quality lanes. | Proof green, AND either `bun run beep yeet verify` (full tier) passes, OR every failure is reproduced against the `origin/main` base, classified inherited/unrelated in `history/P3-evidence.md`, and no lane covering this packet's affected scope fails. Failures in this phase's own scope always block. P3 PR mergeable via yeet. |

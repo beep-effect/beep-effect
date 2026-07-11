@@ -11,7 +11,13 @@ import { O } from "@beep/utils";
 import * as S from "effect/Schema";
 
 const $I = $EcfrId.create("Ecfr.errors");
-const EcfrErrorReasonBase = LiteralKit(["config", "response decoding", "response status", "transport"]);
+const EcfrErrorReasonBase = LiteralKit([
+  "config",
+  "request encoding",
+  "response decoding",
+  "response status",
+  "transport",
+]);
 
 /**
  * Technical error reasons emitted by the eCFR REST API driver.

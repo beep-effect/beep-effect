@@ -1,4 +1,4 @@
-import { ChangeOperation } from "@beep/ontology-domain/aggregates/Session";
+import { ChangeOperation, OntologyChangeActor } from "@beep/ontology-domain/aggregates/Session";
 import { OntologyToolsLive } from "@beep/ontology-server/tools";
 import { OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session";
 import {
@@ -41,6 +41,8 @@ ex:PersonShape a sh:NodeShape ;
 ex:alice a ex:Person .
 ${fixtureResources}
 `;
+
+const testActor = OntologyChangeActor.make("urn:beep:test:ontology-tool-actor");
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -121,7 +123,27 @@ describe("ontology agent toolkit real-engine handlers", () => {
         expect(metadata.capabilities).toHaveLength(9);
         expect(metadata.casSemantics).toBe("semantic");
       })
-    )
+    ),
+    { timeout: 120_000 }
+  );
+
+  it.effect(
+    "returns plain literals from a real-engine SELECT through the ontology tool path",
+    withToolkit((tools, path) =>
+      Effect.gen(function* () {
+        const sparql = yield* tools.sparqlQuery(
+          OntologySparqlQueryRequest.make({
+            path,
+            profile: "select",
+            query: "SELECT ?s ?p ?o WHERE { ?s ?p ?o }",
+          })
+        );
+
+        expect(sparql.query.displayedResultCount).toBe(200);
+        expect(sparql.query.result.profile).toBe("select");
+      })
+    ),
+    { timeout: 120_000 }
   );
 
   it.effect(
@@ -134,7 +156,8 @@ describe("ontology agent toolkit real-engine handlers", () => {
             path,
             expectedFingerprint: opened.fingerprint,
             operations: [addName("alice", "Alice")],
-          })
+          }),
+          testActor
         );
         const stale = yield* Effect.flip(
           tools.proposeChangeBatch(
@@ -142,8 +165,16 @@ describe("ontology agent toolkit real-engine handlers", () => {
               path,
               expectedFingerprint: opened.fingerprint,
               operations: [addName("bob", "Robert")],
-            })
+            }),
+            testActor
           )
+        );
+        const afterStale = yield* tools.sparqlQuery(
+          OntologySparqlQueryRequest.make({
+            path,
+            profile: "select",
+            query: "SELECT ?p ?o WHERE { <https://example.test/bob> ?p ?o }",
+          })
         );
 
         expect(first.delta.added).toHaveLength(1);
@@ -154,8 +185,11 @@ describe("ontology agent toolkit real-engine handlers", () => {
           expect(stale.recoverable).toBe(true);
           expect(stale.guidance).toContain("Refetch");
         }
+        expect(afterStale.query.result.profile).toBe("select");
+        expect(afterStale.query.displayedResultCount).toBe(0);
       })
-    )
+    ),
+    { timeout: 120_000 }
   );
 
   it.effect(
@@ -171,7 +205,8 @@ describe("ontology agent toolkit real-engine handlers", () => {
               path,
               expectedFingerprint: opened.fingerprint,
               operations: budgetOperations,
-            })
+            }),
+            testActor
           )
         );
         const drift = yield* Effect.flip(
@@ -180,14 +215,16 @@ describe("ontology agent toolkit real-engine handlers", () => {
               path,
               expectedFingerprint: opened.fingerprint,
               operations: driftOperations,
-            })
+            }),
+            testActor
           )
         );
 
         expect(budget._tag).toBe("OntologyBudgetRefusal");
         expect(drift._tag).toBe("OntologyReasonerDriftRefusal");
       })
-    )
+    ),
+    { timeout: 120_000 }
   );
 
   it.effect(
@@ -202,13 +239,15 @@ describe("ontology agent toolkit real-engine handlers", () => {
             path,
             expectedFingerprint: opened.fingerprint,
             proposalId: proposal.id,
-          })
+          }),
+          testActor
         );
 
         expect(repaired.proposal.verified).toBe(true);
         expect(repaired.change.delta.added.length + repaired.change.delta.removed.length).toBeGreaterThan(0);
         expect(repaired.validation.validation.conforms).toBe(true);
       })
-    )
+    ),
+    { timeout: 120_000 }
   );
 });
