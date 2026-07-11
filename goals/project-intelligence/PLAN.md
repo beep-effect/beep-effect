@@ -26,7 +26,9 @@ Two rules apply to every phase transition:
   phase-status fields (`phases[Pn].status`, this plan's row) go back to
   their prior `pending`/`in-progress` value; prose surfaces (top-level
   Status, Current Phase, Latest Evidence) go back to their exact pre-flip
-  text.
+  text; and `goals/INDEX.md` is regenerated (`bun run beep goals index
+  --write`) against the restored manifest so the index gate passes in the
+  rollback commit too.
 - **Mergeable includes merged.** Wherever an exit oracle says a PR must be
   mergeable, `MERGED` also satisfies it — merged phase PRs remain valid
   evidence forever.
@@ -219,7 +221,8 @@ achieved only when the status-bearing closeout PR is mergeable.
    checks green. On any post-publication failure, restore each surface to
    its exact pre-transition value per the PR-lifecycle rollback rule
    (lifecycle fields → `active`; `phases[P5].status` and this plan's P5 row
-   → their prior value; prose surfaces → pre-flip text).
+   → their prior value; prose surfaces → pre-flip text; `goals/INDEX.md`
+   regenerated against the restored manifest).
 
 ## Execution Notes
 

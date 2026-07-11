@@ -279,7 +279,8 @@ P0–P3 ships as its own PR driven to mergeable via `bun run beep yeet`):
       containing any of it. On any post-flip lint, audit, or yeet failure,
       restore each surface to its exact pre-transition value (lifecycle
       fields → `active`; phase-status fields → prior value; prose surfaces
-      → pre-flip text) — the goal is achieved only when the status-bearing
+      → pre-flip text; `goals/INDEX.md` regenerated against the restored
+      manifest) — the goal is achieved only when the status-bearing
       closeout PR is MERGED, or currently MERGEABLE with required checks
       green.
 - [ ] Every phase PR registers newly created `research/` artifacts in
