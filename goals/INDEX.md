@@ -26,7 +26,7 @@ drifts from the manifests, and merge conflicts are resolved by regenerating.
 | [legal-document-intake](./legal-document-intake/README.md) | Legal Document Intake | 3/8 | 2026-07-11 | — |
 | [lint-advisory-hardening](./lint-advisory-hardening/README.md) | Lint Advisory Hardening | 1/4 | 2026-06-12 | Make root lint advisory output actionable by eliminating the current nonfatal backlog, hardening false-positive-prone c… |
 | [one-round-loop](./one-round-loop/README.md) | One-Round Loop | 2/5 | 2026-07-11 | — |
-| [ontology-agent-surface](./ontology-agent-surface/README.md) | Ontology Agent Surface | 0/4 | 2026-07-11 | Expose the ontology workbench to agents through a curated, task-oriented MCP toolkit on the professional-desktop sideca… |
+| [ontology-agent-surface](./ontology-agent-surface/README.md) | Ontology Agent Surface | 1/4 | 2026-07-11 | Expose the ontology workbench to agents through a curated, task-oriented MCP toolkit on the professional-desktop sideca… |
 | [project-intelligence](./project-intelligence/README.md) | Project Intelligence | 0/6 | 2026-07-11 | — |
 | [repo-codegraph](./repo-codegraph/README.md) | Repo Codegraph | — | 2026-05-20 | Build a deterministic-first repo codegraph lookup and retrieval surface for coding agents. |
 | [schema-first-v4-capabilities](./schema-first-v4-capabilities/README.md) | Schema-First V4 Capabilities | 3/6 | 2026-06-08 | — |

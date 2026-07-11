@@ -56,8 +56,9 @@
     {
       "id": "P1",
       "name": "Toolkit Definition",
-      "status": "pending",
-      "exit": "Curated schemas and thin handlers are real-engine tested; stateless CAS rejects stale writes recoverably; budgets and typed errors are server-enforced without a session repository or silent cache."
+      "status": "complete",
+      "exit": "Curated schemas and thin handlers are real-engine tested; stateless CAS rejects stale writes recoverably; budgets and typed errors are server-enforced without a session repository or silent cache. Evidence: history/2026-07-11-p1-toolkit.md.",
+      "evidence": "history/2026-07-11-p1-toolkit.md"
     },
     {
       "id": "P2",

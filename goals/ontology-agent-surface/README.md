@@ -35,17 +35,18 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Bootstrap + Hardening is implemented locally and
-`host-verification-required`. The live inventory, repair registry, base-prefix
-session round-trip, ROBOT host script, and P1 placement decision are recorded;
-P1 must not begin until a capable host runs the ROBOT script or explicitly
-accepts that remaining host gate.
+P1 Toolkit Definition is complete locally. The nine worker-safe schema tools,
+thin real-engine handlers, semantic rdfc-1.0 CAS, static budgets, typed
+recoverable refusals, and shared ingestion classifier are implemented and
+tested. P0's ROBOT interop command remains an inherited host gate; P2 transport,
+TierGate, and authenticated actor attribution have not begun.
 
 ## Latest Evidence
 
-[`history/2026-07-11-p0-hardening.md`](./history/2026-07-11-p0-hardening.md)
-records P0 implementation and local proof. ROBOT remains host-gated because
-the sandbox has no `robot` binary and no network installation path.
+[`history/2026-07-11-p1-toolkit.md`](./history/2026-07-11-p1-toolkit.md)
+records the P1 contracts, semantic CAS decision, budgets, typed errors,
+real-engine proof, local gates, and P2 risks. P0 ROBOT evidence remains in
+[`history/2026-07-11-p0-hardening.md`](./history/2026-07-11-p0-hardening.md).
 
 ## Notes
 

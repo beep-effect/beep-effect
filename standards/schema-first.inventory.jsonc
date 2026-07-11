@@ -1824,6 +1824,16 @@
       "reason": "Dependency-injection container of Effect service shapes (FileProcessingService/ClaimGate/IrToLaw/ClaimTransition); a wiring bundle of function-bearing services, not serializable data."
     },
     {
+      "file": "packages/ontology/server/test/OntologyTools.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 63,
+      "owner": "@beep/ontology-server",
+      "reason": "Real-engine tool integration suite; the codec assertions are S.decodeUnknownEffect boundary decodes of branded OntologyFilePath fixture values, not schema round-trip coverage. Schema-derived arbitrary coverage for the tool request/response schemas belongs with the toolkit schema tests in @beep/ontology-use-cases."
+    },
+    {
       "file": "packages/ontology/use-cases/src/aggregates/Session/Session.ports.ts",
       "symbol": "OntologyFileStoreShape",
       "kind": "exported-interface",
@@ -1854,6 +1864,14 @@
       "status": "exception",
       "owner": "@beep/ontology-use-cases",
       "reason": "Service shape contains Effect-returning operations and runtime ports; Context.Service owns the boundary rather than a data schema."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/tools/OntologyToolService.ts",
+      "symbol": "OntologyToolServiceShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/ontology-use-cases",
+      "reason": "Agent-toolkit service shape whose members are Effect-returning tool operations over schema-typed requests/responses; Context.Service owns the boundary rather than a data schema."
     },
     {
       "file": "packages/shared/domain/src/values/LocalDate/LocalDate.model.ts",

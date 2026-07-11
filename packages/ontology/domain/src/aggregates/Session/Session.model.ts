@@ -468,7 +468,26 @@ const baseShapeSubjectKeys = (dataset: Dataset): ReadonlyArray<string> => {
   return visited;
 };
 
-const partitionBaseDataset = (dataset: Dataset): Pick<SessionGraphPartitions, "asserted" | "shapes"> => {
+/**
+ * Classify an ingested RDF dataset into asserted and SHACL-shape partitions.
+ *
+ * @example
+ * ```ts
+ * import { classifySessionDatasetPartitions } from "@beep/ontology-domain/aggregates/Session"
+ * import { makeDataset } from "@beep/rdf/Rdf"
+ *
+ * const partitions = classifySessionDatasetPartitions(makeDataset([]))
+ * console.log(partitions.asserted.quads.length) // 0
+ * ```
+ *
+ * @remarks This classifier is shared by base-document ingestion and typed
+ * change-batch validation so SHACL closure follows one routing rule.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const classifySessionDatasetPartitions = (
+  dataset: Dataset
+): Pick<SessionGraphPartitions, "asserted" | "shapes"> => {
   const shapeSubjectKeys = baseShapeSubjectKeys(dataset);
   return {
     asserted: makeDataset(
@@ -845,7 +864,7 @@ export const invertChangeOperation = (change: ChangeOperation): ChangeOperation 
  * @category utilities
  */
 export const deriveSessionGraphPartitions = (session: Session): SessionGraphPartitions => {
-  const base = partitionBaseDataset(session.baseDataset);
+  const base = classifySessionDatasetPartitions(session.baseDataset);
   return pipe(
     session.changeLog,
     A.reduce(

@@ -38,6 +38,9 @@
       "@beep/ontology-server/test": [
         "../../../packages/ontology/server/src/test.ts"
       ],
+      "@beep/ontology-server/tools": [
+        "../../../packages/ontology/server/src/tools/index.ts"
+      ],
       "@beep/ontology-server/aggregates/Session": [
         "../../../packages/ontology/server/src/aggregates/Session/index.ts"
       ],
@@ -95,6 +98,9 @@
       ],
       "@beep/ontology-use-cases/server": [
         "../../../packages/ontology/use-cases/src/server.ts"
+      ],
+      "@beep/ontology-use-cases/tools": [
+        "../../../packages/ontology/use-cases/src/tools/index.ts"
       ],
       "@beep/ontology-use-cases/aggregates/Session": [
         "../../../packages/ontology/use-cases/src/aggregates/Session/index.ts"
