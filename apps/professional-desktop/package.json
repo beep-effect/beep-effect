@@ -76,8 +76,8 @@
   "devDependencies": {
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
-    "@electric-sql/pglite": "0.4.6",
-    "@electric-sql/pglite-legacy-053": "npm:@electric-sql/pglite@0.5.3",
+    "@electric-sql/pglite": "catalog:",
+    "@electric-sql/pglite-legacy-046": "npm:@electric-sql/pglite@0.4.6",
     "@tauri-apps/cli": "catalog:",
     "@testing-library/dom": "catalog:",
     "@testing-library/jest-dom": "catalog:",

@@ -59,6 +59,9 @@
     // tools/skillopt is a uv-managed Python project; its tests/fixtures contain
     // TS files used as SkillOpt eval-task fixtures, not workspace source.
     "tools/skillopt/**",
+    // tools/tsgo-shim provides the repo `tsgo` bin (consumed via node_modules/.bin,
+    // never imported), executing the Effect-patched @typescript/native compiler.
+    "tools/tsgo-shim/**",
     // architecture proof barrels: read BY FILE PATH by beep architecture OperationPlan (see repo-cli test architecture-operation-plan.test.ts) — not import-referenced, knip cannot see the usage
     "packages/architecture-lab/*/src/entities/index.ts"
   ],

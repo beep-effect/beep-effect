@@ -13,6 +13,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { printLines } from "../../internal/cli/Printer.js";
+import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.js";
 import { makeArchitectureOperationPlan, makeArchitecturePackageOperationPlan } from "./Architecture.plan.js";
 import {
   ArchitectureDomainKind,
@@ -148,6 +149,10 @@ const runWriteCommand = Effect.fn(function* (plan: CanonicalSliceOperationPlan, 
   const rootDir = yield* findRepoRoot();
   const result = yield* applyCanonicalSliceOperationPlan(rootDir, plan);
   yield* reportApplyResult(result);
+  const registeredSlugs = yield* CreatePackageIdentityRegistration.registerMissingWorkspaceIdentityPackages(rootDir);
+  if (A.isReadonlyArrayNonEmpty(registeredSlugs)) {
+    yield* Console.log(`architecture identity registration: registered ${A.join(registeredSlugs, ", ")}`);
+  }
 });
 
 const architecturePlanCommand = Command.make(

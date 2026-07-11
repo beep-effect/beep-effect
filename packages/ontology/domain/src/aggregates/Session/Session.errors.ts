@@ -5,13 +5,12 @@
  * @since 0.0.0
  */
 
-import { make as makeIdentity } from "@beep/identity";
+import { $OntologyDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import * as S from "effect/Schema";
 import { SessionId } from "./Session.values.js";
 
-const { $OntologyDomainId } = makeIdentity("ontology-domain");
 const $I = $OntologyDomainId.create("aggregates/Session/Session.errors");
 
 /**

@@ -50,6 +50,9 @@
     "**/test/fixtures/**",
     "**/examples/**",
     "**/postcss.config.*",
+    // tools/tsgo-shim provides the repo `tsgo` bin (consumed via node_modules/.bin,
+    // never imported), executing the Effect-patched @typescript/native compiler.
+    "tools/tsgo-shim/**",
     "packages/canvas/client/**",
     "packages/canvas/ui/**",
     "**/test/fixtures/mock-monorepo/**",
@@ -74,6 +77,12 @@
     "@babel/plugin-transform-export-namespace-from",
     "@babel/plugin-transform-modules-commonjs",
     "@typescript-eslint/parser",
+    // tsgo >= 0.18 native TypeScript backend: consumed by the effect-tsgo patch
+    // step at install time, never imported from source.
+    "@typescript/native",
+    // Repo-local `tsgo` bin shim over the patched @typescript/native backend;
+    // consumed via node_modules/.bin, never imported from source.
+    "@beep/tsgo-shim",
     "eslint-plugin-jsdoc",
     "eslint-plugin-tsdoc",
     "tailwindcss",

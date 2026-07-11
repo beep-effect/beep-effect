@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { make as makeIdentity } from "@beep/identity";
+import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { ChangeOperation, Session, SessionChangeDelta } from "@beep/ontology-domain/aggregates/Session";
 import { Dataset } from "@beep/rdf/Rdf";
 import { LiteralKit } from "@beep/schema/LiteralKit";
@@ -15,7 +15,6 @@ import { ParseTurtleRequest, ParseTurtleResult } from "./Session.ports.js";
 import { OntologySnapshot } from "./Session.projections.js";
 import { OntologyGraphProjection, OntologyGraphProjectionOptions } from "./Session.visualizer.js";
 
-const { $OntologyUseCasesId } = makeIdentity("ontology-use-cases");
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.worker-protocol");
 
 const WorkerCommandKind = LiteralKit([

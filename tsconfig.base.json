@@ -76,6 +76,7 @@
           "effectMapVoid": "error",
           "effectSucceedWithVoid": "error",
           "extendsNativeError": "error",
+          "flatMapToMap": "error",
           "floatingEffect": "error",
           "genericEffectServices": "error",
           "globalConsole": "error",

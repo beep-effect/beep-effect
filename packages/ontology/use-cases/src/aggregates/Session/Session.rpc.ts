@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { make as makeIdentity } from "@beep/identity";
+import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { ChangeOperation, Session, SessionChangeDelta, SessionId } from "@beep/ontology-domain/aggregates/Session";
 import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { Effect, flow } from "effect";
@@ -23,7 +23,6 @@ import {
   RunOntologyValidationResult,
 } from "./Session.validation.js";
 
-const { $OntologyUseCasesId } = makeIdentity("ontology-use-cases");
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.rpc");
 
 /**

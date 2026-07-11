@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { make as makeIdentity } from "@beep/identity";
+import { $OntologyUseCasesId } from "@beep/identity/packages";
 import {
   applyChangeOperationsWithDelta,
   ChangeOperation,
@@ -58,7 +58,6 @@ import type { Dataset, ObjectTerm, Quad, Subject } from "@beep/rdf/Rdf";
 import type { ShaclValidationError, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import type { OntologyFileStoreError, TurtleCodecError } from "./Session.ports.js";
 
-const { $OntologyUseCasesId } = makeIdentity("ontology-use-cases");
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.validation");
 
 const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;

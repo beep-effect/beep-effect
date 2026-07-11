@@ -800,7 +800,7 @@ const loadPgModule = Effect.tryPromise({
   catch: (cause) => toHarnessError("pg-external", "provision", "Failed to load pg support for SQL tests.", cause),
 }).pipe(Effect.withSpan("SqlTest.PgExternalTestDriver.loadPg"));
 
-const PgConnectRetryPolicy = Schedule.both(Schedule.spaced(Duration.millis(250)), Schedule.recurs(20));
+const PgConnectRetryPolicy = Schedule.max([Schedule.spaced(Duration.millis(250)), Schedule.recurs(20)]);
 
 const makePgliteConfig = Effect.fn("SqlTest.PgliteTestcontainersTestDriver.makeConfig")(function* (
   configInput: PgliteTestcontainersTestDriverConfigInput

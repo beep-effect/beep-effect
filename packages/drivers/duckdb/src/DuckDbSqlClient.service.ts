@@ -22,7 +22,7 @@
  * @since 0.0.0
  */
 
-import { make as makeIdentity } from "@beep/identity";
+import { $DuckdbId } from "@beep/identity/packages";
 import { blobValue, DuckDBInstance, quotedIdentifier, quotedString, timestampMillisValue } from "@duckdb/node-api";
 import { Clock, Context, Effect, Exit, Layer, Scope, Semaphore, Stream, Tracer } from "effect";
 import * as A from "effect/Array";
@@ -38,7 +38,6 @@ import type { DuckDBConnection, DuckDBValue, Json } from "@duckdb/node-api";
 import type * as SqlConnection from "effect/unstable/sql/SqlConnection";
 import type { DuckDbConnectionOptions, DuckDbParquetExport } from "./DuckDb.models.ts";
 
-const { $DuckdbId } = makeIdentity("duckdb");
 const $I = $DuckdbId.create("DuckDbSqlClient.service");
 const ATTR_DB_SYSTEM_NAME = "db.system.name";
 

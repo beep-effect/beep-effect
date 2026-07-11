@@ -92,6 +92,7 @@ describe("goals status migration mapping", () => {
       ["in-progress", "in-progress"],
       ["active", "in-progress"],
       ["selected", "in-progress"],
+      ["superseded", "superseded"],
     ];
     for (const [legacy, canonical] of expectations) {
       expect(O.getOrNull(migrateGoalPhaseStatusToken(legacy))).toBe(canonical);

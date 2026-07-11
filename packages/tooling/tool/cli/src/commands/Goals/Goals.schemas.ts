@@ -77,18 +77,23 @@ export const isGoalStatus = S.is(GoalStatus);
 /**
  * Canonical normalized phase statuses inside a goal manifest.
  *
+ * `superseded` marks a phase whose work moved to another packet (record the
+ * successor in a phase-level `supersededBy`); it is terminal for that packet
+ * but deliberately not `complete`, so all-phases-complete checks stay honest.
+ *
  * @example
  * ```ts
  * import { GoalPhaseStatus } from "@beep/repo-cli/commands/Goals/Goals.schemas"
  *
  * console.log(GoalPhaseStatus.is.complete("complete")) // true
+ * console.log(GoalPhaseStatus.is.superseded("superseded")) // true
  * ```
  * @category models
  * @since 0.0.0
  */
-export const GoalPhaseStatus = LiteralKit(["pending", "in-progress", "complete"]).pipe(
+export const GoalPhaseStatus = LiteralKit(["pending", "in-progress", "complete", "superseded"]).pipe(
   $I.annoteSchema("GoalPhaseStatus", {
-    description: "Canonical normalized goal-phase status domain.",
+    description: "Canonical normalized goal-phase status domain (superseded = moved to another packet).",
   })
 );
 

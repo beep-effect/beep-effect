@@ -20,6 +20,7 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
 import { printLines } from "../../internal/cli/Printer.js";
 import { runGoalsDoctor } from "../Goals/Doctor.js";
 import { runRootLintPolicyTask } from "../Quality/index.js";
+import { lintIdentityRegistryCommand } from "./IdentityRegistry.js";
 import { LintCircularAnalysisError, LintFileDiscoveryError } from "./Lint.errors.js";
 import { lintPackageTestImportsCommand } from "./PackageTestImports.js";
 import { lintReflectionArtifactsCommand } from "./ReflectionArtifact.ts";
@@ -585,6 +586,7 @@ export const lintCommand = Command.make("lint", {}, () =>
     "- bun run beep lint circular",
     "- bun run beep lint deprecated-apis",
     "- bun run beep lint goal-packets",
+    "- bun run beep lint identity-registry",
     "- bun run beep lint package-test-imports",
     "- bun run beep lint policy",
     "- bun run beep lint reflection-artifacts",
@@ -599,6 +601,7 @@ export const lintCommand = Command.make("lint", {}, () =>
     lintCircularCommand,
     lintDeprecatedApisCommand,
     lintGoalPacketsCommand,
+    lintIdentityRegistryCommand,
     lintPackageTestImportsCommand,
     lintPolicyCommand,
     lintReflectionArtifactsCommand,

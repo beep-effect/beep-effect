@@ -104,6 +104,7 @@ export const LintPolicySubcommand = LiteralKit([
   "circular",
   "deprecated-apis",
   "goal-packets",
+  "identity-registry",
   "package-test-imports",
   "policy",
   "reflection-artifacts",
