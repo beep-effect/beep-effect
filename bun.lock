@@ -663,6 +663,7 @@
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
+        "@effect/platform-bun": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -1011,12 +1012,14 @@
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
+        "@effect/platform-bun": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/drivers/sanity": {
@@ -1059,6 +1062,8 @@
       "name": "@beep/tailscale",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
         "effect": "catalog:",
       },
       "devDependencies": {

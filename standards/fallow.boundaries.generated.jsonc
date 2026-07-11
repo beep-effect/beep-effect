@@ -612,6 +612,12 @@
         ]
       },
       {
+        "name": "@beep/tailscale",
+        "patterns": [
+          "packages/drivers/tailscale/src/**"
+        ]
+      },
+      {
         "name": "@beep/test-utils",
         "patterns": [
           "packages/tooling/test-kit/test-utils/src/**"
@@ -2600,6 +2606,19 @@
           "@beep/form",
           "@beep/storybook",
           "@beep/ui"
+        ]
+      },
+      {
+        "from": "@beep/tailscale",
+        "allow": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/tailscale"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/tailscale"
         ]
       },
       {

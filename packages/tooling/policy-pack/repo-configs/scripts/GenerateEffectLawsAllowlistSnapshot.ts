@@ -1,6 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
-import { Console, Effect, FileSystem, Inspectable, Path, Result } from "effect";
+import { Console, Effect, FileSystem, Inspectable, Layer, Path, Result } from "effect";
 import { normalizePath } from "../src/eslint/Shared.ts";
 import { ALLOWLIST_PATH, EffectLawsAllowlistSnapshot } from "../src/internal/eslint/EffectLawsAllowlistSchemas.ts";
 import {
@@ -32,7 +32,7 @@ const buildSnapshotFromAllowlist = Effect.fn(function* () {
   return yield* Result.match(allowlistTextResult, {
     onFailure: (diagnostics) =>
       Effect.succeed(
-        new EffectLawsAllowlistSnapshot({
+        EffectLawsAllowlistSnapshot.make({
           path: normalizedAllowlistPath,
           diagnostics,
         })
@@ -57,4 +57,8 @@ const program = Effect.gen(function* () {
   yield* Console.log(`[allowlist-codegen] diagnostics=${snapshot.diagnostics.length}`);
 });
 
-NodeRuntime.runMain(program.pipe(Effect.provide(NodeServices.layer)));
+const main = Effect.scoped(
+  Layer.build(NodeServices.layer).pipe(Effect.flatMap((context) => Effect.provide(program, context)))
+);
+
+NodeRuntime.runMain(main);
