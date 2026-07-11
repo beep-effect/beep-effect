@@ -76,5 +76,6 @@
     "The implementation would exceed named scope.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "mission": "Give the repo one canonical rich-text pipeline as foundation substrate: `@beep/md` AST ↔ `@beep/lexical-schema` (schema-first Lexical serialized state + codecs) ↔ `@beep/editor` (React editor kit). Prerequisite packet for `desktop-chat-surface`."
 }

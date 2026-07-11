@@ -3,13 +3,13 @@
   "initiative": {
     "id": "storybook-app",
     "title": "Storybook App",
-    "status": "complete",
+    "status": "completed-retained",
     "created": "2026-06-07",
     "updated": "2026-06-07",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/storybook-app",
-  "lifecycle": "complete",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "completionGate": {
     "operator": "yeet",
@@ -86,5 +86,7 @@
     "The implementation would exceed named scope.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "statusNote": "legacy status: complete",
+  "mission": "Move Storybook hosting out of `@beep/ui` into a single executable app workspace, `@beep/storybook` at `apps/storybook`, while keeping package-local stories in foundation UI-system packages."
 }

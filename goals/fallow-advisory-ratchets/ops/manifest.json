@@ -65,17 +65,17 @@
     {
       "id": "P0",
       "name": "Packet Authoring",
-      "status": "done"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Dupes Ratchet",
-      "status": "done"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Health Ratchet",
-      "status": "seeded"
+      "status": "pending"
     },
     {
       "id": "P3",
@@ -85,7 +85,7 @@
     {
       "id": "P4",
       "name": "Guardrails And Close",
-      "status": "seeded"
+      "status": "pending"
     }
   ],
   "verificationCommands": [
@@ -106,5 +106,6 @@
     "Do not make runtime coverage blocking.",
     "Do not encode architecture meaning in Fallow config before doctrine.",
     "Do not promote lanes with unresolved false positives or doctrine gaps."
-  ]
+  ],
+  "mission": "Implement the next phase after Fallow Quality Enforcement: selected advisory lanes become narrow, policy-backed ratchets where new debt fails, while inherited baselines, false positives, and doctrine gaps remain explicit."
 }

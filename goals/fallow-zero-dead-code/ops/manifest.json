@@ -57,27 +57,27 @@
     {
       "id": "P0",
       "name": "Triage",
-      "status": "done"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Remediate",
-      "status": "done"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Rebaseline",
-      "status": "done"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Promote",
-      "status": "done"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "done"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

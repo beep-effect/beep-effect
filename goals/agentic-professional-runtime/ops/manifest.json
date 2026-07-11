@@ -127,7 +127,7 @@
     {
       "id": "P0",
       "name": "Packet Bootstrap",
-      "status": "completed",
+      "status": "complete",
       "outputs": [
         "README.md",
         "SPEC.md",
@@ -149,7 +149,7 @@
     {
       "id": "P2",
       "name": "Runtime Data Loop Specification",
-      "status": "completed",
+      "status": "complete",
       "outputs": [
         "docs/runtime-data-loop.md",
         "docs/runtime-fixture-catalog.md",
@@ -163,7 +163,7 @@
     {
       "id": "P3",
       "name": "Slice Implementation Plan",
-      "status": "completed",
+      "status": "complete",
       "outputs": [
         "docs/p3-slice-implementation.md",
         "packages/shared/domain",
@@ -201,5 +201,6 @@
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
-  }
+  },
+  "mission": "Define the local-first agentic professional-services runtime that beep-effect will prove through two real product slices:"
 }

@@ -51,22 +51,22 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Close",
-      "status": "completed"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -82,5 +82,6 @@
     "The implementation would exceed named scope.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "mission": "Ship `@beep/m365-mcp`: expose the `@beep/m365` driver's read verbs as MCP tools via `effect/unstable/ai` (the `@beep/nlp-mcp` pattern), so beep's agents reach Microsoft 365 over a stdio MCP server while the app keeps typed errors, telemetry, and least-privilege scopes."
 }

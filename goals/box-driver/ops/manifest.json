@@ -3,7 +3,7 @@
   "initiative": {
     "id": "box-driver",
     "title": "Box Driver",
-    "status": "pending-implementation",
+    "status": "paused",
     "created": "2026-06-04",
     "updated": "2026-06-04",
     "packetAnchorDocument": "GOAL.md"
@@ -211,7 +211,7 @@
     {
       "id": "P0",
       "name": "Packet Bootstrap",
-      "status": "completed"
+      "status": "complete"
     },
     {
       "id": "P1",
@@ -301,5 +301,6 @@
     "jq . goals/box-driver/ops/manifest.json",
     "rg -n \"@beep/box|packages/drivers/box|box-node-sdk|_generated|runSdkCall|CCG|greptile|5/5\" goals/box-driver",
     "git diff --check"
-  ]
+  ],
+  "statusNote": "legacy status: pending-implementation"
 }

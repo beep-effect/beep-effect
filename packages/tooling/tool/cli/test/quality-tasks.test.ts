@@ -946,6 +946,8 @@ describe("quality task adapter", () => {
       "lint:identity-registry",
       "lint:package-test-imports",
       "lint:reflection-artifacts",
+      "goals:doctor",
+      "goals:index-check",
       "lint:schema-first",
       "lint:deprecated-apis",
       "lint:jsdoc",
@@ -974,6 +976,8 @@ describe("quality task adapter", () => {
       "lint:identity-registry",
       "lint:package-test-imports",
       "lint:reflection-artifacts",
+      "goals:doctor",
+      "goals:index-check",
       "lint:schema-first",
       "lint:deprecated-apis",
       "lint:jsdoc",
@@ -1014,7 +1018,7 @@ describe("quality task adapter", () => {
           expect(Exit.isSuccess(exit)).toBe(true);
 
           const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-          expect(logText).toContain("[beep-cli] lint:policy: running 20 step(s) with concurrency 3");
+          expect(logText).toContain("[beep-cli] lint:policy: running 22 step(s) with concurrency 3");
         })
       )
     ));
@@ -1456,7 +1460,7 @@ describe("quality task adapter", () => {
           expect(commandLog).toContain("bunx typos");
 
           const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-          expect(logText).toContain("[beep-cli] lint: running 21 step(s) with concurrency 3");
+          expect(logText).toContain("[beep-cli] lint: running 23 step(s) with concurrency 3");
         })
       )
     ));

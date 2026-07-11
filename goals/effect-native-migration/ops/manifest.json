@@ -3,7 +3,7 @@
   "initiative": {
     "id": "effect-native-migration",
     "title": "Effect-Native Migration",
-    "status": "bootstrapped-phase-1-pending",
+    "status": "paused",
     "created": "2026-05-20",
     "updated": "2026-05-20",
     "packetAnchorDocument": "SPEC.md"
@@ -35,7 +35,7 @@
   "phases": {
     "phase0": {
       "id": "bootstrap",
-      "status": "done"
+      "status": "complete"
     },
     "phase1": {
       "id": "symbol-inventories",
@@ -81,5 +81,6 @@
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
-  }
+  },
+  "statusNote": "legacy status: bootstrapped-phase-1-pending"
 }

@@ -60,37 +60,37 @@
     {
       "id": "P0",
       "name": "Initiative Bootstrap And Current State",
-      "status": "completed",
+      "status": "complete",
       "output": "history/outputs/p0-current-state.md"
     },
     {
       "id": "P1",
       "name": "Source Discovery And Privacy",
-      "status": "completed",
+      "status": "complete",
       "output": "history/outputs/p1-source-discovery-and-privacy.md"
     },
     {
       "id": "P2",
       "name": "Durable Ingest And Derived Storage",
-      "status": "completed",
+      "status": "complete",
       "output": "history/outputs/p2-durable-ingest-and-derived-storage.md"
     },
     {
       "id": "P3",
       "name": "OTLP And Backend Stack",
-      "status": "completed",
+      "status": "complete",
       "output": "history/outputs/p3-otlp-and-backend-stack.md"
     },
     {
       "id": "P4",
       "name": "Scorecards Labels And Benchmarks",
-      "status": "completed",
+      "status": "complete",
       "output": "history/outputs/p4-scorecards-labels-and-benchmarks.md"
     },
     {
       "id": "P5",
       "name": "Install And Remote Deployment",
-      "status": "completed",
+      "status": "complete",
       "output": "history/outputs/p5a-operator-contract-and-dry-run-apply.md",
       "subphases": [
         {
@@ -110,7 +110,7 @@
     {
       "id": "P6",
       "name": "Seven-Day Proof And Hardening",
-      "status": "in_progress",
+      "status": "in-progress",
       "output": "history/outputs/p6-seven-day-proof-and-hardening.md",
       "subphases": [
         {
@@ -136,7 +136,7 @@
     {
       "id": "P7",
       "name": "Topology-First Productionization",
-      "status": "in_progress",
+      "status": "in-progress",
       "output": "history/outputs/p7-topology-first-production-plan.md",
       "subphases": [
         {

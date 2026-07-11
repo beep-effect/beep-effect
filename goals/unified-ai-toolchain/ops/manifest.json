@@ -3,7 +3,7 @@
   "initiative": {
     "id": "unified-ai-toolchain",
     "title": "Unified AI Toolchain",
-    "status": "v2-active",
+    "status": "active",
     "created": "2026-05-22",
     "updated": "2026-06-07",
     "packetAnchorDocument": "SPEC.md"
@@ -162,31 +162,31 @@
     {
       "id": "V3.1",
       "name": "Canonical Models",
-      "status": "planned",
+      "status": "pending",
       "version": "V3"
     },
     {
       "id": "V3.2",
       "name": "Canonical Source",
-      "status": "planned",
+      "status": "pending",
       "version": "V3"
     },
     {
       "id": "V3.3",
       "name": "Native Plan And Apply",
-      "status": "planned",
+      "status": "pending",
       "version": "V3"
     },
     {
       "id": "V3.4",
       "name": "Current-Matrix Emitters",
-      "status": "planned",
+      "status": "pending",
       "version": "V3"
     },
     {
       "id": "V3b",
       "name": "Research-Gated Additional Agents",
-      "status": "planned",
+      "status": "pending",
       "version": "V3"
     }
   ],
@@ -251,5 +251,6 @@
     "Additional-agent support starts before current-matrix V3 emitters are production-ready.",
     "Required source files are missing or materially contradictory."
   ],
-  "nextAction": "Implement V2.1 Operator CLI in @beep/repo-cli, backed by @beep/ai-sync report and validation primitives."
+  "nextAction": "Implement V2.1 Operator CLI in @beep/repo-cli, backed by @beep/ai-sync report and validation primitives.",
+  "statusNote": "legacy status: v2-active"
 }

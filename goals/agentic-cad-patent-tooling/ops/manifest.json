@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "agentic-cad-patent-tooling",
+    "title": "Agentic CAD — Patent Tooling",
+    "status": "reference",
+    "packetAnchorDocument": "README.md"
+  },
+  "packetPath": "goals/agentic-cad-patent-tooling",
+  "lifecycle": "reference",
+  "executionCapable": false,
+  "reflectionRequired": false,
+  "statusNote": "backfilled from README evidence: research complete 2026-05-29 (repo-agnostic buyer's guide)",
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  }
+}

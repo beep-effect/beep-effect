@@ -57,7 +57,7 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "done"
+      "status": "complete"
     },
     {
       "id": "P1",
@@ -94,5 +94,6 @@
     "The work would promote Fallow advisory lanes.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "mission": "Make root lint advisory output actionable by eliminating the current nonfatal backlog, hardening false-positive-prone checks, and promoting root lint warnings/advisories to failures in local and PR quality paths."
 }

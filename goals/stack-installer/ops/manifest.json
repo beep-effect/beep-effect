@@ -3,7 +3,7 @@
   "initiative": {
     "id": "stack-installer",
     "title": "Stack Installer",
-    "status": "active-p1d-with-open-p1-windows-proof-debt",
+    "status": "active",
     "created": "2026-05-14",
     "updated": "2026-05-20",
     "packetAnchorDocument": "SPEC.md"
@@ -211,21 +211,21 @@
     {
       "id": "P0",
       "name": "Initiative Bootstrap",
-      "status": "completed",
+      "status": "complete",
       "output": "history/outputs/p0-current-state.md",
       "exitCriteriaSummary": "Packet created, decisions captured, corrected slice topology named, manifest targets P1."
     },
     {
       "id": "P1",
       "name": "Discord Vertical, Manual Mode",
-      "status": "in_progress",
+      "status": "in-progress",
       "output": "history/outputs/p1-discord-vertical-manual.md",
       "exitCriteriaSummary": "P1A dry-run spine and P1 live harness are implemented; macOS proof is complete; full P1 still needs the real Windows manual run plus the post-proof PR readiness review/fix loop."
     },
     {
       "id": "P1D",
       "name": "App-First Manual Installer UX",
-      "status": "in_progress",
+      "status": "in-progress",
       "output": "history/outputs/p1d-app-first-manual-installer-ux.md",
       "exitCriteriaSummary": "The Tauri app becomes the primary operator surface and completes one real Linux-first Bun repair action for an existing Bun install through installer-owned code and installer-owned config."
     },
@@ -484,5 +484,6 @@
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
-  }
+  },
+  "statusNote": "legacy status: active-p1d-with-open-p1-windows-proof-debt"
 }

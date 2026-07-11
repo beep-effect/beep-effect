@@ -3,14 +3,14 @@
   "initiative": {
     "id": "repo-quality-throughput",
     "title": "Repo Quality Throughput",
-    "status": "complete",
+    "status": "completed-retained",
     "created": "2026-06-06",
     "updated": "2026-06-06",
     "packetAnchorDocument": "SPEC.md",
     "supersedes": ["repo-quality-acceleration"]
   },
   "packetPath": "goals/repo-quality-throughput",
-  "lifecycle": "complete",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "completionGate": {
     "operator": "yeet",
@@ -181,5 +181,6 @@
     "A command repeatedly makes the workstation unusable despite bounded resource settings.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "statusNote": "legacy status: complete"
 }

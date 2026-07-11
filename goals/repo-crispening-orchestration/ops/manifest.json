@@ -3,7 +3,7 @@
   "initiative": {
     "id": "repo-crispening-orchestration",
     "title": "Repo Crispening Orchestration",
-    "status": "complete",
+    "status": "completed-retained",
     "created": "2026-07-05",
     "updated": "2026-07-07",
     "packetAnchorDocument": "SPEC.md"
@@ -48,37 +48,37 @@
     {
       "id": "P0",
       "name": "Enforce foundations",
-      "status": "done",
+      "status": "complete",
       "evidence": "done (#294)"
     },
     {
       "id": "P1",
       "name": "Baseline & rank",
-      "status": "done",
+      "status": "complete",
       "evidence": "done (#298, #299)"
     },
     {
       "id": "P1.5",
       "name": "Mechanize",
-      "status": "done",
+      "status": "complete",
       "evidence": "done (#301)"
     },
     {
       "id": "P2",
       "name": "Remediation waves",
-      "status": "done",
+      "status": "complete",
       "evidence": "done (#303, #304, #307, #314, #316, #317)"
     },
     {
       "id": "P3",
       "name": "Catalog & ship",
-      "status": "done",
+      "status": "complete",
       "evidence": "done (#318)"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "done",
+      "status": "complete",
       "evidence": "done (#318)"
     }
   ],
@@ -96,5 +96,6 @@
     "bun run beep yeet verify is red at the wave gate and repair does not restore green within the wave.",
     "The SFV4-getsomes-struct sweep is reached before the Law 20/47 amendment has merged (D5 ordering).",
     "Required source files are missing or materially contradictory, the work would exceed named scope, verification requires unnamed credentials/cost/destructive side effects/policy approval, or the same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "statusNote": "legacy status: complete"
 }

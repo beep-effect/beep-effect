@@ -89,16 +89,27 @@ wire shapes unless a dedicated manifest migration is planned.
 
 ## Lifecycle
 
-Directory names do not encode lifecycle state. Lifecycle is declared in each
-packet's `README.md` and `ops/manifest.json`.
+Directory names do not encode lifecycle state. Lifecycle is declared once per
+packet: `initiative.status` in `ops/manifest.json` is canonical, the README
+`Lifecycle:` line mirrors it, and both surfaces (plus the generated
+[`INDEX.md`](./INDEX.md)) are written together by
+`bun run beep goals set-status <slug> <status>`. The vocabulary is closed —
+validated by the `GoalManifest` schema and enforced by
+`bun run beep goals doctor`:
 
 | State | Meaning |
 | --- | --- |
 | `active` | Execution is open and the packet must include `GOAL.md`. |
-| `paused` | Execution is intentionally stopped; resume conditions must be explicit. |
-| `reference` | Retained as design/research precedent; not directly executable unless it has `GOAL.md`. |
+| `paused` | Execution is intentionally stopped, including authored-but-not-started packets; resume conditions must be explicit. |
 | `completed-retained` | Implementation or proof is complete, but the packet remains as evidence or precedent. |
-| `removed` | The packet left the working tree; git history is the archive. |
+| `superseded` | Replaced by a successor; record `supersededBy` (slug) and `supersededNote` in the manifest. |
+| `reference` | Retained as design/research precedent; not directly executable unless it has `GOAL.md`. |
+
+Legacy tokens (`complete`, `pending`, `DONE`, bespoke progress strings, ...)
+are no longer valid declarations; the 2026-07 migration preserved each
+packet's original token in `statusNote`. Removal from the working tree is an
+archive *operation*, not a status — a removed packet's history lives in git,
+and physical `goals/_archive/` moves are a follow-up packet.
 
 Completed packets are not always removed. Retain a completed packet only when it
 continues to serve as evidence, reference design, or launch context for follow-up
@@ -106,8 +117,8 @@ work.
 
 ## Completion gate
 
-A goal is not **achieved** — it may not be declared `complete` or
-`completed-retained` — until its work has shipped as a **pull request driven to
+A goal is not **achieved** — it may not be declared `completed-retained` —
+until its work has shipped as a **pull request driven to
 mergeable via `/yeet`** (`bun run beep yeet`: repair → verify → publish `--pr`
 → monitor, until GitHub checks and review are green and the branch is
 merge-ready). Passing local proof is necessary but not sufficient; the durable
@@ -161,71 +172,18 @@ git diff --check -- goals/<slug>
    packet `reference` or `paused` with an explicit non-executable rationale in
    `README.md` and `ops/manifest.json`.
 
-## Current Goals Snapshot
-
-This snapshot was retained from the local `main` saving commit during the
-`firecrawl-and-ontology-packet-plus-poc` merge. Use the filesystem and manifest
-commands below as the source of truth when the snapshot drifts.
-
-- `ai-metrics-stack`
-- `agent-effectiveness-loop` — Phase 1 complete Phoenix-backed coding-agent
-  effectiveness loop; follow-up work now lives in separate goals.
-- `agent-effectiveness-phoenix-enrichment` — Phoenix-native annotations,
-  datasets, experiments, evals, and prompt/config comparison follow-up.
-- `agent-effectiveness-workflow-integration` — repo workflow, operator, CI, and
-  agent-handoff integration follow-up.
-- `agentic-professional-runtime`
-- `agent-governance-control-plane`
-- `canvas`
-- `codex-security-findings` — local Codex Security finding catalog, current-HEAD
-  triage, and remediation queue.
-- `file-processing-capability` — schema-first file processing contracts,
-  Tika/libpff driver split, and `beep files process` proof packet.
-- `identity-iri-core` — rewrite `@beep/identity` as a literal-preserving
-  IRI/CURIE composer (graduated from
-  [`explorations/identity-as-iri`](../explorations/identity-as-iri); first of
-  three; `identity-iri-fold` and `identity-iri-fibered` queue behind it).
-- `ip-law-knowledge-graph`
-- `oip-web-production-hardening`
-- `ontology-modeling-foundation` — superseded/reference-only (its
-  `Ontology.create` authoring POC is dead prior art); replaced by
-  [`explorations/identity-as-iri`](../explorations/identity-as-iri). The
-  `@beep/rdf`/`@beep/ontology` package-split evidence remains useful.
-- `oip-web-launch` — implementation complete; launch review pending.
-- `repo-codegraph` — deterministic-first codegraph lookup and retrieval
-  implementation packet.
-- `repo-quality-acceleration` — superseded research-first quality feedback
-  speedup packet; active execution moved to `repo-quality-throughput`.
-- `repo-quality-convergence` — 9/10 repo-health scorecard, release guardrail,
-  and quality closure packet.
-- `repo-quality-throughput` — active End-to-End Green quality/CI performance
-  research, task synthesis, implementation, and proof packet.
-- `repo-context-topology` — generated topology and export catalog work for
-  coding-agent symbol discovery.
-- `stack-installer`
-- `trustgraph-doc-ontology`
-- `unified-ai-toolchain` — schema-first AI agent configuration contract packet
-  for Claude Code, Codex, Grok Build, JetBrains AI Assistant, and Junie.
-
 ## Index Policy
 
-This README defines the packet standard. It should not maintain a hand-written
-list of active packets that can drift from the filesystem.
-
-Use filesystem and manifest audits for the live packet index:
-
-```sh
-find goals -mindepth 1 -maxdepth 1 -type d ! -name _template | sort
-```
+This README defines the packet standard. It does not maintain a hand-written
+list of packets: the live portfolio index is generated at
+[`INDEX.md`](./INDEX.md), grouped by canonical status with one row per packet.
 
 ```sh
-for f in goals/*/ops/manifest.json; do
-  jq -r 'input_filename + "\t" +
-    ((.initiative.id // .initiative.slug // .id // "unknown") | tostring) +
-    "\t" + ((.initiative.status // .status // "unknown") | tostring) +
-    "\t" + ((.initiative.packetAnchorDocument // .packetAnchorDocument // "unknown") | tostring)' "$f"
-done
+bun run beep goals index --write   # regenerate goals/INDEX.md
+bun run beep goals index --check   # fail on drift (runs inside yeet verify)
 ```
+
+Merge conflicts on `INDEX.md` are resolved by rerunning `--write`.
 
 ## Research Basis
 

@@ -18,6 +18,7 @@ import { ChildProcess } from "effect/unstable/process";
 import madge from "madge";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
 import { printLines } from "../../internal/cli/Printer.js";
+import { runGoalsDoctor } from "../Goals/Doctor.js";
 import { runRootLintPolicyTask } from "../Quality/index.js";
 import { lintIdentityRegistryCommand } from "./IdentityRegistry.js";
 import { LintCircularAnalysisError, LintFileDiscoveryError } from "./Lint.errors.js";
@@ -541,6 +542,21 @@ const lintPolicyCommand = Command.make("policy", {}, () => runRootLintPolicyTask
 );
 
 /**
+ * Lint alias for the goals doctor (the CLI has no command-alias mechanism, so
+ * this second registration delegates to the Goals runner).
+ *
+ * @example
+ * ```ts
+ * console.log("bun run beep lint goal-packets")
+ * ```
+ * @category cli-commands
+ * @since 0.0.0
+ */
+const lintGoalPacketsCommand = Command.make("goal-packets", {}, () => runGoalsDoctor({ writeBaseline: false })).pipe(
+  Command.withDescription("Diff goal-packet manifests against reality (alias of beep goals doctor)")
+);
+
+/**
  * Lint command for schema-first CLI conventions.
  *
  * @example
@@ -569,6 +585,7 @@ export const lintCommand = Command.make("lint", {}, () =>
     "Lint commands:",
     "- bun run beep lint circular",
     "- bun run beep lint deprecated-apis",
+    "- bun run beep lint goal-packets",
     "- bun run beep lint identity-registry",
     "- bun run beep lint package-test-imports",
     "- bun run beep lint policy",
@@ -583,6 +600,7 @@ export const lintCommand = Command.make("lint", {}, () =>
   Command.withSubcommands([
     lintCircularCommand,
     lintDeprecatedApisCommand,
+    lintGoalPacketsCommand,
     lintIdentityRegistryCommand,
     lintPackageTestImportsCommand,
     lintPolicyCommand,

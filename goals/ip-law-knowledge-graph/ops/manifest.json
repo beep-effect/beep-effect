@@ -1,41 +1,40 @@
 {
   "slug": "ip-law-knowledge-graph",
   "title": "IP Law Knowledge Graph",
-  "status": "PENDING",
   "created": "2026-03-03",
   "updated": "2026-03-03",
   "phases": {
     "p0": {
       "name": "Ontology Research",
-      "status": "PENDING",
+      "status": "pending",
       "output": "history/outputs/p0-ontology-research.md",
       "handoff": "ops/handoffs/HANDOFF_P0.md",
       "orchestrator": "ops/handoffs/P0_ORCHESTRATOR_PROMPT.md"
     },
     "p1": {
       "name": "Schema Design",
-      "status": "PENDING",
+      "status": "pending",
       "output": "history/outputs/p1-schema-design.md",
       "handoff": "ops/handoffs/HANDOFF_P1.md",
       "orchestrator": "ops/handoffs/P1_ORCHESTRATOR_PROMPT.md"
     },
     "p2": {
       "name": "Implementation Plan",
-      "status": "PENDING",
+      "status": "pending",
       "output": "history/outputs/p2-implementation-plan.md",
       "handoff": "ops/handoffs/HANDOFF_P2.md",
       "orchestrator": "ops/handoffs/P2_ORCHESTRATOR_PROMPT.md"
     },
     "p3": {
       "name": "Implementation",
-      "status": "PENDING",
+      "status": "pending",
       "output": "history/outputs/p3-implementation-notes.md",
       "handoff": "ops/handoffs/HANDOFF_P3.md",
       "orchestrator": "ops/handoffs/P3_ORCHESTRATOR_PROMPT.md"
     },
     "p4": {
       "name": "Verification",
-      "status": "PENDING",
+      "status": "pending",
       "output": "history/outputs/p4-verification.md",
       "handoff": "ops/handoffs/HANDOFF_P4.md",
       "orchestrator": "ops/handoffs/P4_ORCHESTRATOR_PROMPT.md"
@@ -75,5 +74,11 @@
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
-  }
+  },
+  "initiative": {
+    "id": "ip-law-knowledge-graph",
+    "title": "IP Law Knowledge Graph",
+    "status": "paused"
+  },
+  "statusNote": "legacy status: PENDING"
 }

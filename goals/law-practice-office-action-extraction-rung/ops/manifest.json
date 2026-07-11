@@ -3,13 +3,13 @@
   "initiative": {
     "id": "law-practice-office-action-extraction-rung",
     "title": "Law-Practice Office-Action Extraction Rung",
-    "status": "complete",
+    "status": "completed-retained",
     "created": "2026-06-18",
     "updated": "2026-06-18",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/law-practice-office-action-extraction-rung",
-  "lifecycle": "complete",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
@@ -121,5 +121,9 @@
     "The implementation would exceed named scope before service-backed extraction is green.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "researchReports": ["research/SOURCES.md"]
+  "researchReports": [
+    "research/SOURCES.md"
+  ],
+  "statusNote": "legacy status: complete",
+  "mission": "Graduate the law-practice office-action loop beyond the rung-0 fixed candidate list by invoking the provider-neutral `@beep/langextract` service, preserving span-grounded `GroundedExtraction[]`, and adding enough adverse extraction cases to make the next doctrine breadth slice safe."
 }

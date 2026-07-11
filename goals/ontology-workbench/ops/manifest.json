@@ -9,7 +9,7 @@
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ontology-workbench",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

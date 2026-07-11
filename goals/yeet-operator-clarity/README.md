@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `superseded`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

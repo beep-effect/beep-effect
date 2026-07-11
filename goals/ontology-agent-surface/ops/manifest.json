@@ -86,5 +86,6 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "A required real-engine, live-client, CAS-conflict, or ROBOT proof cannot be produced.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "mission": "Expose the ontology workbench to agents through a curated, task-oriented MCP toolkit on the professional-desktop sidecar: stateless over saved Turtle files, CAS-safe, authenticated, gated, attributed, budgeted, and proven against the real ontology engine stack."
 }

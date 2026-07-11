@@ -1,6 +1,5 @@
 {
   "id": "oip-web-launch",
-  "status": "implementation_complete_review_pending",
   "owner": "@beep-team",
   "app": "@beep/oip-web",
   "sourcePrototype": "/home/elpresidank/Documents/OP_IP_LAW/site",
@@ -43,5 +42,11 @@
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
-  }
+  },
+  "initiative": {
+    "id": "oip-web-launch",
+    "title": "OIP Web Launch",
+    "status": "paused"
+  },
+  "statusNote": "legacy status: implementation_complete_review_pending"
 }

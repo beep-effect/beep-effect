@@ -22,7 +22,7 @@ const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {
 
 const testLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
 
-const writeCompletedGoal = Effect.fn("writeCompletedGoal")(function* (slug: string, reflectionRequired = true) {
+const writeCompletedGoal = Effect.fn("writeCompletedGoal")(function* (slug: string, reflectionRequired?: boolean) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   yield* fs.makeDirectory(path.join("goals", slug, "ops"), { recursive: true });
@@ -31,7 +31,7 @@ const writeCompletedGoal = Effect.fn("writeCompletedGoal")(function* (slug: stri
     `${encodeJson({
       schemaVersion: "initiative-manifest/v1",
       initiative: { id: slug, title: slug, status: "completed-retained" },
-      reflectionRequired,
+      ...(reflectionRequired === undefined ? {} : { reflectionRequired }),
     })}\n`
   );
 });
@@ -72,7 +72,7 @@ type ReflectionLintFixture = {
 };
 
 const runReflectionLintFixture = Effect.fn("runReflectionLintFixture")(function* (fixture: ReflectionLintFixture = {}) {
-  yield* writeCompletedGoal("example", fixture.reflectionRequired ?? true);
+  yield* writeCompletedGoal("example", fixture.reflectionRequired);
   if (fixture.reflection !== undefined) {
     yield* writeReflection("example", fixture.reflection.file, fixture.reflection.body);
   }
@@ -144,15 +144,26 @@ describe("reflection-artifacts lint command", { concurrent: false }, () => {
   );
 
   it(
-    "blocks completed goals without reflectionRequired when no reflection artifact exists",
+    "blocks completed goals when reflectionRequired is absent and no reflection artifact exists",
     () =>
       Effect.runPromise(
         withTempWorkingDirectory(
           Effect.gen(function* () {
-            const exit = yield* runReflectionLintFixture({ reflectionRequired: false });
+            const exit = yield* runReflectionLintFixture({});
             expectReportedFailure(exit);
           })
         ).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
+
+  it(
+    "treats an explicit reflectionRequired opt-out as a non-blocking advisory",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(expectReflectionLintSuccess({ reflectionRequired: false })).pipe(
+          provideScopedLayer(testLayer)
+        )
       ),
     20_000
   );

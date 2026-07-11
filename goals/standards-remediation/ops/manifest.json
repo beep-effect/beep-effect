@@ -3,13 +3,13 @@
   "initiative": {
     "id": "standards-remediation",
     "title": "Standards Inventory Zero",
-    "status": "complete",
+    "status": "completed-retained",
     "created": "2026-07-07",
     "updated": "2026-07-08",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/standards-remediation",
-  "lifecycle": "complete",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -47,47 +47,47 @@
     {
       "id": "P0",
       "name": "Packet + preflight + draft umbrella PR",
-      "status": "done"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Detector bug fixes with fixtures",
-      "status": "done"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Cluster audits + conversion pilots (rulings)",
-      "status": "done"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Dual-arity waves",
-      "status": "done"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Schema-first conversion waves",
-      "status": "done"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "JSDoc waves to zero",
-      "status": "done"
+      "status": "complete"
     },
     {
       "id": "P6",
       "name": "Knip burn-down",
-      "status": "done"
+      "status": "complete"
     },
     {
       "id": "P7",
       "name": "Effect-laws allowlist challenge",
-      "status": "done"
+      "status": "complete"
     },
     {
       "id": "P8",
       "name": "Enforcement flips + merge + close",
-      "status": "done"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -108,5 +108,6 @@
     "The branch base is red for out-of-scope reasons.",
     "Verification requires unnamed credentials, cost, or destructive side effects.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "statusNote": "legacy status: complete"
 }

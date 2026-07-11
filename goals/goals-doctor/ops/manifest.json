@@ -1,15 +1,15 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "goals-doctor",
     "title": "Goals Doctor & Index",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-11",
     "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/goals-doctor",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -47,37 +47,37 @@
     {
       "id": "P0",
       "name": "Research: inventory census",
-      "status": "pending",
+      "status": "complete",
       "exit": "research/status-token-census.md committed with the census script and its output; census total equals packet-dir count."
     },
     {
       "id": "P1",
       "name": "Schema + set-status + migrate",
-      "status": "pending",
+      "status": "complete",
       "exit": "All manifests decode via GoalManifest v2 after --migrate; zero unknown status tokens; 5 missing manifests backfilled; mapping unit tests pass."
     },
     {
       "id": "P2",
       "name": "Index",
-      "status": "pending",
+      "status": "complete",
       "exit": "goals/INDEX.md generated and committed; index --check exits 0 clean and 1 on a scratch drift; README snapshot replaced by pointer."
     },
     {
       "id": "P3",
       "name": "Doctor + yeet wiring",
-      "status": "pending",
+      "status": "complete",
       "exit": "beep goals doctor exits 0 with committed baseline; synthetic-finding fixture exits 1; doctor + index --check green inside yeet verify; ReflectionArtifact uses the canonical completed set."
     },
     {
       "id": "P4",
       "name": "Yeet: PR to mergeable",
-      "status": "pending",
+      "status": "complete",
       "exit": "PR open with all required checks green and MERGEABLE."
     },
     {
       "id": "P5",
       "name": "Close",
-      "status": "pending",
+      "status": "complete",
       "exit": "Closeout reflection validates; packet closed via beep goals set-status goals-doctor completed-retained (dogfood)."
     }
   ],
@@ -94,5 +94,6 @@
     "The implementation would exceed named scope (archive moves, cron automation, packet triage beyond mechanical migration).",
     "A legacy manifest cannot be mapped mechanically and needs a human status decision — record it, park that packet's migration, continue.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "mission": "Make `goals/` lifecycle machine-truthful: a canonical `GoalManifest` schema, a generated `goals/INDEX.md`, a `beep goals doctor` that diffs manifest claims against git evidence, and a single-writer `beep goals set-status` — all wired into `yeet verify` so packet drift blocks instead of accumulating."
 }

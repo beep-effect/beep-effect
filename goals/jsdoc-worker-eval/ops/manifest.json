@@ -3,7 +3,7 @@
   "initiative": {
     "id": "jsdoc-worker-eval",
     "title": "JSDoc Worker Eval",
-    "status": "p0-p6-implemented-runpod-10-packet-evidence-complete",
+    "status": "completed-retained",
     "created": "2026-05-12",
     "updated": "2026-05-16",
     "packetAnchorDocument": "SPEC.md"
@@ -118,5 +118,7 @@
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": true,
     "grandfatheredNote": "Completion predates the 2026-06-30 PR-mergeable gate (lifecycle reports P0-P6 implemented, evidence-complete); not reopened."
-  }
+  },
+  "reflectionRequired": false,
+  "statusNote": "legacy status: p0-p6-implemented-runpod-10-packet-evidence-complete"
 }
