@@ -1768,6 +1768,20 @@
         "@types/node": "catalog:",
       },
     },
+    "packages/ontology/config": {
+      "name": "@beep/ontology-config",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/ontology/domain": {
       "name": "@beep/ontology-domain",
       "version": "0.0.2",
@@ -1789,6 +1803,7 @@
       "dependencies": {
         "@beep/file-processing": "workspace:^",
         "@beep/n3": "workspace:^",
+        "@beep/ontology-config": "workspace:^",
         "@beep/ontology-use-cases": "workspace:^",
         "@beep/oxigraph": "workspace:^",
         "@beep/shacl": "workspace:^",
@@ -2695,6 +2710,8 @@
     "@beep/ontology": ["@beep/ontology@workspace:packages/foundation/modeling/ontology"],
 
     "@beep/ontology-client": ["@beep/ontology-client@workspace:packages/ontology/client"],
+
+    "@beep/ontology-config": ["@beep/ontology-config@workspace:packages/ontology/config"],
 
     "@beep/ontology-domain": ["@beep/ontology-domain@workspace:packages/ontology/domain"],
 

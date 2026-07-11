@@ -6,6 +6,7 @@
  */
 
 import { N3ParseTurtleRequest, N3SerializeTurtleRequest, N3TurtleCodec, N3TurtleCodecLive } from "@beep/n3";
+import { OntologyConfigLive } from "@beep/ontology-config/layer";
 import {
   OntologyFileStore,
   OntologyReasonerLive,
@@ -76,14 +77,31 @@ export const TurtleCodecLayer = Layer.effect(TurtleCodec, makeTurtleCodec()).pip
  * @example
  * ```ts
  * import { OntologyFileStoreLayer } from "@beep/ontology-server/aggregates/Session"
+ * import { NodeServices } from "@effect/platform-node"
+ * import { ConfigProvider, Effect, Layer } from "effect"
  *
- * console.log(OntologyFileStoreLayer)
+ * const configuredLayer = OntologyFileStoreLayer.pipe(
+ *   Layer.provide(
+ *     ConfigProvider.layer(
+ *       ConfigProvider.fromUnknown({ ONTOLOGY_WORKSPACE_ROOT: "." })
+ *     )
+ *   ),
+ *   Layer.provide(NodeServices.layer)
+ * )
+ * const program = Effect.scoped(Layer.build(configuredLayer))
+ *
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
- * @since 0.0.0
+ * @effects Resolves the typed ontology config from the ambient
+ * `ConfigProvider`, acquires filesystem and path services, canonicalizes and
+ * validates the authority root, and constructs the file-store service.
  * @category layers
+ * @since 0.0.0
  */
-export const OntologyFileStoreLayer = Layer.effect(OntologyFileStore, makeFileSystemOntologyFileStore());
+export const OntologyFileStoreLayer = Layer.effect(OntologyFileStore, makeFileSystemOntologyFileStore()).pipe(
+  Layer.provide(OntologyConfigLive)
+);
 
 /**
  * Domain-native ontology reasoner port layer.

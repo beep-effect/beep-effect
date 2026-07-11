@@ -9,23 +9,31 @@ import {
   resolvePathWithinCanonicalRoot,
   writeFileWithinCanonicalRootAtomically,
 } from "@beep/file-processing/PathSafety";
+import { OntologyConfig } from "@beep/ontology-config/server";
 import {
+  OntologyFilePath,
   OntologyFileStore,
   OntologyFileStoreError,
   ReadOntologyFileResult,
 } from "@beep/ontology-use-cases/aggregates/Session";
-import { Config, Effect, FileSystem, Path, PlatformError } from "effect";
+import { Effect, FileSystem, Path, PlatformError } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { ReadOntologyFileRequest, WriteOntologyFileRequest } from "@beep/ontology-use-cases/aggregates/Session";
 
-const OntologyWorkspaceRoot = Config.nonEmptyString("ONTOLOGY_WORKSPACE_ROOT");
 const utf8Encoder = new TextEncoder();
 
-const isSafePathSegment = P.every<string>([Str.isNonEmpty, P.not(Eq.equals(".")), P.not(Eq.equals(".."))]);
+const OntologyWorkspacePathSegment = S.NonEmptyString.check(
+  S.isPattern(/^(?!\.{1,2}$).+$/u, {
+    identifier: "OntologyWorkspacePathSegmentCheck",
+    title: "Ontology Workspace Path Segment",
+    description: "Ontology workspace path segments must not be current-directory or parent-directory markers.",
+    message: "Ontology workspace path segments must not be '.' or '..'.",
+  })
+);
+const isOntologyWorkspacePathSegment = S.is(OntologyWorkspacePathSegment);
 
 const OntologyWorkspaceFilePathChecks = S.makeFilterGroup(
   [
@@ -35,7 +43,7 @@ const OntologyWorkspaceFilePathChecks = S.makeFilterGroup(
       description: "Ontology workspace paths must be root-relative POSIX paths ending in lower-case .ttl.",
       message: "Expected a root-relative POSIX path ending in lower-case .ttl.",
     }),
-    S.makeFilter((value: string) => A.every(Str.split("/")(value), isSafePathSegment), {
+    S.makeFilter((value: string) => A.every(Str.split("/")(value), isOntologyWorkspacePathSegment), {
       identifier: "OntologyWorkspaceFilePathSegmentCheck",
       title: "Ontology Workspace File Path Segments",
       description: "Ontology workspace paths must not contain empty, current-directory, or parent-directory segments.",
@@ -49,7 +57,7 @@ const OntologyWorkspaceFilePathChecks = S.makeFilterGroup(
   }
 );
 
-const OntologyWorkspaceFilePath = S.String.check(OntologyWorkspaceFilePathChecks);
+const OntologyWorkspaceFilePath = OntologyFilePath.check(OntologyWorkspaceFilePathChecks);
 const decodeOntologyWorkspaceFilePath = S.decodeUnknownEffect(OntologyWorkspaceFilePath);
 
 const readFailure = (path: ReadOntologyFileRequest["path"]) => (): OntologyFileStoreError =>
@@ -92,9 +100,9 @@ const invalidResolvedWritePath = (path: WriteOntologyFileRequest["path"]): Ontol
   );
 
 const resolveOntologyWorkspaceRoot = Effect.fn("Ontology.FileStore.resolveWorkspaceRoot")(function* (
-  fileSystem: FileSystem.FileSystem
+  fileSystem: FileSystem.FileSystem,
+  configuredRoot: string
 ) {
-  const configuredRoot = yield* OntologyWorkspaceRoot;
   const canonicalRoot = yield* fileSystem.realPath(configuredRoot);
   const info = yield* fileSystem.stat(canonicalRoot);
 
@@ -177,24 +185,35 @@ const resolveWritePath = (
 /**
  * Build the FileSystem-backed ontology file-store port implementation.
  *
+ * @remarks The supplied ontology server configuration must name an existing
+ * directory. Requests accept only traversal-safe root-relative paths ending in
+ * lower-case `.ttl`.
+ *
  * @example
  * ```ts
+ * import { OntologyConfig, OntologyServerConfig } from "@beep/ontology-config/server"
  * import { makeFileSystemOntologyFileStore } from "@beep/ontology-server/aggregates/Session"
+ * import { Effect } from "effect"
  *
- * const fileStore = makeFileSystemOntologyFileStore()
- *
- * console.log(fileStore)
+ * const program = makeFileSystemOntologyFileStore().pipe(
+ *   Effect.provideService(
+ *     OntologyConfig,
+ *     OntologyServerConfig.make({ workspaceRoot: "." })
+ *   ),
+ *   Effect.map((fileStore) => typeof fileStore.read === "function")
+ * )
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
- * @remarks `ONTOLOGY_WORKSPACE_ROOT` is required and must resolve to an existing directory. Requests accept only traversal-safe root-relative paths ending in lower-case `.ttl`.
- * @effects Reads and validates `ONTOLOGY_WORKSPACE_ROOT`, canonicalizes read targets, and atomically writes Turtle documents within the configured root.
- * @since 0.0.0
+ * @effects Reads typed ontology server configuration, canonicalizes its workspace root and read targets, and atomically writes Turtle documents within that root.
  * @category services
+ * @since 0.0.0
  */
 export const makeFileSystemOntologyFileStore = Effect.fn("Ontology.FileStore.makeFileSystem")(function* () {
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const canonicalRoot = yield* resolveOntologyWorkspaceRoot(fileSystem).pipe(Effect.orDie);
+  const { workspaceRoot } = yield* OntologyConfig;
+  const canonicalRoot = yield* resolveOntologyWorkspaceRoot(fileSystem, workspaceRoot);
 
   return OntologyFileStore.of({
     read: Effect.fn("Ontology.FileStore.read")(function* (request: ReadOntologyFileRequest) {

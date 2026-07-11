@@ -286,6 +286,9 @@
       "path": "packages/ontology/client"
     },
     {
+      "path": "packages/ontology/config"
+    },
+    {
       "path": "packages/ontology/domain"
     },
     {

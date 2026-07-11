@@ -41,6 +41,7 @@ import { RuntimeLive } from "@/runtime/Layer";
 import { ipcTransport, SidecarStdioLive } from "./IpcStdoutGuard.ts";
 import { DesktopRpcSessionToken, RpcSessionAuthLayer } from "./RpcSessionAuth.ts";
 import type { Redacted } from "effect";
+import type { DesktopStartupError } from "@/runtime/Layer";
 
 // Loopback rpc port; defaults to 3939 (the desktop chat surface's sidecar
 // port). Configurable via CHAT_SIDECAR_PORT for tests/dev that need a free port.
@@ -61,9 +62,9 @@ const ChatOnlyRpcServer = RpcServer.layer(ChatRpcs).pipe(Layer.provide(RuntimeLi
 
 // HTTP transport (default): one HttpRouter carries the rpc protocol and the CORS
 // middleware via layer memoization, served by HttpRouter.serve.
-const httpMain = (): Layer.Layer<never> => {
+const httpMain = (): Layer.Layer<never, DesktopStartupError> => {
   const Protocol = RpcServer.layerProtocolHttp({ path: "/rpc" }).pipe(Layer.provide(HttpRouter.layer));
-  const RpcServerLive: Layer.Layer<never, never, RpcServer.Protocol> = O.isSome(RPC_SESSION_TOKEN)
+  const RpcServerLive: Layer.Layer<never, DesktopStartupError, RpcServer.Protocol> = O.isSome(RPC_SESSION_TOKEN)
     ? DesktopRpcServer
     : ChatOnlyRpcServer;
   const Auth = O.match(RPC_SESSION_TOKEN, {
@@ -93,7 +94,7 @@ const httpMain = (): Layer.Layer<never> => {
 // IPC transport: ndjson rpc frames ride stdin/stdout (bridged to the webview by
 // the Tauri Rust shell). Logs are pinned to stderr so they never interleave with
 // the stdout frame stream the bridge parses.
-const ipcMain = (): Layer.Layer<never> =>
+const ipcMain = (): Layer.Layer<never, DesktopStartupError> =>
   DesktopRpcServer.pipe(
     Layer.provide(RpcServer.layerProtocolStdio),
     Layer.provide(SidecarStdioLive),

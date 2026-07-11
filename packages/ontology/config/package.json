@@ -1,22 +1,23 @@
 {
-  "name": "@beep/ontology-server",
-  "version": "0.0.2",
-  "description": "Ontology workbench server adapter package for file IO and Turtle codec Layers.",
+  "name": "@beep/ontology-config",
+  "version": "0.0.0",
+  "description": "Typed server configuration for ontology workspace filesystem authority.",
   "license": "MIT",
   "private": true,
   "type": "module",
-  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/packages/ontology/server",
+  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/packages/ontology/config",
   "repository": {
     "type": "git",
     "url": "git@github.com:beep-effect/beep-effect.git",
-    "directory": "packages/ontology/server"
+    "directory": "packages/ontology/config"
   },
   "scripts": {
     "audit": "bun run --if-present beep:audit",
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
     "beep:build": "tsc -b tsconfig.json && bun run babel",
-    "beep:check": "tsgo -b tsconfig.json",
+    "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+    "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
@@ -28,14 +29,16 @@
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
-    "test:property": "bun run beep:test",
     "test:integration": "bun run beep:test:integration"
   },
   "exports": {
     ".": "./src/index.ts",
-    "./layer": "./src/Layer.ts",
+    "./public": "./src/public.ts",
+    "./server": "./src/server.ts",
+    "./secrets": "./src/secrets.ts",
+    "./layer": "./src/layer.ts",
     "./test": "./src/test.ts",
-    "./aggregates/Session": "./src/aggregates/Session/index.ts",
+    "./aggregates/*": "./src/aggregates/*/index.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -51,29 +54,25 @@
     "access": "public",
     "provenance": true,
     "exports": {
-      ".": "./dist/index.ts",
-      "./layer": "./dist/Layer.js",
+      ".": "./dist/index.js",
+      "./public": "./dist/public.js",
+      "./server": "./dist/server.js",
+      "./secrets": "./dist/secrets.js",
+      "./layer": "./dist/layer.js",
       "./test": "./dist/test.js",
-      "./aggregates/Session": "./dist/aggregates/Session/index.js",
+      "./aggregates/*": "./dist/aggregates/*/index.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }
   },
   "dependencies": {
-    "@beep/file-processing": "workspace:^",
-    "@beep/n3": "workspace:^",
-    "@beep/ontology-config": "workspace:^",
-    "@beep/ontology-use-cases": "workspace:^",
-    "@beep/oxigraph": "workspace:^",
-    "@beep/shacl": "workspace:^",
+    "@beep/identity": "workspace:^",
+    "@beep/schema": "workspace:^",
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@beep/rdf-canonize": "workspace:^",
-    "@beep/semantic-web": "workspace:^",
-    "@beep/test-utils": "workspace:^",
-    "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "bun-types": "catalog:"
   }
 }

@@ -69,6 +69,24 @@
         "../../../packages/foundation/capability/file-processing/src/test.ts"
       ],
       "@beep/n3": ["../../../packages/drivers/n3/src/index.ts"],
+      "@beep/ontology-config": [
+        "../../../packages/ontology/config/src/index.ts"
+      ],
+      "@beep/ontology-config/public": [
+        "../../../packages/ontology/config/src/public.ts"
+      ],
+      "@beep/ontology-config/server": [
+        "../../../packages/ontology/config/src/server.ts"
+      ],
+      "@beep/ontology-config/secrets": [
+        "../../../packages/ontology/config/src/secrets.ts"
+      ],
+      "@beep/ontology-config/layer": [
+        "../../../packages/ontology/config/src/layer.ts"
+      ],
+      "@beep/ontology-config/test": [
+        "../../../packages/ontology/config/src/test.ts"
+      ],
       "@beep/ontology-use-cases": [
         "../../../packages/ontology/use-cases/src/index.ts"
       ],

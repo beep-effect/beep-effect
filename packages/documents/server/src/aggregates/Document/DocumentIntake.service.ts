@@ -58,11 +58,27 @@ const materializeAtomically = (
  *
  * @example
  * ```ts
- * import { makeDocumentIntake } from "@beep/documents-server/aggregates/Document"
+ * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
+ * import * as BunPath from "@effect/platform-bun/BunPath"
+ * import {
+ *   FilingDecisionHeuristicLayer,
+ *   makeDocumentIntake
+ * } from "@beep/documents-server/aggregates/Document"
+ * import { Effect, Layer } from "effect"
  *
- * console.log(makeDocumentIntake)
+ * const program = makeDocumentIntake().pipe(
+ *   Effect.provide(
+ *     Layer.mergeAll(BunFileSystem.layer, BunPath.layer, FilingDecisionHeuristicLayer)
+ *   ),
+ *   Effect.map((service) => typeof service.intakeDroppedFile === "function")
+ * )
+ *
+ * Effect.runPromise(program).then(console.log) // true
  * ```
  *
+ * @effects Acquires filing-decision, filesystem, and path services. Each
+ * returned intake operation computes the content digest and taxonomy path,
+ * then atomically materializes the bytes beneath the supplied vault root.
  * @category layers
  * @since 0.0.0
  */

@@ -32,6 +32,7 @@
     "packages/workspace/tables/dtslint/**/*.tst.*",
     "packages/workspace/use-cases/dtslint/**/*.tst.*",
     "packages/workspace/server/dtslint/**/*.tst.*",
+    "packages/ontology/config/dtslint/**/*.tst.*",
     "packages/ontology/domain/dtslint/**/*.tst.*",
     "packages/ontology/use-cases/dtslint/**/*.tst.*",
     "packages/ontology/server/dtslint/**/*.tst.*",

@@ -536,7 +536,7 @@ const writeWithinCanonicalRootAtomically: (
         yield* fs.rename(temporaryPath, finalTarget);
         return finalTarget;
       }),
-      (temporaryDirectory) => fs.remove(temporaryDirectory, { force: true, recursive: true }).pipe(Effect.ignore)
+      (temporaryDirectory) => fs.remove(temporaryDirectory, { force: true, recursive: true })
     );
   }
 );
@@ -574,7 +574,7 @@ const writeWithinCanonicalRootAtomically: (
  * ```
  *
  * @effects Canonicalizes candidate paths, creates destination directories and a private temporary directory, writes a new file exclusively, atomically renames it, and removes temporary artifacts; never re-canonicalizes the authority root.
- * @category mutations
+ * @category resource-management
  * @since 0.0.0
  */
 export const writeFileWithinCanonicalRootAtomically: (options: {
@@ -622,7 +622,7 @@ export const writeFileWithinCanonicalRootAtomically: (options: {
  * ```
  *
  * @effects Canonicalizes paths, creates destination directories and a private temporary directory, writes a new file exclusively, atomically renames it, and removes temporary artifacts.
- * @category mutations
+ * @category resource-management
  * @since 0.0.0
  */
 export const writeFileWithinRootAtomically: (options: {

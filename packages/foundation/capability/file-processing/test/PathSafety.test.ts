@@ -9,6 +9,7 @@ import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, Ref, Result } from "effect";
 import * as Eq from "effect/Equal";
+import * as PlatformError from "effect/PlatformError";
 
 const PathSafetyTestLayer = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
 const payload = new TextEncoder().encode("safe payload");
@@ -98,6 +99,35 @@ describe("@beep/file-processing PathSafety", () => {
 
       expect(Result.isFailure(result)).toBe(true);
       expect(yield* fs.readDirectory(root)).toEqual(["blocked"]);
+    }).pipe(provideScopedLayer(PathSafetyTestLayer))
+  );
+
+  it.effect("fails with the cleanup PlatformError when temporary artifact removal fails", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-path-safety-" });
+      const cleanupAttempts = yield* Ref.make(0);
+      const cleanupFailure = PlatformError.systemError({
+        _tag: "PermissionDenied",
+        module: "FileSystem",
+        method: "remove",
+        description: "simulated temporary-directory cleanup failure",
+      });
+      const failingCleanupFileSystem: FileSystem.FileSystem = {
+        ...fs,
+        remove: () =>
+          Ref.update(cleanupAttempts, (count) => count + 1).pipe(Effect.andThen(Effect.fail(cleanupFailure))),
+      };
+
+      const error = yield* writeFileWithinRootAtomically({
+        root,
+        candidate: "result.bin",
+        bytes: payload,
+      }).pipe(Effect.provideService(FileSystem.FileSystem, failingCleanupFileSystem), Effect.flip);
+
+      expect(error).toBe(cleanupFailure);
+      expect(yield* Ref.get(cleanupAttempts)).toBe(1);
+      expect(yield* fs.readFileString(`${root}/result.bin`)).toBe("safe payload");
     }).pipe(provideScopedLayer(PathSafetyTestLayer))
   );
 

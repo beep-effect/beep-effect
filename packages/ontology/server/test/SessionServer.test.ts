@@ -29,7 +29,7 @@ import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
-import { ConfigProvider, Effect, Exit, FileSystem, Layer, Path, Result } from "effect";
+import { Cause, ConfigProvider, Effect, Exit, FileSystem, Layer, Path, Result } from "effect";
 import * as Eq from "effect/Equal";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
@@ -294,6 +294,10 @@ describe("Ontology file-store security boundary", () => {
           Effect.scoped(Layer.build(ontologyFileStoreLayerForConfiguration(configuration)))
         );
         expect(Exit.isFailure(exit)).toBe(true);
+        if (Exit.isFailure(exit)) {
+          expect(Cause.hasFails(exit.cause)).toBe(true);
+          expect(Cause.hasDies(exit.cause)).toBe(false);
+        }
       }
     }, provideScopedLayer(NodeServices.layer))
   );

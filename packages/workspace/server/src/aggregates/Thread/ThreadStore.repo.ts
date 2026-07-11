@@ -196,11 +196,30 @@ const projectTimeline = (
  *
  * @example
  * ```ts
+ * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
+ * import { CuidState } from "@beep/schema/Cuid"
+ * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import { makeInMemoryThreadStore } from "@beep/workspace-server/aggregates/Thread"
+ * import { Effect } from "effect"
  *
- * console.log(makeInMemoryThreadStore)
+ * const program = Effect.gen(function* () {
+ *   const store = yield* makeInMemoryThreadStore()
+ *   const thread = yield* store.createThread({
+ *     title: "Matter intake",
+ *     workspaceId: Workspace.WorkspaceId.make(1)
+ *   })
+ *   return thread.publicId.startsWith("workspace_thread_")
+ * }).pipe(
+ *   Effect.provide(CuidState.Default),
+ *   Effect.provide(BunCrypto.layer)
+ * )
+ *
+ * Effect.runPromise(program).then(console.log) // true
  * ```
  *
+ * @effects Acquires CUID state and platform crypto, allocates mutable in-memory
+ * state, and returns operations that generate non-enumerable public IDs before
+ * atomically updating that state.
  * @category repositories
  * @since 0.0.0
  */
@@ -349,10 +368,19 @@ const messageTable = DbSchema.message;
  * @example
  * ```ts
  * import { makeDrizzleThreadStore } from "@beep/workspace-server/aggregates/Thread"
+ * import { Effect } from "effect"
  *
- * console.log(makeDrizzleThreadStore)
+ * const program = makeDrizzleThreadStore().pipe(
+ *   Effect.map((store) => typeof store.createThread === "function")
+ * )
+ *
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
+ * @effects Acquires the Postgres Drizzle repository, CUID state, and platform
+ * crypto. Returned operations generate public IDs and query or mutate the
+ * workspace thread, turn, and message tables; driver and ID-generation
+ * failures are translated to `ThreadStoreUnavailable`.
  * @category repositories
  * @since 0.0.0
  */
@@ -549,11 +577,22 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
  *
  * @example
  * ```ts
+ * import * as BunCrypto from "@effect/platform-bun/BunCrypto"
+ * import { CuidState } from "@beep/schema/Cuid"
  * import { makeThreadStore } from "@beep/workspace-server/aggregates/Thread"
+ * import { Effect } from "effect"
  *
- * console.log(makeThreadStore)
+ * const program = makeThreadStore().pipe(
+ *   Effect.map((store) => typeof store.timeline === "function"),
+ *   Effect.provide(CuidState.Default),
+ *   Effect.provide(BunCrypto.layer)
+ * )
+ *
+ * Effect.runPromise(program).then(console.log) // true
  * ```
  *
+ * @effects Uses the same CUID-backed mutable in-memory state as
+ * {@link makeInMemoryThreadStore}, requiring CUID state and platform crypto.
  * @category repositories
  * @since 0.0.0
  */

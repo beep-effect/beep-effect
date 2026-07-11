@@ -1,4 +1,5 @@
 ---
+"@beep/ontology-config": patch
 "@beep/ontology-server": patch
 "@beep/professional-desktop": patch
 "@beep/workspace-server": patch
