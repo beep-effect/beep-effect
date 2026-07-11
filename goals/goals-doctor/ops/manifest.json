@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "goals-doctor",
     "title": "Goals Doctor & Index",
@@ -59,7 +59,7 @@
     {
       "id": "P2",
       "name": "Index",
-      "status": "pending",
+      "status": "complete",
       "exit": "goals/INDEX.md generated and committed; index --check exits 0 clean and 1 on a scratch drift; README snapshot replaced by pointer."
     },
     {

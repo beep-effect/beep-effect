@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "initiative-manifest/v1",
+  "schemaVersion": "initiative-manifest/v2",
   "initiative": {
     "id": "<slug>",
     "title": "<Goal Title>",
@@ -10,6 +10,7 @@
   },
   "packetPath": "goals/<slug>",
   "lifecycle": "active",
+  "mission": "<one-line mission shown in the generated goals/INDEX.md>",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
