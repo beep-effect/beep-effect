@@ -20,7 +20,7 @@ drifts from the manifests, and merge conflicts are resolved by regenerating.
 | [fallow-advisory-ratchets](./fallow-advisory-ratchets/README.md) | Fallow Advisory Ratchets | 2/5 | 2026-06-11 | Implement the next phase after Fallow Quality Enforcement: selected advisory lanes become narrow, policy-backed ratchet… |
 | [fallow-debt-burndown](./fallow-debt-burndown/README.md) | Fallow Debt Burn-Down | 1/6 | 2026-06-11 | Turn the current advisory Fallow output into a remediation queue. This packet is about fixing selected Fallow-identifie… |
 | [file-processing-capability](./file-processing-capability/README.md) | File Processing Capability | 3/7 | 2026-06-18 | Define and implement a product-neutral schema-first file processing capability with driver-backed extraction and repo C… |
-| [goals-doctor](./goals-doctor/README.md) | Goals Doctor & Index | 3/6 | 2026-07-11 | Make `goals/` lifecycle machine-truthful: a canonical `GoalManifest` schema, a generated `goals/INDEX.md`, a `beep goal… |
+| [goals-doctor](./goals-doctor/README.md) | Goals Doctor & Index | 4/6 | 2026-07-11 | Make `goals/` lifecycle machine-truthful: a canonical `GoalManifest` schema, a generated `goals/INDEX.md`, a `beep goal… |
 | [gov-legal-data-driver-codegen](./gov-legal-data-driver-codegen/README.md) | Gov/Legal Data Driver Codegen | 3/4 | 2026-06-30 | — |
 | [knowledge-workspace](./knowledge-workspace/README.md) | Knowledge Workspace | — | — | — |
 | [legal-document-intake](./legal-document-intake/README.md) | Legal Document Intake | 2/8 | 2026-07-09 | — |

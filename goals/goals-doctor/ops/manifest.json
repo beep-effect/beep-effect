@@ -65,7 +65,7 @@
     {
       "id": "P3",
       "name": "Doctor + yeet wiring",
-      "status": "pending",
+      "status": "complete",
       "exit": "beep goals doctor exits 0 with committed baseline; synthetic-finding fixture exits 1; doctor + index --check green inside yeet verify; ReflectionArtifact uses the canonical completed set."
     },
     {

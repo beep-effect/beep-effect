@@ -34,8 +34,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Schema + set-status + migrate — `GoalManifest` v2, `beep goals set-status`
-with `--migrate`, manifests migrated, 5 missing manifests backfilled.
+P4 Yeet: PR to mergeable — ship via yeet (repair → verify → publish → monitor).
 
 ## Latest Evidence
 
