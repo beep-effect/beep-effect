@@ -5,9 +5,11 @@
  * @since 0.0.0
  */
 
+import { FilingOutcome } from "@beep/documents-domain/aggregates/Document";
 import { legalDocumentTaxonomy, slugVaultSegment } from "@beep/documents-domain/values/Taxonomy";
 import * as DocumentUseCases from "@beep/documents-use-cases/server";
 import { $DocumentsServerId } from "@beep/identity/packages";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A } from "@beep/utils";
 import { Effect, flow, Layer, pipe } from "effect";
 import * as O from "effect/Option";
@@ -16,7 +18,7 @@ import * as Str from "effect/String";
 const $I = $DocumentsServerId.create("aggregates/Document/FilingDecisionHeuristic");
 
 const FilingDecision = DocumentUseCases.Document.FilingDecision;
-const fallbackConceptId = "client-source-materials" as const;
+const deterministicConfidence = UnitInterval.fromUnknown(1);
 
 const normalizedHaystack = flow(Str.toLowerCase, Str.replace(/[_\s.]+/g, "-"));
 
@@ -32,12 +34,15 @@ const decideFromTaxonomy = (fileName: string) =>
       ),
       O.match({
         onNone: () =>
-          DocumentUseCases.Document.FilingDecisionResult.make({
-            rationale: "No taxonomy heuristic token matched the filename; defaulted to client source materials.",
-            taxonomyConceptId: fallbackConceptId,
+          FilingOutcome.make({
+            kind: "inboxed",
+            rationale: "No taxonomy heuristic token matched the filename; routed to the intake inbox.",
+            reason: "no-match",
           }),
         onSome: (concept) =>
-          DocumentUseCases.Document.FilingDecisionResult.make({
+          FilingOutcome.make({
+            kind: "filed",
+            confidence: deterministicConfidence,
             rationale: `Matched deterministic taxonomy token for ${concept.id}.`,
             taxonomyConceptId: concept.id,
           }),

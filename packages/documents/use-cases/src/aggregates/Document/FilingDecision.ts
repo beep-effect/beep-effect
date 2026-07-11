@@ -1,19 +1,73 @@
 /**
- * FilingDecision port for deterministic P1 and future LLM-backed P2 filing.
+ * FilingDecision port for deterministic and LLM-backed filing.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document";
-import { LegalDocumentConceptId } from "@beep/documents-domain/values/Taxonomy";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
+import type { FilingOutcome } from "@beep/documents-domain/aggregates/Document";
 import type { Effect } from "effect";
 import type { FilingDecisionUnavailable } from "./Document.errors.ts";
 
 const $I = $DocumentsUseCasesId.create("aggregates/Document/FilingDecision");
+
+/**
+ * Maximum characters of extracted document text supplied to the FilingDecision port.
+ *
+ * @example
+ * ```ts
+ * import { FILING_TEXT_EXCERPT_MAX_LENGTH } from "@beep/documents-use-cases/aggregates/Document/server"
+ *
+ * console.log(FILING_TEXT_EXCERPT_MAX_LENGTH)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const FILING_TEXT_EXCERPT_MAX_LENGTH = 8000;
+
+/**
+ * Bounded extracted-text excerpt used by content-aware filing decisions.
+ *
+ * @example
+ * ```ts
+ * import { FilingTextExcerpt } from "@beep/documents-use-cases/aggregates/Document/server"
+ * import * as S from "effect/Schema"
+ *
+ * const excerpt = S.decodeUnknownSync(FilingTextExcerpt)("MASTER SERVICES AGREEMENT ...")
+ * console.log(excerpt.length)
+ * ```
+ *
+ * @category ports
+ * @since 0.0.0
+ */
+export const FilingTextExcerpt = S.NonEmptyString.check(S.isMaxLength(FILING_TEXT_EXCERPT_MAX_LENGTH)).pipe(
+  $I.annoteSchema("FilingTextExcerpt", {
+    description: "Bounded extracted-text excerpt used by content-aware filing decisions.",
+  })
+);
+
+/**
+ * Type for {@link FilingTextExcerpt}.
+ *
+ * @example
+ * ```ts
+ * import { FilingTextExcerpt } from "@beep/documents-use-cases/aggregates/Document/server"
+ * import * as S from "effect/Schema"
+ *
+ * const excerpt: FilingTextExcerpt = S.decodeUnknownSync(FilingTextExcerpt)("Indemnification clause")
+ * console.log(excerpt)
+ * ```
+ *
+ * @category ports
+ * @since 0.0.0
+ */
+export type FilingTextExcerpt = typeof FilingTextExcerpt.Type;
 
 /**
  * Input supplied to the FilingDecision port.
@@ -40,7 +94,10 @@ export class FilingDecisionInput extends S.Class<FilingDecisionInput>($I`FilingD
       description: "Deterministic content digest for the source bytes.",
     }),
     originalFileName: S.NonEmptyString.annotateKey({
-      description: "Original source filename used by the deterministic heuristic.",
+      description: "Original source filename used by filename-based classification.",
+    }),
+    textExcerpt: S.Option(FilingTextExcerpt).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional bounded extracted-text excerpt for content-aware classification.",
     }),
   },
   $I.annote("FilingDecisionInput", {
@@ -49,47 +106,18 @@ export class FilingDecisionInput extends S.Class<FilingDecisionInput>($I`FilingD
 ) {}
 
 /**
- * Result returned by the FilingDecision port.
- *
- * @example
- * ```ts
- * import { FilingDecisionResult } from "@beep/documents-use-cases/aggregates/Document/server"
- *
- * const result = FilingDecisionResult.make({
- *   rationale: "Matched deterministic taxonomy token for pleadings.",
- *   taxonomyConceptId: "pleadings"
- * })
- * console.log(result.taxonomyConceptId)
- * ```
- *
- * @category ports
- * @since 0.0.0
- */
-export class FilingDecisionResult extends S.Class<FilingDecisionResult>($I`FilingDecisionResult`)(
-  {
-    rationale: S.NonEmptyString.annotateKey({
-      description: "Deterministic explanation for the selected taxonomy concept.",
-    }),
-    taxonomyConceptId: LegalDocumentConceptId.annotateKey({
-      description: "Selected legal document taxonomy concept.",
-    }),
-  },
-  $I.annote("FilingDecisionResult", {
-    description: "Result returned by the FilingDecision port.",
-  })
-) {}
-
-/**
  * FilingDecision port shape used by deterministic and LLM-backed classifiers.
  *
  * @example
  * ```ts
- * import { FilingDecisionResult } from "@beep/documents-use-cases/aggregates/Document/server"
+ * import { FilingOutcome } from "@beep/documents-domain/aggregates/Document"
  * import type { FilingDecisionShape } from "@beep/documents-use-cases/aggregates/Document/server"
  * import { Effect } from "effect"
  *
  * const service: FilingDecisionShape = {
- *   decide: () => Effect.succeed(FilingDecisionResult.make({
+ *   decide: () => Effect.succeed(FilingOutcome.fromUnknown({
+ *     kind: "filed",
+ *     confidence: 1,
  *     rationale: "Matched deterministic taxonomy token for pleadings.",
  *     taxonomyConceptId: "pleadings"
  *   }))
@@ -101,22 +129,24 @@ export class FilingDecisionResult extends S.Class<FilingDecisionResult>($I`Filin
  * @since 0.0.0
  */
 export interface FilingDecisionShape {
-  readonly decide: (input: FilingDecisionInput) => Effect.Effect<FilingDecisionResult, FilingDecisionUnavailable>;
+  readonly decide: (input: FilingDecisionInput) => Effect.Effect<FilingOutcome, FilingDecisionUnavailable>;
 }
 
 /**
- * FilingDecision port for deterministic P1 and future LLM-backed filing.
+ * FilingDecision port for deterministic and LLM-backed filing.
  *
  * @example
  * ```ts
- * import { FilingDecision, FilingDecisionResult } from "@beep/documents-use-cases/aggregates/Document/server"
+ * import { FilingOutcome } from "@beep/documents-domain/aggregates/Document"
+ * import { FilingDecision } from "@beep/documents-use-cases/aggregates/Document/server"
  * import type { FilingDecisionShape } from "@beep/documents-use-cases/aggregates/Document/server"
  * import { Effect } from "effect"
  *
  * const service: FilingDecisionShape = {
- *   decide: () => Effect.succeed(FilingDecisionResult.make({
- *     rationale: "Matched deterministic taxonomy token for pleadings.",
- *     taxonomyConceptId: "pleadings"
+ *   decide: () => Effect.succeed(FilingOutcome.make({
+ *     kind: "inboxed",
+ *     rationale: "Classifier unavailable; routed to the intake inbox.",
+ *     reason: "llm-unavailable"
  *   }))
  * }
  * const program = Effect.gen(function* () {

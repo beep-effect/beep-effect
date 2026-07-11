@@ -1,3 +1,4 @@
+import { FilingOutcome } from "@beep/documents-domain/aggregates/Document";
 import {
   DefaultVaultFilingContext,
   legalDocumentTaxonomy,
@@ -34,6 +35,12 @@ const complaintInput = Effect.fn("DocumentsIntakeTest.complaintInput")(function*
   });
 });
 
+const filedConceptId = (filing: FilingOutcome) =>
+  FilingOutcome.match(filing, {
+    filed: (filed) => filed.taxonomyConceptId,
+    inboxed: () => null,
+  });
+
 describe("@beep/documents-server DocumentIntake", () => {
   it.effect("materializes a dropped file atomically into the deterministic taxonomy path", () =>
     Effect.gen(function* () {
@@ -46,10 +53,38 @@ describe("@beep/documents-server DocumentIntake", () => {
       const targetPath = path.resolve(vaultRootPath, ...document.vaultPath.segments);
       const written = yield* fs.readFile(targetPath);
 
-      expect(document.taxonomyConceptId).toBe("pleadings");
+      expect(document.filing.kind).toBe("filed");
+      expect(filedConceptId(document.filing)).toBe("pleadings");
       expect(document.vaultPath.relativePath).toContain("01-pleadings");
       expect(document.vaultPath.fileName).toMatch(/^complaint--[a-f0-9]{12}\.pdf$/u);
       expect(new TextDecoder().decode(written)).toBe("complaint body");
+    }).pipe(provideScopedLayer(DocumentsIntakeTestLayer))
+  );
+
+  it.effect("routes an unmatched document into the intake inbox instead of a guessed folder", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const intake = yield* Document.DocumentIntake;
+      const vaultRootPath = yield* fs.makeTempDirectoryScoped({ prefix: "beep-documents-vault-" });
+      const bytes = new TextEncoder().encode("unclassifiable body");
+
+      const input = yield* S.decodeUnknownEffect(Document.IntakeDroppedFileInput)({
+        content: Buffer.from(bytes).toString("base64"),
+        filingContext: DefaultVaultFilingContext,
+        intakeBatchId: "Batch 42",
+        originalFileName: "untitled.xyz",
+        vaultRootPath,
+        workspaceId: 1,
+      });
+      const document = yield* intake.intakeDroppedFile(input);
+      const targetPath = path.resolve(vaultRootPath, ...document.vaultPath.segments);
+      const written = yield* fs.readFile(targetPath);
+
+      expect(document.filing).toMatchObject({ kind: "inboxed", reason: "no-match" });
+      expect(document.vaultPath.relativePath).toMatch(/^00-inbox\/batch-42\/untitled--[a-f0-9]{12}\.xyz$/u);
+      expect(document.vaultPath.taxonomySegments).toEqual([]);
+      expect(new TextDecoder().decode(written)).toBe("unclassifiable body");
     }).pipe(provideScopedLayer(DocumentsIntakeTestLayer))
   );
 
