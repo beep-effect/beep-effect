@@ -143,8 +143,11 @@ pauses the packet with an explicit resume condition.
 
 ## Phase-Exit Audit
 
-Manual checklist, run before marking any phase complete (mechanization
-belongs to the future `beep goals doctor`; see `goals/goals-doctor`):
+Manual checklist, run before marking any phase complete. `bun run beep
+goals doctor` and `bun run beep goals index --check` (shipped 2026-07-11,
+PR #373) mechanize the manifest/index portion — run both, and regenerate
+the index (`bun run beep goals index --write`) in the same PR as any status
+change; the remaining items stay manual:
 
 1. Required artifacts for the phase exist at their named paths.
 2. `README.md` (status, Current Phase, Latest Evidence), this plan's phase

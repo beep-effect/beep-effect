@@ -97,7 +97,9 @@
     "bun run beep lint reflection-artifacts",
     "sh -c 'rg -n \"/ho[m]e/|/Us[e]rs/|C:.[U]sers|~/[A-Za-z]|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+[.][A-Za-z]{2,}\" goals/project-intelligence; test \"$?\" -eq 1'",
     "jq -e '.initiative.id == \"project-intelligence\" and .initiative.packetAnchorDocument == \"SPEC.md\" and .agentLaunchers[0].path == \"GOAL.md\" and .lifecycle == .initiative.status' goals/project-intelligence/ops/manifest.json",
-    "sh -c 'set -e; for f in $(jq -r \".currentSourceOfTruth[]\" goals/project-intelligence/ops/manifest.json); do test -e \"$f\"; done; for f in $(jq -r \".researchReports[]\" goals/project-intelligence/ops/manifest.json); do test -e \"goals/project-intelligence/$f\"; done'"
+    "sh -c 'set -e; for f in $(jq -r \".currentSourceOfTruth[]\" goals/project-intelligence/ops/manifest.json); do test -e \"$f\"; done; for f in $(jq -r \".researchReports[]\" goals/project-intelligence/ops/manifest.json); do test -e \"goals/project-intelligence/$f\"; done'",
+    "bun run beep goals doctor",
+    "bun run beep goals index --check"
   ],
   "stopConditions": [
     "Required source files are missing or materially contradictory.",

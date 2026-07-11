@@ -67,9 +67,12 @@ Not started (packet authored 2026-07-11; P0 pending).
 
 ## Notes
 
-- `bun run beep goals` (doctor/index/set-status) does not exist yet — it is
-  the unbuilt deliverable of [`goals-doctor`](../goals-doctor/README.md). Use
-  the manifest `verificationCommands` directly until it lands.
+- `bun run beep goals` (doctor / index / set-status) shipped 2026-07-11
+  (goals-doctor, PR #373): `bun run beep goals doctor` and
+  `bun run beep goals index --check` now gate the repo lint lane and are
+  part of this packet's `verificationCommands`. Phase transitions must
+  regenerate `goals/INDEX.md` via `bun run beep goals index --write` in the
+  same PR as any manifest status change.
 - The `beep research` CLI
   (`packages/tooling/tool/cli/src/commands/Research/`) is a working prototype
   of much of this loop (Firecrawl capture, vault cards, DuckDB dedup catalog,

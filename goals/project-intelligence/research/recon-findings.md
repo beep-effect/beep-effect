@@ -56,14 +56,16 @@ ls goals explorations
 - Packet standard, file roles, launcher rule (≤4000 chars, target 3500),
   lifecycle vocabulary, completion gate, and New Packet Checklist:
   `goals/README.md`. Template: `goals/_template/` (10 files).
-- `bun run beep goals` (doctor / index / set-status) **does not exist yet**:
-  no `Goals` command group in `packages/tooling/tool/cli/src/index.ts`; it is
-  the unbuilt deliverable of `goals/goals-doctor` (all phases pending). The
-  only shipping goals-gating lint is `bun run beep lint reflection-artifacts`
-  (`packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts`),
-  which enforces only packets whose status is in
-  `["completed-retained","complete","completed","v1-closed"]` — a no-op for a
-  new `active` packet.
+- `bun run beep goals` (doctor / index / set-status): at the inspected
+  commit this did not exist (goals-doctor's unbuilt deliverable).
+  **Superseded 2026-07-11**: goals-doctor shipped (PR #373) — `beep goals
+  doctor` and `beep goals index --check` now gate the repo lint lane, and
+  `goals/INDEX.md` must be regenerated (`index --write`) in the same PR as
+  any manifest change. The reflection lint
+  (`packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts`)
+  still enforces only packets whose status is in
+  `["completed-retained","complete","completed","v1-closed"]` — a no-op for
+  a new `active` packet.
 - Direct authoring (no exploration packet) has precedent:
   `goals/goals-doctor` (`provenance.authoredDirectly: true`) and
   `goals/legal-document-intake` (grilled design session, 2026-07-08). ~40
