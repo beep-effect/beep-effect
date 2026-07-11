@@ -3,6 +3,17 @@
 Status: doctrine addendum.
 Assessed: 2026-05-12.
 
+> **Refresh (2026-07-08, applied 2026-07-11):** the clone+docs research run in
+> [`docs/agent-memory-infra/`](../../docs/agent-memory-infra/00-recommendation.md)
+> supersedes several entries below (see the dated notes in each affected
+> section and the 2026-07-08 entry in [`04-decision-log.md`](./04-decision-log.md)):
+> FalkorDB is **SSPLv1, not OSI open-source**; Mem0 is upgraded from
+> benchmark-only to donor; Graphiti's "bi-temporal" wording is narrowed and its
+> deployment retires post-port; Cognee is the sole (bounded) dev-tooling
+> memory incumbent; Supermemory and OriginTrail DKG entries are added at the
+> end of the candidate list. The authority model above is unchanged — the run
+> **confirmed** it across all thirteen lanes.
+
 This addendum reopens the external landscape only for feature and capability
 selection. It does not reopen the question of what owns durable memory truth in
 this repository.
@@ -175,6 +186,17 @@ Sources: [llms.txt](https://www.cognee.ai/llms.txt),
 Cognee should influence UX, ontology workflows, and cache ergonomics. It should
 not own accepted claims, professional approvals, or durable legal facts.
 
+> **Role update (2026-07-08):** Cognee is now the **sole always-on dev-tooling
+> memory incumbent** (Role B), conditional on: running the embedded/local or
+> all-Postgres profile (never the full compose stack — its own compose
+> reserves 4CPU/8GB + 2CPU/4GB); bounding the semantic cache per `01`
+> (TTL/pruning/consolidation via its memify/improve loop, node-set scoping);
+> and a 2–4 week recall bakeoff whose fallback is Layer-1 file memory alone.
+> Its authority-boundary limits above are unchanged. Also a **projection
+> donor** for Role A: DataPoint metadata, pipeline provenance stamping with a
+> relational rollback ledger, and the all-Postgres deployment shape. See
+> `docs/agent-memory-infra/cognee-clone.md`.
+
 ### Graphiti / Zep
 
 Sources: [Graphiti GitHub](https://github.com/getzep/graphiti),
@@ -203,6 +225,15 @@ Sources: [Graphiti GitHub](https://github.com/getzep/graphiti),
 
 Use the temporal model, not the unbounded memory practice. Any Graphiti-like
 cache must have TTL, pruning, consolidation, and provenance-gated promotion.
+
+> **Superseded in part (2026-07-08):** "bi-temporal" overstates the model —
+> Graphiti provides valid-time fields plus system timestamps plus episode
+> lineage (`valid_at`/`invalid_at`/`expired_at`/`reference_time`,
+> `episodes[]`), not a transaction ledger with claim lifecycle. Its MCP server
+> is labeled experimental upstream, and the FalkorDB backend option carries
+> the SSPLv1 flag. Verdict update: **primary bitemporal port donor; deployment
+> retires after the `@beep/epistemic-tables` port lands** (write-freeze until
+> then). See `docs/agent-memory-infra/graphiti-clone.md`.
 
 ### GraphZep
 
@@ -280,6 +311,12 @@ Sources: [FalkorDB docs](https://docs.falkordb.com/),
 FalkorDB can be foundational infrastructure, but only as a rebuildable
 projection/read model over authoritative events and evidence.
 
+> **License correction (2026-07-08):** FalkorDB is **SSPLv1 — not an OSI
+> license** (confirmed by two lanes incl. a live LICENSE.txt fetch). Any
+> shipping decision that bundles it (directly or via Graphiti's FalkorDB
+> backend) must choose a gate-passing backend or accept SSPL consciously.
+> The "USE — already chosen" verdict in 03 predates this flag.
+
 ### LangGraph / LangMem
 
 Sources: [LangChain JS long-term memory docs](https://docs.langchain.com/oss/javascript/langchain/long-term-memory),
@@ -354,6 +391,17 @@ Sources: [mem0 docs index](https://docs.mem0.ai/llms.txt),
 **Tradeoff**
 
 Do not invest unless a narrow benchmark or integration comparison requires it.
+
+> **Upgraded (2026-07-08):** "benchmark/reference only" is too narrow — Mem0
+> ships a real TS OSS SDK (`mem0ai/oss`), a pgvector-default self-host server,
+> and the strongest Claude/Codex plugin/lifecycle-hook story of the six.
+> Verdict update: **donor** for ADD-only automatic extraction (no LLM-decided
+> UPDATE/DELETE), UUID masking before LLM calls, hash-dedup, entity-sidecar
+> linking, and hybrid scoring over pgvector; its lifecycle-hook *pattern*
+> (recall-before-prompt, store-on-stop, pre-compact summary) is the reference
+> shape for tuning Cognee's hooks. Still nowhere near authority-grade (no
+> evidence spans, no acceptance lifecycle). See
+> `docs/agent-memory-infra/mem0-clone.md`.
 
 ### LlamaIndex PropertyGraphIndex
 
@@ -466,6 +514,58 @@ Source: [Hindsight GitHub](https://github.com/vectorize-io/hindsight).
 
 Track as an external benchmark. Do not let benchmark claims override authority
 requirements.
+
+### Supermemory (added 2026-07-08)
+
+Sources: `docs/agent-memory-infra/supermemory-clone.md`,
+`docs/agent-memory-infra/supermemory-docs.md`.
+
+**Use as:** schema-pattern donor only; never foundation.
+
+**Pros**
+
+- Real, source-observed donor patterns: document/chunk/memory schema split;
+  typed version relations (`updates`/`extends`/`derives`); container-tag
+  namespace isolation; profile/query/full retrieval-mode split.
+
+**Cons**
+
+- Engine is not source-buildable from the OSS repo; the repo's own dev path
+  points at the hosted API — fails auditable self-host.
+- 03's "nothing to take" is refuted, but its IGNORE-as-foundation verdict is
+  confirmed.
+
+**Tradeoff**
+
+LEARN (schemas, version relations, container tags, retrieval modes); the
+engine stays opaque and hosted-API-backed.
+
+### OriginTrail DKG (added 2026-07-08)
+
+Sources: `docs/agent-memory-infra/origintrail-clone.md`,
+`docs/agent-memory-infra/origintrail-docs.md`.
+
+**Use as:** verifiable-provenance packaging donor; watchlist.
+
+**Pros**
+
+- The only TS-native candidate of the six (Node 22+ monorepo, HTTP daemon,
+  29-tool MCP); Apache-2.0 root license (clone-verified).
+- Strongest verifiable-provenance packaging ideas found: knowledge-asset
+  lifecycle envelopes (create→finalize→share→publish), Merkle commitments
+  over public/private partitions, author attestations, fail-closed
+  private-graph gates, explicit WM/SWM/VM trust-tier labels.
+- Tokenless local mode covers WM/SWM/query.
+
+**Cons**
+
+- Release-candidate; its own README says avoid production. VM finality needs
+  TRAC/gas (chain dependency).
+
+**Tradeoff**
+
+Watchlist for the legal verifiability story once V10 exits release-candidate;
+port packaging ideas, do not deploy.
 
 ### ArangoDB, LanceDB, SurrealDB
 

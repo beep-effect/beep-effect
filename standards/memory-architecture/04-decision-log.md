@@ -4,6 +4,64 @@ Dated decision log for the memory architecture standard. Records decisions as th
 
 ---
 
+## 2026-07-08: External Memory Stack — Donor Portfolio Confirmed; Cognee Is the Sole Dev-Memory Incumbent; Doctrine Phrasing Sharpened
+
+**Context:** Six products (OriginTrail DKG, TrustGraph, Graphiti/Zep, Cognee,
+Supermemory, Mem0) were evaluated at clone+docs depth across 12 codex research
+lanes plus a GPT-5.5 Pro adversarial oracle lane; synthesis with per-claim
+citations and spot-checks lives in
+[`docs/agent-memory-infra/`](../../docs/agent-memory-infra/00-recommendation.md).
+That run corrected several claims in this standard (see 03/05 supersession
+annotations) and its drafted durable records were applied on 2026-07-11.
+
+**Decision:**
+
+- **(A) Product runtime:** no external memory service enters the product
+  runtime's authority path or default deployment. Durable truth stays
+  repo-native (claim + evidence + provenance + lifecycle in Postgres). The
+  donor portfolio is ported behind `drivers/*`: Graphiti bitemporal edge
+  contract, TrustGraph provenance/explainability shell, Cognee
+  projection/rollback-ledger ergonomics, Mem0 ADD-only extraction discipline,
+  plus Supermemory/OriginTrail minor donors.
+- **(B) Dev-tooling memory:** Cognee (bounded: embedded/local or all-Postgres
+  profile, never the full compose stack) is the sole always-on dev-memory
+  incumbent. graphiti-memory is decommissioned only AFTER the
+  `@beep/epistemic-tables` bitemporal port lands; until then it is
+  read-available but no longer written to. A 2–4 week recall bakeoff gate
+  applies; the fallback on failure is Layer-1 file memory alone, not a return
+  to Graphiti. File memory (CLAUDE.md / MEMORY.md) remains Layer 1.
+- **(C) Doctrine phrasing:** deterministic-first survives adversarial review;
+  the operative rule is sharpened to **"no uncited LLM output may cross the
+  authority boundary"**, with explicit review states
+  (`candidate` / `machine-extracted` / `human-reviewed` / `authoritative`) and
+  four separately governed memory classes (authoritative facts+quoted sources /
+  derived semantic graph / operational agent state / opinions+work product).
+
+**Rationale:** All thirteen lanes converged on the authority boundary (every
+candidate stores LLM-derived content without evidence spans or acceptance
+lifecycle). The Role B reversal from Graphiti to Cognee rests on the
+redundancy argument (Graphiti's sole decisive differentiator — its temporal
+edge model — is exactly what the repo is porting natively), first-party
+degradation history, operational direction of travel, and ontology alignment.
+
+**Consequences:**
+
+- 03/05 in this standard carry dated supersession annotations (FalkorDB is
+  SSPLv1, not OSI open-source; Supermemory "nothing to take" refuted; Mem0
+  upgraded to donor; Graphiti "bi-temporal" narrowed; Cognee/OriginTrail
+  entries added to 05).
+- `AGENTS.md`/`CLAUDE.md` name Cognee (bounded) as the durable dev-memory;
+  Graphiti demoted to read-only donor pending the port milestone.
+- Both memory servers are operator-level MCP config, not repo `.mcp.json`
+  (which carries no memory server). The operator's config keeps
+  graphiti-memory read-available until the port lands (write-freeze only);
+  Cognee likewise runs from the operator's plugin/user settings.
+- `explorations/agent-memory-tiers-bitemporal-edges` receives the research
+  input for its open forks (Apache-2.0 Graphiti shapes only; Postgres-native
+  reaffirmed; invalidate-don't-delete; review-state enum).
+
+---
+
 ## 2026-06-17: Reframe — Code-Intelligence Was the Learning Vehicle; Product Is the IP-Law Flywheel
 
 **Context:** The `atlas-synthesis` exploration (2026-06-17, formerly

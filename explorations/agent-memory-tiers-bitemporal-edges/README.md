@@ -48,5 +48,6 @@ see [`explorations/_gold-intake`](../_gold-intake/).
 
 ## Trail
 
+- 2026-07-11: 2026-07-08 memory-stack research input recorded in DECISIONS.md (Q1/Q2/Q4/Q6 strengthened, forks stay open); packet's bitemporal port is now the gate for graphiti-memory decommission.
 - 2026-06-29: research-complete — RESEARCH.md synthesized, codex gate-1 folded, DECISIONS pre-drafted.
 - 2026-06-29: packet opened from gold-intake cluster 'Four-tier agent-memory schema w/ confidence + conflict edges' (15 nuggets).

@@ -21,6 +21,13 @@
 
 **What to take:** Bi-temporal validity windows and auto-invalidation are the right primitives for managing Layer 2 (session memory). The four-primitive model (Entity, Fact, Episode, CustomType) is a clean abstraction. The specific implementation will degrade, but the temporal management pattern should be adopted.
 
+> **Narrowed (2026-07-08):** "bi-temporal" overstates it — Graphiti provides
+> valid-time fields plus system timestamps plus episode lineage, not a
+> transaction ledger with claim lifecycle. Deployment status: retiring to
+> donor after the `@beep/epistemic-tables` bitemporal port lands
+> (write-freeze until then). See 05's Graphiti note and
+> `docs/agent-memory-infra/graphiti-clone.md`.
+
 ---
 
 ## Supermemory
@@ -38,6 +45,12 @@
 **Verdict:** IGNORE
 
 **What to take:** Nothing. The connector ecosystem is immature and the architectural internals are opaque. The project has no need for another degrading memory backend with reliability issues.
+
+> **Superseded in part (2026-07-08):** "nothing to take" is refuted — the
+> document/chunk/memory schema split, `updates`/`extends`/`derives` version
+> relations, container-tag namespace isolation, and retrieval-mode split are
+> real, source-observed donor patterns. IGNORE **as foundation** is confirmed
+> (engine opaque, hosted-API-backed). See the Supermemory entry added to 05.
 
 ---
 
@@ -74,6 +87,12 @@
 **Verdict:** USE — Already chosen as the graph engine.
 
 **What to take:** Already selected for repo-memory v0 and BeepGraph. The right choice for local-first deployment. Continue using it. The performance characteristics make interference management strategies (compression, clustering, pruning) practical at interactive latency.
+
+> **Superseded in part (2026-07-08):** calling FalkorDB "open-source" is wrong
+> for shipping decisions — it is **SSPLv1, non-OSI** (live LICENSE.txt fetch,
+> confirmed by two lanes). USE survives only for local projection/read-model
+> roles with the license accepted consciously; anything shipped must pick a
+> gate-passing backend. See `docs/agent-memory-infra/00-recommendation.md`.
 
 ---
 
