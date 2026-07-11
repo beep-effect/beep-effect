@@ -3,13 +3,13 @@
   "initiative": {
     "id": "langextract-capability",
     "title": "LangExtract Capability",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-06-07",
-    "updated": "2026-06-07",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/langextract-capability",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "completionGate": {
     "operator": "yeet",
@@ -83,17 +83,20 @@
     {
       "id": "P4",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "completed",
+      "note": "@beep/langextract shipped on main 2026-06-07/08 (3961138de6 + hardening fixes through 33b0e0b378) with source, tests, and docs at packages/foundation/capability/langextract."
     },
     {
       "id": "P5",
       "name": "Quality Review Fix Loop",
-      "status": "pending"
+      "status": "completed",
+      "note": "Subsumed by the repo-wide crispening/standards remediation waves (PRs #294-#326) that ran over this package with ratchets now blocking; a packet-local review loop would duplicate that coverage."
     },
     {
       "id": "P6",
       "name": "Yeet And PR Babysitting",
-      "status": "pending"
+      "status": "completed",
+      "note": "Capability is consumed in production by the office-action extraction rung (PR #265, merged 2026-06-18); packet closed retroactively 2026-07-11."
     }
   ],
   "researchReports": [

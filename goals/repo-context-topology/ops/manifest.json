@@ -3,11 +3,13 @@
   "initiative": {
     "id": "repo-context-topology",
     "title": "Repo Context Topology",
-    "status": "active",
+    "status": "superseded",
     "created": "2026-05-14",
-    "updated": "2026-05-14",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
+  "lifecycle": "reference",
+  "supersededNote": "2026-07-11: Phase 1 catalog shipped 2026-05-14 (af57941c10, ff1445f6c2; PR #148 landed the repo-symbol-discovery skill), then the generated catalog was deleted and retired in 8852619f04 (2026-06-18) and formally retired in CLAUDE.md; symbol discovery is now live ripgrep plus the repo-symbol-discovery skill.",
   "mission": "Compress repository context into executable topology and generated metadata for coding-agent symbol discovery.",
   "phase1": {
     "id": "public-export-catalog",

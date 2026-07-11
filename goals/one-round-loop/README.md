@@ -2,9 +2,18 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `active` — P0 and P1 complete; P2–P4 pending.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+### Closeout reconciliation (2026-07-11)
+
+Manifest phases had drifted: P0 (CI-lane inversion: `beep ci` lane +
+`check.yml` thinning) and P1 (property-law lane, SAST gate, env-max
+floors) shipped via merged PRs #321–#336 during 2026-07-07/08 (e.g.
+#327 merged as `64b7e44d88`), but all phases still read `pending`.
+Reconciled 2026-07-11: P0/P1 marked complete with PR evidence; P2–P4
+remain pending and the packet stays active.
 
 ## Mission
 
@@ -41,16 +50,18 @@ itself on itself via the dogfood rule.
 
 ## Current Phase
 
-P0 CI-lane inversion — pending; next action: execute `orl-001..003` in
-[`tasks/tasks.jsonc`](./tasks/tasks.jsonc). P0 gates everything: the
-dogfood rule (every packet PR passes `beep ci local` before push)
-activates when P0 merges.
+P2 Medium tier (coverage v2, cwd, regen-generated,
+`withNormalizedCheck`) — pending. P0 and P1 are complete and merged;
+the dogfood rule (every packet PR passes `beep ci local` before push)
+is active.
 
 ## Latest Evidence
 
 Packet authored 2026-07-07 from the crispening closeout reflection
 (`goals/repo-crispening-orchestration/history/reflections/2026-07-07-claude.md`)
-plus three Explore research briefs; no implementation started.
+plus three Explore research briefs. P0 and P1 shipped via merged PRs
+#321–#336 (2026-07-07/08, e.g. #327 merged as `64b7e44d88`); manifest
+reconciled 2026-07-11.
 
 ## Notes
 

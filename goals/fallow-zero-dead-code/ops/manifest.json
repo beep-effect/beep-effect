@@ -3,13 +3,13 @@
   "initiative": {
     "id": "fallow-zero-dead-code",
     "title": "Fallow Zero Dead-Code",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-06-11",
-    "updated": "2026-06-11",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/fallow-zero-dead-code",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "completionGate": {
     "operator": "yeet",
@@ -77,7 +77,7 @@
     {
       "id": "P4",
       "name": "Close",
-      "status": "in-progress"
+      "status": "done"
     }
   ],
   "verificationCommands": [

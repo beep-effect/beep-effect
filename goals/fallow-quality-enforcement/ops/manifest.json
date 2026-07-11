@@ -3,11 +3,12 @@
   "initiative": {
     "id": "fallow-quality-enforcement",
     "title": "Fallow Quality Enforcement",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-06-08",
-    "updated": "2026-06-08",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
+  "lifecycle": "completed-retained",
   "mission": "Promote Fallow from advisory pilot into a repo-cli quality subsystem that improves agent back-pressure without replacing Knip until parity is proven.",
   "currentSourceOfTruth": "SPEC.md",
   "currentTargetPhase": "P3",

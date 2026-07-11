@@ -2,9 +2,20 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+### Closeout reconciliation (2026-07-11)
+
+The work shipped weeks before this paperwork closed: PR #269
+("feat(data): automate official dataset schemas") merged on 2026-06-21 as
+`c0ca20670a`. The `SyncDataToTs` command lives on `main` at
+`packages/tooling/tool/cli/src/commands/SyncDataToTs/` and generated snapshots
+at `packages/foundation/primitive/data/src/generated/`. The manifest's P3 Close
+phase stayed `pending` after the merge; this note, the manifest flip to
+`completed-retained`, and the closeout reflection reconcile the packet
+retroactively.
 
 ## Mission
 
@@ -34,8 +45,9 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Close - package is implemented and scoped verification is complete; closeout
-reflection remains pending if this packet is marked complete.
+P3 Close - completed 2026-07-11. Implementation and scoped verification shipped
+via PR #269 (merged 2026-06-21); closeout reflection recorded at
+[`history/reflections/2026-07-11-claude.md`](./history/reflections/2026-07-11-claude.md).
 
 ## Latest Evidence
 

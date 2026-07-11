@@ -2,9 +2,20 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+### Closeout reconciliation (2026-07-11)
+
+The work shipped as PR #272, merged 2026-06-21 (branch
+`feature/editor-chat-enhancements`, now 0 ahead of `main`; `ChatComposer`
+lives at `packages/foundation/ui-system/editor/src/chat/`). The closeout
+reflection was written the same day
+([`history/reflections/2026-06-21-claude.md`](./history/reflections/2026-06-21-claude.md)),
+but the manifest was left with P3 Close `in_progress` and lifecycle `active`.
+This reconciliation flips the paperwork to match the merged reality; no new
+work was done.
 
 ## Mission
 
@@ -36,8 +47,8 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement + P2 Verify **complete** — both capabilities shipped and verified;
-P3 Close in progress (reflection written, PR pending). The green workbench theme
+All phases **complete** — both capabilities shipped, verified, and merged as
+PR #272 (2026-06-21); reflection written. The green workbench theme
 (app-local `createAppTheme` + Tailwind var layer, `system` default + persisted
 toggle, `OrbBackground tone="green"`) and the feature-flagged `@beep/editor`
 `ChatComposer` (toolbar, `/` slash, `@` mentions, attachment capture,

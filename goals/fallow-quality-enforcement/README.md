@@ -2,7 +2,23 @@
 
 ## Status
 
-**COMPLETE - P3 blocking promotion landed: dead-code + audit lanes are blocking in `quality github-checks pre-push` (fqe-006 closed via goals/fallow-zero-dead-code on 2026-06-11)**
+**COMPLETED-RETAINED** — P3 blocking promotion landed (fqe-006 closed via
+goals/fallow-zero-dead-code on 2026-06-11). Current posture: `fallow:dead-code`
+is blocking in `quality github-checks pre-push`; `fallow:audit` was later
+downgraded to advisory-only (`295eb62557`, 2026-06-18). Manifest lifecycle:
+`completed-retained`.
+
+### Closeout reconciliation (2026-07-11)
+
+The work shipped weeks before this paperwork closeout. Git evidence: advisory
+integration landed through PR #222 (merged 2026-06-08, `1366a812a6`); the final
+blocking promotion (fqe-006) landed through PR #229 "fallow zero dead-code +
+blocking lane promotion" (merged 2026-06-11, commits `bccc71ef23`,
+`ae74f400f6`). A post-close adjustment (`295eb62557`, 2026-06-18) kept
+dead-code blocking but returned the audit lane (complexity/duplication smells)
+to advisory. All tasks in `tasks/tasks.jsonc` are `done` with checks `passed`.
+Only `ops/manifest.json` had drifted, still reading `active` with
+`updated: 2026-06-08`; reconciled today to `completed-retained`.
 
 ## Owner
 
@@ -11,7 +27,7 @@
 ## Created / Updated
 
 - **Created:** 2026-06-08
-- **Updated:** 2026-06-08
+- **Updated:** 2026-07-11
 
 ## Purpose
 

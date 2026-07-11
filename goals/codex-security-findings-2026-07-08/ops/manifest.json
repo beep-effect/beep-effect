@@ -5,7 +5,7 @@
     "title": "Codex Security Findings (2026-07-08)",
     "status": "active",
     "created": "2026-07-08",
-    "updated": "2026-07-08",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-07-08",
@@ -161,14 +161,14 @@
     {
       "id": "P6",
       "name": "yeet-to-mergeable",
-      "status": "active",
-      "exit": "Yeet proof, hosted checks, and review closeout are green; PR is mergeable."
+      "status": "complete",
+      "exit": "Yeet proof, hosted checks, and review closeout are green; PR is mergeable. Evidence: PR #338 reached mergeable and merged 2026-07-08."
     },
     {
       "id": "P7",
       "name": "merge",
-      "status": "pending",
-      "exit": "PR merged using repository default merge behavior."
+      "status": "complete",
+      "exit": "PR merged using repository default merge behavior. Evidence: PR #338 merged to main 2026-07-08 as c9ca7734e5."
     },
     {
       "id": "P8",

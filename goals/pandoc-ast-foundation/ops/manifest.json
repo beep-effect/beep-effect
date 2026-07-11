@@ -3,13 +3,13 @@
   "initiative": {
     "id": "pandoc-ast-foundation",
     "title": "Pandoc AST Foundation",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-06-15",
-    "updated": "2026-06-15",
+    "updated": "2026-07-11",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/pandoc-ast-foundation",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
@@ -17,7 +17,8 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": true,
+    "grandfatheredNote": "Work landed on main as direct commit d22d97bb29 (2026-06-15), before the PR-only ruleset; no PR exists and the gate is not retroactively enforced."
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -58,7 +59,7 @@
     {
       "id": "P3",
       "name": "Close",
-      "status": "pending"
+      "status": "completed"
     }
   ],
   "verificationCommands": [

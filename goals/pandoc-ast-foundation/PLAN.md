@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active`
+Status: `completed-retained`
 
 ## Phases
 
@@ -11,7 +11,7 @@ Status: `active`
 | P0 Research | completed | Ground on the exploration packet and repo modeling patterns. | Scope and non-goals were confirmed from `docx-roundtrip-interop`, `@beep/md`, and `@beep/lexical-schema`. |
 | P1 Implement | completed | Create the pure `@beep/pandoc-ast` foundation/modeling package. | Models, codecs, mappers, reports, fixtures, tests, docs, and exports are present. |
 | P2 Verify | completed | Run package-local checks and packet validation. | Package check/test/type-test/lint/docgen/build passed on 2026-06-15. |
-| P3 Close | pending | Prepare retained closeout evidence and reflection if the packet is marked closed. | Reflection exists and reflection-artifact lint passes, or packet remains active. |
+| P3 Close | completed | Prepare retained closeout evidence and reflection if the packet is marked closed. | Closeout reflection `history/reflections/2026-07-11-claude.md` written during the 2026-07-11 reconciliation. |
 
 ## P0 Research Notes
 

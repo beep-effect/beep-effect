@@ -2,9 +2,19 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+### Closeout reconciliation (2026-07-11)
+
+The work shipped weeks ago but the packet paperwork drifted. PR #229
+(`feat/fallow-zero-dead-code`) merged to `main` on 2026-06-11 (merge commit
+`c25dc13663`), including the review-comment fix commit `8e9483aea7`: dead-code
+findings driven to zero, regression baseline reset to zero, and the dead-code
+plus audit lanes promoted to blocking pre-push (fqe-005/fqe-006 closed). The
+manifest still showed P4 Close as `in-progress`; this reconciliation flips P4
+to done and marks the packet `completed-retained` to match the git evidence.
 
 ## Mission
 
@@ -43,11 +53,10 @@ tasks fqe-005/fqe-006.
 
 ## Current Phase
 
-P4 Close. fzd-001 through fzd-005 are done: fallow dead-code reports
-`total_issues: 0`, the regression baseline is zero, and the dead-code + audit
+Closed. All phases (P0-P4) are done: fallow dead-code reports
+`total_issues: 0`, the regression baseline is zero, the dead-code + audit
 lanes are blocking in `quality github-checks pre-push` (fqe-005/fqe-006
-closed). Remaining action: land the mergeable PR via the normal yeet path
-(fzd-006).
+closed), and the work merged to `main` via PR #229 on 2026-06-11.
 
 ## Latest Evidence
 

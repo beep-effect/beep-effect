@@ -2,7 +2,22 @@
 
 ## Status
 
-Pending implementation. Packet authored on 2026-06-04.
+Completed (retained). Packet authored on 2026-06-04; closed retroactively on
+2026-07-11.
+
+### Closeout reconciliation (2026-07-11)
+
+The driver shipped weeks ago but this packet's paperwork was never flipped.
+Git evidence: PR #210 ("feat: add firecrawl driver and ontology modeling
+foundations") merged to `main` on 2026-06-04 (merge commit `07bf3c8e`),
+landing `packages/drivers/firecrawl` (~6,200 lines: schema-first models,
+typed errors, Effect service with live/fake Layers, watcher-as-Stream, unit +
+env-gated live integration tests, dtslint, docgen docs). All phases P1-P8 are
+reconciled to `completed` in `ops/manifest.json` with per-phase notes. Two
+caveats recorded there: the P7 repo-exports catalog mechanism was retired
+repo-wide on 2026-06-18 (no longer applicable), and the P8 Greptile 5/5 score
+is not re-verifiable retroactively — the substantive gate (merged, CI-green
+PR) is satisfied.
 
 ## Mission
 

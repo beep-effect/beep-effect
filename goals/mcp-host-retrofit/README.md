@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -36,8 +36,20 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Verify complete. Both hosts are retrofitted and green; next is P3 Yeet
-(PR to mergeable, coordinated with `uspto-mcp` on the shared branch).
+Closed. All phases complete; the retrofit is live on `main`.
+
+### Closeout reconciliation (2026-07-11)
+
+The shared branch `feat/mcp-kit-proving-slice` was merged directly to `main`
+on 2026-07-01 via merge commit `8dbd778313`, pre-dating the 2026-07-06
+PR-only ruleset, so the "P3 Yeet: PR to mergeable" step was satisfied by
+that direct merge rather than a PR. The retrofit is verified live on `main`:
+`sanitizedToolkit` from `@beep/mcp-kit` is wired in
+`packages/drivers/nlp-mcp/src/Server.ts` and
+`packages/drivers/m365-mcp/src/Server.ts`. Manifest phases P3/P4 and the
+packet status are reconciled to `completed-retained` retroactively; a
+closeout reflection was added at
+`history/reflections/2026-07-11-claude.md`.
 
 ## Latest Evidence
 
