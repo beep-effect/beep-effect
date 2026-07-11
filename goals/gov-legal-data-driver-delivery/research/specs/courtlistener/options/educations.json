@@ -1,0 +1,226 @@
+{
+  "name": "Education List",
+  "description": "",
+  "renders": ["application/json", "text/html", "application/xml"],
+  "parses": [
+    "application/json",
+    "application/x-www-form-urlencoded",
+    "multipart/form-data",
+    "application/xml"
+  ],
+  "actions": {
+    "POST": {
+      "resource_uri": {
+        "type": "field",
+        "required": false,
+        "read_only": true,
+        "label": "Resource uri"
+      },
+      "id": {
+        "type": "field",
+        "required": false,
+        "read_only": true,
+        "label": "Id"
+      },
+      "school": {
+        "type": "nested object",
+        "required": false,
+        "read_only": true,
+        "label": "School",
+        "children": {
+          "resource_uri": {
+            "type": "field",
+            "required": false,
+            "read_only": true,
+            "label": "Resource uri"
+          },
+          "id": {
+            "type": "field",
+            "required": false,
+            "read_only": true,
+            "label": "Id"
+          },
+          "is_alias_of": {
+            "type": "field",
+            "required": true,
+            "read_only": false,
+            "label": "Is alias of"
+          },
+          "date_created": {
+            "type": "datetime",
+            "required": false,
+            "read_only": true,
+            "label": "Date created",
+            "help_text": "The moment when the item was created."
+          },
+          "date_modified": {
+            "type": "datetime",
+            "required": false,
+            "read_only": true,
+            "label": "Date modified",
+            "help_text": "The last moment when the item was modified. A value in year 1750 indicates the value is unknown"
+          },
+          "name": {
+            "type": "string",
+            "required": true,
+            "read_only": false,
+            "label": "Name",
+            "help_text": "The name of the school or alias",
+            "max_length": 120
+          },
+          "ein": {
+            "type": "integer",
+            "required": false,
+            "read_only": false,
+            "label": "Ein",
+            "help_text": "The EIN assigned by the IRS",
+            "min_value": -2147483648,
+            "max_value": 2147483647
+          }
+        }
+      },
+      "person": {
+        "type": "field",
+        "required": true,
+        "read_only": false,
+        "label": "Person"
+      },
+      "date_created": {
+        "type": "datetime",
+        "required": false,
+        "read_only": true,
+        "label": "Date created",
+        "help_text": "The moment when the item was created."
+      },
+      "date_modified": {
+        "type": "datetime",
+        "required": false,
+        "read_only": true,
+        "label": "Date modified",
+        "help_text": "The last moment when the item was modified. A value in year 1750 indicates the value is unknown"
+      },
+      "degree_level": {
+        "type": "choice",
+        "required": false,
+        "read_only": false,
+        "label": "Degree level",
+        "help_text": "Normalized degree level, e.g. BA, JD.",
+        "choices": [
+          { "value": "ba", "display_name": "Bachelor's (e.g. B.A.)" },
+          { "value": "ma", "display_name": "Master's (e.g. M.A.)" },
+          { "value": "jd", "display_name": "Juris Doctor (J.D.)" },
+          { "value": "llm", "display_name": "Master of Laws (LL.M)" },
+          { "value": "llb", "display_name": "Bachelor of Laws (e.g. LL.B)" },
+          { "value": "jsd", "display_name": "Doctor of Law (J.S.D)" },
+          { "value": "phd", "display_name": "Doctor of Philosophy (PhD)" },
+          { "value": "aa", "display_name": "Associate (e.g. A.A.)" },
+          { "value": "md", "display_name": "Medical Degree (M.D.)" },
+          {
+            "value": "mba",
+            "display_name": "Master of Business Administration (M.B.A.)"
+          },
+          {
+            "value": "cfa",
+            "display_name": "Accounting Certification (C.P.A., C.M.A., C.F.A.)"
+          },
+          { "value": "cert", "display_name": "Certificate" }
+        ]
+      },
+      "degree_detail": {
+        "type": "string",
+        "required": false,
+        "read_only": false,
+        "label": "Degree detail",
+        "help_text": "Detailed degree description, e.g. including major.",
+        "max_length": 100
+      },
+      "degree_year": {
+        "type": "integer",
+        "required": false,
+        "read_only": false,
+        "label": "Degree year",
+        "help_text": "The year the degree was awarded.",
+        "min_value": 0,
+        "max_value": 32767
+      }
+    }
+  },
+  "filters": {
+    "id": {
+      "type": "NumberFilter",
+      "lookup_types": ["exact", "gte", "gt", "lte", "lt", "range"]
+    },
+    "date_created": {
+      "type": "IsoDateTimeFilter",
+      "lookup_types": [
+        "exact",
+        "gte",
+        "gt",
+        "lte",
+        "lt",
+        "range",
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second"
+      ]
+    },
+    "date_modified": {
+      "type": "IsoDateTimeFilter",
+      "lookup_types": [
+        "exact",
+        "gte",
+        "gt",
+        "lte",
+        "lt",
+        "range",
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second"
+      ]
+    },
+    "degree_year": { "type": "NumberFilter", "lookup_types": ["exact"] },
+    "degree_detail": {
+      "type": "CharFilter",
+      "lookup_types": ["exact", "iexact", "startswith", "istartswith"]
+    },
+    "degree_level": {
+      "type": "ChoiceFilter",
+      "lookup_types": ["exact"],
+      "choices": [
+        { "value": "ba", "display_name": "Bachelor's (e.g. B.A.)" },
+        { "value": "ma", "display_name": "Master's (e.g. M.A.)" },
+        { "value": "jd", "display_name": "Juris Doctor (J.D.)" },
+        { "value": "llm", "display_name": "Master of Laws (LL.M)" },
+        { "value": "llb", "display_name": "Bachelor of Laws (e.g. LL.B)" },
+        { "value": "jsd", "display_name": "Doctor of Law (J.S.D)" },
+        { "value": "phd", "display_name": "Doctor of Philosophy (PhD)" },
+        { "value": "aa", "display_name": "Associate (e.g. A.A.)" },
+        { "value": "md", "display_name": "Medical Degree (M.D.)" },
+        {
+          "value": "mba",
+          "display_name": "Master of Business Administration (M.B.A.)"
+        },
+        {
+          "value": "cfa",
+          "display_name": "Accounting Certification (C.P.A., C.M.A., C.F.A.)"
+        },
+        { "value": "cert", "display_name": "Certificate" }
+      ]
+    },
+    "person": {
+      "type": "RelatedFilter",
+      "lookup_types": "See available filters for 'People'"
+    },
+    "school": {
+      "type": "RelatedFilter",
+      "lookup_types": "See available filters for 'Schools'"
+    }
+  },
+  "ordering": ["id", "date_created", "date_modified"]
+}

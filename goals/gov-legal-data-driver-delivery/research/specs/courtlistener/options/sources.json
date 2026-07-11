@@ -1,0 +1,91 @@
+{
+  "name": "Source List",
+  "description": "",
+  "renders": ["application/json", "text/html", "application/xml"],
+  "parses": [
+    "application/json",
+    "application/x-www-form-urlencoded",
+    "multipart/form-data",
+    "application/xml"
+  ],
+  "actions": {
+    "POST": {
+      "resource_uri": {
+        "type": "field",
+        "required": false,
+        "read_only": true,
+        "label": "Resource uri"
+      },
+      "id": {
+        "type": "field",
+        "required": false,
+        "read_only": true,
+        "label": "Id"
+      },
+      "person": {
+        "type": "field",
+        "required": true,
+        "read_only": false,
+        "label": "Person"
+      },
+      "date_created": {
+        "type": "datetime",
+        "required": false,
+        "read_only": true,
+        "label": "Date created",
+        "help_text": "The moment when the item was created."
+      },
+      "date_modified": {
+        "type": "datetime",
+        "required": false,
+        "read_only": true,
+        "label": "Date modified",
+        "help_text": "The last moment when the item was modified. A value in year 1750 indicates the value is unknown"
+      },
+      "url": {
+        "type": "url",
+        "required": false,
+        "read_only": false,
+        "label": "Url",
+        "help_text": "The URL where this data was gathered.",
+        "max_length": 2000
+      },
+      "date_accessed": {
+        "type": "date",
+        "required": false,
+        "read_only": false,
+        "label": "Date accessed",
+        "help_text": "The date the data was gathered."
+      },
+      "notes": {
+        "type": "string",
+        "required": false,
+        "read_only": false,
+        "label": "Notes",
+        "help_text": "Any additional notes about the data's provenance, in Markdown format."
+      }
+    }
+  },
+  "filters": {
+    "id": { "type": "NumberFilter", "lookup_types": ["exact"] },
+    "date_modified": {
+      "type": "IsoDateTimeFilter",
+      "lookup_types": [
+        "exact",
+        "gte",
+        "gt",
+        "lte",
+        "lt",
+        "range",
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second"
+      ]
+    },
+    "person": { "type": "ModelChoiceFilter", "lookup_types": ["exact"] }
+  },
+  "ordering": ["id", "date_modified", "date_accessed"]
+}

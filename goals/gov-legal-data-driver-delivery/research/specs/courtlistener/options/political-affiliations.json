@@ -1,0 +1,209 @@
+{
+  "name": "Political Affiliation List",
+  "description": "",
+  "renders": ["application/json", "text/html", "application/xml"],
+  "parses": [
+    "application/json",
+    "application/x-www-form-urlencoded",
+    "multipart/form-data",
+    "application/xml"
+  ],
+  "actions": {
+    "POST": {
+      "resource_uri": {
+        "type": "field",
+        "required": false,
+        "read_only": true,
+        "label": "Resource uri"
+      },
+      "id": {
+        "type": "field",
+        "required": false,
+        "read_only": true,
+        "label": "Id"
+      },
+      "person": {
+        "type": "field",
+        "required": true,
+        "read_only": false,
+        "label": "Person"
+      },
+      "date_created": {
+        "type": "datetime",
+        "required": false,
+        "read_only": true,
+        "label": "Date created",
+        "help_text": "The moment when the item was created."
+      },
+      "date_modified": {
+        "type": "datetime",
+        "required": false,
+        "read_only": true,
+        "label": "Date modified",
+        "help_text": "The last moment when the item was modified. A value in year 1750 indicates the value is unknown"
+      },
+      "political_party": {
+        "type": "choice",
+        "required": true,
+        "read_only": false,
+        "label": "Political party",
+        "help_text": "The political party the person is affiliated with.",
+        "choices": [
+          { "value": "d", "display_name": "Democratic" },
+          { "value": "r", "display_name": "Republican" },
+          { "value": "i", "display_name": "Independent" },
+          { "value": "g", "display_name": "Green" },
+          { "value": "l", "display_name": "Libertarian" },
+          { "value": "f", "display_name": "Federalist" },
+          { "value": "w", "display_name": "Whig" },
+          { "value": "j", "display_name": "Jeffersonian Republican" },
+          { "value": "u", "display_name": "National Union" },
+          { "value": "z", "display_name": "Reform Party" }
+        ]
+      },
+      "source": {
+        "type": "choice",
+        "required": false,
+        "read_only": false,
+        "label": "Source",
+        "help_text": "The source of the political affiliation -- where it is documented that this affiliation exists.",
+        "choices": [
+          { "value": "b", "display_name": "Ballot" },
+          { "value": "a", "display_name": "Appointer" },
+          { "value": "o", "display_name": "Other" }
+        ]
+      },
+      "date_start": {
+        "type": "date",
+        "required": false,
+        "read_only": false,
+        "label": "Date start",
+        "help_text": "The date the political affiliation was first documented"
+      },
+      "date_granularity_start": {
+        "type": "choice",
+        "required": false,
+        "read_only": false,
+        "label": "Date granularity start",
+        "choices": [
+          { "value": "%Y", "display_name": "Year" },
+          { "value": "%Y-%m", "display_name": "Month" },
+          { "value": "%Y-%m-%d", "display_name": "Day" }
+        ]
+      },
+      "date_end": {
+        "type": "date",
+        "required": false,
+        "read_only": false,
+        "label": "Date end",
+        "help_text": "The date the affiliation ended."
+      },
+      "date_granularity_end": {
+        "type": "choice",
+        "required": false,
+        "read_only": false,
+        "label": "Date granularity end",
+        "choices": [
+          { "value": "%Y", "display_name": "Year" },
+          { "value": "%Y-%m", "display_name": "Month" },
+          { "value": "%Y-%m-%d", "display_name": "Day" }
+        ]
+      }
+    }
+  },
+  "filters": {
+    "id": {
+      "type": "NumberFilter",
+      "lookup_types": ["exact", "gte", "gt", "lte", "lt", "range"]
+    },
+    "date_created": {
+      "type": "IsoDateTimeFilter",
+      "lookup_types": [
+        "exact",
+        "gte",
+        "gt",
+        "lte",
+        "lt",
+        "range",
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second"
+      ]
+    },
+    "date_modified": {
+      "type": "IsoDateTimeFilter",
+      "lookup_types": [
+        "exact",
+        "gte",
+        "gt",
+        "lte",
+        "lt",
+        "range",
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second"
+      ]
+    },
+    "date_start": {
+      "type": "DateFilter",
+      "lookup_types": [
+        "exact",
+        "gte",
+        "gt",
+        "lte",
+        "lt",
+        "range",
+        "year",
+        "month",
+        "day"
+      ]
+    },
+    "date_end": {
+      "type": "DateFilter",
+      "lookup_types": [
+        "exact",
+        "gte",
+        "gt",
+        "lte",
+        "lt",
+        "range",
+        "year",
+        "month",
+        "day"
+      ]
+    },
+    "political_party": {
+      "type": "ChoiceFilter",
+      "lookup_types": ["exact"],
+      "choices": [
+        { "value": "d", "display_name": "Democratic" },
+        { "value": "r", "display_name": "Republican" },
+        { "value": "i", "display_name": "Independent" },
+        { "value": "g", "display_name": "Green" },
+        { "value": "l", "display_name": "Libertarian" },
+        { "value": "f", "display_name": "Federalist" },
+        { "value": "w", "display_name": "Whig" },
+        { "value": "j", "display_name": "Jeffersonian Republican" },
+        { "value": "u", "display_name": "National Union" },
+        { "value": "z", "display_name": "Reform Party" }
+      ]
+    },
+    "source": {
+      "type": "ChoiceFilter",
+      "lookup_types": ["exact"],
+      "choices": [
+        { "value": "b", "display_name": "Ballot" },
+        { "value": "a", "display_name": "Appointer" },
+        { "value": "o", "display_name": "Other" }
+      ]
+    },
+    "person": { "type": "ModelChoiceFilter", "lookup_types": ["exact"] }
+  },
+  "ordering": ["id", "date_created", "date_modified", "date_start", "date_end"]
+}

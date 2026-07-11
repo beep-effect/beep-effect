@@ -1,0 +1,300 @@
+{
+  "name": "Court List",
+  "description": "",
+  "renders": ["application/json", "text/html", "application/xml"],
+  "parses": [
+    "application/json",
+    "application/x-www-form-urlencoded",
+    "multipart/form-data",
+    "application/xml"
+  ],
+  "actions": {
+    "POST": {
+      "resource_uri": {
+        "type": "field",
+        "required": false,
+        "read_only": true,
+        "label": "Resource uri"
+      },
+      "id": {
+        "type": "field",
+        "required": false,
+        "read_only": true,
+        "label": "Id"
+      },
+      "pacer_court_id": {
+        "type": "integer",
+        "required": false,
+        "read_only": false,
+        "label": "Pacer court id",
+        "help_text": "The numeric ID for the court in PACER. This can be found by looking at the first three digits of any doc1 URL in PACER.",
+        "min_value": 0,
+        "max_value": 32767
+      },
+      "pacer_has_rss_feed": {
+        "type": "boolean",
+        "required": false,
+        "read_only": false,
+        "label": "Pacer has rss feed",
+        "help_text": "Whether the court has a PACER RSS feed. If null, this doesn't apply to the given court."
+      },
+      "pacer_rss_entry_types": {
+        "type": "string",
+        "required": false,
+        "read_only": false,
+        "label": "Pacer rss entry types",
+        "help_text": "The types of entries provided by the court's RSS feed."
+      },
+      "date_last_pacer_contact": {
+        "type": "datetime",
+        "required": false,
+        "read_only": false,
+        "label": "Date last pacer contact",
+        "help_text": "The last time the PACER website for the court was successfully contacted"
+      },
+      "fjc_court_id": {
+        "type": "string",
+        "required": false,
+        "read_only": false,
+        "label": "Fjc court id",
+        "help_text": "The ID used by FJC in the Integrated Database",
+        "max_length": 3
+      },
+      "date_modified": {
+        "type": "datetime",
+        "required": false,
+        "read_only": true,
+        "label": "Date modified",
+        "help_text": "The last moment when the item was modified"
+      },
+      "in_use": {
+        "type": "boolean",
+        "required": false,
+        "read_only": false,
+        "label": "In use",
+        "help_text": "Whether this jurisdiction is in use in CourtListener -- increasingly True"
+      },
+      "has_opinion_scraper": {
+        "type": "boolean",
+        "required": false,
+        "read_only": false,
+        "label": "Has opinion scraper",
+        "help_text": "Whether the jurisdiction has a scraper that obtains opinions automatically."
+      },
+      "has_oral_argument_scraper": {
+        "type": "boolean",
+        "required": false,
+        "read_only": false,
+        "label": "Has oral argument scraper",
+        "help_text": "Whether the jurisdiction has a scraper that obtains oral arguments automatically."
+      },
+      "position": {
+        "type": "float",
+        "required": true,
+        "read_only": false,
+        "label": "Position",
+        "help_text": "A dewey-decimal-style numeral indicating a hierarchical ordering of jurisdictions"
+      },
+      "citation_string": {
+        "type": "string",
+        "required": false,
+        "read_only": false,
+        "label": "Citation string",
+        "help_text": "the citation abbreviation for the court as dictated by Blue Book",
+        "max_length": 100
+      },
+      "short_name": {
+        "type": "string",
+        "required": true,
+        "read_only": false,
+        "label": "Short name",
+        "help_text": "a short name of the court",
+        "max_length": 100
+      },
+      "full_name": {
+        "type": "string",
+        "required": true,
+        "read_only": false,
+        "label": "Full name",
+        "help_text": "the full name of the court",
+        "max_length": 200
+      },
+      "url": {
+        "type": "url",
+        "required": false,
+        "read_only": false,
+        "label": "Url",
+        "help_text": "the homepage for each court or the closest thing thereto",
+        "max_length": 500
+      },
+      "start_date": {
+        "type": "date",
+        "required": false,
+        "read_only": false,
+        "label": "Start date",
+        "help_text": "the date the court was established, if known"
+      },
+      "end_date": {
+        "type": "date",
+        "required": false,
+        "read_only": false,
+        "label": "End date",
+        "help_text": "the date the court was abolished, if known"
+      },
+      "jurisdiction": {
+        "type": "choice",
+        "required": true,
+        "read_only": false,
+        "label": "Jurisdiction",
+        "help_text": "the jurisdiction of the court, one of: F (Federal Appellate), FD (Federal District), FB (Federal Bankruptcy), FBP (Federal Bankruptcy Panel), FS (Federal Special), S (State Supreme), SA (State Appellate), ST (State Trial), SS (State Special), TRS (Tribal Supreme), TRA (Tribal Appellate), TRT (Tribal Trial), TRX (Tribal Special), TS (Territory Supreme), TA (Territory Appellate), TT (Territory Trial), TSP (Territory Special), SAG (State Attorney General), MA (Military Appellate), MT (Military Trial), C (Committee), I (International), T (Testing)",
+        "choices": [
+          { "value": "F", "display_name": "Federal Appellate" },
+          { "value": "FD", "display_name": "Federal District" },
+          { "value": "FB", "display_name": "Federal Bankruptcy" },
+          { "value": "FBP", "display_name": "Federal Bankruptcy Panel" },
+          { "value": "FS", "display_name": "Federal Special" },
+          { "value": "S", "display_name": "State Supreme" },
+          { "value": "SA", "display_name": "State Appellate" },
+          { "value": "ST", "display_name": "State Trial" },
+          { "value": "SS", "display_name": "State Special" },
+          { "value": "TRS", "display_name": "Tribal Supreme" },
+          { "value": "TRA", "display_name": "Tribal Appellate" },
+          { "value": "TRT", "display_name": "Tribal Trial" },
+          { "value": "TRX", "display_name": "Tribal Special" },
+          { "value": "TS", "display_name": "Territory Supreme" },
+          { "value": "TA", "display_name": "Territory Appellate" },
+          { "value": "TT", "display_name": "Territory Trial" },
+          { "value": "TSP", "display_name": "Territory Special" },
+          { "value": "SAG", "display_name": "State Attorney General" },
+          { "value": "MA", "display_name": "Military Appellate" },
+          { "value": "MT", "display_name": "Military Trial" },
+          { "value": "C", "display_name": "Committee" },
+          { "value": "I", "display_name": "International" },
+          { "value": "T", "display_name": "Testing" }
+        ]
+      },
+      "parent_court": {
+        "type": "field",
+        "required": false,
+        "read_only": false,
+        "label": "Parent court",
+        "help_text": "Parent court for subdivisions"
+      },
+      "appeals_to": {
+        "type": "field",
+        "required": false,
+        "read_only": false,
+        "label": "Appeals to",
+        "help_text": "Appellate courts for this court"
+      }
+    }
+  },
+  "filters": {
+    "id": { "type": "CharFilter", "lookup_types": ["exact"] },
+    "date_modified": {
+      "type": "IsoDateTimeFilter",
+      "lookup_types": [
+        "exact",
+        "gte",
+        "gt",
+        "lte",
+        "lt",
+        "range",
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second"
+      ]
+    },
+    "in_use": { "type": "BooleanFilter", "lookup_types": ["exact"] },
+    "has_opinion_scraper": {
+      "type": "BooleanFilter",
+      "lookup_types": ["exact"]
+    },
+    "has_oral_argument_scraper": {
+      "type": "BooleanFilter",
+      "lookup_types": ["exact"]
+    },
+    "position": {
+      "type": "NumberFilter",
+      "lookup_types": ["exact", "gte", "gt", "lte", "lt", "range"]
+    },
+    "start_date": {
+      "type": "DateFilter",
+      "lookup_types": [
+        "exact",
+        "gte",
+        "gt",
+        "lte",
+        "lt",
+        "range",
+        "year",
+        "month",
+        "day"
+      ]
+    },
+    "end_date": {
+      "type": "DateFilter",
+      "lookup_types": [
+        "exact",
+        "gte",
+        "gt",
+        "lte",
+        "lt",
+        "range",
+        "year",
+        "month",
+        "day"
+      ]
+    },
+    "short_name": {
+      "type": "CharFilter",
+      "lookup_types": ["exact", "iexact", "startswith", "istartswith"]
+    },
+    "full_name": {
+      "type": "CharFilter",
+      "lookup_types": ["exact", "iexact", "startswith", "istartswith"]
+    },
+    "citation_string": {
+      "type": "CharFilter",
+      "lookup_types": ["exact", "iexact", "startswith", "istartswith"]
+    },
+    "dockets": {
+      "type": "RelatedFilter",
+      "lookup_types": "See available filters for 'Dockets'"
+    },
+    "jurisdiction": {
+      "type": "MultipleChoiceFilter",
+      "lookup_types": ["exact"],
+      "choices": [
+        { "value": "F", "display_name": "Federal Appellate" },
+        { "value": "FD", "display_name": "Federal District" },
+        { "value": "FB", "display_name": "Federal Bankruptcy" },
+        { "value": "FBP", "display_name": "Federal Bankruptcy Panel" },
+        { "value": "FS", "display_name": "Federal Special" },
+        { "value": "S", "display_name": "State Supreme" },
+        { "value": "SA", "display_name": "State Appellate" },
+        { "value": "ST", "display_name": "State Trial" },
+        { "value": "SS", "display_name": "State Special" },
+        { "value": "TRS", "display_name": "Tribal Supreme" },
+        { "value": "TRA", "display_name": "Tribal Appellate" },
+        { "value": "TRT", "display_name": "Tribal Trial" },
+        { "value": "TRX", "display_name": "Tribal Special" },
+        { "value": "TS", "display_name": "Territory Supreme" },
+        { "value": "TA", "display_name": "Territory Appellate" },
+        { "value": "TT", "display_name": "Territory Trial" },
+        { "value": "TSP", "display_name": "Territory Special" },
+        { "value": "SAG", "display_name": "State Attorney General" },
+        { "value": "MA", "display_name": "Military Appellate" },
+        { "value": "MT", "display_name": "Military Trial" },
+        { "value": "C", "display_name": "Committee" },
+        { "value": "I", "display_name": "International" },
+        { "value": "T", "display_name": "Testing" }
+      ]
+    },
+    "parent_court": { "type": "CharFilter", "lookup_types": ["exact"] }
+  },
+  "ordering": ["id", "date_modified", "position", "start_date", "end_date"]
+}

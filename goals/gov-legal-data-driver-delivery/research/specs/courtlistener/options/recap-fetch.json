@@ -1,0 +1,215 @@
+{
+  "name": "Pacer Fetch Request List",
+  "description": "",
+  "renders": ["application/json", "text/html", "application/xml"],
+  "parses": [
+    "application/json",
+    "application/x-www-form-urlencoded",
+    "multipart/form-data",
+    "application/xml"
+  ],
+  "actions": {
+    "POST": {
+      "id": {
+        "type": "integer",
+        "required": false,
+        "read_only": true,
+        "label": "ID"
+      },
+      "court": {
+        "type": "field",
+        "required": false,
+        "read_only": false,
+        "label": "Court"
+      },
+      "docket": {
+        "type": "field",
+        "required": false,
+        "read_only": false,
+        "label": "Docket"
+      },
+      "recap_document": {
+        "type": "field",
+        "required": false,
+        "read_only": false,
+        "label": "Recap document"
+      },
+      "pacer_username": {
+        "type": "string",
+        "required": true,
+        "read_only": false,
+        "label": "Pacer username"
+      },
+      "pacer_password": {
+        "type": "string",
+        "required": true,
+        "read_only": false,
+        "label": "Pacer password"
+      },
+      "client_code": {
+        "type": "string",
+        "required": false,
+        "read_only": false,
+        "label": "Client code"
+      },
+      "date_created": {
+        "type": "datetime",
+        "required": false,
+        "read_only": true,
+        "label": "Date created",
+        "help_text": "The moment when the item was created."
+      },
+      "date_modified": {
+        "type": "datetime",
+        "required": false,
+        "read_only": true,
+        "label": "Date modified",
+        "help_text": "The last moment when the item was modified. A value in year 1750 indicates the value is unknown"
+      },
+      "date_completed": {
+        "type": "datetime",
+        "required": false,
+        "read_only": true,
+        "label": "Date completed",
+        "help_text": "When the item was completed or errored out."
+      },
+      "status": {
+        "type": "choice",
+        "required": false,
+        "read_only": true,
+        "label": "Status",
+        "help_text": "The current status of this request. Possible values are: (1): Awaiting processing in queue., (2): Item processed successfully., (3): Item encountered an error while processing., (4): Item is currently being processed., (5): Item failed processing, but will be retried., (6): Item failed validity tests., (7): There was insufficient metadata to complete the task."
+      },
+      "request_type": {
+        "type": "choice",
+        "required": true,
+        "read_only": false,
+        "label": "Request type",
+        "help_text": "The type of object that is requested",
+        "choices": [
+          { "value": 1, "display_name": "HTML Docket" },
+          { "value": 2, "display_name": "PDF" },
+          { "value": 3, "display_name": "Attachment Page" }
+        ]
+      },
+      "message": {
+        "type": "string",
+        "required": false,
+        "read_only": true,
+        "label": "Message",
+        "help_text": "Any messages that may help a user during or after processing."
+      },
+      "pacer_case_id": {
+        "type": "string",
+        "required": false,
+        "read_only": false,
+        "label": "Pacer case id",
+        "help_text": "The case ID provided by PACER for the case to update (must be used in combination with the court field).",
+        "max_length": 100
+      },
+      "docket_number": {
+        "type": "string",
+        "required": false,
+        "read_only": false,
+        "label": "Docket number",
+        "help_text": "The docket number of a case to update (must be used in combination with the court field).",
+        "max_length": 50
+      },
+      "de_date_start": {
+        "type": "date",
+        "required": false,
+        "read_only": false,
+        "label": "De date start",
+        "help_text": "Only fetch docket entries (de) newer than this date. Default is 1 Jan. 1960. Timezone appears to be that of the court."
+      },
+      "de_date_end": {
+        "type": "date",
+        "required": false,
+        "read_only": false,
+        "label": "De date end",
+        "help_text": "Only fetch docket entries (de) older than or equal to this date. Timezone appears to be that of the court."
+      },
+      "de_number_start": {
+        "type": "integer",
+        "required": false,
+        "read_only": false,
+        "label": "De number start",
+        "help_text": "Only fetch docket entries (de) >= than this value. Warning: Using this parameter will not return numberless entries.",
+        "min_value": -2147483648,
+        "max_value": 2147483647
+      },
+      "de_number_end": {
+        "type": "integer",
+        "required": false,
+        "read_only": false,
+        "label": "De number end",
+        "help_text": "Only fetch docket entries (de) <= this value. Warning: Using this parameter will not return numberless entries.",
+        "min_value": -2147483648,
+        "max_value": 2147483647
+      },
+      "show_parties_and_counsel": {
+        "type": "boolean",
+        "required": false,
+        "read_only": false,
+        "label": "Show parties and counsel",
+        "help_text": "Should we pull parties and counsel for a docket report?"
+      },
+      "show_terminated_parties": {
+        "type": "boolean",
+        "required": false,
+        "read_only": false,
+        "label": "Show terminated parties",
+        "help_text": "Should we pull terminated parties and counsel as well?"
+      },
+      "show_list_of_member_cases": {
+        "type": "boolean",
+        "required": false,
+        "read_only": false,
+        "label": "Show list of member cases",
+        "help_text": "Should we pull the list of member cases? This can add considerable expense to each docket."
+      }
+    }
+  },
+  "filters": {
+    "status": {
+      "type": "ChoiceFilter",
+      "lookup_types": ["exact", "in"],
+      "choices": [
+        { "value": 1, "display_name": "Awaiting processing in queue." },
+        { "value": 2, "display_name": "Item processed successfully." },
+        {
+          "value": 3,
+          "display_name": "Item encountered an error while processing."
+        },
+        { "value": 4, "display_name": "Item is currently being processed." },
+        {
+          "value": 5,
+          "display_name": "Item failed processing, but will be retried."
+        },
+        { "value": 6, "display_name": "Item failed validity tests." },
+        {
+          "value": 7,
+          "display_name": "There was insufficient metadata to complete the task."
+        }
+      ]
+    },
+    "request_type": {
+      "type": "ChoiceFilter",
+      "lookup_types": ["exact"],
+      "choices": [
+        { "value": 1, "display_name": "HTML Docket" },
+        { "value": 2, "display_name": "PDF" },
+        { "value": 3, "display_name": "Attachment Page" }
+      ]
+    },
+    "court": { "type": "ModelChoiceFilter", "lookup_types": ["exact"] },
+    "docket": { "type": "ModelChoiceFilter", "lookup_types": ["exact"] },
+    "pacer_case_id": { "type": "CharFilter", "lookup_types": ["exact", "in"] },
+    "docket_number": { "type": "CharFilter", "lookup_types": ["exact"] },
+    "recap_document": {
+      "type": "ModelChoiceFilter",
+      "lookup_types": ["exact", "in"]
+    }
+  },
+  "ordering": ["id", "date_created", "date_modified", "date_completed"]
+}

@@ -21,7 +21,7 @@ drifts from the manifests, and merge conflicts are resolved by regenerating.
 | [fallow-debt-burndown](./fallow-debt-burndown/README.md) | Fallow Debt Burn-Down | 1/6 | 2026-06-11 | Turn the current advisory Fallow output into a remediation queue. This packet is about fixing selected Fallow-identifie… |
 | [file-processing-capability](./file-processing-capability/README.md) | File Processing Capability | 3/7 | 2026-06-18 | Define and implement a product-neutral schema-first file processing capability with driver-backed extraction and repo C… |
 | [gov-legal-data-driver-codegen](./gov-legal-data-driver-codegen/README.md) | Gov/Legal Data Driver Codegen | 3/4 | 2026-07-11 | — |
-| [gov-legal-data-driver-delivery](./gov-legal-data-driver-delivery/README.md) | Gov/Legal Data Driver Delivery | 0/7 | 2026-07-11 | — |
+| [gov-legal-data-driver-delivery](./gov-legal-data-driver-delivery/README.md) | Gov/Legal Data Driver Delivery | 1/7 | 2026-07-11 | — |
 | [knowledge-workspace](./knowledge-workspace/README.md) | Knowledge Workspace | — | — | — |
 | [legal-document-intake](./legal-document-intake/README.md) | Legal Document Intake | 3/8 | 2026-07-11 | — |
 | [lint-advisory-hardening](./lint-advisory-hardening/README.md) | Lint Advisory Hardening | 1/4 | 2026-06-12 | Make root lint advisory output actionable by eliminating the current nonfatal backlog, hardening false-positive-prone c… |

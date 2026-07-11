@@ -2,10 +2,17 @@
 
 ## Status
 
-Status: `pending`
+Status: `in-progress`
 
-Current phase: **P0** — author the data/source-terms matrix and commit the
-official specs.
+Current phase: **P1** — ecfr breadth (2→15 operations). P0 completed
+2026-07-11: data/source-terms matrix authored (all five upstreams
+ALLOW-WITH-CONDITIONS, none prohibitive; P3–P5 unlocked subject to the
+recorded propagation obligations),
+official FedReg spec (14 ops) + CourtListener official machine-readable
+capture committed under `research/specs/`, DOL auth mechanism verified
+(query-param `X-API-KEY` → `ApiKeyQueryAuth`), CL deltas recorded (no
+official OpenAPI endpoint — dated D4 correction in `SPEC.md`; SCOTUS
+visualizations deprecated → excluded).
 
 ## Binding Sequencing
 
@@ -27,7 +34,7 @@ constraints. Every phase branch carries its own committed changeset.
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 research: matrix + specs | pending | Author `research/data-source-terms-matrix.md` (Federal Register, eCFR, DOL, CourtListener, govinfo rows; D2 columns). Commit official upstream specs for federal-register and courtlistener (CL `/api/schema/`); record the DOL donor spec (MIT) as bootstrap with attribution. Verify the DOL auth mechanism (header vs query `X-API-KEY`) against developer.dol.gov and record it. Record CL deprecated-endpoint deltas (e.g. SCOTUS visualizations). Cross-link the predecessor packet (P2 superseded-by note). | Matrix committed + registered in manifest `currentSourceOfTruth[]`; specs committed with provenance rows in `research/SOURCES.md`; DOL auth fact + CL deltas recorded; predecessor cross-links landed; AC#1 gate observable. |
+| P0 research: matrix + specs | complete (2026-07-11) | Author `research/data-source-terms-matrix.md` (Federal Register, eCFR, DOL, CourtListener, govinfo rows; D2 columns). Commit official upstream specs for federal-register and courtlistener (CL `/api/schema/`); record the DOL donor spec (MIT) as bootstrap with attribution. Verify the DOL auth mechanism (header vs query `X-API-KEY`) against developer.dol.gov and record it. Record CL deprecated-endpoint deltas (e.g. SCOTUS visualizations). Cross-link the predecessor packet (P2 superseded-by note). | Matrix committed + registered in manifest `currentSourceOfTruth[]`; specs committed with provenance rows in `research/SOURCES.md`; DOL auth fact + CL deltas recorded; predecessor cross-links landed; AC#1 gate observable. |
 | P1 ecfr breadth | pending | Grow the committed `packages/drivers/ecfr/openapi.json` from today's hand-maintained 2-operation subset to the full 15-operation official surface (ecfr.gov v1 docs as authority; donor `v1-openapi3.json` as diff reference; record conversion/trim provenance in `research/SOURCES.md`), then regenerate via the existing `scripts/generate.ts` + descriptor pattern (admin corrections, search family, versioner ancestry/full/structure/versions). Full-title XML as typed raw-string payload (D7). Add Stream `*All` helpers for paginated search results (D5). | AC#2: committed spec at 15 operations + 15/15 descriptor parity; offline tests per endpoint group + multi-page search test; `bun run check --filter @beep/ecfr` green offline; codegen deterministic; docgen green. |
 | P2 federal-register | pending | Build `@beep/federal-register` skeleton→finished keyless driver in the exact ecfr shape: deps + tsconfig refs, committed official spec + adapted `scripts/generate.ts` → `src/_generated/*`, `FederalRegister.config.ts`/`.errors.ts`/`.service.ts`, `ApiAuth.NoAuth`, 14 operations, page/per_page Stream helpers, source/status metadata preserved (Q8: FedReg is unofficial-prototype; reconcile to GovInfo). Agency-slug domain (LiteralKit vs branded string) decided in-phase against the ~470-slug enum. | AC#3: 14/14 parity; network-free build/check; offline tests incl. multi-page; CI drift lane extended; changeset; docgen green. |
 | P3 dol (GATED on matrix) | pending | Build `@beep/dol`: 6 operations from the committed spec; wire the existing `ApiAuth` branch matching the P0-verified mechanism (`ApiKeyHeaderAuth` header vs `ApiKeyQueryAuth` query — both already implemented in `@beep/api-transport`); `Config.redacted("DOL_API_KEY")` with graceful-omission Option pattern; `filter_object` DSL as tagged-union schemas; limit/offset + array-tail-metadata pagination Stream helper; xml/csv operations as typed raw-string payloads. | Matrix row cleared; AC#4: 6/6 parity; auth branch exercised offline (header/param presence, no secret leakage); DSL schemas round-trip under FastCheck; check green offline; docgen green. |
