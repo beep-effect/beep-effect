@@ -101,7 +101,7 @@ export const GOAL_PHASE_STATUS_MIGRATIONS: Readonly<Record<string, GoalPhaseStat
  * Map a goal status token (legacy or canonical) onto the canonical domain.
  *
  * @param token - Observed status token.
- * @returns The canonical status, or `None` for an unmappable token (the
+ * @returns The canonical status, or `None` for a token outside every mapping (the
  * park-with-recorded-question condition).
  * @example
  * ```ts
@@ -122,7 +122,7 @@ export const migrateGoalStatusToken = (token: string): O.Option<GoalStatusValue>
  * Map a phase status token (legacy or canonical) onto the canonical domain.
  *
  * @param token - Observed phase status token.
- * @returns The canonical phase status, or `None` for an unmappable token.
+ * @returns The canonical phase status, or `None` for a token outside every mapping.
  * @example
  * ```ts
  * import { migrateGoalPhaseStatusToken } from "@beep/repo-cli/commands/Goals/Migration"

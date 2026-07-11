@@ -149,6 +149,8 @@ export const listGoalPackets = Effect.fn("Goals.listGoalPackets")(function* () {
 /**
  * Guard for a plain JSON object (a record that is not an array).
  *
+ * @param value - Candidate value.
+ * @returns Whether the value is a non-array record.
  * @example
  * ```ts
  * import { isJsonRecord } from "@beep/repo-cli/commands/Goals/Inventory"
