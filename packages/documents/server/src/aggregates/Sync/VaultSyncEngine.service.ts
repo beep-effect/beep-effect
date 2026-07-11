@@ -346,8 +346,9 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
         .readDirectory(absolutePath)
         .pipe(Effect.mapError(() => scanFailed(`vault scan could not read directory ${absolutePath}`)));
       const visible = pipe(names, A.filter(P.not(Str.startsWith("."))), A.sort(Order.String));
-      const observations = yield* Effect.forEach(visible, (name) =>
-        Effect.gen(function* () {
+      const observations = yield* Effect.forEach(
+        visible,
+        Effect.fnUntraced(function* (name) {
           const childAbsolutePath = path.join(absolutePath, name);
           const childSegments = A.append(relSegments, name);
           // Symlinks are never followed: a link out of the vault must not leak
