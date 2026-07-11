@@ -34,14 +34,16 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — re-verify the audit inventory (status-token census, manifest-less
-packets, GOAL.md violations) and commit it as the migration's ground truth.
+P1 Schema + set-status + migrate — `GoalManifest` v2, `beep goals set-status`
+with `--migrate`, manifests migrated, 5 missing manifests backfilled.
 
 ## Latest Evidence
 
-Not started. Packet authored 2026-07-11 from the goals-system recommendations
-and the PR #365 housekeeping sweep, which demonstrated every targeted failure
-mode by hand before this packet automates it.
+P0 census committed 2026-07-11
+([`research/status-token-census.md`](./research/status-token-census.md),
+oracle in [`history/p0-oracle.md`](./history/p0-oracle.md)): 83 packets,
+78 manifests, 14+7 status tokens, 12 phase tokens, 10 status↔lifecycle
+disagreements — audit confirmed with fresh deltas.
 
 ## Notes
 

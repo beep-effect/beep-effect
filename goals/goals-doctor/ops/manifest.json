@@ -47,7 +47,7 @@
     {
       "id": "P0",
       "name": "Research: inventory census",
-      "status": "pending",
+      "status": "complete",
       "exit": "research/status-token-census.md committed with the census script and its output; census total equals packet-dir count."
     },
     {
