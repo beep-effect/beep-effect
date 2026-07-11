@@ -1,5 +1,6 @@
 import { CiLaneRunOptions, ciLaneStepsForTesting } from "@beep/repo-cli/commands/Ci";
 import {
+  collectAuditDiffInputForTesting,
   fallowAuditDiffFallbackArgsForTesting,
   fallowAuditNeedsDiffFallbackForTesting,
   fallowCiUploadDiagnosticsForTesting,
@@ -53,6 +54,7 @@ import { Cause, Effect, Exit, FileSystem, Layer, Order, Path, pipe } from "effec
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
+import { ChildProcess } from "effect/unstable/process";
 import { describe, expect, it } from "vitest";
 import type { QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
 
@@ -67,6 +69,14 @@ const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = decodeJsoncTextAs(G
 const isQualityTaskFailed = S.is(QualityTaskFailed);
 const isQualityTaskGroupFailed = S.is(QualityTaskGroupFailed);
 const isString = (value: unknown): value is string => typeof value === "string";
+const runGit = Effect.fn("QualityTasksTest.runGit")(function* (repoRoot: string, args: ReadonlyArray<string>) {
+  const handle = yield* ChildProcess.make("git", [...args], {
+    cwd: repoRoot,
+    stdout: "ignore",
+    stderr: "ignore",
+  });
+  expect(yield* handle.exitCode).toBe(0);
+});
 const coveragePackageBaseline = (path: string, metric = 50): CoveragePackageBaseline =>
   CoveragePackageBaseline.make({
     path,
@@ -478,6 +488,17 @@ describe("quality task adapter", () => {
         }),
       })
     ).toBe(true);
+    expect(
+      fallowAuditNeedsDiffFallbackForTesting({
+        exitCode: 2,
+        stdout: "",
+        stderr: JSON.stringify({
+          error: true,
+          message: "could not create a temporary worktree for base ref 'origin/main'",
+          exit_code: 2,
+        }),
+      })
+    ).toBe(true);
     expect(fallowAuditNeedsDiffFallbackForTesting({ exitCode: 2, stdout: '{"error":true}' })).toBe(false);
     expect(fallowAuditDiffFallbackArgsForTesting("origin/main", true, "/tmp/audit.diff")).toEqual([
       "run",
@@ -497,6 +518,41 @@ describe("quality task adapter", () => {
       "all",
     ]);
   });
+
+  it("includes untracked files in the diff-scoped audit input", () =>
+    Effect.runPromise(
+      Effect.scoped(
+        Effect.acquireUseRelease(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const repoRoot = yield* fs.makeTempDirectory();
+
+            yield* runGit(repoRoot, ["init"]);
+            yield* runGit(repoRoot, ["config", "user.email", "quality-test@example.com"]);
+            yield* runGit(repoRoot, ["config", "user.name", "Quality Test"]);
+            yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
+            yield* fs.writeFileString(path.join(repoRoot, "tracked.ts"), "export const tracked = 1;\n");
+            yield* runGit(repoRoot, ["add", "tracked.ts"]);
+            yield* runGit(repoRoot, ["commit", "-m", "init"]);
+            yield* fs.writeFileString(path.join(repoRoot, "tracked.ts"), "export const tracked = 2;\n");
+            yield* fs.writeFileString(path.join(repoRoot, "untracked.ts"), "export const untracked = true;\n");
+
+            return { fs, repoRoot } as const;
+          }),
+          ({ repoRoot }) =>
+            Effect.gen(function* () {
+              const result = yield* collectAuditDiffInputForTesting(repoRoot, "HEAD");
+
+              expect(result.exitCode).toBe(0);
+              expect(result.stdout).toContain("tracked.ts");
+              expect(result.stdout).toContain("untracked.ts");
+              expect(result.stdout).toContain("new file mode");
+            }),
+          ({ fs, repoRoot }) => fs.remove(repoRoot, { recursive: true, force: true }).pipe(Effect.ignore)
+        ).pipe(provideScopedLayer(PlatformLayer))
+      )
+    ));
 
   it("keeps wired pre-push Fallow lanes in parity with authoritative promoted matrix lanes", () =>
     Effect.runPromise(

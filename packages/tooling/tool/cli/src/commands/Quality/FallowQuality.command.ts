@@ -383,6 +383,7 @@ type ProcessResult = {
 class FallowAuditDiffFallbackResult extends S.Class<FallowAuditDiffFallbackResult>($I`FallowAuditDiffFallbackResult`)(
   {
     stdout: S.String,
+    stderr: S.optionalKey(S.String),
     exitCode: S.Finite,
   },
   $I.annote("FallowAuditDiffFallbackResult", {
@@ -1034,12 +1035,21 @@ export const fallowAuditNeedsDiffFallbackForTesting = FallowAuditDiffFallbackPre
     return false;
   }
 
-  const jsonText = pipe(extractJsonDocumentText(result.stdout), O.getOrUndefined);
-  const decoded = P.isUndefined(jsonText) ? O.none() : Effect.runSync(decodeJsonText(jsonText).pipe(Effect.option));
-  return pipe(
-    decoded,
-    O.flatMap((document) => unknownStringProperty(document, "message")),
-    O.exists(Str.includes("could not create a temporary worktree for base ref"))
+  return A.some(
+    [
+      result.stdout,
+      pipe(
+        result.stderr,
+        O.fromUndefinedOr,
+        O.getOrElse(() => "")
+      ),
+    ],
+    flow(
+      extractJsonDocumentText,
+      O.flatMap((jsonText) => Effect.runSync(decodeJsonText(jsonText).pipe(Effect.option))),
+      O.flatMap((document) => unknownStringProperty(document, "message")),
+      O.exists(Str.includes("could not create a temporary worktree for base ref"))
+    )
   );
 });
 
@@ -1197,6 +1207,59 @@ const resolveBaseRef = Effect.fn("FallowQuality.resolveBaseRef")(function* (
   );
 });
 
+/**
+ * Collect the tracked and untracked working-tree diff consumed by the audit fallback.
+ *
+ * @param repoRoot - Absolute repository root used as the Git working directory.
+ * @param base - Base revision for tracked changes.
+ * @returns A successful combined binary diff, or the first failed Git process result.
+ * @example
+ * ```ts
+ * import { collectAuditDiffInputForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const result = yield* collectAuditDiffInputForTesting(process.cwd(), "origin/main")
+ *   return result.exitCode
+ * })
+ * console.log(Effect.isEffect(program))
+ * // true
+ * ```
+ * @category testing
+ * @since 0.0.0
+ */
+export const collectAuditDiffInputForTesting = Effect.fn("FallowQuality.collectAuditDiffInput")(function* (
+  repoRoot: string,
+  base: string
+): Effect.fn.Return<ProcessResult, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  const trackedDiff = yield* collectProcessOutput(repoRoot, "git", ["diff", "--binary", base, "--", "."]);
+  if (trackedDiff.exitCode !== 0) {
+    return trackedDiff;
+  }
+
+  const untrackedFiles = yield* collectProcessOutput(repoRoot, "git", [
+    "ls-files",
+    "--others",
+    "--exclude-standard",
+    "-z",
+  ]);
+  if (untrackedFiles.exitCode !== 0) {
+    return untrackedFiles;
+  }
+
+  const paths = pipe(Str.split("\0")(untrackedFiles.stdout), A.filter(Str.isNonEmpty));
+  const untrackedDiffs = yield* Effect.forEach(paths, (filePath) =>
+    collectProcessOutput(repoRoot, "git", ["diff", "--binary", "--no-index", "--", "/dev/null", filePath])
+  );
+  const failedDiff = A.findFirst(untrackedDiffs, (result) => result.exitCode !== 0 && result.exitCode !== 1);
+  if (O.isSome(failedDiff)) {
+    return failedDiff.value;
+  }
+
+  const stdout = pipe([trackedDiff.stdout, ...A.map(untrackedDiffs, (result) => result.stdout)], A.join(""));
+  return { stdout, stderr: "", output: stdout, exitCode: 0 };
+});
+
 const collectAuditDiffFallbackOutput = Effect.fn("FallowQuality.collectAuditDiffFallbackOutput")(function* (
   repoRoot: string,
   options: FallowCommandOptions,
@@ -1217,7 +1280,7 @@ const collectAuditDiffFallbackOutput = Effect.fn("FallowQuality.collectAuditDiff
       .pipe(QualityScriptCommandError.mapError("Failed to create temporary Fallow audit diff directory.")),
     Effect.fnUntraced(function* (tempDir) {
       const diffPath = path.join(tempDir, "working-tree.diff");
-      const diffResult = yield* collectProcessOutput(repoRoot, "git", ["diff", "--binary", options.base, "--", "."]);
+      const diffResult = yield* collectAuditDiffInputForTesting(repoRoot, options.base);
       if (diffResult.exitCode !== 0) {
         return original;
       }
