@@ -15,13 +15,13 @@
   "provenance": {
     "exploration": null,
     "authoredDirectly": true,
-    "note": "Authored 2026-07-11 from a sanitized operator assignment brief (local, uncommitted) via a grilled design session (grill-with-docs) backed by read-only recon workflow wf_24cbd840-0ff; seven design decisions locked with the operator are recorded as SPEC.md D1-D7."
+    "note": "Authored 2026-07-11 from a sanitized operator assignment brief (local, uncommitted) via a grilled design session (grill-with-docs) backed by read-only recon workflow wf_24cbd840-0ff; seven design decisions locked with the operator are recorded as SPEC.md D1-D7. Hardened same day by an adversarial review loop (gpt-5.6-sol, xhigh)."
   },
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor). Each PLAN.md phase is its own PR under this gate.",
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor). Each delivery phase (P0-P3) is its own PR under this gate; P4 audits all phase PRs; P5 is the separately gated closeout PR.",
     "grandfathered": false
   },
   "dependencies": [
@@ -54,56 +54,62 @@
   "phases": [
     {
       "id": "P0",
-      "name": "Research: recon, product, architecture, ADR, threat model",
+      "name": "Research: recon, product, architecture, ADR, prototype disposition, threat model",
       "status": "pending",
-      "exit": "research/ holds the recon report, interest taxonomy + seed watchlist, product definition, architecture proposal, technology ADR, and untrusted-ingestion threat model; every SPEC.md deferred decision is resolved or explicitly stopped-and-documented."
+      "exit": "Corpus reconnaissance stayed within the operator-provided session-only allowlist (PLAN P0 preflight; allowlist never committed); research/ holds the recon report (with recorded freshness check), interest taxonomy + seed watchlist, product definition, architecture proposal, technology ADR, prototype-disposition matrix, and untrusted-ingestion threat model, all registered in researchReports, and history/P0-evidence.md records the manual sanitization review; gates G1-G6 are accepted and G7 is accepted or deferred-nonblocking (a blocked gate keeps P0 open); sanitization is clean (mechanical check + recorded manual review); the P0 PR is driven to mergeable via bun run beep yeet."
     },
     {
       "id": "P1",
       "name": "Proof specification",
       "status": "pending",
-      "exit": "research/proof-spec.md names scenario, inputs and fixtures, expected authoritative records, expected projections, package ownership, failure cases, invariants, acceptance tests, and explicitly deferred capabilities."
+      "exit": "research/proof-spec.md names scenario, fixtures, the exact proof invocation contract (command, arguments, inputs, configuration, outputs, exit codes), expected authoritative records with stable IDs/counts/hashes/ordering, the grounded brief projection schema, the determinism scenario matrix, the adversarial fixture list with expected outcomes, package ownership, failure cases, invariants, acceptance tests, and explicitly deferred capabilities; the P1 PR is driven to mergeable via bun run beep yeet."
     },
     {
       "id": "P2",
       "name": "Implement first vertical proof",
       "status": "pending",
-      "exit": "The first vertical proof is implemented per proof-spec.md with deterministic fixtures, no live network or LLM calls in tests, and a sample daily brief generated from fixtures."
+      "exit": "The first vertical proof is implemented per proof-spec.md with deterministic fixtures, no live network or LLM calls in tests, and a fixed test clock; the named proof command executes end to end from a clean checkout with its transcript recorded at history/P2-proof-transcript.md; a sample daily brief generated from fixtures lands at history/P2-sample-brief.md; the P2 PR is driven to mergeable via bun run beep yeet."
     },
     {
       "id": "P3",
       "name": "Verify",
       "status": "pending",
-      "exit": "Proof tests are green including idempotent reruns, retry behavior, provenance traceability, and projection delete-and-rebuild; repo quality lanes are green for the affected scope."
+      "exit": "The determinism scenario matrix passes (idempotent reruns asserted on IDs/counts/hashes, reviewable change on modified input, projection delete-and-rebuild to equivalence, adversarial fixtures produce their specified redact/quarantine/render-safe outcomes); provenance traceability holds; quality condition: bun run beep yeet verify (full tier) passes, OR every failure is reproduced against the origin/main base, classified inherited/unrelated in history/P3-evidence.md, and no lane covering this packet's affected scope fails (own-scope failures always block); the P3 PR is driven to mergeable via bun run beep yeet."
     },
     {
       "id": "P4",
-      "name": "Yeet: PR to mergeable",
+      "name": "Program audit: phase PRs merged or mergeable",
       "status": "pending",
-      "exit": "Each phase PR is open with all required checks green and MERGEABLE."
+      "exit": "history/P4-pr-audit.md lists every P0-P3 phase PR URL with base/head branches and dependency order, proving predecessors merged in sequence or the stacked chain was rebased/retargeted and revalidated in landing order; each PR is MERGED or currently MERGEABLE with required checks green; packet phase statuses agree with GitHub state; the audit ships via its own yeet-gated PR."
     },
     {
       "id": "P5",
       "name": "Close",
       "status": "pending",
-      "exit": "Closeout reflection passes bun run beep lint reflection-artifacts; the staged capability roadmap is recorded; the next vertical proof is recommended with evidence."
+      "exit": "In order: closeout reflection written; staged capability roadmap and next-vertical-proof recommendation recorded in research/roadmap.md (registered in researchReports) and history/P5-evidence.md written; pre-status Phase-Exit Audit passes (pass 1: excluding the flip, lint, and hosted-PR conditions); the atomic status set is staged as a PRE-publication condition (initiative.status, lifecycle, phases[P5].status, PLAN top-level Status line and P5 row, README status/phase/evidence, and the regenerated goals/INDEX.md from bun run beep goals index --write) — never pre-committed; bun run beep lint reflection-artifacts passes with that completed status in the working tree; the closeout is published exactly via bun run beep yeet publish --staged-only --pr --monitor --message (yeet creates the commit; drop --pr if the PR exists). Published oracle: the yeet-created closeout commit atomically contains the entire status set (no earlier commit contained any of it) and the closeout PR reaches MERGED, or currently MERGEABLE with required checks green. Any post-flip failure restores each surface to its exact pre-transition value (lifecycle fields to active; phase-status fields to their prior value; prose surfaces to pre-flip text; goals/INDEX.md regenerated against the restored manifest) in a follow-up commit."
     }
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/project-intelligence/GOAL.md)\" -le 4000",
     "jq . goals/project-intelligence/ops/manifest.json",
     "rg -n \"project-intelligence|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/project-intelligence",
-    "git diff --check -- goals/project-intelligence",
-    "bun run beep lint reflection-artifacts"
+    "git diff HEAD --check -- goals/project-intelligence",
+    "bun run beep lint reflection-artifacts",
+    "sh -c 'rg -n \"/ho[m]e/|/Us[e]rs/|C:.[U]sers|~/[A-Za-z]|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+[.][A-Za-z]{2,}\" goals/project-intelligence; test \"$?\" -eq 1'",
+    "jq -e '.initiative.id == \"project-intelligence\" and .initiative.packetAnchorDocument == \"SPEC.md\" and .agentLaunchers[0].path == \"GOAL.md\" and .lifecycle == .initiative.status' goals/project-intelligence/ops/manifest.json",
+    "sh -c 'set -e; for f in $(jq -r \".currentSourceOfTruth[]\" goals/project-intelligence/ops/manifest.json); do test -e \"$f\"; done; for f in $(jq -r \".researchReports[]\" goals/project-intelligence/ops/manifest.json); do test -e \"goals/project-intelligence/$f\"; done'",
+    "bun run beep goals doctor",
+    "bun run beep goals index --check"
   ],
   "stopConditions": [
     "Required source files are missing or materially contradictory.",
     "The implementation would exceed named scope.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
-    "A step would create difficult-to-reverse package or slice topology before its P0 decision gate is resolved.",
+    "A step would create difficult-to-reverse package or slice topology before its P0 decision gate is accepted.",
     "A step would introduce a major external dependency or vendor commitment before the technology ADR is accepted.",
     "A step would broaden access to private or privileged data beyond the explicit source allowlist.",
     "A conclusion would conflict with an authoritative repository specification.",
+    "A deferred decision gate enters blocked state: keep P0 open or pause the packet with an explicit resume condition.",
     "The same blocker repeats after reasonable investigation."
   ]
 }

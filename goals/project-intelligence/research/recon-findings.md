@@ -5,19 +5,67 @@ wf_24cbd840-0ff (four sweep agents + a completeness critic) plus the grilled
 design session that produced SPEC decisions D1–D7. Evidence is cited as
 repo-relative paths; spot-check before relying on volatile details.
 
+## Provenance & freshness
+
+- Inspected tree: `main` @ `53f5bb53a2` (2026-07-11). All positive and
+  negative claims below are relative to that commit.
+- The negative inventory (section C) is reproducible. **Freshness re-check
+  commands** — run these at P0 start and record the result in
+  `recon-report.md`; a full resurvey is needed only if they show material
+  drift:
+
+```sh
+ls packages/drivers
+rg -il "octokit|api[.]github[.]com" packages/drivers
+rg -il "watchlist" packages apps
+rg -il "daily.?brief" packages apps
+rg -il "\b(cron|scheduler|systemd)\b" packages --glob '**/src/**'
+rg -il "mem0|pgvector" packages
+ls goals explorations
+```
+
+  Expected (verified by executing these exact commands at `53f5bb53a2`) —
+  treat DEVIATIONS from these recorded baselines as drift, not the
+  baselines themselves:
+  - drivers listing has no github entry; the drivers-scoped octokit/API
+    probe is empty (exit 1); watchlist and daily-brief probes are empty
+    (exit 1);
+  - scheduler probe: 11 hits, ALL under `packages/tooling/**` (Research
+    command + `internal/Timers.ts`; Graphiti proxy `schemas`/`config`/
+    `StackRestore`/`ProxyServiceInstall`; AIMetrics command + `Programs`;
+    ai-metrics library `install`/`forwarder`/`source-discovery`). Any hit
+    OUTSIDE `packages/tooling/**` is drift — that would mean slice/runtime
+    scheduling infrastructure appeared. Note: bare "timer" is deliberately
+    NOT probed (UI debounce timers and metric timers are expected noise);
+  - `mem0|pgvector`: exactly one known baseline hit,
+    `packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/DockerResolver.ts`
+    (a Docker image resolver, not a vector-store integration); no mem0
+    integration anywhere;
+  - no goals/explorations packet covering research-intelligence besides
+    this one.
+
+  Scope note: these commands mechanically cover the load-bearing negatives
+  (GitHub driver, watchlist/daily-brief naming, scheduling, mem0/vector
+  store). The remaining Section C negatives (license-policy surface,
+  security implementations, packaged Cognee/Graphiti drivers) were verified
+  by the recon agents at the inspected commit but are NOT mechanically
+  re-checked here — spot-check them during P0 before relying on them.
+
 ## A. Packet mechanics (why this packet is shaped the way it is)
 
 - Packet standard, file roles, launcher rule (≤4000 chars, target 3500),
   lifecycle vocabulary, completion gate, and New Packet Checklist:
   `goals/README.md`. Template: `goals/_template/` (10 files).
-- `bun run beep goals` (doctor / index / set-status) **does not exist yet**:
-  no `Goals` command group in `packages/tooling/tool/cli/src/index.ts`; it is
-  the unbuilt deliverable of `goals/goals-doctor` (all phases pending). The
-  only shipping goals-gating lint is `bun run beep lint reflection-artifacts`
-  (`packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts`),
-  which enforces only packets whose status is in
-  `["completed-retained","complete","completed","v1-closed"]` — a no-op for a
-  new `active` packet.
+- `bun run beep goals` (doctor / index / set-status): at the inspected
+  commit this did not exist (goals-doctor's unbuilt deliverable).
+  **Superseded 2026-07-11**: goals-doctor shipped (PR #373) — `beep goals
+  doctor` and `beep goals index --check` now gate the repo lint lane, and
+  `goals/INDEX.md` must be regenerated (`index --write`) in the same PR as
+  any manifest change. The reflection lint
+  (`packages/tooling/tool/cli/src/commands/Lint/ReflectionArtifact.ts`)
+  still enforces only packets whose status is in
+  `["completed-retained","complete","completed","v1-closed"]` — a no-op for
+  a new `active` packet.
 - Direct authoring (no exploration packet) has precedent:
   `goals/goals-doctor` (`provenance.authoredDirectly: true`) and
   `goals/legal-document-intake` (grilled design session, 2026-07-08). ~40
@@ -32,9 +80,11 @@ repo-relative paths; spot-check before relying on volatile details.
 ## B. Prior art and reuse map
 
 - **`beep research` CLI prototype** —
-  `packages/tooling/tool/cli/src/commands/Research/` (subcommands:
-  captureUrl, cognify, daily, digest, historySift, notionPull, repoCard,
-  status). A working discover→ingest→snapshot→dedup→brief loop:
+  `packages/tooling/tool/cli/src/commands/Research/` (nine executable CLI
+  tokens: `capture`, `cognify`, `daily`, `digest`, `history-sift`,
+  `install-timers`, `notion-pull`, `repo-card`, `status` — handler/service
+  identifiers like captureUrl/historySift differ from the CLI tokens). A
+  working discover→ingest→snapshot→dedup→brief loop:
   - `internal/Capture.ts`: Firecrawl scrape → immutable Markdown knowledge
     card with YAML frontmatter (id, url, sourceType, capturedAt, status,
     tags, contentHash).
@@ -49,9 +99,23 @@ repo-relative paths; spot-check before relying on volatile details.
     shell-out (no typed driver).
   - `internal/CogneeClient.ts`, `internal/GraphitiEpisodes.ts`: HTTP clients
     for graph-memory engines (CLI-internal, not `@beep/*` drivers).
+  - `internal/Timers.ts` (`install-timers`): **systemd user-timer
+    installation** — renders and enables service+timer unit pairs so the
+    daily pipeline runs daily and repo cards refresh weekly, with secrets
+    from an optional EnvironmentFile. The prototype therefore already has
+    scheduled unattended operation at the tooling level. A second
+    tooling-level timer mechanism exists in AI-metrics
+    (`packages/tooling/library/ai-metrics/src/install.ts`,
+    `packages/tooling/tool/cli/src/commands/AIMetrics/`) following the same
+    systemd user-timer install pattern — inventory both in G3/G1 before
+    designing any scheduling.
+  - `internal/BrowserHistory.ts` (historySift's engine), `CatalogOps.ts`,
+    `Status.ts`, and the NotionPull/RepoCard run modules round out the
+    internal mechanism inventory.
   Limitations: tooling-family internals, no schema-first domain, no slice
   boundaries, shell-outs, vault outside the repo. Gate G3 decides
-  promote/reuse/retire per mechanism.
+  promote/reuse/retire/defer per mechanism (defer only under the SPEC D8
+  controlled-defer rules).
 - **Epistemic slice** — `packages/epistemic/{domain,use-cases,tables,server}`:
   CandidateClaim (lifecycle + snapshot keyed by stable EpistemicFixtureKey),
   Evidence (char-offset EvidenceSpan: startChar/endChar/quote/confidence),
@@ -84,17 +148,30 @@ repo-relative paths; spot-check before relying on volatile details.
   only `gh` CLI shell-outs in the Research command).
 - No watchlist or daily-brief code anywhere (grep: zero code hits; concepts
   are net-new naming).
-- No scheduler/cron/job infrastructure; no unattended worker app (apps/ =
-  oip-web, professional-desktop, storybook, architecture-lab-proof).
+- No general-purpose in-repo scheduler/job infrastructure and no unattended
+  worker app (apps/ = oip-web, professional-desktop, storybook,
+  architecture-lab-proof). **Correction (adversarial review round 2):** the
+  `beep research` prototype DOES ship scheduled operation as tooling —
+  `install-timers` installs systemd user timers for the daily pipeline and
+  weekly repo-card refresh (`internal/Timers.ts`). Its disposition is part of
+  gate G3; the roadmap's scheduled-unattended-operation stage remains net-new
+  at the slice/runtime level.
 - No vector/embedding store; no mem0 integration; no packaged Cognee/Graphiti
   drivers (HTTP clients are CLI-internal).
 - No dependency/third-party license-compliance policy surface (repo is
   Apache-2.0; osv-scanner covers vulnerabilities only) — relevant to the
   brief's license/attribution requirements.
-- Untrusted-ingestion security (prompt-injection detector, secret/PII scrub,
-  GuardedHttpClient, SSRF-safe host table) exists only as active-unshipped
-  exploration doctrine: `explorations/ingestion-security-secret-governance`
-  (8 open questions). D7: cite as baseline, scope to the proof.
+- Untrusted-ingestion security is split by capability (corrected in
+  adversarial round 5): the prompt-injection detector, secret/PII scrub,
+  and GuardedHttpClient exist only as active-unshipped exploration doctrine
+  (`explorations/ingestion-security-secret-governance`, 8 open questions) —
+  D7: cite as baseline, scope to the proof. However, **SSRF-safe host
+  validation is SHIPPED prior art**: `@beep/schema` `SafeRemoteHost`
+  (`packages/foundation/modeling/schema/src/SafeRemoteHost.ts`) with live
+  driver consumers (`packages/drivers/box/src/Box.streaming.ts`,
+  `packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts`). The P0 threat
+  model must assess reusing it (including known limitations such as
+  DNS-rebinding residual risk) rather than rebuilding SSRF machinery.
 
 ## D. Doctrine constraints (binding on P0+ design)
 
