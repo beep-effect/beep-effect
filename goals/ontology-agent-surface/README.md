@@ -35,15 +35,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Bootstrap + Hardening is pending. Re-verify the exploration's capability
-inventory against the live checkout, then harden repair strategies, base-prefix
-codec fidelity, and ROBOT interop evidence before defining the toolkit.
+P0 Bootstrap + Hardening is implemented locally and
+`host-verification-required`. The live inventory, repair registry, base-prefix
+session round-trip, ROBOT host script, and P1 placement decision are recorded;
+P1 must not begin until a capable host runs the ROBOT script or explicitly
+accepts that remaining host gate.
 
 ## Latest Evidence
 
-Graduated on 2026-07-11 from
-[`explorations/ontology-agent-surface`](../../explorations/ontology-agent-surface/README.md);
-implementation has not started.
+[`history/2026-07-11-p0-hardening.md`](./history/2026-07-11-p0-hardening.md)
+records P0 implementation and local proof. ROBOT remains host-gated because
+the sandbox has no `robot` binary and no network installation path.
 
 ## Notes
 

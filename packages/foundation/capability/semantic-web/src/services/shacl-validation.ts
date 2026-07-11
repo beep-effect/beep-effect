@@ -25,7 +25,7 @@ const serviceContractMetadata = (canonicalName: string, overview: string) =>
     equivalenceBasis: "Shape and result equality by exact field comparison.",
     representations: [{ kind: "RDF/JS" }],
     implementationNotes: [
-      "The v1 package surface validates a bounded SHACL-inspired subset covering targetClass, targetNode, minCount, maxCount, datatype, and hasValue.",
+      "The v1 package surface validates a bounded SHACL-inspired subset covering targetClass, targetNode, minCount, maxCount, datatype, class, and hasValue.",
       "Full external SHACL engines can consume the optional shapesDataset while legacy callers keep using the typed bounded shapes array.",
     ],
   });
@@ -80,7 +80,8 @@ export type ShaclSeverity = typeof ShaclSeverity.Type;
  *
  * const shape = S.decodeUnknownSync(ShaclPropertyShape)({
  *   path: { termType: "NamedNode", value: "https://example.com/name" },
- *   minCount: 1
+ *   minCount: 1,
+ *   class: { termType: "NamedNode", value: "https://schema.org/Person" }
  * })
  * strictEqual(shape.path.value, "https://example.com/name")
  * ```
@@ -94,6 +95,7 @@ export class ShaclPropertyShape extends S.Class<ShaclPropertyShape>($I`ShaclProp
     minCount: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
     maxCount: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
     datatype: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
+    class: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
     hasValue: S.OptionFromOptionalKey(ObjectTerm).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("ShaclPropertyShape", {
@@ -158,7 +160,11 @@ export class ShaclNodeShape extends S.Class<ShaclNodeShape>($I`ShaclNodeShape`)(
  *   focusNode: "https://example.com/alice",
  *   path: { termType: "NamedNode", value: "https://example.com/name" },
  *   message: "Expected at least one value.",
- *   severity: "violation"
+ *   severity: "violation",
+ *   sourceConstraintComponent: {
+ *     termType: "NamedNode",
+ *     value: "http://www.w3.org/ns/shacl#MinCountConstraintComponent"
+ *   }
  * })
  * strictEqual(violation.severity, "violation")
  * ```
@@ -173,6 +179,8 @@ export class ShaclValidationViolation extends S.Class<ShaclValidationViolation>(
     message: S.String,
     severity: ShaclSeverity,
     sourceShape: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
+    sourceConstraintComponent: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
+    value: S.OptionFromOptionalKey(ObjectTerm).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("ShaclValidationViolation", {
     description: "SHACL validation violation.",
