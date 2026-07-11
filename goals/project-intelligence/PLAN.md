@@ -15,8 +15,9 @@ Two rules apply to every phase transition:
 
 - **Two-pass transition (all phases).** Include the phase's status flip
   (manifest `phases[Pn].status`, this plan's row AND its top-level Status
-  line, README Current Phase/Latest Evidence) as staged changes in the
-  phase's own PR. Pass 1: run the Phase-Exit Audit excluding the flip and
+  line, README Current Phase/Latest Evidence, plus the regenerated
+  `goals/INDEX.md` from `bun run beep goals index --write`) as staged
+  changes in the phase's own PR. Pass 1: run the Phase-Exit Audit excluding the flip and
   hosted-check conditions. Pass 2: after yeet publishes and hosted checks
   are green, re-run the audit against the full exit oracle. On failure,
   restore each surface to its exact pre-transition value in a follow-up
@@ -200,7 +201,9 @@ achieved only when the status-bearing closeout PR is mergeable.
    `initiative.status` + `lifecycle` to the final status
    (`completed-retained` expected) + `phases[P5].status: "complete"`; this
    plan's top-level Status line AND its P5 row; README (Status, Current
-   Phase, Latest Evidence). Yeet creates the commit — do not pre-commit.
+   Phase, Latest Evidence); AND the regenerated `goals/INDEX.md`
+   (`bun run beep goals index --write`) so the index gate passes against
+   the flipped manifest. Yeet creates the commit — do not pre-commit.
 5. Run `bun run beep lint reflection-artifacts` against the working tree —
    it must pass with the completed status in place. If it fails, fix the
    reflection or unstage the status set; never publish a completed status
@@ -240,3 +243,8 @@ sh -c 'rg -n "/ho[m]e/|/Us[e]rs/|C:.[U]sers|~/[A-Za-z]|[A-Za-z0-9._%+-]+@[A-Za-z
 The final command is the D2 mechanical sanitization check as a tri-state
 wrapper: it exits 0 only when `rg` finds nothing (rg exit 1), and fails on
 both hits (rg exit 0) and scanner errors (rg exit 2).
+
+Ordering matters: run this battery AFTER staging every phase change
+(`git add`, including new research/history files — `git diff HEAD --check`
+sees untracked files only once staged) and BEFORE publishing; after yeet
+commits, the diff-based checks trivially pass and prove nothing.
