@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "legal-ontology-landscape",
+    "title": "Legal Ontology Landscape",
+    "status": "active",
+    "stage": "graduate",
+    "openQuestions": [
+      "P1-P4 research reports are pending; feed goals/semantic-foundation as they land."
+    ],
+    "sources": ["research/01-direction-grounding.md"],
+    "links": {
+      "goals": ["goals/semantic-foundation"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-08",
+    "updated": "2026-07-08"
+  }
+}

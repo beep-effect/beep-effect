@@ -148,6 +148,14 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `goals/ontology-modeling-foundation`), and an effect-only scratchpad
   prototype proving types/ergonomics before the packaging call
   (all-in-`@beep/identity` vs identity/rdf/ontology split).
+- [`legal-ontology-landscape`](./legal-ontology-landscape/README.md) —
+  foundation-layer legal semantics exploration at `graduate`: first packet
+  graduated 2026-07-08 into
+  [`goals/semantic-foundation`](../goals/semantic-foundation/README.md) for M1
+  intake-serving SKOS seed, FOLIO-aligned concept IRIs, and `@beep/ontology`
+  taxonomy registry/loader. Status stays `active` while P1-P4 research reports
+  land and feed M2-M4; dependent `goals/trademark-docketing-domain` is deferred
+  behind M3.
 
 ### Proposed
 
