@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-11T10:05:09.334Z
+Generated: 2026-07-11T10:31:32.160Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 4 |
 | packagesNeedingRemediation | 0 |
 | publicModules | 1778 |
-| publicExports | 15278 |
+| publicExports | 15282 |
 | openModules | 0 |
 | openExports | 0 |
 | missingExportExamples | 0 |
@@ -59,7 +59,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 16 | `@beep/face-detection` | `packages/drivers/face-detection` | clean | 4 | 33 | 0 | 0 |
 | 17 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | clean | 19 | 151 | 0 | 0 |
 | 18 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
-| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | clean | 133 | 795 | 0 | 0 |
+| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | clean | 133 | 798 | 0 | 0 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | clean | 4 | 11 | 0 | 0 |
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | clean | 7 | 27 | 0 | 0 |
@@ -102,7 +102,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 59 | `@beep/libpff` | `packages/drivers/libpff` | clean | 4 | 19 | 0 | 0 |
 | 60 | `@beep/venice-ai` | `packages/drivers/venice-ai` | clean | 3 | 35 | 0 | 0 |
 | 61 | `@beep/form` | `packages/foundation/ui-system/form` | clean | 42 | 114 | 0 | 0 |
-| 62 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 6 | 179 | 0 | 0 |
+| 62 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 6 | 180 | 0 | 0 |
 | 63 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 4 | 17 | 0 | 0 |
 | 64 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 5 | 7 | 0 | 0 |
 | 65 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | clean | 2 | 8 | 0 | 0 |
