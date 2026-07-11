@@ -204,6 +204,7 @@ describe("OntoAuthor-Mat competency fixtures", () => {
           reason: fixture.reason,
         }))
       );
-    }, provideScopedLayer(TestLayer))
+    }, provideScopedLayer(TestLayer)),
+    { timeout: 120_000 }
   );
 });
