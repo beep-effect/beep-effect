@@ -94,6 +94,18 @@ export class SomeError extends Schema.TaggedErrorClass<SomeError>()("SomeError",
   Learn how to create effects from various sources, including plain values,
   synchronous code, Promise APIs, optional values, and callback-based APIs.
 
+## Defining schemas and domain models
+
+All validation and domain modeling in Effect is done with `Schema`.
+
+**AVOID using predicates or manual parsing**, instead use `Schema` to parse untrusted data and validate it.
+
+For a comprehensive guide, see [packages/effect/SCHEMA.md](./packages/effect/SCHEMA.md). Make sure to read the guide in chunks, as it is a large document.
+
+- **[Schema basics](./ai-docs/src/01_effect/02_schema/10_schema-basics.ts)**:
+  Define `Schema.Class`s, decode unknown input into typed values, and
+  encode typed values back into their external representation.
+
 ## Writing Effect services
 
 Effect services are the most common way to structure Effect code. Prefer using
@@ -148,11 +160,11 @@ export type DatabaseService = Database["Service"]
 
 ### More examples
 
-- **[Context.Reference](./ai-docs/src/01_effect/02_services/10_reference.ts)**: For defining configuration values, feature flags, or any other service that has a default value.
-- **[Composing services with the Layer module](./ai-docs/src/01_effect/02_services/20_layer-composition.ts)**:
+- **[Context.Reference](./ai-docs/src/01_effect/03_services/10_reference.ts)**: For defining configuration values, feature flags, or any other service that has a default value.
+- **[Composing services with the Layer module](./ai-docs/src/01_effect/03_services/20_layer-composition.ts)**:
   Build focused service layers, then compose them with `Layer.provide` and
   `Layer.provideMerge` based on what services you want to expose.
-- **[Creating Layers from configuration and/or Effects](./ai-docs/src/01_effect/02_services/20_layer-unwrap.ts)**: Build a layer dynamically from an Effect / Config with `Layer.unwrap`.
+- **[Creating Layers from configuration and/or Effects](./ai-docs/src/01_effect/03_services/20_layer-unwrap.ts)**: Build a layer dynamically from an Effect / Config with `Layer.unwrap`.
 
 ## Error handling
 
@@ -190,8 +202,8 @@ export const withFinalFallback = loadPort("invalid").pipe(
 
 ### More examples
 
-- **[Catch multiple errors with Effect.catchTags](./ai-docs/src/01_effect/03_errors/10_catch-tags.ts)**: Use `Effect.catchTags` to handle several tagged errors in one place.
-- **[Creating and handling errors with reasons](./ai-docs/src/01_effect/03_errors/20_reason-errors.ts)**:
+- **[Catch multiple errors with Effect.catchTags](./ai-docs/src/01_effect/04_errors/10_catch-tags.ts)**: Use `Effect.catchTags` to handle several tagged errors in one place.
+- **[Creating and handling errors with reasons](./ai-docs/src/01_effect/04_errors/20_reason-errors.ts)**:
   Define a tagged error with a tagged `reason` field, then recover with
   `Effect.catchReason`, `Effect.catchReasons`, or by unwrapping the reason into
   the error channel with `Effect.unwrapReason`.
@@ -200,37 +212,25 @@ export const withFinalFallback = loadPort("invalid").pipe(
 
 Learn how to safely manage resources in Effect using `Scope`s and finalizers.
 
-- **[Acquiring resources with Effect.acquireRelease](./ai-docs/src/01_effect/04_resources/10_acquire-release.ts)**:
+- **[Acquiring resources with Effect.acquireRelease](./ai-docs/src/01_effect/05_resources/10_acquire-release.ts)**:
   Define a service that uses `Effect.acquireRelease` to manage the lifecycle of
   a resource, ensuring that it is properly cleaned up when the service is no
   longer needed.
-- **[Creating Layers that run background tasks](./ai-docs/src/01_effect/04_resources/20_layer-side-effects.ts)**: Use Layer.effectDiscard to encapsulate background tasks without a service interface.
-- **[Dynamic resources with LayerMap](./ai-docs/src/01_effect/04_resources/30_layer-map.ts)**:
+- **[Creating Layers that run background tasks](./ai-docs/src/01_effect/05_resources/20_layer-side-effects.ts)**: Use Layer.effectDiscard to encapsulate background tasks without a service interface.
+- **[Dynamic resources with LayerMap](./ai-docs/src/01_effect/05_resources/30_layer-map.ts)**:
   Use `LayerMap.Service` to dynamically build and manage resources that are
   keyed by some identifier, such as a tenant ID.
 
 ## Running Effect programs
 
-- **[Running effects with NodeRuntime and BunRuntime](./ai-docs/src/01_effect/05_running/10_run-main.ts)**: Use `NodeRuntime.runMain` to run an Effect program as your process entrypoint.
-- **[Using Layer.launch as the application entry point](./ai-docs/src/01_effect/05_running/20_layer-launch.ts)**: Use `Layer.launch` to run a long-running Effect program as your process entrypoint.
+- **[Running effects with NodeRuntime and BunRuntime](./ai-docs/src/01_effect/06_running/10_run-main.ts)**: Use `NodeRuntime.runMain` to run an Effect program as your process entrypoint.
+- **[Using Layer.launch as the application entry point](./ai-docs/src/01_effect/06_running/20_layer-launch.ts)**: Use `Layer.launch` to run a long-running Effect program as your process entrypoint.
 
 ## Broadcasting messages with PubSub
 
 Use `PubSub` when you need one producer to fan out messages to many consumers.
 
-- **[Broadcasting domain events with PubSub](./ai-docs/src/01_effect/06_pubsub/10_pubsub.ts)**: Build an in-process event bus with `PubSub` and expose it as a service.
-
-## Defining schemas and domain models
-
-All validation and domain modeling in Effect is done with `Schema`.
-
-**AVOID** using predicates or manual parsing, instead use `Schema` to parse untrusted data and validate it.
-
-For a comprehensive guide, see [packages/effect/SCHEMA.md](./packages/effect/SCHEMA.md). Make sure to read the file in chunks, as it is a large document.
-
-- **[Schema basics](./ai-docs/src/02_schema/10_schema-basics.ts)**:
-  Define `Schema.Class`s, decode unknown input into typed values, and
-  encode typed values back into their external representation.
+- **[Broadcasting domain events with PubSub](./ai-docs/src/01_effect/07_pubsub/10_pubsub.ts)**: Build an in-process event bus with `PubSub` and expose it as a service.
 
 ## Working with Streams
 
