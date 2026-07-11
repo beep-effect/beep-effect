@@ -280,9 +280,24 @@ export const runReflectionArtifactLint = Effect.fn(function* () {
     if (O.isNone(manifestRead)) {
       continue;
     }
-    const { status } = readManifestStatus(parse(manifestRead.value));
+    const manifestJson: unknown = parse(manifestRead.value);
+    const { status } = readManifestStatus(manifestJson);
     const completed = COMPLETED_STATUS_TOKENS.includes(status);
     if (!completed) {
+      continue;
+    }
+    // Explicit opt-out only (goals/README.md documents the gate as a
+    // reflectionRequired contract): packets closed before the reflection
+    // practice carry `reflectionRequired: false`; an absent field still gates.
+    if (((manifestJson ?? {}) as Record<string, unknown>).reflectionRequired === false) {
+      advisories.push(
+        makeFinding(
+          slug,
+          "warning",
+          `Completed goal "${slug}" opted out of the reflection gate (reflectionRequired: false).`,
+          "Write a closeout reflection and flip reflectionRequired to true when the packet re-enters the gate."
+        )
+      );
       continue;
     }
 

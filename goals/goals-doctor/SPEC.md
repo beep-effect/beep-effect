@@ -196,4 +196,4 @@ weeks earlier — every one of those findings was mechanically detectable.
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| None | N/A | N/A | N/A | N/A |
+| Reflection-gate opt-out (`reflectionRequired: false`) set on 5 pre-reflection-era packets: agent-effectiveness-loop, dedup-clone-engine, jsdoc-worker-eval, nlp-adjunct-port, repo-quality-convergence | `bun run beep lint reflection-artifacts` | goals-doctor migration (2026-07-11) | D7's canonical completed set newly gates packets whose legacy tokens (`phase1-complete`, `DONE`, `p0-p6-...`, `local-proof-complete`, backfill) were closed before the reflection practice existed; the gate now honors an explicit opt-out as a non-blocking advisory while an absent field still gates (strict default preserved, per the `reflectionRequired` contract in `goals/README.md`). | Write closeout reflections for those packets and flip `reflectionRequired` back to `true`. |

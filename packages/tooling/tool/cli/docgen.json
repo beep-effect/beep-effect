@@ -83,6 +83,9 @@
       "@beep/repo-cli/commands/Files": [
         "../../../../packages/tooling/tool/cli/src/commands/Files/index.ts"
       ],
+      "@beep/repo-cli/commands/Goals": [
+        "../../../../packages/tooling/tool/cli/src/commands/Goals/index.ts"
+      ],
       "@beep/repo-cli/commands/Graphiti": [
         "../../../../packages/tooling/tool/cli/src/commands/Graphiti/index.ts"
       ],
