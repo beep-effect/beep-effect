@@ -45,19 +45,18 @@ const droppedFiles = (event: DragEvent<HTMLElement>): ReadonlyArray<File> => A.f
 const batchIdFor = (files: ReadonlyArray<File>): string =>
   `batch-${files.length}-${slugVaultSegment(files[0]?.name ?? "drop")}`;
 
-const vaultConfigurationFailureMessage = (cause: unknown): string =>
-  P.isError(cause) && cause.message.length > 0
-    ? cause.message
-    : P.isObject(cause) && P.hasProperty(cause, "message") && P.isString(cause.message) && cause.message.length > 0
+const failureMessageOr =
+  (fallback: string) =>
+  (cause: unknown): string =>
+    P.isError(cause) && cause.message.length > 0
       ? cause.message
-      : "Unable to save workspace vault.";
+      : P.isObject(cause) && P.hasProperty(cause, "message") && P.isString(cause.message) && cause.message.length > 0
+        ? cause.message
+        : fallback;
 
-const intakeFailureMessage = (cause: unknown): string =>
-  P.isError(cause) && cause.message.length > 0
-    ? cause.message
-    : P.isObject(cause) && P.hasProperty(cause, "message") && P.isString(cause.message) && cause.message.length > 0
-      ? cause.message
-      : "Intake failed.";
+const vaultConfigurationFailureMessage = failureMessageOr("Unable to save workspace vault.");
+
+const intakeFailureMessage = failureMessageOr("Intake failed.");
 
 type IntakeResultEntry =
   | { readonly kind: "document"; readonly document: Document }
@@ -94,6 +93,65 @@ const intakeResultRow = (entry: IntakeResultEntry): JSX.Element =>
         </li>
       ),
     })
+  );
+
+const VaultOnboarding = ({
+  onChoose,
+  status,
+}: {
+  readonly onChoose: () => void;
+  readonly status: string | null;
+}): JSX.Element => (
+  <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
+    <section className="w-full max-w-md rounded-md border bg-card p-5 shadow-sm" data-testid="vault-onboarding">
+      <h1 className="text-lg font-semibold">Choose workspace vault</h1>
+      <p className="mt-2 text-sm text-muted-foreground">Select the local folder where filed documents will land.</p>
+      <div className="mt-4 flex items-center gap-3">
+        <Button type="button" onClick={onChoose} data-testid="vault-choose">
+          Choose folder
+        </Button>
+        {status === null ? null : <span className="text-sm text-muted-foreground">{status}</span>}
+      </div>
+    </section>
+  </div>
+);
+
+const IntakeBusyBadge = ({ activeBatches }: { readonly activeBatches: number }): JSX.Element | null =>
+  activeBatches === 0 ? null : (
+    <div
+      className="absolute right-4 top-16 z-40 rounded-md border bg-card px-3 py-2 text-sm shadow-sm"
+      data-testid="intake-busy"
+    >
+      Filing {activeBatches === 1 ? "documents" : `${activeBatches} batches`}
+    </div>
+  );
+
+const IntakeResultsPanel = ({
+  onClear,
+  results,
+}: {
+  readonly onClear: () => void;
+  readonly results: ReadonlyArray<IntakeResultEntry>;
+}): JSX.Element | null =>
+  results.length === 0 ? null : (
+    <div
+      className="absolute bottom-4 right-4 z-40 max-h-80 w-96 overflow-y-auto rounded-md border bg-card p-3 text-sm shadow-sm"
+      data-testid="intake-results"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="font-semibold">Filed documents</h2>
+        <Button type="button" variant="ghost" size="sm" onClick={onClear} data-testid="intake-results-clear">
+          Clear
+        </Button>
+      </div>
+      <ul className="mt-2 space-y-2">
+        {results.map((entry, index) => (
+          <Fragment key={`${index}-${entry.kind === "document" ? entry.document.contentDigest : entry.fileName}`}>
+            {intakeResultRow(entry)}
+          </Fragment>
+        ))}
+      </ul>
+    </div>
   );
 
 /**
@@ -203,20 +261,7 @@ export function DocumentIntakeTarget({ children }: { readonly children: ReactNod
   });
 
   if (needsOnboarding) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
-        <section className="w-full max-w-md rounded-md border bg-card p-5 shadow-sm" data-testid="vault-onboarding">
-          <h1 className="text-lg font-semibold">Choose workspace vault</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Select the local folder where filed documents will land.</p>
-          <div className="mt-4 flex items-center gap-3">
-            <Button type="button" onClick={() => void Effect.runPromise(chooseVault)} data-testid="vault-choose">
-              Choose folder
-            </Button>
-            {status === null ? null : <span className="text-sm text-muted-foreground">{status}</span>}
-          </div>
-        </section>
-      </div>
-    );
+    return <VaultOnboarding onChoose={() => void Effect.runPromise(chooseVault)} status={status} />;
   }
 
   return (
@@ -249,40 +294,8 @@ export function DocumentIntakeTarget({ children }: { readonly children: ReactNod
           Drop documents to file
         </div>
       ) : null}
-      {activeBatches === 0 ? null : (
-        <div
-          className="absolute right-4 top-16 z-40 rounded-md border bg-card px-3 py-2 text-sm shadow-sm"
-          data-testid="intake-busy"
-        >
-          Filing {activeBatches === 1 ? "documents" : `${activeBatches} batches`}
-        </div>
-      )}
-      {results.length === 0 ? null : (
-        <div
-          className="absolute bottom-4 right-4 z-40 max-h-80 w-96 overflow-y-auto rounded-md border bg-card p-3 text-sm shadow-sm"
-          data-testid="intake-results"
-        >
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="font-semibold">Filed documents</h2>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => setResults([])}
-              data-testid="intake-results-clear"
-            >
-              Clear
-            </Button>
-          </div>
-          <ul className="mt-2 space-y-2">
-            {results.map((entry, index) => (
-              <Fragment key={`${index}-${entry.kind === "document" ? entry.document.contentDigest : entry.fileName}`}>
-                {intakeResultRow(entry)}
-              </Fragment>
-            ))}
-          </ul>
-        </div>
-      )}
+      <IntakeBusyBadge activeBatches={activeBatches} />
+      <IntakeResultsPanel results={results} onClear={() => setResults([])} />
     </div>
   );
 }

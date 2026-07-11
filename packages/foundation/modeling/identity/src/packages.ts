@@ -166,7 +166,8 @@ const generatedComposers = $I.compose(
   "oxigraph",
   "shacl",
   "storybook",
-  "tsgo-shim", "doc-text"
+  "tsgo-shim",
+  "doc-text"
 );
 
 const composers = {
