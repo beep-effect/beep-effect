@@ -17,6 +17,15 @@ Current real consumers proving this foundation/capability promotion are:
 - `@beep/repo-cli` for the initial `beep files process` manifest proof surface.
 - `@beep/documents-server` for containment-checked, symlink-resistant atomic
   document materialization.
+- `@beep/ontology-server` for workspace-root-pinned Turtle reads and atomic
+  writes that reject post-startup root symlink swaps.
+
+`resolvePathWithinRoot` and `writeFileWithinRootAtomically` canonicalize their
+configured root on each invocation. Long-lived services that canonicalize an
+authority root during layer construction use `resolvePathWithinCanonicalRoot`
+and `writeFileWithinCanonicalRootAtomically` instead. Those variants never
+re-resolve the authority root, so replacing its lexical path with an escaping
+symlink fails candidate containment instead of transferring authority.
 
 ## Installation
 

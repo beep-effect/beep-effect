@@ -1,9 +1,14 @@
-import { writeFileWithinRootAtomically } from "@beep/file-processing/PathSafety";
+import {
+  resolvePathWithinCanonicalRoot,
+  writeFileWithinCanonicalRootAtomically,
+  writeFileWithinRootAtomically,
+} from "@beep/file-processing/PathSafety";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, Ref, Result } from "effect";
+import * as Eq from "effect/Equal";
 
 const PathSafetyTestLayer = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
 const payload = new TextEncoder().encode("safe payload");
@@ -93,6 +98,88 @@ describe("@beep/file-processing PathSafety", () => {
 
       expect(Result.isFailure(result)).toBe(true);
       expect(yield* fs.readDirectory(root)).toEqual(["blocked"]);
+    }).pipe(provideScopedLayer(PathSafetyTestLayer))
+  );
+
+  it.effect("keeps an already-canonical authority root pinned across a lexical root symlink swap", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const sandbox = yield* fs.makeTempDirectoryScoped({ prefix: "beep-path-safety-" });
+      const configuredRoot = path.join(sandbox, "workspace");
+      const movedRoot = path.join(sandbox, "workspace-moved");
+      const outsideRoot = path.join(sandbox, "outside");
+      const outsideVictim = path.join(outsideRoot, "victim.bin");
+      yield* fs.makeDirectory(configuredRoot);
+      yield* fs.makeDirectory(outsideRoot);
+      yield* fs.writeFileString(outsideVictim, "unchanged");
+      const canonicalRoot = yield* fs.realPath(configuredRoot);
+
+      yield* fs.rename(configuredRoot, movedRoot);
+      yield* fs.symlink(outsideRoot, configuredRoot);
+
+      const readResult = yield* Effect.result(
+        resolvePathWithinCanonicalRoot({ canonicalRoot, candidate: "victim.bin" })
+      );
+      const writeResult = yield* Effect.result(
+        writeFileWithinCanonicalRootAtomically({ canonicalRoot, candidate: "victim.bin", bytes: payload })
+      );
+
+      expect(Result.isFailure(readResult)).toBe(true);
+      expect(Result.isFailure(writeResult)).toBe(true);
+      expect(yield* fs.readFileString(outsideVictim)).toBe("unchanged");
+      expect(yield* fs.readLink(configuredRoot)).toBe(outsideRoot);
+    }).pipe(provideScopedLayer(PathSafetyTestLayer))
+  );
+
+  it.effect("rejects a non-absolute canonical authority root before resolving or writing a candidate", () =>
+    Effect.gen(function* () {
+      const resolveError = yield* resolvePathWithinCanonicalRoot({
+        canonicalRoot: "relative-root",
+        candidate: "victim.bin",
+      }).pipe(Effect.flip);
+      const writeError = yield* writeFileWithinCanonicalRootAtomically({
+        canonicalRoot: "relative-root",
+        candidate: "victim.bin",
+        bytes: payload,
+      }).pipe(Effect.flip);
+
+      expect(resolveError.reason).toBe("canonical-root-not-absolute");
+      expect(writeError).toMatchObject({ reason: "canonical-root-not-absolute" });
+    }).pipe(provideScopedLayer(PathSafetyTestLayer))
+  );
+
+  it.effect("rejects a POSIX symlink escape through an outside sibling containing a literal backslash", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+
+      if (!Eq.equals(path.sep, "/")) {
+        return;
+      }
+
+      const sandbox = yield* fs.makeTempDirectoryScoped({ prefix: "beep-path-safety-" });
+      const root = path.join(sandbox, "workspace");
+      const outsideRoot = path.join(sandbox, "workspace\\evil");
+      const outsideVictim = path.join(outsideRoot, "victim.bin");
+      const link = path.join(root, "linked.bin");
+      yield* fs.makeDirectory(root);
+      yield* fs.makeDirectory(outsideRoot);
+      yield* fs.writeFileString(outsideVictim, "unchanged");
+      yield* fs.symlink(outsideVictim, link);
+      const canonicalRoot = yield* fs.realPath(root);
+
+      const resolveResult = yield* Effect.result(
+        resolvePathWithinCanonicalRoot({ canonicalRoot, candidate: "linked.bin" })
+      );
+      const writeResult = yield* Effect.result(
+        writeFileWithinCanonicalRootAtomically({ canonicalRoot, candidate: "linked.bin", bytes: payload })
+      );
+
+      expect(Result.isFailure(resolveResult)).toBe(true);
+      expect(Result.isFailure(writeResult)).toBe(true);
+      expect(yield* fs.readFileString(outsideVictim)).toBe("unchanged");
+      expect(yield* fs.readLink(link)).toBe(outsideVictim);
     }).pipe(provideScopedLayer(PathSafetyTestLayer))
   );
 });

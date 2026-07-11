@@ -23,6 +23,7 @@ import { makeDrizzleLayer } from "@beep/postgres";
 import { makePgliteSqlTestLayer } from "@beep/test-utils";
 import { Thread as ThreadLayers } from "@beep/workspace-server";
 import { Thread } from "@beep/workspace-use-cases/server";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect, it, layer } from "@effect/vitest";
@@ -102,7 +103,11 @@ const RealAnthropicChatLayer = Layer.mergeAll(
   AnthropicTurnKernel,
   BunFileSystem.layer,
   BunPath.layer
-).pipe(Layer.provideMerge(makeDrizzleLayer()), Layer.provideMerge(makeInProcessPgliteLayer()));
+).pipe(
+  Layer.provideMerge(makeDrizzleLayer()),
+  Layer.provideMerge(makeInProcessPgliteLayer()),
+  Layer.provideMerge(BunCrypto.layer)
+);
 
 const hasAnthropicApiKey =
   P.isString(Bun.env[anthropicApiKeyEnv]) && Str.isNonEmpty(Str.trim(Bun.env[anthropicApiKeyEnv]));

@@ -22,8 +22,9 @@
  */
 import { ChatRpcs } from "@beep/agents-use-cases/public";
 import { provideScopedLayer } from "@beep/test-utils";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect, it } from "@effect/vitest";
-import { Chunk, Effect } from "effect";
+import { Chunk, ConfigProvider, Effect, FileSystem, Layer } from "effect";
 import * as Stream from "effect/Stream";
 import { RpcTest } from "effect/unstable/rpc";
 import { decodeWorkspaceId, userDocument } from "@/chat/ChatFixtures";
@@ -31,9 +32,7 @@ import { RuntimeTest } from "@/runtime/Layer";
 
 const shouldRun = Bun.env.BEEP_TEST_SIDECAR_SMOKE === "1";
 
-// Build a fresh in-process rpc client wired to the fixture runtime handler
-// group, mirroring how the sidecar binds ChatRpcs to RuntimeLive.
-const smoke = Effect.gen(function* () {
+const smokeProgram = Effect.gen(function* () {
   const client = yield* RpcTest.makeClient(ChatRpcs);
   const workspaceId = decodeWorkspaceId(1);
 
@@ -51,7 +50,20 @@ const smoke = Effect.gen(function* () {
   );
   expect(roles).toContain("user");
   expect(roles).toContain("assistant");
-}).pipe(provideScopedLayer(RuntimeTest));
+});
+
+// Build a fresh in-process rpc client wired to the fixture runtime handler
+// group, mirroring how the sidecar binds ChatRpcs to RuntimeLive.
+const smoke = Effect.gen(function* () {
+  const fileSystem = yield* FileSystem.FileSystem;
+  const ontologyWorkspaceRoot = yield* fileSystem.makeTempDirectoryScoped({ prefix: "sidecar-smoke-ontology-" });
+  const OntologyWorkspaceConfigTest = ConfigProvider.layer(
+    ConfigProvider.fromUnknown({ ONTOLOGY_WORKSPACE_ROOT: ontologyWorkspaceRoot })
+  );
+  const runtime = RuntimeTest.pipe(Layer.provide(OntologyWorkspaceConfigTest));
+
+  yield* smokeProgram.pipe(provideScopedLayer(runtime));
+}).pipe(provideScopedLayer(BunFileSystem.layer));
 
 if (!shouldRun) {
   describe.skip("Professional desktop sidecar smoke (set BEEP_TEST_SIDECAR_SMOKE=1)", () => {});

@@ -24,7 +24,7 @@ import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/servi
 import { A, O } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { ConfigProvider, Effect, FileSystem, Layer } from "effect";
 import * as S from "effect/Schema";
 import type { Dataset } from "@beep/rdf/Rdf";
 
@@ -36,9 +36,15 @@ type TaskFixture = {
   readonly reason: string;
 };
 
+const fixturesRoot = fileURLToPath(new URL("./fixtures/ontoauthor-mat/", import.meta.url));
+
 const TestLayer = Layer.mergeAll(
-  OntologyServerTest.pipe(Layer.provide(NodeServices.layer)),
-  OxigraphSparqlQueryServiceLive
+  OntologyServerTest.pipe(
+    Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ ONTOLOGY_WORKSPACE_ROOT: fixturesRoot }))),
+    Layer.provide(NodeServices.layer)
+  ),
+  OxigraphSparqlQueryServiceLive,
+  NodeServices.layer
 );
 
 const provideScopedLayer =
@@ -91,10 +97,15 @@ const taskFixtures: ReadonlyArray<TaskFixture> = [
   },
 ];
 
-const fixturePath = (relativePath: string): OntologyFilePath =>
-  S.decodeUnknownSync(OntologyFilePath)(
-    fileURLToPath(new URL(`./fixtures/ontoauthor-mat/${relativePath}`, import.meta.url))
-  );
+const fixturePath = (relativePath: string): OntologyFilePath => S.decodeUnknownSync(OntologyFilePath)(relativePath);
+
+const fixtureFilePath = (relativePath: string): string =>
+  fileURLToPath(new URL(`./fixtures/ontoauthor-mat/${relativePath}`, import.meta.url));
+
+const readTextFixture = Effect.fn("OntoauthorMat.readTextFixture")(function* (relativePath: string) {
+  const fileSystem = yield* FileSystem.FileSystem;
+  return yield* fileSystem.readFileString(fixtureFilePath(relativePath));
+});
 
 const readFixture = Effect.fn("OntoauthorMat.readFixture")(function* (path: OntologyFilePath) {
   const fileStore = yield* OntologyFileStore;
@@ -133,8 +144,8 @@ const executeAsk = Effect.fn("OntoauthorMat.executeAsk")(function* (query: strin
 });
 
 const runTask = Effect.fn("OntoauthorMat.runTask")(function* (fixture: TaskFixture) {
-  const task = yield* readFixture(fixturePath(`${fixture.id}/task.md`));
-  const cq = yield* readFixture(fixturePath(`${fixture.id}/cq.sparql`));
+  const task = yield* readTextFixture(`${fixture.id}/task.md`);
+  const cq = yield* readTextFixture(`${fixture.id}/cq.sparql`);
   const reference = yield* parseFixture(fixturePath(`${fixture.id}/reference.ttl`));
   const shapes = yield* parseFixture(fixturePath(`${fixture.id}/shapes.ttl`));
   const sessionId = yield* S.decodeUnknownEffect(SessionId)(`ontoauthor-${fixture.id}`);
@@ -156,7 +167,7 @@ const runTask = Effect.fn("OntoauthorMat.runTask")(function* (fixture: TaskFixtu
     })
   );
   const sparqlDataset = makeDataset([...reference.dataset.quads, ...inference.inferredDataset.quads]);
-  const actualAskValues = yield* Effect.forEach(askQueries(cq.source), (query) => executeAsk(query, sparqlDataset));
+  const actualAskValues = yield* Effect.forEach(askQueries(cq), (query) => executeAsk(query, sparqlDataset));
   const competencyPass =
     validation.validation.conforms &&
     actualAskValues.length === fixture.expectedAskValues.length &&
@@ -165,7 +176,7 @@ const runTask = Effect.fn("OntoauthorMat.runTask")(function* (fixture: TaskFixtu
 
   return {
     id: fixture.id,
-    taskTitle: task.source.split("\n")[0] ?? fixture.id,
+    taskTitle: task.split("\n")[0] ?? fixture.id,
     shaclConforms: validation.validation.conforms,
     shapeCount: validation.shapeCount,
     askValues: actualAskValues,

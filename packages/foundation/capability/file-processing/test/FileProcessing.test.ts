@@ -225,10 +225,12 @@ describe("@beep/file-processing", () => {
         const child = `${root}/${leafName}`;
 
         expect(isPathWithinRoot(root, root)).toBe(true);
-        expect(isPathWithinRoot(`${root}/`, `${root}\\${leafName}`)).toBe(true);
+        expect(isPathWithinRoot(`${root}/`, `${root}\\${leafName}`)).toBe(false);
         expect(isPathWithinRoot(root, child)).toBe(true);
         expect(isPathWithinRoot(root, `/srv/${rootName}-evil/${leafName}`)).toBe(false);
         expect(isPathWithinRoot(root, `${root}/../${rootName}/${leafName}`)).toBe(false);
+        expect(isPathWithinRoot(`C:\\srv\\${rootName}`, `C:\\srv\\${rootName}\\${leafName}`)).toBe(true);
+        expect(isPathWithinRoot(`C:/srv/${rootName}`, `C:\\srv\\${rootName}\\${leafName}`)).toBe(true);
       }),
       fcRuns(50)
     ));
