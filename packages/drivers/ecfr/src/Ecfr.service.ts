@@ -168,6 +168,32 @@ export class EcfrVersionerParams extends S.Class<EcfrVersionerParams>($I`EcfrVer
 ) {}
 
 /**
+ * Dated CFR title path parameters for versioner requests that accept no
+ * hierarchy selectors (the official structure endpoint takes only `date` and
+ * `title`).
+ *
+ * @example
+ * ```ts
+ * import { EcfrDatedTitleParams } from "@beep/ecfr"
+ *
+ * const params = EcfrDatedTitleParams.make({ date: "2026-07-01", title: "1" })
+ * console.log(params.title)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EcfrDatedTitleParams extends S.Class<EcfrDatedTitleParams>($I`EcfrDatedTitleParams`)(
+  {
+    date: S.String,
+    title: S.String,
+  },
+  $I.annote("EcfrDatedTitleParams", {
+    description: "Dated CFR title path parameters for eCFR versioner requests without hierarchy selectors.",
+  })
+) {}
+
+/**
  * Filters for listing dated content versions within one CFR title.
  *
  * @example
@@ -222,7 +248,7 @@ export class EcfrVersionsParams extends S.Class<EcfrVersionsParams>($I`EcfrVersi
 export interface EcfrShape {
   readonly getAncestry: (params: EcfrVersionerParams) => Effect.Effect<G.AncestryResponse, EcfrError>;
   readonly getFullTitleXml: (params: EcfrVersionerParams) => Effect.Effect<string, EcfrError>;
-  readonly getStructure: (params: EcfrVersionerParams) => Effect.Effect<G.StructureNode, EcfrError>;
+  readonly getStructure: (params: EcfrDatedTitleParams) => Effect.Effect<G.StructureNode, EcfrError>;
   readonly listAgencies: Effect.Effect<G.AgenciesResponse, EcfrError>;
   readonly listCorrections: (params?: EcfrCorrectionsParams) => Effect.Effect<G.CorrectionsResponse, EcfrError>;
   readonly listTitleCorrections: (params: EcfrTitleParams) => Effect.Effect<G.CorrectionsResponse, EcfrError>;
@@ -428,7 +454,7 @@ const makeFromResolved = Effect.fnUntraced(function* (config: ResolvedConfig) {
       return yield* runText(descriptor, request);
     }),
     getStructure: Effect.fn("Ecfr.getStructure")(function* (params) {
-      const decoded = yield* S.encodeUnknownEffect(EcfrVersionerParams)(params).pipe(
+      const decoded = yield* S.encodeUnknownEffect(EcfrDatedTitleParams)(params).pipe(
         Effect.as(params),
         Effect.mapError(requestError)
       );

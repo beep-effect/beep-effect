@@ -5,6 +5,7 @@ import {
   Ecfr,
   EcfrConfigInput,
   EcfrCorrectionsParams,
+  EcfrDatedTitleParams,
   EcfrError,
   EcfrErrorOptions,
   EcfrErrorReason,
@@ -326,7 +327,7 @@ describe("@beep/ecfr", () => {
         });
         yield* ecfr.getAncestry(versioner);
         const xml = yield* ecfr.getFullTitleXml(versioner);
-        yield* ecfr.getStructure(versioner);
+        yield* ecfr.getStructure(EcfrDatedTitleParams.make({ date: "2026-07-01", title: "1" }));
         yield* ecfr.listTitles;
         yield* ecfr.listVersions(
           EcfrVersionsParams.make({
