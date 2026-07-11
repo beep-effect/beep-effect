@@ -155,6 +155,7 @@ export function DocumentIntakeTarget({ children }: { readonly children: ReactNod
   const intakeDroppedDocument = useAtomSet(intakeDroppedDocumentAtom, { mode: "promise" });
   const [isDragging, setIsDragging] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  const [activeBatches, setActiveBatches] = useState(0);
   const [results, setResults] = useState<ReadonlyArray<IntakeResultEntry>>([]);
 
   useAtomMount(configureWorkspaceVaultAtom);
@@ -173,7 +174,9 @@ export function DocumentIntakeTarget({ children }: { readonly children: ReactNod
   const intakeFiles = Effect.fnUntraced(function* (files: ReadonlyArray<File>) {
     if (files.length === 0) return;
     const intakeBatchId = yield* S.decodeUnknownEffect(IntakeBatchId)(batchIdFor(files)).pipe(Effect.orDie);
-    yield* Effect.sync(() => setStatus(`Filing ${files.length} document${files.length === 1 ? "" : "s"}`));
+    // Each drop is an independent batch; a shared counter keeps the busy
+    // indicator up until the LAST in-flight batch settles.
+    yield* Effect.sync(() => setActiveBatches((count) => count + 1));
     yield* Effect.forEach(files, (file) => {
       const fileName = file.name || "document";
       return Effect.tryPromise(() => file.arrayBuffer()).pipe(
@@ -196,8 +199,7 @@ export function DocumentIntakeTarget({ children }: { readonly children: ReactNod
           onSuccess: (document) => Effect.sync(() => appendResult({ kind: "document", document })),
         })
       );
-    });
-    yield* Effect.sync(() => setStatus(null));
+    }).pipe(Effect.ensuring(Effect.sync(() => setActiveBatches((count) => count - 1))));
   });
 
   if (needsOnboarding) {
@@ -247,9 +249,12 @@ export function DocumentIntakeTarget({ children }: { readonly children: ReactNod
           Drop documents to file
         </div>
       ) : null}
-      {status === null ? null : (
-        <div className="absolute right-4 top-16 z-40 rounded-md border bg-card px-3 py-2 text-sm shadow-sm">
-          {status}
+      {activeBatches === 0 ? null : (
+        <div
+          className="absolute right-4 top-16 z-40 rounded-md border bg-card px-3 py-2 text-sm shadow-sm"
+          data-testid="intake-busy"
+        >
+          Filing {activeBatches === 1 ? "documents" : `${activeBatches} batches`}
         </div>
       )}
       {results.length === 0 ? null : (
