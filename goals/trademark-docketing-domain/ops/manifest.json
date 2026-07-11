@@ -3,7 +3,7 @@
   "initiative": {
     "id": "trademark-docketing-domain",
     "title": "Trademark Docketing Domain",
-    "status": "deferred/blocked",
+    "status": "paused",
     "created": "2026-07-08",
     "updated": "2026-07-08",
     "packetAnchorDocument": "README.md"
@@ -83,5 +83,6 @@
     "The work starts implementing TrademarkAsset or docketing entities before the blocker clears.",
     "The packet needs law-practice source changes before it has an execution-capable SPEC.md.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval."
-  ]
+  ],
+  "statusNote": "legacy status: deferred/blocked"
 }
