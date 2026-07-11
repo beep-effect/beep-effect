@@ -1,5 +1,5 @@
 /**
- * Shared path-traversal safety guard for local file reads and writes.
+ * Shared path-traversal safety guards and atomic writes for local files.
  *
  * Given an allowed root directory and a candidate path, this module resolves
  * the real, canonical absolute path and fails closed (typed
@@ -14,8 +14,10 @@
  * ({@link validateResolvedPath} / {@link isPathWithinRoot}) is provided for
  * already-resolved absolute strings where the filesystem is not consulted.
  *
- * Rejecting non-regular or device files is intentionally out of scope for this
- * helper; callers stat and reject those after the path is proven in-root.
+ * {@link writeFileWithinRootAtomically} builds on the containment guard with a
+ * private, unpredictable temporary directory and exclusive payload creation.
+ * Rejecting non-regular or device files is intentionally out of scope for
+ * reads; callers stat and reject those after the path is proven in-root.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -318,28 +320,7 @@ export const resolvePathWithinRoot: (options: {
       )
     );
 
-  // Resolve the candidate against the canonical root so a relative candidate
-  // is anchored in-root and an absolute candidate stays absolute.
-  const anchored = path.resolve(canonicalRoot, options.candidate);
-
-  // Canonicalize the deepest existing ancestor (following symlinks), then
-  // re-attach any not-yet-created suffix. This lets write targets that don't
-  // exist yet still be guarded without a realPath failure on the missing leaf.
-  const canonicalCandidate = yield* canonicalizeExisting(fs, path, anchored).pipe(
-    Effect.mapError((cause) =>
-      PathSafetyError.candidateNotResolvable({ root: options.root, candidate: options.candidate, cause })
-    )
-  );
-
-  if (!isPathWithinRoot(canonicalRoot, canonicalCandidate)) {
-    return yield* PathSafetyError.escapesRoot({
-      root: canonicalRoot,
-      candidate: options.candidate,
-      resolved: canonicalCandidate,
-    });
-  }
-
-  return canonicalCandidate;
+  return yield* resolveCandidateWithinCanonicalRoot(fs, path, canonicalRoot, options.candidate);
 });
 
 /**
@@ -375,4 +356,130 @@ const canonicalizeExisting: (
     suffix = A.prepend(suffix, path.basename(current));
     current = parent;
   }
+});
+
+/**
+ * Resolve a candidate against a root that has already been canonicalized.
+ * Keeping this separate lets multi-step operations bind their authority root
+ * once instead of following a caller-controlled root symlink at every check.
+ */
+const resolveCandidateWithinCanonicalRoot: (
+  fs: FileSystem.FileSystem,
+  path: Path.Path,
+  canonicalRoot: string,
+  candidate: string
+) => Effect.Effect<string, PathSafetyError> = Effect.fnUntraced(function* (fs, path, canonicalRoot, candidate) {
+  // Resolve the candidate against the canonical root so a relative candidate
+  // is anchored in-root and an absolute candidate stays absolute.
+  const anchored = path.resolve(canonicalRoot, candidate);
+
+  // Canonicalize the deepest existing ancestor (following symlinks), then
+  // re-attach any not-yet-created suffix. This lets write targets that don't
+  // exist yet still be guarded without a realPath failure on the missing leaf.
+  const canonicalCandidate = yield* canonicalizeExisting(fs, path, anchored).pipe(
+    Effect.mapError((cause) => PathSafetyError.candidateNotResolvable({ root: canonicalRoot, candidate, cause }))
+  );
+
+  if (!isPathWithinRoot(canonicalRoot, canonicalCandidate)) {
+    return yield* PathSafetyError.escapesRoot({
+      root: canonicalRoot,
+      candidate,
+      resolved: canonicalCandidate,
+    });
+  }
+
+  return canonicalCandidate;
+});
+
+/**
+ * Write bytes atomically to a root-contained destination.
+ *
+ * The destination is containment-checked before and after parent-directory
+ * creation. The bytes are then written with exclusive creation and mode
+ * `0o600` inside an unpredictable temporary directory beside the destination,
+ * before an atomic rename promotes them into place. Temporary artifacts are
+ * removed on success, failure, or interruption.
+ *
+ * This prevents writes through a pre-positioned predictable temporary-file
+ * symlink. Callers that allow another principal to rename entries in the
+ * destination directory still need an operating-system boundary with
+ * directory-handle-relative operations for complete concurrent-adversary
+ * protection.
+ *
+ * @example
+ * ```ts
+ * import * as BunFileSystem from "@effect/platform-bun/BunFileSystem"
+ * import * as BunPath from "@effect/platform-bun/BunPath"
+ * import { writeFileWithinRootAtomically } from "@beep/file-processing/PathSafety"
+ * import { Effect, Layer } from "effect"
+ *
+ * const program = writeFileWithinRootAtomically({
+ *   root: ".",
+ *   candidate: "artifacts/report.txt",
+ *   bytes: new TextEncoder().encode("ready")
+ * }).pipe(Effect.provide(Layer.mergeAll(BunFileSystem.layer, BunPath.layer)))
+ *
+ * Effect.runPromise(program).then(console.log)
+ * ```
+ *
+ * @effects Canonicalizes paths, creates destination directories and a private temporary directory, writes a new file exclusively, atomically renames it, and removes temporary artifacts.
+ * @category mutations
+ * @since 0.0.0
+ */
+export const writeFileWithinRootAtomically: (options: {
+  readonly root: string;
+  readonly candidate: string;
+  readonly bytes: Uint8Array;
+}) => Effect.Effect<string, PathSafetyError | PlatformError, FileSystem.FileSystem | Path.Path> = Effect.fn(
+  "PathSafety.writeFileWithinRootAtomically"
+)(function* (options) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const canonicalRoot = yield* fs
+    .realPath(options.root)
+    .pipe(
+      Effect.mapError((cause) =>
+        PathSafetyError.rootNotResolvable({ root: options.root, candidate: options.candidate, cause })
+      )
+    );
+  const initialTarget = yield* resolveCandidateWithinCanonicalRoot(fs, path, canonicalRoot, options.candidate);
+  const initialTargetDirectory = yield* resolveCandidateWithinCanonicalRoot(
+    fs,
+    path,
+    canonicalRoot,
+    path.dirname(initialTarget)
+  );
+
+  yield* fs.makeDirectory(initialTargetDirectory, { recursive: true });
+
+  const checkedTarget = yield* resolveCandidateWithinCanonicalRoot(fs, path, canonicalRoot, options.candidate);
+  const checkedTargetDirectory = yield* resolveCandidateWithinCanonicalRoot(
+    fs,
+    path,
+    canonicalRoot,
+    path.dirname(checkedTarget)
+  );
+
+  return yield* Effect.acquireUseRelease(
+    fs.makeTempDirectory({
+      directory: checkedTargetDirectory,
+      prefix: `.${path.basename(checkedTarget)}.tmp-`,
+    }),
+    Effect.fnUntraced(function* (temporaryDirectory) {
+      const checkedTemporaryDirectory = yield* resolveCandidateWithinCanonicalRoot(
+        fs,
+        path,
+        checkedTargetDirectory,
+        temporaryDirectory
+      );
+      const temporaryPath = path.join(checkedTemporaryDirectory, "payload");
+
+      yield* fs.writeFile(temporaryPath, options.bytes, { flag: "wx", mode: 0o600 });
+
+      const finalTarget = yield* resolveCandidateWithinCanonicalRoot(fs, path, canonicalRoot, options.candidate);
+      yield* fs.rename(temporaryPath, finalTarget);
+      return finalTarget;
+    }),
+    (temporaryDirectory) => fs.remove(temporaryDirectory, { force: true, recursive: true }).pipe(Effect.ignore)
+  );
 });

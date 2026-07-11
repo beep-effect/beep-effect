@@ -1,16 +1,22 @@
 # @beep/file-processing
 
-Runtime-neutral schema-first file processing capability contracts and manifest models
+Schema-first file processing capability contracts, manifest models, and
+platform-abstracted path safety operations.
 
 ## Capability boundary
 
-`@beep/file-processing` contains runtime-neutral schemas, operation contracts, strategy models, service interfaces, and test fixtures only. Runtime, process, filesystem, and engine-specific behavior belongs in consuming packages.
+`@beep/file-processing` contains runtime-neutral schemas, operation contracts,
+strategy models, service interfaces, test fixtures, and reusable path-safety
+operations expressed through Effect's platform-neutral `FileSystem` and `Path`
+services. Process and engine-specific behavior belongs in consuming packages.
 
 Current real consumers proving this foundation/capability promotion are:
 
 - `@beep/tika` for Apache Tika-backed detection, text extraction, and metadata extraction driver scaffolding.
 - `@beep/libpff` for PST archive export driver scaffolding.
 - `@beep/repo-cli` for the initial `beep files process` manifest proof surface.
+- `@beep/documents-server` for containment-checked, symlink-resistant atomic
+  document materialization.
 
 ## Installation
 

@@ -10,7 +10,7 @@ import { Sint32 } from "@beep/schema/Sint32";
 import { Sint64 } from "@beep/schema/Sint64";
 import { Uint32 } from "@beep/schema/Uint32";
 import { Uint64 } from "@beep/schema/Uint64";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, expect, it, vi } from "@effect/vitest";
 import { Effect, Exit } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -208,9 +208,11 @@ describe("protobuf 64-bit integer scalar schemas", () => {
       const decodeFixed64 = S.decodeUnknownEffect(Fixed64);
 
       expect(yield* decodeUint64("42")).toBe(BigInt(42));
+      expect(yield* decodeUint64("18446744073709551615")).toBe(uint64Maximum);
       expect(yield* decodeUint64(42)).toBe(BigInt(42));
       expect(yield* decodeUint64(makeLongLike("18446744073709551615", true))).toBe(uint64Maximum);
       expect(yield* decodeFixed64("42")).toBe(BigInt(42));
+      expect(yield* decodeFixed64("18446744073709551615")).toBe(uint64Maximum);
       expect(yield* decodeFixed64(42)).toBe(BigInt(42));
       expect(yield* decodeFixed64(makeLongLike("18446744073709551615", true))).toBe(uint64Maximum);
     })
@@ -234,9 +236,11 @@ describe("protobuf 64-bit integer scalar schemas", () => {
       const decodeSfixed64 = S.decodeUnknownEffect(Sfixed64);
 
       expect(yield* decodeSint64("-42")).toBe(-BigInt(42));
+      expect(yield* decodeSint64("-9223372036854775808")).toBe(sint64Minimum);
       expect(yield* decodeSint64(-42)).toBe(-BigInt(42));
       expect(yield* decodeSint64(makeLongLike("-9223372036854775808"))).toBe(sint64Minimum);
       expect(yield* decodeSfixed64("-42")).toBe(-BigInt(42));
+      expect(yield* decodeSfixed64("-9223372036854775808")).toBe(sint64Minimum);
       expect(yield* decodeSfixed64(-42)).toBe(-BigInt(42));
       expect(yield* decodeSfixed64(makeLongLike("-9223372036854775808"))).toBe(sint64Minimum);
     })
@@ -266,6 +270,28 @@ describe("protobuf 64-bit integer scalar schemas", () => {
       expect(Exit.isFailure(yield* Effect.exit(decodeSfixed64(sint64Minimum - BigInt(1))))).toBe(true);
       expect(Exit.isFailure(yield* Effect.exit(decodeSfixed64(sint64Maximum + BigInt(1))))).toBe(true);
       expect(Exit.isFailure(yield* Effect.exit(decodeSfixed64(unsafeNegative64Number)))).toBe(true);
+    })
+  );
+
+  it.effect("rejects invalid decimal inputs before BigInt conversion", () =>
+    Effect.gen(function* () {
+      const decodeUint64 = S.decodeUnknownEffect(Uint64);
+      const oversizedDecimal = "184467440737095516150";
+      const coerceDecimal = vi.fn(() => "42");
+      const nonStringLongLike = {
+        high: 0,
+        low: 42,
+        toString: () => ({ [Symbol.toPrimitive]: coerceDecimal }),
+        unsigned: true,
+      };
+      const bigIntSpy = vi.spyOn(globalThis, "BigInt");
+
+      expect(Exit.isFailure(yield* Effect.exit(decodeUint64(oversizedDecimal)))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeUint64(makeLongLike(oversizedDecimal, true))))).toBe(true);
+      expect(Exit.isFailure(yield* Effect.exit(decodeUint64(nonStringLongLike)))).toBe(true);
+      expect(coerceDecimal).not.toHaveBeenCalled();
+      expect(bigIntSpy).not.toHaveBeenCalled();
+      bigIntSpy.mockRestore();
     })
   );
 
