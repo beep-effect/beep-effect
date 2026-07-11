@@ -16,11 +16,11 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
-import { Console, Effect, FileSystem, Order, Path } from "effect";
+import { Console, Effect, FileSystem, HashSet, Order, Path } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
-import { Project } from "ts-morph";
+import { Node, Project } from "ts-morph";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
 import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.js";
 
@@ -30,6 +30,18 @@ const IDENTITY_PACKAGE_NAME = "@beep/identity";
 const IDENTITY_MODULE_PREFIX = "@beep/identity/";
 const IDENTITY_PACKAGES_MODULE = "@beep/identity/packages";
 const FIX_HINT = "Run `bun run beep lint identity-registry --fix` to register missing packages.";
+// Test and dtslint sources are deliberately exempt from the local-root scan;
+// generated/output directories never carry authored composers.
+const EXCLUDED_SCAN_DIRECTORIES = HashSet.fromIterable([
+  "node_modules",
+  "dist",
+  "dist-test",
+  "build",
+  "coverage",
+  ".turbo",
+  "test",
+  "dtslint",
+]);
 
 class IdentityRegistryViolation extends S.Class<IdentityRegistryViolation>($I`IdentityRegistryViolation`)(
   {
@@ -74,6 +86,10 @@ const collectSourceFiles = Effect.fn("IdentityRegistry.collectSourceFiles")(func
     let files = A.empty<string>();
 
     for (const entry of entries) {
+      if (HashSet.has(EXCLUDED_SCAN_DIRECTORIES, entry)) {
+        continue;
+      }
+
       files = A.appendAll(files, yield* walk(path.join(currentPath, entry)));
     }
 
@@ -94,6 +110,7 @@ const collectLocalRootComposerUses = (
 ): ReadonlyArray<IdentityRegistryViolation> => {
   const sourceFile = project.createSourceFile(filePath, content, { overwrite: true });
   let violations = A.empty<IdentityRegistryViolation>();
+  let namespaceAliases = A.empty<string>();
 
   for (const declaration of sourceFile.getImportDeclarations()) {
     if (declaration.isTypeOnly()) {
@@ -122,19 +139,35 @@ const collectLocalRootComposerUses = (
     const namespaceImport = declaration.getNamespaceImport();
 
     if (namespaceImport !== undefined) {
-      const namespaceMakeCallPattern = new RegExp(`\\b${namespaceImport.getText()}\\.make\\(`);
+      namespaceAliases = A.append(namespaceAliases, namespaceImport.getText());
+    }
+  }
 
-      if (namespaceMakeCallPattern.test(content)) {
+  if (A.isReadonlyArrayNonEmpty(namespaceAliases)) {
+    sourceFile.forEachDescendant((node) => {
+      if (!Node.isCallExpression(node)) {
+        return;
+      }
+
+      const expression = node.getExpression();
+
+      if (!Node.isPropertyAccessExpression(expression) || expression.getName() !== "make") {
+        return;
+      }
+
+      const receiver = expression.getExpression();
+
+      if (Node.isIdentifier(receiver) && A.some(namespaceAliases, Str.equivalence(receiver.getText()))) {
         violations = A.append(
           violations,
           IdentityRegistryViolation.make({
             kind: "local-root-composer",
-            subject: `${filePath}:${namespaceImport.getStartLineNumber()}`,
-            detail: `Import the canonical composer from "${IDENTITY_PACKAGES_MODULE}" instead of building a local root via \`${namespaceImport.getText()}.make(...)\`.`,
+            subject: `${filePath}:${node.getStartLineNumber()}`,
+            detail: `Import the canonical composer from "${IDENTITY_PACKAGES_MODULE}" instead of building a local root via \`${receiver.getText()}.make(...)\`.`,
           })
         );
       }
-    }
+    });
   }
 
   return violations;
@@ -179,7 +212,7 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
       continue;
     }
 
-    const files = yield* collectSourceFiles(path.join(dir, "src"));
+    const files = yield* collectSourceFiles(dir);
 
     for (const file of files) {
       const content = yield* fs.readFileString(file).pipe(Effect.orElseSucceed(() => Str.empty));

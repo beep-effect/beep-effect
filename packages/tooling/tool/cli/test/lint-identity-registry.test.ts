@@ -47,6 +47,7 @@ const writeWorkspaceFixture = Effect.fn("writeWorkspaceFixture")(function* (opti
   readonly registrySlugs: ReadonlyArray<string>;
   readonly extraPackages?: ReadonlyArray<string>;
   readonly widgetSourceLines?: ReadonlyArray<string>;
+  readonly widgetRootFileLines?: ReadonlyArray<string>;
 }) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -87,6 +88,10 @@ const writeWorkspaceFixture = Effect.fn("writeWorkspaceFixture")(function* (opti
       options.widgetSourceLines.join("\n")
     );
   }
+
+  if (options.widgetRootFileLines !== undefined) {
+    yield* fs.writeFileString(path.join("packages", "widget", "Tool.ts"), options.widgetRootFileLines.join("\n"));
+  }
 });
 
 describe("identity-registry lint command", { concurrent: false }, () => {
@@ -99,6 +104,12 @@ describe("identity-registry lint command", { concurrent: false }, () => {
             yield* writeWorkspaceFixture({
               registrySlugs: ["identity", "widget"],
               widgetSourceLines: ['import { $WidgetId } from "@beep/identity/packages";', "void $WidgetId;", ""],
+              widgetRootFileLines: [
+                'import * as Identity from "@beep/identity";',
+                '// A comment mentioning Identity.make("widget") must not trip the scan.',
+                'export type WidgetComposer = Identity.IdentityComposer<"@beep/widget">;',
+                "",
+              ],
             });
 
             yield* runLintCommand(["identity-registry"]);
@@ -152,6 +163,12 @@ describe("identity-registry lint command", { concurrent: false }, () => {
                 "void $WidgetId;",
                 "",
               ],
+              widgetRootFileLines: [
+                'import * as Identity from "@beep/identity";',
+                'const { $WidgetId } = Identity.make("widget");',
+                "void $WidgetId;",
+                "",
+              ],
             });
 
             const exit = yield* Effect.exit(runLintCommand(["identity-registry"]));
@@ -163,6 +180,12 @@ describe("identity-registry lint command", { concurrent: false }, () => {
                 errorLines,
                 (line) =>
                   P.isString(line) && Str.startsWith("packages/widget/src/Widget.ts:1 [local-root-composer]")(line)
+              )
+            ).toBe(true);
+            expect(
+              A.some(
+                errorLines,
+                (line) => P.isString(line) && Str.startsWith("packages/widget/Tool.ts:2 [local-root-composer]")(line)
               )
             ).toBe(true);
           })

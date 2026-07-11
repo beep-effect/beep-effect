@@ -74,6 +74,9 @@
     "@babel/plugin-transform-export-namespace-from",
     "@babel/plugin-transform-modules-commonjs",
     "@typescript-eslint/parser",
+    // tsgo >= 0.18 native TypeScript backend: consumed by the effect-tsgo patch
+    // step at install time, never imported from source.
+    "@typescript/native",
     "eslint-plugin-jsdoc",
     "eslint-plugin-tsdoc",
     "tailwindcss",

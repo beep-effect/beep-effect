@@ -1,7 +1,7 @@
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect, layer } from "@effect/vitest";
-import { PGlite as LegacyPglite053 } from "@electric-sql/pglite-legacy-053";
+import { PGlite as LegacyPglite046 } from "@electric-sql/pglite-legacy-046";
 import { ConfigProvider, Effect, Exit, FileSystem, Layer, Path } from "effect";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import {
@@ -50,11 +50,11 @@ const createPgliteFixture = Effect.fn("ProfessionalDesktop.PgliteCompatibilityTe
   );
 });
 
-const createLegacyPglite053Fixture = Effect.fn(
-  "ProfessionalDesktop.PgliteCompatibilityTest.createLegacyPglite053Fixture"
+const createLegacyPglite046Fixture = Effect.fn(
+  "ProfessionalDesktop.PgliteCompatibilityTest.createLegacyPglite046Fixture"
 )(function* (dataDir: string) {
   yield* Effect.acquireUseRelease(
-    Effect.sync(() => new LegacyPglite053(dataDir)).pipe(
+    Effect.sync(() => new LegacyPglite046(dataDir)).pipe(
       Effect.tap((pglite) => Effect.promise(() => pglite.waitReady))
     ),
     (pglite) =>
@@ -152,7 +152,7 @@ layer(TestServices)("Pglite data-dir compatibility gate", (it) => {
         const rootDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-chat-db-marked-incompatible-" });
         const dataDir = path.join(rootDir, "chat-db");
 
-        yield* createLegacyPglite053Fixture(dataDir);
+        yield* createLegacyPglite046Fixture(dataDir);
         yield* fs.writeFileString(markerPath(path, dataDir), "runtime=professional-desktop-pglite-inprocess\n");
         const result = yield* ensureCompatibleChatDbDataDir(dataDir).pipe(Effect.exit);
 
@@ -186,14 +186,14 @@ layer(TestServices)("Pglite data-dir compatibility gate", (it) => {
     );
 
     it.effect(
-      "fails closed instead of moving aside a prior PGlite 0.5 data dir",
+      "fails closed instead of moving aside a prior PGlite 0.4 data dir",
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const rootDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-chat-db-pglite-053-" });
+        const rootDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-chat-db-pglite-046-" });
         const dataDir = path.join(rootDir, "chat-db");
 
-        yield* createLegacyPglite053Fixture(dataDir);
+        yield* createLegacyPglite046Fixture(dataDir);
         const result = yield* ensureCompatibleChatDbDataDir(dataDir).pipe(Effect.exit);
 
         expect(Exit.isFailure(result)).toBe(true);
