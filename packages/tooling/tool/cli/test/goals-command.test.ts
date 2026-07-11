@@ -32,8 +32,8 @@ const COMPLETION_GATE = {
 
 const packetRecord = (input: {
   readonly slug: string;
-  readonly manifestText?: string;
-  readonly readmeText?: string;
+  readonly manifestText?: string | undefined;
+  readonly readmeText?: string | undefined;
 }): GoalPacketRecord =>
   GoalPacketRecord.make({
     slug: input.slug,

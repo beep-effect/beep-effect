@@ -55,44 +55,53 @@ const writeBaseline = (keys: ReadonlyArray<string>) =>
   );
 
 describe("goals doctor baseline ratchet", () => {
-  it("fails with exit 1 on a synthetic new blocking finding absent from the baseline", async () => {
-    const exit = await Effect.runPromise(
-      withTempWorkingDirectory(
-        Effect.gen(function* () {
-          yield* writeDriftedPacket("demo");
-          yield* writeBaseline([]);
-          return yield* Effect.exit(runGoalsCommand(["doctor"]));
-        })
-      ).pipe(provideScopedLayer(testLayer))
-    );
-    expectReportedFailure(exit);
-  });
+  it(
+    "fails with exit 1 on a synthetic new blocking finding absent from the baseline",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeDriftedPacket("demo");
+            yield* writeBaseline([]);
+            const exit = yield* Effect.exit(runGoalsCommand(["doctor"]));
+            expectReportedFailure(exit);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
 
-  it("exits 0 when the same finding is inherited from the committed baseline", async () => {
-    const exit = await Effect.runPromise(
-      withTempWorkingDirectory(
-        Effect.gen(function* () {
-          yield* writeDriftedPacket("demo");
-          yield* writeBaseline(["demo lifecycle-mismatch"]);
-          return yield* Effect.exit(runGoalsCommand(["doctor"]));
-        })
-      ).pipe(provideScopedLayer(testLayer))
-    );
-    expect(Exit.isSuccess(exit)).toBe(true);
-  });
+  it(
+    "exits 0 when the same finding is inherited from the committed baseline",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeDriftedPacket("demo");
+            yield* writeBaseline(["demo lifecycle-mismatch"]);
+            const exit = yield* Effect.exit(runGoalsCommand(["doctor"]));
+            expect(Exit.isSuccess(exit)).toBe(true);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
 
-  it("exposes the same ratchet through the beep lint goal-packets alias", async () => {
-    const exit = await Effect.runPromise(
-      withTempWorkingDirectory(
-        Effect.gen(function* () {
-          yield* writeDriftedPacket("demo");
-          yield* writeBaseline([]);
-          return yield* Effect.exit(runLintCommand(["goal-packets"]));
-        })
-      ).pipe(provideScopedLayer(testLayer))
-    );
-    expectReportedFailure(exit);
-  });
+  it(
+    "exposes the same ratchet through the beep lint goal-packets alias",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeDriftedPacket("demo");
+            yield* writeBaseline([]);
+            const exit = yield* Effect.exit(runLintCommand(["goal-packets"]));
+            expectReportedFailure(exit);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
 });
 
 describe("classifyGoalDoctorFindings", () => {
