@@ -12,14 +12,19 @@
  */
 
 import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client";
+import { HttpOntologyProtocolLive, ontologyProtocolLayerAtom } from "@beep/ontology-client";
+import { OntologyWorkbench } from "@beep/ontology-ui";
+import { Button } from "@beep/ui/components/button";
 import { Toaster } from "@beep/ui/components/sonner";
-import { useAtomMount, useAtomValue } from "@effect/atom-react";
+import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Cause, Effect } from "effect";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
 import { DocumentIntakeTarget } from "./intake/DocumentIntakeTarget.tsx";
+import { CosmosSpike } from "./spikes/CosmosSpike.tsx";
 import { makeDesktopHttpProtocolLive } from "./transport/DesktopHttpProtocol.ts";
 import { IpcChatProtocolLive } from "./transport/IpcChatClient.ts";
 import { IpcSpikePanel } from "./transport/IpcSpikePanel.tsx";
@@ -46,6 +51,7 @@ const readSidecarTransport = Effect.suspend(() =>
 // AsyncResult<SidecarTransport>: Initial = checking, Failure = unavailable,
 // Success = ready. Replaces the useState/useEffect transport probe.
 const sidecarTransportAtom = Atom.make(readSidecarTransport);
+const desktopSurfaceAtom = Atom.make<"chat" | "ontology">("chat");
 
 // atom-first: when the probe resolves, point the rpc client at the matching
 // protocol layer (IPC in the desktop shell, HTTP in the browser). A mounted
@@ -55,15 +61,19 @@ const protocolLayerBindingAtom = Atom.make((get) => {
   const apply = (): void => {
     const result = get.once(sidecarTransportAtom);
     if (AsyncResult.isSuccess(result)) {
+      const protocolLayer = result.value.ipc
+        ? IpcChatProtocolLive
+        : O.match(O.fromUndefinedOr(result.value.rpcSessionToken), {
+            onNone: () => HttpChatProtocolLive,
+            onSome: makeDesktopHttpProtocolLive,
+          });
       get.set(
-        chatProtocolLayerAtom,
-        result.value.ipc
-          ? IpcChatProtocolLive
-          : O.match(O.fromUndefinedOr(result.value.rpcSessionToken), {
-              onNone: () => HttpChatProtocolLive,
-              onSome: makeDesktopHttpProtocolLive,
-            })
+        ontologyProtocolLayerAtom,
+        result.value.ipc || O.isSome(O.fromUndefinedOr(result.value.rpcSessionToken))
+          ? protocolLayer
+          : HttpOntologyProtocolLive
       );
+      get.set(chatProtocolLayerAtom, protocolLayer);
     }
   };
   apply();
@@ -74,6 +84,18 @@ const protocolLayerBindingAtom = Atom.make((get) => {
 const hasIpcSpikeFlag = (): boolean =>
   typeof window !== "undefined" && new URLSearchParams(window.location.search).has("ipc");
 
+const isDevMode = (): boolean => {
+  // biome-ignore lint/suspicious/noUndeclaredEnvVars: Vite injects DEV on import.meta.env.
+  const value = import.meta.env.DEV;
+
+  return P.isBoolean(value) ? value : value === "true";
+};
+
+const hasCosmosSpikeFlag = (): boolean =>
+  isDevMode() &&
+  (import.meta.env.VITE_COSMOS_SPIKE === "1" ||
+    (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("cosmos-spike")));
+
 const TransportLoading = (): JSX.Element => (
   <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
     <div className="flex items-center gap-3 text-sm text-muted-foreground">
@@ -82,6 +104,42 @@ const TransportLoading = (): JSX.Element => (
     </div>
   </div>
 );
+
+const DesktopShell = ({ transport }: { readonly transport: SidecarTransport }): JSX.Element => {
+  const surface = useAtomValue(desktopSurfaceAtom);
+  const setSurface = useAtomSet(desktopSurfaceAtom);
+
+  return (
+    <>
+      <DocumentIntakeTarget>
+        <div className="flex h-screen min-h-0 w-full flex-col bg-background text-foreground">
+          <div className="flex h-10 shrink-0 items-center gap-1 border-b px-2">
+            <Button
+              size="sm"
+              type="button"
+              variant={surface === "chat" ? "default" : "ghost"}
+              onClick={() => setSurface("chat")}
+            >
+              Chat
+            </Button>
+            <Button
+              size="sm"
+              type="button"
+              variant={surface === "ontology" ? "default" : "ghost"}
+              onClick={() => setSurface("ontology")}
+            >
+              Workbench
+            </Button>
+          </div>
+          <div className="min-h-0 flex-1">{surface === "chat" ? <ChatApp /> : <OntologyWorkbench />}</div>
+        </div>
+      </DocumentIntakeTarget>
+      <ChatTurnErrorToasts />
+      <Toaster richColors />
+      {transport.ipc && hasIpcSpikeFlag() ? <IpcSpikePanel /> : null}
+    </>
+  );
+};
 
 /**
  * The desktop application root. A thin wrapper that mounts the chat surface.
@@ -100,6 +158,10 @@ export function App(): JSX.Element {
   const transport = useAtomValue(sidecarTransportAtom);
   // bind the rpc protocol layer to the resolved transport (see binding above).
   useAtomMount(protocolLayerBindingAtom);
+
+  if (hasCosmosSpikeFlag()) {
+    return <CosmosSpike />;
+  }
 
   return AsyncResult.match(transport, {
     onInitial: () => (
@@ -121,15 +183,6 @@ export function App(): JSX.Element {
         <Toaster richColors />
       </>
     ),
-    onSuccess: (success) => (
-      <>
-        <DocumentIntakeTarget>
-          <ChatApp />
-        </DocumentIntakeTarget>
-        <ChatTurnErrorToasts />
-        <Toaster richColors />
-        {success.value.ipc && hasIpcSpikeFlag() ? <IpcSpikePanel /> : null}
-      </>
-    ),
+    onSuccess: (success) => <DesktopShell transport={success.value} />,
   });
 }

@@ -41,6 +41,9 @@
       "@beep/ontology-use-cases/aggregates/Session": [
         "../../../packages/ontology/use-cases/src/aggregates/Session/index.ts"
       ],
+      "@beep/ontology-use-cases/aggregates/Session/worker": [
+        "../../../packages/ontology/use-cases/src/aggregates/Session/worker.ts"
+      ],
       "@beep/ontology-use-cases/aggregates/Session/server": [
         "../../../packages/ontology/use-cases/src/aggregates/Session/server.ts"
       ],
@@ -463,6 +466,13 @@
       "@beep/schema/test/Yaml": [
         "../../../packages/foundation/modeling/schema/src/internal/test/Yaml.test-kit.ts"
       ],
+      "@beep/semantic-web": [
+        "../../../packages/foundation/capability/semantic-web/src/index.ts"
+      ],
+      "@beep/semantic-web/*": [
+        "../../../packages/foundation/capability/semantic-web/src/*.ts"
+      ],
+      "@beep/shacl": ["../../../packages/drivers/shacl/src/index.ts"],
       "@beep/test-utils": [
         "../../../packages/tooling/test-kit/test-utils/src/index.ts"
       ],

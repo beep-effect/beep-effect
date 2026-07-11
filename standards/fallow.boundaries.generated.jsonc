@@ -126,6 +126,12 @@
         ]
       },
       {
+        "name": "@beep/cosmos",
+        "patterns": [
+          "packages/drivers/cosmos/src/**"
+        ]
+      },
+      {
         "name": "@beep/courtlistener",
         "patterns": [
           "packages/drivers/courtlistener/src/**"
@@ -408,6 +414,12 @@
         ]
       },
       {
+        "name": "@beep/ontology-client",
+        "patterns": [
+          "packages/ontology/client/src/**"
+        ]
+      },
+      {
         "name": "@beep/ontology-domain",
         "patterns": [
           "packages/ontology/domain/src/**"
@@ -420,6 +432,12 @@
         ]
       },
       {
+        "name": "@beep/ontology-ui",
+        "patterns": [
+          "packages/ontology/ui/src/**"
+        ]
+      },
+      {
         "name": "@beep/ontology-use-cases",
         "patterns": [
           "packages/ontology/use-cases/src/**"
@@ -429,6 +447,12 @@
         "name": "@beep/openai-compat",
         "patterns": [
           "packages/drivers/openai-compat/src/**"
+        ]
+      },
+      {
+        "name": "@beep/oxigraph",
+        "patterns": [
+          "packages/drivers/oxigraph/src/**"
         ]
       },
       {
@@ -549,6 +573,12 @@
         "name": "@beep/semantic-web",
         "patterns": [
           "packages/foundation/capability/semantic-web/src/**"
+        ]
+      },
+      {
+        "name": "@beep/shacl",
+        "patterns": [
+          "packages/drivers/shacl/src/**"
         ]
       },
       {
@@ -1020,6 +1050,23 @@
           "@beep/colors",
           "@beep/identity",
           "@beep/schema",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/cosmos",
+        "allow": [
+          "@beep/cosmos",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/cosmos",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1843,6 +1890,31 @@
         ]
       },
       {
+        "from": "@beep/ontology-client",
+        "allow": [
+          "@beep/agents-client",
+          "@beep/cosmos",
+          "@beep/identity",
+          "@beep/ontology-client",
+          "@beep/ontology-domain",
+          "@beep/ontology-use-cases",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/agents-client",
+          "@beep/cosmos",
+          "@beep/identity",
+          "@beep/ontology-client",
+          "@beep/ontology-domain",
+          "@beep/ontology-use-cases",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
         "from": "@beep/ontology-domain",
         "allow": [
           "@beep/identity",
@@ -1862,20 +1934,51 @@
       {
         "from": "@beep/ontology-server",
         "allow": [
+          "@beep/file-processing",
           "@beep/n3",
           "@beep/ontology-server",
           "@beep/ontology-use-cases",
+          "@beep/oxigraph",
           "@beep/rdf-canonize",
           "@beep/semantic-web",
+          "@beep/shacl",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
+          "@beep/file-processing",
           "@beep/n3",
           "@beep/ontology-server",
           "@beep/ontology-use-cases",
+          "@beep/oxigraph",
           "@beep/rdf-canonize",
           "@beep/semantic-web",
+          "@beep/shacl",
           "@beep/test-utils"
+        ]
+      },
+      {
+        "from": "@beep/ontology-ui",
+        "allow": [
+          "@beep/editor",
+          "@beep/lexical-schema",
+          "@beep/ontology-client",
+          "@beep/ontology-domain",
+          "@beep/ontology-ui",
+          "@beep/ontology-use-cases",
+          "@beep/rdf",
+          "@beep/ui",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/editor",
+          "@beep/lexical-schema",
+          "@beep/ontology-client",
+          "@beep/ontology-domain",
+          "@beep/ontology-ui",
+          "@beep/ontology-use-cases",
+          "@beep/rdf",
+          "@beep/ui",
+          "@beep/utils"
         ]
       },
       {
@@ -1886,6 +1989,8 @@
           "@beep/ontology-use-cases",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/semantic-web",
+          "@beep/shacl",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
@@ -1894,6 +1999,8 @@
           "@beep/ontology-use-cases",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/semantic-web",
+          "@beep/shacl",
           "@beep/test-utils"
         ]
       },
@@ -1910,6 +2017,27 @@
           "@beep/identity",
           "@beep/openai-compat",
           "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/oxigraph",
+        "allow": [
+          "@beep/identity",
+          "@beep/oxigraph",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/semantic-web",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/oxigraph",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/semantic-web",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -2006,6 +2134,7 @@
           "@beep/agents-domain",
           "@beep/agents-server",
           "@beep/agents-use-cases",
+          "@beep/cosmos",
           "@beep/documents-domain",
           "@beep/documents-server",
           "@beep/documents-use-cases",
@@ -2015,9 +2144,15 @@
           "@beep/identity",
           "@beep/lexical-schema",
           "@beep/md",
+          "@beep/ontology-client",
+          "@beep/ontology-domain",
+          "@beep/ontology-server",
+          "@beep/ontology-ui",
+          "@beep/ontology-use-cases",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/professional-desktop",
+          "@beep/rdf",
           "@beep/shared-domain",
           "@beep/test-utils",
           "@beep/ui",
@@ -2031,6 +2166,7 @@
           "@beep/agents-domain",
           "@beep/agents-server",
           "@beep/agents-use-cases",
+          "@beep/cosmos",
           "@beep/documents-domain",
           "@beep/documents-server",
           "@beep/documents-use-cases",
@@ -2040,9 +2176,15 @@
           "@beep/identity",
           "@beep/lexical-schema",
           "@beep/md",
+          "@beep/ontology-client",
+          "@beep/ontology-domain",
+          "@beep/ontology-server",
+          "@beep/ontology-ui",
+          "@beep/ontology-use-cases",
           "@beep/pglite",
           "@beep/postgres",
           "@beep/professional-desktop",
+          "@beep/rdf",
           "@beep/shared-domain",
           "@beep/test-utils",
           "@beep/ui",
@@ -2328,6 +2470,27 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/shacl",
+        "allow": [
+          "@beep/identity",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/semantic-web",
+          "@beep/shacl",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/rdf",
+          "@beep/schema",
+          "@beep/semantic-web",
+          "@beep/shacl",
           "@beep/test-utils",
           "@beep/utils"
         ]

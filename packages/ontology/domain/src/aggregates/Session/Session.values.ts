@@ -6,7 +6,8 @@
  */
 
 import { make as makeIdentity } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as S from "effect/Schema";
 
 const { $OntologyDomainId } = makeIdentity("ontology-domain");

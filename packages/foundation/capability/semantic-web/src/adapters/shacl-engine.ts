@@ -15,6 +15,7 @@ import {
   ShaclValidationViolation,
 } from "../services/shacl-validation.ts";
 import { RDF_TYPE } from "../vocab/rdf.ts";
+import type { Subject, Term } from "../rdf.ts";
 import type { ShaclValidationServiceShape } from "../services/shacl-validation.ts";
 
 const emptySubjectKeys: Array<string> = [];
@@ -23,14 +24,21 @@ const emptyViolations: Array<ShaclValidationViolation> = [];
 const makeViolation = (
   focusNode: string,
   path: ShaclValidationViolation["path"],
-  message: string
+  message: string,
+  sourceShape: ShaclValidationViolation["sourceShape"]
 ): ShaclValidationViolation =>
   ShaclValidationViolation.make({
     focusNode,
     path,
     severity: "violation",
     message,
+    sourceShape,
   });
+
+const sameTerm = (left: Term, right: Term): boolean => serializeTerm(left) === serializeTerm(right);
+
+const focusNodeValue = (subject: Subject): string =>
+  subject.termType === "NamedNode" ? subject.value : serializeTerm(subject);
 
 /**
  * Bounded SHACL-inspired validation service live layer.
@@ -76,23 +84,32 @@ export const BoundedShaclValidationServiceLive = Layer.succeed(
       );
 
       for (const shape of request.shapes) {
-        for (const subjectKey of subjectKeys) {
+        const focusSubjectKeys = O.isSome(shape.targetNode) ? [serializeTerm(shape.targetNode.value)] : subjectKeys;
+        for (const subjectKey of focusSubjectKeys) {
           const subjectQuads = pipe(
             request.dataset.quads,
             A.filter((quad) => serializeTerm(quad.subject) === subjectKey)
           );
-          const targetClass = O.isSome(shape.targetClass) ? shape.targetClass.value.value : undefined;
-          const targetClassMatches =
-            targetClass === undefined ||
-            pipe(
-              subjectQuads,
-              A.some(
-                (quad) =>
-                  quad.predicate.value === RDF_TYPE.value &&
-                  quad.object.termType === "NamedNode" &&
-                  quad.object.value === targetClass
+          const focusNode = pipe(
+            A.head(subjectQuads),
+            O.map((quad) => focusNodeValue(quad.subject)),
+            O.getOrElse(() => (O.isSome(shape.targetNode) ? shape.targetNode.value.value : subjectKey))
+          );
+          const targetClassMatches = pipe(
+            shape.targetClass,
+            O.map((targetClass) =>
+              pipe(
+                subjectQuads,
+                A.some(
+                  (quad) =>
+                    quad.predicate.value === RDF_TYPE.value &&
+                    quad.object.termType === "NamedNode" &&
+                    quad.object.value === targetClass.value
+                )
               )
-            );
+            ),
+            O.getOrElse(() => true)
+          );
 
           if (!targetClassMatches) {
             continue;
@@ -103,28 +120,42 @@ export const BoundedShaclValidationServiceLive = Layer.succeed(
               subjectQuads,
               A.filter((quad) => quad.predicate.value === propertyShape.path.value)
             );
+            const countedPropertyQuads = pipe(
+              propertyShape.hasValue,
+              O.map((hasValue) =>
+                pipe(
+                  propertyQuads,
+                  A.filter((quad) => sameTerm(quad.object, hasValue))
+                )
+              ),
+              O.getOrElse(() => propertyQuads)
+            );
 
-            if (O.isSome(propertyShape.minCount) && propertyQuads.length < propertyShape.minCount.value) {
+            if (O.isSome(propertyShape.minCount) && countedPropertyQuads.length < propertyShape.minCount.value) {
               violations = pipe(
                 violations,
                 A.append(
                   makeViolation(
-                    subjectKey,
+                    focusNode,
                     propertyShape.path,
-                    `Expected at least ${propertyShape.minCount.value} value(s) for ${propertyShape.path.value}.`
+                    O.isSome(propertyShape.hasValue)
+                      ? `Expected value ${serializeTerm(propertyShape.hasValue.value)} for ${propertyShape.path.value}.`
+                      : `Expected at least ${propertyShape.minCount.value} value(s) for ${propertyShape.path.value}.`,
+                    shape.id
                   )
                 )
               );
             }
 
-            if (O.isSome(propertyShape.maxCount) && propertyQuads.length > propertyShape.maxCount.value) {
+            if (O.isSome(propertyShape.maxCount) && countedPropertyQuads.length > propertyShape.maxCount.value) {
               violations = pipe(
                 violations,
                 A.append(
                   makeViolation(
-                    subjectKey,
+                    focusNode,
                     propertyShape.path,
-                    `Expected at most ${propertyShape.maxCount.value} value(s) for ${propertyShape.path.value}.`
+                    `Expected at most ${propertyShape.maxCount.value} value(s) for ${propertyShape.path.value}.`,
+                    shape.id
                   )
                 )
               );
@@ -140,9 +171,10 @@ export const BoundedShaclValidationServiceLive = Layer.succeed(
                     violations,
                     A.append(
                       makeViolation(
-                        subjectKey,
+                        focusNode,
                         propertyShape.path,
-                        `Expected datatype ${propertyShape.datatype.value.value} for ${propertyShape.path.value}.`
+                        `Expected datatype ${propertyShape.datatype.value.value} for ${propertyShape.path.value}.`,
+                        shape.id
                       )
                     )
                   );

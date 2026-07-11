@@ -31,13 +31,14 @@
 import { AnthropicTurnKernel } from "@beep/agents-server/AnthropicTurnKernel";
 import { FixtureTurnKernel } from "@beep/agents-use-cases/proof";
 import { DocumentsServerLive } from "@beep/documents-server/layer";
+import { OntologyServerLive } from "@beep/ontology-server/layer";
 import { Thread, Workspace } from "@beep/workspace-server";
-import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import * as BunPath from "@effect/platform-bun/BunPath";
+import { BunServices } from "@effect/platform-bun";
 import { Config, Effect, Layer } from "effect";
 import { ChatHandlersLive } from "@/chat/ChatOrchestrator";
 import { UsageRecordSinkDrizzle, UsageRecordSinkInMemory } from "@/chat/UsageRecordSink";
 import { DocumentIntakeHandlersLive, WorkspaceVaultHandlersLive } from "@/intake/DocumentIntakeOrchestrator";
+import { OntologyHandlersLive } from "@/ontology/OntologyOrchestrator";
 import { ObservabilityLive } from "@/runtime/Observability";
 import { PgliteDrizzleLive } from "@/runtime/Pglite";
 import type { AgentTurnKernel } from "@beep/agents-use-cases/public";
@@ -50,16 +51,21 @@ import type { AgentTurnKernel } from "@beep/agents-use-cases/public";
  *
  * @example
  * ```ts
- * import type { ChatHandlersLayer } from "@/runtime/Layer"
+ * import type { DesktopHandlersLayer } from "@/runtime/Layer"
  * import type { RuntimeLive } from "@/runtime/Layer"
  *
- * type Check = typeof RuntimeLive extends ChatHandlersLayer ? true : false
+ * type Check = typeof RuntimeLive extends DesktopHandlersLayer ? true : false
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-const DesktopHandlersLive = Layer.mergeAll(ChatHandlersLive, WorkspaceVaultHandlersLive, DocumentIntakeHandlersLive);
+const DesktopHandlersLive = Layer.mergeAll(
+  ChatHandlersLive,
+  WorkspaceVaultHandlersLive,
+  DocumentIntakeHandlersLive,
+  OntologyHandlersLive
+);
 
 /**
  * Type of the fully-provided RPC handler layer served by the desktop sidecar.
@@ -77,7 +83,7 @@ const DesktopHandlersLive = Layer.mergeAll(ChatHandlersLive, WorkspaceVaultHandl
  * @category models
  * @since 0.0.0
  */
-export type ChatHandlersLayer = Layer.Layer<Layer.Success<typeof DesktopHandlersLive>>;
+export type DesktopHandlersLayer = Layer.Layer<Layer.Success<typeof DesktopHandlersLive>>;
 
 /**
  * Select the assistant-turn kernel from the `CHAT_AGENT` env flag. `anthropic`
@@ -98,13 +104,7 @@ const TurnKernelLive: Layer.Layer<AgentTurnKernel> = Layer.unwrap(
 );
 
 /**
- * App-local live runtime Layer: the fully-provided `ChatRpcs` handler group
- * backed by the live assistant-turn kernel, the Drizzle ThreadStore, and the
- * Drizzle usage-record sink — all over one shared PGlite-backed
- * {@link PgliteDrizzleLive} database, with env-gated observability merged in.
- *
- * This is the thing the sidecar launches; its only remaining requirement is the
- * rpc/http transport the sidecar provides on top.
+ * App-local live runtime Layer for chat and ontology sidecar handlers.
  *
  * @example
  * ```ts
@@ -116,24 +116,22 @@ const TurnKernelLive: Layer.Layer<AgentTurnKernel> = Layer.unwrap(
  * @category layers
  * @since 0.0.0
  */
-export const RuntimeLive: ChatHandlersLayer = DesktopHandlersLive.pipe(
+export const RuntimeLive: DesktopHandlersLayer = DesktopHandlersLive.pipe(
   Layer.provide([
     TurnKernelLive,
     Thread.ThreadStoreDrizzleLayer,
     Workspace.WorkspaceVaultStoreDrizzleLayer,
     UsageRecordSinkDrizzle,
     DocumentsServerLive,
+    OntologyServerLive,
   ]),
   Layer.provide(PgliteDrizzleLive),
-  Layer.provideMerge(Layer.mergeAll(BunFileSystem.layer, BunPath.layer)),
+  Layer.provideMerge(BunServices.layer),
   Layer.provideMerge(ObservabilityLive)
 );
 
 /**
- * App-local fixture runtime Layer for smoke/dev: the deterministic keyless
- * {@link FixtureTurnKernel}, the in-memory ThreadStore, and the in-memory
- * usage-record sink — no database, no API key, no external dependency. Mirrors
- * the wiring exercised by the app-level chat contract test.
+ * App-local fixture runtime Layer for smoke/dev chat and ontology handlers.
  *
  * @example
  * ```ts
@@ -145,13 +143,14 @@ export const RuntimeLive: ChatHandlersLayer = DesktopHandlersLive.pipe(
  * @category layers
  * @since 0.0.0
  */
-export const RuntimeTest: ChatHandlersLayer = DesktopHandlersLive.pipe(
+export const RuntimeTest: DesktopHandlersLayer = DesktopHandlersLive.pipe(
   Layer.provide([
     FixtureTurnKernel,
     Thread.ThreadStoreInMemoryLayer,
     Workspace.WorkspaceVaultStoreInMemoryLayer,
     UsageRecordSinkInMemory,
     DocumentsServerLive,
+    OntologyServerLive,
   ]),
-  Layer.provideMerge(Layer.mergeAll(BunFileSystem.layer, BunPath.layer))
+  Layer.provideMerge(BunServices.layer)
 );

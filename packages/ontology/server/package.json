@@ -60,8 +60,11 @@
     }
   },
   "dependencies": {
+    "@beep/file-processing": "workspace:^",
     "@beep/n3": "workspace:^",
     "@beep/ontology-use-cases": "workspace:^",
+    "@beep/oxigraph": "workspace:^",
+    "@beep/shacl": "workspace:^",
     "effect": "catalog:"
   },
   "devDependencies": {

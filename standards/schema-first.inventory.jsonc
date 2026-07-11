@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-09",
+  "generatedOn": "2026-07-10",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
@@ -20,6 +20,16 @@
       "status": "exception",
       "owner": "@beep/professional-desktop",
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "apps/professional-desktop/test/ontology-sidecar-registration.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 25,
+      "owner": "@beep/professional-desktop",
+      "reason": "Sidecar registration regression decodes fixed RPC payload/result envelopes to prove wiring; schema-derived arbitrary coverage belongs with the use-case schemas."
     },
     {
       "file": "infra/src/OipWeb.ts",
@@ -196,6 +206,14 @@
       "status": "exception",
       "owner": "@beep/box",
       "reason": "Type alias contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/drivers/cosmos/src/Cosmos.renderer.ts",
+      "symbol": "CosmosRenderHandle",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/cosmos",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
       "file": "packages/drivers/drizzle/src/Drizzle.service.ts",
@@ -1804,6 +1822,30 @@
       "status": "exception",
       "owner": "@beep/ontology-use-cases",
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.reasoner.ts",
+      "symbol": "OntologyReasonerShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/ontology-use-cases",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.sparql.ts",
+      "symbol": "OntologySparqlRunnerShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/ontology-use-cases",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/ontology/use-cases/src/aggregates/Session/Session.validation.ts",
+      "symbol": "OntologyValidationRunnerShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/ontology-use-cases",
+      "reason": "Service shape contains Effect-returning operations and runtime ports; Context.Service owns the boundary rather than a data schema."
     },
     {
       "file": "packages/shared/domain/src/values/LocalDate/LocalDate.model.ts",

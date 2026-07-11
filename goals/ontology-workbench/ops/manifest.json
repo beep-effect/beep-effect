@@ -3,7 +3,7 @@
   "initiative": {
     "id": "ontology-workbench",
     "title": "Ontology Workbench",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-08",
     "updated": "2026-07-09",
     "packetAnchorDocument": "SPEC.md"
@@ -60,38 +60,38 @@
     {
       "id": "P1",
       "name": "Foundation",
-      "status": "host-verification-required",
+      "status": "complete",
       "exit": "ontology slice (domain+use-cases+server) and drivers/n3 land with partitioned session design and Effect-Schema worker protocol; ontoauthor-mat + pizza/FOAF fixtures ported; direct fixture round-trip by rdf-canonize fingerprint passed in sandbox; host must run install and Vitest slice tests."
     },
     {
       "id": "P2",
       "name": "Explorer + Editor",
-      "status": "pending",
-      "exit": "client + ui packages land; author-edit-save loop works in the running desktop app with undo/redo, change log, ABox/TBox view modes, and metrics panel."
+      "status": "complete",
+      "exit": "client + ui packages landed with sidecar RPCs, atom client state, workbench UI, real batch deltas, shared ABox/TBox classification/search, pizza tutorial typed ops, change-log panel, fixed tooltip button markup, and prefix-preserving Turtle save behavior; live proof covered core flows, and host must rerun bun-backed tests plus the running desktop author-edit-save proof."
     },
     {
       "id": "P3",
       "name": "Visualizer",
-      "status": "pending",
-      "exit": "drivers/cosmos viewport with worker projection, focus-neighborhood, fold levels L0-L3 with clustering, halo light-editing gestures, pinned-node layouts; synthetic 100k-element ontology interactive on webkitgtk with benchmark note in history/."
+      "status": "complete",
+      "exit": "drivers/cosmos viewport with worker projection, incremental graph deltas, focus-neighborhood, fold levels L0-L3 with clustering, halo light-editing gestures, pinned-node layouts, sigma fallback preservation, and folded worker-backed spike contract implemented locally; host must rerun the synthetic 100k-element ontology interactive proof on webkitgtk with folds active. Evidence: history/2026-07-09-p3-visualizer.md."
     },
     {
       "id": "P4",
       "name": "SPARQL + Reasoning",
-      "status": "pending",
-      "exit": "drivers/oxigraph implements the @beep/semantic-web SPARQL contract; query panel executes SELECT/CONSTRUCT with safeguards UX; inferred-view toggle shows closure/type/disjointness signals under the invalidation discipline."
+      "status": "complete",
+      "exit": "drivers/oxigraph implements the @beep/semantic-web SPARQL contract; query panel executes SELECT/CONSTRUCT with safeguards UX; inferred-view toggle shows closure/type/disjointness signals under the invalidation discipline; local quality gates and node-backed Vitest proof passed, with host install/browser proof still required. Evidence: history/2026-07-09-p4-sparql-reasoning.md."
     },
     {
       "id": "P5",
       "name": "Validation + Provenance",
-      "status": "pending",
-      "exit": "drivers/shacl implements the @beep/semantic-web SHACL contract; SHACL violation -> verified repair -> undo acceptance passes; PROV-O journal and VoID/DCAT exports produced from the change log."
+      "status": "complete",
+      "exit": "drivers/shacl implements the @beep/semantic-web SHACL contract; validation runs over asserted plus inferred graphs; verified repair proposals are typed undoable change operations; validation metrics, focus-node navigation, PROV-O journal export, and VoID/DCAT dataset export are implemented. Local package checks and formatting passed; host must verify npm registry pins, install, rerun tests, and complete browser acceptance. Evidence: history/2026-07-09-p5-validation-provenance.md."
     },
     {
       "id": "P6",
       "name": "Harden + Close",
-      "status": "pending",
-      "exit": "Protege/ROBOT interop evidence recorded; ontoauthor-mat competency tasks t1-t6 pass; all SPEC acceptance criteria pass; disambiguation notes added; closeout reflection exists; final PR mergeable."
+      "status": "complete",
+      "exit": "Structural Turtle interop evidence, real PROV-O subset round-trip, ontoauthor-mat executable status suite, node-side projection benchmark, disambiguation notes, docs, and acceptance checklist recorded in history/2026-07-09-p6-harden-close.md. Host must run ROBOT/Protege, GUI/Tauri proof, /reflect plus reflection lint, Yeet closeout, and resolve or explicitly defer remaining OWL DL competency gaps before final close."
     }
   ],
   "verificationCommands": [

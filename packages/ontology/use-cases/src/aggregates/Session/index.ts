@@ -13,6 +13,13 @@ export * from "./Session.commands.js";
  */
 export * from "./Session.errors.js";
 /**
+ * Pizza tutorial operation generator exports.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export * from "./Session.pizza-tutorial.js";
+/**
  * Session public port exports.
  *
  * @category ports
@@ -20,12 +27,54 @@ export * from "./Session.errors.js";
  */
 export * from "./Session.ports.js";
 /**
+ * Session read-model projection exports.
+ *
+ * @category read-models
+ * @since 0.0.0
+ */
+export * from "./Session.projections.js";
+/**
+ * Session structural inference exports.
+ *
+ * @category read-models
+ * @since 0.0.0
+ */
+export * from "./Session.reasoner.js";
+/**
+ * Session RPC protocol exports.
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export * from "./Session.rpc.js";
+/**
+ * Session SPARQL query exports.
+ *
+ * @category queries
+ * @since 0.0.0
+ */
+export * from "./Session.sparql.js";
+/**
  * Session public use-case contract exports.
  *
  * @category use-cases
  * @since 0.0.0
  */
 export * from "./Session.use-cases.js";
+/**
+ * Session SHACL validation and provenance exports.
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export * from "./Session.validation.js";
+/**
+ * Session visualizer projection exports.
+ *
+ * @category read-models
+ * @since 0.0.0
+ */
+export * from "./Session.visualizer.js";
 /**
  * Session worker protocol exports.
  *

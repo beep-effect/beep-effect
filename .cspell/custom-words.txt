@@ -1,3 +1,4 @@
+abox
 achievability
 achievability
 affordances
@@ -55,6 +56,8 @@ commoditizing
 conclusory
 contoso
 Danswer
+DCAT
+dcat
 DCMI
 DCMI
 Dcterms

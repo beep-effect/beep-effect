@@ -5,14 +5,27 @@
   "compilerOptions": {
     "types": ["node"],
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    "paths": {
+      "@beep/oxigraph": ["../../drivers/oxigraph/src/index.ts"],
+      "@beep/shacl": ["../../drivers/shacl/src/index.ts"]
+    }
   },
   "references": [
     {
       "path": "../../drivers/n3/tsconfig.json"
     },
     {
+      "path": "../../drivers/oxigraph/tsconfig.json"
+    },
+    {
       "path": "../../drivers/rdf-canonize/tsconfig.json"
+    },
+    {
+      "path": "../../drivers/shacl/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/capability/file-processing/tsconfig.json"
     },
     {
       "path": "../../foundation/capability/semantic-web/tsconfig.json"

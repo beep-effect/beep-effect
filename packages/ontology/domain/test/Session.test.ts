@@ -1,16 +1,20 @@
 import {
   appendChange,
+  applyChangeOperationsWithDelta,
   ChangeOperation,
   CreateSessionInput,
   createSession,
   deriveNamedGraphs,
   deriveSessionGraphPartitions,
+  graphPartitionIri,
   isExcludedFromReasoning,
   SessionId,
 } from "@beep/ontology-domain/aggregates/Session";
-import { makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
+import { makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad, serializeQuad } from "@beep/rdf/Rdf";
+import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const sessionId = S.decodeUnknownSync(SessionId)("session-1");
@@ -23,6 +27,19 @@ const knowsQuad = makeQuad(
   makeNamedNode("https://example.test/alice"),
   makeNamedNode("https://example.test/knows"),
   makeNamedNode("https://example.test/bob")
+);
+const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;
+const SH_NODE_SHAPE = makeNamedNode(`${SHACL_NAMESPACE}NodeShape`);
+const SH_PROPERTY = makeNamedNode(`${SHACL_NAMESPACE}property`);
+const SH_PATH = makeNamedNode(`${SHACL_NAMESPACE}path`);
+const SH_NODE = makeNamedNode(`${SHACL_NAMESPACE}node`);
+const ontologyGraphQuad = makeQuad(
+  makeNamedNode("https://example.test/alice"),
+  makeNamedNode("https://example.test/knows"),
+  {
+    object: makeNamedNode("https://example.test/bob"),
+    graph: makeNamedNode(graphPartitionIri("ontologies")),
+  }
 );
 
 describe("Ontology Session aggregate", () => {
@@ -37,7 +54,7 @@ describe("Ontology Session aggregate", () => {
       ChangeOperation.make({
         kind: "addQuad",
         partition: "ontologies",
-        quad: knowsQuad,
+        quad: ontologyGraphQuad,
       })
     );
 
@@ -46,6 +63,33 @@ describe("Ontology Session aggregate", () => {
     expect(partitions.asserted.quads).toHaveLength(1);
     expect(partitions.ontologies.quads).toHaveLength(1);
     expect(partitions.inferred.quads).toHaveLength(0);
+  });
+
+  it("routes opened SHACL node and property shapes into the shapes partition", () => {
+    const shape = makeNamedNode("urn:shape:alice-name");
+    const property = makeBlankNode("alice-name-property");
+    const nestedShape = makeBlankNode("alice-name-nested-shape");
+    const nestedProperty = makeBlankNode("alice-name-nested-property");
+    const path = makeNamedNode("https://example.test/name");
+    const shapeQuads = [
+      makeQuad(shape, RDF_TYPE, SH_NODE_SHAPE),
+      makeQuad(shape, SH_PROPERTY, property),
+      makeQuad(property, SH_PATH, path),
+      makeQuad(property, SH_NODE, nestedShape),
+      makeQuad(nestedShape, SH_PROPERTY, nestedProperty),
+      makeQuad(nestedProperty, SH_PATH, path),
+    ];
+    const session = createSession(
+      CreateSessionInput.make({
+        id: sessionId,
+        baseDataset: makeDataset([nameQuad, ...shapeQuads]),
+      })
+    );
+
+    const partitions = deriveSessionGraphPartitions(session);
+
+    expect(partitions.asserted.quads.map(serializeQuad)).toEqual([serializeQuad(nameQuad)]);
+    expect(partitions.shapes.quads.map(serializeQuad)).toEqual(shapeQuads.map(serializeQuad));
   });
 
   it("applies remove operations without mutating other partitions", () => {
@@ -66,6 +110,26 @@ describe("Ontology Session aggregate", () => {
     expect(deriveSessionGraphPartitions(session).asserted.quads).toHaveLength(1);
   });
 
+  it("accepts default-graph quads for non-asserted partitions", () => {
+    const change = ChangeOperation.make({
+      kind: "addQuad",
+      partition: "shapes",
+      quad: knowsQuad,
+    });
+
+    expect(change.partition).toBe("shapes");
+  });
+
+  it("rejects change operations whose named quad graph diverges from the partition", () => {
+    expect(() =>
+      ChangeOperation.make({
+        kind: "addQuad",
+        partition: "asserted",
+        quad: ontologyGraphQuad,
+      })
+    ).toThrow("Change operation quad graph must match the declared session partition");
+  });
+
   it("keeps one shared reasoning-exclusion rule across named graphs", () => {
     const session = createSession(
       CreateSessionInput.make({
@@ -82,4 +146,33 @@ describe("Ontology Session aggregate", () => {
     expect(isExcludedFromReasoning("provenance")).toBe(true);
     expect(namedGraphs).toHaveLength(5);
   });
+
+  it.effect(
+    "returns real deltas for batch operations",
+    Effect.fnUntraced(function* () {
+      const session = createSession(
+        CreateSessionInput.make({
+          id: sessionId,
+          baseDataset: makeDataset([nameQuad]),
+        })
+      );
+      const applied = applyChangeOperationsWithDelta(session, [
+        ChangeOperation.make({
+          kind: "addQuad",
+          partition: "asserted",
+          quad: knowsQuad,
+        }),
+        ChangeOperation.make({
+          kind: "removeQuad",
+          partition: "asserted",
+          quad: nameQuad,
+        }),
+      ]);
+
+      expect(applied.delta.added).toHaveLength(1);
+      expect(applied.delta.removed).toHaveLength(1);
+      expect(deriveSessionGraphPartitions(applied.session).asserted.quads).toHaveLength(1);
+      yield* Effect.void;
+    })
+  );
 });

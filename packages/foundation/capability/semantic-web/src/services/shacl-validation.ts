@@ -9,7 +9,7 @@ import { $SemanticWebId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
-import { Dataset, NamedNode } from "../rdf.ts";
+import { Dataset, NamedNode, ObjectTerm } from "../rdf.ts";
 import { makeSemanticSchemaMetadata } from "../semantic-schema-metadata.ts";
 import type { Effect } from "effect";
 
@@ -25,8 +25,8 @@ const serviceContractMetadata = (canonicalName: string, overview: string) =>
     equivalenceBasis: "Shape and result equality by exact field comparison.",
     representations: [{ kind: "RDF/JS" }],
     implementationNotes: [
-      "The v1 package surface validates a bounded SHACL-inspired subset covering targetClass, minCount, maxCount, and datatype.",
-      "A full external SHACL engine can later back this contract without changing the public request and result wrappers.",
+      "The v1 package surface validates a bounded SHACL-inspired subset covering targetClass, targetNode, minCount, maxCount, datatype, and hasValue.",
+      "Full external SHACL engines can consume the optional shapesDataset while legacy callers keep using the typed bounded shapes array.",
     ],
   });
 
@@ -94,6 +94,7 @@ export class ShaclPropertyShape extends S.Class<ShaclPropertyShape>($I`ShaclProp
     minCount: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
     maxCount: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
     datatype: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
+    hasValue: S.OptionFromOptionalKey(ObjectTerm).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("ShaclPropertyShape", {
     description: "SHACL property shape used by the bounded service contract.",
@@ -131,6 +132,7 @@ export class ShaclPropertyShape extends S.Class<ShaclPropertyShape>($I`ShaclProp
 export class ShaclNodeShape extends S.Class<ShaclNodeShape>($I`ShaclNodeShape`)(
   {
     id: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
+    targetNode: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
     targetClass: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
     properties: S.Array(ShaclPropertyShape),
   },
@@ -170,6 +172,7 @@ export class ShaclValidationViolation extends S.Class<ShaclValidationViolation>(
     path: NamedNode,
     message: S.String,
     severity: ShaclSeverity,
+    sourceShape: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("ShaclValidationViolation", {
     description: "SHACL validation violation.",
@@ -201,6 +204,7 @@ export class ShaclValidationRequest extends S.Class<ShaclValidationRequest>($I`S
   {
     dataset: Dataset,
     shapes: S.Array(ShaclNodeShape),
+    shapesDataset: S.OptionFromOptionalKey(Dataset).pipe(SchemaUtils.withNoneDefault),
     maxResults: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("ShaclValidationRequest", {

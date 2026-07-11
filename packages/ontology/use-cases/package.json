@@ -36,6 +36,7 @@
     "./public": "./src/public.ts",
     "./server": "./src/server.ts",
     "./aggregates/Session": "./src/aggregates/Session/index.ts",
+    "./aggregates/Session/worker": "./src/aggregates/Session/worker.ts",
     "./aggregates/Session/server": "./src/aggregates/Session/server.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
@@ -56,6 +57,7 @@
       "./public": "./dist/public.js",
       "./server": "./dist/server.js",
       "./aggregates/Session": "./dist/aggregates/Session/index.js",
+      "./aggregates/Session/worker": "./dist/aggregates/Session/worker.js",
       "./aggregates/Session/server": "./dist/aggregates/Session/server.js",
       "./internal/*": null,
       "./package.json": "./package.json"
@@ -66,9 +68,11 @@
     "@beep/ontology-domain": "workspace:^",
     "@beep/rdf": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/semantic-web": "workspace:^",
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/shacl": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:"

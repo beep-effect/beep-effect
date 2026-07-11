@@ -1,6 +1,19 @@
 # @beep/ontology
 
-Ontology modeling package
+Ontology modeling package for repo-internal foundation models.
+
+## Boundary
+
+`@beep/ontology` is the foundation modeling package under
+`packages/foundation/modeling/ontology`. It owns FOLIO-oriented and
+identity-as-IRI modeling primitives used by repo-internal knowledge surfaces.
+
+The professional-desktop ontology workbench is a separate vertical slice under
+`packages/ontology/*`, with its domain entrypoint published as
+`@beep/ontology-domain`. That slice edits user-supplied Turtle ontology
+documents through `@beep/rdf` and `@beep/semantic-web` ports. Do not route
+workbench product state, sidecar file IO, or UI concerns through this
+foundation package.
 
 ## Installation
 

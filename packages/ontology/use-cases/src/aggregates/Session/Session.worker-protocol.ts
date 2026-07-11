@@ -6,16 +6,25 @@
  */
 
 import { make as makeIdentity } from "@beep/identity";
-import { ChangeOperation } from "@beep/ontology-domain/aggregates/Session";
+import { ChangeOperation, Session, SessionChangeDelta } from "@beep/ontology-domain/aggregates/Session";
 import { Dataset } from "@beep/rdf/Rdf";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as S from "effect/Schema";
 import { ParseTurtleRequest, ParseTurtleResult } from "./Session.ports.js";
+import { OntologySnapshot } from "./Session.projections.js";
+import { OntologyGraphProjection, OntologyGraphProjectionOptions } from "./Session.visualizer.js";
 
 const { $OntologyUseCasesId } = makeIdentity("ontology-use-cases");
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.worker-protocol");
 
-const WorkerCommandKind = LiteralKit(["parseTurtle", "diffDatasets"]);
+const WorkerCommandKind = LiteralKit([
+  "parseTurtle",
+  "diffDatasets",
+  "computeSnapshot",
+  "projectGraph",
+  "applyGraphDelta",
+]);
 
 /**
  * Worker command envelope.
@@ -34,6 +43,26 @@ const WorkerCommandKind = LiteralKit(["parseTurtle", "diffDatasets"]);
  * console.log(command.kind)
  * ```
  *
+ * @example
+ * ```ts
+ * import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session"
+ * import { WorkerCommand } from "@beep/ontology-use-cases/aggregates/Session"
+ * import { makeDataset } from "@beep/rdf/Rdf"
+ * import * as S from "effect/Schema"
+ *
+ * const command = WorkerCommand.make({
+ *   kind: "computeSnapshot",
+ *   session: createSession(
+ *     CreateSessionInput.make({
+ *       id: S.decodeUnknownSync(SessionId)("session-1"),
+ *       baseDataset: makeDataset([])
+ *     })
+ *   )
+ * })
+ *
+ * console.log(command.kind)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -44,6 +73,19 @@ export const WorkerCommand = WorkerCommandKind.toTaggedUnion("kind")({
   diffDatasets: {
     before: Dataset,
     after: Dataset,
+  },
+  computeSnapshot: {
+    session: Session,
+  },
+  projectGraph: {
+    snapshot: OntologySnapshot,
+    options: OntologyGraphProjectionOptions,
+  },
+  applyGraphDelta: {
+    snapshot: OntologySnapshot,
+    delta: SessionChangeDelta,
+    previous: OntologyGraphProjection,
+    options: OntologyGraphProjectionOptions,
   },
 }).pipe(
   $I.annoteSchema("WorkerCommand", {
@@ -100,7 +142,13 @@ export class DiffWorkerResult extends S.Class<DiffWorkerResult>($I`DiffWorkerRes
   })
 ) {}
 
-const WorkerResultKind = LiteralKit(["parseTurtleSucceeded", "diffDatasetsSucceeded"]);
+const WorkerResultKind = LiteralKit([
+  "parseTurtleSucceeded",
+  "diffDatasetsSucceeded",
+  "computeSnapshotSucceeded",
+  "projectGraphSucceeded",
+  "applyGraphDeltaSucceeded",
+]);
 
 /**
  * Worker result envelope.
@@ -120,6 +168,31 @@ const WorkerResultKind = LiteralKit(["parseTurtleSucceeded", "diffDatasetsSuccee
  * console.log(result.kind)
  * ```
  *
+ * @example
+ * ```ts
+ * import { OntologyMetrics, OntologySnapshot, WorkerResult } from "@beep/ontology-use-cases/aggregates/Session"
+ *
+ * const result = WorkerResult.make({
+ *   kind: "computeSnapshotSucceeded",
+ *   result: OntologySnapshot.make({
+ *     sessionId: "session-1",
+ *     resources: [],
+ *     hierarchy: [],
+ *     metrics: OntologyMetrics.make({
+ *       quadCount: 0,
+ *       resourceCount: 0,
+ *       classCount: 0,
+ *       propertyCount: 0,
+ *       individualCount: 0,
+ *       tboxCount: 0,
+ *       aboxCount: 0
+ *     })
+ *   })
+ * })
+ *
+ * console.log(result.kind)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -129,6 +202,15 @@ export const WorkerResult = WorkerResultKind.toTaggedUnion("kind")({
   },
   diffDatasetsSucceeded: {
     result: DiffWorkerResult,
+  },
+  computeSnapshotSucceeded: {
+    result: OntologySnapshot,
+  },
+  projectGraphSucceeded: {
+    result: OntologyGraphProjection,
+  },
+  applyGraphDeltaSucceeded: {
+    result: OntologyGraphProjection,
   },
 }).pipe(
   $I.annoteSchema("WorkerResult", {

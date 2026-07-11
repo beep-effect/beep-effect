@@ -37,6 +37,16 @@ const initialVendorChunkGroups = [
 export default defineConfig({
   clearScreen: false,
   plugins: [stripMisplacedLexicalPureAnnotations(), react()],
+  optimizeDeps: {
+    // @cosmos.gl/graph imports CJS/UMD deps that need explicit handling:
+    // keep cosmos itself un-prebundled, interop-wrap seedrandom, and route
+    // gl-bench at its shipped ESM build (the package's `module` field is
+    // ignored by the optimizer, which picks the default-less UMD `main`).
+    // Oxigraph is a WASM-backed sidecar driver; do not let the web optimizer
+    // initialize or prebundle it if a future webview path imports the package.
+    exclude: ["@cosmos.gl/graph", "oxigraph"],
+    include: ["seedrandom"],
+  },
   build: {
     chunkSizeWarningLimit: 650,
     rolldownOptions: {
@@ -50,6 +60,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
+      "gl-bench": fileURLToPath(new URL("../../node_modules/gl-bench/dist/gl-bench.module.js", import.meta.url)),
     },
   },
   server: {

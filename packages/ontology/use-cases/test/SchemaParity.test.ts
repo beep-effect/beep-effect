@@ -1,10 +1,22 @@
 import { ChangeOperation, SessionId } from "@beep/ontology-domain/aggregates/Session";
 import {
+  ApplyOntologyBatchCommand,
+  ApplyOntologyBatchResult,
   DiffWorkerResult,
+  ExportOntologyProvenanceCommand,
+  ExportOntologyProvenanceResult,
+  OntologyActionError,
   OntologyFilePath,
+  OntologyRepairProposal,
+  OntologySnapshot,
+  OpenOntologyDocumentResult,
   OpenOntologyFileCommand,
   ParseTurtleRequest,
   ParseTurtleResult,
+  PreviewOntologyTurtleResult,
+  RunOntologyValidationInput,
+  RunOntologyValidationResult,
+  SaveOntologyDocumentResult,
   SerializeTurtleRequest,
   TurtleCodecError,
   WorkerCommand,
@@ -43,6 +55,18 @@ const assertRoundTrips = <Schema extends S.Top & S.ConstraintDecoder<unknown> & 
 describe("@beep/ontology-use-cases schema parity", () => {
   it("round-trips schema-derived command and worker samples", () => {
     assertRoundTrips(OpenOntologyFileCommand);
+    assertRoundTrips(OpenOntologyDocumentResult);
+    assertRoundTrips(SaveOntologyDocumentResult);
+    assertRoundTrips(PreviewOntologyTurtleResult);
+    assertRoundTrips(ApplyOntologyBatchCommand);
+    assertRoundTrips(ApplyOntologyBatchResult);
+    assertRoundTrips(OntologyRepairProposal);
+    assertRoundTrips(RunOntologyValidationInput);
+    assertRoundTrips(RunOntologyValidationResult);
+    assertRoundTrips(ExportOntologyProvenanceCommand);
+    assertRoundTrips(ExportOntologyProvenanceResult);
+    assertRoundTrips(OntologyActionError);
+    assertRoundTrips(OntologySnapshot);
     assertRoundTrips(WorkerCommand);
     assertRoundTrips(WorkerResult);
     assertRoundTrips(TurtleCodecError);

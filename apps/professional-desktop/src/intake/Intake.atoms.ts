@@ -6,6 +6,7 @@
  */
 
 import { chatProtocolLayerAtom } from "@beep/agents-client";
+import { IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch";
 import { DefaultVaultFilingContext } from "@beep/documents-domain/values/Taxonomy";
 import { DocumentsRpcs, IntakeDroppedFilePayload } from "@beep/documents-use-cases/public";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
@@ -130,7 +131,7 @@ export const configureWorkspaceVaultAtom = DesktopIntakeClient.runtime.fn<Config
 export class DroppedDocumentInput extends S.Class<DroppedDocumentInput>($I`DroppedDocumentInput`)(
   {
     content: S.Uint8ArrayFromBase64,
-    intakeBatchId: S.NonEmptyString,
+    intakeBatchId: IntakeBatchId,
     originalFileName: S.NonEmptyString,
     workspaceId: WorkspaceIdentity.WorkspaceId,
   },
@@ -138,6 +139,33 @@ export class DroppedDocumentInput extends S.Class<DroppedDocumentInput>($I`Dropp
     description: "Browser-side dropped document input.",
   })
 ) {}
+
+/**
+ * Attach the default filing context to a typed dropped document input.
+ *
+ * @example
+ * ```ts
+ * import { DEFAULT_WORKSPACE_ID, DroppedDocumentInput, intakeDroppedFilePayload } from "@/intake/Intake.atoms"
+ *
+ * const payload = intakeDroppedFilePayload(
+ *   DroppedDocumentInput.make({
+ *     content: new Uint8Array([1, 2, 3]),
+ *     intakeBatchId: "batch-1",
+ *     originalFileName: "complaint.pdf",
+ *     workspaceId: DEFAULT_WORKSPACE_ID
+ *   })
+ * )
+ * console.log(payload.originalFileName)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const intakeDroppedFilePayload = (input: DroppedDocumentInput): IntakeDroppedFilePayload =>
+  IntakeDroppedFilePayload.make({
+    ...input,
+    filingContext: DefaultVaultFilingContext,
+  });
 
 /**
  * Mutation atom that sends one dropped document to the intake RPC.
@@ -155,10 +183,7 @@ export class DroppedDocumentInput extends S.Class<DroppedDocumentInput>($I`Dropp
 export const intakeDroppedDocumentAtom = DesktopIntakeClient.runtime.fn<DroppedDocumentInput>()(
   Effect.fn("intakeDroppedDocument")(function* (input) {
     const client = yield* DesktopIntakeClient;
-    const payload = yield* S.decodeUnknownEffect(IntakeDroppedFilePayload)({
-      ...input,
-      filingContext: DefaultVaultFilingContext,
-    });
+    const payload = intakeDroppedFilePayload(input);
     yield* Reactivity.mutation(client("IntakeDroppedFile", payload), [workspaceVaultKey(input.workspaceId)]);
   })
 );

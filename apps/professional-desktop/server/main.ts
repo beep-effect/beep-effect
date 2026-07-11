@@ -30,6 +30,7 @@ import "./IpcStdoutGuard.prelude.ts";
 
 import { ChatRpcs } from "@beep/agents-use-cases/public";
 import { DocumentsRpcs } from "@beep/documents-use-cases/public";
+import { OntologyRpcs } from "@beep/ontology-use-cases/aggregates/Session";
 import { WorkspaceVaultRpcs } from "@beep/workspace-use-cases/public";
 import { BunHttpServer, BunRuntime } from "@effect/platform-bun";
 import { Config, Effect, Layer, Logger } from "effect";
@@ -46,12 +47,13 @@ import type { Redacted } from "effect";
 const PORT = Effect.runSync(Config.port("CHAT_SIDECAR_PORT").pipe(Config.withDefault(3939)));
 const RPC_SESSION_TOKEN = Effect.runSync(DesktopRpcSessionToken);
 
-const DesktopRpcs = ChatRpcs.merge(WorkspaceVaultRpcs, DocumentsRpcs);
+const DesktopRpcs = ChatRpcs.merge(WorkspaceVaultRpcs, DocumentsRpcs, OntologyRpcs);
 
-// The full desktop group includes write-capable workspace vault and document
-// intake RPCs. HTTP only exposes that group when the per-launch bearer token is
-// configured; otherwise dev HTTP falls back to chat-only RPCs so loopback HTTP
-// never exposes vault/document writes without an unguessable shell-issued token.
+// The full desktop group includes write-capable workspace vault, document
+// intake, and ontology workbench RPCs. HTTP only exposes that group when the
+// per-launch bearer token is configured; otherwise dev HTTP falls back to
+// chat-only RPCs so loopback HTTP never exposes non-chat writes without an
+// unguessable shell-issued token.
 // IPC keeps the full group because it is reachable only through the Tauri shell
 // bridge, where `sidecar_send` also requires the same per-launch token.
 const DesktopRpcServer = RpcServer.layer(DesktopRpcs).pipe(Layer.provide(RuntimeLive));

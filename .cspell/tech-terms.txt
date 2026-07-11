@@ -247,6 +247,8 @@ pxlsx
 qjhr
 rdfc
 RDFC
+RDFJS
+rdfjs
 rdfs
 RDFS
 recompiles

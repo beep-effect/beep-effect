@@ -79,6 +79,9 @@
       "path": "packages/drivers/box"
     },
     {
+      "path": "packages/drivers/cosmos"
+    },
+    {
       "path": "packages/drivers/courtlistener"
     },
     {
@@ -136,6 +139,9 @@
       "path": "packages/drivers/openai-compat"
     },
     {
+      "path": "packages/drivers/oxigraph"
+    },
+    {
       "path": "packages/drivers/pacer"
     },
     {
@@ -158,6 +164,9 @@
     },
     {
       "path": "packages/drivers/sanity"
+    },
+    {
+      "path": "packages/drivers/shacl"
     },
     {
       "path": "packages/drivers/tika"
@@ -274,10 +283,16 @@
       "path": "packages/law-practice/use-cases"
     },
     {
+      "path": "packages/ontology/client"
+    },
+    {
       "path": "packages/ontology/domain"
     },
     {
       "path": "packages/ontology/server"
+    },
+    {
+      "path": "packages/ontology/ui"
     },
     {
       "path": "packages/ontology/use-cases"
