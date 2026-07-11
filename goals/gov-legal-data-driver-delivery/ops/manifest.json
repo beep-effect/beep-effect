@@ -36,10 +36,16 @@
     "goals/gov-legal-data-driver-delivery/PLAN.md",
     "goals/gov-legal-data-driver-delivery/GOAL.md",
     "goals/gov-legal-data-driver-delivery/research/SOURCES.md",
+    "goals/gov-legal-data-driver-delivery/research/data-source-terms-matrix.md",
+    "goals/gov-legal-data-driver-delivery/research/courtlistener-deltas.md",
     "goals/gov-legal-data-driver-codegen/SPEC.md",
     "goals/gov-legal-data-driver-codegen/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/data-source-terms-matrix.md",
+    "research/courtlistener-deltas.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -53,7 +59,7 @@
     {
       "id": "P0",
       "name": "research: data/source-terms matrix + committed specs",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",

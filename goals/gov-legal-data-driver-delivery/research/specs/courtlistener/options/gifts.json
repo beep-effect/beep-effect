@@ -1,0 +1,134 @@
+{
+  "name": "Gift List",
+  "description": "",
+  "renders": ["application/json", "text/html", "application/xml"],
+  "parses": [
+    "application/json",
+    "application/x-www-form-urlencoded",
+    "multipart/form-data",
+    "application/xml"
+  ],
+  "actions": {
+    "POST": {
+      "resource_uri": {
+        "type": "field",
+        "required": false,
+        "read_only": true,
+        "label": "Resource uri"
+      },
+      "id": {
+        "type": "field",
+        "required": false,
+        "read_only": true,
+        "label": "Id"
+      },
+      "date_created": {
+        "type": "datetime",
+        "required": false,
+        "read_only": true,
+        "label": "Date created",
+        "help_text": "The moment when the item was created."
+      },
+      "date_modified": {
+        "type": "datetime",
+        "required": false,
+        "read_only": true,
+        "label": "Date modified",
+        "help_text": "The last moment when the item was modified. A value in year 1750 indicates the value is unknown"
+      },
+      "source": {
+        "type": "string",
+        "required": false,
+        "read_only": false,
+        "label": "Source",
+        "help_text": "Source of the judicial gift. (ex. Alta Ski Area)."
+      },
+      "description": {
+        "type": "string",
+        "required": false,
+        "read_only": false,
+        "label": "Description",
+        "help_text": "Description of the gift (ex. Season Pass)."
+      },
+      "value": {
+        "type": "string",
+        "required": false,
+        "read_only": false,
+        "label": "Value",
+        "help_text": "Value of the judicial gift, (ex. $1,199.00)"
+      },
+      "redacted": {
+        "type": "boolean",
+        "required": false,
+        "read_only": false,
+        "label": "Redacted",
+        "help_text": "Does the gift row contain redaction(s)?"
+      },
+      "financial_disclosure": {
+        "type": "field",
+        "required": true,
+        "read_only": false,
+        "label": "Financial disclosure",
+        "help_text": "The financial disclosure associated with this gift."
+      }
+    }
+  },
+  "filters": {
+    "id": {
+      "type": "NumberFilter",
+      "lookup_types": ["exact", "gte", "gt", "lte", "lt", "range"]
+    },
+    "date_created": {
+      "type": "IsoDateTimeFilter",
+      "lookup_types": [
+        "exact",
+        "gte",
+        "gt",
+        "lte",
+        "lt",
+        "range",
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second"
+      ]
+    },
+    "date_modified": {
+      "type": "IsoDateTimeFilter",
+      "lookup_types": [
+        "exact",
+        "gte",
+        "gt",
+        "lte",
+        "lt",
+        "range",
+        "year",
+        "month",
+        "day",
+        "hour",
+        "minute",
+        "second"
+      ]
+    },
+    "source": {
+      "type": "CharFilter",
+      "lookup_types": ["exact", "iexact", "startswith", "istartswith"]
+    },
+    "description": {
+      "type": "CharFilter",
+      "lookup_types": ["exact", "iexact", "startswith", "istartswith"]
+    },
+    "value": {
+      "type": "CharFilter",
+      "lookup_types": ["exact", "iexact", "startswith", "istartswith"]
+    },
+    "redacted": { "type": "BooleanFilter", "lookup_types": ["exact"] },
+    "financial_disclosure": {
+      "type": "RelatedFilter",
+      "lookup_types": "See available filters for 'Financial Disclosures'"
+    }
+  },
+  "ordering": ["id", "date_created", "date_modified"]
+}
