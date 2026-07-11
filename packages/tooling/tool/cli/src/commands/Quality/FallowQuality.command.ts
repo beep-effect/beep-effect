@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
-import { NonNegativeInt } from "@beep/schema";
+import { Fn, NonNegativeInt } from "@beep/schema";
 import { Console, DateTime, Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -84,6 +84,7 @@ const encodeFallowEnvelopeJson = S.encodeUnknownEffect(S.fromJsonString(FallowRe
 const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 const decodeUnknownArrayOption = S.decodeUnknownOption(S.Array(S.Unknown));
 const decodeNumberOption = S.decodeUnknownOption(S.Finite);
+const decodeStringOption = S.decodeUnknownOption(S.String);
 const decodeFallowReportEnvelope = S.decodeUnknownEffect(FallowReportEnvelope);
 const decodeFallowReportOkOption = S.decodeUnknownOption(FallowReportOk);
 const decodeFallowAttributionKindsOption = S.decodeUnknownOption(FallowAttributionKinds);
@@ -379,6 +380,23 @@ type ProcessResult = {
   readonly output: string;
   readonly exitCode: number;
 };
+class FallowAuditDiffFallbackResult extends S.Class<FallowAuditDiffFallbackResult>($I`FallowAuditDiffFallbackResult`)(
+  {
+    stdout: S.String,
+    exitCode: S.Finite,
+  },
+  $I.annote("FallowAuditDiffFallbackResult", {
+    description: "Fallow audit process result fields used to detect sandbox worktree failures.",
+  })
+) {}
+const FallowAuditDiffFallbackPredicate = Fn({
+  input: FallowAuditDiffFallbackResult,
+  output: S.Boolean,
+}).pipe(
+  $I.annoteSchema("FallowAuditDiffFallbackPredicate", {
+    description: "Function contract for deciding whether Fallow audit needs the diff-scoped fallback.",
+  })
+);
 type ReportPathResolution = {
   readonly absolute: string;
   readonly relative: string;
@@ -411,6 +429,9 @@ const unknownRecordProperty = (value: unknown, key: string): O.Option<unknown> =
 
 const unknownNumberProperty = (value: unknown, key: string): O.Option<number> =>
   pipe(unknownRecordProperty(value, key), O.flatMap(decodeNumberOption));
+
+const unknownStringProperty = (value: unknown, key: string): O.Option<string> =>
+  pipe(unknownRecordProperty(value, key), O.flatMap(decodeStringOption));
 
 const yamlDocumentValue = Effect.fn("FallowQuality.yamlDocumentValue")(function* (
   filePath: string,
@@ -921,6 +942,46 @@ const fallowArgs = (feature: FallowFeature, base: string, quiet: boolean): Reado
   });
 };
 
+/**
+ * Build the fallback Fallow audit argv used when base-snapshot worktrees are unavailable.
+ *
+ * @param base - Base ref passed through to Fallow audit.
+ * @param quiet - Whether the fallback should pass Fallow's `--quiet` flag.
+ * @param diffPath - Path to the generated diff file consumed by Fallow audit.
+ * @returns Ordered Bun argv for the diff-scoped Fallow audit fallback.
+ * @example
+ * ```ts
+ * import { fallowAuditDiffFallbackArgsForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
+ *
+ * const args = fallowAuditDiffFallbackArgsForTesting("origin/main", true, "/tmp/audit.diff")
+ * console.log(args.includes("--diff-file"), args[args.length - 1])
+ * // true all
+ * ```
+ * @category testing
+ * @since 0.0.0
+ */
+export const fallowAuditDiffFallbackArgsForTesting = (
+  base: string,
+  quiet: boolean,
+  diffPath: string
+): ReadonlyArray<string> => [
+  "run",
+  "fallow",
+  "--",
+  "audit",
+  "--config",
+  ".fallowrc.jsonc",
+  "--format",
+  "json",
+  ...(quiet ? ["--quiet"] : []),
+  "--base",
+  base,
+  "--diff-file",
+  diffPath,
+  "--gate",
+  "all",
+];
+
 const wrapperArgs = (feature: FallowFeature, options: FallowCommandOptions, out: string): ReadonlyArray<string> => [
   "quality",
   "fallow",
@@ -936,6 +997,51 @@ const wrapperArgs = (feature: FallowFeature, options: FallowCommandOptions, out:
 
 const renderWrapperCommand = (feature: FallowFeature, options: FallowCommandOptions, out: string): string =>
   commandText("beep", wrapperArgs(feature, options, out));
+
+/**
+ * Detect the structured Fallow audit error that should use the diff-scoped fallback.
+ *
+ * @param result - Captured Fallow audit process result to inspect.
+ * @returns `true` when Fallow failed because the base worktree snapshot could not be created.
+ * @example
+ * ```ts
+ * import { fallowAuditNeedsDiffFallbackForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
+ *
+ * const worktreeError = fallowAuditNeedsDiffFallbackForTesting({
+ *   exitCode: 2,
+ *   stdout: JSON.stringify({
+ *     error: true,
+ *     message: "could not create a temporary worktree for base ref 'origin/main'",
+ *     exit_code: 2,
+ *   }),
+ * })
+ * const unrelatedError = fallowAuditNeedsDiffFallbackForTesting({
+ *   exitCode: 2,
+ *   stdout: JSON.stringify({
+ *     error: true,
+ *     message: "configuration file was not found",
+ *     exit_code: 2,
+ *   }),
+ * })
+ * console.log([worktreeError, unrelatedError])
+ * // [true, false]
+ * ```
+ * @category testing
+ * @since 0.0.0
+ */
+export const fallowAuditNeedsDiffFallbackForTesting = FallowAuditDiffFallbackPredicate.implementSync((result) => {
+  if (result.exitCode !== 2) {
+    return false;
+  }
+
+  const jsonText = pipe(extractJsonDocumentText(result.stdout), O.getOrUndefined);
+  const decoded = P.isUndefined(jsonText) ? O.none() : Effect.runSync(decodeJsonText(jsonText).pipe(Effect.option));
+  return pipe(
+    decoded,
+    O.flatMap((document) => unknownStringProperty(document, "message")),
+    O.exists(Str.includes("could not create a temporary worktree for base ref"))
+  );
+});
 
 const hasFallowReportShape = (feature: FallowFeature, document: unknown): boolean =>
   FallowFeatureFamily.$match(feature, {
@@ -1091,6 +1197,45 @@ const resolveBaseRef = Effect.fn("FallowQuality.resolveBaseRef")(function* (
   );
 });
 
+const collectAuditDiffFallbackOutput = Effect.fn("FallowQuality.collectAuditDiffFallbackOutput")(function* (
+  repoRoot: string,
+  options: FallowCommandOptions,
+  original: ProcessResult
+): Effect.fn.Return<ProcessResult, QualityScriptCommandError, FallowQualityEnvironment> {
+  if (!fallowAuditNeedsDiffFallbackForTesting(original)) {
+    return original;
+  }
+
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+
+  // Managed agent sandboxes can expose `.git` as read-only; `--gate all`
+  // keeps the audit diff-scoped while skipping Fallow's base worktree snapshot.
+  return yield* Effect.acquireUseRelease(
+    fs
+      .makeTempDirectory({ prefix: "beep-fallow-audit-diff-" })
+      .pipe(QualityScriptCommandError.mapError("Failed to create temporary Fallow audit diff directory.")),
+    Effect.fnUntraced(function* (tempDir) {
+      const diffPath = path.join(tempDir, "working-tree.diff");
+      const diffResult = yield* collectProcessOutput(repoRoot, "git", ["diff", "--binary", options.base, "--", "."]);
+      if (diffResult.exitCode !== 0) {
+        return original;
+      }
+
+      yield* fs
+        .writeFileString(diffPath, diffResult.stdout)
+        .pipe(QualityScriptCommandError.mapError(`Failed to write temporary Fallow audit diff ${diffPath}.`));
+
+      return yield* collectProcessOutput(
+        repoRoot,
+        "bun",
+        fallowAuditDiffFallbackArgsForTesting(options.base, options.quiet, diffPath)
+      );
+    }),
+    (tempDir) => fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore)
+  );
+});
+
 const hasPromotedBlockingFindings = (envelope: FallowReportEnvelope): boolean =>
   pipe(
     decodeFallowReportOkOption(envelope),
@@ -1200,7 +1345,9 @@ const runFallowFeature = Effect.fn("FallowQuality.runFallowFeature")(function* (
   }
 
   const args = fallowArgs(feature, options.base, options.quiet);
-  const result = yield* collectProcessOutput(repoRoot, "bun", args);
+  const initialResult = yield* collectProcessOutput(repoRoot, "bun", args);
+  const result =
+    feature === "audit" ? yield* collectAuditDiffFallbackOutput(repoRoot, options, initialResult) : initialResult;
   const envelope = yield* envelopeFromProcessResult(feature, options, paths, generatedAt, toolVersion, isDirty, result);
 
   yield* writeEnvelope(paths, result.output, envelope);

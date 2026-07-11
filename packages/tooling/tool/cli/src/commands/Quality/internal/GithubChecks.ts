@@ -283,6 +283,11 @@ const fallowGithubCheckLaneId = (featureFamily: FallowQualityFeatureFamily): str
  */
 export const githubCheckFallowLanes = (repoRoot: string): ReadonlyArray<GithubCheckLaneSpec> => [
   githubCheckLane(
+    "fallow:audit",
+    "repo-quality",
+    repoCliLane(repoRoot, "fallow:audit", ["fallow", "audit", "--check", "--quiet"])
+  ),
+  githubCheckLane(
     "fallow:dead-code",
     "repo-quality",
     repoCliLane(repoRoot, "fallow:dead-code", ["fallow", "dead-code", "--check", "--quiet"])

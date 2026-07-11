@@ -1,5 +1,9 @@
 import { CiLaneRunOptions, ciLaneStepsForTesting } from "@beep/repo-cli/commands/Ci";
-import { fallowCiUploadDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command";
+import {
+  fallowAuditDiffFallbackArgsForTesting,
+  fallowAuditNeedsDiffFallbackForTesting,
+  fallowCiUploadDiagnosticsForTesting,
+} from "@beep/repo-cli/commands/Quality/FallowQuality.command";
 import {
   CoveragePackageBaseline,
   CoverageRegressionBaseline,
@@ -208,10 +212,11 @@ const fallowFeatureMatrix = (features: ReadonlyArray<FallowFeatureMatrixRowTuple
     })),
   });
 
-const expectUnpromotedWiredDeadCodeLane = (matrix: GithubChecksFallowFeatureMatrix): void => {
-  expect(githubCheckPromotedFallowLaneDiagnosticsForTesting("/repo", "pre-push", matrix)).toContain(
-    "unpromoted Fallow GitHub check lane is wired: fallow:dead-code"
-  );
+const expectUnpromotedWiredFallowLanes = (matrix: GithubChecksFallowFeatureMatrix): void => {
+  expect(githubCheckPromotedFallowLaneDiagnosticsForTesting("/repo", "pre-push", matrix)).toEqual([
+    "unpromoted Fallow GitHub check lane is wired: fallow:audit",
+    "unpromoted Fallow GitHub check lane is wired: fallow:dead-code",
+  ]);
 };
 
 const expectSubstringBefore = (text: string, before: string, after: string): void => {
@@ -452,14 +457,45 @@ describe("quality task adapter", () => {
     expect(A.every(lanes, (lane) => lane.blockedBy.length === 0)).toBe(true);
   });
 
-  it("accepts the current packet state with only dead-code as the promoted pre-push lane", () => {
+  it("accepts the current packet state with audit and dead-code as promoted pre-push lanes", () => {
     const matrix = fallowFeatureMatrix([
-      ["audit", "advisory-artifact", "advisory"],
+      ["audit", "blocking-check", "blocking"],
       ["dead-code", "blocking-check", "blocking"],
     ]);
 
-    expect(promotedFallowGithubCheckLaneIdsForTesting(matrix)).toEqual(["fallow:dead-code"]);
+    expect(promotedFallowGithubCheckLaneIdsForTesting(matrix)).toEqual(["fallow:audit", "fallow:dead-code"]);
     expect(githubCheckPromotedFallowLaneDiagnosticsForTesting("/repo", "pre-push", matrix)).toEqual([]);
+  });
+
+  it("falls back to diff-scoped audit when Fallow cannot create the base worktree", () => {
+    expect(
+      fallowAuditNeedsDiffFallbackForTesting({
+        exitCode: 2,
+        stdout: JSON.stringify({
+          error: true,
+          message: "could not create a temporary worktree for base ref 'origin/main'",
+          exit_code: 2,
+        }),
+      })
+    ).toBe(true);
+    expect(fallowAuditNeedsDiffFallbackForTesting({ exitCode: 2, stdout: '{"error":true}' })).toBe(false);
+    expect(fallowAuditDiffFallbackArgsForTesting("origin/main", true, "/tmp/audit.diff")).toEqual([
+      "run",
+      "fallow",
+      "--",
+      "audit",
+      "--config",
+      ".fallowrc.jsonc",
+      "--format",
+      "json",
+      "--quiet",
+      "--base",
+      "origin/main",
+      "--diff-file",
+      "/tmp/audit.diff",
+      "--gate",
+      "all",
+    ]);
   });
 
   it("keeps wired pre-push Fallow lanes in parity with authoritative promoted matrix lanes", () =>
@@ -525,9 +561,9 @@ describe("quality task adapter", () => {
         expect(validateStepIndex).toBeGreaterThan(dispatchIndex);
         expect(uploadStepIndex).toBeGreaterThan(validateStepIndex);
 
-        // Deferred-exit ordering, from the lane's own step plan: promoted
-        // blocking lanes precede advisory lanes, and envelope validation
-        // steps come last when replayed locally.
+        // Deferred-exit ordering, from the lane's own step plan: both
+        // blocking lanes precede every advisory lane, and envelope
+        // validation steps come last when replayed locally.
         const plan = ciLaneStepsForTesting(
           "/repo",
           "fallow",
@@ -544,7 +580,7 @@ describe("quality task adapter", () => {
           })
         );
         const labels = A.map(plan, (step) => step.label);
-        expect(A.take(labels, 2)).toEqual(["ci:fallow:dead-code", "ci:fallow:audit"]);
+        expect(A.take(labels, 2)).toEqual(["ci:fallow:audit", "ci:fallow:dead-code"]);
         expect(labels).toContain("ci:fallow:envelope-check:dead-code");
       }).pipe(provideScopedLayer(FileSystemLayer))
     ));
@@ -552,6 +588,7 @@ describe("quality task adapter", () => {
   it("rejects a promoted Fallow matrix row that is not wired into pre-push", () => {
     // dead-code is wired; health is promoted but not wired → missing health diagnostic
     const matrix = fallowFeatureMatrix([
+      ["audit", "blocking-check", "blocking"],
       ["dead-code", "blocking-check", "blocking"],
       ["health", "blocking-check", "blocking"],
     ]);
@@ -562,18 +599,25 @@ describe("quality task adapter", () => {
   });
 
   it("rejects a wired Fallow lane whose matrix row is not promoted", () => {
-    expectUnpromotedWiredDeadCodeLane(fallowFeatureMatrix([["dead-code", "advisory-artifact", "research"]]));
+    expectUnpromotedWiredFallowLanes(
+      fallowFeatureMatrix([
+        ["audit", "advisory-artifact", "research"],
+        ["dead-code", "advisory-artifact", "research"],
+      ])
+    );
   });
 
   it("treats candidate-blocking Fallow rows as promotion contract inputs", () => {
     // health=candidate-blocking counts as promoted; dead-code wired but research → both diagnostics fire
     const matrix = fallowFeatureMatrix([
       ["health", "advisory-artifact", "candidate-blocking"],
+      ["audit", "advisory-artifact", "research"],
       ["dead-code", "advisory-artifact", "research"],
     ]);
     expect(promotedFallowGithubCheckLaneIdsForTesting(matrix)).toEqual(["fallow:health"]);
     expect(githubCheckPromotedFallowLaneDiagnosticsForTesting("/repo", "pre-push", matrix)).toEqual([
       "missing promoted Fallow GitHub check lane fallow:health",
+      "unpromoted Fallow GitHub check lane is wired: fallow:audit",
       "unpromoted Fallow GitHub check lane is wired: fallow:dead-code",
     ]);
   });

@@ -410,7 +410,7 @@ jobs:
           cache-turbo: "false"
           cache-write: "false"
 
-      - name: Run Fallow advisory envelopes
+      - name: Run Fallow envelopes
         id: fallow
         shell: bash
         env:
