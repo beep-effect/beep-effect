@@ -4,6 +4,18 @@
 
 **PENDING**
 
+## Supersession Note (2026-07-08)
+
+This packet retains its knowledge-graph projection scope (deferred). Its
+ontology-survey scope (LKIF-Core/IPRonto/ALIS/Copyright-Ontology/JudO/LCBR/
+ESTRELLA/WIPO-IPC survey work) is superseded by
+[`goals/semantic-foundation`](../semantic-foundation/README.md). The
+FalkorDB/Cypher storage choice below is deferred pending the P4
+semantic-topology report at
+`explorations/legal-ontology-landscape/research/05-semantic-topology-recommendation.md`;
+v1 follows [`goals/legal-document-intake`](../legal-document-intake/README.md)
+D6: Postgres/PGlite projection.
+
 ## Owner
 
 @beep-team
