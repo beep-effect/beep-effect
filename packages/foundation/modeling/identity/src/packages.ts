@@ -166,7 +166,7 @@ const generatedComposers = $I.compose(
   "oxigraph",
   "shacl",
   "storybook",
-  "tsgo-shim"
+  "tsgo-shim", "doc-text"
 );
 
 const composers = {
@@ -2020,3 +2020,19 @@ export const $StorybookId: Identity.IdentityComposer<"@beep/storybook"> = compos
  * @category configuration
  */
 export const $TsgoShimId: Identity.IdentityComposer<"@beep/tsgo-shim"> = composers.$TsgoShimId;
+
+/**
+ * Identity composer for `@beep/doc-text`.
+ *
+ * @example
+ * ```typescript
+ * import { $DocTextId } from "@beep/identity"
+ *
+ * const id = $DocTextId.make("DocText")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $DocTextId: Identity.IdentityComposer<"@beep/doc-text"> = composers.$DocTextId;
