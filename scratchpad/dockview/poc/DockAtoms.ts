@@ -4,13 +4,27 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
-import { Cause, Context, Effect, Exit, FiberSet, Layer, MutableRef, Semaphore } from "effect";
+import {$ScratchpadId} from "@beep/identity/packages";
+import {
+  Cause,
+  Context,
+  Effect,
+  Exit,
+  FiberSet,
+  Layer,
+  MutableRef,
+  Semaphore
+} from "effect";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
 import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
-import { AsyncResult, Atom, AtomRegistry, Reactivity } from "effect/unstable/reactivity";
+import {
+  AsyncResult,
+  Atom,
+  AtomRegistry,
+  Reactivity
+} from "effect/unstable/reactivity";
 import {
   DockAtomOperation,
   type DockAtomOperationOutcome,
@@ -25,29 +39,40 @@ import {
   requireSnapshot,
 } from "./DockEngine.ts";
 import {
-  type DockInputError,
-  type DockInvariantViolation,
-  type DockMutationOutcome,
+  DockInputError,
+  DockInvariantViolation,
+  DockMutationOutcome,
   DockMutationResult,
-  type DockPersistenceError,
-  type DockSnapshotMissing,
-  type DockTransitionError,
+  DockPersistenceError,
+  DockSnapshotMissing,
+  DockTransitionError,
   DockWorkspace,
   type GroupId,
   type PanelId,
 } from "./Domain.ts";
-import { validateWorkspace } from "./Reducer.ts";
+import {validateWorkspace} from "./Reducer.ts";
+import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("dockview/poc/DockAtoms");
 const SNAPSHOT_REACTIVITY_KEY = "dockview-snapshot";
 
 /** Typed failures produced after the Atom session layer has built. */
-export type DockAtomSessionError =
-  | DockTransitionError
-  | DockInputError
-  | DockInvariantViolation
-  | DockPersistenceError
-  | DockSnapshotMissing;
+export const DockAtomSessionError = S.Union(
+  [
+    DockTransitionError,
+    DockInputError,
+    DockInvariantViolation,
+    DockPersistenceError,
+    DockSnapshotMissing,
+  ]
+).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("DockAtomSessionError", {
+    description: "Typed failures produced after the Atom session layer has built."
+  })
+);
+export type DockAtomSessionError = typeof DockAtomSessionError.Type;
+
 
 interface DockAtomSessionShape {
   readonly awaitIdle: Effect.Effect<void>;
@@ -55,7 +80,8 @@ interface DockAtomSessionShape {
 }
 
 /** Per-registry capability that serializes every stateful session operation. */
-class DockAtomSession extends Context.Service<DockAtomSession, DockAtomSessionShape>()($I`DockAtomSession`) {}
+class DockAtomSession extends Context.Service<DockAtomSession, DockAtomSessionShape>()($I`DockAtomSession`) {
+}
 
 /** Console logging layer installed into every isolated POC Atom factory. */
 export const DockAtomObservabilityLive: Layer.Layer<never> = Logger.layer([Logger.consolePretty()]);
@@ -92,9 +118,9 @@ const makeDockAtomSessionLayer = (
 
       const runOperation = Effect.fn("DockAtomSession.runOperation")((operation: DockAtomOperation) =>
         DockAtomOperation.match(operation, {
-          dispatchCommand: ({ envelope }) =>
+          dispatchCommand: ({envelope}) =>
             engine.transition(registry.get(stateAtom), envelope).pipe(Effect.flatMap(publishMutation)),
-          dispatchUnknownCommand: ({ input }) =>
+          dispatchUnknownCommand: ({input}) =>
             engine.decodeCommand(input).pipe(
               Effect.flatMap((envelope) => engine.transition(registry.get(stateAtom), envelope)),
               Effect.flatMap(publishMutation)
@@ -107,7 +133,7 @@ const makeDockAtomSessionLayer = (
               snapshot,
             });
           }),
-          restoreSnapshot: Effect.fn("DockAtomSession.restoreSnapshot")(function* ({ request }) {
+          restoreSnapshot: Effect.fn("DockAtomSession.restoreSnapshot")(function* ({request}) {
             const snapshot = yield* requireSnapshot(yield* store.load);
             const outcome = yield* engine.restore(registry.get(stateAtom), snapshot, request);
             return yield* publishMutation(outcome);
@@ -240,7 +266,7 @@ export const makeDockAtomsWith = <E>(
   validateWorkspace(initial).pipe(
     Effect.flatMap((validated) => {
       const graph = makeDockAtomGraph(validated, servicesLayer);
-      return AtomRegistry.getResult(graph.registry, graph.runtime, { suspendOnWaiting: true }).pipe(
+      return AtomRegistry.getResult(graph.registry, graph.runtime, {suspendOnWaiting: true}).pipe(
         Effect.map((context) => {
           const session = Context.get(context, DockAtomSession);
 

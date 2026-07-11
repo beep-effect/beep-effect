@@ -15,7 +15,6 @@ import { Console, Effect, FileSystem, HashSet, Inspectable, MutableHashSet, Orde
 import * as S from "effect/Schema";
 import { Command } from "effect/unstable/cli";
 import { ChildProcess } from "effect/unstable/process";
-import madge from "madge";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
 import { printLines } from "../../internal/cli/Printer.js";
 import { runGoalsDoctor } from "../Goals/Doctor.js";
@@ -415,12 +414,18 @@ const runLintCircular = Effect.fn("runLintCircular")(function* () {
     }
 
     const result = yield* Effect.tryPromise({
-      try: () =>
-        madge(dir, {
+      // Import madge lazily: its transitive `detective-typescript` dependency
+      // crashes at module-eval time under Bun (`ts.Extension.Cjs` undefined),
+      // so a static top-level import would take down every sibling command that
+      // shares this CLI tree (version-sync, tsconfig-sync, ...) at startup.
+      try: async () => {
+        const { default: madge } = await import("madge");
+        return madge(dir, {
           fileExtensions: ["ts"],
           tsConfig: "tsconfig.json",
           detectiveOptions: { ts: { skipTypeImports: true } },
-        }),
+        });
+      },
       catch: (cause) =>
         LintCircularAnalysisError.new(
           `Failed to analyze circular deps in ${dir}: ${Inspectable.toStringUnknown(cause, 0)}`
