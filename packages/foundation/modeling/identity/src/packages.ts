@@ -165,7 +165,8 @@ const generatedComposers = $I.compose(
   "ontology-use-cases",
   "oxigraph",
   "shacl",
-  "storybook"
+  "storybook",
+  "tsgo-shim"
 );
 
 const composers = {
@@ -2003,3 +2004,19 @@ export const $ShaclId: Identity.IdentityComposer<"@beep/shacl"> = composers.$Sha
  * @category configuration
  */
 export const $StorybookId: Identity.IdentityComposer<"@beep/storybook"> = composers.$StorybookId;
+
+/**
+ * Identity composer for `@beep/tsgo-shim`.
+ *
+ * @example
+ * ```typescript
+ * import { $TsgoShimId } from "@beep/identity"
+ *
+ * const id = $TsgoShimId.make("TsgoShim")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $TsgoShimId: Identity.IdentityComposer<"@beep/tsgo-shim"> = composers.$TsgoShimId;

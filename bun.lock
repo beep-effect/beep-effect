@@ -9,7 +9,7 @@
         "@babel/core": "catalog:",
         "@babel/plugin-transform-export-namespace-from": "catalog:",
         "@babel/plugin-transform-modules-commonjs": "catalog:",
-        "@beep/tsgo-shim": "file:tools/tsgo-shim",
+        "@beep/tsgo-shim": "workspace:^",
         "@biomejs/biome": "catalog:",
         "@changesets/changelog-github": "catalog:",
         "@changesets/cli": "catalog:",
@@ -2204,6 +2204,13 @@
         "vitest": "catalog:",
       },
     },
+    "tools/tsgo-shim": {
+      "name": "@beep/tsgo-shim",
+      "version": "0.0.0",
+      "bin": {
+        "tsgo": "./tsgo.js",
+      },
+    },
   },
   "overrides": {
     "@effect/platform-node-shared": "catalog:",
@@ -2775,7 +2782,7 @@
 
     "@beep/tika": ["@beep/tika@workspace:packages/drivers/tika"],
 
-    "@beep/tsgo-shim": ["@beep/tsgo-shim@file:tools/tsgo-shim", { "bin": { "tsgo": "./tsgo.js" } }],
+    "@beep/tsgo-shim": ["@beep/tsgo-shim@workspace:tools/tsgo-shim"],
 
     "@beep/types": ["@beep/types@workspace:packages/foundation/primitive/types"],
 
