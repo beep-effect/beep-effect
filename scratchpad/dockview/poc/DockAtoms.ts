@@ -1,13 +1,22 @@
 /**
- * Headless Effect Atom adapter for the Dockview POC.
+ * Headless Effect Atom session for the Dockview POC.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Effect, Layer } from "effect";
+import { $ScratchpadId } from "@beep/identity/packages";
+import { Cause, Context, Effect, Exit, FiberSet, Layer, MutableRef, Semaphore } from "effect";
+import * as Bool from "effect/Boolean";
+import * as Eq from "effect/Equal";
 import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
-import { Atom } from "effect/unstable/reactivity";
+import { AsyncResult, Atom, AtomRegistry, Reactivity } from "effect/unstable/reactivity";
+import {
+  DockAtomOperation,
+  type DockAtomOperationOutcome,
+  DockMutationCompleted,
+  DockSnapshotSaved,
+} from "./DockAtomProtocol.ts";
 import {
   DockEngine,
   DockEngineLive,
@@ -15,84 +24,179 @@ import {
   makeDockSnapshotStoreMemory,
   requireSnapshot,
 } from "./DockEngine.ts";
-import type { DockCommandEnvelope, DockWorkspace, GroupId, PanelId, RestoreSnapshotRequest } from "./Domain.ts";
 import {
-  emptyDockWorkspace,
-  findPanelInWorkspace,
-  findTabsInWorkspace,
-  groupCount,
-  panelsInWorkspace,
-} from "./Reducer.ts";
+  type DockInputError,
+  type DockInvariantViolation,
+  type DockMutationOutcome,
+  DockMutationResult,
+  type DockPersistenceError,
+  type DockSnapshotMissing,
+  type DockTransitionError,
+  DockWorkspace,
+  type GroupId,
+  type PanelId,
+} from "./Domain.ts";
+import { validateWorkspace } from "./Reducer.ts";
 
+const $I = $ScratchpadId.create("dockview/poc/DockAtoms");
 const SNAPSHOT_REACTIVITY_KEY = "dockview-snapshot";
+
+/** Typed failures produced after the Atom session layer has built. */
+export type DockAtomSessionError =
+  | DockTransitionError
+  | DockInputError
+  | DockInvariantViolation
+  | DockPersistenceError
+  | DockSnapshotMissing;
+
+interface DockAtomSessionShape {
+  readonly awaitIdle: Effect.Effect<void>;
+  readonly submitUnsafe: (operation: DockAtomOperation) => void;
+}
+
+/** Per-registry capability that serializes every stateful session operation. */
+class DockAtomSession extends Context.Service<DockAtomSession, DockAtomSessionShape>()($I`DockAtomSession`) {}
 
 /** Console logging layer installed into every isolated POC Atom factory. */
 export const DockAtomObservabilityLive: Layer.Layer<never> = Logger.layer([Logger.consolePretty()]);
 
-/**
- * Creates one isolated reactive Dockview instance.
- *
- * Live layout state belongs to a private writable atom. `DockEngine` is a
- * stateless capability, while snapshot persistence is service-backed external
- * state and therefore uses an explicit Reactivity key.
- */
-export const makeDockAtoms = (
-  initial: DockWorkspace = emptyDockWorkspace,
-  engineLayer: Layer.Layer<DockEngine> = DockEngineLive,
-  snapshotStoreLayer: Layer.Layer<DockSnapshotStore> = makeDockSnapshotStoreMemory()
+const makeDockAtomSessionLayer = (
+  stateAtom: Atom.Writable<DockWorkspace>,
+  operationResultAtom: Atom.Writable<AsyncResult.AsyncResult<DockAtomOperationOutcome, DockAtomSessionError>>
+): Layer.Layer<
+  DockAtomSession,
+  never,
+  AtomRegistry.AtomRegistry | Reactivity.Reactivity | DockEngine | DockSnapshotStore
+> =>
+  Layer.effect(
+    DockAtomSession,
+    Effect.gen(function* () {
+      const registry = yield* AtomRegistry.AtomRegistry;
+      const reactivity = yield* Reactivity.Reactivity;
+      const engine = yield* DockEngine;
+      const store = yield* DockSnapshotStore;
+      const mutationGate = yield* Semaphore.make(1);
+      const fibers = yield* FiberSet.make<void, never>();
+      const runFork = yield* FiberSet.runtime(fibers)<never>();
+      const latestSubmission = MutableRef.make(0);
+
+      const publishMutation = Effect.fn("DockAtomSession.publishMutation")(function* (outcome: DockMutationOutcome) {
+        yield* DockMutationResult.match(outcome.result, {
+          Changed: (changed) => Effect.sync(() => registry.set(stateAtom, changed.state)),
+          Unchanged: () => Effect.void,
+        });
+        return DockMutationCompleted.make({
+          outcome,
+        });
+      });
+
+      const runOperation = Effect.fn("DockAtomSession.runOperation")((operation: DockAtomOperation) =>
+        DockAtomOperation.match(operation, {
+          dispatchCommand: ({ envelope }) =>
+            engine.transition(registry.get(stateAtom), envelope).pipe(Effect.flatMap(publishMutation)),
+          dispatchUnknownCommand: ({ input }) =>
+            engine.decodeCommand(input).pipe(
+              Effect.flatMap((envelope) => engine.transition(registry.get(stateAtom), envelope)),
+              Effect.flatMap(publishMutation)
+            ),
+          saveSnapshot: Effect.fn("DockAtomSession.saveSnapshot")(function* () {
+            const snapshot = yield* engine.encodeSnapshot(registry.get(stateAtom));
+            yield* store.save(snapshot);
+            yield* reactivity.invalidate([SNAPSHOT_REACTIVITY_KEY]);
+            return DockSnapshotSaved.make({
+              snapshot,
+            });
+          }),
+          restoreSnapshot: Effect.fn("DockAtomSession.restoreSnapshot")(function* ({ request }) {
+            const snapshot = yield* requireSnapshot(yield* store.load);
+            const outcome = yield* engine.restore(registry.get(stateAtom), snapshot, request);
+            return yield* publishMutation(outcome);
+          }),
+        })
+      );
+
+      const submitUnsafe = (operation: DockAtomOperation): void => {
+        const submission = MutableRef.incrementAndGet(latestSubmission);
+        const previous = registry.get(operationResultAtom);
+        registry.set(operationResultAtom, AsyncResult.waiting(previous));
+
+        runFork(
+          mutationGate.withPermit(runOperation(operation)).pipe(
+            Effect.exit,
+            Effect.tap(
+              Exit.match({
+                onFailure: (cause) =>
+                  Effect.logError("dock operation failed").pipe(
+                    Effect.annotateLogs({
+                      submission,
+                      operationKind: operation.kind,
+                      cause: Cause.pretty(cause),
+                    })
+                  ),
+                onSuccess: (outcome) =>
+                  Effect.logInfo("dock operation completed").pipe(
+                    Effect.annotateLogs({
+                      submission,
+                      operationKind: operation.kind,
+                      outcomeKind: outcome.kind,
+                    })
+                  ),
+              })
+            ),
+            Effect.flatMap((exit) =>
+              Bool.match(Eq.equals(submission, MutableRef.get(latestSubmission)), {
+                onTrue: () =>
+                  Effect.sync(() =>
+                    registry.set(operationResultAtom, AsyncResult.fromExitWithPrevious(exit, O.some(previous)))
+                  ),
+                onFalse: () => Effect.void,
+              })
+            )
+          )
+        );
+      };
+
+      return DockAtomSession.of({
+        awaitIdle: FiberSet.awaitEmpty(fibers),
+        submitUnsafe,
+      });
+    }).pipe(Effect.withSpan("DockAtomSession.make"))
+  );
+
+const makeDockAtomGraph = <E>(
+  initial: DockWorkspace,
+  servicesLayer: Layer.Layer<DockEngine | DockSnapshotStore, E>
 ) => {
   const factory = Atom.context({
     memoMap: Layer.makeMemoMapUnsafe(),
   });
   factory.addGlobalLayer(DockAtomObservabilityLive);
 
-  const runtime = factory(Layer.mergeAll(engineLayer, snapshotStoreLayer));
-
   const stateAtom = Atom.make(initial).pipe(Atom.keepAlive);
+  const operationResultAtom = Atom.make<AsyncResult.AsyncResult<DockAtomOperationOutcome, DockAtomSessionError>>(
+    AsyncResult.initial()
+  ).pipe(Atom.keepAlive);
+  const sessionLayer = makeDockAtomSessionLayer(stateAtom, operationResultAtom).pipe(Layer.provideMerge(servicesLayer));
+  const runtime = factory(sessionLayer);
 
   /** Read-only authoritative workspace projection. */
   const workspaceAtom = Atom.readable((get) => get(stateAtom)).pipe(Atom.keepAlive);
 
   /** All panels in tree order. */
-  const panelsAtom = Atom.map(workspaceAtom, panelsInWorkspace);
+  const panelsAtom = Atom.map(workspaceAtom, DockWorkspace.panels);
 
   /** Number of non-empty tab groups. */
-  const groupCountAtom = Atom.map(workspaceAtom, groupCount);
+  const groupCountAtom = Atom.map(workspaceAtom, DockWorkspace.groupCount);
 
   /** Per-panel projection without component-local state. */
-  const panelAtom = Atom.family((panelId: PanelId) =>
-    Atom.map(workspaceAtom, (state) => findPanelInWorkspace(state, panelId))
-  );
+  const panelAtom = Atom.family((panelId: PanelId) => Atom.map(workspaceAtom, DockWorkspace.findPanel(panelId)));
 
   /** Per-group projection without component-local state. */
-  const tabsAtom = Atom.family((groupId: GroupId) =>
-    Atom.map(workspaceAtom, (state) => findTabsInWorkspace(state, groupId))
-  );
+  const tabsAtom = Atom.family((groupId: GroupId) => Atom.map(workspaceAtom, DockWorkspace.findTabs(groupId)));
 
-  /** Active panel projection for one group. */
+  /** Selected panel projection for one group. */
   const activePanelAtom = Atom.family((groupId: GroupId) =>
-    Atom.map(workspaceAtom, (state) => O.map(findTabsInWorkspace(state, groupId), (tabs) => tabs.active))
-  );
-
-  /** Typed command mutation. State is written exactly once after success. */
-  const dispatchAtom = runtime.fn<DockCommandEnvelope>()(
-    Effect.fn("DockAtoms.dispatch")(function* (envelope, get) {
-      const engine = yield* DockEngine;
-      const result = yield* engine.transition(get(stateAtom), envelope);
-      get.set(stateAtom, result.state);
-      return result;
-    })
-  );
-
-  /** Unknown-input command mutation with schema decoding at the boundary. */
-  const dispatchUnknownAtom = runtime.fn<unknown>()(
-    Effect.fn("DockAtoms.dispatchUnknown")(function* (input, get) {
-      const engine = yield* DockEngine;
-      const envelope = yield* engine.decodeCommand(input);
-      const result = yield* engine.transition(get(stateAtom), envelope);
-      get.set(stateAtom, result.state);
-      return result;
-    })
+    Atom.map(workspaceAtom, DockWorkspace.findActivePanel(groupId))
   );
 
   /** Service-backed persisted snapshot query. */
@@ -100,42 +204,84 @@ export const makeDockAtoms = (
     .atom(DockSnapshotStore.use((store) => store.load))
     .pipe(factory.withReactivity([SNAPSHOT_REACTIVITY_KEY]), Atom.keepAlive);
 
-  /** Persists the current state and invalidates only the snapshot query. */
-  const saveSnapshotAtom = runtime.fn<void>()(
-    Effect.fn("DockAtoms.saveSnapshot")(function* (_, get) {
-      const engine = yield* DockEngine;
-      const store = yield* DockSnapshotStore;
-      const snapshot = yield* engine.encodeSnapshot(get(stateAtom));
-      yield* store.save(snapshot);
-      return snapshot;
-    }),
-    { reactivityKeys: [SNAPSHOT_REACTIVITY_KEY] }
-  );
+  const registry = AtomRegistry.make();
+  const releaseRuntime = registry.mount(runtime);
+  const releasePersistence = registry.mount(persistedSnapshotAtom);
 
-  /** Decodes and validates the complete persisted snapshot before one write. */
-  const restoreSnapshotAtom = runtime.fn<RestoreSnapshotRequest>()(
-    Effect.fn("DockAtoms.restoreSnapshot")(function* (request, get) {
-      const engine = yield* DockEngine;
-      const store = yield* DockSnapshotStore;
-      const snapshot = yield* requireSnapshot(yield* store.load);
-      const result = yield* engine.restore(get(stateAtom), snapshot, request);
-      get.set(stateAtom, result.state);
-      return result;
-    })
-  );
+  const disposeBase = (): void => {
+    releasePersistence();
+    releaseRuntime();
+    registry.dispose();
+  };
 
   return {
+    registry,
     runtime,
+    operationResultAtom,
     workspaceAtom,
     panelsAtom,
     groupCountAtom,
     panelAtom,
     tabsAtom,
     activePanelAtom,
-    dispatchAtom,
-    dispatchUnknownAtom,
     persistedSnapshotAtom,
-    saveSnapshotAtom,
-    restoreSnapshotAtom,
+    disposeBase,
   };
 };
+
+/**
+ * Creates a validated, isolated Atom session from a fully provided service
+ * layer. Layer construction failures remain typed in the returned Effect.
+ */
+export const makeDockAtomsWith = <E>(
+  servicesLayer: Layer.Layer<DockEngine | DockSnapshotStore, E>,
+  initial: DockWorkspace = DockWorkspace.empty
+) =>
+  validateWorkspace(initial).pipe(
+    Effect.flatMap((validated) => {
+      const graph = makeDockAtomGraph(validated, servicesLayer);
+      return AtomRegistry.getResult(graph.registry, graph.runtime, { suspendOnWaiting: true }).pipe(
+        Effect.map((context) => {
+          const session = Context.get(context, DockAtomSession);
+
+          /**
+           * The only stateful operation lane. Writes submit synchronously into
+           * the Context-owned Effect runtime; reads expose the latest typed
+           * `AsyncResult` for host adapters.
+           */
+          const operationAtom = Atom.writable(
+            (get) => get(graph.operationResultAtom),
+            (_ctx, operation: DockAtomOperation) => session.submitUnsafe(operation)
+          ).pipe(Atom.keepAlive);
+          const releaseOperations = graph.registry.mount(operationAtom);
+
+          /** Releases the one-registry session and every service scope it owns. */
+          const dispose = (): void => {
+            releaseOperations();
+            graph.disposeBase();
+          };
+
+          return {
+            registry: graph.registry,
+            runtime: graph.runtime,
+            workspaceAtom: graph.workspaceAtom,
+            panelsAtom: graph.panelsAtom,
+            groupCountAtom: graph.groupCountAtom,
+            panelAtom: graph.panelAtom,
+            tabsAtom: graph.tabsAtom,
+            activePanelAtom: graph.activePanelAtom,
+            awaitIdle: session.awaitIdle,
+            operationAtom,
+            persistedSnapshotAtom: graph.persistedSnapshotAtom,
+            dispose,
+          };
+        }),
+        Effect.onError(() => Effect.sync(graph.disposeBase))
+      );
+    }),
+    Effect.withSpan("DockAtoms.makeWith")
+  );
+
+/** Creates a validated Atom session with the live engine and isolated memory store. */
+export const makeDockAtoms = (initial: DockWorkspace = DockWorkspace.empty) =>
+  makeDockAtomsWith(Layer.mergeAll(DockEngineLive, makeDockSnapshotStoreMemory()), initial);

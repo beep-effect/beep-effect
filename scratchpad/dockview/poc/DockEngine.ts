@@ -12,9 +12,9 @@ import type { DockInvariantViolation, DockTransitionError } from "./Domain.ts";
 import {
   DockCommandEnvelope,
   DockInputError,
+  type DockMutationOutcome,
   type DockPersistenceError,
   DockSnapshotMissing,
-  type DockTransition,
   DockWorkspace,
   type RestoreSnapshotRequest,
 } from "./Domain.ts";
@@ -36,6 +36,7 @@ const decodeCommand = Effect.fn("DockEngine.decodeCommand")(function* (input: un
 });
 
 const encodeSnapshot = Effect.fn("DockEngine.encodeSnapshot")(function* (state: DockWorkspace) {
+  yield* validateWorkspace(state);
   return yield* S.encodeEffect(DockWorkspaceJson)(state).pipe(
     Effect.mapError((cause) =>
       DockInputError.make({
@@ -46,8 +47,8 @@ const encodeSnapshot = Effect.fn("DockEngine.encodeSnapshot")(function* (state: 
   );
 });
 
-const decodeSnapshot = Effect.fn("DockEngine.decodeSnapshot")(function* (input: string) {
-  const state = yield* S.decodeUnknownEffect(DockWorkspaceJson)(input).pipe(
+const decodeSnapshotInput = Effect.fn("DockEngine.decodeSnapshotInput")(function* (input: string) {
+  return yield* S.decodeUnknownEffect(DockWorkspaceJson)(input).pipe(
     Effect.mapError((cause) =>
       DockInputError.make({
         boundary: "snapshot",
@@ -55,6 +56,10 @@ const decodeSnapshot = Effect.fn("DockEngine.decodeSnapshot")(function* (input: 
       })
     )
   );
+});
+
+const decodeSnapshot = Effect.fn("DockEngine.decodeSnapshot")(function* (input: string) {
+  const state = yield* decodeSnapshotInput(input);
   return yield* validateWorkspace(state);
 });
 
@@ -63,15 +68,15 @@ export interface DockEngineShape {
   readonly transition: (
     state: DockWorkspace,
     envelope: DockCommandEnvelope
-  ) => Effect.Effect<DockTransition, DockTransitionError>;
+  ) => Effect.Effect<DockMutationOutcome, DockTransitionError>;
   readonly decodeCommand: (input: unknown) => Effect.Effect<DockCommandEnvelope, DockInputError>;
-  readonly encodeSnapshot: (state: DockWorkspace) => Effect.Effect<string, DockInputError>;
+  readonly encodeSnapshot: (state: DockWorkspace) => Effect.Effect<string, DockInputError | DockInvariantViolation>;
   readonly decodeSnapshot: (input: string) => Effect.Effect<DockWorkspace, DockInputError | DockInvariantViolation>;
   readonly restore: (
     current: DockWorkspace,
     input: string,
     request: RestoreSnapshotRequest
-  ) => Effect.Effect<DockTransition, DockInputError | DockInvariantViolation>;
+  ) => Effect.Effect<DockMutationOutcome, DockInputError | DockInvariantViolation>;
 }
 
 /**
@@ -89,7 +94,7 @@ const makeDockEngine = Effect.succeed(
     encodeSnapshot,
     decodeSnapshot,
     restore: Effect.fn("DockEngine.restore")(function* (current, input, request) {
-      const restored = yield* decodeSnapshot(input);
+      const restored = yield* decodeSnapshotInput(input);
       return yield* restoreDockWorkspace(current, restored, request);
     }),
   })
@@ -125,14 +130,10 @@ export const makeDockSnapshotStoreMemory = (initial: O.Option<string> = O.none()
   );
 
 /** Resolves a loaded snapshot or fails with an explicit typed absence. */
-export const requireSnapshot = Effect.fn("DockSnapshotStore.requireSnapshot")(function* (snapshot: O.Option<string>) {
-  return yield* O.match(snapshot, {
-    onNone: () =>
-      Effect.fail(
-        DockSnapshotMissing.make({
-          message: "No persisted dock snapshot is available.",
-        })
-      ),
-    onSome: Effect.succeed,
-  });
-});
+export const requireSnapshot = Effect.fn("DockSnapshotStore.requireSnapshot")((snapshot: O.Option<string>) =>
+  Effect.fromOption(snapshot, () =>
+    DockSnapshotMissing.make({
+      message: "No persisted dock snapshot is available.",
+    })
+  )
+);

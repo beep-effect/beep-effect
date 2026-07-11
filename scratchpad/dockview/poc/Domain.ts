@@ -5,18 +5,39 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
-import { Tuple } from "effect";
+import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { flow, pipe, Tuple } from "effect";
+import * as A from "effect/Array";
+import * as Bool from "effect/Boolean";
+import * as Eq from "effect/Equal";
+import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
+import * as N from "effect/Number";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("dockview/poc/Domain");
+
+type Dual2<Self, That, Result> = {
+  (self: Self, that: That): Result;
+  (that: That): (self: Self) => Result;
+};
+
+type Dual3<Self, First, Second, Result> = {
+  (self: Self, first: First, second: Second): Result;
+  (first: First, second: Second): (self: Self) => Result;
+};
 
 /** Stable identity for a panel instance. */
 export const PanelId = S.NonEmptyString.pipe(
   S.brand("DockPanelId"),
   $I.annoteSchema("PanelId", {
     description: "Stable identity for one panel instance in a dock workspace.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    equals: SchemaUtils.toEquivalence(schema),
+    is: S.is(schema),
+  }))
 );
 export type PanelId = typeof PanelId.Type;
 
@@ -25,7 +46,11 @@ export const GroupId = S.NonEmptyString.pipe(
   S.brand("DockGroupId"),
   $I.annoteSchema("GroupId", {
     description: "Stable identity for one non-empty tab group.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    equals: SchemaUtils.toEquivalence(schema),
+    is: S.is(schema),
+  }))
 );
 export type GroupId = typeof GroupId.Type;
 
@@ -34,7 +59,11 @@ export const SplitId = S.NonEmptyString.pipe(
   S.brand("DockSplitId"),
   $I.annoteSchema("SplitId", {
     description: "Stable identity for one binary layout split.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    equals: SchemaUtils.toEquivalence(schema),
+    is: S.is(schema),
+  }))
 );
 export type SplitId = typeof SplitId.Type;
 
@@ -43,7 +72,11 @@ export const CommandId = S.NonEmptyString.pipe(
   S.brand("DockCommandId"),
   $I.annoteSchema("CommandId", {
     description: "Causal identity shared by a command and its emitted events.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    equals: SchemaUtils.toEquivalence(schema),
+    is: S.is(schema),
+  }))
 );
 export type CommandId = typeof CommandId.Type;
 
@@ -52,21 +85,30 @@ export const RendererKey = S.NonEmptyString.pipe(
   S.brand("DockRendererKey"),
   $I.annoteSchema("RendererKey", {
     description: "Renderer-neutral key resolved by a host adapter outside dockview-core.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    equals: SchemaUtils.toEquivalence(schema),
+    is: S.is(schema),
+  }))
 );
 export type RendererKey = typeof RendererKey.Type;
 
-/** Relative share of the start child in a binary split. */
-export const SplitRatio = S.Finite.check(
+/** Relative share of one child in integer basis points. */
+export const SplitRatio = S.Int.check(
   S.isBetween({
-    minimum: 0.1,
-    maximum: 0.9,
+    minimum: 1_000,
+    maximum: 9_000,
   })
 ).pipe(
   S.brand("DockSplitRatio"),
   $I.annoteSchema("SplitRatio", {
-    description: "Relative share of the start child in a binary split.",
-  })
+    description: "Exact child share in basis points, bounded from ten through ninety percent.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    complement: (ratio: typeof schema.Type) => schema.make(N.subtract(10_000, ratio)),
+    equals: SchemaUtils.toEquivalence(schema),
+    is: S.is(schema),
+  }))
 );
 export type SplitRatio = typeof SplitRatio.Type;
 
@@ -93,7 +135,7 @@ export class ComponentPanelView extends S.Class<ComponentPanelView>($I`Component
   {
     kind: S.tag("component"),
     renderer: S.toType(RendererKey),
-    input: PanelParameters,
+    input: PanelParameters.pipe(SchemaUtils.withConstantDefault<PanelParameters>({})),
   },
   $I.annote("ComponentPanelView", {
     description: "Panel content resolved by a host renderer registry.",
@@ -131,14 +173,27 @@ export class Panel extends S.Class<Panel>($I`Panel`)(
   $I.annote("Panel", {
     description: "A renderer-neutral panel owned directly by one tab group.",
   })
-) {}
+) {
+  static readonly findInNode: Dual2<DockNode.Type, PanelId, O.Option<Panel>> = dual(
+    2,
+    (node: DockNode.Type, panelId: PanelId): O.Option<Panel> =>
+      pipe(
+        DockNode.panels(node),
+        A.findFirst((panel) => PanelId.equals(panel.id, panelId))
+      )
+  );
 
-export const DockAxis = LiteralKit(["horizontal", "vertical"]).annotate(
-  $I.annote("DockAxis", {
-    description: "Main axis of a binary dock split.",
-  })
-);
-export type DockAxis = typeof DockAxis.Type;
+  static readonly findInTabs: Dual2<TabsNode, PanelId, O.Option<Panel>> = dual(
+    2,
+    (tabs: TabsNode, panelId: PanelId): O.Option<Panel> =>
+      pipe(
+        TabsNode.panels(tabs),
+        A.findFirst((panel) => PanelId.equals(panel.id, panelId))
+      )
+  );
+
+  static readonly is = S.is(Panel);
+}
 
 /**
  * A non-empty tab group represented as a zipper.
@@ -150,61 +205,404 @@ export class TabsNode extends S.TaggedClass<TabsNode>($I`TabsNode`)(
   "Tabs",
   {
     groupId: S.toType(GroupId),
-    before: S.Array(Panel),
+    before: S.Array(Panel).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<Panel>>([])),
     active: Panel,
-    after: S.Array(Panel),
+    after: S.Array(Panel).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<Panel>>([])),
   },
   $I.annote("TabsNode", {
     description: "A non-empty ordered tab zipper with one structurally active panel.",
   })
+) {
+  static readonly activate: Dual2<TabsNode, PanelId, O.Option<TabsNode>> = dual(
+    2,
+    (tabs: TabsNode, panelId: PanelId): O.Option<TabsNode> => {
+      const [before, fromMatch] = A.splitWhere(TabsNode.panels(tabs), (panel) => PanelId.equals(panel.id, panelId));
+      return A.match(fromMatch, {
+        onEmpty: O.none,
+        onNonEmpty: (activeAndAfter) =>
+          O.some(
+            TabsNode.make({
+              groupId: tabs.groupId,
+              before,
+              active: A.headNonEmpty(activeAndAfter),
+              after: A.tailNonEmpty(activeAndAfter),
+            })
+          ),
+      });
+    }
+  );
+
+  static readonly append: Dual2<TabsNode, Panel, TabsNode> = dual(
+    2,
+    (tabs: TabsNode, panel: Panel): TabsNode =>
+      TabsNode.make({
+        groupId: tabs.groupId,
+        before: TabsNode.panels(tabs),
+        active: panel,
+      })
+  );
+
+  static readonly findForPanel: Dual2<DockNode.Type, PanelId, O.Option<TabsNode>> = dual(
+    2,
+    (node: DockNode.Type, panelId: PanelId): O.Option<TabsNode> =>
+      pipe(
+        DockNode.tabs(node),
+        A.findFirst((tabs) => O.isSome(Panel.findInTabs(tabs, panelId)))
+      )
+  );
+
+  static readonly is = S.is(TabsNode);
+
+  static readonly panels = (tabs: TabsNode): ReadonlyArray<Panel> =>
+    pipe(tabs.before, A.append(tabs.active), A.appendAll(tabs.after));
+
+  static readonly remove: Dual2<TabsNode, PanelId, O.Option<TabsNode>> = dual(
+    2,
+    (tabs: TabsNode, panelId: PanelId): O.Option<TabsNode> =>
+      Bool.match(PanelId.equals(tabs.active.id, panelId), {
+        onTrue: () =>
+          A.match(tabs.after, {
+            onNonEmpty: (after) =>
+              O.some(
+                TabsNode.make({
+                  groupId: tabs.groupId,
+                  before: tabs.before,
+                  active: A.headNonEmpty(after),
+                  after: A.tailNonEmpty(after),
+                })
+              ),
+            onEmpty: () =>
+              A.match(tabs.before, {
+                onEmpty: O.none,
+                onNonEmpty: (before) =>
+                  O.some(
+                    TabsNode.make({
+                      groupId: tabs.groupId,
+                      before: A.dropRight(before, 1),
+                      active: A.lastNonEmpty(before),
+                    })
+                  ),
+              }),
+          }),
+        onFalse: () =>
+          O.some(
+            TabsNode.make({
+              groupId: tabs.groupId,
+              before: A.filter(tabs.before, (panel) => Bool.not(PanelId.equals(panel.id, panelId))),
+              active: tabs.active,
+              after: A.filter(tabs.after, (panel) => Bool.not(PanelId.equals(panel.id, panelId))),
+            })
+          ),
+      })
+  );
+}
+
+const DockNodeRef = S.suspend((): S.Codec<DockNode.Type, DockNode.Encoded> => DockNode);
+const DefaultSplitRatio = S.toType(SplitRatio).pipe(SchemaUtils.withConstantDefault<number>(5_000));
+
+/** Horizontal split geometry with semantic left and right children. */
+export class HorizontalSplitLayout extends S.Class<HorizontalSplitLayout>($I`HorizontalSplitLayout`)(
+  {
+    axis: S.tag("horizontal"),
+    leftRatio: DefaultSplitRatio,
+    left: DockNodeRef,
+    right: DockNodeRef,
+  },
+  $I.annote("HorizontalSplitLayout", {
+    description: "Horizontal split geometry whose ratio describes the left child share.",
+  })
 ) {}
 
-type SplitNodeShape = {
-  readonly _tag: "Split";
-  readonly splitId: SplitId;
-  readonly axis: DockAxis;
-  readonly ratio: SplitRatio;
-  readonly start: DockNodeShape;
-  readonly end: DockNodeShape;
-};
+/** Vertical split geometry with semantic top and bottom children. */
+export class VerticalSplitLayout extends S.Class<VerticalSplitLayout>($I`VerticalSplitLayout`)(
+  {
+    axis: S.tag("vertical"),
+    topRatio: DefaultSplitRatio,
+    top: DockNodeRef,
+    bottom: DockNodeRef,
+  },
+  $I.annote("VerticalSplitLayout", {
+    description: "Vertical split geometry whose ratio describes the top child share.",
+  })
+) {}
 
-type DockNodeShape = TabsNode | SplitNodeShape;
+type SplitLayoutShape = HorizontalSplitLayout | VerticalSplitLayout;
 
-/**
- * Recursive binary split schema.
- *
- * `S.TaggedStruct` is the deliberate recursive-schema exception to the usual
- * `S.Class` preference: a class cannot reference its own union in its base
- * expression without creating a TypeScript circular base.
- */
-export const SplitNode: S.Codec<SplitNodeShape> = S.TaggedStruct("Split", {
-  splitId: S.toType(SplitId),
-  axis: DockAxis,
-  ratio: S.toType(SplitRatio),
-  start: S.suspend((): S.Codec<DockNodeShape> => DockNode),
-  end: S.suspend((): S.Codec<DockNodeShape> => DockNode),
-}).pipe(
-  $I.annoteSchema("SplitNode", {
-    description: "A recursive binary split with exactly two children.",
+/** Axis-specific geometry owned by one binary split. */
+export const SplitLayout = S.Union([HorizontalSplitLayout, VerticalSplitLayout]).pipe(
+  S.toTaggedUnion("axis"),
+  $I.annoteSchema("SplitLayout", {
+    description: "Axis-specific split geometry with semantic child and leading-ratio names.",
+  }),
+  SchemaUtils.withStatics((schema) => {
+    const children = (layout: SplitLayoutShape): readonly [DockNodeShape, DockNodeShape] =>
+      schema.match(layout, {
+        horizontal: ({ left, right }): readonly [DockNodeShape, DockNodeShape] => [left, right],
+        vertical: ({ top, bottom }): readonly [DockNodeShape, DockNodeShape] => [top, bottom],
+      });
+
+    const mapChildren: Dual2<SplitLayoutShape, (node: DockNodeShape) => DockNodeShape, SplitLayoutShape> = dual(
+      2,
+      (layout: SplitLayoutShape, f: (node: DockNodeShape) => DockNodeShape): SplitLayoutShape =>
+        schema.match(layout, {
+          horizontal: ({ left, leftRatio, right }) =>
+            HorizontalSplitLayout.make({ leftRatio, left: f(left), right: f(right) }),
+          vertical: ({ bottom, top, topRatio }) =>
+            VerticalSplitLayout.make({ topRatio, top: f(top), bottom: f(bottom) }),
+        })
+    );
+
+    const ratio = (layout: SplitLayoutShape): SplitRatio =>
+      schema.match(layout, {
+        horizontal: ({ leftRatio }) => leftRatio,
+        vertical: ({ topRatio }) => topRatio,
+      });
+
+    const withChildren: Dual3<SplitLayoutShape, DockNodeShape, DockNodeShape, SplitLayoutShape> = dual(
+      3,
+      (layout: SplitLayoutShape, first: DockNodeShape, second: DockNodeShape): SplitLayoutShape =>
+        schema.match(layout, {
+          horizontal: ({ leftRatio }) => HorizontalSplitLayout.make({ leftRatio, left: first, right: second }),
+          vertical: ({ topRatio }) => VerticalSplitLayout.make({ topRatio, top: first, bottom: second }),
+        })
+    );
+
+    const withRatio: Dual2<SplitLayoutShape, SplitRatio, SplitLayoutShape> = dual(
+      2,
+      (layout: SplitLayoutShape, nextRatio: SplitRatio): SplitLayoutShape =>
+        schema.match(layout, {
+          horizontal: ({ left, right }) => HorizontalSplitLayout.make({ leftRatio: nextRatio, left, right }),
+          vertical: ({ bottom, top }) => VerticalSplitLayout.make({ topRatio: nextRatio, top, bottom }),
+        })
+    );
+
+    return { children, mapChildren, ratio, withChildren, withRatio };
   })
 );
-export type SplitNode = typeof SplitNode.Type;
+export type SplitLayout = typeof SplitLayout.Type;
+
+/** Recursive binary split with model-owned topology operations. */
+export class SplitNode extends S.TaggedClass<SplitNode>($I`SplitNode`)(
+  "Split",
+  {
+    splitId: S.toType(SplitId),
+    layout: SplitLayout,
+  },
+  $I.annote("SplitNode", {
+    description: "A recursive binary split with axis-specific geometry and exactly two children.",
+  })
+) {
+  static readonly fromPlacement: Dual3<TabsNode, Panel, SplitPlacement, SplitNode> = dual(
+    3,
+    (reference: TabsNode, panel: Panel, placement: SplitPlacement): SplitNode => {
+      const inserted = TabsNode.make({ groupId: placement.newGroupId, active: panel });
+      return DockSide.$match(placement.side, {
+        left: () =>
+          SplitNode.make({
+            splitId: placement.splitId,
+            layout: HorizontalSplitLayout.make({
+              leftRatio: placement.newGroupRatio,
+              left: inserted,
+              right: reference,
+            }),
+          }),
+        right: () =>
+          SplitNode.make({
+            splitId: placement.splitId,
+            layout: HorizontalSplitLayout.make({
+              leftRatio: SplitRatio.complement(placement.newGroupRatio),
+              left: reference,
+              right: inserted,
+            }),
+          }),
+        top: () =>
+          SplitNode.make({
+            splitId: placement.splitId,
+            layout: VerticalSplitLayout.make({
+              topRatio: placement.newGroupRatio,
+              top: inserted,
+              bottom: reference,
+            }),
+          }),
+        bottom: () =>
+          SplitNode.make({
+            splitId: placement.splitId,
+            layout: VerticalSplitLayout.make({
+              topRatio: SplitRatio.complement(placement.newGroupRatio),
+              top: reference,
+              bottom: inserted,
+            }),
+          }),
+      });
+    }
+  );
+
+  static readonly is = S.is(SplitNode);
+
+  static readonly withRatio: Dual2<SplitNode, SplitRatio, SplitNode> = dual(
+    2,
+    (split: SplitNode, ratio: SplitRatio): SplitNode =>
+      SplitNode.make({
+        splitId: split.splitId,
+        layout: SplitLayout.withRatio(split.layout, ratio),
+      })
+  );
+}
+
+type DockNodeShape = TabsNode | SplitNode;
 
 /** Recursive layout tree node. */
-export const DockNode = S.Union([TabsNode, SplitNode])
+const DockNodeBase = S.Union([TabsNode, SplitNode])
   .annotate(
     $I.annote("DockNode", {
       description: "Recursive binary dock tree containing only non-empty leaves.",
     })
   )
   .pipe(S.toTaggedUnion("_tag"));
+
+export const DockNode = DockNodeBase.pipe(
+  SchemaUtils.withStatics((schema) => {
+    const tabs = (node: DockNodeShape): ReadonlyArray<TabsNode> =>
+      schema.match(node, {
+        Tabs: (tabsNode): ReadonlyArray<TabsNode> => A.of(tabsNode),
+        Split: ({ layout }): ReadonlyArray<TabsNode> => {
+          const [first, second] = SplitLayout.children(layout);
+          return A.appendAll(tabs(first), tabs(second));
+        },
+      });
+
+    const splits = (node: DockNodeShape): ReadonlyArray<SplitNode> =>
+      schema.match(node, {
+        Tabs: (): ReadonlyArray<SplitNode> => A.empty(),
+        Split: (split): ReadonlyArray<SplitNode> => {
+          const [first, second] = SplitLayout.children(split.layout);
+          return pipe(A.of(split), A.appendAll(splits(first)), A.appendAll(splits(second)));
+        },
+      });
+
+    const panels: (node: DockNodeShape) => ReadonlyArray<Panel> = flow(tabs, A.flatMap(TabsNode.panels));
+
+    const findTabs: Dual2<DockNodeShape, GroupId, O.Option<TabsNode>> = dual(
+      2,
+      (node: DockNodeShape, groupId: GroupId): O.Option<TabsNode> =>
+        pipe(
+          tabs(node),
+          A.findFirst((candidate) => GroupId.equals(candidate.groupId, groupId))
+        )
+    );
+
+    const findSplit: Dual2<DockNodeShape, SplitId, O.Option<SplitNode>> = dual(
+      2,
+      (node: DockNodeShape, splitId: SplitId): O.Option<SplitNode> =>
+        pipe(
+          splits(node),
+          A.findFirst((candidate) => SplitId.equals(candidate.splitId, splitId))
+        )
+    );
+
+    const replaceAtGroup: Dual3<DockNodeShape, GroupId, DockNodeShape, DockNodeShape> = dual(
+      3,
+      (node: DockNodeShape, groupId: GroupId, replacement: DockNodeShape): DockNodeShape =>
+        schema.match(node, {
+          Tabs: (candidate) =>
+            Bool.match(GroupId.equals(candidate.groupId, groupId), {
+              onTrue: () => replacement,
+              onFalse: () => candidate,
+            }),
+          Split: (split) =>
+            SplitNode.make({
+              splitId: split.splitId,
+              layout: SplitLayout.mapChildren(split.layout, (child: DockNodeShape) =>
+                replaceAtGroup(child, groupId, replacement)
+              ),
+            }),
+        })
+    );
+
+    const replaceSplit: Dual2<DockNodeShape, SplitNode, DockNodeShape> = dual(
+      2,
+      (node: DockNodeShape, replacement: SplitNode): DockNodeShape =>
+        schema.match(node, {
+          Tabs: (tabsNode) => tabsNode,
+          Split: (split) =>
+            Bool.match(SplitId.equals(split.splitId, replacement.splitId), {
+              onTrue: () => replacement,
+              onFalse: () =>
+                SplitNode.make({
+                  splitId: split.splitId,
+                  layout: SplitLayout.mapChildren(split.layout, (child: DockNodeShape) =>
+                    replaceSplit(child, replacement)
+                  ),
+                }),
+            }),
+        })
+    );
+
+    const removeTabs: Dual2<DockNodeShape, GroupId, O.Option<DockNodeShape>> = dual(
+      2,
+      (node: DockNodeShape, groupId: GroupId): O.Option<DockNodeShape> =>
+        schema.match(node, {
+          Tabs: (candidate) =>
+            Bool.match(GroupId.equals(candidate.groupId, groupId), {
+              onTrue: O.none,
+              onFalse: () => O.some(candidate),
+            }),
+          Split: (split) => {
+            const [first, second] = SplitLayout.children(split.layout);
+            return Bool.match(O.isSome(findTabs(first, groupId)), {
+              onTrue: () =>
+                O.match(removeTabs(first, groupId), {
+                  onNone: () => O.some(second),
+                  onSome: (nextFirst) =>
+                    O.some(
+                      SplitNode.make({
+                        splitId: split.splitId,
+                        layout: SplitLayout.withChildren(split.layout, nextFirst, second),
+                      })
+                    ),
+                }),
+              onFalse: () =>
+                O.match(removeTabs(second, groupId), {
+                  onNone: () => O.some(first),
+                  onSome: (nextSecond) =>
+                    O.some(
+                      SplitNode.make({
+                        splitId: split.splitId,
+                        layout: SplitLayout.withChildren(split.layout, first, nextSecond),
+                      })
+                    ),
+                }),
+            });
+          },
+        })
+    );
+
+    return {
+      equals: SchemaUtils.toEquivalence(schema),
+      findSplit,
+      findTabs,
+      is: S.is(schema),
+      panels,
+      removeTabs,
+      replaceAtGroup,
+      replaceSplit,
+      splits,
+      tabs,
+    };
+  })
+) satisfies S.Codec<DockNodeShape>;
 export type DockNode = typeof DockNode.Type;
+
+export declare namespace DockNode {
+  export type Type = DockNodeShape;
+  export type Encoded = DockNodeShape;
+}
 
 /** Workspace with no panels and therefore no root node. */
 export class EmptyWorkspace extends S.Class<EmptyWorkspace>($I`EmptyWorkspace`)(
   {
     kind: S.tag("empty"),
-    revision: NonNegativeInt,
+    revision: NonNegativeInt.pipe(SchemaUtils.withConstantDefault<number>(0)),
   },
   $I.annote("EmptyWorkspace", {
     description: "A dock workspace with no representable layout tree.",
@@ -215,7 +613,7 @@ export class EmptyWorkspace extends S.Class<EmptyWorkspace>($I`EmptyWorkspace`)(
 export class PopulatedWorkspace extends S.Class<PopulatedWorkspace>($I`PopulatedWorkspace`)(
   {
     kind: S.tag("populated"),
-    revision: NonNegativeInt,
+    revision: NonNegativeInt.pipe(SchemaUtils.withConstantDefault<number>(0)),
     root: DockNode,
   },
   $I.annote("PopulatedWorkspace", {
@@ -225,16 +623,117 @@ export class PopulatedWorkspace extends S.Class<PopulatedWorkspace>($I`Populated
 
 const DockWorkspaceKind = LiteralKit(["empty", "populated"]);
 
-/** Complete serializable workspace state. */
-export const DockWorkspace = DockWorkspaceKind.mapMembers(
+const DockWorkspaceBase = DockWorkspaceKind.mapMembers(
   Tuple.evolve([() => EmptyWorkspace, () => PopulatedWorkspace])
-)
-  .annotate(
-    $I.annote("DockWorkspace", {
-      description: "Complete dock state discriminated between empty and populated layouts.",
-    })
-  )
-  .pipe(S.toTaggedUnion("kind"));
+).pipe(S.toTaggedUnion("kind"));
+type DockWorkspaceShape = typeof DockWorkspaceBase.Type;
+
+const idsAreUnique = (ids: ReadonlyArray<string>): boolean =>
+  Eq.equals(HashSet.size(HashSet.fromIterable(ids)), A.length(ids));
+
+const DockWorkspaceGlobalIdentityCheck = S.makeFilter<typeof DockWorkspaceBase.Type>(
+  (workspace) =>
+    DockWorkspaceBase.match(workspace, {
+      empty: () => true,
+      populated: ({ root }) => {
+        const panelIds = A.map(DockNode.panels(root), (panel) => panel.id);
+        const groupIds = A.map(DockNode.tabs(root), (tabs) => tabs.groupId);
+        const splitIds = A.map(DockNode.splits(root), (split) => split.splitId);
+        return Bool.and(idsAreUnique(panelIds), Bool.and(idsAreUnique(groupIds), idsAreUnique(splitIds)));
+      },
+    }),
+  {
+    identifier: $I`DockWorkspaceGlobalIdentityCheck`,
+    title: "Dock workspace global identity",
+    description: "Panel, group, and split identifiers must each be globally unique across the complete tree.",
+    message: "Expected globally unique panel, group, and split identifiers.",
+  }
+);
+
+/** Complete serializable workspace state. */
+export const DockWorkspace = DockWorkspaceBase.pipe(
+  S.check(DockWorkspaceGlobalIdentityCheck),
+  $I.annoteSchema("DockWorkspace", {
+    description: "Complete dock state discriminated between empty and populated layouts.",
+  }),
+  SchemaUtils.withStatics((schema) => {
+    const asPopulated = O.liftPredicate(DockWorkspaceBase.guards.populated);
+    const empty: DockWorkspaceShape = EmptyWorkspace.make();
+
+    const findPanel: Dual2<DockWorkspaceShape, PanelId, O.Option<Panel>> = dual(
+      2,
+      (workspace: DockWorkspaceShape, panelId: PanelId): O.Option<Panel> =>
+        DockWorkspaceBase.match(workspace, {
+          empty: (): O.Option<Panel> => O.none(),
+          populated: ({ root }): O.Option<Panel> => Panel.findInNode(root, panelId),
+        })
+    );
+
+    const findActivePanel: Dual2<DockWorkspaceShape, GroupId, O.Option<Panel>> = dual(
+      2,
+      (workspace: DockWorkspaceShape, groupId: GroupId): O.Option<Panel> =>
+        pipe(
+          findTabs(workspace, groupId),
+          O.map((tabs) => tabs.active)
+        )
+    );
+
+    const findTabs: Dual2<DockWorkspaceShape, GroupId, O.Option<TabsNode>> = dual(
+      2,
+      (workspace: DockWorkspaceShape, groupId: GroupId): O.Option<TabsNode> =>
+        DockWorkspaceBase.match(workspace, {
+          empty: (): O.Option<TabsNode> => O.none(),
+          populated: ({ root }): O.Option<TabsNode> => DockNode.findTabs(root, groupId),
+        })
+    );
+
+    const hasSameContent: Dual2<DockWorkspaceShape, DockWorkspaceShape, boolean> = dual(
+      2,
+      (left: DockWorkspaceShape, right: DockWorkspaceShape): boolean =>
+        DockWorkspaceBase.match(left, {
+          empty: () => DockWorkspaceBase.guards.empty(right),
+          populated: ({ root }) =>
+            pipe(
+              right,
+              asPopulated,
+              O.exists((candidate) => DockNode.equals(root, candidate.root))
+            ),
+        })
+    );
+
+    const withRevision: Dual2<DockWorkspaceShape, NonNegativeInt, DockWorkspaceShape> = dual(
+      2,
+      (workspace: DockWorkspaceShape, revision: NonNegativeInt): DockWorkspaceShape =>
+        DockWorkspaceBase.match(workspace, {
+          empty: () => EmptyWorkspace.make({ revision }),
+          populated: ({ root }) => PopulatedWorkspace.make({ revision, root }),
+        })
+    );
+
+    return {
+      empty,
+      equals: SchemaUtils.toEquivalence(schema),
+      findActivePanel,
+      findPanel,
+      findTabs,
+      groupCount: (workspace: DockWorkspaceShape): number =>
+        DockWorkspaceBase.match(workspace, {
+          empty: () => 0,
+          populated: ({ root }) => A.length(DockNode.tabs(root)),
+        }),
+      guards: DockWorkspaceBase.guards,
+      hasSameContent,
+      is: S.is(schema),
+      match: DockWorkspaceBase.match,
+      panels: (workspace: DockWorkspaceShape): ReadonlyArray<Panel> =>
+        DockWorkspaceBase.match(workspace, {
+          empty: (): ReadonlyArray<Panel> => A.empty(),
+          populated: ({ root }): ReadonlyArray<Panel> => DockNode.panels(root),
+        }),
+      withRevision,
+    };
+  })
+);
 export type DockWorkspace = typeof DockWorkspace.Type;
 
 /** Placement for the first panel in an empty workspace. */
@@ -274,10 +773,10 @@ export class SplitPlacement extends S.Class<SplitPlacement>($I`SplitPlacement`)(
     newGroupId: GroupId,
     splitId: SplitId,
     side: DockSide,
-    ratio: SplitRatio,
+    newGroupRatio: SplitRatio.pipe(SchemaUtils.withConstantDefault<number>(5_000)),
   },
   $I.annote("SplitPlacement", {
-    description: "Creates a new tab group beside an existing group.",
+    description: "Creates a new tab group beside an existing group with an explicit share for the new group.",
   })
 ) {}
 
@@ -294,6 +793,15 @@ export const DockPlacement = DockPlacementKind.mapMembers(
   )
   .pipe(S.toTaggedUnion("kind"));
 export type DockPlacement = typeof DockPlacement.Type;
+
+/** Semantic destination for moving an existing panel. */
+export const DockMoveTarget = S.Union([TabPlacement, SplitPlacement]).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("DockMoveTarget", {
+    description: "Moves a panel into tabs or docks it beside an existing group.",
+  })
+);
+export type DockMoveTarget = typeof DockMoveTarget.Type;
 
 /** Command originating from a user interaction. */
 export class UserCommandOrigin extends S.Class<UserCommandOrigin>($I`UserCommandOrigin`)(
@@ -354,15 +862,15 @@ export class ActivatePanelCommand extends S.Class<ActivatePanelCommand>($I`Activ
   })
 ) {}
 
-/** Moves a panel to the end of another tab group and activates it. */
+/** Moves a panel into tabs or docks it beside an existing group. */
 export class MovePanelCommand extends S.Class<MovePanelCommand>($I`MovePanelCommand`)(
   {
     kind: S.tag("movePanel"),
     panelId: PanelId,
-    targetGroupId: GroupId,
+    target: DockMoveTarget,
   },
   $I.annote("MovePanelCommand", {
-    description: "Moves a panel between groups as one atomic tree transition.",
+    description: "Moves a panel to a semantic destination as one atomic tree transition.",
   })
 ) {}
 
@@ -525,10 +1033,11 @@ export class WorkspaceClearedEvent extends S.Class<WorkspaceClearedEvent>($I`Wor
 export class WorkspaceRestoredEvent extends S.Class<WorkspaceRestoredEvent>($I`WorkspaceRestoredEvent`)(
   {
     kind: S.tag("workspaceRestored"),
-    revision: NonNegativeInt,
+    sourceRevision: NonNegativeInt,
+    installedRevision: NonNegativeInt,
   },
   $I.annote("WorkspaceRestoredEvent", {
-    description: "A fully decoded and validated snapshot replaced live state.",
+    description: "A fully decoded and validated snapshot replaced live content without rewinding live revision order.",
   })
 ) {}
 
@@ -562,17 +1071,60 @@ export const DockEvent = DockEventKind.mapMembers(
   .pipe(S.toTaggedUnion("kind"));
 export type DockEvent = typeof DockEvent.Type;
 
-/** Accepted command result published atomically to observers. */
-export class DockTransition extends S.Class<DockTransition>($I`DockTransition`)(
+export const DockUnchangedReason = LiteralKit([
+  "panel-already-active",
+  "split-ratio-unchanged",
+  "snapshot-identical",
+]).annotate(
+  $I.annote("DockUnchangedReason", {
+    description: "Expected reasons a valid dock intent produces no state change or domain event.",
+  })
+);
+export type DockUnchangedReason = typeof DockUnchangedReason.Type;
+
+/** Outcome for a state-changing dock intent. */
+export class DockChanged extends S.TaggedClass<DockChanged>($I`DockChanged`)(
+  "Changed",
   {
-    commandId: CommandId,
-    origin: CommandOrigin,
     previousRevision: NonNegativeInt,
     state: DockWorkspace,
     events: S.NonEmptyArray(DockEvent),
   },
-  $I.annote("DockTransition", {
-    description: "Atomic next state plus causally associated domain events.",
+  $I.annote("DockChanged", {
+    description: "A dock intent changed state and produced causally associated events.",
+  })
+) {}
+
+/** Outcome for a valid idempotent dock intent. */
+export class DockUnchanged extends S.TaggedClass<DockUnchanged>($I`DockUnchanged`)(
+  "Unchanged",
+  {
+    revision: NonNegativeInt,
+    reason: DockUnchangedReason,
+  },
+  $I.annote("DockUnchanged", {
+    description: "A valid dock intent left state and revision untouched and emitted no event.",
+  })
+) {}
+
+/** Variant-specific result of a valid dock mutation. */
+export const DockMutationResult = S.Union([DockChanged, DockUnchanged]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("DockMutationResult", {
+    description: "Discriminates published state changes from idempotent no-change results.",
+  })
+);
+export type DockMutationResult = typeof DockMutationResult.Type;
+
+/** Causal envelope around a changed or unchanged mutation result. */
+export class DockMutationOutcome extends S.Class<DockMutationOutcome>($I`DockMutationOutcome`)(
+  {
+    commandId: CommandId,
+    origin: CommandOrigin,
+    result: DockMutationResult,
+  },
+  $I.annote("DockMutationOutcome", {
+    description: "Causally identified result of a valid command or snapshot restore.",
   })
 ) {}
 
@@ -586,6 +1138,7 @@ export const DockRejectionReason = LiteralKit([
   "group-already-exists",
   "split-already-exists",
   "same-group-move",
+  "source-group-would-disappear",
 ]).annotate(
   $I.annote("DockRejectionReason", {
     description: "Expected business reasons for rejecting a dock command.",
@@ -610,14 +1163,16 @@ export const DockInvariantReason = LiteralKit([
   "duplicate-panel-id",
   "duplicate-group-id",
   "duplicate-split-id",
+  "revision-exhausted",
+  "topology-corrupted",
 ]).annotate(
   $I.annote("DockInvariantReason", {
-    description: "Cross-tree invariant violations not expressible by local schema shape alone.",
+    description: "Workspace invariant failures surfaced through the typed transition boundary.",
   })
 );
 export type DockInvariantReason = typeof DockInvariantReason.Type;
 
-/** Cross-tree invariant failure discovered before state publication. */
+/** Workspace invariant failure discovered before state publication. */
 export class DockInvariantViolation extends TaggedErrorClass<DockInvariantViolation>($I`DockInvariantViolation`)(
   "DockInvariantViolation",
   {
@@ -625,7 +1180,7 @@ export class DockInvariantViolation extends TaggedErrorClass<DockInvariantViolat
     message: S.String,
   },
   $I.annote("DockInvariantViolation", {
-    description: "A global uniqueness invariant failed before state publication.",
+    description: "A workspace invariant failed before state publication.",
   })
 ) {}
 
@@ -679,7 +1234,11 @@ export class DockSnapshotMissing extends TaggedErrorClass<DockSnapshotMissing>($
 ) {}
 
 /** Error union for a typed dock transition. */
-export type DockTransitionError = DockCommandRejected | DockInvariantViolation;
+export const DockTransitionError = S.Union([DockCommandRejected, DockInvariantViolation]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("DockTransitionError", {
+    description: "Error while executing a dock transition.",
+  })
+);
 
-/** Error union for snapshot restoration through the Atom adapter. */
-export type DockRestoreError = DockInputError | DockInvariantViolation | DockPersistenceError | DockSnapshotMissing;
+export type DockTransitionError = typeof DockTransitionError.Type;

@@ -1,4 +1,10 @@
 import {
+  DispatchDockCommand,
+  DispatchUnknownDockCommand,
+  RestoreDockSnapshot,
+  SaveDockSnapshot,
+} from "../DockAtomProtocol.ts";
+import {
   ActivatePanelCommand,
   ApiCommandOrigin,
   ClearWorkspaceCommand,
@@ -11,40 +17,45 @@ import {
   OpenPanelCommand,
   Panel,
   PanelId,
+  PopulatedWorkspace,
   ResizeSplitCommand,
   RestoreSnapshotRequest,
   RootPlacement,
   SplitId,
+  SplitLayout,
+  SplitNode,
   SplitPlacement,
   SplitRatio,
   TabPlacement,
+  TabsNode,
   TextPanelView,
 } from "../Domain.ts";
 
 export const groupOne = GroupId.make("group-one");
 export const groupTwo = GroupId.make("group-two");
+export const groupThree = GroupId.make("group-three");
 export const splitOne = SplitId.make("split-one");
+export const splitTwo = SplitId.make("split-two");
 
 export const panelOne = Panel.make({
   id: PanelId.make("panel-one"),
   title: "Panel One",
-  view: TextPanelView.make({ kind: "text", text: "one" }),
+  view: TextPanelView.make({ text: "one" }),
 });
 
 export const panelTwo = Panel.make({
   id: PanelId.make("panel-two"),
   title: "Panel Two",
-  view: TextPanelView.make({ kind: "text", text: "two" }),
+  view: TextPanelView.make({ text: "two" }),
 });
 
 export const panelThree = Panel.make({
   id: PanelId.make("panel-three"),
   title: "Panel Three",
-  view: TextPanelView.make({ kind: "text", text: "three" }),
+  view: TextPanelView.make({ text: "three" }),
 });
 
 const origin = ApiCommandOrigin.make({
-  kind: "api",
   requestId: "poc-test",
 });
 
@@ -58,33 +69,28 @@ export const envelope = (id: string, command: DockCommand): DockCommandEnvelope 
 export const openPanelOne = envelope(
   "command-open-one",
   OpenPanelCommand.make({
-    kind: "openPanel",
     panel: panelOne,
-    placement: RootPlacement.make({ kind: "root", groupId: groupOne }),
+    placement: RootPlacement.make({ groupId: groupOne }),
   })
 );
 
 export const openPanelTwo = envelope(
   "command-open-two",
   OpenPanelCommand.make({
-    kind: "openPanel",
     panel: panelTwo,
-    placement: TabPlacement.make({ kind: "tab", groupId: groupOne }),
+    placement: TabPlacement.make({ groupId: groupOne }),
   })
 );
 
 export const openPanelThreeSplitRight = envelope(
   "command-open-three",
   OpenPanelCommand.make({
-    kind: "openPanel",
     panel: panelThree,
     placement: SplitPlacement.make({
-      kind: "split",
       referenceGroupId: groupOne,
       newGroupId: groupTwo,
       splitId: splitOne,
       side: "right",
-      ratio: SplitRatio.make(0.5),
     }),
   })
 );
@@ -92,7 +98,6 @@ export const openPanelThreeSplitRight = envelope(
 export const activatePanelOne = envelope(
   "command-activate-one",
   ActivatePanelCommand.make({
-    kind: "activatePanel",
     panelId: panelOne.id,
   })
 );
@@ -100,16 +105,14 @@ export const activatePanelOne = envelope(
 export const movePanelOne = envelope(
   "command-move-one",
   MovePanelCommand.make({
-    kind: "movePanel",
     panelId: panelOne.id,
-    targetGroupId: groupTwo,
+    target: TabPlacement.make({ groupId: groupTwo }),
   })
 );
 
 export const closePanelTwo = envelope(
   "command-close-two",
   ClosePanelCommand.make({
-    kind: "closePanel",
     panelId: panelTwo.id,
   })
 );
@@ -117,15 +120,45 @@ export const closePanelTwo = envelope(
 export const resizeSplit = envelope(
   "command-resize",
   ResizeSplitCommand.make({
-    kind: "resizeSplit",
     splitId: splitOne,
-    ratio: SplitRatio.make(0.6),
+    ratio: SplitRatio.make(6_000),
   })
 );
 
-export const clearWorkspace = envelope("command-clear", ClearWorkspaceCommand.make({ kind: "clearWorkspace" }));
+export const clearWorkspace = envelope("command-clear", ClearWorkspaceCommand.make());
 
 export const restoreRequest = RestoreSnapshotRequest.make({
   commandId: CommandId.make("command-restore"),
   origin,
+});
+
+export const dispatch = (command: DockCommandEnvelope) =>
+  DispatchDockCommand.make({
+    envelope: command,
+  });
+
+export const dispatchUnknown = (input: unknown) =>
+  DispatchUnknownDockCommand.make({
+    input,
+  });
+
+export const saveSnapshot = SaveDockSnapshot.make();
+export const restoreSnapshot = RestoreDockSnapshot.make({
+  request: restoreRequest,
+});
+
+export const duplicatePanelWorkspace = PopulatedWorkspace.make({
+  root: SplitNode.make({
+    splitId: SplitId.make("duplicate-panel-split"),
+    layout: SplitLayout.cases.horizontal.make({
+      left: TabsNode.make({
+        groupId: groupOne,
+        active: panelOne,
+      }),
+      right: TabsNode.make({
+        groupId: groupTwo,
+        active: panelOne,
+      }),
+    }),
+  }),
 });

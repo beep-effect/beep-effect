@@ -5,7 +5,25 @@
  * @since 0.0.0
  */
 
-export * from "./DockAtoms.ts";
-export * from "./DockEngine.ts";
+export * from "./DockAtomProtocol.ts";
+export {
+  DockAtomObservabilityLive,
+  type DockAtomSessionError,
+  makeDockAtoms,
+  makeDockAtomsWith,
+} from "./DockAtoms.ts";
+export {
+  DockEngine,
+  DockEngineLive,
+  type DockEngineShape,
+  DockSnapshotStore,
+  type DockSnapshotStoreShape,
+  makeDockSnapshotStoreMemory,
+  requireSnapshot,
+} from "./DockEngine.ts";
 export * from "./Domain.ts";
-export * from "./Reducer.ts";
+export {
+  reduceDockCommand,
+  restoreDockWorkspace,
+  validateWorkspace,
+} from "./Reducer.ts";
