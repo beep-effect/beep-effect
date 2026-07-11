@@ -1,9 +1,14 @@
 ---
 name: mcp-graphiti-memory
-description: "Use for Graphiti MCP memory workflows including startup checks, fact search, episode logging, and handshake diagnosis."
+description: "DEPRECATED (2026-07-08 memory decision): Graphiti is write-frozen, read-only for historical context until the epistemic-tables bitemporal port lands. Use only for read workflows: startup checks, fact search, handshake diagnosis. New durable memory goes to Cognee."
 ---
 
 # MCP Graphiti Memory
+
+> **DEPRECATED** — per `standards/memory-architecture/04-decision-log.md`
+> (2026-07-08): graphiti-memory is write-frozen and read-available only until
+> the `@beep/epistemic-tables` bitemporal port lands. Do not log new episodes;
+> use Cognee for durable dev-memory.
 
 ## Use When
 - You need cross-session memory lookup or writeback.
