@@ -2077,7 +2077,7 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-      "symbol": "anonymous@322",
+      "symbol": "anonymous@323",
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/repo-cli",

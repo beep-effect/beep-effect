@@ -1,5 +1,10 @@
 import { CiLaneRunOptions, ciLaneStepsForTesting } from "@beep/repo-cli/commands/Ci";
-import { fallowCiUploadDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command";
+import {
+  collectAuditDiffInputForTesting,
+  fallowAuditDiffFallbackArgsForTesting,
+  fallowAuditNeedsDiffFallbackForTesting,
+  fallowCiUploadDiagnosticsForTesting,
+} from "@beep/repo-cli/commands/Quality/FallowQuality.command";
 import {
   CoveragePackageBaseline,
   CoverageRegressionBaseline,
@@ -49,6 +54,7 @@ import { Cause, Effect, Exit, FileSystem, Layer, Order, Path, pipe } from "effec
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
+import { ChildProcess } from "effect/unstable/process";
 import { describe, expect, it } from "vitest";
 import type { QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
 
@@ -63,6 +69,14 @@ const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = decodeJsoncTextAs(G
 const isQualityTaskFailed = S.is(QualityTaskFailed);
 const isQualityTaskGroupFailed = S.is(QualityTaskGroupFailed);
 const isString = (value: unknown): value is string => typeof value === "string";
+const runGit = Effect.fn("QualityTasksTest.runGit")(function* (repoRoot: string, args: ReadonlyArray<string>) {
+  const handle = yield* ChildProcess.make("git", [...args], {
+    cwd: repoRoot,
+    stdout: "ignore",
+    stderr: "ignore",
+  });
+  expect(yield* handle.exitCode).toBe(0);
+});
 const coveragePackageBaseline = (path: string, metric = 50): CoveragePackageBaseline =>
   CoveragePackageBaseline.make({
     path,
@@ -208,10 +222,11 @@ const fallowFeatureMatrix = (features: ReadonlyArray<FallowFeatureMatrixRowTuple
     })),
   });
 
-const expectUnpromotedWiredDeadCodeLane = (matrix: GithubChecksFallowFeatureMatrix): void => {
-  expect(githubCheckPromotedFallowLaneDiagnosticsForTesting("/repo", "pre-push", matrix)).toContain(
-    "unpromoted Fallow GitHub check lane is wired: fallow:dead-code"
-  );
+const expectUnpromotedWiredFallowLanes = (matrix: GithubChecksFallowFeatureMatrix): void => {
+  expect(githubCheckPromotedFallowLaneDiagnosticsForTesting("/repo", "pre-push", matrix)).toEqual([
+    "unpromoted Fallow GitHub check lane is wired: fallow:audit",
+    "unpromoted Fallow GitHub check lane is wired: fallow:dead-code",
+  ]);
 };
 
 const expectSubstringBefore = (text: string, before: string, after: string): void => {
@@ -452,15 +467,92 @@ describe("quality task adapter", () => {
     expect(A.every(lanes, (lane) => lane.blockedBy.length === 0)).toBe(true);
   });
 
-  it("accepts the current packet state with only dead-code as the promoted pre-push lane", () => {
+  it("accepts the current packet state with audit and dead-code as promoted pre-push lanes", () => {
     const matrix = fallowFeatureMatrix([
-      ["audit", "advisory-artifact", "advisory"],
+      ["audit", "blocking-check", "blocking"],
       ["dead-code", "blocking-check", "blocking"],
     ]);
 
-    expect(promotedFallowGithubCheckLaneIdsForTesting(matrix)).toEqual(["fallow:dead-code"]);
+    expect(promotedFallowGithubCheckLaneIdsForTesting(matrix)).toEqual(["fallow:audit", "fallow:dead-code"]);
     expect(githubCheckPromotedFallowLaneDiagnosticsForTesting("/repo", "pre-push", matrix)).toEqual([]);
   });
+
+  it("falls back to diff-scoped audit when Fallow cannot create the base worktree", () => {
+    expect(
+      fallowAuditNeedsDiffFallbackForTesting({
+        exitCode: 2,
+        stdout: JSON.stringify({
+          error: true,
+          message: "could not create a temporary worktree for base ref 'origin/main'",
+          exit_code: 2,
+        }),
+      })
+    ).toBe(true);
+    expect(
+      fallowAuditNeedsDiffFallbackForTesting({
+        exitCode: 2,
+        stdout: "",
+        stderr: JSON.stringify({
+          error: true,
+          message: "could not create a temporary worktree for base ref 'origin/main'",
+          exit_code: 2,
+        }),
+      })
+    ).toBe(true);
+    expect(fallowAuditNeedsDiffFallbackForTesting({ exitCode: 2, stdout: '{"error":true}' })).toBe(false);
+    expect(fallowAuditDiffFallbackArgsForTesting("origin/main", true, "/tmp/audit.diff")).toEqual([
+      "run",
+      "fallow",
+      "--",
+      "audit",
+      "--config",
+      ".fallowrc.jsonc",
+      "--format",
+      "json",
+      "--quiet",
+      "--base",
+      "origin/main",
+      "--diff-file",
+      "/tmp/audit.diff",
+      "--gate",
+      "all",
+    ]);
+  });
+
+  it("includes untracked files in the diff-scoped audit input", () =>
+    Effect.runPromise(
+      Effect.scoped(
+        Effect.acquireUseRelease(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const repoRoot = yield* fs.makeTempDirectory();
+
+            yield* runGit(repoRoot, ["init"]);
+            yield* runGit(repoRoot, ["config", "user.email", "quality-test@example.com"]);
+            yield* runGit(repoRoot, ["config", "user.name", "Quality Test"]);
+            yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
+            yield* fs.writeFileString(path.join(repoRoot, "tracked.ts"), "export const tracked = 1;\n");
+            yield* runGit(repoRoot, ["add", "tracked.ts"]);
+            yield* runGit(repoRoot, ["commit", "-m", "init"]);
+            yield* fs.writeFileString(path.join(repoRoot, "tracked.ts"), "export const tracked = 2;\n");
+            yield* fs.writeFileString(path.join(repoRoot, "untracked.ts"), "export const untracked = true;\n");
+
+            return { fs, repoRoot } as const;
+          }),
+          ({ repoRoot }) =>
+            Effect.gen(function* () {
+              const result = yield* collectAuditDiffInputForTesting(repoRoot, "HEAD");
+
+              expect(result.exitCode).toBe(0);
+              expect(result.stdout).toContain("tracked.ts");
+              expect(result.stdout).toContain("untracked.ts");
+              expect(result.stdout).toContain("new file mode");
+            }),
+          ({ fs, repoRoot }) => fs.remove(repoRoot, { recursive: true, force: true }).pipe(Effect.ignore)
+        ).pipe(provideScopedLayer(PlatformLayer))
+      )
+    ));
 
   it("keeps wired pre-push Fallow lanes in parity with authoritative promoted matrix lanes", () =>
     Effect.runPromise(
@@ -525,9 +617,9 @@ describe("quality task adapter", () => {
         expect(validateStepIndex).toBeGreaterThan(dispatchIndex);
         expect(uploadStepIndex).toBeGreaterThan(validateStepIndex);
 
-        // Deferred-exit ordering, from the lane's own step plan: promoted
-        // blocking lanes precede advisory lanes, and envelope validation
-        // steps come last when replayed locally.
+        // Deferred-exit ordering, from the lane's own step plan: both
+        // blocking lanes precede every advisory lane, and envelope
+        // validation steps come last when replayed locally.
         const plan = ciLaneStepsForTesting(
           "/repo",
           "fallow",
@@ -544,7 +636,7 @@ describe("quality task adapter", () => {
           })
         );
         const labels = A.map(plan, (step) => step.label);
-        expect(A.take(labels, 2)).toEqual(["ci:fallow:dead-code", "ci:fallow:audit"]);
+        expect(A.take(labels, 2)).toEqual(["ci:fallow:audit", "ci:fallow:dead-code"]);
         expect(labels).toContain("ci:fallow:envelope-check:dead-code");
       }).pipe(provideScopedLayer(FileSystemLayer))
     ));
@@ -552,6 +644,7 @@ describe("quality task adapter", () => {
   it("rejects a promoted Fallow matrix row that is not wired into pre-push", () => {
     // dead-code is wired; health is promoted but not wired → missing health diagnostic
     const matrix = fallowFeatureMatrix([
+      ["audit", "blocking-check", "blocking"],
       ["dead-code", "blocking-check", "blocking"],
       ["health", "blocking-check", "blocking"],
     ]);
@@ -562,18 +655,25 @@ describe("quality task adapter", () => {
   });
 
   it("rejects a wired Fallow lane whose matrix row is not promoted", () => {
-    expectUnpromotedWiredDeadCodeLane(fallowFeatureMatrix([["dead-code", "advisory-artifact", "research"]]));
+    expectUnpromotedWiredFallowLanes(
+      fallowFeatureMatrix([
+        ["audit", "advisory-artifact", "research"],
+        ["dead-code", "advisory-artifact", "research"],
+      ])
+    );
   });
 
   it("treats candidate-blocking Fallow rows as promotion contract inputs", () => {
     // health=candidate-blocking counts as promoted; dead-code wired but research → both diagnostics fire
     const matrix = fallowFeatureMatrix([
       ["health", "advisory-artifact", "candidate-blocking"],
+      ["audit", "advisory-artifact", "research"],
       ["dead-code", "advisory-artifact", "research"],
     ]);
     expect(promotedFallowGithubCheckLaneIdsForTesting(matrix)).toEqual(["fallow:health"]);
     expect(githubCheckPromotedFallowLaneDiagnosticsForTesting("/repo", "pre-push", matrix)).toEqual([
       "missing promoted Fallow GitHub check lane fallow:health",
+      "unpromoted Fallow GitHub check lane is wired: fallow:audit",
       "unpromoted Fallow GitHub check lane is wired: fallow:dead-code",
     ]);
   });

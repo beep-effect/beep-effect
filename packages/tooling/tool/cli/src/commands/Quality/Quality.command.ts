@@ -869,6 +869,8 @@ const runSastScan = Effect.fn("QualityScriptCommands.runSastScan")(function* (
   ).pipe(Effect.map(A.getSomes));
 
   if (A.isReadonlyArrayEmpty(semgrepFiles)) {
+    // DELIBERATE fail-open: Semgrep only runs when tracked JS/TS files are present.
+    // Record this path-filter constraint in the gate-integrity expectation file.
     yield* Console.log("[github-checks] sast: skipped, no tracked JavaScript or TypeScript files");
     return;
   }
