@@ -35,6 +35,7 @@
     ".": "./src/index.ts",
     "./layer": "./src/Layer.ts",
     "./test": "./src/test.ts",
+    "./tools": "./src/tools/index.ts",
     "./aggregates/Session": "./src/aggregates/Session/index.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
@@ -54,6 +55,7 @@
       ".": "./dist/index.ts",
       "./layer": "./dist/Layer.js",
       "./test": "./dist/test.js",
+      "./tools": "./dist/tools/index.js",
       "./aggregates/Session": "./dist/aggregates/Session/index.js",
       "./internal/*": null,
       "./package.json": "./package.json"
@@ -65,11 +67,11 @@
     "@beep/ontology-config": "workspace:^",
     "@beep/ontology-use-cases": "workspace:^",
     "@beep/oxigraph": "workspace:^",
+    "@beep/rdf-canonize": "workspace:^",
     "@beep/shacl": "workspace:^",
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@beep/rdf-canonize": "workspace:^",
     "@beep/semantic-web": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/platform-node": "catalog:",

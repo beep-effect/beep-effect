@@ -12,6 +12,9 @@
       "path": "../../drivers/shacl/tsconfig.json"
     },
     {
+      "path": "../../foundation/capability/mcp-kit/tsconfig.json"
+    },
+    {
       "path": "../../foundation/capability/semantic-web/tsconfig.json"
     },
     {
