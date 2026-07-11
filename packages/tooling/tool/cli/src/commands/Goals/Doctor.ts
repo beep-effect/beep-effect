@@ -1,0 +1,686 @@
+/**
+ * `beep goals doctor` — diff goal-packet manifest claims against reality.
+ *
+ * Blocking findings (manifest missing/invalid, status↔lifecycle mismatch,
+ * README status-line drift, oversized `GOAL.md`, all-phases-terminal-but-
+ * active, invalid reflection frontmatter in any packet) are checked against
+ * the committed baseline `goals/goals-doctor.baseline.jsonc` following the
+ * fallow ratchet pattern: inherited findings are advisory, new findings
+ * block, and the baseline may only shrink. Advisory findings (staleness,
+ * missing launchers, schema-version upgrades, unsatisfied completion gates,
+ * missing supersession pointers, broken exploration back-links) never block.
+ * Git-backed advisories run as single-pass log walks and degrade to a
+ * skipped-with-note on shallow or unavailable history.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
+import { A, O, pipe, Str, thunkEmptyStr } from "@beep/utils";
+import { Console, Effect, FileSystem, Order, Path, SchemaGetter } from "effect";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
+import { Command, Flag } from "effect/unstable/cli";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
+import { diffMembership } from "../../internal/ratchet/RatchetDiff.js";
+import { runGitOutput } from "../../internal/repo-run/index.js";
+import { reflectionFileNameIsArtifact, reflectionFrontmatterIsValid } from "../Lint/ReflectionArtifact.js";
+import { GoalsGitError } from "./Goals.errors.js";
+import { decodeGoalManifest, GoalPhaseStatus, GoalStatus } from "./Goals.schemas.js";
+import {
+  goalManifestPhases,
+  isJsonRecord,
+  listGoalPackets,
+  parseGoalManifestText,
+  readmeLifecycleToken,
+} from "./Inventory.js";
+import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.js";
+import type { GoalManifest } from "./Goals.schemas.js";
+import type { GoalPacketRecord } from "./Inventory.js";
+
+const $I = $RepoCliId.create("commands/Goals/Doctor");
+
+/**
+ * Repo-relative path of the committed doctor baseline.
+ *
+ * @example
+ * ```ts
+ * import { GOALS_DOCTOR_BASELINE_PATH } from "@beep/repo-cli/commands/Goals/Doctor"
+ *
+ * console.log(GOALS_DOCTOR_BASELINE_PATH) // "goals/goals-doctor.baseline.jsonc"
+ * ```
+ * @category configuration
+ * @since 0.0.0
+ */
+export const GOALS_DOCTOR_BASELINE_PATH = "goals/goals-doctor.baseline.jsonc";
+
+/**
+ * Hard maximum `GOAL.md` launcher size in characters.
+ *
+ * @example
+ * ```ts
+ * import { GOAL_MD_MAX_CHARS } from "@beep/repo-cli/commands/Goals/Doctor"
+ *
+ * console.log(GOAL_MD_MAX_CHARS) // 4000
+ * ```
+ * @category configuration
+ * @since 0.0.0
+ */
+export const GOAL_MD_MAX_CHARS = 4000;
+
+const STALE_ACTIVE_DAYS = 21;
+
+/**
+ * Finding kinds emitted by `beep goals doctor`.
+ *
+ * @example
+ * ```ts
+ * import { GoalDoctorFindingKind } from "@beep/repo-cli/commands/Goals/Doctor"
+ *
+ * console.log(GoalDoctorFindingKind.is["manifest-invalid"]("manifest-invalid"))
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const GoalDoctorFindingKind = LiteralKit([
+  "manifest-missing",
+  "manifest-invalid",
+  "lifecycle-mismatch",
+  "readme-status-line",
+  "goal-md-oversize",
+  "phases-terminal-but-active",
+  "reflection-frontmatter-invalid",
+  "stale-active",
+  "active-missing-goal-md",
+  "schema-version-upgrade",
+  "completion-gate-unsatisfied",
+  "superseded-without-pointer",
+  "exploration-backlink-missing",
+]).pipe(
+  $I.annoteSchema("GoalDoctorFindingKind", {
+    description: "Finding kinds emitted by beep goals doctor (blocking and advisory).",
+  })
+);
+
+const GoalDoctorSeverity = LiteralKit(["blocking", "advisory"]).pipe(
+  $I.annoteSchema("GoalDoctorSeverity", {
+    description: "Severity of a goals-doctor finding: blocking checks ratchet against the baseline.",
+  })
+);
+
+/**
+ * One goals-doctor finding.
+ *
+ * `key` is the stable identity used for baseline membership; it never embeds
+ * volatile detail so a finding keeps its identity across runs.
+ *
+ * @example
+ * ```ts
+ * import { GoalDoctorFinding } from "@beep/repo-cli/commands/Goals/Doctor"
+ *
+ * const finding = GoalDoctorFinding.make({
+ *   slug: "demo",
+ *   kind: "readme-status-line",
+ *   severity: "blocking",
+ *   key: "demo readme-status-line",
+ *   message: "README has no recognizable Lifecycle line.",
+ * })
+ * console.log(finding.key)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class GoalDoctorFinding extends S.Class<GoalDoctorFinding>($I`GoalDoctorFinding`)(
+  {
+    slug: S.String,
+    kind: GoalDoctorFindingKind,
+    severity: GoalDoctorSeverity,
+    key: S.String,
+    message: S.String,
+  },
+  $I.annote("GoalDoctorFinding", {
+    description: "One goals-doctor finding with a stable baseline-membership key.",
+  })
+) {}
+
+class GoalsDoctorBaseline extends S.Class<GoalsDoctorBaseline>($I`GoalsDoctorBaseline`)(
+  {
+    schemaVersion: S.Literal("goals-doctor-baseline/v1"),
+    note: S.optionalKey(S.String),
+    findings: S.Array(S.String),
+  },
+  $I.annote("GoalsDoctorBaseline", {
+    description: "Committed goals-doctor baseline: the inherited blocking-finding keys (may only shrink).",
+  })
+) {}
+
+const decodeBaseline = S.decodeUnknownEffect(GoalsDoctorBaseline);
+const encodeBaseline = S.encodeUnknownEffect(GoalsDoctorBaseline);
+const stringifyBaseline = SchemaGetter.stringifyJson({ space: 2 });
+
+const finding = (
+  slug: string,
+  kind: typeof GoalDoctorFindingKind.Type,
+  severity: typeof GoalDoctorSeverity.Type,
+  message: string,
+  keySuffix = ""
+): GoalDoctorFinding =>
+  GoalDoctorFinding.make({
+    slug,
+    kind,
+    severity,
+    key: keySuffix === "" ? `${slug} ${kind}` : `${slug} ${kind} ${keySuffix}`,
+    message,
+  });
+
+/**
+ * Classify current blocking findings against the committed baseline keys.
+ *
+ * Pure fallow-ratchet core: `introduced` (not in the baseline) is the failure
+ * signal, `inherited` stays advisory, `resolved` is the shrink-the-baseline
+ * nudge.
+ *
+ * @param input - Current blocking findings and the baseline keys.
+ * @returns Introduced/inherited findings plus resolved baseline keys.
+ * @example
+ * ```ts
+ * import { classifyGoalDoctorFindings, GoalDoctorFinding } from "@beep/repo-cli/commands/Goals/Doctor"
+ *
+ * const current = GoalDoctorFinding.make({
+ *   slug: "demo",
+ *   kind: "goal-md-oversize",
+ *   severity: "blocking",
+ *   key: "demo goal-md-oversize",
+ *   message: "GOAL.md exceeds 4000 chars.",
+ * })
+ * const result = classifyGoalDoctorFindings({ current: [current], baselineKeys: [] })
+ * console.log(result.introduced.length) // 1
+ * ```
+ * @category classification
+ * @since 0.0.0
+ */
+export const classifyGoalDoctorFindings = (input: {
+  readonly current: ReadonlyArray<GoalDoctorFinding>;
+  readonly baselineKeys: ReadonlyArray<string>;
+}): {
+  readonly introduced: ReadonlyArray<GoalDoctorFinding>;
+  readonly inherited: ReadonlyArray<GoalDoctorFinding>;
+  readonly resolved: ReadonlyArray<string>;
+} => {
+  const currentKeys = A.map(input.current, (item) => item.key);
+  const diff = diffMembership({
+    current: currentKeys,
+    baseline: input.baselineKeys,
+    equivalence: (left, right) => left === right,
+    order: Order.String,
+  });
+  const introducedKeys = new Set(diff.introduced);
+  return {
+    introduced: A.filter(input.current, (item) => introducedKeys.has(item.key)),
+    inherited: A.filter(input.current, (item) => !introducedKeys.has(item.key)),
+    resolved: diff.resolved,
+  };
+};
+
+const stringAt = (value: Readonly<Record<string, unknown>>, key: string): O.Option<string> =>
+  pipe(
+    R.get(value, key),
+    O.filter((candidate): candidate is string => typeof candidate === "string")
+  );
+
+const hasSupersessionPointer = (raw: Readonly<Record<string, unknown>>): boolean => {
+  const topLevel = O.isSome(stringAt(raw, "supersededBy")) || O.isSome(stringAt(raw, "supersededNote"));
+  const initiative = pipe(R.get(raw, "initiative"), O.filter(isJsonRecord));
+  const nested = O.isSome(O.flatMap(initiative, (block) => stringAt(block, "supersededBy")));
+  return topLevel || nested;
+};
+
+const packetFindings = Effect.fn("Goals.packetFindings")(function* (record: GoalPacketRecord) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  let findings = A.empty<GoalDoctorFinding>();
+  const push = (item: GoalDoctorFinding): void => {
+    findings = A.append(findings, item);
+  };
+
+  // Reflection frontmatter must decode in ANY packet (the PR #365 YAML traps
+  // hid in the completed-only gap).
+  const reflectionsDir = path.join(record.packetPath, "history", "reflections");
+  const reflectionsDirExists = yield* fs.exists(reflectionsDir).pipe(Effect.orElseSucceed(() => false));
+  if (reflectionsDirExists) {
+    const files = yield* fs.readDirectory(reflectionsDir).pipe(Effect.orElseSucceed(A.empty<string>));
+    for (const file of A.sort(A.filter(files, reflectionFileNameIsArtifact), Order.String)) {
+      const raw = yield* fs.readFileString(path.join(reflectionsDir, file)).pipe(Effect.orElseSucceed(() => ""));
+      const valid = yield* reflectionFrontmatterIsValid(raw);
+      if (!valid) {
+        push(
+          finding(
+            record.slug,
+            "reflection-frontmatter-invalid",
+            "blocking",
+            `history/reflections/${file} has missing or invalid ReflectionFrontmatter.`,
+            file
+          )
+        );
+      }
+    }
+  }
+
+  if (record.goalMdChars !== undefined && record.goalMdChars > GOAL_MD_MAX_CHARS) {
+    push(
+      finding(
+        record.slug,
+        "goal-md-oversize",
+        "blocking",
+        `GOAL.md is ${record.goalMdChars} chars (hard maximum ${GOAL_MD_MAX_CHARS}).`
+      )
+    );
+  }
+
+  if (record.manifestText === undefined) {
+    push(finding(record.slug, "manifest-missing", "blocking", "ops/manifest.json is missing."));
+    return { findings, manifest: O.none<GoalManifest>() };
+  }
+  const parsed = parseGoalManifestText(record.manifestText);
+  if (O.isNone(parsed)) {
+    push(finding(record.slug, "manifest-invalid", "blocking", "ops/manifest.json does not parse as JSON."));
+    return { findings, manifest: O.none<GoalManifest>() };
+  }
+  const raw = parsed.value as Readonly<Record<string, unknown>>;
+  const decoded = yield* decodeGoalManifest(parsed.value).pipe(
+    Effect.map(O.some),
+    Effect.orElseSucceed(O.none<GoalManifest>)
+  );
+  if (O.isNone(decoded)) {
+    const issue = yield* decodeGoalManifest(parsed.value).pipe(
+      Effect.flip,
+      Effect.map((error) => error.message),
+      Effect.orElseSucceed(() => "unknown decode failure")
+    );
+    push(
+      finding(
+        record.slug,
+        "manifest-invalid",
+        "blocking",
+        `ops/manifest.json does not decode as GoalManifest: ${pipe(issue, Str.replace(/\s+/g, " "), Str.slice(0, 200))}`
+      )
+    );
+    return { findings, manifest: O.none<GoalManifest>() };
+  }
+  const manifest = decoded.value;
+  const status = manifest.initiative.status;
+
+  if (manifest.lifecycle !== undefined && manifest.lifecycle !== status) {
+    push(
+      finding(
+        record.slug,
+        "lifecycle-mismatch",
+        "blocking",
+        `initiative.status "${status}" != lifecycle "${manifest.lifecycle}".`
+      )
+    );
+  }
+
+  const readmeToken = pipe(O.fromUndefinedOr(record.readmeText), O.flatMap(readmeLifecycleToken));
+  if (O.isNone(readmeToken)) {
+    push(
+      finding(
+        record.slug,
+        "readme-status-line",
+        "blocking",
+        'README.md has no recognizable "Lifecycle:" status line (see goals/_template/README.md).'
+      )
+    );
+  } else if (readmeToken.value !== status) {
+    push(
+      finding(
+        record.slug,
+        "readme-status-line",
+        "blocking",
+        `README Lifecycle line says "${readmeToken.value}" but the manifest says "${status}".`
+      )
+    );
+  }
+
+  const phases = goalManifestPhases(manifest);
+  if (
+    GoalStatus.is.active(status) &&
+    A.isReadonlyArrayNonEmpty(phases) &&
+    A.every(phases, (phase) => GoalPhaseStatus.is.complete(phase.status))
+  ) {
+    push(
+      finding(
+        record.slug,
+        "phases-terminal-but-active",
+        "blocking",
+        `all ${A.length(phases)} phases are complete but the packet is still "active".`
+      )
+    );
+  }
+
+  if (GoalStatus.is.active(status) && record.goalMdChars === undefined) {
+    push(finding(record.slug, "active-missing-goal-md", "advisory", "active packet has no GOAL.md launcher."));
+  }
+
+  if (manifest.schemaVersion !== "initiative-manifest/v2") {
+    push(
+      finding(
+        record.slug,
+        "schema-version-upgrade",
+        "advisory",
+        `manifest declares ${manifest.schemaVersion === undefined ? "no schemaVersion" : `"${manifest.schemaVersion}"`}; upgrade to "initiative-manifest/v2".`
+      )
+    );
+  }
+
+  if (GoalStatus.is.superseded(status) && !hasSupersessionPointer(raw)) {
+    push(
+      finding(
+        record.slug,
+        "superseded-without-pointer",
+        "advisory",
+        "superseded packet carries no supersededBy/supersededNote."
+      )
+    );
+  }
+
+  const provenance = pipe(R.get(raw, "provenance"), O.filter(isJsonRecord));
+  const exploration = O.flatMap(provenance, (block) => stringAt(block, "exploration"));
+  if (O.isSome(exploration)) {
+    const exists = yield* fs.exists(exploration.value).pipe(Effect.orElseSucceed(() => false));
+    if (!exists) {
+      push(
+        finding(
+          record.slug,
+          "exploration-backlink-missing",
+          "advisory",
+          `provenance.exploration "${exploration.value}" does not exist in the working tree.`
+        )
+      );
+    }
+  }
+
+  return { findings, manifest: O.some(manifest) };
+});
+
+const gitAdapter: GitCommandErrorAdapter<GoalsGitError> = {
+  onSpawnFailure: (commandLine) => (cause) => GoalsGitError.new(`spawn ${commandLine}: ${String(cause)}`),
+  onNonZeroExit: ({ commandLine, exitCode }) => GoalsGitError.new(`${commandLine} exited with ${exitCode}`),
+  onTruncated: O.none(),
+};
+
+const gitOutputOrNone = Effect.fn("Goals.gitOutputOrNone")(function* (args: ReadonlyArray<string>) {
+  return yield* runGitOutput(".", args, gitAdapter).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+});
+
+const gitAdvisories = Effect.fn("Goals.gitAdvisories")(function* (
+  packets: ReadonlyArray<{
+    readonly record: GoalPacketRecord;
+    readonly manifest: O.Option<GoalManifest>;
+    readonly raw: O.Option<Readonly<Record<string, unknown>>>;
+  }>
+) {
+  let findings = A.empty<GoalDoctorFinding>();
+  let notes = A.empty<string>();
+
+  const shallow = yield* gitOutputOrNone(["rev-parse", "--is-shallow-repository"]);
+  if (O.isNone(shallow)) {
+    return {
+      findings,
+      notes: A.append(notes, "git history unavailable; staleness/completion-gate advisories skipped."),
+    };
+  }
+  if (Str.trim(shallow.value) === "true") {
+    return {
+      findings,
+      notes: A.append(notes, "shallow git checkout; staleness/completion-gate advisories skipped."),
+    };
+  }
+
+  // Single-pass staleness walk: every path under goals/ touched in the window.
+  const recentPaths = yield* gitOutputOrNone([
+    "log",
+    `--since=${STALE_ACTIVE_DAYS}.days`,
+    "--name-only",
+    "--format=",
+    "--",
+    "goals/",
+  ]);
+  if (O.isSome(recentPaths)) {
+    const touched = new Set(
+      pipe(
+        recentPaths.value,
+        Str.split("\n"),
+        A.map(Str.trim),
+        A.filter((line) => Str.startsWith("goals/")(line)),
+        A.map((line) =>
+          pipe(
+            line,
+            Str.split("/"),
+            A.get(1),
+            O.getOrElse(() => "")
+          )
+        )
+      )
+    );
+    for (const packet of packets) {
+      if (O.isNone(packet.manifest)) {
+        continue;
+      }
+      const manifest = packet.manifest.value;
+      const hasContext =
+        manifest.statusNote !== undefined || (manifest.blockedBy !== undefined && A.length(manifest.blockedBy) > 0);
+      if (GoalStatus.is.active(manifest.initiative.status) && !touched.has(packet.record.slug) && !hasContext) {
+        findings = A.append(
+          findings,
+          finding(
+            packet.record.slug,
+            "stale-active",
+            "advisory",
+            `active packet untouched for ${STALE_ACTIVE_DAYS}+ days with no blockedBy/statusNote.`
+          )
+        );
+      }
+    }
+  } else {
+    notes = A.append(notes, "git log for staleness failed; staleness advisories skipped.");
+  }
+
+  // Single-pass completion-gate heuristic: merge/squash subjects citing the
+  // packet slug or the packet's recorded PR number.
+  const subjects = yield* gitOutputOrNone(["log", "--format=%s", "-n", "4000"]);
+  if (O.isSome(subjects)) {
+    for (const packet of packets) {
+      if (O.isNone(packet.manifest)) {
+        continue;
+      }
+      const manifest = packet.manifest.value;
+      const gate = manifest.completionGate;
+      if (!GoalStatus.is["completed-retained"](manifest.initiative.status) || gate.grandfathered) {
+        continue;
+      }
+      const prNumber = pipe(
+        packet.raw,
+        O.flatMap((raw) => R.get(raw, "mergedPullRequest")),
+        O.map((value) => `#${String(value)}`)
+      );
+      const cited =
+        Str.includes(packet.record.slug)(subjects.value) ||
+        (O.isSome(prNumber) && Str.includes(prNumber.value)(subjects.value));
+      if (!cited) {
+        findings = A.append(
+          findings,
+          finding(
+            packet.record.slug,
+            "completion-gate-unsatisfied",
+            "advisory",
+            "completed-retained but no merge/squash commit cites the packet (completionGate not grandfathered)."
+          )
+        );
+      }
+    }
+  } else {
+    notes = A.append(notes, "git log for completion gates failed; completion-gate advisories skipped.");
+  }
+
+  return { findings, notes };
+});
+
+const findingLine = (item: GoalDoctorFinding): string => `- ${item.slug} [${item.kind}] ${item.message}`;
+
+/**
+ * Run the goals doctor: collect findings, ratchet blocking ones against the
+ * committed baseline, and fail on new blocking findings.
+ *
+ * @example
+ * ```ts
+ * import { runGoalsDoctor } from "@beep/repo-cli/commands/Goals/Doctor"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(runGoalsDoctor({ writeBaseline: false })))
+ * ```
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (options: {
+  readonly writeBaseline: boolean;
+}) {
+  const fs = yield* FileSystem.FileSystem;
+  const records = yield* listGoalPackets();
+
+  const packets: Array<{
+    readonly record: GoalPacketRecord;
+    readonly manifest: O.Option<GoalManifest>;
+    readonly raw: O.Option<Readonly<Record<string, unknown>>>;
+    readonly findings: ReadonlyArray<GoalDoctorFinding>;
+  }> = [];
+  for (const record of records) {
+    const result = yield* packetFindings(record);
+    const raw = pipe(
+      O.fromUndefinedOr(record.manifestText),
+      O.flatMap(parseGoalManifestText),
+      O.map((value) => value as Readonly<Record<string, unknown>>)
+    );
+    packets.push({ record, manifest: result.manifest, raw, findings: result.findings });
+  }
+
+  const advisoriesFromGit = yield* gitAdvisories(packets);
+  const allFindings = [...A.flatMap(packets, (packet) => packet.findings), ...advisoriesFromGit.findings];
+  const blocking = A.filter(allFindings, (item) => item.severity === "blocking");
+  const advisories = A.filter(allFindings, (item) => item.severity === "advisory");
+
+  if (options.writeBaseline) {
+    const baseline = GoalsDoctorBaseline.make({
+      schemaVersion: "goals-doctor-baseline/v1",
+      note: "Inherited goals-doctor findings (advisory). New findings block. This baseline may only shrink; regenerate with bun run beep goals doctor --write-baseline after burning findings down.",
+      findings: A.sort(
+        A.map(blocking, (item) => item.key),
+        Order.String
+      ),
+    });
+    const encoded = yield* encodeBaseline(baseline);
+    const rendered = yield* stringifyBaseline.run(O.some(encoded), {});
+    const content = `${O.getOrElse(rendered, thunkEmptyStr)}\n`;
+    yield* fs.writeFileString(GOALS_DOCTOR_BASELINE_PATH, content);
+    yield* Console.log(`[goals:doctor] wrote ${GOALS_DOCTOR_BASELINE_PATH} with ${A.length(blocking)} finding key(s).`);
+    return;
+  }
+
+  const baselineText = yield* fs
+    .readFileString(GOALS_DOCTOR_BASELINE_PATH)
+    .pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+  const baselineKeys = yield* pipe(
+    baselineText,
+    O.match({
+      onNone: () => Effect.succeed(A.empty<string>()),
+      onSome: (text) =>
+        pipe(
+          parseGoalManifestText(text),
+          O.match({
+            onNone: () =>
+              Console.error(`[goals:doctor] ${GOALS_DOCTOR_BASELINE_PATH} does not parse as JSONC.`).pipe(
+                Effect.andThen(failWithReportedExit("goals doctor: baseline unreadable.", 2))
+              ),
+            onSome: (value) =>
+              decodeBaseline(value).pipe(
+                Effect.map((baseline) => baseline.findings),
+                Effect.catchTag("SchemaError", (error) =>
+                  Console.error(`[goals:doctor] baseline does not decode: ${error.message}`).pipe(
+                    Effect.andThen(failWithReportedExit("goals doctor: baseline invalid.", 2))
+                  )
+                )
+              ),
+          })
+        ),
+    })
+  );
+
+  const classified = classifyGoalDoctorFindings({ current: blocking, baselineKeys });
+
+  yield* Console.log(
+    `[goals:doctor] packets=${A.length(records)} blocking_new=${A.length(classified.introduced)} blocking_inherited=${A.length(classified.inherited)} baseline_resolved=${A.length(classified.resolved)} advisories=${A.length(advisories)}`
+  );
+
+  for (const note of advisoriesFromGit.notes) {
+    yield* Console.log(`[goals:doctor] note: ${note}`);
+  }
+
+  if (A.isReadonlyArrayNonEmpty(advisories)) {
+    yield* Console.error("[goals:doctor] advisories (non-fatal):");
+    for (const item of advisories) {
+      yield* Console.error(findingLine(item));
+    }
+  }
+
+  if (A.isReadonlyArrayNonEmpty(classified.inherited)) {
+    yield* Console.error("[goals:doctor] inherited baseline findings (non-fatal, burn down over time):");
+    for (const item of classified.inherited) {
+      yield* Console.error(findingLine(item));
+    }
+  }
+
+  if (A.isReadonlyArrayNonEmpty(classified.resolved)) {
+    yield* Console.error(
+      `[goals:doctor] ${A.length(classified.resolved)} baseline finding(s) resolved — shrink the baseline with --write-baseline:`
+    );
+    for (const key of classified.resolved) {
+      yield* Console.error(`- ${key}`);
+    }
+  }
+
+  if (A.isReadonlyArrayNonEmpty(classified.introduced)) {
+    yield* Console.error("[goals:doctor] NEW blocking findings (not in baseline):");
+    for (const item of classified.introduced) {
+      yield* Console.error(findingLine(item));
+    }
+    return yield* failWithReportedExit("goals doctor: new blocking findings detected.");
+  }
+
+  yield* Console.log("[goals:doctor] OK: no new blocking findings.");
+});
+
+const writeBaselineFlag = Flag.boolean("write-baseline").pipe(
+  Flag.withDescription("Capture the current blocking findings as the committed baseline (may only shrink)")
+);
+
+/**
+ * `bun run beep goals doctor` — packet-drift findings with a baseline ratchet.
+ *
+ * @example
+ * ```ts
+ * import { goalsDoctorCommand } from "@beep/repo-cli/commands/Goals/Doctor"
+ *
+ * console.log(goalsDoctorCommand.name)
+ * ```
+ * @category commands
+ * @since 0.0.0
+ */
+export const goalsDoctorCommand = Command.make(
+  "doctor",
+  { writeBaseline: writeBaselineFlag },
+  Effect.fn(function* ({ writeBaseline }) {
+    yield* runGoalsDoctor({ writeBaseline });
+  })
+).pipe(Command.withDescription("Diff goal-packet manifest claims against git/filesystem evidence (baseline ratchet)"));

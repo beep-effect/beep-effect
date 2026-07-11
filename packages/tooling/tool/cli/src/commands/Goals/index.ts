@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+export * from "./Doctor.js";
 export * from "./Goals.command.js";
 export * from "./Goals.errors.js";
 export * from "./Goals.schemas.js";

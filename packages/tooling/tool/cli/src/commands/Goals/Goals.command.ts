@@ -11,6 +11,7 @@
 
 import { Command } from "effect/unstable/cli";
 import { printLines } from "../../internal/cli/Printer.js";
+import { goalsDoctorCommand } from "./Doctor.js";
 import { goalsIndexCommand } from "./PortfolioIndex.js";
 import { goalsSetStatusCommand } from "./SetStatus.js";
 
@@ -29,11 +30,12 @@ import { goalsSetStatusCommand } from "./SetStatus.js";
 export const goalsCommand = Command.make("goals", {}, () =>
   printLines([
     "Goals commands:",
+    "- bun run beep goals doctor [--write-baseline]",
     "- bun run beep goals index [--write | --check]",
     "- bun run beep goals set-status <slug> <status>",
     "- bun run beep goals set-status --migrate [--write]",
   ])
 ).pipe(
-  Command.withDescription("Goal-packet lifecycle tooling (index, set-status)"),
-  Command.withSubcommands([goalsIndexCommand, goalsSetStatusCommand])
+  Command.withDescription("Goal-packet lifecycle tooling (doctor, index, set-status)"),
+  Command.withSubcommands([goalsDoctorCommand, goalsIndexCommand, goalsSetStatusCommand])
 );

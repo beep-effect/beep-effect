@@ -1042,6 +1042,8 @@ const rootRepoLintPolicySteps = (repoRoot: string): ReadonlyArray<QualityTaskSte
   repoCliStep(repoRoot, "lint:tsgo-rules", ["quality", "tsgo-rules"]),
   repoCliStep(repoRoot, "lint:package-test-imports", ["lint", "package-test-imports"]),
   repoCliStep(repoRoot, "lint:reflection-artifacts", ["lint", "reflection-artifacts"]),
+  repoCliStep(repoRoot, "goals:doctor", ["goals", "doctor"]),
+  repoCliStep(repoRoot, "goals:index-check", ["goals", "index", "--check"]),
   repoCliStep(repoRoot, "lint:schema-first", ["lint", "schema-first"]),
   repoCliStep(repoRoot, "lint:deprecated-apis", ["lint", "deprecated-apis"]),
   bunxStep(repoRoot, "lint:jsdoc", ["eslint", ".", "--max-warnings=0"]),

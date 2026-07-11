@@ -103,6 +103,7 @@ export type QualityTaskBypassArgName = typeof QualityTaskBypassArgName.Type;
 export const LintPolicySubcommand = LiteralKit([
   "circular",
   "deprecated-apis",
+  "goal-packets",
   "package-test-imports",
   "policy",
   "reflection-artifacts",

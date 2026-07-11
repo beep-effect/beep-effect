@@ -97,6 +97,33 @@ export class GoalReadmeStatusLineError extends TaggedErrorClass<GoalReadmeStatus
 }
 
 /**
+ * Failure raised when a git command backing a goals-doctor advisory fails.
+ *
+ * Always recovered into a skipped-with-note advisory; never blocks the doctor.
+ *
+ * @example
+ * ```ts
+ * import { GoalsGitError } from "@beep/repo-cli/commands/Goals/Goals.errors"
+ *
+ * const error = GoalsGitError.new("git log exited with 128")
+ * console.log(error.message)
+ * ```
+ * @category errors
+ * @since 0.0.0
+ */
+export class GoalsGitError extends TaggedErrorClass<GoalsGitError>($I`GoalsGitError`)(
+  "GoalsGitError",
+  {
+    message: S.String,
+  },
+  $I.annote("GoalsGitError", {
+    description: "A git command backing a goals-doctor advisory failed (recovered, never blocking).",
+  })
+) {
+  static readonly new = (message: string): GoalsGitError => GoalsGitError.make({ message });
+}
+
+/**
  * Failure raised when `beep goals set-status` receives arguments outside the
  * canonical status domain or an unusable slug/status combination.
  *
