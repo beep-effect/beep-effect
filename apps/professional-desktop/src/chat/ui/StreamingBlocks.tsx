@@ -15,6 +15,7 @@
 
 import { AssistantBlock, InlineNode } from "@beep/agents-domain/values/AssistantContent";
 import { MermaidView, YouTubeEmbed } from "@beep/editor";
+import { sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
 import { A, O, Str } from "@beep/utils";
 import { Hash, MutableHashMap } from "effect";
 import { dual } from "effect/Function";
@@ -143,6 +144,11 @@ export const blockRenderKey = (block: AssistantBlock): string =>
     youtube: (b) => `youtube:${b.videoId}`,
   });
 
+// Keep the streaming sink aligned with the persisted Lexical link boundary:
+// model-controlled active and unknown protocols collapse to an inert fragment.
+const safeLinkUrl = (url: string): O.Option<string> =>
+  O.liftPredicate((sanitized: string) => sanitized !== "#")(sanitizeUrl(url));
+
 const Inline = ({ node }: { readonly node: InlineNode }): ReactNode =>
   InlineNode.match(node, {
     text: (t) => {
@@ -152,11 +158,17 @@ const Inline = ({ node }: { readonly node: InlineNode }): ReactNode =>
       if (t.bold === true) el = <strong>{el}</strong>;
       return el;
     },
-    link: (l) => (
-      <a className="text-primary underline" href={l.url} target="_blank" rel="noreferrer">
-        {l.text}
-      </a>
-    ),
+    link: (l) =>
+      O.match(safeLinkUrl(l.url), {
+        // A rejected destination still shows its text: the content is not lost,
+        // it simply is not clickable.
+        onNone: () => <span>{l.text}</span>,
+        onSome: (url) => (
+          <a className="text-primary underline" href={url} target="_blank" rel="noreferrer noopener">
+            {l.text}
+          </a>
+        ),
+      }),
   });
 
 const Inlines = ({ nodes }: { readonly nodes: ReadonlyArray<InlineNode> }): JSX.Element => {
