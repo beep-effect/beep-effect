@@ -39,6 +39,31 @@ const AnthropicTokenPriceUsd = S.Finite.check(S.isGreaterThanOrEqualTo(0));
 export const ANTHROPIC_API_KEY_ENV = "AI_ANTHROPIC_API_KEY" as const;
 
 /**
+ * Environment binding overriding the model used by the default language-model layer.
+ *
+ * @remarks
+ * When unset, {@link ANTHROPIC_DEFAULT_MODEL} applies. The identifier must be
+ * accepted by the generated `@effect/ai-anthropic` catalog, which validates
+ * streamed response model ids.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import { ANTHROPIC_MODEL_ENV } from "@beep/anthropic"
+ *
+ * const localEnv = {
+ *   [ANTHROPIC_MODEL_ENV]: "claude-haiku-4-5",
+ * }
+ *
+ * strictEqual(localEnv.AI_ANTHROPIC_MODEL, "claude-haiku-4-5")
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const ANTHROPIC_MODEL_ENV = "AI_ANTHROPIC_MODEL" as const;
+
+/**
  * Claude model used by the default language-model layer.
  *
  * @remarks

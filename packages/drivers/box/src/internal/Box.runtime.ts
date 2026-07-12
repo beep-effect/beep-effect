@@ -6,8 +6,42 @@ import { BoxError } from "../Box.errors.ts";
 import type { Exit } from "effect";
 import type { BoxMethodName } from "../_generated/Box.models.gen.ts";
 
+const isPlainObject = (value: unknown): value is Record<string, unknown> => {
+  if (value === null || typeof value !== "object") {
+    return false;
+  }
+  const prototype: unknown = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+};
+
+// The Box SDK deserializers materialize absent response fields as
+// present-but-undefined keys (e.g. `nextMarker: undefined` on the final
+// marker-paginated page), which exact-optional schema keys reject. JSON has no
+// `undefined`, so dropping those keys before decoding restores wire semantics.
+// Only plain objects and arrays are rebuilt; streams, buffers, and other
+// non-plain values pass through untouched.
+const pruneUndefined = (value: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.map(pruneUndefined);
+  }
+  if (isPlainObject(value)) {
+    const pruned: Record<string, unknown> = {};
+    for (const [key, entry] of Object.entries(value)) {
+      if (entry !== undefined) {
+        pruned[key] = pruneUndefined(entry);
+      }
+    }
+    return pruned;
+  }
+  return value;
+};
+
 /**
  * Decode a Box driver boundary value into a typed request or response model.
+ *
+ * Response values are normalized first: SDK-materialized
+ * present-but-undefined keys are pruned so exact-optional schema keys decode
+ * the same payload the Box API actually sent.
  *
  * @category utilities
  * @since 0.0.0
@@ -38,7 +72,7 @@ export const decodeWith: {
       readonly reason: "request encoding" | "response decoding";
     }
   ): Effect.Effect<A, BoxError> =>
-    S.decodeUnknownEffect(schema)(value).pipe(
+    S.decodeUnknownEffect(schema)(options.reason === "response decoding" ? pruneUndefined(value) : value).pipe(
       Effect.mapError((cause) =>
         BoxError.fromReason(options.reason, {
           cause,
