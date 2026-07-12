@@ -50,7 +50,7 @@ export * from "./composer.tsx";
  * @category components
  * @since 0.0.0
  */
-export * from "./mermaid-code-decorator-plugin.tsx";
+export * from "./mermaid-node.tsx";
 /**
  * Mermaid diagram renderer shared by persisted editor and streaming chat surfaces.
  *

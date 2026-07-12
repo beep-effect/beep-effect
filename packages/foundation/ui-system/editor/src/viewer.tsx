@@ -15,7 +15,7 @@ import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { MermaidCodeDecoratorPlugin } from "./mermaid-code-decorator-plugin.tsx";
+import { MermaidNode } from "./mermaid-node.tsx";
 import { editorNodes } from "./nodes.ts";
 import { editorTheme } from "./theme.ts";
 import type { JSX } from "react";
@@ -23,6 +23,44 @@ import type { JSX } from "react";
 const $I = $EditorId.create("viewer");
 
 const onError = (error: Error) => Effect.runSync(Effect.logError(error));
+
+const MERMAID_LANGUAGE = "mermaid";
+
+interface SerializedNodeLike {
+  readonly children?: ReadonlyArray<SerializedNodeLike>;
+  readonly language?: string;
+  readonly text?: string;
+  readonly type?: string;
+}
+
+/** The source a code block holds, the way Lexical's own `getTextContent` reads it. */
+const nodeSource = (node: SerializedNodeLike): string => {
+  if (node.type === "linebreak") return "\n";
+  if (node.type === "tab") return "\t";
+  if (typeof node.text === "string") return node.text;
+  return node.children === undefined ? "" : node.children.map(nodeSource).join("");
+};
+
+/**
+ * Swap mermaid code blocks for the decorator node before Lexical mounts.
+ *
+ * The wire profile keeps a diagram as a `code` block with `language="mermaid"`
+ * (the composer edits diagrams as code, and that must not change), so the swap
+ * happens here, on the read-only side, against the state this viewer is about to
+ * render and never serializes back.
+ *
+ * Rendering it as a real Lexical node is the point: the previous decorator hid
+ * the `<code>` and injected a sibling `<div>` into the contenteditable subtree to
+ * portal into. Lexical owns and reconciles that subtree, so it removed the div —
+ * and the diagram rendered as a blank gap with its source hidden behind it. It
+ * rendered while streaming (a separate path) and disappeared once it persisted.
+ */
+const decorateMermaid = (node: SerializedNodeLike): SerializedNodeLike =>
+  node.type === "code" && node.language === MERMAID_LANGUAGE
+    ? ({ type: "mermaid", version: 1, format: "", source: nodeSource(node) } as SerializedNodeLike)
+    : node.children === undefined
+      ? node
+      : { ...node, children: node.children.map(decorateMermaid) };
 
 class EditorViewerProps extends S.Class<EditorViewerProps>($I`EditorViewerProps`)(
   {
@@ -65,6 +103,11 @@ export function EditorViewer({ state, className }: EditorViewerProps): JSX.Eleme
   // is the same value the config consumes, so this costs nothing extra and needs
   // no effect to reconcile.
   const encoded = S.encodeSync(EditorStateFromJson)(state);
+  const decorated = JSON.stringify(
+    ((wire: { readonly root: SerializedNodeLike }) => ({ ...wire, root: decorateMermaid(wire.root) }))(
+      JSON.parse(encoded) as { readonly root: SerializedNodeLike }
+    )
+  );
   return (
     <LexicalComposer
       key={encoded}
@@ -72,8 +115,8 @@ export function EditorViewer({ state, className }: EditorViewerProps): JSX.Eleme
         namespace: "beep-editor-viewer",
         editable: false,
         theme: editorTheme,
-        nodes: [...editorNodes],
-        editorState: encoded,
+        nodes: [...editorNodes, MermaidNode],
+        editorState: decorated,
         onError,
       }}
     >
@@ -86,7 +129,6 @@ export function EditorViewer({ state, className }: EditorViewerProps): JSX.Eleme
           ErrorBoundary={LexicalErrorBoundary}
         />
       </div>
-      <MermaidCodeDecoratorPlugin />
     </LexicalComposer>
   );
 }
