@@ -199,4 +199,32 @@ describe("ThreadTimeline", () => {
       expect(Thread.activeBranchTurns(timeline.turns).map((t) => Number(t.turnId))).toEqual([1, 2]);
     })
   );
+
+  // Corrupt parent links must never truncate the transcript: a reader would lose
+  // real turns. An unresolvable link degrades to "this turn replaces nothing".
+  it.effect(
+    "ignores parent links that cannot describe a replacement",
+    Effect.fnUntraced(function* () {
+      const content = yield* S.encodeEffect(Document)(Document.make({ children: [] }));
+      const turn = (turnId: number, turnIndex: number, parentTurnId: number | null) => ({
+        turnId,
+        turnIndex,
+        parentTurnId,
+        costMicros: 0,
+        items: [{ kind: "message", role: "user", content }],
+      });
+
+      const timeline = yield* S.decodeUnknownEffect(Thread.ThreadTimeline)({
+        threadId: 10,
+        turns: [
+          turn(1, 0, 1), // parents itself
+          turn(2, 1, 9), // parents a turn that does not exist
+          turn(3, 2, 4), // parents a turn that has not happened yet
+          turn(4, 3, null),
+        ],
+      });
+
+      expect(Thread.activeBranchTurns(timeline.turns).map((t) => Number(t.turnId))).toEqual([1, 2, 3, 4]);
+    })
+  );
 });

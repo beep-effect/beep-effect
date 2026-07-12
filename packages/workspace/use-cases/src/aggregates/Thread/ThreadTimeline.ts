@@ -266,6 +266,13 @@ export const activeBranchTurns = (turns: ReadonlyArray<TimelineTurn>): ReadonlyA
   A.reduce(A.sort(turns, turnIndexOrder), A.empty<TimelineTurn>(), (branch, turn) =>
     pipe(
       turn.parentTurnId,
+      // A turn only replaces one that is already behind it. A link pointing at
+      // itself, or forward at a turn that has not happened yet, cannot describe a
+      // replacement — it can only be corruption. Such a link is ignored (the turn
+      // simply continues the conversation) rather than trusted: an unresolvable
+      // parent must never be able to truncate the transcript, which is what a
+      // reader would lose if this projection took a corrupt link at its word.
+      O.filter((replacedTurnId) => replacedTurnId !== turn.turnId),
       O.flatMap((replacedTurnId) => A.findFirstIndex(branch, (candidate) => candidate.turnId === replacedTurnId)),
       O.map((index) => A.append(A.take(branch, index), turn)),
       O.getOrElse(() => A.append(branch, turn))

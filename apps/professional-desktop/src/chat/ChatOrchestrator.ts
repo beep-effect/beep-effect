@@ -315,7 +315,23 @@ const streamAndPersist = (
               .appendTurn({ threadId, parentTurnId: O.none(), role: "assistant", content })
               .pipe(Effect.catch(toChatActionError("SendMessage.persistAssistant")));
             if (O.isNone(note)) {
-              yield* usage.append(fixtureUsageRecord);
+              // The answer is committed. A usage-accounting failure must not fail
+              // the turn behind it: doing so reported a delivered answer as a
+              // rejected send, so the client handed the prompt back and a retry
+              // produced the answer a second time. Record the miss and move on.
+              yield* usage.append(fixtureUsageRecord).pipe(
+                Effect.tapError((error) =>
+                  logRedactedCause(
+                    Cause.fail(error),
+                    LogRedactedCauseOptions.make({
+                      message: "assistant turn persisted but its usage record was not recorded",
+                      level: "Warn",
+                      attributes: { context: "SendMessage.usage", kind, subsystem: "chat" },
+                    })
+                  )
+                ),
+                Effect.ignore
+              );
             }
           });
 

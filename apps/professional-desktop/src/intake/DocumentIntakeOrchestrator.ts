@@ -34,6 +34,19 @@ const observeIntakeOperation = Effect.fnUntraced(function* <A, E, R>(
   }).pipe(Effect.withSpan(`documents.intake.${operation}`));
 });
 
+/**
+ * Largest document the intake RPC accepts, in decoded bytes.
+ *
+ * The client refuses an oversized file before reading it, but the client is not
+ * the boundary: content crosses this RPC base64-expanded and is held in memory
+ * on both sides through extraction and filing, so a payload posted straight at
+ * the sidecar could still exhaust it. Kept in step with the composer's limit.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+const MAX_INTAKE_CONTENT_BYTES = 25 * 1024 * 1024;
+
 const toWorkspaceVaultActionError = (context: string) =>
   Effect.fnUntraced(function* (error: { readonly _tag: string }): Effect.fn.Return<never, WorkspaceVaultActionError> {
     yield* logRedactedCause(
@@ -113,6 +126,15 @@ export const DocumentIntakeHandlersLive = DocumentsRpcs.toLayer(
         return yield* observeIntakeOperation(
           "dropped_file",
           Effect.gen(function* () {
+            // The UI refuses an oversized file, but the UI is not the boundary:
+            // the content arrives here base64-expanded and is held in memory
+            // through extraction and filing, so a payload posted straight at the
+            // RPC could still exhaust the sidecar. Refuse it where it lands.
+            if (payload.content.length > MAX_INTAKE_CONTENT_BYTES) {
+              return yield* DocumentIntakeActionError.failEffect(
+                `Document exceeds the ${Math.round(MAX_INTAKE_CONTENT_BYTES / (1024 * 1024))} MB intake limit.`
+              );
+            }
             const config = yield* workspaceVaultStore
               .getVaultConfig(payload.workspaceId)
               .pipe(Effect.catch(toDocumentIntakeActionError("IntakeDroppedFile.workspaceVault")));
