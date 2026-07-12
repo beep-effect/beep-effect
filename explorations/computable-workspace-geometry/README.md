@@ -72,3 +72,12 @@ triggers, awaiting Ben's yes/no. Then Q2: grow the draft
   RESEARCH.md; `docs/product/workspace-substrate.md` gained §4 "agents that
   can see" subsection and reframed §5 costs language the same day.
   ATLAS.md not yet updated (token budget); add the map line next session.
+
+- 2026-07-12 (burn to 100%): reactive minima atom landed
+  (`makeDockGeometryAtoms.minimaAtom`, record-valued to dodge Atom.make
+  function ambiguity) and the FIRST FEED CONSUMER landed —
+  `poc/Recency.ts` (`touchedGroups` / `makeMruGroupsAtom`): most-recent-
+  first group recency derived purely from Success+Changed feed entries,
+  retiring half the MRU divergence. Kernel 75/75, formatted, annotations
+  synced. Kernel residue now: max constraints, LayoutPriority,
+  snap-to-collapse; feed residue: announcer/autosave/undo.

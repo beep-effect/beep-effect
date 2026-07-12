@@ -142,7 +142,7 @@ export class GeometryOptions extends S.Class<GeometryOptions>($I`GeometryOptions
   },
   $I.annote("GeometryOptions", {
     description:
-      "Gap, minimum sash hit thickness, and minimum per-side split extent for geometry projection. The minimum extent is a per-split-local clamp, not a global constraint solver: each feasible split guarantees both sides at least minGroupExtent; an infeasible split (available < 2 x minGroupExtent) degrades to the unclamped proportional partition.",
+      "Gap, minimum sash hit thickness, and global per-leaf minimum extent for geometry projection. minGroupExtent is the floor under every visible leaf; each split clamps between the requiredExtent of its two subtrees (leaf minimums sum through same-axis splits plus gaps, max across cross-axis splits), and an infeasible split degrades to the unclamped proportional partition.",
   })
 ) {}
 
