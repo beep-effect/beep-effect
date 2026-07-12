@@ -1,8 +1,13 @@
+import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema";
 import { RegistryContext, useAtomSet, useAtomValue } from "@effect/atom-react";
-import type { Effect } from "effect";
+import { type Effect, Match } from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
 import type React from "react";
 import { createPortal } from "react-dom";
@@ -18,6 +23,7 @@ import {
   DockFloatingGroupCommand,
   type DockGeometry,
   DockNode,
+  DockSide,
   DockWorkspace,
   FloatGroupCommand,
   GeometryOptions,
@@ -46,18 +52,125 @@ import {
   UserCommandOrigin,
 } from "../../dockview/poc/index.ts";
 
+/**
+ * Atom graph consumed by the React dock adapter.
+ *
+ * @example
+ * ```ts
+ * import type { DockAtomGraph } from "./DockviewReact.tsx"
+ *
+ * type WorkspaceAtom = DockAtomGraph["workspaceAtom"]
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
 export type DockAtomGraph = Effect.Success<ReturnType<typeof makeDockAtoms>>;
 
-export type DockPanelApi = { readonly id: PanelId };
+const $I = $ScratchpadId.create("dockview-react/DockviewReact");
+
+/**
+ * Renderer-facing API for one dock panel.
+ *
+ * @example
+ * ```ts
+ * import { DockPanelApi } from "./DockviewReact.tsx"
+ * import { PanelId } from "../../dockview/poc/index.ts"
+ *
+ * const api = DockPanelApi.make({ id: PanelId.make("panel-1") })
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class DockPanelApi extends S.Class<DockPanelApi>($I`DockPanelApi`)(
+  {
+    id: PanelId,
+  },
+  $I.annote("DockPanelApi", {
+    description: "Renderer-facing API identifying the dock panel currently being rendered.",
+  })
+) {}
+
+/**
+ * Properties supplied to a dock panel renderer.
+ *
+ * @example
+ * ```ts
+ * import type { DockPanelProps } from "./DockviewReact.tsx"
+ *
+ * type PanelApi = DockPanelProps["api"]
+ * type ContainerApi = DockPanelProps["containerApi"]
+ * ```
+ *
+ * @category components
+ * @since 0.0.0
+ */
 export type DockPanelProps = {
   readonly params: PanelParameters;
   readonly api: DockPanelApi;
   readonly containerApi: DockviewAdapterApi;
 };
+
+/**
+ * Panel-renderer properties extended with the tab title.
+ *
+ * @example
+ * ```ts
+ * import type { DockTabProps } from "./DockviewReact.tsx"
+ *
+ * type TabTitle = DockTabProps["title"]
+ * ```
+ *
+ * @category components
+ * @since 0.0.0
+ */
 export type DockTabProps = DockPanelProps & { readonly title: string };
+
+/**
+ * React component contract for rendering panel content.
+ *
+ * @example
+ * ```ts
+ * import type { DockRenderer } from "./DockviewReact.tsx"
+ *
+ * type RendererProps = Parameters<DockRenderer>[0]
+ * ```
+ *
+ * @category components
+ * @since 0.0.0
+ */
 export type DockRenderer = React.FunctionComponent<DockPanelProps>;
+
+/**
+ * React component contract for rendering a panel tab.
+ *
+ * @example
+ * ```ts
+ * import type { DockTabRenderer } from "./DockviewReact.tsx"
+ *
+ * type RendererProps = Parameters<DockTabRenderer>[0]
+ * ```
+ *
+ * @category components
+ * @since 0.0.0
+ */
 export type DockTabRenderer = React.FunctionComponent<DockTabProps>;
 
+/**
+ * Imperative adapter surface exposed to panel renderers and `onReady` handlers.
+ *
+ * @example
+ * ```ts
+ * import type { DockviewAdapterApi } from "./DockviewReact.tsx"
+ *
+ * type Submit = DockviewAdapterApi["submit"]
+ * type WorkspaceAtom = DockviewAdapterApi["atoms"]["workspace"]
+ * ```
+ *
+ * @category adapters
+ * @since 0.0.0
+ */
 export type DockviewAdapterApi = {
   readonly submit: (operation: DockAtomOperation) => void;
   readonly awaitIdle: Effect.Effect<void>;
@@ -70,6 +183,20 @@ export type DockviewAdapterApi = {
   };
 };
 
+/**
+ * Configuration and renderer registry accepted by {@link DockviewReact}.
+ *
+ * @example
+ * ```ts
+ * import type { DockviewReactProps } from "./DockviewReact.tsx"
+ *
+ * type ComponentRegistry = DockviewReactProps["components"]
+ * type ReadyHandler = DockviewReactProps["onReady"]
+ * ```
+ *
+ * @category components
+ * @since 0.0.0
+ */
 export type DockviewReactProps = {
   readonly graph: DockAtomGraph;
   readonly components: Readonly<Record<string, DockRenderer>>;
@@ -89,37 +216,133 @@ type AdapterState = {
   readonly floatingGestureAtom: Atom.Writable<O.Option<FloatingGesture>>;
   readonly floatingOverrideAtom: Atom.Writable<O.Option<FloatingOverride>>;
   readonly geometry: ReturnType<typeof makeDockGeometryAtoms>;
-  readonly targets: Map<PanelId, HTMLElement>;
+  readonly targets: MutableHashMap.MutableHashMap<PanelId, HTMLElement>;
   readonly readyRoots: WeakSet<HTMLElement>;
   readonly api: DockviewAdapterApi;
 };
 
-type PointerPosition = { readonly left: number; readonly top: number };
-type TabDrag = {
-  readonly panelId: PanelId;
-  readonly fromGroupId: GroupId;
-  readonly pointer: PointerPosition;
-};
-type SashDrag = {
-  readonly splitId: SplitId;
-  readonly axis: "horizontal" | "vertical";
-  readonly start: PointerPosition;
-  readonly initialRatio: SplitRatio;
-  readonly extent: number;
-  readonly moved: boolean;
-};
-type RatioOverride = { readonly splitId: SplitId; readonly ratio: SplitRatio };
-type FloatingGesture = {
-  readonly groupId: GroupId;
-  readonly mode: "move" | "resize";
-  readonly start: PointerPosition;
-  readonly initial: AnchoredBox;
-  readonly initialBox: DockBox;
-  readonly moved: boolean;
-};
-type FloatingOverride = { readonly groupId: GroupId; readonly anchoredBox: AnchoredBox };
+class PointerPosition extends S.Class<PointerPosition>($I`PointerPosition`)(
+  {
+    left: S.Finite,
+    top: S.Finite,
+  },
+  $I.annote("PointerPosition", {
+    description: "Finite client-space coordinates captured from a pointer event.",
+  })
+) {}
 
-const states = new WeakMap<DockAtomGraph, Map<number, AdapterState>>();
+class TabDrag extends S.Class<TabDrag>($I`TabDrag`)(
+  {
+    panelId: PanelId,
+    fromGroupId: GroupId,
+    pointer: PointerPosition,
+  },
+  $I.annote("TabDrag", {
+    description: "Active tab-drag state, including its source group and latest pointer position.",
+  })
+) {}
+
+class SashDragBase extends S.Class<SashDragBase>($I`SashDragBase`)(
+  {
+    splitId: SplitId,
+    start: PointerPosition,
+    initialRatio: SplitRatio,
+    extent: S.Finite,
+    moved: S.Boolean,
+  },
+  $I.annote("SashDragBase", {
+    description: "Shared state captured while resizing a split sash.",
+  })
+) {}
+
+class SashDragHorizontal extends SashDragBase.extend<SashDragHorizontal>($I`SashDragHorizontal`)(
+  {
+    axis: S.tag("horizontal"),
+  },
+  $I.annote("SashDragHorizontal", {
+    description: "Sash-resize gesture whose pointer delta is measured horizontally.",
+  })
+) {}
+
+class SashDragVertical extends SashDragBase.extend<SashDragVertical>($I`SashDragVertical`)(
+  {
+    axis: S.tag("vertical"),
+  },
+  $I.annote("SashDragVertical", {
+    description: "Sash-resize gesture whose pointer delta is measured vertically.",
+  })
+) {}
+
+const SashDrag = S.Union([SashDragHorizontal, SashDragVertical]).pipe(
+  S.toTaggedUnion("axis"),
+  $I.annoteSchema("SashDrag", {
+    description: "Axis-discriminated state for an in-progress split-sash resize gesture.",
+  })
+);
+type SashDrag = typeof SashDrag.Type;
+
+class RatioOverride extends S.Class<RatioOverride>($I`RatioOverride`)(
+  {
+    splitId: SplitId,
+    ratio: SplitRatio,
+  },
+  $I.annote("RatioOverride", {
+    description: "Transient split-ratio preview applied while a sash is moving.",
+  })
+) {}
+
+class FloatingGestureBase extends S.Class<FloatingGestureBase>($I`FloatingGestureBase`)(
+  {
+    groupId: GroupId,
+    start: PointerPosition,
+    initial: AnchoredBox,
+    initialBox: DockBox,
+    moved: S.Boolean,
+  },
+  $I.annote("FloatingGestureBase", {
+    description: "Shared pointer and geometry state for moving or resizing a floating group.",
+  })
+) {}
+
+class FloatingGestureMove extends FloatingGestureBase.extend<FloatingGestureMove>($I`FloatingGestureMove`)(
+  {
+    mode: S.tag("move"),
+  },
+  $I.annote("FloatingGestureMove", {
+    description: "Gesture state for translating a floating group.",
+  })
+) {}
+
+class FloatingGestureResize extends FloatingGestureBase.extend<FloatingGestureResize>($I`FloatingGestureResize`)(
+  {
+    mode: S.tag("resize"),
+  },
+  $I.annote("FloatingGestureResize", {
+    description: "Gesture state for resizing a floating group.",
+  })
+) {}
+
+const FloatingGesture = S.Union([FloatingGestureMove, FloatingGestureResize]).pipe(
+  S.toTaggedUnion("mode"),
+  $I.annoteSchema("FloatingGesture", {
+    description: "Mode-discriminated gesture state for a floating dock group.",
+  })
+);
+
+type FloatingGesture = typeof FloatingGesture.Type;
+
+class FloatingOverride extends S.Class<FloatingOverride>($I`FloatingOverride`)(
+  {
+    groupId: GroupId,
+    anchoredBox: AnchoredBox,
+  },
+  $I.annote("FloatingOverride", {
+    description: "Transient anchored-box preview for a floating dock group.",
+  })
+) {}
+
+// crispen: graph identity and lifetime are host concerns; WeakMap avoids structural hashing and retains no disposed graph.
+const states = new WeakMap<DockAtomGraph, MutableHashMap.MutableHashMap<number, AdapterState>>();
 let commandCounter = 0;
 
 const makeOperation = (
@@ -146,15 +369,15 @@ const makeOperation = (
 };
 
 const adapterState = (graph: DockAtomGraph, gap: number): AdapterState => {
-  // crispen: gap remains the adapter identity because geometry atoms close over it; remove the inner Map when options become reactive.
-  let byGap = states.get(graph);
-  if (byGap === undefined) {
-    byGap = new Map();
-    states.set(graph, byGap);
-  }
-  const existing = byGap.get(gap);
-  if (existing !== undefined) return existing;
-  const containerAtom = Atom.make(DockBox.make({ left: 0, top: 0, width: 0, height: 0 })).pipe(Atom.keepAlive);
+  // crispen: gap remains the adapter identity because geometry atoms close over it; remove the inner cache when options become reactive.
+  const byGap = O.getOrElse(O.fromUndefinedOr(states.get(graph)), () => {
+    const created = MutableHashMap.empty<number, AdapterState>();
+    states.set(graph, created);
+    return created;
+  });
+  const existing = MutableHashMap.get(byGap, gap);
+  if (O.isSome(existing)) return existing.value;
+  const containerAtom = Atom.make(DockBox.make()).pipe(Atom.keepAlive);
   const focusedGroupAtom = Atom.make<O.Option<GroupId>>(O.none()).pipe(Atom.keepAlive);
   const dragAtom = Atom.make<O.Option<TabDrag>>(O.none()).pipe(Atom.keepAlive);
   const resizeAtom = Atom.make<O.Option<SashDrag>>(O.none()).pipe(Atom.keepAlive);
@@ -194,7 +417,12 @@ const adapterState = (graph: DockAtomGraph, gap: number): AdapterState => {
           onSome: (split) => DockNode.replaceSplit(workspace.root, SplitNode.withRatio(split, candidate.ratio)),
         }),
     });
-    return PopulatedWorkspace.make({ revision: workspace.revision, root, maximized: workspace.maximized, floating });
+    return PopulatedWorkspace.make({
+      revision: workspace.revision,
+      root,
+      maximized: workspace.maximized,
+      floating,
+    });
   });
   const geometry = makeDockGeometryAtoms({
     workspaceAtom: projectedWorkspaceAtom,
@@ -210,20 +438,20 @@ const adapterState = (graph: DockAtomGraph, gap: number): AdapterState => {
     floatingGestureAtom,
     floatingOverrideAtom,
     geometry,
-    targets: new Map(),
-    readyRoots: new WeakSet(),
+    targets: MutableHashMap.empty<PanelId, HTMLElement>(),
+    readyRoots: new WeakSet<HTMLElement>(),
     api,
   };
-  byGap.set(gap, created);
+  MutableHashMap.set(byGap, gap, created);
   return created;
 };
 
 const targetFor = (state: AdapterState, panelId: PanelId): HTMLElement => {
-  const existing = state.targets.get(panelId);
-  if (existing !== undefined) return existing;
+  const existing = MutableHashMap.get(state.targets, panelId);
+  if (O.isSome(existing)) return existing.value;
   const target = document.createElement("div");
   target.dataset.panelTarget = panelId;
-  state.targets.set(panelId, target);
+  MutableHashMap.set(state.targets, panelId, target);
   return target;
 };
 
@@ -235,7 +463,10 @@ const boxStyle = (box: DockBox): React.CSSProperties => ({
   height: box.height,
 });
 
-const positionOf = (event: PointerEvent): PointerPosition => ({ left: event.clientX, top: event.clientY });
+const positionOf = (event: PointerEvent): PointerPosition => ({
+  left: event.clientX,
+  top: event.clientY,
+});
 const contains = (box: DockBox, point: PointerPosition): boolean =>
   point.left >= box.left &&
   point.left <= box.left + box.width &&
@@ -261,16 +492,25 @@ const compileDrop = (state: AdapterState, graph: DockAtomGraph, drag: TabDrag): 
   const container = graph.registry.get(state.containerAtom);
   const point = drag.pointer;
   const outer = Math.min(32, Math.min(container.width, container.height) / 6);
-  const rootSide =
-    point.left <= container.left + outer
-      ? "left"
-      : point.left >= container.left + container.width - outer
-        ? "right"
-        : point.top <= container.top + outer
-          ? "top"
-          : point.top >= container.top + container.height - outer
-            ? "bottom"
-            : undefined;
+  const rootSide: O.Option<DockSide> = Match.value(point).pipe(
+    Match.when(
+      ({ left }) => left <= container.left + outer,
+      () => O.some(DockSide.Enum.left)
+    ),
+    Match.when(
+      ({ left }) => left >= container.left + container.width - outer,
+      () => O.some(DockSide.Enum.right)
+    ),
+    Match.when(
+      ({ top }) => top <= container.top + outer,
+      () => O.some(DockSide.Enum.top)
+    ),
+    Match.when(
+      ({ top }) => top >= container.top + container.height - outer,
+      () => O.some(DockSide.Enum.bottom)
+    ),
+    Match.orElse((): O.Option<DockSide> => O.none())
+  );
   const floating = floatingHit(geometry, point);
   const group = O.match(floating, {
     onNone: () => A.findFirst(geometry.groups, (candidate) => contains(candidate.box, point)),
@@ -289,16 +529,23 @@ const compileDrop = (state: AdapterState, graph: DockAtomGraph, drag: TabDrag): 
       return O.some(
         MovePanelCommand.make({
           panelId: drag.panelId,
-          target: TabPlacement.make({ groupId: group.value.groupId, index: O.some(index) }),
+          target: TabPlacement.make({
+            groupId: group.value.groupId,
+            index: O.some(index),
+          }),
         })
       );
     }
   }
-  if (O.isNone(floating) && rootSide !== undefined) {
+  if (O.isNone(floating) && O.isSome(rootSide)) {
     return O.some(
       MovePanelCommand.make({
         panelId: drag.panelId,
-        target: RootSplitPlacement.make({ side: rootSide, splitId: freshSplitId(), newGroupId: freshGroupId() }),
+        target: RootSplitPlacement.make({
+          side: rootSide.value,
+          splitId: freshSplitId(),
+          newGroupId: freshGroupId(),
+        }),
       })
     );
   }
@@ -311,17 +558,26 @@ const compileDrop = (state: AdapterState, graph: DockAtomGraph, drag: TabDrag): 
   const y = point.top - contentTop;
   const edgeX = box.width * 0.25;
   const edgeY = contentHeight * 0.25;
-  const side =
-    x <= edgeX
-      ? "left"
-      : x >= box.width - edgeX
-        ? "right"
-        : y <= edgeY
-          ? "top"
-          : y >= contentHeight - edgeY
-            ? "bottom"
-            : undefined;
-  if (side !== undefined) {
+  const side: O.Option<DockSide> = Match.value({ x, y }).pipe(
+    Match.when(
+      ({ x }) => x <= edgeX,
+      () => O.some(DockSide.Enum.left)
+    ),
+    Match.when(
+      ({ x }) => x >= box.width - edgeX,
+      () => O.some(DockSide.Enum.right)
+    ),
+    Match.when(
+      ({ y }) => y <= edgeY,
+      () => O.some(DockSide.Enum.top)
+    ),
+    Match.when(
+      ({ y }) => y >= contentHeight - edgeY,
+      () => O.some(DockSide.Enum.bottom)
+    ),
+    Match.orElse((): O.Option<DockSide> => O.none())
+  );
+  if (O.isSome(side)) {
     return O.some(
       MovePanelCommand.make({
         panelId: drag.panelId,
@@ -329,14 +585,19 @@ const compileDrop = (state: AdapterState, graph: DockAtomGraph, drag: TabDrag): 
           referenceGroupId: groupId,
           newGroupId: freshGroupId(),
           splitId: freshSplitId(),
-          side,
+          side: side.value,
         }),
       })
     );
   }
   return GroupId.equals(groupId, drag.fromGroupId)
     ? O.none()
-    : O.some(MovePanelCommand.make({ panelId: drag.panelId, target: TabPlacement.make({ groupId }) }));
+    : O.some(
+        MovePanelCommand.make({
+          panelId: drag.panelId,
+          target: TabPlacement.make({ groupId }),
+        })
+      );
 };
 
 const splitExtent = (graph: DockAtomGraph, state: AdapterState, split: SplitNode): number => {
@@ -350,12 +611,19 @@ const splitExtent = (graph: DockAtomGraph, state: AdapterState, split: SplitNode
       }
     )
   );
-  if (boxes.length === 0) return 0;
-  const left = Math.min(...A.map(boxes, (box) => box.left));
-  const top = Math.min(...A.map(boxes, (box) => box.top));
-  const right = Math.max(...A.map(boxes, (box) => box.left + box.width));
-  const bottom = Math.max(...A.map(boxes, (box) => box.top + box.height));
-  return split.layout.axis === "horizontal" ? right - left : bottom - top;
+  return A.match(boxes, {
+    onEmpty: () => 0,
+    onNonEmpty: (nonEmpty) => {
+      const left = Math.min(...A.map(nonEmpty, (box) => box.left));
+      const top = Math.min(...A.map(nonEmpty, (box) => box.top));
+      const right = Math.max(...A.map(nonEmpty, (box) => box.left + box.width));
+      const bottom = Math.max(...A.map(nonEmpty, (box) => box.top + box.height));
+      return SplitLayout.match(split.layout, {
+        horizontal: () => right - left,
+        vertical: () => bottom - top,
+      });
+    },
+  });
 };
 
 const PanelContent = (props: {
@@ -403,7 +671,7 @@ const ContentHost = (props: {
 }) => {
   const workspace = useAtomValue(props.graph.workspaceAtom);
   const attach = (host: HTMLDivElement | null): (() => void) | undefined => {
-    if (host === null) return undefined;
+    if (P.isNull(host)) return undefined;
     // crispen: imperative DOM ownership stays explicit at this lifecycle boundary; replace only when Atom owns a keyed child collection.
     for (const panel of props.graph.registry.get(props.graph.panelsAtom)) {
       if (
@@ -414,7 +682,7 @@ const ContentHost = (props: {
         const active = O.exists(props.graph.registry.get(props.graph.activePanelAtom(props.groupId)), (candidate) =>
           PanelId.equals(candidate.id, panel.id)
         );
-        if (active || panel.renderMode === "always") host.appendChild(targetFor(props.state, panel.id));
+        if (active || Eq.equals(panel.renderMode, "always")) host.appendChild(targetFor(props.state, panel.id));
         else targetFor(props.state, panel.id).remove();
       }
     }
@@ -440,19 +708,25 @@ const Tab = (props: {
     submit(makeOperation(ActivatePanelCommand.make({ panelId: props.panel.id })));
   };
   const activateFromKeyboard = (event: React.KeyboardEvent<HTMLDivElement>): void => {
-    if (event.key === "Enter" || event.key === " ") activate();
+    if (P.or(Eq.equals("Enter"), Eq.equals(" "))(event.key)) activate();
   };
   const close = (): void => submit(makeOperation(ClosePanelCommand.make({ panelId: props.panel.id })));
   const pointerRef = (node: HTMLDivElement | null): (() => void) | undefined => {
-    if (node === null) return undefined;
+    if (P.isNull(node)) return undefined;
     const cancel = (): void => props.graph.registry.set(props.state.dragAtom, O.none());
     const keydown = (event: KeyboardEvent): void => {
-      if (event.key === "Escape") cancel();
+      if (Eq.equals(event.key, "Escape")) cancel();
     };
     const move = (event: PointerEvent): void => {
       const current = props.graph.registry.get(props.state.dragAtom);
       if (O.isSome(current) && PanelId.equals(current.value.panelId, props.panel.id)) {
-        props.graph.registry.set(props.state.dragAtom, O.some({ ...current.value, pointer: positionOf(event) }));
+        props.graph.registry.set(
+          props.state.dragAtom,
+          O.some({
+            ...current.value,
+            pointer: positionOf(event),
+          })
+        );
       }
     };
     const up = (event: PointerEvent): void => {
@@ -465,11 +739,15 @@ const Tab = (props: {
       event.preventDefault();
     };
     const down = (event: PointerEvent): void => {
-      if (event.button !== 0) return;
+      if (P.not(Eq.equals(0))(event.button)) return;
       node.setPointerCapture?.(event.pointerId);
       props.graph.registry.set(
         props.state.dragAtom,
-        O.some({ panelId: props.panel.id, fromGroupId: props.groupId, pointer: positionOf(event) })
+        O.some({
+          panelId: props.panel.id,
+          fromGroupId: props.groupId,
+          pointer: positionOf(event),
+        })
       );
     };
     node.addEventListener("pointerdown", down);
@@ -499,16 +777,20 @@ const Tab = (props: {
       onClick={activate}
       onKeyDown={activateFromKeyboard}
     >
-      {Renderer === undefined ? (
-        props.panel.title
-      ) : (
-        <Renderer
-          params={PanelView.match(props.panel.view, { component: ({ input }) => input, text: () => ({}) })}
-          api={{ id: props.panel.id }}
-          containerApi={props.state.api}
-          title={props.panel.title}
-        />
-      )}
+      {O.match(O.fromUndefinedOr(Renderer), {
+        onNone: () => props.panel.title,
+        onSome: (TabRenderer) => (
+          <TabRenderer
+            params={PanelView.match(props.panel.view, {
+              component: ({ input }) => input,
+              text: () => ({}),
+            })}
+            api={{ id: props.panel.id }}
+            containerApi={props.state.api}
+            title={props.panel.title}
+          />
+        ),
+      })}
       <button
         type="button"
         aria-label={`Close ${props.panel.title}`}
@@ -533,11 +815,11 @@ const GroupPane = (
 ) => {
   const tabsOption = useAtomValue(props.graph.tabsAtom(props.groupId));
   const boxOption = useAtomValue(props.state.geometry.groupBoxAtom(props.groupId));
-  if (O.isNone(tabsOption) || (props.box === undefined && O.isNone(boxOption))) return null;
-  const tabs = tabsOption.value;
-  const box = props.box ?? O.getOrThrow(boxOption);
   const workspace = useAtomValue(props.graph.workspaceAtom);
   const submit = useAtomSet(props.graph.operationAtom);
+  if (O.isNone(tabsOption) || (P.isUndefined(props.box) && O.isNone(boxOption))) return null;
+  const tabs = tabsOption.value;
+  const box = props.box ?? O.getOrThrow(boxOption);
   const maximized = DockWorkspace.guards.empty(workspace) ? O.none<GroupId>() : workspace.maximized;
   const toggleMaximized = (): void =>
     submit(
@@ -551,7 +833,7 @@ const GroupPane = (
     <div
       role="tablist"
       onDoubleClick={(event) => {
-        if (props.floating !== true && event.currentTarget === event.target) toggleMaximized();
+        if (P.not(Eq.equals(true))(props.floating) && Eq.equals(event.currentTarget, event.target)) toggleMaximized();
       }}
     >
       {A.map(TabsNode.panels(tabs), (panel) => (
@@ -566,7 +848,7 @@ const GroupPane = (
           defaultTabComponent={props.defaultTabComponent}
         />
       ))}
-      {props.floating !== true && (
+      {P.not(Eq.equals(true))(props.floating) && (
         <>
           <button
             type="button"
@@ -590,7 +872,11 @@ const GroupPane = (
           >
             Float
           </button>
-          <button type="button" aria-label={`${O.isSome(maximized) ? "Restore" : "Maximize"} group ${props.groupId}`} onClick={toggleMaximized}>
+          <button
+            type="button"
+            aria-label={`${O.isSome(maximized) ? "Restore" : "Maximize"} group ${props.groupId}`}
+            onClick={toggleMaximized}
+          >
             {O.isSome(maximized) ? "Restore" : "Maximize"}
           </button>
         </>
@@ -606,7 +892,7 @@ const GroupPane = (
       style={{
         ...boxStyle(box),
         display: "flex",
-        flexDirection: tabs.metadata.headerPosition === "bottom" ? "column-reverse" : "column",
+        flexDirection: Eq.equals(tabs.metadata.headerPosition, "bottom") ? "column-reverse" : "column",
       }}
     >
       {strip}
@@ -624,11 +910,12 @@ const FloatingPane = (
   }
 ) => {
   const geometry = useAtomValue(props.state.geometry.geometryAtom);
-  const member = geometry.floating[props.index];
-  if (member === undefined) return null;
-  const groupId = DockNode.tabs(props.root)[0]?.groupId;
-  if (groupId === undefined) return null;
   const submit = useAtomSet(props.graph.operationAtom);
+  const memberOption = A.get(geometry.floating, props.index);
+  const groupIdOption = O.map(A.head(DockNode.tabs(props.root)), (tabs) => tabs.groupId);
+  if (O.isNone(memberOption) || O.isNone(groupIdOption)) return null;
+  const member = memberOption.value;
+  const groupId = groupIdOption.value;
   const container = props.graph.registry.get(props.state.containerAtom);
   const finish = (node: HTMLElement, event: PointerEvent): void => {
     const gesture = props.graph.registry.get(props.state.floatingGestureAtom);
@@ -638,60 +925,105 @@ const FloatingPane = (
     props.graph.registry.set(props.state.floatingOverrideAtom, O.none());
     node.releasePointerCapture?.(event.pointerId);
     if (gesture.value.moved && O.isSome(override)) {
-      submit(makeOperation(MoveFloatingGroupCommand.make({ groupId, anchoredBox: override.value.anchoredBox })));
+      submit(
+        makeOperation(
+          MoveFloatingGroupCommand.make({
+            groupId,
+            anchoredBox: override.value.anchoredBox,
+          })
+        )
+      );
     }
   };
-  const gestureRef = (mode: FloatingGesture["mode"]) => (node: HTMLDivElement | null): (() => void) | undefined => {
-    if (node === null) return undefined;
-    const cancel = (): void => {
-      props.graph.registry.set(props.state.floatingGestureAtom, O.none());
-      props.graph.registry.set(props.state.floatingOverrideAtom, O.none());
-    };
-    const keydown = (event: KeyboardEvent): void => {
-      if (event.key === "Escape") cancel();
-    };
-    const move = (event: PointerEvent): void => {
-      const gesture = props.graph.registry.get(props.state.floatingGestureAtom);
-      if (O.isNone(gesture) || !GroupId.equals(gesture.value.groupId, groupId) || gesture.value.mode !== mode) return;
-      const dx = event.clientX - gesture.value.start.left;
-      const dy = event.clientY - gesture.value.start.top;
-      const next =
-        mode === "move"
-          ? DockBox.make({ ...gesture.value.initialBox, left: gesture.value.initialBox.left + dx, top: gesture.value.initialBox.top + dy })
+  const gestureRef =
+    (mode: FloatingGesture["mode"]) =>
+    (node: HTMLDivElement | null): (() => void) | undefined => {
+      if (P.isNull(node)) return undefined;
+      const cancel = (): void => {
+        props.graph.registry.set(props.state.floatingGestureAtom, O.none());
+        props.graph.registry.set(props.state.floatingOverrideAtom, O.none());
+      };
+      const keydown = (event: KeyboardEvent): void => {
+        if (Eq.equals(event.key, "Escape")) cancel();
+      };
+      const move = (event: PointerEvent): void => {
+        const gesture = props.graph.registry.get(props.state.floatingGestureAtom);
+        if (
+          O.isNone(gesture) ||
+          !GroupId.equals(gesture.value.groupId, groupId) ||
+          P.not(Eq.equals(mode))(gesture.value.mode)
+        )
+          return;
+        const dx = event.clientX - gesture.value.start.left;
+        const dy = event.clientY - gesture.value.start.top;
+        const next = Eq.equals(mode, "move")
+          ? DockBox.make({
+              ...gesture.value.initialBox,
+              left: gesture.value.initialBox.left + dx,
+              top: gesture.value.initialBox.top + dy,
+            })
           : DockBox.make({
               ...gesture.value.initialBox,
               width: Math.max(32, gesture.value.initialBox.width + dx),
               height: Math.max(32, gesture.value.initialBox.height + dy),
             });
-      props.graph.registry.set(props.state.floatingGestureAtom, O.some({ ...gesture.value, moved: dx !== 0 || dy !== 0 }));
-      props.graph.registry.set(props.state.floatingOverrideAtom, O.some({ groupId, anchoredBox: topLeftBox(next, container) }));
+        props.graph.registry.set(
+          props.state.floatingGestureAtom,
+          O.some({
+            ...gesture.value,
+            moved: gesture.value.moved || P.not(Eq.equals(0))(dx) || P.not(Eq.equals(0))(dy),
+          })
+        );
+        props.graph.registry.set(
+          props.state.floatingOverrideAtom,
+          O.some({
+            groupId,
+            anchoredBox: topLeftBox(next, container),
+          })
+        );
+      };
+      const down = (event: PointerEvent): void => {
+        if (P.not(Eq.equals(0))(event.button)) return;
+        event.stopPropagation();
+        node.setPointerCapture?.(event.pointerId);
+        props.graph.registry.set(
+          props.state.floatingGestureAtom,
+          O.some({
+            groupId,
+            mode,
+            start: positionOf(event),
+            initial: props.anchoredBox,
+            initialBox: member.box,
+            moved: false,
+          })
+        );
+      };
+      const up = (event: PointerEvent): void => finish(node, event);
+      node.addEventListener("pointerdown", down);
+      node.addEventListener("pointermove", move);
+      node.addEventListener("pointerup", up);
+      document.addEventListener("keydown", keydown);
+      return () => {
+        node.removeEventListener("pointerdown", down);
+        node.removeEventListener("pointermove", move);
+        node.removeEventListener("pointerup", up);
+        document.removeEventListener("keydown", keydown);
+      };
     };
-    const down = (event: PointerEvent): void => {
-      if (event.button !== 0) return;
-      event.stopPropagation();
-      node.setPointerCapture?.(event.pointerId);
-      props.graph.registry.set(
-        props.state.floatingGestureAtom,
-        O.some({ groupId, mode, start: positionOf(event), initial: props.anchoredBox, initialBox: member.box, moved: false })
-      );
-    };
-    const up = (event: PointerEvent): void => finish(node, event);
-    node.addEventListener("pointerdown", down);
-    node.addEventListener("pointermove", move);
-    node.addEventListener("pointerup", up);
-    document.addEventListener("keydown", keydown);
-    return () => {
-      node.removeEventListener("pointerdown", down);
-      node.removeEventListener("pointermove", move);
-      node.removeEventListener("pointerup", up);
-      document.removeEventListener("keydown", keydown);
-    };
-  };
   return (
     <div
       data-floating-pane={groupId}
       style={{ ...boxStyle(member.box), zIndex: props.index + 1 }}
-      onPointerDown={() => submit(makeOperation(MoveFloatingGroupCommand.make({ groupId, anchoredBox: props.anchoredBox })))}
+      onPointerDown={() =>
+        submit(
+          makeOperation(
+            MoveFloatingGroupCommand.make({
+              groupId,
+              anchoredBox: props.anchoredBox,
+            })
+          )
+        )
+      }
     >
       <div ref={gestureRef("move")} data-floating-header={groupId} style={{ height: 32, cursor: "move" }}>
         <button
@@ -703,7 +1035,10 @@ const FloatingPane = (
               makeOperation(
                 DockFloatingGroupCommand.make({
                   groupId,
-                  target: GroupRootSplitPlacement.make({ side: "right", splitId: freshFloatingSplitId() }),
+                  target: GroupRootSplitPlacement.make({
+                    side: "right",
+                    splitId: freshFloatingSplitId(),
+                  }),
                 })
               )
             )
@@ -729,7 +1064,14 @@ const FloatingPane = (
       <div
         ref={gestureRef("resize")}
         data-floating-resize={groupId}
-        style={{ position: "absolute", right: 0, bottom: 0, width: 16, height: 16, cursor: "nwse-resize" }}
+        style={{
+          position: "absolute",
+          right: 0,
+          bottom: 0,
+          width: 16,
+          height: 16,
+          cursor: "nwse-resize",
+        }}
       />
     </div>
   );
@@ -740,21 +1082,27 @@ const Sash = (props: { readonly graph: DockAtomGraph; readonly state: AdapterSta
   const sash = A.findFirst(geometry.sashes, (candidate) => SplitId.equals(candidate.splitId, props.splitId));
   if (O.isNone(sash)) return null;
   const attach = (node: HTMLDivElement | null): (() => void) | undefined => {
-    if (node === null) return undefined;
+    if (P.isNull(node)) return undefined;
     const move = (event: PointerEvent): void => {
       const current = props.graph.registry.get(props.state.resizeAtom);
       if (O.isNone(current) || !SplitId.equals(current.value.splitId, props.splitId) || current.value.extent <= 0)
         return;
-      const delta =
-        current.value.axis === "horizontal"
-          ? event.clientX - current.value.start.left
-          : event.clientY - current.value.start.top;
+      const delta = SashDrag.match(current.value, {
+        horizontal: () => event.clientX - current.value.start.left,
+        vertical: () => event.clientY - current.value.start.top,
+      });
       const ratio = clampRatio(current.value.initialRatio + (delta * 10_000) / current.value.extent);
       props.graph.registry.set(
         props.state.resizeAtom,
-        O.some({ ...current.value, moved: current.value.moved || delta !== 0 })
+        O.some({ ...current.value, moved: current.value.moved || P.not(Eq.equals(0))(delta) })
       );
-      props.graph.registry.set(props.state.ratioOverrideAtom, O.some({ splitId: props.splitId, ratio }));
+      props.graph.registry.set(
+        props.state.ratioOverrideAtom,
+        O.some({
+          splitId: props.splitId,
+          ratio,
+        })
+      );
     };
     const up = (event: PointerEvent): void => {
       const current = props.graph.registry.get(props.state.resizeAtom);
@@ -766,12 +1114,17 @@ const Sash = (props: { readonly graph: DockAtomGraph; readonly state: AdapterSta
       if (current.value.moved && O.isSome(override)) {
         props.graph.registry.set(
           props.graph.operationAtom,
-          makeOperation(ResizeSplitCommand.make({ splitId: props.splitId, ratio: override.value.ratio }))
+          makeOperation(
+            ResizeSplitCommand.make({
+              splitId: props.splitId,
+              ratio: override.value.ratio,
+            })
+          )
         );
       }
     };
     const down = (event: PointerEvent): void => {
-      if (event.button !== 0) return;
+      if (P.not(Eq.equals(0))(event.button)) return;
       const workspace = props.graph.registry.get(props.graph.workspaceAtom);
       if (DockWorkspace.guards.empty(workspace)) return;
       const split = DockNode.findSplit(workspace.root, props.splitId);
@@ -805,7 +1158,10 @@ const Sash = (props: { readonly graph: DockAtomGraph; readonly state: AdapterSta
       ref={attach}
       data-sash-id={props.splitId}
       data-axis={sash.value.axis}
-      style={{ ...boxStyle(sash.value.box), cursor: sash.value.axis === "horizontal" ? "col-resize" : "row-resize" }}
+      style={{
+        ...boxStyle(sash.value.box),
+        cursor: Eq.equals(sash.value.axis, "horizontal") ? "col-resize" : "row-resize",
+      }}
     />
   );
 };
@@ -820,13 +1176,22 @@ const DropOverlay = (props: { readonly state: AdapterState }) => {
   });
   const box = O.match(group, {
     onNone: () =>
-      DockBox.make({ left: drag.value.pointer.left - 8, top: drag.value.pointer.top - 8, width: 16, height: 16 }),
+      DockBox.make({
+        left: drag.value.pointer.left - 8,
+        top: drag.value.pointer.top - 8,
+        width: 16,
+        height: 16,
+      }),
     onSome: (candidate) => candidate.box,
   });
   return <div data-drop-indicator="true" style={{ ...boxStyle(box), pointerEvents: "none" }} />;
 };
 
-const DockviewRoot = (props: DockviewReactProps & { readonly state: AdapterState }) => {
+const DockviewRoot = (
+  props: DockviewReactProps & {
+    readonly state: AdapterState;
+  }
+) => {
   const workspace = useAtomValue(props.graph.workspaceAtom);
   const panels = useAtomValue(props.graph.panelsAtom);
   const geometry = useAtomValue(props.state.geometry.geometryAtom);
@@ -836,18 +1201,28 @@ const DockviewRoot = (props: DockviewReactProps & { readonly state: AdapterState
   });
   const Watermark = props.watermarkComponent;
   const rootRef = (node: HTMLDivElement | null): (() => void) | undefined => {
-    if (node === null) return undefined;
-    if (props.state.readyRoots.has(node) === false) {
+    if (P.isNull(node)) return undefined;
+    if (P.not((root: HTMLElement) => props.state.readyRoots.has(root))(node)) {
       props.state.readyRoots.add(node);
       props.onReady?.({ api: props.state.api });
     }
     const observer = new ResizeObserver((entries) => {
       const entry = A.head(entries);
-      if (O.isNone(entry) || node.isConnected === false || node.hidden === true) return;
+      if (O.isNone(entry) || P.not(P.isTruthy)(node.isConnected) || P.isTruthy(node.hidden)) return;
       const { width, height } = entry.value.contentRect;
       const current = props.graph.registry.get(props.state.containerAtom);
-      if (width > 0 && height > 0 && (current.width !== width || current.height !== height)) {
-        props.graph.registry.set(props.state.containerAtom, DockBox.make({ left: 0, top: 0, width, height }));
+      if (
+        width > 0 &&
+        height > 0 &&
+        (P.not(Eq.equals(width))(current.width) || P.not(Eq.equals(height))(current.height))
+      ) {
+        props.graph.registry.set(
+          props.state.containerAtom,
+          DockBox.make({
+            width,
+            height,
+          })
+        );
       }
     });
     observer.observe(node);
@@ -856,13 +1231,20 @@ const DockviewRoot = (props: DockviewReactProps & { readonly state: AdapterState
   return (
     <div ref={rootRef} data-testid="dockview-react" style={{ position: "relative", width: "100%", height: "100%" }}>
       {A.match(groups, {
-        onEmpty: () => (Watermark === undefined ? <div>Empty workspace</div> : <Watermark />),
+        onEmpty: () =>
+          O.match(O.fromUndefinedOr(Watermark), {
+            onNone: () => <div>Empty workspace</div>,
+            onSome: (EmptyRenderer) => <EmptyRenderer />,
+          }),
         onNonEmpty: (tabsNodes) =>
           A.map(tabsNodes, (tabs) => <GroupPane key={tabs.groupId} {...props} groupId={tabs.groupId} />),
       })}
       {A.map(workspace.floating, (member, index) => (
         <FloatingPane
-          key={DockNode.tabs(member.root)[0]?.groupId ?? index}
+          key={O.getOrElse(
+            O.map(A.head(DockNode.tabs(member.root)), (tabs) => tabs.groupId),
+            () => index
+          )}
           {...props}
           index={index}
           anchoredBox={member.anchoredBox}
@@ -886,6 +1268,24 @@ const DockviewRoot = (props: DockviewReactProps & { readonly state: AdapterState
   );
 };
 
+/**
+ * Renders a dock workspace backed by a serialized Atom graph.
+ *
+ * @remarks
+ * Adapter state is cached by graph identity and geometry gap so portal hosts
+ * remain stable across React remounts and dock topology changes.
+ *
+ * @example
+ * ```ts
+ * import { DockviewReact } from "./DockviewReact.tsx"
+ *
+ * type Props = Parameters<typeof DockviewReact>[0]
+ * type Graph = Props["graph"]
+ * ```
+ *
+ * @category components
+ * @since 0.0.0
+ */
 export const DockviewReact = (props: DockviewReactProps) => {
   const gap = O.getOrElse(
     O.flatMap(O.fromUndefinedOr(props.options), ({ gap }) => O.fromUndefinedOr(gap)),

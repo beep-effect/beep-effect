@@ -15,7 +15,7 @@ bunx tsgo -p scratchpad/dockview/tsconfig.json --pretty false          # exit 0
 bun test scratchpad/dockview/poc/test scratchpad/test/dockview-anchored-box.test.ts  # 63 pass
 bunx tsgo -p scratchpad/dockview-react/tsconfig.json --pretty false     # exit 0
 (cd scratchpad/dockview-react && bunx biome check --config-path biome.json .)        # exit 0
-npx vitest run --config scratchpad/dockview-react/vitest.config.ts      # 10 pass
+npx vitest run --config scratchpad/dockview-react/vitest.config.ts      # 17 pass
 ```
 
 ## Landed since v1 (2026-07-11)
@@ -81,18 +81,25 @@ npx vitest run --config scratchpad/dockview-react/vitest.config.ts      # 10 pas
 - **Crispen ultra pass** — schema-derived guards/equality/match adoption in both
   modules, 4 duplicated helpers deleted, feed exposed read-only, deliberate
   leaves marked with `crispen:` comments; behavior parity, −6 net lines.
+- **Adapter floating windows + maximize** — z-ordered floating panes rendered
+  from `geometry.floating` above the docked layer; bring-to-front on
+  pointerdown; header-drag move and corner resize via transient
+  anchored-box override then ONE `MoveFloatingGroupCommand` on release
+  (Escape cancels); Float button on docked strips (offset default box), Dock
+  button on floating headers (root split right); Maximize/Restore toggle +
+  strip double-click (floating panes get neither, kernel rejects
+  group-floating); tab-drops hit-test floating panes first in z-order; panel
+  portal keep-alive proven across docked↔floating tree moves. Kernel gained
+  one accepted tweak: `DockBox` fields default to 0 so `DockBox.make()` means
+  "unmeasured container". Adapter suite now 17 vitest tests (suites are
+  `describe.sequential` — concurrent suites race the shared jsdom body).
 
 ## Still open
 
-Adapter-side (the kernel models these; `DockviewReact` does not render them yet):
+Adapter-side:
 
-- **Floating windows in the adapter** — `geometry.floating` is ignored; no
-  floating panes, no float/dock gestures, no z-order interaction. The kernel
-  topology and commands are ready.
-- **Maximize affordance** — geometry renders a maximized group correctly, but
-  no UI gesture (double-click tab, button) compiles Maximize/Restore commands.
 - **Drop-indicator polish, tab overflow (dropdown), header action slots,
-  context menus** — none attempted.
+  context menus, drag-to-dock a floating pane** — none attempted.
 - **Announcer/autosave/undo consumers** — the lossless feed exists; nothing
   consumes it yet.
 

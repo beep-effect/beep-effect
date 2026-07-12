@@ -6,7 +6,7 @@
 
 - **Status:** Vision (north star) · **Working codename:** Prose-to-Proof · **Architecture name:** BeepGraph
 - **Product target:** `apps/professional-desktop` (today a chat shell; tomorrow the workbench)
-- **Companion docs:** [For Tom](./PROSE_TO_PROOF_FOR_TOM.md) · [User Story](./PROSE_TO_PROOF_USER_STORY.md) · [Visualization](./PROSE_TO_PROOF_VISUALIZATION.html) · [Architecture Map](./PROSE_TO_PROOF_ARCHITECTURE_MAP.md) · [Draft PRD](./product/prose-to-proof.md) · [BeepGraph Architecture](./BEEPGRAPH_ARCHITECTURE.md)
+- **Companion docs:** [For Tom](./PROSE_TO_PROOF_FOR_TOM.md) · [User Story](./PROSE_TO_PROOF_USER_STORY.md) · [Visualization](./PROSE_TO_PROOF_VISUALIZATION.html) · [Architecture Map](./PROSE_TO_PROOF_ARCHITECTURE_MAP.md) · [Draft PRD](./product/prose-to-proof.md) · [BeepGraph Architecture](./BEEPGRAPH_ARCHITECTURE.md) · [Workspace Substrate](./product/workspace-substrate.md)
 
 ---
 

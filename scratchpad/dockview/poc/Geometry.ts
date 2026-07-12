@@ -37,9 +37,30 @@ const Extent = S.Finite.check(S.isGreaterThanOrEqualTo(0)).pipe(
   $I.annoteSchema("Extent", { description: "A finite non-negative pixel coordinate or extent." })
 );
 
-/** A finite non-negative rectangle in host pixel coordinates. */
+/**
+ * A finite non-negative rectangle in host pixel coordinates.
+ *
+ * Missing constructor fields default to zero, which represents an unmeasured
+ * host container before its first resize observation.
+ *
+ * @example
+ * ```ts
+ * import { DockBox } from "./Geometry.ts"
+ *
+ * const empty = DockBox.make()
+ * console.log(empty.width) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class DockBox extends S.Class<DockBox>($I`DockBox`)(
-  { left: Extent, top: Extent, width: Extent, height: Extent },
+  {
+    left: Extent.pipe(SchemaUtils.withConstantDefault<number>(0)),
+    top: Extent.pipe(SchemaUtils.withConstantDefault<number>(0)),
+    width: Extent.pipe(SchemaUtils.withConstantDefault<number>(0)),
+    height: Extent.pipe(SchemaUtils.withConstantDefault<number>(0)),
+  },
   $I.annote("DockBox", { description: "A finite non-negative rectangle in host pixel coordinates." })
 ) {}
 
