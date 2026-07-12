@@ -493,6 +493,7 @@ const toTurnError = (error: unknown): ChatActionError =>
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as S from "effect/Schema"
  *
+ * const threadId = S.decodeUnknownSync(Workspace.ThreadId)(10)
  * const turnId = S.decodeUnknownSync(Workspace.TurnId)(20)
  * const content = Document.make({ children: [P.make({ children: [Text.make({ value: "Revised prompt" })] })] })
  * const target = EditTarget.make({ threadId, turnId, content })
