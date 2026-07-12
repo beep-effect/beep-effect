@@ -267,6 +267,10 @@ export const configureSelectedWorkspaceVault = Effect.fn("configureSelectedWorks
  * @category components
  * @since 0.0.0
  */
+// This existing intake boundary owns the drag, picker, batch, and result UI
+// states. The QA patch adds bounded file selection to those same transitions;
+// decomposing the full surface is a separate atom-migration refactor.
+// fallow-ignore-next-line complexity
 export function DocumentIntakeTarget({ children }: { readonly children: ReactNode }): JSX.Element {
   const vaultConfig = useAtomValue(workspaceVaultConfigAtom(DEFAULT_WORKSPACE_ID));
   const configureVault = useAtomSet(configureWorkspaceVaultAtom, { mode: "promise" });

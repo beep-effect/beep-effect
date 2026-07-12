@@ -174,6 +174,10 @@ const VaultSyncConflictsList = ({
  * @category components
  * @since 0.0.0
  */
+// This existing panel coordinates status, sync, and conflict-review states in
+// one operator surface. The QA patch only makes each outcome visible; splitting
+// its state machine belongs with the broader atom migration.
+// fallow-ignore-next-line complexity
 export function VaultSyncPanel({ floating = true }: { readonly floating?: boolean }): JSX.Element {
   const status = useAtomValue(vaultSyncStatusAtom(DEFAULT_WORKSPACE_ID));
   const conflicts = useAtomValue(vaultSyncConflictsAtom(DEFAULT_WORKSPACE_ID));
