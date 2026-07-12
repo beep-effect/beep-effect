@@ -20,9 +20,11 @@ import {
   ApplyOntologyBatchCommand,
   buildOntologySnapshot,
   buildOntologySnapshotWithInference,
+  decodeWorkerResult,
   defaultOntologyGraphProjectionOptions,
   defaultOntologySparqlQuery,
   ExportOntologyProvenanceCommand,
+  encodeWorkerCommand,
   graphGestureChangeOperations,
   InferOntologySessionInput,
   OntologyActionError,
@@ -44,7 +46,7 @@ import {
 import { serializeQuad } from "@beep/rdf/Rdf";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
-import { Cause, Effect, flow, Order, pipe, Semaphore } from "effect";
+import { Cause, Duration, Effect, Fiber, flow, Order, pipe, Result, Semaphore } from "effect";
 import * as S from "effect/Schema";
 import { Atom, AtomRpc, Reactivity } from "effect/unstable/reactivity";
 import type { CosmosBackend, CosmosRenderHandle } from "@beep/cosmos";
@@ -1022,10 +1024,29 @@ const graphWorkerMessageError = (event: MessageEvent<unknown>): string =>
  * @category atoms
  * @since 0.0.0
  */
+const GRAPH_WORKER_UNAVAILABLE_MESSAGE = "Graph projection is unavailable: this environment has no web worker.";
+
+const GRAPH_WORKER_UNREADABLE_RESULT_MESSAGE = "The graph worker returned a result this app could not read.";
+
+const GRAPH_WORKER_TIMEOUT_MESSAGE = "The graph worker did not respond. The diagram could not be drawn.";
+
+/**
+ * How long a projection may take before the worker is treated as dead.
+ *
+ * There was no watchdog at all, and a worker that simply never answers is the one
+ * failure the error handlers cannot see: `error` and `messageerror` never fire, so
+ * the workbench sat on "pending" forever with nothing to explain it. That is the
+ * shape this very bug took. A silence this long is a failure, and it now says so.
+ */
+const GRAPH_WORKER_TIMEOUT = Duration.seconds(20);
+
 export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
   const WorkerCtor = globalThis.Worker;
 
   if (P.isUndefined(WorkerCtor)) {
+    // No worker, no projection — but say so. Returning quietly left the graph on
+    // "pending" forever with nothing to explain it.
+    get.set(ontologyGraphErrorAtom, O.some(GRAPH_WORKER_UNAVAILABLE_MESSAGE));
     return;
   }
 
@@ -1033,6 +1054,27 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
   let previousProjection: O.Option<OntologyGraphProjection> = O.none();
   let lastProjectionRequest: O.Option<WorkerCommand> = O.none();
   let requeuedAfterFailure = false;
+  let watchdog: O.Option<Fiber.Fiber<void>> = O.none();
+
+  const disarmWatchdog = (): void => {
+    pipe(
+      watchdog,
+      O.match({ onNone: () => undefined, onSome: (fiber) => void Effect.runFork(Fiber.interrupt(fiber)) })
+    );
+    watchdog = O.none();
+  };
+
+  // Armed on every request, disarmed by any answer. A worker that never replies
+  // fires neither `error` nor `messageerror`, so without this the graph waits
+  // forever and says nothing — which is precisely how this bug hid.
+  const armWatchdog = (): void => {
+    disarmWatchdog();
+    watchdog = O.some(
+      Effect.runFork(
+        Effect.sleep(GRAPH_WORKER_TIMEOUT).pipe(Effect.map(() => failWorker(GRAPH_WORKER_TIMEOUT_MESSAGE)))
+      )
+    );
+  };
 
   const terminateWorker = (): void => {
     pipe(worker, O.match({ onNone: () => undefined, onSome: (currentWorker) => currentWorker.terminate() }));
@@ -1040,6 +1082,7 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
   };
 
   const failWorker = (message: string): void => {
+    disarmWatchdog();
     previousProjection = O.none();
     get.set(ontologyGraphProjectionAtom, O.none());
     get.set(ontologyGraphDeltaAtom, O.none());
@@ -1051,8 +1094,16 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
 
   const makeWorker = (): Worker => {
     const nextWorker = new WorkerCtor(new URL("./Session.visualizer.worker.ts", import.meta.url), { type: "module" });
-    nextWorker.addEventListener("message", (event: MessageEvent<WorkerResult>) => {
-      WorkerResult.match(event.data, {
+    nextWorker.addEventListener("message", (event: MessageEvent<unknown>) => {
+      // The worker posts the ENCODED result: a structured clone drops prototypes,
+      // so what arrives is plain data until it is decoded back into the domain.
+      disarmWatchdog();
+      const received = decodeWorkerResult(event.data);
+      if (!Result.isSuccess(received)) {
+        failWorker(GRAPH_WORKER_UNREADABLE_RESULT_MESSAGE);
+        return;
+      }
+      WorkerResult.match(received.success, {
         parseTurtleSucceeded: () => undefined,
         diffDatasetsSucceeded: () => undefined,
         computeSnapshotSucceeded: () => undefined,
@@ -1100,7 +1151,8 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
         onNone: () => undefined,
         onSome: (command) => {
           requeuedAfterFailure = true;
-          currentWorker().postMessage(command);
+          armWatchdog();
+          currentWorker().postMessage(encodeWorkerCommand(command));
         },
       })
     );
@@ -1137,13 +1189,17 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
       lastProjectionRequest = O.some(command);
       requeuedAfterFailure = false;
       get.set(ontologyGraphErrorAtom, O.none());
-      activeWorker.postMessage(command);
+      armWatchdog();
+      activeWorker.postMessage(encodeWorkerCommand(command));
       get.set(ontologyGraphDeltaAtom, O.none());
     },
     { immediate: true }
   );
 
-  get.addFinalizer(terminateWorker);
+  get.addFinalizer(() => {
+    disarmWatchdog();
+    terminateWorker();
+  });
 });
 
 const cosmosProjectionFromOntology = (projection: OntologyGraphProjection): CosmosGraphProjection =>

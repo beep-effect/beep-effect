@@ -239,3 +239,79 @@ export const WorkerResult = WorkerResultKind.toTaggedUnion("kind")({
  * @category models
  */
 export type WorkerResult = typeof WorkerResult.Type;
+
+/**
+ * The worker boundary is a `structuredClone`, not a channel that carries types.
+ *
+ * A clone copies own enumerable properties and drops prototypes. Effect's
+ * `Option.none()` keeps `_tag`/`_id` on its *prototype*, so posting a decoded
+ * `WorkerCommand` sends `options.focusIri` as the bare object `{}` — a key that
+ * is present but is not the `string | absent` the encoded schema expects. The
+ * worker's decode then rejected every command it was ever sent, and the graph sat
+ * on "pending" forever: the worker was constructed, it was messaged, and it
+ * simply never answered.
+ *
+ * Both ends must therefore speak the *encoded* form, and both must go through
+ * these four functions. Encoding at the boundary is what makes the wire the wire.
+ *
+ * @example
+ * ```ts
+ * import { encodeWorkerCommand, decodeWorkerCommand } from "@beep/ontology-use-cases/aggregates/Session"
+ *
+ * console.log(typeof encodeWorkerCommand)
+ * console.log(typeof decodeWorkerCommand)
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const encodeWorkerCommand = S.encodeSync(WorkerCommand);
+
+/**
+ * Decode a `WorkerCommand` that has crossed the worker boundary.
+ *
+ * @example
+ * ```ts
+ * import { decodeWorkerCommand } from "@beep/ontology-use-cases/aggregates/Session"
+ *
+ * console.log(typeof decodeWorkerCommand)
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const decodeWorkerCommand = S.decodeUnknownResult(WorkerCommand);
+
+/**
+ * Encode a `WorkerResult` for the trip back across the worker boundary.
+ *
+ * The return path had the same defect in mirror image: the worker posted the
+ * decoded result and the parent never decoded it, so the projection arrived
+ * de-prototyped — a plain object wearing the shape of a domain value.
+ *
+ * @example
+ * ```ts
+ * import { encodeWorkerResult } from "@beep/ontology-use-cases/aggregates/Session"
+ *
+ * console.log(typeof encodeWorkerResult)
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const encodeWorkerResult = S.encodeSync(WorkerResult);
+
+/**
+ * Decode a `WorkerResult` received from the worker.
+ *
+ * @example
+ * ```ts
+ * import { decodeWorkerResult } from "@beep/ontology-use-cases/aggregates/Session"
+ *
+ * console.log(typeof decodeWorkerResult)
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const decodeWorkerResult = S.decodeUnknownResult(WorkerResult);
