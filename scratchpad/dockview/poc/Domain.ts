@@ -6,7 +6,7 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
-import { flow, pipe, Tuple } from "effect";
+import { Effect, flow, pipe, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
@@ -15,6 +15,7 @@ import * as HashSet from "effect/HashSet";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { AnchoredBox } from "./AnchoredBox.ts";
 
 const $I = $ScratchpadId.create("dockview/poc/Domain");
 
@@ -26,6 +27,11 @@ type Dual2<Self, That, Result> = {
 type Dual3<Self, First, Second, Result> = {
   (self: Self, first: First, second: Second): Result;
   (first: First, second: Second): (self: Self) => Result;
+};
+
+type Dual4<Self, First, Second, Third, Result> = {
+  (self: Self, first: First, second: Second, third: Third): Result;
+  (first: First, second: Second, third: Third): (self: Self) => Result;
 };
 
 /** Stable identity for a panel instance. */
@@ -114,6 +120,14 @@ export type SplitRatio = typeof SplitRatio.Type;
 
 const PanelViewKind = LiteralKit(["component", "text"]);
 
+/** Persistence contract controlling whether an inactive panel remains rendered. */
+export const PanelRenderMode = LiteralKit(["onlyWhenVisible", "always"]).annotate(
+  $I.annote("PanelRenderMode", {
+    description: "Serializable host rendering policy for inactive panel content.",
+  })
+);
+export type PanelRenderMode = typeof PanelRenderMode.Type;
+
 /** JSON-safe scalar accepted by the POC renderer parameter record. */
 export const PanelParameterValue = S.Union([S.String, S.Finite, S.Boolean]).pipe(
   $I.annoteSchema("PanelParameterValue", {
@@ -169,11 +183,14 @@ export class Panel extends S.Class<Panel>($I`Panel`)(
     id: S.toType(PanelId),
     title: S.NonEmptyString,
     view: PanelView,
+    renderMode: PanelRenderMode.pipe(SchemaUtils.withConstantDefault<PanelRenderMode>("onlyWhenVisible")),
+    tabComponent: S.toType(RendererKey).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("Panel", {
     description: "A renderer-neutral panel owned directly by one tab group.",
   })
 ) {
+  static readonly equals = SchemaUtils.toEquivalence(Panel);
   static readonly findInNode: Dual2<DockNode.Type, PanelId, O.Option<Panel>> = dual(
     2,
     (node: DockNode.Type, panelId: PanelId): O.Option<Panel> =>
@@ -195,6 +212,59 @@ export class Panel extends S.Class<Panel>($I`Panel`)(
   static readonly is = S.is(Panel);
 }
 
+/** Optional whole-value replacements accepted by a panel update command. */
+export class PanelPatch extends S.Class<PanelPatch>($I`PanelPatch`)(
+  {
+    title: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    view: S.OptionFromOptionalKey(PanelView).pipe(SchemaUtils.withNoneDefault),
+    renderMode: S.OptionFromOptionalKey(PanelRenderMode).pipe(SchemaUtils.withNoneDefault),
+    tabComponent: S.toType(RendererKey).pipe(S.Option, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annote("PanelPatch", {
+    description: "Optional whole-value replacements for persistable panel facets.",
+  })
+) {}
+
+/** Persisted locking mode for a tab group. */
+export const GroupLockedMode = LiteralKit(["unlocked", "locked", "no-drop-target"]).annotate(
+  $I.annote("GroupLockedMode", { description: "Persisted group locking policy data." })
+);
+export type GroupLockedMode = typeof GroupLockedMode.Type;
+
+/** Persisted edge on which a tab-group header is rendered. */
+export const GroupHeaderPosition = LiteralKit(["top", "bottom"]).annotate(
+  $I.annote("GroupHeaderPosition", { description: "Persisted tab-group header edge." })
+);
+export type GroupHeaderPosition = typeof GroupHeaderPosition.Type;
+
+/** Persistable metadata attached to one tab group. */
+export class GroupMetadata extends S.Class<GroupMetadata>($I`GroupMetadata`)(
+  {
+    visible: S.Boolean.pipe(SchemaUtils.withConstantDefault<boolean>(true)),
+    locked: GroupLockedMode.pipe(SchemaUtils.withConstantDefault<GroupLockedMode>("unlocked")),
+    hideHeader: S.Boolean.pipe(SchemaUtils.withConstantDefault<boolean>(false)),
+    headerPosition: GroupHeaderPosition.pipe(SchemaUtils.withConstantDefault<GroupHeaderPosition>("top")),
+  },
+  $I.annote("GroupMetadata", {
+    description: "Serializable display and future policy metadata for one tab group.",
+  })
+) {
+  static readonly equals = SchemaUtils.toEquivalence(GroupMetadata);
+}
+
+/** Optional whole-value replacements accepted by a group update command. */
+export class GroupPatch extends S.Class<GroupPatch>($I`GroupPatch`)(
+  {
+    visible: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    locked: S.OptionFromOptionalKey(GroupLockedMode).pipe(SchemaUtils.withNoneDefault),
+    hideHeader: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    headerPosition: S.OptionFromOptionalKey(GroupHeaderPosition).pipe(SchemaUtils.withNoneDefault),
+  },
+  $I.annote("GroupPatch", {
+    description: "Optional whole-value replacements for persistable group metadata.",
+  })
+) {}
+
 /**
  * A non-empty tab group represented as a zipper.
  *
@@ -208,11 +278,46 @@ export class TabsNode extends S.TaggedClass<TabsNode>($I`TabsNode`)(
     before: S.Array(Panel).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<Panel>>([])),
     active: Panel,
     after: S.Array(Panel).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<Panel>>([])),
+    metadata: GroupMetadata.pipe(S.withConstructorDefault(Effect.succeed(GroupMetadata.make()))),
   },
   $I.annote("TabsNode", {
     description: "A non-empty ordered tab zipper with one structurally active panel.",
   })
 ) {
+  static readonly fromPanels: Dual4<GroupId, A.NonEmptyReadonlyArray<Panel>, PanelId, GroupMetadata, TabsNode> = dual(
+    4,
+    (
+      groupId: GroupId,
+      panels: A.NonEmptyReadonlyArray<Panel>,
+      activePanelId: PanelId,
+      metadata: GroupMetadata
+    ): TabsNode => {
+      const [before, activeAndAfter] = A.splitWhere(panels, (panel) => PanelId.equals(panel.id, activePanelId));
+      return A.match(activeAndAfter, {
+        onEmpty: () =>
+          TabsNode.make({ groupId, active: A.headNonEmpty(panels), after: A.tailNonEmpty(panels), metadata }),
+        onNonEmpty: (active) =>
+          TabsNode.make({ groupId, before, active: A.headNonEmpty(active), after: A.tailNonEmpty(active), metadata }),
+      });
+    }
+  );
+
+  static readonly insert: Dual3<TabsNode, Panel, TabPlacement, TabsNode> = dual(
+    3,
+    (tabs: TabsNode, panel: Panel, placement: TabPlacement): TabsNode => {
+      const panels = TabsNode.panels(tabs);
+      const index = O.getOrElse(placement.index, () => A.length(panels));
+      const inserted = O.getOrThrow(
+        A.insertAt(panels, N.clamp(index, { minimum: 0, maximum: A.length(panels) }), panel)
+      ); // crispen: total after clamp; use a total Effect Array insert when available.
+      const activePanelId = Bool.match(placement.activate, {
+        onTrue: () => panel.id,
+        onFalse: () => tabs.active.id,
+      });
+      return TabsNode.fromPanels(tabs.groupId, inserted, activePanelId, tabs.metadata);
+    }
+  );
+
   static readonly activate: Dual2<TabsNode, PanelId, O.Option<TabsNode>> = dual(
     2,
     (tabs: TabsNode, panelId: PanelId): O.Option<TabsNode> => {
@@ -226,6 +331,7 @@ export class TabsNode extends S.TaggedClass<TabsNode>($I`TabsNode`)(
               before,
               active: A.headNonEmpty(activeAndAfter),
               after: A.tailNonEmpty(activeAndAfter),
+              metadata: tabs.metadata,
             })
           ),
       });
@@ -239,6 +345,7 @@ export class TabsNode extends S.TaggedClass<TabsNode>($I`TabsNode`)(
         groupId: tabs.groupId,
         before: TabsNode.panels(tabs),
         active: panel,
+        metadata: tabs.metadata,
       })
   );
 
@@ -253,7 +360,7 @@ export class TabsNode extends S.TaggedClass<TabsNode>($I`TabsNode`)(
 
   static readonly is = S.is(TabsNode);
 
-  static readonly panels = (tabs: TabsNode): ReadonlyArray<Panel> =>
+  static readonly panels = (tabs: TabsNode): A.NonEmptyReadonlyArray<Panel> =>
     pipe(tabs.before, A.append(tabs.active), A.appendAll(tabs.after));
 
   static readonly remove: Dual2<TabsNode, PanelId, O.Option<TabsNode>> = dual(
@@ -269,6 +376,7 @@ export class TabsNode extends S.TaggedClass<TabsNode>($I`TabsNode`)(
                   before: tabs.before,
                   active: A.headNonEmpty(after),
                   after: A.tailNonEmpty(after),
+                  metadata: tabs.metadata,
                 })
               ),
             onEmpty: () =>
@@ -280,6 +388,7 @@ export class TabsNode extends S.TaggedClass<TabsNode>($I`TabsNode`)(
                       groupId: tabs.groupId,
                       before: A.dropRight(before, 1),
                       active: A.lastNonEmpty(before),
+                      metadata: tabs.metadata,
                     })
                   ),
               }),
@@ -291,6 +400,7 @@ export class TabsNode extends S.TaggedClass<TabsNode>($I`TabsNode`)(
               before: A.filter(tabs.before, (panel) => Bool.not(PanelId.equals(panel.id, panelId))),
               active: tabs.active,
               after: A.filter(tabs.after, (panel) => Bool.not(PanelId.equals(panel.id, panelId))),
+              metadata: tabs.metadata,
             })
           ),
       })
@@ -392,11 +502,10 @@ export class SplitNode extends S.TaggedClass<SplitNode>($I`SplitNode`)(
     description: "A recursive binary split with axis-specific geometry and exactly two children.",
   })
 ) {
-  static readonly fromPlacement: Dual3<TabsNode, Panel, SplitPlacement, SplitNode> = dual(
+  static readonly fromNodes: Dual3<DockNode.Type, DockNode.Type, SplitPosition, SplitNode> = dual(
     3,
-    (reference: TabsNode, panel: Panel, placement: SplitPlacement): SplitNode => {
-      const inserted = TabsNode.make({ groupId: placement.newGroupId, active: panel });
-      return DockSide.$match(placement.side, {
+    (reference: DockNode.Type, inserted: DockNode.Type, placement: SplitPosition): SplitNode =>
+      DockSide.$match(placement.side, {
         left: () =>
           SplitNode.make({
             splitId: placement.splitId,
@@ -418,11 +527,7 @@ export class SplitNode extends S.TaggedClass<SplitNode>($I`SplitNode`)(
         top: () =>
           SplitNode.make({
             splitId: placement.splitId,
-            layout: VerticalSplitLayout.make({
-              topRatio: placement.newGroupRatio,
-              top: inserted,
-              bottom: reference,
-            }),
+            layout: VerticalSplitLayout.make({ topRatio: placement.newGroupRatio, top: inserted, bottom: reference }),
           }),
         bottom: () =>
           SplitNode.make({
@@ -433,8 +538,13 @@ export class SplitNode extends S.TaggedClass<SplitNode>($I`SplitNode`)(
               bottom: inserted,
             }),
           }),
-      });
-    }
+      })
+  );
+
+  static readonly fromPlacement: Dual3<TabsNode, Panel, SplitPlacement, SplitNode> = dual(
+    3,
+    (reference: TabsNode, panel: Panel, placement: SplitPlacement): SplitNode =>
+      SplitNode.fromNodes(reference, TabsNode.make({ groupId: placement.newGroupId, active: panel }), placement)
   );
 
   static readonly is = S.is(SplitNode);
@@ -590,22 +700,54 @@ export const DockNode = DockNodeBase.pipe(
       tabs,
     };
   })
-) satisfies S.Codec<DockNodeShape>;
+) satisfies S.Codec<DockNodeShape, DockNodeEncoded>;
 export type DockNode = typeof DockNode.Type;
+
+interface TabsNodeEncoded extends Omit<TabsNode, "before" | "active" | "after" | "metadata"> {
+  readonly before: ReadonlyArray<typeof Panel.Encoded>;
+  readonly active: typeof Panel.Encoded;
+  readonly after: ReadonlyArray<typeof Panel.Encoded>;
+  readonly metadata: typeof GroupMetadata.Encoded;
+}
+
+interface HorizontalSplitLayoutEncoded extends Omit<HorizontalSplitLayout, "left" | "right"> {
+  readonly left: DockNodeEncoded;
+  readonly right: DockNodeEncoded;
+}
+
+interface VerticalSplitLayoutEncoded extends Omit<VerticalSplitLayout, "top" | "bottom"> {
+  readonly top: DockNodeEncoded;
+  readonly bottom: DockNodeEncoded;
+}
+
+type SplitLayoutEncoded = HorizontalSplitLayoutEncoded | VerticalSplitLayoutEncoded;
+
+interface SplitNodeEncoded extends Omit<SplitNode, "layout"> {
+  readonly layout: SplitLayoutEncoded;
+}
+
+type DockNodeEncoded = TabsNodeEncoded | SplitNodeEncoded;
 
 export declare namespace DockNode {
   export type Type = DockNodeShape;
-  export type Encoded = DockNodeShape;
+  export type Encoded = DockNodeEncoded;
 }
+
+/** One independently positioned dock subtree; array order is back-to-front z-order. */
+export class FloatingMember extends S.Class<FloatingMember>($I`FloatingMember`)(
+  { anchoredBox: AnchoredBox, root: DockNode },
+  $I.annote("FloatingMember", { description: "A floating dock subtree and its anchored container geometry." })
+) {}
 
 /** Workspace with no panels and therefore no root node. */
 export class EmptyWorkspace extends S.Class<EmptyWorkspace>($I`EmptyWorkspace`)(
   {
     kind: S.tag("empty"),
     revision: NonNegativeInt.pipe(SchemaUtils.withConstantDefault<number>(0)),
+    floating: S.Array(FloatingMember).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<FloatingMember>>([])),
   },
   $I.annote("EmptyWorkspace", {
-    description: "A dock workspace with no representable layout tree.",
+    description: "A dock workspace with no docked tree; floating subtrees may still exist.",
   })
 ) {}
 
@@ -615,6 +757,8 @@ export class PopulatedWorkspace extends S.Class<PopulatedWorkspace>($I`Populated
     kind: S.tag("populated"),
     revision: NonNegativeInt.pipe(SchemaUtils.withConstantDefault<number>(0)),
     root: DockNode,
+    maximized: S.toType(GroupId).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    floating: S.Array(FloatingMember).pipe(SchemaUtils.withConstantDefault<ReadonlyArray<FloatingMember>>([])),
   },
   $I.annote("PopulatedWorkspace", {
     description: "A dock workspace containing a non-empty binary layout tree.",
@@ -634,19 +778,43 @@ const idsAreUnique = (ids: ReadonlyArray<string>): boolean =>
 const DockWorkspaceGlobalIdentityCheck = S.makeFilter<typeof DockWorkspaceBase.Type>(
   (workspace) =>
     DockWorkspaceBase.match(workspace, {
-      empty: () => true,
-      populated: ({ root }) => {
-        const panelIds = A.map(DockNode.panels(root), (panel) => panel.id);
-        const groupIds = A.map(DockNode.tabs(root), (tabs) => tabs.groupId);
-        const splitIds = A.map(DockNode.splits(root), (split) => split.splitId);
-        return Bool.and(idsAreUnique(panelIds), Bool.and(idsAreUnique(groupIds), idsAreUnique(splitIds)));
+      empty: ({ floating }) => {
+        const roots = A.map(floating, (member) => member.root);
+        return Bool.and(
+          idsAreUnique(A.flatMap(roots, (root) => A.map(DockNode.panels(root), (panel) => panel.id))),
+          Bool.and(
+            idsAreUnique(A.flatMap(roots, (root) => A.map(DockNode.tabs(root), (tabs) => tabs.groupId))),
+            idsAreUnique(A.flatMap(roots, (root) => A.map(DockNode.splits(root), (split) => split.splitId)))
+          )
+        );
+      },
+      populated: ({ floating, maximized, root }) => {
+        const roots = A.prepend(
+          A.map(floating, (member) => member.root),
+          root
+        );
+        const panelIds = A.flatMap(roots, (candidate) => A.map(DockNode.panels(candidate), (panel) => panel.id));
+        const groupIds = A.flatMap(roots, (candidate) => A.map(DockNode.tabs(candidate), (tabs) => tabs.groupId));
+        const splitIds = A.flatMap(roots, (candidate) => A.map(DockNode.splits(candidate), (split) => split.splitId));
+        const maximizedIsValid = O.match(maximized, {
+          onNone: () => true,
+          onSome: (groupId) =>
+            pipe(
+              DockNode.findTabs(root, groupId),
+              O.exists((tabs) => tabs.metadata.visible)
+            ),
+        });
+        return Bool.and(
+          maximizedIsValid,
+          Bool.and(idsAreUnique(panelIds), Bool.and(idsAreUnique(groupIds), idsAreUnique(splitIds)))
+        );
       },
     }),
   {
     identifier: $I`DockWorkspaceGlobalIdentityCheck`,
     title: "Dock workspace global identity",
-    description: "Panel, group, and split identifiers must each be globally unique across the complete tree.",
-    message: "Expected globally unique panel, group, and split identifiers.",
+    description: "Identifiers must be globally unique and a maximized group must exist and be visible.",
+    message: "Expected globally unique panel, group, and split identifiers and an existing visible maximized group.",
   }
 );
 
@@ -660,13 +828,26 @@ export const DockWorkspace = DockWorkspaceBase.pipe(
     const asPopulated = O.liftPredicate(DockWorkspaceBase.guards.populated);
     const empty: DockWorkspaceShape = EmptyWorkspace.make();
 
+    const roots = (workspace: DockWorkspaceShape): ReadonlyArray<DockNodeShape> =>
+      DockWorkspaceBase.match(workspace, {
+        empty: ({ floating }) => A.map(floating, (member) => member.root),
+        populated: ({ floating, root }) =>
+          A.prepend(
+            A.map(floating, (member) => member.root),
+            root
+          ),
+      });
+    const floatingMembers = (workspace: DockWorkspaceShape): ReadonlyArray<FloatingMember> =>
+      DockWorkspaceBase.match(workspace, { empty: ({ floating }) => floating, populated: ({ floating }) => floating });
+
     const findPanel: Dual2<DockWorkspaceShape, PanelId, O.Option<Panel>> = dual(
       2,
       (workspace: DockWorkspaceShape, panelId: PanelId): O.Option<Panel> =>
-        DockWorkspaceBase.match(workspace, {
-          empty: (): O.Option<Panel> => O.none(),
-          populated: ({ root }): O.Option<Panel> => Panel.findInNode(root, panelId),
-        })
+        pipe(
+          roots(workspace),
+          A.findFirst((root) => O.isSome(Panel.findInNode(root, panelId))),
+          O.flatMap((root) => Panel.findInNode(root, panelId))
+        )
     );
 
     const findActivePanel: Dual2<DockWorkspaceShape, GroupId, O.Option<Panel>> = dual(
@@ -681,22 +862,109 @@ export const DockWorkspace = DockWorkspaceBase.pipe(
     const findTabs: Dual2<DockWorkspaceShape, GroupId, O.Option<TabsNode>> = dual(
       2,
       (workspace: DockWorkspaceShape, groupId: GroupId): O.Option<TabsNode> =>
-        DockWorkspaceBase.match(workspace, {
-          empty: (): O.Option<TabsNode> => O.none(),
-          populated: ({ root }): O.Option<TabsNode> => DockNode.findTabs(root, groupId),
-        })
+        pipe(
+          roots(workspace),
+          A.findFirst((root) => O.isSome(DockNode.findTabs(root, groupId))),
+          O.flatMap((root) => DockNode.findTabs(root, groupId))
+        )
     );
+
+    const findSplit: Dual2<DockWorkspaceShape, SplitId, O.Option<SplitNode>> = dual(2, (workspace, splitId) =>
+      pipe(
+        roots(workspace),
+        A.findFirst((root) => O.isSome(DockNode.findSplit(root, splitId))),
+        O.flatMap((root) => DockNode.findSplit(root, splitId))
+      )
+    );
+    const findTabsForPanel: Dual2<DockWorkspaceShape, PanelId, O.Option<TabsNode>> = dual(2, (workspace, panelId) =>
+      pipe(
+        roots(workspace),
+        A.findFirst((root) => O.isSome(TabsNode.findForPanel(root, panelId))),
+        O.flatMap((root) => TabsNode.findForPanel(root, panelId))
+      )
+    );
+    const isFloatingGroup: Dual2<DockWorkspaceShape, GroupId, boolean> = dual(2, (workspace, groupId) =>
+      A.some(floatingMembers(workspace), (member) => O.isSome(DockNode.findTabs(member.root, groupId)))
+    );
+
+    const replaceAtGroup: Dual3<DockWorkspaceShape, GroupId, DockNodeShape, DockWorkspaceShape> = dual(
+      3,
+      (workspace, groupId, replacement) => {
+        const floating = A.map(floatingMembers(workspace), (member) =>
+          FloatingMember.make({
+            anchoredBox: member.anchoredBox,
+            root: DockNode.replaceAtGroup(member.root, groupId, replacement),
+          })
+        );
+        return DockWorkspaceBase.match(workspace, {
+          empty: ({ revision }) => EmptyWorkspace.make({ revision, floating }),
+          populated: ({ revision, root, maximized }) =>
+            PopulatedWorkspace.make({
+              revision,
+              root: DockNode.replaceAtGroup(root, groupId, replacement),
+              maximized,
+              floating,
+            }),
+        });
+      }
+    );
+
+    const replaceSplit: Dual2<DockWorkspaceShape, SplitNode, DockWorkspaceShape> = dual(2, (workspace, replacement) => {
+      const floating = A.map(floatingMembers(workspace), (member) =>
+        FloatingMember.make({ anchoredBox: member.anchoredBox, root: DockNode.replaceSplit(member.root, replacement) })
+      );
+      return DockWorkspaceBase.match(workspace, {
+        empty: ({ revision }) => EmptyWorkspace.make({ revision, floating }),
+        populated: ({ revision, root, maximized }) =>
+          PopulatedWorkspace.make({ revision, root: DockNode.replaceSplit(root, replacement), maximized, floating }),
+      });
+    });
+    const removeTabs: Dual2<DockWorkspaceShape, GroupId, DockWorkspaceShape> = dual(2, (workspace, groupId) => {
+      const floating = A.flatMap(floatingMembers(workspace), (member) =>
+        O.match(DockNode.findTabs(member.root, groupId), {
+          onNone: () => A.of(member),
+          onSome: () =>
+            O.match(DockNode.removeTabs(member.root, groupId), {
+              onNone: A.empty,
+              onSome: (root) => A.of(FloatingMember.make({ anchoredBox: member.anchoredBox, root })),
+            }),
+        })
+      );
+      return DockWorkspaceBase.match(workspace, {
+        empty: ({ revision }) => EmptyWorkspace.make({ revision, floating }),
+        populated: ({ revision, root, maximized }) =>
+          O.match(DockNode.findTabs(root, groupId), {
+            onNone: () => PopulatedWorkspace.make({ revision, root, maximized, floating }),
+            onSome: () =>
+              O.match(DockNode.removeTabs(root, groupId), {
+                onNone: () => EmptyWorkspace.make({ revision, floating }),
+                onSome: (nextRoot) =>
+                  PopulatedWorkspace.make({
+                    revision,
+                    root: nextRoot,
+                    maximized: O.filter(maximized, (id) => !GroupId.equals(id, groupId)),
+                    floating,
+                  }),
+              }),
+          }),
+      });
+    });
 
     const hasSameContent: Dual2<DockWorkspaceShape, DockWorkspaceShape, boolean> = dual(
       2,
       (left: DockWorkspaceShape, right: DockWorkspaceShape): boolean =>
         DockWorkspaceBase.match(left, {
-          empty: () => DockWorkspaceBase.guards.empty(right),
-          populated: ({ root }) =>
+          empty: ({ floating }) => DockWorkspaceBase.guards.empty(right) && Eq.equals(floating, right.floating),
+          populated: ({ floating, maximized, root }) =>
             pipe(
               right,
               asPopulated,
-              O.exists((candidate) => DockNode.equals(root, candidate.root))
+              O.exists((candidate) =>
+                Bool.and(
+                  DockNode.equals(root, candidate.root),
+                  Bool.and(Eq.equals(floating, candidate.floating), Eq.equals(maximized, candidate.maximized))
+                )
+              )
             ),
         })
     );
@@ -705,8 +973,9 @@ export const DockWorkspace = DockWorkspaceBase.pipe(
       2,
       (workspace: DockWorkspaceShape, revision: NonNegativeInt): DockWorkspaceShape =>
         DockWorkspaceBase.match(workspace, {
-          empty: () => EmptyWorkspace.make({ revision }),
-          populated: ({ root }) => PopulatedWorkspace.make({ revision, root }),
+          empty: ({ floating }) => EmptyWorkspace.make({ revision, floating }),
+          populated: ({ floating, maximized, root }) =>
+            PopulatedWorkspace.make({ revision, root, maximized, floating }),
         })
     );
 
@@ -715,11 +984,15 @@ export const DockWorkspace = DockWorkspaceBase.pipe(
       equals: SchemaUtils.toEquivalence(schema),
       findActivePanel,
       findPanel,
+      findSplit,
       findTabs,
+      findTabsForPanel,
+      floatingMembers,
       groupCount: (workspace: DockWorkspaceShape): number =>
         DockWorkspaceBase.match(workspace, {
-          empty: () => 0,
-          populated: ({ root }) => A.length(DockNode.tabs(root)),
+          empty: ({ floating }) => A.length(A.flatMap(floating, (member) => DockNode.tabs(member.root))),
+          populated: ({ floating, root }) =>
+            A.length(DockNode.tabs(root)) + A.length(A.flatMap(floating, (member) => DockNode.tabs(member.root))),
         }),
       guards: DockWorkspaceBase.guards,
       hasSameContent,
@@ -727,14 +1000,34 @@ export const DockWorkspace = DockWorkspaceBase.pipe(
       match: DockWorkspaceBase.match,
       panels: (workspace: DockWorkspaceShape): ReadonlyArray<Panel> =>
         DockWorkspaceBase.match(workspace, {
-          empty: (): ReadonlyArray<Panel> => A.empty(),
-          populated: ({ root }): ReadonlyArray<Panel> => DockNode.panels(root),
+          empty: ({ floating }): ReadonlyArray<Panel> => A.flatMap(floating, (member) => DockNode.panels(member.root)),
+          populated: ({ floating, root }): ReadonlyArray<Panel> =>
+            A.appendAll(
+              DockNode.panels(root),
+              A.flatMap(floating, (member) => DockNode.panels(member.root))
+            ),
         }),
+      replaceAtGroup,
+      replaceSplit,
+      removeTabs,
+      roots,
+      isFloatingGroup,
       withRevision,
     };
   })
 );
 export type DockWorkspace = typeof DockWorkspace.Type;
+
+/** Migration-proof persisted snapshot containing one complete workspace. */
+export class DockSnapshot extends S.Class<DockSnapshot>($I`DockSnapshot`)(
+  {
+    version: S.tag(1),
+    workspace: DockWorkspace,
+  },
+  $I.annote("DockSnapshot", {
+    description: "Version one persisted snapshot envelope containing one complete dock workspace.",
+  })
+) {}
 
 /** Placement for the first panel in an empty workspace. */
 export class RootPlacement extends S.Class<RootPlacement>($I`RootPlacement`)(
@@ -752,9 +1045,11 @@ export class TabPlacement extends S.Class<TabPlacement>($I`TabPlacement`)(
   {
     kind: S.tag("tab"),
     groupId: GroupId,
+    index: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
+    activate: S.Boolean.pipe(SchemaUtils.withConstantDefault<boolean>(true)),
   },
   $I.annote("TabPlacement", {
-    description: "Appends a panel to an existing tab group and activates it.",
+    description: "Inserts a panel into an existing tab group, optionally without changing its active panel.",
   })
 ) {}
 
@@ -780,11 +1075,54 @@ export class SplitPlacement extends S.Class<SplitPlacement>($I`SplitPlacement`)(
   })
 ) {}
 
-const DockPlacementKind = LiteralKit(["root", "tab", "split"]);
+type SplitPosition = Pick<SplitPlacement, "side" | "splitId" | "newGroupRatio">;
+
+/** Placement that creates a new tab group against the complete workspace root. */
+export class RootSplitPlacement extends S.Class<RootSplitPlacement>($I`RootSplitPlacement`)(
+  {
+    kind: S.tag("rootSplit"),
+    side: DockSide,
+    splitId: SplitId,
+    newGroupId: GroupId,
+    newGroupRatio: SplitRatio.pipe(SchemaUtils.withConstantDefault<number>(5_000)),
+  },
+  $I.annote("RootSplitPlacement", {
+    description: "Creates a new tab group against one semantic edge of the complete workspace root.",
+  })
+) {}
+
+/** Group relocation beside an existing group without a dangling new-group identity. */
+export class GroupSplitPlacement extends S.Class<GroupSplitPlacement>($I`GroupSplitPlacement`)(
+  {
+    kind: S.tag("groupSplit"),
+    referenceGroupId: GroupId,
+    splitId: SplitId,
+    side: DockSide,
+    newGroupRatio: SplitRatio.pipe(SchemaUtils.withConstantDefault<number>(5_000)),
+  },
+  $I.annote("GroupSplitPlacement", {
+    description: "Relocates an existing group beside a reference group using a new split.",
+  })
+) {}
+
+/** Group relocation against the workspace root without a dangling new-group identity. */
+export class GroupRootSplitPlacement extends S.Class<GroupRootSplitPlacement>($I`GroupRootSplitPlacement`)(
+  {
+    kind: S.tag("groupRootSplit"),
+    side: DockSide,
+    splitId: SplitId,
+    newGroupRatio: SplitRatio.pipe(SchemaUtils.withConstantDefault<number>(5_000)),
+  },
+  $I.annote("GroupRootSplitPlacement", {
+    description: "Relocates an existing group against one semantic edge of the workspace root.",
+  })
+) {}
+
+const DockPlacementKind = LiteralKit(["root", "tab", "split", "rootSplit"]);
 
 /** Semantic destination for opening a panel. */
 export const DockPlacement = DockPlacementKind.mapMembers(
-  Tuple.evolve([() => RootPlacement, () => TabPlacement, () => SplitPlacement])
+  Tuple.evolve([() => RootPlacement, () => TabPlacement, () => SplitPlacement, () => RootSplitPlacement])
 )
   .annotate(
     $I.annote("DockPlacement", {
@@ -795,13 +1133,22 @@ export const DockPlacement = DockPlacementKind.mapMembers(
 export type DockPlacement = typeof DockPlacement.Type;
 
 /** Semantic destination for moving an existing panel. */
-export const DockMoveTarget = S.Union([TabPlacement, SplitPlacement]).pipe(
+export const DockMoveTarget = S.Union([TabPlacement, SplitPlacement, RootSplitPlacement]).pipe(
   S.toTaggedUnion("kind"),
   $I.annoteSchema("DockMoveTarget", {
     description: "Moves a panel into tabs or docks it beside an existing group.",
   })
 );
 export type DockMoveTarget = typeof DockMoveTarget.Type;
+
+/** Honest target algebra for whole-group merge and relocation. */
+export const DockGroupMoveTarget = S.Union([TabPlacement, GroupSplitPlacement, GroupRootSplitPlacement]).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("DockGroupMoveTarget", {
+    description: "Merges a group into tabs or relocates it without unused new-group identifiers.",
+  })
+);
+export type DockGroupMoveTarget = typeof DockGroupMoveTarget.Type;
 
 /** Command originating from a user interaction. */
 export class UserCommandOrigin extends S.Class<UserCommandOrigin>($I`UserCommandOrigin`)(
@@ -862,6 +1209,12 @@ export class ActivatePanelCommand extends S.Class<ActivatePanelCommand>($I`Activ
   })
 ) {}
 
+/** Replaces selected persistable facets of one panel. */
+export class UpdatePanelCommand extends S.Class<UpdatePanelCommand>($I`UpdatePanelCommand`)(
+  { kind: S.tag("updatePanel"), panelId: PanelId, patch: PanelPatch },
+  $I.annote("UpdatePanelCommand", { description: "Applies whole-value replacements to an existing panel." })
+) {}
+
 /** Moves a panel into tabs or docks it beside an existing group. */
 export class MovePanelCommand extends S.Class<MovePanelCommand>($I`MovePanelCommand`)(
   {
@@ -872,6 +1225,18 @@ export class MovePanelCommand extends S.Class<MovePanelCommand>($I`MovePanelComm
   $I.annote("MovePanelCommand", {
     description: "Moves a panel to a semantic destination as one atomic tree transition.",
   })
+) {}
+
+/** Moves or merges one complete non-empty tab group atomically. */
+export class MoveGroupCommand extends S.Class<MoveGroupCommand>($I`MoveGroupCommand`)(
+  { kind: S.tag("moveGroup"), groupId: GroupId, target: DockGroupMoveTarget },
+  $I.annote("MoveGroupCommand", { description: "Merges or relocates an entire tab group as one atomic transition." })
+) {}
+
+/** Replaces selected persistable metadata of one group. */
+export class UpdateGroupCommand extends S.Class<UpdateGroupCommand>($I`UpdateGroupCommand`)(
+  { kind: S.tag("updateGroup"), groupId: GroupId, patch: GroupPatch },
+  $I.annote("UpdateGroupCommand", { description: "Applies whole-value replacements to existing group metadata." })
 ) {}
 
 /** Closes a panel, collapsing an empty leaf and its parent split. */
@@ -907,13 +1272,46 @@ export class ClearWorkspaceCommand extends S.Class<ClearWorkspaceCommand>($I`Cle
   })
 ) {}
 
+/** Maximizes one group, revealing it when hidden. */
+export class MaximizeGroupCommand extends S.Class<MaximizeGroupCommand>($I`MaximizeGroupCommand`)(
+  { kind: S.tag("maximizeGroup"), groupId: GroupId },
+  $I.annote("MaximizeGroupCommand", { description: "Reveals and maximizes one existing tab group." })
+) {}
+
+/** Restores the normal split projection. */
+export class RestoreMaximizedCommand extends S.Class<RestoreMaximizedCommand>($I`RestoreMaximizedCommand`)(
+  { kind: S.tag("restoreMaximized") },
+  $I.annote("RestoreMaximizedCommand", { description: "Clears the currently maximized group." })
+) {}
+
+export class FloatGroupCommand extends S.Class<FloatGroupCommand>($I`FloatGroupCommand`)(
+  { kind: S.tag("floatGroup"), groupId: GroupId, anchoredBox: AnchoredBox },
+  $I.annote("FloatGroupCommand", { description: "Moves one docked group into a new topmost floating member." })
+) {}
+export class DockFloatingGroupCommand extends S.Class<DockFloatingGroupCommand>($I`DockFloatingGroupCommand`)(
+  { kind: S.tag("dockFloatingGroup"), groupId: GroupId, target: DockGroupMoveTarget },
+  $I.annote("DockFloatingGroupCommand", { description: "Moves a floating group back into the docked tree." })
+) {}
+export class MoveFloatingGroupCommand extends S.Class<MoveFloatingGroupCommand>($I`MoveFloatingGroupCommand`)(
+  { kind: S.tag("moveFloatingGroup"), groupId: GroupId, anchoredBox: AnchoredBox },
+  $I.annote("MoveFloatingGroupCommand", { description: "Updates a floating member box and brings it to front." })
+) {}
+
 const DockCommandKind = LiteralKit([
   "openPanel",
   "activatePanel",
+  "updatePanel",
   "movePanel",
+  "moveGroup",
+  "updateGroup",
   "closePanel",
   "resizeSplit",
   "clearWorkspace",
+  "maximizeGroup",
+  "restoreMaximized",
+  "floatGroup",
+  "dockFloatingGroup",
+  "moveFloatingGroup",
 ]);
 
 /** Complete domain command union. */
@@ -921,10 +1319,18 @@ export const DockCommand = DockCommandKind.mapMembers(
   Tuple.evolve([
     () => OpenPanelCommand,
     () => ActivatePanelCommand,
+    () => UpdatePanelCommand,
     () => MovePanelCommand,
+    () => MoveGroupCommand,
+    () => UpdateGroupCommand,
     () => ClosePanelCommand,
     () => ResizeSplitCommand,
     () => ClearWorkspaceCommand,
+    () => MaximizeGroupCommand,
+    () => RestoreMaximizedCommand,
+    () => FloatGroupCommand,
+    () => DockFloatingGroupCommand,
+    () => MoveFloatingGroupCommand,
   ])
 )
   .annotate(
@@ -982,6 +1388,34 @@ export class PanelActivatedEvent extends S.Class<PanelActivatedEvent>($I`PanelAc
   })
 ) {}
 
+/** Event emitted after replacing a panel title. */
+export class PanelTitleChangedEvent extends S.Class<PanelTitleChangedEvent>($I`PanelTitleChangedEvent`)(
+  { kind: S.tag("panelTitleChanged"), panelId: PanelId, groupId: GroupId, title: S.NonEmptyString },
+  $I.annote("PanelTitleChangedEvent", { description: "A panel title was replaced." })
+) {}
+
+/** Event emitted after replacing a panel view. */
+export class PanelViewChangedEvent extends S.Class<PanelViewChangedEvent>($I`PanelViewChangedEvent`)(
+  { kind: S.tag("panelViewChanged"), panelId: PanelId, groupId: GroupId, view: PanelView },
+  $I.annote("PanelViewChangedEvent", { description: "A panel view contract was replaced." })
+) {}
+
+/** Event emitted after replacing a panel render mode. */
+export class PanelRenderModeChangedEvent extends S.Class<PanelRenderModeChangedEvent>($I`PanelRenderModeChangedEvent`)(
+  { kind: S.tag("panelRenderModeChanged"), panelId: PanelId, groupId: GroupId, renderMode: PanelRenderMode },
+  $I.annote("PanelRenderModeChangedEvent", { description: "A panel rendering policy was replaced." })
+) {}
+
+/** Event emitted after replacing or clearing a custom tab renderer key. */
+export class PanelTabComponentChangedEvent extends S.Class<PanelTabComponentChangedEvent>(
+  $I`PanelTabComponentChangedEvent`
+)(
+  { kind: S.tag("panelTabComponentChanged"), panelId: PanelId, groupId: GroupId, tabComponent: S.Option(RendererKey) },
+  $I.annote("PanelTabComponentChangedEvent", {
+    description: "A panel custom tab renderer key was replaced or cleared.",
+  })
+) {}
+
 /** Event emitted after atomically moving a panel between groups. */
 export class PanelMovedEvent extends S.Class<PanelMovedEvent>($I`PanelMovedEvent`)(
   {
@@ -993,6 +1427,32 @@ export class PanelMovedEvent extends S.Class<PanelMovedEvent>($I`PanelMovedEvent
   $I.annote("PanelMovedEvent", {
     description: "A panel moved between tab groups in one tree publication.",
   })
+) {}
+
+/** Event emitted after reordering a panel within its current group. */
+export class PanelReorderedEvent extends S.Class<PanelReorderedEvent>($I`PanelReorderedEvent`)(
+  { kind: S.tag("panelReordered"), panelId: PanelId, groupId: GroupId, index: NonNegativeInt },
+  $I.annote("PanelReorderedEvent", { description: "A panel changed position within its existing tab group." })
+) {}
+
+/** Event emitted after merging a complete source group into another group. */
+export class GroupMergedEvent extends S.Class<GroupMergedEvent>($I`GroupMergedEvent`)(
+  { kind: S.tag("groupMerged"), fromGroupId: GroupId, toGroupId: GroupId, panelIds: S.NonEmptyArray(PanelId) },
+  $I.annote("GroupMergedEvent", {
+    description: "A complete source group was merged into a destination group in source order.",
+  })
+) {}
+
+/** Event emitted after relocating a complete group through a new split. */
+export class GroupMovedEvent extends S.Class<GroupMovedEvent>($I`GroupMovedEvent`)(
+  { kind: S.tag("groupMoved"), groupId: GroupId, splitId: SplitId },
+  $I.annote("GroupMovedEvent", { description: "A complete tab group was relocated through a newly created split." })
+) {}
+
+/** Event emitted after replacing group metadata. */
+export class GroupUpdatedEvent extends S.Class<GroupUpdatedEvent>($I`GroupUpdatedEvent`)(
+  { kind: S.tag("groupUpdated"), groupId: GroupId },
+  $I.annote("GroupUpdatedEvent", { description: "Persistable metadata for a tab group changed." })
 ) {}
 
 /** Event emitted after closing a panel. */
@@ -1041,14 +1501,51 @@ export class WorkspaceRestoredEvent extends S.Class<WorkspaceRestoredEvent>($I`W
   })
 ) {}
 
+/** Event emitted after maximizing a group. */
+export class GroupMaximizedEvent extends S.Class<GroupMaximizedEvent>($I`GroupMaximizedEvent`)(
+  { kind: S.tag("groupMaximized"), groupId: GroupId },
+  $I.annote("GroupMaximizedEvent", { description: "A visible group became the exclusive geometry projection." })
+) {}
+
+/** Event emitted after leaving maximized mode. */
+export class GroupRestoredEvent extends S.Class<GroupRestoredEvent>($I`GroupRestoredEvent`)(
+  { kind: S.tag("groupRestored"), groupId: GroupId },
+  $I.annote("GroupRestoredEvent", { description: "A group left maximized mode." })
+) {}
+export class GroupFloatedEvent extends S.Class<GroupFloatedEvent>($I`GroupFloatedEvent`)(
+  { kind: S.tag("groupFloated"), groupId: GroupId },
+  $I.annote("GroupFloatedEvent", { description: "A docked group became floating." })
+) {}
+export class GroupDockedEvent extends S.Class<GroupDockedEvent>($I`GroupDockedEvent`)(
+  { kind: S.tag("groupDocked"), groupId: GroupId },
+  $I.annote("GroupDockedEvent", { description: "A floating group returned to the docked tree." })
+) {}
+export class FloatingGroupMovedEvent extends S.Class<FloatingGroupMovedEvent>($I`FloatingGroupMovedEvent`)(
+  { kind: S.tag("floatingGroupMoved"), groupId: GroupId },
+  $I.annote("FloatingGroupMovedEvent", { description: "A floating member moved or changed z-order." })
+) {}
+
 const DockEventKind = LiteralKit([
   "panelOpened",
   "panelActivated",
+  "panelTitleChanged",
+  "panelViewChanged",
+  "panelRenderModeChanged",
+  "panelTabComponentChanged",
   "panelMoved",
+  "panelReordered",
+  "groupMerged",
+  "groupMoved",
+  "groupUpdated",
   "panelClosed",
   "splitResized",
   "workspaceCleared",
   "workspaceRestored",
+  "groupMaximized",
+  "groupRestored",
+  "groupFloated",
+  "groupDocked",
+  "floatingGroupMoved",
 ]);
 
 /** Complete domain event union. */
@@ -1056,11 +1553,24 @@ export const DockEvent = DockEventKind.mapMembers(
   Tuple.evolve([
     () => PanelOpenedEvent,
     () => PanelActivatedEvent,
+    () => PanelTitleChangedEvent,
+    () => PanelViewChangedEvent,
+    () => PanelRenderModeChangedEvent,
+    () => PanelTabComponentChangedEvent,
     () => PanelMovedEvent,
+    () => PanelReorderedEvent,
+    () => GroupMergedEvent,
+    () => GroupMovedEvent,
+    () => GroupUpdatedEvent,
     () => PanelClosedEvent,
     () => SplitResizedEvent,
     () => WorkspaceClearedEvent,
     () => WorkspaceRestoredEvent,
+    () => GroupMaximizedEvent,
+    () => GroupRestoredEvent,
+    () => GroupFloatedEvent,
+    () => GroupDockedEvent,
+    () => FloatingGroupMovedEvent,
   ])
 )
   .annotate(
@@ -1073,8 +1583,15 @@ export type DockEvent = typeof DockEvent.Type;
 
 export const DockUnchangedReason = LiteralKit([
   "panel-already-active",
+  "panel-unchanged",
+  "group-unchanged",
   "split-ratio-unchanged",
   "snapshot-identical",
+  "panel-position-unchanged",
+  "topology-unchanged",
+  "group-already-maximized",
+  "no-group-maximized",
+  "floating-position-unchanged",
 ]).annotate(
   $I.annote("DockUnchangedReason", {
     description: "Expected reasons a valid dock intent produces no state change or domain event.",
@@ -1137,8 +1654,12 @@ export const DockRejectionReason = LiteralKit([
   "split-not-found",
   "group-already-exists",
   "split-already-exists",
+  "group-locked",
   "same-group-move",
   "source-group-would-disappear",
+  "group-floating",
+  "group-not-docked",
+  "group-not-floating",
 ]).annotate(
   $I.annote("DockRejectionReason", {
     description: "Expected business reasons for rejecting a dock command.",
@@ -1165,6 +1686,7 @@ export const DockInvariantReason = LiteralKit([
   "duplicate-split-id",
   "revision-exhausted",
   "topology-corrupted",
+  "maximized-group-invalid",
 ]).annotate(
   $I.annote("DockInvariantReason", {
     description: "Workspace invariant failures surfaced through the typed transition boundary.",

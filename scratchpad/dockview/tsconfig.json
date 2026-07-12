@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../tsconfig.json",
-  "include": ["poc/**/*.ts"],
+  "include": ["**/*.ts"],
   "exclude": ["node_modules"],
   "compilerOptions": {
     "rootDir": ".",

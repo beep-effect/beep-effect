@@ -1,9 +1,8 @@
 # Dockview core, reconsidered from first principles
 
 This POC treats a dock workspace as a headless transactional state machine. It
-does not port `dockview-core` class-by-class. The earlier sketches beside this
-directory remain intact; the greenfield implementation is isolated in
-[`poc/`](./poc/).
+does not port `dockview-core` class-by-class. The greenfield implementation is
+isolated in [`poc/`](./poc/).
 
 The central claim is that DOM state is a projection of dock state, never the
 source of dock topology. Pointer, keyboard, RPC, and programmatic adapters all
@@ -37,9 +36,17 @@ explicit completion barrier.
 
 The result atom exposes the latest submission as a typed `AsyncResult`. An
 older completion cannot overwrite that latest result, but every completion is
-still logged with its submission id and operation kind. State is read only
+also appended to `operationFeedAtom` with its monotone submission ordinal and
+operation kind, including typed failures, while logging remains unchanged. State is read only
 after acquiring the serialization permit, preventing stale read/modify/write
 transitions when commands arrive rapidly.
+
+The feed is an unbounded append-only Atom log so `useAtomValue` and
+`useAtomSubscribe` adapters can recover every in-order entry from the cumulative
+window even when React coalesces notifications. Appending is synchronous and
+never waits on a slow subscriber; losslessness lasts for the attached session,
+at the explicit cost of memory growing with completed operations until
+`dispose()` tears down the registry and its feed.
 
 There are two intentionally different reactive state categories:
 
@@ -49,16 +56,28 @@ There are two intentionally different reactive state categories:
   `runtime.atom(...)` bound to a custom `factory.withReactivity(...)` key;
   successful saves invalidate that key.
 
+Geometry is a derived projection, not kernel state: the ratio tree plus a host-supplied
+container box produces per-group pixel boxes and sash hit rectangles. Each split rounds
+the leading extent once and assigns the trailing extent from the remainder, guaranteeing
+that leading + gap + trailing exactly equals the parent extent.
+
+Floating topology is part of the same headless kernel. Each workspace carries a
+`floating` array of `{ anchoredBox, root }` members; array order is z-order, with
+the last member topmost. Every member projects its recursive root inside a box
+resolved and clamped against the host container. Docked maximize still receives
+the complete container, while floating projections remain above it and are not
+affected by maximize.
+
 ## Schema-first domain algebra
 
 The layout is a binary tree:
 
 ```text
-DockWorkspace
-|- EmptyWorkspace(revision = 0)
-`- PopulatedWorkspace(revision = 0, root)
+DockWorkspace(floating = [])
+|- EmptyWorkspace(revision = 0) // empty docked tree; floating may be non-empty
+`- PopulatedWorkspace(revision = 0, root, maximized = none)
    `- DockNode
-      |- TabsNode(groupId, before = [], active, after = [])
+   |- TabsNode(groupId, before = [], active, after = [], metadata.visible = true)
       `- SplitNode(splitId, layout)
          |- HorizontalSplitLayout(axis, leftRatio = 5000, left, right)
          `- VerticalSplitLayout(axis, topRatio = 5000, top, bottom)
@@ -72,14 +91,18 @@ The schema carries defaults and removes invalid states:
 - Panels live in exactly one leaf rather than a record plus drifting references.
 - Closing or moving the final panel removes its leaf and promotes its sibling.
 - The public workspace codec checks panel, group, and split identity uniqueness
-  across the complete recursive tree; the reducer preserves reason-specific
+  across the complete docked-plus-floating forest; the reducer preserves reason-specific
   typed diagnostics for the same invariant.
 - Split shares use exact integer basis points from `1000` through `9000`, so
   complements such as `9000 -> 1000` cannot acquire floating-point drift.
 - Constructor-only defaults keep `.make(...)` calls terse while encoded
   snapshots remain explicit and strict.
+- Panels persist render mode and an optional custom-tab renderer key; groups
+  persist locked mode, header visibility, and header position.
 - Optional external state is represented by `Option`; `null` and `undefined`
   do not leak into the core model.
+- `PopulatedWorkspace.maximized` is an optional group identity checked globally:
+  when present it must resolve to a visible group in the tree.
 
 Tagged constructors never repeat schema-owned `kind`, `_tag`, or `axis` values.
 The recursive knot follows the `@beep/md` pattern: a typed suspended
@@ -95,11 +118,16 @@ The principal discriminated unions are:
 - `DockNode`: tabs or split
 - `SplitLayout`: horizontal `{ leftRatio, left, right }` or vertical
   `{ topRatio, top, bottom }`
-- `DockPlacement`: root, tab, or semantic split side
-- `DockMoveTarget`: existing tabs or a new semantic split
+- `DockPlacement`: root, indexed/active-policy tab insertion, semantic split,
+  or workspace-root split
+- `DockMoveTarget`: existing tabs, a new semantic split, or a workspace-root split
+- `DockGroupMoveTarget`: tab merge or group relocation split variants
 - `CommandOrigin`: user gesture or API call
-- `DockCommand`: open, activate, move, close, resize, or clear
-- `DockEvent`: changed semantic notifications, including restore
+- `DockCommand`: open, activate, update panel, move panel, move group, update
+  group, close, resize, clear, maximize, restore maximized, float, dock floating,
+  or move a floating member
+- `DockEvent`: changed semantic notifications, including per-facet panel
+  updates, group metadata updates, and restore
 - `DockMutationResult`: changed state/events or explicit unchanged reason
 - `DockAtomOperation`: typed command, unknown command, save, or restore
 
@@ -113,11 +141,19 @@ genuinely disjoint properties or where common metadata belongs to an outer
 envelope. `SplitLayout` prevents horizontal and vertical geometry from being
 mixed; `DockMutationOutcome(commandId, origin, result)` keeps causality in one
 place while `DockMutationResult` owns changed/unchanged payloads. An
-axis-specific `SplitResizedEvent` payload and a `{ revision, content }`
-workspace envelope are plausible later applications. They are deliberately
-not added until a consumer needs self-contained axis data or revision and
-content acquire independent lifecycles. Literal-only reasons and sides remain
-flat because nesting them would add shape without excluding an invalid state.
+axis-specific `SplitResizedEvent` payload remains a plausible later application.
+Persisted snapshots now use a `{ version, workspace }` envelope so future
+migrations always begin from an explicit format version; the live workspace
+remains envelope-free because revision and content still share one lifecycle.
+Literal-only reasons and sides remain flat because nesting them would add shape
+without excluding an invalid state.
+
+Whole-group relocation deliberately uses `GroupSplitPlacement` and
+`GroupRootSplitPlacement`, distinct from panel-opening `SplitPlacement` and
+`RootSplitPlacement`. The relocation variants carry only the new split's id,
+side, ratio, and (for a sibling split) reference group. They do not carry a
+`newGroupId`, because relocation preserves the moving group's identity and an
+unused replacement identity would be a representable invalid state.
 
 ## Model-owned pure behavior
 
@@ -158,6 +194,11 @@ invariant diagnostics, logging, and metrics.
 Browser, RPC, IndexedDB, collaboration, authorization, or policy layers can
 replace service implementations without changing the domain or Atom graph.
 
+That replaceable-engine claim is proven by a policy layer that wraps the live
+engine's `transition`; `lockedGroupsPolicy` is the concrete example. Policies
+see the same validated state and typed-error channel, while the Atom graph
+remains unchanged.
+
 ## Transaction semantics
 
 A command produces
@@ -177,16 +218,73 @@ No-op activation and resize therefore do not bump revision, emit events, or
 notify workspace subscribers. Events describe accepted state changes; this
 POC does not claim to be an event-sourced persistence model.
 
-Snapshot encoding validates global invariants before serialization. Restore
-decodes and validates the whole snapshot before installation. A changed restore
-uses `current.revision + 1` and records the snapshot's revision separately as
-provenance; an identical restore is `Unchanged`.
+Snapshot encoding validates global invariants before serialization and wraps
+the workspace in a versioned `{ version, workspace }` envelope. Restore decodes
+and validates the whole envelope before installation. A changed restore uses
+`current.revision + 1` and records the decoded workspace's revision separately
+as provenance; an identical restore is `Unchanged`.
+
+Panel and group update patches use explicit `Option` fields and replace each
+present facet as a whole value. Group `locked` metadata is data only here; the
+reducer deliberately does not veto moves because that belongs to the upcoming
+replaceable policy layer.
+
+Maximize follows dockview's auto-exit policy. Structural commands (`openPanel`,
+`movePanel`, `moveGroup`, `closePanel`, and `clearWorkspace`) restore normal
+projection in the same transition. Activating another group also restores it,
+while activation inside the maximized group and `resizeSplit` retain it.
+Activating a hidden group reveals it. Panel/group metadata updates retain
+maximize except that hiding the maximized group restores normal projection.
+Every automatic restore appends `GroupRestoredEvent` to the command's event
+batch, including collapse paths that remove the maximized group.
+
+## Divergences and their costs
+
+- The POC uses a binary tree with basis-point ratios, while gridview uses
+  N-child branches sized in pixels. A three-way row therefore requires nested
+  ratios rather than one flat branch, and resizing or projecting it must account
+  for both levels. The `[1000, 9000]` `SplitRatio` bound also forbids any split
+  beyond 90/10.
+- Hidden groups retain the split ratios that describe the both-visible layout.
+  If only one child subtree is visible it receives the full parent extent with
+  no gap or sash; an all-hidden tree projects no geometry. This proportional
+  representation is strictly simpler than dockview's pixel-oriented
+  `cachedVisibleSize`: restoring visibility recovers the exact ratio without
+  cached-size state or container-size invalidation.
+- Closing the active panel promotes the zipper's first `after` panel, or its
+  last `before` panel when `after` is empty. Dockview instead activates by MRU,
+  so hosts cannot reproduce dockview's close-selection behavior without keeping
+  additional recency state and issuing a follow-up activation policy.
+- Global focus is host-owned here. Dockview serializes `activeGroup`, so this
+  POC intentionally cannot restore a globally focused group without a host
+  envelope that stores that separate concern.
+- Groups are non-empty by construction. There is no `addGroup` operation and no
+  representation for empty-group watermark states; a host needing either must
+  add a distinct topology state rather than temporarily violating the zipper.
+- Popout window lifecycle is not modeled yet; floating members are topology and
+  geometry only. `FloatGroupCommand` starts with one group, while later cross-tree
+  moves may make a floating member's root a complete split subtree.
+- Panel parameter updates deliberately use whole-record replacement: hosts
+  read, modify, and write the complete `PanelParameters` record instead of
+  dockview's shallow merge where `undefined` deletes keys.
+- Merging groups preserves the destination group's metadata; the source group
+  dissolves together with its metadata.
+- Version-one snapshots written before required panel render mode and group
+  metadata fields were introduced fail snapshot decoding cleanly; the envelope
+  version remains 1 because this kernel has not been published.
+- Each `Changed` result publishes its semantic event exactly once, after the
+  accepted next state is known. This single timing contract subsumes dockview's
+  `onWillMutateLayout` / `onDidMutateLayout` pair, `Emitter.pause` (which drops
+  events rather than buffering them), and `AsapEvent` coalescing. Adapters that
+  need those distinct phases or dropped/coalesced notifications must synthesize
+  them outside the kernel.
 
 ## Proven scenario
 
 The focused tests prove:
 
-1. Open, activate, resize, move-to-tab, move-to-split, close, and tree collapse.
+1. Open (including indexed and inactive), activate, reorder, resize,
+   move-to-tab, move-to-split/root-edge, close, and tree collapse.
 2. Exact split-side semantics and basis-point complements at `9000` and `7000`.
 3. Explicit unchanged outcomes with stable revision and zero Atom publication.
 4. Schema JSON round-trips and refusal to encode globally invalid trees.
@@ -196,6 +294,10 @@ The focused tests prove:
 7. Rapid typed and unknown submissions preserve ordered state changes.
 8. Save/query invalidation and typed malformed-input or missing-snapshot errors.
 9. Invalid initial state is rejected before a registry is exposed.
+10. Whole-group merge preserves source order and applies explicit activation
+    policy while collapsing the source leaf.
+11. Whole-group sibling/root relocation preserves the complete zipper,
+    creates the requested split geometry, and reports topology no-ops.
 
 ## Deliberately outside this POC
 
@@ -203,6 +305,8 @@ The focused tests prove:
 - pointer/touch drag backends, ghosts, hit testing, and gesture coalescing
 - bounded backpressure for high-frequency pointer-resize streams
 - floating groups and popout-window resource lifecycles
+- edge groups
+- tab-group chips
 - sash constraint solving and layout measurement
 - maximize, hidden views, overflow, themes, and tab accents
 - undo/redo, collaboration, RPC, and snapshot migrations
@@ -232,6 +336,9 @@ Run the focused proof from the repository root:
 
 ```sh
 bunx tsgo -p scratchpad/dockview/tsconfig.json --pretty false
-(cd scratchpad/dockview && bunx biome check --config-path biome.json poc)
+(cd scratchpad/dockview && bunx biome check --config-path biome.json .)
 bun test scratchpad/dockview/poc/test scratchpad/test/dockview-anchored-box.test.ts
 ```
+
+This scratchpad deliberately uses `bun test`; repository packages use Vitest,
+and the scratchpad is exempt from that package convention by choice.

@@ -115,7 +115,10 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   (langextract streaming-lock sibling),
   [`court-vocabulary-resolver`](./court-vocabulary-resolver/README.md),
   [`ingestion-security-secret-governance`](./ingestion-security-secret-governance/README.md),
-  [`multi-provider-llm-dispatch-fallback`](./multi-provider-llm-dispatch-fallback/README.md),
+  [`multi-provider-llm-dispatch-fallback`](./multi-provider-llm-dispatch-fallback/README.md)
+  (partial graduation 2026-07-11: CLI subscription-auth leg →
+  [`goals/llm-provider-subscription-auth`](../goals/llm-provider-subscription-auth/README.md);
+  dispatch/fallback questions remain queued),
   [`rag-retrieval-projection`](./rag-retrieval-projection/README.md) (the single RRF-layer owner),
   [`secure-document-download-proxy`](./secure-document-download-proxy/README.md),
   [`local-first-projection-sync`](./local-first-projection-sync/README.md) (last two are

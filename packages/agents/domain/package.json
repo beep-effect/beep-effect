@@ -32,6 +32,7 @@
     ".": "./src/index.ts",
     "./entities": "./src/entities/index.ts",
     "./entities/Agent": "./src/entities/Agent/index.ts",
+    "./entities/ProviderInstance": "./src/entities/ProviderInstance/index.ts",
     "./entities/Skill": "./src/entities/Skill/index.ts",
     "./values": "./src/values/index.ts",
     "./values/AssistantContent": "./src/values/AssistantContent/index.ts",

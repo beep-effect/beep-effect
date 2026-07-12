@@ -1866,6 +1866,150 @@
       "reason": "Derived interface with extends clauses is tracked as an exception."
     },
     {
+      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "symbol": "anonymous@1249",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "symbol": "anonymous@306",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "symbol": "anonymous@342",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "symbol": "anonymous@354",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "symbol": "anonymous@356",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "symbol": "anonymous@370",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ConstitutionalCitation/ConstitutionalCitation.model.ts",
+      "symbol": "anonymous@99",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/DocketCitation/DocketCitation.model.ts",
+      "symbol": "anonymous@81",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/DocketCitation/DocketCitation.model.ts",
+      "symbol": "anonymous@83",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/DurableLocator/DurableLocator.model.ts",
+      "symbol": "anonymous@60",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/DurableLocator/DurableLocator.model.ts",
+      "symbol": "anonymous@81",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/RegulationCitation/RegulationCitation.model.ts",
+      "symbol": "anonymous@76",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/RegulationCitation/RegulationCitation.model.ts",
+      "symbol": "anonymous@97",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/SessionLawCitation/SessionLawCitation.model.ts",
+      "symbol": "anonymous@85",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/SessionLawCitation/SessionLawCitation.model.ts",
+      "symbol": "anonymous@99",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/StatuteCitation/StatuteCitation.model.ts",
+      "symbol": "anonymous@102",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/StatuteCitation/StatuteCitation.model.ts",
+      "symbol": "anonymous@80",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/SurroundingContext/SurroundingContext.model.ts",
+      "symbol": "anonymous@45",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
       "file": "packages/law-practice/server/test/fixture.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",

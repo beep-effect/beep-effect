@@ -5,10 +5,19 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { Tuple } from "effect";
 import * as S from "effect/Schema";
-import { DockCommandEnvelope, DockMutationOutcome, RestoreSnapshotRequest } from "./Domain.ts";
+import {
+  DockCommandEnvelope,
+  DockInputError,
+  DockInvariantViolation,
+  DockMutationOutcome,
+  DockPersistenceError,
+  DockSnapshotMissing,
+  DockTransitionError,
+  RestoreSnapshotRequest,
+} from "./Domain.ts";
 
 const $I = $ScratchpadId.create("dockview/poc/DockAtomProtocol");
 
@@ -55,12 +64,13 @@ export class RestoreDockSnapshot extends S.Class<RestoreDockSnapshot>($I`Restore
   })
 ) {}
 
-const DockAtomOperationKind = LiteralKit([
+export const DockAtomOperationKind = LiteralKit([
   "dispatchCommand",
   "dispatchUnknownCommand",
   "saveSnapshot",
   "restoreSnapshot",
 ]);
+export type DockAtomOperationKind = typeof DockAtomOperationKind.Type;
 
 /** Complete serialized operation algebra for one Dockview Atom session. */
 export const DockAtomOperation = DockAtomOperationKind.mapMembers(
@@ -114,3 +124,53 @@ export const DockAtomOperationOutcome = DockAtomOperationOutcomeKind.mapMembers(
   )
   .pipe(S.toTaggedUnion("kind"));
 export type DockAtomOperationOutcome = typeof DockAtomOperationOutcome.Type;
+
+/** Typed failures produced after the Atom session layer has built. */
+export const DockAtomSessionError = S.Union([
+  DockTransitionError,
+  DockInputError,
+  DockInvariantViolation,
+  DockPersistenceError,
+  DockSnapshotMissing,
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("DockAtomSessionError", {
+    description: "Typed failures produced after the Atom session layer has built.",
+  })
+);
+export type DockAtomSessionError = typeof DockAtomSessionError.Type;
+
+/** One successfully completed serialized session operation. */
+export class DockAtomFeedSuccess extends S.TaggedClass<DockAtomFeedSuccess>($I`DockAtomFeedSuccess`)(
+  "Success",
+  {
+    submission: NonNegativeInt,
+    operationKind: DockAtomOperationKind,
+    outcome: DockAtomOperationOutcome,
+  },
+  $I.annote("DockAtomFeedSuccess", {
+    description: "Publishes one successful operation outcome with its submission causality.",
+  })
+) {}
+
+/** One typed failure from a completed serialized session operation. */
+export class DockAtomFeedFailure extends S.TaggedClass<DockAtomFeedFailure>($I`DockAtomFeedFailure`)(
+  "Failure",
+  {
+    submission: NonNegativeInt,
+    operationKind: DockAtomOperationKind,
+    error: DockAtomSessionError,
+  },
+  $I.annote("DockAtomFeedFailure", {
+    description: "Publishes one typed session failure with its operation and submission causality.",
+  })
+) {}
+
+/** Lossless ordered completion entry exposed to host adapters. */
+export const DockAtomFeedEntry = S.Union([DockAtomFeedSuccess, DockAtomFeedFailure]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("DockAtomFeedEntry", {
+    description: "Discriminates successful outcomes from typed failures in the host-facing completion feed.",
+  })
+);
+export type DockAtomFeedEntry = typeof DockAtomFeedEntry.Type;

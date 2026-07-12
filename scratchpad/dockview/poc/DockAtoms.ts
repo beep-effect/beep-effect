@@ -4,33 +4,28 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import {$ScratchpadId} from "@beep/identity/packages";
-import {
-  Cause,
-  Context,
-  Effect,
-  Exit,
-  FiberSet,
-  Layer,
-  MutableRef,
-  Semaphore
-} from "effect";
+import { $ScratchpadId } from "@beep/identity/packages";
+import { NonNegativeInt } from "@beep/schema";
+import { Cause, Context, Effect, Exit, FiberSet, Layer, MutableRef, Semaphore } from "effect";
+import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
 import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
+import { AsyncResult, Atom, AtomRegistry, Reactivity } from "effect/unstable/reactivity";
 import {
-  AsyncResult,
-  Atom,
-  AtomRegistry,
-  Reactivity
-} from "effect/unstable/reactivity";
-import {
+  type DockAtomFeedEntry,
+  DockAtomFeedFailure,
+  DockAtomFeedSuccess,
   DockAtomOperation,
   type DockAtomOperationOutcome,
+  type DockAtomSessionError,
   DockMutationCompleted,
   DockSnapshotSaved,
 } from "./DockAtomProtocol.ts";
+
+export { DockAtomSessionError } from "./DockAtomProtocol.ts";
+
 import {
   DockEngine,
   DockEngineLive,
@@ -38,41 +33,11 @@ import {
   makeDockSnapshotStoreMemory,
   requireSnapshot,
 } from "./DockEngine.ts";
-import {
-  DockInputError,
-  DockInvariantViolation,
-  DockMutationOutcome,
-  DockMutationResult,
-  DockPersistenceError,
-  DockSnapshotMissing,
-  DockTransitionError,
-  DockWorkspace,
-  type GroupId,
-  type PanelId,
-} from "./Domain.ts";
-import {validateWorkspace} from "./Reducer.ts";
-import * as S from "effect/Schema";
+import { type DockMutationOutcome, DockMutationResult, DockWorkspace, type GroupId, type PanelId } from "./Domain.ts";
+import { validateWorkspace } from "./Reducer.ts";
 
 const $I = $ScratchpadId.create("dockview/poc/DockAtoms");
 const SNAPSHOT_REACTIVITY_KEY = "dockview-snapshot";
-
-/** Typed failures produced after the Atom session layer has built. */
-export const DockAtomSessionError = S.Union(
-  [
-    DockTransitionError,
-    DockInputError,
-    DockInvariantViolation,
-    DockPersistenceError,
-    DockSnapshotMissing,
-  ]
-).pipe(
-  S.toTaggedUnion("_tag"),
-  $I.annoteSchema("DockAtomSessionError", {
-    description: "Typed failures produced after the Atom session layer has built."
-  })
-);
-export type DockAtomSessionError = typeof DockAtomSessionError.Type;
-
 
 interface DockAtomSessionShape {
   readonly awaitIdle: Effect.Effect<void>;
@@ -80,15 +45,15 @@ interface DockAtomSessionShape {
 }
 
 /** Per-registry capability that serializes every stateful session operation. */
-class DockAtomSession extends Context.Service<DockAtomSession, DockAtomSessionShape>()($I`DockAtomSession`) {
-}
+class DockAtomSession extends Context.Service<DockAtomSession, DockAtomSessionShape>()($I`DockAtomSession`) {}
 
 /** Console logging layer installed into every isolated POC Atom factory. */
 export const DockAtomObservabilityLive: Layer.Layer<never> = Logger.layer([Logger.consolePretty()]);
 
 const makeDockAtomSessionLayer = (
   stateAtom: Atom.Writable<DockWorkspace>,
-  operationResultAtom: Atom.Writable<AsyncResult.AsyncResult<DockAtomOperationOutcome, DockAtomSessionError>>
+  operationResultAtom: Atom.Writable<AsyncResult.AsyncResult<DockAtomOperationOutcome, DockAtomSessionError>>,
+  operationFeedAtom: Atom.Writable<ReadonlyArray<DockAtomFeedEntry>>
 ): Layer.Layer<
   DockAtomSession,
   never,
@@ -106,6 +71,9 @@ const makeDockAtomSessionLayer = (
       const runFork = yield* FiberSet.runtime(fibers)<never>();
       const latestSubmission = MutableRef.make(0);
 
+      const appendFeed = (entry: DockAtomFeedEntry): Effect.Effect<void> =>
+        Effect.sync(() => registry.update(operationFeedAtom, A.append(entry)));
+
       const publishMutation = Effect.fn("DockAtomSession.publishMutation")(function* (outcome: DockMutationOutcome) {
         yield* DockMutationResult.match(outcome.result, {
           Changed: (changed) => Effect.sync(() => registry.set(stateAtom, changed.state)),
@@ -118,9 +86,9 @@ const makeDockAtomSessionLayer = (
 
       const runOperation = Effect.fn("DockAtomSession.runOperation")((operation: DockAtomOperation) =>
         DockAtomOperation.match(operation, {
-          dispatchCommand: ({envelope}) =>
+          dispatchCommand: ({ envelope }) =>
             engine.transition(registry.get(stateAtom), envelope).pipe(Effect.flatMap(publishMutation)),
-          dispatchUnknownCommand: ({input}) =>
+          dispatchUnknownCommand: ({ input }) =>
             engine.decodeCommand(input).pipe(
               Effect.flatMap((envelope) => engine.transition(registry.get(stateAtom), envelope)),
               Effect.flatMap(publishMutation)
@@ -133,7 +101,7 @@ const makeDockAtomSessionLayer = (
               snapshot,
             });
           }),
-          restoreSnapshot: Effect.fn("DockAtomSession.restoreSnapshot")(function* ({request}) {
+          restoreSnapshot: Effect.fn("DockAtomSession.restoreSnapshot")(function* ({ request }) {
             const snapshot = yield* requireSnapshot(yield* store.load);
             const outcome = yield* engine.restore(registry.get(stateAtom), snapshot, request);
             return yield* publishMutation(outcome);
@@ -147,38 +115,67 @@ const makeDockAtomSessionLayer = (
         registry.set(operationResultAtom, AsyncResult.waiting(previous));
 
         runFork(
-          mutationGate.withPermit(runOperation(operation)).pipe(
-            Effect.exit,
-            Effect.tap(
-              Exit.match({
-                onFailure: (cause) =>
-                  Effect.logError("dock operation failed").pipe(
-                    Effect.annotateLogs({
-                      submission,
-                      operationKind: operation.kind,
-                      cause: Cause.pretty(cause),
-                    })
-                  ),
-                onSuccess: (outcome) =>
-                  Effect.logInfo("dock operation completed").pipe(
-                    Effect.annotateLogs({
-                      submission,
-                      operationKind: operation.kind,
-                      outcomeKind: outcome.kind,
-                    })
-                  ),
-              })
-            ),
-            Effect.flatMap((exit) =>
-              Bool.match(Eq.equals(submission, MutableRef.get(latestSubmission)), {
-                onTrue: () =>
-                  Effect.sync(() =>
-                    registry.set(operationResultAtom, AsyncResult.fromExitWithPrevious(exit, O.some(previous)))
-                  ),
-                onFalse: () => Effect.void,
-              })
+          mutationGate
+            .withPermit(
+              runOperation(operation).pipe(
+                Effect.exit,
+                Effect.tap(
+                  Exit.match({
+                    onFailure: (cause) =>
+                      O.match(Cause.findErrorOption(cause), {
+                        onNone: () => Effect.void,
+                        onSome: (error) =>
+                          appendFeed(
+                            DockAtomFeedFailure.make({
+                              submission: NonNegativeInt.make(submission),
+                              operationKind: operation.kind,
+                              error,
+                            })
+                          ),
+                      }),
+                    onSuccess: (outcome) =>
+                      appendFeed(
+                        DockAtomFeedSuccess.make({
+                          submission: NonNegativeInt.make(submission),
+                          operationKind: operation.kind,
+                          outcome,
+                        })
+                      ),
+                  })
+                ),
+                Effect.tap(
+                  Exit.match({
+                    onFailure: (cause) =>
+                      Effect.logError("dock operation failed").pipe(
+                        Effect.annotateLogs({
+                          submission,
+                          operationKind: operation.kind,
+                          cause: Cause.pretty(cause),
+                        })
+                      ),
+                    onSuccess: (outcome) =>
+                      Effect.logInfo("dock operation completed").pipe(
+                        Effect.annotateLogs({
+                          submission,
+                          operationKind: operation.kind,
+                          outcomeKind: outcome.kind,
+                        })
+                      ),
+                  })
+                )
+              )
             )
-          )
+            .pipe(
+              Effect.flatMap((exit) =>
+                Bool.match(Eq.equals(submission, MutableRef.get(latestSubmission)), {
+                  onTrue: () =>
+                    Effect.sync(() =>
+                      registry.set(operationResultAtom, AsyncResult.fromExitWithPrevious(exit, O.some(previous)))
+                    ),
+                  onFalse: () => Effect.void,
+                })
+              )
+            )
         );
       };
 
@@ -202,7 +199,11 @@ const makeDockAtomGraph = <E>(
   const operationResultAtom = Atom.make<AsyncResult.AsyncResult<DockAtomOperationOutcome, DockAtomSessionError>>(
     AsyncResult.initial()
   ).pipe(Atom.keepAlive);
-  const sessionLayer = makeDockAtomSessionLayer(stateAtom, operationResultAtom).pipe(Layer.provideMerge(servicesLayer));
+  const operationFeedAtom = Atom.make<ReadonlyArray<DockAtomFeedEntry>>([]).pipe(Atom.keepAlive);
+  const operationFeed = Atom.readable((get) => get(operationFeedAtom)).pipe(Atom.keepAlive);
+  const sessionLayer = makeDockAtomSessionLayer(stateAtom, operationResultAtom, operationFeedAtom).pipe(
+    Layer.provideMerge(servicesLayer)
+  );
   const runtime = factory(sessionLayer);
 
   /** Read-only authoritative workspace projection. */
@@ -244,6 +245,7 @@ const makeDockAtomGraph = <E>(
     registry,
     runtime,
     operationResultAtom,
+    operationFeedAtom: operationFeed,
     workspaceAtom,
     panelsAtom,
     groupCountAtom,
@@ -266,7 +268,7 @@ export const makeDockAtomsWith = <E>(
   validateWorkspace(initial).pipe(
     Effect.flatMap((validated) => {
       const graph = makeDockAtomGraph(validated, servicesLayer);
-      return AtomRegistry.getResult(graph.registry, graph.runtime, {suspendOnWaiting: true}).pipe(
+      return AtomRegistry.getResult(graph.registry, graph.runtime, { suspendOnWaiting: true }).pipe(
         Effect.map((context) => {
           const session = Context.get(context, DockAtomSession);
 
@@ -298,6 +300,7 @@ export const makeDockAtomsWith = <E>(
             activePanelAtom: graph.activePanelAtom,
             awaitIdle: session.awaitIdle,
             operationAtom,
+            operationFeedAtom: graph.operationFeedAtom,
             persistedSnapshotAtom: graph.persistedSnapshotAtom,
             dispose,
           };

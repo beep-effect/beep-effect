@@ -83,3 +83,62 @@ export * from "./AiProviderCli.models.ts";
  * @since 0.0.0
  */
 export * from "./AiProviderCli.service.ts";
+/**
+ * Provider CLI home-layout error exports.
+ *
+ * @example
+ * ```ts
+ * import { AiProviderCliHomePathConflictError } from "@beep/ai-provider-cli"
+ *
+ * const error = AiProviderCliHomePathConflictError.make({
+ *   effectiveHomePath: "/home/dev/.codex",
+ *   sharedHomePath: "/home/dev/.codex"
+ * })
+ *
+ * console.log(error._tag) // "AiProviderCliHomePathConflictError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export * from "./AiProviderCliHome.errors.ts";
+/**
+ * Provider CLI home-layout model exports.
+ *
+ * @example
+ * ```ts
+ * import { AiProviderCliCodexHomeLayout } from "@beep/ai-provider-cli"
+ *
+ * const layout = AiProviderCliCodexHomeLayout.make({
+ *   mode: "direct",
+ *   sharedHomePath: "/home/dev/.codex"
+ * })
+ *
+ * console.log(layout.mode) // "direct"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./AiProviderCliHome.models.ts";
+/**
+ * Effect service exports for provider CLI home isolation mechanics.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ * import { AiProviderCliHome } from "@beep/ai-provider-cli"
+ *
+ * const program = Effect.gen(function* () {
+ *   const home = yield* AiProviderCliHome
+ *   return home.resolveClaudeHome(O.none())
+ * })
+ *
+ * console.log(program)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./AiProviderCliHome.service.ts";

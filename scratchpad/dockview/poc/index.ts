@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+export * from "./AnchoredBox.ts";
 export * from "./DockAtomProtocol.ts";
 export {
   DockAtomObservabilityLive,
@@ -21,7 +22,9 @@ export {
   makeDockSnapshotStoreMemory,
   requireSnapshot,
 } from "./DockEngine.ts";
+export { type DockCommandPolicy, lockedGroupsPolicy, makePolicyDockEngineLayer } from "./DockPolicy.ts";
 export * from "./Domain.ts";
+export * from "./Geometry.ts";
 export {
   reduceDockCommand,
   restoreDockWorkspace,

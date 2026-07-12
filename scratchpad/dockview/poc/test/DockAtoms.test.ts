@@ -2,9 +2,10 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { AsyncResult, AtomRegistry } from "effect/unstable/reactivity";
 import { makeDockAtoms } from "../DockAtoms.ts";
-import { DockWorkspace } from "../Domain.ts";
+import { DockCommandEnvelope, DockWorkspace } from "../Domain.ts";
 import {
   activatePanelOne,
   clearWorkspace,
@@ -73,13 +74,87 @@ describe("DockAtoms", () => {
       makeDockAtoms(),
       Effect.fnUntraced(function* (graph) {
         graph.registry.set(graph.operationAtom, dispatch(openPanelOne));
-        graph.registry.set(graph.operationAtom, dispatchUnknown(openPanelTwo));
+        const encodedOpenPanelTwo = yield* S.encodeEffect(DockCommandEnvelope)(openPanelTwo);
+        graph.registry.set(graph.operationAtom, dispatchUnknown(encodedOpenPanelTwo));
 
         yield* graph.awaitIdle;
         yield* AtomRegistry.getResult(graph.registry, graph.operationAtom, { suspendOnWaiting: true });
         const state = graph.registry.get(graph.workspaceAtom);
         expect(A.map(graph.registry.get(graph.panelsAtom), (panel) => panel.id)).toEqual([panelOne.id, "panel-two"]);
         expect(state.revision).toBe(2);
+      }),
+      (graph) => Effect.sync(graph.dispose)
+    )
+  );
+
+  it.effect("publishes every rapid completion to the ordered host feed", () =>
+    Effect.acquireUseRelease(
+      makeDockAtoms(),
+      Effect.fnUntraced(function* (graph) {
+        let observed = graph.registry.get(graph.operationFeedAtom);
+        const unsubscribe = graph.registry.subscribe(graph.operationFeedAtom, (entries) => {
+          observed = entries;
+        });
+
+        graph.registry.set(graph.operationAtom, dispatch(openPanelOne));
+        graph.registry.set(graph.operationAtom, dispatch(activatePanelOne));
+        graph.registry.set(graph.operationAtom, dispatchUnknown({ commandId: "invalid" }));
+        graph.registry.set(graph.operationAtom, dispatch(openPanelTwo));
+
+        yield* graph.awaitIdle;
+        const latest = yield* AtomRegistry.getResult(graph.registry, graph.operationAtom, {
+          suspendOnWaiting: true,
+        });
+        unsubscribe();
+
+        expect(A.map(observed, (entry) => entry.submission)).toEqual([1, 2, 3, 4]);
+        expect(A.map(observed, (entry) => entry._tag)).toEqual(["Success", "Success", "Failure", "Success"]);
+        expect(A.map(observed, (entry) => entry.operationKind)).toEqual([
+          "dispatchCommand",
+          "dispatchCommand",
+          "dispatchUnknownCommand",
+          "dispatchCommand",
+        ]);
+        expect(observed).toMatchObject([
+          {
+            _tag: "Success",
+            outcome: {
+              kind: "mutationCompleted",
+              outcome: {
+                commandId: openPanelOne.commandId,
+                origin: openPanelOne.origin,
+                result: { _tag: "Changed", events: [{ kind: "panelOpened" }] },
+              },
+            },
+          },
+          {
+            _tag: "Success",
+            outcome: {
+              kind: "mutationCompleted",
+              outcome: {
+                commandId: activatePanelOne.commandId,
+                origin: activatePanelOne.origin,
+                result: { _tag: "Unchanged" },
+              },
+            },
+          },
+          { _tag: "Failure", error: { _tag: "DockInputError" } },
+          {
+            _tag: "Success",
+            outcome: {
+              kind: "mutationCompleted",
+              outcome: {
+                commandId: openPanelTwo.commandId,
+                origin: openPanelTwo.origin,
+                result: { _tag: "Changed", events: [{ kind: "panelOpened" }] },
+              },
+            },
+          },
+        ]);
+        expect(latest).toMatchObject({
+          kind: "mutationCompleted",
+          outcome: { commandId: openPanelTwo.commandId },
+        });
       }),
       (graph) => Effect.sync(graph.dispose)
     )

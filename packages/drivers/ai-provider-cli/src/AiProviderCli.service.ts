@@ -8,13 +8,22 @@
 import { $AiProviderCliId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { thunkEmptyStr } from "@beep/utils";
-import { Context, Effect, Layer, Stream } from "effect";
+import { Context, Effect, Layer, Match, Result, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { AiProviderCliError } from "./AiProviderCli.errors.ts";
-import { AiProviderCliAuthProbe, AiProviderCliProcessResult, AiProviderCliProvider } from "./AiProviderCli.models.ts";
+import {
+  AiProviderCliAuthProbe,
+  AiProviderCliAuthSnapshot,
+  AiProviderCliClaudeAuthStatusPayload,
+  AiProviderCliClaudeSubscriptionLabel,
+  AiProviderCliProcessResult,
+  AiProviderCliProvider,
+  AiProviderCliTokenSource,
+} from "./AiProviderCli.models.ts";
 
 const $I = $AiProviderCliId.create("AiProviderCli.service");
 
@@ -70,6 +79,9 @@ export type AiProviderCliRunner = (
  */
 interface AiProviderCliShape {
   readonly checkAuth: (provider: AiProviderCliProvider) => Effect.Effect<AiProviderCliAuthProbe, AiProviderCliError>;
+  readonly checkAuthSnapshot: (
+    provider: AiProviderCliProvider
+  ) => Effect.Effect<AiProviderCliAuthSnapshot, AiProviderCliError>;
 }
 
 /**
@@ -136,6 +148,53 @@ const runNative = (
   );
 };
 
+const decodeClaudeAuthStatus = S.decodeUnknownEffect(S.fromJsonString(AiProviderCliClaudeAuthStatusPayload));
+
+const claudeSubscriptionLabelFor = (subscriptionType: string): string =>
+  Result.getOrElse(
+    S.decodeUnknownResult(AiProviderCliClaudeSubscriptionLabel)(subscriptionType),
+    () =>
+      // Unknown tiers keep a stable generic label instead of failing the probe.
+      "Claude Subscription"
+  );
+
+const exitCodeOnlySnapshot = (
+  provider: AiProviderCliProvider,
+  result: AiProviderCliProcessResult
+): AiProviderCliAuthSnapshot =>
+  AiProviderCliAuthSnapshot.make({
+    provider,
+    status: result.exitCode === 0 ? "authenticated" : "not-authenticated",
+  });
+
+const claudeSnapshot = (result: AiProviderCliProcessResult): Effect.Effect<AiProviderCliAuthSnapshot> =>
+  decodeClaudeAuthStatus(result.stdout).pipe(
+    Effect.map((payload) =>
+      AiProviderCliAuthSnapshot.make({
+        email: payload.email,
+        provider: "claude",
+        status: payload.loggedIn ? "authenticated" : "not-authenticated",
+        subscriptionLabel: O.map(payload.subscriptionType, claudeSubscriptionLabelFor),
+        tokenSource: O.filter(payload.authMethod, S.is(AiProviderCliTokenSource)),
+      })
+    ),
+    // Malformed stdout degrades to the exit-code-only probe; raw output never leaks.
+    Effect.catchTag("SchemaError", () => Effect.succeed(exitCodeOnlySnapshot("claude", result)))
+  );
+
+const codexTokenSource: (stdout: string) => O.Option<AiProviderCliTokenSource> = Match.type<string>().pipe(
+  Match.when(Str.includes("ChatGPT"), () => O.some(AiProviderCliTokenSource.Enum.chatgpt)),
+  Match.when(Str.includes("API key"), () => O.some(AiProviderCliTokenSource.Enum["api-key"])),
+  Match.orElse(() => O.none())
+);
+
+const codexSnapshot = (result: AiProviderCliProcessResult): AiProviderCliAuthSnapshot =>
+  AiProviderCliAuthSnapshot.make({
+    provider: "codex",
+    status: result.exitCode === 0 ? "authenticated" : "not-authenticated",
+    tokenSource: result.exitCode === 0 ? codexTokenSource(result.stdout) : O.none(),
+  });
+
 const makeService = (paths: AiProviderCliPaths, runner: AiProviderCliRunner): AiProviderCliShape => ({
   checkAuth: Effect.fn("AiProviderCli.checkAuth")(function* (provider) {
     const [command, args] = commandFor(paths, provider);
@@ -147,6 +206,15 @@ const makeService = (paths: AiProviderCliPaths, runner: AiProviderCliRunner): Ai
       status: result.exitCode === 0 ? "authenticated" : "not-authenticated",
     });
   }),
+  checkAuthSnapshot: Effect.fn("AiProviderCli.checkAuthSnapshot")(function* (provider) {
+    const [command, args] = commandFor(paths, provider);
+    const result = yield* runner(provider, command, args);
+
+    return yield* AiProviderCliProvider.$match(provider, {
+      claude: () => claudeSnapshot(result),
+      codex: () => Effect.succeed(codexSnapshot(result)),
+    });
+  }),
 });
 
 /**
@@ -156,6 +224,10 @@ const makeService = (paths: AiProviderCliPaths, runner: AiProviderCliRunner): Ai
  * `checkAuth` maps provider-specific status commands to a stable
  * `AiProviderCliAuthProbe`. It only treats exit code `0` as authenticated; the
  * returned probe never includes raw account, token, stdout, or stderr data.
+ * `checkAuthSnapshot` layers optional account email, subscription label, and
+ * token source on top by schema-decoding Claude stdout JSON and classifying
+ * the Codex status line; undecodable output degrades to the exit-code-only
+ * interpretation instead of leaking raw output.
  *
  * @example
  * ```ts

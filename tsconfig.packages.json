@@ -34,6 +34,9 @@
       "path": "packages/agents/server"
     },
     {
+      "path": "packages/agents/tables"
+    },
+    {
       "path": "packages/agents/use-cases"
     },
     {

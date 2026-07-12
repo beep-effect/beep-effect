@@ -35,6 +35,20 @@ export * from "./Agent/index.js";
  */
 export * from "./Fixture.values.js";
 /**
+ * ProviderInstance entity, value-schema, and behavior exports.
+ *
+ * @example
+ * ```ts
+ * import { ProviderInstance } from "@beep/agents-domain/entities"
+ *
+ * console.log(ProviderInstance.definition.entityId.entityType)
+ * ```
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./ProviderInstance/index.js";
+/**
  * Skill entity exports.
  *
  * @example
