@@ -1,7 +1,7 @@
 {
   "$schema": "../../../packages/tooling/tool/docgen/schema.json",
   "exclude": ["src/internal/**/*.ts"],
-  "srcLink": "https://github.com/beep-effect/beep-effect/tree/main/packages/ontology/client/src/",
+  "srcLink": "https://github.com/beep-effect/beep-effect/tree/main/packages/drivers/pretext/src/",
   "examplesCompilerOptions": {
     "noEmit": true,
     "strict": true,
@@ -29,23 +29,10 @@
     "types": [],
     "jsx": "react-jsx",
     "paths": {
-      "@beep/ontology-client": [
-        "../../../packages/ontology/client/src/index.ts"
+      "@beep/pretext": ["../../../packages/drivers/pretext/src/index.ts"],
+      "@beep/pretext/browser": [
+        "../../../packages/drivers/pretext/src/browser.ts"
       ],
-      "@beep/agents-client": ["../../../packages/agents/client/src/index.ts"],
-      "@beep/agents-client/Chat.atoms": [
-        "../../../packages/agents/client/src/Chat.atoms.ts"
-      ],
-      "@beep/agents-client/ClientObservability": [
-        "../../../packages/agents/client/src/ClientObservability.ts"
-      ],
-      "@beep/agents-client/ProviderInstance.atoms": [
-        "../../../packages/agents/client/src/ProviderInstance.atoms.ts"
-      ],
-      "@beep/agents-client/ProviderInstance.service": [
-        "../../../packages/agents/client/src/ProviderInstance.service.ts"
-      ],
-      "@beep/cosmos": ["../../../packages/drivers/cosmos/src/index.ts"],
       "@beep/identity": [
         "../../../packages/foundation/modeling/identity/src/index.ts"
       ],
@@ -54,36 +41,6 @@
       ],
       "@beep/identity/packages": [
         "../../../packages/foundation/modeling/identity/src/packages.ts"
-      ],
-      "@beep/ontology-domain": [
-        "../../../packages/ontology/domain/src/index.ts"
-      ],
-      "@beep/ontology-domain/aggregates": [
-        "../../../packages/ontology/domain/src/aggregates/index.ts"
-      ],
-      "@beep/ontology-domain/aggregates/Session": [
-        "../../../packages/ontology/domain/src/aggregates/Session/index.ts"
-      ],
-      "@beep/ontology-use-cases": [
-        "../../../packages/ontology/use-cases/src/index.ts"
-      ],
-      "@beep/ontology-use-cases/public": [
-        "../../../packages/ontology/use-cases/src/public.ts"
-      ],
-      "@beep/ontology-use-cases/server": [
-        "../../../packages/ontology/use-cases/src/server.ts"
-      ],
-      "@beep/ontology-use-cases/tools": [
-        "../../../packages/ontology/use-cases/src/tools/index.ts"
-      ],
-      "@beep/ontology-use-cases/aggregates/Session": [
-        "../../../packages/ontology/use-cases/src/aggregates/Session/index.ts"
-      ],
-      "@beep/ontology-use-cases/aggregates/Session/worker": [
-        "../../../packages/ontology/use-cases/src/aggregates/Session/worker.ts"
-      ],
-      "@beep/ontology-use-cases/aggregates/Session/server": [
-        "../../../packages/ontology/use-cases/src/aggregates/Session/server.ts"
       ],
       "@beep/schema": [
         "../../../packages/foundation/modeling/schema/src/index.ts"

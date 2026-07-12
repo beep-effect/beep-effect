@@ -9,10 +9,10 @@
   },
   "references": [
     {
-      "path": "../../drivers/drizzle/tsconfig.json"
+      "path": "../domain/tsconfig.json"
     },
     {
-      "path": "../domain/tsconfig.json"
+      "path": "../../drivers/drizzle/tsconfig.json"
     }
   ]
 }

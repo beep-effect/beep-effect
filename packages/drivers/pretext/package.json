@@ -1,22 +1,26 @@
 {
-  "name": "@beep/agents-server",
+  "name": "@beep/pretext",
   "version": "0.0.0",
-  "description": "Agents server adapter package for assistant-turn streaming primitives and Layers.",
+  "description": "Driver-level text measurement and layout backed by @chenglou/pretext.",
   "license": "MIT",
   "private": true,
   "type": "module",
-  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/packages/agents/server",
+  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/packages/drivers/pretext",
   "repository": {
     "type": "git",
     "url": "git@github.com:beep-effect/beep-effect.git",
-    "directory": "packages/agents/server"
+    "directory": "packages/drivers/pretext"
+  },
+  "beep": {
+    "family": "drivers"
   },
   "scripts": {
     "audit": "bun run --if-present beep:audit",
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
     "beep:build": "tsc -b tsconfig.json && bun run babel",
-    "beep:check": "tsgo -b tsconfig.json",
+    "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+    "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
@@ -28,16 +32,11 @@
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
-    "test:property": "bun run beep:test",
     "test:integration": "bun run beep:test:integration"
   },
   "exports": {
     ".": "./src/index.ts",
-    "./test": "./src/test.ts",
-    "./AssistantTurn": "./src/AssistantTurn/index.ts",
-    "./ProviderInstance": "./src/ProviderInstance/index.ts",
-    "./AnthropicTurnCodec": "./src/AssistantTurn/AnthropicTurnCodec.ts",
-    "./AnthropicTurnKernel": "./src/AssistantTurn/AnthropicTurnKernel.ts",
+    "./browser": "./src/browser.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -54,33 +53,22 @@
     "provenance": true,
     "exports": {
       ".": "./dist/index.js",
-      "./test": "./dist/test.js",
-      "./AssistantTurn": "./dist/AssistantTurn/index.js",
-      "./ProviderInstance": "./dist/ProviderInstance/index.js",
-      "./AnthropicTurnCodec": "./dist/AssistantTurn/AnthropicTurnCodec.js",
-      "./AnthropicTurnKernel": "./dist/AssistantTurn/AnthropicTurnKernel.js",
+      "./browser": "./dist/browser.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }
   },
   "dependencies": {
-    "@beep/agents-domain": "workspace:^",
-    "@beep/agents-tables": "workspace:^",
-    "@beep/agents-use-cases": "workspace:^",
-    "@beep/ai-provider-cli": "workspace:^",
-    "@beep/anthropic": "workspace:^",
     "@beep/identity": "workspace:^",
-    "@beep/observability": "workspace:^",
-    "@beep/postgres": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
-    "drizzle-orm": "catalog:",
+    "@chenglou/pretext": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@beep/test-utils": "workspace:^",
-    "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "vitest": "catalog:"
   }
 }

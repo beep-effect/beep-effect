@@ -163,6 +163,9 @@
       "path": "packages/drivers/postgres"
     },
     {
+      "path": "packages/drivers/pretext"
+    },
+    {
       "path": "packages/drivers/protobuf"
     },
     {

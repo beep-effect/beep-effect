@@ -21,9 +21,10 @@ and line break from data. Agents gain *sight*.
 
 Goal #2 coordination gate: negotiate editor-stack file ownership with the
 beep-effect6 write lane before opening the thread-virtualization packet.
-(Q1 RATIFIED and goal #1 graduated 2026-07-13 →
-[`goals/pretext-driver/`](../../goals/pretext-driver/README.md); driver
-implementation proceeds there under `/goal`.)
+(Q1 RATIFIED and goal #1 graduated AND **executed** 2026-07-13 →
+[`goals/pretext-driver/`](../../goals/pretext-driver/README.md);
+`@beep/pretext` is landed surface — remaining gate is PR #391 merge via
+yeet completion. Q2 v2 residue grows inside the driver package.)
 
 ## Read This First
 
@@ -33,6 +34,20 @@ implementation proceeds there under `/goal`.)
 
 ## Trail
 
+- 2026-07-13 (goal #1 executed): **`@beep/pretext` LANDED** at
+  `packages/drivers/pretext` under `/goal` — catalog dep `@chenglou/pretext`
+  0.0.8, `$PretextId` composer, root pure surface (FontMetricsSnapshotV1 +
+  5-field EngineProfile synced to upstream 0.0.8, codecs with typed
+  `PretextSnapshotCodecError`, pure greedy `naturalWidth`/`lineCount`/
+  `textHeight`), `PretextCapture` service contract + Chrome/150 fixture
+  test layer at root, `/browser` live capture (typed
+  measurement-unavailable/system-ui rejection; engine-profile UA fences
+  mirrored because upstream's exports map hides `getEngineProfile`).
+  Proofs: 14 vitest + 1 skipped (live capture needs canvas), docgen 27
+  examples green, and `full-circle-driver.test.ts` reproduces the
+  full-circle theorem against the shipped surface (17/17 scratchpad).
+  Scratchpad proof marked SUPERSEDED with pointer. Q2 v1 contract is now
+  shipped matter; v2 residue unchanged.
 - 2026-07-13 (kickoff, fresh account): align ran via /grill-with-docs — Q1
   RATIFIED (consume/wrap as driver `@beep/pretext`, root=pure /browser=
   capture per driver entrypoint law) plus kickoff shape, publish sequencing,

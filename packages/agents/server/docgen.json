@@ -36,6 +36,9 @@
       "@beep/agents-server/AssistantTurn": [
         "../../../packages/agents/server/src/AssistantTurn/index.ts"
       ],
+      "@beep/agents-server/ProviderInstance": [
+        "../../../packages/agents/server/src/ProviderInstance/index.ts"
+      ],
       "@beep/agents-server/AnthropicTurnCodec": [
         "../../../packages/agents/server/src/AssistantTurn/AnthropicTurnCodec.ts"
       ],
@@ -49,6 +52,9 @@
       "@beep/agents-domain/entities/Agent": [
         "../../../packages/agents/domain/src/entities/Agent/index.ts"
       ],
+      "@beep/agents-domain/entities/ProviderInstance": [
+        "../../../packages/agents/domain/src/entities/ProviderInstance/index.ts"
+      ],
       "@beep/agents-domain/entities/Skill": [
         "../../../packages/agents/domain/src/entities/Skill/index.ts"
       ],
@@ -57,6 +63,10 @@
       ],
       "@beep/agents-domain/values/AssistantContent": [
         "../../../packages/agents/domain/src/values/AssistantContent/index.ts"
+      ],
+      "@beep/agents-tables": ["../../../packages/agents/tables/src/index.ts"],
+      "@beep/agents-tables/tables": [
+        "../../../packages/agents/tables/src/tables.ts"
       ],
       "@beep/agents-use-cases": [
         "../../../packages/agents/use-cases/src/index.ts"
@@ -72,6 +82,12 @@
       ],
       "@beep/agents-use-cases/test": [
         "../../../packages/agents/use-cases/src/test.ts"
+      ],
+      "@beep/ai-provider-cli": [
+        "../../../packages/drivers/ai-provider-cli/src/index.ts"
+      ],
+      "@beep/ai-provider-cli/*": [
+        "../../../packages/drivers/ai-provider-cli/src/*.ts"
       ],
       "@beep/anthropic": ["../../../packages/drivers/anthropic/src/index.ts"],
       "@beep/identity": [
@@ -94,6 +110,25 @@
       ],
       "@beep/observability/web": [
         "../../../packages/foundation/capability/observability/src/web/index.ts"
+      ],
+      "@beep/postgres": ["../../../packages/drivers/postgres/src/index.ts"],
+      "@beep/postgres/client": [
+        "../../../packages/drivers/postgres/src/PostgresClient.service.ts"
+      ],
+      "@beep/postgres/drizzle": [
+        "../../../packages/drivers/postgres/src/PostgresDrizzle.service.ts"
+      ],
+      "@beep/postgres/errors": [
+        "../../../packages/drivers/postgres/src/Postgres.errors.ts"
+      ],
+      "@beep/postgres/format": [
+        "../../../packages/drivers/postgres/src/PostgresDiagnostics.service.ts"
+      ],
+      "@beep/postgres/interop": [
+        "../../../packages/drivers/postgres/src/PostgresInterop.models.ts"
+      ],
+      "@beep/postgres/sqlstate": [
+        "../../../packages/drivers/postgres/src/PostgresSqlState.models.ts"
       ],
       "@beep/schema": [
         "../../../packages/foundation/modeling/schema/src/index.ts"

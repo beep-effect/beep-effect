@@ -157,6 +157,7 @@ const generatedComposers = $I.compose(
   "epistemic-tables",
   "lint-rules",
   "n3",
+  "pretext",
   "ontology-client",
   "ontology-config",
   "ontology-domain",
@@ -1864,6 +1865,22 @@ export const $LintRulesId: Identity.IdentityComposer<"@beep/lint-rules"> = compo
  * @category configuration
  */
 export const $N3Id: Identity.IdentityComposer<"@beep/n3"> = composers.$N3Id;
+
+/**
+ * Identity composer for `@beep/pretext`.
+ *
+ * @example
+ * ```typescript
+ * import { $PretextId } from "@beep/identity"
+ *
+ * const id = $PretextId.make("Pretext")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $PretextId: Identity.IdentityComposer<"@beep/pretext"> = composers.$PretextId;
 
 /**
  * Identity composer for `@beep/ontology-client`.

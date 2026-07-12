@@ -1,5 +1,14 @@
 # Computable layout — layout-as-unit-tests, first proof
 
+> **SUPERSEDED (2026-07-13):** this proof graduated into the repo driver
+> [`@beep/pretext`](../../packages/drivers/pretext/README.md)
+> (`goals/pretext-driver/`). The v1 contract, engine profile, fixture, and
+> pure greedy helpers now live there as shipped, tested surface —
+> [`full-circle-driver.test.ts`](./full-circle-driver.test.ts) reproduces the
+> full-circle theorem against the driver. The files below stay as the
+> original oracle-capture record until `@beep/dock` graduates and the whole
+> scratchpad retires (cleanup-on-touch).
+
 The smallest end-to-end turn of the loop described in
 [`explorations/computable-workspace-geometry/`](../../explorations/computable-workspace-geometry/README.md):
 
