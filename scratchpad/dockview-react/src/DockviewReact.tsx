@@ -8,16 +8,23 @@ import type React from "react";
 import { createPortal } from "react-dom";
 import {
   ActivatePanelCommand,
+  AnchoredBox,
   ClosePanelCommand,
   CommandId,
   DispatchDockCommand,
   type DockAtomOperation,
   DockBox,
   DockCommandEnvelope,
+  DockFloatingGroupCommand,
+  type DockGeometry,
   DockNode,
   DockWorkspace,
+  FloatGroupCommand,
   GeometryOptions,
   GroupId,
+  GroupRootSplitPlacement,
+  MaximizeGroupCommand,
+  MoveFloatingGroupCommand,
   MovePanelCommand,
   type makeDockAtoms,
   makeDockGeometryAtoms,
@@ -27,6 +34,7 @@ import {
   PanelView,
   PopulatedWorkspace,
   ResizeSplitCommand,
+  RestoreMaximizedCommand,
   RootSplitPlacement,
   SplitId,
   SplitLayout,
@@ -78,6 +86,8 @@ type AdapterState = {
   readonly dragAtom: Atom.Writable<O.Option<TabDrag>>;
   readonly resizeAtom: Atom.Writable<O.Option<SashDrag>>;
   readonly ratioOverrideAtom: Atom.Writable<O.Option<RatioOverride>>;
+  readonly floatingGestureAtom: Atom.Writable<O.Option<FloatingGesture>>;
+  readonly floatingOverrideAtom: Atom.Writable<O.Option<FloatingOverride>>;
   readonly geometry: ReturnType<typeof makeDockGeometryAtoms>;
   readonly targets: Map<PanelId, HTMLElement>;
   readonly readyRoots: WeakSet<HTMLElement>;
@@ -99,12 +109,30 @@ type SashDrag = {
   readonly moved: boolean;
 };
 type RatioOverride = { readonly splitId: SplitId; readonly ratio: SplitRatio };
+type FloatingGesture = {
+  readonly groupId: GroupId;
+  readonly mode: "move" | "resize";
+  readonly start: PointerPosition;
+  readonly initial: AnchoredBox;
+  readonly initialBox: DockBox;
+  readonly moved: boolean;
+};
+type FloatingOverride = { readonly groupId: GroupId; readonly anchoredBox: AnchoredBox };
 
 const states = new WeakMap<DockAtomGraph, Map<number, AdapterState>>();
 let commandCounter = 0;
 
 const makeOperation = (
-  command: ActivatePanelCommand | ClosePanelCommand | MovePanelCommand | ResizeSplitCommand
+  command:
+    | ActivatePanelCommand
+    | ClosePanelCommand
+    | MovePanelCommand
+    | ResizeSplitCommand
+    | FloatGroupCommand
+    | DockFloatingGroupCommand
+    | MoveFloatingGroupCommand
+    | MaximizeGroupCommand
+    | RestoreMaximizedCommand
 ): DockAtomOperation => {
   commandCounter += 1;
   const id = `dockview-react-${commandCounter}`;
@@ -131,6 +159,8 @@ const adapterState = (graph: DockAtomGraph, gap: number): AdapterState => {
   const dragAtom = Atom.make<O.Option<TabDrag>>(O.none()).pipe(Atom.keepAlive);
   const resizeAtom = Atom.make<O.Option<SashDrag>>(O.none()).pipe(Atom.keepAlive);
   const ratioOverrideAtom = Atom.make<O.Option<RatioOverride>>(O.none()).pipe(Atom.keepAlive);
+  const floatingGestureAtom = Atom.make<O.Option<FloatingGesture>>(O.none()).pipe(Atom.keepAlive);
+  const floatingOverrideAtom = Atom.make<O.Option<FloatingOverride>>(O.none()).pipe(Atom.keepAlive);
   const api: DockviewAdapterApi = {
     submit: (operation) => graph.registry.set(graph.operationAtom, operation),
     awaitIdle: graph.awaitIdle,
@@ -145,15 +175,26 @@ const adapterState = (graph: DockAtomGraph, gap: number): AdapterState => {
   const projectedWorkspaceAtom = Atom.readable((get) => {
     const workspace = get(graph.workspaceAtom);
     const override = get(ratioOverrideAtom);
-    if (DockWorkspace.guards.empty(workspace) || O.isNone(override)) return workspace;
-    return O.match(DockNode.findSplit(workspace.root, override.value.splitId), {
-      onNone: () => workspace,
-      onSome: (split) =>
-        PopulatedWorkspace.make({
-          revision: workspace.revision,
-          root: DockNode.replaceSplit(workspace.root, SplitNode.withRatio(split, override.value.ratio)),
+    const floatingOverride = get(floatingOverrideAtom);
+    const floating = O.match(floatingOverride, {
+      onNone: () => workspace.floating,
+      onSome: (candidate) =>
+        A.map(workspace.floating, (member) =>
+          A.some(DockNode.tabs(member.root), (tabs) => GroupId.equals(tabs.groupId, candidate.groupId))
+            ? { ...member, anchoredBox: candidate.anchoredBox }
+            : member
+        ),
+    });
+    if (DockWorkspace.guards.empty(workspace)) return { ...workspace, floating };
+    const root = O.match(override, {
+      onNone: () => workspace.root,
+      onSome: (candidate) =>
+        O.match(DockNode.findSplit(workspace.root, candidate.splitId), {
+          onNone: () => workspace.root,
+          onSome: (split) => DockNode.replaceSplit(workspace.root, SplitNode.withRatio(split, candidate.ratio)),
         }),
     });
+    return PopulatedWorkspace.make({ revision: workspace.revision, root, maximized: workspace.maximized, floating });
   });
   const geometry = makeDockGeometryAtoms({
     workspaceAtom: projectedWorkspaceAtom,
@@ -166,6 +207,8 @@ const adapterState = (graph: DockAtomGraph, gap: number): AdapterState => {
     dragAtom,
     resizeAtom,
     ratioOverrideAtom,
+    floatingGestureAtom,
+    floatingOverrideAtom,
     geometry,
     targets: new Map(),
     readyRoots: new WeakSet(),
@@ -201,6 +244,17 @@ const contains = (box: DockBox, point: PointerPosition): boolean =>
 const clampRatio = (ratio: number): SplitRatio => SplitRatio.make(Math.min(9_000, Math.max(1_000, Math.round(ratio))));
 const freshSplitId = (): SplitId => SplitId.make(`dockview-react-split-${commandCounter + 1}`);
 const freshGroupId = (): GroupId => GroupId.make(`dockview-react-group-${commandCounter + 1}`);
+const freshFloatingSplitId = (): SplitId => SplitId.make(`dockview-react-floating-split-${commandCounter + 1}`);
+const topLeftBox = (box: DockBox, container: DockBox): AnchoredBox => ({
+  _tag: "TopLeft",
+  left: box.left - container.left,
+  top: box.top - container.top,
+  width: box.width,
+  height: box.height,
+});
+
+const floatingHit = (geometry: DockGeometry, point: PointerPosition) =>
+  A.findFirst(A.reverse(geometry.floating), (candidate) => contains(candidate.box, point));
 
 const compileDrop = (state: AdapterState, graph: DockAtomGraph, drag: TabDrag): O.Option<MovePanelCommand> => {
   const geometry = graph.registry.get(state.geometry.geometryAtom);
@@ -217,7 +271,11 @@ const compileDrop = (state: AdapterState, graph: DockAtomGraph, drag: TabDrag): 
           : point.top >= container.top + container.height - outer
             ? "bottom"
             : undefined;
-  const group = A.findFirst(geometry.groups, (candidate) => contains(candidate.box, point));
+  const floating = floatingHit(geometry, point);
+  const group = O.match(floating, {
+    onNone: () => A.findFirst(geometry.groups, (candidate) => contains(candidate.box, point)),
+    onSome: (member) => A.findFirst(member.groups, (candidate) => contains(candidate.box, point)),
+  });
   if (O.isSome(group)) {
     const tabs = graph.registry.get(graph.tabsAtom(group.value.groupId));
     const headerHeight = Math.min(32, group.value.box.height);
@@ -236,7 +294,7 @@ const compileDrop = (state: AdapterState, graph: DockAtomGraph, drag: TabDrag): 
       );
     }
   }
-  if (rootSide !== undefined) {
+  if (O.isNone(floating) && rootSide !== undefined) {
     return O.some(
       MovePanelCommand.make({
         panelId: drag.panelId,
@@ -465,13 +523,37 @@ const Tab = (props: {
   );
 };
 
-const GroupPane = (props: DockviewReactProps & { readonly groupId: GroupId; readonly state: AdapterState }) => {
+const GroupPane = (
+  props: DockviewReactProps & {
+    readonly groupId: GroupId;
+    readonly state: AdapterState;
+    readonly box?: DockBox | undefined;
+    readonly floating?: boolean | undefined;
+  }
+) => {
   const tabsOption = useAtomValue(props.graph.tabsAtom(props.groupId));
   const boxOption = useAtomValue(props.state.geometry.groupBoxAtom(props.groupId));
-  if (O.isNone(tabsOption) || O.isNone(boxOption)) return null;
+  if (O.isNone(tabsOption) || (props.box === undefined && O.isNone(boxOption))) return null;
   const tabs = tabsOption.value;
+  const box = props.box ?? O.getOrThrow(boxOption);
+  const workspace = useAtomValue(props.graph.workspaceAtom);
+  const submit = useAtomSet(props.graph.operationAtom);
+  const maximized = DockWorkspace.guards.empty(workspace) ? O.none<GroupId>() : workspace.maximized;
+  const toggleMaximized = (): void =>
+    submit(
+      makeOperation(
+        O.exists(maximized, (groupId) => GroupId.equals(groupId, props.groupId))
+          ? RestoreMaximizedCommand.make()
+          : MaximizeGroupCommand.make({ groupId: props.groupId })
+      )
+    );
   const strip = tabs.metadata.hideHeader ? null : (
-    <div role="tablist">
+    <div
+      role="tablist"
+      onDoubleClick={(event) => {
+        if (props.floating !== true && event.currentTarget === event.target) toggleMaximized();
+      }}
+    >
       {A.map(TabsNode.panels(tabs), (panel) => (
         <Tab
           key={panel.id}
@@ -484,6 +566,35 @@ const GroupPane = (props: DockviewReactProps & { readonly groupId: GroupId; read
           defaultTabComponent={props.defaultTabComponent}
         />
       ))}
+      {props.floating !== true && (
+        <>
+          <button
+            type="button"
+            aria-label={`Float group ${props.groupId}`}
+            onClick={() =>
+              submit(
+                makeOperation(
+                  FloatGroupCommand.make({
+                    groupId: props.groupId,
+                    anchoredBox: {
+                      _tag: "TopLeft",
+                      left: box.left + 24,
+                      top: box.top + 24,
+                      width: Math.max(32, box.width - 48),
+                      height: Math.max(32, box.height - 48),
+                    },
+                  })
+                )
+              )
+            }
+          >
+            Float
+          </button>
+          <button type="button" aria-label={`${O.isSome(maximized) ? "Restore" : "Maximize"} group ${props.groupId}`} onClick={toggleMaximized}>
+            {O.isSome(maximized) ? "Restore" : "Maximize"}
+          </button>
+        </>
+      )}
     </div>
   );
   return (
@@ -493,7 +604,7 @@ const GroupPane = (props: DockviewReactProps & { readonly groupId: GroupId; read
       data-locked={tabs.metadata.locked}
       onPointerDown={() => props.graph.registry.set(props.state.focusedGroupAtom, O.some(props.groupId))}
       style={{
-        ...boxStyle(boxOption.value),
+        ...boxStyle(box),
         display: "flex",
         flexDirection: tabs.metadata.headerPosition === "bottom" ? "column-reverse" : "column",
       }}
@@ -501,6 +612,126 @@ const GroupPane = (props: DockviewReactProps & { readonly groupId: GroupId; read
       {strip}
       <ContentHost graph={props.graph} groupId={props.groupId} state={props.state} />
     </section>
+  );
+};
+
+const FloatingPane = (
+  props: DockviewReactProps & {
+    readonly state: AdapterState;
+    readonly index: number;
+    readonly anchoredBox: AnchoredBox;
+    readonly root: DockNode;
+  }
+) => {
+  const geometry = useAtomValue(props.state.geometry.geometryAtom);
+  const member = geometry.floating[props.index];
+  if (member === undefined) return null;
+  const groupId = DockNode.tabs(props.root)[0]?.groupId;
+  if (groupId === undefined) return null;
+  const submit = useAtomSet(props.graph.operationAtom);
+  const container = props.graph.registry.get(props.state.containerAtom);
+  const finish = (node: HTMLElement, event: PointerEvent): void => {
+    const gesture = props.graph.registry.get(props.state.floatingGestureAtom);
+    if (O.isNone(gesture) || !GroupId.equals(gesture.value.groupId, groupId)) return;
+    const override = props.graph.registry.get(props.state.floatingOverrideAtom);
+    props.graph.registry.set(props.state.floatingGestureAtom, O.none());
+    props.graph.registry.set(props.state.floatingOverrideAtom, O.none());
+    node.releasePointerCapture?.(event.pointerId);
+    if (gesture.value.moved && O.isSome(override)) {
+      submit(makeOperation(MoveFloatingGroupCommand.make({ groupId, anchoredBox: override.value.anchoredBox })));
+    }
+  };
+  const gestureRef = (mode: FloatingGesture["mode"]) => (node: HTMLDivElement | null): (() => void) | undefined => {
+    if (node === null) return undefined;
+    const cancel = (): void => {
+      props.graph.registry.set(props.state.floatingGestureAtom, O.none());
+      props.graph.registry.set(props.state.floatingOverrideAtom, O.none());
+    };
+    const keydown = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") cancel();
+    };
+    const move = (event: PointerEvent): void => {
+      const gesture = props.graph.registry.get(props.state.floatingGestureAtom);
+      if (O.isNone(gesture) || !GroupId.equals(gesture.value.groupId, groupId) || gesture.value.mode !== mode) return;
+      const dx = event.clientX - gesture.value.start.left;
+      const dy = event.clientY - gesture.value.start.top;
+      const next =
+        mode === "move"
+          ? DockBox.make({ ...gesture.value.initialBox, left: gesture.value.initialBox.left + dx, top: gesture.value.initialBox.top + dy })
+          : DockBox.make({
+              ...gesture.value.initialBox,
+              width: Math.max(32, gesture.value.initialBox.width + dx),
+              height: Math.max(32, gesture.value.initialBox.height + dy),
+            });
+      props.graph.registry.set(props.state.floatingGestureAtom, O.some({ ...gesture.value, moved: dx !== 0 || dy !== 0 }));
+      props.graph.registry.set(props.state.floatingOverrideAtom, O.some({ groupId, anchoredBox: topLeftBox(next, container) }));
+    };
+    const down = (event: PointerEvent): void => {
+      if (event.button !== 0) return;
+      event.stopPropagation();
+      node.setPointerCapture?.(event.pointerId);
+      props.graph.registry.set(
+        props.state.floatingGestureAtom,
+        O.some({ groupId, mode, start: positionOf(event), initial: props.anchoredBox, initialBox: member.box, moved: false })
+      );
+    };
+    const up = (event: PointerEvent): void => finish(node, event);
+    node.addEventListener("pointerdown", down);
+    node.addEventListener("pointermove", move);
+    node.addEventListener("pointerup", up);
+    document.addEventListener("keydown", keydown);
+    return () => {
+      node.removeEventListener("pointerdown", down);
+      node.removeEventListener("pointermove", move);
+      node.removeEventListener("pointerup", up);
+      document.removeEventListener("keydown", keydown);
+    };
+  };
+  return (
+    <div
+      data-floating-pane={groupId}
+      style={{ ...boxStyle(member.box), zIndex: props.index + 1 }}
+      onPointerDown={() => submit(makeOperation(MoveFloatingGroupCommand.make({ groupId, anchoredBox: props.anchoredBox })))}
+    >
+      <div ref={gestureRef("move")} data-floating-header={groupId} style={{ height: 32, cursor: "move" }}>
+        <button
+          type="button"
+          aria-label={`Dock group ${groupId}`}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={() =>
+            submit(
+              makeOperation(
+                DockFloatingGroupCommand.make({
+                  groupId,
+                  target: GroupRootSplitPlacement.make({ side: "right", splitId: freshFloatingSplitId() }),
+                })
+              )
+            )
+          }
+        >
+          Dock
+        </button>
+      </div>
+      {A.map(member.groups, (group) => (
+        <GroupPane
+          key={group.groupId}
+          {...props}
+          groupId={group.groupId}
+          floating
+          box={DockBox.make({
+            left: group.box.left - member.box.left,
+            top: group.box.top - member.box.top,
+            width: group.box.width,
+            height: group.box.height,
+          })}
+        />
+      ))}
+      <div
+        ref={gestureRef("resize")}
+        data-floating-resize={groupId}
+        style={{ position: "absolute", right: 0, bottom: 0, width: 16, height: 16, cursor: "nwse-resize" }}
+      />
+    </div>
   );
 };
 
@@ -583,7 +814,10 @@ const DropOverlay = (props: { readonly state: AdapterState }) => {
   const drag = useAtomValue(props.state.dragAtom);
   const geometry = useAtomValue(props.state.geometry.geometryAtom);
   if (O.isNone(drag)) return null;
-  const group = A.findFirst(geometry.groups, (candidate) => contains(candidate.box, drag.value.pointer));
+  const group = O.match(floatingHit(geometry, drag.value.pointer), {
+    onNone: () => A.findFirst(geometry.groups, (candidate) => contains(candidate.box, drag.value.pointer)),
+    onSome: (member) => A.findFirst(member.groups, (candidate) => contains(candidate.box, drag.value.pointer)),
+  });
   const box = O.match(group, {
     onNone: () =>
       DockBox.make({ left: drag.value.pointer.left - 8, top: drag.value.pointer.top - 8, width: 16, height: 16 }),
@@ -626,6 +860,15 @@ const DockviewRoot = (props: DockviewReactProps & { readonly state: AdapterState
         onNonEmpty: (tabsNodes) =>
           A.map(tabsNodes, (tabs) => <GroupPane key={tabs.groupId} {...props} groupId={tabs.groupId} />),
       })}
+      {A.map(workspace.floating, (member, index) => (
+        <FloatingPane
+          key={DockNode.tabs(member.root)[0]?.groupId ?? index}
+          {...props}
+          index={index}
+          anchoredBox={member.anchoredBox}
+          root={member.root}
+        />
+      ))}
       {A.map(panels, (panel) => (
         <PanelPortal
           key={panel.id}
