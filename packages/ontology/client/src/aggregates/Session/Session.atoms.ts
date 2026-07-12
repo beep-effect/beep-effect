@@ -510,8 +510,34 @@ const resetOntologyValidation = (ctx: Atom.FnContext): void => {
   ctx.set(ontologyValidationErrorAtom, O.none());
 };
 
+/**
+ * What to tell the user when an ontology action fails.
+ *
+ * The workbench used to print `Cause.pretty(cause)` straight into its panels: an
+ * internal Effect cause, complete with stack frames and module paths, shown to
+ * someone who mistyped a SPARQL query. It told them nothing they could act on, and
+ * it leaked the shape of the program to do it.
+ *
+ * Every failure that crosses the RPC boundary is a typed `OntologyActionError`
+ * carrying a `message` written for a person — so that message is what gets shown.
+ * The full cause still goes to the log, where the detail is useful and the reader is
+ * a developer.
+ */
+const actionFailureMessage = (label: string, cause: Cause.Cause<unknown>): string =>
+  pipe(
+    Cause.findErrorOption(cause),
+    O.filter((error) => P.hasProperty(error, "message") && P.isString(error.message)),
+    O.map((error) => String((error as { readonly message: string }).message)),
+    O.filter(Str.isNonEmpty),
+    O.getOrElse(() => `${label} failed. See the log for details.`)
+  );
+
+const reportFailure = (label: string, cause: Cause.Cause<unknown>): void => {
+  Effect.runFork(Effect.logError(`${label} failed`, cause));
+};
+
 const validationFailureMessage = (label: string, cause: Cause.Cause<unknown>): string =>
-  `${label} failed: ${Cause.pretty(cause)}`;
+  actionFailureMessage(label, cause);
 
 const setValidationFailure = (ctx: Atom.FnContext, label: string, cause: Cause.Cause<unknown>): void => {
   ctx.set(ontologyValidationStatusAtom, "failed");
@@ -1445,7 +1471,12 @@ export const runOntologySparqlAtom = OntologyClient.runtime.fn<void>()(
       ctx.set(ontologySparqlResultAtom, O.some(result));
       ctx.set(ontologySparqlErrorAtom, O.none());
     }).pipe(
-      Effect.tapCause((cause) => Effect.sync(() => ctx.set(ontologySparqlErrorAtom, O.some(Cause.pretty(cause)))))
+      Effect.tapCause((cause) =>
+        Effect.sync(() => {
+          reportFailure("SPARQL", cause);
+          ctx.set(ontologySparqlErrorAtom, O.some(actionFailureMessage("The query", cause)));
+        })
+      )
     );
   })
 );
@@ -1565,7 +1596,8 @@ export const applyOntologyRepairAtom = OntologyClient.runtime.fn<OntologyRepairP
         Effect.tapCause((cause) =>
           Effect.sync(() => {
             ctx.set(ontologyValidationStatusAtom, "failed");
-            ctx.set(ontologyValidationErrorAtom, O.some(Cause.pretty(cause)));
+            reportFailure("Validation", cause);
+            ctx.set(ontologyValidationErrorAtom, O.some(actionFailureMessage("Validation", cause)));
           })
         )
       )
@@ -1659,7 +1691,12 @@ export const openOntologyDocumentAtom = OntologyClient.runtime.fn<OpenOntologyDo
       .pipe(
         // Without this, a rejected path or unreadable file made Open a no-op:
         // the RPC failed, nothing rendered, and the workbench sat at "No file open".
-        Effect.tapCause((cause) => Effect.sync(() => ctx.set(ontologyDocumentErrorAtom, O.some(Cause.pretty(cause)))))
+        Effect.tapCause((cause) =>
+          Effect.sync(() => {
+            reportFailure("Ontology document", cause);
+            ctx.set(ontologyDocumentErrorAtom, O.some(actionFailureMessage("The document", cause)));
+          })
+        )
       );
   })
 );
@@ -1698,7 +1735,12 @@ export const saveOntologyDocumentAtom = OntologyClient.runtime.fn<SaveOntologyDo
         })
       )
       .pipe(
-        Effect.tapCause((cause) => Effect.sync(() => ctx.set(ontologyDocumentErrorAtom, O.some(Cause.pretty(cause)))))
+        Effect.tapCause((cause) =>
+          Effect.sync(() => {
+            reportFailure("Ontology document", cause);
+            ctx.set(ontologyDocumentErrorAtom, O.some(actionFailureMessage("The document", cause)));
+          })
+        )
       );
   })
 );
@@ -1725,7 +1767,12 @@ export const previewOntologyTurtleAtom = OntologyClient.runtime.fn<void>()(
       ctx.set(ontologyDocumentErrorAtom, O.none());
       ctx.set(ontologySourceAtom, preview.source);
     }).pipe(
-      Effect.tapCause((cause) => Effect.sync(() => ctx.set(ontologyDocumentErrorAtom, O.some(Cause.pretty(cause)))))
+      Effect.tapCause((cause) =>
+        Effect.sync(() => {
+          reportFailure("Ontology document", cause);
+          ctx.set(ontologyDocumentErrorAtom, O.some(actionFailureMessage("The document", cause)));
+        })
+      )
     );
   })
 );
