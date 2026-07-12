@@ -33,6 +33,17 @@ triggers, awaiting Ben's yes/no. Then Q2: grow the draft
 
 ## Trail
 
+- 2026-07-12 (finale): TWO promotions from proof to matter. (1) The dock
+  kernel itself gained `GeometryOptions.minGroupExtent` — per-split-local
+  minimum-extent clamp in the pure geometry projection (feasible → both
+  sides guaranteed; infeasible → proportional; default 0 behavior-identical;
+  kernel 69/69, tsgo+biome clean) — first WHAT-IS-LEFT constraint item
+  partially retired by exploration math. (2) Q2 v1 landed:
+  `FontMetricsV1.schema.ts` versioned envelope + `EngineProfile`
+  (computable-layout 13/13). Next session: ratify Q1 seam, then per-group
+  minimum maps in geometry (feeding naturalWidth-style metrics), then v2
+  contract residue.
+
 - 2026-07-12 (later, same session — the genesis context's last 7%): first
   proof LANDED at [`scratchpad/computable-layout`](../../scratchpad/computable-layout/README.md) —
   live-Chrome oracle fixture (canvas widths + DOM wrap counts), 20-line pure

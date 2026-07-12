@@ -31,10 +31,13 @@ internals (that smell means reconsider vendoring, not rebuilding).
 
 ## Q2 — Metrics-cache shipping format
 
-**Status:** OPEN — draft contract exists (`FontMetrics.schema.ts`,
-fixture-shaped). Real contract needs: segment kinds (pretext's eight), engine
-profile fields, emoji correction, font descriptor normalization, and a
-versioned envelope (`S.tag(1)` pattern, same as `DockSnapshot`).
+**Status:** V1 LANDED (2026-07-12) — versioned envelope
+(`FontMetricsV1.schema.ts`: `S.tag(1)` + `EngineProfile` mirroring pretext's
+quirk fences; unversioned input fails typed; encode∘decode identity proven;
+`fixture-v1.json` carries the Chrome/150 profile). **V2 residue:** segment
+kinds (pretext's eight break kinds), emoji correction, font-descriptor
+normalization, and — once the seam decision (Q1) is ratified — alignment
+with pretext's actual `PreparedText` internals rather than word-level widths.
 
 ## Q3 — First proving consumer
 

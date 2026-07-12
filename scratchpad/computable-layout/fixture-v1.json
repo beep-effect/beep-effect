@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "metrics": {
+    "capturedAt": "2026-07-12",
+    "oracle": "Chrome/150.0.0.0 on Linux x86_64, OffscreenCanvas measureText + hidden-div getBoundingClientRect, captured live via Claude-in-Chrome",
+    "engine": "Chrome/150.0.0.0",
+    "platform": "Linux x86_64",
+    "font": "16px Arial",
+    "lineHeight": 20,
+    "sentence": "The dragon slithers across the page and text flows around its body in real time.",
+    "spaceWidth": 4.4453125,
+    "words": {
+      "The": 27.5703125,
+      "dragon": 49.8203125,
+      "slithers": 50.6796875,
+      "across": 47.125,
+      "the": 22.2421875,
+      "page": 35.59375,
+      "and": 26.6953125,
+      "text": 25.7890625,
+      "flows": 36.453125,
+      "around": 49.8203125,
+      "its": 16,
+      "body": 34.6953125,
+      "in": 12.453125,
+      "real": 26.6796875,
+      "time.": 34.671875
+    },
+    "domLineCounts": { "200": 3, "320": 2, "480": 2 },
+    "engineProfile": {
+      "lineFitEpsilon": 0.005,
+      "carryCJKAfterClosingQuote": true,
+      "breakKeepAllAfterPunctuation": true,
+      "preferPrefixWidthsForBreakableRuns": false
+    }
+  }
+}

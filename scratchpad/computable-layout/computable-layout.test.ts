@@ -3,7 +3,9 @@
 // pure arithmetic — no DOM, no jsdom, no canvas, no screenshots.
 import { describe, expect, test } from "bun:test";
 import fixture from "./fixture.json";
+import fixtureV1 from "./fixture-v1.json";
 import { decodeFontMetricsSnapshot, encodeFontMetricsSnapshot } from "./FontMetrics.schema.ts";
+import { decodeFontMetricsSnapshotV1, encodeFontMetricsSnapshotV1 } from "./FontMetricsV1.schema.ts";
 import { layoutLineCount, naturalWidth } from "./layout.ts";
 
 const metrics = { words: fixture.words, spaceWidth: fixture.spaceWidth };
@@ -44,6 +46,29 @@ describe("the metrics cache is a schema value (shippable sight)", () => {
   test("round-trips: decode ∘ encode is identity on the wire format", () => {
     const snapshot = decodeFontMetricsSnapshot(fixture);
     expect(encodeFontMetricsSnapshot(snapshot)).toEqual(fixture);
+  });
+});
+
+describe("v1 envelope: versioned, engine-profiled, migration-ready", () => {
+  test("fixture-v1 decodes with version tag and engine profile", () => {
+    const v1 = decodeFontMetricsSnapshotV1(fixtureV1);
+    expect(v1.version).toBe(1);
+    expect(v1.metrics.engineProfile.lineFitEpsilon).toBe(0.005);
+  });
+
+  test("unversioned legacy input fails typed", () => {
+    expect(() => decodeFontMetricsSnapshotV1(fixture)).toThrow();
+  });
+
+  test("v1 metrics drive pure layout to the oracle's answer", () => {
+    const v1 = decodeFontMetricsSnapshotV1(fixtureV1);
+    const typed = { words: v1.metrics.words, spaceWidth: v1.metrics.spaceWidth };
+    expect(layoutLineCount(v1.metrics.sentence, typed, 200)).toBe(v1.metrics.domLineCounts["200"]);
+  });
+
+  test("v1 round-trips: encode ∘ decode is identity on the wire format", () => {
+    const v1 = decodeFontMetricsSnapshotV1(fixtureV1);
+    expect(encodeFontMetricsSnapshotV1(v1)).toEqual(fixtureV1);
   });
 });
 
