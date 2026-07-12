@@ -325,11 +325,42 @@ const readContextInfo = (value: unknown): O.Option<BoxApiFailureContext> =>
     O.flatMap((contextInfo) => decodeApiFailureContext({ values: contextInfo }))
   );
 
+/**
+ * How much of a schema failure's issue tree is worth carrying.
+ *
+ * Enough to name the field and say what was expected; not so much that a large
+ * response's failure becomes the payload.
+ */
+const SCHEMA_ISSUE_LIMIT = 2_000;
+
+/**
+ * A schema failure's whole value is its issue tree.
+ *
+ * `_tag` is read first, and a decode failure's `_tag` is the literal `"SchemaError"` —
+ * so every schema failure in this driver stringified to the word "SchemaError" and
+ * discarded the one thing that would have explained it. Diagnosing the Box decode bug
+ * (absent optional fields arriving as present-but-undefined keys, which broke every
+ * final-page listing) meant writing a standalone reproduction, because the error, the
+ * log, and the trace all said "SchemaError" and stopped.
+ */
+const schemaIssueLabel = (cause: unknown): O.Option<string> =>
+  pipe(
+    readString("_tag")(cause),
+    O.filter((tag) => tag === "SchemaError"),
+    O.flatMap(() => readString("message")(cause)),
+    O.map((message) => `SchemaError: ${message.slice(0, SCHEMA_ISSUE_LIMIT)}`)
+  );
+
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.
 // fallow-ignore-next-line code-duplication
 const causeLabel = (cause: unknown): string =>
   pipe(
-    O.firstSomeOf([readString("_tag")(cause), readString("name")(cause), readString("code")(cause)]),
+    O.firstSomeOf([
+      schemaIssueLabel(cause),
+      readString("_tag")(cause),
+      readString("name")(cause),
+      readString("code")(cause),
+    ]),
     // shared driver boundary idiom; no in-family home; future foundation capability candidate.
     // fallow-ignore-next-line code-duplication
     O.getOrElse(() => (P.isString(cause) ? "String" : "Unknown"))

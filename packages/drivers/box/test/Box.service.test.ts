@@ -263,6 +263,25 @@ describe("@beep/box", () => {
     expect(nonJson.status).toEqual(O.some(429));
   });
 
+  it('keeps a schema failure\'s issue tree instead of the word "SchemaError"', () => {
+    // `_tag` was read first, and a decode failure's `_tag` is the literal
+    // "SchemaError" — so every schema failure in this driver stringified to that one
+    // word and threw away the only thing that explained it. Diagnosing the Box decode
+    // bug (absent optional fields arriving as present-but-undefined keys, which broke
+    // every final-page listing) meant writing a standalone reproduction, because the
+    // error, the log, and the trace all said "SchemaError" and stopped there.
+    const schemaFailure = {
+      _tag: "SchemaError",
+      message: 'Expected string, got undefined\n  at ["entries"][0]["nextMarker"]',
+    };
+
+    const error = B.BoxError.fromUnknown("folders.getFolderItems", schemaFailure);
+
+    const label = O.getOrElse(error.cause, () => "");
+    expect(label).toContain("nextMarker");
+    expect(label).toContain("Expected string");
+  });
+
   it("drops invalid SDK status codes from sanitized errors", () => {
     const error = B.BoxError.fromUnknown("users.getUserMe", {
       responseInfo: {
