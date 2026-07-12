@@ -17,6 +17,7 @@ import {
   exportOntologyProvenanceAtom,
   OpenOntologyDocumentInput,
   ontologyDirtyAtom,
+  ontologyDocumentErrorAtom,
   ontologyFoldLevelAtom,
   ontologyGraphBackendAtom,
   ontologyGraphContainerAtom,
@@ -60,6 +61,7 @@ import {
 } from "@beep/ontology-client/aggregates/Session";
 import { ChangeOperation, SessionId } from "@beep/ontology-domain/aggregates/Session";
 import { OntologyFilePath, OntologyGraphGesture } from "@beep/ontology-use-cases/aggregates/Session";
+import { AbsoluteIRI } from "@beep/rdf/Iri";
 import { makeLiteral, makeNamedNode, makeQuad, serializeQuad, serializeTerm } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { Badge } from "@beep/ui/components/badge";
@@ -119,6 +121,13 @@ const sourceViewerState = S.decodeUnknownSync(SerializedEditorState)({
 });
 
 const decodePath = (value: string): O.Option<OntologyFilePath> => OntologyFilePath.decodeOption(Str.trim(value));
+
+// Subjects, predicates, and IRI objects must be absolute IRIs. The form used to
+// accept any non-empty string, so `not an iri` sailed through into the change
+// log and only surfaced later as a broken serialization.
+const isAbsoluteIri = S.is(AbsoluteIRI);
+
+const iriFieldValid = (value: string): boolean => isAbsoluteIri(Str.trim(value));
 
 const sessionIdFromPath = (path: OntologyFilePath): SessionId => SessionId.fromUnknown(`ontology:${path}`);
 
@@ -382,6 +391,8 @@ export function OntologyWorkbench(): JSX.Element {
   const graphProjection = useAtomValue(ontologyGraphProjectionAtom);
   const graphBackend = useAtomValue(ontologyGraphBackendAtom);
   const graphError = useAtomValue(ontologyGraphErrorAtom);
+  const documentError = useAtomValue(ontologyDocumentErrorAtom);
+  const setDocumentError = useAtomSet(ontologyDocumentErrorAtom);
   const dirty = useAtomValue(ontologyDirtyAtom);
   const path = useAtomValue(ontologyPathAtom);
   const session = useAtomValue(ontologySessionAtom);
@@ -438,8 +449,12 @@ export function OntologyWorkbench(): JSX.Element {
   useAtomValue(ontologyGraphWorkerBridgeAtom);
   useAtomValue(ontologyGraphRenderBridgeAtom);
   const treeItems = ontologyTreeItemsFor(snapshot, mode);
-  const canApplyTriple =
-    Str.isNonEmpty(Str.trim(subject)) && Str.isNonEmpty(Str.trim(predicate)) && Str.isNonEmpty(Str.trim(object));
+  // A literal object is free text (whitespace included, once it has content);
+  // an IRI object, like every subject and predicate, must be an absolute IRI.
+  const subjectValid = iriFieldValid(subject);
+  const predicateValid = iriFieldValid(predicate);
+  const objectValid = objectKind === "iri" ? iriFieldValid(object) : Str.isNonEmpty(Str.trim(object));
+  const canApplyTriple = subjectValid && predicateValid && objectValid;
   const canApplyGraphGesture = canApplyTriple && objectKind === "iri";
   const canRunSparql = O.isSome(session) && Str.isNonEmpty(Str.trim(sparqlQuery));
   const canRunValidation = O.isSome(session);
@@ -480,7 +495,14 @@ export function OntologyWorkbench(): JSX.Element {
     pipe(
       decodePath(pathInput),
       O.match({
-        onNone: () => undefined,
+        // A malformed path returned here silently, so Open read as a dead
+        // button. Say why the path was rejected instead of doing nothing.
+        onNone: () =>
+          setDocumentError(
+            O.some(
+              "Enter a workspace-relative, lower-case .ttl path with no leading slash and no '..' segments — for example tmp/ontology-workbench/pizza-tutorial.ttl."
+            )
+          ),
         onSome: (decodedPath) =>
           openDocument(
             OpenOntologyDocumentInput.make({
@@ -508,7 +530,9 @@ export function OntologyWorkbench(): JSX.Element {
     const quad = makeQuad(
       makeNamedNode(Str.trim(subject)),
       makeNamedNode(Str.trim(predicate)),
-      objectKind === "iri" ? makeNamedNode(Str.trim(object)) : makeLiteral(Str.trim(object), XSD_STRING.value)
+      // Literals keep their text verbatim: trimming silently rewrote the value
+      // the user typed, and leading/trailing whitespace can be significant.
+      objectKind === "iri" ? makeNamedNode(Str.trim(object)) : makeLiteral(object, XSD_STRING.value)
     );
     applyBatch(
       ApplyOntologyBatchInput.make({
@@ -689,6 +713,17 @@ export function OntologyWorkbench(): JSX.Element {
           <Badge variant={dirty ? "destructive" : "secondary"}>{dirty ? "Dirty" : "Saved"}</Badge>
         </div>
 
+        {/* Open/save/preview failures had nowhere to land, so a rejected path or
+            an unreadable file made the toolbar look inert. */}
+        {O.isSome(documentError) ? (
+          <div
+            role="alert"
+            className="text-destructive border-destructive/40 bg-destructive/10 shrink-0 border-b px-3 py-2 text-xs"
+          >
+            {documentError.value}
+          </div>
+        ) : null}
+
         <div className="grid min-h-0 flex-1 grid-cols-[300px_minmax(360px,1fr)_340px]">
           <aside className="flex min-h-0 flex-col border-r">
             <div className="border-b p-3">
@@ -779,11 +814,13 @@ export function OntologyWorkbench(): JSX.Element {
               <div className="space-y-2">
                 <Input
                   aria-label="Subject IRI"
+                  aria-invalid={Str.isNonEmpty(Str.trim(subject)) && !subjectValid}
                   value={subject}
                   onChange={(event) => setSubject(valueFromEvent(event))}
                 />
                 <Input
                   aria-label="Predicate IRI"
+                  aria-invalid={Str.isNonEmpty(Str.trim(predicate)) && !predicateValid}
                   list="ontology-predicate-suggestions"
                   value={predicate}
                   onChange={(event) => setPredicate(valueFromEvent(event))}
@@ -807,10 +844,24 @@ export function OntologyWorkbench(): JSX.Element {
                   </NativeSelect>
                   <Input
                     aria-label="Object value"
+                    aria-invalid={Str.isNonEmpty(Str.trim(object)) && !objectValid}
                     value={object}
                     onChange={(event) => setObject(valueFromEvent(event))}
                   />
                 </div>
+                {/* Apply is disabled for a malformed IRI; say why, or the button
+                    just looks broken. */}
+                {Str.isNonEmpty(Str.trim(subject)) && !subjectValid ? (
+                  <p className="text-destructive text-xs">
+                    Subject must be an absolute IRI (e.g. https://example.org/pizza#Pizza).
+                  </p>
+                ) : null}
+                {Str.isNonEmpty(Str.trim(predicate)) && !predicateValid ? (
+                  <p className="text-destructive text-xs">Predicate must be an absolute IRI.</p>
+                ) : null}
+                {objectKind === "iri" && Str.isNonEmpty(Str.trim(object)) && !objectValid ? (
+                  <p className="text-destructive text-xs">An IRI object must be an absolute IRI.</p>
+                ) : null}
                 <Button
                   className="w-full"
                   size="sm"

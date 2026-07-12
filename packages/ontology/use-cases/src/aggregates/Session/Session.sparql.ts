@@ -404,9 +404,79 @@ const validateProfile = (
       );
 };
 
+// Whether the query already bounds its own solutions with a top-level `LIMIT`.
+//
+// This is a safety guard, not a formatter: if it wrongly reports `true` the
+// engine materializes an unbounded result set before `truncateResult` ever runs,
+// which can exhaust the sidecar. A raw regex over the query text reported `true`
+// for a `LIMIT` that appears in a comment (`# LIMIT 1`) or inside a subquery —
+// neither of which bounds anything — so the scan below tracks lexical state:
+// `#` comments run to end-of-line, `'…'`/`"…"` (incl. triple-quoted) literals and
+// `<…>` IRIs are opaque, and only a `LIMIT` keyword at brace depth 0 counts.
 const queryHasLimit = (query: string): boolean => {
-  const limitPattern = /(^|\s)LIMIT\s+($|\S)/i;
-  return limitPattern.test(query);
+  let depth = 0;
+  let index = 0;
+
+  const startsWithAt = (token: string, at: number): boolean =>
+    query.slice(at, at + token.length).toUpperCase() === token;
+
+  const skipUntil = (terminator: string, from: number): number => {
+    let cursor = from;
+    while (cursor < query.length) {
+      if (query[cursor] === "\\") {
+        cursor += 2;
+        continue;
+      }
+      if (query.startsWith(terminator, cursor)) {
+        return cursor + terminator.length;
+      }
+      cursor += 1;
+    }
+    return query.length;
+  };
+
+  while (index < query.length) {
+    const character = query[index];
+
+    if (character === "#") {
+      index = skipUntil("\n", index + 1);
+      continue;
+    }
+    if (query.startsWith('"""', index) || query.startsWith("'''", index)) {
+      const quote = query.slice(index, index + 3);
+      index = skipUntil(quote, index + 3);
+      continue;
+    }
+    if (character === '"' || character === "'") {
+      index = skipUntil(character, index + 1);
+      continue;
+    }
+    if (character === "<") {
+      index = skipUntil(">", index + 1);
+      continue;
+    }
+    if (character === "{") {
+      depth += 1;
+      index += 1;
+      continue;
+    }
+    if (character === "}") {
+      depth -= 1;
+      index += 1;
+      continue;
+    }
+    // A keyword only counts when it stands alone (not `?limit`, not `xLIMIT`).
+    if (depth === 0 && startsWithAt("LIMIT", index)) {
+      const before = index === 0 ? " " : (query[index - 1] ?? " ");
+      const after = query[index + 5] ?? " ";
+      if (/[\s(){}]/.test(before) && /\s/.test(after)) {
+        return true;
+      }
+    }
+    index += 1;
+  }
+
+  return false;
 };
 
 const injectLimit = (query: string, limit: number): { readonly query: string; readonly injected: boolean } =>

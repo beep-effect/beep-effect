@@ -520,6 +520,80 @@ describe("Session use-cases", () => {
     })
   );
 
+  // The LIMIT guard is what stops the engine materializing an unbounded result
+  // set; anything that fools it into reporting "already limited" removes the
+  // bound entirely, so these are safety regressions, not formatting ones.
+  it.effect(
+    "still injects a LIMIT when the query only mentions one inside a comment",
+    Effect.fnUntraced(function* () {
+      let submittedQuery = "";
+      const session = createSession(CreateSessionInput.make({ id: sessionId, baseDataset: dataset }));
+      const sparql = SparqlQueryService.of({
+        execute: Effect.fn("SparqlQueryService.execute")((request) =>
+          Effect.sync(() => {
+            submittedQuery = request.query;
+            return SparqlSelectResult.make({ profile: "select", rows: [] });
+          })
+        ),
+      });
+      const query = "SELECT ?s WHERE { ?s ?p ?o }\n# LIMIT 1";
+
+      yield* Effect.gen(function* () {
+        const runner = yield* OntologySparqlRunner;
+        const result = yield* runner.run(
+          RunOntologySparqlInput.make({
+            session,
+            profile: "select",
+            query,
+            safeguards: OntologySparqlSafeguards.make({ defaultLimit: NonNegativeInt.make(10) }),
+          })
+        );
+
+        expect(result.limitInjected).toBe(true);
+      }).pipe(
+        provideScopedLayer(OntologySparqlRunnerLive.pipe(Layer.provide(Layer.succeed(SparqlQueryService, sparql))))
+      );
+
+      expect(submittedQuery).toBe(`${query}\nLIMIT 10`);
+    })
+  );
+
+  it.effect(
+    "still injects a LIMIT when the only LIMIT bounds a subquery",
+    Effect.fnUntraced(function* () {
+      let submittedQuery = "";
+      const session = createSession(CreateSessionInput.make({ id: sessionId, baseDataset: dataset }));
+      const sparql = SparqlQueryService.of({
+        execute: Effect.fn("SparqlQueryService.execute")((request) =>
+          Effect.sync(() => {
+            submittedQuery = request.query;
+            return SparqlSelectResult.make({ profile: "select", rows: [] });
+          })
+        ),
+      });
+      // The inner LIMIT bounds the subquery's solutions, not the outer result.
+      const query = "SELECT ?s WHERE { { SELECT ?s WHERE { ?s ?p ?o } LIMIT 5 } ?s ?p2 ?o2 }";
+
+      yield* Effect.gen(function* () {
+        const runner = yield* OntologySparqlRunner;
+        const result = yield* runner.run(
+          RunOntologySparqlInput.make({
+            session,
+            profile: "select",
+            query,
+            safeguards: OntologySparqlSafeguards.make({ defaultLimit: NonNegativeInt.make(10) }),
+          })
+        );
+
+        expect(result.limitInjected).toBe(true);
+      }).pipe(
+        provideScopedLayer(OntologySparqlRunnerLive.pipe(Layer.provide(Layer.succeed(SparqlQueryService, sparql))))
+      );
+
+      expect(submittedQuery).toBe(`${query}\nLIMIT 10`);
+    })
+  );
+
   it.effect(
     "uses one ABox/TBox classification rule for snapshots and search",
     Effect.fnUntraced(function* () {
