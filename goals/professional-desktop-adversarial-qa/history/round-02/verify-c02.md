@@ -4,6 +4,8 @@ Claim reproduced in Chrome at `http://127.0.0.1:1421` after creating a new
 thread, waiting for the response to finish, and reloading the page to force the
 persisted viewer.
 
+Verified on 2026-07-12 in a newly opened Chrome tab.
+
 ## Exact probe output
 
 ```json

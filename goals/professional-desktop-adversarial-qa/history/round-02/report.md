@@ -73,8 +73,66 @@ This is a *class*, not an instance: any writable state atom that is written and
 never subscribed loses its value 30 seconds later, silently. An audit of every
 atom surface in the app is underway.
 
+## The same bug, three more times
+
+The composer was an instance of a class, so I audited every atom surface in the app
+for it: **state written into an atom that nothing subscribes to, swept back to its
+default 30 seconds later.** Three more, all confirmed against the source:
+
+- **The ontology workbench destroyed the open document.** Its atoms are subscribed
+  only from inside the workbench, which the app unmounts on a surface switch. Open a
+  `.ttl`, edit it, glance at Chat for half a minute, come back: *no file open*, and
+  every unsaved change in the change log is gone. No error, no prompt, nothing to
+  undo. That is the user's work, destroyed in silence — the worst bug of the
+  campaign.
+- **The chat surface lost the user's thread selection**, whose default means "follow
+  the list" — so after 30 seconds away you came back to a *different* conversation,
+  and the next thing you typed went into it.
+- **A spinner button held past the TTL lost its own timer handle**, so releasing it
+  cleared nothing and the value span forever.
+
+The document and the selection are application state, not view state, and they are
+singletons, so keeping them alive cannot leak. The graph's DOM element and WebGL
+backend are deliberately left sweepable — pinning *those* to a dead view is the bug,
+not the fix.
+
+Worth recording: my own first guess in that audit (thread drafts) was **wrong** —
+drafts are `Atom.kvs`-backed and re-read their persisted value. And one verifier
+"refuted" the thread-selection finding because the atom *is* subscribed. It is —
+inside a subtree that unmounts. Adversarial review cuts both ways, so I checked each
+one against the source myself.
+
+## What the reviewers found that I had to reject
+
+Lane C reported that a bare YouTube URL renders as a link instead of an embed, and
+recommended normalizing URLs into youtube blocks in the codec. That would have been
+wrong: the assistant emits structured blocks, and its system prompt says *"Use
+youtube blocks only with the bare 11-character video id, never a full URL."* Asked
+for a URL, the model correctly produced a link. Asked for the video **as a block**,
+it produces an embed that survives a reload — verified live.
+
+## Verified in the browser, not just in tests
+
+Every fix above was re-checked in Chrome against the running app:
+
+- the persisted mermaid diagram renders after a reload (`diagrams: 1, svgs: 1,
+  leftoverCode: 0`) where the probe previously found a hidden `<code>` and nothing
+  beside it;
+- the composer still sends after sitting idle for 60 seconds;
+- the thread selection survives a 60-second trip to another surface;
+- a youtube block renders an embed and stays one across a reload.
+
+The mermaid bug is the one that most deserved this: **jsdom could not see it.** My
+headless repro passed against the broken code, because the injected `<div>` only
+disappears where Lexical actually reconciles. The browser is what proved it.
+
 ## State
 
-Two rounds: 53 + 20 findings, 51 fixed and verified, 4 backlogged with rationale,
-the rest open (see `../../ledgers/findings.md`). The loop has **not** converged —
-it exits on two consecutive clean rounds, and round 2 was not clean.
+Two rounds: 53 + 24 findings. 57 fixed and verified, 1 rejected with reasons, 4
+backlogged, the rest open (see `../../ledgers/findings.md`). Every fix that could
+carry a regression test has one, and each was mutation-tested — reverted, and
+confirmed to fail.
+
+The loop has **not** converged: it exits on two consecutive clean rounds, and round 2
+found a P0. Lanes D (ontology), E (sync/intake) and F (cross-cutting) are still
+running on the frozen tree.
