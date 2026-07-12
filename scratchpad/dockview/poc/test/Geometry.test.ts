@@ -20,6 +20,7 @@ import {
   DockBox,
   DockGeometry,
   GeometryOptions,
+  type GroupMinimaRecord,
   makeDockGeometryAtoms,
   project,
   projectWorkspace,
@@ -229,6 +230,26 @@ describe("per-group minimum lookup", () => {
     expect(two?.box.width).toBe(30);
     expect(three?.box.width).toBe(30);
     expect(three?.box.left).toBe(71);
+  });
+
+  it("recomputes geometry when the reactive minima record changes", () => {
+    const workspaceAtom = Atom.make<DockWorkspace>(
+      PopulatedWorkspace.make({ root: split("horizontal", 9_000, tabsOne, tabsTwo) })
+    );
+    const containerAtom = Atom.make(DockBox.make({ left: 0, top: 0, width: 101, height: 99 }));
+    const minimaAtom = Atom.make<GroupMinimaRecord>({});
+    const atoms = makeDockGeometryAtoms({
+      workspaceAtom,
+      containerAtom,
+      options: GeometryOptions.make({ gap: 3 }),
+      minimaAtom,
+    });
+    const registry = AtomRegistry.make();
+
+    expect(O.getOrThrow(registry.get(atoms.groupBoxAtom(groupTwo))).width).toBe(10);
+    registry.set(minimaAtom, { [groupTwo]: 50 });
+    expect(O.getOrThrow(registry.get(atoms.groupBoxAtom(groupTwo))).width).toBe(50);
+    expect(O.getOrThrow(registry.get(atoms.groupBoxAtom(groupOne))).width).toBe(48);
   });
 
   it("takes the maximum requirement across a cross-axis subtree", () => {

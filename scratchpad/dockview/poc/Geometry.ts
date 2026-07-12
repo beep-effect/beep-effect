@@ -13,6 +13,7 @@ import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
 import type { AnchoredBox } from "./AnchoredBox.ts";
@@ -163,6 +164,18 @@ const hasVisibleGroup = (node: DockNode): boolean =>
 export type GroupMinimumLookup = (groupId: GroupId) => number;
 
 const zeroMinimum: GroupMinimumLookup = () => 0;
+
+/**
+ * Per-group minimum extents as a plain record value, keyed by group id. This
+ * is the atom-friendly shape: a value (not a function) so hosts can store it
+ * in a writable Atom and update it as content measurements change.
+ */
+export type GroupMinimaRecord = Readonly<Record<string, number>>;
+
+const minimaFromRecord =
+  (record: GroupMinimaRecord): GroupMinimumLookup =>
+  (groupId) =>
+    pipe(R.get(record, groupId), O.getOrElse(() => 0));
 
 // The minimum extent a visible subtree needs along the given axis: leaf
 // minimums SUM through same-axis splits (plus the gap when both sides are
@@ -393,12 +406,23 @@ export const makeDockGeometryAtoms = (input: {
   readonly containerAtom: Atom.Atom<DockBox>;
   readonly options?: GeometryOptions | undefined;
   readonly minima?: GroupMinimumLookup | undefined;
+  readonly minimaAtom?: Atom.Atom<GroupMinimaRecord> | undefined;
 }) => {
   const options = O.getOrElse(O.fromUndefinedOr(input.options), () => GeometryOptions.make());
   const minima = O.getOrElse(O.fromUndefinedOr(input.minima), () => zeroMinimum);
-  const geometryAtom = Atom.readable((get) =>
-    projectWorkspace(get(input.workspaceAtom), get(input.containerAtom), options, minima)
-  );
+  const geometryAtom = Atom.readable((get) => {
+    // Reactive per-group minimums compose with the static lookup by max, so
+    // content-driven updates (a retitled panel, a loaded document) recompute
+    // geometry without rebuilding the atom graph.
+    const lookup = O.match(O.fromUndefinedOr(input.minimaAtom), {
+      onNone: () => minima,
+      onSome: (recordAtom) => {
+        const fromRecord = minimaFromRecord(get(recordAtom));
+        return (groupId: GroupId) => N.max(minima(groupId), fromRecord(groupId));
+      },
+    });
+    return projectWorkspace(get(input.workspaceAtom), get(input.containerAtom), options, lookup);
+  });
   const groupBoxAtom = Atom.family((groupId: GroupId) =>
     Atom.map(geometryAtom, (geometry) => DockGeometry.forGroup(geometry, groupId))
   );
