@@ -41,7 +41,7 @@ const $I = $OntologyUseCasesId.create("aggregates/Session/Session.sparql");
  * @category queries
  * @since 0.0.0
  */
-export const OntologySparqlPanelProfile = LiteralKit(["select", "construct"]).pipe(
+export const OntologySparqlPanelProfile = LiteralKit(["select", "construct", "ask"]).pipe(
   $I.annoteSchema("OntologySparqlPanelProfile", {
     description: "SPARQL query profiles exposed by the ontology workbench panel.",
   })
@@ -393,6 +393,7 @@ const validateProfile = (
   const ok = OntologySparqlPanelProfile.$match(profile, {
     select: () => Str.startsWith(body, "SELECT"),
     construct: () => Str.startsWith(body, "CONSTRUCT"),
+    ask: () => Str.startsWith(body, "ASK"),
   });
   return ok
     ? Effect.void
@@ -561,6 +562,14 @@ const truncateResult = (
         truncated: construct.dataset.quads.length > quads.length,
       };
     }),
+    // An ASK answers with a single boolean. There is nothing to take the first N of,
+    // and nothing that can be cut off.
+    Match.when("ask", () => ({
+      result,
+      rawResultCount: 1,
+      displayedResultCount: 1,
+      truncated: false,
+    })),
     Match.exhaustive
   );
 
@@ -574,7 +583,12 @@ const runOntologySparql = Effect.fn("Ontology.Sparql.run")(function* (input: Run
   const service = yield* SparqlQueryService;
   const normalized = normalizePrefixes(input);
   yield* validateProfile(input.profile, normalized);
-  const limited = injectLimit(normalized, input.safeguards.defaultLimit);
+  // An ASK returns one boolean; bounding it is meaningless, and appending a LIMIT to
+  // someone's query so a badge can describe it would be worse than meaningless.
+  const limited =
+    input.profile === "ask"
+      ? { query: normalized, injected: false }
+      : injectLimit(normalized, input.safeguards.defaultLimit);
   const result = yield* service
     .execute(
       SparqlQueryRequest.make({

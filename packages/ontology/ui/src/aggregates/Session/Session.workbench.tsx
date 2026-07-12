@@ -218,6 +218,15 @@ const sparqlResultPreview = (result: RunOntologySparqlResult): JSX.Element => {
     );
   }
 
+  if (result.result.profile === "ask") {
+    // An ASK answers yes or no. Say which.
+    return (
+      <p className="text-sm font-medium" data-testid="sparql-ask-result">
+        {result.result.value ? "Yes — the pattern matches." : "No — the pattern does not match."}
+      </p>
+    );
+  }
+
   return <p className="text-sm text-muted-foreground">Unsupported result.</p>;
 };
 
@@ -228,7 +237,7 @@ const sparqlErrorView = (error: string): JSX.Element => <p className="text-sm te
 const sparqlResultView = (result: RunOntologySparqlResult): JSX.Element => (
   <div className="space-y-2">
     <div className="flex flex-wrap gap-1">
-      <Badge variant="outline">LIMIT {result.effectiveLimit}</Badge>
+      {result.result.profile === "ask" ? null : <Badge variant="outline">LIMIT {result.effectiveLimit}</Badge>}
       {result.limitInjected ? <Badge variant="secondary">injected</Badge> : null}
       {result.truncated ? <Badge variant="destructive">truncated</Badge> : null}
     </div>
@@ -967,6 +976,7 @@ export function OntologyWorkbench(): JSX.Element {
                   >
                     <NativeSelectOption value="select">SELECT</NativeSelectOption>
                     <NativeSelectOption value="construct">CONSTRUCT</NativeSelectOption>
+                    <NativeSelectOption value="ask">ASK</NativeSelectOption>
                   </NativeSelect>
                   <NativeSelect
                     aria-label="SPARQL examples"
