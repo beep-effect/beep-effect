@@ -21,7 +21,7 @@ import { fromThreadRow, toThreadInsert } from "@beep/workspace-tables/entities/T
 import { fromTurnRow, toTurnInsert } from "@beep/workspace-tables/entities/Turn";
 import * as ThreadStoreServer from "@beep/workspace-use-cases/server";
 import { and, asc, eq } from "drizzle-orm";
-import { Clock, DateTime, Effect, HashMap, Match, Order, pipe, Ref } from "effect";
+import { Clock, DateTime, Effect, HashMap, Match, Order, pipe, Ref, Semaphore } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { InMemoryState } from "./ThreadStore.repo.internal.ts";
@@ -417,30 +417,42 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
   const db = yield* PostgresDrizzle;
   const publicIds = yield* makePublicIdGenerators();
 
+  // Row ids are allocated as `max(existing) + 1`, read inside the write. Two
+  // writes in flight — two windows on the same thread, a retried request —
+  // therefore read the same maximum and claim the same id, and one of them loses
+  // (the send simply never appeared, with nothing to explain why). Serializing
+  // the writes makes the read-then-allocate atomic; the sidecar is the only
+  // writer, so this is the whole race.
+  const writeSemaphore = Semaphore.makeUnsafe(1);
+
   return ThreadStoreServer.Thread.ThreadStore.of({
     createThread: Effect.fn("Workspace.ThreadStore.drizzleCreateThread")(function* (input) {
-      const workspaceId = PosInt.make(Number(encodeWorkspaceId(input.workspaceId)));
-      const existingThreads = yield* db
-        .select()
-        .from(threadTable)
-        .pipe(repositoryUnavailable("list Thread", THREAD_TABLE_NAME));
-      const publicId = yield* publicIds.thread;
-      const now = yield* Clock.currentTimeMillis;
-      const seed = makeThreadEntity(
-        { id: nextEntityId(existingThreads), title: input.title, workspaceId },
-        publicId,
-        timestampsAt(now)
-      );
-      const rows = yield* db
-        .insert(threadTable)
-        .values(toThreadInsert(seed))
-        .returning()
-        .pipe(repositoryUnavailable("insert Thread", THREAD_TABLE_NAME));
-      return pipe(
-        rows,
-        A.head,
-        O.map(fromThreadRow),
-        O.getOrElse(() => seed)
+      return yield* writeSemaphore.withPermit(
+        Effect.gen(function* () {
+          const workspaceId = PosInt.make(Number(encodeWorkspaceId(input.workspaceId)));
+          const existingThreads = yield* db
+            .select()
+            .from(threadTable)
+            .pipe(repositoryUnavailable("list Thread", THREAD_TABLE_NAME));
+          const publicId = yield* publicIds.thread;
+          const now = yield* Clock.currentTimeMillis;
+          const seed = makeThreadEntity(
+            { id: nextEntityId(existingThreads), title: input.title, workspaceId },
+            publicId,
+            timestampsAt(now)
+          );
+          const rows = yield* db
+            .insert(threadTable)
+            .values(toThreadInsert(seed))
+            .returning()
+            .pipe(repositoryUnavailable("insert Thread", THREAD_TABLE_NAME));
+          return pipe(
+            rows,
+            A.head,
+            O.map(fromThreadRow),
+            O.getOrElse(() => seed)
+          );
+        })
       );
     }),
     listThreads: Effect.fn("Workspace.ThreadStore.drizzleListThreads")(function* (workspaceId) {
@@ -492,90 +504,92 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
       const messagePublicId = yield* publicIds.message;
       const turnPublicId = yield* publicIds.turn;
       const now = yield* Clock.currentTimeMillis;
-      return yield* db
-        .transaction(
-          Effect.fnUntraced(function* (tx) {
-            const existingTurns = yield* tx.select().from(turnTable).where(eq(turnTable.threadId, threadId));
-            const existingTurnRows = yield* tx.select().from(turnTable);
-            const existingMessages = yield* tx.select().from(messageTable);
-            const turnIndex = NonNegativeInt.make(existingTurns.length);
-            const nextTurnId = nextEntityId(existingTurnRows);
-            const nextMessageId = nextEntityId(existingMessages);
+      return yield* writeSemaphore.withPermit(
+        db
+          .transaction(
+            Effect.fnUntraced(function* (tx) {
+              const existingTurns = yield* tx.select().from(turnTable).where(eq(turnTable.threadId, threadId));
+              const existingTurnRows = yield* tx.select().from(turnTable);
+              const existingMessages = yield* tx.select().from(messageTable);
+              const turnIndex = NonNegativeInt.make(existingTurns.length);
+              const nextTurnId = nextEntityId(existingTurnRows);
+              const nextMessageId = nextEntityId(existingMessages);
 
-            const messageSeed = makeMessageEntity(
-              {
-                id: nextMessageId,
-                threadId,
-                turnId: nextTurnId,
-                role: input.role,
-                content: input.content,
-              },
-              messagePublicId,
-              timestampsAt(now)
-            );
-            const turnSeed = makeTurnEntity(
-              {
-                id: nextTurnId,
-                threadId,
-                parentTurnId,
-                turnIndex,
-                messageId: nextMessageId,
-              },
-              turnPublicId,
-              timestampsAt(now)
-            );
+              const messageSeed = makeMessageEntity(
+                {
+                  id: nextMessageId,
+                  threadId,
+                  turnId: nextTurnId,
+                  role: input.role,
+                  content: input.content,
+                },
+                messagePublicId,
+                timestampsAt(now)
+              );
+              const turnSeed = makeTurnEntity(
+                {
+                  id: nextTurnId,
+                  threadId,
+                  parentTurnId,
+                  turnIndex,
+                  messageId: nextMessageId,
+                },
+                turnPublicId,
+                timestampsAt(now)
+              );
 
-            const turnRows = yield* tx.insert(turnTable).values(toTurnInsert(turnSeed)).returning();
-            const persistedTurn = pipe(
-              turnRows,
-              A.head,
-              O.map(fromTurnRow),
-              O.getOrElse(() => turnSeed)
-            );
-            const persistedTurnId = PosInt.make(Number(encodeTurnId(persistedTurn.id)));
+              const turnRows = yield* tx.insert(turnTable).values(toTurnInsert(turnSeed)).returning();
+              const persistedTurn = pipe(
+                turnRows,
+                A.head,
+                O.map(fromTurnRow),
+                O.getOrElse(() => turnSeed)
+              );
+              const persistedTurnId = PosInt.make(Number(encodeTurnId(persistedTurn.id)));
 
-            const messageInsert: MessageInsert = {
-              ...toMessageInsert(messageSeed),
-              turnId: persistedTurnId,
-            };
-            const messageRows = yield* tx.insert(messageTable).values(messageInsert).returning();
-            const persistedMessage = pipe(
-              messageRows,
-              A.head,
-              O.map(fromMessageRow),
-              O.getOrElse(() => messageSeed)
-            );
-            const persistedMessageId = PosInt.make(Number(encodeMessageId(persistedMessage.id)));
+              const messageInsert: MessageInsert = {
+                ...toMessageInsert(messageSeed),
+                turnId: persistedTurnId,
+              };
+              const messageRows = yield* tx.insert(messageTable).values(messageInsert).returning();
+              const persistedMessage = pipe(
+                messageRows,
+                A.head,
+                O.map(fromMessageRow),
+                O.getOrElse(() => messageSeed)
+              );
+              const persistedMessageId = PosInt.make(Number(encodeMessageId(persistedMessage.id)));
 
-            const reconciledTurn = makeTurnEntity(
-              {
-                id: PosInt.make(Number(encodeTurnId(persistedTurn.id))),
-                threadId,
-                parentTurnId,
-                turnIndex,
-                messageId: persistedMessageId,
-              },
-              persistedTurn.publicId,
-              // The row already exists; keep its creation stamp and only advance
-              // the update stamp.
-              { createdAt: DateTime.toEpochMillis(persistedTurn.createdAt), updatedAt: now }
-            );
-            const reconciledRows = yield* tx
-              .update(turnTable)
-              .set({ items: toTurnInsert(reconciledTurn).items })
-              .where(eq(turnTable.id, persistedTurnId))
-              .returning();
-            const finalTurn = pipe(
-              reconciledRows,
-              A.head,
-              O.map(fromTurnRow),
-              O.getOrElse(() => reconciledTurn)
-            );
+              const reconciledTurn = makeTurnEntity(
+                {
+                  id: PosInt.make(Number(encodeTurnId(persistedTurn.id))),
+                  threadId,
+                  parentTurnId,
+                  turnIndex,
+                  messageId: persistedMessageId,
+                },
+                persistedTurn.publicId,
+                // The row already exists; keep its creation stamp and only advance
+                // the update stamp.
+                { createdAt: DateTime.toEpochMillis(persistedTurn.createdAt), updatedAt: now }
+              );
+              const reconciledRows = yield* tx
+                .update(turnTable)
+                .set({ items: toTurnInsert(reconciledTurn).items })
+                .where(eq(turnTable.id, persistedTurnId))
+                .returning();
+              const finalTurn = pipe(
+                reconciledRows,
+                A.head,
+                O.map(fromTurnRow),
+                O.getOrElse(() => reconciledTurn)
+              );
 
-            return { turn: finalTurn, message: persistedMessage };
-          })
-        )
-        .pipe(repositoryUnavailable("append Turn", TURN_TABLE_NAME));
+              return { turn: finalTurn, message: persistedMessage };
+            })
+          )
+          .pipe(repositoryUnavailable("append Turn", TURN_TABLE_NAME))
+      );
     }),
     timeline: Effect.fn("Workspace.ThreadStore.drizzleTimeline")(function* (threadId) {
       const numericId = threadIdToNumber(threadId);
