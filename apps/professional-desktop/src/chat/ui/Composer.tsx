@@ -131,6 +131,7 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
   // already drops out-of-schema states internally, so onSerializedChange only
   // ever sees valid content; the decode-failure fiber stays mounted as the
   // contracted observability sink for that path.
+  const reportDecodeFailure = useAtomSet(reportDecodeFailureAtom);
   useAtomMount(reportDecodeFailureAtom);
   useAtomMount(runTurnAtom);
 
@@ -172,7 +173,16 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
       return false;
     }
     const content = editorStateToDocument(state);
-    if (A.isReadonlyArrayEmpty(content.children)) return false;
+    if (A.isReadonlyArrayEmpty(content.children)) {
+      // The send command only fires when the editor holds text, so an empty
+      // projection means the editor→document codec dropped everything the user
+      // wrote. That is a bug, and it used to present as a composer that had
+      // simply stopped working: Enter and Send did nothing, no error, no log,
+      // the draft still sitting there.
+      toast.error("This message could not be prepared for sending. Your draft has been kept.");
+      reportDecodeFailure();
+      return false;
+    }
     // A message had no upper bound at all: a 50,000-character paste was accepted,
     // persisted, rendered, and sent verbatim to the model. Refuse it here and
     // leave the content in the editor so nothing is lost.
