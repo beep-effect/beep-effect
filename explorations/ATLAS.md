@@ -47,8 +47,12 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   costs. First proof landed same day:
   [`scratchpad/computable-layout`](../scratchpad/computable-layout/README.md)
   (browser-oracle fixture → pure greedy breaker reproduces Chrome's wrap
-  counts under `bun test`, 5/5). Next: integration seam (consume/vendor/
-  rebuild), metrics-cache schema. Feeds
+  counts under `bun test`). Same-day landings: minimum-extent constraints in
+  the dock kernel itself (global floor + per-group `GroupMinimumLookup` via
+  `requiredExtent`; kernel 72/72), `FontMetricsSnapshotV1` versioned
+  envelope, and the full-circle proof (metrics → content minimum → kernel
+  geometry → guaranteed one-line render). Next: ratify the seam decision
+  (DECISIONS.md Q1, consume/wrap recommended), first product consumer. Feeds
   [`docs/product/workspace-substrate.md`](../docs/product/workspace-substrate.md) §4–§5.
 - [`atlas-synthesis`](./atlas-synthesis/README.md) — grounding/context packet
   (stage `research`): a maximal-fan-out synthesis of current repo state vs.

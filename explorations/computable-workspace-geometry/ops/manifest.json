@@ -8,7 +8,8 @@
     "openQuestions": [
       "Ratify Q1 (DECISIONS.md): consume/wrap pretext, schema-wrap the boundary — recommended with rationale, awaiting Ben",
       "Q2 v2 residue: segment kinds, emoji correction, font-descriptor normalization, PreparedText alignment (v1 envelope + engine profile landed 2026-07-12)",
-      "Q3 residue: second consumer — thread virtualization, bubble shrinkwrap, or content-aware dock constraints (layout-as-unit-tests proven 2026-07-12)"
+      "Q3 residue: first PRODUCT consumer — thread virtualization or bubble shrinkwrap (layout-as-tests AND dock-constraint consumers proven in scratchpad 2026-07-12; full-circle.test.ts)",
+      "Kernel residue: max constraints, LayoutPriority, snap-to-collapse, reactive minima atom for content-driven geometry updates"
     ],
     "sources": ["RESEARCH.md"],
     "links": {

@@ -33,6 +33,14 @@ triggers, awaiting Ben's yes/no. Then Q2: grow the draft
 
 ## Trail
 
+- 2026-07-12 (overtime): per-group minimums landed in the kernel —
+  `GroupMinimumLookup` + `requiredExtent` (sum along axis + gap, max across
+  axes; kernel 72/72, adapter 17/17) — and the **full-circle proof** landed:
+  `scratchpad/computable-layout/full-circle.test.ts` imports the real kernel
+  and proves metrics → naturalWidth → minimum lookup → `project()` →
+  guaranteed one-line render, with the starvation counter-case. §5 of the
+  substrate doc synced ("unwritten pure math" → partially written). Also
+  fixed pre-existing `describe.concurrent` race in adapter Floating suite.
 - 2026-07-12 (finale): TWO promotions from proof to matter. (1) The dock
   kernel itself gained `GeometryOptions.minGroupExtent` — per-split-local
   minimum-extent clamp in the pure geometry projection (feasible → both
