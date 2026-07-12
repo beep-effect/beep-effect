@@ -25,6 +25,7 @@ import * as P from "effect/Predicate";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
+import { ThemeToggle } from "./chat/ui/ThemeToggle.tsx";
 import { DocumentIntakeTarget } from "./intake/DocumentIntakeTarget.tsx";
 import { CosmosSpike } from "./spikes/CosmosSpike.tsx";
 import { VaultSyncPanel } from "./sync/VaultSyncPanel.tsx";
@@ -196,7 +197,13 @@ const DesktopShell = ({ transport }: { readonly transport: SidecarTransport }): 
   return (
     <>
       <DocumentIntakeTarget>
-        <div className="flex h-screen min-h-0 w-full flex-col bg-background text-foreground">
+        {/* The shell owns the viewport, and nothing outside it scrolls. `h-dvh` rather
+            than `h-screen` so a mobile browser's collapsing chrome cannot push the app
+            taller than the space it actually has, and `overflow-hidden` so a surface
+            that misjudges its height gets clipped instead of growing a second, outer
+            scrollbar over the top of the pane that was already scrolling. Everything
+            inside scrolls in its own pane. */}
+        <div className="flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-background text-foreground">
           <nav className="flex h-12 shrink-0 items-center gap-1 border-b px-3" aria-label="Desktop pages">
             <span className="mr-3 text-sm font-semibold">BEEP</span>
             {desktopNavigationItems.map((item) => (
@@ -211,6 +218,12 @@ const DesktopShell = ({ transport }: { readonly transport: SidecarTransport }): 
                 {item.label}
               </Button>
             ))}
+            {/* Theming belongs to the shell, not to one surface. It used to live in
+                the chat header, so Home, Ontology and Vault sync had no way to reach
+                it at all. */}
+            <div className="ml-auto">
+              <ThemeToggle />
+            </div>
           </nav>
           <div className="min-h-0 flex-1">
             {surface === "home" ? <HomeSurface /> : null}

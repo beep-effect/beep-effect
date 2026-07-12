@@ -25,7 +25,6 @@ import * as S from "effect/Schema";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { Composer } from "./Composer.tsx";
 import { Sidebar } from "./Sidebar.tsx";
-import { ThemeToggle } from "./ThemeToggle.tsx";
 import { Thread } from "./Thread.tsx";
 import type { JSX } from "react";
 
@@ -93,15 +92,21 @@ export function ChatApp(): JSX.Element {
   );
 
   return (
+    // `h-full`, not `h-screen`: the chat surface mounts BELOW the app's nav bar,
+    // inside a parent that already holds the remaining height. Asking for the whole
+    // viewport made it overflow by exactly the nav's height, so the WINDOW scrolled
+    // on top of the transcript's own scrollbar — two scrollbars for one list. The
+    // shell owns the viewport; a surface fills what it is given, and only the panes
+    // inside it scroll.
     <div
-      className="relative isolate flex h-screen w-full flex-col overflow-hidden bg-background text-foreground"
+      className="relative isolate flex h-full min-h-0 w-full flex-col overflow-hidden bg-background text-foreground"
       data-testid="chat-app"
     >
       <OrbBackground tone="green" intensity="subtle" />
-      <header className="relative flex items-center justify-between gap-2 border-b bg-background/30 px-4 py-3 backdrop-blur">
-        <span className="text-sm font-semibold">Professional Desktop — Chat</span>
-        <ThemeToggle />
-      </header>
+      {/* No second title bar. The app's nav already says where you are, and this
+          header only repeated it — costing a strip of vertical height on the one
+          surface that needs it most, and hiding the theme control where the other
+          three surfaces could not reach it. Both now live in the shell's nav. */}
       <div className="flex min-h-0 flex-1">
         <Sidebar workspaceId={DEFAULT_WORKSPACE_ID} />
         {/* bg-background/60 damps the shared orb glow so the content area reads
