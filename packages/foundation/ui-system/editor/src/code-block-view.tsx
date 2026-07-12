@@ -45,7 +45,7 @@ const copyFn = Atom.family((code: string) =>
  *
  * @example
  * ```tsx
- * import { CodeBlockView } from "@beep/editor/code-block-view"
+ * import { CodeBlockView } from "@beep/editor"
  *
  * function Snippet() {
  *   return <CodeBlockView code="export {}" language="typescript" />

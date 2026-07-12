@@ -18,13 +18,49 @@ import { Atom } from "effect/unstable/reactivity";
 
 const layoutRuntime = Atom.runtime(KeyValueStore.layerStorage(() => globalThis.localStorage));
 
-/** Percent of the chat surface the sidebar may occupy. */
+/**
+ * Minimum percentage of the chat surface the sidebar may occupy.
+ *
+ * @example
+ * ```ts
+ * import { SIDEBAR_MIN_PERCENT } from "@/chat/ui/layout.atoms"
+ *
+ * console.log(SIDEBAR_MIN_PERCENT) // 14
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const SIDEBAR_MIN_PERCENT = 14;
 
-/** @see {@link SIDEBAR_MIN_PERCENT} */
+/**
+ * Maximum percentage of the chat surface the sidebar may occupy.
+ *
+ * @example
+ * ```ts
+ * import { SIDEBAR_MAX_PERCENT } from "@/chat/ui/layout.atoms"
+ *
+ * console.log(SIDEBAR_MAX_PERCENT) // 40
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const SIDEBAR_MAX_PERCENT = 40;
 
-/** @see {@link SIDEBAR_MIN_PERCENT} */
+/**
+ * Initial percentage of the chat surface assigned to the sidebar.
+ *
+ * @example
+ * ```ts
+ * import { SIDEBAR_DEFAULT_PERCENT } from "@/chat/ui/layout.atoms"
+ *
+ * console.log(SIDEBAR_DEFAULT_PERCENT) // 20
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const SIDEBAR_DEFAULT_PERCENT = 20;
 
 /**

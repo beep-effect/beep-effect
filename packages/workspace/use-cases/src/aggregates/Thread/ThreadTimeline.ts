@@ -252,11 +252,19 @@ export class ThreadTimeline extends S.Class<ThreadTimeline>($I`ThreadTimeline`)(
  *
  * @example
  * ```ts
- * import { activeBranchTurns } from "@beep/workspace-use-cases/aggregates/Thread"
- * import type { ThreadTimeline } from "@beep/workspace-use-cases/aggregates/Thread"
+ * import { activeBranchTurns, ThreadTimeline } from "@beep/workspace-use-cases/aggregates/Thread"
+ * import * as S from "effect/Schema"
  *
- * declare const timeline: ThreadTimeline
- * console.log(activeBranchTurns(timeline.turns).length <= timeline.turns.length) // true
+ * const timeline = S.decodeUnknownSync(ThreadTimeline)({
+ *   threadId: 10,
+ *   turns: [
+ *     { turnId: 1, turnIndex: 0, parentTurnId: null, items: [], costMicros: 0 },
+ *     { turnId: 2, turnIndex: 1, parentTurnId: null, items: [], costMicros: 0 },
+ *     { turnId: 3, turnIndex: 2, parentTurnId: null, items: [], costMicros: 0 },
+ *     { turnId: 4, turnIndex: 3, parentTurnId: 2, items: [], costMicros: 0 },
+ *   ],
+ * })
+ * console.log(activeBranchTurns(timeline.turns).map((turn) => turn.turnId)) // [1, 4]
  * ```
  *
  * @category projections

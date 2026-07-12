@@ -487,33 +487,6 @@ const titleGuardForEditedTurn = (
 // ---------------------------------------------------------------------------
 
 /**
- * The chat orchestration operations over already-acquired services. Each
- * operation is a plainly typed `Effect`/`Stream` translated to the client-safe
- * {@link ChatActionError} at the boundary (std-09), with a per-action
- * `<slice>.<concept>.<action>` span (std-12). The app-level contract test drives
- * these directly without the rpc transport, and {@link ChatHandlersLive} adapts
- * them onto {@link ChatRpcs}.
- *
- * @example
- * ```ts
- * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
- * import { Thread } from "@beep/workspace-use-cases/server"
- * import { Effect } from "effect"
- * import { makeChatOperations } from "@/chat/ChatOrchestrator"
- * import { UsageRecordSink } from "@/chat/UsageRecordSink"
- *
- * const program = Effect.gen(function* () {
- *   const store = yield* Thread.ThreadStore
- *   const kernel = yield* AgentTurnKernel
- *   const usage = yield* UsageRecordSink
- *   return makeChatOperations(store, kernel, usage)
- * })
- * ```
- *
- * @category constructors
- * @since 0.0.0
- */
-/**
  * One turn at a time per thread.
  *
  * A turn appends the user message, reads the whole conversation back, and asks
@@ -560,6 +533,33 @@ const holdThreadTurnPermit = Effect.fn("chat.holdThreadTurnPermit")(function* (t
   yield* Effect.acquireRelease(lock.take(1), () => lock.release(1));
 });
 
+/**
+ * The chat orchestration operations over already-acquired services. Each
+ * operation is a plainly typed `Effect`/`Stream` translated to the client-safe
+ * {@link ChatActionError} at the boundary (std-09), with a per-action
+ * `<slice>.<concept>.<action>` span (std-12). The app-level contract test drives
+ * these directly without the rpc transport, and {@link ChatHandlersLive} adapts
+ * them onto {@link ChatRpcs}.
+ *
+ * @example
+ * ```ts
+ * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
+ * import { Thread } from "@beep/workspace-use-cases/server"
+ * import { Effect } from "effect"
+ * import { makeChatOperations } from "@/chat/ChatOrchestrator"
+ * import { UsageRecordSink } from "@/chat/UsageRecordSink"
+ *
+ * const program = Effect.gen(function* () {
+ *   const store = yield* Thread.ThreadStore
+ *   const kernel = yield* AgentTurnKernel
+ *   const usage = yield* UsageRecordSink
+ *   return makeChatOperations(store, kernel, usage)
+ * })
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const makeChatOperations = (
   store: Thread.ThreadStore["Service"],
   kernel: AgentTurnKernel["Service"],

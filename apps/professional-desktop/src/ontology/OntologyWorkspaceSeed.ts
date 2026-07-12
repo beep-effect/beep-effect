@@ -49,6 +49,14 @@ const PIZZA_TUTORIAL_PATH = "tmp/ontology-workbench/pizza-tutorial.ttl";
  * Exported for the regression test that pins the one behaviour that matters
  * here: a read failure that is *not* absence must never lead to a write.
  *
+ * @example
+ * ```ts
+ * import { seedPizzaTutorial } from "@/ontology/OntologyWorkspaceSeed"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(seedPizzaTutorial())) // true
+ * ```
+ *
  * @category effects
  * @since 0.0.0
  */

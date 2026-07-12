@@ -121,6 +121,13 @@ export const anyMenuOpenAtom = Atom.family((editor: LexicalEditor) =>
  * listbox nested in a listbox is an invalid ARIA hierarchy); this attribute
  * gives DOM queries a handle on the real menu without re-introducing the role.
  *
+ * @example
+ * ```ts
+ * import { TYPEAHEAD_MENU_ATTRIBUTE } from "@beep/editor/chat"
+ *
+ * console.log(TYPEAHEAD_MENU_ATTRIBUTE) // "data-typeahead-menu"
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -128,6 +135,15 @@ export const TYPEAHEAD_MENU_ATTRIBUTE = "data-typeahead-menu";
 
 /**
  * Marks a rendered typeahead container as belonging to `editor`.
+ *
+ * @example
+ * ```ts
+ * import { TYPEAHEAD_MENU_ATTRIBUTE, typeaheadMenuMarker } from "@beep/editor/chat"
+ * import { createEditor } from "lexical"
+ *
+ * const editor = createEditor()
+ * console.log(typeaheadMenuMarker(editor)[TYPEAHEAD_MENU_ATTRIBUTE] === editor.getKey()) // true
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -202,10 +218,9 @@ export const typeaheadActiveDescendant: {
  * @example
  * ```ts
  * import { isTypeaheadMenuVisible } from "@beep/editor/chat"
- * import type { LexicalEditor } from "lexical"
+ * import { createEditor } from "lexical"
  *
- * declare const editor: LexicalEditor
- * console.log(typeof isTypeaheadMenuVisible(editor)) // "boolean"
+ * console.log(isTypeaheadMenuVisible(createEditor())) // false
  * ```
  *
  * @category predicates

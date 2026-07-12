@@ -52,6 +52,17 @@ const reportBrowserFailureAtom = professionalBrowserRuntime.fn<BrowserFailure>()
  * Mounted Atom that registers browser-global error and rejected-Promise
  * listeners and removes them when the renderer registry is disposed.
  *
+ * @example
+ * ```tsx
+ * import { browserFailureListenersAtom } from "@/runtime/BrowserFailure.atoms"
+ * import { useAtomMount } from "@effect/atom-react"
+ *
+ * function BrowserFailureListeners(): null {
+ *   useAtomMount(browserFailureListenersAtom)
+ *   return null
+ * }
+ * ```
+ *
  * @category atoms
  * @since 0.0.0
  */

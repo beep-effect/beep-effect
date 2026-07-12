@@ -132,6 +132,25 @@ const makeLabelLayer = (container: HTMLElement, labels: ReadonlyArray<string>) =
   };
 };
 
+const positionLabel = (
+  graph: CosmosGraphInstance,
+  positions: ReadonlyArray<number>,
+  layer: ReturnType<typeof makeLabelLayer>,
+  index: number
+): void => {
+  const x = positions[index * 2];
+  const y = positions[index * 2 + 1];
+  const element = layer.elements[index];
+  if (element === undefined || x === undefined || y === undefined) return;
+  if (Number.isNaN(x) || Number.isNaN(y)) return;
+
+  const screen = graph.spaceToScreenPosition?.([x, y]);
+  if (screen === undefined) return;
+
+  // Offset below the point so the text never sits on top of the dot it names.
+  element.style.transform = `translate(${Math.round(screen[0])}px, ${Math.round(screen[1] + 8)}px) translateX(-50%)`;
+};
+
 type CosmosGraphConstructor = new (container: HTMLElement, config: CosmosGraphConfig) => CosmosGraphInstance;
 
 type CosmosGraphModule = {
@@ -378,16 +397,7 @@ const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
           // labels simply never moved, and nothing said why.
           const positions = graph.getPointPositions?.() ?? [];
           for (let index = 0; index < current.count; index += 1) {
-            const x = positions[index * 2];
-            const y = positions[index * 2 + 1];
-            const element = current.elements[index];
-            if (element === undefined || x === undefined || y === undefined || Number.isNaN(x) || Number.isNaN(y)) {
-              continue;
-            }
-            const screen = graph.spaceToScreenPosition?.([x, y]);
-            if (screen === undefined) continue;
-            // Offset below the point so the text never sits on top of the dot it names.
-            element.style.transform = `translate(${Math.round(screen[0])}px, ${Math.round(screen[1] + 8)}px) translateX(-50%)`;
+            positionLabel(graph, positions, current, index);
           }
         },
       })

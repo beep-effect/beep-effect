@@ -109,5 +109,18 @@ const ProjectSyntheticGraphRpc = Rpc.make("ProjectSyntheticGraph", {
  */
 export const CosmosSpikeRpcs = RpcGroup.make(ProjectSyntheticGraphRpc);
 
-/** Decoded payload accepted by {@link ProjectSyntheticGraphRpc}. */
+/**
+ * Decoded payload accepted by {@link ProjectSyntheticGraphRpc}.
+ *
+ * @example
+ * ```ts
+ * import type { ProjectSyntheticGraphRequest } from "@/spikes/CosmosSpike.rpc"
+ *
+ * const request = { edgeCount: 24, nodeCount: 12, seed: 97 } satisfies ProjectSyntheticGraphRequest
+ * console.log(request.nodeCount) // 12
+ * ```
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
 export type ProjectSyntheticGraphRequest = Rpc.Payload<typeof ProjectSyntheticGraphRpc>;
