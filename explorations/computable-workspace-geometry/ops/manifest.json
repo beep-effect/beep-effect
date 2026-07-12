@@ -6,9 +6,9 @@
     "status": "active",
     "stage": "research",
     "openQuestions": [
-      "Integration seam: consume @chenglou/pretext as a dependency, vendor it, or rebuild effect-native (same fork we faced with dockview)?",
-      "PreparedText metrics cache: what is the schema-encoded shipping format so agents/tests/servers compute layout with the user's engine widths?",
-      "Which consumer proves the loop first: thread virtualization, bubble shrinkwrap, content-aware dock constraints, or layout-as-unit-tests?"
+      "Ratify Q1 (DECISIONS.md): consume/wrap pretext, schema-wrap the boundary — recommended with rationale, awaiting Ben",
+      "Q2: grow draft FontMetricsSnapshot (scratchpad/computable-layout) into the real versioned contract: segment kinds, engine profile, emoji correction, S.tag envelope",
+      "Q3 residue: second consumer — thread virtualization, bubble shrinkwrap, or content-aware dock constraints (layout-as-unit-tests proven 2026-07-12)"
     ],
     "sources": ["RESEARCH.md"],
     "links": {

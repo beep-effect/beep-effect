@@ -19,10 +19,11 @@ and line break from data. Agents gain *sight*.
 
 ## Next Open Question
 
-Integration seam: consume `@chenglou/pretext` as a dependency, vendor it, or
-rebuild effect-native — the same fork we faced with dockview, but the calculus
-may differ (pretext is MIT, zero-dep, and its value is a *validated corpus*,
-not just code).
+Ratify Q1 in [`DECISIONS.md`](./DECISIONS.md): the seam recommendation
+(consume/wrap pretext, schema-wrap the boundary only — the corpus is the
+asset, not the architecture) is written with full rationale and revisit
+triggers, awaiting Ben's yes/no. Then Q2: grow the draft
+`FontMetricsSnapshot` into the real versioned contract.
 
 ## Read This First
 
@@ -31,6 +32,19 @@ not just code).
 3. [`RESEARCH.md`](./RESEARCH.md) - pretext technical map, the isomorphism, the cost audit.
 
 ## Trail
+
+- 2026-07-12 (later, same session — the genesis context's last 7%): first
+  proof LANDED at [`scratchpad/computable-layout`](../../scratchpad/computable-layout/README.md) —
+  live-Chrome oracle fixture (canvas widths + DOM wrap counts), 20-line pure
+  greedy breaker, 8/8 under `bun test`: arithmetic reproduces the browser's
+  own line counts at all three widths, AND the metrics cache round-trips
+  through a first-draft effect `FontMetricsSnapshot` codec
+  ([`FontMetrics.schema.ts`](../../scratchpad/computable-layout/FontMetrics.schema.ts)) —
+  "shippable sight" is now typed matter, not prose. `DECISIONS.md` pre-seeded:
+  Q1 seam recommendation written (consume/wrap; corpus-is-the-asset
+  rationale; revisit triggers), Q3 partially closed by the proof.
+  ATLAS.md entry added. Q3 residue: next consumer (virtualization vs
+  shrinkwrap vs dock constraints).
 
 - 2026-07-12: packet opened directly at research (capture + research landed
   same session). Firsthand reads: pretext README/thoughts/RESEARCH/AGENTS/
