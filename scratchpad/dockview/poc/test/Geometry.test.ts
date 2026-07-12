@@ -199,3 +199,49 @@ describe("minimum group extent clamp", () => {
     expect(geometry.groups[0]?.box.width).toBe(101);
   });
 });
+
+describe("per-group minimum lookup", () => {
+  const gapThree = GeometryOptions.make({ gap: 3 });
+
+  it("honors a per-group minimum on the trailing side", () => {
+    const geometry = project(split("horizontal", 9_000, tabsOne, tabsTwo), box, gapThree, (groupId) =>
+      GroupId.equals(groupId, groupTwo) ? 50 : 0
+    );
+    const [left, right] = geometry.groups;
+    expect(left?.box.width).toBe(48);
+    expect(right?.box.width).toBe(50);
+  });
+
+  it("sums leaf requirements through nested same-axis splits", () => {
+    const nested = split(
+      "horizontal",
+      5_000,
+      tabsOne,
+      split("horizontal", 5_000, tabsTwo, tabsThree, splitTwo)
+    );
+    const options = GeometryOptions.make({ gap: 3, minGroupExtent: 30 });
+    const geometry = project(nested, box, options);
+    const [one, two, three] = geometry.groups;
+    // Outer trailing side REQUIRES 30 + 3 + 30 = 63, so the outer clamp
+    // yields 35/63 (a scalar clamped level-by-level would give 49/49 and
+    // squeeze the inner groups to 23px each, violating the minimum).
+    expect(one?.box.width).toBe(35);
+    expect(two?.box.width).toBe(30);
+    expect(three?.box.width).toBe(30);
+    expect(three?.box.left).toBe(71);
+  });
+
+  it("takes the maximum requirement across a cross-axis subtree", () => {
+    const crossed = split(
+      "horizontal",
+      9_000,
+      tabsOne,
+      split("vertical", 5_000, tabsTwo, tabsThree, splitTwo)
+    );
+    const geometry = project(crossed, box, gapThree, (groupId) =>
+      GroupId.equals(groupId, groupThree) ? 40 : 0
+    );
+    const widths = A.map(geometry.groups, (group) => group.box.width);
+    expect(widths).toEqual([58, 40, 40]);
+  });
+});

@@ -154,7 +154,55 @@ const hasVisibleGroup = (node: DockNode): boolean =>
     },
   });
 
-const projectNode = (node: DockNode, box: DockBox, options: GeometryOptions): DockGeometry =>
+/**
+ * Host-supplied per-group minimum extents, e.g. derived from content
+ * measurement (a panel title's natural width). The effective per-leaf
+ * minimum is the maximum of this lookup and the global
+ * `GeometryOptions.minGroupExtent`.
+ */
+export type GroupMinimumLookup = (groupId: GroupId) => number;
+
+const zeroMinimum: GroupMinimumLookup = () => 0;
+
+// The minimum extent a visible subtree needs along the given axis: leaf
+// minimums SUM through same-axis splits (plus the gap when both sides are
+// visible) and take the MAX across cross-axis splits. Hidden subtrees need
+// nothing. This is what makes the clamp honest for nested trees — a scalar
+// clamped level-by-level would understate a same-axis run's requirement.
+const requiredExtent = (
+  node: DockNode,
+  axis: SashGeometry["axis"],
+  options: GeometryOptions,
+  minima: GroupMinimumLookup
+): number =>
+  DockNodeModel.match(node, {
+    Tabs: ({ groupId, metadata }) =>
+      Bool.match(metadata.visible, {
+        onFalse: () => 0,
+        onTrue: () => N.max(options.minGroupExtent, minima(groupId)),
+      }),
+    Split: ({ layout }) => {
+      const [first, second] = SplitLayout.children(layout);
+      const firstRequired = requiredExtent(first, axis, options, minima);
+      const secondRequired = requiredExtent(second, axis, options, minima);
+      const bothVisible = Bool.and(hasVisibleGroup(first), hasVisibleGroup(second));
+      return Bool.match(Eq.equals(layout.axis, axis), {
+        onFalse: () => N.max(firstRequired, secondRequired),
+        onTrue: () =>
+          Bool.match(bothVisible, {
+            onFalse: () => N.max(firstRequired, secondRequired),
+            onTrue: () => N.sum(firstRequired, N.sum(options.gap, secondRequired)),
+          }),
+      });
+    },
+  });
+
+const projectNode = (
+  node: DockNode,
+  box: DockBox,
+  options: GeometryOptions,
+  minima: GroupMinimumLookup
+): DockGeometry =>
   DockNodeModel.match(node, {
     Tabs: ({ groupId, metadata }) =>
       Bool.match(metadata.visible, {
@@ -166,15 +214,15 @@ const projectNode = (node: DockNode, box: DockBox, options: GeometryOptions): Do
       const firstVisible = hasVisibleGroup(first);
       const secondVisible = hasVisibleGroup(second);
       if (!firstVisible && !secondVisible) return DockGeometry.empty;
-      if (!firstVisible) return projectNode(second, box, options);
-      if (!secondVisible) return projectNode(first, box, options);
+      if (!firstVisible) return projectNode(second, box, options, minima);
+      if (!secondVisible) return projectNode(first, box, options, minima);
       const axisExtent = SplitLayout.match(layout, {
         horizontal: () => box.width,
         vertical: () => box.height,
       });
       if (N.isLessThanOrEqualTo(axisExtent, 0)) {
-        const firstGeometry = projectNode(first, box, options);
-        const secondGeometry = projectNode(second, box, options);
+        const firstGeometry = projectNode(first, box, options, minima);
+        const secondGeometry = projectNode(second, box, options, minima);
         return DockGeometry.make({
           groups: A.appendAll(firstGeometry.groups, secondGeometry.groups),
           sashes: pipe(
@@ -188,17 +236,20 @@ const projectNode = (node: DockNode, box: DockBox, options: GeometryOptions): Do
       const gap = N.min(options.gap, axisExtent);
       const available = N.subtract(axisExtent, gap);
       const rawLeading = pipe(available, N.multiply(SplitLayout.ratio(layout)), N.divideUnsafe(10_000), N.round(0));
-      // Per-split-local minimum-extent clamp (content-aware minimums are pure
-      // inputs — see explorations/computable-workspace-geometry). Ratio stays
-      // in [1000, 9000], so at minGroupExtent 0 the clamp bounds are [0,
-      // available] and the projection is unchanged. Infeasible splits keep the
-      // proportional partition rather than clamping one side into negatives.
-      const leading = Bool.match(N.isGreaterThanOrEqualTo(available, N.multiply(options.minGroupExtent, 2)), {
+      // Minimum-extent clamp fed by requiredExtent, so nested same-axis
+      // subtrees carry their summed leaf requirements (content-aware minimums
+      // are pure inputs — see explorations/computable-workspace-geometry).
+      // With zero minimums the bounds are [0, available] and the projection
+      // is unchanged; an infeasible split keeps the proportional partition
+      // rather than clamping one side into negatives.
+      const minLeading = requiredExtent(first, layout.axis, options, minima);
+      const minTrailing = requiredExtent(second, layout.axis, options, minima);
+      const leading = Bool.match(N.isGreaterThanOrEqualTo(available, N.sum(minLeading, minTrailing)), {
         onFalse: () => rawLeading,
         onTrue: () =>
           N.clamp(rawLeading, {
-            minimum: options.minGroupExtent,
-            maximum: N.subtract(available, options.minGroupExtent),
+            minimum: minLeading,
+            maximum: N.subtract(available, minTrailing),
           }),
       });
       const trailing = N.subtract(available, leading);
@@ -242,8 +293,8 @@ const projectNode = (node: DockNode, box: DockBox, options: GeometryOptions): Do
             height: sashThickness,
           }),
       });
-      const firstGeometry = projectNode(first, firstBox, options);
-      const secondGeometry = projectNode(second, secondBox, options);
+      const firstGeometry = projectNode(first, firstBox, options, minima);
+      const secondGeometry = projectNode(second, secondBox, options, minima);
       return DockGeometry.make({
         groups: A.appendAll(firstGeometry.groups, secondGeometry.groups),
         sashes: pipe(
@@ -256,25 +307,30 @@ const projectNode = (node: DockNode, box: DockBox, options: GeometryOptions): Do
   });
 
 /** Projects a ratio tree into exact-partition pixel boxes and sash hit rectangles. */
-export const project = (root: DockNode, container: DockBox, options = GeometryOptions.make()): DockGeometry =>
-  projectNode(root, container, options);
+export const project = (
+  root: DockNode,
+  container: DockBox,
+  options = GeometryOptions.make(),
+  minima: GroupMinimumLookup = zeroMinimum
+): DockGeometry => projectNode(root, container, options, minima);
 
 /** Projects a workspace, returning empty geometry for an empty workspace. */
 export const projectWorkspace = (
   workspace: DockWorkspace,
   container: DockBox,
-  options = GeometryOptions.make()
+  options = GeometryOptions.make(),
+  minima: GroupMinimumLookup = zeroMinimum
 ): DockGeometry => {
   const floating = A.map(DockWorkspaceModel.floatingMembers(workspace), (member) => {
     const box = resolveAnchoredBox(member.anchoredBox, container);
-    const geometry = project(member.root, box, options);
+    const geometry = project(member.root, box, options, minima);
     return FloatingGeometry.make({ box, groups: geometry.groups, sashes: geometry.sashes });
   });
   const docked = DockWorkspaceModel.match(workspace, {
     empty: () => DockGeometry.empty,
     populated: ({ maximized, root }) =>
       O.match(maximized, {
-        onNone: () => project(root, container, options),
+        onNone: () => project(root, container, options, minima),
         onSome: (groupId) =>
           pipe(
             DockNodeModel.findTabs(root, groupId),
@@ -336,10 +392,12 @@ export const makeDockGeometryAtoms = (input: {
   readonly workspaceAtom: Atom.Atom<DockWorkspace>;
   readonly containerAtom: Atom.Atom<DockBox>;
   readonly options?: GeometryOptions | undefined;
+  readonly minima?: GroupMinimumLookup | undefined;
 }) => {
   const options = O.getOrElse(O.fromUndefinedOr(input.options), () => GeometryOptions.make());
+  const minima = O.getOrElse(O.fromUndefinedOr(input.minima), () => zeroMinimum);
   const geometryAtom = Atom.readable((get) =>
-    projectWorkspace(get(input.workspaceAtom), get(input.containerAtom), options)
+    projectWorkspace(get(input.workspaceAtom), get(input.containerAtom), options, minima)
   );
   const groupBoxAtom = Atom.family((groupId: GroupId) =>
     Atom.map(geometryAtom, (geometry) => DockGeometry.forGroup(geometry, groupId))

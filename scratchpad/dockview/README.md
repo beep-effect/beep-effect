@@ -59,14 +59,17 @@ There are two intentionally different reactive state categories:
 Geometry is a derived projection, not kernel state: the ratio tree plus a host-supplied
 container box produces per-group pixel boxes and sash hit rectangles. Each split rounds
 the leading extent once and assigns the trailing extent from the remainder, guaranteeing
-that leading + gap + trailing exactly equals the parent extent. `GeometryOptions.minGroupExtent`
-(default 0) adds a per-split-local minimum: a feasible split clamps its partition so both
-sides receive at least the minimum, an infeasible split keeps the proportional partition,
-and the exact-partition invariant holds in every case. It is deliberately not a global
-constraint solver — nested same-axis trees clamp level-by-level, and per-group minimum
-maps, LayoutPriority, and snap-to-collapse remain out. Content-aware minimums (a panel's
-text wants 142px) are pure inputs to this clamp; see
-`explorations/computable-workspace-geometry/` for why they never require DOM measurement.
+that leading + gap + trailing exactly equals the parent extent. Minimum extents are
+supported as pure inputs: `GeometryOptions.minGroupExtent` is the global per-leaf floor,
+and a host-supplied `GroupMinimumLookup` provides per-group minimums (e.g. from content
+measurement — a panel title's natural width). Each split clamps its partition between the
+`requiredExtent` of its two subtrees, where leaf minimums sum through same-axis splits
+(plus gaps) and take the maximum across cross-axis splits — so nested trees carry their
+true requirements rather than a level-by-level scalar. A feasible split guarantees both
+sides their requirement; an infeasible split keeps the proportional partition; the
+exact-partition invariant holds in every case. Max constraints, LayoutPriority, and
+snap-to-collapse remain out. See `explorations/computable-workspace-geometry/` for why
+content-aware minimums never require DOM measurement.
 
 Floating topology is part of the same headless kernel. Each workspace carries a
 `floating` array of `{ anchoredBox, root }` members; array order is z-order, with

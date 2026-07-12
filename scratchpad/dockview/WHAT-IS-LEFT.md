@@ -109,13 +109,15 @@ Kernel-side (unchanged non-goals or newly explicit):
   hard part, iframe/webview state loss on DOM reparenting
   (`overlayRenderContainer` upstream). Floating topology is the prerequisite
   and now exists.
-- **Per-child min/max constraints, LayoutPriority, snap-to-collapse** — a
-  global `GeometryOptions.minGroupExtent` per-split-local clamp landed
-  2026-07-12 (feasible splits guarantee both sides the minimum; infeasible
-  splits degrade proportionally; exact partition preserved; default 0 is
-  behavior-identical). Per-group minimum maps, max constraints,
-  LayoutPriority, and snap-to-collapse remain out; content-aware per-group
-  minimums are the designed next step
+- **Per-child min/max constraints, LayoutPriority, snap-to-collapse** —
+  minimum constraints LANDED 2026-07-12 in two steps: global
+  `GeometryOptions.minGroupExtent` floor, then a host-supplied
+  `GroupMinimumLookup` with `requiredExtent` (leaf minimums sum through
+  same-axis splits + gaps, max across cross-axis; feasible splits guarantee
+  both subtrees their requirement; infeasible splits degrade proportionally;
+  exact partition preserved; zero minimums are behavior-identical). Still
+  out: max constraints, LayoutPriority, snap-to-collapse, and a reactive
+  minima atom for content-driven updates
   (`explorations/computable-workspace-geometry/`).
 - **MRU activation** — zipper promotion stands (documented divergence); MRU
   would be host/session state.
