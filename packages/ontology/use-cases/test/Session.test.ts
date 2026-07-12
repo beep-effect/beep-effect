@@ -512,6 +512,11 @@ describe("Session use-cases", () => {
         );
 
         expect(result.limitInjected).toBe(false);
+        // The bound the engine was actually given, not the one we would have supplied.
+        // `effectiveLimit` was reported as the safeguard default unconditionally, so a
+        // query that asked for 50 and received 50 rows was labelled `LIMIT 10`: the
+        // badge named a bound that had never been applied.
+        expect(result.effectiveLimit).toBe(50);
       }).pipe(
         provideScopedLayer(OntologySparqlRunnerLive.pipe(Layer.provide(Layer.succeed(SparqlQueryService, sparql))))
       );

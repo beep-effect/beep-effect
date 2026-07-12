@@ -417,7 +417,7 @@ const validateProfile = (
 // pass avoids either a false positive that permits an unbounded query or a
 // multi-pass parser whose cost grows with the input.
 // fallow-ignore-next-line complexity
-const queryHasLimit = (query: string): boolean => {
+const topLevelLimit = (query: string): O.Option<number> => {
   let depth = 0;
   let index = 0;
 
@@ -474,14 +474,24 @@ const queryHasLimit = (query: string): boolean => {
       const before = index === 0 ? " " : (query[index - 1] ?? " ");
       const after = query[index + 5] ?? " ";
       if (/[\s(){}]/.test(before) && /\s/.test(after)) {
-        return true;
+        // The value matters, not just the keyword. Reporting only *whether* a bound
+        // existed is what let the panel announce `LIMIT 100` over a query that had
+        // asked for `LIMIT 2` and been given exactly two rows: the badge named a bound
+        // that was never applied. A `LIMIT` with no number is not a bound the engine
+        // will honour, so it is treated as absent and the safeguard still injects one.
+        const digits = /^\s+(\d+)/.exec(query.slice(index + 5));
+        if (digits !== null && digits[1] !== undefined) {
+          return O.some(Number(digits[1]));
+        }
       }
     }
     index += 1;
   }
 
-  return false;
+  return O.none();
 };
+
+const queryHasLimit = (query: string): boolean => O.isSome(topLevelLimit(query));
 
 const injectLimit = (query: string, limit: number): { readonly query: string; readonly injected: boolean } =>
   queryHasLimit(query)
@@ -580,7 +590,10 @@ const runOntologySparql = Effect.fn("Ontology.Sparql.run")(function* (input: Run
     profile: input.profile,
     submittedQuery: input.query,
     normalizedQuery: limited.query,
-    effectiveLimit: input.safeguards.defaultLimit,
+    // The bound actually in force: the query's own LIMIT when it carried one, and the
+    // safeguard's default only when we supplied it. Reporting the default either way
+    // meant the badge described a limit the engine had never been given.
+    effectiveLimit: NonNegativeInt.make(O.getOrElse(topLevelLimit(input.query), () => input.safeguards.defaultLimit)),
     limitInjected: limited.injected,
     truncated: truncated.truncated,
     rawResultCount: truncated.rawResultCount,
