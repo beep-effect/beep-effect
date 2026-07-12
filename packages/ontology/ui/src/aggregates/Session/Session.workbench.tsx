@@ -699,6 +699,7 @@ export function OntologyWorkbench(): JSX.Element {
             <TooltipTrigger
               render={
                 <Button
+                  aria-label="Undo ontology change"
                   size="icon-sm"
                   type="button"
                   variant="ghost"
@@ -715,6 +716,7 @@ export function OntologyWorkbench(): JSX.Element {
             <TooltipTrigger
               render={
                 <Button
+                  aria-label="Redo ontology change"
                   size="icon-sm"
                   type="button"
                   variant="ghost"
@@ -772,7 +774,11 @@ export function OntologyWorkbench(): JSX.Element {
           </div>
         ) : null}
 
-        <div className="grid min-h-0 flex-1 grid-cols-[300px_minmax(360px,1fr)_340px]">
+        {/* The three columns were fixed at 300px + minmax(360px,1fr) + 340px with no
+            breakpoint, so a narrow window did not narrow them — it overlapped them, and
+            controls became unreachable. The tree and inspector fold away below the width
+            at which they stop being usable, and each pane keeps its own scroll. */}
+        <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[260px_minmax(320px,1fr)] lg:overflow-hidden xl:grid-cols-[300px_minmax(360px,1fr)_340px]">
           <aside className="flex min-h-0 flex-col border-r">
             <div className="border-b p-3">
               <Input
