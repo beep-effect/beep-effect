@@ -52,16 +52,16 @@ export class VaultDirectoryPickError extends TaggedErrorClass<VaultDirectoryPick
  *
  * @example
  * ```ts
- * import { PickVaultDirectoryRpc, VaultDirectoryPickerRpcs } from "@/intake/VaultDirectoryPicker.rpc"
+ * import { VaultDirectoryPickerRpcs } from "@/intake/VaultDirectoryPicker.rpc"
  *
  * const registered = VaultDirectoryPickerRpcs.requests.get("PickVaultDirectory")
- * console.log(registered === PickVaultDirectoryRpc)
+ * console.log(registered)
  * ```
  *
  * @category protocols
  * @since 0.0.0
  */
-export const PickVaultDirectoryRpc = Rpc.make("PickVaultDirectory", {
+const PickVaultDirectoryRpc = Rpc.make("PickVaultDirectory", {
   success: S.NullOr(S.String),
   error: VaultDirectoryPickError,
 });

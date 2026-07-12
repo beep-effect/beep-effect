@@ -31,7 +31,7 @@ import { Atom } from "effect/unstable/reactivity";
 import { $createTextNode, $getSelection, $isRangeSelection } from "lexical";
 import { useContext } from "react";
 import { createPortal } from "react-dom";
-import { anyMenuOpenAtom, menusOpenAtom } from "./atoms.ts";
+import { anyMenuOpenAtom, menusOpenAtom, TYPEAHEAD_MENU_ATTRIBUTE } from "./atoms.ts";
 import type { MenuRenderFn } from "@lexical/react/LexicalTypeaheadMenuPlugin";
 import type { LexicalEditor } from "lexical";
 import type { ReactNode, RefObject } from "react";
@@ -75,6 +75,27 @@ const mentionOptionsAtom = Atom.family((_editor: LexicalEditor) => Atom.make<Rea
 
 // Per-editor monotonic mention-request id, so stale async responses are dropped.
 const mentionRequestIdAtom = Atom.family((_editor: LexicalEditor) => Atom.make<number>(0));
+
+// Whether the latest `@` lookup failed. A rejected source must not be
+// indistinguishable from "no matches": the menu renders an unavailable row.
+const mentionFailedAtom = Atom.family((_editor: LexicalEditor) => Atom.make<boolean>(false));
+
+// Bumped whenever the viewport moves under an open menu. `TypeaheadMenuList`
+// reads it so the fixed-position listbox is recomputed on scroll/resize instead
+// of detaching from the caret; listeners live only while a menu is mounted.
+const viewportTickAtom = Atom.family((editor: LexicalEditor) =>
+  Atom.make((get) => {
+    const bump = (): void => get.setSelf(get.once(viewportTickAtom(editor)) + 1);
+    // Capture-phase scroll so movement of any ancestor pane counts, not just window.
+    window.addEventListener("scroll", bump, true);
+    window.addEventListener("resize", bump);
+    get.addFinalizer(() => {
+      window.removeEventListener("scroll", bump, true);
+      window.removeEventListener("resize", bump);
+    });
+    return 0;
+  })
+);
 
 interface MenuListProps<TOption extends MenuOption> {
   readonly anchorElementRef: RefObject<HTMLElement | null>;
@@ -159,13 +180,22 @@ export const typeaheadMenuPosition = ({
 // measured first because Lexical positions the anchor element in an effect after
 // this render; the anchor rect is only a fallback (e.g. collapsed selection with
 // no client rect).
+//
+// `undefined` means the caret cannot be located at all — the selection has moved
+// away from this trigger and the anchor is degenerate. A menu that renders anyway
+// strands itself at the viewport origin on top of the live menu, so callers must
+// render nothing instead.
 const caretViewportRect = (
   anchor: HTMLElement
-): { readonly bottom: number; readonly left: number; readonly top: number } => {
+): { readonly bottom: number; readonly left: number; readonly top: number } | undefined => {
   const selection = window.getSelection();
   const rect =
     selection !== null && selection.rangeCount > 0 ? selection.getRangeAt(0).getBoundingClientRect() : undefined;
-  return rect !== undefined && (rect.top !== 0 || rect.bottom !== 0) ? rect : anchor.getBoundingClientRect();
+  if (rect !== undefined && (rect.top !== 0 || rect.bottom !== 0)) {
+    return rect;
+  }
+  const anchorRect = anchor.getBoundingClientRect();
+  return anchorRect.top !== 0 || anchorRect.bottom !== 0 ? anchorRect : undefined;
 };
 
 /**
@@ -186,17 +216,28 @@ function TypeaheadMenuList<TOption extends MenuOption>({
   setHighlightedIndex,
   renderItem,
 }: MenuListProps<TOption>): ReactNode {
+  const [editor] = useLexicalComposerContext();
+  // Subscribing re-renders (and so repositions) the fixed listbox whenever the
+  // viewport moves; mounting here scopes the listeners to an open menu.
+  useAtomValue(viewportTickAtom(editor));
   if (anchorElementRef.current === null || A.isReadonlyArrayEmpty(options)) {
     return null;
   }
+  const caret = caretViewportRect(anchorElementRef.current);
+  // No locatable caret means this menu's trigger is gone even though Lexical
+  // still holds a resolution for it. Rendering would strand the listbox at the
+  // viewport origin over the menu the user is actually using.
+  if (caret === undefined) {
+    return null;
+  }
   const menuPosition = typeaheadMenuPosition({
-    caret: caretViewportRect(anchorElementRef.current),
+    caret,
     viewportHeight: window.innerHeight,
     viewportWidth: window.innerWidth,
   });
   return createPortal(
     <div
-      role="listbox"
+      {...{ [TYPEAHEAD_MENU_ATTRIBUTE]: "" }}
       style={menuPosition}
       className="bg-popover text-popover-foreground fixed z-50 max-h-72 w-64 overflow-auto rounded-md border p-1 shadow-md"
     >
@@ -218,6 +259,38 @@ function TypeaheadMenuList<TOption extends MenuOption>({
           {renderItem(option)}
         </div>
       ))}
+    </div>,
+    anchorElementRef.current
+  );
+}
+
+// Rendered in place of the mention options when the app-injected source rejects,
+// so a service outage reads as an outage rather than "no matches".
+function MentionUnavailableNotice({
+  anchorElementRef,
+}: {
+  readonly anchorElementRef: RefObject<HTMLElement | null>;
+}): ReactNode {
+  const [editor] = useLexicalComposerContext();
+  useAtomValue(viewportTickAtom(editor));
+  if (anchorElementRef.current === null) {
+    return null;
+  }
+  const caret = caretViewportRect(anchorElementRef.current);
+  if (caret === undefined) {
+    return null;
+  }
+  return createPortal(
+    <div
+      style={typeaheadMenuPosition({
+        caret,
+        viewportHeight: window.innerHeight,
+        viewportWidth: window.innerWidth,
+      })}
+      className="bg-popover text-muted-foreground fixed z-50 w-64 rounded-md border p-2 text-sm shadow-md"
+      role="status"
+    >
+      Mentions are unavailable right now.
     </div>,
     anchorElementRef.current
   );
@@ -286,8 +359,14 @@ export function SlashPlugin({ items }: SlashPluginProps): ReactNode {
       options={options}
       onQueryChange={(matching) => setQuery(matching ?? "")}
       onSelectOption={onSelectOption}
-      onOpen={() => setMenus((s) => ({ ...s, slash: true }))}
-      onClose={() => setMenus((s) => ({ ...s, slash: false }))}
+      // Opening is exclusive: only one typeahead may hold the combobox at a
+      // time, so a menu that never fired `onClose` cannot keep `aria-expanded`
+      // true (or gate Enter) behind the menu the user is actually using.
+      onOpen={() => setMenus({ slash: true, mention: false })}
+      onClose={() => {
+        setMenus((s) => ({ ...s, slash: false }));
+        setQuery("");
+      }}
       triggerFn={triggerFn}
       menuRenderFn={menuRenderFn}
     />
@@ -327,6 +406,8 @@ export function MentionPlugin({ source }: MentionPluginProps): ReactNode {
   const setOptions = useAtomSet(mentionOptionsAtom(editor));
   const setRequestId = useAtomSet(mentionRequestIdAtom(editor));
   const setMenus = useAtomSet(menusOpenAtom(editor));
+  const failed = useAtomValue(mentionFailedAtom(editor));
+  const setFailed = useAtomSet(mentionFailedAtom(editor));
   const triggerFn = useBasicTypeaheadTriggerMatch("@", { minLength: 0 });
 
   const onQueryChange = (matching: string | null): void => {
@@ -343,10 +424,18 @@ export function MentionPlugin({ source }: MentionPluginProps): ReactNode {
       .then(() => source(matching ?? ""))
       .then((results) => {
         // Drop a stale response: only the most-recent request wins.
-        if (isLatest()) setOptions(A.map(results, (option) => new MentionMenuOption(option)));
+        if (isLatest()) {
+          setFailed(false);
+          setOptions(A.map(results, (option) => new MentionMenuOption(option)));
+        }
       })
       .catch(() => {
-        if (isLatest()) setOptions([]);
+        // A failed lookup is not "no matches": clearing the list silently would
+        // make a source outage indistinguishable from an empty result set.
+        if (isLatest()) {
+          setFailed(true);
+          setOptions([]);
+        }
       });
   };
 
@@ -368,34 +457,43 @@ export function MentionPlugin({ source }: MentionPluginProps): ReactNode {
     closeMenu();
   };
 
-  const menuRenderFn: MenuRenderFn<MentionMenuOption> = (anchorElementRef, itemProps) => (
-    <TypeaheadMenuList
-      anchorElementRef={anchorElementRef}
-      options={itemProps.options}
-      selectedIndex={itemProps.selectedIndex}
-      selectOptionAndCleanUp={itemProps.selectOptionAndCleanUp}
-      setHighlightedIndex={itemProps.setHighlightedIndex}
-      renderItem={(option) => (
-        <>
-          {option.option.icon}
-          <span className="flex flex-1 flex-col">
-            <span className="truncate">{option.option.label}</span>
-            {option.option.hint !== undefined ? (
-              <span className="text-muted-foreground text-xs">{option.option.hint}</span>
-            ) : null}
-          </span>
-        </>
-      )}
-    />
-  );
+  const menuRenderFn: MenuRenderFn<MentionMenuOption> = (anchorElementRef, itemProps) =>
+    // A failed lookup still renders the portal, so the outage is visible where
+    // the results would have been instead of collapsing into an empty menu.
+    failed && A.isReadonlyArrayEmpty(itemProps.options) ? (
+      <MentionUnavailableNotice anchorElementRef={anchorElementRef} />
+    ) : (
+      <TypeaheadMenuList
+        anchorElementRef={anchorElementRef}
+        options={itemProps.options}
+        selectedIndex={itemProps.selectedIndex}
+        selectOptionAndCleanUp={itemProps.selectOptionAndCleanUp}
+        setHighlightedIndex={itemProps.setHighlightedIndex}
+        renderItem={(option) => (
+          <>
+            {option.option.icon}
+            <span className="flex flex-1 flex-col">
+              <span className="truncate">{option.option.label}</span>
+              {option.option.hint !== undefined ? (
+                <span className="text-muted-foreground text-xs">{option.option.hint}</span>
+              ) : null}
+            </span>
+          </>
+        )}
+      />
+    );
 
   return (
     <LexicalTypeaheadMenuPlugin<MentionMenuOption>
       options={[...options]}
       onQueryChange={onQueryChange}
       onSelectOption={onSelectOption}
-      onOpen={() => setMenus((s) => ({ ...s, mention: true }))}
-      onClose={() => setMenus((s) => ({ ...s, mention: false }))}
+      onOpen={() => setMenus({ slash: false, mention: true })}
+      onClose={() => {
+        setMenus((s) => ({ ...s, mention: false }));
+        setFailed(false);
+        setOptions([]);
+      }}
       triggerFn={triggerFn}
       menuRenderFn={menuRenderFn}
     />
@@ -405,6 +503,8 @@ export function MentionPlugin({ source }: MentionPluginProps): ReactNode {
 // Per-editor combobox-ARIA root-listener registration. Subscribes to
 // anyMenuOpenAtom so it re-registers (re-applies aria-expanded) whenever the
 // open state changes; torn down via the atom finalizer.
+const COMBOBOX_ARIA_ATTRIBUTES = ["role", "aria-haspopup", "aria-autocomplete", "aria-expanded"] as const;
+
 const comboboxAriaAtom = Atom.family((editor: LexicalEditor) =>
   Atom.make((get) => {
     const open = get(anyMenuOpenAtom(editor));
@@ -417,6 +517,16 @@ const comboboxAriaAtom = Atom.family((editor: LexicalEditor) =>
         rootElement.setAttribute("aria-expanded", open ? "true" : "false");
       })
     );
+    // Unregistering the root listener leaves the attributes painted on a root
+    // that outlives this plugin — an editor advertised as an expanded combobox
+    // with no popup. Strip what we applied when the binding goes away.
+    get.addFinalizer(() => {
+      const rootElement = editor.getRootElement();
+      if (rootElement === null) return;
+      for (const attribute of COMBOBOX_ARIA_ATTRIBUTES) {
+        rootElement.removeAttribute(attribute);
+      }
+    });
     return undefined;
   })
 );

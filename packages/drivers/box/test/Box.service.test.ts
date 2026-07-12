@@ -326,6 +326,57 @@ describe("@beep/box", () => {
     })
   );
 
+  // The SDK deserializers materialize absent response fields as present-but-
+  // undefined keys. Exact-optional schema keys reject those, which silently
+  // broke every real Box call whose response omitted an optional field (the
+  // mirror-root probe read it as "disconnected" rather than a decode failure).
+  layer(
+    B.Box.makeLayerFromClient(
+      makeFakeClient({
+        users: {
+          getUserMe: (_queryParams, _headersInput, _cancellationToken) =>
+            Promise.resolve({ ...userFull, jobTitle: undefined, phone: undefined }),
+        },
+      })
+    )
+  )((it) => {
+    it.effect(
+      "decodes responses whose absent optional fields are present-but-undefined keys",
+      Effect.fnUntraced(function* () {
+        const box = yield* B.Box;
+        const response = yield* box.users.getUserMe(B.UsersGetUserMePayload.make({}));
+
+        expect(response).toBeInstanceOf(B.UserFull);
+        expect(response.id).toBe("user-id");
+      })
+    );
+  });
+
+  // A response carrying a raw `__proto__` key still decodes. (The normalizer
+  // writes keys with `defineProperty` so the legacy prototype setter is never
+  // invoked; that hardening is not otherwise observable here, because schema
+  // decoding ignores the unknown key either way.)
+  layer(
+    B.Box.makeLayerFromClient(
+      makeFakeClient({
+        users: {
+          getUserMe: (_queryParams, _headersInput, _cancellationToken) =>
+            Promise.resolve(JSON.parse(`{"id":"user-id","type":"user","__proto__":{"polluted":true}}`)),
+        },
+      })
+    )
+  )((it) => {
+    it.effect(
+      "decodes responses carrying a raw __proto__ key",
+      Effect.fnUntraced(function* () {
+        const box = yield* B.Box;
+        const response = yield* box.users.getUserMe(B.UsersGetUserMePayload.make({}));
+
+        expect(response.id).toBe("user-id");
+      })
+    );
+  });
+
   layer(B.Box.makeLayerFromClient(makeFakeClient()))((it) => {
     it.effect(
       "wraps SDK JSON operations in decoded success schemas",

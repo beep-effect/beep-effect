@@ -58,14 +58,22 @@ class EditorViewerProps extends S.Class<EditorViewerProps>($I`EditorViewerProps`
  * @since 0.0.0
  */
 export function EditorViewer({ state, className }: EditorViewerProps): JSX.Element {
+  // `initialConfig.editorState` is read once, when Lexical constructs the
+  // editor: a viewer that stays mounted while its `state` prop changes would go
+  // on rendering the message it was first given. Keying the composer by the
+  // encoded state remounts it exactly when the content differs — the JSON string
+  // is the same value the config consumes, so this costs nothing extra and needs
+  // no effect to reconcile.
+  const encoded = S.encodeSync(EditorStateFromJson)(state);
   return (
     <LexicalComposer
+      key={encoded}
       initialConfig={{
         namespace: "beep-editor-viewer",
         editable: false,
         theme: editorTheme,
         nodes: [...editorNodes],
-        editorState: S.encodeSync(EditorStateFromJson)(state),
+        editorState: encoded,
         onError,
       }}
     >

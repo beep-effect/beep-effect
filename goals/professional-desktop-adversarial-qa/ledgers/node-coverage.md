@@ -12,21 +12,21 @@ profile, NOT a finding.
 
 | node | seeded prompt (steer the real LLM) | streaming ✓ | persisted ✓ | screenshot |
 |---|---|---|---|---|
-| TextNode | any prose reply | | | |
-| ParagraphNode | "Write two short paragraphs about contract law." | | | |
-| LineBreakNode | "Write a haiku with each line separated by a line break (not new paragraphs)." | | | |
-| TabNode | "Show a Python snippet indented with literal tab characters in a code block." | | | |
-| HeadingNode | "Structure your answer with H1, H2, and H3 markdown headings." | | | |
-| QuoteNode | "Quote the first amendment as a markdown blockquote." | | | |
-| ListNode (bullet) | "List 3 pros and 3 cons as bulleted lists." | | | |
-| ListNode (numbered) | "Give me a numbered 5-step checklist." | | | |
-| ListNode (check) | "Produce a markdown task list (- [ ] items) for onboarding." | | | |
-| LinkNode | "Link to https://example.com and https://anthropic.com inline in a sentence." | | | |
-| CodeNode | "Show a TypeScript hello-world in a fenced code block." | | | |
-| CodeNode (mermaid) | "Draw a 3-node flowchart as a fenced ```mermaid block." | | | |
-| TableNode (+Row/Cell) | "Compare 3 databases in a markdown table with 4 columns." | | | |
-| ArtifactRefNode | "Reply with a paragraph that is exactly one markdown link whose URL is artifact://qa-demo-artifact labeled 'QA demo'." | | | |
-| YouTubeNode | "Embed the YouTube video with id dQw4w9WgXcQ so it renders as an embedded player." | | | |
+| TextNode | any prose reply | ✓ | ✓ | `lane-c-02-core-complete.png` |
+| ParagraphNode | "Write two short paragraphs about contract law." | ✓ | ✓ | `lane-c-02-core-complete.png` |
+| LineBreakNode | "Write a haiku with each line separated by a line break (not new paragraphs)." | ✓ | ✓ | `lane-c-02-core-complete.png` |
+| TabNode | "Show a Python snippet indented with literal tab characters in a code block." | ✓ | ✓ | `lane-c-09-code-tabs-streaming.png` |
+| HeadingNode | "Structure your answer with H1, H2, and H3 markdown headings." | ✓ | ✓ | `lane-c-02-core-complete.png` |
+| QuoteNode | "Quote the first amendment as a markdown blockquote." | ✓ | ✓ | `lane-c-02-core-complete.png` |
+| ListNode (bullet) | "List 3 pros and 3 cons as bulleted lists." | ✓ | ✓ | `lane-c-02-core-complete.png` |
+| ListNode (numbered) | "Give me a numbered 5-step checklist." | ✓ | ✓ | `lane-c-02-core-complete.png` |
+| ListNode (check) | "Produce a markdown task list (- [ ] items) for onboarding." | ✓ | ✓ | `lane-c-02-core-complete.png` |
+| LinkNode | "Link to https://example.com and https://anthropic.com inline in a sentence." | ✓ | ✓ | `lane-c-02-core-complete.png` |
+| CodeNode | "Show a TypeScript hello-world in a fenced code block." | ✓ | ✓ | `lane-c-09-code-tabs-streaming.png` |
+| CodeNode (mermaid) | "Draw a 3-node flowchart as a fenced ```mermaid block." | ✓ | ✓ | `lane-c-03-mermaid-streaming.png` (failure state; see lane-c report) |
+| TableNode (+Row/Cell) | "Compare 3 databases in a markdown table with 4 columns." | ✓ | ✓ | `lane-c-02-core-complete.png` |
+| ArtifactRefNode | "Reply with a paragraph that is exactly one markdown link whose URL is artifact://qa-demo-artifact labeled 'QA demo'." | ✓ | ✓ | `lane-c-05-artifact-streaming.png`, `lane-c-06-artifact-persisted.png` |
+| YouTubeNode | "Embed the YouTube video with id dQw4w9WgXcQ so it renders as an embedded player." | ✓ | ✓ | `lane-c-07-youtube-streaming.png`, `lane-c-08-youtube-persisted.png` (player unavailable; see lane-c report) |
 
 Notes:
 - TableRowNode/TableCellNode are proven by any TableNode observation.

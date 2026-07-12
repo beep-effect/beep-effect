@@ -1,3 +1,4 @@
+import { A, P, Struct } from "@beep/utils";
 import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -7,7 +8,7 @@ import type { Exit } from "effect";
 import type { BoxMethodName } from "../_generated/Box.models.gen.ts";
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> => {
-  if (value === null || typeof value !== "object") {
+  if (!P.isObject(value)) {
     return false;
   }
   const prototype: unknown = Object.getPrototypeOf(value);
@@ -18,18 +19,31 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> => {
 // present-but-undefined keys (e.g. `nextMarker: undefined` on the final
 // marker-paginated page), which exact-optional schema keys reject. JSON has no
 // `undefined`, so dropping those keys before decoding restores wire semantics.
-// Only plain objects and arrays are rebuilt; streams, buffers, and other
-// non-plain values pass through untouched.
+//
+// Copy-on-write: a branch with nothing to prune is returned by identity, so an
+// unchanged listing costs a traversal and no allocation. Keys are written with
+// `defineProperty` because plain assignment of an own `__proto__` key invokes
+// the legacy prototype setter — mutating the normalized object's prototype and
+// dropping the field rather than copying it.
+//
+// Only plain objects and arrays are rebuilt; streams, buffers, and every other
+// non-plain value pass through untouched, so recursion stays confined to
+// JSON-shaped SDK payloads, which cannot be cyclic.
 const pruneUndefined = (value: unknown): unknown => {
-  if (Array.isArray(value)) {
-    return value.map(pruneUndefined);
+  if (A.isArray(value)) {
+    const pruned = A.map(value, pruneUndefined);
+    return A.every(pruned, (entry, index) => entry === value[index]) ? value : pruned;
   }
   if (isPlainObject(value)) {
+    const entries = Struct.entries(value);
+    const kept = A.filter(entries, ([, entry]) => entry !== undefined);
+    const prunedEntries = A.map(kept, ([key, entry]) => [key, pruneUndefined(entry)] as const);
+    if (kept.length === entries.length && A.every(prunedEntries, ([key, entry]) => entry === value[key])) {
+      return value;
+    }
     const pruned: Record<string, unknown> = {};
-    for (const [key, entry] of Object.entries(value)) {
-      if (entry !== undefined) {
-        pruned[key] = pruneUndefined(entry);
-      }
+    for (const [key, entry] of prunedEntries) {
+      Object.defineProperty(pruned, key, { configurable: true, enumerable: true, value: entry, writable: true });
     }
     return pruned;
   }

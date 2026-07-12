@@ -66,6 +66,8 @@ import type { LexicalEditor } from "lexical";
 import type { JSX, ReactNode } from "react";
 import type { MentionSource, SlashItem } from "./config.ts";
 
+const DEFAULT_ARIA_LABEL = "Message composer";
+
 const EDITABLE_CLASS_NAME =
   "relative block max-h-60 min-h-10 overflow-auto px-3 py-2.5 text-sm leading-6 focus:outline-none";
 
@@ -101,6 +103,12 @@ const PLACEHOLDER_CLASS_NAME =
  * @since 0.0.0
  */
 export interface ChatComposerProps {
+  /**
+   * Accessible name for the editable surface. The typeahead plugins promote it
+   * to `role="combobox"`, which must be named.
+   * @defaultValue "Message composer"
+   */
+  readonly ariaLabel?: string;
   /** Extra plugins rendered inside the composer context (e.g. app bindings). */
   readonly children?: ReactNode;
   /** Class for the outer composer container. */
@@ -242,6 +250,9 @@ function ComposerFooter({
 }
 
 interface ComposerSurfaceProps {
+  // Resolved by `ChatComposer` (defaulted), so the inner surfaces take a name
+  // rather than re-deriving the fallback.
+  readonly ariaLabel: string;
   readonly features: ComposerFeatures;
   readonly onStop?: () => void;
   readonly placeholder: string;
@@ -254,6 +265,7 @@ interface ComposerSurfaceProps {
 // region, and the footer. Split from ComposerBody so the JSX nesting + toolbar
 // gate live here and ComposerBody stays a thin assembler.
 function ComposerSurface({
+  ariaLabel,
   features,
   onStop,
   placeholder,
@@ -272,6 +284,10 @@ function ComposerSurface({
         <RichTextPlugin
           contentEditable={
             <ContentEditable
+              // The typeahead plugins promote this root to `role="combobox"`;
+              // a combobox named only by `aria-placeholder` has no accessible
+              // name, so assistive tech announces an unlabeled control.
+              ariaLabel={ariaLabel}
               className={EDITABLE_CLASS_NAME}
               placeholderClassName={PLACEHOLDER_CLASS_NAME}
               placeholder={placeholder}
@@ -292,7 +308,8 @@ function ComposerSurface({
   );
 }
 
-interface ComposerBodyProps extends Omit<ChatComposerProps, "initialState"> {
+interface ComposerBodyProps extends Omit<ChatComposerProps, "ariaLabel" | "initialState"> {
+  readonly ariaLabel: string;
   readonly features: ComposerFeatures;
   readonly maxAttachmentBytes: number;
   readonly placeholder: string;
@@ -303,6 +320,7 @@ interface ComposerBodyProps extends Omit<ChatComposerProps, "initialState"> {
 }
 
 function ComposerBody({
+  ariaLabel,
   features,
   placeholder,
   className,
@@ -341,6 +359,7 @@ function ComposerBody({
       )}
     >
       <ComposerSurface
+        ariaLabel={ariaLabel}
         features={features}
         placeholder={placeholder}
         streaming={streaming}
@@ -464,6 +483,7 @@ function AttachmentSweep({ editor }: { readonly editor: LexicalEditor }): null {
  * @since 0.0.0
  */
 export function ChatComposer({
+  ariaLabel = DEFAULT_ARIA_LABEL,
   features,
   initialState,
   placeholder,
@@ -498,6 +518,7 @@ export function ChatComposer({
       }}
     >
       <ComposerBody
+        ariaLabel={ariaLabel}
         features={resolved}
         slashItems={slashItems}
         maxAttachmentBytes={maxAttachmentBytes}

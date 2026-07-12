@@ -1,5 +1,7 @@
 # Professional Desktop — Adversarial QA & Fix Loop
 
+Lifecycle: active
+
 Campaign charter. Autonomous adversarial review-and-fix loop over the entire
 `apps/professional-desktop` frontend surface. Codex `gpt-5.6-sol` (effort
 `medium`) agents review with browser + screenshot evidence; Claude (session

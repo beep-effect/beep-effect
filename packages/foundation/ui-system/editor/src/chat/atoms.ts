@@ -25,7 +25,12 @@ import {
   INSERT_PARAGRAPH_COMMAND,
   KEY_ENTER_COMMAND,
 } from "lexical";
-import { DEFAULT_MAX_ATTACHMENT_BYTES, fileToAttachment, revokeAttachment } from "./attachment-model.ts";
+import {
+  AttachmentPortFailed,
+  DEFAULT_MAX_ATTACHMENT_BYTES,
+  fileToAttachment,
+  revokeAttachment,
+} from "./attachment-model.ts";
 import { SEND_MESSAGE_COMMAND } from "./commands.ts";
 import { ComposerFeatures } from "./config.ts";
 import type { LexicalEditor } from "lexical";
@@ -107,6 +112,45 @@ export const anyMenuOpenAtom = Atom.family((editor: LexicalEditor) =>
     return menus.slash || menus.mention;
   })
 );
+
+/**
+ * Marks the rendered typeahead option container. Lexical's own menu anchor
+ * already carries `role="listbox"`, so the portal must not add a second one (a
+ * listbox nested in a listbox is an invalid ARIA hierarchy); this attribute
+ * gives DOM queries a handle on the real menu without re-introducing the role.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const TYPEAHEAD_MENU_ATTRIBUTE = "data-typeahead-menu";
+
+/**
+ * Whether a typeahead listbox is genuinely on screen for `editor`: an option row
+ * is rendered inside the typeahead container.
+ *
+ * {@link menusOpenAtom} is plugin-reported state and can go stale — a menu whose
+ * trigger text vanished may never fire `onClose` — so anything that *suppresses*
+ * behavior on its behalf, above all Enter-to-send, must confirm against the DOM.
+ * Trusting the flag alone let a stale `true` swallow every Enter with no menu
+ * visible and no way to send the draft.
+ *
+ * @example
+ * ```ts
+ * import { isTypeaheadMenuVisible } from "@beep/editor/chat"
+ * import type { LexicalEditor } from "lexical"
+ *
+ * declare const editor: LexicalEditor
+ * console.log(typeof isTypeaheadMenuVisible(editor)) // "boolean"
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isTypeaheadMenuVisible = (editor: LexicalEditor): boolean => {
+  const root = editor.getRootElement();
+  if (root === null) return false;
+  return root.ownerDocument.querySelector(`[${TYPEAHEAD_MENU_ATTRIBUTE}] [role="option"]`) !== null;
+};
 
 /**
  * Per-editor captured attachments. Writable; the composer pushes captured files
@@ -254,11 +298,25 @@ export const captureAttachmentsFn = composerRuntime.fn<{
       yield* Effect.logWarning("ChatComposer declined attachments during capture", ...rejections);
     }
     const captured = A.getSomes(A.map(results, Result.getSuccess));
-    // `FnContext.set` writes a value (no updater form), so the append reads the
-    // current attachments via `get` and writes the concatenated array.
     if (A.isReadonlyArrayNonEmpty(captured)) {
-      get(onAttachAtom(editor))(A.map(captured, (attachment) => attachment.file));
+      // Append BEFORE notifying: `fileToAttachment` has already minted object
+      // URLs for these files, and only `attachmentsAtom` knows how to revoke
+      // them. Notifying first meant a throwing consumer callback took the append
+      // down with it, stranding every URL it had just created — invisible to
+      // removal, send, and the unmount sweep alike.
+      //
+      // `FnContext.set` writes a value (no updater form), so the append reads the
+      // current attachments via `get` and writes the concatenated array.
       get.set(attachmentsAtom(editor), [...get(attachmentsAtom(editor)), ...captured]);
+      yield* Effect.try({
+        try: () => get(onAttachAtom(editor))(A.map(captured, (attachment) => attachment.file)),
+        catch: (cause) => AttachmentPortFailed.make({ message: String(cause) }),
+      }).pipe(
+        Effect.tapError((failure) =>
+          Effect.logError("ChatComposer upload port rejected captured attachments", failure)
+        ),
+        Effect.ignore
+      );
     }
   })
 );
@@ -411,7 +469,12 @@ export const sendKeyBindingAtom = Atom.family((editor: LexicalEditor) =>
         KEY_ENTER_COMMAND,
         (event) => {
           if (event === null) return false;
-          if (get.once(anyMenuOpenAtom(editor))) return false;
+          // Yield Enter to a typeahead only when one is *actually* on screen.
+          // The open flags are plugin-reported and can go stale (a menu whose
+          // trigger vanished may never fire `onClose`); trusting the flag alone
+          // let a stale `true` silently swallow every Enter, with no visible
+          // menu and no way to send.
+          if (get.once(anyMenuOpenAtom(editor)) && isTypeaheadMenuVisible(editor)) return false;
           if (isImeComposing(event)) return false;
           const sendOn = get.once(featuresAtom(editor)).sendOn;
           if (!shouldSendFromEnter(event, sendOn)) {
