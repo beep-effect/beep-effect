@@ -29,6 +29,13 @@ export const VERSION = "0.0.0" as const;
  */
 export * from "./aggregates/Document/index.js";
 /**
+ * Vault sync server aggregate exports.
+ *
+ * @category handlers
+ * @since 0.0.0
+ */
+export * from "./aggregates/Sync/index.js";
+/**
  * Server layer exports.
  *
  * @category layers

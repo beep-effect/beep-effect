@@ -38,6 +38,8 @@
       "@beep/documents-server/test": [
         "../../../packages/documents/server/src/test.ts"
       ],
+      "@beep/box": ["../../../packages/drivers/box/src/index.ts"],
+      "@beep/box/*": ["../../../packages/drivers/box/src/*.ts"],
       "@beep/documents-domain": [
         "../../../packages/documents/domain/src/index.ts"
       ],
@@ -50,8 +52,29 @@
       "@beep/documents-domain/identity": [
         "../../../packages/documents/domain/src/identity/index.ts"
       ],
+      "@beep/documents-domain/identity/Documents": [
+        "../../../packages/documents/domain/src/identity/Documents.ts"
+      ],
       "@beep/documents-domain/values": [
         "../../../packages/documents/domain/src/values/index.ts"
+      ],
+      "@beep/documents-tables": [
+        "../../../packages/documents/tables/src/index.ts"
+      ],
+      "@beep/documents-tables/tables": [
+        "../../../packages/documents/tables/src/tables.ts"
+      ],
+      "@beep/documents-tables/entities/SyncItem": [
+        "../../../packages/documents/tables/src/entities/SyncItem/index.ts"
+      ],
+      "@beep/documents-tables/entities/SyncOperation": [
+        "../../../packages/documents/tables/src/entities/SyncOperation/index.ts"
+      ],
+      "@beep/documents-tables/entities/SyncCursor": [
+        "../../../packages/documents/tables/src/entities/SyncCursor/index.ts"
+      ],
+      "@beep/documents-tables/entities/SyncConflict": [
+        "../../../packages/documents/tables/src/entities/SyncConflict/index.ts"
       ],
       "@beep/documents-use-cases": [
         "../../../packages/documents/use-cases/src/index.ts"
@@ -97,6 +120,25 @@
       ],
       "@beep/identity/packages": [
         "../../../packages/foundation/modeling/identity/src/packages.ts"
+      ],
+      "@beep/postgres": ["../../../packages/drivers/postgres/src/index.ts"],
+      "@beep/postgres/client": [
+        "../../../packages/drivers/postgres/src/PostgresClient.service.ts"
+      ],
+      "@beep/postgres/drizzle": [
+        "../../../packages/drivers/postgres/src/PostgresDrizzle.service.ts"
+      ],
+      "@beep/postgres/errors": [
+        "../../../packages/drivers/postgres/src/Postgres.errors.ts"
+      ],
+      "@beep/postgres/format": [
+        "../../../packages/drivers/postgres/src/PostgresDiagnostics.service.ts"
+      ],
+      "@beep/postgres/interop": [
+        "../../../packages/drivers/postgres/src/PostgresInterop.models.ts"
+      ],
+      "@beep/postgres/sqlstate": [
+        "../../../packages/drivers/postgres/src/PostgresSqlState.models.ts"
       ],
       "@beep/schema": [
         "../../../packages/foundation/modeling/schema/src/index.ts"
@@ -496,6 +538,77 @@
       ],
       "@beep/schema/test/Yaml": [
         "../../../packages/foundation/modeling/schema/src/internal/test/Yaml.test-kit.ts"
+      ],
+      "@beep/shared-domain": ["../../../packages/shared/domain/src/index.ts"],
+      "@beep/shared-domain/*": ["../../../packages/shared/domain/src/*.ts"],
+      "@beep/shared-domain/aggregates": [
+        "../../../packages/shared/domain/src/aggregates.ts"
+      ],
+      "@beep/shared-domain/entities": [
+        "../../../packages/shared/domain/src/entities.ts"
+      ],
+      "@beep/shared-domain/entities/Membership": [
+        "../../../packages/shared/domain/src/entities/Membership/index.ts"
+      ],
+      "@beep/shared-domain/entities/Organization": [
+        "../../../packages/shared/domain/src/entities/Organization/index.ts"
+      ],
+      "@beep/shared-domain/entities/User": [
+        "../../../packages/shared/domain/src/entities/User/index.ts"
+      ],
+      "@beep/shared-domain/entity": [
+        "../../../packages/shared/domain/src/entity.ts"
+      ],
+      "@beep/shared-domain/entity/BaseEntity": [
+        "../../../packages/shared/domain/src/entity/BaseEntity.ts"
+      ],
+      "@beep/shared-domain/entity/EntityId": [
+        "../../../packages/shared/domain/src/entity/EntityId.ts"
+      ],
+      "@beep/shared-domain/entity/EntityRef": [
+        "../../../packages/shared/domain/src/entity/EntityRef.ts"
+      ],
+      "@beep/shared-domain/entity/PublicEntityId": [
+        "../../../packages/shared/domain/src/entity/PublicEntityId.ts"
+      ],
+      "@beep/shared-domain/entity/Principal": [
+        "../../../packages/shared/domain/src/entity/Principal.ts"
+      ],
+      "@beep/shared-domain/entity/SourceKind": [
+        "../../../packages/shared/domain/src/entity/SourceKind.ts"
+      ],
+      "@beep/shared-domain/entity/primitives": [
+        "../../../packages/shared/domain/src/entity/primitives.ts"
+      ],
+      "@beep/shared-domain/identity": [
+        "../../../packages/shared/domain/src/identity.ts"
+      ],
+      "@beep/shared-domain/identity/Agents": [
+        "../../../packages/shared/domain/src/identity/Agents.ts"
+      ],
+      "@beep/shared-domain/identity/Epistemic": [
+        "../../../packages/shared/domain/src/identity/Epistemic.ts"
+      ],
+      "@beep/shared-domain/identity/LawPractice": [
+        "../../../packages/shared/domain/src/identity/LawPractice.ts"
+      ],
+      "@beep/shared-domain/identity/Shared": [
+        "../../../packages/shared/domain/src/identity/Shared.ts"
+      ],
+      "@beep/shared-domain/identity/Workspace": [
+        "../../../packages/shared/domain/src/identity/Workspace.ts"
+      ],
+      "@beep/shared-domain/values": [
+        "../../../packages/shared/domain/src/values.ts"
+      ],
+      "@beep/shared-domain/values/ClaimLifecycle": [
+        "../../../packages/shared/domain/src/values/ClaimLifecycle/index.ts"
+      ],
+      "@beep/shared-domain/values/LocalDate": [
+        "../../../packages/shared/domain/src/values/LocalDate/index.ts"
+      ],
+      "@beep/shared-domain/values/OnePasswordReference": [
+        "../../../packages/shared/domain/src/values/OnePasswordReference/index.ts"
       ],
       "@beep/test-utils": [
         "../../../packages/tooling/test-kit/test-utils/src/index.ts"

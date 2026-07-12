@@ -7,6 +7,7 @@
 
 import { $CosmosId } from "@beep/identity/packages";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { P } from "@beep/utils";
 import * as S from "effect/Schema";
 
 const $I = $CosmosId.create("Cosmos.errors");
@@ -26,8 +27,8 @@ const $I = $CosmosId.create("Cosmos.errors");
  * @category errors
  * @since 0.0.0
  */
-export const CosmosDriverErrorReason = LiteralKit(["importFailed", "adapterInvariant", "renderFailed"]).pipe(
-  $I.annoteSchema("CosmosDriverErrorReason", {
+export const CosmosDriverErrorReason = LiteralKit(["importFailed", "adapterInvariant", "renderFailed"]).annotate(
+  $I.annote("CosmosDriverErrorReason", {
     description: "Failure reason emitted by the cosmos graph driver.",
   })
 );
@@ -76,4 +77,21 @@ export class CosmosDriverError extends TaggedErrorClass<CosmosDriverError>($I`Co
   $I.annote("CosmosDriverError", {
     description: "Typed error raised by cosmos and sigma graph render adapters.",
   })
-) {}
+) {
+  /** Creates an adapter-invariant failure for an invalid runtime module shape. */
+  static readonly adapterInvariant = (message: string): CosmosDriverError =>
+    CosmosDriverError.make({
+      reason: "adapterInvariant",
+      message,
+    });
+
+  /** Maps an unknown runtime failure into the driver's typed error channel. */
+  static readonly fromUnknown =
+    (reason: CosmosDriverErrorReason) =>
+    (fallback: string) =>
+    (cause: unknown): CosmosDriverError =>
+      CosmosDriverError.make({
+        reason,
+        message: P.hasProperty(cause, "message") && P.isString(cause.message) ? cause.message : fallback,
+      });
+}

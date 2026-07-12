@@ -16,7 +16,8 @@
  * `biome check --write` over the output for deterministic formatting).
  */
 
-import { Match, MutableHashSet } from "effect";
+import { BunRuntime } from "@effect/platform-bun";
+import { Effect, Match, MutableHashSet } from "effect";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
@@ -371,13 +372,13 @@ ${specEntries}
 `;
 };
 
-const main = async (): Promise<void> => {
-  const spec = (await Bun.file(specPath).json()) as Spec;
-  await Bun.write(outPath, render(spec));
+const main = Effect.gen(function* () {
+  const spec = (yield* Effect.tryPromise(() => Bun.file(specPath).json())) as Spec;
+  yield* Effect.tryPromise(() => Bun.write(outPath, render(spec)));
   const count = R.keys(spec.definitions).length;
-  console.log(
+  yield* Effect.log(
     `Generated ${count} eCFR models + ${operationsOf(spec).length} operations -> src/_generated/Ecfr.generated.ts`
   );
-};
+}).pipe(Effect.withSpan("Ecfr.generate"));
 
-await main();
+BunRuntime.runMain(main);

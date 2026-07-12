@@ -30,6 +30,14 @@ const validateCommand = Effect.fnUntraced(function* () {
 
 const command = process.argv[2] ?? "help";
 
+const driftCommand = Effect.fnUntraced(function* () {
+  const report = process.argv.includes("--strict") ? yield* checkStrictDrift() : yield* checkGeneratedArtifacts();
+
+  return A.length(report.findings) > 0
+    ? yield* Console.error(`AI sync drift found ${report.findings.length} source(s).`).pipe(Effect.as(1))
+    : yield* Console.log(`AI sync ${report.mode} drift check passed.`).pipe(Effect.as(0));
+});
+
 const program = Match.value(command).pipe(
   Match.when("generate", () => generateAiSyncArtifacts().pipe(Effect.as(0))),
   Match.when("refresh", () => generateAiSyncArtifacts().pipe(Effect.as(0))),
@@ -41,15 +49,7 @@ const program = Match.value(command).pipe(
     )
   ),
   Match.when("drift", () =>
-    process.argv.includes("--refresh")
-      ? generateAiSyncArtifacts().pipe(Effect.as(0))
-      : (process.argv.includes("--strict") ? checkStrictDrift() : checkGeneratedArtifacts()).pipe(
-          Effect.flatMap((report) =>
-            A.length(report.findings) > 0
-              ? Console.error(`AI sync drift found ${report.findings.length} source(s).`).pipe(Effect.as(1))
-              : Console.log(`AI sync ${report.mode} drift check passed.`).pipe(Effect.as(0))
-          )
-        )
+    process.argv.includes("--refresh") ? generateAiSyncArtifacts().pipe(Effect.as(0)) : driftCommand()
   ),
   Match.when("validate", validateCommand),
   Match.orElse(() =>
@@ -59,16 +59,22 @@ const program = Match.value(command).pipe(
   )
 );
 
-NodeRuntime.runMain(
-  program.pipe(
-    Effect.catchTag("AiSyncError", reportError),
-    Effect.flatMap((code) =>
-      code === 0
-        ? Effect.void
-        : Effect.sync(() => {
-            process.exitCode = code;
-          })
-    ),
-    Effect.provide(runtimeLayer)
+const main = Effect.scoped(
+  Layer.build(runtimeLayer).pipe(
+    Effect.flatMap((context) =>
+      program.pipe(
+        Effect.catchTag("AiSyncError", reportError),
+        Effect.flatMap((code) =>
+          code === 0
+            ? Effect.void
+            : Effect.sync(() => {
+                process.exitCode = code;
+              })
+        ),
+        Effect.provide(context)
+      )
+    )
   )
 );
+
+NodeRuntime.runMain(main);

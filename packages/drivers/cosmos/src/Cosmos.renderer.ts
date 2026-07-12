@@ -6,26 +6,35 @@
  */
 /// <reference path="./vendor.d.ts" />
 
+import { $CosmosId } from "@beep/identity/packages";
+import { HexColor, SchemaUtils } from "@beep/schema";
 import { P } from "@beep/utils";
-import { Effect, Match } from "effect";
+import { Duration, Effect, Match } from "effect";
+import * as S from "effect/Schema";
 import { probeWebGl2, selectCosmosBackend } from "./Cosmos.backend.js";
 import { CosmosDriverError } from "./Cosmos.errors.js";
 import type { CosmosBackend } from "./Cosmos.backend.js";
-import type { CosmosDriverErrorReason } from "./Cosmos.errors.js";
 import type { CosmosGraphProjection } from "./Cosmos.projection.js";
 
-type CosmosGraphConfig = {
-  readonly enableDrag: boolean;
-  readonly enableSimulation: boolean;
-  readonly fitViewDelay: number;
-  readonly fitViewOnInit: boolean;
-  readonly fitViewPadding: number;
-  readonly linkBlending: boolean;
-  readonly simulationFriction: number;
-  readonly simulationGravity: number;
-  readonly simulationRepulsion: number;
-  readonly transitionDuration: number;
-};
+const $I = $CosmosId.create("Cosmos.renderer");
+
+class CosmosGraphConfig extends S.Class<CosmosGraphConfig>($I`CosmosGraphConfig`)(
+  {
+    enableDrag: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    enableSimulation: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    fitViewDelay: S.Finite.pipe(SchemaUtils.withKeyDefaults(100)),
+    fitViewOnInit: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    fitViewPadding: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.15)),
+    linkBlending: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    simulationFriction: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.15)),
+    simulationGravity: S.Finite.pipe(SchemaUtils.withKeyDefaults(0)),
+    simulationRepulsion: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.45)),
+    transitionDuration: S.Finite.pipe(SchemaUtils.withKeyDefaults(0)),
+  },
+  $I.annote("CosmosGraphConfig", {
+    description: "Stable cosmos.gl simulation and viewport defaults used for each mounted graph renderer.",
+  })
+) {}
 
 type CosmosGraphInstance = {
   readonly destroy?: () => void;
@@ -41,28 +50,42 @@ type CosmosGraphModule = {
   readonly Graph: CosmosGraphConstructor;
 };
 
-type GraphologyOptions = {
-  readonly multi: boolean;
-  readonly type: "directed";
-};
+class GraphologyOptions extends S.Class<GraphologyOptions>($I`GraphologyOptions`)(
+  {
+    multi: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    type: S.tag("directed"),
+  },
+  $I.annote("GraphologyOptions", {
+    description: "Directed multi-graph options required by the sigma.js fallback adapter.",
+  })
+) {}
+
+class EdgeAttributes extends S.Class<EdgeAttributes>($I`EdgeAttributes`)(
+  {
+    color: HexColor.pipe(SchemaUtils.withKeyDefaults(HexColor.make("#94a3b8"))),
+    size: S.Finite.pipe(SchemaUtils.withKeyDefaults(1)),
+  },
+  $I.annote("EdgeAttributes", {
+    description: "Default visual attributes assigned to graphology edges rendered by sigma.js.",
+  })
+) {}
+
+class NodeAttributes extends S.Class<NodeAttributes>($I`NodeAttributes`)(
+  {
+    color: HexColor.pipe(SchemaUtils.withKeyDefaults(HexColor.make("#38bdf8"))),
+    label: S.NonEmptyString,
+    size: S.Finite.pipe(SchemaUtils.withKeyDefaults(2)),
+    x: S.Finite,
+    y: S.Finite,
+  },
+  $I.annote("NodeAttributes", {
+    description: "Position, label, and default visual attributes for a sigma.js graph node.",
+  })
+) {}
 
 type GraphologyGraph = {
-  readonly addDirectedEdgeWithKey: (
-    key: string,
-    source: string,
-    target: string,
-    attributes: { readonly color: string; readonly size: number }
-  ) => void;
-  readonly addNode: (
-    key: string,
-    attributes: {
-      readonly color: string;
-      readonly label: string;
-      readonly size: number;
-      readonly x: number;
-      readonly y: number;
-    }
-  ) => void;
+  readonly addDirectedEdgeWithKey: (key: string, source: string, target: string, attributes: EdgeAttributes) => void;
+  readonly addNode: (key: string, attributes: NodeAttributes) => void;
   readonly clear: () => void;
 };
 
@@ -73,8 +96,8 @@ type GraphologyModule = {
 };
 
 type SigmaInstance = {
-  readonly kill?: () => void;
-  readonly refresh?: () => void;
+  readonly kill?: undefined | (() => void);
+  readonly refresh?: undefined | (() => void);
 };
 
 type SigmaConstructor = new (graph: GraphologyGraph, container: HTMLElement) => SigmaInstance;
@@ -88,35 +111,7 @@ type FpsSampler = {
   readonly stop: () => void;
 };
 
-const cosmosConfig: CosmosGraphConfig = {
-  enableDrag: true,
-  enableSimulation: true,
-  fitViewDelay: 100,
-  fitViewOnInit: true,
-  fitViewPadding: 0.15,
-  linkBlending: false,
-  simulationFriction: 0.15,
-  simulationGravity: 0,
-  simulationRepulsion: 0.45,
-  transitionDuration: 0,
-};
-
-const unknownMessage = (cause: unknown, fallback: string): string =>
-  P.hasProperty(cause, "message") && P.isString(cause.message) ? cause.message : fallback;
-
-const driverError =
-  (reason: CosmosDriverErrorReason, fallback: string) =>
-  (cause: unknown): CosmosDriverError =>
-    CosmosDriverError.make({
-      reason,
-      message: unknownMessage(cause, fallback),
-    });
-
-const adapterInvariant = (message: string): CosmosDriverError =>
-  CosmosDriverError.make({
-    reason: "adapterInvariant",
-    message,
-  });
+const fpsSampleWindow = Duration.millis(500).pipe(Duration.toMillis);
 
 const isCosmosGraphModule = (value: unknown): value is CosmosGraphModule =>
   P.isObject(value) && P.hasProperty(value, "Graph") && P.isFunction(value.Graph);
@@ -129,30 +124,22 @@ const isSigmaModule = (value: unknown): value is SigmaModule =>
 
 const loadCosmosGraphModule = Effect.tryPromise({
   try: () => import("@cosmos.gl/graph"),
-  catch: driverError("importFailed", "Failed to import @cosmos.gl/graph."),
+  catch: CosmosDriverError.fromUnknown("importFailed")("Failed to import @cosmos.gl/graph."),
 }).pipe(
-  Effect.flatMap((module) =>
-    isCosmosGraphModule(module) ? Effect.succeed(module) : Effect.fail(adapterInvariant("Invalid cosmos.gl module."))
-  )
+  Effect.filterOrFail(isCosmosGraphModule, () => CosmosDriverError.adapterInvariant("Invalid cosmos.gl module."))
 );
 
 const loadGraphologyModule = Effect.tryPromise({
   try: () => import("graphology"),
-  catch: driverError("importFailed", "Failed to import graphology."),
+  catch: CosmosDriverError.fromUnknown("importFailed")("Failed to import graphology."),
 }).pipe(
-  Effect.flatMap((module) =>
-    isGraphologyModule(module) ? Effect.succeed(module) : Effect.fail(adapterInvariant("Invalid graphology module."))
-  )
+  Effect.filterOrFail(isGraphologyModule, () => CosmosDriverError.adapterInvariant("Invalid graphology module."))
 );
 
 const loadSigmaModule = Effect.tryPromise({
   try: () => import("sigma"),
-  catch: driverError("importFailed", "Failed to import sigma."),
-}).pipe(
-  Effect.flatMap((module) =>
-    isSigmaModule(module) ? Effect.succeed(module) : Effect.fail(adapterInvariant("Invalid sigma module."))
-  )
-);
+  catch: CosmosDriverError.fromUnknown("importFailed")("Failed to import sigma."),
+}).pipe(Effect.filterOrFail(isSigmaModule, () => CosmosDriverError.adapterInvariant("Invalid sigma module.")));
 
 const makeFpsSampler = (): FpsSampler => {
   if (!P.isFunction(globalThis.requestAnimationFrame)) {
@@ -162,6 +149,8 @@ const makeFpsSampler = (): FpsSampler => {
     };
   }
 
+  // crispen: mutable counters are requestAnimationFrame callback state; move them
+  // into Effect Ref only if this sampler becomes an Effect-owned scoped resource.
   let active = true;
   let currentFps = 0;
   let frames = 0;
@@ -173,7 +162,7 @@ const makeFpsSampler = (): FpsSampler => {
       lastTime = time;
     }
     frames += 1;
-    if (time - lastTime >= 500) {
+    if (time - lastTime >= fpsSampleWindow) {
       currentFps = (frames * 1_000) / (time - lastTime);
       frames = 0;
       lastTime = time;
@@ -229,8 +218,8 @@ const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
 ) {
   const module = yield* loadCosmosGraphModule;
   const graph = yield* Effect.try({
-    try: () => new module.Graph(container, cosmosConfig),
-    catch: driverError("renderFailed", "Failed to construct cosmos.gl graph."),
+    try: () => new module.Graph(container, CosmosGraphConfig.make()),
+    catch: CosmosDriverError.fromUnknown("renderFailed")("Failed to construct cosmos.gl graph."),
   });
 
   yield* Effect.try({
@@ -239,7 +228,7 @@ const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
       graph.setLinks(projection.links);
       graph.render();
     },
-    catch: driverError("renderFailed", "Failed to render cosmos.gl graph."),
+    catch: CosmosDriverError.fromUnknown("renderFailed")("Failed to render cosmos.gl graph."),
   });
 
   const sampler = makeFpsSampler();
@@ -270,21 +259,24 @@ const renderWithSigma = Effect.fn("Cosmos.renderWithSigma")(function* (
 ) {
   const graphology = yield* loadGraphologyModule;
   const sigma = yield* loadSigmaModule;
-  const graph = new graphology.default({ multi: true, type: "directed" });
+  const graph = new graphology.default(GraphologyOptions.make());
   const populateGraph = (nextProjection: CosmosGraphProjection): void => {
+    // crispen: graphology exposes a mutating adapter API and these loops avoid
+    // allocating index arrays on the 100k-node benchmark path; keep explicit.
     let nodeIndex = 0;
 
     while (nodeIndex < nextProjection.nodeCount) {
       const positionOffset = nodeIndex * 2;
       const nodeId = `n${nextProjection.nodeIds[nodeIndex]}`;
 
-      graph.addNode(nodeId, {
-        x: nextProjection.pointPositions[positionOffset],
-        y: nextProjection.pointPositions[positionOffset + 1],
-        label: nodeId,
-        size: 2,
-        color: "#38bdf8",
-      });
+      graph.addNode(
+        nodeId,
+        NodeAttributes.make({
+          x: nextProjection.pointPositions[positionOffset],
+          y: nextProjection.pointPositions[positionOffset + 1],
+          label: nodeId,
+        })
+      );
       nodeIndex += 1;
     }
 
@@ -299,10 +291,7 @@ const renderWithSigma = Effect.fn("Cosmos.renderWithSigma")(function* (
         `e${edgeIndex}`,
         `n${nextProjection.nodeIds[sourceIndex]}`,
         `n${nextProjection.nodeIds[targetIndex]}`,
-        {
-          size: 1,
-          color: "#94a3b8",
-        }
+        EdgeAttributes.make()
       );
       edgeIndex += 1;
     }
@@ -312,7 +301,7 @@ const renderWithSigma = Effect.fn("Cosmos.renderWithSigma")(function* (
 
   const renderer = yield* Effect.try({
     try: () => new sigma.default(graph, container),
-    catch: driverError("renderFailed", "Failed to construct sigma graph."),
+    catch: CosmosDriverError.fromUnknown("renderFailed")("Failed to construct sigma graph."),
   });
 
   if (P.isFunction(renderer.refresh)) {
@@ -343,12 +332,30 @@ const renderWithSigma = Effect.fn("Cosmos.renderWithSigma")(function* (
 /**
  * Renders a graph projection with the selected runtime backend.
  *
+ * @remarks
+ * The returned handle owns a frame sampler and renderer resources. Call
+ * `destroy` when the host unmounts the graph.
+ *
  * @example
  * ```ts
- * import { renderCosmosGraph } from "@beep/cosmos"
+ * import { CosmosGraphProjection, renderCosmosGraph } from "@beep/cosmos"
+ * import { Effect } from "effect"
  *
- * console.log(renderCosmosGraph)
+ * const projection = CosmosGraphProjection.make({
+ *   nodeCount: 1,
+ *   edgeCount: 0,
+ *   nodeIds: new Uint32Array([0]),
+ *   pointPositions: new Float32Array([0, 0]),
+ *   links: new Float32Array()
+ * })
+ * const backend = renderCosmosGraph(document.createElement("div"), projection).pipe(
+ *   Effect.map((handle) => handle.backend)
+ * )
+ *
+ * console.log(backend)
  * ```
+ *
+ * @effects Mounts a browser graph renderer and starts a request-animation-frame sampler.
  *
  * @category adapters
  * @since 0.0.0
@@ -359,9 +366,9 @@ export const renderCosmosGraph = Effect.fn("Cosmos.renderCosmosGraph")(function*
 ) {
   const selection = selectCosmosBackend(probeWebGl2());
 
-  return yield* Match.value(selection.backend).pipe(
+  return yield* Match.type<CosmosBackend>().pipe(
     Match.withReturnType<Effect.Effect<CosmosRenderHandle, CosmosDriverError>>(),
     Match.when("cosmos", () => renderWithCosmos(container, projection)),
     Match.orElse(() => renderWithSigma(container, projection))
-  );
+  )(selection.backend);
 });

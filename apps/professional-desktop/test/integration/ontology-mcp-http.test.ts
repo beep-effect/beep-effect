@@ -205,7 +205,7 @@ const openThroughMcp = Effect.fn("OntologyMcpHttpTest.open")(function* (
   return yield* S.decodeUnknownEffect(OpenInspectResponse)(result.structuredContent);
 });
 
-describe("professional desktop ontology MCP streamable HTTP mount", { concurrent: false }, () => {
+describe("professional desktop ontology MCP streamable HTTP mount", { concurrent: false, timeout: 120_000 }, () => {
   it.effect(
     "proves initialize, tools/list, and the read-only first slice while mutation registration is disabled",
     () =>

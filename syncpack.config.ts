@@ -34,6 +34,7 @@ const config = {
     "packages/documents/domain/package.json",
     "packages/documents/use-cases/package.json",
     "packages/documents/server/package.json",
+    "packages/documents/tables/package.json",
     "packages/workspace/domain/package.json",
     "packages/drivers/drizzle/package.json",
     "packages/drivers/duckdb/package.json",
@@ -93,6 +94,7 @@ const config = {
     "packages/drivers/uspto-mcp/package.json",
     "packages/drivers/pacer/package.json",
     "packages/drivers/protobuf/package.json",
+    "packages/drivers/tailscale/package.json",
   ],
   customTypes: {
     catalog: {

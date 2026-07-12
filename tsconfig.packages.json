@@ -64,6 +64,9 @@
       "path": "packages/documents/server"
     },
     {
+      "path": "packages/documents/tables"
+    },
+    {
       "path": "packages/documents/use-cases"
     },
     {
@@ -170,6 +173,9 @@
     },
     {
       "path": "packages/drivers/shacl"
+    },
+    {
+      "path": "packages/drivers/tailscale"
     },
     {
       "path": "packages/drivers/tika"

@@ -23,7 +23,7 @@ import {
   VeniceAiLanguageModel,
 } from "@beep/venice-ai";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { Context, Effect, Equal, Layer, Match, pipe, Redacted, Ref, Stream } from "effect";
+import { Context, Effect, Layer, Match, pipe, Redacted, Ref, Stream } from "effect";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
@@ -129,30 +129,22 @@ const PromptBodyArbitrary = S.toArbitrary(PromptBody);
 const decodeVeniceAIConfigInput = S.decodeUnknownEffect(VeniceAIConfigInput);
 const encodeVeniceAIConfigInput = S.encodeEffect(VeniceAIConfigInput);
 const VeniceAIConfigInputArbitrary = S.toArbitrary(VeniceAIConfigInput);
-const decodeVeniceAIRequestOptions = S.decodeUnknownEffect(VeniceAIRequestOptions);
 const encodeVeniceAIRequestOptions = S.encodeEffect(VeniceAIRequestOptions);
 const VeniceAIRequestOptionsArbitrary = S.toArbitrary(VeniceAIRequestOptions);
-const decodeVeniceAIOperationDescriptor = S.decodeUnknownEffect(VeniceAIOperationDescriptor);
-const encodeVeniceAIOperationDescriptor = S.encodeEffect(VeniceAIOperationDescriptor);
 const VeniceAIOperationDescriptorArbitrary = S.toArbitrary(VeniceAIOperationDescriptor);
-const decodeVeniceAIResponse = S.decodeUnknownEffect(VeniceAIResponse);
 const encodeVeniceAIResponse = S.encodeEffect(VeniceAIResponse);
 const VeniceAIResponseArbitrary = S.toArbitrary(VeniceAIResponse);
-const decodeVeniceAIServerSentEvent = S.decodeUnknownEffect(VeniceAIServerSentEvent);
 const encodeVeniceAIServerSentEvent = S.encodeEffect(VeniceAIServerSentEvent);
 const VeniceAIServerSentEventArbitrary = S.toArbitrary(VeniceAIServerSentEvent);
-const decodeVeniceAIError = S.decodeUnknownEffect(VeniceAIError);
 const encodeVeniceAIError = S.encodeEffect(VeniceAIError);
 const VeniceAIErrorArbitrary = S.toArbitrary(VeniceAIError);
 
-const expectRoundTrip = <A, Encoded>(
-  value: A,
-  encode: (value: A) => Effect.Effect<Encoded, S.SchemaError>,
-  decode: (encoded: Encoded) => Effect.Effect<A, S.SchemaError>
-): void => {
-  const encoded = Effect.runSync(encode(value));
-  const decoded = Effect.runSync(decode(encoded));
-  expect(Equal.equals(decoded, value)).toBe(true);
+const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): void => {
+  const encoded = Effect.runSync(S.encodeEffect(schema)(value));
+  const decoded = Effect.runSync(S.decodeUnknownEffect(schema)(encoded));
+
+  expect(Effect.runSync(S.encodeEffect(schema)(decoded))).toEqual(encoded);
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
 };
 
 const sortStrings = A.sort(Order.String);
@@ -540,12 +532,12 @@ describe("@beep/venice-ai", () => {
         VeniceAIServerSentEventArbitrary,
         VeniceAIErrorArbitrary,
         (config, request, descriptor, response, event, error) => {
-          expectRoundTrip(config, encodeVeniceAIConfigInput, decodeVeniceAIConfigInput);
-          expectRoundTrip(request, encodeVeniceAIRequestOptions, decodeVeniceAIRequestOptions);
-          expectRoundTrip(descriptor, encodeVeniceAIOperationDescriptor, decodeVeniceAIOperationDescriptor);
-          expectRoundTrip(response, encodeVeniceAIResponse, decodeVeniceAIResponse);
-          expectRoundTrip(event, encodeVeniceAIServerSentEvent, decodeVeniceAIServerSentEvent);
-          expectRoundTrip(error, encodeVeniceAIError, decodeVeniceAIError);
+          expectRoundTrip(VeniceAIConfigInput, config);
+          expectRoundTrip(VeniceAIRequestOptions, request);
+          expectRoundTrip(VeniceAIOperationDescriptor, descriptor);
+          expectRoundTrip(VeniceAIResponse, response);
+          expectRoundTrip(VeniceAIServerSentEvent, event);
+          expectRoundTrip(VeniceAIError, error);
         }
       ),
       fcRuns(15)

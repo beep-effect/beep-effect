@@ -5,25 +5,14 @@
 import { $RunpodId } from "@beep/identity";
 import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str, Struct } from "@beep/utils";
-import { Effect, Match, pipe } from "effect";
+import { BunRuntime } from "@effect/platform-bun";
+import { Effect, Match, Order, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const $I = $RunpodId.create("scripts/generate");
-
-type JsonSchema = {
-  readonly $ref?: string;
-  readonly type?: string | readonly string[];
-  readonly format?: string;
-  readonly enum?: readonly unknown[];
-  readonly items?: JsonSchema;
-  readonly nullable?: boolean;
-  readonly properties?: Record<string, JsonSchema>;
-  readonly required?: readonly string[];
-  readonly additionalProperties?: JsonSchema | boolean;
-};
 
 const RunpodGeneratorHttpMethod = MappedLiteralKit([
   ["get", "GET"],
@@ -44,17 +33,20 @@ class JsonSchema extends S.Class<JsonSchema>($I`JsonSchema`)(
     $ref: S.optionalKey(S.String),
     type: S.optionalKey(S.Union([S.String, S.Array(S.String)])),
     format: S.optionalKey(S.String),
-    enum: S.Array(S.Unknown).pipe(SchemaUtils.withEmptyArrayDefaults<unknown>()),
-    items: S.optionalKey(JsonSchemaRef),
+    enum: S.Array(S.Unknown).pipe(S.optionalKey),
+    items: JsonSchemaRef.pipe(S.optionalKey),
     nullable: S.optionalKey(S.Boolean),
-    properties: S.optionalKey(S.Record(S.String, JsonSchemaRef)),
-    required: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
-    additionalProperties: S.optionalKey(S.Union([JsonSchemaRef, S.Boolean])),
+    properties: S.Record(S.String, JsonSchemaRef).pipe(S.optionalKey),
+    required: S.Array(S.String).pipe(S.optionalKey),
+    additionalProperties: S.Union([JsonSchemaRef, S.Boolean]).pipe(S.optionalKey),
   },
   $I.annote("JsonSchema", {
     description: "JSON Schema subset consumed by the Runpod OpenAPI generator.",
   })
 ) {}
+
+const StringJsonSchema = JsonSchema.make({ type: "string" });
+const UnknownJsonSchema = JsonSchema.make({ type: "unknown" });
 
 class OpenApiParameter extends S.Class<OpenApiParameter>($I`OpenApiParameter`)(
   {
@@ -101,11 +93,11 @@ class OpenApiOperation extends S.Class<OpenApiOperation>($I`OpenApiOperation`)(
     operationId: S.String,
     summary: S.optionalKey(S.String),
     description: S.optionalKey(S.String),
-    tags: S.optionalKey(S.Array(S.String)),
+    tags: S.String.pipe(S.Array, S.optionalKey),
     parameters: S.Array(OpenApiParameter).pipe(SchemaUtils.withEmptyArrayDefaults<OpenApiParameter>()),
     requestBody: S.optionalKey(OpenApiRequestBody),
     responses: S.Record(S.String, OpenApiResponse).pipe(SchemaUtils.withKeyDefaults(R.empty())),
-    security: S.optionalKey(S.Array(S.Record(S.String, S.Array(S.String)))),
+    security: S.Record(S.String, S.Array(S.String)).pipe(S.Array, S.optionalKey),
   },
   $I.annote("OpenApiOperation", {
     description: "OpenAPI operation subset consumed by the Runpod generator.",
@@ -140,7 +132,7 @@ class OpenApiDocument extends S.Class<OpenApiDocument>($I`OpenApiDocument`)(
     openapi: S.String,
     paths: S.Record(S.String, OpenApiPathItem),
     components: S.optionalKey(OpenApiComponents),
-    security: S.optionalKey(S.Array(S.Record(S.String, S.Array(S.String)))),
+    security: S.Record(S.String, S.Array(S.String)).pipe(S.Array, S.optionalKey),
   },
   $I.annote("OpenApiDocument", {
     description: "Runpod OpenAPI document subset consumed by the generator.",
@@ -160,11 +152,11 @@ type Operation = {
   readonly requestClassName: string;
   readonly requestFields: readonly RequestField[];
   readonly responseBody: OperationResponseBodyKind;
-  readonly responseSchemaExpression?: string;
-  readonly responseSchemaName?: string;
+  readonly responseSchemaExpression: string | undefined;
+  readonly responseSchemaName: string | undefined;
   readonly responseTypeExpression: string;
   readonly status: string;
-  readonly summary?: string;
+  readonly summary: string | undefined;
 };
 
 type RequestField = {
@@ -196,9 +188,9 @@ const DYNAMIC_ENUM_HINTS = [
 
 let advisoryEnums: Record<string, readonly string[]> = {};
 
-const main = async (): Promise<void> => {
-  const raw = await Bun.file(openApiPath).text();
-  const document = await Effect.runPromise(OpenApiDocument.decodeJsonEffect(raw));
+const main = Effect.gen(function* () {
+  const raw = yield* Effect.tryPromise(() => Bun.file(openApiPath).text());
+  const document = yield* OpenApiDocument.decodeJsonEffect(raw);
   const components = document.components?.schemas ?? {};
   const operations = buildOperations(document);
   const code = renderGeneratedFile({
@@ -209,11 +201,11 @@ const main = async (): Promise<void> => {
     operations,
   });
 
-  await Bun.write(generatedPath, code);
-  console.log(
+  yield* Effect.tryPromise(() => Bun.write(generatedPath, code));
+  yield* Effect.log(
     `Generated ${A.length(operations)} Runpod operations at ${pipe(generatedPath.pathname, Str.replace(repoRoot.pathname, ""))}`
   );
-};
+}).pipe(Effect.withSpan("Runpod.generate"));
 
 const buildOperations = (document: OpenApiDocument): readonly Operation[] => {
   let methodCounts: Record<string, number> = {};
@@ -317,7 +309,7 @@ const renderRequestFields = (
     A.map((parameter) => ({
       name: parameter.name,
       required: parameter.in === "path" || parameter.required === true,
-      schemaExpression: schemaExpression(parameter.schema ?? { type: "string" }, parameter.name),
+      schemaExpression: schemaExpression(parameter.schema ?? StringJsonSchema, parameter.name),
     }))
   );
 
@@ -466,7 +458,7 @@ const $I = $RunpodId.create("Runpod.generated");
 
 const renderComponent = (name: string, schema: JsonSchema): Component => {
   if (schema.type === "object" || schema.properties !== undefined) {
-    const required = schema.required;
+    const required = pipe(schema.required, O.fromUndefinedOr, O.getOrElse(A.empty<string>));
     const properties = Struct.entries(schema.properties ?? {});
     const fields = pipe(
       properties,
@@ -592,7 +584,7 @@ export type ${name} = typeof ${name}.Type;`;
 const renderAdvisoryEnums = (): string => {
   const entries = pipe(
     Struct.entries(advisoryEnums),
-    A.sort(([left], [right]) => pipe(left, Str.localeCompare(right)))
+    A.sort(Order.mapInput(Str.Order, ([name]: readonly [string, readonly string[]]) => name))
   );
 
   if (A.isReadonlyArrayEmpty(entries)) {
@@ -979,7 +971,7 @@ const schemaExpression = (schema: JsonSchema, hint: string): string => {
     return wrapNullable(schema, `S.suspend(() => ${refName.value})`);
   }
 
-  const values = pipe(schema.enum, A.filter(P.isString));
+  const values = pipe(schema.enum, O.fromUndefinedOr, O.getOrElse(A.empty<unknown>), A.filter(P.isString));
   if (A.isReadonlyArrayNonEmpty(values)) {
     if (shouldTrackAdvisoryEnum(hint)) {
       advisoryEnums = R.set(advisoryEnums, Str.camelCase(hint), values);
@@ -990,18 +982,18 @@ const schemaExpression = (schema: JsonSchema, hint: string): string => {
     return wrapNullable(schema, `LiteralKit(${JSON.stringify(values)})`);
   }
 
-  const type = A.isArray(schema.type) ? schema.type[0] : schema.type;
+  const type = P.isString(schema.type) ? schema.type : schema.type?.[0];
 
   return Match.type<string | undefined>().pipe(
     Match.when("array", () =>
-      wrapNullable(schema, pipeExpression(schemaExpression(schema.items ?? { type: "unknown" }, hint), "S.Array"))
+      wrapNullable(schema, pipeExpression(schemaExpression(schema.items ?? UnknownJsonSchema, hint), "S.Array"))
     ),
     Match.when("boolean", () => wrapNullable(schema, "S.Boolean")),
     Match.when("integer", () => wrapNullable(schema, "S.Int")),
     Match.when("number", () => wrapNullable(schema, "S.Finite")),
     Match.when("object", () => {
       if (schema.properties !== undefined) {
-        const required = schema.required;
+        const required = pipe(schema.required, O.fromUndefinedOr, O.getOrElse(A.empty<string>));
         const properties = pipe(
           Struct.entries(schema.properties),
           A.map(([propertyName, propertySchema]) => {
@@ -1057,4 +1049,4 @@ const upperFirst = Str.capitalize;
 
 const unique = <Value>(values: readonly Value[]): readonly Value[] => A.dedupe(values);
 
-await main();
+BunRuntime.runMain(main);

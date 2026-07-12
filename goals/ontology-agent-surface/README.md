@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -32,22 +32,30 @@ Use this command for execution-capable sessions:
 5. [`research/SOURCES.md`](./research/SOURCES.md) - inherited implementation
    source corpus and provenance.
 6. [`history/`](./history/) - evidence, benchmarks, closeouts, and reflections.
+7. [`docs/product/ontology-agent-surface.md`](../../docs/product/ontology-agent-surface.md)
+   - curated tool vocabulary and the v1 capability, safety, and limit contract.
 
 ## Current Phase
 
-P2 Transport + Safety is complete locally. The sidecar mounts strict-Origin,
-bearer-authenticated `/mcp`; read-only registration is independent of the
-mutation feature gate; TierGate fails mutations closed; and authenticated MCP
-caller identity is retained in each mutation's PROV-O journal. The sandbox
-blocked node socket listen with `EPERM`, so the node-socket and live-sidecar
-client transcripts remain host gates alongside P0's inherited ROBOT command.
+Closed locally through P3. The packet now carries a repeatable real-stack
+stateless benchmark, the authored tool/capability contract, a criterion-by-
+criterion acceptance sweep, synchronized closeout state, and a schema-valid
+reflection. The archived launched-sidecar client transcript proves
+initialize/list/capability/SPARQL; the repaired socket and launched-sidecar
+re-proof commands remain retained for the operator alongside ROBOT, canonical
+host benchmark numbers, and P3 Yeet/GitHub mergeability.
 
 ## Latest Evidence
 
-[`history/2026-07-11-p2-transport.md`](./history/2026-07-11-p2-transport.md)
-records the mount policy, first-slice gate, TierGate precedent, attribution
-path, HTTP fallback proof, host commands, and P3 risks. P1 evidence remains in
-[`history/2026-07-11-p1-toolkit.md`](./history/2026-07-11-p1-toolkit.md), and P0 ROBOT evidence remains in
+[`history/2026-07-11-p3-harden-close.md`](./history/2026-07-11-p3-harden-close.md)
+records the benchmark, documentation, full acceptance checklist, local gates,
+and remaining host commands. Closeout reflection:
+[`history/reflections/2026-07-11-codex.md`](./history/reflections/2026-07-11-codex.md).
+
+Earlier lineage remains in
+[`history/2026-07-11-p2-transport.md`](./history/2026-07-11-p2-transport.md),
+[`history/2026-07-11-p2-live-client.log`](./history/2026-07-11-p2-live-client.log),
+[`history/2026-07-11-p1-toolkit.md`](./history/2026-07-11-p1-toolkit.md), and
 [`history/2026-07-11-p0-hardening.md`](./history/2026-07-11-p0-hardening.md).
 
 ## Notes
@@ -55,5 +63,6 @@ path, HTTP fallback proof, host commands, and P3 risks. P1 evidence remains in
 - The source exploration resolved five decisions and approved one goal packet.
 - The first live proof is `capability-metadata` + `sparql-query` over the real
   authenticated `/mcp` endpoint from an actual MCP client.
-- This packet is not complete until its PR work is driven to mergeable through
-  `bun run beep yeet` and the P3 reflection gate passes.
+- The local `completed-retained` preparation is not achieved closeout until
+  the operator accepts the recorded host-only evidence and the P3 PR is driven
+  to mergeable through `bun run beep yeet`.
