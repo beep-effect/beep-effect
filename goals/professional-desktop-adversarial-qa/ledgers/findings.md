@@ -70,3 +70,26 @@ P3 polish. Gate is on unwaived status, not severity.
 | F-001-51 | lane-d | P2 | ontology | Invalid file paths accepted; decodePath onNone → undefined silent no-op, Open never disabled (Session.workbench.tsx:483,611) | fixed: invalid path renders a field error instead of a silent no-op (Session.workbench.tsx) |
 | F-001-52 | verify | P2 | shell | A failed status/timeline query never retries: a transient sidecar restart leaves "Sync status is unavailable" + disconnected until a manual reload. Found while verifying R1 fixes against a tab held open across a restart. | open |
 | F-001-53 | verify | P3 | campaign | codex Chrome extension cannot select files from disk ("Allow access to file URLs" disabled), so the intake picker is driven via in-page File objects instead. Not an app defect; recorded so the coverage limit is explicit. | waived (tooling) |
+
+## Round 02 inventory (details in history/round-02/<lane>-report.md)
+
+Round 2 reviewed the round-1 fixes adversarially. It found a P0 *in* those fixes.
+
+| id | lane | sev | surface | summary | status |
+|---|---|---|---|---|---|
+| F-002-01 | code-ontology | P0 | ontology | The round-1 seed decided to write from a *read failure*, and every read failure looked like absence — so a permissions error or transient fault would overwrite the user's document with the starter fixture. | fixed: file store distinguishes notFound from readFailed; seed recovers only from absence; mutation-tested regression |
+| F-002-02 | lane-a | P1 | chat | Two tabs sending at once produced two copies of the reply to the FIRST message and none to the second, persisted. Serializing row writes was not enough: the turns interleave, so each kernel is handed a history ending in two unanswered prompts and both answer the first. | fixed: the whole turn (append/stream/persist) is serialized per thread; test asserts on the history the kernel receives and fails with ['user','user'] without it |
+| F-002-03 | lane-a | P1 | chat | A stopped turn was recorded by the server after the client stopped listening, so a single refetch raced it and the prompt sat answerless until some later action refreshed the thread. | fixed: bounded refresh until the stopped turn lands |
+| F-002-04 | lane-b | P1 | editor | A draft became unsendable: Enter and Send both did nothing, with no error, no toast, no log. | partially fixed: every refusal now explains itself (a schema-reject reports itself and keeps the draft; a send during streaming says so). The captured state decodes AND projects correctly, so the schema is not the gap — live re-diagnosis in progress to name the branch. |
+| F-002-05 | code-editor | P1 | editor | `isTypeaheadMenuVisible` queried the whole document, so a menu open in another composer suppressed Enter here — the same dead-Enter the check exists to prevent. | fixed: the marker carries its editor's key |
+| F-002-06 | lane-a | P2 | chat | A 50,000-character message was accepted, persisted, rendered, and sent verbatim to the model — no bound anywhere. | fixed: refused with the content kept in the editor |
+| F-002-07 | code-sync | P2 | sync | A failed Box probe was cached as long as a successful one, so one transient hiccup disabled sync and flapped the badge for the whole window. | fixed: failures expire in seconds |
+| F-002-08 | code-chat | P1 | chat | A usage-append failure *after* the assistant turn commits is reported as a rejected send, so the draft is restored and a retry duplicates the answer. | open |
+| F-002-09 | code-chat | P2 | chat | `activeBranchTurns` silently retains invalid parent links (self-parent, a parent appearing later in turn order), so corrupt data yields a corrupt branch instead of a typed failure. | open |
+| F-002-10 | code-chat | P2 | chat | `(stopped)`/`(failed)` are ordinary model content, so a model that literally outputs "(stopped)" is indistinguishable from an interrupted turn. | open — wants a structured turn outcome, i.e. a domain change |
+| F-002-11 | code-sync | P1 | intake | The 25MB intake bound is client-only; a direct RPC payload still exhausts the sidecar. | open |
+| F-002-12 | code-sync | P1 | sync | Conflict review does not share the workspace sync lock, so a concurrent poll can strand the item it just resolved. | open |
+| F-002-13 | code-ontology | P1 | ontology | A SPARQL/validation read that starts on session S can publish its result after a mutation commits S+1 — a stale result on a changed session. | open |
+| F-002-14 | code-editor | P2 | editor | Capture-phase scroll handling rerenders the typeahead synchronously on every scroll event. | open |
+| F-002-15 | code-editor | P2 | editor | The viewer re-encodes unchanged states on every render (the keyed remount encodes each time). | open |
+| F-002-16 | code-chat | P1 | workspace | The process-local write semaphore cannot protect `max(id)+1` across sidecars; a second process would still collide. | backlog — needs a database sequence, not a lock |

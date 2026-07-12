@@ -54,6 +54,7 @@ import {
   removeAttachmentFn,
   sendBlockedAtom,
   sendCommandBindingAtom,
+  unboundSend,
 } from "./atoms.ts";
 import { DEFAULT_MAX_ATTACHMENT_BYTES, revokeAttachment } from "./attachment-model.ts";
 import { AttachmentChips, AttachmentPlugin } from "./attachments.tsx";
@@ -357,10 +358,24 @@ function ComposerBody({
   // ComposerFeatures object each render.
   useAtomInitialValues([
     [featuresAtom(editor), features],
-    [onSendAtom(editor), { run: onSend ?? (() => undefined) }],
+    [onSendAtom(editor), { run: onSend ?? unboundSend }],
     [onAttachAtom(editor), onAttach ?? (() => undefined)],
     [maxAttachmentBytesAtom(editor), maxAttachmentBytes],
   ]);
+
+  // Seeding is not enough to keep the config: the registry sweeps every node
+  // with no listeners and no dependents once its idle TTL elapses (the desktop
+  // app sets one), and these four are only ever read with `get.once` at fire
+  // time — so nothing held them. Thirty seconds after the composer mounted they
+  // were garbage-collected and came back as their DEFAULTS, and because
+  // `useAtomInitialValues` seeds an atom only once per registry they were never
+  // re-seeded. The composer silently stopped sending, permanently, with the
+  // draft still sitting in it. Mounting them ties their lifetime to this
+  // component: alive while it is, swept once it unmounts.
+  useAtomMount(featuresAtom(editor));
+  useAtomMount(onSendAtom(editor));
+  useAtomMount(onAttachAtom(editor));
+  useAtomMount(maxAttachmentBytesAtom(editor));
 
   return (
     <div
@@ -392,7 +407,6 @@ function ComposerBody({
         slashItems={slashItems}
         {...O.getSomesStruct({
           mentionSource: O.fromUndefinedOr(mentionSource),
-          onSend: O.fromUndefinedOr(onSend),
           onSerializedChange: O.fromUndefinedOr(onSerializedChange),
         })}
       />
@@ -406,7 +420,6 @@ interface ComposerFeaturePluginsProps {
   readonly editor: LexicalEditor;
   readonly features: ComposerFeatures;
   readonly mentionSource?: MentionSource;
-  readonly onSend?: (state: SerializedEditorState.Type) => boolean | void;
   readonly onSerializedChange?: (state: SerializedEditorState.Type) => void;
   readonly slashItems: ReadonlyArray<SlashItem>;
 }
@@ -420,7 +433,6 @@ function ComposerFeaturePlugins({
   editor,
   features,
   mentionSource,
-  onSend,
   onSerializedChange,
   slashItems,
 }: ComposerFeaturePluginsProps): JSX.Element {
@@ -441,7 +453,7 @@ function ComposerFeaturePlugins({
       {features.mentions && mentionSource !== undefined ? <MentionPlugin source={mentionSource} /> : null}
       {features.attachments ? <AttachmentPlugin /> : null}
       {features.slash || features.mentions ? <ComboboxAriaPlugin /> : null}
-      {onSend === undefined ? null : <SendCommandBinding editor={editor} />}
+      <SendCommandBinding editor={editor} />
     </>
   );
 }

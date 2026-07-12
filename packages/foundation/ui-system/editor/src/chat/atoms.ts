@@ -434,6 +434,9 @@ export const sendBlockedAtom = Atom.family((_editor: LexicalEditor) => Atom.make
 const SEND_DECODE_FAILURE_MESSAGE =
   "This message could not be prepared for sending. Please report it — your draft has been kept.";
 
+const SEND_UNBOUND_MESSAGE =
+  "This composer is not connected to a conversation. Please report it — your draft has been kept.";
+
 /**
  * Per-editor live character count of the editor's plain text. The read fn
  * registers a Lexical update listener (torn down via the atom finalizer) and
@@ -575,6 +578,28 @@ export interface SendHandlerBox {
 }
 
 /**
+ * The `run` installed when no consumer `onSend` is bound. It is a sentinel, not
+ * a no-op: {@link sendCommandBindingAtom} compares against it by identity and
+ * reports an unbound composer instead of silently discarding the send.
+ *
+ * A send that goes nowhere and says nothing is indistinguishable from a broken
+ * app — Enter and the Send button simply stop working, with the draft still
+ * sitting there — so the unbound case is made loud at the one place that can
+ * detect it.
+ *
+ * @example
+ * ```ts
+ * import { unboundSend } from "@beep/editor/chat"
+ *
+ * console.log(unboundSend()) // undefined
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const unboundSend = (): void => undefined;
+
+/**
  * Per-editor convenience send handler. `run` receives the editor's current
  * serialized state (read live at send time, so it never sees stale/missed
  * content) and returns `true` to signal a turn was dispatched (the binding then
@@ -602,7 +627,7 @@ export interface SendHandlerBox {
  * @category atoms
  * @since 0.0.0
  */
-export const onSendAtom = Atom.family((_editor: LexicalEditor) => Atom.make<SendHandlerBox>({ run: () => undefined }));
+export const onSendAtom = Atom.family((_editor: LexicalEditor) => Atom.make<SendHandlerBox>({ run: unboundSend }));
 
 /**
  * Per-editor `SEND_MESSAGE_COMMAND` handler registered at
@@ -644,6 +669,17 @@ export const sendCommandBindingAtom = Atom.family((editor: LexicalEditor) =>
           // Send button) on an empty composer is a no-op. (When attachment
           // transport lands, an attachments-present check joins this guard.)
           const hasContent = editorState.read(() => $getRoot().getTextContent().trim().length > 0);
+          const handler = get.once(onSendAtom(editor));
+          // An unbound handler means the composer's `onSend` was never seeded —
+          // or was swept out from under this binding by the registry's idle TTL
+          // (see the mount in `ComposerBody`). Either way the send has nowhere
+          // to go, and returning a quiet `false` here is what made a composer
+          // that had silently stopped sending look like a broken app.
+          if (hasContent && handler.run === unboundSend) {
+            get.set(sendBlockedAtom(editor), O.some(SEND_UNBOUND_MESSAGE));
+            get.set(logEditorErrorFn, new Error("ChatComposer refused to send: no send handler is bound"));
+            return true;
+          }
           const dispatched =
             hasContent &&
             O.match(SerializedEditorState.decodeOption(editorState.toJSON()), {
@@ -657,7 +693,7 @@ export const sendCommandBindingAtom = Atom.family((editor: LexicalEditor) =>
               },
               onSome: (state) => {
                 get.set(sendBlockedAtom(editor), O.none());
-                return get.once(onSendAtom(editor)).run(state) === true;
+                return handler.run(state) === true;
               },
             });
           if (dispatched) {
