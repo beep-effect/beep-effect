@@ -90,14 +90,36 @@ export const stableOccurrenceKeys: {
   });
 });
 
+// Every part of a key is bounded AT CONSTRUCTION. `boundedKey` hashes a 256-character
+// sample, but it was handed a string that had already been built in full — so the guard
+// against a megabyte paragraph materialized the megabyte in order to bound it. A single
+// text node was enough: its whole body went into the key before anything trimmed it.
 const inlineRenderKey = (node: InlineNode): string =>
   InlineNode.match(node, {
     text: (t) =>
-      `text:${t.text}:${t.bold === true ? "b" : ""}:${t.italic === true ? "i" : ""}:${t.code === true ? "c" : ""}`,
-    link: (l) => `link:${l.url}:${l.text}`,
+      `text:${Str.length(t.text).toString(36)}:${Str.takeLeft(t.text, KEY_SAMPLE_LIMIT)}:${t.bold === true ? "b" : ""}:${t.italic === true ? "i" : ""}:${t.code === true ? "c" : ""}`,
+    link: (l) => `link:${Str.takeLeft(l.url, KEY_SAMPLE_LIMIT)}:${Str.takeLeft(l.text, KEY_SAMPLE_LIMIT)}`,
   });
 
-const inlinesRenderKey = (nodes: ReadonlyArray<InlineNode>): string => A.join(A.map(nodes, inlineRenderKey), "|");
+/** The content's true size, counted without ever concatenating it. */
+const inlinesLength = (nodes: ReadonlyArray<InlineNode>): number =>
+  A.reduce(nodes, 0, (total, node) =>
+    InlineNode.match(node, {
+      text: (t) => total + Str.length(t.text),
+      link: (l) => total + Str.length(l.url) + Str.length(l.text),
+    })
+  );
+
+const inlinesRenderKey = (nodes: ReadonlyArray<InlineNode>): string => {
+  // The count and the true length still disambiguate two runs that happen to share an
+  // opening — they are what a truncated sample would otherwise throw away.
+  let key = `${nodes.length.toString(36)}:${inlinesLength(nodes).toString(36)}`;
+  for (const node of nodes) {
+    if (Str.length(key) >= KEY_SAMPLE_LIMIT) break;
+    key = `${key}|${inlineRenderKey(node)}`;
+  }
+  return key;
+};
 
 const tableCellRenderKey = (cell: TableBlock["rows"][number]["cells"][number]): string =>
   `cell:${inlinesRenderKey(cell.children)}`;

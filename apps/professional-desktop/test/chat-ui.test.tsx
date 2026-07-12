@@ -140,6 +140,29 @@ describe("StreamingBlocks", () => {
     expect(boundedKey(codeRenderKey).length).toBeLessThan(64);
   });
 
+  it("bounds a paragraph's key without first materializing the paragraph", () => {
+    // The code block was bounded; the prose was not. `boundedKey` hashes a capped
+    // prefix — but the string it was handed had already been built in full, because
+    // the inline key concatenated every text node's whole body first. The guard
+    // against a megabyte paragraph allocated the megabyte in order to bound it.
+    const huge = "x".repeat(2_000_000);
+
+    const paragraphKey = blockRenderKey({ type: "paragraph", children: [{ type: "text", text: huge }] });
+
+    expect(paragraphKey.length).toBeLessThan(8192);
+    expect(boundedKey(paragraphKey).length).toBeLessThan(64);
+  });
+
+  it("keeps two huge paragraphs distinct when they share an opening", () => {
+    // A truncated sample alone would collide. The count and the true length -- both
+    // computed without concatenating anything -- are what keep them apart.
+    const shared = "z".repeat(1_000);
+    const first = blockRenderKey({ type: "paragraph", children: [{ type: "text", text: shared }] });
+    const second = blockRenderKey({ type: "paragraph", children: [{ type: "text", text: `${shared}tail` }] });
+
+    expect(first).not.toBe(second);
+  });
+
   it("disambiguates duplicate content with stable #n occurrence suffixes (CSF-004)", () => {
     const keys = stableOccurrenceKeys(["a", "a", "b", "a"], (s) => s);
     expect(keys[0]).not.toContain("#");
