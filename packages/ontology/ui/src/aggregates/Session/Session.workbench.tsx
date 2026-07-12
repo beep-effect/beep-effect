@@ -658,7 +658,12 @@ export function OntologyWorkbench(): JSX.Element {
 
   return (
     <TooltipProvider>
-      <div className="flex h-screen min-h-0 w-full flex-col bg-background text-foreground">
+      {/* `h-full`, not `h-screen`: the workbench mounts BELOW the app's nav bar, inside
+          a parent that has already been given the remaining height. Claiming the whole
+          viewport made it overflow by exactly the nav's height, so the document itself
+          scrolled — the toolbar slid off the top and the graph canvas drifted with the
+          page instead of staying put in its pane. */}
+      <div className="flex h-full min-h-0 w-full flex-col bg-background text-foreground">
         <div className="flex h-12 shrink-0 items-center gap-2 border-b px-3">
           <Input
             aria-label="Ontology file path"

@@ -29,17 +29,50 @@ class CosmosGraphConfig extends S.Class<CosmosGraphConfig>($I`CosmosGraphConfig`
     simulationGravity: S.Finite.pipe(SchemaUtils.withKeyDefaults(0)),
     simulationRepulsion: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.45)),
     transitionDuration: S.Finite.pipe(SchemaUtils.withKeyDefaults(0)),
+    // Appearance was left entirely to cosmos.gl's defaults, which draw a graph you
+    // can barely see: single-pixel grey points and hairline links on a dark
+    // background. A diagram nobody can read is not a diagram.
+    linkWidthScale: S.Finite.pipe(SchemaUtils.withKeyDefaults(1.6)),
+    pointSizeScale: S.Finite.pipe(SchemaUtils.withKeyDefaults(2.4)),
+    renderLinks: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    scalePointsOnZoom: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
   },
   $I.annote("CosmosGraphConfig", {
-    description: "Stable cosmos.gl simulation and viewport defaults used for each mounted graph renderer.",
+    description: "Stable cosmos.gl simulation, appearance, and viewport defaults used for each mounted graph.",
   })
 ) {}
+
+/** Points: bright enough to read against the workbench's dark canvas. */
+const POINT_RGBA: readonly [number, number, number, number] = [0.44, 0.87, 0.53, 1];
+
+/** Links: visible, but never louder than the points they connect. */
+const LINK_RGBA: readonly [number, number, number, number] = [0.55, 0.68, 0.6, 0.55];
+
+/** Baseline point radius, before `pointSizeScale`. */
+const POINT_SIZE = 4;
+
+/** Baseline link width, before `linkWidthScale`. */
+const LINK_WIDTH = 1;
+
+const repeatRgba = (count: number, rgba: readonly [number, number, number, number]): Float32Array => {
+  const values = new Float32Array(count * 4);
+  for (let index = 0; index < count; index += 1) {
+    values.set(rgba, index * 4);
+  }
+  return values;
+};
+
+const filled = (count: number, value: number): Float32Array => new Float32Array(count).fill(value);
 
 type CosmosGraphInstance = {
   readonly destroy?: () => void;
   readonly render: () => void;
+  readonly setLinkColors?: (linkColors: Float32Array) => void;
+  readonly setLinkWidths?: (linkWidths: Float32Array) => void;
   readonly setLinks: (links: Float32Array) => void;
+  readonly setPointColors?: (pointColors: Float32Array) => void;
   readonly setPointPositions: (positions: Float32Array) => void;
+  readonly setPointSizes?: (pointSizes: Float32Array) => void;
   readonly stop?: () => void;
 };
 
@@ -224,15 +257,29 @@ const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
   projection: CosmosGraphProjection
 ) {
   const module = yield* loadCosmosGraphModule;
-  const graph = yield* Effect.try({
+  // Held as the instance shape this driver declares, not as cosmos.gl's class: the
+  // wrapper depends on exactly the members it names here and nothing more.
+  const graph: CosmosGraphInstance = yield* Effect.try({
     try: () => new module.Graph(container, CosmosGraphConfig.make()),
     catch: CosmosDriverError.fromUnknown("renderFailed")("Failed to construct cosmos.gl graph."),
   });
+
+  // Sizes and colours are set per element, not left to the library's defaults. The
+  // setters are optional in the instance type because they arrived in cosmos.gl 2.x:
+  // where they are missing the graph still draws, just with the plain defaults.
+  const paint = (current: CosmosGraphProjection): void => {
+    const linkCount = current.links.length / 2;
+    graph.setPointSizes?.(filled(current.nodeCount, POINT_SIZE));
+    graph.setPointColors?.(repeatRgba(current.nodeCount, POINT_RGBA));
+    graph.setLinkWidths?.(filled(linkCount, LINK_WIDTH));
+    graph.setLinkColors?.(repeatRgba(linkCount, LINK_RGBA));
+  };
 
   yield* Effect.try({
     try: () => {
       graph.setPointPositions(projection.pointPositions);
       graph.setLinks(projection.links);
+      paint(projection);
       graph.render();
     },
     catch: CosmosDriverError.fromUnknown("renderFailed")("Failed to render cosmos.gl graph."),
@@ -246,6 +293,7 @@ const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
     update: CosmosRenderHandle.fields.update.implement((nextProjection) => {
       graph.setPointPositions(nextProjection.pointPositions);
       graph.setLinks(nextProjection.links);
+      paint(nextProjection);
       graph.render();
     }),
     destroy: () => {
