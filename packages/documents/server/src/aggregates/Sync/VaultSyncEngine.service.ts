@@ -69,7 +69,7 @@ import { $DocumentsServerId } from "@beep/identity/packages";
 import { NonNegativeInt } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import { Effect, FileSystem, HashMap, identity, Order, Path, pipe, Ref, Result } from "effect";
+import { Effect, FileSystem, HashMap, identity, Order, Path, pipe, Ref, Result, Semaphore } from "effect";
 import * as A from "effect/Array";
 import * as F from "effect/Function";
 import * as O from "effect/Option";
@@ -364,6 +364,26 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
   const config = yield* VaultSyncConfig;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+
+  // One sync pass per workspace at a time. Every pass opens by requeueing all
+  // leased operations, so two overlapping passes hand each other's in-flight
+  // uploads back to the queue and run the same remote mutation twice. A disabled
+  // button is only a hint — a second window, a repeated RPC, or a scheduled pass
+  // can all arrive concurrently — so the guard belongs here, not in the UI.
+  const syncLocks = yield* Ref.make(HashMap.empty<WorkspaceIdentity.WorkspaceId, Semaphore.Semaphore>());
+  const lockFor = (workspaceId: WorkspaceIdentity.WorkspaceId): Effect.Effect<Semaphore.Semaphore> =>
+    Ref.modify(syncLocks, (locks) =>
+      pipe(
+        HashMap.get(locks, workspaceId),
+        O.match({
+          onSome: (existing) => [existing, locks] as const,
+          onNone: () => {
+            const created = Semaphore.makeUnsafe(1);
+            return [created, HashMap.set(locks, workspaceId, created)] as const;
+          },
+        })
+      )
+    );
 
   const walkDirectory = (
     absolutePath: string,
@@ -1301,17 +1321,22 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     }),
     status: readStatus,
     syncOnce: Effect.fn($I`syncOnce`)(function* (input) {
-      const probe = yield* availability.probe;
-      yield* operationRepository.requeueLeased(
-        RequeueLeasedSyncOperationsInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+      const lock = yield* lockFor(input.workspaceId);
+      return yield* lock.withPermit(
+        Effect.gen(function* () {
+          const probe = yield* availability.probe;
+          yield* operationRepository.requeueLeased(
+            RequeueLeasedSyncOperationsInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+          );
+          yield* recoverStalledOperations(input, probe.connected);
+          yield* scanVault(input);
+          const pushRecords = yield* pumpQueue(input);
+          yield* pollRemoteEvents(input, pushRecords).pipe(
+            Effect.catchTag("DmsMirrorUnavailable", (error) => recordPollFailure(input, error))
+          );
+          return yield* readStatus(VaultSyncStatusInput.make({ workspaceId: input.workspaceId }));
+        })
       );
-      yield* recoverStalledOperations(input, probe.connected);
-      yield* scanVault(input);
-      const pushRecords = yield* pumpQueue(input);
-      yield* pollRemoteEvents(input, pushRecords).pipe(
-        Effect.catchTag("DmsMirrorUnavailable", (error) => recordPollFailure(input, error))
-      );
-      return yield* readStatus(VaultSyncStatusInput.make({ workspaceId: input.workspaceId }));
     }),
   });
 });

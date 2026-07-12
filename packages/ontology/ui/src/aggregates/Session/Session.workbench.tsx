@@ -61,7 +61,7 @@ import {
 } from "@beep/ontology-client/aggregates/Session";
 import { ChangeOperation, SessionId } from "@beep/ontology-domain/aggregates/Session";
 import { OntologyFilePath, OntologyGraphGesture } from "@beep/ontology-use-cases/aggregates/Session";
-import { AbsoluteIRI } from "@beep/rdf/Iri";
+import { IRI } from "@beep/rdf/Iri";
 import { makeLiteral, makeNamedNode, makeQuad, serializeQuad, serializeTerm } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { Badge } from "@beep/ui/components/badge";
@@ -122,12 +122,30 @@ const sourceViewerState = S.decodeUnknownSync(SerializedEditorState)({
 
 const decodePath = (value: string): O.Option<OntologyFilePath> => OntologyFilePath.decodeOption(Str.trim(value));
 
-// Subjects, predicates, and IRI objects must be absolute IRIs. The form used to
-// accept any non-empty string, so `not an iri` sailed through into the change
-// log and only surfaced later as a broken serialization.
-const isAbsoluteIri = S.is(AbsoluteIRI);
+// Subjects, predicates, and IRI objects must be IRIs. The form used to accept
+// any non-empty string, so `not an iri` sailed through into the change log and
+// only surfaced later as a broken serialization.
+//
+// `IRI`, not `AbsoluteIRI`: the latter is RFC 3987 absolute-IRI *without a
+// fragment*, which rejects the hash IRIs RDF vocabularies are built from
+// (`https://example.org/pizza#Pizza`, `…/rdf-schema#label`).
+const isIri = S.is(IRI);
 
-const iriFieldValid = (value: string): boolean => isAbsoluteIri(Str.trim(value));
+/**
+ * Whether an Add Triple IRI field holds a usable IRI.
+ *
+ * @example
+ * ```ts
+ * import { iriFieldValid } from "@beep/ontology-ui/aggregates/Session/workbench"
+ *
+ * console.log(iriFieldValid("https://example.org/pizza#Pizza")) // true
+ * console.log(iriFieldValid("not an iri")) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const iriFieldValid = (value: string): boolean => isIri(Str.trim(value));
 
 const sessionIdFromPath = (path: OntologyFilePath): SessionId => SessionId.fromUnknown(`ontology:${path}`);
 
@@ -853,14 +871,16 @@ export function OntologyWorkbench(): JSX.Element {
                     just looks broken. */}
                 {Str.isNonEmpty(Str.trim(subject)) && !subjectValid ? (
                   <p className="text-destructive text-xs">
-                    Subject must be an absolute IRI (e.g. https://example.org/pizza#Pizza).
+                    Subject must be an IRI (e.g. https://example.org/pizza#Pizza).
                   </p>
                 ) : null}
                 {Str.isNonEmpty(Str.trim(predicate)) && !predicateValid ? (
-                  <p className="text-destructive text-xs">Predicate must be an absolute IRI.</p>
+                  <p className="text-destructive text-xs">
+                    Predicate must be an IRI (e.g. http://www.w3.org/2000/01/rdf-schema#label).
+                  </p>
                 ) : null}
                 {objectKind === "iri" && Str.isNonEmpty(Str.trim(object)) && !objectValid ? (
-                  <p className="text-destructive text-xs">An IRI object must be an absolute IRI.</p>
+                  <p className="text-destructive text-xs">An IRI object must be an IRI.</p>
                 ) : null}
                 <Button
                   className="w-full"

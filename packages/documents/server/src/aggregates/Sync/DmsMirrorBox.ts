@@ -32,7 +32,7 @@ import {
 import { $DocumentsServerId } from "@beep/identity/packages";
 import { UnknownRecord } from "@beep/schema";
 import { getSomesStruct } from "@beep/utils/Option";
-import { Config, Context, Effect, flow, identity, Layer, Match, pipe, Ref, SchemaTransformation } from "effect";
+import { Config, Context, Duration, Effect, flow, identity, Layer, Match, pipe, Ref, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -705,12 +705,29 @@ export const DmsMirrorBoxLayer = Layer.effect(DmsMirror, makeDmsMirrorBox());
 export const DmsMirrorBoxLive = DmsMirrorBoxLayer.pipe(Layer.provide(BoxMirrorConfigLayer));
 
 /**
+ * How long a mirror-root resolution answers later probes before Box is asked
+ * again.
+ *
+ * The resolution used to be cached for the life of the service, so the *first*
+ * success made every later probe report `connected: true` without touching Box:
+ * once the token expired, the panel kept claiming a healthy connection and a
+ * sync pass whose every remote call was failing still returned a normal status.
+ * Re-resolving on a short interval keeps the reported state honest while still
+ * sparing the common case a round trip per probe.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+const MIRROR_ROOT_CACHE_TTL = Duration.seconds(30);
+
+/**
  * Availability layer probing the Box mirror adapter.
  *
- * The probe resolves (and caches) the mirror-root folder id: success reports
- * `connected: true` with `rootRemoteId` set; any driver failure reports
- * `connected: false` without failing the probe. Applications supply their own
- * disconnected variant when no Box credentials are configured.
+ * The probe resolves the mirror-root folder id (cached for
+ * {@link MIRROR_ROOT_CACHE_TTL}): success reports `connected: true` with
+ * `rootRemoteId` set; any driver failure reports `connected: false` without
+ * failing the probe. Applications supply their own disconnected variant when no
+ * Box credentials are configured.
  *
  * @example
  * ```ts
@@ -727,24 +744,17 @@ export const DmsMirrorAvailabilityBoxLayer = Layer.effect(
   Effect.gen(function* () {
     const box = yield* Box;
     const config = yield* BoxMirrorConfig;
-    const rootRef = yield* Ref.make(O.none<RemoteItemId>());
     const { resolveMirrorRootId } = makeMirrorRootResolver(box, config);
 
-    const resolveOnce = Ref.get(rootRef).pipe(
-      Effect.flatMap(
-        O.match({
-          onNone: () =>
-            resolveMirrorRootId.pipe(
-              Effect.flatMap(decodeRemoteItemId),
-              Effect.tap((id) => Ref.set(rootRef, O.some(id)))
-            ),
-          onSome: Effect.succeed,
-        })
-      )
+    // Caches the failure too, so a hard-down Box is not re-probed on every
+    // status read; both outcomes expire together.
+    const resolveCached = yield* Effect.cachedWithTTL(
+      resolveMirrorRootId.pipe(Effect.flatMap(decodeRemoteItemId)),
+      MIRROR_ROOT_CACHE_TTL
     );
 
     return DmsMirrorAvailability.of({
-      probe: resolveOnce.pipe(
+      probe: resolveCached.pipe(
         Effect.match({
           onFailure: () => DmsMirrorProbe.make({ connected: false, provider: "box", rootRemoteId: O.none() }),
           onSuccess: (rootRemoteId) =>
