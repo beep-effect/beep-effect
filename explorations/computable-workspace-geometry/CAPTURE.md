@@ -74,3 +74,12 @@ true costs.
   control over text."
 - The beep-effect6 layout bugs were, every one, "the browser was the only
   oracle and we asked it wrong."
+
+## 2026-07-12 (last drops of the genesis context)
+
+Per-group minimums landed in the kernel via `requiredExtent` (sum along
+axis + gap, max across axes — the v1 scalar provably understated nested
+requirements: 35/30/30 vs the 49/23/23 squeeze). Then the full-circle test:
+fixture metrics → naturalWidth → GroupMinimumLookup → project() → one-line
+render guaranteed by kernel geometry, starvation counter-case included.
+The sentence "blocks feed docks" is now a passing test, not a slogan.

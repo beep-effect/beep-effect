@@ -30,3 +30,12 @@ same as `scratchpad/dockview`).
   exploration packet; this proof is seam-agnostic.
 
 Next steps live in the packet's `ops/manifest.json` open questions.
+
+## Full circle (added later, 2026-07-12)
+
+[`full-circle.test.ts`](./full-circle.test.ts) imports the actual dock kernel
+and proves the composition end to end: browser-measured metrics →
+`naturalWidth` content minimum → `GroupMinimumLookup` → `project()` → the
+prose panel's kernel-granted width provably renders its sentence on one line
+(and the same split without the minimum provably starves it into wrapping).
+Blocks feed docks; both pure; no DOM.
