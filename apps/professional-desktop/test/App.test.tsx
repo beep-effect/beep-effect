@@ -31,7 +31,9 @@ describe("Professional Desktop app", { concurrent: false }, () => {
       .findByTestId("chat-no-thread")
       .then((noThread) => {
         expect(noThread).toBeInTheDocument();
-        expect(screen.getByText("Create a thread to get started.")).toBeInTheDocument();
+        // Without a reachable sidecar the state names the problem (a failed
+        // thread load) instead of pretending the workspace is merely empty.
+        expect(within(noThread).getByText(/first thread|Chat is unavailable/, { selector: "h2" })).toBeInTheDocument();
       })
       .finally(unmount);
   });

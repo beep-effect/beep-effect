@@ -27,7 +27,12 @@ import {
 import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+// Deep imports, not the root barrel: this module runs inside the visualizer
+// worker, and the barrel pulls Markdown.ts → micromark, whose browser build
+// touches `document` at module top level (ReferenceError in workers).
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import { NonNegativeInt } from "@beep/schema/Number";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A, O, Str } from "@beep/utils";
 import { Context, Effect, flow, Layer, MutableHashMap, Order, pipe } from "effect";
 import { dual } from "effect/Function";

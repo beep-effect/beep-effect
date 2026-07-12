@@ -7,6 +7,7 @@
 
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { TaggedErrorClass } from "@beep/schema";
+import { Effect, flow } from "effect";
 import * as S from "effect/Schema";
 import * as Rpc from "effect/unstable/rpc/Rpc";
 import * as RpcGroup from "effect/unstable/rpc/RpcGroup";
@@ -37,6 +38,8 @@ export class VaultDirectoryPickError extends TaggedErrorClass<VaultDirectoryPick
   })
 ) {
   static readonly new = (message: string) => VaultDirectoryPickError.make({ message });
+
+  static readonly failEffect = flow(this.new, Effect.fail);
 }
 
 /**

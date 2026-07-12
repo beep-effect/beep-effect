@@ -22,21 +22,44 @@ const emptyString = () => Str.empty;
 const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
   stream.pipe(Stream.decodeText(), Stream.runFold(emptyString, Str.concat));
 
-const pickWith = (
-  spawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
-  executable: string,
-  args: ReadonlyArray<string>
-) =>
-  Effect.gen(function* () {
-    const child = yield* spawner.spawn(ChildProcess.make(executable, args));
-    const [stdout, exitCode] = yield* Effect.all([collectText(child.stdout), child.exitCode], {
-      concurrency: "unbounded",
-    });
-    // kdialog and zenity exit non-zero when the user cancels the dialog.
-    if (Number(exitCode) !== 0) return null;
-    const selected = Str.trim(stdout);
-    return Str.isNonEmpty(selected) ? selected : null;
-  }).pipe(Effect.scoped);
+const pickWith = Effect.fn("pickWith")(function* (executable: string, args: ReadonlyArray<string>) {
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  const child = yield* spawner.spawn(ChildProcess.make(executable, args));
+  const [stdout, exitCode] = yield* Effect.all([collectText(child.stdout), child.exitCode], {
+    concurrency: "unbounded",
+  });
+  // kdialog and zenity exit non-zero when the user cancels the dialog.
+  if (Number(exitCode) !== 0) return null;
+  const selected = Str.trim(stdout);
+  return Str.isNonEmpty(selected) ? selected : null;
+}, Effect.scoped);
+
+/**
+ * Open the sidecar host's native folder dialog (kdialog, then zenity) and
+ * resolve with the picked absolute directory path, or `null` on cancel.
+ *
+ * @example
+ * ```ts
+ * import { pickVaultDirectoryOnHost } from "@/intake/VaultDirectoryPickerOrchestrator"
+ *
+ * const effect = pickVaultDirectoryOnHost("/home/user")
+ * console.log(effect)
+ * ```
+ *
+ * @category effects
+ * @since 0.0.0
+ */
+export const pickVaultDirectoryOnHost = (
+  startDirectory: string
+): Effect.Effect<string | null, VaultDirectoryPickError, ChildProcessSpawner.ChildProcessSpawner> =>
+  pickWith("kdialog", ["--title", dialogTitle, "--getexistingdirectory", startDirectory]).pipe(
+    Effect.catch(() => pickWith("zenity", ["--file-selection", "--directory", `--title=${dialogTitle}`])),
+    Effect.catch((error) =>
+      Effect.logWarning("native vault directory picker unavailable", { detail: error }).pipe(
+        Effect.andThen(VaultDirectoryPickError.failEffect("Native folder dialog unavailable on this host."))
+      )
+    )
+  );
 
 /**
  * RPC handler layer that opens the sidecar host's native folder dialog.
@@ -53,20 +76,9 @@ const pickWith = (
  */
 export const VaultDirectoryPickerHandlersLive = VaultDirectoryPickerRpcs.toLayer(
   Effect.gen(function* () {
-    const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
     const startDirectory = yield* Config.string("HOME").pipe(Config.withDefault("/"));
     return VaultDirectoryPickerRpcs.of({
-      PickVaultDirectory: () =>
-        pickWith(spawner, "kdialog", ["--title", dialogTitle, "--getexistingdirectory", startDirectory]).pipe(
-          Effect.catch(() =>
-            pickWith(spawner, "zenity", ["--file-selection", "--directory", `--title=${dialogTitle}`])
-          ),
-          Effect.catch((error) =>
-            Effect.logWarning("native vault directory picker unavailable", { detail: error }).pipe(
-              Effect.andThen(VaultDirectoryPickError.failEffect("Native folder dialog unavailable on this host."))
-            )
-          )
-        ),
+      PickVaultDirectory: () => pickVaultDirectoryOnHost(startDirectory),
     });
   })
 );

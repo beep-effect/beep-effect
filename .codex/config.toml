@@ -107,3 +107,14 @@
 
     [mcp_servers.webstorm.headers]
       IJ_MCP_SERVER_PROJECT_PATH = "<REPO_ROOT>"
+
+  # Grafana MCP against the local otel-lgtm stack (Grafana UI :3000, OTLP :4318).
+  # Anonymous-admin local Grafana, so no token is required. Tempo = traces/spans,
+  # Loki = logs, Prometheus = metrics, Pyroscope = profiles — frontend webview and
+  # sidecar backend both export through OTLP :4318 into the same datasources.
+  [mcp_servers.grafana]
+    command = "docker"
+    args = ["run", "--rm", "-i", "--network=host", "-e", "GRAFANA_URL", "mcp/grafana", "-t", "stdio"]
+
+    [mcp_servers.grafana.env]
+      GRAFANA_URL = "http://localhost:3000"

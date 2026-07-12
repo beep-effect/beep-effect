@@ -69,10 +69,15 @@ export function EditorViewer({ state, className }: EditorViewerProps): JSX.Eleme
         onError,
       }}
     >
-      <RichTextPlugin
-        contentEditable={<ContentEditable className={className ?? "relative block px-1 focus:outline-none"} />}
-        ErrorBoundary={LexicalErrorBoundary}
-      />
+      {/* Non-flex wrapper: Lexical warns when the content editable's direct
+          parent computes to flex/inline-flex (Chrome focus quirks), and the
+          viewer mounts inside arbitrary (often flex) message layouts. */}
+      <div className="relative">
+        <RichTextPlugin
+          contentEditable={<ContentEditable className={className ?? "relative block px-1 focus:outline-none"} />}
+          ErrorBoundary={LexicalErrorBoundary}
+        />
+      </div>
       <MermaidCodeDecoratorPlugin />
     </LexicalComposer>
   );

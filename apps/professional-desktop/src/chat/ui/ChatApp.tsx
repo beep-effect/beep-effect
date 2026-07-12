@@ -16,9 +16,10 @@
 
 import { createThreadAtom, selectedThreadAtom, threadsAtoms } from "@beep/agents-client/Chat.atoms";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { Button } from "@beep/ui/components/button";
 import { OrbBackground } from "@beep/ui/components/orb-background";
 import { A, DateTime, O } from "@beep/utils";
-import { useAtomMount, useAtomValue } from "@effect/atom-react";
+import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Order } from "effect";
 import * as S from "effect/Schema";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
@@ -80,6 +81,7 @@ const autoNewThreadBinding = Atom.family((workspaceId: WorkspaceIdentity.Workspa
 export function ChatApp(): JSX.Element {
   const selected = useAtomValue(selectedThreadAtom);
   const threads = useAtomValue(threadsAtoms(DEFAULT_WORKSPACE_ID));
+  const createThread = useAtomSet(createThreadAtom);
   // auto-create a thread when the workspace is empty (see binding above).
   useAtomMount(autoNewThreadBinding(DEFAULT_WORKSPACE_ID));
 
@@ -95,21 +97,44 @@ export function ChatApp(): JSX.Element {
       className="relative isolate flex h-screen w-full flex-col overflow-hidden bg-background text-foreground"
       data-testid="chat-app"
     >
-      <OrbBackground tone="green" intensity="vivid" />
-      <header className="relative flex items-center justify-between gap-2 border-b bg-background/80 px-4 py-3 backdrop-blur">
+      <OrbBackground tone="green" intensity="subtle" />
+      <header className="relative flex items-center justify-between gap-2 border-b bg-background/30 px-4 py-3 backdrop-blur">
         <span className="text-sm font-semibold">Professional Desktop — Chat</span>
         <ThemeToggle />
       </header>
       <div className="flex min-h-0 flex-1">
         <Sidebar workspaceId={DEFAULT_WORKSPACE_ID} />
-        <main className="flex min-h-0 flex-1 flex-col">
+        {/* bg-background/60 damps the shared orb glow so the content area reads
+            quieter than the header and sidebar (Taskade-style ambience). */}
+        <main className="flex min-h-0 flex-1 flex-col bg-background/60">
           {O.match(active, {
             onNone: () => (
               <div className="flex flex-1 items-center justify-center text-center" data-testid="chat-no-thread">
-                <div>
-                  <h2 className="text-lg font-semibold">No thread selected</h2>
-                  <p className="text-sm text-muted-foreground">Create a thread to get started.</p>
-                </div>
+                {AsyncResult.isFailure(threads) ? (
+                  <div>
+                    <h2 className="text-lg font-semibold">Chat is unavailable</h2>
+                    <p className="text-sm text-muted-foreground">
+                      The desktop sidecar could not be reached, so threads cannot be loaded or created.
+                    </p>
+                  </div>
+                ) : (
+                  // An empty workspace auto-creates its first thread (see
+                  // autoNewThreadBinding), so this state is normally transient;
+                  // the button is the manual fallback if that create failed.
+                  <div>
+                    <h2 className="text-lg font-semibold">Starting your first thread…</h2>
+                    <p className="text-sm text-muted-foreground">The composer opens as soon as it's ready.</p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="mt-4"
+                      data-testid="chat-no-thread-create"
+                      onClick={() => createThread({ workspaceId: DEFAULT_WORKSPACE_ID, title: "New thread" })}
+                    >
+                      + New thread
+                    </Button>
+                  </div>
+                )}
               </div>
             ),
             onSome: (threadId) => (

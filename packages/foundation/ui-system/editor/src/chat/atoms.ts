@@ -22,6 +22,7 @@ import {
   $getRoot,
   COMMAND_PRIORITY_HIGH,
   COMMAND_PRIORITY_LOW,
+  INSERT_PARAGRAPH_COMMAND,
   KEY_ENTER_COMMAND,
 } from "lexical";
 import { DEFAULT_MAX_ATTACHMENT_BYTES, fileToAttachment, revokeAttachment } from "./attachment-model.ts";
@@ -412,7 +413,19 @@ export const sendKeyBindingAtom = Atom.family((editor: LexicalEditor) =>
           if (event === null) return false;
           if (get.once(anyMenuOpenAtom(editor))) return false;
           if (isImeComposing(event)) return false;
-          if (!shouldSendFromEnter(event, get.once(featuresAtom(editor)).sendOn)) return false;
+          const sendOn = get.once(featuresAtom(editor)).sendOn;
+          if (!shouldSendFromEnter(event, sendOn)) {
+            // With sendOn="enter" the only newline gesture is Shift+Enter, and
+            // Lexical's default maps it to a soft line-break — leaving the whole
+            // draft one paragraph, so block toggles (lists/quote/code) swallow
+            // everything typed so far. Promote it to a real paragraph break.
+            if (sendOn === "enter" && event.shiftKey && !event.altKey && !hasCommandModifier(event)) {
+              event.preventDefault();
+              editor.dispatchCommand(INSERT_PARAGRAPH_COMMAND, undefined);
+              return true;
+            }
+            return false;
+          }
           event.preventDefault();
           editor.dispatchCommand(SEND_MESSAGE_COMMAND, undefined);
           return true;

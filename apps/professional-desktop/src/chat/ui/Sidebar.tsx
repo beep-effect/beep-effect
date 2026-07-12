@@ -17,8 +17,9 @@
 import { createThreadAtom, editTargetAtom, selectedThreadAtom, threadsAtoms } from "@beep/agents-client/Chat.atoms";
 import { Button } from "@beep/ui/components/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@beep/ui/components/empty";
+import { toast } from "@beep/ui/components/sonner";
 import { A, DateTime, O } from "@beep/utils";
-import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { useAtomMount, useAtomSet, useAtomSubscribe, useAtomValue } from "@effect/atom-react";
 import { Order } from "effect";
 import { AsyncResult } from "effect/unstable/reactivity";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
@@ -53,14 +54,23 @@ export function Sidebar({ workspaceId }: { readonly workspaceId: WorkspaceId }):
   // keep the create fiber subscribed — unobserved fn atoms get interrupted.
   useAtomMount(createThreadAtom);
 
+  // A failed create must not die silently: without this the "+ New thread"
+  // button reads as dead when the sidecar is down or rejects the session.
+  useAtomSubscribe(createThreadAtom, (result) => {
+    if (AsyncResult.isFailure(result)) {
+      toast.error("Couldn't create a thread — the desktop sidecar is unreachable or rejected the request.");
+    }
+  });
+
   const sorted = AsyncResult.isSuccess(threads) ? A.sort(threads.value, byUpdatedDesc) : [];
-  // Once the load settles with nothing to show — an empty workspace or a failed
-  // load — present a calm empty state rather than an error. `Initial` (still
-  // loading) renders nothing.
-  const isEmpty = !AsyncResult.isInitial(threads) && sorted.length === 0;
+  const loadFailed = AsyncResult.isFailure(threads);
+  // Once the load settles with nothing to show, present a calm empty state;
+  // a failed load names the problem instead of masquerading as "no threads".
+  // `Initial` (still loading) renders nothing.
+  const isEmpty = !AsyncResult.isInitial(threads) && !loadFailed && sorted.length === 0;
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-r bg-background/80 backdrop-blur" data-testid="sidebar">
+    <aside className="flex w-64 shrink-0 flex-col border-r bg-background/30 backdrop-blur" data-testid="sidebar">
       <div className="border-b p-3">
         <Button
           type="button"
@@ -73,6 +83,16 @@ export function Sidebar({ workspaceId }: { readonly workspaceId: WorkspaceId }):
         </Button>
       </div>
       <nav className="flex-1 overflow-y-auto p-2" data-testid="sidebar-list">
+        {loadFailed ? (
+          <Empty className="h-full border-none" data-testid="sidebar-load-failed">
+            <EmptyHeader>
+              <EmptyTitle>Threads unavailable</EmptyTitle>
+              <EmptyDescription>
+                The thread list could not be loaded. Check that the desktop sidecar is running, then reload.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        ) : null}
         {isEmpty ? (
           <Empty className="h-full border-none" data-testid="sidebar-empty">
             <EmptyHeader>

@@ -85,8 +85,94 @@ interface MenuListProps<TOption extends MenuOption> {
   readonly setHighlightedIndex: (index: number) => void;
 }
 
+// max-h-72 (288px) plus the 4px gap between the caret line and the listbox.
+const MENU_MAX_HEIGHT_PX = 292;
+// w-64, used to clamp the menu inside the viewport horizontally.
+const MENU_WIDTH_PX = 256;
+const MENU_VIEWPORT_GAP_PX = 4;
+
 /**
- * Renders the open typeahead as a `listbox` portal anchored under the trigger.
+ * Whether the typeahead listbox should flip above the caret line: there is not
+ * enough viewport space below it for the full menu, and more space above.
+ *
+ * @example
+ * ```ts
+ * import { shouldOpenUpward } from "@beep/editor/chat"
+ *
+ * console.log(shouldOpenUpward({ caretTop: 700, caretBottom: 720, viewportHeight: 800 })) // true
+ * ```
+ *
+ * @category layout
+ * @since 0.0.0
+ */
+export const shouldOpenUpward = ({
+  caretBottom,
+  caretTop,
+  viewportHeight,
+}: {
+  readonly caretBottom: number;
+  readonly caretTop: number;
+  readonly viewportHeight: number;
+}): boolean => {
+  const spaceBelow = viewportHeight - caretBottom;
+  return spaceBelow < MENU_MAX_HEIGHT_PX && caretTop > spaceBelow;
+};
+
+/**
+ * Fixed viewport coordinates for the typeahead listbox: below the caret when it
+ * fits, above it otherwise, clamped horizontally to the viewport.
+ *
+ * @example
+ * ```ts
+ * import { typeaheadMenuPosition } from "@beep/editor/chat"
+ *
+ * const position = typeaheadMenuPosition({
+ *   caret: { bottom: 720, left: 40, top: 700 },
+ *   viewportHeight: 800,
+ *   viewportWidth: 1280
+ * })
+ * console.log(position.bottom) // 104
+ * ```
+ *
+ * @category layout
+ * @since 0.0.0
+ */
+export const typeaheadMenuPosition = ({
+  caret,
+  viewportHeight,
+  viewportWidth,
+}: {
+  readonly caret: { readonly bottom: number; readonly left: number; readonly top: number };
+  readonly viewportHeight: number;
+  readonly viewportWidth: number;
+}): { readonly left: number; readonly top?: number; readonly bottom?: number } => {
+  const left = Math.max(
+    MENU_VIEWPORT_GAP_PX,
+    Math.min(caret.left, viewportWidth - MENU_WIDTH_PX - MENU_VIEWPORT_GAP_PX)
+  );
+  return shouldOpenUpward({ caretBottom: caret.bottom, caretTop: caret.top, viewportHeight })
+    ? { left, bottom: viewportHeight - caret.top + MENU_VIEWPORT_GAP_PX }
+    : { left, top: caret.bottom + MENU_VIEWPORT_GAP_PX };
+};
+
+// Viewport rect of the caret line the menu anchors to. The live DOM selection is
+// measured first because Lexical positions the anchor element in an effect after
+// this render; the anchor rect is only a fallback (e.g. collapsed selection with
+// no client rect).
+const caretViewportRect = (
+  anchor: HTMLElement
+): { readonly bottom: number; readonly left: number; readonly top: number } => {
+  const selection = window.getSelection();
+  const rect =
+    selection !== null && selection.rangeCount > 0 ? selection.getRangeAt(0).getBoundingClientRect() : undefined;
+  return rect !== undefined && (rect.top !== 0 || rect.bottom !== 0) ? rect : anchor.getBoundingClientRect();
+};
+
+/**
+ * Renders the open typeahead as a `listbox` portal pinned to the viewport at
+ * the caret: below the caret line when there is room, flipped above it
+ * otherwise. `position: fixed` keeps the menu inside the view box, so a
+ * composer at the bottom of the screen never grows the page scroll area.
  * Each row is a `role="option"` with the `typeahead-item-${index}` id the
  * Lexical menu delegate references through `aria-activedescendant`, and registers
  * its element via `option.setRefElement` so scroll-into-view works. `mousedown`
@@ -103,10 +189,16 @@ function TypeaheadMenuList<TOption extends MenuOption>({
   if (anchorElementRef.current === null || A.isReadonlyArrayEmpty(options)) {
     return null;
   }
+  const menuPosition = typeaheadMenuPosition({
+    caret: caretViewportRect(anchorElementRef.current),
+    viewportHeight: window.innerHeight,
+    viewportWidth: window.innerWidth,
+  });
   return createPortal(
     <div
       role="listbox"
-      className="bg-popover text-popover-foreground z-50 mt-1 max-h-72 w-64 overflow-auto rounded-md border p-1 shadow-md"
+      style={menuPosition}
+      className="bg-popover text-popover-foreground fixed z-50 max-h-72 w-64 overflow-auto rounded-md border p-1 shadow-md"
     >
       {A.map(options, (option, index) => (
         <div

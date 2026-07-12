@@ -61,8 +61,10 @@
     "@beep/ontology-server": "workspace:^",
     "@beep/ontology-ui": "workspace:^",
     "@beep/ontology-use-cases": "workspace:^",
+    "@lexical/extension": "catalog:",
     "@beep/pglite": "workspace:^",
     "@beep/postgres": "workspace:^",
+    "@huggingface/transformers": "catalog:",
     "@beep/rdf": "workspace:^",
     "@beep/shared-domain": "workspace:^",
     "@beep/ui": "workspace:^",
@@ -93,6 +95,7 @@
     "@vitejs/plugin-react": "catalog:",
     "gl-bench": "catalog:",
     "jsdom": "catalog:",
+    "react-grab": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:"
   }
