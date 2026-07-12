@@ -1312,12 +1312,39 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
       const openConflicts = yield* conflictRepository.listOpen(
         ListOpenSyncConflictsInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
       );
-      if (!A.some(openConflicts, (conflict) => conflict.id === input.conflictId)) {
+      const reviewedConflict = A.findFirst(openConflicts, (conflict) => conflict.id === input.conflictId);
+      if (O.isNone(reviewedConflict)) {
         return yield* SyncConflictRepositoryNotFound.make({ conflictId: input.conflictId });
       }
-      return yield* conflictRepository.markReviewed(
+      const reviewed = yield* conflictRepository.markReviewed(
         MarkSyncConflictReviewedInput.make({ conflictId: input.conflictId })
       );
+
+      // Reviewing used to touch only the conflict record, leaving the item
+      // parked in `conflict` forever: the row vanished from the panel while the
+      // conflict counter stayed up, with no remaining way to resolve it. The
+      // mirror is a one-way push, so an acknowledged remote drift means the
+      // local state wins — return the item to `pending` and let the next pass
+      // re-converge it.
+      yield* O.match(reviewedConflict.value.syncItemId, {
+        onNone: () => Effect.void,
+        onSome: Effect.fn($I`requeueReviewedConflictItem`)(function* (syncItemId) {
+          const items = yield* itemRepository.listByWorkspace(
+            ListSyncItemsByWorkspaceInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+          );
+          yield* pipe(
+            A.findFirst(items, (item) => item.id === syncItemId),
+            O.filter((item) => SyncItemState.is.conflict(item.syncState)),
+            O.match({
+              onNone: () => Effect.void,
+              onSome: (item) =>
+                itemRepository.update(DomainSyncItem.SyncItem.make({ ...item, syncState: SyncItemState.Enum.pending })),
+            })
+          );
+        }),
+      });
+
+      return reviewed;
     }),
     status: readStatus,
     syncOnce: Effect.fn($I`syncOnce`)(function* (input) {

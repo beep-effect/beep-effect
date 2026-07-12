@@ -32,7 +32,19 @@ import {
 import { $DocumentsServerId } from "@beep/identity/packages";
 import { UnknownRecord } from "@beep/schema";
 import { getSomesStruct } from "@beep/utils/Option";
-import { Config, Context, Duration, Effect, flow, identity, Layer, Match, pipe, Ref, SchemaTransformation } from "effect";
+import {
+  Config,
+  Context,
+  Duration,
+  Effect,
+  flow,
+  identity,
+  Layer,
+  Match,
+  pipe,
+  Ref,
+  SchemaTransformation,
+} from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
