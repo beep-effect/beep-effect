@@ -60,3 +60,28 @@ worker (as the graph projection already does) or a child process, so a runaway q
 can be terminated rather than waited out. That is an architectural change to the
 ontology server, not a patch, and it should be done deliberately — with the worker's
 own startup cost measured against the query latencies it is protecting.
+
+## F-002-10 — a stopped turn is described in prose, not recorded as an outcome (domain change)
+
+An interrupted or failed turn is persisted as ordinary assistant content:
+
+```ts
+const STOPPED_NOTE = "(stopped)" as const;
+const FAILED_NOTE = "(failed)" as const;
+```
+
+This was the right fix for the bug it solved — before it, an unfinished turn persisted
+*nothing*, which left an unanswered prompt in the conversation and made the next
+question get answered as if it were the abandoned one. Recording the marker closed
+that hole, and it is worth keeping until something better replaces it.
+
+But it says with prose what should be said with structure. A model that literally writes
+"(stopped)" produces a turn indistinguishable from one the user interrupted, and nothing
+downstream can tell them apart: no consumer branches on the marker — the UI renders it
+as text, because text is all it is.
+
+Doing it properly means an `outcome` on the `Turn` aggregate (`completed | stopped |
+failed`), which reaches the domain schema, a database migration for the persisted rows,
+the RPC contract, and the renderer that would finally have something to render *as* a
+stopped turn rather than a message that happens to say so. That is a schema change with
+a migration attached, and it should be designed rather than patched in behind a QA loop.
