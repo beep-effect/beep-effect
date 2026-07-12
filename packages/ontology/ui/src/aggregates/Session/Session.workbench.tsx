@@ -136,7 +136,7 @@ const isIri = S.is(IRI);
  *
  * @example
  * ```ts
- * import { iriFieldValid } from "@beep/ontology-ui/aggregates/Session/workbench"
+ * import { iriFieldValid } from "@beep/ontology-ui/aggregates/Session"
  *
  * console.log(iriFieldValid("https://example.org/pizza#Pizza")) // true
  * console.log(iriFieldValid("not an iri")) // false

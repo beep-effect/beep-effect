@@ -365,7 +365,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
 
-  // One sync pass per workspace at a time. Every pass opens by requeueing all
+  // One sync pass per workspace at a time. Every pass opens by requeuing all
   // leased operations, so two overlapping passes hand each other's in-flight
   // uploads back to the queue and run the same remote mutation twice. A disabled
   // button is only a hint — a second window, a repeated RPC, or a scheduled pass
@@ -1300,6 +1300,23 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     });
   });
 
+  const requeueReviewedConflictItem = Effect.fn($I`requeueReviewedConflictItem`)(function* (
+    workspaceId: WorkspaceIdentity.WorkspaceId,
+    syncItemId: DomainSyncItem.SyncItemId
+  ) {
+    const items = yield* itemRepository.listByWorkspace(
+      ListSyncItemsByWorkspaceInput.make({ provider: BOX_PROVIDER, workspaceId })
+    );
+    return yield* pipe(
+      A.findFirst(items, (item) => item.id === syncItemId),
+      O.filter((item) => SyncItemState.is.conflict(item.syncState)),
+      O.map((item) =>
+        itemRepository.update(DomainSyncItem.SyncItem.make({ ...item, syncState: SyncItemState.Enum.pending }))
+      ),
+      O.getOrElse(() => Effect.void)
+    );
+  });
+
   return VaultSyncEngine.of({
     listOpenConflicts: Effect.fn($I`listOpenConflicts`)(function* (input) {
       return yield* conflictRepository.listOpen(
@@ -1326,23 +1343,11 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
       // mirror is a one-way push, so an acknowledged remote drift means the
       // local state wins — return the item to `pending` and let the next pass
       // re-converge it.
-      yield* O.match(reviewedConflict.value.syncItemId, {
-        onNone: () => Effect.void,
-        onSome: Effect.fn($I`requeueReviewedConflictItem`)(function* (syncItemId) {
-          const items = yield* itemRepository.listByWorkspace(
-            ListSyncItemsByWorkspaceInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
-          );
-          yield* pipe(
-            A.findFirst(items, (item) => item.id === syncItemId),
-            O.filter((item) => SyncItemState.is.conflict(item.syncState)),
-            O.match({
-              onNone: () => Effect.void,
-              onSome: (item) =>
-                itemRepository.update(DomainSyncItem.SyncItem.make({ ...item, syncState: SyncItemState.Enum.pending })),
-            })
-          );
-        }),
-      });
+      yield* pipe(
+        reviewedConflict.value.syncItemId,
+        O.map((syncItemId) => requeueReviewedConflictItem(input.workspaceId, syncItemId)),
+        O.getOrElse(() => Effect.void)
+      );
 
       return reviewed;
     }),

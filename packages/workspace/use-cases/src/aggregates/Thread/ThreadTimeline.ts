@@ -63,6 +63,8 @@ export class TimelineMessageItem extends S.Class<TimelineMessageItem>($I`Timelin
   })
 ) {}
 
+const turnIndexOrder = Order.mapInput(Order.Number, (turn: TimelineTurn) => turn.turnIndex);
+
 /**
  * Timeline item placeholder for a tool-call turn item.
  *
@@ -260,22 +262,12 @@ export class ThreadTimeline extends S.Class<ThreadTimeline>($I`ThreadTimeline`)(
  * @category projections
  * @since 0.0.0
  */
-const turnIndexOrder = Order.mapInput(Order.Number, (turn: TimelineTurn) => turn.turnIndex);
-
 export const activeBranchTurns = (turns: ReadonlyArray<TimelineTurn>): ReadonlyArray<TimelineTurn> =>
   A.reduce(A.sort(turns, turnIndexOrder), A.empty<TimelineTurn>(), (branch, turn) =>
-    O.match(turn.parentTurnId, {
-      // A turn with no parent simply continues the conversation.
-      onNone: () => A.append(branch, turn),
-      // A replacement: drop the turn it replaces and everything that followed it.
-      onSome: (replacedTurnId) =>
-        pipe(
-          A.findFirstIndex(branch, (candidate) => candidate.turnId === replacedTurnId),
-          O.match({
-            // The replaced turn is already gone (an edit of an edit): keep going.
-            onNone: () => A.append(branch, turn),
-            onSome: (index) => A.append(A.take(branch, index), turn),
-          })
-        ),
-    })
+    pipe(
+      turn.parentTurnId,
+      O.flatMap((replacedTurnId) => A.findFirstIndex(branch, (candidate) => candidate.turnId === replacedTurnId)),
+      O.map((index) => A.append(A.take(branch, index), turn)),
+      O.getOrElse(() => A.append(branch, turn))
+    )
   );
