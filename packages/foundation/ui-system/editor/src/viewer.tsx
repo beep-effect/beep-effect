@@ -16,6 +16,7 @@ import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { Effect, Result } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { CodeBlockNode } from "./code-block-node.tsx";
 import { MermaidNode } from "./mermaid-node.tsx";
 import { editorNodes } from "./nodes.ts";
 import { editorTheme } from "./theme.ts";
@@ -69,6 +70,30 @@ const decorateMermaid = (node: SerializedNodeLike): SerializedNodeLike =>
       ? node
       : { ...node, children: node.children.map(decorateMermaid) };
 
+/**
+ * Swap the remaining code blocks for the code-block node, on the same read-only
+ * terms as the diagram above: the wire profile still carries a `code` block, and the
+ * composer still edits one.
+ *
+ * A code block Lexical renders itself cannot do two things a reader needs. Its long
+ * lines *wrap*, because the contenteditable's `white-space` is `pre-wrap` — code that
+ * folds at an arbitrary column has to be reassembled in the reader's head. And it
+ * cannot be copied: the only way to take a snippet the assistant wrote was to select
+ * it by hand and hope the selection did not catch the prose around it.
+ */
+const decorateCode = (node: SerializedNodeLike): SerializedNodeLike =>
+  node.type === "code"
+    ? ({
+        type: "codeblock",
+        version: 1,
+        format: "",
+        code: nodeSource(node),
+        language: P.isString(node.language) ? node.language : "",
+      } as SerializedNodeLike)
+    : node.children === undefined
+      ? node
+      : { ...node, children: node.children.map(decorateCode) };
+
 class EditorViewerProps extends S.Class<EditorViewerProps>($I`EditorViewerProps`)(
   {
     /** Optional class for the read-only content container. */
@@ -112,7 +137,7 @@ export function EditorViewer({ state, className }: EditorViewerProps): JSX.Eleme
   const wire = Result.getOrThrowWith(encodeEditorState(state), schemaIssueToError);
   const encoded = Result.getOrThrowWith(encodeJson(wire), schemaIssueToError);
   const decorated = Result.getOrThrowWith(
-    encodeJson({ ...wire, root: decorateMermaid(wire.root) }),
+    encodeJson({ ...wire, root: decorateCode(decorateMermaid(wire.root)) }),
     schemaIssueToError
   );
   return (
@@ -122,7 +147,7 @@ export function EditorViewer({ state, className }: EditorViewerProps): JSX.Eleme
         namespace: "beep-editor-viewer",
         editable: false,
         theme: editorTheme,
-        nodes: [...editorNodes, MermaidNode],
+        nodes: [...editorNodes, MermaidNode, CodeBlockNode],
         editorState: decorated,
         onError,
       }}

@@ -38,18 +38,20 @@ export * from "./artifact-ref-node.tsx";
  */
 export * from "./chat/index.ts";
 /**
+ * Read-only Lexical plugin rendering `language="mermaid"` code nodes as diagrams.
+ *
+ * @category components
+ * @since 0.0.0
+ */
+export * from "./code-block-node.tsx";
+export * from "./code-block-view.tsx";
+/**
  * Composer primitives: an editable Lexical surface wired with the v1 node registration and theme.
  *
  * @category components
  * @since 0.0.0
  */
 export * from "./composer.tsx";
-/**
- * Read-only Lexical plugin rendering `language="mermaid"` code nodes as diagrams.
- *
- * @category components
- * @since 0.0.0
- */
 export * from "./mermaid-node.tsx";
 /**
  * Mermaid diagram renderer shared by persisted editor and streaming chat surfaces.
