@@ -20,8 +20,7 @@ import { GroupId } from "./Domain.ts";
 // Structural narrowing on the event union: any accepted event naming a
 // groupId counts as a "touch" of that group. Events without a groupId
 // (workspace-level, split-level, cross-group moves) contribute nothing.
-const eventGroupId = (event: DockEvent): O.Option<GroupId> =>
-  "groupId" in event ? O.some(event.groupId) : O.none();
+const eventGroupId = (event: DockEvent): O.Option<GroupId> => ("groupId" in event ? O.some(event.groupId) : O.none());
 
 /**
  * Group ids touched by a batch of accepted events, in event order.

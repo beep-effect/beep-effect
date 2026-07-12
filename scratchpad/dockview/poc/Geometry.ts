@@ -175,7 +175,10 @@ export type GroupMinimaRecord = Readonly<Record<string, number>>;
 const minimaFromRecord =
   (record: GroupMinimaRecord): GroupMinimumLookup =>
   (groupId) =>
-    pipe(R.get(record, groupId), O.getOrElse(() => 0));
+    pipe(
+      R.get(record, groupId),
+      O.getOrElse(() => 0)
+    );
 
 // The minimum extent a visible subtree needs along the given axis: leaf
 // minimums SUM through same-axis splits (plus the gap when both sides are

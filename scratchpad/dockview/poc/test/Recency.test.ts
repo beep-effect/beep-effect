@@ -2,8 +2,8 @@ import { NonNegativeInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import { Atom, AtomRegistry } from "effect/unstable/reactivity";
 import {
-  DockAtomFeedSuccess,
   type DockAtomFeedEntry,
+  DockAtomFeedSuccess,
   DockMutationCompleted,
   DockSnapshotSaved,
 } from "../DockAtomProtocol.ts";

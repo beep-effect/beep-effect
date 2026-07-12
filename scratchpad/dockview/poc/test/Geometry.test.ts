@@ -214,12 +214,7 @@ describe("per-group minimum lookup", () => {
   });
 
   it("sums leaf requirements through nested same-axis splits", () => {
-    const nested = split(
-      "horizontal",
-      5_000,
-      tabsOne,
-      split("horizontal", 5_000, tabsTwo, tabsThree, splitTwo)
-    );
+    const nested = split("horizontal", 5_000, tabsOne, split("horizontal", 5_000, tabsTwo, tabsThree, splitTwo));
     const options = GeometryOptions.make({ gap: 3, minGroupExtent: 30 });
     const geometry = project(nested, box, options);
     const [one, two, three] = geometry.groups;
@@ -253,15 +248,8 @@ describe("per-group minimum lookup", () => {
   });
 
   it("takes the maximum requirement across a cross-axis subtree", () => {
-    const crossed = split(
-      "horizontal",
-      9_000,
-      tabsOne,
-      split("vertical", 5_000, tabsTwo, tabsThree, splitTwo)
-    );
-    const geometry = project(crossed, box, gapThree, (groupId) =>
-      GroupId.equals(groupId, groupThree) ? 40 : 0
-    );
+    const crossed = split("horizontal", 9_000, tabsOne, split("vertical", 5_000, tabsTwo, tabsThree, splitTwo));
+    const geometry = project(crossed, box, gapThree, (groupId) => (GroupId.equals(groupId, groupThree) ? 40 : 0));
     const widths = A.map(geometry.groups, (group) => group.box.width);
     expect(widths).toEqual([58, 40, 40]);
   });
