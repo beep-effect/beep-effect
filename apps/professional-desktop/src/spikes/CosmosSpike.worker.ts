@@ -1,16 +1,14 @@
 /**
- * Worker-side synthetic ontology projection for the cosmos spike.
+ * Effect RPC worker for synthetic ontology graph projections.
  *
  * @packageDocumentation
  * @category projections
  * @since 0.0.0
  */
 
-import { $ProfessionalDesktopId } from "@beep/identity";
 import {
   buildOntologyGraphProjection,
   defaultOntologyGraphProjectionOptions,
-  OntologyGraphProjection,
   OntologyGraphProjectionOptions,
   OntologyMetrics,
   OntologyRelationshipSummary,
@@ -19,70 +17,13 @@ import {
 } from "@beep/ontology-use-cases/aggregates/Session/worker";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
-import * as S from "effect/Schema";
-
-const $I = $ProfessionalDesktopId.create("spikes/CosmosSpike.worker");
-
-type SyntheticProjectionRequest = {
-  readonly nodeCount: number;
-  readonly edgeCount: number;
-  readonly seed: number;
-};
-
-/**
- * Response posted from the synthetic cosmos projection worker.
- *
- * @example
- * ```ts
- * import { SyntheticProjectionResponse } from "@/spikes/CosmosSpike.worker"
- * import { OntologyGraphProjection, OntologyGraphProjectionStats } from "@beep/ontology-use-cases/aggregates/Session/worker"
- *
- * const projection = OntologyGraphProjection.make({
- *   revision: 0,
- *   foldLevel: "L3",
- *   labelDetail: "hidden",
- *   nodeCount: 0,
- *   edgeCount: 0,
- *   nodeIds: new Uint32Array([]),
- *   nodeKinds: new Uint8Array([]),
- *   nodeFlags: new Uint8Array([]),
- *   edgeIds: new Uint32Array([]),
- *   edgeKinds: new Uint8Array([]),
- *   pointPositions: new Float32Array([]),
- *   links: new Float32Array([]),
- *   nodes: [],
- *   edges: [],
- *   clusters: [],
- *   changedNodeIds: [],
- *   changedEdgeIds: [],
- *   stats: OntologyGraphProjectionStats.make({
- *     visibleResourceCount: 0,
- *     projectedNodeCount: 0,
- *     projectedEdgeCount: 0,
- *     foldedResourceCount: 0
- *   })
- * })
- *
- * const response = SyntheticProjectionResponse.make({
- *   elementCount: 0,
- *   projection
- * })
- *
- * console.log(response.elementCount)
- * ```
- *
- * @category projections
- * @since 0.0.0
- */
-export class SyntheticProjectionResponse extends S.Class<SyntheticProjectionResponse>($I`SyntheticProjectionResponse`)(
-  {
-    elementCount: S.Int,
-    projection: OntologyGraphProjection,
-  },
-  $I.annote("SyntheticProjectionResponse", {
-    description: "Response posted from the synthetic cosmos projection worker.",
-  })
-) {}
+import * as BrowserRuntime from "@effect/platform-browser/BrowserRuntime";
+import * as BrowserWorkerRunner from "@effect/platform-browser/BrowserWorkerRunner";
+import { Effect, Layer } from "effect";
+import * as A from "effect/Array";
+import * as RpcServer from "effect/unstable/rpc/RpcServer";
+import { CosmosSpikeRpcs, SyntheticProjectionResponse } from "./CosmosSpike.rpc.ts";
+import type { ProjectSyntheticGraphRequest } from "./CosmosSpike.rpc.ts";
 
 const RDFS_SUB_CLASS_OF = `${RDFS_NAMESPACE}subClassOf`;
 
@@ -95,6 +36,7 @@ const iriFor = (index: number): string => `https://example.test/synthetic/${inde
 const resourceFor = (index: number): OntologyResourceSummary => {
   const isClass = index % 5 === 0;
   const parentIndex = isClass && index >= 500 ? index % 500 : 0;
+
   return OntologyResourceSummary.make({
     iri: iriFor(index),
     label: labelFor(index),
@@ -111,67 +53,68 @@ const relationshipFor = (index: number, nodeCount: number, state: number): Ontol
   const offset = nodeCount === 1 ? 0 : 1 + (state % (nodeCount - 1));
   const target = (source + offset) % nodeCount;
   const isClassLink = source % 5 === 0 && target % 5 === 0;
-  const predicateIri = isClassLink ? RDFS_SUB_CLASS_OF : RDF_TYPE.value;
 
   return OntologyRelationshipSummary.make({
     sourceIri: iriFor(source),
-    predicateIri,
+    predicateIri: isClassLink ? RDFS_SUB_CLASS_OF : RDF_TYPE.value,
     objectIri: iriFor(target),
     label: isClassLink ? "subClassOf" : "type",
     sourcePartitions: ["asserted"],
   });
 };
 
-const buildSyntheticProjection = (request: SyntheticProjectionRequest): SyntheticProjectionResponse => {
-  const resources: Array<OntologyResourceSummary> = [];
-  const relationships: Array<OntologyRelationshipSummary> = [];
-  let index = 0;
-  let state = request.seed;
+const buildSyntheticProjection = Effect.fn("CosmosSpikeWorker.buildSyntheticProjection")(
+  (request: ProjectSyntheticGraphRequest) =>
+    Effect.sync(() => {
+      const resources = A.makeBy(request.nodeCount, resourceFor);
+      const [, relationships] = A.mapAccum(
+        A.makeBy(request.edgeCount, (index) => index),
+        request.seed,
+        (state, index) => {
+          const nextState = nextSeed(state);
+          return [nextState, relationshipFor(index, request.nodeCount, nextState)];
+        }
+      );
+      const snapshot = OntologySnapshot.make({
+        sessionId: "cosmos-spike",
+        resources,
+        hierarchy: [],
+        relationships,
+        metrics: OntologyMetrics.make({
+          quadCount: request.edgeCount,
+          resourceCount: request.nodeCount,
+          classCount: A.countBy(resources, (resource) => resource.kind === "class"),
+          propertyCount: 0,
+          individualCount: A.countBy(resources, (resource) => resource.kind === "individual"),
+          tboxCount: A.countBy(resources, (resource) => resource.classification === "tbox"),
+          aboxCount: A.countBy(resources, (resource) => resource.classification === "abox"),
+        }),
+      });
+      const projection = buildOntologyGraphProjection(
+        snapshot,
+        OntologyGraphProjectionOptions.make({
+          ...defaultOntologyGraphProjectionOptions(),
+          foldLevel: "L3",
+          autoClusterThreshold: 2_500,
+          structuralFoldThreshold: 24,
+        })
+      );
 
-  while (index < request.nodeCount) {
-    resources.push(resourceFor(index));
-    index += 1;
-  }
-
-  index = 0;
-  while (index < request.edgeCount) {
-    state = nextSeed(state);
-    relationships.push(relationshipFor(index, request.nodeCount, state));
-    index += 1;
-  }
-
-  const snapshot = OntologySnapshot.make({
-    sessionId: "cosmos-spike",
-    resources,
-    hierarchy: [],
-    relationships,
-    metrics: OntologyMetrics.make({
-      quadCount: request.edgeCount,
-      resourceCount: request.nodeCount,
-      classCount: resources.filter((resource) => resource.kind === "class").length,
-      propertyCount: 0,
-      individualCount: resources.filter((resource) => resource.kind === "individual").length,
-      tboxCount: resources.filter((resource) => resource.classification === "tbox").length,
-      aboxCount: resources.filter((resource) => resource.classification === "abox").length,
-    }),
-  });
-
-  const projection = buildOntologyGraphProjection(
-    snapshot,
-    OntologyGraphProjectionOptions.make({
-      ...defaultOntologyGraphProjectionOptions(),
-      foldLevel: "L3",
-      autoClusterThreshold: 2_500,
-      structuralFoldThreshold: 24,
+      return SyntheticProjectionResponse.make({
+        elementCount: request.nodeCount + request.edgeCount,
+        projection,
+      });
     })
-  );
+);
 
-  return SyntheticProjectionResponse.make({
-    elementCount: request.nodeCount + request.edgeCount,
-    projection,
-  });
-};
-
-globalThis.addEventListener("message", (event: MessageEvent<SyntheticProjectionRequest>) => {
-  globalThis.postMessage(buildSyntheticProjection(event.data));
+const CosmosSpikeHandlersLive = CosmosSpikeRpcs.toLayer({
+  ProjectSyntheticGraph: buildSyntheticProjection,
 });
+
+const CosmosSpikeWorkerLive = RpcServer.layer(CosmosSpikeRpcs).pipe(
+  Layer.provide(CosmosSpikeHandlersLive),
+  Layer.provide(RpcServer.layerProtocolWorkerRunner),
+  Layer.provide(BrowserWorkerRunner.layer)
+);
+
+BrowserRuntime.runMain(Layer.launch(CosmosSpikeWorkerLive));

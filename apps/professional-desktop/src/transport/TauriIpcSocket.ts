@@ -28,10 +28,11 @@
  */
 
 import { $ProfessionalDesktopId } from "@beep/identity";
+import { LogRedactedCauseOptions, tapRedactedCause } from "@beep/observability";
 import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { Effect, Layer, Queue, Ref, Stream } from "effect";
+import { Effect, Layer, Metric, Queue, Ref, Stream } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -45,6 +46,16 @@ import type * as Scope from "effect/Scope";
 const $I = $ProfessionalDesktopId.create("transport/TauriIpcSocket");
 
 const FRAME_SEPARATOR = "\n";
+
+const ipcListenerFailures = Metric.counter("desktop_ipc_listener_failures_total", { incremental: true });
+const ipcInboundFrames = Metric.counter("desktop_ipc_inbound_frames_total", { incremental: true });
+const ipcInboundBytes = Metric.counter("desktop_ipc_inbound_bytes_total", { incremental: true });
+const ipcDecodeFailures = Metric.counter("desktop_ipc_decode_failures_total", { incremental: true });
+const ipcClosedEvents = Metric.counter("desktop_ipc_closed_events_total", { incremental: true });
+const ipcOutboundFrames = Metric.counter("desktop_ipc_outbound_frames_total", { incremental: true });
+const ipcOutboundBytes = Metric.counter("desktop_ipc_outbound_bytes_total", { incremental: true });
+const ipcSendFailures = Metric.counter("desktop_ipc_send_failures_total", { incremental: true });
+const ipcSendDuration = Metric.timer("desktop_ipc_send_duration");
 
 /**
  * The Tauri event names the Rust shell uses for the IPC stdio bridge: inbound
@@ -235,6 +246,16 @@ const scopedListen = (
       catch: toSocketError,
     }),
     (unlisten) => Effect.sync(unlisten)
+  ).pipe(
+    Effect.tapError(() => Metric.update(Metric.withAttributes(ipcListenerFailures, { event }), 1)),
+    tapRedactedCause(
+      LogRedactedCauseOptions.make({
+        message: "Tauri IPC listener registration failed",
+        level: "Error",
+        attributes: { event, subsystem: "ipc" },
+      })
+    ),
+    Effect.withSpan("desktop.ipc.listen", { attributes: { event } })
   );
 
 /**
@@ -247,16 +268,49 @@ const decodeInboundEvent = (event: InboundEvent): Effect.Effect<InboundFrame, So
   InboundEvent.match({
     Closed: ({ payload }) =>
       SidecarClosedPayload.decodeUnknownEffect(payload).pipe(
+        Effect.tapError(() => Metric.update(Metric.withAttributes(ipcDecodeFailures, { event: "Closed" }), 1)),
+        tapRedactedCause(
+          LogRedactedCauseOptions.make({
+            message: "Tauri IPC close payload decode failed",
+            level: "Error",
+            attributes: { event: "Closed", subsystem: "ipc" },
+          })
+        ),
         Effect.matchEffect({
           onFailure: (error) => Effect.fail(toSocketError(error)),
           onSuccess: (decoded) =>
-            Effect.fail(
-              toSocketError(SidecarClosedError.make({ message: sidecarClosedMessage(decoded), payload: decoded }))
+            Metric.update(Metric.withAttributes(ipcClosedEvents, { kind: decoded.kind }), 1).pipe(
+              Effect.andThen(
+                Effect.logWarning("Tauri IPC sidecar closed").pipe(
+                  Effect.annotateLogs({ close_kind: decoded.kind, subsystem: "ipc" })
+                )
+              ),
+              Effect.andThen(
+                Effect.fail(
+                  toSocketError(SidecarClosedError.make({ message: sidecarClosedMessage(decoded), payload: decoded }))
+                )
+              )
             ),
         })
       ),
-    Rx: ({ payload }) => InboundFrame.decodeUnknownEffect(payload).pipe(Effect.mapError(toSocketError)),
-  })(event);
+    Rx: ({ payload }) =>
+      InboundFrame.decodeUnknownEffect(payload).pipe(
+        Effect.tapError(() => Metric.update(Metric.withAttributes(ipcDecodeFailures, { event: "Rx" }), 1)),
+        tapRedactedCause(
+          LogRedactedCauseOptions.make({
+            message: "Tauri IPC inbound frame decode failed",
+            level: "Error",
+            attributes: { event: "Rx", subsystem: "ipc" },
+          })
+        ),
+        Effect.tap((frame) =>
+          Metric.update(Metric.withAttributes(ipcInboundFrames, { event: "Rx" }), 1).pipe(
+            Effect.andThen(Metric.update(ipcInboundBytes, Str.length(frame)))
+          )
+        ),
+        Effect.mapError(toSocketError)
+      ),
+  })(event).pipe(Effect.withSpan("desktop.ipc.decode_inbound", { attributes: { event: event._tag } }));
 
 /**
  * Inbound ndjson rpc frames as an Effect {@link Stream}. The two Tauri listeners
@@ -301,32 +355,46 @@ const inboundFrames = (onOpen: O.Option<Effect.Effect<void>>): Stream.Stream<Inb
  * framing, so it is written verbatim.
  */
 const sendFrame = Effect.fn("sendFrame")(function* (frame: string): Effect.fn.Return<void, SidecarSendError> {
-  const transport = yield* Effect.tryPromise({
-    try: () => invoke<unknown>("sidecar_transport"),
-    catch: (cause) => {
-      const causeMessage = unknownToMessage(cause);
-      return SidecarSendError.make({ causeMessage, message: `sidecar transport probe failed: ${causeMessage}` });
-    },
-  }).pipe(Effect.flatMap(SidecarTransport.decodeUnknownEffect), Effect.mapError(toSidecarSendError));
+  yield* Metric.update(ipcOutboundBytes, Str.length(frame));
+  return yield* Effect.gen(function* () {
+    const transport = yield* Effect.tryPromise({
+      try: () => invoke<unknown>("sidecar_transport"),
+      catch: (cause) => {
+        const causeMessage = unknownToMessage(cause);
+        return SidecarSendError.make({ causeMessage, message: `sidecar transport probe failed: ${causeMessage}` });
+      },
+    }).pipe(Effect.flatMap(SidecarTransport.decodeUnknownEffect), Effect.mapError(toSidecarSendError));
 
-  const rpcSessionToken = yield* O.match(O.fromUndefinedOr(transport.rpcSessionToken), {
-    onNone: () =>
-      Effect.fail(
-        SidecarSendError.make({
-          causeMessage: "missing RPC session token",
-          message: "sidecar transport did not provide an RPC session token for IPC send",
-        })
-      ),
-    onSome: Effect.succeed,
-  });
+    const rpcSessionToken = yield* O.match(O.fromUndefinedOr(transport.rpcSessionToken), {
+      onNone: () =>
+        Effect.fail(
+          SidecarSendError.make({
+            causeMessage: "missing RPC session token",
+            message: "sidecar transport did not provide an RPC session token for IPC send",
+          })
+        ),
+      onSome: Effect.succeed,
+    });
 
-  yield* Effect.tryPromise({
-    try: () => invoke<void>("sidecar_send", { frame, rpcSessionToken }),
-    catch: (cause) => {
-      const causeMessage = unknownToMessage(cause);
-      return SidecarSendError.make({ causeMessage, message: `sidecar send failed: ${causeMessage}` });
-    },
-  });
+    yield* Effect.tryPromise({
+      try: () => invoke<void>("sidecar_send", { frame, rpcSessionToken }),
+      catch: (cause) => {
+        const causeMessage = unknownToMessage(cause);
+        return SidecarSendError.make({ causeMessage, message: `sidecar send failed: ${causeMessage}` });
+      },
+    });
+    yield* Metric.update(ipcOutboundFrames, 1);
+  }).pipe(
+    Effect.trackDuration(ipcSendDuration),
+    Effect.tapError(() => Metric.update(ipcSendFailures, 1)),
+    tapRedactedCause(
+      LogRedactedCauseOptions.make({
+        message: "Tauri IPC frame send failed",
+        level: "Error",
+        attributes: { subsystem: "ipc" },
+      })
+    )
+  );
 });
 
 /**

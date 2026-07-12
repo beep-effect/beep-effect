@@ -132,6 +132,25 @@ const ipcMain = (): Layer.Layer<never, DesktopStartupError> =>
     Layer.provide(Logger.layer([Logger.withConsoleError(Logger.formatLogFmt)], { mergeWithExisting: false }))
   );
 
-const Main = ipcTransport ? ipcMain() : httpMain();
+const Main = (ipcTransport ? ipcMain() : httpMain()).pipe(
+  Layer.tap(
+    Effect.fnUntraced(function* () {
+      yield* Effect.logInfo("professional desktop sidecar ready").pipe(
+        Effect.annotateLogs({
+          auth_enabled: O.isSome(RPC_SESSION_TOKEN),
+          ontology_mcp_mutations_enabled: ONTOLOGY_MCP_MUTATIONS_ENABLED,
+          port: PORT,
+          transport: ipcTransport ? "ipc" : "http",
+        })
+      );
+      yield* Effect.addFinalizer(() =>
+        Effect.logInfo("professional desktop sidecar stopping").pipe(
+          Effect.annotateLogs({ transport: ipcTransport ? "ipc" : "http" })
+        )
+      );
+    })
+  ),
+  Layer.withSpan("professional_desktop.sidecar.runtime")
+);
 
 BunRuntime.runMain(Layer.launch(Main));

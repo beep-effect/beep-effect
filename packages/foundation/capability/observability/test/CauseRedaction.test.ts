@@ -1,4 +1,7 @@
+/** @effect-diagnostics strictEffectProvide:skip-file */
 import {
+  LogRedactedCauseOptions,
+  logRedactedCause,
   RedactCauseOptions,
   redactCause,
   redactCauseEffect,
@@ -6,11 +9,12 @@ import {
   redactString,
   sanitizeSensitiveText,
   summarizeCause,
+  tapRedactedCause,
 } from "@beep/observability";
 import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Equal } from "effect";
+import { Cause, Effect, Equal, Logger, References } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -82,6 +86,41 @@ describe("CauseRedaction", () => {
       const safe = yield* redactCauseEffect(Cause.fail(new Error("boom")));
       expect(safe.tag).toBe("failure");
       expect(safe.message).toBe("boom");
+    })
+  );
+
+  it.effect("logs only bounded redacted Cause diagnostics", () =>
+    Effect.gen(function* () {
+      const annotations: Array<Record<string, unknown>> = [];
+      const logger = Logger.make<unknown, void>((options) => {
+        annotations.push({ ...options.fiber.getRef(References.CurrentLogAnnotations) });
+      });
+
+      yield* logRedactedCause(
+        Cause.fail(new Error("token=sk-EXAMPLEKEY00 at /home/ada/project")),
+        LogRedactedCauseOptions.make({ message: "boundary failed" })
+      ).pipe(Effect.provide(Logger.layer([logger])));
+
+      expect(annotations).toHaveLength(1);
+      expect(annotations[0]?.cause_message).not.toContain("sk-EXAMPLEKEY00");
+      expect(annotations[0]?.cause_detail).not.toContain("/home/ada");
+      expect(annotations[0]?.cause_fingerprint).not.toContain("sk-EXAMPLEKEY00");
+      expect(annotations[0]?.cause_classification).toBe("failure");
+    })
+  );
+
+  it.effect("observes a boundary failure without changing its Cause", () =>
+    Effect.gen(function* () {
+      const original = Cause.fail(new Error("boom"));
+      const exit = yield* Effect.exit(
+        Effect.failCause(original).pipe(
+          tapRedactedCause(LogRedactedCauseOptions.make({ message: "boundary failed" })),
+          Effect.provide(Logger.layer([]))
+        )
+      );
+
+      expect(exit._tag).toBe("Failure");
+      expect(exit._tag === "Failure" ? Equal.equals(exit.cause, original) : false).toBe(true);
     })
   );
 

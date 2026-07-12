@@ -1,3 +1,4 @@
+/** @effect-diagnostics nodeBuiltinImport:skip-file asyncFunction:skip-file */
 /**
  * Browser-conditions regression guard for the visualizer worker import graph.
  *

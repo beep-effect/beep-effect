@@ -8,13 +8,17 @@
 import { fromApprovedToolsPolicy, sanitizedToolkit, TierGate } from "@beep/mcp-kit";
 import { OntologyMcpMutationToolsLive, OntologyMcpReadOnlyToolsLive } from "@beep/ontology-server/tools";
 import { OntologyMutationToolkit, OntologyReadOnlyToolkit } from "@beep/ontology-use-cases/tools";
-import { Context, Data, Effect, Layer } from "effect";
+import { Context, Data, Effect, Layer, Metric } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import { Headers, HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import { requireRpcSessionToken } from "./RpcSessionAuth.ts";
 import type { Redacted } from "effect";
+
+const ontologyMcpOriginDecisions = Metric.counter("desktop_ontology_mcp_origin_decisions_total", {
+  incremental: true,
+});
 
 const ontologyMcpAllowedOrigins: ReadonlyArray<string> = [
   "http://localhost:1421",
@@ -34,17 +38,27 @@ const isAllowedOntologyMcpOrigin = (headers: Headers.Headers): boolean =>
 const originMiddleware = HttpMiddleware.make((effect) =>
   Effect.withFiber((fiber) => {
     const request = Context.getUnsafe(fiber.context, HttpServerRequest.HttpServerRequest);
-    return isAllowedOntologyMcpOrigin(request.headers)
-      ? effect
-      : Effect.succeed(
-          HttpServerResponse.jsonUnsafe(
-            new OntologyMcpOriginForbidden({
-              status: 403,
-              message: "Origin is not allowed for the ontology MCP endpoint.",
-            }),
-            { status: 403 }
-          )
-        );
+    const allowed = isAllowedOntologyMcpOrigin(request.headers);
+    const attributes = { decision: allowed ? "allowed" : "denied", method: request.method };
+    return Metric.update(Metric.withAttributes(ontologyMcpOriginDecisions, attributes), 1).pipe(
+      Effect.andThen(
+        allowed
+          ? effect
+          : Effect.logWarning("ontology MCP origin denied").pipe(
+              Effect.annotateLogs({ method: request.method, subsystem: "ontology_mcp" }),
+              Effect.as(
+                HttpServerResponse.jsonUnsafe(
+                  new OntologyMcpOriginForbidden({
+                    status: 403,
+                    message: "Origin is not allowed for the ontology MCP endpoint.",
+                  }),
+                  { status: 403 }
+                )
+              )
+            )
+      ),
+      Effect.withSpan("ontology.mcp.origin", { attributes })
+    );
   })
 );
 

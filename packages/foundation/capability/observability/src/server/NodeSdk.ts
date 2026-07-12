@@ -14,16 +14,16 @@ import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-proto";
 import { BatchLogRecordProcessor } from "@opentelemetry/sdk-logs";
 import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
-import { Duration } from "effect";
+import { Duration, Layer } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { layerMinimumLogLevel } from "../Logging.ts";
 import { ServerObservabilityConfig, toOtlpResource } from "./Config.ts";
 import type * as OtelResource from "@effect/opentelemetry/Resource";
 import type { LogRecordProcessor } from "@opentelemetry/sdk-logs";
 import type { MetricReader } from "@opentelemetry/sdk-metrics";
 import type { SpanProcessor } from "@opentelemetry/sdk-trace-base";
-import type { Layer } from "effect";
 
 const $I = $ObservabilityId.create("server/NodeSdk");
 const isOTelLogRecordProcessor = (value: unknown): value is LogRecordProcessor => P.isUnknown(value);
@@ -275,6 +275,22 @@ export const makeNodeSdkServerTraceConfig: {
     })
 );
 
+type NodeSdkServerLayer = {
+  (
+    config: ServerObservabilityConfig,
+    options?: NodeSdkServerOptionsInput | undefined
+  ): Layer.Layer<OtelResource.Resource>;
+  (
+    options: NodeSdkServerOptionsInput | undefined
+  ): (config: ServerObservabilityConfig) => Layer.Layer<OtelResource.Resource>;
+};
+
+const makeNodeSdkLayer = (
+  config: ServerObservabilityConfig,
+  makeConfig: () => NodeSdk.Configuration
+): Layer.Layer<OtelResource.Resource> =>
+  Layer.merge(NodeSdk.layer(makeConfig), layerMinimumLogLevel(config.minLogLevel));
+
 /**
  * Build a shared Node SDK layer for server runtimes.
  *
@@ -301,20 +317,12 @@ export const makeNodeSdkServerTraceConfig: {
  * @since 0.0.0
  * @category layers
  */
-export const layerNodeSdkServer: {
-  (
-    config: ServerObservabilityConfig,
-    options?: NodeSdkServerOptionsInput | undefined
-  ): Layer.Layer<OtelResource.Resource>;
-  (
-    options: NodeSdkServerOptionsInput | undefined
-  ): (config: ServerObservabilityConfig) => Layer.Layer<OtelResource.Resource>;
-} = dual(
+export const layerNodeSdkServer: NodeSdkServerLayer = dual(
   (args) => ServerObservabilityConfig.is(args[0]),
   (
     config: ServerObservabilityConfig,
     options?: NodeSdkServerOptionsInput | undefined
-  ): Layer.Layer<OtelResource.Resource> => NodeSdk.layer(() => makeNodeSdkServerConfig(config, options))
+  ): Layer.Layer<OtelResource.Resource> => makeNodeSdkLayer(config, () => makeNodeSdkServerConfig(config, options))
 );
 
 /**
@@ -343,18 +351,10 @@ export const layerNodeSdkServer: {
  * @since 0.0.0
  * @category layers
  */
-export const layerNodeSdkServerTraces: {
-  (
-    config: ServerObservabilityConfig,
-    options?: NodeSdkServerOptionsInput | undefined
-  ): Layer.Layer<OtelResource.Resource>;
-  (
-    options: NodeSdkServerOptionsInput | undefined
-  ): (config: ServerObservabilityConfig) => Layer.Layer<OtelResource.Resource>;
-} = dual(
+export const layerNodeSdkServerTraces: NodeSdkServerLayer = dual(
   (args) => ServerObservabilityConfig.is(args[0]),
   (
     config: ServerObservabilityConfig,
     options?: NodeSdkServerOptionsInput | undefined
-  ): Layer.Layer<OtelResource.Resource> => NodeSdk.layer(() => makeNodeSdkServerTraceConfig(config, options))
+  ): Layer.Layer<OtelResource.Resource> => makeNodeSdkLayer(config, () => makeNodeSdkServerTraceConfig(config, options))
 );

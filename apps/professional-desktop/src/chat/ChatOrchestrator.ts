@@ -24,9 +24,10 @@ import {
 } from "@beep/agents-use-cases/public";
 import { appendTurnFinalizationUsageRecord, TurnFinalizationUsageAppend } from "@beep/epistemic-domain";
 import { renderPlainTextUnsafe } from "@beep/md/Md.render";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Thread } from "@beep/workspace-use-cases/server";
-import { Clock, Duration, Effect, Metric, Order, pipe, Ref, Stream } from "effect";
+import { Cause, Clock, Duration, Effect, Exit, Metric, Order, pipe, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -149,12 +150,18 @@ const projectTimelineToHistory = (timeline: Thread.ThreadTimeline): ReadonlyArra
 // Boundary translation (std-09): drop internal detail, keep it in the log
 // ---------------------------------------------------------------------------
 
-const toChatActionError =
-  (context: string) =>
-  (error: { readonly _tag: string }): Effect.Effect<never, ChatActionError> =>
-    Effect.logWarning("chat action dropped internal failure", { context, detail: error }).pipe(
-      Effect.andThen(ChatActionError.failEffect(context))
+const toChatActionError = (context: string) =>
+  Effect.fnUntraced(function* (error: { readonly _tag: string }): Effect.fn.Return<never, ChatActionError> {
+    yield* logRedactedCause(
+      Cause.fail(error),
+      LogRedactedCauseOptions.make({
+        message: "chat action dropped internal failure",
+        level: "Warn",
+        attributes: { context, subsystem: "chat" },
+      })
     );
+    return yield* ChatActionError.failEffect(context);
+  });
 
 // ---------------------------------------------------------------------------
 // Usage-record synthesis (fixture path)
@@ -223,6 +230,13 @@ const chatBlocksStreamedTotal = Metric.counter("agents_chat_blocks_streamed_tota
   description: "Assistant blocks streamed to the chat client",
   incremental: true,
 });
+const chatTurnsCompletedTotal = Metric.counter("agents_chat_turns_completed_total", { incremental: true });
+const chatTurnsInterruptedTotal = Metric.counter("agents_chat_turns_interrupted_total", { incremental: true });
+const chatTurnsZeroBlockTotal = Metric.counter("agents_chat_turns_zero_block_total", { incremental: true });
+const chatPersistenceFailuresTotal = Metric.counter("agents_chat_persistence_failures_total", { incremental: true });
+const chatTimeToFirstBlock = Metric.timer("agents_chat_time_to_first_block", {
+  boundaries: [25, 50, 100, 250, 500, 1000, 2000, 4000, 8000, 16000, 30000, 60000],
+});
 
 /**
  * Build the assistant-turn stream for a thread: stream the kernel turn,
@@ -274,38 +288,78 @@ const streamAndPersist = (
         const persistWithTelemetry = persist.pipe(
           Effect.tapError((error) =>
             trackTurnFailure("persist").pipe(
+              Effect.andThen(Metric.update(Metric.withAttributes(chatPersistenceFailuresTotal, { kind }), 1)),
               Effect.andThen(
-                Effect.logWarning("chat stream failed", {
-                  context: "SendMessage.persistAssistant",
-                  detail: error,
-                })
+                logRedactedCause(
+                  Cause.fail(error),
+                  LogRedactedCauseOptions.make({
+                    message: "chat stream failed",
+                    level: "Warn",
+                    attributes: { context: "SendMessage.persistAssistant", subsystem: "chat" },
+                  })
+                )
               )
             )
           )
         );
 
+        const completeWithTelemetry = Effect.gen(function* () {
+          yield* persistWithTelemetry;
+          yield* Metric.update(Metric.withAttributes(chatTurnsCompletedTotal, { kind }), 1);
+          if (A.isReadonlyArrayEmpty(collected)) {
+            yield* Metric.update(Metric.withAttributes(chatTurnsZeroBlockTotal, { kind }), 1);
+            yield* Effect.logWarning("chat turn completed without assistant blocks").pipe(
+              Effect.annotateLogs({ kind })
+            );
+          }
+          yield* Effect.logInfo("chat turn completed").pipe(Effect.annotateLogs({ kind }));
+        });
+
         return kernel.streamTurn(history).pipe(
           Stream.tap(
             Effect.fnUntraced(function* (indexed: IndexedBlock) {
+              if (A.isReadonlyArrayEmpty(collected)) {
+                const firstBlockAt = yield* Clock.currentTimeMillis;
+                yield* Metric.update(
+                  Metric.withAttributes(chatTimeToFirstBlock, { kind }),
+                  Duration.millis(firstBlockAt - startedAt)
+                );
+              }
               collected = A.append(collected, indexed);
               yield* Metric.update(Metric.withAttributes(chatBlocksStreamedTotal, { kind }), 1);
             })
           ),
           Stream.tapError((error) =>
             trackTurnFailure("kernel").pipe(
-              Effect.andThen(Effect.logWarning("chat stream failed", { context: "SendMessage.kernel", detail: error }))
+              Effect.andThen(
+                logRedactedCause(
+                  Cause.fail(error),
+                  LogRedactedCauseOptions.make({
+                    message: "chat stream failed",
+                    level: "Warn",
+                    attributes: { context: "SendMessage.kernel", subsystem: "chat" },
+                  })
+                )
+              )
             )
           ),
           // wire stays bare blocks; envelope indices are a handler-side concern
           Stream.map((indexed): AssistantBlock => indexed.block),
           // success path only — persist nothing on error/interrupt (no onExit).
           // onEnd widens the error channel with persist's ChatActionError.
-          Stream.onEnd(persistWithTelemetry),
+          Stream.onEnd(completeWithTelemetry),
           // translate the kernel's TurnGenerationError to the client-safe wire
           // error; the persist ChatActionError passes through unchanged (std-09).
           Stream.mapError(
             (error: TurnGenerationError | ChatActionError): ChatActionError =>
               S.is(ChatActionError)(error) ? error : ChatActionError.new(error.message)
+          ),
+          Stream.onExit((exit) =>
+            Exit.hasInterrupts(exit)
+              ? Metric.update(Metric.withAttributes(chatTurnsInterruptedTotal, { kind }), 1).pipe(
+                  Effect.andThen(Effect.logInfo("chat turn interrupted").pipe(Effect.annotateLogs({ kind })))
+                )
+              : Effect.void
           ),
           Stream.ensuring(recordTurnDuration)
         );
@@ -324,10 +378,14 @@ const setTitleFromFirstUserMessage = (
     O.map((title) =>
       store.setTitleIfEmpty({ threadId, emptyTitle, title }).pipe(
         Effect.catch((error) =>
-          Effect.logWarning("chat title derivation skipped", {
-            context: "SendMessage.setTitleIfEmpty",
-            detail: error,
-          })
+          logRedactedCause(
+            Cause.fail(error),
+            LogRedactedCauseOptions.make({
+              message: "chat title derivation skipped",
+              level: "Warn",
+              attributes: { context: "SendMessage.setTitleIfEmpty", subsystem: "chat" },
+            })
+          )
         )
       )
     ),
@@ -344,10 +402,14 @@ const titleGuardForEditedTurn = (
       isFirstUserMessageTurn(timeline, turnId) ? titleGuardForEditedFirstUserTurn(timeline, turnId) : O.none()
     ),
     Effect.catch((error) =>
-      Effect.logWarning("chat title derivation skipped", {
-        context: "EditMessage.firstUserTitleGate",
-        detail: error,
-      }).pipe(Effect.as(O.none<string>()))
+      logRedactedCause(
+        Cause.fail(error),
+        LogRedactedCauseOptions.make({
+          message: "chat title derivation skipped",
+          level: "Warn",
+          attributes: { context: "EditMessage.firstUserTitleGate", subsystem: "chat" },
+        })
+      ).pipe(Effect.as(O.none<string>()))
     )
   );
 

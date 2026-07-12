@@ -14,7 +14,7 @@ import { assertSchemaArbitraryDecodesToSelf, provideScopedLayer } from "@beep/te
 import { ThreadStoreInMemoryLayer } from "@beep/workspace-server/aggregates/Thread";
 import { Thread } from "@beep/workspace-use-cases/server";
 import { describe, expect, it } from "@effect/vitest";
-import { Deferred, Effect, Fiber, Layer, Ref, Stream } from "effect";
+import { Deferred, Effect, Fiber, Layer, Metric, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
@@ -86,6 +86,23 @@ describe("@beep/professional-desktop chat contract", () => {
       const usage = yield* Ref.get(usageRef);
       expect(usage).toHaveLength(1);
       expect(usage[0]?.provider).toBe("fixture");
+
+      // The successful stream records completion and duration telemetry in the
+      // same Effect runtime that executed the contract.
+      const metrics = yield* Metric.snapshot;
+      const completed = O.getOrThrow(
+        A.findFirst(
+          metrics,
+          (snapshot) => snapshot.id === "agents_chat_turns_completed_total" && snapshot.type === "Counter"
+        )
+      );
+      const duration = O.getOrThrow(
+        A.findFirst(metrics, (snapshot) => snapshot.id === "agents_chat_turn_duration" && snapshot.type === "Histogram")
+      );
+      expect(completed.type).toBe("Counter");
+      expect(completed.type === "Counter" ? completed.state.count : 0).not.toBe(0);
+      expect(duration.type).toBe("Histogram");
+      expect(duration.type === "Histogram" ? duration.state.count : 0).toBeGreaterThan(0);
     }).pipe(provideScopedLayer(StackLayer))
   );
 

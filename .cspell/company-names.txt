@@ -36,6 +36,7 @@ singlestore
 Softeria
 Solana
 Solv
+Taskade
 tldraw
 Toggl
 Vercel

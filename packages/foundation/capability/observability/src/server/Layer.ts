@@ -7,10 +7,10 @@
 import { Duration, Layer, Metric } from "effect";
 import { dual } from "effect/Function";
 import * as Otlp from "effect/unstable/observability/Otlp";
-import { toOtlpResource } from "./Config.ts";
+import { layerMinimumLogLevel } from "../Logging.ts";
+import { ServerObservabilityConfig, toOtlpResource } from "./Config.ts";
 import { layerFilteredDevTools } from "./DevTools.ts";
 import type * as HttpClient from "effect/unstable/http/HttpClient";
-import type { ServerObservabilityConfig } from "./Config.ts";
 import type { DevToolsSpanFilter } from "./DevTools.ts";
 
 /**
@@ -50,7 +50,7 @@ export const layerLocalLgtmServer: {
     readonly shouldPublishDevToolsSpan?: DevToolsSpanFilter | undefined;
   }): (config: ServerObservabilityConfig) => Layer.Layer<never, never, HttpClient.HttpClient>;
 } = dual(
-  2,
+  (args) => ServerObservabilityConfig.is(args[0]),
   (
     config: ServerObservabilityConfig,
     options?: {
@@ -59,6 +59,7 @@ export const layerLocalLgtmServer: {
   ): Layer.Layer<never, never, HttpClient.HttpClient> =>
     Layer.mergeAll(
       Metric.enableRuntimeMetricsLayer,
+      layerMinimumLogLevel(config.minLogLevel),
       config.otlpEnabled
         ? Otlp.layerProtobuf({
             baseUrl: config.otlpBaseUrl,

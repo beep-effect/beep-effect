@@ -20,11 +20,16 @@ import type { SkillOptTaskManifest } from "../AgentEffectiveness.schemas.js";
 const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/EvalScoring");
 const SCORE_FORMAT_DIGITS = 6;
 
-interface LawComponentScores {
-  readonly biome: number;
-  readonly schemaFirst: number;
-  readonly tsgo: number;
-}
+class LawComponentScores extends S.Class<LawComponentScores>($I`LawComponentScores`)(
+  {
+    biome: S.Finite,
+    schemaFirst: S.Finite,
+    tsgo: S.Finite,
+  },
+  $I.annote("LawComponentScores", {
+    description: "Scores for one eval task, one law lane.",
+  })
+) {}
 
 /**
  * Completion-lane score for one eval task: the fraction of required skill

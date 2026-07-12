@@ -10,7 +10,9 @@
  * @since 0.0.0
  */
 
-import { Config, Effect, Stream } from "effect";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
+import { O } from "@beep/utils";
+import { Cause, Config, Effect, Stream } from "effect";
 import * as Str from "effect/String";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { VaultDirectoryPickError, VaultDirectoryPickerRpcs } from "./VaultDirectoryPicker.rpc.ts";
@@ -29,14 +31,14 @@ const pickWith = Effect.fn("pickWith")(function* (executable: string, args: Read
     concurrency: "unbounded",
   });
   // kdialog and zenity exit non-zero when the user cancels the dialog.
-  if (Number(exitCode) !== 0) return null;
+  if (Number(exitCode) !== 0) return O.none<string>();
   const selected = Str.trim(stdout);
-  return Str.isNonEmpty(selected) ? selected : null;
+  return Str.isNonEmpty(selected) ? O.some(selected) : O.none<string>();
 }, Effect.scoped);
 
 /**
  * Open the sidecar host's native folder dialog (kdialog, then zenity) and
- * resolve with the picked absolute directory path, or `null` on cancel.
+ * resolve with the picked absolute directory path, or `None` on cancel.
  *
  * @example
  * ```ts
@@ -51,13 +53,18 @@ const pickWith = Effect.fn("pickWith")(function* (executable: string, args: Read
  */
 export const pickVaultDirectoryOnHost = (
   startDirectory: string
-): Effect.Effect<string | null, VaultDirectoryPickError, ChildProcessSpawner.ChildProcessSpawner> =>
+): Effect.Effect<O.Option<string>, VaultDirectoryPickError, ChildProcessSpawner.ChildProcessSpawner> =>
   pickWith("kdialog", ["--title", dialogTitle, "--getexistingdirectory", startDirectory]).pipe(
     Effect.catch(() => pickWith("zenity", ["--file-selection", "--directory", `--title=${dialogTitle}`])),
     Effect.catch((error) =>
-      Effect.logWarning("native vault directory picker unavailable", { detail: error }).pipe(
-        Effect.andThen(VaultDirectoryPickError.failEffect("Native folder dialog unavailable on this host."))
-      )
+      logRedactedCause(
+        Cause.fail(error),
+        LogRedactedCauseOptions.make({
+          message: "native vault directory picker unavailable",
+          level: "Warn",
+          attributes: { subsystem: "vault_picker" },
+        })
+      ).pipe(Effect.andThen(VaultDirectoryPickError.failEffect("Native folder dialog unavailable on this host.")))
     )
   );
 
@@ -78,7 +85,7 @@ export const VaultDirectoryPickerHandlersLive = VaultDirectoryPickerRpcs.toLayer
   Effect.gen(function* () {
     const startDirectory = yield* Config.string("HOME").pipe(Config.withDefault("/"));
     return VaultDirectoryPickerRpcs.of({
-      PickVaultDirectory: () => pickVaultDirectoryOnHost(startDirectory),
+      PickVaultDirectory: () => pickVaultDirectoryOnHost(startDirectory).pipe(Effect.map(O.getOrNull)),
     });
   })
 );

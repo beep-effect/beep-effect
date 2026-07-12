@@ -6,16 +6,16 @@
  */
 
 "use client";
-
-import { FilingOutcome } from "@beep/documents-domain/aggregates/Document";
+import { Document, FilingOutcome } from "@beep/documents-domain/aggregates/Document";
 import { IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch";
 import { slugVaultSegment } from "@beep/documents-domain/values/Taxonomy";
+import { $ProfessionalDesktopId } from "@beep/identity";
 import { Button } from "@beep/ui/components/button";
+import { A, O } from "@beep/utils";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Effect } from "effect";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { AsyncResult } from "effect/unstable/reactivity";
 import { Fragment, useState } from "react";
 import { failureMessageOr } from "@/lib/failureMessage";
@@ -28,9 +28,9 @@ import {
   pickVaultDirectoryAtom,
   workspaceVaultConfigAtom,
 } from "./Intake.atoms.js";
-import type { Document } from "@beep/documents-domain/aggregates/Document";
 import type { DragEvent, JSX, ReactNode } from "react";
 
+const $I = $ProfessionalDesktopId.create("intake/DocumentIntakeTarget");
 const hasTauriRuntime = (): boolean => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
 // Tauri opens the shell's own native dialog; browser mode asks the sidecar to
@@ -56,9 +56,34 @@ const vaultConfigurationFailureMessage = failureMessageOr("Unable to save worksp
 
 const intakeFailureMessage = failureMessageOr("Intake failed.");
 
-type IntakeResultEntry =
-  | { readonly kind: "document"; readonly document: Document }
-  | { readonly kind: "failure"; readonly fileName: string; readonly message: string };
+class IntakeResultEntryDocument extends S.Class<IntakeResultEntryDocument>($I`IntakeResultEntry`)(
+  {
+    kind: S.tag("document"),
+    document: Document,
+  },
+  $I.annote("IntakeResultEntry", {
+    description: "",
+  })
+) {}
+
+class IntakeResultEntryFailure extends S.Class<IntakeResultEntryFailure>($I`IntakeResultEntryFailure`)(
+  {
+    kind: S.tag("failure"),
+    fileName: S.String,
+    message: S.String,
+  },
+  $I.annote("IntakeResultEntry", {
+    description: "",
+  })
+) {}
+
+const IntakeResultEntry = S.Union([IntakeResultEntryDocument, IntakeResultEntryFailure]).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("IntakeResultEntry", {
+    description: "",
+  })
+);
+type IntakeResultEntry = typeof IntakeResultEntry.Type;
 
 const intakeResultRow = (entry: IntakeResultEntry): JSX.Element =>
   entry.kind === "failure" ? (
@@ -143,8 +168,10 @@ const IntakeResultsPanel = ({
         </Button>
       </div>
       <ul className="mt-2 space-y-2">
-        {results.map((entry, index) => (
-          <Fragment key={`${index}-${entry.kind === "document" ? entry.document.contentDigest : entry.fileName}`}>
+        {A.map(results, (entry, index) => (
+          <Fragment
+            key={`${index}-${IntakeResultEntry.guards.document(entry) ? entry.document.contentDigest : entry.fileName}`}
+          >
             {intakeResultRow(entry)}
           </Fragment>
         ))}
@@ -172,7 +199,7 @@ export const configureSelectedWorkspaceVault = Effect.fn("configureSelectedWorks
   configureVault: (input: ConfigureWorkspaceVaultInput) => Promise<unknown>,
   setStatus: (status: string | null) => void
 ) {
-  if (selected === null || selected.trim().length === 0) return;
+  if (selected === null || Str.isEmpty(Str.trim(selected))) return;
   const input = yield* S.decodeUnknownEffect(ConfigureWorkspaceVaultInput)({
     vaultRootPath: selected,
     workspaceId: DEFAULT_WORKSPACE_ID,
@@ -253,8 +280,22 @@ export function DocumentIntakeTarget({ children }: { readonly children: ReactNod
         ),
         Effect.matchEffect({
           onFailure: (cause) =>
-            Effect.sync(() => appendResult({ kind: "failure", fileName, message: intakeFailureMessage(cause) })),
-          onSuccess: (document) => Effect.sync(() => appendResult({ kind: "document", document })),
+            Effect.sync(() =>
+              appendResult(
+                IntakeResultEntryFailure.make({
+                  fileName,
+                  message: intakeFailureMessage(cause),
+                })
+              )
+            ),
+          onSuccess: (document) =>
+            Effect.sync(() =>
+              appendResult(
+                IntakeResultEntryDocument.make({
+                  document,
+                })
+              )
+            ),
         })
       );
     }).pipe(Effect.ensuring(Effect.sync(() => setActiveBatches((count) => count - 1))));

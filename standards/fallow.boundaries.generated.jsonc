@@ -739,6 +739,7 @@
           "@beep/agents-domain",
           "@beep/agents-use-cases",
           "@beep/md",
+          "@beep/observability",
           "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
@@ -748,6 +749,7 @@
           "@beep/agents-domain",
           "@beep/agents-use-cases",
           "@beep/md",
+          "@beep/observability",
           "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
@@ -2245,6 +2247,7 @@
           "@beep/lexical-schema",
           "@beep/mcp-kit",
           "@beep/md",
+          "@beep/observability",
           "@beep/ontology-client",
           "@beep/ontology-domain",
           "@beep/ontology-server",
@@ -2281,6 +2284,7 @@
           "@beep/lexical-schema",
           "@beep/mcp-kit",
           "@beep/md",
+          "@beep/observability",
           "@beep/ontology-client",
           "@beep/ontology-domain",
           "@beep/ontology-server",

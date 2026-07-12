@@ -15,10 +15,11 @@ import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
 import { ChatActionError, ChatRpcs } from "@beep/agents-use-cases/public";
 import { $AgentsClientId } from "@beep/identity/packages";
 import { Document } from "@beep/md/Md.model";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { A, O, P, Str } from "@beep/utils";
-import { Clock, Duration, Effect, Layer, Metric, Stream } from "effect";
+import { Cause, Clock, Duration, Effect, Layer, Metric, Stream } from "effect";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
 import { KeyValueStore } from "effect/unstable/persistence";
@@ -551,6 +552,15 @@ const decodeFailures = Metric.counter("ui_editor_decode_failures_total", {
   description: "Composer editor states that failed schema decode",
   incremental: true,
 });
+const turnAttempts = Metric.counter("ui_turn_attempts_total", { incremental: true });
+const turnCompleted = Metric.counter("ui_turn_completed_total", { incremental: true });
+const turnFailed = Metric.counter("ui_turn_failed_total", { incremental: true });
+const turnCancelled = Metric.counter("ui_turn_cancelled_total", { incremental: true });
+const turnZeroBlock = Metric.counter("ui_turn_zero_block_total", { incremental: true });
+const turnBlocks = Metric.counter("ui_turn_blocks_total", { incremental: true });
+const turnDuration = Metric.timer("ui_turn_duration", {
+  boundaries: [100, 250, 500, 1000, 2000, 4000, 8000, 16000, 30000, 60000],
+});
 
 /**
  * Composer content failing schema decode is a bug — count and log it.
@@ -753,6 +763,8 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
     const client = yield* ChatClient;
     const reactivity = yield* Reactivity.Reactivity;
     const registry = yield* AtomRegistry.AtomRegistry;
+    yield* Effect.annotateCurrentSpan({ turn_kind: turn._tag, thread_id: turn.threadId });
+    yield* Metric.update(Metric.withAttributes(turnAttempts, { kind: turn._tag }), 1);
     yield* Effect.logInfo("assistant turn started").pipe(Effect.annotateLogs({ turn: turn._tag }));
     const stream = TurnRequest.match(turn, {
       send: (turn) => client("SendMessage", { threadId: turn.threadId, content: turn.content }),
@@ -782,6 +794,13 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
     // every workspace list, so invalidate both the timeline and the shared list
     const turnKeys = [timelineKey(turn.threadId), THREADS_KEY];
     const startedAt = yield* Clock.currentTimeMillis;
+    const recordDuration = Effect.gen(function* () {
+      const endedAt = yield* Clock.currentTimeMillis;
+      yield* Metric.update(
+        Metric.withAttributes(turnDuration, { kind: turn._tag }),
+        Duration.millis(endedAt - startedAt)
+      );
+    });
     let blocks: ReadonlyArray<AssistantBlock> = [];
     ctx.set(turnErrorAtom, O.none());
     ctx.set(streamingTurnAtom, O.some(makeStreamingTurn(blocks)));
@@ -809,7 +828,15 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
           ctx.set(streamingTurnAtom, O.none());
           const turnError = toTurnError(error);
           ctx.set(turnErrorAtom, O.some(turnError));
-          yield* Effect.logError("assistant turn failed", error);
+          yield* Metric.update(Metric.withAttributes(turnFailed, { kind: turn._tag }), 1);
+          yield* logRedactedCause(
+            Cause.fail(error),
+            LogRedactedCauseOptions.make({
+              message: "assistant turn failed",
+              level: "Error",
+              attributes: { kind: turn._tag, subsystem: "chat_ui" },
+            })
+          );
         })
       ),
       // user-cancelled (Atom.Interrupt write): drop the partial turn and
@@ -818,16 +845,30 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
       // `ctx` is already disposed and its writes are silently dropped — go
       // through the registry and reactivity services, which outlive the node.
       Effect.onInterrupt(() =>
-        Effect.sync(() => {
-          registry.set(streamingTurnAtom, O.none());
-          reactivity.invalidateUnsafe(turnKeys);
-        })
-      )
+        Metric.update(Metric.withAttributes(turnCancelled, { kind: turn._tag }), 1).pipe(
+          Effect.andThen(Effect.logInfo("assistant turn cancelled").pipe(Effect.annotateLogs({ turn: turn._tag }))),
+          Effect.andThen(
+            Effect.sync(() => {
+              registry.set(streamingTurnAtom, O.none());
+              reactivity.invalidateUnsafe(turnKeys);
+            })
+          )
+        )
+      ),
+      Effect.ensuring(recordDuration)
     );
     // wait for the refetched timeline before dropping the streamed turn, so the
     // persisted rendering swaps in without a gap
     yield* ctx.result(threadTimelineAtoms(turn.threadId), { suspendOnWaiting: true });
     ctx.set(streamingTurnAtom, O.none());
+    yield* Metric.update(Metric.withAttributes(turnCompleted, { kind: turn._tag }), 1);
+    yield* Metric.update(Metric.withAttributes(turnBlocks, { kind: turn._tag }), blocks.length);
+    if (A.isReadonlyArrayEmpty(blocks)) {
+      yield* Metric.update(Metric.withAttributes(turnZeroBlock, { kind: turn._tag }), 1);
+      yield* Effect.logWarning("assistant turn completed without streamed blocks").pipe(
+        Effect.annotateLogs({ turn: turn._tag })
+      );
+    }
     yield* Effect.logInfo("assistant turn complete");
   })
 );

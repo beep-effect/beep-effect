@@ -11,6 +11,7 @@
  */
 
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
+import { profilePhase } from "@beep/observability";
 import { migrate, PostgresDrizzle, PostgresError } from "@beep/postgres";
 import { SchemaUtils } from "@beep/schema";
 import { Effect, FileSystem, Path } from "effect";
@@ -493,7 +494,7 @@ const writeSidecarReadyMarker = Effect.sync(() => {
  * @since 0.0.0
  */
 export const migrateOnBoot: Effect.Effect<void, PostgresError, FileSystem.FileSystem | Path.Path | PostgresDrizzle> =
-  migrateProfessionalDesktopDatabase().pipe(
+  profilePhase(migrateProfessionalDesktopDatabase(), { phase: "professional_desktop.database.migrate" }).pipe(
     Effect.tap(() =>
       Effect.logInfo("chat sidecar migrations applied").pipe(
         Effect.annotateLogs({

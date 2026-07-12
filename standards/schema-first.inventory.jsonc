@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-11",
+  "generatedOn": "2026-07-12",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
@@ -298,14 +298,6 @@
       "status": "exception",
       "owner": "@beep/box",
       "reason": "Type alias contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/drivers/cosmos/src/Cosmos.renderer.ts",
-      "symbol": "CosmosRenderHandle",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/cosmos",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
       "file": "packages/drivers/drizzle/src/Drizzle.service.ts",

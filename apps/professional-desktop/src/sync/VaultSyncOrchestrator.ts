@@ -13,16 +13,44 @@ import {
   VaultSyncStatusInput,
 } from "@beep/documents-use-cases/aggregates/Sync/server";
 import { VaultSyncActionError, VaultSyncRpcs } from "@beep/documents-use-cases/public";
+import { LogRedactedCauseOptions, logRedactedCause, observeWorkflow } from "@beep/observability";
 import * as WorkspaceUseCases from "@beep/workspace-use-cases/server";
-import { Effect, pipe } from "effect";
+import { Cause, Effect, Metric, pipe } from "effect";
 import * as O from "effect/Option";
 
-const toVaultSyncActionError =
-  (context: string) =>
-  (error: { readonly _tag: string }): Effect.Effect<never, VaultSyncActionError> =>
-    Effect.logWarning("vault sync action dropped internal failure", { context, detail: error }).pipe(
-      Effect.andThen(VaultSyncActionError.failEffect(context))
+const syncStarted = Metric.counter("desktop_vault_sync_operations_started_total", { incremental: true });
+const syncCompleted = Metric.counter("desktop_vault_sync_operations_completed_total", { incremental: true });
+const syncFailed = Metric.counter("desktop_vault_sync_operations_failed_total", { incremental: true });
+const syncInterrupted = Metric.counter("desktop_vault_sync_operations_interrupted_total", { incremental: true });
+const syncDuration = Metric.timer("desktop_vault_sync_operation_duration");
+
+const observeSyncOperation = Effect.fnUntraced(function* <A, E, R>(
+  operation: string,
+  effect: Effect.Effect<A, E, R>
+): Effect.fn.Return<A, E, R> {
+  return yield* observeWorkflow(effect, {
+    name: `documents.sync.${operation}`,
+    attributes: { operation },
+    started: syncStarted,
+    completed: syncCompleted,
+    failed: syncFailed,
+    interrupted: syncInterrupted,
+    duration: syncDuration,
+  }).pipe(Effect.withSpan(`documents.sync.${operation}`));
+});
+
+const toVaultSyncActionError = (context: string) =>
+  Effect.fnUntraced(function* (error: { readonly _tag: string }): Effect.fn.Return<never, VaultSyncActionError> {
+    yield* logRedactedCause(
+      Cause.fail(error),
+      LogRedactedCauseOptions.make({
+        message: "vault sync action dropped internal failure",
+        level: "Warn",
+        attributes: { context, subsystem: "vault_sync" },
+      })
     );
+    return yield* VaultSyncActionError.failEffect(context);
+  });
 
 /**
  * RPC handler layer for workspace vault sync commands.
@@ -48,31 +76,45 @@ export const VaultSyncHandlersLive = VaultSyncRpcs.toLayer(
     const engine = yield* VaultSyncEngine;
     return VaultSyncRpcs.of({
       GetVaultSyncStatus: ({ workspaceId }) =>
-        engine
-          .status(VaultSyncStatusInput.make({ workspaceId }))
-          .pipe(Effect.catch(toVaultSyncActionError("GetVaultSyncStatus"))),
+        observeSyncOperation(
+          "get_status",
+          engine
+            .status(VaultSyncStatusInput.make({ workspaceId }))
+            .pipe(Effect.catch(toVaultSyncActionError("GetVaultSyncStatus")))
+        ),
       ListVaultSyncConflicts: ({ workspaceId }) =>
-        engine
-          .listOpenConflicts(ListOpenConflictsInput.make({ workspaceId }))
-          .pipe(Effect.catch(toVaultSyncActionError("ListVaultSyncConflicts"))),
+        observeSyncOperation(
+          "list_conflicts",
+          engine
+            .listOpenConflicts(ListOpenConflictsInput.make({ workspaceId }))
+            .pipe(Effect.catch(toVaultSyncActionError("ListVaultSyncConflicts")))
+        ),
       MarkVaultSyncConflictReviewed: ({ conflictId, workspaceId }) =>
-        engine
-          .markConflictReviewed(MarkConflictReviewedInput.make({ conflictId, workspaceId }))
-          .pipe(Effect.catch(toVaultSyncActionError("MarkVaultSyncConflictReviewed"))),
+        observeSyncOperation(
+          "mark_conflict_reviewed",
+          engine
+            .markConflictReviewed(MarkConflictReviewedInput.make({ conflictId, workspaceId }))
+            .pipe(Effect.catch(toVaultSyncActionError("MarkVaultSyncConflictReviewed")))
+        ),
       TriggerVaultSync: Effect.fn("TriggerVaultSync")(function* (payload) {
-        const config = yield* workspaceVaultStore
-          .getVaultConfig(payload.workspaceId)
-          .pipe(Effect.catch(toVaultSyncActionError("TriggerVaultSync.workspaceVault")));
-        const vaultRootPath = yield* pipe(
-          config.vaultRootPath,
-          O.match({
-            onNone: () => VaultSyncActionError.failEffect("Workspace vault is not configured."),
-            onSome: Effect.succeed,
+        return yield* observeSyncOperation(
+          "trigger",
+          Effect.gen(function* () {
+            const config = yield* workspaceVaultStore
+              .getVaultConfig(payload.workspaceId)
+              .pipe(Effect.catch(toVaultSyncActionError("TriggerVaultSync.workspaceVault")));
+            const vaultRootPath = yield* pipe(
+              config.vaultRootPath,
+              O.match({
+                onNone: () => VaultSyncActionError.failEffect("Workspace vault is not configured."),
+                onSome: Effect.succeed,
+              })
+            );
+            return yield* engine
+              .syncOnce(SyncOnceInput.make({ vaultRootPath, workspaceId: payload.workspaceId }))
+              .pipe(Effect.catch(toVaultSyncActionError("TriggerVaultSync")));
           })
         );
-        return yield* engine
-          .syncOnce(SyncOnceInput.make({ vaultRootPath, workspaceId: payload.workspaceId }))
-          .pipe(Effect.catch(toVaultSyncActionError("TriggerVaultSync")));
       }),
     });
   })

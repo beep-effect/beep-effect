@@ -165,6 +165,9 @@
       "path": "../../packages/foundation/capability/mcp-kit/tsconfig.json"
     },
     {
+      "path": "../../packages/foundation/capability/observability/tsconfig.json"
+    },
+    {
       "path": "../../packages/foundation/modeling/identity/tsconfig.json"
     },
     {

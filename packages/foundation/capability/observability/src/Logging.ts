@@ -198,6 +198,30 @@ export class LoggingConfig extends S.Class<LoggingConfig>($I`LoggingConfig`)(
 ) {}
 
 /**
+ * Install only the Effect runtime minimum log level.
+ *
+ * Unlike {@link layerConsoleLogger}, this layer does not replace or add any
+ * logger, so it is safe to compose with OTLP logger layers that merge with the
+ * existing runtime logger set.
+ *
+ * @example
+ * ```typescript
+ * import { layerMinimumLogLevel } from "@beep/observability"
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.logInfo("visible").pipe(
+ *   Effect.provide(layerMinimumLogLevel("Info"))
+ * )
+ * console.log(program)
+ * ```
+ *
+ * @since 0.0.0
+ * @category layers
+ */
+export const layerMinimumLogLevel = (minLogLevel: LogLevel): Layer.Layer<never> =>
+  Layer.succeed(References.MinimumLogLevel, minLogLevel);
+
+/**
  * Options controlling startup/phase log banner rendering.
  *
  * @example
@@ -412,8 +436,5 @@ export const layerConsoleLogger: {
 } = dual(
   2,
   (config: LoggingConfig, pretty: PrettyLoggerConfig = defaultPrettyLoggerConfig): Layer.Layer<never> =>
-    Layer.mergeAll(
-      Logger.layer([resolveLogger(config.format, pretty)]),
-      Layer.succeed(References.MinimumLogLevel, config.minLogLevel)
-    )
+    Layer.mergeAll(Logger.layer([resolveLogger(config.format, pretty)]), layerMinimumLogLevel(config.minLogLevel))
 );

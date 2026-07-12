@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { LogRedactedCauseOptions, logRedactedCause, observeWorkflow } from "@beep/observability";
 import { applyChangeOperationsWithDelta } from "@beep/ontology-domain/aggregates/Session";
 import {
   ApplyOntologyBatchResult,
@@ -22,19 +23,46 @@ import {
   SerializeOntologySessionCommand,
   SessionUseCases,
 } from "@beep/ontology-use-cases/aggregates/Session";
-import { Effect } from "effect";
+import { Cause, Effect, Metric } from "effect";
 import type {
   ApplyOntologyBatchCommand,
   OntologyFilePath,
   OpenOntologyDocumentResult as OpenOntologyDocumentResultType,
 } from "@beep/ontology-use-cases/aggregates/Session";
 
-const toOntologyActionError =
-  (context: string) =>
-  (error: { readonly _tag?: string }): Effect.Effect<never, OntologyActionError> =>
-    Effect.logWarning("ontology action dropped internal failure", { context, detail: error }).pipe(
-      Effect.andThen(OntologyActionError.failEffect(context))
+const ontologyStarted = Metric.counter("desktop_ontology_operations_started_total", { incremental: true });
+const ontologyCompleted = Metric.counter("desktop_ontology_operations_completed_total", { incremental: true });
+const ontologyFailed = Metric.counter("desktop_ontology_operations_failed_total", { incremental: true });
+const ontologyInterrupted = Metric.counter("desktop_ontology_operations_interrupted_total", { incremental: true });
+const ontologyDuration = Metric.timer("desktop_ontology_operation_duration");
+
+const observeOntologyOperation = Effect.fnUntraced(function* <A, E, R>(
+  operation: string,
+  effect: Effect.Effect<A, E, R>
+): Effect.fn.Return<A, E, R> {
+  return yield* observeWorkflow(effect, {
+    name: `ontology.${operation}`,
+    attributes: { operation },
+    started: ontologyStarted,
+    completed: ontologyCompleted,
+    failed: ontologyFailed,
+    interrupted: ontologyInterrupted,
+    duration: ontologyDuration,
+  }).pipe(Effect.withSpan(`ontology.${operation}`));
+});
+
+const toOntologyActionError = (context: string) =>
+  Effect.fnUntraced(function* (error: { readonly _tag?: string }): Effect.fn.Return<never, OntologyActionError> {
+    yield* logRedactedCause(
+      Cause.fail(error),
+      LogRedactedCauseOptions.make({
+        message: "ontology action dropped internal failure",
+        level: "Warn",
+        attributes: { context, subsystem: "ontology" },
+      })
     );
+    return yield* OntologyActionError.failEffect(context);
+  });
 
 /**
  * Build ontology sidecar operations over the session use-case service.
@@ -48,70 +76,85 @@ const makeOntologyOperations = (
   openDocument: (
     command: OpenOntologyFileCommand
   ): Effect.Effect<OpenOntologyDocumentResultType, OntologyActionError> =>
-    useCases.openFile(command).pipe(
-      Effect.map((opened) =>
-        OpenOntologyDocumentResult.make({
-          session: opened.session,
-          path: opened.path,
-          source: opened.source,
-          snapshot: buildOntologySnapshot(opened.session),
-        })
-      ),
-      Effect.catch(toOntologyActionError("OpenOntologyDocument")),
-      Effect.withSpan("ontology.open_document")
+    observeOntologyOperation(
+      "open_document",
+      useCases.openFile(command).pipe(
+        Effect.map((opened) =>
+          OpenOntologyDocumentResult.make({
+            session: opened.session,
+            path: opened.path,
+            source: opened.source,
+            snapshot: buildOntologySnapshot(opened.session),
+          })
+        ),
+        Effect.catch(toOntologyActionError("OpenOntologyDocument"))
+      )
     ),
 
   saveDocument: (path: OntologyFilePath, session: SaveOntologyFileCommand["session"]) =>
-    useCases.saveFile(SaveOntologyFileCommand.make({ path, session })).pipe(
-      Effect.map((saved) =>
-        SaveOntologyDocumentResult.make({
-          path: saved.path,
-          source: saved.source,
-        })
-      ),
-      Effect.catch(toOntologyActionError("SaveOntologyDocument")),
-      Effect.withSpan("ontology.save_document")
+    observeOntologyOperation(
+      "save_document",
+      useCases.saveFile(SaveOntologyFileCommand.make({ path, session })).pipe(
+        Effect.map((saved) =>
+          SaveOntologyDocumentResult.make({
+            path: saved.path,
+            source: saved.source,
+          })
+        ),
+        Effect.catch(toOntologyActionError("SaveOntologyDocument"))
+      )
     ),
 
   previewTurtle: (session: SerializeOntologySessionCommand["session"]) =>
-    useCases.serialize(SerializeOntologySessionCommand.make({ session })).pipe(
-      Effect.map((serialized) => PreviewOntologyTurtleResult.make({ source: serialized.source })),
-      Effect.catch(toOntologyActionError("PreviewOntologyTurtle")),
-      Effect.withSpan("ontology.preview_turtle")
+    observeOntologyOperation(
+      "preview_turtle",
+      useCases.serialize(SerializeOntologySessionCommand.make({ session })).pipe(
+        Effect.map((serialized) => PreviewOntologyTurtleResult.make({ source: serialized.source })),
+        Effect.catch(toOntologyActionError("PreviewOntologyTurtle"))
+      )
     ),
 
   applyBatch: (command: ApplyOntologyBatchCommand) =>
-    Effect.sync(() => {
-      const applied = applyChangeOperationsWithDelta(command.session, command.operations);
-      return ApplyOntologyBatchResult.make({
-        session: applied.session,
-        delta: applied.delta,
-        operations: applied.operations,
-      });
-    }).pipe(Effect.withSpan("ontology.apply_batch")),
+    observeOntologyOperation(
+      "apply_batch",
+      Effect.sync(() => {
+        const applied = applyChangeOperationsWithDelta(command.session, command.operations);
+        return ApplyOntologyBatchResult.make({
+          session: applied.session,
+          delta: applied.delta,
+          operations: applied.operations,
+        });
+      })
+    ),
 
   getSnapshot: (session: SerializeOntologySessionCommand["session"]) =>
-    Effect.sync(() => buildOntologySnapshot(session)).pipe(Effect.withSpan("ontology.get_snapshot")),
+    observeOntologyOperation(
+      "get_snapshot",
+      Effect.sync(() => buildOntologySnapshot(session))
+    ),
 
   runInference: (input: Parameters<OntologyReasoner["Service"]["infer"]>[0]) =>
-    reasoner.infer(input).pipe(Effect.withSpan("ontology.run_inference")),
+    observeOntologyOperation("run_inference", reasoner.infer(input)),
 
   runSparql: (input: Parameters<OntologySparqlRunner["Service"]["run"]>[0]) =>
     sparql
       .run(input)
-      .pipe(Effect.catch(toOntologyActionError("RunOntologySparql")), Effect.withSpan("ontology.run_sparql")),
+      .pipe(Effect.catch(toOntologyActionError("RunOntologySparql")), (effect) =>
+        observeOntologyOperation("run_sparql", effect)
+      ),
 
   runValidation: (input: Parameters<OntologyValidationRunner["Service"]["run"]>[0]) =>
     validation
       .run(input)
-      .pipe(Effect.catch(toOntologyActionError("RunOntologyValidation")), Effect.withSpan("ontology.run_validation")),
+      .pipe(Effect.catch(toOntologyActionError("RunOntologyValidation")), (effect) =>
+        observeOntologyOperation("run_validation", effect)
+      ),
 
   exportProvenance: (command: Parameters<OntologyValidationRunner["Service"]["exportProvenance"]>[0]) =>
     validation
       .exportProvenance(command)
-      .pipe(
-        Effect.catch(toOntologyActionError("ExportOntologyProvenance")),
-        Effect.withSpan("ontology.export_provenance")
+      .pipe(Effect.catch(toOntologyActionError("ExportOntologyProvenance")), (effect) =>
+        observeOntologyOperation("export_provenance", effect)
       ),
 });
 

@@ -146,12 +146,10 @@ const schemaFirstIssueToViolation = (issue: SchemaFirstPolicyFinding): AgentEffe
     message: issue.message,
   });
 
-const schemaFirstIssueFromLine = decodeSchemaFirstPolicyFindingLine;
-
 const parseSchemaFirstViolations: (output: string) => ReadonlyArray<AgentEffectivenessEvalViolation> = flow(
   Str.split("\n"),
   A.filter(Str.isNonEmpty),
-  A.map(schemaFirstIssueFromLine),
+  A.map(decodeSchemaFirstPolicyFindingLine),
   A.getSomes,
   A.map(schemaFirstIssueToViolation),
   sortViolations

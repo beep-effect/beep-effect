@@ -8,10 +8,12 @@
 "use client";
 
 import { MarkVaultSyncConflictReviewedPayload } from "@beep/documents-use-cases/public";
+import { $ProfessionalDesktopId } from "@beep/identity";
 import { Button } from "@beep/ui/components/button";
+import { A, O } from "@beep/utils";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Effect } from "effect";
-import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { AsyncResult } from "effect/unstable/reactivity";
 import { useState } from "react";
 import { DEFAULT_WORKSPACE_ID } from "@/intake/Intake.atoms";
@@ -26,24 +28,31 @@ import type { SyncConflict } from "@beep/documents-domain/entities/SyncConflict"
 import type { VaultSyncStatus } from "@beep/documents-use-cases/public";
 import type { JSX } from "react";
 
+const $I = $ProfessionalDesktopId.create("sync/VaultSyncPanel");
+
 const syncFailureMessage = failureMessageOr("Vault sync failed.");
 
 const reviewFailureMessage = failureMessageOr("Marking the conflict reviewed failed.");
 
-type StatusCountEntry = {
-  readonly key: string;
-  readonly label: string;
-  readonly value: number;
-};
+class StatusCountEntry extends S.Class<StatusCountEntry>($I`StatusCountEntry`)(
+  {
+    key: S.String,
+    label: S.String,
+    value: S.Finite,
+  },
+  $I.annote("StatusCountEntry", {
+    description: "",
+  })
+) {}
 
 const statusCounts = (status: VaultSyncStatus): ReadonlyArray<StatusCountEntry> => [
-  { key: "pending", label: "Pending", value: status.pendingItems },
-  { key: "current", label: "Current", value: status.currentItems },
-  { key: "error", label: "Errors", value: status.errorItems },
-  { key: "conflict", label: "Conflicts", value: status.conflictItems },
-  { key: "queued-ops", label: "Queued ops", value: status.queuedOperations },
-  { key: "failed-ops", label: "Failed ops", value: status.failedOperations },
-  { key: "open-conflicts", label: "Open conflicts", value: status.openConflicts },
+  StatusCountEntry.make({ key: "pending", label: "Pending", value: status.pendingItems }),
+  StatusCountEntry.make({ key: "current", label: "Current", value: status.currentItems }),
+  StatusCountEntry.make({ key: "error", label: "Errors", value: status.errorItems }),
+  StatusCountEntry.make({ key: "conflict", label: "Conflicts", value: status.conflictItems }),
+  StatusCountEntry.make({ key: "queued-ops", label: "Queued ops", value: status.queuedOperations }),
+  StatusCountEntry.make({ key: "failed-ops", label: "Failed ops", value: status.failedOperations }),
+  StatusCountEntry.make({ key: "open-conflicts", label: "Open conflicts", value: status.openConflicts }),
 ];
 
 const ConnectionBadge = ({ connected }: { readonly connected: boolean }): JSX.Element => (
@@ -77,7 +86,7 @@ const VaultSyncStatusView = ({
     ),
     onSuccess: (success) => (
       <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1" data-testid="vault-sync-status">
-        {statusCounts(success.value).map((entry) => (
+        {A.map(statusCounts(success.value), (entry) => (
           <div key={entry.key} className="flex items-center justify-between gap-2">
             <dt className="text-xs text-muted-foreground">{entry.label}</dt>
             <dd className="text-xs font-medium" data-testid={`vault-sync-count-${entry.key}`}>
@@ -100,7 +109,7 @@ const VaultSyncConflictsList = ({
 }): JSX.Element | null =>
   AsyncResult.isSuccess(conflicts) && conflicts.value.length > 0 ? (
     <ul className="mt-3 space-y-2" data-testid="vault-sync-conflicts">
-      {conflicts.value.map((conflict) => (
+      {A.map(conflicts.value, (conflict) => (
         <li
           key={conflict.id}
           className="rounded-sm border border-amber-500/40 p-2"

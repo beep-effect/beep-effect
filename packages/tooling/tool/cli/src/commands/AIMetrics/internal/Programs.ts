@@ -292,6 +292,7 @@ const requireHashSaltForTarget = Effect.fn("AIMetrics.requireHashSaltForTarget")
     message: "Non-local AI metrics commands require --hash-salt or BEEP_AI_METRICS_HASH_SALT.",
   });
 });
+
 /**
  * Option schema for the RequireHashSaltSecretRefForTarget AI metrics helper.
  *
@@ -315,6 +316,7 @@ class RequireHashSaltSecretRefForTargetOptions extends S.Class<RequireHashSaltSe
     description: "Resolved hash-salt secret reference and deployment target for install planning.",
   })
 ) {}
+
 const requireHashSaltSecretRefForTarget = Effect.fn("AIMetrics.requireHashSaltSecretRefForTarget")(function* ({
   hashSaltSecretRef,
   target,
@@ -956,6 +958,7 @@ const makeInstallDoctorProgram = Effect.fn("AIMetrics.makeInstallDoctorProgram")
     });
   }
 });
+
 /**
  * Option schema for the MakeInstallApplyProgram AI metrics helper.
  *
@@ -983,6 +986,7 @@ class MakeInstallApplyProgramOptions extends S.Class<MakeInstallApplyProgramOpti
     description: "CLI flags for dry-running an AI metrics install apply plan.",
   })
 ) {}
+
 const makeInstallApplyProgram = Effect.fn("AIMetrics.makeInstallApplyProgram")(function* ({
   dataRoot,
   dryRun,
@@ -1018,6 +1022,7 @@ const makeInstallApplyProgram = Effect.fn("AIMetrics.makeInstallApplyProgram")(f
     ...A.map(result.plan.steps, (step) => `${step.order}. ${step.stepId}: ${step.command}`),
   ]);
 });
+
 /**
  * Option schema for the MakeIngestProgram AI metrics helper.
  *
@@ -1042,6 +1047,7 @@ class MakeIngestProgramOptions extends S.Class<MakeIngestProgramOptions>($I`Make
     description: "CLI flags for summarizing a transcript file into AI metrics ingest output.",
   })
 ) {}
+
 const makeIngestProgram = Effect.fn("AIMetrics.makeIngestProgram")(function* ({
   hashSalt,
   input,
@@ -1139,6 +1145,7 @@ const readPrivacyInput = Effect.fn("AIMetrics.readPrivacyInput")(function* (inpu
     content: pipe(chunks, A.join("\n")),
   };
 });
+
 /**
  * Option schema for the MakeSourcesDiscoverProgram AI metrics helper.
  *
@@ -1170,6 +1177,7 @@ class MakeSourcesDiscoverProgramOptions extends S.Class<MakeSourcesDiscoverProgr
     description: "CLI flags for discovering transcript sources available to AI metrics.",
   })
 ) {}
+
 const makeSourcesDiscoverProgram = Effect.fn("AIMetrics.makeSourcesDiscoverProgram")(function* ({
   all,
   hashSalt,
@@ -1217,6 +1225,7 @@ const makeSourcesDiscoverProgram = Effect.fn("AIMetrics.makeSourcesDiscoverProgr
     ),
   ]);
 });
+
 /**
  * Option schema for the MakeConfigSnapshotProgram AI metrics helper.
  *
@@ -1240,6 +1249,7 @@ class MakeConfigSnapshotProgramOptions extends S.Class<MakeConfigSnapshotProgram
     description: "CLI flags for capturing repository configuration into an AI metrics snapshot.",
   })
 ) {}
+
 const makeConfigSnapshotProgram = Effect.fn("AIMetrics.makeConfigSnapshotProgram")(function* ({
   json,
   repoRoot,
@@ -1261,6 +1271,7 @@ const makeConfigSnapshotProgram = Effect.fn("AIMetrics.makeConfigSnapshotProgram
     `hash: ${result.snapshot.configHash}`,
   ]);
 });
+
 /**
  * Option schema for the MakePrivacyCheckProgram AI metrics helper.
  *
@@ -1286,6 +1297,7 @@ class MakePrivacyCheckProgramOptions extends S.Class<MakePrivacyCheckProgramOpti
     description: "CLI flags for checking transcript privacy before derived AI metrics use.",
   })
 ) {}
+
 const makePrivacyCheckProgram = Effect.fn("AIMetrics.makePrivacyCheckProgram")(function* ({
   hashSalt,
   input,
@@ -1374,6 +1386,7 @@ const forwarderOtlpExported = (result: AiMetricsOtlpExportResult): AiMetricsForw
   });
 
 const forwarderOtlpExportFailureMessage = "OTLP export did not complete after the forwarder run.";
+
 /**
  * Option schema for the ForwarderOtlpExportFailed AI metrics helper.
  *
@@ -1399,6 +1412,7 @@ class ForwarderOtlpExportFailedOptions extends S.Class<ForwarderOtlpExportFailed
     description: "Forwarder run context used to render a derived OTLP export failure payload.",
   })
 ) {}
+
 const forwarderOtlpExportFailed = ({
   endpoint,
   forwarderResult,
@@ -1412,6 +1426,7 @@ const forwarderOtlpExportFailed = ({
     status: "failed",
     target,
   });
+
 /**
  * Option schema for the ExportForwarderDerivedOtlp AI metrics helper.
  *
@@ -1436,6 +1451,7 @@ class ExportForwarderDerivedOtlpOptions extends S.Class<ExportForwarderDerivedOt
     description: "Forwarder run context required to export derived OTLP spans.",
   })
 ) {}
+
 const exportForwarderDerivedOtlp = Effect.fn("AIMetrics.exportForwarderDerivedOtlp")(function* ({
   endpoint,
   forwarderResult,
@@ -1465,6 +1481,7 @@ const exportForwarderDerivedOtlp = Effect.fn("AIMetrics.exportForwarderDerivedOt
     })
   );
 });
+
 /**
  * Option schema for the MakeForwarderRunProgram AI metrics helper.
  *
@@ -1504,6 +1521,7 @@ class MakeForwarderRunProgramOptions extends S.Class<MakeForwarderRunProgramOpti
     description: "CLI flags for running the AI metrics forwarder and optional derived exports.",
   })
 ) {}
+
 const makeForwarderRunProgram = Effect.fn("AIMetrics.makeForwarderRunProgram")(function* ({
   all,
   dataRoot,
@@ -1652,6 +1670,7 @@ const makeForwarderRunProgram = Effect.fn("AIMetrics.makeForwarderRunProgram")(f
     }
   }
 });
+
 /**
  * Option schema for the MakeForwarderTimerProgram AI metrics helper.
  *
@@ -1686,6 +1705,7 @@ class MakeForwarderTimerProgramOptions extends S.Class<MakeForwarderTimerProgram
     description: "CLI flags for rendering the AI metrics forwarder systemd timer plan.",
   })
 ) {}
+
 const makeForwarderTimerProgram = Effect.fn("AIMetrics.makeForwarderTimerProgram")(function* ({
   dataRoot,
   hashSaltSecretRef,
@@ -1772,6 +1792,7 @@ const makeForwarderTimerProgram = Effect.fn("AIMetrics.makeForwarderTimerProgram
     ...plan.installCommands,
   ]);
 });
+
 /**
  * Option schema for the MakeOtlpExportProgram AI metrics helper.
  *
@@ -1798,6 +1819,7 @@ class MakeOtlpExportProgramOptions extends S.Class<MakeOtlpExportProgramOptions>
     description: "CLI flags for exporting one derived ingest run to the configured OTLP endpoint.",
   })
 ) {}
+
 const makeOtlpExportProgram = Effect.fn("AIMetrics.makeOtlpExportProgram")(function* ({
   dataRoot,
   hashSaltSecretRef,
@@ -1860,6 +1882,7 @@ const makeOtlpExportProgram = Effect.fn("AIMetrics.makeOtlpExportProgram")(funct
     `trace endpoint: ${result.endpointTraceUrl}`,
   ]);
 });
+
 /**
  * Option schema for the MakeBenchmarkRunProgram AI metrics helper.
  *
@@ -1892,6 +1915,7 @@ class MakeBenchmarkRunProgramOptions extends S.Class<MakeBenchmarkRunProgramOpti
     description: "CLI flags for recording one benchmark run in AI metrics storage.",
   })
 ) {}
+
 const makeBenchmarkRunProgram = Effect.fn("AIMetrics.makeBenchmarkRunProgram")(function* ({
   caseId,
   configSnapshotId,
@@ -1952,6 +1976,7 @@ const makeBenchmarkCompareProgram = Effect.fn("AIMetrics.makeBenchmarkComparePro
 
   yield* Console.log("ai-metrics benchmark compare: outcome-heavy scorecard ready for derived run tables");
 });
+
 /**
  * Option schema for the MakeLabelQueueProgram AI metrics helper.
  *
@@ -1979,6 +2004,7 @@ class MakeLabelQueueProgramOptions extends S.Class<MakeLabelQueueProgramOptions>
     description: "CLI flags for selecting unlabeled AI metrics tasks within a time window.",
   })
 ) {}
+
 const makeLabelQueueProgram = Effect.fn("AIMetrics.makeLabelQueueProgram")(function* ({
   dataRoot,
   hashSaltSecretRef,
@@ -2019,6 +2045,7 @@ const makeLabelQueueProgram = Effect.fn("AIMetrics.makeLabelQueueProgram")(funct
     ...A.map(result.items, (item) => `${item.agentTaskId} config=${item.configSnapshotId} turns=${item.turnCount}`),
   ]);
 });
+
 /**
  * Option schema for the MakeLabelAddProgram AI metrics helper.
  *
@@ -2050,6 +2077,7 @@ class MakeLabelAddProgramOptions extends S.Class<MakeLabelAddProgramOptions>($I`
     description: "CLI flags for adding one human outcome label to an AI metrics task.",
   })
 ) {}
+
 const makeLabelAddProgram = Effect.fn("AIMetrics.makeLabelAddProgram")(function* ({
   dataRoot,
   followUpFix,
@@ -2093,6 +2121,7 @@ const makeLabelAddProgram = Effect.fn("AIMetrics.makeLabelAddProgram")(function*
     `passed: ${result.passed}`,
   ]);
 });
+
 /**
  * Option schema for the MakeBenchmarkCaseAddProgram AI metrics helper.
  *
@@ -2124,6 +2153,7 @@ class MakeBenchmarkCaseAddProgramOptions extends S.Class<MakeBenchmarkCaseAddPro
     description: "CLI flags for upserting a benchmark case used by AI metrics scoring.",
   })
 ) {}
+
 const makeBenchmarkCaseAddProgram = Effect.fn("AIMetrics.makeBenchmarkCaseAddProgram")(function* ({
   caseId,
   checks,
@@ -2162,6 +2192,7 @@ const makeBenchmarkCaseAddProgram = Effect.fn("AIMetrics.makeBenchmarkCaseAddPro
     `checks: ${A.length(result.expectedChecks)}`,
   ]);
 });
+
 /**
  * Option schema for the MakeBenchmarkCaseListProgram AI metrics helper.
  *
@@ -2188,6 +2219,7 @@ class MakeBenchmarkCaseListProgramOptions extends S.Class<MakeBenchmarkCaseListP
     description: "CLI flags for listing benchmark cases from AI metrics storage.",
   })
 ) {}
+
 const makeBenchmarkCaseListProgram = Effect.fn("AIMetrics.makeBenchmarkCaseListProgram")(function* ({
   dataRoot,
   hashSaltSecretRef,
@@ -2213,6 +2245,7 @@ const makeBenchmarkCaseListProgram = Effect.fn("AIMetrics.makeBenchmarkCaseListP
     ...A.map(result.cases, (benchmarkCase) => `${benchmarkCase.benchmarkCaseId}: ${benchmarkCase.title}`),
   ]);
 });
+
 /**
  * Option schema for the MakeWeeklyReportProgram AI metrics helper.
  *
@@ -2241,6 +2274,7 @@ class MakeWeeklyReportProgramOptions extends S.Class<MakeWeeklyReportProgramOpti
     description: "CLI flags for generating a weekly AI metrics scorecard report.",
   })
 ) {}
+
 const makeWeeklyReportProgram = Effect.fn("AIMetrics.makeWeeklyReportProgram")(function* ({
   dataRoot,
   hashSaltSecretRef,
@@ -2517,6 +2551,21 @@ const makeMirrorBuildProgram = Effect.fn("AIMetrics.makeMirrorBuildProgram")(fun
   yield* Console.log(`tables: ${A.length(result.tables)}`);
 });
 
+class MakeMirrorSyncProgramOpts extends S.Class<MakeMirrorSyncProgramOpts>($I`MakeMirrorSyncProgramOpts`)(
+  {
+    bundle: S.String,
+    confirm: S.Option(S.String),
+    dataRoot: S.Option(S.String),
+    host: S.String,
+    json: S.Boolean,
+    remoteRoot: S.String,
+    target: AiMetricsDeployTarget,
+  },
+  $I.annote("MakeMirrorSyncProgramOpts", {
+    description: "",
+  })
+) {}
+
 const makeMirrorSyncProgram = Effect.fn("AIMetrics.makeMirrorSyncProgram")(function* ({
   bundle,
   confirm,
@@ -2525,15 +2574,7 @@ const makeMirrorSyncProgram = Effect.fn("AIMetrics.makeMirrorSyncProgram")(funct
   json,
   remoteRoot,
   target,
-}: {
-  readonly bundle: string;
-  readonly confirm: O.Option<string>;
-  readonly dataRoot: O.Option<string>;
-  readonly host: string;
-  readonly json: boolean;
-  readonly remoteRoot: string;
-  readonly target: AiMetricsDeployTarget;
-}) {
+}: MakeMirrorSyncProgramOpts) {
   const bundleDir = yield* resolveMirrorBundleDir({
     bundle,
     dataRoot,
@@ -2593,17 +2634,24 @@ const makeMirrorSyncProgram = Effect.fn("AIMetrics.makeMirrorSyncProgram")(funct
   yield* Console.log(`ai-metrics mirror sync: synced ${bundleDir} -> ${host}:${remoteRoot}`);
 });
 
+class MakeMirrorStatusProgramParams extends S.Class<MakeMirrorStatusProgramParams>($I`MakeMirrorStatusProgramParams`)(
+  {
+    host: S.String,
+    json: S.Boolean,
+    remoteRoot: S.String,
+    target: AiMetricsDeployTarget,
+  },
+  $I.annote("MakeMirrorStatusProgramParams", {
+    description: "Parameters for the `ai-metrics mirror status` command.",
+  })
+) {}
+
 const makeMirrorStatusProgram = Effect.fn("AIMetrics.makeMirrorStatusProgram")(function* ({
   host,
   json,
   remoteRoot,
   target,
-}: {
-  readonly host: string;
-  readonly json: boolean;
-  readonly remoteRoot: string;
-  readonly target: AiMetricsDeployTarget;
-}) {
+}: MakeMirrorStatusProgramParams) {
   const manifestPath = `${remoteRoot}/manifest.json`;
   const captured = yield* runCapturedCommand("ssh", [host, `cat ${shellQuote(manifestPath)}`]);
   const manifest = yield* decodeMirrorManifestJson(captured.stdout).pipe(
@@ -2631,13 +2679,22 @@ const makeMirrorStatusProgram = Effect.fn("AIMetrics.makeMirrorStatusProgram")(f
   yield* Console.log("status: available");
 });
 
+class ConfirmRetentionMutationParams extends S.Class<ConfirmRetentionMutationParams>(
+  $I`ConfirmRetentionMutationParams`
+)(
+  {
+    confirm: S.Option(S.String),
+    selector: AiMetricsRetentionSelector,
+  },
+  $I.annote("ConfirmRetentionMutationParams", {
+    description: "Parameters for the `ai-metrics confirm retention mutation` command.",
+  })
+) {}
+
 const confirmRetentionMutation = Effect.fn("AIMetrics.confirmRetentionMutation")(function* ({
   confirm,
   selector,
-}: {
-  readonly confirm: O.Option<string>;
-  readonly selector: AiMetricsRetentionSelector;
-}) {
+}: ConfirmRetentionMutationParams) {
   if (O.isNone(confirm)) {
     return true;
   }
@@ -2666,19 +2723,28 @@ const confirmRetentionMutation = Effect.fn("AIMetrics.confirmRetentionMutation")
   return false;
 });
 
+class MakeRetentionListProgramParams extends S.Class<MakeRetentionListProgramParams>(
+  $I`MakeRetentionListProgramParams`
+)(
+  {
+    before: S.Option(S.String),
+    dataRoot: S.Option(S.String),
+    json: S.Boolean,
+    since: S.Option(S.String),
+    until: S.Option(S.String),
+  },
+  $I.annote("MakeRetentionListProgramParams", {
+    description: "Parameters for the `ai-metrics retention list` command.",
+  })
+) {}
+
 const makeRetentionListProgram = Effect.fn("AIMetrics.makeRetentionListProgram")(function* ({
   before,
   dataRoot,
   json,
   since,
   until,
-}: {
-  readonly before: O.Option<string>;
-  readonly dataRoot: O.Option<string>;
-  readonly json: boolean;
-  readonly since: O.Option<string>;
-  readonly until: O.Option<string>;
-}) {
+}: MakeRetentionListProgramParams) {
   const selector = yield* parseRetentionSelector({
     before,
     dataRoot,
@@ -2698,6 +2764,23 @@ const makeRetentionListProgram = Effect.fn("AIMetrics.makeRetentionListProgram")
   yield* Console.log(`reports: ${result.selectedReportCount}`);
 });
 
+class MakeRetentionMutationProgramParams extends S.Class<MakeRetentionMutationProgramParams>(
+  $I`MakeRetentionMutationProgramParams`
+)(
+  {
+    before: S.Option(S.String),
+    confirm: S.Option(S.String),
+    dataRoot: S.Option(S.String),
+    json: S.Boolean,
+    mode: S.Literals(["compact", "delete"]),
+    since: S.Option(S.String),
+    until: S.Option(S.String),
+  },
+  $I.annote("MakeRetentionMutationProgramParams", {
+    description: "Parameters for the `ai-metrics retention mutation` command.",
+  })
+) {}
+
 const makeRetentionMutationProgram = Effect.fn("AIMetrics.makeRetentionMutationProgram")(function* ({
   before,
   confirm,
@@ -2706,15 +2789,7 @@ const makeRetentionMutationProgram = Effect.fn("AIMetrics.makeRetentionMutationP
   mode,
   since,
   until,
-}: {
-  readonly before: O.Option<string>;
-  readonly confirm: O.Option<string>;
-  readonly dataRoot: O.Option<string>;
-  readonly json: boolean;
-  readonly mode: "compact" | "delete";
-  readonly since: O.Option<string>;
-  readonly until: O.Option<string>;
-}) {
+}: MakeRetentionMutationProgramParams) {
   const selector = yield* parseRetentionSelector({
     before,
     dataRoot,
@@ -2855,12 +2930,12 @@ const makeArchiveDrillProgram = Effect.fn("AIMetrics.makeArchiveDrillProgram")(f
   const result = yield* Effect.gen(function* () {
     const duckdb = yield* DuckDb;
     const rows = yield* duckdb
-      .query(`SELECT archive_object_id      AS "archiveObjectId",
-                           archive_path           AS "archivePath",
-                           plaintext_content_hash AS "plaintextContentHash"
-                    FROM ai_metrics_raw_archive_objects
-                    ORDER BY encrypted_at_epoch_ms
-                        DESC LIMIT 1`)
+      .query(`SELECT archive_object_id AS      "archiveObjectId",
+                     archive_path AS           "archivePath",
+                     plaintext_content_hash AS "plaintextContentHash"
+              FROM ai_metrics_raw_archive_objects
+              ORDER BY encrypted_at_epoch_ms
+                DESC LIMIT 1`)
       .pipe(AiMetricsCommandError.mapError("Failed to select an AI metrics archive object for the decrypt drill."));
     const decoded = yield* decodeArchiveDrillRows(rows).pipe(
       AiMetricsCommandError.mapError("Failed to decode AI metrics archive drill rows.")

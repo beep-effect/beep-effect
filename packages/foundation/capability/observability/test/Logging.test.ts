@@ -1,10 +1,11 @@
-import { PrettyLoggerConfig, RenderLogBannerOptions, renderLogBanner } from "@beep/observability";
+/** @effect-diagnostics strictEffectProvide:skip-file */
+import { layerMinimumLogLevel, PrettyLoggerConfig, RenderLogBannerOptions, renderLogBanner } from "@beep/observability";
 import { fcRuns } from "@beep/test-utils";
-import { Equal } from "effect";
+import { describe, expect, it } from "@effect/vitest";
+import { Effect, Equal, Layer, Logger } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
-import { describe, expect, it } from "vitest";
 
 describe("Logging", () => {
   it("keeps pretty logger constructor defaults on the schema", () => {
@@ -49,4 +50,26 @@ describe("Logging", () => {
   it("renders with default pretty config when options omit it", () => {
     expect(renderLogBanner("Server Ready", { kind: "startup" })).toBe("Server Ready");
   });
+
+  it.effect("filters logs through the independently composable minimum-level layer", () =>
+    Effect.gen(function* () {
+      const levels: Array<string> = [];
+      const logger = Logger.make<unknown, void>((options) => {
+        levels.push(options.logLevel);
+      });
+
+      yield* Effect.all(
+        [Effect.logDebug("debug"), Effect.logInfo("info"), Effect.logWarning("warn"), Effect.logError("error")],
+        { discard: true }
+      ).pipe(Effect.provide(Layer.mergeAll(Logger.layer([logger]), layerMinimumLogLevel("Info"))));
+
+      expect(levels).toStrictEqual(["Info", "Warn", "Error"]);
+
+      levels.length = 0;
+      yield* Effect.logError("hidden").pipe(
+        Effect.provide(Layer.mergeAll(Logger.layer([logger]), layerMinimumLogLevel("None")))
+      );
+      expect(levels).toStrictEqual([]);
+    })
+  );
 });

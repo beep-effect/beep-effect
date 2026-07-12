@@ -7,14 +7,13 @@
 /// <reference path="./vendor.d.ts" />
 
 import { $CosmosId } from "@beep/identity/packages";
-import { HexColor, SchemaUtils } from "@beep/schema";
+import { Fn, HexColor, SchemaUtils } from "@beep/schema";
 import { P } from "@beep/utils";
 import { Duration, Effect, Match } from "effect";
 import * as S from "effect/Schema";
-import { probeWebGl2, selectCosmosBackend } from "./Cosmos.backend.js";
+import { CosmosBackend, probeWebGl2, selectCosmosBackend } from "./Cosmos.backend.js";
 import { CosmosDriverError } from "./Cosmos.errors.js";
-import type { CosmosBackend } from "./Cosmos.backend.js";
-import type { CosmosGraphProjection } from "./Cosmos.projection.js";
+import { CosmosGraphProjection } from "./Cosmos.projection.js";
 
 const $I = $CosmosId.create("Cosmos.renderer");
 
@@ -205,12 +204,20 @@ const makeFpsSampler = (): FpsSampler => {
  * @category adapters
  * @since 0.0.0
  */
-export interface CosmosRenderHandle {
-  readonly backend: CosmosBackend;
-  readonly destroy: () => void;
-  readonly fps: () => number;
-  readonly update: (projection: CosmosGraphProjection) => void;
-}
+export class CosmosRenderHandle extends S.Class<CosmosRenderHandle>($I`CosmosRenderHandle`)(
+  {
+    backend: CosmosBackend,
+    destroy: Fn({ output: S.Void }),
+    fps: Fn({ output: S.Finite }),
+    update: Fn({
+      input: CosmosGraphProjection,
+      output: S.Void,
+    }),
+  },
+  $I.annote("CosmosRenderHandle", {
+    description: "",
+  })
+) {}
 
 const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
   container: HTMLElement,
@@ -233,14 +240,14 @@ const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
 
   const sampler = makeFpsSampler();
 
-  return {
+  return CosmosRenderHandle.make({
     backend: "cosmos",
     fps: sampler.fps,
-    update: (nextProjection) => {
+    update: CosmosRenderHandle.fields.update.implement((nextProjection) => {
       graph.setPointPositions(nextProjection.pointPositions);
       graph.setLinks(nextProjection.links);
       graph.render();
-    },
+    }),
     destroy: () => {
       sampler.stop();
       if (P.isFunction(graph.stop)) {
@@ -250,7 +257,7 @@ const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
         graph.destroy();
       }
     },
-  } satisfies CosmosRenderHandle;
+  });
 });
 
 const renderWithSigma = Effect.fn("Cosmos.renderWithSigma")(function* (

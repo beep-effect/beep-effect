@@ -32,7 +32,7 @@
 import { $ObservabilityId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Cause, Effect, flow, Result } from "effect";
+import { Cause, Effect, flow, Match, Result } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -494,4 +494,139 @@ export const redactCauseEffect: {
     });
     return redacted;
   })
+);
+
+/**
+ * Runtime-controlled levels supported by redacted boundary logging.
+ *
+ * @example
+ * ```typescript
+ * import { RedactedCauseLogLevel } from "@beep/observability"
+ *
+ * console.log(RedactedCauseLogLevel.Enum.Warn) // "Warn"
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export const RedactedCauseLogLevel = LiteralKit(["Info", "Warn", "Error"]).pipe(
+  $I.annoteSchema("RedactedCauseLogLevel", {
+    description: "Runtime-controlled levels supported by redacted boundary logging.",
+  })
+);
+
+/**
+ * Runtime type for {@link RedactedCauseLogLevel}.
+ *
+ * @example
+ * ```typescript
+ * import type { RedactedCauseLogLevel } from "@beep/observability"
+ *
+ * const level: RedactedCauseLogLevel = "Error"
+ * console.log(level)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type RedactedCauseLogLevel = typeof RedactedCauseLogLevel.Type;
+
+/**
+ * Options for logging one redacted Cause at an Effect runtime-controlled level.
+ *
+ * @example
+ * ```typescript
+ * import { LogRedactedCauseOptions } from "@beep/observability"
+ *
+ * const options = LogRedactedCauseOptions.make({ message: "request failed" })
+ * console.log(options.level) // "Error"
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export class LogRedactedCauseOptions extends S.Class<LogRedactedCauseOptions>($I`LogRedactedCauseOptions`)(
+  {
+    message: S.NonEmptyString,
+    level: RedactedCauseLogLevel.pipe(S.withConstructorDefault(Effect.succeed(RedactedCauseLogLevel.Enum.Error))),
+    attributes: S.Record(S.String, S.String).pipe(S.optionalKey),
+  },
+  $I.annote("LogRedactedCauseOptions", {
+    description: "Options for logging one sanitized and bounded Cause.",
+  })
+) {}
+
+const logAtRedactedCauseLevel = (level: RedactedCauseLogLevel, message: string): Effect.Effect<void> =>
+  Match.value(level).pipe(
+    Match.when("Info", () => Effect.logInfo(message)),
+    Match.when("Warn", () => Effect.logWarning(message)),
+    Match.when("Error", () => Effect.logError(message)),
+    Match.exhaustive
+  );
+
+/**
+ * Log a Cause with bounded, sanitized diagnostic attributes.
+ *
+ * The active span receives only the stable Cause tag and sanitized fingerprint.
+ * The log receives the sanitized message and optional bounded detail. Runtime
+ * minimum log level filtering remains authoritative.
+ *
+ * @example
+ * ```typescript
+ * import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability"
+ * import { Cause } from "effect"
+ *
+ * const program = logRedactedCause(
+ *   Cause.fail(new Error("token=secret")),
+ *   LogRedactedCauseOptions.make({ message: "request failed" })
+ * )
+ * console.log(program)
+ * ```
+ *
+ * @since 0.0.0
+ * @category observability
+ */
+export const logRedactedCause = Effect.fn("observability.log_redacted_cause")(function* (
+  input: unknown,
+  options: LogRedactedCauseOptions
+) {
+  const redacted = yield* redactCauseEffect(input);
+  const baseAttributes = {
+    ...(options.attributes ?? {}),
+    cause_classification: redacted.tag,
+    cause_fingerprint: redacted.fingerprint,
+    cause_message: redacted.message,
+    cause_truncated: `${redacted.truncated}`,
+  };
+  const attributes = O.match(redacted.detail, {
+    onNone: () => baseAttributes,
+    onSome: (causeDetail) => ({ ...baseAttributes, cause_detail: causeDetail }),
+  });
+
+  return yield* logAtRedactedCauseLevel(options.level, options.message).pipe(Effect.annotateLogs(attributes));
+});
+
+/**
+ * Observe every failing exit of an Effect with sanitized Cause logging while
+ * preserving the original Cause unchanged.
+ *
+ * @example
+ * ```typescript
+ * import { LogRedactedCauseOptions, tapRedactedCause } from "@beep/observability"
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.fail("boom").pipe(
+ *   tapRedactedCause(LogRedactedCauseOptions.make({ message: "operation failed" }))
+ * )
+ * console.log(program)
+ * ```
+ *
+ * @since 0.0.0
+ * @category observability
+ */
+export const tapRedactedCause: {
+  <A, E, R>(effect: Effect.Effect<A, E, R>, options: LogRedactedCauseOptions): Effect.Effect<A, E, R>;
+  (options: LogRedactedCauseOptions): <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
+} = dual(2, <A, E, R>(effect: Effect.Effect<A, E, R>, options: LogRedactedCauseOptions) =>
+  effect.pipe(Effect.tapCause((cause) => logRedactedCause(cause, options)))
 );

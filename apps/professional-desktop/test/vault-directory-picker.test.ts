@@ -1,3 +1,4 @@
+import { O } from "@beep/utils";
 import { assert, describe, layer } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Layer from "effect/Layer";
@@ -48,25 +49,25 @@ describe("pickVaultDirectoryOnHost", () => {
     it.effect("returns the picked path from kdialog stdout", () =>
       Effect.gen(function* () {
         const selected = yield* pickVaultDirectoryOnHost("/home/user");
-        assert.strictEqual(selected, "/home/user/vault1");
+        assert.deepStrictEqual(selected, O.some("/home/user/vault1"));
       })
     );
   });
 
   layer(mockSpawnerLayer(() => ({ code: 1 })))("with a cancelled dialog", (it) => {
-    it.effect("returns null", () =>
+    it.effect("returns None", () =>
       Effect.gen(function* () {
         const selected = yield* pickVaultDirectoryOnHost("/home/user");
-        assert.isNull(selected);
+        assert.isTrue(O.isNone(selected));
       })
     );
   });
 
   layer(mockSpawnerLayer(() => ({ stdout: "  \n" })))("with a clean exit but no selection", (it) => {
-    it.effect("returns null", () =>
+    it.effect("returns None", () =>
       Effect.gen(function* () {
         const selected = yield* pickVaultDirectoryOnHost("/home/user");
-        assert.isNull(selected);
+        assert.isTrue(O.isNone(selected));
       })
     );
   });
@@ -77,7 +78,7 @@ describe("pickVaultDirectoryOnHost", () => {
       it.effect("falls back to zenity", () =>
         Effect.gen(function* () {
           const selected = yield* pickVaultDirectoryOnHost("/home/user");
-          assert.strictEqual(selected, "/home/user/vault2");
+          assert.deepStrictEqual(selected, O.some("/home/user/vault2"));
         })
       );
     }

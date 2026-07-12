@@ -12,12 +12,13 @@
  */
 
 import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client";
+import { redactCauseForClient } from "@beep/observability";
 import { HttpOntologyProtocolLive, ontologyProtocolLayerAtom } from "@beep/ontology-client";
 import { OntologyWorkbench } from "@beep/ontology-ui";
 import { Button } from "@beep/ui/components/button";
 import { Toaster } from "@beep/ui/components/sonner";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { Cause, Effect } from "effect";
+import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -231,18 +232,22 @@ export function App(): JSX.Element {
         <Toaster richColors />
       </>
     ),
-    onFailure: (failure) => (
-      <>
-        <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
-          <div className="max-w-md rounded-md border bg-card p-4 shadow-sm">
-            <h1 className="text-base font-semibold">Desktop transport unavailable</h1>
-            <p className="mt-2 text-sm text-muted-foreground">{Cause.pretty(failure.cause)}</p>
+    onFailure: (failure) => {
+      const redacted = redactCauseForClient(failure.cause);
+      return (
+        <>
+          <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
+            <div className="max-w-md rounded-md border bg-card p-4 shadow-sm">
+              <h1 className="text-base font-semibold">Desktop transport unavailable</h1>
+              <p className="mt-2 text-sm text-muted-foreground">{redacted.message}</p>
+              <p className="mt-2 text-xs text-muted-foreground">Diagnostic ID: {redacted.fingerprint}</p>
+            </div>
           </div>
-        </div>
-        <ChatTurnErrorToasts />
-        <Toaster richColors />
-      </>
-    ),
+          <ChatTurnErrorToasts />
+          <Toaster richColors />
+        </>
+      );
+    },
     onSuccess: (success) => <DesktopShell transport={success.value} />,
   });
 }
