@@ -60,26 +60,31 @@ export function CodeBlockView({ code, language }: { readonly code: string; reado
   const copy = useAtomSet(copyFn(code));
 
   return (
-    <div className="group relative my-3" data-testid="code-block">
-      <div className="absolute right-2 top-2 z-10 flex items-center gap-2">
-        {language === "" ? null : (
-          <span className="rounded bg-background/70 px-1.5 py-0.5 text-[10px] text-muted-foreground">{language}</span>
-        )}
+    // The header sits in normal flow, and that is load-bearing, not cosmetic. It used
+    // to be absolutely positioned — contributing nothing to the block's intrinsic
+    // width — and a message bubble is shrink-to-fit (`max-w-[80%]` is a ceiling, not a
+    // width). So the bubble sized itself to the *code*: an empty fence gave a block
+    // barely wider than its own padding, and the language and Copy label, clamped into
+    // it, wrapped one character per line. A header in flow sets a floor no code block
+    // can collapse under.
+    <div className="my-3 overflow-hidden rounded-md border bg-muted" data-testid="code-block">
+      <div className="flex items-center justify-between gap-4 border-b bg-background/40 px-3 py-1">
+        <span className="font-mono text-[11px] text-muted-foreground">{language === "" ? "code" : language}</span>
         <button
           type="button"
           aria-label={copied ? "Code copied" : "Copy code"}
           data-testid="code-block-copy"
-          className="rounded border bg-background/80 px-2 py-0.5 text-[11px] text-muted-foreground opacity-0 transition-opacity focus-visible:opacity-100 group-hover:opacity-100"
+          className="rounded px-1.5 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           onClick={() => copy()}
         >
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
-      {/* The wrapper scrolls and the code does not wrap. Lexical renders code inside a
+      {/* The code scrolls and does not wrap. Lexical renders code inside a
           contenteditable whose `white-space` is `pre-wrap`, so a long line folded back
           on itself instead of scrolling — and code that wraps at an arbitrary column
           has to be reassembled in the reader's head before it can be read. */}
-      <pre className="overflow-x-auto rounded-md border bg-muted p-3 text-sm">
+      <pre className="overflow-x-auto p-3 text-sm">
         <code className="whitespace-pre font-mono text-[13px] leading-[1.53]">{code}</code>
       </pre>
     </div>

@@ -70,7 +70,12 @@ export function Sidebar({ workspaceId }: { readonly workspaceId: WorkspaceId }):
   const isEmpty = !AsyncResult.isInitial(threads) && !loadFailed && sorted.length === 0;
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-r bg-background/30 backdrop-blur" data-testid="sidebar">
+    // The width belongs to the resizable panel this sits in, not to the sidebar. It
+    // used to pin itself to `w-64`, which a drag could not have moved.
+    <aside
+      className="flex h-full w-full min-w-0 flex-col border-r bg-background/30 backdrop-blur"
+      data-testid="sidebar"
+    >
       <div className="border-b p-3">
         <Button
           type="button"
@@ -82,7 +87,10 @@ export function Sidebar({ workspaceId }: { readonly workspaceId: WorkspaceId }):
           + New thread
         </Button>
       </div>
-      <nav className="flex-1 overflow-y-auto p-2" data-testid="sidebar-list">
+      {/* `overflow-y-auto` alone computes the *other* axis to `auto` as well, so a title
+          that overflowed handed the sidebar a horizontal scrollbar. Nothing in a thread
+          list is ever meant to be reachable sideways. */}
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden p-2" data-testid="sidebar-list">
         {loadFailed ? (
           <Empty className="h-full border-none" data-testid="sidebar-load-failed">
             <EmptyHeader>
@@ -121,7 +129,7 @@ export function Sidebar({ workspaceId }: { readonly workspaceId: WorkspaceId }):
             <button
               key={thread.id}
               type="button"
-              className={`flex w-full flex-col items-start rounded-md px-2 py-2 text-left text-sm transition-colors hover:bg-muted ${
+              className={`flex w-full min-w-0 flex-col items-start rounded-md px-2 py-2 text-left text-sm transition-colors hover:bg-muted ${
                 isActive ? "bg-muted" : ""
               }`}
               onClick={() => {
@@ -131,7 +139,11 @@ export function Sidebar({ workspaceId }: { readonly workspaceId: WorkspaceId }):
               }}
               data-testid="sidebar-item"
             >
-              <span className="truncate font-medium">{thread.title}</span>
+              {/* `w-full` is what makes `truncate` mean anything. The button lays its
+                  children out with `items-start`, so without it the title sizes itself
+                  to its own text — a thread whose title is the first line of a long
+                  prompt simply ran off the side, ellipsis rule and all. */}
+              <span className="w-full truncate font-medium">{thread.title}</span>
               <span className="text-xs text-muted-foreground">
                 {DateTime.formatLocal(thread.updatedAt, { month: "short", day: "numeric" })}
               </span>

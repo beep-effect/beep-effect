@@ -1037,19 +1037,6 @@ const graphWorkerMessageError = (event: MessageEvent<unknown>): string =>
     ? "Ontology graph worker message failed to deserialize."
     : "Ontology graph worker failed.";
 
-/**
- * Side-effect atom that owns the visualizer projection worker.
- *
- * @example
- * ```ts
- * import { ontologyGraphWorkerBridgeAtom } from "@beep/ontology-client/aggregates/Session"
- *
- * console.log(ontologyGraphWorkerBridgeAtom)
- * ```
- *
- * @category atoms
- * @since 0.0.0
- */
 const GRAPH_WORKER_UNAVAILABLE_MESSAGE = "Graph projection is unavailable: this environment has no web worker.";
 
 const GRAPH_WORKER_UNREADABLE_RESULT_MESSAGE = "The graph worker returned a result this app could not read.";
@@ -1066,6 +1053,19 @@ const GRAPH_WORKER_TIMEOUT_MESSAGE = "The graph worker did not respond. The diag
  */
 const GRAPH_WORKER_TIMEOUT = Duration.seconds(20);
 
+/**
+ * Side-effect atom that owns the visualizer projection worker.
+ *
+ * @example
+ * ```ts
+ * import { ontologyGraphWorkerBridgeAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyGraphWorkerBridgeAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
 export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
   const WorkerCtor = globalThis.Worker;
 
@@ -1260,6 +1260,9 @@ const renderRequestAtom = Atom.make((get) => ({
   projection: get(ontologyGraphProjectionAtom),
 }));
 
+const graphRenderFailureMessage = (cause: unknown): string =>
+  `The graph could not be drawn: ${cause instanceof Error ? cause.message : String(cause)}`;
+
 /**
  * Side-effect atom that mounts and updates the cosmos viewport.
  *
@@ -1273,9 +1276,6 @@ const renderRequestAtom = Atom.make((get) => ({
  * @category atoms
  * @since 0.0.0
  */
-const graphRenderFailureMessage = (cause: unknown): string =>
-  `The graph could not be drawn: ${cause instanceof Error ? cause.message : String(cause)}`;
-
 export const ontologyGraphRenderBridgeAtom = Atom.make((get) => {
   let handle: O.Option<CosmosRenderHandle> = O.none();
   let renderToken = 0;

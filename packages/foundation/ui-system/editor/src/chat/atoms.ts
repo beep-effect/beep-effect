@@ -16,6 +16,7 @@
 import { SerializedEditorState } from "@beep/lexical-schema";
 import { A, O } from "@beep/utils";
 import { Effect, Layer, Result } from "effect";
+import { dual } from "effect/Function";
 import { Atom } from "effect/unstable/reactivity";
 import {
   $createParagraphNode,
@@ -31,6 +32,7 @@ import {
   fileToAttachment,
   revokeAttachment,
 } from "./attachment-model.ts";
+import { $isInsideCodeBlock, $openCodeFence } from "./code-fence.ts";
 import { SEND_MESSAGE_COMMAND } from "./commands.ts";
 import { ComposerFeatures } from "./config.ts";
 import type { LexicalEditor } from "lexical";
@@ -155,8 +157,10 @@ export const typeaheadMenuMarker = (editor: LexicalEditor): Record<string, strin
  * @category constants
  * @since 0.0.0
  */
-export const typeaheadOptionId = (editor: LexicalEditor, index: number): string =>
-  `typeahead-item-${editor.getKey()}-${index}`;
+export const typeaheadOptionId: {
+  (index: number): (editor: LexicalEditor) => string;
+  (editor: LexicalEditor, index: number): string;
+} = dual(2, (editor: LexicalEditor, index: number): string => `typeahead-item-${editor.getKey()}-${index}`);
 
 /**
  * Points an editor's `aria-activedescendant` at the option it has actually
@@ -169,10 +173,13 @@ export const typeaheadOptionId = (editor: LexicalEditor, index: number): string 
  * console.log(typeof typeaheadActiveDescendant)
  * ```
  *
- * @category bindings
+ * @category utilities
  * @since 0.0.0
  */
-export const typeaheadActiveDescendant = (editor: LexicalEditor, selectedIndex: number | null): void => {
+export const typeaheadActiveDescendant: {
+  (selectedIndex: number | null): (editor: LexicalEditor) => void;
+  (editor: LexicalEditor, selectedIndex: number | null): void;
+} = dual(2, (editor: LexicalEditor, selectedIndex: number | null): void => {
   const root = editor.getRootElement();
   if (root === null) return;
   if (selectedIndex === null) {
@@ -180,7 +187,7 @@ export const typeaheadActiveDescendant = (editor: LexicalEditor, selectedIndex: 
     return;
   }
   root.setAttribute("aria-activedescendant", typeaheadOptionId(editor, selectedIndex));
-};
+});
 
 /**
  * Whether a typeahead listbox is genuinely on screen for `editor`: an option row
@@ -578,6 +585,24 @@ export const sendKeyBindingAtom = Atom.family((editor: LexicalEditor) =>
           // menu and no way to send.
           if (get.once(anyMenuOpenAtom(editor)) && isTypeaheadMenuVisible(editor)) return false;
           if (isImeComposing(event)) return false;
+          // A code block owns Enter: inside one the keystroke is a newline, or the
+          // block the fence just opened could only ever hold a single line. That
+          // spends the send gesture, so Cmd/Ctrl+Enter becomes an explicit send here
+          // under either policy — otherwise a code block is a keyboard trap you can
+          // only escape with the mouse.
+          if ($isInsideCodeBlock()) {
+            if (!hasCommandModifier(event)) return false;
+            event.preventDefault();
+            editor.dispatchCommand(SEND_MESSAGE_COMMAND, undefined);
+            return true;
+          }
+          // A fence opener takes the keystroke ahead of both send and newline: typing
+          // ```ts and pressing Enter is how a code block gets written, and this
+          // composer consumes Enter before `@lexical/markdown` can ever see it.
+          if ($openCodeFence()) {
+            event.preventDefault();
+            return true;
+          }
           const sendOn = get.once(featuresAtom(editor)).sendOn;
           if (!shouldSendFromEnter(event, sendOn)) {
             // With sendOn="enter" the only newline gesture is Shift+Enter, and

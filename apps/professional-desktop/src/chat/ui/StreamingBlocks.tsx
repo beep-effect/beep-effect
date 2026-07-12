@@ -14,7 +14,7 @@
 "use client";
 
 import { AssistantBlock, InlineNode } from "@beep/agents-domain/values/AssistantContent";
-import { MermaidView, YouTubeEmbed } from "@beep/editor";
+import { CodeBlockView, MermaidView, YouTubeEmbed } from "@beep/editor";
 import { sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
 import { A, O, Str } from "@beep/utils";
 import { Hash, MutableHashMap } from "effect";
@@ -237,8 +237,13 @@ const Table = ({ block }: { readonly block: TableBlock }): JSX.Element => {
   const bodyKeys = stableOccurrenceKeys(bodyRows, tableRowRenderKey);
 
   return (
-    <div className="my-3 overflow-x-auto">
-      <table className="w-full border-collapse overflow-hidden rounded border text-sm">
+    // `w-max min-w-full`, not `w-full`: forced to the container's width, a table with
+    // more columns than fit crushes each one down and breaks the words inside it. The
+    // table takes the width its content needs and the wrapper scrolls. (`overflow-hidden`
+    // is gone from the table for the same reason it left the theme — on a table it
+    // collapses min-content and licenses exactly that squeeze.)
+    <div className="my-3 overflow-x-auto rounded border">
+      <table className="w-max min-w-full border-collapse text-sm">
         {headerRow === undefined ? null : (
           <thead>
             <TableRow cells={headerRow.cells} header={true} />
@@ -291,9 +296,10 @@ const Block = ({ block, renderKey }: { readonly block: AssistantBlock; readonly 
       b.language === "mermaid" ? (
         <MermaidView renderKey={`stream:${renderKey}`} source={b.code} />
       ) : (
-        <pre className="my-2 overflow-x-auto rounded bg-muted p-3 text-sm">
-          <code>{b.code}</code>
-        </pre>
+        // The same view the persisted transcript renders. A streaming block used to be
+        // a bare `<pre>` — no language, nothing to copy — and then changed shape under
+        // the reader the moment the turn landed.
+        <CodeBlockView code={b.code} language={b.language ?? ""} />
       ),
     table: (b) => <Table block={b} />,
     youtube: (b) => <YouTubeEmbed videoID={b.videoId} />,

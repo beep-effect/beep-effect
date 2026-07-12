@@ -1,4 +1,5 @@
 {
+  "disabledMcpjsonServers": ["serena", "sourcegraph", "webstorm"],
   "enabledMcpjsonServers": ["grafana"],
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": false,

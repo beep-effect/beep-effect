@@ -104,6 +104,7 @@
 
   [mcp_servers.webstorm]
     url = "http://127.0.0.1:64542/stream"
+    enabled = false
 
     [mcp_servers.webstorm.headers]
       IJ_MCP_SERVER_PROJECT_PATH = "<REPO_ROOT>"

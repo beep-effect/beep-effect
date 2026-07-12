@@ -11,6 +11,7 @@ import {
   buildOntologyGraphProjection,
   decodeWorkerCommand,
   encodeWorkerResult,
+  OntologyWorkerUndecodableCommand,
   WorkerCommand,
   WorkerResult,
 } from "@beep/ontology-use-cases/aggregates/Session/worker";
@@ -60,7 +61,7 @@ const pipeDecode = (data: unknown): void => {
   // and it answered nothing, so the workbench sat on "pending" with no error to
   // show and no way to find out why. Throwing surfaces it as an `error` event on
   // the parent, which fails the graph out loud.
-  throw new Error(`Ontology graph worker received a command it could not decode: ${decoded.failure}`);
+  throw OntologyWorkerUndecodableCommand.make({ reason: String(decoded.failure) });
 };
 
 globalThis.addEventListener("message", (event: MessageEvent<unknown>) => {

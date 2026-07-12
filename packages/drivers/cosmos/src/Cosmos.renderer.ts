@@ -89,7 +89,7 @@ const MAX_RENDERED_LABELS = 300;
  *
  * The labels the ontology computes were being thrown away: cosmos.gl draws points
  * and lines, never text, so a graph of a dozen named classes rendered as a dozen
- * anonymous dots. The library does expose its space -> screen transform, though,
+ * anonymous dots. The library does expose its space-to-screen transform, though,
  * which is exactly what a text layer needs — so the names go in a DOM layer pinned
  * over the canvas and follow their points through pan, zoom and simulation.
  */
