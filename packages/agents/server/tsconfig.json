@@ -15,6 +15,15 @@
       "path": "../use-cases/tsconfig.json"
     },
     {
+      "path": "../tables/tsconfig.json"
+    },
+    {
+      "path": "../../drivers/ai-provider-cli/tsconfig.json"
+    },
+    {
+      "path": "../../drivers/postgres/tsconfig.json"
+    },
+    {
       "path": "../../drivers/anthropic/tsconfig.json"
     },
     {

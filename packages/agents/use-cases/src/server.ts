@@ -6,6 +6,32 @@
  */
 
 /**
+ * Server-only provider-instance ports and implementation factory.
+ *
+ * @example
+ * ```ts
+ * import { ProviderInstance } from "@beep/agents-use-cases/server"
+ * console.log(ProviderInstance.ProviderProbe)
+ * ```
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * as ProviderInstance from "./entities/ProviderInstance/server.js";
+/**
+ * Direct server-only provider-instance port and factory exports.
+ *
+ * @example
+ * ```ts
+ * import { ProviderProbe } from "@beep/agents-use-cases/server"
+ * console.log(ProviderProbe)
+ * ```
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * from "./entities/ProviderInstance/server.js";
+/**
  * Server-only assistant-turn use-case exports.
  *
  * @example

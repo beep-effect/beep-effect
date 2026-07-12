@@ -1,23 +1,54 @@
 /**
- * agents table collection.
+ * Agents Drizzle schema aggregate.
  *
  * @packageDocumentation
  * @category tables
  * @since 0.0.0
  */
 
-/**
- * Empty shell Drizzle schema for the agents slice.
- *
- * @category tables
- * @since 0.0.0
- */
-export const DbSchema = {};
+import * as ProviderInstance from "./entities/ProviderInstance/index.js";
+
+type DbSchemaShape = {
+  readonly providerInstance: typeof ProviderInstance.providerInstanceTable;
+};
 
 /**
- * Empty shell Drizzle schema type.
+ * Drizzle schema object containing the agents table projections.
+ *
+ * @example
+ * ```ts
+ * import { DbSchema } from "@beep/agents-tables/tables"
+ * import { getTableName } from "drizzle-orm"
+ *
+ * const providerInstanceTableName = getTableName(DbSchema.providerInstance)
+ * if (providerInstanceTableName !== "agents_provider_instance") {
+ *   throw new Error("unexpected agents schema")
+ * }
+ *
+ * console.log(providerInstanceTableName)
+ * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export type DbSchema = typeof DbSchema;
+export const DbSchema: DbSchemaShape = {
+  providerInstance: ProviderInstance.providerInstanceTable,
+};
+
+/**
+ * Type-level view of the agents Drizzle schema object.
+ *
+ * @example
+ * ```ts
+ * import { DbSchema, type DbSchema as DbSchemaType } from "@beep/agents-tables/tables"
+ *
+ * const schema: DbSchemaType = DbSchema
+ * const tableName: "agents_provider_instance" = schema.providerInstance.definition.tableName
+ *
+ * console.log(tableName)
+ * ```
+ *
+ * @category tables
+ * @since 0.0.0
+ */
+export type DbSchema = DbSchemaShape;

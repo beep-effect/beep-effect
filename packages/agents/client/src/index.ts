@@ -41,3 +41,31 @@ export * from "./Chat.atoms.js";
  * @since 0.0.0
  */
 export * from "./ClientObservability.js";
+/**
+ * Reactive provider-instance list and lifecycle mutations.
+ *
+ * @example
+ * ```ts
+ * import { providerInstancesAtom } from "@beep/agents-client"
+ *
+ * console.log(providerInstancesAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export * from "./ProviderInstance.atoms.js";
+/**
+ * Provider-instance RPC transport and atom client wiring.
+ *
+ * @example
+ * ```ts
+ * import { ProviderInstanceClient } from "@beep/agents-client"
+ *
+ * console.log(ProviderInstanceClient)
+ * ```
+ *
+ * @category clients
+ * @since 0.0.0
+ */
+export * from "./ProviderInstance.service.js";
