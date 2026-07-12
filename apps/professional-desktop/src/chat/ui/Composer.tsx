@@ -31,7 +31,7 @@ import {
   reportDecodeFailureAtom,
   runTurnAtom,
   SendTurnRequest,
-  streamingTurnAtom,
+  turnActiveAtom,
 } from "@beep/agents-client/Chat.atoms";
 import { ChatComposer, defaultChatSlashItems } from "@beep/editor";
 import { editorStateToDocument } from "@beep/lexical-schema";
@@ -99,7 +99,7 @@ const mentionSource: MentionSource = (query) => {
  * @since 0.0.0
  */
 export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Element {
-  // Registry handle so `submit` reads every reactive value (streaming, latest
+  // Registry handle so `submit` reads every reactive value (turn activity, latest
   // state, edit target) FRESH at fire time, and so the draft is read UNTRACKED for
   // seeding. The foundation seeds the send handler ONCE per mount (stable per
   // `key`) and the composer does not remount on streaming / draft change, so a
@@ -114,7 +114,7 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
   const editTarget = O.filter(useAtomValue(editTargetAtom), (target) => target.threadId === threadId);
   const setEditTarget = useAtomSet(editTargetAtom);
   const runTurn = useAtomSet(runTurnAtom);
-  const streaming = O.isSome(useAtomValue(streamingTurnAtom));
+  const streaming = useAtomValue(turnActiveAtom);
 
   // The draft is read UNTRACKED: the seed only needs the draft value at (re)mount
   // time. Subscribing would re-render + re-project on every keystroke even though
@@ -162,13 +162,13 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
   // Returns true when a turn was dispatched, so the foundation clears the editor
   // in place (keeping focus); false on a no-op (streaming or empty). `streaming`
   // and `editTarget` are read FRESH from the registry because the send handler is
-  // seeded once per mount and a closed-over `streaming` could double-send.
+  // seeded once per mount and a closed-over activity value could double-send.
   const submit = (state: SerializedEditorState): boolean => {
     // Every refusal below explains itself. A silently refused send is
     // indistinguishable from a broken composer: Enter and the Send button simply
     // stop working, with the draft sitting there and no error anywhere, and the
     // only way to find out why is to read the source.
-    if (O.isSome(registry.get(streamingTurnAtom))) {
+    if (registry.get(turnActiveAtom)) {
       toast.info("A reply is still streaming — wait for it to finish, or press Stop.");
       return false;
     }

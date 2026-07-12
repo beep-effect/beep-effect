@@ -1,15 +1,21 @@
+// cspell:ignore Condvar unreaped
 use serde::Serialize;
 use std::env;
+use std::io::{BufRead, BufReader, Read, Write};
+#[cfg(unix)]
+use std::os::unix::process::ExitStatusExt;
 use std::path::Path;
+use std::process::{Child, ChildStdin, Stdio};
 use std::sync::{
     atomic::{AtomicBool, Ordering},
-    Arc, Mutex, MutexGuard,
+    Arc, Condvar, Mutex, MutexGuard,
 };
+use std::thread::JoinHandle;
 use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter, Manager, RunEvent};
 use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
-use tauri_plugin_shell::process::{CommandChild, CommandEvent};
+use tauri_plugin_shell::process::{CommandEvent, TerminatedPayload};
 use tauri_plugin_shell::ShellExt;
 use uuid::Uuid;
 
@@ -271,16 +277,125 @@ async fn select_vault_directory(app: AppHandle) -> Result<Option<String>, String
 
 /// The bundled rpc sidecar process, killed when the app exits.
 struct Sidecar {
-    child: SharedSidecarChild,
     ipc_ready: SharedIpcReady,
     pending_closed: SharedPendingClosed,
     pending_stdout_frames: SharedPendingStdoutFrames,
+    process: SidecarProcess,
 }
 
 type SharedIpcReady = Arc<AtomicBool>;
 type SharedPendingClosed = Arc<Mutex<Option<SidecarClosed>>>;
 type SharedPendingStdoutFrames = Arc<Mutex<Vec<String>>>;
-type SharedSidecarChild = Arc<Mutex<Option<CommandChild>>>;
+
+/// Own stdin independently from the process handle so a full pipe cannot prevent
+/// liveness probes or forced shutdown. The monitor is the sole child reaper.
+#[derive(Clone)]
+struct SidecarProcess {
+    child: Arc<Mutex<Option<Child>>>,
+    lifecycle: Arc<SidecarLifecycle>,
+    pid: u32,
+    stdin: Arc<Mutex<Option<ChildStdin>>>,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum SidecarLifecycleState {
+    Running,
+    Stopping,
+    Exited,
+    Closed,
+}
+
+struct SidecarLifecycle {
+    changed: Condvar,
+    state: Mutex<SidecarLifecycleState>,
+}
+
+impl SidecarLifecycle {
+    fn new() -> Self {
+        Self {
+            changed: Condvar::new(),
+            state: Mutex::new(SidecarLifecycleState::Running),
+        }
+    }
+
+    fn accepts_writes(&self) -> bool {
+        *recover_lock(&self.state) == SidecarLifecycleState::Running
+    }
+
+    fn begin_shutdown(&self) {
+        let mut state = recover_lock(&self.state);
+        if *state == SidecarLifecycleState::Running {
+            *state = SidecarLifecycleState::Stopping;
+        }
+    }
+
+    fn has_exited(&self) -> bool {
+        matches!(
+            *recover_lock(&self.state),
+            SidecarLifecycleState::Exited | SidecarLifecycleState::Closed
+        )
+    }
+
+    fn mark_exited(&self) {
+        let mut state = recover_lock(&self.state);
+        if *state != SidecarLifecycleState::Closed {
+            *state = SidecarLifecycleState::Exited;
+        }
+        self.changed.notify_all();
+    }
+
+    fn mark_closed(&self) {
+        *recover_lock(&self.state) = SidecarLifecycleState::Closed;
+        self.changed.notify_all();
+    }
+
+    #[cfg(test)]
+    fn wait_for_exit(&self, timeout: Duration) -> bool {
+        let state = recover_lock(&self.state);
+        let (state, _) = self
+            .changed
+            .wait_timeout_while(state, timeout, |state| {
+                !matches!(
+                    *state,
+                    SidecarLifecycleState::Exited | SidecarLifecycleState::Closed
+                )
+            })
+            .unwrap_or_else(|error| error.into_inner());
+        matches!(
+            *state,
+            SidecarLifecycleState::Exited | SidecarLifecycleState::Closed
+        )
+    }
+
+    fn wait_for_close(&self, timeout: Duration) -> bool {
+        let state = recover_lock(&self.state);
+        let (state, _) = self
+            .changed
+            .wait_timeout_while(state, timeout, |state| {
+                *state != SidecarLifecycleState::Closed
+            })
+            .unwrap_or_else(|error| error.into_inner());
+        *state == SidecarLifecycleState::Closed
+    }
+}
+
+impl SidecarProcess {
+    fn new(child: Child, stdin: ChildStdin) -> Self {
+        let pid = child.id();
+        Self {
+            child: Arc::new(Mutex::new(Some(child))),
+            lifecycle: Arc::new(SidecarLifecycle::new()),
+            pid,
+            stdin: Arc::new(Mutex::new(Some(stdin))),
+        }
+    }
+}
+
+enum SidecarProcessPoll {
+    Exited(TerminatedPayload),
+    Missing,
+    Running,
+}
 
 /// Upper bound on a single IPC ndjson rpc frame, enforced in both directions: the
 /// inbound stdout bridge buffer (which only ever holds one in-flight frame, see
@@ -381,6 +496,26 @@ fn emit_or_buffer_ipc_stdout_frame(
     pending_stdout_frames: &SharedPendingStdoutFrames,
     frame: Vec<u8>,
 ) -> bool {
+    if frame.len() > MAX_IPC_FRAME_BYTES {
+        let message = format!(
+            "sidecar stdout frame of {} bytes exceeds the {MAX_IPC_FRAME_BYTES}-byte limit",
+            frame.len()
+        );
+        log::error!("{message}");
+        emit_or_buffer_sidecar_closed(
+            handle,
+            ready,
+            pending_closed,
+            SidecarClosed {
+                code: None,
+                kind: "error",
+                message: Some(message),
+                signal: None,
+            },
+        );
+        return false;
+    }
+
     if is_blank_ipc_stdout_frame(&frame) {
         log::warn!(
             "event=sidecar_ipc_frame_dropped direction=inbound reason=blank bytes={}",
@@ -432,12 +567,11 @@ fn is_blank_ipc_stdout_frame(frame: &[u8]) -> bool {
         .all(|byte| matches!(*byte, b'\n' | b'\r' | b'\t' | b' '))
 }
 
-fn kill_sidecar(sidecar: &SharedSidecarChild, reason: &'static str) {
-    let mut guard = recover_lock(sidecar);
-    let child = guard.take();
-    drop(guard);
-    if let Some(child) = child {
-        let pid = child.pid();
+fn kill_sidecar(process: &SidecarProcess, reason: &'static str) {
+    process.lifecycle.begin_shutdown();
+    let mut child = recover_lock(&process.child);
+    if let Some(child) = child.as_mut() {
+        let pid = child.id();
         match child.kill() {
             Ok(()) => log::info!("event=sidecar_stopped mode=forced reason={reason} pid={pid}"),
             Err(error) => log::error!(
@@ -449,28 +583,198 @@ fn kill_sidecar(sidecar: &SharedSidecarChild, reason: &'static str) {
     }
 }
 
-fn sidecar_pid(sidecar: &SharedSidecarChild) -> Option<u32> {
-    recover_lock(sidecar).as_ref().map(CommandChild::pid)
+fn running_sidecar_pid(process: &SidecarProcess) -> Option<u32> {
+    if process.lifecycle.has_exited() {
+        return None;
+    }
+    recover_lock(&process.child).as_ref().map(Child::id)
 }
 
 #[cfg(unix)]
-fn request_graceful_sidecar_stop(sidecar: &SharedSidecarChild) -> Result<Option<u32>, String> {
-    let Some(pid) = sidecar_pid(sidecar) else {
+fn request_graceful_sidecar_stop(process: &SidecarProcess) -> Result<Option<u32>, String> {
+    process.lifecycle.begin_shutdown();
+    let Some(pid) = running_sidecar_pid(process) else {
         return Ok(None);
     };
-    // SAFETY: `pid` comes from the live child handle and SIGTERM does not borrow
-    // memory from this process. A negative return value is reported below.
+    // SAFETY: `pid` belongs to an unreaped child owned by `process`, so it cannot
+    // be reused while this signal is sent. SIGTERM borrows no process memory.
     let result = unsafe { libc::kill(pid as libc::pid_t, libc::SIGTERM) };
     if result == 0 {
         Ok(Some(pid))
+    } else if process.lifecycle.has_exited() {
+        Ok(None)
     } else {
         Err(std::io::Error::last_os_error().to_string())
     }
 }
 
 #[cfg(not(unix))]
-fn request_graceful_sidecar_stop(_sidecar: &SharedSidecarChild) -> Result<Option<u32>, String> {
-    Ok(None)
+fn request_graceful_sidecar_stop(process: &SidecarProcess) -> Result<Option<u32>, String> {
+    process.lifecycle.begin_shutdown();
+    if running_sidecar_pid(process).is_none() {
+        Ok(None)
+    } else {
+        Err("graceful sidecar shutdown is not supported on this platform".to_string())
+    }
+}
+
+fn write_sidecar_frame(process: &SidecarProcess, frame: &[u8]) -> Result<(), String> {
+    if !process.lifecycle.accepts_writes() {
+        return Err("sidecar is stopping or not running".to_string());
+    }
+
+    let mut stdin = recover_lock(&process.stdin);
+    if !process.lifecycle.accepts_writes() {
+        return Err("sidecar is stopping or not running".to_string());
+    }
+    stdin
+        .as_mut()
+        .ok_or_else(|| "sidecar is not running".to_string())?
+        .write_all(frame)
+        .map_err(|error| error.to_string())
+}
+
+fn poll_sidecar_process(process: &SidecarProcess) -> std::io::Result<SidecarProcessPoll> {
+    let mut child = recover_lock(&process.child);
+    let Some(active_child) = child.as_mut() else {
+        return Ok(SidecarProcessPoll::Missing);
+    };
+    let Some(status) = active_child.try_wait()? else {
+        return Ok(SidecarProcessPoll::Running);
+    };
+
+    let payload = TerminatedPayload {
+        code: status.code(),
+        #[cfg(unix)]
+        signal: status.signal(),
+        #[cfg(not(unix))]
+        signal: None,
+    };
+    child.take();
+    Ok(SidecarProcessPoll::Exited(payload))
+}
+
+fn pump_raw_sidecar_output<R: Read + Send + 'static>(
+    mut reader: R,
+    sender: tauri::async_runtime::Sender<CommandEvent>,
+    event: fn(Vec<u8>) -> CommandEvent,
+) -> JoinHandle<()> {
+    std::thread::spawn(move || {
+        let mut buffer = [0_u8; 8 * 1024];
+        loop {
+            match reader.read(&mut buffer) {
+                Ok(0) => return,
+                Ok(read) => {
+                    if sender
+                        .blocking_send(event(buffer[..read].to_vec()))
+                        .is_err()
+                    {
+                        return;
+                    }
+                }
+                Err(error) => {
+                    let _ = sender.blocking_send(CommandEvent::Error(error.to_string()));
+                    return;
+                }
+            }
+        }
+    })
+}
+
+fn pump_line_sidecar_output<R: Read + Send + 'static>(
+    reader: R,
+    sender: tauri::async_runtime::Sender<CommandEvent>,
+    event: fn(Vec<u8>) -> CommandEvent,
+) -> JoinHandle<()> {
+    std::thread::spawn(move || {
+        let mut reader = BufReader::new(reader);
+        loop {
+            let mut line = Vec::new();
+            match reader.read_until(b'\n', &mut line) {
+                Ok(0) => return,
+                Ok(_) => {
+                    if sender.blocking_send(event(line)).is_err() {
+                        return;
+                    }
+                }
+                Err(error) => {
+                    let _ = sender.blocking_send(CommandEvent::Error(error.to_string()));
+                    return;
+                }
+            }
+        }
+    })
+}
+
+fn monitor_sidecar_process(
+    process: SidecarProcess,
+    readers: [JoinHandle<()>; 2],
+    sender: tauri::async_runtime::Sender<CommandEvent>,
+) {
+    std::thread::spawn(move || loop {
+        match poll_sidecar_process(&process) {
+            Ok(SidecarProcessPoll::Running) => {
+                std::thread::sleep(Duration::from_millis(25));
+            }
+            Ok(SidecarProcessPoll::Exited(payload)) => {
+                process.lifecycle.mark_exited();
+                recover_lock(&process.stdin).take();
+                for reader in readers {
+                    if reader.join().is_err() {
+                        let _ = sender.blocking_send(CommandEvent::Error(
+                            "sidecar output reader panicked".to_string(),
+                        ));
+                    }
+                }
+                let _ = sender.blocking_send(CommandEvent::Terminated(payload));
+                return;
+            }
+            Ok(SidecarProcessPoll::Missing) => {
+                process.lifecycle.mark_exited();
+                let _ = sender.blocking_send(CommandEvent::Error(
+                    "sidecar process handle disappeared before termination".to_string(),
+                ));
+                return;
+            }
+            Err(error) => {
+                let _ = sender.blocking_send(CommandEvent::Error(format!(
+                    "sidecar liveness probe failed: {error}"
+                )));
+                return;
+            }
+        }
+    });
+}
+
+fn spawn_sidecar_process(
+    command: tauri_plugin_shell::process::Command,
+    ipc: bool,
+) -> std::io::Result<(tauri::async_runtime::Receiver<CommandEvent>, SidecarProcess)> {
+    let mut command: std::process::Command = command.into();
+    command
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
+    let mut child = command.spawn()?;
+    let handles = (child.stdin.take(), child.stdout.take(), child.stderr.take());
+    let (Some(stdin), Some(stdout), Some(stderr)) = handles else {
+        let _ = child.kill();
+        let _ = child.wait();
+        return Err(std::io::Error::other(
+            "sidecar process did not expose piped stdio",
+        ));
+    };
+
+    let process = SidecarProcess::new(child, stdin);
+    let (sender, events) = tauri::async_runtime::channel(1);
+    let stdout_reader = if ipc {
+        pump_raw_sidecar_output(stdout, sender.clone(), CommandEvent::Stdout)
+    } else {
+        pump_line_sidecar_output(stdout, sender.clone(), CommandEvent::Stdout)
+    };
+    let stderr_reader = pump_line_sidecar_output(stderr, sender.clone(), CommandEvent::Stderr);
+    monitor_sidecar_process(process.clone(), [stdout_reader, stderr_reader], sender);
+    Ok((events, process))
 }
 
 fn log_sidecar_output(stream: &'static str, bytes: &[u8]) {
@@ -502,10 +806,10 @@ fn bridge_sidecar_events(
     launch_id: String,
 ) {
     let handle = app.clone();
-    let sidecar_child = Arc::clone(&sidecar.child);
     let ipc_ready = Arc::clone(&sidecar.ipc_ready);
     let pending_closed = Arc::clone(&sidecar.pending_closed);
     let pending_stdout_frames = Arc::clone(&sidecar.pending_stdout_frames);
+    let sidecar_process = sidecar.process.clone();
     tauri::async_runtime::spawn(async move {
         let mut stdout_buffer: Vec<u8> = Vec::new();
         let mut closed_emitted = false;
@@ -536,7 +840,7 @@ fn bridge_sidecar_events(
                                 frame,
                             ) {
                                 closed_emitted = true;
-                                kill_sidecar(&sidecar_child, "ipc-frame-emit-failed");
+                                kill_sidecar(&sidecar_process, "ipc-frame-emit-failed");
                                 break;
                             }
                         }
@@ -552,7 +856,7 @@ fn bridge_sidecar_events(
                             );
                             log::error!("{message}");
                             closed_emitted = true;
-                            kill_sidecar(&sidecar_child, "ipc-frame-limit");
+                            kill_sidecar(&sidecar_process, "ipc-frame-limit");
                             emit_or_buffer_sidecar_closed(
                                 &handle,
                                 &ipc_ready,
@@ -576,7 +880,7 @@ fn bridge_sidecar_events(
                 CommandEvent::Error(err) => {
                     log::error!("event=sidecar_process_error launch_id={launch_id} error={err}");
                     closed_emitted = true;
-                    kill_sidecar(&sidecar_child, "process-error");
+                    kill_sidecar(&sidecar_process, "process-error");
                     emit_or_buffer_sidecar_closed(
                         &handle,
                         &ipc_ready,
@@ -608,7 +912,7 @@ fn bridge_sidecar_events(
                                 signal: payload.signal,
                             },
                         );
-                        kill_sidecar(&sidecar_child, "partial-ipc-frame");
+                        sidecar_process.lifecycle.mark_closed();
                         continue;
                     }
                     log::warn!(
@@ -616,7 +920,6 @@ fn bridge_sidecar_events(
                         payload.code,
                         payload.signal
                     );
-                    kill_sidecar(&sidecar_child, "terminated");
                     emit_or_buffer_sidecar_closed(
                         &handle,
                         &ipc_ready,
@@ -628,6 +931,7 @@ fn bridge_sidecar_events(
                             signal: payload.signal,
                         },
                     );
+                    sidecar_process.lifecycle.mark_closed();
                 }
                 _ => {}
             }
@@ -649,13 +953,16 @@ fn bridge_sidecar_events(
                 },
             );
         }
+        if sidecar_process.lifecycle.has_exited() {
+            sidecar_process.lifecycle.mark_closed();
+        }
     });
 }
 
 /// Write one outbound ndjson rpc frame from the webview to the sidecar's stdin.
 /// The frame already carries the ndjson serialization framing, so it is written
-/// verbatim. `async` so Tauri runs it off the UI thread — `CommandChild::write`
-/// blocks on a full stdin pipe, which must never stall the webview.
+/// verbatim. The blocking pipe write runs on Tauri's blocking pool and owns only
+/// the stdin lock, leaving process control available to shutdown and finalizers.
 #[tauri::command]
 async fn sidecar_send(
     state: tauri::State<'_, Sidecar>,
@@ -696,30 +1003,33 @@ async fn sidecar_send(
         ));
     }
     let frame_bytes = frame.len();
-    let mut guard = recover_lock(&state.child);
-    match guard.as_mut() {
-        Some(child) => match child.write(frame.as_bytes()) {
-            Ok(()) => {
-                log::debug!(
-                    "event=sidecar_ipc_frame_sent launch_id={} direction=outbound bytes={frame_bytes}",
-                    metadata.launch_id
-                );
-                Ok(())
-            }
-            Err(error) => {
-                log::error!(
-                    "event=sidecar_send_failed launch_id={} bytes={frame_bytes} error={error}",
-                    metadata.launch_id
-                );
-                Err(error.to_string())
-            }
-        },
-        None => {
+    let launch_id = metadata.launch_id.clone();
+    let process = state.process.clone();
+    let write_task = tauri::async_runtime::spawn_blocking(move || {
+        write_sidecar_frame(&process, frame.as_bytes())
+    })
+    .await;
+    let result = match write_task {
+        Ok(result) => result,
+        Err(error) => {
             log::error!(
-                "event=sidecar_send_failed launch_id={} bytes={frame_bytes} error=not-running",
-                metadata.launch_id
+                "event=sidecar_send_failed launch_id={launch_id} bytes={frame_bytes} phase=write-task error={error}"
             );
-            Err("sidecar is not running".to_string())
+            return Err(error.to_string());
+        }
+    };
+    match result {
+        Ok(()) => {
+            log::debug!(
+                "event=sidecar_ipc_frame_sent launch_id={launch_id} direction=outbound bytes={frame_bytes}"
+            );
+            Ok(())
+        }
+        Err(error) => {
+            log::error!(
+                "event=sidecar_send_failed launch_id={launch_id} bytes={frame_bytes} error={error}"
+            );
+            Err(error)
         }
     }
 }
@@ -940,7 +1250,7 @@ pub fn run() {
                 }
                 command = command.env(RPC_SESSION_TOKEN_ENV, rpc_session_token);
 
-                let (events, child) = match command.spawn() {
+                let (events, process) = match spawn_sidecar_process(command, ipc) {
                     Ok(spawned) => spawned,
                     Err(error) => {
                         log::error!(
@@ -951,12 +1261,12 @@ pub fn run() {
                         return Err(error.into());
                     }
                 };
-                let child_pid = child.pid();
+                let child_pid = process.pid;
                 let sidecar = Sidecar {
-                    child: Arc::new(Mutex::new(Some(child))),
                     ipc_ready: Arc::new(AtomicBool::new(!ipc)),
                     pending_closed: Arc::new(Mutex::new(None)),
                     pending_stdout_frames: Arc::new(Mutex::new(Vec::new())),
+                    process,
                 };
                 bridge_sidecar_events(
                     app.handle(),
@@ -1005,47 +1315,68 @@ pub fn run() {
 
                 api.prevent_exit();
                 let app = app.clone();
-                let sidecar_child = Arc::clone(&sidecar.child);
+                let sidecar_process = sidecar.process.clone();
                 let launch_id = app.state::<DesktopRuntimeMetadata>().launch_id.clone();
                 tauri::async_runtime::spawn(async move {
-                    match request_graceful_sidecar_stop(&sidecar_child) {
-                        Ok(Some(pid)) => {
-                            log::info!(
-                                "event=desktop_stopping launch_id={launch_id} shutdown_mode=sigterm pid={pid} timeout_ms=4000"
-                            );
-                            let deadline = Instant::now() + Duration::from_secs(4);
-                            while Instant::now() < deadline && sidecar_pid(&sidecar_child).is_some() {
-                                std::thread::sleep(Duration::from_millis(50));
-                            }
-                            if sidecar_pid(&sidecar_child).is_some() {
-                                log::warn!(
-                                    "event=sidecar_graceful_stop_timeout launch_id={launch_id} pid={pid} timeout_ms=4000"
-                                );
-                                kill_sidecar(&sidecar_child, "graceful-timeout");
-                            } else {
+                    let shutdown_launch_id = launch_id.clone();
+                    let shutdown_result = tauri::async_runtime::spawn_blocking(move || {
+                        match request_graceful_sidecar_stop(&sidecar_process) {
+                            Ok(Some(pid)) => {
                                 log::info!(
-                                    "event=sidecar_graceful_stop_completed launch_id={launch_id} pid={pid}"
+                                    "event=desktop_stopping launch_id={shutdown_launch_id} shutdown_mode=sigterm pid={pid} timeout_ms=4000"
+                                );
+                                if sidecar_process
+                                    .lifecycle
+                                    .wait_for_close(Duration::from_secs(4))
+                                {
+                                    log::info!(
+                                        "event=sidecar_graceful_stop_completed launch_id={shutdown_launch_id} pid={pid}"
+                                    );
+                                } else if sidecar_process.lifecycle.has_exited() {
+                                    log::warn!(
+                                        "event=sidecar_graceful_stop_drain_timeout launch_id={shutdown_launch_id} pid={pid} timeout_ms=4000"
+                                    );
+                                } else {
+                                    log::warn!(
+                                        "event=sidecar_graceful_stop_timeout launch_id={shutdown_launch_id} pid={pid} timeout_ms=4000"
+                                    );
+                                    kill_sidecar(&sidecar_process, "graceful-timeout");
+                                }
+                            }
+                            Ok(None) => {
+                                if !sidecar_process
+                                    .lifecycle
+                                    .wait_for_close(Duration::from_secs(4))
+                                {
+                                    log::warn!(
+                                        "event=sidecar_graceful_stop_drain_timeout launch_id={shutdown_launch_id} pid={} timeout_ms=4000",
+                                        sidecar_process.pid
+                                    );
+                                }
+                                log::info!(
+                                    "event=desktop_stopping launch_id={shutdown_launch_id} shutdown_mode=no-running-sidecar"
                                 );
                             }
+                            Err(error) => {
+                                log::warn!(
+                                    "event=sidecar_graceful_stop_failed launch_id={shutdown_launch_id} error={error} fallback=forced"
+                                );
+                                kill_sidecar(&sidecar_process, "graceful-signal-failed");
+                            }
                         }
-                        Ok(None) => {
-                            log::info!(
-                                "event=desktop_stopping launch_id={launch_id} shutdown_mode=no-running-sidecar"
-                            );
-                        }
-                        Err(error) => {
-                            log::warn!(
-                                "event=sidecar_graceful_stop_failed launch_id={launch_id} error={error} fallback=forced"
-                            );
-                            kill_sidecar(&sidecar_child, "graceful-signal-failed");
-                        }
+                    })
+                    .await;
+                    if let Err(error) = shutdown_result {
+                        log::error!(
+                            "event=sidecar_shutdown_task_failed launch_id={launch_id} error={error}"
+                        );
                     }
                     app.exit(code.unwrap_or(0));
                 });
             }
             RunEvent::Exit => {
                 if let Some(sidecar) = app.try_state::<Sidecar>() {
-                    kill_sidecar(&sidecar.child, "desktop-exit-finalizer");
+                    kill_sidecar(&sidecar.process, "desktop-exit-finalizer");
                 }
             }
             _ => {}
@@ -1058,7 +1389,34 @@ mod tests {
         authorize_sidecar_send, ensure_private_directory, is_blank_ipc_stdout_frame,
         parse_native_logging_config,
     };
+    #[cfg(unix)]
+    use super::{
+        kill_sidecar, monitor_sidecar_process, poll_sidecar_process, running_sidecar_pid,
+        write_sidecar_frame, SidecarProcess, SidecarProcessPoll, MAX_IPC_FRAME_BYTES,
+    };
+    #[cfg(unix)]
+    use std::process::{Command, Stdio};
+    #[cfg(unix)]
+    use std::sync::mpsc::{self, TryRecvError};
+    #[cfg(unix)]
+    use std::time::{Duration, Instant};
     use uuid::Uuid;
+
+    #[cfg(unix)]
+    fn spawn_test_sidecar(script: &str) -> SidecarProcess {
+        let mut child = Command::new("sh")
+            .args(["-c", script])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .expect("test sidecar should spawn");
+        let stdin = child
+            .stdin
+            .take()
+            .expect("test sidecar should expose stdin");
+        SidecarProcess::new(child, stdin)
+    }
 
     #[test]
     fn creates_private_ontology_workspace_directory() {
@@ -1097,6 +1455,74 @@ mod tests {
         assert_eq!(invalid.effect_level, "Info");
         assert_eq!(invalid.native_level, log::LevelFilter::Info);
         assert!(invalid.invalid_value);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn reports_actual_exit_before_event_bridge_cleanup() {
+        let process = spawn_test_sidecar("exit 0");
+        let (sender, mut events) = tauri::async_runtime::channel(1);
+        monitor_sidecar_process(
+            process.clone(),
+            [std::thread::spawn(|| {}), std::thread::spawn(|| {})],
+            sender,
+        );
+
+        assert!(process.lifecycle.wait_for_exit(Duration::from_secs(2)));
+        assert_eq!(running_sidecar_pid(&process), None);
+        let event = tauri::async_runtime::block_on(events.recv())
+            .expect("termination event should follow the liveness transition");
+        match event {
+            tauri_plugin_shell::process::CommandEvent::Terminated(payload) => {
+                assert_eq!(payload.code, Some(0));
+                assert_eq!(payload.signal, None);
+            }
+            event => panic!("expected termination event, received {event:?}"),
+        }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn forced_stop_does_not_wait_for_blocked_stdin() {
+        let process = spawn_test_sidecar("sleep 30");
+        let writer_process = process.clone();
+        let (started_sender, started_receiver) = mpsc::channel();
+        let (result_sender, result_receiver) = mpsc::channel();
+        let writer = std::thread::spawn(move || {
+            started_sender
+                .send(())
+                .expect("writer start should be observed");
+            let frame = vec![b'x'; MAX_IPC_FRAME_BYTES];
+            result_sender
+                .send(write_sidecar_frame(&writer_process, &frame))
+                .expect("writer result should be observed");
+        });
+
+        started_receiver
+            .recv_timeout(Duration::from_secs(1))
+            .expect("writer should start");
+        std::thread::sleep(Duration::from_millis(50));
+        assert_eq!(result_receiver.try_recv(), Err(TryRecvError::Empty));
+
+        let started_at = Instant::now();
+        kill_sidecar(&process, "blocked-stdin-test");
+        assert!(started_at.elapsed() < Duration::from_secs(1));
+        let write_result = result_receiver
+            .recv_timeout(Duration::from_secs(2))
+            .expect("killing the child should unblock stdin");
+        assert!(write_result.is_err());
+        writer.join().expect("writer thread should finish");
+
+        let deadline = Instant::now() + Duration::from_secs(2);
+        loop {
+            match poll_sidecar_process(&process).expect("liveness probe should succeed") {
+                SidecarProcessPoll::Exited(_) | SidecarProcessPoll::Missing => break,
+                SidecarProcessPoll::Running if Instant::now() < deadline => {
+                    std::thread::sleep(Duration::from_millis(10));
+                }
+                SidecarProcessPoll::Running => panic!("killed test sidecar did not exit"),
+            }
+        }
     }
 
     #[cfg(unix)]

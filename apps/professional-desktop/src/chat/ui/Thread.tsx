@@ -21,7 +21,13 @@
  */
 "use client";
 
-import { editTargetAtom, runTurnAtom, streamingTurnAtom, threadTimelineAtoms } from "@beep/agents-client/Chat.atoms";
+import {
+  editTargetAtom,
+  runTurnAtom,
+  streamingTurnAtom,
+  threadTimelineAtoms,
+  turnActiveAtom,
+} from "@beep/agents-client/Chat.atoms";
 import { Button } from "@beep/ui/components/button";
 import { A, O, thunkNull } from "@beep/utils";
 import { Thread as ThreadProjections } from "@beep/workspace-use-cases/public";
@@ -140,6 +146,7 @@ export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Eleme
   const timelineAtom = threadTimelineAtoms(threadId);
   const timeline = useAtomValue(timelineAtom);
   const streaming = useAtomValue(streamingTurnAtom);
+  const turnActive = useAtomValue(turnActiveAtom);
   const runTurn = useAtomSet(runTurnAtom);
   // the turn fiber must stay subscribed for the lifetime of the thread view,
   // otherwise the registry releases the fn atom and interrupts the stream.
@@ -217,22 +224,24 @@ export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Eleme
               <div className="max-w-[80%] rounded-lg bg-muted/50 px-3 py-2">
                 {A.isReadonlyArrayEmpty(turn.blocks) ? (
                   <div className="text-sm text-muted-foreground" data-testid="thinking">
-                    Thinking…
+                    {turnActive ? "Thinking…" : "Reply completed; waiting for the thread to refresh…"}
                   </div>
                 ) : (
                   <StreamingBlocks blocks={turn.blocks} />
                 )}
-                <div className="mt-2">
-                  <Button
-                    variant="outline"
-                    size="xs"
-                    title="Stop generating"
-                    onClick={() => runTurn(Atom.Interrupt)}
-                    data-testid="turn-stop"
-                  >
-                    Stop
-                  </Button>
-                </div>
+                {turnActive ? (
+                  <div className="mt-2">
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      title="Stop generating"
+                      onClick={() => runTurn(Atom.Interrupt)}
+                      data-testid="turn-stop"
+                    >
+                      Stop
+                    </Button>
+                  </div>
+                ) : null}
               </div>
             </div>
           </>
