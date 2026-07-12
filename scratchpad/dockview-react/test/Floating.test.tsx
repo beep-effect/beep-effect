@@ -96,7 +96,7 @@ const pointer = (node: Element, name: "pointerDown" | "pointerMove" | "pointerUp
 
 afterEach(cleanup);
 
-describe.concurrent("floating dock adapter", () => {
+describe.sequential("floating dock adapter", () => {
   it.effect("renders z-ordered floating panes and preserves a portal target across docked-to-floating movement",
     Effect.fnUntraced(function* () {
       const graph = yield* mount();
