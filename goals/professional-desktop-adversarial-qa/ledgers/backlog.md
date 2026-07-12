@@ -35,3 +35,28 @@ worse, and risks the model's compliance with the tool surface.
 That is a deliberate domain decision with a provider-behaviour risk attached, not a
 defect to patch mid-loop. It needs its own change, with the tool-schema behaviour
 verified against the live model before it lands.
+
+## F-001-28 — SPARQL cannot be cancelled, and a timeout would be a lie (needs a worker boundary)
+
+`Oxigraph.sparql.ts` executes the query with a **synchronous** call:
+
+```ts
+Effect.try({ try: () => store.query(request.query, { use_default_graph_as_union: true }) })
+```
+
+Wrapping a blocking call in an Effect does not make it interruptible. JavaScript cannot
+preempt a synchronous call, so `Effect.timeout` would not fire until `store.query`
+had already returned — it would report a timeout for a query that had just finished,
+while the engine stayed blocked for exactly as long as it was always going to. Adding
+one would make the panel *look* protected while changing nothing, which is worse than
+the honest absence of a bound.
+
+The existing safeguards bound the RESULT (an injected `LIMIT`, `maxResultCount`), not
+the WORK. A pathological pattern — an unbounded cartesian join — still costs whatever
+it costs before the first row exists to be limited.
+
+Cancelling it for real means moving the engine onto a boundary that can be killed: a
+worker (as the graph projection already does) or a child process, so a runaway query
+can be terminated rather than waited out. That is an architectural change to the
+ontology server, not a patch, and it should be done deliberately — with the worker's
+own startup cost measured against the query latencies it is protecting.
