@@ -51,8 +51,11 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   the dock kernel itself (global floor + per-group `GroupMinimumLookup` via
   `requiredExtent`; kernel 72/72), `FontMetricsSnapshotV1` versioned
   envelope, and the full-circle proof (metrics → content minimum → kernel
-  geometry → guaranteed one-line render). Next: ratify the seam decision
-  (DECISIONS.md Q1, consume/wrap recommended), first product consumer. Feeds
+  geometry → guaranteed one-line render). Align closed 2026-07-13: Q1
+  RATIFIED (driver `@beep/pretext`), stage `graduate`, **goal #1 graduated →
+  [`goals/pretext-driver`](../goals/pretext-driver/README.md)** (PR #391
+  carries the arc). Residue: goal-2 (thread virtualization) coordination
+  gate with the beep-effect6 lane. Feeds
   [`docs/product/workspace-substrate.md`](../docs/product/workspace-substrate.md) §4–§5.
 - [`atlas-synthesis`](./atlas-synthesis/README.md) — grounding/context packet
   (stage `research`): a maximal-fan-out synthesis of current repo state vs.

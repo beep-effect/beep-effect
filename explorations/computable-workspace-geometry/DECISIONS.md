@@ -1,13 +1,23 @@
 # Decisions — grilling log
 
-Pre-seeded (stage is still `research`; align has not formally started).
-Convention: one branch-closing question at a time, recommended answer first.
+Align ran 2026-07-13 via `/grill-with-docs` (Ben present, four
+branch-closing questions). Convention: one question at a time,
+recommended answer first.
 
 ## Q1 — Integration seam: consume, vendor, or rebuild pretext?
 
-**Status:** RECOMMENDED, not ratified by Ben.
+**Status:** RATIFIED (Ben, 2026-07-13) — consume/wrap as repo driver
+**`@beep/pretext`** (`packages/drivers/pretext`), routed by
+`standards/architecture/07-non-slice-families.md` route #2 (external
+engine wrapper → drivers). Entrypoint law maps the purity boundary:
+package **root = browser-safe pure surface** (schema contracts,
+FontMetricsSnapshot codecs, pure layout helpers over decoded
+snapshots); **`@beep/pretext/browser` = impure capture surface**
+(`prepare()`, canvas, engine-profile detection). `@chenglou/pretext`
+enters as a catalog dependency. Test layers ship fixture metrics so
+consumers test DOM-free.
 
-**Recommendation: consume/wrap — do not rewrite.** Schema-wrap the boundary
+**Original recommendation (accepted as written):** consume/wrap — do not rewrite. Schema-wrap the boundary
 (a `FontMetricsSnapshot` / prepared-text codec, first draft in
 [`scratchpad/computable-layout/FontMetrics.schema.ts`](../../scratchpad/computable-layout/FontMetrics.schema.ts)),
 not the internals.
@@ -41,7 +51,30 @@ with pretext's actual `PreparedText` internals rather than word-level widths.
 
 ## Q3 — First proving consumer
 
-**Status:** PARTIALLY CLOSED — layout-as-unit-tests proven 2026-07-12
-(`scratchpad/computable-layout`, 5/5 under `bun test`). Next consumer still
-open: thread virtualization vs bubble shrinkwrap vs content-aware dock
-constraints.
+**Status:** CLOSED for scratchpad consumers (layout-as-unit-tests 2026-07-12;
+dock-constraint full-circle proof same day). First PRODUCT consumer decided
+at align (see Q6): thread virtualization, coordination-gated.
+
+## Q4 — Kickoff shape (align, 2026-07-13)
+
+**RATIFIED: crystallize + graduate.** Finish align → BRIEF → MAP →
+definition-of-ready → graduate `goals/pretext-driver/`. No pipeline bypass;
+implementation runs inside the goal packet.
+
+## Q5 — Publish sequencing (align, 2026-07-13)
+
+**RATIFIED: publish before building.** The dockview-experiment arc ships as
+PR #391 (hosted checks gate; local full proof known-stricter on pre-existing
+full-scope debt). Driver work starts from the published state. Operational
+note: yeet `--start-pr-early` requires `--monitor` whose PR-exists check
+fires pre-push (circular for first publish of a branch); the manual
+equivalent (push → `gh pr create` → `yeet monitor`) was used.
+
+## Q6 — First consumer sequencing (align, 2026-07-13)
+
+**RATIFIED: driver-only goal #1; consumer #2 coordination-gated.**
+`goals/pretext-driver` touches zero product surface (no write-lane
+collision). Goal #2 = thread virtualization in the editor stack, explicitly
+gated on coordination with the beep-effect6 write lane before its packet
+opens. Later candidates: dock-adapter minima wiring (kernel side already
+landed), bubble shrinkwrap.

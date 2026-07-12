@@ -4,20 +4,19 @@
     "slug": "computable-workspace-geometry",
     "title": "Computable Workspace Geometry — pretext × dock kernel × blocks",
     "status": "active",
-    "stage": "research",
+    "stage": "graduate",
     "openQuestions": [
-      "Ratify Q1 (DECISIONS.md): consume/wrap pretext, schema-wrap the boundary — recommended with rationale, awaiting Ben",
-      "Q2 v2 residue: segment kinds, emoji correction, font-descriptor normalization, PreparedText alignment (v1 envelope + engine profile landed 2026-07-12)",
-      "Q3 residue: first PRODUCT consumer — thread virtualization or bubble shrinkwrap (layout-as-tests AND dock-constraint consumers proven in scratchpad 2026-07-12; full-circle.test.ts)",
-      "Kernel residue: max constraints, LayoutPriority, snap-to-collapse, reactive minima atom for content-driven geometry updates"
+      "Goal #2 (thread-virtualization) coordination gate: negotiate editor-stack file ownership with the beep-effect6 write lane before opening its packet",
+      "Q2 v2 contract residue: segment kinds, emoji correction, font-descriptor normalization, PreparedText alignment — grow inside goals/pretext-driver",
+      "Kernel residue: max constraints, LayoutPriority, snap-to-collapse (reactive minima atom landed 2026-07-12)"
     ],
     "sources": ["RESEARCH.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/pretext-driver"],
       "docs": ["docs/product/workspace-substrate.md"],
       "supersededBy": null
     },
     "created": "2026-07-12",
-    "updated": "2026-07-12"
+    "updated": "2026-07-13"
   }
 }

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "pretext-driver",
+    "title": "Pretext Driver (@beep/pretext)",
+    "status": "active",
+    "created": "2026-07-13",
+    "updated": "2026-07-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/pretext-driver",
+  "lifecycle": "active",
+  "mission": "Wrap @chenglou/pretext as the repo driver @beep/pretext: browser-safe pure root (FontMetricsSnapshot contracts, codecs, pure layout helpers), @beep/pretext/browser capture surface (prepare/canvas/engine-profile), fixture-backed test layers so every consumer tests DOM-free, and centralized typed technical errors. Zero product surface.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/computable-workspace-geometry",
+    "graduated": "2026-07-13",
+    "note": "Goal #1 of the computable-workspace-geometry decomposition (MAP.md): the driver alone. Thread virtualization (goal #2) stays in the exploration, coordination-gated on the beep-effect6 write lane. Seam ratified in the exploration's DECISIONS.md Q1 (consume/wrap; corpus is the asset)."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/pretext-driver/README.md",
+    "goals/pretext-driver/SPEC.md",
+    "goals/pretext-driver/GOAL.md",
+    "goals/pretext-driver/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"]
+}

@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `research`
+Stage: `graduate`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -19,11 +19,11 @@ and line break from data. Agents gain *sight*.
 
 ## Next Open Question
 
-Ratify Q1 in [`DECISIONS.md`](./DECISIONS.md): the seam recommendation
-(consume/wrap pretext, schema-wrap the boundary only — the corpus is the
-asset, not the architecture) is written with full rationale and revisit
-triggers, awaiting Ben's yes/no. Then Q2: grow the draft
-`FontMetricsSnapshot` into the real versioned contract.
+Goal #2 coordination gate: negotiate editor-stack file ownership with the
+beep-effect6 write lane before opening the thread-virtualization packet.
+(Q1 RATIFIED and goal #1 graduated 2026-07-13 →
+[`goals/pretext-driver/`](../../goals/pretext-driver/README.md); driver
+implementation proceeds there under `/goal`.)
 
 ## Read This First
 
@@ -33,6 +33,16 @@ triggers, awaiting Ben's yes/no. Then Q2: grow the draft
 
 ## Trail
 
+- 2026-07-13 (kickoff, fresh account): align ran via /grill-with-docs — Q1
+  RATIFIED (consume/wrap as driver `@beep/pretext`, root=pure /browser=
+  capture per driver entrypoint law) plus kickoff shape, publish sequencing,
+  and consumer sequencing recorded in DECISIONS.md. Arc published as PR #391
+  (manual push + `gh pr create` + `yeet monitor`; yeet `--start-pr-early`
+  has a circular `--monitor` requires-PR validation — reported). BRIEF.md +
+  MAP.md written; **goal #1 graduated → `goals/pretext-driver/`** (manifest
+  v2, SPEC, GOAL launcher, sources); goals INDEX regenerated. Stage →
+  graduate. Next: driver implementation under /goal; goal-2 coordination
+  gate stands.
 - 2026-07-12 (burn to 100%): reactive minima atom landed
   (`makeDockGeometryAtoms.minimaAtom`, record-valued to dodge Atom.make
   function ambiguity) and the FIRST FEED CONSUMER landed —
