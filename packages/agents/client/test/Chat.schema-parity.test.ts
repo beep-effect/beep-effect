@@ -69,10 +69,16 @@ describe("@beep/agents-client schema parity", () => {
       blocks: [encodedBlock],
     });
 
-    expect(Result.getOrThrow(S.encodeResult(EditTarget)(EditTarget.make({ turnId, content })))).toStrictEqual({
-      turnId: 20,
-      content: encodedContent,
-    });
+    // An edit target carries its thread: edit state is global while composers are
+    // per-thread, so without it a thread change mid-edit submitted the old
+    // thread's turn id against the new thread.
+    expect(Result.getOrThrow(S.encodeResult(EditTarget)(EditTarget.make({ threadId, turnId, content })))).toStrictEqual(
+      {
+        threadId: 10,
+        turnId: 20,
+        content: encodedContent,
+      }
+    );
 
     expect(
       Result.getOrThrow(S.encodeResult(SendTurnRequest)(SendTurnRequest.make({ threadId, content })))

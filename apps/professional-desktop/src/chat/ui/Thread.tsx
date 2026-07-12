@@ -24,19 +24,24 @@
 import { editTargetAtom, runTurnAtom, streamingTurnAtom, threadTimelineAtoms } from "@beep/agents-client/Chat.atoms";
 import { Button } from "@beep/ui/components/button";
 import { A, O, thunkNull } from "@beep/utils";
+import { Thread as ThreadProjections } from "@beep/workspace-use-cases/public";
 import { useAtomMount, useAtomSet, useAtomSubscribe, useAtomValue } from "@effect/atom-react";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { useRef } from "react";
 import { MessageView } from "./MessageView.tsx";
 import { StreamingBlocks } from "./StreamingBlocks.tsx";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { Thread as ThreadProjections } from "@beep/workspace-use-cases/public";
 import type { Thread as ThreadUseCases } from "@beep/workspace-use-cases/public";
 import type { JSX } from "react";
 
 type ThreadId = WorkspaceIdentity.ThreadId;
 type TimelineTurn = ThreadUseCases.TimelineTurn;
 type TimelineItem = ThreadUseCases.TimelineItem;
+
+// How far from the bottom still counts as "following along". A couple of lines of
+// slack keeps sub-pixel scroll rounding and the tail padding from reading as
+// "the reader scrolled away".
+const PINNED_SLACK_PX = 64;
 
 const ToolCallChip = ({ name }: { readonly name: string }): JSX.Element => (
   <span className="inline-flex items-center rounded-full border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
@@ -61,9 +66,11 @@ const CostRollup = ({ costMicros }: { readonly costMicros: number }): JSX.Elemen
   ) : null;
 
 const TurnRow = ({
+  threadId,
   turn,
   hasSiblings,
 }: {
+  readonly threadId: ThreadId;
   readonly turn: TimelineTurn;
   readonly hasSiblings: boolean;
 }): JSX.Element => {
@@ -87,7 +94,7 @@ const TurnRow = ({
                   variant="ghost"
                   size="xs"
                   title="Edit — rewrites the thread from here"
-                  onClick={() => setEditTarget(O.some({ turnId: turn.turnId, content: item.content }))}
+                  onClick={() => setEditTarget(O.some({ threadId, turnId: turn.turnId, content: item.content }))}
                   data-testid="turn-edit"
                 >
                   Edit
@@ -138,8 +145,18 @@ export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Eleme
   // otherwise the registry releases the fn atom and interrupts the stream.
   useAtomMount(runTurnAtom);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = (): void => void bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  // Follow the stream only while the reader is already at the bottom. Scrolling
+  // unconditionally dragged anyone who had scrolled up to re-read an earlier
+  // answer back down again on every single streamed block.
+  const scrollToBottom = (): void => {
+    const viewport = scrollRef.current;
+    if (viewport !== null && viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight > PINNED_SLACK_PX) {
+      return;
+    }
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
   useAtomSubscribe(timelineAtom, scrollToBottom);
   useAtomSubscribe(streamingTurnAtom, scrollToBottom);
 
@@ -159,7 +176,7 @@ export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Eleme
   );
 
   return (
-    <div className="flex-1 overflow-y-auto p-4" data-testid="thread">
+    <div ref={scrollRef} className="flex-1 overflow-y-auto p-4" data-testid="thread">
       {AsyncResult.isInitial(timeline) && timeline.waiting ? (
         <div className="text-sm text-muted-foreground" data-testid="thread-loading">
           Loading thread…
@@ -178,7 +195,7 @@ export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Eleme
       ) : null}
 
       {A.map(turns, (turn) => (
-        <TurnRow key={turn.turnId} turn={turn} hasSiblings={turnHasSiblings(allTurns, turn)} />
+        <TurnRow key={turn.turnId} threadId={threadId} turn={turn} hasSiblings={turnHasSiblings(allTurns, turn)} />
       ))}
 
       {O.match(streamingHere, {

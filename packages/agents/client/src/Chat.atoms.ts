@@ -495,7 +495,7 @@ const toTurnError = (error: unknown): ChatActionError =>
  *
  * const turnId = S.decodeUnknownSync(Workspace.TurnId)(20)
  * const content = Document.make({ children: [P.make({ children: [Text.make({ value: "Revised prompt" })] })] })
- * const target = EditTarget.make({ turnId, content })
+ * const target = EditTarget.make({ threadId, turnId, content })
  *
  * console.log(target.content.children.length) // 1
  * ```
@@ -505,6 +505,10 @@ const toTurnError = (error: unknown): ChatActionError =>
  */
 export class EditTarget extends S.Class<EditTarget>($I`EditTarget`)(
   {
+    threadId: WorkspaceIdentity.ThreadId.annotateKey({
+      description:
+        "Thread the edited turn belongs to. Edit state is global, so without this a thread change mid-edit submitted the old thread's turn id against the new thread.",
+    }),
     turnId: WorkspaceIdentity.TurnId.annotateKey({
       description: "Turn being edited.",
     }),
@@ -529,11 +533,12 @@ export class EditTarget extends S.Class<EditTarget>($I`EditTarget`)(
  * import * as S from "effect/Schema"
  * import { AtomRegistry } from "effect/unstable/reactivity"
  *
+ * const threadId = S.decodeUnknownSync(Workspace.ThreadId)(10)
  * const turnId = S.decodeUnknownSync(Workspace.TurnId)(20)
  * const content = Document.make({ children: [P.make({ children: [Text.make({ value: "Edit me" })] })] })
  * const registry = AtomRegistry.make()
  *
- * registry.set(editTargetAtom, O.some(EditTarget.make({ turnId, content })))
+ * registry.set(editTargetAtom, O.some(EditTarget.make({ threadId, turnId, content })))
  *
  * console.log(O.isSome(registry.get(editTargetAtom))) // true
  * ```

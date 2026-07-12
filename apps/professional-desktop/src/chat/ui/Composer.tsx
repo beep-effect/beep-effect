@@ -96,7 +96,10 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
   const registry = useContext(RegistryContext);
   const draftAtom = draftAtoms(threadId);
   const setDraft = useAtomSet(draftAtom);
-  const editTarget = useAtomValue(editTargetAtom);
+  // Edit state is global while the composer is per-thread: an edit target from
+  // another thread would otherwise seed this composer and submit that thread's
+  // turn id against this one.
+  const editTarget = O.filter(useAtomValue(editTargetAtom), (target) => target.threadId === threadId);
   const setEditTarget = useAtomSet(editTargetAtom);
   const runTurn = useAtomSet(runTurnAtom);
   const streaming = O.isSome(useAtomValue(streamingTurnAtom));
@@ -149,10 +152,16 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
     const content = editorStateToDocument(state);
     if (A.isReadonlyArrayEmpty(content.children)) return false;
     runTurn(
-      O.match(registry.get(editTargetAtom), {
-        onNone: () => SendTurnRequest.make({ threadId, content }),
-        onSome: (t) => EditTurnRequest.make({ threadId, turnId: t.turnId, content }),
-      })
+      O.match(
+        // Read fresh (the handler is seeded once per mount) and scoped to this
+        // thread; a stale cross-thread target sends a new message instead of
+        // rewriting a turn that does not belong here.
+        O.filter(registry.get(editTargetAtom), (target) => target.threadId === threadId),
+        {
+          onNone: () => SendTurnRequest.make({ threadId, content }),
+          onSome: (t) => EditTurnRequest.make({ threadId, turnId: t.turnId, content }),
+        }
+      )
     );
     setDraft(O.none());
     setEditTarget(O.none());
