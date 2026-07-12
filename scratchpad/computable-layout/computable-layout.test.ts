@@ -4,7 +4,7 @@
 import { describe, expect, test } from "bun:test";
 import fixture from "./fixture.json";
 import { decodeFontMetricsSnapshot, encodeFontMetricsSnapshot } from "./FontMetrics.schema.ts";
-import { layoutLineCount } from "./layout.ts";
+import { layoutLineCount, naturalWidth } from "./layout.ts";
 
 const metrics = { words: fixture.words, spaceWidth: fixture.spaceWidth };
 
@@ -44,5 +44,13 @@ describe("the metrics cache is a schema value (shippable sight)", () => {
   test("round-trips: decode ∘ encode is identity on the wire format", () => {
     const snapshot = decodeFontMetricsSnapshot(fixture);
     expect(encodeFontMetricsSnapshot(snapshot)).toEqual(fixture);
+  });
+});
+
+describe("content-aware constraints are pure solver inputs (the Class-C dissolution)", () => {
+  test("naturalWidth is the exact single-line threshold", () => {
+    const w = naturalWidth(fixture.sentence, metrics);
+    expect(layoutLineCount(fixture.sentence, metrics, w)).toBe(1);
+    expect(layoutLineCount(fixture.sentence, metrics, w - 0.01)).toBe(2);
   });
 });
