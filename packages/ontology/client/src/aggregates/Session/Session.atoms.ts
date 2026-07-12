@@ -357,6 +357,26 @@ const changeLogSignature: (changes: ReadonlyArray<ChangeOperation>) => string = 
   A.join("\n")
 );
 
+/** Identifies the exact session a read was computed from. */
+const sessionSignature = (session: Session): string => `${session.id}:${changeLogSignature(session.changeLog)}`;
+
+/**
+ * True when the open session is no longer the one a read started against.
+ *
+ * SPARQL and validation deliberately do not hold the mutation lock — a slow read
+ * must never block editing — so the user can apply a triple, undo, or redo while
+ * one is in flight. A result computed from the session as it was is not an answer
+ * about the ontology as it is: publishing it anyway put rows and verdicts from the
+ * old ontology on screen as the current ones, which is worse than no answer.
+ */
+const sessionMoved = (current: O.Option<Session>, signature: string): boolean =>
+  O.match(current, {
+    onNone: () => true,
+    onSome: (session) => sessionSignature(session) !== signature,
+  });
+
+const STALE_READ_MESSAGE = "The ontology changed while this was running. Run it again for a current result.";
+
 /**
  * Change-log signature after the last successful save/open.
  *
@@ -1306,6 +1326,7 @@ export const runOntologySparqlAtom = OntologyClient.runtime.fn<void>()(
     yield* Effect.gen(function* () {
       const client = yield* OntologyClient;
       const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+      const signature = sessionSignature(session);
       // Drop the previous verdict before running: an invalid or failing query
       // used to leave the last successful result table on screen with no error,
       // so the panel appeared to answer a query it had actually rejected.
@@ -1331,6 +1352,10 @@ export const runOntologySparqlAtom = OntologyClient.runtime.fn<void>()(
         ),
         [SPARQL_KEY]
       );
+      if (sessionMoved(ctx(ontologySessionAtom), signature)) {
+        ctx.set(ontologySparqlErrorAtom, O.some(STALE_READ_MESSAGE));
+        return;
+      }
       ctx.set(ontologySparqlResultAtom, O.some(result));
       ctx.set(ontologySparqlErrorAtom, O.none());
     }).pipe(
@@ -1357,6 +1382,7 @@ export const runOntologyValidationAtom = OntologyClient.runtime.fn<void>()(
     yield* pipe(
       Effect.gen(function* () {
         const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+        const signature = sessionSignature(session);
         if (!hasValidationShapes(session)) {
           ctx.set(ontologyValidationStatusAtom, "blocked");
           ctx.set(ontologyValidationResultAtom, O.none());
@@ -1379,6 +1405,16 @@ export const runOntologyValidationAtom = OntologyClient.runtime.fn<void>()(
           ),
           [VALIDATION_KEY]
         );
+        // A verdict for the session as it WAS is not a verdict on the session as it
+        // IS. Applying a triple mid-validation used to land the older run afterwards
+        // and present it as `complete` for the newer ontology — a clean bill of
+        // health for a document that had changed underneath it.
+        if (sessionMoved(ctx(ontologySessionAtom), signature)) {
+          ctx.set(ontologyValidationStatusAtom, "idle");
+          ctx.set(ontologyValidationResultAtom, O.none());
+          ctx.set(ontologyValidationErrorAtom, O.some(STALE_READ_MESSAGE));
+          return;
+        }
         ctx.set(ontologyValidationStatusAtom, "complete");
         ctx.set(ontologyValidationResultAtom, O.some(result));
         ctx.set(ontologyValidationErrorAtom, O.none());

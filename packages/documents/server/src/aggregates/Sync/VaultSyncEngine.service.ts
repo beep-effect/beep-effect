@@ -28,6 +28,7 @@ import {
   DmsMirrorAvailability,
   DmsMirrorUnavailable,
   EnsureFolderInput,
+  MarkConflictReviewedInput,
   MoveItemInput,
   PollEventsInput,
   RenameItemInput,
@@ -1317,6 +1318,37 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     );
   });
 
+  const markConflictReviewedLocked = Effect.fn($I`markConflictReviewedLocked`)(function* (
+    input: MarkConflictReviewedInput
+  ) {
+    // Reviews are workspace-scoped: a conflict id from another workspace is
+    // indistinguishable from a missing one.
+    const openConflicts = yield* conflictRepository.listOpen(
+      ListOpenSyncConflictsInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+    );
+    const reviewedConflict = A.findFirst(openConflicts, (conflict) => conflict.id === input.conflictId);
+    if (O.isNone(reviewedConflict)) {
+      return yield* SyncConflictRepositoryNotFound.make({ conflictId: input.conflictId });
+    }
+    const reviewed = yield* conflictRepository.markReviewed(
+      MarkSyncConflictReviewedInput.make({ conflictId: input.conflictId })
+    );
+
+    // Reviewing used to touch only the conflict record, leaving the item
+    // parked in `conflict` forever: the row vanished from the panel while the
+    // conflict counter stayed up, with no remaining way to resolve it. The
+    // mirror is a one-way push, so an acknowledged remote drift means the
+    // local state wins — return the item to `pending` and let the next pass
+    // re-converge it.
+    yield* pipe(
+      reviewedConflict.value.syncItemId,
+      O.map((syncItemId) => requeueReviewedConflictItem(input.workspaceId, syncItemId)),
+      O.getOrElse(() => Effect.void)
+    );
+
+    return reviewed;
+  });
+
   return VaultSyncEngine.of({
     listOpenConflicts: Effect.fn($I`listOpenConflicts`)(function* (input) {
       return yield* conflictRepository.listOpen(
@@ -1324,32 +1356,14 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
       );
     }),
     markConflictReviewed: Effect.fn($I`markConflictReviewed`)(function* (input) {
-      // Reviews are workspace-scoped: a conflict id from another workspace is
-      // indistinguishable from a missing one.
-      const openConflicts = yield* conflictRepository.listOpen(
-        ListOpenSyncConflictsInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
-      );
-      const reviewedConflict = A.findFirst(openConflicts, (conflict) => conflict.id === input.conflictId);
-      if (O.isNone(reviewedConflict)) {
-        return yield* SyncConflictRepositoryNotFound.make({ conflictId: input.conflictId });
-      }
-      const reviewed = yield* conflictRepository.markReviewed(
-        MarkSyncConflictReviewedInput.make({ conflictId: input.conflictId })
-      );
-
-      // Reviewing used to touch only the conflict record, leaving the item
-      // parked in `conflict` forever: the row vanished from the panel while the
-      // conflict counter stayed up, with no remaining way to resolve it. The
-      // mirror is a one-way push, so an acknowledged remote drift means the
-      // local state wins — return the item to `pending` and let the next pass
-      // re-converge it.
-      yield* pipe(
-        reviewedConflict.value.syncItemId,
-        O.map((syncItemId) => requeueReviewedConflictItem(input.workspaceId, syncItemId)),
-        O.getOrElse(() => Effect.void)
-      );
-
-      return reviewed;
+      // Reviewing takes the same per-workspace lock a sync pass takes. It reads the
+      // open conflicts, marks one reviewed, and returns its item to `pending` — a
+      // read-modify-write over exactly the rows a concurrent pass is scanning and
+      // leasing. Without the lock, a pass running alongside the review could lease
+      // the item between the review and the requeue and strand it right back in
+      // `conflict`, so the row the user just resolved came straight back.
+      const lock = yield* lockFor(input.workspaceId);
+      return yield* lock.withPermit(markConflictReviewedLocked(input));
     }),
     status: readStatus,
     syncOnce: Effect.fn($I`syncOnce`)(function* (input) {

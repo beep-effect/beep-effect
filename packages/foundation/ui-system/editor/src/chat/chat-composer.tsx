@@ -332,6 +332,34 @@ interface ComposerBodyProps extends Omit<ChatComposerProps, "ariaLabel" | "initi
   readonly streaming: boolean;
 }
 
+const unboundAttach = (): void => undefined;
+
+function useComposerRuntimeBindings(
+  editor: LexicalEditor,
+  features: ComposerFeatures,
+  maxAttachmentBytes: number,
+  onSend: ((state: SerializedEditorState.Type) => boolean | void) | undefined,
+  onAttach: ((files: ReadonlyArray<File>) => void) | undefined
+): void {
+  // Seed the per-editor config the Lexical bindings + capture runtime read at
+  // fire time. The composer remounts by `key` on thread/edit-target changes,
+  // so these values are stable for the lifetime of each mount.
+  useAtomInitialValues([
+    [featuresAtom(editor), features],
+    [onSendAtom(editor), { run: onSend ?? unboundSend }],
+    [onAttachAtom(editor), onAttach ?? unboundAttach],
+    [maxAttachmentBytesAtom(editor), maxAttachmentBytes],
+  ]);
+
+  // The registry may sweep nodes that have no listeners or dependents after
+  // its idle TTL. These config atoms are read only at fire time, so explicitly
+  // mount them for as long as the composer is alive.
+  useAtomMount(featuresAtom(editor));
+  useAtomMount(onSendAtom(editor));
+  useAtomMount(onAttachAtom(editor));
+  useAtomMount(maxAttachmentBytesAtom(editor));
+}
+
 function ComposerBody({
   ariaLabel,
   features,
@@ -350,32 +378,7 @@ function ComposerBody({
   children,
 }: ComposerBodyProps): JSX.Element {
   const [editor] = useLexicalComposerContext();
-
-  // Seed the per-editor config the Lexical bindings + capture runtime read at
-  // fire time. Seeded ONCE per mount (the composer remounts by `key` on
-  // thread/edit-target change, so the config is stable per mount) — never a
-  // render-phase atom write, which would re-render-loop and re-seed a fresh
-  // ComposerFeatures object each render.
-  useAtomInitialValues([
-    [featuresAtom(editor), features],
-    [onSendAtom(editor), { run: onSend ?? unboundSend }],
-    [onAttachAtom(editor), onAttach ?? (() => undefined)],
-    [maxAttachmentBytesAtom(editor), maxAttachmentBytes],
-  ]);
-
-  // Seeding is not enough to keep the config: the registry sweeps every node
-  // with no listeners and no dependents once its idle TTL elapses (the desktop
-  // app sets one), and these four are only ever read with `get.once` at fire
-  // time — so nothing held them. Thirty seconds after the composer mounted they
-  // were garbage-collected and came back as their DEFAULTS, and because
-  // `useAtomInitialValues` seeds an atom only once per registry they were never
-  // re-seeded. The composer silently stopped sending, permanently, with the
-  // draft still sitting in it. Mounting them ties their lifetime to this
-  // component: alive while it is, swept once it unmounts.
-  useAtomMount(featuresAtom(editor));
-  useAtomMount(onSendAtom(editor));
-  useAtomMount(onAttachAtom(editor));
-  useAtomMount(maxAttachmentBytesAtom(editor));
+  useComposerRuntimeBindings(editor, features, maxAttachmentBytes, onSend, onAttach);
 
   return (
     <div
