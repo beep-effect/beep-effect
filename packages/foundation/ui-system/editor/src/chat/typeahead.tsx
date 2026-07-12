@@ -31,7 +31,7 @@ import { Atom } from "effect/unstable/reactivity";
 import { $createTextNode, $getSelection, $isRangeSelection } from "lexical";
 import { useContext } from "react";
 import { createPortal } from "react-dom";
-import { anyMenuOpenAtom, menusOpenAtom, TYPEAHEAD_MENU_ATTRIBUTE } from "./atoms.ts";
+import { anyMenuOpenAtom, menusOpenAtom, typeaheadMenuMarker } from "./atoms.ts";
 import type { MenuRenderFn } from "@lexical/react/LexicalTypeaheadMenuPlugin";
 import type { LexicalEditor } from "lexical";
 import type { ReactNode, RefObject } from "react";
@@ -237,7 +237,7 @@ function TypeaheadMenuList<TOption extends MenuOption>({
   });
   return createPortal(
     <div
-      {...{ [TYPEAHEAD_MENU_ATTRIBUTE]: "" }}
+      {...typeaheadMenuMarker(editor)}
       style={menuPosition}
       className="bg-popover text-popover-foreground fixed z-50 max-h-72 w-64 overflow-auto rounded-md border p-1 shadow-md"
     >

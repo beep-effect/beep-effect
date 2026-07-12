@@ -125,6 +125,16 @@ export const anyMenuOpenAtom = Atom.family((editor: LexicalEditor) =>
 export const TYPEAHEAD_MENU_ATTRIBUTE = "data-typeahead-menu";
 
 /**
+ * Marks a rendered typeahead container as belonging to `editor`.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const typeaheadMenuMarker = (editor: LexicalEditor): Record<string, string> => ({
+  [TYPEAHEAD_MENU_ATTRIBUTE]: editor.getKey(),
+});
+
+/**
  * Whether a typeahead listbox is genuinely on screen for `editor`: an option row
  * is rendered inside the typeahead container.
  *
@@ -149,7 +159,12 @@ export const TYPEAHEAD_MENU_ATTRIBUTE = "data-typeahead-menu";
 export const isTypeaheadMenuVisible = (editor: LexicalEditor): boolean => {
   const root = editor.getRootElement();
   if (root === null) return false;
-  return root.ownerDocument.querySelector(`[${TYPEAHEAD_MENU_ATTRIBUTE}] [role="option"]`) !== null;
+  // Scoped to THIS editor. A document-wide query let a menu open in another
+  // composer on the page suppress Enter here, which is the same silent
+  // dead-Enter this predicate exists to prevent.
+  return (
+    root.ownerDocument.querySelector(`[${TYPEAHEAD_MENU_ATTRIBUTE}="${editor.getKey()}"] [role="option"]`) !== null
+  );
 };
 
 /**

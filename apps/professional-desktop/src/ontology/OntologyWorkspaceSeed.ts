@@ -43,15 +43,35 @@ import * as S from "effect/Schema";
  */
 const PIZZA_TUTORIAL_PATH = "tmp/ontology-workbench/pizza-tutorial.ttl";
 
-const seedPizzaTutorial = Effect.fn("OntologyWorkspaceSeed.seedPizzaTutorial")(function* () {
+/**
+ * Writes the starter document when — and only when — it is absent.
+ *
+ * Exported for the regression test that pins the one behaviour that matters
+ * here: a read failure that is *not* absence must never lead to a write.
+ *
+ * @category effects
+ * @since 0.0.0
+ */
+export const seedPizzaTutorial = Effect.fn("OntologyWorkspaceSeed.seedPizzaTutorial")(function* () {
   const fileStore = yield* OntologyFileStore;
   const codec = yield* TurtleCodec;
   const path = yield* S.decodeUnknownEffect(OntologyFilePath)(PIZZA_TUTORIAL_PATH);
 
-  // An existing document wins: this seeds a starting point, it does not reset
-  // the user's workspace on every launch.
-  const existing = yield* fileStore.read(ReadOntologyFileRequest.make({ path })).pipe(Effect.option);
-  if (existing._tag === "Some") {
+  // An existing document wins: this seeds a starting point, it does not reset the
+  // user's workspace on every launch.
+  //
+  // Only *absence* means "seed it". Treating any read failure as absence — which
+  // an unqualified `Effect.option` does — would overwrite a document that exists
+  // but could not be read (a permissions error, a transient fault) with the
+  // starter fixture, destroying the user's work.
+  const absent = yield* fileStore.read(ReadOntologyFileRequest.make({ path })).pipe(
+    Effect.as(false),
+    Effect.catchIf(
+      (error) => error.reason === "notFound",
+      () => Effect.succeed(true)
+    )
+  );
+  if (!absent) {
     return;
   }
 

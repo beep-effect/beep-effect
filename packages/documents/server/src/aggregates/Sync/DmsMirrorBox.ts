@@ -33,6 +33,7 @@ import { $DocumentsServerId } from "@beep/identity/packages";
 import { UnknownRecord } from "@beep/schema";
 import { getSomesStruct } from "@beep/utils/Option";
 import {
+  Clock,
   Config,
   Context,
   Duration,
@@ -733,6 +734,21 @@ export const DmsMirrorBoxLive = DmsMirrorBoxLayer.pipe(Layer.provide(BoxMirrorCo
 const MIRROR_ROOT_CACHE_TTL = Duration.seconds(30);
 
 /**
+ * How long a *failed* probe answers later probes.
+ *
+ * Failures expire far sooner than successes. Caching both for the same window
+ * meant one transient Box hiccup disabled sync — and flapped the connection
+ * badge — for the whole window even after Box had recovered, while re-probing a
+ * hard-down Box on every status read is the cost this cache exists to avoid.
+ */
+const MIRROR_ROOT_FAILURE_CACHE_TTL = Duration.seconds(3);
+
+type MirrorProbeCacheEntry = {
+  readonly expiresAt: number;
+  readonly probe: DmsMirrorProbe;
+};
+
+/**
  * Availability layer probing the Box mirror adapter.
  *
  * The probe resolves the mirror-root folder id (cached for
@@ -757,23 +773,29 @@ export const DmsMirrorAvailabilityBoxLayer = Layer.effect(
     const box = yield* Box;
     const config = yield* BoxMirrorConfig;
     const { resolveMirrorRootId } = makeMirrorRootResolver(box, config);
+    const cache = yield* Ref.make<O.Option<MirrorProbeCacheEntry>>(O.none());
 
-    // Caches the failure too, so a hard-down Box is not re-probed on every
-    // status read; both outcomes expire together.
-    const resolveCached = yield* Effect.cachedWithTTL(
-      resolveMirrorRootId.pipe(Effect.flatMap(decodeRemoteItemId)),
-      MIRROR_ROOT_CACHE_TTL
+    const resolve = resolveMirrorRootId.pipe(
+      Effect.flatMap(decodeRemoteItemId),
+      Effect.match({
+        onFailure: () => DmsMirrorProbe.make({ connected: false, provider: "box", rootRemoteId: O.none() }),
+        onSuccess: (rootRemoteId) =>
+          DmsMirrorProbe.make({ connected: true, provider: "box", rootRemoteId: O.some(rootRemoteId) }),
+      })
     );
 
     return DmsMirrorAvailability.of({
-      probe: resolveCached.pipe(
-        Effect.match({
-          onFailure: () => DmsMirrorProbe.make({ connected: false, provider: "box", rootRemoteId: O.none() }),
-          onSuccess: (rootRemoteId) =>
-            DmsMirrorProbe.make({ connected: true, provider: "box", rootRemoteId: O.some(rootRemoteId) }),
-        }),
-        Effect.withSpan($I`DmsMirrorAvailabilityBoxProbe`)
-      ),
+      probe: Effect.gen(function* () {
+        const now = yield* Clock.currentTimeMillis;
+        const cached = yield* Ref.get(cache);
+        if (O.isSome(cached) && cached.value.expiresAt > now) {
+          return cached.value.probe;
+        }
+        const probe = yield* resolve;
+        const ttl = probe.connected ? MIRROR_ROOT_CACHE_TTL : MIRROR_ROOT_FAILURE_CACHE_TTL;
+        yield* Ref.set(cache, O.some({ probe, expiresAt: now + Duration.toMillis(ttl) }));
+        return probe;
+      }).pipe(Effect.withSpan($I`DmsMirrorAvailabilityBoxProbe`)),
     });
   })
 );
