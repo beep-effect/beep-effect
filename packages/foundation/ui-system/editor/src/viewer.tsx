@@ -94,6 +94,31 @@ const decorateCode = (node: SerializedNodeLike): SerializedNodeLike =>
       ? node
       : { ...node, children: node.children.map(decorateCode) };
 
+/**
+ * The encoded forms of a viewer state, computed once and remembered.
+ *
+ * A transcript re-renders on every streamed block, and this ran on each of them for
+ * every message already on screen: the entire history re-serialized, every frame, to
+ * produce strings identical to the ones it produced last time. The key is the state
+ * object, held weakly — a message that leaves the timeline takes its entry with it.
+ */
+const encodedStates = new WeakMap<object, { readonly decorated: string; readonly encoded: string }>();
+
+const encodeOnce = (state: SerializedEditorState.Type): { readonly decorated: string; readonly encoded: string } => {
+  const cached = encodedStates.get(state);
+  if (cached !== undefined) return cached;
+
+  const wire = Result.getOrThrowWith(encodeEditorState(state), schemaIssueToError);
+  const encoded = Result.getOrThrowWith(encodeJson(wire), schemaIssueToError);
+  const decorated = Result.getOrThrowWith(
+    encodeJson({ ...wire, root: decorateCode(decorateMermaid(wire.root)) }),
+    schemaIssueToError
+  );
+  const result = { decorated, encoded };
+  encodedStates.set(state, result);
+  return result;
+};
+
 class EditorViewerProps extends S.Class<EditorViewerProps>($I`EditorViewerProps`)(
   {
     /** Optional class for the read-only content container. */
@@ -134,12 +159,13 @@ export function EditorViewer({ state, className }: EditorViewerProps): JSX.Eleme
   // encoded state remounts it exactly when the content differs — the JSON string
   // is the same value the config consumes, so this costs nothing extra and needs
   // no effect to reconcile.
-  const wire = Result.getOrThrowWith(encodeEditorState(state), schemaIssueToError);
-  const encoded = Result.getOrThrowWith(encodeJson(wire), schemaIssueToError);
-  const decorated = Result.getOrThrowWith(
-    encodeJson({ ...wire, root: decorateCode(decorateMermaid(wire.root)) }),
-    schemaIssueToError
-  );
+  //
+  // Encoded ONCE per state, not once per render. A transcript re-renders on every
+  // streamed block, and each render re-encoded every message already on screen — the
+  // whole history, serialized again, to produce a string identical to the one it
+  // produced last time. The cache is keyed on the state object itself and holds it
+  // weakly, so a message that scrolls out of the timeline takes its entry with it.
+  const { encoded, decorated } = encodeOnce(state);
   return (
     <LexicalComposer
       key={encoded}

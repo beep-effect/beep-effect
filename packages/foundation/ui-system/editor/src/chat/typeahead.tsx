@@ -91,12 +91,29 @@ const mentionFailedAtom = Atom.family((_editor: LexicalEditor) => Atom.make<bool
 // of detaching from the caret; listeners live only while a menu is mounted.
 const viewportTickAtom = Atom.family((editor: LexicalEditor) =>
   Atom.make((get) => {
-    const bump = (): void => get.setSelf(get.once(viewportTickAtom(editor)) + 1);
-    // Capture-phase scroll so movement of any ancestor pane counts, not just window.
-    window.addEventListener("scroll", bump, true);
-    window.addEventListener("resize", bump);
+    let frame: number | undefined = undefined;
+
+    // One reposition per frame, not one per scroll event. The handler ran on the
+    // capture phase and bumped the tick synchronously, so every wheel notch — of the
+    // window OR of any ancestor pane, which is why capture is used — re-rendered the
+    // menu inside the scroll handler itself, on the thread that was trying to scroll.
+    // A frame is the finest granularity the screen can show anyway.
+    const bump = (): void => {
+      if (frame !== undefined) return;
+      frame = globalThis.requestAnimationFrame(() => {
+        frame = undefined;
+        get.setSelf(get.once(viewportTickAtom(editor)) + 1);
+      });
+    };
+
+    // `passive` promises the browser we will not call `preventDefault`, so scrolling is
+    // never blocked waiting to find out.
+    const options = { capture: true, passive: true } as const;
+    window.addEventListener("scroll", bump, options);
+    window.addEventListener("resize", bump, { passive: true });
     get.addFinalizer(() => {
-      window.removeEventListener("scroll", bump, true);
+      if (frame !== undefined) globalThis.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", bump, options);
       window.removeEventListener("resize", bump);
     });
     return 0;
