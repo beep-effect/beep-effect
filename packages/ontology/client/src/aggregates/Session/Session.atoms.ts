@@ -272,6 +272,27 @@ const OntologyValidationStatus = LiteralKit(["idle", "running", "blocked", "fail
 export type OntologyValidationStatus = typeof OntologyValidationStatus.Type;
 
 /**
+ * Workbench state that outlives the view showing it.
+ *
+ * The registry disposes any atom with no listeners and no dependents once its
+ * idle TTL elapses, and the desktop sets one. Every atom below is subscribed
+ * only from inside `OntologyWorkbench`, which the app unmounts whenever the user
+ * switches surface — so leaving the Ontology tab dropped all of them to zero
+ * listeners, and thirty seconds later the registry swept them back to their
+ * defaults. The open document, every unsaved change in its change log, the
+ * dirty-tracking signature, and the redo stack were all destroyed in silence:
+ * the workbench simply came back saying "no file open".
+ *
+ * This is application state, not view state. Keeping it alive says so. These are
+ * singletons, so there is nothing to leak — unlike a per-editor family, where
+ * keeping values alive would pin every editor ever created.
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+const workbenchState = <A>(initialValue: A) => Atom.keepAlive(Atom.make(initialValue));
+
+/**
  * Current open ontology session, if any.
  *
  * @example
@@ -284,7 +305,7 @@ export type OntologyValidationStatus = typeof OntologyValidationStatus.Type;
  * @category atoms
  * @since 0.0.0
  */
-export const ontologySessionAtom = Atom.make<O.Option<Session>>(O.none());
+export const ontologySessionAtom = workbenchState<O.Option<Session>>(O.none());
 
 /**
  * Current open ontology path, if any.
@@ -299,7 +320,7 @@ export const ontologySessionAtom = Atom.make<O.Option<Session>>(O.none());
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyPathAtom = Atom.make<O.Option<OntologyFilePath>>(O.none());
+export const ontologyPathAtom = workbenchState<O.Option<OntologyFilePath>>(O.none());
 
 /**
  * Latest Turtle source shown by the source view.
@@ -314,7 +335,7 @@ export const ontologyPathAtom = Atom.make<O.Option<OntologyFilePath>>(O.none());
  * @category atoms
  * @since 0.0.0
  */
-export const ontologySourceAtom = Atom.make("");
+export const ontologySourceAtom = workbenchState("");
 
 /**
  * Change-log length after the last successful save/open.
@@ -329,7 +350,7 @@ export const ontologySourceAtom = Atom.make("");
  * @category atoms
  * @since 0.0.0
  */
-export const ontologySavedChangeCountAtom = Atom.make(0);
+export const ontologySavedChangeCountAtom = workbenchState(0);
 
 const changeLogSignature: (changes: ReadonlyArray<ChangeOperation>) => string = flow(
   A.map((change: ChangeOperation) => `${change.kind}:${change.partition}:${serializeQuad(change.quad)}`),
@@ -349,7 +370,7 @@ const changeLogSignature: (changes: ReadonlyArray<ChangeOperation>) => string = 
  * @category atoms
  * @since 0.0.0
  */
-export const ontologySavedChangeLogSignatureAtom = Atom.make(changeLogSignature([]));
+export const ontologySavedChangeLogSignatureAtom = workbenchState(changeLogSignature([]));
 
 /**
  * Redo stack for client-local undo/redo.
@@ -364,7 +385,7 @@ export const ontologySavedChangeLogSignatureAtom = Atom.make(changeLogSignature(
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyRedoStackAtom = Atom.make<ReadonlyArray<ChangeOperation>>([]);
+export const ontologyRedoStackAtom = workbenchState<ReadonlyArray<ChangeOperation>>([]);
 
 /**
  * Current explorer view mode.
@@ -379,7 +400,7 @@ export const ontologyRedoStackAtom = Atom.make<ReadonlyArray<ChangeOperation>>([
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyViewModeAtom = Atom.make<OntologyViewMode>("all");
+export const ontologyViewModeAtom = workbenchState<OntologyViewMode>("all");
 
 /**
  * Current visualizer fold level.
@@ -394,7 +415,7 @@ export const ontologyViewModeAtom = Atom.make<OntologyViewMode>("all");
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyFoldLevelAtom = Atom.make<OntologyFoldLevel>("L2");
+export const ontologyFoldLevelAtom = workbenchState<OntologyFoldLevel>("L2");
 
 /**
  * Whether explorer projections include the derived inferred graph partition.
@@ -409,7 +430,7 @@ export const ontologyFoldLevelAtom = Atom.make<OntologyFoldLevel>("L2");
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyInferredViewAtom = Atom.make(false);
+export const ontologyInferredViewAtom = workbenchState(false);
 
 /**
  * Latest structural inference result for the open session.
@@ -424,9 +445,9 @@ export const ontologyInferredViewAtom = Atom.make(false);
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyInferenceResultAtom = Atom.make<O.Option<OntologyInferenceResult>>(O.none());
+export const ontologyInferenceResultAtom = workbenchState<O.Option<OntologyInferenceResult>>(O.none());
 
-const ontologyInferenceInputSignatureAtom = Atom.make<O.Option<string>>(O.none());
+const ontologyInferenceInputSignatureAtom = workbenchState<O.Option<string>>(O.none());
 
 /**
  * Latest structural inference failure, if any.
@@ -441,7 +462,7 @@ const ontologyInferenceInputSignatureAtom = Atom.make<O.Option<string>>(O.none()
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyInferenceErrorAtom = Atom.make<O.Option<string>>(O.none());
+export const ontologyInferenceErrorAtom = workbenchState<O.Option<string>>(O.none());
 
 const inferenceInputSignature = (session: Session): string => {
   const partitions = deriveSessionGraphPartitions(session);
@@ -521,7 +542,7 @@ const ensureOntologyInference = Effect.fn("ensureOntologyInference")(function* (
  * @category atoms
  * @since 0.0.0
  */
-export const ontologySparqlProfileAtom = Atom.make<OntologySparqlPanelProfile>("select");
+export const ontologySparqlProfileAtom = workbenchState<OntologySparqlPanelProfile>("select");
 
 /**
  * Current SPARQL query text.
@@ -536,7 +557,7 @@ export const ontologySparqlProfileAtom = Atom.make<OntologySparqlPanelProfile>("
  * @category atoms
  * @since 0.0.0
  */
-export const ontologySparqlQueryAtom = Atom.make("SELECT ?s ?p ?o WHERE {\n  ?s ?p ?o\n}");
+export const ontologySparqlQueryAtom = workbenchState("SELECT ?s ?p ?o WHERE {\n  ?s ?p ?o\n}");
 
 /**
  * Built-in SPARQL example library for the workbench panel.
@@ -566,7 +587,7 @@ export const ontologySparqlExamplesAtom = Atom.make(ontologySparqlExamples());
  * @category atoms
  * @since 0.0.0
  */
-export const ontologySparqlResultAtom = Atom.make<O.Option<RunOntologySparqlResult>>(O.none());
+export const ontologySparqlResultAtom = workbenchState<O.Option<RunOntologySparqlResult>>(O.none());
 
 /**
  * Latest SPARQL query failure, if any.
@@ -581,7 +602,7 @@ export const ontologySparqlResultAtom = Atom.make<O.Option<RunOntologySparqlResu
  * @category atoms
  * @since 0.0.0
  */
-export const ontologySparqlErrorAtom = Atom.make<O.Option<string>>(O.none());
+export const ontologySparqlErrorAtom = workbenchState<O.Option<string>>(O.none());
 
 /**
  * Latest open/save/preview failure, if any.
@@ -601,7 +622,7 @@ export const ontologySparqlErrorAtom = Atom.make<O.Option<string>>(O.none());
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyDocumentErrorAtom = Atom.make<O.Option<string>>(O.none());
+export const ontologyDocumentErrorAtom = workbenchState<O.Option<string>>(O.none());
 
 /**
  * Latest SHACL validation result, if one has been requested.
@@ -616,7 +637,7 @@ export const ontologyDocumentErrorAtom = Atom.make<O.Option<string>>(O.none());
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyValidationResultAtom = Atom.make<O.Option<RunOntologyValidationResult>>(O.none());
+export const ontologyValidationResultAtom = workbenchState<O.Option<RunOntologyValidationResult>>(O.none());
 
 /**
  * Current SHACL validation panel state.
@@ -631,7 +652,7 @@ export const ontologyValidationResultAtom = Atom.make<O.Option<RunOntologyValida
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyValidationStatusAtom = Atom.make<OntologyValidationStatus>("idle");
+export const ontologyValidationStatusAtom = workbenchState<OntologyValidationStatus>("idle");
 
 /**
  * Latest SHACL validation failure, if any.
@@ -646,7 +667,7 @@ export const ontologyValidationStatusAtom = Atom.make<OntologyValidationStatus>(
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyValidationErrorAtom = Atom.make<O.Option<string>>(O.none());
+export const ontologyValidationErrorAtom = workbenchState<O.Option<string>>(O.none());
 
 /**
  * Latest provenance export result, if one has been produced.

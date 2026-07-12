@@ -37,23 +37,41 @@ intake bound lived only in the UI, not at the RPC. Corrupt parent links in the
 branch projection are ignored rather than trusted, so they can never truncate a
 transcript.
 
-## Open: the unsendable composer (lane B)
+## The unsendable composer was a P0, and it was about time, not typing
 
 Lane B found a draft that could not be sent: Enter and the Send button both did
-nothing — no error, no toast, no log, the draft sitting there intact. This is
-**not yet root-caused**, and I have not pretended otherwise:
+nothing — no error, no toast, no log, the draft sitting there intact. Lane B
+blamed the wire schema. That was wrong, and so were my first three theories.
 
-- The captured editor state **decodes** against the wire schema, and **projects**
-  to a correct non-empty document — I ran both against the real schema and codec.
-  All 32 inline-mark combinations round-trip cleanly.
-- At the point of failure the button reads *Send*, not *Stop*, so nothing is
-  streaming.
-- What I have done is make every refusal path explain itself: a schema-reject, a
-  send during streaming, an oversized message, and an empty projection from a
-  non-empty editor now each report themselves and keep the draft. A composer that
-  declines to send is no longer allowed to look broken.
-- A live re-diagnosis is running against the instrumented build to name the
-  branch that fires. Until it does, this stays open.
+The state **decoded** cleanly, **projected** to a correct non-empty document, and
+all 32 inline-mark combinations round-tripped through the codec without dropping
+anything. None of it explained a dead Send button.
+
+The actual cause: **the composer stops sending 30 seconds after it mounts.** The
+registry disposes any atom with no listeners and no dependents once its idle TTL
+elapses, and the desktop sets one (30s). The composer's per-editor config — the
+send handler, the attach handler, the size limit, the feature set — is seeded once
+at mount and then only ever read at fire time, so nothing held it. It was swept,
+came back as its defaults, and `useAtomInitialValues` seeds an atom only once per
+registry, so it was never re-seeded. The default send handler returns `undefined`,
+and the binding treats anything but `true` as "not dispatched".
+
+So the composer silently stopped sending, permanently. What made this so hard to
+see is that the trigger had nothing to do with what lane B was doing — the marks,
+the combinations, the content were all irrelevant. It was **elapsed time**. Lane B
+spent minutes toggling marks before pressing Send; the "fresh thread" control that
+seemed to prove the composer was fine only worked because it sent immediately
+after mounting, inside the TTL window.
+
+Fixed by mounting the seeded config for the composer's lifetime. And because a
+send that goes nowhere and says nothing is indistinguishable from a broken app, an
+unbound send handler is now loud: it reports a blocked send instead of discarding
+it. Both regression tests were mutation-tested — each fails when its fix is
+reverted.
+
+This is a *class*, not an instance: any writable state atom that is written and
+never subscribed loses its value 30 seconds later, silently. An audit of every
+atom surface in the app is underway.
 
 ## State
 

@@ -206,7 +206,16 @@ export const threadsAtoms = Atom.family((workspaceId: WorkspaceId) =>
  * @category atoms
  * @since 0.0.0
  */
-export const selectedThreadAtom = Atom.make<O.Option<ThreadId>>(O.none());
+// Kept alive because the selection outlives the view that shows it. Every
+// subscriber lives inside the chat surface, which the desktop unmounts when the
+// user switches to Ontology, Vault sync, or Home — so the selection dropped to
+// zero listeners, and 30 seconds later the registry's idle sweep reset it to
+// `O.none()`. That default means "follow the list", so the user came back to the
+// most-recently-updated thread instead of the one they had open, with no error
+// and nothing to explain it. Anything they typed next went to the wrong
+// conversation. Under 30 seconds the same trip preserved the selection, which is
+// what made it look intermittent.
+export const selectedThreadAtom = Atom.keepAlive(Atom.make<O.Option<ThreadId>>(O.none()));
 
 const timelineKey = (threadId: ThreadId) => `timeline:${threadId}`;
 

@@ -159,6 +159,14 @@ export function useSpinner<T>(increment: (params?: T) => void, decrement: (param
   const scope = useId();
   const dispatch = useAtomSet(spinnerCommandAtom(scope));
 
+  // The spinner's live `setTimeout`/`setInterval` handles live in this atom, and
+  // nothing subscribed to it: it was only ever written on press and read again on
+  // release. A registry with an idle TTL (the desktop sets one) sweeps a node with
+  // no listeners, so a button held past the TTL lost its handles — `stop` then read
+  // the default, cleared nothing, and the interval went on firing forever, spinning
+  // the value with no way to stop it short of a reload. Mount it so the handles
+  // live exactly as long as the spinner that owns them.
+  useAtomMount(spinnerStateAtom(scope));
   useAtomMount(spinnerCleanupAtom(scope));
 
   return {
