@@ -8,6 +8,7 @@ import {
   type DockWorkspace,
   EmptyWorkspace,
   GroupId,
+  GroupMetadata,
   PopulatedWorkspace,
   type SplitId,
   SplitLayout,
@@ -142,5 +143,59 @@ describe("dock geometry projection", () => {
     registry.set(containerAtom, DockBox.make({ left: 0, top: 0, width: 30, height: 40 }));
     expect(O.getOrThrow(registry.get(atoms.groupBoxAtom(groupOne))).width).toBe(30);
     expect(O.isNone(registry.get(atoms.groupBoxAtom(groupTwo)))).toBe(true);
+  });
+});
+
+describe("minimum group extent clamp", () => {
+  const options = GeometryOptions.make({ gap: 3, minGroupExtent: 30 });
+
+  it("clamps the leading side up to the minimum with an exact partition", () => {
+    const geometry = project(split("horizontal", 1_000, tabsOne, tabsTwo), box, options);
+    const [left, right] = geometry.groups;
+    expect(left?.box.width).toBe(30);
+    expect(right?.box.width).toBe(68);
+    expect(right?.box.left).toBe(33);
+  });
+
+  it("clamps the trailing side symmetrically", () => {
+    const geometry = project(split("horizontal", 9_000, tabsOne, tabsTwo), box, options);
+    const [left, right] = geometry.groups;
+    expect(left?.box.width).toBe(68);
+    expect(right?.box.width).toBe(30);
+  });
+
+  it("clamps on the vertical axis too", () => {
+    const geometry = project(split("vertical", 1_000, tabsOne, tabsTwo), box, options);
+    const [top, bottom] = geometry.groups;
+    expect(top?.box.height).toBe(30);
+    expect(bottom?.box.height).toBe(66);
+  });
+
+  it("degrades to the proportional partition when infeasible", () => {
+    const infeasible = GeometryOptions.make({ gap: 3, minGroupExtent: 60 });
+    const geometry = project(split("horizontal", 1_000, tabsOne, tabsTwo), box, infeasible);
+    const [left, right] = geometry.groups;
+    expect(left?.box.width).toBe(10);
+    expect(right?.box.width).toBe(88);
+  });
+
+  it("defaults to zero and reproduces the unclamped projection exactly", () => {
+    const node = split("horizontal", 7_000, tabsOne, tabsTwo);
+    const implicit = project(node, box, GeometryOptions.make({ gap: 3 }));
+    const explicit = project(node, box, GeometryOptions.make({ gap: 3, minGroupExtent: 0 }));
+    expect(explicit).toEqual(implicit);
+    expect(implicit.groups[0]?.box.width).toBe(69);
+  });
+
+  it("leaves the hidden-sibling full-extent path unclamped", () => {
+    const hidden = TabsNode.make({
+      groupId: groupTwo,
+      active: panelTwo,
+      metadata: GroupMetadata.make({ visible: false }),
+    });
+    const clamped = GeometryOptions.make({ gap: 3, minGroupExtent: 500 });
+    const geometry = project(split("horizontal", 1_000, tabsOne, hidden), box, clamped);
+    expect(geometry.groups).toHaveLength(1);
+    expect(geometry.groups[0]?.box.width).toBe(101);
   });
 });

@@ -132,13 +132,17 @@ export const resolveAnchoredBox = (anchoredBox: AnchoredBox, container: DockBox)
   });
 };
 
-/** Options controlling gap allocation and sash hit-target expansion. */
+/** Options controlling gap allocation, sash hit-target expansion, and minimum group extent. */
 export class GeometryOptions extends S.Class<GeometryOptions>($I`GeometryOptions`)(
   {
     gap: Extent.pipe(SchemaUtils.withConstantDefault<number>(0)),
     minSashThickness: Extent.pipe(SchemaUtils.withConstantDefault<number>(8)),
+    minGroupExtent: Extent.pipe(SchemaUtils.withConstantDefault<number>(0)),
   },
-  $I.annote("GeometryOptions", { description: "Gap and minimum sash hit thickness for geometry projection." })
+  $I.annote("GeometryOptions", {
+    description:
+      "Gap, minimum sash hit thickness, and minimum per-side split extent for geometry projection. The minimum extent is a per-split-local clamp, not a global constraint solver: each feasible split guarantees both sides at least minGroupExtent; an infeasible split (available < 2 x minGroupExtent) degrades to the unclamped proportional partition.",
+  })
 ) {}
 
 const hasVisibleGroup = (node: DockNode): boolean =>
@@ -183,7 +187,20 @@ const projectNode = (node: DockNode, box: DockBox, options: GeometryOptions): Do
 
       const gap = N.min(options.gap, axisExtent);
       const available = N.subtract(axisExtent, gap);
-      const leading = pipe(available, N.multiply(SplitLayout.ratio(layout)), N.divideUnsafe(10_000), N.round(0));
+      const rawLeading = pipe(available, N.multiply(SplitLayout.ratio(layout)), N.divideUnsafe(10_000), N.round(0));
+      // Per-split-local minimum-extent clamp (content-aware minimums are pure
+      // inputs — see explorations/computable-workspace-geometry). Ratio stays
+      // in [1000, 9000], so at minGroupExtent 0 the clamp bounds are [0,
+      // available] and the projection is unchanged. Infeasible splits keep the
+      // proportional partition rather than clamping one side into negatives.
+      const leading = Bool.match(N.isGreaterThanOrEqualTo(available, N.multiply(options.minGroupExtent, 2)), {
+        onFalse: () => rawLeading,
+        onTrue: () =>
+          N.clamp(rawLeading, {
+            minimum: options.minGroupExtent,
+            maximum: N.subtract(available, options.minGroupExtent),
+          }),
+      });
       const trailing = N.subtract(available, leading);
       const [firstBox, secondBox, gapBox] = SplitLayout.match(layout, {
         horizontal: () => [
