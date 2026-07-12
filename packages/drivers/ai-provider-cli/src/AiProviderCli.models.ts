@@ -7,6 +7,7 @@
 
 import { $AiProviderCliId } from "@beep/identity";
 import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const $I = $AiProviderCliId.create("AiProviderCli.models");
@@ -238,6 +239,86 @@ export const AiProviderCliExitCode = S.Int.check(S.isBetween({ minimum: 0, maxim
  * @since 0.0.0
  */
 export type AiProviderCliExitCode = typeof AiProviderCliExitCode.Type;
+
+/**
+ * Per-call process overrides for a provider CLI auth probe.
+ *
+ * @remarks
+ * Environment values are secrets-adjacent runner inputs. They are never
+ * copied into probe results, errors, logs, or spans.
+ *
+ * @example
+ * ```ts
+ * import { AiProviderCliProbeOptions } from "@beep/ai-provider-cli"
+ *
+ * const options = AiProviderCliProbeOptions.make({
+ *   env: { HOME: "/tmp/claude-home" },
+ *   executable: "/opt/bin/claude"
+ * })
+ *
+ * console.log(options.executable)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AiProviderCliProbeOptions extends S.Class<AiProviderCliProbeOptions>($I`AiProviderCliProbeOptions`)(
+  {
+    env: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({
+      description: "Environment overlay supplied only to the provider CLI child process.",
+    }),
+    executable: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional executable override supplied only to the provider CLI runner.",
+    }),
+  },
+  $I.annote("AiProviderCliProbeOptions", {
+    description: "Per-call executable and child-environment overrides for a provider CLI auth probe.",
+  })
+) {}
+
+/**
+ * Complete technical request passed to an injected provider CLI runner.
+ *
+ * @remarks
+ * This request is an execution boundary only. Its executable and environment
+ * must never be rendered into diagnostics or observable probe payloads.
+ *
+ * @example
+ * ```ts
+ * import { AiProviderCliRunRequest } from "@beep/ai-provider-cli"
+ *
+ * const request = AiProviderCliRunRequest.make({
+ *   args: ["login", "status"],
+ *   env: { CODEX_HOME: "/tmp/codex-home" },
+ *   executable: "/opt/bin/codex",
+ *   provider: "codex"
+ * })
+ *
+ * console.log(request.provider) // "codex"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AiProviderCliRunRequest extends S.Class<AiProviderCliRunRequest>($I`AiProviderCliRunRequest`)(
+  {
+    args: S.Array(S.String).annotateKey({
+      description: "Provider-specific auth status command arguments.",
+    }),
+    env: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({
+      description: "Environment overlay supplied only to the child process.",
+    }),
+    executable: S.NonEmptyString.annotateKey({
+      description: "Executable command or path used by the child process.",
+    }),
+    provider: AiProviderCliProvider.annotateKey({
+      description: "Provider whose auth status command is being executed.",
+    }),
+  },
+  $I.annote("AiProviderCliRunRequest", {
+    description: "Technical provider CLI child-process invocation request.",
+  })
+) {}
 
 /**
  * Captured provider CLI status process output.

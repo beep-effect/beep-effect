@@ -2,8 +2,9 @@
 
 import * as Domain from "@beep/agents-domain/entities/ProviderInstance";
 import { ProviderProbe, ProviderProbeUnavailable } from "@beep/agents-use-cases/server";
-import { AiProviderCli } from "@beep/ai-provider-cli";
+import { AiProviderCli, AiProviderCliHome } from "@beep/ai-provider-cli";
 import { DateTime, Effect, Match } from "effect";
+import * as O from "effect/Option";
 import type { AiProviderCliAuthSnapshot, AiProviderCliError } from "@beep/ai-provider-cli";
 
 const translateDriverError = (_error: AiProviderCliError): ProviderProbeUnavailable =>
@@ -41,9 +42,32 @@ const toDomainSnapshot = Effect.fn("Agents.ProviderProbe.toDomainSnapshot")(func
  */
 export const makeProviderProbe = Effect.fn("Agents.ProviderProbe.make")(function* () {
   const cli = yield* AiProviderCli;
+  const home = yield* AiProviderCliHome;
   return ProviderProbe.of({
     probe: Effect.fn("Agents.ProviderProbe.probe")(function* (input) {
-      const snapshot = yield* cli.checkAuthSnapshot(input.kind).pipe(Effect.mapError(translateDriverError));
+      const env = yield* Match.value(input.kind).pipe(
+        Match.when("claude", () =>
+          Effect.succeed(home.makeClaudeEnv({ baseEnv: input.envVars, homePath: input.homePath }))
+        ),
+        Match.when("codex", () => {
+          const layout = home.resolveCodexHomeLayout({
+            homePath: O.none(),
+            shadowHomePath: input.homePath,
+          });
+          return home.ensureCodexShadowHome(layout).pipe(
+            Effect.as(home.makeCodexEnv({ baseEnv: input.envVars, layout })),
+            Effect.mapError(() =>
+              ProviderProbeUnavailable.make({
+                guidance: "Check the configured binary path and provider CLI HOME, then probe again.",
+              })
+            )
+          );
+        }),
+        Match.exhaustive
+      );
+      const snapshot = yield* cli
+        .checkAuthSnapshot(input.kind, { env, executable: O.some(input.binaryPath) })
+        .pipe(Effect.mapError(translateDriverError));
       return yield* toDomainSnapshot(snapshot);
     }),
   });

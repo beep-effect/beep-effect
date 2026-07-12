@@ -7,7 +7,7 @@ import {
   ProviderInstanceUseCases,
   ProviderProbe,
 } from "@beep/agents-use-cases/server";
-import { AiProviderCli } from "@beep/ai-provider-cli";
+import { AiProviderCli, AiProviderCliHome } from "@beep/ai-provider-cli";
 import { Effect, Layer } from "effect";
 import { makeProviderProbe } from "./ProviderInstance.probe.js";
 import { makeProviderInstanceRepository } from "./ProviderInstance.repo.js";
@@ -81,5 +81,6 @@ const PortsLive = Layer.mergeAll(ProviderInstanceRepositoryLive, ProviderProbeLi
 export const ProviderInstanceLive = ProviderInstanceRpcHandlersLive.pipe(
   Layer.provideMerge(ProviderInstanceUseCasesLive),
   Layer.provideMerge(PortsLive),
+  Layer.provideMerge(AiProviderCliHome.layer),
   Layer.provideMerge(AiProviderCli.makeLayer())
 );

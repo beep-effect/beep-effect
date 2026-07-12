@@ -20,8 +20,10 @@ import {
   AiProviderCliAuthSnapshot,
   AiProviderCliClaudeAuthStatusPayload,
   AiProviderCliClaudeSubscriptionLabel,
+  AiProviderCliProbeOptions,
   AiProviderCliProcessResult,
   AiProviderCliProvider,
+  AiProviderCliRunRequest,
   AiProviderCliTokenSource,
 } from "./AiProviderCli.models.ts";
 
@@ -48,16 +50,18 @@ const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<str
  * import { Effect } from "effect"
  * import { AiProviderCliProcessResult, type AiProviderCliRunner } from "@beep/ai-provider-cli"
  *
- * const runner: AiProviderCliRunner = (provider, command, args) =>
+ * const runner: AiProviderCliRunner = (request) =>
  *   Effect.succeed(
  *     AiProviderCliProcessResult.make({
- *       exitCode: provider === "claude" ? 0 : 1,
+ *       exitCode: request.provider === "claude" ? 0 : 1,
  *       stderr: "",
- *       stdout: `${command} ${args.join(" ")}`
+ *       stdout: `${request.executable} ${request.args.join(" ")}`
  *     })
  *   )
  *
- * const result = Effect.runSync(runner("claude", "claude", ["auth", "status"]))
+ * const result = Effect.runSync(runner({
+ *   args: ["auth", "status"], env: {}, executable: "claude", provider: "claude"
+ * }))
  *
  * console.log(result.stdout) // "claude auth status"
  * ```
@@ -66,9 +70,7 @@ const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<str
  * @since 0.0.0
  */
 export type AiProviderCliRunner = (
-  provider: AiProviderCliProvider,
-  command: string,
-  args: ReadonlyArray<string>
+  request: AiProviderCliRunRequest
 ) => Effect.Effect<AiProviderCliProcessResult, AiProviderCliError>;
 
 /**
@@ -78,9 +80,13 @@ export type AiProviderCliRunner = (
  * @since 0.0.0
  */
 interface AiProviderCliShape {
-  readonly checkAuth: (provider: AiProviderCliProvider) => Effect.Effect<AiProviderCliAuthProbe, AiProviderCliError>;
+  readonly checkAuth: (
+    provider: AiProviderCliProvider,
+    options?: (typeof AiProviderCliProbeOptions)["~type.make.in"]
+  ) => Effect.Effect<AiProviderCliAuthProbe, AiProviderCliError>;
   readonly checkAuthSnapshot: (
-    provider: AiProviderCliProvider
+    provider: AiProviderCliProvider,
+    options?: (typeof AiProviderCliProbeOptions)["~type.make.in"]
   ) => Effect.Effect<AiProviderCliAuthSnapshot, AiProviderCliError>;
 }
 
@@ -115,11 +121,11 @@ const commandFor = (
 
 const runNative = (
   spawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
-  commandPath: string,
-  args: ReadonlyArray<string>,
-  provider: AiProviderCliProvider
+  request: AiProviderCliRunRequest
 ): Effect.Effect<AiProviderCliProcessResult, AiProviderCliError> => {
-  const command = ChildProcess.make(commandPath, A.fromIterable(args), {
+  const command = ChildProcess.make(request.executable, A.fromIterable(request.args), {
+    env: request.env,
+    extendEnv: true,
     stdin: "ignore",
     stderr: "pipe",
     stdout: "pipe",
@@ -138,10 +144,10 @@ const runNative = (
   ).pipe(
     Effect.mapError(() =>
       AiProviderCliError.make({
-        command: O.some(commandPath),
+        command: O.none(),
         message: "Failed to execute provider CLI status command.",
         operation: "checkAuth",
-        provider,
+        provider: request.provider,
         stderr: O.some("unknown"),
       })
     )
@@ -196,19 +202,35 @@ const codexSnapshot = (result: AiProviderCliProcessResult): AiProviderCliAuthSna
   });
 
 const makeService = (paths: AiProviderCliPaths, runner: AiProviderCliRunner): AiProviderCliShape => ({
-  checkAuth: Effect.fn("AiProviderCli.checkAuth")(function* (provider) {
-    const [command, args] = commandFor(paths, provider);
-    const result = yield* runner(provider, command, args);
+  checkAuth: Effect.fn("AiProviderCli.checkAuth")(function* (provider, inputOptions) {
+    const [defaultExecutable, args] = commandFor(paths, provider);
+    const options = AiProviderCliProbeOptions.make(inputOptions ?? {});
+    const result = yield* runner(
+      AiProviderCliRunRequest.make({
+        args,
+        env: options.env,
+        executable: O.getOrElse(options.executable, () => defaultExecutable),
+        provider,
+      })
+    );
 
     return AiProviderCliAuthProbe.make({
-      command,
+      command: defaultExecutable,
       provider,
       status: result.exitCode === 0 ? "authenticated" : "not-authenticated",
     });
   }),
-  checkAuthSnapshot: Effect.fn("AiProviderCli.checkAuthSnapshot")(function* (provider) {
-    const [command, args] = commandFor(paths, provider);
-    const result = yield* runner(provider, command, args);
+  checkAuthSnapshot: Effect.fn("AiProviderCli.checkAuthSnapshot")(function* (provider, inputOptions) {
+    const [defaultExecutable, args] = commandFor(paths, provider);
+    const options = AiProviderCliProbeOptions.make(inputOptions ?? {});
+    const result = yield* runner(
+      AiProviderCliRunRequest.make({
+        args,
+        env: options.env,
+        executable: O.getOrElse(options.executable, () => defaultExecutable),
+        provider,
+      })
+    );
 
     return yield* AiProviderCliProvider.$match(provider, {
       claude: () => claudeSnapshot(result),
@@ -234,12 +256,12 @@ const makeService = (paths: AiProviderCliPaths, runner: AiProviderCliRunner): Ai
  * import { Effect } from "effect"
  * import { AiProviderCli, AiProviderCliProcessResult, type AiProviderCliRunner } from "@beep/ai-provider-cli"
  *
- * const runner: AiProviderCliRunner = (provider, command) =>
+ * const runner: AiProviderCliRunner = (request) =>
  *   Effect.succeed(
  *     AiProviderCliProcessResult.make({
- *       exitCode: provider === "claude" ? 0 : 1,
+ *       exitCode: request.provider === "claude" ? 0 : 1,
  *       stderr: "",
- *       stdout: command
+ *       stdout: request.executable
  *     })
  *   )
  *
@@ -291,9 +313,7 @@ export class AiProviderCli extends Context.Service<AiProviderCli, AiProviderCliS
       Effect.gen(function* () {
         const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
         const providerPaths = AiProviderCliPaths.make(paths);
-        return AiProviderCli.of(
-          makeService(providerPaths, (provider, command, args) => runNative(spawner, command, args, provider))
-        );
+        return AiProviderCli.of(makeService(providerPaths, (request) => runNative(spawner, request)));
       })
     );
 
@@ -305,10 +325,10 @@ export class AiProviderCli extends Context.Service<AiProviderCli, AiProviderCliS
    * import { Effect } from "effect"
    * import { AiProviderCli, AiProviderCliProcessResult, type AiProviderCliRunner } from "@beep/ai-provider-cli"
    *
-   * const runner: AiProviderCliRunner = (provider) =>
+   * const runner: AiProviderCliRunner = (request) =>
    *   Effect.succeed(
    *     AiProviderCliProcessResult.make({
-   *       exitCode: provider === "codex" ? 0 : 1,
+   *       exitCode: request.provider === "codex" ? 0 : 1,
    *       stderr: "",
    *       stdout: ""
    *     })

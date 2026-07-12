@@ -14,6 +14,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import type { AiProviderCliRunner } from "@beep/ai-provider-cli";
 
 const ProviderArbitrary = S.toArbitrary(AiProviderCliProvider);
 const AuthStatusArbitrary = S.toArbitrary(AiProviderCliAuthStatus);
@@ -26,7 +27,7 @@ const sameProcessResult = S.toEquivalence(AiProviderCliProcessResult);
 const sameAuthProbe = S.toEquivalence(AiProviderCliAuthProbe);
 const sameError = S.toEquivalence(AiProviderCliError);
 
-const runner = (provider: AiProviderCliProvider, _command: string, args: ReadonlyArray<string>) =>
+const runner: AiProviderCliRunner = ({ args, provider }) =>
   Effect.succeed(
     AiProviderCliProcessResult.make({
       exitCode: provider === "claude" ? 0 : 1,

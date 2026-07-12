@@ -10,12 +10,17 @@ import {
   ProbeProviderInstanceCommand,
   ProviderInstanceUseCases,
 } from "@beep/agents-use-cases/server";
-import { AiProviderCli, AiProviderCliProcessResult } from "@beep/ai-provider-cli";
+import {
+  AiProviderCli,
+  AiProviderCliCodexHomeLayout,
+  AiProviderCliHome,
+  AiProviderCliProcessResult,
+} from "@beep/ai-provider-cli";
 import { makeDrizzle, makeDrizzleLayer } from "@beep/postgres";
 import { makePgliteIntegrationGate } from "@beep/test-utils";
 import { describe, expect, layer } from "@effect/vitest";
 import { sql } from "drizzle-orm";
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Ref } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -23,21 +28,49 @@ import type { AiProviderCliRunner } from "@beep/ai-provider-cli";
 
 const { makePgliteLayer, pgliteIntegrationTimeoutMillis } = makePgliteIntegrationGate();
 
-const runner: AiProviderCliRunner = (provider) =>
-  Effect.succeed(
-    provider === "claude"
-      ? AiProviderCliProcessResult.make({
-          exitCode: 0,
-          stderr: "",
-          stdout: '{"loggedIn":true,"authMethod":"claude.ai","email":"dev@example.com","subscriptionType":"max"}',
-        })
-      : AiProviderCliProcessResult.make({ exitCode: 1, stderr: "logged out", stdout: "Not logged in" })
+const runnerRequests = Ref.makeUnsafe<ReadonlyArray<Parameters<AiProviderCliRunner>[0]>>([]);
+
+const runner: AiProviderCliRunner = (request) =>
+  Ref.update(runnerRequests, (requests) => [...requests, request]).pipe(
+    Effect.as(
+      request.provider === "claude"
+        ? AiProviderCliProcessResult.make({
+            exitCode: 0,
+            stderr: "",
+            stdout: '{"loggedIn":true,"authMethod":"claude.ai","email":"dev@example.com","subscriptionType":"max"}',
+          })
+        : AiProviderCliProcessResult.make({ exitCode: 1, stderr: "logged out", stdout: "Not logged in" })
+    )
   );
+
+const TestHomeLayer = Layer.succeed(AiProviderCliHome)(
+  AiProviderCliHome.of({
+    ensureCodexShadowHome: () => Effect.void,
+    makeClaudeEnv: ({ baseEnv, homePath }) =>
+      O.match(homePath, {
+        onNone: () => baseEnv,
+        onSome: (HOME) => ({ ...baseEnv, HOME }),
+      }),
+    makeCodexEnv: ({ baseEnv, layout }) =>
+      O.match(layout.effectiveHomePath, {
+        onNone: () => baseEnv,
+        onSome: (CODEX_HOME) => ({ ...baseEnv, CODEX_HOME }),
+      }),
+    resolveClaudeHome: O.getOrElse(() => "/tmp/claude-default"),
+    resolveCodexHomeLayout: ({ shadowHomePath }) =>
+      AiProviderCliCodexHomeLayout.make({
+        effectiveHomePath: shadowHomePath,
+        mode: O.isSome(shadowHomePath) ? "authOverlay" : "direct",
+        sharedHomePath: "/tmp/codex-shared",
+      }),
+  })
+);
 
 const PortsLive = Layer.mergeAll(ProviderInstanceRepositoryLive, ProviderProbeLive);
 const TestLayer = ProviderInstanceUseCasesLive.pipe(
   Layer.provideMerge(PortsLive),
   Layer.provideMerge(AiProviderCli.makeLayerFromRunner(runner)),
+  Layer.provideMerge(TestHomeLayer),
   Layer.provideMerge(makeDrizzleLayer()),
   Layer.provideMerge(makePgliteLayer())
 );
@@ -75,6 +108,7 @@ describe.sequential("ProviderInstance PGLite integration", () => {
       Effect.fnUntraced(function* () {
         yield* prepareTable();
         const useCases = yield* ProviderInstanceUseCases;
+        yield* Ref.set(runnerRequests, []);
         const added = yield* useCases.add(
           AddProviderInstanceCommand.make({
             binaryPath: "/opt/bin/claude",
@@ -92,6 +126,9 @@ describe.sequential("ProviderInstance PGLite integration", () => {
         expect(O.getOrThrow(listed[0]?.lastProbe).status).toBe("authenticated");
         const snapshot = O.getOrThrow(listed[0]?.lastProbe);
         expect(S.is(Domain.AuthenticatedSnapshot)(snapshot)).toBe(true);
+        const requests = yield* Ref.get(runnerRequests);
+        expect(requests[0]?.executable).toBe("/opt/bin/claude");
+        expect(requests[0]?.env).toEqual({ HOME: "/tmp/claude-home", NO_PROXY: "localhost" });
       }),
       pgliteIntegrationTimeoutMillis
     );
@@ -101,6 +138,7 @@ describe.sequential("ProviderInstance PGLite integration", () => {
       Effect.fnUntraced(function* () {
         yield* prepareTable();
         const useCases = yield* ProviderInstanceUseCases;
+        yield* Ref.set(runnerRequests, []);
         const added = yield* useCases.add(
           AddProviderInstanceCommand.make({
             binaryPath: "/opt/bin/codex",
@@ -118,6 +156,9 @@ describe.sequential("ProviderInstance PGLite integration", () => {
         }
         const listed = yield* useCases.list(ListProviderInstancesQuery.make({}));
         expect(O.getOrThrow(listed[0]?.lastProbe).status).toBe("unauthenticated");
+        const requests = yield* Ref.get(runnerRequests);
+        expect(requests[0]?.executable).toBe("/opt/bin/codex");
+        expect(requests[0]?.env).toEqual({ CODEX_HOME: "/tmp/codex-home" });
       }),
       pgliteIntegrationTimeoutMillis
     );

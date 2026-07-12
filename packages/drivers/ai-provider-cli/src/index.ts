@@ -61,12 +61,12 @@ export * from "./AiProviderCli.models.ts";
  * import { Effect } from "effect"
  * import { AiProviderCli, AiProviderCliProcessResult, type AiProviderCliRunner } from "@beep/ai-provider-cli"
  *
- * const runner: AiProviderCliRunner = (provider, command) =>
+ * const runner: AiProviderCliRunner = (request) =>
  *   Effect.succeed(
  *     AiProviderCliProcessResult.make({
- *       exitCode: provider === "claude" ? 0 : 1,
+ *       exitCode: request.provider === "claude" ? 0 : 1,
  *       stderr: "",
- *       stdout: command
+ *       stdout: request.executable
  *     })
  *   )
  *
