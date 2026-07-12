@@ -77,6 +77,7 @@ import { RichTreeView } from "@mui/x-tree-view/RichTreeView";
 import { flow, pipe } from "effect";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
+import { useCallback } from "react";
 import { ontologyTreeItemsFor } from "./Session.tree.js";
 import type { OntologyValidationStatus } from "@beep/ontology-client/aggregates/Session";
 import type {
@@ -640,9 +641,20 @@ export function OntologyWorkbench(): JSX.Element {
     setSearchQuery(iri);
   };
 
-  const graphContainerRef = (element: HTMLDivElement | null): void => {
-    setGraphContainer(O.fromNullishOr(element));
-  };
+  // The ref callback has to be STABLE. A fresh closure each render makes React
+  // detach the old ref (calling it with `null`) and attach the new one on every
+  // single render — so the container atom flipped none → some → none → some
+  // forever, and the render bridge tore the cosmos graph down and rebuilt it each
+  // time. Whenever the flip landed on `none` the backend reset, the canvas was
+  // destroyed, and the badge fell back to "pending": the graph was being mounted
+  // correctly and thrown away just as fast, which is why it looked like it had
+  // never rendered at all.
+  const graphContainerRef = useCallback(
+    (element: HTMLDivElement | null): void => {
+      setGraphContainer(O.fromNullishOr(element));
+    },
+    [setGraphContainer]
+  );
 
   return (
     <TooltipProvider>

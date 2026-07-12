@@ -1229,6 +1229,9 @@ const renderRequestAtom = Atom.make((get) => ({
  * @category atoms
  * @since 0.0.0
  */
+const graphRenderFailureMessage = (cause: unknown): string =>
+  `The graph could not be drawn: ${cause instanceof Error ? cause.message : String(cause)}`;
+
 export const ontologyGraphRenderBridgeAtom = Atom.make((get) => {
   let handle: O.Option<CosmosRenderHandle> = O.none();
   let renderToken = 0;
@@ -1242,6 +1245,10 @@ export const ontologyGraphRenderBridgeAtom = Atom.make((get) => {
         get.set(ontologyGraphBackendAtom, O.none());
         return;
       }
+
+      // A fresh attempt clears the last failure, so a recovered graph stops
+      // claiming to be broken.
+      get.set(ontologyGraphErrorAtom, O.none());
 
       const cosmosProjection = cosmosProjectionFromOntology(projection.value);
 
@@ -1260,10 +1267,15 @@ export const ontologyGraphRenderBridgeAtom = Atom.make((get) => {
                 handle = O.some(mounted);
                 get.set(ontologyGraphBackendAtom, O.some(mounted.backend));
               },
-              () => {
+              (cause: unknown) => {
                 if (token === renderToken) {
                   handle = O.none();
                   get.set(ontologyGraphBackendAtom, O.none());
+                  // The renderer's failure used to be dropped on the floor: the
+                  // backend went back to `none`, the badge read "pending", and the
+                  // reason — a lost WebGL context, a container with no size — was
+                  // never spoken. A graph that cannot be drawn has to say so.
+                  get.set(ontologyGraphErrorAtom, O.some(graphRenderFailureMessage(cause)));
                 }
               }
             );

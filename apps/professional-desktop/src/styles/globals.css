@@ -9,6 +9,18 @@
    mode). Point @source at the real package src so every themed class generates. */
 @source "../../../../packages/foundation/ui-system/ui/src";
 @source "../../../../packages/foundation/ui-system/editor/src";
+/* Every UI package the app renders has to be listed, not just the foundation two.
+   The ontology workbench was missing, so a class used ONLY there was never
+   generated — and the one it needed most was its three-column grid,
+   `grid-cols-[300px_minmax(360px,1fr)_340px]`. Without it the workbench collapsed
+   to a single column: the tree, the source pane and the inspector stacked and
+   painted over one another, and the graph's container inherited the collapse and
+   had no size at all, so the WebGL canvas had nothing to mount into. Ordinary
+   utilities (`flex`, `border`) survived only because the app happens to use them
+   elsewhere — which is exactly what made this look like a layout bug rather than a
+   missing stylesheet. */
+@source "../../../../packages/ontology/ui/src";
+@source "../../../../packages/drivers/cosmos/src";
 
 /* Green-workbench theme — app-local override of the shadcn/Tailwind tokens.
    Light = green-on-parchment (oip-web parchment bg); dark = near-black green
