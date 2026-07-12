@@ -30,6 +30,7 @@ import { useRef } from "react";
 import { MessageView } from "./MessageView.tsx";
 import { StreamingBlocks } from "./StreamingBlocks.tsx";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { Thread as ThreadProjections } from "@beep/workspace-use-cases/public";
 import type { Thread as ThreadUseCases } from "@beep/workspace-use-cases/public";
 import type { JSX } from "react";
 
@@ -145,8 +146,12 @@ export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Eleme
   // a turn keeps streaming in its own thread when the user navigates away.
   const streamingHere = O.filter(streaming, (turn) => turn.threadId === threadId);
 
-  const allTurns = AsyncResult.isSuccess(timeline) ? timeline.value.turns : [];
-  // during an edit turn, optimistically hide the rewritten-away tail.
+  // The conversation as it now stands: an edited turn and the exchange it
+  // produced are gone for good, not merely hidden while the replacement streams.
+  // (The transcript used to fall back to every turn once streaming finished, so
+  // the tail the rewrite banner promised to discard came straight back.)
+  const allTurns = AsyncResult.isSuccess(timeline) ? ThreadProjections.activeBranchTurns(timeline.value.turns) : [];
+  // While the replacement streams, its predecessor is already on its way out.
   const turns = O.flatMap(streamingHere, (turn) => turn.truncateFrom).pipe(
     O.flatMap((truncateFrom) => A.findFirstIndex(allTurns, (turn) => turn.turnId === truncateFrom)),
     O.map((index) => A.take(allTurns, index)),

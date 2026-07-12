@@ -11,6 +11,9 @@ import { Document } from "@beep/md/Md.model";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { MessageRole } from "@beep/workspace-domain/entities/Message";
+import { Order, pipe } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const $I = $WorkspaceUseCasesId.create("aggregates/Thread/ThreadTimeline");
@@ -229,3 +232,50 @@ export class ThreadTimeline extends S.Class<ThreadTimeline>($I`ThreadTimeline`)(
     description: "Read model projecting a thread's ordered turns and resolved timeline items.",
   })
 ) {}
+
+/**
+ * The turns still part of the conversation, with every superseded branch removed.
+ *
+ * Editing a turn appends a replacement whose `parentTurnId` points at the turn it
+ * replaces. The replacement therefore supersedes that turn *and* everything
+ * recorded after it — the answers, and any follow-up exchange, that the old
+ * wording produced.
+ *
+ * Nothing consumed this before: the transcript rendered every turn in index
+ * order, so an "Edit" that promised to rewrite the thread from that point left
+ * the old tail on screen (and in the persisted thread) once streaming finished,
+ * and the model was handed that obsolete tail as history alongside the new
+ * prompt. Both the renderer and the history projection read the conversation
+ * through here so they agree on what the thread now says.
+ *
+ * @example
+ * ```ts
+ * import { activeBranchTurns } from "@beep/workspace-use-cases/aggregates/Thread"
+ * import type { ThreadTimeline } from "@beep/workspace-use-cases/aggregates/Thread"
+ *
+ * declare const timeline: ThreadTimeline
+ * console.log(activeBranchTurns(timeline.turns).length <= timeline.turns.length) // true
+ * ```
+ *
+ * @category projections
+ * @since 0.0.0
+ */
+const turnIndexOrder = Order.mapInput(Order.Number, (turn: TimelineTurn) => turn.turnIndex);
+
+export const activeBranchTurns = (turns: ReadonlyArray<TimelineTurn>): ReadonlyArray<TimelineTurn> =>
+  A.reduce(A.sort(turns, turnIndexOrder), A.empty<TimelineTurn>(), (branch, turn) =>
+    O.match(turn.parentTurnId, {
+      // A turn with no parent simply continues the conversation.
+      onNone: () => A.append(branch, turn),
+      // A replacement: drop the turn it replaces and everything that followed it.
+      onSome: (replacedTurnId) =>
+        pipe(
+          A.findFirstIndex(branch, (candidate) => candidate.turnId === replacedTurnId),
+          O.match({
+            // The replaced turn is already gone (an edit of an edit): keep going.
+            onNone: () => A.append(branch, turn),
+            onSome: (index) => A.append(A.take(branch, index), turn),
+          })
+        ),
+    })
+  );

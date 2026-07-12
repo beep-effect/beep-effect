@@ -131,9 +131,12 @@ const messageItemToHistory = (item: Thread.TimelineMessageItem): ReadonlyArray<T
     user: () => [UserTurnHistoryItem.make({ text: documentToPlainText(item.content) })],
   });
 
+// Only the conversation as it now stands is sent to the model. Flattening every
+// turn handed the kernel the tail an edit had already replaced, so a rewritten
+// prompt was answered in the context of the wording it replaced.
 const projectTimelineToHistory = (timeline: Thread.ThreadTimeline): ReadonlyArray<TurnHistoryItem> =>
   pipe(
-    timeline.turns,
+    Thread.activeBranchTurns(timeline.turns),
     A.flatMap((turn) =>
       A.flatMap(
         turn.items,
