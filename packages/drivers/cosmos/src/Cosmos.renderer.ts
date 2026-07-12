@@ -8,8 +8,8 @@
 
 import { $CosmosId } from "@beep/identity/packages";
 import { Fn, HexColor, SchemaUtils } from "@beep/schema";
-import { P } from "@beep/utils";
-import { Duration, Effect, Match } from "effect";
+import { A, O, P } from "@beep/utils";
+import { Duration, Effect, Match, pipe } from "effect";
 import * as S from "effect/Schema";
 import { CosmosBackend, probeWebGl2, selectCosmosBackend } from "./Cosmos.backend.js";
 import { CosmosDriverError } from "./Cosmos.errors.js";
@@ -73,7 +73,60 @@ type CosmosGraphInstance = {
   readonly setPointColors?: (pointColors: Float32Array) => void;
   readonly setPointPositions: (positions: Float32Array) => void;
   readonly setPointSizes?: (pointSizes: Float32Array) => void;
+  // The graph's own space -> screen transform, which is what makes an HTML label
+  // layer possible: cosmos.gl renders no text, but it will tell you where a point
+  // currently is on screen, through every pan, zoom and simulation tick.
+  readonly spaceToScreenPosition?: (spacePosition: [number, number]) => [number, number];
+  readonly getPointPositions?: () => ReadonlyArray<number>;
   readonly stop?: () => void;
+};
+
+/** Beyond this many points, labels stop being readable and start being noise. */
+const MAX_RENDERED_LABELS = 300;
+
+/**
+ * An HTML label layer over the WebGL canvas.
+ *
+ * The labels the ontology computes were being thrown away: cosmos.gl draws points
+ * and lines, never text, so a graph of a dozen named classes rendered as a dozen
+ * anonymous dots. The library does expose its space -> screen transform, though,
+ * which is exactly what a text layer needs — so the names go in a DOM layer pinned
+ * over the canvas and follow their points through pan, zoom and simulation.
+ */
+const makeLabelLayer = (container: HTMLElement, labels: ReadonlyArray<string>) => {
+  const layer = document.createElement("div");
+  layer.setAttribute("data-testid", "cosmos-labels");
+  layer.setAttribute(
+    "style",
+    "position:absolute;inset:0;overflow:hidden;pointer-events:none;font-size:11px;line-height:1;"
+  );
+
+  // The canvas is positioned within the container, so the layer must be too —
+  // otherwise the labels anchor to the page and drift away from their points.
+  if (getComputedStyle(container).position === "static") {
+    container.style.position = "relative";
+  }
+
+  const shown = labels.slice(0, MAX_RENDERED_LABELS);
+  const elements = shown.map((label) => {
+    const element = document.createElement("span");
+    element.textContent = label;
+    element.setAttribute(
+      "style",
+      "position:absolute;top:0;left:0;white-space:nowrap;transform:translate(-9999px,-9999px);" +
+        "color:rgba(226,240,230,0.92);text-shadow:0 1px 2px rgba(0,0,0,0.85);will-change:transform;"
+    );
+    layer.appendChild(element);
+    return element;
+  });
+
+  container.appendChild(layer);
+
+  return {
+    elements,
+    count: shown.length,
+    destroy: (): void => layer.remove(),
+  };
 };
 
 type CosmosGraphConstructor = new (container: HTMLElement, config: CosmosGraphConfig) => CosmosGraphInstance;
@@ -285,6 +338,53 @@ const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
     catch: CosmosDriverError.fromUnknown("renderFailed")("Failed to render cosmos.gl graph."),
   });
 
+  // Labels live in a DOM layer over the canvas and are re-pinned to their points on
+  // every frame, because the simulation, a pan, and a zoom all move them. The graph
+  // is the only thing that knows where a point currently is, so it is asked, rather
+  // than the transform being reconstructed here.
+  const layerFor = (current: CosmosGraphProjection): O.Option<ReturnType<typeof makeLabelLayer>> =>
+    pipe(
+      O.fromNullishOr(current.labels),
+      O.filter(A.isReadonlyArrayNonEmpty),
+      O.map((names) => makeLabelLayer(container, names))
+    );
+
+  let layer = layerFor(projection);
+  let frame: number | undefined = undefined;
+
+  const positionLabels = (): void => {
+    pipe(
+      layer,
+      O.match({
+        onNone: () => undefined,
+        onSome: (current) => {
+          const positions = graph.getPointPositions?.();
+          const toScreen = graph.spaceToScreenPosition;
+          if (positions === undefined || toScreen === undefined) return;
+          for (let index = 0; index < current.count; index += 1) {
+            const x = positions[index * 2];
+            const y = positions[index * 2 + 1];
+            const element = current.elements[index];
+            if (element === undefined || x === undefined || y === undefined || Number.isNaN(x) || Number.isNaN(y)) {
+              continue;
+            }
+            const [screenX, screenY] = toScreen([x, y]);
+            // Offset below the point so the text never sits on top of the dot it names.
+            element.style.transform = `translate(${Math.round(screenX)}px, ${Math.round(screenY + 8)}px) translateX(-50%)`;
+          }
+        },
+      })
+    );
+  };
+
+  const tick = (): void => {
+    positionLabels();
+    frame = globalThis.requestAnimationFrame(tick);
+  };
+  if (O.isSome(layer)) {
+    tick();
+  }
+
   const sampler = makeFpsSampler();
 
   return CosmosRenderHandle.make({
@@ -295,9 +395,23 @@ const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
       graph.setLinks(nextProjection.links);
       paint(nextProjection);
       graph.render();
+
+      // A re-projection can rename, add or drop nodes, so the layer is rebuilt from
+      // the labels that arrived with it rather than left describing the old graph.
+      pipe(layer, O.match({ onNone: () => undefined, onSome: (current) => current.destroy() }));
+      layer = layerFor(nextProjection);
+      if (O.isSome(layer) && frame === undefined) {
+        tick();
+      }
     }),
     destroy: () => {
       sampler.stop();
+      if (frame !== undefined) {
+        globalThis.cancelAnimationFrame(frame);
+        frame = undefined;
+      }
+      pipe(layer, O.match({ onNone: () => undefined, onSome: (current) => current.destroy() }));
+      layer = O.none();
       if (P.isFunction(graph.stop)) {
         graph.stop();
       }

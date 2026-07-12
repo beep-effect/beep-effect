@@ -1202,13 +1202,31 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
   });
 });
 
-const cosmosProjectionFromOntology = (projection: OntologyGraphProjection): CosmosGraphProjection =>
+/**
+ * Maps the worker's ontology projection onto the renderer's projection.
+ *
+ * @example
+ * ```ts
+ * import { cosmosProjectionFromOntology } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(typeof cosmosProjectionFromOntology)
+ * ```
+ *
+ * @category projections
+ * @since 0.0.0
+ */
+export const cosmosProjectionFromOntology = (projection: OntologyGraphProjection): CosmosGraphProjection =>
   CosmosGraphProjection.make({
     nodeCount: projection.nodeCount,
     edgeCount: projection.edgeCount,
     nodeIds: projection.nodeIds,
     pointPositions: projection.pointPositions,
     links: projection.links,
+    // The projection has always carried a label for every node, and the fold level
+    // has always decided how many to show — and then the renderer dropped the lot,
+    // so a graph of named classes drew as a field of anonymous dots. The names reach
+    // the canvas now; `hidden` still means hidden.
+    ...(projection.labelDetail === "hidden" ? {} : { labels: A.map(projection.nodes, (node) => node.label) }),
   });
 
 const renderRequestAtom = Atom.make((get) => ({

@@ -46,9 +46,14 @@ export class CosmosGraphProjection extends S.Class<CosmosGraphProjection>($I`Cos
     nodeIds: Uint32Arr,
     pointPositions: Float32Arr,
     links: Float32Arr,
+    // One label per point, in point order. cosmos.gl draws no text — it is a WebGL
+    // point renderer — but it exposes the coordinate hooks to place text over the
+    // canvas, which is how a label layer is built. Absent or empty means a bare
+    // graph; a caller with more points than it wants to name simply sends fewer.
+    labels: S.Array(S.String).pipe(S.optionalKey),
   },
   $I.annote("CosmosGraphProjection", {
-    description: "Typed-array graph projection containing node ids, point positions, and source-target link pairs.",
+    description: "Typed-array graph projection: node ids, point positions, source-target link pairs, and labels.",
   })
 ) {}
 
