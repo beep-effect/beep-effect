@@ -135,6 +135,54 @@ export const typeaheadMenuMarker = (editor: LexicalEditor): Record<string, strin
 });
 
 /**
+ * The DOM id of a typeahead option, scoped to its editor.
+ *
+ * Lexical points the editor root's `aria-activedescendant` at a hardcoded
+ * `typeahead-item-${index}`. With two composers on one page both menus emitted the
+ * same ids, and `aria-activedescendant` resolves document-wide — first match wins — so
+ * a screen reader in one composer could be told about an option belonging to the
+ * other composer's menu. The id carries its editor now, and
+ * {@link typeaheadActiveDescendant} repoints each editor at its own.
+ *
+ * @example
+ * ```ts
+ * import { typeaheadOptionId } from "@beep/editor/chat"
+ * import { createEditor } from "lexical"
+ *
+ * console.log(typeaheadOptionId(createEditor(), 0).startsWith("typeahead-item-"))
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const typeaheadOptionId = (editor: LexicalEditor, index: number): string =>
+  `typeahead-item-${editor.getKey()}-${index}`;
+
+/**
+ * Points an editor's `aria-activedescendant` at the option it has actually
+ * highlighted, overriding the document-wide id Lexical writes.
+ *
+ * @example
+ * ```ts
+ * import { typeaheadActiveDescendant } from "@beep/editor/chat"
+ *
+ * console.log(typeof typeaheadActiveDescendant)
+ * ```
+ *
+ * @category bindings
+ * @since 0.0.0
+ */
+export const typeaheadActiveDescendant = (editor: LexicalEditor, selectedIndex: number | null): void => {
+  const root = editor.getRootElement();
+  if (root === null) return;
+  if (selectedIndex === null) {
+    root.removeAttribute("aria-activedescendant");
+    return;
+  }
+  root.setAttribute("aria-activedescendant", typeaheadOptionId(editor, selectedIndex));
+};
+
+/**
  * Whether a typeahead listbox is genuinely on screen for `editor`: an option row
  * is rendered inside the typeahead container.
  *

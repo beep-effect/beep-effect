@@ -31,7 +31,13 @@ import { Atom } from "effect/unstable/reactivity";
 import { $createTextNode, $getSelection, $isRangeSelection } from "lexical";
 import { useContext } from "react";
 import { createPortal } from "react-dom";
-import { anyMenuOpenAtom, menusOpenAtom, typeaheadMenuMarker } from "./atoms.ts";
+import {
+  anyMenuOpenAtom,
+  menusOpenAtom,
+  typeaheadActiveDescendant,
+  typeaheadMenuMarker,
+  typeaheadOptionId,
+} from "./atoms.ts";
 import type { MenuRenderFn } from "@lexical/react/LexicalTypeaheadMenuPlugin";
 import type { LexicalEditor } from "lexical";
 import type { ReactNode, RefObject } from "react";
@@ -235,6 +241,12 @@ function TypeaheadMenuList<TOption extends MenuOption>({
     viewportHeight: window.innerHeight,
     viewportWidth: window.innerWidth,
   });
+  // Lexical has just written `aria-activedescendant="typeahead-item-<index>"` on the
+  // editor root — an id that is not unique across composers. Overwrite it with the id
+  // of the option this editor actually rendered, so the reference resolves to the row
+  // in THIS menu.
+  typeaheadActiveDescendant(editor, selectedIndex);
+
   return createPortal(
     <div
       {...typeaheadMenuMarker(editor)}
@@ -244,7 +256,13 @@ function TypeaheadMenuList<TOption extends MenuOption>({
       {A.map(options, (option, index) => (
         <div
           key={option.key}
-          id={`typeahead-item-${index}`}
+          // Scoped to the editor. Lexical points the editor root's
+          // `aria-activedescendant` at a hardcoded `typeahead-item-${index}`, so two
+          // composers on one page emitted the same ids — and the attribute resolves
+          // document-wide, first match wins. A screen reader in one composer could be
+          // told about an option in the other composer's menu. The rows carry unique
+          // ids now, and the binding below points each editor at its own.
+          id={typeaheadOptionId(editor, index)}
           role="option"
           aria-selected={selectedIndex === index}
           ref={(element) => option.setRefElement(element)}
