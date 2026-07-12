@@ -39,6 +39,17 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 ## Explorations
 
 ### Active
+- [`computable-workspace-geometry`](./computable-workspace-geometry/README.md) —
+  pretext × dock kernel × blocks (stage `research`, opened 2026-07-12): text
+  layout as pure arithmetic over shippable per-engine font metrics closes the
+  workspace-as-data composition — rendered geometry becomes data, agents gain
+  sight, and the dock-divergence "costs" audit came back almost empty of true
+  costs. First proof landed same day:
+  [`scratchpad/computable-layout`](../scratchpad/computable-layout/README.md)
+  (browser-oracle fixture → pure greedy breaker reproduces Chrome's wrap
+  counts under `bun test`, 5/5). Next: integration seam (consume/vendor/
+  rebuild), metrics-cache schema. Feeds
+  [`docs/product/workspace-substrate.md`](../docs/product/workspace-substrate.md) §4–§5.
 - [`atlas-synthesis`](./atlas-synthesis/README.md) — grounding/context packet
   (stage `research`): a maximal-fan-out synthesis of current repo state vs.
   goals/vision, centered on a gap map
