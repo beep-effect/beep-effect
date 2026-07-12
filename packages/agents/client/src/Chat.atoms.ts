@@ -357,6 +357,33 @@ export const draftAtoms = Atom.family((threadId: ThreadId) =>
   })
 );
 
+/**
+ * Bumped whenever a thread's draft is replaced from outside the editor.
+ *
+ * The composer seeds its editor from the draft at mount and then owns the
+ * content, so restoring a draft is invisible until the composer remounts. It
+ * keys itself on this revision: submitting cleared the editor before the request
+ * was accepted, so a rejected send simply destroyed what the user had written —
+ * the draft is put back and the editor re-seeded from it.
+ *
+ * @example
+ * ```ts
+ * import { draftRevisionAtoms } from "@beep/agents-client"
+ * import * as Workspace from "@beep/shared-domain/identity/Workspace"
+ * import * as S from "effect/Schema"
+ * import { AtomRegistry } from "effect/unstable/reactivity"
+ *
+ * const threadId = S.decodeUnknownSync(Workspace.ThreadId)(10)
+ * const registry = AtomRegistry.make()
+ *
+ * console.log(registry.get(draftRevisionAtoms(threadId))) // 0
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const draftRevisionAtoms = Atom.family((_threadId: ThreadId) => Atom.make(0));
+
 // ---------------------------------------------------------------------------
 // Streaming turn
 // ---------------------------------------------------------------------------
@@ -834,6 +861,11 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
           ctx.set(streamingTurnAtom, O.none());
           const turnError = toTurnError(error);
           ctx.set(turnErrorAtom, O.some(turnError));
+          // Give the user back what they wrote. The composer cleared its editor
+          // the moment it dispatched, so a rejected turn otherwise took the
+          // message with it — a toast, and nothing left to retry with.
+          ctx.set(draftAtoms(turn.threadId), O.some(turn.content));
+          ctx.set(draftRevisionAtoms(turn.threadId), registry.get(draftRevisionAtoms(turn.threadId)) + 1);
           yield* Metric.update(Metric.withAttributes(turnFailed, { kind: turn._tag }), 1);
           yield* logRedactedCause(
             Cause.fail(error),
@@ -864,8 +896,29 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
       Effect.ensuring(recordDuration)
     );
     // wait for the refetched timeline before dropping the streamed turn, so the
-    // persisted rendering swaps in without a gap
-    yield* ctx.result(threadTimelineAtoms(turn.threadId), { suspendOnWaiting: true });
+    // persisted rendering swaps in without a gap.
+    //
+    // A failure here is a *display* problem — the turn itself already streamed
+    // and persisted — but it used to abort this fiber before the streaming state
+    // was cleared, leaving every composer convinced a turn was still in flight
+    // and refusing to send another one, with no error anywhere. The refresh
+    // failure is reported and the streaming state is cleared regardless.
+    yield* ctx.result(threadTimelineAtoms(turn.threadId), { suspendOnWaiting: true }).pipe(
+      Effect.tapError(
+        Effect.fnUntraced(function* (error) {
+          ctx.set(turnErrorAtom, O.some(toTurnError(error)));
+          yield* logRedactedCause(
+            Cause.fail(error),
+            LogRedactedCauseOptions.make({
+              message: "assistant turn completed but the thread could not be refreshed",
+              level: "Warn",
+              attributes: { kind: turn._tag, subsystem: "chat_ui" },
+            })
+          );
+        })
+      ),
+      Effect.ignore
+    );
     ctx.set(streamingTurnAtom, O.none());
     yield* Metric.update(Metric.withAttributes(turnCompleted, { kind: turn._tag }), 1);
     yield* Metric.update(Metric.withAttributes(turnBlocks, { kind: turn._tag }), blocks.length);

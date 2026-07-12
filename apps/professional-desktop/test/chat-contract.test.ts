@@ -10,6 +10,7 @@ import { assistantContentToDocument } from "@beep/agents-domain/values/Assistant
 import { FixtureTurnKernel, fixtureBlocksFor } from "@beep/agents-use-cases/proof";
 import { AgentTurnKernel, TurnHistoryItem } from "@beep/agents-use-cases/public";
 import * as Md from "@beep/md/Md.model";
+import { renderPlainTextUnsafe } from "@beep/md/Md.render";
 import { assertSchemaArbitraryDecodesToSelf, provideScopedLayer } from "@beep/test-utils";
 import { ThreadStoreInMemoryLayer } from "@beep/workspace-server/aggregates/Thread";
 import { Thread } from "@beep/workspace-use-cases/server";
@@ -263,7 +264,12 @@ describe("@beep/professional-desktop chat contract", () => {
     expect(text).toContain("Ship docs");
   });
 
-  it.effect("cancel leaves no partial assistant row and appends no usage record", () =>
+  // Cancelling still keeps no partial model output and bills nothing. What it no
+  // longer does is erase the turn entirely: persisting nothing left the user's
+  // prompt with no answer, so a reload orphaned it and — because the kernel is
+  // handed the whole conversation — the next prompt arrived after an unanswered
+  // request and the model answered the abandoned one instead.
+  it.effect("cancel records a stopped turn, keeps no partial content, and bills nothing", () =>
     Effect.gen(function* () {
       const { operations, usageRef } = yield* makeStack;
       const workspaceId = decodeWorkspaceId(1);
@@ -287,12 +293,17 @@ describe("@beep/professional-desktop chat contract", () => {
       yield* Deferred.await(firstBlockSeen);
       yield* Fiber.interrupt(fiber);
 
-      // timeline shows the user turn but NO assistant turn
+      // the prompt is answered by a turn that says it was stopped
       const timeline = yield* operations.getTimeline(thread.id);
       const items = messageItems(timeline);
-      expect(items.map((m) => m.role)).toEqual(["user"]);
+      expect(items.map((m) => m.role)).toEqual(["user", "assistant"]);
 
-      // no usage record appended on interrupt
+      // the stopped turn carries the marker and none of the streamed content
+      const stopped = items[1];
+      const stoppedText = renderPlainTextUnsafe(stopped!.content).trim();
+      expect(stoppedText).toBe("(stopped)");
+
+      // still no usage record on interrupt
       const usage = yield* Ref.get(usageRef);
       expect(usage).toHaveLength(0);
     }).pipe(provideScopedLayer(StackLayer))

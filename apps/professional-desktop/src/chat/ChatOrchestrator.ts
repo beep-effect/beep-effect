@@ -3,12 +3,17 @@
  * kernel, the workspace ThreadStore, and the usage-record sink behind the
  * {@link ChatRpcs} wire contract.
  *
- * SPEC: "Cancel must leave no partial assistant row." The user turn is
- * persisted before streaming starts; the assistant turn+message is persisted
- * **only on successful stream completion** ({@link Stream.onEnd}). On
- * interrupt or error nothing is persisted, so a cancelled turn leaves the
- * user turn but no assistant turn. This deliberately differs from the POC,
- * which persisted partial blocks on abnormal exit via `Stream.onExit`.
+ * The user turn is persisted before streaming starts, and the assistant turn is
+ * persisted when the stream ends — successfully or not.
+ *
+ * Persisting only on success (the original "cancel must leave no partial
+ * assistant row" rule) left a stopped or failed turn as a user message with no
+ * answer. That was not merely untidy: a reload showed an orphaned prompt with no
+ * way to retry, and because the kernel is handed the whole conversation, the
+ * *next* prompt arrived after an unanswered request — so the model answered the
+ * abandoned one instead of the new one. An unfinished turn now records what it
+ * produced, marked stopped or failed, and both the transcript and the history
+ * stay well-formed.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -23,6 +28,7 @@ import {
   UserTurnHistoryItem,
 } from "@beep/agents-use-cases/public";
 import { appendTurnFinalizationUsageRecord, TurnFinalizationUsageAppend } from "@beep/epistemic-domain";
+import { Document, P, Text } from "@beep/md/Md.model";
 import { renderPlainTextUnsafe } from "@beep/md/Md.render";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { MessageRole } from "@beep/workspace-domain/entities/Message";
@@ -36,7 +42,6 @@ import { DerivedThreadTitle } from "./DerivedThreadTitle.ts";
 import { UsageRecordSink } from "./UsageRecordSink.ts";
 import type { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
 import type { IndexedBlock, TurnGenerationError, TurnHistoryItem } from "@beep/agents-use-cases/public";
-import type { Document } from "@beep/md/Md.model";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 
 // ---------------------------------------------------------------------------
@@ -62,6 +67,12 @@ import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
 export const documentToPlainText = (document: Document.Type): string => renderPlainTextUnsafe(document);
 
 const UNTITLED_THREAD_TITLE = "New thread" as const;
+
+// What an unfinished assistant turn says. Appended after whatever had streamed,
+// so a stopped answer reads as a truncated answer that was stopped, and an empty
+// one still records that the request was made and abandoned.
+const STOPPED_NOTE = "(stopped)" as const;
+const FAILED_NOTE = "(failed)" as const;
 
 const decodeDerivedThreadTitle = S.decodeUnknownOption(DerivedThreadTitle);
 const decodeDerivedThreadTitleLine = (line: string): O.Option<string> => decodeDerivedThreadTitle(line);
@@ -275,20 +286,40 @@ const streamAndPersist = (
         let collected: ReadonlyArray<IndexedBlock> = A.empty<IndexedBlock>();
         const persisted = yield* Ref.make(false);
 
-        // Persist runs once, only on success: sort collected blocks by envelope
-        // index, lift to a Document, append the assistant turn, then append the
-        // finalized-turn usage record. Its failure channel is ChatActionError.
-        const persist: Effect.Effect<void, ChatActionError> = Effect.gen(function* () {
-          if (yield* Ref.getAndSet(persisted, true)) return;
-          const blocks = A.map(A.sortWith(collected, indexOf, Order.Number), (indexed) => indexed.block);
-          const content = assistantContentToDocument(blocks);
-          yield* store
-            .appendTurn({ threadId, parentTurnId: O.none(), role: "assistant", content })
-            .pipe(Effect.catch(toChatActionError("SendMessage.persistAssistant")));
-          yield* usage.append(fixtureUsageRecord);
-        });
+        // Persist runs once. A finished turn stores the streamed blocks, sorted by
+        // envelope index and lifted to a Document, and appends the finalized-turn
+        // usage record. Its failure channel is ChatActionError.
+        //
+        // An unfinished turn (`note` set) stores *only* the note — never the
+        // partial model output, and never a usage record. The original rule was
+        // "cancel must leave no partial assistant row", and that intent holds:
+        // half-generated content is not kept, and nothing is billed. What changed
+        // is that the turn is no longer erased entirely. Persisting nothing left
+        // the user's prompt in the thread with no answer, and because the kernel
+        // is handed the whole conversation, the *next* prompt arrived after an
+        // unanswered request — so the model answered the abandoned one instead of
+        // the new one (a stop-then-send returned the cancelled request's reply).
+        // A reload showed the same prompt orphaned, with no way to retry. Saying
+        // "(stopped)" keeps both the transcript and the history well-formed.
+        const persist = (note: O.Option<string>): Effect.Effect<void, ChatActionError> =>
+          Effect.gen(function* () {
+            if (yield* Ref.getAndSet(persisted, true)) return;
+            const content = O.match(note, {
+              onNone: () =>
+                assistantContentToDocument(
+                  A.map(A.sortWith(collected, indexOf, Order.Number), (indexed) => indexed.block)
+                ),
+              onSome: (text) => Document.make({ children: [P.make({ children: [Text.make({ value: text })] })] }),
+            });
+            yield* store
+              .appendTurn({ threadId, parentTurnId: O.none(), role: "assistant", content })
+              .pipe(Effect.catch(toChatActionError("SendMessage.persistAssistant")));
+            if (O.isNone(note)) {
+              yield* usage.append(fixtureUsageRecord);
+            }
+          });
 
-        const persistWithTelemetry = persist.pipe(
+        const persistWithTelemetry = persist(O.none()).pipe(
           Effect.tapError((error) =>
             trackTurnFailure("persist").pipe(
               Effect.andThen(Metric.update(Metric.withAttributes(chatPersistenceFailuresTotal, { kind }), 1)),
@@ -348,9 +379,29 @@ const streamAndPersist = (
           ),
           // wire stays bare blocks; envelope indices are a handler-side concern
           Stream.map((indexed): AssistantBlock => indexed.block),
-          // success path only — persist nothing on error/interrupt (no onExit).
-          // onEnd widens the error channel with persist's ChatActionError.
           Stream.onEnd(completeWithTelemetry),
+          // A turn that stops or fails still happened: record it (with whatever
+          // had streamed) so the prompt is not left hanging. `persist` is
+          // idempotent, so the success path above already claimed it and this is
+          // a no-op there. A persistence failure here must not replace the
+          // original cause, so it is logged and swallowed.
+          Stream.onExit((exit) =>
+            Exit.isSuccess(exit)
+              ? Effect.void
+              : persist(O.some(Cause.hasInterrupts(exit.cause) ? STOPPED_NOTE : FAILED_NOTE)).pipe(
+                  Effect.tapError((error) =>
+                    logRedactedCause(
+                      Cause.fail(error),
+                      LogRedactedCauseOptions.make({
+                        message: "chat turn could not record its interruption",
+                        level: "Warn",
+                        attributes: { context: "SendMessage.persistInterrupted", subsystem: "chat" },
+                      })
+                    )
+                  ),
+                  Effect.ignore
+                )
+          ),
           // translate the kernel's TurnGenerationError to the client-safe wire
           // error; the persist ChatActionError passes through unchanged (std-09).
           Stream.mapError(

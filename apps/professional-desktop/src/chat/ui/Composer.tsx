@@ -25,6 +25,7 @@
 
 import {
   draftAtoms,
+  draftRevisionAtoms,
   EditTurnRequest,
   editTargetAtom,
   reportDecodeFailureAtom,
@@ -110,6 +111,9 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
   // back into the draft. Reads stay current because every remount trigger (thread
   // or edit-target switch) re-renders the composer.
   const draft = registry.get(draftAtom);
+  // Subscribed (unlike the draft itself): a failed turn puts the message back and
+  // bumps this, which remounts the composer so the editor re-seeds from it.
+  const draftRevision = useAtomValue(draftRevisionAtoms(threadId));
 
   // keep the report + turn fibers subscribed — unobserved fn atoms get
   // interrupted by the registry (POC lesson, ported verbatim). ChatComposer
@@ -127,7 +131,7 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
   const contentToLoad = contentToLoadFor(editTarget, draft);
 
   const composerKey = O.match(editTarget, {
-    onNone: () => `thread:${threadId}`,
+    onNone: () => `thread:${threadId}:${draftRevision}`,
     onSome: (t) => `edit:${t.turnId}`,
   });
 
