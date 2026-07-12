@@ -52,6 +52,7 @@ import {
   onAttachAtom,
   onSendAtom,
   removeAttachmentFn,
+  sendBlockedAtom,
   sendCommandBindingAtom,
 } from "./atoms.ts";
 import { DEFAULT_MAX_ATTACHMENT_BYTES, revokeAttachment } from "./attachment-model.ts";
@@ -176,6 +177,9 @@ function ComposerFooter({
 }: FooterProps): JSX.Element {
   const [editor] = useLexicalComposerContext();
   const count = useCharacterCount();
+  // A refused send must never be invisible: the composer used to go quietly dead
+  // when the editor state failed to decode.
+  const sendBlocked = useAtomValue(sendBlockedAtom(editor));
   // The picked files flow into the per-editor capture runtime mutation (which
   // notifies the upload-port and appends captured attachments); the footer holds
   // no capture logic of its own.
@@ -194,6 +198,14 @@ function ComposerFooter({
             {count} {count === 1 ? "character" : "characters"}
           </span>
         ) : null}
+        {O.match(sendBlocked, {
+          onNone: () => null,
+          onSome: (message) => (
+            <span className="text-destructive" role="alert">
+              {message}
+            </span>
+          ),
+        })}
       </div>
       <div className="flex items-center gap-1">
         {attachments ? (

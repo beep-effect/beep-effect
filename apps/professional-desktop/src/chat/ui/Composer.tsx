@@ -163,7 +163,14 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
   // and `editTarget` are read FRESH from the registry because the send handler is
   // seeded once per mount and a closed-over `streaming` could double-send.
   const submit = (state: SerializedEditorState): boolean => {
-    if (O.isSome(registry.get(streamingTurnAtom))) return false;
+    // Every refusal below explains itself. A silently refused send is
+    // indistinguishable from a broken composer: Enter and the Send button simply
+    // stop working, with the draft sitting there and no error anywhere, and the
+    // only way to find out why is to read the source.
+    if (O.isSome(registry.get(streamingTurnAtom))) {
+      toast.info("A reply is still streaming — wait for it to finish, or press Stop.");
+      return false;
+    }
     const content = editorStateToDocument(state);
     if (A.isReadonlyArrayEmpty(content.children)) return false;
     // A message had no upper bound at all: a 50,000-character paste was accepted,

@@ -405,6 +405,36 @@ export const logEditorErrorFn = composerRuntime.fn<Error>()((error) =>
 );
 
 /**
+ * Why the composer refused to send, if it did.
+ *
+ * A send used to be abandoned silently when the editor state failed to decode
+ * against the wire schema: Enter and the Send button both did nothing, with no
+ * error, no toast, and no log — the composer simply went dead while the draft
+ * sat there intact. Whatever the schema gap turns out to be, refusing to send is
+ * never allowed to be invisible.
+ *
+ * @example
+ * ```tsx
+ * import { sendBlockedAtom } from "@beep/editor/chat"
+ * import { useAtomValue } from "@effect/atom-react"
+ * import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
+ *
+ * function SendBlockedNotice() {
+ *   const [editor] = useLexicalComposerContext()
+ *   const blocked = useAtomValue(sendBlockedAtom(editor))
+ *   return <span role="alert">{O.getOrElse(blocked, () => "")}</span>
+ * }
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const sendBlockedAtom = Atom.family((_editor: LexicalEditor) => Atom.make<O.Option<string>>(O.none()));
+
+const SEND_DECODE_FAILURE_MESSAGE =
+  "This message could not be prepared for sending. Please report it — your draft has been kept.";
+
+/**
  * Per-editor live character count of the editor's plain text. The read fn
  * registers a Lexical update listener (torn down via the atom finalizer) and
  * pushes the new length with `get.setSelf` on every change.
@@ -617,8 +647,18 @@ export const sendCommandBindingAtom = Atom.family((editor: LexicalEditor) =>
           const dispatched =
             hasContent &&
             O.match(SerializedEditorState.decodeOption(editorState.toJSON()), {
-              onNone: () => false,
-              onSome: (state) => get.once(onSendAtom(editor)).run(state) === true,
+              // A state the wire schema rejects is a bug in the schema or the
+              // editor — never a reason to make the composer quietly stop
+              // working. Say so, keep the draft, and leave a log behind.
+              onNone: () => {
+                get.set(sendBlockedAtom(editor), O.some(SEND_DECODE_FAILURE_MESSAGE));
+                get.set(logEditorErrorFn, new Error("ChatComposer refused to send: editor state failed to decode"));
+                return false;
+              },
+              onSome: (state) => {
+                get.set(sendBlockedAtom(editor), O.none());
+                return get.once(onSendAtom(editor)).run(state) === true;
+              },
             });
           if (dispatched) {
             editor.update(() => {
