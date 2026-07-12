@@ -35,6 +35,7 @@ import {
 } from "@beep/agents-client/Chat.atoms";
 import { ChatComposer, defaultChatSlashItems } from "@beep/editor";
 import { editorStateToDocument } from "@beep/lexical-schema";
+import { renderPlainTextUnsafe } from "@beep/md/Md.render";
 import { Button } from "@beep/ui/components/button";
 import { toast } from "@beep/ui/components/sonner";
 import { A, O, Str } from "@beep/utils";
@@ -62,6 +63,16 @@ const contentToLoadFor = (editTarget: O.Option<EditTarget>, draft: O.Option<Md.D
 // v1 mention source — a small app-injected set demonstrating ephemeral `@`
 // mentions. Real entity / prior-art / persona sources land with the knowledge
 // graph; mentions serialize to plain text, so swapping the source is additive.
+/**
+ * Longest message the composer will send.
+ *
+ * There was no bound at all: a 50,000-character paste was accepted, persisted,
+ * rendered into the transcript, and sent verbatim to the model. This is a
+ * generous ceiling for a chat prompt while keeping a hostile paste out of the
+ * thread and off the wire.
+ */
+const MAX_MESSAGE_CHARACTERS = 16_000;
+
 const MENTION_CANDIDATES: ReadonlyArray<MentionOption> = [
   { id: "assistant", label: "assistant", hint: "the workspace agent" },
   { id: "workspace", label: "workspace", hint: "the active workspace" },
@@ -155,6 +166,16 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
     if (O.isSome(registry.get(streamingTurnAtom))) return false;
     const content = editorStateToDocument(state);
     if (A.isReadonlyArrayEmpty(content.children)) return false;
+    // A message had no upper bound at all: a 50,000-character paste was accepted,
+    // persisted, rendered, and sent verbatim to the model. Refuse it here and
+    // leave the content in the editor so nothing is lost.
+    const length = Str.length(renderPlainTextUnsafe(content));
+    if (length > MAX_MESSAGE_CHARACTERS) {
+      toast.error(
+        `Message is ${length.toLocaleString()} characters — the limit is ${MAX_MESSAGE_CHARACTERS.toLocaleString()}.`
+      );
+      return false;
+    }
     runTurn(
       O.match(
         // Read fresh (the handler is seeded once per mount) and scoped to this

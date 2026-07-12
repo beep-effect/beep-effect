@@ -23,7 +23,7 @@ import { Cause, Clock, Duration, Effect, Layer, Metric, Stream } from "effect";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
 import { KeyValueStore } from "effect/unstable/persistence";
-import { Atom, AtomRegistry, AtomRpc, Reactivity } from "effect/unstable/reactivity";
+import { AsyncResult, Atom, AtomRegistry, AtomRpc, Reactivity } from "effect/unstable/reactivity";
 import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
 import { ClientObservabilityLive } from "./ClientObservability.js";
 
@@ -791,11 +791,25 @@ export type TurnRequest = typeof TurnRequest.Type;
  * @category atoms
  * @since 0.0.0
  */
+// How hard the client chases the stopped turn the server records after we stop
+// listening. Eight attempts at 150ms covers a slow persist without spinning on a
+// thread that will never gain a turn.
+const INTERRUPT_REFRESH_ATTEMPTS = 8;
+const INTERRUPT_REFRESH_INTERVAL = "150 millis";
+
+const timelineTurnCount = (registry: AtomRegistry.AtomRegistry, threadId: ThreadId): number =>
+  O.match(AsyncResult.value(registry.get(threadTimelineAtoms(threadId))), {
+    onNone: () => -1,
+    onSome: (timeline) => timeline.turns.length,
+  });
+
 export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
   Effect.fn("runTurn")(function* (turn, ctx) {
     const client = yield* ChatClient;
     const reactivity = yield* Reactivity.Reactivity;
     const registry = yield* AtomRegistry.AtomRegistry;
+    // Baseline for the post-interrupt refresh below.
+    const turnsAtStart = timelineTurnCount(registry, turn.threadId);
     yield* Effect.annotateCurrentSpan({ turn_kind: turn._tag, thread_id: turn.threadId });
     yield* Metric.update(Metric.withAttributes(turnAttempts, { kind: turn._tag }), 1);
     yield* Effect.logInfo("assistant turn started").pipe(Effect.annotateLogs({ turn: turn._tag }));
@@ -882,14 +896,25 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
       // Interrupt write refreshes the fn node BEFORE this fiber unwinds, so
       // `ctx` is already disposed and its writes are silently dropped — go
       // through the registry and reactivity services, which outlive the node.
+      //
+      // The server records the stopped turn as *its* stream unwinds, which
+      // happens after we have stopped listening: a single refetch here raced it
+      // and usually won, so the prompt sat answerless until some later action
+      // refreshed the thread again. Refresh until the stopped turn actually
+      // lands (bounded — a thread that never gains a turn stops retrying rather
+      // than spinning).
       Effect.onInterrupt(() =>
         Metric.update(Metric.withAttributes(turnCancelled, { kind: turn._tag }), 1).pipe(
           Effect.andThen(Effect.logInfo("assistant turn cancelled").pipe(Effect.annotateLogs({ turn: turn._tag }))),
+          Effect.andThen(Effect.sync(() => registry.set(streamingTurnAtom, O.none()))),
           Effect.andThen(
-            Effect.sync(() => {
-              registry.set(streamingTurnAtom, O.none());
-              reactivity.invalidateUnsafe(turnKeys);
-            })
+            Effect.sync(() => reactivity.invalidateUnsafe(turnKeys)).pipe(
+              Effect.andThen(Effect.sleep(INTERRUPT_REFRESH_INTERVAL)),
+              Effect.repeat({
+                times: INTERRUPT_REFRESH_ATTEMPTS,
+                until: () => timelineTurnCount(registry, turn.threadId) > turnsAtStart,
+              })
+            )
           )
         )
       ),

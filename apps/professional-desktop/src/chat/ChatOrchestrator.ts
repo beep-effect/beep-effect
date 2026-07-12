@@ -33,7 +33,7 @@ import { renderPlainTextUnsafe } from "@beep/md/Md.render";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Thread } from "@beep/workspace-use-cases/server";
-import { Cause, Clock, Duration, Effect, Exit, Metric, Order, pipe, Ref, Stream } from "effect";
+import { Cause, Clock, Duration, Effect, Exit, HashMap, Metric, Order, pipe, Ref, Semaphore, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -498,6 +498,53 @@ const titleGuardForEditedTurn = (
  * @category constructors
  * @since 0.0.0
  */
+/**
+ * One turn at a time per thread.
+ *
+ * A turn appends the user message, reads the whole conversation back, and asks
+ * the kernel to continue it. Two turns in flight on the same thread therefore
+ * interleave: both prompts land with no answer between them, and each kernel is
+ * handed a history ending in two unanswered requests — so both answer the
+ * *first* one. Two windows on one thread produced two copies of the reply to the
+ * first message and none to the second, and a reload showed that corruption was
+ * persisted.
+ *
+ * Serializing the whole turn — append, stream, persist — restores the invariant
+ * a conversation already implies: the model never sees an unanswered prompt that
+ * is not the one it is answering. The permit is held for the life of the stream,
+ * so a concurrent send waits rather than racing.
+ */
+const threadTurnLocks = Ref.makeUnsafe(HashMap.empty<WorkspaceIdentity.ThreadId, Semaphore.Semaphore>());
+
+const threadTurnLock = Effect.fn("chat.threadTurnLock")(function* (threadId: WorkspaceIdentity.ThreadId) {
+  return yield* Ref.modify(threadTurnLocks, (locks) =>
+    pipe(
+      HashMap.get(locks, threadId),
+      O.match({
+        onSome: (
+          existing
+        ): readonly [Semaphore.Semaphore, HashMap.HashMap<WorkspaceIdentity.ThreadId, Semaphore.Semaphore>] => [
+          existing,
+          locks,
+        ],
+        onNone: (): readonly [
+          Semaphore.Semaphore,
+          HashMap.HashMap<WorkspaceIdentity.ThreadId, Semaphore.Semaphore>,
+        ] => {
+          const created = Semaphore.makeUnsafe(1);
+          return [created, HashMap.set(locks, threadId, created)];
+        },
+      })
+    )
+  );
+});
+
+const holdThreadTurnPermit = Effect.fn("chat.holdThreadTurnPermit")(function* (threadId: WorkspaceIdentity.ThreadId) {
+  const lock = yield* threadTurnLock(threadId);
+  // Released when the stream's scope closes — completion, failure, or stop.
+  yield* Effect.acquireRelease(lock.take(1), () => lock.release(1));
+});
+
 export const makeChatOperations = (
   store: Thread.ThreadStore["Service"],
   kernel: AgentTurnKernel["Service"],
@@ -524,6 +571,7 @@ export const makeChatOperations = (
   ): Stream.Stream<AssistantBlock, ChatActionError> =>
     Stream.unwrap(
       Effect.gen(function* () {
+        yield* holdThreadTurnPermit(threadId);
         yield* store
           .appendTurn({ threadId, parentTurnId: O.none(), role: "user", content })
           .pipe(Effect.catch(toChatActionError("SendMessage")));
@@ -539,6 +587,7 @@ export const makeChatOperations = (
   ): Stream.Stream<AssistantBlock, ChatActionError> =>
     Stream.unwrap(
       Effect.gen(function* () {
+        yield* holdThreadTurnPermit(threadId);
         const titleGuard = yield* titleGuardForEditedTurn(store, threadId, turnId);
         yield* store
           .appendTurn({ threadId, parentTurnId: O.some(turnId), role: "user", content })

@@ -8,7 +8,7 @@
  */
 import { assistantContentToDocument } from "@beep/agents-domain/values/AssistantContent";
 import { FixtureTurnKernel, fixtureBlocksFor } from "@beep/agents-use-cases/proof";
-import { AgentTurnKernel, TurnHistoryItem } from "@beep/agents-use-cases/public";
+import { AgentTurnKernel, IndexedBlock, TurnHistoryItem } from "@beep/agents-use-cases/public";
 import * as Md from "@beep/md/Md.model";
 import { renderPlainTextUnsafe } from "@beep/md/Md.render";
 import { assertSchemaArbitraryDecodesToSelf, provideScopedLayer } from "@beep/test-utils";
@@ -24,7 +24,7 @@ import * as Str from "effect/String";
 import { decodeWorkspaceId, userDocument, userParagraphDocument } from "@/chat/ChatFixtures";
 import { documentToPlainText, makeChatOperations } from "@/chat/ChatOrchestrator";
 import { makeInMemoryUsageRecordSink } from "@/chat/UsageRecordSink";
-import type { IndexedBlock, TurnHistoryItem as TurnHistoryItemType } from "@beep/agents-use-cases/public";
+import type { TurnHistoryItem as TurnHistoryItemType } from "@beep/agents-use-cases/public";
 
 // Build the chat operations + the usage Ref over the provided in-memory stack.
 const makeStack = Effect.gen(function* () {
@@ -369,4 +369,61 @@ describe("@beep/professional-desktop chat contract", () => {
   it("round-trips schema-derived turn history items through the wire contract", () => {
     assertSchemaArbitraryDecodesToSelf(TurnHistoryItem, { numRuns: 25 });
   });
+
+  // A turn appends the user message, reads the whole conversation back, and asks
+  // the kernel to continue it. Two turns in flight on one thread interleave: both
+  // prompts land with no answer between them, so each kernel is handed a history
+  // ending in two unanswered requests — and both answer the *first*. Two windows
+  // on one thread produced two copies of the reply to the first message and none
+  // to the second, and the corruption was persisted.
+  //
+  // The kernel here blocks until released, which is what forces the two turns to
+  // actually overlap; the assertion is on the history each kernel call is given,
+  // because that is where the corruption originates.
+  it.effect("never hands the kernel a history ending in an unanswered prompt", () =>
+    Effect.gen(function* () {
+      const store = yield* Thread.ThreadStore;
+      const { sink } = yield* makeInMemoryUsageRecordSink;
+      const histories = yield* Ref.make<ReadonlyArray<ReadonlyArray<TurnHistoryItemType>>>([]);
+      const release = yield* Deferred.make<void>();
+
+      const gatedKernel = AgentTurnKernel.of({
+        streamTurn: (history) =>
+          Stream.unwrap(
+            Effect.gen(function* () {
+              yield* Ref.update(histories, (all) => [...all, history]);
+              yield* Deferred.await(release);
+              return Stream.make(IndexedBlock.make({ index: 0, block: fixtureBlocksFor(history)[0]! }));
+            })
+          ),
+      });
+
+      const operations = makeChatOperations(store, gatedKernel, sink);
+      const workspaceId = decodeWorkspaceId(1);
+      const thread = yield* operations.createThread(workspaceId, "Concurrent");
+
+      const first = yield* Effect.forkChild(Stream.runDrain(operations.sendMessage(thread.id, userDocument("ALPHA"))));
+      // Wait until the first turn is inside the kernel (holding the thread).
+      yield* Effect.repeat(Ref.get(histories), { until: (all) => all.length === 1 });
+
+      const second = yield* Effect.forkChild(Stream.runDrain(operations.sendMessage(thread.id, userDocument("BRAVO"))));
+      // Give the second turn every chance to barge in ahead of the first.
+      yield* Effect.yieldNow;
+      yield* Effect.yieldNow;
+
+      yield* Deferred.succeed(release, void 0);
+      yield* Fiber.join(first);
+      yield* Fiber.join(second);
+
+      const seen = yield* Ref.get(histories);
+      expect(seen).toHaveLength(2);
+
+      // The second turn's history must already contain the first turn's answer:
+      // it must never end in two prompts in a row.
+      const secondHistory = seen[1]!;
+      expect(secondHistory.map((item) => item.role)).toEqual(["user", "assistant", "user"]);
+      // ...and the prompt it is being asked to answer is its own.
+      expect(secondHistory[2]!.text).toContain("BRAVO");
+    }).pipe(provideScopedLayer(ThreadStoreTestLayer))
+  );
 });

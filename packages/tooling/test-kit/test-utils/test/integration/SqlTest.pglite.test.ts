@@ -51,14 +51,18 @@ beforeAll(() => {
 }, 60_000);
 
 const skipWhenNoSharedDatabase = (ctx: { readonly skip: (message?: string) => void }) =>
-  hasSharedConnectionUri
-    ? Effect.void
-    : Effect.sync(() => ctx.skip("BEEP_TEST_DATABASE_URL is required for shared external PostgreSQL tests."));
+  Effect.sync(() => {
+    if (hasSharedConnectionUri) return false;
+    ctx.skip("BEEP_TEST_DATABASE_URL is required for shared external PostgreSQL tests.");
+    return true;
+  });
 
 const skipTestcontainersWhenUnavailable = (ctx: { readonly skip: (message?: string) => void }) =>
-  pgliteTestcontainersAvailable
-    ? Effect.void
-    : Effect.sync(() => ctx.skip("Docker/Testcontainers is unavailable or redundant for PGLite integration tests."));
+  Effect.sync(() => {
+    if (pgliteTestcontainersAvailable) return false;
+    ctx.skip("Docker/Testcontainers is unavailable or redundant for PGLite integration tests.");
+    return true;
+  });
 
 const makeSharedLayer = <MigrateError = never, SeedError = never>(hooks?: SqlTestHooks<MigrateError, SeedError>) =>
   Layer.fresh(
@@ -190,7 +194,7 @@ describe("PGLite shared external SQL test driver", { concurrent: false }, () => 
     "runs select 1 through the shared external driver",
 
     Effect.fnUntraced(function* (ctx) {
-      yield* skipWhenNoSharedDatabase(ctx);
+      if (yield* skipWhenNoSharedDatabase(ctx)) return;
 
       const result = yield* Effect.gen(function* () {
         const sql = (yield* SqlClient.SqlClient).withoutTransforms();
@@ -220,7 +224,7 @@ describe("PGLite shared external SQL test driver", { concurrent: false }, () => 
     "creates, inserts, and queries PostgreSQL tables inside the generated schema",
 
     Effect.fnUntraced(function* (ctx) {
-      yield* skipWhenNoSharedDatabase(ctx);
+      if (yield* skipWhenNoSharedDatabase(ctx)) return;
 
       const values = yield* Effect.gen(function* () {
         const sql = (yield* SqlClient.SqlClient).withoutTransforms();
@@ -254,7 +258,7 @@ describe("PGLite shared external SQL test driver", { concurrent: false }, () => 
   it.effect(
     "isolates schemas between scoped external layers",
     Effect.fnUntraced(function* (ctx) {
-      yield* skipWhenNoSharedDatabase(ctx);
+      if (yield* skipWhenNoSharedDatabase(ctx)) return;
 
       const createTableAndCountRows = Effect.gen(function* () {
         const sql = (yield* SqlClient.SqlClient).withoutTransforms();
@@ -293,7 +297,7 @@ describe("PGLite shared external SQL test driver", { concurrent: false }, () => 
   it.effect(
     "runs migrate and seed hooks inside the generated schema",
     Effect.fnUntraced(function* (ctx) {
-      yield* skipWhenNoSharedDatabase(ctx);
+      if (yield* skipWhenNoSharedDatabase(ctx)) return;
 
       const result = yield* Effect.gen(function* () {
         const info = yield* TestDatabaseInfo;
@@ -342,7 +346,7 @@ describe("PGLite shared external SQL test driver", { concurrent: false }, () => 
   it.effect(
     "wraps hook failures with the external driver id",
     Effect.fnUntraced(function* (ctx) {
-      yield* skipWhenNoSharedDatabase(ctx);
+      if (yield* skipWhenNoSharedDatabase(ctx)) return;
 
       const exit = yield* Effect.exit(
         Effect.void.pipe(
@@ -371,7 +375,7 @@ describe("PGLite shared external SQL test driver", { concurrent: false }, () => 
   it.effect(
     "drops generated schemas when the layer scope closes",
     Effect.fnUntraced(function* (ctx) {
-      yield* skipWhenNoSharedDatabase(ctx);
+      if (yield* skipWhenNoSharedDatabase(ctx)) return;
 
       const scope = yield* Scope.make();
       const services = yield* Layer.buildWithScope(makeSharedLayer(), scope);
@@ -402,7 +406,7 @@ if (hasSharedConnectionUri) {
     it.effect(
       "starts a PGLite Testcontainers database and runs select 1 through SqlClient",
       Effect.fnUntraced(function* (ctx) {
-        yield* skipTestcontainersWhenUnavailable(ctx);
+        if (yield* skipTestcontainersWhenUnavailable(ctx)) return;
 
         const result = yield* Effect.gen(function* () {
           const sql = (yield* SqlClient.SqlClient).withoutTransforms();
@@ -441,7 +445,7 @@ if (hasSharedConnectionUri) {
     it.effect(
       "stops and removes the PGLite container when the layer scope closes",
       Effect.fnUntraced(function* (ctx) {
-        yield* skipTestcontainersWhenUnavailable(ctx);
+        if (yield* skipTestcontainersWhenUnavailable(ctx)) return;
 
         const containerId = yield* Effect.scoped(
           Effect.gen(function* () {
