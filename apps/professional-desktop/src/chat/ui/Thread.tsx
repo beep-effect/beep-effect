@@ -201,28 +201,41 @@ export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Eleme
       {O.match(streamingHere, {
         onNone: thunkNull,
         onSome: (turn) => (
-          <div className="mb-4 flex flex-col items-start" data-testid="turn-streaming">
-            <div className="max-w-[80%] rounded-lg bg-muted/50 px-3 py-2">
-              {A.isReadonlyArrayEmpty(turn.blocks) ? (
-                <div className="text-sm text-muted-foreground" data-testid="thinking">
-                  Thinking…
-                </div>
-              ) : (
-                <StreamingBlocks blocks={turn.blocks} />
-              )}
-              <div className="mt-2">
-                <Button
-                  variant="outline"
-                  size="xs"
-                  title="Stop generating"
-                  onClick={() => runTurn(Atom.Interrupt)}
-                  data-testid="turn-stop"
-                >
-                  Stop
-                </Button>
+          <>
+            {/* The message you just sent, shown while the reply streams. The streaming
+                turn has always CARRIED this ("optimistic rendering of the just-sent user
+                message") and the transcript threw it away — so between pressing Enter
+                and the answer landing, your own words were nowhere on screen, and an
+                edit-regenerate hid the turn it was replacing without showing what it was
+                replacing it with. */}
+            <div className="mb-4 flex flex-col items-end" data-testid="turn-streaming-user">
+              <div className="max-w-[80%] rounded-lg bg-primary/10 px-3 py-2">
+                <MessageView content={turn.userContent} />
               </div>
             </div>
-          </div>
+            <div className="mb-4 flex flex-col items-start" data-testid="turn-streaming">
+              <div className="max-w-[80%] rounded-lg bg-muted/50 px-3 py-2">
+                {A.isReadonlyArrayEmpty(turn.blocks) ? (
+                  <div className="text-sm text-muted-foreground" data-testid="thinking">
+                    Thinking…
+                  </div>
+                ) : (
+                  <StreamingBlocks blocks={turn.blocks} />
+                )}
+                <div className="mt-2">
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    title="Stop generating"
+                    onClick={() => runTurn(Atom.Interrupt)}
+                    data-testid="turn-stop"
+                  >
+                    Stop
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </>
         ),
       })}
       <div ref={bottomRef} />
