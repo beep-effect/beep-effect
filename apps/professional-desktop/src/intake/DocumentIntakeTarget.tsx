@@ -17,7 +17,7 @@ import { Effect } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { AsyncResult } from "effect/unstable/reactivity";
-import { Fragment, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import { failureMessageOr } from "@/lib/failureMessage";
 import {
   ConfigureWorkspaceVaultInput,
@@ -33,19 +33,54 @@ import type { DragEvent, JSX, ReactNode } from "react";
 const $I = $ProfessionalDesktopId.create("intake/DocumentIntakeTarget");
 const hasTauriRuntime = (): boolean => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
+/**
+ * The picker could not be opened at all. `null` means the user dismissed the
+ * dialog — a normal outcome — so an import, IPC, or permission failure must not
+ * be reported the same way: doing so made "Choose folder" look like an inert
+ * button with no diagnostic anywhere.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+class VaultPickerUnavailable extends S.Class<VaultPickerUnavailable>($I`VaultPickerUnavailable`)(
+  {
+    message: S.String,
+  },
+  $I.annote("VaultPickerUnavailable", {
+    description: "The native vault directory picker could not be opened.",
+  })
+) {}
+
 // Tauri opens the shell's own native dialog; browser mode asks the sidecar to
 // open its host's native folder dialog over RPC, and only falls back to manual
 // path entry when that surface is unavailable (chat-only HTTP, headless host).
-const pickVaultDirectory = (pickWithSidecar: () => Promise<string | null>): Effect.Effect<string | null> =>
+const pickVaultDirectory = (
+  pickWithSidecar: () => Promise<string | null>
+): Effect.Effect<string | null, VaultPickerUnavailable> =>
   Effect.suspend(() =>
     hasTauriRuntime()
-      ? Effect.tryPromise(() =>
-          import("@tauri-apps/api/core").then(({ invoke }) => invoke<string | null>("select_vault_directory"))
-        ).pipe(Effect.orElseSucceed(() => null))
+      ? Effect.tryPromise({
+          try: () =>
+            import("@tauri-apps/api/core").then(({ invoke }) => invoke<string | null>("select_vault_directory")),
+          catch: (cause) =>
+            VaultPickerUnavailable.make({ message: `The folder picker could not be opened: ${String(cause)}` }),
+        })
       : Effect.tryPromise(pickWithSidecar).pipe(
           Effect.catch(() => Effect.sync(() => window.prompt("Workspace vault path")))
         )
   );
+
+/**
+ * Largest file the intake path accepts. Content crosses the RPC boundary as
+ * base64 (~33% expansion) and is held in memory on both sides while it is
+ * extracted and filed, so the bound protects the renderer and the sidecar alike.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+const MAX_INTAKE_FILE_BYTES = 25 * 1024 * 1024;
+
+const formatMegabytes = (bytes: number): string => `${Math.round((bytes / (1024 * 1024)) * 10) / 10} MB`;
 
 const droppedFiles = (event: DragEvent<HTMLElement>): ReadonlyArray<File> => A.fromIterable(event.dataTransfer.files);
 
@@ -238,6 +273,8 @@ export function DocumentIntakeTarget({ children }: { readonly children: ReactNod
   const intakeDroppedDocument = useAtomSet(intakeDroppedDocumentAtom, { mode: "promise" });
   const pickWithSidecar = useAtomSet(pickVaultDirectoryAtom, { mode: "promise" });
   const [isDragging, setIsDragging] = useState(false);
+  // The one permitted useRef: a DOM handle for the hidden file input.
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [activeBatches, setActiveBatches] = useState(0);
   const [results, setResults] = useState<ReadonlyArray<IntakeResultEntry>>([]);
@@ -250,7 +287,16 @@ export function DocumentIntakeTarget({ children }: { readonly children: ReactNod
   const needsOnboarding = AsyncResult.isSuccess(vaultConfig) && O.isNone(vaultConfig.value.vaultRootPath);
 
   const chooseVault = Effect.gen(function* () {
-    const selected = yield* pickVaultDirectory(() => pickWithSidecar());
+    // Dismissing the dialog yields `null` and stays silent (the configure step
+    // treats it as "nothing chosen"); a picker that could not open at all says so.
+    const selected = yield* pickVaultDirectory(() => pickWithSidecar()).pipe(
+      Effect.catch((failure) =>
+        Effect.sync((): string | null => {
+          setStatus(failure.message);
+          return null;
+        })
+      )
+    );
     yield* configureSelectedWorkspaceVault(selected, configureVault, setStatus);
   });
 
@@ -264,6 +310,20 @@ export function DocumentIntakeTarget({ children }: { readonly children: ReactNod
     yield* Effect.sync(() => setActiveBatches((count) => count + 1));
     yield* Effect.forEach(files, (file) => {
       const fileName = file.name || "document";
+      // Reject before `arrayBuffer()`: the file is otherwise materialized, copied
+      // into a Uint8Array, base64-expanded (~33% larger) for the RPC, and decoded
+      // again server-side. A big enough drop took the renderer or the sidecar down
+      // with no size ever being checked.
+      if (file.size > MAX_INTAKE_FILE_BYTES) {
+        return Effect.sync(() =>
+          appendResult(
+            IntakeResultEntryFailure.make({
+              fileName,
+              message: `${formatMegabytes(file.size)} exceeds the ${formatMegabytes(MAX_INTAKE_FILE_BYTES)} intake limit.`,
+            })
+          )
+        );
+      }
       return Effect.tryPromise(() => file.arrayBuffer()).pipe(
         Effect.map((buffer) => new Uint8Array(buffer)),
         Effect.flatMap((content) =>
@@ -334,6 +394,35 @@ export function DocumentIntakeTarget({ children }: { readonly children: ReactNod
         <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center border-2 border-dashed border-primary bg-background/80 text-sm font-medium text-foreground backdrop-blur">
           Drop documents to file
         </div>
+      ) : null}
+      {/* Filing was drag-and-drop only, so the whole intake feature was
+          unreachable by keyboard (and by anything that cannot synthesize a
+          filesystem drag). The picker drives exactly the same intake path. */}
+      {configured ? (
+        <>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            className="hidden"
+            data-testid="intake-file-input"
+            onChange={(event) => {
+              const selected = A.fromIterable(event.target.files ?? []);
+              event.target.value = "";
+              void Effect.runPromise(intakeFiles(selected));
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="absolute bottom-4 left-4 z-40"
+            data-testid="intake-choose-files"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            File documents…
+          </Button>
+        </>
       ) : null}
       <IntakeBusyBadge activeBatches={activeBatches} />
       <IntakeResultsPanel results={results} onClear={() => setResults([])} />

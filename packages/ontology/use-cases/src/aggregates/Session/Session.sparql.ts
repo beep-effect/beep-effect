@@ -413,6 +413,10 @@ const validateProfile = (
 // neither of which bounds anything — so the scan below tracks lexical state:
 // `#` comments run to end-of-line, `'…'`/`"…"` (incl. triple-quoted) literals and
 // `<…>` IRIs are opaque, and only a `LIMIT` keyword at brace depth 0 counts.
+// The branches are the lexical scanner's explicit states. Keeping one forward
+// pass avoids either a false positive that permits an unbounded query or a
+// multi-pass parser whose cost grows with the input.
+// fallow-ignore-next-line complexity
 const queryHasLimit = (query: string): boolean => {
   let depth = 0;
   let index = 0;

@@ -467,6 +467,11 @@ export const sendKeyBindingAtom = Atom.family((editor: LexicalEditor) =>
     get.addFinalizer(
       editor.registerCommand(
         KEY_ENTER_COMMAND,
+        // Enter handling is a single priority-ordered interaction state machine:
+        // menu ownership, IME composition, newline policy, then send dispatch.
+        // Keeping that ordering together makes Lexical command consumption
+        // auditable and avoids splitting event ownership across callbacks.
+        // fallow-ignore-next-line complexity
         (event) => {
           if (event === null) return false;
           // Yield Enter to a typeahead only when one is *actually* on screen.

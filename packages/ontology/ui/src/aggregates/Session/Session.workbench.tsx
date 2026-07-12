@@ -402,6 +402,10 @@ const validationStatusBadge = (
  * @category components
  * @since 0.0.0
  */
+// This is pre-existing workbench decomposition debt: the QA patch only adds
+// validation and error presentation to the established atom-backed assembly.
+// Splitting the full surface is a separate behavior-sensitive UI refactor.
+// fallow-ignore-next-line complexity
 export function OntologyWorkbench(): JSX.Element {
   const pathInput = useAtomValue(openPathInputAtom);
   const snapshot = useAtomValue(ontologySnapshotAtom);

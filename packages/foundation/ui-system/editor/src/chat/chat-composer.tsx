@@ -482,6 +482,10 @@ function AttachmentSweep({ editor }: { readonly editor: LexicalEditor }): null {
  * @category components
  * @since 0.0.0
  */
+// This component is intentionally the declarative assembly boundary for the
+// composer plugins and their optional consumer ports. Extracting the prop
+// forwarding would obscure which mount-time values enter the atom-backed body.
+// fallow-ignore-next-line complexity
 export function ChatComposer({
   ariaLabel = DEFAULT_ARIA_LABEL,
   features,

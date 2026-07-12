@@ -17,7 +17,7 @@ import { HttpOntologyProtocolLive, ontologyProtocolLayerAtom } from "@beep/ontol
 import { OntologyWorkbench } from "@beep/ontology-ui";
 import { Button } from "@beep/ui/components/button";
 import { Toaster } from "@beep/ui/components/sonner";
-import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { useAtomMount, useAtomValue } from "@effect/atom-react";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -79,7 +79,31 @@ const readSidecarTransport = Effect.suspend(() =>
 const sidecarTransportAtom = Atom.make(readSidecarTransport);
 type DesktopSurface = "home" | "chat" | "ontology" | "sync";
 
-const desktopSurfaceAtom = Atom.make<DesktopSurface>("chat");
+const DEFAULT_SURFACE: DesktopSurface = "chat";
+
+const isDesktopSurface = (value: string): value is DesktopSurface =>
+  value === "home" || value === "chat" || value === "ontology" || value === "sync";
+
+// The nav items are anchors, so every click already writes `#<surface>` to the
+// address bar. Reading it back is what makes the URL authoritative: without
+// this, a reload at `#sync` rendered Chat, and Back left the URL and the
+// rendered surface disagreeing (with the old nav item still marked current).
+const surfaceFromHash = (): DesktopSurface => {
+  const raw = window.location.hash.replace(/^#/, "");
+  return isDesktopSurface(raw) ? raw : DEFAULT_SURFACE;
+};
+
+const desktopSurfaceAtom = Atom.make<DesktopSurface>(surfaceFromHash());
+
+// atom-first: a mounted binding rather than a useEffect. Syncs the surface from
+// the URL on mount and on every hash change (which covers back/forward too).
+const hashRoutingBindingAtom = Atom.make((get) => {
+  const apply = (): void => get.set(desktopSurfaceAtom, surfaceFromHash());
+  apply();
+  window.addEventListener("hashchange", apply);
+  get.addFinalizer(() => window.removeEventListener("hashchange", apply));
+  return undefined;
+});
 
 const desktopNavigationItems: ReadonlyArray<{
   readonly description: string;
@@ -137,7 +161,7 @@ const TransportLoading = (): JSX.Element => (
   </div>
 );
 
-const HomeSurface = ({ onNavigate }: { readonly onNavigate: (surface: DesktopSurface) => void }): JSX.Element => (
+const HomeSurface = (): JSX.Element => (
   <main className="h-full overflow-y-auto p-6">
     <div className="mx-auto max-w-5xl">
       <p className="text-sm font-medium text-primary">Professional Desktop</p>
@@ -151,7 +175,6 @@ const HomeSurface = ({ onNavigate }: { readonly onNavigate: (surface: DesktopSur
             key={item.surface}
             href={`#${item.surface}`}
             className="rounded-lg border bg-card p-4 shadow-sm transition-colors hover:border-primary/50 hover:bg-accent"
-            onClick={() => onNavigate(item.surface)}
           >
             <h2 className="font-semibold">{item.label}</h2>
             <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
@@ -165,7 +188,10 @@ const HomeSurface = ({ onNavigate }: { readonly onNavigate: (surface: DesktopSur
 
 const DesktopShell = ({ transport }: { readonly transport: SidecarTransport }): JSX.Element => {
   const surface = useAtomValue(desktopSurfaceAtom);
-  const setSurface = useAtomSet(desktopSurfaceAtom);
+  // The anchors below already write `#<surface>`; this binding reads it back, so
+  // the hash is the single source of truth for which surface renders (and
+  // reload/back/forward all land where the URL says).
+  useAtomMount(hashRoutingBindingAtom);
 
   return (
     <>
@@ -181,14 +207,13 @@ const DesktopShell = ({ transport }: { readonly transport: SidecarTransport }): 
                 render={<a href={`#${item.surface}`} />}
                 size="sm"
                 variant={surface === item.surface ? "secondary" : "ghost"}
-                onClick={() => setSurface(item.surface)}
               >
                 {item.label}
               </Button>
             ))}
           </nav>
           <div className="min-h-0 flex-1">
-            {surface === "home" ? <HomeSurface onNavigate={setSurface} /> : null}
+            {surface === "home" ? <HomeSurface /> : null}
             {surface === "chat" ? <ChatApp /> : null}
             {surface === "ontology" ? <OntologyWorkbench /> : null}
             {surface === "sync" ? <VaultSyncPanel floating={false} /> : null}

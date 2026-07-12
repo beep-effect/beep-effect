@@ -32,6 +32,10 @@ const $I = $ProfessionalDesktopId.create("sync/VaultSyncPanel");
 
 const syncFailureMessage = failureMessageOr("Vault sync failed.");
 
+// Sync outcomes are announced in one slot; the kind keeps a success from being
+// painted (and announced) as a failure.
+type ActionMessage = { readonly kind: "error" | "success"; readonly text: string };
+
 const reviewFailureMessage = failureMessageOr("Marking the conflict reviewed failed.");
 
 class StatusCountEntry extends S.Class<StatusCountEntry>($I`StatusCountEntry`)(
@@ -106,8 +110,18 @@ const VaultSyncConflictsList = ({
   readonly conflicts: AsyncResult.AsyncResult<ReadonlyArray<SyncConflict>, unknown>;
   readonly onReview: (conflict: SyncConflict) => void;
   readonly reviewingId: SyncConflict["id"] | null;
-}): JSX.Element | null =>
-  AsyncResult.isSuccess(conflicts) && conflicts.value.length > 0 ? (
+}): JSX.Element | null => {
+  // A failed conflict query used to render as `null` — exactly like "no
+  // conflicts" — so an operator could be told everything was clean while the
+  // listing was actually unavailable.
+  if (AsyncResult.isFailure(conflicts)) {
+    return (
+      <p className="mt-3 text-xs text-destructive" role="alert" data-testid="vault-sync-conflicts-failed">
+        Open conflicts could not be loaded. The count above may be out of date.
+      </p>
+    );
+  }
+  return AsyncResult.isSuccess(conflicts) && conflicts.value.length > 0 ? (
     <ul className="mt-3 space-y-2" data-testid="vault-sync-conflicts">
       {A.map(conflicts.value, (conflict) => (
         <li
@@ -138,6 +152,7 @@ const VaultSyncConflictsList = ({
       ))}
     </ul>
   ) : null;
+};
 
 /**
  * Floating vault sync status surface: provider connection badge, sync trigger,
@@ -166,7 +181,7 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
   const markReviewed = useAtomSet(markVaultSyncConflictReviewedAtom, { mode: "promise" });
   const [syncing, setSyncing] = useState(false);
   const [reviewingId, setReviewingId] = useState<SyncConflict["id"] | null>(null);
-  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<ActionMessage | null>(null);
 
   const connected = AsyncResult.isSuccess(status) && status.value.connected;
 
@@ -176,8 +191,11 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
     void Effect.runPromise(
       Effect.tryPromise({ try: () => triggerSync(DEFAULT_WORKSPACE_ID), catch: syncFailureMessage }).pipe(
         Effect.matchEffect({
-          onFailure: (message) => Effect.sync(() => setActionMessage(message)),
-          onSuccess: () => Effect.sync(() => setActionMessage(null)),
+          onFailure: (message) => Effect.sync(() => setActionMessage({ kind: "error", text: message })),
+          // A successful pass used to clear the message and return the button to
+          // its resting state, which is indistinguishable from having done
+          // nothing — especially when every count is zero.
+          onSuccess: () => Effect.sync(() => setActionMessage({ kind: "success", text: "Sync complete." })),
         }),
         Effect.ensuring(Effect.sync(() => setSyncing(false)))
       )
@@ -199,7 +217,7 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
         catch: reviewFailureMessage,
       }).pipe(
         Effect.matchEffect({
-          onFailure: (message) => Effect.sync(() => setActionMessage(message)),
+          onFailure: (message) => Effect.sync(() => setActionMessage({ kind: "error", text: message })),
           onSuccess: () => Effect.sync(() => setActionMessage(null)),
         }),
         Effect.ensuring(Effect.sync(() => setReviewingId(null)))
@@ -246,8 +264,12 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
           {syncing ? "Syncing" : "Sync now"}
         </Button>
         {actionMessage === null ? null : (
-          <span className="text-xs text-destructive" data-testid="vault-sync-error">
-            {actionMessage}
+          <span
+            className={actionMessage.kind === "error" ? "text-xs text-destructive" : "text-xs text-muted-foreground"}
+            role="status"
+            data-testid={actionMessage.kind === "error" ? "vault-sync-error" : "vault-sync-complete"}
+          >
+            {actionMessage.text}
           </span>
         )}
       </div>

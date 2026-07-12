@@ -123,7 +123,7 @@ const MENU_VIEWPORT_GAP_PX = 4;
  * console.log(shouldOpenUpward({ caretTop: 700, caretBottom: 720, viewportHeight: 800 })) // true
  * ```
  *
- * @category layout
+ * @category utilities
  * @since 0.0.0
  */
 export const shouldOpenUpward = ({
@@ -155,7 +155,7 @@ export const shouldOpenUpward = ({
  * console.log(position.bottom) // 104
  * ```
  *
- * @category layout
+ * @category utilities
  * @since 0.0.0
  */
 export const typeaheadMenuPosition = ({
