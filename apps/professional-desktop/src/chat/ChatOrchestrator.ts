@@ -301,39 +301,38 @@ const streamAndPersist = (
         // the new one (a stop-then-send returned the cancelled request's reply).
         // A reload showed the same prompt orphaned, with no way to retry. Saying
         // "(stopped)" keeps both the transcript and the history well-formed.
-        const persist = (note: O.Option<string>): Effect.Effect<void, ChatActionError> =>
-          Effect.gen(function* () {
-            if (yield* Ref.getAndSet(persisted, true)) return;
-            const content = O.match(note, {
-              onNone: () =>
-                assistantContentToDocument(
-                  A.map(A.sortWith(collected, indexOf, Order.Number), (indexed) => indexed.block)
-                ),
-              onSome: (text) => Document.make({ children: [P.make({ children: [Text.make({ value: text })] })] }),
-            });
-            yield* store
-              .appendTurn({ threadId, parentTurnId: O.none(), role: "assistant", content })
-              .pipe(Effect.catch(toChatActionError("SendMessage.persistAssistant")));
-            if (O.isNone(note)) {
-              // The answer is committed. A usage-accounting failure must not fail
-              // the turn behind it: doing so reported a delivered answer as a
-              // rejected send, so the client handed the prompt back and a retry
-              // produced the answer a second time. Record the miss and move on.
-              yield* usage.append(fixtureUsageRecord).pipe(
-                Effect.tapError((error) =>
-                  logRedactedCause(
-                    Cause.fail(error),
-                    LogRedactedCauseOptions.make({
-                      message: "assistant turn persisted but its usage record was not recorded",
-                      level: "Warn",
-                      attributes: { context: "SendMessage.usage", kind, subsystem: "chat" },
-                    })
-                  )
-                ),
-                Effect.ignore
-              );
-            }
+        const persist = Effect.fnUntraced(function* (note: O.Option<string>) {
+          if (yield* Ref.getAndSet(persisted, true)) return;
+          const content = O.match(note, {
+            onNone: () =>
+              assistantContentToDocument(
+                A.map(A.sortWith(collected, indexOf, Order.Number), (indexed) => indexed.block)
+              ),
+            onSome: (text) => Document.make({ children: [P.make({ children: [Text.make({ value: text })] })] }),
           });
+          yield* store
+            .appendTurn({ threadId, parentTurnId: O.none(), role: "assistant", content })
+            .pipe(Effect.catch(toChatActionError("SendMessage.persistAssistant")));
+          if (O.isNone(note)) {
+            // The answer is committed. A usage-accounting failure must not fail
+            // the turn behind it: doing so reported a delivered answer as a
+            // rejected send, so the client handed the prompt back and a retry
+            // produced the answer a second time. Record the miss and move on.
+            yield* usage.append(fixtureUsageRecord).pipe(
+              Effect.tapError((error) =>
+                logRedactedCause(
+                  Cause.fail(error),
+                  LogRedactedCauseOptions.make({
+                    message: "assistant turn persisted but its usage record was not recorded",
+                    level: "Warn",
+                    attributes: { context: "SendMessage.usage", kind, subsystem: "chat" },
+                  })
+                )
+              ),
+              Effect.ignore
+            );
+          }
+        });
 
         const persistWithTelemetry = persist(O.none()).pipe(
           Effect.tapError((error) =>

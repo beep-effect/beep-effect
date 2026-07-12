@@ -8,12 +8,13 @@
 "use client";
 
 import { $EditorId } from "@beep/identity";
-import { EditorStateFromJson, SerializedEditorState } from "@beep/lexical-schema";
+import { SerializedEditorState } from "@beep/lexical-schema";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { Effect } from "effect";
+import { Effect, Result } from "effect";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { MermaidNode } from "./mermaid-node.tsx";
 import { editorNodes } from "./nodes.ts";
@@ -26,18 +27,24 @@ const onError = (error: Error) => Effect.runSync(Effect.logError(error));
 
 const MERMAID_LANGUAGE = "mermaid";
 
+const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
+  cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
+
+const encodeEditorState = S.encodeUnknownResult(SerializedEditorState);
+const encodeJson = S.encodeUnknownResult(S.UnknownFromJsonString);
+
 interface SerializedNodeLike {
-  readonly children?: ReadonlyArray<SerializedNodeLike>;
-  readonly language?: string;
-  readonly text?: string;
-  readonly type?: string;
+  readonly children?: ReadonlyArray<SerializedNodeLike> | undefined;
+  readonly language?: null | string | undefined;
+  readonly text?: string | undefined;
+  readonly type?: string | undefined;
 }
 
 /** The source a code block holds, the way Lexical's own `getTextContent` reads it. */
 const nodeSource = (node: SerializedNodeLike): string => {
   if (node.type === "linebreak") return "\n";
   if (node.type === "tab") return "\t";
-  if (typeof node.text === "string") return node.text;
+  if (P.isString(node.text)) return node.text;
   return node.children === undefined ? "" : node.children.map(nodeSource).join("");
 };
 
@@ -102,11 +109,11 @@ export function EditorViewer({ state, className }: EditorViewerProps): JSX.Eleme
   // encoded state remounts it exactly when the content differs — the JSON string
   // is the same value the config consumes, so this costs nothing extra and needs
   // no effect to reconcile.
-  const encoded = S.encodeSync(EditorStateFromJson)(state);
-  const decorated = JSON.stringify(
-    ((wire: { readonly root: SerializedNodeLike }) => ({ ...wire, root: decorateMermaid(wire.root) }))(
-      JSON.parse(encoded) as { readonly root: SerializedNodeLike }
-    )
+  const wire = Result.getOrThrowWith(encodeEditorState(state), schemaIssueToError);
+  const encoded = Result.getOrThrowWith(encodeJson(wire), schemaIssueToError);
+  const decorated = Result.getOrThrowWith(
+    encodeJson({ ...wire, root: decorateMermaid(wire.root) }),
+    schemaIssueToError
   );
   return (
     <LexicalComposer

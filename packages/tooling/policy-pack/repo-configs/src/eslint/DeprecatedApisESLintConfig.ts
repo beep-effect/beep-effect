@@ -26,6 +26,7 @@ const generatedAndBuildOutputIgnores = [
   "**/coverage/**",
   "dist/**",
   "**/dist/**",
+  "**/docs/**",
   "node_modules/**",
   "**/node_modules/**",
   "apps/*/src/app/sw.ts",

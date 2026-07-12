@@ -391,7 +391,7 @@ export const removeAttachmentFn = composerRuntime.fn<{
  *
  * function LexicalErrorProbe() {
  *   const logEditorError = useAtomSet(logEditorErrorFn)
- *   return <button onClick={() => logEditorError(new Error("probe"))}>Report editor error</button>
+ *   return <button onClick={() => logEditorError("probe")}>Report editor error</button>
  * }
  * ```
  *
@@ -400,7 +400,7 @@ export const removeAttachmentFn = composerRuntime.fn<{
  * @category atoms
  * @since 0.0.0
  */
-export const logEditorErrorFn = composerRuntime.fn<Error>()((error) =>
+export const logEditorErrorFn = composerRuntime.fn<unknown>()((error) =>
   Effect.logError("ChatComposer Lexical editor error", error)
 );
 
@@ -418,6 +418,7 @@ export const logEditorErrorFn = composerRuntime.fn<Error>()((error) =>
  * import { sendBlockedAtom } from "@beep/editor/chat"
  * import { useAtomValue } from "@effect/atom-react"
  * import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
+ * import * as O from "effect/Option"
  *
  * function SendBlockedNotice() {
  *   const [editor] = useLexicalComposerContext()
@@ -677,7 +678,7 @@ export const sendCommandBindingAtom = Atom.family((editor: LexicalEditor) =>
           // that had silently stopped sending look like a broken app.
           if (hasContent && handler.run === unboundSend) {
             get.set(sendBlockedAtom(editor), O.some(SEND_UNBOUND_MESSAGE));
-            get.set(logEditorErrorFn, new Error("ChatComposer refused to send: no send handler is bound"));
+            get.set(logEditorErrorFn, "ChatComposer refused to send: no send handler is bound");
             return true;
           }
           const dispatched =
@@ -688,7 +689,7 @@ export const sendCommandBindingAtom = Atom.family((editor: LexicalEditor) =>
               // working. Say so, keep the draft, and leave a log behind.
               onNone: () => {
                 get.set(sendBlockedAtom(editor), O.some(SEND_DECODE_FAILURE_MESSAGE));
-                get.set(logEditorErrorFn, new Error("ChatComposer refused to send: editor state failed to decode"));
+                get.set(logEditorErrorFn, "ChatComposer refused to send: editor state failed to decode");
                 return false;
               },
               onSome: (state) => {

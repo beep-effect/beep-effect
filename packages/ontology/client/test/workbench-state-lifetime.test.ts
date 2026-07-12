@@ -5,7 +5,7 @@ import {
   ontologySessionAtom,
   ontologySourceAtom,
 } from "@beep/ontology-client/aggregates/Session";
-import { createSession, CreateSessionInput, SessionId } from "@beep/ontology-domain/aggregates/Session";
+import { CreateSessionInput, createSession, SessionId } from "@beep/ontology-domain/aggregates/Session";
 import { OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session";
 import { makeDataset } from "@beep/rdf/Rdf";
 import { describe, expect, it } from "@effect/vitest";

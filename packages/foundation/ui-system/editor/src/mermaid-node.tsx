@@ -19,11 +19,21 @@
  */
 "use client";
 
+import { $EditorId } from "@beep/identity";
+import { ElementFormat } from "@beep/lexical-schema";
 import { DecoratorBlockNode } from "@lexical/react/LexicalDecoratorBlockNode";
+import { Result } from "effect";
+import * as S from "effect/Schema";
 import { MermaidView } from "./mermaid-view.tsx";
-import type { SerializedDecoratorBlockNode } from "@lexical/react/LexicalDecoratorBlockNode";
-import type { EditorConfig, ElementFormatType, LexicalEditor, NodeKey } from "lexical";
+import type { EditorConfig, ElementFormatType, LexicalEditor, NodeKey, SerializedLexicalNode } from "lexical";
 import type { JSX } from "react";
+
+const $I = $EditorId.create("mermaid-node");
+
+const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
+  cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
+
+const decodeSerializedMermaidNode = (input: unknown) => S.decodeUnknownResult(SerializedMermaidNode)(input);
 
 /**
  * Serialized shape of {@link MermaidNode}. Viewer-internal: the wire profile
@@ -31,13 +41,13 @@ import type { JSX } from "react";
  *
  * @example
  * ```ts
- * import type { SerializedMermaidNode } from "@beep/editor/mermaid-node"
+ * import { SerializedMermaidNode } from "@beep/editor/mermaid-node"
  *
- * const payload = {
- *   type: "mermaid",
+ * const payload = SerializedMermaidNode.make({
+ *   format: "",
  *   version: 1,
  *   source: "graph TD\n  A --> B",
- * } satisfies Partial<SerializedMermaidNode> as SerializedMermaidNode
+ * })
  *
  * console.log(payload.source) // "graph TD\n  A --> B"
  * ```
@@ -45,9 +55,17 @@ import type { JSX } from "react";
  * @category models
  * @since 0.0.0
  */
-export interface SerializedMermaidNode extends SerializedDecoratorBlockNode {
-  readonly source: string;
-}
+export class SerializedMermaidNode extends S.Class<SerializedMermaidNode>($I`SerializedMermaidNode`)(
+  {
+    type: S.tag("mermaid"),
+    version: S.Literal(1),
+    format: ElementFormat,
+    source: S.String,
+  },
+  $I.annote("SerializedMermaidNode", {
+    description: "Viewer-internal serialized Mermaid decorator node.",
+  })
+) {}
 
 /**
  * Block-level Lexical decorator node that renders a Mermaid diagram.
@@ -78,16 +96,19 @@ export class MermaidNode extends DecoratorBlockNode {
     return new MermaidNode(node.__source, node.__format, node.__key);
   }
 
-  static override importJSON(serializedNode: SerializedMermaidNode & Record<string, unknown>): MermaidNode {
-    return $createMermaidNode(serializedNode.source);
+  static override importJSON(serializedNode: SerializedLexicalNode & Record<string, unknown>): MermaidNode {
+    return $createMermaidNode(
+      Result.getOrThrowWith(decodeSerializedMermaidNode(serializedNode), schemaIssueToError).source
+    );
   }
 
   override exportJSON(): SerializedMermaidNode {
-    return {
-      ...super.exportJSON(),
-      type: "mermaid",
+    const serialized = super.exportJSON();
+    return SerializedMermaidNode.make({
+      format: serialized.format,
+      version: 1,
       source: this.__source,
-    };
+    });
   }
 
   getSource(): string {

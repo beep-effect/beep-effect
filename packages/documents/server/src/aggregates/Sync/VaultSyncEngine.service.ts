@@ -28,7 +28,6 @@ import {
   DmsMirrorAvailability,
   DmsMirrorUnavailable,
   EnsureFolderInput,
-  MarkConflictReviewedInput,
   MoveItemInput,
   PollEventsInput,
   RenameItemInput,
@@ -78,7 +77,12 @@ import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import { VaultSyncConfig } from "./VaultSync.config.js";
 import type { RemoteItemId } from "@beep/documents-domain/values/Sync";
-import type { DmsRemoteEvent, DmsRemoteItem, SyncOnceInput } from "@beep/documents-use-cases/aggregates/Sync/server";
+import type {
+  DmsRemoteEvent,
+  DmsRemoteItem,
+  MarkConflictReviewedInput,
+  SyncOnceInput,
+} from "@beep/documents-use-cases/aggregates/Sync/server";
 import type { UnknownRecord } from "@beep/schema";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 

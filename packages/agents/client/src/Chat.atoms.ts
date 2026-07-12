@@ -752,6 +752,18 @@ export const TurnRequest = S.Union([SendTurnRequest, EditTurnRequest]).pipe(
  */
 export type TurnRequest = typeof TurnRequest.Type;
 
+// How hard the client chases the stopped turn the server records after we stop
+// listening. Eight attempts at 150ms covers a slow persist without spinning on a
+// thread that will never gain a turn.
+const INTERRUPT_REFRESH_ATTEMPTS = 8;
+const INTERRUPT_REFRESH_INTERVAL = "150 millis";
+
+const timelineTurnCount = (registry: AtomRegistry.AtomRegistry, threadId: ThreadId): number =>
+  O.match(AsyncResult.value(registry.get(threadTimelineAtoms(threadId))), {
+    onNone: () => -1,
+    onSome: (timeline) => timeline.turns.length,
+  });
+
 /**
  * Drives one assistant turn: fires the streaming rpc, appends blocks into
  * {@link streamingTurnAtom} as they arrive, and on completion invalidates the
@@ -800,18 +812,6 @@ export type TurnRequest = typeof TurnRequest.Type;
  * @category atoms
  * @since 0.0.0
  */
-// How hard the client chases the stopped turn the server records after we stop
-// listening. Eight attempts at 150ms covers a slow persist without spinning on a
-// thread that will never gain a turn.
-const INTERRUPT_REFRESH_ATTEMPTS = 8;
-const INTERRUPT_REFRESH_INTERVAL = "150 millis";
-
-const timelineTurnCount = (registry: AtomRegistry.AtomRegistry, threadId: ThreadId): number =>
-  O.match(AsyncResult.value(registry.get(threadTimelineAtoms(threadId))), {
-    onNone: () => -1,
-    onSome: (timeline) => timeline.turns.length,
-  });
-
 export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
   Effect.fn("runTurn")(function* (turn, ctx) {
     const client = yield* ChatClient;

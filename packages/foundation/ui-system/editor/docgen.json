@@ -41,8 +41,8 @@
       "@beep/editor/composer": [
         "../../../../packages/foundation/ui-system/editor/src/composer.tsx"
       ],
-      "@beep/editor/mermaid-code-decorator-plugin": [
-        "../../../../packages/foundation/ui-system/editor/src/mermaid-code-decorator-plugin.tsx"
+      "@beep/editor/mermaid-node": [
+        "../../../../packages/foundation/ui-system/editor/src/mermaid-node.tsx"
       ],
       "@beep/editor/mermaid-view": [
         "../../../../packages/foundation/ui-system/editor/src/mermaid-view.tsx"

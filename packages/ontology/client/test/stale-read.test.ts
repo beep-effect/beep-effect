@@ -8,14 +8,14 @@ import {
 import {
   appendChange,
   ChangeOperation,
-  createSession,
   CreateSessionInput,
+  createSession,
   SessionId,
 } from "@beep/ontology-domain/aggregates/Session";
 import { RunOntologySparqlResult } from "@beep/ontology-use-cases/aggregates/Session";
-import { SparqlSelectResult } from "@beep/semantic-web/services/sparql-query";
-import { NonNegativeInt } from "@beep/schema";
 import { makeDataset, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
+import { NonNegativeInt } from "@beep/schema";
+import { SparqlSelectResult } from "@beep/semantic-web/services/sparql-query";
 import { describe, expect, it } from "@effect/vitest";
 import { Deferred, Effect, Layer } from "effect";
 import * as O from "effect/Option";
