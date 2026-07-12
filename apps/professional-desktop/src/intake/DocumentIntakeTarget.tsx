@@ -82,6 +82,37 @@ const MAX_INTAKE_FILE_BYTES = 25 * 1024 * 1024;
 
 const formatMegabytes = (bytes: number): string => `${Math.round((bytes / (1024 * 1024)) * 10) / 10} MB`;
 
+/**
+ * Why intake refuses a file, decided before a single byte is read.
+ *
+ * Both bounds are checked ahead of `arrayBuffer()`: the content is otherwise
+ * materialized, copied into a `Uint8Array`, base64-expanded (~33% larger) for the
+ * RPC, and decoded again server-side.
+ *
+ * @example
+ * ```ts
+ * import { intakeRefusal } from "@/intake/DocumentIntakeTarget"
+ *
+ * console.log(intakeRefusal({ name: "empty.txt", size: 0 }))
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const intakeRefusal = (file: { readonly name: string; readonly size: number }): O.Option<string> => {
+  if (file.size > MAX_INTAKE_FILE_BYTES) {
+    return O.some(`${formatMegabytes(file.size)} exceeds the ${formatMegabytes(MAX_INTAKE_FILE_BYTES)} intake limit.`);
+  }
+  // An empty file was accepted, classified, and filed: it produced a content-free
+  // object in the vault and a classification rationale invented about nothing at all.
+  // There is no document in zero bytes, and the model should not be asked to pretend
+  // there is.
+  if (file.size === 0) {
+    return O.some("This file is empty, so there is nothing to file.");
+  }
+  return O.none();
+};
+
 const droppedFiles = (event: DragEvent<HTMLElement>): ReadonlyArray<File> => A.fromIterable(event.dataTransfer.files);
 
 const batchIdFor = (files: ReadonlyArray<File>): string =>
@@ -197,7 +228,11 @@ const IntakeResultsPanel = ({
       data-testid="intake-results"
     >
       <div className="flex items-center justify-between gap-2">
-        <h2 className="font-semibold">Filed documents</h2>
+        {/* The panel holds refusals as well as successes, so it cannot call itself
+            "Filed documents": a file the app had just refused appeared, correctly red
+            and correctly explained, underneath a heading announcing it as filed. The
+            heading contradicted the row. */}
+        <h2 className="font-semibold">Intake results</h2>
         <Button type="button" variant="ghost" size="sm" onClick={onClear} data-testid="intake-results-clear">
           Clear
         </Button>
@@ -318,15 +353,9 @@ export function DocumentIntakeTarget({ children }: { readonly children: ReactNod
       // into a Uint8Array, base64-expanded (~33% larger) for the RPC, and decoded
       // again server-side. A big enough drop took the renderer or the sidecar down
       // with no size ever being checked.
-      if (file.size > MAX_INTAKE_FILE_BYTES) {
-        return Effect.sync(() =>
-          appendResult(
-            IntakeResultEntryFailure.make({
-              fileName,
-              message: `${formatMegabytes(file.size)} exceeds the ${formatMegabytes(MAX_INTAKE_FILE_BYTES)} intake limit.`,
-            })
-          )
-        );
+      const refusal = intakeRefusal(file);
+      if (O.isSome(refusal)) {
+        return Effect.sync(() => appendResult(IntakeResultEntryFailure.make({ fileName, message: refusal.value })));
       }
       return Effect.tryPromise(() => file.arrayBuffer()).pipe(
         Effect.map((buffer) => new Uint8Array(buffer)),

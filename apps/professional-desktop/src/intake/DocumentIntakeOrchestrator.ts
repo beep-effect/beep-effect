@@ -135,6 +135,12 @@ export const DocumentIntakeHandlersLive = DocumentsRpcs.toLayer(
                 `Document exceeds the ${Math.round(MAX_INTAKE_CONTENT_BYTES / (1024 * 1024))} MB intake limit.`
               );
             }
+            // The UI refuses an empty file, but the UI is not the boundary. Filing zero
+            // bytes writes a content-free object to the vault and asks the model to
+            // invent a rationale for a document that does not exist.
+            if (payload.content.length === 0) {
+              return yield* DocumentIntakeActionError.failEffect("The document is empty, so there is nothing to file.");
+            }
             const config = yield* workspaceVaultStore
               .getVaultConfig(payload.workspaceId)
               .pipe(Effect.catch(toDocumentIntakeActionError("IntakeDroppedFile.workspaceVault")));
