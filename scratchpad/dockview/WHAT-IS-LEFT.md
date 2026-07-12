@@ -100,8 +100,10 @@ Adapter-side:
 
 - **Drop-indicator polish, tab overflow (dropdown), header action slots,
   context menus, drag-to-dock a floating pane** — none attempted.
-- **Announcer/autosave/undo consumers** — the lossless feed exists; nothing
-  consumes it yet.
+- **Announcer/autosave/undo consumers** — the first feed consumer landed
+  2026-07-12: `poc/Recency.ts` derives most-recent-first touched-group
+  recency (and an MRU atom) purely from the feed. Announcer, autosave, and
+  undo consumers remain open.
 
 Kernel-side (unchanged non-goals or newly explicit):
 
@@ -119,8 +121,10 @@ Kernel-side (unchanged non-goals or newly explicit):
   out: max constraints, LayoutPriority, snap-to-collapse, and a reactive
   minima atom for content-driven updates
   (`explorations/computable-workspace-geometry/`).
-- **MRU activation** — zipper promotion stands (documented divergence); MRU
-  would be host/session state.
+- **MRU activation** — zipper promotion stands (documented divergence). The
+  host-side half now exists: `poc/Recency.ts` `makeMruGroupsAtom` derives
+  recency from the feed; a host wanting dockview's close-selection behavior
+  reads it and dispatches the follow-up activation itself.
 - **Undo/redo** — host-side by design; outcomes carry previousRevision + origin
   and the feed makes recording lossless.
 - **Edge groups, tab-group chips** — triaged non-goals (README).

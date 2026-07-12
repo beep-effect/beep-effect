@@ -25,6 +25,7 @@ export {
 export { type DockCommandPolicy, lockedGroupsPolicy, makePolicyDockEngineLayer } from "./DockPolicy.ts";
 export * from "./Domain.ts";
 export * from "./Geometry.ts";
+export { makeMruGroupsAtom, touchedGroups, touchedGroupsInEvents } from "./Recency.ts";
 export {
   reduceDockCommand,
   restoreDockWorkspace,
