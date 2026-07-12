@@ -125,6 +125,9 @@ const makeLabelLayer = (container: HTMLElement, labels: ReadonlyArray<string>) =
   return {
     elements,
     count: shown.length,
+    // A label layer that cannot place its labels says so, on the layer itself, where
+    // both a human and a test can see it. Silence was the original bug.
+    fail: (reason: string): void => layer.setAttribute("data-label-error", reason),
     destroy: (): void => layer.remove(),
   };
 };
@@ -349,6 +352,16 @@ const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
       O.map((names) => makeLabelLayer(container, names))
     );
 
+  // A graph that cannot say where its points are cannot carry labels, and pretending
+  // otherwise is how the first attempt at this failed: the labels were built, mounted,
+  // and left sitting at their off-screen start position, saying nothing.
+  const canPlaceLabels = P.isFunction(graph.getPointPositions) && P.isFunction(graph.spaceToScreenPosition);
+  if (A.isReadonlyArrayNonEmpty(projection.labels ?? []) && !canPlaceLabels) {
+    return yield* CosmosDriverError.adapterInvariant(
+      "cosmos.gl cannot report point positions, so labels cannot be placed."
+    );
+  }
+
   let layer = layerFor(projection);
   let frame: number | undefined = undefined;
 
@@ -358,9 +371,12 @@ const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
       O.match({
         onNone: () => undefined,
         onSome: (current) => {
-          const positions = graph.getPointPositions?.();
-          const toScreen = graph.spaceToScreenPosition;
-          if (positions === undefined || toScreen === undefined) return;
+          // Called ON the graph, never lifted off it. Holding the method in a local
+          // (`const toScreen = graph.spaceToScreenPosition`) detaches it from its
+          // instance, so `this` is undefined and every call throws — inside an
+          // animation frame, where the throw goes nowhere anyone will see it. The
+          // labels simply never moved, and nothing said why.
+          const positions = graph.getPointPositions?.() ?? [];
           for (let index = 0; index < current.count; index += 1) {
             const x = positions[index * 2];
             const y = positions[index * 2 + 1];
@@ -368,17 +384,35 @@ const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
             if (element === undefined || x === undefined || y === undefined || Number.isNaN(x) || Number.isNaN(y)) {
               continue;
             }
-            const [screenX, screenY] = toScreen([x, y]);
+            const screen = graph.spaceToScreenPosition?.([x, y]);
+            if (screen === undefined) continue;
             // Offset below the point so the text never sits on top of the dot it names.
-            element.style.transform = `translate(${Math.round(screenX)}px, ${Math.round(screenY + 8)}px) translateX(-50%)`;
+            element.style.transform = `translate(${Math.round(screen[0])}px, ${Math.round(screen[1] + 8)}px) translateX(-50%)`;
           }
         },
       })
     );
   };
 
+  // A throw inside an animation frame lands nowhere: the browser swallows it, the
+  // loop keeps being rescheduled, and the labels sit motionless with nothing to
+  // explain them. That is exactly how the unbound-method bug above stayed invisible.
+  // So a failure here stops the loop and marks the layer, which is visible in the
+  // DOM and in a test, instead of failing in a place no one can look.
   const tick = (): void => {
-    positionLabels();
+    try {
+      positionLabels();
+    } catch (cause) {
+      pipe(
+        layer,
+        O.match({
+          onNone: () => undefined,
+          onSome: (current) => current.fail(cause instanceof Error ? cause.message : String(cause)),
+        })
+      );
+      frame = undefined;
+      return;
+    }
     frame = globalThis.requestAnimationFrame(tick);
   };
   if (O.isSome(layer)) {
