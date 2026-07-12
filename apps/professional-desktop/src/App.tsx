@@ -18,6 +18,7 @@ import { Button } from "@beep/ui/components/button";
 import { Toaster } from "@beep/ui/components/sonner";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Cause, Effect } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
@@ -46,7 +47,6 @@ const isDevMode = (): boolean => {
 // the Tauri `sidecar_transport` probe). Gated on Vite DEV so production web
 // builds never embed a token; without it browser HTTP stays chat-only.
 const devRpcSessionToken = (): string | undefined => {
-  // biome-ignore lint/suspicious/noUndeclaredEnvVars: Vite injects VITE_* on import.meta.env.
   const token: unknown = import.meta.env.VITE_BEEP_DESKTOP_RPC_SESSION_TOKEN;
   return isDevMode() && P.isString(token) && token.length > 0 ? token : undefined;
 };
@@ -76,7 +76,20 @@ const readSidecarTransport = Effect.suspend(() =>
 // AsyncResult<SidecarTransport>: Initial = checking, Failure = unavailable,
 // Success = ready. Replaces the useState/useEffect transport probe.
 const sidecarTransportAtom = Atom.make(readSidecarTransport);
-const desktopSurfaceAtom = Atom.make<"chat" | "ontology">("chat");
+type DesktopSurface = "home" | "chat" | "ontology" | "sync";
+
+const desktopSurfaceAtom = Atom.make<DesktopSurface>("chat");
+
+const desktopNavigationItems: ReadonlyArray<{
+  readonly description: string;
+  readonly label: string;
+  readonly surface: DesktopSurface;
+}> = [
+  { description: "Return to the workspace overview.", label: "Home", surface: "home" },
+  { description: "Work with the professional assistant and your saved threads.", label: "Chat", surface: "chat" },
+  { description: "Explore and refine the workspace knowledge model.", label: "Ontology", surface: "ontology" },
+  { description: "Review provider connectivity, queue health, and conflicts.", label: "Vault sync", surface: "sync" },
+];
 
 // atom-first: when the probe resolves, point the rpc client at the matching
 // protocol layer (IPC in the desktop shell, HTTP in the browser). A mounted
@@ -123,6 +136,32 @@ const TransportLoading = (): JSX.Element => (
   </div>
 );
 
+const HomeSurface = ({ onNavigate }: { readonly onNavigate: (surface: DesktopSurface) => void }): JSX.Element => (
+  <main className="h-full overflow-y-auto p-6">
+    <div className="mx-auto max-w-5xl">
+      <p className="text-sm font-medium text-primary">Professional Desktop</p>
+      <h1 className="mt-1 text-2xl font-semibold tracking-tight">Your professional workspace</h1>
+      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+        Move between assisted research, ontology work, and document synchronization from one place.
+      </p>
+      <div className="mt-6 grid gap-4 md:grid-cols-3">
+        {A.drop(desktopNavigationItems, 1).map((item) => (
+          <a
+            key={item.surface}
+            href={`#${item.surface}`}
+            className="rounded-lg border bg-card p-4 shadow-sm transition-colors hover:border-primary/50 hover:bg-accent"
+            onClick={() => onNavigate(item.surface)}
+          >
+            <h2 className="font-semibold">{item.label}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+            <span className="mt-4 inline-block text-sm font-medium text-primary">Open {item.label} →</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </main>
+);
+
 const DesktopShell = ({ transport }: { readonly transport: SidecarTransport }): JSX.Element => {
   const surface = useAtomValue(desktopSurfaceAtom);
   const setSurface = useAtomSet(desktopSurfaceAtom);
@@ -131,28 +170,30 @@ const DesktopShell = ({ transport }: { readonly transport: SidecarTransport }): 
     <>
       <DocumentIntakeTarget>
         <div className="flex h-screen min-h-0 w-full flex-col bg-background text-foreground">
-          <div className="flex h-10 shrink-0 items-center gap-1 border-b px-2">
-            <Button
-              size="sm"
-              type="button"
-              variant={surface === "chat" ? "default" : "ghost"}
-              onClick={() => setSurface("chat")}
-            >
-              Chat
-            </Button>
-            <Button
-              size="sm"
-              type="button"
-              variant={surface === "ontology" ? "default" : "ghost"}
-              onClick={() => setSurface("ontology")}
-            >
-              Workbench
-            </Button>
+          <nav className="flex h-12 shrink-0 items-center gap-1 border-b px-3" aria-label="Desktop pages">
+            <span className="mr-3 text-sm font-semibold">BEEP</span>
+            {desktopNavigationItems.map((item) => (
+              <Button
+                key={item.surface}
+                aria-current={surface === item.surface ? "page" : undefined}
+                nativeButton={false}
+                render={<a href={`#${item.surface}`} />}
+                size="sm"
+                variant={surface === item.surface ? "secondary" : "ghost"}
+                onClick={() => setSurface(item.surface)}
+              >
+                {item.label}
+              </Button>
+            ))}
+          </nav>
+          <div className="min-h-0 flex-1">
+            {surface === "home" ? <HomeSurface onNavigate={setSurface} /> : null}
+            {surface === "chat" ? <ChatApp /> : null}
+            {surface === "ontology" ? <OntologyWorkbench /> : null}
+            {surface === "sync" ? <VaultSyncPanel floating={false} /> : null}
           </div>
-          <div className="min-h-0 flex-1">{surface === "chat" ? <ChatApp /> : <OntologyWorkbench />}</div>
         </div>
       </DocumentIntakeTarget>
-      <VaultSyncPanel />
       <ChatTurnErrorToasts />
       <Toaster richColors />
       {transport.ipc && hasIpcSpikeFlag() ? <IpcSpikePanel /> : null}

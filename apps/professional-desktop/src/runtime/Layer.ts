@@ -58,6 +58,7 @@ import * as O from "effect/Option";
 import { ChatHandlersLive } from "@/chat/ChatOrchestrator";
 import { UsageRecordSinkDrizzle, UsageRecordSinkInMemory } from "@/chat/UsageRecordSink";
 import { DocumentIntakeHandlersLive, WorkspaceVaultHandlersLive } from "@/intake/DocumentIntakeOrchestrator";
+import { VaultDirectoryPickerHandlersLive } from "@/intake/VaultDirectoryPickerOrchestrator";
 import { OntologyHandlersLive } from "@/ontology/OntologyOrchestrator";
 import { ObservabilityLive } from "@/runtime/Observability";
 import { PgliteDrizzleLive } from "@/runtime/Pglite";
@@ -88,6 +89,7 @@ const DesktopHandlersLive = Layer.mergeAll(
   ChatHandlersLive,
   WorkspaceVaultHandlersLive,
   DocumentIntakeHandlersLive,
+  VaultDirectoryPickerHandlersLive,
   VaultSyncHandlersLive,
   OntologyHandlersLive
 );

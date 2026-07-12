@@ -150,7 +150,7 @@ const VaultSyncConflictsList = ({
  * @category components
  * @since 0.0.0
  */
-export function VaultSyncPanel(): JSX.Element {
+export function VaultSyncPanel({ floating = true }: { readonly floating?: boolean }): JSX.Element {
   const status = useAtomValue(vaultSyncStatusAtom(DEFAULT_WORKSPACE_ID));
   const conflicts = useAtomValue(vaultSyncConflictsAtom(DEFAULT_WORKSPACE_ID));
   const triggerSync = useAtomSet(triggerVaultSyncAtom, { mode: "promise" });
@@ -200,7 +200,11 @@ export function VaultSyncPanel(): JSX.Element {
 
   return (
     <section
-      className="fixed bottom-4 left-4 z-40 max-h-96 w-80 overflow-y-auto rounded-md border bg-card p-3 text-sm shadow-sm"
+      className={
+        floating
+          ? "fixed bottom-4 left-4 z-40 max-h-96 w-80 overflow-y-auto rounded-md border bg-card p-3 text-sm shadow-sm"
+          : "mx-auto mt-6 max-h-[calc(100vh-6rem)] w-[min(44rem,calc(100%-3rem))] overflow-y-auto rounded-lg border bg-card p-5 text-sm shadow-sm"
+      }
       data-testid="vault-sync-panel"
     >
       <div className="flex items-center justify-between gap-2">

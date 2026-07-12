@@ -15,6 +15,7 @@ import { SetWorkspaceVaultInput, WorkspaceVaultRpcs } from "@beep/workspace-use-
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { Atom, AtomRpc, Reactivity } from "effect/unstable/reactivity";
+import { VaultDirectoryPickerRpcs } from "./VaultDirectoryPicker.rpc.js";
 
 const $I = $ProfessionalDesktopId.create("intake/Intake.atoms");
 
@@ -33,7 +34,7 @@ const $I = $ProfessionalDesktopId.create("intake/Intake.atoms");
  */
 export const DEFAULT_WORKSPACE_ID = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(1);
 
-const DesktopIntakeRpcs = WorkspaceVaultRpcs.merge(DocumentsRpcs);
+const DesktopIntakeRpcs = WorkspaceVaultRpcs.merge(DocumentsRpcs, VaultDirectoryPickerRpcs);
 
 class DesktopIntakeClient extends AtomRpc.Service<DesktopIntakeClient>()("DesktopIntakeClient", {
   group: DesktopIntakeRpcs,
@@ -106,6 +107,27 @@ export const configureWorkspaceVaultAtom = DesktopIntakeClient.runtime.fn<Config
     const client = yield* DesktopIntakeClient;
     const payload = yield* S.decodeUnknownEffect(SetWorkspaceVaultInput)(input);
     yield* Reactivity.mutation(client("SetWorkspaceVault", payload), [workspaceVaultKey(input.workspaceId)]);
+  })
+);
+
+/**
+ * Mutation atom that asks the sidecar to open its host's native folder dialog
+ * and resolves with the picked absolute directory path, or `null` on cancel.
+ *
+ * @example
+ * ```ts
+ * import { pickVaultDirectoryAtom } from "@/intake/Intake.atoms"
+ *
+ * console.log(pickVaultDirectoryAtom)
+ * ```
+ *
+ * @category state
+ * @since 0.0.0
+ */
+export const pickVaultDirectoryAtom = DesktopIntakeClient.runtime.fn<void>()(
+  Effect.fn("pickVaultDirectory")(function* () {
+    const client = yield* DesktopIntakeClient;
+    return yield* client("PickVaultDirectory", void 0);
   })
 );
 

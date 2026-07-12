@@ -25,6 +25,7 @@ import {
   DEFAULT_WORKSPACE_ID,
   DroppedDocumentInput,
   intakeDroppedDocumentAtom,
+  pickVaultDirectoryAtom,
   workspaceVaultConfigAtom,
 } from "./Intake.atoms.js";
 import type { Document } from "@beep/documents-domain/aggregates/Document";
@@ -32,13 +33,19 @@ import type { DragEvent, JSX, ReactNode } from "react";
 
 const hasTauriRuntime = (): boolean => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
-const pickVaultDirectory: Effect.Effect<string | null> = Effect.suspend(() =>
-  hasTauriRuntime()
-    ? Effect.tryPromise(() =>
-        import("@tauri-apps/api/core").then(({ invoke }) => invoke<string | null>("select_vault_directory"))
-      ).pipe(Effect.orElseSucceed(() => null))
-    : Effect.sync(() => window.prompt("Workspace vault path"))
-);
+// Tauri opens the shell's own native dialog; browser mode asks the sidecar to
+// open its host's native folder dialog over RPC, and only falls back to manual
+// path entry when that surface is unavailable (chat-only HTTP, headless host).
+const pickVaultDirectory = (pickWithSidecar: () => Promise<string | null>): Effect.Effect<string | null> =>
+  Effect.suspend(() =>
+    hasTauriRuntime()
+      ? Effect.tryPromise(() =>
+          import("@tauri-apps/api/core").then(({ invoke }) => invoke<string | null>("select_vault_directory"))
+        ).pipe(Effect.orElseSucceed(() => null))
+      : Effect.tryPromise(pickWithSidecar).pipe(
+          Effect.catch(() => Effect.sync(() => window.prompt("Workspace vault path")))
+        )
+  );
 
 const droppedFiles = (event: DragEvent<HTMLElement>): ReadonlyArray<File> => A.fromIterable(event.dataTransfer.files);
 
@@ -202,6 +209,7 @@ export function DocumentIntakeTarget({ children }: { readonly children: ReactNod
   const vaultConfig = useAtomValue(workspaceVaultConfigAtom(DEFAULT_WORKSPACE_ID));
   const configureVault = useAtomSet(configureWorkspaceVaultAtom, { mode: "promise" });
   const intakeDroppedDocument = useAtomSet(intakeDroppedDocumentAtom, { mode: "promise" });
+  const pickWithSidecar = useAtomSet(pickVaultDirectoryAtom, { mode: "promise" });
   const [isDragging, setIsDragging] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [activeBatches, setActiveBatches] = useState(0);
@@ -209,12 +217,13 @@ export function DocumentIntakeTarget({ children }: { readonly children: ReactNod
 
   useAtomMount(configureWorkspaceVaultAtom);
   useAtomMount(intakeDroppedDocumentAtom);
+  useAtomMount(pickVaultDirectoryAtom);
 
   const configured = AsyncResult.isSuccess(vaultConfig) && O.isSome(vaultConfig.value.vaultRootPath);
   const needsOnboarding = AsyncResult.isSuccess(vaultConfig) && O.isNone(vaultConfig.value.vaultRootPath);
 
   const chooseVault = Effect.gen(function* () {
-    const selected = yield* pickVaultDirectory;
+    const selected = yield* pickVaultDirectory(() => pickWithSidecar());
     yield* configureSelectedWorkspaceVault(selected, configureVault, setStatus);
   });
 

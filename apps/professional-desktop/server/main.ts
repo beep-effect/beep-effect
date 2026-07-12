@@ -38,6 +38,7 @@ import { Config, Effect, Layer, Logger } from "effect";
 import * as O from "effect/Option";
 import { HttpMiddleware, HttpRouter, HttpServerResponse } from "effect/unstable/http";
 import { RpcSerialization, RpcServer } from "effect/unstable/rpc";
+import { VaultDirectoryPickerRpcs } from "@/intake/VaultDirectoryPicker.rpc";
 import { RuntimeLive } from "@/runtime/Layer";
 import { ipcTransport, SidecarStdioLive } from "./IpcStdoutGuard.ts";
 import { makeOntologyMcpTransportLayer } from "./OntologyMcpTransport.ts";
@@ -56,7 +57,13 @@ const APPROVED_ONTOLOGY_MUTATION_TOOLS = ONTOLOGY_MCP_MUTATIONS_ENABLED
   ? [ProposeChangeBatchTool.name, RepairOntologyTool.name, ExportProvenanceTool.name]
   : [];
 
-const DesktopRpcs = ChatRpcs.merge(WorkspaceVaultRpcs, DocumentsRpcs, VaultSyncRpcs, OntologyRpcs);
+const DesktopRpcs = ChatRpcs.merge(
+  WorkspaceVaultRpcs,
+  DocumentsRpcs,
+  VaultSyncRpcs,
+  OntologyRpcs,
+  VaultDirectoryPickerRpcs
+);
 
 // The full desktop group includes write-capable workspace vault, document
 // intake, vault sync, and ontology workbench RPCs. HTTP only exposes that
