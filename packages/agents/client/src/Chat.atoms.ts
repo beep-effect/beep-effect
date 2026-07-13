@@ -985,10 +985,7 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
                 Effect.option,
                 Effect.map((status) =>
                   status.pipe(
-                    O.map(
-                      (value) =>
-                        value === "pending" || value === "accepted" || value === "unknown" || value === "not_persisted"
-                    ),
+                    O.map((value) => value === "pending" || value === "accepted" || value === "unknown"),
                     O.getOrElse(() => true)
                   )
                 )

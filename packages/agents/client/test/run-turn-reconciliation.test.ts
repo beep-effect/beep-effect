@@ -547,7 +547,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
   );
 
   it.effect(
-    "retires only receipt fallbacks whose exact status later confirms durability",
+    "retires receipt fallbacks only after an exact terminal status",
     Effect.fnUntraced(function* () {
       let timelineReads = 0;
       let statusReads = 0;
@@ -559,6 +559,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         if (tag === "GetTurnRequestStatus") {
           statusReads += 1;
           if (payload?.requestId === "receipt-persisted") return Effect.succeed("persisted");
+          if (payload?.requestId === "receipt-not-persisted") return Effect.succeed("not_persisted");
           if (payload?.requestId === "receipt-accepted") return Effect.succeed("accepted");
           return Effect.succeed("unknown");
         }
@@ -589,6 +590,13 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         reconciliation: "receipt",
         blocks: [assistantBlock],
       });
+      const notPersistedReceiptFallback = StreamingTurn.make({
+        threadId,
+        requestId: O.some("receipt-not-persisted"),
+        userContent: content,
+        reconciliation: "receipt",
+        blocks: [assistantBlock],
+      });
       const timelineFallback = StreamingTurn.make({
         threadId,
         userContent: content,
@@ -602,6 +610,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       registry.set(unreconciledAtom, [
         receiptFallback,
         acceptedReceiptFallback,
+        notPersistedReceiptFallback,
         durableReceiptFallback,
         timelineFallback,
       ]);
@@ -609,7 +618,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       yield* AtomRegistry.getResult(registry, runTurnAtom);
 
       expect(registry.get(unreconciledAtom)).toStrictEqual([receiptFallback, acceptedReceiptFallback]);
-      expect(statusReads).toBeGreaterThanOrEqual(3);
+      expect(statusReads).toBeGreaterThanOrEqual(4);
 
       unmountUnreconciled();
       unmountTurn();
