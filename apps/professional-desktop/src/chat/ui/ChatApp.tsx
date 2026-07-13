@@ -16,15 +16,17 @@
 
 import { createThreadAtom, selectedThreadAtom, threadsAtoms } from "@beep/agents-client/Chat.atoms";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { Button } from "@beep/ui/components/button";
 import { OrbBackground } from "@beep/ui/components/orb-background";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@beep/ui/components/resizable";
 import { A, DateTime, O } from "@beep/utils";
-import { useAtomMount, useAtomValue } from "@effect/atom-react";
+import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Order } from "effect";
 import * as S from "effect/Schema";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { Composer } from "./Composer.tsx";
+import { SIDEBAR_MAX_PERCENT, SIDEBAR_MIN_PERCENT, sidebarPercentAtom, sidebarSize } from "./layout.atoms.ts";
 import { Sidebar } from "./Sidebar.tsx";
-import { ThemeToggle } from "./ThemeToggle.tsx";
 import { Thread } from "./Thread.tsx";
 import type { JSX } from "react";
 
@@ -80,8 +82,13 @@ const autoNewThreadBinding = Atom.family((workspaceId: WorkspaceIdentity.Workspa
 export function ChatApp(): JSX.Element {
   const selected = useAtomValue(selectedThreadAtom);
   const threads = useAtomValue(threadsAtoms(DEFAULT_WORKSPACE_ID));
+  const createThread = useAtomSet(createThreadAtom);
   // auto-create a thread when the workspace is empty (see binding above).
   useAtomMount(autoNewThreadBinding(DEFAULT_WORKSPACE_ID));
+  // Clamped on the way out, not on the way in: a width persisted by an older build
+  // must not be able to hand back a sidebar the user cannot drag.
+  const storedPercent = useAtomValue(sidebarPercentAtom);
+  const setSidebarPercent = useAtomSet(sidebarPercentAtom);
 
   // active thread: the explicit selection, else the most recent thread.
   const active = O.orElse(selected, () =>
@@ -91,36 +98,87 @@ export function ChatApp(): JSX.Element {
   );
 
   return (
+    // `h-full`, not `h-screen`: the chat surface mounts BELOW the app's nav bar,
+    // inside a parent that already holds the remaining height. Asking for the whole
+    // viewport made it overflow by exactly the nav's height, so the WINDOW scrolled
+    // on top of the transcript's own scrollbar — two scrollbars for one list. The
+    // shell owns the viewport; a surface fills what it is given, and only the panes
+    // inside it scroll.
     <div
-      className="relative isolate flex h-screen w-full flex-col overflow-hidden bg-background text-foreground"
+      className="relative isolate flex h-full min-h-0 w-full flex-col overflow-hidden bg-background text-foreground"
       data-testid="chat-app"
     >
-      <OrbBackground tone="green" intensity="vivid" />
-      <header className="relative flex items-center justify-between gap-2 border-b bg-background/80 px-4 py-3 backdrop-blur">
-        <span className="text-sm font-semibold">Professional Desktop — Chat</span>
-        <ThemeToggle />
-      </header>
-      <div className="flex min-h-0 flex-1">
-        <Sidebar workspaceId={DEFAULT_WORKSPACE_ID} />
-        <main className="flex min-h-0 flex-1 flex-col">
-          {O.match(active, {
-            onNone: () => (
-              <div className="flex flex-1 items-center justify-center text-center" data-testid="chat-no-thread">
-                <div>
-                  <h2 className="text-lg font-semibold">No thread selected</h2>
-                  <p className="text-sm text-muted-foreground">Create a thread to get started.</p>
+      <OrbBackground tone="green" intensity="subtle" />
+      {/* No second title bar. The app's nav already says where you are, and this
+          header only repeated it — costing a strip of vertical height on the one
+          surface that needs it most, and hiding the theme control where the other
+          three surfaces could not reach it. Both now live in the shell's nav. */}
+      <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1" data-testid="chat-panes">
+        {/* Sizes are percent STRINGS. react-resizable-panels reads a bare `number` as
+            PIXELS — so `minSize={14} maxSize={40}` pinned the sidebar into a 14-to-40
+            *pixel* range, which is a sliver you cannot read and cannot drag back out of.
+            The percentages are also why the size is taken from `onResize`, which reports
+            `asPercentage` outright, rather than from the group's layout map, which
+            reports raw flex-grow. */}
+        <ResizablePanel
+          id="sidebar-pane"
+          defaultSize={sidebarSize(storedPercent)}
+          minSize={sidebarSize(SIDEBAR_MIN_PERCENT)}
+          maxSize={sidebarSize(SIDEBAR_MAX_PERCENT)}
+          // `inPixels > 0` skips the mount pass, before the group has been measured:
+          // persisting a zero there would restore a collapsed sidebar next launch.
+          onResize={(size) => {
+            if (size.inPixels > 0) setSidebarPercent(size.asPercentage);
+          }}
+          className="min-w-0"
+        >
+          <Sidebar workspaceId={DEFAULT_WORKSPACE_ID} />
+        </ResizablePanel>
+        <ResizableHandle withHandle />
+        <ResizablePanel id="main-pane" minSize="40%" className="min-w-0">
+          {/* bg-background/60 damps the shared orb glow so the content area reads
+              quieter than the header and sidebar (Taskade-style ambience). */}
+          <main className="flex h-full min-h-0 flex-col bg-background/60">
+            {O.match(active, {
+              onNone: () => (
+                <div className="flex flex-1 items-center justify-center text-center" data-testid="chat-no-thread">
+                  {AsyncResult.isFailure(threads) ? (
+                    <div>
+                      <h2 className="text-lg font-semibold">Chat is unavailable</h2>
+                      <p className="text-sm text-muted-foreground">
+                        The desktop sidecar could not be reached, so threads cannot be loaded or created.
+                      </p>
+                    </div>
+                  ) : (
+                    // An empty workspace auto-creates its first thread (see
+                    // autoNewThreadBinding), so this state is normally transient;
+                    // the button is the manual fallback if that create failed.
+                    <div>
+                      <h2 className="text-lg font-semibold">Starting your first thread…</h2>
+                      <p className="text-sm text-muted-foreground">The composer opens as soon as it's ready.</p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="mt-4"
+                        data-testid="chat-no-thread-create"
+                        onClick={() => createThread({ workspaceId: DEFAULT_WORKSPACE_ID, title: "New thread" })}
+                      >
+                        + New thread
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ),
-            onSome: (threadId) => (
-              <>
-                <Thread key={threadId} threadId={threadId} />
-                <Composer threadId={threadId} />
-              </>
-            ),
-          })}
-        </main>
-      </div>
+              ),
+              onSome: (threadId) => (
+                <>
+                  <Thread key={threadId} threadId={threadId} />
+                  <Composer threadId={threadId} />
+                </>
+              ),
+            })}
+          </main>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 }

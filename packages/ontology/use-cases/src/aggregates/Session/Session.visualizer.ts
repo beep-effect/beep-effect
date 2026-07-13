@@ -788,12 +788,36 @@ const pinnedPositionMap = (
   return positions;
 };
 
+/**
+ * The angle that spreads points most evenly around a centre — the one sunflowers
+ * use. Successive nodes land in the gaps left by the ones before them.
+ */
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+
+/** Distance between successive rings of the spiral, in graph space. */
+const RING_SPACING = 26;
+
+/**
+ * The seed position for a node the simulation has not placed yet.
+ *
+ * This used to be a 512-column grid: `row = floor(index / 512)`, which is zero for
+ * every node in any ontology with fewer than 512 of them — so a real ontology got a
+ * single row, every `y` within a few units of the others, and `x` smeared across
+ * ±768. It rendered as a horizontal line of overlapping dots. And a collinear start
+ * is the one arrangement a force simulation cannot escape: repulsion between points
+ * on a line only pushes them further along it, so the layout never opened up.
+ *
+ * A phyllotaxis spiral spreads evenly in two dimensions at any node count, stays
+ * deterministic (same ontology, same picture), and gives the simulation something it
+ * can actually relax from. The hash still perturbs the angle so that two nodes added
+ * in the same order do not sit on top of each other.
+ */
 const deterministicPosition = (iri: string, index: number): readonly [number, number] => {
   const hash = hashText(iri);
-  const column = hash % 512;
-  const row = (index - (index % 512)) / 512;
+  const radius = RING_SPACING * Math.sqrt(index + 0.5);
+  const angle = index * GOLDEN_ANGLE + ((hash % 64) - 32) / 512;
 
-  return [(column - 256) * 3, row * 3 + ((hash % 97) - 48) / 8];
+  return [radius * Math.cos(angle), radius * Math.sin(angle)];
 };
 
 const projectionFromRelationships = (

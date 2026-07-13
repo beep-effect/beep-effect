@@ -38,6 +38,7 @@ import { Config, Effect, Layer, Logger } from "effect";
 import * as O from "effect/Option";
 import { HttpMiddleware, HttpRouter, HttpServerResponse } from "effect/unstable/http";
 import { RpcSerialization, RpcServer } from "effect/unstable/rpc";
+import { VaultDirectoryPickerRpcs } from "@/intake/VaultDirectoryPicker.rpc";
 import { RuntimeLive } from "@/runtime/Layer";
 import { ipcTransport, SidecarStdioLive } from "./IpcStdoutGuard.ts";
 import { makeOntologyMcpTransportLayer } from "./OntologyMcpTransport.ts";
@@ -56,7 +57,13 @@ const APPROVED_ONTOLOGY_MUTATION_TOOLS = ONTOLOGY_MCP_MUTATIONS_ENABLED
   ? [ProposeChangeBatchTool.name, RepairOntologyTool.name, ExportProvenanceTool.name]
   : [];
 
-const DesktopRpcs = ChatRpcs.merge(WorkspaceVaultRpcs, DocumentsRpcs, VaultSyncRpcs, OntologyRpcs);
+const DesktopRpcs = ChatRpcs.merge(
+  WorkspaceVaultRpcs,
+  DocumentsRpcs,
+  VaultSyncRpcs,
+  OntologyRpcs,
+  VaultDirectoryPickerRpcs
+);
 
 // The full desktop group includes write-capable workspace vault, document
 // intake, vault sync, and ontology workbench RPCs. HTTP only exposes that
@@ -125,6 +132,25 @@ const ipcMain = (): Layer.Layer<never, DesktopStartupError> =>
     Layer.provide(Logger.layer([Logger.withConsoleError(Logger.formatLogFmt)], { mergeWithExisting: false }))
   );
 
-const Main = ipcTransport ? ipcMain() : httpMain();
+const Main = (ipcTransport ? ipcMain() : httpMain()).pipe(
+  Layer.tap(
+    Effect.fnUntraced(function* () {
+      yield* Effect.logInfo("professional desktop sidecar ready").pipe(
+        Effect.annotateLogs({
+          auth_enabled: O.isSome(RPC_SESSION_TOKEN),
+          ontology_mcp_mutations_enabled: ONTOLOGY_MCP_MUTATIONS_ENABLED,
+          port: PORT,
+          transport: ipcTransport ? "ipc" : "http",
+        })
+      );
+      yield* Effect.addFinalizer(() =>
+        Effect.logInfo("professional desktop sidecar stopping").pipe(
+          Effect.annotateLogs({ transport: ipcTransport ? "ipc" : "http" })
+        )
+      );
+    })
+  ),
+  Layer.withSpan("professional_desktop.sidecar.runtime")
+);
 
 BunRuntime.runMain(Layer.launch(Main));

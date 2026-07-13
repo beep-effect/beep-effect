@@ -17,8 +17,9 @@
 import { createThreadAtom, editTargetAtom, selectedThreadAtom, threadsAtoms } from "@beep/agents-client/Chat.atoms";
 import { Button } from "@beep/ui/components/button";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@beep/ui/components/empty";
+import { toast } from "@beep/ui/components/sonner";
 import { A, DateTime, O } from "@beep/utils";
-import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { useAtomMount, useAtomSet, useAtomSubscribe, useAtomValue } from "@effect/atom-react";
 import { Order } from "effect";
 import { AsyncResult } from "effect/unstable/reactivity";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
@@ -53,14 +54,28 @@ export function Sidebar({ workspaceId }: { readonly workspaceId: WorkspaceId }):
   // keep the create fiber subscribed — unobserved fn atoms get interrupted.
   useAtomMount(createThreadAtom);
 
+  // A failed create must not die silently: without this the "+ New thread"
+  // button reads as dead when the sidecar is down or rejects the session.
+  useAtomSubscribe(createThreadAtom, (result) => {
+    if (AsyncResult.isFailure(result)) {
+      toast.error("Couldn't create a thread — the desktop sidecar is unreachable or rejected the request.");
+    }
+  });
+
   const sorted = AsyncResult.isSuccess(threads) ? A.sort(threads.value, byUpdatedDesc) : [];
-  // Once the load settles with nothing to show — an empty workspace or a failed
-  // load — present a calm empty state rather than an error. `Initial` (still
-  // loading) renders nothing.
-  const isEmpty = !AsyncResult.isInitial(threads) && sorted.length === 0;
+  const loadFailed = AsyncResult.isFailure(threads);
+  // Once the load settles with nothing to show, present a calm empty state;
+  // a failed load names the problem instead of masquerading as "no threads".
+  // `Initial` (still loading) renders nothing.
+  const isEmpty = !AsyncResult.isInitial(threads) && !loadFailed && sorted.length === 0;
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-r bg-background/80 backdrop-blur" data-testid="sidebar">
+    // The width belongs to the resizable panel this sits in, not to the sidebar. It
+    // used to pin itself to `w-64`, which a drag could not have moved.
+    <aside
+      className="flex h-full w-full min-w-0 flex-col border-r bg-background/30 backdrop-blur"
+      data-testid="sidebar"
+    >
       <div className="border-b p-3">
         <Button
           type="button"
@@ -72,7 +87,20 @@ export function Sidebar({ workspaceId }: { readonly workspaceId: WorkspaceId }):
           + New thread
         </Button>
       </div>
-      <nav className="flex-1 overflow-y-auto p-2" data-testid="sidebar-list">
+      {/* `overflow-y-auto` alone computes the *other* axis to `auto` as well, so a title
+          that overflowed handed the sidebar a horizontal scrollbar. Nothing in a thread
+          list is ever meant to be reachable sideways. */}
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden p-2" data-testid="sidebar-list">
+        {loadFailed ? (
+          <Empty className="h-full border-none" data-testid="sidebar-load-failed">
+            <EmptyHeader>
+              <EmptyTitle>Threads unavailable</EmptyTitle>
+              <EmptyDescription>
+                The thread list could not be loaded. Check that the desktop sidecar is running, then reload.
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        ) : null}
         {isEmpty ? (
           <Empty className="h-full border-none" data-testid="sidebar-empty">
             <EmptyHeader>
@@ -101,7 +129,7 @@ export function Sidebar({ workspaceId }: { readonly workspaceId: WorkspaceId }):
             <button
               key={thread.id}
               type="button"
-              className={`flex w-full flex-col items-start rounded-md px-2 py-2 text-left text-sm transition-colors hover:bg-muted ${
+              className={`flex w-full min-w-0 flex-col items-start rounded-md px-2 py-2 text-left text-sm transition-colors hover:bg-muted ${
                 isActive ? "bg-muted" : ""
               }`}
               onClick={() => {
@@ -111,7 +139,11 @@ export function Sidebar({ workspaceId }: { readonly workspaceId: WorkspaceId }):
               }}
               data-testid="sidebar-item"
             >
-              <span className="truncate font-medium">{thread.title}</span>
+              {/* `w-full` is what makes `truncate` mean anything. The button lays its
+                  children out with `items-start`, so without it the title sizes itself
+                  to its own text — a thread whose title is the first line of a long
+                  prompt simply ran off the side, ellipsis rule and all. */}
+              <span className="w-full truncate font-medium">{thread.title}</span>
               <span className="text-xs text-muted-foreground">
                 {DateTime.formatLocal(thread.updatedAt, { month: "short", day: "numeric" })}
               </span>

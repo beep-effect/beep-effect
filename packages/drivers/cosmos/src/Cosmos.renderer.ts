@@ -7,14 +7,13 @@
 /// <reference path="./vendor.d.ts" />
 
 import { $CosmosId } from "@beep/identity/packages";
-import { HexColor, SchemaUtils } from "@beep/schema";
-import { P } from "@beep/utils";
-import { Duration, Effect, Match } from "effect";
+import { Fn, HexColor, SchemaUtils } from "@beep/schema";
+import { A, O, P } from "@beep/utils";
+import { Duration, Effect, Match, pipe } from "effect";
 import * as S from "effect/Schema";
-import { probeWebGl2, selectCosmosBackend } from "./Cosmos.backend.js";
+import { CosmosBackend, probeWebGl2, selectCosmosBackend } from "./Cosmos.backend.js";
 import { CosmosDriverError } from "./Cosmos.errors.js";
-import type { CosmosBackend } from "./Cosmos.backend.js";
-import type { CosmosGraphProjection } from "./Cosmos.projection.js";
+import { CosmosGraphProjection } from "./Cosmos.projection.js";
 
 const $I = $CosmosId.create("Cosmos.renderer");
 
@@ -30,18 +29,126 @@ class CosmosGraphConfig extends S.Class<CosmosGraphConfig>($I`CosmosGraphConfig`
     simulationGravity: S.Finite.pipe(SchemaUtils.withKeyDefaults(0)),
     simulationRepulsion: S.Finite.pipe(SchemaUtils.withKeyDefaults(0.45)),
     transitionDuration: S.Finite.pipe(SchemaUtils.withKeyDefaults(0)),
+    // Appearance was left entirely to cosmos.gl's defaults, which draw a graph you
+    // can barely see: single-pixel grey points and hairline links on a dark
+    // background. A diagram nobody can read is not a diagram.
+    linkWidthScale: S.Finite.pipe(SchemaUtils.withKeyDefaults(1.6)),
+    pointSizeScale: S.Finite.pipe(SchemaUtils.withKeyDefaults(2.4)),
+    renderLinks: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    scalePointsOnZoom: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
   },
   $I.annote("CosmosGraphConfig", {
-    description: "Stable cosmos.gl simulation and viewport defaults used for each mounted graph renderer.",
+    description: "Stable cosmos.gl simulation, appearance, and viewport defaults used for each mounted graph.",
   })
 ) {}
+
+/** Points: bright enough to read against the workbench's dark canvas. */
+const POINT_RGBA: readonly [number, number, number, number] = [0.44, 0.87, 0.53, 1];
+
+/** Links: visible, but never louder than the points they connect. */
+const LINK_RGBA: readonly [number, number, number, number] = [0.55, 0.68, 0.6, 0.55];
+
+/** Baseline point radius, before `pointSizeScale`. */
+const POINT_SIZE = 4;
+
+/** Baseline link width, before `linkWidthScale`. */
+const LINK_WIDTH = 1;
+
+const repeatRgba = (count: number, rgba: readonly [number, number, number, number]): Float32Array => {
+  const values = new Float32Array(count * 4);
+  for (let index = 0; index < count; index += 1) {
+    values.set(rgba, index * 4);
+  }
+  return values;
+};
+
+const filled = (count: number, value: number): Float32Array => new Float32Array(count).fill(value);
 
 type CosmosGraphInstance = {
   readonly destroy?: () => void;
   readonly render: () => void;
+  readonly setLinkColors?: (linkColors: Float32Array) => void;
+  readonly setLinkWidths?: (linkWidths: Float32Array) => void;
   readonly setLinks: (links: Float32Array) => void;
+  readonly setPointColors?: (pointColors: Float32Array) => void;
   readonly setPointPositions: (positions: Float32Array) => void;
+  readonly setPointSizes?: (pointSizes: Float32Array) => void;
+  // The graph's own space -> screen transform, which is what makes an HTML label
+  // layer possible: cosmos.gl renders no text, but it will tell you where a point
+  // currently is on screen, through every pan, zoom and simulation tick.
+  readonly spaceToScreenPosition?: (spacePosition: [number, number]) => [number, number];
+  readonly getPointPositions?: () => ReadonlyArray<number>;
   readonly stop?: () => void;
+};
+
+/** Beyond this many points, labels stop being readable and start being noise. */
+const MAX_RENDERED_LABELS = 300;
+
+/**
+ * An HTML label layer over the WebGL canvas.
+ *
+ * The labels the ontology computes were being thrown away: cosmos.gl draws points
+ * and lines, never text, so a graph of a dozen named classes rendered as a dozen
+ * anonymous dots. The library does expose its space-to-screen transform, though,
+ * which is exactly what a text layer needs — so the names go in a DOM layer pinned
+ * over the canvas and follow their points through pan, zoom and simulation.
+ */
+const makeLabelLayer = (container: HTMLElement, labels: ReadonlyArray<string>) => {
+  const layer = document.createElement("div");
+  layer.setAttribute("data-testid", "cosmos-labels");
+  layer.setAttribute(
+    "style",
+    "position:absolute;inset:0;overflow:hidden;pointer-events:none;font-size:11px;line-height:1;"
+  );
+
+  // The canvas is positioned within the container, so the layer must be too —
+  // otherwise the labels anchor to the page and drift away from their points.
+  if (getComputedStyle(container).position === "static") {
+    container.style.position = "relative";
+  }
+
+  const shown = labels.slice(0, MAX_RENDERED_LABELS);
+  const elements = shown.map((label) => {
+    const element = document.createElement("span");
+    element.textContent = label;
+    element.setAttribute(
+      "style",
+      "position:absolute;top:0;left:0;white-space:nowrap;transform:translate(-9999px,-9999px);" +
+        "color:rgba(226,240,230,0.92);text-shadow:0 1px 2px rgba(0,0,0,0.85);will-change:transform;"
+    );
+    layer.appendChild(element);
+    return element;
+  });
+
+  container.appendChild(layer);
+
+  return {
+    elements,
+    count: shown.length,
+    // A label layer that cannot place its labels says so, on the layer itself, where
+    // both a human and a test can see it. Silence was the original bug.
+    fail: (reason: string): void => layer.setAttribute("data-label-error", reason),
+    destroy: (): void => layer.remove(),
+  };
+};
+
+const positionLabel = (
+  graph: CosmosGraphInstance,
+  positions: ReadonlyArray<number>,
+  layer: ReturnType<typeof makeLabelLayer>,
+  index: number
+): void => {
+  const x = positions[index * 2];
+  const y = positions[index * 2 + 1];
+  const element = layer.elements[index];
+  if (element === undefined || x === undefined || y === undefined) return;
+  if (Number.isNaN(x) || Number.isNaN(y)) return;
+
+  const screen = graph.spaceToScreenPosition?.([x, y]);
+  if (screen === undefined) return;
+
+  // Offset below the point so the text never sits on top of the dot it names.
+  element.style.transform = `translate(${Math.round(screen[0])}px, ${Math.round(screen[1] + 8)}px) translateX(-50%)`;
 };
 
 type CosmosGraphConstructor = new (container: HTMLElement, config: CosmosGraphConfig) => CosmosGraphInstance;
@@ -205,44 +312,150 @@ const makeFpsSampler = (): FpsSampler => {
  * @category adapters
  * @since 0.0.0
  */
-export interface CosmosRenderHandle {
-  readonly backend: CosmosBackend;
-  readonly destroy: () => void;
-  readonly fps: () => number;
-  readonly update: (projection: CosmosGraphProjection) => void;
-}
+export class CosmosRenderHandle extends S.Class<CosmosRenderHandle>($I`CosmosRenderHandle`)(
+  {
+    backend: CosmosBackend,
+    destroy: Fn({ output: S.Void }),
+    fps: Fn({ output: S.Finite }),
+    update: Fn({
+      input: CosmosGraphProjection,
+      output: S.Void,
+    }),
+  },
+  $I.annote("CosmosRenderHandle", {
+    description: "",
+  })
+) {}
 
 const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
   container: HTMLElement,
   projection: CosmosGraphProjection
 ) {
   const module = yield* loadCosmosGraphModule;
-  const graph = yield* Effect.try({
+  // Held as the instance shape this driver declares, not as cosmos.gl's class: the
+  // wrapper depends on exactly the members it names here and nothing more.
+  const graph: CosmosGraphInstance = yield* Effect.try({
     try: () => new module.Graph(container, CosmosGraphConfig.make()),
     catch: CosmosDriverError.fromUnknown("renderFailed")("Failed to construct cosmos.gl graph."),
   });
+
+  // Sizes and colours are set per element, not left to the library's defaults. The
+  // setters are optional in the instance type because they arrived in cosmos.gl 2.x:
+  // where they are missing the graph still draws, just with the plain defaults.
+  const paint = (current: CosmosGraphProjection): void => {
+    const linkCount = current.links.length / 2;
+    graph.setPointSizes?.(filled(current.nodeCount, POINT_SIZE));
+    graph.setPointColors?.(repeatRgba(current.nodeCount, POINT_RGBA));
+    graph.setLinkWidths?.(filled(linkCount, LINK_WIDTH));
+    graph.setLinkColors?.(repeatRgba(linkCount, LINK_RGBA));
+  };
 
   yield* Effect.try({
     try: () => {
       graph.setPointPositions(projection.pointPositions);
       graph.setLinks(projection.links);
+      paint(projection);
       graph.render();
     },
     catch: CosmosDriverError.fromUnknown("renderFailed")("Failed to render cosmos.gl graph."),
   });
 
+  // Labels live in a DOM layer over the canvas and are re-pinned to their points on
+  // every frame, because the simulation, a pan, and a zoom all move them. The graph
+  // is the only thing that knows where a point currently is, so it is asked, rather
+  // than the transform being reconstructed here.
+  const layerFor = (current: CosmosGraphProjection): O.Option<ReturnType<typeof makeLabelLayer>> =>
+    pipe(
+      O.fromNullishOr(current.labels),
+      O.filter(A.isReadonlyArrayNonEmpty),
+      O.map((names) => makeLabelLayer(container, names))
+    );
+
+  // A graph that cannot say where its points are cannot carry labels, and pretending
+  // otherwise is how the first attempt at this failed: the labels were built, mounted,
+  // and left sitting at their off-screen start position, saying nothing.
+  const canPlaceLabels = P.isFunction(graph.getPointPositions) && P.isFunction(graph.spaceToScreenPosition);
+  if (A.isReadonlyArrayNonEmpty(projection.labels ?? []) && !canPlaceLabels) {
+    return yield* CosmosDriverError.adapterInvariant(
+      "cosmos.gl cannot report point positions, so labels cannot be placed."
+    );
+  }
+
+  let layer = layerFor(projection);
+  let frame: number | undefined = undefined;
+
+  const positionLabels = (): void => {
+    pipe(
+      layer,
+      O.match({
+        onNone: () => undefined,
+        onSome: (current) => {
+          // Called ON the graph, never lifted off it. Holding the method in a local
+          // (`const toScreen = graph.spaceToScreenPosition`) detaches it from its
+          // instance, so `this` is undefined and every call throws — inside an
+          // animation frame, where the throw goes nowhere anyone will see it. The
+          // labels simply never moved, and nothing said why.
+          const positions = graph.getPointPositions?.() ?? [];
+          for (let index = 0; index < current.count; index += 1) {
+            positionLabel(graph, positions, current, index);
+          }
+        },
+      })
+    );
+  };
+
+  // A throw inside an animation frame lands nowhere: the browser swallows it, the
+  // loop keeps being rescheduled, and the labels sit motionless with nothing to
+  // explain them. That is exactly how the unbound-method bug above stayed invisible.
+  // So a failure here stops the loop and marks the layer, which is visible in the
+  // DOM and in a test, instead of failing in a place no one can look.
+  const tick = (): void => {
+    try {
+      positionLabels();
+    } catch (cause) {
+      pipe(
+        layer,
+        O.match({
+          onNone: () => undefined,
+          onSome: (current) => current.fail(cause instanceof Error ? cause.message : String(cause)),
+        })
+      );
+      frame = undefined;
+      return;
+    }
+    frame = globalThis.requestAnimationFrame(tick);
+  };
+  if (O.isSome(layer)) {
+    tick();
+  }
+
   const sampler = makeFpsSampler();
 
-  return {
+  return CosmosRenderHandle.make({
     backend: "cosmos",
     fps: sampler.fps,
-    update: (nextProjection) => {
+    update: CosmosRenderHandle.fields.update.implement((nextProjection) => {
       graph.setPointPositions(nextProjection.pointPositions);
       graph.setLinks(nextProjection.links);
+      paint(nextProjection);
       graph.render();
-    },
+
+      // A re-projection can rename, add or drop nodes, so the layer is rebuilt from
+      // the labels that arrived with it rather than left describing the old graph.
+      pipe(layer, O.match({ onNone: () => undefined, onSome: (current) => current.destroy() }));
+      layer = layerFor(nextProjection);
+      if (O.isSome(layer) && frame === undefined) {
+        tick();
+      }
+    }),
     destroy: () => {
       sampler.stop();
+      if (frame !== undefined) {
+        globalThis.cancelAnimationFrame(frame);
+        frame = undefined;
+      }
+      pipe(layer, O.match({ onNone: () => undefined, onSome: (current) => current.destroy() }));
+      layer = O.none();
       if (P.isFunction(graph.stop)) {
         graph.stop();
       }
@@ -250,7 +463,7 @@ const renderWithCosmos = Effect.fn("Cosmos.renderWithCosmos")(function* (
         graph.destroy();
       }
     },
-  } satisfies CosmosRenderHandle;
+  });
 });
 
 const renderWithSigma = Effect.fn("Cosmos.renderWithSigma")(function* (

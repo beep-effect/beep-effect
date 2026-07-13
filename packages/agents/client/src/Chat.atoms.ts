@@ -11,25 +11,35 @@
  * @category atoms
  * @since 0.0.0
  */
-import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
+import { AssistantBlock, ParagraphBlock, TextInline } from "@beep/agents-domain/values/AssistantContent";
 import { ChatActionError, ChatRpcs } from "@beep/agents-use-cases/public";
 import { $AgentsClientId } from "@beep/identity/packages";
 import { Document } from "@beep/md/Md.model";
-import { SchemaUtils } from "@beep/schema";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { A, O, P, Str } from "@beep/utils";
-import { Clock, Duration, Effect, Layer, Metric, Stream } from "effect";
+import { Cause, Clock, Duration, Effect, Layer, Match, Metric, Random, Stream } from "effect";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
 import { KeyValueStore } from "effect/unstable/persistence";
-import { Atom, AtomRegistry, AtomRpc, Reactivity } from "effect/unstable/reactivity";
+import { AsyncResult, Atom, AtomRegistry, AtomRpc, Reactivity } from "effect/unstable/reactivity";
 import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
 import { ClientObservabilityLive } from "./ClientObservability.js";
+import type { TurnRequestStatus } from "@beep/agents-use-cases/public";
+import type { RpcClientError } from "effect/unstable/rpc";
 
 const $I = $AgentsClientId.create("Chat.atoms");
 
 type WorkspaceId = WorkspaceIdentity.WorkspaceId;
 type ThreadId = WorkspaceIdentity.ThreadId;
+
+const StreamingTurnReconciliation = LiteralKit(["timeline", "receipt"]).pipe(
+  $I.annoteSchema("StreamingTurnReconciliation", {
+    description: "Evidence that controls when a locally retained turn may retire.",
+  })
+);
+type StreamingTurnReconciliation = typeof StreamingTurnReconciliation.Type;
 
 // Dev (browser or `tauri dev`): the page is served from a real http(s) origin
 // (the dev server), so the rpc URL rides that origin relative to `/rpc` — which
@@ -205,7 +215,16 @@ export const threadsAtoms = Atom.family((workspaceId: WorkspaceId) =>
  * @category atoms
  * @since 0.0.0
  */
-export const selectedThreadAtom = Atom.make<O.Option<ThreadId>>(O.none());
+// Kept alive because the selection outlives the view that shows it. Every
+// subscriber lives inside the chat surface, which the desktop unmounts when the
+// user switches to Ontology, Vault sync, or Home — so the selection dropped to
+// zero listeners, and 30 seconds later the registry's idle sweep reset it to
+// `O.none()`. That default means "follow the list", so the user came back to the
+// most-recently-updated thread instead of the one they had open, with no error
+// and nothing to explain it. Anything they typed next went to the wrong
+// conversation. Under 30 seconds the same trip preserved the selection, which is
+// what made it look intermittent.
+export const selectedThreadAtom = Atom.keepAlive(Atom.make<O.Option<ThreadId>>(O.none()));
 
 const timelineKey = (threadId: ThreadId) => `timeline:${threadId}`;
 
@@ -356,13 +375,43 @@ export const draftAtoms = Atom.family((threadId: ThreadId) =>
   })
 );
 
+/**
+ * Bumped whenever a thread's draft is replaced from outside the editor.
+ *
+ * The composer seeds its editor from the draft at mount and then owns the
+ * content, so restoring a draft is invisible until the composer remounts. It
+ * keys itself on this revision: submitting cleared the editor before the request
+ * was accepted, so a rejected send simply destroyed what the user had written —
+ * the draft is put back and the editor re-seeded from it.
+ *
+ * @example
+ * ```ts
+ * import { draftRevisionAtoms } from "@beep/agents-client"
+ * import * as Workspace from "@beep/shared-domain/identity/Workspace"
+ * import * as S from "effect/Schema"
+ * import { AtomRegistry } from "effect/unstable/reactivity"
+ *
+ * const threadId = S.decodeUnknownSync(Workspace.ThreadId)(10)
+ * const registry = AtomRegistry.make()
+ *
+ * console.log(registry.get(draftRevisionAtoms(threadId))) // 0
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const draftRevisionAtoms = Atom.family((_threadId: ThreadId) => Atom.make(0));
+
 // ---------------------------------------------------------------------------
 // Streaming turn
 // ---------------------------------------------------------------------------
 
 /**
- * A streaming assistant turn: optimistic user content plus the assistant blocks
- * appended as each finishes streaming.
+ * A locally rendered assistant turn: optimistic user content plus the assistant
+ * blocks appended as each finishes streaming.
+ *
+ * Active turns live in {@link streamingTurnAtom}; completed turns whose durable
+ * refresh fails move to the per-thread {@link unreconciledTurnAtoms} collection.
  *
  * @example
  * ```ts
@@ -393,17 +442,27 @@ export const draftAtoms = Atom.family((threadId: ThreadId) =>
  */
 export class StreamingTurn extends S.Class<StreamingTurn>($I`StreamingTurn`)(
   {
-    /** The thread this turn streams into. */
+    /** The thread this turn belongs to. */
     threadId: WorkspaceIdentity.ThreadId.annotateKey({
-      description: "Thread this turn streams into.",
+      description: "Thread this locally rendered turn belongs to.",
+    }),
+    /** Exact request receipt used to retire uncertain local turns safely. */
+    requestId: S.Option(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Client request id used for exact persistence reconciliation when available.",
     }),
     /** Optimistic rendering of the just-sent user message. */
     userContent: Document.annotateKey({
       description: "Optimistic rendering of the just-sent user message.",
     }),
-    /** For edits: hide this turn and everything after it while streaming. */
+    /** For edits: hide this turn and everything after it while rendered locally. */
     truncateFrom: S.Option(WorkspaceIdentity.TurnId).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Turn id to truncate from while an edit-regenerate stream is in flight.",
+      description: "Turn id to truncate from while an edit-regenerate turn is rendered locally.",
+    }),
+    /** Evidence that controls when the local turn may retire. */
+    reconciliation: StreamingTurnReconciliation.pipe(
+      S.withConstructorDefault(Effect.succeed(StreamingTurnReconciliation.Enum.timeline))
+    ).annotateKey({
+      description: "Timeline fallbacks retire on refresh; receipt fallbacks remain until exact evidence resolves.",
     }),
     /** Assistant blocks appended as they stream in. */
     blocks: S.Array(AssistantBlock).annotateKey({
@@ -411,17 +470,18 @@ export class StreamingTurn extends S.Class<StreamingTurn>($I`StreamingTurn`)(
     }),
   },
   $I.annote("StreamingTurn", {
-    description: "A streaming assistant turn rendered optimistically while blocks arrive.",
+    description:
+      "An assistant turn rendered locally while blocks stream, its timeline refresh is pending, or receipt evidence is uncertain.",
   })
 ) {}
 
 /**
- * Blocks of the in-flight assistant turn, appended as they stream in.
+ * The actively streaming assistant turn rendered outside the durable timeline.
  *
  * @remarks
- * The atom is cleared after the persisted timeline has refetched, so the UI can
- * swap from optimistic streaming content to durable read-model content without
- * briefly dropping the assistant response.
+ * The atom is cleared when generation stops. If the post-completion timeline
+ * refresh fails, the completed value moves to {@link unreconciledTurnAtoms}
+ * before this active slot is cleared.
  *
  * @example
  * ```ts
@@ -450,6 +510,26 @@ export class StreamingTurn extends S.Class<StreamingTurn>($I`StreamingTurn`)(
  * @since 0.0.0
  */
 export const streamingTurnAtom = Atom.make<O.Option<StreamingTurn>>(O.none());
+
+/**
+ * Per-thread completed local replies awaiting a durable timeline refresh.
+ * Kept alive across thread/view unmounts so a transient read failure cannot
+ * erase the only visible copy of a completed reply.
+ *
+ * @example
+ * ```ts
+ * import { unreconciledTurnAtoms } from "@beep/agents-client"
+ * import * as Workspace from "@beep/shared-domain/identity/Workspace"
+ * import { AtomRegistry } from "effect/unstable/reactivity"
+ * const registry = AtomRegistry.make()
+ * console.log(registry.get(unreconciledTurnAtoms(Workspace.ThreadId.make(1))).length)
+ * ```
+ * @category atoms
+ * @since 0.0.0
+ */
+export const unreconciledTurnAtoms = Atom.family((_threadId: ThreadId) =>
+  Atom.keepAlive(Atom.make<ReadonlyArray<StreamingTurn>>([]))
+);
 
 /**
  * The latest failed assistant turn, surfaced for app/UI-layer toast handling.
@@ -492,9 +572,10 @@ const toTurnError = (error: unknown): ChatActionError =>
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
  * import * as S from "effect/Schema"
  *
+ * const threadId = S.decodeUnknownSync(Workspace.ThreadId)(10)
  * const turnId = S.decodeUnknownSync(Workspace.TurnId)(20)
  * const content = Document.make({ children: [P.make({ children: [Text.make({ value: "Revised prompt" })] })] })
- * const target = EditTarget.make({ turnId, content })
+ * const target = EditTarget.make({ threadId, turnId, content })
  *
  * console.log(target.content.children.length) // 1
  * ```
@@ -504,6 +585,10 @@ const toTurnError = (error: unknown): ChatActionError =>
  */
 export class EditTarget extends S.Class<EditTarget>($I`EditTarget`)(
   {
+    threadId: WorkspaceIdentity.ThreadId.annotateKey({
+      description:
+        "Thread the edited turn belongs to. Edit state is global, so without this a thread change mid-edit submitted the old thread's turn id against the new thread.",
+    }),
     turnId: WorkspaceIdentity.TurnId.annotateKey({
       description: "Turn being edited.",
     }),
@@ -528,11 +613,12 @@ export class EditTarget extends S.Class<EditTarget>($I`EditTarget`)(
  * import * as S from "effect/Schema"
  * import { AtomRegistry } from "effect/unstable/reactivity"
  *
+ * const threadId = S.decodeUnknownSync(Workspace.ThreadId)(10)
  * const turnId = S.decodeUnknownSync(Workspace.TurnId)(20)
  * const content = Document.make({ children: [P.make({ children: [Text.make({ value: "Edit me" })] })] })
  * const registry = AtomRegistry.make()
  *
- * registry.set(editTargetAtom, O.some(EditTarget.make({ turnId, content })))
+ * registry.set(editTargetAtom, O.some(EditTarget.make({ threadId, turnId, content })))
  *
  * console.log(O.isSome(registry.get(editTargetAtom))) // true
  * ```
@@ -550,6 +636,15 @@ const perceivedLatency = Metric.timer("ui_turn_perceived_latency", {
 const decodeFailures = Metric.counter("ui_editor_decode_failures_total", {
   description: "Composer editor states that failed schema decode",
   incremental: true,
+});
+const turnAttempts = Metric.counter("ui_turn_attempts_total", { incremental: true });
+const turnCompleted = Metric.counter("ui_turn_completed_total", { incremental: true });
+const turnFailed = Metric.counter("ui_turn_failed_total", { incremental: true });
+const turnCancelled = Metric.counter("ui_turn_cancelled_total", { incremental: true });
+const turnZeroBlock = Metric.counter("ui_turn_zero_block_total", { incremental: true });
+const turnBlocks = Metric.counter("ui_turn_blocks_total", { incremental: true });
+const turnDuration = Metric.timer("ui_turn_duration", {
+  boundaries: [100, 250, 500, 1000, 2000, 4000, 8000, 16000, 30000, 60000],
 });
 
 /**
@@ -700,6 +795,21 @@ export const TurnRequest = S.Union([SendTurnRequest, EditTurnRequest]).pipe(
  */
 export type TurnRequest = typeof TurnRequest.Type;
 
+// How hard the client chases the receipt the server records after a turn stops
+// or fails. Exhaustion keeps the prompt in a non-sendable reconciliation state;
+// only an explicit `not_persisted` receipt may restore a sendable draft.
+const TURN_RECEIPT_POLL_ATTEMPTS = 8;
+const TURN_RECEIPT_POLL_INTERVAL = Duration.millis(150);
+const isUncertainTurnRequestStatus = (status: O.Option<TurnRequestStatus>): boolean =>
+  O.isNone(status) || O.exists(status, (value) => value === "pending" || value === "accepted" || value === "unknown");
+const terminalAssistantBlock = (text: "(failed)" | "(stopped)"): AssistantBlock =>
+  ParagraphBlock.make({ children: [TextInline.make({ text })] });
+
+// Cleanup from an interrupted fn node can overlap the replacement invocation.
+// A generation guard keeps the old finalizer from clearing or restoring state
+// owned by the newer turn.
+const turnGenerationAtom = Atom.keepAlive(Atom.make(0));
+
 /**
  * Drives one assistant turn: fires the streaming rpc, appends blocks into
  * {@link streamingTurnAtom} as they arrive, and on completion invalidates the
@@ -753,38 +863,172 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
     const client = yield* ChatClient;
     const reactivity = yield* Reactivity.Reactivity;
     const registry = yield* AtomRegistry.AtomRegistry;
+    const requestId = A.join(
+      A.map(yield* Effect.all(A.replicate(Random.nextInt, 4)), (value) => `${value}`),
+      ":"
+    );
+    const generation = registry.get(turnGenerationAtom) + 1;
+    ctx.set(turnGenerationAtom, generation);
+    yield* Effect.annotateCurrentSpan({ turn_kind: turn._tag, thread_id: turn.threadId });
+    yield* Metric.update(Metric.withAttributes(turnAttempts, { kind: turn._tag }), 1);
     yield* Effect.logInfo("assistant turn started").pipe(Effect.annotateLogs({ turn: turn._tag }));
     const stream = TurnRequest.match(turn, {
-      send: (turn) => client("SendMessage", { threadId: turn.threadId, content: turn.content }),
+      send: (turn) => client("SendMessage", { threadId: turn.threadId, content: turn.content, requestId }),
       edit: (turn) =>
         client("EditMessage", {
           threadId: turn.threadId,
           turnId: turn.turnId,
           content: turn.content,
+          requestId,
         }),
     });
     const makeStreamingTurn = TurnRequest.match(turn, {
-      send: (turn) => (blocks: ReadonlyArray<AssistantBlock>) =>
-        StreamingTurn.make({
-          threadId: turn.threadId,
-          userContent: turn.content,
-          blocks,
-        }),
-      edit: (turn) => (blocks: ReadonlyArray<AssistantBlock>) =>
-        StreamingTurn.make({
-          threadId: turn.threadId,
-          userContent: turn.content,
-          truncateFrom: O.some(turn.turnId),
-          blocks,
-        }),
+      send:
+        (turn) =>
+        (
+          blocks: ReadonlyArray<AssistantBlock>,
+          reconciliation: StreamingTurnReconciliation = StreamingTurnReconciliation.Enum.timeline
+        ) =>
+          StreamingTurn.make({
+            threadId: turn.threadId,
+            requestId: O.some(requestId),
+            userContent: turn.content,
+            reconciliation,
+            blocks,
+          }),
+      edit:
+        (turn) =>
+        (
+          blocks: ReadonlyArray<AssistantBlock>,
+          reconciliation: StreamingTurnReconciliation = StreamingTurnReconciliation.Enum.timeline
+        ) =>
+          StreamingTurn.make({
+            threadId: turn.threadId,
+            requestId: O.some(requestId),
+            userContent: turn.content,
+            truncateFrom: O.some(turn.turnId),
+            reconciliation,
+            blocks,
+          }),
     });
     // a completed turn changes this thread's timeline and bumps its activity in
     // every workspace list, so invalidate both the timeline and the shared list
     const turnKeys = [timelineKey(turn.threadId), THREADS_KEY];
     const startedAt = yield* Clock.currentTimeMillis;
+    const recordDuration = Effect.gen(function* () {
+      const endedAt = yield* Clock.currentTimeMillis;
+      yield* Metric.update(
+        Metric.withAttributes(turnDuration, { kind: turn._tag }),
+        Duration.millis(endedAt - startedAt)
+      );
+    });
     let blocks: ReadonlyArray<AssistantBlock> = [];
     ctx.set(turnErrorAtom, O.none());
     ctx.set(streamingTurnAtom, O.some(makeStreamingTurn(blocks)));
+    const pollTurnRequestStatus = client("GetTurnRequestStatus", { requestId }).pipe(
+      Effect.option,
+      Effect.delay(TURN_RECEIPT_POLL_INTERVAL),
+      Effect.repeat({
+        times: TURN_RECEIPT_POLL_ATTEMPTS,
+        until: O.exists(
+          (status) => status === "persisted" || status === "user_persisted" || status === "not_persisted"
+        ),
+      })
+    );
+    const timelineAtom = threadTimelineAtoms(turn.threadId);
+    // Reactivity invalidation notifies query atoms, but a function atom can read
+    // the previous success before that notification has rebuilt the query node.
+    // Subscribe before refreshing and wait for a distinct non-waiting result so
+    // this result belongs to the post-turn fetch rather than the cached timeline.
+    const refreshTimeline = (
+      refresh: () => void
+    ): Effect.Effect<void, ChatActionError | RpcClientError.RpcClientError> =>
+      Effect.callback((resume) => {
+        const previous = registry.get(timelineAtom);
+        let refreshStarted = false;
+        const cancel = registry.subscribe(
+          timelineAtom,
+          (result) => {
+            if (result.waiting) {
+              refreshStarted = true;
+              return;
+            }
+            if (AsyncResult.isInitial(result) || (!refreshStarted && result === previous)) return;
+            cancel();
+            resume(AsyncResult.isFailure(result) ? Effect.failCause(result.cause) : Effect.void);
+          },
+          { immediate: false }
+        );
+        refresh();
+        return Effect.sync(cancel);
+      });
+    const retainTerminalTurn = (text: "(failed)" | "(stopped)", reconciliation: StreamingTurnReconciliation) =>
+      Effect.sync(() =>
+        registry.set(
+          unreconciledTurnAtoms(turn.threadId),
+          A.append(
+            registry.get(unreconciledTurnAtoms(turn.threadId)),
+            makeStreamingTurn([terminalAssistantBlock(text)], reconciliation)
+          )
+        )
+      );
+    const reconcileReceiptFallbacks = Effect.gen(function* () {
+      const unreconciledAtom = unreconciledTurnAtoms(turn.threadId);
+      const snapshot = registry.get(unreconciledAtom);
+      const decisions = yield* Effect.forEach(
+        snapshot,
+        (fallback) => {
+          if (fallback.reconciliation === "timeline") {
+            return Effect.succeed([fallback, O.some<TurnRequestStatus>("persisted")] as const);
+          }
+          const requestStatus = fallback.requestId.pipe(
+            O.map((fallbackRequestId) =>
+              client("GetTurnRequestStatus", { requestId: fallbackRequestId }).pipe(Effect.option)
+            ),
+            O.getOrElse(() => Effect.succeed(O.none<TurnRequestStatus>()))
+          );
+          return requestStatus.pipe(Effect.map((status) => [fallback, status] as const));
+        },
+        { concurrency: 1 }
+      );
+      yield* Effect.sync(() => {
+        const draftAtom = draftAtoms(turn.threadId);
+        const currentDraftOccupied = O.map(registry.get(draftAtom), () => true);
+        let draftToRestore = O.none<StreamingTurn>();
+        const retained = A.filter(registry.get(unreconciledAtom), (fallback) =>
+          A.findFirst(decisions, ([candidate]) => candidate === fallback).pipe(
+            O.map(([, status]) =>
+              status.pipe(
+                O.map((status) =>
+                  Match.value(status).pipe(
+                    Match.whenOr("pending", "accepted", "unknown", () => true),
+                    Match.when("not_persisted", () =>
+                      currentDraftOccupied.pipe(
+                        O.orElse(() => O.map(draftToRestore, () => true)),
+                        O.getOrElse(() => {
+                          draftToRestore = O.some(fallback);
+                          return false;
+                        })
+                      )
+                    ),
+                    Match.whenOr("persisted", "user_persisted", () => false),
+                    Match.exhaustive
+                  )
+                ),
+                O.getOrElse(() => true)
+              )
+            ),
+            // Preserve fallbacks appended while receipt reads were in flight.
+            O.getOrElse(() => true)
+          )
+        );
+        A.forEach(O.toArray(draftToRestore), (fallback) => {
+          ctx.set(draftAtom, O.some(fallback.userContent));
+          ctx.set(draftRevisionAtoms(fallback.threadId), registry.get(draftRevisionAtoms(fallback.threadId)) + 1);
+        });
+        ctx.set(unreconciledAtom, retained);
+      });
+    });
     yield* Reactivity.mutation(
       Stream.runForEach(
         stream,
@@ -809,7 +1053,54 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
           ctx.set(streamingTurnAtom, O.none());
           const turnError = toTurnError(error);
           ctx.set(turnErrorAtom, O.some(turnError));
-          yield* Effect.logError("assistant turn failed", error);
+          const requestStatus = yield* pollTurnRequestStatus;
+          if (O.contains(requestStatus, "not_persisted")) {
+            // Give the user back what they wrote only when the server did not
+            // commit it. Restoring a durable prompt would make retry duplicate
+            // its user row.
+            ctx.set(draftAtoms(turn.threadId), O.some(turn.content));
+            ctx.set(draftRevisionAtoms(turn.threadId), registry.get(draftRevisionAtoms(turn.threadId)) + 1);
+          } else {
+            // Reactivity.mutation invalidates only on success. A failed stream
+            // may still have committed the user row and a terminal assistant
+            // marker, so explicitly refresh those durable states. Preserve a
+            // local terminal turn if that read fails too, or if the exact
+            // request receipt remains uncertain after bounded polling.
+            yield* refreshTimeline(() => reactivity.invalidateUnsafe(turnKeys)).pipe(
+              Effect.tap(() =>
+                isUncertainTurnRequestStatus(requestStatus)
+                  ? retainTerminalTurn("(failed)", StreamingTurnReconciliation.Enum.receipt)
+                  : Effect.void
+              ),
+              Effect.catch(
+                Effect.fnUntraced(function* (refreshError) {
+                  yield* retainTerminalTurn(
+                    "(failed)",
+                    isUncertainTurnRequestStatus(requestStatus)
+                      ? StreamingTurnReconciliation.Enum.receipt
+                      : StreamingTurnReconciliation.Enum.timeline
+                  );
+                  yield* logRedactedCause(
+                    Cause.fail(refreshError),
+                    LogRedactedCauseOptions.make({
+                      message: "failed assistant turn persisted but the thread could not be refreshed",
+                      level: "Warn",
+                      attributes: { kind: turn._tag, subsystem: "chat_ui" },
+                    })
+                  );
+                })
+              )
+            );
+          }
+          yield* Metric.update(Metric.withAttributes(turnFailed, { kind: turn._tag }), 1);
+          yield* logRedactedCause(
+            Cause.fail(error),
+            LogRedactedCauseOptions.make({
+              message: "assistant turn failed",
+              level: "Error",
+              attributes: { kind: turn._tag, subsystem: "chat_ui" },
+            })
+          );
         })
       ),
       // user-cancelled (Atom.Interrupt write): drop the partial turn and
@@ -817,17 +1108,155 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
       // Interrupt write refreshes the fn node BEFORE this fiber unwinds, so
       // `ctx` is already disposed and its writes are silently dropped — go
       // through the registry and reactivity services, which outlive the node.
+      //
+      // The exact request receipt distinguishes a queued cancellation from a
+      // request whose user or assistant row committed. Aggregate timeline growth
+      // cannot do that when another window is using the same thread. Restore the
+      // prompt only when this request is confirmed not persisted. Missing or
+      // unavailable receipt evidence must stay non-sendable because a durable
+      // user row must never be duplicated by retry.
       Effect.onInterrupt(() =>
-        Effect.sync(() => {
-          registry.set(streamingTurnAtom, O.none());
-          reactivity.invalidateUnsafe(turnKeys);
+        Metric.update(Metric.withAttributes(turnCancelled, { kind: turn._tag }), 1).pipe(
+          Effect.andThen(Effect.logInfo("assistant turn cancelled").pipe(Effect.annotateLogs({ turn: turn._tag }))),
+          Effect.andThen(
+            pollTurnRequestStatus.pipe(
+              Effect.flatMap(
+                Effect.fnUntraced(function* (requestStatus) {
+                  if (registry.get(turnGenerationAtom) !== generation) return;
+                  if (O.contains(requestStatus, "not_persisted")) {
+                    registry.set(draftAtoms(turn.threadId), O.some(turn.content));
+                    registry.set(
+                      draftRevisionAtoms(turn.threadId),
+                      registry.get(draftRevisionAtoms(turn.threadId)) + 1
+                    );
+                    registry.set(
+                      turnErrorAtom,
+                      O.some(
+                        ChatActionError.new("The stopped reply could not be confirmed. Your message was restored.")
+                      )
+                    );
+                    reactivity.invalidateUnsafe(turnKeys);
+                  } else {
+                    const requestStatusUncertain = isUncertainTurnRequestStatus(requestStatus);
+                    if (requestStatusUncertain) {
+                      registry.set(
+                        turnErrorAtom,
+                        O.some(
+                          ChatActionError.new(
+                            "The stopped reply could not be confirmed. It remains visible until the thread reconciles."
+                          )
+                        )
+                      );
+                    }
+                    yield* refreshTimeline(() => reactivity.invalidateUnsafe(turnKeys)).pipe(
+                      Effect.tap(() =>
+                        requestStatusUncertain
+                          ? retainTerminalTurn("(stopped)", StreamingTurnReconciliation.Enum.receipt)
+                          : Effect.void
+                      ),
+                      Effect.catch(
+                        Effect.fnUntraced(function* (refreshError) {
+                          yield* retainTerminalTurn(
+                            "(stopped)",
+                            requestStatusUncertain
+                              ? StreamingTurnReconciliation.Enum.receipt
+                              : StreamingTurnReconciliation.Enum.timeline
+                          );
+                          registry.set(
+                            turnErrorAtom,
+                            O.some(
+                              ChatActionError.new(
+                                requestStatusUncertain
+                                  ? "The stopped reply could not be confirmed or refreshed."
+                                  : "The stopped reply persisted, but the thread could not be refreshed."
+                              )
+                            )
+                          );
+                          yield* logRedactedCause(
+                            Cause.fail(refreshError),
+                            LogRedactedCauseOptions.make({
+                              message: "stopped assistant turn persisted but the thread could not be refreshed",
+                              level: "Warn",
+                              attributes: { kind: turn._tag, subsystem: "chat_ui" },
+                            })
+                          );
+                        })
+                      )
+                    );
+                  }
+                  registry.set(streamingTurnAtom, O.none());
+                })
+              )
+            )
+          )
+        )
+      ),
+      Effect.ensuring(recordDuration)
+    );
+    // wait for the refetched timeline before dropping the streamed turn, so the
+    // persisted rendering swaps in without a gap.
+    //
+    // A failure here is a *display* problem — the turn itself already streamed
+    // and persisted. Keep the streamed value as the local fallback; activity is
+    // derived separately from this fn atom, so a failed refresh neither loses the
+    // reply nor leaves the composer/Stop control believing generation continues.
+    yield* refreshTimeline(() => ctx.refresh(timelineAtom)).pipe(
+      Effect.tap(() =>
+        reconcileReceiptFallbacks.pipe(
+          Effect.andThen(
+            Effect.sync(() => {
+              ctx.set(streamingTurnAtom, O.none());
+            })
+          )
+        )
+      ),
+      Effect.catch(
+        Effect.fnUntraced(function* (error) {
+          ctx.set(turnErrorAtom, O.some(toTurnError(error)));
+          ctx.set(
+            unreconciledTurnAtoms(turn.threadId),
+            A.append(registry.get(unreconciledTurnAtoms(turn.threadId)), makeStreamingTurn(blocks))
+          );
+          ctx.set(streamingTurnAtom, O.none());
+          yield* logRedactedCause(
+            Cause.fail(error),
+            LogRedactedCauseOptions.make({
+              message: "assistant turn completed but the thread could not be refreshed",
+              level: "Warn",
+              attributes: { kind: turn._tag, subsystem: "chat_ui" },
+            })
+          );
         })
       )
     );
-    // wait for the refetched timeline before dropping the streamed turn, so the
-    // persisted rendering swaps in without a gap
-    yield* ctx.result(threadTimelineAtoms(turn.threadId), { suspendOnWaiting: true });
-    ctx.set(streamingTurnAtom, O.none());
+    yield* Metric.update(Metric.withAttributes(turnCompleted, { kind: turn._tag }), 1);
+    yield* Metric.update(Metric.withAttributes(turnBlocks, { kind: turn._tag }), blocks.length);
+    if (A.isReadonlyArrayEmpty(blocks)) {
+      yield* Metric.update(Metric.withAttributes(turnZeroBlock, { kind: turn._tag }), 1);
+      yield* Effect.logWarning("assistant turn completed without streamed blocks").pipe(
+        Effect.annotateLogs({ turn: turn._tag })
+      );
+    }
     yield* Effect.logInfo("assistant turn complete");
   })
 );
+
+/**
+ * Whether the assistant turn driver is actively running.
+ *
+ * This is intentionally separate from {@link unreconciledTurnAtoms}: completed
+ * display fallbacks must not block another send or leave a nonfunctional Stop
+ * action.
+ *
+ * @example
+ * ```ts
+ * import { turnActiveAtom } from "@beep/agents-client"
+ * import { Atom } from "effect/unstable/reactivity"
+ *
+ * console.log(Atom.isAtom(turnActiveAtom)) // true
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const turnActiveAtom = Atom.map(runTurnAtom, AsyncResult.isWaiting);

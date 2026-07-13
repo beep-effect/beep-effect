@@ -20,9 +20,11 @@ import {
   ApplyOntologyBatchCommand,
   buildOntologySnapshot,
   buildOntologySnapshotWithInference,
+  decodeWorkerResult,
   defaultOntologyGraphProjectionOptions,
   defaultOntologySparqlQuery,
   ExportOntologyProvenanceCommand,
+  encodeWorkerCommand,
   graphGestureChangeOperations,
   InferOntologySessionInput,
   OntologyActionError,
@@ -44,7 +46,7 @@ import {
 import { serializeQuad } from "@beep/rdf/Rdf";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
-import { Cause, Effect, flow, Order, pipe } from "effect";
+import { Cause, Duration, Effect, Fiber, flow, Order, pipe, Result, Semaphore } from "effect";
 import * as S from "effect/Schema";
 import { Atom, AtomRpc, Reactivity } from "effect/unstable/reactivity";
 import type { CosmosBackend, CosmosRenderHandle } from "@beep/cosmos";
@@ -272,6 +274,27 @@ const OntologyValidationStatus = LiteralKit(["idle", "running", "blocked", "fail
 export type OntologyValidationStatus = typeof OntologyValidationStatus.Type;
 
 /**
+ * Workbench state that outlives the view showing it.
+ *
+ * The registry disposes any atom with no listeners and no dependents once its
+ * idle TTL elapses, and the desktop sets one. Every atom below is subscribed
+ * only from inside `OntologyWorkbench`, which the app unmounts whenever the user
+ * switches surface — so leaving the Ontology tab dropped all of them to zero
+ * listeners, and thirty seconds later the registry swept them back to their
+ * defaults. The open document, every unsaved change in its change log, the
+ * dirty-tracking signature, and the redo stack were all destroyed in silence:
+ * the workbench simply came back saying "no file open".
+ *
+ * This is application state, not view state. Keeping it alive says so. These are
+ * singletons, so there is nothing to leak — unlike a per-editor family, where
+ * keeping values alive would pin every editor ever created.
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+const workbenchState = <A>(initialValue: A) => Atom.keepAlive(Atom.make(initialValue));
+
+/**
  * Current open ontology session, if any.
  *
  * @example
@@ -284,7 +307,7 @@ export type OntologyValidationStatus = typeof OntologyValidationStatus.Type;
  * @category atoms
  * @since 0.0.0
  */
-export const ontologySessionAtom = Atom.make<O.Option<Session>>(O.none());
+export const ontologySessionAtom = workbenchState<O.Option<Session>>(O.none());
 
 /**
  * Current open ontology path, if any.
@@ -299,7 +322,7 @@ export const ontologySessionAtom = Atom.make<O.Option<Session>>(O.none());
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyPathAtom = Atom.make<O.Option<OntologyFilePath>>(O.none());
+export const ontologyPathAtom = workbenchState<O.Option<OntologyFilePath>>(O.none());
 
 /**
  * Latest Turtle source shown by the source view.
@@ -314,7 +337,7 @@ export const ontologyPathAtom = Atom.make<O.Option<OntologyFilePath>>(O.none());
  * @category atoms
  * @since 0.0.0
  */
-export const ontologySourceAtom = Atom.make("");
+export const ontologySourceAtom = workbenchState("");
 
 /**
  * Change-log length after the last successful save/open.
@@ -329,12 +352,32 @@ export const ontologySourceAtom = Atom.make("");
  * @category atoms
  * @since 0.0.0
  */
-export const ontologySavedChangeCountAtom = Atom.make(0);
+export const ontologySavedChangeCountAtom = workbenchState(0);
 
 const changeLogSignature: (changes: ReadonlyArray<ChangeOperation>) => string = flow(
   A.map((change: ChangeOperation) => `${change.kind}:${change.partition}:${serializeQuad(change.quad)}`),
   A.join("\n")
 );
+
+/** Identifies the exact session a read was computed from. */
+const sessionSignature = (session: Session): string => `${session.id}:${changeLogSignature(session.changeLog)}`;
+
+/**
+ * True when the open session is no longer the one a read started against.
+ *
+ * SPARQL and validation deliberately do not hold the mutation lock — a slow read
+ * must never block editing — so the user can apply a triple, undo, or redo while
+ * one is in flight. A result computed from the session as it was is not an answer
+ * about the ontology as it is: publishing it anyway put rows and verdicts from the
+ * old ontology on screen as the current ones, which is worse than no answer.
+ */
+const sessionMoved = (current: O.Option<Session>, signature: string): boolean =>
+  O.match(current, {
+    onNone: () => true,
+    onSome: (session) => sessionSignature(session) !== signature,
+  });
+
+const STALE_READ_MESSAGE = "The ontology changed while this was running. Run it again for a current result.";
 
 /**
  * Change-log signature after the last successful save/open.
@@ -349,7 +392,7 @@ const changeLogSignature: (changes: ReadonlyArray<ChangeOperation>) => string = 
  * @category atoms
  * @since 0.0.0
  */
-export const ontologySavedChangeLogSignatureAtom = Atom.make(changeLogSignature([]));
+export const ontologySavedChangeLogSignatureAtom = workbenchState(changeLogSignature([]));
 
 /**
  * Redo stack for client-local undo/redo.
@@ -364,7 +407,7 @@ export const ontologySavedChangeLogSignatureAtom = Atom.make(changeLogSignature(
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyRedoStackAtom = Atom.make<ReadonlyArray<ChangeOperation>>([]);
+export const ontologyRedoStackAtom = workbenchState<ReadonlyArray<ChangeOperation>>([]);
 
 /**
  * Current explorer view mode.
@@ -379,7 +422,7 @@ export const ontologyRedoStackAtom = Atom.make<ReadonlyArray<ChangeOperation>>([
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyViewModeAtom = Atom.make<OntologyViewMode>("all");
+export const ontologyViewModeAtom = workbenchState<OntologyViewMode>("all");
 
 /**
  * Current visualizer fold level.
@@ -394,7 +437,7 @@ export const ontologyViewModeAtom = Atom.make<OntologyViewMode>("all");
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyFoldLevelAtom = Atom.make<OntologyFoldLevel>("L2");
+export const ontologyFoldLevelAtom = workbenchState<OntologyFoldLevel>("L2");
 
 /**
  * Whether explorer projections include the derived inferred graph partition.
@@ -409,7 +452,7 @@ export const ontologyFoldLevelAtom = Atom.make<OntologyFoldLevel>("L2");
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyInferredViewAtom = Atom.make(false);
+export const ontologyInferredViewAtom = workbenchState(false);
 
 /**
  * Latest structural inference result for the open session.
@@ -424,9 +467,9 @@ export const ontologyInferredViewAtom = Atom.make(false);
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyInferenceResultAtom = Atom.make<O.Option<OntologyInferenceResult>>(O.none());
+export const ontologyInferenceResultAtom = workbenchState<O.Option<OntologyInferenceResult>>(O.none());
 
-const ontologyInferenceInputSignatureAtom = Atom.make<O.Option<string>>(O.none());
+const ontologyInferenceInputSignatureAtom = workbenchState<O.Option<string>>(O.none());
 
 /**
  * Latest structural inference failure, if any.
@@ -441,7 +484,7 @@ const ontologyInferenceInputSignatureAtom = Atom.make<O.Option<string>>(O.none()
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyInferenceErrorAtom = Atom.make<O.Option<string>>(O.none());
+export const ontologyInferenceErrorAtom = workbenchState<O.Option<string>>(O.none());
 
 const inferenceInputSignature = (session: Session): string => {
   const partitions = deriveSessionGraphPartitions(session);
@@ -467,8 +510,34 @@ const resetOntologyValidation = (ctx: Atom.FnContext): void => {
   ctx.set(ontologyValidationErrorAtom, O.none());
 };
 
+/**
+ * What to tell the user when an ontology action fails.
+ *
+ * The workbench used to print `Cause.pretty(cause)` straight into its panels: an
+ * internal Effect cause, complete with stack frames and module paths, shown to
+ * someone who mistyped a SPARQL query. It told them nothing they could act on, and
+ * it leaked the shape of the program to do it.
+ *
+ * Every failure that crosses the RPC boundary is a typed `OntologyActionError`
+ * carrying a `message` written for a person — so that message is what gets shown.
+ * The full cause still goes to the log, where the detail is useful and the reader is
+ * a developer.
+ */
+const actionFailureMessage = (label: string, cause: Cause.Cause<unknown>): string =>
+  pipe(
+    Cause.findErrorOption(cause),
+    O.filter((error) => P.hasProperty(error, "message") && P.isString(error.message)),
+    O.map((error) => String((error as { readonly message: string }).message)),
+    O.filter(Str.isNonEmpty),
+    O.getOrElse(() => `${label} failed. See the log for details.`)
+  );
+
+const reportFailure = (label: string, cause: Cause.Cause<unknown>): void => {
+  Effect.runFork(Effect.logError(`${label} failed`, cause));
+};
+
 const validationFailureMessage = (label: string, cause: Cause.Cause<unknown>): string =>
-  `${label} failed: ${Cause.pretty(cause)}`;
+  actionFailureMessage(label, cause);
 
 const setValidationFailure = (ctx: Atom.FnContext, label: string, cause: Cause.Cause<unknown>): void => {
   ctx.set(ontologyValidationStatusAtom, "failed");
@@ -521,7 +590,7 @@ const ensureOntologyInference = Effect.fn("ensureOntologyInference")(function* (
  * @category atoms
  * @since 0.0.0
  */
-export const ontologySparqlProfileAtom = Atom.make<OntologySparqlPanelProfile>("select");
+export const ontologySparqlProfileAtom = workbenchState<OntologySparqlPanelProfile>("select");
 
 /**
  * Current SPARQL query text.
@@ -536,7 +605,7 @@ export const ontologySparqlProfileAtom = Atom.make<OntologySparqlPanelProfile>("
  * @category atoms
  * @since 0.0.0
  */
-export const ontologySparqlQueryAtom = Atom.make("SELECT ?s ?p ?o WHERE {\n  ?s ?p ?o\n}");
+export const ontologySparqlQueryAtom = workbenchState("SELECT ?s ?p ?o WHERE {\n  ?s ?p ?o\n}");
 
 /**
  * Built-in SPARQL example library for the workbench panel.
@@ -566,7 +635,7 @@ export const ontologySparqlExamplesAtom = Atom.make(ontologySparqlExamples());
  * @category atoms
  * @since 0.0.0
  */
-export const ontologySparqlResultAtom = Atom.make<O.Option<RunOntologySparqlResult>>(O.none());
+export const ontologySparqlResultAtom = workbenchState<O.Option<RunOntologySparqlResult>>(O.none());
 
 /**
  * Latest SPARQL query failure, if any.
@@ -581,7 +650,27 @@ export const ontologySparqlResultAtom = Atom.make<O.Option<RunOntologySparqlResu
  * @category atoms
  * @since 0.0.0
  */
-export const ontologySparqlErrorAtom = Atom.make<O.Option<string>>(O.none());
+export const ontologySparqlErrorAtom = workbenchState<O.Option<string>>(O.none());
+
+/**
+ * Latest open/save/preview failure, if any.
+ *
+ * Document operations are the workbench's entry gate: with nowhere to render
+ * their failures, a rejected path or an unreadable file made Open look like a
+ * dead button, and a failed Save left the "Saved" badge asserting a write that
+ * never landed.
+ *
+ * @example
+ * ```ts
+ * import { ontologyDocumentErrorAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyDocumentErrorAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyDocumentErrorAtom = workbenchState<O.Option<string>>(O.none());
 
 /**
  * Latest SHACL validation result, if one has been requested.
@@ -596,7 +685,7 @@ export const ontologySparqlErrorAtom = Atom.make<O.Option<string>>(O.none());
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyValidationResultAtom = Atom.make<O.Option<RunOntologyValidationResult>>(O.none());
+export const ontologyValidationResultAtom = workbenchState<O.Option<RunOntologyValidationResult>>(O.none());
 
 /**
  * Current SHACL validation panel state.
@@ -611,7 +700,7 @@ export const ontologyValidationResultAtom = Atom.make<O.Option<RunOntologyValida
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyValidationStatusAtom = Atom.make<OntologyValidationStatus>("idle");
+export const ontologyValidationStatusAtom = workbenchState<OntologyValidationStatus>("idle");
 
 /**
  * Latest SHACL validation failure, if any.
@@ -626,7 +715,7 @@ export const ontologyValidationStatusAtom = Atom.make<OntologyValidationStatus>(
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyValidationErrorAtom = Atom.make<O.Option<string>>(O.none());
+export const ontologyValidationErrorAtom = workbenchState<O.Option<string>>(O.none());
 
 /**
  * Latest provenance export result, if one has been produced.
@@ -948,6 +1037,22 @@ const graphWorkerMessageError = (event: MessageEvent<unknown>): string =>
     ? "Ontology graph worker message failed to deserialize."
     : "Ontology graph worker failed.";
 
+const GRAPH_WORKER_UNAVAILABLE_MESSAGE = "Graph projection is unavailable: this environment has no web worker.";
+
+const GRAPH_WORKER_UNREADABLE_RESULT_MESSAGE = "The graph worker returned a result this app could not read.";
+
+const GRAPH_WORKER_TIMEOUT_MESSAGE = "The graph worker did not respond. The diagram could not be drawn.";
+
+/**
+ * How long a projection may take before the worker is treated as dead.
+ *
+ * There was no watchdog at all, and a worker that simply never answers is the one
+ * failure the error handlers cannot see: `error` and `messageerror` never fire, so
+ * the workbench sat on "pending" forever with nothing to explain it. That is the
+ * shape this very bug took. A silence this long is a failure, and it now says so.
+ */
+const GRAPH_WORKER_TIMEOUT = Duration.seconds(20);
+
 /**
  * Side-effect atom that owns the visualizer projection worker.
  *
@@ -965,6 +1070,9 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
   const WorkerCtor = globalThis.Worker;
 
   if (P.isUndefined(WorkerCtor)) {
+    // No worker, no projection — but say so. Returning quietly left the graph on
+    // "pending" forever with nothing to explain it.
+    get.set(ontologyGraphErrorAtom, O.some(GRAPH_WORKER_UNAVAILABLE_MESSAGE));
     return;
   }
 
@@ -972,6 +1080,27 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
   let previousProjection: O.Option<OntologyGraphProjection> = O.none();
   let lastProjectionRequest: O.Option<WorkerCommand> = O.none();
   let requeuedAfterFailure = false;
+  let watchdog: O.Option<Fiber.Fiber<void>> = O.none();
+
+  const disarmWatchdog = (): void => {
+    pipe(
+      watchdog,
+      O.match({ onNone: () => undefined, onSome: (fiber) => void Effect.runFork(Fiber.interrupt(fiber)) })
+    );
+    watchdog = O.none();
+  };
+
+  // Armed on every request, disarmed by any answer. A worker that never replies
+  // fires neither `error` nor `messageerror`, so without this the graph waits
+  // forever and says nothing — which is precisely how this bug hid.
+  const armWatchdog = (): void => {
+    disarmWatchdog();
+    watchdog = O.some(
+      Effect.runFork(
+        Effect.sleep(GRAPH_WORKER_TIMEOUT).pipe(Effect.map(() => failWorker(GRAPH_WORKER_TIMEOUT_MESSAGE)))
+      )
+    );
+  };
 
   const terminateWorker = (): void => {
     pipe(worker, O.match({ onNone: () => undefined, onSome: (currentWorker) => currentWorker.terminate() }));
@@ -979,6 +1108,7 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
   };
 
   const failWorker = (message: string): void => {
+    disarmWatchdog();
     previousProjection = O.none();
     get.set(ontologyGraphProjectionAtom, O.none());
     get.set(ontologyGraphDeltaAtom, O.none());
@@ -990,8 +1120,16 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
 
   const makeWorker = (): Worker => {
     const nextWorker = new WorkerCtor(new URL("./Session.visualizer.worker.ts", import.meta.url), { type: "module" });
-    nextWorker.addEventListener("message", (event: MessageEvent<WorkerResult>) => {
-      WorkerResult.match(event.data, {
+    nextWorker.addEventListener("message", (event: MessageEvent<unknown>) => {
+      // The worker posts the ENCODED result: a structured clone drops prototypes,
+      // so what arrives is plain data until it is decoded back into the domain.
+      disarmWatchdog();
+      const received = decodeWorkerResult(event.data);
+      if (!Result.isSuccess(received)) {
+        failWorker(GRAPH_WORKER_UNREADABLE_RESULT_MESSAGE);
+        return;
+      }
+      WorkerResult.match(received.success, {
         parseTurtleSucceeded: () => undefined,
         diffDatasetsSucceeded: () => undefined,
         computeSnapshotSucceeded: () => undefined,
@@ -1039,7 +1177,8 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
         onNone: () => undefined,
         onSome: (command) => {
           requeuedAfterFailure = true;
-          currentWorker().postMessage(command);
+          armWatchdog();
+          currentWorker().postMessage(encodeWorkerCommand(command));
         },
       })
     );
@@ -1076,28 +1215,53 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
       lastProjectionRequest = O.some(command);
       requeuedAfterFailure = false;
       get.set(ontologyGraphErrorAtom, O.none());
-      activeWorker.postMessage(command);
+      armWatchdog();
+      activeWorker.postMessage(encodeWorkerCommand(command));
       get.set(ontologyGraphDeltaAtom, O.none());
     },
     { immediate: true }
   );
 
-  get.addFinalizer(terminateWorker);
+  get.addFinalizer(() => {
+    disarmWatchdog();
+    terminateWorker();
+  });
 });
 
-const cosmosProjectionFromOntology = (projection: OntologyGraphProjection): CosmosGraphProjection =>
+/**
+ * Maps the worker's ontology projection onto the renderer's projection.
+ *
+ * @example
+ * ```ts
+ * import { cosmosProjectionFromOntology } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(typeof cosmosProjectionFromOntology)
+ * ```
+ *
+ * @category projections
+ * @since 0.0.0
+ */
+export const cosmosProjectionFromOntology = (projection: OntologyGraphProjection): CosmosGraphProjection =>
   CosmosGraphProjection.make({
     nodeCount: projection.nodeCount,
     edgeCount: projection.edgeCount,
     nodeIds: projection.nodeIds,
     pointPositions: projection.pointPositions,
     links: projection.links,
+    // The projection has always carried a label for every node, and the fold level
+    // has always decided how many to show — and then the renderer dropped the lot,
+    // so a graph of named classes drew as a field of anonymous dots. The names reach
+    // the canvas now; `hidden` still means hidden.
+    ...(projection.labelDetail === "hidden" ? {} : { labels: A.map(projection.nodes, (node) => node.label) }),
   });
 
 const renderRequestAtom = Atom.make((get) => ({
   container: get(ontologyGraphContainerAtom),
   projection: get(ontologyGraphProjectionAtom),
 }));
+
+const graphRenderFailureMessage = (cause: unknown): string =>
+  `The graph could not be drawn: ${cause instanceof Error ? cause.message : String(cause)}`;
 
 /**
  * Side-effect atom that mounts and updates the cosmos viewport.
@@ -1126,6 +1290,10 @@ export const ontologyGraphRenderBridgeAtom = Atom.make((get) => {
         return;
       }
 
+      // A fresh attempt clears the last failure, so a recovered graph stops
+      // claiming to be broken.
+      get.set(ontologyGraphErrorAtom, O.none());
+
       const cosmosProjection = cosmosProjectionFromOntology(projection.value);
 
       pipe(
@@ -1143,10 +1311,15 @@ export const ontologyGraphRenderBridgeAtom = Atom.make((get) => {
                 handle = O.some(mounted);
                 get.set(ontologyGraphBackendAtom, O.some(mounted.backend));
               },
-              () => {
+              (cause: unknown) => {
                 if (token === renderToken) {
                   handle = O.none();
                   get.set(ontologyGraphBackendAtom, O.none());
+                  // The renderer's failure used to be dropped on the floor: the
+                  // backend went back to `none`, the badge read "pending", and the
+                  // reason — a lost WebGL context, a container with no size — was
+                  // never spoken. A graph that cannot be drawn has to say so.
+                  get.set(ontologyGraphErrorAtom, O.some(graphRenderFailureMessage(cause)));
                 }
               }
             );
@@ -1165,6 +1338,25 @@ export const ontologyGraphRenderBridgeAtom = Atom.make((get) => {
 });
 
 const noOpenSessionError = OntologyActionError.new("No ontology session is open.");
+
+/**
+ * Serializes every session-authoring mutation.
+ *
+ * Each mutation reads the open session, awaits an RPC that returns a *whole new
+ * session*, then writes it back. Two mutations in flight therefore both start
+ * from session S, come back with S+A and S+B, and whichever lands last silently
+ * discards the other author's change — a double-clicked Apply, or a graph
+ * gesture fired while Apply was pending, loses work with no error anywhere.
+ *
+ * Holding the permit across the read means a queued mutation observes the
+ * previous one's committed session, so changes compose instead of racing. The
+ * server-side tool service already serializes its own mutations the same way
+ * ({@link OntologyToolService}); this closes the client path.
+ *
+ * @category concurrency
+ * @since 0.0.0
+ */
+const sessionMutationSemaphore = Semaphore.makeUnsafe(1);
 
 /**
  * Toggle inferred view and refresh inference when enabling it.
@@ -1243,30 +1435,49 @@ export const applyOntologySparqlExampleAtom = OntologyClient.runtime.fn<string>(
  */
 export const runOntologySparqlAtom = OntologyClient.runtime.fn<void>()(
   Effect.fn("runOntologySparql")(function* (_, ctx) {
-    const client = yield* OntologyClient;
-    const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
-    let inference = ctx(ontologyInferenceResultAtom);
+    yield* Effect.gen(function* () {
+      const client = yield* OntologyClient;
+      const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+      const signature = sessionSignature(session);
+      // Drop the previous verdict before running: an invalid or failing query
+      // used to leave the last successful result table on screen with no error,
+      // so the panel appeared to answer a query it had actually rejected.
+      ctx.set(ontologySparqlResultAtom, O.none());
+      ctx.set(ontologySparqlErrorAtom, O.none());
+      let inference = ctx(ontologyInferenceResultAtom);
 
-    if (ctx(ontologyInferredViewAtom)) {
-      const refreshed = yield* ensureOntologyInference(client, session, ctx);
-      inference = O.some(refreshed);
-    }
+      if (ctx(ontologyInferredViewAtom)) {
+        const refreshed = yield* ensureOntologyInference(client, session, ctx);
+        inference = O.some(refreshed);
+      }
 
-    const result = yield* Reactivity.mutation(
-      client(
-        "RunOntologySparql",
-        RunOntologySparqlInput.make({
-          session,
-          profile: ctx(ontologySparqlProfileAtom),
-          query: ctx(ontologySparqlQueryAtom),
-          includeInferred: ctx(ontologyInferredViewAtom),
-          inference,
+      const result = yield* Reactivity.mutation(
+        client(
+          "RunOntologySparql",
+          RunOntologySparqlInput.make({
+            session,
+            profile: ctx(ontologySparqlProfileAtom),
+            query: ctx(ontologySparqlQueryAtom),
+            includeInferred: ctx(ontologyInferredViewAtom),
+            inference,
+          })
+        ),
+        [SPARQL_KEY]
+      );
+      if (sessionMoved(ctx(ontologySessionAtom), signature)) {
+        ctx.set(ontologySparqlErrorAtom, O.some(STALE_READ_MESSAGE));
+        return;
+      }
+      ctx.set(ontologySparqlResultAtom, O.some(result));
+      ctx.set(ontologySparqlErrorAtom, O.none());
+    }).pipe(
+      Effect.tapCause((cause) =>
+        Effect.sync(() => {
+          reportFailure("SPARQL", cause);
+          ctx.set(ontologySparqlErrorAtom, O.some(actionFailureMessage("The query", cause)));
         })
-      ),
-      [SPARQL_KEY]
+      )
     );
-    ctx.set(ontologySparqlResultAtom, O.some(result));
-    ctx.set(ontologySparqlErrorAtom, O.none());
   })
 );
 
@@ -1288,6 +1499,7 @@ export const runOntologyValidationAtom = OntologyClient.runtime.fn<void>()(
     yield* pipe(
       Effect.gen(function* () {
         const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+        const signature = sessionSignature(session);
         if (!hasValidationShapes(session)) {
           ctx.set(ontologyValidationStatusAtom, "blocked");
           ctx.set(ontologyValidationResultAtom, O.none());
@@ -1310,6 +1522,16 @@ export const runOntologyValidationAtom = OntologyClient.runtime.fn<void>()(
           ),
           [VALIDATION_KEY]
         );
+        // A verdict for the session as it WAS is not a verdict on the session as it
+        // IS. Applying a triple mid-validation used to land the older run afterwards
+        // and present it as `complete` for the newer ontology — a clean bill of
+        // health for a document that had changed underneath it.
+        if (sessionMoved(ctx(ontologySessionAtom), signature)) {
+          ctx.set(ontologyValidationStatusAtom, "idle");
+          ctx.set(ontologyValidationResultAtom, O.none());
+          ctx.set(ontologyValidationErrorAtom, O.some(STALE_READ_MESSAGE));
+          return;
+        }
         ctx.set(ontologyValidationStatusAtom, "complete");
         ctx.set(ontologyValidationResultAtom, O.some(result));
         ctx.set(ontologyValidationErrorAtom, O.none());
@@ -1334,31 +1556,52 @@ export const runOntologyValidationAtom = OntologyClient.runtime.fn<void>()(
  */
 export const applyOntologyRepairAtom = OntologyClient.runtime.fn<OntologyRepairProposal>()(
   Effect.fn("applyOntologyRepair")(function* (proposal, ctx) {
-    const client = yield* OntologyClient;
-    const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
-    const applied = yield* Reactivity.mutation(
-      client("ApplyOntologyBatch", ApplyOntologyBatchCommand.make({ session, operations: proposal.operations })),
-      [SESSION_KEY, GRAPH_KEY, VALIDATION_KEY]
+    yield* sessionMutationSemaphore.withPermit(
+      Effect.gen(function* () {
+        const client = yield* OntologyClient;
+        const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+        const applied = yield* Reactivity.mutation(
+          client("ApplyOntologyBatch", ApplyOntologyBatchCommand.make({ session, operations: proposal.operations })),
+          [SESSION_KEY, GRAPH_KEY, VALIDATION_KEY]
+        );
+        ctx.set(ontologySessionAtom, O.some(applied.session));
+        ctx.set(ontologyRedoStackAtom, []);
+        ctx.set(ontologySparqlResultAtom, O.none());
+        ctx.set(ontologyGraphProjectionAtom, O.none());
+        ctx.set(ontologyGraphDeltaAtom, O.none());
+        // The repair is already committed. Clear the pre-repair verdict now and
+        // mark validation running: if revalidation below fails, the panel must
+        // not keep showing violations the repair already resolved (still
+        // offering the same repair button), as though nothing had happened.
+        ctx.set(ontologyValidationStatusAtom, "running");
+        ctx.set(ontologyValidationResultAtom, O.none());
+        ctx.set(ontologyValidationErrorAtom, O.none());
+        const inference = yield* ensureOntologyInference(client, applied.session, ctx);
+        const validation = yield* Reactivity.mutation(
+          client(
+            "RunOntologyValidation",
+            RunOntologyValidationInput.make({
+              session: applied.session,
+              inference: O.some(inference),
+            })
+          ),
+          [VALIDATION_KEY]
+        );
+        ctx.set(ontologyValidationStatusAtom, "complete");
+        ctx.set(ontologyValidationResultAtom, O.some(validation));
+        ctx.set(ontologyValidationErrorAtom, O.none());
+      }).pipe(
+        // A failure after the batch landed leaves the ontology repaired but
+        // unvalidated; say so instead of failing silently.
+        Effect.tapCause((cause) =>
+          Effect.sync(() => {
+            ctx.set(ontologyValidationStatusAtom, "failed");
+            reportFailure("Validation", cause);
+            ctx.set(ontologyValidationErrorAtom, O.some(actionFailureMessage("Validation", cause)));
+          })
+        )
+      )
     );
-    ctx.set(ontologySessionAtom, O.some(applied.session));
-    ctx.set(ontologyRedoStackAtom, []);
-    ctx.set(ontologySparqlResultAtom, O.none());
-    ctx.set(ontologyGraphProjectionAtom, O.none());
-    ctx.set(ontologyGraphDeltaAtom, O.none());
-    const inference = yield* ensureOntologyInference(client, applied.session, ctx);
-    const validation = yield* Reactivity.mutation(
-      client(
-        "RunOntologyValidation",
-        RunOntologyValidationInput.make({
-          session: applied.session,
-          inference: O.some(inference),
-        })
-      ),
-      [VALIDATION_KEY]
-    );
-    ctx.set(ontologyValidationStatusAtom, "complete");
-    ctx.set(ontologyValidationResultAtom, O.some(validation));
-    ctx.set(ontologyValidationErrorAtom, O.none());
   })
 );
 
@@ -1418,27 +1661,43 @@ export const exportOntologyProvenanceAtom = OntologyClient.runtime.fn<void>()(
  */
 export const openOntologyDocumentAtom = OntologyClient.runtime.fn<OpenOntologyDocumentInput>()(
   Effect.fn("openOntologyDocument")(function* (input, ctx) {
-    const client = yield* OntologyClient;
-    const opened = yield* Reactivity.mutation(client("OpenOntologyDocument", input), [SESSION_KEY, SOURCE_KEY]);
-    ctx.set(ontologySessionAtom, O.some(opened.session));
-    ctx.set(ontologyPathAtom, O.some(opened.path));
-    ctx.set(ontologySourceAtom, opened.source);
-    ctx.set(ontologySavedChangeCountAtom, opened.session.changeLog.length);
-    ctx.set(ontologySavedChangeLogSignatureAtom, changeLogSignature(opened.session.changeLog));
-    ctx.set(ontologyRedoStackAtom, []);
-    ctx.set(selectedOntologyResourceIriAtom, O.none());
-    ctx.set(ontologyGraphProjectionAtom, O.none());
-    ctx.set(ontologyGraphDeltaAtom, O.none());
-    ctx.set(ontologyGraphErrorAtom, O.none());
-    resetOntologyInference(ctx);
-    ctx.set(ontologySparqlQueryAtom, defaultOntologySparqlQuery(opened.session));
-    ctx.set(ontologySparqlResultAtom, O.none());
-    ctx.set(ontologySparqlErrorAtom, O.none());
-    resetOntologyValidation(ctx);
-    ctx.set(ontologyProvenanceExportAtom, O.none());
-    if (ctx(ontologyInferredViewAtom)) {
-      yield* ensureOntologyInference(client, opened.session, ctx);
-    }
+    yield* sessionMutationSemaphore
+      .withPermit(
+        Effect.gen(function* () {
+          const client = yield* OntologyClient;
+          const opened = yield* Reactivity.mutation(client("OpenOntologyDocument", input), [SESSION_KEY, SOURCE_KEY]);
+          ctx.set(ontologyDocumentErrorAtom, O.none());
+          ctx.set(ontologySessionAtom, O.some(opened.session));
+          ctx.set(ontologyPathAtom, O.some(opened.path));
+          ctx.set(ontologySourceAtom, opened.source);
+          ctx.set(ontologySavedChangeCountAtom, opened.session.changeLog.length);
+          ctx.set(ontologySavedChangeLogSignatureAtom, changeLogSignature(opened.session.changeLog));
+          ctx.set(ontologyRedoStackAtom, []);
+          ctx.set(selectedOntologyResourceIriAtom, O.none());
+          ctx.set(ontologyGraphProjectionAtom, O.none());
+          ctx.set(ontologyGraphDeltaAtom, O.none());
+          ctx.set(ontologyGraphErrorAtom, O.none());
+          resetOntologyInference(ctx);
+          ctx.set(ontologySparqlQueryAtom, defaultOntologySparqlQuery(opened.session));
+          ctx.set(ontologySparqlResultAtom, O.none());
+          ctx.set(ontologySparqlErrorAtom, O.none());
+          resetOntologyValidation(ctx);
+          ctx.set(ontologyProvenanceExportAtom, O.none());
+          if (ctx(ontologyInferredViewAtom)) {
+            yield* ensureOntologyInference(client, opened.session, ctx);
+          }
+        })
+      )
+      .pipe(
+        // Without this, a rejected path or unreadable file made Open a no-op:
+        // the RPC failed, nothing rendered, and the workbench sat at "No file open".
+        Effect.tapCause((cause) =>
+          Effect.sync(() => {
+            reportFailure("Ontology document", cause);
+            ctx.set(ontologyDocumentErrorAtom, O.some(actionFailureMessage("The document", cause)));
+          })
+        )
+      );
   })
 );
 
@@ -1457,16 +1716,32 @@ export const openOntologyDocumentAtom = OntologyClient.runtime.fn<OpenOntologyDo
  */
 export const saveOntologyDocumentAtom = OntologyClient.runtime.fn<SaveOntologyDocumentInput>()(
   Effect.fn("saveOntologyDocument")(function* (input, ctx) {
-    const client = yield* OntologyClient;
-    const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
-    const saved = yield* Reactivity.mutation(client("SaveOntologyDocument", { path: input.path, session }), [
-      SESSION_KEY,
-      SOURCE_KEY,
-    ]);
-    ctx.set(ontologyPathAtom, O.some(saved.path));
-    ctx.set(ontologySourceAtom, saved.source);
-    ctx.set(ontologySavedChangeCountAtom, session.changeLog.length);
-    ctx.set(ontologySavedChangeLogSignatureAtom, changeLogSignature(session.changeLog));
+    yield* sessionMutationSemaphore
+      .withPermit(
+        Effect.gen(function* () {
+          const client = yield* OntologyClient;
+          const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+          const saved = yield* Reactivity.mutation(client("SaveOntologyDocument", { path: input.path, session }), [
+            SESSION_KEY,
+            SOURCE_KEY,
+          ]);
+          ctx.set(ontologyDocumentErrorAtom, O.none());
+          ctx.set(ontologyPathAtom, O.some(saved.path));
+          ctx.set(ontologySourceAtom, saved.source);
+          // Only after the write lands: marking the log saved on a failed save
+          // would flip the badge to "Saved" for data still only in memory.
+          ctx.set(ontologySavedChangeCountAtom, session.changeLog.length);
+          ctx.set(ontologySavedChangeLogSignatureAtom, changeLogSignature(session.changeLog));
+        })
+      )
+      .pipe(
+        Effect.tapCause((cause) =>
+          Effect.sync(() => {
+            reportFailure("Ontology document", cause);
+            ctx.set(ontologyDocumentErrorAtom, O.some(actionFailureMessage("The document", cause)));
+          })
+        )
+      );
   })
 );
 
@@ -1485,10 +1760,20 @@ export const saveOntologyDocumentAtom = OntologyClient.runtime.fn<SaveOntologyDo
  */
 export const previewOntologyTurtleAtom = OntologyClient.runtime.fn<void>()(
   Effect.fn("previewOntologyTurtle")(function* (_, ctx) {
-    const client = yield* OntologyClient;
-    const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
-    const preview = yield* Reactivity.mutation(client("PreviewOntologyTurtle", { session }), [SOURCE_KEY]);
-    ctx.set(ontologySourceAtom, preview.source);
+    yield* Effect.gen(function* () {
+      const client = yield* OntologyClient;
+      const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+      const preview = yield* Reactivity.mutation(client("PreviewOntologyTurtle", { session }), [SOURCE_KEY]);
+      ctx.set(ontologyDocumentErrorAtom, O.none());
+      ctx.set(ontologySourceAtom, preview.source);
+    }).pipe(
+      Effect.tapCause((cause) =>
+        Effect.sync(() => {
+          reportFailure("Ontology document", cause);
+          ctx.set(ontologyDocumentErrorAtom, O.some(actionFailureMessage("The document", cause)));
+        })
+      )
+    );
   })
 );
 
@@ -1507,24 +1792,29 @@ export const previewOntologyTurtleAtom = OntologyClient.runtime.fn<void>()(
  */
 export const applyOntologyBatchAtom = OntologyClient.runtime.fn<ApplyOntologyBatchInput>()(
   Effect.fn("applyOntologyBatch")(function* (input, ctx) {
-    const client = yield* OntologyClient;
-    const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
-    const applied = yield* Reactivity.mutation(
-      client("ApplyOntologyBatch", ApplyOntologyBatchCommand.make({ session, operations: input.operations })),
-      [SESSION_KEY, GRAPH_KEY]
+    // The session read must happen under the permit — see sessionMutationSemaphore.
+    yield* sessionMutationSemaphore.withPermit(
+      Effect.gen(function* () {
+        const client = yield* OntologyClient;
+        const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+        const applied = yield* Reactivity.mutation(
+          client("ApplyOntologyBatch", ApplyOntologyBatchCommand.make({ session, operations: input.operations })),
+          [SESSION_KEY, GRAPH_KEY]
+        );
+        ctx.set(ontologySessionAtom, O.some(applied.session));
+        ctx.set(ontologyRedoStackAtom, []);
+        ctx.set(ontologySparqlResultAtom, O.none());
+        resetOntologyValidation(ctx);
+        if (ctx(ontologyInferredViewAtom)) {
+          yield* ensureOntologyInference(client, applied.session, ctx);
+          ctx.set(ontologyGraphProjectionAtom, O.none());
+          ctx.set(ontologyGraphDeltaAtom, O.none());
+        } else {
+          resetOntologyInference(ctx);
+          ctx.set(ontologyGraphDeltaAtom, O.some(applied.delta));
+        }
+      })
     );
-    ctx.set(ontologySessionAtom, O.some(applied.session));
-    ctx.set(ontologyRedoStackAtom, []);
-    ctx.set(ontologySparqlResultAtom, O.none());
-    resetOntologyValidation(ctx);
-    if (ctx(ontologyInferredViewAtom)) {
-      yield* ensureOntologyInference(client, applied.session, ctx);
-      ctx.set(ontologyGraphProjectionAtom, O.none());
-      ctx.set(ontologyGraphDeltaAtom, O.none());
-    } else {
-      resetOntologyInference(ctx);
-      ctx.set(ontologyGraphDeltaAtom, O.some(applied.delta));
-    }
   })
 );
 
@@ -1543,25 +1833,29 @@ export const applyOntologyBatchAtom = OntologyClient.runtime.fn<ApplyOntologyBat
  */
 export const applyOntologyGraphGestureAtom = OntologyClient.runtime.fn<ApplyOntologyGraphGestureInput>()(
   Effect.fn("applyOntologyGraphGesture")(function* (input, ctx) {
-    const client = yield* OntologyClient;
-    const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
-    const operations = graphGestureChangeOperations(input.gesture);
-    const applied = yield* Reactivity.mutation(
-      client("ApplyOntologyBatch", ApplyOntologyBatchCommand.make({ session, operations })),
-      [SESSION_KEY, GRAPH_KEY]
+    yield* sessionMutationSemaphore.withPermit(
+      Effect.gen(function* () {
+        const client = yield* OntologyClient;
+        const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+        const operations = graphGestureChangeOperations(input.gesture);
+        const applied = yield* Reactivity.mutation(
+          client("ApplyOntologyBatch", ApplyOntologyBatchCommand.make({ session, operations })),
+          [SESSION_KEY, GRAPH_KEY]
+        );
+        ctx.set(ontologySessionAtom, O.some(applied.session));
+        ctx.set(ontologyRedoStackAtom, []);
+        ctx.set(ontologySparqlResultAtom, O.none());
+        resetOntologyValidation(ctx);
+        if (ctx(ontologyInferredViewAtom)) {
+          yield* ensureOntologyInference(client, applied.session, ctx);
+          ctx.set(ontologyGraphProjectionAtom, O.none());
+          ctx.set(ontologyGraphDeltaAtom, O.none());
+        } else {
+          resetOntologyInference(ctx);
+          ctx.set(ontologyGraphDeltaAtom, O.some(applied.delta));
+        }
+      })
     );
-    ctx.set(ontologySessionAtom, O.some(applied.session));
-    ctx.set(ontologyRedoStackAtom, []);
-    ctx.set(ontologySparqlResultAtom, O.none());
-    resetOntologyValidation(ctx);
-    if (ctx(ontologyInferredViewAtom)) {
-      yield* ensureOntologyInference(client, applied.session, ctx);
-      ctx.set(ontologyGraphProjectionAtom, O.none());
-      ctx.set(ontologyGraphDeltaAtom, O.none());
-    } else {
-      resetOntologyInference(ctx);
-      ctx.set(ontologyGraphDeltaAtom, O.some(applied.delta));
-    }
   })
 );
 
@@ -1580,29 +1874,35 @@ export const applyOntologyGraphGestureAtom = OntologyClient.runtime.fn<ApplyOnto
  */
 export const undoOntologyChangeAtom = OntologyClient.runtime.fn<void>()(
   Effect.fn("undoOntologyChange")(function* (_, ctx) {
-    const client = yield* OntologyClient;
-    const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
-    yield* pipe(
-      A.last(session.changeLog),
-      O.match({
-        onNone: () => Effect.void,
-        onSome: Effect.fn("undoOntologyChange.onSome")(function* (change) {
-          const nextSession = Session.make({
-            ...session,
-            changeLog: A.dropRight(session.changeLog, 1),
-          });
-          ctx.set(ontologySessionAtom, O.some(nextSession));
-          ctx.set(ontologyRedoStackAtom, pipe(ctx(ontologyRedoStackAtom), A.prepend(change)));
-          ctx.set(ontologySparqlResultAtom, O.none());
-          resetOntologyValidation(ctx);
-          ctx.set(ontologyGraphProjectionAtom, O.none());
-          ctx.set(ontologyGraphDeltaAtom, O.none());
-          if (ctx(ontologyInferredViewAtom)) {
-            yield* ensureOntologyInference(client, nextSession, ctx);
-          } else {
-            resetOntologyInference(ctx);
-          }
-        }),
+    // Undo/redo rewrite the session wholesale from a snapshot too, so spamming
+    // them alongside an in-flight Apply raced the same way.
+    yield* sessionMutationSemaphore.withPermit(
+      Effect.gen(function* () {
+        const client = yield* OntologyClient;
+        const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+        yield* pipe(
+          A.last(session.changeLog),
+          O.match({
+            onNone: () => Effect.void,
+            onSome: Effect.fn("undoOntologyChange.onSome")(function* (change) {
+              const nextSession = Session.make({
+                ...session,
+                changeLog: A.dropRight(session.changeLog, 1),
+              });
+              ctx.set(ontologySessionAtom, O.some(nextSession));
+              ctx.set(ontologyRedoStackAtom, pipe(ctx(ontologyRedoStackAtom), A.prepend(change)));
+              ctx.set(ontologySparqlResultAtom, O.none());
+              resetOntologyValidation(ctx);
+              ctx.set(ontologyGraphProjectionAtom, O.none());
+              ctx.set(ontologyGraphDeltaAtom, O.none());
+              if (ctx(ontologyInferredViewAtom)) {
+                yield* ensureOntologyInference(client, nextSession, ctx);
+              } else {
+                resetOntologyInference(ctx);
+              }
+            }),
+          })
+        );
       })
     );
   })
@@ -1623,26 +1923,30 @@ export const undoOntologyChangeAtom = OntologyClient.runtime.fn<void>()(
  */
 export const redoOntologyChangeAtom = OntologyClient.runtime.fn<void>()(
   Effect.fn("redoOntologyChange")(function* (_, ctx) {
-    const client = yield* OntologyClient;
-    const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
-    yield* pipe(
-      A.head(ctx(ontologyRedoStackAtom)),
-      O.match({
-        onNone: () => Effect.void,
-        onSome: Effect.fn("redoOntologyChange.onSome")(function* (change) {
-          const nextSession = appendChange(session, change);
-          ctx.set(ontologySessionAtom, O.some(nextSession));
-          ctx.set(ontologyRedoStackAtom, A.drop(ctx(ontologyRedoStackAtom), 1));
-          ctx.set(ontologySparqlResultAtom, O.none());
-          resetOntologyValidation(ctx);
-          ctx.set(ontologyGraphProjectionAtom, O.none());
-          ctx.set(ontologyGraphDeltaAtom, O.none());
-          if (ctx(ontologyInferredViewAtom)) {
-            yield* ensureOntologyInference(client, nextSession, ctx);
-          } else {
-            resetOntologyInference(ctx);
-          }
-        }),
+    yield* sessionMutationSemaphore.withPermit(
+      Effect.gen(function* () {
+        const client = yield* OntologyClient;
+        const session = yield* ctx.some(ontologySessionAtom).pipe(Effect.mapError(() => noOpenSessionError));
+        yield* pipe(
+          A.head(ctx(ontologyRedoStackAtom)),
+          O.match({
+            onNone: () => Effect.void,
+            onSome: Effect.fn("redoOntologyChange.onSome")(function* (change) {
+              const nextSession = appendChange(session, change);
+              ctx.set(ontologySessionAtom, O.some(nextSession));
+              ctx.set(ontologyRedoStackAtom, A.drop(ctx(ontologyRedoStackAtom), 1));
+              ctx.set(ontologySparqlResultAtom, O.none());
+              resetOntologyValidation(ctx);
+              ctx.set(ontologyGraphProjectionAtom, O.none());
+              ctx.set(ontologyGraphDeltaAtom, O.none());
+              if (ctx(ontologyInferredViewAtom)) {
+                yield* ensureOntologyInference(client, nextSession, ctx);
+              } else {
+                resetOntologyInference(ctx);
+              }
+            }),
+          })
+        );
       })
     );
   })

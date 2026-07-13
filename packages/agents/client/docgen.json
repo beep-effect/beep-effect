@@ -81,6 +81,18 @@
       "@beep/md/Md.render": [
         "../../../packages/foundation/modeling/md/src/Md.render.ts"
       ],
+      "@beep/observability": [
+        "../../../packages/foundation/capability/observability/src/index.ts"
+      ],
+      "@beep/observability/experimental/server": [
+        "../../../packages/foundation/capability/observability/src/experimental/server/index.ts"
+      ],
+      "@beep/observability/server": [
+        "../../../packages/foundation/capability/observability/src/server/index.ts"
+      ],
+      "@beep/observability/web": [
+        "../../../packages/foundation/capability/observability/src/web/index.ts"
+      ],
       "@beep/schema": [
         "../../../packages/foundation/modeling/schema/src/index.ts"
       ],

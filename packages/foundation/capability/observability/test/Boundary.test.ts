@@ -1,3 +1,4 @@
+import { VERSION } from "@beep/observability";
 import { Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -14,6 +15,7 @@ const repoRoot = pathFromUrl(new URL("../../../../..", import.meta.url));
 const boundaryTypecheckTimeout = 600_000;
 const PackageJson = S.Struct({
   exports: S.Record(S.String, S.NullOr(S.String)),
+  version: S.String,
 });
 const decodePackageJson = S.decodeUnknownEffect(S.fromJsonString(PackageJson));
 const readText = (relativePath: string) => Effect.promise(() => Bun.file(joinPath(packageRoot, relativePath)).text());
@@ -45,6 +47,7 @@ describe("Boundary", () => {
           "./web": "./src/web/index.ts",
         });
         expect(packageJson.exports).not.toHaveProperty("./*");
+        expect(VERSION).toBe(packageJson.version);
         expect(tsconfigSource).not.toMatch(/"types"\s*:\s*\[[^\]]*"node"/m);
       })
     )

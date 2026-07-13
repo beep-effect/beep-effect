@@ -37,6 +37,13 @@ export * from "./attachments.tsx";
  */
 export * from "./chat-composer.tsx";
 /**
+ * The markdown code-fence gesture, in a composer whose Enter key already means send.
+ *
+ * @category commands
+ * @since 0.0.0
+ */
+export * from "./code-fence.ts";
+/**
  * Lexical commands the chat composer dispatches so consumers can wire send and stop.
  *
  * @category constants

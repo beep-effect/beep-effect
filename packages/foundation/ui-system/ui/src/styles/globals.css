@@ -5,6 +5,16 @@
 @plugin "@tailwindcss/typography";
 @plugin "tailwindcss-jun-layout";
 
+/* This package declares where its own classes live, so consuming apps do not have
+   to know. Tailwind v4 roots content detection at the importing app's CSS and skips
+   node_modules, and these sources reach an app through a workspace symlink — so
+   without this, a class used ONLY inside this package is tree-shaken away and its
+   component silently renders unstyled. Every app then had to remember an `@source`
+   line, and an app that forgot got a component that looked broken for no visible
+   reason. `@source` resolves relative to THIS file, so it keeps working wherever the
+   package is imported from. */
+@source "../";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

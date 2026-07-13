@@ -36,11 +36,15 @@ services:
     container_name: grafana
     restart: unless-stopped
     ports:
-      - "4000:3000"
-      - "4318:4318"
+      - "127.0.0.1:${GRAFANA_PORT:-4000}:3000"
+      - "127.0.0.1:${OTEL_HTTP_PORT:-4318}:4318"
+      - "127.0.0.1:${OTEL_HEALTH_PORT:-13133}:13133"
     volumes:
+      - grafana_lgtm_data:/data
       - ./docker/grafana/otelcol-config.yaml:/otel-lgtm/otelcol-config.yaml:ro
-      - ./docker/grafana/chat-dashboards.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/chat-dashboards.yaml:ro
-      - ./docker/grafana/chat-dashboard.json:/otel-lgtm/grafana/dashboards/chat-dashboard.json:ro
+      - ./docker/grafana/datasources.yaml:/otel-lgtm/grafana-datasources.yaml:ro
+      - ./docker/grafana/chat-dashboards.yaml:/otel-lgtm/grafana/conf/provisioning/dashboards/professional-desktop.yaml:ro
+      - ./docker/grafana/chat-dashboard.json:/otel-lgtm/grafana/conf/provisioning/dashboards/professional-desktop/chat-dashboard.json:ro
 volumes:
+  grafana_lgtm_data:
   redis_data:

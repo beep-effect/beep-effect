@@ -40,7 +40,7 @@ const smokeProgram = Effect.gen(function* () {
   expect(thread.title).toBe("Smoke matter");
 
   const blocks = yield* client
-    .SendMessage({ threadId: thread.id, content: userDocument("hello sidecar") })
+    .SendMessage({ threadId: thread.id, content: userDocument("hello sidecar"), requestId: "sidecar-smoke-test" })
     .pipe(Stream.runCollect, Effect.map(Chunk.fromIterable));
   expect(Chunk.size(blocks)).toBeGreaterThan(0);
 

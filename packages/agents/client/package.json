@@ -61,6 +61,7 @@
     "@beep/agents-domain": "workspace:^",
     "@beep/agents-use-cases": "workspace:^",
     "@beep/md": "workspace:^",
+    "@beep/observability": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
     "effect": "catalog:"

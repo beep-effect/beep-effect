@@ -17,6 +17,7 @@ import {
   exportOntologyProvenanceAtom,
   OpenOntologyDocumentInput,
   ontologyDirtyAtom,
+  ontologyDocumentErrorAtom,
   ontologyFoldLevelAtom,
   ontologyGraphBackendAtom,
   ontologyGraphContainerAtom,
@@ -60,6 +61,7 @@ import {
 } from "@beep/ontology-client/aggregates/Session";
 import { ChangeOperation, SessionId } from "@beep/ontology-domain/aggregates/Session";
 import { OntologyFilePath, OntologyGraphGesture } from "@beep/ontology-use-cases/aggregates/Session";
+import { IRI } from "@beep/rdf/Iri";
 import { makeLiteral, makeNamedNode, makeQuad, serializeQuad, serializeTerm } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { Badge } from "@beep/ui/components/badge";
@@ -75,6 +77,7 @@ import { RichTreeView } from "@mui/x-tree-view/RichTreeView";
 import { flow, pipe } from "effect";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
+import { useCallback } from "react";
 import { ontologyTreeItemsFor } from "./Session.tree.js";
 import type { OntologyValidationStatus } from "@beep/ontology-client/aggregates/Session";
 import type {
@@ -119,6 +122,31 @@ const sourceViewerState = S.decodeUnknownSync(SerializedEditorState)({
 });
 
 const decodePath = (value: string): O.Option<OntologyFilePath> => OntologyFilePath.decodeOption(Str.trim(value));
+
+// Subjects, predicates, and IRI objects must be IRIs. The form used to accept
+// any non-empty string, so `not an iri` sailed through into the change log and
+// only surfaced later as a broken serialization.
+//
+// `IRI`, not `AbsoluteIRI`: the latter is RFC 3987 absolute-IRI *without a
+// fragment*, which rejects the hash IRIs RDF vocabularies are built from
+// (`https://example.org/pizza#Pizza`, `…/rdf-schema#label`).
+const isIri = S.is(IRI);
+
+/**
+ * Whether an Add Triple IRI field holds a usable IRI.
+ *
+ * @example
+ * ```ts
+ * import { iriFieldValid } from "@beep/ontology-ui/aggregates/Session"
+ *
+ * console.log(iriFieldValid("https://example.org/pizza#Pizza")) // true
+ * console.log(iriFieldValid("not an iri")) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const iriFieldValid = (value: string): boolean => isIri(Str.trim(value));
 
 const sessionIdFromPath = (path: OntologyFilePath): SessionId => SessionId.fromUnknown(`ontology:${path}`);
 
@@ -190,6 +218,15 @@ const sparqlResultPreview = (result: RunOntologySparqlResult): JSX.Element => {
     );
   }
 
+  if (result.result.profile === "ask") {
+    // An ASK answers yes or no. Say which.
+    return (
+      <p className="text-sm font-medium" data-testid="sparql-ask-result">
+        {result.result.value ? "Yes — the pattern matches." : "No — the pattern does not match."}
+      </p>
+    );
+  }
+
   return <p className="text-sm text-muted-foreground">Unsupported result.</p>;
 };
 
@@ -200,7 +237,7 @@ const sparqlErrorView = (error: string): JSX.Element => <p className="text-sm te
 const sparqlResultView = (result: RunOntologySparqlResult): JSX.Element => (
   <div className="space-y-2">
     <div className="flex flex-wrap gap-1">
-      <Badge variant="outline">LIMIT {result.effectiveLimit}</Badge>
+      {result.result.profile === "ask" ? null : <Badge variant="outline">LIMIT {result.effectiveLimit}</Badge>}
       {result.limitInjected ? <Badge variant="secondary">injected</Badge> : null}
       {result.truncated ? <Badge variant="destructive">truncated</Badge> : null}
     </div>
@@ -375,6 +412,10 @@ const validationStatusBadge = (
  * @category components
  * @since 0.0.0
  */
+// This is pre-existing workbench decomposition debt: the QA patch only adds
+// validation and error presentation to the established atom-backed assembly.
+// Splitting the full surface is a separate behavior-sensitive UI refactor.
+// fallow-ignore-next-line complexity
 export function OntologyWorkbench(): JSX.Element {
   const pathInput = useAtomValue(openPathInputAtom);
   const snapshot = useAtomValue(ontologySnapshotAtom);
@@ -382,6 +423,8 @@ export function OntologyWorkbench(): JSX.Element {
   const graphProjection = useAtomValue(ontologyGraphProjectionAtom);
   const graphBackend = useAtomValue(ontologyGraphBackendAtom);
   const graphError = useAtomValue(ontologyGraphErrorAtom);
+  const documentError = useAtomValue(ontologyDocumentErrorAtom);
+  const setDocumentError = useAtomSet(ontologyDocumentErrorAtom);
   const dirty = useAtomValue(ontologyDirtyAtom);
   const path = useAtomValue(ontologyPathAtom);
   const session = useAtomValue(ontologySessionAtom);
@@ -438,8 +481,12 @@ export function OntologyWorkbench(): JSX.Element {
   useAtomValue(ontologyGraphWorkerBridgeAtom);
   useAtomValue(ontologyGraphRenderBridgeAtom);
   const treeItems = ontologyTreeItemsFor(snapshot, mode);
-  const canApplyTriple =
-    Str.isNonEmpty(Str.trim(subject)) && Str.isNonEmpty(Str.trim(predicate)) && Str.isNonEmpty(Str.trim(object));
+  // A literal object is free text (whitespace included, once it has content);
+  // an IRI object, like every subject and predicate, must be an absolute IRI.
+  const subjectValid = iriFieldValid(subject);
+  const predicateValid = iriFieldValid(predicate);
+  const objectValid = objectKind === "iri" ? iriFieldValid(object) : Str.isNonEmpty(Str.trim(object));
+  const canApplyTriple = subjectValid && predicateValid && objectValid;
   const canApplyGraphGesture = canApplyTriple && objectKind === "iri";
   const canRunSparql = O.isSome(session) && Str.isNonEmpty(Str.trim(sparqlQuery));
   const canRunValidation = O.isSome(session);
@@ -480,7 +527,14 @@ export function OntologyWorkbench(): JSX.Element {
     pipe(
       decodePath(pathInput),
       O.match({
-        onNone: () => undefined,
+        // A malformed path returned here silently, so Open read as a dead
+        // button. Say why the path was rejected instead of doing nothing.
+        onNone: () =>
+          setDocumentError(
+            O.some(
+              "Enter a workspace-relative, lower-case .ttl path with no leading slash and no '..' segments — for example tmp/ontology-workbench/pizza-tutorial.ttl."
+            )
+          ),
         onSome: (decodedPath) =>
           openDocument(
             OpenOntologyDocumentInput.make({
@@ -508,7 +562,9 @@ export function OntologyWorkbench(): JSX.Element {
     const quad = makeQuad(
       makeNamedNode(Str.trim(subject)),
       makeNamedNode(Str.trim(predicate)),
-      objectKind === "iri" ? makeNamedNode(Str.trim(object)) : makeLiteral(Str.trim(object), XSD_STRING.value)
+      // Literals keep their text verbatim: trimming silently rewrote the value
+      // the user typed, and leading/trailing whitespace can be significant.
+      objectKind === "iri" ? makeNamedNode(Str.trim(object)) : makeLiteral(object, XSD_STRING.value)
     );
     applyBatch(
       ApplyOntologyBatchInput.make({
@@ -594,13 +650,29 @@ export function OntologyWorkbench(): JSX.Element {
     setSearchQuery(iri);
   };
 
-  const graphContainerRef = (element: HTMLDivElement | null): void => {
-    setGraphContainer(O.fromNullishOr(element));
-  };
+  // The ref callback has to be STABLE. A fresh closure each render makes React
+  // detach the old ref (calling it with `null`) and attach the new one on every
+  // single render — so the container atom flipped none → some → none → some
+  // forever, and the render bridge tore the cosmos graph down and rebuilt it each
+  // time. Whenever the flip landed on `none` the backend reset, the canvas was
+  // destroyed, and the badge fell back to "pending": the graph was being mounted
+  // correctly and thrown away just as fast, which is why it looked like it had
+  // never rendered at all.
+  const graphContainerRef = useCallback(
+    (element: HTMLDivElement | null): void => {
+      setGraphContainer(O.fromNullishOr(element));
+    },
+    [setGraphContainer]
+  );
 
   return (
     <TooltipProvider>
-      <div className="flex h-screen min-h-0 w-full flex-col bg-background text-foreground">
+      {/* `h-full`, not `h-screen`: the workbench mounts BELOW the app's nav bar, inside
+          a parent that has already been given the remaining height. Claiming the whole
+          viewport made it overflow by exactly the nav's height, so the document itself
+          scrolled — the toolbar slid off the top and the graph canvas drifted with the
+          page instead of staying put in its pane. */}
+      <div className="flex h-full min-h-0 w-full flex-col bg-background text-foreground">
         <div className="flex h-12 shrink-0 items-center gap-2 border-b px-3">
           <Input
             aria-label="Ontology file path"
@@ -627,6 +699,7 @@ export function OntologyWorkbench(): JSX.Element {
             <TooltipTrigger
               render={
                 <Button
+                  aria-label="Undo ontology change"
                   size="icon-sm"
                   type="button"
                   variant="ghost"
@@ -643,6 +716,7 @@ export function OntologyWorkbench(): JSX.Element {
             <TooltipTrigger
               render={
                 <Button
+                  aria-label="Redo ontology change"
                   size="icon-sm"
                   type="button"
                   variant="ghost"
@@ -689,7 +763,22 @@ export function OntologyWorkbench(): JSX.Element {
           <Badge variant={dirty ? "destructive" : "secondary"}>{dirty ? "Dirty" : "Saved"}</Badge>
         </div>
 
-        <div className="grid min-h-0 flex-1 grid-cols-[300px_minmax(360px,1fr)_340px]">
+        {/* Open/save/preview failures had nowhere to land, so a rejected path or
+            an unreadable file made the toolbar look inert. */}
+        {O.isSome(documentError) ? (
+          <div
+            role="alert"
+            className="text-destructive border-destructive/40 bg-destructive/10 shrink-0 border-b px-3 py-2 text-xs"
+          >
+            {documentError.value}
+          </div>
+        ) : null}
+
+        {/* The three columns were fixed at 300px + minmax(360px,1fr) + 340px with no
+            breakpoint, so a narrow window did not narrow them — it overlapped them, and
+            controls became unreachable. The tree and inspector fold away below the width
+            at which they stop being usable, and each pane keeps its own scroll. */}
+        <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[260px_minmax(320px,1fr)] lg:overflow-hidden xl:grid-cols-[300px_minmax(360px,1fr)_340px]">
           <aside className="flex min-h-0 flex-col border-r">
             <div className="border-b p-3">
               <Input
@@ -779,11 +868,13 @@ export function OntologyWorkbench(): JSX.Element {
               <div className="space-y-2">
                 <Input
                   aria-label="Subject IRI"
+                  aria-invalid={Str.isNonEmpty(Str.trim(subject)) && !subjectValid}
                   value={subject}
                   onChange={(event) => setSubject(valueFromEvent(event))}
                 />
                 <Input
                   aria-label="Predicate IRI"
+                  aria-invalid={Str.isNonEmpty(Str.trim(predicate)) && !predicateValid}
                   list="ontology-predicate-suggestions"
                   value={predicate}
                   onChange={(event) => setPredicate(valueFromEvent(event))}
@@ -807,10 +898,26 @@ export function OntologyWorkbench(): JSX.Element {
                   </NativeSelect>
                   <Input
                     aria-label="Object value"
+                    aria-invalid={Str.isNonEmpty(Str.trim(object)) && !objectValid}
                     value={object}
                     onChange={(event) => setObject(valueFromEvent(event))}
                   />
                 </div>
+                {/* Apply is disabled for a malformed IRI; say why, or the button
+                    just looks broken. */}
+                {Str.isNonEmpty(Str.trim(subject)) && !subjectValid ? (
+                  <p className="text-destructive text-xs">
+                    Subject must be an IRI (e.g. https://example.org/pizza#Pizza).
+                  </p>
+                ) : null}
+                {Str.isNonEmpty(Str.trim(predicate)) && !predicateValid ? (
+                  <p className="text-destructive text-xs">
+                    Predicate must be an IRI (e.g. http://www.w3.org/2000/01/rdf-schema#label).
+                  </p>
+                ) : null}
+                {objectKind === "iri" && Str.isNonEmpty(Str.trim(object)) && !objectValid ? (
+                  <p className="text-destructive text-xs">An IRI object must be an IRI.</p>
+                ) : null}
                 <Button
                   className="w-full"
                   size="sm"
@@ -875,6 +982,7 @@ export function OntologyWorkbench(): JSX.Element {
                   >
                     <NativeSelectOption value="select">SELECT</NativeSelectOption>
                     <NativeSelectOption value="construct">CONSTRUCT</NativeSelectOption>
+                    <NativeSelectOption value="ask">ASK</NativeSelectOption>
                   </NativeSelect>
                   <NativeSelect
                     aria-label="SPARQL examples"

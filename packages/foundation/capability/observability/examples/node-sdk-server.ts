@@ -1,7 +1,7 @@
 import { PrettyLoggerConfig, renderLogBanner } from "@beep/observability";
 import { layerNodeSdkServer, ServerObservabilityConfig } from "@beep/observability/server";
 
-const config = new ServerObservabilityConfig({
+const config = ServerObservabilityConfig.make({
   serviceName: "beep-sidecar",
   serviceVersion: "0.0.0",
   environment: "local",
@@ -17,7 +17,7 @@ const config = new ServerObservabilityConfig({
 });
 
 void renderLogBanner("Node SDK Server", {
-  pretty: new PrettyLoggerConfig({
+  pretty: PrettyLoggerConfig.make({
     theme: "ocean",
     bannerMode: "startup",
   }),

@@ -2647,6 +2647,7 @@ dependencies = [
 name = "professional-desktop"
 version = "0.0.0"
 dependencies = [
+ "libc",
  "log",
  "serde",
  "serde_json",

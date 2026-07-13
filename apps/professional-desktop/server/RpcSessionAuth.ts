@@ -5,10 +5,12 @@
  * @since 0.0.0
  */
 
-import { Config, Context, Effect, Redacted } from "effect";
+import { Config, Context, Effect, Metric, Redacted } from "effect";
 import * as O from "effect/Option";
 import { Headers, HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import type { Layer } from "effect";
+
+const rpcAuthDecisions = Metric.counter("desktop_rpc_auth_decisions_total", { incremental: true });
 
 /**
  * Environment variable carrying the per-launch sidecar RPC session token.
@@ -77,9 +79,19 @@ export const requireRpcSessionToken = (token: Redacted.Redacted<string>) =>
     ): Effect.Effect<HttpServerResponse.HttpServerResponse, E, R | HttpServerRequest.HttpServerRequest> =>
       Effect.withFiber((fiber) => {
         const request = Context.getUnsafe(fiber.context, HttpServerRequest.HttpServerRequest);
-        return isAuthorizedRpcSessionRequest(request.method, request.headers, token)
-          ? effect
-          : Effect.succeed(HttpServerResponse.text("Unauthorized desktop RPC session.", { status: 401 }));
+        const authorized = isAuthorizedRpcSessionRequest(request.method, request.headers, token);
+        const attributes = { decision: authorized ? "allowed" : "denied", method: request.method };
+        return Metric.update(Metric.withAttributes(rpcAuthDecisions, attributes), 1).pipe(
+          Effect.andThen(
+            authorized
+              ? effect
+              : Effect.logWarning("desktop RPC session authorization denied").pipe(
+                  Effect.annotateLogs({ method: request.method, subsystem: "rpc_auth" }),
+                  Effect.as(HttpServerResponse.text("Unauthorized desktop RPC session.", { status: 401 }))
+                )
+          ),
+          Effect.withSpan("desktop.rpc.authorize", { attributes })
+        );
       })
   );
 

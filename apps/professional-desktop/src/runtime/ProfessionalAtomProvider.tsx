@@ -8,6 +8,7 @@
 "use client";
 
 import { RegistryProvider, useAtomMount } from "@effect/atom-react";
+import { browserFailureListenersAtom } from "./BrowserFailure.atoms.ts";
 import { professionalBrowserRuntime } from "./ProfessionalAtomRuntime.ts";
 import type { ReactNode } from "react";
 
@@ -15,6 +16,7 @@ const chatIdleTtlMs = 30_000;
 
 function ProfessionalAtomRuntimeMount({ children }: { readonly children: ReactNode }) {
   useAtomMount(professionalBrowserRuntime);
+  useAtomMount(browserFailureListenersAtom);
 
   return <>{children}</>;
 }

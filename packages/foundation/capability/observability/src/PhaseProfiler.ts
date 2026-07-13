@@ -28,6 +28,7 @@ import { Clock, Duration, Effect, Exit, Match, Metric } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { LogRedactedCauseOptions, logRedactedCause } from "./CauseRedaction.ts";
 import { decodeNonNegativeInt } from "./internal/decode.ts";
 
 const $I = $ObservabilityId.create("PhaseProfiler");
@@ -138,7 +139,34 @@ const toPhaseOutcome = <A, E>(exit: Exit.Exit<A, E>): PhaseOutcome =>
     Match.orElse(() => "failed" as const)
   );
 
-const logPhaseProfile = (profile: PhaseProfile): Effect.Effect<void> =>
+const logPhaseCause = <A, E>(
+  profile: PhaseProfile,
+  exit: Exit.Exit<A, E>,
+  level: "Error" | "Warn"
+): Effect.Effect<void> =>
+  Exit.match(exit, {
+    onSuccess: () => Effect.logError("phase outcome did not match successful exit"),
+    onFailure: (cause) =>
+      logRedactedCause(
+        cause,
+        LogRedactedCauseOptions.make({
+          message: Match.value(level).pipe(
+            Match.when("Warn", () => "phase interrupted" as const),
+            Match.when("Error", () => "phase failed" as const),
+            Match.exhaustive
+          ),
+          level,
+          attributes: {
+            ...profile.attributes,
+            phase: profile.phase,
+            phase_outcome: profile.outcome,
+            phase_duration_ms: `${profile.durationMs}`,
+          },
+        })
+      ),
+  });
+
+const logPhaseProfile = <A, E>(profile: PhaseProfile, exit: Exit.Exit<A, E>): Effect.Effect<void> =>
   Match.value(profile.outcome).pipe(
     Match.when("completed", () =>
       Effect.logInfo({
@@ -148,22 +176,8 @@ const logPhaseProfile = (profile: PhaseProfile): Effect.Effect<void> =>
         attributes: profile.attributes,
       })
     ),
-    Match.when("interrupted", () =>
-      Effect.logWarning({
-        message: "phase interrupted",
-        phase: profile.phase,
-        durationMs: profile.durationMs,
-        attributes: profile.attributes,
-      })
-    ),
-    Match.when("failed", () =>
-      Effect.logError({
-        message: "phase failed",
-        phase: profile.phase,
-        durationMs: profile.durationMs,
-        attributes: profile.attributes,
-      })
-    ),
+    Match.when("interrupted", () => logPhaseCause(profile, exit, "Warn")),
+    Match.when("failed", () => logPhaseCause(profile, exit, "Error")),
     Match.exhaustive
   );
 
@@ -248,7 +262,7 @@ const profilePhaseImpl = Effect.fn("profilePhaseImpl")(function* <A, E, R>(
                   }).pipe(
                     Effect.andThen(durationEffect),
                     Effect.andThen(outcomeEffect),
-                    Effect.andThen(logPhaseProfile(profile))
+                    Effect.andThen(logPhaseProfile(profile, exit))
                   );
                 })
               )
@@ -288,11 +302,15 @@ export const profilePhase: {
     options: ProfilePhaseOptions | Effect.Effect<A, E, R> | undefined
   ): Effect.fn.Return<A, E, R> {
     if (Effect.isEffect(effect) && P.isNotUndefined(options) && !Effect.isEffect(options)) {
-      return yield* profilePhaseImpl(effect, options);
+      return yield* profilePhaseImpl(effect, options).pipe(
+        Effect.withSpan("observability.phase", { attributes: { phase: options.phase } })
+      );
     }
 
     if (!Effect.isEffect(effect) && Effect.isEffect(options)) {
-      return yield* profilePhaseImpl(options, effect);
+      return yield* profilePhaseImpl(options, effect).pipe(
+        Effect.withSpan("observability.phase", { attributes: { phase: effect.phase } })
+      );
     }
 
     return yield* Effect.die("Invalid profilePhase arguments");

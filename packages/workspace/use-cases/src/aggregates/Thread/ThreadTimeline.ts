@@ -11,6 +11,9 @@ import { Document } from "@beep/md/Md.model";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { MessageRole } from "@beep/workspace-domain/entities/Message";
+import { Order, pipe } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const $I = $WorkspaceUseCasesId.create("aggregates/Thread/ThreadTimeline");
@@ -59,6 +62,8 @@ export class TimelineMessageItem extends S.Class<TimelineMessageItem>($I`Timelin
     description: "Timeline item resolving a turn message reference to its role and md-aligned content.",
   })
 ) {}
+
+const turnIndexOrder = Order.mapInput(Order.Number, (turn: TimelineTurn) => turn.turnIndex);
 
 /**
  * Timeline item placeholder for a tool-call turn item.
@@ -229,3 +234,55 @@ export class ThreadTimeline extends S.Class<ThreadTimeline>($I`ThreadTimeline`)(
     description: "Read model projecting a thread's ordered turns and resolved timeline items.",
   })
 ) {}
+
+/**
+ * The turns still part of the conversation, with every superseded branch removed.
+ *
+ * Editing a turn appends a replacement whose `parentTurnId` points at the turn it
+ * replaces. The replacement therefore supersedes that turn *and* everything
+ * recorded after it — the answers, and any follow-up exchange, that the old
+ * wording produced.
+ *
+ * Nothing consumed this before: the transcript rendered every turn in index
+ * order, so an "Edit" that promised to rewrite the thread from that point left
+ * the old tail on screen (and in the persisted thread) once streaming finished,
+ * and the model was handed that obsolete tail as history alongside the new
+ * prompt. Both the renderer and the history projection read the conversation
+ * through here so they agree on what the thread now says.
+ *
+ * @example
+ * ```ts
+ * import { activeBranchTurns, ThreadTimeline } from "@beep/workspace-use-cases/aggregates/Thread"
+ * import * as S from "effect/Schema"
+ *
+ * const timeline = S.decodeUnknownSync(ThreadTimeline)({
+ *   threadId: 10,
+ *   turns: [
+ *     { turnId: 1, turnIndex: 0, parentTurnId: null, items: [], costMicros: 0 },
+ *     { turnId: 2, turnIndex: 1, parentTurnId: null, items: [], costMicros: 0 },
+ *     { turnId: 3, turnIndex: 2, parentTurnId: null, items: [], costMicros: 0 },
+ *     { turnId: 4, turnIndex: 3, parentTurnId: 2, items: [], costMicros: 0 },
+ *   ],
+ * })
+ * console.log(activeBranchTurns(timeline.turns).map((turn) => turn.turnId)) // [1, 4]
+ * ```
+ *
+ * @category projections
+ * @since 0.0.0
+ */
+export const activeBranchTurns = (turns: ReadonlyArray<TimelineTurn>): ReadonlyArray<TimelineTurn> =>
+  A.reduce(A.sort(turns, turnIndexOrder), A.empty<TimelineTurn>(), (branch, turn) =>
+    pipe(
+      turn.parentTurnId,
+      // A turn only replaces one that is already behind it. A link pointing at
+      // itself, or forward at a turn that has not happened yet, cannot describe a
+      // replacement — it can only be corruption. Such a link is ignored (the turn
+      // simply continues the conversation) rather than trusted: an unresolvable
+      // parent must never be able to truncate the transcript, which is what a
+      // reader would lose if this projection took a corrupt link at its word.
+      O.filter((replacedTurnId) => replacedTurnId !== turn.turnId),
+      O.flatMap((replacedTurnId) => A.findFirstIndex(branch, (candidate) => candidate.turnId === replacedTurnId)),
+      O.map((index) => A.append(A.take(branch, index), turn)),
+      O.getOrElse(() => A.append(branch, turn))
+    )
+  );

@@ -20,36 +20,64 @@
  * - Otherwise, on a real http(s) origin (the vite dev server) the exporter posts
  *   to the same-origin `/otlp` path, which vite proxies to the collector (see
  *   the app's vite.config.ts) — no CORS setup needed.
- * - Otherwise (packaged `tauri://` origin, or jsdom/SSR with no http origin) the
- *   base URL is empty and the layer collapses to {@link Layer.empty}, so
- *   tests/dev without a collector are unaffected and packaged builds default to
- *   telemetry-off.
+ * - Otherwise, a packaged Tauri webview uses the loopback OTLP/HTTP collector;
+ *   jsdom/SSR still collapses to {@link Layer.empty}, so tests without a
+ *   collector remain unaffected.
  *
  * @packageDocumentation
  * @category observability
  * @since 0.0.0
  */
 
+import { LogLevel } from "@beep/schema";
 import { O, P, Str } from "@beep/utils";
-import { Layer } from "effect";
+import { Effect, Layer, Metric, References } from "effect";
+import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
 import { Otlp, OtlpSerialization } from "effect/unstable/observability";
 
-// browser/runtime-derived config boundary — no vite env, no node `process`.
-const otlpBaseUrl = ((): O.Option<string> => {
+const readRuntimeString = (key: string): O.Option<string> => {
   const runtime: unknown = globalThis;
-  const override = P.hasProperty(runtime, "__BEEP_OTLP_URL__") ? runtime.__BEEP_OTLP_URL__ : undefined;
-  if (P.isString(override)) {
-    return O.some(override);
-  }
-  if (typeof window !== "undefined") {
-    const origin = window.location.origin;
-    if (Str.startsWith(origin, "http://") || Str.startsWith(origin, "https://")) {
-      return O.some(new URL("/otlp", origin).toString());
+  return P.hasProperty(runtime, key) && P.isString(runtime[key]) && Str.isNonEmpty(runtime[key])
+    ? O.some(runtime[key])
+    : O.none();
+};
+
+const runtimeAttribute = (key: string, attribute: string): Readonly<Record<string, string>> =>
+  O.getOrElse(
+    O.map(readRuntimeString(key), (value) => ({ [attribute]: value })),
+    () => ({})
+  );
+
+// browser/runtime-derived config boundary — no vite env, no node `process`.
+const resolveOtlpBaseUrl = (): O.Option<string> =>
+  O.orElse(readRuntimeString("__BEEP_OTLP_URL__"), () => {
+    if (typeof window !== "undefined") {
+      const origin = window.location.origin;
+      if (Str.startsWith(origin, "http://") || Str.startsWith(origin, "https://")) {
+        return O.some(new URL("/otlp", origin).toString());
+      }
+      if ("__TAURI_INTERNALS__" in window) {
+        return O.some("http://127.0.0.1:4318");
+      }
     }
-  }
-  return O.none();
-})();
+    return O.none();
+  });
+
+const resolveMinimumLogLevel = (): LogLevel =>
+  O.match(readRuntimeString("__BEEP_LOG_LEVEL__"), {
+    onNone: () => LogLevel.Enum.Info,
+    onSome: (value) => (S.is(LogLevel)(value) ? value : LogLevel.Enum.Info),
+  });
+
+const resourceAttributes = (): Readonly<Record<string, string>> => ({
+  "deployment.environment": "qa",
+  ...runtimeAttribute("__BEEP_DEPLOYMENT_ENVIRONMENT__", "deployment.environment"),
+  ...runtimeAttribute("__BEEP_LAUNCH_ID__", "launch_id"),
+  ...runtimeAttribute("__BEEP_QA_SESSION_ID__", "session_id"),
+  ...runtimeAttribute("__BEEP_BUILD_COMMIT__", "build_commit"),
+  component: "renderer",
+});
 
 /**
  * Env-gated client OTLP layer. Present base URL ⇒ the effect-native OTLP
@@ -68,14 +96,22 @@ const otlpBaseUrl = ((): O.Option<string> => {
  * @category layers
  * @since 0.0.0
  */
-export const ClientObservabilityLive: Layer.Layer<never> = O.match(otlpBaseUrl, {
-  onNone: () => Layer.empty,
-  onSome: (baseUrl) =>
-    Otlp.layer({
-      baseUrl,
-      resource: {
-        serviceName: "professional-desktop-web",
-        serviceVersion: "0.0.3",
-      },
-    }).pipe(Layer.provide([FetchHttpClient.layer, OtlpSerialization.layerJson])),
-});
+export const ClientObservabilityLive: Layer.Layer<never> = Layer.unwrap(
+  Effect.sync(() => {
+    const minimumLogLevel = Layer.succeed(References.MinimumLogLevel, resolveMinimumLogLevel());
+    const telemetry = O.match(resolveOtlpBaseUrl(), {
+      onNone: () => Layer.empty,
+      onSome: (baseUrl) =>
+        Otlp.layer({
+          baseUrl,
+          resource: {
+            serviceName: "professional-desktop-web",
+            serviceVersion: "0.0.3",
+            attributes: resourceAttributes(),
+          },
+        }).pipe(Layer.provide([FetchHttpClient.layer, OtlpSerialization.layerJson])),
+    });
+
+    return Layer.mergeAll(telemetry, Metric.enableRuntimeMetricsLayer, minimumLogLevel);
+  })
+);

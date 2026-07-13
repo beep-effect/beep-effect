@@ -3,12 +3,17 @@
  * kernel, the workspace ThreadStore, and the usage-record sink behind the
  * {@link ChatRpcs} wire contract.
  *
- * SPEC: "Cancel must leave no partial assistant row." The user turn is
- * persisted before streaming starts; the assistant turn+message is persisted
- * **only on successful stream completion** ({@link Stream.onEnd}). On
- * interrupt or error nothing is persisted, so a cancelled turn leaves the
- * user turn but no assistant turn. This deliberately differs from the POC,
- * which persisted partial blocks on abnormal exit via `Stream.onExit`.
+ * The user turn is persisted before streaming starts, and the assistant turn is
+ * persisted when the stream ends — successfully or not.
+ *
+ * Persisting only on success (the original "cancel must leave no partial
+ * assistant row" rule) left a stopped or failed turn as a user message with no
+ * answer. That was not merely untidy: a reload showed an orphaned prompt with no
+ * way to retry, and because the kernel is handed the whole conversation, the
+ * *next* prompt arrived after an unanswered request — so the model answered the
+ * abandoned one instead of the new one. An unfinished turn now records what it
+ * produced, marked stopped or failed, and both the transcript and the history
+ * stay well-formed.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -23,10 +28,12 @@ import {
   UserTurnHistoryItem,
 } from "@beep/agents-use-cases/public";
 import { appendTurnFinalizationUsageRecord, TurnFinalizationUsageAppend } from "@beep/epistemic-domain";
+import { Document, P, Text } from "@beep/md/Md.model";
 import { renderPlainTextUnsafe } from "@beep/md/Md.render";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Thread } from "@beep/workspace-use-cases/server";
-import { Clock, Duration, Effect, Metric, Order, pipe, Ref, Stream } from "effect";
+import { Cause, Clock, Duration, Effect, Exit, HashMap, Metric, Order, pipe, Ref, Semaphore, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -34,8 +41,12 @@ import * as Str from "effect/String";
 import { DerivedThreadTitle } from "./DerivedThreadTitle.ts";
 import { UsageRecordSink } from "./UsageRecordSink.ts";
 import type { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
-import type { IndexedBlock, TurnGenerationError, TurnHistoryItem } from "@beep/agents-use-cases/public";
-import type { Document } from "@beep/md/Md.model";
+import type {
+  IndexedBlock,
+  TurnGenerationError,
+  TurnHistoryItem,
+  TurnRequestStatus,
+} from "@beep/agents-use-cases/public";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 
 // ---------------------------------------------------------------------------
@@ -61,6 +72,14 @@ import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
 export const documentToPlainText = (document: Document.Type): string => renderPlainTextUnsafe(document);
 
 const UNTITLED_THREAD_TITLE = "New thread" as const;
+
+// What an unfinished assistant turn says. Appended after whatever had streamed,
+// so a stopped answer reads as a truncated answer that was stopped, and an empty
+// one still records that the request was made and abandoned.
+const STOPPED_NOTE = "(stopped)" as const;
+const FAILED_NOTE = "(failed)" as const;
+const terminalNoteDocument = (text: string): Document.Type =>
+  Document.make({ children: [P.make({ children: [Text.make({ value: text })] })] });
 
 const decodeDerivedThreadTitle = S.decodeUnknownOption(DerivedThreadTitle);
 const decodeDerivedThreadTitleLine = (line: string): O.Option<string> => decodeDerivedThreadTitle(line);
@@ -130,9 +149,12 @@ const messageItemToHistory = (item: Thread.TimelineMessageItem): ReadonlyArray<T
     user: () => [UserTurnHistoryItem.make({ text: documentToPlainText(item.content) })],
   });
 
+// Only the conversation as it now stands is sent to the model. Flattening every
+// turn handed the kernel the tail an edit had already replaced, so a rewritten
+// prompt was answered in the context of the wording it replaced.
 const projectTimelineToHistory = (timeline: Thread.ThreadTimeline): ReadonlyArray<TurnHistoryItem> =>
   pipe(
-    timeline.turns,
+    Thread.activeBranchTurns(timeline.turns),
     A.flatMap((turn) =>
       A.flatMap(
         turn.items,
@@ -149,12 +171,39 @@ const projectTimelineToHistory = (timeline: Thread.ThreadTimeline): ReadonlyArra
 // Boundary translation (std-09): drop internal detail, keep it in the log
 // ---------------------------------------------------------------------------
 
-const toChatActionError =
-  (context: string) =>
-  (error: { readonly _tag: string }): Effect.Effect<never, ChatActionError> =>
-    Effect.logWarning("chat action dropped internal failure", { context, detail: error }).pipe(
-      Effect.andThen(ChatActionError.failEffect(context))
+const toChatActionError = (context: string) =>
+  Effect.fnUntraced(function* (error: { readonly _tag: string }): Effect.fn.Return<never, ChatActionError> {
+    yield* logRedactedCause(
+      Cause.fail(error),
+      LogRedactedCauseOptions.make({
+        message: "chat action dropped internal failure",
+        level: "Warn",
+        attributes: { context, subsystem: "chat" },
+      })
     );
+    return yield* ChatActionError.failEffect(context);
+  });
+
+// A prior assistant-store outage can leave the active branch ending in a user
+// prompt. Repair that terminal marker before accepting another prompt so the
+// kernel is never handed two unanswered user turns. If persistence is still
+// unavailable, the new send fails before appending its user row and can retry
+// this repair after the store recovers.
+const repairOrphanedUserTurn = Effect.fn("agents.chat.repair_orphaned_user_turn")(function* (
+  store: Thread.ThreadStore["Service"],
+  threadId: WorkspaceIdentity.ThreadId
+) {
+  const timeline = yield* store.timeline(threadId).pipe(Effect.catch(toChatActionError("SendMessage.repairTimeline")));
+  if (!O.exists(A.last(projectTimelineToHistory(timeline)), (turn) => turn.role === "user")) return;
+  yield* store
+    .appendTurn({
+      threadId,
+      parentTurnId: O.none(),
+      role: "assistant",
+      content: terminalNoteDocument(FAILED_NOTE),
+    })
+    .pipe(Effect.catch(toChatActionError("SendMessage.repairAssistant")));
+});
 
 // ---------------------------------------------------------------------------
 // Usage-record synthesis (fixture path)
@@ -223,20 +272,29 @@ const chatBlocksStreamedTotal = Metric.counter("agents_chat_blocks_streamed_tota
   description: "Assistant blocks streamed to the chat client",
   incremental: true,
 });
+const chatTurnsCompletedTotal = Metric.counter("agents_chat_turns_completed_total", { incremental: true });
+const chatTurnsInterruptedTotal = Metric.counter("agents_chat_turns_interrupted_total", { incremental: true });
+const chatTurnsZeroBlockTotal = Metric.counter("agents_chat_turns_zero_block_total", { incremental: true });
+const chatPersistenceFailuresTotal = Metric.counter("agents_chat_persistence_failures_total", { incremental: true });
+const chatTimeToFirstBlock = Metric.timer("agents_chat_time_to_first_block", {
+  boundaries: [25, 50, 100, 250, 500, 1000, 2000, 4000, 8000, 16000, 30000, 60000],
+});
 
 /**
  * Build the assistant-turn stream for a thread: stream the kernel turn,
- * collecting indexed blocks as they pass, and on **successful completion only**
- * persist the assistant turn+message and append the usage record. A single-shot
- * `Ref` guard makes the persist run at most once. Nothing is persisted on error
- * or interrupt — the SPEC's cancel-no-partial invariant.
+ * collecting indexed blocks as they pass. Successful completion persists the
+ * assistant content and appends the usage record; failure or interruption
+ * persists only a terminal marker. A single-shot `Ref` guard makes the persist
+ * run at most once, so partial model output is never stored or billed.
  */
 const streamAndPersist = (
   store: Thread.ThreadStore["Service"],
   kernel: AgentTurnKernel["Service"],
   usage: UsageRecordSink["Service"],
   threadId: WorkspaceIdentity.ThreadId,
-  kind: "send" | "edit"
+  kind: "send" | "edit",
+  requestId: string,
+  requestGeneration: number
 ): Stream.Stream<AssistantBlock, ChatActionError> =>
   Stream.unwrap(
     Effect.gen(function* () {
@@ -258,54 +316,155 @@ const streamAndPersist = (
         let collected: ReadonlyArray<IndexedBlock> = A.empty<IndexedBlock>();
         const persisted = yield* Ref.make(false);
 
-        // Persist runs once, only on success: sort collected blocks by envelope
-        // index, lift to a Document, append the assistant turn, then append the
-        // finalized-turn usage record. Its failure channel is ChatActionError.
-        const persist: Effect.Effect<void, ChatActionError> = Effect.gen(function* () {
-          if (yield* Ref.getAndSet(persisted, true)) return;
-          const blocks = A.map(A.sortWith(collected, indexOf, Order.Number), (indexed) => indexed.block);
-          const content = assistantContentToDocument(blocks);
-          yield* store
-            .appendTurn({ threadId, parentTurnId: O.none(), role: "assistant", content })
-            .pipe(Effect.catch(toChatActionError("SendMessage.persistAssistant")));
-          yield* usage.append(fixtureUsageRecord);
+        // Persist runs once. A finished turn stores the streamed blocks, sorted by
+        // envelope index and lifted to a Document, and appends the finalized-turn
+        // usage record. Its failure channel is ChatActionError.
+        //
+        // An unfinished turn (`note` set) stores *only* the note — never the
+        // partial model output, and never a usage record. The original rule was
+        // "cancel must leave no partial assistant row", and that intent holds:
+        // half-generated content is not kept, and nothing is billed. What changed
+        // is that the turn is no longer erased entirely. Persisting nothing left
+        // the user's prompt in the thread with no answer, and because the kernel
+        // is handed the whole conversation, the *next* prompt arrived after an
+        // unanswered request — so the model answered the abandoned one instead of
+        // the new one (a stop-then-send returned the cancelled request's reply).
+        // A reload showed the same prompt orphaned, with no way to retry. Saying
+        // "(stopped)" keeps both the transcript and the history well-formed.
+        const persist = Effect.fnUntraced(function* (note: O.Option<string>) {
+          const committed = yield* Effect.gen(function* () {
+            if (yield* Ref.getAndSet(persisted, true)) return false;
+            const content = O.match(note, {
+              onNone: () =>
+                assistantContentToDocument(
+                  A.map(A.sortWith(collected, indexOf, Order.Number), (indexed) => indexed.block)
+                ),
+              onSome: terminalNoteDocument,
+            });
+            yield* store.appendTurn({ threadId, parentTurnId: O.none(), role: "assistant", content }).pipe(
+              Effect.catch(toChatActionError("SendMessage.persistAssistant")),
+              Effect.andThen(setTurnRequestStatus(requestId, requestGeneration, "persisted")),
+              Effect.tapError(() => Ref.set(persisted, false))
+            );
+            return true;
+          }).pipe(Effect.uninterruptible);
+          if (!committed) return;
+          if (O.isNone(note)) {
+            // The answer is committed. A usage-accounting failure must not fail
+            // the turn behind it: doing so reported a delivered answer as a
+            // rejected send, so the client handed the prompt back and a retry
+            // produced the answer a second time. Record the miss and move on.
+            yield* usage.append(fixtureUsageRecord).pipe(
+              Effect.tapError((error) =>
+                logRedactedCause(
+                  Cause.fail(error),
+                  LogRedactedCauseOptions.make({
+                    message: "assistant turn persisted but its usage record was not recorded",
+                    level: "Warn",
+                    attributes: { context: "SendMessage.usage", kind, subsystem: "chat" },
+                  })
+                )
+              ),
+              Effect.ignore
+            );
+          }
         });
 
-        const persistWithTelemetry = persist.pipe(
+        const persistWithTelemetry = persist(O.none()).pipe(
           Effect.tapError((error) =>
             trackTurnFailure("persist").pipe(
+              Effect.andThen(Metric.update(Metric.withAttributes(chatPersistenceFailuresTotal, { kind }), 1)),
               Effect.andThen(
-                Effect.logWarning("chat stream failed", {
-                  context: "SendMessage.persistAssistant",
-                  detail: error,
-                })
+                logRedactedCause(
+                  Cause.fail(error),
+                  LogRedactedCauseOptions.make({
+                    message: "chat stream failed",
+                    level: "Warn",
+                    attributes: { context: "SendMessage.persistAssistant", subsystem: "chat" },
+                  })
+                )
               )
             )
           )
         );
 
+        const completeWithTelemetry = Effect.gen(function* () {
+          yield* persistWithTelemetry;
+          yield* Metric.update(Metric.withAttributes(chatTurnsCompletedTotal, { kind }), 1);
+          if (A.isReadonlyArrayEmpty(collected)) {
+            yield* Metric.update(Metric.withAttributes(chatTurnsZeroBlockTotal, { kind }), 1);
+            yield* Effect.logWarning("chat turn completed without assistant blocks").pipe(
+              Effect.annotateLogs({ kind })
+            );
+          }
+          yield* Effect.logInfo("chat turn completed").pipe(Effect.annotateLogs({ kind }));
+        });
+
         return kernel.streamTurn(history).pipe(
           Stream.tap(
             Effect.fnUntraced(function* (indexed: IndexedBlock) {
+              if (A.isReadonlyArrayEmpty(collected)) {
+                const firstBlockAt = yield* Clock.currentTimeMillis;
+                yield* Metric.update(
+                  Metric.withAttributes(chatTimeToFirstBlock, { kind }),
+                  Duration.millis(firstBlockAt - startedAt)
+                );
+              }
               collected = A.append(collected, indexed);
               yield* Metric.update(Metric.withAttributes(chatBlocksStreamedTotal, { kind }), 1);
             })
           ),
           Stream.tapError((error) =>
             trackTurnFailure("kernel").pipe(
-              Effect.andThen(Effect.logWarning("chat stream failed", { context: "SendMessage.kernel", detail: error }))
+              Effect.andThen(
+                logRedactedCause(
+                  Cause.fail(error),
+                  LogRedactedCauseOptions.make({
+                    message: "chat stream failed",
+                    level: "Warn",
+                    attributes: { context: "SendMessage.kernel", subsystem: "chat" },
+                  })
+                )
+              )
             )
           ),
           // wire stays bare blocks; envelope indices are a handler-side concern
           Stream.map((indexed): AssistantBlock => indexed.block),
-          // success path only — persist nothing on error/interrupt (no onExit).
-          // onEnd widens the error channel with persist's ChatActionError.
-          Stream.onEnd(persistWithTelemetry),
+          Stream.onEnd(completeWithTelemetry),
+          // A turn that stops or fails still happened: record it (with whatever
+          // had streamed) so the prompt is not left hanging. `persist` is
+          // idempotent, so the success path above already claimed it and this is
+          // a no-op there. A persistence failure here must not replace the
+          // original cause, so it is logged and swallowed.
+          Stream.onExit((exit) =>
+            Exit.isSuccess(exit)
+              ? Effect.void
+              : persist(O.some(Cause.hasInterrupts(exit.cause) ? STOPPED_NOTE : FAILED_NOTE)).pipe(
+                  Effect.tapError((error) =>
+                    logRedactedCause(
+                      Cause.fail(error),
+                      LogRedactedCauseOptions.make({
+                        message: "chat turn could not record its interruption",
+                        level: "Warn",
+                        attributes: { context: "SendMessage.persistInterrupted", subsystem: "chat" },
+                      })
+                    )
+                  ),
+                  Effect.ignore
+                )
+          ),
           // translate the kernel's TurnGenerationError to the client-safe wire
           // error; the persist ChatActionError passes through unchanged (std-09).
           Stream.mapError(
             (error: TurnGenerationError | ChatActionError): ChatActionError =>
               S.is(ChatActionError)(error) ? error : ChatActionError.new(error.message)
+          ),
+          Stream.onExit((exit) =>
+            Exit.hasInterrupts(exit)
+              ? Metric.update(Metric.withAttributes(chatTurnsInterruptedTotal, { kind }), 1).pipe(
+                  Effect.andThen(Effect.logInfo("chat turn interrupted").pipe(Effect.annotateLogs({ kind })))
+                )
+              : Effect.void
           ),
           Stream.ensuring(recordTurnDuration)
         );
@@ -324,10 +483,14 @@ const setTitleFromFirstUserMessage = (
     O.map((title) =>
       store.setTitleIfEmpty({ threadId, emptyTitle, title }).pipe(
         Effect.catch((error) =>
-          Effect.logWarning("chat title derivation skipped", {
-            context: "SendMessage.setTitleIfEmpty",
-            detail: error,
-          })
+          logRedactedCause(
+            Cause.fail(error),
+            LogRedactedCauseOptions.make({
+              message: "chat title derivation skipped",
+              level: "Warn",
+              attributes: { context: "SendMessage.setTitleIfEmpty", subsystem: "chat" },
+            })
+          )
         )
       )
     ),
@@ -344,16 +507,140 @@ const titleGuardForEditedTurn = (
       isFirstUserMessageTurn(timeline, turnId) ? titleGuardForEditedFirstUserTurn(timeline, turnId) : O.none()
     ),
     Effect.catch((error) =>
-      Effect.logWarning("chat title derivation skipped", {
-        context: "EditMessage.firstUserTitleGate",
-        detail: error,
-      }).pipe(Effect.as(O.none<string>()))
+      logRedactedCause(
+        Cause.fail(error),
+        LogRedactedCauseOptions.make({
+          message: "chat title derivation skipped",
+          level: "Warn",
+          attributes: { context: "EditMessage.firstUserTitleGate", subsystem: "chat" },
+        })
+      ).pipe(Effect.as(O.none<string>()))
     )
   );
 
 // ---------------------------------------------------------------------------
 // Chat operations (raw — plainly typed Effects/Streams)
 // ---------------------------------------------------------------------------
+
+/**
+ * One turn at a time per thread.
+ *
+ * A turn appends the user message, reads the whole conversation back, and asks
+ * the kernel to continue it. Two turns in flight on the same thread therefore
+ * interleave: both prompts land with no answer between them, and each kernel is
+ * handed a history ending in two unanswered requests — so both answer the
+ * *first* one. Two windows on one thread produced two copies of the reply to the
+ * first message and none to the second, and a reload showed that corruption was
+ * persisted.
+ *
+ * Serializing the whole turn — append, stream, persist — restores the invariant
+ * a conversation already implies: the model never sees an unanswered prompt that
+ * is not the one it is answering. The permit is held for the life of the stream,
+ * so a concurrent send waits rather than racing.
+ */
+const threadTurnLocks = Ref.makeUnsafe(HashMap.empty<WorkspaceIdentity.ThreadId, Semaphore.Semaphore>());
+interface TurnRequestReceipt {
+  readonly generation: number;
+  readonly status: TurnRequestStatus;
+}
+const turnRequestStatuses = Ref.makeUnsafe(HashMap.empty<string, TurnRequestReceipt>());
+const TURN_REQUEST_STATUS_TTL = Duration.minutes(5);
+let internalRequestSequence = 0;
+let requestReceiptGeneration = 0;
+const nextInternalRequestId = (): string => `internal:${internalRequestSequence++}`;
+
+const setTurnRequestStatus = (requestId: string, generation: number, status: TurnRequestStatus) =>
+  Ref.update(turnRequestStatuses, (statuses) =>
+    O.match(HashMap.get(statuses, requestId), {
+      onNone: () => statuses,
+      onSome: (receipt) =>
+        receipt.generation === generation ? HashMap.set(statuses, requestId, { generation, status }) : statuses,
+    })
+  );
+
+const getTurnRequestStatus = (requestId: string) =>
+  Ref.get(turnRequestStatuses).pipe(
+    Effect.map(HashMap.get(requestId)),
+    Effect.map(O.match({ onNone: () => "unknown" as const, onSome: (receipt) => receipt.status })),
+    Effect.withSpan("agents.chat.get_turn_request_status")
+  );
+
+const expireTurnRequestStatus = (requestId: string, terminalReceipt: TurnRequestReceipt) =>
+  Ref.update(turnRequestStatuses, (statuses) =>
+    O.match(HashMap.get(statuses, requestId), {
+      onNone: () => statuses,
+      onSome: (current) =>
+        current.generation === terminalReceipt.generation && current.status === terminalReceipt.status
+          ? HashMap.remove(statuses, requestId)
+          : statuses,
+    })
+  ).pipe(Effect.delay(TURN_REQUEST_STATUS_TTL), Effect.forkDetach, Effect.asVoid);
+
+const finalizeTurnRequestStatus = (requestId: string, generation: number) =>
+  Ref.modify(
+    turnRequestStatuses,
+    (statuses): readonly [O.Option<TurnRequestReceipt>, HashMap.HashMap<string, TurnRequestReceipt>] =>
+      O.match(HashMap.get(statuses, requestId), {
+        onNone: () => [O.none(), statuses],
+        onSome: (receipt) => {
+          if (receipt.generation !== generation) return [O.none(), statuses];
+          const status: TurnRequestStatus =
+            receipt.status === "pending"
+              ? "not_persisted"
+              : receipt.status === "accepted"
+                ? "user_persisted"
+                : receipt.status;
+          const terminalReceipt = { generation, status };
+          return [O.some(terminalReceipt), HashMap.set(statuses, requestId, terminalReceipt)];
+        },
+      })
+  ).pipe(
+    Effect.flatMap(
+      O.match({ onNone: () => Effect.void, onSome: (receipt) => expireTurnRequestStatus(requestId, receipt) })
+    )
+  );
+
+const trackTurnRequest = <A, E>(
+  requestId: string,
+  generation: number,
+  stream: Stream.Stream<A, E>
+): Stream.Stream<A, E> => {
+  const pendingReceipt: TurnRequestReceipt = { generation, status: "pending" };
+  return Stream.unwrap(
+    Ref.update(turnRequestStatuses, (statuses) => HashMap.set(statuses, requestId, pendingReceipt)).pipe(
+      Effect.as(stream)
+    )
+  ).pipe(Stream.ensuring(finalizeTurnRequestStatus(requestId, generation)));
+};
+
+const threadTurnLock = Effect.fn("chat.threadTurnLock")(function* (threadId: WorkspaceIdentity.ThreadId) {
+  return yield* Ref.modify(threadTurnLocks, (locks) =>
+    pipe(
+      HashMap.get(locks, threadId),
+      O.match({
+        onSome: (
+          existing
+        ): readonly [Semaphore.Semaphore, HashMap.HashMap<WorkspaceIdentity.ThreadId, Semaphore.Semaphore>] => [
+          existing,
+          locks,
+        ],
+        onNone: (): readonly [
+          Semaphore.Semaphore,
+          HashMap.HashMap<WorkspaceIdentity.ThreadId, Semaphore.Semaphore>,
+        ] => {
+          const created = Semaphore.makeUnsafe(1);
+          return [created, HashMap.set(locks, threadId, created)];
+        },
+      })
+    )
+  );
+});
+
+const holdThreadTurnPermit = Effect.fn("chat.holdThreadTurnPermit")(function* (threadId: WorkspaceIdentity.ThreadId) {
+  const lock = yield* threadTurnLock(threadId);
+  // Released when the stream's scope closes — completion, failure, or stop.
+  yield* Effect.acquireRelease(lock.take(1), () => lock.release(1));
+});
 
 /**
  * The chat orchestration operations over already-acquired services. Each
@@ -402,39 +689,68 @@ export const makeChatOperations = (
       .timeline(threadId)
       .pipe(Effect.catch(toChatActionError("GetTimeline")), Effect.withSpan("agents.chat.get_timeline")),
 
+  getTurnRequestStatus,
+
   sendMessage: (
     threadId: WorkspaceIdentity.ThreadId,
-    content: Document.Type
-  ): Stream.Stream<AssistantBlock, ChatActionError> =>
-    Stream.unwrap(
-      Effect.gen(function* () {
-        yield* store
-          .appendTurn({ threadId, parentTurnId: O.none(), role: "user", content })
-          .pipe(Effect.catch(toChatActionError("SendMessage")));
-        yield* setTitleFromFirstUserMessage(store, threadId, content);
-        return streamAndPersist(store, kernel, usage, threadId, "send");
-      })
-    ).pipe(Stream.withSpan("agents.chat.send_message")),
+    content: Document.Type,
+    requestId: string = nextInternalRequestId()
+  ): Stream.Stream<AssistantBlock, ChatActionError> => {
+    const requestGeneration = requestReceiptGeneration++;
+    return trackTurnRequest(
+      requestId,
+      requestGeneration,
+      Stream.unwrap(
+        Effect.gen(function* () {
+          yield* holdThreadTurnPermit(threadId);
+          yield* repairOrphanedUserTurn(store, threadId);
+          yield* Effect.uninterruptible(
+            store
+              .appendTurn({ threadId, parentTurnId: O.none(), role: "user", content })
+              .pipe(
+                Effect.catch(toChatActionError("SendMessage")),
+                Effect.andThen(setTurnRequestStatus(requestId, requestGeneration, "accepted"))
+              )
+          );
+          yield* setTitleFromFirstUserMessage(store, threadId, content);
+          return streamAndPersist(store, kernel, usage, threadId, "send", requestId, requestGeneration);
+        })
+      )
+    ).pipe(Stream.withSpan("agents.chat.send_message"));
+  },
 
   editMessage: (
     threadId: WorkspaceIdentity.ThreadId,
     turnId: WorkspaceIdentity.TurnId,
-    content: Document.Type
-  ): Stream.Stream<AssistantBlock, ChatActionError> =>
-    Stream.unwrap(
-      Effect.gen(function* () {
-        const titleGuard = yield* titleGuardForEditedTurn(store, threadId, turnId);
-        yield* store
-          .appendTurn({ threadId, parentTurnId: O.some(turnId), role: "user", content })
-          .pipe(Effect.catch(toChatActionError("EditMessage")));
-        yield* pipe(
-          titleGuard,
-          O.map((emptyTitle) => setTitleFromFirstUserMessage(store, threadId, content, emptyTitle)),
-          O.getOrElse(() => Effect.void)
-        );
-        return streamAndPersist(store, kernel, usage, threadId, "edit");
-      })
-    ).pipe(Stream.withSpan("agents.chat.edit_message")),
+    content: Document.Type,
+    requestId: string = nextInternalRequestId()
+  ): Stream.Stream<AssistantBlock, ChatActionError> => {
+    const requestGeneration = requestReceiptGeneration++;
+    return trackTurnRequest(
+      requestId,
+      requestGeneration,
+      Stream.unwrap(
+        Effect.gen(function* () {
+          yield* holdThreadTurnPermit(threadId);
+          const titleGuard = yield* titleGuardForEditedTurn(store, threadId, turnId);
+          yield* Effect.uninterruptible(
+            store
+              .appendTurn({ threadId, parentTurnId: O.some(turnId), role: "user", content })
+              .pipe(
+                Effect.catch(toChatActionError("EditMessage")),
+                Effect.andThen(setTurnRequestStatus(requestId, requestGeneration, "accepted"))
+              )
+          );
+          yield* pipe(
+            titleGuard,
+            O.map((emptyTitle) => setTitleFromFirstUserMessage(store, threadId, content, emptyTitle)),
+            O.getOrElse(() => Effect.void)
+          );
+          return streamAndPersist(store, kernel, usage, threadId, "edit", requestId, requestGeneration);
+        })
+      )
+    ).pipe(Stream.withSpan("agents.chat.edit_message"));
+  },
 });
 
 /**
@@ -457,8 +773,10 @@ const makeChatHandlers = (operations: ChatOperations) =>
     ListThreads: ({ workspaceId }) => operations.listThreads(workspaceId),
     CreateThread: ({ workspaceId, title }) => operations.createThread(workspaceId, title),
     GetTimeline: ({ threadId }) => operations.getTimeline(threadId),
-    SendMessage: ({ threadId, content }) => operations.sendMessage(threadId, content),
-    EditMessage: ({ threadId, turnId, content }) => operations.editMessage(threadId, turnId, content),
+    GetTurnRequestStatus: ({ requestId }) => operations.getTurnRequestStatus(requestId),
+    SendMessage: ({ threadId, content, requestId }) => operations.sendMessage(threadId, content, requestId),
+    EditMessage: ({ threadId, turnId, content, requestId }) =>
+      operations.editMessage(threadId, turnId, content, requestId),
   });
 
 /**

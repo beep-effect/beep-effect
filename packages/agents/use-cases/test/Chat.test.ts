@@ -2,12 +2,19 @@ import { ChatActionError, ChatRpcs } from "@beep/agents-use-cases/public";
 import { describe, expect, it } from "@effect/vitest";
 import * as RpcSchema from "effect/unstable/rpc/RpcSchema";
 
-const tags = ["ListThreads", "CreateThread", "GetTimeline", "SendMessage", "EditMessage"] as const;
+const tags = [
+  "ListThreads",
+  "CreateThread",
+  "GetTimeline",
+  "GetTurnRequestStatus",
+  "SendMessage",
+  "EditMessage",
+] as const;
 
 const streaming = new Set(["SendMessage", "EditMessage"]);
 
 describe("@beep/agents-use-cases Chat", () => {
-  it("exposes exactly the five chat rpcs", () => {
+  it("exposes exactly the six chat rpcs", () => {
     expect([...ChatRpcs.requests.keys()].sort()).toEqual([...tags].sort());
   });
 

@@ -8,14 +8,14 @@ import { ThreadStoreRepoTestSchemas } from "@beep/workspace-server/test";
 import { SetThreadTitleIfEmptyInput } from "@beep/workspace-use-cases/aggregates/Thread/server";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Exit, HashMap, Layer } from "effect";
+import { Cause, Clock, DateTime, Effect, Exit, HashMap, Layer } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
+import { FastCheck as fc, TestClock } from "effect/testing";
 
 const decodeWorkspaceId = S.decodeUnknownEffect(WorkspaceIdentity.WorkspaceId);
 const SetThreadTitleIfEmptyInputArbitrary = S.toArbitrary(SetThreadTitleIfEmptyInput);
@@ -329,6 +329,49 @@ describe("ThreadStore in-memory", () => {
         .setTitleIfEmpty({ threadId: missing, emptyTitle: "New thread", title: "Missing" })
         .pipe(Effect.flip);
       expect(error._tag).toBe("ThreadStoreNotFound");
+    })
+  );
+
+  // Audit stamps were filled with the row's entity id, so thread 1 was created
+  // at 1970-01-01T00:00:00.001Z and the sidebar showed every conversation as
+  // "Dec 31" (1969, in any negative UTC offset). The clock is the only source of
+  // a timestamp: under the test clock every stamp must be *exactly* the current
+  // time, which the old id-derived stamps never were.
+  it.effect(
+    "stamps rows from the clock, and a rename advances updatedAt without restamping createdAt",
+    Effect.fnUntraced(function* () {
+      const store = yield* makeTestThreadStore;
+      const workspaceId = yield* decodeWorkspaceId(2);
+      const createdTime = yield* Clock.currentTimeMillis;
+
+      const thread = yield* store.createThread({ title: "New thread", workspaceId });
+      expect(DateTime.toEpochMillis(thread.createdAt)).toBe(createdTime);
+      expect(DateTime.toEpochMillis(thread.updatedAt)).toBe(createdTime);
+
+      const { message, turn } = yield* store.appendTurn({
+        threadId: thread.id,
+        parentTurnId: O.none(),
+        role: "user",
+        content: docOf("Hello"),
+      });
+      expect(DateTime.toEpochMillis(turn.createdAt)).toBe(createdTime);
+      expect(DateTime.toEpochMillis(message.createdAt)).toBe(createdTime);
+
+      yield* TestClock.adjust("1 minute");
+      const renameTime = yield* Clock.currentTimeMillis;
+      expect(renameTime).toBeGreaterThan(createdTime);
+
+      yield* store.setTitleIfEmpty(
+        SetThreadTitleIfEmptyInput.make({
+          threadId: thread.id,
+          title: "Renamed",
+          emptyTitle: "New thread",
+        })
+      );
+      const [renamed] = yield* store.listThreads(workspaceId);
+      expect(renamed?.title).toBe("Renamed");
+      expect(DateTime.toEpochMillis(renamed!.createdAt)).toBe(createdTime);
+      expect(DateTime.toEpochMillis(renamed!.updatedAt)).toBe(renameTime);
     })
   );
 });

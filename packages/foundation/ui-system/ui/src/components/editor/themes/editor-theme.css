@@ -1,28 +1,34 @@
 .EditorTheme__code {
-  background-color: transparent;
+  background-color: var(--muted);
   font-family: Menlo, Consolas, Monaco, monospace;
   display: block;
-  padding: 8px 8px 8px 52px;
+  padding: 8px;
   line-height: 1.53;
   font-size: 13px;
   margin: 0;
   margin-top: 8px;
   margin-bottom: 8px;
   overflow-x: auto;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border);
   position: relative;
   border-radius: 8px;
   tab-size: 2;
 }
-.EditorTheme__code:before {
+/* The line-number gutter only exists once code highlighting populates
+   data-gutter; without the guard an empty ::before still paints its
+   border-right as a stray 1px vertical rule. */
+.EditorTheme__code[data-gutter]:not([data-gutter=""]) {
+  padding-left: 52px;
+}
+.EditorTheme__code[data-gutter]:not([data-gutter=""]):before {
   content: attr(data-gutter);
   position: absolute;
   background-color: transparent;
-  border-right: 1px solid #ccc;
+  border-right: 1px solid var(--border);
   left: 0;
   top: 0;
   padding: 8px;
-  color: #777;
+  color: var(--muted-foreground);
   white-space: pre-wrap;
   text-align: right;
   min-width: 25px;

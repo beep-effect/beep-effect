@@ -6,18 +6,18 @@
  */
 
 "use client";
-
-import { FilingOutcome } from "@beep/documents-domain/aggregates/Document";
+import { Document, FilingOutcome } from "@beep/documents-domain/aggregates/Document";
 import { IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch";
 import { slugVaultSegment } from "@beep/documents-domain/values/Taxonomy";
+import { $ProfessionalDesktopId } from "@beep/identity";
 import { Button } from "@beep/ui/components/button";
+import { A, O } from "@beep/utils";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Effect } from "effect";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { AsyncResult } from "effect/unstable/reactivity";
-import { Fragment, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import { failureMessageOr } from "@/lib/failureMessage";
 import {
   ConfigureWorkspaceVaultInput,
@@ -25,20 +25,93 @@ import {
   DEFAULT_WORKSPACE_ID,
   DroppedDocumentInput,
   intakeDroppedDocumentAtom,
+  pickVaultDirectoryAtom,
   workspaceVaultConfigAtom,
 } from "./Intake.atoms.js";
-import type { Document } from "@beep/documents-domain/aggregates/Document";
 import type { DragEvent, JSX, ReactNode } from "react";
 
+const $I = $ProfessionalDesktopId.create("intake/DocumentIntakeTarget");
 const hasTauriRuntime = (): boolean => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
-const pickVaultDirectory: Effect.Effect<string | null> = Effect.suspend(() =>
-  hasTauriRuntime()
-    ? Effect.tryPromise(() =>
-        import("@tauri-apps/api/core").then(({ invoke }) => invoke<string | null>("select_vault_directory"))
-      ).pipe(Effect.orElseSucceed(() => null))
-    : Effect.sync(() => window.prompt("Workspace vault path"))
-);
+/**
+ * The picker could not be opened at all. `null` means the user dismissed the
+ * dialog — a normal outcome — so an import, IPC, or permission failure must not
+ * be reported the same way: doing so made "Choose folder" look like an inert
+ * button with no diagnostic anywhere.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+class VaultPickerUnavailable extends S.Class<VaultPickerUnavailable>($I`VaultPickerUnavailable`)(
+  {
+    message: S.String,
+  },
+  $I.annote("VaultPickerUnavailable", {
+    description: "The native vault directory picker could not be opened.",
+  })
+) {}
+
+// Tauri opens the shell's own native dialog; browser mode asks the sidecar to
+// open its host's native folder dialog over RPC, and only falls back to manual
+// path entry when that surface is unavailable (chat-only HTTP, headless host).
+const pickVaultDirectory = (
+  pickWithSidecar: () => Promise<string | null>
+): Effect.Effect<string | null, VaultPickerUnavailable> =>
+  Effect.suspend(() =>
+    hasTauriRuntime()
+      ? Effect.tryPromise({
+          try: () =>
+            import("@tauri-apps/api/core").then(({ invoke }) => invoke<string | null>("select_vault_directory")),
+          catch: (cause) =>
+            VaultPickerUnavailable.make({ message: `The folder picker could not be opened: ${String(cause)}` }),
+        })
+      : Effect.tryPromise(pickWithSidecar).pipe(
+          Effect.catch(() => Effect.sync(() => window.prompt("Workspace vault path")))
+        )
+  );
+
+/**
+ * Largest file the intake path accepts. Content crosses the RPC boundary as
+ * base64 (~33% expansion) and is held in memory on both sides while it is
+ * extracted and filed, so the bound protects the renderer and the sidecar alike.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+const MAX_INTAKE_FILE_BYTES = 25 * 1024 * 1024;
+
+const formatMegabytes = (bytes: number): string => `${Math.round((bytes / (1024 * 1024)) * 10) / 10} MB`;
+
+/**
+ * Why intake refuses a file, decided before a single byte is read.
+ *
+ * Both bounds are checked ahead of `arrayBuffer()`: the content is otherwise
+ * materialized, copied into a `Uint8Array`, base64-expanded (~33% larger) for the
+ * RPC, and decoded again server-side.
+ *
+ * @example
+ * ```ts
+ * import { intakeRefusal } from "@/intake/DocumentIntakeTarget"
+ *
+ * console.log(intakeRefusal({ name: "empty.txt", size: 0 }))
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const intakeRefusal = (file: { readonly name: string; readonly size: number }): O.Option<string> => {
+  if (file.size > MAX_INTAKE_FILE_BYTES) {
+    return O.some(`${formatMegabytes(file.size)} exceeds the ${formatMegabytes(MAX_INTAKE_FILE_BYTES)} intake limit.`);
+  }
+  // An empty file was accepted, classified, and filed: it produced a content-free
+  // object in the vault and a classification rationale invented about nothing at all.
+  // There is no document in zero bytes, and the model should not be asked to pretend
+  // there is.
+  if (file.size === 0) {
+    return O.some("This file is empty, so there is nothing to file.");
+  }
+  return O.none();
+};
 
 const droppedFiles = (event: DragEvent<HTMLElement>): ReadonlyArray<File> => A.fromIterable(event.dataTransfer.files);
 
@@ -49,9 +122,34 @@ const vaultConfigurationFailureMessage = failureMessageOr("Unable to save worksp
 
 const intakeFailureMessage = failureMessageOr("Intake failed.");
 
-type IntakeResultEntry =
-  | { readonly kind: "document"; readonly document: Document }
-  | { readonly kind: "failure"; readonly fileName: string; readonly message: string };
+class IntakeResultEntryDocument extends S.Class<IntakeResultEntryDocument>($I`IntakeResultEntry`)(
+  {
+    kind: S.tag("document"),
+    document: Document,
+  },
+  $I.annote("IntakeResultEntry", {
+    description: "",
+  })
+) {}
+
+class IntakeResultEntryFailure extends S.Class<IntakeResultEntryFailure>($I`IntakeResultEntryFailure`)(
+  {
+    kind: S.tag("failure"),
+    fileName: S.String,
+    message: S.String,
+  },
+  $I.annote("IntakeResultEntry", {
+    description: "",
+  })
+) {}
+
+const IntakeResultEntry = S.Union([IntakeResultEntryDocument, IntakeResultEntryFailure]).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("IntakeResultEntry", {
+    description: "",
+  })
+);
+type IntakeResultEntry = typeof IntakeResultEntry.Type;
 
 const intakeResultRow = (entry: IntakeResultEntry): JSX.Element =>
   entry.kind === "failure" ? (
@@ -130,14 +228,20 @@ const IntakeResultsPanel = ({
       data-testid="intake-results"
     >
       <div className="flex items-center justify-between gap-2">
-        <h2 className="font-semibold">Filed documents</h2>
+        {/* The panel holds refusals as well as successes, so it cannot call itself
+            "Filed documents": a file the app had just refused appeared, correctly red
+            and correctly explained, underneath a heading announcing it as filed. The
+            heading contradicted the row. */}
+        <h2 className="font-semibold">Intake results</h2>
         <Button type="button" variant="ghost" size="sm" onClick={onClear} data-testid="intake-results-clear">
           Clear
         </Button>
       </div>
       <ul className="mt-2 space-y-2">
-        {results.map((entry, index) => (
-          <Fragment key={`${index}-${entry.kind === "document" ? entry.document.contentDigest : entry.fileName}`}>
+        {A.map(results, (entry, index) => (
+          <Fragment
+            key={`${index}-${IntakeResultEntry.guards.document(entry) ? entry.document.contentDigest : entry.fileName}`}
+          >
             {intakeResultRow(entry)}
           </Fragment>
         ))}
@@ -165,7 +269,7 @@ export const configureSelectedWorkspaceVault = Effect.fn("configureSelectedWorks
   configureVault: (input: ConfigureWorkspaceVaultInput) => Promise<unknown>,
   setStatus: (status: string | null) => void
 ) {
-  if (selected === null || selected.trim().length === 0) return;
+  if (selected === null || Str.isEmpty(Str.trim(selected))) return;
   const input = yield* S.decodeUnknownEffect(ConfigureWorkspaceVaultInput)({
     vaultRootPath: selected,
     workspaceId: DEFAULT_WORKSPACE_ID,
@@ -198,23 +302,40 @@ export const configureSelectedWorkspaceVault = Effect.fn("configureSelectedWorks
  * @category components
  * @since 0.0.0
  */
+// This existing intake boundary owns the drag, picker, batch, and result UI
+// states. The QA patch adds bounded file selection to those same transitions;
+// decomposing the full surface is a separate atom-migration refactor.
+// fallow-ignore-next-line complexity
 export function DocumentIntakeTarget({ children }: { readonly children: ReactNode }): JSX.Element {
   const vaultConfig = useAtomValue(workspaceVaultConfigAtom(DEFAULT_WORKSPACE_ID));
   const configureVault = useAtomSet(configureWorkspaceVaultAtom, { mode: "promise" });
   const intakeDroppedDocument = useAtomSet(intakeDroppedDocumentAtom, { mode: "promise" });
+  const pickWithSidecar = useAtomSet(pickVaultDirectoryAtom, { mode: "promise" });
   const [isDragging, setIsDragging] = useState(false);
+  // The one permitted useRef: a DOM handle for the hidden file input.
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [activeBatches, setActiveBatches] = useState(0);
   const [results, setResults] = useState<ReadonlyArray<IntakeResultEntry>>([]);
 
   useAtomMount(configureWorkspaceVaultAtom);
   useAtomMount(intakeDroppedDocumentAtom);
+  useAtomMount(pickVaultDirectoryAtom);
 
   const configured = AsyncResult.isSuccess(vaultConfig) && O.isSome(vaultConfig.value.vaultRootPath);
   const needsOnboarding = AsyncResult.isSuccess(vaultConfig) && O.isNone(vaultConfig.value.vaultRootPath);
 
   const chooseVault = Effect.gen(function* () {
-    const selected = yield* pickVaultDirectory;
+    // Dismissing the dialog yields `null` and stays silent (the configure step
+    // treats it as "nothing chosen"); a picker that could not open at all says so.
+    const selected = yield* pickVaultDirectory(() => pickWithSidecar()).pipe(
+      Effect.catch((failure) =>
+        Effect.sync((): string | null => {
+          setStatus(failure.message);
+          return null;
+        })
+      )
+    );
     yield* configureSelectedWorkspaceVault(selected, configureVault, setStatus);
   });
 
@@ -228,6 +349,14 @@ export function DocumentIntakeTarget({ children }: { readonly children: ReactNod
     yield* Effect.sync(() => setActiveBatches((count) => count + 1));
     yield* Effect.forEach(files, (file) => {
       const fileName = file.name || "document";
+      // Reject before `arrayBuffer()`: the file is otherwise materialized, copied
+      // into a Uint8Array, base64-expanded (~33% larger) for the RPC, and decoded
+      // again server-side. A big enough drop took the renderer or the sidecar down
+      // with no size ever being checked.
+      const refusal = intakeRefusal(file);
+      if (O.isSome(refusal)) {
+        return Effect.sync(() => appendResult(IntakeResultEntryFailure.make({ fileName, message: refusal.value })));
+      }
       return Effect.tryPromise(() => file.arrayBuffer()).pipe(
         Effect.map((buffer) => new Uint8Array(buffer)),
         Effect.flatMap((content) =>
@@ -244,8 +373,22 @@ export function DocumentIntakeTarget({ children }: { readonly children: ReactNod
         ),
         Effect.matchEffect({
           onFailure: (cause) =>
-            Effect.sync(() => appendResult({ kind: "failure", fileName, message: intakeFailureMessage(cause) })),
-          onSuccess: (document) => Effect.sync(() => appendResult({ kind: "document", document })),
+            Effect.sync(() =>
+              appendResult(
+                IntakeResultEntryFailure.make({
+                  fileName,
+                  message: intakeFailureMessage(cause),
+                })
+              )
+            ),
+          onSuccess: (document) =>
+            Effect.sync(() =>
+              appendResult(
+                IntakeResultEntryDocument.make({
+                  document,
+                })
+              )
+            ),
         })
       );
     }).pipe(Effect.ensuring(Effect.sync(() => setActiveBatches((count) => count - 1))));
@@ -284,6 +427,35 @@ export function DocumentIntakeTarget({ children }: { readonly children: ReactNod
         <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center border-2 border-dashed border-primary bg-background/80 text-sm font-medium text-foreground backdrop-blur">
           Drop documents to file
         </div>
+      ) : null}
+      {/* Filing was drag-and-drop only, so the whole intake feature was
+          unreachable by keyboard (and by anything that cannot synthesize a
+          filesystem drag). The picker drives exactly the same intake path. */}
+      {configured ? (
+        <>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            className="hidden"
+            data-testid="intake-file-input"
+            onChange={(event) => {
+              const selected = A.fromIterable(event.target.files ?? []);
+              event.target.value = "";
+              void Effect.runPromise(intakeFiles(selected));
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="absolute bottom-4 left-4 z-40"
+            data-testid="intake-choose-files"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            File documents…
+          </Button>
+        </>
       ) : null}
       <IntakeBusyBadge activeBatches={activeBatches} />
       <IntakeResultsPanel results={results} onClear={() => setResults([])} />

@@ -51,14 +51,18 @@ beforeAll(() => {
 }, 60_000);
 
 const skipWhenNoSharedDatabase = (ctx: { readonly skip: (message?: string) => void }) =>
-  hasSharedConnectionUri
-    ? Effect.void
-    : Effect.sync(() => ctx.skip("BEEP_TEST_DATABASE_URL is required for shared external PostgreSQL tests."));
+  Effect.sync(() => {
+    if (hasSharedConnectionUri) return false;
+    ctx.skip("BEEP_TEST_DATABASE_URL is required for shared external PostgreSQL tests.");
+    return true;
+  });
 
 const skipTestcontainersWhenUnavailable = (ctx: { readonly skip: (message?: string) => void }) =>
-  pgliteTestcontainersAvailable
-    ? Effect.void
-    : Effect.sync(() => ctx.skip("Docker/Testcontainers is unavailable or redundant for PGLite integration tests."));
+  Effect.sync(() => {
+    if (pgliteTestcontainersAvailable) return false;
+    ctx.skip("Docker/Testcontainers is unavailable or redundant for PGLite integration tests.");
+    return true;
+  });
 
 const makeSharedLayer = <MigrateError = never, SeedError = never>(hooks?: SqlTestHooks<MigrateError, SeedError>) =>
   Layer.fresh(
@@ -187,43 +191,14 @@ describe("PGLite in-process SQL test driver", () => {
 // `--concurrency=1` and `BEEP_TEST_DATABASE_MAX_CONNECTIONS=1`.
 describe("PGLite shared external SQL test driver", { concurrent: false }, () => {
   it.effect(
-    "runs select 1 through the shared external driver",
+    "creates, inserts, and queries PostgreSQL tables inside the generated schema",
 
     Effect.fnUntraced(function* (ctx) {
-      yield* skipWhenNoSharedDatabase(ctx);
+      if (yield* skipWhenNoSharedDatabase(ctx)) return;
 
       const result = yield* Effect.gen(function* () {
         const sql = (yield* SqlClient.SqlClient).withoutTransforms();
         const info = yield* TestDatabaseInfo;
-        const rows = yield* sql<{ readonly one: number }>`SELECT 1 AS one`;
-
-        return {
-          driver: info.driver,
-          one: pipe(
-            rows,
-            A.head,
-            O.map((row) => row.one),
-            O.getOrElse(() => 0)
-          ),
-          schema: O.isSome(info.schema),
-        };
-      }).pipe(provideScopedLayer(makeSharedLayer()));
-
-      expect(result.driver).toBe("pg-external");
-      expect(result.one).toBe(1);
-      expect(result.schema).toBe(true);
-    }),
-    SharedPgliteIntegrationTimeoutMs
-  );
-
-  it.effect(
-    "creates, inserts, and queries PostgreSQL tables inside the generated schema",
-
-    Effect.fnUntraced(function* (ctx) {
-      yield* skipWhenNoSharedDatabase(ctx);
-
-      const values = yield* Effect.gen(function* () {
-        const sql = (yield* SqlClient.SqlClient).withoutTransforms();
         yield* sql`
             CREATE TABLE notes (
               id SERIAL PRIMARY KEY,
@@ -240,13 +215,19 @@ describe("PGLite shared external SQL test driver", { concurrent: false }, () => 
             ORDER BY id ASC
           `;
 
-        return pipe(
-          rows,
-          A.map((row) => row.body)
-        );
+        return {
+          values: pipe(
+            rows,
+            A.map((row) => row.body)
+          ),
+          driver: info.driver,
+          schema: O.isSome(info.schema),
+        };
       }).pipe(provideScopedLayer(makeSharedLayer()));
 
-      expect(values).toEqual(["alpha", "beta"]);
+      expect(result.driver).toBe("pg-external");
+      expect(result.schema).toBe(true);
+      expect(result.values).toEqual(["alpha", "beta"]);
     }),
     SharedPgliteIntegrationTimeoutMs
   );
@@ -254,7 +235,7 @@ describe("PGLite shared external SQL test driver", { concurrent: false }, () => 
   it.effect(
     "isolates schemas between scoped external layers",
     Effect.fnUntraced(function* (ctx) {
-      yield* skipWhenNoSharedDatabase(ctx);
+      if (yield* skipWhenNoSharedDatabase(ctx)) return;
 
       const createTableAndCountRows = Effect.gen(function* () {
         const sql = (yield* SqlClient.SqlClient).withoutTransforms();
@@ -293,7 +274,7 @@ describe("PGLite shared external SQL test driver", { concurrent: false }, () => 
   it.effect(
     "runs migrate and seed hooks inside the generated schema",
     Effect.fnUntraced(function* (ctx) {
-      yield* skipWhenNoSharedDatabase(ctx);
+      if (yield* skipWhenNoSharedDatabase(ctx)) return;
 
       const result = yield* Effect.gen(function* () {
         const info = yield* TestDatabaseInfo;
@@ -342,7 +323,7 @@ describe("PGLite shared external SQL test driver", { concurrent: false }, () => 
   it.effect(
     "wraps hook failures with the external driver id",
     Effect.fnUntraced(function* (ctx) {
-      yield* skipWhenNoSharedDatabase(ctx);
+      if (yield* skipWhenNoSharedDatabase(ctx)) return;
 
       const exit = yield* Effect.exit(
         Effect.void.pipe(
@@ -371,7 +352,7 @@ describe("PGLite shared external SQL test driver", { concurrent: false }, () => 
   it.effect(
     "drops generated schemas when the layer scope closes",
     Effect.fnUntraced(function* (ctx) {
-      yield* skipWhenNoSharedDatabase(ctx);
+      if (yield* skipWhenNoSharedDatabase(ctx)) return;
 
       const scope = yield* Scope.make();
       const services = yield* Layer.buildWithScope(makeSharedLayer(), scope);
@@ -402,7 +383,7 @@ if (hasSharedConnectionUri) {
     it.effect(
       "starts a PGLite Testcontainers database and runs select 1 through SqlClient",
       Effect.fnUntraced(function* (ctx) {
-        yield* skipTestcontainersWhenUnavailable(ctx);
+        if (yield* skipTestcontainersWhenUnavailable(ctx)) return;
 
         const result = yield* Effect.gen(function* () {
           const sql = (yield* SqlClient.SqlClient).withoutTransforms();
@@ -441,7 +422,7 @@ if (hasSharedConnectionUri) {
     it.effect(
       "stops and removes the PGLite container when the layer scope closes",
       Effect.fnUntraced(function* (ctx) {
-        yield* skipTestcontainersWhenUnavailable(ctx);
+        if (yield* skipTestcontainersWhenUnavailable(ctx)) return;
 
         const containerId = yield* Effect.scoped(
           Effect.gen(function* () {

@@ -8,13 +8,14 @@
  */
 import { assistantContentToDocument } from "@beep/agents-domain/values/AssistantContent";
 import { FixtureTurnKernel, fixtureBlocksFor } from "@beep/agents-use-cases/proof";
-import { AgentTurnKernel, TurnHistoryItem } from "@beep/agents-use-cases/public";
+import { AgentTurnKernel, IndexedBlock, TurnHistoryItem } from "@beep/agents-use-cases/public";
 import * as Md from "@beep/md/Md.model";
+import { renderPlainTextUnsafe } from "@beep/md/Md.render";
 import { assertSchemaArbitraryDecodesToSelf, provideScopedLayer } from "@beep/test-utils";
 import { ThreadStoreInMemoryLayer } from "@beep/workspace-server/aggregates/Thread";
 import { Thread } from "@beep/workspace-use-cases/server";
 import { describe, expect, it } from "@effect/vitest";
-import { Deferred, Effect, Fiber, Layer, Ref, Stream } from "effect";
+import { Deferred, Effect, Fiber, Layer, Metric, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
@@ -23,7 +24,7 @@ import * as Str from "effect/String";
 import { decodeWorkspaceId, userDocument, userParagraphDocument } from "@/chat/ChatFixtures";
 import { documentToPlainText, makeChatOperations } from "@/chat/ChatOrchestrator";
 import { makeInMemoryUsageRecordSink } from "@/chat/UsageRecordSink";
-import type { IndexedBlock, TurnHistoryItem as TurnHistoryItemType } from "@beep/agents-use-cases/public";
+import type { TurnHistoryItem as TurnHistoryItemType } from "@beep/agents-use-cases/public";
 
 // Build the chat operations + the usage Ref over the provided in-memory stack.
 const makeStack = Effect.gen(function* () {
@@ -86,6 +87,23 @@ describe("@beep/professional-desktop chat contract", () => {
       const usage = yield* Ref.get(usageRef);
       expect(usage).toHaveLength(1);
       expect(usage[0]?.provider).toBe("fixture");
+
+      // The successful stream records completion and duration telemetry in the
+      // same Effect runtime that executed the contract.
+      const metrics = yield* Metric.snapshot;
+      const completed = O.getOrThrow(
+        A.findFirst(
+          metrics,
+          (snapshot) => snapshot.id === "agents_chat_turns_completed_total" && snapshot.type === "Counter"
+        )
+      );
+      const duration = O.getOrThrow(
+        A.findFirst(metrics, (snapshot) => snapshot.id === "agents_chat_turn_duration" && snapshot.type === "Histogram")
+      );
+      expect(completed.type).toBe("Counter");
+      expect(completed.type === "Counter" ? completed.state.count : 0).not.toBe(0);
+      expect(duration.type).toBe("Histogram");
+      expect(duration.type === "Histogram" ? duration.state.count : 0).toBeGreaterThan(0);
     }).pipe(provideScopedLayer(StackLayer))
   );
 
@@ -246,7 +264,12 @@ describe("@beep/professional-desktop chat contract", () => {
     expect(text).toContain("Ship docs");
   });
 
-  it.effect("cancel leaves no partial assistant row and appends no usage record", () =>
+  // Cancelling still keeps no partial model output and bills nothing. What it no
+  // longer does is erase the turn entirely: persisting nothing left the user's
+  // prompt with no answer, so a reload orphaned it and — because the kernel is
+  // handed the whole conversation — the next prompt arrived after an unanswered
+  // request and the model answered the abandoned one instead.
+  it.effect("cancel records a stopped turn, keeps no partial content, and bills nothing", () =>
     Effect.gen(function* () {
       const { operations, usageRef } = yield* makeStack;
       const workspaceId = decodeWorkspaceId(1);
@@ -270,14 +293,95 @@ describe("@beep/professional-desktop chat contract", () => {
       yield* Deferred.await(firstBlockSeen);
       yield* Fiber.interrupt(fiber);
 
-      // timeline shows the user turn but NO assistant turn
+      // the prompt is answered by a turn that says it was stopped
       const timeline = yield* operations.getTimeline(thread.id);
       const items = messageItems(timeline);
-      expect(items.map((m) => m.role)).toEqual(["user"]);
+      expect(items.map((m) => m.role)).toEqual(["user", "assistant"]);
 
-      // no usage record appended on interrupt
+      // the stopped turn carries the marker and none of the streamed content
+      const stopped = items[1];
+      const stoppedText = renderPlainTextUnsafe(stopped!.content).trim();
+      expect(stoppedText).toBe("(stopped)");
+
+      // still no usage record on interrupt
       const usage = yield* Ref.get(usageRef);
       expect(usage).toHaveLength(0);
+    }).pipe(provideScopedLayer(StackLayer))
+  );
+
+  it.effect("reports user_persisted repeatedly when assistant persistence fails after the user append", () =>
+    Effect.gen(function* () {
+      const store = yield* Thread.ThreadStore;
+      const kernel = yield* AgentTurnKernel;
+      const { sink } = yield* makeInMemoryUsageRecordSink;
+      const histories = yield* Ref.make<ReadonlyArray<ReadonlyArray<TurnHistoryItemType>>>([]);
+      const capturingKernel = AgentTurnKernel.of({
+        streamTurn: (history) =>
+          Stream.unwrap(
+            Ref.update(histories, (all) => A.append(all, history)).pipe(Effect.as(kernel.streamTurn(history)))
+          ),
+      });
+      const assistantFailingStore = Thread.ThreadStore.of({
+        ...store,
+        appendTurn: Effect.fn("Thread.ThreadStore.appendTurn")((input) =>
+          input.role === "assistant"
+            ? Effect.fail(Thread.ThreadStoreUnavailable.make({ reason: "assistant persistence unavailable" }))
+            : store.appendTurn(input)
+        ),
+      });
+      const operations = makeChatOperations(assistantFailingStore, capturingKernel, sink);
+      const thread = yield* operations.createThread(decodeWorkspaceId(1), "Persistence failure");
+
+      yield* Stream.runDrain(
+        operations.sendMessage(thread.id, userDocument("Keep the durable prompt"), "after-user-append")
+      ).pipe(Effect.exit);
+
+      expect(yield* operations.getTurnRequestStatus("after-user-append")).toBe("user_persisted");
+      expect(yield* operations.getTurnRequestStatus("after-user-append")).toBe("user_persisted");
+      yield* Stream.runDrain(
+        operations.sendMessage(thread.id, userDocument("Do not append this yet"), "after-orphaned-user")
+      ).pipe(Effect.exit);
+      const timeline = yield* operations.getTimeline(thread.id);
+      expect(messageItems(timeline).map((item) => item.role)).toEqual(["user"]);
+      const captured = yield* Ref.get(histories);
+      expect(A.map(captured, (history) => A.map(history, (item) => item.role))).toStrictEqual([["user"]]);
+    }).pipe(provideScopedLayer(StackLayer))
+  );
+
+  it.effect("reports persisted when interrupted after the assistant append commits", () =>
+    Effect.gen(function* () {
+      const store = yield* Thread.ThreadStore;
+      const kernel = yield* AgentTurnKernel;
+      const { sink } = yield* makeInMemoryUsageRecordSink;
+      const assistantCommitted = yield* Deferred.make<void>();
+      const releaseAssistantAppend = yield* Deferred.make<void>();
+      const gatedStore = Thread.ThreadStore.of({
+        ...store,
+        appendTurn: Effect.fn("Thread.ThreadStore.appendTurn")((input) =>
+          input.role === "assistant"
+            ? store.appendTurn(input).pipe(
+                Effect.tap(() => Deferred.succeed(assistantCommitted, undefined)),
+                Effect.tap(() => Deferred.await(releaseAssistantAppend))
+              )
+            : store.appendTurn(input)
+        ),
+      });
+      const operations = makeChatOperations(gatedStore, kernel, sink);
+      const thread = yield* operations.createThread(decodeWorkspaceId(1), "Committed assistant");
+      const send = yield* Effect.forkChild(
+        Stream.runDrain(operations.sendMessage(thread.id, userDocument("Keep the answer"), "assistant-committed"))
+      );
+
+      yield* Deferred.await(assistantCommitted);
+      const interrupt = yield* Effect.forkChild(Fiber.interrupt(send));
+      yield* Effect.yieldNow;
+      yield* Deferred.succeed(releaseAssistantAppend, undefined);
+      yield* Fiber.join(interrupt);
+
+      expect(yield* operations.getTurnRequestStatus("assistant-committed")).toBe("persisted");
+      expect(yield* operations.getTurnRequestStatus("assistant-committed")).toBe("persisted");
+      const timeline = yield* operations.getTimeline(thread.id);
+      expect(messageItems(timeline).map((item) => item.role)).toEqual(["user", "assistant"]);
     }).pipe(provideScopedLayer(StackLayer))
   );
 
@@ -341,4 +445,100 @@ describe("@beep/professional-desktop chat contract", () => {
   it("round-trips schema-derived turn history items through the wire contract", () => {
     assertSchemaArbitraryDecodesToSelf(TurnHistoryItem, { numRuns: 25 });
   });
+
+  // A turn appends the user message, reads the whole conversation back, and asks
+  // the kernel to continue it. Two turns in flight on one thread interleave: both
+  // prompts land with no answer between them, so each kernel is handed a history
+  // ending in two unanswered requests — and both answer the *first*. Two windows
+  // on one thread produced two copies of the reply to the first message and none
+  // to the second, and the corruption was persisted.
+  //
+  // The kernel here blocks until released, which is what forces the two turns to
+  // actually overlap; the assertion is on the history each kernel call is given,
+  // because that is where the corruption originates.
+  it.effect("never hands the kernel a history ending in an unanswered prompt", () =>
+    Effect.gen(function* () {
+      const store = yield* Thread.ThreadStore;
+      const { sink } = yield* makeInMemoryUsageRecordSink;
+      const histories = yield* Ref.make<ReadonlyArray<ReadonlyArray<TurnHistoryItemType>>>([]);
+      const release = yield* Deferred.make<void>();
+
+      const gatedKernel = AgentTurnKernel.of({
+        streamTurn: (history) =>
+          Stream.unwrap(
+            Effect.gen(function* () {
+              yield* Ref.update(histories, (all) => [...all, history]);
+              yield* Deferred.await(release);
+              return Stream.make(IndexedBlock.make({ index: 0, block: fixtureBlocksFor(history)[0]! }));
+            })
+          ),
+      });
+
+      const operations = makeChatOperations(store, gatedKernel, sink);
+      const workspaceId = decodeWorkspaceId(1);
+      const thread = yield* operations.createThread(workspaceId, "Concurrent");
+
+      const first = yield* Effect.forkChild(Stream.runDrain(operations.sendMessage(thread.id, userDocument("ALPHA"))));
+      // Wait until the first turn is inside the kernel (holding the thread).
+      yield* Effect.repeat(Ref.get(histories), { until: (all) => all.length === 1 });
+
+      const second = yield* Effect.forkChild(Stream.runDrain(operations.sendMessage(thread.id, userDocument("BRAVO"))));
+      // Give the second turn every chance to barge in ahead of the first.
+      yield* Effect.yieldNow;
+      yield* Effect.yieldNow;
+
+      yield* Deferred.succeed(release, void 0);
+      yield* Fiber.join(first);
+      yield* Fiber.join(second);
+
+      const seen = yield* Ref.get(histories);
+      expect(seen).toHaveLength(2);
+
+      // The second turn's history must already contain the first turn's answer:
+      // it must never end in two prompts in a row.
+      const secondHistory = seen[1]!;
+      expect(secondHistory.map((item) => item.role)).toEqual(["user", "assistant", "user"]);
+      // ...and the prompt it is being asked to answer is its own.
+      expect(secondHistory[2]!.text).toContain("BRAVO");
+    }).pipe(provideScopedLayer(ThreadStoreTestLayer))
+  );
+
+  it.effect("does not credit another window's persisted turn to a queued request interrupted before append", () =>
+    Effect.gen(function* () {
+      const store = yield* Thread.ThreadStore;
+      const { sink } = yield* makeInMemoryUsageRecordSink;
+      const enteredKernel = yield* Deferred.make<void>();
+      const release = yield* Deferred.make<void>();
+      const kernel = AgentTurnKernel.of({
+        streamTurn: (history) =>
+          Stream.unwrap(
+            Deferred.succeed(enteredKernel, undefined).pipe(
+              Effect.andThen(Deferred.await(release)),
+              Effect.as(Stream.make(IndexedBlock.make({ index: 0, block: fixtureBlocksFor(history)[0]! })))
+            )
+          ),
+      });
+      const operations = makeChatOperations(store, kernel, sink);
+      const thread = yield* operations.createThread(decodeWorkspaceId(1), "Two windows");
+      const first = yield* Effect.forkChild(
+        Stream.runDrain(operations.sendMessage(thread.id, userDocument("ALPHA"), "window-a"))
+      );
+      yield* Deferred.await(enteredKernel);
+      const queued = yield* Effect.forkChild(
+        Stream.runDrain(operations.sendMessage(thread.id, userDocument("BRAVO"), "window-b"))
+      );
+      yield* Effect.yieldNow;
+      const interrupt = yield* Effect.forkChild(Fiber.interrupt(queued));
+      yield* Deferred.succeed(release, undefined);
+      yield* Fiber.join(first);
+      yield* Fiber.join(interrupt);
+
+      expect(yield* operations.getTurnRequestStatus("window-b")).toBe("not_persisted");
+      expect(yield* operations.getTurnRequestStatus("window-b")).toBe("not_persisted");
+      const timeline = yield* operations.getTimeline(thread.id);
+      expect(
+        timeline.turns.some((turn) => turn.items.some((item) => item.kind === "message" && item.role === "assistant"))
+      ).toBe(true);
+    }).pipe(provideScopedLayer(ThreadStoreTestLayer))
+  );
 });

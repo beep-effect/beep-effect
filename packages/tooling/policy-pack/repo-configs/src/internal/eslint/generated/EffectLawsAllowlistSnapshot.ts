@@ -38,6 +38,14 @@ export const ALLOWLIST_SNAPSHOT = {
     },
     {
       "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/ui-system/editor/src/viewer.tsx",
+      "kind": "new-map-set",
+      "reason": "The viewer memoizes each message's encoded state against the state object itself; the weak keys are the point, since an Effect HashMap would retain every message ever rendered and turn a render cache into a transcript-sized leak.",
+      "owner": "@beep/ui-system",
+      "issue": "EDITOR-VIEWER-WEAKMAP-ENCODE-CACHE"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/ui-system/ui/src/components/banner.tsx",
       "kind": "object-method",
       "reason": "The shadcn React banner component composes slot props with Object.assign at the UI boundary to preserve upstream component semantics.",

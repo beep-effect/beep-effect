@@ -11,16 +11,21 @@ receivers:
             - http://127.0.0.1:3000
             - https://localhost:3000
             - https://127.0.0.1:3000
-            - http://localhost:4318
-            - http://127.0.0.1:4318
-            - http://*
-            - https://*
+            - http://localhost:1421
+            - http://127.0.0.1:1421
+            - https://localhost:1421
+            - https://127.0.0.1:1421
+            - tauri://localhost
+            - http://tauri.localhost
+            - https://tauri.localhost
           allowed_headers:
+            - Accept
             - Content-Type
             - Authorization
             - Baggage
             - traceparent
             - tracestate
+          max_age: 7200
   prometheus/collector:
     config:
       scrape_configs:

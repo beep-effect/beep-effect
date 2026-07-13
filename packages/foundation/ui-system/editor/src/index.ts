@@ -38,6 +38,20 @@ export * from "./artifact-ref-node.tsx";
  */
 export * from "./chat/index.ts";
 /**
+ * Read-only Lexical decorator node rendering a code block that scrolls and can be copied.
+ *
+ * @category components
+ * @since 0.0.0
+ */
+export * from "./code-block-node.tsx";
+/**
+ * The code block a reader actually gets: long lines scroll, and the snippet can be copied.
+ *
+ * @category components
+ * @since 0.0.0
+ */
+export * from "./code-block-view.tsx";
+/**
  * Composer primitives: an editable Lexical surface wired with the v1 node registration and theme.
  *
  * @category components
@@ -45,12 +59,12 @@ export * from "./chat/index.ts";
  */
 export * from "./composer.tsx";
 /**
- * Read-only Lexical plugin rendering `language="mermaid"` code nodes as diagrams.
+ * Read-only Lexical decorator node rendering a `language="mermaid"` code block as a diagram.
  *
  * @category components
  * @since 0.0.0
  */
-export * from "./mermaid-code-decorator-plugin.tsx";
+export * from "./mermaid-node.tsx";
 /**
  * Mermaid diagram renderer shared by persisted editor and streaming chat surfaces.
  *

@@ -224,14 +224,18 @@ const trackDurationImpl = Effect.fn("trackDurationImpl")(function* <A, E, R>(
   metric: Metric.Metric<Duration.Duration, unknown>,
   options: TrackDurationOptions
 ): Effect.fn.Return<A, E, R> {
-  return yield* measureElapsedMillis(effect).pipe(
-    Effect.tap(([_, elapsedMs]) =>
-      Metric.update(withMetricAttributes(metric, options.attributes), Duration.millis(elapsedMs)).pipe(
-        Effect.andThen(Effect.annotateCurrentSpan("duration_ms", elapsedMs))
-      )
-    ),
-    Effect.map(([head]) => head)
-  );
+  const startedAt = yield* Clock.currentTimeMillis;
+  const exit = yield* Effect.exit(effect);
+  const endedAt = yield* Clock.currentTimeMillis;
+  const elapsedMs = Math.max(0, endedAt - startedAt);
+
+  yield* Metric.update(withMetricAttributes(metric, options.attributes), Duration.millis(elapsedMs));
+  yield* Effect.annotateCurrentSpan("duration_ms", elapsedMs);
+
+  return yield* Exit.match(exit, {
+    onFailure: Effect.failCause,
+    onSuccess: Effect.succeed,
+  });
 });
 
 /**

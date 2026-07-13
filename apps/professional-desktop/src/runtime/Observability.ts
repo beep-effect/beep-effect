@@ -12,17 +12,17 @@
  *   DEVTOOLS                    true enables the Effect DevTools websocket
  *                                mirror via `@beep/observability/server`.
  *   DEVTOOLS_URL                defaults to ws://localhost:34437.
- *   DEVTOOLS_ALLOW_REMOTE       true allows non-local DevTools websocket URLs.
+ *   Non-local DevTools websocket URLs are rejected because span payloads can
+ *   contain diagnostic attributes intended only for the local QA workstation.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-import { layerFilteredDevTools } from "@beep/observability/server";
+import { layerLocalLgtmServer, ServerObservabilityConfig } from "@beep/observability/server";
 import { O } from "@beep/utils";
-import { Config, Effect, HashSet, identity, Layer, Result } from "effect";
+import { Config, Effect, HashSet, identity, Layer, References, Result } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
-import { Otlp, OtlpSerialization } from "effect/unstable/observability";
 
 /**
  * OTLP observability layer for the sidecar. Gated on
@@ -34,21 +34,6 @@ import { Otlp, OtlpSerialization } from "effect/unstable/observability";
  * @category layers
  * @since 0.0.0
  */
-const OtlpLive: Layer.Layer<never> = Layer.unwrap(
-  Effect.gen(function* () {
-    const endpoint = yield* Config.option(Config.string("OTEL_EXPORTER_OTLP_ENDPOINT"));
-    if (O.isNone(endpoint)) {
-      return Layer.empty;
-    }
-    return Otlp.layerFromConfig({
-      resource: {
-        serviceName: "professional-desktop-sidecar",
-        serviceVersion: "0.0.3",
-      },
-    }).pipe(Layer.provide([FetchHttpClient.layer, OtlpSerialization.layerJson]));
-  }).pipe(Effect.orDie)
-);
-
 const localDevToolsHostnames = HashSet.make("localhost", "127.0.0.1", "::1", "[::1]");
 
 const isLocalDevToolsUrl = (url: string): boolean =>
@@ -62,6 +47,49 @@ const isLocalDevToolsUrl = (url: string): boolean =>
     })
   );
 
+const ObservabilityConfigLive: Layer.Layer<never> = Layer.unwrap(
+  Effect.gen(function* () {
+    const endpoint = yield* Config.option(Config.string("OTEL_EXPORTER_OTLP_ENDPOINT"));
+    const minLogLevel = yield* Config.logLevel("APP_LOG_LEVEL").pipe(Config.withDefault("Info"));
+    const environment = yield* Config.string("BEEP_DEPLOYMENT_ENVIRONMENT").pipe(Config.withDefault("qa"));
+    const launchId = yield* Config.option(Config.string("BEEP_LAUNCH_ID"));
+    const qaSessionId = yield* Config.option(Config.string("BEEP_QA_SESSION_ID"));
+    const buildCommit = yield* Config.option(Config.string("BEEP_BUILD_COMMIT"));
+    const transport = yield* Config.option(Config.string("CHAT_TRANSPORT"));
+    const devtoolsRequested = yield* Config.boolean("DEVTOOLS").pipe(Config.withDefault(false));
+    const devtoolsUrl = yield* Config.string("DEVTOOLS_URL").pipe(Config.withDefault("ws://localhost:34437"));
+    const devtoolsAllowed = !devtoolsRequested || isLocalDevToolsUrl(devtoolsUrl);
+
+    if (!devtoolsAllowed) {
+      yield* Effect.logWarning("Effect DevTools disabled for non-local DEVTOOLS_URL", { url: devtoolsUrl });
+    }
+
+    const config = ServerObservabilityConfig.make({
+      serviceName: "professional-desktop-sidecar",
+      serviceVersion: "0.0.3",
+      environment,
+      minLogLevel,
+      otlpBaseUrl: O.getOrElse(endpoint, () => "http://127.0.0.1:4318"),
+      otlpEnabled: O.isSome(endpoint),
+      otlpResourceAttributes: O.getSomesStruct({
+        launch_id: launchId,
+        session_id: qaSessionId,
+        build_commit: buildCommit,
+        transport,
+        component: O.some("sidecar"),
+      }),
+      devtoolsEnabled: devtoolsRequested && devtoolsAllowed,
+      devtoolsUrl,
+      prometheusPrefix: "professional_desktop",
+    });
+
+    return Layer.mergeAll(
+      layerLocalLgtmServer(config).pipe(Layer.provide(FetchHttpClient.layer)),
+      Layer.succeed(References.MinimumLogLevel, minLogLevel)
+    );
+  }).pipe(Effect.orDie)
+);
+
 /**
  * Effect DevTools websocket mirror for local sidecar debugging. Gated by
  * `DEVTOOLS=true`, using the shared observability capability so the app does
@@ -72,21 +100,6 @@ const isLocalDevToolsUrl = (url: string): boolean =>
  * @category layers
  * @since 0.0.0
  */
-const DevToolsLive: Layer.Layer<never> = Layer.unwrap(
-  Effect.gen(function* () {
-    const enabled = yield* Config.boolean("DEVTOOLS").pipe(Config.withDefault(false));
-    if (!enabled) {
-      return Layer.empty;
-    }
-    const url = yield* Config.string("DEVTOOLS_URL").pipe(Config.withDefault("ws://localhost:34437"));
-    const allowRemote = yield* Config.boolean("DEVTOOLS_ALLOW_REMOTE").pipe(Config.withDefault(false));
-    if (!allowRemote && !isLocalDevToolsUrl(url)) {
-      yield* Effect.logWarning("Effect DevTools disabled for non-local DEVTOOLS_URL", { url });
-      return Layer.empty;
-    }
-    return layerFilteredDevTools({ url, shouldPublish: () => true });
-  }).pipe(Effect.orDie)
-);
 
 /**
  * Sidecar observability layer: OTLP export plus optional Effect DevTools.
@@ -101,4 +114,4 @@ const DevToolsLive: Layer.Layer<never> = Layer.unwrap(
  * @category layers
  * @since 0.0.0
  */
-export const ObservabilityLive: Layer.Layer<never> = Layer.mergeAll(OtlpLive, DevToolsLive);
+export const ObservabilityLive: Layer.Layer<never> = ObservabilityConfigLive;

@@ -97,6 +97,62 @@ export const GetTimelineRpc = Rpc.make("GetTimeline", {
 });
 
 /**
+ * Persistence status of one client-correlated turn request. `accepted` means
+ * the user row committed, while terminal `user_persisted` means stream unwind
+ * finished without an assistant commit.
+ *
+ * @example
+ * ```ts
+ * import { TurnRequestStatus } from "@beep/agents-use-cases/public"
+ * console.log(TurnRequestStatus.literals.includes("persisted"))
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const TurnRequestStatus = S.Literals([
+  "pending",
+  "accepted",
+  "persisted",
+  "user_persisted",
+  "not_persisted",
+  "unknown",
+]).annotate({
+  identifier: "TurnRequestStatus",
+  description: "Server-side persistence status for one exact chat turn request.",
+});
+
+/**
+ * Runtime type for {@link TurnRequestStatus}.
+ *
+ * @example
+ * ```ts
+ * import type { TurnRequestStatus } from "@beep/agents-use-cases/public"
+ * const status: TurnRequestStatus = "persisted"
+ * console.log(status)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type TurnRequestStatus = typeof TurnRequestStatus.Type;
+
+/**
+ * Reads persistence evidence for one exact client request id.
+ *
+ * @example
+ * ```ts
+ * import { ChatRpcs, GetTurnRequestStatusRpc } from "@beep/agents-use-cases/public"
+ * console.log(ChatRpcs.requests.get("GetTurnRequestStatus") === GetTurnRequestStatusRpc)
+ * ```
+ * @category protocols
+ * @since 0.0.0
+ */
+export const GetTurnRequestStatusRpc = Rpc.make("GetTurnRequestStatus", {
+  payload: { requestId: S.NonEmptyString },
+  success: TurnRequestStatus,
+  error: ChatActionError,
+});
+
+/**
  * Sends a message to a thread and streams the assistant turn back, one
  * rich-text block at a time as each finishes generating.
  *
@@ -120,7 +176,7 @@ export const GetTimelineRpc = Rpc.make("GetTimeline", {
  * @since 0.0.0
  */
 export const SendMessageRpc = Rpc.make("SendMessage", {
-  payload: { threadId: WorkspaceIdentity.ThreadId, content: Document },
+  payload: { threadId: WorkspaceIdentity.ThreadId, content: Document, requestId: S.NonEmptyString },
   success: AssistantBlock,
   error: ChatActionError,
   stream: true,
@@ -155,6 +211,7 @@ export const EditMessageRpc = Rpc.make("EditMessage", {
     threadId: WorkspaceIdentity.ThreadId,
     turnId: WorkspaceIdentity.TurnId,
     content: Document,
+    requestId: S.NonEmptyString,
   },
   success: AssistantBlock,
   error: ChatActionError,
@@ -163,7 +220,8 @@ export const EditMessageRpc = Rpc.make("EditMessage", {
 
 /**
  * The chat protocol the desktop chat surface speaks to its app sidecar:
- * thread listing/creation, the timeline read-model, and the two streaming
+ * thread listing/creation, the timeline read-model, exact request-status
+ * reconciliation via {@link GetTurnRequestStatusRpc}, and the two streaming
  * message turns ({@link SendMessageRpc}, {@link EditMessageRpc}).
  *
  * @example
@@ -176,4 +234,11 @@ export const EditMessageRpc = Rpc.make("EditMessage", {
  * @category protocols
  * @since 0.0.0
  */
-export const ChatRpcs = RpcGroup.make(ListThreadsRpc, CreateThreadRpc, GetTimelineRpc, SendMessageRpc, EditMessageRpc);
+export const ChatRpcs = RpcGroup.make(
+  ListThreadsRpc,
+  CreateThreadRpc,
+  GetTimelineRpc,
+  GetTurnRequestStatusRpc,
+  SendMessageRpc,
+  EditMessageRpc
+);

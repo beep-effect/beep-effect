@@ -5,8 +5,9 @@
  * @since 0.0.0
  */
 import * as WebSdk from "@effect/opentelemetry/WebSdk";
+import { Layer } from "effect";
+import { layerMinimumLogLevel } from "../Logging.ts";
 import { toWebResource } from "./Config.ts";
-import type * as Layer from "effect/Layer";
 import type { WebObservabilityConfig } from "./Config.ts";
 
 /**
@@ -35,6 +36,9 @@ import type { WebObservabilityConfig } from "./Config.ts";
 export const layerWebSdk = (
   config: WebObservabilityConfig
 ): Layer.Layer<import("@effect/opentelemetry/Resource").Resource> =>
-  WebSdk.layer(() => ({
-    resource: toWebResource(config),
-  }));
+  Layer.merge(
+    WebSdk.layer(() => ({
+      resource: toWebResource(config),
+    })),
+    layerMinimumLogLevel(config.minLogLevel)
+  );

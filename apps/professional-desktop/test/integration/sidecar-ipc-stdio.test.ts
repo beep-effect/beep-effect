@@ -144,7 +144,7 @@ const ipcStdioProgram = Effect.gen(function* () {
     expect(thread.title).toBe("ipc stdio");
 
     const blocks = yield* client
-      .SendMessage({ threadId: thread.id, content: userDocument("hello over stdio") })
+      .SendMessage({ threadId: thread.id, content: userDocument("hello over stdio"), requestId: "ipc-stdio-test" })
       .pipe(Stream.runCollect, Effect.map(Chunk.fromIterable));
     expect(Chunk.size(blocks)).toBeGreaterThan(0);
   });

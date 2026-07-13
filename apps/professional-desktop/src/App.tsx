@@ -12,17 +12,20 @@
  */
 
 import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client";
+import { redactCauseForClient } from "@beep/observability";
 import { HttpOntologyProtocolLive, ontologyProtocolLayerAtom } from "@beep/ontology-client";
 import { OntologyWorkbench } from "@beep/ontology-ui";
 import { Button } from "@beep/ui/components/button";
 import { Toaster } from "@beep/ui/components/sonner";
-import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { Cause, Effect } from "effect";
+import { useAtomMount, useAtomValue } from "@effect/atom-react";
+import { Effect } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
+import { ThemeToggle } from "./chat/ui/ThemeToggle.tsx";
 import { DocumentIntakeTarget } from "./intake/DocumentIntakeTarget.tsx";
 import { CosmosSpike } from "./spikes/CosmosSpike.tsx";
 import { VaultSyncPanel } from "./sync/VaultSyncPanel.tsx";
@@ -46,7 +49,6 @@ const isDevMode = (): boolean => {
 // the Tauri `sidecar_transport` probe). Gated on Vite DEV so production web
 // builds never embed a token; without it browser HTTP stays chat-only.
 const devRpcSessionToken = (): string | undefined => {
-  // biome-ignore lint/suspicious/noUndeclaredEnvVars: Vite injects VITE_* on import.meta.env.
   const token: unknown = import.meta.env.VITE_BEEP_DESKTOP_RPC_SESSION_TOKEN;
   return isDevMode() && P.isString(token) && token.length > 0 ? token : undefined;
 };
@@ -76,7 +78,44 @@ const readSidecarTransport = Effect.suspend(() =>
 // AsyncResult<SidecarTransport>: Initial = checking, Failure = unavailable,
 // Success = ready. Replaces the useState/useEffect transport probe.
 const sidecarTransportAtom = Atom.make(readSidecarTransport);
-const desktopSurfaceAtom = Atom.make<"chat" | "ontology">("chat");
+type DesktopSurface = "home" | "chat" | "ontology" | "sync";
+
+const DEFAULT_SURFACE: DesktopSurface = "chat";
+
+const isDesktopSurface = (value: string): value is DesktopSurface =>
+  value === "home" || value === "chat" || value === "ontology" || value === "sync";
+
+// The nav items are anchors, so every click already writes `#<surface>` to the
+// address bar. Reading it back is what makes the URL authoritative: without
+// this, a reload at `#sync` rendered Chat, and Back left the URL and the
+// rendered surface disagreeing (with the old nav item still marked current).
+const surfaceFromHash = (): DesktopSurface => {
+  const raw = window.location.hash.replace(/^#/, "");
+  return isDesktopSurface(raw) ? raw : DEFAULT_SURFACE;
+};
+
+const desktopSurfaceAtom = Atom.make<DesktopSurface>(surfaceFromHash());
+
+// atom-first: a mounted binding rather than a useEffect. Syncs the surface from
+// the URL on mount and on every hash change (which covers back/forward too).
+const hashRoutingBindingAtom = Atom.make((get) => {
+  const apply = (): void => get.set(desktopSurfaceAtom, surfaceFromHash());
+  apply();
+  window.addEventListener("hashchange", apply);
+  get.addFinalizer(() => window.removeEventListener("hashchange", apply));
+  return undefined;
+});
+
+const desktopNavigationItems: ReadonlyArray<{
+  readonly description: string;
+  readonly label: string;
+  readonly surface: DesktopSurface;
+}> = [
+  { description: "Return to the workspace overview.", label: "Home", surface: "home" },
+  { description: "Work with the professional assistant and your saved threads.", label: "Chat", surface: "chat" },
+  { description: "Explore and refine the workspace knowledge model.", label: "Ontology", surface: "ontology" },
+  { description: "Review provider connectivity, queue health, and conflicts.", label: "Vault sync", surface: "sync" },
+];
 
 // atom-first: when the probe resolves, point the rpc client at the matching
 // protocol layer (IPC in the desktop shell, HTTP in the browser). A mounted
@@ -123,36 +162,77 @@ const TransportLoading = (): JSX.Element => (
   </div>
 );
 
+const HomeSurface = (): JSX.Element => (
+  <main className="h-full overflow-y-auto p-6">
+    <div className="mx-auto max-w-5xl">
+      <p className="text-sm font-medium text-primary">Professional Desktop</p>
+      <h1 className="mt-1 text-2xl font-semibold tracking-tight">Your professional workspace</h1>
+      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+        Move between assisted research, ontology work, and document synchronization from one place.
+      </p>
+      <div className="mt-6 grid gap-4 md:grid-cols-3">
+        {A.drop(desktopNavigationItems, 1).map((item) => (
+          <a
+            key={item.surface}
+            href={`#${item.surface}`}
+            className="rounded-lg border bg-card p-4 shadow-sm transition-colors hover:border-primary/50 hover:bg-accent"
+          >
+            <h2 className="font-semibold">{item.label}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+            <span className="mt-4 inline-block text-sm font-medium text-primary">Open {item.label} →</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </main>
+);
+
 const DesktopShell = ({ transport }: { readonly transport: SidecarTransport }): JSX.Element => {
   const surface = useAtomValue(desktopSurfaceAtom);
-  const setSurface = useAtomSet(desktopSurfaceAtom);
+  // The anchors below already write `#<surface>`; this binding reads it back, so
+  // the hash is the single source of truth for which surface renders (and
+  // reload/back/forward all land where the URL says).
+  useAtomMount(hashRoutingBindingAtom);
 
   return (
     <>
       <DocumentIntakeTarget>
-        <div className="flex h-screen min-h-0 w-full flex-col bg-background text-foreground">
-          <div className="flex h-10 shrink-0 items-center gap-1 border-b px-2">
-            <Button
-              size="sm"
-              type="button"
-              variant={surface === "chat" ? "default" : "ghost"}
-              onClick={() => setSurface("chat")}
-            >
-              Chat
-            </Button>
-            <Button
-              size="sm"
-              type="button"
-              variant={surface === "ontology" ? "default" : "ghost"}
-              onClick={() => setSurface("ontology")}
-            >
-              Workbench
-            </Button>
+        {/* The shell owns the viewport, and nothing outside it scrolls. `h-dvh` rather
+            than `h-screen` so a mobile browser's collapsing chrome cannot push the app
+            taller than the space it actually has, and `overflow-hidden` so a surface
+            that misjudges its height gets clipped instead of growing a second, outer
+            scrollbar over the top of the pane that was already scrolling. Everything
+            inside scrolls in its own pane. */}
+        <div className="flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-background text-foreground">
+          <nav className="flex h-12 shrink-0 items-center gap-1 border-b px-3" aria-label="Desktop pages">
+            <span className="mr-3 text-sm font-semibold">BEEP</span>
+            {desktopNavigationItems.map((item) => (
+              <Button
+                key={item.surface}
+                aria-current={surface === item.surface ? "page" : undefined}
+                nativeButton={false}
+                render={<a href={`#${item.surface}`} />}
+                size="sm"
+                variant={surface === item.surface ? "secondary" : "ghost"}
+              >
+                {item.label}
+              </Button>
+            ))}
+            {/* Theming belongs to the shell, not to one surface. It used to live in
+                the chat header, so Home, Ontology and Vault sync had no way to reach
+                it at all. */}
+            <div className="ml-auto">
+              <ThemeToggle />
+            </div>
+          </nav>
+          <div className="min-h-0 flex-1">
+            {surface === "home" ? <HomeSurface /> : null}
+            {surface === "chat" ? <ChatApp /> : null}
+            {surface === "ontology" ? <OntologyWorkbench /> : null}
+            {surface === "sync" ? <VaultSyncPanel floating={false} /> : null}
           </div>
-          <div className="min-h-0 flex-1">{surface === "chat" ? <ChatApp /> : <OntologyWorkbench />}</div>
         </div>
       </DocumentIntakeTarget>
-      <VaultSyncPanel />
       <ChatTurnErrorToasts />
       <Toaster richColors />
       {transport.ipc && hasIpcSpikeFlag() ? <IpcSpikePanel /> : null}
@@ -190,18 +270,22 @@ export function App(): JSX.Element {
         <Toaster richColors />
       </>
     ),
-    onFailure: (failure) => (
-      <>
-        <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
-          <div className="max-w-md rounded-md border bg-card p-4 shadow-sm">
-            <h1 className="text-base font-semibold">Desktop transport unavailable</h1>
-            <p className="mt-2 text-sm text-muted-foreground">{Cause.pretty(failure.cause)}</p>
+    onFailure: (failure) => {
+      const redacted = redactCauseForClient(failure.cause);
+      return (
+        <>
+          <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
+            <div className="max-w-md rounded-md border bg-card p-4 shadow-sm">
+              <h1 className="text-base font-semibold">Desktop transport unavailable</h1>
+              <p className="mt-2 text-sm text-muted-foreground">{redacted.message}</p>
+              <p className="mt-2 text-xs text-muted-foreground">Diagnostic ID: {redacted.fingerprint}</p>
+            </div>
           </div>
-        </div>
-        <ChatTurnErrorToasts />
-        <Toaster richColors />
-      </>
-    ),
+          <ChatTurnErrorToasts />
+          <Toaster richColors />
+        </>
+      );
+    },
     onSuccess: (success) => <DesktopShell transport={success.value} />,
   });
 }

@@ -100,15 +100,20 @@ export function EditorComposer({
         onError,
       }}
     >
-      <RichTextPlugin
-        contentEditable={
-          <ContentEditable
-            placeholder={placeholder ?? "Start typing ..."}
-            {...O.getSomesStruct({ className: O.fromUndefinedOr(className) })}
-          />
-        }
-        ErrorBoundary={LexicalErrorBoundary}
-      />
+      {/* Non-flex wrapper: Lexical warns when the content editable's direct
+          parent computes to flex/inline-flex (Chrome focus quirks); `relative`
+          also anchors the absolute placeholder overlay to the editable box. */}
+      <div className="relative">
+        <RichTextPlugin
+          contentEditable={
+            <ContentEditable
+              placeholder={placeholder ?? "Start typing ..."}
+              {...O.getSomesStruct({ className: O.fromUndefinedOr(className) })}
+            />
+          }
+          ErrorBoundary={LexicalErrorBoundary}
+        />
+      </div>
       <HistoryPlugin />
       <ListPlugin />
       <CheckListPlugin />
