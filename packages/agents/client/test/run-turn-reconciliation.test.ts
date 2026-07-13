@@ -540,6 +540,50 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
   );
 
   it.effect(
+    "preserves receipt-uncertain prompts after a later turn refresh succeeds",
+    Effect.fnUntraced(function* () {
+      let timelineReads = 0;
+      const client = ChatClient.of(((tag: string) => {
+        if (tag === "GetTimeline") {
+          timelineReads += 1;
+          return Effect.succeed(timelineReads === 1 ? emptyTimeline : completedTimeline);
+        }
+        if (tag === "SendMessage") return Stream.fromIterable([assistantBlock]);
+        return Effect.die(`unexpected chat RPC: ${tag}`);
+      }) as unknown as ChatClient["Service"]);
+      const registry = registryWithClient(client);
+      const timelineAtom = threadTimelineAtoms(threadId);
+      const unreconciledAtom = unreconciledTurnAtoms(threadId);
+      const receiptFallback = StreamingTurn.make({
+        threadId,
+        userContent: content,
+        reconciliation: "receipt",
+        blocks: [assistantBlock],
+      });
+      const timelineFallback = StreamingTurn.make({
+        threadId,
+        userContent: content,
+        blocks: [assistantBlock],
+      });
+      const unmountTimeline = registry.mount(timelineAtom);
+      const unmountTurn = registry.mount(runTurnAtom);
+      const unmountUnreconciled = registry.mount(unreconciledAtom);
+
+      yield* AtomRegistry.getResult(registry, timelineAtom);
+      registry.set(unreconciledAtom, [receiptFallback, timelineFallback]);
+      registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
+      yield* AtomRegistry.getResult(registry, runTurnAtom);
+
+      expect(registry.get(unreconciledAtom)).toStrictEqual([receiptFallback]);
+
+      unmountUnreconciled();
+      unmountTurn();
+      unmountTimeline();
+      registry.dispose();
+    })
+  );
+
+  it.effect(
     "clears the local reply only after a fresh durable timeline succeeds",
     Effect.fnUntraced(function* () {
       let timelineReads = 0;

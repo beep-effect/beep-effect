@@ -1140,7 +1140,11 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
     yield* refreshTimeline(() => ctx.refresh(timelineAtom)).pipe(
       Effect.tap(() =>
         Effect.sync(() => {
-          ctx.set(unreconciledTurnAtoms(turn.threadId), []);
+          const unreconciledAtom = unreconciledTurnAtoms(turn.threadId);
+          ctx.set(
+            unreconciledAtom,
+            A.filter(registry.get(unreconciledAtom), (fallback) => fallback.reconciliation === "receipt")
+          );
           ctx.set(streamingTurnAtom, O.none());
         })
       ),
