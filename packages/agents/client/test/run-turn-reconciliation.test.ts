@@ -36,6 +36,13 @@ const uncertainStatusResult = (statusKind: UncertainStatusKind) =>
     Match.when("transport_failure", () => Effect.fail(ChatActionError.new("receipt status unavailable"))),
     Match.exhaustive
   );
+const reconciliationReceiptStatus = (requestId: string | undefined) =>
+  Match.value(requestId).pipe(
+    Match.when("receipt-persisted", () => "persisted" as const),
+    Match.when("receipt-not-persisted", () => "not_persisted" as const),
+    Match.when("receipt-accepted", () => "accepted" as const),
+    Match.orElse(() => "unknown" as const)
+  );
 
 const emptyTimeline = ThreadTimeline.make({ threadId, turns: [] });
 const userOnlyTimeline = ThreadTimeline.make({
@@ -558,10 +565,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         }
         if (tag === "GetTurnRequestStatus") {
           statusReads += 1;
-          if (payload?.requestId === "receipt-persisted") return Effect.succeed("persisted");
-          if (payload?.requestId === "receipt-not-persisted") return Effect.succeed("not_persisted");
-          if (payload?.requestId === "receipt-accepted") return Effect.succeed("accepted");
-          return Effect.succeed("unknown");
+          return Effect.succeed(reconciliationReceiptStatus(payload?.requestId));
         }
         if (tag === "SendMessage") return Stream.fromIterable([assistantBlock]);
         return Effect.die(`unexpected chat RPC: ${tag}`);
