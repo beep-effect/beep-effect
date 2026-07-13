@@ -73,7 +73,9 @@ const useThreadScroll = (
     timelineAtom,
     (result) => {
       scrollToBottom();
-      if (AsyncResult.isSuccess(result) && A.isReadonlyArrayNonEmpty(unreconciled)) setUnreconciled([]);
+      if (AsyncResult.isSuccess(result) && A.some(unreconciled, (turn) => turn.reconciliation === "timeline")) {
+        setUnreconciled(A.filter(unreconciled, (turn) => turn.reconciliation === "receipt"));
+      }
     },
     { immediate: true }
   );
@@ -190,9 +192,12 @@ export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Eleme
 
   // a turn keeps streaming in its own thread when the user navigates away.
   const streamingHere = O.filter(streaming, (turn) => turn.threadId === threadId);
-  // A success is authoritative and already contains every persisted fallback.
-  // Hide them synchronously while the subscription above retires their state.
-  const displayedUnreconciled = AsyncResult.isSuccess(timeline) ? [] : unreconciled;
+  // A success is authoritative for timeline fallbacks, but it cannot identify
+  // an exact request whose receipt RPC stayed unavailable. Keep those prompts
+  // visible and non-sendable until exact persistence evidence resolves.
+  const displayedUnreconciled = AsyncResult.isSuccess(timeline)
+    ? A.filter(unreconciled, (turn) => turn.reconciliation === "receipt")
+    : unreconciled;
 
   // The conversation as it now stands: an edited turn and the exchange it
   // produced are gone for good, not merely hidden while the replacement streams.

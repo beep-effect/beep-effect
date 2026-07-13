@@ -129,6 +129,23 @@ function CompletedFallbackThread(): JSX.Element {
       >
         retain
       </button>
+      <button
+        type="button"
+        data-testid="retain-receipt"
+        onClick={() =>
+          setUnreconciled([
+            StreamingTurn.make({
+              threadId,
+              userContent: userMessage,
+              truncateFrom: O.none(),
+              reconciliation: "receipt",
+              blocks: [completedBlock],
+            }),
+          ])
+        }
+      >
+        retain receipt
+      </button>
       <button type="button" data-testid="retry-timeline" onClick={refreshTimeline}>
         retry timeline
       </button>
@@ -223,6 +240,36 @@ describe("the message you just sent", { concurrent: false }, () => {
       screen.getByTestId("retry-timeline").click();
       expect(yield* Effect.promise(() => screen.findByText("superseded durable tail"))).toBeInTheDocument();
       expect(screen.queryByTestId("turn-unreconciled")).not.toBeInTheDocument();
+    })
+  );
+
+  it.effect(
+    "keeps a receipt-uncertain prompt visible across successful timeline refreshes",
+    Effect.fnUntraced(function* () {
+      const timelineAtom = threadTimelineAtoms(threadId);
+      const client = ChatClient.of(((tag: string) => {
+        if (tag === "GetTimeline") return Effect.succeed(retryTimeline);
+        return Effect.die(`unexpected chat RPC: ${tag}`);
+      }) as unknown as ChatClient["Service"]);
+      const { container } = render(
+        <RegistryProvider
+          initialValues={[
+            [timelineAtom, AsyncResult.success(retryTimeline)],
+            [ChatClient.runtime.layer, Layer.mergeAll(Layer.succeed(ChatClient, client), Reactivity.layer)],
+          ]}
+        >
+          <CompletedFallbackThread />
+        </RegistryProvider>
+      );
+      const screen = within(container);
+
+      screen.getByTestId("retain-receipt").click();
+      expect(yield* Effect.promise(() => screen.findByTestId("turn-unreconciled"))).toBeInTheDocument();
+
+      screen.getByTestId("retry-timeline").click();
+      expect(yield* Effect.promise(() => screen.findByText("superseded durable tail"))).toBeInTheDocument();
+      expect(screen.getByTestId("turn-unreconciled")).toBeInTheDocument();
+      expect(screen.getByTestId("turn-unreconciled-user")).toHaveTextContent("what did I just ask?");
     })
   );
 

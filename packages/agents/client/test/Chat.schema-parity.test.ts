@@ -51,6 +51,7 @@ describe("@beep/agents-client schema parity", () => {
       threadId,
       userContent: content,
       truncateFrom: O.none(),
+      reconciliation: "timeline",
       blocks: [block],
     });
     const defaultedStreamingTurn = StreamingTurn.make({
@@ -59,6 +60,7 @@ describe("@beep/agents-client schema parity", () => {
       blocks: [block],
     });
     expect(defaultedStreamingTurn.truncateFrom).toStrictEqual(O.none());
+    expect(defaultedStreamingTurn.reconciliation).toBe("timeline");
     expect(Result.getOrThrow(S.encodeResult(StreamingTurn)(defaultedStreamingTurn))).toStrictEqual(
       Result.getOrThrow(S.encodeResult(StreamingTurn)(explicitStreamingTurn))
     );
@@ -66,6 +68,7 @@ describe("@beep/agents-client schema parity", () => {
       threadId: 10,
       userContent: encodedContent,
       truncateFrom: O.none(),
+      reconciliation: "timeline",
       blocks: [encodedBlock],
     });
 

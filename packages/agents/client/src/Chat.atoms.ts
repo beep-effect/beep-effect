@@ -16,7 +16,7 @@ import { ChatActionError, ChatRpcs } from "@beep/agents-use-cases/public";
 import { $AgentsClientId } from "@beep/identity/packages";
 import { Document } from "@beep/md/Md.model";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
-import { SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { A, O, P, Str } from "@beep/utils";
 import { Cause, Clock, Duration, Effect, Layer, Metric, Random, Stream } from "effect";
@@ -33,6 +33,13 @@ const $I = $AgentsClientId.create("Chat.atoms");
 
 type WorkspaceId = WorkspaceIdentity.WorkspaceId;
 type ThreadId = WorkspaceIdentity.ThreadId;
+
+const StreamingTurnReconciliation = LiteralKit(["timeline", "receipt"]).pipe(
+  $I.annoteSchema("StreamingTurnReconciliation", {
+    description: "Evidence that controls when a locally retained turn may retire.",
+  })
+);
+type StreamingTurnReconciliation = typeof StreamingTurnReconciliation.Type;
 
 // Dev (browser or `tauri dev`): the page is served from a real http(s) origin
 // (the dev server), so the rpc URL rides that origin relative to `/rpc` — which
@@ -447,13 +454,20 @@ export class StreamingTurn extends S.Class<StreamingTurn>($I`StreamingTurn`)(
     truncateFrom: S.Option(WorkspaceIdentity.TurnId).pipe(SchemaUtils.withNoneDefault).annotateKey({
       description: "Turn id to truncate from while an edit-regenerate turn is rendered locally.",
     }),
+    /** Evidence that controls when the local turn may retire. */
+    reconciliation: StreamingTurnReconciliation.pipe(
+      S.withConstructorDefault(Effect.succeed(StreamingTurnReconciliation.Enum.timeline))
+    ).annotateKey({
+      description: "Timeline fallbacks retire on refresh; receipt fallbacks remain until exact evidence resolves.",
+    }),
     /** Assistant blocks appended as they stream in. */
     blocks: S.Array(AssistantBlock).annotateKey({
       description: "Assistant blocks appended as they stream in.",
     }),
   },
   $I.annote("StreamingTurn", {
-    description: "An assistant turn rendered locally while blocks stream or its durable timeline refresh is pending.",
+    description:
+      "An assistant turn rendered locally while blocks stream, its timeline refresh is pending, or receipt evidence is uncertain.",
   })
 ) {}
 
@@ -778,10 +792,12 @@ export const TurnRequest = S.Union([SendTurnRequest, EditTurnRequest]).pipe(
 export type TurnRequest = typeof TurnRequest.Type;
 
 // How hard the client chases the receipt the server records after a turn stops
-// or fails. Exhaustion restores a recoverable draft and reports the failure, so
-// this bound controls polling cost rather than silently discarding user state.
+// or fails. Exhaustion keeps the prompt in a non-sendable reconciliation state;
+// only an explicit `not_persisted` receipt may restore a sendable draft.
 const TURN_RECEIPT_POLL_ATTEMPTS = 8;
 const TURN_RECEIPT_POLL_INTERVAL = Duration.millis(150);
+const isUncertainTurnRequestStatus = (status: O.Option<TurnRequestStatus>): boolean =>
+  O.isNone(status) || O.exists(status, (value) => value === "pending" || value === "unknown");
 const terminalAssistantBlock = (text: "(failed)" | "(stopped)"): AssistantBlock =>
   ParagraphBlock.make({ children: [TextInline.make({ text })] });
 
@@ -863,19 +879,31 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
         }),
     });
     const makeStreamingTurn = TurnRequest.match(turn, {
-      send: (turn) => (blocks: ReadonlyArray<AssistantBlock>) =>
-        StreamingTurn.make({
-          threadId: turn.threadId,
-          userContent: turn.content,
-          blocks,
-        }),
-      edit: (turn) => (blocks: ReadonlyArray<AssistantBlock>) =>
-        StreamingTurn.make({
-          threadId: turn.threadId,
-          userContent: turn.content,
-          truncateFrom: O.some(turn.turnId),
-          blocks,
-        }),
+      send:
+        (turn) =>
+        (
+          blocks: ReadonlyArray<AssistantBlock>,
+          reconciliation: StreamingTurnReconciliation = StreamingTurnReconciliation.Enum.timeline
+        ) =>
+          StreamingTurn.make({
+            threadId: turn.threadId,
+            userContent: turn.content,
+            reconciliation,
+            blocks,
+          }),
+      edit:
+        (turn) =>
+        (
+          blocks: ReadonlyArray<AssistantBlock>,
+          reconciliation: StreamingTurnReconciliation = StreamingTurnReconciliation.Enum.timeline
+        ) =>
+          StreamingTurn.make({
+            threadId: turn.threadId,
+            userContent: turn.content,
+            truncateFrom: O.some(turn.turnId),
+            reconciliation,
+            blocks,
+          }),
     });
     // a completed turn changes this thread's timeline and bumps its activity in
     // every workspace list, so invalidate both the timeline and the shared list
@@ -892,13 +920,14 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
     ctx.set(turnErrorAtom, O.none());
     ctx.set(streamingTurnAtom, O.some(makeStreamingTurn(blocks)));
     const pollTurnRequestStatus = client("GetTurnRequestStatus", { requestId }).pipe(
-      Effect.orElseSucceed(() => "unknown" as const),
+      Effect.option,
       Effect.delay(TURN_RECEIPT_POLL_INTERVAL),
       Effect.repeat({
         times: TURN_RECEIPT_POLL_ATTEMPTS,
-        until: (status) => status === "persisted" || status === "user_persisted" || status === "not_persisted",
-      }),
-      Effect.map((status): TurnRequestStatus => status)
+        until: O.exists(
+          (status) => status === "persisted" || status === "user_persisted" || status === "not_persisted"
+        ),
+      })
     );
     const timelineAtom = threadTimelineAtoms(turn.threadId);
     // Reactivity invalidation notifies query atoms, but a function atom can read
@@ -927,13 +956,13 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
         refresh();
         return Effect.sync(cancel);
       });
-    const retainTerminalTurn = (text: "(failed)" | "(stopped)") =>
+    const retainTerminalTurn = (text: "(failed)" | "(stopped)", reconciliation: StreamingTurnReconciliation) =>
       Effect.sync(() =>
         registry.set(
           unreconciledTurnAtoms(turn.threadId),
           A.append(
             registry.get(unreconciledTurnAtoms(turn.threadId)),
-            makeStreamingTurn([terminalAssistantBlock(text)])
+            makeStreamingTurn([terminalAssistantBlock(text)], reconciliation)
           )
         )
       );
@@ -962,7 +991,7 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
           const turnError = toTurnError(error);
           ctx.set(turnErrorAtom, O.some(turnError));
           const requestStatus = yield* pollTurnRequestStatus;
-          if (requestStatus === "not_persisted" || requestStatus === "unknown") {
+          if (O.contains(requestStatus, "not_persisted")) {
             // Give the user back what they wrote only when the server did not
             // commit it. Restoring a durable prompt would make retry duplicate
             // its user row.
@@ -972,11 +1001,22 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
             // Reactivity.mutation invalidates only on success. A failed stream
             // may still have committed the user row and a terminal assistant
             // marker, so explicitly refresh those durable states. Preserve a
-            // local terminal turn if that read fails too.
+            // local terminal turn if that read fails too, or if the exact
+            // request receipt remains uncertain after bounded polling.
             yield* refreshTimeline(() => reactivity.invalidateUnsafe(turnKeys)).pipe(
+              Effect.tap(() =>
+                isUncertainTurnRequestStatus(requestStatus)
+                  ? retainTerminalTurn("(failed)", StreamingTurnReconciliation.Enum.receipt)
+                  : Effect.void
+              ),
               Effect.catch(
                 Effect.fnUntraced(function* (refreshError) {
-                  yield* retainTerminalTurn("(failed)");
+                  yield* retainTerminalTurn(
+                    "(failed)",
+                    isUncertainTurnRequestStatus(requestStatus)
+                      ? StreamingTurnReconciliation.Enum.receipt
+                      : StreamingTurnReconciliation.Enum.timeline
+                  );
                   yield* logRedactedCause(
                     Cause.fail(refreshError),
                     LogRedactedCauseOptions.make({
@@ -1009,8 +1049,9 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
       // The exact request receipt distinguishes a queued cancellation from a
       // request whose user or assistant row committed. Aggregate timeline growth
       // cannot do that when another window is using the same thread. Restore the
-      // prompt only when this request is confirmed not persisted (or never
-      // observed); a durable user row must never be duplicated by retry.
+      // prompt only when this request is confirmed not persisted. Missing or
+      // unavailable receipt evidence must stay non-sendable because a durable
+      // user row must never be duplicated by retry.
       Effect.onInterrupt(() =>
         Metric.update(Metric.withAttributes(turnCancelled, { kind: turn._tag }), 1).pipe(
           Effect.andThen(Effect.logInfo("assistant turn cancelled").pipe(Effect.annotateLogs({ turn: turn._tag }))),
@@ -1019,7 +1060,7 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
               Effect.flatMap(
                 Effect.fnUntraced(function* (requestStatus) {
                   if (registry.get(turnGenerationAtom) !== generation) return;
-                  if (requestStatus === "not_persisted" || requestStatus === "unknown") {
+                  if (O.contains(requestStatus, "not_persisted")) {
                     registry.set(draftAtoms(turn.threadId), O.some(turn.content));
                     registry.set(
                       draftRevisionAtoms(turn.threadId),
@@ -1033,14 +1074,39 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
                     );
                     reactivity.invalidateUnsafe(turnKeys);
                   } else {
+                    const requestStatusUncertain = isUncertainTurnRequestStatus(requestStatus);
+                    if (requestStatusUncertain) {
+                      registry.set(
+                        turnErrorAtom,
+                        O.some(
+                          ChatActionError.new(
+                            "The stopped reply could not be confirmed. It remains visible until the thread reconciles."
+                          )
+                        )
+                      );
+                    }
                     yield* refreshTimeline(() => reactivity.invalidateUnsafe(turnKeys)).pipe(
+                      Effect.tap(() =>
+                        requestStatusUncertain
+                          ? retainTerminalTurn("(stopped)", StreamingTurnReconciliation.Enum.receipt)
+                          : Effect.void
+                      ),
                       Effect.catch(
                         Effect.fnUntraced(function* (refreshError) {
-                          yield* retainTerminalTurn("(stopped)");
+                          yield* retainTerminalTurn(
+                            "(stopped)",
+                            requestStatusUncertain
+                              ? StreamingTurnReconciliation.Enum.receipt
+                              : StreamingTurnReconciliation.Enum.timeline
+                          );
                           registry.set(
                             turnErrorAtom,
                             O.some(
-                              ChatActionError.new("The stopped reply persisted, but the thread could not be refreshed.")
+                              ChatActionError.new(
+                                requestStatusUncertain
+                                  ? "The stopped reply could not be confirmed or refreshed."
+                                  : "The stopped reply persisted, but the thread could not be refreshed."
+                              )
                             )
                           );
                           yield* logRedactedCause(
