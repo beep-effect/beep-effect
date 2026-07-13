@@ -2,9 +2,16 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `active` — P0–P3 complete; P4 close pending merge.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+Latest evidence (2026-07-12): PR
+[#392](https://github.com/beep-effect/beep-effect/pull/392) carries the full
+vertical (driver probe/shadow-home isolation, agents domain/use-cases/tables/
+server/client) on `feat/llm-provider-subscription-auth`; local
+`bun run beep yeet verify` green; closeout reflection at
+[`history/reflections/2026-07-12-claude.md`](./history/reflections/2026-07-12-claude.md).
 
 ## Mission
 
