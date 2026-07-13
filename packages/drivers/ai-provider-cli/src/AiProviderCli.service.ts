@@ -26,6 +26,7 @@ import {
   AiProviderCliRunRequest,
   AiProviderCliTokenSource,
 } from "./AiProviderCli.models.ts";
+import { expandTildePath } from "./AiProviderCliHome.service.ts";
 
 const $I = $AiProviderCliId.create("AiProviderCli.service");
 
@@ -201,7 +202,7 @@ const makeService = (paths: AiProviderCliPaths, runner: AiProviderCliRunner): Ai
       AiProviderCliRunRequest.make({
         args,
         env: options.env,
-        executable: O.getOrElse(options.executable, () => defaultExecutable),
+        executable: expandTildePath(O.getOrElse(options.executable, () => defaultExecutable)),
         provider,
       })
     );

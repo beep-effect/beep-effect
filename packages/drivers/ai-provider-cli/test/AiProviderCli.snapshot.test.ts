@@ -1,14 +1,16 @@
+import * as NodeOS from "node:os";
 import {
   AiProviderCli,
   AiProviderCliAuthSnapshot,
   AiProviderCliError,
+  AiProviderCliProbeOptions,
   AiProviderCliProcessResult,
 } from "@beep/ai-provider-cli";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import type { AiProviderCliProvider } from "@beep/ai-provider-cli";
+import type { AiProviderCliProvider, AiProviderCliRunRequest } from "@beep/ai-provider-cli";
 
 const claudeLoggedInStdout = `{
   "loggedIn": true,
@@ -180,5 +182,28 @@ describe("@beep/ai-provider-cli auth snapshots", () => {
       provider: "codex",
       status: "not-authenticated",
     });
+  });
+});
+
+let lastRunRequest: O.Option<AiProviderCliRunRequest> = O.none();
+const CapturingLayer = AiProviderCli.makeLayerFromRunner((request) => {
+  lastRunRequest = O.some(request);
+  return Effect.succeed(AiProviderCliProcessResult.make({ exitCode: 0, stderr: "", stdout: claudeLoggedInStdout }));
+});
+
+describe("@beep/ai-provider-cli executable overrides", () => {
+  layer(CapturingLayer)((it) => {
+    it.effect(
+      "expands a tilde executable override before it reaches the runner",
+      Effect.fnUntraced(function* () {
+        const providerCli = yield* AiProviderCli;
+        yield* providerCli.checkAuthSnapshot(
+          "claude",
+          AiProviderCliProbeOptions.make({ executable: O.some("~/bin/claude") })
+        );
+        const request = O.getOrThrow(lastRunRequest);
+        expect(request.executable).toBe(`${NodeOS.homedir()}/bin/claude`);
+      })
+    );
   });
 });
