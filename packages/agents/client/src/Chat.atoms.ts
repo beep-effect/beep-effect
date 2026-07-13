@@ -446,6 +446,10 @@ export class StreamingTurn extends S.Class<StreamingTurn>($I`StreamingTurn`)(
     threadId: WorkspaceIdentity.ThreadId.annotateKey({
       description: "Thread this locally rendered turn belongs to.",
     }),
+    /** Exact request receipt used to retire uncertain local turns safely. */
+    requestId: S.Option(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Client request id used for exact persistence reconciliation when available.",
+    }),
     /** Optimistic rendering of the just-sent user message. */
     userContent: Document.annotateKey({
       description: "Optimistic rendering of the just-sent user message.",
@@ -887,6 +891,7 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
         ) =>
           StreamingTurn.make({
             threadId: turn.threadId,
+            requestId: O.some(requestId),
             userContent: turn.content,
             reconciliation,
             blocks,
@@ -899,6 +904,7 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
         ) =>
           StreamingTurn.make({
             threadId: turn.threadId,
+            requestId: O.some(requestId),
             userContent: turn.content,
             truncateFrom: O.some(turn.turnId),
             reconciliation,
@@ -966,6 +972,30 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
           )
         )
       );
+    const reconcileReceiptFallbacks = Effect.gen(function* () {
+      const unreconciledAtom = unreconciledTurnAtoms(turn.threadId);
+      const retained = yield* Effect.filter(
+        registry.get(unreconciledAtom),
+        (fallback) => {
+          if (fallback.reconciliation === "timeline") return Effect.succeed(false);
+          return O.match(fallback.requestId, {
+            onNone: () => Effect.succeed(true),
+            onSome: (fallbackRequestId) =>
+              client("GetTurnRequestStatus", { requestId: fallbackRequestId }).pipe(
+                Effect.option,
+                Effect.map(
+                  O.match({
+                    onNone: () => true,
+                    onSome: (status) => status === "pending" || status === "unknown" || status === "not_persisted",
+                  })
+                )
+              ),
+          });
+        },
+        { concurrency: 1 }
+      );
+      ctx.set(unreconciledAtom, retained);
+    });
     yield* Reactivity.mutation(
       Stream.runForEach(
         stream,
@@ -1139,14 +1169,13 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
     // reply nor leaves the composer/Stop control believing generation continues.
     yield* refreshTimeline(() => ctx.refresh(timelineAtom)).pipe(
       Effect.tap(() =>
-        Effect.sync(() => {
-          const unreconciledAtom = unreconciledTurnAtoms(turn.threadId);
-          ctx.set(
-            unreconciledAtom,
-            A.filter(registry.get(unreconciledAtom), (fallback) => fallback.reconciliation === "receipt")
-          );
-          ctx.set(streamingTurnAtom, O.none());
-        })
+        reconcileReceiptFallbacks.pipe(
+          Effect.andThen(
+            Effect.sync(() => {
+              ctx.set(streamingTurnAtom, O.none());
+            })
+          )
+        )
       ),
       Effect.catch(
         Effect.fnUntraced(function* (error) {

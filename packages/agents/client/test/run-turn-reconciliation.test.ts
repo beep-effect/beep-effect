@@ -540,13 +540,18 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
   );
 
   it.effect(
-    "preserves receipt-uncertain prompts after a later turn refresh succeeds",
+    "retires only receipt fallbacks whose exact status later confirms durability",
     Effect.fnUntraced(function* () {
       let timelineReads = 0;
-      const client = ChatClient.of(((tag: string) => {
+      let statusReads = 0;
+      const client = ChatClient.of(((tag: string, payload?: { readonly requestId?: string }) => {
         if (tag === "GetTimeline") {
           timelineReads += 1;
           return Effect.succeed(timelineReads === 1 ? emptyTimeline : completedTimeline);
+        }
+        if (tag === "GetTurnRequestStatus") {
+          statusReads += 1;
+          return Effect.succeed(payload?.requestId === "receipt-uncertain" ? "unknown" : "persisted");
         }
         if (tag === "SendMessage") return Stream.fromIterable([assistantBlock]);
         return Effect.die(`unexpected chat RPC: ${tag}`);
@@ -556,6 +561,14 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       const unreconciledAtom = unreconciledTurnAtoms(threadId);
       const receiptFallback = StreamingTurn.make({
         threadId,
+        requestId: O.some("receipt-uncertain"),
+        userContent: content,
+        reconciliation: "receipt",
+        blocks: [assistantBlock],
+      });
+      const durableReceiptFallback = StreamingTurn.make({
+        threadId,
+        requestId: O.some("receipt-durable"),
         userContent: content,
         reconciliation: "receipt",
         blocks: [assistantBlock],
@@ -570,11 +583,12 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       const unmountUnreconciled = registry.mount(unreconciledAtom);
 
       yield* AtomRegistry.getResult(registry, timelineAtom);
-      registry.set(unreconciledAtom, [receiptFallback, timelineFallback]);
+      registry.set(unreconciledAtom, [receiptFallback, durableReceiptFallback, timelineFallback]);
       registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
       yield* AtomRegistry.getResult(registry, runTurnAtom);
 
       expect(registry.get(unreconciledAtom)).toStrictEqual([receiptFallback]);
+      expect(statusReads).toBeGreaterThanOrEqual(2);
 
       unmountUnreconciled();
       unmountTurn();
