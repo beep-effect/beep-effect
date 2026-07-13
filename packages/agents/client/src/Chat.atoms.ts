@@ -19,7 +19,7 @@ import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { A, O, P, Str } from "@beep/utils";
-import { Cause, Clock, Duration, Effect, Layer, Metric, Random, Stream } from "effect";
+import { Cause, Clock, Duration, Effect, Layer, Match, Metric, Random, Stream } from "effect";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
 import { KeyValueStore } from "effect/unstable/persistence";
@@ -974,27 +974,60 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
       );
     const reconcileReceiptFallbacks = Effect.gen(function* () {
       const unreconciledAtom = unreconciledTurnAtoms(turn.threadId);
-      const retained = yield* Effect.filter(
-        registry.get(unreconciledAtom),
+      const snapshot = registry.get(unreconciledAtom);
+      const decisions = yield* Effect.forEach(
+        snapshot,
         (fallback) => {
-          if (fallback.reconciliation === "timeline") return Effect.succeed(false);
-          return O.match(fallback.requestId, {
-            onNone: () => Effect.succeed(true),
-            onSome: (fallbackRequestId) =>
-              client("GetTurnRequestStatus", { requestId: fallbackRequestId }).pipe(
-                Effect.option,
-                Effect.map((status) =>
-                  status.pipe(
-                    O.map((value) => value === "pending" || value === "accepted" || value === "unknown"),
-                    O.getOrElse(() => true)
-                  )
-                )
-              ),
-          });
+          if (fallback.reconciliation === "timeline") {
+            return Effect.succeed([fallback, O.some<TurnRequestStatus>("persisted")] as const);
+          }
+          const requestStatus = fallback.requestId.pipe(
+            O.map((fallbackRequestId) =>
+              client("GetTurnRequestStatus", { requestId: fallbackRequestId }).pipe(Effect.option)
+            ),
+            O.getOrElse(() => Effect.succeed(O.none<TurnRequestStatus>()))
+          );
+          return requestStatus.pipe(Effect.map((status) => [fallback, status] as const));
         },
         { concurrency: 1 }
       );
-      ctx.set(unreconciledAtom, retained);
+      yield* Effect.sync(() => {
+        const draftAtom = draftAtoms(turn.threadId);
+        const currentDraftOccupied = O.map(registry.get(draftAtom), () => true);
+        let draftToRestore = O.none<StreamingTurn>();
+        const retained = A.filter(registry.get(unreconciledAtom), (fallback) =>
+          A.findFirst(decisions, ([candidate]) => candidate === fallback).pipe(
+            O.map(([, status]) =>
+              status.pipe(
+                O.map((status) =>
+                  Match.value(status).pipe(
+                    Match.whenOr("pending", "accepted", "unknown", () => true),
+                    Match.when("not_persisted", () =>
+                      currentDraftOccupied.pipe(
+                        O.orElse(() => O.map(draftToRestore, () => true)),
+                        O.getOrElse(() => {
+                          draftToRestore = O.some(fallback);
+                          return false;
+                        })
+                      )
+                    ),
+                    Match.whenOr("persisted", "user_persisted", () => false),
+                    Match.exhaustive
+                  )
+                ),
+                O.getOrElse(() => true)
+              )
+            ),
+            // Preserve fallbacks appended while receipt reads were in flight.
+            O.getOrElse(() => true)
+          )
+        );
+        A.forEach(O.toArray(draftToRestore), (fallback) => {
+          ctx.set(draftAtom, O.some(fallback.userContent));
+          ctx.set(draftRevisionAtoms(fallback.threadId), registry.get(draftRevisionAtoms(fallback.threadId)) + 1);
+        });
+        ctx.set(unreconciledAtom, retained);
+      });
     });
     yield* Reactivity.mutation(
       Stream.runForEach(

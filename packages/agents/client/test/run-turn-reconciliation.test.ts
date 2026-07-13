@@ -19,11 +19,15 @@ import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { ThreadTimeline, TimelineMessageItem, TimelineTurn } from "@beep/workspace-use-cases/aggregates/Thread";
 import { describe, expect, it } from "@effect/vitest";
 import { Deferred, Duration, Effect, Layer, Match, Stream } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { AsyncResult, Atom, AtomRegistry, Reactivity } from "effect/unstable/reactivity";
 
 const threadId = WorkspaceIdentity.ThreadId.make(1);
 const content = Document.make({ children: [P.make({ children: [Text.make({ value: "Keep this prompt" })] })] });
+const newerContent = Document.make({
+  children: [P.make({ children: [Text.make({ value: "Keep this newer draft" })] })],
+});
 const assistantBlock = ParagraphBlock.make({
   children: [TextInline.make({ text: "A completed local reply" })],
 });
@@ -558,6 +562,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     Effect.fnUntraced(function* () {
       let timelineReads = 0;
       let statusReads = 0;
+      let beforeStatusResolution = (_requestId: string | undefined): void => {};
       const client = ChatClient.of(((tag: string, payload?: { readonly requestId?: string }) => {
         if (tag === "GetTimeline") {
           timelineReads += 1;
@@ -565,7 +570,10 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         }
         if (tag === "GetTurnRequestStatus") {
           statusReads += 1;
-          return Effect.succeed(reconciliationReceiptStatus(payload?.requestId));
+          return Effect.sync(() => {
+            beforeStatusResolution(payload?.requestId);
+            return reconciliationReceiptStatus(payload?.requestId);
+          });
         }
         if (tag === "SendMessage") return Stream.fromIterable([assistantBlock]);
         return Effect.die(`unexpected chat RPC: ${tag}`);
@@ -573,6 +581,8 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       const registry = registryWithClient(client);
       const timelineAtom = threadTimelineAtoms(threadId);
       const unreconciledAtom = unreconciledTurnAtoms(threadId);
+      const draftAtom = draftAtoms(threadId);
+      const draftRevisionAtom = draftRevisionAtoms(threadId);
       const receiptFallback = StreamingTurn.make({
         threadId,
         requestId: O.some("receipt-uncertain"),
@@ -601,6 +611,13 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         reconciliation: "receipt",
         blocks: [assistantBlock],
       });
+      const anotherNotPersistedFallback = StreamingTurn.make({
+        threadId,
+        requestId: O.some("receipt-not-persisted"),
+        userContent: newerContent,
+        reconciliation: "receipt",
+        blocks: [assistantBlock],
+      });
       const timelineFallback = StreamingTurn.make({
         threadId,
         userContent: content,
@@ -609,21 +626,50 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       const unmountTimeline = registry.mount(timelineAtom);
       const unmountTurn = registry.mount(runTurnAtom);
       const unmountUnreconciled = registry.mount(unreconciledAtom);
+      const unmountDraft = registry.mount(draftAtom);
+      const unmountDraftRevision = registry.mount(draftRevisionAtom);
 
       yield* AtomRegistry.getResult(registry, timelineAtom);
       registry.set(unreconciledAtom, [
         receiptFallback,
         acceptedReceiptFallback,
         notPersistedReceiptFallback,
+        anotherNotPersistedFallback,
         durableReceiptFallback,
         timelineFallback,
       ]);
       registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
       yield* AtomRegistry.getResult(registry, runTurnAtom);
 
-      expect(registry.get(unreconciledAtom)).toStrictEqual([receiptFallback, acceptedReceiptFallback]);
-      expect(statusReads).toBeGreaterThanOrEqual(4);
+      expect(registry.get(unreconciledAtom)).toStrictEqual([
+        receiptFallback,
+        acceptedReceiptFallback,
+        anotherNotPersistedFallback,
+      ]);
+      expect(registry.get(draftAtom)).toStrictEqual(O.some(content));
+      expect(registry.get(draftRevisionAtom)).toBe(1);
+      expect(statusReads).toBeGreaterThanOrEqual(5);
 
+      registry.set(draftAtom, O.none());
+      registry.set(unreconciledAtom, [notPersistedReceiptFallback]);
+      beforeStatusResolution = (requestId) =>
+        Match.value(requestId).pipe(
+          Match.when("receipt-not-persisted", () => {
+            registry.set(draftAtom, O.some(newerContent));
+            registry.set(draftRevisionAtom, 2);
+            registry.set(unreconciledAtom, A.append(registry.get(unreconciledAtom), receiptFallback));
+          }),
+          Match.orElse(() => undefined)
+        );
+      registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
+      yield* AtomRegistry.getResult(registry, runTurnAtom);
+
+      expect(registry.get(unreconciledAtom)).toStrictEqual([notPersistedReceiptFallback, receiptFallback]);
+      expect(registry.get(draftAtom)).toStrictEqual(O.some(newerContent));
+      expect(registry.get(draftRevisionAtom)).toBe(2);
+
+      unmountDraftRevision();
+      unmountDraft();
       unmountUnreconciled();
       unmountTurn();
       unmountTimeline();
