@@ -1016,8 +1016,8 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
           Effect.andThen(Effect.logInfo("assistant turn cancelled").pipe(Effect.annotateLogs({ turn: turn._tag }))),
           Effect.andThen(
             pollTurnRequestStatus.pipe(
-              Effect.flatMap((requestStatus) =>
-                Effect.gen(function* () {
+              Effect.flatMap(
+                Effect.fnUntraced(function* (requestStatus) {
                   if (registry.get(turnGenerationAtom) !== generation) return;
                   if (requestStatus === "not_persisted" || requestStatus === "unknown") {
                     registry.set(draftAtoms(turn.threadId), O.some(turn.content));
