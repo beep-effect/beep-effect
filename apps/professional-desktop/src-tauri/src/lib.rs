@@ -583,6 +583,7 @@ fn kill_sidecar(process: &SidecarProcess, reason: &'static str) {
     }
 }
 
+#[cfg(any(not(unix), test))]
 fn running_sidecar_pid(process: &SidecarProcess) -> Option<u32> {
     if process.lifecycle.has_exited() {
         return None;
@@ -593,12 +594,18 @@ fn running_sidecar_pid(process: &SidecarProcess) -> Option<u32> {
 #[cfg(unix)]
 fn request_graceful_sidecar_stop(process: &SidecarProcess) -> Result<Option<u32>, String> {
     process.lifecycle.begin_shutdown();
-    let Some(pid) = running_sidecar_pid(process) else {
-        return Ok(None);
+    let (pid, result) = {
+        let child = recover_lock(&process.child);
+        let Some(child) = child.as_ref() else {
+            return Ok(None);
+        };
+        let pid = child.id();
+        // SAFETY: the child lock prevents the monitor from reaping this process,
+        // so its PID cannot be reused while SIGTERM is sent. The signal borrows
+        // no process memory.
+        let result = unsafe { libc::kill(pid as libc::pid_t, libc::SIGTERM) };
+        (pid, result)
     };
-    // SAFETY: `pid` belongs to an unreaped child owned by `process`, so it cannot
-    // be reused while this signal is sent. SIGTERM borrows no process memory.
-    let result = unsafe { libc::kill(pid as libc::pid_t, libc::SIGTERM) };
     if result == 0 {
         Ok(Some(pid))
     } else if process.lifecycle.has_exited() {
@@ -681,24 +688,66 @@ fn pump_raw_sidecar_output<R: Read + Send + 'static>(
     })
 }
 
+fn read_bounded_sidecar_line<R: BufRead>(
+    reader: &mut R,
+    limit: usize,
+) -> std::io::Result<Option<Vec<u8>>> {
+    let mut line = Vec::new();
+    loop {
+        let available = reader.fill_buf()?;
+        if available.is_empty() {
+            return if line.is_empty() {
+                Ok(None)
+            } else {
+                Ok(Some(line))
+            };
+        }
+
+        let read = available
+            .iter()
+            .position(|byte| *byte == b'\n')
+            .map_or(available.len(), |index| index + 1);
+        let line_length = line.len().checked_add(read).ok_or_else(|| {
+            std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "sidecar output line length overflowed",
+            )
+        })?;
+        if line_length > limit {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                format!("sidecar output line exceeds the {limit}-byte limit before newline or EOF"),
+            ));
+        }
+
+        line.extend_from_slice(&available[..read]);
+        reader.consume(read);
+        if line.last() == Some(&b'\n') {
+            return Ok(Some(line));
+        }
+    }
+}
+
 fn pump_line_sidecar_output<R: Read + Send + 'static>(
     reader: R,
     sender: tauri::async_runtime::Sender<CommandEvent>,
+    stream: &'static str,
     event: fn(Vec<u8>) -> CommandEvent,
 ) -> JoinHandle<()> {
     std::thread::spawn(move || {
         let mut reader = BufReader::new(reader);
         loop {
-            let mut line = Vec::new();
-            match reader.read_until(b'\n', &mut line) {
-                Ok(0) => return,
-                Ok(_) => {
+            match read_bounded_sidecar_line(&mut reader, MAX_IPC_FRAME_BYTES) {
+                Ok(None) => return,
+                Ok(Some(line)) => {
                     if sender.blocking_send(event(line)).is_err() {
                         return;
                     }
                 }
                 Err(error) => {
-                    let _ = sender.blocking_send(CommandEvent::Error(error.to_string()));
+                    let _ = sender.blocking_send(CommandEvent::Error(format!(
+                        "sidecar {stream} line reader failed: {error}"
+                    )));
                     return;
                 }
             }
@@ -770,9 +819,10 @@ fn spawn_sidecar_process(
     let stdout_reader = if ipc {
         pump_raw_sidecar_output(stdout, sender.clone(), CommandEvent::Stdout)
     } else {
-        pump_line_sidecar_output(stdout, sender.clone(), CommandEvent::Stdout)
+        pump_line_sidecar_output(stdout, sender.clone(), "stdout", CommandEvent::Stdout)
     };
-    let stderr_reader = pump_line_sidecar_output(stderr, sender.clone(), CommandEvent::Stderr);
+    let stderr_reader =
+        pump_line_sidecar_output(stderr, sender.clone(), "stderr", CommandEvent::Stderr);
     monitor_sidecar_process(process.clone(), [stdout_reader, stderr_reader], sender);
     Ok((events, process))
 }
@@ -1387,13 +1437,14 @@ pub fn run() {
 mod tests {
     use super::{
         authorize_sidecar_send, ensure_private_directory, is_blank_ipc_stdout_frame,
-        parse_native_logging_config,
+        parse_native_logging_config, read_bounded_sidecar_line,
     };
     #[cfg(unix)]
     use super::{
         kill_sidecar, monitor_sidecar_process, poll_sidecar_process, running_sidecar_pid,
         write_sidecar_frame, SidecarProcess, SidecarProcessPoll, MAX_IPC_FRAME_BYTES,
     };
+    use std::io::Cursor;
     #[cfg(unix)]
     use std::process::{Command, Stdio};
     #[cfg(unix)]
@@ -1455,6 +1506,44 @@ mod tests {
         assert_eq!(invalid.effect_level, "Info");
         assert_eq!(invalid.native_level, log::LevelFilter::Info);
         assert!(invalid.invalid_value);
+    }
+
+    #[test]
+    fn preserves_delimited_and_eof_terminated_bounded_lines() {
+        let mut reader = Cursor::new(b"first\nlast");
+
+        assert_eq!(
+            read_bounded_sidecar_line(&mut reader, 8).expect("first line should decode"),
+            Some(b"first\n".to_vec())
+        );
+        assert_eq!(
+            read_bounded_sidecar_line(&mut reader, 8).expect("EOF line should decode"),
+            Some(b"last".to_vec())
+        );
+        assert_eq!(
+            read_bounded_sidecar_line(&mut reader, 8).expect("reader should reach EOF"),
+            None
+        );
+    }
+
+    #[test]
+    fn rejects_delimiter_terminated_line_over_limit() {
+        let mut reader = Cursor::new(b"12345678\n");
+
+        let error = read_bounded_sidecar_line(&mut reader, 8)
+            .expect_err("newline must count toward the line limit");
+        assert_eq!(error.kind(), std::io::ErrorKind::InvalidData);
+        assert!(error.to_string().contains("8-byte limit"));
+    }
+
+    #[test]
+    fn rejects_eof_terminated_line_over_limit() {
+        let mut reader = Cursor::new(b"123456789");
+
+        let error = read_bounded_sidecar_line(&mut reader, 8)
+            .expect_err("EOF must not permit an oversized line");
+        assert_eq!(error.kind(), std::io::ErrorKind::InvalidData);
+        assert!(error.to_string().contains("8-byte limit"));
     }
 
     #[cfg(unix)]

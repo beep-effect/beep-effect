@@ -41,7 +41,12 @@ import * as Str from "effect/String";
 import { DerivedThreadTitle } from "./DerivedThreadTitle.ts";
 import { UsageRecordSink } from "./UsageRecordSink.ts";
 import type { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
-import type { IndexedBlock, TurnGenerationError, TurnHistoryItem } from "@beep/agents-use-cases/public";
+import type {
+  IndexedBlock,
+  TurnGenerationError,
+  TurnHistoryItem,
+  TurnRequestStatus,
+} from "@beep/agents-use-cases/public";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 
 // ---------------------------------------------------------------------------
@@ -73,6 +78,8 @@ const UNTITLED_THREAD_TITLE = "New thread" as const;
 // one still records that the request was made and abandoned.
 const STOPPED_NOTE = "(stopped)" as const;
 const FAILED_NOTE = "(failed)" as const;
+const terminalNoteDocument = (text: string): Document.Type =>
+  Document.make({ children: [P.make({ children: [Text.make({ value: text })] })] });
 
 const decodeDerivedThreadTitle = S.decodeUnknownOption(DerivedThreadTitle);
 const decodeDerivedThreadTitleLine = (line: string): O.Option<string> => decodeDerivedThreadTitle(line);
@@ -177,6 +184,27 @@ const toChatActionError = (context: string) =>
     return yield* ChatActionError.failEffect(context);
   });
 
+// A prior assistant-store outage can leave the active branch ending in a user
+// prompt. Repair that terminal marker before accepting another prompt so the
+// kernel is never handed two unanswered user turns. If persistence is still
+// unavailable, the new send fails before appending its user row and can retry
+// this repair after the store recovers.
+const repairOrphanedUserTurn = Effect.fn("agents.chat.repair_orphaned_user_turn")(function* (
+  store: Thread.ThreadStore["Service"],
+  threadId: WorkspaceIdentity.ThreadId
+) {
+  const timeline = yield* store.timeline(threadId).pipe(Effect.catch(toChatActionError("SendMessage.repairTimeline")));
+  if (!O.exists(A.last(projectTimelineToHistory(timeline)), (turn) => turn.role === "user")) return;
+  yield* store
+    .appendTurn({
+      threadId,
+      parentTurnId: O.none(),
+      role: "assistant",
+      content: terminalNoteDocument(FAILED_NOTE),
+    })
+    .pipe(Effect.catch(toChatActionError("SendMessage.repairAssistant")));
+});
+
 // ---------------------------------------------------------------------------
 // Usage-record synthesis (fixture path)
 // ---------------------------------------------------------------------------
@@ -254,17 +282,19 @@ const chatTimeToFirstBlock = Metric.timer("agents_chat_time_to_first_block", {
 
 /**
  * Build the assistant-turn stream for a thread: stream the kernel turn,
- * collecting indexed blocks as they pass, and on **successful completion only**
- * persist the assistant turn+message and append the usage record. A single-shot
- * `Ref` guard makes the persist run at most once. Nothing is persisted on error
- * or interrupt — the SPEC's cancel-no-partial invariant.
+ * collecting indexed blocks as they pass. Successful completion persists the
+ * assistant content and appends the usage record; failure or interruption
+ * persists only a terminal marker. A single-shot `Ref` guard makes the persist
+ * run at most once, so partial model output is never stored or billed.
  */
 const streamAndPersist = (
   store: Thread.ThreadStore["Service"],
   kernel: AgentTurnKernel["Service"],
   usage: UsageRecordSink["Service"],
   threadId: WorkspaceIdentity.ThreadId,
-  kind: "send" | "edit"
+  kind: "send" | "edit",
+  requestId: string,
+  requestGeneration: number
 ): Stream.Stream<AssistantBlock, ChatActionError> =>
   Stream.unwrap(
     Effect.gen(function* () {
@@ -302,17 +332,23 @@ const streamAndPersist = (
         // A reload showed the same prompt orphaned, with no way to retry. Saying
         // "(stopped)" keeps both the transcript and the history well-formed.
         const persist = Effect.fnUntraced(function* (note: O.Option<string>) {
-          if (yield* Ref.getAndSet(persisted, true)) return;
-          const content = O.match(note, {
-            onNone: () =>
-              assistantContentToDocument(
-                A.map(A.sortWith(collected, indexOf, Order.Number), (indexed) => indexed.block)
-              ),
-            onSome: (text) => Document.make({ children: [P.make({ children: [Text.make({ value: text })] })] }),
-          });
-          yield* store
-            .appendTurn({ threadId, parentTurnId: O.none(), role: "assistant", content })
-            .pipe(Effect.catch(toChatActionError("SendMessage.persistAssistant")));
+          const committed = yield* Effect.gen(function* () {
+            if (yield* Ref.getAndSet(persisted, true)) return false;
+            const content = O.match(note, {
+              onNone: () =>
+                assistantContentToDocument(
+                  A.map(A.sortWith(collected, indexOf, Order.Number), (indexed) => indexed.block)
+                ),
+              onSome: terminalNoteDocument,
+            });
+            yield* store.appendTurn({ threadId, parentTurnId: O.none(), role: "assistant", content }).pipe(
+              Effect.catch(toChatActionError("SendMessage.persistAssistant")),
+              Effect.andThen(setTurnRequestStatus(requestId, requestGeneration, "persisted")),
+              Effect.tapError(() => Ref.set(persisted, false))
+            );
+            return true;
+          }).pipe(Effect.uninterruptible);
+          if (!committed) return;
           if (O.isNone(note)) {
             // The answer is committed. A usage-accounting failure must not fail
             // the turn behind it: doing so reported a delivered answer as a
@@ -503,6 +539,79 @@ const titleGuardForEditedTurn = (
  * so a concurrent send waits rather than racing.
  */
 const threadTurnLocks = Ref.makeUnsafe(HashMap.empty<WorkspaceIdentity.ThreadId, Semaphore.Semaphore>());
+interface TurnRequestReceipt {
+  readonly generation: number;
+  readonly status: TurnRequestStatus;
+}
+const turnRequestStatuses = Ref.makeUnsafe(HashMap.empty<string, TurnRequestReceipt>());
+const TURN_REQUEST_STATUS_TTL = Duration.minutes(5);
+let internalRequestSequence = 0;
+let requestReceiptGeneration = 0;
+const nextInternalRequestId = (): string => `internal:${internalRequestSequence++}`;
+
+const setTurnRequestStatus = (requestId: string, generation: number, status: TurnRequestStatus) =>
+  Ref.update(turnRequestStatuses, (statuses) =>
+    O.match(HashMap.get(statuses, requestId), {
+      onNone: () => statuses,
+      onSome: (receipt) =>
+        receipt.generation === generation ? HashMap.set(statuses, requestId, { generation, status }) : statuses,
+    })
+  );
+
+const getTurnRequestStatus = (requestId: string) =>
+  Ref.get(turnRequestStatuses).pipe(
+    Effect.map(HashMap.get(requestId)),
+    Effect.map(O.match({ onNone: () => "unknown" as const, onSome: (receipt) => receipt.status })),
+    Effect.withSpan("agents.chat.get_turn_request_status")
+  );
+
+const expireTurnRequestStatus = (requestId: string, terminalReceipt: TurnRequestReceipt) =>
+  Ref.update(turnRequestStatuses, (statuses) =>
+    O.match(HashMap.get(statuses, requestId), {
+      onNone: () => statuses,
+      onSome: (current) =>
+        current.generation === terminalReceipt.generation && current.status === terminalReceipt.status
+          ? HashMap.remove(statuses, requestId)
+          : statuses,
+    })
+  ).pipe(Effect.delay(TURN_REQUEST_STATUS_TTL), Effect.forkDetach, Effect.asVoid);
+
+const finalizeTurnRequestStatus = (requestId: string, generation: number) =>
+  Ref.modify(
+    turnRequestStatuses,
+    (statuses): readonly [O.Option<TurnRequestReceipt>, HashMap.HashMap<string, TurnRequestReceipt>] =>
+      O.match(HashMap.get(statuses, requestId), {
+        onNone: () => [O.none(), statuses],
+        onSome: (receipt) => {
+          if (receipt.generation !== generation) return [O.none(), statuses];
+          const status: TurnRequestStatus =
+            receipt.status === "pending"
+              ? "not_persisted"
+              : receipt.status === "accepted"
+                ? "user_persisted"
+                : receipt.status;
+          const terminalReceipt = { generation, status };
+          return [O.some(terminalReceipt), HashMap.set(statuses, requestId, terminalReceipt)];
+        },
+      })
+  ).pipe(
+    Effect.flatMap(
+      O.match({ onNone: () => Effect.void, onSome: (receipt) => expireTurnRequestStatus(requestId, receipt) })
+    )
+  );
+
+const trackTurnRequest = <A, E>(
+  requestId: string,
+  generation: number,
+  stream: Stream.Stream<A, E>
+): Stream.Stream<A, E> => {
+  const pendingReceipt: TurnRequestReceipt = { generation, status: "pending" };
+  return Stream.unwrap(
+    Ref.update(turnRequestStatuses, (statuses) => HashMap.set(statuses, requestId, pendingReceipt)).pipe(
+      Effect.as(stream)
+    )
+  ).pipe(Stream.ensuring(finalizeTurnRequestStatus(requestId, generation)));
+};
 
 const threadTurnLock = Effect.fn("chat.threadTurnLock")(function* (threadId: WorkspaceIdentity.ThreadId) {
   return yield* Ref.modify(threadTurnLocks, (locks) =>
@@ -580,41 +689,68 @@ export const makeChatOperations = (
       .timeline(threadId)
       .pipe(Effect.catch(toChatActionError("GetTimeline")), Effect.withSpan("agents.chat.get_timeline")),
 
+  getTurnRequestStatus,
+
   sendMessage: (
     threadId: WorkspaceIdentity.ThreadId,
-    content: Document.Type
-  ): Stream.Stream<AssistantBlock, ChatActionError> =>
-    Stream.unwrap(
-      Effect.gen(function* () {
-        yield* holdThreadTurnPermit(threadId);
-        yield* store
-          .appendTurn({ threadId, parentTurnId: O.none(), role: "user", content })
-          .pipe(Effect.catch(toChatActionError("SendMessage")));
-        yield* setTitleFromFirstUserMessage(store, threadId, content);
-        return streamAndPersist(store, kernel, usage, threadId, "send");
-      })
-    ).pipe(Stream.withSpan("agents.chat.send_message")),
+    content: Document.Type,
+    requestId: string = nextInternalRequestId()
+  ): Stream.Stream<AssistantBlock, ChatActionError> => {
+    const requestGeneration = requestReceiptGeneration++;
+    return trackTurnRequest(
+      requestId,
+      requestGeneration,
+      Stream.unwrap(
+        Effect.gen(function* () {
+          yield* holdThreadTurnPermit(threadId);
+          yield* repairOrphanedUserTurn(store, threadId);
+          yield* Effect.uninterruptible(
+            store
+              .appendTurn({ threadId, parentTurnId: O.none(), role: "user", content })
+              .pipe(
+                Effect.catch(toChatActionError("SendMessage")),
+                Effect.andThen(setTurnRequestStatus(requestId, requestGeneration, "accepted"))
+              )
+          );
+          yield* setTitleFromFirstUserMessage(store, threadId, content);
+          return streamAndPersist(store, kernel, usage, threadId, "send", requestId, requestGeneration);
+        })
+      )
+    ).pipe(Stream.withSpan("agents.chat.send_message"));
+  },
 
   editMessage: (
     threadId: WorkspaceIdentity.ThreadId,
     turnId: WorkspaceIdentity.TurnId,
-    content: Document.Type
-  ): Stream.Stream<AssistantBlock, ChatActionError> =>
-    Stream.unwrap(
-      Effect.gen(function* () {
-        yield* holdThreadTurnPermit(threadId);
-        const titleGuard = yield* titleGuardForEditedTurn(store, threadId, turnId);
-        yield* store
-          .appendTurn({ threadId, parentTurnId: O.some(turnId), role: "user", content })
-          .pipe(Effect.catch(toChatActionError("EditMessage")));
-        yield* pipe(
-          titleGuard,
-          O.map((emptyTitle) => setTitleFromFirstUserMessage(store, threadId, content, emptyTitle)),
-          O.getOrElse(() => Effect.void)
-        );
-        return streamAndPersist(store, kernel, usage, threadId, "edit");
-      })
-    ).pipe(Stream.withSpan("agents.chat.edit_message")),
+    content: Document.Type,
+    requestId: string = nextInternalRequestId()
+  ): Stream.Stream<AssistantBlock, ChatActionError> => {
+    const requestGeneration = requestReceiptGeneration++;
+    return trackTurnRequest(
+      requestId,
+      requestGeneration,
+      Stream.unwrap(
+        Effect.gen(function* () {
+          yield* holdThreadTurnPermit(threadId);
+          const titleGuard = yield* titleGuardForEditedTurn(store, threadId, turnId);
+          yield* Effect.uninterruptible(
+            store
+              .appendTurn({ threadId, parentTurnId: O.some(turnId), role: "user", content })
+              .pipe(
+                Effect.catch(toChatActionError("EditMessage")),
+                Effect.andThen(setTurnRequestStatus(requestId, requestGeneration, "accepted"))
+              )
+          );
+          yield* pipe(
+            titleGuard,
+            O.map((emptyTitle) => setTitleFromFirstUserMessage(store, threadId, content, emptyTitle)),
+            O.getOrElse(() => Effect.void)
+          );
+          return streamAndPersist(store, kernel, usage, threadId, "edit", requestId, requestGeneration);
+        })
+      )
+    ).pipe(Stream.withSpan("agents.chat.edit_message"));
+  },
 });
 
 /**
@@ -637,8 +773,10 @@ const makeChatHandlers = (operations: ChatOperations) =>
     ListThreads: ({ workspaceId }) => operations.listThreads(workspaceId),
     CreateThread: ({ workspaceId, title }) => operations.createThread(workspaceId, title),
     GetTimeline: ({ threadId }) => operations.getTimeline(threadId),
-    SendMessage: ({ threadId, content }) => operations.sendMessage(threadId, content),
-    EditMessage: ({ threadId, turnId, content }) => operations.editMessage(threadId, turnId, content),
+    GetTurnRequestStatus: ({ requestId }) => operations.getTurnRequestStatus(requestId),
+    SendMessage: ({ threadId, content, requestId }) => operations.sendMessage(threadId, content, requestId),
+    EditMessage: ({ threadId, turnId, content, requestId }) =>
+      operations.editMessage(threadId, turnId, content, requestId),
   });
 
 /**

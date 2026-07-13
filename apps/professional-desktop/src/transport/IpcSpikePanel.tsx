@@ -54,14 +54,16 @@ const runSpikeAtom = ipcSpikeRuntime.fn<void>()(
       const thread = yield* client.CreateThread({ workspaceId, title: "ipc spike" });
       log(`thread created over ipc: ${thread.id}`);
       let blocks = 0;
-      yield* client.SendMessage({ threadId: thread.id, content: userDocument("hello over tauri ipc") }).pipe(
-        Stream.runForEach(() =>
-          Effect.sync(() => {
-            blocks += 1;
-            log(`streamed block ${blocks}`);
-          })
-        )
-      );
+      yield* client
+        .SendMessage({ threadId: thread.id, content: userDocument("hello over tauri ipc"), requestId: "ipc-spike" })
+        .pipe(
+          Stream.runForEach(() =>
+            Effect.sync(() => {
+              blocks += 1;
+              log(`streamed block ${blocks}`);
+            })
+          )
+        );
       log(`stream complete (${blocks} block(s)) — no /rpc, no :3939`);
     }).pipe(Effect.catchCause((cause) => Effect.sync(() => log(`stopped: ${redactCauseForClient(cause).message}`))));
   })

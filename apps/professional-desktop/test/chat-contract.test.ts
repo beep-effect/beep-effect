@@ -309,6 +309,82 @@ describe("@beep/professional-desktop chat contract", () => {
     }).pipe(provideScopedLayer(StackLayer))
   );
 
+  it.effect("reports user_persisted repeatedly when assistant persistence fails after the user append", () =>
+    Effect.gen(function* () {
+      const store = yield* Thread.ThreadStore;
+      const kernel = yield* AgentTurnKernel;
+      const { sink } = yield* makeInMemoryUsageRecordSink;
+      const histories = yield* Ref.make<ReadonlyArray<ReadonlyArray<TurnHistoryItemType>>>([]);
+      const capturingKernel = AgentTurnKernel.of({
+        streamTurn: (history) =>
+          Stream.unwrap(
+            Ref.update(histories, (all) => A.append(all, history)).pipe(Effect.as(kernel.streamTurn(history)))
+          ),
+      });
+      const assistantFailingStore = Thread.ThreadStore.of({
+        ...store,
+        appendTurn: Effect.fn("Thread.ThreadStore.appendTurn")((input) =>
+          input.role === "assistant"
+            ? Effect.fail(Thread.ThreadStoreUnavailable.make({ reason: "assistant persistence unavailable" }))
+            : store.appendTurn(input)
+        ),
+      });
+      const operations = makeChatOperations(assistantFailingStore, capturingKernel, sink);
+      const thread = yield* operations.createThread(decodeWorkspaceId(1), "Persistence failure");
+
+      yield* Stream.runDrain(
+        operations.sendMessage(thread.id, userDocument("Keep the durable prompt"), "after-user-append")
+      ).pipe(Effect.exit);
+
+      expect(yield* operations.getTurnRequestStatus("after-user-append")).toBe("user_persisted");
+      expect(yield* operations.getTurnRequestStatus("after-user-append")).toBe("user_persisted");
+      yield* Stream.runDrain(
+        operations.sendMessage(thread.id, userDocument("Do not append this yet"), "after-orphaned-user")
+      ).pipe(Effect.exit);
+      const timeline = yield* operations.getTimeline(thread.id);
+      expect(messageItems(timeline).map((item) => item.role)).toEqual(["user"]);
+      const captured = yield* Ref.get(histories);
+      expect(A.map(captured, (history) => A.map(history, (item) => item.role))).toStrictEqual([["user"]]);
+    }).pipe(provideScopedLayer(StackLayer))
+  );
+
+  it.effect("reports persisted when interrupted after the assistant append commits", () =>
+    Effect.gen(function* () {
+      const store = yield* Thread.ThreadStore;
+      const kernel = yield* AgentTurnKernel;
+      const { sink } = yield* makeInMemoryUsageRecordSink;
+      const assistantCommitted = yield* Deferred.make<void>();
+      const releaseAssistantAppend = yield* Deferred.make<void>();
+      const gatedStore = Thread.ThreadStore.of({
+        ...store,
+        appendTurn: Effect.fn("Thread.ThreadStore.appendTurn")((input) =>
+          input.role === "assistant"
+            ? store.appendTurn(input).pipe(
+                Effect.tap(() => Deferred.succeed(assistantCommitted, undefined)),
+                Effect.tap(() => Deferred.await(releaseAssistantAppend))
+              )
+            : store.appendTurn(input)
+        ),
+      });
+      const operations = makeChatOperations(gatedStore, kernel, sink);
+      const thread = yield* operations.createThread(decodeWorkspaceId(1), "Committed assistant");
+      const send = yield* Effect.forkChild(
+        Stream.runDrain(operations.sendMessage(thread.id, userDocument("Keep the answer"), "assistant-committed"))
+      );
+
+      yield* Deferred.await(assistantCommitted);
+      const interrupt = yield* Effect.forkChild(Fiber.interrupt(send));
+      yield* Effect.yieldNow;
+      yield* Deferred.succeed(releaseAssistantAppend, undefined);
+      yield* Fiber.join(interrupt);
+
+      expect(yield* operations.getTurnRequestStatus("assistant-committed")).toBe("persisted");
+      expect(yield* operations.getTurnRequestStatus("assistant-committed")).toBe("persisted");
+      const timeline = yield* operations.getTimeline(thread.id);
+      expect(messageItems(timeline).map((item) => item.role)).toEqual(["user", "assistant"]);
+    }).pipe(provideScopedLayer(StackLayer))
+  );
+
   it.effect("timeline ordering: a second send appends after the first assistant turn", () =>
     Effect.gen(function* () {
       const { operations } = yield* makeStack;
@@ -424,6 +500,45 @@ describe("@beep/professional-desktop chat contract", () => {
       expect(secondHistory.map((item) => item.role)).toEqual(["user", "assistant", "user"]);
       // ...and the prompt it is being asked to answer is its own.
       expect(secondHistory[2]!.text).toContain("BRAVO");
+    }).pipe(provideScopedLayer(ThreadStoreTestLayer))
+  );
+
+  it.effect("does not credit another window's persisted turn to a queued request interrupted before append", () =>
+    Effect.gen(function* () {
+      const store = yield* Thread.ThreadStore;
+      const { sink } = yield* makeInMemoryUsageRecordSink;
+      const enteredKernel = yield* Deferred.make<void>();
+      const release = yield* Deferred.make<void>();
+      const kernel = AgentTurnKernel.of({
+        streamTurn: (history) =>
+          Stream.unwrap(
+            Deferred.succeed(enteredKernel, undefined).pipe(
+              Effect.andThen(Deferred.await(release)),
+              Effect.as(Stream.make(IndexedBlock.make({ index: 0, block: fixtureBlocksFor(history)[0]! })))
+            )
+          ),
+      });
+      const operations = makeChatOperations(store, kernel, sink);
+      const thread = yield* operations.createThread(decodeWorkspaceId(1), "Two windows");
+      const first = yield* Effect.forkChild(
+        Stream.runDrain(operations.sendMessage(thread.id, userDocument("ALPHA"), "window-a"))
+      );
+      yield* Deferred.await(enteredKernel);
+      const queued = yield* Effect.forkChild(
+        Stream.runDrain(operations.sendMessage(thread.id, userDocument("BRAVO"), "window-b"))
+      );
+      yield* Effect.yieldNow;
+      const interrupt = yield* Effect.forkChild(Fiber.interrupt(queued));
+      yield* Deferred.succeed(release, undefined);
+      yield* Fiber.join(first);
+      yield* Fiber.join(interrupt);
+
+      expect(yield* operations.getTurnRequestStatus("window-b")).toBe("not_persisted");
+      expect(yield* operations.getTurnRequestStatus("window-b")).toBe("not_persisted");
+      const timeline = yield* operations.getTimeline(thread.id);
+      expect(
+        timeline.turns.some((turn) => turn.items.some((item) => item.kind === "message" && item.role === "assistant"))
+      ).toBe(true);
     }).pipe(provideScopedLayer(ThreadStoreTestLayer))
   );
 });

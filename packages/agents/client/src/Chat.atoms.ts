@@ -11,7 +11,7 @@
  * @category atoms
  * @since 0.0.0
  */
-import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
+import { AssistantBlock, ParagraphBlock, TextInline } from "@beep/agents-domain/values/AssistantContent";
 import { ChatActionError, ChatRpcs } from "@beep/agents-use-cases/public";
 import { $AgentsClientId } from "@beep/identity/packages";
 import { Document } from "@beep/md/Md.model";
@@ -19,13 +19,14 @@ import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { A, O, P, Str } from "@beep/utils";
-import { Cause, Clock, Duration, Effect, Layer, Metric, Stream } from "effect";
+import { Cause, Clock, Duration, Effect, Layer, Metric, Random, Stream } from "effect";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
 import { KeyValueStore } from "effect/unstable/persistence";
 import { AsyncResult, Atom, AtomRegistry, AtomRpc, Reactivity } from "effect/unstable/reactivity";
 import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
 import { ClientObservabilityLive } from "./ClientObservability.js";
+import type { TurnRequestStatus } from "@beep/agents-use-cases/public";
 import type { RpcClientError } from "effect/unstable/rpc";
 
 const $I = $AgentsClientId.create("Chat.atoms");
@@ -402,9 +403,8 @@ export const draftRevisionAtoms = Atom.family((_threadId: ThreadId) => Atom.make
  * A locally rendered assistant turn: optimistic user content plus the assistant
  * blocks appended as each finishes streaming.
  *
- * The value can outlive the active RPC when the durable timeline refresh fails.
- * In that case it is a display fallback, while {@link turnActiveAtom} reports
- * that the turn itself has finished.
+ * Active turns live in {@link streamingTurnAtom}; completed turns whose durable
+ * refresh fails move to the per-thread {@link unreconciledTurnAtoms} collection.
  *
  * @example
  * ```ts
@@ -458,14 +458,12 @@ export class StreamingTurn extends S.Class<StreamingTurn>($I`StreamingTurn`)(
 ) {}
 
 /**
- * The assistant turn currently rendered outside the durable timeline.
+ * The actively streaming assistant turn rendered outside the durable timeline.
  *
  * @remarks
- * The atom is cleared only after the persisted timeline has refetched, so the UI
- * can swap from optimistic content to durable read-model content without briefly
- * dropping the assistant response. A failed refresh keeps this local fallback;
- * use {@link turnActiveAtom} to distinguish active generation from fallback
- * display state.
+ * The atom is cleared when generation stops. If the post-completion timeline
+ * refresh fails, the completed value moves to {@link unreconciledTurnAtoms}
+ * before this active slot is cleared.
  *
  * @example
  * ```ts
@@ -494,6 +492,26 @@ export class StreamingTurn extends S.Class<StreamingTurn>($I`StreamingTurn`)(
  * @since 0.0.0
  */
 export const streamingTurnAtom = Atom.make<O.Option<StreamingTurn>>(O.none());
+
+/**
+ * Per-thread completed local replies awaiting a durable timeline refresh.
+ * Kept alive across thread/view unmounts so a transient read failure cannot
+ * erase the only visible copy of a completed reply.
+ *
+ * @example
+ * ```ts
+ * import { unreconciledTurnAtoms } from "@beep/agents-client"
+ * import * as Workspace from "@beep/shared-domain/identity/Workspace"
+ * import { AtomRegistry } from "effect/unstable/reactivity"
+ * const registry = AtomRegistry.make()
+ * console.log(registry.get(unreconciledTurnAtoms(Workspace.ThreadId.make(1))).length)
+ * ```
+ * @category atoms
+ * @since 0.0.0
+ */
+export const unreconciledTurnAtoms = Atom.family((_threadId: ThreadId) =>
+  Atom.keepAlive(Atom.make<ReadonlyArray<StreamingTurn>>([]))
+);
 
 /**
  * The latest failed assistant turn, surfaced for app/UI-layer toast handling.
@@ -759,27 +777,13 @@ export const TurnRequest = S.Union([SendTurnRequest, EditTurnRequest]).pipe(
  */
 export type TurnRequest = typeof TurnRequest.Type;
 
-// How hard the client chases the stopped turn the server records after we stop
-// listening. Exhaustion restores a recoverable draft and reports the failure, so
+// How hard the client chases the receipt the server records after a turn stops
+// or fails. Exhaustion restores a recoverable draft and reports the failure, so
 // this bound controls polling cost rather than silently discarding user state.
-const INTERRUPT_REFRESH_ATTEMPTS = 8;
-const INTERRUPT_REFRESH_INTERVAL = Duration.millis(150);
-
-const timelineAssistantTurnCount = (registry: AtomRegistry.AtomRegistry, threadId: ThreadId): O.Option<number> =>
-  O.map(AsyncResult.value(registry.get(threadTimelineAtoms(threadId))), (timeline) =>
-    A.length(
-      A.filter(timeline.turns, (timelineTurn) =>
-        A.some(timelineTurn.items, (item) => item.kind === "message" && item.role === "assistant")
-      )
-    )
-  );
-
-const hasNewAssistantTurn = (
-  registry: AtomRegistry.AtomRegistry,
-  threadId: ThreadId,
-  baseline: O.Option<number>
-): boolean =>
-  O.exists(baseline, (count) => O.exists(timelineAssistantTurnCount(registry, threadId), (next) => next > count));
+const TURN_RECEIPT_POLL_ATTEMPTS = 8;
+const TURN_RECEIPT_POLL_INTERVAL = Duration.millis(150);
+const terminalAssistantBlock = (text: "(failed)" | "(stopped)"): AssistantBlock =>
+  ParagraphBlock.make({ children: [TextInline.make({ text })] });
 
 // Cleanup from an interrupted fn node can overlap the replacement invocation.
 // A generation guard keeps the old finalizer from clearing or restoring state
@@ -839,21 +843,23 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
     const client = yield* ChatClient;
     const reactivity = yield* Reactivity.Reactivity;
     const registry = yield* AtomRegistry.AtomRegistry;
-    // Baseline for the post-interrupt refresh below. Absence stays `None`: an
-    // unloaded timeline cannot prove which assistant turn is new.
-    const assistantTurnsAtStart = timelineAssistantTurnCount(registry, turn.threadId);
+    const requestId = A.join(
+      A.map(yield* Effect.all(A.replicate(Random.nextInt, 4)), (value) => `${value}`),
+      ":"
+    );
     const generation = registry.get(turnGenerationAtom) + 1;
     ctx.set(turnGenerationAtom, generation);
     yield* Effect.annotateCurrentSpan({ turn_kind: turn._tag, thread_id: turn.threadId });
     yield* Metric.update(Metric.withAttributes(turnAttempts, { kind: turn._tag }), 1);
     yield* Effect.logInfo("assistant turn started").pipe(Effect.annotateLogs({ turn: turn._tag }));
     const stream = TurnRequest.match(turn, {
-      send: (turn) => client("SendMessage", { threadId: turn.threadId, content: turn.content }),
+      send: (turn) => client("SendMessage", { threadId: turn.threadId, content: turn.content, requestId }),
       edit: (turn) =>
         client("EditMessage", {
           threadId: turn.threadId,
           turnId: turn.turnId,
           content: turn.content,
+          requestId,
         }),
     });
     const makeStreamingTurn = TurnRequest.match(turn, {
@@ -885,6 +891,52 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
     let blocks: ReadonlyArray<AssistantBlock> = [];
     ctx.set(turnErrorAtom, O.none());
     ctx.set(streamingTurnAtom, O.some(makeStreamingTurn(blocks)));
+    const pollTurnRequestStatus = client("GetTurnRequestStatus", { requestId }).pipe(
+      Effect.orElseSucceed(() => "unknown" as const),
+      Effect.delay(TURN_RECEIPT_POLL_INTERVAL),
+      Effect.repeat({
+        times: TURN_RECEIPT_POLL_ATTEMPTS,
+        until: (status) => status === "persisted" || status === "user_persisted" || status === "not_persisted",
+      }),
+      Effect.map((status): TurnRequestStatus => status)
+    );
+    const timelineAtom = threadTimelineAtoms(turn.threadId);
+    // Reactivity invalidation notifies query atoms, but a function atom can read
+    // the previous success before that notification has rebuilt the query node.
+    // Subscribe before refreshing and wait for a distinct non-waiting result so
+    // this result belongs to the post-turn fetch rather than the cached timeline.
+    const refreshTimeline = (
+      refresh: () => void
+    ): Effect.Effect<void, ChatActionError | RpcClientError.RpcClientError> =>
+      Effect.callback((resume) => {
+        const previous = registry.get(timelineAtom);
+        let refreshStarted = false;
+        const cancel = registry.subscribe(
+          timelineAtom,
+          (result) => {
+            if (result.waiting) {
+              refreshStarted = true;
+              return;
+            }
+            if (AsyncResult.isInitial(result) || (!refreshStarted && result === previous)) return;
+            cancel();
+            resume(AsyncResult.isFailure(result) ? Effect.failCause(result.cause) : Effect.void);
+          },
+          { immediate: false }
+        );
+        refresh();
+        return Effect.sync(cancel);
+      });
+    const retainTerminalTurn = (text: "(failed)" | "(stopped)") =>
+      Effect.sync(() =>
+        registry.set(
+          unreconciledTurnAtoms(turn.threadId),
+          A.append(
+            registry.get(unreconciledTurnAtoms(turn.threadId)),
+            makeStreamingTurn([terminalAssistantBlock(text)])
+          )
+        )
+      );
     yield* Reactivity.mutation(
       Stream.runForEach(
         stream,
@@ -909,11 +961,34 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
           ctx.set(streamingTurnAtom, O.none());
           const turnError = toTurnError(error);
           ctx.set(turnErrorAtom, O.some(turnError));
-          // Give the user back what they wrote. The composer cleared its editor
-          // the moment it dispatched, so a rejected turn otherwise took the
-          // message with it — a toast, and nothing left to retry with.
-          ctx.set(draftAtoms(turn.threadId), O.some(turn.content));
-          ctx.set(draftRevisionAtoms(turn.threadId), registry.get(draftRevisionAtoms(turn.threadId)) + 1);
+          const requestStatus = yield* pollTurnRequestStatus;
+          if (requestStatus === "not_persisted" || requestStatus === "unknown") {
+            // Give the user back what they wrote only when the server did not
+            // commit it. Restoring a durable prompt would make retry duplicate
+            // its user row.
+            ctx.set(draftAtoms(turn.threadId), O.some(turn.content));
+            ctx.set(draftRevisionAtoms(turn.threadId), registry.get(draftRevisionAtoms(turn.threadId)) + 1);
+          } else {
+            // Reactivity.mutation invalidates only on success. A failed stream
+            // may still have committed the user row and a terminal assistant
+            // marker, so explicitly refresh those durable states. Preserve a
+            // local terminal turn if that read fails too.
+            yield* refreshTimeline(() => reactivity.invalidateUnsafe(turnKeys)).pipe(
+              Effect.catch(
+                Effect.fnUntraced(function* (refreshError) {
+                  yield* retainTerminalTurn("(failed)");
+                  yield* logRedactedCause(
+                    Cause.fail(refreshError),
+                    LogRedactedCauseOptions.make({
+                      message: "failed assistant turn persisted but the thread could not be refreshed",
+                      level: "Warn",
+                      attributes: { kind: turn._tag, subsystem: "chat_ui" },
+                    })
+                  );
+                })
+              )
+            );
+          }
           yield* Metric.update(Metric.withAttributes(turnFailed, { kind: turn._tag }), 1);
           yield* logRedactedCause(
             Cause.fail(error),
@@ -931,38 +1006,59 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
       // `ctx` is already disposed and its writes are silently dropped — go
       // through the registry and reactivity services, which outlive the node.
       //
-      // The server records the stopped assistant turn as *its* stream unwinds,
-      // after its user turn was already appended. Total turn growth therefore
-      // proves nothing: the user row alone used to end this loop before the
-      // assistant marker existed. Only a newly observed assistant turn confirms
-      // reconciliation. On exhaustion the prompt is restored before the local
-      // display fallback is cleared.
+      // The exact request receipt distinguishes a queued cancellation from a
+      // request whose user or assistant row committed. Aggregate timeline growth
+      // cannot do that when another window is using the same thread. Restore the
+      // prompt only when this request is confirmed not persisted (or never
+      // observed); a durable user row must never be duplicated by retry.
       Effect.onInterrupt(() =>
         Metric.update(Metric.withAttributes(turnCancelled, { kind: turn._tag }), 1).pipe(
           Effect.andThen(Effect.logInfo("assistant turn cancelled").pipe(Effect.annotateLogs({ turn: turn._tag }))),
           Effect.andThen(
-            Effect.sync(() => reactivity.invalidateUnsafe(turnKeys)).pipe(
-              Effect.andThen(Effect.sleep(INTERRUPT_REFRESH_INTERVAL)),
-              Effect.repeat({
-                times: INTERRUPT_REFRESH_ATTEMPTS,
-                until: () => hasNewAssistantTurn(registry, turn.threadId, assistantTurnsAtStart),
-              })
+            pollTurnRequestStatus.pipe(
+              Effect.flatMap((requestStatus) =>
+                Effect.gen(function* () {
+                  if (registry.get(turnGenerationAtom) !== generation) return;
+                  if (requestStatus === "not_persisted" || requestStatus === "unknown") {
+                    registry.set(draftAtoms(turn.threadId), O.some(turn.content));
+                    registry.set(
+                      draftRevisionAtoms(turn.threadId),
+                      registry.get(draftRevisionAtoms(turn.threadId)) + 1
+                    );
+                    registry.set(
+                      turnErrorAtom,
+                      O.some(
+                        ChatActionError.new("The stopped reply could not be confirmed. Your message was restored.")
+                      )
+                    );
+                    reactivity.invalidateUnsafe(turnKeys);
+                  } else {
+                    yield* refreshTimeline(() => reactivity.invalidateUnsafe(turnKeys)).pipe(
+                      Effect.catch(
+                        Effect.fnUntraced(function* (refreshError) {
+                          yield* retainTerminalTurn("(stopped)");
+                          registry.set(
+                            turnErrorAtom,
+                            O.some(
+                              ChatActionError.new("The stopped reply persisted, but the thread could not be refreshed.")
+                            )
+                          );
+                          yield* logRedactedCause(
+                            Cause.fail(refreshError),
+                            LogRedactedCauseOptions.make({
+                              message: "stopped assistant turn persisted but the thread could not be refreshed",
+                              level: "Warn",
+                              attributes: { kind: turn._tag, subsystem: "chat_ui" },
+                            })
+                          );
+                        })
+                      )
+                    );
+                  }
+                  registry.set(streamingTurnAtom, O.none());
+                })
+              )
             )
-          ),
-          Effect.andThen(
-            Effect.sync(() => {
-              if (registry.get(turnGenerationAtom) !== generation) return;
-              const assistantRecorded = hasNewAssistantTurn(registry, turn.threadId, assistantTurnsAtStart);
-              if (!assistantRecorded) {
-                registry.set(draftAtoms(turn.threadId), O.some(turn.content));
-                registry.set(draftRevisionAtoms(turn.threadId), registry.get(draftRevisionAtoms(turn.threadId)) + 1);
-                registry.set(
-                  turnErrorAtom,
-                  O.some(ChatActionError.new("The stopped reply could not be confirmed. Your message was restored."))
-                );
-              }
-              registry.set(streamingTurnAtom, O.none());
-            })
           )
         )
       ),
@@ -975,37 +1071,21 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
     // and persisted. Keep the streamed value as the local fallback; activity is
     // derived separately from this fn atom, so a failed refresh neither loses the
     // reply nor leaves the composer/Stop control believing generation continues.
-    const timelineAtom = threadTimelineAtoms(turn.threadId);
-    // Reactivity invalidation notifies query atoms, but a function atom can read
-    // the previous success before that notification has rebuilt the query node.
-    // Subscribe before refreshing and wait for a distinct non-waiting result so
-    // this result belongs to the post-turn fetch rather than the cached timeline.
-    const refreshTimeline: Effect.Effect<void, ChatActionError | RpcClientError.RpcClientError> = Effect.callback(
-      (resume) => {
-        const previous = registry.get(timelineAtom);
-        let refreshStarted = false;
-        const cancel = registry.subscribe(
-          timelineAtom,
-          (result) => {
-            if (result.waiting) {
-              refreshStarted = true;
-              return;
-            }
-            if (AsyncResult.isInitial(result) || (!refreshStarted && result === previous)) return;
-            cancel();
-            resume(AsyncResult.isFailure(result) ? Effect.failCause(result.cause) : Effect.void);
-          },
-          { immediate: false }
-        );
-        ctx.refresh(timelineAtom);
-        return Effect.sync(cancel);
-      }
-    );
-    yield* refreshTimeline.pipe(
-      Effect.tap(() => Effect.sync(() => ctx.set(streamingTurnAtom, O.none()))),
+    yield* refreshTimeline(() => ctx.refresh(timelineAtom)).pipe(
+      Effect.tap(() =>
+        Effect.sync(() => {
+          ctx.set(unreconciledTurnAtoms(turn.threadId), []);
+          ctx.set(streamingTurnAtom, O.none());
+        })
+      ),
       Effect.catch(
         Effect.fnUntraced(function* (error) {
           ctx.set(turnErrorAtom, O.some(toTurnError(error)));
+          ctx.set(
+            unreconciledTurnAtoms(turn.threadId),
+            A.append(registry.get(unreconciledTurnAtoms(turn.threadId)), makeStreamingTurn(blocks))
+          );
+          ctx.set(streamingTurnAtom, O.none());
           yield* logRedactedCause(
             Cause.fail(error),
             LogRedactedCauseOptions.make({
@@ -1032,9 +1112,9 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
 /**
  * Whether the assistant turn driver is actively running.
  *
- * This is intentionally separate from {@link streamingTurnAtom}: a completed
- * reply remains there as a display fallback when the durable timeline refresh
- * fails, but it must not block another send or leave a nonfunctional Stop action.
+ * This is intentionally separate from {@link unreconciledTurnAtoms}: completed
+ * display fallbacks must not block another send or leave a nonfunctional Stop
+ * action.
  *
  * @example
  * ```ts

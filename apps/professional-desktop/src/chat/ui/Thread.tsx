@@ -27,9 +27,10 @@ import {
   streamingTurnAtom,
   threadTimelineAtoms,
   turnActiveAtom,
+  unreconciledTurnAtoms,
 } from "@beep/agents-client/Chat.atoms";
 import { Button } from "@beep/ui/components/button";
-import { A, O, thunkNull } from "@beep/utils";
+import { A, N, O, thunkNull } from "@beep/utils";
 import { Thread as ThreadProjections } from "@beep/workspace-use-cases/public";
 import { useAtomMount, useAtomSet, useAtomSubscribe, useAtomValue } from "@effect/atom-react";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
@@ -48,6 +49,39 @@ type TimelineItem = ThreadUseCases.TimelineItem;
 // slack keeps sub-pixel scroll rounding and the tail padding from reading as
 // "the reader scrolled away".
 const PINNED_SLACK_PX = 64;
+
+const useThreadScroll = (
+  timelineAtom: ReturnType<typeof threadTimelineAtoms>,
+  unreconciledAtom: ReturnType<typeof unreconciledTurnAtoms>
+) => {
+  const unreconciled = useAtomValue(unreconciledAtom);
+  const setUnreconciled = useAtomSet(unreconciledAtom);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Follow the stream only while the reader is already at the bottom. Scrolling
+  // unconditionally dragged anyone who had scrolled up to re-read an earlier
+  // answer back down again on every single streamed block.
+  const scrollToBottom = (): void => {
+    const viewport = scrollRef.current;
+    if (viewport !== null && viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight > PINNED_SLACK_PX) {
+      return;
+    }
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+  useAtomSubscribe(
+    timelineAtom,
+    (result) => {
+      scrollToBottom();
+      if (AsyncResult.isSuccess(result) && A.isReadonlyArrayNonEmpty(unreconciled)) setUnreconciled([]);
+    },
+    { immediate: true }
+  );
+  useAtomSubscribe(streamingTurnAtom, scrollToBottom);
+  useAtomSubscribe(unreconciledAtom, scrollToBottom);
+
+  return { bottomRef, scrollRef, unreconciled };
+};
 
 const ToolCallChip = ({ name }: { readonly name: string }): JSX.Element => (
   <span className="inline-flex items-center rounded-full border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
@@ -146,38 +180,48 @@ export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Eleme
   const timelineAtom = threadTimelineAtoms(threadId);
   const timeline = useAtomValue(timelineAtom);
   const streaming = useAtomValue(streamingTurnAtom);
+  const unreconciledAtom = unreconciledTurnAtoms(threadId);
   const turnActive = useAtomValue(turnActiveAtom);
   const runTurn = useAtomSet(runTurnAtom);
   // the turn fiber must stay subscribed for the lifetime of the thread view,
   // otherwise the registry releases the fn atom and interrupts the stream.
   useAtomMount(runTurnAtom);
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  // Follow the stream only while the reader is already at the bottom. Scrolling
-  // unconditionally dragged anyone who had scrolled up to re-read an earlier
-  // answer back down again on every single streamed block.
-  const scrollToBottom = (): void => {
-    const viewport = scrollRef.current;
-    if (viewport !== null && viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight > PINNED_SLACK_PX) {
-      return;
-    }
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-  useAtomSubscribe(timelineAtom, scrollToBottom);
-  useAtomSubscribe(streamingTurnAtom, scrollToBottom);
+  const { bottomRef, scrollRef, unreconciled } = useThreadScroll(timelineAtom, unreconciledAtom);
 
   // a turn keeps streaming in its own thread when the user navigates away.
   const streamingHere = O.filter(streaming, (turn) => turn.threadId === threadId);
+  // A success is authoritative and already contains every persisted fallback.
+  // Hide them synchronously while the subscription above retires their state.
+  const displayedUnreconciled = AsyncResult.isSuccess(timeline) ? [] : unreconciled;
 
   // The conversation as it now stands: an edited turn and the exchange it
   // produced are gone for good, not merely hidden while the replacement streams.
   // (The transcript used to fall back to every turn once streaming finished, so
   // the tail the rewrite banner promised to discard came straight back.)
-  const allTurns = AsyncResult.isSuccess(timeline) ? ThreadProjections.activeBranchTurns(timeline.value.turns) : [];
+  const allTurns = O.match(AsyncResult.value(timeline), {
+    onNone: () => [],
+    onSome: (value) => ThreadProjections.activeBranchTurns(value.turns),
+  });
   // While the replacement streams, its predecessor is already on its way out.
-  const turns = O.flatMap(streamingHere, (turn) => turn.truncateFrom).pipe(
-    O.flatMap((truncateFrom) => A.findFirstIndex(allTurns, (turn) => turn.turnId === truncateFrom)),
+  const localTurns = A.appendAll(displayedUnreconciled, O.toArray(streamingHere));
+  const truncateIndex = A.reduce(localTurns, O.none<number>(), (earliest, localTurn) =>
+    O.match(
+      O.flatMap(localTurn.truncateFrom, (truncateFrom) =>
+        A.findFirstIndex(allTurns, (turn) => turn.turnId === truncateFrom)
+      ),
+      {
+        onNone: () => earliest,
+        onSome: (index) =>
+          O.some(
+            earliest.pipe(
+              O.map((current) => N.min(current, index)),
+              O.getOrElse(() => index)
+            )
+          ),
+      }
+    )
+  );
+  const turns = truncateIndex.pipe(
     O.map((index) => A.take(allTurns, index)),
     O.getOrElse(() => allTurns)
   );
@@ -194,7 +238,10 @@ export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Eleme
           Failed to load the thread — is the sidecar running?
         </div>
       ) : null}
-      {A.isReadonlyArrayEmpty(turns) && AsyncResult.isSuccess(timeline) && O.isNone(streamingHere) ? (
+      {A.isReadonlyArrayEmpty(turns) &&
+      A.isReadonlyArrayEmpty(displayedUnreconciled) &&
+      AsyncResult.isSuccess(timeline) &&
+      O.isNone(streamingHere) ? (
         <div className="flex h-full flex-col items-center justify-center text-center" data-testid="thread-empty">
           <h2 className="text-lg font-semibold">Start the conversation</h2>
           <p className="text-sm text-muted-foreground">Ask anything. Responses stream in as structured rich text.</p>
@@ -203,6 +250,25 @@ export function Thread({ threadId }: { readonly threadId: ThreadId }): JSX.Eleme
 
       {A.map(turns, (turn) => (
         <TurnRow key={turn.turnId} threadId={threadId} turn={turn} hasSiblings={turnHasSiblings(allTurns, turn)} />
+      ))}
+
+      {A.map(displayedUnreconciled, (turn, index) => (
+        <div key={`unreconciled-${index}`}>
+          <div className="mb-4 flex flex-col items-end" data-testid="turn-unreconciled-user">
+            <div className="max-w-[80%] rounded-lg bg-primary/10 px-3 py-2">
+              <MessageView content={turn.userContent} />
+            </div>
+          </div>
+          <div className="mb-4 flex flex-col items-start" data-testid="turn-unreconciled">
+            <div className="max-w-[80%] rounded-lg bg-muted/50 px-3 py-2">
+              {A.isReadonlyArrayEmpty(turn.blocks) ? (
+                <div className="text-sm text-muted-foreground">Reply completed; waiting for the thread to refresh…</div>
+              ) : (
+                <StreamingBlocks blocks={turn.blocks} />
+              )}
+            </div>
+          </div>
+        </div>
       ))}
 
       {O.match(streamingHere, {
