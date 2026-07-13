@@ -983,11 +983,11 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
             onSome: (fallbackRequestId) =>
               client("GetTurnRequestStatus", { requestId: fallbackRequestId }).pipe(
                 Effect.option,
-                Effect.map(
-                  O.match({
-                    onNone: () => true,
-                    onSome: (status) => status === "pending" || status === "unknown" || status === "not_persisted",
-                  })
+                Effect.map((status) =>
+                  status.pipe(
+                    O.map((value) => value === "pending" || value === "unknown" || value === "not_persisted"),
+                    O.getOrElse(() => true)
+                  )
                 )
               ),
           });
