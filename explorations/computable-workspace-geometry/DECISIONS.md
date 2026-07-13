@@ -37,7 +37,10 @@ Effect-managed capture, schema-tagged errors.
 
 **Revisit triggers:** upstream abandonment; server-side backend need arriving
 before upstream ships one; the boundary wrapper starting to reimplement
-internals (that smell means reconsider vendoring, not rebuilding).
+internals (that smell means reconsider vendoring, not rebuilding); any
+catalog bump of `@chenglou/pretext` (re-verify the driver's mirrored
+`detectEngineProfile` fences against upstream `getEngineProfile` and
+re-capture the built-in fixture — added 2026-07-13, quality panel EVO-1).
 
 ## Q2 — Metrics-cache shipping format
 
@@ -48,6 +51,10 @@ quirk fences; unversioned input fails typed; encode∘decode identity proven;
 kinds (pretext's eight break kinds), emoji correction, font-descriptor
 normalization, and — once the seam decision (Q1) is ratified — alignment
 with pretext's actual `PreparedText` internals rather than word-level widths.
+**V2 seam (2026-07-13):** when V2 lands, dispatch lives in a top-level
+`FontMetricsSnapshot = S.Union(V1, V2)` discriminated on `version`; an
+unknown higher version hard-fails typed (no silent degrade) so callers
+choose their own fallback.
 
 ## Q3 — First proving consumer
 

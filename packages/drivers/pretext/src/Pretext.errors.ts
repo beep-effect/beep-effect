@@ -192,6 +192,45 @@ export class PretextSnapshotCodecError extends TaggedErrorClass<PretextSnapshotC
 ) {}
 
 /**
+ * Measurement operation that can fail.
+ *
+ * @example
+ * ```ts
+ * import { PretextMeasurementOperation } from "@beep/pretext"
+ * import * as S from "effect/Schema"
+ *
+ * const operation = S.decodeUnknownSync(PretextMeasurementOperation)("measureText")
+ *
+ * console.log(operation)
+ * ```
+ *
+ * @since 0.0.0
+ * @category errors
+ */
+export const PretextMeasurementOperation = LiteralKit(["measureText", "fixtureCapture"]).pipe(
+  $I.annoteSchema("PretextMeasurementOperation", {
+    description: "Measurement operation that can fail.",
+  })
+);
+
+/**
+ * Type for {@link PretextMeasurementOperation}.
+ *
+ * @example
+ * ```ts
+ * import { PretextMeasurementOperation } from "@beep/pretext"
+ *
+ * const operation: PretextMeasurementOperation = "fixtureCapture"
+ *
+ * console.log(operation)
+ * ```
+ *
+ * @since 0.0.0
+ * @category errors
+ */
+export type PretextMeasurementOperation = typeof PretextMeasurementOperation.Type;
+
+/**
  * A measurement operation failed: an unmeasured word was requested from a
  * fixture, or the underlying pretext engine rejected an input.
  *
@@ -213,7 +252,7 @@ export class PretextSnapshotCodecError extends TaggedErrorClass<PretextSnapshotC
 export class PretextMeasurementError extends TaggedErrorClass<PretextMeasurementError>($I`PretextMeasurementError`)(
   "PretextMeasurementError",
   {
-    operation: S.String,
+    operation: PretextMeasurementOperation,
     message: S.String,
   },
   $I.annote("PretextMeasurementError", {

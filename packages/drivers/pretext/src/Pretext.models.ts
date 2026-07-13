@@ -12,15 +12,17 @@
  */
 
 import { $PretextId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import { isNonNegative } from "@beep/schema/Number";
 import { A, O, pipe, R, Str } from "@beep/utils";
 import { Effect, Result } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { PretextSnapshotCodecError } from "./Pretext.errors.js";
-import type * as AST from "effect/SchemaAST";
 
 const $I = $PretextId.create("Pretext.models");
+
+const NonNegativeAdvance = S.Finite.check(isNonNegative);
+const NonNegativeLineCount = S.Int.check(isNonNegative);
 
 /**
  * Per-engine layout quirk fences, mirroring upstream pretext's
@@ -49,7 +51,7 @@ const $I = $PretextId.create("Pretext.models");
  */
 export class EngineProfile extends S.Class<EngineProfile>($I`EngineProfile`)(
   {
-    lineFitEpsilon: S.Finite,
+    lineFitEpsilon: NonNegativeAdvance,
     carryCJKAfterClosingQuote: S.Boolean,
     breakKeepAllAfterPunctuation: S.Boolean,
     preferPrefixWidthsForBreakableRuns: S.Boolean,
@@ -96,17 +98,21 @@ export class EngineProfile extends S.Class<EngineProfile>($I`EngineProfile`)(
  */
 export class FontMetrics extends S.Class<FontMetrics>($I`FontMetrics`)(
   {
+    // capturedAt is opaque provenance, not a datetime contract: live captures
+    // write full ISO, curated fixtures may carry date-only stamps.
     capturedAt: S.String,
     engine: S.String,
     platform: S.String,
     font: S.String,
-    lineHeight: S.Finite,
+    lineHeight: NonNegativeAdvance,
+    // spaceWidth is a kerning-derived delta (pair minus markers) and may
+    // legitimately sit at or fractionally below zero; keep it unrefined.
     spaceWidth: S.Finite,
-    words: S.Record(S.String, S.Finite),
+    words: S.Record(S.String, NonNegativeAdvance),
     engineProfile: EngineProfile,
     sentence: S.OptionFromOptionalKey(S.String),
     oracle: S.OptionFromOptionalKey(S.String),
-    domLineCounts: S.OptionFromOptionalKey(S.Record(S.String, S.Finite)),
+    domLineCounts: S.OptionFromOptionalKey(S.Record(S.String, NonNegativeLineCount)),
   },
   $I.annote("FontMetrics", {
     description: "A single engine's font measurement capture: word widths, space advance, line height, engine profile.",
@@ -146,10 +152,8 @@ export class FontMetricsSnapshotV1 extends S.Class<FontMetricsSnapshotV1>($I`Fon
     S.decodeUnknownResult(FontMetricsSnapshotV1)(input).pipe(
       Result.getOrThrowWith((error) => PretextSnapshotCodecError.make({ operation: "decode", message: error.message }))
     );
-  static readonly decodeOption: {
-    (input: unknown, options?: AST.ParseOptions): O.Option<FontMetricsSnapshotV1>;
-    (options?: AST.ParseOptions): (input: unknown) => O.Option<FontMetricsSnapshotV1>;
-  } = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownOption(FontMetricsSnapshotV1));
+  static readonly decodeOption: (input: unknown) => O.Option<FontMetricsSnapshotV1> =
+    S.decodeUnknownOption(FontMetricsSnapshotV1);
   static readonly decode = (input: unknown): Effect.Effect<FontMetricsSnapshotV1, PretextSnapshotCodecError> =>
     S.decodeUnknownEffect(FontMetricsSnapshotV1)(input).pipe(
       Effect.mapError((error) => PretextSnapshotCodecError.make({ operation: "decode", message: error.message }))
@@ -196,7 +200,7 @@ export type FontMetricsSnapshotV1Encoded = typeof FontMetricsSnapshotV1.Encoded;
  */
 export class TextLayoutInput extends S.Class<TextLayoutInput>($I`TextLayoutInput`)(
   {
-    maxWidth: S.Finite,
+    maxWidth: NonNegativeAdvance,
     text: S.String,
   },
   $I.annote("TextLayoutInput", {

@@ -14,7 +14,7 @@
 import { A, O, R } from "@beep/utils";
 import { Effect, Layer, Result } from "effect";
 import { PretextMeasurementError } from "./Pretext.errors.js";
-import { FontMetricsSnapshotV1 } from "./Pretext.models.js";
+import { FontMetrics, FontMetricsSnapshotV1 } from "./Pretext.models.js";
 import { PretextCapture } from "./PretextCapture.service.js";
 import type { FontMetricsSnapshotV1Encoded } from "./Pretext.models.js";
 import type { PretextCaptureRequest } from "./PretextCapture.service.js";
@@ -112,7 +112,10 @@ const fixtureCaptureFontMetrics = (snapshot: FontMetricsSnapshotV1) =>
         message: `Fixture does not carry widths for: ${A.join(missing, ", ")}.`,
       });
     }
-    return { version: snapshot.version, metrics: { ...snapshot.metrics, words: R.fromEntries(entries) } };
+    return FontMetricsSnapshotV1.make({
+      version: snapshot.version,
+      metrics: FontMetrics.make({ ...snapshot.metrics, words: R.fromEntries(entries) }),
+    });
   });
 
 /**

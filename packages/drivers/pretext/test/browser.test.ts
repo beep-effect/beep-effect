@@ -1,13 +1,25 @@
-import { PretextCapture, PretextCaptureLive, PretextCaptureRequest } from "@beep/pretext/browser";
+import { detectEngineProfile, PretextCapture, PretextCaptureLive, PretextCaptureRequest } from "@beep/pretext/browser";
+import { provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { Effect } from "effect";
+import * as P from "effect/Predicate";
 
-const runtimeHasCanvas2d = typeof OffscreenCanvas === "function" || typeof document !== "undefined";
+const runtimeHasCanvas2d = P.isFunction(globalThis.OffscreenCanvas) || !P.isUndefined(globalThis.document);
 
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+describe("detectEngineProfile", () => {
+  it.effect(
+    "pins the non-browser fence values mirrored from upstream v0.0.8",
+    Effect.fnUntraced(function* () {
+      const profile = detectEngineProfile();
+
+      expect(profile.lineFitEpsilon).toBe(0.005);
+      expect(profile.carryCJKAfterClosingQuote).toBe(false);
+      expect(profile.breakKeepAllAfterPunctuation).toBe(true);
+      expect(profile.preferPrefixWidthsForBreakableRuns).toBe(false);
+      expect(profile.preferEarlySoftHyphenBreak).toBe(false);
+    })
+  );
+});
 
 describe("PretextCaptureLive", () => {
   it.effect(
@@ -42,7 +54,7 @@ describe("PretextCaptureLive", () => {
         )
       );
 
-      expect(error._tag).toBe("PretextMeasurementUnavailableError");
+      expect(error).toMatchObject({ _tag: "PretextMeasurementUnavailableError", reason: "missingCanvas2d" });
     }, provideScopedLayer(PretextCaptureLive))
   );
 

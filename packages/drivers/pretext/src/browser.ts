@@ -25,9 +25,9 @@ import {
   PretextMeasurementUnavailableError,
   PretextUnsupportedFontError,
 } from "./Pretext.errors.js";
+import { EngineProfile, FontMetrics, FontMetricsSnapshotV1 } from "./Pretext.models.js";
 import { PretextCapture } from "./PretextCapture.service.js";
 import type { PretextMeasurementUnavailableReason } from "./Pretext.errors.js";
-import type { EngineProfile, FontMetricsSnapshotV1 } from "./Pretext.models.js";
 import type { PretextCaptureRequest } from "./PretextCapture.service.js";
 
 /**
@@ -42,19 +42,33 @@ export * from "./index.js";
 const uaIncludesAny = (ua: string, flags: ReadonlyArray<string>): boolean =>
   A.some(flags, (flag) => pipe(ua, Str.includes(flag)));
 
-// Mirrors upstream pretext's engine detection (v0.0.8, dist/measurement.js
-// getEngineProfile), which the upstream exports map does not expose. The
-// values are Chromium/Safari/Gecko quirk fences; keep in lockstep with the
-// pinned catalog version.
-const detectEngineProfile = (): EngineProfile => {
+/**
+ * Detect the current runtime's {@link EngineProfile}. Mirrors upstream
+ * pretext's unexported `getEngineProfile` (v0.0.8, `src/measurement.ts`):
+ * the values are Chromium/Safari/Gecko quirk fences. On a catalog bump of
+ * `@chenglou/pretext`, re-verify this mirror against upstream and re-capture
+ * the built-in fixture (revisit trigger recorded in the
+ * computable-workspace-geometry DECISIONS log).
+ *
+ * @example
+ * ```ts
+ * import { detectEngineProfile } from "@beep/pretext/browser"
+ *
+ * console.log(detectEngineProfile().lineFitEpsilon)
+ * ```
+ *
+ * @since 0.0.0
+ * @category capture
+ */
+export const detectEngineProfile = (): EngineProfile => {
   if (P.isUndefined(globalThis.navigator)) {
-    return {
+    return EngineProfile.make({
       lineFitEpsilon: 0.005,
       carryCJKAfterClosingQuote: false,
       breakKeepAllAfterPunctuation: true,
       preferPrefixWidthsForBreakableRuns: false,
       preferEarlySoftHyphenBreak: false,
-    };
+    });
   }
   const ua = navigator.userAgent;
   const isSafari =
@@ -62,13 +76,13 @@ const detectEngineProfile = (): EngineProfile => {
     pipe(ua, Str.includes("Safari/")) &&
     !uaIncludesAny(ua, ["Chrome/", "Chromium/", "CriOS/", "FxiOS/", "EdgiOS/"]);
   const isChromium = uaIncludesAny(ua, ["Chrome/", "Chromium/", "CriOS/", "Edg/"]);
-  return {
+  return EngineProfile.make({
     lineFitEpsilon: isSafari ? 1 / 64 : 0.005,
     carryCJKAfterClosingQuote: isChromium,
     breakKeepAllAfterPunctuation: !isSafari,
     preferPrefixWidthsForBreakableRuns: isSafari,
     preferEarlySoftHyphenBreak: isSafari,
-  };
+  });
 };
 
 const capabilityProbes: ReadonlyArray<{
@@ -93,8 +107,7 @@ const probeMeasurementCapability: Effect.Effect<void, PretextMeasurementUnavaila
     A.findFirst(capabilityProbes, (probe) => !probe.available()),
     {
       onNone: () => Effect.void,
-      onSome: (probe) =>
-        Effect.fail(PretextMeasurementUnavailableError.make({ reason: probe.reason, message: probe.message })),
+      onSome: (probe) => PretextMeasurementUnavailableError.make({ reason: probe.reason, message: probe.message }),
     }
   )
 );
@@ -130,14 +143,16 @@ const captureFontMetrics = Effect.fn("Pretext.captureFontMetrics")(function* (re
   }
   yield* probeMeasurementCapability;
   const now = yield* DateTime.now;
+  // Sequential by design: measurement is synchronous single-canvas work, so
+  // concurrency would only add fiber overhead and canvas contention.
   const entries = yield* Effect.forEach(request.words, (word) =>
     Effect.map(measureText(word, request.font), (width) => [word, width] as const)
   );
   const markerWidth = yield* measureText("i", request.font);
   const pairWidth = yield* measureText("i i", request.font);
-  const snapshot: FontMetricsSnapshotV1 = {
+  return FontMetricsSnapshotV1.make({
     version: 1,
-    metrics: {
+    metrics: FontMetrics.make({
       capturedAt: DateTime.formatIso(now),
       engine: detectEngineLabel(),
       platform: detectPlatformLabel(),
@@ -149,9 +164,8 @@ const captureFontMetrics = Effect.fn("Pretext.captureFontMetrics")(function* (re
       sentence: request.sentence,
       oracle: O.none(),
       domLineCounts: O.none(),
-    },
-  };
-  return snapshot;
+    }),
+  });
 });
 
 /**

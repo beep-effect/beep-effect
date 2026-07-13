@@ -53,6 +53,36 @@ describe("FontMetricsSnapshotV1", () => {
       );
 
       expect(error._tag).toBe("PretextSnapshotCodecError");
+      expect(error.message).toContain(`at ["version"]`);
+    })
+  );
+
+  it.effect(
+    "rejects a fractional DOM line count at decode",
+    Effect.fnUntraced(function* () {
+      const error = yield* Effect.flip(
+        FontMetricsSnapshotV1.decode({
+          version: 1,
+          metrics: { ...chromeLinuxArial16Encoded.metrics, domLineCounts: { "200": 2.5 } },
+        })
+      );
+
+      expect(error._tag).toBe("PretextSnapshotCodecError");
+      expect(error.operation).toBe("decode");
+    })
+  );
+
+  it.effect(
+    "rejects a negative word advance at decode",
+    Effect.fnUntraced(function* () {
+      const error = yield* Effect.flip(
+        FontMetricsSnapshotV1.decode({
+          version: 1,
+          metrics: { ...chromeLinuxArial16Encoded.metrics, words: { the: -1 } },
+        })
+      );
+
+      expect(error._tag).toBe("PretextSnapshotCodecError");
     })
   );
 });
@@ -115,6 +145,34 @@ describe("pure layout helpers", () => {
       expect(
         lineCount(snapshot.metrics, TextLayoutInput.make({ maxWidth: 320, text: "unmeasured words entirely" }))
       ).toEqual(O.none());
+    })
+  );
+
+  it.effect(
+    "treats empty text as unmeasured, not zero lines",
+    Effect.fnUntraced(function* () {
+      const snapshot = yield* chromeLinuxArial16;
+
+      expect(naturalWidth(snapshot.metrics, "")).toEqual(O.none());
+      expect(lineCount(snapshot.metrics, TextLayoutInput.make({ maxWidth: 320, text: "" }))).toEqual(O.none());
+    })
+  );
+
+  it.effect(
+    "keeps a single word wider than maxWidth on one line",
+    Effect.fnUntraced(function* () {
+      const snapshot = yield* chromeLinuxArial16;
+
+      expect(lineCount(snapshot.metrics, TextLayoutInput.make({ maxWidth: 1, text: "slithers" }))).toEqual(O.some(1));
+    })
+  );
+
+  it.effect(
+    "breaks every subsequent word at maxWidth zero",
+    Effect.fnUntraced(function* () {
+      const snapshot = yield* chromeLinuxArial16;
+
+      expect(lineCount(snapshot.metrics, TextLayoutInput.make({ maxWidth: 0, text: "the dragon" }))).toEqual(O.some(2));
     })
   );
 });

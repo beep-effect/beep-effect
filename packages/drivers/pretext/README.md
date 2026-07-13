@@ -36,8 +36,8 @@ import * as Effect from "effect/Effect"
 import * as O from "effect/Option"
 
 const metrics = Effect.runSync(chromeLinuxArial16).metrics
-const width = naturalWidth(metrics, "the dragon")   // Option<number>
-const lines = lineCount(metrics, "the dragon", 320) // Option<number>
+const width = naturalWidth(metrics, "the dragon")                        // Option<number>
+const lines = lineCount(metrics, { text: "the dragon", maxWidth: 320 }) // Option<number>
 console.log(O.isSome(width), O.isSome(lines))
 ```
 
@@ -53,6 +53,8 @@ const capture = Effect.gen(function* () {
     PretextCaptureRequest.make({ font: "16px Arial", lineHeight: 20, words: ["the", "dragon"] })
   )
 })
+
+const snapshot = capture.pipe(Effect.provide(PretextCaptureLive))
 ```
 
 ## Development

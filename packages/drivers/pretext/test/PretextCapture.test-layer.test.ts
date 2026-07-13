@@ -1,14 +1,10 @@
 import { chromeLinuxArial16, PretextCapture, PretextCaptureFixture, PretextCaptureRequest } from "@beep/pretext";
+import { provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Struct from "effect/Struct";
-
-const provideScopedLayer =
-  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
-    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 describe("PretextCaptureFixture", () => {
   it.effect(
