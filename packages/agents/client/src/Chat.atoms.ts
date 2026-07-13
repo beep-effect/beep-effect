@@ -801,7 +801,7 @@ export type TurnRequest = typeof TurnRequest.Type;
 const TURN_RECEIPT_POLL_ATTEMPTS = 8;
 const TURN_RECEIPT_POLL_INTERVAL = Duration.millis(150);
 const isUncertainTurnRequestStatus = (status: O.Option<TurnRequestStatus>): boolean =>
-  O.isNone(status) || O.exists(status, (value) => value === "pending" || value === "unknown");
+  O.isNone(status) || O.exists(status, (value) => value === "pending" || value === "accepted" || value === "unknown");
 const terminalAssistantBlock = (text: "(failed)" | "(stopped)"): AssistantBlock =>
   ParagraphBlock.make({ children: [TextInline.make({ text })] });
 
@@ -985,7 +985,10 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
                 Effect.option,
                 Effect.map((status) =>
                   status.pipe(
-                    O.map((value) => value === "pending" || value === "unknown" || value === "not_persisted"),
+                    O.map(
+                      (value) =>
+                        value === "pending" || value === "accepted" || value === "unknown" || value === "not_persisted"
+                    ),
                     O.getOrElse(() => true)
                   )
                 )

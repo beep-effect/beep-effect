@@ -872,6 +872,13 @@ fn bridge_sidecar_events(
         );
 
         while let Some(event) = events.recv().await {
+            // Fatal bridge errors stop normal event handling, but this receiver
+            // must remain alive until the monitor reports termination. Otherwise
+            // the monitor can advance the lifecycle to `Exited` after the
+            // post-loop check, leaving no consumer to advance it to `Closed`.
+            if closed_emitted && !matches!(&event, CommandEvent::Terminated(_)) {
+                continue;
+            }
             match event {
                 CommandEvent::Stdout(bytes) => {
                     if ipc {
@@ -895,7 +902,7 @@ fn bridge_sidecar_events(
                             }
                         }
                         if closed_emitted {
-                            break;
+                            continue;
                         }
                         // Fail closed if the sidecar floods stdout without a frame
                         // terminator so a malformed/chatty child can never grow the
@@ -918,7 +925,7 @@ fn bridge_sidecar_events(
                                     signal: None,
                                 },
                             );
-                            break;
+                            continue;
                         }
                     } else {
                         log_sidecar_output("stdout", &bytes);

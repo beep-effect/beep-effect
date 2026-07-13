@@ -18,7 +18,7 @@ import { NonNegativeInt } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { ThreadTimeline, TimelineMessageItem, TimelineTurn } from "@beep/workspace-use-cases/aggregates/Thread";
 import { describe, expect, it } from "@effect/vitest";
-import { Deferred, Duration, Effect, Layer, Stream } from "effect";
+import { Deferred, Duration, Effect, Layer, Match, Stream } from "effect";
 import * as O from "effect/Option";
 import { AsyncResult, Atom, AtomRegistry, Reactivity } from "effect/unstable/reactivity";
 
@@ -27,6 +27,15 @@ const content = Document.make({ children: [P.make({ children: [Text.make({ value
 const assistantBlock = ParagraphBlock.make({
   children: [TextInline.make({ text: "A completed local reply" })],
 });
+
+type UncertainStatusKind = "accepted" | "protocol_unknown" | "transport_failure";
+const uncertainStatusResult = (statusKind: UncertainStatusKind) =>
+  Match.value(statusKind).pipe(
+    Match.when("accepted", () => Effect.succeed("accepted" as const)),
+    Match.when("protocol_unknown", () => Effect.succeed("unknown" as const)),
+    Match.when("transport_failure", () => Effect.fail(ChatActionError.new("receipt status unavailable"))),
+    Match.exhaustive
+  );
 
 const emptyTimeline = ThreadTimeline.make({ threadId, turns: [] });
 const userOnlyTimeline = ThreadTimeline.make({
@@ -165,7 +174,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
   it.effect("keeps failed prompts non-sendable while receipt evidence is uncertain", () =>
     Effect.gen(function* () {
       const verifyUncertainStatus = Effect.fn("verifyUncertainFailedTurnStatus")(function* (
-        statusKind: "protocol_unknown" | "transport_failure"
+        statusKind: UncertainStatusKind
       ) {
         let statusReads = 0;
         let timelineReads = 0;
@@ -177,9 +186,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
           if (tag === "GetTurnRequestStatus") {
             return Effect.suspend(() => {
               statusReads += 1;
-              return statusKind === "protocol_unknown"
-                ? Effect.succeed("unknown")
-                : Effect.fail(ChatActionError.new("receipt status unavailable"));
+              return uncertainStatusResult(statusKind);
             });
           }
           if (tag === "SendMessage") return Stream.fail(ChatActionError.new("generation failed"));
@@ -217,6 +224,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         registry.dispose();
       });
 
+      yield* verifyUncertainStatus("accepted");
       yield* verifyUncertainStatus("protocol_unknown");
       yield* verifyUncertainStatus("transport_failure");
     })
@@ -226,7 +234,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     "keeps interrupted prompts non-sendable while receipt evidence is uncertain",
     Effect.fnUntraced(function* () {
       const verifyUncertainStatus = Effect.fn("verifyUncertainInterruptedTurnStatus")(function* (
-        statusKind: "protocol_unknown" | "transport_failure"
+        statusKind: UncertainStatusKind
       ) {
         const streamStarted = yield* Deferred.make<void>();
         let timelineReads = 0;
@@ -236,9 +244,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
             return Effect.succeed(timelineReads === 1 ? emptyTimeline : userOnlyTimeline);
           }
           if (tag === "GetTurnRequestStatus") {
-            return statusKind === "protocol_unknown"
-              ? Effect.succeed("unknown")
-              : Effect.fail(ChatActionError.new("receipt status unavailable"));
+            return uncertainStatusResult(statusKind);
           }
           if (tag === "SendMessage") {
             return Stream.unwrap(Deferred.succeed(streamStarted, undefined).pipe(Effect.as(Stream.never)));
@@ -285,6 +291,7 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         registry.dispose();
       });
 
+      yield* verifyUncertainStatus("accepted");
       yield* verifyUncertainStatus("protocol_unknown");
       yield* verifyUncertainStatus("transport_failure");
     })
@@ -551,7 +558,9 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         }
         if (tag === "GetTurnRequestStatus") {
           statusReads += 1;
-          return Effect.succeed(payload?.requestId === "receipt-uncertain" ? "unknown" : "persisted");
+          if (payload?.requestId === "receipt-persisted") return Effect.succeed("persisted");
+          if (payload?.requestId === "receipt-accepted") return Effect.succeed("accepted");
+          return Effect.succeed("unknown");
         }
         if (tag === "SendMessage") return Stream.fromIterable([assistantBlock]);
         return Effect.die(`unexpected chat RPC: ${tag}`);
@@ -568,7 +577,14 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       });
       const durableReceiptFallback = StreamingTurn.make({
         threadId,
-        requestId: O.some("receipt-durable"),
+        requestId: O.some("receipt-persisted"),
+        userContent: content,
+        reconciliation: "receipt",
+        blocks: [assistantBlock],
+      });
+      const acceptedReceiptFallback = StreamingTurn.make({
+        threadId,
+        requestId: O.some("receipt-accepted"),
         userContent: content,
         reconciliation: "receipt",
         blocks: [assistantBlock],
@@ -583,12 +599,17 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       const unmountUnreconciled = registry.mount(unreconciledAtom);
 
       yield* AtomRegistry.getResult(registry, timelineAtom);
-      registry.set(unreconciledAtom, [receiptFallback, durableReceiptFallback, timelineFallback]);
+      registry.set(unreconciledAtom, [
+        receiptFallback,
+        acceptedReceiptFallback,
+        durableReceiptFallback,
+        timelineFallback,
+      ]);
       registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
       yield* AtomRegistry.getResult(registry, runTurnAtom);
 
-      expect(registry.get(unreconciledAtom)).toStrictEqual([receiptFallback]);
-      expect(statusReads).toBeGreaterThanOrEqual(2);
+      expect(registry.get(unreconciledAtom)).toStrictEqual([receiptFallback, acceptedReceiptFallback]);
+      expect(statusReads).toBeGreaterThanOrEqual(3);
 
       unmountUnreconciled();
       unmountTurn();
