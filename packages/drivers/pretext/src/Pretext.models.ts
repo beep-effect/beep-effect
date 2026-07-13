@@ -12,10 +12,13 @@
  */
 
 import { $PretextId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { A, O, pipe, R, Str } from "@beep/utils";
-import * as Effect from "effect/Effect";
+import { Effect, Result } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { PretextSnapshotCodecError } from "./Pretext.errors.js";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $PretextId.create("Pretext.models");
 
@@ -44,40 +47,18 @@ const $I = $PretextId.create("Pretext.models");
  * @since 0.0.0
  * @category models
  */
-export const EngineProfile = S.Struct({
-  lineFitEpsilon: S.Finite,
-  carryCJKAfterClosingQuote: S.Boolean,
-  breakKeepAllAfterPunctuation: S.Boolean,
-  preferPrefixWidthsForBreakableRuns: S.Boolean,
-  preferEarlySoftHyphenBreak: S.Boolean,
-}).pipe(
-  $I.annoteSchema("EngineProfile", {
+export class EngineProfile extends S.Class<EngineProfile>($I`EngineProfile`)(
+  {
+    lineFitEpsilon: S.Finite,
+    carryCJKAfterClosingQuote: S.Boolean,
+    breakKeepAllAfterPunctuation: S.Boolean,
+    preferPrefixWidthsForBreakableRuns: S.Boolean,
+    preferEarlySoftHyphenBreak: S.Boolean,
+  },
+  $I.annote("EngineProfile", {
     description: "Per-engine layout quirk fences mirroring upstream pretext's EngineProfile.",
   })
-);
-
-/**
- * Type for {@link EngineProfile}.
- *
- * @example
- * ```ts
- * import { EngineProfile } from "@beep/pretext"
- *
- * const profile: EngineProfile = {
- *   lineFitEpsilon: 0.005,
- *   carryCJKAfterClosingQuote: true,
- *   breakKeepAllAfterPunctuation: true,
- *   preferPrefixWidthsForBreakableRuns: false,
- *   preferEarlySoftHyphenBreak: false
- * }
- *
- * console.log(profile.carryCJKAfterClosingQuote)
- * ```
- *
- * @since 0.0.0
- * @category models
- */
-export type EngineProfile = typeof EngineProfile.Type;
+) {}
 
 /**
  * A single engine's font measurement capture: word advance widths, the space
@@ -113,84 +94,73 @@ export type EngineProfile = typeof EngineProfile.Type;
  * @since 0.0.0
  * @category models
  */
-export const FontMetrics = S.Struct({
-  capturedAt: S.String,
-  engine: S.String,
-  platform: S.String,
-  font: S.String,
-  lineHeight: S.Finite,
-  spaceWidth: S.Finite,
-  words: S.Record(S.String, S.Finite),
-  engineProfile: EngineProfile,
-  sentence: S.OptionFromOptionalKey(S.String),
-  oracle: S.OptionFromOptionalKey(S.String),
-  domLineCounts: S.OptionFromOptionalKey(S.Record(S.String, S.Finite)),
-}).pipe(
-  $I.annoteSchema("FontMetrics", {
+export class FontMetrics extends S.Class<FontMetrics>($I`FontMetrics`)(
+  {
+    capturedAt: S.String,
+    engine: S.String,
+    platform: S.String,
+    font: S.String,
+    lineHeight: S.Finite,
+    spaceWidth: S.Finite,
+    words: S.Record(S.String, S.Finite),
+    engineProfile: EngineProfile,
+    sentence: S.OptionFromOptionalKey(S.String),
+    oracle: S.OptionFromOptionalKey(S.String),
+    domLineCounts: S.OptionFromOptionalKey(S.Record(S.String, S.Finite)),
+  },
+  $I.annote("FontMetrics", {
     description: "A single engine's font measurement capture: word widths, space advance, line height, engine profile.",
   })
-);
-
-/**
- * Type for {@link FontMetrics}.
- *
- * @example
- * ```ts
- * import type { FontMetrics } from "@beep/pretext"
- *
- * const lineHeightOf = (metrics: FontMetrics): number => metrics.lineHeight
- *
- * console.log(lineHeightOf.length)
- * ```
- *
- * @since 0.0.0
- * @category models
- */
-export type FontMetrics = typeof FontMetrics.Type;
+) {}
 
 /**
  * The versioned font-metrics snapshot envelope. The explicit version tag
  * means every future migration starts from a known format; unversioned input
  * fails decode with a typed error.
  *
+ * Codec statics are colocated on the schema: `is`, `decodeOption`,
+ * `fromUnknown` (trusted-boundary sync decode), plus the driver's typed
+ * `decode`/`encode` Effects failing with {@link PretextSnapshotCodecError}.
+ *
  * @example
  * ```ts
  * import { FontMetricsSnapshotV1 } from "@beep/pretext"
- * import * as S from "effect/Schema"
  *
- * const guard = S.is(FontMetricsSnapshotV1)
- *
- * console.log(guard({ version: 2 }))
+ * console.log(FontMetricsSnapshotV1.is({ version: 2 }))
  * ```
  *
  * @since 0.0.0
  * @category models
  */
-export const FontMetricsSnapshotV1 = S.Struct({
-  version: S.tag(1),
-  metrics: FontMetrics,
-}).pipe(
-  $I.annoteSchema("FontMetricsSnapshotV1", {
+export class FontMetricsSnapshotV1 extends S.Class<FontMetricsSnapshotV1>($I`FontMetricsSnapshotV1`)(
+  {
+    version: S.tag(1),
+    metrics: FontMetrics,
+  },
+  $I.annote("FontMetricsSnapshotV1", {
     description: "Versioned font-metrics snapshot envelope: version tag plus a single engine's capture.",
   })
-);
-
-/**
- * Type for {@link FontMetricsSnapshotV1}.
- *
- * @example
- * ```ts
- * import type { FontMetricsSnapshotV1 } from "@beep/pretext"
- *
- * const versionOf = (snapshot: FontMetricsSnapshotV1): number => snapshot.version
- *
- * console.log(versionOf.length)
- * ```
- *
- * @since 0.0.0
- * @category models
- */
-export type FontMetricsSnapshotV1 = typeof FontMetricsSnapshotV1.Type;
+) {
+  static readonly is = S.is(FontMetricsSnapshotV1);
+  static readonly fromUnknown = (input: unknown): FontMetricsSnapshotV1 =>
+    S.decodeUnknownResult(FontMetricsSnapshotV1)(input).pipe(
+      Result.getOrThrowWith((error) => PretextSnapshotCodecError.make({ operation: "decode", message: error.message }))
+    );
+  static readonly decodeOption: {
+    (input: unknown, options?: AST.ParseOptions): O.Option<FontMetricsSnapshotV1>;
+    (options?: AST.ParseOptions): (input: unknown) => O.Option<FontMetricsSnapshotV1>;
+  } = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownOption(FontMetricsSnapshotV1));
+  static readonly decode = (input: unknown): Effect.Effect<FontMetricsSnapshotV1, PretextSnapshotCodecError> =>
+    S.decodeUnknownEffect(FontMetricsSnapshotV1)(input).pipe(
+      Effect.mapError((error) => PretextSnapshotCodecError.make({ operation: "decode", message: error.message }))
+    );
+  static readonly encode = (
+    value: FontMetricsSnapshotV1
+  ): Effect.Effect<typeof FontMetricsSnapshotV1.Encoded, PretextSnapshotCodecError> =>
+    S.encodeEffect(FontMetricsSnapshotV1)(value).pipe(
+      Effect.mapError((error) => PretextSnapshotCodecError.make({ operation: "encode", message: error.message }))
+    );
+}
 
 /**
  * Encoded (wire) type for {@link FontMetricsSnapshotV1}.
@@ -210,67 +180,29 @@ export type FontMetricsSnapshotV1 = typeof FontMetricsSnapshotV1.Type;
 export type FontMetricsSnapshotV1Encoded = typeof FontMetricsSnapshotV1.Encoded;
 
 /**
- * Decode an unknown value into a {@link FontMetricsSnapshotV1}, failing with
- * a typed {@link PretextSnapshotCodecError} on contract mismatch.
+ * Text and width inputs for pure line-count and height calculations.
  *
  * @example
  * ```ts
- * import { decodeFontMetricsSnapshot } from "@beep/pretext"
- * import * as Effect from "effect/Effect"
+ * import { TextLayoutInput } from "@beep/pretext"
  *
- * const program = decodeFontMetricsSnapshot({ version: 1 }).pipe(
- *   Effect.catch((error) => Effect.succeed(error.operation))
- * )
+ * const input = TextLayoutInput.make({ maxWidth: 320, text: "the dragon" })
  *
- * console.log(Effect.runSync(program))
+ * console.log(input.maxWidth)
  * ```
  *
  * @since 0.0.0
- * @category codecs
+ * @category models
  */
-export const decodeFontMetricsSnapshot = (
-  input: unknown
-): Effect.Effect<FontMetricsSnapshotV1, PretextSnapshotCodecError> =>
-  S.decodeUnknownEffect(FontMetricsSnapshotV1)(input).pipe(
-    Effect.mapError((error) =>
-      PretextSnapshotCodecError.make({
-        operation: "decode",
-        message: error.message,
-      })
-    )
-  );
-
-/**
- * Encode a {@link FontMetricsSnapshotV1} to its wire form, failing with a
- * typed {@link PretextSnapshotCodecError} on contract mismatch.
- *
- * @example
- * ```ts
- * import { decodeFontMetricsSnapshot, encodeFontMetricsSnapshot } from "@beep/pretext"
- * import * as Effect from "effect/Effect"
- *
- * const roundTrip = decodeFontMetricsSnapshot({ version: 1 }).pipe(
- *   Effect.flatMap(encodeFontMetricsSnapshot),
- *   Effect.catch((error) => Effect.succeed(error.operation))
- * )
- *
- * console.log(Effect.runSync(roundTrip))
- * ```
- *
- * @since 0.0.0
- * @category codecs
- */
-export const encodeFontMetricsSnapshot = (
-  value: FontMetricsSnapshotV1
-): Effect.Effect<FontMetricsSnapshotV1Encoded, PretextSnapshotCodecError> =>
-  S.encodeEffect(FontMetricsSnapshotV1)(value).pipe(
-    Effect.mapError((error) =>
-      PretextSnapshotCodecError.make({
-        operation: "encode",
-        message: error.message,
-      })
-    )
-  );
+export class TextLayoutInput extends S.Class<TextLayoutInput>($I`TextLayoutInput`)(
+  {
+    maxWidth: S.Finite,
+    text: S.String,
+  },
+  $I.annote("TextLayoutInput", {
+    description: "Text and maximum width used by pure font-metrics layout calculations.",
+  })
+) {}
 
 const wordWidths = (metrics: FontMetrics, text: string): O.Option<ReadonlyArray<number>> =>
   O.all(A.map(Str.split(text, " "), (word) => R.get(metrics.words, word)));
@@ -300,10 +232,16 @@ const wordWidths = (metrics: FontMetrics, text: string): O.Option<ReadonlyArray<
  * @since 0.0.0
  * @category layout
  */
-export const naturalWidth = (metrics: FontMetrics, text: string): O.Option<number> =>
-  O.map(wordWidths(metrics, text), (widths) =>
-    A.reduce(widths, 0, (total, width, index) => (index === 0 ? width : total + metrics.spaceWidth + width))
-  );
+export const naturalWidth: {
+  (metrics: FontMetrics, text: string): O.Option<number>;
+  (text: string): (metrics: FontMetrics) => O.Option<number>;
+} = dual(
+  2,
+  (metrics: FontMetrics, text: string): O.Option<number> =>
+    O.map(wordWidths(metrics, text), (widths) =>
+      A.reduce(widths, 0, (total, width, index) => (index === 0 ? width : total + metrics.spaceWidth + width))
+    )
+);
 
 /**
  * Greedy first-fit line count for `text` at `maxWidth`, computed purely from
@@ -318,7 +256,7 @@ export const naturalWidth = (metrics: FontMetrics, text: string): O.Option<numbe
  *
  * declare const metrics: FontMetrics
  *
- * const lines = lineCount(metrics, "the the", 320)
+ * const lines = lineCount(metrics, { text: "the the", maxWidth: 320 })
  *
  * console.log(O.isOption(lines))
  * ```
@@ -326,18 +264,26 @@ export const naturalWidth = (metrics: FontMetrics, text: string): O.Option<numbe
  * @since 0.0.0
  * @category layout
  */
-export const lineCount = (metrics: FontMetrics, text: string, maxWidth: number): O.Option<number> =>
-  O.map(
-    wordWidths(metrics, text),
-    (widths) =>
-      A.reduce(widths, { lines: 0, width: 0 }, (state, wordWidth) => {
-        if (state.lines === 0) {
-          return { lines: 1, width: wordWidth };
-        }
-        const needed = state.width + metrics.spaceWidth + wordWidth;
-        return needed > maxWidth ? { lines: state.lines + 1, width: wordWidth } : { lines: state.lines, width: needed };
-      }).lines
-  );
+export const lineCount: {
+  (metrics: FontMetrics, input: TextLayoutInput): O.Option<number>;
+  (input: TextLayoutInput): (metrics: FontMetrics) => O.Option<number>;
+} = dual(
+  2,
+  (metrics: FontMetrics, input: TextLayoutInput): O.Option<number> =>
+    O.map(
+      wordWidths(metrics, input.text),
+      (widths) =>
+        A.reduce(widths, { lines: 0, width: 0 }, (state, wordWidth) => {
+          if (state.lines === 0) {
+            return { lines: 1, width: wordWidth };
+          }
+          const needed = state.width + metrics.spaceWidth + wordWidth;
+          return needed > input.maxWidth
+            ? { lines: state.lines + 1, width: wordWidth }
+            : { lines: state.lines, width: needed };
+        }).lines
+    )
+);
 
 /**
  * Greedy first-fit text height for `text` at `maxWidth`: line count times
@@ -352,7 +298,7 @@ export const lineCount = (metrics: FontMetrics, text: string, maxWidth: number):
  *
  * declare const metrics: FontMetrics
  *
- * const height = textHeight(metrics, "the the", 320)
+ * const height = textHeight(metrics, { text: "the the", maxWidth: 320 })
  *
  * console.log(O.isOption(height))
  * ```
@@ -360,8 +306,14 @@ export const lineCount = (metrics: FontMetrics, text: string, maxWidth: number):
  * @since 0.0.0
  * @category layout
  */
-export const textHeight = (metrics: FontMetrics, text: string, maxWidth: number): O.Option<number> =>
-  pipe(
-    lineCount(metrics, text, maxWidth),
-    O.map((lines) => lines * metrics.lineHeight)
-  );
+export const textHeight: {
+  (metrics: FontMetrics, input: TextLayoutInput): O.Option<number>;
+  (input: TextLayoutInput): (metrics: FontMetrics) => O.Option<number>;
+} = dual(
+  2,
+  (metrics: FontMetrics, input: TextLayoutInput): O.Option<number> =>
+    pipe(
+      lineCount(metrics, input),
+      O.map((lines) => lines * metrics.lineHeight)
+    )
+);

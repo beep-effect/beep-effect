@@ -1,10 +1,10 @@
 import {
   chromeLinuxArial16,
   chromeLinuxArial16Encoded,
-  decodeFontMetricsSnapshot,
-  encodeFontMetricsSnapshot,
+  FontMetricsSnapshotV1,
   lineCount,
   naturalWidth,
+  TextLayoutInput,
   textHeight,
 } from "@beep/pretext";
 import { describe, expect, it } from "@effect/vitest";
@@ -29,7 +29,7 @@ describe("FontMetricsSnapshotV1", () => {
     "round-trips encode after decode as identity",
     Effect.fnUntraced(function* () {
       const snapshot = yield* chromeLinuxArial16;
-      const encoded = yield* encodeFontMetricsSnapshot(snapshot);
+      const encoded = yield* FontMetricsSnapshotV1.encode(snapshot);
 
       expect(encoded).toEqual(chromeLinuxArial16Encoded);
     })
@@ -38,7 +38,7 @@ describe("FontMetricsSnapshotV1", () => {
   it.effect(
     "fails typed on unversioned input",
     Effect.fnUntraced(function* () {
-      const error = yield* Effect.flip(decodeFontMetricsSnapshot(chromeLinuxArial16Encoded.metrics));
+      const error = yield* Effect.flip(FontMetricsSnapshotV1.decode(chromeLinuxArial16Encoded.metrics));
 
       expect(error._tag).toBe("PretextSnapshotCodecError");
       expect(error.operation).toBe("decode");
@@ -49,7 +49,7 @@ describe("FontMetricsSnapshotV1", () => {
     "fails typed on a future version tag",
     Effect.fnUntraced(function* () {
       const error = yield* Effect.flip(
-        decodeFontMetricsSnapshot({ version: 2, metrics: chromeLinuxArial16Encoded.metrics })
+        FontMetricsSnapshotV1.decode({ version: 2, metrics: chromeLinuxArial16Encoded.metrics })
       );
 
       expect(error._tag).toBe("PretextSnapshotCodecError");
@@ -66,9 +66,15 @@ describe("pure layout helpers", () => {
       const sentence = O.getOrThrow(metrics.sentence);
       const domLineCounts = O.getOrThrow(metrics.domLineCounts);
 
-      expect(lineCount(metrics, sentence, 200)).toEqual(R.get(domLineCounts, "200"));
-      expect(lineCount(metrics, sentence, 320)).toEqual(R.get(domLineCounts, "320"));
-      expect(lineCount(metrics, sentence, 480)).toEqual(R.get(domLineCounts, "480"));
+      expect(lineCount(metrics, TextLayoutInput.make({ maxWidth: 200, text: sentence }))).toEqual(
+        R.get(domLineCounts, "200")
+      );
+      expect(lineCount(metrics, TextLayoutInput.make({ maxWidth: 320, text: sentence }))).toEqual(
+        R.get(domLineCounts, "320")
+      );
+      expect(lineCount(metrics, TextLayoutInput.make({ maxWidth: 480, text: sentence }))).toEqual(
+        R.get(domLineCounts, "480")
+      );
     })
   );
 
@@ -80,8 +86,10 @@ describe("pure layout helpers", () => {
       const sentence = O.getOrThrow(metrics.sentence);
       const width = O.getOrThrow(naturalWidth(metrics, sentence));
 
-      expect(lineCount(metrics, sentence, width)).toEqual(O.some(1));
-      expect(O.getOrThrow(lineCount(metrics, sentence, width - 1))).toBeGreaterThan(1);
+      expect(lineCount(metrics, TextLayoutInput.make({ maxWidth: width, text: sentence }))).toEqual(O.some(1));
+      expect(
+        O.getOrThrow(lineCount(metrics, TextLayoutInput.make({ maxWidth: width - 1, text: sentence })))
+      ).toBeGreaterThan(1);
     })
   );
 
@@ -92,7 +100,9 @@ describe("pure layout helpers", () => {
       const metrics = snapshot.metrics;
       const sentence = O.getOrThrow(metrics.sentence);
 
-      expect(textHeight(metrics, sentence, 320)).toEqual(O.some(2 * metrics.lineHeight));
+      expect(textHeight(metrics, TextLayoutInput.make({ maxWidth: 320, text: sentence }))).toEqual(
+        O.some(2 * metrics.lineHeight)
+      );
     })
   );
 
@@ -102,7 +112,9 @@ describe("pure layout helpers", () => {
       const snapshot = yield* chromeLinuxArial16;
 
       expect(naturalWidth(snapshot.metrics, "unmeasured words entirely")).toEqual(O.none());
-      expect(lineCount(snapshot.metrics, "unmeasured words entirely", 320)).toEqual(O.none());
+      expect(
+        lineCount(snapshot.metrics, TextLayoutInput.make({ maxWidth: 320, text: "unmeasured words entirely" }))
+      ).toEqual(O.none());
     })
   );
 });

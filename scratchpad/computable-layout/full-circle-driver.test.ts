@@ -5,7 +5,7 @@
 // renders on one line. Same theorem as full-circle.test.ts, but every layout
 // value now flows through the graduated package instead of scratchpad code.
 import { describe, expect, test } from "bun:test";
-import { chromeLinuxArial16, lineCount, naturalWidth } from "@beep/pretext";
+import { chromeLinuxArial16, lineCount, naturalWidth, TextLayoutInput } from "@beep/pretext";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import {
@@ -66,7 +66,7 @@ describe("full circle against @beep/pretext: driver metrics → content minimum 
     expect(proseBox!.width).toBeGreaterThanOrEqual(contentMinimum);
     // The kernel-granted width provably renders the sentence on one line —
     // asserted with the driver's own pure greedy breaker.
-    expect(lineCount(metrics, sentence, proseBox!.width)).toEqual(O.some(1));
+    expect(lineCount(metrics, TextLayoutInput.make({ maxWidth: proseBox!.width, text: sentence }))).toEqual(O.some(1));
   });
 
   test("without the minimum, the same split starves the prose panel into wrapping", () => {
@@ -81,6 +81,8 @@ describe("full circle against @beep/pretext: driver metrics → content minimum 
     const container = DockBox.make({ left: 0, top: 0, width: 900, height: 600 });
     const geometry = project(workspaceRoot, container, GeometryOptions.make({ gap: 4 }));
     const proseBox = geometry.groups.find((group) => GroupId.equals(group.groupId, proseGroup))?.box;
-    expect(O.getOrThrow(lineCount(metrics, sentence, proseBox!.width))).toBeGreaterThan(1);
+    expect(
+      O.getOrThrow(lineCount(metrics, TextLayoutInput.make({ maxWidth: proseBox!.width, text: sentence })))
+    ).toBeGreaterThan(1);
   });
 });

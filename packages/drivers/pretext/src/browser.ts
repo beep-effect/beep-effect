@@ -18,15 +18,15 @@
 
 import { A, O, pipe, R, Str } from "@beep/utils";
 import { measureNaturalWidth, prepareWithSegments } from "@chenglou/pretext";
-import * as DateTime from "effect/DateTime";
-import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
+import { DateTime, Effect, Layer } from "effect";
+import * as P from "effect/Predicate";
 import {
   PretextMeasurementError,
   PretextMeasurementUnavailableError,
   PretextUnsupportedFontError,
 } from "./Pretext.errors.js";
 import { PretextCapture } from "./PretextCapture.service.js";
+import type { PretextMeasurementUnavailableReason } from "./Pretext.errors.js";
 import type { EngineProfile, FontMetricsSnapshotV1 } from "./Pretext.models.js";
 import type { PretextCaptureRequest } from "./PretextCapture.service.js";
 
@@ -39,12 +39,15 @@ import type { PretextCaptureRequest } from "./PretextCapture.service.js";
  */
 export * from "./index.js";
 
+const uaIncludesAny = (ua: string, flags: ReadonlyArray<string>): boolean =>
+  A.some(flags, (flag) => pipe(ua, Str.includes(flag)));
+
 // Mirrors upstream pretext's engine detection (v0.0.8, dist/measurement.js
 // getEngineProfile), which the upstream exports map does not expose. The
 // values are Chromium/Safari/Gecko quirk fences; keep in lockstep with the
 // pinned catalog version.
 const detectEngineProfile = (): EngineProfile => {
-  if (typeof navigator === "undefined") {
+  if (P.isUndefined(globalThis.navigator)) {
     return {
       lineFitEpsilon: 0.005,
       carryCJKAfterClosingQuote: false,
@@ -57,16 +60,8 @@ const detectEngineProfile = (): EngineProfile => {
   const isSafari =
     navigator.vendor === "Apple Computer, Inc." &&
     pipe(ua, Str.includes("Safari/")) &&
-    !pipe(ua, Str.includes("Chrome/")) &&
-    !pipe(ua, Str.includes("Chromium/")) &&
-    !pipe(ua, Str.includes("CriOS/")) &&
-    !pipe(ua, Str.includes("FxiOS/")) &&
-    !pipe(ua, Str.includes("EdgiOS/"));
-  const isChromium =
-    pipe(ua, Str.includes("Chrome/")) ||
-    pipe(ua, Str.includes("Chromium/")) ||
-    pipe(ua, Str.includes("CriOS/")) ||
-    pipe(ua, Str.includes("Edg/"));
+    !uaIncludesAny(ua, ["Chrome/", "Chromium/", "CriOS/", "FxiOS/", "EdgiOS/"]);
+  const isChromium = uaIncludesAny(ua, ["Chrome/", "Chromium/", "CriOS/", "Edg/"]);
   return {
     lineFitEpsilon: isSafari ? 1 / 64 : 0.005,
     carryCJKAfterClosingQuote: isChromium,
@@ -76,29 +71,33 @@ const detectEngineProfile = (): EngineProfile => {
   };
 };
 
-const hasIntlSegmenter = (): boolean => typeof Intl !== "undefined" && typeof Intl.Segmenter === "function";
+const capabilityProbes: ReadonlyArray<{
+  readonly available: () => boolean;
+  readonly reason: PretextMeasurementUnavailableReason;
+  readonly message: string;
+}> = [
+  {
+    available: () => !P.isUndefined(globalThis.Intl) && P.isFunction(globalThis.Intl.Segmenter),
+    reason: "missingIntlSegmenter",
+    message: "Font-metrics capture requires Intl.Segmenter.",
+  },
+  {
+    available: () => P.isFunction(globalThis.OffscreenCanvas) || !P.isUndefined(globalThis.document),
+    reason: "missingCanvas2d",
+    message: "Font-metrics capture requires OffscreenCanvas or a DOM canvas context.",
+  },
+];
 
-const hasCanvas2d = (): boolean => typeof OffscreenCanvas === "function" || typeof document !== "undefined";
-
-const probeMeasurementCapability: Effect.Effect<void, PretextMeasurementUnavailableError> = Effect.suspend(() => {
-  if (!hasIntlSegmenter()) {
-    return Effect.fail(
-      PretextMeasurementUnavailableError.make({
-        reason: "missingIntlSegmenter",
-        message: "Font-metrics capture requires Intl.Segmenter.",
-      })
-    );
-  }
-  if (!hasCanvas2d()) {
-    return Effect.fail(
-      PretextMeasurementUnavailableError.make({
-        reason: "missingCanvas2d",
-        message: "Font-metrics capture requires OffscreenCanvas or a DOM canvas context.",
-      })
-    );
-  }
-  return Effect.void;
-});
+const probeMeasurementCapability: Effect.Effect<void, PretextMeasurementUnavailableError> = Effect.suspend(() =>
+  O.match(
+    A.findFirst(capabilityProbes, (probe) => !probe.available()),
+    {
+      onNone: () => Effect.void,
+      onSome: (probe) =>
+        Effect.fail(PretextMeasurementUnavailableError.make({ reason: probe.reason, message: probe.message })),
+    }
+  )
+);
 
 const measureText = (text: string, font: string): Effect.Effect<number, PretextMeasurementError> =>
   Effect.try({
@@ -106,12 +105,12 @@ const measureText = (text: string, font: string): Effect.Effect<number, PretextM
     catch: (cause) =>
       PretextMeasurementError.make({
         operation: "measureText",
-        message: cause instanceof Error ? cause.message : "Pretext failed to measure the text.",
+        message: P.isError(cause) ? cause.message : "Pretext failed to measure the text.",
       }),
   });
 
 const detectEngineLabel = (): string =>
-  typeof navigator === "undefined"
+  P.isUndefined(globalThis.navigator)
     ? "unknown"
     : pipe(
         navigator.userAgent,
@@ -120,7 +119,7 @@ const detectEngineLabel = (): string =>
         O.getOrElse(() => navigator.userAgent)
       );
 
-const detectPlatformLabel = (): string => (typeof navigator === "undefined" ? "unknown" : navigator.platform);
+const detectPlatformLabel = (): string => (P.isUndefined(globalThis.navigator) ? "unknown" : navigator.platform);
 
 const captureFontMetrics = Effect.fn("Pretext.captureFontMetrics")(function* (request: PretextCaptureRequest) {
   if (pipe(request.font, Str.includes("system-ui"))) {

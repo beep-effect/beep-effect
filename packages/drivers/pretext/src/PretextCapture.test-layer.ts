@@ -12,12 +12,11 @@
  */
 
 import { A, O, R } from "@beep/utils";
-import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
+import { Effect, Layer, Result } from "effect";
 import { PretextMeasurementError } from "./Pretext.errors.js";
-import { decodeFontMetricsSnapshot } from "./Pretext.models.js";
+import { FontMetricsSnapshotV1 } from "./Pretext.models.js";
 import { PretextCapture } from "./PretextCapture.service.js";
-import type { FontMetricsSnapshotV1, FontMetricsSnapshotV1Encoded } from "./Pretext.models.js";
+import type { FontMetricsSnapshotV1Encoded } from "./Pretext.models.js";
 import type { PretextCaptureRequest } from "./PretextCapture.service.js";
 
 /**
@@ -91,7 +90,7 @@ export const chromeLinuxArial16Encoded: FontMetricsSnapshotV1Encoded = {
  * @since 0.0.0
  * @category fixtures
  */
-export const chromeLinuxArial16 = decodeFontMetricsSnapshot(chromeLinuxArial16Encoded);
+export const chromeLinuxArial16 = FontMetricsSnapshotV1.decode(chromeLinuxArial16Encoded);
 
 const fixtureCaptureFontMetrics = (snapshot: FontMetricsSnapshotV1) =>
   Effect.fn("Pretext.fixtureCaptureFontMetrics")(function* (request: PretextCaptureRequest) {
@@ -101,19 +100,19 @@ const fixtureCaptureFontMetrics = (snapshot: FontMetricsSnapshotV1) =>
         message: `Fixture carries "${snapshot.metrics.font}"; requested "${request.font}".`,
       });
     }
-    const missing = A.filter(request.words, (word) => O.isNone(R.get(snapshot.metrics.words, word)));
+    const [missing, entries] = A.partition(request.words, (word) =>
+      O.match(R.get(snapshot.metrics.words, word), {
+        onNone: () => Result.fail(word),
+        onSome: (width) => Result.succeed([word, width] as const),
+      })
+    );
     if (A.length(missing) > 0) {
       return yield* PretextMeasurementError.make({
         operation: "fixtureCapture",
         message: `Fixture does not carry widths for: ${A.join(missing, ", ")}.`,
       });
     }
-    const words = R.fromEntries(
-      A.getSomes(
-        A.map(request.words, (word) => O.map(R.get(snapshot.metrics.words, word), (width) => [word, width] as const))
-      )
-    );
-    return { version: snapshot.version, metrics: { ...snapshot.metrics, words } };
+    return { version: snapshot.version, metrics: { ...snapshot.metrics, words: R.fromEntries(entries) } };
   });
 
 /**

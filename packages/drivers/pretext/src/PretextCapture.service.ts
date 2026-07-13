@@ -12,7 +12,7 @@
 
 import { $PretextId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import * as Context from "effect/Context";
+import { Context } from "effect";
 import * as S from "effect/Schema";
 import type * as Effect from "effect/Effect";
 import type {

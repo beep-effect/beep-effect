@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-11",
+  "generatedOn": "2026-07-13",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "enforcedRoots": [
     "packages/tooling/tool/cli/src/commands/Laws/DualArity.ts",
@@ -75,7 +75,7 @@
       "status": "candidate",
       "owner": "@beep/professional-desktop",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 44,
+      "line": 46,
       "column": 14,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -87,7 +87,7 @@
       "status": "candidate",
       "owner": "@beep/professional-desktop",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 54,
+      "line": 56,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual"]
@@ -100,7 +100,7 @@
       "owner": "@beep/professional-desktop",
       "reason": "makeChatOperations is a service factory that binds already-acquired ThreadStore/AgentTurnKernel/UsageRecordSink services into an operations record; it has no pipeable data subject, so a data-last/data-first dual is meaningless. It is only ever called data-first once during ChatRpcs layer construction.",
       "issue": "PROFESSIONAL-DESKTOP-CHAT-OPERATIONS-FACTORY",
-      "line": 385,
+      "line": 672,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual"]
@@ -124,7 +124,7 @@
       "status": "candidate",
       "owner": "@beep/professional-desktop",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 132,
+      "line": 143,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -808,7 +808,7 @@
       "status": "candidate",
       "owner": "@beep/repo-cli",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 235,
+      "line": 236,
       "column": 14,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
