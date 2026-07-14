@@ -18,7 +18,7 @@ drifts from the manifests, and merge conflicts are resolved by regenerating.
 | [legal-document-intake](./legal-document-intake/README.md) | Legal Document Intake | 4/8 | 2026-07-14 | — |
 | [professional-desktop-adversarial-qa](./professional-desktop-adversarial-qa/README.md) | Professional Desktop Adversarial QA | 1/5 | 2026-07-12 | Run adversarial QA and repair loops over the professional desktop surface until two consecutive rounds are clean. |
 | [semantic-foundation](./semantic-foundation/README.md) | Semantic Foundation | 0/6 | 2026-07-08 | — |
-| [yeet-publish-preflight](./yeet-publish-preflight/README.md) | Yeet Publish Preflight | 0/5 | 2026-07-14 | Harden yeet publish with the two highest-leverage pretext-driver reflection todos: a frozen-lockfile clean-HEAD install… |
+| [yeet-publish-preflight](./yeet-publish-preflight/README.md) | Yeet Publish Preflight | 3/5 | 2026-07-14 | Harden yeet publish with the two highest-leverage pretext-driver reflection todos: a frozen-lockfile clean-HEAD install… |
 
 ## Paused (1)
 

@@ -126,6 +126,7 @@ export class YeetVerdictLane extends S.Class<YeetVerdictLane>($I`YeetVerdictLane
     label: S.String,
     phase: S.String,
     status: YeetLaneStatus,
+    durationMs: S.optionalKey(S.Finite),
     exitCode: S.optionalKey(S.Finite),
     repairCommand: S.optionalKey(S.String),
   },
@@ -211,6 +212,7 @@ export class YeetVerdict extends S.Class<YeetVerdict>($I`YeetVerdict`)(
  */
 export class YeetExecutedStep extends S.Class<YeetExecutedStep>($I`YeetExecutedStep`)(
   {
+    durationMs: S.optionalKey(S.Finite),
     result: RepoStepRunResult,
     step: RepoPlanStep,
   },
@@ -235,7 +237,7 @@ const laneFromExecuted = (executed: YeetExecutedStep): YeetVerdictLane => {
     phase: executed.step.phase,
     status: failed ? "failed" : "passed",
     exitCode: executed.result.exitCode,
-    ...O.getSomesStruct({ repairCommand }),
+    ...O.getSomesStruct({ durationMs: O.fromUndefinedOr(executed.durationMs), repairCommand }),
   });
 };
 

@@ -95,10 +95,11 @@ bun run beep yeet publish --pr --monitor --message "type(scope): summary"
 bun run beep yeet closeout --reply-thread <thread-id> --reply-body "Fixed in <sha>." --resolve-threads <thread-id>[,<thread-id>...]
 ```
 
-- Start hosted PR review/checks immediately, then keep proving locally:
+- Create or reuse the PR, start hosted review/checks immediately, then keep
+  proving locally:
 
 ```bash
-bun run beep yeet publish --start-pr-early --monitor --message "type(scope): summary"
+bun run beep yeet publish --start-pr-early --monitor --pr --message "type(scope): summary"
 ```
 
 - Retry after a separately verified amend without creating a new commit:
@@ -174,6 +175,13 @@ tsgo with the effect language-service rules), full `bun run docgen` (which
 compiles every JSDoc `@example`), `bun run test`, and the secrets/security/SAST/
 Nix lanes. If `yeet verify` is green, CI should be green on the first push.
 
+The full verify tier and every publish push path also run
+`publish:00-head-install-preflight`: a frozen-lockfile install in a detached,
+temporary worktree of committed `HEAD`. This catches lockfile/manifest state
+that is self-consistent only in the dirty working tree. The temporary worktree
+is always removed and pruned; a failure must be repaired by committing or
+restaging the required manifest and `bun.lock` state before retrying.
+
 The following cheaper commands are convenient inner-loop tools but are **NOT
 authoritative** — do not conclude "it's green" from them:
 
@@ -242,12 +250,13 @@ secrets, security, SAST, Nix, and any lane that must be proven outside Yeet.
 
 ## Start PR Early
 
-`bun run beep yeet publish --start-pr-early --monitor --message "..."` is the
-explicit fail-faster path for an existing PR branch. It validates the commit
-message, commits and pushes with Git hooks skipped, then still runs the full
-local pre-push proof and hosted PR monitor. Unlike `--fast`, it does not skip the
-local full proof; it only overlaps that proof with hosted CI and reviewer startup
-time.
+`bun run beep yeet publish --start-pr-early --monitor --pr --message "..."` is
+the explicit fail-faster path. It requires `--pr` so a PR-less branch creates
+the PR immediately after its clean-HEAD preflight and early push; an existing PR
+is reused. Omitting `--pr` fails at guard time before commit or push. The flow
+then runs the full local pre-push proof and hosted PR monitor. Unlike `--fast`,
+it does not skip the local full proof; it only overlaps that proof with hosted
+CI and reviewer startup time.
 
 Use it when the user wants remote checks and reviewers moving in parallel with a
 local proof cycle. If the post-push local proof fails or writes files, fix the
@@ -284,9 +293,9 @@ the authoritative gates.
 - There is no pre-push git hook; `yeet publish` runs the full local pre-push
   proof itself before pushing, so the proof is the gate. (The former pre-push
   catalog hook was removed with the repo-exports catalog.)
-- `--start-pr-early` is the only Yeet publish mode that intentionally skips
-  commit and pre-push hooks. It requires `--monitor`, still runs full local
-  proof after pushing, and should fail loudly rather than hiding follow-up work.
+- `--start-pr-early` requires both `--monitor` and `--pr`. It runs the clean-HEAD
+  install preflight before the early push, creates or reuses the PR immediately
+  afterward, and still runs full local proof after pushing.
 - If Yeet refuses untracked, unstaged, or newly generated paths, inspect the
   paths and decide whether they belong in the reviewed publish intent.
 - Yeet serializes full local proof runs with `.beep/yeet/quality-lock`.

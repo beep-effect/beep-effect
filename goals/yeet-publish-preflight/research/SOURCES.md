@@ -30,4 +30,27 @@
 
 ## P0 probe results
 
-(to be filled during P0 — probe matrix from `SPEC.md`)
+- Branch under probe: `feat/yeet-publish-preflight` (no push, PR creation, or
+  other GitHub write was performed).
+- Exact matrix commands using the default `origin/main` base both stopped
+  during context hydration with exit 255: `git fetch --quiet --no-tags origin
+  refs/heads/main:refs/remotes/origin/main`. This happens at
+  `internal/GitExec.ts:205-233`, before `validateMonitorGuards` or plan
+  rendering, so it is an environment/network precondition rather than either
+  target failure mode.
+- Re-running the same safe plan probes with `--base HEAD` bypassed only that
+  remote refresh and exposed current behavior:
+  - Without `--pr`: exit 0; the plan contains commit ->
+    `early-publish:01-git-push` -> `full:01-pre-push` -> monitor. No guard
+    rejects the PR-less first-publish shape. `internal/Guards.ts:227-228`
+    skips `validateOpenPullRequest` in plan mode, while
+    `internal/PullRequest.ts:40-45` is therefore reached only by a real run
+    after the commit/push path is selected.
+  - With `--pr`: exit 0; the plan adds `publish:02-pr-create` immediately
+    after `early-publish:01-git-push`, before full proof and monitor. This
+    matches `internal/Handler.ts:344-349` and confirms the reflection is stale
+    for the explicit-`--pr` form.
+- Fix shape selected from observed behavior: add a static guard requiring
+  `--pr` whenever `--start-pr-early` is selected. `--pr` is idempotent when a
+  PR already exists, preserves explicit GitHub-write consent, and makes the
+  missing-`--pr` failure visible in plan mode before commit or push.

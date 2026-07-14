@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { Console, DateTime, Effect, FileSystem, Path, pipe, Ref } from "effect";
+import { Console, DateTime, Duration, Effect, FileSystem, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -30,7 +30,13 @@ import {
   lockfileChangedSinceBase,
   refreshBaseRef,
 } from "./GitExec.js";
-import { validateCommitMessage, validateMonitorGuards, validateRequiredMessage } from "./Guards.js";
+import {
+  validateCommitMessage,
+  validateMonitorGuards,
+  validateRequiredMessage,
+  validateStartPrEarlyPrGuard,
+} from "./Guards.js";
+import { HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.js";
 import {
   emptyPlanResult,
   executeStepWithArtifacts,
@@ -184,7 +190,14 @@ const runPhase = Effect.fn("Yeet.runPhase")(function* (
     steps,
     (step) =>
       executeStepWithArtifacts(context, step).pipe(
-        Effect.tap((result) => Ref.update(recorder, A.append(YeetExecutedStep.make({ result, step }))))
+        Effect.timed,
+        Effect.tap(([duration, result]) =>
+          Ref.update(
+            recorder,
+            A.append(YeetExecutedStep.make({ durationMs: Duration.toMillis(duration), result, step }))
+          )
+        ),
+        Effect.map(([, result]) => result)
       ),
     { concurrency: 1 }
   );
@@ -329,8 +342,18 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
       yield* Console.log(
         "[yeet] start-pr-early: pushing before local proof; full proof and hosted monitor remain required"
       );
+      const preflightSteps = A.filter(earlyPublishSteps, (step) => step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID);
+      yield* runRequiredPhase(
+        plan.context,
+        preflightSteps,
+        recorder,
+        "yeet clean-HEAD install preflight failed before the early push."
+      );
       yield* warnOnMismatchedPublishUpstream(plan.context);
-      const earlyPushSteps = A.filter(earlyPublishSteps, (step) => step.id !== "publish:02-pr-create");
+      const earlyPushSteps = A.filter(
+        earlyPublishSteps,
+        (step) => step.id !== "publish:02-pr-create" && step.id !== HEAD_INSTALL_PREFLIGHT_STEP_ID
+      );
       const earlyPublishResults = yield* runPhase(plan.context, earlyPushSteps, recorder);
       if (A.some(earlyPublishResults, (result) => result.exitCode !== 0)) {
         return yield* failWithIssueArtifacts(
@@ -380,8 +403,18 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
     }
     yield* validatePostCommitProofDidNotChangeWorktree(plan.context);
 
+    const preflightSteps = A.filter(publishSteps, (step) => step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID);
+    yield* runRequiredPhase(
+      plan.context,
+      preflightSteps,
+      recorder,
+      "yeet clean-HEAD install preflight failed before push."
+    );
     yield* warnOnMismatchedPublishUpstream(plan.context);
-    const pushSteps = A.filter(publishSteps, (step) => step.id !== "publish:02-pr-create");
+    const pushSteps = A.filter(
+      publishSteps,
+      (step) => step.id !== "publish:02-pr-create" && step.id !== HEAD_INSTALL_PREFLIGHT_STEP_ID
+    );
     const publishResults = yield* runPhase(plan.context, pushSteps, recorder);
     if (A.some(publishResults, (result) => result.exitCode !== 0)) {
       return yield* failWithIssueArtifacts(plan.context, pushSteps, publishResults, "yeet publish phase failed.");
@@ -754,6 +787,7 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const message = yield* validateRequiredMessage(options);
+  yield* validateStartPrEarlyPrGuard(options);
   const context = yield* hydrateYeetRunContext(options);
   yield* validatePublishBranch(context, options);
   yield* validateMonitorGuards(context, options);

@@ -21,6 +21,7 @@ import {
   repoProofStepDefinition,
   TurboPlanSnapshot,
 } from "../../../internal/repo-run/index.js";
+import { HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.js";
 import type { RepoRunContext, TurboPlanTask } from "../../../internal/repo-run/index.js";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Planner");
@@ -369,12 +370,7 @@ const commitStep = (
 // early push: --no-verify would publish unverified content to the remote before
 // any hook could block secrets or policy violations.
 const earlyPushStep = (context: RepoRunContext): RepoPlanStep =>
-  gitStep(context, "early-publish:01-git-push", "early-publish:git:push", "early-publish", [
-    "push",
-    "-u",
-    "origin",
-    "HEAD",
-  ]);
+  gitStep(context, "publish:01-git-push", "early-publish:git:push", "early-publish", ["push", "-u", "origin", "HEAD"]);
 
 const pushStep = (context: RepoRunContext): RepoPlanStep =>
   gitStep(
@@ -385,6 +381,20 @@ const pushStep = (context: RepoRunContext): RepoPlanStep =>
     ["push", "-u", "origin", "HEAD"],
     O.some({ BEEP_YEET_REUSE_PRE_PUSH_PROOF: "1" })
   );
+
+const headInstallPreflightStep = (context: RepoRunContext, phase: RepoPlanStep["phase"]): RepoPlanStep =>
+  RepoPlanStep.make({
+    id: HEAD_INSTALL_PREFLIGHT_STEP_ID,
+    label: "publish:head-install-preflight",
+    phase,
+    command: "bun",
+    args: ["install", "--frozen-lockfile"],
+    cwd: context.repoRoot,
+    scope: "repo",
+    mutability: "readonly",
+    resume: "never",
+    verification: "detached-clean-temp-worktree-of-HEAD",
+  });
 
 const prCreateStep = (context: RepoRunContext, phase: RepoPlanStep["phase"] = "publish"): RepoPlanStep =>
   RepoPlanStep.make({
@@ -519,6 +529,7 @@ const publishSteps = (
 ): ReadonlyArray<RepoPlanStep> =>
   options.pushOnly
     ? [
+        headInstallPreflightStep(context, "publish"),
         pushStep(context),
         ...(options.pr ? [prCreateStep(context)] : []),
         ...(options.monitor ? monitorSteps(context) : []),
@@ -527,6 +538,7 @@ const publishSteps = (
       ? [
           fallowAdvisoryFeedbackStep(context),
           commitStep(context, message, options),
+          headInstallPreflightStep(context, "early-publish"),
           earlyPushStep(context),
           ...(options.pr ? [prCreateStep(context, "early-publish")] : []),
           proofStep(context, "full"),
@@ -536,6 +548,7 @@ const publishSteps = (
           fallowAdvisoryFeedbackStep(context),
           commitStep(context, message, options),
           ...(options.fast && options.monitor ? [] : [proofStep(context, "full")]),
+          headInstallPreflightStep(context, "publish"),
           pushStep(context),
           ...(options.pr ? [prCreateStep(context)] : []),
           ...(options.monitor ? monitorSteps(context) : []),
@@ -548,7 +561,11 @@ const stepsForMode = (
 ): ReadonlyArray<RepoPlanStep> =>
   YeetRunMode.$match(options.mode, {
     repair: () => [...repairSteps(context), ...feedbackSteps(context)],
-    verify: () => [fallowAdvisoryFeedbackStep(context), proofStep(context, options.tier)],
+    verify: () => [
+      fallowAdvisoryFeedbackStep(context),
+      proofStep(context, options.tier),
+      ...(options.tier === "full" ? [headInstallPreflightStep(context, "full")] : []),
+    ],
     publish: () => publishSteps(context, message, options),
     monitor: () => monitorSteps(context),
     closeout: () => closeoutSteps(context),

@@ -56,3 +56,23 @@ between phases.
 - [ ] Reflection written and lint-green.
 - [ ] Manifest statuses flipped with evidence lines in README.
 - [ ] goals/INDEX.md regenerated.
+
+## Execution evidence (2026-07-14)
+
+- P0 complete: the exact plan probes both stopped at the sandboxed
+  `origin/main` refresh (exit 255). With `--base HEAD`, both plans exited 0;
+  only the explicit-`--pr` form inserted `publish:02-pr-create` before proof
+  and monitor. Full observations and pre-change file:line evidence are in
+  `research/SOURCES.md`.
+- P1 complete: added `publish:00-head-install-preflight` to verify full and all
+  publish push paths, guaranteed worktree removal/prune, standard failure
+  packets and repair hint, per-lane `durationMs`, the static add-`--pr` guard,
+  unit coverage, skill documentation, and a patch changeset.
+- P2 complete locally: CLI Yeet Vitest suite passes (1 file, 77 tests), CLI
+  tsgo passes, the exact missing-`--pr` plan probe fails at guard time, and a
+  local-base full-tier plan contains the preflight. The exact default-base plan
+  remains blocked before rendering because this sandbox cannot update Git refs.
+- Operator pending: the SPEC's live negative probe using a scratch branch with
+  an intentionally desynced committed lockfile is intentionally deferred per
+  the implementation-lane instruction. The unit negative probe covers failure
+  hinting and cleanup without any push or GitHub write.
