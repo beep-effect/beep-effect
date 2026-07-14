@@ -23,6 +23,7 @@ import { lintIdentityRegistryCommand } from "./IdentityRegistry.js";
 import { LintCircularAnalysisError, LintFileDiscoveryError } from "./Lint.errors.js";
 import { lintPackageTestImportsCommand } from "./PackageTestImports.js";
 import { lintReflectionArtifactsCommand } from "./ReflectionArtifact.ts";
+import { lintRoadmapRefsCommand } from "./RoadmapRefs.ts";
 import { lintSchemaCatalogCommand } from "./SchemaCatalog.ts";
 import { lintSchemaFirstCommand } from "./SchemaFirst.ts";
 import { lintSchemaTopologyCommand } from "./SchemaTopology.ts";
@@ -595,6 +596,7 @@ export const lintCommand = Command.make("lint", {}, () =>
     "- bun run beep lint package-test-imports",
     "- bun run beep lint policy",
     "- bun run beep lint reflection-artifacts",
+    "- bun run beep lint roadmap-refs",
     "- bun run beep lint schema-catalog",
     "- bun run beep lint schema-first",
     "- bun run beep lint schema-topology",
@@ -610,6 +612,7 @@ export const lintCommand = Command.make("lint", {}, () =>
     lintPackageTestImportsCommand,
     lintPolicyCommand,
     lintReflectionArtifactsCommand,
+    lintRoadmapRefsCommand,
     lintSchemaCatalogCommand,
     lintSchemaFirstCommand,
     lintSchemaTopologyCommand,
