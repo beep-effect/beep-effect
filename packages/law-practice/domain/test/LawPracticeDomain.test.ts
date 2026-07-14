@@ -1,9 +1,12 @@
 import {
   ApplicationNumber,
+  Citation,
   Claim,
   ClaimNumber,
   Distinction,
   DistinctionDetail,
+  DocketCitation,
+  FullCitation,
   KindCode,
   LawPracticeFixtureKey,
   LawPracticeText,
@@ -20,12 +23,16 @@ import {
   PatentDocumentTriplet,
   PatentNumber,
   PriorArtReference,
+  RegulationCitation,
   Rejection,
   RejectionGround,
+  ShortFormCitation,
+  StatuteCitation,
 } from "@beep/law-practice-domain";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { assertSchemaArbitraryDecodesToSelf, baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
@@ -278,5 +285,69 @@ describe("@beep/law-practice-domain", () => {
     expect(S.encodeSync(PatentAsset)(S.decodeUnknownSync(PatentAsset)(patentAssetInput))).toStrictEqual(
       patentAssetInput
     );
+  });
+
+  it("round-trips leaf citation value schemas through encoded form", () => {
+    for (const schema of [StatuteCitation, RegulationCitation, DocketCitation]) {
+      assertSchemaEncodedRoundTrips(schema, 10);
+    }
+  });
+
+  it("round-trips the recursive citation unions via schema-derived arbitraries", () => {
+    for (const schema of [Citation, FullCitation, ShortFormCitation]) {
+      assertSchemaEncodedRoundTrips(schema, 5);
+    }
+  });
+
+  it("decodes and re-encodes a mutually-recursive Citation nesting", () => {
+    const leaf = (volume: number, reporter: string, text: string) => ({
+      type: "case" as const,
+      text,
+      span: { cleanStart: 0, cleanEnd: text.length, originalStart: 0, originalEnd: text.length },
+      confidence: 1,
+      matchedText: text,
+      processTimeMs: 0,
+      patternsChecked: 1,
+      volume,
+      reporter,
+    });
+
+    // case -> parentheticals -> case -> parentheticals -> case (three recursion levels)
+    const wire = {
+      ...leaf(410, "U.S.", "410 U.S. 113"),
+      parentheticals: [
+        {
+          text: "quoting Doe v. City, 100 F.2d 1 (citing Roe, 200 F.2d 2)",
+          type: "quoting",
+          citations: [
+            {
+              ...leaf(100, "F.2d", "100 F.2d 1"),
+              parentheticals: [
+                { text: "citing Roe, 200 F.2d 2", type: "citing", citations: [leaf(200, "F.2d", "200 F.2d 2")] },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const decoded = S.decodeUnknownSync(Citation)(wire);
+    expect(decoded.type).toBe("case");
+    if (decoded.type !== "case") return;
+
+    const level1 = O.getOrThrow(decoded.parentheticals)[0];
+    expect(level1.type).toBe("quoting");
+    const child = O.getOrThrow(level1.citations)[0];
+    expect(child.type).toBe("case");
+    if (child.type !== "case") return;
+
+    const grandchild = O.getOrThrow(O.getOrThrow(child.parentheticals)[0].citations)[0];
+    expect(grandchild.type).toBe("case");
+    if (grandchild.type !== "case") return;
+    expect(grandchild.reporter).toBe("F.2d");
+
+    // encode -> decode is identity across the S.suspend recursion knot
+    const equivalent = S.toEquivalence(Citation);
+    expect(equivalent(S.decodeUnknownSync(Citation)(S.encodeSync(Citation)(decoded)), decoded)).toBe(true);
   });
 });

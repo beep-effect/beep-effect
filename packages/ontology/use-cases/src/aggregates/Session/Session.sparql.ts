@@ -423,7 +423,7 @@ const topLevelLimit = (query: string): O.Option<number> => {
   let index = 0;
 
   const startsWithAt = (token: string, at: number): boolean =>
-    query.slice(at, at + token.length).toUpperCase() === token;
+    pipe(query, Str.slice(at, at + Str.length(token)), Str.toUpperCase) === token;
 
   const skipUntil = (terminator: string, from: number): number => {
     let cursor = from;

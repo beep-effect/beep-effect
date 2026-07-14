@@ -24,6 +24,7 @@ const config = {
     "packages/agents/use-cases/package.json",
     "packages/agents/client/package.json",
     "packages/agents/server/package.json",
+    "packages/agents/tables/package.json",
     "packages/epistemic/domain/package.json",
     "packages/epistemic/tables/package.json",
     "packages/epistemic/use-cases/package.json",
@@ -95,6 +96,7 @@ const config = {
     "packages/drivers/pacer/package.json",
     "packages/drivers/protobuf/package.json",
     "packages/drivers/tailscale/package.json",
+    "packages/drivers/pretext/package.json",
   ],
   customTypes: {
     catalog: {

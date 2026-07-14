@@ -6,6 +6,19 @@
  */
 
 /**
+ * Provider-instance commands, queries, actionable errors, and RPC contracts.
+ *
+ * @example
+ * ```ts
+ * import { ProviderInstanceRpcs } from "@beep/agents-use-cases/public"
+ * console.log(ProviderInstanceRpcs.requests.has("ListProviderInstances")) // true
+ * ```
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * from "./entities/ProviderInstance/index.js";
+/**
  * Assistant-turn generation kernel contracts, errors, and port tag.
  *
  * @example

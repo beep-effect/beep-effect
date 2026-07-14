@@ -8,6 +8,7 @@ biomejs
 bunx
 caniwebview
 changesets
+chenglou
 cmdk
 coadmin
 commitlint

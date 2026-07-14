@@ -31,6 +31,9 @@ const $I = $RepoCliId.create("commands/Ci/CiLane");
 
 type CiLaneEnvironment = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
 
+const JSDOC_CI_INVENTORY_JSON_PATH = ".beep/ci/jsdoc-documentation.inventory.jsonc";
+const JSDOC_CI_INVENTORY_MARKDOWN_PATH = ".beep/ci/jsdoc-documentation.inventory.md";
+
 /**
  * Parity classes for CI lanes (one-round-loop D2 taxonomy).
  *
@@ -775,8 +778,22 @@ export const ciLaneStepsForTesting: {
       docgen: () => docgenLaneSteps(repoRoot, options),
       fallow: () => fallowRunPhaseSteps(repoRoot, options),
       "jsdoc-ratchet": () => [
-        bunRunStep(repoRoot, "ci:jsdoc-ratchet:inventory", ["beep", "quality", "jsdoc-inventory"]),
-        bunRunStep(repoRoot, "ci:jsdoc-ratchet:ratchet", ["beep", "quality", "jsdoc-ratchet"]),
+        bunRunStep(repoRoot, "ci:jsdoc-ratchet:inventory", [
+          "beep",
+          "quality",
+          "jsdoc-inventory",
+          "--output-json",
+          JSDOC_CI_INVENTORY_JSON_PATH,
+          "--output-markdown",
+          JSDOC_CI_INVENTORY_MARKDOWN_PATH,
+        ]),
+        bunRunStep(repoRoot, "ci:jsdoc-ratchet:ratchet", [
+          "beep",
+          "quality",
+          "jsdoc-ratchet",
+          "--inventory",
+          JSDOC_CI_INVENTORY_JSON_PATH,
+        ]),
       ],
       knip: () => [bunRunStep(repoRoot, "ci:knip", ["beep", "quality", "knip"])],
       lint: () => [turboRootLaneStep(repoRoot, "lint", "lint", A.empty<string>(), options)],

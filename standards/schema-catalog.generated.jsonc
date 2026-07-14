@@ -436,6 +436,102 @@
       "description": "Closed vocabulary of execution modes supported by fixture-backed agents."
     },
     {
+      "file": "packages/agents/domain/src/entities/ProviderInstance/ProviderInstance.model.ts",
+      "symbol": "ProviderInstance",
+      "kind": "schema-const",
+      "owner": "@beep/agents-domain",
+      "identity": "ProviderInstance",
+      "description": "Persisted provider CLI instance holding binary, HOME, and env configuration plus the latest auth-probe snapshot; never provider tokens."
+    },
+    {
+      "file": "packages/agents/domain/src/entities/ProviderInstance/ProviderInstance.values.ts",
+      "symbol": "AuthSnapshot",
+      "kind": "tagged-union",
+      "owner": "@beep/agents-domain",
+      "identity": "AuthSnapshot",
+      "description": "Tagged union of provider auth-probe outcomes, discriminated by status."
+    },
+    {
+      "file": "packages/agents/domain/src/entities/ProviderInstance/ProviderInstance.values.ts",
+      "symbol": "AuthenticatedSnapshot",
+      "kind": "schema-class",
+      "owner": "@beep/agents-domain",
+      "identity": "AuthenticatedSnapshot",
+      "description": "Auth-snapshot variant for a logged-in provider CLI."
+    },
+    {
+      "file": "packages/agents/domain/src/entities/ProviderInstance/ProviderInstance.values.ts",
+      "symbol": "BinaryPath",
+      "kind": "brand",
+      "owner": "@beep/agents-domain",
+      "identity": "BinaryPath",
+      "description": "Non-empty filesystem path to the provider CLI binary."
+    },
+    {
+      "file": "packages/agents/domain/src/entities/ProviderInstance/ProviderInstance.values.ts",
+      "symbol": "EnvVarName",
+      "kind": "brand",
+      "owner": "@beep/agents-domain",
+      "identity": "EnvVarName",
+      "description": "Environment-variable name safe to persist on a provider instance; token-bearing names rejected."
+    },
+    {
+      "file": "packages/agents/domain/src/entities/ProviderInstance/ProviderInstance.values.ts",
+      "symbol": "EnvVars",
+      "kind": "codec",
+      "owner": "@beep/agents-domain",
+      "identity": "EnvVars",
+      "description": "Extra child-process environment injected when spawning the provider CLI, token-safe names only."
+    },
+    {
+      "file": "packages/agents/domain/src/entities/ProviderInstance/ProviderInstance.values.ts",
+      "symbol": "HomePath",
+      "kind": "brand",
+      "owner": "@beep/agents-domain",
+      "identity": "HomePath",
+      "description": "Non-empty filesystem path used as the isolated HOME directory of one provider instance."
+    },
+    {
+      "file": "packages/agents/domain/src/entities/ProviderInstance/ProviderInstance.values.ts",
+      "symbol": "InstanceLabel",
+      "kind": "brand",
+      "owner": "@beep/agents-domain",
+      "identity": "InstanceLabel",
+      "description": "Trimmed non-empty display label for one provider instance, at most 120 characters."
+    },
+    {
+      "file": "packages/agents/domain/src/entities/ProviderInstance/ProviderInstance.values.ts",
+      "symbol": "ProbeFailedSnapshot",
+      "kind": "schema-class",
+      "owner": "@beep/agents-domain",
+      "identity": "ProbeFailedSnapshot",
+      "description": "Auth-snapshot variant for a transport-level probe failure; carries no error text."
+    },
+    {
+      "file": "packages/agents/domain/src/entities/ProviderInstance/ProviderInstance.values.ts",
+      "symbol": "ProviderKind",
+      "kind": "literal-kit",
+      "owner": "@beep/agents-domain",
+      "identity": "ProviderKind",
+      "description": "Closed vocabulary of provider CLI kinds a provider instance can delegate to."
+    },
+    {
+      "file": "packages/agents/domain/src/entities/ProviderInstance/ProviderInstance.values.ts",
+      "symbol": "TokenSource",
+      "kind": "literal-kit",
+      "owner": "@beep/agents-domain",
+      "identity": "TokenSource",
+      "description": "Closed vocabulary of credential sources a provider auth probe can report."
+    },
+    {
+      "file": "packages/agents/domain/src/entities/ProviderInstance/ProviderInstance.values.ts",
+      "symbol": "UnauthenticatedSnapshot",
+      "kind": "schema-class",
+      "owner": "@beep/agents-domain",
+      "identity": "UnauthenticatedSnapshot",
+      "description": "Auth-snapshot variant for a provider CLI that responded but is logged out."
+    },
+    {
       "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
       "symbol": "AssistantBlock",
       "kind": "tagged-union",
@@ -16334,12 +16430,396 @@
       "description": "Patent asset lifecycle status accepted by law-practice proof fixtures."
     },
     {
+      "file": "packages/law-practice/domain/src/values/AnnotationCitation/AnnotationCitation.model.ts",
+      "symbol": "AnnotationCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "AnnotationCitation",
+      "description": "Annotation citation (#581): American Law Reports (A.L.R.) annotations — secondary authority that looks like a case citation."
+    },
+    {
       "file": "packages/law-practice/domain/src/values/ApplicationNumber/ApplicationNumber.model.ts",
       "symbol": "ApplicationNumber",
       "kind": "brand",
       "owner": "@beep/law-practice-domain",
       "identity": "ApplicationNumber",
       "description": "Canonical WIPO ST.13 patent application number in machine-readable form: patent type code, year designation, and serial positions."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CanonCitation/CanonCitation.model.ts",
+      "symbol": "CanonCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "CanonCitation",
+      "description": "Judicial-conduct canon citation (#310)."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CaseGroup/CaseGroup.model.ts",
+      "symbol": "CaseGroup",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "CaseGroup",
+      "description": "A group of citations all referring to the same underlying case."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "symbol": "Citation",
+      "kind": "tagged-union",
+      "owner": "@beep/law-practice-domain",
+      "identity": "Citation",
+      "description": "Union type of all citation types."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "symbol": "FullCaseCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "FullCaseCitation",
+      "description": "A parsed full case citation (type: \"case\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "symbol": "FullCitation",
+      "kind": "tagged-union",
+      "owner": "@beep/law-practice-domain",
+      "identity": "FullCitation",
+      "description": "Union of all full citation types (not short-form references)."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "symbol": "IdCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "IdCitation",
+      "description": "A parsed `Id.` short-form citation (type: \"id\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "symbol": "Parenthetical",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "Parenthetical",
+      "description": "An extracted explanatory parenthetical from a case citation."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "symbol": "ShortFormCaseCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "ShortFormCaseCitation",
+      "description": "A parsed short-form case citation (type: \"shortFormCase\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "symbol": "ShortFormCitation",
+      "kind": "tagged-union",
+      "owner": "@beep/law-practice-domain",
+      "identity": "ShortFormCitation",
+      "description": "Union of all short-form citation types (Id., supra, short-form case)."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Citation/Citation.models.ts",
+      "symbol": "SupraCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "SupraCitation",
+      "description": "A parsed `supra` short-form citation (type: \"supra\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CitationBase/CitationBase.model.ts",
+      "symbol": "CitationBase",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "CitationBase",
+      "description": "Base fields shared by all citation types."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CitationId/CitationId.model.ts",
+      "symbol": "CitationId",
+      "kind": "brand",
+      "owner": "@beep/law-practice-domain",
+      "identity": "CitationId",
+      "description": "Stable opaque identity for a citation within one extractCitations() result set; compared, keyed, or stored, but never parsed or derived from array position."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CitationSignal/CitationSignal.model.ts",
+      "symbol": "CitationSignal",
+      "kind": "literal-kit",
+      "owner": "@beep/law-practice-domain",
+      "identity": "CitationSignal",
+      "description": "Introductory Bluebook signal word classifying citation support level."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CitationType/CitationType.model.ts",
+      "symbol": "CitationType",
+      "kind": "literal-kit",
+      "owner": "@beep/law-practice-domain",
+      "identity": "CitationType",
+      "description": "Discriminant identifying the kind of legal authority a citation refers to."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CitationWarning/CitationWarning.models.ts",
+      "symbol": "CitationWarning",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "CitationWarning",
+      "description": "A diagnostic emitted while parsing a citation."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CitationWarning/CitationWarning.models.ts",
+      "symbol": "WarningLevel",
+      "kind": "literal-kit",
+      "owner": "@beep/law-practice-domain",
+      "identity": "WarningLevel",
+      "description": "Severity level of a citation warning."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CitationWarning/CitationWarning.models.ts",
+      "symbol": "WarningPosition",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "WarningPosition",
+      "description": "Character range of the region a citation warning refers to."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ComponentSpan/ComponentSpan.models.ts",
+      "symbol": "AnnotationComponentSpan",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "AnnotationComponentSpan",
+      "description": "Component spans for A.L.R. annotation citations (type: \"annotation\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ComponentSpan/ComponentSpan.models.ts",
+      "symbol": "CaseComponentSpan",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "CaseComponentSpan",
+      "description": "Component spans for case citations (type: \"case\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ComponentSpan/ComponentSpan.models.ts",
+      "symbol": "ConstitutionalComponentSpan",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "ConstitutionalComponentSpan",
+      "description": "Component spans for constitutional citations (type: \"constitutional\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ComponentSpan/ComponentSpan.models.ts",
+      "symbol": "FederalRegisterComponentSpan",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "FederalRegisterComponentSpan",
+      "description": "Component spans for federal register citations (type: \"federalRegister\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ComponentSpan/ComponentSpan.models.ts",
+      "symbol": "FederalRuleComponentSpan",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "FederalRuleComponentSpan",
+      "description": "Component spans for federal rule citations (type: \"federalRule\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ComponentSpan/ComponentSpan.models.ts",
+      "symbol": "IdComponentSpan",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "IdComponentSpan",
+      "description": "Component spans for Id./Ibid. citations (type: \"id\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ComponentSpan/ComponentSpan.models.ts",
+      "symbol": "JournalComponentSpan",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "JournalComponentSpan",
+      "description": "Component spans for journal citations (type: \"journal\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ComponentSpan/ComponentSpan.models.ts",
+      "symbol": "NeutralComponentSpan",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "NeutralComponentSpan",
+      "description": "Component spans for neutral citations (type: \"neutral\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ComponentSpan/ComponentSpan.models.ts",
+      "symbol": "PublicLawComponentSpan",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "PublicLawComponentSpan",
+      "description": "Component spans for public law citations (type: \"publicLaw\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ComponentSpan/ComponentSpan.models.ts",
+      "symbol": "RestatementComponentSpan",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "RestatementComponentSpan",
+      "description": "Component spans for Restatement citations (type: \"restatement\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ComponentSpan/ComponentSpan.models.ts",
+      "symbol": "ShortFormCaseComponentSpan",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "ShortFormCaseComponentSpan",
+      "description": "Component spans for short-form case citations (type: \"shortFormCase\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ComponentSpan/ComponentSpan.models.ts",
+      "symbol": "StatuteComponentSpan",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "StatuteComponentSpan",
+      "description": "Component spans for statute citations (type: \"statute\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ComponentSpan/ComponentSpan.models.ts",
+      "symbol": "StatutesAtLargeComponentSpan",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "StatutesAtLargeComponentSpan",
+      "description": "Component spans for statutes at large citations (type: \"statutesAtLarge\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ComponentSpan/ComponentSpan.models.ts",
+      "symbol": "SupraComponentSpan",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "SupraComponentSpan",
+      "description": "Component spans for supra citations (type: \"supra\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ComponentSpan/ComponentSpan.models.ts",
+      "symbol": "TreatiseComponentSpan",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "TreatiseComponentSpan",
+      "description": "Component spans for treatise citations (type: \"treatise\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ConstitutionalCitation/ConstitutionalCitation.model.ts",
+      "symbol": "ConstitutionalCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "ConstitutionalCitation",
+      "description": "A parsed constitutional citation referencing an article, amendment, clause, or the Preamble."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ContextOptions/ContextOptions.model.ts",
+      "symbol": "ContextOptions",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "ContextOptions",
+      "description": "Options for surrounding context extraction."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CourtInference/CourtInference.model.ts",
+      "symbol": "CourtInference",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "CourtInference",
+      "description": "Court level and jurisdiction inferred from a reporter series."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CourtInference/CourtInference.model.ts",
+      "symbol": "CourtJurisdiction",
+      "kind": "literal-kit",
+      "owner": "@beep/law-practice-domain",
+      "identity": "CourtJurisdiction",
+      "description": "Jurisdiction classification inferred from a reporter series."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/CourtInference/CourtInference.model.ts",
+      "symbol": "CourtLevel",
+      "kind": "literal-kit",
+      "owner": "@beep/law-practice-domain",
+      "identity": "CourtLevel",
+      "description": "Court level classification inferred from a reporter series."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/DocketCitation/DocketCitation.model.ts",
+      "symbol": "DocketCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "DocketCitation",
+      "description": "A docket-number-only case citation (type: \"docket\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/DurableLocator/DurableLocator.model.ts",
+      "symbol": "DurableLocator",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "DurableLocator",
+      "description": "A portable, host-agnostic locator for a citation, in the style of W3C Web Annotation selectors."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/DurableLocatorOptions/DurableLocatorOptions.model.ts",
+      "symbol": "DurableLocatorOptions",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "DurableLocatorOptions",
+      "description": "Options for toDurableLocator / toDurableLocators."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/FederalRegisterCitation/FederalRegisterCitation.model.ts",
+      "symbol": "FederalRegisterCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "FederalRegisterCitation",
+      "description": "A parsed Federal Register citation (type: federalRegister)."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/FederalRuleCitation/FederalRuleCitation.model.ts",
+      "symbol": "FederalRuleCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "FederalRuleCitation",
+      "description": "Federal Rules of Procedure citation covering the civil, criminal, evidence, appellate, and bankruptcy rule sets (#576)."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/FullCitationType/FullCitationType.model.ts",
+      "symbol": "FullCitationType",
+      "kind": "literal-kit",
+      "owner": "@beep/law-practice-domain",
+      "identity": "FullCitationType",
+      "description": "Discriminant identifying the kind of legal authority a full (non-short-form) citation refers to."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/HistoryChain/HistoryChain.model.ts",
+      "symbol": "HistoryChain",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "HistoryChain",
+      "description": "A subsequent-history chain (#849), ordered root → latest."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/HistoryLink/HistoryLink.model.ts",
+      "symbol": "HistoryLink",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "HistoryLink",
+      "description": "One link in a subsequent-history chain (#849)."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/HistorySignal/HistorySignal.model.ts",
+      "symbol": "HistorySignal",
+      "kind": "literal-kit",
+      "owner": "@beep/law-practice-domain",
+      "identity": "HistorySignal",
+      "description": "Normalized subsequent-history signal classifying what a later court did to a cited authority."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/JournalCitation/JournalCitation.model.ts",
+      "symbol": "JournalCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "JournalCitation",
+      "description": "A parsed journal citation."
     },
     {
       "file": "packages/law-practice/domain/src/values/KindCode/KindCode.model.ts",
@@ -16350,12 +16830,52 @@
       "description": "WIPO ST.16 patent document kind code letters, with optional one-digit supplements 1 through 9."
     },
     {
+      "file": "packages/law-practice/domain/src/values/LegislativeMaterialCitation/LegislativeMaterialCitation.model.ts",
+      "symbol": "LegislativeMaterialCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "LegislativeMaterialCitation",
+      "description": "Legislative-material citation (#308): committee reports and the Congressional Record, unified via the kind discriminator."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/LocalOrdinanceCitation/LocalOrdinanceCitation.model.ts",
+      "symbol": "LocalOrdinanceCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "LocalOrdinanceCitation",
+      "description": "Local / municipal ordinance citation (#778)."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/NeutralCitation/NeutralCitation.model.ts",
+      "symbol": "NeutralCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "NeutralCitation",
+      "description": "A vendor-neutral court citation (type: \"neutral\")."
+    },
+    {
       "file": "packages/law-practice/domain/src/values/OfficeCode/OfficeCode.model.ts",
       "symbol": "OfficeCode",
       "kind": "literal-kit",
       "owner": "@beep/law-practice-domain",
       "identity": "OfficeCode",
       "description": "WIPO ST.3 two-letter office/state/entity/organization code from Annex I, Section 2, including XX for unknown."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ParallelGroup/ParallelGroup.model.ts",
+      "symbol": "ParallelGroup",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "ParallelGroup",
+      "description": "A parallel-citation group: the same case reported in multiple reporters (#850)."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ParentheticalType/ParentheticalType.model.ts",
+      "symbol": "ParentheticalType",
+      "kind": "literal-kit",
+      "owner": "@beep/law-practice-domain",
+      "identity": "ParentheticalType",
+      "description": "Signal-word classification for explanatory parentheticals based on the leading gerund/verb form."
     },
     {
       "file": "packages/law-practice/domain/src/values/PatentDocumentTriplet/PatentDocumentTriplet.model.ts",
@@ -16478,6 +16998,46 @@
       "description": "WIPO ST.16 / office logo + flag metadata, used for jurisdiction-aware UI."
     },
     {
+      "file": "packages/law-practice/domain/src/values/PinciteInfo/PinciteInfo.model.ts",
+      "symbol": "PinciteInfo",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "PinciteInfo",
+      "description": "Structured pincite information parsed from citation text; page and paragraph are mutually exclusive (#204)."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/PublicLawCitation/PublicLawCitation.model.ts",
+      "symbol": "PublicLawCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "PublicLawCitation",
+      "description": "A parsed public law citation."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/RegulationCitation/RegulationCitation.model.ts",
+      "symbol": "RegulationCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "RegulationCitation",
+      "description": "Regulation citation (CFR + state regulatory codes) issued by executive agencies (#637)."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ResolutionResult/ResolutionResult.model.ts",
+      "symbol": "ResolutionResult",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "ResolutionResult",
+      "description": "Result of resolving a short-form citation."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/RestatementCitation/RestatementCitation.model.ts",
+      "symbol": "RestatementCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "RestatementCitation",
+      "description": "Restatement citation: secondary authority published by the American Law Institute (#578)."
+    },
+    {
       "file": "packages/law-practice/domain/src/values/Segment/Segment.model.ts",
       "symbol": "Segment",
       "kind": "schema-class",
@@ -16502,6 +17062,22 @@
       "description": "The seniority tier of a lawyer."
     },
     {
+      "file": "packages/law-practice/domain/src/values/SessionLawCitation/SessionLawCitation.model.ts",
+      "symbol": "SessionLawCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "SessionLawCitation",
+      "description": "Session-law citation cited by year and chapter (#350, #779)."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/ShortFormCitationType/ShortFormCitationType.model.ts",
+      "symbol": "ShortFormCitationType",
+      "kind": "literal-kit",
+      "owner": "@beep/law-practice-domain",
+      "identity": "ShortFormCitationType",
+      "description": "Discriminant identifying which kind of short-form reference a citation is."
+    },
+    {
       "file": "packages/law-practice/domain/src/values/Span/Span.model.ts",
       "symbol": "Span",
       "kind": "schema-class",
@@ -16516,6 +17092,86 @@
       "owner": "@beep/law-practice-domain",
       "identity": "TransformationMap",
       "description": "Maps cleaned text positions to original text positions."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/StateRuleCitation/StateRuleCitation.model.ts",
+      "symbol": "StateRuleCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "StateRuleCitation",
+      "description": "State court rule citation (#636)."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/StatuteCitation/StatuteCitation.model.ts",
+      "symbol": "StatuteCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "StatuteCitation",
+      "description": "A parsed statute citation (type: \"statute\")."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/StatutesAtLargeCitation/StatutesAtLargeCitation.model.ts",
+      "symbol": "StatutesAtLargeCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "StatutesAtLargeCitation",
+      "description": "Citation to the Statutes at Large (session law compilation)."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/StringCitationGroup/StringCitationGroup.model.ts",
+      "symbol": "StringCitationGroup",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "StringCitationGroup",
+      "description": "A string-citation group: citations chained for one proposition (\"See A; B; C\") (#857)."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/StructuredDate/StructuredDate.model.ts",
+      "symbol": "ParsedDate",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "ParsedDate",
+      "description": "Structured date components with optional month and day for year-only dates."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/StructuredDate/StructuredDate.model.ts",
+      "symbol": "StructuredDate",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "StructuredDate",
+      "description": "Date in both ISO string and structured format."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/SubsequentHistoryEntry/SubsequentHistoryEntry.model.ts",
+      "symbol": "SubsequentHistoryEntry",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "SubsequentHistoryEntry",
+      "description": "A single subsequent history entry from a case citation."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/SurroundingContext/SurroundingContext.model.ts",
+      "symbol": "SurroundingContext",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "SurroundingContext",
+      "description": "Result of surrounding context extraction."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/TreatiseCitation/TreatiseCitation.model.ts",
+      "symbol": "TreatiseCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "TreatiseCitation",
+      "description": "A parsed legal treatise citation."
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/TreatyCitation/TreatyCitation.model.ts",
+      "symbol": "TreatyCitation",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-domain",
+      "identity": "TreatyCitation",
+      "description": "Treaty-series citation (#309): T.I.A.S. No. 1502, 1155 U.N.T.S. 331."
     },
     {
       "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.errors.ts",

@@ -38,6 +38,9 @@
       "@beep/agents-domain/entities/Agent": [
         "../../../packages/agents/domain/src/entities/Agent/index.ts"
       ],
+      "@beep/agents-domain/entities/ProviderInstance": [
+        "../../../packages/agents/domain/src/entities/ProviderInstance/index.ts"
+      ],
       "@beep/agents-domain/entities/Skill": [
         "../../../packages/agents/domain/src/entities/Skill/index.ts"
       ],

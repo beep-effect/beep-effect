@@ -95,8 +95,9 @@ const readOptionalFile = Effect.fn("Goals.readOptionalFile")(function* (filePath
 });
 
 /**
- * Scan `goals/` and collect every packet directory (excluding `_template`)
- * with its manifest, README, and `GOAL.md` surfaces, sorted by slug.
+ * Scan `goals/` and collect every packet directory (excluding `_template`
+ * and hidden editor/tooling directories) with its manifest, README, and
+ * `GOAL.md` surfaces, sorted by slug.
  *
  * @example
  * ```ts
@@ -115,7 +116,7 @@ export const listGoalPackets = Effect.fn("Goals.listGoalPackets")(function* () {
 
   let records = A.empty<GoalPacketRecord>();
   for (const slug of entries) {
-    if (slug === TEMPLATE_SLUG) {
+    if (slug === TEMPLATE_SLUG || Str.startsWith(".")(slug)) {
       continue;
     }
     const packetPath = path.join(GOALS_DIR, slug);

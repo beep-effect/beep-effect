@@ -8,8 +8,8 @@
 import { $OnepasswordCliId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema";
 import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
-import { thunkEmptyStr } from "@beep/utils";
-import { Context, Effect, Layer, Redacted, Stream } from "effect";
+import { collectProcessOutput } from "@beep/utils/Stream";
+import { Context, Effect, Layer, Redacted } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
@@ -23,14 +23,6 @@ import {
 const $I = $OnepasswordCliId.create("OnePasswordCli.service");
 const decodeOnePasswordCliAccount = S.decodeUnknownEffect(OnePasswordCliAccount);
 const decodeOnePasswordReference = S.decodeUnknownEffect(OnePasswordReference);
-
-// shared driver boundary idiom; no in-family home; future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
-const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
-  stream.pipe(
-    Stream.decodeText(),
-    Stream.runFold(thunkEmptyStr, (acc, chunk) => `${acc}${chunk}`)
-  );
 
 /**
  * Product-neutral process runner used by the 1Password CLI driver.
@@ -81,10 +73,7 @@ const runNative = (
   return Effect.scoped(
     Effect.gen(function* () {
       const handle = yield* spawner.spawn(command);
-      const [stdout, stderr, exitCode] = yield* Effect.all(
-        [collectText(handle.stdout), collectText(handle.stderr), handle.exitCode],
-        { concurrency: "unbounded" }
-      );
+      const [stdout, stderr, exitCode] = yield* collectProcessOutput(handle);
 
       return OnePasswordCliProcessResult.make({ exitCode, stderr, stdout });
     })

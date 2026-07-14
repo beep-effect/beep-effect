@@ -56,6 +56,22 @@ const writeBaseline = (keys: ReadonlyArray<string>) =>
 
 describe("goals doctor baseline ratchet", () => {
   it(
+    "ignores hidden editor directories under goals",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeProjectFile("goals/.idea/workspace.xml", "<project />\n");
+            yield* writeBaseline([]);
+            const exit = yield* Effect.exit(runGoalsCommand(["doctor"]));
+            expect(Exit.isSuccess(exit)).toBe(true);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
+
+  it(
     "fails with exit 1 on a synthetic new blocking finding absent from the baseline",
     () =>
       Effect.runPromise(

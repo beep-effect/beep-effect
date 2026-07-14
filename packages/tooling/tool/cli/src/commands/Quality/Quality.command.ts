@@ -8,6 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { A, Str, thunkFalse } from "@beep/utils";
+import * as OptionUtils from "@beep/utils/Option";
 import { Console, DateTime, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -36,7 +37,10 @@ import {
   githubCheckRepoSanityLanesForTesting as githubCheckRepoSanityLanesForTestingImpl,
   promotedFallowGithubCheckLaneIdsForTesting as promotedFallowGithubCheckLaneIdsForTestingImpl,
 } from "./internal/GithubChecks.js";
-import { writeJSDocDocumentationInventory } from "./internal/JSDocDocumentationInventory.js";
+import {
+  JSDocDocumentationInventoryOptions,
+  writeJSDocDocumentationInventory,
+} from "./internal/JSDocDocumentationInventory.js";
 import { defaultJSDocInventoryPath, defaultJSDocTotalsBaselinePath, runJSDocRatchet } from "./internal/JSDocRatchet.js";
 import { defaultKnipBaselinePath, runKnipRatchet } from "./internal/KnipRatchet.js";
 import { runPackageVerifyCli } from "./internal/PackageVerify.js";
@@ -1913,15 +1917,31 @@ export const runJSDocModuleTagsCheck = Effect.fn("QualityScriptCommands.runJSDoc
  * @category use-cases
  * @since 0.0.0
  */
-export const runJSDocInventory = Effect.fn("QualityScriptCommands.runJSDocInventory")(function* (): Effect.fn.Return<
+export const runJSDocInventory = Effect.fn("QualityScriptCommands.runJSDocInventory")(function* (
+  options: JSDocDocumentationInventoryOptions = {}
+): Effect.fn.Return<
   void,
   QualityScriptCommandError,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
+  const outputJsonPath = pipe(
+    options.outputJsonPath,
+    O.fromUndefinedOr,
+    O.map((outputPath) => path.resolve(repoRoot, outputPath))
+  );
+  const outputMarkdownPath = pipe(
+    options.outputMarkdownPath,
+    O.fromUndefinedOr,
+    O.map((outputPath) => path.resolve(repoRoot, outputPath))
+  );
 
-  const result = yield* writeJSDocDocumentationInventory({ rootDir: repoRoot }).pipe(
+  const result = yield* writeJSDocDocumentationInventory({
+    ...options,
+    rootDir: repoRoot,
+    ...OptionUtils.getSomesStruct({ outputJsonPath, outputMarkdownPath }),
+  }).pipe(
     QualityScriptCommandError.mapError("Failed to generate JSDoc documentation inventory.", {
       command: "bun run beep quality jsdoc-inventory",
       exitCode: 1,
@@ -2069,9 +2089,27 @@ const jsdocModuleTagsCommand = Command.make("jsdoc-module-tags", {}, () =>
   runQualityProgram(runJSDocModuleTagsCheck())
 ).pipe(Command.withDescription("Check for forbidden @module fileoverview tags"));
 
-const jsdocInventoryCommand = Command.make("jsdoc-inventory", {}, () => runQualityProgram(runJSDocInventory())).pipe(
-  Command.withDescription("Generate the tracked JSDoc documentation inventory")
-);
+const jsdocInventoryCommand = Command.make(
+  "jsdoc-inventory",
+  {
+    outputJson: Flag.string("output-json").pipe(
+      Flag.withDescription("JSONC inventory output path; defaults to the tracked standards artifact"),
+      Flag.optional
+    ),
+    outputMarkdown: Flag.string("output-markdown").pipe(
+      Flag.withDescription("Markdown inventory output path; defaults to the tracked standards artifact"),
+      Flag.optional
+    ),
+  },
+  ({ outputJson, outputMarkdown }) =>
+    runQualityProgram(
+      runJSDocInventory(
+        JSDocDocumentationInventoryOptions.make({
+          ...OptionUtils.getSomesStruct({ outputJsonPath: outputJson, outputMarkdownPath: outputMarkdown }),
+        })
+      )
+    )
+).pipe(Command.withDescription("Generate the JSDoc documentation inventory"));
 
 const jsdocQualityCommand = Command.make("jsdoc-quality", {}, () => runQualityProgram(runJSDocQuality())).pipe(
   Command.withDescription("Fail when repo-wide JSDoc quality reports warnings or failures")

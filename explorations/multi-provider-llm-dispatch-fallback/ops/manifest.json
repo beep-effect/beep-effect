@@ -15,12 +15,12 @@
       "Q7: V1 resilience scope \u2014 ordered fallback only (defer round-robin + circuit-breaker) and reuse generateObject for structured output vs rebuild?"
     ],
     "links": {
-      "goals": [],
+      "goals": ["goals/llm-provider-subscription-auth"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-06-29",
-    "updated": "2026-06-29",
+    "updated": "2026-07-11",
     "sources": ["research/SOURCES.md"]
   }
 }

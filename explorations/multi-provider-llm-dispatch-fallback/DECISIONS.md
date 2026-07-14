@@ -188,3 +188,21 @@ substrate. RESEARCH aligns schema-validation-as-defect with sibling law EF-31
 (`BamlParseError → Effect.die`).
 
 **Status:** open (for /grill-with-docs)
+
+## Graduation Note (2026-07-11): CLI subscription-auth leg — partial graduation
+
+The CLI leg of Q5's key-precedence chain (user>CLI>env) graduated to
+[`goals/llm-provider-subscription-auth`](../../goals/llm-provider-subscription-auth/README.md)
+after a /grill-with-docs session. Locked there: vendor-CLI delegation (t3code
+methodology — the vendor CLI owns login/tokens/refresh; beep probes and
+isolates HOME dirs), local-first deployment, `agents` slice owns the
+`ProviderInstance` concept, no provider tokens at rest in beep-owned storage.
+
+Constraint inherited by this packet: when Q5 is resolved, the "CLI" leg of the
+precedence resolver consumes that goal's rich probe surface
+(`drivers/ai-provider-cli`) and `ProviderInstance` records; it must not
+re-implement CLI probing or instance management. Q5 itself (resolver shape,
+advisory prefix detect, advance-vs-fail-fast, broker ApiKeyResolver) remains
+open here.
+
+**Status:** recorded (partial graduation; packet stays `active`)

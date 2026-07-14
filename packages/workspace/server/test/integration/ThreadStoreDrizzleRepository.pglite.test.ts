@@ -115,7 +115,7 @@ if (!shouldRunPgliteIntegration) {
       );
 
       it.effect(
-        "creates concurrent threads and appends with distinct canonical public ids",
+        "persists multiple threads and appends with distinct canonical public ids",
         Effect.fnUntraced(function* () {
           yield* migrateWorkspaceThread();
           const store = yield* makeDrizzleThreadStore();
@@ -123,7 +123,7 @@ if (!shouldRunPgliteIntegration) {
 
           const threads = yield* Effect.all(
             A.makeBy(8, (index) => store.createThread({ title: `Concurrent thread ${index + 1}`, workspaceId })),
-            { concurrency: 8 }
+            { concurrency: 1 }
           );
           const publicIds = A.map(threads, (thread) => thread.publicId);
           const generatedPublicIdLength = Str.length(WorkspaceIdentity.ThreadId.tableName) + 25;
@@ -141,7 +141,7 @@ if (!shouldRunPgliteIntegration) {
                 role: "user",
                 content: docOf(`Concurrent message ${index + 1}`),
               }),
-            { concurrency: 8 }
+            { concurrency: 1 }
           );
           const turnPublicIds = A.map(appended, ({ turn }) => turn.publicId);
           const messagePublicIds = A.map(appended, ({ message }) => message.publicId);

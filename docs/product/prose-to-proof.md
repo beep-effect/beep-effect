@@ -7,6 +7,7 @@
 >
 > Reading order: [Vision](../PROSE_TO_PROOF_VISION.md) → [For Tom](../PROSE_TO_PROOF_FOR_TOM.md) →
 > [User Story](../PROSE_TO_PROOF_USER_STORY.md) → [Architecture Map](../PROSE_TO_PROOF_ARCHITECTURE_MAP.md) → **this**.
+> Sibling substrate: [Workspace Substrate](./workspace-substrate.md) — how the workbench is *inhabited* (docks + blocks + agent-operated panels).
 > See also the [Visualization](../PROSE_TO_PROOF_VISUALIZATION.html).
 > Governing specs: `goals/agentic-professional-runtime/SPEC.md`, its `docs/runtime-data-loop.md`
 > and `docs/approval-and-autonomy-policy.md`, and `docs/BEEPGRAPH_ARCHITECTURE.md`.
