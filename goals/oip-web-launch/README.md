@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: paused
+Lifecycle: completed-retained
 
 Implementation complete. The package proof lane was re-run on 2026-07-14;
 closure has the user-approved FINISH disposition and rides the

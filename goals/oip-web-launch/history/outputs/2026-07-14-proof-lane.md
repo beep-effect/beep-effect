@@ -20,6 +20,20 @@ artifacts are part of this lane.
 | lint | `bun run --cwd apps/oip-web lint` | PASS | 0 | 1.85s |
 | type-test | `bun run --cwd apps/oip-web type-test` | FAIL | 1 | 0.00s |
 
+## Driver Re-Run (2026-07-14, outside the restricted sandbox)
+
+The build/test failures above were sandbox capability artifacts (denied port
+binding for Turbopack loader processes; Vitest fork workers unable to start).
+The driver re-ran both lanes in the normal session environment:
+
+| Lane | Command | Result | Notes |
+| --- | --- | --- | --- |
+| build | `bun run --cwd apps/oip-web build` | PASS | full Next/Turbopack production build; routes emitted |
+| test | `bun run --cwd apps/oip-web test` | PASS | 2 files, 48/48 tests, 3.86s |
+
+`type-test` is reconciled as not-a-lane: `apps/oip-web/package.json` defines
+build/check/test/lint only; PLAN.md named a lane the app never defined.
+
 ## Failure Evidence
 
 ### Build
@@ -82,8 +96,9 @@ reconciling that missing lane requires work outside this packet-only edit scope.
 ## Closure Assessment
 
 Implementation remains complete, and the user-approved FINISH disposition rides
-the `portfolio-consolidation` pull request. This proof re-run is not green, so
-the packet is not ready for the `completed-retained` lifecycle flip until the
-driver obtains passing build/test evidence and resolves or explicitly
-reconciles the missing type-test script. Public launch remains separately
-blocked by the five `EXTERNAL` review gates recorded in the packet.
+the `portfolio-consolidation` pull request. With the driver re-run above, all
+defined lanes (build/check/test/lint) are green and the type-test lane is
+reconciled as never-defined. Browser smoke evidence is recorded separately at
+`2026-07-14-browser-smoke.md`. The packet is ready for the `completed-retained`
+lifecycle flip. Public launch remains separately blocked by the five `EXTERNAL`
+review gates recorded in the packet.

@@ -94,12 +94,12 @@
   "initiative": {
     "id": "oip-web-launch",
     "title": "OIP Web Launch",
-    "status": "paused",
+    "status": "completed-retained",
     "updated": "2026-07-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/oip-web-launch",
-  "lifecycle": "paused",
+  "lifecycle": "completed-retained",
   "reflectionRequired": false,
   "statusNote": "Implementation complete; proof lane re-run 2026-07-14; FINISH disposition rides the portfolio-consolidation PR."
 }

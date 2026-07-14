@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "oip-web",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "--cwd", "apps/oip-web", "start"],
+      "port": 3000,
+      "autoPort": true
+    }
+  ]
+}
