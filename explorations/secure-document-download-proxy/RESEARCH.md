@@ -6,6 +6,25 @@ external landscape (cited) and in-repo inventory (compose bricks, mark gaps
 NOT FOUND). Raw per-subtopic detail lives in research/<subtopic>.md.
 -->
 
+## 2026-07-14 Amendment — Live Desktop Runtime and Ratified Boundaries
+
+This amendment supersedes the stale June runtime statements below where they
+conflict. The root catalog and professional-desktop app now resolve
+`@electric-sql/pglite` **0.5.4** (`package.json`,
+`apps/professional-desktop/package.json`); `0.4.6` remains only under the
+explicit `@electric-sql/pglite-legacy-046` alias. The existing
+`PgliteDrizzleLive` and boot-migration path remains the correct binding target.
+
+The sidecar HTTP surface also postdates the June research: `main.ts` binds Bun
+to `127.0.0.1`, and `RpcSessionAuth.ts` supplies a per-launch redacted bearer
+token plus request middleware. The document route will extend that authenticated
+edge while remaining separate from permissive RPC CORS and adding Host,
+session/audience, and identical-404 document semantics.
+
+Alignment further rejected the upstream seven-day default: TTL is
+consumer-supplied and purpose-bound under a packet-owned maximum. Live provider
+fetch is fixture-only until the ingestion-security DNS-rebinding harness passes.
+
 ## External Landscape
 
 Two convergent porting sources frame the wedge: an edge-gated `GET /resources/:file`
@@ -184,20 +203,18 @@ Already present to compose against (verified via `rg`/`ls`, 2026-06-29):
   (`packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts`,
   `Prometheus.ts`). A schema-validated path-param route with a branded strict-UUID
   decode → typed 404 + `Cache-Control` response is well-supported.
-- **Backing link store is repo-native, but target the desktop's actual PGlite
-  runtime** (Codex gate-1 correction) — the professional-desktop sidecar does NOT
-  consume the root catalog's `@electric-sql/pglite@0.5.3` (`package.json:44`); it
-  pins `@electric-sql/pglite` **`0.4.6`** and aliases
-  `@electric-sql/pglite-legacy-053` → `npm:@electric-sql/pglite@0.5.3`
-  (`apps/professional-desktop/package.json:68-69`; installed `0.4.6` per
-  `node_modules/@electric-sql/pglite/package.json:2-3`). The sidecar already owns a
+- **Backing link store is repo-native; target the desktop's actual PGlite
+  runtime** (2026-07-14 correction) — the professional-desktop sidecar consumes
+  catalog `@electric-sql/pglite` **`0.5.4`** (`package.json:47`,
+  `apps/professional-desktop/package.json:86`) and retains `0.4.6` only through
+  the `@electric-sql/pglite-legacy-046` alias. The sidecar already owns a
   file-backed runtime — `makeBundledPgliteLayer` + `PgliteDrizzleLive`
   (`apps/professional-desktop/src/runtime/Pglite.ts:252-279`) over the `@beep/pglite`
   driver — with a bundled migration set applied on boot
   (`apps/professional-desktop/src/runtime/Migrations.ts`). The link-store table
   should be a Drizzle table added to that existing `PgliteDrizzleLive` + migration
   bundle, or a separate store chosen with an explicit migration/storage-compat
-  rationale — not a bespoke SQLite file and not a fresh store against root `0.5.3`.
+  rationale — not a bespoke SQLite file and not a second PGlite store.
   `@effect/sql` driver packages (`packages/drivers/pglite`, `packages/drivers/postgres`)
   and `drizzle-orm` (`package.json:156`) back this; table-modeling precedent:
   `EntityTable.models.ts` (`packages/drivers/drizzle/src/EntityTable.models.ts`),
@@ -321,18 +338,17 @@ own a desktop serve route); (d) `apps/professional-desktop` is the *wiring host*
   basename, gating `.pdf` + strict-v4 *before* fs access.
 - `Cache-Control: private, no-store` on every served response (RFC 9111); 404 on
   expired/missing (existence opacity).
-- Default TTL 7 days; expiry enforced *both* by store query
+- TTL is consumer-supplied and purpose-bound under a packet-owned maximum; the
+  upstream seven-day default is **not inherited**. Expiry is enforced *both* by store query
   (`expires_at > now AND revoked_at IS NULL`) and by the edge 404; revocation =
   set `revoked_at` (the opaque-token advantage).
 - Local-first / offline: keep the link store in the **sidecar process**, not the
   renderer (IDB/Dexie in the renderer would contradict "key/server-side").
 
 **Routing / boundary cautions.**
-- The Express `GET /resources/:file` does **not** map 1:1 — the desktop has no
-  HTTP edge (IPC stdio only). Resolve in shape/decompose: custom-protocol (preserves
-  per-response `Cache-Control`/404 header semantics) vs returning `Uint8Array` over
-  the existing ndjson IPC channel + renderer `Blob`/object URL (simpler, but loses
-  per-response header semantics). **Spike needed:** whether each platform webview
+- The Express `GET /resources/:file` does **not** map 1:1. Extend the existing
+  authenticated loopback Bun HTTP edge with a document route separate from RPC
+  CORS. Custom protocol remains fallback only. **Spike needed:** whether each platform webview
   (WKWebView / WebView2 / WebKitGTK) honors `no-store`/BFCache suppression for
   *custom-scheme* responses is UNVERIFIED against a primary per-platform source.
 - **Preserve the SSRF guard** (Codex gate-1) — the existing origin-fetch verb is

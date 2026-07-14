@@ -172,7 +172,10 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `graduate`, still active for four gated satellites): graduated
   [`hybrid-retrieval-fusion-core`](../goals/hybrid-retrieval-fusion-core/README.md),
   the single RRF-layer owner,
-  [`secure-document-download-proxy`](./secure-document-download-proxy/README.md),
+  [`secure-document-download-proxy`](./secure-document-download-proxy/README.md)
+  (stage `graduate`, still active for three gated candidates): graduated
+  [`secure-document-delivery`](../goals/secure-document-delivery/README.md) on
+  2026-07-14,
   [`local-first-projection-sync`](./local-first-projection-sync/README.md) (last two are
   singletons — attach-vs-standalone deferred to their `DECISIONS.md`). Plus **9 non-invasive
   Case-A research notes** folded into existing goals (`file-processing-capability` OCR,

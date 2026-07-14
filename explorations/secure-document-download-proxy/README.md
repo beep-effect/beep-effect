@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `research`
+Stage: `graduate`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -16,13 +16,10 @@ UUID-guarded resource route with an encrypted, auto-expiring opaque-link store.
 
 ## Next Open Question
 
-**Q6: Serve boundary — existing sidecar HTTP route vs Tauri custom protocol vs
-IPC blob.** Highest-leverage open fork: it sets the security-semantic backbone
-(header honoring + existence opacity) and carries the only unresolved spike
-(per-platform webview `no-store`/BFCache honoring for custom-scheme responses).
-Eight branch-closing decisions are pre-drafted with recommendations in
-[`DECISIONS.md`](./DECISIONS.md) — resolve them via
-`/grill-with-docs secure-document-download-proxy`.
+None. Eight alignment questions and the fan-out are ratified. Resume from the
+gated Box origin, viewer integration, or additional-origin candidate only when a
+named consumer pull satisfies its gate; implementation starts at
+[`goals/secure-document-delivery`](../../goals/secure-document-delivery/README.md).
 
 ## Read This First
 
@@ -43,5 +40,7 @@ in-repo `@beep/*` brick it composes. Derived from the gold-intake cluster
 
 ## Trail
 
+- 2026-07-14: graduated `goals/secure-document-delivery`; exploration remains active for three gated candidates.
+- 2026-07-14: align closed in one round — Q1-Q8 and fan-out ratified; brief and map drafted.
 - 2026-06-29: research-complete — RESEARCH.md synthesized, codex gate-1 folded, DECISIONS pre-drafted.
 - 2026-06-29: packet opened from gold-intake cluster 'Secure document download proxy (opaque TTL-gated links)' (2 nuggets).
