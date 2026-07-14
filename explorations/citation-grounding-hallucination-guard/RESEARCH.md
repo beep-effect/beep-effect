@@ -405,3 +405,43 @@ rather than rebuilding them. All paths verified via `rg`/`ls` on 2026-06-29.
 ---
 
 _Codex gate-1 folded 2026-06-29: 5 blocking + 6 advisory addressed._
+
+## 2026-07-14 correction — citation models landed after this research
+
+The 2026-06-29 inventory’s “no parser models” / citation-model gap claims are
+superseded. PRs #326 and #391 landed a schema-first citation taxonomy under
+`packages/law-practice/domain/src/values/` after this packet’s research snapshot.
+The live inventory contains roughly 56 value-object modules, including:
+
+- the shared and union layers at
+  `CitationBase/CitationBase.model.ts` and `Citation/Citation.models.ts`, plus
+  `CitationSignal/`, `CitationType/`, `FullCitationType/`, and
+  `ShortFormCitationType/`;
+- per-form models such as `DocketCitation/DocketCitation.model.ts`,
+  `NeutralCitation/NeutralCitation.model.ts`,
+  `ConstitutionalCitation/`, `FederalRuleCitation/`, `JournalCitation/`,
+  `TreatiseCitation/`, `TreatyCitation/`, `PublicLawCitation/`,
+  `SessionLawCitation/`, `StatutesAtLargeCitation/`, `LocalOrdinanceCitation/`,
+  `RestatementCitation/`, `CanonCitation/`, `LegislativeMaterialCitation/`,
+  `FederalRegisterCitation/`, `StateRuleCitation/`, and `AnnotationCitation/`,
+  `StatuteCitation/StatuteCitation.model.ts`, and
+  `RegulationCitation/RegulationCitation.model.ts`;
+- extraction/resolution values including
+  `CitationWarning/CitationWarning.models.ts`,
+  `ResolutionResult/ResolutionResult.model.ts`,
+  `PinciteInfo/PinciteInfo.model.ts`, `ParallelGroup/ParallelGroup.model.ts`,
+  `StringCitationGroup/StringCitationGroup.model.ts`,
+  `CourtInference/CourtInference.model.ts`, and
+  `DurableLocator/DurableLocator.model.ts`, plus `SurroundingContext/`; and
+- normalized-to-original offset structures at `Span/Span.model.ts`,
+  `ComponentSpan/ComponentSpan.models.ts`, `Segment/Segment.model.ts`, and
+  `SegmentMap/SegmentMap.model.ts`, alongside patent-specific values such as
+  `PatentNumber/`, `ApplicationNumber/`, `KindCode/`, `OfficeCode/`, and
+  `PatentMetadata/`.
+
+Fields such as `matchedText`, `confidence`, and `patternsChecked`, together
+with full/short/Id./supra case forms and clean/original offsets, make this the
+model layer of an eyecite-style port. **The remaining gap is the extraction
+ENGINE** (tokenization, matching, extraction, grouping, and resolution over
+those values), plus the generic verified-span mechanics—not a new citation
+taxonomy and not an eyecite-js dependency.

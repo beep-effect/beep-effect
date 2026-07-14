@@ -125,7 +125,15 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   graduated first goal 2026-07-01: Q1–Q7 resolved, BRIEF+MAP written,
   [`goals/mcp-kit`](../goals/mcp-kit/README.md) scaffolded at `foundation/capability`;
   `uspto-mcp`/`mcp-host-retrofit`/`mcp-write-wall` queue behind it),
-  [`citation-grounding-hallucination-guard`](./citation-grounding-hallucination-guard/README.md).
+  [`citation-grounding-hallucination-guard`](./citation-grounding-hallucination-guard/README.md)
+  (stage `graduate`, still active while two lanes remain): graduated
+  [`citation-verified-span-substrate`](../goals/citation-verified-span-substrate/README.md)
+  on 2026-07-14, with product doctrine at
+  [`docs/product/citation-grounding.md`](../docs/product/citation-grounding.md).
+  Queued: `citation-extraction-engine`, revisited when
+  `court-vocabulary-resolver` graduates later in this campaign, then
+  `citation-ground-before-cite`; MPEP patterns, hosted enrichment, matter-wall
+  enforcement, and rich-text annotation remain gated follow-ons.
   **Queued (P2/P3, research-complete):**
   [`effect-orchestration-patterns`](./effect-orchestration-patterns/README.md),
   [`agent-memory-tiers-bitemporal-edges`](./agent-memory-tiers-bitemporal-edges/README.md),

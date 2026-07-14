@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `research`
+Stage: `graduate`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -17,15 +17,8 @@ hangs everything else on.
 
 ## Next Open Question
 
-**Q2: Scope boundary** — does this packet ship the full guard (parser +
-lifecycle + verbatim gate + straddle + matter carrier + fence enforcement +
-court vocab), or own only the grounding core and compose/defer the rest? This is
-the highest-leverage fork: it bounds the packet's surface area and conditions
-every other open question (build-vs-buy, first-slice, placement). RESEARCH flags
-multiple routing items here as "NOT yet settled." Run
-`/grill-with-docs citation-grounding-hallucination-guard` to resolve the open
-questions one at a time (recommended answers pre-drafted in
-[`DECISIONS.md`](./DECISIONS.md)).
+**Engine + guard scaffolds queued:** engine unblocks when
+`court-vocabulary-resolver` graduates (this campaign).
 
 ## Sources & provenance
 
@@ -46,5 +39,14 @@ cluster "Citation lookup + verbatim-span grounding (hallucination guard)".
 
 ## Trail
 
+- 2026-07-14: graduated the first program lane into
+  [`goals/citation-verified-span-substrate`](../../goals/citation-verified-span-substrate/README.md)
+  and product doctrine into
+  [`docs/product/citation-grounding.md`](../../docs/product/citation-grounding.md);
+  engine and guard scaffolds remain queued, with the engine revisited when
+  `court-vocabulary-resolver` graduates later in this campaign.
+- 2026-07-14: align closed — 8 decisions locked, including the port-not-adopt
+  user override grounded in the existing law-practice citation taxonomy;
+  BRIEF.md and MAP.md drafted for shape sign-off.
 - 2026-06-29: research-complete — RESEARCH.md synthesized, codex gate-1 folded, DECISIONS pre-drafted.
 - 2026-06-29: packet opened from gold-intake cluster 'Citation lookup + verbatim-span grounding (hallucination guard)' (11 nuggets).
