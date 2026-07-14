@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "yeet-publish-preflight",
+    "title": "Yeet Publish Preflight",
+    "status": "active",
+    "created": "2026-07-14",
+    "updated": "2026-07-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/yeet-publish-preflight",
+  "lifecycle": "active",
+  "mission": "Harden yeet publish with the two highest-leverage pretext-driver reflection todos: a frozen-lockfile clean-HEAD install preflight before every push, and a probe-first fix for the --start-pr-early / --monitor circular validation on PR-less branches.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "",
+    "note": "Codifies the two highest-leverage codification-todos from goals/pretext-driver/history/reflections/2026-07-14-claude.md (PR #391 CI-wall incident; 2026-07-13 --start-pr-early circular-gate incident). Not graduated from an exploration."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/yeet-publish-preflight/README.md",
+    "goals/yeet-publish-preflight/SPEC.md",
+    "goals/yeet-publish-preflight/PLAN.md",
+    "goals/yeet-publish-preflight/GOAL.md",
+    "goals/yeet-publish-preflight/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/yeet-publish-preflight/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Probe (reproduce both failure modes against current yeet)",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/yeet-publish-preflight/GOAL.md)\" -le 4000",
+    "jq . goals/yeet-publish-preflight/ops/manifest.json",
+    "git diff --check -- goals/yeet-publish-preflight",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope (only the two named fixes).",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
