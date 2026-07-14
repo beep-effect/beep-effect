@@ -33,6 +33,12 @@ export const HEAD_INSTALL_PREFLIGHT_FAILURE_HINT =
 const renderCommandOutput = (label: string, output: string): string =>
   A.join([`[head-install-preflight] ${label}`, output], "\n");
 
+const cleanupWarning = (label: string, exitCode: O.Option<number>): O.Option<string> =>
+  O.match(exitCode, {
+    onNone: () => O.some(`${label} could not run`),
+    onSome: (code) => (code === 0 ? O.none() : O.some(`${label} exited ${code}`)),
+  });
+
 const persistOutput = Effect.fn("Yeet.persistHeadInstallPreflightOutput")(function* (
   rawOutputPath: O.Option<string>,
   output: string
@@ -123,16 +129,27 @@ export const executeHeadInstallPreflight = Effect.fn("Yeet.executeHeadInstallPre
         ...O.getSomesStruct({ rawOutputRef: rawOutputPath }),
       });
     }),
-    (checkout) =>
-      Effect.all(
-        [
-          runRepoCommandCapture("git", ["worktree", "remove", "--force", checkout], context.repoRoot).pipe(
-            Effect.ignore
-          ),
-          runRepoCommandCapture("git", ["worktree", "prune"], context.repoRoot).pipe(Effect.ignore),
-          fs.remove(tempRoot, { recursive: true }).pipe(Effect.ignore),
-        ],
-        { concurrency: 1, discard: true }
-      )
+    Effect.fnUntraced(function* (checkout: string) {
+      const remove = yield* runRepoCommandCapture(
+        "git",
+        ["worktree", "remove", "--force", checkout],
+        context.repoRoot
+      ).pipe(
+        Effect.map((result) => result.exitCode),
+        Effect.option
+      );
+      yield* runRepoCommandCapture("git", ["worktree", "prune"], context.repoRoot).pipe(Effect.ignore);
+      const removedTemp = yield* fs.remove(tempRoot, { recursive: true }).pipe(Effect.as(0), Effect.option);
+      const warnings = A.getSomes([
+        cleanupWarning("`git worktree remove --force`", remove),
+        cleanupWarning("temp directory removal", removedTemp),
+      ]);
+      if (A.isReadonlyArrayEmpty(warnings)) {
+        return;
+      }
+      yield* Console.log(
+        `[head-install-preflight] cleanup warning: ${A.join(warnings, "; ")} — a stale entry may remain under .git/worktrees; run \`git worktree prune\` and remove ${tempRoot} manually.`
+      );
+    })
   );
 });
