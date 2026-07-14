@@ -24,9 +24,9 @@ beep-effect6 write lane before opening the thread-virtualization packet
 (gate re-confirmed still active 2026-07-14). Goal #1 is CLOSED: PR #391
 merged 2026-07-14 and
 [`goals/pretext-driver/`](../../goals/pretext-driver/README.md) is
-completed-retained with reflection. In flight on this lane: dock-adapter
-title-minima wiring (exploration-tracked, no packet). Q2 v2 residue grows
-inside the driver package.
+completed-retained with reflection. Dock-adapter title-minima wiring LANDED
+2026-07-14 (exploration-tracked, no packet; PR pending merge). Q2 v2
+residue grows inside the driver package.
 
 ## Read This First
 
@@ -36,6 +36,22 @@ inside the driver package.
 
 ## Trail
 
+- 2026-07-14 (later: minima wiring LANDED): the pinned design executed the
+  same day on `feat/dock-minima-wiring` — codex (gpt-5.6-sol, medium) wrote
+  both lanes under Fable review. Kernel: `poc/Minima.ts` (`TabChrome`,
+  `titleWords`, pure `titleMinima` sum-of-tabs fold over the full forest,
+  `makeTitleMinimaAtom` capture seam degrading to empty minima on
+  waiting/failure) + 8 bun tests including end-to-end geometry clamps.
+  Adapter: `options.titleMinima` on DockviewReact (default
+  `PretextCaptureLive`, fixture layer injectable) feeding
+  `makeDockGeometryAtoms.minimaAtom`; +3 jsdom tests (feasible clamp ≥
+  measured requirement, no-config parity, capture-failure honesty). Suites:
+  kernel 82/82, adapter 20/20, tsgo+biome clean. Also repaired en route: the
+  effect 4.0.0-beta.97 catalog bump (#393) broke `S.Class` make() on plain
+  tagged POJOs — five anchored-box construction sites migrated to variant
+  `.make()` instances (was 6 kernel + 6 adapter test failures on main).
+  Live-Chrome smoke deferred: no dev page hosts the adapter yet (candidate
+  follow-up: tiny demo harness). PR pending merge.
 - 2026-07-14 (goal #1 CLOSED, next slice gated): PR #391 **merged**
   (squash `1c0977ccad`); `goals/pretext-driver` flipped to
   completed-retained with closeout reflection
