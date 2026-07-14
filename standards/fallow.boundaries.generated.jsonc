@@ -1998,11 +1998,17 @@
       {
         "from": "@beep/ontology",
         "allow": [
+          "@beep/identity",
           "@beep/ontology",
+          "@beep/rdf",
+          "@beep/schema",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
+          "@beep/identity",
           "@beep/ontology",
+          "@beep/rdf",
+          "@beep/schema",
           "@beep/test-utils"
         ]
       },

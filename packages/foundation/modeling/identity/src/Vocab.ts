@@ -445,3 +445,45 @@ export const mergeVocab: {
     extension: Extension
   ): <const Base extends VocabShape>(base: Base) => ReturnType<typeof mergeVocabImpl<Base, Extension>>;
 } = dual(2, mergeVocabImpl);
+
+/**
+ * Core vocabulary extended with repository-owned semantic-foundation terms.
+ *
+ * @example
+ * ```ts
+ * import { SemanticFoundationVocab } from "@beep/identity"
+ *
+ * console.log(SemanticFoundationVocab.beep.iri) // "https://ns.beep.sh/"
+ * console.log(SemanticFoundationVocab.beep.terms.includes("ontology/semantic-foundation")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const SemanticFoundationVocab = mergeVocab(CoreVocab, {
+  beep: {
+    iri: "https://ns.beep.sh/",
+    terms: [
+      "ontology/semantic-foundation",
+      "ontology/semantic-foundation/taxonomy/legal-intake",
+      "ontology/semantic-foundation/filing-root/local-vault",
+      "ontology/semantic-foundation/filing-root/box-mirror",
+    ],
+  },
+});
+
+/**
+ * Runtime type for {@link SemanticFoundationVocab}.
+ *
+ * @example
+ * ```ts
+ * import { SemanticFoundationVocab, type SemanticFoundationVocab as SemanticFoundationVocabType } from "@beep/identity"
+ *
+ * const vocab: SemanticFoundationVocabType = SemanticFoundationVocab
+ * console.log(vocab.beep.iri)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SemanticFoundationVocab = typeof SemanticFoundationVocab;

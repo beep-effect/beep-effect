@@ -37,14 +37,27 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-M1 Intake-Serving Semantic Seed. Next concrete action: implement the
-repo-owned SKOS taxonomy seed and the `@beep/ontology` taxonomy registry/loader
-surface described in [`SPEC.md`](./SPEC.md), using the legal exploration's
-research directory as feeder input rather than copying it into this packet.
+M1 Intake-Serving Semantic Seed is complete. M2-M4 remain gated; the next
+action is the operator-owned P3 verification and publish flow.
 
 ## Latest Evidence
 
-Not started.
+- `@beep/ontology`: 2 test files and 11 tests pass.
+- `@beep/identity`: 6 test files and 63 tests pass.
+- Ontology source/test and identity TypeScript project checks pass.
+- Effect function/import laws and fallow boundary configuration checks pass.
+- No vendor slice is live-wired: research names no slice `VETTED` for loading,
+  so package-local fixtures prove the fail-closed loader contract.
+- `config-sync:check` is green after the operator applied the single managed
+  change it actually required (`packages/foundation/modeling/ontology/docgen.json`);
+  the implementation lane's repo-wide 110-file sync attempt was a misfire and
+  its invalid blank-file edits were correctly restored.
+- R1 reconciliation caveat: the loader's `VendorManifestEntry` load-manifest
+  shape (`id`/`path`/`format:"jsonld"`/`loadStatus`) is intentionally narrower
+  than the exploration asset pack's fetch-metadata `manifest.jsonl`; pointing
+  the loader at the real manifest today fails closed with a parse error. R1
+  must either extend the asset-pack manifest with load fields or introduce a
+  dedicated load manifest before any live vendor slice is wired.
 
 ## Provenance Notes
 
