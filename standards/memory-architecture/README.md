@@ -51,6 +51,7 @@ _(2026-06-17: the original "until repo-memory v0 is running" gate is superseded 
 | `03-saas-landscape-assessment.md` | Condensed evaluations of external solutions (closed, not ongoing) |
 | `04-decision-log.md` | Dated decision entries as the architecture evolves |
 | `05-context-graph-capability-assessment.md` | Bounded addendum selecting feature donors for provenance, ontology graphs, context graphs, and agent recall UX |
+| `06-agent-memory-operations.md` | Operational runbook implementing 04's dev-memory decision: provisioning envelope, recall routing, session continuity |
 
 ## Relationship to Other Standards
 

@@ -3,13 +3,13 @@
   "initiative": {
     "id": "harness-hygiene-mechanical",
     "title": "Harness Hygiene Mechanical",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-14",
     "updated": "2026-07-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/harness-hygiene-mechanical",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Delete the four zero-signal skills, evict volatile state from AGENTS.md's cache prefix, add the three agent-requested laws - mechanical, evidence-cited edits only.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -47,22 +47,22 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable + Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

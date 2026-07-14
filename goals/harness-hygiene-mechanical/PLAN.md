@@ -2,16 +2,16 @@
 
 ## Status
 
-Status: `pending`
+Status: `complete`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Confirm zero tooling references for the four skills; pick owned destinations for evicted AGENTS.md prose; draft the three laws (1-2 lines each) with evidence citations. | Reference scan clean; destinations named; law text drafted. |
-| P1 Implement | pending | Delete the four skill dirs; ONE batched AGENTS.md edit (evict volatile state + add laws); land evicted prose at owned surfaces with pointers. | `SPEC.md` acceptance criteria met; AGENTS.md not larger than before. |
-| P2 Verify | pending | Run the verification matrix; record before/after `wc -c AGENTS.md` in evidence. | Matrix green. |
-| P3 Close | pending | PR to mergeable via yeet, closeout reflection, packet status flipped in the SAME PR (this goal ships the law that requires it — practice it). | Packet closed; reflection lint passes. |
+| P0 Research | complete | Confirm zero tooling references for the four skills; pick owned destinations for evicted AGENTS.md prose; draft the three laws (1-2 lines each) with evidence citations. | Reference scan clean; destinations named; law text drafted. |
+| P1 Implement | complete | Delete the four skill dirs; ONE batched AGENTS.md edit (evict volatile state + add laws); land evicted prose at owned surfaces with pointers. | `SPEC.md` acceptance criteria met; AGENTS.md not larger than before. |
+| P2 Verify | complete | Run the verification matrix; record before/after `wc -c AGENTS.md` in evidence. | Matrix green. |
+| P3 Close | complete | PR to mergeable via yeet, closeout reflection, packet status flipped in the SAME PR (this goal ships the law that requires it — practice it). | Packet closed; reflection lint passes. |
 
 ## P3 Closeout Checklist
 

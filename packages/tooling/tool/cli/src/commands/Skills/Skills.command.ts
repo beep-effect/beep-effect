@@ -251,30 +251,6 @@ export const remoteSkillSources: ReadonlyArray<RemoteSkillSource> = [
     skillPath: "skills/ponytail/SKILL.md",
   }),
   skillSource({
-    name: "ponytail-audit",
-    source: "DietrichGebert/ponytail",
-    ref: "main",
-    skillPath: "skills/ponytail-audit/SKILL.md",
-  }),
-  skillSource({
-    name: "ponytail-debt",
-    source: "DietrichGebert/ponytail",
-    ref: "main",
-    skillPath: "skills/ponytail-debt/SKILL.md",
-  }),
-  skillSource({
-    name: "ponytail-gain",
-    source: "DietrichGebert/ponytail",
-    ref: "main",
-    skillPath: "skills/ponytail-gain/SKILL.md",
-  }),
-  skillSource({
-    name: "ponytail-help",
-    source: "DietrichGebert/ponytail",
-    ref: "main",
-    skillPath: "skills/ponytail-help/SKILL.md",
-  }),
-  skillSource({
     name: "ponytail-review",
     source: "DietrichGebert/ponytail",
     ref: "main",
