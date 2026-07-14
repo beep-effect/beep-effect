@@ -418,14 +418,14 @@ const runLintCircular = Effect.fn("runLintCircular")(function* () {
       // crashes at module-eval time under Bun (`ts.Extension.Cjs` undefined),
       // so a static top-level import would take down every sibling command that
       // shares this CLI tree (version-sync, tsconfig-sync, ...) at startup.
-      try: async () => {
-        const { default: madge } = await import("madge");
-        return madge(dir, {
-          fileExtensions: ["ts"],
-          tsConfig: "tsconfig.json",
-          detectiveOptions: { ts: { skipTypeImports: true } },
-        });
-      },
+      try: () =>
+        import("madge").then(({ default: madge }) =>
+          madge(dir, {
+            fileExtensions: ["ts"],
+            tsConfig: "tsconfig.json",
+            detectiveOptions: { ts: { skipTypeImports: true } },
+          })
+        ),
       catch: (cause) =>
         LintCircularAnalysisError.new(
           `Failed to analyze circular deps in ${dir}: ${Inspectable.toStringUnknown(cause, 0)}`

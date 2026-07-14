@@ -17,6 +17,7 @@ Gopinath
 Gebert
 Graydon
 Griesemer
+Hintze
 Hoare
 Ihaka
 Jaya

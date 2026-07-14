@@ -35,6 +35,7 @@
     ".": "./src/index.ts",
     "./tables": "./src/tables.ts",
     "./aggregates/*": "./src/aggregates/*/index.ts",
+    "./entities": "./src/entities/index.ts",
     "./entities/*": "./src/entities/*/index.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
@@ -54,6 +55,7 @@
       ".": "./dist/index.js",
       "./tables": "./dist/tables.js",
       "./aggregates/*": "./dist/aggregates/*/index.js",
+      "./entities": "./dist/entities/index.js",
       "./entities/*": "./dist/entities/*/index.js",
       "./internal/*": null,
       "./package.json": "./package.json"

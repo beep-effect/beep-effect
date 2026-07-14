@@ -5,7 +5,7 @@ import {
   AiProviderCliProcessResult,
 } from "@beep/ai-provider-cli";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { Effect, Layer, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { AiProviderCliProvider } from "@beep/ai-provider-cli";
@@ -20,11 +20,16 @@ const claudeLoggedInStdout = `{
   "subscriptionType": "max"
 }`;
 
+const provideScopedLayer =
+  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
+    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+
 const snapshotWith = (provider: AiProviderCliProvider, result: AiProviderCliProcessResult) =>
   Effect.gen(function* () {
     const providerCli = yield* AiProviderCli;
     return yield* providerCli.checkAuthSnapshot(provider);
-  }).pipe(Effect.provide(AiProviderCli.makeLayerFromRunner(() => Effect.succeed(result))));
+  }).pipe(provideScopedLayer(AiProviderCli.makeLayerFromRunner(() => Effect.succeed(result))));
 
 describe("@beep/ai-provider-cli auth snapshots", () => {
   it.effect(
@@ -144,7 +149,7 @@ describe("@beep/ai-provider-cli auth snapshots", () => {
       const error = yield* Effect.gen(function* () {
         const providerCli = yield* AiProviderCli;
         return yield* providerCli.checkAuthSnapshot("claude");
-      }).pipe(Effect.provide(AiProviderCli.makeLayerFromRunner(() => Effect.fail(failure))), Effect.flip);
+      }).pipe(provideScopedLayer(AiProviderCli.makeLayerFromRunner(() => Effect.fail(failure))), Effect.flip);
 
       expect(error._tag).toBe("AiProviderCliError");
       expect(error.provider).toBe("claude");

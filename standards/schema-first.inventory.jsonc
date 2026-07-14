@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-12",
+  "generatedOn": "2026-07-13",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
@@ -19,7 +19,7 @@
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/professional-desktop",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+      "reason": "Effect service contract containing repository functions; persisted ProviderInstance values and command payloads are modeled by schemas at the boundary."
     },
     {
       "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
@@ -58,6 +58,30 @@
       "line": 19,
       "owner": "@beep/db-admin",
       "reason": "Migration regression decodes fixed fixture rows to prove the documents-sync target SQL and unique-index enforcement; schema-derived arbitrary round-trips for the Sync* entities live with the domain model tests (packages/documents/domain/test/Sync*.test.ts)."
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.repository.ts",
+      "symbol": "ProviderInstanceRepositoryShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/agents-use-cases",
+      "reason": "Effect service contract for executing provider probes; ProviderProbeInput and probe results remain schema-modeled boundary data."
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.repository.ts",
+      "symbol": "ProviderProbeShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/agents-use-cases",
+      "reason": "Effect use-case service contract containing functions; commands, errors, and ProviderInstance values are modeled by schemas."
+    },
+    {
+      "file": "packages/agents/use-cases/src/entities/ProviderInstance/ProviderInstance.use-cases.ts",
+      "symbol": "ProviderInstanceUseCasesShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/agents-use-cases",
+      "reason": "Effect browser-driver service contract containing capture functions; captured font metrics and snapshots are modeled by schemas."
     },
     {
       "file": "packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.kernel.ts",
@@ -459,6 +483,14 @@
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/phoenix",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/drivers/pretext/src/PretextCapture.service.ts",
+      "symbol": "PretextCaptureShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/pretext",
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {

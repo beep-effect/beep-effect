@@ -30,6 +30,7 @@ export * as AssistantTurn from "./AssistantTurn/index.js";
  * import { ProviderInstance } from "@beep/agents-server"
  * console.log(ProviderInstance.ProviderInstanceLive)
  * ```
- * @category layers @since 0.0.0
+ * @category layers
+ * @since 0.0.0
  */
 export * as ProviderInstance from "./ProviderInstance/index.js";

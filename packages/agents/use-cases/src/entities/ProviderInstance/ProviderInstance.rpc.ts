@@ -19,7 +19,8 @@ import { ProviderActionError } from "./ProviderInstance.errors.js";
  * import { AddProviderInstanceRpc, ProviderInstanceRpcs } from "@beep/agents-use-cases/public"
  * console.log(ProviderInstanceRpcs.requests.get("AddProviderInstance") === AddProviderInstanceRpc)
  * ```
- * @category protocols @since 0.0.0
+ * @category protocols
+ * @since 0.0.0
  */
 export const AddProviderInstanceRpc = Rpc.make("AddProviderInstance", {
   payload: AddProviderInstanceCommand,
@@ -32,7 +33,8 @@ export const AddProviderInstanceRpc = Rpc.make("AddProviderInstance", {
  * import { ProviderInstanceRpcs, UpdateProviderInstanceRpc } from "@beep/agents-use-cases/public"
  * console.log(ProviderInstanceRpcs.requests.get("UpdateProviderInstance") === UpdateProviderInstanceRpc)
  * ```
- * @category protocols @since 0.0.0
+ * @category protocols
+ * @since 0.0.0
  */
 export const UpdateProviderInstanceRpc = Rpc.make("UpdateProviderInstance", {
   payload: UpdateProviderInstanceCommand,
@@ -45,7 +47,8 @@ export const UpdateProviderInstanceRpc = Rpc.make("UpdateProviderInstance", {
  * import { ProviderInstanceRpcs, RemoveProviderInstanceRpc } from "@beep/agents-use-cases/public"
  * console.log(ProviderInstanceRpcs.requests.get("RemoveProviderInstance") === RemoveProviderInstanceRpc)
  * ```
- * @category protocols @since 0.0.0
+ * @category protocols
+ * @since 0.0.0
  */
 export const RemoveProviderInstanceRpc = Rpc.make("RemoveProviderInstance", {
   payload: RemoveProviderInstanceCommand,
@@ -58,7 +61,8 @@ export const RemoveProviderInstanceRpc = Rpc.make("RemoveProviderInstance", {
  * import { ProbeProviderInstanceRpc, ProviderInstanceRpcs } from "@beep/agents-use-cases/public"
  * console.log(ProviderInstanceRpcs.requests.get("ProbeProviderInstance") === ProbeProviderInstanceRpc)
  * ```
- * @category protocols @since 0.0.0
+ * @category protocols
+ * @since 0.0.0
  */
 export const ProbeProviderInstanceRpc = Rpc.make("ProbeProviderInstance", {
   payload: ProbeProviderInstanceCommand,
@@ -71,7 +75,8 @@ export const ProbeProviderInstanceRpc = Rpc.make("ProbeProviderInstance", {
  * import { GetProviderInstanceRpc, ProviderInstanceRpcs } from "@beep/agents-use-cases/public"
  * console.log(ProviderInstanceRpcs.requests.get("GetProviderInstance") === GetProviderInstanceRpc)
  * ```
- * @category protocols @since 0.0.0
+ * @category protocols
+ * @since 0.0.0
  */
 export const GetProviderInstanceRpc = Rpc.make("GetProviderInstance", {
   payload: GetProviderInstanceQuery,
@@ -84,7 +89,8 @@ export const GetProviderInstanceRpc = Rpc.make("GetProviderInstance", {
  * import { ListProviderInstancesRpc, ProviderInstanceRpcs } from "@beep/agents-use-cases/public"
  * console.log(ProviderInstanceRpcs.requests.get("ListProviderInstances") === ListProviderInstancesRpc)
  * ```
- * @category protocols @since 0.0.0
+ * @category protocols
+ * @since 0.0.0
  */
 export const ListProviderInstancesRpc = Rpc.make("ListProviderInstances", {
   payload: ListProviderInstancesQuery,
@@ -98,7 +104,8 @@ export const ListProviderInstancesRpc = Rpc.make("ListProviderInstances", {
  * import { ProviderInstanceRpcs } from "@beep/agents-use-cases/public"
  * console.log(ProviderInstanceRpcs.requests.has("ProbeProviderInstance")) // true
  * ```
- * @category protocols @since 0.0.0
+ * @category protocols
+ * @since 0.0.0
  */
 export const ProviderInstanceRpcs = RpcGroup.make(
   AddProviderInstanceRpc,

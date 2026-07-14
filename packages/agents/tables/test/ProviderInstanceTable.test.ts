@@ -37,6 +37,7 @@ describe("ProviderInstance table", () => {
     expect(providerInstanceTable.definition.entityId.entityType).toBe("AgentsProviderInstance");
     expect(providerInstanceTable.entitySchema).toBe(DomainProviderInstance.ProviderInstance);
     expect(columns.id.primary).toBe(true);
+    expect(columns.id.hasDefault).toBe(true);
     expect(columns.id.columnType).toBe("PgSerial");
     expect(columns.publicId.name).toBe("public_id");
     expect(columns.binaryPath.name).toBe("binary_path");

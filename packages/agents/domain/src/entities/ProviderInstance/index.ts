@@ -20,7 +20,7 @@
  * console.log(loginGuidance("codex", snapshot))
  * ```
  *
- * @category behavior
+ * @category mapping
  * @since 0.0.0
  */
 export * from "./ProviderInstance.behavior.js";

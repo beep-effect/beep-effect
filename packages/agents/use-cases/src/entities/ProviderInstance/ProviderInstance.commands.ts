@@ -27,8 +27,15 @@ const configurationFields = {
  * @example
  * ```ts
  * import { AddProviderInstanceCommand } from "@beep/agents-use-cases/public"
+ * import * as Domain from "@beep/agents-domain/entities/ProviderInstance"
  * import * as O from "effect/Option"
- * const command = AddProviderInstanceCommand.make({ binaryPath: "/usr/bin/claude", envVars: {}, homePath: O.none(), kind: "claude", label: "Personal" })
+ * const command = AddProviderInstanceCommand.make({
+ *   binaryPath: Domain.BinaryPath.make("/usr/bin/claude"),
+ *   envVars: {},
+ *   homePath: O.none(),
+ *   kind: "claude",
+ *   label: Domain.InstanceLabel.make("Personal")
+ * })
  * console.log(command.kind) // "claude"
  * ```
  * @category commands
@@ -45,9 +52,17 @@ export class AddProviderInstanceCommand extends S.Class<AddProviderInstanceComma
  * @example
  * ```ts
  * import { UpdateProviderInstanceCommand } from "@beep/agents-use-cases/public"
+ * import * as Domain from "@beep/agents-domain/entities/ProviderInstance"
  * import * as Agents from "@beep/shared-domain/identity/Agents"
  * import * as O from "effect/Option"
- * const command = UpdateProviderInstanceCommand.make({ id: Agents.ProviderInstanceId.make(1), binaryPath: "/usr/bin/codex", envVars: {}, homePath: O.none(), kind: "codex", label: "Work" })
+ * const command = UpdateProviderInstanceCommand.make({
+ *   id: Agents.ProviderInstanceId.make(1),
+ *   binaryPath: Domain.BinaryPath.make("/usr/bin/codex"),
+ *   envVars: {},
+ *   homePath: O.none(),
+ *   kind: "codex",
+ *   label: Domain.InstanceLabel.make("Work")
+ * })
  * console.log(command.label) // "Work"
  * ```
  * @category commands

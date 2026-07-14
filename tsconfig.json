@@ -242,6 +242,9 @@
         "./packages/agents/domain/src/entities/ProviderInstance/index.ts"
       ],
       "@beep/agents-tables": ["./packages/agents/tables/src/index.ts"],
+      "@beep/agents-tables/entities": [
+        "./packages/agents/tables/src/entities/index.ts"
+      ],
       "@beep/agents-tables/tables": ["./packages/agents/tables/src/tables.ts"],
       "@beep/epistemic-domain/entities": [
         "./packages/epistemic/domain/src/entities/index.ts"

@@ -8,10 +8,10 @@
 
 import { $AgentsDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as SchemaTransformation from "effect/SchemaTransformation";
 
 const $I = $AgentsDomainId.create("entities/ProviderInstance/ProviderInstance.values");
 

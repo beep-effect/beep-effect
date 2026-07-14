@@ -1,6 +1,7 @@
 /** Provider-instance use-case implementation. @packageDocumentation @since 0.0.0 */
 import * as Domain from "@beep/agents-domain/entities/ProviderInstance";
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import { ProviderProbeUnavailable, ProviderUnauthenticated } from "./ProviderInstance.errors.js";
 import type {
@@ -18,17 +19,19 @@ import type { ProviderInstanceUseCasesShape } from "./ProviderInstance.use-cases
  * @example
  * ```ts
  * import { makeProviderInstanceUseCases } from "@beep/agents-use-cases/server"
+ * import type { ProviderInstance } from "@beep/agents-domain/entities/ProviderInstance"
  * import { Effect } from "effect"
- * const repository = { add: () => Effect.die("example"), get: () => Effect.die("example"), list: Effect.succeed([]), remove: () => Effect.void, save: (instance) => Effect.succeed(instance) }
+ * const repository = { add: () => Effect.die("example"), get: () => Effect.die("example"), list: Effect.succeed([]), remove: () => Effect.void, save: (instance: ProviderInstance) => Effect.succeed(instance) }
  * const useCases = makeProviderInstanceUseCases(repository, { probe: () => Effect.die("example") })
  * console.log(useCases.list)
  * ```
- * @category use-cases @since 0.0.0
+ * @category use-cases
+ * @since 0.0.0
  */
-export const makeProviderInstanceUseCases = (
-  repository: ProviderInstanceRepositoryShape,
-  providerProbe: ProviderProbeShape
-): ProviderInstanceUseCasesShape => ({
+export const makeProviderInstanceUseCases: {
+  (repository: ProviderInstanceRepositoryShape, providerProbe: ProviderProbeShape): ProviderInstanceUseCasesShape;
+  (providerProbe: ProviderProbeShape): (repository: ProviderInstanceRepositoryShape) => ProviderInstanceUseCasesShape;
+} = dual(2, (repository: ProviderInstanceRepositoryShape, providerProbe: ProviderProbeShape) => ({
   add: Effect.fn("Agents.ProviderInstance.add")(function* (command: AddProviderInstanceCommand) {
     return yield* repository.add(command);
   }),
@@ -76,4 +79,4 @@ export const makeProviderInstanceUseCases = (
   list: Effect.fn("Agents.ProviderInstance.list")(function* (_query: ListProviderInstancesQuery) {
     return yield* repository.list;
   }),
-});
+}));

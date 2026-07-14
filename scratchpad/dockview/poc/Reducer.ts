@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { NonNegativeInt } from "@beep/schema";
+import { thunkEffectVoid } from "@beep/utils";
 import { Effect, Metric, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -85,7 +86,7 @@ const nextRevision = (state: DockWorkspace) => NonNegativeInt.make(state.revisio
 
 const ensureRevisionAvailable = (state: DockWorkspace): Effect.Effect<void, DockInvariantViolation> =>
   Bool.match(N.isLessThan(state.revision, globalThis.Number.MAX_SAFE_INTEGER), {
-    onTrue: () => Effect.void,
+    onTrue: thunkEffectVoid,
     onFalse: () =>
       DockInvariantViolation.make({
         reason: "revision-exhausted",
@@ -152,7 +153,7 @@ const ensureUnique = (
   message: string
 ): Effect.Effect<void, DockInvariantViolation> =>
   Bool.match(Eq.equals(HashSet.size(HashSet.fromIterable(values)), A.length(values)), {
-    onTrue: () => Effect.void,
+    onTrue: thunkEffectVoid,
     onFalse: () => DockInvariantViolation.make({ reason, message }),
   });
 
@@ -183,7 +184,7 @@ export const validateWorkspace = Effect.fn("DockReducer.validateWorkspace")(func
     populated: ({ maximized }) => maximized,
   });
   yield* O.match(maximized, {
-    onNone: () => Effect.void,
+    onNone: thunkEffectVoid,
     onSome: (groupId) =>
       pipe(
         DockWorkspace.match(state, {
@@ -192,7 +193,7 @@ export const validateWorkspace = Effect.fn("DockReducer.validateWorkspace")(func
         }),
         O.filter((group) => group.metadata.visible),
         O.match({
-          onSome: () => Effect.void,
+          onSome: thunkEffectVoid,
           onNone: () =>
             DockInvariantViolation.make({
               reason: "maximized-group-invalid",
@@ -211,7 +212,7 @@ const openPanel = Effect.fn("DockReducer.openPanel")(function* (
 ) {
   yield* Bool.match(O.isSome(DockWorkspace.findPanel(state, command.panel.id)), {
     onTrue: () => reject(envelope, "panel-already-open", `Panel '${command.panel.id}' is already open.`),
-    onFalse: () => Effect.void,
+    onFalse: thunkEffectVoid,
   });
 
   return yield* DockPlacement.match(command.placement, {
@@ -247,11 +248,11 @@ const openPanel = Effect.fn("DockReducer.openPanel")(function* (
     split: Effect.fnUntraced(function* (placement) {
       yield* Bool.match(O.isSome(DockWorkspace.findTabs(state, placement.newGroupId)), {
         onTrue: () => reject(envelope, "group-already-exists", `Group '${placement.newGroupId}' already exists.`),
-        onFalse: () => Effect.void,
+        onFalse: thunkEffectVoid,
       });
       yield* Bool.match(O.isSome(DockWorkspace.findSplit(state, placement.splitId)), {
         onTrue: () => reject(envelope, "split-already-exists", `Split '${placement.splitId}' already exists.`),
-        onFalse: () => Effect.void,
+        onFalse: thunkEffectVoid,
       });
       return yield* O.match(DockWorkspace.findTabs(state, placement.referenceGroupId), {
         onNone: () =>
@@ -288,11 +289,11 @@ const openPanel = Effect.fn("DockReducer.openPanel")(function* (
         populated: Effect.fnUntraced(function* (workspace) {
           yield* Bool.match(O.isSome(DockNode.findTabs(workspace.root, placement.newGroupId)), {
             onTrue: () => reject(envelope, "group-already-exists", `Group '${placement.newGroupId}' already exists.`),
-            onFalse: () => Effect.void,
+            onFalse: thunkEffectVoid,
           });
           yield* Bool.match(O.isSome(DockNode.findSplit(workspace.root, placement.splitId)), {
             onTrue: () => reject(envelope, "split-already-exists", `Split '${placement.splitId}' already exists.`),
-            onFalse: () => Effect.void,
+            onFalse: thunkEffectVoid,
           });
           return yield* changed(workspace, envelope, (revision) => [
             PopulatedWorkspace.make({
@@ -548,17 +549,17 @@ const movePanel = Effect.fn("DockReducer.movePanel")(function* (
           );
           yield* Bool.match(GroupId.equals(source.groupId, targetTabs.groupId), {
             onTrue: () => reject(envelope, "same-group-move", "Move destination must be a different group."),
-            onFalse: () => Effect.void,
+            onFalse: thunkEffectVoid,
           });
         }),
         split: Effect.fnUntraced(function* (target) {
           yield* Bool.match(O.isSome(DockNode.findTabs(workspace.root, target.newGroupId)), {
             onTrue: () => reject(envelope, "group-already-exists", `Group '${target.newGroupId}' already exists.`),
-            onFalse: () => Effect.void,
+            onFalse: thunkEffectVoid,
           });
           yield* Bool.match(O.isSome(DockNode.findSplit(workspace.root, target.splitId)), {
             onTrue: () => reject(envelope, "split-already-exists", `Split '${target.splitId}' already exists.`),
-            onFalse: () => Effect.void,
+            onFalse: thunkEffectVoid,
           });
           const reference = yield* Effect.fromOption(DockNode.findTabs(workspace.root, target.referenceGroupId), () =>
             reject(envelope, "group-not-found", `Reference group '${target.referenceGroupId}' does not exist.`)
@@ -575,18 +576,18 @@ const movePanel = Effect.fn("DockReducer.movePanel")(function* (
                   "source-group-would-disappear",
                   "The only panel in a group cannot be docked beside that same group."
                 ),
-              onFalse: () => Effect.void,
+              onFalse: thunkEffectVoid,
             }
           );
         }),
         rootSplit: Effect.fnUntraced(function* (target) {
           yield* Bool.match(O.isSome(DockNode.findTabs(workspace.root, target.newGroupId)), {
             onTrue: () => reject(envelope, "group-already-exists", `Group '${target.newGroupId}' already exists.`),
-            onFalse: () => Effect.void,
+            onFalse: thunkEffectVoid,
           });
           yield* Bool.match(O.isSome(DockNode.findSplit(workspace.root, target.splitId)), {
             onTrue: () => reject(envelope, "split-already-exists", `Split '${target.splitId}' already exists.`),
-            onFalse: () => Effect.void,
+            onFalse: thunkEffectVoid,
           });
         }),
       });
@@ -718,7 +719,7 @@ const moveGroup = Effect.fn("DockReducer.moveGroup")(function* (
           }
           yield* Bool.match(O.isSome(DockNode.findSplit(workspace.root, target.splitId)), {
             onTrue: () => reject(envelope, "split-already-exists", `Split '${target.splitId}' already exists.`),
-            onFalse: () => Effect.void,
+            onFalse: thunkEffectVoid,
           });
           yield* Effect.fromOption(DockNode.findTabs(workspace.root, target.referenceGroupId), () =>
             reject(envelope, "group-not-found", `Reference group '${target.referenceGroupId}' does not exist.`)
@@ -752,7 +753,7 @@ const moveGroup = Effect.fn("DockReducer.moveGroup")(function* (
         groupRootSplit: Effect.fnUntraced(function* (target) {
           yield* Bool.match(O.isSome(DockNode.findSplit(workspace.root, target.splitId)), {
             onTrue: () => reject(envelope, "split-already-exists", `Split '${target.splitId}' already exists.`),
-            onFalse: () => Effect.void,
+            onFalse: thunkEffectVoid,
           });
           const rootWithoutSource = DockNode.removeTabs(workspace.root, source.groupId);
           if (O.isNone(rootWithoutSource)) return unchanged(workspace, envelope, "topology-unchanged");

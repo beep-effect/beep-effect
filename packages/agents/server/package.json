@@ -73,13 +73,14 @@
     "@beep/observability": "workspace:^",
     "@beep/postgres": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/shared-domain": "workspace:^",
     "@beep/utils": "workspace:^",
     "drizzle-orm": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@beep/test-utils": "workspace:^",
-    "@effect/platform-node": "catalog:",
+    "@effect/platform-bun": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:"
   }

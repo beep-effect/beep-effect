@@ -1,14 +1,23 @@
 import * as Domain from "@beep/agents-domain/entities/ProviderInstance";
 import {
+  makeProviderInstanceRepository,
   ProviderInstanceRepositoryLive,
   ProviderInstanceUseCasesLive,
   ProviderProbeLive,
 } from "@beep/agents-server/ProviderInstance";
 import {
   AddProviderInstanceCommand,
+  GetProviderInstanceQuery,
   ListProviderInstancesQuery,
+  makeProviderInstanceUseCases,
   ProbeProviderInstanceCommand,
+  ProviderInstanceActorContext,
+  ProviderInstanceActorScope,
+  ProviderInstanceRepository,
   ProviderInstanceUseCases,
+  ProviderProbe,
+  RemoveProviderInstanceCommand,
+  UpdateProviderInstanceCommand,
 } from "@beep/agents-use-cases/server";
 import {
   AiProviderCli,
@@ -17,7 +26,12 @@ import {
   AiProviderCliProcessResult,
 } from "@beep/ai-provider-cli";
 import { makeDrizzle, makeDrizzleLayer } from "@beep/postgres";
+import { CuidState } from "@beep/schema/Cuid";
+import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
+import * as Agents from "@beep/shared-domain/identity/Agents";
 import { makePgliteIntegrationGate } from "@beep/test-utils";
+import { A, Str } from "@beep/utils";
+import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, layer } from "@effect/vitest";
 import { sql } from "drizzle-orm";
 import { Effect, Layer, Ref } from "effect";
@@ -27,6 +41,20 @@ import * as S from "effect/Schema";
 import type { AiProviderCliRunner } from "@beep/ai-provider-cli";
 
 const { makePgliteLayer, pgliteIntegrationTimeoutMillis } = makePgliteIntegrationGate();
+const ProviderInstancePublicId = PublicEntityId.factory(Agents.ProviderInstanceId);
+const decodeActorScope = S.decodeUnknownSync(ProviderInstanceActorScope);
+
+const primaryActorScope = decodeActorScope({
+  orgId: 1,
+  principal: { component: "Runtime", kind: "System" },
+});
+
+const secondaryActorScope = decodeActorScope({
+  orgId: 2,
+  principal: { component: "Sync", kind: "System" },
+});
+
+const TestActorScopeLayer = Layer.succeed(ProviderInstanceActorContext, primaryActorScope);
 
 const runnerRequests = Ref.makeUnsafe<ReadonlyArray<Parameters<AiProviderCliRunner>[0]>>([]);
 
@@ -45,7 +73,9 @@ const runner: AiProviderCliRunner = (request) =>
 
 const TestHomeLayer = Layer.succeed(AiProviderCliHome)(
   AiProviderCliHome.of({
-    ensureCodexShadowHome: () => Effect.void,
+    ensureCodexShadowHome: Effect.fnUntraced(function* () {
+      return yield* Effect.void;
+    }),
     makeClaudeEnv: ({ baseEnv, homePath }) =>
       O.match(homePath, {
         onNone: () => baseEnv,
@@ -71,9 +101,21 @@ const TestLayer = ProviderInstanceUseCasesLive.pipe(
   Layer.provideMerge(PortsLive),
   Layer.provideMerge(AiProviderCli.makeLayerFromRunner(runner)),
   Layer.provideMerge(TestHomeLayer),
+  Layer.provideMerge(TestActorScopeLayer),
+  Layer.provideMerge(CuidState.Default),
+  Layer.provideMerge(BunCrypto.layer),
   Layer.provideMerge(makeDrizzleLayer()),
   Layer.provideMerge(makePgliteLayer())
 );
+
+const makeAddCommand = (label: string) =>
+  AddProviderInstanceCommand.make({
+    binaryPath: Domain.BinaryPath.make("/opt/bin/claude"),
+    envVars: {},
+    homePath: O.none(),
+    kind: "claude",
+    label: Domain.InstanceLabel.make(label),
+  });
 
 const prepareTable = Effect.fnUntraced(function* () {
   const db = yield* makeDrizzle();
@@ -81,7 +123,7 @@ const prepareTable = Effect.fnUntraced(function* () {
   yield* db.execute(sql`
     CREATE TABLE agents_provider_instance (
       id serial PRIMARY KEY,
-      public_id text NOT NULL,
+      public_id text NOT NULL UNIQUE,
       entity_type text NOT NULL,
       schema_version text NOT NULL,
       created_at bigint NOT NULL,
@@ -101,7 +143,7 @@ const prepareTable = Effect.fnUntraced(function* () {
   `);
 });
 
-describe.sequential("ProviderInstance PGLite integration", () => {
+describe("ProviderInstance PGLite integration", { concurrent: false }, () => {
   layer(TestLayer, { timeout: "5 minutes" })((it) => {
     it.effect(
       "persists an authenticated probe snapshot and lists it",
@@ -109,13 +151,14 @@ describe.sequential("ProviderInstance PGLite integration", () => {
         yield* prepareTable();
         const useCases = yield* ProviderInstanceUseCases;
         yield* Ref.set(runnerRequests, []);
+        const envVars = yield* S.decodeUnknownEffect(Domain.EnvVars)({ NO_PROXY: "localhost" });
         const added = yield* useCases.add(
           AddProviderInstanceCommand.make({
-            binaryPath: "/opt/bin/claude",
-            envVars: { NO_PROXY: "localhost" },
-            homePath: O.some("/tmp/claude-home"),
+            binaryPath: Domain.BinaryPath.make("/opt/bin/claude"),
+            envVars,
+            homePath: O.some(Domain.HomePath.make("/tmp/claude-home")),
             kind: "claude",
-            label: "Personal Claude",
+            label: Domain.InstanceLabel.make("Personal Claude"),
           })
         );
         const probed = yield* useCases.probe(ProbeProviderInstanceCommand.make({ id: added.id }));
@@ -141,11 +184,11 @@ describe.sequential("ProviderInstance PGLite integration", () => {
         yield* Ref.set(runnerRequests, []);
         const added = yield* useCases.add(
           AddProviderInstanceCommand.make({
-            binaryPath: "/opt/bin/codex",
+            binaryPath: Domain.BinaryPath.make("/opt/bin/codex"),
             envVars: {},
-            homePath: O.some("/tmp/codex-home"),
+            homePath: O.some(Domain.HomePath.make("/tmp/codex-home")),
             kind: "codex",
-            label: "Work Codex",
+            label: Domain.InstanceLabel.make("Work Codex"),
           })
         );
         const failure = yield* Effect.flip(useCases.probe(ProbeProviderInstanceCommand.make({ id: added.id })));
@@ -159,6 +202,103 @@ describe.sequential("ProviderInstance PGLite integration", () => {
         const requests = yield* Ref.get(runnerRequests);
         expect(requests[0]?.executable).toBe("/opt/bin/codex");
         expect(requests[0]?.env).toEqual({ CODEX_HOME: "/tmp/codex-home" });
+      }),
+      pgliteIntegrationTimeoutMillis
+    );
+
+    it.effect(
+      "uses database-generated ids for concurrent inserts",
+      Effect.fnUntraced(function* () {
+        yield* prepareTable();
+        const useCases = yield* ProviderInstanceUseCases;
+        const concurrency = 8;
+        const added = yield* Effect.all(
+          A.makeBy(concurrency, (index) => useCases.add(makeAddCommand(`Concurrent ${index + 1}`))),
+          { concurrency: "unbounded" }
+        );
+        const ids = A.map(added, (instance) => instance.id);
+        const publicIds = A.map(added, (instance) => instance.publicId);
+        const generatedPublicIdLength = Str.length(Agents.ProviderInstanceId.tableName) + 25;
+
+        expect(A.length(A.dedupe(ids))).toBe(concurrency);
+        expect(A.length(A.dedupe(publicIds))).toBe(concurrency);
+        expect(A.every(publicIds, ProviderInstancePublicId.is)).toBe(true);
+        expect(A.every(publicIds, (publicId) => Str.length(publicId) === generatedPublicIdLength)).toBe(true);
+      }),
+      pgliteIntegrationTimeoutMillis
+    );
+
+    it.effect(
+      "isolates organizations and attributes writes to the trusted actor scope",
+      Effect.fnUntraced(function* () {
+        yield* prepareTable();
+        const primaryUseCases = yield* ProviderInstanceUseCases;
+        const primaryRepository = yield* ProviderInstanceRepository;
+        const providerProbe = yield* ProviderProbe;
+        const cuidState = yield* CuidState;
+        const secondaryRepository = yield* makeProviderInstanceRepository().pipe(
+          Effect.provideService(ProviderInstanceActorContext, secondaryActorScope),
+          Effect.provideService(CuidState, cuidState)
+        );
+        const secondaryUseCases = makeProviderInstanceUseCases(secondaryRepository, providerProbe);
+        yield* Ref.set(runnerRequests, []);
+
+        const primary = yield* primaryUseCases.add(makeAddCommand("Primary tenant"));
+        const secondary = yield* secondaryUseCases.add(makeAddCommand("Secondary tenant"));
+
+        expect(primary.orgId).toBe(primaryActorScope.orgId);
+        expect(primary.createdByPrincipal).toEqual(primaryActorScope.principal);
+        expect(secondary.orgId).toBe(secondaryActorScope.orgId);
+        expect(secondary.createdByPrincipal).toEqual(secondaryActorScope.principal);
+
+        const primaryList = yield* primaryUseCases.list(ListProviderInstancesQuery.make({}));
+        const secondaryList = yield* secondaryUseCases.list(ListProviderInstancesQuery.make({}));
+        expect(A.map(primaryList, (instance) => instance.id)).toEqual([primary.id]);
+        expect(A.map(secondaryList, (instance) => instance.id)).toEqual([secondary.id]);
+
+        const getFailure = yield* Effect.flip(primaryUseCases.get(GetProviderInstanceQuery.make({ id: secondary.id })));
+        const updateFailure = yield* Effect.flip(
+          primaryUseCases.update(
+            UpdateProviderInstanceCommand.make({
+              binaryPath: secondary.binaryPath,
+              envVars: secondary.envVars,
+              homePath: secondary.homePath,
+              id: secondary.id,
+              kind: secondary.kind,
+              label: Domain.InstanceLabel.make("Cross-tenant update"),
+            })
+          )
+        );
+        const probeFailure = yield* Effect.flip(
+          primaryUseCases.probe(ProbeProviderInstanceCommand.make({ id: secondary.id }))
+        );
+        const saveFailure = yield* Effect.flip(primaryRepository.save(secondary));
+        const removeFailure = yield* Effect.flip(
+          primaryUseCases.remove(RemoveProviderInstanceCommand.make({ id: secondary.id }))
+        );
+
+        expect(P.isTagged("ProviderInstanceNotFound")(getFailure)).toBe(true);
+        expect(P.isTagged("ProviderInstanceNotFound")(updateFailure)).toBe(true);
+        expect(P.isTagged("ProviderInstanceNotFound")(probeFailure)).toBe(true);
+        expect(P.isTagged("ProviderInstanceNotFound")(saveFailure)).toBe(true);
+        expect(P.isTagged("ProviderInstanceNotFound")(removeFailure)).toBe(true);
+        expect(yield* Ref.get(runnerRequests)).toHaveLength(0);
+
+        const persistedSecondary = yield* secondaryUseCases.get(GetProviderInstanceQuery.make({ id: secondary.id }));
+        const updatedSecondary = yield* secondaryUseCases.update(
+          UpdateProviderInstanceCommand.make({
+            binaryPath: persistedSecondary.binaryPath,
+            envVars: persistedSecondary.envVars,
+            homePath: persistedSecondary.homePath,
+            id: persistedSecondary.id,
+            kind: persistedSecondary.kind,
+            label: Domain.InstanceLabel.make("Updated secondary tenant"),
+          })
+        );
+
+        expect(updatedSecondary.orgId).toBe(secondaryActorScope.orgId);
+        expect(updatedSecondary.updatedByPrincipal).toEqual(secondaryActorScope.principal);
+        expect(updatedSecondary.rowVersion).toBe(secondary.rowVersion + 1);
       }),
       pgliteIntegrationTimeoutMillis
     );

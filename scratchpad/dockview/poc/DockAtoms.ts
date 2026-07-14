@@ -26,6 +26,7 @@ import {
 
 export { DockAtomSessionError } from "./DockAtomProtocol.ts";
 
+import { thunkEffectVoid } from "@beep/utils";
 import {
   DockEngine,
   DockEngineLive,
@@ -77,7 +78,7 @@ const makeDockAtomSessionLayer = (
       const publishMutation = Effect.fn("DockAtomSession.publishMutation")(function* (outcome: DockMutationOutcome) {
         yield* DockMutationResult.match(outcome.result, {
           Changed: (changed) => Effect.sync(() => registry.set(stateAtom, changed.state)),
-          Unchanged: () => Effect.void,
+          Unchanged: thunkEffectVoid,
         });
         return DockMutationCompleted.make({
           outcome,
@@ -123,7 +124,7 @@ const makeDockAtomSessionLayer = (
                   Exit.match({
                     onFailure: (cause) =>
                       O.match(Cause.findErrorOption(cause), {
-                        onNone: () => Effect.void,
+                        onNone: thunkEffectVoid,
                         onSome: (error) =>
                           appendFeed(
                             DockAtomFeedFailure.make({
@@ -172,7 +173,7 @@ const makeDockAtomSessionLayer = (
                     Effect.sync(() =>
                       registry.set(operationResultAtom, AsyncResult.fromExitWithPrevious(exit, O.some(previous)))
                     ),
-                  onFalse: () => Effect.void,
+                  onFalse: thunkEffectVoid,
                 })
               )
             )

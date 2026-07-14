@@ -24,7 +24,8 @@ const $I = $AgentsUseCasesId.create("entities/ProviderInstance/ProviderInstance.
  * const useCases = { add: () => Effect.die("example"), update: () => Effect.die("example"), remove: () => Effect.void, probe: () => Effect.die("example"), get: () => Effect.die("example"), list: () => Effect.succeed([]) } satisfies ProviderInstanceUseCasesShape
  * console.log(useCases.list)
  * ```
- * @category use-cases @since 0.0.0
+ * @category use-cases
+ * @since 0.0.0
  */
 export interface ProviderInstanceUseCasesShape {
   readonly add: (command: AddProviderInstanceCommand) => Effect.Effect<Domain.ProviderInstance, ProviderActionError>;
@@ -49,7 +50,8 @@ export interface ProviderInstanceUseCasesShape {
  * const program = Effect.gen(function* () { return yield* ProviderInstanceUseCases })
  * console.log(program)
  * ```
- * @category use-cases @since 0.0.0
+ * @category use-cases
+ * @since 0.0.0
  */
 export class ProviderInstanceUseCases extends Context.Service<
   ProviderInstanceUseCases,

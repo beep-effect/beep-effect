@@ -171,7 +171,8 @@ const generatedComposers = $I.compose(
   "doc-text",
   "doc-text",
   "documents-tables",
-  "tailscale"
+  "tailscale",
+  "agents-tables"
 );
 
 const composers = {
@@ -2089,3 +2090,19 @@ export const $DocumentsTablesId: Identity.IdentityComposer<"@beep/documents-tabl
  * @category configuration
  */
 export const $TailscaleId: Identity.IdentityComposer<"@beep/tailscale"> = composers.$TailscaleId;
+
+/**
+ * Identity composer for `@beep/agents-tables`.
+ *
+ * @example
+ * ```typescript
+ * import { $AgentsTablesId } from "@beep/identity"
+ *
+ * const id = $AgentsTablesId.make("AgentsTables")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $AgentsTablesId: Identity.IdentityComposer<"@beep/agents-tables"> = composers.$AgentsTablesId;

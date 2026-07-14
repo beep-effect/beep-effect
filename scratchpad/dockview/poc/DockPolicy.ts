@@ -4,6 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { thunkEffectVoid } from "@beep/utils";
 import { Effect, Layer, pipe } from "effect";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
@@ -51,7 +53,7 @@ const rejectLockedDestination = (
   Bool.match(
     O.exists(destinationLock(state, groupId), (locked) => Bool.not(Eq.equals(locked, "unlocked"))),
     {
-      onFalse: () => Effect.void,
+      onFalse: thunkEffectVoid,
       onTrue: () => rejectLocked(envelope),
     }
   );
@@ -62,7 +64,7 @@ const rejectNoDropReference = (
   groupId: GroupIdType
 ): Effect.Effect<void, DockCommandRejected> =>
   Bool.match(O.exists(destinationLock(state, groupId), Eq.equals("no-drop-target")), {
-    onFalse: () => Effect.void,
+    onFalse: thunkEffectVoid,
     onTrue: () => rejectLocked(envelope),
   });
 
@@ -74,8 +76,8 @@ export const lockedGroupsPolicy: DockCommandPolicy = Effect.fn("DockPolicy.locke
   return yield* DockCommand.match(envelope.command, {
     openPanel: ({ placement }) =>
       DockPlacement.match(placement, {
-        root: () => Effect.void,
-        rootSplit: () => Effect.void,
+        root: thunkEffectVoid,
+        rootSplit: thunkEffectVoid,
         tab: ({ groupId }) => rejectLockedDestination(state, envelope, groupId),
         split: ({ referenceGroupId }) => rejectNoDropReference(state, envelope, referenceGroupId),
       }),
@@ -87,35 +89,35 @@ export const lockedGroupsPolicy: DockCommandPolicy = Effect.fn("DockPolicy.locke
               GroupId.equals(source.groupId, groupId)
             ),
             {
-              onTrue: () => Effect.void,
+              onTrue: thunkEffectVoid,
               onFalse: () => rejectLockedDestination(state, envelope, groupId),
             }
           ),
         split: ({ referenceGroupId }) => rejectNoDropReference(state, envelope, referenceGroupId),
-        rootSplit: () => Effect.void,
+        rootSplit: thunkEffectVoid,
       }),
     moveGroup: ({ target }) =>
       DockGroupMoveTarget.match(target, {
         tab: ({ groupId }) => rejectLockedDestination(state, envelope, groupId),
         groupSplit: ({ referenceGroupId }) => rejectNoDropReference(state, envelope, referenceGroupId),
-        groupRootSplit: () => Effect.void,
+        groupRootSplit: thunkEffectVoid,
       }),
-    activatePanel: () => Effect.void,
-    updatePanel: () => Effect.void,
-    updateGroup: () => Effect.void,
-    closePanel: () => Effect.void,
-    resizeSplit: () => Effect.void,
-    clearWorkspace: () => Effect.void,
-    maximizeGroup: () => Effect.void,
-    restoreMaximized: () => Effect.void,
-    floatGroup: () => Effect.void,
+    activatePanel: thunkEffectVoid,
+    updatePanel: thunkEffectVoid,
+    updateGroup: thunkEffectVoid,
+    closePanel: thunkEffectVoid,
+    resizeSplit: thunkEffectVoid,
+    clearWorkspace: thunkEffectVoid,
+    maximizeGroup: thunkEffectVoid,
+    restoreMaximized: thunkEffectVoid,
+    floatGroup: thunkEffectVoid,
     dockFloatingGroup: ({ target }) =>
       DockGroupMoveTarget.match(target, {
         tab: ({ groupId }) => rejectLockedDestination(state, envelope, groupId),
         groupSplit: ({ referenceGroupId }) => rejectNoDropReference(state, envelope, referenceGroupId),
-        groupRootSplit: () => Effect.void,
+        groupRootSplit: thunkEffectVoid,
       }),
-    moveFloatingGroup: () => Effect.void,
+    moveFloatingGroup: thunkEffectVoid,
   });
 });
 

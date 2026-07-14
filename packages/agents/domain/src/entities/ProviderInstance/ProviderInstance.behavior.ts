@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 
+import { dual } from "effect/Function";
 import { AuthSnapshot, ProviderKind } from "./ProviderInstance.values.js";
 
 /**
@@ -33,10 +34,13 @@ import { AuthSnapshot, ProviderKind } from "./ProviderInstance.values.js";
  * @param kind - Provider CLI kind the instance delegates to.
  * @param snapshot - Latest auth-probe snapshot for the instance.
  * @returns User-facing guidance string for the given kind and snapshot.
- * @category behavior
+ * @category mapping
  * @since 0.0.0
  */
-export const loginGuidance = (kind: ProviderKind, snapshot: AuthSnapshot): string =>
+export const loginGuidance: {
+  (kind: ProviderKind, snapshot: AuthSnapshot): string;
+  (snapshot: AuthSnapshot): (kind: ProviderKind) => string;
+} = dual(2, (kind: ProviderKind, snapshot: AuthSnapshot): string =>
   AuthSnapshot.match(snapshot, {
     authenticated: () =>
       ProviderKind.$match(kind, {
@@ -55,4 +59,5 @@ export const loginGuidance = (kind: ProviderKind, snapshot: AuthSnapshot): strin
         codex: () =>
           "The Codex CLI probe failed before reporting auth status. Check that the instance binary path points at a runnable `codex` binary, then probe again.",
       }),
-  });
+  })
+);

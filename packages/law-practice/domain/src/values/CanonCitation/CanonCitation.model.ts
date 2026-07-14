@@ -17,8 +17,8 @@ const $I = $LawPracticeDomainId.create("values/CanonCitation/CanonCitation.model
  *
  * Spreads the shared {@link CitationBase} fields and tags itself with the
  * `canon` discriminant, then adds the canon number and its optional subsection
- * chain and explicitly stated rule set (e.g. `Code of Judicial Conduct Canon
- * 7(B)(1)`).
+ * chain and explicitly stated rule set (e.g.
+ * `Code of Judicial Conduct Canon 7(B)(1)`).
  *
  * **Example**
  *

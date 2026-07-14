@@ -38,7 +38,8 @@ const toDomainSnapshot = Effect.fn("Agents.ProviderProbe.toDomainSnapshot")(func
  * import { makeProviderProbe } from "@beep/agents-server/ProviderInstance"
  * console.log(makeProviderProbe)
  * ```
- * @category ports @since 0.0.0
+ * @category ports
+ * @since 0.0.0
  */
 export const makeProviderProbe = Effect.fn("Agents.ProviderProbe.make")(function* () {
   const cli = yield* AiProviderCli;

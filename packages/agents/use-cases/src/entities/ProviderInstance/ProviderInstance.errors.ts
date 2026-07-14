@@ -13,7 +13,8 @@ const $I = $AgentsUseCasesId.create("entities/ProviderInstance/ProviderInstance.
  * import * as Agents from "@beep/shared-domain/identity/Agents"
  * console.log(ProviderInstanceNotFound.make({ providerInstanceId: Agents.ProviderInstanceId.make(1) })._tag)
  * ```
- * @category errors @since 0.0.0
+ * @category errors
+ * @since 0.0.0
  */
 export class ProviderInstanceNotFound extends TaggedErrorClass<ProviderInstanceNotFound>($I`ProviderInstanceNotFound`)(
   "ProviderInstanceNotFound",
@@ -29,7 +30,8 @@ export class ProviderInstanceNotFound extends TaggedErrorClass<ProviderInstanceN
  * const error = ProviderUnauthenticated.make({ providerInstanceId: Agents.ProviderInstanceId.make(1), guidance: "Run `codex login` in your terminal, then probe again." })
  * console.log(error.guidance)
  * ```
- * @category errors @since 0.0.0
+ * @category errors
+ * @since 0.0.0
  */
 export class ProviderUnauthenticated extends TaggedErrorClass<ProviderUnauthenticated>($I`ProviderUnauthenticated`)(
   "ProviderUnauthenticated",
@@ -44,7 +46,8 @@ export class ProviderUnauthenticated extends TaggedErrorClass<ProviderUnauthenti
  * const error = ProviderProbeUnavailable.make({ guidance: "Check the configured binary path, then probe again." })
  * console.log(error._tag)
  * ```
- * @category errors @since 0.0.0
+ * @category errors
+ * @since 0.0.0
  */
 export class ProviderProbeUnavailable extends TaggedErrorClass<ProviderProbeUnavailable>($I`ProviderProbeUnavailable`)(
   "ProviderProbeUnavailable",
@@ -60,7 +63,8 @@ export class ProviderProbeUnavailable extends TaggedErrorClass<ProviderProbeUnav
  * import { ProviderActionError, ProviderProbeUnavailable } from "@beep/agents-use-cases/public"
  * console.log(ProviderActionError.is(ProviderProbeUnavailable.make({ guidance: "Try again." }))) // true
  * ```
- * @category errors @since 0.0.0
+ * @category errors
+ * @since 0.0.0
  */
 export const ProviderActionError = S.Union([
   ProviderInstanceNotFound,
@@ -79,6 +83,7 @@ export const ProviderActionError = S.Union([
  * const error: ProviderActionError = ProviderProbeUnavailable.make({ guidance: "Try again." })
  * console.log(error._tag)
  * ```
- * @category errors @since 0.0.0
+ * @category errors
+ * @since 0.0.0
  */
 export type ProviderActionError = typeof ProviderActionError.Type;

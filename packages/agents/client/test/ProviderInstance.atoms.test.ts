@@ -4,7 +4,7 @@ import {
   providerInstanceTransportLayerAtom,
 } from "@beep/agents-client/ProviderInstance.service";
 import { ProviderInstance } from "@beep/agents-domain/entities/ProviderInstance";
-import { ProviderUnauthenticated } from "@beep/agents-use-cases/public";
+import { ProviderInstanceRpcs, ProviderUnauthenticated } from "@beep/agents-use-cases/public";
 import * as Agents from "@beep/shared-domain/identity/Agents";
 import { baseEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -13,6 +13,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Atom, AtomRegistry } from "effect/unstable/reactivity";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
+import * as RpcTest from "effect/unstable/rpc/RpcTest";
 
 const instance = S.decodeUnknownSync(ProviderInstance)({
   ...baseEntityFixtureInput("AgentsProviderInstance", 7),
@@ -27,27 +28,34 @@ const instance = S.decodeUnknownSync(ProviderInstance)({
 const settle = Effect.repeat(Effect.yieldNow, { times: 4 });
 let listReads = 0;
 let probeFailure: O.Option<ProviderUnauthenticated> = O.none();
-const transport = ProviderInstanceTransport.of((tag) => {
-  if (tag === "ListProviderInstances") {
+const isProviderUnauthenticated = S.is(ProviderUnauthenticated);
+const unexpectedRpc = (tag: string) =>
+  Effect.fnUntraced(function* () {
+    return yield* Effect.die(`unexpected rpc: ${tag}`);
+  });
+const ProviderInstanceRpcHandlersTest = ProviderInstanceRpcs.toLayer({
+  AddProviderInstance: unexpectedRpc("AddProviderInstance"),
+  GetProviderInstance: unexpectedRpc("GetProviderInstance"),
+  ListProviderInstances: Effect.fnUntraced(function* () {
     listReads += 1;
-    return Effect.succeed([instance]);
-  }
-  if (tag === "ProbeProviderInstance") {
-    return O.match(probeFailure, { onNone: () => Effect.succeed(instance), onSome: Effect.fail });
-  }
-  return Effect.die(`unexpected rpc: ${tag}`);
+    return [instance];
+  }),
+  ProbeProviderInstance: Effect.fnUntraced(function* () {
+    return yield* O.match(probeFailure, { onNone: () => Effect.succeed(instance), onSome: Effect.fail });
+  }),
+  RemoveProviderInstance: unexpectedRpc("RemoveProviderInstance"),
+  UpdateProviderInstance: unexpectedRpc("UpdateProviderInstance"),
 });
+const ProviderInstanceTransportTest = Layer.effect(
+  ProviderInstanceTransport,
+  RpcTest.makeClient(ProviderInstanceRpcs, { flatten: true })
+).pipe(Layer.provide(ProviderInstanceRpcHandlersTest));
 const makeRegistry = () =>
   AtomRegistry.make({
-    initialValues: [
-      Atom.initialValue(
-        providerInstanceTransportLayerAtom,
-        O.some(Layer.succeed(ProviderInstanceTransport, transport))
-      ),
-    ],
+    initialValues: [Atom.initialValue(providerInstanceTransportLayerAtom, O.some(ProviderInstanceTransportTest))],
   });
 
-describe.sequential("@beep/agents-client ProviderInstance atoms", () => {
+describe("@beep/agents-client ProviderInstance atoms", { concurrent: false }, () => {
   it.effect("reads provider instances through the injected transport", () =>
     Effect.gen(function* () {
       listReads = 0;
@@ -103,8 +111,8 @@ describe.sequential("@beep/agents-client ProviderInstance atoms", () => {
         const reason = result.cause.reasons[0];
         expect(Cause.isFailReason(reason)).toBe(true);
         if (Cause.isFailReason(reason)) {
-          expect(reason.error).toBeInstanceOf(ProviderUnauthenticated);
-          if (reason.error instanceof ProviderUnauthenticated) {
+          expect(isProviderUnauthenticated(reason.error)).toBe(true);
+          if (isProviderUnauthenticated(reason.error)) {
             expect(reason.error.guidance).toBe(guidance);
           }
         }

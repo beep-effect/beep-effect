@@ -33,6 +33,9 @@
       "@beep/agents-tables/tables": [
         "../../../packages/agents/tables/src/tables.ts"
       ],
+      "@beep/agents-tables/entities": [
+        "../../../packages/agents/tables/src/entities/index.ts"
+      ],
       "@beep/agents-domain": ["../../../packages/agents/domain/src/index.ts"],
       "@beep/agents-domain/entities": [
         "../../../packages/agents/domain/src/entities/index.ts"

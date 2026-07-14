@@ -42,8 +42,8 @@ export const WarningLevel = LiteralKit(["error", "warning", "info"]).pipe(
 );
 
 /**
- * The decoded literal type for {@link WarningLevel} (`"error" | "warning" |
- * "info"`).
+ * The decoded literal type for {@link WarningLevel}:
+ * `"error" | "warning" | "info"`.
  *
  * **Example**
  *

@@ -23,6 +23,8 @@ import type { ProviderInstanceRepositoryShape, ProviderProbeShape } from "@beep/
 const id = Agents.ProviderInstanceId.make(1);
 const missingId = Agents.ProviderInstanceId.make(99);
 const probedAt = DateTime.makeUnsafe("2026-07-12T00:00:00.000Z");
+const isProviderInstanceNotFound = S.is(ProviderInstanceNotFound);
+const isProviderUnauthenticated = S.is(ProviderUnauthenticated);
 
 const makeInstance = (kind: Domain.ProviderKind = "claude"): Domain.ProviderInstance =>
   S.decodeUnknownSync(Domain.ProviderInstance)({
@@ -50,17 +52,15 @@ const makeRepository = (initial: ReadonlyArray<Domain.ProviderInstance>) => {
     add: () => unavailable(),
     get,
     list: Effect.sync(() => stored),
-    remove: (providerInstanceId) =>
-      Effect.gen(function* () {
-        yield* get(providerInstanceId);
-        stored = A.filter(stored, (instance) => instance.id !== providerInstanceId);
-      }),
-    save: (instance) =>
-      Effect.gen(function* () {
-        yield* get(instance.id);
-        stored = A.map(stored, (current) => (current.id === instance.id ? instance : current));
-        return instance;
-      }),
+    remove: Effect.fnUntraced(function* (providerInstanceId: Agents.ProviderInstanceId) {
+      yield* get(providerInstanceId);
+      stored = A.filter(stored, (instance) => instance.id !== providerInstanceId);
+    }),
+    save: Effect.fnUntraced(function* (instance: Domain.ProviderInstance) {
+      yield* get(instance.id);
+      stored = A.map(stored, (current) => (current.id === instance.id ? instance : current));
+      return instance;
+    }),
   };
   return { repository, read: () => stored };
 };
@@ -89,11 +89,11 @@ describe("@beep/agents-use-cases ProviderInstance", () => {
       const updated = yield* useCases.update(
         UpdateProviderInstanceCommand.make({
           id,
-          binaryPath: "/usr/bin/codex",
+          binaryPath: Domain.BinaryPath.make("/usr/bin/codex"),
           envVars: {},
           homePath: O.none(),
           kind: "codex",
-          label: "Work",
+          label: Domain.InstanceLabel.make("Work"),
         })
       );
       expect(updated.kind).toBe("codex");
@@ -129,8 +129,10 @@ describe("@beep/agents-use-cases ProviderInstance", () => {
           probe: () => Effect.succeed(snapshot),
         });
         const failure = yield* Effect.flip(useCases.probe(ProbeProviderInstanceCommand.make({ id })));
-        expect(failure).toBeInstanceOf(ProviderUnauthenticated);
-        expect(failure.guidance).toContain(command);
+        expect(isProviderUnauthenticated(failure)).toBe(true);
+        if (isProviderUnauthenticated(failure)) {
+          expect(failure.guidance).toContain(command);
+        }
         expect(O.getOrThrow(state.read()[0]?.lastProbe ?? O.none())).toBe(snapshot);
       })
     );
@@ -144,11 +146,11 @@ describe("@beep/agents-use-cases ProviderInstance", () => {
       });
       const update = UpdateProviderInstanceCommand.make({
         id: missingId,
-        binaryPath: "/usr/bin/claude",
+        binaryPath: Domain.BinaryPath.make("/usr/bin/claude"),
         envVars: {},
         homePath: O.none(),
         kind: "claude",
-        label: "Missing",
+        label: Domain.InstanceLabel.make("Missing"),
       });
       const failures = yield* Effect.all([
         Effect.flip(useCases.get(GetProviderInstanceQuery.make({ id: missingId }))),
@@ -156,7 +158,7 @@ describe("@beep/agents-use-cases ProviderInstance", () => {
         Effect.flip(useCases.remove(RemoveProviderInstanceCommand.make({ id: missingId }))),
         Effect.flip(useCases.probe(ProbeProviderInstanceCommand.make({ id: missingId }))),
       ]);
-      expect(A.every(failures, (failure) => failure instanceof ProviderInstanceNotFound)).toBe(true);
+      expect(A.every(failures, isProviderInstanceNotFound)).toBe(true);
     })
   );
 });

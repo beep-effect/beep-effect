@@ -16,9 +16,9 @@ drifts from the manifests, and merge conflicts are resolved by regenerating.
 | [file-processing-capability](./file-processing-capability/README.md) | File Processing Capability | 3/7 | 2026-06-18 | Define and implement a product-neutral schema-first file processing capability with driver-backed extraction and repo C… |
 | [gov-legal-data-driver-codegen](./gov-legal-data-driver-codegen/README.md) | Gov/Legal Data Driver Codegen | 3/4 | 2026-07-11 | — |
 | [legal-document-intake](./legal-document-intake/README.md) | Legal Document Intake | 4/8 | 2026-07-11 | — |
-| [professional-desktop-adversarial-qa](./professional-desktop-adversarial-qa/README.md) | Professional Desktop Adversarial QA | 1/5 | 2026-07-12 | Run adversarial QA and repair loops over the professional desktop surface until two consecutive rounds are clean. |
 | [llm-provider-subscription-auth](./llm-provider-subscription-auth/README.md) | LLM Provider Subscription Auth via CLI Delegation | 0/5 | 2026-07-11 | Users authenticate to LLM providers via their subscriptions through vendor-CLI delegation (t3code methodology): provide… |
 | [pretext-driver](./pretext-driver/README.md) | Pretext Driver (@beep/pretext) | — | 2026-07-13 | Wrap @chenglou/pretext as the repo driver @beep/pretext: browser-safe pure root (FontMetricsSnapshot contracts, codecs,… |
+| [professional-desktop-adversarial-qa](./professional-desktop-adversarial-qa/README.md) | Professional Desktop Adversarial QA | 1/5 | 2026-07-12 | Run adversarial QA and repair loops over the professional desktop surface until two consecutive rounds are clean. |
 | [semantic-foundation](./semantic-foundation/README.md) | Semantic Foundation | 0/6 | 2026-07-08 | — |
 
 ## Paused (22)
@@ -120,7 +120,3 @@ drifts from the manifests, and merge conflicts are resolved by regenerating.
 | [agentic-cad-patent-tooling](./agentic-cad-patent-tooling/README.md) | Agentic CAD — Patent Tooling | — | — | — |
 | [codex-security-findings-2026-06](./codex-security-findings-2026-06/README.md) | Codex Security Findings (2026-06) | 1/10 | 2026-06-17 | Triage, remediate-by-default, and close all 52 Codex Cloud security findings from scan `5138685acf488191ad6a5ee51a84452… |
 | [repo-codegraph-jsdoc](./repo-codegraph-jsdoc/README.md) | Repo Codegraph JSDoc | — | — | — |
-
-## Invalid or missing manifests (1)
-
-- `.idea` — manifest missing or does not decode as GoalManifest; see `bun run beep goals doctor`.

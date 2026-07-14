@@ -250,10 +250,11 @@ export type AiProviderCliExitCode = typeof AiProviderCliExitCode.Type;
  * @example
  * ```ts
  * import { AiProviderCliProbeOptions } from "@beep/ai-provider-cli"
+ * import * as O from "effect/Option"
  *
  * const options = AiProviderCliProbeOptions.make({
  *   env: { HOME: "/tmp/claude-home" },
- *   executable: "/opt/bin/claude"
+ *   executable: O.some("/opt/bin/claude")
  * })
  *
  * console.log(options.executable)

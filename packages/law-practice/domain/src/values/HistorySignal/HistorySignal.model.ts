@@ -90,8 +90,8 @@ export const HistorySignal = LiteralKit([
 
 /**
  * The decoded literal type for {@link HistorySignal} — a union of every
- * normalized subsequent-history disposition (`"affirmed" | "reversed" |
- * "cert_denied" | ...`), spanning federal-style history, Texas Greenbook
+ * normalized subsequent-history disposition, including
+ * `"affirmed" | "reversed" | "cert_denied" | ...`, spanning federal-style history, Texas Greenbook
  * writ/petition history, and California review history.
  *
  * **Example**

@@ -60,8 +60,8 @@ export const ParentheticalType = LiteralKit([
 
 /**
  * The decoded literal type for {@link ParentheticalType} — a union of every
- * supported parenthetical signal word (`"holding" | "finding" | "stating" |
- * ...`).
+ * supported parenthetical signal words, including
+ * `"holding" | "finding" | "stating" | ...`.
  *
  * **Example**
  *
