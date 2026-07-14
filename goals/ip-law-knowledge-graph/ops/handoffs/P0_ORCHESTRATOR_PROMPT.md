@@ -1,1 +1,0 @@
-Read the P0 handoff at `handoffs/HANDOFF_P0.md` and the README Source-of-Truth Contract. Survey all 7 OWL ontologies, extract class hierarchies and object properties, document reasoning constraints, and produce the class-to-node-type mapping. Write the complete findings to `outputs/p0-ontology-research.md`.

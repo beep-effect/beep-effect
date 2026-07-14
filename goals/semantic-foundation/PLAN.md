@@ -60,7 +60,8 @@ Before marking the packet closed (and `status` -> `completed-retained` /
 - Keep `SPEC.md` normative and update it only when the contract changes.
 - Keep third-party ontology material in the exploration asset pack; commit only
   manifest/fetch metadata there and repo-owned seed data in implementation.
-- Do not annotate `goals/ip-law-knowledge-graph` in this packet.
+- The former ontology-survey packet was removed 2026-07-14, so its no-annotation
+  fence is moot; use `explorations/legal-ontology-landscape` for grounding.
 
 ## Verification Commands
 

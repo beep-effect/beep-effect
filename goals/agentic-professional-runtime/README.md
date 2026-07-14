@@ -116,15 +116,16 @@ same runtime pressure:
 
 ## Related Packets
 
-This initiative references existing packets without merging them:
+This initiative references related surfaces without merging them:
 
-- `goals/knowledge-workspace`
-- `goals/ip-law-knowledge-graph`
+- `explorations/knowledge-workspace` — re-captures the workspace vision.
+- `goals/semantic-foundation` — absorbs the ontology-survey scope; grounding
+  survey remains in `explorations/legal-ontology-landscape`.
 - `goals/canonical-slice-factory`
 - `goals/oppold-corpus-pipeline` — salvages and organizes the real practice
   corpus that feeds this runtime's corpus-ingestion lane (added 2026-06-11)
 
-Those packets remain source context and evidence. This packet is the active
+Those surfaces remain source context and evidence. This packet is the active
 authority for the professional runtime product direction.
 
 ## Next Actions

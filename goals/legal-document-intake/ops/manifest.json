@@ -26,8 +26,6 @@
   "dependencies": [
     "goals/box-driver",
     "goals/m365-driver",
-    "goals/ip-law-knowledge-graph",
-    "goals/trustgraph-port",
     "goals/file-processing-capability",
     "goals/agentic-professional-runtime",
     "goals/mcp-kit",

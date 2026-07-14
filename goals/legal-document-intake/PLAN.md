@@ -35,7 +35,8 @@ Phase content is normatively bounded by `SPEC.md` decisions D1–D11.
    nomic-embed-text, ...) for legal text against pgvector; latency and recall
    targets for both KG symbolic-entry search and document semantic search;
    pick the driver's default model. → `research/embedding-bakeoff.md`
-4. **Librarian/critic prior art** — mine `goals/trustgraph-port` findings,
+4. **Librarian/critic prior art** — mine the recorded
+   `research/librarian-critic.md` findings and git history (packet removed 2026-07-14),
    `~/YeeBois/dev/trustgraph/ts` (librarian patterns), and
    `~/YeeBois/dev/cognee` (pipeline stages, ontology validation, provenance
    anchoring) for prompt and loop design. → `research/librarian-critic.md`
@@ -73,9 +74,9 @@ Phase content is normatively bounded by `SPEC.md` decisions D1–D11.
 
 - `goals/box-driver/README.md` — stale "Pending implementation" status
   corrected against actual `@beep/box` source.
-- `goals/ip-law-knowledge-graph/research/kg-storage-resolution.md` — records
-  the FalkorDB-vs-projection P0 resolution (projection, per D6) with pointer
-  back to this packet.
+- Git history (packet removed 2026-07-14) records the shipped cross-packet
+  FalkorDB-vs-projection P0 resolution (projection, per D6); the ontology-survey
+  scope now lives in `goals/semantic-foundation`.
 
 ## P7 Closeout Checklist
 
