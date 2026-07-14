@@ -221,6 +221,22 @@ Status: in progress
   elapses. P7e must generate the final seven-day report, build a sanitized
   derived mirror from the active data root, run confirmed `mirror sync` to
   `/srv/data/ai-metrics/p7-derived-mirror`, and verify remote mirror status.
+- V1 pending: P7f forwarder durability (added 2026-07-14 from
+  `explorations/agent-effectiveness-pulse` pipeline-revival evidence; gates
+  P7e because the sanitized mirror builds from parquet exports): fix the
+  parquet-export regression (`forwarder run` fails at derived-storage write
+  unless `--parquet-mode none`; suspects are the `@beep/duckdb` effect-sql
+  rework or the 2026-07-13 catalog dep bump), surface underlying error
+  causes in CLI output (currently swallowed even at `--log-level debug`),
+  add ingest-time dedup/skip-already-ingested (5.43M turn rows collapse to
+  ~516K distinct `raw_event_hash` across 1,222 trickle runs), and chunk
+  derived writes (single-transaction ceiling observed above ~160MB/run
+  during the 2026-07-14 backfill). The pre-backfill DuckDB snapshot at
+  `.beep/ai-metrics/derived/ai-metrics.duckdb.pre-pulse-backfill-20260714.bak`
+  preserves pre-contamination state for the P7e final credited scorecard.
+  A systemd timer (`beep-ai-metrics-forwarder.timer`, 6h cadence,
+  `--parquet-mode none`) was installed 2026-07-14 and must be re-rendered
+  once parquet is fixed.
 - Follow-up, not V1-blocking: P7c provider/model/tool/token/cost enrichment,
   P7d dashboard/backend expansion, and remote mirror lifecycle automation
   beyond confirmed bundle sync/status.

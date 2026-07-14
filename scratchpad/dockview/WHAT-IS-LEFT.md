@@ -117,10 +117,13 @@ Kernel-side (unchanged non-goals or newly explicit):
   `GroupMinimumLookup` with `requiredExtent` (leaf minimums sum through
   same-axis splits + gaps, max across cross-axis; feasible splits guarantee
   both subtrees their requirement; infeasible splits degrade proportionally;
-  exact partition preserved; zero minimums are behavior-identical). Still
-  out: max constraints, LayoutPriority, snap-to-collapse, and a reactive
-  minima atom for content-driven updates
-  (`explorations/computable-workspace-geometry/`).
+  exact partition preserved; zero minimums are behavior-identical). The
+  reactive minima atom landed 2026-07-12 (`makeDockGeometryAtoms.minimaAtom`),
+  and 2026-07-14 the first content-driven feeder landed: `poc/Minima.ts`
+  derives per-group title floors from `@beep/pretext` font metrics
+  (sum-of-tabs + `TabChrome` allowances) and the React adapter wires it via
+  `options.titleMinima` (`explorations/computable-workspace-geometry/`).
+  Still out: max constraints, LayoutPriority, snap-to-collapse.
 - **MRU activation** — zipper promotion stands (documented divergence). The
   host-side half now exists: `poc/Recency.ts` `makeMruGroupsAtom` derives
   recency from the feed; a host wanting dockview's close-selection behavior
@@ -141,5 +144,5 @@ Process notes:
   adapter runs under the repo's Vitest law. Biome emits one informational
   config-deprecation notice in each module (schema version pin) — harmless,
   fix by bumping the biome config schema when convenient.
-- Everything is uncommitted working-tree state on `dockview-experiment` —
-  publish via yeet from a feature branch when ready.
+- The v2 build-out merged to `main` via PR #391 (2026-07-14); later slices
+  publish via yeet from feature branches.

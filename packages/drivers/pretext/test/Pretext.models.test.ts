@@ -3,6 +3,8 @@ import {
   chromeLinuxArial16Encoded,
   FontMetricsSnapshotV1,
   lineCount,
+  lineRanges,
+  lineStats,
   naturalWidth,
   TextLayoutInput,
   textHeight,
@@ -164,6 +166,58 @@ describe("pure layout helpers", () => {
       const snapshot = yield* chromeLinuxArial16;
 
       expect(lineCount(snapshot.metrics, TextLayoutInput.make({ maxWidth: 1, text: "slithers" }))).toEqual(O.some(1));
+    })
+  );
+
+  it.effect(
+    "lineStats line count matches lineCount across measured and missing words",
+    Effect.fnUntraced(function* () {
+      const snapshot = yield* chromeLinuxArial16;
+      const metrics = snapshot.metrics;
+      const inputs = [
+        TextLayoutInput.make({ maxWidth: 40, text: "The dragon slithers" }),
+        TextLayoutInput.make({ maxWidth: 100_000, text: "The dragon slithers" }),
+        TextLayoutInput.make({ maxWidth: 1, text: "slithers" }),
+      ];
+
+      for (const input of inputs) {
+        expect(O.map(lineStats(metrics, input), (stats) => stats.lineCount)).toEqual(lineCount(metrics, input));
+      }
+
+      const missing = TextLayoutInput.make({ maxWidth: 320, text: "unmeasured" });
+      expect(lineStats(metrics, missing)).toEqual(O.none());
+      expect(lineCount(metrics, missing)).toEqual(O.none());
+    })
+  );
+
+  it.effect(
+    "lineStats max width equals naturalWidth without forced wrapping",
+    Effect.fnUntraced(function* () {
+      const snapshot = yield* chromeLinuxArial16;
+      const text = "The dragon slithers across the page";
+
+      expect(O.map(lineStats(snapshot.metrics, { maxWidth: 100_000, text }), (stats) => stats.maxLineWidth)).toEqual(
+        naturalWidth(snapshot.metrics, text)
+      );
+    })
+  );
+
+  it.effect(
+    "lineRanges reports exact half-open word ranges and advances",
+    Effect.fnUntraced(function* () {
+      const snapshot = yield* chromeLinuxArial16;
+      const metrics = snapshot.metrics;
+
+      expect(lineRanges(metrics, { maxWidth: 90, text: "The dragon slithers" })).toEqual(
+        O.some([
+          {
+            startWord: 0,
+            endWord: 2,
+            width: metrics.words.The + metrics.spaceWidth + metrics.words.dragon,
+          },
+          { startWord: 2, endWord: 3, width: metrics.words.slithers },
+        ])
+      );
     })
   );
 

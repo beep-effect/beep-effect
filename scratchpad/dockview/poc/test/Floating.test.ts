@@ -3,6 +3,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { BottomRightAnchoredBox, TopLeftAnchoredBox } from "../AnchoredBox.ts";
 import { DockEngine, DockEngineLive } from "../DockEngine.ts";
 import {
   ActivatePanelCommand,
@@ -32,8 +33,8 @@ import {
 import { DockBox, projectWorkspace, resolveAnchoredBox } from "../Geometry.ts";
 import { envelope, groupOne, groupTwo, panelOne, panelThree, panelTwo, splitOne, splitTwo } from "./Fixtures.ts";
 
-const firstBox = { _tag: "TopLeft" as const, left: 10, top: 20, width: 300, height: 200 };
-const secondBox = { _tag: "BottomRight" as const, right: 5, bottom: 6, width: 250, height: 180 };
+const firstBox = TopLeftAnchoredBox.make({ left: 10, top: 20, width: 300, height: 200 });
+const secondBox = BottomRightAnchoredBox.make({ right: 5, bottom: 6, width: 250, height: 180 });
 const tabsOne = TabsNode.make({ groupId: groupOne, active: panelOne });
 const tabsTwo = TabsNode.make({ groupId: groupTwo, active: panelTwo });
 const workspace = PopulatedWorkspace.make({
@@ -287,7 +288,7 @@ describe("floating dock topology", () => {
   it("clamps anchored boxes to a sensible minimum inside the container", () => {
     expect(
       resolveAnchoredBox(
-        { ...firstBox, left: 999, top: -5, width: 1, height: 1 },
+        TopLeftAnchoredBox.make({ left: 999, top: -5, width: 1, height: 1 }),
         DockBox.make({ left: 0, top: 0, width: 100, height: 80 })
       )
     ).toEqual(DockBox.make({ left: 68, top: 0, width: 32, height: 32 }));

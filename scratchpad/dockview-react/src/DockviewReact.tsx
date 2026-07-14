@@ -1,7 +1,9 @@
 import { $ScratchpadId } from "@beep/identity";
+import type { PretextCapture } from "@beep/pretext";
+import { PretextCaptureLive } from "@beep/pretext/browser";
 import { NonNegativeInt } from "@beep/schema";
 import { RegistryContext, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { type Effect, Match } from "effect";
+import { type Effect, type Layer, Match } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -26,6 +28,7 @@ import {
   DockSide,
   DockWorkspace,
   FloatGroupCommand,
+  FloatingMember,
   GeometryOptions,
   GroupId,
   GroupRootSplitPlacement,
@@ -34,6 +37,7 @@ import {
   MovePanelCommand,
   type makeDockAtoms,
   makeDockGeometryAtoms,
+  makeTitleMinimaAtom,
   type Panel,
   PanelId,
   type PanelParameters,
@@ -47,8 +51,10 @@ import {
   SplitNode,
   SplitPlacement,
   SplitRatio,
+  TabChrome,
   TabPlacement,
   TabsNode,
+  TopLeftAnchoredBox,
   UserCommandOrigin,
 } from "../../dockview/poc/index.ts";
 
@@ -184,6 +190,28 @@ export type DockviewAdapterApi = {
 };
 
 /**
+ * Browser-side title measurement used to clamp docked group widths.
+ *
+ * A custom `captureLayer` must carry a `captureKey` — the provider's stable
+ * semantic identity. Adapter state is cached per graph and measurement
+ * configuration (gap, font, line height, chrome, captureKey), so layers
+ * built inline on every render share one state as long as their key is
+ * stable, while switching providers under a new key gets fresh state
+ * instead of stale metrics. The default live provider needs no key.
+ *
+ * @category adapters
+ * @since 0.0.0
+ */
+export type DockTitleMinimaOptions = {
+  readonly font: string;
+  readonly lineHeight: number;
+  readonly chrome?: TabChrome | undefined;
+} & (
+  | { readonly captureLayer: Layer.Layer<PretextCapture>; readonly captureKey: string }
+  | { readonly captureLayer?: undefined; readonly captureKey?: undefined }
+);
+
+/**
  * Configuration and renderer registry accepted by {@link DockviewReact}.
  *
  * @example
@@ -204,7 +232,9 @@ export type DockviewReactProps = {
   readonly watermarkComponent?: React.FunctionComponent | undefined;
   readonly defaultTabComponent?: DockTabRenderer | undefined;
   readonly onReady?: ((event: { readonly api: DockviewAdapterApi }) => void) | undefined;
-  readonly options?: { readonly gap?: number | undefined } | undefined;
+  readonly options?:
+    | { readonly gap?: number | undefined; readonly titleMinima?: DockTitleMinimaOptions | undefined }
+    | undefined;
 };
 
 type AdapterState = {
@@ -342,8 +372,24 @@ class FloatingOverride extends S.Class<FloatingOverride>($I`FloatingOverride`)(
 ) {}
 
 // crispen: graph identity and lifetime are host concerns; WeakMap avoids structural hashing and retains no disposed graph.
-const states = new WeakMap<DockAtomGraph, MutableHashMap.MutableHashMap<number, AdapterState>>();
+const states = new WeakMap<DockAtomGraph, MutableHashMap.MutableHashMap<string, AdapterState>>();
 let commandCounter = 0;
+
+// crispen: the key is measurement-config values plus the provider's SEMANTIC
+// identity (captureKey) — referential layer identity would mint a fresh
+// retained state per render whenever a host builds captureLayer inline,
+// while omitting the provider entirely would share stale metrics across
+// distinct providers.
+const stateKey = (gap: number, titleMinima: O.Option<DockTitleMinimaOptions>): string =>
+  O.match(titleMinima, {
+    onNone: () => `${gap}`,
+    onSome: (config) => {
+      const captureKey = O.getOrElse(O.fromUndefinedOr(config.captureKey), () => "live");
+      const chrome = O.getOrElse(O.fromUndefinedOr(config.chrome), () => TabChrome.make());
+
+      return `${gap}\u0000${config.font}\u0000${config.lineHeight}\u0000${chrome.perTab}\u0000${chrome.strip}\u0000${captureKey}`;
+    },
+  });
 
 const makeOperation = (
   command:
@@ -368,14 +414,19 @@ const makeOperation = (
   });
 };
 
-const adapterState = (graph: DockAtomGraph, gap: number): AdapterState => {
-  // crispen: gap remains the adapter identity because geometry atoms close over it; remove the inner cache when options become reactive.
-  const byGap = O.getOrElse(O.fromUndefinedOr(states.get(graph)), () => {
-    const created = MutableHashMap.empty<number, AdapterState>();
+const adapterState = (
+  graph: DockAtomGraph,
+  gap: number,
+  titleMinima: O.Option<DockTitleMinimaOptions>
+): AdapterState => {
+  // crispen: geometry inputs remain the adapter identity because the derived atoms close over them.
+  const byOptions = O.getOrElse(O.fromUndefinedOr(states.get(graph)), () => {
+    const created = MutableHashMap.empty<string, AdapterState>();
     states.set(graph, created);
     return created;
   });
-  const existing = MutableHashMap.get(byGap, gap);
+  const key = stateKey(gap, titleMinima);
+  const existing = MutableHashMap.get(byOptions, key);
   if (O.isSome(existing)) return existing.value;
   const containerAtom = Atom.make(DockBox.make()).pipe(Atom.keepAlive);
   const focusedGroupAtom = Atom.make<O.Option<GroupId>>(O.none()).pipe(Atom.keepAlive);
@@ -404,7 +455,7 @@ const adapterState = (graph: DockAtomGraph, gap: number): AdapterState => {
       onSome: (candidate) =>
         A.map(workspace.floating, (member) =>
           A.some(DockNode.tabs(member.root), (tabs) => GroupId.equals(tabs.groupId, candidate.groupId))
-            ? { ...member, anchoredBox: candidate.anchoredBox }
+            ? FloatingMember.make({ anchoredBox: candidate.anchoredBox, root: member.root })
             : member
         ),
     });
@@ -424,10 +475,26 @@ const adapterState = (graph: DockAtomGraph, gap: number): AdapterState => {
       floating,
     });
   });
-  const geometry = makeDockGeometryAtoms({
-    workspaceAtom: projectedWorkspaceAtom,
-    containerAtom,
-    options: GeometryOptions.make({ gap }),
+  const geometry = O.match(titleMinima, {
+    onNone: () =>
+      makeDockGeometryAtoms({
+        workspaceAtom: projectedWorkspaceAtom,
+        containerAtom,
+        options: GeometryOptions.make({ gap }),
+      }),
+    onSome: (config) =>
+      makeDockGeometryAtoms({
+        workspaceAtom: projectedWorkspaceAtom,
+        containerAtom,
+        options: GeometryOptions.make({ gap }),
+        minimaAtom: makeTitleMinimaAtom({
+          workspaceAtom: graph.workspaceAtom,
+          captureLayer: O.getOrElse(O.fromUndefinedOr(config.captureLayer), () => PretextCaptureLive),
+          font: config.font,
+          lineHeight: config.lineHeight,
+          chrome: config.chrome,
+        }),
+      }),
   });
   const created = {
     containerAtom,
@@ -442,7 +509,7 @@ const adapterState = (graph: DockAtomGraph, gap: number): AdapterState => {
     readyRoots: new WeakSet<HTMLElement>(),
     api,
   };
-  MutableHashMap.set(byGap, gap, created);
+  MutableHashMap.set(byOptions, key, created);
   return created;
 };
 
@@ -476,13 +543,13 @@ const clampRatio = (ratio: number): SplitRatio => SplitRatio.make(Math.min(9_000
 const freshSplitId = (): SplitId => SplitId.make(`dockview-react-split-${commandCounter + 1}`);
 const freshGroupId = (): GroupId => GroupId.make(`dockview-react-group-${commandCounter + 1}`);
 const freshFloatingSplitId = (): SplitId => SplitId.make(`dockview-react-floating-split-${commandCounter + 1}`);
-const topLeftBox = (box: DockBox, container: DockBox): AnchoredBox => ({
-  _tag: "TopLeft",
-  left: box.left - container.left,
-  top: box.top - container.top,
-  width: box.width,
-  height: box.height,
-});
+const topLeftBox = (box: DockBox, container: DockBox): AnchoredBox =>
+  TopLeftAnchoredBox.make({
+    left: box.left - container.left,
+    top: box.top - container.top,
+    width: box.width,
+    height: box.height,
+  });
 
 const floatingHit = (geometry: DockGeometry, point: PointerPosition) =>
   A.findFirst(A.reverse(geometry.floating), (candidate) => contains(candidate.box, point));
@@ -858,13 +925,12 @@ const GroupPane = (
                 makeOperation(
                   FloatGroupCommand.make({
                     groupId: props.groupId,
-                    anchoredBox: {
-                      _tag: "TopLeft",
+                    anchoredBox: TopLeftAnchoredBox.make({
                       left: box.left + 24,
                       top: box.top + 24,
                       width: Math.max(32, box.width - 48),
                       height: Math.max(32, box.height - 48),
-                    },
+                    }),
                   })
                 )
               )
@@ -1272,8 +1338,8 @@ const DockviewRoot = (
  * Renders a dock workspace backed by a serialized Atom graph.
  *
  * @remarks
- * Adapter state is cached by graph identity and geometry gap so portal hosts
- * remain stable across React remounts and dock topology changes.
+ * Adapter state is cached by graph identity and geometry inputs so portal
+ * hosts remain stable across React remounts and dock topology changes.
  *
  * @example
  * ```ts
@@ -1291,7 +1357,8 @@ export const DockviewReact = (props: DockviewReactProps) => {
     O.flatMap(O.fromUndefinedOr(props.options), ({ gap }) => O.fromUndefinedOr(gap)),
     () => 0
   );
-  const state = adapterState(props.graph, gap);
+  const titleMinima = O.flatMap(O.fromUndefinedOr(props.options), ({ titleMinima }) => O.fromUndefinedOr(titleMinima));
+  const state = adapterState(props.graph, gap, titleMinima);
   return (
     <RegistryContext.Provider value={props.graph.registry}>
       <DockviewRoot {...props} state={state} />

@@ -19,11 +19,19 @@ and line break from data. Agents gain *sight*.
 
 ## Next Open Question
 
-Negotiate thread-virtualization ownership with the beep-effect6 editor-stack
-lane and complete the pretext-driver handoff before opening that packet. Q2 v2
-contract residue is routed to [`goals/pretext-driver`](../../goals/pretext-driver/README.md);
-kernel max-constraint, `LayoutPriority`, and snap-to-collapse residue is routed
-to [`scratchpad/dockview/WHAT-IS-LEFT.md`](../../scratchpad/dockview/WHAT-IS-LEFT.md).
+Goal #2 coordination gate: negotiate editor-stack file ownership with the
+beep-effect6 write lane before opening the thread-virtualization packet
+(gate re-confirmed still active 2026-07-14). Goal #1 is CLOSED: PR #391
+merged 2026-07-14 and
+[`goals/pretext-driver/`](../../goals/pretext-driver/README.md) is
+completed-retained with reflection. Dock-adapter title-minima wiring MERGED
+2026-07-14 (PR #396, squash `dc95033709`; exploration-tracked, no packet).
+Next slice in flight: bubble shrinkwrap — `measureLineStats` /
+`walkLineRanges` pure driver-root wrappers + a `scratchpad/bubbles` proof
+(also burns Q2 v2 residue). Q2 v2 residue grows inside the driver package;
+kernel max-constraint, `LayoutPriority`, and snap-to-collapse residue is
+routed to [`scratchpad/dockview/WHAT-IS-LEFT.md`](../../scratchpad/dockview/WHAT-IS-LEFT.md)
+(2026-07-14 sibling review).
 
 ## Read This First
 
@@ -36,6 +44,52 @@ to [`scratchpad/dockview/WHAT-IS-LEFT.md`](../../scratchpad/dockview/WHAT-IS-LEF
 - 2026-07-14: sibling review kept the packet active at `graduate`; reduced the
   resume surface to the thread-virtualization ownership/handoff gate and routed
   Q2 plus dock-kernel residue to their existing owners.
+- 2026-07-14 (latest: demo harness + clamp proven in a live browser): the
+  deferred smoke target landed as `scratchpad/dockview-demo` — a vite page
+  (port 5199, no install: workspace symlinks resolve `@beep/*` to source)
+  hosting the dock adapter with a seeded workspace (nested splits, floating
+  pane, custom + text renderers) and `options.titleMinima` on live
+  `PretextCaptureLive` (16px Arial, `TabChrome` 48/8). Headless-Chromium
+  proof: at an 860px window the long-title group renders ~446px — its
+  measured no-truncation floor, not its 30% ratio share (~250px); identical
+  width at 1400px confirms the floor, not coincidence. Interactive
+  drag-the-sash GIF still pending a connected Chrome extension session
+  (non-gating). Arc kickoff decisions recorded: four sequential lanes —
+  harness → bubble shrinkwrap → `goals/yeet-publish-preflight` →
+  security-findings closeout + semantic-foundation M1.
+- 2026-07-14 (later: minima wiring LANDED): the pinned design executed the
+  same day on `feat/dock-minima-wiring` — codex (gpt-5.6-sol, medium) wrote
+  both lanes under Fable review. Kernel: `poc/Minima.ts` (`TabChrome`,
+  `titleWords`, pure `titleMinima` sum-of-tabs fold over the full forest,
+  `makeTitleMinimaAtom` capture seam degrading to empty minima on
+  waiting/failure) + 8 bun tests including end-to-end geometry clamps.
+  Adapter: `options.titleMinima` on DockviewReact (default
+  `PretextCaptureLive`, fixture layer injectable) feeding
+  `makeDockGeometryAtoms.minimaAtom`; +3 jsdom tests (feasible clamp ≥
+  measured requirement, no-config parity, capture-failure honesty). Suites:
+  kernel 82/82, adapter 20/20, tsgo+biome clean. Also repaired en route: the
+  effect 4.0.0-beta.97 catalog bump (#393) broke `S.Class` make() on plain
+  tagged POJOs — five anchored-box construction sites migrated to variant
+  `.make()` instances (was 6 kernel + 6 adapter test failures on main).
+  Live-Chrome smoke deferred: no dev page hosts the adapter yet (candidate
+  follow-up: tiny demo harness). Merged as PR #396 (squash `dc95033709`,
+  2026-07-14).
+- 2026-07-14 (goal #1 CLOSED, next slice gated): PR #391 **merged**
+  (squash `1c0977ccad`); `goals/pretext-driver` flipped to
+  completed-retained with closeout reflection
+  (`history/reflections/2026-07-14-claude.md`, lint gate
+  `blocking_findings=0`) and goals INDEX regenerated. Grill session closed
+  the next-slice decisions: **dock-adapter title-minima wiring** is next
+  (first real `@beep/pretext` consumer; exploration-tracked, NO goal
+  packet, per kernel-work precedent), proof bar = fixture tests gate +
+  live Chrome smoke as bonus; thread-virtualization stays gated —
+  beep-effect6 lane re-confirmed still active on the editor surfaces.
+  Design pinned: kernel-side `poc/Minima.ts` (pure `titleMinima` fold,
+  sum-of-tabs floor + `TabChrome` allowances; `makeTitleMinimaAtom`
+  effectful seam over `PretextCapture`) feeding the adapter's existing
+  `makeDockGeometryAtoms.minimaAtom` input; adapter gets an optional
+  `titleMinima` prop with `PretextCaptureLive` default and fixture layer
+  injection for jsdom tests.
 - 2026-07-13 (goal #1 executed): **`@beep/pretext` LANDED** at
   `packages/drivers/pretext` under `/goal` — catalog dep `@chenglou/pretext`
   0.0.8, `$PretextId` composer, root pure surface (FontMetricsSnapshotV1 +

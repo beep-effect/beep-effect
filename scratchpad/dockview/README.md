@@ -67,9 +67,14 @@ measurement — a panel title's natural width). Each split clamps its partition 
 (plus gaps) and take the maximum across cross-axis splits — so nested trees carry their
 true requirements rather than a level-by-level scalar. A feasible split guarantees both
 sides their requirement; an infeasible split keeps the proportional partition; the
-exact-partition invariant holds in every case. Max constraints, LayoutPriority, and
-snap-to-collapse remain out. See `explorations/computable-workspace-geometry/` for why
-content-aware minimums never require DOM measurement.
+exact-partition invariant holds in every case. The content-aware feeder exists:
+`poc/Minima.ts` derives per-group title floors purely from `@beep/pretext` font metrics
+(`titleMinima` sums measured tab-title widths plus `TabChrome` allowances;
+`makeTitleMinimaAtom` runs capture behind a reactive atom that degrades to no minima on
+failure), and the React adapter wires it through `options.titleMinima`. Max constraints,
+LayoutPriority, and snap-to-collapse remain out. See
+`explorations/computable-workspace-geometry/` for why content-aware minimums never
+require DOM measurement.
 
 Floating topology is part of the same headless kernel. Each workspace carries a
 `floating` array of `{ anchoredBox, root }` members; array order is z-order, with
