@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "voice-composer-slice",
+    "title": "Voice Composer Slice",
+    "status": "active",
+    "created": "2026-07-14",
+    "updated": "2026-07-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/voice-composer-slice",
+  "lifecycle": "active",
+  "mission": "Add all-device push-to-talk Moonshine dictation and manual, interruptible Kokoro read-aloud to the professional-desktop composer, gated by a five-day Linux Tauri spike.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/local-first-voice",
+    "graduated": "2026-07-14"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/voice-composer-slice/README.md",
+    "goals/voice-composer-slice/SPEC.md",
+    "goals/voice-composer-slice/PLAN.md",
+    "goals/voice-composer-slice/GOAL.md",
+    "goals/voice-composer-slice/research/SOURCES.md",
+    "explorations/local-first-voice/BRIEF.md",
+    "explorations/local-first-voice/MAP.md",
+    "explorations/local-first-voice/DECISIONS.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/voice-composer-slice/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Spike: Linux Tauri proof",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement thin composer slice",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Close: Yeet PR to mergeable",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/voice-composer-slice/GOAL.md)\" -le 4000",
+    "jq . goals/voice-composer-slice/ops/manifest.json",
+    "rg -n \"voice-composer-slice|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/voice-composer-slice",
+    "git diff --check -- goals/voice-composer-slice explorations/local-first-voice explorations/ATLAS.md",
+    "bun run beep yeet verify",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "P0 reaches its five-engineering-day cap or any locked P0 threshold fails; record proceed, reshape, or stop before P1.",
+    "The implementation would exceed the named thin-slice scope or enter a non-goal.",
+    "Required source files are missing or materially contradictory.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "Required zero-egress, teardown, target-runtime, or pre-ship cross-webview evidence cannot be produced.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

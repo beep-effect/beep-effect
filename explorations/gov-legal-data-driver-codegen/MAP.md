@@ -10,10 +10,16 @@ its sequenced internal slices, not separate goal packets.
 
 ## Candidate goals
 
-This wedge does **not** fan out into multiple goal packets. The substrate bet is
-one cohesive, multi-phase goal so the shared transformer, codegen tiering, and
-determinism gate are designed once and proven across two reference verticals
-before any breadth.
+**Lifecycle annotation (2026-07-14):** P0, P1, and P3 are complete; P2 is
+superseded into
+[`goals/gov-legal-data-driver-delivery`](../../goals/gov-legal-data-driver-delivery/README.md),
+which is paused on named-consumer pull. The `@beep/api-transport` promotion is
+complete with `@beep/govinfo` and `@beep/ecfr` as its named consumers.
+
+The original substrate wedge stayed one cohesive multi-phase goal so the shared
+transformer, codegen tiering, and determinism gate were designed once and proven
+across two reference verticals. Sibling closure now records the separately owned
+delivery breadth and MCP host without reopening that substrate scope.
 
 | Goal | Scope | Graduates as |
 | --- | --- | --- |
@@ -28,14 +34,13 @@ before any breadth.
 | **P2** | CourtListener + DOL authed drivers | Token-header (`Authorization: Token <key>`) and agency-native `X-API-KEY` auth families branched in the now-shared transformer; CourtListener caching **in-process/ephemeral only**; third-party legal content **excluded from committed fixtures**. | **GATED** on the data/source-terms matrix (required pre-shape research item, default-deny per Q8) + the metadata/auth-enforcement spike | shared transformer (from P0/P1); runpod/uspto `Config.redacted` secret precedent; per-driver raw-request escape hatch (runpod `RunpodRawRequest`) |
 | **P3** | verify + promote | Per-package generate-first audit + CI `git diff --exit-code` drift check; pin exact versions in each codegen template; **promote the transformer to `foundation/capability/<name>`** with a README promotion record naming ≥2 current consumers (govinfo + the keyless driver). | ≥2 named importers actually consuming the transformer (the `07-non-slice-families` gate) | `standards/architecture/07-non-slice-families.md` gate; `foundation/capability/*` home convention (nlp-processing, file-processing, observability) |
 
-## Named follow-on goals (deferred, not v1)
+## Named follow-on goals
 
-These are explicitly out of the v1 graduation slice and become their own named
-goals later:
+These remain explicitly outside the original v1 substrate slice:
 
 | Follow-on goal | Trigger / gate | Cites |
 | --- | --- | --- |
-| `gov-legal-mcp` sibling server | Gated behind **≥2 proven drivers** (Q3). New `packages/drivers/gov-legal-mcp` package; carries the mandatory generated-tool-name collision contract (driver-prefixed stable names, `^[a-zA-Z0-9_-]+$` normalization + length cap, duplicate detection with a checked-in collision report, integration tests against the Effect MCP JSON schemas). | `m365-mcp` + `nlp-mcp` sibling-package precedent (both exist) |
+| [`gov-legal-mcp`](../../goals/gov-legal-mcp/README.md) sibling server — **GRADUATED 2026-07-14** | The ≥2-proven-driver gate is cleared by `@beep/govinfo` plus `@beep/ecfr`. New `packages/drivers/gov-legal-mcp` package; carries the mandatory generated-tool-name collision contract (driver-prefixed stable names, `^[a-zA-Z0-9_-]+$` normalization + length cap, duplicate detection with a checked-in collision report, integration tests against the Effect MCP JSON schemas). | Shipped `@beep/mcp-kit`, `m365-mcp`, and `uspto-mcp` conventions |
 | transformer `foundation/capability` promotion record | Authored at P3 once the 2nd driver imports the incubated transformer; the formal README promotion record naming both consumers. | `standards/architecture/07-non-slice-families.md`; existing `foundation/capability/*` packages |
 
 ## First vertical slice
@@ -106,7 +111,7 @@ or is marked **NET-NEW**.
   file-processing, langextract, nlp-processing, observability, semantic-web) governed
   by `standards/architecture/07-non-slice-families.md` (≥2-named-consumers rule).
 - **MCP sibling precedent** — `packages/drivers/m365-mcp` + `packages/drivers/nlp-mcp`
-  (the deferred `gov-legal-mcp` template).
+  (worked conventions for the graduated `gov-legal-mcp` goal).
 
 ### NET-NEW (no existing brick)
 
@@ -127,8 +132,8 @@ or is marked **NET-NEW**.
   gating P2 (default-deny). NET-NEW.
 - **CI `git diff --exit-code` codegen-drift check** — the per-package determinism
   gate wiring (no global `build → codegen` turbo edge in v1, Q7). NET-NEW.
-- **`gov-legal-mcp` server** and the **transformer promotion record** — deferred
-  follow-ons (above). NET-NEW.
+- **`gov-legal-mcp` server** remains NET-NEW implementation owned by its
+  separately graduated goal; the **transformer promotion record is complete**.
 
 ## Open risks inherited from the brief
 

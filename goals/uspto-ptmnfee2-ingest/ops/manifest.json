@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "uspto-ptmnfee2-ingest",
+    "title": "USPTO PTMNFEE2 Ingest",
+    "status": "active",
+    "created": "2026-07-14",
+    "updated": "2026-07-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/uspto-ptmnfee2-ingest",
+  "lifecycle": "active",
+  "mission": "Checksum-pin and atomically full-replace the weekly cumulative PTMNFEE2 release into typed native maintenance events and attributed fixtures.",
+  "statusNote": "P0 hard gate: verify the current release layout, complete code list, sizes, limits, anonymous-download behavior, and shared-generator fit.",
+  "dependencies": ["goals/uspto-prosecution-read"],
+  "blockedBy": ["goals/uspto-prosecution-read"],
+  "feeds": ["goals/law-docketing-patent-spine"],
+  "orchestrationOwner": "goals/law-docketing-reliability",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/uspto-patent-driver-depth",
+    "graduated": "2026-07-14"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/uspto-ptmnfee2-ingest/README.md",
+    "goals/uspto-ptmnfee2-ingest/SPEC.md",
+    "goals/uspto-ptmnfee2-ingest/PLAN.md",
+    "goals/uspto-ptmnfee2-ingest/GOAL.md",
+    "goals/uspto-ptmnfee2-ingest/research/SOURCES.md",
+    "goals/uspto-prosecution-read/SPEC.md",
+    "goals/uspto-prosecution-read/PLAN.md",
+    "explorations/uspto-patent-driver-depth/BRIEF.md",
+    "explorations/uspto-patent-driver-depth/MAP.md",
+    "explorations/uspto-patent-driver-depth/DECISIONS.md",
+    "explorations/uspto-patent-driver-depth/research/ptmnfee2-maintenance-fee-dataset.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/uspto-ptmnfee2-ingest/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Current-release discovery",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Close: Yeet PR to mergeable",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/uspto-ptmnfee2-ingest/GOAL.md)\" -le 4000",
+    "jq . goals/uspto-ptmnfee2-ingest/ops/manifest.json",
+    "rg -n \"uspto-ptmnfee2-ingest|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/uspto-ptmnfee2-ingest",
+    "git diff --check -- goals/uspto-ptmnfee2-ingest",
+    "bun run beep yeet verify",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The current release layout, code companion, access behavior, or licensing provenance cannot be verified honestly.",
+    "The shared generation mechanism cannot represent PTMNFEE2 without forking.",
+    "Atomic full replacement or preservation of raw drift evidence cannot be proven.",
+    "The work would require legal interpretation or scheduler ownership in the driver.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

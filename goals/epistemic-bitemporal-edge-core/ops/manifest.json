@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "epistemic-bitemporal-edge-core",
+    "title": "Epistemic Bitemporal Edge Core",
+    "status": "active",
+    "created": "2026-07-14",
+    "updated": "2026-07-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/epistemic-bitemporal-edge-core",
+  "lifecycle": "active",
+  "mission": "Deliver the Postgres bitemporal claim/edge authority with durable disposition, atomic supersession, two-axis history, and restart-safe migration proof.",
+  "statusNote": "P0 hard gate: prove storage, concurrency, provenance, and Postgres/PGlite invariant backstops before schema commitment.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/agent-memory-tiers-bitemporal-edges",
+    "graduated": "2026-07-14"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/epistemic-bitemporal-edge-core/README.md",
+    "goals/epistemic-bitemporal-edge-core/SPEC.md",
+    "goals/epistemic-bitemporal-edge-core/PLAN.md",
+    "goals/epistemic-bitemporal-edge-core/GOAL.md",
+    "goals/epistemic-bitemporal-edge-core/research/SOURCES.md",
+    "explorations/agent-memory-tiers-bitemporal-edges/BRIEF.md",
+    "explorations/agent-memory-tiers-bitemporal-edges/MAP.md",
+    "explorations/agent-memory-tiers-bitemporal-edges/DECISIONS.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/epistemic-bitemporal-edge-core/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Storage, concurrency, and provenance spike",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Close: Yeet PR to mergeable",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/epistemic-bitemporal-edge-core/GOAL.md)\" -le 4000",
+    "jq . goals/epistemic-bitemporal-edge-core/ops/manifest.json",
+    "rg -n \"epistemic-bitemporal-edge-core|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/epistemic-bitemporal-edge-core",
+    "git diff --check -- goals/epistemic-bitemporal-edge-core",
+    "bun run beep yeet verify",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The P0 spike fails to preserve the ratified invariants across production Postgres and the repo's PGlite proof lane; stop and reshape the storage backstop.",
+    "Logical identity, bounded endpoints, portable no-overlap enforcement, generated migration shape, or deterministic concurrent supersession cannot be made explicit before schema commitment.",
+    "The implementation would enter a non-goal, add a donor runtime dependency, or weaken the product-authority/operator-memory boundary.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

@@ -4,24 +4,15 @@
     "slug": "secure-document-download-proxy",
     "title": "Secure Document Download Proxy",
     "status": "active",
-    "stage": "research",
-    "openQuestions": [
-      "Scope boundary \u2014 stand-alone capability packet vs fold into an existing driver/goal",
-      "Package placement \u2014 where the reusable mint+gate+seal logic lives",
-      "First slice \u2014 which origin to gate first",
-      "Token model \u2014 opaque reference vs stateless sealed token",
-      "Token cryptography (build-vs-buy) \u2014 reuse the in-repo AES-256-GCM seal vs vendor a token library",
-      "Serve boundary \u2014 existing sidecar HTTP route vs Tauri custom protocol vs IPC blob",
-      "Key custody / at-rest wrapping (vendor/auth) \u2014 reuse M365 msal-node-extensions vs adopt tauri-plugin-keyring",
-      "Backing store \u2014 extend the desktop PGlite/Drizzle runtime vs bespoke store"
-    ],
+    "stage": "graduate",
+    "openQuestions": [],
     "links": {
-      "goals": [],
+      "goals": ["goals/secure-document-delivery"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-06-29",
-    "updated": "2026-06-29",
+    "updated": "2026-07-14",
     "sources": ["research/SOURCES.md"]
   }
 }

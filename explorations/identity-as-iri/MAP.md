@@ -9,6 +9,11 @@ explicitly marked NET-NEW.
 
 ## Candidate Goal Packets
 
+**Lifecycle annotation (2026-07-14):** `identity-iri-core` is
+**COMPLETED-RETAINED (5/5)**, satisfying the fold dependency;
+[`identity-iri-fold`](../../goals/identity-iri-fold/README.md) is
+**GRADUATED**; `identity-iri-fibered` is **HOLD** until the fold lands.
+
 | Slug | Mission | Depends on | Capabilities cited |
 | --- | --- | --- | --- |
 | `identity-iri-core` | Rewrite `@beep/identity` in place: vocab registry data + `Curie`/`Predicate`/`Expand` literal types + expand/contract + PN_LOCAL codecs + composer binding (`make({authority, prefix, vocab})`, literal `.iri`/`.curie`, projection-only `rebase`) — surface shape-stable, zero call-site changes | none | Port donors: [`scratchpad/identity/{Vocab,Curie,PnLocal,Composer}.ts`](../../scratchpad/identity/) (proven, 27/27). Preserve-exactly surface: [`research/11-audit-identity-coupling.md`](./research/11-audit-identity-coupling.md). Existing composer: `packages/foundation/modeling/identity/src/Id.ts`. Vocab source constants: `packages/foundation/modeling/rdf/src/Vocab/*`. NET-NEW: literal-type registry, codecs, IRI/CURIE getters, rebase |
@@ -23,15 +28,16 @@ surface) and carries the repo-wide blast radius (every file imports
 `@beep/identity`), so it merges alone with the shape-stable proof harness.
 Fold unlocks the product-visible payoff (FOLIO models migrate, projections
 ship). Fibered is the agent-retrieval capstone and can trail without blocking
-product work. Graduate-now: `identity-iri-core`. Queued: the other two
-graduate as predecessors land (domain-layer-hardening precedent).
+product work. `identity-iri-core` is completed-retained;
+`identity-iri-fold` graduated 2026-07-14; `identity-iri-fibered` remains held
+until the fold lands.
 
 ## First Vertical Slice
 
-When `identity-iri-core` lands: every existing `$I = $PkgId.create(...)` call
-site compiles unchanged, and any schema author can write
+`identity-iri-core` landed with every existing `$I = $PkgId.create(...)` call
+site compiling unchanged, and schema authors can write
 `$BeepId.create("x").iri` / `.curie` and get exact literal-typed
-`https://ns.beep.sh/x` / `beep:x` (authority pending confirmation), with
+`https://ns.beep.sh/x` / `beep:x` under the confirmed authority, with
 `"skos:prefLabl"`-style typos as compile errors. Verified by: the audit-B
 shape-stable harness (existing surface pinned by tests), type-level literal
 assertions, CURIE codec property tests ported from
@@ -44,8 +50,7 @@ packages.
 - Compile blast radius: `Curie<V>` unions × identity's import graph —
   measure `tsc --extendedDiagnostics` before/after; module-boundary the vocab
   machinery if hot (named acceptance item in core).
-- Authority host still deferred — `https://ns.beep.sh/` placeholder; core's
-  first blocking input before merge.
+- Authority host resolved by the completed core: `https://ns.beep.sh/`.
 - Fibered 2-cells temptation — discrete case only; versions/migrations out of
   scope (fibered packet constraint).
 - General PN_LOCAL escaped-emission — acceptance-model codec + full-IRI

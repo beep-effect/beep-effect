@@ -4,23 +4,18 @@
     "slug": "citation-grounding-hallucination-guard",
     "title": "Citation Grounding & Hallucination Guard",
     "status": "active",
-    "stage": "research",
-    "openQuestions": [
-      "Q1: Build-vs-buy \u2014 clean-room TS/Effect reimplementation of the eyecite parser, a vendored port of `eyecite-js`, or wrap the hosted CourtListener lookup as the engine?",
-      "Q2: Scope boundary \u2014 does this packet ship the full guard (parser + lifecycle + verbatim gate + straddle + matter carrier + fence enforcement + court vocab), or own only the grounding core and compose/defer the rest?",
-      "Q3: First slice \u2014 which thin vertical proves the substrate end-to-end first?",
-      "Q4: Vendor/auth \u2014 depend on the hosted CourtListener Citation Lookup API in v1, or ship local-only?",
-      "Q5: Package placement \u2014 where do the parser, the guard/straddle contract, the citation lifecycle, and the matter-scoped evidence model live?",
-      "Q6: Lifecycle modeling \u2014 one citation status type, or two distinct vocabularies (persisted resolution vs transient lookup status)?",
-      "Q7: Verbatim strictness \u2014 how strict is the \"match\" that lets a citation through the gate?"
-    ],
+    "stage": "graduate",
+    "openQuestions": [],
     "links": {
-      "goals": [],
-      "docs": [],
+      "goals": [
+        "goals/citation-verified-span-substrate",
+        "goals/citation-extraction-engine"
+      ],
+      "docs": ["docs/product/citation-grounding.md"],
       "supersededBy": null
     },
     "created": "2026-06-29",
-    "updated": "2026-06-29",
+    "updated": "2026-07-14",
     "sources": ["research/SOURCES.md"]
   }
 }

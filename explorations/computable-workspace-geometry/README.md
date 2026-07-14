@@ -29,8 +29,10 @@ completed-retained with reflection. Dock-adapter title-minima wiring MERGED
 shrinkwrap MERGED 2026-07-14 (PR #399: `lineRanges`/`lineStats` pure root
 helpers + `scratchpad/bubbles` proof + live demo page). Remaining ungated
 candidates: layout-as-unit-tests doctrine (MAP), kernel residue (max
-constraints, LayoutPriority, snap-to-collapse). Q2 v2 residue grows inside
-the driver package.
+constraints, LayoutPriority, snap-to-collapse — routed to
+[`scratchpad/dockview/WHAT-IS-LEFT.md`](../../scratchpad/dockview/WHAT-IS-LEFT.md)
+per the 2026-07-14 sibling review). Q2 v2 residue grows inside the driver
+package.
 
 ## Read This First
 
@@ -40,6 +42,9 @@ the driver package.
 
 ## Trail
 
+- 2026-07-14: sibling review kept the packet active at `graduate`; reduced the
+  resume surface to the thread-virtualization ownership/handoff gate and routed
+  Q2 plus dock-kernel residue to their existing owners.
 - 2026-07-14 (latest: bubble shrinkwrap LANDED — third consumer, surface
   grew): PR #399 merged (squash `00be3efd41`). `@beep/pretext` root gained
   the shrinkwrap primitives as pure word-granularity mirrors of upstream's

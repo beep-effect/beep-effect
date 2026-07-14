@@ -4,23 +4,15 @@
     "slug": "rag-retrieval-projection",
     "title": "RAG Retrieval Projection Layer",
     "status": "active",
-    "stage": "research",
-    "openQuestions": [
-      "Q1: Build vs buy \u2014 does beep own the RRF fusion service in-repo, or delegate fusion to pgvector / a vector DB's built-in hybrid ranker?",
-      "Q2: First slice \u2014 what is the thin V1 vertical that graduates into a goals/ packet first?",
-      "Q3: Scope boundary \u2014 do MinHash/LSH evidence-cluster dedup and citation-graph BFS live inside this packet's first graduating goal, or split into separate follow-on goal slices?",
-      "Q4: Lexical channel \u2014 ship the generated-tsvector + GIN path (ts_rank_cd), or the external pg_textsearch BM25 extension?",
-      "Q5: Vendor / license \u2014 which embedding model is the default, and is the projection column locked to vector(768) regardless?",
-      "Q6: Vendor / runtime \u2014 does the embedding encoder run as webview-WASM (transformers.js / onnxruntime-web), or as a Rust-side ONNX sidecar (ort / Candle)?",
-      "Q7: Package placement \u2014 where do the net-new pieces live in the repo topology?"
-    ],
+    "stage": "graduate",
+    "openQuestions": [],
     "links": {
-      "goals": [],
+      "goals": ["goals/hybrid-retrieval-fusion-core"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-06-29",
-    "updated": "2026-06-29",
+    "updated": "2026-07-14",
     "sources": ["research/SOURCES.md"]
   }
 }

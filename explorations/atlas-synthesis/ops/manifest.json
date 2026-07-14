@@ -2,7 +2,7 @@
   "schemaVersion": "exploration-manifest/v1",
   "exploration": {
     "slug": "atlas-synthesis",
-    "title": "Atlas Synthesis — Current State <-> Goals/Vision Grounding",
+    "title": "Atlas Synthesis \u2014 Current State <-> Goals/Vision Grounding",
     "status": "active",
     "stage": "research",
     "openQuestions": [
@@ -25,6 +25,6 @@
       "supersededBy": null
     },
     "created": "2026-06-17",
-    "updated": "2026-06-17"
+    "updated": "2026-07-14"
   }
 }

@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `research`
+Stage: `graduate`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -18,13 +18,12 @@ chain + per-user vault) that today have no home.
 
 ## Next Open Question
 
-**Q1: Scope boundary — one ingestion-security wedge vs split content-security
-gate + shared secret-governance spine.** Highest-leverage open fork: it decides
-whether the secret-governance spine (resolver + vault) graduates with this
-packet at all or rides `multi-provider-llm-dispatch-fallback`, and it frames
-every package-placement and first-slice decision below it. Eight branch-closing
-decisions are pre-drafted with recommendations in [`DECISIONS.md`](./DECISIONS.md)
-— resolve them via `/grill-with-docs ingestion-security-secret-governance`.
+Five candidates remain gated: `ingestion-injection-findings` behind the scrub;
+`safe-html-sanitization` behind the browser-carrier spike;
+`guarded-remote-fetch` behind the rebinding harness;
+`secret-resolution-contract` behind multi-consumer incubation; and
+`per-user-credential-vault` behind the threat-model spike (with its ownership
+model now ratified).
 
 ## Sources & provenance
 
@@ -45,6 +44,11 @@ license + port discipline, the external research citation, and the composed
 
 ## Trail
 
+- 2026-07-14: graduate — shape ratified the appetite and all nine policy blocks
+  as drafted after all eight align decisions locked;
+  [`ingestion-secret-scrub`](../../goals/ingestion-secret-scrub/README.md)
+  graduated while five gated candidates remain queued.
+- 2026-07-14: align closed — all eight decisions locked; first slice reordered to pre-LLM secret scrub; BRIEF.md and MAP.md drafted for shape sign-off with five explicit spike/ownership deferrals.
 - 2026-07-11: cross-reference — `goals/llm-provider-subscription-auth` (partial graduation from sibling `multi-provider-llm-dispatch-fallback`) ships subscription auth via vendor-CLI delegation and stores no tokens, so this packet's per-user vault question (Q1) is unaffected and stays parked here.
 - 2026-06-29: research-complete — RESEARCH.md synthesized, codex gate-1 folded, DECISIONS pre-drafted.
 - 2026-06-29: packet opened from gold-intake cluster 'Ingestion security + secret/PII governance' (10 nuggets).

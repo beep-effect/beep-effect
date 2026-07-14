@@ -2,29 +2,24 @@
 
 ## Status
 
-Stage: `research`
+Stage: `graduate`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Spark
 
-The hand-rolled `packages/drivers/uspto` already speaks ODP application-metadata
-basics, but attorney-grade patent work needs real depth — a Lucene/ODP
-query-DSL with injection-safe escaping, prosecution-timeline + status-code +
-document-tier vocabularies, PTAB/assignment/priority endpoints, a 403→source-PDF
-fallback, plus net-new international/full-text tiers (EPO OPS, BigQuery, ppubs,
-Google Patents). Extend the existing driver in place; do not restart it.
+The graduated patent-docketing spine needs official USPTO depth from the
+hand-rolled `@beep/uspto` driver: first a known-application, provenance-bearing
+prosecution observation, then a separately sequenced `PTMNFEE2` maintenance-fee
+snapshot ingest. Extend the existing driver and shipped USPTO MCP host in place;
+keep legal interpretation and reliability orchestration in their owning goals.
 
 ## Next Open Question
 
-**Q1: Driver-wave scope — in-place `@beep/uspto` depth only, or fan out to
-net-new sibling drivers in this packet?** This is the highest-leverage fork: it
-decides whether the exploration graduates as a single privilege-safe in-place
-depth goal or a fan-out of credentialed driver goals, which shapes every
-downstream slice. All seven branch-closing questions are pre-drafted with
-recommended answers in [`DECISIONS.md`](./DECISIONS.md) — resolve them via
-`/grill-with-docs uspto-patent-driver-depth`.
+**Queued gates:** `uspto-search-structured` waits for live applications-endpoint
+proof; EPO OPS and Google Patents BigQuery wait for named consumers; SerpApi and
+the ppubs experiment remain parked pending explicit pull/approval.
 
 ## Sources & provenance
 
@@ -47,5 +42,11 @@ sources = port-with-attribution), the external research citations, and the
 
 ## Trail
 
+- 2026-07-14: shape gate signed off as drafted; graduated
+  [`goals/uspto-prosecution-read`](../../goals/uspto-prosecution-read/README.md)
+  and
+  [`goals/uspto-ptmnfee2-ingest`](../../goals/uspto-ptmnfee2-ingest/README.md);
+  packet stays active for queued and parked candidates.
+- 2026-07-14: align closed with eight locked decisions; the `PTMNFEE2` research hole closed the same day; BRIEF.md and MAP.md drafted for shape sign-off.
 - 2026-06-29: research-complete — RESEARCH.md synthesized, codex gate-1 folded, DECISIONS pre-drafted.
 - 2026-06-29: packet opened from gold-intake cluster 'USPTO/patent driver depth (ODP, query DSL, File Wrapper, EPO, BigQuery)' (26 nuggets).

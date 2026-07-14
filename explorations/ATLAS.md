@@ -74,7 +74,7 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   of approval-first repair UX, app/manual parity, fresh-machine evidence
   contracts, and the still-unclosed Windows proof gap.
 - [`computable-workspace-geometry`](./computable-workspace-geometry/README.md) —
-  pretext × dock kernel × blocks (stage `research`, opened 2026-07-12): text
+  pretext × dock kernel × blocks (stage `graduate`, opened 2026-07-12): text
   layout as pure arithmetic over shippable per-engine font metrics closes the
   workspace-as-data composition — rendered geometry becomes data, agents gain
   sight, and the dock-divergence "costs" audit came back almost empty of true
@@ -88,8 +88,8 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   geometry → guaranteed one-line render). Align closed 2026-07-13: Q1
   RATIFIED (driver `@beep/pretext`), stage `graduate`, **goal #1 graduated →
   [`goals/pretext-driver`](../goals/pretext-driver/README.md)** (PR #391
-  carries the arc). Residue: goal-2 (thread virtualization) coordination
-  gate with the beep-effect6 lane. Feeds
+  carries the arc). The thread-virtualization gate remains: secure beep-effect6
+  editor-stack ownership and complete the pretext-driver handoff. Feeds
   [`docs/product/workspace-substrate.md`](../docs/product/workspace-substrate.md) §4–§5.
 - [`atlas-synthesis`](./atlas-synthesis/README.md) — grounding/context packet
   (stage `research`): a maximal-fan-out synthesis of current repo state vs.
@@ -102,34 +102,34 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   first) and [`law-practice-office-action-spike`](../goals/law-practice-office-action-spike/README.md).
   More verticals (intake/drafting/contract review) follow once the loop turns once.
 - [`solo-firm-docketing`](./solo-firm-docketing/README.md) — how Tom's solo IP
-  practice deals with docketing (office actions, maintenance fees, court orders,
-  deadlines years out) without missing one. At `align`, held at a review gate:
-  three deep-research tracks done (IP-prosecution vendors; court/litigation
-  engines; official-data/handroll), doctrine locked as **vigilance overlay, not
-  system of record**. Verified reruns sharpened the recommendation: narrow
-  US-deterministic handroll first (ODP/`ptmnfee2` checked, approval-gated), CPI /
-  LawToolBox / Alt Legal as additive redundancy (CPI is headless-ready via
-  documented OAuth2 password grant), ODP polling is sequential per key, litigation
-  L1 uses CourtListener webhooks + hosted MCP, and Outlook push depends on
-  [`m365-driver`](../goals/m365-driver/README.md) (the concrete driver for its
-  future `Calendars.ReadWrite` scope).
-- [`ip-attorney-time-tracking`](./ip-attorney-time-tracking/README.md) - active
-  align-stage exploration for a local-first IP attorney time-capture/prebill
-  assistant: agents may observe activity and propose candidate billable or
-  nonbillable entries, while the attorney approval gate controls what becomes
-  billable or exportable.
-- [`local-first-voice`](./local-first-voice/README.md) — privilege-safe voice &
-  microphone capability (TTS, STT, voice-to-voice) for `apps/professional-desktop`
-  (already Tauri v2). At `shape`, awaiting BRIEF sign-off. Research done via two
-  adversarial sweeps; 9 forks resolved (hybrid local-default · dictation-first slice
-  · desktop-first shared pkg · webview AudioWorklet capture · English-first
-  Moonshine+Kokoro · per-capability provider ports · STT→LLM→TTS pipeline ·
-  `effect/unstable/rpc` worker). Hand-rolls the missing `@effect/platform-browser`
-  audio glue; composes existing `live-waveform`/`use-scribe`/`xai`/`venice-ai`
-  bricks. First slice: local desktop dictation. MAP names 7 candidate goals
-  (`voice-capture-foundation`, `voice-inference-worker`, `voice-provider-ports`,
-  `voice-dictation-slice`, `voice-tts-playback`, `voice-cloud-transport`,
-  `voice-to-voice-session`).
+  practice deals with docketing (stage `graduate`, still active while gated
+  candidates remain). Graduated 2026-07-14 into
+  [`law-docketing-patent-spine`](../goals/law-docketing-patent-spine/README.md)
+  and [`law-docketing-reliability`](../goals/law-docketing-reliability/README.md),
+  with product orientation at
+  [`docs/product/solo-firm-docketing.md`](../docs/product/solo-firm-docketing.md).
+  Queued: CPI after the handroll-v1 trigger, trademark on a qualifying matter,
+  court on a qualifying matter plus licensed-engine shape, and foreign on a
+  qualifying matter plus licensed engine/source shape.
+- [`ip-attorney-time-tracking`](./ip-attorney-time-tracking/README.md) —
+  capture/prebill overlay for Tom's solo IP practice (stage `graduate`, still
+  active while gated candidates remain). Graduated 2026-07-14 into
+  [`law-time-capture-spine`](../goals/law-time-capture-spine/README.md), with
+  product orientation at
+  [`docs/product/ip-attorney-time-tracking.md`](../docs/product/ip-attorney-time-tracking.md).
+  Queued: FreshBooks after its API/write/mapping P0, one M365 signal after its
+  permission/sync/retention P0 and consent, PST on a demonstrated need,
+  profitability after sufficient Slice 1 data, and LEDES/UTBMS on a client
+  mandate with a concrete billing target.
+- [`local-first-voice`](./local-first-voice/README.md) — privilege-safe voice for
+  `apps/professional-desktop` (stage `graduate`, still active while follow-ons remain).
+  Graduated 2026-07-14 into
+  [`voice-composer-slice`](../goals/voice-composer-slice/README.md): local
+  push-to-talk Moonshine dictation plus manual, interruptible Kokoro read-aloud,
+  with the five-day Linux Tauri proof as fail-fast P0. Capture foundation and the
+  general inference worker are absorbed until a second consumer appears. Provider
+  ports, auto/streaming read-aloud, cloud transport, and voice-to-voice remain gated
+  follow-ons off the proven slice.
 - [`domain-layer-hardening`](./domain-layer-hardening/README.md) — systematic
   hardening of every product slice's domain/schema layer (entities, aggregates,
   value objects, typed errors) against a regret-minimization rubric + external
@@ -138,12 +138,11 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`19`](./domain-layer-hardening/synthesis/19-phase1-crosscutting.md) + external
   grounding [`20`](./domain-layer-hardening/synthesis/20-external-law-and-ontology.md)/[`21`](./domain-layer-hardening/synthesis/21-external-signature-dms-notes-corpus.md));
   Phase 3 ([`BRIEF`](./domain-layer-hardening/BRIEF.md)+[`MAP`](./domain-layer-hardening/MAP.md))
-  decomposed into **7 goal packets**, first graduated:
-  [`domain-kernel-hardening`](../goals/domain-kernel-hardening/README.md) (soft-delete
-  on `BaseEntity` + retire `DomainModel`). Status stays `active` — packets 2–7
-  (typed-references, epistemic-claim-body, workspace-candidate-approval,
-  law-practice-real-domain, provenance-attestation, agents-and-narrowing) graduate as
-  predecessors land. Frontier was: 0 typed
+  decomposed into **7 goal packets**. First goal
+  [`domain-kernel-hardening`](../goals/domain-kernel-hardening/README.md) is
+  paused until KG tables approach scale with PRD P2 librarian; packets 2–7 are
+  held behind it. The six 2026-07-14 law consumers are packet-5 shaping inputs,
+  not dependency clearance. Frontier was: 0 typed
   errors in 3 slices, two competing audit bases (`BaseEntity` vs unused
   `@beep/schema/DomainModel`), no soft-delete / temporal-validity / domain-event
   substrate, near-empty aggregates, law-practice rich-in-nouns-thin-in-lifecycle.
@@ -153,28 +152,63 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`routing.json`](./_gold-intake/routing.json) (219/219 routed, user-approved). Each packet:
   CAPTURE seeded from its nuggets, `RESEARCH.md` (external landscape · in-repo inventory ·
   constraints), codex gate-1 folded, `DECISIONS.md` pre-drafted. **Graduate-now (Wave-1,
-  user-confirmed):** [`gov-legal-data-driver-codegen`](./gov-legal-data-driver-codegen/README.md),
-  [`uspto-patent-driver-depth`](./uspto-patent-driver-depth/README.md) (extends `@beep/uspto`),
-  [`mcp-auth-gated-registration`](./mcp-auth-gated-registration/README.md) (grilled+decomposed+
-  graduated first goal 2026-07-01: Q1–Q7 resolved, BRIEF+MAP written,
-  [`goals/mcp-kit`](../goals/mcp-kit/README.md) scaffolded at `foundation/capability`;
-  `uspto-mcp`/`mcp-host-retrofit`/`mcp-write-wall` queue behind it),
-  [`citation-grounding-hallucination-guard`](./citation-grounding-hallucination-guard/README.md).
+  user-confirmed):** [`uspto-patent-driver-depth`](./uspto-patent-driver-depth/README.md) (stage
+  `graduate`, still active for queued/parked lanes): graduated
+  [`uspto-prosecution-read`](../goals/uspto-prosecution-read/README.md) and
+  [`uspto-ptmnfee2-ingest`](../goals/uspto-ptmnfee2-ingest/README.md) on
+  2026-07-14,
+  [`mcp-auth-gated-registration`](./mcp-auth-gated-registration/README.md)
+  (Q1–Q7 resolved; [`mcp-kit`](../goals/mcp-kit/README.md),
+  [`uspto-mcp`](../goals/uspto-mcp/README.md), and
+  [`mcp-host-retrofit`](../goals/mcp-host-retrofit/README.md) completed-retained;
+  write-wall gate remains for a named genuinely write-capable host),
+  [`citation-grounding-hallucination-guard`](./citation-grounding-hallucination-guard/README.md)
+  (stage `graduate`, still active while two lanes remain): graduated
+  [`citation-verified-span-substrate`](../goals/citation-verified-span-substrate/README.md)
+  and scaffolded
+  [`citation-extraction-engine`](../goals/citation-extraction-engine/README.md)
+  on 2026-07-14, with product doctrine at
+  [`docs/product/citation-grounding.md`](../docs/product/citation-grounding.md).
+  The engine is blocked by the verified-span substrate and
+  [`court-reporter-vocabulary`](../goals/court-reporter-vocabulary/README.md);
+  `citation-ground-before-cite` remains queued, with MPEP patterns, hosted
+  enrichment, matter-wall enforcement, and rich-text annotation gated.
+  [`effect-orchestration-patterns`](./effect-orchestration-patterns/README.md)
+  (stage `graduate`, still active for four demand-gated candidates): graduated
+  [`effect-v4-workflow-engine-spike`](../goals/effect-v4-workflow-engine-spike/README.md)
+  on 2026-07-14. Consumer-led reframe: Effect v4 workflow and promoted
+  `@beep/api-transport` supersede the original helper-bundle premise.
   **Queued (P2/P3, research-complete):**
-  [`effect-orchestration-patterns`](./effect-orchestration-patterns/README.md),
-  [`agent-memory-tiers-bitemporal-edges`](./agent-memory-tiers-bitemporal-edges/README.md),
+  [`agent-memory-tiers-bitemporal-edges`](./agent-memory-tiers-bitemporal-edges/README.md)
+  (stage `graduate`, still active for triage/retention lanes): graduated
+  [`epistemic-bitemporal-edge-core`](../goals/epistemic-bitemporal-edge-core/README.md),
+  the `@beep/epistemic-tables` port milestone whose landing triggers write-frozen
+  operator Graphiti retirement without making product tables its backend,
   [`deterministic-doc-structure-extraction`](./deterministic-doc-structure-extraction/README.md)
-  (langextract streaming-lock sibling),
-  [`court-vocabulary-resolver`](./court-vocabulary-resolver/README.md),
-  [`ingestion-security-secret-governance`](./ingestion-security-secret-governance/README.md),
-  [`multi-provider-llm-dispatch-fallback`](./multi-provider-llm-dispatch-fallback/README.md)
-  (partial graduation 2026-07-11: CLI subscription-auth leg →
-  [`goals/llm-provider-subscription-auth`](../goals/llm-provider-subscription-auth/README.md);
-  dispatch/fallback questions remain queued),
-  [`rag-retrieval-projection`](./rag-retrieval-projection/README.md) (the single RRF-layer owner),
-  [`secure-document-download-proxy`](./secure-document-download-proxy/README.md),
-  [`local-first-projection-sync`](./local-first-projection-sync/README.md) (last two are
-  singletons — attach-vs-standalone deferred to their `DECISIONS.md`). Plus **9 non-invasive
+  (stage `graduate`, still active for queued families/streaming/calibration):
+  graduated [`law-doc-structure-oa-slice`](../goals/law-doc-structure-oa-slice/README.md)
+  on 2026-07-14; it consumes the verified-span substrate and feeds the
+  patent-docketing spine,
+  [`court-vocabulary-resolver`](./court-vocabulary-resolver/README.md) (stage
+  `graduate`, still active for resolver/fuzzy/SKOS lanes): graduated
+  [`court-reporter-vocabulary`](../goals/court-reporter-vocabulary/README.md)
+  on 2026-07-14,
+  [`ingestion-security-secret-governance`](./ingestion-security-secret-governance/README.md)
+  (stage `graduate`, still active across two tracks): graduated
+  [`ingestion-secret-scrub`](../goals/ingestion-secret-scrub/README.md) while five
+  content-security/secret-governance candidates remain gated,
+  [`rag-retrieval-projection`](./rag-retrieval-projection/README.md) (stage
+  `graduate`, still active for four gated satellites): graduated
+  [`hybrid-retrieval-fusion-core`](../goals/hybrid-retrieval-fusion-core/README.md),
+  the single RRF-layer owner,
+  [`secure-document-download-proxy`](./secure-document-download-proxy/README.md)
+  (stage `graduate`, still active for three gated candidates): graduated
+  [`secure-document-delivery`](../goals/secure-document-delivery/README.md) on
+  2026-07-14,
+  [`local-first-projection-sync`](./local-first-projection-sync/README.md) (stage
+  `graduate`, still active for gated projector/topology candidates): graduated
+  [`projection-dispatch-core`](../goals/projection-dispatch-core/README.md) on
+  2026-07-14. Plus **9 non-invasive
   Case-A research notes** folded into existing goals (`file-processing-capability` OCR,
   `langextract-capability` anti-inference, `law-practice-office-action-spike` IP-depth,
   `law-practice-office-action-extraction-rung` relational-grid, `ip-law-knowledge-graph` CPC/IPC,
@@ -188,10 +222,10 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `graduate`; capture→graduate in two days — 3 spec docs, 12 repo-mining
   reports, 3 audits, adversarially-verified synthesis, 6 decisions,
   `goals/ontology-modeling-foundation` superseded, design proven by the
-  effect-only `scratchpad/identity` prototype at 27/27). First packet
-  graduated 2026-07-02:
-  [`goals/identity-iri-core`](../goals/identity-iri-core/README.md);
-  `identity-iri-fold` + `identity-iri-fibered` queue behind it
+  effect-only `scratchpad/identity` prototype at 27/27).
+  [`identity-iri-core`](../goals/identity-iri-core/README.md) is complete;
+  [`identity-iri-fold`](../goals/identity-iri-fold/README.md) graduated
+  2026-07-14; `identity-iri-fibered` remains gated behind it
   ([`MAP.md`](./identity-as-iri/MAP.md)) — merge `IdentityComposer`, the ontology layer, and fibered
   metadata retrieval: identity path and IRI as two literal-typed encodings of
   one value, borrowed RDF vocab as CURIE literal types, `$I.ontology` fold
@@ -203,26 +237,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `goals/ontology-modeling-foundation`), and an effect-only scratchpad
   prototype proving types/ergonomics before the packaging call
   (all-in-`@beep/identity` vs identity/rdf/ontology split).
-- [`legal-ontology-landscape`](./legal-ontology-landscape/README.md) —
-  foundation-layer legal semantics exploration at `graduate`: first packet
-  graduated 2026-07-08 into
-  [`goals/semantic-foundation`](../goals/semantic-foundation/README.md) for M1
-  intake-serving SKOS seed, FOLIO-aligned concept IRIs, and `@beep/ontology`
-  taxonomy registry/loader. Status stays `active` while P1-P4 research reports
-  land and feed M2-M4; dependent `goals/trademark-docketing-domain` is deferred
-  behind M3.
-- [`effect-ontology-harvest`](./effect-ontology-harvest/README.md) — opened
-  2026-07-11 at `research`: harvest inventory of
-  [mepuka/effect-ontology](https://github.com/mepuka/effect-ontology)
-  `packages/@core-v2` (MIT, Effect v3) — 8 codex inventory agents map LLM
-  governance, content-addressing/storage, workflow/streaming, domain models,
-  prompting/extraction, runtime/telemetry, repository patterns, and docs
-  rationale to beep homes (foundation modeling/capability vs slice vs
-  design-reference), scored active-goals-first
-  (`ontology-agent-surface`, `semantic-foundation`,
-  `agentic-professional-runtime`); codex verify gate then per-item
-  evaluation then align. Harvest-not-port; end state align-complete.
-
 ### Proposed
 
 - (none — `atlas-synthesis` is now an Active packet above; its capability-inventory
@@ -230,6 +244,10 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Parked
 
+- [`effect-ontology-harvest`](./effect-ontology-harvest/README.md) — parked
+  2026-07-14 at align-complete: harvest-not-port complete with zero goals by
+  design; demand gates and reference routes are recorded, and every item must
+  be re-verified with exact source/notice attribution before any port.
 - `effect-capability-kg` (parked 2026-06-17; packet removed 2026-06-18) —
   tooling-first deterministic Effect v4 capability graph (JSDoc-derived ontology,
   specialist profiles, judge routing, advisory hook backpressure). The exploration
@@ -241,6 +259,24 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`gov-legal-data-driver-codegen`](./gov-legal-data-driver-codegen/README.md) —
+  graduated after the codegen substrate and `@beep/api-transport` promotion
+  completed: [`gov-legal-data-driver-codegen`](../goals/gov-legal-data-driver-codegen/README.md),
+  paused named-consumer delivery in
+  [`gov-legal-data-driver-delivery`](../goals/gov-legal-data-driver-delivery/README.md),
+  and collision-safe MCP sibling
+  [`gov-legal-mcp`](../goals/gov-legal-mcp/README.md).
+- [`legal-ontology-landscape`](./legal-ontology-landscape/README.md) — research
+  complete; [`semantic-foundation`](../goals/semantic-foundation/README.md)
+  owns active M1 execution, while
+  [`trademark-docketing-domain`](../goals/trademark-docketing-domain/README.md)
+  remains a paused stub behind M3.
+- [`multi-provider-llm-dispatch-fallback`](./multi-provider-llm-dispatch-fallback/README.md)
+  — graduated 2026-07-14 on its shipped auth leg,
+  [`llm-provider-subscription-auth`](../goals/llm-provider-subscription-auth/README.md).
+  The `llm-runtime-dispatch` remainder is demand-gated until a real consumer
+  requires two compatible, credential-resolvable runtime targets; then it owns
+  ordered runtime `ExecutionPlan` policy only.
 - [`ontology-agent-surface`](./ontology-agent-surface/README.md) — graduated
   2026-07-11 into
   [`ontology-agent-surface`](../goals/ontology-agent-surface/README.md): a

@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "citation-extraction-engine",
+    "title": "Citation Extraction Engine",
+    "status": "active",
+    "created": "2026-07-14",
+    "updated": "2026-07-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/citation-extraction-engine",
+  "lifecycle": "active",
+  "mission": "Port the eyecite extraction pipeline into Effect over existing law-practice citation values with pinned parity, exact spans, and versioned stable vocabulary IDs.",
+  "statusNote": "P0 research may proceed; P1 is blocked by the verified-span substrate and court-reporter vocabulary public compatibility contract.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/citation-grounding-hallucination-guard",
+    "graduated": "2026-07-14"
+  },
+  "blockedBy": [
+    "goals/citation-verified-span-substrate",
+    "goals/court-reporter-vocabulary"
+  ],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/citation-extraction-engine/README.md",
+    "goals/citation-extraction-engine/SPEC.md",
+    "goals/citation-extraction-engine/PLAN.md",
+    "goals/citation-extraction-engine/GOAL.md",
+    "goals/citation-extraction-engine/research/SOURCES.md",
+    "goals/citation-verified-span-substrate/SPEC.md",
+    "goals/court-reporter-vocabulary/SPEC.md",
+    "explorations/citation-grounding-hallucination-guard/BRIEF.md",
+    "explorations/citation-grounding-hallucination-guard/MAP.md",
+    "explorations/citation-grounding-hallucination-guard/DECISIONS.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/citation-extraction-engine/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Pinned parity corpus, regex safety, and provenance",
+      "status": "pending"
+    },
+    { "id": "P1", "name": "Implement", "status": "pending" },
+    {
+      "id": "P2",
+      "name": "Verify: parity and Bun span fidelity",
+      "status": "pending"
+    },
+    { "id": "P3", "name": "Close: Yeet PR to mergeable", "status": "pending" }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/citation-extraction-engine/GOAL.md)\" -le 4000",
+    "jq . goals/citation-extraction-engine/ops/manifest.json",
+    "rg -n \"citation-extraction-engine|blockedBy|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/citation-extraction-engine",
+    "git diff --check -- goals/citation-extraction-engine THIRD_PARTY_NOTICES.md",
+    "bun run beep yeet verify",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Either prerequisite contract is absent, incompatible, or accessible only through raw generated files.",
+    "P0 cannot establish a pinned attribution-safe parity corpus or bounded regex strategy.",
+    "Parity would require a second citation taxonomy, hosted truth, fuzzy grounding, or weakened exact-span equality.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

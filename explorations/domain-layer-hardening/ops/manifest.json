@@ -6,9 +6,7 @@
     "status": "active",
     "stage": "graduate",
     "openQuestions": [
-      "Graduate sibling packets 2-7 (domain-typed-references, epistemic-claim-body, workspace-candidate-approval, law-practice-real-domain, provenance-attestation, agents-and-narrowing-sweep) as their predecessors land — see MAP.md sequencing. Deferred until domain-kernel-hardening progresses.",
-      "Confirm during packet-2 shaping: move fixtureKey out of domain models into a fixtures/seed layer (N1) vs retain as a seed-import field.",
-      "Confirm during epistemic-claim-body shaping: SPO-capable assertion VO shape (deep FOLIO/PROV-O TBox deferred to ip-law-knowledge-graph)."
+      "Concrete trigger: goals/domain-kernel-hardening is paused until KG tables approach scale and opens with the ROADMAP PRD P2 librarian condition; packets 2-7 remain held behind packet 1 per the MAP dependency graph."
     ],
     "links": {
       "goals": ["goals/domain-kernel-hardening"],
@@ -21,6 +19,6 @@
       "supersededBy": null
     },
     "created": "2026-06-29",
-    "updated": "2026-06-29"
+    "updated": "2026-07-14"
   }
 }

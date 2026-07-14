@@ -1,34 +1,36 @@
 # Local-First Projection Sync — Sources & Provenance
 
 Provenance ledger for this packet: it joins the one mined gold nugget in this
-packet's cluster to its upstream repo + license, the external research citations
-already on disk, and the in-repo bricks the proposed `EventStreamHub` composes
-onto. Derived from the gold-intake cluster **"Local-first projection sync
-(EventStreamHub)"** (route `new-exploration`, wave `P2`, theme `desktop-portal`).
+packet's cluster to its upstream repo and unresolved license, the external
+research already on disk, and the live repo bricks used by the ratified
+two-plane projection-dispatch seam. Derived from the gold-intake cluster
+**"Local-first projection sync (EventStreamHub)"** (route `new-exploration`,
+wave `P2`, theme `desktop-portal`).
 
 - Cluster: `Local-first projection sync (EventStreamHub)` — 1 nugget, 1 upstream repo.
 - Gold-intake provenance: [`../../_gold-intake/ROUTING.md`](../../_gold-intake/ROUTING.md) · [`../../_gold-intake/routing.json`](../../_gold-intake/routing.json) · [`../../_gold-intake/GOLD_SYNTHESIS.md`](../../_gold-intake/GOLD_SYNTHESIS.md) (`### Desktop & document portal` → `#### Per-user live connection hub for projection sync`, source line `GOLD_SYNTHESIS.md:1341`).
 - Packet codex review: [`../reviews/2026-06-29-codex-research.md`](../reviews/2026-06-29-codex-research.md) (research-gate critique, 3 blocking + 5 advisory, folded into RESEARCH.md).
 
-> **License conflict to reconcile (load-bearing) — see §2.** The gold-intake
+> **License conflict deferred, safe disposition fixed — see §2.** The gold-intake
 > catalog (this packet's authoritative source bundle) records TalentScore as
 > **MIT**. The packet prose (CAPTURE L48–49, RESEARCH "Licensing gravity",
 > DECISIONS, raw research) instead asserts TalentScore is *commercial-licensed*
-> and builds the "port the design **shape**, never copy code" discipline on
-> that. If the upstream is in fact MIT, port-with-attribution is permissible.
-> Resolve the license-of-record at the align stage before the hub graduates; do
-> not silently change the prose here.
+> without authoritative license evidence on disk to reconcile the two. The
+> 2026-07-14 align gate therefore makes TalentScore **reference-only and
+> clean-room design-pattern reuse only** until authoritative upstream evidence
+> resolves the license of record. No code is copied and graduation does not
+> depend on the donor.
 
 ## 1. Mined source corpus (gold nuggets)
 
 | Nugget | Title | Upstream (repo) | Source (file:line) | Theme | Priority | Disposition |
 | --- | --- | --- | --- | --- | --- | --- |
-| TalentScore#10 | Per-user live connection hub for local-first real-time projection sync | TalentScore | `packages/server/src/public/event-stream/event-stream-hub.ts:83-118` | desktop-portal | P2 | **port (shape only)** — clean-room reimplement the design under Effect v4; see §2 license conflict |
+| TalentScore#10 | Per-user live connection hub for local-first real-time projection sync | TalentScore | `packages/server/src/public/event-stream/event-stream-hub.ts:83-118` | desktop-portal | P2 | **reference only** — clean-room study of targeted live fan-out; it does not own durable work |
 
 **How this nugget informs the packet.** This is a single-nugget cluster: the
 whole packet exists to evaluate and right-size TalentScore#10.
 
-- *The pattern to take* — a **targeted server-push fan-out hub**: a scoped
+- *The precedent studied* — a **targeted server-push fan-out hub**: a scoped
   `Effect.Service` holding a guarded `MutableHashMap<UserId, ActiveConnection[]>`
   registry with `register` / `unregister` / `notifyUser`, fanning one typed
   event out to only that user's live connections and pruning dead consumers. The
@@ -37,19 +39,18 @@ whole packet exists to evaluate and right-size TalentScore#10.
   boundary"). The upstream snippet carries the concrete signature:
   `notifyUser(userId, event)` iterating a user's connections and offering the
   event to each connection's queue with `{ discard: true }`.
-- *What to leave / adapt* — the upstream's `effect/Mailbox` primitive and
+- *What to leave* — the upstream's `effect/Mailbox` primitive and
   `conn.mailbox.offer(event)` / `Mailbox.toStream()` calls are a **dead v3 API**
-  in this repo's `effect@4.0.0-beta.91`; the concept maps cleanly to one `Queue`
-  per connection drained via `Stream.fromQueue` (RESEARCH "Constraints", Q4 in
-  DECISIONS). Leave the `Clock.currentTimeMillis`-gated prune as a half-open
+  in this repo's pinned Effect v4 beta. The first ephemeral plane may use one
+  scoped queue/stream for the current IPC session, but no donor hub or registry
+  is implemented without topology proof. Leave the `Clock.currentTimeMillis`-gated prune as a half-open
   backstop only; prefer `Scope`-based register/unregister finalizers (codex
   gate-1, A2). Leave the upstream's WebSocket transport — the desktop reuses the
   proven Tauri-IPC streaming-RPC surface (§4).
-- *Do not over-scope from the nugget* — the hub's remit is narrowed to
-  **cross-window / server-originated** invalidation only; in-window UI-projection
-  refresh is already covered by the existing Atom/SQL reactivity paths (RESEARCH
-  "Existing reactive-invalidation paths vs the hub", DECISIONS Q3). A first slice
-  that re-implements in-window invalidation in the hub would overbuild.
+- *Do not promote the nugget into architecture* — durable work belongs to
+  repo-native intent persistence plus Effect v4 `DurableQueue`; the live hint is
+  disposable. The per-user registry is gated because no user principal or
+  multiple independently scoped desktop connections are proved today.
 
 This is **not** a split cluster — no sibling packet shares this nugget.
 
@@ -57,7 +58,7 @@ This is **not** a split cluster — no sibling packet shares this nugget.
 
 | Repo | Tier | License | Port discipline | What we take |
 | --- | --- | --- | --- | --- |
-| TalentScore | T1 | **MIT** (per gold-intake catalog/bundle) — packet prose claims "commercial"; conflict, see callout | If MIT: **port-with-attribution** permitted. If commercial (packet's stated assumption): **clean-room reimplement, shape only — never copy code**. Treat as clean-room until reconciled (the safe superset). | The `EventStreamHub` design shape: scoped `Effect.Service` + per-`UserId` registry + targeted `notifyUser` + dead-consumer prune. Adapt the primitive to Effect v4 `Queue`. |
+| TalentScore | T1 | **UNRESOLVED:** gold-intake says MIT; packet prose says commercial | **Reference-only; clean-room design-pattern study; never copy code until reconciled** | Targeted live fan-out as historical precedent only; no durable ownership and no invented `UserId` |
 
 > **Cautions (echoed from the bundle).** `P2 desktop/local-first concern;
 > coordinate with the authority/projection/cache standard.` The hub is the
@@ -77,7 +78,9 @@ This is **not** a split cluster — no sibling packet shares this nugget.
 > triggers SSPL's service-source obligation. This wedge introduces **no FalkorDB
 > runtime** (only a typed refresh event); track SSPLv1 as an open licensing gate
 > (DECISIONS Q7) and require legal/architecture review before any FalkorDB
-> projection ships.
+> projection ships. The 2026-07-14 decision excludes FalkorDB from v1 and
+> requires separate approval for any driver-isolated, rebuildable,
+> non-authoritative graph projection.
 
 ## 3. External research sources
 
@@ -127,26 +130,47 @@ All URLs below are reproduced from this packet's own
 
 ## 4. In-repo capability references
 
-The bricks the proposed hub composes onto (from the bundle `secondaryTargets`
-and RESEARCH "In-Repo Capability Inventory"). Paths verified in RESEARCH on
-2026-06-29.
+Paths were rescanned on 2026-07-14. The ratified design composes these bricks:
 
-- `@beep/workspace-server` — `packages/workspace/server` — **extend** (hub home; exports the `Thread` server namespace + workspace Layer; co-locate the scoped `EventStreamHub` next to the authority boundary). Bundle `secondaryTargets`.
-- `@beep/workspace-use-cases` — `packages/workspace/use-cases/src/aggregates/Thread/ThreadStore.ts` — **reuse** (the single authority write boundary `appendTurn`/`createThread`/`setTitleIfEmpty`; `notifyUser` fires *after* commit). Candidate RPC-contract home (UNRESOLVED vs `@beep/agents-use-cases`).
-- `@beep/agents-use-cases` — `packages/agents/use-cases/src/processes/Chat/Chat.rpc.ts` — **reuse** (proven `stream: true` server→client RPC surface, `ChatRpcs` `RpcGroup`; `SubscribeProjectionEvents` lands as a sibling). Alternate RPC-contract home.
-- `apps/professional-desktop` — `src/transport/IpcChatClient.ts`, `src/runtime/*`, `src/chat/ui/*` — **extend** (client transport `RpcClient.layerProtocolSocket` over ndjson on Tauri IPC; app-local live-Layer wiring + client subscription land here only — no slice product code in the app). Bundle `secondaryTargets`.
-- `@effect/atom-react` + `effect/unstable/reactivity` `Atom` — `apps/professional-desktop/src/runtime/ProfessionalAtomRuntime.ts` — **reuse** (the client substrate that consumes the subscription stream and invalidates UI projections; note the dep is `@effect/atom-react`, not the older `@effect-atom/atom-react`).
-- `@beep/drivers-pglite` — `packages/drivers/pglite/src/PgliteClient.service.ts` (`listen`/`notify`) — **reuse / boundary** (single-user PGlite-in-sidecar authority store; in-process only, does not reach a separate renderer — the gap the hub fills).
-- `@beep/observability` — `packages/foundation/capability/observability/src/server/DevTools.ts` (`effect/unstable/socket/Socket` `layerWebSocket`) — **reuse** (WS fan-out substrate if a real WebSocket ever replaces the Tauri IPC socket).
-- `MutableHashMap` (root `effect`) — **reuse** (in-repo-proven: `@beep/nlp` Graph ops, `@beep/repo-utils` `TSMorph.service.ts`, schema test).
-- `EventStreamHub` service + `notifyUser` + `SubscribeProjectionEvents` RPC — **NET-NEW** (zero `EventStreamHub`/`notifyUser`/`PubSub` usage in any `src`; `SynchronizedRef` exists in Effect v4 but has no repo usage — this slice is its first user).
-- FalkorDB projection client — **NET-NEW / aspirational** (no `packages/drivers/falkordb`, no in-process projection client; only Graphiti MCP/FalkorDB *proxy orchestration* under `packages/tooling/tool/cli/src/commands/Graphiti/internal/{ProxyOps,ProxyConfig}.ts`, which is dev/infra, not a reusable projection client).
+- Effect v4 durable queue —
+  `node_modules/effect/src/unstable/workflow/DurableQueue.ts` — **reuse after
+  prerequisite proof** (`idempotencyKey`, persisted processing, worker
+  concurrency, `WorkflowEngine` and `PersistedQueueFactory` requirements).
+- Workflow persistence adapter — `packages/drivers/workflow` — **NET-NEW in
+  `goals/effect-v4-workflow-engine-spike`**; do not freeze or duplicate it here.
+- Epistemic contracts — `packages/epistemic/use-cases` — **NET-NEW dispatch,
+  status, and subscription RPC contracts** in an existing slice/package.
+- Epistemic persistence — `packages/epistemic/tables` — **NET-NEW accepted
+  record/intent/projection/cursor persistence** in an existing slice/package.
+- Epistemic worker composition — `packages/epistemic/server` — **NET-NEW
+  isolated target-family worker/projector composition**.
+- Documents precedent —
+  `packages/documents/use-cases/src/aggregates/Sync/VaultSyncEngine.ts` and
+  `packages/documents/server/src/aggregates/Sync/VaultSyncEngine.service.ts` —
+  **study only** for cursor/status/retry concerns; do not generalize its
+  vault/provider model.
+- Desktop re-query — `apps/professional-desktop/src/sync/Sync.atoms.ts` —
+  **reuse pattern** for reactivity-keyed RPC reads and invalidation.
+- Desktop transport —
+  `apps/professional-desktop/src/transport/TauriIpcSocket.ts` and
+  `IpcChatClient.ts` — **extend** the scoped Effect socket/RPC bridge; no
+  multi-connection claim.
+- Desktop launch auth —
+  `apps/professional-desktop/server/RpcSessionAuth.ts` — **reuse authentication;
+  NET-NEW server-side scope authorization**. The launch token is not a user
+  principal.
+- Scoped queue/stream hint — **NET-NEW, minimal and ephemeral**. `PubSub` and a
+  per-audience registry stay gated by topology evidence.
+- FalkorDB projection client — **NET-NEW / gated / not v1**. Existing Graphiti
+  proxy orchestration is not a reusable projector.
 
 ## 5. Cross-links & provenance
 
 - Cluster id: `local-first-projection-sync` (route `new-exploration`, wave `P2`, theme `desktop-portal`). Bundle `crossref`: none.
-- Packet exploration trail: [`../CAPTURE.md`](../CAPTURE.md) · [`../RESEARCH.md`](../RESEARCH.md) · [`../DECISIONS.md`](../DECISIONS.md) (Q1–Q7 pre-drafted, open for `/grill-with-docs`) · [`../ops/manifest.json`](../ops/manifest.json).
+- Packet exploration trail: [`../CAPTURE.md`](../CAPTURE.md) · [`../RESEARCH.md`](../RESEARCH.md) · [`../DECISIONS.md`](../DECISIONS.md) (Q1–Q7 locked 2026-07-14) · [`../BRIEF.md`](../BRIEF.md) · [`../MAP.md`](../MAP.md) · [`../ops/manifest.json`](../ops/manifest.json).
 - Raw per-subtopic research: [`./eventstreamhub-projection-fanout-and-attach-vs-standalone.md`](./eventstreamhub-projection-fanout-and-attach-vs-standalone.md).
 - Codex review: [`../reviews/2026-06-29-codex-research.md`](../reviews/2026-06-29-codex-research.md).
 - Gold synthesis: [`../../_gold-intake/GOLD_SYNTHESIS.md`](../../_gold-intake/GOLD_SYNTHESIS.md) — `### Desktop & document portal` → `#### Per-user live connection hub for projection sync` (`GOLD_SYNTHESIS.md:1341`).
-- Coordinate-with goals (from RESEARCH "Routing cautions", not yet linked in manifest): `goals/desktop-chat-surface` (RPC surface + app-local Layer; SPEC non-goal "No collaboration; no multi-user presence"), `goals/workspace-thread-domain` (`ThreadStore` write hook). Precedent: `explorations/local-first-voice/DECISIONS.md` (attach-as-spike right-sizing).
+- Graduated goal: [`goals/projection-dispatch-core`](../../../goals/projection-dispatch-core/) — carries this ledger's relevant corpus for implementation.
+- Cross-packet boundaries: `goals/epistemic-bitemporal-edge-core` is the authority producer; `goals/hybrid-retrieval-fusion-core` owns downstream ranking; `goals/effect-v4-workflow-engine-spike` owns the prerequisite persistence/crash proof.
+- Superseded pre-draft: the `ThreadStore` attach wedge and in-memory durable hub premise remain historical research only.

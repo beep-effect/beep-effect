@@ -4,23 +4,15 @@
     "slug": "agent-memory-tiers-bitemporal-edges",
     "title": "Agent Memory Tiers & Bitemporal Edges",
     "status": "active",
-    "stage": "research",
-    "openQuestions": [
-      "Q1: How do we source the borrowed memory primitives \u2014 port-with-attribution, reference-only, or clean-room?",
-      "Q2: What does this packet own versus consume or defer?",
-      "Q3: What is the first shippable slice?",
-      "Q4: Where does durable truth live, and do we admit any external graph vendor for it?",
-      "Q5: Where does the new code live, and is the disposition axis shared-kernel or slice-local?",
-      "Q6: Do we persist an explicit CONTRADICTS edge, or rely on implicit invalidation only?",
-      "Q7: How are the bitemporal no-overlap / supersession invariants enforced, and how are open intervals represented?"
-    ],
+    "stage": "graduate",
+    "openQuestions": [],
     "links": {
-      "goals": [],
+      "goals": ["goals/epistemic-bitemporal-edge-core"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-06-29",
-    "updated": "2026-06-29",
+    "updated": "2026-07-14",
     "sources": ["research/SOURCES.md"]
   }
 }

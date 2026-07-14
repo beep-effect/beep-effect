@@ -44,6 +44,13 @@ law-practice vertical that composes it.
 
 ## Trail
 
+- 2026-07-14: **Frontier re-drawn by the graduation campaign** — 16 exploration
+  packets dispositioned in one run (~18 goals graduated, incl. the law-practice
+  docketing/time/citation/doc-structure arc, the epistemic bitemporal core, the
+  retrieval fusion core, and the workflow-engine spike). The gap map
+  (`synthesis/00-baseline-gap-map.md`) is stale by design; the next synthesis
+  pass fires after the first vertical loop turns (office-action wedge ships).
+  Packet stays `active` as the standing synthesis vehicle.
 - 2026-06-17: **Foundation-gaps analysis** (`synthesis/60-foundation-gaps.md`). Grilled the
   placement; recommends a shared **`@beep/provenance`** anchor (`TextAnchor`/`SourceRef`) in
   `foundation/modeling` as the keystone fill-in. Coordination: `epistemic-claim-lifecycle-gate`'s

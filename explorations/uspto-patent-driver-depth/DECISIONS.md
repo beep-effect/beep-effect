@@ -1,69 +1,211 @@
 # USPTO Patent Driver Depth — Decisions
 
-<!--
-Stage 2 (ALIGN seed). Branch-closing questions with a RECOMMENDED answer
-first, posed but NOT resolved. The human resolves each via
-`/grill-with-docs uspto-patent-driver-depth`, then this file becomes the
-resolution log (one entry per closed branch). Until then every question below
-is `Status: open` and mirrored in ops/manifest.json `openQuestions`.
+The seven 2026-06-29 recommendations were align seeds, not decisions. The
+2026-07-14 align gate supersedes them with the eight locked resolutions below.
+In particular, graduation of the docketing spine changed the answers to Q2,
+Q5, Q6, and Q7.
 
-These forks are grounded in RESEARCH.md (synthesis + Unresolved) and the
-folded Codex research-gate critique (reviews/2026-06-29-codex-research.md:
-3 blocking + 5 advisory).
--->
+## 2026-07-14 — Q1: Driver-wave scope
 
-## Q1: Driver-wave scope — in-place `@beep/uspto` depth only, or fan out to net-new sibling drivers in this packet?
+**Status:** LOCKED
 
-**Recommended:** Graduate this exploration as an **in-place `@beep/uspto` depth goal first**, and split the three net-new sibling drivers (`epo`, `google-patents-bigquery`, `google-patents`) into **separate follow-on goal packets** rather than one mega-goal. When the credentialed tiers do graduate, the defensible default pair is **`epo` + `google-patents-bigquery`**; if GCP billing is deferred, fall back to **`epo` + `google-patents` (SerpApi)**. ppubs stays **DEFERRED** to a clearly-marked best-effort experiment.
+**Question:** Does this wave deepen `@beep/uspto` in place, or fan out into
+international and commercial patent-data drivers?
 
-**Rationale:** Extend-in-place is zero-new-package, zero-credential, and privilege-safe by default — it can land and prove the depth pattern without any secret/billing surface (RESEARCH "Locked decisions": extend-in-place, not restart). Each net-new driver carries its own auth/secret/billing/license gravity (EPO OAuth2, GCP billing + CC BY 4.0 attribution, SerpApi paid-scraping/ToS risk), so folding all four into one goal balloons the appetite and couples a clean in-place win to credential governance it doesn't need. `epo` leads the credentialed pair because it has a free registered fair-use tier (~4 GB/week, no billing); `google-patents-bigquery` is the *sanctioned* dataset vs SerpApi's scraping risk (RESEARCH §4). ppubs reference impls are archived/fragile (`patent_client` archived 2026-04-24; split `/api/` vs `/dirsearch-public/` base) — the durable pattern is the 403→source-document fallback, not a full-text tier in this wave (RESEARCH §3).
+**Answer:** Deepen `@beep/uspto` in place first, exclusively for capabilities
+the docketing spine needs. EPO OPS and Google Patents BigQuery remain separate,
+consumer-pulled candidate goals. SerpApi is parked, and ppubs is at most a
+best-effort experiment.
 
-**Status:** open (for /grill-with-docs)
+**Rationale:** The official USPTO read path now has a named consumer and can
+produce useful, credential-bounded depth without coupling the first wave to
+OAuth, GCP billing, attribution, or scraping risk.
 
-## Q2: First vertical slice — what is the smallest end-to-end proof that graduates first?
+**Rejected options:** One patent-data mega-goal; graduating EPO or BigQuery
+without a named product pull; treating SerpApi or ppubs as a committed tier.
 
-**Recommended:** The **ODP query surface on the existing `@beep/uspto` driver**: injection-safe literal-term escaping (full modern OpenSearch reserved set, strip `<>`, ~1000-char cap) + friendly→API nested field map (always emit fully-qualified dotted paths) + identifier disambiguation (app/patent/publication with a **confidence score**, never a hard guess), all feeding the **existing GET `searchApplications`**. No new packages, no credentials, no MCP gating. Verify with fixtures over the escaping/field-map/disambiguation helpers plus a live-probe checklist for the grammar features.
+## 2026-07-14 — Q2: First vertical slice
 
-**Rationale:** This is pure extend-in-place onto the five hand-rolled files, privilege-safe, and has no secret/billing/license dependency — the fastest path to a graded, testable depth win. Codex confirmed-sound that GET `searchApplications` is the existing compatibility path and the structured POST is "the gap" (review: confirmed-sound #2). It de-risks the highest-traffic surface (query construction) before any prosecution-vocab or credentialed-tier work, and the escaping/disambiguation logic is the load-bearing security boundary (anti-injection + confidence-scored identifiers) that everything downstream depends on.
+**Status:** LOCKED — changed by docketing graduation
 
-**Status:** open (for /grill-with-docs)
+**Question:** What is the smallest end-to-end proof that should graduate first?
 
-## Q3: `searchStructured` (POST structured body) — ship it in this packet, or keep it behind a spike?
+**Answer:** A known-application prosecution-event read: application number to a
+schema-decoded, provenance-bearing prosecution observation containing numeric
+status and description, `eventDataBag` transaction events, an authoritative
+office-action/document reference, typed technical failures, and a fixture-backed
+contract test shaped for the patent-spine intake port. P0 must first verify the
+current office-action endpoint and envelope and decide whether transaction
+events come from the dedicated Patent File Wrapper path or an aggregate
+projection.
 
-**Recommended:** **Keep `searchStructured` behind a documented spike.** Do NOT wire the POST `filters`/`rangeFilters`/`sort` body until a **real-browser Swagger read or a key-authenticated probe** confirms `POST /api/v1/patent/applications/search` accepts the structured body. The existing GET `searchApplications?q=` remains the compatibility path; model the `filters` (`name`/`value[]`) vs `rangeFilters`/`sort` (`field`) asymmetry only once the endpoint is proven.
+**Rationale:** The graduated patent spine needs official prosecution evidence,
+not a general query builder. This slice proves the driver-to-intake contract
+while keeping legal interpretation and scheduling out of the driver.
 
-**Rationale:** This is the Codex **release-blocker** (review: blocking #1) — the synthesis stated the POST as confirmed in the exec summary but marked the *same* applications-search POST as Unresolved. The structured-body acceptance is confirmed only for PTAB `/proceedings/search`, **unverified for `applications/search`** (RESEARCH §1 + Unresolved). Building `searchStructured` against an assumed method/body combination risks shipping a method the target endpoint rejects; the WAF/Swagger gate must be cleared in a real browser first.
+**Rejected options:** Query DSL as the first slice; a broad application-search
+surface; deadline computation in `@beep/uspto`; assuming either Patent File
+Wrapper transactions or OA Text Retrieval is authoritative without a live
+reconciliation spike.
 
-**Status:** open (for /grill-with-docs)
+## 2026-07-14 — Q3: `searchStructured`
 
-## Q4: Status-code vocabulary — versioned generated artifact, or runtime `/status-codes` cache?
+**Status:** LOCKED
 
-**Recommended:** **(a) A versioned generated artifact** `Uspto.vocab.generated.ts`, built from the PatEx/ODP `/status-codes` table (canonical **225 codes**, keyed by integer `applicationStatusCode`) with an embedded **source date + checksum + a refresh command**, export-blocked like the runpod `_generated/*: null` precedent. Do NOT port either hand-curated MCP status-code map (both are corrupted — 4-of-5 wrong). Anchor the document-tier vocab to `documentCode` (the IFW spreadsheet, namespace-collision guard for `RCEX/EXIN/CTAV/CTNF/CTFR`), and decode `/transactions` as `eventDataBag`, not `statusCodeBag`.
+**Question:** Should structured application search enter the committed public
+contract now?
 
-**Rationale:** Codex advisory — "sync" is not an implementation verb without owner, cadence, and proof gate (review: advisory #5). Option (b) runtime cache **couples vocab decode to secret availability** (the `/status-codes` endpoint is key-authenticated), breaking offline/privilege-safe decode; (a) is offline-safe, deterministic, and proof-gated via checksum (RESEARCH "Locked decisions"). USPTO status/event/document dictionaries are US-government **public-domain facts**, so embedding them in `Uspto.vocab.ts` is license-safe (RESEARCH Constraints).
+**Answer:** No. `searchStructured` stays out until a live spike proves the
+applications endpoint's method, body, field list, pagination, and error behavior.
+When admitted, it must preserve the real asymmetry: `filters` use
+`name`/`value[]`, while `rangeFilters` and `sort` use `field`.
 
-**Status:** open (for /grill-with-docs)
+**Rationale:** Structured POST is confirmed for PTAB, not for the applications
+endpoint. Publishing an inferred request contract would turn an evidence gap
+into public API debt.
 
-## Q5: Package placement — where do net-new drivers and the prosecution-phase overlay live?
+**Rejected options:** Shipping the secondary-source POST shape as fact; hiding
+the uncertainty behind a permissive record; coupling structured search to the
+first prosecution-read slice.
 
-**Recommended:** Net-new drivers go under **`packages/drivers/{epo,google-patents-bigquery,google-patents}`**, mirroring `@beep/uspto`'s Redacted-secret config pattern and reusing the shared `assertAllowedRemoteUrl` SSRF guard from `@beep/schema`. Hold the **vocabulary-ownership boundary**: `@beep/uspto` owns USPTO-native vocab as **faithfully-decoded data** (codes-as-strings + native categories, zero interpretation) in `Uspto.vocab.ts`; the **opinionated overlays** — litigation-importance tiers, a **NEW `ProsecutionPhase`/`PatentAssetStatus`** value, OA→rejection semantics — live in **`@beep/law-practice-domain`**, with driver→domain translation in `law-practice/use-cases` `OfficeActionReview`. Reuse the existing XML stack (`@beep/schema/Xml` + cataloged `fast-xml-parser`) with an EPO force-array hook — do NOT add a new parser. **Do NOT overload the shared-kernel `ClaimLifecycle`.**
+## 2026-07-14 — Q4: Native vocabulary lifecycle
 
-**Rationale:** Codex advisory — `ClaimLifecycle` is an **admission-state** axis already reused by law-practice `Distinction.lifecycleState`; prosecution **phase** is a different axis and needs its own value (review: advisory #4). The vocab-ownership split keeps native facts in the driver and legal/strategic judgment in the domain — the moment a mapping encodes litigation importance it crosses into `OfficeActionReview` (RESEARCH "Vocabulary-ownership boundary"). Reusing `@beep/schema/Xml` avoids a parallel XML layer the repo already has (review: advisory #3); port EPO throttle/auth logic from the **Apache-2.0** `ip-tools/python-epo-ops-client`, not the license-unverified TS source.
+**Status:** LOCKED
 
-**Status:** open (for /grill-with-docs)
+**Question:** How are USPTO status and event vocabularies made deterministic?
 
-## Q6: Source/consent matrix — how is the privilege-safe boundary encoded across all sources?
+**Answer:** Generate a package-private, deterministic artifact carrying source
+identity, retrieval date, checksum, and refresh command. Runtime
+`/status-codes` access may detect and report drift but never silently changes
+decode semantics. Refreshes produce reviewable diffs. The same mechanism owns
+all four native vocabularies together: application status codes, OA transaction
+event codes, document codes, and `PTMNFEE2` maintenance event codes.
+Prosecution-affecting changes require a separately versioned, attorney-reviewed
+rule update in the patent spine.
 
-**Recommended:** Encode a **source-policy axis** in the driver/MCP auth matrix that **separates "official/public-source" from "privilege-safe."** Default pre-filing/privileged matters to **offline-local or public-identifier-only** lookups (a known application/patent number, not free-text disclosure language). Require **explicit matter-level consent for ANY external free-text search** — **ODP and ppubs included**, alongside the three credentialed tiers. Make the opt-in **structural, not a runtime flag**: absence of a Redacted secret → the driver `Layer` fails fast / is not constructed, and its MCP toolkit layer resolves to `Layer.empty`. Govern EPO/GCP/SerpApi secrets as `op://` references via the 1Password skill; never commit. Keep the two distinct 403 behaviors separate (ppubs session-expiry re-handshake vs ODP structured-endpoint reroute-to-PDF).
+**Rationale:** Offline decode and fixture-based CI need stable meanings.
+Separating native vocabulary refresh from legal rule versions makes drift
+visible without letting a network response rewrite docketing semantics.
 
-**Rationale:** Codex **blocking #3** — the draft drew the consent boundary around EPO/BigQuery/SerpApi but treated ODP/ppubs as privilege-safe defaults. Both ODP search and ppubs **transmit free-text query text to external USPTO systems**; for pre-filing invention disclosures, confidentiality risk is **not** eliminated by an endpoint being official or no-key (RESEARCH "Auth / secret / offline boundaries"). Only offline/local search and public-identifier-only lookups are truly privilege-safe by default. The structural gate (missing secret → `Layer.empty`) makes the policy enforceable rather than advisory.
+**Rejected options:** Runtime cache as decode authority; hand-maintained maps;
+silent mutation on drift; mixing USPTO-native descriptions with legal phase or
+deadline rules.
 
-**Status:** open (for /grill-with-docs)
+## 2026-07-14 — Q5: Placement and translation boundary
 
-## Q7: MCP credential gating — which registration shape, and do we depend on `mcp-auth-gated-registration`?
+**Status:** LOCKED — changed by docketing graduation
 
-**Recommended:** Treat credential-gated MCP registration as a **dependency on the active `explorations/mcp-auth-gated-registration` packet**, not net-new design space. Import its shapes: **build-time conditional mounting (Shapes A/B)** as the default — read each driver credential via `Config.option`, conditionally include its `McpServer.toolkit(...)` layer (present→real, absent→`Layer.empty`) so EPO/BigQuery tools **disappear from the advertised list** when unconfigured — reserving **Shape C** (always-register + handler-time `api_key_required` guard) only where a tool must advertise. Use the **v4 `Layer.unwrap`/`Layer.catch`** APIs with a `layers.reduce((acc, l) => Layer.merge(acc, l), Layer.empty)` fold, and land a **dtslint spike before committing to dynamic layer folding**. Do NOT re-derive these shapes here.
+**Question:** Where do native decoding, legal meaning, ports, and translation
+belong?
 
-**Rationale:** Codex **blocking #2** — the design is not net-new; the active packet already shapes Shapes A/B/C, the `api_key_required` helper, and the `McpServer.registerToolkit` `isError` wire-encoding gotcha. Critically, **`Layer.unwrapEffect` is not an Effect v4 API** (`effect/src/Layer.ts` exports `unwrap`; `Layer.orElse` was removed → use `Layer.catch`), and a dynamically-built `Array<Layer>` cannot satisfy `Layer.mergeAll`'s non-empty tuple — the reduce-fold is required (RESEARCH §5). Build-time disappearance is the structural complement to Q6's missing-secret→`Layer.empty` gate.
+**Answer:** `packages/drivers/uspto` owns USPTO-native schemas, codes, and
+technical OA/`PTMNFEE2` decoding. Future independent wrappers live in
+`packages/drivers/epo` and `packages/drivers/google-patents-bigquery`.
+`law-practice/domain` owns `ProsecutionPhase` and deadline-relevant semantics;
+`law-practice/use-cases` owns driver-neutral ports; `law-practice/server` is the
+only place that translates `@beep/uspto` records and errors into those ports.
+There is no `drivers/_shared`, no `ClaimLifecycle` overload, and no competing
+law-practice overlay goal in this packet.
 
-**Status:** open (for /grill-with-docs)
+**Rationale:** The docketing packets now own the legal model and intake port.
+Keeping native facts in drivers and all translation in the server adapter
+prevents transport vocabulary from becoming domain doctrine.
+
+**Rejected options:** Driver-owned prosecution phases or deadlines; translation
+inside use-cases; a shared cross-driver abstraction before two consumers exist;
+reusing `ClaimLifecycle`; creating another law-practice goal from this packet.
+
+## 2026-07-14 — Q6: Credential and matter-consent controls
+
+**Status:** LOCKED — changed by docketing graduation
+
+**Question:** How are technical source capability and matter authorization kept
+independent and enforced?
+
+**Answer:** Drivers and MCP `SourceAuth` own technical capability metadata:
+source, operation class, public-identifier versus free-text, credential class,
+cost class, and attribution. Law practice owns a matter authorization record
+with approver, matter, source, operation class, scope, expiry or revocation,
+consent provenance, and audit evidence. Both controls are enforced at the
+law-practice server adapter and MCP dispatch gate. Credential presence never
+implies matter consent. Public-identifier reads default allowed; every external
+free-text operation requires explicit matter-level authorization. BigQuery also
+requires cost authorization and retention of CC BY attribution.
+
+**Rationale:** Source authentication answers whether a call can be made; matter
+authorization answers whether it may be made for this representation. The
+graduated docketing boundary supplies the matter context that the driver cannot
+own.
+
+**Rejected options:** Credential-as-consent; source-wide opt-in flags; treating
+official USPTO free-text search as privilege-safe; putting matter authorization
+inside a driver; omitting cost or attribution policy from BigQuery dispatch.
+
+## 2026-07-14 — Q7: MCP boundary and gate defaults
+
+**Status:** LOCKED — changed because `mcp-kit` and `uspto-mcp` shipped
+
+**Question:** Which MCP host and gate policy should new operations use?
+
+**Answer:** Reuse shipped `@beep/mcp-kit`. Existing ODP tools retain the shipped
+soft gate. Future EPO, BigQuery, and SerpApi toolkits default to hard gates.
+Keyless sources use `none` plus matter-consent dispatch policy. New USPTO
+operations extend `packages/drivers/uspto-mcp`; no second USPTO MCP package is
+created. The dependency is `goals/mcp-kit` and the shipped `uspto-mcp` boundary,
+not the superseded exploration that produced them.
+
+**Rationale:** `SourceAuth`, credential-keyed composition, the typed
+`api_key_required` envelope, and `TierGate` already exist. This packet only
+extends their use with operation/source metadata and matter-aware dispatch.
+
+**Rejected options:** A second USPTO MCP host; re-deriving conditional layer
+composition; changing shipped ODP tools to hard gates; treating `SourceAuth` as
+the matter-consent decision.
+
+## 2026-07-14 — Q8: `PTMNFEE2` ingestion
+
+**Status:** LOCKED
+
+**Question:** How should the official maintenance-fee events product enter the
+docketing spine?
+
+**Answer:** Treat `PTMNFEE2` as weekly cumulative ASCII snapshots. Discover with
+an ODP account/API key, checksum-pin the release, and perform validated
+full-replace ingestion in `@beep/uspto`; never append snapshots. The driver owns
+technical decoding only, while docketing goals own legal interpretation.
+Small attributed fixtures are supportable under Public Domain Mark 1.0 with
+release, checksum, and extraction provenance.
+
+**Rationale:** Each weekly file is cumulative event evidence, not a delta or a
+deadline table. Separating faithful parse from legal interpretation preserves
+reissue, lapse, reinstatement, and calendar-rule review in the patent spine.
+
+**Rejected options:** Per-record API polling; append-only snapshot ingestion;
+driver-computed deadlines or current legal status; invented 2026 layouts or
+event-code lists; unattributed fixtures.
+
+## 2026-07-14 — Deferred implementation spikes
+
+### OA endpoint and envelope
+
+**Status:** DEFERRED to `uspto-prosecution-read` P0.
+
+Prove the current office-action endpoint and response envelope, reconcile Patent
+File Wrapper transactions with OA Text Retrieval, and identify whether the
+observation's transactions come from a dedicated endpoint or an aggregate
+projection. This blocks implementation detail, not shape sign-off.
+
+### `searchStructured` live contract
+
+**Status:** DEFERRED to `uspto-search-structured` P0 or a separately approved
+slice.
+
+Prove method, request body, field list, pagination, and typed error behavior on
+the applications endpoint before admitting a public method.
+
+### Vocabulary-generation retrieval route
+
+**Status:** DEFERRED to `uspto-prosecution-read` P0.
+
+Prove one authoritative retrieval route and checksum stability for the generated
+application-status, OA-event, document-code, and `PTMNFEE2`-event artifacts.

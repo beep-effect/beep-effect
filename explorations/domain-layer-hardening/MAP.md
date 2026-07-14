@@ -16,6 +16,12 @@ or is marked NET-NEW. -->
 | 6 | **`provenance-attestation`** | Verbatim span verifier (cross-field refinement idiom) + `Attestation`/`SignatureRequest` VO wiring `Sha256`/`Ed25519Signature` + content-addressing + evidence authority grading. | 1, 3 |
 | 7 | **`agents-and-narrowing-sweep`** | `Agent`/`Skill` real fields + versioning, `AgentMode` union; fix `AssistantContent` annotation-dup; repo-wide `S.String`→`NonEmptyString`/VO narrowing; finish `ConstraintDecoder` migration. | 2 |
 
+**Lifecycle annotation (2026-07-14):** packet 1,
+[`domain-kernel-hardening`](../../goals/domain-kernel-hardening/README.md), is
+`paused`; it resumes when KG tables approach scale with the ROADMAP PRD P2
+librarian condition. Packets 2–7 remain held behind it through the dependency
+graph below.
+
 > **Deferred shared VOs (review finding).** `DomainEvent` and `TemporalValidity`
 > are NOT pre-built in packet 1: a shared-kernel export needs >=2 *current*
 > consumers (`02-shared-kernel.md`), and they have zero. Each is introduced by its
@@ -28,6 +34,14 @@ or is marked NET-NEW. -->
 > aggregate + claim/prosecution lineage. It also overlaps the completed
 > `law-practice-office-action-spike`/`-extraction-rung` packets — reconcile against
 > them (do not re-model office actions) before graduating.
+
+> **Packet-5 shaping inputs (2026-07-14).** The bounded goals
+> `law-docketing-patent-spine`, `law-time-capture-spine`,
+> `citation-verified-span-substrate`, `citation-extraction-engine`,
+> `court-reporter-vocabulary`, and `law-doc-structure-oa-slice` inform
+> `law-practice-real-domain` shaping only. They do not clear dependency 2, and
+> packet 5 must compose their public contracts without duplicating their
+> workflows.
 
 ## Sequencing / dependency edges
 

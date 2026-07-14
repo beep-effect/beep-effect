@@ -8,11 +8,11 @@
     "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": ["goals/identity-iri-core"],
+      "goals": ["goals/identity-iri-core", "goals/identity-iri-fold"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-07-01",
-    "updated": "2026-07-02"
+    "updated": "2026-07-14"
   }
 }

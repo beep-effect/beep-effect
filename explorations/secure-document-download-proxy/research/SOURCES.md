@@ -52,8 +52,9 @@ pre-filter, never authorization).
 **Encrypted opaque-link store (`uspto_pfw_mcp#11`).** *Take the
 opaque-reference + TTL + server-held-key structure, leave Fernet/SQLite/DPAPI as
 literal tech.* The contract is: store the real app/document ids encrypted in a
-backing table, issue opaque non-business-revealing URLs, auto-expire (default 7
-days), keep the API key server-side. Port the shape onto repo-native bricks: the
+backing table, issue opaque non-business-revealing URLs, auto-expire, and keep the
+API key server-side. The upstream seven-day default is historical source context
+only and is **not inherited**. Port the shape onto repo-native bricks: the
 in-repo AES-256-GCM + `Redacted` seal (Q5), the desktop PGlite/Drizzle store
 (Q8), and the M365 OS-backed at-rest key wrapping (Q7) — not the Python Fernet
 codec or a raw SQLite file. The hybrid both sources imply (opaque UUID in the
@@ -140,18 +141,20 @@ RESEARCH "In-Repo Capability Inventory"):
 | AES-256-GCM seal/unseal + `Redacted` key precedent — `crypto.subtle` `AES-GCM`, 12-byte nonce, `AiMetricsRawArchiveKey = S.RedactedFromValue` | `packages/tooling/library/ai-metrics/src/archive.ts` (importKey:160, encrypt:287, decrypt:380, nonce:172-174, key:103-118) | **reuse / extend** (the Fernet analog — encrypt the id-mapping, not the bytes) |
 | Forwarding-proxy-with-TTL precedent (bounded, TTL-aware edge) | `packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyServices.ts` (635, 704) + security test | **reference** (pattern only) |
 | Idiomatic HTTP route / response shapes — `HttpApiEndpoint`, `HttpServerResponse` | `@beep/govinfo` `Search.http.ts:4`; `@beep/observability` `server/HttpApiTelemetry.ts`, `Prometheus.ts` | **reuse** |
-| Desktop PGlite/Drizzle runtime + boot migrations (sidecar pins `@electric-sql/pglite@0.4.6`, NOT root `0.5.3`) | `apps/professional-desktop/src/runtime/Pglite.ts:252-279` (`makeBundledPgliteLayer` + `PgliteDrizzleLive`), `Migrations.ts`; backed by `@beep/pglite`, `@effect/sql`, `drizzle-orm` | **extend** (add the link-store table to the existing migration bundle) |
+| Desktop PGlite/Drizzle runtime + boot migrations (live catalog `@electric-sql/pglite@0.5.4`; `0.4.6` is legacy alias only) | `apps/professional-desktop/src/runtime/Pglite.ts` (`PgliteDrizzleLive`), `Migrations.ts`; backed by `@beep/pglite`, `@effect/sql`, `drizzle-orm` | **extend** (add the mapping table to the existing migration bundle) |
 | Table/id modeling bricks | `EntityTable.models.ts` (`packages/drivers/drizzle/`), `EntityId` (`packages/shared/domain/src/entity/EntityId.ts`), `$I` composer (`packages/foundation/modeling/identity/src/Id.ts`) | **reuse** |
 | Branded UUID + v4 insert helper | `@beep/schema` — `String.ts:16-39` (branded `UUID` via `S.isUUID()`), `Model/Model.uuid.ts:71-96` (`Model.UuidV4Insert`/`WithGenerate`) | **reuse / extend** (derive `StrictUuidV4PdfBasename` only if strict-v4 + `.pdf` decode needed) |
 | `Redacted` repo-wide idiom (key never in logs/traces/URL) | `@beep/uspto`, `@beep/sanity` (`Sanity.{service,config,errors}.ts`), ai-metrics archive key | **reuse** |
-| OS-backed secret persistence precedent — `buildCachePlugin` dynamic-imports `@azure/msal-node-extensions` (5.3.0, MIT), `DataProtectionScope.CurrentUser`, `usePlaintextFileOnLinux:false` | `@beep/m365` — `packages/drivers/m365/src/M365.auth.ts:124-146` | **reuse / extend** (Bun-sidecar at-rest key wrapping; preferred over a new Tauri keyring dep) |
+| Generic OS-backed persistence interface and executable precedent — `IPersistence`, `PersistenceCreator`, `DataProtectionScope.CurrentUser`, `usePlaintextFileOnLinux:false` | `node_modules/@azure/msal-node-extensions/types/persistence/{IPersistence,PersistenceCreator}.d.ts`; `packages/drivers/m365/src/M365.auth.ts` | **adapt behind NET-NEW `ServingKeyCustody`** (no `@beep/m365` import; packaged proof required) |
+| Per-launch authenticated loopback HTTP edge | `apps/professional-desktop/server/main.ts` (`RpcServer.layerProtocolHttp`, Bun hostname `127.0.0.1`); `server/RpcSessionAuth.ts` | **extend** with a document route separate from RPC CORS plus Host/audience and identical-404 policy |
 | Generic HTTP header schema kit | `@beep/schema` — `Http/Http.headers.shared.ts` | **reference** (substrate; no first-class `Cache-Control` builder — NET-NEW) |
 
 **NET-NEW (no in-repo brick — see RESEARCH "Gaps (NOT FOUND)"):**
 - The document/resource serve route (`GET /resources/:file`) — extends the existing sidecar `HttpRouter`, but the route itself is net-new.
 - The encrypted opaque-link store table + mint/lookup/revoke service (`id → enc_payload, expires_at, revoked_at`).
 - A first-class `Cache-Control: private, no-store` response-header builder.
-- A generic keyring/keychain/DPAPI service abstraction (the M365 precedent is executable but not yet a reusable service).
+- A document-specific `ServingKeyCustody` port (the installed generic
+  `IPersistence` interface is an adapter candidate, not the capability contract).
 - The token/seal codec itself (no Fernet/Branca/PASETO/XChaCha20 impl — build on the archive.ts AES-GCM + `Redacted` pattern; `@noble/ciphers` is absent).
 
 ---

@@ -4,23 +4,15 @@
     "slug": "local-first-projection-sync",
     "title": "Local-First Projection Sync",
     "status": "active",
-    "stage": "research",
-    "openQuestions": [
-      "Q1: Build the in-repo per-user fan-out hub, or buy a sync engine?",
-      "Q2: Attach as a spike, or graduate a standalone goal packet?",
-      "Q3: What does the first slice nail?",
-      "Q4: What is the core fan-out primitive under Effect v4 beta?",
-      "Q5: Where does the subscription RPC contract live? (placement)",
-      "Q6: How does a live connection resolve identity, and who may subscribe? (auth)",
-      "Q7: Does the first event contract anticipate a FalkorDB projection, and how is SSPL handled?"
-    ],
+    "stage": "graduate",
+    "openQuestions": [],
     "links": {
-      "goals": [],
+      "goals": ["goals/projection-dispatch-core"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-06-29",
-    "updated": "2026-06-29",
+    "updated": "2026-07-14",
     "sources": ["research/SOURCES.md"]
   }
 }

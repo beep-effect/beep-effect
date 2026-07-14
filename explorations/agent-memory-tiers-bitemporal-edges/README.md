@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `research`
+Stage: `graduate`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -19,14 +19,10 @@ extending the epistemic slice rather than an in-place edit of the closed gate.
 
 ## Next Open Question
 
-**Q2: What does this packet own versus consume or defer?** — the keystone fork:
-it sets ownership against `rag-retrieval-projection` (the single RRF owner) and
-`goals/trustgraph-port` (FalkorDB/GraphRAG), and getting it wrong duplicates
-retrieval infrastructure across three packets. DECISIONS.md pre-drafts a
-recommended answer for this and 6 sibling forks (build-vs-buy, first-slice,
-storage/authority, package placement, conflict representation, invariant
-enforcement), all left open. Resolve via
-`run /grill-with-docs agent-memory-tiers-bitemporal-edges`.
+Two gates remain queued: contradiction triage stays behind the graduated
+[`epistemic-bitemporal-edge-core`](../../goals/epistemic-bitemporal-edge-core/README.md),
+and retention/tier projections stay behind real-usage calibration and an
+independent shape pass.
 
 ## Read This First
 
@@ -48,6 +44,8 @@ see [`explorations/_gold-intake`](../_gold-intake/).
 
 ## Trail
 
+- 2026-07-14: shape gate ratified as drafted; graduated only `epistemic-bitemporal-edge-core`, with contradiction triage queued behind the core and retention queued behind real-usage calibration; no product prose page created.
+- 2026-07-14: align gate closed; seven decisions plus the controlling product-memory scope recorded LOCKED, two spikes deferred to goal P0s, and the packet advanced to shape with BRIEF/MAP drafts awaiting sign-off.
 - 2026-07-11: 2026-07-08 memory-stack research input recorded in DECISIONS.md (Q1/Q2/Q4/Q6 strengthened, forks stay open); packet's bitemporal port is now the gate for graphiti-memory decommission.
 - 2026-06-29: research-complete — RESEARCH.md synthesized, codex gate-1 folded, DECISIONS pre-drafted.
 - 2026-06-29: packet opened from gold-intake cluster 'Four-tier agent-memory schema w/ confidence + conflict edges' (15 nuggets).

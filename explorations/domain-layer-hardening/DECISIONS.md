@@ -170,3 +170,21 @@ shape ≠ storage), and "plan shaped in isolation" (the README Related-Packets s
 exists). Reuse check (run manually after one review agent degraded): all proposed
 NET-NEW symbols return 0 existing files; claimed bricks (`EntityRef`, `Ed25519Signature`)
 exist — reuse-first discipline holds.
+
+## 2026-07-14 — sibling review held packets 2–7
+
+**Decision:** Hold all six remaining candidate packets. Packet 1,
+`goals/domain-kernel-hardening`, is paused until KG tables approach scale and
+opens with the ROADMAP PRD P2 librarian condition; the MAP dependency graph
+therefore keeps packets 2–7 closed.
+
+The new goals `law-docketing-patent-spine`, `law-time-capture-spine`,
+`citation-verified-span-substrate`, `citation-extraction-engine`,
+`court-reporter-vocabulary`, and `law-doc-structure-oa-slice` are recorded as
+packet-5 (`law-practice-real-domain`) **SHAPING INPUTS only**. They do not clear
+dependency 2, and packet 5 must not duplicate their bounded workflows.
+
+**Rationale:** These consumers sharpen the eventual domain seam, but they do
+not land the typed-reference prerequisite or resume the shared-kernel packet.
+Treating them as clearance would invert the ratified dependency graph; folding
+their workflows into packet 5 would create overlapping owners.

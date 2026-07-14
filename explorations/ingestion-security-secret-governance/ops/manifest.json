@@ -4,24 +4,15 @@
     "slug": "ingestion-security-secret-governance",
     "title": "Ingestion Security + Secret/PII Governance",
     "status": "active",
-    "stage": "research",
-    "openQuestions": [
-      "Scope boundary \u2014 one ingestion-security wedge vs split content-security gate + shared secret-governance spine",
-      "First slice \u2014 which net-new capability to build first",
-      "Package placement \u2014 secret resolver + per-user vault home (platform-adjacent, NOT @beep/identity)",
-      "Package placement \u2014 content-security modules, HTML sanitizer, and scored-findings home",
-      "Build-vs-buy \u2014 reimplement-not-copy (x-ray on pdf.js, deterministic injection, Presidio contract)",
-      "Vendor/auth \u2014 1Password first provider + ordered-resolution placeholder-rejection mechanism",
-      "Per-user vault cryptography \u2014 AES-256-GCM per-user subkeys vs XChaCha20-Poly1305 + KDF floor",
-      "SSRF \u2014 extend SafeRemoteHost range table + net-new GuardedHttpClient connect-time layer"
-    ],
+    "stage": "graduate",
+    "openQuestions": [],
     "links": {
-      "goals": [],
+      "goals": ["goals/ingestion-secret-scrub"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-06-29",
-    "updated": "2026-06-29",
+    "updated": "2026-07-14",
     "sources": ["research/SOURCES.md"]
   }
 }

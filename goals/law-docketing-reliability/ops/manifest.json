@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "law-docketing-reliability",
+    "title": "Law Docketing Reliability",
+    "status": "active",
+    "created": "2026-07-14",
+    "updated": "2026-07-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/law-docketing-reliability",
+  "lifecycle": "active",
+  "mission": "Prove years-out reminders cannot fail silently through escalation, acknowledgment, bounded recovery, and an independent dead-man path.",
+  "statusNote": "Depends on goals/law-docketing-patent-spine for the lifecycle/records contract and blocks that packet's v1 acceptance until kill-app alert and recovery proof pass.",
+  "dependencies": ["goals/law-docketing-patent-spine"],
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/solo-firm-docketing",
+    "graduated": "2026-07-14"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/law-docketing-reliability/README.md",
+    "goals/law-docketing-reliability/SPEC.md",
+    "goals/law-docketing-reliability/PLAN.md",
+    "goals/law-docketing-reliability/GOAL.md",
+    "goals/law-docketing-reliability/research/SOURCES.md",
+    "explorations/solo-firm-docketing/BRIEF.md",
+    "explorations/solo-firm-docketing/MAP.md",
+    "explorations/solo-firm-docketing/DECISIONS.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/law-docketing-reliability/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/law-docketing-reliability/GOAL.md)\" -le 4000",
+    "jq . goals/law-docketing-reliability/ops/manifest.json",
+    "rg -n \"law-docketing-reliability|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/law-docketing-reliability",
+    "git diff --check -- goals/law-docketing-reliability",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

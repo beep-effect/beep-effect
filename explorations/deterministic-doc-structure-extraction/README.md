@@ -1,30 +1,28 @@
-# Deterministic Doc-Structure Extraction & Streaming Candidate Gate
+# Deterministic Legal Document Structure Extraction
 
 ## Status
 
-Stage: `research`
+Stage: `graduate`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Spark
 
-A non-LLM-in-the-loop logic tier for legal documents: deterministic regex
-extractors (defined terms, Section/Article/Exhibit cross-refs, corporate-suffix
-parties + roles, amendment recitals, court captions, PACER header stamps, a
-statute/case/court legal-entity catalog) that emit verbatim text + char offsets
-as cheap pre-LLM candidate seeders — so a parse miss is an absent row, never a
-wrong fact. Paired with a `Partial`(candidate)/`Complete`(authoritative)
-Effect-Stream gate where fallible partial extractions surface to the UI but only
-the finalized, scored object crosses into authority.
+Versioned, deterministic, fail-closed recognition of non-citation legal
+document structure, expressed as evidence-backed candidates for named product
+consumers. The first slice extracts office-action finality and the shortened
+statutory-period block for the patent docketing spine. Verified anchoring,
+citations, file/OCR production, Pandoc ASTs, and epistemic admission remain
+owned by their neighboring packets; streaming is deferred.
 
 ## Next Open Question
 
-**Q1: Scope boundary — which of the 10 netNew themes does THIS packet own, vs
-route to neighbor goals?** Highest-leverage fork: it gates the first slice (Q2)
-and package placement (Q3). RESEARCH.md is synthesized and `DECISIONS.md` holds
-all eight load-bearing forks pre-drafted with recommended answers, each `open`.
-Resolve them by running `/grill-with-docs deterministic-doc-structure-extraction`.
+Queued gates: further office-action rule families after first-slice acceptance
+and per-family precision proof; defined-term/contract structures after a named
+consumer and approved appetite; streaming with the locked Q7 doctrine after a
+named consumer; calibration/cascade after labeled outcomes and approval of a
+local privilege-safe path.
 
 ## Read This First
 
@@ -46,5 +44,11 @@ deterministic doc-structure"*; the anti-inference prompt-mode half is the siblin
 
 ## Trail
 
+- 2026-07-14: shape gate signed off; brief ratified as drafted; graduated
+  [`law-doc-structure-oa-slice`](../../goals/law-doc-structure-oa-slice/README.md)
+  while keeping the exploration active for the queued OA, contract, streaming,
+  and calibration/cascade gates.
+- 2026-07-14: align closed with eight locked decisions; post-align BRIEF/MAP
+  drafted and packet advanced to shape for user sign-off.
 - 2026-06-29: research-complete — RESEARCH.md synthesized, codex gate-1 folded, DECISIONS pre-drafted.
 - 2026-06-29: packet opened from gold-intake cluster 'Anti-inference structured extraction + deterministic doc-structure' (10 nuggets).

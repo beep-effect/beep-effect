@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "projection-dispatch-core",
+    "title": "Projection Dispatch Core",
+    "status": "active",
+    "created": "2026-07-14",
+    "updated": "2026-07-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/projection-dispatch-core",
+  "lifecycle": "active",
+  "mission": "Deliver one restart-safe accepted-record projection cycle with durable target isolation and a disposable authenticated desktop freshness hint.",
+  "statusNote": "P0 is blocked until effect-v4-workflow-engine-spike lands its persistence adapter and crash evidence.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/local-first-projection-sync",
+    "graduated": "2026-07-14"
+  },
+  "blockedBy": ["goals/effect-v4-workflow-engine-spike"],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/projection-dispatch-core/README.md",
+    "goals/projection-dispatch-core/SPEC.md",
+    "goals/projection-dispatch-core/PLAN.md",
+    "goals/projection-dispatch-core/GOAL.md",
+    "goals/projection-dispatch-core/research/SOURCES.md",
+    "explorations/local-first-projection-sync/BRIEF.md",
+    "explorations/local-first-projection-sync/MAP.md",
+    "explorations/local-first-projection-sync/DECISIONS.md",
+    "explorations/local-first-projection-sync/RESEARCH.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/projection-dispatch-core/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Atomic handoff and DurableQueue store-integration proof",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Close: Yeet PR to mergeable",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/projection-dispatch-core/GOAL.md)\" -le 4000",
+    "jq . goals/projection-dispatch-core/ops/manifest.json",
+    "rg -n \"projection-dispatch-core|blockedBy|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/projection-dispatch-core",
+    "git diff --check -- goals/projection-dispatch-core explorations/local-first-projection-sync explorations/ATLAS.md",
+    "bun run beep yeet verify",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The workflow spike cannot supply the persistence adapter and kill/restart contract required for DurableQueue integration.",
+    "Atomic accepted-record/intent persistence or recoverable queue handoff cannot be proved without bespoke durability or an unsupported exactly-once claim.",
+    "Cursor monotonicity, retry idempotence, stale-version rejection, or competing-worker ownership cannot be made explicit.",
+    "Server-authorized subscription scope would require trusting client input or inventing a user principal.",
+    "Implementation would enter a non-goal, add an unapproved dependency, or change unrelated surfaces.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -18,11 +18,11 @@ Effect/effect-Schema/HttpApi stack rather than vendoring Orval/axios/Zod.
 
 ## Next Open Question
 
-**Q1: Codegen engine — one generator for all five drivers, or a tiered
-per-driver strategy keyed on spec availability?** (the build-vs-buy fork the
-whole pipeline hinges on). All eight branch-closing questions are pre-drafted
-with recommended answers in [`DECISIONS.md`](./DECISIONS.md) — resolve them via
-`/grill-with-docs gov-legal-data-driver-codegen`.
+No exploration question. The substrate is complete; driver breadth continues
+in [`goals/gov-legal-data-driver-delivery`](../../goals/gov-legal-data-driver-delivery/README.md),
+paused until a product feature pulls a named driver. The ≥2-driver gate is
+cleared by `@beep/govinfo` plus `@beep/ecfr`, so the collision-contract sibling
+is scaffolded at [`goals/gov-legal-mcp`](../../goals/gov-legal-mcp/README.md).
 
 ## Read This First
 
@@ -42,6 +42,10 @@ license + port discipline, the external research cited on disk, and the
 
 ## Trail
 
+- 2026-07-14: sibling closure completed. P0/P1/P3 substrate and promotion are
+  complete; P2 is superseded into the paused delivery packet; `gov-legal-mcp`
+  graduated on the proven GovInfo + eCFR driver pair; exploration flipped to
+  `graduated` with no remaining exploration question.
 - 2026-06-29: graduated into goals/gov-legal-data-driver-codegen.
 - 2026-06-29: research-complete — RESEARCH.md synthesized, codex gate-1 folded, DECISIONS pre-drafted.
 - 2026-06-29: packet opened from gold-intake cluster 'Gov/legal data drivers + OpenAPI codegen' (19 nuggets).

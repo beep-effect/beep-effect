@@ -3,11 +3,9 @@
   "exploration": {
     "slug": "legal-ontology-landscape",
     "title": "Legal Ontology Landscape",
-    "status": "active",
+    "status": "graduated",
     "stage": "graduate",
-    "openQuestions": [
-      "P1-P4 research reports are pending; feed goals/semantic-foundation as they land."
-    ],
+    "openQuestions": [],
     "sources": [
       "research/01-direction-grounding.md",
       "research/07-ip-law-ontology-survey-distillation.md"

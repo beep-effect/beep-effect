@@ -2,8 +2,8 @@
 
 ## Status
 
-Stage: `research`
-Status: `active`
+Stage: `align`
+Status: `parked` (align-complete)
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -18,10 +18,7 @@ relevance to active goals.
 
 ## Next Open Question
 
-The eight-agent fan-out produced six landed research report files, and the
-canonical ledger is consolidated. Verification and closeout cleanup are the
-current gate; next comes per-item evaluation in `RESEARCH.md` against the
-manifest's two open questions, then align.
+none — reference inventory; re-verify before any port
 
 ## Read This First
 
@@ -33,6 +30,9 @@ manifest's two open questions, then align.
 
 ## Trail
 
+- 2026-07-14: parked at align-complete with zero goals by design; demand gates
+  and selective reference routes are locked in `DECISIONS.md`, and every port
+  requires item-level re-verification plus exact source/notice attribution.
 - 2026-07-13: the eight-agent fan-out landed six research reports and the
   canonical source ledger was consolidated; verification and closeout cleanup
   remain before per-item evaluation.
