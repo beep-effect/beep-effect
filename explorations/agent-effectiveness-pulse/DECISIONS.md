@@ -162,3 +162,61 @@ goals (OTel config verification → OTel goal P0; AGENTS.md proposal →
 hygiene goal SPEC). Publishing now ends the risk of 20+ uncommitted files
 in a worktree the operator edits in parallel. Rejected: single publish at
 graduation (longer exposure window).
+
+## 2026-07-14 — Shape sign-off: OTel signal routing
+
+**Question:** Claude Code's primary OTel signal is METRICS (+events), Codex
+exports logs/metrics/traces — but Phoenix only ingests traces. Where does
+harness telemetry route?
+
+**Answer:** Dankserver collector hub: expose the existing
+`monitoring_otel_collector` (otel-contrib 0.154, currently 127.0.0.1:4318)
+on the tailnet via a new tailscale-serve route; both harnesses export there;
+the collector fans out traces→Phoenix (same host) and
+metrics→`monitoring_prometheus`/`monitoring_grafana`. Logs deferred (no
+Loki).
+
+**Rationale:** Zero new containers; grafana MCP already points at that
+stack. Discovered during grilling: the "local collector" cited in the
+original MAP belongs to trustgraph (and the LGTM box to effect-lexical-chat)
+— beep owns no collector, so the cite was corrected. Rejected: traces-only
+wave 1 (loses the token/cost metrics — the most valuable Claude Code
+signal) and a new beep-owned collector (more moving parts for no gain).
+
+## 2026-07-14 — Shape sign-off: graduation vehicle
+
+**Question:** Stack graduation artifacts on PR #398 or ship separately?
+
+**Answer:** Merge #398 once green (operator merges, or agent on explicit
+say-so), then graduation ships on a fresh branch from updated main via the
+isolated-worktree yeet flow.
+
+**Rationale:** Clean provenance (exploration PR → graduation PR), each
+small and reviewable. Rejected: stacking (bigger diff, PR mutates after
+checks) and standing autonomous-merge authorization.
+
+## 2026-07-14 — Shape sign-off: session scope
+
+**Question:** Start wave-1 implementation in the same session as graduation?
+
+**Answer:** Graduate only, stop. Wave-1 implementation starts in fresh
+sessions via `/goal`.
+
+**Rationale:** Each goal is a reviewable unit; harness edits (AGENTS.md,
+skills) deserve unhurried review, not a tail-of-session push. Rejected:
+starting hygiene or both goals immediately.
+
+## 2026-07-14 — Shape sign-off: BRIEF/MAP ratified
+
+**Question:** Does the shaped BRIEF/MAP match the operator's picture?
+
+**Answer:** Signed off, with the routing amendment above applied to
+BRIEF/MAP. Wave-1 = `harness-otel-adoption` + `harness-hygiene-mechanical`;
+wave-2 = `yeet-verdict-instrumentation` + `repo-replay-evals`; forwarder
+durability rides `ai-metrics-stack` (P7f, P7e-linked); no-gos as written.
+
+**Rationale:** Explore-skill shape-stage exit condition met (operator
+confirmation via grilling). Additional standing constraint recorded at
+sign-off: Fable 5 plans/designs/reviews only — all token-heavy lanes run on
+codex `gpt-5.6-sol` at `--effort medium` (operator weekly-limit economy);
+encoded in both wave-1 GOAL.md/SPEC.md files.

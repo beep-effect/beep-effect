@@ -35,8 +35,13 @@ stretched.
 **Wave 1 (graduate now):**
 
 - `harness-otel-adoption` — turn on Claude Code + Codex native OTLP
-  exporters, routed into the existing local collector → dankserver Phoenix
-  path. Content capture OFF (SPEC privacy doctrine). Custom span attributes
+  exporters, routed to dankserver's existing `monitoring_otel_collector`
+  (newly tailnet-exposed via a tailscale-serve route, same pattern as
+  Phoenix's 8447→6006); the collector fans out traces→Phoenix and
+  metrics→`monitoring_prometheus`/`monitoring_grafana`; logs deferred (no
+  Loki). *(Amended at shape sign-off 2026-07-14: the "local collector"
+  originally cited belongs to trustgraph, not beep — beep owns no local
+  collector.)* Content capture OFF (SPEC privacy doctrine). Custom span attributes
   carry repo / branch / goal-slug / task-class — this is also the
   attribution fix. Pin semconv versions; translate into beep-owned stable
   names before anything downstream depends on them. Validate coverage

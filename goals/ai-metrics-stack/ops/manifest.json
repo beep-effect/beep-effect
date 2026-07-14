@@ -5,7 +5,7 @@
     "title": "AI Metrics Stack",
     "status": "active",
     "created": "2026-05-05",
-    "updated": "2026-05-12",
+    "updated": "2026-07-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "currentSourceOfTruth": "SPEC.md",
@@ -38,6 +38,7 @@
     "remainingGates": [
       "keep pinned proof runner unchanged through the credited proof window",
       "generate the final seven-day scorecard after 2026-05-16T02:26:00-05:00",
+      "complete P7f forwarder durability - at minimum the parquet-export regression fix - before building the sanitized derived mirror (the mirror bundles parquet exports)",
       "build and confirmed-sync the sanitized derived mirror to dankserver after the final report",
       "verify remote mirror status",
       "record P7e production-readiness closeout evidence"
@@ -164,6 +165,14 @@
           "status": "pending",
           "v1Blocking": false,
           "output": "history/outputs/p7-topology-first-production-plan.md"
+        },
+        {
+          "id": "P7f",
+          "name": "Forwarder Durability",
+          "status": "pending",
+          "v1Blocking": true,
+          "output": "history/outputs/p7-topology-first-production-plan.md",
+          "note": "Added 2026-07-14 from explorations/agent-effectiveness-pulse pipeline-revival evidence. Scope: (1) parquet-export regression fix - forwarder run fails at derived-storage write unless --parquet-mode none; gates P7e because the sanitized mirror is built from parquet exports; suspects: @beep/duckdb effect-sql rework or the 2026-07-13 catalog dep bump; (2) surface underlying error causes in CLI output (currently swallowed even at --log-level debug); (3) ingest-time dedup / skip-already-ingested (5.43M turn rows ~= 516K distinct raw_event_hash from 1,222 trickle runs); (4) chunked derived writes - single-transaction ceiling observed above ~160MB per run during the 2026-07-14 backfill (16 byte-capped batches succeeded; 878MB and 2.5GB single runs failed). Evidence: explorations/agent-effectiveness-pulse/research/pulse-report.md (revival section). Pre-backfill DuckDB snapshot preserved at .beep/ai-metrics/derived/ai-metrics.duckdb.pre-pulse-backfill-20260714.bak for the P7e final credited scorecard."
         },
         {
           "id": "P7e",
