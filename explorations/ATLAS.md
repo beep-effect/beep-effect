@@ -168,7 +168,10 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   (partial graduation 2026-07-11: CLI subscription-auth leg →
   [`goals/llm-provider-subscription-auth`](../goals/llm-provider-subscription-auth/README.md);
   dispatch/fallback questions remain queued),
-  [`rag-retrieval-projection`](./rag-retrieval-projection/README.md) (the single RRF-layer owner),
+  [`rag-retrieval-projection`](./rag-retrieval-projection/README.md) (stage
+  `graduate`, still active for four gated satellites): graduated
+  [`hybrid-retrieval-fusion-core`](../goals/hybrid-retrieval-fusion-core/README.md),
+  the single RRF-layer owner,
   [`secure-document-download-proxy`](./secure-document-download-proxy/README.md),
   [`local-first-projection-sync`](./local-first-projection-sync/README.md) (last two are
   singletons — attach-vs-standalone deferred to their `DECISIONS.md`). Plus **9 non-invasive

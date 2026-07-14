@@ -6,11 +6,43 @@ against the filesystem (rg/ls); genuine gaps are marked NOT FOUND. Raw per-subto
 findings live in research/<subtopic>.md — this file is the synthesis.
 -->
 
-This packet owns the **hybrid 3-channel RRF retrieval service (k=60) + pgvector HNSW
-projection** over beep's local-first PGlite substrate. Consumers
-(`agent-memory-tiers-bitemporal-edges`, `goals/trustgraph-port`) inject it; they do
-not rebuild it. Five research threads back the synthesis below; each links to its raw
-file.
+This packet owns the **hybrid three-channel weighted-RRF policy** and graduates
+its own fusion, projection, encoder, dedup, and citation-channel goals. The
+fixture-driven fusion seam lands first; `goals/epistemic-bitemporal-edge-core`
+defers RRF to it and does not rebuild it. Five research threads back the
+synthesis below; each links to its raw file.
+
+## 2026-07-14 Amendment — align-gate corrections
+
+- **Runtime correction:** the live checkout pins `@electric-sql/pglite` **0.5.4**
+  (`package.json`, `bun.lock`, and installed package agree). Its installed
+  `exports` contain **no vector or textsearch subpaths**. The earlier 0.4.6
+  runtime description below is stale; pgvector and `pg_textsearch` enablement
+  each require fresh P0 proof rather than assumed subpath registration.
+- **Live-source inventory:** a 2026-07-14 search of `packages/**/src` found no
+  RRF/reciprocal-rank implementation, generated `tsvector`, or HNSW projection.
+  It did find in-memory BM25 corpus/similarity tools under
+  `packages/foundation/capability/nlp-processing/src/Tools/` and their canonical
+  schemas in `packages/foundation/modeling/nlp/src/Core/Vectorization.ts`. These
+  are fixture/diagnostic capabilities, not the durable lexical projection.
+- **Migration source:** the prior-generation scorer and tests at
+  `../beep-effect4/packages/knowledge/server/src/GraphRAG/RrfScorer.ts` and
+  `../beep-effect4/packages/knowledge/server/test/GraphRAG/RrfScorer.test.ts`
+  are migration material. The current-generation three-channel weights,
+  empty-channel renormalization, literal tier/floor, spans, contributions, and
+  deterministic tie behavior remain net-new extensions.
+- **RRF-owner contract:** `goals/epistemic-bitemporal-edge-core` explicitly
+  defers RRF to this packet. Candidate retrieval engines emit ranked streams;
+  this packet is the sole owner of final fusion policy.
+- **License reconciliation:** `research/SOURCES.md` is authoritative for
+  **agentmemory = Apache-2.0**. The older `RESEARCH.md:377-380` statement that
+  grouped agentmemory with unknown-license sources is superseded and must not
+  control port discipline.
+- **Dedup contamination boundary:**
+  `research/bounded-concurrency-ingest-and-dedup.md` reproduces CourtListener
+  AGPL-derived policy details. Treat those details as design-reference poison;
+  any dedup goal requires an independently authored clean-room product policy
+  and representative corpus.
 
 ## External Landscape
 
@@ -96,11 +128,10 @@ truncation. Build the index *after* bulk load (matches the rebuildable-projectio
 PGlite is "Postgres in WASM" based on **PostgreSQL 17**, ~3 MB gzipped
 (https://pglite.dev/docs/about); pgvector is an **external** extension package (~42.9 KB,
 not core-bundled), enabled via `CREATE EXTENSION IF NOT EXISTS vector;` after registering it
-in the `extensions` map (https://pglite.dev/extensions/). In the version actually resolved by
-this repo (`@electric-sql/pglite@0.4.6`, via `@effect/sql-pglite@4.0.0-beta.91` — see the
-`@beep/pglite` inventory entry), the extension ships as the subpath export
-`@electric-sql/pglite/vector`, and the BM25 candidate ships as `@electric-sql/pglite/pg_textsearch`
-(both verified in the installed `package.json` `exports` on 2026-06-29). Drizzle ships the vector schema
+in the `extensions` map (https://pglite.dev/extensions/). The live checkout now resolves
+`@electric-sql/pglite@0.5.4` through `@effect/sql-pglite@4.0.0-beta.97`, and its installed
+package exports neither a vector nor textsearch subpath. Extension enablement is therefore a
+P0 projection-goal proof, not an assumed registration step. Drizzle ships the vector schema
 (`vector('embedding',{dimensions})` + `.op('vector_cosine_ops')`) and distance helpers
 (`cosineDistance`, `l2Distance`, …); thresholded top-k is `sql\`1 - (${cosineDistance(...)})\``
 + `.where(gt(similarity, …))`, but the `1 - distance DESC` ordering may not hit the index —
@@ -284,16 +315,10 @@ verified via `ls`/`rg` on 2026-06-29; package names resolved from each `package.
   `Claim`, `OfficeAction`, `PatentAsset`, `PriorArtReference`, `Rejection`, `Matter`,
   `Distinction`, `LegalClient`, `LegalContact`. IP-law entities are extend-targets, not gaps.
 - **`@beep/pglite`** — `packages/drivers/pglite/src/PgliteClient.service.ts`. The local-first
-  Postgres-in-WASM authority store. **Runtime chain (verified `bun.lock`/imports 2026-06-29):**
-  the driver imports `@effect/sql-pglite/PgliteClient` (`PgliteClient.service.ts:16`), and
-  `@effect/sql-pglite@4.0.0-beta.91` depends on `@electric-sql/pglite ^0.4.5`, resolved to
-  **`0.4.6`** (`bun.lock:140`, `bun.lock:2629`). The catalog `@electric-sql/pglite@0.5.3`
-  (`package.json:44`) is NOT the imported runtime — it is present only as the aliased
-  `@electric-sql/pglite-legacy-053` (`bun.lock:141`, `bun.lock:2631`) and unused by this driver.
-  The live `0.4.6` package ships the vector and FTS extensions as subpath exports
-  (`@electric-sql/pglite/vector`, `@electric-sql/pglite/pg_textsearch`, verified in
-  `node_modules/@electric-sql/pglite/package.json` `exports`). (The vector extension is NOT yet
-  wired into `@beep/pglite` — see gap below.)
+  Postgres-in-WASM authority store. **Runtime chain re-verified 2026-07-14:** the driver imports
+  `@effect/sql-pglite/PgliteClient`; `@effect/sql-pglite@4.0.0-beta.97` depends on
+  `@electric-sql/pglite ^0.5.4`, resolved to **0.5.4**. The installed package exports neither
+  vector nor textsearch subpaths. Extension enablement and registration are NET-NEW P0 proof.
 - **`@beep/drizzle`** — `packages/drivers/drizzle/src/` (`Drizzle.service.ts`,
   `EntityTable.models.ts`). The ORM layer; `.transaction(...)` is used at
   `packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts:376`, and the PGlite
@@ -330,15 +355,15 @@ verified via `ls`/`rg` on 2026-06-29; package names resolved from each `package.
   `goals/repo-codegraph-jsdoc` research prose, never executable). NET-NEW, and this packet is
   the designated single owner (k=60, literal-floor, empty-channel renorm).
 - **Local text-embedding pipeline** — **NOT FOUND**. No `feature-extraction`/transformers.js/
-  EmbeddingGemma text-embedding pipeline in `packages/**`; the only ONNX usage is
-  `@beep/face-detection` (image, not text). NET-NEW: EmbeddingGemma-300m ONNX encoder +
-  breadcrumb-prefix strategy.
+  text-embedding pipeline in `packages/**`; the only ONNX usage is `@beep/face-detection`
+  (image, not text). NET-NEW: runtime-neutral encoder port, provisional
+  `nomic-embed-text-v1.5` adapter, model identity, and asymmetric-prefix strategy.
 - **Offset-preserving char-span chunker** — **NOT FOUND** as a standalone capability (the
   windowing layer between `@beep/md` and `@beep/langextract`). The *aligner* exists; the
   *sectionizer/slicer that emits `{chunkText, charStart, charEnd, breadcrumb}`* does not.
   NET-NEW.
-- **AGPL-clean MinHash/LSH evidence-cluster dedup** — **NOT FOUND**. NET-NEW, clean-room from
-  MIT datasketch math + courtlistener policy spec.
+- **AGPL-clean MinHash/LSH evidence-cluster dedup** — **NOT FOUND**. NET-NEW; use only MIT
+  `datasketch` math plus an independently authored beep policy and representative corpus.
 - **Generated-`tsvector` lexical/FTS channel** — **NOT FOUND** in `packages/**` (no `tsvector`
   column). NET-NEW (generated STORED column + GIN). Note this is a *lexical FTS* path ranked by
   `ts_rank_cd` (cover-density), **not** BM25; true BM25 requires the external `pg_textsearch`
@@ -359,10 +384,10 @@ verified via `ls`/`rg` on 2026-06-29; package names resolved from each `package.
   Oct 2024) (https://data.uspto.gov/support/transition-guide/patentsview). Citation-BFS edges
   must come from the ODP/PatentSearch API (`api.uspto.gov`); the `@beep/uspto` driver already
   targets ODP and must **NEVER** use PatentsView.
-- **pgvector 0.8.0** features (`hnsw.iterative_scan`, improved filter cost) require ≥0.8.0; the
-  exact pgvector version bundled inside the imported `@electric-sql/pglite/vector` extension
-  (resolved to `@electric-sql/pglite@0.4.6`, NOT the catalog's unused `0.5.3` — see inventory)
-  is UNVERIFIED — confirm against the installed package before depending on `iterative_scan`.
+- **pgvector 0.8.0** features (`hnsw.iterative_scan`, improved filter cost) require ≥0.8.0; no
+  vector subpath exists in the installed `@electric-sql/pglite@0.5.4`, so both the extension
+  artifact/version and enablement mechanism are UNVERIFIED. Prove them before depending on
+  `iterative_scan`.
   drizzle-orm must include **PR #3824** (2024-12-22) for vector columns under PGlite.
 
 ### Licensing gravity (reimplement, don't copy)
@@ -375,9 +400,9 @@ verified via `ls`/`rg` on 2026-06-29; package names resolved from each `package.
   reproduced from the AGPL source. Author the clustering policy as an independent beep product
   spec (or run a two-person clean-room). Never copy AGPL source.
 - **UNKNOWN license → reimplement, do not copy source**: **lawyergpt** (the
-  schema/bounded-concurrency/threshold patterns) and **agentmemory** (RRF renormalization +
-  graph index design). The RRF *formula* is a published method (SIGIR 2009, no copyright on the
-  formula) so reimplementation is safe regardless.
+  schema/bounded-concurrency/threshold patterns). **agentmemory is Apache-2.0** per the
+  authoritative `research/SOURCES.md` ledger and may be ported with attribution. The RRF
+  *formula* is a published method (SIGIR 2009, no copyright on the formula).
 - **MIT → safe to study/adapt**: **doc-haus** (3-channel + literal-floor + char-span design),
   **LangChain `EnsembleRetriever`** (weighted-RRF reference), **InLegalBERT** weights (wiring
   reference only, wrong jurisdiction). **Apache-2.0**: Google **langextract** `chunking.py`
@@ -393,9 +418,9 @@ verified via `ls`/`rg` on 2026-06-29; package names resolved from each `package.
 
 ### Locked decisions (carry into align/shape)
 
-- **This packet is the single owner** of the hybrid 3-channel RRF retrieval layer (k=60) +
-  pgvector HNSW projection. `agent-memory-tiers-bitemporal-edges` and `goals/trustgraph-port`
-  **CONSUME it (inject one service), they do not rebuild it.**
+- **This packet is the single owner** of hybrid three-channel weighted-RRF policy (k=60).
+  `goals/epistemic-bitemporal-edge-core` defers RRF here; candidate engines and sibling packets
+  emit/consume ranked-channel contracts and do not rebuild fusion.
 - **Vectors are a rebuildable projection, not authority** — the authoritative row is the
   text + char-span offsets in PGlite; the `vector` column + HNSW index are derived and
   reconstructable. Migration = re-embed-from-source + rebuild-index, never rolling-update.
@@ -420,9 +445,9 @@ verified via `ls`/`rg` on 2026-06-29; package names resolved from each `package.
 - **Local-first, provider-neutral, offline-capable**: the embedding encoder runs in-process
   (ONNX/transformers.js WASM or a Rust `ort` sidecar) with no API round-trip and no secret. No
   embedding provider key is pinned.
-- **WebGPU is NOT available in WebKitGTK** (Linux Tauri webview) — size embedding perf against
-  the WASM (q8/q4) path on the user's Linux box; WebGPU is opportunistic only on Chromium/Safari
-  webviews. The webview-WASM vs Rust-`ort`-sidecar split is an unmeasured align-stage fork.
+- **WebGPU is NOT available in WebKitGTK** (Linux Tauri webview). The renderer never owns
+  durable projection work. Benchmark runtime-neutral server/sidecar adapters on the target
+  Linux packaging path; prefer Rust `ort` if a WASM adapter misses the ratified budget.
 - **Privilege-safety wall**: retrieval outputs flow as `CandidateClaim` + `Evidence` spans
   through the **ClaimGate**, NEVER raw chunks to an LLM (lawyergpt's un-gated tool-calling RAG
   is the explicit anti-pattern). Cross-encoder rerank defaults to a local `bge-reranker`-class

@@ -25,7 +25,7 @@ are invented here).
 
 | Nugget | Title | Upstream (repo) | Source (file:line) | Theme | Priority | Disposition |
 | --- | --- | --- | --- | --- | --- | --- |
-| `agentmemory#1` | Triple-stream hybrid retrieval (BM25 + vector + graph) fused via RRF | agentmemory | `src/state/hybrid-search.ts:194-219` | kg-ontology-reasoning | P1 | **port** (clean-room; unknown→reimplement, RRF formula is published) |
+| `agentmemory#1` | Triple-stream hybrid retrieval (BM25 + vector + graph) fused via RRF | agentmemory | `src/state/hybrid-search.ts:194-219` | kg-ontology-reasoning | P1 | **port with attribution** (Apache-2.0; RRF formula is published) |
 | `doc-haus#1` | Hybrid retrieval w/ RRF fusion + char-span citations + auto-attached defs/cross-refs | doc-haus | `dochaus/tool/search-document.ts:42-121` | provenance-evidence | P1 | **study** (MIT, adapt 3-channel + literal-floor design) |
 | `uspto-patents-mcp#2` | Bounded BFS over the patent citation graph (forward/backward/both) | uspto-patents-mcp | `src/patentsview.ts:89-149` | kg-ontology-reasoning | P1 | **port** (MIT; re-source edges from `api.uspto.gov`, never PatentsView) |
 | `agentmemory#12` | Scale-driven graph index design (name-index / edge-key / node-degree side indexes) | agentmemory | `src/state/schema.ts:24-39` | kg-ontology-reasoning | P2 | **study** (Apache-2.0; blueprint for local-scale projection) |
@@ -96,8 +96,8 @@ feature-extraction `pooling:"mean", normalize:true` call is the gold; the model 
 jurisdiction (Indian case law) and its relevance scorer is a `Math.random` stub.
 
 > **Cluster owns the RRF layer outright** (no split). Per ROUTING.md's RRF single-owner rule,
-> `agent-memory-tiers-bitemporal-edges` and `goals/trustgraph-port` (FalkorDB/GraphRAG) **consume**
-> this packet's fusion service via injection — they do not rebuild it.
+> `goals/epistemic-bitemporal-edge-core` explicitly defers RRF to this packet. Candidate engines
+> and sibling packets consume ranked-channel/fusion contracts — they do not rebuild policy.
 
 ---
 
@@ -116,6 +116,8 @@ clean-room reimplement (pattern, not code); permissive (MIT/Apache-2.0) → port
 | Juris.AI | T2 | MIT | port-with-attribution (wiring only) | transformers.js feature-extraction embedding pipeline wiring (`#4`) |
 | LegalEase | T2 | MIT | port-with-attribution | hybrid BM25+dense alpha fusion (`#5`) — kept as the *rejected* Relative-Score alternate |
 | research-squad | T1 | MIT | port-with-attribution | URL primary-source / authority taxonomy (`#9`) |
+| pgvector | extension | **NEEDS-LICENSE-RECORD** | **NO ADOPTION** until exact artifact/version license is recorded | Candidate `vector(768)`/HNSW projection extension; PGlite 0.5.4 enablement also requires P0 proof. |
+| pg_textsearch | extension | **NEEDS-LICENSE-RECORD** | **NO ADOPTION** until exact artifact/version license is recorded | Optional true-BM25 lexical upgrade behind the ranked-channel interface; not the default lexical FTS path. |
 
 > **Cautions (echoed verbatim from the bundle — load-bearing):**
 > - **lawyergpt license is UNKNOWN** → reimplement patterns, do not copy source. lawyergpt pins
@@ -128,11 +130,12 @@ clean-room reimplement (pattern, not code); permissive (MIT/Apache-2.0) → port
 >   (raw chunks to LLM, "use your own knowledge") is an explicit ANTI-PATTERN beep rejects —
 >   outputs must carry CandidateClaim+Evidence provenance spans through the ClaimGate, not bare
 >   chunks.
-> - **`courtlistener#10` (MinHash/LSH near-dup clustering, rec=port) is AGPL-3.0** → reimplement
->   the dedup from spec, do not copy AGPL source.
-> - **RRF retrieval fusion:** this packet is the DESIGNATED single owner of the hybrid 3-channel
->   RRF retrieval layer; `agent-memory-tiers-bitemporal-edges` and `goals/trustgraph-port` must
->   consume it, not rebuild it.
+> - **`courtlistener#10` (MinHash/LSH near-dup clustering, rec=port) is AGPL-3.0** → do not use
+>   its constants, tokenization, representative-selection, or clustering policy. Author a
+>   clean-room product spec and representative corpus independently; use only clean math sources.
+> - **RRF retrieval fusion:** this packet is the DESIGNATED single owner of hybrid three-channel
+>   weighted-RRF policy; `goals/epistemic-bitemporal-edge-core` defers RRF here and consumes the
+>   resulting contract rather than rebuilding it.
 
 ---
 
@@ -214,8 +217,10 @@ Marked reuse / extend / NET-NEW. Paths verified in RES on 2026-06-29.
 - `@beep/law-practice-domain` — `packages/law-practice/domain/src/entities/`
   (`Claim`, `PriorArtReference`, `PatentAsset`, `OfficeAction`, …). IP entities are **extend**-targets.
 - `@beep/pglite` — `packages/drivers/pglite/src/PgliteClient.service.ts`. Local-first authority
-  store; runtime chain `@effect/sql-pglite@4.0.0-beta.91` → `@electric-sql/pglite@0.4.6`
-  (vector + `pg_textsearch` subpath exports). Vector extension **not yet wired** (gap below).
+  store. **2026-07-14 correction:** the live runtime resolves through
+  `@effect/sql-pglite@4.0.0-beta.97` to `@electric-sql/pglite@0.5.4`; the installed package has
+  no vector or textsearch subpath exports. Both extension paths are unproven and require P0
+  enablement proof rather than simple registration.
 - `@beep/drizzle` — `packages/drivers/drizzle/src/`. ORM + `.transaction(...)`.
 - `@beep/semantic-web` (`packages/foundation/capability/semantic-web`) + `@beep/rdf`
   (`packages/foundation/modeling/rdf`). KG/graph-projection substrate for the optional graph
@@ -231,8 +236,9 @@ Marked reuse / extend / NET-NEW. Paths verified in RES on 2026-06-29.
   `packages/**`; register the `vector` extension in PGlite, define the Drizzle column + HNSW index.
 - **Hybrid 3-channel RRF fusion service** (k=60, literal-floor, empty-channel renorm) — NOT FOUND;
   this packet is the designated single owner.
-- **Local text-embedding pipeline** (EmbeddingGemma-300m ONNX + breadcrumb prefix) — NOT FOUND
-  (only ONNX usage is image `@beep/face-detection`).
+- **Local text-embedding pipeline** (runtime-neutral port; provisional
+  `nomic-embed-text-v1.5`, with final model selected by bake-off) — NOT FOUND (only ONNX usage
+  is image `@beep/face-detection`).
 - **Offset-preserving char-span chunker** (windowing/sectionizer between `@beep/md` and
   `@beep/langextract`) — NOT FOUND; the aligner exists, the slicer does not.
 - **AGPL-clean MinHash/LSH evidence-cluster dedup** — NET-NEW, clean-room from MIT `datasketch`.
@@ -245,8 +251,8 @@ Marked reuse / extend / NET-NEW. Paths verified in RES on 2026-06-29.
 - **Cluster id:** RAG ingestion + char-span chunking (`routing.json` →
   `rag-retrieval-projection`, route `mixed`, wave P3, 14 nuggets).
 - **Sibling / consumer links** (bundle `crossref` is empty; these are the routing-level couplings):
-  - `agent-memory-tiers-bitemporal-edges` and `goals/trustgraph-port` — **consumers** of this
-    packet's RRF fusion service (ROUTING.md RRF single-owner rule, line 584). They inject, never rebuild.
+  - `goals/epistemic-bitemporal-edge-core` — defers RRF to this packet as sole owner and
+    consumes the fusion contract without rebuilding policy.
   - `goals/langextract-capability` (secondaryTarget) — shares only the chunker's *offset contract*
     (UTF-16 code-unit offsets; chunk-local `Contract.Span` → document-global `TextAnchor`); its SPEC
     non-goals decline a standalone windowing chunker (`SPEC.md:21`). This packet owns the chunker
