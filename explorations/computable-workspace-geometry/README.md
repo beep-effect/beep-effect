@@ -24,9 +24,11 @@ beep-effect6 write lane before opening the thread-virtualization packet
 (gate re-confirmed still active 2026-07-14). Goal #1 is CLOSED: PR #391
 merged 2026-07-14 and
 [`goals/pretext-driver/`](../../goals/pretext-driver/README.md) is
-completed-retained with reflection. Dock-adapter title-minima wiring LANDED
-2026-07-14 (exploration-tracked, no packet; PR pending merge). Q2 v2
-residue grows inside the driver package.
+completed-retained with reflection. Dock-adapter title-minima wiring MERGED
+2026-07-14 (PR #396, squash `dc95033709`; exploration-tracked, no packet).
+Next slice in flight: bubble shrinkwrap — `measureLineStats` /
+`walkLineRanges` pure driver-root wrappers + a `scratchpad/bubbles` proof
+(also burns Q2 v2 residue). Q2 v2 residue grows inside the driver package.
 
 ## Read This First
 
@@ -36,6 +38,19 @@ residue grows inside the driver package.
 
 ## Trail
 
+- 2026-07-14 (latest: demo harness + clamp proven in a live browser): the
+  deferred smoke target landed as `scratchpad/dockview-demo` — a vite page
+  (port 5199, no install: workspace symlinks resolve `@beep/*` to source)
+  hosting the dock adapter with a seeded workspace (nested splits, floating
+  pane, custom + text renderers) and `options.titleMinima` on live
+  `PretextCaptureLive` (16px Arial, `TabChrome` 48/8). Headless-Chromium
+  proof: at an 860px window the long-title group renders ~446px — its
+  measured no-truncation floor, not its 30% ratio share (~250px); identical
+  width at 1400px confirms the floor, not coincidence. Interactive
+  drag-the-sash GIF still pending a connected Chrome extension session
+  (non-gating). Arc kickoff decisions recorded: four sequential lanes —
+  harness → bubble shrinkwrap → `goals/yeet-publish-preflight` →
+  security-findings closeout + semantic-foundation M1.
 - 2026-07-14 (later: minima wiring LANDED): the pinned design executed the
   same day on `feat/dock-minima-wiring` — codex (gpt-5.6-sol, medium) wrote
   both lanes under Fable review. Kernel: `poc/Minima.ts` (`TabChrome`,
@@ -51,7 +66,8 @@ residue grows inside the driver package.
   tagged POJOs — five anchored-box construction sites migrated to variant
   `.make()` instances (was 6 kernel + 6 adapter test failures on main).
   Live-Chrome smoke deferred: no dev page hosts the adapter yet (candidate
-  follow-up: tiny demo harness). PR pending merge.
+  follow-up: tiny demo harness). Merged as PR #396 (squash `dc95033709`,
+  2026-07-14).
 - 2026-07-14 (goal #1 CLOSED, next slice gated): PR #391 **merged**
   (squash `1c0977ccad`); `goals/pretext-driver` flipped to
   completed-retained with closeout reflection
