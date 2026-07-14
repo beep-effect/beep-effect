@@ -72,6 +72,7 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import { Effect, FileSystem, HashMap, identity, Order, Path, pipe, Ref, Result, Semaphore } from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import * as F from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -417,9 +418,23 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
           return yield* scanFailed(`vault sync refused non-regular file ${displayPath}`);
         }
 
-        const openedPath = yield* fs
-          .realPath(`/proc/self/fd/${file.fd}`)
-          .pipe(Effect.mapError(() => scanFailed(`vault sync could not resolve open local file ${displayPath}`)));
+        const descriptorPath = yield* Effect.option(fs.realPath(`/proc/self/fd/${file.fd}`));
+        const openedPath = yield* O.match(descriptorPath, {
+          onNone: Effect.fnUntraced(function* () {
+            const canonicalCandidate = yield* fs
+              .realPath(candidatePath)
+              .pipe(Effect.mapError(() => scanFailed(`vault sync could not resolve open local file ${displayPath}`)));
+            const candidateInfo = yield* fs
+              .stat(canonicalCandidate)
+              .pipe(Effect.mapError(() => scanFailed(`vault sync could not inspect local file ${displayPath}`)));
+            const inodeMatches = O.getOrElse(O.zipWith(info.ino, candidateInfo.ino, Eq.equals), F.constFalse);
+            if (!Eq.equals(info.dev, candidateInfo.dev) || !inodeMatches || candidateInfo.type !== "File") {
+              return yield* scanFailed(`vault sync refused changed local file ${displayPath}`);
+            }
+            return canonicalCandidate;
+          }),
+          onSome: Effect.succeed,
+        });
         if (!isPathWithinRoot(path, canonicalRoot, openedPath)) {
           return yield* scanFailed(`vault sync refused file outside the configured vault ${displayPath}`);
         }
