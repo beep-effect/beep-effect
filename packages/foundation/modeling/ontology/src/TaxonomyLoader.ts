@@ -11,21 +11,40 @@ import { Context, Effect, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { TaxonomySeed } from "./SemanticFoundation.models.js";
+import { isFilingSegment, TaxonomySeed } from "./SemanticFoundation.models.js";
 import { SemanticFoundationSeed } from "./SemanticFoundation.seed.js";
 
 const $I = $OntologyId.create("TaxonomyLoader");
 
-/** Repository-relative production manifest contract.
+/**
+ * Relative path to one vendor slice, contained within the vendor root: one
+ * or more {@link FilingSegment}-safe components joined by `/`, so `..`
+ * traversal, absolute paths, and separator tricks are rejected at decode
+ * time and the loader cannot read outside its configured directory.
+ *
  * @example
  * ```ts
- * import { VendorManifestPath } from "@beep/ontology/TaxonomyLoader"
- * console.log(VendorManifestPath.endsWith("manifest.jsonl")) // true
+ * import { VendorSlicePath } from "@beep/ontology/TaxonomyLoader"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownResult(VendorSlicePath)("../secrets.jsonld")._tag) // "Failure"
  * ```
- * @category constants
+ *
+ * @category schemas
  * @since 0.0.0
  */
-export const VendorManifestPath = "explorations/legal-ontology-landscape/assets/manifest.jsonl";
+export const VendorSlicePath = S.NonEmptyString.check(
+  S.makeFilter((path: string) => A.every(Str.split(path, "/"), isFilingSegment), {
+    identifier: $I`VendorSlicePathCheck`,
+    title: "Vendor Slice Path",
+    description: "A vendor-root-relative path whose every component is a safe filing segment.",
+    message: "Vendor slice path must stay inside the vendor root",
+  })
+).pipe(
+  $I.annoteSchema("VendorSlicePath", {
+    description: "Vendor-root-relative slice path that cannot escape the configured directory.",
+  })
+);
 
 /** Explicit loader-vetting state required in addition to research verification.
  * @example
@@ -62,7 +81,7 @@ export type VendorLoadStatus = typeof VendorLoadStatus.Type;
  * @since 0.0.0
  */
 export class VendorManifestEntry extends S.Class<VendorManifestEntry>($I`VendorManifestEntry`)(
-  { format: S.Literal("jsonld"), id: S.NonEmptyString, loadStatus: VendorLoadStatus, path: S.NonEmptyString },
+  { format: S.Literal("jsonld"), id: S.NonEmptyString, loadStatus: VendorLoadStatus, path: VendorSlicePath },
   $I.annote("VendorManifestEntry", { description: "Manifest row for one explicitly vetted JSON-LD taxonomy slice." })
 ) {}
 

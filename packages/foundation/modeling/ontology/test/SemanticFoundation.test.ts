@@ -1,5 +1,7 @@
 import {
   DocumentClass,
+  FilingSegment,
+  isFilingSegment,
   LibrarianInput,
   runLibrarianLoop,
   SemanticFoundationSeed,
@@ -16,7 +18,9 @@ import { IRIReference } from "@beep/rdf";
 import { expect, layer } from "@effect/vitest";
 import { Effect, FileSystem, Match } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 const manifestPath = "test/fixtures/vendor-manifest.jsonl";
 const vendorRoot = "test/fixtures";
@@ -72,6 +76,14 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
   it.effect("fails closed for an unparsable manifest", () =>
     Effect.gen(function* () {
       const error = yield* loadWith(() => Effect.succeed("not-json")).pipe(Effect.flip);
+      expect(S.is(TaxonomyManifestParseError)(error)).toBe(true);
+    })
+  );
+
+  it.effect("fails closed for a manifest row whose path escapes the vendor root", () =>
+    Effect.gen(function* () {
+      const manifest = `{"format":"jsonld","id":"escape","loadStatus":"VETTED","path":"../secrets.jsonld"}`;
+      const error = yield* loadWith(() => Effect.succeed(manifest)).pipe(Effect.flip);
       expect(S.is(TaxonomyManifestParseError)(error)).toBe(true);
     })
   );
@@ -152,6 +164,33 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
         "box-mirror/acme/aurora/email-messages/received/intake-email.eml",
       ]);
       expect(DocumentClass.Options).toEqual(["draft", "redline", "filed", "received", "privileged", "extracted-child"]);
+    })
+  );
+
+  it.effect("round-trips generated filing segments and never admits separators", () =>
+    Effect.sync(() =>
+      fc.assert(
+        fc.property(S.toArbitrary(FilingSegment), (segment) => {
+          const decoded = O.flatMap(S.encodeOption(FilingSegment)(segment), S.decodeUnknownOption(FilingSegment));
+          expect(O.exists(decoded, (value) => value === segment)).toBe(true);
+          expect(isFilingSegment(segment)).toBe(true);
+        })
+      )
+    )
+  );
+
+  it.effect("rejects traversal segments in librarian input at decode time", () =>
+    Effect.gen(function* () {
+      const decoded = yield* Effect.sync(() =>
+        S.decodeUnknownResult(LibrarianInput)({
+          client: "acme",
+          conceptIri: "https://ns.beep.sh/ontology/semantic-foundation/concept/email-message",
+          documentClass: "received",
+          fileName: "../../other-matter/document.pdf",
+          matter: "aurora",
+        })
+      );
+      expect(decoded._tag).toBe("Failure");
     })
   );
 });

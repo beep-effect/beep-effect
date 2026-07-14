@@ -12,7 +12,7 @@ import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { DocumentClass, FilingRootKind } from "./SemanticFoundation.models.js";
+import { DocumentClass, FilingRootKind, FilingSegment } from "./SemanticFoundation.models.js";
 import type { TaxonomyConcept, TaxonomySeed } from "./SemanticFoundation.models.js";
 
 const $I = $OntologyId.create("TaxonomyRegistry");
@@ -31,11 +31,11 @@ const iriEquivalence = S.toEquivalence(IRIReference);
  */
 export class LibrarianInput extends S.Class<LibrarianInput>($I`LibrarianInput`)(
   {
-    client: S.NonEmptyString,
+    client: FilingSegment,
     conceptIri: IRIReference,
     documentClass: DocumentClass,
-    fileName: S.NonEmptyString,
-    matter: S.NonEmptyString,
+    fileName: FilingSegment,
+    matter: FilingSegment,
   },
   $I.annote("LibrarianInput", { description: "Document metadata used to project one registry-backed filing decision." })
 ) {}

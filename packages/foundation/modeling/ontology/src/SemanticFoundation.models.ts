@@ -8,9 +8,79 @@
 import { $OntologyId } from "@beep/identity/packages";
 import { IRIReference } from "@beep/rdf";
 import { LiteralKit } from "@beep/schema";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $OntologyId.create("SemanticFoundation.models");
+
+const isSafeFilingSegment = (segment: string): boolean =>
+  segment !== "." &&
+  segment !== ".." &&
+  P.not(Str.includes("/"))(segment) &&
+  P.not(Str.includes("\\"))(segment) &&
+  P.not(Str.includes("\u0000"))(segment);
+
+/**
+ * A single safe path component for projected filing paths: no separators,
+ * no dot traversal, no NUL bytes. Every value that is later joined into a
+ * vault or Box mirror path must pass this check, so path traversal is
+ * rejected at decode time instead of reaching a storage adapter.
+ *
+ * @example
+ * ```ts
+ * import { FilingSegment } from "@beep/ontology/SemanticFoundation.models"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownResult(FilingSegment)("../escape")._tag) // "Failure"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FilingSegment = S.NonEmptyString.check(
+  S.makeFilter(isSafeFilingSegment, {
+    identifier: $I`FilingSegmentCheck`,
+    title: "Filing Segment",
+    description: "A single path component without separators, dot traversal, or NUL bytes.",
+    message: "Filing segment must be a single safe path component",
+  })
+).pipe(
+  $I.annoteSchema("FilingSegment", {
+    description: "A single safe path component used when projecting filing paths.",
+  })
+);
+
+/**
+ * Runtime type for {@link FilingSegment}.
+ *
+ * @example
+ * ```ts
+ * import type { FilingSegment } from "@beep/ontology/SemanticFoundation.models"
+ *
+ * const segment: FilingSegment = "email-messages"
+ * console.log(segment)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FilingSegment = typeof FilingSegment.Type;
+
+/**
+ * Derived guard for {@link FilingSegment}.
+ *
+ * @example
+ * ```ts
+ * import { isFilingSegment } from "@beep/ontology/SemanticFoundation.models"
+ *
+ * console.log(isFilingSegment("received")) // true
+ * ```
+ *
+ * @category guards
+ * @since 0.0.0
+ */
+export const isFilingSegment = S.is(FilingSegment);
 
 /**
  * Exact document-class vocabulary locked by the M1 specification.
@@ -144,7 +214,7 @@ export class TaxonomyConcept extends S.Class<TaxonomyConcept>($I`TaxonomyConcept
     broader: S.Array(IRIReference),
     definition: S.NonEmptyString,
     documentClasses: S.Array(DocumentClass),
-    filingSegment: S.NonEmptyString,
+    filingSegment: FilingSegment,
     iri: IRIReference,
     prefLabel: S.NonEmptyString,
   },
@@ -199,7 +269,7 @@ export type FilingRootKind = typeof FilingRootKind.Type;
  * @since 0.0.0
  */
 export class FilingRoot extends S.Class<FilingRoot>($I`FilingRoot`)(
-  { iri: IRIReference, kind: FilingRootKind, rootSegment: S.NonEmptyString },
+  { iri: IRIReference, kind: FilingRootKind, rootSegment: FilingSegment },
   $I.annote("FilingRoot", { description: "Vocabulary data for a local or mirrored filing root." })
 ) {}
 
@@ -218,7 +288,7 @@ export class TaxonomySeed extends S.Class<TaxonomySeed>($I`TaxonomySeed`)(
   {
     concepts: S.Array(TaxonomyConcept),
     filingRoots: S.Array(FilingRoot),
-    pathTemplateSegments: S.Array(S.NonEmptyString),
+    pathTemplateSegments: S.Array(FilingSegment),
     schemeIri: IRIReference,
     title: S.NonEmptyString,
   },
