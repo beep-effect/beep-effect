@@ -177,6 +177,17 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   taxonomy registry/loader. Status stays `active` while P1-P4 research reports
   land and feed M2-M4; dependent `goals/trademark-docketing-domain` is deferred
   behind M3.
+- [`effect-ontology-harvest`](./effect-ontology-harvest/README.md) — opened
+  2026-07-11 at `research`: harvest inventory of
+  [mepuka/effect-ontology](https://github.com/mepuka/effect-ontology)
+  `packages/@core-v2` (MIT, Effect v3) — 8 codex inventory agents map LLM
+  governance, content-addressing/storage, workflow/streaming, domain models,
+  prompting/extraction, runtime/telemetry, repository patterns, and docs
+  rationale to beep homes (foundation modeling/capability vs slice vs
+  design-reference), scored active-goals-first
+  (`ontology-agent-surface`, `semantic-foundation`,
+  `agentic-professional-runtime`); codex verify gate then per-item
+  evaluation then align. Harvest-not-port; end state align-complete.
 
 ### Proposed
 
