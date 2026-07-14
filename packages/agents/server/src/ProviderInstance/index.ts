@@ -1,4 +1,9 @@
-/** ProviderInstance server exports. @packageDocumentation @since 0.0.0 */
+/**
+ * ProviderInstance server exports.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 /** Provider-instance layer exports.
  *
  * @category layers

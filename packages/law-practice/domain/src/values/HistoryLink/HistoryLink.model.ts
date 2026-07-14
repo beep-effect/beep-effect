@@ -66,6 +66,14 @@ export class HistoryLink extends S.Class<HistoryLink>($I`HistoryLink`)(
 /**
  * Companion namespace for `HistoryLink`.
  *
+ * @example
+ * ```ts
+ * import type { HistoryLink } from "@beep/law-practice-domain"
+ *
+ * const identityField: keyof HistoryLink.Encoded = "citationId"
+ * console.log(identityField) // "citationId"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

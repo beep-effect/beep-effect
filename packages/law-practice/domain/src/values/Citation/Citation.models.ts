@@ -125,6 +125,14 @@ export class Parenthetical extends S.Class<Parenthetical>($I`Parenthetical`)(
 /**
  * Companion namespace for `Parenthetical`.
  *
+ * @example
+ * ```ts
+ * import type { Parenthetical } from "@beep/law-practice-domain"
+ *
+ * const type: Parenthetical.Type["type"] = "holding"
+ * console.log(type) // "holding"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -516,6 +524,14 @@ export class FullCaseCitation extends S.Class<FullCaseCitation>($I`FullCaseCitat
 /**
  * Companion namespace for `FullCaseCitation`.
  *
+ * @example
+ * ```ts
+ * import type { FullCaseCitation } from "@beep/law-practice-domain"
+ *
+ * const type: FullCaseCitation.Type["type"] = "case"
+ * console.log(type) // "case"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -833,6 +849,14 @@ export class IdCitation extends S.Class<IdCitation>($I`IdCitation`)(
 /**
  * Companion namespace for `IdCitation`.
  *
+ * @example
+ * ```ts
+ * import type { IdCitation } from "@beep/law-practice-domain"
+ *
+ * const type: IdCitation.Type["type"] = "id"
+ * console.log(type) // "id"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1022,6 +1046,14 @@ export class SupraCitation extends S.Class<SupraCitation>($I`SupraCitation`)(
 
 /**
  * Companion namespace for `SupraCitation`.
+ *
+ * @example
+ * ```ts
+ * import type { SupraCitation } from "@beep/law-practice-domain"
+ *
+ * const type: SupraCitation.Type["type"] = "supra"
+ * console.log(type) // "supra"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1282,6 +1314,14 @@ export class ShortFormCaseCitation extends S.Class<ShortFormCaseCitation>($I`Sho
 
 /**
  * Companion namespace for `ShortFormCaseCitation`.
+ *
+ * @example
+ * ```ts
+ * import type { ShortFormCaseCitation } from "@beep/law-practice-domain"
+ *
+ * const type: ShortFormCaseCitation.Type["type"] = "shortFormCase"
+ * console.log(type) // "shortFormCase"
+ * ```
  *
  * @category models
  * @since 0.0.0

@@ -116,6 +116,13 @@ export class LegislativeMaterialCitation extends S.Class<LegislativeMaterialCita
 /**
  * Companion namespace for `LegislativeMaterialCitation`.
  *
+ * @example
+ * ```ts
+ * import type { LegislativeMaterialCitation } from "@beep/law-practice-domain"
+ *
+ * type LegislativeMaterialWire = LegislativeMaterialCitation.Encoded
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

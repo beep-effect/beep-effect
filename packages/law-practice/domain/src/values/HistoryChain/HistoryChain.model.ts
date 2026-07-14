@@ -47,6 +47,14 @@ export class HistoryChain extends S.Class<HistoryChain>($I`HistoryChain`)(
 /**
  * Companion namespace for `HistoryChain`.
  *
+ * @example
+ * ```ts
+ * import type { HistoryChain } from "@beep/law-practice-domain"
+ *
+ * const links: HistoryChain.Encoded["links"] = []
+ * console.log(links.length) // 0
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

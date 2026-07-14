@@ -124,6 +124,14 @@ export class ConstitutionalCitation extends S.Class<ConstitutionalCitation>($I`C
 /**
  * Companion namespace for `ConstitutionalCitation`.
  *
+ * @example
+ * ```ts
+ * import type { ConstitutionalCitation } from "@beep/law-practice-domain"
+ *
+ * const type: ConstitutionalCitation.Encoded["type"] = "constitutional"
+ * console.log(type) // "constitutional"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

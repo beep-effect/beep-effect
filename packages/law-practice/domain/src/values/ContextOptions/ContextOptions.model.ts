@@ -63,6 +63,14 @@ export class ContextOptions extends S.Class<ContextOptions>($I`ContextOptions`)(
 /**
  * Companion namespace for `ContextOptions`.
  *
+ * @example
+ * ```ts
+ * import type { ContextOptions } from "@beep/law-practice-domain"
+ *
+ * const boundary: ContextOptions.Encoded["type"] = "sentence"
+ * console.log(boundary) // "sentence"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

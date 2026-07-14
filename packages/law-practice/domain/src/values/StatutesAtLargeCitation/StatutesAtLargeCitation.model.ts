@@ -103,6 +103,13 @@ export class StatutesAtLargeCitation extends S.Class<StatutesAtLargeCitation>($I
 /**
  * Companion namespace for `StatutesAtLargeCitation`.
  *
+ * @example
+ * ```ts
+ * import type { StatutesAtLargeCitation } from "@beep/law-practice-domain"
+ *
+ * type StatutesAtLargeWire = StatutesAtLargeCitation.Encoded
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

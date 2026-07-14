@@ -1,4 +1,9 @@
-/** Provider-instance use-case implementation. @packageDocumentation @since 0.0.0 */
+/**
+ * Provider-instance use-case implementation.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import * as Domain from "@beep/agents-domain/entities/ProviderInstance";
 import { Effect } from "effect";
 import { dual } from "effect/Function";

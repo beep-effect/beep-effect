@@ -83,6 +83,14 @@ export class FederalRegisterCitation extends S.Class<FederalRegisterCitation>($I
 /**
  * Companion namespace for `FederalRegisterCitation`.
  *
+ * @example
+ * ```ts
+ * import type { FederalRegisterCitation } from "@beep/law-practice-domain"
+ *
+ * const type: FederalRegisterCitation.Encoded["type"] = "federalRegister"
+ * console.log(type) // "federalRegister"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

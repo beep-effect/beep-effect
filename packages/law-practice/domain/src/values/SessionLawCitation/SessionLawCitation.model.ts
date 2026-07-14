@@ -112,6 +112,13 @@ export class SessionLawCitation extends S.Class<SessionLawCitation>($I`SessionLa
 /**
  * Companion namespace for `SessionLawCitation`.
  *
+ * @example
+ * ```ts
+ * import type { SessionLawCitation } from "@beep/law-practice-domain"
+ *
+ * type SessionLawWire = SessionLawCitation.Encoded
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

@@ -1,4 +1,9 @@
-/** Provider-instance actionable errors. @packageDocumentation @since 0.0.0 */
+/**
+ * Provider-instance actionable errors.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { $AgentsUseCasesId } from "@beep/identity/packages";
 import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import * as Agents from "@beep/shared-domain/identity/Agents";

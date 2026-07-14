@@ -118,6 +118,14 @@ export class JournalCitation extends S.Class<JournalCitation>($I`JournalCitation
 /**
  * Companion namespace for `JournalCitation`.
  *
+ * @example
+ * ```ts
+ * import type { JournalCitation } from "@beep/law-practice-domain"
+ *
+ * const type: JournalCitation.Encoded["type"] = "journal"
+ * console.log(type) // "journal"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

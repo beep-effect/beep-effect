@@ -167,6 +167,14 @@ export class CourtInference extends S.Class<CourtInference>($I`CourtInference`)(
 /**
  * Companion namespace for `CourtInference`.
  *
+ * @example
+ * ```ts
+ * import type { CourtInference } from "@beep/law-practice-domain"
+ *
+ * const level: CourtInference.Encoded["level"] = "appellate"
+ * console.log(level) // "appellate"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

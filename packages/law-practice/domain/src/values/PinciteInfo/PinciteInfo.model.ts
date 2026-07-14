@@ -19,6 +19,13 @@ const $I = $LawPracticeDomainId.create("values/PinciteInfo/PinciteInfo.model");
  * `additionalPincites` suspend can name them without making the class's own
  * base expression circular (see the {@link PinciteInfo} field definition).
  *
+ * @example
+ * ```ts
+ * import type { PinciteInfo } from "@beep/law-practice-domain"
+ *
+ * type PinciteWire = PinciteInfo.Encoded
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

@@ -87,6 +87,13 @@ export class StateRuleCitation extends S.Class<StateRuleCitation>($I`StateRuleCi
 /**
  * Companion namespace for `StateRuleCitation`.
  *
+ * @example
+ * ```ts
+ * import type { StateRuleCitation } from "@beep/law-practice-domain"
+ *
+ * type StateRuleWire = StateRuleCitation.Encoded
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

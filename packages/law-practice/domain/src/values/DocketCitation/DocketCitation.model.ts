@@ -150,6 +150,14 @@ export class DocketCitation extends S.Class<DocketCitation>($I`DocketCitation`)(
 /**
  * Companion namespace for `DocketCitation`.
  *
+ * @example
+ * ```ts
+ * import type { DocketCitation } from "@beep/law-practice-domain"
+ *
+ * const type: DocketCitation.Encoded["type"] = "docket"
+ * console.log(type) // "docket"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

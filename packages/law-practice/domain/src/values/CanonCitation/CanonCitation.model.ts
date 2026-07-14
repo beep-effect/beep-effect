@@ -78,6 +78,14 @@ export class CanonCitation extends S.Class<CanonCitation>($I`CanonCitation`)(
 /**
  * Companion namespace for `CanonCitation`.
  *
+ * @example
+ * ```ts
+ * import type { CanonCitation } from "@beep/law-practice-domain"
+ *
+ * const canon: CanonCitation.Encoded["canon"] = "7"
+ * console.log(canon) // "7"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

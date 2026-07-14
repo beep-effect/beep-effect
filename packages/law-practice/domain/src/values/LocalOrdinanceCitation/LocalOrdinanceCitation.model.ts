@@ -74,6 +74,13 @@ export class LocalOrdinanceCitation extends S.Class<LocalOrdinanceCitation>($I`L
 /**
  * Companion namespace for `LocalOrdinanceCitation`.
  *
+ * @example
+ * ```ts
+ * import type { LocalOrdinanceCitation } from "@beep/law-practice-domain"
+ *
+ * type LocalOrdinanceWire = LocalOrdinanceCitation.Encoded
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

@@ -1,4 +1,9 @@
-/** Provider-instance use-case contract. @packageDocumentation @since 0.0.0 */
+/**
+ * Provider-instance use-case contract.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import { $AgentsUseCasesId } from "@beep/identity/packages";
 import { Context } from "effect";

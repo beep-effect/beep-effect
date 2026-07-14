@@ -61,6 +61,13 @@ export class SurroundingContext extends S.Class<SurroundingContext>($I`Surroundi
 /**
  * Companion namespace for `SurroundingContext`.
  *
+ * @example
+ * ```ts
+ * import type { SurroundingContext } from "@beep/law-practice-domain"
+ *
+ * type SurroundingContextWire = SurroundingContext.Encoded
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

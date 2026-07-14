@@ -1,4 +1,9 @@
-/** Provider-instance server ports. @packageDocumentation @since 0.0.0 */
+/**
+ * Provider-instance server ports.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import * as Domain from "@beep/agents-domain/entities/ProviderInstance";
 import { $AgentsUseCasesId } from "@beep/identity/packages";
@@ -49,7 +54,7 @@ export class ProviderInstanceActorScope extends S.Class<ProviderInstanceActorSco
  * import { ProviderInstanceActorContext } from "@beep/agents-use-cases/server"
  * console.log(ProviderInstanceActorContext)
  * ```
- * @category contexts
+ * @category services
  * @since 0.0.0
  */
 export class ProviderInstanceActorContext extends Context.Service<

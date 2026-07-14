@@ -84,6 +84,14 @@ export class FederalRuleCitation extends S.Class<FederalRuleCitation>($I`Federal
 /**
  * Companion namespace for `FederalRuleCitation`.
  *
+ * @example
+ * ```ts
+ * import type { FederalRuleCitation } from "@beep/law-practice-domain"
+ *
+ * const type: FederalRuleCitation.Encoded["type"] = "federalRule"
+ * console.log(type) // "federalRule"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

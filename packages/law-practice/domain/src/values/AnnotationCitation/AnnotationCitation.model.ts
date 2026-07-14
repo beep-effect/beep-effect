@@ -88,6 +88,14 @@ export class AnnotationCitation extends S.Class<AnnotationCitation>($I`Annotatio
 /**
  * Companion namespace for `AnnotationCitation`.
  *
+ * @example
+ * ```ts
+ * import type { AnnotationCitation } from "@beep/law-practice-domain"
+ *
+ * const type: AnnotationCitation.Encoded["type"] = "annotation"
+ * console.log(type) // "annotation"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

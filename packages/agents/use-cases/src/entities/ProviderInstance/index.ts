@@ -1,4 +1,9 @@
-/** Client-safe provider-instance exports. @packageDocumentation @since 0.0.0 */
+/**
+ * Client-safe provider-instance exports.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 /** Command and query payloads.
  *
  * @category commands

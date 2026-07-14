@@ -96,6 +96,13 @@ export class TreatiseCitation extends S.Class<TreatiseCitation>($I`TreatiseCitat
 /**
  * Companion namespace for `TreatiseCitation`.
  *
+ * @example
+ * ```ts
+ * import type { TreatiseCitation } from "@beep/law-practice-domain"
+ *
+ * type TreatiseCitationWire = TreatiseCitation.Encoded
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

@@ -152,6 +152,14 @@ export class CitationBase extends S.Class<CitationBase>($I`CitationBase`)(
 /**
  * Companion namespace for `CitationBase`.
  *
+ * @example
+ * ```ts
+ * import type { CitationBase } from "@beep/law-practice-domain"
+ *
+ * const confidence: CitationBase.Encoded["confidence"] = 1
+ * console.log(confidence) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

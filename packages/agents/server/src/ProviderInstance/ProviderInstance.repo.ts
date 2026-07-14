@@ -1,4 +1,9 @@
-/** ProviderInstance Drizzle repository adapter. @packageDocumentation @since 0.0.0 */
+/**
+ * ProviderInstance Drizzle repository adapter.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import * as Domain from "@beep/agents-domain/entities/ProviderInstance";
 import {

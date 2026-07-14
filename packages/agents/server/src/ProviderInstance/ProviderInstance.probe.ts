@@ -1,4 +1,9 @@
-/** ProviderInstance probe adapter over the AI provider CLI driver. @packageDocumentation @since 0.0.0 */
+/**
+ * ProviderInstance probe adapter over the AI provider CLI driver.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import * as Domain from "@beep/agents-domain/entities/ProviderInstance";
 import { ProviderProbe, ProviderProbeUnavailable } from "@beep/agents-use-cases/server";

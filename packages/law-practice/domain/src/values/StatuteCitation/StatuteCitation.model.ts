@@ -172,6 +172,13 @@ export class StatuteCitation extends S.Class<StatuteCitation>($I`StatuteCitation
 /**
  * Companion namespace for `StatuteCitation`.
  *
+ * @example
+ * ```ts
+ * import type { StatuteCitation } from "@beep/law-practice-domain"
+ *
+ * type StatuteCitationWire = StatuteCitation.Encoded
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

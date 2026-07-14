@@ -66,13 +66,13 @@ export class PretextCaptureRequest extends S.Class<PretextCaptureRequest>($I`Pre
  * ```ts
  * import type { PretextCaptureShape } from "@beep/pretext"
  *
- * declare const shape: PretextCaptureShape
+ * const methodName = "captureFontMetrics" satisfies keyof PretextCaptureShape
  *
- * console.log(typeof shape.captureFontMetrics)
+ * console.log(methodName)
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export interface PretextCaptureShape {
   readonly captureFontMetrics: (

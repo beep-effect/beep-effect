@@ -426,7 +426,7 @@ describe("quality task adapter", () => {
     expect(A.every(lanes, (lane) => lane.blockedBy.length === 0)).toBe(true);
     expect(lanes[1]?.step.args).toEqual(["run", "check"]);
     expect(lanes[2]?.step.args).toEqual(["run", "beep", "quality", "knip"]);
-    expect(lanes[3]?.step.args).toEqual(["run", "beep", "quality", "jsdoc-ratchet"]);
+    expect(lanes[3]?.step.args).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
     expect(lanes[4]?.step.args).toEqual(["run", "lint"]);
     expect(lanes[6]?.step.args).toEqual(["run", "test"]);
   });

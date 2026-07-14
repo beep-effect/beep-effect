@@ -69,6 +69,13 @@ export class SubsequentHistoryEntry extends S.Class<SubsequentHistoryEntry>($I`S
 /**
  * Companion namespace for `SubsequentHistoryEntry`.
  *
+ * @example
+ * ```ts
+ * import type { SubsequentHistoryEntry } from "@beep/law-practice-domain"
+ *
+ * type SubsequentHistoryWire = SubsequentHistoryEntry.Encoded
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

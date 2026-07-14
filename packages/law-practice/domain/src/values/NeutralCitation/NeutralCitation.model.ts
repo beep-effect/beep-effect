@@ -129,6 +129,13 @@ export class NeutralCitation extends S.Class<NeutralCitation>($I`NeutralCitation
 /**
  * Companion namespace for `NeutralCitation`.
  *
+ * @example
+ * ```ts
+ * import type { NeutralCitation } from "@beep/law-practice-domain"
+ *
+ * type NeutralCitationWire = NeutralCitation.Encoded
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

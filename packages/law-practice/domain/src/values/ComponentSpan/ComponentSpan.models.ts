@@ -76,6 +76,14 @@ export class CaseComponentSpan extends S.Class<CaseComponentSpan>($I`CaseCompone
 /**
  * Companion namespace for `CaseComponentSpan`.
  *
+ * @example
+ * ```ts
+ * import type { CaseComponentSpan } from "@beep/law-practice-domain"
+ *
+ * const component: keyof CaseComponentSpan.Encoded = "reporter"
+ * console.log(component) // "reporter"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -144,6 +152,14 @@ export class StatuteComponentSpan extends S.Class<StatuteComponentSpan>($I`Statu
 
 /**
  * Companion namespace for `StatuteComponentSpan`.
+ *
+ * @example
+ * ```ts
+ * import type { StatuteComponentSpan } from "@beep/law-practice-domain"
+ *
+ * const component: keyof StatuteComponentSpan.Encoded = "section"
+ * console.log(component) // "section"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -218,6 +234,14 @@ export class ConstitutionalComponentSpan extends S.Class<ConstitutionalComponent
 /**
  * Companion namespace for `ConstitutionalComponentSpan`.
  *
+ * @example
+ * ```ts
+ * import type { ConstitutionalComponentSpan } from "@beep/law-practice-domain"
+ *
+ * const component: keyof ConstitutionalComponentSpan.Encoded = "amendment"
+ * console.log(component) // "amendment"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -288,6 +312,14 @@ export class JournalComponentSpan extends S.Class<JournalComponentSpan>($I`Journ
 /**
  * Companion namespace for `JournalComponentSpan`.
  *
+ * @example
+ * ```ts
+ * import type { JournalComponentSpan } from "@beep/law-practice-domain"
+ *
+ * const component: keyof JournalComponentSpan.Encoded = "journal"
+ * console.log(component) // "journal"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -357,6 +389,14 @@ export class NeutralComponentSpan extends S.Class<NeutralComponentSpan>($I`Neutr
 /**
  * Companion namespace for `NeutralComponentSpan`.
  *
+ * @example
+ * ```ts
+ * import type { NeutralComponentSpan } from "@beep/law-practice-domain"
+ *
+ * const component: keyof NeutralComponentSpan.Encoded = "documentNumber"
+ * console.log(component) // "documentNumber"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -418,6 +458,14 @@ export class IdComponentSpan extends S.Class<IdComponentSpan>($I`IdComponentSpan
 
 /**
  * Companion namespace for `IdComponentSpan`.
+ *
+ * @example
+ * ```ts
+ * import type { IdComponentSpan } from "@beep/law-practice-domain"
+ *
+ * const component: keyof IdComponentSpan.Encoded = "pincite"
+ * console.log(component) // "pincite"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -481,6 +529,14 @@ export class SupraComponentSpan extends S.Class<SupraComponentSpan>($I`SupraComp
 /**
  * Companion namespace for `SupraComponentSpan`.
  *
+ * @example
+ * ```ts
+ * import type { SupraComponentSpan } from "@beep/law-practice-domain"
+ *
+ * const component: keyof SupraComponentSpan.Encoded = "pincite"
+ * console.log(component) // "pincite"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -542,6 +598,14 @@ export class ShortFormCaseComponentSpan extends S.Class<ShortFormCaseComponentSp
 
 /**
  * Companion namespace for `ShortFormCaseComponentSpan`.
+ *
+ * @example
+ * ```ts
+ * import type { ShortFormCaseComponentSpan } from "@beep/law-practice-domain"
+ *
+ * const component: keyof ShortFormCaseComponentSpan.Encoded = "pincite"
+ * console.log(component) // "pincite"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -609,6 +673,14 @@ export class PublicLawComponentSpan extends S.Class<PublicLawComponentSpan>($I`P
 
 /**
  * Companion namespace for `PublicLawComponentSpan`.
+ *
+ * @example
+ * ```ts
+ * import type { PublicLawComponentSpan } from "@beep/law-practice-domain"
+ *
+ * const component: keyof PublicLawComponentSpan.Encoded = "lawNumber"
+ * console.log(component) // "lawNumber"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -680,6 +752,14 @@ export class FederalRegisterComponentSpan extends S.Class<FederalRegisterCompone
 /**
  * Companion namespace for `FederalRegisterComponentSpan`.
  *
+ * @example
+ * ```ts
+ * import type { FederalRegisterComponentSpan } from "@beep/law-practice-domain"
+ *
+ * const component: keyof FederalRegisterComponentSpan.Encoded = "volume"
+ * console.log(component) // "volume"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -750,6 +830,14 @@ export class StatutesAtLargeComponentSpan extends S.Class<StatutesAtLargeCompone
 /**
  * Companion namespace for `StatutesAtLargeComponentSpan`.
  *
+ * @example
+ * ```ts
+ * import type { StatutesAtLargeComponentSpan } from "@beep/law-practice-domain"
+ *
+ * const component: keyof StatutesAtLargeComponentSpan.Encoded = "page"
+ * console.log(component) // "page"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -817,6 +905,14 @@ export class FederalRuleComponentSpan extends S.Class<FederalRuleComponentSpan>(
 
 /**
  * Companion namespace for `FederalRuleComponentSpan`.
+ *
+ * @example
+ * ```ts
+ * import type { FederalRuleComponentSpan } from "@beep/law-practice-domain"
+ *
+ * const component: keyof FederalRuleComponentSpan.Encoded = "ruleSet"
+ * console.log(component) // "ruleSet"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -887,6 +983,14 @@ export class RestatementComponentSpan extends S.Class<RestatementComponentSpan>(
 /**
  * Companion namespace for `RestatementComponentSpan`.
  *
+ * @example
+ * ```ts
+ * import type { RestatementComponentSpan } from "@beep/law-practice-domain"
+ *
+ * const component: keyof RestatementComponentSpan.Encoded = "subject"
+ * console.log(component) // "subject"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -956,6 +1060,14 @@ export class TreatiseComponentSpan extends S.Class<TreatiseComponentSpan>($I`Tre
 /**
  * Companion namespace for `TreatiseComponentSpan`.
  *
+ * @example
+ * ```ts
+ * import type { TreatiseComponentSpan } from "@beep/law-practice-domain"
+ *
+ * const component: keyof TreatiseComponentSpan.Encoded = "title"
+ * console.log(component) // "title"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1024,6 +1136,14 @@ export class AnnotationComponentSpan extends S.Class<AnnotationComponentSpan>($I
 
 /**
  * Companion namespace for `AnnotationComponentSpan`.
+ *
+ * @example
+ * ```ts
+ * import type { AnnotationComponentSpan } from "@beep/law-practice-domain"
+ *
+ * const component: keyof AnnotationComponentSpan.Encoded = "series"
+ * console.log(component) // "series"
+ * ```
  *
  * @category models
  * @since 0.0.0

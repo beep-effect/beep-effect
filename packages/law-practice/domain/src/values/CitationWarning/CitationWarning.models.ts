@@ -145,6 +145,14 @@ export class CitationWarning extends S.Class<CitationWarning>($I`CitationWarning
 /**
  * Companion namespace for `CitationWarning`.
  *
+ * @example
+ * ```ts
+ * import type { CitationWarning } from "@beep/law-practice-domain"
+ *
+ * const level: CitationWarning.Encoded["level"] = "warning"
+ * console.log(level) // "warning"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

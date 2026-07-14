@@ -166,6 +166,13 @@ export class RegulationCitation extends S.Class<RegulationCitation>($I`Regulatio
 /**
  * Companion namespace for `RegulationCitation`.
  *
+ * @example
+ * ```ts
+ * import type { RegulationCitation } from "@beep/law-practice-domain"
+ *
+ * type RegulationCitationWire = RegulationCitation.Encoded
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

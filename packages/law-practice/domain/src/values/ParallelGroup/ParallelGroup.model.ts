@@ -55,6 +55,13 @@ export class ParallelGroup extends S.Class<ParallelGroup>($I`ParallelGroup`)(
 /**
  * Companion namespace for `ParallelGroup`.
  *
+ * @example
+ * ```ts
+ * import type { ParallelGroup } from "@beep/law-practice-domain"
+ *
+ * type ParallelGroupWire = ParallelGroup.Encoded
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

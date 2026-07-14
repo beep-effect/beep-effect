@@ -34,8 +34,8 @@ import type { PretextCaptureRequest } from "./PretextCapture.service.js";
  * Browser-safe pure surface re-exported for client code, which imports
  * drivers only through this entrypoint.
  *
+ * @category interop
  * @since 0.0.0
- * @category re-exports
  */
 export * from "./index.js";
 
@@ -57,8 +57,8 @@ const uaIncludesAny = (ua: string, flags: ReadonlyArray<string>): boolean =>
  * console.log(detectEngineProfile().lineFitEpsilon)
  * ```
  *
+ * @category getters
  * @since 0.0.0
- * @category capture
  */
 export const detectEngineProfile = (): EngineProfile => {
   if (P.isUndefined(globalThis.navigator)) {

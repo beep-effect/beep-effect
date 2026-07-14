@@ -9,6 +9,13 @@
 /**
  * Package version for `@beep/agents-tables`.
  *
+ * @example
+ * ```ts
+ * import { VERSION } from "@beep/agents-tables"
+ *
+ * console.log(VERSION)
+ * ```
+ *
  * @category tables
  * @since 0.0.0
  */

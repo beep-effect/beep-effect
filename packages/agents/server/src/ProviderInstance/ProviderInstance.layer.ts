@@ -1,4 +1,9 @@
-/** ProviderInstance server and RPC layers. @packageDocumentation @since 0.0.0 */
+/**
+ * ProviderInstance server and RPC layers.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 
 import {
   makeProviderInstanceUseCases,
@@ -13,7 +18,10 @@ import { Effect, Layer } from "effect";
 import { makeProviderProbe } from "./ProviderInstance.probe.js";
 import { makeProviderInstanceRepository } from "./ProviderInstance.repo.js";
 
-/** Drizzle repository port layer. @example
+/**
+ * Drizzle repository port layer.
+ *
+ * @example
  * ```ts
  * import { ProviderInstanceRepositoryLive } from "@beep/agents-server/ProviderInstance"
  * console.log(ProviderInstanceRepositoryLive)
@@ -26,7 +34,10 @@ export const ProviderInstanceRepositoryLive = Layer.effect(
   makeProviderInstanceRepository()
 ).pipe(Layer.provide(CuidState.Default));
 
-/** Provider CLI probe port layer. @example
+/**
+ * Provider CLI probe port layer.
+ *
+ * @example
  * ```ts
  * import { ProviderProbeLive } from "@beep/agents-server/ProviderInstance"
  * console.log(ProviderProbeLive)
@@ -36,7 +47,10 @@ export const ProviderInstanceRepositoryLive = Layer.effect(
  */
 export const ProviderProbeLive = Layer.effect(ProviderProbe, makeProviderProbe());
 
-/** ProviderInstance use-case layer over its two ports. @example
+/**
+ * ProviderInstance use-case layer over its two ports.
+ *
+ * @example
  * ```ts
  * import { ProviderInstanceUseCasesLive } from "@beep/agents-server/ProviderInstance"
  * console.log(ProviderInstanceUseCasesLive)
@@ -51,7 +65,10 @@ export const ProviderInstanceUseCasesLive = Layer.effect(
   })
 );
 
-/** RPC handler layer bound to the live ProviderInstance use cases. @example
+/**
+ * RPC handler layer bound to the live ProviderInstance use cases.
+ *
+ * @example
  * ```ts
  * import { ProviderInstanceRpcHandlersLive } from "@beep/agents-server/ProviderInstance"
  * console.log(ProviderInstanceRpcHandlersLive)

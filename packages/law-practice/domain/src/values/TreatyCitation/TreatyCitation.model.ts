@@ -116,6 +116,13 @@ export class TreatyCitation extends S.Class<TreatyCitation>($I`TreatyCitation`)(
 /**
  * Companion namespace for `TreatyCitation`.
  *
+ * @example
+ * ```ts
+ * import type { TreatyCitation } from "@beep/law-practice-domain"
+ *
+ * type TreatyCitationWire = TreatyCitation.Encoded
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

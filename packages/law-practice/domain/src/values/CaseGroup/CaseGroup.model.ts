@@ -73,6 +73,14 @@ export class CaseGroup extends S.Class<CaseGroup>($I`CaseGroup`)(
 /**
  * Companion namespace for `CaseGroup`.
  *
+ * @example
+ * ```ts
+ * import type { CaseGroup } from "@beep/law-practice-domain"
+ *
+ * const reporters: CaseGroup.Encoded["parallelCitations"] = ["410 U.S. 113"]
+ * console.log(reporters.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

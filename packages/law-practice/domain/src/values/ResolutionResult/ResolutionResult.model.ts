@@ -101,6 +101,13 @@ export class ResolutionResult extends S.Class<ResolutionResult>($I`ResolutionRes
 /**
  * Companion namespace for `ResolutionResult`.
  *
+ * @example
+ * ```ts
+ * import type { ResolutionResult } from "@beep/law-practice-domain"
+ *
+ * type ResolutionResultWire = ResolutionResult.Encoded
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

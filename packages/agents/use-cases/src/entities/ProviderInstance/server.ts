@@ -1,4 +1,9 @@
-/** Server-only provider-instance exports. @packageDocumentation @since 0.0.0 */
+/**
+ * Server-only provider-instance exports.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 /** Client-safe contracts.
  *
  * @category use-cases

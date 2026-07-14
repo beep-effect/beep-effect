@@ -74,6 +74,14 @@ export class DurableLocatorOptions extends S.Class<DurableLocatorOptions>($I`Dur
 /**
  * Companion namespace for `DurableLocatorOptions`.
  *
+ * @example
+ * ```ts
+ * import type { DurableLocatorOptions } from "@beep/law-practice-domain"
+ *
+ * const space: DurableLocatorOptions.Encoded["space"] = "clean"
+ * console.log(space) // "clean"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

@@ -1,4 +1,9 @@
-/** Provider-instance RPC contracts. @packageDocumentation @since 0.0.0 */
+/**
+ * Provider-instance RPC contracts.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { ProviderInstance } from "@beep/agents-domain/entities/ProviderInstance";
 import * as S from "effect/Schema";
 import * as Rpc from "effect/unstable/rpc/Rpc";

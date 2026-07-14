@@ -222,19 +222,19 @@ const wordWidths = (metrics: FontMetrics, text: string): O.Option<ReadonlyArray<
  *
  * @example
  * ```ts
- * import { naturalWidth } from "@beep/pretext"
- * import type { FontMetrics } from "@beep/pretext"
+ * import { chromeLinuxArial16, naturalWidth } from "@beep/pretext"
+ * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
- * declare const metrics: FontMetrics
+ * const metrics = Effect.runSync(chromeLinuxArial16).metrics
  *
  * const width = naturalWidth(metrics, "the the")
  *
  * console.log(O.isOption(width))
  * ```
  *
+ * @category utilities
  * @since 0.0.0
- * @category layout
  */
 export const naturalWidth: {
   (metrics: FontMetrics, text: string): O.Option<number>;
@@ -254,19 +254,19 @@ export const naturalWidth: {
  *
  * @example
  * ```ts
- * import { lineCount } from "@beep/pretext"
- * import type { FontMetrics } from "@beep/pretext"
+ * import { chromeLinuxArial16, lineCount } from "@beep/pretext"
+ * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
- * declare const metrics: FontMetrics
+ * const metrics = Effect.runSync(chromeLinuxArial16).metrics
  *
  * const lines = lineCount(metrics, { text: "the the", maxWidth: 320 })
  *
  * console.log(O.isOption(lines))
  * ```
  *
+ * @category utilities
  * @since 0.0.0
- * @category layout
  */
 export const lineCount: {
   (metrics: FontMetrics, input: TextLayoutInput): O.Option<number>;
@@ -296,19 +296,19 @@ export const lineCount: {
  *
  * @example
  * ```ts
- * import { textHeight } from "@beep/pretext"
- * import type { FontMetrics } from "@beep/pretext"
+ * import { chromeLinuxArial16, textHeight } from "@beep/pretext"
+ * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
- * declare const metrics: FontMetrics
+ * const metrics = Effect.runSync(chromeLinuxArial16).metrics
  *
  * const height = textHeight(metrics, { text: "the the", maxWidth: 320 })
  *
  * console.log(O.isOption(height))
  * ```
  *
+ * @category utilities
  * @since 0.0.0
- * @category layout
  */
 export const textHeight: {
   (metrics: FontMetrics, input: TextLayoutInput): O.Option<number>;

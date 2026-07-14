@@ -62,6 +62,13 @@ export class StringCitationGroup extends S.Class<StringCitationGroup>($I`StringC
 /**
  * Companion namespace for `StringCitationGroup`.
  *
+ * @example
+ * ```ts
+ * import type { StringCitationGroup } from "@beep/law-practice-domain"
+ *
+ * type StringCitationGroupWire = StringCitationGroup.Encoded
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

@@ -67,6 +67,13 @@ export class ParsedDate extends S.Class<ParsedDate>($I`ParsedDate`)(
 /**
  * Companion namespace for `ParsedDate`.
  *
+ * @example
+ * ```ts
+ * import type { ParsedDate } from "@beep/law-practice-domain"
+ *
+ * type ParsedDateWire = ParsedDate.Encoded
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -135,6 +142,13 @@ export class StructuredDate extends S.Class<StructuredDate>($I`StructuredDate`)(
 
 /**
  * Companion namespace for `StructuredDate`.
+ *
+ * @example
+ * ```ts
+ * import type { StructuredDate } from "@beep/law-practice-domain"
+ *
+ * type StructuredDateWire = StructuredDate.Encoded
+ * ```
  *
  * @category models
  * @since 0.0.0

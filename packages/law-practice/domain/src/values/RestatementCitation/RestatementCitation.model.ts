@@ -87,6 +87,13 @@ export class RestatementCitation extends S.Class<RestatementCitation>($I`Restate
 /**
  * Companion namespace for `RestatementCitation`.
  *
+ * @example
+ * ```ts
+ * import type { RestatementCitation } from "@beep/law-practice-domain"
+ *
+ * type RestatementCitationWire = RestatementCitation.Encoded
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

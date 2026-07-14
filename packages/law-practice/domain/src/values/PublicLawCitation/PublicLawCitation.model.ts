@@ -83,6 +83,13 @@ export class PublicLawCitation extends S.Class<PublicLawCitation>($I`PublicLawCi
 /**
  * Companion namespace for `PublicLawCitation`.
  *
+ * @example
+ * ```ts
+ * import type { PublicLawCitation } from "@beep/law-practice-domain"
+ *
+ * type PublicLawWire = PublicLawCitation.Encoded
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
