@@ -194,6 +194,17 @@ Titles are paraphrased; URLs reproduced verbatim from the notes.
 - USPTO PatentsView→ODP transition guide — <https://data.uspto.gov/support/transition-guide/patentsview>
 - USPTO OCE status-codes API (decommissioned 2026-01-30) — <https://developer.uspto.gov/api-catalog/oce-patent-examination-status-codes>
 - USPTO data support / account-binding tightening — <https://data.uspto.gov/support>
+- USPTO `PTMNFEE2` bulk-data product page — <https://data.uspto.gov/bulkdata/datasets/ptmnfee2> — accessed 2026-07-14; official landing page; portal required sign-in in this session; license recorded by the federal catalog as Public Domain Mark 1.0.
+- Federal catalog record for USPTO Patent Maintenance Fee Events — <https://catalog.data.gov/dataset/patent-maintenance-fee-events-1981-present> — accessed 2026-07-14; official harvested metadata for cadence, cumulative semantics, ASCII format, data dictionary, public access, and Public Domain Mark 1.0.
+- USPTO Official Gazette launch notice for the Maintenance Fees Event File — <https://www.uspto.gov/web/offices/com/sol/og/2010/week05/TOC.htm> — accessed 2026-07-14; official source for Tuesday delivery and the `MaintFeeEventsDesc`/documentation-file contract; government-authored/public-domain terms apply.
+- USPTO ODP bulk-data Search API documentation — <https://data.uspto.gov/apis/bulk-data/search> — accessed 2026-07-14; official API-key requirement and Product Data routing; no numeric rate limit found.
+- USPTO ODP registration announcement — <https://www.uspto.gov/about-us/news-updates/uspto-open-data-portal-require-registration-access-beginning-june-18-2026> — accessed 2026-07-14; official account requirement effective 2026-06-18; government-authored/public-domain terms apply.
+- USPTO maintenance-fee guidance — <https://www.uspto.gov/patents/maintain> — accessed 2026-07-14; official windows, grace/expiration, reinstatement, eligible-patent, timing, and holiday rules; government-authored/public-domain terms apply.
+- USPTO current fee schedule, patent maintenance fees — <https://www.uspto.gov/learning-and-resources/fees-and-payment/uspto-fee-schedule#patent-maintenance-fees> — accessed 2026-07-14; official payment/surcharge/petition fee-code families; government-authored/public-domain terms apply.
+- MPEP §1415.01, maintenance fees on original/reissue patents — <https://www.uspto.gov/web/offices/pac/mpep/s1415.html> — accessed 2026-07-14; official reissue-family timing and post-2018 separate-payment rules; government-authored/public-domain terms apply.
+- MPEP §2520, maintenance fee amounts — <https://www.uspto.gov/web/offices/pac/mpep/s2520.html> — accessed 2026-07-14; official terminal-disclaimer/no-proration rule; government-authored/public-domain terms apply.
+- MPEP §2591, intervening rights in reinstated patents — <https://www.uspto.gov/web/offices/pac/mpep/s2591.html> — accessed 2026-07-14; official evidence that reinstatement changes the legal posture after expiration; government-authored/public-domain terms apply.
+- USPTO Terms of Use — <https://www.uspto.gov/terms-use-uspto-websites> — accessed 2026-07-14; public-domain/acknowledgement, third-party-material, seal/logo, URL-stability, and anti-abusive-access terms; dataset-specific catalog license is Public Domain Mark 1.0.
 
 In-repo RESEARCH sections that carry the load-bearing synthesis (read alongside the
 URLs above): RESEARCH.md §"External Landscape" 1–5, §"In-Repo Capability Inventory",

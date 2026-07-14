@@ -120,7 +120,11 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   CAPTURE seeded from its nuggets, `RESEARCH.md` (external landscape · in-repo inventory ·
   constraints), codex gate-1 folded, `DECISIONS.md` pre-drafted. **Graduate-now (Wave-1,
   user-confirmed):** [`gov-legal-data-driver-codegen`](./gov-legal-data-driver-codegen/README.md),
-  [`uspto-patent-driver-depth`](./uspto-patent-driver-depth/README.md) (extends `@beep/uspto`),
+  [`uspto-patent-driver-depth`](./uspto-patent-driver-depth/README.md) (stage
+  `graduate`, still active for queued/parked lanes): graduated
+  [`uspto-prosecution-read`](../goals/uspto-prosecution-read/README.md) and
+  [`uspto-ptmnfee2-ingest`](../goals/uspto-ptmnfee2-ingest/README.md) on
+  2026-07-14,
   [`mcp-auth-gated-registration`](./mcp-auth-gated-registration/README.md) (grilled+decomposed+
   graduated first goal 2026-07-01: Q1–Q7 resolved, BRIEF+MAP written,
   [`goals/mcp-kit`](../goals/mcp-kit/README.md) scaffolded at `foundation/capability`;

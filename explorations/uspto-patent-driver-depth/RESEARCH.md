@@ -468,3 +468,21 @@ drivers (`courtlistener`, `ecfr`, `dol`, `federal-register` = 1 file each; `govi
 ---
 
 _Codex gate-1 folded 2026-06-29: 3 blocking + 5 advisory addressed._
+
+## 2026-07-14 — `PTMNFEE2` maintenance-fee dataset hole closure
+
+- Raw note: [`research/ptmnfee2-maintenance-fee-dataset.md`](research/ptmnfee2-maintenance-fee-dataset.md).
+- `PTMNFEE2` is the official USPTO Patent Maintenance Fee Events product, covering grants from 1981-09-01 forward.
+- USPTO publishes it weekly; every new event file is cumulative, so refresh means validated full-snapshot replacement, never append.
+- The catalog identifies ASCII/text plus `MaintFeeEventsFileDocumentation.doc`; USPTO's launch notice also names `MaintFeeEventsDesc`.
+- The current exact delimiter/width/null/date/header contract remains NEEDS-VERIFICATION against the downloaded 2026 documentation.
+- Current compressed/uncompressed size is NOT FOUND in accessible primary metadata; record observed sizes in the refresh manifest.
+- `MaintFeeEventsDesc`, shipped with the product, is the authoritative dataset-specific event vocabulary.
+- No semantic version for that vocabulary was found; version it by release date plus event/doc/code-list checksums and diff each refresh.
+- The 3.5/7.5/11.5-year payments, six-month surcharge periods, 4/8/12-year lapse, and possible reinstatement form an event sequence, not a final-status scalar.
+- Reissue due dates continue from the original grant; post-2018 multiple-reissue families can require multiple payments and must not be naïvely collapsed.
+- ODP site access requires a USPTO.gov account since 2026-06-18; bulk APIs require an API key; direct resolved-file anonymity remains NEEDS-VERIFICATION.
+- The dataset is marked Public Domain Mark 1.0; minimal attributed structured-row fixtures are supportable with release/checksum/extraction provenance.
+- `@beep/uspto` should own authenticated bulk discovery, deterministic parse, raw vocabulary, checksums, fixtures, and network-free generated artifacts.
+- `law-docketing-patent-spine` should own calendar/legal interpretation, patent-family/reissue rules, alerts, provenance, and human review.
+- Remaining gates: retrieve the current `.doc`/description file, enumerate all codes, measure the release, and live-probe direct-download authentication.
