@@ -93,7 +93,8 @@ const pointer = (node: Element, name: "pointerDown" | "pointerMove" | "pointerUp
 afterEach(cleanup);
 
 describe.sequential("floating dock adapter", () => {
-  it.effect("renders z-ordered floating panes and preserves a portal target across docked-to-floating movement",
+  it.effect(
+    "renders z-ordered floating panes and preserves a portal target across docked-to-floating movement",
     Effect.fnUntraced(function* () {
       const graph = yield* mount();
       const first = query(`[data-floating-pane='${floating1Id}']`);
@@ -126,7 +127,8 @@ describe.sequential("floating dock adapter", () => {
     })
   );
 
-  it.effect("previews one header move, commits once, and cancels with Escape",
+  it.effect(
+    "previews one header move, commits once, and cancels with Escape",
     Effect.fnUntraced(function* () {
       const graph = yield* mount();
       const header = query(`[data-floating-header='${floating2Id}']`);

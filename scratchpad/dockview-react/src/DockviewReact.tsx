@@ -1,7 +1,9 @@
 import { $ScratchpadId } from "@beep/identity";
+import type { PretextCapture } from "@beep/pretext";
+import { PretextCaptureLive } from "@beep/pretext/browser";
 import { NonNegativeInt } from "@beep/schema";
 import { RegistryContext, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { type Effect, Match } from "effect";
+import { type Effect, type Layer, Match } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -35,6 +37,7 @@ import {
   MovePanelCommand,
   type makeDockAtoms,
   makeDockGeometryAtoms,
+  makeTitleMinimaAtom,
   type Panel,
   PanelId,
   type PanelParameters,
@@ -48,6 +51,7 @@ import {
   SplitNode,
   SplitPlacement,
   SplitRatio,
+  TabChrome,
   TabPlacement,
   TabsNode,
   TopLeftAnchoredBox,
@@ -186,6 +190,19 @@ export type DockviewAdapterApi = {
 };
 
 /**
+ * Browser-side title measurement used to clamp docked group widths.
+ *
+ * @category adapters
+ * @since 0.0.0
+ */
+export type DockTitleMinimaOptions = {
+  readonly font: string;
+  readonly lineHeight: number;
+  readonly chrome?: TabChrome | undefined;
+  readonly captureLayer?: Layer.Layer<PretextCapture> | undefined;
+};
+
+/**
  * Configuration and renderer registry accepted by {@link DockviewReact}.
  *
  * @example
@@ -206,7 +223,9 @@ export type DockviewReactProps = {
   readonly watermarkComponent?: React.FunctionComponent | undefined;
   readonly defaultTabComponent?: DockTabRenderer | undefined;
   readonly onReady?: ((event: { readonly api: DockviewAdapterApi }) => void) | undefined;
-  readonly options?: { readonly gap?: number | undefined } | undefined;
+  readonly options?:
+    | { readonly gap?: number | undefined; readonly titleMinima?: DockTitleMinimaOptions | undefined }
+    | undefined;
 };
 
 type AdapterState = {
@@ -344,8 +363,27 @@ class FloatingOverride extends S.Class<FloatingOverride>($I`FloatingOverride`)(
 ) {}
 
 // crispen: graph identity and lifetime are host concerns; WeakMap avoids structural hashing and retains no disposed graph.
-const states = new WeakMap<DockAtomGraph, MutableHashMap.MutableHashMap<number, AdapterState>>();
+const states = new WeakMap<DockAtomGraph, MutableHashMap.MutableHashMap<string, AdapterState>>();
+const captureLayerIds = new WeakMap<Layer.Layer<PretextCapture>, number>();
+let captureLayerCounter = 0;
 let commandCounter = 0;
+
+const captureLayerId = (layer: Layer.Layer<PretextCapture>): number =>
+  O.getOrElse(O.fromUndefinedOr(captureLayerIds.get(layer)), () => {
+    captureLayerCounter += 1;
+    captureLayerIds.set(layer, captureLayerCounter);
+    return captureLayerCounter;
+  });
+
+const stateKey = (gap: number, titleMinima: O.Option<DockTitleMinimaOptions>): string =>
+  O.match(titleMinima, {
+    onNone: () => `${gap}`,
+    onSome: (config) => {
+      const chrome = O.getOrElse(O.fromUndefinedOr(config.chrome), () => TabChrome.make());
+      const captureLayer = O.getOrElse(O.fromUndefinedOr(config.captureLayer), () => PretextCaptureLive);
+      return `${gap}\u0000${config.font}\u0000${config.lineHeight}\u0000${chrome.perTab}\u0000${chrome.strip}\u0000${captureLayerId(captureLayer)}`;
+    },
+  });
 
 const makeOperation = (
   command:
@@ -370,14 +408,19 @@ const makeOperation = (
   });
 };
 
-const adapterState = (graph: DockAtomGraph, gap: number): AdapterState => {
-  // crispen: gap remains the adapter identity because geometry atoms close over it; remove the inner cache when options become reactive.
-  const byGap = O.getOrElse(O.fromUndefinedOr(states.get(graph)), () => {
-    const created = MutableHashMap.empty<number, AdapterState>();
+const adapterState = (
+  graph: DockAtomGraph,
+  gap: number,
+  titleMinima: O.Option<DockTitleMinimaOptions>
+): AdapterState => {
+  // crispen: geometry inputs remain the adapter identity because the derived atoms close over them.
+  const byOptions = O.getOrElse(O.fromUndefinedOr(states.get(graph)), () => {
+    const created = MutableHashMap.empty<string, AdapterState>();
     states.set(graph, created);
     return created;
   });
-  const existing = MutableHashMap.get(byGap, gap);
+  const key = stateKey(gap, titleMinima);
+  const existing = MutableHashMap.get(byOptions, key);
   if (O.isSome(existing)) return existing.value;
   const containerAtom = Atom.make(DockBox.make()).pipe(Atom.keepAlive);
   const focusedGroupAtom = Atom.make<O.Option<GroupId>>(O.none()).pipe(Atom.keepAlive);
@@ -426,10 +469,26 @@ const adapterState = (graph: DockAtomGraph, gap: number): AdapterState => {
       floating,
     });
   });
-  const geometry = makeDockGeometryAtoms({
-    workspaceAtom: projectedWorkspaceAtom,
-    containerAtom,
-    options: GeometryOptions.make({ gap }),
+  const geometry = O.match(titleMinima, {
+    onNone: () =>
+      makeDockGeometryAtoms({
+        workspaceAtom: projectedWorkspaceAtom,
+        containerAtom,
+        options: GeometryOptions.make({ gap }),
+      }),
+    onSome: (config) =>
+      makeDockGeometryAtoms({
+        workspaceAtom: projectedWorkspaceAtom,
+        containerAtom,
+        options: GeometryOptions.make({ gap }),
+        minimaAtom: makeTitleMinimaAtom({
+          workspaceAtom: graph.workspaceAtom,
+          captureLayer: O.getOrElse(O.fromUndefinedOr(config.captureLayer), () => PretextCaptureLive),
+          font: config.font,
+          lineHeight: config.lineHeight,
+          chrome: config.chrome,
+        }),
+      }),
   });
   const created = {
     containerAtom,
@@ -444,7 +503,7 @@ const adapterState = (graph: DockAtomGraph, gap: number): AdapterState => {
     readyRoots: new WeakSet<HTMLElement>(),
     api,
   };
-  MutableHashMap.set(byGap, gap, created);
+  MutableHashMap.set(byOptions, key, created);
   return created;
 };
 
@@ -1273,8 +1332,8 @@ const DockviewRoot = (
  * Renders a dock workspace backed by a serialized Atom graph.
  *
  * @remarks
- * Adapter state is cached by graph identity and geometry gap so portal hosts
- * remain stable across React remounts and dock topology changes.
+ * Adapter state is cached by graph identity and geometry inputs so portal
+ * hosts remain stable across React remounts and dock topology changes.
  *
  * @example
  * ```ts
@@ -1292,7 +1351,8 @@ export const DockviewReact = (props: DockviewReactProps) => {
     O.flatMap(O.fromUndefinedOr(props.options), ({ gap }) => O.fromUndefinedOr(gap)),
     () => 0
   );
-  const state = adapterState(props.graph, gap);
+  const titleMinima = O.flatMap(O.fromUndefinedOr(props.options), ({ titleMinima }) => O.fromUndefinedOr(titleMinima));
+  const state = adapterState(props.graph, gap, titleMinima);
   return (
     <RegistryContext.Provider value={props.graph.registry}>
       <DockviewRoot {...props} state={state} />
