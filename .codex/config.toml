@@ -57,18 +57,6 @@
     name = "ponytail"
     enabled = true
   [[skills.config]]
-    name = "ponytail-audit"
-    enabled = true
-  [[skills.config]]
-    name = "ponytail-debt"
-    enabled = true
-  [[skills.config]]
-    name = "ponytail-gain"
-    enabled = true
-  [[skills.config]]
-    name = "ponytail-help"
-    enabled = true
-  [[skills.config]]
     name = "ponytail-review"
     enabled = true
   [[skills.config]]

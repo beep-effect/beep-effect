@@ -55,6 +55,9 @@ Ship reliable code with effect-first and schema-first patterns.
 - Docgen: prefer `bun run docgen:local` for edit loops (bounded,
   `origin/main...HEAD` + dirty files); `bun run docgen` only for the full
   repo proof.
+- Attribute verification failures before repairing — introduced / inherited /
+  unrelated / environment-only; attribution decides fix vs rebase vs report,
+  not blind rerun.
 
 ## Codegen
 
@@ -72,33 +75,21 @@ Ship reliable code with effect-first and schema-first patterns.
 - `explorations/` is the fuzzy front end (capture → graduate), driven by the
   `/explore` skill; crystallized work graduates into `goals/` packets and
   `docs/product/` prose.
+- same-PR packet-state flips: flip goal manifest/lifecycle status and land the
+  closeout reflection in the same PR as the final work.
 
 ## Agent Memory
 
-- Cognee (`beepintir` MCP + cognee-memory plugin hooks/skills) is the sole
-  always-on durable dev-memory (2026-07-08 decision,
-  `standards/memory-architecture/04-decision-log.md`). It is OPERATOR-LEVEL
-  config (user plugin + user MCP settings), not provisioned by this repo's
-  `.mcp.json` — checkouts without it fall back to file memory and repo docs,
-  by design. Bounded use only: embedded/local or all-Postgres profile;
-  semantic memory is a managed cache (TTL, pruning, consolidation, node-set
-  scoping) — never source of truth. No uncited LLM output crosses the
-  authority boundary.
-- File memory (this file via the `CLAUDE.md` symlink, auto-memory
-  `MEMORY.md`) remains Layer 1 for durable curated knowledge.
-- `graphiti-memory` is DEPRECATED: write-frozen, read-available for
-  historical context only until the `@beep/epistemic-tables` bitemporal port
-  lands, then decommissioned. Read helpers until then:
-  `bun run graphiti:proxy`, `bun run graphiti:proxy:ensure`; `group_ids`
-  must be a JSON array containing `beep_dev`.
+- Cognee is the durable always-on dev-memory; file memory (`CLAUDE.md` /
+  `MEMORY.md`) remains Layer 1; `graphiti-memory` is write-frozen.
+- See `standards/memory-architecture/` for all memory decisions and operational
+  detail.
 - If memory is unavailable in-session, fall back to repo-local docs, code
   search, and this file.
 
 ## Tool Routing
 
-- effect v3↔v4 differences: prefer the `effect-v4-imports` skill; reach for
-  Cognee recall (or read-frozen `graphiti-memory`) only for historical
-  context.
+- effect v3↔v4 differences: prefer the `effect-v4-imports` skill.
 - shadcn: editor app = app workspace, shared UI package = shared base; prefer
   the shadcn skill + shadcn MCP for registry discovery and installs.
 - MUI: prefer `mui-mcp` — `useMuiDocs` first, then `fetchDocs` only with URLs
@@ -114,4 +105,6 @@ Ship reliable code with effect-first and schema-first patterns.
 - Front-load stable context; let volatile per-task detail arrive later in the
   conversation.
 - Continue related follow-ups on an existing subagent (SendMessage) instead
-  of spawning fresh ones; avoid idle gaps over ~5 minutes (cache TTL).
+  of spawning fresh ones.
+- Durable on-disk handoffs: agent/session transitions exchange deliverables as
+  files on disk (packet `research/`, scratchpad), never chat-only summaries.

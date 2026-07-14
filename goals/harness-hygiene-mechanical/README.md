@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -34,14 +34,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — confirm the four skills have no tooling references; choose the
-owned destination surface for each evicted AGENTS.md passage; draft the three
-laws at one-to-two lines each.
+Closed (2026-07-14) — all phases complete; packet retained for reference.
 
 ## Latest Evidence
 
-Not started. Graduated 2026-07-14 from
-[`explorations/agent-effectiveness-pulse`](../../explorations/agent-effectiveness-pulse/README.md)
-(usage evidence: `research/pulse/skill-usage.md`; pre-audit:
-`research/2026-07-13-agents-md-preaudit.md`; H4/H9 verdicts:
-`research/pulse/closeout-hypotheses.md`).
+[`research/2026-07-14-eviction-and-laws.md`](./research/2026-07-14-eviction-and-laws.md)
+records the eviction map; three laws with reflection counts 11 same-PR / 6
+attribution / 10 handoffs; H4 refuted + H9 partial framing; skills-deletion
+mechanics; and a provisioning-only reference scan. AGENTS.md measured 5,840
+bytes before and 5,354 bytes after. The P2 verification matrix passed in full
+(GOAL size, manifest JSON, whitespace, four skill dirs gone, no dangling refs
+with `--hidden`, three laws present). Closeout reflection:
+[`history/reflections/2026-07-14-claude.md`](./history/reflections/2026-07-14-claude.md).
+Note: running the canonical `bun run beep skills update` also drift-repaired
+three surviving remote skills from upstream HEAD (ponytail wording, new
+grill-me/teach agents manifests) — kept as documented side effects of the
+mandated sync.

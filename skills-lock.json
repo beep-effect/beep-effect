@@ -39,7 +39,7 @@
     "grill-me": {
       "source": "mattpocock/skills",
       "sourceType": "github",
-      "computedHash": "5b1d529b1b9575934bb8512d194153f28c7b376c5441a5767203a28c75b1f412",
+      "computedHash": "0a4f8c315b9013756b96d77844edb47e75eb2ddc58d4981ba66e8ac080cc8bc2",
       "ref": "main",
       "skillPath": "skills/productivity/grill-me/SKILL.md"
     },
@@ -56,7 +56,7 @@
     "mcp-graphiti-memory": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "df29f3fa1a8a8a5c623db0568d54a64f4de591aa0407f582ab857dc37fff5060"
+      "computedHash": "1ddb75b7c3c7b0a34284f5736839b1facce4dfd3cdc416689382a273872d5da6"
     },
     "mcp-jetbrains": {
       "source": "repo-local",
@@ -66,7 +66,7 @@
     "onepassword-secret-refs": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "d847a12fddb0f0c0c06ed8d6939e77dc428f612dc75a2035451a1eb4291d2a64"
+      "computedHash": "e65a19607bf480dafd0059ca7ce223e1794ff8a3725fe20b0d90545786c09266"
     },
     "oracle": {
       "source": "repo-local",
@@ -76,37 +76,9 @@
     "ponytail": {
       "source": "DietrichGebert/ponytail",
       "sourceType": "github",
-      "computedHash": "5e9e090eb1f26f97d16f81a2260b8844672a5cd1f3ff2a2e87f4b92242077433",
+      "computedHash": "46b47680aa82495d02166614b6ab812b3b73d91cf297929c8feaf57a3dd9ec71",
       "ref": "main",
       "skillPath": "skills/ponytail/SKILL.md"
-    },
-    "ponytail-audit": {
-      "source": "DietrichGebert/ponytail",
-      "sourceType": "github",
-      "computedHash": "f078f777f7407af17bd7bc1b6ebfe0cd5dddb82e410baedfdfbbf9f5b63b81a9",
-      "ref": "main",
-      "skillPath": "skills/ponytail-audit/SKILL.md"
-    },
-    "ponytail-debt": {
-      "source": "DietrichGebert/ponytail",
-      "sourceType": "github",
-      "computedHash": "569ee6f296a958550ddbef89b9555ca3e89f26624d5801981daaa9f881680bac",
-      "ref": "main",
-      "skillPath": "skills/ponytail-debt/SKILL.md"
-    },
-    "ponytail-gain": {
-      "source": "DietrichGebert/ponytail",
-      "sourceType": "github",
-      "computedHash": "20c10261e06b54c90fa1c57e09b44e84238b0edfcf87291017e5e34df291d960",
-      "ref": "main",
-      "skillPath": "skills/ponytail-gain/SKILL.md"
-    },
-    "ponytail-help": {
-      "source": "DietrichGebert/ponytail",
-      "sourceType": "github",
-      "computedHash": "98e3c7053fa38c6d84712f4da14fa6c0209773f7fa0cc3cfab06aafaa515f2bc",
-      "ref": "main",
-      "skillPath": "skills/ponytail-help/SKILL.md"
     },
     "ponytail-review": {
       "source": "DietrichGebert/ponytail",
@@ -155,7 +127,7 @@
     "teach": {
       "source": "mattpocock/skills",
       "sourceType": "github",
-      "computedHash": "ae1fc585cc759811434446a3d34f9fdc0a11de30dc4beff3a1ae242803d44a81",
+      "computedHash": "34543ef16f83356d3dbd325884817f8cafc0f808dfd11d949f7847d266a624af",
       "ref": "main",
       "skillPath": "skills/productivity/teach/SKILL.md"
     },
@@ -167,7 +139,7 @@
     "yeet": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "b5eeeb79bea73339040a6b2cd859a9657cc95e2093448d58b372935fa4c21913"
+      "computedHash": "971285f643fbe107fa1cd644ae470fa8af03b11fa58557b06a817d18ea388e2d"
     }
   }
 }
