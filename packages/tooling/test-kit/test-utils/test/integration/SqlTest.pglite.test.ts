@@ -10,7 +10,7 @@ import {
 } from "@beep/test-utils";
 import { A, O } from "@beep/utils";
 import { beforeAll, describe, expect, it } from "@effect/vitest";
-import { Cause, Context, Duration, Effect, Exit, Layer, pipe, Scope } from "effect";
+import { Cause, Context, Duration, Effect, Exit, Layer, pipe, Schedule, Scope } from "effect";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import type { SqlTestHooks } from "@beep/test-utils";
 
@@ -27,6 +27,9 @@ const ContainerInspectTimeout = Duration.seconds(5);
 // CI load a scoped-layer provision can queue well past a minute.
 const SharedPgliteIntegrationTimeoutMs = 180_000;
 const PgliteTestcontainersIntegrationTimeoutMs = 120_000;
+const PostCloseConnectRetryPolicy = Schedule.spaced(Duration.seconds(1)).pipe(
+  Schedule.upTo({ duration: Duration.seconds(60) })
+);
 
 beforeAll(() => {
   if (hasSharedConnectionUri) {
@@ -367,7 +370,8 @@ describe("PGLite shared external SQL test driver", { concurrent: false }, () => 
       ).toBe(true);
       yield* Scope.close(scope, Exit.void);
       const existsAfterClose = yield* schemaExists(schemaName).pipe(
-        provideScopedLayer(makeExternalNoIsolationLayer(connectionUri))
+        provideScopedLayer(makeExternalNoIsolationLayer(connectionUri)),
+        Effect.retry(PostCloseConnectRetryPolicy)
       );
 
       expect(existsAfterClose).toBe(false);

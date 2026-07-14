@@ -1146,7 +1146,21 @@ const buildPgExternalLayer: (
                 }),
             }),
             (client) =>
-              Effect.promise(() => client.end()).pipe(Effect.timeoutOption(PgExternalClientEndTimeout), Effect.asVoid)
+              Effect.tryPromise({
+                try: () => client.end(),
+                catch: (cause) =>
+                  toHarnessError(
+                    "pg-external",
+                    "teardown",
+                    "Failed to close the external PostgreSQL test client.",
+                    cause
+                  ),
+              }).pipe(
+                Effect.catchTag("SqlTestHarnessError", () =>
+                  Effect.logWarning("Failed to close the external PostgreSQL test client.")
+                ),
+                Effect.asVoid
+              )
           ),
           acquireForStream: false,
         }).pipe(
