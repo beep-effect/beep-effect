@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "law-time-capture-spine",
+    "title": "Law Time Capture Spine",
+    "status": "active",
+    "created": "2026-07-14",
+    "updated": "2026-07-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/law-time-capture-spine",
+  "lifecycle": "active",
+  "mission": "Deliver the manual timer-to-approved-entry spine with matter/task context, evidence-bounded narrative, attorney control, and duplicate-safe CSV/prebill preview.",
+  "statusNote": "P0 gate: Tom supplies the initial native prosecution task set from representative real matters before implementation contracts freeze.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/ip-attorney-time-tracking",
+    "graduated": "2026-07-14"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/law-time-capture-spine/README.md",
+    "goals/law-time-capture-spine/SPEC.md",
+    "goals/law-time-capture-spine/PLAN.md",
+    "goals/law-time-capture-spine/GOAL.md",
+    "goals/law-time-capture-spine/research/SOURCES.md",
+    "explorations/ip-attorney-time-tracking/BRIEF.md",
+    "explorations/ip-attorney-time-tracking/MAP.md",
+    "explorations/ip-attorney-time-tracking/DECISIONS.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/law-time-capture-spine/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/law-time-capture-spine/GOAL.md)\" -le 4000",
+    "jq . goals/law-time-capture-spine/ops/manifest.json",
+    "rg -n \"law-time-capture-spine|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/law-time-capture-spine",
+    "git diff --check -- goals/law-time-capture-spine",
+    "bun run beep yeet verify",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed the manual Slice 1 scope or weaken approval/privacy/deletion contracts.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

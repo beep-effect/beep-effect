@@ -4,20 +4,15 @@
     "slug": "ip-attorney-time-tracking",
     "title": "IP Attorney Time Tracking",
     "status": "active",
-    "stage": "align",
-    "openQuestions": [
-      "Is Beep a time-capture overlay/prebill assistant, or should it become the billing/timekeeping system of record?",
-      "First segment: Tom solo IP practice first, or compare solo/mid/enterprise from day one?",
-      "First slice: M365 email/calendar/document activity to candidate time entry, or manual timer plus narrative assistant?",
-      "Which vendor integration should be evaluated first: Clio/LeanLaw/TimeSolv/Bill4Time for small firm, or Intapp/Aderant/Elite for enterprise?",
-      "Privacy boundary: what passive capture is acceptable, and what must require explicit user start/stop or review?"
-    ],
+    "stage": "graduate",
+    "openQuestions": [],
     "links": {
-      "goals": [],
-      "docs": [],
+      "goals": ["goals/law-time-capture-spine"],
+      "docs": ["docs/product/ip-attorney-time-tracking.md"],
       "supersededBy": null
     },
     "created": "2026-06-18",
-    "updated": "2026-06-18"
+    "updated": "2026-07-14",
+    "sources": ["research/SOURCES.md"]
   }
 }

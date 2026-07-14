@@ -77,11 +77,16 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   Queued: CPI after the handroll-v1 trigger, trademark on a qualifying matter,
   court on a qualifying matter plus licensed-engine shape, and foreign on a
   qualifying matter plus licensed engine/source shape.
-- [`ip-attorney-time-tracking`](./ip-attorney-time-tracking/README.md) - active
-  align-stage exploration for a local-first IP attorney time-capture/prebill
-  assistant: agents may observe activity and propose candidate billable or
-  nonbillable entries, while the attorney approval gate controls what becomes
-  billable or exportable.
+- [`ip-attorney-time-tracking`](./ip-attorney-time-tracking/README.md) —
+  capture/prebill overlay for Tom's solo IP practice (stage `graduate`, still
+  active while gated candidates remain). Graduated 2026-07-14 into
+  [`law-time-capture-spine`](../goals/law-time-capture-spine/README.md), with
+  product orientation at
+  [`docs/product/ip-attorney-time-tracking.md`](../docs/product/ip-attorney-time-tracking.md).
+  Queued: FreshBooks after its API/write/mapping P0, one M365 signal after its
+  permission/sync/retention P0 and consent, PST on a demonstrated need,
+  profitability after sufficient Slice 1 data, and LEDES/UTBMS on a client
+  mandate with a concrete billing target.
 - [`local-first-voice`](./local-first-voice/README.md) — privilege-safe voice &
   microphone capability (TTS, STT, voice-to-voice) for `apps/professional-desktop`
   (already Tauri v2). At `shape`, awaiting BRIEF sign-off. Research done via two
