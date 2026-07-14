@@ -15,6 +15,7 @@ import {
   commandTextForStep,
   decodeTurboPlanTasksFromQueryJsonForTesting,
   defaultYeetRunOptions,
+  executeStepWithArtifacts,
   FallowFeedbackAllowedRoot,
   GreptileSummary,
   gitPathListFromNulOutputForTesting,
@@ -52,6 +53,7 @@ import {
   TurboPlanSnapshot,
   TurboPlanTask,
   TurboWorkspacePackage,
+  validateMonitorGuards,
   validatePublishBranchForTesting,
   YeetCommandError,
   YeetExecutedStep,
@@ -344,7 +346,13 @@ describe("yeet planner", () => {
         plan.steps,
         A.map((step) => step.label)
       )
-    ).toEqual(["fallow-advisory-feedback", "commit:git:commit", "full:pre-push", "publish:git:push"]);
+    ).toEqual([
+      "fallow-advisory-feedback",
+      "commit:git:commit",
+      "full:pre-push",
+      "publish:head-install-preflight",
+      "publish:git:push",
+    ]);
     expect(
       pipe(
         plan.steps,
@@ -378,7 +386,7 @@ describe("yeet planner", () => {
         plan.steps,
         A.map((step) => step.label)
       )
-    ).toEqual(["fallow-advisory-feedback", "full:pre-push"]);
+    ).toEqual(["fallow-advisory-feedback", "full:pre-push", "publish:head-install-preflight"]);
     expect(
       pipe(
         plan.steps,
@@ -529,6 +537,7 @@ describe("yeet planner", () => {
     ).toEqual([
       "fallow-advisory-feedback",
       "commit:git:commit",
+      "publish:head-install-preflight",
       "publish:git:push",
       "monitor:pr-context",
       "monitor:pr-checks:watch",
@@ -541,7 +550,7 @@ describe("yeet planner", () => {
     ).not.toContain("full:pre-push");
   });
 
-  it("builds start-pr-early publish as commit, early push, full proof, then monitor", () => {
+  it("builds start-pr-early publish as commit, preflight, early push, full proof, then monitor", () => {
     const plan = buildYeetRunPlanForTesting({
       context,
       message: O.some("feat(repo-cli): add yeet"),
@@ -557,6 +566,7 @@ describe("yeet planner", () => {
     ).toEqual([
       "fallow-advisory-feedback",
       "commit:git:commit",
+      "publish:head-install-preflight",
       "early-publish:git:push",
       "full:pre-push",
       "monitor:pr-context",
@@ -596,7 +606,7 @@ describe("yeet planner", () => {
         plan.steps,
         A.map((step) => step.label)
       )
-    ).toEqual(["publish:git:push", "monitor:pr-context", "monitor:pr-checks:watch"]);
+    ).toEqual(["publish:head-install-preflight", "publish:git:push", "monitor:pr-context", "monitor:pr-checks:watch"]);
     expect(findStep(plan.steps, "publish:git:push").args).toEqual(["push", "-u", "origin", "HEAD"]);
   });
 
@@ -688,6 +698,7 @@ describe("yeet planner", () => {
       "fallow-advisory-feedback",
       "commit:git:commit",
       "full:pre-push",
+      "publish:head-install-preflight",
       "publish:git:push",
       "monitor:pr-context",
       "monitor:pr-checks:watch",
@@ -1613,6 +1624,7 @@ describe("yeet publish scope helpers", () => {
       "fallow-advisory-feedback",
       "commit:git:commit",
       "full:pre-push",
+      "publish:head-install-preflight",
       "publish:git:push",
       "publish:pr-create",
     ]);
@@ -1634,6 +1646,7 @@ describe("yeet publish scope helpers", () => {
     expect(labels).toEqual([
       "fallow-advisory-feedback",
       "commit:git:commit",
+      "publish:head-install-preflight",
       "early-publish:git:push",
       "publish:pr-create",
       "full:pre-push",
@@ -1641,6 +1654,62 @@ describe("yeet publish scope helpers", () => {
       "monitor:pr-checks:watch",
     ]);
   });
+
+  it("requires explicit --pr before start-pr-early can reach commit or push", () =>
+    Effect.gen(function* () {
+      const error = yield* validateMonitorGuards(
+        context,
+        defaultYeetRunOptions({
+          message: "test(repo-cli): probe early publish",
+          monitor: true,
+          startPrEarly: true,
+        })
+      ).pipe(Effect.flip);
+
+      expect(error.message).toContain("requires --pr");
+      expect(error.message).toContain("Add `--pr` and retry");
+
+      yield* validateMonitorGuards(
+        context,
+        defaultYeetRunOptions({
+          message: "test(repo-cli): probe early publish",
+          monitor: true,
+          pr: true,
+          startPrEarly: true,
+        })
+      );
+    }));
+
+  it("surfaces the clean-HEAD frozen-install repair hint and removes its temp worktree", () =>
+    withTempDirectory((tmpDir) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* runGit(tmpDir, ["init"]);
+        yield* runGit(tmpDir, ["config", "user.email", "yeet@example.test"]);
+        yield* runGit(tmpDir, ["config", "user.name", "Yeet Test"]);
+        yield* fs.writeFileString(path.join(tmpDir, "package.json"), '{"name":"head-install-probe","private":true}\n');
+        yield* fs.writeFileString(path.join(tmpDir, "bun.lock"), "not a bun lockfile\n");
+        yield* runGit(tmpDir, ["add", "package.json", "bun.lock"]);
+        yield* runGit(tmpDir, ["commit", "-m", "test: invalid committed lockfile"]);
+
+        const tempContext = RepoRunContext.make({ ...context, cwd: tmpDir, repoRoot: tmpDir });
+        const plan = buildYeetRunPlanForTesting({ context: tempContext, message: O.none(), mode: "verify" });
+        const step = findStep(plan.steps, "publish:head-install-preflight");
+        const result = yield* executeStepWithArtifacts(tempContext, step);
+
+        expect(result.exitCode).not.toBe(0);
+        expect(result.output).toContain("Frozen-lockfile clean-HEAD install preflight failed");
+        expect(knownSubLaneRemediationFromOutput(result.output)).toEqual(
+          O.some(
+            "Commit or restage the required lockfile and manifest changes; if needed, run `bun install` and restage `bun.lock`."
+          )
+        );
+        expect(yield* runGitCapture(tmpDir, ["worktree", "list", "--porcelain"])).not.toContain(
+          "beep-yeet-head-install-"
+        );
+      })
+    ));
 
   it("builds a verdict with hint-derived repair commands and not-run lanes", () => {
     const proofStep = RepoPlanStep.make({
@@ -1671,6 +1740,7 @@ describe("yeet publish scope helpers", () => {
       createdAt: "2026-06-11T00:00:00.000Z",
       executed: [
         YeetExecutedStep.make({
+          durationMs: 12,
           result: RepoStepRunResult.make({
             stepId: proofStep.id,
             commandText: "bun run beep quality github-checks pre-push",
@@ -1695,6 +1765,7 @@ describe("yeet publish scope helpers", () => {
     expect(verdict.lanes).toHaveLength(2);
     expect(verdict.lanes[0]).toMatchObject({
       id: "full:pre-push",
+      durationMs: 12,
       repairCommand: "Run `bun run cspell` or update the spelling dictionary for intentional terms.",
       status: "failed",
     });

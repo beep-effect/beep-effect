@@ -1,21 +1,21 @@
 {
   "schemaVersion": "initiative-manifest/v2",
   "initiative": {
-    "id": "harness-otel-adoption",
-    "title": "Harness OTel Adoption",
+    "id": "yeet-publish-preflight",
+    "title": "Yeet Publish Preflight",
     "status": "active",
     "created": "2026-07-14",
     "updated": "2026-07-14",
     "packetAnchorDocument": "SPEC.md"
   },
-  "packetPath": "goals/harness-otel-adoption",
+  "packetPath": "goals/yeet-publish-preflight",
   "lifecycle": "active",
-  "mission": "Native Claude Code + Codex OTLP into dankserver's monitoring collector (traces to Phoenix, metrics to Prometheus/Grafana) with a beep-owned attribution attribute schema; content capture off.",
+  "mission": "Harden yeet publish with the two highest-leverage pretext-driver reflection todos: a frozen-lockfile clean-HEAD install preflight before every push, and a probe-first fix for the --start-pr-early / --monitor circular validation on PR-less branches.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
-    "exploration": "explorations/agent-effectiveness-pulse",
-    "graduated": "2026-07-14"
+    "exploration": "",
+    "note": "Codifies the two highest-leverage codification-todos from goals/pretext-driver/history/reflections/2026-07-14-claude.md (PR #391 CI-wall incident; 2026-07-13 --start-pr-early circular-gate incident). Not graduated from an exploration."
   },
   "completionGate": {
     "operator": "yeet",
@@ -27,11 +27,11 @@
   "currentSourceOfTruth": [
     "AGENTS.md",
     "CLAUDE.md",
-    "goals/harness-otel-adoption/README.md",
-    "goals/harness-otel-adoption/SPEC.md",
-    "goals/harness-otel-adoption/PLAN.md",
-    "goals/harness-otel-adoption/GOAL.md",
-    "goals/harness-otel-adoption/research/SOURCES.md"
+    "goals/yeet-publish-preflight/README.md",
+    "goals/yeet-publish-preflight/SPEC.md",
+    "goals/yeet-publish-preflight/PLAN.md",
+    "goals/yeet-publish-preflight/GOAL.md",
+    "goals/yeet-publish-preflight/research/SOURCES.md"
   ],
   "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
@@ -40,13 +40,13 @@
       "path": "GOAL.md",
       "targetChars": 3500,
       "maxChars": 4000,
-      "command": "/goal follow the instructions in goals/harness-otel-adoption/GOAL.md"
+      "command": "/goal follow the instructions in goals/yeet-publish-preflight/GOAL.md"
     }
   ],
   "phases": [
     {
       "id": "P0",
-      "name": "Research",
+      "name": "Probe (reproduce both failure modes against current yeet)",
       "status": "complete"
     },
     {
@@ -57,26 +57,29 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
-      "name": "Yeet: PR to mergeable + Close",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
       "status": "pending"
     }
   ],
   "verificationCommands": [
-    "test \"$(wc -m < goals/harness-otel-adoption/GOAL.md)\" -le 4000",
-    "jq . goals/harness-otel-adoption/ops/manifest.json",
-    "rg -n \"harness-otel-adoption|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/harness-otel-adoption",
-    "git diff --check -- goals/harness-otel-adoption",
+    "test \"$(wc -m < goals/yeet-publish-preflight/GOAL.md)\" -le 4000",
+    "jq . goals/yeet-publish-preflight/ops/manifest.json",
+    "git diff --check -- goals/yeet-publish-preflight",
     "bun run beep lint reflection-artifacts"
   ],
   "stopConditions": [
     "Required source files are missing or materially contradictory.",
-    "The implementation would exceed named scope.",
+    "The implementation would exceed named scope (only the two named fixes).",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
-    "Dankserver operator actions are needed but unconfirmed.",
     "The same blocker repeats after reasonable investigation."
   ]
 }

@@ -41,6 +41,26 @@ export const shouldMonitorChecks = (options: YeetRunOptions): boolean =>
   options.monitor || options.mode === "monitor" || options.mode === "closeout";
 
 /**
+ * Require explicit PR creation consent before repository hydration can perform
+ * remote base reads for start-pr-early publish.
+ *
+ * @param options - Runtime Yeet options after CLI defaults are applied.
+ * @returns A successful Effect unless start-pr-early omits `--pr`.
+ * @category guards
+ * @since 0.0.0
+ */
+export const validateStartPrEarlyPrGuard = (options: YeetRunOptions): Effect.Effect<void, YeetCommandError> =>
+  options.startPrEarly && !options.pr
+    ? Effect.fail(
+        YeetCommandError.make({
+          message:
+            "yeet publish --start-pr-early requires --pr so a PR-less branch creates its pull request before monitoring. Add `--pr` and retry.",
+          exitCode: 1,
+        })
+      )
+    : Effect.void;
+
+/**
  * Reject monitor-like Yeet flows on branches that cannot have a PR head.
  *
  * @param context - Repo context carrying the current branch name.
@@ -115,6 +135,8 @@ export const validateMonitorGuards = Effect.fn("Yeet.validateMonitorGuards")(fun
   context: RepoRunContext,
   options: YeetRunOptions
 ): Effect.fn.Return<void, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  yield* validateStartPrEarlyPrGuard(options);
+
   if (options.fast && options.mode !== "publish") {
     return yield* YeetCommandError.make({
       message: "yeet --fast is only valid for publish.",

@@ -14,6 +14,7 @@ import { YeetCommandError } from "../Yeet.errors.js";
 import { renderPackageQualityPacketMarkdown } from "../Yeet.render.js";
 import { YeetRunResult } from "../Yeet.schemas.js";
 import { artifactDirForContext, safeArtifactName } from "./ArtifactPaths.js";
+import { executeHeadInstallPreflight, HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.js";
 import { buildQualityIssueIndex, qualityIssuesFromStepResult } from "./QualityIssueIndex.js";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoPlanStep, RepoRunContext, RepoStepRunResult } from "../../../internal/repo-run/index.js";
@@ -148,9 +149,11 @@ export const executeStepWithArtifacts = Effect.fn("Yeet.executeStepWithArtifacts
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const rawOutputPath = yield* rawOutputPathForStep(context, step);
-  return yield* executeRepoPlanStepStreaming(step, O.some(rawOutputPath)).pipe(
-    Effect.mapError(YeetCommandError.new(`Failed to execute ${step.label}.`))
-  );
+  return yield* step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID
+    ? executeHeadInstallPreflight(context, step, O.some(rawOutputPath))
+    : executeRepoPlanStepStreaming(step, O.some(rawOutputPath)).pipe(
+        Effect.mapError(YeetCommandError.new(`Failed to execute ${step.label}.`))
+      );
 });
 
 /**

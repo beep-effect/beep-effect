@@ -25,13 +25,14 @@ beep-effect6 write lane before opening the thread-virtualization packet
 merged 2026-07-14 and
 [`goals/pretext-driver/`](../../goals/pretext-driver/README.md) is
 completed-retained with reflection. Dock-adapter title-minima wiring MERGED
-2026-07-14 (PR #396, squash `dc95033709`; exploration-tracked, no packet).
-Next slice in flight: bubble shrinkwrap — `measureLineStats` /
-`walkLineRanges` pure driver-root wrappers + a `scratchpad/bubbles` proof
-(also burns Q2 v2 residue). Q2 v2 residue grows inside the driver package;
-kernel max-constraint, `LayoutPriority`, and snap-to-collapse residue is
-routed to [`scratchpad/dockview/WHAT-IS-LEFT.md`](../../scratchpad/dockview/WHAT-IS-LEFT.md)
-(2026-07-14 sibling review).
+2026-07-14 (PR #396) with a demo harness + live clamp proof (#397); bubble
+shrinkwrap MERGED 2026-07-14 (PR #399: `lineRanges`/`lineStats` pure root
+helpers + `scratchpad/bubbles` proof + live demo page). Remaining ungated
+candidates: layout-as-unit-tests doctrine (MAP), kernel residue (max
+constraints, LayoutPriority, snap-to-collapse — routed to
+[`scratchpad/dockview/WHAT-IS-LEFT.md`](../../scratchpad/dockview/WHAT-IS-LEFT.md)
+per the 2026-07-14 sibling review). Q2 v2 residue grows inside the driver
+package.
 
 ## Read This First
 
@@ -44,7 +45,24 @@ routed to [`scratchpad/dockview/WHAT-IS-LEFT.md`](../../scratchpad/dockview/WHAT
 - 2026-07-14: sibling review kept the packet active at `graduate`; reduced the
   resume surface to the thread-virtualization ownership/handoff gate and routed
   Q2 plus dock-kernel residue to their existing owners.
-- 2026-07-14 (latest: demo harness + clamp proven in a live browser): the
+- 2026-07-14 (latest: bubble shrinkwrap LANDED — third consumer, surface
+  grew): PR #399 merged (squash `00be3efd41`). `@beep/pretext` root gained
+  the shrinkwrap primitives as pure word-granularity mirrors of upstream's
+  line APIs: `LineRange`/`lineRanges` (one greedy fold, `lineCount`-identical
+  break semantics, half-open word indices) and `LineStats`/`lineStats`
+  (derived; field names mirror upstream). Proofs pin `lineStats.lineCount ==
+  lineCount` and `maxLineWidth == naturalWidth` at unbounded width, plus
+  exact fixture arithmetic (driver 23+1). `scratchpad/bubbles` proves the
+  consumer: schema-first `ChatMessage`/`BubbleConstraints` → pure
+  `bubbleBox` (width = min(maxWidth, maxLineWidth)+2·padding, height =
+  lines×lineHeight; unmeasured → None), 5 bun tests. Greptile's one nit was
+  real (undeclared `@beep/pretext` workspace dep) and taught the lesson:
+  a scratchpad dep addition must resync tsconfig references AND fallow
+  boundaries or repo-sanity fails. The demo harness gained `/bubbles.html`
+  rendering `bubbleBox` live — the border is the math, the text just fits.
+  Codex (gpt-5.6-sol medium) wrote the driver+proof lane in an isolated
+  worktree; Fable reviewed, fixed the nit, and wrote the demo page.
+- 2026-07-14 (demo harness + clamp proven in a live browser): the
   deferred smoke target landed as `scratchpad/dockview-demo` — a vite page
   (port 5199, no install: workspace symlinks resolve `@beep/*` to source)
   hosting the dock adapter with a seeded workspace (nested splits, floating

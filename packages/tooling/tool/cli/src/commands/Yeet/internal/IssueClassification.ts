@@ -175,6 +175,13 @@ type KnownSubLaneMatch = {
 
 const knownSubLaneHints: ReadonlyArray<KnownSubLaneHint> = [
   {
+    needle: "frozen-lockfile clean-head install preflight failed",
+    subCategory: "head-install-preflight",
+    category: "command-failure",
+    remediation:
+      "Commit or restage the required lockfile and manifest changes; if needed, run `bun install` and restage `bun.lock`.",
+  },
+  {
     needle: "cspell",
     subCategory: "cspell",
     category: "lint-tool",
