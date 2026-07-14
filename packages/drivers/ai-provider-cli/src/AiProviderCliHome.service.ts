@@ -11,6 +11,7 @@
 
 import * as NodeOS from "node:os";
 import { $AiProviderCliId } from "@beep/identity";
+import * as HostPath from "@beep/utils/Path";
 import { Context, Effect, FileSystem, flow, Layer, Match, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -89,15 +90,35 @@ const isNotSymlinkFailure = (error: PlatformError.PlatformError): boolean =>
 // Drop configured values that are unset or whitespace-only.
 const configuredPath = flow(O.map(Str.trim), O.filter(Str.isNonEmpty));
 
+/**
+ * Expands a leading `~` or `~/` segment to the current user's home directory.
+ *
+ * Spawned CLI processes get no shell expansion, so configured HOME and
+ * executable paths that start with a tilde must be expanded before they reach
+ * the process runner.
+ *
+ * @example
+ * ```ts
+ * import * as NodeOS from "node:os"
+ * import { expandTildePath } from "@beep/ai-provider-cli"
+ *
+ * console.log(expandTildePath("~") === NodeOS.homedir()) // true
+ * console.log(expandTildePath("/usr/bin/claude")) // "/usr/bin/claude"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const expandTildePath: (value: string) => string = Match.type<string>().pipe(
+  Match.when("~", () => NodeOS.homedir()),
+  Match.whenOr(Str.startsWith("~/"), Str.startsWith("~\\"), (value) =>
+    HostPath.join(NodeOS.homedir(), pipe(value, Str.slice(2)))
+  ),
+  Match.orElse((value) => value)
+);
+
 const makeHome = (fs: FileSystem.FileSystem, path: Path.Path): AiProviderCliHomeShape => {
-  // Spawned processes get no shell expansion, so `~` must be expanded here.
-  const expandTilde: (value: string) => string = Match.type<string>().pipe(
-    Match.when("~", () => NodeOS.homedir()),
-    Match.whenOr(Str.startsWith("~/"), Str.startsWith("~\\"), (value) =>
-      path.join(NodeOS.homedir(), pipe(value, Str.slice(2)))
-    ),
-    Match.orElse((value) => value)
-  );
+  const expandTilde = expandTildePath;
 
   const resolveClaudeHome: AiProviderCliHomeShape["resolveClaudeHome"] = (homePath) =>
     path.resolve(configuredPath(homePath).pipe(O.map(expandTilde), O.getOrElse(NodeOS.homedir)));

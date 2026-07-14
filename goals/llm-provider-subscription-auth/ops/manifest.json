@@ -3,13 +3,13 @@
   "initiative": {
     "id": "llm-provider-subscription-auth",
     "title": "LLM Provider Subscription Auth via CLI Delegation",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-11",
-    "updated": "2026-07-11",
+    "updated": "2026-07-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/llm-provider-subscription-auth",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Users authenticate to LLM providers via their subscriptions through vendor-CLI delegation (t3code methodology): provider instances with isolated HOME dirs, rich auth probes, and zero provider tokens at rest in beep-owned storage.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -48,27 +48,27 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

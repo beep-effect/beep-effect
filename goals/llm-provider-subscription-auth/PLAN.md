@@ -2,17 +2,17 @@
 
 ## Status
 
-Status: `pending`
+Status: `completed-retained` — P0–P4 complete; PR #392 carries the final implementation.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Confirm probe transports per provider and port-level facts from t3code sources. | Probe transport decision recorded per provider (see P0 tasks); blockers recorded. |
-| P1 Implement | pending | Make the smallest changes that satisfy `SPEC.md`, in the sub-phase order below. | Acceptance criteria are met. |
-| P2 Verify | pending | Run required checks and capture evidence. | Verification matrix is green or blockers are documented. |
-| P3 Yeet | pending | Drive the PR to mergeable via `/yeet`. | PR open, checks green, mergeable. |
-| P4 Close | pending | Write the closeout reflection and final packet updates. | Packet status and evidence are updated; a closeout reflection exists. |
+| P0 Research | completed | Confirm probe transports per provider and port-level facts from t3code sources. | Probe transport decision recorded per provider (see P0 tasks); blockers recorded. |
+| P1 Implement | completed | Make the smallest changes that satisfy `SPEC.md`, in the sub-phase order below. | Acceptance criteria are met. |
+| P2 Verify | completed | Run required checks and capture evidence. | Verification matrix is green or blockers are documented. |
+| P3 Yeet | completed | Drive the PR to mergeable via `/yeet`. | PR open, checks green, mergeable. |
+| P4 Close | completed | Write the closeout reflection and final packet updates. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## P0 Research Tasks
 
@@ -68,7 +68,7 @@ Work inward-out so each layer compiles against the previous:
    reactivity invalidation). UI composition is app-local follow-up; keep this
    sub-phase thin.
 
-## P3 Closeout Checklist
+## P4 Closeout Checklist
 
 Before marking the packet closed (and `status` → `completed-retained` /
 `complete`):

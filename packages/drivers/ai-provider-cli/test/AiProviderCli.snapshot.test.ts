@@ -1,14 +1,18 @@
+import * as NodeOS from "node:os";
 import {
   AiProviderCli,
   AiProviderCliAuthSnapshot,
   AiProviderCliError,
+  AiProviderCliProbeOptions,
   AiProviderCliProcessResult,
+  expandTildePath,
 } from "@beep/ai-provider-cli";
+import * as HostPath from "@beep/utils/Path";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer, Result } from "effect";
+import { Effect, Layer, Ref, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import type { AiProviderCliProvider } from "@beep/ai-provider-cli";
+import type { AiProviderCliProvider, AiProviderCliRunRequest } from "@beep/ai-provider-cli";
 
 const claudeLoggedInStdout = `{
   "loggedIn": true,
@@ -181,4 +185,31 @@ describe("@beep/ai-provider-cli auth snapshots", () => {
       status: "not-authenticated",
     });
   });
+});
+
+describe("@beep/ai-provider-cli executable overrides", () => {
+  it("expands Windows-style tilde prefixes with host path semantics", () => {
+    expect(expandTildePath("~\\bin\\claude")).toBe(HostPath.join(NodeOS.homedir(), "bin\\claude"));
+  });
+
+  it.effect(
+    "expands a tilde executable override before it reaches the runner",
+    Effect.fnUntraced(function* () {
+      const lastRunRequest = yield* Ref.make<O.Option<AiProviderCliRunRequest>>(O.none());
+      const CapturingLayer = AiProviderCli.makeLayerFromRunner((request) =>
+        Ref.set(lastRunRequest, O.some(request)).pipe(
+          Effect.as(AiProviderCliProcessResult.make({ exitCode: 0, stderr: "", stdout: claudeLoggedInStdout }))
+        )
+      );
+      yield* Effect.gen(function* () {
+        const providerCli = yield* AiProviderCli;
+        yield* providerCli.checkAuthSnapshot(
+          "claude",
+          AiProviderCliProbeOptions.make({ executable: O.some("~/bin/claude") })
+        );
+      }).pipe(provideScopedLayer(CapturingLayer));
+      const request = O.getOrThrow(yield* Ref.get(lastRunRequest));
+      expect(request.executable).toBe(HostPath.join(NodeOS.homedir(), "bin/claude"));
+    })
+  );
 });

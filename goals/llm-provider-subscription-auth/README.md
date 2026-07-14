@@ -2,9 +2,17 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained` — P0–P4 complete; implementation retained as shipped reference.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+Latest evidence (2026-07-13): PR
+[#392](https://github.com/beep-effect/beep-effect/pull/392) carries the full
+vertical (driver probe/shadow-home isolation, agents domain/use-cases/tables/
+server/client) rebased onto current `main`; final local
+`bun run beep yeet verify` is green, with hosted readiness driven through
+Yeet. Closeout reflection:
+[`history/reflections/2026-07-12-claude.md`](./history/reflections/2026-07-12-claude.md).
 
 ## Mission
 
@@ -36,15 +44,15 @@ Use this command for execution-capable sessions:
    reference files, exploration lineage, in-repo capabilities.
 6. [`history/`](./history/) - evidence and closeouts, if present.
 
-## Current Phase
+## Closed Scope
 
-P0 Research — next concrete action: resolve the per-provider probe-transport
-decisions in `PLAN.md` P0 Tasks (exit-code probe vs richer account read for
-`claude` and `codex`).
+P0–P4 are complete. The retained implementation covers provider-instance
+modeling, vendor-CLI auth probes, isolated provider homes, persistence, and
+client state. App-local UI composition remains a separately scoped follow-up.
 
 ## Latest Evidence
 
-Not started.
+See the 2026-07-13 evidence above and the closeout reflection in `history/`.
 
 ## Notes
 
