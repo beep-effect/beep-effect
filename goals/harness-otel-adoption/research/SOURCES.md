@@ -26,7 +26,7 @@ telemetry, local transcripts, and repo prior art.
 ## 3. External research sources
 
 All URLs below appear on disk in
-[`2026-07-13-external-landscape.md`](./2026-07-13-external-landscape.md):
+[`2026-07-13-external-landscape.md`](../../../explorations/agent-effectiveness-pulse/research/2026-07-13-external-landscape.md):
 
 - OpenTelemetry GenAI attribute registry; semantic-conventions releases;
   `gen_ai_normalizer` collector processor docs.
@@ -42,7 +42,7 @@ All URLs below appear on disk in
 - ccusage repo + cost-modes guide; claude-usage repo.
 
 Claims without URLs are carried by
-[`RESEARCH.md`](../RESEARCH.md) (live recon, verified in-session) and the
+[`RESEARCH.md`](../../../explorations/agent-effectiveness-pulse/RESEARCH.md) (live recon, verified in-session) and the
 prior-art brief's `path:line` citations into this repo's goal packets.
 
 ## 4. In-repo capability references
@@ -66,6 +66,6 @@ prior-art brief's `path:line` citations into this repo's goal packets.
   `goals/agent-effectiveness-workflow-integration` (superseded),
   `goals/agent-pipeline-velocity`, `goals/yeet-agent-ergonomics`,
   `explorations/agent-pipeline-velocity` (graduated).
-- This packet's own artifacts: [`RESEARCH.md`](../RESEARCH.md),
-  [`CAPTURE.md`](../CAPTURE.md), `research/2026-07-13-*.md`.
+- This packet's own artifacts: [`RESEARCH.md`](../../../explorations/agent-effectiveness-pulse/RESEARCH.md),
+  [`CAPTURE.md`](../../../explorations/agent-effectiveness-pulse/CAPTURE.md), `research/2026-07-13-*.md`.
 - Graduated goals: none yet (see `ops/manifest.json` `links.goals`).
