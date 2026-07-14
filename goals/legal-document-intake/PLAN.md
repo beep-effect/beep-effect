@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` (P3 Box sync shipped 2026-07-11 with live-Box lanes deferred
+Status: `active` (P3 Box sync merged in PR #386 with live-Box lanes deferred
 per the SPEC Exception Ledger; P4 Extraction → KG loop is next)
 
 Each phase below ships as its own mergeable PR via `/yeet` (completion gate).
@@ -91,12 +91,14 @@ Before marking the packet closed (and `status` → `completed-retained` /
 
 ## Execution Notes
 
-- P3 tenant deferral (2026-07-11): the Box test tenant was not arranged, so P3
+- P3 tracked exception (2026-07-11): the Box test tenant was not arranged, so P3
   shipped with every sync behavior verified against the deterministic
   DmsMirror fixture + pglite lanes and the Box adapter unit-verified against a
   fake SDK client; live-Box round-trip evidence and the OAuth connect flow are
-  deferred per the SPEC Exception Ledger (removal condition: provision the
-  tenant, set `CLOUD_BOX_TOKEN`, run the env-gated live lanes).
+  deferred per the SPEC Exception Ledger. Clearing conditions: provision the
+  tenant, set `CLOUD_BOX_TOKEN`, run
+  `packages/drivers/box/test/integration/Box.live.test.ts` plus a live sync
+  round-trip, and replace the env-token desktop setup path with OAuth.
 - Preserve unrelated worktree changes.
 - Every phase PR includes evidence of an agent-run browser smoke: frontend +
   sidecar over HTTP against a temp vault, driving the phase's real user flow

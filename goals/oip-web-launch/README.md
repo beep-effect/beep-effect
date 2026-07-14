@@ -2,7 +2,17 @@
 
 ## Status
 
-Implementation complete; launch review pending.
+Lifecycle: paused
+
+Implementation complete. The package proof lane was re-run on 2026-07-14;
+closure has the user-approved FINISH disposition and rides the
+`portfolio-consolidation` pull request. Launch review remains pending.
+
+The re-run is recorded in
+[history/outputs/2026-07-14-proof-lane.md](./history/outputs/2026-07-14-proof-lane.md).
+Build, test, and type-test did not pass in this environment, so the packet is
+not yet ready for the driver to flip its lifecycle to `completed-retained`.
+Browser smoke evidence follows separately from the driver.
 
 ## Overview
 
@@ -40,3 +50,19 @@ repo state, not public launch approval or deployment:
   features.
 - Tailnet, standalone, static export, and production deployment remain
   follow-up decisions.
+
+## External Public-Launch Follow-ups
+
+These are `EXTERNAL` user follow-ups. Packet completion or a
+`completed-retained` lifecycle does not approve public launch.
+
+- **EXTERNAL — Client-logo permission:** confirm permission to publish every
+  client logo or remove it.
+- **EXTERNAL — Named-matter publication comfort:** confirm publication comfort
+  for each named matter and associated client language.
+- **EXTERNAL — Credentials:** confirm bar and USPTO credentials and the exact
+  public wording.
+- **EXTERNAL — Contact details:** confirm the public email, telephone, address,
+  and contact-link destinations.
+- **EXTERNAL — Legal-notice review:** obtain final review of disclaimers, legal
+  notices, and footer-adjacent language.

@@ -52,11 +52,11 @@ which fixtures move into package tests.
 - Create domain packages for all six owner slices.
 - Keep Law and Wealth context-only in P3.
 - Put SDK-facing context packet and candidate output-set contracts in
-  `@beep/agent-capability-use-cases/public`.
+  `@beep/agents-use-cases/public`.
 - Publish the deterministic fixture runner only from
-  `@beep/agent-capability-use-cases/test`.
-- Compose the paired Law and Wealth proof at the app boundary in
-  `apps/professional-runtime-proof`.
+  `@beep/agents-use-cases/test`.
+- Compose the paired Law and Wealth fixtures in the agents use-cases package
+  test boundary.
 - Keep persistence, tables, real connectors, real LLMs, and review UI deferred.
 
 ### P3 Rationale

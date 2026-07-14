@@ -19,13 +19,22 @@ data model, and agent integration story to become concrete.
 Status note (2026-06-11): law is the sole active vertical; wealth-management
 is demoted to a dormant proof fixture (see the SPEC status amendment).
 
-Status note (2026-06-18): the law-practice office-action rung-0 loop merged to
-`main` in PR #262. It now ingests a synthetic/public office action through
-`@beep/file-processing` + `@beep/tika`, maps span-bearing
-`GroundedExtraction[]` into law entities, and gates a candidate distinction
-through the epistemic public surface. The next law vertical rung is to replace
-the fixed candidate set with langextract-service/LLM extraction while
-preserving deterministic tests and the privilege wall.
+Status note (2026-07-14): the law-practice office-action loop now invokes the
+provider-neutral `@beep/langextract` service over an injected LLM, maps
+span-bearing `GroundedExtraction[]` into law entities, and covers missing and
+unaligned required extractions before the epistemic gate. The next
+implementation rung is multi-reference section 103 plus section 101/112
+handling while preserving deterministic tests and the privilege wall.
+
+## Launch
+
+Use this command for execution-capable sessions:
+
+```text
+/goal follow the instructions in goals/agentic-professional-runtime/GOAL.md
+```
+
+`GOAL.md` is the compact launcher. `SPEC.md` remains the normative contract.
 
 ## Read This First
 
@@ -33,6 +42,7 @@ preserving deterministic tests and the privilege wall.
 
 - [SPEC.md](./SPEC.md) - authoritative product and architecture contract
 - [PLAN.md](./PLAN.md) - staged rollout and follow-up plan
+- [GOAL.md](./GOAL.md) - compact `/goal` launcher
 - [ops/manifest.json](./ops/manifest.json) - machine-readable routing surface
 - [history/sources.md](./history/sources.md) - source inventory and authority
 
@@ -116,6 +126,14 @@ This initiative references existing packets without merging them:
 
 Those packets remain source context and evidence. This packet is the active
 authority for the professional runtime product direction.
+
+## Next Actions
+
+1. Keep P1 open for the user's product interview tightening across the law and
+   dormant wealth proof documents.
+2. Implement the tracked doctrine rung: multi-reference section 103 plus
+   section 101/112 extraction, mapping, and review behavior.
+3. Keep P4 open for the user's native first-run onboarding product design.
 
 ## Source material
 

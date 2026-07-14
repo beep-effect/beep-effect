@@ -53,17 +53,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P4 Extraction → KG loop (pending P3 PR merge). P3 shipped 2026-07-11 with the
-live-Box verification lanes and OAuth connect flow deferred per the SPEC
-Exception Ledger — the Box test tenant is still not provisioned. To remove the
-exception: provision a Box developer/test tenant, set `CLOUD_BOX_TOKEN` in
-`.env`, run the env-gated live lanes
+P4 Extraction → KG loop. P3 merged in PR #386 (`158876c1e6`) with the live-Box
+verification lanes and OAuth connect flow deferred per the SPEC Exception
+Ledger — the Box test tenant is still not provisioned. To remove the exception:
+provision a Box developer/test tenant, set `CLOUD_BOX_TOKEN` in `.env`, run the
+env-gated live lanes
 (`packages/drivers/box/test/integration/Box.live.test.ts` and a live sync
 round-trip), and replace the desktop env-token setup path with the OAuth flow.
 
 ## Latest Evidence
 
-P3 Box sync completed 2026-07-11 (PR pending merge). Evidence: schema-first
+P3 Box sync merged 2026-07-11 in PR #386 (`158876c1e6`). Evidence: schema-first
 sync entities (SyncItem/SyncOperation/SyncCursor/SyncConflict) with
 `@beep/documents-tables` projections and the `documents_sync_state` db-admin
 migration proven on pglite; provider-neutral `DmsMirror`/`VaultSyncEngine`
