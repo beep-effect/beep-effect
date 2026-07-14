@@ -97,7 +97,7 @@ const App = ({ graph }: { readonly graph: DockAtomGraph }) => (
       <h1>Dockview — computable workspace geometry</h1>
       <p>
         Kernel geometry is pure schema math; group width floors come from real text measurement via{" "}
-        <code>options.titleMinima</code>.
+        <code>options.titleMinima</code>. <a href="/bubbles.html">Bubble shrinkwrap demo</a>
       </p>
     </header>
     <section className="demo-stage">

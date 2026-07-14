@@ -19,6 +19,11 @@ merge (crispen `f9598694f8`, panel fixes `35b9710c95`, round-2 clean).
 Reflection:
 [`history/reflections/2026-07-14-claude.md`](./history/reflections/2026-07-14-claude.md).
 
+Surface grew post-close (2026-07-14, PR #399): pure root gained
+`LineRange`/`lineRanges` and `LineStats`/`lineStats` shrinkwrap helpers
+(exploration-tracked in `explorations/computable-workspace-geometry`; packet
+stays completed-retained).
+
 ## Mission
 
 Wrap `@chenglou/pretext` as the repo driver `@beep/pretext`: text

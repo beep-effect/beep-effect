@@ -34,8 +34,13 @@ bunx tsgo -p scratchpad/dockview-demo/tsconfig.json --pretty false
 The page itself is non-gating demo surface; the gating suites live in
 `scratchpad/dockview` (bun test) and `scratchpad/dockview-react` (vitest).
 
-## Seams
+## Pages
 
-- Second demo page (bubble shrinkwrap): add `bubbles.html` next to
-  `index.html` — vite treats extra `.html` files as additional entries; give
-  it its own `src/bubbles.tsx` and reuse `demo.css`.
+- `/` — dock adapter with live title-minima clamps.
+- `/bubbles.html` — bubble shrinkwrap: `scratchpad/bubbles` `bubbleBox`
+  boxes computed from live-captured word advances; the border is the math,
+  the text just has to fit (`overflow: hidden` makes any mismatch visible).
+
+Further pages: add another `.html` next to `index.html` (vite treats extra
+`.html` files as additional entries) with its own `src/*.tsx`, reuse
+`demo.css`.

@@ -140,6 +140,49 @@ section[data-group-id] {
   border-radius: 3px;
 }
 
+.bubbles-stage {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bubble-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.bubble-row-user {
+  align-items: flex-end;
+}
+
+.bubble {
+  box-sizing: border-box;
+  font:
+    16px Arial,
+    sans-serif;
+  line-height: 20px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #26436e;
+  color: #eef2f8;
+}
+
+.bubble-agent {
+  background: #2b3038;
+  color: #e6e6e6;
+}
+
+.bubble-caption {
+  margin: 4px 2px 0;
+  font-size: 11px;
+  color: #6d7683;
+}
+
 .demo-notes h2 {
   margin: 0 0 8px;
   font-size: 14px;
