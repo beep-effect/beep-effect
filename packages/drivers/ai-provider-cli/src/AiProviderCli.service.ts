@@ -112,6 +112,8 @@ const commandFor = (
     codex: () => [paths.codexPath, ["login", "status"]] as const,
   });
 
+const executableEquivalence = S.toEquivalence(S.String);
+
 const runNative = (
   spawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
   request: AiProviderCliRunRequest
@@ -198,11 +200,23 @@ const makeService = (paths: AiProviderCliPaths, runner: AiProviderCliRunner): Ai
   ) {
     const [defaultExecutable, args] = commandFor(paths, provider);
     const options = AiProviderCliProbeOptions.make(inputOptions ?? {});
+    const allowedExecutable = expandTildePath(defaultExecutable);
+    const executable = yield* Effect.filterOrFail(
+      Effect.succeed(expandTildePath(O.getOrElse(options.executable, () => defaultExecutable))),
+      (candidate) => executableEquivalence(candidate, allowedExecutable),
+      () =>
+        AiProviderCliError.make({
+          command: O.none(),
+          message: "Executable override is not allowed for this provider CLI status command.",
+          operation: "checkAuth",
+          provider,
+        })
+    );
     const result = yield* runner(
       AiProviderCliRunRequest.make({
         args,
         env: options.env,
-        executable: expandTildePath(O.getOrElse(options.executable, () => defaultExecutable)),
+        executable,
         provider,
       })
     );

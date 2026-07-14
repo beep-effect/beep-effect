@@ -317,6 +317,72 @@ describe("Ontology validation and provenance", () => {
   );
 
   it.effect(
+    "skips datatype repair for a blank-node focus without crashing validation",
+    Effect.fnUntraced(function* () {
+      const blankFocus = makeBlankNode("datatype-focus");
+      const agePath = makeNamedNode("https://example.test/age");
+      const stringDatatype = makeNamedNode("http://www.w3.org/2001/XMLSchema#string");
+      const scenarioShape = makeNamedNode("urn:shape:blank-node-datatype");
+      const propertyNode = makeBlankNode("blank-node-datatype-property");
+      const value = makeLiteral("7", stringDatatype.value);
+      const session = applyChangeOperationsWithDelta(
+        createSession(
+          CreateSessionInput.make({
+            id: sessionId,
+            baseDataset: makeDataset([makeQuad(blankFocus, agePath, value)]),
+          })
+        ),
+        [
+          makeQuad(scenarioShape, RDF_TYPE, SH_NODE_SHAPE),
+          makeQuad(scenarioShape, SH_PROPERTY, propertyNode),
+          makeQuad(propertyNode, SH_PATH, agePath),
+          makeQuad(propertyNode, SH_DATATYPE, XSD_INTEGER),
+        ].map((quad) => ChangeOperation.make({ kind: "addQuad", partition: "shapes", quad }))
+      ).session;
+      const shacl = ShaclValidationService.of({
+        validate: Effect.fn("ShaclValidationService.validate")(() =>
+          Effect.succeed(
+            ShaclValidationResult.make({
+              conforms: false,
+              truncated: false,
+              violations: [
+                ShaclValidationViolation.make({
+                  focusNode: blankFocus.value,
+                  path: agePath,
+                  message: "Expected an integer literal.",
+                  severity: "violation",
+                  sourceShape: O.some(scenarioShape),
+                  sourceConstraintComponent: O.some(SH_DATATYPE_COMPONENT),
+                  value: O.some(value),
+                }),
+              ],
+            })
+          )
+        ),
+      });
+      const layer = OntologyValidationRunnerLive.pipe(
+        Layer.provide(
+          Layer.mergeAll(
+            Layer.succeed(ShaclValidationService, shacl),
+            Layer.succeed(TurtleCodec, turtle),
+            Layer.succeed(OntologyFileStore, fileStore)
+          )
+        )
+      );
+      const result = yield* runWithLayer(
+        layer,
+        Effect.gen(function* () {
+          const runner = yield* OntologyValidationRunner;
+          return yield* runner.run(RunOntologyValidationInput.make({ session }));
+        })
+      );
+
+      expect(result.validation.violations).toHaveLength(1);
+      expect(result.repairs).toHaveLength(0);
+    })
+  );
+
+  it.effect(
     "verifies SHACL repairs, accepts undo, and exports provenance artifacts",
     Effect.fnUntraced(function* () {
       yield* runWithValidationLayer(

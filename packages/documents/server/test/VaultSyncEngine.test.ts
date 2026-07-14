@@ -266,6 +266,30 @@ describe("@beep/documents-server VaultSyncEngine", () => {
     }).pipe(provideScopedLayer(SyncEngineTestLayer))
   );
 
+  it.effect("refuses a queued upload whose vault path is replaced by an escaping symlink", () =>
+    Effect.gen(function* () {
+      const engine = yield* VaultSyncEngine;
+      const handle = yield* DmsMirrorFixtureHandle;
+      const itemRepository = yield* SyncItemRepository;
+      const operationRepository = yield* SyncOperationRepository;
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* makeVaultRoot();
+      const outside = yield* fs.makeTempFileScoped({ prefix: "beep-vault-outside-" });
+      yield* fs.writeFileString(outside, "outside secret");
+      const seeded = yield* itemRepository.create(rootFileSeed("queued.txt", "outside secret"));
+      yield* operationRepository.enqueue(rootUploadSeed(seeded.id, "queued.txt", "outside secret", "queued"));
+      yield* fs.symlink(outside, path.join(root, "queued.txt"));
+
+      const status = yield* engine.syncOnce(syncInput(root));
+      const tree = yield* handle.snapshotTree;
+
+      expect(tree["queued.txt"]).toBeUndefined();
+      expect(status.failedOperations).toBe(1);
+      expect(status.errorItems).toBe(1);
+    }).pipe(provideScopedLayer(SyncEngineTestLayer))
+  );
+
   it.effect("retries a retryable mirror failure within the same pass and succeeds", () =>
     Effect.gen(function* () {
       const engine = yield* VaultSyncEngine;

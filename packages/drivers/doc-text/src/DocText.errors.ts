@@ -11,7 +11,12 @@ import { O } from "@beep/utils";
 import * as S from "effect/Schema";
 
 const $I = $RootId.create("doc-text").create("DocText.errors");
-const DocTextErrorReasonBase = LiteralKit(["empty-text-layer", "extraction", "source-bytes-unavailable"]);
+const DocTextErrorReasonBase = LiteralKit([
+  "empty-text-layer",
+  "extraction",
+  "input-limit",
+  "source-bytes-unavailable",
+]);
 
 /**
  * Technical failure reasons emitted by the document text driver.

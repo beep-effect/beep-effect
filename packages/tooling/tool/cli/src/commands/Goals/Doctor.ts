@@ -16,7 +16,9 @@
  * @since 0.0.0
  */
 
+import { isPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
+import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, O, pipe, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import { Console, Effect, FileSystem, HashSet, Order, Path, SchemaGetter } from "effect";
@@ -415,12 +417,30 @@ const explorationBacklinkFindings = Effect.fn("Goals.explorationBacklinkFindings
   raw: Readonly<Record<string, unknown>>
 ) {
   const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
   const provenance = pipe(R.get(raw, "provenance"), O.filter(isJsonRecord));
   const exploration = O.flatMap(provenance, (block) => stringAt(block, "exploration"));
   if (O.isNone(exploration)) {
     return A.empty<GoalDoctorFinding>();
   }
-  const exists = yield* fs.exists(exploration.value).pipe(Effect.orElseSucceed(thunkFalse));
+  const repoRoot = yield* findRepoRoot();
+  const resolvedExploration = path.resolve(repoRoot, exploration.value);
+  const pathEscapesRepo =
+    path.isAbsolute(exploration.value) ||
+    Str.startsWith("//")(exploration.value) ||
+    Str.startsWith("\\\\")(exploration.value) ||
+    !isPathWithinRoot(repoRoot, resolvedExploration);
+  if (pathEscapesRepo) {
+    return A.of(
+      finding(
+        record.slug,
+        "exploration-backlink-missing",
+        "advisory",
+        `provenance.exploration "${exploration.value}" is an invalid path; expected a path contained within the repository root.`
+      )
+    );
+  }
+  const exists = yield* fs.exists(resolvedExploration).pipe(Effect.orElseSucceed(thunkFalse));
   if (exists) {
     return A.empty<GoalDoctorFinding>();
   }

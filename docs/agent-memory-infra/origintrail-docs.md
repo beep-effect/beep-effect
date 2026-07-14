@@ -186,13 +186,13 @@ for original URL `https://docs.origintrail.io/llms.txt`. I read this local file
 because outbound DNS resolution for `docs.origintrail.io` failed.
 
 [R2] Repo doctrine:
-`/home/elpresidank/YeeBois/projects/beep-effect5/standards/memory-architecture/README.md`.
+`<beep-effect-repo>/standards/memory-architecture/README.md`.
 
 [R3] Repo memory taxonomy:
-`/home/elpresidank/YeeBois/projects/beep-effect5/standards/memory-architecture/01-memory-layer-taxonomy.md`.
+`<beep-effect-repo>/standards/memory-architecture/01-memory-layer-taxonomy.md`.
 
 [R4] Product authority:
-`/home/elpresidank/YeeBois/projects/beep-effect5/goals/agentic-professional-runtime/README.md`.
+`<beep-effect-repo>/goals/agentic-professional-runtime/README.md`.
 
 Unfollowed OriginTrail links due to unavailable network/DNS. These are listed as
 gaps, not cited as page evidence:
