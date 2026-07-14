@@ -18,7 +18,7 @@ depend on non-`beep.` attribute names.
 | `beep.repo` | checkout family (`beep-effect`, `beep-effect2`, …) | launcher wrapper, from `basename $(git rev-parse --show-toplevel)` |
 | `beep.branch` | current git branch | launcher wrapper |
 | `beep.task_class` | `feat` \| `fix` \| `goals` \| `chore` \| `explore` \| `other` | launcher wrapper, from branch prefix |
-| `beep.goal_slug` | `goals/<slug>` branch slug or empty | launcher wrapper, from branch |
+| `beep.goal_slug` | the branch path AFTER the `goals/` prefix, verbatim (e.g. branch `goals/harness-otel-adoption-impl` -> `harness-otel-adoption-impl`); empty for non-goals branches | launcher wrapper, from branch |
 | `beep.schema_version` | `1` | static |
 | `host.name` | machine name | static (standard semconv) |
 
@@ -29,6 +29,12 @@ Cardinality rule: NO session ids, paths, or prompt-derived values in metric
 labels. `resource_to_telemetry_conversion` on the Prometheus exporter copies
 resource attributes onto datapoints — the table above is the complete
 allowed set.
+
+Consumers should prefix-match goal slugs
+(`beep_goal_slug=~"<goal>.*"`) because implementation branches may carry
+suffixes. The 2026-07-14 live probe exported a manually normalized value
+(`harness-otel-adoption`); wrapper-emitted values are verbatim branch
+remainders.
 
 Emitter version pins (recorded at adoption): Claude Code 2.1.209 (traces
 beta), Codex CLI 0.144.4, otelcol-contrib 0.154.0.

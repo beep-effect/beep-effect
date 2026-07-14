@@ -4,6 +4,11 @@ Verified against Claude Code 2.1.209 and Codex CLI 0.144.4 installed on this wor
 
 ## A. Claude Code config ready to paste
 
+> NOTE (post-review): in the deployed setup `OTEL_RESOURCE_ATTRIBUTES` is
+> NOT placed in settings.json — the `claude()` launcher wrapper computes and
+> exports it per session (see `p0-attribute-contract.md`). The line below
+> shows the canonical `beep.*` names for reference.
+
 Put this `env` object in user-level `~/.claude/settings.json`; user settings apply across projects. Project/local settings can override it, so `/status` should be checked during rollout. [Claude settings scopes](https://code.claude.com/docs/en/settings)
 
 ```json
@@ -17,7 +22,7 @@ Put this `env` object in user-level `~/.claude/settings.json`; user settings app
     "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
     "OTEL_EXPORTER_OTLP_ENDPOINT": "https://dankserver.tailc7c348.ts.net:<HTTPS_PORT>",
     "OTEL_EXPORTER_OTLP_HEADERS": "<key>=<value>",
-    "OTEL_RESOURCE_ATTRIBUTES": "repo=<repo>,branch=<branch>,goal-slug=<goal>,task-class=<class>,host.name=<machine>",
+    "OTEL_RESOURCE_ATTRIBUTES": "beep.repo=<repo>,beep.branch=<branch>,beep.goal_slug=<goal>,beep.task_class=<class>,beep.schema_version=1,host.name=<machine>",
     "OTEL_METRICS_INCLUDE_RESOURCE_ATTRIBUTES": "true",
     "OTEL_LOG_USER_PROMPTS": "0",
     "OTEL_LOG_TOOL_DETAILS": "0",
@@ -42,7 +47,7 @@ log_user_prompt = false
 exporter = "none" # logs deferred by this goal
 metrics_exporter = { otlp-http = { endpoint = "https://dankserver.tailc7c348.ts.net:<HTTPS_PORT>/v1/metrics", protocol = "binary", headers = {} } }
 trace_exporter = { otlp-http = { endpoint = "https://dankserver.tailc7c348.ts.net:<HTTPS_PORT>/v1/traces", protocol = "binary", headers = {} } }
-span_attributes = { repo = "<repo>", branch = "<branch>", "goal-slug" = "<goal>", "task-class" = "<class>", "host.name" = "<machine>" }
+span_attributes = { "host.name" = "<machine>", "beep.schema_version" = "1" } # static only; see p0-attribute-contract.md codex gap
 ```
 
 `otlp-http` requires an endpoint and `protocol = "binary"` or `"json"`; `otlp-grpc` is the alternative and has no `protocol` field. Headers are static literal TOML strings (no environment interpolation), with optional CA/client-certificate/client-key paths under `tls`. `environment` defaults to `dev`; `metrics_exporter` otherwise defaults to `statsig`. [Codex reference](https://learn.chatgpt.com/docs/config-file/config-reference) [Codex schema](https://github.com/openai/codex/blob/main/codex-rs/core/config.schema.json) [header interpolation limitation](https://github.com/openai/codex/issues/14465)
