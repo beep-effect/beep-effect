@@ -14,7 +14,7 @@ drifts from the manifests, and merge conflicts are resolved by regenerating.
 | [ai-metrics-stack](./ai-metrics-stack/README.md) | AI Metrics Stack | 6/8 | 2026-07-14 | — |
 | [file-processing-capability](./file-processing-capability/README.md) | File Processing Capability | 3/7 | 2026-07-14 | Define and implement a product-neutral schema-first file processing capability with driver-backed extraction and repo C… |
 | [harness-hygiene-mechanical](./harness-hygiene-mechanical/README.md) | Harness Hygiene Mechanical | 0/4 | 2026-07-14 | Delete the four zero-signal skills, evict volatile state from AGENTS.md's cache prefix, add the three agent-requested l… |
-| [harness-otel-adoption](./harness-otel-adoption/README.md) | Harness OTel Adoption | 0/4 | 2026-07-14 | Native Claude Code + Codex OTLP into dankserver's monitoring collector (traces to Phoenix, metrics to Prometheus/Grafan… |
+| [harness-otel-adoption](./harness-otel-adoption/README.md) | Harness OTel Adoption | 2/4 | 2026-07-14 | Native Claude Code + Codex OTLP into dankserver's monitoring collector (traces to Phoenix, metrics to Prometheus/Grafan… |
 | [legal-document-intake](./legal-document-intake/README.md) | Legal Document Intake | 4/8 | 2026-07-14 | — |
 | [professional-desktop-adversarial-qa](./professional-desktop-adversarial-qa/README.md) | Professional Desktop Adversarial QA | 1/5 | 2026-07-12 | Run adversarial QA and repair loops over the professional desktop surface until two consecutive rounds are clean. |
 | [semantic-foundation](./semantic-foundation/README.md) | Semantic Foundation | 0/6 | 2026-07-08 | — |
