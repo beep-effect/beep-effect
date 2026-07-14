@@ -3,13 +3,13 @@
   "initiative": {
     "id": "codex-security-findings-2026-07-08",
     "title": "Codex Security Findings (2026-07-08)",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-08",
-    "updated": "2026-07-11",
+    "updated": "2026-07-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-07-08",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "reflectionRequired": false,
   "completionGate": {
@@ -48,12 +48,13 @@
       "Informational": 19
     },
     "verdictCounts": {
-      "fixed": 4,
+      "fixed": 34,
       "dismissed": 11,
       "untriaged": 0,
       "notCaptured": 0,
-      "openRemediate": 30,
-      "remediatedPendingMerge": 30
+      "openRemediate": 0,
+      "remediatedPendingMerge": 0,
+      "closedRemediated": 30
     },
     "dispositionCounts": {
       "remediate": 30,
@@ -63,7 +64,7 @@
       "untriaged": 0,
       "notCaptured": 0
     },
-    "note": "P2 validation complete 2026-07-08T11:10:27.310Z: 30 remediate, 5 out-of-scope, 6 false-positive, 4 already-fixed, 0 untriaged. P3 invalid/already-fixed closeout complete 2026-07-08T11:26:24.118Z: 15 findings closed or verified closed in Codex. P4/P5 remediation complete locally 2026-07-08: 30 legitimate maintained-code findings fixed and awaiting Yeet PR merge before Codex closure."
+    "note": "P2 validation complete 2026-07-08T11:10:27.310Z: 30 remediate, 5 out-of-scope, 6 false-positive, 4 already-fixed, 0 untriaged. P3 invalid/already-fixed closeout complete 2026-07-08T11:26:24.118Z: 15 findings closed or verified closed in Codex. PR #338 merged 2026-07-08 as c9ca7734e5. P8/P9 closeout complete 2026-07-14: all 30 remediated findings were already archived as fixed and the live open view showed 0 packet-applicable findings; 9 displayed opens belonged to newer work and were left untouched."
   },
   "closeoutPolicy": {
     "fixed": "Already fixed",
@@ -106,11 +107,15 @@
     "invalidsClosedBy": "main-agent",
     "invalidsClosedAfter": "strict-proof validation",
     "remediatedClosedWhen": "after PR merge",
-    "finalTrackedCloseout": false,
+    "finalTrackedCloseout": true,
     "invalidsClosedAt": "2026-07-08T11:26:24.118Z",
     "invalidsClosedCount": 15,
-    "remediatedPendingCloseCount": 30,
-    "remediationCompletedAt": "2026-07-08T12:18:00.000Z"
+    "remediatedPendingCloseCount": 0,
+    "remediationCompletedAt": "2026-07-08T12:18:00.000Z",
+    "remediatedClosedCount": 30,
+    "remediatedClosedAt": "2026-07-14T04:35:39-05:00",
+    "finalOpenApplicableCount": 0,
+    "closeoutEvidence": "history/2026-07-14-p8-p9-closeout.md"
   },
   "agentLaunchers": [
     {
@@ -173,14 +178,14 @@
     {
       "id": "P8",
       "name": "close-remediated",
-      "status": "pending",
-      "exit": "Remediated findings closed in Codex as Already fixed; zero open findings visible."
+      "status": "complete",
+      "exit": "All 30 remediated findings were already archived as fixed in Codex; the live open view showed zero findings applicable to this packet on 2026-07-14."
     },
     {
       "id": "P9",
       "name": "local-closeout",
-      "status": "pending",
-      "exit": "Local untracked closeout evidence and final agent report record zero open findings."
+      "status": "complete",
+      "exit": "Packet history records the 30 closed IDs, zero-applicable-open evidence, newer 2026-07-10 batch distinction, and repeat browser re-check blocker."
     }
   ],
   "verificationCommands": [
