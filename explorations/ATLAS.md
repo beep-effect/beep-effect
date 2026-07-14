@@ -87,18 +87,15 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   permission/sync/retention P0 and consent, PST on a demonstrated need,
   profitability after sufficient Slice 1 data, and LEDES/UTBMS on a client
   mandate with a concrete billing target.
-- [`local-first-voice`](./local-first-voice/README.md) — privilege-safe voice &
-  microphone capability (TTS, STT, voice-to-voice) for `apps/professional-desktop`
-  (already Tauri v2). At `shape`, awaiting BRIEF sign-off. Research done via two
-  adversarial sweeps; 9 forks resolved (hybrid local-default · dictation-first slice
-  · desktop-first shared pkg · webview AudioWorklet capture · English-first
-  Moonshine+Kokoro · per-capability provider ports · STT→LLM→TTS pipeline ·
-  `effect/unstable/rpc` worker). Hand-rolls the missing `@effect/platform-browser`
-  audio glue; composes existing `live-waveform`/`use-scribe`/`xai`/`venice-ai`
-  bricks. First slice: local desktop dictation. MAP names 7 candidate goals
-  (`voice-capture-foundation`, `voice-inference-worker`, `voice-provider-ports`,
-  `voice-dictation-slice`, `voice-tts-playback`, `voice-cloud-transport`,
-  `voice-to-voice-session`).
+- [`local-first-voice`](./local-first-voice/README.md) — privilege-safe voice for
+  `apps/professional-desktop` (stage `graduate`, still active while follow-ons remain).
+  Graduated 2026-07-14 into
+  [`voice-composer-slice`](../goals/voice-composer-slice/README.md): local
+  push-to-talk Moonshine dictation plus manual, interruptible Kokoro read-aloud,
+  with the five-day Linux Tauri proof as fail-fast P0. Capture foundation and the
+  general inference worker are absorbed until a second consumer appears. Provider
+  ports, auto/streaming read-aloud, cloud transport, and voice-to-voice remain gated
+  follow-ons off the proven slice.
 - [`domain-layer-hardening`](./domain-layer-hardening/README.md) — systematic
   hardening of every product slice's domain/schema layer (entities, aggregates,
   value objects, typed errors) against a regret-minimization rubric + external

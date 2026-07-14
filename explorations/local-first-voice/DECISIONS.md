@@ -172,3 +172,67 @@ read-aloud (Kokoro TTS of a turn).
 synth path today, so the spike additionally proves local **Kokoro TTS** + Web Audio
 playback alongside the STT path. Surface confirmed: the chat composer, **desktop-first**
 (Tauri), built into the shared `@beep/editor` so web inherits.
+
+## 2026-07-14 — graduation-path (LOCKED)
+
+**Question:** Should the composer bet remain an ungraduated spike, or become an
+execution-capable goal while retaining the proof-before-production gate?
+
+**Answer:** **Graduate one thin combined goal, `voice-composer-slice`.** It adds
+local push-to-talk Moonshine dictation and manual per-turn Kokoro read-aloud to
+the professional-desktop composer. The pre-graduation spike moves into that goal
+as P0. P0 is fail-fast: if any locked threshold fails, the goal must record an
+explicit **proceed / reshape / stop** decision before P1 may begin.
+
+**Rationale:** This deliberately overrides the 2026-06-27 *prototype in a spike
+branch; do not graduate yet* answer. It preserves that decision's spirit—no
+production design or implementation before spike proof—while fitting the
+single-PR graduation campaign and its ratified defer-spikes-to-P0 policy.
+Rejected: *keep the spike outside goals* (splits the campaign's contract and
+evidence), *graduate separate capture/worker goals* (premature extraction), and
+*start production work in P0* (silently defeats the proof gate).
+
+## 2026-07-14 — spike-target (LOCKED)
+
+**Question:** Which platform is the bounded P0 spike required to prove?
+
+**Answer:** **Linux development Tauri on WebKitGTK**, the user's daily machine.
+macOS/WKWebView—including the hardened-runtime versus App Sandbox microphone
+entitlement fork—and Windows/WebView2 differences are named P1 risks that must
+be checked before ship, not P0 spike scope.
+
+**Rationale:** Rejected *macOS-first* (not the daily development target), *all
+three webviews in P0* (turns a bounded spike into a compatibility program), and
+*browser-only proof* (does not exercise Tauri/WebKitGTK microphone reality).
+The chosen target attacks the highest-value local uncertainty without pretending
+cross-platform behavior has already been proven.
+
+## 2026-07-14 — read-aloud-ux (LOCKED)
+
+**Question:** What read-aloud behavior belongs in the first composer slice?
+
+**Answer:** **A manual speaker button on completed agent turns, with interruptible
+playback.** Auto-read and streaming read-aloud remain MAP follow-ons.
+
+**Rationale:** Rejected *auto-read* (changes conversation behavior and increases
+surprise), *streaming read-aloud* (adds incremental synthesis/buffering and turn
+coordination), and *read-aloud on user or incomplete turns* (unclear value and
+unstable input). Manual completed-turn playback is the thinnest useful Kokoro path.
+
+## 2026-07-14 — p0-thresholds-and-timebox (LOCKED)
+
+**Question:** What quantitative evidence lets the P0 spike authorize P1?
+
+**Answer:** P0 has a **five-engineering-day hard cap** and must prove: first model
+load at most 15 seconds with visible progress; cached loads at most 3 seconds; a
+short-utterance transcript (at most 10 seconds of speech) appears at most 2 seconds
+after push-to-talk release; read-aloud time-to-first-audio at most 1.5 seconds; the
+mic indicator clears at most 500 milliseconds after release or unmount; zero audio
+network egress; and composer insertion without chat-domain or sidecar-protocol
+changes. Failing any one requires a recorded **proceed / reshape / stop** decision
+before P1—never silent scope growth.
+
+**Rationale:** Rejected *qualitative feels-fast acceptance* (not reproducible),
+*unbounded tuning* (turns uncertainty reduction into implementation), and
+*threshold-by-threshold scope expansion* (hides a failed bet). The numbers measure
+the user-visible latency, privacy, teardown, and seam assumptions the slice depends on.
