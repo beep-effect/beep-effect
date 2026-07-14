@@ -20,11 +20,13 @@ and line break from data. Agents gain *sight*.
 ## Next Open Question
 
 Goal #2 coordination gate: negotiate editor-stack file ownership with the
-beep-effect6 write lane before opening the thread-virtualization packet.
-(Q1 RATIFIED and goal #1 graduated AND **executed** 2026-07-13 →
-[`goals/pretext-driver/`](../../goals/pretext-driver/README.md);
-`@beep/pretext` is landed surface — remaining gate is PR #391 merge via
-yeet completion. Q2 v2 residue grows inside the driver package.)
+beep-effect6 write lane before opening the thread-virtualization packet
+(gate re-confirmed still active 2026-07-14). Goal #1 is CLOSED: PR #391
+merged 2026-07-14 and
+[`goals/pretext-driver/`](../../goals/pretext-driver/README.md) is
+completed-retained with reflection. In flight on this lane: dock-adapter
+title-minima wiring (exploration-tracked, no packet). Q2 v2 residue grows
+inside the driver package.
 
 ## Read This First
 
@@ -34,6 +36,22 @@ yeet completion. Q2 v2 residue grows inside the driver package.)
 
 ## Trail
 
+- 2026-07-14 (goal #1 CLOSED, next slice gated): PR #391 **merged**
+  (squash `1c0977ccad`); `goals/pretext-driver` flipped to
+  completed-retained with closeout reflection
+  (`history/reflections/2026-07-14-claude.md`, lint gate
+  `blocking_findings=0`) and goals INDEX regenerated. Grill session closed
+  the next-slice decisions: **dock-adapter title-minima wiring** is next
+  (first real `@beep/pretext` consumer; exploration-tracked, NO goal
+  packet, per kernel-work precedent), proof bar = fixture tests gate +
+  live Chrome smoke as bonus; thread-virtualization stays gated —
+  beep-effect6 lane re-confirmed still active on the editor surfaces.
+  Design pinned: kernel-side `poc/Minima.ts` (pure `titleMinima` fold,
+  sum-of-tabs floor + `TabChrome` allowances; `makeTitleMinimaAtom`
+  effectful seam over `PretextCapture`) feeding the adapter's existing
+  `makeDockGeometryAtoms.minimaAtom` input; adapter gets an optional
+  `titleMinima` prop with `PretextCaptureLive` default and fixture layer
+  injection for jsdom tests.
 - 2026-07-13 (goal #1 executed): **`@beep/pretext` LANDED** at
   `packages/drivers/pretext` under `/goal` — catalog dep `@chenglou/pretext`
   0.0.8, `$PretextId` composer, root pure surface (FontMetricsSnapshotV1 +
