@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "agent-effectiveness-pulse",
+    "title": "Agent Effectiveness Pulse",
+    "status": "active",
+    "stage": "shape",
+    "openQuestions": [
+      "BRIEF/MAP shape-stage sign-off (conversational; Checkpoint B collapsed per DECISIONS 2026-07-14).",
+      "H4/H9 cheap pass results (research/pulse/closeout-hypotheses.md) - do they change the same-PR packet-state-flip law's framing?",
+      "Parquet-export root cause (delegated to the ai-metrics-stack durability phase, tracked here until that phase exists)."
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-14",
+    "updated": "2026-07-14"
+  }
+}

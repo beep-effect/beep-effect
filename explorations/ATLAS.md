@@ -39,6 +39,19 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 ## Explorations
 
 ### Active
+- [`agent-effectiveness-pulse`](./agent-effectiveness-pulse/README.md) — a
+  data-driven pulse on repo agent friendliness/effectiveness (stage `shape`,
+  opened 2026-07-14): which skills are used or dead, where agent time goes,
+  what blocks mergeable, what eats token spend. Same-day arc: pipeline
+  revived (backfill + 1.0M spans to Phoenix + systemd timer — the feed had
+  been dead since Jun 8/Jul 1), five mining lanes + synthesis in
+  [`research/pulse-report.md`](./agent-effectiveness-pulse/research/pulse-report.md),
+  Checkpoint A grilling closed seven decisions
+  ([`DECISIONS.md`](./agent-effectiveness-pulse/DECISIONS.md)). BRIEF/MAP
+  shaped: wave-1 goals `harness-otel-adoption` + `harness-hygiene-mechanical`,
+  wave-2 `yeet-verdict-instrumentation` + `repo-replay-evals`, forwarder
+  durability rides `ai-metrics-stack` (P7e-linked). Awaiting shape sign-off →
+  graduation.
 - [`computable-workspace-geometry`](./computable-workspace-geometry/README.md) —
   pretext × dock kernel × blocks (stage `research`, opened 2026-07-12): text
   layout as pure arithmetic over shippable per-engine font metrics closes the
