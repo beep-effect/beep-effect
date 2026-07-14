@@ -4,6 +4,7 @@ import { PretextCapture, PretextCaptureRequest } from "@beep/pretext";
 import { PretextCaptureLive } from "@beep/pretext/browser";
 import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
@@ -70,14 +71,37 @@ const App = ({ metrics }: { readonly metrics: FontMetrics }) => (
   </main>
 );
 
+const MeasurementUnavailable = ({ detail }: { readonly detail: string }) => (
+  <main className="demo-shell">
+    <header className="demo-header">
+      <h1>Bubble shrinkwrap — measurement unavailable</h1>
+      <p>
+        Live font capture failed in this browser, so there is nothing honest to render. <a href="/">Dock demo</a>
+      </p>
+      <p className="bubble-caption">{detail}</p>
+    </header>
+  </main>
+);
+
+const mountNode = Effect.suspend(() => {
+  const host = document.getElementById("root");
+  return P.isNull(host) ? Effect.die(new Error("Missing #root mount node")) : Effect.succeed(host);
+});
+
 const boot = Effect.gen(function* () {
   const capture = yield* PretextCapture;
   const snapshot = yield* capture.captureFontMetrics(
     PretextCaptureRequest.make({ font, lineHeight, words: distinctWords })
   );
-  const host = document.getElementById("root");
-  if (P.isNull(host)) return yield* Effect.die(new Error("Missing #root mount node"));
+  const host = yield* mountNode;
   createRoot(host).render(<App metrics={snapshot.metrics} />);
 });
 
-void Effect.runPromise(boot.pipe(Effect.provide(PretextCaptureLive)));
+void Effect.runPromise(
+  boot.pipe(
+    Effect.provide(PretextCaptureLive),
+    Effect.catchCause((cause) =>
+      Effect.map(mountNode, (host) => createRoot(host).render(<MeasurementUnavailable detail={Cause.pretty(cause)} />))
+    )
+  )
+);
