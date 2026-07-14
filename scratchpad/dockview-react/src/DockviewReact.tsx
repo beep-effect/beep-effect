@@ -192,10 +192,12 @@ export type DockviewAdapterApi = {
 /**
  * Browser-side title measurement used to clamp docked group widths.
  *
- * `captureLayer` is resolved once, when the adapter state for this graph and
- * measurement configuration (gap, font, line height, chrome) is first
- * created; later referential changes to the layer are ignored so hosts may
- * build it inline without growing retained state per render.
+ * A custom `captureLayer` must carry a `captureKey` — the provider's stable
+ * semantic identity. Adapter state is cached per graph and measurement
+ * configuration (gap, font, line height, chrome, captureKey), so layers
+ * built inline on every render share one state as long as their key is
+ * stable, while switching providers under a new key gets fresh state
+ * instead of stale metrics. The default live provider needs no key.
  *
  * @category adapters
  * @since 0.0.0
@@ -204,8 +206,10 @@ export type DockTitleMinimaOptions = {
   readonly font: string;
   readonly lineHeight: number;
   readonly chrome?: TabChrome | undefined;
-  readonly captureLayer?: Layer.Layer<PretextCapture> | undefined;
-};
+} & (
+  | { readonly captureLayer: Layer.Layer<PretextCapture>; readonly captureKey: string }
+  | { readonly captureLayer?: undefined; readonly captureKey?: undefined }
+);
 
 /**
  * Configuration and renderer registry accepted by {@link DockviewReact}.
@@ -371,16 +375,19 @@ class FloatingOverride extends S.Class<FloatingOverride>($I`FloatingOverride`)(
 const states = new WeakMap<DockAtomGraph, MutableHashMap.MutableHashMap<string, AdapterState>>();
 let commandCounter = 0;
 
-// crispen: the key is measurement-config VALUES only — keying on layer identity
-// would mint a fresh retained state per render whenever a host builds
-// captureLayer inline; the layer is resolved once at first state creation.
+// crispen: the key is measurement-config values plus the provider's SEMANTIC
+// identity (captureKey) — referential layer identity would mint a fresh
+// retained state per render whenever a host builds captureLayer inline,
+// while omitting the provider entirely would share stale metrics across
+// distinct providers.
 const stateKey = (gap: number, titleMinima: O.Option<DockTitleMinimaOptions>): string =>
   O.match(titleMinima, {
     onNone: () => `${gap}`,
     onSome: (config) => {
+      const captureKey = O.getOrElse(O.fromUndefinedOr(config.captureKey), () => "live");
       const chrome = O.getOrElse(O.fromUndefinedOr(config.chrome), () => TabChrome.make());
 
-      return `${gap}\u0000${config.font}\u0000${config.lineHeight}\u0000${chrome.perTab}\u0000${chrome.strip}`;
+      return `${gap}\u0000${config.font}\u0000${config.lineHeight}\u0000${chrome.perTab}\u0000${chrome.strip}\u0000${captureKey}`;
     },
   });
 

@@ -66,6 +66,7 @@ const titleMinima = {
   font: "16px Arial",
   lineHeight: 20,
   captureLayer: Layer.orDie(PretextCaptureFixture),
+  captureKey: "fixture",
 };
 
 afterEach(cleanup);
