@@ -171,7 +171,10 @@ Document and gradually prefer schema-native codecs and transformations:
 - `S.decodeTo` with `SchemaTransformation.transform` / `transformOrFail`;
 - `SchemaGetter` for optional/default/omit/forbidden/property transforms.
 
-### Representation And Codegen Spike
+### Representation And Codegen Spike — dropped 2026-07-14
+
+Portfolio closeout dropped this spike. The constraints below are retained as
+the historical safety record; no generated Box files were replaced.
 
 Do not rewrite generated drivers immediately. First spike
 `SchemaRepresentation` on a small generated API subset and compare:

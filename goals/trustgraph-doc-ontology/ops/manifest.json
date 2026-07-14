@@ -32,7 +32,8 @@
     "history/outputs/source-authority-matrix.md"
   ],
   "probe": {
-    "notes": "Use TrustGraph config put/get/delete against the temporary ontology key to verify round-trip loading.",
+    "status": "wont-do",
+    "notes": "No TrustGraph instance is running; retain the locally verified artifact set without a live config round-trip.",
     "ontologyKey": "beep-effect-doc-ontology-probe-2026-04-04"
   },
   "rerun": {
@@ -40,8 +41,8 @@
     "verify": "bun goals/trustgraph-doc-ontology/scripts/verify-artifacts.ts"
   },
   "spec": "trustgraph-doc-ontology",
-  "stage": "artifact-prototype",
-  "updated": "2026-04-04",
+  "stage": "artifact-complete-research-precedent",
+  "updated": "2026-07-14",
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
@@ -52,7 +53,8 @@
   "initiative": {
     "id": "trustgraph-doc-ontology",
     "title": "TrustGraph Documentation Ontology",
-    "status": "paused"
+    "status": "reference",
+    "updated": "2026-07-14"
   },
-  "statusNote": "legacy status: pending"
+  "statusNote": "Artifact-complete research precedent; ready for the driver to set initiative.status to reference."
 }

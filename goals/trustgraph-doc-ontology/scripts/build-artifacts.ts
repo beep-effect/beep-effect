@@ -1382,10 +1382,10 @@ const run = async () => {
 
   const manifest = {
     spec: "trustgraph-doc-ontology",
-    status: "pending",
-    stage: "artifact-prototype",
+    status: "artifact-complete",
+    stage: "artifact-complete-research-precedent",
     created: createdDate,
-    updated: createdDate,
+    updated: "2026-07-14",
     generatedAt,
     currentSourceOfTruth: "SPEC.md",
     outputs: [
@@ -1406,7 +1406,9 @@ const run = async () => {
     },
     probe: {
       ontologyKey: probeOntologyKey,
-      notes: "Use TrustGraph config put/get/delete against the temporary ontology key to verify round-trip loading.",
+      status: "wont-do",
+      notes:
+        "No TrustGraph instance is running; retain the locally verified artifact set without a live config round-trip.",
     },
     counts: scaffold.counts,
     keyDecisions: [

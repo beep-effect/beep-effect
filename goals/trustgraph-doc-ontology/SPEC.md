@@ -2,7 +2,7 @@
 
 ## Status
 
-PENDING
+ARTIFACT-COMPLETE RESEARCH PRECEDENT
 
 ## Purpose
 
@@ -14,6 +14,11 @@ The package produces:
 - a mechanically derived scaffold for the broader JSDoc and docgen domain
 - a companion semantic-web seed layer grounded in RDF, PROV, evidence anchors, and bounded SHACL shapes
 - local verification outputs that separate structural validation from rule-enforcement feasibility
+
+The artifact set is complete for reference use. Local verification records 641
+quads and SHACL conformance. The live TrustGraph config put/get/delete
+round-trip is won't-do because no TrustGraph instance is running; it is not a
+remaining acceptance gate for this research precedent.
 
 ## Quick Start
 

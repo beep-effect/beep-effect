@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 1. [`GOAL.md`](./GOAL.md) - compact `/goal` launcher.
 2. [`SPEC.md`](./SPEC.md) - normative source of truth (incl. the Q1–Q8 Decision Log).
-3. [`PLAN.md`](./PLAN.md) - active execution plan (P0–P3).
+3. [`PLAN.md`](./PLAN.md) - terminal execution record (P0–P3).
 4. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing.
 5. [`research/`](./research/) - back-links to the source exploration's research.
 6. [`history/`](./history/) - evidence and closeouts, if present.
@@ -50,13 +50,11 @@ unknown-license = reimplement-don't-copy).
 
 ## Current Phase
 
-**Substrate delivered (P0 + P1 + P3 complete); P2 superseded.** As of
-2026-07-11, P2 (CourtListener + DOL) is superseded by
+**Terminal: substrate delivered (P0 + P1 + P3 complete); P2 superseded.** As of
+2026-07-14, P2 delivery scope is owned by
 [`goals/gov-legal-data-driver-delivery`](../gov-legal-data-driver-delivery),
-which owns the data/source-terms matrix (its P0) and the DOL + CourtListener
-drivers (its P3–P5) under the same Q8 default-deny gate. No implementation
-work remains in this packet; final status closure happens at the delivery
-packet's P6.
+which retains the completed data/source-terms matrix and per-driver restart
+points. No implementation or close bookkeeping remains in this packet.
 
 ## Latest Evidence
 
@@ -89,6 +87,6 @@ packet's P6.
 - The shared transformer **incubates inside govinfo** and only promotes to
   `foundation/capability/<name>` once a 2nd driver imports it (Q6; the
   `07-non-slice-families` ≥2-consumer gate).
-- P2 (CourtListener + DOL) is **gated** on a per-upstream data/source-terms matrix
-  — default-deny until it exists (Q8).
+- P2 is superseded into the delivery packet; its completed matrix and deferred
+  per-driver restart points preserve the Q8 default-deny decision.
 - The `gov-legal-mcp` sibling server is a deferred follow-on goal, not v1 (Q3).

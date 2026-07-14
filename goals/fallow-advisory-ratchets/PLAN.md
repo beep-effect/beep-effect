@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active`
+Status: `docs-closeout-complete`
 
 ## Phases
 
@@ -10,9 +10,13 @@ Status: `active`
 | --- | --- | --- | --- |
 | P0 Packet Authoring | done | Create this child packet and validator. | Packet validator and parent validator pass. |
 | P1 Duplication Ratchet Retirement | done | Remove the repo-owned duplication ratchet from quality checks. | No removed duplication wrapper is wired. |
-| P2 Health Ratchet | seeded | Build calibrated health inventory. | New/worsened critical/high policy is explicit and false positives are classified. |
-| P3 Boundary And Flags Policy | in-progress | Promote boundary config freshness and define flag lifecycle inventory. | Config freshness is hard-check wired; flag registry contract exists. |
-| P4 Guardrails And Close | seeded | Keep late lanes guarded/deferred and close review evidence. | Required findings are closed or waived with evidence. |
+| P2 Health Ratchet | deferred | Build calibrated health inventory. | Won't-do until a Fallow advisory lane regresses or the post-P5 platform window opens. |
+| P3 Boundary Freshness Shipped; Flags Deferred | done/deferred | Retain the shipped boundary-config freshness hard check; defer the feature-flag registry. | Boundary freshness is implemented and tested; flags won't-do until the shared trigger. |
+| P4 Guardrails And Close | deferred | Keep late lanes guarded/deferred. | Won't-do until a Fallow advisory lane regresses or the post-P5 platform window opens. |
+
+The single former P3 `in-progress` state is reconciled: only boundary-config
+freshness shipped. The feature-flag registry remainder is a recorded deferral,
+not a shipped P3 claim.
 
 ## Execution Notes
 

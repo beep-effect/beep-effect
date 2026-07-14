@@ -53,5 +53,6 @@ Not started.
 - The source exploration stays `active` until P1-P4 research lands; those
   reports feed this packet's later research verdicts and do not widen M1 unless
   `SPEC.md` changes.
-- The older `goals/ip-law-knowledge-graph` ontology-survey scope is absorbed
-  here by decision, but that packet is not modified by this graduation.
+- The older ontology-survey scope is absorbed here by decision from
+  [`explorations/legal-ontology-landscape`](../../explorations/legal-ontology-landscape/README.md);
+  its packet was removed 2026-07-14, so the former no-edit fence is moot.

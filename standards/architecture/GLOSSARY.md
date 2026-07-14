@@ -313,6 +313,15 @@ belong in `tables`.
 A persistence shape optimized for queries, UI, reporting, or projections. Read
 model tables use `.read-model-table.ts` and are composed by `ReadModels.ts`.
 
+## Reflection / Reflection Artifact
+
+A reflection is a structured, evidence-grounded retrospective written at goal
+closeout or on demand. A reflection artifact is its schema-validated,
+append-only record at
+`goals/<slug>/history/reflections/<YYYY-MM-DD>-<agent>.md`; it captures tooling
+experience, implementation improvements, goal or prompt critique, codification
+TODOs, and confidence-tiered lessons for later consolidation.
+
 ## Rich Domain Model
 
 A domain model that owns shape, validation, and pure behavior. Rich behavior may

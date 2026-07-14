@@ -67,11 +67,11 @@ not two separate platforms.
 ### Status Amendment (2026-06-11)
 
 Law is the sole active product vertical. The wealth-management vertical is
-demoted to a dormant proof fixture: its packages and paired P3 fixtures stay
-in-repo so the runtime-spine proof keeps exercising two domain languages, but
-no wealth-specific product work is planned. Roadmap and vision surfaces treat
-the law practice as the only live vertical. The capability-lane vision map
-lives in `docs/vision-map.html`.
+demoted to a dormant proof fixture: its paired P3 fixture stays in-repo so the
+runtime-spine proof keeps exercising two domain languages, but no
+wealth-specific product work is planned. Roadmap and vision surfaces treat the
+law practice as the only live vertical. The capability-lane vision map lives in
+`docs/vision-map.html`.
 
 ### Agentic Solo Practice Law Firm
 
@@ -137,8 +137,7 @@ The first executable package proof lives in:
 - `packages/agents/domain`
 - `packages/agents/use-cases`
 - `packages/law-practice/domain`
-- `packages/wealth-management/domain`
-- `apps/professional-runtime-proof`
+- `packages/agents/use-cases/test/ProfessionalRuntime.test.ts`
 
 The proof keeps shared-kernel and slice domains schema-first, maps readable
 fixture keys to repo-native entity IDs at the proof boundary, exposes SDK
@@ -146,8 +145,9 @@ candidate output and context-packet contracts from
 `@beep/agents-use-cases/public`, and runs the paired fixtures through
 `@beep/agents-use-cases/test`.
 
-The app-level proof harness is the only place that composes both verticals in
-P3. Slice packages still do not import from other product slices directly.
+The package-local proof test composes both fixture scenarios without requiring
+a dormant wealth package. Slice packages still do not import from other
+product slices directly.
 
 ## Initial Slice Topology
 

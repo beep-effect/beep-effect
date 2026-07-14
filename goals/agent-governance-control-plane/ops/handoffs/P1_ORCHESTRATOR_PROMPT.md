@@ -1,1 +1,0 @@
-Read `handoffs/HANDOFF_P1.md` and the referenced OpenClaw prompts. Define the canonical agent catalog for this package and write or refine `outputs/p1-agent-topology-and-role-contracts.md`. Name every required auditor family, assign ownership, and make blocker and acceptance-condition contracts explicit.

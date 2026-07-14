@@ -15,11 +15,10 @@ The first real slice packages are:
 - `@beep/agents-domain`
 - `@beep/agents-use-cases`
 - `@beep/law-practice-domain`
-- `@beep/wealth-management-domain`
 
-The app-level proof harness is:
+The package-local proof harness is:
 
-- `@beep/professional-runtime-proof`
+- `packages/agents/use-cases/test/ProfessionalRuntime.test.ts`
 
 ## Boundary Shape
 
@@ -30,18 +29,18 @@ The app-level proof harness is:
 - `@beep/agents-use-cases/public` exposes the SDK-facing context
   packet and candidate output-set contracts.
 - `@beep/agents-use-cases/proof` exposes the deterministic fixture
-  runner used by the proof app; `/test` re-exports it for package tests.
-- Law and wealth packages remain context-only. They do not own runtime workflow
-  orchestration yet.
-- The proof harness composes the slices at the app boundary and imports both
-  product verticals only from there.
+  runner; `/test` re-exports it for package tests.
+- The Law package remains context-only in this paired-fixture proof; the
+  dormant wealth scenario is fixture data, not a package.
+- The proof harness composes both fixture scenarios at the agents use-cases
+  test boundary without a dormant wealth package.
 
 ## Executable Proof
 
-The app-level test runs both P2 fixture scenarios:
+The package test runs both P2 fixture scenarios:
 
 ```sh
-bun run --cwd apps/professional-runtime-proof test
+bun run --filter=@beep/agents-use-cases test
 ```
 
 The test proves:
@@ -58,6 +57,6 @@ The test proves:
 - Drizzle or PGlite tables
 - production repositories
 - real email connector execution
-- real LLM extraction
+- real LLM extraction in the paired deterministic runtime fixture
 - native review UI
 - tenancy lifecycle use-cases, repositories, and adapters

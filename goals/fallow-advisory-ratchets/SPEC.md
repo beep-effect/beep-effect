@@ -8,6 +8,13 @@ closed false positives, doctrine gaps, and baseline policy.
 
 The thesis is "new debt fails", not "all existing advisory findings fail".
 
+## Portfolio disposition (2026-07-14)
+
+P0, P1, and P3 boundary-config freshness are the retained deliverable. P2
+health, the P3 feature-flag registry, and P4 are recorded deferrals until a
+Fallow advisory lane regresses or the post-P5 platform window opens. The
+contracts below remain the guardrails if that trigger later reopens the work.
+
 ## Source Hierarchy
 
 1. User objective for Fallow Advisory Ratchets.

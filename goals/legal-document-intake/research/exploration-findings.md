@@ -67,11 +67,12 @@ design session that authored this packet. Paths were spot-verified on
 - FOLIO exists only as unused OpenAPI client schemas in
   `packages/foundation/modeling/ontology/src/Ontology.models.ts` — no
   fetch/cache driver.
-- Packet landscape: `ontology-modeling-foundation` superseded
-  (`Ontology.create` is dead prior art) by `explorations/identity-as-iri`;
+- Packet landscape: the ontology authoring design (`Ontology.create`, dead
+  prior art; packet removed 2026-07-14) was superseded by
+  `explorations/identity-as-iri` and its identity-IRI packet sequence;
   `ontology-interop-roadmap` active but defers full SHACL and legal content;
-  `ip-law-knowledge-graph` fully pending with a drafted P0 research doc and an
-  open FalkorDB-vs-projection question (resolved by this packet's D6).
+  the ontology-survey scope now absorbed by `goals/semantic-foundation` and
+  `explorations/legal-ontology-landscape`, with its storage question resolved by this packet's D6.
 - **Gaps**: no legal document-type taxonomy anywhere; no ontology MCP tools.
 
 ## 5. Knowledge graph / epistemic
@@ -111,8 +112,8 @@ design session that authored this packet. Paths were spot-verified on
   `mcp-host-retrofit` are in-flight, unmerged.
 - "Librarian agent" is named as an unbuilt P2 concept in
   `explorations/atlas-synthesis` and `explorations/microsoft-365-integration`;
-  `goals/trustgraph-port` studies an external Python `librarian.py` as prior
-  art to adapt, not port.
+  `research/librarian-critic.md` records the relevant prior art from git history
+  (packet removed 2026-07-14) to adapt, not port.
 - Note: `goals/one-round-loop` / `@beep/fc-runs` are CI/property-testing infra
   — a false lead for agent loops.
 
@@ -121,8 +122,8 @@ design session that authored this packet. Paths were spot-verified on
 The external-reference investigator handed off to a background Codex task;
 its full report was not captured in the workflow result. Treat mining
 `~/YeeBois/dev/trustgraph/ts` and `~/YeeBois/dev/cognee` as P0 research task 4
-(`research/librarian-critic.md`), alongside the in-repo `goals/trustgraph-port`
-research which already inventories the librarian/critic architecture.
+(`research/librarian-critic.md`), alongside git history (packet removed
+2026-07-14), which preserves the earlier librarian/critic inventory.
 
 ## Net-new work implied (gap list)
 

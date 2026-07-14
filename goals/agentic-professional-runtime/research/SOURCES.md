@@ -145,7 +145,7 @@ note's in-repo inventory):
 | USPTO driver | `packages/drivers/uspto` | reuse / extend — IP-attorney Skill prompts compose over this (coverage-window caveats apply) |
 | workspace server (approvals, `ThreadStore`) | `packages/workspace/server` | extend — `ThreadStore.repo.ts:54` hardcodes `orgId: 1`; ethical-wall `CurrentUser` lands here |
 | law-practice server | `packages/law-practice/server` | extend — RPC boundary for matter-scoped ethical wall |
-| epistemic ClaimGate (pre-retrieval triage) | `goals/epistemic-claim-lifecycle-gate` / `@beep/epistemic` | NET-NEW target for `research-squad#13` triage gate |
+| epistemic ClaimGate (pre-retrieval triage) | `goals/epistemic-claim-lifecycle-gate` / `@beep/epistemic-use-cases` | reuse / extend for `research-squad#13` triage behavior |
 | auth-gated MCP registration | `mcp-auth-gated-registration` (secondary target) | NET-NEW pattern target |
 
 NET-NEW per bundle: cost-tiered tool-routing Skill + mandatory not-legal-advice

@@ -1,1 +1,0 @@
-Read `handoffs/HANDOFF_P2.md` and the nearby phased-spec examples. Define the universal category workflow and write or refine `outputs/p2-workflow-lifecycle-and-phase-gates.md`. Make phase entry rules, exit rules, stop conditions, and escalation rules explicit.

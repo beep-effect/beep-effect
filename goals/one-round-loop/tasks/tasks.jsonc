@@ -3,7 +3,7 @@
 // then P1, then P2 items in any order, then P3 stretch, then P4 close.
 {
   "schemaVersion": "one-round-loop/tasks/v1",
-  "updated": "2026-07-07",
+  "updated": "2026-07-14",
   "rankingMethod": "P0 enables the dogfood rule and therefore ranks first; P1 is the second-highest-leverage item from the crispening reflection; P2 items are independent of each other; P3 stretch items may close wont_fix with rationale (D6); P4 closes.",
   "tasks": [
     {
@@ -63,7 +63,8 @@
       "id": "orl-020",
       "rank": 7,
       "phase": "P2",
-      "status": "pending",
+      "status": "wont_fix",
+      "rationale": "Deferred until CI round-trips measurably bottleneck delivery (median PR requires more than one CI round).",
       "blockedBy": ["orl-003"],
       "title": "Coverage baseline v2 — raw counts + denominator deltas + auto-add",
       "detail": "CoveragePackageBaseline gains covered/total per metric (already decoded at CoverageRegression.ts:103, discarded at :223); schema_version 2; regenerate baseline; failure renderer reports count deltas; missing-package warning path becomes auto-add on write (resolves @beep/pacer)."
@@ -72,7 +73,8 @@
       "id": "orl-021",
       "rank": 8,
       "phase": "P2",
-      "status": "pending",
+      "status": "wont_fix",
+      "rationale": "Deferred until CI round-trips measurably bottleneck delivery (median PR requires more than one CI round).",
       "blockedBy": ["orl-003"],
       "title": "beep cwd-independence — chdir + escape hatch + shim",
       "detail": "Lightweight sync root-walk + process.chdir at the VERY TOP of bin.ts — before the fast lint-fix no-op path (bin.ts:17-46) that itself runs before the bin-main import; stash BEEP_INVOCATION_CWD defensively (audit: no consumer today — Worktree re-derives from git worktree list, Yeet passes explicit cwd); `beep` shim ships WITH or AFTER the chdir (never before). Verify: subdir invocations of several commands match root invocations."
@@ -81,7 +83,8 @@
       "id": "orl-022",
       "rank": 9,
       "phase": "P2",
-      "status": "pending",
+      "status": "wont_fix",
+      "rationale": "Deferred until CI round-trips measurably bottleneck delivery (median PR requires more than one CI round).",
       "blockedBy": ["orl-003"],
       "title": "beep quality regen-generated + conflict recipe",
       "detail": "An ORDERED per-artifact manifest (artifact path(s) -> exact regen command -> idempotency check), not a generic wrapper: write mechanisms differ (jsdoc-inventory writes directly; jsdoc-ratchet + knip use --write-baseline flags; coverage baseline is a root script; fallow dead-code baseline is a fallow subcommand). Scope per decisions-locked R3; effect-laws allowlist EXCLUDED (validation input, no writer exists); must preserve hand-curated ledger entries (exception statuses). Document the merge-conflict recipe (checkout --ours on generated paths -> regen -> continue) where agents will find it; optional local merge-driver bootstrap."
@@ -90,7 +93,8 @@
       "id": "orl-023",
       "rank": 10,
       "phase": "P2",
-      "status": "pending",
+      "status": "wont_fix",
+      "rationale": "Deferred until CI round-trips measurably bottleneck delivery (median PR requires more than one CI round).",
       "blockedBy": ["orl-003"],
       "title": "SchemaUtils.withNormalizedCheck + migrations",
       "detail": "New file SchemaUtils/withNormalizedCheck.ts + alphabetized barrel entry (style reference: withConstructorDefaults.ts, home of withConstantDefault/withNoneDefault; first check-based combinator). Options bag with caller-supplied identifier/title/description/message + optional equivalence (default from the schema). dtslint + arbitrary round-trip law. Migrate venice-ai (VeniceAI.service.ts:75-95), phoenix (Phoenix.config.ts:16-36), m365 (M365.config.ts:139-159) wire-identically; uspto (Uspto.config.ts:30-41) optional — adds the missing guard, needs its own parity note (fence 4). TSConfigJsonKey is NOT a target."
@@ -99,7 +103,8 @@
       "id": "orl-030",
       "rank": 11,
       "phase": "P3",
-      "status": "pending",
+      "status": "wont_fix",
+      "rationale": "Deferred until CI round-trips measurably bottleneck delivery; location-rich envelopes are outside the retained P0/P1 outcome.",
       "blockedBy": ["orl-003"],
       "title": "S1 Fallow envelope file/line/symbol",
       "detail": "FallowEnvelope.schema.ts findings gain OPTIONAL file/line/symbol (cheap); real work: rewrite the normalize* builders in FallowQuality.command.ts to map over the already-decoded raw arrays instead of unfolding integer counts (raw location data is decoded then discarded today). Audit lane is counts-only — only duplication instances[].file (+ unparsed start_line) liftable. Closable wont_fix with rationale."
@@ -108,7 +113,8 @@
       "id": "orl-031",
       "rank": 12,
       "phase": "P3",
-      "status": "pending",
+      "status": "wont_fix",
+      "rationale": "Deferred until CI round-trips measurably bottleneck delivery; committed-branch publish mode is outside the retained P0/P1 outcome.",
       "blockedBy": ["orl-003"],
       "title": "S2 yeet publish committed-branch mode",
       "detail": "Reuse the existing skipCommit fork (Handler.ts:2314 via shouldSkipCommitForReusablePublish) without the --reuse-verified durable-state requirement: branch-ahead + clean tree -> skip stage/commit, KEEP proofStep+pushStep+ensurePullRequest+monitorSteps; relax the pre-dispatch --message requirement (Handler.ts:2135). Closable wont_fix with rationale."
@@ -117,7 +123,8 @@
       "id": "orl-032",
       "rank": 13,
       "phase": "P3",
-      "status": "pending",
+      "status": "wont_fix",
+      "rationale": "Deferred until CI round-trips measurably bottleneck delivery; worktree adoption tuning is outside the retained P0/P1 outcome.",
       "blockedBy": ["orl-003"],
       "title": "S3 worktree agent-lane adoption",
       "detail": "Measure `beep worktree new` end-to-end (already bun-installs, Worktree.command.ts:716); close agent-lane adoption gaps (candidates: branch-from-base, list subcommand, --delete-branch on remove); document as THE parallel-agent-lane path. SEAM: coordinate with explorations/agent-pipeline-velocity + standards/git-worktrees.md — do not fork worktree doctrine. Closable wont_fix with rationale."
@@ -126,7 +133,8 @@
       "id": "orl-033",
       "rank": 14,
       "phase": "P3",
-      "status": "pending",
+      "status": "wont_fix",
+      "rationale": "Deferred until CI round-trips measurably bottleneck delivery; cancellation evidence remains recorded in history/p0-parity-evidence.md.",
       "blockedBy": ["orl-003"],
       "title": "S4 CI cancel-rerun + required-check quarantine",
       "detail": "First classify recent 'operation was canceled' events (benign cancel-in-progress supersession vs infra). Then rerun automation + a quarantine convention for known-red-on-main required checks, or close wont_fix with the classification data. Closable wont_fix with rationale."
@@ -135,7 +143,7 @@
       "id": "orl-040",
       "rank": 15,
       "phase": "P4",
-      "status": "pending",
+      "status": "done",
       "blockedBy": [
         "orl-002",
         "orl-003",
@@ -150,7 +158,7 @@
         "orl-033"
       ],
       "title": "Close: DoD + dogfood ledger + required flip + reflection",
-      "detail": "Verification Matrix green; property-lane required-check flip executed and recorded (D3, admin gh api step); dogfood ledger table in history/ (CI rounds per packet PR; every >1-round PR shows root-cause AND local-catch evidence per DoD.2); stretch blockedBy entries accept done OR wont_fix-with-rationale as terminal; /reflect closeout; lint reflection-artifacts green; README + manifest statuses."
+      "detail": "Docs-side closeout recorded in history/p4-closeout.md with pointers to shipped P0/P1 Verification Matrix evidence and the existing dogfood ledger; P2/P3 terminal via wont_fix-with-rationale; required reflection written. The property-lane required-check flip was deliberately not executed and is recorded as wont_fix until median PR CI round-trips exceed one."
     }
   ]
 }

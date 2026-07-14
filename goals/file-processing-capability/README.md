@@ -2,8 +2,8 @@
 
 ## Status
 
-Active — P1 minimum vertical proof complete; P2/P3/P4 driver and corpus
-completion phases remain pending.
+Active — P1 minimum vertical proof complete; P2/P3/P4/P5 driver, corpus, and
+handoff phases remain pending.
 
 Packet hardening completed on 2026-06-02. The P1 implementation landed through
 the law-practice office-action branch and merged to `main` in PR #262 on
@@ -32,6 +32,7 @@ the in-repo capability it composes with — is tracked in
 
 ## Reading Order
 
+- [GOAL.md](./GOAL.md) - compact `/goal` launcher
 - [SPEC.md](./SPEC.md) - authoritative goal contract when it does not
   conflict with the architecture standard
 - [PLAN.md](./PLAN.md) - phased implementation plan
@@ -76,6 +77,13 @@ format-specific engines. Drivers implement declared operation capabilities.
   `research/gold-intake-ocr-pdf-diagnostics.md` (see for OCR-need gating,
   layout-aware PDF extraction, MIME/encoding/mojibake repair, and input-quality
   gating feeding the SPEC-deferred OCR strategy/driver boundary).
+
+## Consumer Alignment
+
+The remaining P2-P5 work remains aligned with
+`goals/legal-document-intake` P4: broad extraction runs over filed documents,
+while the libpff/PST lane supplies exported email and attachment artifacts for
+the same downstream extraction and knowledge-graph loop.
 
 ## V1 Cutline
 

@@ -3,13 +3,14 @@
   "initiative": {
     "id": "gov-legal-data-driver-codegen",
     "title": "Gov/Legal Data Driver Codegen",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-06-29",
-    "updated": "2026-07-11",
+    "updated": "2026-07-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/gov-legal-data-driver-codegen",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
+  "statusNote": "Terminal packet: P0, P1, and P3 substrate scope is complete; P2 delivery scope now lives in goals/gov-legal-data-driver-delivery.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

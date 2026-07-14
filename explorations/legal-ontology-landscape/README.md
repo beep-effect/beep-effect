@@ -31,10 +31,15 @@ behind M3.
 
 ## Trail
 
-- 2026-07-14: sibling review confirmed P0–P4 research and verification
-  complete, linked the trademark stub, and flipped the exploration to
-  `graduated`; execution remains with semantic-foundation M1 and trademark
-  stays paused behind M3.
+- 2026-07-14 (later): sibling review confirmed P0–4 research and verification
+  complete and flipped the exploration to `graduated`; execution remains with
+  semantic-foundation M1. The trademark-docketing-domain stub was deleted the
+  same day by portfolio consolidation (#401); the trademark candidate returns
+  to a MAP-queued candidate gated on semantic-foundation M3 (no packet).
+- 2026-07-14: absorbed the paused `ip-law-knowledge-graph` P0 survey as the
+  compact research note
+  [`07-ip-law-ontology-survey-distillation.md`](./research/07-ip-law-ontology-survey-distillation.md);
+  the full survey remains a repository-history lookup, not a copied corpus.
 - 2026-07-08 (later): P1-P4 reports + verification landed (16 manifest rows,
   9 fully verified; LKIF namespaces found dead, SALI license conflict flagged);
   synthesis written to `RESEARCH.md`; recovered full packet from a yeet

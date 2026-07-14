@@ -6,19 +6,19 @@ Status: `pending`
 
 ## Sequencing
 
-M1 is the only open implementation slice. P1-P4 exploration research feeds
+M1 is the only open implementation slice. R1-R4 exploration research feeds
 implementation choices, especially which vendor TTL slices the registry loads
 and which vocabularies deserve constants in `@beep/rdf`.
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | M1 Intake-Serving Semantic Seed | pending | Ship the repo-owned SKOS seed, document-class vocabulary, filing-path semantics, and `@beep/ontology` taxonomy registry/loader. | Sample document classification produces taxonomy concept, document class, filing path, and FOLIO-aligned concept IRI; repo proof is green or unrelated failures are documented. |
-| P1 Research Feed: FOLIO and Legal Vocab Alignment | pending | Decide which FOLIO/vendor slices are vetted for loader support and which alignments are `exactMatch` vs `closeMatch`. | Research report in `explorations/legal-ontology-landscape/research/` names loadable slices, licenses, and alignment confidence. |
-| P2 Research Feed: Classification Schemes | pending | Ground IPC/CPC/Nice edition strategy and constant eligibility. | Research report decides M2 seed boundaries, edition metadata, and whether `@beep/rdf` constants are warranted. |
-| P3 Research Feed: Docketing and Party Roles | pending | Ground deadline and role vocabularies without creating domain entities. | Research report separates enduring party identity from time-bounded legal role vocabulary and names M3 prerequisites. |
-| P4 Research Feed: SHACL and Topology | pending | Decide shape-authoring needs and whether any future SPARQL/topology report is warranted. | Research report keeps `UnsupportedSparqlQueryServiceLive` unchanged for v1 or opens a separate gated topology packet. |
+| R1 Research Feed: FOLIO and Legal Vocab Alignment | pending | Decide which FOLIO/vendor slices are vetted for loader support and which alignments are `exactMatch` vs `closeMatch`. | Research report in `explorations/legal-ontology-landscape/research/` names loadable slices, licenses, and alignment confidence. |
+| R2 Research Feed: Classification Schemes | pending | Ground IPC/CPC/Nice edition strategy and constant eligibility. | Research report decides M2 seed boundaries, edition metadata, and whether `@beep/rdf` constants are warranted. |
+| R3 Research Feed: Docketing and Party Roles | pending | Ground deadline and role vocabularies without creating domain entities. | Research report separates enduring party identity from time-bounded legal role vocabulary and names M3 prerequisites. |
+| R4 Research Feed: SHACL and Topology | pending | Decide shape-authoring needs and whether any future SPARQL/topology report is warranted. | Research report keeps `UnsupportedSparqlQueryServiceLive` unchanged for v1 or opens a separate gated topology packet. |
 | M2 Classification Schemes | gated | Load IPC/CPC/Nice SKOS schemes with edition tracking and hierarchy lookup. | Gate condition met: August 5 first-user metric or demo-day pull. |
-| M3 Docketing and Party Roles | gated | Add docketing/deadline and party-role vocabulary modules. | Gate condition met and dependent trademark docketing packet can start. |
+| M3 Docketing and Party Roles | gated | Add docketing/deadline and party-role vocabulary modules. When the vocabulary stabilizes, spawn a `trademark-docketing-domain` packet to replace the removed stub. | Gate condition met and dependent trademark docketing packet can start. |
 | M4 ClaimGate Shapes | gated | Author intake/ClaimGate SHACL shapes against bounded semantic-web validator. | Gate condition met; shapes work without semantic-web contract changes. |
 
 ## M1 Work Items
@@ -40,7 +40,7 @@ and which vocabularies deserve constants in `@beep/rdf`.
 7. Prove a fixture intake librarian classification loop that emits concept IRI,
    document class, and filing path without implementing the document slice.
 
-## P3 Closeout Checklist
+## P4 Closeout Checklist
 
 Before marking the packet closed (and `status` -> `completed-retained` /
 `complete`):
@@ -60,7 +60,8 @@ Before marking the packet closed (and `status` -> `completed-retained` /
 - Keep `SPEC.md` normative and update it only when the contract changes.
 - Keep third-party ontology material in the exploration asset pack; commit only
   manifest/fetch metadata there and repo-owned seed data in implementation.
-- Do not annotate `goals/ip-law-knowledge-graph` in this packet.
+- The former ontology-survey packet was removed 2026-07-14, so its no-annotation
+  fence is moot; use `explorations/legal-ontology-landscape` for grounding.
 
 ## Verification Commands
 

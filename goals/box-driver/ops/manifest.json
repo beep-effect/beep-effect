@@ -3,9 +3,9 @@
   "initiative": {
     "id": "box-driver",
     "title": "Box Driver",
-    "status": "paused",
+    "status": "completed-retained",
     "created": "2026-06-04",
-    "updated": "2026-06-04",
+    "updated": "2026-07-14",
     "packetAnchorDocument": "GOAL.md"
   },
   "mission": "Implement @beep/box as a full-surface, generated, schema-first, Effect-first technical driver around box-node-sdk v10.11.1: a custom generator emits S.Class models and per-manager method wrappers from the SDK's own TypeScript types, hand-written code provides config/errors/service/streaming Layers, plus tests, docs, quality closure, PR babysitting, and Greptile 5/5 readiness.",
@@ -24,7 +24,7 @@
     "family": "drivers",
     "description": "Box driver package",
     "alreadyScaffolded": true,
-    "scaffoldNote": "Package already exists on branch feature/beep-box-driver. Box.config.ts (Redacted token + layers) and Box.errors.ts (BoxError via CauseTaggedError) are implemented; Box.service.ts is a 'stub' marker and Box.models.ts is empty. Do NOT re-run create-package; extend the existing scaffold.",
+    "scaffoldNote": "Package implementation shipped in merge commit f306e8ca5b. Do NOT re-run create-package; the generated and hand-written driver surfaces are present at HEAD.",
     "identityComposer": "$BoxId (already registered in packages/foundation/modeling/identity/src/packages.ts)"
   },
   "currentSourceOfTruth": [
@@ -68,8 +68,8 @@
       "node_modules/box-node-sdk/lib/box/eventStream.d.ts"
     ],
     "observedManagerCount": 85,
-    "observedAsyncMethodCount": 305,
-    "observedSchemaFileCount": 301,
+    "observedAsyncMethodCount": 333,
+    "observedSchemaFileCount": 531,
     "observedDeprecatedManagerMethodCount": 0,
     "fieldCasing": "camelCase (SDK deserializers map Box snake_case JSON to camelCase TS interfaces)",
     "openEnums": "Box uses open enums such as 'gsuite' | 'office_wopi' | ... | string; every object also carries rawData",
@@ -133,7 +133,7 @@
     "groupId": "beep-dev"
   },
   "methodSurface": {
-    "inScopePolicy": "Full non-deprecated surface: all ~305 async manager methods across all 85 managers. The SDK currently tags 0 manager methods @deprecated, so nothing is dropped on that basis; the exclusion rule still applies if a future SDK version adds @deprecated methods.",
+    "inScopePolicy": "Full non-deprecated generated JSON surface: 333 operations across 85 manager groups at HEAD, plus hand-written byte/event adapters. The shipped generator records deprecated and non-JSON exclusions.",
     "jsonMethodsHandling": "Generated per-method wrappers grouped by manager via shared runSdkCall.",
     "nonJsonMethodsHandling": "Generator SKIPS methods returning ByteStream / EventStream / undefined; these are hand-written in Box.streaming.ts.",
     "nonJsonManagers": [
@@ -159,7 +159,7 @@
     {
       "id": "generate-from-sdk-types",
       "decision": "A custom generator (runpod-style) parses box-node-sdk's own .d.ts and emits schema-first artifacts. Generate from the SDK types, NOT the upstream Box OpenAPI, and do NOT hand-write.",
-      "rationale": "The SDK exposes camelCase interfaces; decoding SDK return values requires schemas matching the SDK shape. Generating from the installed .d.ts is decode-compatible and version-locked. Hand-writing ~305 methods x 3 classes is infeasible."
+      "rationale": "The SDK exposes camelCase interfaces; decoding SDK return values requires schemas matching the SDK shape. Generating from the installed .d.ts is decode-compatible and version-locked. Hand-writing the 333-operation HEAD surface is infeasible."
     },
     {
       "id": "per-method-grouped-service",
@@ -168,8 +168,8 @@
     },
     {
       "id": "pragmatic-generated-fidelity",
-      "decision": "Generated schemas use S.optionalKey (NOT Option), open enums as S.Union([LiteralKit(known), S.String]), and permissive decode (ignore excess props + rawData). This is a documented divergence from firecrawl's Option-wrapped hand bar and is recorded in standards/architecture/DECISIONS.md at implementation.",
-      "rationale": "Option on every field of 301 schemas is heavy and brittle to Box adding enum values/fields. Matches the runpod generated precedent and resolves a real scale/ergonomics tradeoff."
+      "decision": "Generated schemas use S.optionalKey (NOT Option), open enums as S.Union([LiteralKit(known), S.String]), and permissive decode (ignore excess props + rawData). This remains a driver-level decision and was not promoted to standards/architecture/DECISIONS.md.",
+      "rationale": "Option on every field of 531 generated model schemas is heavy and brittle to Box adding enum values/fields. Matches the runpod generated precedent and resolves a real scale/ergonomics tradeoff."
     },
     {
       "id": "streaming-first-class",
@@ -189,7 +189,7 @@
     {
       "id": "generated-layout",
       "decision": "Generated output is split into _generated/Box.models.gen.ts (S.Class schemas) and _generated/Box.operations.gen.ts (per-manager wrappers), kept internal via package exports '\\./_generated/*': null.",
-      "rationale": "At ~301 schemas + ~305 methods a single file is unwieldy; biome already ignores *.gen.* via root config."
+      "rationale": "At 531 model schemas plus 333 JSON operations a single file is unwieldy; biome already ignores *.gen.* via root config."
     },
     {
       "id": "live-smokes-read-only",
@@ -203,7 +203,7 @@
     }
   ],
   "phaseStatusMeaning": {
-    "completed": "The phase is documented and its packet-level exit criteria are satisfied.",
+    "complete": "The phase is documented and its packet-level exit criteria are satisfied.",
     "pending": "The phase is ready for an implementation agent to execute.",
     "blocked": "The phase cannot proceed without a named decision, dependency, credential, or external-state change."
   },
@@ -216,55 +216,53 @@
     {
       "id": "P1",
       "name": "Refresh Box SDK Inventory",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Build Generator And Package Wiring",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Generate Models And Operations",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Hand-Written Config And Errors",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Effect Service And Layers",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P6",
       "name": "Streaming Surfaces",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P7",
       "name": "Tests Docs And Live Smoke",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P8",
-      "name": "Doctrine Record And Export Catalog And Local Quality Closure",
-      "status": "pending"
+      "name": "Driver Decision Package Exports And Local Quality Closure",
+      "status": "complete"
     },
     {
       "id": "P9",
       "name": "Commit PR CI Review Greptile",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "qualityCommands": [
     "bunx turbo run check test lint type-test --filter=@beep/box",
     "bunx turbo run test:integration --filter=@beep/box",
     "bun run docgen:local",
-    "bun run repo-exports:catalog",
-    "bun run repo-exports:catalog:check",
     "bun run lint:fix",
     "bun run audit:github quality"
   ],
@@ -302,5 +300,5 @@
     "rg -n \"@beep/box|packages/drivers/box|box-node-sdk|_generated|runSdkCall|CCG|greptile|5/5\" goals/box-driver",
     "git diff --check"
   ],
-  "statusNote": "legacy status: pending-implementation"
+  "statusNote": "Implementation and PR closure shipped in merge commit f306e8ca5b; packet bookkeeping reconciled on 2026-07-14. Initiative status remains externally managed."
 }

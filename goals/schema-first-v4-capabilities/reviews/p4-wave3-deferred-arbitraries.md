@@ -2,6 +2,10 @@
 
 Date: 2026-06-08
 
+Final disposition: recorded deferrals as of 2026-07-14. This is the packet's
+final arbitrary-deferral ledger; portfolio closeout does not reopen or remove
+any entry.
+
 ## Summary
 
 Third orchestrated batch over the deferred `SFV4-arbitrary-tests` candidates,
@@ -41,7 +45,7 @@ import in `src/`, so no runtime dependency):
   annotation composes the part arbitraries. Covers both `TSMorph.model.test.ts`
   and `TSMorph.service.test.ts`. Full repo-utils suite clean (18 passed).
 
-## Reverted as FLAKY — kept deferred (2)
+## Reverted as FLAKY — recorded deferrals (2)
 
 The agents' individual runs passed (lucky seeds), but the operator's full-suite
 run (different seed) plus heavy stress runs exposed real non-determinism. These
@@ -87,7 +91,12 @@ bun run beep lint schema-first --write   # arbitrary-tests 15 -> 5
 bun run beep lint schema-first           # exit 0, missing/stale 0
 ```
 
-After this batch the live `SFV4-arbitrary-tests` advisory count is **5**
-(Glob, TypedArrays — Bun-runtime-blocked; IRI, PackageJson — reverted-flaky,
-need curated arbitraries; Graph — not yet addressed). Cumulatively the 34
-surfaced candidates are now 20 remediated, 9 exceptions, 5 deferred.
+After this batch the live `SFV4-arbitrary-tests` advisory count is **5**.
+Portfolio closeout retains all five as recorded deferrals:
+
+- Glob and TypedArrays — Bun-runtime-blocked.
+- IRI and PackageJson — reverted-flaky and require curated arbitraries.
+- Graph — not yet addressed.
+
+Cumulatively the 34 surfaced candidates are 20 remediated, 9 exceptions, and
+5 final recorded deferrals.

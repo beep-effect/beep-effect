@@ -1,1 +1,0 @@
-Read the P4 handoff at `handoffs/HANDOFF_P4.md` and the P3 implementation notes. Run all 4 quality gate commands, record outputs, classify failures, resolve new issues, and write the final readiness statement to `outputs/p4-verification.md`.
