@@ -212,18 +212,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   taxonomy registry/loader. Status stays `active` while P1-P4 research reports
   land and feed M2-M4; dependent `goals/trademark-docketing-domain` is deferred
   behind M3.
-- [`effect-ontology-harvest`](./effect-ontology-harvest/README.md) — opened
-  2026-07-11 at `research`: harvest inventory of
-  [mepuka/effect-ontology](https://github.com/mepuka/effect-ontology)
-  `packages/@core-v2` (MIT, Effect v3) — 8 codex inventory agents map LLM
-  governance, content-addressing/storage, workflow/streaming, domain models,
-  prompting/extraction, runtime/telemetry, repository patterns, and docs
-  rationale to beep homes (foundation modeling/capability vs slice vs
-  design-reference), scored active-goals-first
-  (`ontology-agent-surface`, `semantic-foundation`,
-  `agentic-professional-runtime`); codex verify gate then per-item
-  evaluation then align. Harvest-not-port; end state align-complete.
-
 ### Proposed
 
 - (none — `atlas-synthesis` is now an Active packet above; its capability-inventory
@@ -231,6 +219,10 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Parked
 
+- [`effect-ontology-harvest`](./effect-ontology-harvest/README.md) — parked
+  2026-07-14 at align-complete: harvest-not-port complete with zero goals by
+  design; demand gates and reference routes are recorded, and every item must
+  be re-verified with exact source/notice attribution before any port.
 - `effect-capability-kg` (parked 2026-06-17; packet removed 2026-06-18) —
   tooling-first deterministic Effect v4 capability graph (JSDoc-derived ontology,
   specialist profiles, judge routing, advisory hook backpressure). The exploration
