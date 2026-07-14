@@ -144,7 +144,11 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   on 2026-07-14. Consumer-led reframe: Effect v4 workflow and promoted
   `@beep/api-transport` supersede the original helper-bundle premise.
   **Queued (P2/P3, research-complete):**
-  [`agent-memory-tiers-bitemporal-edges`](./agent-memory-tiers-bitemporal-edges/README.md),
+  [`agent-memory-tiers-bitemporal-edges`](./agent-memory-tiers-bitemporal-edges/README.md)
+  (stage `graduate`, still active for triage/retention lanes): graduated
+  [`epistemic-bitemporal-edge-core`](../goals/epistemic-bitemporal-edge-core/README.md),
+  the `@beep/epistemic-tables` port milestone whose landing triggers write-frozen
+  operator Graphiti retirement without making product tables its backend,
   [`deterministic-doc-structure-extraction`](./deterministic-doc-structure-extraction/README.md)
   (langextract streaming-lock sibling),
   [`court-vocabulary-resolver`](./court-vocabulary-resolver/README.md),
