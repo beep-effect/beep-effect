@@ -13,6 +13,7 @@
   "mission": "Checksum-pin and atomically full-replace the weekly cumulative PTMNFEE2 release into typed native maintenance events and attributed fixtures.",
   "statusNote": "P0 hard gate: verify the current release layout, complete code list, sizes, limits, anonymous-download behavior, and shared-generator fit.",
   "dependencies": ["goals/uspto-prosecution-read"],
+  "blockedBy": ["goals/uspto-prosecution-read"],
   "feeds": ["goals/law-docketing-patent-spine"],
   "orchestrationOwner": "goals/law-docketing-reliability",
   "executionCapable": true,
@@ -54,10 +55,26 @@
     }
   ],
   "phases": [
-    { "id": "P0", "name": "Current-release discovery", "status": "pending" },
-    { "id": "P1", "name": "Implement", "status": "pending" },
-    { "id": "P2", "name": "Verify", "status": "pending" },
-    { "id": "P3", "name": "Close: Yeet PR to mergeable", "status": "pending" }
+    {
+      "id": "P0",
+      "name": "Current-release discovery",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Close: Yeet PR to mergeable",
+      "status": "pending"
+    }
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/uspto-ptmnfee2-ingest/GOAL.md)\" -le 4000",

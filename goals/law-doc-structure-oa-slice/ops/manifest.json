@@ -13,6 +13,7 @@
   "mission": "Deliver versioned deterministic office-action finality and shortened-period candidates with exact verified anchors to the patent-docketing intake seam.",
   "statusNote": "P0 may start; P1 is blocked until goals/citation-verified-span-substrate P0/P1 proves the shared verified-anchor contract.",
   "dependencies": ["goals/citation-verified-span-substrate"],
+  "blockedBy": ["goals/citation-verified-span-substrate"],
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

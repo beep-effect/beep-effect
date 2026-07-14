@@ -17,6 +17,11 @@
     "goals/law-docketing-reliability",
     "goals/law-doc-structure-oa-slice"
   ],
+  "blockedBy": [
+    "goals/m365-driver",
+    "goals/law-docketing-reliability",
+    "goals/law-doc-structure-oa-slice"
+  ],
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -27,7 +32,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor). Additionally not achieved until goals/law-docketing-reliability proves the independent kill-app alert and restore/backfill/reconciliation path and the goals/law-doc-structure-oa-slice intake contract lands (paired acceptance).",
     "grandfathered": false
   },
   "currentSourceOfTruth": [
