@@ -68,17 +68,15 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   first) and [`law-practice-office-action-spike`](../goals/law-practice-office-action-spike/README.md).
   More verticals (intake/drafting/contract review) follow once the loop turns once.
 - [`solo-firm-docketing`](./solo-firm-docketing/README.md) — how Tom's solo IP
-  practice deals with docketing (office actions, maintenance fees, court orders,
-  deadlines years out) without missing one. At `align`, held at a review gate:
-  three deep-research tracks done (IP-prosecution vendors; court/litigation
-  engines; official-data/handroll), doctrine locked as **vigilance overlay, not
-  system of record**. Verified reruns sharpened the recommendation: narrow
-  US-deterministic handroll first (ODP/`ptmnfee2` checked, approval-gated), CPI /
-  LawToolBox / Alt Legal as additive redundancy (CPI is headless-ready via
-  documented OAuth2 password grant), ODP polling is sequential per key, litigation
-  L1 uses CourtListener webhooks + hosted MCP, and Outlook push depends on
-  [`m365-driver`](../goals/m365-driver/README.md) (the concrete driver for its
-  future `Calendars.ReadWrite` scope).
+  practice deals with docketing (stage `graduate`, still active while gated
+  candidates remain). Graduated 2026-07-14 into
+  [`law-docketing-patent-spine`](../goals/law-docketing-patent-spine/README.md)
+  and [`law-docketing-reliability`](../goals/law-docketing-reliability/README.md),
+  with product orientation at
+  [`docs/product/solo-firm-docketing.md`](../docs/product/solo-firm-docketing.md).
+  Queued: CPI after the handroll-v1 trigger, trademark on a qualifying matter,
+  court on a qualifying matter plus licensed-engine shape, and foreign on a
+  qualifying matter plus licensed engine/source shape.
 - [`ip-attorney-time-tracking`](./ip-attorney-time-tracking/README.md) - active
   align-stage exploration for a local-first IP attorney time-capture/prebill
   assistant: agents may observe activity and propose candidate billable or
