@@ -160,7 +160,10 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `graduate`, still active for resolver/fuzzy/SKOS lanes): graduated
   [`court-reporter-vocabulary`](../goals/court-reporter-vocabulary/README.md)
   on 2026-07-14,
-  [`ingestion-security-secret-governance`](./ingestion-security-secret-governance/README.md),
+  [`ingestion-security-secret-governance`](./ingestion-security-secret-governance/README.md)
+  (stage `graduate`, still active across two tracks): graduated
+  [`ingestion-secret-scrub`](../goals/ingestion-secret-scrub/README.md) while five
+  content-security/secret-governance candidates remain gated,
   [`multi-provider-llm-dispatch-fallback`](./multi-provider-llm-dispatch-fallback/README.md)
   (partial graduation 2026-07-11: CLI subscription-auth leg →
   [`goals/llm-provider-subscription-auth`](../goals/llm-provider-subscription-auth/README.md);

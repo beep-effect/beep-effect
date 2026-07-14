@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "ingestion-secret-scrub",
+    "title": "Ingestion Secret Scrub",
+    "status": "active",
+    "created": "2026-07-14",
+    "updated": "2026-07-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/ingestion-secret-scrub",
+  "lifecycle": "active",
+  "mission": "Deliver a pre-LLM file-processing secret scrub with one canonical pattern bank, no-secret proof, honest coverage/residue, and enforced prompt gating.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/ingestion-security-secret-governance",
+    "graduated": "2026-07-14"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/ingestion-secret-scrub/README.md",
+    "goals/ingestion-secret-scrub/SPEC.md",
+    "goals/ingestion-secret-scrub/PLAN.md",
+    "goals/ingestion-secret-scrub/GOAL.md",
+    "goals/ingestion-secret-scrub/research/SOURCES.md",
+    "explorations/ingestion-security-secret-governance/BRIEF.md",
+    "explorations/ingestion-security-secret-governance/MAP.md",
+    "explorations/ingestion-security-secret-governance/DECISIONS.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/ingestion-secret-scrub/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Pattern-bank consolidation audit and fixtures",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Close: Yeet PR to mergeable",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/ingestion-secret-scrub/GOAL.md)\" -le 4000",
+    "jq . goals/ingestion-secret-scrub/ops/manifest.json",
+    "rg -n \"ingestion-secret-scrub|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/ingestion-secret-scrub",
+    "git diff --check -- goals/ingestion-secret-scrub explorations/ingestion-security-secret-governance explorations/ATLAS.md",
+    "bun run beep yeet verify",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "P0 cannot consolidate both live banks without contradictory ownership, semantics, or versioning.",
+    "A raw match reaches a persisted or observable surface, or a blocked or unknown result reaches prompt construction.",
+    "The implementation would enter a named gated candidate or unrelated package scope.",
+    "Required source files or a real prompt boundary are unavailable or materially contradictory.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
