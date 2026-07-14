@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "court-reporter-vocabulary",
+    "title": "Court Reporter Vocabulary",
+    "status": "active",
+    "created": "2026-07-14",
+    "updated": "2026-07-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/court-reporter-vocabulary",
+  "lifecycle": "active",
+  "mission": "Deliver deterministic versioned courts-db and reporters-db artifacts with stable public IDs, lifecycle-safe drift, and a machine-readable compatibility contract.",
+  "statusNote": "P0 hard gate: pin authoritative source assembly, prove deterministic rendering and record/ID counts, and exercise stable-ID compatibility fixtures.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/court-vocabulary-resolver",
+    "graduated": "2026-07-14"
+  },
+  "blockedBy": [],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/court-reporter-vocabulary/README.md",
+    "goals/court-reporter-vocabulary/SPEC.md",
+    "goals/court-reporter-vocabulary/PLAN.md",
+    "goals/court-reporter-vocabulary/GOAL.md",
+    "goals/court-reporter-vocabulary/research/SOURCES.md",
+    "explorations/court-vocabulary-resolver/BRIEF.md",
+    "explorations/court-vocabulary-resolver/MAP.md",
+    "explorations/court-vocabulary-resolver/DECISIONS.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/court-reporter-vocabulary/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Pinned-source assembly and stable-ID spike",
+      "status": "pending"
+    },
+    { "id": "P1", "name": "Implement", "status": "pending" },
+    { "id": "P2", "name": "Verify", "status": "pending" },
+    { "id": "P3", "name": "Close: Yeet PR to mergeable", "status": "pending" }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/court-reporter-vocabulary/GOAL.md)\" -le 4000",
+    "jq . goals/court-reporter-vocabulary/ops/manifest.json",
+    "rg -n \"court-reporter-vocabulary|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/court-reporter-vocabulary",
+    "git diff --check -- goals/court-reporter-vocabulary THIRD_PARTY_NOTICES.md",
+    "bun run beep yeet verify",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "P0 cannot identify authoritative source assembly or deterministic record and stable-ID counts.",
+    "Stable-ID fixtures expose reassignment, silent removal, or ambiguous succession.",
+    "Implementation would require public raw files, runtime mutation or networking, AGPL transcription, or sync-engine redesign.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

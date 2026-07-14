@@ -132,12 +132,14 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`citation-grounding-hallucination-guard`](./citation-grounding-hallucination-guard/README.md)
   (stage `graduate`, still active while two lanes remain): graduated
   [`citation-verified-span-substrate`](../goals/citation-verified-span-substrate/README.md)
+  and scaffolded
+  [`citation-extraction-engine`](../goals/citation-extraction-engine/README.md)
   on 2026-07-14, with product doctrine at
   [`docs/product/citation-grounding.md`](../docs/product/citation-grounding.md).
-  Queued: `citation-extraction-engine`, revisited when
-  `court-vocabulary-resolver` graduates later in this campaign, then
-  `citation-ground-before-cite`; MPEP patterns, hosted enrichment, matter-wall
-  enforcement, and rich-text annotation remain gated follow-ons.
+  The engine is blocked by the verified-span substrate and
+  [`court-reporter-vocabulary`](../goals/court-reporter-vocabulary/README.md);
+  `citation-ground-before-cite` remains queued, with MPEP patterns, hosted
+  enrichment, matter-wall enforcement, and rich-text annotation gated.
   [`effect-orchestration-patterns`](./effect-orchestration-patterns/README.md)
   (stage `graduate`, still active for four demand-gated candidates): graduated
   [`effect-v4-workflow-engine-spike`](../goals/effect-v4-workflow-engine-spike/README.md)
@@ -154,7 +156,10 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   graduated [`law-doc-structure-oa-slice`](../goals/law-doc-structure-oa-slice/README.md)
   on 2026-07-14; it consumes the verified-span substrate and feeds the
   patent-docketing spine,
-  [`court-vocabulary-resolver`](./court-vocabulary-resolver/README.md),
+  [`court-vocabulary-resolver`](./court-vocabulary-resolver/README.md) (stage
+  `graduate`, still active for resolver/fuzzy/SKOS lanes): graduated
+  [`court-reporter-vocabulary`](../goals/court-reporter-vocabulary/README.md)
+  on 2026-07-14,
   [`ingestion-security-secret-governance`](./ingestion-security-secret-governance/README.md),
   [`multi-provider-llm-dispatch-fallback`](./multi-provider-llm-dispatch-fallback/README.md)
   (partial graduation 2026-07-11: CLI subscription-auth leg →

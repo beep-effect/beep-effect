@@ -12,7 +12,11 @@
   "lifecycle": "active",
   "mission": "Deliver the US Patent Office-Action Approval Spine from official evidence through attorney-approved durable reconciliation and one-way Outlook reminders.",
   "statusNote": "Paired acceptance: patent v1 is blocked until goals/law-docketing-reliability proves the independent kill-app alert and restore/backfill/reconciliation path.",
-  "dependencies": ["goals/m365-driver", "goals/law-docketing-reliability"],
+  "dependencies": [
+    "goals/m365-driver",
+    "goals/law-docketing-reliability",
+    "goals/law-doc-structure-oa-slice"
+  ],
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

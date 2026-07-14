@@ -17,8 +17,9 @@ hangs everything else on.
 
 ## Next Open Question
 
-**Engine + guard scaffolds queued:** engine unblocks when
-`court-vocabulary-resolver` graduates (this campaign).
+**Guard gate:** execute the verified-span and vocabulary prerequisites, then the
+scaffolded citation engine. `citation-ground-before-cite` remains queued behind
+all three contracts.
 
 ## Sources & provenance
 
@@ -39,6 +40,11 @@ cluster "Citation lookup + verbatim-span grounding (hallucination guard)".
 
 ## Trail
 
+- 2026-07-14: scaffolded
+  [`goals/citation-extraction-engine`](../../goals/citation-extraction-engine/README.md)
+  per the ratified campaign revisit; it is blocked by
+  `citation-verified-span-substrate` and `court-reporter-vocabulary`. The guard
+  remains queued.
 - 2026-07-14: graduated the first program lane into
   [`goals/citation-verified-span-substrate`](../../goals/citation-verified-span-substrate/README.md)
   and product doctrine into

@@ -7,7 +7,10 @@
     "stage": "graduate",
     "openQuestions": [],
     "links": {
-      "goals": ["goals/citation-verified-span-substrate"],
+      "goals": [
+        "goals/citation-verified-span-substrate",
+        "goals/citation-extraction-engine"
+      ],
       "docs": ["docs/product/citation-grounding.md"],
       "supersededBy": null
     },

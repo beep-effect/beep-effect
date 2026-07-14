@@ -22,7 +22,7 @@ marks, ligatures, curly quotes, collapsed whitespace, duplicates, page
 boundaries, and source drift. Lock half-open UTF-16 conversion and prove the
 raw-slice invariant before implementation.
 
-### 2. `citation-extraction-engine` — QUEUED
+### 2. [`citation-extraction-engine`](../../goals/citation-extraction-engine/README.md) — GRADUATED-SCAFFOLDED 2026-07-14
 
 **Mission:** Port/reimplement the eyecite pipeline in Effect over the existing
 law-practice taxonomy, with parity-corpus proof for full/short/Id./supra case
@@ -38,10 +38,11 @@ stable IDs from `court-vocabulary-resolver`; existing values under
 `THIRD_PARTY_NOTICES.md` convention; stage-level parity diagnostics must make
 tokenizer/extractor/grouping/resolution divergence attributable.
 
-**Campaign revisit:** scaffold this goal when
-`explorations/court-vocabulary-resolver` graduates later in this same campaign;
-that graduation supplies the versioned stable-ID vocabulary dependency to
-re-check before the engine contract freezes.
+**Campaign revisit executed:** scaffolded when
+`explorations/court-vocabulary-resolver` graduated. Its manifest records
+`blockedBy` edges to both `citation-verified-span-substrate` and
+`court-reporter-vocabulary`; P0 provenance work may proceed, but its consumer
+contract does not freeze before both dependencies land.
 
 ### 3. `citation-ground-before-cite` — QUEUED
 
