@@ -19,13 +19,11 @@ kit for deterministic agent metadata retrieval.
 
 ## Next Open Question
 
-`identity-iri-core` is COMPLETE (merged
-[PR #289](https://github.com/beep-effect/beep-effect/pull/289); authority
-resolved `https://ns.beep.sh/`). Next: graduate
-[`identity-iri-fold`](./MAP.md) (its dependency is satisfied) — repopulate
-`@beep/ontology` with the fold + projections and run the §8 FOLIO
-migrations. Then `identity-iri-fibered`. Packet stays `active` until all
-three graduate.
+`identity-iri-fold` is graduated at
+[`goals/identity-iri-fold`](../../goals/identity-iri-fold/README.md), with its
+`identity-iri-core` dependency satisfied by the completed-retained PR #289.
+The next open question is held: `identity-iri-fibered` stays behind the fold
+until the fold/projection surface and FOLIO migration contracts land.
 
 ## Read This First
 
@@ -40,6 +38,9 @@ three graduate.
 
 ## Trail
 
+- 2026-07-14: sibling-closure review graduated `identity-iri-fold`; recorded
+  `identity-iri-core` as a satisfied completed-retained dependency and kept
+  `identity-iri-fibered` on HOLD behind the fold.
 - 2026-07-02 (merged): `goals/identity-iri-core` COMPLETE — implementation
   landed via [PR #289](https://github.com/beep-effect/beep-effect/pull/289)
   (shape-stable harness, vocab/CURIE/PN_LOCAL modules, bound composer with

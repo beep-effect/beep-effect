@@ -85,3 +85,16 @@ collision). Goal #2 = thread virtualization in the editor stack, explicitly
 gated on coordination with the beep-effect6 write lane before its packet
 opens. Later candidates: dock-adapter minima wiring (kernel side already
 landed), bubble shrinkwrap.
+
+## 2026-07-14 — sibling-closure routing
+
+**Decision:** Keep this exploration `active` at `graduate`. Its sole open
+question is the thread-virtualization coordination gate: a beep-effect6
+editor-stack ownership agreement plus completion of the pretext-driver
+handoff. Route Q2 v2 contract residue to `goals/pretext-driver` and dock-kernel
+residue to `scratchpad/dockview/WHAT-IS-LEFT.md`.
+
+**Rationale:** Both residue sets already have durable owners; retaining them as
+exploration questions would duplicate execution state. Thread virtualization
+still crosses an active ownership boundary, so it remains a real graduation
+gate rather than being silently scaffolded.

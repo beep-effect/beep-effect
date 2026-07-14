@@ -172,3 +172,15 @@ host in a follow-on goal.
 persistence scope to a P2 wedge; coordinate with `domain-layer-hardening`'s
 provenance-attestation goal instead); span-only audit with no persistence
 (loses the durable record).
+
+## 2026-07-14 — sibling review preserves the write-wall gate
+
+**Decision:** Record `mcp-kit`, `uspto-mcp`, and `mcp-host-retrofit` as shipped
+completed-retained candidates. Keep `mcp-write-wall` held until a named MCP
+host exposes a genuinely write-capable operation requiring candidate→approved
+enforcement and end-to-end `UsageRecord.metadata` audit.
+
+**Rationale:** The USPTO ODP proving host validates `soft` credential gating
+for read operations. It does not exercise the Q7 security boundary against a
+real write, so the 2026-07-14 ODP soft-gate decision does not clear or weaken
+the write-wall trigger.

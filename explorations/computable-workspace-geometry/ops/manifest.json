@@ -6,9 +6,7 @@
     "status": "active",
     "stage": "graduate",
     "openQuestions": [
-      "Goal #2 (thread-virtualization) coordination gate: negotiate editor-stack file ownership with the beep-effect6 write lane before opening its packet",
-      "Q2 v2 contract residue: segment kinds, emoji correction, font-descriptor normalization, PreparedText alignment — grow inside goals/pretext-driver",
-      "Kernel residue: max constraints, LayoutPriority, snap-to-collapse (reactive minima atom landed 2026-07-12)"
+      "Thread-virtualization coordination gate: secure beep-effect6 editor-stack ownership agreement and complete the pretext-driver handoff before opening the goal packet."
     ],
     "sources": ["RESEARCH.md"],
     "links": {
@@ -17,6 +15,6 @@
       "supersededBy": null
     },
     "created": "2026-07-12",
-    "updated": "2026-07-13"
+    "updated": "2026-07-14"
   }
 }

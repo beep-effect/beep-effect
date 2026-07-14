@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "gov-legal-mcp",
+    "title": "Gov Legal MCP",
+    "status": "active",
+    "created": "2026-07-14",
+    "updated": "2026-07-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/gov-legal-mcp",
+  "lifecycle": "active",
+  "mission": "Ship a thin collision-safe Effect MCP host over the proven GovInfo and eCFR drivers without absorbing remaining delivery breadth.",
+  "statusNote": "The >=2-proven-driver gate is cleared by @beep/govinfo and @beep/ecfr; remaining driver breadth stays paused in gov-legal-data-driver-delivery.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/gov-legal-data-driver-codegen",
+    "graduated": "2026-07-14"
+  },
+  "dependencies": ["goals/gov-legal-data-driver-codegen", "goals/mcp-kit"],
+  "blockedBy": [],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/gov-legal-mcp/README.md",
+    "goals/gov-legal-mcp/SPEC.md",
+    "goals/gov-legal-mcp/PLAN.md",
+    "goals/gov-legal-mcp/GOAL.md",
+    "goals/gov-legal-mcp/research/SOURCES.md",
+    "goals/mcp-kit/SPEC.md",
+    "goals/uspto-mcp/SPEC.md",
+    "explorations/gov-legal-data-driver-codegen/BRIEF.md",
+    "explorations/gov-legal-data-driver-codegen/MAP.md",
+    "explorations/gov-legal-data-driver-codegen/DECISIONS.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "../../explorations/gov-legal-data-driver-codegen/research/SOURCES.md",
+    "../../explorations/gov-legal-data-driver-codegen/research/conditional-mcp-registration-and-auth-gating.md",
+    "../../explorations/gov-legal-data-driver-codegen/research/openapi-to-effect-sdk-mcp-codegen.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/gov-legal-mcp/GOAL.md"
+    }
+  ],
+  "phases": [
+    { "id": "P0", "name": "Contract and naming audit", "status": "pending" },
+    { "id": "P1", "name": "Implement thin host", "status": "pending" },
+    { "id": "P2", "name": "Verify", "status": "pending" },
+    { "id": "P3", "name": "Close: Yeet PR to mergeable", "status": "pending" }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/gov-legal-mcp/GOAL.md)\" -le 4000",
+    "jq . goals/gov-legal-mcp/ops/manifest.json",
+    "rg -n \"gov-legal-mcp|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/gov-legal-mcp",
+    "git diff --check -- goals/gov-legal-mcp",
+    "bun run beep yeet verify",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "A proven driver lacks a stable public operation surface needed by the thin host.",
+    "Collision safety would require unstable or order-dependent naming.",
+    "Implementation would absorb delivery breadth, write-wall persistence, or a general-purpose generator.",
+    "Installed MCP internals have drifted enough to invalidate shipped kit conventions."
+  ]
+}

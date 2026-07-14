@@ -5,14 +5,16 @@
     "title": "MCP Auth-Gated Registration & Progressive Disclosure",
     "status": "active",
     "stage": "graduate",
-    "openQuestions": [],
+    "openQuestions": [
+      "a named MCP host exposes a genuinely write-capable operation requiring candidate→approved enforcement and end-to-end UsageRecord.metadata audit"
+    ],
     "links": {
-      "goals": ["goals/mcp-kit"],
+      "goals": ["goals/mcp-kit", "goals/uspto-mcp", "goals/mcp-host-retrofit"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-06-29",
-    "updated": "2026-07-01",
+    "updated": "2026-07-14",
     "sources": ["research/SOURCES.md"]
   }
 }

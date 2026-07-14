@@ -40,7 +40,7 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 - [`computable-workspace-geometry`](./computable-workspace-geometry/README.md) —
-  pretext × dock kernel × blocks (stage `research`, opened 2026-07-12): text
+  pretext × dock kernel × blocks (stage `graduate`, opened 2026-07-12): text
   layout as pure arithmetic over shippable per-engine font metrics closes the
   workspace-as-data composition — rendered geometry becomes data, agents gain
   sight, and the dock-divergence "costs" audit came back almost empty of true
@@ -54,8 +54,8 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   geometry → guaranteed one-line render). Align closed 2026-07-13: Q1
   RATIFIED (driver `@beep/pretext`), stage `graduate`, **goal #1 graduated →
   [`goals/pretext-driver`](../goals/pretext-driver/README.md)** (PR #391
-  carries the arc). Residue: goal-2 (thread virtualization) coordination
-  gate with the beep-effect6 lane. Feeds
+  carries the arc). The thread-virtualization gate remains: secure beep-effect6
+  editor-stack ownership and complete the pretext-driver handoff. Feeds
   [`docs/product/workspace-substrate.md`](../docs/product/workspace-substrate.md) §4–§5.
 - [`atlas-synthesis`](./atlas-synthesis/README.md) — grounding/context packet
   (stage `research`): a maximal-fan-out synthesis of current repo state vs.
@@ -104,12 +104,11 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`19`](./domain-layer-hardening/synthesis/19-phase1-crosscutting.md) + external
   grounding [`20`](./domain-layer-hardening/synthesis/20-external-law-and-ontology.md)/[`21`](./domain-layer-hardening/synthesis/21-external-signature-dms-notes-corpus.md));
   Phase 3 ([`BRIEF`](./domain-layer-hardening/BRIEF.md)+[`MAP`](./domain-layer-hardening/MAP.md))
-  decomposed into **7 goal packets**, first graduated:
-  [`domain-kernel-hardening`](../goals/domain-kernel-hardening/README.md) (soft-delete
-  on `BaseEntity` + retire `DomainModel`). Status stays `active` — packets 2–7
-  (typed-references, epistemic-claim-body, workspace-candidate-approval,
-  law-practice-real-domain, provenance-attestation, agents-and-narrowing) graduate as
-  predecessors land. Frontier was: 0 typed
+  decomposed into **7 goal packets**. First goal
+  [`domain-kernel-hardening`](../goals/domain-kernel-hardening/README.md) is
+  paused until KG tables approach scale with PRD P2 librarian; packets 2–7 are
+  held behind it. The six 2026-07-14 law consumers are packet-5 shaping inputs,
+  not dependency clearance. Frontier was: 0 typed
   errors in 3 slices, two competing audit bases (`BaseEntity` vs unused
   `@beep/schema/DomainModel`), no soft-delete / temporal-validity / domain-event
   substrate, near-empty aggregates, law-practice rich-in-nouns-thin-in-lifecycle.
@@ -119,16 +118,16 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`routing.json`](./_gold-intake/routing.json) (219/219 routed, user-approved). Each packet:
   CAPTURE seeded from its nuggets, `RESEARCH.md` (external landscape · in-repo inventory ·
   constraints), codex gate-1 folded, `DECISIONS.md` pre-drafted. **Graduate-now (Wave-1,
-  user-confirmed):** [`gov-legal-data-driver-codegen`](./gov-legal-data-driver-codegen/README.md),
-  [`uspto-patent-driver-depth`](./uspto-patent-driver-depth/README.md) (stage
+  user-confirmed):** [`uspto-patent-driver-depth`](./uspto-patent-driver-depth/README.md) (stage
   `graduate`, still active for queued/parked lanes): graduated
   [`uspto-prosecution-read`](../goals/uspto-prosecution-read/README.md) and
   [`uspto-ptmnfee2-ingest`](../goals/uspto-ptmnfee2-ingest/README.md) on
   2026-07-14,
-  [`mcp-auth-gated-registration`](./mcp-auth-gated-registration/README.md) (grilled+decomposed+
-  graduated first goal 2026-07-01: Q1–Q7 resolved, BRIEF+MAP written,
-  [`goals/mcp-kit`](../goals/mcp-kit/README.md) scaffolded at `foundation/capability`;
-  `uspto-mcp`/`mcp-host-retrofit`/`mcp-write-wall` queue behind it),
+  [`mcp-auth-gated-registration`](./mcp-auth-gated-registration/README.md)
+  (Q1–Q7 resolved; [`mcp-kit`](../goals/mcp-kit/README.md),
+  [`uspto-mcp`](../goals/uspto-mcp/README.md), and
+  [`mcp-host-retrofit`](../goals/mcp-host-retrofit/README.md) completed-retained;
+  write-wall gate remains for a named genuinely write-capable host),
   [`citation-grounding-hallucination-guard`](./citation-grounding-hallucination-guard/README.md)
   (stage `graduate`, still active while two lanes remain): graduated
   [`citation-verified-span-substrate`](../goals/citation-verified-span-substrate/README.md)
@@ -189,10 +188,10 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `graduate`; capture→graduate in two days — 3 spec docs, 12 repo-mining
   reports, 3 audits, adversarially-verified synthesis, 6 decisions,
   `goals/ontology-modeling-foundation` superseded, design proven by the
-  effect-only `scratchpad/identity` prototype at 27/27). First packet
-  graduated 2026-07-02:
-  [`goals/identity-iri-core`](../goals/identity-iri-core/README.md);
-  `identity-iri-fold` + `identity-iri-fibered` queue behind it
+  effect-only `scratchpad/identity` prototype at 27/27).
+  [`identity-iri-core`](../goals/identity-iri-core/README.md) is complete;
+  [`identity-iri-fold`](../goals/identity-iri-fold/README.md) graduated
+  2026-07-14; `identity-iri-fibered` remains gated behind it
   ([`MAP.md`](./identity-as-iri/MAP.md)) — merge `IdentityComposer`, the ontology layer, and fibered
   metadata retrieval: identity path and IRI as two literal-typed encodings of
   one value, borrowed RDF vocab as CURIE literal types, `$I.ontology` fold
@@ -204,14 +203,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `goals/ontology-modeling-foundation`), and an effect-only scratchpad
   prototype proving types/ergonomics before the packaging call
   (all-in-`@beep/identity` vs identity/rdf/ontology split).
-- [`legal-ontology-landscape`](./legal-ontology-landscape/README.md) —
-  foundation-layer legal semantics exploration at `graduate`: first packet
-  graduated 2026-07-08 into
-  [`goals/semantic-foundation`](../goals/semantic-foundation/README.md) for M1
-  intake-serving SKOS seed, FOLIO-aligned concept IRIs, and `@beep/ontology`
-  taxonomy registry/loader. Status stays `active` while P1-P4 research reports
-  land and feed M2-M4; dependent `goals/trademark-docketing-domain` is deferred
-  behind M3.
 ### Proposed
 
 - (none — `atlas-synthesis` is now an Active packet above; its capability-inventory
@@ -234,6 +225,18 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`gov-legal-data-driver-codegen`](./gov-legal-data-driver-codegen/README.md) —
+  graduated after the codegen substrate and `@beep/api-transport` promotion
+  completed: [`gov-legal-data-driver-codegen`](../goals/gov-legal-data-driver-codegen/README.md),
+  paused named-consumer delivery in
+  [`gov-legal-data-driver-delivery`](../goals/gov-legal-data-driver-delivery/README.md),
+  and collision-safe MCP sibling
+  [`gov-legal-mcp`](../goals/gov-legal-mcp/README.md).
+- [`legal-ontology-landscape`](./legal-ontology-landscape/README.md) — research
+  complete; [`semantic-foundation`](../goals/semantic-foundation/README.md)
+  owns active M1 execution, while
+  [`trademark-docketing-domain`](../goals/trademark-docketing-domain/README.md)
+  remains a paused stub behind M3.
 - [`multi-provider-llm-dispatch-fallback`](./multi-provider-llm-dispatch-fallback/README.md)
   — graduated 2026-07-14 on its shipped auth leg,
   [`llm-provider-subscription-auth`](../goals/llm-provider-subscription-auth/README.md).

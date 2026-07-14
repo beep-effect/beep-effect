@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active` (candidates remain: `uspto-mcp`, `mcp-host-retrofit`, `mcp-write-wall`)
+Status: `active` (sole remaining candidate: `mcp-write-wall`)
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -19,12 +19,12 @@ context budget.
 
 ## Next Open Question
 
-**When to graduate the remaining candidates.** The first goal is graduated:
-[`goals/mcp-kit`](../../goals/mcp-kit/README.md) (2026-07-01, user-approved).
-Per [`MAP.md`](./MAP.md) sequencing, graduate `uspto-mcp` and
-`mcp-host-retrofit` when `mcp-kit` implementation starts landing (they form
-the first proving slice and jointly discharge the `foundation/capability`
-≥2-consumer gate); `mcp-write-wall` waits for a write-capable host.
+The shipped candidates are [`mcp-kit`](../../goals/mcp-kit/README.md),
+[`uspto-mcp`](../../goals/uspto-mcp/README.md), and
+[`mcp-host-retrofit`](../../goals/mcp-host-retrofit/README.md), all
+completed-retained. The sole next open question is the write wall: a named MCP
+host must expose a genuinely write-capable operation requiring
+candidate→approved enforcement and end-to-end `UsageRecord.metadata` audit.
 
 ## Read This First
 
@@ -49,6 +49,9 @@ registration, multi-provider auth, progressive disclosure)" - see
 
 <Dated one-liners, newest first: what each session did and where it stopped.>
 
+- 2026-07-14: sibling review acknowledged all three shipped candidates and
+  retained only the real-host `mcp-write-wall` trigger; ODP's read-only soft
+  gate does not clear it.
 - 2026-07-01 (later): graduated first goal — `goals/mcp-kit` scaffolded (SPEC seeded from BRIEF, SOURCES carried, manifests cross-linked, ATLAS synced). Stopped at: remaining candidates queue behind mcp-kit implementation.
 - 2026-07-01: align+shape+decompose — /grill-with-docs resolved Q1–Q7 (+Q4b gate); kit-only scope, `foundation/capability/mcp-kit` home, hybrid gate model, success-JSON channel, UsageRecord.metadata audit; Codex re-verification folded (reviews/2026-07-01-codex-verification.md; effect pin corrected to beta.92); BRIEF + MAP written. Stopped at: graduation sign-off.
 - 2026-06-29: research-complete — RESEARCH.md synthesized, codex gate-1 folded, DECISIONS pre-drafted.

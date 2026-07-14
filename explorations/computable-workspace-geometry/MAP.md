@@ -31,8 +31,18 @@ Capability cites (what already exists and moves or is consumed):
 
 Exact-height virtualization for the thread renderer in the editor stack.
 **Gate:** coordinate with the beep-effect6 write lane (it owns the
-professional-desktop/editor surfaces) before opening the packet. Consumes
+professional-desktop/editor surfaces), secure an explicit ownership agreement,
+and complete the pretext-driver handoff before opening the packet. Consumes
 `@beep/pretext` root surface + a capture pass in the client.
+
+## Routed residue (2026-07-14 sibling review)
+
+- Q2 v2 contract residue — segment kinds, emoji correction, font-descriptor
+  normalization, and `PreparedText` alignment — is **ROUTED** to
+  [`goals/pretext-driver`](../../goals/pretext-driver/README.md).
+- Dock-kernel max constraints, `LayoutPriority`, and snap-to-collapse are
+  **ROUTED** to
+  [`scratchpad/dockview/WHAT-IS-LEFT.md`](../../scratchpad/dockview/WHAT-IS-LEFT.md).
 
 ## Later candidates (unsequenced)
 

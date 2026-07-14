@@ -3,18 +3,19 @@
   "exploration": {
     "slug": "legal-ontology-landscape",
     "title": "Legal Ontology Landscape",
-    "status": "active",
+    "status": "graduated",
     "stage": "graduate",
-    "openQuestions": [
-      "P1-P4 research reports are pending; feed goals/semantic-foundation as they land."
-    ],
+    "openQuestions": [],
     "sources": ["research/01-direction-grounding.md"],
     "links": {
-      "goals": ["goals/semantic-foundation"],
+      "goals": [
+        "goals/semantic-foundation",
+        "goals/trademark-docketing-domain"
+      ],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-07-08",
-    "updated": "2026-07-08"
+    "updated": "2026-07-14"
   }
 }

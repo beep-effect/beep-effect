@@ -3,16 +3,20 @@
   "exploration": {
     "slug": "gov-legal-data-driver-codegen",
     "title": "Gov/Legal Data Drivers + OpenAPI Codegen",
-    "status": "active",
+    "status": "graduated",
     "stage": "graduate",
     "openQuestions": [],
     "links": {
-      "goals": ["goals/gov-legal-data-driver-codegen"],
+      "goals": [
+        "goals/gov-legal-data-driver-codegen",
+        "goals/gov-legal-data-driver-delivery",
+        "goals/gov-legal-mcp"
+      ],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-06-29",
-    "updated": "2026-06-29",
+    "updated": "2026-07-14",
     "sources": ["research/SOURCES.md"]
   }
 }

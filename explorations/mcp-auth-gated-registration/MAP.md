@@ -8,6 +8,11 @@ Capability citations verified by Codex sub-agents against current HEAD
 
 ## Candidate Goal Packets
 
+**Lifecycle annotation (2026-07-14):** `mcp-kit`, `uspto-mcp`, and
+`mcp-host-retrofit` are completed-retained. `mcp-write-wall` remains held for
+a named genuinely write-capable host. The shipped USPTO ODP host's `soft` gate
+is read-only and therefore does **not** clear the write-wall gate.
+
 | Slug | Mission | Depends on | Capabilities cited |
 | --- | --- | --- | --- |
 | `mcp-kit` | Build `@beep/mcp-kit` (`packages/foundation/capability/mcp-kit`): credential-keyed `Toolkit` composition (`Config.option`-gated, folded `Layer.merge`), `api_key_required` envelope, `SourceAuth` gate registry (schemas inline), progressive field-tier projector + columnar reshaper, sanitized-span wrapper, four-hint annotation helper, `tools/call` tier-gate dispatch wrapper (`ClaimGate`-shaped, refusal-as-value), `EnabledWhen` list-filter helper. | none | NET-NEW on `effect/unstable/ai` `{Tool,Toolkit,McpServer}` (beta.92); reuse `@beep/schema` `$I` identity composer (`packages/foundation/modeling/identity/src/Id.ts`), `ClaimGate` pattern (`packages/epistemic/use-cases/src/ClaimGate/ClaimGate.ports.ts:42-47`), `UsageRecord.metadata` jsonb (`packages/epistemic/domain/src/entities/UsageRecord/UsageRecord.model.ts:95-97`) |

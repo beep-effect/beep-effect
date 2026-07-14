@@ -1,11 +1,16 @@
 # Legal Ontology Landscape Map
 
+**Lifecycle annotation (2026-07-14):** research is complete;
+[`goals/semantic-foundation`](../../goals/semantic-foundation/README.md) is
+active with M1 pending; [`goals/trademark-docketing-domain`](../../goals/trademark-docketing-domain/README.md)
+remains a paused stub behind semantic-foundation M3.
+
 ## Candidate Goal Packets
 
 | Goal | Mission | Dependency / sequencing | Status |
 | --- | --- | --- | --- |
-| [`goals/semantic-foundation`](../../goals/semantic-foundation/README.md) | Shared legal semantic substrate: repo-owned SKOS seed, FOLIO alignments, taxonomy registry/loader, gated classification/docketing/SHACL vocabulary work. | First slice. M1 starts now; M2-M4 gated by product metrics and research verdicts. | Graduated 2026-07-08. |
-| [`goals/trademark-docketing-domain`](../../goals/trademark-docketing-domain/README.md) | TrademarkAsset plus docketing entities and workflows. | Deferred. Blocks on semantic-foundation M3 because it needs docketing/deadline vocabulary and enduring-party-vs-role semantics. | Deferred stub created 2026-07-08; non-executable until semantic-foundation M3. |
+| [`goals/semantic-foundation`](../../goals/semantic-foundation/README.md) | Shared legal semantic substrate: repo-owned SKOS seed, FOLIO alignments, taxonomy registry/loader, gated classification/docketing/SHACL vocabulary work. | First slice. M1 pending; M2-M4 gated by product metrics and research verdicts. | Active; M1 pending. |
+| [`goals/trademark-docketing-domain`](../../goals/trademark-docketing-domain/README.md) | TrademarkAsset plus docketing entities and workflows. | Blocks on semantic-foundation M3 because it needs docketing/deadline vocabulary and enduring-party-vs-role semantics. | Paused stub behind M3. |
 
 ## Routed Work
 
@@ -59,8 +64,8 @@ M1 in `goals/semantic-foundation`:
 
 ## Inherited Risks
 
-- The requested P0 exploration files were absent at graduation drafting time;
-  reconcile this map when they land.
+- P0–P4 research and the verification pass are complete; implementation uses
+  the verified synthesis and manifest-driven asset ledger.
 - Vendor ontology licenses and freshness must be manifest-driven before loader
   code can read any third-party slice.
 - M2 classification data can become large quickly; edition tracking and

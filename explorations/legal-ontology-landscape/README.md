@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -15,12 +15,8 @@ docketing to a premature graph store or domain-entity model.
 
 ## Next Open Question
 
-None — research phases P0-P4 plus the verification pass are complete and
-synthesized in [`RESEARCH.md`](./RESEARCH.md). Next action lives in the goal
-packet: implement
-[`goals/semantic-foundation`](../../goals/semantic-foundation/README.md) M1.
-Open loose ends tracked there: SALI LMSS license conflict before any
-ingestion; P4 gate conditions before SPARQL/SHACL upgrades.
+None — M1 execution lives in goals/semantic-foundation; trademark stub paused
+behind M3.
 
 ## Read This First
 
@@ -35,6 +31,10 @@ ingestion; P4 gate conditions before SPARQL/SHACL upgrades.
 
 ## Trail
 
+- 2026-07-14: sibling review confirmed P0–P4 research and verification
+  complete, linked the trademark stub, and flipped the exploration to
+  `graduated`; execution remains with semantic-foundation M1 and trademark
+  stays paused behind M3.
 - 2026-07-08 (later): P1-P4 reports + verification landed (16 manifest rows,
   9 fully verified; LKIF namespaces found dead, SALI license conflict flagged);
   synthesis written to `RESEARCH.md`; recovered full packet from a yeet

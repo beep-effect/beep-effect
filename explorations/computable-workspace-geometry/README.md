@@ -19,12 +19,11 @@ and line break from data. Agents gain *sight*.
 
 ## Next Open Question
 
-Goal #2 coordination gate: negotiate editor-stack file ownership with the
-beep-effect6 write lane before opening the thread-virtualization packet.
-(Q1 RATIFIED and goal #1 graduated AND **executed** 2026-07-13 →
-[`goals/pretext-driver/`](../../goals/pretext-driver/README.md);
-`@beep/pretext` is landed surface — remaining gate is PR #391 merge via
-yeet completion. Q2 v2 residue grows inside the driver package.)
+Negotiate thread-virtualization ownership with the beep-effect6 editor-stack
+lane and complete the pretext-driver handoff before opening that packet. Q2 v2
+contract residue is routed to [`goals/pretext-driver`](../../goals/pretext-driver/README.md);
+kernel max-constraint, `LayoutPriority`, and snap-to-collapse residue is routed
+to [`scratchpad/dockview/WHAT-IS-LEFT.md`](../../scratchpad/dockview/WHAT-IS-LEFT.md).
 
 ## Read This First
 
@@ -34,6 +33,9 @@ yeet completion. Q2 v2 residue grows inside the driver package.)
 
 ## Trail
 
+- 2026-07-14: sibling review kept the packet active at `graduate`; reduced the
+  resume surface to the thread-virtualization ownership/handoff gate and routed
+  Q2 plus dock-kernel residue to their existing owners.
 - 2026-07-13 (goal #1 executed): **`@beep/pretext` LANDED** at
   `packages/drivers/pretext` under `/goal` — catalog dep `@chenglou/pretext`
   0.0.8, `$PretextId` composer, root pure surface (FontMetricsSnapshotV1 +
