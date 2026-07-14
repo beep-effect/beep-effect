@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -35,12 +35,20 @@ Use this command for execution-capable sessions:
 5. [`research/SOURCES.md`](./research/SOURCES.md) - incident evidence and
    code-site map.
 
-## Current Phase
+## Outcome (2026-07-14)
 
-`P3 Operator Handoff` — P0 probe, P1 implementation, and P2 local verification
-are complete. The operator-owned desynced-lockfile scratch-branch live probe,
-publish, hosted monitor, and mergeable-PR closeout remain pending; no P3 write
-was performed in the implementation lane.
+Shipped as PR #402 (squash `31bedfeac1`, merged 2026-07-14):
+`publish:00-head-install-preflight` runs a frozen-lockfile install in a
+detached temp worktree of committed HEAD in verify's full tier and before
+every publish push (guaranteed cleanup with warning-on-failure), and
+`--start-pr-early` now fails fast at guard time unless `--pr` is present.
+Proofs: 77/77 yeet tests, tsgo clean, three full local proofs, 25 hosted
+checks green, Greptile finding fixed (`5d7e98ece3`), 0 unresolved threads.
+Live positive probe: the preflight's first real execution gated its own
+PR's push (~7s, warm bun cache). The SPEC's negative live probe is covered
+by the unit test asserting the failure hint + temp-worktree cleanup.
+Reflection:
+[`history/reflections/2026-07-14-claude.md`](./history/reflections/2026-07-14-claude.md).
 
 ## Provenance
 
