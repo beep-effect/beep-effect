@@ -30,6 +30,7 @@ CAFC
 CAGR
 Cassano
 Catalunya
+CCCO
 CDTF
 CDTF
 ceur
@@ -109,6 +110,7 @@ gramm
 Gramm
 graphiti
 greppable
+Harv
 Heppner
 hierarchized
 HMAC
@@ -184,6 +186,7 @@ NCOR
 negotiables
 Neur
 Nikhil
+NMSA
 notif
 OAPI
 ODRL
@@ -201,6 +204,7 @@ oxigraph
 Oxigraph
 parameterizes
 parameterizes
+parentheticals
 partes
 perkinscoie
 permissioned

@@ -36,12 +36,21 @@
       "@beep/agents-client/ClientObservability": [
         "../../../packages/agents/client/src/ClientObservability.ts"
       ],
+      "@beep/agents-client/ProviderInstance.atoms": [
+        "../../../packages/agents/client/src/ProviderInstance.atoms.ts"
+      ],
+      "@beep/agents-client/ProviderInstance.service": [
+        "../../../packages/agents/client/src/ProviderInstance.service.ts"
+      ],
       "@beep/agents-domain": ["../../../packages/agents/domain/src/index.ts"],
       "@beep/agents-domain/entities": [
         "../../../packages/agents/domain/src/entities/index.ts"
       ],
       "@beep/agents-domain/entities/Agent": [
         "../../../packages/agents/domain/src/entities/Agent/index.ts"
+      ],
+      "@beep/agents-domain/entities/ProviderInstance": [
+        "../../../packages/agents/domain/src/entities/ProviderInstance/index.ts"
       ],
       "@beep/agents-domain/entities/Skill": [
         "../../../packages/agents/domain/src/entities/Skill/index.ts"

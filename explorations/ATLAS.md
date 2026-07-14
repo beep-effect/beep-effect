@@ -39,6 +39,24 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 ## Explorations
 
 ### Active
+- [`computable-workspace-geometry`](./computable-workspace-geometry/README.md) —
+  pretext × dock kernel × blocks (stage `research`, opened 2026-07-12): text
+  layout as pure arithmetic over shippable per-engine font metrics closes the
+  workspace-as-data composition — rendered geometry becomes data, agents gain
+  sight, and the dock-divergence "costs" audit came back almost empty of true
+  costs. First proof landed same day:
+  [`scratchpad/computable-layout`](../scratchpad/computable-layout/README.md)
+  (browser-oracle fixture → pure greedy breaker reproduces Chrome's wrap
+  counts under `bun test`). Same-day landings: minimum-extent constraints in
+  the dock kernel itself (global floor + per-group `GroupMinimumLookup` via
+  `requiredExtent`; kernel 72/72), `FontMetricsSnapshotV1` versioned
+  envelope, and the full-circle proof (metrics → content minimum → kernel
+  geometry → guaranteed one-line render). Align closed 2026-07-13: Q1
+  RATIFIED (driver `@beep/pretext`), stage `graduate`, **goal #1 graduated →
+  [`goals/pretext-driver`](../goals/pretext-driver/README.md)** (PR #391
+  carries the arc). Residue: goal-2 (thread virtualization) coordination
+  gate with the beep-effect6 lane. Feeds
+  [`docs/product/workspace-substrate.md`](../docs/product/workspace-substrate.md) §4–§5.
 - [`atlas-synthesis`](./atlas-synthesis/README.md) — grounding/context packet
   (stage `research`): a maximal-fan-out synthesis of current repo state vs.
   goals/vision, centered on a gap map
@@ -115,7 +133,10 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   (langextract streaming-lock sibling),
   [`court-vocabulary-resolver`](./court-vocabulary-resolver/README.md),
   [`ingestion-security-secret-governance`](./ingestion-security-secret-governance/README.md),
-  [`multi-provider-llm-dispatch-fallback`](./multi-provider-llm-dispatch-fallback/README.md),
+  [`multi-provider-llm-dispatch-fallback`](./multi-provider-llm-dispatch-fallback/README.md)
+  (partial graduation 2026-07-11: CLI subscription-auth leg →
+  [`goals/llm-provider-subscription-auth`](../goals/llm-provider-subscription-auth/README.md);
+  dispatch/fallback questions remain queued),
   [`rag-retrieval-projection`](./rag-retrieval-projection/README.md) (the single RRF-layer owner),
   [`secure-document-download-proxy`](./secure-document-download-proxy/README.md),
   [`local-first-projection-sync`](./local-first-projection-sync/README.md) (last two are

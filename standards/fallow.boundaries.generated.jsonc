@@ -30,6 +30,12 @@
         ]
       },
       {
+        "name": "@beep/agents-tables",
+        "patterns": [
+          "packages/agents/tables/src/**"
+        ]
+      },
+      {
         "name": "@beep/agents-use-cases",
         "patterns": [
           "packages/agents/use-cases/src/**"
@@ -504,6 +510,12 @@
         ]
       },
       {
+        "name": "@beep/pretext",
+        "patterns": [
+          "packages/drivers/pretext/src/**"
+        ]
+      },
+      {
         "name": "@beep/professional-desktop",
         "patterns": [
           "apps/professional-desktop/src/**"
@@ -779,24 +791,45 @@
         "allow": [
           "@beep/agents-domain",
           "@beep/agents-server",
+          "@beep/agents-tables",
           "@beep/agents-use-cases",
+          "@beep/ai-provider-cli",
           "@beep/anthropic",
           "@beep/identity",
           "@beep/observability",
+          "@beep/postgres",
           "@beep/schema",
+          "@beep/shared-domain",
           "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/agents-domain",
           "@beep/agents-server",
+          "@beep/agents-tables",
           "@beep/agents-use-cases",
+          "@beep/ai-provider-cli",
           "@beep/anthropic",
           "@beep/identity",
           "@beep/observability",
+          "@beep/postgres",
           "@beep/schema",
+          "@beep/shared-domain",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/agents-tables",
+        "allow": [
+          "@beep/agents-domain",
+          "@beep/agents-tables",
+          "@beep/drizzle"
+        ],
+        "allowTypeOnly": [
+          "@beep/agents-domain",
+          "@beep/agents-tables",
+          "@beep/drizzle"
         ]
       },
       {
@@ -832,13 +865,15 @@
           "@beep/ai-provider-cli",
           "@beep/identity",
           "@beep/schema",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/ai-provider-cli",
           "@beep/identity",
           "@beep/schema",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
@@ -2221,6 +2256,23 @@
           "@beep/colors",
           "@beep/identity",
           "@beep/postgres",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/pretext",
+        "allow": [
+          "@beep/identity",
+          "@beep/pretext",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/pretext",
           "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"

@@ -45,5 +45,6 @@ license + port discipline, the external research citation, and the composed
 
 ## Trail
 
+- 2026-07-11: cross-reference — `goals/llm-provider-subscription-auth` (partial graduation from sibling `multi-provider-llm-dispatch-fallback`) ships subscription auth via vendor-CLI delegation and stores no tokens, so this packet's per-user vault question (Q1) is unaffected and stays parked here.
 - 2026-06-29: research-complete — RESEARCH.md synthesized, codex gate-1 folded, DECISIONS pre-drafted.
 - 2026-06-29: packet opened from gold-intake cluster 'Ingestion security + secret/PII governance' (10 nuggets).

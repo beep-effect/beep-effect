@@ -34,6 +34,9 @@
       "path": "packages/agents/server"
     },
     {
+      "path": "packages/agents/tables"
+    },
+    {
       "path": "packages/agents/use-cases"
     },
     {
@@ -158,6 +161,9 @@
     },
     {
       "path": "packages/drivers/postgres"
+    },
+    {
+      "path": "packages/drivers/pretext"
     },
     {
       "path": "packages/drivers/protobuf"

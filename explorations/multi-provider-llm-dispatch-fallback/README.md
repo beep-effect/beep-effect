@@ -7,6 +7,12 @@ Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
+Graduated (partial):
+[`goals/llm-provider-subscription-auth`](../../goals/llm-provider-subscription-auth/README.md)
+— the CLI subscription-auth leg of Q5's user>CLI>env precedence chain
+(2026-07-11). Dispatch/registry/fallback and the precedence resolver itself
+remain here.
+
 ## Spark
 
 beep already ships the four per-provider LLM drivers (`@beep/anthropic`,
@@ -46,5 +52,6 @@ gold-intake cluster "Multi-provider LLM dispatch + graceful fallback"
 
 ## Trail
 
+- 2026-07-11: partial graduation — CLI subscription-auth leg (vendor-CLI delegation, t3code methodology) graduated to `goals/llm-provider-subscription-auth` via /grill-with-docs; Q5's precedence resolver and all dispatch/fallback questions remain open here. `links.goals` updated.
 - 2026-06-29: research-complete — RESEARCH.md synthesized, codex gate-1 folded, DECISIONS pre-drafted.
 - 2026-06-29: packet opened from gold-intake cluster 'Multi-provider LLM dispatch + graceful fallback' (8 nuggets).

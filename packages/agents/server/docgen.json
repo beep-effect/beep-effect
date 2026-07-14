@@ -36,6 +36,9 @@
       "@beep/agents-server/AssistantTurn": [
         "../../../packages/agents/server/src/AssistantTurn/index.ts"
       ],
+      "@beep/agents-server/ProviderInstance": [
+        "../../../packages/agents/server/src/ProviderInstance/index.ts"
+      ],
       "@beep/agents-server/AnthropicTurnCodec": [
         "../../../packages/agents/server/src/AssistantTurn/AnthropicTurnCodec.ts"
       ],
@@ -49,6 +52,9 @@
       "@beep/agents-domain/entities/Agent": [
         "../../../packages/agents/domain/src/entities/Agent/index.ts"
       ],
+      "@beep/agents-domain/entities/ProviderInstance": [
+        "../../../packages/agents/domain/src/entities/ProviderInstance/index.ts"
+      ],
       "@beep/agents-domain/entities/Skill": [
         "../../../packages/agents/domain/src/entities/Skill/index.ts"
       ],
@@ -57,6 +63,13 @@
       ],
       "@beep/agents-domain/values/AssistantContent": [
         "../../../packages/agents/domain/src/values/AssistantContent/index.ts"
+      ],
+      "@beep/agents-tables": ["../../../packages/agents/tables/src/index.ts"],
+      "@beep/agents-tables/tables": [
+        "../../../packages/agents/tables/src/tables.ts"
+      ],
+      "@beep/agents-tables/entities": [
+        "../../../packages/agents/tables/src/entities/index.ts"
       ],
       "@beep/agents-use-cases": [
         "../../../packages/agents/use-cases/src/index.ts"
@@ -72,6 +85,12 @@
       ],
       "@beep/agents-use-cases/test": [
         "../../../packages/agents/use-cases/src/test.ts"
+      ],
+      "@beep/ai-provider-cli": [
+        "../../../packages/drivers/ai-provider-cli/src/index.ts"
+      ],
+      "@beep/ai-provider-cli/*": [
+        "../../../packages/drivers/ai-provider-cli/src/*.ts"
       ],
       "@beep/anthropic": ["../../../packages/drivers/anthropic/src/index.ts"],
       "@beep/identity": [
@@ -94,6 +113,25 @@
       ],
       "@beep/observability/web": [
         "../../../packages/foundation/capability/observability/src/web/index.ts"
+      ],
+      "@beep/postgres": ["../../../packages/drivers/postgres/src/index.ts"],
+      "@beep/postgres/client": [
+        "../../../packages/drivers/postgres/src/PostgresClient.service.ts"
+      ],
+      "@beep/postgres/drizzle": [
+        "../../../packages/drivers/postgres/src/PostgresDrizzle.service.ts"
+      ],
+      "@beep/postgres/errors": [
+        "../../../packages/drivers/postgres/src/Postgres.errors.ts"
+      ],
+      "@beep/postgres/format": [
+        "../../../packages/drivers/postgres/src/PostgresDiagnostics.service.ts"
+      ],
+      "@beep/postgres/interop": [
+        "../../../packages/drivers/postgres/src/PostgresInterop.models.ts"
+      ],
+      "@beep/postgres/sqlstate": [
+        "../../../packages/drivers/postgres/src/PostgresSqlState.models.ts"
       ],
       "@beep/schema": [
         "../../../packages/foundation/modeling/schema/src/index.ts"
@@ -493,6 +531,77 @@
       ],
       "@beep/schema/test/Yaml": [
         "../../../packages/foundation/modeling/schema/src/internal/test/Yaml.test-kit.ts"
+      ],
+      "@beep/shared-domain": ["../../../packages/shared/domain/src/index.ts"],
+      "@beep/shared-domain/*": ["../../../packages/shared/domain/src/*.ts"],
+      "@beep/shared-domain/aggregates": [
+        "../../../packages/shared/domain/src/aggregates.ts"
+      ],
+      "@beep/shared-domain/entities": [
+        "../../../packages/shared/domain/src/entities.ts"
+      ],
+      "@beep/shared-domain/entities/Membership": [
+        "../../../packages/shared/domain/src/entities/Membership/index.ts"
+      ],
+      "@beep/shared-domain/entities/Organization": [
+        "../../../packages/shared/domain/src/entities/Organization/index.ts"
+      ],
+      "@beep/shared-domain/entities/User": [
+        "../../../packages/shared/domain/src/entities/User/index.ts"
+      ],
+      "@beep/shared-domain/entity": [
+        "../../../packages/shared/domain/src/entity.ts"
+      ],
+      "@beep/shared-domain/entity/BaseEntity": [
+        "../../../packages/shared/domain/src/entity/BaseEntity.ts"
+      ],
+      "@beep/shared-domain/entity/EntityId": [
+        "../../../packages/shared/domain/src/entity/EntityId.ts"
+      ],
+      "@beep/shared-domain/entity/EntityRef": [
+        "../../../packages/shared/domain/src/entity/EntityRef.ts"
+      ],
+      "@beep/shared-domain/entity/PublicEntityId": [
+        "../../../packages/shared/domain/src/entity/PublicEntityId.ts"
+      ],
+      "@beep/shared-domain/entity/Principal": [
+        "../../../packages/shared/domain/src/entity/Principal.ts"
+      ],
+      "@beep/shared-domain/entity/SourceKind": [
+        "../../../packages/shared/domain/src/entity/SourceKind.ts"
+      ],
+      "@beep/shared-domain/entity/primitives": [
+        "../../../packages/shared/domain/src/entity/primitives.ts"
+      ],
+      "@beep/shared-domain/identity": [
+        "../../../packages/shared/domain/src/identity.ts"
+      ],
+      "@beep/shared-domain/identity/Agents": [
+        "../../../packages/shared/domain/src/identity/Agents.ts"
+      ],
+      "@beep/shared-domain/identity/Epistemic": [
+        "../../../packages/shared/domain/src/identity/Epistemic.ts"
+      ],
+      "@beep/shared-domain/identity/LawPractice": [
+        "../../../packages/shared/domain/src/identity/LawPractice.ts"
+      ],
+      "@beep/shared-domain/identity/Shared": [
+        "../../../packages/shared/domain/src/identity/Shared.ts"
+      ],
+      "@beep/shared-domain/identity/Workspace": [
+        "../../../packages/shared/domain/src/identity/Workspace.ts"
+      ],
+      "@beep/shared-domain/values": [
+        "../../../packages/shared/domain/src/values.ts"
+      ],
+      "@beep/shared-domain/values/ClaimLifecycle": [
+        "../../../packages/shared/domain/src/values/ClaimLifecycle/index.ts"
+      ],
+      "@beep/shared-domain/values/LocalDate": [
+        "../../../packages/shared/domain/src/values/LocalDate/index.ts"
+      ],
+      "@beep/shared-domain/values/OnePasswordReference": [
+        "../../../packages/shared/domain/src/values/OnePasswordReference/index.ts"
       ],
       "@beep/test-utils": [
         "../../../packages/tooling/test-kit/test-utils/src/index.ts"

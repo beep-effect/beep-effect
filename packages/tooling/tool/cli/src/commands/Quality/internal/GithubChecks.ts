@@ -173,7 +173,7 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
   githubCheckLane(
     "quality:jsdoc-ratchet",
     "repo-quality",
-    repoCliLane(repoRoot, "quality:jsdoc-ratchet", ["jsdoc-ratchet"])
+    bunRunLane(repoRoot, "quality:jsdoc-ratchet", ["beep", "ci", "lane", "jsdoc-ratchet"])
   ),
   githubCheckLane("quality:lint", "repo-quality", bunRunLane(repoRoot, "quality:lint", ["lint"])),
   githubCheckLane("quality:docgen", "repo-quality", bunRunLane(repoRoot, "quality:docgen", ["docgen"])),

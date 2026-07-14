@@ -39,6 +39,12 @@
       "@beep/agents-client/ClientObservability": [
         "../../../packages/agents/client/src/ClientObservability.ts"
       ],
+      "@beep/agents-client/ProviderInstance.atoms": [
+        "../../../packages/agents/client/src/ProviderInstance.atoms.ts"
+      ],
+      "@beep/agents-client/ProviderInstance.service": [
+        "../../../packages/agents/client/src/ProviderInstance.service.ts"
+      ],
       "@beep/cosmos": ["../../../packages/drivers/cosmos/src/index.ts"],
       "@beep/identity": [
         "../../../packages/foundation/modeling/identity/src/index.ts"

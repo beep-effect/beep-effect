@@ -20,6 +20,7 @@
     "@biomejs/biome": "^2.5.3",
     "@changesets/changelog-github": "^0.7.0",
     "@changesets/cli": "^2.31.0",
+    "@chenglou/pretext": "0.0.8",
     "@clack/prompts": "^1.7.0",
     "@commitlint/cli": "^21.2.1",
     "@commitlint/config-conventional": "^21.2.0",
@@ -430,6 +431,7 @@
     "packages/agents/use-cases",
     "packages/agents/client",
     "packages/agents/server",
+    "packages/agents/tables",
     "packages/epistemic/domain",
     "packages/epistemic/tables",
     "packages/epistemic/use-cases",
@@ -500,6 +502,7 @@
     "packages/drivers/uspto-mcp",
     "packages/drivers/pacer",
     "packages/drivers/protobuf",
-    "packages/drivers/tailscale"
+    "packages/drivers/tailscale",
+    "packages/drivers/pretext"
   ]
 }

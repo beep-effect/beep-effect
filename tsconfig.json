@@ -238,6 +238,14 @@
       "@beep/agents-domain/entities/Skill": [
         "./packages/agents/domain/src/entities/Skill/index.ts"
       ],
+      "@beep/agents-domain/entities/ProviderInstance": [
+        "./packages/agents/domain/src/entities/ProviderInstance/index.ts"
+      ],
+      "@beep/agents-tables": ["./packages/agents/tables/src/index.ts"],
+      "@beep/agents-tables/entities": [
+        "./packages/agents/tables/src/entities/index.ts"
+      ],
+      "@beep/agents-tables/tables": ["./packages/agents/tables/src/tables.ts"],
       "@beep/epistemic-domain/entities": [
         "./packages/epistemic/domain/src/entities/index.ts"
       ],
@@ -1525,7 +1533,18 @@
       "@beep/tailscale/*": ["./packages/drivers/tailscale/src/*"],
       "@beep/editor/mermaid-node": [
         "./packages/foundation/ui-system/editor/src/mermaid-node.tsx"
-      ]
+      ],
+      "@beep/agents-client/ProviderInstance.atoms": [
+        "./packages/agents/client/src/ProviderInstance.atoms.ts"
+      ],
+      "@beep/agents-client/ProviderInstance.service": [
+        "./packages/agents/client/src/ProviderInstance.service.ts"
+      ],
+      "@beep/agents-server/ProviderInstance": [
+        "./packages/agents/server/src/ProviderInstance/index.ts"
+      ],
+      "@beep/pretext": ["./packages/drivers/pretext/src/index.ts"],
+      "@beep/pretext/browser": ["./packages/drivers/pretext/src/browser.ts"]
     }
   }
 }

@@ -157,6 +157,7 @@ const generatedComposers = $I.compose(
   "epistemic-tables",
   "lint-rules",
   "n3",
+  "pretext",
   "ontology-client",
   "ontology-config",
   "ontology-domain",
@@ -170,7 +171,8 @@ const generatedComposers = $I.compose(
   "doc-text",
   "doc-text",
   "documents-tables",
-  "tailscale"
+  "tailscale",
+  "agents-tables"
 );
 
 const composers = {
@@ -1866,6 +1868,22 @@ export const $LintRulesId: Identity.IdentityComposer<"@beep/lint-rules"> = compo
 export const $N3Id: Identity.IdentityComposer<"@beep/n3"> = composers.$N3Id;
 
 /**
+ * Identity composer for `@beep/pretext`.
+ *
+ * @example
+ * ```typescript
+ * import { $PretextId } from "@beep/identity"
+ *
+ * const id = $PretextId.make("Pretext")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $PretextId: Identity.IdentityComposer<"@beep/pretext"> = composers.$PretextId;
+
+/**
  * Identity composer for `@beep/ontology-client`.
  *
  * @example
@@ -2072,3 +2090,19 @@ export const $DocumentsTablesId: Identity.IdentityComposer<"@beep/documents-tabl
  * @category configuration
  */
 export const $TailscaleId: Identity.IdentityComposer<"@beep/tailscale"> = composers.$TailscaleId;
+
+/**
+ * Identity composer for `@beep/agents-tables`.
+ *
+ * @example
+ * ```typescript
+ * import { $AgentsTablesId } from "@beep/identity"
+ *
+ * const id = $AgentsTablesId.make("AgentsTables")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $AgentsTablesId: Identity.IdentityComposer<"@beep/agents-tables"> = composers.$AgentsTablesId;

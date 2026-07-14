@@ -70,6 +70,7 @@ dryrun
 dtos
 dtslint
 ECONNREFUSED
+EdgiOS
 ellipsized
 encodeds
 Endo
@@ -198,6 +199,7 @@ nsubj
 ntile
 NTILE
 numtide
+nvim
 objectset
 octo
 octocat

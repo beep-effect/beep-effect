@@ -115,8 +115,27 @@ describe("ciLaneStepsForTesting", () => {
   });
 
   it("runs jsdoc-inventory before jsdoc-ratchet, matching hosted CI", () => {
-    const labels = A.map(ciLaneStepsForTesting(REPO_ROOT, "jsdoc-ratchet", baseOptions), (step) => step.label);
+    const steps = ciLaneStepsForTesting(REPO_ROOT, "jsdoc-ratchet", baseOptions);
+    const labels = A.map(steps, (step) => step.label);
     expect(labels).toEqual(["ci:jsdoc-ratchet:inventory", "ci:jsdoc-ratchet:ratchet"]);
+    expect(steps[0]?.args).toEqual([
+      "run",
+      "beep",
+      "quality",
+      "jsdoc-inventory",
+      "--output-json",
+      ".beep/ci/jsdoc-documentation.inventory.jsonc",
+      "--output-markdown",
+      ".beep/ci/jsdoc-documentation.inventory.md",
+    ]);
+    expect(steps[1]?.args).toEqual([
+      "run",
+      "beep",
+      "quality",
+      "jsdoc-ratchet",
+      "--inventory",
+      ".beep/ci/jsdoc-documentation.inventory.jsonc",
+    ]);
   });
 
   it("builds the codegen drift lane as generate-then-diff", () => {
