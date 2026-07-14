@@ -74,13 +74,20 @@ Higher sources outrank lower sources when they conflict.
 - [ ] Slice 1: a real Claude Code session on this workstation produces traces
       visible in Phoenix carrying `repo` and `goal-slug` attributes, routed
       through the dankserver collector (not direct-to-Phoenix).
-- [ ] Codex sessions produce metrics visible in Grafana/Prometheus with the
-      same attribution attributes, for every execution mode in use.
+- [ ] Codex sessions produce metrics visible in Grafana/Prometheus
+      (service-level identity; per-repo/goal attribution on codex METRICS is
+      an accepted v1 gap — codex `span_attributes` is traces-only and static;
+      see `research/p0-attribute-contract.md` "Known gap"), for every
+      execution mode in use.
 - [ ] A written coverage-verification note compares one day of native
       telemetry against local transcripts (session counts, token totals
       within tolerance) and records gaps.
-- [ ] Attribute schema documented in `packages/tooling/library/ai-metrics`
-      with pinned semconv versions and the dual-ingestion precedence rule.
+- [ ] Attribute schema v1 documented with pinned emitter versions and the
+      dual-ingestion precedence rule (`research/p0-attribute-contract.md`;
+      amended 2026-07-14: the typed schema in
+      `packages/tooling/library/ai-metrics` is deliberately deferred until
+      the first in-code consumer — contract-by-documentation is the v1
+      deliverable).
 - [ ] Payload privacy check evidenced: emitted spans/metrics contain no
       prompt/response content.
 - [ ] No unrelated refactors or formatting churn.

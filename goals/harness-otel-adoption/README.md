@@ -34,12 +34,20 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — verify current Claude Code/Codex OTel config surfaces and the
-dankserver collector pipeline; decide the dual-ingestion precedence rule.
+P2 Verify — instrumentation is LIVE (2026-07-14): both harnesses export to
+the dankserver collector; traces land in Phoenix, attributed metrics in
+Prometheus. Remaining: one-day coverage-verification note vs transcripts,
+trace-payload content spot-check, then P3 close.
 
 ## Latest Evidence
 
-Not started. Graduated 2026-07-14 from
+[`history/p1-rollout-evidence.md`](./history/p1-rollout-evidence.md) —
+end-to-end live 2026-07-14: dankserver commit 3b22cac, tailnet route :8448,
+attributed metrics verified (`beep_goal_slug="harness-otel-adoption"` on
+real cost series). P0 research in
+[`research/p0-config-surfaces.md`](./research/p0-config-surfaces.md) +
+[`research/p0-attribute-contract.md`](./research/p0-attribute-contract.md).
+Graduated 2026-07-14 from
 [`explorations/agent-effectiveness-pulse`](../../explorations/agent-effectiveness-pulse/README.md)
 (pulse report: `research/pulse-report.md`; landscape:
 `research/2026-07-13-external-landscape.md`; decisions: DECISIONS.md
