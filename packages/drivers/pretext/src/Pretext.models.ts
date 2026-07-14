@@ -208,6 +208,59 @@ export class TextLayoutInput extends S.Class<TextLayoutInput>($I`TextLayoutInput
   })
 ) {}
 
+/**
+ * A word-indexed line range from a greedy text layout. `startWord` is
+ * inclusive, `endWord` is exclusive, and `width` is the line advance.
+ *
+ * @example
+ * ```ts
+ * import { LineRange } from "@beep/pretext"
+ *
+ * const range = LineRange.make({ startWord: 0, endWord: 2, width: 80 })
+ *
+ * console.log(range.endWord)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LineRange extends S.Class<LineRange>($I`LineRange`)(
+  {
+    startWord: NonNegativeLineCount,
+    endWord: NonNegativeLineCount,
+    width: NonNegativeAdvance,
+  },
+  $I.annote("LineRange", {
+    description: "A word-indexed half-open line range and its measured advance width.",
+  })
+) {}
+
+/**
+ * Aggregate geometry for a greedy text layout: total line count and widest
+ * line advance.
+ *
+ * @example
+ * ```ts
+ * import { LineStats } from "@beep/pretext"
+ *
+ * const stats = LineStats.make({ lineCount: 2, maxLineWidth: 180 })
+ *
+ * console.log(stats.maxLineWidth)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LineStats extends S.Class<LineStats>($I`LineStats`)(
+  {
+    lineCount: NonNegativeLineCount,
+    maxLineWidth: NonNegativeAdvance,
+  },
+  $I.annote("LineStats", {
+    description: "Aggregate line count and maximum line width from a greedy text layout.",
+  })
+) {}
+
 const wordWidths = (metrics: FontMetrics, text: string): O.Option<ReadonlyArray<number>> =>
   O.all(A.map(Str.split(text, " "), (word) => R.get(metrics.words, word)));
 
@@ -244,6 +297,98 @@ export const naturalWidth: {
   (metrics: FontMetrics, text: string): O.Option<number> =>
     O.map(wordWidths(metrics, text), (widths) =>
       A.reduce(widths, 0, (total, width, index) => (index === 0 ? width : total + metrics.spaceWidth + width))
+    )
+);
+
+/**
+ * Greedy first-fit word ranges for `text` at `maxWidth`, computed purely from
+ * snapshot word widths. Returns `None` when any word is missing from the
+ * snapshot. Ranges use half-open word indices and omit trailing spaces from
+ * each line width.
+ *
+ * @example
+ * ```ts
+ * import { chromeLinuxArial16, lineRanges } from "@beep/pretext"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const metrics = Effect.runSync(chromeLinuxArial16).metrics
+ *
+ * const ranges = lineRanges(metrics, { text: "the the", maxWidth: 40 })
+ *
+ * console.log(O.isOption(ranges))
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const lineRanges: {
+  (metrics: FontMetrics, input: TextLayoutInput): O.Option<ReadonlyArray<LineRange>>;
+  (input: TextLayoutInput): (metrics: FontMetrics) => O.Option<ReadonlyArray<LineRange>>;
+} = dual(
+  2,
+  (metrics: FontMetrics, input: TextLayoutInput): O.Option<ReadonlyArray<LineRange>> =>
+    O.map(wordWidths(metrics, input.text), (widths) => {
+      const state = A.reduce(
+        widths,
+        { lines: 0, ranges: A.empty<LineRange>(), startWord: 0, width: 0 },
+        (state, wordWidth, index) => {
+          if (state.lines === 0) {
+            return { ...state, lines: 1, width: wordWidth };
+          }
+          const needed = state.width + metrics.spaceWidth + wordWidth;
+          return needed > input.maxWidth
+            ? {
+                lines: state.lines + 1,
+                ranges: A.append(
+                  state.ranges,
+                  LineRange.make({ startWord: state.startWord, endWord: index, width: state.width })
+                ),
+                startWord: index,
+                width: wordWidth,
+              }
+            : { ...state, width: needed };
+        }
+      );
+      return A.append(
+        state.ranges,
+        LineRange.make({ startWord: state.startWord, endWord: A.length(widths), width: state.width })
+      );
+    })
+);
+
+/**
+ * Aggregate greedy line geometry for `text` at `maxWidth`, derived from
+ * {@link lineRanges}. Returns `None` when any word is missing from the
+ * snapshot.
+ *
+ * @example
+ * ```ts
+ * import { chromeLinuxArial16, lineStats } from "@beep/pretext"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const metrics = Effect.runSync(chromeLinuxArial16).metrics
+ *
+ * const stats = lineStats(metrics, { text: "the the", maxWidth: 40 })
+ *
+ * console.log(O.isOption(stats))
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const lineStats: {
+  (metrics: FontMetrics, input: TextLayoutInput): O.Option<LineStats>;
+  (input: TextLayoutInput): (metrics: FontMetrics) => O.Option<LineStats>;
+} = dual(
+  2,
+  (metrics: FontMetrics, input: TextLayoutInput): O.Option<LineStats> =>
+    O.map(lineRanges(metrics, input), (ranges) =>
+      LineStats.make({
+        lineCount: A.length(ranges),
+        maxLineWidth: A.reduce(ranges, 0, (maximum, range) => (range.width > maximum ? range.width : maximum)),
+      })
     )
 );
 
