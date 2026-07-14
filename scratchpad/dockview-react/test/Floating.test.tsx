@@ -20,6 +20,7 @@ import {
   SplitNode,
   TabsNode,
   TextPanelView,
+  TopLeftAnchoredBox,
 } from "../../dockview/poc/index.ts";
 import { type DockPanelProps, DockviewReact } from "../src/index.ts";
 import { resize } from "./setup.dom.ts";
@@ -49,13 +50,8 @@ const otherDockedPanel = Panel.make({
   view: TextPanelView.make({ text: "other docked" }),
 });
 const tabs = (groupId: GroupId, panel: Panel): TabsNode => TabsNode.make({ groupId, active: panel });
-const anchored = (left: number, top: number, width = 240, height = 160): AnchoredBox => ({
-  _tag: "TopLeft",
-  left,
-  top,
-  width,
-  height,
-});
+const anchored = (left: number, top: number, width = 240, height = 160): AnchoredBox =>
+  TopLeftAnchoredBox.make({ left, top, width, height });
 const workspace = (floating = true, twoDocked = false) =>
   PopulatedWorkspace.make({
     root: twoDocked

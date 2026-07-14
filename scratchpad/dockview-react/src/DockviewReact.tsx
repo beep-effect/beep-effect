@@ -26,6 +26,7 @@ import {
   DockSide,
   DockWorkspace,
   FloatGroupCommand,
+  FloatingMember,
   GeometryOptions,
   GroupId,
   GroupRootSplitPlacement,
@@ -49,6 +50,7 @@ import {
   SplitRatio,
   TabPlacement,
   TabsNode,
+  TopLeftAnchoredBox,
   UserCommandOrigin,
 } from "../../dockview/poc/index.ts";
 
@@ -404,7 +406,7 @@ const adapterState = (graph: DockAtomGraph, gap: number): AdapterState => {
       onSome: (candidate) =>
         A.map(workspace.floating, (member) =>
           A.some(DockNode.tabs(member.root), (tabs) => GroupId.equals(tabs.groupId, candidate.groupId))
-            ? { ...member, anchoredBox: candidate.anchoredBox }
+            ? FloatingMember.make({ anchoredBox: candidate.anchoredBox, root: member.root })
             : member
         ),
     });
@@ -476,13 +478,13 @@ const clampRatio = (ratio: number): SplitRatio => SplitRatio.make(Math.min(9_000
 const freshSplitId = (): SplitId => SplitId.make(`dockview-react-split-${commandCounter + 1}`);
 const freshGroupId = (): GroupId => GroupId.make(`dockview-react-group-${commandCounter + 1}`);
 const freshFloatingSplitId = (): SplitId => SplitId.make(`dockview-react-floating-split-${commandCounter + 1}`);
-const topLeftBox = (box: DockBox, container: DockBox): AnchoredBox => ({
-  _tag: "TopLeft",
-  left: box.left - container.left,
-  top: box.top - container.top,
-  width: box.width,
-  height: box.height,
-});
+const topLeftBox = (box: DockBox, container: DockBox): AnchoredBox =>
+  TopLeftAnchoredBox.make({
+    left: box.left - container.left,
+    top: box.top - container.top,
+    width: box.width,
+    height: box.height,
+  });
 
 const floatingHit = (geometry: DockGeometry, point: PointerPosition) =>
   A.findFirst(A.reverse(geometry.floating), (candidate) => contains(candidate.box, point));
@@ -858,13 +860,12 @@ const GroupPane = (
                 makeOperation(
                   FloatGroupCommand.make({
                     groupId: props.groupId,
-                    anchoredBox: {
-                      _tag: "TopLeft",
+                    anchoredBox: TopLeftAnchoredBox.make({
                       left: box.left + 24,
                       top: box.top + 24,
                       width: Math.max(32, box.width - 48),
                       height: Math.max(32, box.height - 48),
-                    },
+                    }),
                   })
                 )
               )
