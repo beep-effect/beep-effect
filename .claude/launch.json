@@ -4,7 +4,7 @@
     {
       "name": "oip-web",
       "runtimeExecutable": "bun",
-      "runtimeArgs": ["run", "--cwd", "apps/oip-web", "start"],
+      "runtimeArgs": ["run", "--cwd", "apps/oip-web", "dev:raw"],
       "port": 3000,
       "autoPort": true
     }
