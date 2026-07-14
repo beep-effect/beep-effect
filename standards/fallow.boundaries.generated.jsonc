@@ -2603,6 +2603,7 @@
           "@beep/identity",
           "@beep/md",
           "@beep/ontology",
+          "@beep/pretext",
           "@beep/schema",
           "@beep/scratchpad",
           "@beep/utils"
@@ -2611,6 +2612,7 @@
           "@beep/identity",
           "@beep/md",
           "@beep/ontology",
+          "@beep/pretext",
           "@beep/schema",
           "@beep/scratchpad",
           "@beep/utils"
