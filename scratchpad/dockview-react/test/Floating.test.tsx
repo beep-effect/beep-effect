@@ -20,6 +20,7 @@ import {
   SplitNode,
   TabsNode,
   TextPanelView,
+  TopLeftAnchoredBox,
 } from "../../dockview/poc/index.ts";
 import { type DockPanelProps, DockviewReact } from "../src/index.ts";
 import { resize } from "./setup.dom.ts";
@@ -49,13 +50,8 @@ const otherDockedPanel = Panel.make({
   view: TextPanelView.make({ text: "other docked" }),
 });
 const tabs = (groupId: GroupId, panel: Panel): TabsNode => TabsNode.make({ groupId, active: panel });
-const anchored = (left: number, top: number, width = 240, height = 160): AnchoredBox => ({
-  _tag: "TopLeft",
-  left,
-  top,
-  width,
-  height,
-});
+const anchored = (left: number, top: number, width = 240, height = 160): AnchoredBox =>
+  TopLeftAnchoredBox.make({ left, top, width, height });
 const workspace = (floating = true, twoDocked = false) =>
   PopulatedWorkspace.make({
     root: twoDocked
@@ -97,7 +93,8 @@ const pointer = (node: Element, name: "pointerDown" | "pointerMove" | "pointerUp
 afterEach(cleanup);
 
 describe.sequential("floating dock adapter", () => {
-  it.effect("renders z-ordered floating panes and preserves a portal target across docked-to-floating movement",
+  it.effect(
+    "renders z-ordered floating panes and preserves a portal target across docked-to-floating movement",
     Effect.fnUntraced(function* () {
       const graph = yield* mount();
       const first = query(`[data-floating-pane='${floating1Id}']`);
@@ -130,7 +127,8 @@ describe.sequential("floating dock adapter", () => {
     })
   );
 
-  it.effect("previews one header move, commits once, and cancels with Escape",
+  it.effect(
+    "previews one header move, commits once, and cancels with Escape",
     Effect.fnUntraced(function* () {
       const graph = yield* mount();
       const header = query(`[data-floating-header='${floating2Id}']`);

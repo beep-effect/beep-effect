@@ -2,9 +2,22 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+## Outcome (2026-07-14)
+
+Shipped as specced and merged: PR #391 (squash `1c0977ccad`, merged
+2026-07-14) landed `@beep/pretext` at `packages/drivers/pretext` — pure root
+(FontMetricsSnapshotV1 contracts, typed codecs, greedy layout helpers),
+`/browser` capture with typed capability failures, fixture test layers,
+centralized errors, zero product surface. Proofs at close: 20 vitest + 1
+skipped (live canvas), docgen examples green, scratchpad full-circle proof
+17/17 against the shipped surface. A full quality-review-fix-loop ran before
+merge (crispen `f9598694f8`, panel fixes `35b9710c95`, round-2 clean).
+Reflection:
+[`history/reflections/2026-07-14-claude.md`](./history/reflections/2026-07-14-claude.md).
 
 ## Mission
 
