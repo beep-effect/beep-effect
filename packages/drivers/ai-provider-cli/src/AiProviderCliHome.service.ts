@@ -11,6 +11,7 @@
 
 import * as NodeOS from "node:os";
 import { $AiProviderCliId } from "@beep/identity";
+import * as HostPath from "@beep/utils/Path";
 import { Context, Effect, FileSystem, flow, Layer, Match, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -110,10 +111,8 @@ const configuredPath = flow(O.map(Str.trim), O.filter(Str.isNonEmpty));
  */
 export const expandTildePath: (value: string) => string = Match.type<string>().pipe(
   Match.when("~", () => NodeOS.homedir()),
-  Match.whenOr(
-    Str.startsWith("~/"),
-    Str.startsWith("~\\"),
-    (value) => `${NodeOS.homedir()}/${pipe(value, Str.slice(2))}`
+  Match.whenOr(Str.startsWith("~/"), Str.startsWith("~\\"), (value) =>
+    HostPath.join(NodeOS.homedir(), pipe(value, Str.slice(2)))
   ),
   Match.orElse((value) => value)
 );

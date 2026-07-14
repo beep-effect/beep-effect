@@ -7,7 +7,7 @@
 
 import * as Domain from "@beep/agents-domain/entities/ProviderInstance";
 import { ProviderProbe, ProviderProbeUnavailable } from "@beep/agents-use-cases/server";
-import { AiProviderCli, AiProviderCliHome, expandTildePath } from "@beep/ai-provider-cli";
+import { AiProviderCli, AiProviderCliHome } from "@beep/ai-provider-cli";
 import { DateTime, Effect, Match } from "effect";
 import * as O from "effect/Option";
 import type { AiProviderCliAuthSnapshot, AiProviderCliError } from "@beep/ai-provider-cli";
@@ -72,7 +72,7 @@ export const makeProviderProbe = Effect.fn("Agents.ProviderProbe.make")(function
         Match.exhaustive
       );
       const snapshot = yield* cli
-        .checkAuthSnapshot(input.kind, { env, executable: O.some(expandTildePath(input.binaryPath)) })
+        .checkAuthSnapshot(input.kind, { env, executable: O.some(input.binaryPath) })
         .pipe(Effect.mapError(translateDriverError));
       return yield* toDomainSnapshot(snapshot);
     }),

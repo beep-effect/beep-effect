@@ -32,6 +32,7 @@ import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as Agents from "@beep/shared-domain/identity/Agents";
 import { makePgliteIntegrationGate } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
+import * as HostPath from "@beep/utils/Path";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, layer } from "@effect/vitest";
 import { sql } from "drizzle-orm";
@@ -201,7 +202,7 @@ describe("ProviderInstance PGLite integration", { concurrent: false }, () => {
         const listed = yield* useCases.list(ListProviderInstancesQuery.make({}));
         expect(O.getOrThrow(listed[0]?.lastProbe).status).toBe("unauthenticated");
         const requests = yield* Ref.get(runnerRequests);
-        expect(requests[0]?.executable).toBe(`${NodeOS.homedir()}/opt/bin/codex`);
+        expect(requests[0]?.executable).toBe(HostPath.join(NodeOS.homedir(), "opt/bin/codex"));
         expect(requests[0]?.env).toEqual({ CODEX_HOME: "/tmp/codex-home" });
       }),
       pgliteIntegrationTimeoutMillis

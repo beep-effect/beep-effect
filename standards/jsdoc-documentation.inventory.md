@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-14T01:06:04.178Z
+Generated: 2026-07-14T03:05:09.298Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 4 |
 | packagesNeedingRemediation | 0 |
 | publicModules | 1994 |
-| publicExports | 16200 |
+| publicExports | 16201 |
 | openModules | 0 |
 | openExports | 0 |
 | missingExportExamples | 0 |
@@ -71,7 +71,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 28 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | clean | 9 | 82 | 0 | 0 |
 | 29 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | clean | 8 | 98 | 0 | 0 |
 | 30 | `@beep/ontology-config` | `packages/ontology/config` | clean | 6 | 11 | 0 | 0 |
-| 31 | `@beep/ai-provider-cli` | `packages/drivers/ai-provider-cli` | clean | 7 | 43 | 0 | 0 |
+| 31 | `@beep/ai-provider-cli` | `packages/drivers/ai-provider-cli` | clean | 7 | 44 | 0 | 0 |
 | 32 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | clean | 8 | 31 | 0 | 0 |
 | 33 | `@beep/ontology-server` | `packages/ontology/server` | clean | 8 | 21 | 0 | 0 |
 | 34 | `@beep/colors` | `packages/foundation/capability/colors` | clean | 1 | 9 | 0 | 0 |
