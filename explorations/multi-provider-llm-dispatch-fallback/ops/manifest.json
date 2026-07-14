@@ -3,24 +3,16 @@
   "exploration": {
     "slug": "multi-provider-llm-dispatch-fallback",
     "title": "Multi-Provider LLM Dispatch + Graceful Fallback",
-    "status": "active",
-    "stage": "research",
-    "openQuestions": [
-      "Q1: Scope boundary \u2014 declarative dispatch/registry surface above ExecutionPlan vs also owning the shared retry/Schedule + round-robin + circuit-breaker stack?",
-      "Q2: Build-vs-buy \u2014 reuse vendored ExecutionPlan + the four existing drivers and clean-room the glue vs build/port a bespoke fallback engine?",
-      "Q3: First slice \u2014 Anthropic\u2192single-fallback over the four installed drivers wired into AnthropicTurnKernel vs a broader provider set/consumer?",
-      "Q4: Registry shape \u2014 adapter table over the four non-uniform driver surfaces (reading driver config constants) vs a uniform driver.model() registry?",
-      "Q5: Vendor/auth \u2014 key precedence (user>CLI>env), advisory prefix detect, missing-primary-key advance-vs-fail-fast, and broker ApiKeyResolver?",
-      "Q6: Package placement \u2014 new @beep driver-tier dispatch package vs foundation/capability vs inline in agents/server?",
-      "Q7: V1 resilience scope \u2014 ordered fallback only (defer round-robin + circuit-breaker) and reuse generateObject for structured output vs rebuild?"
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "links": {
       "goals": ["goals/llm-provider-subscription-auth"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-06-29",
-    "updated": "2026-07-11",
+    "updated": "2026-07-14",
     "sources": ["research/SOURCES.md"]
   }
 }

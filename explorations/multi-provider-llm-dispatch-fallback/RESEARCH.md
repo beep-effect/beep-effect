@@ -410,3 +410,82 @@ single-provider plan for a multi-provider one.
 ---
 
 _Codex gate-1 folded 2026-06-29: 1 blocking + 5 advisory addressed._
+
+## 2026-07-14 — Closure amendment
+
+The June research correctly identified ordered `ExecutionPlan` reuse, but its
+Q1-Q7 build list was overtaken by two sibling packets and the shipped auth leg.
+This amendment is the closure-time inventory; where it conflicts with the June
+recommendations, the 2026-07-14 locked decisions control.
+
+### Cross-packet constraints that close Q1-Q7
+
+- [`effect-orchestration-patterns`](../effect-orchestration-patterns/DECISIONS.md)
+  now locks consumer-led adoption: LLM retry predicates remain at driver
+  boundaries; shared LLM retry policy requires a second `ExecutionPlan`
+  consumer; runtime provider selection stays app-local until a concrete runtime
+  needs compatible providers; round-robin and circuit breaking remain behind
+  their own demand gates. This removes shared schedules, build-time selection,
+  circuit breaking, round-robin, and a resilience bundle from this packet.
+- [`ingestion-security-secret-governance`](../ingestion-security-secret-governance/DECISIONS.md)
+  owns provider-neutral credential resolution. Its resolution semantics advance
+  only on typed absence/placeholder outcomes and stop on authentication,
+  transport, malformed-reference, and integrity failures. The source order is
+  user vault -> `op://` reference -> environment; CLI subscription tokens are
+  outside the chain. Dispatch therefore consumes a credential-resolution port
+  and decides only whether an eligible target is available or the ordered plan
+  may advance.
+- Key-prefix detection has no authorization meaning. At most it remains
+  app-local onboarding advice; it is not a dispatch or resolution contract.
+
+### Live ExecutionPlan and driver surface inventory
+
+- Vendored ordered fallback is implemented at
+  `.repos/effect-v4/packages/effect/src/ExecutionPlan.ts`. Its public step shape
+  provides a `Context` or `Layer` plus optional `attempts`, `while`, and
+  `schedule`; no wrapper engine is needed. Provider-neutral structured output
+  remains available through
+  `.repos/effect-v4/packages/effect/src/unstable/ai/LanguageModel.ts`
+  (`generateObject`).
+- Anthropic public barrel: `packages/drivers/anthropic/src/index.ts`; its live
+  language-model constructors and plan are exported from
+  `packages/drivers/anthropic/src/Anthropic.service.ts`
+  (`makeAnthropicLanguageModelLayer`, `AnthropicLanguageModelLive`,
+  `AnthropicTurnPlan`).
+- OpenAI-compatible public barrel:
+  `packages/drivers/openai-compat/src/index.ts`; the current barrel exports
+  `make`, `layer`, and `model` from
+  `packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts`.
+  This corrects the June snapshot that described it as layer-only.
+- xAI public barrel: `packages/drivers/xai/src/index.ts`; it exposes the
+  `XAiLanguageModel` namespace backed by
+  `packages/drivers/xai/src/XAiLanguageModel.service.ts` (`make`, `layer`,
+  `model`).
+- Venice AI public barrel: `packages/drivers/venice-ai/src/index.ts`; it
+  exposes the `VeniceAiLanguageModel` namespace backed by
+  `packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts` (`make`,
+  `layer`, `model`).
+
+These are four live provider drivers, not one uniform driver interface. The
+first two-target consumer should use an app-local match. A later static adapter
+table must use these public barrels only and carry compile/dtslint evidence that
+each adapter constructs the common `LanguageModel.LanguageModel` surface.
+
+### Corrected ProviderInstance premise
+
+[`goals/llm-provider-subscription-auth/SPEC.md`](../../goals/llm-provider-subscription-auth/SPEC.md)
+defines `ProviderInstance` as vendor-CLI delegation. The live entity at
+`packages/agents/domain/src/entities/ProviderInstance/ProviderInstance.model.ts`
+stores a CLI binary path, isolated HOME, token-safe env configuration, and the
+latest auth-probe snapshot. Its value schemas at
+`packages/agents/domain/src/entities/ProviderInstance/ProviderInstance.values.ts`
+reject token-bearing environment names, and
+`packages/agents/server/src/ProviderInstance/ProviderInstance.probe.ts` invokes
+the `@beep/ai-provider-cli` auth probe.
+
+That surface has no language-model endpoint, model identity, API base URL, or
+beep-readable provider credential. An authenticated `ProviderInstance` is not a
+dispatchable target, and vendor CLI tokens are never beep-resolvable
+credentials. Runtime dispatch remains demand-gated until a real consumer has
+two compatible targets whose credentials resolve through the secret-governance
+port.

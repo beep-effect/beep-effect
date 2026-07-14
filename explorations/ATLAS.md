@@ -164,10 +164,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   (stage `graduate`, still active across two tracks): graduated
   [`ingestion-secret-scrub`](../goals/ingestion-secret-scrub/README.md) while five
   content-security/secret-governance candidates remain gated,
-  [`multi-provider-llm-dispatch-fallback`](./multi-provider-llm-dispatch-fallback/README.md)
-  (partial graduation 2026-07-11: CLI subscription-auth leg →
-  [`goals/llm-provider-subscription-auth`](../goals/llm-provider-subscription-auth/README.md);
-  dispatch/fallback questions remain queued),
   [`rag-retrieval-projection`](./rag-retrieval-projection/README.md) (stage
   `graduate`, still active for four gated satellites): graduated
   [`hybrid-retrieval-fusion-core`](../goals/hybrid-retrieval-fusion-core/README.md),
@@ -246,6 +242,12 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`multi-provider-llm-dispatch-fallback`](./multi-provider-llm-dispatch-fallback/README.md)
+  — graduated 2026-07-14 on its shipped auth leg,
+  [`llm-provider-subscription-auth`](../goals/llm-provider-subscription-auth/README.md).
+  The `llm-runtime-dispatch` remainder is demand-gated until a real consumer
+  requires two compatible, credential-resolvable runtime targets; then it owns
+  ordered runtime `ExecutionPlan` policy only.
 - [`ontology-agent-surface`](./ontology-agent-surface/README.md) — graduated
   2026-07-11 into
   [`ontology-agent-surface`](../goals/ontology-agent-surface/README.md): a
