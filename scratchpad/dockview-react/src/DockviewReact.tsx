@@ -192,6 +192,11 @@ export type DockviewAdapterApi = {
 /**
  * Browser-side title measurement used to clamp docked group widths.
  *
+ * `captureLayer` is resolved once, when the adapter state for this graph and
+ * measurement configuration (gap, font, line height, chrome) is first
+ * created; later referential changes to the layer are ignored so hosts may
+ * build it inline without growing retained state per render.
+ *
  * @category adapters
  * @since 0.0.0
  */
@@ -364,24 +369,18 @@ class FloatingOverride extends S.Class<FloatingOverride>($I`FloatingOverride`)(
 
 // crispen: graph identity and lifetime are host concerns; WeakMap avoids structural hashing and retains no disposed graph.
 const states = new WeakMap<DockAtomGraph, MutableHashMap.MutableHashMap<string, AdapterState>>();
-const captureLayerIds = new WeakMap<Layer.Layer<PretextCapture>, number>();
-let captureLayerCounter = 0;
 let commandCounter = 0;
 
-const captureLayerId = (layer: Layer.Layer<PretextCapture>): number =>
-  O.getOrElse(O.fromUndefinedOr(captureLayerIds.get(layer)), () => {
-    captureLayerCounter += 1;
-    captureLayerIds.set(layer, captureLayerCounter);
-    return captureLayerCounter;
-  });
-
+// crispen: the key is measurement-config VALUES only — keying on layer identity
+// would mint a fresh retained state per render whenever a host builds
+// captureLayer inline; the layer is resolved once at first state creation.
 const stateKey = (gap: number, titleMinima: O.Option<DockTitleMinimaOptions>): string =>
   O.match(titleMinima, {
     onNone: () => `${gap}`,
     onSome: (config) => {
       const chrome = O.getOrElse(O.fromUndefinedOr(config.chrome), () => TabChrome.make());
-      const captureLayer = O.getOrElse(O.fromUndefinedOr(config.captureLayer), () => PretextCaptureLive);
-      return `${gap}\u0000${config.font}\u0000${config.lineHeight}\u0000${chrome.perTab}\u0000${chrome.strip}\u0000${captureLayerId(captureLayer)}`;
+
+      return `${gap}\u0000${config.font}\u0000${config.lineHeight}\u0000${chrome.perTab}\u0000${chrome.strip}`;
     },
   });
 
