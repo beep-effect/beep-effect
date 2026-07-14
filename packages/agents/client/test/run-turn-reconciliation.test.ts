@@ -18,7 +18,7 @@ import { NonNegativeInt } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { ThreadTimeline, TimelineMessageItem, TimelineTurn } from "@beep/workspace-use-cases/aggregates/Thread";
 import { describe, expect, it } from "@effect/vitest";
-import { Deferred, Duration, Effect, Layer, Match, Stream } from "effect";
+import { Deferred, Duration, Effect, Layer, Match, Schedule, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { AsyncResult, Atom, AtomRegistry, Reactivity } from "effect/unstable/reactivity";
@@ -77,6 +77,9 @@ const registryWithClient = (client: ChatClient["Service"]) =>
   AtomRegistry.make({
     initialValues: [[ChatClient.runtime.layer, Layer.mergeAll(Layer.succeed(ChatClient, client), Reactivity.layer)]],
   });
+const reconciliationSchedule = Schedule.spaced(Duration.millis(10)).pipe(
+  Schedule.upTo({ duration: Duration.seconds(3), times: 300 })
+);
 
 describe("assistant turn reconciliation", { concurrent: false }, () => {
   it.live(
@@ -99,14 +102,10 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     "does not mistake a newly persisted user turn for the stopped assistant turn",
     Effect.fnUntraced(function* () {
       const streamStarted = yield* Deferred.make<void>();
-      const timelineRefreshed = yield* Deferred.make<void>();
       let timeline: ThreadTimeline = emptyTimeline;
-      let interrupted = false;
       const client = ChatClient.of(((tag: string) => {
         if (tag === "GetTimeline") {
-          return Effect.sync(() => timeline).pipe(
-            Effect.tap(() => (interrupted ? Deferred.succeed(timelineRefreshed, undefined) : Effect.void))
-          );
+          return Effect.sync(() => timeline);
         }
         if (tag === "GetTurnRequestStatus") return Effect.succeed("not_persisted");
         if (tag === "SendMessage") {
@@ -132,15 +131,15 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       // its assistant `(stopped)` marker. Every bounded refresh sees only that
       // user row: total-count growth must not be accepted as reconciliation.
       timeline = userOnlyTimeline;
-      interrupted = true;
       registry.set(runTurnAtom, Atom.Interrupt);
-      yield* Deferred.await(timelineRefreshed);
-      yield* Effect.yieldNow;
+      yield* Effect.suspend(() =>
+        O.isNone(registry.get(streamingTurnAtom)) ? Effect.void : Effect.fail("streaming turn is still reconciling")
+      ).pipe(Effect.retry(reconciliationSchedule));
 
+      expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
       expect(registry.get(turnActiveAtom)).toBe(false);
       expect(registry.get(draftAtom)).toStrictEqual(O.some(content));
       expect(O.isSome(registry.get(turnErrorAtom))).toBe(true);
-      expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
 
       unmountError();
       unmountActivity();
@@ -156,13 +155,9 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     "does not restore a cancelled prompt after the server confirms its user row persisted",
     Effect.fnUntraced(function* () {
       const streamStarted = yield* Deferred.make<void>();
-      const timelineRefreshed = yield* Deferred.make<void>();
-      let interrupted = false;
       const client = ChatClient.of(((tag: string) => {
         if (tag === "GetTimeline") {
-          return Effect.succeed(userOnlyTimeline).pipe(
-            Effect.tap(() => (interrupted ? Deferred.succeed(timelineRefreshed, undefined) : Effect.void))
-          );
+          return Effect.succeed(userOnlyTimeline);
         }
         if (tag === "GetTurnRequestStatus") return Effect.succeed("user_persisted");
         if (tag === "SendMessage") {
@@ -180,14 +175,14 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
 
       registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
       yield* Deferred.await(streamStarted);
-      interrupted = true;
       registry.set(runTurnAtom, Atom.Interrupt);
-      yield* Deferred.await(timelineRefreshed);
-      yield* Effect.yieldNow;
+      yield* Effect.suspend(() =>
+        O.isNone(registry.get(streamingTurnAtom)) ? Effect.void : Effect.fail("streaming turn is still reconciling")
+      ).pipe(Effect.retry(reconciliationSchedule));
 
+      expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
       expect(registry.get(draftAtom)).toStrictEqual(O.none());
       expect(registry.get(turnErrorAtom)).toStrictEqual(O.none());
-      expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
 
       unmountError();
       unmountStreaming();
@@ -264,14 +259,11 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         statusKind: UncertainStatusKind
       ) {
         const streamStarted = yield* Deferred.make<void>();
-        const timelineRefreshed = yield* Deferred.make<void>();
         let timelineReads = 0;
         const client = ChatClient.of(((tag: string) => {
           if (tag === "GetTimeline") {
             timelineReads += 1;
-            return Effect.succeed(timelineReads === 1 ? emptyTimeline : userOnlyTimeline).pipe(
-              Effect.tap(() => (timelineReads > 1 ? Deferred.succeed(timelineRefreshed, undefined) : Effect.void))
-            );
+            return Effect.succeed(timelineReads === 1 ? emptyTimeline : userOnlyTimeline);
           }
           if (tag === "GetTurnRequestStatus") {
             return uncertainStatusResult(statusKind);
@@ -298,9 +290,11 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
         yield* Deferred.await(streamStarted);
         registry.set(runTurnAtom, Atom.Interrupt);
-        yield* Deferred.await(timelineRefreshed);
-        yield* Effect.yieldNow;
+        yield* Effect.suspend(() =>
+          O.isNone(registry.get(streamingTurnAtom)) ? Effect.void : Effect.fail("streaming turn is still reconciling")
+        ).pipe(Effect.retry(reconciliationSchedule));
 
+        expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
         expect(registry.get(draftAtom)).toStrictEqual(O.none());
         expect(registry.get(draftRevisionAtom)).toBe(0);
         const [fallback] = registry.get(unreconciledAtom);
@@ -310,7 +304,6 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
           { type: "paragraph", children: [{ type: "text", text: "(stopped)" }] },
         ]);
         expect(O.isSome(registry.get(turnErrorAtom))).toBe(true);
-        expect(registry.get(streamingTurnAtom)).toStrictEqual(O.none());
 
         unmountError();
         unmountStreaming();
