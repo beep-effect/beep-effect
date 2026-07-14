@@ -91,25 +91,28 @@ remediation, and package routing. See `reviews/p2-enforcement-slice.md`.
 
 ## P3 Helper And Example Library
 
-Status: in progress. The first internal diagnostics helper pilot is complete
-for repo-cli laws tooling; public `@beep/schema` helper extraction is deferred
-until multiple packages need the same surface. See
+Status: closed with recorded deferrals. The first internal diagnostics helper
+pilot is complete for repo-cli laws tooling; public `@beep/schema` helper
+extraction and helper statics are deferred until repeated cross-package demand.
+See
 `reviews/p3-schema-diagnostics-helper-pilot.md`.
 
-- [ ] Evaluate a small `@beep/schema` law-test helper for
-      arbitrary/equivalence/codecs.
-- [ ] Evaluate helper statics for `S.Class` schemas if the pattern repeats.
+- [ ] Recorded deferral: evaluate a small `@beep/schema` law-test helper only
+      after repeated cross-package demand for arbitrary/equivalence/codecs.
+- [ ] Recorded deferral: evaluate helper statics for `S.Class` schemas only if
+      the pattern repeats across packages.
 - [x] Add reusable diagnostics formatting around
       `SchemaIssue.makeFormatterStandardSchemaV1` for the first internal
       laws-tooling call site.
 - [x] Ensure diagnostics helpers format `SchemaError.issue` and handle redacted
       values before formatting, using public formatter hooks while
       `SchemaIssue.redact` is not exposed by installed package typings.
-- [ ] Keep helpers thin; prefer upstream `effect/Schema` directly where clear.
+- [x] Keep helpers thin; prefer upstream `effect/Schema` directly where clear.
 
 ## P4 Ordered Remediation Waves
 
-Status: in progress. First Wave 3 pilots completed for
+Status: closed with completed pilots retained and remaining waves deferred.
+First Wave 3 pilots completed for
 `packages/foundation/modeling/schema/test/Sha256.test.ts`,
 `packages/foundation/modeling/schema/test/Markdown.test.ts`,
 `packages/foundation/modeling/schema/test/HttpHeaders.test.ts`,
@@ -172,7 +175,7 @@ class-local decoder statics pilots in
 `LiteralKit` statics pilot in
 `reviews/p4-quality-task-literalkit-statics-pilot.md`.
 
-- [ ] Wave 1: migrate low-risk static schema API sites first:
+- [ ] Recorded deferral: remaining Wave 1 low-risk static schema API sites:
       `TaggedUnion.match`, `.cases`, `.guards`, `LiteralKit.Enum`,
       `LiteralKit.is`, `LiteralKit.Options`, `LiteralKit.pickOptions`, and
       `MappedLiteralKit` directional helpers.
@@ -180,7 +183,7 @@ class-local decoder statics pilots in
         adapter guards and canonical values to `LiteralKit` / `S.is` static
         surfaces while leaving the lazy `bin-main.ts` preflight untouched; see
         `reviews/p4-quality-task-literalkit-statics-pilot.md`.
-- [ ] Wave 2: tighten broad schema primitives surfaced by the precision audit,
+- [ ] Recorded deferral: remaining Wave 2 broad-schema precision work,
       including `S.String`, `S.Number`, and unbounded arrays where the domain is
       narrower.
   - [x] Pilot `HubSpotUpsertContactRequest.email`: added a local precise
@@ -195,7 +198,7 @@ class-local decoder statics pilots in
         diagnostic broad email fields in the inventory as `exception` entries
         while excluding them from active advisory counts; see
         `reviews/p4-precision-exception-counting.md`.
-- [ ] Wave 3: migrate schema-modeled unit-test laws from static-only data to
+- [ ] Recorded deferral: remaining Wave 3 schema-derived property work uses
       `S.toArbitrary`, FastCheck, and seeded Faker annotations on existing
       source schemas. Keep fixtures for golden payloads, snapshots, external
       compatibility, migrations, and regression repros.
@@ -285,9 +288,8 @@ class-local decoder statics pilots in
         flaky (caught by full-suite + stress runs), and reclassified
         PromiseSchema as an exception, dropping the advisories 15 → 5. See
         `reviews/p4-wave3-deferred-arbitraries.md`.
-- [ ] Wave 4: migrate options/config/request defaults from parameter defaults
-      and fallback objects into schema defaults. Start with schemas already
-      modeling option/config/request objects.
+- [ ] Recorded deferral: Wave 4 options/config/request defaults. Resume only
+      when a schema-heavy wave creates repeated demand for this capability.
   - [x] Pilot ontology Markdown projection options: moved `linkMode` fallback
         into `OntologyMarkdownProjectionOptions` with
         `S.withConstructorDefault(...)` and proved omitted/empty options render
@@ -300,8 +302,8 @@ class-local decoder statics pilots in
 - [x] Wave 5: add `S.toEquivalence` where schema-modeled equality is manually
       encoded. Completed for `LocalDate.equals` and `Timestamp.equals`; see
       `reviews/p4-equivalence-wave.md`.
-- [ ] Wave 6: add class-local derived helpers where repeated decode/encode /
-      arbitrary/equivalence plumbing exists.
+- [ ] Recorded deferral: Wave 6 class-local derived helpers. Resume only when
+      repeated decode/encode/arbitrary/equivalence plumbing demands them.
   - [x] Pilot OIP schema classes: added class-local `decodeUnknownResult` and
         `decodeUnknownEffect` statics to `OipSiteContent`,
         `ContactSubmission`, and `ContactSubmissionFormPayload`, while keeping
@@ -310,14 +312,13 @@ class-local decoder statics pilots in
         statics to `NamedNode`, `Literal`, and `SemanticSchemaMetadata`, then
         moved private construction-helper decoders through those schema-owned
         statics.
-- [ ] Spike `SchemaRepresentation` on a small generated model subset before
-      touching broader generated driver output.
-- [ ] Keep the `SchemaRepresentation` spike side-by-side only. Do not replace
-      generated Box files until source conversion and emitter parity are proven.
+- [x] Dropped: do not run the `SchemaRepresentation` generated-model spike.
+      The packet closes without a generated-driver experiment.
+- [x] Preserve the safety conclusion: no generated Box replacement was made.
 
 ## P5 Hardening And Closure
 
-Status: planned.
+Status: docs-side closeout complete on 2026-07-14.
 
 - [ ] Run `bun run beep lint schema-first` and iterate false positives.
 - [ ] Run `bun run beep yeet verify --plan --json` to confirm the quality path.
@@ -336,7 +337,13 @@ Status: planned.
       proof reuse for the current state.
 - [ ] Use `publish --start-pr-early --monitor` only when the operator wants
       hosted checks/reviewers to start while local full proof continues.
-- [ ] Record known deferrals in the packet before closing.
+- [x] Record known deferrals in the packet before closing. The false-positive
+      and arbitrary-deferral ledger is final; the five retained arbitrary cases
+      are Glob, TypedArrays, IRI, PackageJson, and Graph.
+
+The remaining command-oriented P5 checks were not claimed as newly executed by
+this documentation-only closeout. Existing shipped proof and review artifacts
+remain the evidence for P0–P2 and the completed P4 pilots.
 
 ## Verification Ladder
 

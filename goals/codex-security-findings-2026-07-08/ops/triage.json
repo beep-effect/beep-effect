@@ -8,14 +8,15 @@
     "capturedCount": 45,
     "capturedAt": "2026-07-08T10:31:52.761Z",
     "validationBatchSize": 6,
-    "note": "P2 validation complete; P3 invalid/already-fixed Codex closeout complete; P4/P5 remediation complete locally with 30 legitimate maintained-code findings fixed pending PR merge and post-merge Codex closure.",
-    "remediationCompletedAt": "2026-07-08T12:18:00.000Z"
+    "note": "P2-P7 complete; PR #338 merged 2026-07-08 as c9ca7734e5. P8/P9 completed 2026-07-14: all 30 remediated findings were already archived by the scanner as Fixed because they were no longer detected; the live open view showed 0 packet-applicable findings and 9 newer non-packet findings were left untouched.",
+    "remediationCompletedAt": "2026-07-08T12:18:00.000Z",
+    "closeoutCompletedAt": "2026-07-14T04:35:39-05:00"
   },
   "lanes": {
     "RL-001": {
       "id": "RL-001",
       "title": "CI, release, and repo-security policy",
-      "status": "complete pending merge",
+      "status": "complete",
       "ownerArea": "GitHub Actions and repository security configuration",
       "findingIds": ["CSF-001", "CSF-005", "CSF-007", "CSF-011", "CSF-014"],
       "completedAt": "2026-07-08T12:18:00.000Z"
@@ -23,7 +24,7 @@
     "RL-002": {
       "id": "RL-002",
       "title": "Agent/plugin and committed local-path surfaces",
-      "status": "complete pending merge",
+      "status": "complete",
       "ownerArea": "agent skills, plugin marketplace, and authored research/goal docs",
       "findingIds": [
         "CSF-003",
@@ -39,7 +40,7 @@
     "RL-003": {
       "id": "RL-003",
       "title": "Repo-cli generators, skills updater, corpus, and codemod tooling",
-      "status": "complete pending merge",
+      "status": "complete",
       "ownerArea": "@beep/repo-cli and goal-local codemod tooling",
       "findingIds": ["CSF-006", "CSF-008", "CSF-012", "CSF-030", "CSF-031"],
       "completedAt": "2026-07-08T12:18:00.000Z"
@@ -47,7 +48,7 @@
     "RL-004": {
       "id": "RL-004",
       "title": "Foundation and editor boundary validation",
-      "status": "complete pending merge",
+      "status": "complete",
       "ownerArea": "foundation packages and editor chat composer",
       "findingIds": [
         "CSF-010",
@@ -62,7 +63,7 @@
     "RL-005": {
       "id": "RL-005",
       "title": "Remote extraction and evidence integrity gates",
-      "status": "complete pending merge",
+      "status": "complete",
       "ownerArea": "LangExtract/law-practice and epistemic claim gate",
       "findingIds": ["CSF-015", "CSF-025"],
       "completedAt": "2026-07-08T12:18:00.000Z"
@@ -70,7 +71,7 @@
     "RL-006": {
       "id": "RL-006",
       "title": "Drivers and scratchpad generator/runtime hardening",
-      "status": "complete pending merge",
+      "status": "complete",
       "ownerArea": "PACER, USPTO MCP, scratchpad ontology/logging",
       "findingIds": ["CSF-029", "CSF-033", "CSF-036", "CSF-038", "CSF-040"],
       "completedAt": "2026-07-08T12:18:00.000Z"
@@ -242,7 +243,7 @@
       "codexId": "c892c74454f881919959780aa3403d4c",
       "title": "Turbo token exposed to same-repo PR code",
       "severity": "High",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "2d ago",
       "page": "1-20 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-001.md",
@@ -255,7 +256,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-001",
       "validation": {
         "status": "complete",
@@ -266,7 +267,7 @@
         "completedAt": "2026-07-08T10:37:22.965Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Limited Turbo and app secrets to trusted push contexts and forced pull-request cache behavior to local mode.",
         "changedFiles": [".github/workflows/check.yml"],
@@ -275,9 +276,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Restrict Turbo credentials to trusted events or otherwise ensure PR-controlled code cannot read inherited Turbo secrets."
     },
@@ -334,7 +335,7 @@
       "codexId": "5e356d5bfee481919545922bff45ec40",
       "title": "DataMoat plugin installs code that captures local AI histories",
       "severity": "High",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "1w ago",
       "page": "1-20 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-003.md",
@@ -347,7 +348,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-002",
       "validation": {
         "status": "complete",
@@ -368,7 +369,7 @@
         "completedAt": "2026-07-08T10:37:22.965Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Removed the installable DataMoat marketplace entry and plugin payload from tracked agent plugin surfaces.",
         "changedFiles": [
@@ -388,9 +389,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Remove the installable DataMoat plugin entry and plugin files, or replace them with a non-installing documentation-only surface that cannot start background capture from agent scripts."
     },
@@ -445,7 +446,7 @@
       "codexId": "fc99dd398e5c8191acea1d4f3f32b5bc",
       "title": "Signing key is read before release approval",
       "severity": "High",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "2w ago",
       "page": "1-20 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-005.md",
@@ -459,7 +460,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-001",
       "validation": {
         "status": "complete",
@@ -473,7 +474,7 @@
         "completedAt": "2026-07-08T10:37:22.965Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Moved signing secret validation behind the protected desktop release environment.",
         "changedFiles": [".github/workflows/release-desktop.yml"],
@@ -482,9 +483,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Keep preflight non-secret and move signing-secret presence checks behind the protected release approval gate."
     },
@@ -493,7 +494,7 @@
       "codexId": "48e9a65e65e88191b1dce25f0f13e489",
       "title": "Unescaped upstream data can inject generated TypeScript",
       "severity": "High",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "2w ago",
       "page": "1-20 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-006.md",
@@ -502,7 +503,7 @@
       "classes": ["CWE-94", "CWE-116", "supply-chain-code-generation"],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-003",
       "validation": {
         "status": "complete",
@@ -521,7 +522,7 @@
         "completedAt": "2026-07-08T10:37:22.965Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Escaped upstream metadata before rendering generated TypeScript comments and added hostile metadata coverage.",
         "changedFiles": [
@@ -538,9 +539,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Add and apply a block-comment-safe metadata formatter, then add a regression test for hostile metadata in generated headers."
     },
@@ -549,7 +550,7 @@
       "codexId": "b5c03ec0d2888191b8d9256069aac5a3",
       "title": "Workflow dispatch input enables shell injection",
       "severity": "Medium",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "50m ago",
       "page": "1-20 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-007.md",
@@ -562,7 +563,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-001",
       "validation": {
         "status": "complete",
@@ -573,7 +574,7 @@
         "completedAt": "2026-07-08T10:42:41.311Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Moved manual run count input through an environment variable and validated it as a bounded positive integer before shell use.",
         "changedFiles": [".github/workflows/property-laws-nightly.yml"],
@@ -582,9 +583,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Move the dispatch value into an environment variable, validate it as a positive integer, and pass only the validated value to the property sweep command."
     },
@@ -593,7 +594,7 @@
       "codexId": "4d1586f75c44819188077892583ee904",
       "title": "Research daily can commit raw browser history on scan failure",
       "severity": "Medium",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "2d ago",
       "page": "1-20 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-008.md",
@@ -605,7 +606,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-003",
       "validation": {
         "status": "complete",
@@ -620,7 +621,7 @@
         "completedAt": "2026-07-08T10:42:41.311Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Copied browser history into scoped temporary storage and kept research commits from staging raw .beep artifacts.",
         "changedFiles": [
@@ -632,9 +633,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Ensure history scratch copies are cleaned with acquire/release or ensuring, keep transient state outside versioned commits, and stage only an allowlist of generated artifacts."
     },
@@ -689,7 +690,7 @@
       "codexId": "a688672e8c6081918e434272ee07f92d",
       "title": "Tier gate permits non-read-only writes without approval",
       "severity": "Medium",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "6d ago",
       "page": "1-20 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-010.md",
@@ -702,7 +703,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-004",
       "validation": {
         "status": "complete",
@@ -713,7 +714,7 @@
         "completedAt": "2026-07-08T10:42:41.311Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Required readonly tool annotations before non-destructive auto-approval can bypass approval.",
         "changedFiles": [
@@ -725,9 +726,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Automatically approve only read-only and non-destructive tools; require explicit policy approval for all non-read-only or destructive tools, with a regression test."
     },
@@ -736,7 +737,7 @@
       "codexId": "74e159f9e3d481919cdacd026ad3b49f",
       "title": "Broad gitleaks allowlist disables secret scanning",
       "severity": "Medium",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "6d ago",
       "page": "1-20 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-011.md",
@@ -749,7 +750,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-001",
       "validation": {
         "status": "complete",
@@ -765,7 +766,7 @@
         "completedAt": "2026-07-08T10:42:41.311Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Scoped the research allowlist to the generic API-key rule instead of disabling broad secret scanning.",
         "changedFiles": [".gitleaks.toml"],
@@ -774,9 +775,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Scope the SOURCES.md allowlist to the intended rule, such as generic-api-key, while preserving anchored path patterns."
     },
@@ -785,7 +786,7 @@
       "codexId": "e1b876909298819181f0810c89bb449f",
       "title": "Remote skill updater allows path traversal writes",
       "severity": "Medium",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "1w ago",
       "page": "1-20 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-012.md",
@@ -794,7 +795,7 @@
       "classes": ["CWE-22", "CWE-73"],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-003",
       "validation": {
         "status": "complete",
@@ -808,7 +809,7 @@
         "completedAt": "2026-07-08T10:42:41.311Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Rejected traversal and out-of-root paths from GitHub skill tree entries before writing updates.",
         "changedFiles": [
@@ -820,9 +821,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Normalize and validate every remote path before fetch/write, reject absolute/traversal/special segments, and assert resolved destinations remain inside the canonical skill directory."
     },
@@ -869,7 +870,7 @@
       "codexId": "33a35d9afa308191810d5b813946077c",
       "title": "Desktop signing job no longer uses protected environment",
       "severity": "Medium",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "2w ago",
       "page": "1-20 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-014.md",
@@ -882,7 +883,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-001",
       "validation": {
         "status": "complete",
@@ -893,7 +894,7 @@
         "completedAt": "2026-07-08T10:47:35.912Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Restored protected-environment gating for desktop release signing and readiness.",
         "changedFiles": [".github/workflows/release-desktop.yml"],
@@ -902,9 +903,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Attach the protected environment to every job that reads signing credentials or stages release assets, or move signing/upload work into the protected job."
     },
@@ -913,7 +914,7 @@
       "codexId": "b756556479a88191a66e8863d5b000c2",
       "title": "Office actions sent to LLM provider without a guard",
       "severity": "Medium",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "2w ago",
       "page": "1-20 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-015.md",
@@ -922,7 +923,7 @@
       "classes": ["CWE-200", "CWE-201", "LLM data exposure"],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-005",
       "validation": {
         "status": "complete",
@@ -940,7 +941,7 @@
         "completedAt": "2026-07-08T10:47:35.912Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Added a default-deny remote extraction policy and wired law-practice server config to opt into remote LangExtract use.",
         "changedFiles": [
@@ -956,9 +957,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Fail closed before extraction unless policy permits the selected provider and data class; add local/remote provider capability checks and tenant/user opt-in or redaction."
     },
@@ -967,7 +968,7 @@
       "codexId": "6a1fd70adaa48191b5b2409303cea34c",
       "title": "Committed SkillOpt artifacts leak local filesystem paths",
       "severity": "Low",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "1d ago",
       "page": "1-20 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-016.md",
@@ -980,7 +981,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-002",
       "validation": {
         "status": "complete",
@@ -1010,7 +1011,7 @@
         "completedAt": "2026-07-08T10:47:35.912Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Removed tracked generated SkillOpt run outputs and scrubbed remaining local filesystem paths from retained findings/proofs.",
         "changedFiles": [
@@ -1036,9 +1037,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Remove or regenerate the committed generated history with local paths and execution traces scrubbed, and add ignore/export sanitation for future SkillOpt artifacts."
     },
@@ -1047,7 +1048,7 @@
       "codexId": "6e47c5f135208191b95c4fe11fc41b40",
       "title": "Unsafe Turtle IRI formatting permits RDF injection",
       "severity": "Low",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "6d ago",
       "page": "1-20 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-017.md",
@@ -1056,7 +1057,7 @@
       "classes": ["RDF injection", "unsafe serialization", "input validation"],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-004",
       "validation": {
         "status": "complete",
@@ -1070,7 +1071,7 @@
         "completedAt": "2026-07-08T10:47:35.912Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Validated PN_LOCAL prefixes and percent-encoded unsafe full IRI references before rendering.",
         "changedFiles": [
@@ -1082,9 +1083,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Validate prefix and full IRI emission rules or accept branded validated values; add regression tests for delimiter, quote, backslash, and control-character rejection."
     },
@@ -1093,7 +1094,7 @@
       "codexId": "f0783d95ca24819183b258081c61a466",
       "title": "Unsafe deepMerge permits prototype poisoning",
       "severity": "Low",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "1w ago",
       "page": "1-20 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-018.md",
@@ -1106,7 +1107,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-004",
       "validation": {
         "status": "complete",
@@ -1117,7 +1118,7 @@
         "completedAt": "2026-07-08T10:47:35.912Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Skipped blocked object keys during deep merge and covered prototype-pollution inputs.",
         "changedFiles": [
@@ -1129,9 +1130,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Reject prototype-sensitive property names during recursive merge and add tests for top-level and nested hostile patch keys."
     },
@@ -1140,7 +1141,7 @@
       "codexId": "e3330b08e0908191bc9b78d5832b0bc0",
       "title": "Dynamic heading level enables HTML injection",
       "severity": "Low",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "1w ago",
       "page": "1-20 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-019.md",
@@ -1149,7 +1150,7 @@
       "classes": ["CWE-79", "CWE-20", "HTML injection"],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-004",
       "validation": {
         "status": "complete",
@@ -1163,7 +1164,7 @@
         "completedAt": "2026-07-08T10:51:52.902Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Validated heading levels through the schema guard and fell back to h6 for forged values.",
         "changedFiles": [
@@ -1175,9 +1176,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Render headings through a closed 1..6 mapping or validate Document/Block at public HTML render boundaries, with regression coverage."
     },
@@ -1274,7 +1275,7 @@
       "codexId": "3a3ea697ab6881918a48a8b9bcc9f3f9",
       "title": "Attachment size limit bypasses upload callback",
       "severity": "Low",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "2w ago",
       "page": "21-40 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-022.md",
@@ -1287,7 +1288,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-004",
       "validation": {
         "status": "complete",
@@ -1303,7 +1304,7 @@
         "completedAt": "2026-07-08T10:51:52.902Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Filtered oversized attachments before invoking callbacks and kept IME composition guards intact.",
         "changedFiles": [
@@ -1315,9 +1316,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Filter/decode files against maxAttachmentBytes before invoking onAttach, or change the callback contract to accepted attachments plus rejections, with regression coverage."
     },
@@ -1326,7 +1327,7 @@
       "codexId": "65957467b2fc8191981bbb7ec6f13048",
       "title": "Developer-local paths committed in research prompt",
       "severity": "Low",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "2w ago",
       "page": "21-40 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-023.md",
@@ -1339,7 +1340,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-002",
       "validation": {
         "status": "complete",
@@ -1352,7 +1353,7 @@
         "completedAt": "2026-07-08T10:51:52.902Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Replaced developer-local checkout paths in the research seed prompt with generic placeholders.",
         "changedFiles": [
@@ -1363,9 +1364,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Replace absolute developer-machine links with repo-relative references, public upstream URLs, or sanitized placeholders."
     },
@@ -1374,7 +1375,7 @@
       "codexId": "77f321288fa88191ae603b14acc7ae61",
       "title": "Internal Tailnet service URL leaked in README",
       "severity": "Low",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "2w ago",
       "page": "21-40 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-024.md",
@@ -1383,7 +1384,7 @@
       "classes": ["CWE-200", "information-disclosure", "internal-service-url"],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-002",
       "validation": {
         "status": "complete",
@@ -1394,7 +1395,7 @@
         "completedAt": "2026-07-08T10:51:52.902Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Redacted the internal Tailnet service URL from the exploration README.",
         "changedFiles": ["explorations/solo-firm-docketing/README.md"],
@@ -1403,9 +1404,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Remove the concrete internal URL and replace it with a generic private deployment placeholder."
     },
@@ -1414,7 +1415,7 @@
       "codexId": "186268b3f5488191988ed21094114551",
       "title": "Claim gate admits claims with fabricated evidence spans",
       "severity": "Low",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "2w ago",
       "page": "21-40 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-025.md",
@@ -1423,7 +1424,7 @@
       "classes": ["CWE-20", "data-integrity", "provenance-validation"],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-005",
       "validation": {
         "status": "complete",
@@ -1440,7 +1441,7 @@
         "completedAt": "2026-07-08T10:56:29.456Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Required non-empty, internally consistent evidence anchors and filtered fabricated spans before claim admission.",
         "changedFiles": [
@@ -1456,9 +1457,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Require non-empty quote, ordered offsets, evidence/source binding, and quote equality against the referenced source slice before admission."
     },
@@ -1467,7 +1468,7 @@
       "codexId": "d1fcf507c67081919f19652cc625af68",
       "title": "1Password skill exposes vault metadata to agent transcripts",
       "severity": "Low",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "2w ago",
       "page": "21-40 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-026.md",
@@ -1480,7 +1481,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-002",
       "validation": {
         "status": "complete",
@@ -1491,7 +1492,7 @@
         "completedAt": "2026-07-08T10:56:29.456Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Narrowed the 1Password skill trigger and required approval-gated, metadata-only secret-reference inventory.",
         "changedFiles": [".claude/skills/onepassword-secret-refs/SKILL.md"],
@@ -1500,9 +1501,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Narrow activation, remove default process/account diagnostics, require explicit user approval before inventory, and default to redacted status/counts."
     },
@@ -1511,7 +1512,7 @@
       "codexId": "d53692049620819191d429f2c1019e9f",
       "title": "Training artifacts disclose local filesystem paths",
       "severity": "Informational",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "1d ago",
       "page": "21-40 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-027.md",
@@ -1525,7 +1526,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-002",
       "validation": {
         "status": "complete",
@@ -1556,7 +1557,7 @@
         "completedAt": "2026-07-08T10:56:29.456Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Removed committed training outputs and replaced remaining local path disclosures in retained SkillOpt history files.",
         "changedFiles": [
@@ -1573,9 +1574,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Scrub or relativize absolute host paths in retained training artifacts and add sanitizer/export handling for future generated logs and JSON/JSONL records."
     },
@@ -1629,7 +1630,7 @@
       "codexId": "7faa711bac00819199fa28258262aba1",
       "title": "Unvalidated PACER report IDs used in cleanup DELETEs",
       "severity": "Informational",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "1d ago",
       "page": "21-40 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-029.md",
@@ -1642,7 +1643,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-006",
       "validation": {
         "status": "complete",
@@ -1657,7 +1658,7 @@
         "completedAt": "2026-07-08T10:56:29.456Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Decoded report IDs before poll/download and restricted cleanup DELETEs to encoded single path segments, so malformed server-issued string or finite numeric IDs can still be cleaned up without reshaping the URL.",
         "changedFiles": [
@@ -1669,9 +1670,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Decode report ID before poll/download, format cleanup IDs as encoded single path segments, and keep finite server-issued cleanup IDs from reshaping the URL."
     },
@@ -1680,7 +1681,7 @@
       "codexId": "d27c76f6363c8191b5765946d6587e83",
       "title": "Static API codemod rewrites shadowed identifiers",
       "severity": "Informational",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "2d ago",
       "page": "21-40 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-030.md",
@@ -1694,7 +1695,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-003",
       "validation": {
         "status": "complete",
@@ -1708,7 +1709,7 @@
         "completedAt": "2026-07-08T10:56:29.456Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Resolved usage identifiers to the original relocated symbol and expanded shorthand properties without touching shadowed bindings.",
         "changedFiles": [
@@ -1720,9 +1721,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Collect verified reference nodes before removing declarations or resolve usages to the original symbol; exclude binding/declaration/import/type-only identifiers and add shadowing tests."
     },
@@ -1731,7 +1732,7 @@
       "codexId": "b58954eda1108191a84d821bb2fc3828",
       "title": "Unsanitized extract out-label permits path traversal",
       "severity": "Informational",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "4d ago",
       "page": "21-40 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-031.md",
@@ -1746,7 +1747,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-003",
       "validation": {
         "status": "complete",
@@ -1761,7 +1762,7 @@
         "completedAt": "2026-07-08T11:01:16.165Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Rejected corpus extract labels that are empty, absolute, traversal, contain separators, or contain NUL before staging writes.",
         "changedFiles": [
@@ -1775,9 +1776,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Validate out-label as a single safe path segment and resolve the final output directory under the corpus staging root before removal or writes."
     },
@@ -1786,7 +1787,7 @@
       "codexId": "bec753a1e9c88191888547eac7038bf1",
       "title": "Research docs leak private repo paths and internals",
       "severity": "Informational",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "6d ago",
       "page": "21-40 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-032.md",
@@ -1799,7 +1800,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-002",
       "validation": {
         "status": "complete",
@@ -1813,7 +1814,7 @@
         "completedAt": "2026-07-08T11:01:16.165Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Scrubbed private checkout, scratch, download, and memory paths from identity-as-IRI research artifacts.",
         "changedFiles": [
@@ -1835,9 +1836,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Redact local paths and private repo internals; use repo-relative references or summarized private-repo learnings without concrete private layouts."
     },
@@ -1846,7 +1847,7 @@
       "codexId": "f11dd817dfe88191add08c93af730f61",
       "title": "Exported bin module starts MCP server on import",
       "severity": "Informational",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "6d ago",
       "page": "21-40 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-033.md",
@@ -1859,7 +1860,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-006",
       "validation": {
         "status": "complete",
@@ -1873,7 +1874,7 @@
         "completedAt": "2026-07-08T11:01:16.165Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Guarded MCP server startup behind import.meta.main and added import-only coverage.",
         "changedFiles": [
@@ -1885,9 +1886,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Move reusable config to an import-safe module and keep executable startup behind an entrypoint guard or non-exported launcher; correct package export/sideEffects metadata."
     },
@@ -1990,7 +1991,7 @@
       "codexId": "5f5ff05418c88191919f07e62490da39",
       "title": "PACER auth sends Option wrappers in login JSON",
       "severity": "Informational",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "1w ago",
       "page": "21-40 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-036.md",
@@ -2003,7 +2004,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-006",
       "validation": {
         "status": "complete",
@@ -2019,7 +2020,7 @@
         "completedAt": "2026-07-08T11:01:16.165Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Schema-encoded login/logout request bodies before bodyJson and asserted that Option internals are not serialized.",
         "changedFiles": [
@@ -2032,9 +2033,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Encode CsoAuthRequest through schemaBodyJson or S.encode before bodyJson, and assert login request JSON shape in mock/tests."
     },
@@ -2089,7 +2090,7 @@
       "codexId": "8932e26dc4a4819187faf74d753f6461",
       "title": "Unsafe ontology IRI codegen allows TS code injection",
       "severity": "Informational",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "1w ago",
       "page": "21-40 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-038.md",
@@ -2102,7 +2103,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-006",
       "validation": {
         "status": "complete",
@@ -2116,7 +2117,7 @@
         "completedAt": "2026-07-08T11:06:33.468Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Rendered generated object keys and IRI values as safe TypeScript literals and removed a cloned-map bucket path that hid dynamic terms from tests.",
         "changedFiles": [
@@ -2129,9 +2130,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Serialize generated object keys and IRI values as safe literals or reject non-identifier terms with strict validation; add codegen regression coverage."
     },
@@ -2182,7 +2183,7 @@
       "codexId": "dc9ac83457488191a4ff4666ef539ba2",
       "title": "Scratchpad logging code fails to compile and can crash",
       "severity": "Informational",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "1w ago",
       "page": "21-40 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-040.md",
@@ -2191,7 +2192,7 @@
       "classes": ["build-failure", "local-runtime-crash", "non-security"],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-006",
       "validation": {
         "status": "complete",
@@ -2206,7 +2207,7 @@
         "completedAt": "2026-07-08T11:06:33.468Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Removed invalid imports, fixed the write path for string/Buffer chunks, and covered rotating log writes.",
         "changedFiles": [
@@ -2220,9 +2221,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Fix/remove the identity import, align exported error imports, and rewrite RotatingFileSink.write so all values are scoped and defined."
     },
@@ -2361,7 +2362,7 @@
       "codexId": "4520d5366ea0819193fd983c32b00436",
       "title": "IME Enter guard regression can submit mid-composition",
       "severity": "Informational",
-      "codexStatus": "New",
+      "codexStatus": "Closed",
       "committed": "2w ago",
       "page": "41-45 of 45",
       "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-044.md",
@@ -2375,7 +2376,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Fixed (scanner auto-close; issue no longer detected)",
       "lane": "RL-004",
       "validation": {
         "status": "complete",
@@ -2392,7 +2393,7 @@
         "completedAt": "2026-07-08T11:10:27.310Z"
       },
       "remediation": {
-        "status": "complete pending merge",
+        "status": "complete",
         "completedAt": "2026-07-08T12:18:00.000Z",
         "summary": "Restored the legacy IME keyCode 229 bail-out alongside modern composition-state checks.",
         "changedFiles": [
@@ -2404,9 +2405,9 @@
         ]
       },
       "closeout": {
-        "status": "pending post-merge",
-        "closedAt": null,
-        "reason": null
+        "status": "closed in Codex",
+        "closedAt": "2026-07-14T04:35:39-05:00",
+        "reason": "Fixed (scanner auto-close; issue no longer detected)"
       },
       "remediationHint": "Restore legacy IME key fallback beside the modern composition guard, preferably via a named helper, with focused coverage."
     },

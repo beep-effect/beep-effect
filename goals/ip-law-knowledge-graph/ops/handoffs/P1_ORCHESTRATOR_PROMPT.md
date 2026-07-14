@@ -1,1 +1,0 @@
-Read the P1 handoff at `handoffs/HANDOFF_P1.md` and the P0 ontology research output. Define all 15 node types as `S.TaggedClass` and 11+ edge types as typed records, compose into tagged unions, add OWL source annotations, and document dropped constraints. Write the complete schema design to `outputs/p1-schema-design.md`.

@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -34,9 +34,9 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-`P8 close-remediated` - the fix PR is merged; next actions are closing the 30
-remediated findings in the Codex scanner UI (P8), then zero-open verification
-(P9).
+`P9 local-closeout complete` - the 30 remediated findings are archived in Codex,
+the live open view showed zero findings applicable to this packet, and the
+packet is ready for the driver's completed-retained flip.
 
 ## Latest Evidence
 
@@ -44,19 +44,29 @@ remediated findings in the Codex scanner UI (P8), then zero-open verification
 
 `2026-07-11` - fix PR #338 merged to main 2026-07-08 as `c9ca7734e5`; P6 and P7 reconciled to complete.
 
+`2026-07-14` - the authenticated Codex findings view showed 9 open findings,
+none matching this packet's 30 tracked remediations. The tracked records were
+already archived as fixed by the scanner, so they were not reopened merely to
+change closure provenance. P8 and P9 are complete; the repeat browser re-check
+later stopped rendering after an archive-audit timeout and is recorded in
+[`history/2026-07-14-p8-p9-closeout.md`](./history/2026-07-14-p8-p9-closeout.md).
+
 ## Closeout reconciliation (2026-07-11)
 
 Retroactive paperwork reconciliation: the fix PR #338 merged to main on
 2026-07-08 as `c9ca7734e5`, but the manifest still showed P6 as `active` and
 P7 as `pending`. Both are now marked `complete` with that evidence. The packet
-stays `active` because P8 (close the 30 remediated findings in the Codex
-scanner UI) and P9 (zero-open verification) have not been performed.
+stayed `active` until the post-merge Codex closeout could be performed. That
+closeout is now complete; status and Lifecycle remain `active` for the driver
+to perform the reserved completed-retained flip.
 
 Important for P9: the zero-open check must account for a NEWER 2026-07-10
 Codex scan batch that has no packet of its own. Those findings were already
 fixed via PR #362 (merged 2026-07-11 as `831410b492`), so "zero open" for this
 packet means the 30 findings tracked here are closed and any remaining open
 items belong to (and are covered by) the 2026-07-10 batch remediated in #362.
+The 2026-07-14 live view showed 9 such non-packet findings; none of them were
+closed during this pass.
 
 ## Notes
 
@@ -70,5 +80,6 @@ items belong to (and are covered by) the 2026-07-10 batch remediated in #362.
 - Sub-agents may validate and fix disjoint lanes in batches of six. The main
   agent owns ledger writes, shared helpers, browser closures, Yeet, merge, and
   final zero-open verification.
-- The tracked packet stays `active` in the single PR. Post-merge Codex closure
-  evidence is local/untracked and reported in the final operator summary.
+- The tracked packet stays `active` until the driver performs the reserved
+  completed-retained flip. Post-merge Codex closure evidence is retained in
+  packet history and reported in the final operator summary.

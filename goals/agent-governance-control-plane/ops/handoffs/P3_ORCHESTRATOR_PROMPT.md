@@ -1,1 +1,0 @@
-Read `handoffs/HANDOFF_P3.md`, the prompt assets in `prompts/`, and the OpenClaw prompt pair. Define the reusable packet contracts and write or refine `outputs/p3-artifact-contracts-and-prompt-assets.md`. Ensure the `Execution Packet` is decision complete and the prompt assets align to it.

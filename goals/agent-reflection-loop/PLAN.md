@@ -2,16 +2,16 @@
 
 ## Status
 
-Status: `active` — P1 in progress.
+Status: `completed-retained` — P1 complete; P2 and P3 descoped.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Survey the frontier of reflection in agentic coding. | Cited report in `research/`. |
-| P1 Goal-closeout reflection system | active | Topology + `ReflectionFrontmatter` schema + advisory/enforcement lint rule + `/reflect` skill. | Rule routes + runs (`blocking_findings=0`); template + README + skill landed; tsgo + test green. |
-| P2 Yeet self-healing reflection | pending | `failure→reflect→repair` bound to Yeet `closeout`/a `yeet reflect` step, grounded in `QualityIssue`s. | Designed + implemented in a follow-up slice. |
-| P3 Memory consolidation | pending | Distill reflections into `memory/` / Graphiti (ExpeL-style ADD/EDIT/UPVOTE/DOWNVOTE). | Designed + implemented in a follow-up slice. |
+| P1 Goal-closeout reflection system | complete | Topology + `ReflectionFrontmatter` schema + advisory/enforcement lint rule + `/reflect` skill. | Rule routes + runs (`blocking_findings=0`); template + README + skill landed; focused test green. |
+| P2 Yeet self-healing reflection | won't-do | `failure→reflect→repair` bound to Yeet `closeout`/a `yeet reflect` step, grounded in `QualityIssue`s. | Reopen only after a packet closes without usable reflections. |
+| P3 Memory consolidation | won't-do | Distill reflections into the current durable-memory architecture. | Reopen only after a packet closes without usable reflections. |
 
 ## P1 Checklist
 
@@ -19,11 +19,11 @@ Status: `active` — P1 in progress.
 - [x] `goals/README.md` File Roles row + `_template` PLAN/GOAL/manifest wiring (`reflectionRequired: true`).
 - [x] `Lint/ReflectionArtifact.ts` — `ReflectionConfidence`/`ReflectionTrigger`/`ReflectionFindingCategory` (LiteralKit), `ReflectionFinding`/`ReflectionFrontmatter`, frontmatter decoder, runner.
 - [x] Route the subcommand: `Lint.command.ts` + `Quality/Tasks.ts` (`LintPolicySubcommand` + composite step) + `bin-main.ts` (`LINT_POLICY_SUBCOMMANDS`).
-- [ ] `commands/Yeet/internal/QualityIssueIndex.ts` — `reflection-artifact-compliance` category + routing to the `reflect` skill.
-- [ ] `.claude/skills/reflect/SKILL.md`.
-- [ ] `test/reflection-lint.test.ts`.
-- [ ] `standards/architecture/GLOSSARY.md` reflection entry.
-- [ ] Dogfood: this packet's own `history/reflections/<date>-claude.md`.
+- [x] `commands/Yeet/internal/QualityIssueIndex.ts` — `reflection-artifact-compliance` category + routing to the `reflect` skill.
+- [x] `.claude/skills/reflect/SKILL.md`.
+- [x] `test/reflection-lint.test.ts`.
+- [x] `standards/architecture/GLOSSARY.md` reflection entry.
+- [x] Dogfood: this packet's own `history/reflections/2026-06-09-claude.md`.
 
 ## P3 Closeout Checklist
 

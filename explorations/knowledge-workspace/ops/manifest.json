@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "knowledge-workspace",
+    "title": "Knowledge Workspace",
+    "status": "active",
+    "stage": "capture",
+    "openQuestions": [
+      "What is the smallest current-repo vertical that proves journal to graph projection to wiki-link authoring to temporal replay as one coherent experience?"
+    ],
+    "sources": [],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-14",
+    "updated": "2026-07-14"
+  }
+}

@@ -2,20 +2,19 @@
 
 ## Status
 
-Status: `substrate-complete` (P0 + P1 + P3 done; P2 superseded).
+Status: `terminal` (P0 + P1 + P3 done; P2 superseded).
 
-**2026-07-11:** P2 (authed-drivers) is **superseded by
+**2026-07-14:** P2 delivery scope is **superseded by
 [`goals/gov-legal-data-driver-delivery`](../gov-legal-data-driver-delivery)**
-(decision D1 of that packet's SPEC). The data/source-terms matrix (Q8) and the
-DOL + CourtListener drivers are now delivered there (its P0, P3–P5); no further
-implementation work happens in this packet. This packet's substrate scope is
-complete and verified.
+(decision D1 of that packet's SPEC). Its committed research and per-driver
+resume points retain the deferred Federal Register, DOL, and CourtListener
+scope. No further implementation or close bookkeeping happens here; this
+packet's substrate scope is complete and verified.
 
 ## Phases
 
-This wedge graduates as ONE cohesive multi-phase goal; the phases below are its
-sequenced internal slices, not separate goal packets. P2 is **gated** on the
-data/source-terms matrix (Q8 default-deny).
+The phases below are the terminal execution record. P2 moved to the delivery
+packet with the Q8 default-deny rule preserved.
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
@@ -37,8 +36,8 @@ Before marking the packet closed (and `status` → `completed-retained` / `compl
    codifying. Its YAML frontmatter must validate against `ReflectionFrontmatter`.
 2. Run `bun run beep lint reflection-artifacts` (this packet has
    `reflectionRequired: true`, so a missing/invalid reflection blocks closeout).
-3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
-   statuses + `initiative.status`.
+3. Update `README.md` (status and latest evidence) and reconcile manifest phase
+   records. The lifecycle/status flip is applied separately by the driver.
 4. Confirm the transformer promotion record names ≥2 current consumers and the
    codegen-drift check is wired before closing.
 
@@ -47,7 +46,7 @@ Before marking the packet closed (and `status` → `completed-retained` / `compl
 - Preserve unrelated worktree changes.
 - Keep `SPEC.md` normative and update it only when the contract changes.
 - Keep this plan current; archive old run outputs under `history/`.
-- Do NOT enter P2 before the data/source-terms matrix exists (Q8 default-deny).
+- Do not resume P2 here; the delivery packet owns its per-driver restart points.
 - The `gov-legal-mcp` sibling server and any patents work are out of scope here.
 
 ## Verification Commands

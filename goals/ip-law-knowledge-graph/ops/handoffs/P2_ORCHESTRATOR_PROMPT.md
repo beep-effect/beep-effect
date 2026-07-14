@@ -1,1 +1,0 @@
-Read the P2 handoff at `handoffs/HANDOFF_P2.md` and the P1 schema design output. Define the package scaffold order, list every source file with purpose and dependencies, create the seed data plan, and specify quality gates. Write the complete implementation plan to `outputs/p2-implementation-plan.md`.

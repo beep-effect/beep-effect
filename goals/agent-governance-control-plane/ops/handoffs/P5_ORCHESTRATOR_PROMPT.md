@@ -1,1 +1,0 @@
-Read `handoffs/HANDOFF_P5.md`, the prior outputs, and the OpenClaw prompt package. Define the consumer inheritance model and write or refine `outputs/p5-adoption-and-consumer-integration.md`. Make the OpenClaw mapping explicit and keep generic governance centralized in this package.

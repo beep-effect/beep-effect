@@ -2,12 +2,19 @@
 
 ## Status
 
-Pending
+Lifecycle: `reference`
+
+Artifact-complete research precedent; ready for reclassification to `reference`.
 
 ## Overview
 
 This initiative turns the documentation-memory exploration into runnable
 artifacts for the repository's documentation domain.
+
+The generated artifact set passed local structural verification with 641 quads
+and SHACL conformance. The live TrustGraph config round-trip probe is won't-do
+because no TrustGraph instance is running; that runtime probe is not required
+to retain this packet as a research precedent.
 
 ## Read This First
 

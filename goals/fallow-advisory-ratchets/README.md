@@ -2,9 +2,21 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+### Portfolio closeout (2026-07-14)
+
+The retained deliverable is P0 packet authoring, P1 duplication-ratchet
+retirement, and the shipped boundary-config freshness portion of P3. P2 health,
+the feature-flag registry remainder of P3, and P4 are recorded deferrals until
+a Fallow advisory lane regresses or the post-P5 platform window opens.
+
+The P3 disposition is intentionally split: generated boundary-config freshness
+is implemented and tested; `standards/feature-flags.inventory.jsonc` is not
+shipped and remains deferred. No raw Fallow advisory lane is promoted by this
+closeout.
 
 ## Mission
 
@@ -36,12 +48,12 @@ Use this command for execution-capable sessions:
 
 ## Ratchet Order
 
-1. `health`: first remaining candidate. Add calibrated health inventory and fail only
-   new or worsened critical/high findings after Effect/schema-heavy calibration.
+1. `health`: recorded deferral until a Fallow advisory lane regresses or the
+   post-P5 platform window opens; calibration still requires a health inventory.
 2. `boundaries`: promote generated boundary config freshness only. Analyzer
    violations and architecture-role legality stay advisory.
-3. `flags`: define `standards/feature-flags.inventory.jsonc` before blocking
-   unregistered or expired flags.
+3. `flags`: recorded deferral under the same trigger; define
+   `standards/feature-flags.inventory.jsonc` before any future blocking policy.
 4. `security`: keep candidate surfacing advisory until triage inventory exists.
 5. `fix-preview`: keep dry-run only; possible future gate is parseability.
 6. `runtime-coverage` and `editor-mcp-hooks`: deferred pending separate policy.

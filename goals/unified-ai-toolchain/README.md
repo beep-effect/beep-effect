@@ -2,11 +2,22 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
-V1 complete; V2 in progress at park time; V3 planned.
+V1 complete and retained; V2/V3 recorded as conditional deferrals.
+
+### Portfolio closeout (2026-07-14)
+
+The retained deliverable is the V1 schema truth layer in `@beep/ai-sync`:
+native schemas, pinned sources, transforms, drift checks, and live
+`.codex/config.toml` dogfooding. The ten remaining V2/V3 phases are recorded
+won't-do-until a real agent-config drift incident occurs.
+
+Known drift for `claude-code-settings`, `rulesync-config`, and `rulesync-mcp`
+remains documented exactly as an unresolved known gap; this closeout does not
+refresh, resolve, or remove those entries.
 
 ## Overview
 
@@ -60,9 +71,9 @@ The V1 package owns:
 - mandatory dogfooding validation of this repo's `.codex/config.toml` during
   package and root checks
 
-V2 is the active target. It does not replace the library or create a separate
-tool package. Operator behavior belongs in the existing root repo CLI as
-`bun run beep ai-sync ...`, backed by `@beep/ai-sync`.
+V2 and V3 are not active targets after portfolio closeout. Their original
+design remains below as a conditional backlog that may reopen only after a
+real agent-config drift incident.
 
 Known live drift as of the V2/V3 bootstrap:
 
@@ -79,7 +90,8 @@ drift, and proves only evidence-backed transforms.
 
 ### V2: Safe Operation And Automation
 
-Active. V2 is complete when:
+Recorded deferral. If a real agent-config drift incident reopens V2, it is
+complete when:
 
 - `beep ai-sync audit`, `check`, `drift`, and `refresh-pr` exist in
   `@beep/repo-cli`
@@ -93,7 +105,8 @@ Active. V2 is complete when:
 
 ### V3: Canonical Sync And Native Emission
 
-Planned. V3 is complete when:
+Recorded deferral. If the same incident justifies progressing beyond V2, V3 is
+complete when:
 
 - `.ai-sync/project.jsonc` is the committed canonical source file
 - canonical per-domain models exist for rules, skills, commands, hooks,
@@ -107,7 +120,9 @@ Planned. V3 is complete when:
 
 ## Completion Standard
 
-This initiative is not fully complete until V1, V2, and V3 are all closed.
+For portfolio consolidation, the completed V1 schema truth layer is the
+retained outcome. V2 and V3 are explicitly not claimed as shipped; their ten
+phases are terminal recorded deferrals until a real drift incident.
 
 V1 remains closed when:
 

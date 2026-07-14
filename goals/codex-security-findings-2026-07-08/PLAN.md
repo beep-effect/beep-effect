@@ -3,7 +3,7 @@
 ## Status
 
 Status: `active` - branch `security/codex-findings-2026-07-08`. Current phase:
-`P6 yeet-to-mergeable`.
+`P9 local-closeout complete`; awaiting the driver's completed-retained flip.
 
 ## Phases
 
@@ -15,10 +15,10 @@ Status: `active` - branch `security/codex-findings-2026-07-08`. Current phase:
 | P3 close-invalids | complete | Main agent closes invalid findings in Chrome. | False-positive, out-of-scope, and already-fixed findings closed with correct reason. |
 | P4 lane-partition | complete | Partition legitimate findings into non-overlapping fix lanes. | Lanes recorded; shared-helper candidates owned by main agent. |
 | P5 remediate | complete | Fix all legitimate maintained-code findings. | Changed files and targeted verification recorded for each remediated finding. |
-| P6 yeet-to-mergeable | active | Drive one PR to mergeability through Yeet. | Yeet verify/publish/monitor/closeout green; no unresolved actionable comments. |
-| P7 merge | pending | Merge the PR with repo default merge behavior. | PR merged; merge commit/SHA recorded locally. |
-| P8 close-remediated | pending | Close remediated Codex findings after merge. | All remediated findings closed as `Already fixed`; zero open findings visible. |
-| P9 local-closeout | pending | Reconcile local evidence and final report. | Local raw closeout note records final zero-open evidence; tracked packet remains active. |
+| P6 yeet-to-mergeable | complete | Drive one PR to mergeability through Yeet. | PR #338 reached mergeable and merged 2026-07-08 as `c9ca7734e5`. |
+| P7 merge | complete | Merge the PR with repo default merge behavior. | PR #338 merged to main 2026-07-08 as `c9ca7734e5`. |
+| P8 close-remediated | complete | Close remediated Codex findings after merge. | All 30 tracked remediations are archived as fixed; the live open view contained 0 packet-applicable findings. |
+| P9 local-closeout | complete | Reconcile local evidence and final report. | Closeout evidence records the 30 IDs, zero-applicable-open result, newer-batch distinction, and browser re-check blocker. |
 
 ## Execution Notes
 

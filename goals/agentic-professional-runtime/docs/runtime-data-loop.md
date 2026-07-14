@@ -100,7 +100,7 @@ The runtime data loop is specified when:
 
 - raw `.eml` parsing
 - real email or calendar connector execution
-- real LLM extraction
+- real LLM extraction in this paired deterministic fixture loop
 - direct authoritative agent writes
 - external email sending
 - calendar event creation

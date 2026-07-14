@@ -1,7 +1,7 @@
 {
   "$schema": "./tasks.schema.json",
   "schemaVersion": "fallow-advisory-ratchets/tasks/v1",
-  "updated": "2026-06-11",
+  "updated": "2026-07-14",
   "validatorVersion": "fallow-advisory-ratchets-validator/v1",
   "tasks": [
     {
@@ -68,10 +68,10 @@
     {
       "id": "far-003",
       "rank": 3,
-      "status": "seeded",
+      "status": "deferred",
       "phase": "P2",
       "title": "Calibrate health baseline inventory",
-      "summary": "Define a health inventory that classifies Effect/schema-heavy false positives and gates only new or worsened critical/high findings.",
+      "summary": "Recorded deferral: define a health inventory only when a Fallow advisory lane regresses or the post-P5 platform window opens.",
       "implementationScope": [
         "standards/fallow.health.inventory.jsonc",
         "packages/tooling/tool/cli/src/commands/Quality",
@@ -94,8 +94,8 @@
       "owner": "@beep-team",
       "riskLevel": "medium",
       "decisionGate": {
-        "kind": "policy-inventory",
-        "status": "open",
+        "kind": "deferred",
+        "status": "passed",
         "evidence": ["goals/fallow-quality-enforcement/research/health.md"]
       }
     },
@@ -143,10 +143,10 @@
     {
       "id": "far-005",
       "rank": 5,
-      "status": "seeded",
+      "status": "deferred",
       "phase": "P3",
       "title": "Define feature flag lifecycle registry",
-      "summary": "Create a repo-owned feature flag inventory before promoting flags from quiet advisory output to unregistered/expired flag enforcement.",
+      "summary": "Recorded deferral: create the feature flag inventory only when a Fallow advisory lane regresses or the post-P5 platform window opens.",
       "implementationScope": [
         "standards/feature-flags.inventory.jsonc",
         "standards/architecture/11-evolution-and-deprecation.md",
@@ -168,18 +168,18 @@
       "owner": "@beep-team",
       "riskLevel": "medium",
       "decisionGate": {
-        "kind": "policy-inventory",
-        "status": "open",
+        "kind": "deferred",
+        "status": "passed",
         "evidence": ["standards/architecture/11-evolution-and-deprecation.md"]
       }
     },
     {
       "id": "far-006",
       "rank": 6,
-      "status": "seeded",
+      "status": "deferred",
       "phase": "P4",
       "title": "Preserve later-lane guardrails",
-      "summary": "Keep security candidate surfacing, fix-preview dry-run parseability, runtime coverage, and editor/MCP hook integrations out of blocking promotion until their separate policies exist.",
+      "summary": "Recorded deferral: keep late-lane guardrails unchanged until a Fallow advisory lane regresses or the post-P5 platform window opens.",
       "implementationScope": [
         "goals/fallow-quality-enforcement/research/security.md",
         "goals/fallow-quality-enforcement/research/fix-preview.md",
@@ -205,7 +205,7 @@
       "riskLevel": "low",
       "decisionGate": {
         "kind": "deferred",
-        "status": "open",
+        "status": "passed",
         "evidence": ["SPEC.md#deferred-lanes"]
       }
     }

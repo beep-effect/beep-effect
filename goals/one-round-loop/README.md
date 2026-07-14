@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `paused` — P0 and P1 complete; P2–P4 pending.
+Lifecycle: `completed-retained` — P0 and P1 complete; P2–P4 pending.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -14,6 +14,20 @@ floors) shipped via merged PRs #321–#336 during 2026-07-07/08 (e.g.
 #327 merged as `64b7e44d88`), but all phases still read `pending`.
 Reconciled 2026-07-11: P0/P1 marked complete with PR evidence; P2–P4
 remain pending and the packet stays active.
+
+### Portfolio closeout (2026-07-14)
+
+The retained deliverable is P0 and P1: CI-lane inversion and the
+property-law lane shipped through merged PRs #321–#336. P2's four
+medium-tier items and all P3 stretch items are recorded `wont_fix` in
+[`ops/progress.json`](./ops/progress.json) until CI round-trips measurably
+bottleneck delivery (median PR requires more than one CI round).
+
+P4's documentation closeout is recorded in
+[`history/p4-closeout.md`](./history/p4-closeout.md), which points each
+shipped Verification Matrix claim to the P0/P1 evidence. The property lane
+remains non-required; its required-check flip is explicitly deferred under
+the same trigger rather than treated as shipped.
 
 ## Mission
 
@@ -50,10 +64,9 @@ itself on itself via the dogfood rule.
 
 ## Current Phase
 
-P2 Medium tier (coverage v2, cwd, regen-generated,
-`withNormalizedCheck`) — pending. P0 and P1 are complete and merged;
-the dogfood rule (every packet PR passes `beep ci local` before push)
-is active.
+Docs-side P4 closeout is complete. P0 and P1 are complete and merged;
+P2 and P3 are recorded deferrals, and the property-lane required-check
+flip remains deferred.
 
 ## Latest Evidence
 
@@ -62,6 +75,7 @@ Packet authored 2026-07-07 from the crispening closeout reflection
 plus three Explore research briefs. P0 and P1 shipped via merged PRs
 #321–#336 (2026-07-07/08, e.g. #327 merged as `64b7e44d88`); manifest
 reconciled 2026-07-11.
+Portfolio closeout and the required reflection were recorded 2026-07-14.
 
 ## Notes
 

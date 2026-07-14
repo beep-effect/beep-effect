@@ -1,12 +1,12 @@
 # Goal: One-Round Loop
 
-Make the next crispening-scale effort need at most one CI round per PR.
+Retain the shipped P0/P1 outcome: CLI-owned CI-lane replay and the property-law
+lane. P2/P3 and the property-lane required-check flip are recorded `wont_fix`
+until median PR CI round-trips exceed one.
 
-`SPEC.md` is normative (tiers, fences, DoD, verification matrix, stop
-conditions). `research/decisions-locked.md` holds the grilled rulings
-D1–D7 and R1–R4 — locked; amendments need a superseding
-`standards/architecture/DECISIONS.md` entry. Track resumable state in
-`ops/progress.json`.
+`SPEC.md` preserves the historical normative contract; `PLAN.md` and
+`history/p4-closeout.md` record the disposition. Locked rulings are in
+`research/decisions-locked.md`.
 
 ## Why
 
@@ -17,7 +17,7 @@ generated files, fallow base-diff, commitlint, seed-dependent property
 laws). This packet removes each structural cause and proves the removal
 on itself.
 
-## Phases (in order; P0 gates the rest)
+## Phase disposition
 
 - **P0 CI-lane inversion** — classify every check.yml lane
   cli-runnable / workflow-gated / ci-native (D2); cli-runnable bodies
@@ -38,7 +38,7 @@ on itself.
   400 runs (own turbo task, env-declared, frozen context name,
   ratchets to required at P4 per D3); nightly sweep at 1000+ with
   workflow_dispatch + issues:write and one tracking issue.
-- **P2 Medium tier** — coverage baseline v2 with raw counts (the counts
+- **P2 Medium tier — recorded `wont_fix`** — coverage baseline v2 with raw counts (the counts
   are already decoded and discarded at CoverageRegression.ts:223;
   denominator deltas in failure output; auto-add missing packages);
   beep cwd-independence (chdir(findRepoRoot) at bin startup +
@@ -46,16 +46,16 @@ on itself.
   shim); `beep quality regen-generated` + documented conflict recipe;
   `SchemaUtils.withNormalizedCheck(normalizer)` + migrate the venice-ai,
   phoenix, and m365 hand-rolls (wire unchanged, parity-proved).
-- **P3 Stretch** (each closable won't-fix with a ledgered rationale) —
+- **P3 Stretch — recorded `wont_fix`** —
   fallow envelope findings carry file/line/symbol; yeet publish
   committed-branch mode (Handler.ts:1188 staged gate); worktree lane
   adoption (beep worktree new already bun-installs — measure, tune,
   document as THE agent-lane path); CI cancel-rerun + required-check
   quarantine (distinguish benign cancel-in-progress supersessions from
   infra cancellations first).
-- **P4 Close** — DoD confirmation, dogfood retrospective (CI rounds per
-  packet PR + root-cause notes), `/reflect` closeout,
-  `bun run beep lint reflection-artifacts` green, statuses updated.
+- **P4 Close — docs-side complete** — shipped-evidence pointers, dogfood
+  retrospective, required reflection, and the property-lane non-flip recorded
+  under the same reopening trigger.
 
 ## Dogfood rule (no bootstrap exemption)
 

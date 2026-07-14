@@ -45,25 +45,25 @@ Use this command for execution-capable sessions:
 | --- | --- |
 | [`box-driver`](../box-driver/README.md) | `@beep/box` write surface already exists in source; P3 builds sync on top. |
 | [`m365-driver`](../m365-driver/README.md) | Completed read-only driver; P6 adds write verbs behind the same DMS port. |
-| [`ip-law-knowledge-graph`](../ip-law-knowledge-graph/README.md) | This packet resolves its FalkorDB-vs-projection P0 question in favor of a Postgres/PGlite projection. |
-| [`trustgraph-port`](../trustgraph-port/README.md) | Librarian/critic prior art to mine (adapt, not port). |
+| [`semantic-foundation`](../semantic-foundation/README.md) | Absorbs the ontology-survey scope; this packet resolves its storage question in favor of a Postgres/PGlite projection. See [`explorations/legal-ontology-landscape`](../../explorations/legal-ontology-landscape/README.md). |
+| [`research/librarian-critic.md`](./research/librarian-critic.md) | Librarian/critic prior art recorded from git history (packet removed 2026-07-14); adapt, do not port. |
 | [`file-processing-capability`](../file-processing-capability/README.md) | Extraction substrate (`@beep/file-processing`, Tika/libpff). |
 | [`agentic-professional-runtime`](../agentic-professional-runtime/README.md) | Product-vision umbrella; the law-practice rung-0 loop is the proven E2E precedent this packet generalizes. |
 | [`mcp-kit`](../mcp-kit/README.md) / [`mcp-host-retrofit`](../mcp-host-retrofit/README.md) | In-flight MCP host infra; skills support (P4+) is gated on their merge. |
 
 ## Current Phase
 
-P4 Extraction → KG loop (pending P3 PR merge). P3 shipped 2026-07-11 with the
-live-Box verification lanes and OAuth connect flow deferred per the SPEC
-Exception Ledger — the Box test tenant is still not provisioned. To remove the
-exception: provision a Box developer/test tenant, set `CLOUD_BOX_TOKEN` in
-`.env`, run the env-gated live lanes
+P4 Extraction → KG loop. P3 merged in PR #386 (`158876c1e6`) with the live-Box
+verification lanes and OAuth connect flow deferred per the SPEC Exception
+Ledger — the Box test tenant is still not provisioned. To remove the exception:
+provision a Box developer/test tenant, set `CLOUD_BOX_TOKEN` in `.env`, run the
+env-gated live lanes
 (`packages/drivers/box/test/integration/Box.live.test.ts` and a live sync
 round-trip), and replace the desktop env-token setup path with the OAuth flow.
 
 ## Latest Evidence
 
-P3 Box sync completed 2026-07-11 (PR pending merge). Evidence: schema-first
+P3 Box sync merged 2026-07-11 in PR #386 (`158876c1e6`). Evidence: schema-first
 sync entities (SyncItem/SyncOperation/SyncCursor/SyncConflict) with
 `@beep/documents-tables` projections and the `documents_sync_state` db-admin
 migration proven on pglite; provider-neutral `DmsMirror`/`VaultSyncEngine`

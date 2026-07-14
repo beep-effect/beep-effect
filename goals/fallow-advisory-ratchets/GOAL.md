@@ -1,10 +1,10 @@
-# GOAL: Implement Fallow Advisory Ratchets
+# GOAL: Fallow Advisory Ratchets retained outcome
 
 Repo: repository root (`./`).
 
-Outcome: implement the follow-up ratchet packet that turns selected advisory
-Fallow lanes into narrow, policy-backed "new debt fails" gates without
-promoting all current findings to blocking lanes.
+Outcome: retain packet authoring, duplication-ratchet retirement, and shipped
+boundary-config freshness. Health, the feature-flag registry, and P4 remain
+deferred until a Fallow advisory lane regresses or the post-P5 window opens.
 
 This is a compact `/goal` launcher. Treat the packet files as the detailed
 contract:
@@ -29,23 +29,16 @@ Scope:
 - Out: raw Fallow lane promotion, Knip removal, non-dry-run `fallow fix`,
   runtime coverage adoption, and new architecture doctrine.
 
-Workflow:
-
-1. Start from updated `origin/main` on `feat/fallow-advisory-ratchets`.
-2. Preserve unrelated worktree changes and untracked files.
-3. Keep `goals/fallow-quality-enforcement` reference-only unless the user
-   explicitly asks to revise the completed parent record.
-4. Wire generated boundary config freshness, not boundary analyzer findings.
-5. Keep `health` and `flags` blocked by inventory/policy prerequisites.
+Workflow: preserve the shipped boundary-config freshness proof and keep the
+parent packet reference-only. Do not reopen health, flags, or P4 until the
+recorded trigger and an explicit status change.
 
 Acceptance:
 
-- [ ] Packet files exist and explain the ratchet sequence.
-- [ ] Duplication ratchet state reflects the retired repo-owned gate.
-- [ ] `health` fails only future calibrated new/worsened critical or high debt.
-- [ ] `boundaries` wires only generated config freshness.
-- [ ] Later lanes are guarded or deferred.
-- [ ] Packet validator passes.
+- [x] Packet files explain the retained and deferred dispositions.
+- [x] Duplication ratchet state reflects the retired repo-owned gate.
+- [x] `boundaries` wires only generated config freshness.
+- [x] Health, flags, and later lanes are recorded deferrals.
 
 Verification:
 

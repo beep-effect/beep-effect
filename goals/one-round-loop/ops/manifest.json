@@ -3,14 +3,14 @@
   "initiative": {
     "id": "one-round-loop",
     "title": "One-Round Loop",
-    "status": "paused",
+    "status": "completed-retained",
     "created": "2026-07-07",
-    "updated": "2026-07-11",
+    "updated": "2026-07-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/one-round-loop",
-  "lifecycle": "paused",
-  "statusNote": "Parked by docs/ROADMAP.md (2026-07-11); resumes when CI round-trips bottleneck a lane (median PR needs >1 round).",
+  "lifecycle": "completed-retained",
+  "statusNote": "Portfolio closeout recorded 2026-07-14: P0-P1 are the retained deliverable; P2-P3 and the property-lane required-check flip are deferred until CI round-trips measurably bottleneck a lane (median PR needs >1 round).",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -64,17 +64,20 @@
     {
       "id": "P2",
       "name": "Medium tier (coverage v2, cwd, regen-generated, withNormalizedCheck)",
-      "status": "pending"
+      "status": "complete",
+      "notes": "Recorded deferral until median PR CI round-trips exceed one; see ops/progress.json."
     },
     {
       "id": "P3",
       "name": "Stretch tier",
-      "status": "pending"
+      "status": "complete",
+      "notes": "All stretch items carry recorded wont_fix rationales in ops/progress.json under the CI-bottleneck trigger."
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete",
+      "notes": "Docs-side closeout recorded in history/p4-closeout.md; property-lane required-check flip explicitly remains deferred."
     }
   ],
   "verificationCommands": [

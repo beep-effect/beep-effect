@@ -8,13 +8,16 @@
     "openQuestions": [
       "P1-P4 research reports are pending; feed goals/semantic-foundation as they land."
     ],
-    "sources": ["research/01-direction-grounding.md"],
+    "sources": [
+      "research/01-direction-grounding.md",
+      "research/07-ip-law-ontology-survey-distillation.md"
+    ],
     "links": {
       "goals": ["goals/semantic-foundation"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-07-08",
-    "updated": "2026-07-08"
+    "updated": "2026-07-14"
   }
 }

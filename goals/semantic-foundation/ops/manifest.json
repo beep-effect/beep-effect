@@ -98,7 +98,7 @@
   "stopConditions": [
     "Required source files are missing or materially contradictory.",
     "The implementation would exceed M1 or pull M2-M4 work forward without the named gate.",
-    "The work requires editing goals/ip-law-knowledge-graph, law-practice domain entities, document-intake workflow code, graph-store wiring, or SPARQL engine wiring.",
+    "The former ontology-survey packet was removed 2026-07-14, so its edit fence is moot; stop if work exceeds the scope absorbed from explorations/legal-ontology-landscape or requires law-practice domain entities, document-intake workflow code, graph-store wiring, or SPARQL engine wiring.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ]

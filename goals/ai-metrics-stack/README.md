@@ -2,7 +2,7 @@
 
 ## Status
 
-Active
+Lifecycle: `active`
 
 ## Overview
 

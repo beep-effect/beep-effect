@@ -5,7 +5,7 @@
     "title": "Legal Document Intake",
     "status": "active",
     "created": "2026-07-08",
-    "updated": "2026-07-11",
+    "updated": "2026-07-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/legal-document-intake",
@@ -26,8 +26,6 @@
   "dependencies": [
     "goals/box-driver",
     "goals/m365-driver",
-    "goals/ip-law-knowledge-graph",
-    "goals/trustgraph-port",
     "goals/file-processing-capability",
     "goals/agentic-professional-runtime",
     "goals/mcp-kit",
@@ -94,6 +92,22 @@
       "id": "P7",
       "name": "Close",
       "status": "pending"
+    }
+  ],
+  "trackedExceptions": [
+    {
+      "id": "P3-live-box-oauth-deferred",
+      "phase": "P3",
+      "status": "open",
+      "reason": "No Box developer/test tenant was provisioned; deterministic DmsMirror, pglite, and fake-SDK adapter lanes supplied the merge evidence.",
+      "deferred": ["Live Box sync round-trip", "Box OAuth connect flow"],
+      "clearingConditions": [
+        "Provision a Box developer/test tenant.",
+        "Set CLOUD_BOX_TOKEN for the env-gated live test lane.",
+        "Run packages/drivers/box/test/integration/Box.live.test.ts.",
+        "Run a live vault-to-Box sync round-trip.",
+        "Replace the desktop env-token setup path with OAuth."
+      ]
     }
   ],
   "verificationCommands": [

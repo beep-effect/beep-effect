@@ -58,6 +58,21 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   durability landed as `ai-metrics-stack` P7f (v1-blocking, gates P7e).
   Wave-2 candidates (`yeet-verdict-instrumentation`, `repo-replay-evals`)
   gate on wave-1 OTel attributes flowing.
+- [`agent-governance-control-plane`](./agent-governance-control-plane/README.md) —
+  capture-stage preservation of the paused goal’s load-bearing governance
+  design: ordered law canon, explicit role authority, gated lifecycle,
+  decision-complete artifacts, and expiring exception contracts.
+- [`knowledge-workspace`](./knowledge-workspace/README.md) — capture-stage
+  product vision for an immutable event journal projected into a live graph,
+  Lexical wiki-link authoring/backlinks, and auditable temporal replay; stale
+  implementation anchors were deliberately discarded.
+- [`project-intelligence`](./project-intelligence/README.md) — capture-stage
+  condensation of the fixture-first watched-source research loop: repo-owned
+  evidence authority, rebuildable projections, stable source lifecycle,
+  untrusted-input boundaries, and deterministic briefs.
+- [`stack-installer`](./stack-installer/README.md) — capture-stage preservation
+  of approval-first repair UX, app/manual parity, fresh-machine evidence
+  contracts, and the still-unclosed Windows proof gap.
 - [`computable-workspace-geometry`](./computable-workspace-geometry/README.md) —
   pretext × dock kernel × blocks (stage `research`, opened 2026-07-12): text
   layout as pure arithmetic over shippable per-engine font metrics closes the

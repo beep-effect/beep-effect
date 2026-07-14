@@ -17,8 +17,9 @@ persisting structured artifacts that compound into durable, reusable knowledge.
     `commands/Quality/Tasks.ts`, `bin-main.ts` — command registration + routing.
   - `.claude/skills/reflect/**` — the on-demand `/reflect` skill.
   - `standards/architecture/GLOSSARY.md` — canonical "reflection" vocabulary.
-- Out (later phases): the Yeet self-healing reflection loop (P2) and memory
-  consolidation into `memory/` / Graphiti (P3).
+- Out (descoped): the Yeet self-healing reflection loop (P2) and memory
+  consolidation (P3). Both are won't-do until a packet closes without usable
+  reflections.
 
 ## Decisions
 
