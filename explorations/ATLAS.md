@@ -150,7 +150,10 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   the `@beep/epistemic-tables` port milestone whose landing triggers write-frozen
   operator Graphiti retirement without making product tables its backend,
   [`deterministic-doc-structure-extraction`](./deterministic-doc-structure-extraction/README.md)
-  (langextract streaming-lock sibling),
+  (stage `graduate`, still active for queued families/streaming/calibration):
+  graduated [`law-doc-structure-oa-slice`](../goals/law-doc-structure-oa-slice/README.md)
+  on 2026-07-14; it consumes the verified-span substrate and feeds the
+  patent-docketing spine,
   [`court-vocabulary-resolver`](./court-vocabulary-resolver/README.md),
   [`ingestion-security-secret-governance`](./ingestion-security-secret-governance/README.md),
   [`multi-provider-llm-dispatch-fallback`](./multi-provider-llm-dispatch-fallback/README.md)
