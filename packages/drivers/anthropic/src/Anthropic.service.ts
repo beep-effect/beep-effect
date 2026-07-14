@@ -6,13 +6,15 @@
  */
 
 import { AnthropicClient, AnthropicLanguageModel } from "@effect/ai-anthropic";
-import { Config, Duration, ExecutionPlan, Layer, Schedule } from "effect";
+import { Config, Duration, Effect, ExecutionPlan, Layer, Schedule } from "effect";
 import { AiError } from "effect/unstable/ai";
 import { FetchHttpClient } from "effect/unstable/http";
 import {
   ANTHROPIC_API_KEY_ENV,
+  ANTHROPIC_DEFAULT_MODEL,
   ANTHROPIC_DEFAULT_RETRY_ATTEMPTS,
   ANTHROPIC_DEFAULT_RETRY_BASE_DELAY_MILLIS,
+  ANTHROPIC_MODEL_ENV,
   AnthropicLanguageModelOptions,
 } from "./Anthropic.config.ts";
 
@@ -80,7 +82,11 @@ export const makeAnthropicLanguageModelLayer = (
   }).pipe(Layer.provide(AnthropicLive));
 
 /**
- * Live language-model layer for the pinned Anthropic model.
+ * Live language-model layer for the default Anthropic model.
+ *
+ * @remarks
+ * The model id resolves from `AI_ANTHROPIC_MODEL` at layer acquisition and
+ * falls back to {@link ANTHROPIC_DEFAULT_MODEL} when the variable is unset.
  *
  * @example
  * ```ts
@@ -95,10 +101,18 @@ export const makeAnthropicLanguageModelLayer = (
  * strictEqual(typeof layer, "object")
  * ```
  *
+ * @effects
+ * - Reads `AI_ANTHROPIC_MODEL` from Effect Config when the layer is acquired.
+ *
  * @category layers
  * @since 0.0.0
  */
-export const AnthropicLanguageModelLive = makeAnthropicLanguageModelLayer();
+export const AnthropicLanguageModelLive = Layer.unwrap(
+  Config.nonEmptyString(ANTHROPIC_MODEL_ENV).pipe(
+    Config.withDefault(ANTHROPIC_DEFAULT_MODEL),
+    Effect.map((model) => makeAnthropicLanguageModelLayer(AnthropicLanguageModelOptions.make({ model })))
+  )
+);
 
 /**
  * Build an acquisition-only execution plan for Anthropic turns.

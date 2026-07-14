@@ -8,6 +8,7 @@
 
 import { $WorkspaceDomainId } from "@beep/identity/packages";
 import { FilePath, WindowsDrivePath, WindowsUncPath } from "@beep/schema/FilePath";
+import { SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -27,23 +28,37 @@ const WorkspaceVaultRootPathChecks = S.makeFilter(isAbsoluteVaultRootPath, {
   message: "Workspace vault root path must be absolute.",
 });
 
+// Trailing separators are dropped only after a non-separator segment character,
+// so bare roots ("/", "C:\", "\\host\share") keep their existing rejection path.
+const stripTrailingSeparators = Str.replace(/([^:/\\])[\\/]+$/u, "$1");
+
+const WorkspaceVaultRootPathValue = S.String.check(WorkspaceVaultRootPathChecks).pipe(
+  S.brand("WorkspaceVaultRootPath")
+);
+
 /**
  * Absolute local root path for a workspace document vault.
+ *
+ * Decoding normalizes trailing path separators, so `"/tmp/vault/"` and
+ * `"/tmp/vault"` decode to the same value.
  *
  * @example
  * ```ts
  * import { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspace"
  * import * as S from "effect/Schema"
  *
- * const path = S.decodeUnknownSync(WorkspaceVaultRootPath)("/tmp/beep-documents-vault")
- * console.log(path)
+ * const path = S.decodeUnknownSync(WorkspaceVaultRootPath)("/tmp/beep-documents-vault/")
+ * console.log(path) // "/tmp/beep-documents-vault"
  * ```
  *
  * @category value-objects
  * @since 0.0.0
  */
-export const WorkspaceVaultRootPath = S.String.check(WorkspaceVaultRootPathChecks).pipe(
-  S.brand("WorkspaceVaultRootPath"),
+export const WorkspaceVaultRootPath = S.String.pipe(
+  S.decodeTo(WorkspaceVaultRootPathValue, {
+    decode: SchemaGetter.transform(stripTrailingSeparators),
+    encode: SchemaGetter.transform(stripTrailingSeparators),
+  }),
   $I.annoteSchema("WorkspaceVaultRootPath", {
     description: "Absolute local filesystem path configured as the workspace vault root.",
   })

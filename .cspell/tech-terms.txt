@@ -128,6 +128,7 @@ jsdocs
 jsonc
 jsxdev
 keccak
+kdialog
 Kiota
 Kleisli
 labelledby
@@ -326,6 +327,7 @@ Toolkits
 topo
 TOTP
 traceid
+traceql
 traceparent
 tracestate
 tsbuildinfo
@@ -372,3 +374,4 @@ worktree
 worktrees
 xhigh
 xlink
+zenity

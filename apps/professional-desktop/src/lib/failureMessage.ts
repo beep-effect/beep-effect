@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { redactCauseForClient } from "@beep/observability";
 import * as P from "effect/Predicate";
 
 /**
@@ -29,7 +30,7 @@ export const failureMessageOr =
   (fallback: string) =>
   (cause: unknown): string =>
     P.isError(cause) && cause.message.length > 0
-      ? cause.message
+      ? redactCauseForClient(cause).message
       : P.isObject(cause) && P.hasProperty(cause, "message") && P.isString(cause.message) && cause.message.length > 0
-        ? cause.message
+        ? redactCauseForClient(cause).message
         : fallback;

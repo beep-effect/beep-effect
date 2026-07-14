@@ -13,9 +13,12 @@
  */
 
 import * as UsageRecordTable from "@beep/epistemic-tables/entities/UsageRecord";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { PostgresDrizzle } from "@beep/postgres";
-import { Context, Effect, Layer, Ref } from "effect";
+import { Context, Effect, Layer, Metric, Ref } from "effect";
 import type { UsageRecord } from "@beep/epistemic-domain";
+
+const usagePersistenceFailures = Metric.counter("agents_usage_persistence_failures_total", { incremental: true });
 
 /**
  * Service shape of the usage-record sink: append a single {@link UsageRecord}.
@@ -140,13 +143,22 @@ const makeDrizzleUsageRecordSink: Effect.Effect<UsageRecordSinkShape, never, Pos
           .values(UsageRecordTable.toUsageRecordInsert(record))
           .pipe(
             Effect.asVoid,
-            Effect.tapError((cause) =>
-              Effect.logError("UsageRecordSink Drizzle adapter dropped driver failure").pipe(
-                Effect.annotateLogs({
-                  provider: record.provider,
-                  table: UsageRecordTable.Table.definition.tableName,
-                  cause,
-                })
+            Effect.tapCause((cause) =>
+              Metric.update(Metric.withAttributes(usagePersistenceFailures, { provider: record.provider }), 1).pipe(
+                Effect.andThen(
+                  logRedactedCause(
+                    cause,
+                    LogRedactedCauseOptions.make({
+                      message: "usage record persistence failed",
+                      level: "Error",
+                      attributes: {
+                        provider: record.provider,
+                        subsystem: "usage_record",
+                        table: UsageRecordTable.Table.definition.tableName,
+                      },
+                    })
+                  )
+                )
               )
             ),
             Effect.ignore,

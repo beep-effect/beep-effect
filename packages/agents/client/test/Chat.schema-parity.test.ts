@@ -49,8 +49,10 @@ describe("@beep/agents-client schema parity", () => {
 
     const explicitStreamingTurn = StreamingTurn.make({
       threadId,
+      requestId: O.none(),
       userContent: content,
       truncateFrom: O.none(),
+      reconciliation: "timeline",
       blocks: [block],
     });
     const defaultedStreamingTurn = StreamingTurn.make({
@@ -58,21 +60,31 @@ describe("@beep/agents-client schema parity", () => {
       userContent: content,
       blocks: [block],
     });
+    expect(defaultedStreamingTurn.requestId).toStrictEqual(O.none());
     expect(defaultedStreamingTurn.truncateFrom).toStrictEqual(O.none());
+    expect(defaultedStreamingTurn.reconciliation).toBe("timeline");
     expect(Result.getOrThrow(S.encodeResult(StreamingTurn)(defaultedStreamingTurn))).toStrictEqual(
       Result.getOrThrow(S.encodeResult(StreamingTurn)(explicitStreamingTurn))
     );
     expect(Result.getOrThrow(S.encodeResult(StreamingTurn)(defaultedStreamingTurn))).toStrictEqual({
       threadId: 10,
+      requestId: O.none(),
       userContent: encodedContent,
       truncateFrom: O.none(),
+      reconciliation: "timeline",
       blocks: [encodedBlock],
     });
 
-    expect(Result.getOrThrow(S.encodeResult(EditTarget)(EditTarget.make({ turnId, content })))).toStrictEqual({
-      turnId: 20,
-      content: encodedContent,
-    });
+    // An edit target carries its thread: edit state is global while composers are
+    // per-thread, so without it a thread change mid-edit submitted the old
+    // thread's turn id against the new thread.
+    expect(Result.getOrThrow(S.encodeResult(EditTarget)(EditTarget.make({ threadId, turnId, content })))).toStrictEqual(
+      {
+        threadId: 10,
+        turnId: 20,
+        content: encodedContent,
+      }
+    );
 
     expect(
       Result.getOrThrow(S.encodeResult(SendTurnRequest)(SendTurnRequest.make({ threadId, content })))

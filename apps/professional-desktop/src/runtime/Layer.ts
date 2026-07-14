@@ -58,7 +58,9 @@ import * as O from "effect/Option";
 import { ChatHandlersLive } from "@/chat/ChatOrchestrator";
 import { UsageRecordSinkDrizzle, UsageRecordSinkInMemory } from "@/chat/UsageRecordSink";
 import { DocumentIntakeHandlersLive, WorkspaceVaultHandlersLive } from "@/intake/DocumentIntakeOrchestrator";
+import { VaultDirectoryPickerHandlersLive } from "@/intake/VaultDirectoryPickerOrchestrator";
 import { OntologyHandlersLive } from "@/ontology/OntologyOrchestrator";
+import { OntologyWorkspaceSeedLive } from "@/ontology/OntologyWorkspaceSeed";
 import { ObservabilityLive } from "@/runtime/Observability";
 import { PgliteDrizzleLive } from "@/runtime/Pglite";
 import { DmsMirrorAvailabilityDisconnectedLayer, DmsMirrorDisconnectedLayer } from "@/sync/DmsMirrorDisconnected";
@@ -88,6 +90,7 @@ const DesktopHandlersLive = Layer.mergeAll(
   ChatHandlersLive,
   WorkspaceVaultHandlersLive,
   DocumentIntakeHandlersLive,
+  VaultDirectoryPickerHandlersLive,
   VaultSyncHandlersLive,
   OntologyHandlersLive
 );
@@ -249,7 +252,11 @@ export const RuntimeLive: DesktopHandlersLayer = DesktopHandlersLive.pipe(
     UsageRecordSinkDrizzle,
     DocumentsFilingLive,
     DocumentsSyncLive,
-    OntologyServerLive,
+    // The workbench pre-fills a starter document path; seeding materializes it
+    // so a fresh workspace opens something instead of failing on Open. Keep the
+    // server services available to the handlers while also providing them to
+    // the seed's scoped startup effect.
+    Layer.merge(OntologyServerLive, OntologyWorkspaceSeedLive.pipe(Layer.provide(OntologyServerLive))),
   ]),
   Layer.provide(PgliteDrizzleLive),
   Layer.provideMerge(BunServices.layer),

@@ -52,7 +52,9 @@ import {
   onAttachAtom,
   onSendAtom,
   removeAttachmentFn,
+  sendBlockedAtom,
   sendCommandBindingAtom,
+  unboundSend,
 } from "./atoms.ts";
 import { DEFAULT_MAX_ATTACHMENT_BYTES, revokeAttachment } from "./attachment-model.ts";
 import { AttachmentChips, AttachmentPlugin } from "./attachments.tsx";
@@ -65,6 +67,8 @@ import { ComboboxAriaPlugin, MentionPlugin, SlashPlugin } from "./typeahead.tsx"
 import type { LexicalEditor } from "lexical";
 import type { JSX, ReactNode } from "react";
 import type { MentionSource, SlashItem } from "./config.ts";
+
+const DEFAULT_ARIA_LABEL = "Message composer";
 
 const EDITABLE_CLASS_NAME =
   "relative block max-h-60 min-h-10 overflow-auto px-3 py-2.5 text-sm leading-6 focus:outline-none";
@@ -101,6 +105,12 @@ const PLACEHOLDER_CLASS_NAME =
  * @since 0.0.0
  */
 export interface ChatComposerProps {
+  /**
+   * Accessible name for the editable surface. The typeahead plugins promote it
+   * to `role="combobox"`, which must be named.
+   * @defaultValue "Message composer"
+   */
+  readonly ariaLabel?: string;
   /** Extra plugins rendered inside the composer context (e.g. app bindings). */
   readonly children?: ReactNode;
   /** Class for the outer composer container. */
@@ -168,6 +178,9 @@ function ComposerFooter({
 }: FooterProps): JSX.Element {
   const [editor] = useLexicalComposerContext();
   const count = useCharacterCount();
+  // A refused send must never be invisible: the composer used to go quietly dead
+  // when the editor state failed to decode.
+  const sendBlocked = useAtomValue(sendBlockedAtom(editor));
   // The picked files flow into the per-editor capture runtime mutation (which
   // notifies the upload-port and appends captured attachments); the footer holds
   // no capture logic of its own.
@@ -186,6 +199,14 @@ function ComposerFooter({
             {count} {count === 1 ? "character" : "characters"}
           </span>
         ) : null}
+        {O.match(sendBlocked, {
+          onNone: () => null,
+          onSome: (message) => (
+            <span className="text-destructive" role="alert">
+              {message}
+            </span>
+          ),
+        })}
       </div>
       <div className="flex items-center gap-1">
         {attachments ? (
@@ -242,6 +263,9 @@ function ComposerFooter({
 }
 
 interface ComposerSurfaceProps {
+  // Resolved by `ChatComposer` (defaulted), so the inner surfaces take a name
+  // rather than re-deriving the fallback.
+  readonly ariaLabel: string;
   readonly features: ComposerFeatures;
   readonly onStop?: () => void;
   readonly placeholder: string;
@@ -254,6 +278,7 @@ interface ComposerSurfaceProps {
 // region, and the footer. Split from ComposerBody so the JSX nesting + toolbar
 // gate live here and ComposerBody stays a thin assembler.
 function ComposerSurface({
+  ariaLabel,
   features,
   onStop,
   placeholder,
@@ -272,6 +297,10 @@ function ComposerSurface({
         <RichTextPlugin
           contentEditable={
             <ContentEditable
+              // The typeahead plugins promote this root to `role="combobox"`;
+              // a combobox named only by `aria-placeholder` has no accessible
+              // name, so assistive tech announces an unlabeled control.
+              ariaLabel={ariaLabel}
               className={EDITABLE_CLASS_NAME}
               placeholderClassName={PLACEHOLDER_CLASS_NAME}
               placeholder={placeholder}
@@ -292,7 +321,8 @@ function ComposerSurface({
   );
 }
 
-interface ComposerBodyProps extends Omit<ChatComposerProps, "initialState"> {
+interface ComposerBodyProps extends Omit<ChatComposerProps, "ariaLabel" | "initialState"> {
+  readonly ariaLabel: string;
   readonly features: ComposerFeatures;
   readonly maxAttachmentBytes: number;
   readonly placeholder: string;
@@ -302,7 +332,36 @@ interface ComposerBodyProps extends Omit<ChatComposerProps, "initialState"> {
   readonly streaming: boolean;
 }
 
+const unboundAttach = (): void => undefined;
+
+function useComposerRuntimeBindings(
+  editor: LexicalEditor,
+  features: ComposerFeatures,
+  maxAttachmentBytes: number,
+  onSend: ((state: SerializedEditorState.Type) => boolean | void) | undefined,
+  onAttach: ((files: ReadonlyArray<File>) => void) | undefined
+): void {
+  // Seed the per-editor config the Lexical bindings + capture runtime read at
+  // fire time. The composer remounts by `key` on thread/edit-target changes,
+  // so these values are stable for the lifetime of each mount.
+  useAtomInitialValues([
+    [featuresAtom(editor), features],
+    [onSendAtom(editor), { run: onSend ?? unboundSend }],
+    [onAttachAtom(editor), onAttach ?? unboundAttach],
+    [maxAttachmentBytesAtom(editor), maxAttachmentBytes],
+  ]);
+
+  // The registry may sweep nodes that have no listeners or dependents after
+  // its idle TTL. These config atoms are read only at fire time, so explicitly
+  // mount them for as long as the composer is alive.
+  useAtomMount(featuresAtom(editor));
+  useAtomMount(onSendAtom(editor));
+  useAtomMount(onAttachAtom(editor));
+  useAtomMount(maxAttachmentBytesAtom(editor));
+}
+
 function ComposerBody({
+  ariaLabel,
   features,
   placeholder,
   className,
@@ -319,18 +378,7 @@ function ComposerBody({
   children,
 }: ComposerBodyProps): JSX.Element {
   const [editor] = useLexicalComposerContext();
-
-  // Seed the per-editor config the Lexical bindings + capture runtime read at
-  // fire time. Seeded ONCE per mount (the composer remounts by `key` on
-  // thread/edit-target change, so the config is stable per mount) — never a
-  // render-phase atom write, which would re-render-loop and re-seed a fresh
-  // ComposerFeatures object each render.
-  useAtomInitialValues([
-    [featuresAtom(editor), features],
-    [onSendAtom(editor), { run: onSend ?? (() => undefined) }],
-    [onAttachAtom(editor), onAttach ?? (() => undefined)],
-    [maxAttachmentBytesAtom(editor), maxAttachmentBytes],
-  ]);
+  useComposerRuntimeBindings(editor, features, maxAttachmentBytes, onSend, onAttach);
 
   return (
     <div
@@ -341,6 +389,7 @@ function ComposerBody({
       )}
     >
       <ComposerSurface
+        ariaLabel={ariaLabel}
         features={features}
         placeholder={placeholder}
         streaming={streaming}
@@ -361,7 +410,6 @@ function ComposerBody({
         slashItems={slashItems}
         {...O.getSomesStruct({
           mentionSource: O.fromUndefinedOr(mentionSource),
-          onSend: O.fromUndefinedOr(onSend),
           onSerializedChange: O.fromUndefinedOr(onSerializedChange),
         })}
       />
@@ -375,7 +423,6 @@ interface ComposerFeaturePluginsProps {
   readonly editor: LexicalEditor;
   readonly features: ComposerFeatures;
   readonly mentionSource?: MentionSource;
-  readonly onSend?: (state: SerializedEditorState.Type) => boolean | void;
   readonly onSerializedChange?: (state: SerializedEditorState.Type) => void;
   readonly slashItems: ReadonlyArray<SlashItem>;
 }
@@ -389,7 +436,6 @@ function ComposerFeaturePlugins({
   editor,
   features,
   mentionSource,
-  onSend,
   onSerializedChange,
   slashItems,
 }: ComposerFeaturePluginsProps): JSX.Element {
@@ -410,7 +456,7 @@ function ComposerFeaturePlugins({
       {features.mentions && mentionSource !== undefined ? <MentionPlugin source={mentionSource} /> : null}
       {features.attachments ? <AttachmentPlugin /> : null}
       {features.slash || features.mentions ? <ComboboxAriaPlugin /> : null}
-      {onSend === undefined ? null : <SendCommandBinding editor={editor} />}
+      <SendCommandBinding editor={editor} />
     </>
   );
 }
@@ -463,7 +509,12 @@ function AttachmentSweep({ editor }: { readonly editor: LexicalEditor }): null {
  * @category components
  * @since 0.0.0
  */
+// This component is intentionally the declarative assembly boundary for the
+// composer plugins and their optional consumer ports. Extracting the prop
+// forwarding would obscure which mount-time values enter the atom-backed body.
+// fallow-ignore-next-line complexity
 export function ChatComposer({
+  ariaLabel = DEFAULT_ARIA_LABEL,
   features,
   initialState,
   placeholder,
@@ -498,6 +549,7 @@ export function ChatComposer({
       }}
     >
       <ComposerBody
+        ariaLabel={ariaLabel}
         features={resolved}
         slashItems={slashItems}
         maxAttachmentBytes={maxAttachmentBytes}

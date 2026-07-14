@@ -1,7 +1,8 @@
+/** @effect-diagnostics strictEffectProvide:skip-file */
 import { PhaseProfile, profilePhase } from "@beep/observability";
 import { NonNegativeInt, TaggedErrorClass } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
-import { Effect, Equal, Metric } from "effect";
+import { Effect, Equal, Logger, Metric, References } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -86,6 +87,36 @@ describe("PhaseProfiler", () => {
         );
 
         expect(failedState.count).toBe(1);
+      })
+    ));
+
+  it("tracks interruption and emits safe Cause annotations", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const interrupted = Metric.counter("test_phase_interrupted_outcomes_total");
+        const annotations: Array<Record<string, unknown>> = [];
+        const logger = Logger.make<unknown, void>((options) => {
+          annotations.push({ ...options.fiber.getRef(References.CurrentLogAnnotations) });
+        });
+
+        yield* Effect.exit(
+          profilePhase(
+            {
+              phase: "stream",
+              interrupted,
+            },
+            Effect.interrupt
+          ).pipe(Effect.provide(Logger.layer([logger])))
+        );
+
+        const interruptedState = yield* Metric.value(
+          Metric.withAttributes(interrupted, { phase: "stream", outcome: "interrupted" })
+        );
+
+        expect(interruptedState.count).toBe(1);
+        expect(annotations).toHaveLength(1);
+        expect(annotations[0]?.cause_classification).toBe("interrupted");
+        expect(annotations[0]?.phase_outcome).toBe("interrupted");
       })
     ));
 });

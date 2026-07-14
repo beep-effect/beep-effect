@@ -108,6 +108,40 @@ const INITIAL_STATE: SelectionState = {
 const blockTypeFromListType = (listType: "number" | "bullet" | "check"): BlockType =>
   listType === "number" ? "number" : listType === "check" ? "check" : "bullet";
 
+// The block type of the current selection, read from live editor state. Must run
+// inside a Lexical lexical-scope (`editorState.read` or `editor.update`), where
+// the `$`-prefixed helpers are valid.
+//
+// Block toggles must resolve this here rather than from the React snapshot in
+// {@link toolbarSelectionAtom}: the snapshot lags the editor by a render, so two
+// quick presses both saw the pre-toggle type and *created* a second block
+// instead of toggling back — nesting a code block inside a quote while both
+// buttons still reported unpressed.
+const $selectionBlockType = (): BlockType => {
+  const selection = $getSelection();
+  if (!$isRangeSelection(selection)) return "paragraph";
+  const anchorNode = selection.anchor.getNode();
+  const element = anchorNode.getKey() === "root" ? anchorNode : (anchorNode.getTopLevelElement() ?? anchorNode);
+
+  if ($isListNode(element)) {
+    return blockTypeFromListType(element.getListType());
+  }
+  const parentList = $getNearestNodeOfType(anchorNode, ListNode);
+  if (parentList !== null) {
+    return blockTypeFromListType(parentList.getListType());
+  }
+  if ($isHeadingNode(element)) {
+    return element.getTag();
+  }
+  if ($isQuoteNode(element)) {
+    return "quote";
+  }
+  if ($isCodeNode(element)) {
+    return "code";
+  }
+  return "paragraph";
+};
+
 // Reads the current selection's marks + block type. Must run inside an
 // editorState.read (a Lexical lexical-scope), where the `$`-prefixed helpers are
 // valid.
@@ -115,24 +149,6 @@ const computeSelectionState = (): SelectionState => {
   const selection = $getSelection();
   if (!$isRangeSelection(selection)) return INITIAL_STATE;
   const anchorNode = selection.anchor.getNode();
-  const element = anchorNode.getKey() === "root" ? anchorNode : (anchorNode.getTopLevelElement() ?? anchorNode);
-
-  let blockType: BlockType = "paragraph";
-  if ($isListNode(element)) {
-    blockType = blockTypeFromListType(element.getListType());
-  } else {
-    const parentList = $getNearestNodeOfType(anchorNode, ListNode);
-    if (parentList !== null) {
-      blockType = blockTypeFromListType(parentList.getListType());
-    } else if ($isHeadingNode(element)) {
-      blockType = element.getTag();
-    } else if ($isQuoteNode(element)) {
-      blockType = "quote";
-    } else if ($isCodeNode(element)) {
-      blockType = "code";
-    }
-  }
-
   const linkParent = $findMatchingParent(anchorNode, $isLinkNode);
   return {
     bold: selection.hasFormat("bold"),
@@ -141,7 +157,7 @@ const computeSelectionState = (): SelectionState => {
     strikethrough: selection.hasFormat("strikethrough"),
     code: selection.hasFormat("code"),
     link: linkParent !== null,
-    blockType,
+    blockType: $selectionBlockType(),
   };
 };
 
@@ -252,17 +268,22 @@ export function FixedToolbarPlugin(): JSX.Element {
     editor.update(() => {
       const selection = $getSelection();
       if ($isRangeSelection(selection)) {
-        $setBlocksType<ElementNode>(selection, state.blockType === target ? () => $createParagraphNode() : create);
+        // Toggle against the live block type, never the rendered snapshot.
+        $setBlocksType<ElementNode>(
+          selection,
+          $selectionBlockType() === target ? () => $createParagraphNode() : create
+        );
       }
     });
 
-  const toggleList = (target: BlockType, insert: typeof INSERT_UNORDERED_LIST_COMMAND): void => {
-    if (state.blockType === target) {
-      editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
-    } else {
-      editor.dispatchCommand(insert, undefined);
-    }
-  };
+  const toggleList = (target: BlockType, insert: typeof INSERT_UNORDERED_LIST_COMMAND): void =>
+    editor.update(() => {
+      if ($selectionBlockType() === target) {
+        editor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
+      } else {
+        editor.dispatchCommand(insert, undefined);
+      }
+    });
 
   return (
     <div

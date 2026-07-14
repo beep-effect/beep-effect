@@ -1106,9 +1106,6 @@
       ],
       "@beep/html": ["./packages/foundation/modeling/html/src/index.ts"],
       "@beep/html/*": ["./packages/foundation/modeling/html/src/*"],
-      "@beep/editor/mermaid-code-decorator-plugin": [
-        "./packages/foundation/ui-system/editor/src/mermaid-code-decorator-plugin.tsx"
-      ],
       "@beep/editor/mermaid-view": [
         "./packages/foundation/ui-system/editor/src/mermaid-view.tsx"
       ],
@@ -1525,7 +1522,10 @@
         "./packages/documents/tables/src/tables.ts"
       ],
       "@beep/tailscale": ["./packages/drivers/tailscale/src/index.ts"],
-      "@beep/tailscale/*": ["./packages/drivers/tailscale/src/*"]
+      "@beep/tailscale/*": ["./packages/drivers/tailscale/src/*"],
+      "@beep/editor/mermaid-node": [
+        "./packages/foundation/ui-system/editor/src/mermaid-node.tsx"
+      ]
     }
   }
 }

@@ -137,4 +137,94 @@ describe("ThreadTimeline", () => {
       );
     }
   });
+
+  // Editing a turn appends a replacement parented to the turn it replaces. The
+  // transcript used to render every turn in index order, so the exchange an edit
+  // promised to discard reappeared the moment streaming finished — and the model
+  // was handed it as history.
+  it.effect(
+    "drops the replaced turn and everything after it from the active branch",
+    Effect.fnUntraced(function* () {
+      const content = yield* S.encodeEffect(Document)(Document.make({ children: [] }));
+      const turn = (turnId: number, turnIndex: number, parentTurnId: number | null) => ({
+        turnId,
+        turnIndex,
+        parentTurnId,
+        costMicros: 0,
+        items: [{ kind: "message", role: "user", content }],
+      });
+
+      const timeline = yield* S.decodeUnknownEffect(Thread.ThreadTimeline)({
+        threadId: 10,
+        turns: [
+          turn(1, 0, null), // first prompt
+          turn(2, 1, null), // its answer
+          turn(3, 2, null), // second prompt        <- edited
+          turn(4, 3, null), // its answer           <- superseded
+          turn(5, 4, 3), //    replacement prompt   <- replaces turn 3
+          turn(6, 5, null), // the replacement's answer
+        ],
+      });
+
+      const branch = Thread.activeBranchTurns(timeline.turns);
+
+      expect(branch.map((t) => Number(t.turnId))).toEqual([1, 2, 5, 6]);
+    })
+  );
+
+  it.effect(
+    "keeps a timeline with no edits intact, in turn order",
+    Effect.fnUntraced(function* () {
+      const content = yield* S.encodeEffect(Document)(Document.make({ children: [] }));
+      const timeline = yield* S.decodeUnknownEffect(Thread.ThreadTimeline)({
+        threadId: 10,
+        turns: [
+          {
+            turnId: 2,
+            turnIndex: 1,
+            parentTurnId: null,
+            costMicros: 0,
+            items: [{ kind: "message", role: "assistant", content }],
+          },
+          {
+            turnId: 1,
+            turnIndex: 0,
+            parentTurnId: null,
+            costMicros: 0,
+            items: [{ kind: "message", role: "user", content }],
+          },
+        ],
+      });
+
+      expect(Thread.activeBranchTurns(timeline.turns).map((t) => Number(t.turnId))).toEqual([1, 2]);
+    })
+  );
+
+  // Corrupt parent links must never truncate the transcript: a reader would lose
+  // real turns. An unresolvable link degrades to "this turn replaces nothing".
+  it.effect(
+    "ignores parent links that cannot describe a replacement",
+    Effect.fnUntraced(function* () {
+      const content = yield* S.encodeEffect(Document)(Document.make({ children: [] }));
+      const turn = (turnId: number, turnIndex: number, parentTurnId: number | null) => ({
+        turnId,
+        turnIndex,
+        parentTurnId,
+        costMicros: 0,
+        items: [{ kind: "message", role: "user", content }],
+      });
+
+      const timeline = yield* S.decodeUnknownEffect(Thread.ThreadTimeline)({
+        threadId: 10,
+        turns: [
+          turn(1, 0, 1), // parents itself
+          turn(2, 1, 9), // parents a turn that does not exist
+          turn(3, 2, 4), // parents a turn that has not happened yet
+          turn(4, 3, null),
+        ],
+      });
+
+      expect(Thread.activeBranchTurns(timeline.turns).map((t) => Number(t.turnId))).toEqual([1, 2, 3, 4]);
+    })
+  );
 });

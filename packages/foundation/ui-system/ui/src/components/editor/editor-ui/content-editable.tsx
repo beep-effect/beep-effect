@@ -30,10 +30,12 @@ const DEFAULT_PLACEHOLDER_CLASS_NAME =
 
 class Props extends S.Class<Props>($I`Props`)({
   placeholder: S.String,
+  ariaLabel: S.optionalKey(S.String),
   className: S.optionalKey(S.String),
   placeholderClassName: S.optionalKey(S.String),
 }) {
   declare readonly placeholder: string;
+  declare readonly ariaLabel?: string;
   declare readonly className?: string;
   declare readonly placeholderClassName?: string;
 }
@@ -45,6 +47,10 @@ class Props extends S.Class<Props>($I`Props`)({
  * The placeholder overlay shares the editable's padding so the empty-state
  * cursor aligns with the placeholder text. When a custom `className` changes
  * the editable padding, pass a matching `placeholderClassName`.
+ *
+ * Pass `ariaLabel` whenever the editable is exposed as a named widget — a
+ * typeahead plugin promotes the root to `role="combobox"`, and a combobox with
+ * only `aria-placeholder` has no accessible name.
  *
  * @example
  * ```tsx
@@ -65,10 +71,11 @@ class Props extends S.Class<Props>($I`Props`)({
  * @category components
  * @since 0.0.0
  */
-export function ContentEditable({ placeholder, className, placeholderClassName }: Props): JSX.Element {
+export function ContentEditable({ ariaLabel, placeholder, className, placeholderClassName }: Props): JSX.Element {
   return (
     <LexicalContentEditable
       className={className ?? DEFAULT_EDITABLE_CLASS_NAME}
+      aria-label={ariaLabel}
       aria-placeholder={placeholder}
       placeholder={<div className={placeholderClassName ?? DEFAULT_PLACEHOLDER_CLASS_NAME}>{placeholder}</div>}
     />

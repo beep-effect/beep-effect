@@ -45,6 +45,23 @@ const sanitizeIdPart = (value: string): string => {
 
 const errorMessage = (error: unknown): string => (error instanceof Error ? error.message : fallbackErrorMessage);
 
+/**
+ * Upper bound on the diagram source Mermaid is asked to lay out.
+ *
+ * `mermaid.render` parses and lays the graph out synchronously on the main
+ * thread, and cancelling only suppresses the later state write — the work itself
+ * cannot be interrupted. An assistant is free to emit an arbitrarily large or
+ * pathological diagram, so an unbounded source is a way to freeze the window.
+ * Past the bound the source is shown as text, which is exactly what a viewer
+ * needs anyway when a diagram is too big to read.
+ */
+const maxSourceLength = 20_000;
+
+const oversizedMessage = (length: number): string =>
+  `Diagram source is too large to render (${length.toLocaleString()} characters; limit ${maxSourceLength.toLocaleString()}).`;
+
+const invalidDiagramMessage = "Diagram could not be parsed.";
+
 const renderMermaidState = (source: string) =>
   Match.type<MermaidRenderState>().pipe(
     Match.tagsExhaustive({
@@ -107,15 +124,38 @@ export function MermaidView({
     let active = true;
     setState(pendingState);
 
+    if (source.length > maxSourceLength) {
+      setState({ _tag: "failed", message: oversizedMessage(source.length) });
+      return;
+    }
+
     void import("mermaid")
       .then(({ default: mermaid }) => {
-        mermaid.initialize({ startOnLoad: false, securityLevel: mermaidSecurityLevel });
-        return mermaid.render(renderId, source);
+        mermaid.initialize({
+          startOnLoad: false,
+          securityLevel: mermaidSecurityLevel,
+          // Without this, an unparseable diagram RESOLVES with Mermaid's own
+          // "Syntax error in text" bomb SVG instead of rejecting — so the failed
+          // branch below never ran and the raw-source fallback this component
+          // promises was unreachable. Even valid-looking diagrams that tripped
+          // Mermaid rendered as that error graphic with no way to see the source.
+          suppressErrorRendering: true,
+        });
+        // `parse` is the documented validity check; with `suppressErrors` it
+        // answers `false` rather than throwing.
+        return mermaid
+          .parse(source, { suppressErrors: true })
+          .then((parsed) => (parsed === false ? undefined : mermaid.render(renderId, source)));
       })
       .then((rendered) => {
-        if (active) {
-          setState({ _tag: "ok", svg: rendered.svg });
+        if (!active) {
+          return;
         }
+        setState(
+          rendered === undefined
+            ? { _tag: "failed", message: invalidDiagramMessage }
+            : { _tag: "ok", svg: rendered.svg }
+        );
       })
       .catch((error: unknown) => {
         if (active) {

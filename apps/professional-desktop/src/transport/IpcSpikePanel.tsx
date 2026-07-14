@@ -17,8 +17,9 @@
 "use client";
 
 import { ChatRpcs } from "@beep/agents-use-cases/public";
+import { redactCauseForClient } from "@beep/observability";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { Cause, Effect, Stream } from "effect";
+import { Effect, Stream } from "effect";
 import { Atom, AtomRegistry } from "effect/unstable/reactivity";
 import { RpcClient } from "effect/unstable/rpc";
 import { decodeWorkspaceId, userDocument } from "@/chat/ChatFixtures";
@@ -53,16 +54,18 @@ const runSpikeAtom = ipcSpikeRuntime.fn<void>()(
       const thread = yield* client.CreateThread({ workspaceId, title: "ipc spike" });
       log(`thread created over ipc: ${thread.id}`);
       let blocks = 0;
-      yield* client.SendMessage({ threadId: thread.id, content: userDocument("hello over tauri ipc") }).pipe(
-        Stream.runForEach(() =>
-          Effect.sync(() => {
-            blocks += 1;
-            log(`streamed block ${blocks}`);
-          })
-        )
-      );
+      yield* client
+        .SendMessage({ threadId: thread.id, content: userDocument("hello over tauri ipc"), requestId: "ipc-spike" })
+        .pipe(
+          Stream.runForEach(() =>
+            Effect.sync(() => {
+              blocks += 1;
+              log(`streamed block ${blocks}`);
+            })
+          )
+        );
       log(`stream complete (${blocks} block(s)) — no /rpc, no :3939`);
-    }).pipe(Effect.catchCause((cause) => Effect.sync(() => log(`stopped: ${Cause.pretty(cause)}`))));
+    }).pipe(Effect.catchCause((cause) => Effect.sync(() => log(`stopped: ${redactCauseForClient(cause).message}`))));
   })
 );
 

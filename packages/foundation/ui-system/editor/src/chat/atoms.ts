@@ -16,15 +16,23 @@
 import { SerializedEditorState } from "@beep/lexical-schema";
 import { A, O } from "@beep/utils";
 import { Effect, Layer, Result } from "effect";
+import { dual } from "effect/Function";
 import { Atom } from "effect/unstable/reactivity";
 import {
   $createParagraphNode,
   $getRoot,
   COMMAND_PRIORITY_HIGH,
   COMMAND_PRIORITY_LOW,
+  INSERT_PARAGRAPH_COMMAND,
   KEY_ENTER_COMMAND,
 } from "lexical";
-import { DEFAULT_MAX_ATTACHMENT_BYTES, fileToAttachment, revokeAttachment } from "./attachment-model.ts";
+import {
+  AttachmentPortFailed,
+  DEFAULT_MAX_ATTACHMENT_BYTES,
+  fileToAttachment,
+  revokeAttachment,
+} from "./attachment-model.ts";
+import { $isInsideCodeBlock, $openCodeFence } from "./code-fence.ts";
 import { SEND_MESSAGE_COMMAND } from "./commands.ts";
 import { ComposerFeatures } from "./config.ts";
 import type { LexicalEditor } from "lexical";
@@ -106,6 +114,128 @@ export const anyMenuOpenAtom = Atom.family((editor: LexicalEditor) =>
     return menus.slash || menus.mention;
   })
 );
+
+/**
+ * Marks the rendered typeahead option container. Lexical's own menu anchor
+ * already carries `role="listbox"`, so the portal must not add a second one (a
+ * listbox nested in a listbox is an invalid ARIA hierarchy); this attribute
+ * gives DOM queries a handle on the real menu without re-introducing the role.
+ *
+ * @example
+ * ```ts
+ * import { TYPEAHEAD_MENU_ATTRIBUTE } from "@beep/editor/chat"
+ *
+ * console.log(TYPEAHEAD_MENU_ATTRIBUTE) // "data-typeahead-menu"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const TYPEAHEAD_MENU_ATTRIBUTE = "data-typeahead-menu";
+
+/**
+ * Marks a rendered typeahead container as belonging to `editor`.
+ *
+ * @example
+ * ```ts
+ * import { TYPEAHEAD_MENU_ATTRIBUTE, typeaheadMenuMarker } from "@beep/editor/chat"
+ * import { createEditor } from "lexical"
+ *
+ * const editor = createEditor()
+ * console.log(typeaheadMenuMarker(editor)[TYPEAHEAD_MENU_ATTRIBUTE] === editor.getKey()) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const typeaheadMenuMarker = (editor: LexicalEditor): Record<string, string> => ({
+  [TYPEAHEAD_MENU_ATTRIBUTE]: editor.getKey(),
+});
+
+/**
+ * The DOM id of a typeahead option, scoped to its editor.
+ *
+ * Lexical points the editor root's `aria-activedescendant` at a hardcoded
+ * `typeahead-item-${index}`. With two composers on one page both menus emitted the
+ * same ids, and `aria-activedescendant` resolves document-wide — first match wins — so
+ * a screen reader in one composer could be told about an option belonging to the
+ * other composer's menu. The id carries its editor now, and
+ * {@link typeaheadActiveDescendant} repoints each editor at its own.
+ *
+ * @example
+ * ```ts
+ * import { typeaheadOptionId } from "@beep/editor/chat"
+ * import { createEditor } from "lexical"
+ *
+ * console.log(typeaheadOptionId(createEditor(), 0).startsWith("typeahead-item-"))
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const typeaheadOptionId: {
+  (index: number): (editor: LexicalEditor) => string;
+  (editor: LexicalEditor, index: number): string;
+} = dual(2, (editor: LexicalEditor, index: number): string => `typeahead-item-${editor.getKey()}-${index}`);
+
+/**
+ * Points an editor's `aria-activedescendant` at the option it has actually
+ * highlighted, overriding the document-wide id Lexical writes.
+ *
+ * @example
+ * ```ts
+ * import { typeaheadActiveDescendant } from "@beep/editor/chat"
+ *
+ * console.log(typeof typeaheadActiveDescendant)
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const typeaheadActiveDescendant: {
+  (selectedIndex: number | null): (editor: LexicalEditor) => void;
+  (editor: LexicalEditor, selectedIndex: number | null): void;
+} = dual(2, (editor: LexicalEditor, selectedIndex: number | null): void => {
+  const root = editor.getRootElement();
+  if (root === null) return;
+  if (selectedIndex === null) {
+    root.removeAttribute("aria-activedescendant");
+    return;
+  }
+  root.setAttribute("aria-activedescendant", typeaheadOptionId(editor, selectedIndex));
+});
+
+/**
+ * Whether a typeahead listbox is genuinely on screen for `editor`: an option row
+ * is rendered inside the typeahead container.
+ *
+ * {@link menusOpenAtom} is plugin-reported state and can go stale — a menu whose
+ * trigger text vanished may never fire `onClose` — so anything that *suppresses*
+ * behavior on its behalf, above all Enter-to-send, must confirm against the DOM.
+ * Trusting the flag alone let a stale `true` swallow every Enter with no menu
+ * visible and no way to send the draft.
+ *
+ * @example
+ * ```ts
+ * import { isTypeaheadMenuVisible } from "@beep/editor/chat"
+ * import { createEditor } from "lexical"
+ *
+ * console.log(isTypeaheadMenuVisible(createEditor())) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isTypeaheadMenuVisible = (editor: LexicalEditor): boolean => {
+  const root = editor.getRootElement();
+  if (root === null) return false;
+  // Scoped to THIS editor. A document-wide query let a menu open in another
+  // composer on the page suppress Enter here, which is the same silent
+  // dead-Enter this predicate exists to prevent.
+  return (
+    root.ownerDocument.querySelector(`[${TYPEAHEAD_MENU_ATTRIBUTE}="${editor.getKey()}"] [role="option"]`) !== null
+  );
+};
 
 /**
  * Per-editor captured attachments. Writable; the composer pushes captured files
@@ -253,11 +383,25 @@ export const captureAttachmentsFn = composerRuntime.fn<{
       yield* Effect.logWarning("ChatComposer declined attachments during capture", ...rejections);
     }
     const captured = A.getSomes(A.map(results, Result.getSuccess));
-    // `FnContext.set` writes a value (no updater form), so the append reads the
-    // current attachments via `get` and writes the concatenated array.
     if (A.isReadonlyArrayNonEmpty(captured)) {
-      get(onAttachAtom(editor))(A.map(captured, (attachment) => attachment.file));
+      // Append BEFORE notifying: `fileToAttachment` has already minted object
+      // URLs for these files, and only `attachmentsAtom` knows how to revoke
+      // them. Notifying first meant a throwing consumer callback took the append
+      // down with it, stranding every URL it had just created — invisible to
+      // removal, send, and the unmount sweep alike.
+      //
+      // `FnContext.set` writes a value (no updater form), so the append reads the
+      // current attachments via `get` and writes the concatenated array.
       get.set(attachmentsAtom(editor), [...get(attachmentsAtom(editor)), ...captured]);
+      yield* Effect.try({
+        try: () => get(onAttachAtom(editor))(A.map(captured, (attachment) => attachment.file)),
+        catch: (cause) => AttachmentPortFailed.make({ message: String(cause) }),
+      }).pipe(
+        Effect.tapError((failure) =>
+          Effect.logError("ChatComposer upload port rejected captured attachments", failure)
+        ),
+        Effect.ignore
+      );
     }
   })
 );
@@ -317,7 +461,7 @@ export const removeAttachmentFn = composerRuntime.fn<{
  *
  * function LexicalErrorProbe() {
  *   const logEditorError = useAtomSet(logEditorErrorFn)
- *   return <button onClick={() => logEditorError(new Error("probe"))}>Report editor error</button>
+ *   return <button onClick={() => logEditorError("probe")}>Report editor error</button>
  * }
  * ```
  *
@@ -326,9 +470,43 @@ export const removeAttachmentFn = composerRuntime.fn<{
  * @category atoms
  * @since 0.0.0
  */
-export const logEditorErrorFn = composerRuntime.fn<Error>()((error) =>
+export const logEditorErrorFn = composerRuntime.fn<unknown>()((error) =>
   Effect.logError("ChatComposer Lexical editor error", error)
 );
+
+/**
+ * Why the composer refused to send, if it did.
+ *
+ * A send used to be abandoned silently when the editor state failed to decode
+ * against the wire schema: Enter and the Send button both did nothing, with no
+ * error, no toast, and no log — the composer simply went dead while the draft
+ * sat there intact. Whatever the schema gap turns out to be, refusing to send is
+ * never allowed to be invisible.
+ *
+ * @example
+ * ```tsx
+ * import { sendBlockedAtom } from "@beep/editor/chat"
+ * import { useAtomValue } from "@effect/atom-react"
+ * import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
+ * import * as O from "effect/Option"
+ *
+ * function SendBlockedNotice() {
+ *   const [editor] = useLexicalComposerContext()
+ *   const blocked = useAtomValue(sendBlockedAtom(editor))
+ *   return <span role="alert">{O.getOrElse(blocked, () => "")}</span>
+ * }
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const sendBlockedAtom = Atom.family((_editor: LexicalEditor) => Atom.make<O.Option<string>>(O.none()));
+
+const SEND_DECODE_FAILURE_MESSAGE =
+  "This message could not be prepared for sending. Please report it — your draft has been kept.";
+
+const SEND_UNBOUND_MESSAGE =
+  "This composer is not connected to a conversation. Please report it — your draft has been kept.";
 
 /**
  * Per-editor live character count of the editor's plain text. The read fn
@@ -408,11 +586,51 @@ export const sendKeyBindingAtom = Atom.family((editor: LexicalEditor) =>
     get.addFinalizer(
       editor.registerCommand(
         KEY_ENTER_COMMAND,
+        // Enter handling is a single priority-ordered interaction state machine:
+        // menu ownership, IME composition, newline policy, then send dispatch.
+        // Keeping that ordering together makes Lexical command consumption
+        // auditable and avoids splitting event ownership across callbacks.
+        // fallow-ignore-next-line complexity
         (event) => {
           if (event === null) return false;
-          if (get.once(anyMenuOpenAtom(editor))) return false;
+          // Yield Enter to a typeahead only when one is *actually* on screen.
+          // The open flags are plugin-reported and can go stale (a menu whose
+          // trigger vanished may never fire `onClose`); trusting the flag alone
+          // let a stale `true` silently swallow every Enter, with no visible
+          // menu and no way to send.
+          if (get.once(anyMenuOpenAtom(editor)) && isTypeaheadMenuVisible(editor)) return false;
           if (isImeComposing(event)) return false;
-          if (!shouldSendFromEnter(event, get.once(featuresAtom(editor)).sendOn)) return false;
+          // A code block owns Enter: inside one the keystroke is a newline, or the
+          // block the fence just opened could only ever hold a single line. That
+          // spends the send gesture, so Cmd/Ctrl+Enter becomes an explicit send here
+          // under either policy — otherwise a code block is a keyboard trap you can
+          // only escape with the mouse.
+          if ($isInsideCodeBlock()) {
+            if (!hasCommandModifier(event)) return false;
+            event.preventDefault();
+            editor.dispatchCommand(SEND_MESSAGE_COMMAND, undefined);
+            return true;
+          }
+          // A fence opener takes the keystroke ahead of both send and newline: typing
+          // ```ts and pressing Enter is how a code block gets written, and this
+          // composer consumes Enter before `@lexical/markdown` can ever see it.
+          if ($openCodeFence()) {
+            event.preventDefault();
+            return true;
+          }
+          const sendOn = get.once(featuresAtom(editor)).sendOn;
+          if (!shouldSendFromEnter(event, sendOn)) {
+            // With sendOn="enter" the only newline gesture is Shift+Enter, and
+            // Lexical's default maps it to a soft line-break — leaving the whole
+            // draft one paragraph, so block toggles (lists/quote/code) swallow
+            // everything typed so far. Promote it to a real paragraph break.
+            if (sendOn === "enter" && event.shiftKey && !event.altKey && !hasCommandModifier(event)) {
+              event.preventDefault();
+              editor.dispatchCommand(INSERT_PARAGRAPH_COMMAND, undefined);
+              return true;
+            }
+            return false;
+          }
           event.preventDefault();
           editor.dispatchCommand(SEND_MESSAGE_COMMAND, undefined);
           return true;
@@ -449,6 +667,28 @@ export interface SendHandlerBox {
 }
 
 /**
+ * The `run` installed when no consumer `onSend` is bound. It is a sentinel, not
+ * a no-op: {@link sendCommandBindingAtom} compares against it by identity and
+ * reports an unbound composer instead of silently discarding the send.
+ *
+ * A send that goes nowhere and says nothing is indistinguishable from a broken
+ * app — Enter and the Send button simply stop working, with the draft still
+ * sitting there — so the unbound case is made loud at the one place that can
+ * detect it.
+ *
+ * @example
+ * ```ts
+ * import { unboundSend } from "@beep/editor/chat"
+ *
+ * console.log(unboundSend()) // undefined
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const unboundSend = (): void => undefined;
+
+/**
  * Per-editor convenience send handler. `run` receives the editor's current
  * serialized state (read live at send time, so it never sees stale/missed
  * content) and returns `true` to signal a turn was dispatched (the binding then
@@ -476,7 +716,7 @@ export interface SendHandlerBox {
  * @category atoms
  * @since 0.0.0
  */
-export const onSendAtom = Atom.family((_editor: LexicalEditor) => Atom.make<SendHandlerBox>({ run: () => undefined }));
+export const onSendAtom = Atom.family((_editor: LexicalEditor) => Atom.make<SendHandlerBox>({ run: unboundSend }));
 
 /**
  * Per-editor `SEND_MESSAGE_COMMAND` handler registered at
@@ -518,11 +758,32 @@ export const sendCommandBindingAtom = Atom.family((editor: LexicalEditor) =>
           // Send button) on an empty composer is a no-op. (When attachment
           // transport lands, an attachments-present check joins this guard.)
           const hasContent = editorState.read(() => $getRoot().getTextContent().trim().length > 0);
+          const handler = get.once(onSendAtom(editor));
+          // An unbound handler means the composer's `onSend` was never seeded —
+          // or was swept out from under this binding by the registry's idle TTL
+          // (see the mount in `ComposerBody`). Either way the send has nowhere
+          // to go, and returning a quiet `false` here is what made a composer
+          // that had silently stopped sending look like a broken app.
+          if (hasContent && handler.run === unboundSend) {
+            get.set(sendBlockedAtom(editor), O.some(SEND_UNBOUND_MESSAGE));
+            get.set(logEditorErrorFn, "ChatComposer refused to send: no send handler is bound");
+            return true;
+          }
           const dispatched =
             hasContent &&
             O.match(SerializedEditorState.decodeOption(editorState.toJSON()), {
-              onNone: () => false,
-              onSome: (state) => get.once(onSendAtom(editor)).run(state) === true,
+              // A state the wire schema rejects is a bug in the schema or the
+              // editor — never a reason to make the composer quietly stop
+              // working. Say so, keep the draft, and leave a log behind.
+              onNone: () => {
+                get.set(sendBlockedAtom(editor), O.some(SEND_DECODE_FAILURE_MESSAGE));
+                get.set(logEditorErrorFn, "ChatComposer refused to send: editor state failed to decode");
+                return false;
+              },
+              onSome: (state) => {
+                get.set(sendBlockedAtom(editor), O.none());
+                return handler.run(state) === true;
+              },
             });
           if (dispatched) {
             editor.update(() => {

@@ -29,14 +29,14 @@
  * ```typescript
  * import { VERSION } from "@beep/observability"
  *
- * const isWorkspacePlaceholder = VERSION === "0.0.0"
- * console.log(isWorkspacePlaceholder) // true
+ * const version: string = VERSION
+ * console.log(version) // "0.0.3"
  * ```
  *
  * @since 0.0.0
  * @category configuration
  */
-export const VERSION = "0.0.0" as const;
+export const VERSION = "0.0.3" as const;
 
 /**
  * Cause and exit diagnostic utilities.

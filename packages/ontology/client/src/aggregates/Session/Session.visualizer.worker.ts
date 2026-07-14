@@ -9,16 +9,19 @@ import {
   ApplyOntologyGraphProjectionDeltaInput,
   applyOntologyGraphProjectionDelta,
   buildOntologyGraphProjection,
+  decodeWorkerCommand,
+  encodeWorkerResult,
+  OntologyWorkerUndecodableCommand,
   WorkerCommand,
   WorkerResult,
 } from "@beep/ontology-use-cases/aggregates/Session/worker";
 import { Result } from "effect";
-import * as S from "effect/Schema";
 
-const decodeWorkerCommand = S.decodeUnknownResult(WorkerCommand);
-
+// The boundary is a structured clone, not a channel that carries types, so both
+// ends speak the ENCODED form. See the codecs in Session.worker-protocol.ts for
+// what posting a decoded value did to this worker.
 const postResult = (result: WorkerResult): void => {
-  globalThis.postMessage(result);
+  globalThis.postMessage(encodeWorkerResult(result));
 };
 
 const handleCommand = (command: WorkerCommand): void => {
@@ -45,14 +48,22 @@ const handleCommand = (command: WorkerCommand): void => {
   });
 };
 
-globalThis.addEventListener("message", (event: MessageEvent<unknown>) => {
-  pipeDecode(event.data);
-});
-
 const pipeDecode = (data: unknown): void => {
   const decoded = decodeWorkerCommand(data);
 
   if (Result.isSuccess(decoded)) {
     handleCommand(decoded.success);
+    return;
   }
+
+  // A command this worker cannot read is not something to shrug at. Dropping it
+  // is what made the graph inexplicable: the worker was alive and being messaged,
+  // and it answered nothing, so the workbench sat on "pending" with no error to
+  // show and no way to find out why. Throwing surfaces it as an `error` event on
+  // the parent, which fails the graph out loud.
+  throw OntologyWorkerUndecodableCommand.make({ reason: String(decoded.failure) });
 };
+
+globalThis.addEventListener("message", (event: MessageEvent<unknown>) => {
+  pipeDecode(event.data);
+});

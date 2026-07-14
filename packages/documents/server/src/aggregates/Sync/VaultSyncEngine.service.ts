@@ -69,7 +69,7 @@ import { $DocumentsServerId } from "@beep/identity/packages";
 import { NonNegativeInt } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import { Effect, FileSystem, HashMap, identity, Order, Path, pipe, Ref, Result } from "effect";
+import { Effect, FileSystem, HashMap, identity, Order, Path, pipe, Ref, Result, Semaphore } from "effect";
 import * as A from "effect/Array";
 import * as F from "effect/Function";
 import * as O from "effect/Option";
@@ -77,7 +77,12 @@ import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import { VaultSyncConfig } from "./VaultSync.config.js";
 import type { RemoteItemId } from "@beep/documents-domain/values/Sync";
-import type { DmsRemoteEvent, DmsRemoteItem, SyncOnceInput } from "@beep/documents-use-cases/aggregates/Sync/server";
+import type {
+  DmsRemoteEvent,
+  DmsRemoteItem,
+  MarkConflictReviewedInput,
+  SyncOnceInput,
+} from "@beep/documents-use-cases/aggregates/Sync/server";
 import type { UnknownRecord } from "@beep/schema";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 
@@ -364,6 +369,26 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
   const config = yield* VaultSyncConfig;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+
+  // One sync pass per workspace at a time. Every pass opens by requeuing all
+  // leased operations, so two overlapping passes hand each other's in-flight
+  // uploads back to the queue and run the same remote mutation twice. A disabled
+  // button is only a hint — a second window, a repeated RPC, or a scheduled pass
+  // can all arrive concurrently — so the guard belongs here, not in the UI.
+  const syncLocks = yield* Ref.make(HashMap.empty<WorkspaceIdentity.WorkspaceId, Semaphore.Semaphore>());
+  const lockFor = (workspaceId: WorkspaceIdentity.WorkspaceId): Effect.Effect<Semaphore.Semaphore> =>
+    Ref.modify(syncLocks, (locks) =>
+      pipe(
+        HashMap.get(locks, workspaceId),
+        O.match({
+          onSome: (existing) => [existing, locks] as const,
+          onNone: () => {
+            const created = Semaphore.makeUnsafe(1);
+            return [created, HashMap.set(locks, workspaceId, created)] as const;
+          },
+        })
+      )
+    );
 
   const walkDirectory = (
     absolutePath: string,
@@ -1280,6 +1305,54 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     });
   });
 
+  const requeueReviewedConflictItem = Effect.fn($I`requeueReviewedConflictItem`)(function* (
+    workspaceId: WorkspaceIdentity.WorkspaceId,
+    syncItemId: DomainSyncItem.SyncItemId
+  ) {
+    const items = yield* itemRepository.listByWorkspace(
+      ListSyncItemsByWorkspaceInput.make({ provider: BOX_PROVIDER, workspaceId })
+    );
+    return yield* pipe(
+      A.findFirst(items, (item) => item.id === syncItemId),
+      O.filter((item) => SyncItemState.is.conflict(item.syncState)),
+      O.map((item) =>
+        itemRepository.update(DomainSyncItem.SyncItem.make({ ...item, syncState: SyncItemState.Enum.pending }))
+      ),
+      O.getOrElse(() => Effect.void)
+    );
+  });
+
+  const markConflictReviewedLocked = Effect.fn($I`markConflictReviewedLocked`)(function* (
+    input: MarkConflictReviewedInput
+  ) {
+    // Reviews are workspace-scoped: a conflict id from another workspace is
+    // indistinguishable from a missing one.
+    const openConflicts = yield* conflictRepository.listOpen(
+      ListOpenSyncConflictsInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+    );
+    const reviewedConflict = A.findFirst(openConflicts, (conflict) => conflict.id === input.conflictId);
+    if (O.isNone(reviewedConflict)) {
+      return yield* SyncConflictRepositoryNotFound.make({ conflictId: input.conflictId });
+    }
+    const reviewed = yield* conflictRepository.markReviewed(
+      MarkSyncConflictReviewedInput.make({ conflictId: input.conflictId })
+    );
+
+    // Reviewing used to touch only the conflict record, leaving the item
+    // parked in `conflict` forever: the row vanished from the panel while the
+    // conflict counter stayed up, with no remaining way to resolve it. The
+    // mirror is a one-way push, so an acknowledged remote drift means the
+    // local state wins — return the item to `pending` and let the next pass
+    // re-converge it.
+    yield* pipe(
+      reviewedConflict.value.syncItemId,
+      O.map((syncItemId) => requeueReviewedConflictItem(input.workspaceId, syncItemId)),
+      O.getOrElse(() => Effect.void)
+    );
+
+    return reviewed;
+  });
+
   return VaultSyncEngine.of({
     listOpenConflicts: Effect.fn($I`listOpenConflicts`)(function* (input) {
       return yield* conflictRepository.listOpen(
@@ -1287,31 +1360,33 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
       );
     }),
     markConflictReviewed: Effect.fn($I`markConflictReviewed`)(function* (input) {
-      // Reviews are workspace-scoped: a conflict id from another workspace is
-      // indistinguishable from a missing one.
-      const openConflicts = yield* conflictRepository.listOpen(
-        ListOpenSyncConflictsInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
-      );
-      if (!A.some(openConflicts, (conflict) => conflict.id === input.conflictId)) {
-        return yield* SyncConflictRepositoryNotFound.make({ conflictId: input.conflictId });
-      }
-      return yield* conflictRepository.markReviewed(
-        MarkSyncConflictReviewedInput.make({ conflictId: input.conflictId })
-      );
+      // Reviewing takes the same per-workspace lock a sync pass takes. It reads the
+      // open conflicts, marks one reviewed, and returns its item to `pending` — a
+      // read-modify-write over exactly the rows a concurrent pass is scanning and
+      // leasing. Without the lock, a pass running alongside the review could lease
+      // the item between the review and the requeue and strand it right back in
+      // `conflict`, so the row the user just resolved came straight back.
+      const lock = yield* lockFor(input.workspaceId);
+      return yield* lock.withPermit(markConflictReviewedLocked(input));
     }),
     status: readStatus,
     syncOnce: Effect.fn($I`syncOnce`)(function* (input) {
-      const probe = yield* availability.probe;
-      yield* operationRepository.requeueLeased(
-        RequeueLeasedSyncOperationsInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+      const lock = yield* lockFor(input.workspaceId);
+      return yield* lock.withPermit(
+        Effect.gen(function* () {
+          const probe = yield* availability.probe;
+          yield* operationRepository.requeueLeased(
+            RequeueLeasedSyncOperationsInput.make({ provider: BOX_PROVIDER, workspaceId: input.workspaceId })
+          );
+          yield* recoverStalledOperations(input, probe.connected);
+          yield* scanVault(input);
+          const pushRecords = yield* pumpQueue(input);
+          yield* pollRemoteEvents(input, pushRecords).pipe(
+            Effect.catchTag("DmsMirrorUnavailable", (error) => recordPollFailure(input, error))
+          );
+          return yield* readStatus(VaultSyncStatusInput.make({ workspaceId: input.workspaceId }));
+        })
       );
-      yield* recoverStalledOperations(input, probe.connected);
-      yield* scanVault(input);
-      const pushRecords = yield* pumpQueue(input);
-      yield* pollRemoteEvents(input, pushRecords).pipe(
-        Effect.catchTag("DmsMirrorUnavailable", (error) => recordPollFailure(input, error))
-      );
-      return yield* readStatus(VaultSyncStatusInput.make({ workspaceId: input.workspaceId }));
     }),
   });
 });

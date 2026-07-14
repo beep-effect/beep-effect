@@ -16,6 +16,9 @@
       "path": "../use-cases/tsconfig.json"
     },
     {
+      "path": "../../foundation/capability/observability/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/md/tsconfig.json"
     },
     {

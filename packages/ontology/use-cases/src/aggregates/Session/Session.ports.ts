@@ -334,9 +334,10 @@ export class TurtleCodec extends Context.Service<TurtleCodec, TurtleCodecShape>(
  * @since 0.0.0
  * @category errors
  */
-export const OntologyFileStoreErrorReason = LiteralKit(["readFailed", "writeFailed"]).pipe(
+export const OntologyFileStoreErrorReason = LiteralKit(["notFound", "readFailed", "writeFailed"]).pipe(
   $I.annoteSchema("OntologyFileStoreErrorReason", {
-    description: "Ontology sidecar file-store failure reason.",
+    description:
+      "Ontology sidecar file-store failure reason. `notFound` is distinct from `readFailed` because callers act on absence (seed a starter document) and must never take that path for a file that exists but could not be read.",
   })
 );
 

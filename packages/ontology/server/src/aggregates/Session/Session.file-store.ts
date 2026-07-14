@@ -60,12 +60,24 @@ const OntologyWorkspaceFilePathChecks = S.makeFilterGroup(
 const OntologyWorkspaceFilePath = OntologyFilePath.check(OntologyWorkspaceFilePathChecks);
 const decodeOntologyWorkspaceFilePath = S.decodeUnknownEffect(OntologyWorkspaceFilePath);
 
-const readFailure = (path: ReadOntologyFileRequest["path"]) => (): OntologyFileStoreError =>
-  OntologyFileStoreError.make({
-    reason: "readFailed",
-    path,
-    message: `Failed to read ontology sidecar file: ${path}.`,
-  });
+// Absence is not a failure to read: callers seed a starter document when a file
+// is missing, and must never take that path for a file that exists but could not
+// be read (a permissions error or a transient fault would otherwise overwrite the
+// user's document with the fixture).
+const readFailure =
+  (path: ReadOntologyFileRequest["path"]) =>
+  (error: PlatformError.PlatformError): OntologyFileStoreError =>
+    error.reason._tag === "NotFound"
+      ? OntologyFileStoreError.make({
+          reason: "notFound",
+          path,
+          message: `Ontology sidecar file does not exist: ${path}.`,
+        })
+      : OntologyFileStoreError.make({
+          reason: "readFailed",
+          path,
+          message: `Failed to read ontology sidecar file: ${path}.`,
+        });
 
 const readPathRejected = (path: ReadOntologyFileRequest["path"], message: string): OntologyFileStoreError =>
   OntologyFileStoreError.make({

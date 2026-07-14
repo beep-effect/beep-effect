@@ -132,6 +132,17 @@ describe("@beep/workspace-domain", () => {
     expect(decode("C:\\Vault")).toBe("C:\\Vault");
   });
 
+  it("normalizes trailing separators on workspace vault roots but still rejects bare roots", () => {
+    const decode = S.decodeUnknownSync(WorkspaceVaultRootPath);
+
+    expect(decode("/home/user/vault1/")).toBe("/home/user/vault1");
+    expect(decode("/home/user/vault1///")).toBe("/home/user/vault1");
+    expect(decode("C:\\Vault\\")).toBe("C:\\Vault");
+    expect(decode("\\\\server\\share\\vault\\")).toBe("\\\\server\\share\\vault");
+    expect(() => decode("/")).toThrow();
+    expect(() => decode("C:\\")).toThrow();
+  });
+
   it("preserves crispened workspace and email wire shapes", () => {
     const workspaceWire = {
       ...baseEntityInput("WorkspaceWorkspace", 20),

@@ -55,7 +55,7 @@ import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL, RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt } from "@beep/schema";
-import { SparqlQueryService, SparqlSelectResult } from "@beep/semantic-web/services/sparql-query";
+import { SparqlAskResult, SparqlQueryService, SparqlSelectResult } from "@beep/semantic-web/services/sparql-query";
 import { fcRuns } from "@beep/test-utils";
 import { O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -486,6 +486,49 @@ describe("Session use-cases", () => {
   );
 
   it.effect(
+    "runs an ASK query and answers it",
+    Effect.fnUntraced(function* () {
+      // An ASK could not be run at all: the workbench's profile literal was
+      // ["select","construct"], so the query was rejected as a profile mismatch before
+      // it ever reached the engine — which had implemented ASK the whole time. And an
+      // ASK returns one boolean, so bounding it is meaningless: no LIMIT is appended to
+      // the user's query just so a badge has something to describe.
+      let submittedQuery = "";
+      const session = createSession(CreateSessionInput.make({ id: sessionId, baseDataset: dataset }));
+      const sparql = SparqlQueryService.of({
+        execute: Effect.fn("SparqlQueryService.execute")((request) =>
+          Effect.sync(() => {
+            submittedQuery = request.query;
+            return SparqlAskResult.make({ profile: "ask", value: true });
+          })
+        ),
+      });
+      const query = "ASK { ?s ?p ?o }";
+
+      yield* Effect.gen(function* () {
+        const runner = yield* OntologySparqlRunner;
+        const result = yield* runner.run(
+          RunOntologySparqlInput.make({
+            session,
+            profile: "ask",
+            query,
+            safeguards: OntologySparqlSafeguards.make({ defaultLimit: NonNegativeInt.make(10) }),
+          })
+        );
+
+        expect(result.result.profile).toBe("ask");
+        expect(result.limitInjected).toBe(false);
+        expect(result.truncated).toBe(false);
+      }).pipe(
+        provideScopedLayer(OntologySparqlRunnerLive.pipe(Layer.provide(Layer.succeed(SparqlQueryService, sparql))))
+      );
+
+      // The query reaches the engine exactly as written.
+      expect(submittedQuery).toBe(query);
+    })
+  );
+
+  it.effect(
     "detects existing SPARQL LIMIT clauses separated by tabs or newlines",
     Effect.fnUntraced(function* () {
       let submittedQuery = "";
@@ -512,11 +555,90 @@ describe("Session use-cases", () => {
         );
 
         expect(result.limitInjected).toBe(false);
+        // The bound the engine was actually given, not the one we would have supplied.
+        // `effectiveLimit` was reported as the safeguard default unconditionally, so a
+        // query that asked for 50 and received 50 rows was labelled `LIMIT 10`: the
+        // badge named a bound that had never been applied.
+        expect(result.effectiveLimit).toBe(50);
       }).pipe(
         provideScopedLayer(OntologySparqlRunnerLive.pipe(Layer.provide(Layer.succeed(SparqlQueryService, sparql))))
       );
 
       expect(submittedQuery).toBe(query);
+    })
+  );
+
+  // The LIMIT guard is what stops the engine materializing an unbounded result
+  // set; anything that fools it into reporting "already limited" removes the
+  // bound entirely, so these are safety regressions, not formatting ones.
+  it.effect(
+    "still injects a LIMIT when the query only mentions one inside a comment",
+    Effect.fnUntraced(function* () {
+      let submittedQuery = "";
+      const session = createSession(CreateSessionInput.make({ id: sessionId, baseDataset: dataset }));
+      const sparql = SparqlQueryService.of({
+        execute: Effect.fn("SparqlQueryService.execute")((request) =>
+          Effect.sync(() => {
+            submittedQuery = request.query;
+            return SparqlSelectResult.make({ profile: "select", rows: [] });
+          })
+        ),
+      });
+      const query = "SELECT ?s WHERE { ?s ?p ?o }\n# LIMIT 1";
+
+      yield* Effect.gen(function* () {
+        const runner = yield* OntologySparqlRunner;
+        const result = yield* runner.run(
+          RunOntologySparqlInput.make({
+            session,
+            profile: "select",
+            query,
+            safeguards: OntologySparqlSafeguards.make({ defaultLimit: NonNegativeInt.make(10) }),
+          })
+        );
+
+        expect(result.limitInjected).toBe(true);
+      }).pipe(
+        provideScopedLayer(OntologySparqlRunnerLive.pipe(Layer.provide(Layer.succeed(SparqlQueryService, sparql))))
+      );
+
+      expect(submittedQuery).toBe(`${query}\nLIMIT 10`);
+    })
+  );
+
+  it.effect(
+    "still injects a LIMIT when the only LIMIT bounds a subquery",
+    Effect.fnUntraced(function* () {
+      let submittedQuery = "";
+      const session = createSession(CreateSessionInput.make({ id: sessionId, baseDataset: dataset }));
+      const sparql = SparqlQueryService.of({
+        execute: Effect.fn("SparqlQueryService.execute")((request) =>
+          Effect.sync(() => {
+            submittedQuery = request.query;
+            return SparqlSelectResult.make({ profile: "select", rows: [] });
+          })
+        ),
+      });
+      // The inner LIMIT bounds the subquery's solutions, not the outer result.
+      const query = "SELECT ?s WHERE { { SELECT ?s WHERE { ?s ?p ?o } LIMIT 5 } ?s ?p2 ?o2 }";
+
+      yield* Effect.gen(function* () {
+        const runner = yield* OntologySparqlRunner;
+        const result = yield* runner.run(
+          RunOntologySparqlInput.make({
+            session,
+            profile: "select",
+            query,
+            safeguards: OntologySparqlSafeguards.make({ defaultLimit: NonNegativeInt.make(10) }),
+          })
+        );
+
+        expect(result.limitInjected).toBe(true);
+      }).pipe(
+        provideScopedLayer(OntologySparqlRunnerLive.pipe(Layer.provide(Layer.succeed(SparqlQueryService, sparql))))
+      );
+
+      expect(submittedQuery).toBe(`${query}\nLIMIT 10`);
     })
   );
 

@@ -27,6 +27,7 @@
 /// <reference path="../assets.d.ts" />
 
 import { fileURLToPath } from "node:url";
+import { LogRedactedCauseOptions, logRedactedCause, profilePhase } from "@beep/observability";
 import { makeLayer as makePgliteLayer } from "@beep/pglite";
 import { makeDrizzleLayer } from "@beep/postgres";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
@@ -145,13 +146,18 @@ const assertCanOpenInProcessPgliteDataDir = Effect.fn("ProfessionalDesktop.Pglit
       )
     ).pipe(
       Effect.catchCause((cause) =>
-        Effect.logError("existing PGlite chat db data dir cannot be opened by the current in-process runtime").pipe(
-          Effect.annotateLogs({
-            cause,
-            component: "professional-desktop",
-            dataDir,
-            recovery: ChatDbIncompatibleRecoveryMessage,
-          }),
+        logRedactedCause(
+          cause,
+          LogRedactedCauseOptions.make({
+            message: "existing PGlite chat db data dir cannot be opened by the current in-process runtime",
+            level: "Error",
+            attributes: {
+              component: "professional-desktop",
+              recovery: "manual_export_or_reset_required",
+              subsystem: "pglite",
+            },
+          })
+        ).pipe(
           Effect.andThen(
             Effect.fail(
               new IncompatiblePgliteDataDir({
@@ -220,7 +226,7 @@ export const ensureCompatibleChatDbDataDir = Effect.fn("ProfessionalDesktop.Pgli
       yield* Effect.logInfo("existing chat db data dir preserved for in-process PGlite compatibility").pipe(
         Effect.annotateLogs({
           component: "professional-desktop",
-          dataDir,
+          data_dir_state: "preserved",
         })
       );
       return true;
@@ -231,9 +237,8 @@ export const ensureCompatibleChatDbDataDir = Effect.fn("ProfessionalDesktop.Pgli
     yield* fs.makeDirectory(dataDir, { recursive: true });
     yield* Effect.logWarning("chat db data dir moved for in-process PGlite compatibility").pipe(
       Effect.annotateLogs({
-        backupPath,
         component: "professional-desktop",
-        dataDir,
+        data_dir_state: "moved_to_backup",
       })
     );
     return true;
@@ -263,7 +268,8 @@ const PgliteBinaryAssets = Effect.all([compileWasmFile(pgliteWasmPath), compileW
     fsBundle: Bun.file(toBunFileSystemPath(pgliteDataPath)),
     initdbWasmModule,
     pgliteWasmModule,
-  }))
+  })),
+  profilePhase({ phase: "professional_desktop.pglite.compile_binary_assets" })
 );
 
 /**

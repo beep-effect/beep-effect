@@ -14,7 +14,8 @@
 "use client";
 
 import { AssistantBlock, InlineNode } from "@beep/agents-domain/values/AssistantContent";
-import { MermaidView, YouTubeEmbed } from "@beep/editor";
+import { CodeBlockView, MermaidView, YouTubeEmbed } from "@beep/editor";
+import { sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
 import { A, O, Str } from "@beep/utils";
 import { Hash, MutableHashMap } from "effect";
 import { dual } from "effect/Function";
@@ -89,14 +90,36 @@ export const stableOccurrenceKeys: {
   });
 });
 
+// Every part of a key is bounded AT CONSTRUCTION. `boundedKey` hashes a 256-character
+// sample, but it was handed a string that had already been built in full — so the guard
+// against a megabyte paragraph materialized the megabyte in order to bound it. A single
+// text node was enough: its whole body went into the key before anything trimmed it.
 const inlineRenderKey = (node: InlineNode): string =>
   InlineNode.match(node, {
     text: (t) =>
-      `text:${t.text}:${t.bold === true ? "b" : ""}:${t.italic === true ? "i" : ""}:${t.code === true ? "c" : ""}`,
-    link: (l) => `link:${l.url}:${l.text}`,
+      `text:${Str.length(t.text).toString(36)}:${Str.takeLeft(t.text, KEY_SAMPLE_LIMIT)}:${t.bold === true ? "b" : ""}:${t.italic === true ? "i" : ""}:${t.code === true ? "c" : ""}`,
+    link: (l) => `link:${Str.takeLeft(l.url, KEY_SAMPLE_LIMIT)}:${Str.takeLeft(l.text, KEY_SAMPLE_LIMIT)}`,
   });
 
-const inlinesRenderKey = (nodes: ReadonlyArray<InlineNode>): string => A.join(A.map(nodes, inlineRenderKey), "|");
+/** The content's true size, counted without ever concatenating it. */
+const inlinesLength = (nodes: ReadonlyArray<InlineNode>): number =>
+  A.reduce(nodes, 0, (total, node) =>
+    InlineNode.match(node, {
+      text: (t) => total + Str.length(t.text),
+      link: (l) => total + Str.length(l.url) + Str.length(l.text),
+    })
+  );
+
+const inlinesRenderKey = (nodes: ReadonlyArray<InlineNode>): string => {
+  // The count and the true length still disambiguate two runs that happen to share an
+  // opening — they are what a truncated sample would otherwise throw away.
+  let key = `${nodes.length.toString(36)}:${inlinesLength(nodes).toString(36)}`;
+  for (const node of nodes) {
+    if (Str.length(key) >= KEY_SAMPLE_LIMIT) break;
+    key = `${key}|${inlineRenderKey(node)}`;
+  }
+  return key;
+};
 
 const tableCellRenderKey = (cell: TableBlock["rows"][number]["cells"][number]): string =>
   `cell:${inlinesRenderKey(cell.children)}`;
@@ -143,6 +166,11 @@ export const blockRenderKey = (block: AssistantBlock): string =>
     youtube: (b) => `youtube:${b.videoId}`,
   });
 
+// Keep the streaming sink aligned with the persisted Lexical link boundary:
+// model-controlled active and unknown protocols collapse to an inert fragment.
+const safeLinkUrl = (url: string): O.Option<string> =>
+  O.liftPredicate((sanitized: string) => sanitized !== "#")(sanitizeUrl(url));
+
 const Inline = ({ node }: { readonly node: InlineNode }): ReactNode =>
   InlineNode.match(node, {
     text: (t) => {
@@ -152,11 +180,17 @@ const Inline = ({ node }: { readonly node: InlineNode }): ReactNode =>
       if (t.bold === true) el = <strong>{el}</strong>;
       return el;
     },
-    link: (l) => (
-      <a className="text-primary underline" href={l.url} target="_blank" rel="noreferrer">
-        {l.text}
-      </a>
-    ),
+    link: (l) =>
+      O.match(safeLinkUrl(l.url), {
+        // A rejected destination still shows its text: the content is not lost,
+        // it simply is not clickable.
+        onNone: () => <span>{l.text}</span>,
+        onSome: (url) => (
+          <a className="text-primary underline" href={url} target="_blank" rel="noreferrer noopener">
+            {l.text}
+          </a>
+        ),
+      }),
   });
 
 const Inlines = ({ nodes }: { readonly nodes: ReadonlyArray<InlineNode> }): JSX.Element => {
@@ -203,8 +237,13 @@ const Table = ({ block }: { readonly block: TableBlock }): JSX.Element => {
   const bodyKeys = stableOccurrenceKeys(bodyRows, tableRowRenderKey);
 
   return (
-    <div className="my-3 overflow-x-auto">
-      <table className="w-full border-collapse overflow-hidden rounded border text-sm">
+    // `w-max min-w-full`, not `w-full`: forced to the container's width, a table with
+    // more columns than fit crushes each one down and breaks the words inside it. The
+    // table takes the width its content needs and the wrapper scrolls. (`overflow-hidden`
+    // is gone from the table for the same reason it left the theme — on a table it
+    // collapses min-content and licenses exactly that squeeze.)
+    <div className="my-3 overflow-x-auto rounded border">
+      <table className="w-max min-w-full border-collapse text-sm">
         {headerRow === undefined ? null : (
           <thead>
             <TableRow cells={headerRow.cells} header={true} />
@@ -257,9 +296,10 @@ const Block = ({ block, renderKey }: { readonly block: AssistantBlock; readonly 
       b.language === "mermaid" ? (
         <MermaidView renderKey={`stream:${renderKey}`} source={b.code} />
       ) : (
-        <pre className="my-2 overflow-x-auto rounded bg-muted p-3 text-sm">
-          <code>{b.code}</code>
-        </pre>
+        // The same view the persisted transcript renders. A streaming block used to be
+        // a bare `<pre>` — no language, nothing to copy — and then changed shape under
+        // the reader the moment the turn landed.
+        <CodeBlockView code={b.code} language={b.language ?? ""} />
       ),
     table: (b) => <Table block={b} />,
     youtube: (b) => <YouTubeEmbed videoID={b.videoId} />,

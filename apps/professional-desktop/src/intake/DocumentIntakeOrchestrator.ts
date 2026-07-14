@@ -7,24 +7,71 @@
 
 import { DocumentIntakeActionError, DocumentsRpcs } from "@beep/documents-use-cases/public";
 import * as DocumentUseCases from "@beep/documents-use-cases/server";
+import { LogRedactedCauseOptions, logRedactedCause, observeWorkflow } from "@beep/observability";
 import { WorkspaceVaultActionError, WorkspaceVaultRpcs } from "@beep/workspace-use-cases/public";
 import * as WorkspaceUseCases from "@beep/workspace-use-cases/server";
-import { Effect, pipe } from "effect";
+import { Cause, Effect, Metric, pipe } from "effect";
 import * as O from "effect/Option";
 
-const toWorkspaceVaultActionError =
-  (context: string) =>
-  (error: { readonly _tag: string }): Effect.Effect<never, WorkspaceVaultActionError> =>
-    Effect.logWarning("workspace vault action dropped internal failure", { context, detail: error }).pipe(
-      Effect.andThen(WorkspaceVaultActionError.failEffect(context))
-    );
+const intakeStarted = Metric.counter("desktop_intake_operations_started_total", { incremental: true });
+const intakeCompleted = Metric.counter("desktop_intake_operations_completed_total", { incremental: true });
+const intakeFailed = Metric.counter("desktop_intake_operations_failed_total", { incremental: true });
+const intakeInterrupted = Metric.counter("desktop_intake_operations_interrupted_total", { incremental: true });
+const intakeDuration = Metric.timer("desktop_intake_operation_duration");
 
-const toDocumentIntakeActionError =
-  (context: string) =>
-  (error: { readonly _tag: string }): Effect.Effect<never, DocumentIntakeActionError> =>
-    Effect.logWarning("document intake action dropped internal failure", { context, detail: error }).pipe(
-      Effect.andThen(DocumentIntakeActionError.failEffect(context))
+const observeIntakeOperation = Effect.fnUntraced(function* <A, E, R>(
+  operation: string,
+  effect: Effect.Effect<A, E, R>
+): Effect.fn.Return<A, E, R> {
+  return yield* observeWorkflow(effect, {
+    name: `documents.intake.${operation}`,
+    attributes: { operation },
+    started: intakeStarted,
+    completed: intakeCompleted,
+    failed: intakeFailed,
+    interrupted: intakeInterrupted,
+    duration: intakeDuration,
+  }).pipe(Effect.withSpan(`documents.intake.${operation}`));
+});
+
+/**
+ * Largest document the intake RPC accepts, in decoded bytes.
+ *
+ * The client refuses an oversized file before reading it, but the client is not
+ * the boundary: content crosses this RPC base64-expanded and is held in memory
+ * on both sides through extraction and filing, so a payload posted straight at
+ * the sidecar could still exhaust it. Kept in step with the composer's limit.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+const MAX_INTAKE_CONTENT_BYTES = 25 * 1024 * 1024;
+
+const toWorkspaceVaultActionError = (context: string) =>
+  Effect.fnUntraced(function* (error: { readonly _tag: string }): Effect.fn.Return<never, WorkspaceVaultActionError> {
+    yield* logRedactedCause(
+      Cause.fail(error),
+      LogRedactedCauseOptions.make({
+        message: "workspace vault action dropped internal failure",
+        level: "Warn",
+        attributes: { context, subsystem: "workspace_vault" },
+      })
     );
+    return yield* WorkspaceVaultActionError.failEffect(context);
+  });
+
+const toDocumentIntakeActionError = (context: string) =>
+  Effect.fnUntraced(function* (error: { readonly _tag: string }): Effect.fn.Return<never, DocumentIntakeActionError> {
+    yield* logRedactedCause(
+      Cause.fail(error),
+      LogRedactedCauseOptions.make({
+        message: "document intake action dropped internal failure",
+        level: "Warn",
+        attributes: { context, subsystem: "document_intake" },
+      })
+    );
+    return yield* DocumentIntakeActionError.failEffect(context);
+  });
 
 /**
  * RPC handler layer for workspace vault configuration commands.
@@ -44,9 +91,15 @@ export const WorkspaceVaultHandlersLive = WorkspaceVaultRpcs.toLayer(
     const store = yield* WorkspaceUseCases.Workspace.WorkspaceVaultStore;
     return WorkspaceVaultRpcs.of({
       GetWorkspaceVault: ({ workspaceId }) =>
-        store.getVaultConfig(workspaceId).pipe(Effect.catch(toWorkspaceVaultActionError("GetWorkspaceVault"))),
+        observeIntakeOperation(
+          "get_workspace_vault",
+          store.getVaultConfig(workspaceId).pipe(Effect.catch(toWorkspaceVaultActionError("GetWorkspaceVault")))
+        ),
       SetWorkspaceVault: (input) =>
-        store.setVaultRoot(input).pipe(Effect.catch(toWorkspaceVaultActionError("SetWorkspaceVault"))),
+        observeIntakeOperation(
+          "set_workspace_vault",
+          store.setVaultRoot(input).pipe(Effect.catch(toWorkspaceVaultActionError("SetWorkspaceVault")))
+        ),
     });
   })
 );
@@ -70,19 +123,39 @@ export const DocumentIntakeHandlersLive = DocumentsRpcs.toLayer(
     const documentIntake = yield* DocumentUseCases.Document.DocumentIntake;
     return DocumentsRpcs.of({
       IntakeDroppedFile: Effect.fn("IntakeDroppedFile")(function* (payload) {
-        const config = yield* workspaceVaultStore
-          .getVaultConfig(payload.workspaceId)
-          .pipe(Effect.catch(toDocumentIntakeActionError("IntakeDroppedFile.workspaceVault")));
-        const vaultRootPath = yield* pipe(
-          config.vaultRootPath,
-          O.match({
-            onNone: () => DocumentIntakeActionError.failEffect("Workspace vault is not configured."),
-            onSome: Effect.succeed,
+        return yield* observeIntakeOperation(
+          "dropped_file",
+          Effect.gen(function* () {
+            // The UI refuses an oversized file, but the UI is not the boundary:
+            // the content arrives here base64-expanded and is held in memory
+            // through extraction and filing, so a payload posted straight at the
+            // RPC could still exhaust the sidecar. Refuse it where it lands.
+            if (payload.content.length > MAX_INTAKE_CONTENT_BYTES) {
+              return yield* DocumentIntakeActionError.failEffect(
+                `Document exceeds the ${Math.round(MAX_INTAKE_CONTENT_BYTES / (1024 * 1024))} MB intake limit.`
+              );
+            }
+            // The UI refuses an empty file, but the UI is not the boundary. Filing zero
+            // bytes writes a content-free object to the vault and asks the model to
+            // invent a rationale for a document that does not exist.
+            if (payload.content.length === 0) {
+              return yield* DocumentIntakeActionError.failEffect("The document is empty, so there is nothing to file.");
+            }
+            const config = yield* workspaceVaultStore
+              .getVaultConfig(payload.workspaceId)
+              .pipe(Effect.catch(toDocumentIntakeActionError("IntakeDroppedFile.workspaceVault")));
+            const vaultRootPath = yield* pipe(
+              config.vaultRootPath,
+              O.match({
+                onNone: () => DocumentIntakeActionError.failEffect("Workspace vault is not configured."),
+                onSome: Effect.succeed,
+              })
+            );
+            return yield* documentIntake
+              .intakeDroppedFile({ ...payload, vaultRootPath })
+              .pipe(Effect.catch(toDocumentIntakeActionError("IntakeDroppedFile")));
           })
         );
-        return yield* documentIntake
-          .intakeDroppedFile({ ...payload, vaultRootPath })
-          .pipe(Effect.catch(toDocumentIntakeActionError("IntakeDroppedFile")));
       }),
     });
   })

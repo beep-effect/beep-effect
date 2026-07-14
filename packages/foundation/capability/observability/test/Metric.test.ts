@@ -4,6 +4,7 @@ import {
   observeWorkflow,
   statusClass,
   TrackDurationOptions,
+  trackDuration,
 } from "@beep/observability";
 import { fcRuns } from "@beep/test-utils";
 import { Effect, Equal, Metric } from "effect";
@@ -87,6 +88,30 @@ describe("Metric", () => {
         const interruptedState = yield* Metric.value(interrupted);
 
         expect(interruptedState.count).toBe(1);
+      })
+    ));
+
+  it("tracks duration while preserving a failed effect", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const duration = Metric.timer("test_failed_task_duration");
+        const exit = yield* Effect.exit(trackDuration(Effect.fail("boom"), duration));
+        const state = yield* Metric.value(duration);
+
+        expect(exit._tag).toBe("Failure");
+        expect(state.count).toBe(1);
+      })
+    ));
+
+  it("tracks duration while preserving interruption", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const duration = Metric.timer("test_interrupted_task_duration");
+        const exit = yield* Effect.exit(trackDuration(Effect.interrupt, duration));
+        const state = yield* Metric.value(duration);
+
+        expect(exit._tag).toBe("Failure");
+        expect(state.count).toBe(1);
       })
     ));
 

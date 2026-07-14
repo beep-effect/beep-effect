@@ -7,6 +7,8 @@
     "declaration": false,
     "declarationMap": false,
     "incremental": false,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "noEmit": true,
     "outDir": "dist-test",
     "rootDir": ".",

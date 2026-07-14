@@ -211,6 +211,34 @@ export class AttachmentInvalidMimeType extends TaggedErrorClass<AttachmentInvali
 ) {}
 
 /**
+ * The consumer's `onAttach` upload port threw while being notified of accepted
+ * attachments. The files stay captured (and revocable) — this records that the
+ * app-side handoff failed, rather than letting the throw escape the capture
+ * pipeline and abandon the object URLs it had just minted.
+ *
+ * @example
+ * ```ts
+ * import { AttachmentPortFailed } from "@beep/editor/chat"
+ *
+ * const failure = new AttachmentPortFailed({ message: "upload port unavailable" })
+ *
+ * console.log(failure._tag) // "AttachmentPortFailed"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class AttachmentPortFailed extends TaggedErrorClass<AttachmentPortFailed>($I`AttachmentPortFailed`)(
+  "AttachmentPortFailed",
+  {
+    message: S.String.annotateKey({ description: "Rendered cause of the upload-port failure." }),
+  },
+  $I.annote("AttachmentPortFailed", {
+    description: "The consumer's `onAttach` upload port threw while being notified of accepted attachments.",
+  })
+) {}
+
+/**
  * Why {@link ComposerAttachment.fromFile} declined to capture a file. A tagged
  * union so the capture pipeline can distinguish — and surface — an over-budget
  * file from one with an unrecognized MIME type, rather than collapsing both into

@@ -68,7 +68,7 @@ export const editorTheme: EditorThemeClasses = {
   hashtag: "text-blue-600 bg-blue-100 rounded-md px-1",
   text: {
     bold: "font-bold",
-    code: "bg-gray-100 p-1 rounded-md",
+    code: "bg-muted p-1 rounded-md font-mono text-sm",
     italic: "italic",
     strikethrough: "line-through",
     subscript: "sub",
@@ -113,9 +113,16 @@ export const editorTheme: EditorThemeClasses = {
     variable: "EditorTheme__tokenVariable",
   },
   characterLimit: "!bg-destructive/50",
-  table: "EditorTheme__table w-fit overflow-scroll border-collapse",
+  // `block` + `w-max` + `overflow-x-auto` is the only way a table scrolls when nothing
+  // wraps it (Lexical only builds a scroll wrapper when the table plugin is mounted, and
+  // the read-only viewer does not mount it). It replaces `w-fit overflow-scroll`, which
+  // made the TABLE itself the scroll container — collapsing its min-content width to
+  // zero, so the browser was free to squeeze every column and break words mid-token.
+  table: "EditorTheme__table my-3 block w-max max-w-full overflow-x-auto rounded border border-collapse",
+  // No `w-24`: a fixed 96px column is what crushed "verylongvaluecolumn1" into three
+  // stacked fragments. A column is as wide as its content needs, and the table scrolls.
   tableCell:
-    'EditorTheme__tableCell w-24 relative border px-4 py-2 text-left [&[align=center]]:text-center [&[align=right]]:text-right"',
+    "EditorTheme__tableCell relative border px-3 py-2 text-left align-top [&[align=center]]:text-center [&[align=right]]:text-right",
   tableCellActionButton:
     "EditorTheme__tableCellActionButton bg-background block border-0 rounded-2xl w-5 h-5 text-foreground cursor-pointer",
   tableCellActionButtonContainer:
