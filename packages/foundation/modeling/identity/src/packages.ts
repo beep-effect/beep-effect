@@ -273,6 +273,21 @@ export const $RdfId: Identity.IdentityComposer<"@beep/rdf"> = composers.$RdfId;
 export const $OntologyId: Identity.IdentityComposer<"@beep/ontology"> = composers.$OntologyId;
 
 /**
+ * Identity composer for the semantic-foundation vocabulary under `@beep/ontology`.
+ *
+ * @example
+ * ```ts
+ * import { $SemanticFoundationId } from "@beep/identity/packages"
+ *
+ * console.log($SemanticFoundationId.iri) // "https://ns.beep.sh/ontology/semantic-foundation"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $SemanticFoundationId = $OntologyId.create("semantic-foundation");
+
+/**
  * Identity composer for the `@beep/types` package.
  *
  * @example

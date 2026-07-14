@@ -1,4 +1,4 @@
-import { CoreVocab, mergeVocab, VocabRegistry } from "@beep/identity";
+import { CoreVocab, mergeVocab, SemanticFoundationVocab, VocabRegistry } from "@beep/identity";
 import { describe, expect, it } from "@effect/vitest";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
@@ -39,6 +39,18 @@ describe("Vocab literal types", () => {
 
     expectTypeOf<Curie<typeof extended>>().toEqualTypeOf<CoreCurie | "ex:Thing">();
     expect(extended.ex.terms).toEqual(["Thing"]);
+  });
+
+  it("extends the core registry with the repository semantic authority", () => {
+    expect(SemanticFoundationVocab.beep).toEqual({
+      iri: "https://ns.beep.sh/",
+      terms: [
+        "ontology/semantic-foundation",
+        "ontology/semantic-foundation/taxonomy/legal-intake",
+        "ontology/semantic-foundation/filing-root/local-vault",
+        "ontology/semantic-foundation/filing-root/box-mirror",
+      ],
+    });
   });
 });
 

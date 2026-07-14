@@ -315,6 +315,7 @@ unasserted
 unbilled
 unbuilt
 Uncheckbox
+uncited
 unconfirmable
 undemonstrated
 Undemonstrated
@@ -342,6 +343,7 @@ unstarted
 unticked
 unticking
 untriaged
+unvetted
 unwired
 USPTO
 UTBMS
@@ -356,4 +358,3 @@ wkcbdgqqo
 Wyner
 yeet
 zazuko
-uncited

@@ -1,0 +1,87 @@
+{
+  "@context": {
+    "beep": "https://ns.beep.sh/ontology/semantic-foundation/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+  },
+  "@id": "beep:taxonomy/legal-intake",
+  "@type": "skos:ConceptScheme",
+  "dcterms:title": "Legal intake taxonomy",
+  "beep:pathTemplateSegment": [
+    "root",
+    "client",
+    "matter",
+    "taxonomy-concept",
+    "document-class",
+    "file-name"
+  ],
+  "@graph": [
+    {
+      "@id": "beep:concept/legal-document",
+      "@type": "skos:Concept",
+      "skos:prefLabel": "Legal document"
+    },
+    {
+      "@id": "beep:concept/correspondence",
+      "@type": "skos:Concept",
+      "skos:broader": { "@id": "beep:concept/legal-document" },
+      "skos:prefLabel": "Correspondence"
+    },
+    {
+      "@id": "beep:concept/email-message",
+      "@type": "skos:Concept",
+      "skos:broader": { "@id": "beep:concept/correspondence" },
+      "skos:prefLabel": "Email message"
+    },
+    {
+      "@id": "beep:document-class/draft",
+      "@type": "skos:Concept",
+      "skos:inScheme": { "@id": "beep:taxonomy/legal-intake" },
+      "skos:prefLabel": "Draft"
+    },
+    {
+      "@id": "beep:document-class/redline",
+      "@type": "skos:Concept",
+      "skos:inScheme": { "@id": "beep:taxonomy/legal-intake" },
+      "skos:prefLabel": "Redline"
+    },
+    {
+      "@id": "beep:document-class/filed",
+      "@type": "skos:Concept",
+      "skos:inScheme": { "@id": "beep:taxonomy/legal-intake" },
+      "skos:prefLabel": "Filed"
+    },
+    {
+      "@id": "beep:document-class/received",
+      "@type": "skos:Concept",
+      "skos:inScheme": { "@id": "beep:taxonomy/legal-intake" },
+      "skos:prefLabel": "Received"
+    },
+    {
+      "@id": "beep:document-class/privileged",
+      "@type": "skos:Concept",
+      "skos:inScheme": { "@id": "beep:taxonomy/legal-intake" },
+      "skos:prefLabel": "Privileged"
+    },
+    {
+      "@id": "beep:document-class/extracted-child",
+      "@type": "skos:Concept",
+      "skos:inScheme": { "@id": "beep:taxonomy/legal-intake" },
+      "skos:prefLabel": "Extracted child"
+    },
+    {
+      "@id": "beep:filing-root/local-vault",
+      "@type": "skos:Concept",
+      "beep:rootSegment": "vault",
+      "skos:inScheme": { "@id": "beep:taxonomy/legal-intake" },
+      "skos:prefLabel": "Local vault"
+    },
+    {
+      "@id": "beep:filing-root/box-mirror",
+      "@type": "skos:Concept",
+      "beep:rootSegment": "box-mirror",
+      "skos:inScheme": { "@id": "beep:taxonomy/legal-intake" },
+      "skos:prefLabel": "Box mirror"
+    }
+  ]
+}

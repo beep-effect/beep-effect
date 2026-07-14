@@ -5,7 +5,7 @@
     "title": "Semantic Foundation",
     "status": "active",
     "created": "2026-07-08",
-    "updated": "2026-07-08",
+    "updated": "2026-07-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/semantic-foundation",
@@ -59,7 +59,7 @@
     {
       "id": "M1",
       "name": "Intake-Serving Semantic Seed",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "M2",
