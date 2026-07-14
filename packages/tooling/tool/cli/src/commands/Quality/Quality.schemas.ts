@@ -108,6 +108,7 @@ export const LintPolicySubcommand = LiteralKit([
   "package-test-imports",
   "policy",
   "reflection-artifacts",
+  "roadmap-refs",
   "schema-first",
   "schema-topology",
   "tooling-schema-first",

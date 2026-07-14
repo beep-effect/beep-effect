@@ -946,6 +946,7 @@ describe("quality task adapter", () => {
       "lint:identity-registry",
       "lint:package-test-imports",
       "lint:reflection-artifacts",
+      "lint:roadmap-refs",
       "goals:doctor",
       "goals:index-check",
       "lint:schema-first",
@@ -976,6 +977,7 @@ describe("quality task adapter", () => {
       "lint:identity-registry",
       "lint:package-test-imports",
       "lint:reflection-artifacts",
+      "lint:roadmap-refs",
       "goals:doctor",
       "goals:index-check",
       "lint:schema-first",
@@ -1018,7 +1020,7 @@ describe("quality task adapter", () => {
           expect(Exit.isSuccess(exit)).toBe(true);
 
           const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-          expect(logText).toContain("[beep-cli] lint:policy: running 22 step(s) with concurrency 3");
+          expect(logText).toContain("[beep-cli] lint:policy: running 23 step(s) with concurrency 3");
         })
       )
     ));
@@ -1456,11 +1458,12 @@ describe("quality task adapter", () => {
           // still executes after the aggregate lint step fails.
           expect(commandLog).toContain("bunx turbo run lint");
           expect(commandLog).toContain("bun run beep laws effect-imports --check");
+          expect(commandLog).toContain("bun run beep lint roadmap-refs");
           expect(commandLog).toContain("bun run beep docgen check --reuse-proof-manifest");
           expect(commandLog).toContain("bunx typos");
 
           const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-          expect(logText).toContain("[beep-cli] lint: running 23 step(s) with concurrency 3");
+          expect(logText).toContain("[beep-cli] lint: running 24 step(s) with concurrency 3");
         })
       )
     ));

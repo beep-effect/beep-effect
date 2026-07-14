@@ -13,8 +13,8 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { decodeYamlTextAs, LiteralKit } from "@beep/schema";
-import { A, thunkEmptyStr } from "@beep/utils";
-import { Console, Effect, FileSystem, Path, pipe, SchemaGetter } from "effect";
+import { A } from "@beep/utils";
+import { Console, Effect, FileSystem, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -23,6 +23,7 @@ import { Command } from "effect/unstable/cli";
 import { parse } from "jsonc-parser";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
 import { optionalProp } from "../../internal/cli/OptionRecord.js";
+import { makePolicyFindingLogger } from "../../internal/cli/PolicyFindingLogger.js";
 import { GoalStatus } from "../Goals/Goals.schemas.js";
 
 const $I = $RepoCliId.create("commands/Lint/ReflectionArtifact");
@@ -35,8 +36,6 @@ const REFLECTION_FILE_PATTERN = /^\d{4}-\d{2}-\d{2}-.+\.md$/;
 // `completed-retained` gates reflections; `superseded` packets are exempt and
 // get a doctor advisory when they carry no supersession pointer.
 const COMPLETED_STATUS_TOKENS: ReadonlyArray<string> = [GoalStatus.Enum["completed-retained"]];
-
-const stringifyJsonLine = SchemaGetter.stringifyJson({ space: 0 });
 
 const ReflectionConfidence = LiteralKit(["high", "medium", "low"]).pipe(
   $I.annoteSchema("ReflectionConfidence", {
@@ -142,17 +141,11 @@ class ReflectionPolicyFinding extends S.Class<ReflectionPolicyFinding>($I`Reflec
 
 const encodePolicyFinding = S.encodeUnknownEffect(ReflectionPolicyFinding);
 
-const renderPolicyFindingLine = Effect.fn("renderReflectionFindingLine")(function* (finding: ReflectionPolicyFinding) {
-  const encoded = yield* encodePolicyFinding(finding);
-  const rendered = yield* stringifyJsonLine.run(O.some(encoded), {});
-  return `[reflection:issue] ${O.getOrElse(rendered, thunkEmptyStr)}`;
-});
-
-const logPolicyFinding = Effect.fn("logReflectionFinding")(function* (finding: ReflectionPolicyFinding) {
-  yield* Console.error(
-    `- ${finding.goal}${finding.file !== undefined ? ` :: ${finding.file}` : ""} [${finding.severity}] ${finding.message}`
-  );
-  yield* Console.error(yield* renderPolicyFindingLine(finding));
+const { log: logPolicyFinding } = makePolicyFindingLogger({
+  issuePrefix: "[reflection:issue] ",
+  encode: encodePolicyFinding,
+  renderSummary: (finding: ReflectionPolicyFinding) =>
+    `- ${finding.goal}${finding.file !== undefined ? ` :: ${finding.file}` : ""} [${finding.severity}] ${finding.message}`,
 });
 
 const decodeFrontmatter = decodeYamlTextAs(ReflectionFrontmatter);
