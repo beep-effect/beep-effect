@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -35,8 +35,9 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-`P5 remediate complete` - all 9 findings fixed across lanes RL-001..RL-004 with
-regression tests; entering P6 yeet-to-mergeable.
+`P9 complete` - all 9 findings remediated and merged (PR #410), closed on the
+Codex dashboard, and hardened via PR #413; packet is `completed-retained`. See
+[`history/2026-07-14-closeout.md`](./history/2026-07-14-closeout.md).
 
 ## Findings at a glance
 

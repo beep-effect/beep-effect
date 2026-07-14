@@ -8,7 +8,7 @@
     "capturedCount": 9,
     "capturedAt": "2026-07-14",
     "captureMethod": "codex-chrome-extension",
-    "note": "P0-P5 complete. All 9 findings remediated via codex gpt-5.6-sol/medium lanes (RL-001..RL-004) plus Fable-owned bun.lock dedupe (CSF-009). Each code finding ships one regression test; all targeted tests pass. CSF-002 grafana MCP fully removed from repo config (Fable finished the read-only-in-sandbox .codex/config.toml block). Pending Yeet PR + post-merge codex-chrome closure."
+    "note": "COMPLETE. All 9 findings remediated (codex gpt-5.6-sol/medium lanes RL-001..RL-004 + Fable bun.lock dedupe), merged to main via PR #410 (f9edd6fed2), and closed as 'Already fixed' on the Codex dashboard via codex Chrome. Greptile P1 review hardening (CSF-003 macOS-portable descriptor verification with fail-closed inode identity; CSF-004 canonical alias resolution) merged via PR #413 (03285268f9). Packet flipped to completed-retained."
   },
   "lanes": {
     "RL-001": {
@@ -59,7 +59,7 @@
       "classes": ["CWE-78", "missing-trust-boundary", "command-execution-sink"],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Already fixed",
       "lane": "RL-001",
       "validation": { "status": "complete", "confidence": "high" },
       "remediation": {
@@ -76,7 +76,11 @@
         ],
         "verified": "ai-provider-cli 12/12, agents/server 4/4 pass"
       },
-      "closeout": { "status": "pending", "reason": "pending post-merge" }
+      "closeout": {
+        "status": "closed in Codex",
+        "reason": "Already fixed",
+        "closedAt": "2026-07-14"
+      }
     },
     {
       "id": "CSF-002",
@@ -95,7 +99,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Already fixed",
       "lane": "RL-004",
       "validation": { "status": "complete", "confidence": "high" },
       "remediation": {
@@ -111,7 +115,11 @@
         ],
         "verified": "no matches (clean); JSON/TOML valid"
       },
-      "closeout": { "status": "pending", "reason": "pending post-merge" }
+      "closeout": {
+        "status": "closed in Codex",
+        "reason": "Already fixed",
+        "closedAt": "2026-07-14"
+      }
     },
     {
       "id": "CSF-003",
@@ -126,7 +134,7 @@
       "classes": ["CWE-59", "CWE-367", "arbitrary-file-read"],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Already fixed",
       "lane": "RL-002",
       "validation": { "status": "complete", "confidence": "high" },
       "remediation": {
@@ -141,7 +149,11 @@
         ],
         "verified": "13/13 pass"
       },
-      "closeout": { "status": "pending", "reason": "pending post-merge" }
+      "closeout": {
+        "status": "closed in Codex",
+        "reason": "Already fixed",
+        "closedAt": "2026-07-14"
+      }
     },
     {
       "id": "CSF-004",
@@ -160,7 +172,7 @@
       ],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Already fixed",
       "lane": "RL-003",
       "validation": { "status": "complete", "confidence": "high" },
       "remediation": {
@@ -176,7 +188,11 @@
         ],
         "verified": "6/6 pass"
       },
-      "closeout": { "status": "pending", "reason": "pending post-merge" }
+      "closeout": {
+        "status": "closed in Codex",
+        "reason": "Already fixed",
+        "closedAt": "2026-07-14"
+      }
     },
     {
       "id": "CSF-005",
@@ -191,7 +207,7 @@
       "classes": ["CWE-400", "denial-of-service"],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Already fixed",
       "lane": "RL-002",
       "validation": { "status": "complete", "confidence": "high" },
       "remediation": {
@@ -211,7 +227,11 @@
         ],
         "verified": "documents/server 5/5, doc-text 8/8 pass"
       },
-      "closeout": { "status": "pending", "reason": "pending post-merge" }
+      "closeout": {
+        "status": "closed in Codex",
+        "reason": "Already fixed",
+        "closedAt": "2026-07-14"
+      }
     },
     {
       "id": "CSF-006",
@@ -226,7 +246,7 @@
       "classes": ["CWE-248", "availability", "unhandled-blank-node"],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Already fixed",
       "lane": "RL-003",
       "validation": { "status": "complete", "confidence": "high" },
       "remediation": {
@@ -241,7 +261,11 @@
         ],
         "verified": "4/4 pass"
       },
-      "closeout": { "status": "pending", "reason": "pending post-merge" }
+      "closeout": {
+        "status": "closed in Codex",
+        "reason": "Already fixed",
+        "closedAt": "2026-07-14"
+      }
     },
     {
       "id": "CSF-007",
@@ -256,7 +280,7 @@
       "classes": ["CWE-22", "CWE-200", "existence-oracle"],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Already fixed",
       "lane": "RL-004",
       "validation": { "status": "complete", "confidence": "high" },
       "remediation": {
@@ -271,7 +295,11 @@
         ],
         "verified": "1/1 pass"
       },
-      "closeout": { "status": "pending", "reason": "pending post-merge" }
+      "closeout": {
+        "status": "closed in Codex",
+        "reason": "Already fixed",
+        "closedAt": "2026-07-14"
+      }
     },
     {
       "id": "CSF-008",
@@ -286,7 +314,7 @@
       "classes": ["CWE-200", "local-path-disclosure", "committed-doc"],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Already fixed",
       "lane": "RL-004",
       "validation": { "status": "complete", "confidence": "high" },
       "remediation": {
@@ -306,7 +334,11 @@
         ],
         "verified": "no matches (clean)"
       },
-      "closeout": { "status": "pending", "reason": "pending post-merge" }
+      "closeout": {
+        "status": "closed in Codex",
+        "reason": "Already fixed",
+        "closedAt": "2026-07-14"
+      }
     },
     {
       "id": "CSF-009",
@@ -321,7 +353,7 @@
       "classes": ["dependency-version-skew", "build-consistency"],
       "verdict": "real",
       "disposition": "remediate",
-      "codexCloseReason": "pending post-merge",
+      "codexCloseReason": "Already fixed",
       "lane": "RL-004",
       "owner": "Fable (global bun.lock file)",
       "validation": { "status": "complete", "confidence": "high" },
@@ -335,7 +367,11 @@
         ],
         "verified": "no canary.82 matches; oip-web tsgo check exit 0"
       },
-      "closeout": { "status": "pending", "reason": "pending post-merge" }
+      "closeout": {
+        "status": "closed in Codex",
+        "reason": "Already fixed",
+        "closedAt": "2026-07-14"
+      }
     }
   ]
 }
