@@ -5,12 +5,12 @@
 # the workflow passes it explicitly with `--config=osv-scanner.toml`, and the
 # local Bun audit wrapper mirrors ignored vulnerability ids found here.
 #
-# Add ignored vulnerabilities only after review, with a reason and expiry date.
-# The `ignoreUntil` expiry is enforced by both consumers: OSV Scanner honors it
-# natively, and the local Bun audit wrapper (runBunAudit in
-# packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts) only
-# mirrors an `--ignore` for entries whose `ignoreUntil` is still in the future,
-# so expired entries stop suppressing the advisory automatically.
+# Add exceptions only after review, with a reason and expiry date. Prefer an
+# exact `PackageOverrides` match when the exception is specific to one package
+# artifact; reserve `IgnoredVulns` for advisory-wide exceptions. OSV Scanner
+# enforces both expiry forms natively. The local Bun audit wrapper (runBunAudit
+# in packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts) mirrors
+# only active `IgnoredVulns` ids because Bun audit has no package-scoped ignore.
 #
 # Retired dependency-refresh ignores are intentionally absent when the lockfile
 # resolves fixed versions. The current lock resolves esbuild 0.25.12, form-data
@@ -23,7 +23,10 @@ id = "GHSA-8988-4f7v-96qf"
 ignoreUntil = 2026-09-15T00:00:00Z
 reason = "@opentelemetry/core advisory affecting versions <2.8.0 (1.30.1, 2.1.0, 2.5.0, 2.7.0, 2.7.1 present in the tree); fixed in 2.8.0. @opentelemetry/core is a transitive dependency of the OpenTelemetry SDK/exporter stack, not a direct workspace dependency; the workspace already pins the otel SDK packages at 2.8.0 while the older core copies are pulled by transitive otel dependents that have not adopted 2.8.0. Newly published advisory, not introduced by the current PR (identical versions present on main); tracked for a repo-wide bump to >=2.8.0. Revisit when dependents widen their ranges."
 
-[[IgnoredVulns]]
-id = "GHSA-38f7-945m-qr2g"
-ignoreUntil = 2026-08-14T00:00:00Z
-reason = "OSV URL-version false positive for root dev-only inspeffct 1.1.0's transitive effect snapshot at effect-smol commit 51f6d19. The installed package metadata is effect 4.0.0-beta.93, and the snapshot creates a scheduler dispatcher per fiber, matching the upstream isolation fix; OSV instead reports the pkg.pr.new URL as the version and misclassifies it against effect <3.20.0. Revisit when inspeffct publishes a semver Effect dependency or OSV classifies URL-pinned versions correctly."
+[[PackageOverrides]]
+name = "effect"
+version = "https://pkg.pr.new/Effect-TS/effect-smol/effect@51f6d19"
+ecosystem = "npm"
+vulnerability.ignore = true
+effectiveUntil = 2026-08-14T00:00:00Z
+reason = "OSV URL-version false positive for root dev-only inspeffct 1.1.0's transitive effect snapshot. This exact effect-smol commit has package version 4.0.0-beta.93 and creates a scheduler dispatcher per fiber, matching the upstream isolation fix. The exact name, ecosystem, and URL version keep every other Effect artifact and version visible to OSV. Revisit when inspeffct publishes a semver Effect dependency or OSV classifies URL-pinned versions correctly."
