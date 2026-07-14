@@ -2,11 +2,13 @@
 
 ## Status
 
-Implementation is wired and the OIP rename has been applied to the source,
-package, app assets, IaC intent, Pulumi S3 backend, and managed asset buckets.
-The previous staging infrastructure was applied for `staging.opip.law`; the new
-`staging.oip.law`, `www.oip.law`, and legacy redirect records are provider
-cutover gates until the OIP Cloudflare and Vercel changes are applied.
+Lifecycle: `completed-retained`
+
+**Completed as shipped.** The implementation, OIP rename, IaC intent, state and
+asset migration, quality proof, browser QA, and completion audit are done.
+Remaining provider operations are launch-time work in
+[`history/outputs/launch-runbook.md`](./history/outputs/launch-runbook.md), not
+open implementation phases.
 
 - Sanity live content remains unconfigured because no OIP Sanity project/token
   is present in `OIP_SECRETS`; the app renders checked-in reviewed fallback
@@ -14,7 +16,8 @@ cutover gates until the OIP Cloudflare and Vercel changes are applied.
 - Vercel TLS activation for `https://staging.oip.law` is pending provider
   apply. `staging.opip.law` remains the verified historical staging endpoint
   until redirect cutover completes.
-- MDN HTTP Observatory reports B+ / 80 on staging because the static
+- The B+ / 80 static CSP posture is accepted for now. MDN HTTP Observatory
+  reports that score because the
   `next.config.ts` CSP must keep `unsafe-inline` for Next App Router runtime
   scripts and Next/Image inline styles. A+ requires a request-bound nonce CSP
   path or equivalent script/style hashes.
@@ -71,6 +74,8 @@ The first production path is managed-first and lean:
   [history/outputs/oip-rename-cutover-addendum.md](./history/outputs/oip-rename-cutover-addendum.md).
 - The completed OIP state and asset bucket rename is recorded in
   [history/outputs/oip-state-bucket-rename-evidence.md](./history/outputs/oip-state-bucket-rename-evidence.md).
+- Provider operations, staging re-proof, and the production DNS approval gate
+  are recorded in [history/outputs/launch-runbook.md](./history/outputs/launch-runbook.md).
 - The encrypted S3 backend, staging Vercel project/domain/env, disabled Vercel
   Authentication posture, and staging asset bucket are managed from
   `infra/oip-web`.
@@ -81,5 +86,5 @@ The first production path is managed-first and lean:
 - Staging Lighthouse proof is 100 across performance, accessibility, best
   practices, SEO, and agentic-browsing after adding Markdown links to
   `llms.txt`.
-- Production DNS records are modeled but must be previewed/applied after the OIP
-  rename changes land.
+- Production DNS records are modeled; cutover remains gated on explicit approval
+  and follows the launch runbook.

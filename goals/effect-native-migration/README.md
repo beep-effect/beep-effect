@@ -2,8 +2,11 @@
 
 ## Status
 
-Phase 0 complete (scaffold, normative SPEC, phased PLAN, and the discovery /
-remediation sub-agent templates exist). Phase 1 pending.
+Lifecycle: `completed-retained`
+
+Historical migration complete. `ops/progress.json` records all 5 phases, all 7
+symbol inventories, and all 75 package entries as done. The packet bookkeeping
+was reconciled on 2026-07-14 without re-auditing current source.
 
 ## Mission
 
@@ -18,17 +21,15 @@ migration prefers the `@beep/utils/*` re-export wrappers (`Str`, `Struct`,
 
 ## Approach
 
-This goal is **bootstrapped, not yet executed**. The design was fully resolved
-up front (see `research/grilling-notes.md`); the new session runs the phases:
+This goal's historical run completed the design resolved in
+`research/grilling-notes.md`:
 
-1. **Phase 1** — build per-category symbol inventories of the target modules.
-2. **Phase 1.5** — stress-test `PLAN.md` with the `grill-with-docs` skill.
-3. **Phase 2** — one discovery agent per in-scope package finds native-usage
-   violations.
-4. **Phase 3** — one remediation agent per package (topo order) replaces them
-   and passes a per-package verification gate.
+1. **Phase 1** built all 7 per-category symbol inventories.
+2. **Phase 1.5** stress-tested `PLAN.md` with the `grill-with-docs` skill.
+3. **Phase 2** completed discovery for all 75 recorded packages.
+4. **Phase 3** completed remediation for all 75 recorded packages.
 
-Fan-out is **one agent per package per phase** (all categories), run in bounded
+The run used **one agent per package per phase** (all categories) in bounded
 parallel waves — not one agent per category per package.
 
 ## Reading Order
@@ -52,3 +53,7 @@ parallel waves — not one agent per category per package.
 - `ops/inventory/symbols/effect-native-<Category>.json` — Phase 1 symbol maps.
 - `ops/inventory/usages/<sanitized-package>/<Category>.json` — Phase 2 findings.
 - Source edits + per-package commits — Phase 3.
+
+See [history/2026-07-14-tree-reconciliation.md](./history/2026-07-14-tree-reconciliation.md)
+for the existence-only mapping of the historical 75-package inventory to the
+current tree.

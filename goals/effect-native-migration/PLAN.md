@@ -1,7 +1,7 @@
 # PLAN — Effect-Native Migration
 
-Execution plan for the goal defined in [SPEC.md](./SPEC.md). Run phases in order.
-Track status in [ops/progress.json](./ops/progress.json).
+Historical execution plan for the goal defined in [SPEC.md](./SPEC.md). All five
+recorded phases are complete in [ops/progress.json](./ops/progress.json).
 
 ## Phase 0 — Bootstrap (COMPLETE)
 
@@ -9,7 +9,7 @@ Scaffold, `README.md`, `SPEC.md`, this `PLAN.md`, the discovery/remediation
 prompt templates, `ops/manifest.json`, and `ops/progress.json` already exist.
 No further action.
 
-## Phase 1 — Symbol inventories
+## Phase 1 — Symbol inventories (COMPLETE)
 
 **Goal:** produce one symbol map per category so downstream agents have a
 complete picture of the available Effect/`@beep/utils` helpers.
@@ -26,21 +26,21 @@ complete picture of the available Effect/`@beep/utils` helpers.
   - `JSON` → `effect/Schema` JSON codecs (`fromJsonString`,
     `UnknownFromJsonString`, `decodeUnknownEffect`, `encodeUnknownEffect`)
   - `Array` → `effect/Array` + `@beep/utils/Array`
-- **Reuse `standards/repo-exports.catalog.{md,jsonc}`** for descriptions where it
-  already covers a symbol; only hand-parse the rest.
+- The historical inventory outputs retain the descriptions used by the completed
+  run. Any future symbol discovery must use live source and barrel searches.
 - Populate `imports.preferred/effect/utils` per SPEC §4 (wrapper form is the
   default `preferred` when one exists).
 
 **Acceptance:** 7 well-formed JSON files exist and parse.
 
-## Phase 1.5 — Stress-test the plan
+## Phase 1.5 — Stress-test the plan (COMPLETE)
 
 Run the `grill-with-docs` skill against this `PLAN.md` and `SPEC.md` to check
 them against `standards/ARCHITECTURE.md`, `GLOSSARY.md`, and `DECISIONS.md`.
 Resolve or record any findings **before** making source edits. No code changes
 in this phase.
 
-## Phase 2 — Discovery (per-package, all categories)
+## Phase 2 — Discovery (per-package, all categories) (COMPLETE)
 
 **Goal:** a complete, machine-readable inventory of native-usage violations.
 
@@ -58,7 +58,7 @@ in this phase.
 **Acceptance:** every in-scope package has a discovery entry (a set of category
 files, or an explicit empty/clean marker) and `progress.json` reflects it.
 
-## Phase 3 — Remediation (per-package, topo order)
+## Phase 3 — Remediation (per-package, topo order) (COMPLETE)
 
 **Goal:** apply the substitutions and keep every touched package green.
 
@@ -86,3 +86,11 @@ clean).
   reviewability and resumability.
 - The run is resumable: always reconcile against `ops/progress.json` before
   starting a wave; skip packages already `done`.
+
+## Completion reconciliation
+
+The completed ledger contains 7 symbol inventories and 75 package entries, all
+marked done. The 2026-07-14 reconciliation checked only whether each recorded
+package path still exists at HEAD; it did not perform fresh source discovery or
+re-audit the historical migration. See
+[history/2026-07-14-tree-reconciliation.md](./history/2026-07-14-tree-reconciliation.md).

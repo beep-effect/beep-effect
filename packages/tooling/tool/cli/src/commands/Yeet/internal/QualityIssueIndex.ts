@@ -10,9 +10,9 @@ import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Str from "effect/String";
 import { optionalProp } from "../../../internal/cli/OptionRecord.js";
-import { PackageQualityReport, QualityIssueIndex } from "../Yeet.schemas.js";
-import type { QualityIssue } from "../Yeet.schemas.js";
+import { PackageQualityReport, QualityIssue, QualityIssueIndex, QualityIssueRouting } from "../Yeet.schemas.js";
 
 export {
   PackageQualityReport,
@@ -43,6 +43,31 @@ const packageReportOrder: Order.Order<PackageQualityReport> = Order.mapInput(
 const issuePackageName = (issue: QualityIssue): string => issue.packageName ?? "@beep/root";
 const issuePackagePath = (issue: QualityIssue): O.Option<string> => O.fromUndefinedOr(issue.packagePath);
 const packageKey = (issue: QualityIssue): string => `${issuePackageName(issue)}\u0000${issue.packagePath ?? ""}`;
+
+const reflectionArtifactCompliance = {
+  needle: "beep lint reflection-artifacts",
+  subCategory: "reflection-artifact-compliance",
+  remediation:
+    "Run `bun run beep lint reflection-artifacts`, then use the `reflect` skill to repair the goal reflection.",
+  routing: QualityIssueRouting.make({ skill: "reflect", reason: "Reflection artifact compliance finding" }),
+};
+
+const routeReflectionArtifactCompliance = (issue: QualityIssue): QualityIssue =>
+  pipe(
+    O.fromUndefinedOr(issue.command),
+    O.filter(Str.includes(reflectionArtifactCompliance.needle)),
+    O.match({
+      onNone: () => issue,
+      onSome: () =>
+        QualityIssue.make({
+          ...issue,
+          category: "lint-tool",
+          subCategory: reflectionArtifactCompliance.subCategory,
+          remediation: reflectionArtifactCompliance.remediation,
+          routing: A.append(issue.routing, reflectionArtifactCompliance.routing),
+        }),
+    })
+  );
 
 const packageReportForKey = (issues: ReadonlyArray<QualityIssue>, key: string): PackageQualityReport => {
   const packageIssues = pipe(
@@ -81,7 +106,7 @@ const packageReportForKey = (issues: ReadonlyArray<QualityIssue>, key: string): 
  * @since 0.0.0
  */
 export const buildQualityIssueIndex = (issues: ReadonlyArray<QualityIssue>): QualityIssueIndex => {
-  const sortedIssues = A.sort(issues, issueOrder);
+  const sortedIssues = pipe(issues, A.map(routeReflectionArtifactCompliance), A.sort(issueOrder));
   const packageKeys = pipe(sortedIssues, A.map(packageKey), A.dedupe, A.sort(Order.String));
   const packages = pipe(
     packageKeys,

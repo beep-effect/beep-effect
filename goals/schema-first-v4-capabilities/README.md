@@ -2,9 +2,23 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+### Portfolio closeout (2026-07-14)
+
+The retained deliverable is P0–P2: Effect v4 Schema doctrine, agent steering,
+and the enforcement plumbing that emits structured schema-first issues through
+Yeet. P3 helper statics are deferred until repeated cross-package demand. The
+completed P4 pilots remain evidence, while all remaining remediation waves and
+the five existing arbitrary cases are recorded deferrals. The
+`SchemaRepresentation` generated-model spike is dropped.
+
+P5's docs-side closeout reconciles this README, `PLAN.md`, and the manifest.
+The existing false-positive and deferral ledger is final; the five arbitrary
+deferrals remain Glob, TypedArrays, IRI, PackageJson, and Graph in
+[`reviews/p4-wave3-deferred-arbitraries.md`](./reviews/p4-wave3-deferred-arbitraries.md).
 
 This packet turns a research finding into a repo initiative: we already require
 schema-first development, but we are underusing Effect v4 Schema features that
@@ -130,7 +144,7 @@ repo-cli laws helper that formats `SchemaError.issue` through
 `SchemaIssue.makeFormatterStandardSchemaV1(...)` and provides redacted
 diagnostic output through public formatter hooks while avoiding a premature
 public `@beep/schema` export.
-P4 has started with low-risk Sha256,
+P4's completed pilot set includes low-risk Sha256,
 Markdown, secure-header
 option, CSV, repo-configs route-predicate, LocalDate codec, and Organization
 value-schema, identity-id, and EntityKernel property-test pilots: `Sha256Hex`
@@ -212,6 +226,6 @@ from 27 to 0 and active precision-audit advisories from 7 to 0, with two
 reviewed precision exceptions still tracked in the inventory. Hardening
 `SFV4-arbitrary-tests` to the full Effect v4 sync/async codec family then
 re-surfaced 34 synchronous-codec advisory candidates for Wave 3.
-The next packet phases are helper evaluation and ordered remediation waves.
-
-Use `PLAN.md` for sequencing and `SPEC.md` for acceptance.
+No implementation phase remains active after portfolio closeout. Use `PLAN.md`
+for the recorded dispositions and `SPEC.md` for the historical acceptance
+contract.

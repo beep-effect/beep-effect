@@ -3,14 +3,14 @@
   "initiative": {
     "id": "schema-first-v4-capabilities",
     "title": "Schema-First V4 Capabilities",
-    "status": "paused",
+    "status": "completed-retained",
     "created": "2026-06-08",
-    "updated": "2026-07-11",
+    "updated": "2026-07-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/schema-first-v4-capabilities",
-  "lifecycle": "paused",
-  "statusNote": "Parked by docs/ROADMAP.md (2026-07-11); resumes when a schema-heavy wave hits a v4-feature gap.",
+  "lifecycle": "completed-retained",
+  "statusNote": "Portfolio closeout recorded 2026-07-14: P0-P2 are the retained deliverable; P3 helper statics and remaining P4 waves are deferred until repeated demand or a schema-heavy v4-feature gap; the SchemaRepresentation spike is dropped.",
   "executionCapable": true,
   "completionGate": {
     "operator": "yeet",
@@ -187,17 +187,20 @@
     {
       "id": "P3",
       "name": "Helper and example library",
-      "status": "in-progress"
+      "status": "complete",
+      "notes": "Internal diagnostics pilot retained; public helpers and helper statics are recorded deferrals pending repeated cross-package demand."
     },
     {
       "id": "P4",
       "name": "Ordered remediation waves",
-      "status": "in-progress"
+      "status": "complete",
+      "notes": "Completed pilots retained; remaining waves and the five existing arbitrary cases are recorded deferrals. SchemaRepresentation spike dropped."
     },
     {
       "id": "P5",
       "name": "Hardening and closure",
-      "status": "pending"
+      "status": "complete",
+      "notes": "Docs-side closeout reconciled README, PLAN, and manifest; existing false-positive and deferral ledger declared final."
     }
   ],
   "verificationCommands": [

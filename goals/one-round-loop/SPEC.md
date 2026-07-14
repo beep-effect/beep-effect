@@ -6,6 +6,14 @@ reflections/2026-07-07-claude.md`). This document is the source of
 truth; `GOAL.md` is the compact launcher; grilled rulings live in
 `research/decisions-locked.md` (D1–D7, R1–R4 — locked).
 
+## Portfolio disposition (2026-07-14)
+
+P0 and P1 are the retained shipped outcome. P2, P3, and the property-lane
+required-check flip are recorded `wont_fix` until median PR CI round-trips
+exceed one. `history/p4-closeout.md` points the shipped Verification Matrix
+claims to evidence. The original Definition of Done below remains the
+historical contract and is not rewritten to claim deferred work shipped.
+
 ## Mission
 
 Remove every structural cause of multi-round CI churn observed during

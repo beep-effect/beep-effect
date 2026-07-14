@@ -2,7 +2,7 @@
 
 ## Status
 
-Active
+Lifecycle: `completed-retained`
 
 ## Overview
 
@@ -12,12 +12,10 @@ gateway activity into privacy-safe raw archives, derived rollups, OTLP traces,
 and weekly scorecards that answer whether agent-facing config changes improved
 coding-agent performance.
 
-Production-complete V1 means the dankserver tailnet stack is deployed, local
-smoke collection works, P6a hardening gates pass, real sources are flowing, one
-restarted seven-day config-impact scorecard has been generated from live data,
-and a sanitized derived mirror has been confirmed on dankserver. Provider and
-dashboard enrichment remain follow-up work when the scorecard explicitly marks
-those metrics unavailable and not scored.
+The descoped V1 is complete: the dankserver tailnet stack was deployed, local
+collection and P6a hardening were proven, and the June full-window scorecard is
+accepted as credited P6 evidence. Mirror sync, provider metrics, and dashboard
+expansion are explicit deferrals.
 
 ## Read This First
 
@@ -52,12 +50,10 @@ those metrics unavailable and not scored.
 - [history/outputs/p6-proof-runner-isolation-and-runbook.md](./history/outputs/p6-proof-runner-isolation-and-runbook.md)
   - isolated proof runner evidence, daily P6 health checklist, and final
     closeout template
-- [history/outputs/p6-pre-may16-readiness-ledger.md](./history/outputs/p6-pre-may16-readiness-ledger.md)
-  - pre-closeout readiness evidence, label candidates, benchmark/report state,
-    and the remaining completion gate before May 16
 - [history/outputs/p7-topology-first-production-plan.md](./history/outputs/p7-topology-first-production-plan.md)
-  - P7 topology-first production packet, implemented P7a/b mirror and
-    retention workflows, pending P7e V1 closeout, and P7c/P7d follow-up work
+  - P7 topology-first implementation plus deferred mirror/provider/dashboard work
+- [research/agent-metrics-capture-2026-06-15.md](./research/agent-metrics-capture-2026-06-15.md)
+  - accepted June full-window scorecard and credited P6 proof
 - [research/effect-native-observability.md](./research/effect-native-observability.md)
   - Effect v4 observability package findings
 - [research/backend-shortlist.md](./research/backend-shortlist.md) - backend
@@ -65,10 +61,10 @@ those metrics unavailable and not scored.
 
 ## Current Progress
 
-P0, P1, P2, P3, P4, P5, P6a, P6b, and P7a/b are complete enough to use as the
-starting checkpoint. The first real collection/export proof remains baseline
-evidence; the credited seven-day proof restarted on May 9, 2026 02:26
-America/Chicago after the P6a closeout gates passed:
+P0–P6 are complete, with
+[`research/agent-metrics-capture-2026-06-15.md`](./research/agent-metrics-capture-2026-06-15.md)
+accepted as the credited full-window P6 proof. P7a/b implementation is retained;
+mirror sync, P7c provider metrics, and P7d dashboards are descoped:
 
 - `@beep/repo-ai-metrics` exists with schema-first models, tolerant transcript
   ingest summaries, target-agnostic install specs, benchmark and scorecard
@@ -127,22 +123,19 @@ America/Chicago after the P6a closeout gates passed:
 - Source discovery remains Codex-only in the recent proof window; `--all`
   discovery confirms Claude Code and OpenClaw sources exist outside the active
   proof window and are deferred to P7c provider/gateway work.
-- Current P6 work is to keep the timer running through May 16, 2026 02:26
-  America/Chicago and generate the final seven-day report.
-- The May 12 P6c label pass added one explicit human-approved outcome label for
-  the isolated-runner config and regenerated an intermediate report where that
-  config is `completionReady=true`. The remaining P6 blocker is elapsed proof
-  time.
-- P7e production-readiness closeout remains the V1 closeout pass after May 16.
-  It must record the final report and confirm a sanitized derived mirror on
-  dankserver.
-- P7c provider/gateway metrics, P7d dashboard/backend expansion, and remote
-  mirror lifecycle automation beyond confirmed bundle sync/status remain
-  follow-up work, not V1 blockers.
+- The June full-window report covers the local ingest history, credits the
+  dominant configuration with 662 tasks and `completionReady=true`, and
+  replaces the earlier interim proof gate.
+- A read-only `dankserver` probe on 2026-07-14 was unreachable from this session:
+  the network sandbox denied the SSH socket. No mirror sync was attempted; the
+  existing mirror build/sync/status commands remain a won't-do-this-PR runbook
+  step for a separately authorized reachable session.
+- P7c provider/gateway metrics and P7d dashboard/backend expansion are won't-do
+  deferrals requiring new product scope.
 
-## Completion Standard
+## Accepted Completion Basis
 
-This initiative is done only when all are true:
+This descoped initiative is complete on this retained basis:
 
 - dankserver tailnet deployment is applied and verified
 - Phoenix is receiving real traces or derived exports
@@ -155,9 +148,8 @@ This initiative is done only when all are true:
   measured rows or are explicitly unavailable and not scored
 - config snapshots are linked to real sessions and benchmark runs
 - CLI label review produces outcome labels for real work
-- one weekly config-impact scorecard is generated from a restarted seven-day
-  live window and is marked completion-ready with labels plus benchmark evidence
-- a sanitized derived mirror is confirmed on dankserver after the final
-  seven-day report
+- the June full-window config-impact scorecard is retained as credited proof and
+  includes completion-ready label plus benchmark evidence
+- sanitized mirror sync remains an explicit won't-do-this-PR runbook step
 - provider/tool/cost fields either contain real measured rows or are explicitly
   reported as unavailable and not scored

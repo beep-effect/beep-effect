@@ -1,10 +1,10 @@
 # Box Driver Plan
 
-This plan executes [SPEC.md](./SPEC.md). It finishes the scaffolded flat
-`drivers` package by building a custom generator over `box-node-sdk`'s own
-TypeScript types, generating schema-first models + per-manager wrappers,
-hand-writing config/errors/service/streaming, and carrying the PR through CI,
-review, Greptile, and readiness.
+This plan records the completed execution of [SPEC.md](./SPEC.md). It finished
+the scaffolded flat `drivers` package by building a custom generator over
+`box-node-sdk`'s own TypeScript types, generating schema-first models +
+per-manager wrappers, hand-writing config/errors/service/streaming, and carrying
+the PR through CI, review, Greptile, and readiness.
 
 ## P0: Packet Bootstrap
 
@@ -23,9 +23,9 @@ Exit Criteria:
 - [x] The packet records the nine locked decisions (generate-from-SDK-types,
   per-manager service, pragmatic fidelity, streaming, auth, exclude-deprecated,
   generated layout, read-only live smokes, closure gate).
-- [x] The packet includes the schema-fidelity divergence and its required
-  `DECISIONS.md` record, `$quality-review-fix-loop`, PR babysitting, and
-  Greptile `5/5`.
+- [x] The packet includes the schema-fidelity divergence, quality review, PR
+  babysitting, and Greptile `5/5`; the divergence remained a driver-level
+  decision rather than an architecture-wide `DECISIONS.md` entry.
 
 Required Checks:
 
@@ -37,9 +37,12 @@ git diff --check
 
 ## P1: Refresh Box SDK Inventory
 
-Status: pending.
+Status: completed.
 
 Goal: Re-verify the `box-node-sdk` surface before writing the generator.
+
+Result: the shipped generated artifacts contain 85 manager groups, 333 JSON
+operations, and 531 model schemas.
 
 Implementation Steps:
 
@@ -56,7 +59,7 @@ Implementation Steps:
 
 Exit Criteria:
 
-- [ ] Inventory records installed version, counts, deprecated list, non-JSON
+- [x] Inventory records installed version, counts, deprecated list, non-JSON
   methods, auth classes, error-field mapping, open-enum/`rawData` notes, and
   drift.
 
@@ -66,7 +69,7 @@ Stop Conditions:
 
 ## P2: Build Generator And Package Wiring
 
-Status: pending.
+Status: completed.
 
 Goal: Create `packages/drivers/box/scripts/generate.ts` and wire the package.
 
@@ -89,9 +92,9 @@ Implementation Steps:
 
 Exit Criteria:
 
-- [ ] Generator produces `_generated/` with no diff on a clean re-run.
-- [ ] `_generated/` is internal (not in the public `exports` surface).
-- [ ] Dropped `@deprecated`/non-JSON method lists are logged.
+- [x] Generator produces `_generated/` with no diff on a clean re-run.
+- [x] `_generated/` is internal (not in the public `exports` surface).
+- [x] Dropped `@deprecated`/non-JSON method lists are logged.
 
 Required Checks:
 
@@ -102,7 +105,7 @@ bunx turbo run check lint --filter=@beep/box
 
 ## P3: Generate Models And Operations
 
-Status: pending.
+Status: completed.
 
 Goal: Commit the generated artifacts and confirm they typecheck.
 
@@ -116,8 +119,8 @@ Implementation Steps:
 
 Exit Criteria:
 
-- [ ] Generated models + operations typecheck under `@beep/box`.
-- [ ] Any constrained dynamic shapes are documented in the inventory.
+- [x] Generated models + operations typecheck under `@beep/box`.
+- [x] Any constrained dynamic shapes are documented in the inventory.
 
 Required Checks:
 
@@ -127,7 +130,7 @@ bunx turbo run check --filter=@beep/box
 
 ## P4: Hand-Written Config And Errors
 
-Status: pending.
+Status: completed.
 
 Goal: Extend config (CCG + escape hatch) and errors (translation factories).
 
@@ -143,9 +146,9 @@ Implementation Steps:
 
 Exit Criteria:
 
-- [ ] No direct `process.env` reads; secrets use `Config`/`Redacted` and are not
+- [x] No direct `process.env` reads; secrets use `Config`/`Redacted` and are not
   logged.
-- [ ] Error factories never embed tokens, raw bodies, or unbounded input.
+- [x] Error factories never embed tokens, raw bodies, or unbounded input.
 
 Required Checks:
 
@@ -155,7 +158,7 @@ bunx turbo run check lint --filter=@beep/box
 
 ## P5: Effect Service And Layers
 
-Status: pending.
+Status: completed.
 
 Goal: Wrap the generated operations behind a typed Effect service boundary.
 
@@ -171,8 +174,8 @@ Implementation Steps:
 
 Exit Criteria:
 
-- [ ] No raw SDK result or raw thrown value crosses the service boundary.
-- [ ] Service root remains product-neutral and server-oriented by default.
+- [x] No raw SDK result or raw thrown value crosses the service boundary.
+- [x] Service root remains product-neutral and server-oriented by default.
 
 Required Checks:
 
@@ -182,7 +185,7 @@ bunx turbo run check test lint --filter=@beep/box
 
 ## P6: Streaming Surfaces
 
-Status: pending.
+Status: completed.
 
 Goal: Hand-write the non-JSON managers as Effect-native streams in
 `Box.streaming.ts`.
@@ -198,9 +201,9 @@ Implementation Steps:
 
 Exit Criteria:
 
-- [ ] Streaming methods return Effect `Stream`/decoded values, never raw SDK
+- [x] Streaming methods return Effect `Stream`/decoded values, never raw SDK
   streams.
-- [ ] Fake-source tests prove events ordering, decode failure, and interruption
+- [x] Fake-source tests prove events ordering, decode failure, and interruption
   cleanup.
 
 Required Checks:
@@ -211,7 +214,7 @@ bunx turbo run test --filter=@beep/box
 
 ## P7: Tests, Docs, And Live Smoke
 
-Status: pending.
+Status: completed.
 
 Goal: Prove runtime behavior, public API types, documentation, and read-only live
 integration.
@@ -231,8 +234,8 @@ Implementation Steps:
 
 Exit Criteria:
 
-- [ ] Tests skip cleanly without `CLOUD_BOX_TOKEN`; no mutation in CI.
-- [ ] All examples compile under docgen; dtslint imports through `@beep/box`.
+- [x] Tests skip cleanly without `CLOUD_BOX_TOKEN`; no mutation in CI.
+- [x] All examples compile under docgen; dtslint imports through `@beep/box`.
 
 Required Checks:
 
@@ -242,24 +245,19 @@ bunx turbo run test:integration --filter=@beep/box
 bun run docgen:local
 ```
 
-## P8: Doctrine Record, Export Catalog, And Local Quality Closure
+## P8: Driver Decision, Package Exports, And Local Quality Closure
 
-Status: pending.
+Status: completed.
 
-Goal: Record the schema-fidelity divergence, refresh exports, and reach repo
-quality green.
+Goal: Retain the schema-fidelity decision at driver scope, refresh exports, and
+reach repo quality green.
 
 Implementation Steps:
 
-1. Author a `standards/architecture/DECISIONS.md` entry ("Generated drivers use
-   pragmatic schema fidelity") per `ADR-FORMAT.md`; add any named open-enum
-   helper to `GLOSSARY.md`. Refresh `packages/drivers/box/{README,AGENTS}.md`.
-2. Refresh the export catalog:
-
-```sh
-bun run repo-exports:catalog
-bun run repo-exports:catalog:check
-```
+1. Keep pragmatic generated fidelity documented at the driver boundary. The
+   shipped decision was judged not to meet the architecture-wide decision-log
+   bar, so no `standards/architecture/DECISIONS.md` entry was added.
+2. Refresh the package exports and documentation surfaces.
 
 3. Run focused package gates and repo closure:
 
@@ -275,13 +273,14 @@ bun run audit:github quality
 
 Exit Criteria:
 
-- [ ] Package gates green; docgen/export catalog current.
-- [ ] `DECISIONS.md` divergence entry exists.
-- [ ] `bun run audit:github quality` green or unrelated failures documented.
+- [x] Package gates and docgen were green for the merged implementation.
+- [x] Driver-level pragmatic-fidelity rationale is retained without an
+  architecture-wide decision-log entry.
+- [x] PR quality and review gates completed before merge.
 
 ## P9: Commit, PR, CI, Review, Greptile
 
-Status: pending.
+Status: completed.
 
 Goal: Publish a focused draft PR and carry it to final readiness.
 
