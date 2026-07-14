@@ -22,3 +22,8 @@
 id = "GHSA-8988-4f7v-96qf"
 ignoreUntil = 2026-09-15T00:00:00Z
 reason = "@opentelemetry/core advisory affecting versions <2.8.0 (1.30.1, 2.1.0, 2.5.0, 2.7.0, 2.7.1 present in the tree); fixed in 2.8.0. @opentelemetry/core is a transitive dependency of the OpenTelemetry SDK/exporter stack, not a direct workspace dependency; the workspace already pins the otel SDK packages at 2.8.0 while the older core copies are pulled by transitive otel dependents that have not adopted 2.8.0. Newly published advisory, not introduced by the current PR (identical versions present on main); tracked for a repo-wide bump to >=2.8.0. Revisit when dependents widen their ranges."
+
+[[IgnoredVulns]]
+id = "GHSA-38f7-945m-qr2g"
+ignoreUntil = 2026-08-14T00:00:00Z
+reason = "OSV URL-version false positive for root dev-only inspeffct 1.1.0's transitive effect snapshot at effect-smol commit 51f6d19. The installed package metadata is effect 4.0.0-beta.93, and the snapshot creates a scheduler dispatcher per fiber, matching the upstream isolation fix; OSV instead reports the pkg.pr.new URL as the version and misclassifies it against effect <3.20.0. Revisit when inspeffct publishes a semver Effect dependency or OSV classifies URL-pinned versions correctly."
