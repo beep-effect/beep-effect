@@ -2,8 +2,9 @@
 
 ## Status
 
-Status: `active` - branch `security/codex-findings-2026-07-14`. Current phase:
-`P5 remediate complete`; entering P6 yeet-to-mergeable.
+Status: `completed-retained`. All phases P0-P9 complete: 9 findings remediated
+and merged (PR #410 `f9edd6fed2`), closed on the Codex dashboard, and hardened
+via PR #413 (`03285268f9`). See `history/2026-07-14-closeout.md`.
 
 ## Phases
 
@@ -15,10 +16,10 @@ Status: `active` - branch `security/codex-findings-2026-07-14`. Current phase:
 | P3 close-invalids | complete | (No invalid/out-of-scope findings in this batch.) | Nothing to close. |
 | P4 lane-partition | complete | Partition findings into disjoint fix lanes. | RL-001..RL-004 recorded; global `bun.lock` owned by Fable. |
 | P5 remediate | complete | Fix all 9 findings via codex lanes + Fable lockfile. | Changed files + targeted verification recorded; one regression test per code finding; all targeted tests pass. |
-| P6 yeet-to-mergeable | pending | Drive one PR to mergeability through Yeet. | Yeet proof, hosted checks, review closeout green; PR mergeable. |
-| P7 merge | pending | Merge the PR with repo default merge behavior. | PR merged to main. |
-| P8 close-remediated | pending | Resolve all 9 Codex findings after merge. | Each of the 9 Codex IDs resolved (scanner auto-close accepted); no non-packet finding touched. |
-| P9 local-closeout | pending | Reconcile local evidence and final report. | Closeout records the 9 IDs, zero-applicable-open result, and any browser blocker. |
+| P6 yeet-to-mergeable | complete | Drive one PR to mergeability through Yeet. | PR #410 proven green and mergeable; hardening PR #413 likewise. |
+| P7 merge | complete | Merge the PR with repo default merge behavior. | PR #410 squash-merged as `f9edd6fed2`; PR #413 as `03285268f9`. |
+| P8 close-remediated | complete | Resolve all 9 Codex findings after merge. | All 9 Codex IDs closed as "Already fixed" via codex Chrome; one non-packet finding left untouched. |
+| P9 local-closeout | complete | Reconcile local evidence and final report. | `history/2026-07-14-closeout.md` records the 9 IDs, both merged PRs, and the hardening follow-up. |
 
 ## Execution Notes
 

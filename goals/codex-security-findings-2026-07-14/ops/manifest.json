@@ -3,15 +3,15 @@
   "initiative": {
     "id": "codex-security-findings-2026-07-14",
     "title": "Codex Security Findings (2026-07-14)",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-14",
-    "updated": "2026-07-14",
+    "updated": "2026-07-14T17:36:00Z",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-07-14",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
-  "reflectionRequired": false,
+  "reflectionRequired": true,
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
@@ -54,7 +54,7 @@
       "untriaged": 0,
       "notCaptured": 0
     },
-    "note": "9 findings captured 2026-07-14 via codex Chrome extension; all remediate, none out-of-scope. This is the 1-9 of 9 batch the 2026-07-08 packet closeout deferred. P5 remediation complete: all 9 fixed with regression tests; awaiting Yeet PR + post-merge closure."
+    "note": "COMPLETE. 9 findings captured 2026-07-14 via codex Chrome; all remediated (regression tests each), merged to main via PR #410 (f9edd6fed2), and closed as 'Already fixed' on the dashboard. Greptile P1 hardening merged via PR #413 (03285268f9). See history/2026-07-14-closeout.md."
   },
   "closeoutPolicy": {
     "fixed": "Already fixed",
@@ -98,7 +98,15 @@
     "remediatedClosedWhen": "after PR merge",
     "acceptScannerAutoClose": true,
     "matchByExactIdAllowlist": true,
-    "finalTrackedCloseout": true
+    "finalTrackedCloseout": true,
+    "remediatedClosedCount": 9,
+    "closedAt": "2026-07-14",
+    "mergedPrs": [
+      "#410 f9edd6fed2 (remediation)",
+      "#413 03285268f9 (Greptile hardening)"
+    ],
+    "closeoutEvidence": "history/2026-07-14-closeout.md",
+    "nonAllowlistOpenLeftUntouched": 1
   },
   "agentLaunchers": [
     {
@@ -125,8 +133,8 @@
     {
       "id": "P2",
       "name": "validate",
-      "status": "pending",
-      "exit": "Every finding has a strict-proof remediate disposition, verdict, rationale, and owner area."
+      "status": "complete",
+      "exit": "Every finding confirmed reproducing at HEAD with a strict-proof remediate disposition, verdict, rationale, and owner area."
     },
     {
       "id": "P3",
@@ -149,26 +157,26 @@
     {
       "id": "P6",
       "name": "yeet-to-mergeable",
-      "status": "pending",
-      "exit": "Yeet proof, hosted checks, and review closeout green; PR mergeable."
+      "status": "complete",
+      "exit": "Yeet proof + hosted checks green; PR #410 mergeable and merged. Hardening follow-up PR #413 also driven green."
     },
     {
       "id": "P7",
       "name": "merge",
-      "status": "pending",
-      "exit": "PR merged using repository default merge behavior."
+      "status": "complete",
+      "exit": "PR #410 squash-merged to main as f9edd6fed2; hardening PR #413 squash-merged as 03285268f9."
     },
     {
       "id": "P8",
       "name": "close-remediated",
-      "status": "pending",
-      "exit": "All 9 Codex findings resolved after merge (scanner auto-close accepted); no non-packet finding touched."
+      "status": "complete",
+      "exit": "All 9 Codex findings resolved as 'Already fixed' via codex Chrome extension, matching the exact allowlist; one non-packet finding left untouched."
     },
     {
       "id": "P9",
       "name": "local-closeout",
-      "status": "pending",
-      "exit": "Packet history records the 9 closed IDs, zero-applicable-open evidence, and any browser blocker."
+      "status": "complete",
+      "exit": "Packet history records the 9 closed IDs, both merged PRs, and the hardening follow-up; status flipped to completed-retained."
     }
   ],
   "verificationCommands": [
