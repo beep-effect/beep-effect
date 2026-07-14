@@ -40,18 +40,24 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 - [`agent-effectiveness-pulse`](./agent-effectiveness-pulse/README.md) — a
-  data-driven pulse on repo agent friendliness/effectiveness (stage `shape`,
-  opened 2026-07-14): which skills are used or dead, where agent time goes,
-  what blocks mergeable, what eats token spend. Same-day arc: pipeline
-  revived (backfill + 1.0M spans to Phoenix + systemd timer — the feed had
-  been dead since Jun 8/Jul 1), five mining lanes + synthesis in
+  data-driven pulse on repo agent friendliness/effectiveness (stage
+  `graduate`, opened 2026-07-14, still active for wave 2): which skills are
+  used or dead, where agent time goes, what blocks mergeable, what eats
+  token spend. Same-day arc: pipeline revived (backfill + 1.0M spans to
+  Phoenix + systemd timer — the feed had been dead since Jun 8/Jul 1), five
+  mining lanes + synthesis in
   [`research/pulse-report.md`](./agent-effectiveness-pulse/research/pulse-report.md),
-  Checkpoint A grilling closed seven decisions
-  ([`DECISIONS.md`](./agent-effectiveness-pulse/DECISIONS.md)). BRIEF/MAP
-  shaped: wave-1 goals `harness-otel-adoption` + `harness-hygiene-mechanical`,
-  wave-2 `yeet-verdict-instrumentation` + `repo-replay-evals`, forwarder
-  durability rides `ai-metrics-stack` (P7e-linked). Awaiting shape sign-off →
-  graduation.
+  two grilling rounds closed eleven decisions
+  ([`DECISIONS.md`](./agent-effectiveness-pulse/DECISIONS.md)). **Wave-1
+  graduated 2026-07-14** →
+  [`goals/harness-otel-adoption`](../goals/harness-otel-adoption/README.md)
+  (native harness OTel into dankserver's monitoring collector hub;
+  attribution attributes) +
+  [`goals/harness-hygiene-mechanical`](../goals/harness-hygiene-mechanical/README.md)
+  (4 dead skills, cache-prefix eviction, 3 requested laws); forwarder
+  durability landed as `ai-metrics-stack` P7f (v1-blocking, gates P7e).
+  Wave-2 candidates (`yeet-verdict-instrumentation`, `repo-replay-evals`)
+  gate on wave-1 OTel attributes flowing.
 - [`computable-workspace-geometry`](./computable-workspace-geometry/README.md) —
   pretext × dock kernel × blocks (stage `research`, opened 2026-07-12): text
   layout as pure arithmetic over shippable per-engine font metrics closes the

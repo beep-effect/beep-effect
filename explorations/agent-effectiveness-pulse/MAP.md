@@ -11,7 +11,7 @@ explicitly marked NET-NEW.
 
 | Slug | Mission | Depends on | Capabilities cited |
 | --- | --- | --- | --- |
-| `harness-otel-adoption` | Native Claude Code + Codex OTLP into the existing collector→Phoenix path with beep-owned attribute schema (incl. task attribution); content capture off | none | local `deploy-otel-collector-1` + `infra/src/AIMetrics.ts` Phoenix deploy (reuse); `@beep/observability` (reuse); harness exporter configs NET-NEW (config, not code); attribute-translation contract NET-NEW (small) |
+| `harness-otel-adoption` | Native Claude Code + Codex OTLP into dankserver's `monitoring_otel_collector` hub (traces→Phoenix, metrics→Prometheus/Grafana) with beep-owned attribute schema (incl. task attribution); content capture off | none | dankserver `monitoring_otel_collector` + `monitoring_prometheus` + `monitoring_grafana` (reuse; amended 2026-07-14 — the previously cited `deploy-otel-collector-1` belongs to trustgraph); `infra/src/AIMetrics.ts` Phoenix deploy + tailscale-serve pattern (reuse); harness exporter configs NET-NEW (config, not code); attribute-translation contract in `@beep/repo-ai-metrics` NET-NEW (small) |
 | `harness-hygiene-mechanical` | Delete 4 dead skills, evict volatile AGENTS.md state, add 3 requested laws | none | `.claude/skills/*` + `AGENTS.md` (edit in place); evidence: `research/pulse/skill-usage.md`, `research/2026-07-13-agents-md-preaudit.md`, `research/pulse/closeout-hypotheses.md` |
 | `yeet-verdict-instrumentation` (wave 2) | Per-step durations, structured failure codes, attempt links, PR lifecycle events in yeet artifacts | benefits from `harness-otel-adoption` conventions | yeet runner + `.beep/yeet/runs` verdict/state/status writers (extend); spec seed: `research/pulse/bottlenecks.md` §Instrumentation gaps; successor to `goals/yeet-agent-ergonomics` (completed-retained) |
 | `repo-replay-evals` (wave 2) | 5 historical merged fixes as deterministic replay tasks with repeated trials | `harness-otel-adoption` (scoring enrichment); pairs with yeet instrumentation | `ai_metrics_benchmark_*` tables in `@beep/repo-ai-metrics` (extend — 2 skeletal cases exist); yeet quality gates as graders (reuse); task corpus NET-NEW |
@@ -38,11 +38,12 @@ PLAN.md/manifest, edited at wave-1 graduation.
 ## First Vertical Slice
 
 `harness-otel-adoption`, slice 1: Claude Code OTel enabled on this
-workstation exporting to the local collector with `repo` + `goal-slug`
-attributes, visible in Phoenix as a distinct project within one session of
-work. Verify: run one real session, query Phoenix GraphQL for the new
-project's trace count and attribute presence. (Codex exporter + attribute
-schema contract are slices 2–3.)
+workstation exporting to dankserver's `monitoring_otel_collector` (via the
+new tailnet route) with `repo` + `goal-slug` attributes, traces visible in
+Phoenix as a distinct project within one session of work. Verify: run one
+real session, query Phoenix GraphQL for the new project's trace count and
+attribute presence. (Codex exporter + attribute schema contract are slices
+2–3.)
 
 ## Open Risks Inherited From The Brief
 

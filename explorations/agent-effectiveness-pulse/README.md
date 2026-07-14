@@ -2,8 +2,8 @@
 
 ## Status
 
-Stage: `shape`
-Status: `active`
+Stage: `graduate`
+Status: `active` (wave-2 candidates remain)
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -16,10 +16,12 @@ and what eats token spend. Get a data-driven pulse, then decide improvements.
 
 ## Next Open Question
 
-BRIEF/MAP drafted from the seven Checkpoint A decisions
-([`DECISIONS.md`](./DECISIONS.md)) — awaiting conversational shape-stage
-sign-off, then publish + wave-1 graduation (`harness-otel-adoption`,
-`harness-hygiene-mechanical`, ai-metrics-stack durability addendum).
+Wave-2 graduation gate: cut `yeet-verdict-instrumentation` +
+`repo-replay-evals` (named in [`MAP.md`](./MAP.md)) once wave-1 OTel
+attributes are flowing. Wave-1 graduated 2026-07-14 →
+[`goals/harness-otel-adoption`](../../goals/harness-otel-adoption/README.md),
+[`goals/harness-hygiene-mechanical`](../../goals/harness-hygiene-mechanical/README.md);
+forwarder durability rides `ai-metrics-stack` P7f.
 
 ## Read This First
 
@@ -33,6 +35,14 @@ sign-off, then publish + wave-1 graduation (`harness-otel-adoption`,
 
 ## Trail
 
+- 2026-07-14 (graduation): shape sign-off after second grilling round (four
+  decisions incl. the OTel routing amendment — dankserver
+  `monitoring_otel_collector` hub; the originally cited "local collector"
+  was trustgraph's). Packet PR #398 merged. Wave-1 graduated:
+  `goals/harness-otel-adoption` + `goals/harness-hygiene-mechanical`
+  scaffolded with inherited SOURCES ledgers; `ai-metrics-stack` gains P7f
+  Forwarder Durability (v1-blocking, gates P7e). Stage → `graduate`; packet
+  stays active for wave 2.
 - 2026-07-14 (later): Phase 1+2 done same session. Pipeline revived: 2,924
   files backfilled in byte-capped batches (bulk-transaction limit found >
   ~160MB/run; parquet export broken — both filed as candidates), 1.0M spans
