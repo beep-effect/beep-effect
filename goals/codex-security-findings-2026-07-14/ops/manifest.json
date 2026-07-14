@@ -1,0 +1,209 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "codex-security-findings-2026-07-14",
+    "title": "Codex Security Findings (2026-07-14)",
+    "status": "active",
+    "created": "2026-07-14",
+    "updated": "2026-07-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/codex-security-findings-2026-07-14",
+  "lifecycle": "active",
+  "executionCapable": true,
+  "reflectionRequired": false,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --message -> monitor), is merged, and the 9 Codex findings are resolved with zero packet-applicable open findings.",
+    "grandfathered": false
+  },
+  "branch": "security/codex-findings-2026-07-14",
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/codex-security-findings-2026-07-14/README.md",
+    "goals/codex-security-findings-2026-07-14/SPEC.md",
+    "goals/codex-security-findings-2026-07-14/PLAN.md",
+    "goals/codex-security-findings-2026-07-14/GOAL.md"
+  ],
+  "source": {
+    "provider": "Codex Cloud Security UI",
+    "repository": "kriegcloud/beep-effect",
+    "url": "https://chatgpt.com/codex/cloud/security/findings/",
+    "capturedAt": "2026-07-14",
+    "captureMethodPolicy": "codex-chrome-extension-capture",
+    "rawCaptureRoot": "goals/codex-security-findings-2026-07-14/raw",
+    "rawCaptureTracked": false
+  },
+  "catalog": {
+    "expectedCount": 9,
+    "capturedCount": 9,
+    "severityCountsKnown": true,
+    "severityCounts": {
+      "Medium": 5,
+      "Low": 3,
+      "Informational": 1
+    },
+    "dispositionCounts": {
+      "remediate": 9,
+      "already-fixed": 0,
+      "false-positive": 0,
+      "out-of-scope": 0,
+      "untriaged": 0,
+      "notCaptured": 0
+    },
+    "note": "9 findings captured 2026-07-14 via codex Chrome extension; all remediate, none out-of-scope. This is the 1-9 of 9 batch the 2026-07-08 packet closeout deferred. P5 remediation complete: all 9 fixed with regression tests; awaiting Yeet PR + post-merge closure."
+  },
+  "closeoutPolicy": {
+    "fixed": "Already fixed",
+    "alreadyFixed": "Already fixed",
+    "dismissedInvalid": "False positive",
+    "outOfScope": "False positive",
+    "acceptedRisk": "not allowed"
+  },
+  "dispositionPolicy": {
+    "default": "remediate",
+    "acceptedRiskAllowed": false,
+    "falsePositiveThreshold": "strict proof: affected code absent, unreachable, non-shipped, out-of-scope, or materially misunderstood",
+    "outOfScopePaths": [".repos/**"],
+    "fixPhilosophy": "minimal scoped fixes matching the Codex suggested remediation, plus one regression test per code finding; shared helpers only for a repeated maintained-code class in the doctrine-correct home after live source and barrel discovery"
+  },
+  "sanitation": {
+    "trackedRawFindingContent": false,
+    "rawCaptureLocation": "goals/codex-security-findings-2026-07-14/raw",
+    "commitsOnlySanitizedMarkdown": true,
+    "codexPatchTextTracked": false,
+    "publicFindingPolicy": "Tracked ledgers carry title, severity, owner area, disposition, rationale, changed files, and verification. Full reports stay in gitignored raw evidence.",
+    "redactedPatterns": [
+      "private keys",
+      "signed artifact URLs",
+      "token-like query params",
+      "authorization header values",
+      "Cookie headers",
+      "absolute developer-local paths"
+    ]
+  },
+  "lanePolicy": {
+    "validationModel": "codex gpt-5.6-sol medium confirms each finding reproduces at HEAD",
+    "remediationModel": "one codex gpt-5.6-sol medium agent per disjoint lane",
+    "validationWrites": "sub-agents return structured verdicts; main agent writes ledgers",
+    "remediationWrites": "workers edit only assigned disjoint paths; main agent owns bun.lock and integration",
+    "record": "ops/triage.json#/lanes"
+  },
+  "closurePolicy": {
+    "tool": "codex-chrome-extension",
+    "invalidsClosedBy": "n/a (no invalids in batch)",
+    "remediatedClosedWhen": "after PR merge",
+    "acceptScannerAutoClose": true,
+    "matchByExactIdAllowlist": true,
+    "finalTrackedCloseout": true
+  },
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/codex-security-findings-2026-07-14/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "bootstrap",
+      "status": "complete",
+      "exit": "Branch created from fresh origin/main; packet scaffolded."
+    },
+    {
+      "id": "P1",
+      "name": "capture",
+      "status": "complete",
+      "exit": "All 9 open findings captured into ignored raw evidence and sanitized tracked CSF files."
+    },
+    {
+      "id": "P2",
+      "name": "validate",
+      "status": "pending",
+      "exit": "Every finding has a strict-proof remediate disposition, verdict, rationale, and owner area."
+    },
+    {
+      "id": "P3",
+      "name": "close-invalids",
+      "status": "complete",
+      "exit": "No invalid/out-of-scope findings in this batch; nothing to close."
+    },
+    {
+      "id": "P4",
+      "name": "lane-partition",
+      "status": "complete",
+      "exit": "Findings partitioned into disjoint lanes RL-001..RL-004; bun.lock owned by Fable."
+    },
+    {
+      "id": "P5",
+      "name": "remediate",
+      "status": "complete",
+      "exit": "All 9 findings fixed via codex lanes RL-001..RL-004 + Fable bun.lock dedupe; changed files and targeted verification recorded; one regression test per code finding; all targeted tests pass."
+    },
+    {
+      "id": "P6",
+      "name": "yeet-to-mergeable",
+      "status": "pending",
+      "exit": "Yeet proof, hosted checks, and review closeout green; PR mergeable."
+    },
+    {
+      "id": "P7",
+      "name": "merge",
+      "status": "pending",
+      "exit": "PR merged using repository default merge behavior."
+    },
+    {
+      "id": "P8",
+      "name": "close-remediated",
+      "status": "pending",
+      "exit": "All 9 Codex findings resolved after merge (scanner auto-close accepted); no non-packet finding touched."
+    },
+    {
+      "id": "P9",
+      "name": "local-closeout",
+      "status": "pending",
+      "exit": "Packet history records the 9 closed IDs, zero-applicable-open evidence, and any browser blocker."
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/codex-security-findings-2026-07-14/GOAL.md)\" -le 4000",
+    "jq . goals/codex-security-findings-2026-07-14/ops/manifest.json",
+    "jq . goals/codex-security-findings-2026-07-14/ops/triage.json",
+    "test \"$(ls goals/codex-security-findings-2026-07-14/findings/CSF-*.md 2>/dev/null | wc -l | tr -d ' ')\" = \"$(jq -r '.catalog.capturedCount' goals/codex-security-findings-2026-07-14/ops/manifest.json)\"",
+    "git status --short -- goals/codex-security-findings-2026-07-14/raw",
+    "! rg -n 'grafana|mcp/grafana|network=host' .mcp.json .codex/config.toml .claude/settings.json",
+    "! rg -n 'next@16.3.0-canary.82' bun.lock",
+    "git diff --check -- goals/codex-security-findings-2026-07-14"
+  ],
+  "stopConditions": [
+    "Codex's Chrome extension cannot access the authenticated Codex security findings page.",
+    "Sanitization scan finds a secret or absolute local path in tracked files, or raw evidence is staged.",
+    "A finding cannot be remediated without an explicit policy or architecture decision outside this packet.",
+    "A proposed helper would violate architecture doctrine and no local fix is viable.",
+    "Yeet or hosted CI exposes a security/check failure that cannot be attributed to environment or unrelated baseline after investigation.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "paths": {
+    "index": "findings/INDEX.md",
+    "triage": "ops/triage.json",
+    "raw": "raw/",
+    "findings": [
+      "findings/CSF-001.md",
+      "findings/CSF-002.md",
+      "findings/CSF-003.md",
+      "findings/CSF-004.md",
+      "findings/CSF-005.md",
+      "findings/CSF-006.md",
+      "findings/CSF-007.md",
+      "findings/CSF-008.md",
+      "findings/CSF-009.md"
+    ]
+  },
+  "mission": "Capture, triage, remediate, and close every open Codex Cloud security finding for beep-effect (the 9-finding batch of 2026-07-14) in one PR on security/codex-findings-2026-07-14. The end state is a merged PR, no unresolved PR comments or failing CI jobs, and zero packet-applicable open Codex security findings."
+}

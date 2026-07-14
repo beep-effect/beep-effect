@@ -549,26 +549,32 @@ const literalWithDatatype = (value: ObjectTerm, datatype: NamedNode): O.Option<O
     NamedNode: O.none<ObjectTerm>,
   });
 
+const namedFocusNode = S.decodeUnknownOption(NamedNode);
+
 const datatypeCandidate = (violation: ShaclValidationViolation, target: ShapeRepairTarget): O.Option<RepairCandidate> =>
   pipe(
-    O.all({ datatype: target.property.datatype, value: violation.value }),
-    O.flatMap(({ datatype, value }) =>
+    O.all({
+      datatype: target.property.datatype,
+      subject: namedFocusNode({ termType: "NamedNode", value: violation.focusNode }),
+      value: violation.value,
+    }),
+    O.flatMap(({ datatype, subject, value }) =>
       pipe(
         literalWithDatatype(value, datatype),
-        O.map((replacement) => {
-          const subject = makeNamedNode(violation.focusNode);
-          return {
-            operations: [
-              ChangeOperation.make({
-                kind: "removeQuad",
-                partition: "asserted",
-                quad: makeQuad(subject, target.property.path, value),
-              }),
-              assertedAdd(subject, target.property.path, replacement),
-            ],
-            safety: "corrective",
-          } satisfies RepairCandidate;
-        })
+        O.map(
+          (replacement) =>
+            ({
+              operations: [
+                ChangeOperation.make({
+                  kind: "removeQuad",
+                  partition: "asserted",
+                  quad: makeQuad(subject, target.property.path, value),
+                }),
+                assertedAdd(subject, target.property.path, replacement),
+              ],
+              safety: "corrective",
+            }) satisfies RepairCandidate
+        )
       )
     )
   );

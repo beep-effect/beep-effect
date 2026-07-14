@@ -1,6 +1,6 @@
 {
   "disabledMcpjsonServers": ["serena", "sourcegraph", "webstorm"],
-  "enabledMcpjsonServers": ["grafana"],
+  "enabledMcpjsonServers": [],
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": false,
     "serena@claude-plugins-official": false,

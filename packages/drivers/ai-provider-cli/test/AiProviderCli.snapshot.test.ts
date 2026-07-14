@@ -196,10 +196,12 @@ describe("@beep/ai-provider-cli executable overrides", () => {
     "expands a tilde executable override before it reaches the runner",
     Effect.fnUntraced(function* () {
       const lastRunRequest = yield* Ref.make<O.Option<AiProviderCliRunRequest>>(O.none());
-      const CapturingLayer = AiProviderCli.makeLayerFromRunner((request) =>
-        Ref.set(lastRunRequest, O.some(request)).pipe(
-          Effect.as(AiProviderCliProcessResult.make({ exitCode: 0, stderr: "", stdout: claudeLoggedInStdout }))
-        )
+      const CapturingLayer = AiProviderCli.makeLayerFromRunner(
+        (request) =>
+          Ref.set(lastRunRequest, O.some(request)).pipe(
+            Effect.as(AiProviderCliProcessResult.make({ exitCode: 0, stderr: "", stdout: claudeLoggedInStdout }))
+          ),
+        { claudePath: "~/bin/claude" }
       );
       yield* Effect.gen(function* () {
         const providerCli = yield* AiProviderCli;
@@ -210,6 +212,28 @@ describe("@beep/ai-provider-cli executable overrides", () => {
       }).pipe(provideScopedLayer(CapturingLayer));
       const request = O.getOrThrow(yield* Ref.get(lastRunRequest));
       expect(request.executable).toBe(HostPath.join(NodeOS.homedir(), "bin/claude"));
+    })
+  );
+
+  it.effect(
+    "rejects an off-allowlist executable before invoking the runner",
+    Effect.fnUntraced(function* () {
+      const runnerInvoked = yield* Ref.make(false);
+      const CapturingLayer = AiProviderCli.makeLayerFromRunner((request) =>
+        Ref.set(runnerInvoked, true).pipe(
+          Effect.as(AiProviderCliProcessResult.make({ exitCode: 0, stderr: "", stdout: request.executable }))
+        )
+      );
+      const error = yield* Effect.gen(function* () {
+        const providerCli = yield* AiProviderCli;
+        return yield* providerCli.checkAuthSnapshot(
+          "claude",
+          AiProviderCliProbeOptions.make({ executable: O.some("/tmp/arbitrary-executable") })
+        );
+      }).pipe(provideScopedLayer(CapturingLayer), Effect.flip);
+
+      expect(S.is(AiProviderCliError)(error)).toBe(true);
+      expect(yield* Ref.get(runnerInvoked)).toBe(false);
     })
   );
 });

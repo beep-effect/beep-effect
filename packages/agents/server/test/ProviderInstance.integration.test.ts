@@ -101,7 +101,9 @@ const TestHomeLayer = Layer.succeed(AiProviderCliHome)(
 const PortsLive = Layer.mergeAll(ProviderInstanceRepositoryLive, ProviderProbeLive);
 const TestLayer = ProviderInstanceUseCasesLive.pipe(
   Layer.provideMerge(PortsLive),
-  Layer.provideMerge(AiProviderCli.makeLayerFromRunner(runner)),
+  Layer.provideMerge(
+    AiProviderCli.makeLayerFromRunner(runner, { claudePath: "/opt/bin/claude", codexPath: "~/opt/bin/codex" })
+  ),
   Layer.provideMerge(TestHomeLayer),
   Layer.provideMerge(TestActorScopeLayer),
   Layer.provideMerge(CuidState.Default),

@@ -8,7 +8,7 @@
 import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document";
 import { FilingTextExcerpt } from "@beep/documents-use-cases/aggregates/Document/server";
 import { ProcessFileResult } from "@beep/file-processing/Extraction";
-import { ProcessFileOperation } from "@beep/file-processing/Operation";
+import { FileProcessingOperationError, ProcessFileOperation } from "@beep/file-processing/Operation";
 import { FileProcessingService } from "@beep/file-processing/Service";
 import { $DocumentsServerId } from "@beep/identity/packages";
 import { A, O } from "@beep/utils";
@@ -157,8 +157,14 @@ export const FilingTextExtractionLiveLayer = Layer.effect(
       extract: Effect.fn($I`extract`)(function* (input: FilingTextExtractionInput) {
         return yield* Effect.gen(function* () {
           const extension = extensionFrom(input.originalFileName);
+          if (input.content.byteLength > config.maxMaterializedBytes) {
+            return yield* FileProcessingOperationError.fromReason("output-limit-exceeded", {
+              message: "Document source exceeds the configured filing text extraction byte cap.",
+            });
+          }
           const operation = yield* decodeProcessFileOperation({
             exportChildren: false,
+            maxMaterializedBytes: config.maxMaterializedBytes,
             operationId: `operation:${input.contentDigest}`,
             operationKind: "process",
             preference: { engine: "auto" },
@@ -175,9 +181,20 @@ export const FilingTextExtractionLiveLayer = Layer.effect(
               sizeBytes: input.content.length,
             },
           });
-          return yield* fileProcessing
-            .process(operation)
-            .pipe(Effect.flatMap((result) => extractedText(result, config.maxExcerptChars)));
+          return yield* fileProcessing.process(operation).pipe(
+            Effect.timeoutOrElse({
+              duration: config.extractionTimeout,
+              orElse: () =>
+                Effect.fail(
+                  FileProcessingOperationError.fromReason("operation-timed-out", {
+                    artifactId: operation.source.id,
+                    message: "Document filing text extraction timed out.",
+                    operationId: operation.operationId,
+                  })
+                ),
+            }),
+            Effect.flatMap((result) => extractedText(result, config.maxExcerptChars))
+          );
         }).pipe(
           Effect.matchCauseEffect({
             onFailure: (cause) =>

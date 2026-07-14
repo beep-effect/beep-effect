@@ -66,6 +66,15 @@ const operationFailure = (operation: ExtractFileOperation, error: DocTextError):
         operationId: operation.operationId,
       })
     ),
+    Match.when("input-limit", () =>
+      FileProcessingOperationError.fromReason("output-limit-exceeded", {
+        artifactId: operation.source.id,
+        engine: DocTextFileProcessingEngineDescriptor.name,
+        format: operation.format,
+        message: "Document source exceeds the configured materialization limit.",
+        operationId: operation.operationId,
+      })
+    ),
     Match.orElse(() =>
       FileProcessingOperationError.fromReason("file-extraction-failed", {
         artifactId: operation.source.id,
@@ -81,7 +90,10 @@ const sourceBytes = (operation: ExtractFileOperation): Effect.Effect<Uint8Array,
   O.fromUndefinedOr(operation.source.bytes).pipe(
     O.match({
       onNone: () => Effect.fail(makeDocTextError("source-bytes-unavailable")),
-      onSome: Effect.succeed,
+      onSome: (bytes) =>
+        O.fromUndefinedOr(operation.maxMaterializedBytes).pipe(O.exists((limit) => bytes.byteLength > limit))
+          ? Effect.fail(makeDocTextError("input-limit"))
+          : Effect.succeed(bytes),
     })
   );
 

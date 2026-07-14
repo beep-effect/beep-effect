@@ -33,24 +33,6 @@
       "headers": {
         "IJ_MCP_SERVER_PROJECT_PATH": "${PWD}"
       }
-    },
-    "grafana": {
-      "type": "stdio",
-      "command": "docker",
-      "args": [
-        "run",
-        "--rm",
-        "-i",
-        "--network=host",
-        "-e",
-        "GRAFANA_URL",
-        "mcp/grafana",
-        "-t",
-        "stdio"
-      ],
-      "env": {
-        "GRAFANA_URL": "${GRAFANA_URL:-http://localhost:3000}"
-      }
     }
   }
 }

@@ -15,7 +15,7 @@ import { provideScopedLayer } from "@beep/test-utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Stream } from "effect";
+import { Duration, Effect, FileSystem, Layer, Stream } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
@@ -23,7 +23,9 @@ import * as Response from "effect/unstable/ai/Response";
 
 const testConfig = FilingDecisionLlmConfigValue.make({
   confidenceThreshold: UnitInterval.make(0.6),
+  extractionTimeout: Duration.seconds(15),
   maxExcerptChars: 8000,
+  maxMaterializedBytes: 32 * 1024 * 1024,
   model: "fixture-model",
 });
 

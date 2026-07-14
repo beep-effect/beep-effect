@@ -58,12 +58,14 @@ const makeOperation = Effect.fn("DocTextTest.makeOperation")(function* (
   ids: FixtureIds,
   extension: string,
   format: ExtractFileOperation["format"],
-  bytes: Uint8Array
+  bytes: Uint8Array,
+  maxMaterializedBytes?: number
 ) {
   const relativePath = yield* S.decodeUnknownEffect(PosixPath)(`fixture.${extension}`);
 
   return ExtractFileOperation.make({
     format,
+    ...(maxMaterializedBytes === undefined ? {} : { maxMaterializedBytes }),
     operationId: ids.operationId,
     operationKind: "extract",
     preference: { engine: "tika" },
@@ -171,6 +173,17 @@ describe("@beep/doc-text", () => {
       ).pipe(Effect.flip);
 
       expect(error.reason).toBe("file-extraction-failed");
+    })
+  );
+
+  it.effect("rejects an over-cap document before parsing", () =>
+    Effect.gen(function* () {
+      const ids = yield* fixtureIds;
+      const error = yield* DocTextFileProcessingEngine.extract(
+        yield* makeOperation(ids, "pdf", "pdf-text-layer", new Uint8Array([0, 1]), 1)
+      ).pipe(Effect.flip);
+
+      expect(error.reason).toBe("output-limit-exceeded");
     })
   );
 

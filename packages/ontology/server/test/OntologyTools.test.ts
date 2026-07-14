@@ -55,7 +55,13 @@ const toolLayerForRoot = (root: string) =>
     Layer.provide(NodeServices.layer)
   );
 
-const withToolkit = <A2, E>(run: (tools: OntologyToolServiceShape, path: OntologyFilePath) => Effect.Effect<A2, E>) =>
+const withToolkit = <A2, E>(
+  run: (
+    tools: OntologyToolServiceShape,
+    path: OntologyFilePath,
+    root: string
+  ) => Effect.Effect<A2, E, FileSystem.FileSystem | Path.Path>
+) =>
   Effect.fnUntraced(function* () {
     return yield* Effect.gen(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
@@ -65,7 +71,7 @@ const withToolkit = <A2, E>(run: (tools: OntologyToolServiceShape, path: Ontolog
       const path = yield* S.decodeUnknownEffect(OntologyFilePath)("ontology.ttl");
       return yield* Effect.gen(function* () {
         const tools = yield* OntologyToolService;
-        return yield* run(tools, path);
+        return yield* run(tools, path, root);
       }).pipe(provideScopedLayer(toolLayerForRoot(root)));
     }).pipe(provideScopedLayer(NodeServices.layer));
   });
@@ -122,6 +128,38 @@ describe("ontology agent toolkit real-engine handlers", () => {
         expect(provenance.provPath).toBe("ontology.prov.ttl");
         expect(metadata.capabilities).toHaveLength(9);
         expect(metadata.casSemantics).toBe("semantic");
+      })
+    ),
+    { timeout: 120_000 }
+  );
+
+  it.effect(
+    "refuses to overwrite an unrelated existing Turtle file during provenance export",
+    withToolkit((tools, path, root) =>
+      Effect.gen(function* () {
+        const fileSystem = yield* FileSystem.FileSystem;
+        const platformPath = yield* Path.Path;
+        const opened = yield* tools.openInspect(OpenInspectRequest.make({ path }));
+        const unrelatedPath = yield* S.decodeUnknownEffect(OntologyFilePath)("unrelated.ttl");
+        const datasetPath = yield* S.decodeUnknownEffect(OntologyFilePath)("ontology.dataset.ttl");
+        const unrelatedSource = "@prefix ex: <https://unrelated.example/> .\nex:subject ex:predicate ex:object .\n";
+        const unrelatedTarget = platformPath.join(root, unrelatedPath);
+        yield* fileSystem.writeFileString(unrelatedTarget, unrelatedSource);
+
+        const refusal = yield* Effect.flip(
+          tools.exportProvenance(
+            ExportProvenanceRequest.make({
+              path,
+              expectedFingerprint: opened.fingerprint,
+              provPath: unrelatedPath,
+              datasetPath,
+            })
+          )
+        );
+        const after = yield* fileSystem.readFileString(unrelatedTarget);
+
+        expect(refusal._tag).toBe("OntologyToolExecutionError");
+        expect(after).toBe(unrelatedSource);
       })
     ),
     { timeout: 120_000 }

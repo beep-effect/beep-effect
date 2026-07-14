@@ -25,11 +25,13 @@ import {
   ExportOntologyProvenanceCommand,
   InferOntologySessionInput,
   OntologyFilePath,
+  OntologyFileStore,
   OntologyReasoner,
   OntologySparqlRunner,
   OntologySparqlSafeguards,
   OntologyValidationRunner,
   OpenOntologyFileCommand,
+  ReadOntologyFileRequest,
   RunOntologySparqlInput,
   RunOntologyValidationInput,
   SaveOntologyFileCommand,
@@ -72,6 +74,7 @@ import type {
 
 const $I = $OntologyUseCasesId.create("tools/OntologyToolService");
 const fingerprintEquivalence = S.toEquivalence(OntologyFingerprint);
+const ontologyFilePathEquivalence = S.toEquivalence(OntologyFilePath);
 
 type OpenedOntology = {
   readonly session: Session;
@@ -352,6 +355,7 @@ export class OntologyToolService extends Context.Service<OntologyToolService, On
 
 const makeOntologyToolService = Effect.gen(function* () {
   const sessions = yield* SessionUseCases;
+  const fileStore = yield* OntologyFileStore;
   const sparql = yield* OntologySparqlRunner;
   const validation = yield* OntologyValidationRunner;
   const canonicalization = yield* CanonicalizationService;
@@ -360,6 +364,43 @@ const makeOntologyToolService = Effect.gen(function* () {
   // /mcp. This semaphore closes compare/apply/write TOCTOU inside that process;
   // deliberately no cross-process lock or stateful session repository exists.
   const mutationSemaphore = yield* Semaphore.make(1);
+  const ensureProvenanceDestinationsAvailable = Effect.fn("Ontology.Tools.ensureProvenanceDestinationsAvailable")(
+    function* (request: ExportProvenanceRequest) {
+      if (
+        ontologyFilePathEquivalence(request.path, request.provPath) ||
+        ontologyFilePathEquivalence(request.path, request.datasetPath) ||
+        ontologyFilePathEquivalence(request.provPath, request.datasetPath)
+      ) {
+        return yield* executionError(
+          "export-provenance",
+          "Provenance output paths must be distinct from the source ontology and from each other.",
+          true
+        );
+      }
+
+      yield* Effect.forEach(
+        [request.provPath, request.datasetPath],
+        (path) =>
+          fileStore.read(ReadOntologyFileRequest.make({ path })).pipe(
+            Effect.matchEffect({
+              onFailure: (error) =>
+                error.reason === "notFound"
+                  ? Effect.void
+                  : Effect.fail(executionError("export-provenance", error.message, true)),
+              onSuccess: () =>
+                Effect.fail(
+                  executionError(
+                    "export-provenance",
+                    `Refusing to overwrite existing provenance output: ${path}.`,
+                    true
+                  )
+                ),
+            })
+          ),
+        { discard: true }
+      );
+    }
+  );
   const provideDependencies = <A2, E>(
     effect: Effect.Effect<
       A2,
@@ -527,6 +568,7 @@ const makeOntologyToolService = Effect.gen(function* () {
           Effect.gen(function* () {
             const opened = yield* openSavedOntology(request);
             yield* ensureCas(request.expectedFingerprint, opened.fingerprint);
+            yield* ensureProvenanceDestinationsAvailable(request);
             const result = yield* validation
               .exportProvenance(
                 ExportOntologyProvenanceCommand.make({
