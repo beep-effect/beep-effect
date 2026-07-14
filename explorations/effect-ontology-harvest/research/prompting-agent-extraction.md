@@ -165,30 +165,7 @@
 - **Effort:** L
 - **Verdict hint:** adapt-improve
 
-## Sources (to merge)
 
-| Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
-|--------|-------|-----------------|------------------------|-------|-------------|
-| eo-prompt-01 | Extraction rule intermediate representation | mepuka/effect-ontology | `packages/@core-v2/src/Prompt/ExtractionRule.ts:19-135` | structured prompt, schema, and feedback policy | adapt-improve with attribution |
-| eo-prompt-02 | Ontology-derived extraction rule sets | mepuka/effect-ontology | `packages/@core-v2/src/Prompt/RuleSet.ts:35-135,588-756` | static plus runtime ontology constraints | adapt-improve with attribution |
-| eo-prompt-03 | Rule-set schema annotation generator | mepuka/effect-ontology | `packages/@core-v2/src/Prompt/SchemaGenerator.ts:36-194` | intended prompt-schema synchronization | design-reference |
-| eo-prompt-04 | Ontology-aware structured prompt compiler | mepuka/effect-ontology | `packages/@core-v2/src/Prompt/PromptGenerator.ts:90-735` | SKOS/OWL guidance, cache partition, examples | adapt-improve with attribution |
-| eo-prompt-05 | Mention extraction schema | mepuka/effect-ontology | `packages/@core-v2/src/Schema/MentionFactory.ts:18-70` | recognition-before-typing seam | design-reference |
-| eo-prompt-06 | Ontology-derived entity schema factory | mepuka/effect-ontology | `packages/@core-v2/src/Schema/EntityFactory.ts:121-165,205-348` | runtime class and attribute constraints | port-now with attribution |
-| eo-prompt-07 | Stage-bound relation schema factory | mepuka/effect-ontology | `packages/@core-v2/src/Schema/RelationFactory.ts:39-115,152-305` | entity-ID and property-range closure | port-now with attribution |
-| eo-prompt-08 | Ontology-constrained extraction services | mepuka/effect-ontology | `packages/@core-v2/src/Service/Extraction.ts:87-323,366-453,506-805` | prompt/schema execution and IRI expansion | adapt-improve with attribution |
-| eo-prompt-09 | Shared agent task and pipeline configuration | mepuka/effect-ontology | `packages/@core-v2/src/Service/Agent/types.ts:38-247` | universal pipeline envelope and modes | design-reference |
-| eo-prompt-10 | Agent adapter kit | mepuka/effect-ontology | `packages/@core-v2/src/Service/Agent/AgentKit.ts:60-349` | ingestion, extraction, validation, correction adapters | design-reference |
-| eo-prompt-11 | Agent coordinator | mepuka/effect-ontology | `packages/@core-v2/src/Service/Agent/AgentCoordinator.ts:130-738,854-1070` | sequential, loop, parallel, events, checkpoints | design-reference |
-| eo-prompt-12 | SHACL corrector agent | mepuka/effect-ontology | `packages/@core-v2/src/Service/Agent/CorrectorAgent.ts:83-286,316-762` | violation-to-correction proposals and unsafe mutation | adapt-improve with attribution |
-| eo-prompt-13 | Cross-batch entity resolver | mepuka/effect-ontology | `packages/@core-v2/src/Service/CrossBatchEntityResolver.ts:63-90,112-388` | hybrid blocking and persistent canonicalization | adapt-improve with attribution |
-| eo-prompt-14 | External entity reconciliation | mepuka/effect-ontology | `packages/@core-v2/src/Service/ReconciliationService.ts:40-98,127-227,263-497` | thresholded Wikidata linking and review queue | adapt-improve with attribution |
-| eo-prompt-15 | Curation feedback service | mepuka/effect-ontology | `packages/@core-v2/src/Service/Curation.ts:69-317,380-447` | reviewed claims to positive/negative examples | adapt-improve with attribution |
-| eo-prompt-16 | Batched document classifier | mepuka/effect-ontology | `packages/@core-v2/src/Service/DocumentClassifier.ts:27-218,247-462` | preprocessing classification and silent fallback | skip |
-| eo-prompt-17 | Provider-neutral embedding service | mepuka/effect-ontology | `packages/@core-v2/src/Service/Embedding.ts:29-168` | task-aware cache-through embedding | adapt-improve with attribution |
-| eo-prompt-18 | Embedding request resolver | mepuka/effect-ontology | `packages/@core-v2/src/Service/EmbeddingResolver.ts:23-95` | request coalescing and provider-size batching | adapt-improve with attribution |
-| eo-prompt-19 | Embedding provider fallback | mepuka/effect-ontology | `packages/@core-v2/src/Service/EmbeddingFallback.ts:78-250` | circuit-protected fallback with metadata flaw | design-reference |
-| eo-prompt-20 | Embedding vector invariants | mepuka/effect-ontology | `packages/@core-v2/src/Service/EmbeddingProvider.ts:121-149` | provider contract and dimension mismatch behavior | design-reference |
-| eo-prompt-21 | Voyage embedding dimensions | mepuka/effect-ontology | `packages/@core-v2/src/Service/VoyageEmbeddingProvider.ts:52-64` | model-specific vector-space identity | design-reference |
-| eo-prompt-22 | Collision-aware IRI local-name mapping | mepuka/effect-ontology | `packages/@core-v2/src/Utils/Iri.ts:152-203` | aligned-ontology vocabulary ambiguity | adapt-improve with attribution |
-| eo-prompt-23 | Ontology property metadata model | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Model/Ontology.ts:443-500` | domain, range, range-kind, and functional constraints | design-reference |
+## Sources appended
+
+`eo-prompt-01` through `eo-prompt-23` are recorded in the canonical ledger at [`SOURCES.md`](./SOURCES.md).

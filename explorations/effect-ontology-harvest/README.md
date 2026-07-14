@@ -18,9 +18,10 @@ relevance to active goals.
 
 ## Next Open Question
 
-Research in flight: 8 codex inventory agents (7 src areas + docs/ rationale)
-are collecting `research/*.md` inventories; then a codex verify gate, then
-per-item evaluation into `RESEARCH.md`, then align.
+The eight-agent fan-out produced six landed research report files, and the
+canonical ledger is consolidated. Verification and closeout cleanup are the
+current gate; next comes per-item evaluation in `RESEARCH.md` against the
+manifest's two open questions, then align.
 
 ## Read This First
 
@@ -32,8 +33,9 @@ per-item evaluation into `RESEARCH.md`, then align.
 
 ## Trail
 
-<Dated one-liners, newest first: what each session did and where it stopped.>
-
+- 2026-07-13: the eight-agent fan-out landed six research reports and the
+  canonical source ledger was consolidated; verification and closeout cleanup
+  remain before per-item evaluation.
 - 2026-07-11: packet opened; grilling locked scope (active-goals-first, full
   sweep + design-comparisons, 8 by-source-area codex agents, verify gate,
   end state align-complete); MAPPING-CONTEXT.md authored; inventory agents

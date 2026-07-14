@@ -154,37 +154,7 @@
 - **Effort:** L
 - **Verdict hint:** adapt-improve
 
-## Sources (to merge)
 
-| Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
-|--------|-------|-----------------|------------------------|-------|-------------|
-| eo-dom-01 | Ontology definitions, hierarchy, and search projection | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Model/Ontology.ts:27-1040` | OWL/SKOS metadata and ontology query behavior | design-reference |
-| eo-dom-02 | Ontology search-document contracts | mepuka/effect-ontology | `packages/@core-v2/test/Domain/Model/Ontology.test.ts:11-218` | labels, definitions, relations, properties, and search text | design-reference |
-| eo-dom-03 | Ontology hierarchy contracts | mepuka/effect-ontology | `packages/@core-v2/test/Domain/Model/OntologyHierarchy.test.ts:5-72` | inherited properties and subclass recognition | design-reference |
-| eo-dom-04 | Extracted entity knowledge graph | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Model/Entity.ts:18-495` | evidence-grounded entities, relations, and dual time | design-reference |
-| eo-dom-05 | Entity-resolution node and edge taxonomy | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Model/EntityResolution.ts:1-461` | mention-to-canonical resolution with provenance | design-reference |
-| eo-dom-06 | Entity-resolution graph indexes | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Model/EntityResolutionGraph.ts:14-111` | canonical indexes, graph state, and statistics | design-reference |
-| eo-dom-07 | Entity-resolution schema contracts | mepuka/effect-ontology | `packages/@core-v2/test/Domain/EntityResolution.test.ts:21-340` | tagged node and edge decoding with bounds | design-reference |
-| eo-dom-08 | Batch lifecycle state machine | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Model/BatchWorkflow.ts:17-315` | staged processing, partial outcomes, and transitions | design-reference |
-| eo-dom-09 | Batch stage handoff schemas | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Schema/Batch.ts:18-150` | manifest and workflow activity payloads | design-reference |
-| eo-dom-10 | Batch transition contracts | mepuka/effect-ontology | `packages/@core-v2/test/Domain/Model/BatchWorkflow.test.ts:18-215` | progress, failure, and transition rejection | design-reference |
-| eo-dom-11 | Agent execution and checkpoint model | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Model/Agent.ts:46-759` | events, resumable state, modes, and termination | design-reference |
-| eo-dom-12 | Agent model contracts | mepuka/effect-ontology | `packages/@core-v2/test/Domain/Model/Agent.test.ts:30-459` | event, checkpoint, and pipeline-state behavior | design-reference |
-| eo-dom-13 | Image asset and contextual-reference model | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Model/Image.ts:17-496` | candidates, content assets, manifests, and prompts | design-reference |
-| eo-dom-14 | Owner image-manifest contracts | mepuka/effect-ontology | `packages/@core-v2/test/Service/ImageStore.test.ts:172-304` | ordered contextual image references | design-reference |
-| eo-dom-15 | Multimodal image-adapter contracts | mepuka/effect-ontology | `packages/@core-v2/test/Prompt/PromptGenerator.multimodal.test.ts:216-265` | image-reference to prompt projection | design-reference |
-| eo-dom-16 | RDF primitive and graph schemas | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Rdf/Types.ts:26-245` | branded RDF terms, triples, and quads | design-reference |
-| eo-dom-17 | RDF and ontology vocabulary bundles | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Rdf/Constants.ts:13-490` | standard terms, product namespaces, and metadata | adapt-improve |
-| eo-dom-18 | Domain and storage identity schemas | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Identity.ts:16-207` | hashes, deterministic IDs, versions, and GCS addresses | design-reference |
-| eo-dom-19 | Domain error export topology | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Error/index.ts:8-21` | centralized cross-boundary error taxonomy | design-reference |
-| eo-dom-20 | Base error model | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Error/Base.ts:13-62` | nominal base hierarchy and implementation gaps | design-reference |
-| eo-dom-21 | Workflow activity errors | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Error/Activity.ts:13-114` | stage and retry metadata | design-reference |
-| eo-dom-22 | Embedding errors | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Error/Embedding.ts:19-144` | provider, retry, dimension, and token metadata | design-reference |
-| eo-dom-23 | SHACL processing and policy errors | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Error/Shacl.ts:19-73` | validation lifecycle versus policy failure | design-reference |
-| eo-dom-24 | Product search schemas | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Schema/Search.ts:18-195` | faceted claim, entity, suggestion, and article search | design-reference |
-| eo-dom-25 | Inference API schemas | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Schema/Inference.ts:16-134` | profiles, delta output, jobs, and statistics | design-reference |
-| eo-dom-26 | Inference contracts | mepuka/effect-ontology | `packages/@core-v2/test/Runtime/InferenceRouter.test.ts:32-117` | defaults, custom rules, and inferred output | design-reference |
-| eo-dom-27 | SHACL report and policy schemas | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Schema/Shacl.ts:13-60` | validation findings, telemetry, and workflow policy | design-reference |
-| eo-dom-28 | SHACL policy contracts | mepuka/effect-ontology | `packages/@core-v2/test/Service/Shacl.policy.test.ts:68-217` | policy failure and telemetry semantics | design-reference |
-| eo-dom-29 | Claim, assertion, derivation, and event schemas | mepuka/effect-ontology | `packages/@core-v2/src/Domain/Schema/KnowledgeModel.ts:1-710` | evidence-backed statements and derivation lineage | adapt-improve |
-| eo-dom-30 | Knowledge-model event contracts | mepuka/effect-ontology | `packages/@core-v2/test/Domain/Schema/KnowledgeModel.test.ts:21-210` | event IDs, participants, facts, and source-document bounds | design-reference |
+## Sources appended
+
+`eo-dom-01` through `eo-dom-30` are recorded in the canonical ledger at [`SOURCES.md`](./SOURCES.md).

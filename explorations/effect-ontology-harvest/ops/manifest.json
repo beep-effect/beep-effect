@@ -11,18 +11,11 @@
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [
-        "ontology-agent-surface",
-        "semantic-foundation",
-        "agentic-professional-runtime",
-        "unified-ai-toolchain",
-        "ip-law-knowledge-graph",
-        "trustgraph-port"
-      ],
+      "goals": [],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-07-11",
-    "updated": "2026-07-11"
+    "updated": "2026-07-13"
   }
 }

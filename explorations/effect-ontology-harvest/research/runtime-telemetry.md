@@ -121,21 +121,7 @@
 - **Effort:** M
 - **Verdict hint:** adapt-improve
 
-## Sources (to merge)
 
-| Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
-|--------|-------|-----------------|------------------------|-------|-------------|
-| eo-rt-01 | Production runtime bundles | mepuka/effect-ontology | `packages/@core-v2/src/Runtime/ProductionRuntime.ts:65-234` | provider-selected LLM decoration, extraction, tracing, and infrastructure composition | adapt-improve with attribution |
-| eo-rt-02 | Final server runtime and lifecycle | mepuka/effect-ontology | `packages/@core-v2/src/server.ts:140-163,230-314` | app-level Layer graph, startup, health, and graceful shutdown | design-reference |
-| eo-rt-03 | Deterministic test runtime | mepuka/effect-ontology | `packages/@core-v2/src/Runtime/TestRuntime.ts:49-246` | production-shaped mocks, config override, and managed runtime | design-reference |
-| eo-rt-04 | Pluggable cluster runtime | mepuka/effect-ontology | `packages/@core-v2/src/Runtime/ClusterRuntime.ts:42-134` | SQLite/caller-provided SQL single-runner composition | design-reference |
-| eo-rt-05 | Workflow dependency bundles | mepuka/effect-ontology | `packages/@core-v2/src/Runtime/WorkflowLayers.ts:47-583` | pre-provided service bundles, construction order, and open test seams | design-reference |
-| eo-rt-06 | Config-driven embedding layers | mepuka/effect-ontology | `packages/@core-v2/src/Runtime/EmbeddingLayers.ts:45-183` | dynamic embedding provider, limiter, cache, metrics, and config composition | design-reference |
-| eo-rt-07 | Health-check service | mepuka/effect-ontology | `packages/@core-v2/src/Runtime/HealthCheck.ts:17-153` | liveness, readiness, and bounded deep dependency checks | adapt-improve with attribution |
-| eo-rt-08 | Health HTTP routes | mepuka/effect-ontology | `packages/@core-v2/src/Runtime/HttpServer.ts:1049-1076` | probe endpoints and status mapping | design-reference |
-| eo-rt-09 | Graceful shutdown service | mepuka/effect-ontology | `packages/@core-v2/src/Runtime/Shutdown.ts:16-148` | admission cutoff, in-flight accounting, and bounded drain | adapt-improve with attribution |
-| eo-rt-10 | Shutdown request middleware | mepuka/effect-ontology | `packages/@core-v2/src/Runtime/HttpMiddleware.ts:98-115` | HTTP request tracking around shutdown | design-reference |
-| eo-rt-11 | Effect-native OTLP tracing Layer | mepuka/effect-ontology | `packages/@core-v2/src/Telemetry/Tracing.ts:21-73` | trace export, shutdown, and disabled/test wiring | skip |
-| eo-rt-12 | In-memory Prometheus metrics service | mepuka/effect-ontology | `packages/@core-v2/src/Telemetry/Metrics.ts:19-315` | extraction, LLM, and embedding-cache metric vocabulary | design-reference |
-| eo-rt-13 | LLM token cost calculator | mepuka/effect-ontology | `packages/@core-v2/src/Telemetry/CostCalculator.ts:10-68` | model pricing and token-to-USD estimation | adapt-improve with attribution |
-| eo-rt-14 | GenAI and extraction span semantics | mepuka/effect-ontology | `packages/@core-v2/src/Telemetry/LlmAttributes.ts:19-189` | PII-minimized usage, cost, retry, error, and extraction attributes | adapt-improve with attribution |
+## Sources appended
+
+`eo-rt-01` through `eo-rt-14` are recorded in the canonical ledger at [`SOURCES.md`](./SOURCES.md).

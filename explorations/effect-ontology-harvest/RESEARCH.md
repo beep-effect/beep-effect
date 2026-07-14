@@ -13,9 +13,11 @@ link. Note license/maintenance/fit concerns inline.>
 
 ## In-Repo Capability Inventory
 
-<What we already have that this exploration would build on. Source from
-`standards/repo-exports.catalog.md`, targeted code search, and local docs; cite
-package + path. Mark gaps explicitly as NOT FOUND.>
+<What we already have that this exploration would build on. Search live source
+and barrels first with `rg -n "export (const|function|class|type|interface)
+.*<intent>" packages --glob '**/src/**/*.{ts,tsx}' --glob '!**/*.test.*'` and
+`rg -n "<intent>" packages --glob '**/src/index.ts'`, then consult local docs;
+cite package + path. Mark gaps explicitly as NOT FOUND.>
 
 ## Constraints Discovered
 

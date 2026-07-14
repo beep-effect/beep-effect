@@ -7,13 +7,20 @@ categories: use the table below.
 
 ## Task frame
 
-- **Source repo (read-only):** `~/YeeBois/dev/effect-ontology`, focus
+- **Target root:** the checkout containing this packet, resolved with
+  `git rev-parse --show-toplevel`. Resolve all target output paths from this
+  root. You may READ anywhere in it, but WRITE only your assigned
+  `explorations/effect-ontology-harvest/research/<area>.md`. Stage that area's
+  source rows in its final `## Sources (to merge)` table; do not write
+  `explorations/effect-ontology-harvest/research/SOURCES.md` concurrently.
+- **Source root (read-only):** a checkout of `mepuka/effect-ontology` at the
+  pinned revision recorded in [`SOURCES.md`](./SOURCES.md). Focus
   `packages/@core-v2/src` (plus `docs/` for the docs agent). MIT license —
-  port-with-attribution.
-- **Target repo:** `~/YeeBois/projects/beep-effect7` (beep-effect). You may
-  READ anywhere in it, but WRITE only your assigned
-  `explorations/effect-ontology-harvest/research/<area>.md` and append rows to
-  `explorations/effect-ontology-harvest/research/SOURCES.md` §1.
+  port-with-attribution. Resolve every mined-source `path:line` citation from
+  this root; never record a machine-local absolute path.
+- **Ledger coordinator:** after every inventory agent finishes, one coordinator
+  serially merges and deduplicates all staged source rows into `SOURCES.md` §1,
+  then replaces each staged table with a `## Sources appended` confirmation.
 - **Intent:** harvest inventory, NOT a port plan. Each item = one valuable
   piece (model, capability, service, pattern, design idea) mapped to where it
   would live in beep, or to the existing beep package it should improve.
@@ -102,8 +109,10 @@ One `###` section per item in your `research/<area>.md`:
 - **Verdict hint:** port-now | adapt-improve | design-reference | skip (advisory — final verdict happens in evaluation)
 ```
 
-End the file with a `## Sources appended` line listing the `eo-<area>-NN` ids
-you added to SOURCES.md §1.
+End the inventory file with a `## Sources (to merge)` table containing its
+`eo-<area>-NN` rows. The ledger coordinator alone merges those rows into
+SOURCES.md §1 and replaces that table with a `## Sources appended`
+confirmation.
 
 ## beep repo laws that shape v3→v4 notes
 
