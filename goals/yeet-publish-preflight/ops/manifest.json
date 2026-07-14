@@ -3,13 +3,13 @@
   "initiative": {
     "id": "yeet-publish-preflight",
     "title": "Yeet Publish Preflight",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-14",
     "updated": "2026-07-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/yeet-publish-preflight",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Harden yeet publish with the two highest-leverage pretext-driver reflection todos: a frozen-lockfile clean-HEAD install preflight before every push, and a probe-first fix for the --start-pr-early / --monitor circular validation on PR-less branches.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -62,12 +62,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
