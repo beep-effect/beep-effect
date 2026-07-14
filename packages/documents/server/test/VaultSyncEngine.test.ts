@@ -26,7 +26,7 @@ import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect, it } from "@effect/vitest";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import { Effect, FileSystem, Layer, Path, Result } from "effect";
+import { Effect, FileSystem, Layer, Path, PlatformError, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -54,6 +54,31 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
 
 const SyncEngineTestLayer = DocumentsSyncFixtureLive.pipe(
   Layer.provideMerge(BunFileSystem.layer),
+  Layer.provideMerge(BunPath.layer)
+);
+
+const ProcfsUnavailableFileSystemLayer = Layer.effect(
+  FileSystem.FileSystem,
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    return {
+      ...fs,
+      realPath: Effect.fnUntraced(function* (candidate: string) {
+        if (Str.startsWith("/proc/self/fd/")(candidate)) {
+          return yield* PlatformError.badArgument({
+            module: "FileSystem",
+            method: "realPath",
+            description: "simulated unavailable procfs descriptor path",
+          });
+        }
+        return yield* fs.realPath(candidate);
+      }),
+    };
+  })
+).pipe(Layer.provide(BunFileSystem.layer));
+
+const ProcfsUnavailableSyncEngineTestLayer = DocumentsSyncFixtureLive.pipe(
+  Layer.provideMerge(ProcfsUnavailableFileSystemLayer),
   Layer.provideMerge(BunPath.layer)
 );
 
@@ -165,6 +190,22 @@ describe("@beep/documents-server VaultSyncEngine", () => {
     }).pipe(provideScopedLayer(SyncEngineTestLayer))
   );
 
+  it.effect("uploads a normal vault file when procfs descriptor paths are unavailable", () =>
+    Effect.gen(function* () {
+      const engine = yield* VaultSyncEngine;
+      const handle = yield* DmsMirrorFixtureHandle;
+      const root = yield* makeVaultRoot();
+      yield* writeVaultFile(root, "portable.txt", "portable body");
+
+      const status = yield* engine.syncOnce(syncInput(root));
+      const tree = yield* handle.snapshotTree;
+
+      expect(nodeDigest(tree["portable.txt"])).toBe(digestOf("portable body"));
+      expect(status.currentItems).toBe(1);
+      expect(status.failedOperations).toBe(0);
+    }).pipe(provideScopedLayer(ProcfsUnavailableSyncEngineTestLayer))
+  );
+
   it.effect("converges a local rename without re-uploading content", () =>
     Effect.gen(function* () {
       const engine = yield* VaultSyncEngine;
@@ -211,7 +252,7 @@ describe("@beep/documents-server VaultSyncEngine", () => {
       expect(counts.renameItem).toBe(0);
       expect(counts.ensureFolder).toBe(2);
       expect(status.openConflicts).toBe(0);
-    }).pipe(provideScopedLayer(SyncEngineTestLayer))
+    }).pipe(provideScopedLayer(ProcfsUnavailableSyncEngineTestLayer))
   );
 
   it.effect("pushes a local edit as a new remote file version", () =>
@@ -287,7 +328,7 @@ describe("@beep/documents-server VaultSyncEngine", () => {
       expect(tree["queued.txt"]).toBeUndefined();
       expect(status.failedOperations).toBe(1);
       expect(status.errorItems).toBe(1);
-    }).pipe(provideScopedLayer(SyncEngineTestLayer))
+    }).pipe(provideScopedLayer(ProcfsUnavailableSyncEngineTestLayer))
   );
 
   it.effect("retries a retryable mirror failure within the same pass and succeeds", () =>

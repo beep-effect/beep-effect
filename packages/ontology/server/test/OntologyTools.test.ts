@@ -166,6 +166,44 @@ describe("ontology agent toolkit real-engine handlers", () => {
   );
 
   it.effect(
+    "refuses canonical provenance path aliases",
+    withToolkit((tools, path) =>
+      Effect.gen(function* () {
+        const opened = yield* tools.openInspect(OpenInspectRequest.make({ path }));
+        const sourceAlias = yield* S.decodeUnknownEffect(OntologyFilePath)("./ontology.ttl");
+        const provPath = yield* S.decodeUnknownEffect(OntologyFilePath)("prov.ttl");
+        const datasetPath = yield* S.decodeUnknownEffect(OntologyFilePath)("dataset.ttl");
+        const datasetAlias = yield* S.decodeUnknownEffect(OntologyFilePath)("./prov.ttl");
+
+        const sourceRefusal = yield* Effect.flip(
+          tools.exportProvenance(
+            ExportProvenanceRequest.make({
+              path,
+              expectedFingerprint: opened.fingerprint,
+              provPath: sourceAlias,
+              datasetPath,
+            })
+          )
+        );
+        const outputRefusal = yield* Effect.flip(
+          tools.exportProvenance(
+            ExportProvenanceRequest.make({
+              path,
+              expectedFingerprint: opened.fingerprint,
+              provPath,
+              datasetPath: datasetAlias,
+            })
+          )
+        );
+
+        expect(sourceRefusal._tag).toBe("OntologyToolExecutionError");
+        expect(outputRefusal._tag).toBe("OntologyToolExecutionError");
+      })
+    ),
+    { timeout: 120_000 }
+  );
+
+  it.effect(
     "returns plain literals from a real-engine SELECT through the ontology tool path",
     withToolkit((tools, path) =>
       Effect.gen(function* () {
