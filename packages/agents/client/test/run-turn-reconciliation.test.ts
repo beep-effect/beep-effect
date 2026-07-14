@@ -99,9 +99,15 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     "does not mistake a newly persisted user turn for the stopped assistant turn",
     Effect.fnUntraced(function* () {
       const streamStarted = yield* Deferred.make<void>();
+      const timelineRefreshed = yield* Deferred.make<void>();
       let timeline: ThreadTimeline = emptyTimeline;
+      let interrupted = false;
       const client = ChatClient.of(((tag: string) => {
-        if (tag === "GetTimeline") return Effect.sync(() => timeline);
+        if (tag === "GetTimeline") {
+          return Effect.sync(() => timeline).pipe(
+            Effect.tap(() => (interrupted ? Deferred.succeed(timelineRefreshed, undefined) : Effect.void))
+          );
+        }
         if (tag === "GetTurnRequestStatus") return Effect.succeed("not_persisted");
         if (tag === "SendMessage") {
           return Stream.unwrap(Deferred.succeed(streamStarted, undefined).pipe(Effect.as(Stream.never)));
@@ -126,8 +132,10 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
       // its assistant `(stopped)` marker. Every bounded refresh sees only that
       // user row: total-count growth must not be accepted as reconciliation.
       timeline = userOnlyTimeline;
+      interrupted = true;
       registry.set(runTurnAtom, Atom.Interrupt);
-      yield* Effect.sleep(Duration.millis(1_600));
+      yield* Deferred.await(timelineRefreshed);
+      yield* Effect.yieldNow;
 
       expect(registry.get(turnActiveAtom)).toBe(false);
       expect(registry.get(draftAtom)).toStrictEqual(O.some(content));
@@ -148,8 +156,14 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     "does not restore a cancelled prompt after the server confirms its user row persisted",
     Effect.fnUntraced(function* () {
       const streamStarted = yield* Deferred.make<void>();
+      const timelineRefreshed = yield* Deferred.make<void>();
+      let interrupted = false;
       const client = ChatClient.of(((tag: string) => {
-        if (tag === "GetTimeline") return Effect.succeed(userOnlyTimeline);
+        if (tag === "GetTimeline") {
+          return Effect.succeed(userOnlyTimeline).pipe(
+            Effect.tap(() => (interrupted ? Deferred.succeed(timelineRefreshed, undefined) : Effect.void))
+          );
+        }
         if (tag === "GetTurnRequestStatus") return Effect.succeed("user_persisted");
         if (tag === "SendMessage") {
           return Stream.unwrap(Deferred.succeed(streamStarted, undefined).pipe(Effect.as(Stream.never)));
@@ -166,8 +180,10 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
 
       registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
       yield* Deferred.await(streamStarted);
+      interrupted = true;
       registry.set(runTurnAtom, Atom.Interrupt);
-      yield* Effect.sleep(Duration.millis(350));
+      yield* Deferred.await(timelineRefreshed);
+      yield* Effect.yieldNow;
 
       expect(registry.get(draftAtom)).toStrictEqual(O.none());
       expect(registry.get(turnErrorAtom)).toStrictEqual(O.none());
@@ -248,11 +264,14 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         statusKind: UncertainStatusKind
       ) {
         const streamStarted = yield* Deferred.make<void>();
+        const timelineRefreshed = yield* Deferred.make<void>();
         let timelineReads = 0;
         const client = ChatClient.of(((tag: string) => {
           if (tag === "GetTimeline") {
             timelineReads += 1;
-            return Effect.succeed(timelineReads === 1 ? emptyTimeline : userOnlyTimeline);
+            return Effect.succeed(timelineReads === 1 ? emptyTimeline : userOnlyTimeline).pipe(
+              Effect.tap(() => (timelineReads > 1 ? Deferred.succeed(timelineRefreshed, undefined) : Effect.void))
+            );
           }
           if (tag === "GetTurnRequestStatus") {
             return uncertainStatusResult(statusKind);
@@ -279,7 +298,8 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
         registry.set(runTurnAtom, SendTurnRequest.make({ threadId, content }));
         yield* Deferred.await(streamStarted);
         registry.set(runTurnAtom, Atom.Interrupt);
-        yield* Effect.sleep(Duration.millis(1_600));
+        yield* Deferred.await(timelineRefreshed);
+        yield* Effect.yieldNow;
 
         expect(registry.get(draftAtom)).toStrictEqual(O.none());
         expect(registry.get(draftRevisionAtom)).toBe(0);
