@@ -176,8 +176,10 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   (stage `graduate`, still active for three gated candidates): graduated
   [`secure-document-delivery`](../goals/secure-document-delivery/README.md) on
   2026-07-14,
-  [`local-first-projection-sync`](./local-first-projection-sync/README.md) (last two are
-  singletons — attach-vs-standalone deferred to their `DECISIONS.md`). Plus **9 non-invasive
+  [`local-first-projection-sync`](./local-first-projection-sync/README.md) (stage
+  `graduate`, still active for gated projector/topology candidates): graduated
+  [`projection-dispatch-core`](../goals/projection-dispatch-core/README.md) on
+  2026-07-14. Plus **9 non-invasive
   Case-A research notes** folded into existing goals (`file-processing-capability` OCR,
   `langextract-capability` anti-inference, `law-practice-office-action-spike` IP-depth,
   `law-practice-office-action-extraction-rung` relational-grid, `ip-law-knowledge-graph` CPC/IPC,

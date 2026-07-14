@@ -1,152 +1,172 @@
 # Local-First Projection Sync — Decisions
 
-<!--
-Stage 2 (ALIGN seed, pre-drafted 2026-06-29 from RESEARCH.md synthesis).
-These are NOT resolved. Each is a branch-closing fork with a RECOMMENDED
-answer the user ratifies, amends, or rejects via /grill-with-docs. Resolve
-one branch at a time; on resolution flip Status to "resolved <date>" with the
-final Answer + Rationale (incl. rejected options), and clear it from
-ops/manifest.json openQuestions. Run: /grill-with-docs local-first-projection-sync
--->
+The align gate closed on 2026-07-14. All seven questions and the fan-out
+primitive are ratified. Full research and provenance remain in
+[`RESEARCH.md`](./RESEARCH.md) and [`research/SOURCES.md`](./research/SOURCES.md).
 
-## Q1: Build the in-repo per-user fan-out hub, or buy a sync engine?
+## 2026-07-14 — Q1 Build-vs-buy — LOCKED
 
-**Recommended:** Build — an in-repo `EventStreamHub` (per-`UserId` registry +
-targeted `notifyUser` + streaming-RPC subscription) reusing the existing
-transport. Do not adopt ElectricSQL / PowerSync / Zero / LiveStore / Jazz /
-InstantDB.
+**Question:** Build a repo-native projection-dispatch seam, or purchase a sync
+platform?
 
-**Rationale:** Every buy-it engine assumes a shared Postgres plus multi-device
-fan-out that is an explicit no-go at one user — Electric keeps a *SQL* projection
-fresh and does nothing for a graph projection (writes stay on your own backend);
-PowerSync/Zero add bidirectional write-back and their own protocols we do not
-need; LiveStore/Jazz/InstantDB import an event-sourcing/CRDT/hosted-backend
-runtime that conflicts with the PGlite-in-sidecar local authority and the
-privilege posture (RESEARCH "External Landscape" + the lighter-alternatives
-table). Decisively, FalkorDB/Redis cannot self-emit reliable change events, so
-**the app write path must emit the refresh event itself** — the single strongest
-argument for an app-level hub over any DB-feed or sync engine. The build-it path
-(per-user `MutableHashMap` registry + streaming RPC) is the right size, and the
-transport already exists and is proven (`Chat.rpc.ts` `stream: true`,
-`IpcChatClient.ts` `RpcClient.layerProtocolSocket`).
+**Answer:** Build a thin repo-native seam. Commit a projection intent
+transactionally with the accepted authority record in repo-native Postgres,
+then use Effect v4 `DurableQueue` plus a persistence-backed worker for durable
+projector work. Emit a deliberately weaker ephemeral "projection version
+changed; re-query" hint only after durable state makes convergence possible.
 
-**Status:** open (for /grill-with-docs)
+**Rationale:** The need is accepted-record projection dispatch, not a second
+authority, bidirectional synchronization, or a general replication platform.
+ElectricSQL and PowerSync are materially broader than this boundary. The
+original in-memory `EventStreamHub` cannot own durable work. The documents
+`VaultSyncEngine` is useful precedent for cursor/status/retry concerns, but its
+provider mirror semantics are not generalized or reused.
 
-## Q2: Attach as a spike, or graduate a standalone goal packet?
+**Rejected options:** ElectricSQL or PowerSync adoption; database or IPC hints
+as the durable path; generalizing `VaultSyncEngine`; copying TalentScore code.
+TalentScore's license conflict remains deferred, so any design-pattern reuse is
+clean-room only.
 
-**Recommended:** Attach as a spike onto existing desktop/workspace work — do
-**not** graduate a standalone `goals/` packet at this appetite.
+## 2026-07-14 — Q2 Standalone ownership — LOCKED
 
-**Rationale:** Direct in-repo precedent: `explorations/local-first-voice/DECISIONS.md`
-right-sized comparable desktop work to an attached spike ("do NOT graduate a goal
-packet yet"). Single-workspace / single-user today means the per-`UserId` map is
-degenerate (one key, N windows), so a thin hub suffices and a standalone packet
-would over-frame the appetite. The hub instead coordinates with
-`goals/desktop-chat-surface` (RPC surface + app-local Layer) and
-`goals/workspace-thread-domain` (`ThreadStore` write hook). Escalation to a
-standalone packet / sync engine is reserved for explicit no-gos: multi-device
-fan-out, a generic cross-slice event bus, or real-time co-editing.
+**Question:** Attach this work to another packet or graduate a standalone goal?
 
-**Status:** open (for /grill-with-docs)
+**Answer:** Graduate [`projection-dispatch-core`](../../goals/projection-dispatch-core/)
+as its own goal. Desktop delivery is one bounded dependent increment inside the
+goal.
 
-## Q3: What does the first slice nail?
+**Rationale:** Projection dispatch has its own durable state, worker failure
+domain, replay contract, authorization boundary, and restart proof. It is not
+part of `epistemic-bitemporal-edge-core`, whose authority path excludes
+projections, and it is not part of `hybrid-retrieval-fusion-core`, which owns
+ranking rather than projection delivery.
 
-**Recommended:** Cross-window, server-originated UI-projection refresh **only** —
-after a `ThreadStore` write commits, push one typed event to the user's *other*
-live desktop connections so their UI projections invalidate without polling. Do
-**not** build the FalkorDB projection consumer, and do **not** re-implement
-in-window invalidation in the hub.
+**Rejected options:** The pre-draft recommendation to wedge the hub into
+`ThreadStore` or desktop/workspace work; attaching it to the bitemporal
+authority goal; attaching it to retrieval fusion; creating a shared package
+before a second producer proves identical semantics.
 
-**Rationale:** The repo already owns three reactive-invalidation paths (Atom RPC
-`reactivityKeys`/`Reactivity.mutation`, `SqlClient.reactive`, `PgliteClient.listen`/
-`notify`), and all three handle *in-window / in-process* refresh; the unique remit
-the hub leaves uncovered is bridging a server-side post-commit event to a
-*separate* live connection (RESEARCH comparison table). A first slice that
-re-implements in-window invalidation would overbuild. The FalkorDB projection is
-**aspirational, not a built consumer** — no `packages/drivers/falkordb`, no
-in-process projection client exists today (only dev/infra orchestration of an
-external container), so the only real downstream now is the UI projection.
+## 2026-07-14 — Q3 First vertical slice — LOCKED
 
-**Status:** open (for /grill-with-docs)
+**Question:** What complete behavior must the first slice prove?
 
-## Q4: What is the core fan-out primitive under Effect v4 beta?
+**Answer:** Prove one accepted-record projection cycle:
 
-**Recommended:** One `Queue` per live connection, drained as a `Stream` via
-`Stream.fromQueue` by that connection's streaming-RPC handler; keep `PubSub`
-(`effect/PubSub`) as the documented broadcast fallback only if Queue done-signal
-semantics churn. Use a `MutableHashMap<UserId, connection[]>` registry guarded by
-`SynchronizedRef`.
+1. atomically commit one accepted authority record and one projection intent;
+2. derive the idempotency key from `{ authorityRecordId, authorityVersion,
+   projectionTarget }`;
+3. process the intent through a persistence-backed `DurableQueue` worker;
+4. update one deliberately trivial, rebuildable repo-native read projection;
+5. record target cursor/status and prove retry without duplicates or regression;
+6. emit an ephemeral version-change hint;
+7. have the desktop re-query and observe the new version; and
+8. kill/restart before and after worker completion, then reconnect without the
+   hint and still converge.
 
-**Rationale:** This repo is on `effect@4.0.0-beta.91` and there is **no
-`effect/Mailbox` module** — the CAPTURE nugget's `conn.mailbox.offer` /
-`Mailbox.toStream()` is a dead v3 API. The concept maps cleanly to v4 `Queue`
-(`offer`/`takeAll`/`end`/`fail`/`shutdown`) + `Stream.fromQueue` (verified in
-`node_modules/effect/dist/Queue.d.ts` + `Stream.d.ts`). A per-user registry does
-*targeted* fan-out; a single global `PubSub` would broadcast-then-filter every
-event to every connection — wrong shape unless topic/broadcast semantics are
-later wanted. `MutableHashMap` is in-repo-proven (`@beep/nlp`, `@beep/repo-utils`);
-`SynchronizedRef` exists in v4 but is **NOT FOUND** in any repo `src` — this slice
-is its first user, so pin the done-signal / single-vs-multi-consumer guarantees to
-beta.91 before committing the hub to `Queue`.
+**Rationale:** This is the smallest end-to-end proof that separates durable
+projection truth from disposable UI freshness while exercising both ambiguous
+completion windows.
 
-**Status:** open (for /grill-with-docs)
+**Rejected options:** UI-only invalidation; the pre-draft `ThreadStore` write
+wedge; RRF, vector scoring, retrieval policy, FalkorDB, or generic multi-device
+replication in the first slice.
 
-## Q5: Where does the subscription RPC contract live? (placement)
+## 2026-07-14 — Q4 Fan-out primitive — LOCKED
 
-**Recommended:** Hub **service** lands in `@beep/workspace-server` (settled — next
-to the `ThreadStore` authority boundary it serves). The subscription **RPC
-contract** placement — `@beep/agents-use-cases` (beside `ChatRpcs`) vs
-`@beep/workspace-use-cases` — is the genuinely open fork; recommend
-`@beep/workspace-use-cases` so the contract co-locates with the workspace authority
-that emits the event, **pending** the authority/projection/cache standard's
-slice-ownership call. Live-Layer wiring + client subscription land **only** in
-`apps/professional-desktop`.
+**Question:** What primitive carries durable projector work and live freshness?
 
-**Rationale:** "App-local live Layer; no God Layers" (`desktop-chat-surface/SPEC.md`)
-plus the vertical-slice rule (no slice product code in the app) fix the service home
-and the app's role. RESEARCH flags the RPC-contract home as explicitly
-**UNRESOLVED** — `ChatRpcs` already lives in `@beep/agents-use-cases` (proven
-streaming RPC), but the event originates from the workspace write boundary, which
-argues for `@beep/workspace-use-cases`. This is a standard-owned routing call, so do
-not pre-commit; ratify the home before the contract lands.
+**Answer:** Use two planes. The durable plane is `DurableQueue` with isolated
+workers per target family, bounded concurrency, an explicit retry policy, and
+recorded target cursor/status. The ephemeral plane uses the smallest primitive
+proved by the transport topology: a scoped queue/stream for the current single
+IPC session; `PubSub` only after same-process broadcast is demonstrated; a
+per-audience connection registry only after multiple independently scoped
+connections exist.
 
-**Status:** open (for /grill-with-docs)
+**Rationale:** Durable projector work and live hints have different delivery
+guarantees. Keeping them separate prevents a missed notification from becoming
+lost work and prevents speculative multi-window infrastructure.
 
-## Q6: How does a live connection resolve identity, and who may subscribe? (auth)
+**Rejected options:** The v3-era in-memory hub as durable ownership; one shared
+worker failure domain for every target family; speculative `PubSub`, mailbox,
+or connection-registry topology.
 
-**Recommended:** Resolve each live connection to a `UserId` server-side and key the
-registry on it; under Tauri, map N renderer windows to one user. Author the typed
-event `Schema` and a subscribe-authorization rule that gates "who may subscribe to
-whose events" — even though it is single-user today, the wire contract must **not**
-assume single-user.
+## 2026-07-14 — Q5 Placement — LOCKED
 
-**Rationale:** RESEARCH's implementation-surface checklist makes identity +
-authorization load-bearing, not boilerplate: the registry key *is* the user/session
-identity, and the multi-window Tauri case (N renderers → one user) is real design
-work, not an afterthought. Hard-coding single-user into the wire contract would bake
-a refactor into the first escalation (multi-device/multi-user is the named escalation
-trigger). Keeping the authorization rule explicit now costs little and keeps the swap
-cheap behind the small port the hub sits behind.
+**Question:** Where do the contracts, persistence, workers, and desktop bridge
+live?
 
-**Status:** open (for /grill-with-docs)
+**Answer:** Place schemas, dispatch/status ports, and the subscription RPC in
+`packages/epistemic/use-cases`; worker/projector composition in
+`packages/epistemic/server`; authority and projection persistence in
+`packages/epistemic/tables`; and the workflow persistence adapter in
+`packages/drivers/workflow`. Put the desktop handler merge and client
+subscription in `apps/professional-desktop`.
 
-## Q7: Does the first event contract anticipate a FalkorDB projection, and how is SSPL handled?
+**Rationale:** These homes follow existing slice roles while keeping the
+unstable workflow store adapter reusable. The adapter and crash proof from
+`goals/effect-v4-workflow-engine-spike` are a prerequisite. A shared
+`@beep/projection` package is justified only by a second non-epistemic producer
+with identical semantics.
 
-**Recommended:** Design the typed refresh event so a *future* FalkorDB projection
-**could** consume the same event the UI projection consumes (one event, multiple
-downstreams), but ship **no FalkorDB runtime** in this wedge. Track SSPLv1 as an
-**open licensing gate**, not a settled "clean" item, and require explicit legal /
-architecture review before bundling, hosting, or distributing any FalkorDB-backed
-projection.
+**Rejected options:** `@beep/workspace-*`; an app-owned durable worker; a new
+shared package now; projection behavior inside authority or retrieval ranking.
 
-**Rationale:** FalkorDB ships under **SSPLv1** (strong copyleft); internal/single-user
-use does not trigger copyleft, but offering its functionality as a service or
-bundling/hosting/distributing a FalkorDB-backed projection triggers SSPL's
-service-source obligation — material in the privilege-sensitive legal-AI context.
-This wedge introduces no FalkorDB code, so no obligation attaches now; designing the
-event as a shared post-commit signal (the write path emits one event both projections
-consume) keeps the future consumer cheap without committing to the backend. A
-non-SSPL graph backend may be warranted if the projection ever ships in a
-hosted/distributed product — a decision for that later gate, not this one.
+## 2026-07-14 — Q6 Subscription authentication and authorization — LOCKED
 
-**Status:** open (for /grill-with-docs)
+**Question:** What identifies a subscriber, and who authorizes its projection
+scope?
+
+**Answer:** Authenticate the desktop launch with the per-launch RPC token in
+`apps/professional-desktop/server/RpcSessionAuth.ts`. Treat requested
+workspace/matter scope as untrusted input; the server must resolve and
+authorize the effective projection scope before registering the subscription.
+The launch token authenticates a launch, not a user, so do not invent a
+singleton `UserId`. Name a future principal boundary explicitly.
+
+**Rationale:** The live desktop RPCs currently trust client-supplied
+`workspaceId`. Repeating that gap on a long-lived subscription would turn an
+authentication mechanism into false audience authorization.
+
+**Rejected options:** Client-trusted workspace/matter scope; deriving a user
+from the launch token; a global singleton audience; postponing authorization
+until multi-user support.
+
+## 2026-07-14 — Q7 FalkorDB — LOCKED
+
+**Question:** Does v1 include or anticipate a FalkorDB graph projection?
+
+**Answer:** FalkorDB is SSPL and excluded from v1. Any future graph projection
+must be rebuildable, driver-isolated, non-authoritative, and separately
+approved.
+
+**Rationale:** This preserves the bitemporal authority doctrine and keeps
+license, topology, and graph semantics out of the first projection-dispatch
+proof.
+
+**Rejected options:** FalkorDB in the first slice; graph storage in the
+authority path; a graph-specific field in the v1 dispatch contract; treating
+SSPL approval as implicit.
+
+## Deferred questions
+
+### 2026-07-14 — Durable adapter freeze — DEFERRED
+
+Do not freeze the `DurableQueue`/`PersistedQueueFactory` adapter contract until
+[`effect-v4-workflow-engine-spike`](../../goals/effect-v4-workflow-engine-spike/)
+lands its persistence, atomicity, competing-worker, and kill/restart evidence.
+This is a dependency gate, not an open align question.
+
+### 2026-07-14 — Live multi-connection topology — DEFERRED
+
+Do not choose `PubSub` or a connection registry until runtime proof shows
+same-process broadcast or multiple independently scoped desktop connections.
+The first slice uses one scoped queue/stream and must still converge without a
+hint.
+
+### 2026-07-14 — TalentScore license reconciliation — DEFERRED
+
+The gold-intake ledger says MIT while packet prose says commercial. Until the
+license of record is reconciled from authoritative upstream evidence,
+TalentScore is reference-only and design-pattern reuse is clean-room. See
+[`research/SOURCES.md`](./research/SOURCES.md#2-upstream-repositories--licenses).
