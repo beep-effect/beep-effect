@@ -427,7 +427,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
             const candidateInfo = yield* fs
               .stat(canonicalCandidate)
               .pipe(Effect.mapError(() => scanFailed(`vault sync could not inspect local file ${displayPath}`)));
-            const inodeMatches = O.getOrElse(O.zipWith(info.ino, candidateInfo.ino, Eq.equals), F.constTrue);
+            const inodeMatches = O.getOrElse(O.zipWith(info.ino, candidateInfo.ino, Eq.equals), F.constFalse);
             if (!Eq.equals(info.dev, candidateInfo.dev) || !inodeMatches || candidateInfo.type !== "File") {
               return yield* scanFailed(`vault sync refused changed local file ${displayPath}`);
             }

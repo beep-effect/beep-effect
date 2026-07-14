@@ -82,6 +82,25 @@ const ProcfsUnavailableSyncEngineTestLayer = DocumentsSyncFixtureLive.pipe(
   Layer.provideMerge(BunPath.layer)
 );
 
+const ProcfsUnavailableMissingInodeFileSystemLayer = Layer.effect(
+  FileSystem.FileSystem,
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    return {
+      ...fs,
+      stat: Effect.fnUntraced(function* (candidate: string) {
+        const info = yield* fs.stat(candidate);
+        return { ...info, ino: O.none() };
+      }),
+    };
+  })
+).pipe(Layer.provide(ProcfsUnavailableFileSystemLayer));
+
+const ProcfsUnavailableMissingInodeSyncEngineTestLayer = DocumentsSyncFixtureLive.pipe(
+  Layer.provideMerge(ProcfsUnavailableMissingInodeFileSystemLayer),
+  Layer.provideMerge(BunPath.layer)
+);
+
 const workspaceId = S.decodeUnknownSync(WorkspaceIdentity.WorkspaceId)(7);
 const decodeVaultRelPath = S.decodeUnknownSync(VaultRelPath);
 const encodeText = (text: string) => new TextEncoder().encode(text);
@@ -194,16 +213,35 @@ describe("@beep/documents-server VaultSyncEngine", () => {
     Effect.gen(function* () {
       const engine = yield* VaultSyncEngine;
       const handle = yield* DmsMirrorFixtureHandle;
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
       const root = yield* makeVaultRoot();
       yield* writeVaultFile(root, "portable.txt", "portable body");
+      const info = yield* fs.stat(path.join(root, "portable.txt"));
 
       const status = yield* engine.syncOnce(syncInput(root));
       const tree = yield* handle.snapshotTree;
 
+      expect(O.isSome(info.ino)).toBe(true);
       expect(nodeDigest(tree["portable.txt"])).toBe(digestOf("portable body"));
       expect(status.currentItems).toBe(1);
       expect(status.failedOperations).toBe(0);
     }).pipe(provideScopedLayer(ProcfsUnavailableSyncEngineTestLayer))
+  );
+
+  it.effect("refuses a vault file when procfs and inode identity are unavailable", () =>
+    Effect.gen(function* () {
+      const engine = yield* VaultSyncEngine;
+      const root = yield* makeVaultRoot();
+      yield* writeVaultFile(root, "unidentified.txt", "unidentified body");
+
+      const refusal = yield* Effect.flip(engine.syncOnce(syncInput(root)));
+
+      expect(refusal).toMatchObject({
+        _tag: "VaultScanFailed",
+        reason: "vault sync refused changed local file unidentified.txt",
+      });
+    }).pipe(provideScopedLayer(ProcfsUnavailableMissingInodeSyncEngineTestLayer))
   );
 
   it.effect("converges a local rename without re-uploading content", () =>

@@ -18,7 +18,7 @@ import { makeDataset, serializeQuad } from "@beep/rdf/Rdf";
 import { NonNegativeInt } from "@beep/schema";
 import { CanonicalizationService, FingerprintDatasetRequest } from "@beep/semantic-web/services/canonicalization";
 import { A, O } from "@beep/utils";
-import { Context, Effect, Layer, Path, pipe, Semaphore } from "effect";
+import { Config, Context, Effect, FileSystem, Layer, Path, pipe, Semaphore } from "effect";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 import {
@@ -360,16 +360,19 @@ const makeOntologyToolService = Effect.gen(function* () {
   const validation = yield* OntologyValidationRunner;
   const canonicalization = yield* CanonicalizationService;
   const reasoner = yield* OntologyReasoner;
+  const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const workspaceRoot = yield* Config.nonEmptyString("ONTOLOGY_WORKSPACE_ROOT");
+  const canonicalWorkspaceRoot = yield* fileSystem.realPath(workspaceRoot);
   // The desktop sidecar is the sole v1 write authority for files exposed via
   // /mcp. This semaphore closes compare/apply/write TOCTOU inside that process;
   // deliberately no cross-process lock or stateful session repository exists.
   const mutationSemaphore = yield* Semaphore.make(1);
   const ensureProvenanceDestinationsAvailable = Effect.fn("Ontology.Tools.ensureProvenanceDestinationsAvailable")(
     function* (request: ExportProvenanceRequest) {
-      const sourcePath = path.normalize(request.path);
-      const provPath = path.normalize(request.provPath);
-      const datasetPath = path.normalize(request.datasetPath);
+      const sourcePath = path.resolve(canonicalWorkspaceRoot, path.normalize(request.path));
+      const provPath = path.resolve(canonicalWorkspaceRoot, path.normalize(request.provPath));
+      const datasetPath = path.resolve(canonicalWorkspaceRoot, path.normalize(request.datasetPath));
       if (Eq.equals(sourcePath, provPath) || Eq.equals(sourcePath, datasetPath) || Eq.equals(provPath, datasetPath)) {
         return yield* executionError(
           "export-provenance",
