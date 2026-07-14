@@ -138,8 +138,12 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `court-vocabulary-resolver` graduates later in this campaign, then
   `citation-ground-before-cite`; MPEP patterns, hosted enrichment, matter-wall
   enforcement, and rich-text annotation remain gated follow-ons.
+  [`effect-orchestration-patterns`](./effect-orchestration-patterns/README.md)
+  (stage `graduate`, still active for four demand-gated candidates): graduated
+  [`effect-v4-workflow-engine-spike`](../goals/effect-v4-workflow-engine-spike/README.md)
+  on 2026-07-14. Consumer-led reframe: Effect v4 workflow and promoted
+  `@beep/api-transport` supersede the original helper-bundle premise.
   **Queued (P2/P3, research-complete):**
-  [`effect-orchestration-patterns`](./effect-orchestration-patterns/README.md),
   [`agent-memory-tiers-bitemporal-edges`](./agent-memory-tiers-bitemporal-edges/README.md),
   [`deterministic-doc-structure-extraction`](./deterministic-doc-structure-extraction/README.md)
   (langextract streaming-lock sibling),
