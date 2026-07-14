@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-13",
+  "generatedOn": "2026-07-14",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "enforcedRoots": [
     "packages/tooling/tool/cli/src/commands/Laws/DualArity.ts",
