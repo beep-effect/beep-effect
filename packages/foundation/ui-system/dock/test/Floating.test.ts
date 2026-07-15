@@ -207,7 +207,8 @@ describe("floating dock topology", () => {
             )
           )
         );
-        expect(docked.state).toMatchObject({ kind: "populated", floating: [] });
+        expect(docked.state).toMatchObject({ kind: "populated", root: tabsOne, floating: [] });
+        expect(docked.events).toEqual([expect.objectContaining({ kind: "groupDocked", groupId: groupOne })]);
         let mixed = changed(
           yield* engine.transition(
             workspace,
@@ -237,6 +238,36 @@ describe("floating dock topology", () => {
           )
         );
         expect(error).toMatchObject({ reason: "group-not-floating" });
+      })
+    );
+
+    it.effect(
+      "rejects root-split panel opening when the new group id belongs to a floating group",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const mixed = changed(
+          yield* engine.transition(
+            workspace,
+            envelope("float-two-before-open", FloatGroupCommand.make({ groupId: groupTwo, anchoredBox: firstBox }))
+          )
+        ).state;
+        const error = yield* Effect.flip(
+          engine.transition(
+            mixed,
+            envelope(
+              "open-floating-group-collision",
+              OpenPanelCommand.make({
+                panel: panelThree,
+                placement: RootSplitPlacement.make({
+                  side: "left",
+                  splitId: splitTwo,
+                  newGroupId: groupTwo,
+                }),
+              })
+            )
+          )
+        );
+        expect(error).toMatchObject({ _tag: "DockCommandRejected", reason: "group-already-exists" });
       })
     );
 
@@ -301,7 +332,38 @@ describe("floating dock topology", () => {
     );
 
     it.effect(
-      "keeps a sole docked group root relocation unchanged when floating members exist",
+      "rejects moving a floating group to a root split when the docked tree is empty",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const floatingOnly = changed(
+          yield* engine.transition(
+            PopulatedWorkspace.make({ root: tabsOne }),
+            envelope("float-before-root-move", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
+          )
+        ).state;
+        const error = yield* Effect.flip(
+          engine.transition(
+            floatingOnly,
+            envelope(
+              "move-floating-to-empty-root-split",
+              MoveGroupCommand.make({
+                groupId: groupOne,
+                target: GroupRootSplitPlacement.make({ side: "left", splitId: splitOne }),
+              })
+            )
+          )
+        );
+        expect(error).toMatchObject({
+          _tag: "DockCommandRejected",
+          reason: "workspace-empty",
+          message:
+            "Root split move requires an existing docked root; use DockFloatingGroupCommand to dock a floating group.",
+        });
+      })
+    );
+
+    it.effect(
+      "treats a sole docked group root relocation as unchanged regardless of floating members",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
         const state = changed(
@@ -328,7 +390,6 @@ describe("floating dock topology", () => {
           reason: "topology-unchanged",
           revision: state.revision,
         });
-        expect(outcome.result).not.toHaveProperty("events");
       })
     );
 

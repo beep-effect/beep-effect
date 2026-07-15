@@ -295,11 +295,11 @@ const openPanel = Effect.fn("DockReducer.openPanel")(function* (
             "Root split placement requires an existing docked root; use root placement to open the first docked panel."
           ),
         populated: Effect.fnUntraced(function* (workspace) {
-          yield* Bool.match(O.isSome(DockNode.findTabs(workspace.root, placement.newGroupId)), {
+          yield* Bool.match(O.isSome(DockWorkspace.findTabs(state, placement.newGroupId)), {
             onTrue: () => reject(envelope, "group-already-exists", `Group '${placement.newGroupId}' already exists.`),
             onFalse: thunkEffectVoid,
           });
-          yield* Bool.match(O.isSome(DockNode.findSplit(workspace.root, placement.splitId)), {
+          yield* Bool.match(O.isSome(DockWorkspace.findSplit(state, placement.splitId)), {
             onTrue: () => reject(envelope, "split-already-exists", `Split '${placement.splitId}' already exists.`),
             onFalse: thunkEffectVoid,
           });
@@ -907,28 +907,27 @@ const moveGroupForest = Effect.fn("DockReducer.moveGroupForest")(function* (
         GroupMovedEvent.make({ groupId: source.groupId, splitId: target.splitId }),
       ]);
     }),
-    groupRootSplit: Effect.fnUntraced(function* (target) {
-      if (
-        !DockWorkspace.isFloatingGroup(state, source.groupId) &&
-        DockWorkspace.match(removed, {
-          empty: () => true,
-          populated: () => false,
-        })
-      ) {
-        return unchanged(state, envelope, "topology-unchanged");
-      }
-      if (O.isSome(DockWorkspace.findSplit(removed, target.splitId)))
-        return yield* reject(envelope, "split-already-exists", `Split '${target.splitId}' already exists.`);
-      const root = DockWorkspace.match(removed, {
-        empty: () => source,
-        populated: ({ root }) => SplitNode.fromNodes(root, source, target),
-      });
-      const next = installDockedRoot(removed, root);
-      return yield* changed(state, envelope, (revision) => [
-        DockWorkspace.withRevision(next, revision),
-        GroupMovedEvent.make({ groupId: source.groupId, splitId: target.splitId }),
-      ]);
-    }),
+    groupRootSplit: (target) =>
+      DockWorkspace.match(removed, {
+        empty: () =>
+          DockWorkspace.isFloatingGroup(state, source.groupId)
+            ? reject(
+                envelope,
+                "workspace-empty",
+                "Root split move requires an existing docked root; use DockFloatingGroupCommand to dock a floating group."
+              )
+            : Effect.succeed(unchanged(state, envelope, "topology-unchanged")),
+        populated: Effect.fnUntraced(function* ({ root: currentRoot }) {
+          if (O.isSome(DockWorkspace.findSplit(removed, target.splitId)))
+            return yield* reject(envelope, "split-already-exists", `Split '${target.splitId}' already exists.`);
+          const root = SplitNode.fromNodes(currentRoot, source, target);
+          const next = installDockedRoot(removed, root);
+          return yield* changed(state, envelope, (revision) => [
+            DockWorkspace.withRevision(next, revision),
+            GroupMovedEvent.make({ groupId: source.groupId, splitId: target.splitId }),
+          ]);
+        }),
+      }),
   });
 });
 
