@@ -194,5 +194,22 @@ describe("hidden groups and maximize", () => {
         expect(O.getOrThrow(DockWorkspace.findTabs(decoded, groupTwo)).metadata.visible).toBe(false);
       })
     );
+
+    it.effect(
+      "emits exactly one restore event when activating an already-active panel outside the maximized group",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const maximized = yield* requireChanged(yield* engine.transition(workspace, maximize()));
+        const result = yield* requireChanged(
+          yield* engine.transition(
+            maximized.state,
+            envelope("activate-restore-only", ActivatePanelCommand.make({ panelId: panelTwo.id }))
+          )
+        );
+        const restoreEvents = A.filter(result.events, (event) => event.kind === "groupRestored");
+        expect(restoreEvents).toEqual([expect.objectContaining({ kind: "groupRestored", groupId: groupOne })]);
+        expect(O.isNone((yield* requirePopulated(result.state)).maximized)).toBe(true);
+      })
+    );
   });
 });

@@ -356,7 +356,9 @@ const activatePanelCommand = Effect.fn("DockReducer.activatePanel")(function* (
   const allEvents = pipe(
     events,
     reveal && panelChanged ? A.append(GroupUpdatedEvent.make({ groupId: tabs.groupId })) : (value) => value,
-    restore && O.isSome(maximized) ? A.append(GroupRestoredEvent.make({ groupId: maximized.value })) : (value) => value
+    restore && (panelChanged || reveal) && O.isSome(maximized)
+      ? A.append(GroupRestoredEvent.make({ groupId: maximized.value }))
+      : (value) => value
   );
   // fallow-ignore-next-line code-duplication
   const replaced = DockWorkspace.replaceAtGroup(state, nextTabs.groupId, nextTabs);
