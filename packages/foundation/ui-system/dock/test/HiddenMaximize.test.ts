@@ -124,6 +124,7 @@ describe("hidden groups and maximize", () => {
             yield* engine.transition(maximized.state, envelope(`structural-${index}`, command))
           );
           expect(result.events.at(-1)).toMatchObject({ kind: "groupRestored", groupId: groupOne });
+          expect(O.isNone((yield* requirePopulated(result.state)).maximized)).toBe(true);
         }
       })
     );

@@ -2,6 +2,7 @@ import {
   ActivatePanelCommand,
   AnchoredBox,
   BottomRightAnchoredBox,
+  ClearWorkspaceCommand,
   ClosePanelCommand,
   DockBox,
   DockEngine,
@@ -353,6 +354,53 @@ describe("floating dock topology", () => {
         const geometry = projectWorkspace(maximized.state, DockBox.make({ left: 0, top: 0, width: 800, height: 600 }));
         expect(geometry.groups[0]?.box).toEqual(DockBox.make({ left: 0, top: 0, width: 800, height: 600 }));
         expect(geometry.floating).toHaveLength(1);
+      })
+    );
+
+    it.effect(
+      "clears both a populated docked tree and its floating members",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const withFloating = changed(
+          yield* engine.transition(
+            workspace,
+            envelope("float-before-clear", FloatGroupCommand.make({ groupId: groupTwo, anchoredBox: firstBox }))
+          )
+        ).state;
+        const cleared = changed(
+          yield* engine.transition(withFloating, envelope("clear-populated", ClearWorkspaceCommand.make()))
+        );
+        expect(cleared.state).toMatchObject({ kind: "empty", floating: [] });
+        expect(cleared.events).toContainEqual(expect.objectContaining({ kind: "workspaceCleared" }));
+      })
+    );
+
+    it.effect(
+      "clears floating members from an empty-root workspace",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const floatingOnly = changed(
+          yield* engine.transition(
+            PopulatedWorkspace.make({ root: tabsOne }),
+            envelope("float-only-before-clear", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
+          )
+        ).state;
+        const cleared = changed(
+          yield* engine.transition(floatingOnly, envelope("clear-floating-only", ClearWorkspaceCommand.make()))
+        );
+        expect(cleared.state).toMatchObject({ kind: "empty", floating: [] });
+        expect(cleared.events).toContainEqual(expect.objectContaining({ kind: "workspaceCleared" }));
+      })
+    );
+
+    it.effect(
+      "rejects clearing a workspace with no docked tree or floating members",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const error = yield* Effect.flip(
+          engine.transition(DockWorkspace.empty, envelope("clear-empty", ClearWorkspaceCommand.make()))
+        );
+        expect(error).toMatchObject({ reason: "workspace-empty" });
       })
     );
   });

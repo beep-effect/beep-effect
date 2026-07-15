@@ -287,7 +287,7 @@ export class ResizeSplitCommand extends S.Class<ResizeSplitCommand>($I`ResizeSpl
 ) {}
 
 /**
- * Command that clears the complete workspace.
+ * Command that clears the docked tree and all floating members.
  *
  * @example
  * ```ts
@@ -305,7 +305,7 @@ export class ClearWorkspaceCommand extends S.Class<ClearWorkspaceCommand>($I`Cle
     kind: S.tag("clearWorkspace"),
   },
   $I.annote("ClearWorkspaceCommand", {
-    description: "Clears every panel and layout node atomically.",
+    description: "Clears the docked tree and all floating members atomically.",
   })
 ) {}
 

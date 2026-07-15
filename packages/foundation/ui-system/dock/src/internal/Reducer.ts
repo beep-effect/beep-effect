@@ -624,7 +624,12 @@ const clearWorkspace = Effect.fn("DockReducer.clearWorkspace")(function* (
   _command: ClearWorkspaceCommand
 ) {
   return yield* DockWorkspace.match(state, {
-    empty: () => reject(envelope, "workspace-empty", "The workspace is already empty."),
+    empty: (workspace) =>
+      A.match(workspace.floating, {
+        onEmpty: () => reject(envelope, "workspace-empty", "The workspace is already empty."),
+        onNonEmpty: () =>
+          changed(workspace, envelope, (revision) => [EmptyWorkspace.make({ revision }), WorkspaceClearedEvent.make()]),
+      }),
     populated: (workspace) =>
       changed(workspace, envelope, (revision) => [EmptyWorkspace.make({ revision }), WorkspaceClearedEvent.make()]),
   });
@@ -1033,6 +1038,9 @@ export const reduceDockCommand = Effect.fn("DockReducer.reduceDockCommand")(func
           origin: rawResult.origin,
           result: DockChanged.make({
             ...outcome,
+            state: DockWorkspace.guards.populated(outcome.state)
+              ? PopulatedWorkspace.make({ ...outcome.state, maximized: O.none() })
+              : outcome.state,
             events: A.append(outcome.events, GroupRestoredEvent.make({ groupId: previousMaximized })),
           }),
         });
