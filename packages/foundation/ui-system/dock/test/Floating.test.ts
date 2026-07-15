@@ -19,8 +19,10 @@ import {
   MoveFloatingGroupCommand,
   MoveGroupCommand,
   MovePanelCommand,
+  OpenPanelCommand,
   PopulatedWorkspace,
   projectWorkspace,
+  RootSplitPlacement,
   resolveAnchoredBox,
   SplitLayout,
   SplitNode,
@@ -233,6 +235,70 @@ describe("floating dock topology", () => {
           )
         );
         expect(error).toMatchObject({ reason: "group-not-floating" });
+      })
+    );
+
+    it.effect(
+      "rejects root-split panel opening when its new group collides with a floating group",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const floatingOnly = changed(
+          yield* engine.transition(
+            PopulatedWorkspace.make({ root: tabsOne }),
+            envelope("float", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
+          )
+        ).state;
+        const error = yield* Effect.flip(
+          engine.transition(
+            floatingOnly,
+            envelope(
+              "open-colliding-root-split",
+              OpenPanelCommand.make({
+                panel: panelTwo,
+                placement: RootSplitPlacement.make({
+                  side: "left",
+                  splitId: splitOne,
+                  newGroupId: groupOne,
+                }),
+              })
+            )
+          )
+        );
+        expect(error).toMatchObject({ reason: "group-already-exists" });
+      })
+    );
+
+    it.effect(
+      "opens a root-split panel with a fresh group beside an empty workspace's floating member",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const floatingOnly = changed(
+          yield* engine.transition(
+            PopulatedWorkspace.make({ root: tabsOne }),
+            envelope("float", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
+          )
+        ).state;
+        const opened = changed(
+          yield* engine.transition(
+            floatingOnly,
+            envelope(
+              "open-fresh-root-split",
+              OpenPanelCommand.make({
+                panel: panelTwo,
+                placement: RootSplitPlacement.make({
+                  side: "left",
+                  splitId: splitOne,
+                  newGroupId: groupTwo,
+                }),
+              })
+            )
+          )
+        );
+        expect(opened.state).toMatchObject({
+          kind: "populated",
+          root: { _tag: "Tabs", groupId: groupTwo },
+          floating: [{ root: tabsOne }],
+        });
       })
     );
 

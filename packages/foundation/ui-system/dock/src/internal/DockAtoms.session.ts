@@ -31,7 +31,9 @@ import type { DockMutationOutcome } from "../Dock.outcomes.ts";
 import type { DockWorkspace } from "../Dock.tree.ts";
 
 const $I = $DockId.create("DockAtoms.session");
-const SNAPSHOT_REACTIVITY_KEY = "dockview-snapshot";
+
+/** Shared reactivity key for persisted dock snapshots. */
+export const SNAPSHOT_REACTIVITY_KEY = "dockview-snapshot";
 
 interface DockAtomSessionShape {
   readonly awaitIdle: Effect.Effect<void>;

@@ -288,8 +288,16 @@ const openPanel = Effect.fn("DockReducer.openPanel")(function* (
     }),
     rootSplit: (placement) =>
       DockWorkspace.match(state, {
-        empty: (workspace) =>
-          Eq.equals(A.length(workspace.floating), 0)
+        empty: Effect.fnUntraced(function* (workspace) {
+          yield* Bool.match(O.isSome(DockWorkspace.findTabs(state, placement.newGroupId)), {
+            onTrue: () => reject(envelope, "group-already-exists", `Group '${placement.newGroupId}' already exists.`),
+            onFalse: thunkEffectVoid,
+          });
+          yield* Bool.match(O.isSome(DockWorkspace.findSplit(state, placement.splitId)), {
+            onTrue: () => reject(envelope, "split-already-exists", `Split '${placement.splitId}' already exists.`),
+            onFalse: thunkEffectVoid,
+          });
+          return yield* Eq.equals(A.length(workspace.floating), 0)
             ? reject(envelope, "workspace-empty", "Root split placement requires an existing docked or floating tree.")
             : changed(workspace, envelope, (revision) => [
                 PopulatedWorkspace.make({
@@ -298,7 +306,8 @@ const openPanel = Effect.fn("DockReducer.openPanel")(function* (
                   floating: workspace.floating,
                 }),
                 PanelOpenedEvent.make({ panelId: command.panel.id, groupId: placement.newGroupId }),
-              ]),
+              ]);
+        }),
         populated: Effect.fnUntraced(function* (workspace) {
           yield* Bool.match(O.isSome(DockNode.findTabs(workspace.root, placement.newGroupId)), {
             onTrue: () => reject(envelope, "group-already-exists", `Group '${placement.newGroupId}' already exists.`),
@@ -502,287 +511,6 @@ const updateGroup = Effect.fn("DockReducer.updateGroup")(function* (
       ? [GroupUpdatedEvent.make({ groupId: tabs.groupId }), GroupRestoredEvent.make({ groupId: maximized.value })]
       : [GroupUpdatedEvent.make({ groupId: tabs.groupId })],
   ]);
-});
-
-const movePanel = Effect.fn("DockReducer.movePanel")(function* (
-  state: DockWorkspace,
-  envelope: DockCommandEnvelope,
-  command: MovePanelCommand
-) {
-  return yield* DockWorkspace.match(state, {
-    empty: () => reject(envelope, "panel-not-found", `Panel '${command.panelId}' does not exist.`),
-    populated: Effect.fnUntraced(function* (workspace) {
-      // fallow-ignore-next-line code-duplication
-      const source = yield* Effect.fromOption(TabsNode.findForPanel(workspace.root, command.panelId), () =>
-        reject(envelope, "panel-not-found", `Panel '${command.panelId}' does not exist.`)
-      );
-      const panel = yield* Effect.fromOption(Panel.findInTabs(source, command.panelId), () =>
-        reject(envelope, "panel-not-found", `Panel '${command.panelId}' does not exist.`)
-      );
-
-      if (DockMoveTarget.guards.tab(command.target) && GroupId.equals(source.groupId, command.target.groupId)) {
-        if (O.isNone(command.target.index)) {
-          return yield* reject(envelope, "same-group-move", "A same-group move requires an insertion index.");
-        }
-        const panels = TabsNode.panels(source);
-        const currentIndex = yield* O.match(
-          A.findFirstIndex(panels, (candidate) => PanelId.equals(candidate.id, command.panelId)),
-          {
-            onNone: () =>
-              DockInvariantViolation.make({
-                reason: "topology-corrupted",
-                message: "The source panel disappeared from its owning group.",
-              }),
-            onSome: Effect.succeed,
-          }
-        );
-        const without = A.remove(panels, currentIndex);
-        const resolvedIndex = N.clamp(command.target.index.value, { minimum: 0, maximum: A.length(without) });
-        if (Eq.equals(currentIndex, resolvedIndex)) {
-          return unchanged(workspace, envelope, "panel-position-unchanged");
-        }
-        const reordered = O.getOrThrow(A.insertAt(without, resolvedIndex, panel)); // crispen: total after clamp; use total insert when available.
-        return yield* changed(workspace, envelope, (revision) => [
-          PopulatedWorkspace.make({
-            revision,
-            root: DockNode.replaceAtGroup(
-              workspace.root,
-              source.groupId,
-              TabsNode.fromPanels(source.groupId, reordered, source.active.id, source.metadata)
-            ),
-          }),
-          PanelReorderedEvent.make({
-            panelId: panel.id,
-            groupId: source.groupId,
-            index: NonNegativeInt.make(resolvedIndex),
-          }),
-        ]);
-      }
-
-      yield* DockMoveTarget.match(command.target, {
-        tab: Effect.fnUntraced(function* (target) {
-          const targetTabs = yield* Effect.fromOption(DockNode.findTabs(workspace.root, target.groupId), () =>
-            reject(envelope, "group-not-found", `Group '${target.groupId}' does not exist.`)
-          );
-          yield* Bool.match(GroupId.equals(source.groupId, targetTabs.groupId), {
-            onTrue: () => reject(envelope, "same-group-move", "Move destination must be a different group."),
-            onFalse: thunkEffectVoid,
-          });
-        }),
-        split: Effect.fnUntraced(function* (target) {
-          yield* Bool.match(O.isSome(DockNode.findTabs(workspace.root, target.newGroupId)), {
-            onTrue: () => reject(envelope, "group-already-exists", `Group '${target.newGroupId}' already exists.`),
-            onFalse: thunkEffectVoid,
-          });
-          yield* Bool.match(O.isSome(DockNode.findSplit(workspace.root, target.splitId)), {
-            onTrue: () => reject(envelope, "split-already-exists", `Split '${target.splitId}' already exists.`),
-            onFalse: thunkEffectVoid,
-          });
-          const reference = yield* Effect.fromOption(DockNode.findTabs(workspace.root, target.referenceGroupId), () =>
-            reject(envelope, "group-not-found", `Reference group '${target.referenceGroupId}' does not exist.`)
-          );
-          yield* Bool.match(
-            Bool.and(
-              GroupId.equals(source.groupId, reference.groupId),
-              Eq.equals(A.length(TabsNode.panels(source)), 1)
-            ),
-            {
-              onTrue: () =>
-                reject(
-                  envelope,
-                  "source-group-would-disappear",
-                  "The only panel in a group cannot be docked beside that same group."
-                ),
-              onFalse: thunkEffectVoid,
-            }
-          );
-        }),
-        rootSplit: Effect.fnUntraced(function* (target) {
-          yield* Bool.match(O.isSome(DockNode.findTabs(workspace.root, target.newGroupId)), {
-            onTrue: () => reject(envelope, "group-already-exists", `Group '${target.newGroupId}' already exists.`),
-            onFalse: thunkEffectVoid,
-          });
-          yield* Bool.match(O.isSome(DockNode.findSplit(workspace.root, target.splitId)), {
-            onTrue: () => reject(envelope, "split-already-exists", `Split '${target.splitId}' already exists.`),
-            onFalse: thunkEffectVoid,
-          });
-        }),
-      });
-
-      const rootWithoutSource = yield* pipe(
-        TabsNode.remove(source, command.panelId),
-        O.map((remaining) => DockNode.replaceAtGroup(workspace.root, remaining.groupId, remaining)),
-        O.orElse(() => DockNode.removeTabs(workspace.root, source.groupId)),
-        O.match({
-          onSome: Effect.succeed,
-          onNone: () =>
-            DockInvariantViolation.make({
-              reason: "topology-corrupted",
-              message: "A valid move destination must survive removal of the source panel.",
-            }),
-        })
-      );
-
-      const destination = yield* DockMoveTarget.match(command.target, {
-        tab: (target) =>
-          Effect.fromOption(DockNode.findTabs(rootWithoutSource, target.groupId), () =>
-            DockInvariantViolation.make({
-              reason: "topology-corrupted",
-              message: "Move destination disappeared while collapsing the source group.",
-            })
-          ).pipe(
-            Effect.map((currentTarget) => ({
-              groupId: currentTarget.groupId,
-              root: DockNode.replaceAtGroup(
-                rootWithoutSource,
-                currentTarget.groupId,
-                TabsNode.insert(currentTarget, panel, target)
-              ),
-            }))
-          ),
-        split: (target) =>
-          Effect.fromOption(DockNode.findTabs(rootWithoutSource, target.referenceGroupId), () =>
-            DockInvariantViolation.make({
-              reason: "topology-corrupted",
-              message: "Split reference disappeared while collapsing the source group.",
-            })
-          ).pipe(
-            Effect.map((reference) => ({
-              groupId: target.newGroupId,
-              root: DockNode.replaceAtGroup(
-                rootWithoutSource,
-                reference.groupId,
-                SplitNode.fromPlacement(reference, panel, target)
-              ),
-            }))
-          ),
-        rootSplit: (target) =>
-          Effect.succeed({
-            groupId: target.newGroupId,
-            root: SplitNode.fromNodes(
-              rootWithoutSource,
-              TabsNode.make({ groupId: target.newGroupId, active: panel }),
-              target
-            ),
-          }),
-      });
-
-      return yield* changed(workspace, envelope, (revision) => [
-        PopulatedWorkspace.make({
-          revision,
-          root: destination.root,
-        }),
-        PanelMovedEvent.make({
-          panelId: command.panelId,
-          fromGroupId: source.groupId,
-          toGroupId: destination.groupId,
-        }),
-      ]);
-    }),
-  });
-});
-
-const moveGroup = Effect.fn("DockReducer.moveGroup")(function* (
-  state: DockWorkspace,
-  envelope: DockCommandEnvelope,
-  command: MoveGroupCommand
-) {
-  return yield* DockWorkspace.match(state, {
-    empty: () => reject(envelope, "group-not-found", `Group '${command.groupId}' does not exist.`),
-    populated: Effect.fnUntraced(function* (workspace) {
-      const source = yield* Effect.fromOption(DockNode.findTabs(workspace.root, command.groupId), () =>
-        reject(envelope, "group-not-found", `Group '${command.groupId}' does not exist.`)
-      );
-      return yield* DockGroupMoveTarget.match(command.target, {
-        tab: Effect.fnUntraced(function* (target) {
-          if (GroupId.equals(source.groupId, target.groupId)) {
-            return yield* reject(envelope, "same-group-move", "A group cannot be merged into itself.");
-          }
-          const destination = yield* Effect.fromOption(DockNode.findTabs(workspace.root, target.groupId), () =>
-            reject(envelope, "group-not-found", `Group '${target.groupId}' does not exist.`)
-          );
-          const rootWithoutSource = yield* Effect.fromOption(DockNode.removeTabs(workspace.root, source.groupId), () =>
-            DockInvariantViolation.make({
-              reason: "topology-corrupted",
-              message: "A merge destination must survive source removal.",
-            })
-          );
-          const insertionIndex = O.getOrElse(target.index, () => A.length(TabsNode.panels(destination)));
-          const resolvedIndex = N.clamp(insertionIndex, {
-            minimum: 0,
-            maximum: A.length(TabsNode.panels(destination)),
-          });
-          const [before, after] = A.splitAt(TabsNode.panels(destination), resolvedIndex);
-          const mergedPanels = A.appendAll(A.appendAll(before, TabsNode.panels(source)), after);
-          const activeId = Bool.match(target.activate, {
-            onTrue: () => source.active.id,
-            onFalse: () => destination.active.id,
-          });
-          const merged = TabsNode.fromPanels(destination.groupId, mergedPanels, activeId, destination.metadata);
-          return yield* changed(workspace, envelope, (revision) => [
-            PopulatedWorkspace.make({
-              revision,
-              root: DockNode.replaceAtGroup(rootWithoutSource, destination.groupId, merged),
-            }),
-            GroupMergedEvent.make({
-              fromGroupId: source.groupId,
-              toGroupId: destination.groupId,
-              panelIds: A.map(TabsNode.panels(source), (panel) => panel.id),
-            }),
-          ]);
-        }),
-        groupSplit: Effect.fnUntraced(function* (target) {
-          if (GroupId.equals(source.groupId, target.referenceGroupId)) {
-            return yield* reject(envelope, "same-group-move", "A group cannot be relocated beside itself.");
-          }
-          yield* Bool.match(O.isSome(DockNode.findSplit(workspace.root, target.splitId)), {
-            onTrue: () => reject(envelope, "split-already-exists", `Split '${target.splitId}' already exists.`),
-            onFalse: thunkEffectVoid,
-          });
-          yield* Effect.fromOption(DockNode.findTabs(workspace.root, target.referenceGroupId), () =>
-            reject(envelope, "group-not-found", `Reference group '${target.referenceGroupId}' does not exist.`)
-          );
-          const rootWithoutSource = yield* Effect.fromOption(DockNode.removeTabs(workspace.root, source.groupId), () =>
-            DockInvariantViolation.make({
-              reason: "topology-corrupted",
-              message: "The relocation reference must survive source removal.",
-            })
-          );
-          const reference = yield* Effect.fromOption(
-            DockNode.findTabs(rootWithoutSource, target.referenceGroupId),
-            () =>
-              DockInvariantViolation.make({
-                reason: "topology-corrupted",
-                message: "The relocation reference disappeared during collapse.",
-              })
-          );
-          return yield* changed(workspace, envelope, (revision) => [
-            PopulatedWorkspace.make({
-              revision,
-              root: DockNode.replaceAtGroup(
-                rootWithoutSource,
-                reference.groupId,
-                SplitNode.fromNodes(reference, source, target)
-              ),
-            }),
-            GroupMovedEvent.make({ groupId: source.groupId, splitId: target.splitId }),
-          ]);
-        }),
-        groupRootSplit: Effect.fnUntraced(function* (target) {
-          yield* Bool.match(O.isSome(DockNode.findSplit(workspace.root, target.splitId)), {
-            onTrue: () => reject(envelope, "split-already-exists", `Split '${target.splitId}' already exists.`),
-            onFalse: thunkEffectVoid,
-          });
-          const rootWithoutSource = DockNode.removeTabs(workspace.root, source.groupId);
-          if (O.isNone(rootWithoutSource)) return unchanged(workspace, envelope, "topology-unchanged");
-          return yield* changed(workspace, envelope, (revision) => [
-            PopulatedWorkspace.make({ revision, root: SplitNode.fromNodes(rootWithoutSource.value, source, target) }),
-            GroupMovedEvent.make({ groupId: source.groupId, splitId: target.splitId }),
-          ]);
-        }),
-      });
-    }),
-  });
 });
 
 const closePanel = Effect.fn("DockReducer.closePanel")(function* (
@@ -1041,11 +769,6 @@ const installDockedRoot = (state: DockWorkspace, root: DockNode): DockWorkspace 
     empty: ({ revision, floating }) => PopulatedWorkspace.make({ revision, root, floating }),
     populated: ({ revision, maximized, floating }) => PopulatedWorkspace.make({ revision, root, maximized, floating }),
   });
-
-// Retained as docked-only reference implementations while the forest variants
-// below own public dispatch.
-void movePanel;
-void moveGroup;
 
 const movePanelForest = Effect.fn("DockReducer.movePanelForest")(function* (
   state: DockWorkspace,

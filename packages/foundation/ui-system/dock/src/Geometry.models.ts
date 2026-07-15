@@ -40,24 +40,10 @@ export const Extent = S.Finite.check(S.isGreaterThanOrEqualTo(0)).pipe(
 );
 
 /**
- * A finite non-negative rectangle in host pixel coordinates.
- *
- * Missing constructor fields default to zero, which represents an unmeasured
- * host container before its first resize observation.
- *
- * @example
- * ```ts
- * import { DockBox } from "./Geometry.ts"
- *
- * const empty = DockBox.make()
- * console.log(empty.width) // 0
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-/**
  * Finite non-negative rectangle in host pixel coordinates.
+ *
+ * @remarks Missing constructor fields default to zero, representing an
+ * unmeasured host container before its first resize observation.
  *
  * @example
  * ```ts

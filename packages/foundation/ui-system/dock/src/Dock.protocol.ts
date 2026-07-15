@@ -116,21 +116,7 @@ export class RestoreDockSnapshot extends S.Class<RestoreDockSnapshot>($I`Restore
 ) {}
 
 /**
- * Serialized Atom-session operation kind.
- *
- * @example
- * ```ts
- * import { DockAtomOperationKind } from "@beep/dock"
- *
- * const value = DockAtomOperationKind.make("saveSnapshot")
- * console.log(value)
- * ```
- *
- * @category protocols
- * @since 0.0.0
- */
-/**
- * Tagged algebra for every serialized Atom-session operation.
+ * Serialized operation-kind domain for the tagged algebra of every Atom-session operation.
  *
  * @example
  * ```ts

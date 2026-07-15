@@ -40,12 +40,6 @@ interface MakeTitleMinimaAtomInput {
 }
 
 /**
- * Pixel allowances added around measured tab titles.
- *
- * @category models
- * @since 0.0.0
- */
-/**
  * Pixel allowances surrounding measured tab titles.
  *
  * @example
@@ -67,12 +61,6 @@ export class TabChrome extends S.Class<TabChrome>($I`TabChrome`)(
   $I.annote("TabChrome", { description: "Per-tab and fixed tab-strip pixel allowances." })
 ) {}
 
-/**
- * Distinct sorted words from every docked and floating panel title.
- *
- * @category projections
- * @since 0.0.0
- */
 /**
  * Returns distinct sorted words from all docked and floating panel titles.
  *
@@ -99,13 +87,9 @@ export const titleWords = (workspace: DockWorkspace): ReadonlyArray<string> =>
   );
 
 /**
- * Per-group no-truncation title floors from an existing font-metrics snapshot.
- *
- * @category projections
- * @since 0.0.0
- */
-/**
  * Computes per-group no-truncation title floors from font metrics.
+ *
+ * @remarks The computation uses an existing font-metrics snapshot.
  *
  * @example
  * ```ts
@@ -166,12 +150,6 @@ export const titleMinima = (metrics: FontMetrics, workspace: DockWorkspace, chro
     })
   );
 
-/**
- * Reactive title minima backed by headless font-metrics capture.
- *
- * @category atoms
- * @since 0.0.0
- */
 /**
  * Composes a reactive title-minima projection with headless font capture.
  *

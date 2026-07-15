@@ -24,11 +24,9 @@ export {
 import { validateWorkspace } from "./Dock.reducer.ts";
 import { DockWorkspace } from "./Dock.tree.ts";
 import { DockEngineLive, DockSnapshotStore, makeDockSnapshotStoreMemory } from "./DockEngine.service.ts";
-import { DockAtomSession, makeDockAtomSessionLayer } from "./internal/DockAtoms.session.ts";
+import { DockAtomSession, makeDockAtomSessionLayer, SNAPSHOT_REACTIVITY_KEY } from "./internal/DockAtoms.session.ts";
 import type { GroupId, PanelId } from "./Dock.ids.ts";
 import type { DockEngine } from "./DockEngine.service.ts";
-
-const SNAPSHOT_REACTIVITY_KEY = "dockview-snapshot";
 
 /**
  * Console observability layer installed in each isolated Atom graph.
@@ -121,11 +119,9 @@ const makeDockAtomGraph = <E>(
 };
 
 /**
- * Creates a validated, isolated Atom session from a fully provided service
- * layer. Layer construction failures remain typed in the returned Effect.
- */
-/**
  * Builds a validated isolated Atom session from caller-provided services.
+ *
+ * @remarks Layer construction failures remain typed in the returned Effect.
  *
  * @example
  * ```ts

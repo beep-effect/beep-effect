@@ -84,11 +84,10 @@ const rejectNoDropReference = (
   });
 
 /**
- * Treats group locking as destination policy while preserving reorder and
- * outbound-move behavior.
- */
-/**
  * Destination policy enforcing persisted group locking metadata.
+ *
+ * @remarks Locking applies to destinations while preserving reorder and
+ * outbound-move behavior.
  *
  * @example
  * ```ts

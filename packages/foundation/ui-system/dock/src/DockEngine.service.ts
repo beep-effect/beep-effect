@@ -99,13 +99,11 @@ export interface DockEngineShape {
 }
 
 /**
- * Stateless dock transition capability consumed by the Atom runtime.
- *
- * Alternate layers can add policy, authorization, collaboration, or remote
- * execution without changing the atom graph.
- */
-/**
  * Context service for the stateless dock transition kernel.
+ *
+ * @remarks The Atom runtime consumes this capability, and alternate layers can
+ * add policy, authorization, collaboration, or remote execution without
+ * changing the atom graph.
  *
  * @example
  * ```ts

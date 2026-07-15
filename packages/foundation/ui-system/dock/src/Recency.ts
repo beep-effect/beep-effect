@@ -23,12 +23,6 @@ import type { DockAtomFeedEntry } from "./Dock.protocol.ts";
 const eventGroupId = (event: DockEvent): O.Option<GroupId> => ("groupId" in event ? O.some(event.groupId) : O.none());
 
 /**
- * Group ids touched by a batch of accepted events, in event order.
- *
- * @category projections
- * @since 0.0.0
- */
-/**
  * Projects group touches from accepted events in event order.
  *
  * @example
@@ -48,16 +42,10 @@ export const touchedGroupsInEvents: (events: ReadonlyArray<DockEvent>) => Readon
 );
 
 /**
- * Most-recently-touched group ids, newest first, deduplicated, derived
- * purely from the feed. Only successful mutation completions with a Changed
- * result contribute — failures, snapshot saves, and unchanged no-ops leave
- * recency untouched, matching the kernel's publish-once contract.
- *
- * @category projections
- * @since 0.0.0
- */
-/**
  * Projects newest-first deduplicated group recency from the operation feed.
+ *
+ * @remarks Only successful changed mutation completions contribute; failures,
+ * snapshot saves, and unchanged results preserve the current recency.
  *
  * @example
  * ```ts
@@ -98,15 +86,10 @@ export const touchedGroups: (entries: ReadonlyArray<DockAtomFeedEntry>) => Reado
 );
 
 /**
- * Derived MRU atom over a host's feed atom. Hosts wanting dockview's
- * MRU-on-close behavior read this and dispatch a follow-up activation; the
- * kernel keeps zipper promotion and stays MRU-free.
- *
- * @category atoms
- * @since 0.0.0
- */
-/**
  * Derives a most-recently-used group atom from a host feed atom.
+ *
+ * @remarks Hosts can use this projection to dispatch MRU-on-close activation
+ * while the kernel retains zipper promotion without storing MRU state.
  *
  * @example
  * ```ts
