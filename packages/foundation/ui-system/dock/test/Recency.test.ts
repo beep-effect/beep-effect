@@ -1,26 +1,25 @@
-import { NonNegativeInt } from "@beep/schema";
-import { describe, expect, it } from "@effect/vitest";
-import { Atom, AtomRegistry } from "effect/unstable/reactivity";
-import {
-  type DockAtomFeedEntry,
-  DockAtomFeedSuccess,
-  DockMutationCompleted,
-  DockSnapshotSaved,
-} from "../DockAtomProtocol.ts";
 import {
   ApiCommandOrigin,
   CommandId,
+  DockAtomFeedSuccess,
   DockChanged,
-  type DockEvent,
+  DockMutationCompleted,
   DockMutationOutcome,
+  DockSnapshotSaved,
   DockUnchanged,
   GroupUpdatedEvent,
+  makeMruGroupsAtom,
   PanelOpenedEvent,
   PopulatedWorkspace,
   TabsNode,
-} from "../Domain.ts";
-import { makeMruGroupsAtom, touchedGroups, touchedGroupsInEvents } from "../Recency.ts";
+  touchedGroups,
+  touchedGroupsInEvents,
+} from "@beep/dock";
+import { NonNegativeInt } from "@beep/schema";
+import { describe, expect, it } from "@effect/vitest";
+import { Atom, AtomRegistry } from "effect/unstable/reactivity";
 import { groupOne, groupTwo, panelOne } from "./Fixtures.ts";
+import type { DockAtomFeedEntry, DockEvent } from "@beep/dock";
 
 const workspace = PopulatedWorkspace.make({ root: TabsNode.make({ groupId: groupOne, active: panelOne }) });
 const origin = ApiCommandOrigin.make({ requestId: "recency-test" });

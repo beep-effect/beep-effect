@@ -1,16 +1,12 @@
-import { NonNegativeInt } from "@beep/schema";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
-import * as O from "effect/Option";
-import * as S from "effect/Schema";
-import { BottomRightAnchoredBox, TopLeftAnchoredBox } from "../AnchoredBox.ts";
-import { DockEngine, DockEngineLive } from "../DockEngine.ts";
 import {
   ActivatePanelCommand,
+  AnchoredBox,
+  BottomRightAnchoredBox,
   ClosePanelCommand,
-  type DockChanged,
+  DockBox,
+  DockEngine,
+  DockEngineLive,
   DockFloatingGroupCommand,
-  type DockMutationOutcome,
   DockMutationResult,
   DockSnapshot,
   DockWorkspace,
@@ -24,14 +20,24 @@ import {
   MoveGroupCommand,
   MovePanelCommand,
   PopulatedWorkspace,
+  projectWorkspace,
+  resolveAnchoredBox,
   SplitLayout,
   SplitNode,
   TabPlacement,
   TabsNode,
+  TopLeftAnchoredBox,
   UpdateGroupCommand,
-} from "../Domain.ts";
-import { DockBox, projectWorkspace, resolveAnchoredBox } from "../Geometry.ts";
+} from "@beep/dock";
+import { NonNegativeInt } from "@beep/schema";
+import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
+import * as Equal from "effect/Equal";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import { envelope, groupOne, groupTwo, panelOne, panelThree, panelTwo, splitOne, splitTwo } from "./Fixtures.ts";
+import type { DockChanged, DockMutationOutcome } from "@beep/dock";
 
 const firstBox = TopLeftAnchoredBox.make({ left: 10, top: 20, width: 300, height: 200 });
 const secondBox = BottomRightAnchoredBox.make({ right: 5, bottom: 6, width: 250, height: 180 });
@@ -306,4 +312,17 @@ describe("floating dock topology", () => {
     ).toBe("Failure");
     expect(EmptyWorkspace.make().floating).toEqual([]);
   });
+});
+
+describe("anchored box codec properties", () => {
+  it.effect("round-trips arbitrary anchored boxes through their codec", () =>
+    Effect.sync(() =>
+      fc.assert(
+        fc.property(S.toArbitrary(AnchoredBox), (box) => {
+          const decoded = O.flatMap(S.encodeOption(AnchoredBox)(box), S.decodeUnknownOption(AnchoredBox));
+          expect(O.exists(decoded, (value) => Equal.equals(value, box))).toBe(true);
+        })
+      )
+    )
+  );
 });

@@ -1,16 +1,11 @@
 import {
-  DispatchDockCommand,
-  DispatchUnknownDockCommand,
-  RestoreDockSnapshot,
-  SaveDockSnapshot,
-} from "../DockAtomProtocol.ts";
-import {
   ActivatePanelCommand,
   ApiCommandOrigin,
   ClearWorkspaceCommand,
   ClosePanelCommand,
   CommandId,
-  type DockCommand,
+  DispatchDockCommand,
+  DispatchUnknownDockCommand,
   DockCommandEnvelope,
   GroupId,
   MovePanelCommand,
@@ -19,8 +14,10 @@ import {
   PanelId,
   PopulatedWorkspace,
   ResizeSplitCommand,
+  RestoreDockSnapshot,
   RestoreSnapshotRequest,
   RootPlacement,
+  SaveDockSnapshot,
   SplitId,
   SplitLayout,
   SplitNode,
@@ -29,7 +26,8 @@ import {
   TabPlacement,
   TabsNode,
   TextPanelView,
-} from "../Domain.ts";
+} from "@beep/dock";
+import type { DockCommand } from "@beep/dock";
 
 export const groupOne = GroupId.make("group-one");
 export const groupTwo = GroupId.make("group-two");

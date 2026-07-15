@@ -564,15 +564,23 @@ directory names alone.
 
 `foundation` is layered:
 
-| Kind           | May depend on                                    |
-|----------------|--------------------------------------------------|
-| `primitive`    | `foundation/primitive`                           |
-| `modeling`     | `foundation/primitive`, `foundation/modeling`    |
-| `capability`   | `primitive`, `modeling`, `capability`            |
-| `ui-system`    | `primitive`, `modeling`, `ui-system`             |
+| Kind           | May depend on                                                  |
+|----------------|----------------------------------------------------------------|
+| `primitive`    | `foundation/primitive`                                         |
+| `modeling`     | `foundation/primitive`, `foundation/modeling`                  |
+| `capability`   | `primitive`, `modeling`, `capability`                          |
+| `ui-system`    | `primitive`, `modeling`, `ui-system`, `drivers` (narrow; below) |
 
 `ui-system` is a side branch, not a top layer. It does not depend on
 `foundation/capability` by default.
+
+The `ui-system` → `drivers` edge is narrow (ratified 2026-07-14; see
+`standards/architecture/DECISIONS.md`): a ui-system package may import a
+driver's browser-safe pure root (pure helpers, schemas, service tags) and may
+default a driver's browser-safe `/browser` layer as an overridable dependency
+injection default. A ui-system package must never import or compose a
+driver's server-only or secret-bearing surfaces, and must keep every live
+layer overridable by the consuming app.
 
 `drivers` is intentionally flat:
 

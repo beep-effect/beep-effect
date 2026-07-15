@@ -1,13 +1,6 @@
-import { NonNegativeInt } from "@beep/schema";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
-import * as S from "effect/Schema";
-import { DockEngine, DockEngineLive } from "../DockEngine.ts";
 import {
-  type DockChanged,
-  type DockMutationOutcome,
+  DockEngine,
+  DockEngineLive,
   DockMutationResult,
   DockNode,
   DockWorkspace,
@@ -25,7 +18,13 @@ import {
   TabPlacement,
   TabsNode,
   TextPanelView,
-} from "../Domain.ts";
+} from "@beep/dock";
+import { NonNegativeInt } from "@beep/schema";
+import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import {
   envelope,
   groupOne,
@@ -40,6 +39,7 @@ import {
   splitOne,
   splitTwo,
 } from "./Fixtures.ts";
+import type { DockChanged, DockMutationOutcome } from "@beep/dock";
 
 const splitThree = SplitId.make("split-three");
 const panelFour = Panel.make({

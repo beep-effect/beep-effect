@@ -1,21 +1,20 @@
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
-import { DockEngine, DockEngineLive } from "../DockEngine.ts";
 import {
   ActivatePanelCommand,
   ClosePanelCommand,
-  type DockChanged,
-  type DockMutationOutcome,
+  DockBox,
+  DockEngine,
+  DockEngineLive,
+  DockGeometry,
   DockMutationResult,
   DockWorkspace,
+  GeometryOptions,
   GroupMetadata,
   GroupPatch,
   MaximizeGroupCommand,
   MovePanelCommand,
   OpenPanelCommand,
   PopulatedWorkspace,
+  projectWorkspace,
   RestoreMaximizedCommand,
   SplitLayout,
   SplitNode,
@@ -23,9 +22,13 @@ import {
   TabPlacement,
   TabsNode,
   UpdateGroupCommand,
-} from "../Domain.ts";
-import { DockBox, DockGeometry, GeometryOptions, projectWorkspace } from "../Geometry.ts";
+} from "@beep/dock";
+import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
 import { envelope, groupOne, groupTwo, panelOne, panelThree, panelTwo, splitOne } from "./Fixtures.ts";
+import type { DockChanged, DockMutationOutcome } from "@beep/dock";
 
 const requireChanged = (outcome: DockMutationOutcome): Effect.Effect<DockChanged> =>
   DockMutationResult.match(outcome.result, {

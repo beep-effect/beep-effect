@@ -1,11 +1,10 @@
+import { DockCommandEnvelope, DockWorkspace, makeDockAtoms } from "@beep/dock";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { AsyncResult, AtomRegistry } from "effect/unstable/reactivity";
-import { makeDockAtoms } from "../DockAtoms.ts";
-import { DockCommandEnvelope, DockWorkspace } from "../Domain.ts";
 import {
   activatePanelOne,
   clearWorkspace,

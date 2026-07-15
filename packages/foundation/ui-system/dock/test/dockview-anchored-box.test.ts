@@ -1,6 +1,6 @@
+import { AnchoredBox } from "@beep/dock";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
-import { AnchoredBox } from "../dockview/poc/AnchoredBox.ts";
 
 describe("Dockview AnchoredBox", () => {
   const decode = S.decodeUnknownResult(AnchoredBox);

@@ -1,19 +1,15 @@
-import { NonNegativeInt } from "@beep/schema";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
-import * as O from "effect/Option";
-import { AtomRegistry } from "effect/unstable/reactivity";
-import { makeDockAtomsWith } from "../DockAtoms.ts";
-import { DockEngine, DockEngineLive, makeDockSnapshotStoreMemory } from "../DockEngine.ts";
-import { lockedGroupsPolicy, makePolicyDockEngineLayer } from "../DockPolicy.ts";
 import {
   ActivatePanelCommand,
-  type DockMutationOutcome,
+  DockEngine,
+  DockEngineLive,
   DockMutationResult,
-  type DockWorkspace,
   GroupMetadata,
+  lockedGroupsPolicy,
   MoveGroupCommand,
   MovePanelCommand,
+  makeDockAtomsWith,
+  makeDockSnapshotStoreMemory,
+  makePolicyDockEngineLayer,
   OpenPanelCommand,
   Panel,
   PanelId,
@@ -27,7 +23,12 @@ import {
   TabPlacement,
   TabsNode,
   TextPanelView,
-} from "../Domain.ts";
+} from "@beep/dock";
+import { NonNegativeInt } from "@beep/schema";
+import { describe, expect, it } from "@effect/vitest";
+import { Effect, Layer } from "effect";
+import * as O from "effect/Option";
+import { AtomRegistry } from "effect/unstable/reactivity";
 import {
   dispatch,
   envelope,
@@ -41,6 +42,7 @@ import {
   splitOne,
   splitTwo,
 } from "./Fixtures.ts";
+import type { DockMutationOutcome, DockWorkspace } from "@beep/dock";
 
 const panelFour = Panel.make({
   id: PanelId.make("panel-four"),

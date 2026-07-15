@@ -30,10 +30,23 @@ Capability cites (what already exists and moves or is consumed):
 ## Goal 2 — `thread-virtualization` (coordination-gated)
 
 Exact-height virtualization for the thread renderer in the editor stack.
-**Gate:** coordinate with the beep-effect6 write lane (it owns the
-professional-desktop/editor surfaces), secure an explicit ownership agreement,
-and complete the pretext-driver handoff before opening the packet. Consumes
-`@beep/pretext` root surface + a capture pass in the client.
+**Gate:** coordinate with the beep-effect6 write lane, secure an explicit
+ownership agreement, and complete the pretext-driver handoff before opening
+the packet. Consumes `@beep/pretext` root surface + a capture pass in the
+client. **Gate status 2026-07-14:** the beep-effect6 write-gate on
+`apps/professional-desktop` shell surfaces was RELEASED (owner confirmation;
+lane rotated off desktop) for
+[`goals/dock-substrate-landing`](../../goals/dock-substrate-landing/README.md);
+the editor-stack (thread renderer) surface is distinct — re-confirm ownership
+when opening this packet.
+
+## Goal 3 — `dock-substrate-landing` (OPENED 2026-07-14)
+
+Graduate the dock kernel/adapter into `@beep/dock` + `@beep/dock-react`
+(`packages/foundation/ui-system/`) and land the dock workspace as the root
+shell of `apps/professional-desktop`. Owned by
+[`goals/dock-substrate-landing`](../../goals/dock-substrate-landing/README.md);
+plan-of-record lives in that packet's SPEC/PLAN, not here.
 
 ## Routed residue (2026-07-14 sibling review)
 
@@ -46,13 +59,11 @@ and complete the pretext-driver handoff before opening the packet. Consumes
 
 ## Later candidates (unsequenced)
 
-- **Dock-adapter minima wiring** — panels measure tab titles via the driver
-  and feed `makeDockGeometryAtoms.minimaAtom` (kernel + atom already landed
-  2026-07-12; adapter wiring only).
-- **Bubble shrinkwrap** — `measureLineStats`/`walkLineRanges` shrinkwrap for
-  chat bubbles.
 - **Layout-as-unit-tests doctrine** — promote the fixture-oracle pattern into
   a documented testing practice once the driver's test layers exist.
+
+(Landed and removed from this list: dock-adapter minima wiring — PR #396,
+2026-07-14; bubble shrinkwrap — PR #399, 2026-07-14.)
 
 ## Sequencing rationale
 

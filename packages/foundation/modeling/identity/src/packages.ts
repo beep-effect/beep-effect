@@ -158,6 +158,8 @@ const generatedComposers = $I.compose(
   "lint-rules",
   "n3",
   "pretext",
+  "dock",
+  "dock-react",
   "ontology-client",
   "ontology-config",
   "ontology-domain",
@@ -1897,6 +1899,38 @@ export const $N3Id: Identity.IdentityComposer<"@beep/n3"> = composers.$N3Id;
  * @category configuration
  */
 export const $PretextId: Identity.IdentityComposer<"@beep/pretext"> = composers.$PretextId;
+
+/**
+ * Identity composer for `@beep/dock`.
+ *
+ * @example
+ * ```typescript
+ * import { $DockId } from "@beep/identity"
+ *
+ * const id = $DockId.make("Dock")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $DockId: Identity.IdentityComposer<"@beep/dock"> = composers.$DockId;
+
+/**
+ * Identity composer for `@beep/dock-react`.
+ *
+ * @example
+ * ```typescript
+ * import { $DockReactId } from "@beep/identity"
+ *
+ * const id = $DockReactId.make("DockReact")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $DockReactId: Identity.IdentityComposer<"@beep/dock-react"> = composers.$DockReactId;
 
 /**
  * Identity composer for `@beep/ontology-client`.

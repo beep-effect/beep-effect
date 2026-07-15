@@ -19,9 +19,15 @@ and line break from data. Agents gain *sight*.
 
 ## Next Open Question
 
-Goal #2 coordination gate: negotiate editor-stack file ownership with the
-beep-effect6 write lane before opening the thread-virtualization packet
-(gate re-confirmed still active 2026-07-14). Goal #1 is CLOSED: PR #391
+Dock graduation IS UNDERWAY: the beep-effect6 write-gate on
+`apps/professional-desktop` was RELEASED 2026-07-14 (owner confirmation; the
+lane rotated off desktop surfaces — checkout on `docs/graph-3d-view-packet`,
+campaign branch dormant since Jul 13), and the dock system graduates via
+[`goals/dock-substrate-landing/`](../../goals/dock-substrate-landing/README.md)
+(`@beep/dock` + `@beep/dock-react` under `foundation/ui-system`, then the
+dock shell lands at the app root). Thread-virtualization (Goal #2) remains a
+separate later candidate — its editor-stack surface is distinct from the
+shell swap; re-confirm ownership when opening it. Goal #1 is CLOSED: PR #391
 merged 2026-07-14 and
 [`goals/pretext-driver/`](../../goals/pretext-driver/README.md) is
 completed-retained with reflection. Dock-adapter title-minima wiring MERGED
@@ -42,6 +48,17 @@ package.
 
 ## Trail
 
+- 2026-07-14 (latest: DOCK GRADUATION OPENED, gate released): grill locked
+  the landing arc — `@beep/dock` + `@beep/dock-react` under
+  `packages/foundation/ui-system/` (purity boundary = package boundary), a
+  ratified narrow ui-system→drivers DECISION for the pretext minima edge,
+  and a four-coarse-panel dock shell replacing the professional-desktop
+  hash switcher. beep-effect6 write-gate on the app RELEASED (owner
+  confirmation; lane rotated off). Packet:
+  [`goals/dock-substrate-landing/`](../../goals/dock-substrate-landing/README.md)
+  (M1 kernel → M2 adapter + scratchpad retirement → M3 shell → M4 QA+close).
+  Kernel-work-stays-scratchpad precedent ends here by design: graduation is
+  the moment the packet system takes over.
 - 2026-07-14: sibling review kept the packet active at `graduate`; reduced the
   resume surface to the thread-virtualization ownership/handoff gate and routed
   Q2 plus dock-kernel residue to their existing owners.

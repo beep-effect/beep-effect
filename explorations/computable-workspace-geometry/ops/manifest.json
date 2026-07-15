@@ -6,11 +6,11 @@
     "status": "active",
     "stage": "graduate",
     "openQuestions": [
-      "Thread-virtualization coordination gate: secure beep-effect6 editor-stack ownership agreement and complete the pretext-driver handoff before opening the goal packet."
+      "Thread-virtualization: editor-stack ownership re-confirmation when the packet opens (the 2026-07-14 gate release covered the professional-desktop shell surfaces for dock-substrate-landing; the thread renderer surface is distinct)."
     ],
     "sources": ["RESEARCH.md"],
     "links": {
-      "goals": ["goals/pretext-driver"],
+      "goals": ["goals/pretext-driver", "goals/dock-substrate-landing"],
       "docs": ["docs/product/workspace-substrate.md"],
       "supersededBy": null
     },

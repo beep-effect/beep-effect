@@ -168,6 +168,12 @@
         ]
       },
       {
+        "name": "@beep/dock",
+        "patterns": [
+          "packages/foundation/ui-system/dock/src/**"
+        ]
+      },
+      {
         "name": "@beep/documents-domain",
         "patterns": [
           "packages/documents/domain/src/**"
@@ -1209,6 +1215,25 @@
           "@beep/doc-text",
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/dock",
+        "allow": [
+          "@beep/dock",
+          "@beep/identity",
+          "@beep/pretext",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/dock",
+          "@beep/identity",
+          "@beep/pretext",
           "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
