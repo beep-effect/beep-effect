@@ -126,7 +126,11 @@ export class SplitPlacement extends S.Class<SplitPlacement>($I`SplitPlacement`)(
 ) {}
 
 /**
- * Placement that inserts a new group against the workspace root.
+ * Placement that inserts a new group against an existing docked workspace root.
+ *
+ * @remarks
+ * This placement requires an existing docked root. Use {@link RootPlacement}
+ * to open the first docked panel in an empty-root workspace.
  *
  * @example
  * ```ts
@@ -148,7 +152,7 @@ export class RootSplitPlacement extends S.Class<RootSplitPlacement>($I`RootSplit
     newGroupRatio: SplitRatio.pipe(SchemaUtils.withConstantDefault<number>(5_000)),
   },
   $I.annote("RootSplitPlacement", {
-    description: "Creates a new tab group against one semantic edge of the complete workspace root.",
+    description: "Creates a new tab group against one semantic edge of an existing docked workspace root.",
   })
 ) {}
 

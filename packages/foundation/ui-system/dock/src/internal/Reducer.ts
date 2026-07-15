@@ -288,26 +288,12 @@ const openPanel = Effect.fn("DockReducer.openPanel")(function* (
     }),
     rootSplit: (placement) =>
       DockWorkspace.match(state, {
-        empty: Effect.fnUntraced(function* (workspace) {
-          yield* Bool.match(O.isSome(DockWorkspace.findTabs(state, placement.newGroupId)), {
-            onTrue: () => reject(envelope, "group-already-exists", `Group '${placement.newGroupId}' already exists.`),
-            onFalse: thunkEffectVoid,
-          });
-          yield* Bool.match(O.isSome(DockWorkspace.findSplit(state, placement.splitId)), {
-            onTrue: () => reject(envelope, "split-already-exists", `Split '${placement.splitId}' already exists.`),
-            onFalse: thunkEffectVoid,
-          });
-          return yield* Eq.equals(A.length(workspace.floating), 0)
-            ? reject(envelope, "workspace-empty", "Root split placement requires an existing docked or floating tree.")
-            : changed(workspace, envelope, (revision) => [
-                PopulatedWorkspace.make({
-                  revision,
-                  root: TabsNode.make({ groupId: placement.newGroupId, active: command.panel }),
-                  floating: workspace.floating,
-                }),
-                PanelOpenedEvent.make({ panelId: command.panel.id, groupId: placement.newGroupId }),
-              ]);
-        }),
+        empty: () =>
+          reject(
+            envelope,
+            "workspace-empty",
+            "Root split placement requires an existing docked root; use root placement to open the first docked panel."
+          ),
         populated: Effect.fnUntraced(function* (workspace) {
           yield* Bool.match(O.isSome(DockNode.findTabs(workspace.root, placement.newGroupId)), {
             onTrue: () => reject(envelope, "group-already-exists", `Group '${placement.newGroupId}' already exists.`),
@@ -925,7 +911,7 @@ const moveGroupForest = Effect.fn("DockReducer.moveGroupForest")(function* (
       if (
         !DockWorkspace.isFloatingGroup(state, source.groupId) &&
         DockWorkspace.match(removed, {
-          empty: ({ floating }) => Eq.equals(A.length(floating), 0),
+          empty: () => true,
           populated: () => false,
         })
       ) {

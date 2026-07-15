@@ -23,6 +23,7 @@ import {
   OpenPanelCommand,
   PopulatedWorkspace,
   projectWorkspace,
+  RootPlacement,
   RootSplitPlacement,
   resolveAnchoredBox,
   SplitLayout,
@@ -240,7 +241,7 @@ describe("floating dock topology", () => {
     );
 
     it.effect(
-      "rejects root-split panel opening when its new group collides with a floating group",
+      "rejects root-split panel opening when only floating members exist",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
         const floatingOnly = changed(
@@ -265,12 +266,12 @@ describe("floating dock topology", () => {
             )
           )
         );
-        expect(error).toMatchObject({ reason: "group-already-exists" });
+        expect(error).toMatchObject({ reason: "workspace-empty" });
       })
     );
 
     it.effect(
-      "opens a root-split panel with a fresh group beside an empty workspace's floating member",
+      "opens the first docked panel with root placement while preserving floating members",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;
         const floatingOnly = changed(
@@ -283,14 +284,10 @@ describe("floating dock topology", () => {
           yield* engine.transition(
             floatingOnly,
             envelope(
-              "open-fresh-root-split",
+              "open-root",
               OpenPanelCommand.make({
                 panel: panelTwo,
-                placement: RootSplitPlacement.make({
-                  side: "left",
-                  splitId: splitOne,
-                  newGroupId: groupTwo,
-                }),
+                placement: RootPlacement.make({ groupId: groupTwo }),
               })
             )
           )
@@ -300,6 +297,38 @@ describe("floating dock topology", () => {
           root: { _tag: "Tabs", groupId: groupTwo },
           floating: [{ root: tabsOne }],
         });
+      })
+    );
+
+    it.effect(
+      "keeps a sole docked group root relocation unchanged when floating members exist",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const state = changed(
+          yield* engine.transition(
+            workspace,
+            envelope(
+              "float-two-before-root-relocate",
+              FloatGroupCommand.make({ groupId: groupTwo, anchoredBox: firstBox })
+            )
+          )
+        ).state;
+        const outcome = yield* engine.transition(
+          state,
+          envelope(
+            "single-root-relocate-with-floating",
+            MoveGroupCommand.make({
+              groupId: groupOne,
+              target: GroupRootSplitPlacement.make({ side: "left", splitId: splitTwo }),
+            })
+          )
+        );
+        expect(outcome.result).toMatchObject({
+          _tag: "Unchanged",
+          reason: "topology-unchanged",
+          revision: state.revision,
+        });
+        expect(outcome.result).not.toHaveProperty("events");
       })
     );
 
