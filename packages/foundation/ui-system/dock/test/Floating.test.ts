@@ -332,6 +332,36 @@ describe("floating dock topology", () => {
     );
 
     it.effect(
+      "rejects root placement when its group collides with a floating group",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const floatingOnly = changed(
+          yield* engine.transition(
+            PopulatedWorkspace.make({ root: tabsOne }),
+            envelope("float-before-root-open", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
+          )
+        ).state;
+        const error = yield* Effect.flip(
+          engine.transition(
+            floatingOnly,
+            envelope(
+              "open-root-colliding-group",
+              OpenPanelCommand.make({
+                panel: panelTwo,
+                placement: RootPlacement.make({ groupId: groupOne }),
+              })
+            )
+          )
+        );
+        expect(error).toMatchObject({
+          _tag: "DockCommandRejected",
+          reason: "group-already-exists",
+          message: `Group '${groupOne}' already exists.`,
+        });
+      })
+    );
+
+    it.effect(
       "rejects moving a floating group to a root split when the docked tree is empty",
       Effect.fnUntraced(function* () {
         const engine = yield* DockEngine;

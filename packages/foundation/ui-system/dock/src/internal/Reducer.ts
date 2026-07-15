@@ -234,17 +234,21 @@ const openPanel = Effect.fn("DockReducer.openPanel")(function* (
         populated: () =>
           reject(envelope, "workspace-not-empty", "Root placement is only valid for an empty workspace."),
         empty: (workspace) =>
-          changed(workspace, envelope, (revision) => [
-            PopulatedWorkspace.make({
-              revision,
-              root: TabsNode.make({ groupId: placement.groupId, active: command.panel }),
-              floating: workspace.floating,
-            }),
-            PanelOpenedEvent.make({
-              panelId: command.panel.id,
-              groupId: placement.groupId,
-            }),
-          ]),
+          Bool.match(O.isSome(DockWorkspace.findTabs(state, placement.groupId)), {
+            onTrue: () => reject(envelope, "group-already-exists", `Group '${placement.groupId}' already exists.`),
+            onFalse: () =>
+              changed(workspace, envelope, (revision) => [
+                PopulatedWorkspace.make({
+                  revision,
+                  root: TabsNode.make({ groupId: placement.groupId, active: command.panel }),
+                  floating: workspace.floating,
+                }),
+                PanelOpenedEvent.make({
+                  panelId: command.panel.id,
+                  groupId: placement.groupId,
+                }),
+              ]),
+          }),
       }),
     tab: (placement) =>
       O.match(DockWorkspace.findTabs(state, placement.groupId), {
