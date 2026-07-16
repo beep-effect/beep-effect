@@ -178,7 +178,11 @@ This keeps the mental model clean:
 
 `ui-system` is a side branch of foundation. It may depend on
 `foundation/primitive` and `foundation/modeling`, but it does not depend on
-`foundation/capability` by default.
+`foundation/capability` by default. It may also import a driver's
+browser-safe pure root (pure helpers, schemas, service tags) and default a
+driver's browser-safe `/browser` layer as an overridable injection default —
+never a driver's server-only or secret-bearing surfaces (narrow edge ratified
+2026-07-14; see `DECISIONS.md`).
 
 Browser/runtime helpers follow platform-first routing:
 

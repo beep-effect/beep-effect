@@ -1,32 +1,28 @@
+import {
+  DockBox,
+  DockGeometry,
+  DockNode,
+  EmptyWorkspace,
+  GeometryOptions,
+  GroupId,
+  GroupMetadata,
+  makeDockGeometryAtoms,
+  PopulatedWorkspace,
+  project,
+  projectWorkspace,
+  SplitLayout,
+  SplitNode,
+  SplitRatio,
+  TabsNode,
+} from "@beep/dock";
+import { rows } from "@beep/dock/internal/Geometry.projection";
 import { describe, expect, it } from "@effect/vitest";
 import { Match } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { Atom, AtomRegistry } from "effect/unstable/reactivity";
-import {
-  DockNode,
-  type DockWorkspace,
-  EmptyWorkspace,
-  GroupId,
-  GroupMetadata,
-  PopulatedWorkspace,
-  type SplitId,
-  SplitLayout,
-  SplitNode,
-  SplitRatio,
-  TabsNode,
-} from "../Domain.ts";
-import {
-  DockBox,
-  DockGeometry,
-  GeometryOptions,
-  type GroupMinimaRecord,
-  makeDockGeometryAtoms,
-  project,
-  projectWorkspace,
-  rows,
-} from "../Geometry.ts";
 import { groupOne, groupThree, groupTwo, panelOne, panelThree, panelTwo, splitOne, splitTwo } from "./Fixtures.ts";
+import type { DockWorkspace, GroupMinimaRecord, SplitId } from "@beep/dock";
 
 const tabsOne = TabsNode.make({ groupId: groupOne, active: panelOne });
 const tabsTwo = TabsNode.make({ groupId: groupTwo, active: panelTwo });

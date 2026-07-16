@@ -280,6 +280,9 @@
       "path": "packages/foundation/primitive/types"
     },
     {
+      "path": "packages/foundation/ui-system/dock"
+    },
+    {
       "path": "packages/foundation/ui-system/editor"
     },
     {

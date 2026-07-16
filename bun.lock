@@ -1673,6 +1673,24 @@
         "@types/node": "catalog:",
       },
     },
+    "packages/foundation/ui-system/dock": {
+      "name": "@beep/dock",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/pretext": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+        "vitest": "catalog:",
+      },
+    },
     "packages/foundation/ui-system/editor": {
       "name": "@beep/editor",
       "version": "0.0.0",
@@ -2758,6 +2776,8 @@
     "@beep/discord": ["@beep/discord@workspace:packages/drivers/discord"],
 
     "@beep/doc-text": ["@beep/doc-text@workspace:packages/drivers/doc-text"],
+
+    "@beep/dock": ["@beep/dock@workspace:packages/foundation/ui-system/dock"],
 
     "@beep/documents-domain": ["@beep/documents-domain@workspace:packages/documents/domain"],
 

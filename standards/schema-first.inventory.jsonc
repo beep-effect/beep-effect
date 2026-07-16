@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-14",
+  "generatedOn": "2026-07-15",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
@@ -1487,6 +1487,22 @@
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/utils",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/DockEngine.service.ts",
+      "symbol": "DockEngineShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/dock",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/DockEngine.service.ts",
+      "symbol": "DockSnapshotStoreShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/dock",
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {

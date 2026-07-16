@@ -178,6 +178,15 @@ A central runtime Layer that merges many unrelated slices and drivers into one
 global dependency graph. God Layers hide ownership, create cross-slice coupling,
 and make experiments expensive to remove.
 
+## Headless UI Kernel
+
+A repo-owned, product-agnostic UI substrate whose core is pure schema plus
+geometry/state arithmetic, rendered by a separate DOM/React adapter package.
+Both the kernel and its adapter anchor in `foundation/ui-system`; the purity
+boundary is a package boundary — the kernel package carries no react
+dependency, the adapter package owns every DOM concern. Example: `@beep/dock`
+(kernel) with `@beep/dock-react` (its adapter, landing separately).
+
 ## Generated Default
 
 An enforcement lane for architecture rules that future generators or scaffolds

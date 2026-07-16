@@ -1,18 +1,9 @@
-import { describe, expect, test } from "bun:test";
-import { chromeLinuxArial16, makePretextCaptureFixture, naturalWidth, PretextCaptureFixture } from "@beep/pretext";
-import { Effect } from "effect";
-import * as A from "effect/Array";
-import * as Layer from "effect/Layer";
-import * as N from "effect/Number";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
-import { Atom, AtomRegistry } from "effect/unstable/reactivity";
-import { TopLeftAnchoredBox } from "../AnchoredBox.ts";
 import {
-  type DockNode,
-  type DockWorkspace,
+  DockBox,
   FloatingMember,
   GroupId,
+  makeDockGeometryAtoms,
+  makeTitleMinimaAtom,
   Panel,
   PanelId,
   PopulatedWorkspace,
@@ -20,11 +11,23 @@ import {
   SplitLayout,
   SplitNode,
   SplitRatio,
+  TabChrome,
   TabsNode,
   TextPanelView,
-} from "../Domain.ts";
-import { DockBox, makeDockGeometryAtoms } from "../Geometry.ts";
-import { makeTitleMinimaAtom, TabChrome, titleMinima, titleWords } from "../Minima.ts";
+  TopLeftAnchoredBox,
+  titleMinima,
+  titleWords,
+} from "@beep/dock";
+import { chromeLinuxArial16, makePretextCaptureFixture, naturalWidth, PretextCaptureFixture } from "@beep/pretext";
+import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
+import * as A from "effect/Array";
+import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
+import * as O from "effect/Option";
+import * as R from "effect/Record";
+import { Atom, AtomRegistry } from "effect/unstable/reactivity";
+import type { DockNode, DockWorkspace } from "@beep/dock";
 
 const snapshot = Effect.runSync(chromeLinuxArial16);
 const metrics = snapshot.metrics;
@@ -72,7 +75,7 @@ const settledAtomValue = <A>(atom: Atom.Atom<A>): Effect.Effect<A> =>
   );
 
 describe("title minima projections", () => {
-  test("deduplicates and sorts title words across docked and floating panels", () => {
+  it("deduplicates and sorts title words across docked and floating panels", () => {
     const workspace = PopulatedWorkspace.make({
       root: tabs(groupOne, ["dragon the", "The dragon"]),
       floating: [floating(tabs(groupFloating, ["page The"]))],
@@ -81,7 +84,7 @@ describe("title minima projections", () => {
     expect(titleWords(workspace)).toEqual(["The", "dragon", "page", "the"]);
   });
 
-  test("sums measured tab widths with per-tab and strip chrome", () => {
+  it("sums measured tab widths with per-tab and strip chrome", () => {
     const workspace = PopulatedWorkspace.make({ root: tabs(groupOne, ["The dragon", "the page"]) });
     const chrome = TabChrome.make({ perTab: 7, strip: 11 });
     const expected = N.sum(
@@ -95,7 +98,7 @@ describe("title minima projections", () => {
     expect(R.get(titleMinima(metrics, workspace, chrome), groupOne)).toEqual(O.some(expected));
   });
 
-  test("keeps measured siblings while unmeasured titles contribute zero", () => {
+  it("keeps measured siblings while unmeasured titles contribute zero", () => {
     const workspace = PopulatedWorkspace.make({ root: tabs(groupOne, ["dragon", "wyvern"]) });
     const chrome = TabChrome.make({ perTab: 5, strip: 3 });
     const expected = N.sum(3, N.sum(O.getOrThrow(naturalWidth(metrics, "dragon")), 5));
@@ -103,13 +106,13 @@ describe("title minima projections", () => {
     expect(R.get(titleMinima(metrics, workspace, chrome), groupOne)).toEqual(O.some(expected));
   });
 
-  test("omits groups with no measurable titles", () => {
+  it("omits groups with no measurable titles", () => {
     const workspace = PopulatedWorkspace.make({ root: tabs(groupOne, ["wyvern", "griffin"]) });
 
     expect(titleMinima(metrics, workspace, TabChrome.make())).toEqual({});
   });
 
-  test("includes floating-member groups", () => {
+  it("includes floating-member groups", () => {
     const workspace = PopulatedWorkspace.make({
       root: tabs(groupOne, ["The"]),
       floating: [floating(tabs(groupFloating, ["dragon"]))],
@@ -122,7 +125,7 @@ describe("title minima projections", () => {
 });
 
 describe("reactive title minima", () => {
-  test("resolves fixture-backed capture to the pure minima record", () => {
+  it("resolves fixture-backed capture to the pure minima record", () => {
     const workspace = PopulatedWorkspace.make({ root: tabs(groupOne, ["The dragon", "the page"]) });
     const chrome = TabChrome.make({ perTab: 4, strip: 8 });
     const minimaAtom = makeTitleMinimaAtom({
@@ -140,7 +143,7 @@ describe("reactive title minima", () => {
     );
   });
 
-  test("degrades capture failure to an empty record", () => {
+  it("degrades capture failure to an empty record", () => {
     const workspace = PopulatedWorkspace.make({ root: tabs(groupOne, ["wyvern"]) });
     const minimaAtom = makeTitleMinimaAtom({
       workspaceAtom: Atom.make<DockWorkspace>(workspace),
@@ -156,7 +159,7 @@ describe("reactive title minima", () => {
     );
   });
 
-  test("feeds feasible clamps and preserves proportional degradation when infeasible", () => {
+  it("feeds feasible clamps and preserves proportional degradation when infeasible", () => {
     const longTabs = tabs(groupOne, ["dragon slithers"]);
     const shortTabs = tabs(groupTwo, ["The"]);
     const workspace = PopulatedWorkspace.make({

@@ -1046,6 +1046,52 @@ running against stale guidance. The per-owner ratchet converts a one-time
 cleanup into a permanent property: once a family is green, new PRs in that
 family cannot reintroduce the smells the wave just removed.
 
+## 2026-07-14: Narrow `ui-system` → `drivers` Edge, And Headless UI Kernels Anchor In `ui-system`
+
+- **Status:** Accepted
+
+Decision:
+
+1. A `foundation/ui-system` package may depend on a `drivers/*` package under
+   two constraints, and only these:
+   - it may import the driver's browser-safe **pure root** — pure helpers,
+     schemas, and service *tags* (e.g. `@beep/pretext` root:
+     `FontMetrics`, `naturalWidth`, the `PretextCapture` tag);
+   - it may default the driver's browser-safe **`/browser` layer** as an
+     **overridable** dependency-injection default (e.g. a React adapter
+     defaulting `PretextCaptureLive` while accepting a host-supplied capture
+     layer).
+   A ui-system package must never import or compose a driver's server-only or
+   secret-bearing surfaces, must keep every live layer overridable by the
+   consuming app, and must not re-export a driver's live layers as its own
+   public API. The foundation dependency-ceiling table in
+   `standards/ARCHITECTURE.md` is amended to match.
+2. Headless UI kernels — repo-owned, product-agnostic UI substrate whose core
+   is pure schema + geometry/state arithmetic with a separate DOM/React
+   adapter (glossary: "Headless UI Kernel") — anchor in
+   `foundation/ui-system`, not `foundation/modeling`, even when the kernel
+   package itself contains no React. The purity boundary is expressed as a
+   package boundary (kernel package with no react dependency; adapter package
+   carrying the DOM/React surface).
+
+Rationale:
+
+The dock workspace substrate (`@beep/dock`, landed with this decision, plus
+`@beep/dock-react`, its planned adapter — both graduating from
+`scratchpad/dockview*` per `docs/product/workspace-substrate.md`)
+computes title-width minima from `@beep/pretext` — a driver whose root is a
+browser-safe pure surface by its own ratified entrypoint law. Without this
+edge the kernel would have to hoist content-aware geometry out of the
+substrate into every consumer, splitting the computable-geometry canon across
+packages for no safety gain: the dangerous driver surfaces (server config,
+secrets, live effects) remain forbidden, and live capture stays injectable.
+Routing the pure kernel to `modeling` was rejected because the kernel is
+reactive UI substrate (atom graphs, engines, policies), purpose-routed to
+ui-system by the specific-home-first table; keeping kernel and adapter in one
+family keeps the promotion story and dependency ceilings legible. This
+resolves the known gap that ui-system had no vocabulary for headless kernels
+and no lawful measurement edge.
+
 ## Known Unknowns
 
 Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:

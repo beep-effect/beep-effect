@@ -1,16 +1,13 @@
-import { NonNegativeInt } from "@beep/schema";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
-import * as O from "effect/Option";
-import * as S from "effect/Schema";
-import { BottomRightAnchoredBox, TopLeftAnchoredBox } from "../AnchoredBox.ts";
-import { DockEngine, DockEngineLive } from "../DockEngine.ts";
 import {
   ActivatePanelCommand,
+  AnchoredBox,
+  BottomRightAnchoredBox,
+  ClearWorkspaceCommand,
   ClosePanelCommand,
-  type DockChanged,
+  DockBox,
+  DockEngine,
+  DockEngineLive,
   DockFloatingGroupCommand,
-  type DockMutationOutcome,
   DockMutationResult,
   DockSnapshot,
   DockWorkspace,
@@ -23,15 +20,28 @@ import {
   MoveFloatingGroupCommand,
   MoveGroupCommand,
   MovePanelCommand,
+  OpenPanelCommand,
   PopulatedWorkspace,
+  projectWorkspace,
+  RootPlacement,
+  RootSplitPlacement,
+  resolveAnchoredBox,
   SplitLayout,
   SplitNode,
   TabPlacement,
   TabsNode,
+  TopLeftAnchoredBox,
   UpdateGroupCommand,
-} from "../Domain.ts";
-import { DockBox, projectWorkspace, resolveAnchoredBox } from "../Geometry.ts";
+} from "@beep/dock";
+import { NonNegativeInt } from "@beep/schema";
+import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
+import * as Equal from "effect/Equal";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import { envelope, groupOne, groupTwo, panelOne, panelThree, panelTwo, splitOne, splitTwo } from "./Fixtures.ts";
+import type { DockChanged, DockMutationOutcome } from "@beep/dock";
 
 const firstBox = TopLeftAnchoredBox.make({ left: 10, top: 20, width: 300, height: 200 });
 const secondBox = BottomRightAnchoredBox.make({ right: 5, bottom: 6, width: 250, height: 180 });
@@ -197,7 +207,8 @@ describe("floating dock topology", () => {
             )
           )
         );
-        expect(docked.state).toMatchObject({ kind: "populated", floating: [] });
+        expect(docked.state).toMatchObject({ kind: "populated", root: tabsOne, floating: [] });
+        expect(docked.events).toEqual([expect.objectContaining({ kind: "groupDocked", groupId: groupOne })]);
         let mixed = changed(
           yield* engine.transition(
             workspace,
@@ -227,6 +238,188 @@ describe("floating dock topology", () => {
           )
         );
         expect(error).toMatchObject({ reason: "group-not-floating" });
+      })
+    );
+
+    it.effect(
+      "rejects root-split panel opening when the new group id belongs to a floating group",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const mixed = changed(
+          yield* engine.transition(
+            workspace,
+            envelope("float-two-before-open", FloatGroupCommand.make({ groupId: groupTwo, anchoredBox: firstBox }))
+          )
+        ).state;
+        const error = yield* Effect.flip(
+          engine.transition(
+            mixed,
+            envelope(
+              "open-floating-group-collision",
+              OpenPanelCommand.make({
+                panel: panelThree,
+                placement: RootSplitPlacement.make({
+                  side: "left",
+                  splitId: splitTwo,
+                  newGroupId: groupTwo,
+                }),
+              })
+            )
+          )
+        );
+        expect(error).toMatchObject({ _tag: "DockCommandRejected", reason: "group-already-exists" });
+      })
+    );
+
+    it.effect(
+      "rejects root-split panel opening when only floating members exist",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const floatingOnly = changed(
+          yield* engine.transition(
+            PopulatedWorkspace.make({ root: tabsOne }),
+            envelope("float", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
+          )
+        ).state;
+        const error = yield* Effect.flip(
+          engine.transition(
+            floatingOnly,
+            envelope(
+              "open-colliding-root-split",
+              OpenPanelCommand.make({
+                panel: panelTwo,
+                placement: RootSplitPlacement.make({
+                  side: "left",
+                  splitId: splitOne,
+                  newGroupId: groupOne,
+                }),
+              })
+            )
+          )
+        );
+        expect(error).toMatchObject({ reason: "workspace-empty" });
+      })
+    );
+
+    it.effect(
+      "opens the first docked panel with root placement while preserving floating members",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const floatingOnly = changed(
+          yield* engine.transition(
+            PopulatedWorkspace.make({ root: tabsOne }),
+            envelope("float", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
+          )
+        ).state;
+        const opened = changed(
+          yield* engine.transition(
+            floatingOnly,
+            envelope(
+              "open-root",
+              OpenPanelCommand.make({
+                panel: panelTwo,
+                placement: RootPlacement.make({ groupId: groupTwo }),
+              })
+            )
+          )
+        );
+        expect(opened.state).toMatchObject({
+          kind: "populated",
+          root: { _tag: "Tabs", groupId: groupTwo },
+          floating: [{ root: tabsOne }],
+        });
+      })
+    );
+
+    it.effect(
+      "rejects root placement when its group collides with a floating group",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const floatingOnly = changed(
+          yield* engine.transition(
+            PopulatedWorkspace.make({ root: tabsOne }),
+            envelope("float-before-root-open", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
+          )
+        ).state;
+        const error = yield* Effect.flip(
+          engine.transition(
+            floatingOnly,
+            envelope(
+              "open-root-colliding-group",
+              OpenPanelCommand.make({
+                panel: panelTwo,
+                placement: RootPlacement.make({ groupId: groupOne }),
+              })
+            )
+          )
+        );
+        expect(error).toMatchObject({
+          _tag: "DockCommandRejected",
+          reason: "group-already-exists",
+          message: `Group '${groupOne}' already exists.`,
+        });
+      })
+    );
+
+    it.effect(
+      "rejects moving a floating group to a root split when the docked tree is empty",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const floatingOnly = changed(
+          yield* engine.transition(
+            PopulatedWorkspace.make({ root: tabsOne }),
+            envelope("float-before-root-move", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
+          )
+        ).state;
+        const error = yield* Effect.flip(
+          engine.transition(
+            floatingOnly,
+            envelope(
+              "move-floating-to-empty-root-split",
+              MoveGroupCommand.make({
+                groupId: groupOne,
+                target: GroupRootSplitPlacement.make({ side: "left", splitId: splitOne }),
+              })
+            )
+          )
+        );
+        expect(error).toMatchObject({
+          _tag: "DockCommandRejected",
+          reason: "workspace-empty",
+          message:
+            "Root split move requires an existing docked root; use DockFloatingGroupCommand to dock a floating group.",
+        });
+      })
+    );
+
+    it.effect(
+      "treats a sole docked group root relocation as unchanged regardless of floating members",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const state = changed(
+          yield* engine.transition(
+            workspace,
+            envelope(
+              "float-two-before-root-relocate",
+              FloatGroupCommand.make({ groupId: groupTwo, anchoredBox: firstBox })
+            )
+          )
+        ).state;
+        const outcome = yield* engine.transition(
+          state,
+          envelope(
+            "single-root-relocate-with-floating",
+            MoveGroupCommand.make({
+              groupId: groupOne,
+              target: GroupRootSplitPlacement.make({ side: "left", splitId: splitTwo }),
+            })
+          )
+        );
+        expect(outcome.result).toMatchObject({
+          _tag: "Unchanged",
+          reason: "topology-unchanged",
+          revision: state.revision,
+        });
       })
     );
 
@@ -283,6 +476,53 @@ describe("floating dock topology", () => {
         expect(geometry.floating).toHaveLength(1);
       })
     );
+
+    it.effect(
+      "clears both a populated docked tree and its floating members",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const withFloating = changed(
+          yield* engine.transition(
+            workspace,
+            envelope("float-before-clear", FloatGroupCommand.make({ groupId: groupTwo, anchoredBox: firstBox }))
+          )
+        ).state;
+        const cleared = changed(
+          yield* engine.transition(withFloating, envelope("clear-populated", ClearWorkspaceCommand.make()))
+        );
+        expect(cleared.state).toMatchObject({ kind: "empty", floating: [] });
+        expect(cleared.events).toContainEqual(expect.objectContaining({ kind: "workspaceCleared" }));
+      })
+    );
+
+    it.effect(
+      "clears floating members from an empty-root workspace",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const floatingOnly = changed(
+          yield* engine.transition(
+            PopulatedWorkspace.make({ root: tabsOne }),
+            envelope("float-only-before-clear", FloatGroupCommand.make({ groupId: groupOne, anchoredBox: firstBox }))
+          )
+        ).state;
+        const cleared = changed(
+          yield* engine.transition(floatingOnly, envelope("clear-floating-only", ClearWorkspaceCommand.make()))
+        );
+        expect(cleared.state).toMatchObject({ kind: "empty", floating: [] });
+        expect(cleared.events).toContainEqual(expect.objectContaining({ kind: "workspaceCleared" }));
+      })
+    );
+
+    it.effect(
+      "rejects clearing a workspace with no docked tree or floating members",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const error = yield* Effect.flip(
+          engine.transition(DockWorkspace.empty, envelope("clear-empty", ClearWorkspaceCommand.make()))
+        );
+        expect(error).toMatchObject({ reason: "workspace-empty" });
+      })
+    );
   });
 
   it("clamps anchored boxes to a sensible minimum inside the container", () => {
@@ -306,4 +546,17 @@ describe("floating dock topology", () => {
     ).toBe("Failure");
     expect(EmptyWorkspace.make().floating).toEqual([]);
   });
+});
+
+describe("anchored box codec properties", () => {
+  it.effect("round-trips arbitrary anchored boxes through their codec", () =>
+    Effect.sync(() =>
+      fc.assert(
+        fc.property(S.toArbitrary(AnchoredBox), (box) => {
+          const decoded = O.flatMap(S.encodeOption(AnchoredBox)(box), S.decodeUnknownOption(AnchoredBox));
+          expect(O.exists(decoded, (value) => Equal.equals(value, box))).toBe(true);
+        })
+      )
+    )
+  );
 });

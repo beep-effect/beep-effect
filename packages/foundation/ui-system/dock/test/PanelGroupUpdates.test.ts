@@ -1,12 +1,6 @@
-import { NonNegativeInt } from "@beep/schema";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
-import { DockEngine, DockEngineLive } from "../DockEngine.ts";
 import {
-  type DockChanged,
-  type DockMutationOutcome,
+  DockEngine,
+  DockEngineLive,
   DockMutationResult,
   DockWorkspace,
   GroupId,
@@ -25,7 +19,12 @@ import {
   TextPanelView,
   UpdateGroupCommand,
   UpdatePanelCommand,
-} from "../Domain.ts";
+} from "@beep/dock";
+import { NonNegativeInt } from "@beep/schema";
+import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
 import {
   envelope,
   groupOne,
@@ -37,6 +36,7 @@ import {
   panelOne,
   splitTwo,
 } from "./Fixtures.ts";
+import type { DockChanged, DockMutationOutcome } from "@beep/dock";
 
 const requireChanged = (outcome: DockMutationOutcome): Effect.Effect<DockChanged> =>
   DockMutationResult.match(outcome.result, {
