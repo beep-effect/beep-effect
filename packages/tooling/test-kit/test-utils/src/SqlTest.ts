@@ -26,7 +26,7 @@ const PgliteDockerContextUrl = new URL("../docker/pglite", import.meta.url);
 const PgliteHealthCheckCommand =
   "node -e \"const { Client } = require('pg'); const client = new Client({ host: '127.0.0.1', port: Number(process.env.PGPORT || '5432'), database: process.env.PGDATABASE, user: process.env.PGUSER, password: process.env.PGPASSWORD, ssl: false }); client.connect().then(() => client.query('select 1')).then(() => client.end()).catch((cause) => { console.error(cause); process.exit(1); });\"";
 const PgliteHealthCheckIntervalMs = 1_000;
-const PgExternalClientEndTimeout = Duration.seconds(5);
+const PgExternalClientShutdownTimeout = Duration.seconds(30);
 const PgExternalSchemaDropTimeout = Duration.seconds(10);
 const PgliteHostReadinessTimeout = Duration.seconds(45);
 const PgliteHostProbeTimeoutMs = 5_000;
@@ -926,7 +926,8 @@ const waitForPgliteHostReadiness = Effect.fn("SqlTest.waitForPgliteHostReadiness
           cause
         ),
     }),
-    (client) => Effect.promise(() => client.end()).pipe(Effect.timeoutOption(PgExternalClientEndTimeout), Effect.asVoid)
+    (client) =>
+      Effect.promise(() => client.end()).pipe(Effect.timeoutOption(PgExternalClientShutdownTimeout), Effect.asVoid)
   );
   const readiness = Effect.scoped(
     probe.pipe(Effect.asVoid, Effect.retry(PgConnectRetryPolicy), Effect.timeoutOption(PgliteHostReadinessTimeout))
@@ -1146,7 +1147,37 @@ const buildPgExternalLayer: (
                 }),
             }),
             (client) =>
-              Effect.promise(() => client.end()).pipe(Effect.timeoutOption(PgExternalClientEndTimeout), Effect.asVoid)
+              Effect.tryPromise({
+                try: () => client.end(),
+                catch: (cause) =>
+                  toHarnessError(
+                    "pg-external",
+                    "teardown",
+                    "Failed to close the external PostgreSQL test client.",
+                    cause
+                  ),
+              }).pipe(
+                Effect.timeoutOrElse({
+                  duration: PgExternalClientShutdownTimeout,
+                  orElse: () =>
+                    Effect.sync(() => client.connection.stream.destroy()).pipe(
+                      Effect.andThen(
+                        Effect.logWarning(
+                          "Timed out closing the external PostgreSQL test client; forced the connection stream closed."
+                        )
+                      ),
+                      Effect.catchCause(() =>
+                        Effect.logWarning(
+                          "Timed out closing the external PostgreSQL test client and failed to force-close the connection stream."
+                        )
+                      )
+                    ),
+                }),
+                Effect.catchTag("SqlTestHarnessError", () =>
+                  Effect.logWarning("Failed to close the external PostgreSQL test client.")
+                ),
+                Effect.asVoid
+              )
           ),
           acquireForStream: false,
         }).pipe(
