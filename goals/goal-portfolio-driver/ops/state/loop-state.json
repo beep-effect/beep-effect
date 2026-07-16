@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "loop-state/v1",
+  "updated": "2026-07-14",
+  "lanes": [],
+  "monitorSlots": [],
+  "verifyLock": null,
+  "waitingOnChecks": [],
+  "escalated": [],
+  "done": [],
+  "phase": "P0"
+}

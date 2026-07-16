@@ -40,6 +40,14 @@ At most three concurrent implementation lanes. A **lane slot** frees only
 when a lane finishes (or retires) its listed scope — Lane 3 frees its slot
 when its last packet closes, not one slot per packet.
 
+Execution note: the active-portfolio drain is driven autonomously by
+[`goal-portfolio-driver`](../goals/goal-portfolio-driver/README.md), which
+locked a dependency-ordered queue of the 25 active packets on 2026-07-14
+(NOW lanes first). The lane cap above refers to these thematic program
+lanes; the driver's two worktree edit lanes are execution slots, not
+program lanes. Priority stays owned by this file; lifecycle stays owned by
+`goals/INDEX.md`.
+
 ### Lane 1 — Product
 
 [`legal-document-intake`](../goals/legal-document-intake/README.md), portal

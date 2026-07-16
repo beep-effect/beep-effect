@@ -1,0 +1,4 @@
+Replace three fixed post-interrupt sleeps with Deferred completion signals from the durable
+timeline refresh; preserves every reconciliation assertion. Root cause: wall-clock sleeps raced
+asynchronous interrupt reconciliation under CI load (red on main since 32c4200843, which surfaced
+but did not cause the race). Proof: 6/6 consecutive forks-pool runs, 12/12 tests each.
