@@ -1,0 +1,62 @@
+# Graph 3D View
+
+## Status
+
+Lifecycle: `active`
+
+Source: [`ops/manifest.json`](./ops/manifest.json)
+
+## Mission
+
+Ship an InfraNodus-style React 3D knowledge-graph renderer (dark force-directed
+3D, community colors, betweenness-proportional distance-faded labels that solve
+2D label overlap, curved edges, selection dimming) on our existing
+cosmos/ontology rendering stack, integrated into the ontology workbench behind a
+2D/3D toggle with cosmos 2D as the default. Target ~2,500 interactive nodes.
+
+## Launch
+
+Use this command for execution-capable sessions:
+
+```text
+/goal follow the instructions in goals/graph-3d-view/GOAL.md
+```
+
+`GOAL.md` is the compact launcher (with the binding Fable/codex routing).
+`SPEC.md` remains the normative contract.
+
+## Read This First
+
+1. [`GOAL.md`](./GOAL.md) - compact `/goal` launcher + routing law.
+2. [`SPEC.md`](./SPEC.md) - normative source of truth.
+3. [`PLAN.md`](./PLAN.md) - phases + per-task actor routing.
+4. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing.
+5. [`research/`](./research/) - clean-room visual spec + integration ledger
+   (frozen, reference-only). Start with `bundle-static-analysis.md` (parameter
+   spec), `integration-constraints.md` (in-repo seams), `library-landscape-3d.md`
+   (stack candidates), `label-anti-overlap.md` (the declutter mechanism).
+6. [`history/`](./history/) - evidence and closeouts, if present.
+
+## Current Phase
+
+P0 Design gate — not started. Next action: run the design gate (Fable) over
+`research/` and emit `research/DESIGN.md` with a 2.5k-node benchmark, deciding
+stack, placement, label technique, layout location, interaction model, theming,
+and toggle UX.
+
+## Latest Evidence
+
+Not started. Research corpus complete and adversarially verified
+(`research/VERIFICATION.md`); graduated from
+[`explorations/graph-3d-navigation`](../../explorations/graph-3d-navigation/README.md)
+on 2026-07-14.
+
+## Notes
+
+- Clean-room / reference-only is binding: the visual spec in `research/` is prose
+  parameters extracted from the proprietary bundle; no bundle/AGPL code may be
+  copied. `rg` audit is an acceptance criterion.
+- 2.5k is a benchmark obligation, not a research-proven given — the InfraNodus
+  reference only ever displays ~150 nodes. Record the proven ceiling.
+- cosmos 2D stays default and must not regress (it also serves the 100k spike).
+- Label importance = betweenness centrality (data-confirmed).

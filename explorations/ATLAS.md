@@ -39,6 +39,16 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 ## Explorations
 
 ### Active
+- [`graph-3d-navigation`](./graph-3d-navigation/README.md) — InfraNodus-style
+  3D knowledge-graph view (**graduated 2026-07-14** →
+  [`goals/graph-3d-view`](../goals/graph-3d-view/README.md)): reverse-engineered
+  the graph.infranodus.com 3D style (three.js r158 + d3-force-3d, ColorBrewer
+  Paired community colors, betweenness-proportional distance-faded Sprite labels
+  with adaptive-budget declutter solving label overlap, tube edges, 0.10/0.35
+  selection dimming, z-flatten 2D/3D toggle) via 6 codex gpt-5.6-sol lanes +
+  verify gate over two corroborating browser passes + the downloaded bundle.
+  Graduated one phased goal: generic 3D component → ontology-workbench 2D/3D
+  toggle (cosmos default), ~2.5k-node target, clean-room/reference-only.
 - [`agent-effectiveness-pulse`](./agent-effectiveness-pulse/README.md) — a
   data-driven pulse on repo agent friendliness/effectiveness (stage
   `graduate`, opened 2026-07-14, still active for wave 2): which skills are
