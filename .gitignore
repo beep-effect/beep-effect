@@ -117,3 +117,11 @@ openai.com_cookies.txt
 
 # SkillOpt pilot local env (tools/skillopt is a uv project; lock is committed)
 tools/skillopt/.venv/
+
+# graph-3d-navigation reverse-engineering capture corpus: third-party reference
+# artifacts only (proprietary graph.infranodus.com JS/CSS bundle, scraped vendor
+# docs, copyrighted papers, their demo dataset). Reference-only working artifact —
+# never commit (public repo). The packet's committed prose reports are the
+# deliverable; the corpus is reproducible from the URLs in
+# explorations/graph-3d-navigation/research/SEED-INVENTORY.md
+explorations/graph-3d-navigation/research/seed/

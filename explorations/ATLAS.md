@@ -259,6 +259,16 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`graph-3d-navigation`](./graph-3d-navigation/README.md) — graduated
+  2026-07-14 into [`graph-3d-view`](../goals/graph-3d-view/README.md) (generic
+  3D graph component → ontology-workbench 2D/3D toggle, cosmos stays default,
+  ~2.5k-node target). Reverse-engineered the graph.infranodus.com 3D style
+  clean-room (three.js r158 + d3-force-3d, ColorBrewer Paired community colors,
+  betweenness-proportional distance-faded Sprite labels with adaptive-budget
+  declutter, tube edges, 0.10/0.35 selection dimming, z-flatten toggle) via 6
+  codex lanes + a verify gate over two corroborating browser passes; the
+  reference-only capture corpus is gitignored (see
+  [`SEED-INVENTORY.md`](./graph-3d-navigation/research/SEED-INVENTORY.md)).
 - [`gov-legal-data-driver-codegen`](./gov-legal-data-driver-codegen/README.md) —
   graduated after the codegen substrate and `@beep/api-transport` promotion
   completed: [`gov-legal-data-driver-codegen`](../goals/gov-legal-data-driver-codegen/README.md),
