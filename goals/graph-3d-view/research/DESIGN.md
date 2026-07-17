@@ -175,12 +175,16 @@ renderGraph3D(container, projection, options?) →
   `scale = min(150, 22.4/maxImportance)`, world diameter
   `logical × 0.5 × zoomDamping` (`bundle-static-analysis.md` §3). Passing
   normalized importance keeps the driver free of bc semantics.
-- **Palette-slot stability:** `nodeCommunities` carries a *stable ordinal*, not
-  a hash: the P2 mapping assigns ordinals by first-seen order of cluster IRIs
-  sorted lexicographically at ordinal-table creation, and the table persists
-  across projection updates within a session — a node keeps its color when
-  the projection refreshes. Slot = ordinal mod 12 (the palette's ordinal-scale
-  behavior, `bundle-static-analysis.md` §3).
+- **Palette-slot stability (as built):** `nodeCommunities` carries a
+  deterministic ordinal, not a hash. Communities are structural — connected
+  components after cutting artery edges whose *minimum* endpoint betweenness
+  exceeds 0.4 (one-shot Girvan–Newman on the channel D4 already computes; label
+  propagation was rejected because synchronous updates two-color tree-heavy
+  ontology graphs and asynchronous updates flood through bridges). Ordinals
+  compress by first occurrence in the IRI-sorted node order, so identical
+  topology recolors identically; results are cached per projection revision.
+  Slot = ordinal mod 12 (the palette's ordinal-scale behavior,
+  `bundle-static-analysis.md` §3).
 - Selection state is handle-side (`select`), not projection data — selection
   must not force a projection rebuild (`integration-constraints.md` §9).
 - Like cosmos, visual constants live in an internal `Graph3DConfig` with
@@ -253,8 +257,9 @@ coordinates; the renderer never runs a simulation. [fix 3 resolved: freeze]**
   Brandes untenable that is a recorded SPEC change, not a silent downgrade.
 - `OntologyPinnedNode` keeps x/y only; pinning z is out of scope (SPEC:
   data-model changes beyond z are out).
-- Per-node community ordinals: derived from cluster identity with the stable
-  ordinal table of D3. Calibration reference: the final captured dataset is
+- Per-node community ordinals: derived structurally in the client mapping per
+  the as-built D3 contract (betweenness-artery components). Calibration
+  reference: the final captured dataset is
   150 xyz-complete nodes, 1,497-of-1,500 captured edges, six communities with
   the resolved topic→palette mapping, bc 0–0.4035 (mean 0.0204), z spread
   ≈ −137..125 (`VERIFICATION.md` §1) — reference-scale facts used to sanity-

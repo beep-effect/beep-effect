@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-14",
+  "generatedOn": "2026-07-17",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "enforcedRoots": [
     "packages/tooling/tool/cli/src/commands/Laws/DualArity.ts",
@@ -407,26 +407,26 @@
     },
     {
       "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
-      "qualifiedName": "Panel.equals",
-      "kind": "static-function-property",
-      "status": "exception",
-      "owner": "@beep/dock",
-      "reason": "Schema-derived Equivalence constant via SchemaUtils.toEquivalence; the (self, that) arity is the Equivalence interface contract, and a dual wrapper would change the exported type. Matches the companion-object equals idiom used by DockWorkspace and PanelId, which the lint already accepts.",
-      "issue": "DOCK-PANEL-EQUIVALENCE",
-      "line": 264,
-      "column": 19,
-      "parameterCount": 2,
-      "diagnostics": ["missing-dual"]
-    },
-    {
-      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
       "qualifiedName": "GroupMetadata.equals",
       "kind": "static-function-property",
       "status": "exception",
       "owner": "@beep/dock",
       "reason": "Schema-derived Equivalence constant via SchemaUtils.toEquivalence; the (self, that) arity is the Equivalence interface contract, and a dual wrapper would change the exported type. Matches the companion-object equals idiom used by DockWorkspace and PanelId, which the lint already accepts.",
       "issue": "DOCK-GROUP-METADATA-EQUIVALENCE",
-      "line": 408,
+      "line": 397,
+      "column": 19,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
+      "qualifiedName": "Panel.equals",
+      "kind": "static-function-property",
+      "status": "exception",
+      "owner": "@beep/dock",
+      "reason": "Schema-derived Equivalence constant via SchemaUtils.toEquivalence; the (self, that) arity is the Equivalence interface contract, and a dual wrapper would change the exported type. Matches the companion-object equals idiom used by DockWorkspace and PanelId, which the lint already accepts.",
+      "issue": "DOCK-PANEL-EQUIVALENCE",
+      "line": 257,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -439,7 +439,7 @@
       "owner": "@beep/dock",
       "reason": "TabsNode.fromPanels is already implemented with dual, but at arity 4 (group id, non-empty panel collection, active panel id, metadata), which exceeds the 3-positional ceiling; reshaping the established public signature would break existing call sites and is out of scope for the zero-behavior-change graduation.",
       "issue": "DOCK-TABS-NODE-FACTORY",
-      "line": 476,
+      "line": 464,
       "column": 19,
       "parameterCount": 4,
       "diagnostics": ["too-many-positional-params", "invalid-dual-arity"]
@@ -452,7 +452,7 @@
       "owner": "@beep/dock",
       "reason": "lockedGroupsPolicy implements the DockCommandPolicy protocol over the co-required workspace state and command envelope; neither input is a canonical data-last subject, and a dual wrapper would change the policy contract rather than improve composition.",
       "issue": "DOCK-LOCKED-GROUPS-POLICY",
-      "line": 101,
+      "line": 114,
       "column": 14,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -465,7 +465,7 @@
       "owner": "@beep/dock",
       "reason": "Geometry projection over an anchored box and its containing dock box; both parameters are co-equal coordinate-space inputs with no canonical data-last subject.",
       "issue": "DOCK-RESOLVE-ANCHORED-BOX-PROJECTION",
-      "line": 196,
+      "line": 177,
       "column": 14,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -478,7 +478,7 @@
       "owner": "@beep/dock",
       "reason": "Geometry-minima projection over font metrics, workspace content, and tab chrome; all three parameters are co-equal measurement inputs with no canonical data-last subject.",
       "issue": "DOCK-TITLE-MINIMA-PROJECTION",
-      "line": 122,
+      "line": 129,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual"]
@@ -491,7 +491,7 @@
       "owner": "@beep/dock",
       "reason": "Layer builder that binds the state, operation-result, and operation-feed atoms into one DockAtomSession service; it has no pipeable data subject, and all three atoms are co-required construction dependencies.",
       "issue": "DOCK-ATOM-SESSION-LAYER-BUILDER",
-      "line": 44,
+      "line": 46,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual"]
@@ -504,7 +504,7 @@
       "owner": "@beep/dock",
       "reason": "Geometry projection whose root, container, options, and minima are co-equal coordinate and constraint inputs; there is no canonical data-last subject, and the four-parameter signature preserves explicit defaults.",
       "issue": "DOCK-PROJECT-GEOMETRY-PROJECTION",
-      "line": 235,
+      "line": 234,
       "column": 14,
       "parameterCount": 4,
       "diagnostics": ["too-many-positional-params"]
@@ -517,7 +517,7 @@
       "owner": "@beep/dock",
       "reason": "Workspace geometry projection whose workspace, container, options, and minima are co-equal coordinate and constraint inputs; there is no canonical data-last subject, and the four-parameter signature preserves explicit defaults.",
       "issue": "DOCK-PROJECT-WORKSPACE-PROJECTION",
-      "line": 257,
+      "line": 255,
       "column": 14,
       "parameterCount": 4,
       "diagnostics": ["too-many-positional-params"]

@@ -13,5 +13,5 @@ ribbon edges, selection dimming, `/browser` subpath) with Storybook stories,
 FPS probe, and a `@vitest/browser` lifecycle suite; ontology visualizer worker
 bakes force-relaxed 3D depths into a new `pointDepths` projection buffer;
 ontology client maps projections to the 3D driver (Brandes betweenness,
-deterministic label-propagation communities) behind a workbench 2D/3D renderer
+deterministic betweenness-artery community components) behind a workbench 2D/3D renderer
 toggle with cosmos remaining the default.

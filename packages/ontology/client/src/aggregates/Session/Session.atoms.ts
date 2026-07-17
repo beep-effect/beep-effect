@@ -1373,66 +1373,68 @@ const graphBetweennessCentrality = (
   return normalized;
 };
 
+/**
+ * Minimum normalized endpoint betweenness above which an edge counts as an
+ * inter-cluster artery. Only edges whose BOTH endpoints are strong bridges are
+ * cut, so hub-to-leaf star edges survive (leaf bc is ~0) while hub-to-hub
+ * arteries separate clusters. Product-tuned.
+ */
+const communityArteryThreshold = 0.4;
+
 const graphCommunities = (
   nodeCount: number,
-  adjacency: ReadonlyArray<ReadonlyArray<number>>
+  links: Float32Array,
+  importance: Float32Array
 ): Uint16Array<ArrayBuffer> => {
-  let communities = new Uint32Array(nodeCount);
-  let nodeIndex = 0;
+  // One-shot Girvan–Newman on the betweenness channel we already compute:
+  // drop artery edges (min endpoint bc above the threshold), then color
+  // connected components. Deterministic; label propagation was rejected —
+  // synchronous updates two-color the tree-heavy ontology graphs and
+  // asynchronous updates flood through bridge nodes.
+  const adjacency: Array<Array<number>> = A.makeBy(nodeCount, (): Array<number> => []);
+  let edgeOffset = 0;
 
-  while (nodeIndex < nodeCount) {
-    communities[nodeIndex] = nodeIndex;
-    nodeIndex += 1;
+  while (edgeOffset < links.length) {
+    const source = links[edgeOffset] ?? -1;
+    const target = links[edgeOffset + 1] ?? -1;
+    const bridgeScore = Math.min(importance[source] ?? 0, importance[target] ?? 0);
+    if (bridgeScore <= communityArteryThreshold) {
+      adjacency[source]?.push(target);
+      adjacency[target]?.push(source);
+    }
+    edgeOffset += 2;
   }
 
-  let iteration = 0;
-  while (iteration < 8) {
-    const next = new Uint32Array(communities);
-    const frequencies = new Uint32Array(nodeCount);
-    nodeIndex = 0;
+  const communities = new Uint32Array(nodeCount).fill(0xffffffff);
+  let componentId = 0;
+  const queue: Array<number> = [];
 
-    while (nodeIndex < nodeCount) {
-      const neighbors = adjacency[nodeIndex] ?? [];
-      if (neighbors.length > 0) {
-        const touchedCommunities: Array<number> = [];
-        let bestCommunity = communities[nodeIndex] ?? nodeIndex;
-        let bestFrequency = 0;
-        let neighborIndex = 0;
-
-        while (neighborIndex < neighbors.length) {
-          const neighbor = neighbors[neighborIndex] ?? nodeIndex;
-          const community = communities[neighbor] ?? neighbor;
-          if ((frequencies[community] ?? 0) === 0) {
-            touchedCommunities.push(community);
-          }
-          const frequency = (frequencies[community] ?? 0) + 1;
-          frequencies[community] = frequency;
-          if (frequency > bestFrequency || (frequency === bestFrequency && community < bestCommunity)) {
-            bestCommunity = community;
-            bestFrequency = frequency;
-          }
-          neighborIndex += 1;
-        }
-        next[nodeIndex] = bestCommunity;
-
-        let touchedIndex = 0;
-        while (touchedIndex < touchedCommunities.length) {
-          frequencies[touchedCommunities[touchedIndex] ?? 0] = 0;
-          touchedIndex += 1;
+  for (let seed = 0; seed < nodeCount; seed += 1) {
+    if (communities[seed] !== 0xffffffff) {
+      continue;
+    }
+    communities[seed] = componentId;
+    queue.length = 0;
+    queue.push(seed);
+    let queueIndex = 0;
+    while (queueIndex < queue.length) {
+      const current = queue[queueIndex] ?? seed;
+      queueIndex += 1;
+      for (const neighbor of adjacency[current] ?? []) {
+        if (communities[neighbor] === 0xffffffff) {
+          communities[neighbor] = componentId;
+          queue.push(neighbor);
         }
       }
-      nodeIndex += 1;
     }
-
-    communities = next;
-    iteration += 1;
+    componentId += 1;
   }
 
   const ordinals = new Uint16Array(nodeCount);
   const ordinalByCommunity = new Uint16Array(nodeCount);
   const seen = new Uint8Array(nodeCount);
   let distinctCount = 0;
-  nodeIndex = 0;
+  let nodeIndex = 0;
 
   while (nodeIndex < nodeCount) {
     const community = communities[nodeIndex] ?? nodeIndex;
@@ -1462,7 +1464,7 @@ const graph3dProjectionChannels = (
       onNone: () => {
         const adjacency = graphAdjacency(projection.nodeCount, projection.links);
         const nodeImportance = graphBetweennessCentrality(projection.nodeCount, adjacency);
-        const nodeCommunities = graphCommunities(projection.nodeCount, adjacency);
+        const nodeCommunities = graphCommunities(projection.nodeCount, projection.links, nodeImportance);
         const edgeWeights = new Float32Array(projection.edgeCount);
         let edgeIndex = 0;
 
