@@ -33,6 +33,7 @@
     // Story files are tool-loaded roots: the Storybook host discovers them via
     // the stories glob in apps/storybook/.storybook/main.ts.
     "packages/foundation/ui-system/*/stories/**/*.stories.tsx",
+    "packages/drivers/graph-3d/stories/**/*.stories.tsx",
     // Tool-loaded roots: syncpack auto-loads its config, eslint.config.mjs is
     // profile-selected by the Lint command, Changesets loads its changelog
     // module from config, and global-cleanup.ts is the vitest globalSetup for
@@ -124,6 +125,9 @@
     // workspace package while fallow attributes the imports to the package that
     // owns the stories.
     "@beep/form",
+    // @beep/storybook: same stories-glob arrangement for the graph-3d driver
+    // stories (goal graph-3d-view).
+    "@beep/graph-3d",
     // @beep/storybook: mounted through Storybook staticDirs so frimousse can
     // load the self-hosted emojibase dataset at runtime.
     "emojibase-data",

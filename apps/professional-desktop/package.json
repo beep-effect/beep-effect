@@ -52,6 +52,7 @@
     "@beep/epistemic-domain": "workspace:^",
     "@beep/epistemic-tables": "workspace:^",
     "@beep/file-processing": "workspace:^",
+    "@beep/graph-3d": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/lexical-schema": "workspace:^",
     "@beep/mcp-kit": "workspace:^",

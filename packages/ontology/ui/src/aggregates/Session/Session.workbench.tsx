@@ -24,6 +24,7 @@ import {
   ontologyGraphErrorAtom,
   ontologyGraphProjectionAtom,
   ontologyGraphRenderBridgeAtom,
+  ontologyGraphRendererAtom,
   ontologyGraphWorkerBridgeAtom,
   ontologyInferenceErrorAtom,
   ontologyInferenceResultAtom,
@@ -430,6 +431,8 @@ export function OntologyWorkbench(): JSX.Element {
   const session = useAtomValue(ontologySessionAtom);
   const mode = useAtomValue(ontologyViewModeAtom);
   const foldLevel = useAtomValue(ontologyFoldLevelAtom);
+  const renderer = useAtomValue(ontologyGraphRendererAtom);
+  const setRenderer = useAtomSet(ontologyGraphRendererAtom);
   const inferredView = useAtomValue(ontologyInferredViewAtom);
   const inferenceResult = useAtomValue(ontologyInferenceResultAtom);
   const inferenceError = useAtomValue(ontologyInferenceErrorAtom);
@@ -500,6 +503,10 @@ export function OntologyWorkbench(): JSX.Element {
   const totalChangeCount = undoPosition + redoStack.length;
   const graphBackendBadge: JSX.Element = O.isSome(graphError) ? (
     <Badge variant="destructive">failed</Badge>
+  ) : renderer === "graph3d" ? (
+    // The cosmos backend atom stays none while the 3D renderer owns the
+    // canvas; the toggle itself is the badge's source of truth.
+    <Badge variant="outline">3d</Badge>
   ) : (
     O.match(graphBackend, {
       onNone: () => <Badge variant="outline">pending</Badge>,
@@ -759,6 +766,15 @@ export function OntologyWorkbench(): JSX.Element {
               onCheckedChange={(checked) => toggleInferredView(checked)}
             />
             <span className="text-xs">Inferred</span>
+          </div>
+          <div className="flex items-center gap-2 rounded-md border px-2 py-1">
+            <Switch
+              aria-label="Toggle 3D graph renderer"
+              size="sm"
+              checked={renderer === "graph3d"}
+              onCheckedChange={(checked) => setRenderer(checked ? "graph3d" : "cosmos")}
+            />
+            <span className="text-xs">3D</span>
           </div>
           <Badge variant={dirty ? "destructive" : "secondary"}>{dirty ? "Dirty" : "Saved"}</Badge>
         </div>

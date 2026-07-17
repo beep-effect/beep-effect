@@ -97,6 +97,7 @@ const config = {
     "packages/drivers/protobuf/package.json",
     "packages/drivers/tailscale/package.json",
     "packages/drivers/pretext/package.json",
+    "packages/drivers/graph-3d/package.json",
   ],
   customTypes: {
     catalog: {

@@ -147,6 +147,9 @@
       "path": "../../packages/drivers/doc-text/tsconfig.json"
     },
     {
+      "path": "../../packages/drivers/graph-3d/tsconfig.json"
+    },
+    {
       "path": "../../packages/drivers/pglite/tsconfig.json"
     },
     {

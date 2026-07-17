@@ -420,6 +420,16 @@
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
+      "file": "packages/drivers/graph-3d/src/Graph3D.react.ts",
+      "symbol": "useGraph3DHandle",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-null-return",
+      "line": 46,
+      "owner": "@beep/graph-3d",
+      "reason": "React hook boundary: the result carries React's RefObject (null until attached) and the not-yet-mounted handle/error as undefined, matching React ref and state conventions for the Storybook/spike consumers."
+    },
+    {
       "file": "packages/drivers/hubspot/src/HubSpot.errors.ts",
       "symbol": "HubSpotErrorOptions.email",
       "kind": "schema-policy-advisory",

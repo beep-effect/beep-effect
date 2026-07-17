@@ -28,6 +28,7 @@ import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
 import { ThemeToggle } from "./chat/ui/ThemeToggle.tsx";
 import { DocumentIntakeTarget } from "./intake/DocumentIntakeTarget.tsx";
 import { CosmosSpike } from "./spikes/CosmosSpike.tsx";
+import { Graph3DSpike } from "./spikes/Graph3DSpike.tsx";
 import { VaultSyncPanel } from "./sync/VaultSyncPanel.tsx";
 import { makeDesktopHttpProtocolLive } from "./transport/DesktopHttpProtocol.ts";
 import { IpcChatProtocolLive } from "./transport/IpcChatClient.ts";
@@ -153,6 +154,11 @@ const hasCosmosSpikeFlag = (): boolean =>
   (import.meta.env.VITE_COSMOS_SPIKE === "1" ||
     (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("cosmos-spike")));
 
+const hasGraph3dSpikeFlag = (): boolean =>
+  isDevMode() &&
+  (import.meta.env.VITE_GRAPH3D_SPIKE === "1" ||
+    (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("graph3d-spike")));
+
 const TransportLoading = (): JSX.Element => (
   <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
     <div className="flex items-center gap-3 text-sm text-muted-foreground">
@@ -260,6 +266,10 @@ export function App(): JSX.Element {
 
   if (hasCosmosSpikeFlag()) {
     return <CosmosSpike />;
+  }
+
+  if (hasGraph3dSpikeFlag()) {
+    return <Graph3DSpike />;
   }
 
   return AsyncResult.match(transport, {
