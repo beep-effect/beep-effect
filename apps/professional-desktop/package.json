@@ -45,6 +45,8 @@
     "@beep/anthropic": "workspace:^",
     "@beep/cosmos": "workspace:^",
     "@beep/doc-text": "workspace:^",
+    "@beep/dock": "workspace:^",
+    "@beep/dock-react": "workspace:^",
     "@beep/documents-domain": "workspace:^",
     "@beep/documents-server": "workspace:^",
     "@beep/documents-use-cases": "workspace:^",

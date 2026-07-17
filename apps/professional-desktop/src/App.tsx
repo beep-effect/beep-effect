@@ -1,10 +1,13 @@
 /**
  * Professional Desktop React workbench shell bootstrap.
  *
- * Mounts the desktop chat surface ({@link ChatApp}), wired to the
- * `@beep/agents-client` atoms and `@beep/editor`. The chat surface renders its
- * own loading/empty/streaming states without a live sidecar; live interaction
- * needs the rpc server (built separately).
+ * The shell is a dock workspace (`@beep/dock` + `@beep/dock-react`): the four
+ * desktop surfaces — Home, Chat ({@link ChatApp}), Ontology, Vault sync — are
+ * keep-alive dock panels in one workspace whose layout the user can rearrange
+ * and which persists to localStorage. Two atom registries with explicit
+ * ownership: application state lives in the root `RegistryProvider`, dock
+ * state lives in the graph's private registry — panel content re-enters the
+ * app registry, and the shell reads dock atoms through `useDockAtom`.
  *
  * @packageDocumentation
  * @category components
@@ -12,17 +15,20 @@
  */
 
 import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client";
+import { TabChrome } from "@beep/dock";
+import { DockviewReact } from "@beep/dock-react";
 import { redactCauseForClient } from "@beep/observability";
 import { HttpOntologyProtocolLive, ontologyProtocolLayerAtom } from "@beep/ontology-client";
 import { OntologyWorkbench } from "@beep/ontology-ui";
 import { Button } from "@beep/ui/components/button";
 import { Toaster } from "@beep/ui/components/sonner";
-import { useAtomMount, useAtomValue } from "@effect/atom-react";
+import { RegistryContext, useAtomMount, useAtomValue } from "@effect/atom-react";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
+import { useContext, useMemo } from "react";
 import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
 import { ThemeToggle } from "./chat/ui/ThemeToggle.tsx";
@@ -34,7 +40,19 @@ import { makeDesktopHttpProtocolLive } from "./transport/DesktopHttpProtocol.ts"
 import { IpcChatProtocolLive } from "./transport/IpcChatClient.ts";
 import { IpcSpikePanel } from "./transport/IpcSpikePanel.tsx";
 import { SidecarTransport } from "./transport/SidecarTransport.ts";
+import {
+  DESKTOP_SURFACES,
+  desktopDockGraphAtom,
+  dockPersistenceBindingAtom,
+  isSurfaceActive,
+  surfaceOperation,
+} from "./workspace/dock.atoms.ts";
+import { useDockAtom } from "./workspace/useDockAtom.ts";
+import type { DockRenderer } from "@beep/dock-react";
 import type { JSX } from "react";
+import type { DesktopDockGraph, DesktopSurface } from "./workspace/dock.atoms.ts";
+
+type AppRegistry = DesktopDockGraph["registry"];
 
 const hasTauriRuntime = (): boolean => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
@@ -79,44 +97,6 @@ const readSidecarTransport = Effect.suspend(() =>
 // AsyncResult<SidecarTransport>: Initial = checking, Failure = unavailable,
 // Success = ready. Replaces the useState/useEffect transport probe.
 const sidecarTransportAtom = Atom.make(readSidecarTransport);
-type DesktopSurface = "home" | "chat" | "ontology" | "sync";
-
-const DEFAULT_SURFACE: DesktopSurface = "chat";
-
-const isDesktopSurface = (value: string): value is DesktopSurface =>
-  value === "home" || value === "chat" || value === "ontology" || value === "sync";
-
-// The nav items are anchors, so every click already writes `#<surface>` to the
-// address bar. Reading it back is what makes the URL authoritative: without
-// this, a reload at `#sync` rendered Chat, and Back left the URL and the
-// rendered surface disagreeing (with the old nav item still marked current).
-const surfaceFromHash = (): DesktopSurface => {
-  const raw = window.location.hash.replace(/^#/, "");
-  return isDesktopSurface(raw) ? raw : DEFAULT_SURFACE;
-};
-
-const desktopSurfaceAtom = Atom.make<DesktopSurface>(surfaceFromHash());
-
-// atom-first: a mounted binding rather than a useEffect. Syncs the surface from
-// the URL on mount and on every hash change (which covers back/forward too).
-const hashRoutingBindingAtom = Atom.make((get) => {
-  const apply = (): void => get.set(desktopSurfaceAtom, surfaceFromHash());
-  apply();
-  window.addEventListener("hashchange", apply);
-  get.addFinalizer(() => window.removeEventListener("hashchange", apply));
-  return undefined;
-});
-
-const desktopNavigationItems: ReadonlyArray<{
-  readonly description: string;
-  readonly label: string;
-  readonly surface: DesktopSurface;
-}> = [
-  { description: "Return to the workspace overview.", label: "Home", surface: "home" },
-  { description: "Work with the professional assistant and your saved threads.", label: "Chat", surface: "chat" },
-  { description: "Explore and refine the workspace knowledge model.", label: "Ontology", surface: "ontology" },
-  { description: "Review provider connectivity, queue health, and conflicts.", label: "Vault sync", surface: "sync" },
-];
 
 // atom-first: when the probe resolves, point the rpc client at the matching
 // protocol layer (IPC in the desktop shell, HTTP in the browser). A mounted
@@ -159,46 +139,97 @@ const hasGraph3dSpikeFlag = (): boolean =>
   (import.meta.env.VITE_GRAPH3D_SPIKE === "1" ||
     (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("graph3d-spike")));
 
-const TransportLoading = (): JSX.Element => (
+const ShellLoading = ({ label }: { readonly label: string }): JSX.Element => (
   <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
     <div className="flex items-center gap-3 text-sm text-muted-foreground">
       <span className="h-2 w-2 rounded-full bg-primary motion-safe:animate-pulse" />
-      Connecting desktop transport
+      {label}
     </div>
   </div>
 );
 
-const HomeSurface = (): JSX.Element => (
-  <main className="h-full overflow-y-auto p-6">
-    <div className="mx-auto max-w-5xl">
-      <p className="text-sm font-medium text-primary">Professional Desktop</p>
-      <h1 className="mt-1 text-2xl font-semibold tracking-tight">Your professional workspace</h1>
-      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-        Move between assisted research, ontology work, and document synchronization from one place.
-      </p>
-      <div className="mt-6 grid gap-4 md:grid-cols-3">
-        {A.drop(desktopNavigationItems, 1).map((item) => (
-          <a
-            key={item.surface}
-            href={`#${item.surface}`}
-            className="rounded-lg border bg-card p-4 shadow-sm transition-colors hover:border-primary/50 hover:bg-accent"
-          >
-            <h2 className="font-semibold">{item.label}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
-            <span className="mt-4 inline-block text-sm font-medium text-primary">Open {item.label} →</span>
-          </a>
-        ))}
+const HomeSurface = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Element => {
+  const workspace = useDockAtom(graph, graph.workspaceAtom);
+  return (
+    <main className="h-full overflow-y-auto p-6">
+      <div className="mx-auto max-w-5xl">
+        <p className="text-sm font-medium text-primary">Professional Desktop</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight">Your professional workspace</h1>
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+          Move between assisted research, ontology work, and document synchronization from one place.
+        </p>
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          {A.map(A.drop(DESKTOP_SURFACES, 1), (item) => (
+            <button
+              key={item.surface}
+              type="button"
+              onClick={() => graph.registry.set(graph.operationAtom, surfaceOperation(workspace, item.surface))}
+              className="rounded-lg border bg-card p-4 text-left shadow-sm transition-colors hover:border-primary/50 hover:bg-accent"
+            >
+              <h2 className="font-semibold">{item.label}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+              <span className="mt-4 inline-block text-sm font-medium text-primary">Open {item.label} →</span>
+            </button>
+          ))}
+        </div>
       </div>
-    </div>
-  </main>
+    </main>
+  );
+};
+
+const DockWatermark = (): JSX.Element => (
+  <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+    All surfaces are closed — reopen one from the navigation above.
+  </div>
 );
 
-const DesktopShell = ({ transport }: { readonly transport: SidecarTransport }): JSX.Element => {
-  const surface = useAtomValue(desktopSurfaceAtom);
-  // The anchors below already write `#<surface>`; this binding reads it back, so
-  // the hash is the single source of truth for which surface renders (and
-  // reload/back/forward all land where the URL says).
-  useAtomMount(hashRoutingBindingAtom);
+// Panel content re-enters the APP registry: the adapter provides the dock
+// graph's private registry to everything it portals, but chat/ontology/sync
+// state (and the protocol-layer bindings that configure them) live in the
+// root RegistryProvider. Without this wrapper each surface would silently
+// instantiate detached copies of its atoms inside the graph registry.
+const makeSurfaceRenderers = (
+  graph: DesktopDockGraph,
+  appRegistry: AppRegistry
+): Readonly<Record<DesktopSurface, DockRenderer>> => ({
+  home: () => (
+    <RegistryContext.Provider value={appRegistry}>
+      <HomeSurface graph={graph} />
+    </RegistryContext.Provider>
+  ),
+  chat: () => (
+    <RegistryContext.Provider value={appRegistry}>
+      <ChatApp />
+    </RegistryContext.Provider>
+  ),
+  ontology: () => (
+    <RegistryContext.Provider value={appRegistry}>
+      <OntologyWorkbench />
+    </RegistryContext.Provider>
+  ),
+  sync: () => (
+    <RegistryContext.Provider value={appRegistry}>
+      <VaultSyncPanel floating={false} />
+    </RegistryContext.Provider>
+  ),
+});
+
+const DesktopShell = ({
+  graph,
+  transport,
+}: {
+  readonly graph: DesktopDockGraph;
+  readonly transport: SidecarTransport;
+}): JSX.Element => {
+  const workspace = useDockAtom(graph, graph.workspaceAtom);
+  const appRegistry = useContext(RegistryContext);
+  // Stable renderer identities: a fresh components map per render would hand
+  // React new component types on every workspace change, remounting every
+  // panel subtree and destroying the state keep-alive exists to preserve.
+  const surfaceRenderers = useMemo(() => makeSurfaceRenderers(graph, appRegistry), [graph, appRegistry]);
+  // Debounced snapshot persistence for every workspace change (drag, split,
+  // float, activate, close) — the reload-restores-layout half of the contract.
+  useAtomMount(dockPersistenceBindingAtom(graph));
 
   return (
     <>
@@ -212,14 +243,13 @@ const DesktopShell = ({ transport }: { readonly transport: SidecarTransport }): 
         <div className="flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-background text-foreground">
           <nav className="flex h-12 shrink-0 items-center gap-1 border-b px-3" aria-label="Desktop pages">
             <span className="mr-3 text-sm font-semibold">BEEP</span>
-            {desktopNavigationItems.map((item) => (
+            {A.map(DESKTOP_SURFACES, (item) => (
               <Button
                 key={item.surface}
-                aria-current={surface === item.surface ? "page" : undefined}
-                nativeButton={false}
-                render={<a href={`#${item.surface}`} />}
+                aria-current={isSurfaceActive(workspace, item.surface) ? "page" : undefined}
+                onClick={() => graph.registry.set(graph.operationAtom, surfaceOperation(workspace, item.surface))}
                 size="sm"
-                variant={surface === item.surface ? "secondary" : "ghost"}
+                variant={isSurfaceActive(workspace, item.surface) ? "secondary" : "ghost"}
               >
                 {item.label}
               </Button>
@@ -231,11 +261,20 @@ const DesktopShell = ({ transport }: { readonly transport: SidecarTransport }): 
               <ThemeToggle />
             </div>
           </nav>
-          <div className="min-h-0 flex-1">
-            {surface === "home" ? <HomeSurface /> : null}
-            {surface === "chat" ? <ChatApp /> : null}
-            {surface === "ontology" ? <OntologyWorkbench /> : null}
-            {surface === "sync" ? <VaultSyncPanel floating={false} /> : null}
+          <div className="desktop-dock min-h-0 flex-1">
+            <DockviewReact
+              graph={graph}
+              components={surfaceRenderers}
+              watermarkComponent={DockWatermark}
+              options={{
+                gap: 6,
+                titleMinima: {
+                  font: "12px ui-sans-serif, system-ui, sans-serif",
+                  lineHeight: 16,
+                  chrome: TabChrome.make({ perTab: 44, strip: 8 }),
+                },
+              }}
+            />
           </div>
         </div>
       </DocumentIntakeTarget>
@@ -246,36 +285,19 @@ const DesktopShell = ({ transport }: { readonly transport: SidecarTransport }): 
   );
 };
 
-/**
- * The desktop application root. A thin wrapper that mounts the chat surface.
- *
- * @example
- * ```tsx
- * import { App } from "@/App"
- *
- * console.log(App.name) // "App"
- * ```
- *
- * @category components
- * @since 0.0.0
- */
-export function App(): JSX.Element {
+// Inside the graph-registry provider: probe the transport, bind the protocol
+// layers into the SAME registry the panel content reads from, and gate the
+// shell on the probe. One registry for the whole app — a second one would let
+// panels read protocol atoms the bindings never wrote.
+const TransportGate = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Element => {
   const transport = useAtomValue(sidecarTransportAtom);
-  // bind the rpc protocol layer to the resolved transport (see binding above).
   useAtomMount(protocolLayerBindingAtom);
 
-  if (hasCosmosSpikeFlag()) {
-    return <CosmosSpike />;
-  }
-
-  if (hasGraph3dSpikeFlag()) {
-    return <Graph3DSpike />;
-  }
 
   return AsyncResult.match(transport, {
     onInitial: () => (
       <>
-        <TransportLoading />
+        <ShellLoading label="Connecting desktop transport" />
         <ChatTurnErrorToasts />
         <Toaster richColors />
       </>
@@ -296,6 +318,51 @@ export function App(): JSX.Element {
         </>
       );
     },
-    onSuccess: (success) => <DesktopShell transport={success.value} />,
+    onSuccess: (success) => <DesktopShell graph={graph} transport={success.value} />,
+  });
+};
+
+/**
+ * The desktop application root: builds the dock workspace graph (with any
+ * persisted layout restored) and renders the shell inside its registry.
+ *
+ * @example
+ * ```tsx
+ * import { App } from "@/App"
+ *
+ * console.log(App.name) // "App"
+ * ```
+ *
+ * @category components
+ * @since 0.0.0
+ */
+export function App(): JSX.Element {
+  // Hooks precede the spike check (rules-of-hooks); the dock graph atom
+  // starting on the spike route mirrors M2, where the transport probe did.
+  const graphResult = useAtomValue(desktopDockGraphAtom);
+
+  if (hasCosmosSpikeFlag()) {
+    return <CosmosSpike />;
+  }
+
+  if (hasGraph3dSpikeFlag()) {
+    return <Graph3DSpike />;
+  }
+
+  return AsyncResult.match(graphResult, {
+    onInitial: () => <ShellLoading label="Preparing workspace" />,
+    onFailure: (failure) => {
+      const redacted = redactCauseForClient(failure.cause);
+      return (
+        <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
+          <div className="max-w-md rounded-md border bg-card p-4 shadow-sm">
+            <h1 className="text-base font-semibold">Workspace unavailable</h1>
+            <p className="mt-2 text-sm text-muted-foreground">{redacted.message}</p>
+            <p className="mt-2 text-xs text-muted-foreground">Diagnostic ID: {redacted.fingerprint}</p>
+          </div>
+        </div>
+      );
+    },
+    onSuccess: (success) => <TransportGate graph={success.value} />,
   });
 }

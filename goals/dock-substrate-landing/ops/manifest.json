@@ -5,7 +5,7 @@
     "title": "Dock Substrate Landing",
     "status": "active",
     "created": "2026-07-14",
-    "updated": "2026-07-14",
+    "updated": "2026-07-17",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/dock-substrate-landing",
@@ -63,7 +63,7 @@
     {
       "id": "P3",
       "name": "M3: professional-desktop dock shell (root workspace, persistence, CSS)",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",

@@ -1,0 +1,101 @@
+/* Dock workspace chrome, scoped under the shell's `.desktop-dock` stage.
+   The adapter emits functional inline styles only (boxes, flex direction);
+   every visual below hangs off its data attributes and ARIA roles, and every
+   color comes from the app's theme tokens so light/dark both hold. */
+
+.desktop-dock {
+  position: relative;
+  padding: 6px;
+  box-sizing: border-box;
+}
+
+.desktop-dock section[data-group-id] {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 8px);
+  overflow: hidden;
+}
+
+.desktop-dock section[data-group-id] > [role="tablist"] {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--muted);
+  padding: 4px 6px;
+  font-size: 12px;
+  min-height: 26px;
+  user-select: none;
+  border-bottom: 1px solid var(--border);
+}
+
+.desktop-dock section[data-group-id] > [role="tablist"] [role="tab"] {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: calc(var(--radius, 8px) - 3px);
+  color: var(--muted-foreground);
+  cursor: default;
+  white-space: nowrap;
+}
+
+.desktop-dock section[data-group-id] > [role="tablist"] [role="tab"][data-active="true"] {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.desktop-dock section[data-group-id] > [role="tablist"] button {
+  background: transparent;
+  border: none;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 5px;
+  border-radius: calc(var(--radius, 8px) - 4px);
+}
+
+.desktop-dock section[data-group-id] > [role="tablist"] button:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.desktop-dock [data-content-host] {
+  background: var(--background);
+}
+
+.desktop-dock [data-panel-target] {
+  height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.desktop-dock [data-sash-id] {
+  border-radius: 3px;
+}
+
+.desktop-dock [data-sash-id]:hover {
+  background: color-mix(in oklch, var(--primary) 45%, transparent);
+}
+
+.desktop-dock [data-drop-indicator] {
+  background: color-mix(in oklch, var(--primary) 18%, transparent);
+  border: 1px solid color-mix(in oklch, var(--primary) 55%, transparent);
+  border-radius: var(--radius, 8px);
+}
+
+.desktop-dock [data-floating-pane] {
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 8px);
+  background: var(--card);
+  box-shadow: 0 12px 32px color-mix(in oklch, var(--foreground) 25%, transparent);
+  overflow: hidden;
+}
+
+.desktop-dock [data-floating-header] {
+  background: var(--muted);
+}
+
+.desktop-dock [data-floating-resize] {
+  background: color-mix(in oklch, var(--muted-foreground) 35%, transparent);
+  border-radius: 3px;
+}
