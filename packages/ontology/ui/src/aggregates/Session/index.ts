@@ -18,4 +18,4 @@ export * from "./Session.tree.ts";
  * @category components
  * @since 0.0.0
  */
-export * from "./Session.workbench.ts";
+export * from "./Session.workbench.tsx";

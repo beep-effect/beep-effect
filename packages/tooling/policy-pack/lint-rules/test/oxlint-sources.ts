@@ -18,6 +18,7 @@ type OxlintCase = {
   readonly count: number;
   readonly filename?: string;
   readonly fixedSource?: string;
+  readonly supportingFiles?: ReadonlyArray<readonly [path: string, source: string]>;
 };
 
 export type OxlintRuleSources = {
@@ -34,21 +35,25 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
   "no-js-extension-imports": {
     invalid: [
       {
-        count: 5,
+        count: 4,
         source: lines(
           `import value from './ProviderInstance.service.js';`,
           `import type { Model } from "../Model.jsx";`,
           `import "./worker.mjs";`,
-          `import "./legacy.cjs";`,
-          `import { App } from "./App.js";`
+          `import "./legacy.cjs";`
         ),
         fixedSource: lines(
           `import value from './ProviderInstance.service.ts';`,
           `import type { Model } from "../Model.tsx";`,
           `import "./worker.mts";`,
-          `import "./legacy.cts";`,
-          `import { App } from "./App.ts";`
+          `import "./legacy.cts";`
         ),
+      },
+      {
+        count: 1,
+        source: `import { App } from "./App.js";`,
+        fixedSource: `import { App } from "./App.tsx";`,
+        supportingFiles: [["App.tsx", `export const App = null;`]],
       },
       {
         count: 2,
@@ -84,6 +89,11 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
         count: 0,
         filename: "fixture.js",
         source: `import value from "./runtime.js";`,
+      },
+      {
+        count: 0,
+        source: `import value from "./runtime.js";`,
+        supportingFiles: [["runtime.js", `export default "runtime";`]],
       },
     ],
   },

@@ -36,11 +36,9 @@ const $I = $RepoCliId.create("commands/Codegen/Codegen.command");
  * @category utilities
  * @since 0.0.0
  */
-const TS_EXTENSIONS = [".ts", ".tsx"] as const;
-
 const TYPE_SCRIPT_SOURCE_FILE_PATTERN = /^.+\.(ts|tsx)$/;
 const TYPE_SCRIPT_TEST_FILE_PATTERN = /^.+\.(test|spec)\.(ts|tsx)$/;
-const TYPESCRIPT_IMPORT_PATH_PATTERN = /^\.\/.+\.ts$/;
+const TYPESCRIPT_IMPORT_PATH_PATTERN = /^\.\/.+\.tsx?$/;
 
 const TypeScriptSourceFileName = S.String.check(S.isPattern(TYPE_SCRIPT_SOURCE_FILE_PATTERN)).pipe(
   S.brand("TypeScriptSourceFileName"),
@@ -59,7 +57,7 @@ const TypeScriptTestFileName = S.String.check(S.isPattern(TYPE_SCRIPT_TEST_FILE_
 
 const TypeScriptImportPath = S.String.check(S.isPattern(TYPESCRIPT_IMPORT_PATH_PATTERN)).pipe(
   $I.annoteSchema("TypeScriptImportPath", {
-    description: "Relative TypeScript import path with .ts extension.",
+    description: "Relative TypeScript import path with a .ts or .tsx extension.",
   })
 );
 
@@ -67,21 +65,13 @@ const TypeScriptSourceToImportPath = TypeScriptSourceFileName.pipe(
   S.decodeTo(
     TypeScriptImportPath,
     SchemaTransformation.transform({
-      decode: (fileName) =>
-        pipe(
-          TS_EXTENSIONS,
-          A.findFirst((ext) => Str.endsWith(ext)(fileName)),
-          O.map((ext) => `./${Str.slice(0, -ext.length)(fileName)}.ts`),
-          O.getOrElse(() => `./${fileName}`)
-        ),
+      decode: (fileName) => `./${fileName}`,
       encode: (importPath) =>
-        Result.getOrThrow(
-          decodeTypeScriptSourceFileNameResult(pipe(importPath, Str.replace(/^\.\/(.*)\.ts$/, "$1.ts")))
-        ),
+        Result.getOrThrow(decodeTypeScriptSourceFileNameResult(pipe(importPath, Str.replace(/^\.\/(.*)$/, "$1")))),
     })
   ),
   $I.annoteSchema("TypeScriptSourceToImportPath", {
-    description: "Schema transformation from a TypeScript module filename to its .ts import path.",
+    description: "Schema transformation from a TypeScript module filename to its matching source import path.",
   })
 );
 
@@ -104,13 +94,13 @@ const isRootIndexFileName = S.is(RootIndexFileName);
 const decodeImportPathResult = S.decodeUnknownResult(TypeScriptSourceToImportPath);
 
 /**
- * Convert a TypeScript filename to its corresponding `.ts` import specifier.
+ * Convert a TypeScript filename to its corresponding source import specifier.
  *
- * Strips the `.ts` or `.tsx` extension and prepends `./` so the result is a
- * valid source-facing relative import path (e.g. `"FsUtils.ts"` becomes `"./FsUtils.ts"`).
+ * Preserves the `.ts` or `.tsx` extension and prepends `./` so the result is a
+ * valid source-facing relative import path (e.g. `"View.tsx"` becomes `"./View.tsx"`).
  *
  * @param name - The TypeScript filename (may include a sub-path prefix).
- * @returns A relative import specifier with a `.ts` extension.
+ * @returns A relative import specifier with the matching source extension.
  * @example
  * ```ts
  * console.log("toImportPath")

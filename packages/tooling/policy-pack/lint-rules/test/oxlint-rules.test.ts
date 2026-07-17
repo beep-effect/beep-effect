@@ -18,12 +18,17 @@ describe("oxlint rules", () => {
         it(`flags invalid case #${index} (${testCase.count} finding(s))`, () =>
           run(
             Effect.gen(function* () {
-              const findings = yield* runOxlintRule(rule, testCase.source, testCase.filename);
+              const findings = yield* runOxlintRule(rule, testCase.source, testCase.filename, testCase.supportingFiles);
               expect(findings.length).toBe(testCase.count);
               expect(A.every(findings, (finding) => finding.ruleId === rule)).toBe(true);
 
               if (testCase.fixedSource !== undefined) {
-                const fixedSource = yield* runOxlintRuleFix(rule, testCase.source, testCase.filename);
+                const fixedSource = yield* runOxlintRuleFix(
+                  rule,
+                  testCase.source,
+                  testCase.filename,
+                  testCase.supportingFiles
+                );
                 expect(fixedSource).toBe(`${testCase.fixedSource}\n`);
               }
             })
@@ -34,7 +39,7 @@ describe("oxlint rules", () => {
         it(`ignores valid case #${index}`, () =>
           run(
             Effect.gen(function* () {
-              const findings = yield* runOxlintRule(rule, testCase.source, testCase.filename);
+              const findings = yield* runOxlintRule(rule, testCase.source, testCase.filename, testCase.supportingFiles);
               expect(findings.length).toBe(0);
             })
           ));

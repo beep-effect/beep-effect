@@ -5,8 +5,9 @@
  * @since 0.1.0
  */
 
-import { Str } from "@beep/utils";
+import { FileSystem, Str } from "@beep/utils";
 import { defineRule } from "@oxlint/plugins";
+import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -29,6 +30,29 @@ const isRelativeSpecifier = (source: string): boolean =>
 
 const replacementFor = (source: string): O.Option<(typeof EXTENSION_REPLACEMENTS)[number]> =>
   A.findFirst(EXTENSION_REPLACEMENTS, ([extension]) => Str.endsWith(extension)(source));
+
+const importedModuleUrl = (source: string, filename: string): URL => new URL(source, new URL(`file://${filename}`));
+
+const pathExists = (url: URL): boolean => Effect.runSync(FileSystem.existsSync(url.pathname));
+
+const sourceExtensionFor = (
+  source: string,
+  runtimeExtension: string,
+  defaultSourceExtension: string,
+  filename: string
+): string => {
+  if (!Str.equivalence(runtimeExtension, ".js")) return defaultSourceExtension;
+
+  const importedModule = importedModuleUrl(source, filename);
+  const sourceStem = Str.slice(0, -runtimeExtension.length)(importedModule.pathname);
+  const typescriptModule = new URL(importedModule);
+  typescriptModule.pathname = `${sourceStem}.ts`;
+  if (pathExists(typescriptModule)) return ".ts";
+
+  const typescriptReactModule = new URL(importedModule);
+  typescriptReactModule.pathname = `${sourceStem}.tsx`;
+  return pathExists(typescriptReactModule) ? ".tsx" : defaultSourceExtension;
+};
 
 const isStringLiteral = (node: ESTree.Expression): node is ESTree.StringLiteral =>
   node.type === "Literal" && P.isString(node.value);
@@ -62,8 +86,15 @@ export default defineRule({
 
       const replacement = replacementFor(source.value);
       if (O.isNone(replacement)) return;
+      if (pathExists(importedModuleUrl(source.value, context.filename))) return;
 
-      const [runtimeExtension, sourceExtension] = replacement.value;
+      const [runtimeExtension, defaultSourceExtension] = replacement.value;
+      const sourceExtension = sourceExtensionFor(
+        source.value,
+        runtimeExtension,
+        defaultSourceExtension,
+        context.filename
+      );
       const extensionStart = source.range[1] - 1 - runtimeExtension.length;
 
       context.report({
