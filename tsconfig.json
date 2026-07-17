@@ -1548,7 +1548,10 @@
       "@beep/dock": ["./packages/foundation/ui-system/dock/src/index.ts"],
       "@beep/graph-3d": ["./packages/drivers/graph-3d/src/index.ts"],
       "@beep/graph-3d/browser": ["./packages/drivers/graph-3d/src/browser.ts"],
-      "@beep/graph-3d/react": ["./packages/drivers/graph-3d/src/react.ts"]
+      "@beep/graph-3d/react": ["./packages/drivers/graph-3d/src/react.ts"],
+      "@beep/dock-react": [
+        "./packages/foundation/ui-system/dock-react/src/index.ts"
+      ]
     }
   }
 }

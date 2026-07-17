@@ -19,13 +19,13 @@ import {
   TextPanelView,
   TopLeftAnchoredBox,
   VerticalSplitLayout,
-} from "../../dockview/poc/index.ts";
+} from "@beep/dock";
 import {
   type DockAtomGraph,
   type DockPanelProps,
   type DockRenderer,
   DockviewReact,
-} from "../../dockview-react/src/index.ts";
+} from "@beep/dock-react";
 import "./demo.css";
 
 const textPanel = (id: string, title: string, body: string): Panel =>

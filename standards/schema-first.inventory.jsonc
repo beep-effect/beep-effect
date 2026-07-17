@@ -1500,6 +1500,38 @@
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
+      "file": "packages/foundation/ui-system/dock-react/src/DockReact.types.ts",
+      "symbol": "DockPanelProps",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/dock-react",
+      "reason": "React renderer props composing DockviewAdapterApi, a function-bearing runtime handle; the schema-modelable half (DockPanelApi) is already an annotated S.Class."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/DockReact.types.ts",
+      "symbol": "DockviewAdapterApi",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/dock-react",
+      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/DockReact.types.ts",
+      "symbol": "DockviewReactProps",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/dock-react",
+      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/AdapterState.ts",
+      "symbol": "AdapterState",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/dock-react",
+      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
+    },
+    {
       "file": "packages/foundation/ui-system/dock/src/DockEngine.service.ts",
       "symbol": "DockEngineShape",
       "kind": "exported-interface",

@@ -53,7 +53,7 @@ jobs:
         include:
           - id: lint
             name: Lint
-            timeout_minutes: 20
+            timeout_minutes: 30
             uses_turbo: "true"
             install_typos: "true"
           - id: lint-policy

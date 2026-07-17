@@ -32,6 +32,12 @@
       "path": "../packages/foundation/modeling/utils/tsconfig.json"
     },
     {
+      "path": "../packages/foundation/ui-system/dock-react/tsconfig.json"
+    },
+    {
+      "path": "../packages/foundation/ui-system/dock/tsconfig.json"
+    },
+    {
       "path": "../packages/foundation/primitive/data/tsconfig.json"
     },
     {

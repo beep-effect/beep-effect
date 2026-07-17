@@ -286,6 +286,9 @@
       "path": "packages/foundation/ui-system/dock"
     },
     {
+      "path": "packages/foundation/ui-system/dock-react"
+    },
+    {
       "path": "packages/foundation/ui-system/editor"
     },
     {

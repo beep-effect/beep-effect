@@ -48,6 +48,9 @@ package.
 
 ## Trail
 
+- 2026-07-16: M2 graduation — `@beep/dock-react` landed, the demo was
+  rewired to package imports, and scratchpad `dockview` + `dockview-react`
+  were retired (residuals moved to the packet README).
 - 2026-07-14 (latest: DOCK GRADUATION OPENED, gate released): grill locked
   the landing arc — `@beep/dock` + `@beep/dock-react` under
   `packages/foundation/ui-system/` (purity boundary = package boundary), a
