@@ -24,7 +24,13 @@ const stripMisplacedLexicalPureAnnotations = (): Plugin => ({
 
 const config: StorybookConfig = {
   framework: "@storybook/react-vite",
-  stories: ["../../../packages/foundation/ui-system/*/stories/**/*.stories.@(ts|tsx)"],
+  stories: [
+    "../../../packages/foundation/ui-system/*/stories/**/*.stories.@(ts|tsx)",
+    // graph-3d driver stories (goal graph-3d-view): the storybook app is a
+    // composition root, so hosting driver stories keeps slice `ui` clean of
+    // driver imports.
+    "../../../packages/drivers/graph-3d/stories/**/*.stories.@(ts|tsx)",
+  ],
   addons: ["@storybook/addon-docs", "@storybook/addon-a11y", "@storybook/addon-themes", "@storybook/addon-vitest"],
   staticDirs: [{ from: "../../../node_modules/emojibase-data", to: "/emojibase-data" }],
   viteFinal(config) {

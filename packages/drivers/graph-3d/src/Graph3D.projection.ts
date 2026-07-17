@@ -75,7 +75,55 @@ export class Graph3DProjection extends S.Class<Graph3DProjection>($I`Graph3DProj
     description:
       "Typed-array 3D graph projection with interleaved positions, indexed links, community ordinals, importance, weights, and optional labels.",
   })
-) {}
+) {
+  /**
+   * Buffer-coherence invariants for a projection: every typed array agrees
+   * with the declared counts, link indices address real nodes, and no edge is
+   * a self-loop (the reference's cubic self-loop variant is out of contract).
+   *
+   * Enforced by the renderer at mount and update as a trusted-boundary
+   * precondition — `Schema.Class` attaches statics in-body because piping a
+   * cross-field check would lose the constructor identity.
+   *
+   * @since 0.0.0
+   */
+  static readonly hasCoherentBuffers = (projection: Graph3DProjection): boolean => {
+    if (
+      projection.nodeIds.length !== projection.nodeCount ||
+      projection.pointPositions.length !== projection.nodeCount * 3 ||
+      projection.nodeCommunities.length !== projection.nodeCount ||
+      projection.nodeImportance.length !== projection.nodeCount ||
+      projection.links.length !== projection.edgeCount * 2 ||
+      projection.edgeWeights.length !== projection.edgeCount ||
+      (projection.labels !== undefined && projection.labels.length !== projection.nodeCount)
+    ) {
+      return false;
+    }
+
+    let edgeIndex = 0;
+
+    while (edgeIndex < projection.edgeCount) {
+      const source = projection.links[edgeIndex * 2] ?? Number.NaN;
+      const target = projection.links[edgeIndex * 2 + 1] ?? Number.NaN;
+
+      if (
+        !Number.isInteger(source) ||
+        !Number.isInteger(target) ||
+        source < 0 ||
+        target < 0 ||
+        source >= projection.nodeCount ||
+        target >= projection.nodeCount ||
+        source === target
+      ) {
+        return false;
+      }
+
+      edgeIndex += 1;
+    }
+
+    return true;
+  };
+}
 
 /**
  * Options for deterministic synthetic 3D graph generation.

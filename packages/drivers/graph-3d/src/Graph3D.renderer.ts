@@ -202,6 +202,40 @@ export class Graph3DRenderOptions extends S.Class<Graph3DRenderOptions>($I`Graph
 ) {}
 
 /**
+ * Introspection snapshot of a mounted renderer, for probes and tests.
+ *
+ * @example
+ * ```ts
+ * import { Graph3DRenderStats } from "@beep/graph-3d/browser"
+ *
+ * const stats = Graph3DRenderStats.make({
+ *   nodeCount: 1,
+ *   edgeCount: 0,
+ *   visibleLabelCount: 0,
+ *   dimmedNodeCount: 0
+ * })
+ *
+ * console.log(stats.nodeCount)
+ * ```
+ *
+ * @category adapters
+ * @since 0.0.0
+ */
+export class Graph3DRenderStats extends S.Class<Graph3DRenderStats>($I`Graph3DRenderStats`)(
+  {
+    nodeCount: S.Int,
+    edgeCount: S.Int,
+    visibleLabelCount: S.Int,
+    // Nodes currently at the dimmed opacity because a selection is active.
+    dimmedNodeCount: S.Int,
+    selectedNodeIndex: S.Int.pipe(S.optionalKey),
+  },
+  $I.annote("Graph3DRenderStats", {
+    description: "Snapshot of rendered node/edge/label counts and active selection dimming.",
+  })
+) {}
+
+/**
  * Mounted 3D graph renderer handle.
  *
  * @example
@@ -227,10 +261,11 @@ export class Graph3DRenderHandle extends S.Class<Graph3DRenderHandle>($I`Graph3D
     // Applies selection dimming for a node index of the *currently rendered*
     // projection; `undefined` clears. Never fires `onNodeSelect`.
     select: Fn({ input: S.UndefinedOr(S.Int), output: S.Void }),
+    stats: Fn({ output: Graph3DRenderStats }),
   },
   $I.annote("Graph3DRenderHandle", {
     description:
-      "Imperative lifecycle for a mounted instanced three.js graph: destroy, fps sampling, full-projection update, and selection dimming.",
+      "Imperative lifecycle for a mounted instanced three.js graph: destroy, fps sampling, full-projection update, selection dimming, and stats introspection.",
   })
 ) {}
 
@@ -767,6 +802,13 @@ const mountRenderer = (
       if (destroyed) {
         return;
       }
+      // Incoherent buffers at a trusted boundary are a programmer error.
+      if (!Graph3DProjection.hasCoherentBuffers(projection)) {
+        options.onRuntimeError?.(
+          Graph3DDriverError.adapterInvariant("The 3D graph projection buffers are incoherent.")
+        );
+        return;
+      }
       // Full-projection replacement (cosmos parity): topology can change
       // across updates (focus reprojection), so the scene graph is rebuilt
       // and selection identity resets — the ontology bridge re-applies it by
@@ -779,6 +821,24 @@ const mountRenderer = (
       if (!destroyed) {
         applySelection(nodeIndex);
       }
+    },
+    stats: () => {
+      if (P.isUndefined(sceneGraph)) {
+        return Graph3DRenderStats.make({ nodeCount: 0, edgeCount: 0, visibleLabelCount: 0, dimmedNodeCount: 0 });
+      }
+      let dimmedNodeCount = 0;
+      for (let index = 0; index < sceneGraph.nodeAlphas.length; index += 1) {
+        if (sceneGraph.nodeAlphas[index]! < 1) {
+          dimmedNodeCount += 1;
+        }
+      }
+      return Graph3DRenderStats.make({
+        nodeCount: sceneGraph.positions.length / 3,
+        edgeCount: sceneGraph.edgeAlphas.length,
+        visibleLabelCount: visibleLabels,
+        dimmedNodeCount,
+        ...(P.isUndefined(selectedIndex) ? {} : { selectedNodeIndex: selectedIndex }),
+      });
     },
     destroy: () => {
       if (destroyed) {
@@ -844,6 +904,9 @@ export const renderGraph3D = Effect.fn("Graph3D.renderGraph3D")(function* (
       reason: "webglUnavailable",
       message: "WebGL2 is unavailable; the 3D graph renderer requires it.",
     });
+  }
+  if (!Graph3DProjection.hasCoherentBuffers(projection)) {
+    return yield* Graph3DDriverError.adapterInvariant("The 3D graph projection buffers are incoherent.");
   }
   const three = yield* loadThreeModule;
   const controlsModule = yield* loadControlsModule;

@@ -7,7 +7,9 @@
     "vitest.storybook.config.ts",
     "vitest.storybook.setup.ts",
     "../../packages/foundation/ui-system/*/stories/**/*.ts",
-    "../../packages/foundation/ui-system/*/stories/**/*.tsx"
+    "../../packages/foundation/ui-system/*/stories/**/*.tsx",
+    "../../packages/drivers/graph-3d/stories/**/*.ts",
+    "../../packages/drivers/graph-3d/stories/**/*.tsx"
   ],
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
@@ -29,6 +31,10 @@
       "@beep/editor/*": ["../../packages/foundation/ui-system/editor/src/*"],
       "@beep/form": ["../../packages/foundation/ui-system/form/src/index.ts"],
       "@beep/form/*": ["../../packages/foundation/ui-system/form/src/*"],
+      "@beep/graph-3d": ["../../packages/drivers/graph-3d/src/index.ts"],
+      "@beep/graph-3d/browser": [
+        "../../packages/drivers/graph-3d/src/browser.ts"
+      ],
       "@beep/lexical-schema": [
         "../../packages/foundation/modeling/lexical/src/index.ts"
       ],
@@ -56,6 +62,9 @@
     },
     {
       "path": "../../packages/foundation/ui-system/ui/tsconfig.json"
+    },
+    {
+      "path": "../../packages/drivers/graph-3d/tsconfig.json"
     }
   ]
 }

@@ -27,6 +27,7 @@
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
+    "test:browser": "vitest run --config vitest.browser.config.ts",
     "test:property": "bun run beep:test"
   },
   "exports": {
@@ -65,6 +66,8 @@
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "@types/three": "catalog:",
+    "@vitest/browser": "catalog:",
+    "@vitest/browser-playwright": "catalog:",
     "vitest": "catalog:"
   },
   "beep": {

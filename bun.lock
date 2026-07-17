@@ -182,6 +182,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@beep/form": "workspace:^",
+        "@beep/graph-3d": "workspace:^",
         "@beep/ui": "workspace:^",
         "@storybook/addon-a11y": "catalog:",
         "@storybook/addon-docs": "catalog:",
