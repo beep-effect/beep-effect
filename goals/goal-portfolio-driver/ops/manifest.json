@@ -5,7 +5,7 @@
     "title": "Goal Portfolio Driver",
     "status": "active",
     "created": "2026-07-14",
-    "updated": "2026-07-14",
+    "updated": "2026-07-16",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/goal-portfolio-driver",
@@ -57,12 +57,12 @@
     {
       "id": "P0",
       "name": "Harden",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Scaffold+Queue",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
