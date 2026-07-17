@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "graph-3d-navigation",
+    "title": "Graph 3D Navigation — InfraNodus-style 3D knowledge-graph view",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [
+      "TRANSFERRED to goals/graph-3d-view P0 design gate: rendering stack + engine placement (drivers vs ui-system vs hybrid), label technique + fade parameters, 3D layout location (worker-z vs renderer-sim vs server-2D+z-synthesis). Evidence in research/library-landscape-3d.md, integration-constraints.md, bundle-static-analysis.md, label-anti-overlap.md."
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/graph-3d-view"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-14",
+    "updated": "2026-07-14"
+  }
+}
