@@ -21,6 +21,9 @@ const ontologyMcpOriginDecisions = Metric.counter("desktop_ontology_mcp_origin_d
 });
 
 const ontologyMcpAllowedOrigins: ReadonlyArray<string> = [
+  // Canonical portless dev origin; the 1421 entries cover the PORTLESS=0
+  // diagnostic bypass (vite falls back to --port 1421).
+  "http://professional-desktop.beep.localhost:1355",
   "http://localhost:1421",
   "http://127.0.0.1:1421",
   "tauri://localhost",
