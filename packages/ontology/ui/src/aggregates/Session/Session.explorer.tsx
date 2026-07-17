@@ -17,8 +17,8 @@ import { Input } from "@beep/ui/components/input";
 import { O } from "@beep/utils";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { RichTreeView } from "@mui/x-tree-view/RichTreeView";
-import { ontologyTreeItemsFor } from "./Session.tree.js";
-import { valueFromEvent } from "./Session.workbench.shared.js";
+import { ontologyTreeItemsFor } from "./Session.tree.ts";
+import { valueFromEvent } from "./Session.workbench.shared.ts";
 import type { JSX } from "react";
 
 /**

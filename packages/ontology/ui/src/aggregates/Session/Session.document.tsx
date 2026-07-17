@@ -36,7 +36,7 @@ import { O, Str } from "@beep/utils";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { pipe } from "effect";
 import * as S from "effect/Schema";
-import { valueFromEvent } from "./Session.workbench.shared.js";
+import { valueFromEvent } from "./Session.workbench.shared.ts";
 import type { JSX } from "react";
 
 const decodePath = (value: string): O.Option<OntologyFilePath> => OntologyFilePath.decodeOption(Str.trim(value));
