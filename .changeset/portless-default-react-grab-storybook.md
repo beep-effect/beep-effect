@@ -13,8 +13,9 @@ Make portless the only dev-server path and enable react-grab in Storybook.
   skips the install inside iframes); guarded out of `storybook build` and
   addon-vitest browser-mode runs, with a leak-guard assertion in the vitest
   setup file.
-- oip-web: portless route renamed to `oip-web.beep`, `dev:raw` removed,
-  `next start` wrapped; dev now rides the shared HTTP proxy
+- oip-web: portless route renamed to `oip-web.beep`, `dev:raw` removed
+  (`start` stays plain `next start` — production startup must not depend
+  on the portless dev CLI); dev now rides the shared HTTP proxy
   (`PORTLESS_HTTPS` dropped — the HTTPS/h2 proxy mode breaks vite HMR
   websockets and hard-conflicts with the proxy the other apps need);
   react-grab unpkg pin bumped to catalog 0.1.48.

@@ -22,9 +22,7 @@ const isDevelopment = !configStringEqualsSync("NODE_ENV", "production");
 const developmentScriptSources = isDevelopment ? " 'unsafe-eval' https://unpkg.com" : "";
 const developmentStyleSources = isDevelopment ? " https://fonts.googleapis.com" : "";
 const developmentFontSources = isDevelopment ? " https://fonts.gstatic.com" : "";
-const developmentConnectSources = isDevelopment
-  ? " https://*.localhost:* ws: wss: https://react-grab.com https://www.react-grab.com"
-  : "";
+const developmentConnectSources = isDevelopment ? " ws: wss: https://react-grab.com https://www.react-grab.com" : "";
 const vercelLiveSource = " https://vercel.live";
 
 const buildCspHeader = (nonce: string): string =>
