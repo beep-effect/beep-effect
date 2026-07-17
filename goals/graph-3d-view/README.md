@@ -2,7 +2,8 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained` (closed 2026-07-16; shipped via the
+`feat/graph-3d-view` PR)
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -39,21 +40,32 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Workbench integration — in progress. P0 design gate and P1 generic
-component completed 2026-07-16. [`research/DESIGN.md`](./research/DESIGN.md)
-(v2, revised against the codex adversarial critique in
-[`research/DESIGN-REVIEW.md`](./research/DESIGN-REVIEW.md)) decides stack
-(custom instanced three.js driver, `@beep/graph-3d` with `/browser` subpath),
-placement, projection contract, worker force layout + Brandes betweenness,
-canvas-sprite labels, selection transaction, fixed dark grammar, and toggle UX.
+Closed. All phases completed 2026-07-16; closeout reflection at
+[`history/reflections/2026-07-16-claude.md`](./history/reflections/2026-07-16-claude.md).
+[`research/DESIGN.md`](./research/DESIGN.md) (v2, revised against the codex
+adversarial critique in [`research/DESIGN-REVIEW.md`](./research/DESIGN-REVIEW.md))
+decides stack (custom instanced three.js driver, `@beep/graph-3d` with
+`/browser` subpath), placement, projection contract, worker force layout +
+Brandes betweenness, canvas-sprite labels, selection transaction, fixed dark
+grammar, and toggle UX.
 
 ## Latest Evidence
 
-- **P1 FPS probe (2026-07-16, dev machine):** the `Drivers/Graph3D` Storybook
-  FPS-probe story reads a sustained **60.0 fps at 2,500 nodes / 5,000 edges**
-  (headless Chromium, unmasked AMD Radeon AI PRO R9700, 1280×800). Six-behavior
-  story + selection-dimming story verified rendering headless with zero page
-  errors; storybook story-tests 3/3 green.
+- **P2 WebKitGTK acceptance (2026-07-16):** the `?graph3d-spike` surface in
+  professional-desktop read **60.0 fps at 2,500 nodes / 5,000 edges / 90
+  labels on WebKitGTK 2.52.5** (system webkit2gtk-4.1 MiniBrowser — the engine
+  Tauri links on this machine). Chromium spike: 56–60 fps with a 20×
+  full-update stress pass at avg 6.3 ms / worst 11.5 ms.
+- **P2 toggle integration test green** (`packages/ontology/client/test/browser`,
+  `bun run test:browser`): cosmos mounts by default, the toggle swaps to the
+  3D renderer and back, selection + projection updates flow through the
+  bridge with no errors. Cosmos driver diff vs main: empty. Known limitation
+  recorded: full-document browser QA is blocked by the pre-existing
+  chat-only dev-token wiring; the integration test covers that seam instead.
+- **P1 FPS probe (dev machine):** the `Drivers/Graph3D` Storybook FPS-probe
+  story reads a sustained **60.0 fps at 2,500 nodes / 5,000 edges** (headless
+  Chromium, unmasked AMD Radeon AI PRO R9700). Six-behavior + selection-dimming
+  stories verified headless, zero page errors; storybook story-tests 3/3 green.
 - **P1 `@vitest/browser` suite green (5/5):** mount/node-count, select-dim +
   clear, `onNodeSelect` echo suppression, idempotent destroy + StrictMode
   double-mount, update-replaces-and-resets-selection
@@ -61,7 +73,6 @@ canvas-sprite labels, selection transaction, fixed dark grammar, and toggle UX.
 - **P0 benchmark** (committed at `scratchpad/graph-3d-bench/`): 2,500 nodes at
   59.3–60.0 avg fps (vsync-capped) at both 5,000 and 12,500 edges; pick
   ≤2.2 ms; full attribute rewrite 2.5–14 ms; clean destroy + double-remount.
-  Dev-machine results — the WebKitGTK run at P2 remains the acceptance gate.
 
 ## Notes
 
