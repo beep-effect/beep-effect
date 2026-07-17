@@ -127,15 +127,21 @@ files below or the lane reports.
 
 ## 5. Cross-links & provenance
 
-- Packet: `explorations/graph-3d-navigation/` (this file's owner).
-- Graduated → `goals/graph-3d-view` (2026-07-14); back-link in
-  `ops/manifest.json` `links.goals`.
-- Research reports (lanes a–f) + `VERIFICATION.md`: `research/*.md` in this
-  packet, carried into the goal's `research/`.
-- Raw artifact corpus: `research/seed/` — **local-only, gitignored** (third-party
-  reference material; public repo). Manifest + re-fetch recipe:
-  `research/SEED-INVENTORY.md`.
-- Synthesis: `RESEARCH.md`; decisions log: `DECISIONS.md`.
+- **This is the goal-side copy**, inherited at graduation by
+  `goals/graph-3d-view/`. The owning packet is
+  `explorations/graph-3d-navigation/`, which holds the authoritative original
+  plus the artifacts not carried here.
+- Originating exploration: `explorations/graph-3d-navigation/` — also holds the
+  synthesis (`RESEARCH.md`), decisions log (`DECISIONS.md`), `BRIEF.md`, and
+  `MAP.md`. Provenance is recorded in this goal's `ops/manifest.json`
+  (`provenance.exploration`); the back-link is the exploration manifest's
+  `links.goals`.
+- Research reports (lanes a–f) + `VERIFICATION.md` sit beside this file in
+  `goals/graph-3d-view/research/`, registered in `ops/manifest.json`
+  `researchReports`.
+- Raw artifact corpus: `explorations/graph-3d-navigation/research/seed/` —
+  **local-only, gitignored** (third-party reference material; public repo).
+  Manifest + re-fetch recipe: `research/SEED-INVENTORY.md` (carried here too).
 
 ## 6. Verify-gate corrections (VERIFICATION.md §5, binding on the goal's P0)
 
