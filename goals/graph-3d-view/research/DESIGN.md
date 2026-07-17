@@ -155,10 +155,13 @@ renderGraph3D(container, projection, options?) →
 // options: { onNodeSelect?: (nodeIndex: number | undefined) => void }
 ```
 
-- **Invariants are constructor validation**, schema-first: the lengths above,
-  link indices in `[0, nodeCount)`, no self-loops (`source !== target`),
-  importance/weights finite in `[0,1]`. Violations are decode/make failures,
-  not renderer crashes.
+- **Invariants are an in-body static guard enforced at the driver boundary**
+  (`Graph3DProjection.hasCoherentBuffers`): the lengths above, link indices in
+  `[0, nodeCount)`, no self-loops (`source !== target`). The renderer rejects
+  incoherent projections at mount (typed error) and update (runtime-error
+  callback) instead of crashing. In-body statics rather than a piped
+  cross-field check because `Schema.Class` loses constructor identity when
+  piped — the repo's own `withCodecStatics` guidance.
 - The handle mirrors `CosmosRenderHandle` (`Cosmos.renderer.ts:315`, verified)
   per the SPEC's reuse constraint; `select` and `onNodeSelect` are the
   intentional extensions `integration-constraints.md` §1 anticipated.

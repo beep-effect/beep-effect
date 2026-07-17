@@ -39,21 +39,29 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Generic component — in progress. P0 design gate completed 2026-07-16:
-[`research/DESIGN.md`](./research/DESIGN.md) (v2, revised against the codex
-adversarial critique in [`research/DESIGN-REVIEW.md`](./research/DESIGN-REVIEW.md))
-decides stack (custom instanced three.js driver, `@beep/graph-3d` with
-`/browser` subpath), placement, projection contract, worker force layout +
-Brandes betweenness, canvas-sprite labels, selection transaction, fixed dark
-grammar, and toggle UX.
+P2 Workbench integration — in progress. P0 design gate and P1 generic
+component completed 2026-07-16. [`research/DESIGN.md`](./research/DESIGN.md)
+(v2, revised against the codex adversarial critique in
+[`research/DESIGN-REVIEW.md`](./research/DESIGN-REVIEW.md)) decides stack
+(custom instanced three.js driver, `@beep/graph-3d` with `/browser` subpath),
+placement, projection contract, worker force layout + Brandes betweenness,
+canvas-sprite labels, selection transaction, fixed dark grammar, and toggle UX.
 
 ## Latest Evidence
 
-P0 benchmark (2026-07-16, committed at `scratchpad/graph-3d-bench/`): 2,500
-nodes at 59.3–60.0 avg fps (vsync-capped, headless Chromium, unmasked AMD
-R9700) at both 5,000 and 12,500 edges; pick ≤2.2 ms; full attribute rewrite
-2.5–14 ms; clean destroy + double-remount. Dev-machine result — the WebKitGTK
-run at P2 remains the acceptance gate.
+- **P1 FPS probe (2026-07-16, dev machine):** the `Drivers/Graph3D` Storybook
+  FPS-probe story reads a sustained **60.0 fps at 2,500 nodes / 5,000 edges**
+  (headless Chromium, unmasked AMD Radeon AI PRO R9700, 1280×800). Six-behavior
+  story + selection-dimming story verified rendering headless with zero page
+  errors; storybook story-tests 3/3 green.
+- **P1 `@vitest/browser` suite green (5/5):** mount/node-count, select-dim +
+  clear, `onNodeSelect` echo suppression, idempotent destroy + StrictMode
+  double-mount, update-replaces-and-resets-selection
+  (`packages/drivers/graph-3d/test/browser`, `bun run test:browser`).
+- **P0 benchmark** (committed at `scratchpad/graph-3d-bench/`): 2,500 nodes at
+  59.3–60.0 avg fps (vsync-capped) at both 5,000 and 12,500 edges; pick
+  ≤2.2 ms; full attribute rewrite 2.5–14 ms; clean destroy + double-remount.
+  Dev-machine results — the WebKitGTK run at P2 remains the acceptance gate.
 
 ## Notes
 

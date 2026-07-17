@@ -13,7 +13,7 @@
   "mission": "Ship an InfraNodus-style React 3D knowledge-graph renderer (community colors, betweenness-proportional distance-faded labels, curved edges, selection dimming) on the cosmos/ontology stack, integrated into the ontology workbench behind a 2D/3D toggle with cosmos 2D default, at ~2,500 interactive nodes.",
   "executionCapable": true,
   "reflectionRequired": true,
-  "statusNote": "P0 design gate completed 2026-07-16: research/DESIGN.md (v2, post codex adversarial review in research/DESIGN-REVIEW.md) decides all seven gate questions with a 2.5k benchmark (scratchpad/graph-3d-bench, 59-60fps vsync-capped at 2,500 nodes / 5,000-12,500 edges). P1 generic component in progress.",
+  "statusNote": "P0+P1 completed 2026-07-16: DESIGN.md v2 (post codex adversarial review); @beep/graph-3d instanced renderer + Storybook six-behavior/FPS-probe stories (60fps at 2.5k/5k, dev machine) + @vitest/browser suite 5/5 green. P2 workbench integration in progress (worker z + bc, 3D bridge/toggle atoms, toggle UI, WebKitGTK QA).",
   "provenance": {
     "exploration": "explorations/graph-3d-navigation",
     "graduated": "2026-07-14"
@@ -62,12 +62,12 @@
     {
       "id": "P1",
       "name": "Generic 3D component",
-      "status": "in-progress"
+      "status": "completed"
     },
     {
       "id": "P2",
       "name": "Workbench integration",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",
