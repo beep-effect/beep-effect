@@ -6,6 +6,10 @@
  * selection-rewrite cost — the acceptance evidence the design gate deferred to
  * the target webview. Reached with `?graph3d-spike` in dev mode, mirroring the
  * cosmos spike's flag pattern.
+ *
+ * @packageDocumentation
+ * @category spikes
+ * @since 0.0.0
  */
 import { generateSyntheticGraph3DProjection, SyntheticGraph3DOptions } from "@beep/graph-3d";
 import { useGraph3DFps, useGraph3DHandle } from "@beep/graph-3d/react";
@@ -30,6 +34,23 @@ const heapMb = (): number | undefined => {
   return memory === undefined ? undefined : Math.round(memory.usedJSHeapSize / 1_048_576);
 };
 
+/**
+ * Full-screen benchmark surface: preset scale buttons, an fps/heap/stats HUD,
+ * and a timed stress pass of twenty projection updates with select/clear
+ * rewrites.
+ *
+ * @example
+ * ```ts
+ * // Dev-only spike surface, reached via the app flag rather than direct use:
+ * //   http://localhost:5199/?graph3d-spike   (or VITE_GRAPH3D_SPIKE=1)
+ * const flag = new URLSearchParams("?graph3d-spike").has("graph3d-spike")
+ *
+ * console.log(flag) // true
+ * ```
+ *
+ * @category spikes
+ * @since 0.0.0
+ */
 export function Graph3DSpike(): JSX.Element {
   const [presetIndex, setPresetIndex] = useState(1);
   const [stress, setStress] = useState<StressReport | undefined>(undefined);
