@@ -31,7 +31,7 @@ import { rpcSessionAuthorizationHeader } from "../../server/RpcSessionAuth.js";
 import type { Scope } from "effect";
 
 const token = Redacted.make("ontology-mcp-http-test-token");
-const allowedOrigin = "http://professional-desktop.beep.localhost:1355";
+const allowedOrigin = "http://127.0.0.1:1421";
 const useSocketTransport = Effect.runSync(
   Config.boolean("BEEP_TEST_ONTOLOGY_MCP_SOCKET").pipe(Config.withDefault(false))
 );

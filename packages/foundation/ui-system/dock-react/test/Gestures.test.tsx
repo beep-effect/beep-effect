@@ -74,6 +74,36 @@ const pointer = (node: Element, name: "pointerDown" | "pointerMove" | "pointerUp
 afterEach(cleanup);
 
 describe("dock pointer gestures", { concurrent: false }, () => {
+  it.effect("previews the compiled group quadrant and center placements", () =>
+    Effect.gen(function* () {
+      const mounted = yield* mount(true);
+      const source = tab(panel1.id);
+      const indicator = (): HTMLElement => {
+        const node = screen.getByTestId("dockview-react").querySelector<HTMLElement>("[data-drop-indicator]");
+        if (node === null) throw new Error("Missing drop indicator");
+        return node;
+      };
+      pointer(source, "pointerDown", 100, 16);
+      pointer(source, "pointerMove", 410, 200);
+      expect(indicator().style.left).toBe("404px");
+      expect(indicator().style.width).toBe("198px");
+      pointer(source, "pointerMove", 720, 200);
+      expect(indicator().style.left).toBe("602px");
+      expect(indicator().style.width).toBe("198px");
+      pointer(source, "pointerMove", 600, 50);
+      expect(indicator().style.top).toBe("0px");
+      expect(indicator().style.height).toBe("200px");
+      pointer(source, "pointerMove", 600, 350);
+      expect(indicator().style.top).toBe("200px");
+      expect(indicator().style.height).toBe("200px");
+      pointer(source, "pointerMove", 600, 200);
+      expect(indicator().style.left).toBe("404px");
+      expect(indicator().style.width).toBe("396px");
+      fireEvent.keyDown(document, { key: "Escape" });
+      mounted.graph.dispose();
+    })
+  );
+
   it.effect("reorders within a group and leaves no overlay", () =>
     Effect.gen(function* () {
       const mounted = yield* mount();

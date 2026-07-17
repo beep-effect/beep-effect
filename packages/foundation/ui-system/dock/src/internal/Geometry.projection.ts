@@ -6,7 +6,7 @@
  */
 import { $DockId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { Number as N, pipe } from "effect";
+import { Match, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
@@ -14,7 +14,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
-import { DockNode as DockNodeModel, DockWorkspace as DockWorkspaceModel, SplitLayout } from "../Dock.tree.ts";
+import { DockNode as DockNodeModel, DockWorkspace as DockWorkspaceModel, SplitLayout, TabsNode } from "../Dock.tree.ts";
 import {
   DockBox,
   DockGeometry,
@@ -72,6 +72,48 @@ const minimaFromRecord =
       O.getOrElse(() => 0)
     );
 
+const panelMinimum = (tabs: TabsNode, axis: SashGeometry["axis"]): number =>
+  A.reduce(TabsNode.panels(tabs), 0, (minimum, panel) =>
+    N.max(
+      minimum,
+      pipe(
+        panel.constraints,
+        O.flatMap((constraints) =>
+          Match.value(axis).pipe(
+            Match.when("horizontal", () => constraints.minWidth),
+            Match.when("vertical", () => constraints.minHeight),
+            Match.exhaustive
+          )
+        ),
+        O.getOrElse(() => 0)
+      )
+    )
+  );
+
+// The tightest bound among whichever options are present; none when neither
+// side carries one. Shared by the per-group panel fold and the cross-axis
+// split fold below.
+const minPresent = (first: O.Option<number>, second: O.Option<number>): O.Option<number> =>
+  A.match(A.getSomes([first, second]), {
+    onEmpty: O.none<number>,
+    onNonEmpty: (present) => O.some(A.min(present, N.Order)),
+  });
+
+const panelMaximum = (tabs: TabsNode, axis: SashGeometry["axis"]): O.Option<number> =>
+  A.reduce(TabsNode.panels(tabs), O.none<number>(), (maximum, panel) =>
+    pipe(
+      panel.constraints,
+      O.flatMap((constraints) =>
+        Match.value(axis).pipe(
+          Match.when("horizontal", () => constraints.maxWidth),
+          Match.when("vertical", () => constraints.maxHeight),
+          Match.exhaustive
+        )
+      ),
+      (candidate) => minPresent(maximum, candidate)
+    )
+  );
+
 // The minimum extent a visible subtree needs along the given axis: leaf
 // minimums SUM through same-axis splits (plus the gap when both sides are
 // visible) and take the MAX across cross-axis splits. Hidden subtrees need
@@ -84,10 +126,10 @@ const requiredExtent = (
   minima: GroupMinimumLookup
 ): number =>
   DockNodeModel.match(node, {
-    Tabs: ({ groupId, metadata }) =>
-      Bool.match(metadata.visible, {
+    Tabs: (tabs) =>
+      Bool.match(tabs.metadata.visible, {
         onFalse: () => 0,
-        onTrue: () => N.max(options.minGroupExtent, minima(groupId)),
+        onTrue: () => N.max(options.minGroupExtent, N.max(minima(tabs.groupId), panelMinimum(tabs, axis))),
       }),
     Split: ({ layout }) => {
       const [first, second] = SplitLayout.children(layout);
@@ -100,6 +142,60 @@ const requiredExtent = (
       });
     },
   });
+
+const maximumExtent = (node: DockNode, axis: SashGeometry["axis"], options: GeometryOptions): O.Option<number> =>
+  DockNodeModel.match(node, {
+    Tabs: (tabs) =>
+      Bool.match(tabs.metadata.visible, {
+        onFalse: O.none,
+        onTrue: () => panelMaximum(tabs, axis),
+      }),
+    Split: ({ layout }) => {
+      const [first, second] = SplitLayout.children(layout);
+      const firstMaximum = maximumExtent(first, axis, options);
+      const secondMaximum = maximumExtent(second, axis, options);
+      return Bool.match(Eq.equals(layout.axis, axis), {
+        onTrue: () =>
+          O.flatMap(firstMaximum, (firstValue) =>
+            O.map(secondMaximum, (secondValue) => N.sum(firstValue, N.sum(options.gap, secondValue)))
+          ),
+        onFalse: () => minPresent(firstMaximum, secondMaximum),
+      });
+    },
+  });
+
+const clampLeadingExtent = (
+  rawLeading: number,
+  available: number,
+  minLeading: number,
+  minTrailing: number,
+  maxLeading: O.Option<number>,
+  maxTrailing: O.Option<number>
+): number => {
+  // Below the combined minima the caller shrinks both sides proportionally
+  // instead of clamping one side into negatives — leave the raw value alone.
+  if (N.isLessThan(available, N.sum(minLeading, minTrailing))) return rawLeading;
+  const lower = pipe(
+    maxTrailing,
+    O.map((maximum) => N.max(minLeading, N.subtract(available, maximum))),
+    O.getOrElse(() => minLeading)
+  );
+  const upper = pipe(
+    maxLeading,
+    O.map((maximum) => N.min(N.subtract(available, minTrailing), maximum)),
+    O.getOrElse(() => N.subtract(available, minTrailing))
+  );
+  // Over-constrained (a maximum below a minimum): minima win and the clamp
+  // degrades to the minima-only band, keeping the solver total.
+  return Bool.match(N.isLessThanOrEqualTo(lower, upper), {
+    onFalse: () =>
+      N.clamp(rawLeading, {
+        minimum: minLeading,
+        maximum: N.subtract(available, minTrailing),
+      }),
+    onTrue: () => N.clamp(rawLeading, { minimum: lower, maximum: upper }),
+  });
+};
 
 const projectNode = (
   node: DockNode,
@@ -148,14 +244,14 @@ const projectNode = (
       // rather than clamping one side into negatives.
       const minLeading = requiredExtent(first, layout.axis, options, minima);
       const minTrailing = requiredExtent(second, layout.axis, options, minima);
-      const leading = Bool.match(N.isGreaterThanOrEqualTo(available, N.sum(minLeading, minTrailing)), {
-        onFalse: () => rawLeading,
-        onTrue: () =>
-          N.clamp(rawLeading, {
-            minimum: minLeading,
-            maximum: N.subtract(available, minTrailing),
-          }),
-      });
+      const leading = clampLeadingExtent(
+        rawLeading,
+        available,
+        minLeading,
+        minTrailing,
+        maximumExtent(first, layout.axis, options),
+        maximumExtent(second, layout.axis, options)
+      );
       const trailing = N.subtract(available, leading);
       const [firstBox, secondBox, gapBox] = SplitLayout.match(layout, {
         horizontal: () => [

@@ -20,7 +20,7 @@ describe("AllowedDevOrigin", () => {
       Effect.gen(function* () {
         expect(AllowedDevOrigin.fromUnknown("local-origin.dev")).toBe("local-origin.dev");
         expect(AllowedDevOrigin.fromUnknown("*.local-origin.dev")).toBe("*.local-origin.dev");
-        expect(AllowedDevOrigin.fromUnknown(" oip-web.beep.localhost ")).toBe("oip-web.beep.localhost");
+        expect(AllowedDevOrigin.fromUnknown(" oip-web.localhost ")).toBe("oip-web.localhost");
       })
     ));
 

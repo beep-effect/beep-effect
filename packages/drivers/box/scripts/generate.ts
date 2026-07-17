@@ -11,7 +11,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ts } from "ts-morph";
+import ts from "typescript";
 import type { PlatformError } from "effect";
 
 const $I = $BoxId.create("scripts/generate");

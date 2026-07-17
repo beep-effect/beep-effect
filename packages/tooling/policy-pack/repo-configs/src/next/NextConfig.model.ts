@@ -169,7 +169,7 @@ const GenerateBuildIdFunction = declaredFunction<NonNullable<NextConfigFromNext[
  * import { defineNextConfig } from "@beep/repo-configs/next"
  * import type { NextConfig } from "next"
  * const config = defineNextConfig({
- *   allowedDevOrigins: ["oip-web.beep.localhost"],
+ *   allowedDevOrigins: ["oip-web.localhost"],
  *   reactStrictMode: true
  * } satisfies NextConfig)
  * console.log(config)

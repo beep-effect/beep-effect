@@ -69,7 +69,6 @@ DPAPI
 dryrun
 dtos
 dtslint
-EADDRINUSE
 ECONNREFUSED
 EdgiOS
 ellipsized

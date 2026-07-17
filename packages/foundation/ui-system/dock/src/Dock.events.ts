@@ -9,7 +9,7 @@ import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { Tuple } from "effect";
 import * as S from "effect/Schema";
 import { GroupId, PanelId, RendererKey, SplitId, SplitRatio } from "./Dock.ids.ts";
-import { PanelRenderMode, PanelView } from "./Dock.models.ts";
+import { PanelConstraints, PanelRenderMode, PanelView } from "./Dock.models.ts";
 
 const $I = $DockId.create("Dock.events");
 
@@ -141,6 +141,39 @@ export class PanelTabComponentChangedEvent extends S.Class<PanelTabComponentChan
   { kind: S.tag("panelTabComponentChanged"), panelId: PanelId, groupId: GroupId, tabComponent: S.Option(RendererKey) },
   $I.annote("PanelTabComponentChangedEvent", {
     description: "A panel custom tab renderer key was replaced or cleared.",
+  })
+) {}
+
+/**
+ * Event recording replacement or removal of panel size constraints.
+ *
+ * @example
+ * ```ts
+ * import { GroupId, PanelConstraints, PanelConstraintsChangedEvent, PanelId } from "@beep/dock"
+ * import * as O from "effect/Option"
+ *
+ * const event = PanelConstraintsChangedEvent.make({
+ *   panelId: PanelId.make("panel-one"),
+ *   groupId: GroupId.make("group-one"),
+ *   constraints: O.some(PanelConstraints.make({ minWidth: O.some(240) })),
+ * })
+ * console.log(event.kind)
+ * ```
+ *
+ * @category events
+ * @since 0.0.0
+ */
+export class PanelConstraintsChangedEvent extends S.Class<PanelConstraintsChangedEvent>(
+  $I`PanelConstraintsChangedEvent`
+)(
+  {
+    kind: S.tag("panelConstraintsChanged"),
+    panelId: PanelId,
+    groupId: GroupId,
+    constraints: S.Option(PanelConstraints),
+  },
+  $I.annote("PanelConstraintsChangedEvent", {
+    description: "A panel size-constraint contract was replaced or cleared.",
   })
 ) {}
 
@@ -447,6 +480,7 @@ const DockEventKind = LiteralKit([
   "panelViewChanged",
   "panelRenderModeChanged",
   "panelTabComponentChanged",
+  "panelConstraintsChanged",
   "panelMoved",
   "panelReordered",
   "groupMerged",
@@ -485,6 +519,7 @@ export const DockEvent = DockEventKind.mapMembers(
     () => PanelViewChangedEvent,
     () => PanelRenderModeChangedEvent,
     () => PanelTabComponentChangedEvent,
+    () => PanelConstraintsChangedEvent,
     () => PanelMovedEvent,
     () => PanelReorderedEvent,
     () => GroupMergedEvent,

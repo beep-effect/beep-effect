@@ -228,6 +228,42 @@ export const PanelView = PanelViewKind.mapMembers(Tuple.evolve([() => ComponentP
  */
 export type PanelView = typeof PanelView.Type;
 
+const PositiveFiniteExtent = S.Finite.check(S.isGreaterThan(0)).pipe(
+  $I.annoteSchema("PositiveFiniteExtent", {
+    description: "A positive finite panel size constraint in host pixels.",
+  })
+);
+
+/**
+ * Optional minimum and maximum pixel extents for one panel.
+ *
+ * @remarks A missing facet leaves that axis bound unconstrained. When a
+ * minimum exceeds a maximum, geometry gives the minimum precedence.
+ *
+ * @example
+ * ```ts
+ * import { PanelConstraints } from "@beep/dock"
+ * import * as O from "effect/Option"
+ *
+ * const constraints = PanelConstraints.make({ minWidth: O.some(240), maxHeight: O.some(720) })
+ * console.log(constraints.minWidth)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PanelConstraints extends S.Class<PanelConstraints>($I`PanelConstraints`)(
+  {
+    minWidth: PositiveFiniteExtent.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    minHeight: PositiveFiniteExtent.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    maxWidth: PositiveFiniteExtent.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    maxHeight: PositiveFiniteExtent.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annote("PanelConstraints", {
+    description: "Optional positive finite minimum and maximum pixel extents for one panel.",
+  })
+) {}
+
 /**
  * One persistable renderer-neutral panel instance.
  *
@@ -249,6 +285,7 @@ export class Panel extends S.Class<Panel>($I`Panel`)(
     view: PanelView,
     renderMode: PanelRenderMode.pipe(SchemaUtils.withConstantDefault<PanelRenderMode>("onlyWhenVisible")),
     tabComponent: S.toType(RendererKey).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    constraints: PanelConstraints.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("Panel", {
     description: "A renderer-neutral panel owned directly by one tab group.",
@@ -297,6 +334,7 @@ export class PanelPatch extends S.Class<PanelPatch>($I`PanelPatch`)(
     view: S.OptionFromOptionalKey(PanelView).pipe(SchemaUtils.withNoneDefault),
     renderMode: S.OptionFromOptionalKey(PanelRenderMode).pipe(SchemaUtils.withNoneDefault),
     tabComponent: S.toType(RendererKey).pipe(S.Option, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    constraints: PanelConstraints.pipe(S.Option, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("PanelPatch", {
     description: "Optional whole-value replacements for persistable panel facets.",

@@ -1,4 +1,6 @@
 import {
+  DockBox,
+  DockMoveTarget,
   DockNode,
   DockSide,
   GroupId,
@@ -13,12 +15,12 @@ import {
   TopLeftAnchoredBox,
 } from "@beep/dock";
 import { NonNegativeInt } from "@beep/schema";
-import { Match } from "effect";
+import { Match, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { commandCounter } from "./AdapterState.ts";
-import type { AnchoredBox, DockBox, DockGeometry, MovePanelCommand, SplitNode } from "@beep/dock";
+import type { AnchoredBox, DockGeometry, MovePanelCommand, SplitNode } from "@beep/dock";
 import type React from "react";
 import type { DockAtomGraph } from "../DockReact.types.ts";
 import type { AdapterState } from "./AdapterState.ts";
@@ -62,6 +64,41 @@ export const topLeftBox = (box: DockBox, container: DockBox): AnchoredBox =>
 
 export const floatingHit = (geometry: DockGeometry, point: PointerPosition) =>
   A.findFirst(A.reverse(geometry.floating), (candidate) => contains(candidate.box, point));
+
+const groupBox = (geometry: DockGeometry, groupId: GroupId): O.Option<DockBox> =>
+  pipe(
+    A.findFirst(geometry.groups, (candidate) => GroupId.equals(candidate.groupId, groupId)),
+    O.map((candidate) => candidate.box),
+    O.orElse(() =>
+      pipe(
+        geometry.floating,
+        A.findFirst((member) => A.some(member.groups, (candidate) => GroupId.equals(candidate.groupId, groupId))),
+        O.flatMap((member) =>
+          pipe(
+            member.groups,
+            A.findFirst((candidate) => GroupId.equals(candidate.groupId, groupId)),
+            O.map((candidate) => candidate.box)
+          )
+        )
+      )
+    )
+  );
+
+const splitPreviewBox = (box: DockBox, side: DockSide, ratio: SplitRatio): DockBox => {
+  const share = N.divideUnsafe(ratio, 10_000);
+  return DockSide.$match(side, {
+    left: () => DockBox.make({ ...box, width: N.multiply(box.width, share) }),
+    right: () => {
+      const width = N.multiply(box.width, share);
+      return DockBox.make({ ...box, left: N.sum(box.left, N.subtract(box.width, width)), width });
+    },
+    top: () => DockBox.make({ ...box, height: N.multiply(box.height, share) }),
+    bottom: () => {
+      const height = N.multiply(box.height, share);
+      return DockBox.make({ ...box, top: N.sum(box.top, N.subtract(box.height, height)), height });
+    },
+  });
+};
 
 export const compileDrop = (state: AdapterState, graph: DockAtomGraph, drag: TabDrag): O.Option<MovePanelCommand> => {
   const geometry = graph.registry.get(state.geometry.geometryAtom);
@@ -175,6 +212,21 @@ export const compileDrop = (state: AdapterState, graph: DockAtomGraph, drag: Tab
         })
       );
 };
+
+export const dropPreviewBox = (state: AdapterState, graph: DockAtomGraph, drag: TabDrag): O.Option<DockBox> =>
+  pipe(
+    compileDrop(state, graph, drag),
+    O.flatMap(({ target }) => {
+      const geometry = graph.registry.get(state.geometry.geometryAtom);
+      return DockMoveTarget.match(target, {
+        tab: ({ groupId }) => groupBox(geometry, groupId),
+        split: ({ referenceGroupId, side, newGroupRatio }) =>
+          O.map(groupBox(geometry, referenceGroupId), (box) => splitPreviewBox(box, side, newGroupRatio)),
+        rootSplit: ({ side, newGroupRatio }) =>
+          O.some(splitPreviewBox(graph.registry.get(state.containerAtom), side, newGroupRatio)),
+      });
+    })
+  );
 
 export const splitExtent = (graph: DockAtomGraph, state: AdapterState, split: SplitNode): number => {
   const geometry = graph.registry.get(state.geometry.geometryAtom);

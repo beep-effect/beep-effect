@@ -253,7 +253,7 @@ export type BeepNextPwaConfig = typeof BeepNextPwaConfig.Type;
  * import { BeepNextConfigOptions } from "@beep/repo-configs/next"
  * const program = S.decodeUnknownEffect(BeepNextConfigOptions)({
  *   repoRoot: "/repo",
- *   allowedDevOrigins: ["oip-web.beep.localhost"]
+ *   allowedDevOrigins: ["oip-web.localhost"]
  * })
  * console.log(Effect.runPromise(program))
  * ```
@@ -298,7 +298,7 @@ export class BeepNextConfigOptions extends S.Class<BeepNextConfigOptions>($I`Bee
  * import type { BeepNextConfigOptionsInput } from "@beep/repo-configs/next"
  * const options: BeepNextConfigOptionsInput = {
  *   repoRoot: "/repo",
- *   allowedDevOrigins: ["oip-web.beep.localhost"],
+ *   allowedDevOrigins: ["oip-web.localhost"],
  *   env: { ANALYZE: "1" }
  * }
  * console.log(options)
@@ -536,7 +536,7 @@ export const composeNextConfig: {
  * import { makeBeepNextBaseConfig } from "@beep/repo-configs/next"
  * const config = makeBeepNextBaseConfig({
  *   repoRoot: "/repo",
- *   allowedDevOrigins: ["oip-web.beep.localhost"]
+ *   allowedDevOrigins: ["oip-web.localhost"]
  * })
  * console.log(config)
  * ```
@@ -559,7 +559,7 @@ export const makeBeepNextBaseConfig = (options: BeepNextConfigOptionsInput): Nex
  * import { defineBeepNextConfig } from "@beep/repo-configs/next"
  * const config = defineBeepNextConfig({
  *   repoRoot: "/repo",
- *   allowedDevOrigins: ["oip-web.beep.localhost"],
+ *   allowedDevOrigins: ["oip-web.localhost"],
  *   env: { NEXT_DISABLE_PWA: "1" }
  * })
  * console.log(config)

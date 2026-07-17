@@ -5,12 +5,12 @@
  * @since 0.0.0
  */
 
-import { DockBox, DockNode, DockWorkspace } from "@beep/dock";
+import { DockNode, DockWorkspace } from "@beep/dock";
 import { RegistryContext, useAtomValue } from "@effect/atom-react";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { adapterState } from "./internal/AdapterState.ts";
-import { boxStyle, contains, floatingHit } from "./internal/DropCompiler.ts";
+import { boxStyle, dropPreviewBox } from "./internal/DropCompiler.ts";
 import { FloatingPane } from "./internal/FloatingPane.tsx";
 import { GroupPane } from "./internal/GroupPane.tsx";
 import { PanelPortal } from "./internal/PanelHost.tsx";
@@ -19,25 +19,13 @@ import type { TabsNode } from "@beep/dock";
 import type { DockviewReactProps } from "./DockReact.types.ts";
 import type { AdapterState } from "./internal/AdapterState.ts";
 
-const DropOverlay = (props: { readonly state: AdapterState }) => {
+const DropOverlay = (props: { readonly graph: DockviewReactProps["graph"]; readonly state: AdapterState }) => {
   const drag = useAtomValue(props.state.dragAtom);
-  const geometry = useAtomValue(props.state.geometry.geometryAtom);
   if (O.isNone(drag)) return null;
-  const group = O.match(floatingHit(geometry, drag.value.pointer), {
-    onNone: () => A.findFirst(geometry.groups, (candidate) => contains(candidate.box, drag.value.pointer)),
-    onSome: (member) => A.findFirst(member.groups, (candidate) => contains(candidate.box, drag.value.pointer)),
+  return O.match(dropPreviewBox(props.state, props.graph, drag.value), {
+    onNone: () => null,
+    onSome: (box) => <div data-drop-indicator="true" style={{ ...boxStyle(box), pointerEvents: "none" }} />,
   });
-  const box = O.match(group, {
-    onNone: () =>
-      DockBox.make({
-        left: drag.value.pointer.left - 8,
-        top: drag.value.pointer.top - 8,
-        width: 16,
-        height: 16,
-      }),
-    onSome: (candidate) => candidate.box,
-  });
-  return <div data-drop-indicator="true" style={{ ...boxStyle(box), pointerEvents: "none" }} />;
 };
 
 const DockviewRoot = (
@@ -93,7 +81,7 @@ const DockviewRoot = (
       {A.map(geometry.sashes, (sash) => (
         <Sash key={sash.splitId} graph={props.graph} state={props.state} splitId={sash.splitId} />
       ))}
-      <DropOverlay state={props.state} />
+      <DropOverlay graph={props.graph} state={props.state} />
     </div>
   );
 };

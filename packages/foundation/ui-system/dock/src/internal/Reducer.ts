@@ -24,6 +24,7 @@ import {
   GroupUpdatedEvent,
   PanelActivatedEvent,
   PanelClosedEvent,
+  PanelConstraintsChangedEvent,
   PanelMovedEvent,
   PanelOpenedEvent,
   PanelRenderModeChangedEvent,
@@ -387,6 +388,7 @@ const updatePanel = Effect.fn("DockReducer.updatePanel")(function* (
     view: O.getOrElse(command.patch.view, () => panel.view),
     renderMode: O.getOrElse(command.patch.renderMode, () => panel.renderMode),
     tabComponent: O.getOrElse(command.patch.tabComponent, () => panel.tabComponent),
+    constraints: O.getOrElse(command.patch.constraints, () => panel.constraints),
   });
   if (Panel.equals(panel, updated)) return unchanged(state, envelope, "panel-unchanged");
   const events = A.getSomes([
@@ -419,6 +421,17 @@ const updatePanel = Effect.fn("DockReducer.updatePanel")(function* (
             panelId: panel.id,
             groupId: tabs.groupId,
             tabComponent: updated.tabComponent,
+          })
+        ),
+    }),
+    Bool.match(Eq.equals(panel.constraints, updated.constraints), {
+      onTrue: O.none,
+      onFalse: () =>
+        O.some(
+          PanelConstraintsChangedEvent.make({
+            panelId: panel.id,
+            groupId: tabs.groupId,
+            constraints: updated.constraints,
           })
         ),
     }),

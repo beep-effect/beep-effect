@@ -52,7 +52,7 @@ Browser smoke:
 bun run --cwd apps/oip-web dev
 ```
 
-Then verify `http://oip-web.beep.localhost:1355` with desktop and mobile
+Then verify `https://oip-web.localhost:1355` with desktop and mobile
 screenshots, anchor navigation, media rendering, contact links, no blocking
 browser console errors, and no obvious text overlap. Keep generated screenshots
 as local proof only; do not commit `output/playwright/*`.

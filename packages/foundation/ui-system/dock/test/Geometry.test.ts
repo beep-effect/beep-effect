@@ -7,6 +7,9 @@ import {
   GroupId,
   GroupMetadata,
   makeDockGeometryAtoms,
+  Panel,
+  PanelConstraints,
+  PanelId,
   PopulatedWorkspace,
   project,
   projectWorkspace,
@@ -14,6 +17,7 @@ import {
   SplitNode,
   SplitRatio,
   TabsNode,
+  TextPanelView,
 } from "@beep/dock";
 import { rows } from "@beep/dock/internal/Geometry.projection";
 import { describe, expect, it } from "@effect/vitest";
@@ -248,5 +252,53 @@ describe("per-group minimum lookup", () => {
     const geometry = project(crossed, box, gapThree, (groupId) => (GroupId.equals(groupId, groupThree) ? 40 : 0));
     const widths = A.map(geometry.groups, (group) => group.box.width);
     expect(widths).toEqual([58, 40, 40]);
+  });
+});
+
+describe("per-panel constraints", () => {
+  const constrainedPanel = (id: string, constraints: PanelConstraints): Panel =>
+    Panel.make({
+      id: PanelId.make(id),
+      title: id,
+      view: TextPanelView.make({ text: id }),
+      constraints: O.some(constraints),
+    });
+  const constrainedTabs = (groupId: GroupId, panel: Panel): TabsNode => TabsNode.make({ groupId, active: panel });
+
+  it("takes the maximum panel minimum in a group on each axis", () => {
+    const first = TabsNode.make({
+      groupId: groupOne,
+      active: constrainedPanel("minimum-one", PanelConstraints.make({ minWidth: O.some(40), minHeight: O.some(35) })),
+      after: [constrainedPanel("minimum-two", PanelConstraints.make({ minWidth: O.some(55), minHeight: O.some(45) }))],
+    });
+    const horizontal = project(split("horizontal", 1_000, first, tabsTwo), box, GeometryOptions.make({ gap: 3 }));
+    const vertical = project(split("vertical", 1_000, first, tabsTwo), box, GeometryOptions.make({ gap: 3 }));
+    expect(horizontal.groups[0]?.box.width).toBe(55);
+    expect(vertical.groups[0]?.box.height).toBe(45);
+  });
+
+  it("best-effort clamps split growth to panel maxima", () => {
+    const first = constrainedTabs(
+      groupOne,
+      constrainedPanel("maximum-one", PanelConstraints.make({ maxWidth: O.some(35) }))
+    );
+    const geometry = project(split("horizontal", 9_000, first, tabsTwo), box, GeometryOptions.make({ gap: 3 }));
+    expect(geometry.groups[0]?.box.width).toBe(35);
+    expect(geometry.groups[1]?.box.width).toBe(63);
+  });
+
+  it("lets minima win over conflicting maxima and stays total when all siblings are capped", () => {
+    const first = constrainedTabs(
+      groupOne,
+      constrainedPanel("conflict-one", PanelConstraints.make({ minWidth: O.some(50), maxWidth: O.some(20) }))
+    );
+    const second = constrainedTabs(
+      groupTwo,
+      constrainedPanel("conflict-two", PanelConstraints.make({ minWidth: O.some(30), maxWidth: O.some(20) }))
+    );
+    const geometry = project(split("horizontal", 5_000, first, second), box, GeometryOptions.make({ gap: 3 }));
+    expect(geometry.groups[0]?.box.width).toBeGreaterThanOrEqual(50);
+    expect(geometry.groups[1]?.box.width).toBeGreaterThanOrEqual(30);
+    expect((geometry.groups[0]?.box.width ?? 0) + 3 + (geometry.groups[1]?.box.width ?? 0)).toBe(101);
   });
 });
