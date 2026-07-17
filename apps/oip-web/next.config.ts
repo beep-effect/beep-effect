@@ -42,7 +42,7 @@ const securityHeaders = [
 
 export default defineBeepNextConfig({
   repoRoot,
-  allowedDevOrigins: ["oip-web.localhost", "dankstation.tailc7c348.ts.net"],
+  allowedDevOrigins: ["oip-web.beep.localhost", "dankstation.tailc7c348.ts.net"],
   additionalTranspilePackages: ["@beep/hubspot", "@beep/sanity"],
   next: {
     images: {
