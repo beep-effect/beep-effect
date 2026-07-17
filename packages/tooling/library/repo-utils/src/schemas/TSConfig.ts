@@ -216,6 +216,15 @@ const JsonRecord = S.Record(TSConfigJsonKey, S.Json).pipe(
   })
 );
 
+// StructWithRest applies its record schema to fixed keys too. Keep the
+// transform's structural target permissive; decodeRest still validates every
+// actual extension key as JSON in both directions. Preserve JSON-only
+// arbitrary generation so schema-derived values remain encodable.
+const LooseJsonValue = S.Unknown.annotate({
+  toArbitrary: () => (fc) => fc.jsonValue(),
+});
+const LooseRecord = S.Record(TSConfigJsonKey, LooseJsonValue);
+
 interface ToTypeSchemaField extends Struct.Lambda {
   readonly "~lambda.out": this["~lambda.in"] extends S.Top ? S.toType<this["~lambda.in"]> : never;
   <Schema extends S.Top>(schema: Schema): S.toType<Schema>;
@@ -253,13 +262,13 @@ const makeLooseJsonObject = <Fields extends S.Struct.Fields>(fields: Fields, nam
       Readonly<Record<string, S.Json>> & S.Schema.Type<typeof strict>,
       Readonly<Record<string, S.Json>> & S.Schema.Type<typeof strict>
     >
-  >(S.StructWithRest(makeTypeStruct(fields), [JsonRecord]).ast);
+  >(S.StructWithRest(makeTypeStruct(fields), [LooseRecord]).ast);
   const encoded = S.make<
     S.Codec<
       Readonly<Record<string, S.Json>> & S.Codec.Encoded<typeof strict>,
       Readonly<Record<string, S.Json>> & S.Codec.Encoded<typeof strict>
     >
-  >(S.StructWithRest(makeEncodedStruct(fields), [JsonRecord]).ast);
+  >(S.StructWithRest(makeEncodedStruct(fields), [LooseRecord]).ast);
   const decodeStrict = S.decodeUnknownEffect(strict);
   const encodeStrict = S.encodeEffect(strict);
   const decodeRest = S.decodeUnknownEffect(JsonRecord);

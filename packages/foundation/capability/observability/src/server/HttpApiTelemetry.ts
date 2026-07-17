@@ -132,9 +132,18 @@ interface HttpApiTelemetryMiddlewareOptions {
   readonly metrics: HttpApiMetricSet;
 }
 
+interface HttpApiEndpointMetadata extends HttpApiEndpoint.Constraint {
+  readonly error: Iterable<S.Top>;
+  readonly identifier: string;
+  readonly method: HttpMethod;
+  readonly middlewares: Iterable<unknown>;
+  readonly path: string;
+  readonly success: Iterable<S.Top>;
+}
+
 interface ObserveHttpApiEffectOptions {
   readonly descriptor: HttpApiTelemetryDescriptor;
-  readonly endpoint: HttpApiEndpoint.AnyWithProps;
+  readonly endpoint: HttpApiEndpointMetadata;
   readonly metrics: HttpApiMetricSet;
 }
 
@@ -184,12 +193,12 @@ export const httpApiSuccessStatus: {
 const httpApiErrorStatus = (schema: S.Top, fallback = 500): NonNegativeInt =>
   HttpStatusCode.fromUnknown(resolveHttpApiStatus(schema.ast) ?? fallback);
 
-const endpointSuccessSchemas = (endpoint: HttpApiEndpoint.AnyWithProps): ReadonlyArray<S.Top> => {
+const endpointSuccessSchemas = (endpoint: HttpApiEndpointMetadata): ReadonlyArray<S.Top> => {
   const schemas = A.fromIterable(endpoint.success);
   return A.isReadonlyArrayNonEmpty(schemas) ? schemas : A.make(HttpApiSchema.NoContent);
 };
 
-const endpointErrorSchemas = (endpoint: HttpApiEndpoint.AnyWithProps): ReadonlyArray<S.Top> => {
+const endpointErrorSchemas = (endpoint: HttpApiEndpointMetadata): ReadonlyArray<S.Top> => {
   let schemas = A.fromIterable(endpoint.error);
   const containsSchema = A.containsWith<S.Top>(Eq.equals);
 
@@ -306,20 +315,13 @@ const annotateHttpApiOutcome = Effect.fn("annotateHttpApiOutcome")(function* (
  * @category observability
  */
 export const makeHttpApiTelemetryDescriptor: {
-  (
-    apiName: string,
-    group: HttpApiGroup.AnyWithProps,
-    endpoint: HttpApiEndpoint.AnyWithProps
-  ): HttpApiTelemetryDescriptor;
-  (
-    group: HttpApiGroup.AnyWithProps,
-    endpoint: HttpApiEndpoint.AnyWithProps
-  ): (apiName: string) => HttpApiTelemetryDescriptor;
-} = dual(3, (apiName: string, group: HttpApiGroup.AnyWithProps, endpoint: HttpApiEndpoint.AnyWithProps) =>
+  (apiName: string, group: HttpApiGroup.Constraint, endpoint: HttpApiEndpointMetadata): HttpApiTelemetryDescriptor;
+  (group: HttpApiGroup.Constraint, endpoint: HttpApiEndpointMetadata): (apiName: string) => HttpApiTelemetryDescriptor;
+} = dual(3, (apiName: string, group: HttpApiGroup.Constraint, endpoint: HttpApiEndpointMetadata) =>
   HttpApiTelemetryDescriptor.make({
     apiName,
     groupName: group.identifier,
-    endpointName: endpoint.name,
+    endpointName: endpoint.identifier,
     method: endpoint.method,
     route: endpoint.path,
     successStatus: httpApiSuccessStatus(endpointSuccessSchemas(endpoint)[0]),
@@ -347,11 +349,11 @@ export const makeHttpApiTelemetryDescriptor: {
  * @category observability
  */
 export const httpApiFailureStatus: {
-  (endpoint: HttpApiEndpoint.AnyWithProps, error: unknown): O.Option<NonNegativeInt>;
-  (error: unknown): (endpoint: HttpApiEndpoint.AnyWithProps) => O.Option<NonNegativeInt>;
+  (endpoint: HttpApiEndpointMetadata, error: unknown): O.Option<NonNegativeInt>;
+  (error: unknown): (endpoint: HttpApiEndpointMetadata) => O.Option<NonNegativeInt>;
 } = dual(
   2,
-  (endpoint: HttpApiEndpoint.AnyWithProps, error: unknown): O.Option<NonNegativeInt> =>
+  (endpoint: HttpApiEndpointMetadata, error: unknown): O.Option<NonNegativeInt> =>
     HttpApiStatusField.decodeOption(error).pipe(
       O.map(({ status }) => status),
       O.orElse(() => (S.isSchemaError(error) ? O.some(HttpStatusCode.fromUnknown(400)) : O.none())),
@@ -520,7 +522,7 @@ export const observeHttpApiEffect: {
   isObserveHttpApiEffectDataFirst,
   Effect.fnUntraced(function* <E, R>(
     effect: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R> | HttpApiTelemetryDescriptor,
-    options: ObserveHttpApiEffectOptions | HttpApiEndpoint.AnyWithProps
+    options: ObserveHttpApiEffectOptions | HttpApiEndpointMetadata
   ): Effect.fn.Return<HttpServerResponse.HttpServerResponse, E, R> {
     if (Effect.isEffect(effect) && isObserveHttpApiEffectOptions(options)) {
       return yield* observeHttpApiEffectImpl(effect, options);

@@ -14,6 +14,7 @@ import {
   formatJson,
   formatTsDocCommentValue,
   formatTsLiteral,
+  normalizeJson,
   outputFile,
   sourceMetadata,
 } from "../internal/Source.js";
@@ -307,11 +308,11 @@ const acquireIanaTimezonesProjection = Effect.fn("SyncDataToTs.IanaTimezones.acq
     A.map((name) => new IanaTimezoneEntry(name))
   );
   const metadata = sourceMetadata(source, { version });
-  const canonical = {
+  const canonical = yield* normalizeJson(targetId, {
     schemaVersion: "beep-data/iana-timezones/v1",
     metadata,
     timezonesByName: byName(values),
-  } as const;
+  });
 
   return SyncDataTargetProjection.make({
     files: [
