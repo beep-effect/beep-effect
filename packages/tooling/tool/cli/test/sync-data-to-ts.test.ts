@@ -8,6 +8,7 @@ import {
   ISO3166_PART2_CSV_URL_ENV,
   ISO3166_SOURCE_URL,
   ISO4217_SOURCE_URL,
+  normalizeJson,
   outputFile,
   parseCsvSource,
   SyncDataTargetProjection,
@@ -275,10 +276,10 @@ const csvTarget: SyncDataTarget = {
   acquire: Effect.gen(function* () {
     const source = yield* fetchSource("test-csv", "fixture-csv", csvFixtureSourceUrl);
     const rows = yield* parseCsvSource("test-csv", source);
-    const canonical = {
+    const canonical = normalizeJson({
       columns: rows.columns ?? [],
       rows,
-    };
+    });
 
     return SyncDataTargetProjection.make({
       files: [

@@ -16,6 +16,7 @@ import {
   formatJson,
   formatTsDocCommentValue,
   formatTsLiteral,
+  normalizeJson,
   outputFile,
   parseXmlSource,
   sourceMetadata,
@@ -324,11 +325,11 @@ const acquireIanaMediaTypesProjection = Effect.fn("SyncDataToTs.IanaMediaTypes.a
   const document = yield* parseXmlSource(targetId, source);
   const { updated, values } = yield* normalizeIanaMediaTypes(document);
   const metadata = sourceMetadata(source, { published: updated });
-  const canonical = {
+  const canonical = normalizeJson({
     schemaVersion: "beep-data/iana-media-types/v1",
     metadata,
     mediaTypesByType: byType(values),
-  } as const;
+  });
 
   return SyncDataTargetProjection.make({
     files: [
