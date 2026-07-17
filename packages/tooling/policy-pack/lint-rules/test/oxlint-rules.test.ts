@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import * as A from "effect/Array";
 import { describe, expect, it } from "vitest";
 import { provideScopedLayer } from "./harness.ts";
-import { OXLINT_RULES, runOxlintRule } from "./oxlint-harness.ts";
+import { OXLINT_RULES, runOxlintRule, runOxlintRuleFix } from "./oxlint-harness.ts";
 import { OXLINT_SOURCES } from "./oxlint-sources.ts";
 
 const run = <A2, E>(program: Effect.Effect<A2, E, NodeServices.NodeServices>): Promise<A2> =>
@@ -21,6 +21,11 @@ describe("oxlint rules", () => {
               const findings = yield* runOxlintRule(rule, testCase.source, testCase.filename);
               expect(findings.length).toBe(testCase.count);
               expect(A.every(findings, (finding) => finding.ruleId === rule)).toBe(true);
+
+              if (testCase.fixedSource !== undefined) {
+                const fixedSource = yield* runOxlintRuleFix(rule, testCase.source, testCase.filename);
+                expect(fixedSource).toBe(`${testCase.fixedSource}\n`);
+              }
             })
           ));
       });

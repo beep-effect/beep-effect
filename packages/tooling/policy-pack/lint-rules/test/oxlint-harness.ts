@@ -36,6 +36,7 @@ const pluginEntry = decodeURIComponent(new URL("../src/rules/index.ts", import.m
 export const OXLINT_RULES = [
   "no-opaque-instance-fields",
   "no-inline-schema-compile",
+  "no-js-extension-imports",
   "no-manual-effect-runtime-in-tests",
   "no-global-process-runtime",
   "namespace-node-imports",
@@ -166,6 +167,49 @@ export const runOxlintRule = Effect.fn("oxlintHarness.runOxlintRule")(function* 
               }))
           )
         );
+      }),
+    (tempDir) => fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore)
+  );
+});
+
+/**
+ * Apply one oxlint rule's normal fixes to a fixture and return the resulting source.
+ *
+ * @param rule - The oxlint rule slug to enable.
+ * @param source - The fixture source written to the temporary file.
+ * @param filename - The temporary file's relative name/path.
+ * @returns The fixed source, including the harness-added trailing newline.
+ * @category utilities
+ * @since 0.1.0
+ */
+export const runOxlintRuleFix = Effect.fn("oxlintHarness.runOxlintRuleFix")(function* (
+  rule: OxlintRule,
+  source: string,
+  filename = "fixture.ts"
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+
+  return yield* Effect.acquireUseRelease(
+    fs.makeTempDirectory({ prefix: "beep-oxlint-fix-" }),
+    (tempDir) =>
+      Effect.gen(function* () {
+        const configPath = path.join(tempDir, "oxlintrc.json");
+        const sourcePath = path.join(tempDir, filename);
+
+        yield* fs.makeDirectory(path.dirname(sourcePath), { recursive: true });
+        yield* fs.writeFileString(configPath, `${encodeConfig(ruleConfig(rule))}\n`);
+        yield* fs.writeFileString(sourcePath, `${source}\n`);
+
+        yield* Effect.sync(() => {
+          Bun.spawnSync(["bunx", "oxlint", "--fix", `--config=${configPath}`, sourcePath], {
+            cwd: packageRoot,
+            stdout: "ignore",
+            stderr: "pipe",
+          });
+        });
+
+        return yield* fs.readFileString(sourcePath);
       }),
     (tempDir) => fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore)
   );
