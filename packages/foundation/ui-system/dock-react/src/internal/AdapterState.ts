@@ -13,6 +13,7 @@ import {
   PopulatedWorkspace,
   SplitNode,
   TabChrome,
+  TabsNode,
   UserCommandOrigin,
 } from "@beep/dock";
 import { PretextCaptureLive } from "@beep/pretext/browser";
@@ -21,6 +22,7 @@ import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import { Atom } from "effect/unstable/reactivity";
 import type {
   ActivatePanelCommand,
@@ -31,6 +33,7 @@ import type {
   MaximizeGroupCommand,
   MoveFloatingGroupCommand,
   MovePanelCommand,
+  Panel,
   PanelId,
   ResizeSplitCommand,
   RestoreMaximizedCommand,
@@ -56,6 +59,39 @@ export type AdapterState = {
 
 // crispen: graph identity and lifetime are host concerns; WeakMap avoids structural hashing and retains no disposed graph.
 const states = new WeakMap<DockAtomGraph, MutableHashMap.MutableHashMap<string, AdapterState>>();
+export // Conservative synchronous strip minima (title chars + tab/strip chrome), so
+// sash clamps hold from first paint; measured title minima replace these per
+// group as soon as font capture lands.
+const ESTIMATED_CHAR_WIDTH = 7;
+const estimateMinima = (workspace: DockWorkspace, chrome: TabChrome): Readonly<Record<string, number>> => {
+  const groups = [
+    ...DockWorkspace.match(workspace, {
+      empty: () => [] as ReadonlyArray<TabsNode>,
+      populated: ({ root }) => DockNode.tabs(root),
+    }),
+    ...A.flatMap(workspace.floating, (member) => DockNode.tabs(member.root)),
+  ];
+  return R.fromEntries(
+    A.map(groups, (tabs) => [
+      tabs.groupId,
+      A.reduce(
+        TabsNode.panels(tabs),
+        chrome.strip,
+        (total, panel: Panel) => total + chrome.perTab + panel.title.length * ESTIMATED_CHAR_WIDTH
+      ),
+    ])
+  );
+};
+
+const withEstimateFallback = (
+  graph: DockAtomGraph,
+  config: DockTitleMinimaOptions,
+  measured: Atom.Atom<Readonly<Record<string, number>>>
+): Atom.Atom<Readonly<Record<string, number>>> => {
+  const chrome = O.getOrElse(O.fromUndefinedOr(config.chrome), () => TabChrome.make());
+  return Atom.readable((get) => R.union(estimateMinima(get(graph.workspaceAtom), chrome), get(measured), (_, b) => b));
+};
+
 export let commandCounter = 0;
 
 // crispen: the key is measurement-config values plus the provider's SEMANTIC
@@ -171,13 +207,17 @@ export const adapterState = (
         workspaceAtom: projectedWorkspaceAtom,
         containerAtom,
         options: GeometryOptions.make({ gap, minGroupExtent }),
-        minimaAtom: makeTitleMinimaAtom({
-          workspaceAtom: graph.workspaceAtom,
-          captureLayer: O.getOrElse(O.fromUndefinedOr(config.captureLayer), () => PretextCaptureLive),
-          font: config.font,
-          lineHeight: config.lineHeight,
-          chrome: config.chrome,
-        }),
+        minimaAtom: withEstimateFallback(
+          graph,
+          config,
+          makeTitleMinimaAtom({
+            workspaceAtom: graph.workspaceAtom,
+            captureLayer: O.getOrElse(O.fromUndefinedOr(config.captureLayer), () => PretextCaptureLive),
+            font: config.font,
+            lineHeight: config.lineHeight,
+            chrome: config.chrome,
+          })
+        ),
       }),
   });
   const readyRoots = new WeakSet<HTMLElement>();

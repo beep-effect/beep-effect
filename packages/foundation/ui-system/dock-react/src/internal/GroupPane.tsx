@@ -195,21 +195,26 @@ export const GroupPane = (
           <button
             type="button"
             aria-label={`Float group ${props.groupId}`}
-            onClick={() =>
+            onClick={() => {
+              // Cascade against the existing floating stack and cap to a
+              // useful viewport fraction, so a new float never fully occludes
+              // an earlier one's header.
+              const container = props.graph.registry.get(props.state.containerAtom);
+              const step = 32 * (workspace.floating.length % 6);
               submit(
                 makeOperation(
                   FloatGroupCommand.make({
                     groupId: props.groupId,
                     anchoredBox: TopLeftAnchoredBox.make({
-                      left: box.left + 24,
-                      top: box.top + 24,
-                      width: Math.max(360, box.width - 48),
-                      height: Math.max(240, box.height - 48),
+                      left: box.left + 24 + step,
+                      top: box.top + 24 + step,
+                      width: Math.min(Math.max(360, box.width - 48), Math.max(360, container.width * 0.55)),
+                      height: Math.min(Math.max(240, box.height - 48), Math.max(240, container.height * 0.6)),
                     }),
                   })
                 )
-              )
-            }
+              );
+            }}
           >
             Float
           </button>

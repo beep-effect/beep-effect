@@ -251,9 +251,10 @@ const DockWatermark = (): JSX.Element => (
 // state (and the protocol-layer bindings that configure them) live in the
 // root RegistryProvider. Without this wrapper each surface would silently
 // instantiate detached copies of its atoms inside the graph registry.
-// A crash in one surface heals with a single fresh remount (dock moves can
-// trip third-party StrictMode bugs, e.g. MUI X useDisposable in the ontology
-// tree). A second consecutive crash stops auto-retrying and offers a button.
+// A crash in one surface heals with fresh remounts (dock moves can trip
+// third-party StrictMode bugs, e.g. MUI X useDisposable in the ontology
+// tree, and StrictMode can double-fire the same incident). After the retry
+// budget the card takes over with a manual reload.
 class SurfaceBoundary extends Component<
   { readonly children: ReactNode; readonly label: string },
   { readonly failures: number }
@@ -266,7 +267,7 @@ class SurfaceBoundary extends Component<
     return null;
   }
   override render(): ReactNode {
-    if (this.state.failures > 1) {
+    if (this.state.failures > 2) {
       return (
         <div className="flex h-full items-center justify-center p-4">
           <div className="max-w-sm rounded-md border bg-card p-4 text-center shadow-sm">
