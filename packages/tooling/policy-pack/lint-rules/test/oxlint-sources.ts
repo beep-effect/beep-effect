@@ -17,6 +17,7 @@ type OxlintCase = {
   readonly source: string;
   readonly count: number;
   readonly filename?: string;
+  readonly fixedSource?: string;
 };
 
 export type OxlintRuleSources = {
@@ -30,6 +31,62 @@ const lines = (...parts: ReadonlyArray<string>): string => parts.join("\n");
 const HOST_PROCESS_FILE = "packages/foundation/capability/chalk/src/internal/SupportsColor.ts";
 
 export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } = {
+  "no-js-extension-imports": {
+    invalid: [
+      {
+        count: 5,
+        source: lines(
+          `import value from './ProviderInstance.service.js';`,
+          `import type { Model } from "../Model.jsx";`,
+          `import "./worker.mjs";`,
+          `import "./legacy.cjs";`,
+          `import { App } from "./App.js";`
+        ),
+        fixedSource: lines(
+          `import value from './ProviderInstance.service.ts';`,
+          `import type { Model } from "../Model.tsx";`,
+          `import "./worker.mts";`,
+          `import "./legacy.cts";`,
+          `import { App } from "./App.ts";`
+        ),
+      },
+      {
+        count: 2,
+        source: lines(`export * from "./all.js";`, `export { value } from '../named.js';`),
+        fixedSource: lines(`export * from "./all.ts";`, `export { value } from '../named.ts';`),
+      },
+      {
+        count: 2,
+        source: lines(
+          `export const load = () => import("./dynamic.js");`,
+          `export type Local = import('./types.js').Local;`
+        ),
+        fixedSource: lines(
+          `export const load = () => import("./dynamic.ts");`,
+          `export type Local = import('./types.ts').Local;`
+        ),
+      },
+    ],
+    valid: [
+      {
+        count: 0,
+        source: lines(
+          `import packageValue from "package/subpath.js";`,
+          `import local from "./local.ts";`,
+          `import extensionless from "./extensionless";`,
+          `export const required = require("./required.js");`,
+          "export const computed = import(`./computed.js`);",
+          `export const queried = import("./worker.js?raw");`,
+          `export const ordinary = "./ordinary.js";`
+        ),
+      },
+      {
+        count: 0,
+        filename: "fixture.js",
+        source: `import value from "./runtime.js";`,
+      },
+    ],
+  },
   "no-opaque-instance-fields": {
     invalid: [
       // (a) namespace import `* as S from "effect/Schema"` -> S.Opaque, instance field.
