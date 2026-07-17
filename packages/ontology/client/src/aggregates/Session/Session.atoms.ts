@@ -299,6 +299,14 @@ const workbenchState = <A>(initialValue: A) => Atom.keepAlive(Atom.make(initialV
 /**
  * Workspace-relative path entered in the ontology document toolbar.
  *
+ * @remarks Deliberately NOT `workbenchState`/keep-alive, matching its
+ * behavior before relocation from the UI file: this is a form draft, not
+ * session truth (`ontologyPathAtom` holds the open document's path), so it
+ * may reset to the seed default after the idle TTL when the workbench
+ * unmounts. The M3 dock shell keeps panels alive, which retires the
+ * unmount-reset path; revisit lifetimes then if the draft should survive
+ * a panel close.
+ *
  * @example
  * ```ts
  * import { openPathInputAtom } from "@beep/ontology-client/aggregates/Session"

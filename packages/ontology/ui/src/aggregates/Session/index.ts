@@ -61,10 +61,6 @@ export { OntologyValidationRegion } from "./Session.validation.js";
  */
 export { OntologyWorkbench } from "./Session.workbench.js";
 /**
- * @category predicates
- * @since 0.0.0
- */
-/**
  * @category forms
  * @since 0.0.0
  */
