@@ -413,10 +413,10 @@
       "owner": "@beep/dock-react",
       "reason": "Memoized adapter-state factory whose three parameters form the composite identity key (graph, gap, titleMinima); data-last currying is meaningless for a constructor.",
       "issue": "DOCK-REACT-ADAPTER-STATE-FACTORY",
-      "line": 100,
+      "line": 139,
       "column": 14,
-      "parameterCount": 3,
-      "diagnostics": ["missing-dual"]
+      "parameterCount": 4,
+      "diagnostics": ["too-many-positional-params"]
     },
     {
       "file": "packages/foundation/ui-system/dock-react/src/internal/DropCompiler.ts",
@@ -426,7 +426,7 @@
       "owner": "@beep/dock-react",
       "reason": "Internal gesture-to-command compiler taking (state, graph, drag) runtime handles; a dual wrapper would change no call site and the parameters are not data-last pipeline values.",
       "issue": "DOCK-REACT-DROP-COMPILER-GEOMETRY",
-      "line": 59,
+      "line": 103,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual"]
@@ -439,9 +439,21 @@
       "owner": "@beep/dock-react",
       "reason": "Internal drop-compiler projection with positional geometric arguments; not a pipeline combinator, and a dual wrapper would obscure the geometric call shape.",
       "issue": "DOCK-REACT-DROP-COMPILER-GEOMETRY",
-      "line": 38,
+      "line": 47,
       "column": 14,
       "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/DropCompiler.ts",
+      "qualifiedName": "dropPreviewBox",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/dock-react",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 216,
+      "column": 14,
+      "parameterCount": 3,
       "diagnostics": ["missing-dual"]
     },
     {
@@ -452,7 +464,7 @@
       "owner": "@beep/dock-react",
       "reason": "Internal drop-compiler projection with positional geometric arguments; not a pipeline combinator, and a dual wrapper would obscure the geometric call shape.",
       "issue": "DOCK-REACT-DROP-COMPILER-GEOMETRY",
-      "line": 56,
+      "line": 65,
       "column": 14,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -465,7 +477,7 @@
       "owner": "@beep/dock-react",
       "reason": "Internal drop-compiler projection with positional geometric arguments; not a pipeline combinator, and a dual wrapper would obscure the geometric call shape.",
       "issue": "DOCK-REACT-DROP-COMPILER-GEOMETRY",
-      "line": 172,
+      "line": 231,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual"]
@@ -478,7 +490,7 @@
       "owner": "@beep/dock-react",
       "reason": "Internal drop-compiler projection with positional geometric arguments; not a pipeline combinator, and a dual wrapper would obscure the geometric call shape.",
       "issue": "DOCK-REACT-DROP-COMPILER-GEOMETRY",
-      "line": 48,
+      "line": 57,
       "column": 14,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -504,7 +516,7 @@
       "owner": "@beep/dock",
       "reason": "Schema-derived Equivalence constant via SchemaUtils.toEquivalence; the (self, that) arity is the Equivalence interface contract, and a dual wrapper would change the exported type. Matches the companion-object equals idiom used by DockWorkspace and PanelId, which the lint already accepts.",
       "issue": "DOCK-GROUP-METADATA-EQUIVALENCE",
-      "line": 397,
+      "line": 435,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -517,7 +529,7 @@
       "owner": "@beep/dock",
       "reason": "Schema-derived Equivalence constant via SchemaUtils.toEquivalence; the (self, that) arity is the Equivalence interface contract, and a dual wrapper would change the exported type. Matches the companion-object equals idiom used by DockWorkspace and PanelId, which the lint already accepts.",
       "issue": "DOCK-PANEL-EQUIVALENCE",
-      "line": 257,
+      "line": 294,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -530,7 +542,7 @@
       "owner": "@beep/dock",
       "reason": "TabsNode.fromPanels is already implemented with dual, but at arity 4 (group id, non-empty panel collection, active panel id, metadata), which exceeds the 3-positional ceiling; reshaping the established public signature would break existing call sites and is out of scope for the zero-behavior-change graduation.",
       "issue": "DOCK-TABS-NODE-FACTORY",
-      "line": 464,
+      "line": 502,
       "column": 19,
       "parameterCount": 4,
       "diagnostics": ["too-many-positional-params", "invalid-dual-arity"]
@@ -595,7 +607,7 @@
       "owner": "@beep/dock",
       "reason": "Geometry projection whose root, container, options, and minima are co-equal coordinate and constraint inputs; there is no canonical data-last subject, and the four-parameter signature preserves explicit defaults.",
       "issue": "DOCK-PROJECT-GEOMETRY-PROJECTION",
-      "line": 234,
+      "line": 330,
       "column": 14,
       "parameterCount": 4,
       "diagnostics": ["too-many-positional-params"]
@@ -608,7 +620,7 @@
       "owner": "@beep/dock",
       "reason": "Workspace geometry projection whose workspace, container, options, and minima are co-equal coordinate and constraint inputs; there is no canonical data-last subject, and the four-parameter signature preserves explicit defaults.",
       "issue": "DOCK-PROJECT-WORKSPACE-PROJECTION",
-      "line": 255,
+      "line": 351,
       "column": 14,
       "parameterCount": 4,
       "diagnostics": ["too-many-positional-params"]
