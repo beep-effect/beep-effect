@@ -71,6 +71,13 @@ sequencing). Provenance: `explorations/computable-workspace-geometry`
 
 ## Residuals (from scratchpad WHAT-IS-LEFT v2)
 
+- Known upstream (dev-only): mounting the Ontology surface under React
+  StrictMode throws MUI X's `useDisposable failed to detect React StrictMode`
+  internal invariant (their error text requests an upstream report). The
+  shell's nested surface boundaries self-heal it invisibly — confirmed twice
+  in hands-on Chrome QA — and production builds are unaffected (no StrictMode
+  double-invoke). Revisit when MUI X ships a fix; do not weaken StrictMode.
+
 - Adapter polish remains open: drop-indicator polish, a tab-overflow dropdown,
   header action slots, context menus, and dragging a floating pane back to a
   dock target.
