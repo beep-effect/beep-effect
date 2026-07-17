@@ -10,18 +10,18 @@
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./SyncDataToTs.command.js";
+export * from "./SyncDataToTs.command.ts";
 /**
  * Public command module export.
  *
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./SyncDataToTs.errors.js";
+export * from "./SyncDataToTs.errors.ts";
 /**
  * Public sync-data-to-ts schemas export.
  *
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./SyncDataToTs.schemas.js";
+export * from "./SyncDataToTs.schemas.ts";

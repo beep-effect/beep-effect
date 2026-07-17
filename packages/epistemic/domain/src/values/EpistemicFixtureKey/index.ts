@@ -18,4 +18,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./EpistemicFixtureKey.model.js";
+export * from "./EpistemicFixtureKey.model.ts";

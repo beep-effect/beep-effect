@@ -11,11 +11,11 @@
  * @category layers
  * @since 0.0.0
  */
-export * from "./WorkspaceVault.layer.js";
+export * from "./WorkspaceVault.layer.ts";
 /**
  * Workspace vault store repository exports.
  *
  * @category repositories
  * @since 0.0.0
  */
-export * from "./WorkspaceVault.repo.js";
+export * from "./WorkspaceVault.repo.ts";

@@ -12,4 +12,4 @@
  * @category components
  * @since 0.0.0
  */
-export * from "../Session.tree.js";
+export * from "../Session.tree.ts";

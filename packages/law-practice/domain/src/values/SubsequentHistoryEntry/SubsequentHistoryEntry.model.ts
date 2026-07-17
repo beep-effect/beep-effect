@@ -8,8 +8,8 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
-import { HistorySignal } from "../HistorySignal/index.js";
-import { Span } from "../Span/index.js";
+import { HistorySignal } from "../HistorySignal/index.ts";
+import { Span } from "../Span/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/SubsequentHistoryEntry/SubsequentHistoryEntry.model");
 

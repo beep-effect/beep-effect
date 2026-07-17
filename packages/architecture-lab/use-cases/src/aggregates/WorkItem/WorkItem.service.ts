@@ -16,7 +16,7 @@ import {
   WorkItemActionRejected,
   WorkItemConflict,
   WorkItemNotFound,
-} from "./WorkItem.errors.js";
+} from "./WorkItem.errors.ts";
 import type {
   ArchiveWorkItemCommand,
   AssignWorkItemCommand,
@@ -25,10 +25,10 @@ import type {
   GetWorkItemQuery,
   ListWorkItemsQuery,
   ReopenWorkItemCommand,
-} from "./WorkItem.commands.js";
-import type { WorkItemActionError } from "./WorkItem.errors.js";
-import type { WorkItemRepositoryError, WorkItemRepositoryShape } from "./WorkItem.repository.js";
-import type { WorkItemUseCasesShape } from "./WorkItem.use-cases.js";
+} from "./WorkItem.commands.ts";
+import type { WorkItemActionError } from "./WorkItem.errors.ts";
+import type { WorkItemRepositoryError, WorkItemRepositoryShape } from "./WorkItem.repository.ts";
+import type { WorkItemUseCasesShape } from "./WorkItem.use-cases.ts";
 
 /**
  * Translate repository and aggregate failures to public WorkItem action failures.

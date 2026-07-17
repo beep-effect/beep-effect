@@ -11,4 +11,4 @@
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./Fallow.command.js";
+export * from "./Fallow.command.ts";

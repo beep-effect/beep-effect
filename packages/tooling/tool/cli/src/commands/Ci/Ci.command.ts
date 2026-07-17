@@ -13,10 +13,10 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Argument, Command } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { formatDurationSeconds, makeTaggedLogger, printLines } from "../../internal/cli/Printer.js";
-import { CiCommandError } from "./Ci.errors.js";
-import { ciLaneCommand, ciLocalCommand } from "./CiLane.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { formatDurationSeconds, makeTaggedLogger, printLines } from "../../internal/cli/Printer.ts";
+import { CiCommandError } from "./Ci.errors.ts";
+import { ciLaneCommand, ciLocalCommand } from "./CiLane.ts";
 
 const $I = $RepoCliId.create("commands/Ci/Ci.command");
 

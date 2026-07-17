@@ -13,4 +13,4 @@ export {
   makeLabelAddProgram,
   makeLabelQueueProgram,
   makeWeeklyReportProgram,
-} from "./Programs.js";
+} from "./Programs.ts";

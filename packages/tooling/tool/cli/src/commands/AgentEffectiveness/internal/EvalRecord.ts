@@ -21,12 +21,12 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { Clock, Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.js";
+import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.ts";
 import {
   AgentEffectivenessEvalRecordResult,
   AgentEffectivenessEvalScoreReport,
   SkillOptTaskManifest,
-} from "../AgentEffectiveness.schemas.js";
+} from "../AgentEffectiveness.schemas.ts";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/EvalRecord");
 const normalizePathSeparators = Str.replaceAll("\\", "/");

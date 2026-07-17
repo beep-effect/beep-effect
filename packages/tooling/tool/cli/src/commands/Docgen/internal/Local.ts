@@ -24,13 +24,13 @@ import {
   assertNoOrphanDocgenConfigPaths,
   discoverDocgenWorkspacePackages,
   resolveDocgenWorkspacePackage,
-} from "./Operations.js";
+} from "./Operations.ts";
 import type { DocgenProofManifestVerification } from "@beep/repo-docgen/ProofManifest";
 import type { FsUtils, NoSuchFileError } from "@beep/repo-utils";
 import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner";
 import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
-import type { DocgenWorkspacePackage } from "./Operations.js";
+import type { DocgenWorkspacePackage } from "./Operations.ts";
 
 const $I = $RepoCliId.create("commands/Docgen/internal/Local");
 

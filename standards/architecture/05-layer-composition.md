@@ -64,8 +64,8 @@ import {
   MembershipNotFound,
   MembershipRevocationDenied,
   MembershipRevocationFailed,
-} from "./Membership.errors.js";
-import type { RevokeMembershipCommand } from "./Membership.commands.js";
+} from "./Membership.errors.ts";
+import type { RevokeMembershipCommand } from "./Membership.commands.ts";
 
 const $I = $IamUseCasesId.create("entities/Membership/Membership.service");
 

@@ -12,7 +12,7 @@ import { Effect } from "effect";
 import * as S from "effect/Schema";
 import type { SegmentValue } from "@beep/identity";
 import type * as BrandNS from "effect/Brand";
-import type * as EntityId from "./EntityId.js";
+import type * as EntityId from "./EntityId.ts";
 
 const $I = $SharedDomainId.create("entity/PublicEntityId");
 

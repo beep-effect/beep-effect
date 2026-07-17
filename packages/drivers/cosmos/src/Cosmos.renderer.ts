@@ -11,9 +11,9 @@ import { Fn, HexColor, SchemaUtils } from "@beep/schema";
 import { A, O, P } from "@beep/utils";
 import { Duration, Effect, Match, pipe } from "effect";
 import * as S from "effect/Schema";
-import { CosmosBackend, probeWebGl2, selectCosmosBackend } from "./Cosmos.backend.js";
-import { CosmosDriverError } from "./Cosmos.errors.js";
-import { CosmosGraphProjection } from "./Cosmos.projection.js";
+import { CosmosBackend, probeWebGl2, selectCosmosBackend } from "./Cosmos.backend.ts";
+import { CosmosDriverError } from "./Cosmos.errors.ts";
+import { CosmosGraphProjection } from "./Cosmos.projection.ts";
 
 const $I = $CosmosId.create("Cosmos.renderer");
 

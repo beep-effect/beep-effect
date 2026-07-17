@@ -15,11 +15,11 @@ import {
   WorkerActionFailed,
   WorkerConflict,
   WorkerNotFound,
-} from "./Worker.errors.js";
-import type { CreateWorkerCommand, GetWorkerQuery, ListWorkersQuery } from "./Worker.commands.js";
-import type { WorkerActionError } from "./Worker.errors.js";
-import type { WorkerRepositoryError, WorkerRepositoryShape } from "./Worker.repository.js";
-import type { WorkerUseCasesShape } from "./Worker.use-cases.js";
+} from "./Worker.errors.ts";
+import type { CreateWorkerCommand, GetWorkerQuery, ListWorkersQuery } from "./Worker.commands.ts";
+import type { WorkerActionError } from "./Worker.errors.ts";
+import type { WorkerRepositoryError, WorkerRepositoryShape } from "./Worker.repository.ts";
+import type { WorkerUseCasesShape } from "./Worker.use-cases.ts";
 
 /**
  * Translate repository failures to public Worker action failures.

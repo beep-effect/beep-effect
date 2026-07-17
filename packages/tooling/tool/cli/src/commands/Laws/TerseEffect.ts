@@ -13,7 +13,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
-import { TerseEffectRulesPersistenceError } from "./Laws.errors.js";
+import { TerseEffectRulesPersistenceError } from "./Laws.errors.ts";
 import type { ArrowFunction, CallExpression, FunctionDeclaration, ObjectLiteralExpression } from "ts-morph";
 
 const $I = $RepoCliId.create("commands/Laws/TerseEffect");

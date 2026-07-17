@@ -6,4 +6,4 @@
  * @since 0.0.0
  */
 
-export * from "./KindCode.model.js";
+export * from "./KindCode.model.ts";

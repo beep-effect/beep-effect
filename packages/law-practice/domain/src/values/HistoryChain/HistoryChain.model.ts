@@ -7,7 +7,7 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity";
 import * as S from "effect/Schema";
-import { HistoryLink } from "../HistoryLink/index.js";
+import { HistoryLink } from "../HistoryLink/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/HistoryChain/HistoryChain.model");
 

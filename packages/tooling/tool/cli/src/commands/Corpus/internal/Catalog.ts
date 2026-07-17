@@ -5,4 +5,4 @@
  * @since 0.0.0
  */
 
-export { catalogCorpusImpl } from "./ServicePrograms.js";
+export { catalogCorpusImpl } from "./ServicePrograms.ts";

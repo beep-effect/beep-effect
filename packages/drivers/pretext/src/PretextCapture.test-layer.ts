@@ -13,11 +13,11 @@
 
 import { A, O, R } from "@beep/utils";
 import { Effect, Layer, Result } from "effect";
-import { PretextMeasurementError } from "./Pretext.errors.js";
-import { FontMetrics, FontMetricsSnapshotV1 } from "./Pretext.models.js";
-import { PretextCapture } from "./PretextCapture.service.js";
-import type { FontMetricsSnapshotV1Encoded } from "./Pretext.models.js";
-import type { PretextCaptureRequest } from "./PretextCapture.service.js";
+import { PretextMeasurementError } from "./Pretext.errors.ts";
+import { FontMetrics, FontMetricsSnapshotV1 } from "./Pretext.models.ts";
+import { PretextCapture } from "./PretextCapture.service.ts";
+import type { FontMetricsSnapshotV1Encoded } from "./Pretext.models.ts";
+import type { PretextCaptureRequest } from "./PretextCapture.service.ts";
 
 /**
  * The built-in fixture in wire form: Chrome/150 on Linux, 16px Arial,

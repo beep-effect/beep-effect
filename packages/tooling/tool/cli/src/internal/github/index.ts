@@ -5,5 +5,5 @@
  * @since 0.0.0
  */
 
-export * from "./GhCommand.js";
-export * from "./GhSchema.js";
+export * from "./GhCommand.ts";
+export * from "./GhSchema.ts";

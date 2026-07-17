@@ -34,7 +34,7 @@ import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { JsonStringCodec } from "../schema/JsonCodec.js";
+import { JsonStringCodec } from "../schema/JsonCodec.ts";
 
 const $I = $RepoCliId.create("internal/quality/SchemaFirstPolicyFinding");
 

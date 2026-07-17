@@ -12,7 +12,7 @@ import { A, O, Str } from "@beep/utils";
 import { Context, Effect, Layer, Match, pipe } from "effect";
 import * as S from "effect/Schema";
 import { DataFactory, Parser, Writer } from "n3";
-import { N3TurtleCodecError } from "./N3.errors.js";
+import { N3TurtleCodecError } from "./N3.errors.ts";
 import type * as N3 from "n3";
 
 const $I = $N3Id.create("N3.service");

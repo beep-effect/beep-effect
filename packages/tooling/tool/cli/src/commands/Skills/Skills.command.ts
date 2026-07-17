@@ -17,8 +17,8 @@ import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import * as jsonc from "jsonc-parser";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { SkillsCommandError, SkillsDriftError } from "./Skills.errors.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { SkillsCommandError, SkillsDriftError } from "./Skills.errors.ts";
 
 // cspell:ignore mattpocock Gebert
 

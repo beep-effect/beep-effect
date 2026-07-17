@@ -4,18 +4,18 @@
  * @category use-cases
  * @since 0.0.0
  */
-export * from "./index.js";
+export * from "./index.ts";
 /**
  * Server-only WorkItem repository exports.
  *
  * @category repositories
  * @since 0.0.0
  */
-export * from "./WorkItem.repository.js";
+export * from "./WorkItem.repository.ts";
 /**
  * WorkItem server-side use-case factories.
  *
  * @category use-cases
  * @since 0.0.0
  */
-export { makeWorkItemUseCases, toWorkItemActionError } from "./WorkItem.service.js";
+export { makeWorkItemUseCases, toWorkItemActionError } from "./WorkItem.service.ts";

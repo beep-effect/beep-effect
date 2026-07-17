@@ -13,11 +13,11 @@
  * @category adapters
  * @since 0.0.0
  */
-export * from "./Graph3D.renderer.js";
+export * from "./Graph3D.renderer.ts";
 /**
  * Node-safe contracts re-exported for browser callers.
  *
  * @category projections
  * @since 0.0.0
  */
-export * from "./index.js";
+export * from "./index.ts";

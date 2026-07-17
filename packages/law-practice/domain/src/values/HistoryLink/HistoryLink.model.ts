@@ -8,8 +8,8 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationId } from "../CitationId/index.js";
-import { HistorySignal } from "../HistorySignal/index.js";
+import { CitationId } from "../CitationId/index.ts";
+import { HistorySignal } from "../HistorySignal/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/HistoryLink/HistoryLink.model");
 

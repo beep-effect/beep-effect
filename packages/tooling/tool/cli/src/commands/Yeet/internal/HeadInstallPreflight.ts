@@ -8,10 +8,10 @@
 import { O } from "@beep/utils";
 import { Console, Effect, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
-import { commandTextForStep, RepoStepRunResult, runRepoCommandCapture } from "../../../internal/repo-run/index.js";
-import { YeetCommandError } from "../Yeet.errors.js";
+import { commandTextForStep, RepoStepRunResult, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { YeetCommandError } from "../Yeet.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.js";
+import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 /**
  * Stable plan-step identifier for the clean-HEAD install preflight.

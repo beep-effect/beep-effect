@@ -8,7 +8,7 @@
 
 import { SyncCursor } from "@beep/documents-domain/entities/SyncCursor";
 import * as S from "effect/Schema";
-import type { syncCursorTable } from "./SyncCursor.table.js";
+import type { syncCursorTable } from "./SyncCursor.table.ts";
 
 /**
  * Selected documents SyncCursor row.

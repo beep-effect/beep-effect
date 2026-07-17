@@ -10,7 +10,7 @@ import * as O from "@beep/utils/Option";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
-import { expectSchemaRoundTrip } from "./schemaParity.js";
+import { expectSchemaRoundTrip } from "./schemaParity.ts";
 
 describe("@beep/infra Storybook", () => {
   it("applies Vercel-only defaults for the public Storybook app", () => {

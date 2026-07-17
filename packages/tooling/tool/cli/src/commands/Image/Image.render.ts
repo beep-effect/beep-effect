@@ -14,7 +14,7 @@ import type {
   ExtractFramesDirOutcome,
   ExtractFramesDirResult,
   ExtractFramesDirSuccess,
-} from "./Image.schemas.js";
+} from "./Image.schemas.ts";
 
 const BAR_WIDTH = 24;
 const repeatBarWidth = Str.repeat(BAR_WIDTH);

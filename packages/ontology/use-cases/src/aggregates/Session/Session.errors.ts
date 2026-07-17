@@ -11,11 +11,11 @@
  * @category errors
  * @since 0.0.0
  */
-export { OntologyFileStoreError, TurtleCodecError } from "./Session.ports.js";
+export { OntologyFileStoreError, TurtleCodecError } from "./Session.ports.ts";
 /**
  * Session port error reason exports.
  *
  * @category errors
  * @since 0.0.0
  */
-export type { OntologyFileStoreErrorReason, TurtleCodecErrorReason } from "./Session.ports.js";
+export type { OntologyFileStoreErrorReason, TurtleCodecErrorReason } from "./Session.ports.ts";

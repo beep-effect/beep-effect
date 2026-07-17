@@ -15,12 +15,12 @@ import markdownToc from "@effect/markdown-toc";
 import { Effect, FileSystem, flow, HashSet, Order, Path, pipe, Stream } from "effect";
 import * as S from "effect/Schema";
 import * as ChildProcess from "effect/unstable/process/ChildProcess";
-import * as Checker from "./Checker.js";
-import * as Configuration from "./Configuration.js";
-import * as Domain from "./Domain.js";
-import * as Parser from "./Parser.js";
-import * as Printer from "./Printer.js";
-import { writeDocgenProofManifest } from "./ProofManifest.js";
+import * as Checker from "./Checker.ts";
+import * as Configuration from "./Configuration.ts";
+import * as Domain from "./Domain.ts";
+import * as Parser from "./Parser.ts";
+import * as Printer from "./Printer.ts";
+import { writeDocgenProofManifest } from "./ProofManifest.ts";
 
 const $I = $RepoDocgenId.create("Core");
 

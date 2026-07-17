@@ -21,8 +21,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { Node, Project } from "ts-morph";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.ts";
 
 const $I = $RepoCliId.create("commands/Lint/IdentityRegistry");
 

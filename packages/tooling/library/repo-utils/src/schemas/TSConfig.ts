@@ -18,8 +18,8 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { jsonStringifyPretty } from "../JsonUtils.js";
-import type { DomainError } from "../errors/index.js";
+import { jsonStringifyPretty } from "../JsonUtils.ts";
+import type { DomainError } from "../errors/index.ts";
 
 const $I = $RepoUtilsId.create("schemas/TSConfig");
 

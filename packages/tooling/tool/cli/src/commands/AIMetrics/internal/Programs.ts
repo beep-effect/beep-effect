@@ -112,8 +112,8 @@ import {
   Redacted,
 } from "effect";
 import * as S from "effect/Schema";
-import { printLines } from "../../../internal/cli/Printer.js";
-import { AiMetricsCommandError, AiMetricsStatusExit } from "../AIMetrics.errors.js";
+import { printLines } from "../../../internal/cli/Printer.ts";
+import { AiMetricsCommandError, AiMetricsStatusExit } from "../AIMetrics.errors.ts";
 import type {
   AiMetricsForwarderOtlpExport,
   AiMetricsInstallDoctorResult,

@@ -9,7 +9,7 @@ import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { Session, SessionId } from "@beep/ontology-domain/aggregates/Session";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { OntologyFilePath, TurtleDocumentText } from "./Session.ports.js";
+import { OntologyFilePath, TurtleDocumentText } from "./Session.ports.ts";
 
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.commands");
 

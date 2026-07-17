@@ -15,8 +15,8 @@ import * as pulumi from "@pulumi/pulumi";
 import * as vercel from "@pulumiverse/vercel";
 import { Effect, pipe, Result } from "effect";
 import * as S from "effect/Schema";
-import { optionalPulumiConfigFields, withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.js";
-import { VercelAuthenticationDeploymentType } from "./Vercel.js";
+import { optionalPulumiConfigFields, withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.ts";
+import { VercelAuthenticationDeploymentType } from "./Vercel.ts";
 
 const $I = $InfraId.create("OipWeb");
 

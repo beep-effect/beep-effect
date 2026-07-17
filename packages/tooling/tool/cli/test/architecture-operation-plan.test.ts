@@ -637,8 +637,8 @@ describe("architecture operation plan", () => {
       expect(parsedPackageJson.exports["./aggregates/*"]).toBe("./src/aggregates/*/index.ts");
       expect(parsedPackageJson.publishConfig?.exports?.["."]).toBe("./dist/index.js");
       expect(parsedPackageJson.publishConfig?.exports?.["./aggregates/*"]).toBe("./dist/aggregates/*/index.js");
-      expect(index).toContain('export * as Aggregates from "./aggregates/index.js";');
-      expect(index).toContain('export * as Values from "./values/index.js";');
+      expect(index).toContain('export * as Aggregates from "./aggregates/index.ts";');
+      expect(index).toContain('export * as Values from "./values/index.ts";');
       expect(check.idempotent).toBe(true);
       expect(secondApply.writtenPaths).toEqual([]);
       expect(secondApply.skippedPaths.length).toBeGreaterThan(0);

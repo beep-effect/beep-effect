@@ -7,8 +7,8 @@
 
 import { cpus, totalmem } from "node:os";
 import { Str } from "@beep/utils";
-import { QualityHardwareProfile, QualityProfileConfig, QualityProfileDetection } from "./Quality.schemas.js";
-import type { QualityProfileDetectionInput } from "./Quality.schemas.js";
+import { QualityHardwareProfile, QualityProfileConfig, QualityProfileDetection } from "./Quality.schemas.ts";
+import type { QualityProfileDetectionInput } from "./Quality.schemas.ts";
 
 const gibibytes = (bytes: number): number => Math.round((bytes / 1024 / 1024 / 1024) * 10) / 10;
 

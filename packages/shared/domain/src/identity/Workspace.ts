@@ -6,7 +6,7 @@
  */
 
 import { $WorkspaceDomainId } from "@beep/identity/packages";
-import * as EntityId from "../entity/EntityId.js";
+import * as EntityId from "../entity/EntityId.ts";
 
 const $I = $WorkspaceDomainId.create("identity/Workspace");
 const make = EntityId.factory("workspace", $I);

@@ -15,4 +15,4 @@
  * @category handlers
  * @since 0.0.0
  */
-export * from "./OntologyToolHandlers.js";
+export * from "./OntologyToolHandlers.ts";

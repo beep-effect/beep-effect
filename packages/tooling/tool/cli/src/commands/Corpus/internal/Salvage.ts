@@ -8,4 +8,4 @@
 export {
   salvageCorpusImpl,
   verifySalvageImpl,
-} from "./ServicePrograms.js";
+} from "./ServicePrograms.ts";

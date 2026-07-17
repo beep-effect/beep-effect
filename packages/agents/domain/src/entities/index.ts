@@ -18,7 +18,7 @@
  * @category entities
  * @since 0.0.0
  */
-export * from "./Agent/index.js";
+export * from "./Agent/index.ts";
 /**
  * Shared fixture-backed entity field schemas.
  *
@@ -33,7 +33,7 @@ export * from "./Agent/index.js";
  * @category entities
  * @since 0.0.0
  */
-export * from "./Fixture.values.js";
+export * from "./Fixture.values.ts";
 /**
  * ProviderInstance entity, value-schema, and behavior exports.
  *
@@ -47,7 +47,7 @@ export * from "./Fixture.values.js";
  * @category entities
  * @since 0.0.0
  */
-export * from "./ProviderInstance/index.js";
+export * from "./ProviderInstance/index.ts";
 /**
  * Skill entity exports.
  *
@@ -61,4 +61,4 @@ export * from "./ProviderInstance/index.js";
  * @category entities
  * @since 0.0.0
  */
-export * from "./Skill/index.js";
+export * from "./Skill/index.ts";

@@ -16,7 +16,7 @@ import {
   DetectFacesOptions,
   NormalizeFilesOptions,
   ProcessFilesOptions,
-} from "./Files.schemas.js";
+} from "./Files.schemas.ts";
 import {
   archivePoorCandidates,
   createCaptionFiles,
@@ -29,9 +29,9 @@ import {
   processFiles,
   sortAndRenameFiles,
   stripMetadataFiles,
-} from "./Files.service.js";
-import type { FilesCommandError } from "./Files.errors.js";
-import type { FilesCommandService } from "./Files.service.js";
+} from "./Files.service.ts";
+import type { FilesCommandError } from "./Files.errors.ts";
+import type { FilesCommandService } from "./Files.service.ts";
 
 const runFilesProgram = <A>(
   effect: Effect.Effect<A, FilesCommandError, FilesCommandService>

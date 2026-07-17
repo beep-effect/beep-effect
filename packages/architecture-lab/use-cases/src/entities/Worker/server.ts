@@ -4,18 +4,18 @@
  * @category use-cases
  * @since 0.0.0
  */
-export * from "./index.js";
+export * from "./index.ts";
 /**
  * Server-only Worker repository exports.
  *
  * @category repositories
  * @since 0.0.0
  */
-export * from "./Worker.repository.js";
+export * from "./Worker.repository.ts";
 /**
  * Worker use-case factory exports.
  *
  * @category use-cases
  * @since 0.0.0
  */
-export { makeWorkerUseCases, toWorkerActionError } from "./Worker.service.js";
+export { makeWorkerUseCases, toWorkerActionError } from "./Worker.service.ts";

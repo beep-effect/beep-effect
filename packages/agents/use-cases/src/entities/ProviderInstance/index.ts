@@ -9,22 +9,22 @@
  * @category commands
  * @since 0.0.0
  */
-export * from "./ProviderInstance.commands.js";
+export * from "./ProviderInstance.commands.ts";
 /** Actionable errors.
  *
  * @category errors
  * @since 0.0.0
  */
-export * from "./ProviderInstance.errors.js";
+export * from "./ProviderInstance.errors.ts";
 /** RPC contracts.
  *
  * @category protocols
  * @since 0.0.0
  */
-export * from "./ProviderInstance.rpc.js";
+export * from "./ProviderInstance.rpc.ts";
 /** Use-case service contract.
  *
  * @category use-cases
  * @since 0.0.0
  */
-export * from "./ProviderInstance.use-cases.js";
+export * from "./ProviderInstance.use-cases.ts";

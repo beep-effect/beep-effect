@@ -12,20 +12,20 @@ import { Console, DateTime, Effect, FileSystem, flow, Path, pipe } from "effect"
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { commandTextForStep } from "../../../internal/repo-run/index.js";
-import { YeetCommandError } from "../Yeet.errors.js";
+import { commandTextForStep } from "../../../internal/repo-run/index.ts";
+import { YeetCommandError } from "../Yeet.errors.ts";
 import {
   artifactDirForContext,
   runIdForContext,
   runArtifactPathForContext as runOutputPathForContext,
   runStatePathForContext,
   safeArtifactName,
-} from "./ArtifactPaths.js";
-import { currentCommitSha, runGitOutput } from "./GitExec.js";
-import { renderJson, writeTextFile } from "./IssueArtifacts.js";
-import { YeetProofTier } from "./Planner.js";
+} from "./ArtifactPaths.ts";
+import { currentCommitSha, runGitOutput } from "./GitExec.ts";
+import { renderJson, writeTextFile } from "./IssueArtifacts.ts";
+import { YeetProofTier } from "./Planner.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.js";
+import type { RepoPlanStep, RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProofState");
 

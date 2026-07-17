@@ -19,9 +19,9 @@
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import { runRepoCommandCapture } from "../repo-run/index.js";
+import { runRepoCommandCapture } from "../repo-run/index.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { GhPageInfo } from "./GhSchema.js";
+import type { GhPageInfo } from "./GhSchema.ts";
 
 /**
  * A classified `gh` invocation failure handed to a caller's error mapper.

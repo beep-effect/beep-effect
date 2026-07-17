@@ -9,8 +9,8 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationId } from "../CitationId/index.js";
-import { CitationSignal } from "../CitationSignal/index.js";
+import { CitationId } from "../CitationId/index.ts";
+import { CitationSignal } from "../CitationSignal/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/StringCitationGroup/StringCitationGroup.model");
 

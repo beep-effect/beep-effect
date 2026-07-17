@@ -8,7 +8,7 @@
 
 import { SyncCursorRepository } from "@beep/documents-use-cases/entities/SyncCursor/server";
 import { Layer } from "effect";
-import { makeDrizzleSyncCursorRepository, makeInMemorySyncCursorRepository } from "./SyncCursor.repo.js";
+import { makeDrizzleSyncCursorRepository, makeInMemorySyncCursorRepository } from "./SyncCursor.repo.ts";
 
 /**
  * In-memory SyncCursor repository layer for deterministic sync tests.

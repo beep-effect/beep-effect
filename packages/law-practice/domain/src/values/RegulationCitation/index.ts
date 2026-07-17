@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./RegulationCitation.model.js";
+export * from "./RegulationCitation.model.ts";

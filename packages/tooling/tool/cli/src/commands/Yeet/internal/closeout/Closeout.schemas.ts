@@ -10,7 +10,7 @@ import { LiteralKit } from "@beep/schema";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { QualityIssue } from "../../Yeet.schemas.js";
+import { QualityIssue } from "../../Yeet.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/closeout/Closeout.schemas");
 

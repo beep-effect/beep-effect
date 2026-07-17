@@ -8,4 +8,4 @@ export {
   ArchitectureLabConfigLive,
   WorkItemConfig,
   type WorkItemConfigShape,
-} from "./aggregates/WorkItem/index.js";
+} from "./aggregates/WorkItem/index.ts";

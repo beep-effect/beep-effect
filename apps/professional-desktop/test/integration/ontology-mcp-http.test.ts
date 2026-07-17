@@ -26,8 +26,8 @@ import * as McpSchema from "effect/unstable/ai/McpSchema";
 import { HttpClient, HttpClientRequest, HttpRouter, HttpServer } from "effect/unstable/http";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
-import { makeOntologyMcpTransportLayer } from "../../server/OntologyMcpTransport.js";
-import { rpcSessionAuthorizationHeader } from "../../server/RpcSessionAuth.js";
+import { makeOntologyMcpTransportLayer } from "../../server/OntologyMcpTransport.ts";
+import { rpcSessionAuthorizationHeader } from "../../server/RpcSessionAuth.ts";
 import type { Scope } from "effect";
 
 const token = Redacted.make("ontology-mcp-http-test-token");

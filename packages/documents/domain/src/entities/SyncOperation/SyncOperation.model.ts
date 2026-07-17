@@ -11,9 +11,9 @@ import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
-import { DocumentContentDigest } from "../../aggregates/Document/index.js";
-import * as Documents from "../../identity/Documents.js";
-import { DmsProvider, VaultRelPath } from "../../values/Sync/index.js";
+import { DocumentContentDigest } from "../../aggregates/Document/index.ts";
+import * as Documents from "../../identity/Documents.ts";
+import { DmsProvider, VaultRelPath } from "../../values/Sync/index.ts";
 
 const $I = $DocumentsDomainId.create("entities/SyncOperation/SyncOperation.model");
 

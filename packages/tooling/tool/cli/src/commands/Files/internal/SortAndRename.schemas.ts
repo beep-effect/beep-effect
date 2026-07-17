@@ -9,7 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { MediaDimensions, MediaKind } from "./Media.schemas.js";
+import { MediaDimensions, MediaKind } from "./Media.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Files/internal/SortAndRename.schemas");
 

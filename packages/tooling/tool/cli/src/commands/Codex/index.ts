@@ -10,11 +10,11 @@
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./Codex.command.js";
+export * from "./Codex.command.ts";
 /**
  * Public command module export.
  *
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./Codex.errors.js";
+export * from "./Codex.errors.ts";

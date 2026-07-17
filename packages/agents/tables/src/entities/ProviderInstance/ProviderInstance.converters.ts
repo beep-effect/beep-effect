@@ -8,7 +8,7 @@
 
 import { ProviderInstance } from "@beep/agents-domain/entities/ProviderInstance";
 import * as S from "effect/Schema";
-import type { providerInstanceTable } from "./ProviderInstance.table.js";
+import type { providerInstanceTable } from "./ProviderInstance.table.ts";
 
 /**
  * Selected agents ProviderInstance row.

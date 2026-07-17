@@ -22,7 +22,7 @@
  * @category codecs
  * @since 0.0.0
  */
-export * from "./AnthropicTurnCodec.js";
+export * from "./AnthropicTurnCodec.ts";
 /**
  * Anthropic streaming kernel Layer satisfying the `AgentTurnKernel` port.
  *
@@ -46,7 +46,7 @@ export * from "./AnthropicTurnCodec.js";
  * @category layers
  * @since 0.0.0
  */
-export * from "./AnthropicTurnKernel.js";
+export * from "./AnthropicTurnKernel.ts";
 /**
  * Assistant-turn invalid-block repair adapter.
  *
@@ -72,7 +72,7 @@ export * from "./AnthropicTurnKernel.js";
  * @category combinators
  * @since 0.0.0
  */
-export * from "./BlockRepair.js";
+export * from "./BlockRepair.ts";
 /**
  * Incremental completed-block extractor and its carry state.
  *
@@ -87,4 +87,4 @@ export * from "./BlockRepair.js";
  * @category parsing
  * @since 0.0.0
  */
-export * from "./ScanState.js";
+export * from "./ScanState.ts";

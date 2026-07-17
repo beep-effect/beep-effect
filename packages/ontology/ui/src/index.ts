@@ -40,4 +40,4 @@ export {
   OntologyValidationRegion,
   OntologyWorkbench,
   ontologyTreeItemsFor,
-} from "./aggregates/Session/index.js";
+} from "./aggregates/Session/index.ts";

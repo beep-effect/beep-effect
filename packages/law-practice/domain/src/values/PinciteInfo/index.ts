@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./PinciteInfo.model.js";
+export * from "./PinciteInfo.model.ts";

@@ -6,4 +6,4 @@
  * @since 0.0.0
  */
 
-export * from "./PatentMetadata.model.js";
+export * from "./PatentMetadata.model.ts";

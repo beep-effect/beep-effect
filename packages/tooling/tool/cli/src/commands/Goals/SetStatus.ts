@@ -16,20 +16,20 @@ import { A, O, pipe, Str } from "@beep/utils";
 import { Console, DateTime, Effect, FileSystem, Path } from "effect";
 import * as R from "effect/Record";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { applyJsoncModification } from "../../internal/cli/Jsonc.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { applyJsoncModification } from "../../internal/cli/Jsonc.ts";
 import {
   GoalManifestInvalidError,
   GoalPacketNotFoundError,
   GoalReadmeStatusLineError,
   GoalStatusInputError,
-} from "./Goals.errors.js";
-import { decodeGoalManifest, GoalStatus, isGoalStatus } from "./Goals.schemas.js";
-import { listGoalPackets, parseGoalManifestText, rewriteReadmeLifecycleToken } from "./Inventory.js";
-import { planGoalPacketMigration } from "./Migration.js";
-import { PORTFOLIO_INDEX_PATH, writePortfolioIndex } from "./PortfolioIndex.js";
-import type { GoalPacketRecord } from "./Inventory.js";
-import type { GoalPacketMigration } from "./Migration.js";
+} from "./Goals.errors.ts";
+import { decodeGoalManifest, GoalStatus, isGoalStatus } from "./Goals.schemas.ts";
+import { listGoalPackets, parseGoalManifestText, rewriteReadmeLifecycleToken } from "./Inventory.ts";
+import { planGoalPacketMigration } from "./Migration.ts";
+import { PORTFOLIO_INDEX_PATH, writePortfolioIndex } from "./PortfolioIndex.ts";
+import type { GoalPacketRecord } from "./Inventory.ts";
+import type { GoalPacketMigration } from "./Migration.ts";
 
 const STATUS_DOMAIN = A.join(GoalStatus.Options, " | ");
 

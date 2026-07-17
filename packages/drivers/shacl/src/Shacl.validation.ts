@@ -17,7 +17,7 @@ import {
 } from "@beep/semantic-web/services/shacl-validation";
 import { A, O, P, Str } from "@beep/utils";
 import { Effect, Layer, Match, pipe } from "effect";
-import { ShaclEngineError } from "./Shacl.errors.js";
+import { ShaclEngineError } from "./Shacl.errors.ts";
 import type {
   ShaclNodeShape,
   ShaclPropertyShape,

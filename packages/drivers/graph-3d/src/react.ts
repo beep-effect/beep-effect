@@ -13,4 +13,4 @@
  * @category react
  * @since 0.0.0
  */
-export * from "./Graph3D.react.js";
+export * from "./Graph3D.react.ts";

@@ -35,7 +35,7 @@ import { Effect, Layer, Metric, References } from "effect";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
 import { Otlp, OtlpSerialization } from "effect/unstable/observability";
-import { resolveBrowserHttpUrl } from "./internal/BrowserHttpUrl.js";
+import { resolveBrowserHttpUrl } from "./internal/BrowserHttpUrl.ts";
 import type { R } from "@beep/utils";
 
 const readRuntimeString = (key: string): O.Option<string> => {

@@ -7,7 +7,7 @@
 
 import { Shared } from "@beep/shared-domain/identity";
 import * as O from "effect/Option";
-import type { Model } from "./Organization.model.js";
+import type { Model } from "./Organization.model.ts";
 
 /**
  * Test whether an Organization row is its own tenant root.

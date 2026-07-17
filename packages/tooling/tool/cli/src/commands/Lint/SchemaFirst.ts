@@ -7,13 +7,13 @@
 
 import { Effect } from "effect";
 import { Command, Flag } from "effect/unstable/cli";
-import { SchemaFirstDetectors } from "./internal/SchemaFirstDetectors.js";
-import { runSchemaFirstLint } from "./internal/SchemaFirstScan.js";
-import { SchemaFirstLintOptions } from "./Lint.schemas.js";
+import { SchemaFirstDetectors } from "./internal/SchemaFirstDetectors.ts";
+import { runSchemaFirstLint } from "./internal/SchemaFirstScan.ts";
+import { SchemaFirstLintOptions } from "./Lint.schemas.ts";
 import type * as O from "effect/Option";
 import type { CallExpression } from "ts-morph";
-import type { FunctionLikeDeclarationNode } from "./internal/SchemaFirstDetectors.js";
-import type { SchemaFirstInventoryEntry } from "./Lint.schemas.js";
+import type { FunctionLikeDeclarationNode } from "./internal/SchemaFirstDetectors.ts";
+import type { SchemaFirstInventoryEntry } from "./Lint.schemas.ts";
 
 /**
  * Literal member equality helper used by schema catalog detection.
@@ -44,7 +44,7 @@ import type { SchemaFirstInventoryEntry } from "./Lint.schemas.js";
 export {
   literalMemberEquals,
   sourceTextHasSchemaArbitraryPropertyCoverage,
-} from "./internal/SchemaFirstArbitraryCoverage.js";
+} from "./internal/SchemaFirstArbitraryCoverage.ts";
 /**
  * Schema-crispening policy exemption predicate.
  *
@@ -82,7 +82,7 @@ export {
  * @category utilities
  * @since 0.0.0
  */
-export { isSchemaCrispeningPolicyExempt, schemaCrispeningFamilyForFile } from "./internal/SchemaFirstPolicy.js";
+export { isSchemaCrispeningPolicyExempt, schemaCrispeningFamilyForFile } from "./internal/SchemaFirstPolicy.ts";
 /**
  * Schema-first owner resolver factory.
  *
@@ -112,7 +112,7 @@ export { isSchemaCrispeningPolicyExempt, schemaCrispeningFamilyForFile } from ".
  * @category utilities
  * @since 0.0.0
  */
-export { makeSchemaFirstOwnerResolver, makeSchemaFirstProject } from "./internal/SchemaFirstProject.js";
+export { makeSchemaFirstOwnerResolver, makeSchemaFirstProject } from "./internal/SchemaFirstProject.ts";
 /**
  * Run schema-first inventory verification.
  *
@@ -127,7 +127,7 @@ export { makeSchemaFirstOwnerResolver, makeSchemaFirstProject } from "./internal
  * @category use-cases
  * @since 0.0.0
  */
-export { runSchemaFirstLint } from "./internal/SchemaFirstScan.js";
+export { runSchemaFirstLint } from "./internal/SchemaFirstScan.ts";
 /**
  * Schema-crispening family policy schema.
  *
@@ -211,7 +211,7 @@ export {
   SchemaFirstIncludedGlobs,
   SchemaFirstInventoryEntry,
   SchemaFirstSourceFileGlobs,
-} from "./Lint.schemas.js";
+} from "./Lint.schemas.ts";
 
 /**
  * Detect an exported function or arrow function with inline object contracts.

@@ -11,4 +11,4 @@ export * as Thread from "./aggregates/Thread/server.ts";
  * @category repositories
  * @since 0.0.0
  */
-export * as Workspace from "./aggregates/Workspace/server.js";
+export * as Workspace from "./aggregates/Workspace/server.ts";

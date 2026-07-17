@@ -10,7 +10,7 @@ import { O, pipe } from "@beep/utils";
 import { Layer } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
 import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
-import { resolveBrowserHttpUrl } from "./internal/BrowserHttpUrl.js";
+import { resolveBrowserHttpUrl } from "./internal/BrowserHttpUrl.ts";
 
 const LOOPBACK_CHAT_RPC_URL = "http://127.0.0.1:3939/rpc";
 const WINDOWS_TAURI_HTTP_ORIGIN = "http://tauri.localhost";

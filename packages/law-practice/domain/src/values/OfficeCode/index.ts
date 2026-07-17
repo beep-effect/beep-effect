@@ -6,4 +6,4 @@
  * @since 0.0.0
  */
 
-export * from "./OfficeCode.model.js";
+export * from "./OfficeCode.model.ts";

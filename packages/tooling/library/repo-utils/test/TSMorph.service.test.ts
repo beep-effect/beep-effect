@@ -22,7 +22,7 @@ import { Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
-import { REPO_ROOT, TestLayer, WORKSPACE_ROOT } from "./TSMorph.test-support.js";
+import { REPO_ROOT, TestLayer, WORKSPACE_ROOT } from "./TSMorph.test-support.ts";
 
 const TSCONFIG_PATH = "packages/tooling/library/repo-utils/tsconfig.json";
 const MODEL_FILE_PATH = "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts";

@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./StateRuleCitation.model.js";
+export * from "./StateRuleCitation.model.ts";

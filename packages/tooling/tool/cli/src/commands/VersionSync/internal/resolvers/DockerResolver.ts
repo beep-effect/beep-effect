@@ -24,7 +24,7 @@ import {
   VersionCategoryStatusThunk,
   VersionDriftItem,
   VersionSyncError,
-} from "../../VersionSync.schemas.js";
+} from "../../VersionSync.schemas.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/resolvers/DockerResolver");
 const STABLE_DOCKER_TAG_PATTERN = /^(?!latest$)(?!.*(?:rc|beta|alpha|nightly|dev|snapshot)).+$/i;

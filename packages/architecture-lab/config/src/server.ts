@@ -4,4 +4,4 @@
  * @category configuration
  * @since 0.0.0
  */
-export { defaultWorkItemServerConfig, WorkItemConfig, WorkItemServerConfig } from "./aggregates/WorkItem/index.js";
+export { defaultWorkItemServerConfig, WorkItemConfig, WorkItemServerConfig } from "./aggregates/WorkItem/index.ts";

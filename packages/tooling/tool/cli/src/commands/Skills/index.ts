@@ -11,11 +11,11 @@
  * @category commands
  * @since 0.0.0
  */
-export * from "./Skills.command.js";
+export * from "./Skills.command.ts";
 /**
  * Typed errors for repo-local skills management.
  *
  * @category errors
  * @since 0.0.0
  */
-export * from "./Skills.errors.js";
+export * from "./Skills.errors.ts";

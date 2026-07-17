@@ -7,7 +7,7 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity";
 import * as S from "effect/Schema";
-import { Citation, FullCaseCitation } from "../Citation/index.js";
+import { Citation, FullCaseCitation } from "../Citation/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/CaseGroup/CaseGroup.model");
 

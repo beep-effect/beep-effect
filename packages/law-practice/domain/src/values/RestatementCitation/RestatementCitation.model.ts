@@ -8,8 +8,8 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationBase } from "../CitationBase/index.js";
-import { RestatementComponentSpan } from "../ComponentSpan/index.js";
+import { CitationBase } from "../CitationBase/index.ts";
+import { RestatementComponentSpan } from "../ComponentSpan/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/RestatementCitation/RestatementCitation.model");
 

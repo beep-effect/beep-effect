@@ -17,4 +17,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./Span.model.js";
+export * from "./Span.model.ts";

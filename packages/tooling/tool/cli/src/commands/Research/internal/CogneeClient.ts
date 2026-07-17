@@ -17,7 +17,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import { ResearchCommandError } from "../Research.errors.js";
+import { ResearchCommandError } from "../Research.errors.ts";
 
 const $I = $RepoCliId.create("commands/Research/internal/CogneeClient");
 

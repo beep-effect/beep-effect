@@ -19,7 +19,7 @@
  * @category services
  * @since 0.0.0
  */
-export * from "./ClaimGate.ports.js";
+export * from "./ClaimGate.ports.ts";
 /**
  * Claim gate implementation exports.
  *
@@ -34,4 +34,4 @@ export * from "./ClaimGate.ports.js";
  * @category services
  * @since 0.0.0
  */
-export * from "./ClaimGate.service.js";
+export * from "./ClaimGate.service.ts";

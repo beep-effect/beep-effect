@@ -15,8 +15,8 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ChildProcess } from "effect/unstable/process";
-import { collectText } from "../../../internal/process/index.js";
-import { QualityScriptCommandError } from "../Quality.errors.js";
+import { collectText } from "../../../internal/process/index.ts";
+import { QualityScriptCommandError } from "../Quality.errors.ts";
 import type { DomainError, FsUtils, NoSuchFileError } from "@beep/repo-utils";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 

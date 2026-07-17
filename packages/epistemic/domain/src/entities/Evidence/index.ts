@@ -18,4 +18,4 @@
  * @category entities
  * @since 0.0.0
  */
-export * from "./Evidence.model.js";
+export * from "./Evidence.model.ts";

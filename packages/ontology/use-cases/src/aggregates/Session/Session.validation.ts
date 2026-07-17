@@ -52,12 +52,12 @@ import {
   TurtleCodec,
   TurtleDocumentText,
   WriteOntologyFileRequest,
-} from "./Session.ports.js";
-import { inferredSessionGraphPartitions, OntologyInferenceResult } from "./Session.reasoner.js";
+} from "./Session.ports.ts";
+import { inferredSessionGraphPartitions, OntologyInferenceResult } from "./Session.reasoner.ts";
 import type { SessionGraphPartitions } from "@beep/ontology-domain/aggregates/Session";
 import type { Dataset, Quad, Subject } from "@beep/rdf/Rdf";
 import type { ShaclValidationError, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import type { OntologyFileStoreError, TurtleCodecError } from "./Session.ports.js";
+import type { OntologyFileStoreError, TurtleCodecError } from "./Session.ports.ts";
 
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.validation");
 

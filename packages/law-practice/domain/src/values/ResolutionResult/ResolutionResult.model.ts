@@ -9,7 +9,7 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationId } from "../CitationId/index.js";
+import { CitationId } from "../CitationId/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/ResolutionResult/ResolutionResult.model");
 

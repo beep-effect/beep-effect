@@ -10,9 +10,9 @@ import { A, Str, thunkFalse } from "@beep/utils";
 import { pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import { isDefaultPlanTarget } from "./RoleTopology.js";
-import type { ArchitectureDomainKind, ArchitecturePlanTarget } from "../Architecture.schemas.js";
-import type { AcceptedProofFile } from "./AcceptedProofManifest.js";
+import { isDefaultPlanTarget } from "./RoleTopology.ts";
+import type { ArchitectureDomainKind, ArchitecturePlanTarget } from "../Architecture.schemas.ts";
+import type { AcceptedProofFile } from "./AcceptedProofManifest.ts";
 
 const sourceConceptForPath = (sourcePath: string): string => {
   const lowerPath = Str.toLowerCase(sourcePath);

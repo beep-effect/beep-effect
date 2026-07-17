@@ -12,4 +12,4 @@
  * @category entity-ids
  * @since 0.0.0
  */
-export * as ArchitectureLab from "./ArchitectureLab.js";
+export * as ArchitectureLab from "./ArchitectureLab.ts";

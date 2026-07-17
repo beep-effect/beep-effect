@@ -17,8 +17,8 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { parse } from "jsonc-parser";
 import { Project } from "ts-morph";
-import { collectNativeRuntimeViolationKeys, NativeRuntimeViolationKeyOptions } from "./NoNativeRuntime.js";
-import { formatSchemaDiagnostics } from "./SchemaDiagnostics.js";
+import { collectNativeRuntimeViolationKeys, NativeRuntimeViolationKeyOptions } from "./NoNativeRuntime.ts";
+import { formatSchemaDiagnostics } from "./SchemaDiagnostics.ts";
 import type { ParseError } from "jsonc-parser";
 
 const $I = $RepoCliId.create("commands/Laws/AllowlistCheck");

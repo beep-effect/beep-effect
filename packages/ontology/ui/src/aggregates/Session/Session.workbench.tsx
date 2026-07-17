@@ -6,15 +6,15 @@
  */
 
 import { TooltipProvider } from "@beep/ui/components/tooltip";
-import { OntologyChangeLogRegion } from "./Session.changelog.js";
-import { OntologyDocumentRegion } from "./Session.document.js";
-import { OntologyExplorerRegion } from "./Session.explorer.js";
-import { OntologyGraphRegion } from "./Session.graph.js";
-import { OntologyInspectorRegion } from "./Session.inspector.js";
-import { OntologyMetricsRegion } from "./Session.metrics.js";
-import { OntologySourceRegion } from "./Session.source.js";
-import { OntologySparqlRegion } from "./Session.sparql.js";
-import { OntologyValidationRegion } from "./Session.validation.js";
+import { OntologyChangeLogRegion } from "./Session.changelog.ts";
+import { OntologyDocumentRegion } from "./Session.document.ts";
+import { OntologyExplorerRegion } from "./Session.explorer.ts";
+import { OntologyGraphRegion } from "./Session.graph.ts";
+import { OntologyInspectorRegion } from "./Session.inspector.ts";
+import { OntologyMetricsRegion } from "./Session.metrics.ts";
+import { OntologySourceRegion } from "./Session.source.ts";
+import { OntologySparqlRegion } from "./Session.sparql.ts";
+import { OntologyValidationRegion } from "./Session.validation.ts";
 import type { JSX } from "react";
 
 /**

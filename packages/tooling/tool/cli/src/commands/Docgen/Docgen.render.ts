@@ -11,15 +11,15 @@ import { Console, Effect, pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { encodeCommandJson, renderPrettyCommandJson } from "../../internal/cli/Json.js";
-import { printLines } from "../../internal/cli/Printer.js";
+import { encodeCommandJson, renderPrettyCommandJson } from "../../internal/cli/Json.ts";
+import { printLines } from "../../internal/cli/Printer.ts";
 import type { Path } from "effect";
 import type {
   DocgenAggregateResult,
   DocgenExportAnalysis,
   DocgenGenerationResult,
   DocgenPackageAnalysis,
-} from "./Docgen.schemas.js";
+} from "./Docgen.schemas.ts";
 
 const encodeJsonResult = S.encodeUnknownResult(S.UnknownFromJsonString);
 const normalizeSlashes = Str.replace(/\\/g, "/");

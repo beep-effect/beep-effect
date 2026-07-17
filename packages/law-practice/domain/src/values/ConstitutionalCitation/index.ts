@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ConstitutionalCitation.model.js";
+export * from "./ConstitutionalCitation.model.ts";

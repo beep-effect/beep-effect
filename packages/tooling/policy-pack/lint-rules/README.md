@@ -3,7 +3,7 @@
 Repo-local **Biome GritQL** lint rules for effect-smol-aligned quality enforcement.
 Each rule is a single `.grit` file under `rules/`, registered by beep's root
 `biome.jsonc` so it runs inside the one Biome lint pass — no bespoke `ts-morph` Project
-loads. (A later wave adds oxlint plugins here for stateful/scope-aware rules.)
+loads. The package also owns the root oxlint custom plugin for repository-specific rules.
 
 ## Layout
 

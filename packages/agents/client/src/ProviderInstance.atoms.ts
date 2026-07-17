@@ -7,7 +7,7 @@
  */
 import { Effect } from "effect";
 import { Reactivity } from "effect/unstable/reactivity";
-import { ProviderInstanceClient } from "./ProviderInstance.service.js";
+import { ProviderInstanceClient } from "./ProviderInstance.service.ts";
 import type {
   AddProviderInstanceCommand,
   ProbeProviderInstanceCommand,

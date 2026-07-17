@@ -15,9 +15,9 @@ import {
   decodeGraphitiMcpJsonRpcRequest,
   isGraphitiProxyFastMcpMethod,
   isGraphitiProxyFastMcpToolName,
-} from "./ProxySchemas.js";
+} from "./ProxySchemas.ts";
 import type { HttpServerRequest } from "effect/unstable/http";
-import type { GraphitiMcpJsonRpcRequest } from "./ProxySchemas.js";
+import type { GraphitiMcpJsonRpcRequest } from "./ProxySchemas.ts";
 
 const utf8Decoder = new TextDecoder("utf-8");
 

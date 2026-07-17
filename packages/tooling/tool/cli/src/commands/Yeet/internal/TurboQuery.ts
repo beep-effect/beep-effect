@@ -18,12 +18,12 @@ import {
   TurboPlanSnapshot,
   TurboPlanTask,
   TurboWorkspacePackage,
-} from "../../../internal/repo-run/index.js";
-import { YeetCommandError } from "../Yeet.errors.js";
-import { emptyTurboPlanSnapshot, YEET_FEEDBACK_TASKS, YeetRunMode } from "./Planner.js";
+} from "../../../internal/repo-run/index.ts";
+import { YeetCommandError } from "../Yeet.errors.ts";
+import { emptyTurboPlanSnapshot, YEET_FEEDBACK_TASKS, YeetRunMode } from "./Planner.ts";
 import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { YeetRunOptions } from "../Yeet.schemas.js";
+import type { YeetRunOptions } from "../Yeet.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/TurboQuery");
 const decodeJsonTextOption = S.decodeUnknownOption(S.UnknownFromJsonString);

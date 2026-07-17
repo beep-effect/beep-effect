@@ -7,7 +7,7 @@
 
 import { Effect, Match, pipe } from "effect";
 import { dual } from "effect/Function";
-import { renderCompletedProgress, renderInitialProgress, renderProgressBar } from "./Image.render.js";
+import { renderCompletedProgress, renderInitialProgress, renderProgressBar } from "./Image.render.ts";
 import type { FFmpegEvent } from "@beep/ffmpeg";
 import type { Terminal } from "effect";
 

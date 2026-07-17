@@ -27,22 +27,22 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { diffMembership } from "../../internal/ratchet/RatchetDiff.js";
-import { runGitOutput } from "../../internal/repo-run/index.js";
-import { reflectionFileNameIsArtifact, reflectionFrontmatterIsValid } from "../Lint/ReflectionArtifact.js";
-import { GoalsGitError } from "./Goals.errors.js";
-import { decodeGoalManifest, GoalPhaseStatus, GoalStatus } from "./Goals.schemas.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { diffMembership } from "../../internal/ratchet/RatchetDiff.ts";
+import { runGitOutput } from "../../internal/repo-run/index.ts";
+import { reflectionFileNameIsArtifact, reflectionFrontmatterIsValid } from "../Lint/ReflectionArtifact.ts";
+import { GoalsGitError } from "./Goals.errors.ts";
+import { decodeGoalManifest, GoalPhaseStatus, GoalStatus } from "./Goals.schemas.ts";
 import {
   goalManifestPhases,
   isJsonRecord,
   listGoalPackets,
   parseGoalManifestText,
   readmeLifecycleToken,
-} from "./Inventory.js";
-import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.js";
-import type { GoalManifest } from "./Goals.schemas.js";
-import type { GoalPacketRecord } from "./Inventory.js";
+} from "./Inventory.ts";
+import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
+import type { GoalManifest } from "./Goals.schemas.ts";
+import type { GoalPacketRecord } from "./Inventory.ts";
 
 const $I = $RepoCliId.create("commands/Goals/Doctor");
 

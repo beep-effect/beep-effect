@@ -8,7 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
-import { NonNegativePixelOffset, PositiveMediaDimension, RgbChannel } from "./Media.schemas.js";
+import { NonNegativePixelOffset, PositiveMediaDimension, RgbChannel } from "./Media.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Files/internal/Borders.schemas");
 

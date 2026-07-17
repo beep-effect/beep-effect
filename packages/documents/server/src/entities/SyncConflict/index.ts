@@ -4,11 +4,11 @@
  * @category layers
  * @since 0.0.0
  */
-export * from "./SyncConflict.layer.js";
+export * from "./SyncConflict.layer.ts";
 /**
  * SyncConflict repository adapter exports.
  *
  * @category repositories
  * @since 0.0.0
  */
-export * from "./SyncConflict.repo.js";
+export * from "./SyncConflict.repo.ts";

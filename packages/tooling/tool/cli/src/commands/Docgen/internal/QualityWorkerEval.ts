@@ -23,10 +23,10 @@ import {
   DEFAULT_JSON_PRETTY_MAX_LENGTH,
   encodeCommandJson,
   renderPrettyCommandJson,
-} from "../../../internal/cli/Json.js";
-import { errorMessage as cliErrorMessage, durationMsSince, timestampIso } from "../../../internal/cli/Timing.js";
-import { DocgenQualityFindingCode, DocgenQualityReport } from "./Quality.js";
-import type { DocgenQualityFindingCode as DocgenQualityFindingCodeValue } from "./Quality.js";
+} from "../../../internal/cli/Json.ts";
+import { errorMessage as cliErrorMessage, durationMsSince, timestampIso } from "../../../internal/cli/Timing.ts";
+import { DocgenQualityFindingCode, DocgenQualityReport } from "./Quality.ts";
+import type { DocgenQualityFindingCode as DocgenQualityFindingCodeValue } from "./Quality.ts";
 
 const $I = $RepoCliId.create("commands/Docgen/internal/QualityWorkerEval");
 

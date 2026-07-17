@@ -8,17 +8,17 @@
 import { Effect, flow, pipe } from "effect";
 import * as O from "effect/Option";
 import { Command, Flag } from "effect/unstable/cli";
-import { printLines } from "../../internal/cli/Printer.js";
-import { GraphitiProxyServiceInstallOptions, GraphitiRestoreOptions } from "./Graphiti.schemas.js";
+import { printLines } from "../../internal/cli/Printer.ts";
+import { GraphitiProxyServiceInstallOptions, GraphitiRestoreOptions } from "./Graphiti.schemas.ts";
 import {
   ensureGraphitiProxy,
   installGraphitiProxyService,
   recoverGraphitiStack,
   restoreGraphitiStack,
   verifyGraphitiStack,
-} from "./Graphiti.service.js";
-import { runGraphitiProxy } from "./internal/ProxyRuntime.js";
-import type { GraphitiProxyOpsError } from "./Graphiti.errors.js";
+} from "./Graphiti.service.ts";
+import { runGraphitiProxy } from "./internal/ProxyRuntime.ts";
+import type { GraphitiProxyOpsError } from "./Graphiti.errors.ts";
 
 /**
  * Graphiti queue proxy subcommand.

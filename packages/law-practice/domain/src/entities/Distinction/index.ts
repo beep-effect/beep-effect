@@ -6,11 +6,11 @@
  * @since 0.0.0
  */
 
-export * from "./Distinction.model.js";
+export * from "./Distinction.model.ts";
 /**
  * Distinction value-object schemas re-exported for this entity surface.
  *
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./Distinction.values.js";
+export * from "./Distinction.values.ts";

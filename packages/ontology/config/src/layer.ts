@@ -6,7 +6,7 @@
  */
 
 import { Effect, Layer } from "effect";
-import { OntologyConfig, OntologyServerConfig, OntologyWorkspaceRootConfig } from "./ServerConfig.js";
+import { OntologyConfig, OntologyServerConfig, OntologyWorkspaceRootConfig } from "./ServerConfig.ts";
 
 const readOntologyConfig = Effect.fn("Ontology.Config.read")(function* () {
   const workspaceRoot = yield* OntologyWorkspaceRootConfig;

@@ -18,7 +18,7 @@
  * @category models
  * @since 0.0.0
  */
-export * from "./EmailArtifact.model.js";
+export * from "./EmailArtifact.model.ts";
 /**
  * Module exports.
  *
@@ -32,4 +32,4 @@ export * from "./EmailArtifact.model.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./EmailArtifact.values.js";
+export * from "./EmailArtifact.values.ts";

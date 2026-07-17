@@ -18,21 +18,21 @@ import {
   EnsureFileOperation,
   WriteFileOperation,
   WritePackageJsonOperation,
-} from "./Architecture.schemas.js";
-import { acceptedProofFiles, legacyFixturePaths } from "./internal/AcceptedProofManifest.js";
+} from "./Architecture.schemas.ts";
+import { acceptedProofFiles, legacyFixturePaths } from "./internal/AcceptedProofManifest.ts";
 import {
   packageShellFileOperationsFor,
   packageShellRolePlanFor,
   packageShellTargetFor,
   shellPackageJsonOperationFor,
-} from "./internal/PackageShell.js";
-import { isStageIncluded, roleAllowedForTarget, rolePlanFor } from "./internal/RoleTopology.js";
+} from "./internal/PackageShell.ts";
+import { isStageIncluded, roleAllowedForTarget, rolePlanFor } from "./internal/RoleTopology.ts";
 import {
   isPackageLevelFile,
   proofFileMatchesDomainKind,
   renderAcceptedTemplateForPlan,
   targetPathFor,
-} from "./internal/TemplateRetarget.js";
+} from "./internal/TemplateRetarget.ts";
 import type {
   ArchitectureOperation,
   ArchitectureOperationConflictPolicy,
@@ -42,8 +42,8 @@ import type {
   ArchitecturePackageRole,
   ArchitectureSliceRole,
   ArchitectureSliceRolePlan,
-} from "./Architecture.schemas.js";
-import type { AcceptedProofFile } from "./internal/AcceptedProofManifest.js";
+} from "./Architecture.schemas.ts";
+import type { AcceptedProofFile } from "./internal/AcceptedProofManifest.ts";
 
 const defaultPlanTarget = defaultArchitecturePlanTarget;
 

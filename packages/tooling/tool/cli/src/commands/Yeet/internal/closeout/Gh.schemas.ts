@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { GhActor, GhComment, GhPageInfo, GhPrView } from "../../../../internal/github/index.js";
+import { GhActor, GhComment, GhPageInfo, GhPrView } from "../../../../internal/github/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/closeout/Gh.schemas");
 

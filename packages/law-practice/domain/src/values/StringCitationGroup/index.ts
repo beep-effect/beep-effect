@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./StringCitationGroup.model.js";
+export * from "./StringCitationGroup.model.ts";

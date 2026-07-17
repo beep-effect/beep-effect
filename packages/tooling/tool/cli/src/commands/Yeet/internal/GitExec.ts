@@ -20,10 +20,10 @@ import {
   runGitOutput as runSharedGitOutput,
   runGitPathList as runSharedGitPathList,
   safeOriginBranchFromBase,
-} from "../../../internal/repo-run/index.js";
-import { YeetCommandError } from "../Yeet.errors.js";
+} from "../../../internal/repo-run/index.ts";
+import { YeetCommandError } from "../Yeet.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { GitCommandErrorAdapter, RepoRunContext } from "../../../internal/repo-run/index.js";
+import type { GitCommandErrorAdapter, RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 const gitErrorAdapter: GitCommandErrorAdapter<YeetCommandError> = {
   onSpawnFailure: (commandLine) => YeetCommandError.new(`Failed to run ${commandLine}.`),

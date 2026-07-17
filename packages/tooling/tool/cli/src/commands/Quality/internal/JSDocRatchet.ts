@@ -13,9 +13,9 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { formatJsonc, readArtifact, renderTruncatedLines, writeArtifact } from "../../../internal/artifacts/index.js";
-import { diffTotals, enforceRatchet } from "../../../internal/ratchet/index.js";
-import { QualityScriptCommandError } from "../Quality.errors.js";
+import { formatJsonc, readArtifact, renderTruncatedLines, writeArtifact } from "../../../internal/artifacts/index.ts";
+import { diffTotals, enforceRatchet } from "../../../internal/ratchet/index.ts";
+import { QualityScriptCommandError } from "../Quality.errors.ts";
 import type { FileSystem } from "effect";
 
 const $I = $RepoCliId.create("commands/Quality/internal/JSDocRatchet");

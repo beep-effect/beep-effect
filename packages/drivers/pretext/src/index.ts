@@ -18,25 +18,25 @@
  * @since 0.0.0
  * @category errors
  */
-export * from "./Pretext.errors.js";
+export * from "./Pretext.errors.ts";
 /**
  * Font-metrics snapshot contracts and pure layout helpers.
  *
  * @since 0.0.0
  * @category models
  */
-export * from "./Pretext.models.js";
+export * from "./Pretext.models.ts";
 /**
  * Font-metrics capture service contract.
  *
  * @since 0.0.0
  * @category services
  */
-export * from "./PretextCapture.service.js";
+export * from "./PretextCapture.service.ts";
 /**
  * Fixture-backed capture layers for DOM-free consumer tests.
  *
  * @since 0.0.0
  * @category layers
  */
-export * from "./PretextCapture.test-layer.js";
+export * from "./PretextCapture.test-layer.ts";

@@ -13,7 +13,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Project } from "ts-morph";
-import { EffectImportRulesPersistenceError } from "./Laws.errors.js";
+import { EffectImportRulesPersistenceError } from "./Laws.errors.ts";
 
 const $I = $RepoCliId.create("commands/Laws/EffectImports");
 

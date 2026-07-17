@@ -7,8 +7,8 @@
  */
 
 import { dual } from "effect/Function";
-import { WorkPriority as WorkPrioritySchema } from "./WorkPriority.model.js";
-import type { WorkPriority } from "./WorkPriority.model.js";
+import { WorkPriority as WorkPrioritySchema } from "./WorkPriority.model.ts";
+import type { WorkPriority } from "./WorkPriority.model.ts";
 
 /**
  * Default priority for newly created WorkItems.

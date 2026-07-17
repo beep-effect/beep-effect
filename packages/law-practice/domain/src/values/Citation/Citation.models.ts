@@ -16,41 +16,41 @@ import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 // Tier-C citation subtypes participating in the Citation union.
-import { AnnotationCitation } from "../AnnotationCitation/index.js";
-import { CanonCitation } from "../CanonCitation/index.js";
-import { CitationBase } from "../CitationBase/index.js";
-import { CitationId } from "../CitationId/index.js";
+import { AnnotationCitation } from "../AnnotationCitation/index.ts";
+import { CanonCitation } from "../CanonCitation/index.ts";
+import { CitationBase } from "../CitationBase/index.ts";
+import { CitationId } from "../CitationId/index.ts";
 import {
   CaseComponentSpan,
   IdComponentSpan,
   ShortFormCaseComponentSpan,
   SupraComponentSpan,
-} from "../ComponentSpan/index.js";
-import { ConstitutionalCitation } from "../ConstitutionalCitation/index.js";
-import { CourtInference } from "../CourtInference/index.js";
-import { DocketCitation } from "../DocketCitation/index.js";
-import { FederalRegisterCitation } from "../FederalRegisterCitation/index.js";
-import { FederalRuleCitation } from "../FederalRuleCitation/index.js";
-import { HistoryChain } from "../HistoryChain/index.js";
-import { HistorySignal } from "../HistorySignal/index.js";
-import { JournalCitation } from "../JournalCitation/index.js";
-import { LegislativeMaterialCitation } from "../LegislativeMaterialCitation/index.js";
-import { LocalOrdinanceCitation } from "../LocalOrdinanceCitation/index.js";
-import { NeutralCitation } from "../NeutralCitation/index.js";
-import { ParallelGroup } from "../ParallelGroup/index.js";
-import { ParentheticalType } from "../ParentheticalType/index.js";
-import { PinciteInfo } from "../PinciteInfo/index.js";
-import { PublicLawCitation } from "../PublicLawCitation/index.js";
-import { RegulationCitation } from "../RegulationCitation/index.js";
-import { RestatementCitation } from "../RestatementCitation/index.js";
-import { SessionLawCitation } from "../SessionLawCitation/index.js";
-import { Span } from "../Span/index.js";
-import { StateRuleCitation } from "../StateRuleCitation/index.js";
-import { StatuteCitation } from "../StatuteCitation/index.js";
-import { StatutesAtLargeCitation } from "../StatutesAtLargeCitation/index.js";
-import { SubsequentHistoryEntry } from "../SubsequentHistoryEntry/index.js";
-import { TreatiseCitation } from "../TreatiseCitation/index.js";
-import { TreatyCitation } from "../TreatyCitation/index.js";
+} from "../ComponentSpan/index.ts";
+import { ConstitutionalCitation } from "../ConstitutionalCitation/index.ts";
+import { CourtInference } from "../CourtInference/index.ts";
+import { DocketCitation } from "../DocketCitation/index.ts";
+import { FederalRegisterCitation } from "../FederalRegisterCitation/index.ts";
+import { FederalRuleCitation } from "../FederalRuleCitation/index.ts";
+import { HistoryChain } from "../HistoryChain/index.ts";
+import { HistorySignal } from "../HistorySignal/index.ts";
+import { JournalCitation } from "../JournalCitation/index.ts";
+import { LegislativeMaterialCitation } from "../LegislativeMaterialCitation/index.ts";
+import { LocalOrdinanceCitation } from "../LocalOrdinanceCitation/index.ts";
+import { NeutralCitation } from "../NeutralCitation/index.ts";
+import { ParallelGroup } from "../ParallelGroup/index.ts";
+import { ParentheticalType } from "../ParentheticalType/index.ts";
+import { PinciteInfo } from "../PinciteInfo/index.ts";
+import { PublicLawCitation } from "../PublicLawCitation/index.ts";
+import { RegulationCitation } from "../RegulationCitation/index.ts";
+import { RestatementCitation } from "../RestatementCitation/index.ts";
+import { SessionLawCitation } from "../SessionLawCitation/index.ts";
+import { Span } from "../Span/index.ts";
+import { StateRuleCitation } from "../StateRuleCitation/index.ts";
+import { StatuteCitation } from "../StatuteCitation/index.ts";
+import { StatutesAtLargeCitation } from "../StatutesAtLargeCitation/index.ts";
+import { SubsequentHistoryEntry } from "../SubsequentHistoryEntry/index.ts";
+import { TreatiseCitation } from "../TreatiseCitation/index.ts";
+import { TreatyCitation } from "../TreatyCitation/index.ts";
 import type * as O from "effect/Option";
 
 const $I = $LawPracticeDomainId.create("values/Citation/Citation.models");

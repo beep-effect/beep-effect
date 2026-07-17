@@ -11,4 +11,4 @@ export {
   makeRetentionListProgram,
   makeRetentionMutationProgram,
   makeRetentionRestoreDrillProgram,
-} from "./Programs.js";
+} from "./Programs.ts";

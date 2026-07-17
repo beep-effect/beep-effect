@@ -15,8 +15,8 @@ import {
   ProbeProviderInstanceCommand,
   RemoveProviderInstanceCommand,
   UpdateProviderInstanceCommand,
-} from "./ProviderInstance.commands.js";
-import { ProviderActionError } from "./ProviderInstance.errors.js";
+} from "./ProviderInstance.commands.ts";
+import { ProviderActionError } from "./ProviderInstance.errors.ts";
 
 /** RPC for adding an instance.
  * @example

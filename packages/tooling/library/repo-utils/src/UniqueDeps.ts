@@ -12,10 +12,10 @@ import { $RepoUtilsId } from "@beep/identity/packages";
 import { A } from "@beep/utils";
 import { Effect, flow, MutableHashSet, Order, Struct } from "effect";
 import * as S from "effect/Schema";
-import { buildRepoDependencyIndex } from "./DependencyIndex.js";
-import { NpmPackageName } from "./schemas/PackageJson.js";
-import type { DomainError, NoSuchFileError } from "./errors/index.js";
-import type { FsUtils } from "./FsUtils.js";
+import { buildRepoDependencyIndex } from "./DependencyIndex.ts";
+import { NpmPackageName } from "./schemas/PackageJson.ts";
+import type { DomainError, NoSuchFileError } from "./errors/index.ts";
+import type { FsUtils } from "./FsUtils.ts";
 
 const $I = $RepoUtilsId.create("UniqueDeps");
 const sameNpmPackageName = S.toEquivalence(NpmPackageName);

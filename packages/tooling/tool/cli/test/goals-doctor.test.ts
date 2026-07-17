@@ -6,7 +6,7 @@ import { Cause, Effect, Exit, Layer, Runtime } from "effect";
 import * as S from "effect/Schema";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
-import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.js";
+import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTest.ts";
 
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });

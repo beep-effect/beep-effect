@@ -7,7 +7,7 @@
  */
 
 import { DbSchema as DocumentsDbSchema } from "@beep/documents-tables/tables";
-import { DbAdminMigrationTarget } from "./ArchitectureLab.js";
+import { DbAdminMigrationTarget } from "./ArchitectureLab.ts";
 
 /**
  * Documents sync migration target used to prove DMS sync-state persistence.

@@ -15,7 +15,7 @@ export {
    * @since 0.0.0
    */
   CyclicDependencyError,
-} from "./CyclicDependencyError.js";
+} from "./CyclicDependencyError.ts";
 /**
  * @category utilities
  * @since 0.0.0
@@ -26,7 +26,7 @@ export {
    * @since 0.0.0
    */
   DomainError,
-} from "./DomainError.js";
+} from "./DomainError.ts";
 /**
  * @category utilities
  * @since 0.0.0
@@ -37,7 +37,7 @@ export {
    * @since 0.0.0
    */
   NoSuchFileError,
-} from "./NoSuchFileError.js";
+} from "./NoSuchFileError.ts";
 /**
  * @category utilities
  * @since 0.0.0
@@ -48,4 +48,4 @@ export {
    * @since 0.0.0
    */
   OptionInjectionError,
-} from "./OptionInjectionError.js";
+} from "./OptionInjectionError.ts";

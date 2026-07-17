@@ -9,15 +9,15 @@ import { buildRepoDependencyIndex, detectCycles } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import { Effect } from "effect";
 import { dual } from "effect/Function";
-import { TsconfigSyncCycleError, TsconfigSyncDriftError } from "./TsconfigSync.errors.js";
-import { TsconfigSyncPlan } from "./TsconfigSync.plan.js";
-import { TsconfigSyncRender } from "./TsconfigSync.render.js";
-import { TsconfigSyncModeMatch, TsconfigSyncResult, tsconfigSyncModeEquivalence } from "./TsconfigSync.schemas.js";
+import { TsconfigSyncCycleError, TsconfigSyncDriftError } from "./TsconfigSync.errors.ts";
+import { TsconfigSyncPlan } from "./TsconfigSync.plan.ts";
+import { TsconfigSyncRender } from "./TsconfigSync.render.ts";
+import { TsconfigSyncModeMatch, TsconfigSyncResult, tsconfigSyncModeEquivalence } from "./TsconfigSync.schemas.ts";
 import type { CyclicDependencyError, DomainError, FsUtils, NoSuchFileError } from "@beep/repo-utils";
 import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner";
-import type { TsconfigSyncFilterError } from "./TsconfigSync.errors.js";
-import type { PlannedFileChange, TsconfigSyncRunOptions } from "./TsconfigSync.schemas.js";
+import type { TsconfigSyncFilterError } from "./TsconfigSync.errors.ts";
+import type { PlannedFileChange, TsconfigSyncRunOptions } from "./TsconfigSync.schemas.ts";
 
 const {
   buildAdjacency,

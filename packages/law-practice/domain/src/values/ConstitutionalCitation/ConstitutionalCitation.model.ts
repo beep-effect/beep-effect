@@ -8,8 +8,8 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationBase } from "../CitationBase/index.js";
-import { ConstitutionalComponentSpan } from "../ComponentSpan/index.js";
+import { CitationBase } from "../CitationBase/index.ts";
+import { ConstitutionalComponentSpan } from "../ComponentSpan/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/ConstitutionalCitation/ConstitutionalCitation.model");
 

@@ -4,4 +4,4 @@
  * @category utilities
  * @since 0.0.0
  */
-export * from "./models/index.js";
+export * from "./models/index.ts";

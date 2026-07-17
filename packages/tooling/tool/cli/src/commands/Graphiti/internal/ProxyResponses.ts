@@ -8,10 +8,10 @@
 import { Match, pipe } from "effect";
 import { dual } from "effect/Function";
 import { HttpServerResponse } from "effect/unstable/http";
-import { ProxyErrorPayload } from "./ProxySchemas.js";
+import { ProxyErrorPayload } from "./ProxySchemas.ts";
 import type * as S from "effect/Schema";
 import type { Headers, HttpClientError } from "effect/unstable/http";
-import type { ProxyErrorKind, ProxyHealthPayload, ProxyLane } from "./ProxySchemas.js";
+import type { ProxyErrorKind, ProxyHealthPayload, ProxyLane } from "./ProxySchemas.ts";
 
 type ProxyErrorResponseOptions = {
   readonly headers?: Headers.Input | undefined;

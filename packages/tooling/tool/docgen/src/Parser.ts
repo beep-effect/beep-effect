@@ -14,8 +14,8 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as ast from "ts-morph";
-import * as Configuration from "./Configuration.js";
-import * as Domain from "./Domain.js";
+import * as Configuration from "./Configuration.ts";
+import * as Domain from "./Domain.ts";
 
 const $I = $RepoDocgenId.create("Parser");
 
@@ -503,7 +503,7 @@ const parseNamedExports = (ed: ast.ExportDeclaration): Effect.Effect<Array<Domai
  * import { Project } from "ts-morph"
  *
  * const project = new Project({ useInMemoryFileSystem: true })
- * const sourceFile = project.createSourceFile("sample.ts", "/** Public value. *\/\nexport { value } from \"./value.js\"")
+ * const sourceFile = project.createSourceFile("sample.ts", "/** Public value. *\/\nexport { value } from \"./value.ts\"")
  * const source = SourceShape.new(["sample.ts"], sourceFile)
  * const exports = Effect.runSync(parseExports.pipe(Effect.provide(Source.layer(source))))
  *

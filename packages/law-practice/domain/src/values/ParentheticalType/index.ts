@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ParentheticalType.model.js";
+export * from "./ParentheticalType.model.ts";

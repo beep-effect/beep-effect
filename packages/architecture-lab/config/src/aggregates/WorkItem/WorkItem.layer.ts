@@ -16,7 +16,7 @@ import {
   WorkItemPublicConfig,
   WorkItemSecretConfig,
   WorkItemServerConfig,
-} from "./WorkItem.config.js";
+} from "./WorkItem.config.ts";
 
 const $I = $ArchitectureLabConfigId.create("WorkItemConfigLayer");
 

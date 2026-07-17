@@ -19,9 +19,9 @@ import { A, O, pipe, Str } from "@beep/utils";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { applyJsoncModification } from "../../internal/cli/Jsonc.js";
-import { optionalProp } from "../../internal/cli/OptionRecord.js";
-import { GoalStatus, isGoalPhaseStatus, isGoalStatus } from "./Goals.schemas.js";
+import { applyJsoncModification } from "../../internal/cli/Jsonc.ts";
+import { optionalProp } from "../../internal/cli/OptionRecord.ts";
+import { GoalStatus, isGoalPhaseStatus, isGoalStatus } from "./Goals.schemas.ts";
 import {
   isJsonRecord,
   parseGoalManifestText,
@@ -29,9 +29,9 @@ import {
   readmeMissionLine,
   readmeTitle,
   rewriteReadmeLifecycleToken,
-} from "./Inventory.js";
-import type { GoalPhaseStatus } from "./Goals.schemas.js";
-import type { GoalPacketRecord } from "./Inventory.js";
+} from "./Inventory.ts";
+import type { GoalPhaseStatus } from "./Goals.schemas.ts";
+import type { GoalPacketRecord } from "./Inventory.ts";
 
 const $I = $RepoCliId.create("commands/Goals/Migration");
 

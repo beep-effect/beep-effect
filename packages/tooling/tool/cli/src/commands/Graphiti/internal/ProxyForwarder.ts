@@ -18,11 +18,11 @@ import {
   HttpMethod,
   HttpServerResponse,
 } from "effect/unstable/http";
-import { mapHttpClientErrorToResponse, proxyErrorResponse } from "./ProxyResponses.js";
-import { decodeUrlSearchParams } from "./ProxySchemas.js";
-import { GraphitiProxyForwarderService } from "./ProxyServices.js";
+import { mapHttpClientErrorToResponse, proxyErrorResponse } from "./ProxyResponses.ts";
+import { decodeUrlSearchParams } from "./ProxySchemas.ts";
+import { GraphitiProxyForwarderService } from "./ProxyServices.ts";
 import type { HttpServerRequest } from "effect/unstable/http";
-import type { GraphitiProxyConfig } from "./ProxyConfig.js";
+import type { GraphitiProxyConfig } from "./ProxyConfig.ts";
 
 const absoluteRequestTargetPattern = /^(?:[a-zA-Z][a-zA-Z\d+.-]*:|\/\/)/;
 

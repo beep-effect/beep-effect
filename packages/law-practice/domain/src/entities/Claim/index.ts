@@ -6,4 +6,4 @@
  * @since 0.0.0
  */
 
-export * from "./Claim.model.js";
+export * from "./Claim.model.ts";

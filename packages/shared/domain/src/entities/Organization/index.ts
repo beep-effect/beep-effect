@@ -12,7 +12,7 @@
  * @since 0.0.0
  * @category predicates
  */
-export * from "./Organization.behavior.js";
+export * from "./Organization.behavior.ts";
 /**
  * Organization model schema namespace.
  *
@@ -26,7 +26,7 @@ export * from "./Organization.behavior.js";
  * @since 0.0.0
  * @category models
  */
-export * from "./Organization.model.js";
+export * from "./Organization.model.ts";
 /**
  * Organization value schemas.
  *
@@ -40,4 +40,4 @@ export * from "./Organization.model.js";
  * @since 0.0.0
  * @category schemas
  */
-export * from "./Organization.values.js";
+export * from "./Organization.values.ts";

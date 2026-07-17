@@ -9,7 +9,7 @@ import {
   withTempWorkingDirectory,
   writeDefaultTsconfig,
   writeProjectFile,
-} from "./support/CommandTest.js";
+} from "./support/CommandTest.ts";
 
 const DemoSourcePath = "packages/demo/src/index.ts" as const;
 

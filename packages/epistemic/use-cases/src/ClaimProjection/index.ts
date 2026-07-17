@@ -19,4 +19,4 @@
  * @category use-cases
  * @since 0.0.0
  */
-export * from "./ClaimProjection.js";
+export * from "./ClaimProjection.ts";

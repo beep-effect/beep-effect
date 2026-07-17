@@ -11,11 +11,11 @@
  * @category tables
  * @since 0.0.0
  */
-export * from "./SyncConflict.converters.js";
+export * from "./SyncConflict.converters.ts";
 /**
  * SyncConflict table exports.
  *
  * @category tables
  * @since 0.0.0
  */
-export * from "./SyncConflict.table.js";
+export * from "./SyncConflict.table.ts";

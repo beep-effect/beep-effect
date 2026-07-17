@@ -29,11 +29,11 @@ export const VERSION = "0.0.0" as const;
  * @category handlers
  * @since 0.0.0
  */
-export * as Session from "./aggregates/Session/index.js";
+export * as Session from "./aggregates/Session/index.ts";
 /**
  * Architecture lab server layer export.
  *
  * @category layers
  * @since 0.0.0
  */
-export * from "./Layer.js";
+export * from "./Layer.ts";

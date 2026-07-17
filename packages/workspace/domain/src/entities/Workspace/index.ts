@@ -18,7 +18,7 @@
  * @category models
  * @since 0.0.0
  */
-export * from "./Workspace.model.js";
+export * from "./Workspace.model.ts";
 /**
  * Module exports.
  *
@@ -32,4 +32,4 @@ export * from "./Workspace.model.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./Workspace.values.js";
+export * from "./Workspace.values.ts";

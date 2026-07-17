@@ -16,7 +16,7 @@ import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { ResearchCommandError } from "../Research.errors.js";
+import { ResearchCommandError } from "../Research.errors.ts";
 
 const $I = $RepoCliId.create("commands/Research/internal/Catalog");
 

@@ -10,7 +10,7 @@ import { NormalizedBooleanString } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Config, Effect, identity, pipe, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
-import { GraphitiProxyConfigLoadError } from "../Graphiti.errors.js";
+import { GraphitiProxyConfigLoadError } from "../Graphiti.errors.ts";
 
 const $I = $RepoCliId.create("commands/Graphiti/internal/ProxyConfig");
 const booleanToNormalizedString = (value: boolean) => (value ? "true" : "false");

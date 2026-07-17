@@ -11,8 +11,8 @@ import { A } from "@beep/utils";
 import { Duration, Effect, flow, identity, Order, pipe, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { errorMessage, timestampIso } from "../../../../internal/cli/Timing.js";
-import { scoreSubject } from "./Quality.rubric.js";
+import { errorMessage, timestampIso } from "../../../../internal/cli/Timing.ts";
+import { scoreSubject } from "./Quality.rubric.ts";
 import {
   bySubjectIdentityAscending,
   DocgenQualityPackageReport,
@@ -22,7 +22,7 @@ import {
   DocgenQualitySummary,
   QUALITY_RUBRIC_VERSION,
   QUALITY_SCHEMA_VERSION,
-} from "./Quality.schemas.js";
+} from "./Quality.schemas.ts";
 import {
   budgetDurationMs,
   budgetExceeded,
@@ -31,14 +31,14 @@ import {
   makeRuntimeBudget,
   packageTimeoutMessage,
   withGeneratedDocSnippets,
-} from "./Quality.subjects.js";
-import type { DocgenWorkspacePackage } from "../../Docgen.schemas.js";
+} from "./Quality.subjects.ts";
+import type { DocgenWorkspacePackage } from "../../Docgen.schemas.ts";
 import type {
   DocgenQualityReview,
   DocgenQualityScopeMode,
   DocgenQualityScoreMode,
   DocgenQualitySubject,
-} from "./Quality.schemas.js";
+} from "./Quality.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Docgen/internal/quality/Quality.service");
 const DEFAULT_PACKAGE_TIMEOUT = Duration.seconds(180);

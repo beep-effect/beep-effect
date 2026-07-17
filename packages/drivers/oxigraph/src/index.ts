@@ -11,11 +11,11 @@
  * @category errors
  * @since 0.0.0
  */
-export * from "./Oxigraph.errors.js";
+export * from "./Oxigraph.errors.ts";
 /**
  * Oxigraph-backed semantic-web SPARQL service Layer.
  *
  * @category layers
  * @since 0.0.0
  */
-export * from "./Oxigraph.sparql.js";
+export * from "./Oxigraph.sparql.ts";

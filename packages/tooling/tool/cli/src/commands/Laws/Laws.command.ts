@@ -10,14 +10,14 @@ import { Text } from "@beep/utils";
 import { Console, Effect } from "effect";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { printLines } from "../../internal/cli/Printer.js";
-import { AllowlistCheckOptions, reportAllowlistCheckSummary, runAllowlistCheck } from "./AllowlistCheck.js";
-import { DualArityRulesOptions, runDualArityRules } from "./DualArity.js";
-import { EffectFnRulesOptions, runEffectFnRules } from "./EffectFn.js";
-import { EffectImportRulesOptions, runEffectImportRules } from "./EffectImports.js";
-import { NoNativeRuntimeRulesOptions, runNoNativeRuntimeRules } from "./NoNativeRuntime.js";
-import { runTerseEffectRules, TerseEffectRulesOptions } from "./TerseEffect.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { printLines } from "../../internal/cli/Printer.ts";
+import { AllowlistCheckOptions, reportAllowlistCheckSummary, runAllowlistCheck } from "./AllowlistCheck.ts";
+import { DualArityRulesOptions, runDualArityRules } from "./DualArity.ts";
+import { EffectFnRulesOptions, runEffectFnRules } from "./EffectFn.ts";
+import { EffectImportRulesOptions, runEffectImportRules } from "./EffectImports.ts";
+import { NoNativeRuntimeRulesOptions, runNoNativeRuntimeRules } from "./NoNativeRuntime.ts";
+import { runTerseEffectRules, TerseEffectRulesOptions } from "./TerseEffect.ts";
 
 const $I = $RepoCliId.create("commands/Laws/Laws.command");
 

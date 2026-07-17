@@ -18,7 +18,7 @@
  * @category configuration
  * @since 0.0.0
  */
-export * from "./OfficeActionExtractionLabel.js";
+export * from "./OfficeActionExtractionLabel.ts";
 /**
  * Office-action review port exports.
  *
@@ -32,7 +32,7 @@ export * from "./OfficeActionExtractionLabel.js";
  * @category services
  * @since 0.0.0
  */
-export * from "./OfficeActionReview.ports.js";
+export * from "./OfficeActionReview.ports.ts";
 /**
  * Office-action review implementation exports.
  *
@@ -46,4 +46,4 @@ export * from "./OfficeActionReview.ports.js";
  * @category services
  * @since 0.0.0
  */
-export * from "./OfficeActionReview.service.js";
+export * from "./OfficeActionReview.service.ts";
