@@ -14,7 +14,7 @@ import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/unstable/http";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
-import { ts } from "ts-morph";
+import * as ts from "typescript";
 
 const CURRENT_SCHEMA_RELEASE = "v0.11.3";
 const GENERATED_SCHEMA_ID = '$AcpId.create("_generated/schema.gen")';

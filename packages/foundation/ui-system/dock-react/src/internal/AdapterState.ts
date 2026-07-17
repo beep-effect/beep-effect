@@ -45,6 +45,9 @@ export type AdapterState = {
   readonly containerAtom: Atom.Writable<DockBox>;
   readonly focusedGroupAtom: Atom.Writable<O.Option<GroupId>>;
   readonly dragAtom: Atom.Writable<O.Option<TabDrag>>;
+  readonly overflowAtom: (groupId: GroupId) => Atom.Writable<ReadonlyArray<PanelId>>;
+  readonly overflowOpenAtom: (groupId: GroupId) => Atom.Writable<boolean>;
+  readonly tabWidths: MutableHashMap.MutableHashMap<GroupId, MutableHashMap.MutableHashMap<PanelId, number>>;
   readonly resizeAtom: Atom.Writable<O.Option<SashDrag>>;
   readonly ratioOverrideAtom: Atom.Writable<O.Option<RatioOverride>>;
   readonly floatingGestureAtom: Atom.Writable<O.Option<FloatingGesture>>;
@@ -151,6 +154,10 @@ export const adapterState = (
   const containerAtom = Atom.make(DockBox.make()).pipe(Atom.keepAlive);
   const focusedGroupAtom = Atom.make<O.Option<GroupId>>(O.none()).pipe(Atom.keepAlive);
   const dragAtom = Atom.make<O.Option<TabDrag>>(O.none()).pipe(Atom.keepAlive);
+  const overflowAtom = Atom.family((_groupId: GroupId) =>
+    Atom.make<ReadonlyArray<PanelId>>(A.empty()).pipe(Atom.keepAlive)
+  );
+  const overflowOpenAtom = Atom.family((_groupId: GroupId) => Atom.make(false).pipe(Atom.keepAlive));
   const resizeAtom = Atom.make<O.Option<SashDrag>>(O.none()).pipe(Atom.keepAlive);
   const ratioOverrideAtom = Atom.make<O.Option<RatioOverride>>(O.none()).pipe(Atom.keepAlive);
   const floatingGestureAtom = Atom.make<O.Option<FloatingGesture>>(O.none()).pipe(Atom.keepAlive);
@@ -259,6 +266,9 @@ export const adapterState = (
     containerAtom,
     focusedGroupAtom,
     dragAtom,
+    overflowAtom,
+    overflowOpenAtom,
+    tabWidths: MutableHashMap.empty<GroupId, MutableHashMap.MutableHashMap<PanelId, number>>(),
     resizeAtom,
     ratioOverrideAtom,
     floatingGestureAtom,

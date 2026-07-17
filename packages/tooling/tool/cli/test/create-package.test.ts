@@ -138,7 +138,7 @@ const ExpectedGeneratedStoriesQualityScripts = {
 const ExpectedNextjsAppScripts = {
   audit: "bun run --if-present beep:audit",
   codegen: "echo 'no codegen needed'",
-  dev: "portless marketing-web.beep next dev --turbopack",
+  dev: "next dev --turbopack",
   "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   "beep:build": "next build --turbopack",
   "beep:check": "tsgo -b tsconfig.json",
@@ -156,7 +156,7 @@ const ExpectedNextjsAppScripts = {
 const ExpectedTauriAppScripts = {
   audit: "bun run --if-present beep:audit",
   codegen: "echo 'no codegen needed'",
-  dev: "portless desktop-shell.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1420}\" --strictPort'",
+  dev: "vite --host 127.0.0.1",
   "dev:tauri": "tauri dev",
   "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   "beep:build": "vite build",

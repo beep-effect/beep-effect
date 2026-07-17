@@ -75,9 +75,6 @@ Set `PORTLESS=0` or `PORTLESS=skip` to run the command directly without the prox
 PORTLESS=0 pnpm dev   # Bypasses proxy, uses default port
 ```
 
-In this repo, bypassing portless is diagnostic-only and must never be
-documented as a development workflow.
-
 ## How It Works
 
 1. `portless proxy start` starts an HTTP reverse proxy on port 1355 as a background daemon (configurable with `-p` / `--port` or the `PORTLESS_PORT` env var). The proxy also auto-starts when you run an app.
@@ -86,10 +83,7 @@ documented as a development workflow.
 
 `.localhost` domains resolve to `127.0.0.1` natively on macOS and Linux -- no `/etc/hosts` editing needed.
 
-Framework behavior varies. Vite does not consume `process.env.PORT`. Portless
-0.14 injects `--port`, `--strictPort`, and host flags only for directly
-recognized Vite commands, so shell-wrapped Vite or Storybook commands must pass
-`--port "$PORT"` (or `-p "$PORT"`) explicitly.
+Most frameworks (Next.js, Vite, Express, etc.) respect the `PORT` env var automatically.
 
 ### State directory
 
@@ -138,12 +132,6 @@ First run generates a local CA and prompts for sudo to add it to the system trus
 
 ## Troubleshooting
 
-### Claude preview URLs
-
-The `.claude/launch.json` preview harness's autoPort-assigned `PORT` is always overridden by
-portless's own 4000-4999 allocation, so its announced `http://localhost:<port>` URL is dead even though the server starts.
-After `preview_start`, navigate to the canonical `http://<app>.beep.localhost:1355` URL instead.
-
 ### Proxy not running
 
 The proxy auto-starts when you run an app with `portless <name> <cmd>`. If it doesn't start (e.g. port conflict), start it manually:
@@ -164,8 +152,6 @@ portless proxy start -p 8080
 
 Some frameworks need explicit configuration to use the `PORT` env var. Examples:
 
-- **Vite and Storybook behind shell wrappers**: pass `--port "$PORT"` (or
-  `-p "$PORT"`) explicitly
 - **Webpack Dev Server**: use `--port $PORT`
 - **Custom servers**: read `process.env.PORT` and listen on it
 

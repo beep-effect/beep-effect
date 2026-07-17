@@ -67,14 +67,6 @@ Ship reliable code with effect-first and schema-first patterns.
   `aggregates` (full slice concepts), `entities` (persisted domain entities),
   `values` (domain-only value objects).
 
-## Dev Servers
-
-- Dev servers run only through the portless-wrapped package scripts; canonical
-  URLs are `http://<app>.beep.localhost:1355` (`storybook.beep`,
-  `oip-web.beep`, `professional-desktop.beep`, `graph3d-bench.beep`).
-- Never launch raw `vite`/`next`/`storybook dev` or test against numeric
-  localhost ports; `PORTLESS=0 <script>` is diagnostic-only.
-
 ## Docs & Knowledge
 
 - `docs/` is tracked authored documentation (see `docs/README.md`); docgen

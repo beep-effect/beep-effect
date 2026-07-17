@@ -1,10 +1,8 @@
-/** @effect-diagnostics nodeBuiltinImport:skip-file */
-import { readFileSync } from "node:fs";
 import { A, P, Str, Struct } from "@beep/utils";
 import { Config, Effect, pipe } from "effect";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
-import { parse as parseJsonc } from "jsonc-parser";
+import ts from "typescript";
 import type { ViteUserConfig } from "vitest/config";
 
 type AliasEntry = {
@@ -49,38 +47,27 @@ const coverageThresholds = undefined;
 
 const escapeRegExp = Str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-// The root tsconfig is JSONC; typescript@7 (native) no longer exports the JS
-// compiler API (`ts.sys`/`parseConfigFileTextToJson`), so read and parse it
-// with jsonc-parser instead.
-const readFileOrUndefined = (path: string): string | undefined => {
-  try {
-    return readFileSync(path, "utf8");
-  } catch {
-    return undefined;
-  }
-};
-
 const readRootTsconfigPaths = (): Readonly<Record<string, readonly string[]>> => {
-  const fileText = readFileOrUndefined(rootTsconfigPath);
+  const fileText = ts.sys.readFile(rootTsconfigPath);
 
   if (P.isUndefined(fileText)) {
     return {};
   }
 
-  const config: unknown = parseJsonc(fileText);
+  const parsed = ts.parseConfigFileTextToJson(rootTsconfigPath, fileText);
 
   if (
-    typeof config !== "object" ||
-    P.isNull(config) ||
-    typeof (config as { compilerOptions?: unknown }).compilerOptions !== "object" ||
-    P.isNull((config as { compilerOptions?: unknown }).compilerOptions) ||
-    typeof (config as { compilerOptions: { paths?: unknown } }).compilerOptions.paths !== "object" ||
-    P.isNull((config as { compilerOptions: { paths?: unknown } }).compilerOptions.paths)
+    typeof parsed.config !== "object" ||
+    P.isNull(parsed.config) ||
+    typeof parsed.config.compilerOptions !== "object" ||
+    P.isNull(parsed.config.compilerOptions) ||
+    typeof parsed.config.compilerOptions.paths !== "object" ||
+    P.isNull(parsed.config.compilerOptions.paths)
   ) {
     return {};
   }
 
-  return (config as { compilerOptions: { paths: Record<string, readonly string[]> } }).compilerOptions.paths;
+  return parsed.config.compilerOptions.paths as Record<string, readonly string[]>;
 };
 
 const toAliasEntry = (find: string, replacement: string): AliasEntry => {

@@ -170,8 +170,7 @@ cleanups; no useState/useEffect/useCallback/useMemo).
 ### M2 acceptance
 
 - Adapter suites green under package vitest; storybook lane builds; demo
-  serves at `http://graph3d-bench.beep.localhost:1355` against package imports
-  (manual smoke ok).
+  serves on :5199 against package imports (manual smoke ok).
 - `@beep/dock-react` → `@beep/dock` is the only kernel edge (no relative
   reach-ins); knip/fallow/preflight green; changeset present.
 

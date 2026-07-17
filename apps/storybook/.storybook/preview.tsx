@@ -1,4 +1,3 @@
-/** @effect-diagnostics globalConsole:skip-file */
 // Polyfill the `process` global for the Storybook dev server. Stories that import
 // `next/link` reference the bare `process` global at eval time, which Vite's browser
 // runtime does not define (the vitest test runner does, so test:storybook passes
@@ -11,27 +10,6 @@ const globalWithProcess = globalThis as unknown as {
 };
 
 globalWithProcess.process ??= { env: { NODE_ENV: "development" } };
-
-// react-grab auto-initializes its overlay in the importing document, so it must load
-// here in the preview iframe (where stories render), never in the manager. The MODE
-// guard keeps it out of addon-vitest browser-mode runs: those evaluate this module
-// with DEV=true but MODE="test", and a leaked overlay would enter addon-a11y's
-// document.body scan and freeze React updates mid-play-function. bippy's React
-// DevTools hook must be installed explicitly before react-grab initializes:
-// react-grab's bundled copy skips the install inside the preview iframe, and its
-// activation path then dies reading `hook.renderers`.
-// biome-ignore lint/suspicious/noUndeclaredEnvVars: Vite injects DEV and MODE on import.meta.env.
-if (import.meta.env.DEV && import.meta.env.MODE !== "test") {
-  void import("bippy")
-    .then((bippy) => {
-      bippy.installRDTHook();
-      return import("react-grab");
-    })
-    .catch((error: unknown) => {
-      // biome-ignore lint/suspicious/noConsole: dev-only degradation notice; the console is the intended surface.
-      console.warn("react-grab failed to load; component grabbing is unavailable in this session.", error);
-    });
-}
 
 import { AppThemeProvider, ThemeMode, useThemeMode } from "@beep/ui/themes";
 import { DecoratorHelpers } from "@storybook/addon-themes";

@@ -10,6 +10,7 @@ import {
   MovePanelCommand,
   OpenPanelCommand,
   Panel,
+  PanelConstraints,
   PanelId,
   PanelPatch,
   RendererKey,
@@ -36,6 +37,7 @@ import {
   panelOne,
   splitTwo,
 } from "./Fixtures.ts";
+import { preM1Snapshot } from "./fixtures/pre-m1-snapshot.ts";
 import type { DockChanged, DockMutationOutcome } from "@beep/dock";
 
 const requireChanged = (outcome: DockMutationOutcome): Effect.Effect<DockChanged> =>
@@ -120,6 +122,54 @@ describe("panel and group updates", () => {
         const panel = O.getOrThrow(DockWorkspace.findPanel(restored, panelOne.id));
         expect(panel.renderMode).toBe("always");
         expect(panel.tabComponent).toEqual(O.some(RendererKey.make("custom-tab")));
+      })
+    );
+
+    it.effect(
+      "updates and clears panel constraints through PanelPatch",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const opened = yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne));
+        const constraints = PanelConstraints.make({ minWidth: O.some(240), maxHeight: O.some(720) });
+        const constrained = yield* requireChanged(
+          yield* engine.transition(
+            opened.state,
+            updatePanel(
+              "update-constraints",
+              panelOne.id,
+              PanelPatch.make({ constraints: O.some(O.some(constraints)) })
+            )
+          )
+        );
+        expect(constrained.events).toEqual([
+          {
+            kind: "panelConstraintsChanged",
+            panelId: panelOne.id,
+            groupId: groupOne,
+            constraints: O.some(constraints),
+          },
+        ]);
+        expect(O.getOrThrow(DockWorkspace.findPanel(constrained.state, panelOne.id)).constraints).toEqual(
+          O.some(constraints)
+        );
+        const cleared = yield* requireChanged(
+          yield* engine.transition(
+            constrained.state,
+            updatePanel("clear-constraints", panelOne.id, PanelPatch.make({ constraints: O.some(O.none()) }))
+          )
+        );
+        expect(O.getOrThrow(DockWorkspace.findPanel(cleared.state, panelOne.id)).constraints).toEqual(O.none());
+      })
+    );
+
+    it.effect(
+      "decodes a pre-M1 version-one snapshot fixture without constraints",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const restored = yield* engine.decodeSnapshot(preM1Snapshot);
+        const panel = O.getOrThrow(DockWorkspace.findPanel(restored, PanelId.make("pre-m1-panel")));
+        expect(panel.title).toBe("Legacy");
+        expect(panel.constraints).toEqual(O.none());
       })
     );
 
