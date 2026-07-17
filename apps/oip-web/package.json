@@ -18,7 +18,7 @@
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "NEXT_DISABLE_PWA=1 next build --turbopack",
     "build:pwa": "NEXT_DISABLE_PWA=0 next build --webpack",
-    "start": "portless oip-web.beep next start",
+    "start": "next start",
     "beep:check": "tsgo -b tsconfig.json",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
