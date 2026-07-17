@@ -23,6 +23,11 @@ id = "GHSA-8988-4f7v-96qf"
 ignoreUntil = 2026-09-15T00:00:00Z
 reason = "@opentelemetry/core advisory affecting versions <2.8.0 (1.30.1, 2.1.0, 2.5.0, 2.7.0, 2.7.1 present in the tree); fixed in 2.8.0. @opentelemetry/core is a transitive dependency of the OpenTelemetry SDK/exporter stack, not a direct workspace dependency; the workspace already pins the otel SDK packages at 2.8.0 while the older core copies are pulled by transitive otel dependents that have not adopted 2.8.0. Newly published advisory, not introduced by the current PR (identical versions present on main); tracked for a repo-wide bump to >=2.8.0. Revisit when dependents widen their ranges."
 
+[[IgnoredVulns]]
+id = "GHSA-xcpc-8h2w-3j85"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "adm-zip advisory affecting <0.6.0 (0.5.18 present in the tree); fixed in 0.6.0. adm-zip is a transitive dependency of onnxruntime-node@1.27.0 (via @beep/face-detection), whose range ^0.5.16 cannot resolve to 0.6.0 — no lockfile bump fixes this without a root override against onnxruntime-node's declared range. Newly published advisory, not introduced by the current PR (identical version present on main); tracked for removal when onnxruntime-node widens its adm-zip range. Revisit on the next onnxruntime-node release."
+
 [[PackageOverrides]]
 name = "effect"
 version = "https://pkg.pr.new/Effect-TS/effect-smol/effect@51f6d19"
