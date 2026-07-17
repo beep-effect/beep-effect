@@ -46,6 +46,7 @@ import * as O from "effect/Option";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import type { DockAtomOperation } from "@beep/dock";
 import type { DockAtomGraph } from "@beep/dock-react";
+import type { Fiber } from "effect";
 
 /**
  * The four coarse desktop surfaces, each one dock panel.
@@ -302,26 +303,26 @@ const DOCK_SAVE_DEBOUNCE_MS = 400;
  */
 export const dockPersistenceBindingAtom = Atom.family((graph: DesktopDockGraph) =>
   Atom.make((get) => {
-    // Effect-native debounce by generation: every workspace change forks a
-    // sleep; only the latest generation saves, so drag storms cost one write.
+    // Effect-native debounce: every workspace change interrupts the pending
+    // save fiber and forks a fresh sleep, so drag storms cost one write.
     // (`Atom.debounce` never fires in effect 4.0.0-beta.97 — proven by test —
     // so the quiet period is expressed with `Effect.sleep` directly.)
-    let generation = 0;
+    let pending: Fiber.Fiber<void> | undefined;
     const cancel = graph.registry.subscribe(graph.workspaceAtom, () => {
-      generation += 1;
-      const scheduled = generation;
-      Effect.runFork(
+      pending?.interruptUnsafe();
+      pending = Effect.runFork(
         Effect.sleep(Duration.millis(DOCK_SAVE_DEBOUNCE_MS)).pipe(
           Effect.andThen(
             Effect.sync(() => {
-              if (scheduled === generation) graph.registry.set(graph.operationAtom, saveOperation());
+              pending = undefined;
+              graph.registry.set(graph.operationAtom, saveOperation());
             })
           )
         )
       );
     });
     get.addFinalizer(() => {
-      generation += 1;
+      pending?.interruptUnsafe();
       cancel();
     });
     return undefined;
