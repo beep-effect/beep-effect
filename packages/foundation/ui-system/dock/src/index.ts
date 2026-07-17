@@ -288,6 +288,11 @@ export {
    * @category events
    * @since 0.0.0
    */
+  PanelConstraintsChangedEvent,
+  /**
+   * @category events
+   * @since 0.0.0
+   */
   PanelMovedEvent,
   /**
    * @category events
@@ -460,6 +465,11 @@ export {
    * @since 0.0.0
    */
   Panel,
+  /**
+   * @category models
+   * @since 0.0.0
+   */
+  PanelConstraints,
   /**
    * @category models
    * @since 0.0.0

@@ -24,6 +24,7 @@ import { activeResizeObserverCount, resize } from "@beep/dock-react/internal/Res
 import { it } from "@effect/vitest";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { Effect } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import React from "react";
 import { afterEach, describe, expect, vi } from "vitest";
@@ -100,6 +101,36 @@ const sizeRoot = (): void => resize(screen.getByTestId("dockview-react"), 800, 4
 afterEach(() => cleanup());
 
 describe("DockviewReact", { concurrent: false }, () => {
+  it.effect("collapses measured overflow while keeping the active tab visible", () =>
+    Effect.gen(function* () {
+      const panel4Id = PanelId.make("panel-4");
+      const graph = yield* makeGraph(
+        makeWorkspace([
+          textPanel(panel1Id, "One", "first"),
+          textPanel(panel2Id, "Two", "second"),
+          textPanel(panel3Id, "Three", "third"),
+          textPanel(panel4Id, "Four", "fourth"),
+        ])
+      );
+      render(<DockviewReact graph={graph} components={{}} />);
+      sizeRoot();
+      const strip = screen.getByTestId("dockview-react").querySelector<HTMLElement>("[data-dock-tab-strip]");
+      if (strip === null) throw new Error("Missing measured tab strip");
+      A.forEach(screen.getAllByRole("tab"), (tab) =>
+        vi.spyOn(tab, "getBoundingClientRect").mockReturnValue(DOMRect.fromRect({ width: 100, height: 32 }))
+      );
+      resize(strip, 260, 32);
+      const trigger = yield* Effect.promise(() => screen.findByRole("button", { name: "Show 2 overflowed tabs" }));
+      expect(screen.getByRole("tab", { name: /One/ }).getAttribute("data-active")).toBe("true");
+      fireEvent.click(trigger);
+      fireEvent.click(screen.getByRole("menuitem", { name: "Four" }));
+      yield* graph.awaitIdle;
+      expect(O.getOrThrow(graph.registry.get(graph.activePanelAtom(group1))).id).toBe(panel4Id);
+      expect(screen.getByRole("tab", { name: /Four/ }).getAttribute("data-active")).toBe("true");
+      graph.dispose();
+    })
+  );
+
   it.effect("renders geometry, zipper tabs, and active content", () =>
     Effect.gen(function* () {
       const graph = yield* makeGraph();

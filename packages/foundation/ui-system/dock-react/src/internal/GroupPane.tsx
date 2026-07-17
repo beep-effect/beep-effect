@@ -12,10 +12,13 @@ import {
   TopLeftAnchoredBox,
 } from "@beep/dock";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { MutableHashMap, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
+import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import { useRef } from "react";
 import { makeOperation } from "./AdapterState.ts";
 import { boxStyle, compileDrop, positionOf, pressStartsOnButton } from "./DropCompiler.ts";
 import { ContentHost } from "./PanelHost.tsx";
@@ -23,6 +26,15 @@ import type { DockBox, Panel } from "@beep/dock";
 import type React from "react";
 import type { DockAtomGraph, DockTabRenderer, DockviewReactProps } from "../DockReact.types.ts";
 import type { AdapterState } from "./AdapterState.ts";
+
+const panelIdsEqual = A.makeEquivalence(PanelId.equals);
+
+const tabWidthsFor = (state: AdapterState, groupId: GroupId): MutableHashMap.MutableHashMap<PanelId, number> =>
+  O.getOrElse(MutableHashMap.get(state.tabWidths, groupId), () => {
+    const widths = MutableHashMap.empty<PanelId, number>();
+    MutableHashMap.set(state.tabWidths, groupId, widths);
+    return widths;
+  });
 
 const Tab = (props: {
   readonly graph: DockAtomGraph;
@@ -109,6 +121,7 @@ const Tab = (props: {
       ref={pointerRef}
       onClick={activate}
       onKeyDown={activateFromKeyboard}
+      style={{ flex: "0 0 auto" }}
     >
       {O.match(O.fromUndefinedOr(Renderer), {
         onNone: () => props.panel.title,
@@ -155,9 +168,32 @@ export const GroupPane = (
   const boxOption = useAtomValue(props.state.geometry.groupBoxAtom(props.groupId));
   const workspace = useAtomValue(props.graph.workspaceAtom);
   const submit = useAtomSet(props.graph.operationAtom);
+  const overflowAtom = props.state.overflowAtom(props.groupId);
+  const overflowOpenAtom = props.state.overflowOpenAtom(props.groupId);
+  const overflowed = useAtomValue(overflowAtom);
+  const overflowOpen = useAtomValue(overflowOpenAtom);
+  const setOverflowed = useAtomSet(overflowAtom);
+  const setOverflowOpen = useAtomSet(overflowOpenAtom);
+  // The overflow atom is keep-alive per group, but its value describes a
+  // measurement of a particular strip DOM. Across an unmount/remount the
+  // stale value must not hide tabs before this mount has measured — so
+  // hiding is gated on a per-mount freshness flag that measureStrip flips.
+  const measuredThisMount = useRef(false);
+  const tabWidths = tabWidthsFor(props.state, props.groupId);
   if (O.isNone(tabsOption) || (P.isUndefined(props.box) && O.isNone(boxOption))) return null;
   const tabs = tabsOption.value;
   const box = props.box ?? O.getOrThrow(boxOption);
+  const panels = TabsNode.panels(tabs);
+  const hiddenPanels = Bool.match(measuredThisMount.current, {
+    onFalse: A.empty<Panel>,
+    onTrue: () =>
+      A.filter(
+        panels,
+        (panel) =>
+          Bool.not(PanelId.equals(panel.id, tabs.active.id)) &&
+          A.some(overflowed, (panelId) => PanelId.equals(panelId, panel.id))
+      ),
+  });
   const maximized = DockWorkspace.guards.empty(workspace) ? O.none<GroupId>() : workspace.maximized;
   const toggleMaximized = (): void =>
     submit(
@@ -167,25 +203,141 @@ export const GroupPane = (
           : MaximizeGroupCommand.make({ groupId: props.groupId })
       )
     );
+  const activateOverflow = (panel: Panel): void => {
+    props.graph.registry.set(props.state.focusedGroupAtom, O.some(props.groupId));
+    submit(makeOperation(ActivatePanelCommand.make({ panelId: panel.id })));
+    setOverflowOpen(false);
+  };
+  const measureStrip = (node: HTMLDivElement, width: number): void => {
+    A.forEach(panels, (panel) => {
+      const tab = node.querySelector<HTMLElement>(`[data-panel-id='${panel.id}']`);
+      if (P.isNotNull(tab)) {
+        const measured = tab.getBoundingClientRect().width;
+        if (N.isGreaterThan(measured, 0)) MutableHashMap.set(tabWidths, panel.id, measured);
+      }
+    });
+    const actionsWidth = O.match(O.fromNullOr(node.querySelector<HTMLElement>("[data-dock-actions]")), {
+      onNone: () => 0,
+      onSome: (actions) => actions.getBoundingClientRect().width,
+    });
+    const totalTabsWidth = A.reduce(panels, 0, (total, panel) =>
+      N.sum(
+        total,
+        pipe(
+          MutableHashMap.get(tabWidths, panel.id),
+          O.getOrElse(() => 0)
+        )
+      )
+    );
+    // An unmeasured strip (zero width, or no tab has reported a real width
+    // yet) must never overflow: before layout settles the honest state is
+    // "everything visible", not "everything hidden" — otherwise the first
+    // frames flicker every inactive tab into the dropdown.
+    const unmeasured =
+      N.isLessThanOrEqualTo(width, 0) || A.every(panels, (panel) => O.isNone(MutableHashMap.get(tabWidths, panel.id)));
+    const allFit = unmeasured || N.isLessThanOrEqualTo(N.sum(totalTabsWidth, actionsWidth), width);
+    const nextOverflow = Bool.match(allFit, {
+      onTrue: A.empty<PanelId>,
+      onFalse: () => {
+        const activeWidth = pipe(
+          MutableHashMap.get(tabWidths, tabs.active.id),
+          O.getOrElse(() => 0)
+        );
+        const capacity = N.max(0, N.subtract(N.subtract(width, actionsWidth), 32));
+        const availableForInactive = N.max(0, N.subtract(capacity, activeWidth));
+        const visibleInactive = A.reduce(panels, { ids: A.empty<PanelId>(), width: 0 }, (visible, panel) => {
+          if (PanelId.equals(panel.id, tabs.active.id)) return visible;
+          const panelWidth = pipe(
+            MutableHashMap.get(tabWidths, panel.id),
+            O.getOrElse(() => 0)
+          );
+          if (N.isGreaterThan(N.sum(visible.width, panelWidth), availableForInactive)) return visible;
+          return { ids: A.append(visible.ids, panel.id), width: N.sum(visible.width, panelWidth) };
+        });
+        const visibleIds = A.append(visibleInactive.ids, tabs.active.id);
+        return pipe(
+          panels,
+          A.filter((panel) => A.every(visibleIds, (panelId) => Bool.not(PanelId.equals(panelId, panel.id)))),
+          A.map((panel) => panel.id)
+        );
+      },
+    });
+    // The first measurement of a mount must always publish (even an equal
+    // value) so the render gated on the freshness flag re-runs with hiding
+    // enabled; after that, only genuine changes re-publish.
+    const firstMeasurement = Bool.not(measuredThisMount.current);
+    measuredThisMount.current = true;
+    if (firstMeasurement || Bool.not(panelIdsEqual(overflowed, nextOverflow))) setOverflowed(nextOverflow);
+  };
+  const stripRef = (node: HTMLDivElement | null): (() => void) | undefined => {
+    if (P.isNull(node)) return undefined;
+    const observer = new ResizeObserver((entries) =>
+      O.map(A.head(entries), (entry) => measureStrip(node, entry.contentRect.width))
+    );
+    observer.observe(node);
+    const initialWidth = node.getBoundingClientRect().width;
+    if (N.isGreaterThan(initialWidth, 0)) measureStrip(node, initialWidth);
+    return () => observer.disconnect();
+  };
   const strip = tabs.metadata.hideHeader ? null : (
     <div
+      ref={stripRef}
       role="tablist"
+      data-dock-tab-strip=""
+      style={{ display: "flex", minWidth: 0 }}
       onDoubleClick={(event) => {
         if (P.not(Eq.equals(true))(props.floating) && Eq.equals(event.currentTarget, event.target)) toggleMaximized();
       }}
     >
-      {A.map(TabsNode.panels(tabs), (panel) => (
-        <Tab
-          key={panel.id}
-          graph={props.graph}
-          groupId={props.groupId}
-          panel={panel}
-          active={PanelId.equals(panel.id, tabs.active.id)}
-          state={props.state}
-          tabComponents={props.tabComponents}
-          defaultTabComponent={props.defaultTabComponent}
-        />
-      ))}
+      {A.map(
+        A.filter(panels, (panel) => A.every(hiddenPanels, (hidden) => Bool.not(PanelId.equals(hidden.id, panel.id)))),
+        (panel) => (
+          <Tab
+            key={panel.id}
+            graph={props.graph}
+            groupId={props.groupId}
+            panel={panel}
+            active={PanelId.equals(panel.id, tabs.active.id)}
+            state={props.state}
+            tabComponents={props.tabComponents}
+            defaultTabComponent={props.defaultTabComponent}
+          />
+        )
+      )}
+      {A.match(hiddenPanels, {
+        onEmpty: () => null,
+        onNonEmpty: () => (
+          <div style={{ position: "relative", flex: "0 0 auto" }}>
+            <button
+              type="button"
+              aria-label={`Show ${A.length(hiddenPanels)} overflowed tabs`}
+              aria-expanded={overflowOpen}
+              data-dock-overflow=""
+              style={{ width: 32 }}
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={() => setOverflowOpen(Bool.not(overflowOpen))}
+            >
+              ⋯
+            </button>
+            {overflowOpen && (
+              <div role="menu" style={{ position: "absolute", insetInlineEnd: 0, zIndex: 2 }}>
+                {A.map(hiddenPanels, (panel) => (
+                  <button
+                    key={panel.id}
+                    type="button"
+                    role="menuitem"
+                    data-panel-id={panel.id}
+                    onPointerDown={(event) => event.stopPropagation()}
+                    onClick={() => activateOverflow(panel)}
+                  >
+                    {panel.title}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ),
+      })}
       {P.not(Eq.equals(true))(props.floating) && (
         <div data-dock-actions="" style={{ marginInlineStart: "auto", display: "inline-flex", gap: 2 }}>
           <button

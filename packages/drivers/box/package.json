@@ -77,7 +77,6 @@
     "@effect/platform-bun": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
-    "bun-types": "catalog:",
-    "ts-morph": "catalog:"
+    "bun-types": "catalog:"
   }
 }

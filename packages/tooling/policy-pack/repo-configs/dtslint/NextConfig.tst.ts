@@ -11,7 +11,7 @@ describe("NextConfig", () => {
 
   it("accepts representative public Next.js config values", () => {
     const config = defineNextConfig({
-      allowedDevOrigins: ["oip-web.beep.localhost"],
+      allowedDevOrigins: ["oip-web.localhost"],
       cacheComponents: true,
       headers: () => [
         {
@@ -46,7 +46,7 @@ describe("NextConfig", () => {
   it("defines the shared repo-owned Next.js config preset", () => {
     const options = {
       repoRoot: "/repo",
-      allowedDevOrigins: ["oip-web.beep.localhost"],
+      allowedDevOrigins: ["oip-web.localhost"],
       env: { ANALYZE: "1", NEXT_DISABLE_PWA: "1" },
       additionalTranspilePackages: ["@beep/shared-domain"],
       next: {

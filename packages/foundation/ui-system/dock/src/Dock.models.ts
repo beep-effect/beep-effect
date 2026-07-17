@@ -39,6 +39,11 @@ export {
    * @category models
    * @since 0.0.0
    */
+  PanelConstraints,
+  /**
+   * @category models
+   * @since 0.0.0
+   */
   PanelParameters,
   /**
    * @category models

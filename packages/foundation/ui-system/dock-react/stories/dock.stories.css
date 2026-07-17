@@ -63,6 +63,28 @@
   color: #e6e6e6;
 }
 
+.dock-story [role="menu"] {
+  min-width: 150px;
+  padding: 4px;
+  background: #232830;
+  border: 1px solid #4a5364;
+  border-radius: 5px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+}
+
+.dock-story [role="menu"] button {
+  display: block;
+  width: 100%;
+  text-align: start;
+  white-space: nowrap;
+}
+
+.dock-story [data-drop-indicator] {
+  background: rgba(59, 130, 246, 0.24);
+  border: 1px solid rgba(96, 165, 250, 0.9);
+  box-sizing: border-box;
+}
+
 .dock-story [data-content-host] {
   background: #171a1f;
 }

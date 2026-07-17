@@ -71,10 +71,8 @@ export default defineConfig({
     },
   },
   server: {
-    // Port and strictPort come from the portless-wrapped `dev` script
-    // (`--port "${PORT:-1421}" --strictPort`): portless assigns PORT for the
-    // named route, and the 1421 fallback keeps the PORTLESS=0 diagnostic
-    // bypass on the port tauri and the ontology MCP allowlist already accept.
+    port: 1421,
+    strictPort: true,
     proxy: {
       // Same-origin rpc: the vite dev server is the single origin, so the
       // webview's `/rpc` calls (see @beep/agents-client Chat.atoms.ts SERVER_URL)

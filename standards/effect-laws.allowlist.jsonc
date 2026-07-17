@@ -4,14 +4,6 @@
   "entries": [
     {
       "rule": "beep-laws/no-native-runtime",
-      "file": "apps/storybook/vitest.storybook.setup.ts",
-      "kind": "native-error",
-      "reason": "Vitest browser-mode setup guard: throwing in afterAll is the only failure channel before any Effect runtime exists, and vitest surfaces the native Error directly as the test failure.",
-      "owner": "@beep/storybook",
-      "issue": "STORYBOOK-REACT-GRAB-TEST-LEAK-GUARD"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
       "file": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
       "kind": "object-method",
       "reason": "ChangeOperation must keep the tagged-union match statics across a schema pipe; Object.assign merges the piped schema with the base statics and no Effect helper performs a static-preserving schema merge.",

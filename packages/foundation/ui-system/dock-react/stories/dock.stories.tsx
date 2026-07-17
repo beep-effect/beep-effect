@@ -5,6 +5,7 @@ import {
   HorizontalSplitLayout,
   makeDockAtoms,
   Panel,
+  PanelConstraints,
   PanelId,
   PopulatedWorkspace,
   RendererKey,
@@ -19,7 +20,7 @@ import {
 import { DockviewReact } from "@beep/dock-react";
 import { Effect } from "effect";
 import * as O from "effect/Option";
-import { expect, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import type { DockAtomGraph, DockPanelProps, DockRenderer, DockTabProps } from "@beep/dock-react";
 import "./dock.stories.css";
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -113,11 +114,63 @@ const tabsWorkspace = PopulatedWorkspace.make({
   }),
 });
 
+const constrainedWorkspace = PopulatedWorkspace.make({
+  root: SplitNode.make({
+    splitId: SplitId.make("story-constrained-split"),
+    layout: HorizontalSplitLayout.make({
+      left: TabsNode.make({
+        groupId: GroupId.make("story-constrained"),
+        active: Panel.make({
+          id: PanelId.make("story-constrained-panel"),
+          title: "Constrained",
+          view: TextPanelView.make({ text: "This panel cannot shrink below 300 pixels." }),
+          constraints: O.some(PanelConstraints.make({ minWidth: O.some(300) })),
+        }),
+      }),
+      right: TabsNode.make({
+        groupId: GroupId.make("story-constrained-neighbor"),
+        active: textPanel("story-constrained-neighbor-panel", "Neighbor", "Drag the sash toward the constraint."),
+      }),
+    }),
+  }),
+});
+
+const overflowWorkspace = PopulatedWorkspace.make({
+  root: TabsNode.make({
+    groupId: GroupId.make("story-overflow"),
+    active: textPanel("story-overflow-alpha", "Overflow Alpha", "Active tabs remain visible."),
+    after: [
+      textPanel("story-overflow-beta", "Overflow Beta", "Measured overflow entry."),
+      textPanel("story-overflow-gamma", "Overflow Gamma", "Measured overflow entry."),
+      textPanel("story-overflow-delta", "Overflow Delta", "Activate me from the dropdown."),
+    ],
+  }),
+});
+
+const quadrantWorkspace = PopulatedWorkspace.make({
+  root: SplitNode.make({
+    splitId: SplitId.make("story-quadrant-split"),
+    layout: HorizontalSplitLayout.make({
+      left: TabsNode.make({
+        groupId: GroupId.make("story-quadrant-source"),
+        active: textPanel("story-quadrant-source-panel", "Drag Source", "Drag over every target quadrant."),
+      }),
+      right: TabsNode.make({
+        groupId: GroupId.make("story-quadrant-target"),
+        active: textPanel("story-quadrant-target-panel", "Drop Target", "Four directional preview zones."),
+      }),
+    }),
+  }),
+});
+
 const graphs = {
   workspace: Effect.runSync(makeDockAtoms(workspace)),
   empty: Effect.runSync(makeDockAtoms()),
   maximized: Effect.runSync(makeDockAtoms(maximizedWorkspace)),
   tabs: Effect.runSync(makeDockAtoms(tabsWorkspace)),
+  constrained: Effect.runSync(makeDockAtoms(constrainedWorkspace)),
+  overflow: Effect.runSync(makeDockAtoms(overflowWorkspace)),
+  quadrants: Effect.runSync(makeDockAtoms(quadrantWorkspace)),
 };
 
 const StoryWatermark = () => (
@@ -201,10 +254,142 @@ export const MaximizedGroup: Story = {
 /** Every tab in the strip renders through the host's `defaultTabComponent`. */
 export const CustomTabs: Story = {
   args: { graph: graphs.tabs, tab: ChipTab },
-  play: ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    void expect(canvas.getByTestId("chip-story-tab-alpha")).toBeVisible();
-    void expect(canvas.getByTestId("chip-story-tab-beta")).toBeVisible();
-    void expect(canvas.getByTestId("chip-story-tab-gamma")).toBeVisible();
-  },
+  play: ({ canvasElement }) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const canvas = within(canvasElement);
+        // This story is about custom tab renderers, not overflow: pin a host
+        // wide enough for all three chips at any test viewport, then await
+        // the (measurement-driven) strip settling with everything visible.
+        const host = canvasElement.querySelector<HTMLElement>(".dock-story");
+        if (host === null) throw new Error("Missing dock story host");
+        host.style.width = "960px";
+        yield* Effect.promise(() =>
+          waitFor(() => {
+            expect(canvas.getByTestId("chip-story-tab-alpha")).toBeVisible();
+            expect(canvas.getByTestId("chip-story-tab-beta")).toBeVisible();
+            expect(canvas.getByTestId("chip-story-tab-gamma")).toBeVisible();
+          })
+        );
+      })
+    ),
+};
+
+/** A sash gesture cannot violate a panel's kernel minimum width. */
+export const ConstrainedSash: Story = {
+  args: { graph: graphs.constrained },
+  play: ({ canvasElement }) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const canvas = within(canvasElement);
+        const sash = canvasElement.querySelector<HTMLElement>("[data-sash-id='story-constrained-split']");
+        const panel = canvasElement.querySelector<HTMLElement>("[data-group-id='story-constrained']");
+        if (sash === null || panel === null) throw new Error("Missing constrained sash story geometry");
+        // Same measurement race as DropQuadrants: wait for settled geometry
+        // before caching the sash position.
+        yield* Effect.promise(() => waitFor(() => expect(panel.getBoundingClientRect().width).toBeGreaterThan(100)));
+        const sashBox = sash.getBoundingClientRect();
+        yield* Effect.promise(() =>
+          userEvent.pointer([
+            { keys: "[MouseLeft>]", target: sash, coords: { clientX: sashBox.left, clientY: sashBox.top } },
+            { target: sash, coords: { clientX: 0, clientY: sashBox.top } },
+            { keys: "[/MouseLeft]", target: sash, coords: { clientX: 0, clientY: sashBox.top } },
+          ])
+        );
+        yield* Effect.promise(() =>
+          waitFor(() => expect(panel.getBoundingClientRect().width).toBeGreaterThanOrEqual(300))
+        );
+        expect(canvas.getByText("Constrained")).toBeVisible();
+      })
+    ),
+};
+
+/** Narrowing a measured strip exposes overflow and can activate a hidden tab. */
+export const TabOverflow: Story = {
+  args: { graph: graphs.overflow },
+  play: ({ canvasElement }) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const canvas = within(canvasElement);
+        const host = canvasElement.querySelector<HTMLElement>(".dock-story");
+        if (host === null) throw new Error("Missing dock story host");
+        host.style.width = "320px";
+        const trigger = yield* Effect.promise(() => canvas.findByRole("button", { name: /overflowed tabs/ }));
+        yield* Effect.promise(() => userEvent.click(trigger));
+        yield* Effect.promise(() => userEvent.click(canvas.getByRole("menuitem", { name: "Overflow Delta" })));
+        yield* Effect.promise(() =>
+          waitFor(() =>
+            expect(
+              canvasElement.querySelector("[data-panel-id='story-overflow-delta']")?.getAttribute("data-active")
+            ).toBe("true")
+          )
+        );
+      })
+    ),
+};
+
+/** Each group quarter previews the exact half-box compiled for that split. */
+export const DropQuadrants: Story = {
+  args: { graph: graphs.quadrants },
+  play: ({ canvasElement }) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const source = canvasElement.querySelector<HTMLElement>("[data-panel-id='story-quadrant-source-panel']");
+        const target = canvasElement.querySelector<HTMLElement>("[data-group-id='story-quadrant-target']");
+        if (source === null || target === null) throw new Error("Missing quadrant story geometry");
+        // The container is measured by a ResizeObserver after mount; play()
+        // can win that race, so wait for real geometry before caching boxes.
+        yield* Effect.promise(() => waitFor(() => expect(target.getBoundingClientRect().width).toBeGreaterThan(100)));
+        const targetBox = target.getBoundingClientRect();
+        const preview = (): DOMRect => {
+          const indicator = canvasElement.querySelector<HTMLElement>("[data-drop-indicator]");
+          if (indicator === null) throw new Error("Missing compiled drop preview");
+          return indicator.getBoundingClientRect();
+        };
+        yield* Effect.promise(() =>
+          userEvent.pointer({
+            keys: "[MouseLeft>]",
+            target: source,
+            coords: { clientX: source.getBoundingClientRect().left, clientY: source.getBoundingClientRect().top },
+          })
+        );
+        yield* Effect.promise(() =>
+          userEvent.pointer({
+            target: source,
+            coords: { clientX: targetBox.left + 2, clientY: targetBox.top + targetBox.height / 2 },
+          })
+        );
+        yield* Effect.promise(() => waitFor(() => expect(preview().width).toBeCloseTo(targetBox.width / 2, 0)));
+        expect(preview().left).toBeCloseTo(targetBox.left, 0);
+        yield* Effect.promise(() =>
+          userEvent.pointer({
+            target: source,
+            coords: { clientX: targetBox.right - 34, clientY: targetBox.top + targetBox.height / 2 },
+          })
+        );
+        yield* Effect.promise(() => waitFor(() => expect(preview().right).toBeCloseTo(targetBox.right, 0)));
+        yield* Effect.promise(() =>
+          userEvent.pointer({
+            target: source,
+            coords: { clientX: targetBox.left + targetBox.width / 2, clientY: targetBox.top + 34 },
+          })
+        );
+        yield* Effect.promise(() => waitFor(() => expect(preview().height).toBeCloseTo(targetBox.height / 2, 0)));
+        expect(preview().top).toBeCloseTo(targetBox.top, 0);
+        yield* Effect.promise(() =>
+          userEvent.pointer({
+            target: source,
+            coords: { clientX: targetBox.left + targetBox.width / 2, clientY: targetBox.bottom - 34 },
+          })
+        );
+        yield* Effect.promise(() => waitFor(() => expect(preview().bottom).toBeCloseTo(targetBox.bottom, 0)));
+        yield* Effect.promise(() =>
+          userEvent.pointer({
+            keys: "[/MouseLeft]",
+            target: source,
+            coords: { clientX: targetBox.left + targetBox.width / 2, clientY: targetBox.bottom - 34 },
+          })
+        );
+      })
+    ),
 };

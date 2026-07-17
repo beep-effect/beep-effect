@@ -15,7 +15,6 @@ receivers:
             - http://127.0.0.1:1421
             - https://localhost:1421
             - https://127.0.0.1:1421
-            - http://professional-desktop.beep.localhost:1355
             - tauri://localhost
             - http://tauri.localhost
             - https://tauri.localhost

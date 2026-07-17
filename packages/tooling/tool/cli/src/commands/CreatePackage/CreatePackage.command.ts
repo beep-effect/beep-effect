@@ -1262,7 +1262,7 @@ const generatePackageJson: (
         scripts: {
           audit: "bun run --if-present beep:audit",
           codegen: "echo 'no codegen needed'",
-          dev: `portless ${name}.beep next dev --turbopack`,
+          dev: "next dev --turbopack",
           "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
           "beep:build": "next build --turbopack",
           start: "next start",
@@ -1304,7 +1304,7 @@ const generatePackageJson: (
         scripts: {
           audit: "bun run --if-present beep:audit",
           codegen: "echo 'no codegen needed'",
-          dev: `portless ${name}.beep sh -c 'vite --host 127.0.0.1 --port "\${PORT:-1420}" --strictPort'`,
+          dev: "vite --host 127.0.0.1",
           "dev:tauri": "tauri dev",
           "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
           "beep:build": "vite build",

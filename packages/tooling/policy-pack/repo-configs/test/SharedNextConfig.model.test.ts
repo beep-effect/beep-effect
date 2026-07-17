@@ -51,7 +51,7 @@ describe("Shared Next.js config preset", () => {
   it("builds the current shared base config with additive app overrides", () => {
     const config = makeBeepNextBaseConfig({
       repoRoot: "/repo",
-      allowedDevOrigins: ["oip-web.beep.localhost"],
+      allowedDevOrigins: ["oip-web.localhost"],
       additionalPageExtensions: ["mdoc"],
       additionalTranspilePackages: ["@beep/shared-domain"],
       additionalOptimizePackageImports: ["@beep/ui"],
@@ -64,7 +64,7 @@ describe("Shared Next.js config preset", () => {
       },
     });
 
-    expect(config.allowedDevOrigins).toEqual(["oip-web.beep.localhost"]);
+    expect(config.allowedDevOrigins).toEqual(["oip-web.localhost"]);
     expect(config.pageExtensions).toEqual(["ts", "tsx", "md", "mdx", "mdoc", "story.tsx"]);
     expect(config.transpilePackages).toEqual([
       "@beep/ui",
@@ -85,11 +85,11 @@ describe("Shared Next.js config preset", () => {
   it("keeps omitted repo-owned list options byte-equivalent to explicit empty lists", () => {
     const omitted = makeBeepNextBaseConfig({
       repoRoot: "/repo",
-      allowedDevOrigins: ["oip-web.beep.localhost"],
+      allowedDevOrigins: ["oip-web.localhost"],
     });
     const explicitEmpty = makeBeepNextBaseConfig({
       repoRoot: "/repo",
-      allowedDevOrigins: ["oip-web.beep.localhost"],
+      allowedDevOrigins: ["oip-web.localhost"],
       additionalPageExtensions: [],
       additionalTranspilePackages: [],
       additionalOptimizePackageImports: [],
@@ -103,7 +103,7 @@ describe("Shared Next.js config preset", () => {
       let headersCalled = false;
       const config = defineBeepNextConfig({
         repoRoot: "/repo",
-        allowedDevOrigins: ["oip-web.beep.localhost"],
+        allowedDevOrigins: ["oip-web.localhost"],
         mdx: false,
         pwa: false,
         bundleAnalyzer: false,
@@ -138,7 +138,7 @@ describe("Shared Next.js config preset", () => {
   it("can disable every shared feature wrapper explicitly", () => {
     const config = defineBeepNextConfig({
       repoRoot: "/repo",
-      allowedDevOrigins: ["oip-web.beep.localhost"],
+      allowedDevOrigins: ["oip-web.localhost"],
       securityHeaders: false,
       mdx: false,
       pwa: false,

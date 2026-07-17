@@ -132,7 +132,7 @@ const ipcStdioProgram = Effect.gen(function* () {
     },
   });
   const socketStream: Socket.InputTransformStream = { readable: proc.stdout, writable };
-  const SocketLive = Layer.effect(Socket.Socket, Socket.fromTransformStream(Effect.succeed(socketStream)));
+  const SocketLive = Layer.effect(Socket.Socket, Socket.fromTransformStream(Effect.sync(() => socketStream)));
   const ProtocolLive = RpcClient.layerProtocolSocket().pipe(Layer.provide([RpcSerialization.layerNdjson, SocketLive]));
   const context = yield* Layer.build(ProtocolLive);
 
