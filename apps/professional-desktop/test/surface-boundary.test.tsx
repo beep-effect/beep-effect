@@ -19,6 +19,9 @@ const makeCrashingChild = (limit: number) => {
 };
 
 describe("SurfaceBoundary", { concurrent: false }, () => {
+  // Expected recoverable render errors from the crashing children are
+  // filtered at the vitest-config level (onUnhandledError); the console.error
+  // spies below keep React's boundary logging out of the output.
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();

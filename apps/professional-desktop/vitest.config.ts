@@ -12,6 +12,13 @@ export default mergeConfig(
     },
     test: {
       environment: "jsdom",
+      // The surface-boundary tests intentionally throw during render; React
+      // reports its "recovered by synchronous rendering" notice as an
+      // unhandled error under bun-run vitest. Everything else still fails.
+      onUnhandledError(error: unknown): boolean | undefined {
+        const message = error instanceof Error ? error.message : String(error);
+        return message.includes("error during concurrent rendering") ? false : undefined;
+      },
       include: ["test/**/*.test.{ts,tsx}"],
       exclude: ["test/integration/**"],
       setupFiles: [fileURLToPath(new URL("./test/setup.dom.ts", import.meta.url))],
