@@ -20,7 +20,7 @@ import {
   SaveOntologyFileResult,
   SerializeOntologySessionCommand,
   SerializeOntologySessionResult,
-} from "./Session.commands.js";
+} from "./Session.commands.ts";
 import {
   OntologyFileStore,
   ParseTurtleRequest,
@@ -29,10 +29,10 @@ import {
   TurtleCodec,
   TurtleCodecError,
   WriteOntologyFileRequest,
-} from "./Session.ports.js";
+} from "./Session.ports.ts";
 import type { ChangeOperation } from "@beep/ontology-domain/aggregates/Session";
-import type { OpenOntologyFileCommand, SaveOntologyFileCommand } from "./Session.commands.js";
-import type { OntologyFileStoreError } from "./Session.ports.js";
+import type { OpenOntologyFileCommand, SaveOntologyFileCommand } from "./Session.commands.ts";
+import type { OntologyFileStoreError } from "./Session.ports.ts";
 
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.service");
 

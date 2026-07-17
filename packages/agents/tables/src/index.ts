@@ -41,4 +41,4 @@ export * as Entities from "./entities/index.ts";
  * @category tables
  * @since 0.0.0
  */
-export * from "./tables.js";
+export * from "./tables.ts";

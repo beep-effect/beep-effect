@@ -17,9 +17,9 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { parse } from "jsonc-parser";
-import { optionalProp } from "../../internal/cli/OptionRecord.js";
+import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import type { ParseError } from "jsonc-parser";
-import type { GoalManifest, GoalPhase } from "./Goals.schemas.js";
+import type { GoalManifest, GoalPhase } from "./Goals.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Goals/Inventory");
 

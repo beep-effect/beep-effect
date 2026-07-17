@@ -12,9 +12,9 @@ import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { editorTheme } from "../../editor/themes/editor-theme.js";
-import { nodes } from "./nodes.js";
-import { Plugins } from "./plugins.js";
+import { editorTheme } from "../../editor/themes/editor-theme.ts";
+import { nodes } from "./nodes.ts";
+import { Plugins } from "./plugins.ts";
 import type { InitialConfigType } from "@lexical/react/LexicalComposer";
 import type { EditorState, SerializedEditorState } from "lexical";
 

@@ -14,7 +14,7 @@ import { Effect, Graph as G, HashMap, HashSet, MutableHashMap, MutableHashSet, p
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import { CyclicDependencyError } from "./errors/index.js";
+import { CyclicDependencyError } from "./errors/index.ts";
 
 // ---------------------------------------------------------------------------
 // Internal helpers

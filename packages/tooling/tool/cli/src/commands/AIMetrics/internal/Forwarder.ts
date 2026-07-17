@@ -9,4 +9,4 @@ export {
   makeForwarderRunProgram,
   makeForwarderTimerProgram,
   makeOtlpExportProgram,
-} from "./Programs.js";
+} from "./Programs.ts";

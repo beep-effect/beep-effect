@@ -8,7 +8,7 @@
 
 import { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
 import * as S from "effect/Schema";
-import type { syncConflictTable } from "./SyncConflict.table.js";
+import type { syncConflictTable } from "./SyncConflict.table.ts";
 
 /**
  * Selected documents SyncConflict row.

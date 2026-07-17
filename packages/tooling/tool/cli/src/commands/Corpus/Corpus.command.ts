@@ -10,7 +10,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { Command, Flag } from "effect/unstable/cli";
-import { CorpusCommandError } from "./Corpus.errors.js";
+import { CorpusCommandError } from "./Corpus.errors.ts";
 import {
   CorpusArchiveMoveOptions,
   CorpusCatalogOptions,
@@ -19,7 +19,7 @@ import {
   CorpusOrganizeOptions,
   CorpusSalvageOptions,
   CorpusSalvageSourceSpec,
-} from "./Corpus.schemas.js";
+} from "./Corpus.schemas.ts";
 import {
   archiveMoveCorpus,
   CorpusCommandServiceLive,
@@ -30,7 +30,7 @@ import {
   printCorpusIndex,
   salvageCorpus,
   verifySalvage,
-} from "./Corpus.service.js";
+} from "./Corpus.service.ts";
 
 /** @since 0.0.0 */
 const corpusRootFlag = Flag.directory("corpus-root", { mustExist: true }).pipe(

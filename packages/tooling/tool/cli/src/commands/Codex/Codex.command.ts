@@ -10,8 +10,8 @@ import { A } from "@beep/utils";
 import { Effect, Stream } from "effect";
 import { Argument, Command } from "effect/unstable/cli";
 import { ChildProcess } from "effect/unstable/process";
-import { printLines } from "../../internal/cli/Printer.js";
-import { CodexCommandError } from "./Codex.errors.js";
+import { printLines } from "../../internal/cli/Printer.ts";
+import { CodexCommandError } from "./Codex.errors.ts";
 import type { FileSystem } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 

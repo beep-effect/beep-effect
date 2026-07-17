@@ -16,9 +16,9 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import * as S from "effect/Schema";
-import { ParseTurtleRequest, ParseTurtleResult } from "./Session.ports.js";
-import { OntologySnapshot } from "./Session.projections.js";
-import { OntologyGraphProjection, OntologyGraphProjectionOptions } from "./Session.visualizer.js";
+import { ParseTurtleRequest, ParseTurtleResult } from "./Session.ports.ts";
+import { OntologySnapshot } from "./Session.projections.ts";
+import { OntologyGraphProjection, OntologyGraphProjectionOptions } from "./Session.visualizer.ts";
 
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.worker-protocol");
 

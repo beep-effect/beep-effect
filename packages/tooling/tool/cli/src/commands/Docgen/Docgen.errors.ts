@@ -6,7 +6,7 @@
  */
 
 import { Console, Effect } from "effect";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 
 /**
  * Reports a Docgen command error using the historical terminal prefix.

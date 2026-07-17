@@ -17,19 +17,19 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Node, Project } from "ts-morph";
-import { boundedText, firstLine } from "../../../../internal/cli/Timing.js";
-import { escapeRegexChar, globPatternToRegExp } from "../../../../internal/GlobPattern.js";
-import { DocgenConfigDocument } from "../../Docgen.schemas.js";
-import { loadDocgenConfigDocument } from "../Workspace.js";
+import { boundedText, firstLine } from "../../../../internal/cli/Timing.ts";
+import { escapeRegexChar, globPatternToRegExp } from "../../../../internal/GlobPattern.ts";
+import { DocgenConfigDocument } from "../../Docgen.schemas.ts";
+import { loadDocgenConfigDocument } from "../Workspace.ts";
 import {
   DocgenQualityDiagnostic,
   DocgenQualityPackageStatus,
   DocgenQualitySubject,
   DocgenQualitySubjectCandidate,
-} from "./Quality.schemas.js";
+} from "./Quality.schemas.ts";
 import type { Diagnostic, JSDoc, SourceFile } from "ts-morph";
-import type { DocgenWorkspacePackage } from "../../Docgen.schemas.js";
-import type { DocgenRelatedSymbol } from "./Quality.schemas.js";
+import type { DocgenWorkspacePackage } from "../../Docgen.schemas.ts";
+import type { DocgenRelatedSymbol } from "./Quality.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Docgen/internal/quality/Quality.subjects");
 

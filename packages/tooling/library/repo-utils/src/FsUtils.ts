@@ -15,8 +15,8 @@ import * as O from "@beep/utils/Option";
 import { Context, Effect, FileSystem, Layer, MutableHashSet, Order, Path } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import { DomainError, NoSuchFileError } from "./errors/index.js";
-import { jsonStringifyPretty } from "./JsonUtils.js";
+import { DomainError, NoSuchFileError } from "./errors/index.ts";
+import { jsonStringifyPretty } from "./JsonUtils.ts";
 
 const $I = $RepoUtilsId.create("FsUtils");
 const decodeJsonString = S.decodeUnknownOption(S.fromJsonString(S.Json));

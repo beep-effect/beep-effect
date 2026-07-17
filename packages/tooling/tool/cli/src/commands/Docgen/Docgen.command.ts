@@ -16,10 +16,10 @@ import * as O from "@beep/utils/Option";
 import { Config, Console, Effect, FileSystem, flow, Layer, Match, Path, pipe } from "effect";
 import * as R from "effect/Record";
 import { Command, Flag } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { jsonFlag } from "../../internal/cli/Flags.js";
-import { printLines } from "../../internal/cli/Printer.js";
-import { reportDocgenCommandError } from "./Docgen.errors.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { jsonFlag } from "../../internal/cli/Flags.ts";
+import { printLines } from "../../internal/cli/Printer.ts";
+import { reportDocgenCommandError } from "./Docgen.errors.ts";
 import {
   defaultAnalysisPath,
   defaultQualityPath,
@@ -29,8 +29,8 @@ import {
   logGenerationResults,
   printDocgenIndex,
   renderDocgenJson,
-} from "./Docgen.render.js";
-import { runDocgenLocal } from "./internal/Local.js";
+} from "./Docgen.render.ts";
+import { runDocgenLocal } from "./internal/Local.ts";
 import {
   aggregateGeneratedDocs,
   analyzePackageDocumentation,
@@ -39,19 +39,19 @@ import {
   loadDocgenConfigDocument,
   resolveDocgenWorkspacePackage,
   runDocgenForPackage,
-} from "./internal/Operations.js";
+} from "./internal/Operations.ts";
 import {
   analyzeDocgenQuality,
   generateQualityJson,
   generateQualityReport,
   resolveDocgenQualityTargets,
-} from "./internal/Quality.js";
+} from "./internal/Quality.ts";
 import {
   analyzeDocgenQualityWorkerEval,
   defaultQualityWorkerEvalPacketLimit,
   defaultQualityWorkerEvalReasoningEffort,
   generateQualityWorkerEvalJson,
-} from "./internal/QualityWorkerEval.js";
+} from "./internal/QualityWorkerEval.ts";
 import {
   defaultQualityWorkerRunpodEvalOtlpBaseUrl,
   defaultQualityWorkerRunpodEvalOtlpProject,
@@ -60,7 +60,7 @@ import {
   generateQualityWorkerRunpodEvalJson,
   requiredQualityWorkerRunpodEvalModel,
   runDocgenQualityWorkerRunpodEval,
-} from "./internal/QualityWorkerRunpodEval.js";
+} from "./internal/QualityWorkerRunpodEval.ts";
 import {
   includePatternsFromFlag,
   qualityReportHasBlockingFindings,
@@ -70,7 +70,7 @@ import {
   resolveQualityWorkerEvalSource,
   targetHasCurrentDocgenProofManifest,
   verifyDocgenCheckProofManifests,
-} from "./internal/Targets.js";
+} from "./internal/Targets.ts";
 
 const packageFlag = Flag.string("package").pipe(
   Flag.withAlias("p"),

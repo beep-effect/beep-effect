@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./TreatyCitation.model.js";
+export * from "./TreatyCitation.model.ts";

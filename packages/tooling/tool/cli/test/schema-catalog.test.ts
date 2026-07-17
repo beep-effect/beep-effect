@@ -12,7 +12,7 @@ import {
   readProjectFile,
   withTempWorkingDirectory,
   writeProjectFile,
-} from "./support/CommandTest.js";
+} from "./support/CommandTest.ts";
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const testLayer = Layer.mergeAll(

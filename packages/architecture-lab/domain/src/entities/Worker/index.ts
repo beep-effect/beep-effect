@@ -4,4 +4,4 @@
  * @category entities
  * @since 0.0.0
  */
-export * from "./Worker.model.js";
+export * from "./Worker.model.ts";

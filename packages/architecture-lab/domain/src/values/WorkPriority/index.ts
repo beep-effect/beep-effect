@@ -4,11 +4,11 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./WorkPriority.behavior.js";
+export * from "./WorkPriority.behavior.ts";
 /**
  * WorkPriority model exports.
  *
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./WorkPriority.model.js";
+export * from "./WorkPriority.model.ts";

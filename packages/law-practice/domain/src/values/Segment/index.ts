@@ -17,4 +17,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./Segment.model.js";
+export * from "./Segment.model.ts";

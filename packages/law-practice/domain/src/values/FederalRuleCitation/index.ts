@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./FederalRuleCitation.model.js";
+export * from "./FederalRuleCitation.model.ts";

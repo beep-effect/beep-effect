@@ -7,10 +7,10 @@
 
 import { Console, Effect } from "effect";
 import { Command, Flag } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { resolveRunMode } from "../../internal/cli/RunMode.js";
-import { handleVersionSync } from "./internal/Handler.js";
-import type { VersionSyncMode } from "./VersionSync.schemas.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { resolveRunMode } from "../../internal/cli/RunMode.ts";
+import { handleVersionSync } from "./internal/Handler.ts";
+import type { VersionSyncMode } from "./VersionSync.schemas.ts";
 
 /**
  * Resolve command mode from flags.

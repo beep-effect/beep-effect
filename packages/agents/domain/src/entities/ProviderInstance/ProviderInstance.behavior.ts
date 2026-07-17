@@ -7,7 +7,7 @@
  */
 
 import { dual } from "effect/Function";
-import { AuthSnapshot, ProviderKind } from "./ProviderInstance.values.js";
+import { AuthSnapshot, ProviderKind } from "./ProviderInstance.values.ts";
 
 /**
  * User-facing guidance for one provider kind and auth-probe outcome.

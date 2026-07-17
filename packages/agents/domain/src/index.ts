@@ -18,7 +18,7 @@
  * @category entities
  * @since 0.0.0
  */
-export * as Entities from "./entities/index.js";
+export * as Entities from "./entities/index.ts";
 /**
  * Root export for agent-domain entity schemas.
  *
@@ -32,7 +32,7 @@ export * as Entities from "./entities/index.js";
  * @category entities
  * @since 0.0.0
  */
-export * from "./entities/index.js";
+export * from "./entities/index.ts";
 /**
  * Namespace export for assistant-content value objects.
  *
@@ -51,7 +51,7 @@ export * from "./entities/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * as Values from "./values/index.js";
+export * as Values from "./values/index.ts";
 /**
  * Root export for assistant-content value objects.
  *
@@ -67,4 +67,4 @@ export * as Values from "./values/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./values/index.js";
+export * from "./values/index.ts";

@@ -15,4 +15,4 @@ export {
   parseRetentionSelector,
   parseSinceEpochMillis,
   parseWindow,
-} from "./Programs.js";
+} from "./Programs.ts";

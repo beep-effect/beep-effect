@@ -10,7 +10,7 @@ import { LiteralKit } from "@beep/schema";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { MediaDimensions, PositiveMediaDimension } from "./Media.schemas.js";
+import { MediaDimensions, PositiveMediaDimension } from "./Media.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Files/internal/ArchivePoorCandidates.schemas");
 

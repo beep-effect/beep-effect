@@ -27,4 +27,4 @@ export const VERSION = "0.0.0" as const;
  * @category layers
  * @since 0.0.0
  */
-export * from "./Layer.js";
+export * from "./Layer.ts";

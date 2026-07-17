@@ -6,7 +6,7 @@
  */
 
 import { $SharedDomainId } from "@beep/identity/packages";
-import * as EntityId from "../entity/EntityId.js";
+import * as EntityId from "../entity/EntityId.ts";
 
 const $I = $SharedDomainId.create("identity/Shared");
 const make = EntityId.factory("shared", $I);

@@ -7,7 +7,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
-import { withTempWorkingDirectory } from "./support/CommandTest.js";
+import { withTempWorkingDirectory } from "./support/CommandTest.ts";
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);

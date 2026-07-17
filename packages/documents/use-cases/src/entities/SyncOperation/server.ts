@@ -11,4 +11,4 @@
  * @category repositories
  * @since 0.0.0
  */
-export * from "./SyncOperation.repository.js";
+export * from "./SyncOperation.repository.ts";

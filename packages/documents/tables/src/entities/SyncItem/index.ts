@@ -11,11 +11,11 @@
  * @category tables
  * @since 0.0.0
  */
-export * from "./SyncItem.converters.js";
+export * from "./SyncItem.converters.ts";
 /**
  * SyncItem table exports.
  *
  * @category tables
  * @since 0.0.0
  */
-export * from "./SyncItem.table.js";
+export * from "./SyncItem.table.ts";

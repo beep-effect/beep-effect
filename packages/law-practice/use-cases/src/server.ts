@@ -19,7 +19,7 @@
  * @category services
  * @since 0.0.0
  */
-export * as IrToLaw from "./IrToLaw/index.js";
+export * as IrToLaw from "./IrToLaw/index.ts";
 /**
  * Office-action review loop service contract exports.
  *
@@ -33,4 +33,4 @@ export * as IrToLaw from "./IrToLaw/index.js";
  * @category services
  * @since 0.0.0
  */
-export * as OfficeActionReview from "./OfficeActionReview/index.js";
+export * as OfficeActionReview from "./OfficeActionReview/index.ts";

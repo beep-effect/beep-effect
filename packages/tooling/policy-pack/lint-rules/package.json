@@ -1,7 +1,7 @@
 {
   "name": "@beep/lint-rules",
   "version": "0.1.0",
-  "description": "Repo-local Biome GritQL lint rules (and, later, oxlint plugins) for effect-smol-aligned quality enforcement",
+  "description": "Repo-local Biome GritQL and oxlint rules for effect-smol-aligned quality enforcement",
   "license": "Apache-2.0",
   "private": true,
   "type": "module",

@@ -10,7 +10,7 @@ import { LiteralKit } from "@beep/schema";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { FileSha256Hash, MediaDimensions, PositiveMediaDimension } from "./Media.schemas.js";
+import { FileSha256Hash, MediaDimensions, PositiveMediaDimension } from "./Media.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Files/internal/Normalize.schemas");
 

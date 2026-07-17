@@ -18,8 +18,8 @@ import type {
   GetWorkItemQuery,
   ListWorkItemsQuery,
   ReopenWorkItemCommand,
-} from "./WorkItem.commands.js";
-import type { WorkItemActionError } from "./WorkItem.errors.js";
+} from "./WorkItem.commands.ts";
+import type { WorkItemActionError } from "./WorkItem.errors.ts";
 
 const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.use-cases");
 

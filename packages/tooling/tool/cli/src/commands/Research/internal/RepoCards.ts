@@ -19,7 +19,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ChildProcess } from "effect/unstable/process";
-import { ResearchCommandError } from "../Research.errors.js";
+import { ResearchCommandError } from "../Research.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Research/internal/RepoCards");

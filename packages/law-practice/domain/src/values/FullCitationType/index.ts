@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./FullCitationType.model.js";
+export * from "./FullCitationType.model.ts";

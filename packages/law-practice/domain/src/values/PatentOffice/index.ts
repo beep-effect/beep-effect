@@ -6,4 +6,4 @@
  * @since 0.0.0
  */
 
-export * from "./PatentOffice.model.js";
+export * from "./PatentOffice.model.ts";

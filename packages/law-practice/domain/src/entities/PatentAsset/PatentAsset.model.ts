@@ -8,8 +8,8 @@ import { $LawPracticeDomainId } from "@beep/identity/packages";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.js";
-import { PatentAssetStatus } from "./PatentAsset.values.js";
+import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.ts";
+import { PatentAssetStatus } from "./PatentAsset.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/PatentAsset/PatentAsset.model");
 

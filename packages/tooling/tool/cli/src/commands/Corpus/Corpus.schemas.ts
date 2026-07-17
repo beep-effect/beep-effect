@@ -11,46 +11,46 @@
  * @category schemas
  * @since 0.0.0
  */
-export * from "./internal/ArchiveMove.schemas.js";
+export * from "./internal/ArchiveMove.schemas.ts";
 /**
  * Catalog schema exports for corpus curation commands.
  *
  * @category schemas
  * @since 0.0.0
  */
-export * from "./internal/Catalog.schemas.js";
+export * from "./internal/Catalog.schemas.ts";
 /**
  * Enrichment schema exports for corpus curation commands.
  *
  * @category schemas
  * @since 0.0.0
  */
-export * from "./internal/Enrich.schemas.js";
+export * from "./internal/Enrich.schemas.ts";
 /**
  * Extraction schema exports for corpus curation commands.
  *
  * @category schemas
  * @since 0.0.0
  */
-export * from "./internal/Extract.schemas.js";
+export * from "./internal/Extract.schemas.ts";
 /**
  * Organization schema exports for corpus curation commands.
  *
  * @category schemas
  * @since 0.0.0
  */
-export * from "./internal/Organize.schemas.js";
+export * from "./internal/Organize.schemas.ts";
 /**
  * Recycle-bin schema exports for corpus curation commands.
  *
  * @category schemas
  * @since 0.0.0
  */
-export * from "./internal/RecycleBin.schemas.js";
+export * from "./internal/RecycleBin.schemas.ts";
 /**
  * Salvage schema exports for corpus curation commands.
  *
  * @category schemas
  * @since 0.0.0
  */
-export * from "./internal/Salvage.schemas.js";
+export * from "./internal/Salvage.schemas.ts";

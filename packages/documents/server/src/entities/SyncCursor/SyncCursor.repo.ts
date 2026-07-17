@@ -23,7 +23,7 @@ import { and, eq } from "drizzle-orm";
 import { Effect, HashMap, pipe, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.js";
+import { makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.ts";
 import type { DmsProvider } from "@beep/documents-domain/values/Sync";
 import type { SyncCursorSeed } from "@beep/documents-use-cases/entities/SyncCursor/server";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";

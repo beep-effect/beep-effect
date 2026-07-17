@@ -79,7 +79,7 @@ import { flow, pipe } from "effect";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
 import { useCallback } from "react";
-import { ontologyTreeItemsFor } from "./Session.tree.js";
+import { ontologyTreeItemsFor } from "./Session.tree.ts";
 import type { OntologyValidationStatus } from "@beep/ontology-client/aggregates/Session";
 import type {
   OntologyFoldLevel,

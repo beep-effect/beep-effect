@@ -24,11 +24,11 @@ import {
   PretextMeasurementError,
   PretextMeasurementUnavailableError,
   PretextUnsupportedFontError,
-} from "./Pretext.errors.js";
-import { EngineProfile, FontMetrics, FontMetricsSnapshotV1 } from "./Pretext.models.js";
-import { PretextCapture } from "./PretextCapture.service.js";
-import type { PretextMeasurementUnavailableReason } from "./Pretext.errors.js";
-import type { PretextCaptureRequest } from "./PretextCapture.service.js";
+} from "./Pretext.errors.ts";
+import { EngineProfile, FontMetrics, FontMetricsSnapshotV1 } from "./Pretext.models.ts";
+import { PretextCapture } from "./PretextCapture.service.ts";
+import type { PretextMeasurementUnavailableReason } from "./Pretext.errors.ts";
+import type { PretextCaptureRequest } from "./PretextCapture.service.ts";
 
 /**
  * Browser-safe pure surface re-exported for client code, which imports
@@ -37,7 +37,7 @@ import type { PretextCaptureRequest } from "./PretextCapture.service.js";
  * @category interop
  * @since 0.0.0
  */
-export * from "./index.js";
+export * from "./index.ts";
 
 const uaIncludesAny = (ua: string, flags: ReadonlyArray<string>): boolean =>
   A.some(flags, (flag) => pipe(ua, Str.includes(flag)));

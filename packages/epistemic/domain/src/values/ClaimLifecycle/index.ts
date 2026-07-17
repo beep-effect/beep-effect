@@ -19,7 +19,7 @@
  * @category errors
  * @since 0.0.0
  */
-export * from "./ClaimLifecycle.errors.js";
+export * from "./ClaimLifecycle.errors.ts";
 /**
  * Claim lifecycle model exports.
  *
@@ -33,4 +33,4 @@ export * from "./ClaimLifecycle.errors.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ClaimLifecycle.model.js";
+export * from "./ClaimLifecycle.model.ts";

@@ -14,32 +14,32 @@ import {
 } from "@beep/repo-ai-metrics";
 import { pipe } from "effect";
 import { Command, Flag } from "effect/unstable/cli";
-import { jsonFlag } from "../../internal/cli/Flags.js";
-import { printLines } from "../../internal/cli/Printer.js";
-import { runAiMetricsProgram } from "./AIMetrics.errors.js";
-import { defaultP7MirrorRemoteRoot, defaultP7MirrorSshHost } from "./AIMetrics.schemas.js";
-import { makeForwarderRunProgram, makeForwarderTimerProgram, makeOtlpExportProgram } from "./internal/Forwarder.js";
+import { jsonFlag } from "../../internal/cli/Flags.ts";
+import { printLines } from "../../internal/cli/Printer.ts";
+import { runAiMetricsProgram } from "./AIMetrics.errors.ts";
+import { defaultP7MirrorRemoteRoot, defaultP7MirrorSshHost } from "./AIMetrics.schemas.ts";
+import { makeForwarderRunProgram, makeForwarderTimerProgram, makeOtlpExportProgram } from "./internal/Forwarder.ts";
 import {
   makeConfigSnapshotProgram,
   makeIngestProgram,
   makePrivacyCheckProgram,
   makeSourcesDiscoverProgram,
-} from "./internal/Ingest.js";
+} from "./internal/Ingest.ts";
 import {
   makeInstallApplyProgram,
   makeInstallComposeProgram,
   makeInstallDoctorProgram,
   makeInstallPlanProgram,
   makeInstallPreviewProgram,
-} from "./internal/Install.js";
-import { makeMirrorBuildProgram, makeMirrorStatusProgram, makeMirrorSyncProgram } from "./internal/Mirror.js";
+} from "./internal/Install.ts";
+import { makeMirrorBuildProgram, makeMirrorStatusProgram, makeMirrorSyncProgram } from "./internal/Mirror.ts";
 import {
   makeArchiveDrillProgram,
   makeRetentionEnforceProgram,
   makeRetentionListProgram,
   makeRetentionMutationProgram,
   makeRetentionRestoreDrillProgram,
-} from "./internal/Retention.js";
+} from "./internal/Retention.ts";
 import {
   makeBenchmarkCaseAddProgram,
   makeBenchmarkCaseListProgram,
@@ -48,7 +48,7 @@ import {
   makeLabelAddProgram,
   makeLabelQueueProgram,
   makeWeeklyReportProgram,
-} from "./internal/Scorecard.js";
+} from "./internal/Scorecard.ts";
 
 const inputFlag = Flag.string("input").pipe(
   Flag.withAlias("i"),

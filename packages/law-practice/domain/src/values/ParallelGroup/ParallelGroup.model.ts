@@ -7,7 +7,7 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity";
 import * as S from "effect/Schema";
-import { CitationId } from "../CitationId/index.js";
+import { CitationId } from "../CitationId/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/ParallelGroup/ParallelGroup.model");
 

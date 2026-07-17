@@ -7,7 +7,7 @@
 import { SchemaAST } from "effect";
 import * as O from "effect/Option";
 import type * as S from "effect/Schema";
-import type { JSDocTagDefinition } from "./JSDocTagDefinition.model.js";
+import type { JSDocTagDefinition } from "./JSDocTagDefinition.model.ts";
 
 /**
  * The payload type stored in the `jsDocTagMetadata` annotation key.

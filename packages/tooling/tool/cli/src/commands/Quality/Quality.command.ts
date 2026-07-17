@@ -18,12 +18,12 @@ import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { XMLParser } from "fast-xml-parser";
 import { parse } from "jsonc-parser";
-import { configStringEqualsSync } from "../../internal/cli/EnvConfig.js";
-import { printLines } from "../../internal/cli/Printer.js";
-import { formatCommandLine, QualityTaskStep, runCaptured, runToExit } from "../../internal/process/index.js";
-import { GITHUB_CHECK_MODE_VALUES } from "../../internal/repo-run/index.js";
-import { runChangesetGraphCheck } from "./ChangesetGraph.js";
-import { qualityFallowCommand } from "./FallowQuality.command.js";
+import { configStringEqualsSync } from "../../internal/cli/EnvConfig.ts";
+import { printLines } from "../../internal/cli/Printer.ts";
+import { formatCommandLine, QualityTaskStep, runCaptured, runToExit } from "../../internal/process/index.ts";
+import { GITHUB_CHECK_MODE_VALUES } from "../../internal/repo-run/index.ts";
+import { runChangesetGraphCheck } from "./ChangesetGraph.ts";
+import { qualityFallowCommand } from "./FallowQuality.command.ts";
 import {
   githubCheckFallowLanes,
   githubCheckLanePlan,
@@ -36,46 +36,46 @@ import {
   githubCheckRepoSanityLanes,
   githubCheckRepoSanityLanesForTesting as githubCheckRepoSanityLanesForTestingImpl,
   promotedFallowGithubCheckLaneIdsForTesting as promotedFallowGithubCheckLaneIdsForTestingImpl,
-} from "./internal/GithubChecks.js";
+} from "./internal/GithubChecks.ts";
 import {
   JSDocDocumentationInventoryOptions,
   writeJSDocDocumentationInventory,
-} from "./internal/JSDocDocumentationInventory.js";
-import { defaultJSDocInventoryPath, defaultJSDocTotalsBaselinePath, runJSDocRatchet } from "./internal/JSDocRatchet.js";
-import { defaultKnipBaselinePath, runKnipRatchet } from "./internal/KnipRatchet.js";
-import { runPackageVerifyCli } from "./internal/PackageVerify.js";
-import { repoRelative } from "./internal/QualityArtifactSupport.js";
+} from "./internal/JSDocDocumentationInventory.ts";
+import { defaultJSDocInventoryPath, defaultJSDocTotalsBaselinePath, runJSDocRatchet } from "./internal/JSDocRatchet.ts";
+import { defaultKnipBaselinePath, runKnipRatchet } from "./internal/KnipRatchet.ts";
+import { runPackageVerifyCli } from "./internal/PackageVerify.ts";
+import { repoRelative } from "./internal/QualityArtifactSupport.ts";
 import {
   renderTurboConfigProofReport,
   renderTurboConfigProofReportJson,
   runTurboConfigProof,
-} from "./internal/TurboConfigProof.js";
-import { QualityScriptCommandError } from "./Quality.errors.js";
+} from "./internal/TurboConfigProof.ts";
+import { QualityScriptCommandError } from "./Quality.errors.ts";
 import {
   activeOsvIgnoreIdsForTesting as activeOsvIgnoreIdsForTestingImpl,
   selectOsvIgnoreIdsForAudit,
-} from "./Quality.osv-ignore.js";
+} from "./Quality.osv-ignore.ts";
 import {
   detectQualityProfile,
   detectQualityProfileForTesting as detectQualityProfileForTestingImpl,
   qualityProfileConfigForTesting as qualityProfileConfigForTestingImpl,
-} from "./Quality.plan.js";
-import { printQualityProfileConfig, printQualityProfileDetection } from "./Quality.render.js";
+} from "./Quality.plan.ts";
+import { printQualityProfileConfig, printQualityProfileDetection } from "./Quality.render.ts";
 import {
   decodeGithubChecksFallowFeatureMatrix,
   GithubCheckMode,
   githubCheckModeFlagChoices,
   QualityHardwareProfile,
-} from "./Quality.schemas.js";
-import { runQualityTaskStreamingStepGroup } from "./Tasks.js";
+} from "./Quality.schemas.ts";
+import { runQualityTaskStreamingStepGroup } from "./Tasks.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ParseError } from "jsonc-parser";
 import type {
   GithubCheckLaneSpec,
   GithubChecksFallowFeatureMatrix,
   QualityProfileDetectionInput as QualityProfileDetectionInputType,
-} from "./Quality.schemas.js";
-import type { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Tasks.js";
+} from "./Quality.schemas.ts";
+import type { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Tasks.ts";
 
 /**
  * Public quality script command error export.
@@ -83,7 +83,7 @@ import type { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroup
  * @category errors
  * @since 0.0.0
  */
-export { QualityScriptCommandError } from "./Quality.errors.js";
+export { QualityScriptCommandError } from "./Quality.errors.ts";
 /**
  * Public Quality schemas retained at the legacy command-module specifier.
  *
@@ -98,7 +98,7 @@ export {
   QualityHardwareProfile,
   QualityProfileConfig,
   QualityProfileDetection,
-} from "./Quality.schemas.js";
+} from "./Quality.schemas.ts";
 /**
  * Host facts used when selecting a quality profile.
  *

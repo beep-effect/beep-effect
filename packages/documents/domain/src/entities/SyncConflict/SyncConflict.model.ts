@@ -11,8 +11,8 @@ import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
-import * as Documents from "../../identity/Documents.js";
-import { DmsProvider, RemoteItemId, VaultRelPath } from "../../values/Sync/index.js";
+import * as Documents from "../../identity/Documents.ts";
+import { DmsProvider, RemoteItemId, VaultRelPath } from "../../values/Sync/index.ts";
 
 const $I = $DocumentsDomainId.create("entities/SyncConflict/SyncConflict.model");
 

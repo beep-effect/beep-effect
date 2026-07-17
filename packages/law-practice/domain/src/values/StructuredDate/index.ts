@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./StructuredDate.model.js";
+export * from "./StructuredDate.model.ts";

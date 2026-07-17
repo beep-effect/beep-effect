@@ -21,10 +21,10 @@ import {
   outputFile,
   parseCsvSource,
   sourceMetadata,
-} from "../internal/Source.js";
-import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.js";
-import type { ParsedCsvRecords } from "../internal/Source.js";
-import type { SyncDataSourceMetadata, SyncDataTarget } from "../SyncDataToTs.schemas.js";
+} from "../internal/Source.ts";
+import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.ts";
+import type { ParsedCsvRecords } from "../internal/Source.ts";
+import type { SyncDataSourceMetadata, SyncDataTarget } from "../SyncDataToTs.schemas.ts";
 
 const $I = $RepoCliId.create("commands/SyncDataToTs/targets/Iso3166");
 const targetId = "iso3166" as const;

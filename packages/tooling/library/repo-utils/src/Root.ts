@@ -10,7 +10,7 @@
 import { A, Str, thunkFalse } from "@beep/utils";
 import { Effect, FileSystem, pipe } from "effect";
 import * as O from "effect/Option";
-import { NoSuchFileError } from "./errors/index.js";
+import { NoSuchFileError } from "./errors/index.ts";
 
 /**
  * Markers that indicate a repository root directory.

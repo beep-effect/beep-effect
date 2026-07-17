@@ -13,7 +13,7 @@
  */
 import { Layer } from "effect";
 import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
-import { TauriIpcSocketLive } from "./TauriIpcSocket.js";
+import { TauriIpcSocketLive } from "./TauriIpcSocket.ts";
 
 /**
  * The client rpc `Protocol`, bound to the Tauri-IPC socket and ndjson framing.

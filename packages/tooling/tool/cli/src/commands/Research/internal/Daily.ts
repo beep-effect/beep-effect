@@ -11,22 +11,22 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ChildProcess } from "effect/unstable/process";
-import { ResearchCommandError } from "../Research.errors.js";
+import { ResearchCommandError } from "../Research.errors.ts";
 import {
   ResearchCognifyOptions,
   ResearchDailySummary,
   ResearchDigestOptions,
   ResearchHistorySiftOptions,
   ResearchNotionPullOptions,
-} from "../Research.schemas.js";
-import { cognifyImpl } from "./Cognify.js";
-import { digestImpl } from "./Digest.js";
-import { historySiftImpl } from "./HistorySift.js";
-import { notionPullImpl } from "./NotionPullRun.js";
-import { VAULT_DIRS } from "./Vault.js";
+} from "../Research.schemas.ts";
+import { cognifyImpl } from "./Cognify.ts";
+import { digestImpl } from "./Digest.ts";
+import { historySiftImpl } from "./HistorySift.ts";
+import { notionPullImpl } from "./NotionPullRun.ts";
+import { VAULT_DIRS } from "./Vault.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { ResearchDailyOptions } from "../Research.schemas.js";
-import type { ResearchCommandServiceRequirements } from "../Research.service.js";
+import type { ResearchDailyOptions } from "../Research.schemas.ts";
+import type { ResearchCommandServiceRequirements } from "../Research.service.ts";
 
 const decodeDailySummary = S.decodeUnknownEffect(ResearchDailySummary);
 

@@ -19,4 +19,4 @@
  * @category services
  * @since 0.0.0
  */
-export * from "./ClaimLifecycle.service.js";
+export * from "./ClaimLifecycle.service.ts";

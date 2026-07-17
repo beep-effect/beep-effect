@@ -18,4 +18,4 @@
  * @category models
  * @since 0.0.0
  */
-export * from "./Turn.model.js";
+export * from "./Turn.model.ts";

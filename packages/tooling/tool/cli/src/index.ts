@@ -26,7 +26,7 @@ export {
    * @since 0.0.0
    */
   agentEffectivenessCommand,
-} from "./commands/AgentEffectiveness/index.js";
+} from "./commands/AgentEffectiveness/index.ts";
 /**
  * CI helper command group.
  *
@@ -41,7 +41,7 @@ export {
    * @since 0.0.0
    */
   ciCommand,
-} from "./commands/Ci/index.js";
+} from "./commands/Ci/index.ts";
 /**
  * Code generation command for workspace barrels and exports.
  *
@@ -56,7 +56,7 @@ export {
    * @since 0.0.0
    */
   codegenCommand,
-} from "./commands/Codegen/index.js";
+} from "./commands/Codegen/index.ts";
 /**
  * Codex helper command group.
  *
@@ -71,7 +71,7 @@ export {
    * @since 0.0.0
    */
   codexCommand,
-} from "./commands/Codex/index.js";
+} from "./commands/Codex/index.ts";
 /**
  * Corpus curation command group.
  *
@@ -86,7 +86,7 @@ export {
    * @since 0.0.0
    */
   corpusCommand,
-} from "./commands/Corpus/index.js";
+} from "./commands/Corpus/index.ts";
 /**
  * Package scaffolding command for creating new workspace packages.
  *
@@ -101,7 +101,7 @@ export {
    * @since 0.0.0
    */
   createPackageCommand,
-} from "./commands/CreatePackage/index.js";
+} from "./commands/CreatePackage/index.ts";
 /**
  * Human-first docgen command group.
  *
@@ -116,7 +116,7 @@ export {
    * @since 0.0.0
    */
   docgenCommand,
-} from "./commands/Docgen/index.js";
+} from "./commands/Docgen/index.ts";
 /**
  * Command-first docs discovery command tree.
  *
@@ -131,7 +131,7 @@ export {
    * @since 0.0.0
    */
   docsCommand,
-} from "./commands/Docs/index.js";
+} from "./commands/Docs/index.ts";
 /**
  * Fallow quality-tooling command group.
  *
@@ -146,7 +146,7 @@ export {
    * @since 0.0.0
    */
   fallowCommand,
-} from "./commands/Fallow/index.js";
+} from "./commands/Fallow/index.ts";
 /**
  * Dataset file curation command group.
  *
@@ -161,7 +161,7 @@ export {
    * @since 0.0.0
    */
   filesCommand,
-} from "./commands/Files/index.js";
+} from "./commands/Files/index.ts";
 /**
  * Graphiti operational command group.
  *
@@ -176,7 +176,7 @@ export {
    * @since 0.0.0
    */
   graphitiCommand,
-} from "./commands/Graphiti/index.js";
+} from "./commands/Graphiti/index.ts";
 /**
  * Image and video curation command group.
  *
@@ -191,7 +191,7 @@ export {
    * @since 0.0.0
    */
   imageCommand,
-} from "./commands/Image/index.js";
+} from "./commands/Image/index.ts";
 /**
  * Effect laws command group.
  *
@@ -206,7 +206,7 @@ export {
    * @since 0.0.0
    */
   lawsCommand,
-} from "./commands/Laws/index.js";
+} from "./commands/Laws/index.ts";
 /**
  * Lint policy command group.
  *
@@ -221,7 +221,7 @@ export {
    * @since 0.0.0
    */
   lintCommand,
-} from "./commands/Lint/index.js";
+} from "./commands/Lint/index.ts";
 /**
  * Purge command for removing root/workspace build artifacts.
  *
@@ -236,7 +236,7 @@ export {
    * @since 0.0.0
    */
   purgeCommand,
-} from "./commands/Purge/index.js";
+} from "./commands/Purge/index.ts";
 /**
  * Repository operational quality command group.
  *
@@ -251,7 +251,7 @@ export {
    * @since 0.0.0
    */
   qualityCommand,
-} from "./commands/Quality/index.js";
+} from "./commands/Quality/index.ts";
 /**
  * Root CLI command that composes subcommands.
  *
@@ -266,7 +266,7 @@ export {
    * @since 0.0.0
    */
   rootCommand,
-} from "./commands/Root.js";
+} from "./commands/Root.ts";
 /**
  * Official data sync command for checked-in generated TypeScript modules.
  *
@@ -281,7 +281,7 @@ export {
    * @since 0.0.0
    */
   syncDataToTsCommand,
-} from "./commands/SyncDataToTs/index.js";
+} from "./commands/SyncDataToTs/index.ts";
 /**
  * Dependency topological sort command.
  *
@@ -296,7 +296,7 @@ export {
    * @since 0.0.0
    */
   topoSortCommand,
-} from "./commands/TopoSort/index.js";
+} from "./commands/TopoSort/index.ts";
 /**
  * Tsconfig sync command for workspace tsconfig references and root aliases.
  *
@@ -311,7 +311,7 @@ export {
    * @since 0.0.0
    */
   tsconfigSyncCommand,
-} from "./commands/TsconfigSync/index.js";
+} from "./commands/TsconfigSync/index.ts";
 /**
  * Version sync command for detecting and fixing version drift.
  *
@@ -326,7 +326,7 @@ export {
    * @since 0.0.0
    */
   versionSyncCommand,
-} from "./commands/VersionSync/index.js";
+} from "./commands/VersionSync/index.ts";
 /**
  * Sibling git-worktree management command.
  *
@@ -341,7 +341,7 @@ export {
    * @since 0.0.0
    */
   worktreeCommand,
-} from "./commands/Worktree/index.js";
+} from "./commands/Worktree/index.ts";
 /**
  * Yeet quality feedback and publish command.
  *
@@ -356,4 +356,4 @@ export {
    * @since 0.0.0
    */
   yeetCommand,
-} from "./commands/Yeet/index.js";
+} from "./commands/Yeet/index.ts";

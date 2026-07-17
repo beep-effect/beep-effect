@@ -21,9 +21,9 @@ import { Effect, flow, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import { formatCommandLine, repoRunOutputBound, runCaptured } from "../process/StepExec.js";
+import { formatCommandLine, repoRunOutputBound, runCaptured } from "../process/StepExec.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { CapturedStep } from "../process/StepExec.js";
+import type { CapturedStep } from "../process/StepExec.ts";
 
 /**
  * Maps a git subprocess failure onto a command group's own error type.

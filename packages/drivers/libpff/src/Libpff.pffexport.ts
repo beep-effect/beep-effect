@@ -15,12 +15,12 @@ import { A, O, Str } from "@beep/utils";
 import { Effect, FileSystem, Match, Order, Path, Stream } from "effect";
 import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
-import { makeLibpffError } from "./Libpff.errors.js";
-import { LibpffFileProcessingEngine, LibpffFileProcessingEngineDescriptor } from "./Libpff.service.js";
+import { makeLibpffError } from "./Libpff.errors.ts";
+import { LibpffFileProcessingEngine, LibpffFileProcessingEngineDescriptor } from "./Libpff.service.ts";
 import type { ExportArchiveOperation, ExtractFileOperation } from "@beep/file-processing/Operation";
 import type { FileProcessingEngineShape } from "@beep/file-processing/Service";
 import type * as Crypto from "effect/Crypto";
-import type { LibpffError } from "./Libpff.errors.js";
+import type { LibpffError } from "./Libpff.errors.ts";
 
 const $I = $LibpffId.create("Libpff.pffexport");
 

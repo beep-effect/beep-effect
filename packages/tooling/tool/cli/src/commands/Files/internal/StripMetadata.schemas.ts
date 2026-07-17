@@ -8,7 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
-import { MediaKind } from "./Media.schemas.js";
+import { MediaKind } from "./Media.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Files/internal/StripMetadata.schemas");
 

@@ -14,17 +14,17 @@ import {
   hashFileSha256 as hashFileSha256Hex,
   preflightOverwritableFile as preflightOverwritableFileShared,
   renameOrFail as renameOrFailShared,
-} from "../../../internal/cli/FsGuards.js";
-import { FilesCommandError, formatPlatformError } from "../Files.errors.js";
-import { formatIndex, makeStripMetadataTempEntries, selectedCanonicalPathSet } from "../Files.media.js";
-import { uniqueArchiveTargetName } from "../Files.plan.js";
-import { FilesConcurrency, runFilesProgressForEach } from "../Files.progress.js";
+} from "../../../internal/cli/FsGuards.ts";
+import { FilesCommandError, formatPlatformError } from "../Files.errors.ts";
+import { formatIndex, makeStripMetadataTempEntries, selectedCanonicalPathSet } from "../Files.media.ts";
+import { uniqueArchiveTargetName } from "../Files.plan.ts";
+import { FilesConcurrency, runFilesProgressForEach } from "../Files.progress.ts";
 import {
   archivedEntries,
   makeArchivePoorCandidatesManifest,
   renderArchivePoorCandidatesManifest,
   renderNormalizeManifest,
-} from "../Files.render.js";
+} from "../Files.render.ts";
 import {
   DetectFacesEntry,
   FileSha256Hash,
@@ -32,8 +32,8 @@ import {
   NormalizeManifestSummary,
   NormalizePlanEntry,
   NormalizeSkippedEntry,
-} from "../Files.schemas.js";
-import { cropImageBordersToTemp, normalizeImageToTemp, stripMetadataToTemp } from "./MediaExec.js";
+} from "../Files.schemas.ts";
+import { cropImageBordersToTemp, normalizeImageToTemp, stripMetadataToTemp } from "./MediaExec.ts";
 import type { Terminal } from "effect";
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
@@ -45,7 +45,7 @@ import type {
   PositiveMediaDimension,
   RenamePlanEntry,
   StripMetadataPlanEntry,
-} from "../Files.schemas.js";
+} from "../Files.schemas.ts";
 
 const decodeFileSha256Hash = S.decodeUnknownEffect(FileSha256Hash);
 

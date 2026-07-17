@@ -21,9 +21,9 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import { ResearchCommandError } from "../Research.errors.js";
-import { asRecord } from "./UnknownRecord.js";
-import { sha256HexOf } from "./Vault.js";
+import { ResearchCommandError } from "../Research.errors.ts";
+import { asRecord } from "./UnknownRecord.ts";
+import { sha256HexOf } from "./Vault.ts";
 
 const $I = $RepoCliId.create("commands/Research/internal/NotionPull");
 

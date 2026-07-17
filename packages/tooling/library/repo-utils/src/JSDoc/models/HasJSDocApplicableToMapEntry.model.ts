@@ -6,7 +6,7 @@
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { ApplicableTo } from "./ApplicableTo.model.js";
+import { ApplicableTo } from "./ApplicableTo.model.ts";
 
 const $I = $RepoUtilsId.create("JSDoc/models/HasJSDocApplicableToMapEntry.model");
 

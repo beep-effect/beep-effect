@@ -8,7 +8,7 @@ import { $AgentsDomainId } from "@beep/identity/packages";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as Agents from "@beep/shared-domain/identity/Agents";
-import { SkillFixtureKey, SkillName } from "../Fixture.values.js";
+import { SkillFixtureKey, SkillName } from "../Fixture.values.ts";
 
 const $I = $AgentsDomainId.create("entities/Skill/Skill.model");
 

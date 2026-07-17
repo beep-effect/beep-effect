@@ -10,7 +10,7 @@ import { jsonStringifyPretty } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import { Effect, pipe } from "effect";
 import * as R from "effect/Record";
-import type { ArchitecturePackageRole, WritePackageJsonOperation } from "./Architecture.schemas.js";
+import type { ArchitecturePackageRole, WritePackageJsonOperation } from "./Architecture.schemas.ts";
 
 const packageExportEntrypointFor = (
   role: ArchitecturePackageRole,

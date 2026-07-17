@@ -10,8 +10,8 @@ import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as Agents from "@beep/shared-domain/identity/Agents";
 import { Tuple } from "effect";
 import * as S from "effect/Schema";
-import { AgentFixtureKey, AgentName, SkillFixtureKey } from "../Fixture.values.js";
-import { AgentMode } from "./Agent.values.js";
+import { AgentFixtureKey, AgentName, SkillFixtureKey } from "../Fixture.values.ts";
+import { AgentMode } from "./Agent.values.ts";
 
 const $I = $AgentsDomainId.create("entities/Agent/Agent.model");
 

@@ -6,10 +6,10 @@
  * @since 0.0.0
  */
 
-import * as SyncConflict from "./entities/SyncConflict/index.js";
-import * as SyncCursor from "./entities/SyncCursor/index.js";
-import * as SyncItem from "./entities/SyncItem/index.js";
-import * as SyncOperation from "./entities/SyncOperation/index.js";
+import * as SyncConflict from "./entities/SyncConflict/index.ts";
+import * as SyncCursor from "./entities/SyncCursor/index.ts";
+import * as SyncItem from "./entities/SyncItem/index.ts";
+import * as SyncOperation from "./entities/SyncOperation/index.ts";
 
 type DbSchemaShape = {
   readonly syncConflict: typeof SyncConflict.syncConflictTable;

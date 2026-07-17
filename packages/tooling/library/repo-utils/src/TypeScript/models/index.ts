@@ -4,4 +4,4 @@
  * @category utilities
  * @since 0.0.0
  */
-export * from "./TSSyntaxKind.model.js";
+export * from "./TSSyntaxKind.model.ts";

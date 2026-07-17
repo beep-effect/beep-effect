@@ -11,8 +11,8 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
-import { optionalProp } from "../../../internal/cli/OptionRecord.js";
-import { PackageQualityReport, QualityIssue, QualityIssueIndex, QualityIssueRouting } from "../Yeet.schemas.js";
+import { optionalProp } from "../../../internal/cli/OptionRecord.ts";
+import { PackageQualityReport, QualityIssue, QualityIssueIndex, QualityIssueRouting } from "../Yeet.schemas.ts";
 
 export {
   PackageQualityReport,
@@ -23,9 +23,9 @@ export {
   QualityIssueIndex,
   QualityIssueRouting,
   QualityIssueSeverity,
-} from "../Yeet.schemas.js";
-export { knownSubLaneRemediationFromOutput } from "./IssueClassification.js";
-export { qualityIssuesFromStepResult } from "./IssueParser.js";
+} from "../Yeet.schemas.ts";
+export { knownSubLaneRemediationFromOutput } from "./IssueClassification.ts";
+export { qualityIssuesFromStepResult } from "./IssueParser.ts";
 
 const issueOrder: Order.Order<QualityIssue> = Order.combine(
   Order.mapInput(Order.String, (issue: QualityIssue) => issue.packageName ?? ""),

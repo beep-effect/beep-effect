@@ -9,18 +9,18 @@ import * as BunHttpClient from "@effect/platform-bun/BunHttpClient";
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import { Console, Deferred, Effect, Fiber, Layer, Ref } from "effect";
 import * as HttpRouter from "effect/unstable/http/HttpRouter";
-import { loadGraphitiProxyConfig } from "./ProxyConfig.js";
-import { makeGraphitiDependencyHealthService } from "./ProxyDependencyHealth.js";
-import { makeGraphitiProxyForwarderService } from "./ProxyForwarder.js";
-import { makeGraphitiProxyQueueService } from "./ProxyQueue.js";
-import { proxyHealthResponse } from "./ProxyResponses.js";
-import { ProxyHealthPayload } from "./ProxySchemas.js";
+import { loadGraphitiProxyConfig } from "./ProxyConfig.ts";
+import { makeGraphitiDependencyHealthService } from "./ProxyDependencyHealth.ts";
+import { makeGraphitiProxyForwarderService } from "./ProxyForwarder.ts";
+import { makeGraphitiProxyQueueService } from "./ProxyQueue.ts";
+import { proxyHealthResponse } from "./ProxyResponses.ts";
+import { ProxyHealthPayload } from "./ProxySchemas.ts";
 import {
   GraphitiDependencyHealthService,
   GraphitiProxyForwarderService,
   GraphitiProxyQueueService,
-} from "./ProxyServices.js";
-import type { DependencyHealthSnapshot } from "./ProxySchemas.js";
+} from "./ProxyServices.ts";
+import type { DependencyHealthSnapshot } from "./ProxySchemas.ts";
 
 const toHealthStatus = (snapshot: DependencyHealthSnapshot): "ok" | "degraded" =>
   snapshot.status === "ok" ? "ok" : "degraded";

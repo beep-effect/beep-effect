@@ -13,7 +13,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { parseDocument } from "yaml";
-import { VersionSyncError } from "../../VersionSync.schemas.js";
+import { VersionSyncError } from "../../VersionSync.schemas.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/updaters/YamlFileUpdater");
 

@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./LegislativeMaterialCitation.model.js";
+export * from "./LegislativeMaterialCitation.model.ts";

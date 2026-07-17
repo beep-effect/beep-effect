@@ -34,7 +34,7 @@ export * as Thread from "./aggregates/Thread/index.ts";
  * @category repositories
  * @since 0.0.0
  */
-export * as Workspace from "./aggregates/Workspace/index.js";
+export * as Workspace from "./aggregates/Workspace/index.ts";
 /**
  * Workspace server layer export.
  *

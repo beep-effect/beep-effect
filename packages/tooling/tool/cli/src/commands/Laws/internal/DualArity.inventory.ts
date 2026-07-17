@@ -10,14 +10,14 @@ import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/sc
 import { A, Str } from "@beep/utils";
 import { Effect, FileSystem, Inspectable, MutableHashSet, Path } from "effect";
 import * as O from "effect/Option";
-import { readArtifact, writeArtifact } from "../../../internal/artifacts/index.js";
-import { DualArityInventoryReadError } from "../Laws.errors.js";
+import { readArtifact, writeArtifact } from "../../../internal/artifacts/index.ts";
+import { DualArityInventoryReadError } from "../Laws.errors.ts";
 import {
   DualArityInventoryDocument,
   DualArityInventoryPath,
   encodeDualArityInventoryDocument,
-} from "../Laws.schemas.js";
-import type { DualArityInventoryEntry } from "../Laws.schemas.js";
+} from "../Laws.schemas.ts";
+import type { DualArityInventoryEntry } from "../Laws.schemas.ts";
 
 const readDocument = Effect.fn(function* () {
   const fs = yield* FileSystem.FileSystem;

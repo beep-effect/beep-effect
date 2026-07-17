@@ -11,12 +11,12 @@ import { A, Str } from "@beep/utils";
 import { Context, Effect, Layer, Match, MutableHashMap, Number as Num, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { updateBiomeSchema } from "../resolvers/BiomeResolver.js";
-import { updateCatalogEntry, updatePackageManagerField } from "../updaters/PackageJsonUpdater.js";
-import { updatePlainTextFile } from "../updaters/PlainTextUpdater.js";
-import { replaceNodeVersionWithFile, updateYamlValue } from "../updaters/YamlFileUpdater.js";
+import { updateBiomeSchema } from "../resolvers/BiomeResolver.ts";
+import { updateCatalogEntry, updatePackageManagerField } from "../updaters/PackageJsonUpdater.ts";
+import { updatePlainTextFile } from "../updaters/PlainTextUpdater.ts";
+import { replaceNodeVersionWithFile, updateYamlValue } from "../updaters/YamlFileUpdater.ts";
 import type { FileSystem } from "effect";
-import type { VersionCategoryReport, VersionSyncError, VersionSyncResolution } from "../../VersionSync.schemas.js";
+import type { VersionCategoryReport, VersionSyncError, VersionSyncResolution } from "../../VersionSync.schemas.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/services/UpdateApplierService");
 const VersionCategoryName = LiteralKit(["bun", "node", "docker", "biome", "effect"]).pipe(

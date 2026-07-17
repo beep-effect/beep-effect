@@ -27,7 +27,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { byIdAscending, makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.js";
+import { byIdAscending, makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.ts";
 import type { DmsProvider } from "@beep/documents-domain/values/Sync";
 import type { SyncOperationSeed } from "@beep/documents-use-cases/entities/SyncOperation/server";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";

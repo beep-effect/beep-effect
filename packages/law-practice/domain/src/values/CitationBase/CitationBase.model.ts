@@ -12,11 +12,11 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationId } from "../CitationId/index.js";
-import { CitationSignal } from "../CitationSignal/index.js";
-import { CitationWarning } from "../CitationWarning/index.js";
-import { Span } from "../Span/index.js";
-import { StringCitationGroup } from "../StringCitationGroup/index.js";
+import { CitationId } from "../CitationId/index.ts";
+import { CitationSignal } from "../CitationSignal/index.ts";
+import { CitationWarning } from "../CitationWarning/index.ts";
+import { Span } from "../Span/index.ts";
+import { StringCitationGroup } from "../StringCitationGroup/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/CitationBase/CitationBase.model");
 

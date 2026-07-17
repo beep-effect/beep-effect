@@ -10,7 +10,7 @@ import { HashMap } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { SegmentMap } from "../SegmentMap/index.js";
+import { SegmentMap } from "../SegmentMap/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/Span/Span.model");
 

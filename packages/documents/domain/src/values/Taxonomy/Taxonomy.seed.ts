@@ -6,7 +6,7 @@
  */
 
 import * as S from "effect/Schema";
-import { LegalDocumentTaxonomy } from "./Taxonomy.model.js";
+import { LegalDocumentTaxonomy } from "./Taxonomy.model.ts";
 
 const SCHEME_IRI = "https://ns.beep.sh/documents/taxonomy/legal-document";
 const FOLIO_SOURCE_IRIS = [

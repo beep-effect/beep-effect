@@ -10,7 +10,7 @@ import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
-import { WorkspaceVaultRootPath } from "./Workspace.values.js";
+import { WorkspaceVaultRootPath } from "./Workspace.values.ts";
 
 const $I = $WorkspaceDomainId.create("entities/Workspace/Workspace.model");
 

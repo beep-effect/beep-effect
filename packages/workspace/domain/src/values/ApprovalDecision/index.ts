@@ -18,4 +18,4 @@
  * @category models
  * @since 0.0.0
  */
-export * from "./ApprovalDecision.model.js";
+export * from "./ApprovalDecision.model.ts";

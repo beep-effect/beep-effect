@@ -4,4 +4,4 @@
  * @category repositories
  * @since 0.0.0
  */
-export * as Session from "./aggregates/Session/server.js";
+export * as Session from "./aggregates/Session/server.ts";

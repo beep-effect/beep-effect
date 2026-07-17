@@ -6,7 +6,7 @@
  */
 
 import { dual } from "effect/Function";
-import { printLines } from "../../internal/cli/Printer.js";
+import { printLines } from "../../internal/cli/Printer.ts";
 
 /**
  * Render an Obsidian wikilink for a catalog card path.

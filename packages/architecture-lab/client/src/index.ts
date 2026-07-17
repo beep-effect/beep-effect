@@ -37,4 +37,4 @@ export const VERSION = "0.0.0" as const;
  * @category clients
  * @since 0.0.0
  */
-export * as WorkItem from "./aggregates/WorkItem/index.js";
+export * as WorkItem from "./aggregates/WorkItem/index.ts";

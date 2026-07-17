@@ -7,19 +7,19 @@
 
 import { Console, Effect } from "effect";
 import * as O from "effect/Option";
-import { optionalProp } from "../../internal/cli/OptionRecord.js";
+import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import {
   renderSchemaFirstPolicyFindingLine,
   SchemaFirstPolicyFinding,
-} from "../../internal/quality/SchemaFirstPolicyFinding.js";
-import { missingEntryRemediation } from "./internal/SchemaFirstPolicy.js";
-import { SchemaFirstInventoryPath, SchemaFirstLintSummary } from "./Lint.schemas.js";
+} from "../../internal/quality/SchemaFirstPolicyFinding.ts";
+import { missingEntryRemediation } from "./internal/SchemaFirstPolicy.ts";
+import { SchemaFirstInventoryPath, SchemaFirstLintSummary } from "./Lint.schemas.ts";
 import type {
   LiteralKitConstAssertionViolation,
   SchemaFirstInventoryDocument,
   SchemaFirstInventoryEntry,
   SchemaFirstLintOptions,
-} from "./Lint.schemas.js";
+} from "./Lint.schemas.ts";
 
 const renderPolicyFindingLine = renderSchemaFirstPolicyFindingLine;
 

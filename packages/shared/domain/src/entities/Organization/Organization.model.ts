@@ -11,8 +11,8 @@ import * as EntitySchema from "@beep/schema/EntitySchema";
 import * as M from "@beep/schema/Model";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as S from "effect/Schema";
-import * as Shared from "../../identity/Shared.js";
-import { LicenseTier, Settings } from "./Organization.values.js";
+import * as Shared from "../../identity/Shared.ts";
+import { LicenseTier, Settings } from "./Organization.values.ts";
 
 const $I = $SharedDomainId.create("entities/Organization/Organization.model");
 

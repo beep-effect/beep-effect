@@ -8,10 +8,10 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationBase } from "../CitationBase/index.js";
-import { NeutralComponentSpan } from "../ComponentSpan/index.js";
-import { PinciteInfo } from "../PinciteInfo/index.js";
-import { StructuredDate } from "../StructuredDate/index.js";
+import { CitationBase } from "../CitationBase/index.ts";
+import { NeutralComponentSpan } from "../ComponentSpan/index.ts";
+import { PinciteInfo } from "../PinciteInfo/index.ts";
+import { StructuredDate } from "../StructuredDate/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/NeutralCitation/NeutralCitation.model");
 

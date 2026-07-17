@@ -7,17 +7,17 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { Context, Effect, Layer } from "effect";
-import { printLines } from "../../internal/cli/Printer.js";
-import { archiveMoveImpl } from "./internal/ArchiveMove.js";
-import { catalogCorpusImpl } from "./internal/Catalog.js";
-import { enrichCorpusImpl } from "./internal/Enrich.js";
-import { extractCorpusImpl } from "./internal/Extract.js";
-import { organizeCorpusImpl } from "./internal/Organize.js";
-import { salvageCorpusImpl, verifySalvageImpl } from "./internal/Salvage.js";
+import { printLines } from "../../internal/cli/Printer.ts";
+import { archiveMoveImpl } from "./internal/ArchiveMove.ts";
+import { catalogCorpusImpl } from "./internal/Catalog.ts";
+import { enrichCorpusImpl } from "./internal/Enrich.ts";
+import { extractCorpusImpl } from "./internal/Extract.ts";
+import { organizeCorpusImpl } from "./internal/Organize.ts";
+import { salvageCorpusImpl, verifySalvageImpl } from "./internal/Salvage.ts";
 import type { FileSystem, Path } from "effect";
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { CorpusArchiveMoveError, CorpusCommandError } from "./Corpus.errors.js";
+import type { CorpusArchiveMoveError, CorpusCommandError } from "./Corpus.errors.ts";
 import type {
   CorpusArchiveMoveOptions,
   CorpusArchiveMoveSummary,
@@ -31,7 +31,7 @@ import type {
   CorpusOrganizeSummary,
   CorpusSalvageOptions,
   CorpusSalvageSummary,
-} from "./Corpus.schemas.js";
+} from "./Corpus.schemas.ts";
 
 /**
  * Re-export the public corpus docket parser from its internal parser module.
@@ -47,7 +47,7 @@ import type {
  * @category parsers
  * @since 0.0.0
  */
-export { extractCorpusDocket } from "./internal/Docket.js";
+export { extractCorpusDocket } from "./internal/Docket.ts";
 
 const $I = $RepoCliId.create("commands/Corpus/Corpus.service");
 

@@ -12,7 +12,7 @@ import { thunkEmptyStr } from "@beep/utils";
 import { Effect, SchemaGetter } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { DomainError } from "./errors/index.js";
+import { DomainError } from "./errors/index.ts";
 
 const prettyGetter = SchemaGetter.stringifyJson({ space: 2 });
 const compactGetter = SchemaGetter.stringifyJson();

@@ -23,4 +23,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./AssistantContent/index.js";
+export * from "./AssistantContent/index.ts";

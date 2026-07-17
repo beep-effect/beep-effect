@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-export * from "../Graphiti.config.js";
+export * from "../Graphiti.config.ts";
 /**
  * Public Graphiti proxy operations error export.
  *
@@ -19,9 +19,9 @@ export * from "../Graphiti.config.js";
  * @category errors
  * @since 0.0.0
  */
-export { GraphitiProxyOpsError } from "../Graphiti.errors.js";
-export * from "../Graphiti.schemas.js";
-export * from "./ContainerHealth.js";
-export * from "./ProxyEnsure.js";
-export * from "./ProxyServiceInstall.js";
-export * from "./StackRestore.js";
+export { GraphitiProxyOpsError } from "../Graphiti.errors.ts";
+export * from "../Graphiti.schemas.ts";
+export * from "./ContainerHealth.ts";
+export * from "./ProxyEnsure.ts";
+export * from "./ProxyServiceInstall.ts";
+export * from "./StackRestore.ts";

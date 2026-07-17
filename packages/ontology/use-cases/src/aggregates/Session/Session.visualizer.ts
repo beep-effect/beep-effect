@@ -24,7 +24,7 @@ import {
   OntologySnapshot,
   OntologyViewMode,
   resourceVisibleInViewMode,
-} from "./Session.projections.js";
+} from "./Session.projections.ts";
 import type { Quad } from "@beep/rdf/Rdf";
 
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.visualizer");

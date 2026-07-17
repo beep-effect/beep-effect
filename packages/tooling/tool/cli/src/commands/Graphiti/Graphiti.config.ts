@@ -13,14 +13,14 @@ import { Str } from "@beep/utils";
 import { pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import { booleanEnvValue, configStringOptionSync, envValue, intEnvValue } from "../../internal/cli/EnvConfig.js";
+import { booleanEnvValue, configStringOptionSync, envValue, intEnvValue } from "../../internal/cli/EnvConfig.ts";
 import {
   GraphitiProxyServiceInstallOptions,
   GraphitiRestoreConfig,
   GraphitiRestoreOptions,
-} from "./Graphiti.schemas.js";
+} from "./Graphiti.schemas.ts";
 import type { Path } from "effect";
-import type { ProxyEnsureConfig, ProxyServiceConfig } from "./Graphiti.schemas.js";
+import type { ProxyEnsureConfig, ProxyServiceConfig } from "./Graphiti.schemas.ts";
 
 const DEFAULT_GRAPHITI_STACK_DIR_NAME = "graphiti-mcp";
 const DEFAULT_GRAPHITI_PROJECT_NAME = "graphiti-mcp";

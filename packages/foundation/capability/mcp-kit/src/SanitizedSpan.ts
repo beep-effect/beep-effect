@@ -31,8 +31,8 @@ import * as S from "effect/Schema";
 import { CallToolResult, McpServerClient, Tool as WireTool } from "effect/unstable/ai/McpSchema";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import * as AiTool from "effect/unstable/ai/Tool";
-import { ApiKeyRequiredFailure } from "./ApiKeyRequired.js";
-import { CurrentMcpCaller, McpCallerIdentity } from "./McpCaller.js";
+import { ApiKeyRequiredFailure } from "./ApiKeyRequired.ts";
+import { CurrentMcpCaller, McpCallerIdentity } from "./McpCaller.ts";
 import type * as Tracer from "effect/Tracer";
 import type * as Toolkit from "effect/unstable/ai/Toolkit";
 

@@ -11,4 +11,4 @@
  * @category use-cases
  * @since 0.0.0
  */
-export * from "./Session.service.js";
+export * from "./Session.service.ts";

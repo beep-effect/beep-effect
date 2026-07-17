@@ -12,9 +12,9 @@ import { Console, Effect, FileSystem } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import { printLines } from "../../internal/cli/Printer.js";
-import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.js";
-import { makeArchitectureOperationPlan, makeArchitecturePackageOperationPlan } from "./Architecture.plan.js";
+import { printLines } from "../../internal/cli/Printer.ts";
+import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.ts";
+import { makeArchitectureOperationPlan, makeArchitecturePackageOperationPlan } from "./Architecture.plan.ts";
 import {
   ArchitectureDomainKind,
   ArchitecturePackageRole,
@@ -23,13 +23,13 @@ import {
   decodeCanonicalSliceOperationPlanJson,
   defaultArchitecturePlanTarget,
   encodeCanonicalSliceOperationPlanJson,
-} from "./Architecture.schemas.js";
-import { applyCanonicalSliceOperationPlan, checkCanonicalSliceOperationPlan } from "./OperationPlanExecution.js";
+} from "./Architecture.schemas.ts";
+import { applyCanonicalSliceOperationPlan, checkCanonicalSliceOperationPlan } from "./OperationPlanExecution.ts";
 import type {
   CanonicalSliceOperationPlan,
   OperationPlanApplyResult,
   OperationPlanCheckResult,
-} from "./Architecture.schemas.js";
+} from "./Architecture.schemas.ts";
 
 const planFileFlag = Flag.string("file").pipe(
   Flag.withAlias("f"),

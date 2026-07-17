@@ -11,8 +11,8 @@ import { A } from "@beep/utils";
 import { Effect, Tuple } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { RunMode, RunModeMatch } from "../../internal/cli/RunMode.js";
-import type { RunMode as RunModeValue } from "../../internal/cli/RunMode.js";
+import { RunMode, RunModeMatch } from "../../internal/cli/RunMode.ts";
+import type { RunMode as RunModeValue } from "../../internal/cli/RunMode.ts";
 
 /**
  * Public version-sync error exports.
@@ -20,7 +20,7 @@ import type { RunMode as RunModeValue } from "../../internal/cli/RunMode.js";
  * @category errors
  * @since 0.0.0
  */
-export { NetworkUnavailableError, VersionSyncDriftError, VersionSyncError } from "./VersionSync.errors.js";
+export { NetworkUnavailableError, VersionSyncDriftError, VersionSyncError } from "./VersionSync.errors.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/VersionSync.schemas");
 

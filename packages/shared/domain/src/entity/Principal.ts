@@ -8,7 +8,7 @@
 import { $SharedDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import * as Shared from "../identity/Shared.js";
+import * as Shared from "../identity/Shared.ts";
 
 const $I = $SharedDomainId.create("entity/Principal");
 const SystemComponentBase = LiteralKit(["Runtime", "Sync", "Migration", "Policy", "Generator"]);

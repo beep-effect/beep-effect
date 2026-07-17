@@ -8,16 +8,16 @@
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str, thunkFalse } from "@beep/utils";
 import { Clock, Console, DateTime, Effect, FileSystem, Path, pipe } from "effect";
-import { QualityTaskStep } from "../../../internal/process/index.js";
-import { graphitiRestoreConfig } from "../Graphiti.config.js";
-import { GraphitiProxyOpsError } from "../Graphiti.errors.js";
-import { GraphitiRestoreOptions } from "../Graphiti.schemas.js";
+import { QualityTaskStep } from "../../../internal/process/index.ts";
+import { graphitiRestoreConfig } from "../Graphiti.config.ts";
+import { GraphitiProxyOpsError } from "../Graphiti.errors.ts";
+import { GraphitiRestoreOptions } from "../Graphiti.schemas.ts";
 import {
   requireRestoreContainersHealthy,
   waitForRestoreContainers,
   waitForRestoreProxyHealthy,
-} from "./ContainerHealth.js";
-import { ensureProxyServiceForRestore } from "./ProxyServiceInstall.js";
+} from "./ContainerHealth.ts";
+import { ensureProxyServiceForRestore } from "./ProxyServiceInstall.ts";
 import {
   collectStepOutput,
   collectSuccessfulOutput,
@@ -25,9 +25,9 @@ import {
   requireExistingPath,
   runInheritedStep,
   shellQuote,
-} from "./StepExec.js";
+} from "./StepExec.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { GraphitiProxyOpsEnvironment, GraphitiRestoreConfig } from "../Graphiti.schemas.js";
+import type { GraphitiProxyOpsEnvironment, GraphitiRestoreConfig } from "../Graphiti.schemas.ts";
 
 const backupTimestamp = (epochMillis: number): string =>
   pipe(DateTime.makeUnsafe(epochMillis), DateTime.formatIso, Str.replaceAll(":", ""), Str.replaceAll(".", ""));

@@ -13,11 +13,11 @@ import {
   runYeetFallowFeedback,
   runYeetFallowFixtureCheck,
   runYeetPlanContractCheck,
-} from "./internal/FallowFeedback.js";
-import { runYeet } from "./internal/Handler.js";
-import { DEFAULT_YEET_PACKET_DIR, YeetProofTier } from "./internal/Planner.js";
-import { YeetRunOptions } from "./Yeet.schemas.js";
-import type { YeetRunMode } from "./internal/Planner.js";
+} from "./internal/FallowFeedback.ts";
+import { runYeet } from "./internal/Handler.ts";
+import { DEFAULT_YEET_PACKET_DIR, YeetProofTier } from "./internal/Planner.ts";
+import { YeetRunOptions } from "./Yeet.schemas.ts";
+import type { YeetRunMode } from "./internal/Planner.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/Yeet.command");
 

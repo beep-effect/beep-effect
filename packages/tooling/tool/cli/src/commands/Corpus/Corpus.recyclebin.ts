@@ -9,9 +9,9 @@ import { A, Str } from "@beep/utils";
 import { DateTime, Effect, Match, MutableHashMap, Order, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { CorpusCommandError } from "./Corpus.errors.js";
-import { RecycleBinOriginal, RecycleBinPairedEntry, RecycleBinPairing } from "./Corpus.schemas.js";
-import type { RecycleBinEntryKind, RecycleBinScanEntry } from "./Corpus.schemas.js";
+import { CorpusCommandError } from "./Corpus.errors.ts";
+import { RecycleBinOriginal, RecycleBinPairedEntry, RecycleBinPairing } from "./Corpus.schemas.ts";
+import type { RecycleBinEntryKind, RecycleBinScanEntry } from "./Corpus.schemas.ts";
 
 const headerBytes = 24;
 const v1PathBytes = 520;

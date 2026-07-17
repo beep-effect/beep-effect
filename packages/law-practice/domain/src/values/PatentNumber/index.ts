@@ -6,4 +6,4 @@
  * @since 0.0.0
  */
 
-export * from "./PatentNumber.model.js";
+export * from "./PatentNumber.model.ts";

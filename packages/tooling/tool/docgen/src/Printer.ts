@@ -14,9 +14,9 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Configuration from "./Configuration.js";
-import * as Domain from "./Domain.js";
-import * as Parser from "./Parser.js";
+import * as Configuration from "./Configuration.ts";
+import * as Domain from "./Domain.ts";
+import * as Parser from "./Parser.ts";
 
 const $I = $RepoDocgenId.create("Printer");
 

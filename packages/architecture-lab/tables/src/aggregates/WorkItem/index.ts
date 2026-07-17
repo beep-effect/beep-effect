@@ -4,4 +4,4 @@
  * @category tables
  * @since 0.0.0
  */
-export * from "./WorkItem.table.js";
+export * from "./WorkItem.table.ts";

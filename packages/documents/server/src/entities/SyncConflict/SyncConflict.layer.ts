@@ -8,7 +8,7 @@
 
 import { SyncConflictRepository } from "@beep/documents-use-cases/entities/SyncConflict/server";
 import { Layer } from "effect";
-import { makeDrizzleSyncConflictRepository, makeInMemorySyncConflictRepository } from "./SyncConflict.repo.js";
+import { makeDrizzleSyncConflictRepository, makeInMemorySyncConflictRepository } from "./SyncConflict.repo.ts";
 
 /**
  * In-memory SyncConflict repository layer for deterministic sync tests.

@@ -8,19 +8,19 @@
 import { A } from "@beep/utils";
 import { Console, Effect, Match } from "effect";
 import { Command, Flag } from "effect/unstable/cli";
-import { printLines } from "../../internal/cli/Printer.js";
-import { ImageCommandError } from "./Image.errors.js";
+import { printLines } from "../../internal/cli/Printer.ts";
+import { ImageCommandError } from "./Image.errors.ts";
 import {
   renderExtractFramesCommandSummary,
   renderExtractFramesDirError,
   renderExtractFramesDirFailure,
   renderExtractFramesDirSuccess,
   renderExtractFramesDirSummary,
-} from "./Image.render.js";
-import { decodeExtractFramesDirOptions, decodeExtractFramesOptions } from "./Image.schemas.js";
-import { ImageCommandService, ImageCommandServiceLive } from "./Image.service.js";
+} from "./Image.render.ts";
+import { decodeExtractFramesDirOptions, decodeExtractFramesOptions } from "./Image.schemas.ts";
+import { ImageCommandService, ImageCommandServiceLive } from "./Image.service.ts";
 import type { FFmpegError } from "@beep/ffmpeg";
-import type { ExtractFramesDirOutcome, ExtractFramesDirResult } from "./Image.schemas.js";
+import type { ExtractFramesDirOutcome, ExtractFramesDirResult } from "./Image.schemas.ts";
 
 const videoFlag = Flag.file("video", { mustExist: true }).pipe(Flag.withDescription("Input video file to sample"));
 const dirFlag = Flag.directory("dir", { mustExist: true }).pipe(

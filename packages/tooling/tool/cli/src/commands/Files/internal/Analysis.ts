@@ -9,12 +9,12 @@ import { FaceDetectionImageRequest } from "@beep/face-detection";
 import { A } from "@beep/utils";
 import { Effect } from "effect";
 import * as O from "effect/Option";
-import { FilesCommandError } from "../Files.errors.js";
-import { analyzeSolidBorders, classifyBorderSides, roundCandidateMetric } from "../Files.media.js";
-import { DetectBordersEntry, DetectFacesEntry } from "../Files.schemas.js";
-import { readImagePixelsForBorderDetection } from "./MediaExec.js";
+import { FilesCommandError } from "../Files.errors.ts";
+import { analyzeSolidBorders, classifyBorderSides, roundCandidateMetric } from "../Files.media.ts";
+import { DetectBordersEntry, DetectFacesEntry } from "../Files.schemas.ts";
+import { readImagePixelsForBorderDetection } from "./MediaExec.ts";
 import type { FaceDetection as DetectedFace, LoadedFaceDetector } from "@beep/face-detection";
-import type { DetectBordersOptions, DetectFacesFlag, DetectFacesOptions, SortableFile } from "../Files.schemas.js";
+import type { DetectBordersOptions, DetectFacesFlag, DetectFacesOptions, SortableFile } from "../Files.schemas.ts";
 
 /**
  * Analyze a single image for solid border sides.

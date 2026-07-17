@@ -7,7 +7,7 @@
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { nameField, optionalDesc, optionalName } from "./_fields.js";
+import { nameField, optionalDesc, optionalName } from "./_fields.ts";
 
 const $I = $RepoUtilsId.create("JSDoc/models/tag-values/EventDependencyTagValues");
 

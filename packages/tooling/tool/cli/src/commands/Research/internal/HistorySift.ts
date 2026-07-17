@@ -10,8 +10,8 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ResearchCommandError } from "../Research.errors.js";
-import { KnowledgeCardFrontmatter, ResearchHistorySiftSummary } from "../Research.schemas.js";
+import { ResearchCommandError } from "../Research.errors.ts";
+import { KnowledgeCardFrontmatter, ResearchHistorySiftSummary } from "../Research.schemas.ts";
 import {
   canonicalizeForSift,
   chromeMicrosToIso,
@@ -19,12 +19,12 @@ import {
   isInterestingUrl,
   readProfileHistory,
   unixSecondsToChromeMicros,
-} from "./BrowserHistory.js";
-import { catalogDbPath, loadSeenUrls, persistCards } from "./CatalogOps.js";
-import { normalizeUrl, sha256HexOf, slugFor, VAULT_DIRS } from "./Vault.js";
-import type { ResearchHistorySiftOptions } from "../Research.schemas.js";
-import type { ResearchCommandServiceRequirements } from "../Research.service.js";
-import type { CardPersistRow } from "./CatalogOps.js";
+} from "./BrowserHistory.ts";
+import { catalogDbPath, loadSeenUrls, persistCards } from "./CatalogOps.ts";
+import { normalizeUrl, sha256HexOf, slugFor, VAULT_DIRS } from "./Vault.ts";
+import type { ResearchHistorySiftOptions } from "../Research.schemas.ts";
+import type { ResearchCommandServiceRequirements } from "../Research.service.ts";
+import type { CardPersistRow } from "./CatalogOps.ts";
 
 const decodeHistorySiftSummary = S.decodeUnknownEffect(ResearchHistorySiftSummary);
 

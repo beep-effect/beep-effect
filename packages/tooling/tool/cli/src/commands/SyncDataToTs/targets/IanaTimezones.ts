@@ -17,10 +17,10 @@ import {
   normalizeJson,
   outputFile,
   sourceMetadata,
-} from "../internal/Source.js";
-import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.js";
+} from "../internal/Source.ts";
+import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.ts";
 import type { ReadEntry } from "tar";
-import type { SyncDataTarget } from "../SyncDataToTs.schemas.js";
+import type { SyncDataTarget } from "../SyncDataToTs.schemas.ts";
 
 const targetId = "iana-timezones" as const;
 const outputPath = "packages/foundation/primitive/data/src/generated/iana-timezones.ts" as const;

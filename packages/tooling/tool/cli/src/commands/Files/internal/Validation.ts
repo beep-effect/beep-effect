@@ -8,9 +8,9 @@
 import { A, P, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, FileSystem, flow, Path, pipe } from "effect";
-import { validateDirectory as validateDirectoryShared } from "../../../internal/cli/FsGuards.js";
-import { FilesCommandError, formatPlatformError } from "../Files.errors.js";
-import { normalizeBareExtension } from "../Files.media.js";
+import { validateDirectory as validateDirectoryShared } from "../../../internal/cli/FsGuards.ts";
+import { FilesCommandError, formatPlatformError } from "../Files.errors.ts";
+import { normalizeBareExtension } from "../Files.media.ts";
 import {
   decodeArchivePoorCandidatesOptions,
   decodeCreateCaptionFilesOptions,
@@ -19,7 +19,7 @@ import {
   decodeDetectFacesOptions,
   decodeNormalizeMaxLongEdge,
   decodeSafeFilePrefix,
-} from "../Files.schemas.js";
+} from "../Files.schemas.ts";
 import type {
   ArchivePoorCandidatesOptions,
   CreateCaptionFilesOptions,
@@ -28,7 +28,7 @@ import type {
   DetectFacesOptions,
   PositiveMediaDimension,
   SafeFilePrefix,
-} from "../Files.schemas.js";
+} from "../Files.schemas.ts";
 
 /**
  * Validate a generated filename prefix.

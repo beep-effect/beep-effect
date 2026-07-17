@@ -16,58 +16,58 @@ const $I = $RepoUtilsId.create("JSDoc/models/tag-values");
  * @category models
  * @since 0.0.0
  */
-export * from "./AccessModifierTagValues.js";
+export * from "./AccessModifierTagValues.ts";
 /**
  * @category models
  * @since 0.0.0
  */
-export * from "./ClosureTagValues.js";
+export * from "./ClosureTagValues.ts";
 /**
  * @category models
  * @since 0.0.0
  */
-export * from "./DocumentationTagValues.js";
+export * from "./DocumentationTagValues.ts";
 /**
  * @category models
  * @since 0.0.0
  */
-export * from "./EventDependencyTagValues.js";
+export * from "./EventDependencyTagValues.ts";
 /**
  * @category models
  * @since 0.0.0
  */
-export * from "./InlineTagValues.js";
+export * from "./InlineTagValues.ts";
 /**
  * @category models
  * @since 0.0.0
  */
-export * from "./OrganizationalTagValues.js";
+export * from "./OrganizationalTagValues.ts";
 /**
  * @category models
  * @since 0.0.0
  */
-export * from "./RemainingTagValues.js";
+export * from "./RemainingTagValues.ts";
 // ── Re-export all member classes ─────────────────────────────────────
 /**
  * @category models
  * @since 0.0.0
  */
-export * from "./StructuralTagValues.js";
+export * from "./StructuralTagValues.ts";
 /**
  * @category models
  * @since 0.0.0
  */
-export * from "./TSDocTagValues.js";
+export * from "./TSDocTagValues.ts";
 /**
  * @category models
  * @since 0.0.0
  */
-export * from "./TypeDocTagValues.js";
+export * from "./TypeDocTagValues.ts";
 /**
  * @category models
  * @since 0.0.0
  */
-export * from "./TypeScriptTagValues.js";
+export * from "./TypeScriptTagValues.ts";
 
 import {
   AbstractValue,
@@ -88,7 +88,7 @@ import {
   SatisfiesValue,
   StaticValue,
   ThisValue,
-} from "./AccessModifierTagValues.js";
+} from "./AccessModifierTagValues.ts";
 import {
   DefineValue,
   DictValue,
@@ -105,7 +105,7 @@ import {
   StructValue,
   SuppressValue,
   UnrestrictedValue,
-} from "./ClosureTagValues.js";
+} from "./ClosureTagValues.ts";
 import {
   AuthorValue,
   DeprecatedValue,
@@ -117,9 +117,9 @@ import {
   SummaryValue,
   TodoValue,
   VersionValue,
-} from "./DocumentationTagValues.js";
-import { EventValue, FiresValue, ListensValue, RequiresValue } from "./EventDependencyTagValues.js";
-import { InheritDocValue, LinkValue } from "./InlineTagValues.js";
+} from "./DocumentationTagValues.ts";
+import { EventValue, FiresValue, ListensValue, RequiresValue } from "./EventDependencyTagValues.ts";
+import { InheritDocValue, LinkValue } from "./InlineTagValues.ts";
 import {
   FunctionValue,
   InterfaceValue,
@@ -128,7 +128,7 @@ import {
   ModuleValue,
   NamespaceValue,
   PropertyValue,
-} from "./OrganizationalTagValues.js";
+} from "./OrganizationalTagValues.ts";
 import {
   AliasValue,
   BorrowsValue,
@@ -150,7 +150,7 @@ import {
   NameValue,
   TutorialValue,
   VariationValue,
-} from "./RemainingTagValues.js";
+} from "./RemainingTagValues.ts";
 // ── Import all members for composition ───────────────────────────────
 import {
   AsyncValue,
@@ -168,7 +168,7 @@ import {
   TypeParamValue,
   TypeValue,
   YieldsValue,
-} from "./StructuralTagValues.js";
+} from "./StructuralTagValues.ts";
 import {
   AlphaValue,
   BetaValue,
@@ -181,7 +181,7 @@ import {
   PrivateRemarksValue,
   SealedValue,
   VirtualValue,
-} from "./TSDocTagValues.js";
+} from "./TSDocTagValues.ts";
 import {
   CategoryValue,
   DocumentValue,
@@ -193,8 +193,8 @@ import {
   PrimaryExportValue,
   SortStrategyValue,
   UseDeclaredTypeValue,
-} from "./TypeDocTagValues.js";
-import { OverloadValue } from "./TypeScriptTagValues.js";
+} from "./TypeDocTagValues.ts";
+import { OverloadValue } from "./TypeScriptTagValues.ts";
 
 // ── Encoded sub-unions by category ───────────────────────────────────
 // S.toTaggedUnion requires Objects ASTs (not Declaration). S.toEncoded()

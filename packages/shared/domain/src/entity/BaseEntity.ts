@@ -12,11 +12,11 @@ import { PosInt } from "@beep/schema/Int";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as Shared from "../identity/Shared.js";
-import { Principal } from "./Principal.js";
-import * as PublicEntityId from "./PublicEntityId.js";
-import { SourceKind } from "./SourceKind.js";
-import type * as EntityId from "./EntityId.js";
+import * as Shared from "../identity/Shared.ts";
+import { Principal } from "./Principal.ts";
+import * as PublicEntityId from "./PublicEntityId.ts";
+import { SourceKind } from "./SourceKind.ts";
+import type * as EntityId from "./EntityId.ts";
 
 const $I = $SharedDomainId.create("entity/BaseEntity");
 

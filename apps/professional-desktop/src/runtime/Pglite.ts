@@ -40,7 +40,7 @@ import * as SqlClient from "effect/unstable/sql/SqlClient";
 import initdbWasmPath from "../../../../node_modules/@electric-sql/pglite/dist/initdb.wasm" with { type: "file" };
 import pgliteDataPath from "../../../../node_modules/@electric-sql/pglite/dist/pglite.data" with { type: "file" };
 import pgliteWasmPath from "../../../../node_modules/@electric-sql/pglite/dist/pglite.wasm" with { type: "file" };
-import { migrateOnBoot } from "./Migrations.js";
+import { migrateOnBoot } from "./Migrations.ts";
 import type { PgliteClientOptions } from "@beep/pglite";
 import type { PostgresDrizzle } from "@beep/postgres";
 import type { Context } from "effect";

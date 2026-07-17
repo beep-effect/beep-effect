@@ -11,11 +11,11 @@
  * @category components
  * @since 0.0.0
  */
-export * from "./Session.tree.js";
+export * from "./Session.tree.ts";
 /**
  * Ontology workbench screen exports.
  *
  * @category components
  * @since 0.0.0
  */
-export * from "./Session.workbench.js";
+export * from "./Session.workbench.ts";

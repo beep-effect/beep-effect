@@ -8,7 +8,7 @@
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as Rpc from "effect/unstable/rpc/Rpc";
 import * as RpcGroup from "effect/unstable/rpc/RpcGroup";
-import { SetWorkspaceVaultInput, WorkspaceVaultActionError, WorkspaceVaultConfig } from "./WorkspaceVault.js";
+import { SetWorkspaceVaultInput, WorkspaceVaultActionError, WorkspaceVaultConfig } from "./WorkspaceVault.ts";
 
 /**
  * RPC for reading the configured workspace vault path.

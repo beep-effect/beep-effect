@@ -27,4 +27,4 @@ export const VERSION = "0.0.0" as const;
  * @category components
  * @since 0.0.0
  */
-export * from "./aggregates/Session/index.js";
+export * from "./aggregates/Session/index.ts";

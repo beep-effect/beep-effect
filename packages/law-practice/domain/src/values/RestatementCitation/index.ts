@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./RestatementCitation.model.js";
+export * from "./RestatementCitation.model.ts";

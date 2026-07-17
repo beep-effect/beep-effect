@@ -11,11 +11,11 @@
  * @category tables
  * @since 0.0.0
  */
-export * from "./SyncCursor.converters.js";
+export * from "./SyncCursor.converters.ts";
 /**
  * SyncCursor table exports.
  *
  * @category tables
  * @since 0.0.0
  */
-export * from "./SyncCursor.table.js";
+export * from "./SyncCursor.table.ts";

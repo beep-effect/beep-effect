@@ -15,7 +15,7 @@ import { A, O } from "@beep/utils";
 import { Cause, Context, Effect, flow, Layer, pipe } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { FilingDecisionLlmConfig } from "./FilingDecisionLlm.config.js";
+import { FilingDecisionLlmConfig } from "./FilingDecisionLlm.config.ts";
 
 const $I = $DocumentsServerId.create("aggregates/Document/FilingTextExtraction");
 

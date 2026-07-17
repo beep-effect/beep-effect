@@ -27,11 +27,11 @@ exactly, and a whole-repo reformat is out of scope.
 | --- | --- | --- | --- | --- |
 | `consistent-type-imports` (inline) | inline `import type` | Biome `useImportType: "separatedType"` | kept | beep keeps separated type-import statements. |
 | `no-import-from-barrel-package` | forbid barrel/root package imports | not ported | skipped | `CLAUDE.md` deliberately allows root `effect` imports for core combinators; `laws effect-imports` already owns beep's import discipline (with `--write` remediation). |
-| `no-js-extension-imports` | mandate `.ts` extension in relative imports | not ported | skipped | beep's `tsconfig.base.json` uses `module/moduleResolution: NodeNext`, which **requires** `.js` extensions on relative imports (~838 in-tree, all `.js`); porting would flag correct, required imports. |
+| `no-js-extension-imports` | mandate TypeScript extensions in relative imports | **implemented (oxlint, mandatory)** | done | `allowImportingTsExtensions` permits source-facing extensions and `rewriteRelativeImportExtensions` rewrites them for runtime output. The fixable `beep/no-js-extension-imports` rule migrated 2,178 imports and re-exports and now prevents regressions. |
 | `jsdocs` | effect-smol JSDoc shape rule | not ported | skipped | beep has its own JSDoc tooling (`quality jsdoc-inventory`, jsdoc skills). |
 | `no-opaque-instance-fields` | no instance members on `Schema.Opaque` classes | **implemented (P3 oxlint, mandatory)** | done | Ported to the P3 oxlint lane as `beep/no-opaque-instance-fields` (needs import-binding + static-vs-instance member scope that GritQL can't express). 0 violations across beep's 114 `S.Opaque` classes → `error`. See "oxlint lane" below. |
 | `import/no-duplicates`, `import/no-self-import` | one import per module / no self-import | not enabled | skipped | These are oxlint's **native `import`-plugin** rules, not custom; enabling native oxlint rule categories would overlap/conflict with Biome (the primary linter). The P3 oxlint lane runs ONLY beep's custom plugin, so these stay disabled. |
-| `no-bigint-literals` | forbid bigint literals | enabled, **advisory only** (src-scoped) | advisory (kept) | P2 verdict: the in-tree bigint literals are **intentional domain values** — `Match.when(1n, ...)` version discriminators, `1n << 32n` id seeds — not just test data. Forcing `BigInt(1)` is more verbose and less readable. Scoped to `**/src/**` (excludes test/`LiteralKit` data); kept `warn` (not mandatory) like `no-js-extension-imports`, because the literals beep writes are correct. |
+| `no-bigint-literals` | forbid bigint literals | enabled, **advisory only** (src-scoped) | advisory (kept) | P2 verdict: the in-tree bigint literals are **intentional domain values** — `Match.when(1n, ...)` version discriminators, `1n << 32n` id seeds — not just test data. Forcing `BigInt(1)` is more verbose and less readable. Scoped to `**/src/**` (excludes test/`LiteralKit` data); kept `warn` because the literals beep writes are correct. |
 | `noConsole` | disallow `console` | enabled, **advisory only** | advisory (kept) | P2 verdict: enforcing repo-wide as `error` is a large, separate effort (~118 sites) and much `console` use is legitimate (CLI output, scripts, diagnostics already allowlisted). Kept `warn` pending a dedicated logging-migration initiative. |
 | `noUselessConstructor` | no useless constructors | enabled, **advisory only** | advisory (kept) | P2 verdict: the flagged constructors carry typed parameters / DI shape (e.g. `chalk` `ChalkValue(_options?: ...)`) that are not safely removable without changing call-site types. Kept `warn`. |
 
@@ -68,8 +68,8 @@ table above for why).
 
 oxlint is added **lint-only** (Biome stays the formatter + primary linter). The root
 `.oxlintrc.json` runs ONLY the `@beep/lint-rules` custom plugin (`jsPlugins`) — no native
-oxlint rule categories, to avoid overlap with Biome. These 5 stateful/path-aware rules
-(which GritQL cannot express) are ported as oxlint ESTree plugins under
+oxlint rule categories, to avoid overlap with Biome. These 6 repository policy rules are
+implemented as oxlint ESTree plugins under
 `packages/tooling/policy-pack/lint-rules/src/rules/`, run via `bun run lint:oxlint`:
 
 The lane runs native oxlint categories **off** (`categories: all off`) so only the custom
@@ -77,13 +77,14 @@ The lane runs native oxlint categories **off** (`categories: all off`) so only t
 code, not the rules' target). The plugin source (`src/rules/**`) is itself oxlint-linted
 (no self-exclusion). `bun run lint:oxlint` exits 0 today.
 
-Detection is **binding-based** (post-review hardening): the rules resolve import bindings
+Binding-sensitive detection is **binding-based** (post-review hardening): those rules resolve import bindings
 (named / namespace / default / aliased) rather than matching literal identifier names, so
 `import { Effect as E }`, `import * as S from "effect/Schema"`, and `import * as Effect from
 "effect"` (`Effect.Schema.Opaque(...)`) are all handled and cannot bypass the rules.
 
 | Rule | Source | beep violations | Severity |
 | --- | --- | --- | --- |
+| `no-js-extension-imports` | effect-smol v4, extended for dynamic/type imports | 0 after migration | **error** (mandatory; fixable terminal-suffix replacement across the existing oxlint scope) |
 | `no-opaque-instance-fields` | effect-smol v4 | 0 | **error** (mandatory; binding-based — effect-root namespace + default/named/namespace Schema/Opaque imports) |
 | `namespace-node-imports` | t3code | 53 | warn (advisory — `node:` import-style cleanup) |
 | `no-inline-schema-compile` | t3code | ~880 | warn (advisory — binding-based Schema detection + non-IIFE in-function compiler bindings; large hot-path-hoisting backlog; exact count tracks the tree) |
@@ -91,8 +92,8 @@ Detection is **binding-based** (post-review hardening): the rules resolve import
 | `no-global-process-runtime` | t3code (host file re-pointed to `chalk/.../SupportsColor.ts`) | 5 | warn (advisory — skips lexically-shadowed `process`; distinct `process.x` vs `os.x()` diagnostics) |
 
 `lint:oxlint` is wired into the **blocking Lint Policy CI lane** via `beep lint policy`
-(`oxlint --quiet` — errors only, so the mandatory `no-opaque-instance-fields` rule is
-enforced on every PR while the advisory backlog stays out of the gate output). oxlint custom
+(`oxlint --quiet` — errors only, so mandatory custom rules are enforced on every PR while
+the advisory backlog stays out of the gate output). oxlint custom
 JS plugins are stable on Linux (spike confirmed; no alpha breakage), so the lane is real —
 not "complete-with-exception." Promotion of the remaining advisory rules to `error` is
 tracked by the SPEC exception ledger's **2026-09-20** re-assessment.

@@ -9,7 +9,7 @@ import { $OntologyDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import * as S from "effect/Schema";
-import { SessionId } from "./Session.values.js";
+import { SessionId } from "./Session.values.ts";
 
 const $I = $OntologyDomainId.create("aggregates/Session/Session.errors");
 

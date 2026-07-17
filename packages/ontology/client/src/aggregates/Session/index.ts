@@ -11,4 +11,4 @@
  * @category atoms
  * @since 0.0.0
  */
-export * from "./Session.atoms.js";
+export * from "./Session.atoms.ts";

@@ -11,7 +11,7 @@ import * as O from "effect/Option";
 import { ChildProcess } from "effect/unstable/process";
 import { imageSizeFromFile } from "image-size/fromFile";
 import sharp from "sharp";
-import { FilesCommandError } from "../Files.errors.js";
+import { FilesCommandError } from "../Files.errors.ts";
 import {
   collectText,
   isExifOrientationRotated,
@@ -20,8 +20,8 @@ import {
   normalizeBareExtension,
   rotationFromStream,
   sharpFormatForNormalize,
-} from "../Files.media.js";
-import { decodeFfprobeOutputJson, decodeImageSizeMetadata, MediaDimensions } from "../Files.schemas.js";
+} from "../Files.media.ts";
+import { decodeFfprobeOutputJson, decodeImageSizeMetadata, MediaDimensions } from "../Files.schemas.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type {
   CropBordersPlanEntry,
@@ -29,7 +29,7 @@ import type {
   PositiveMediaDimension,
   SortableFile,
   StripMetadataPlanEntry,
-} from "../Files.schemas.js";
+} from "../Files.schemas.ts";
 
 const FfmpegLocalProtocolWhitelist = "file,pipe";
 const TrustedMediaToolRoots = ["/usr/bin", "/usr/local/bin", "/opt/homebrew/bin"] as const;

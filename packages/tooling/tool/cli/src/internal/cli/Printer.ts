@@ -8,8 +8,8 @@
 import { Console, Effect } from "effect";
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
-import { printCommandJson } from "./Json.js";
-import type { CliJsonError } from "./Json.js";
+import { printCommandJson } from "./Json.ts";
+import type { CliJsonError } from "./Json.ts";
 
 /**
  * Print each line in order.

@@ -23,7 +23,7 @@
  * @category parsing
  * @since 0.0.0
  */
-export * as AssistantTurn from "./AssistantTurn/index.js";
+export * as AssistantTurn from "./AssistantTurn/index.ts";
 /** Provider-instance persistence, probe, use-case, and RPC layers.
  * @example
  * ```ts
@@ -33,4 +33,4 @@ export * as AssistantTurn from "./AssistantTurn/index.js";
  * @category layers
  * @since 0.0.0
  */
-export * as ProviderInstance from "./ProviderInstance/index.js";
+export * as ProviderInstance from "./ProviderInstance/index.ts";

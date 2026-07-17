@@ -5,4 +5,4 @@
  * @since 0.0.0
  */
 
-export * from "../internal/ratchet/index.js";
+export * from "../internal/ratchet/index.ts";

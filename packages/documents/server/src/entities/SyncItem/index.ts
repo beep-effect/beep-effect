@@ -4,11 +4,11 @@
  * @category layers
  * @since 0.0.0
  */
-export * from "./SyncItem.layer.js";
+export * from "./SyncItem.layer.ts";
 /**
  * SyncItem repository adapter exports.
  *
  * @category repositories
  * @since 0.0.0
  */
-export * from "./SyncItem.repo.js";
+export * from "./SyncItem.repo.ts";

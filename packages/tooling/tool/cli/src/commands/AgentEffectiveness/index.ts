@@ -11,18 +11,18 @@
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./AgentEffectiveness.command.js";
+export * from "./AgentEffectiveness.command.ts";
 /**
  * Agent-effectiveness eval scorer error exports.
  *
  * @category errors
  * @since 0.0.0
  */
-export * from "./AgentEffectiveness.errors.js";
+export * from "./AgentEffectiveness.errors.ts";
 /**
  * Agent-effectiveness eval scorer schema exports.
  *
  * @category schemas
  * @since 0.0.0
  */
-export * from "./AgentEffectiveness.schemas.js";
+export * from "./AgentEffectiveness.schemas.ts";

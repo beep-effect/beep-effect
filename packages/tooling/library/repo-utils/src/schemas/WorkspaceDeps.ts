@@ -9,7 +9,7 @@
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { NonEmptyStringValue, NpmPackageName, RepoPackageName } from "./PackageJson.js";
+import { NonEmptyStringValue, NpmPackageName, RepoPackageName } from "./PackageJson.ts";
 
 const $I = $RepoUtilsId.create("schemas/WorkspaceDeps");
 

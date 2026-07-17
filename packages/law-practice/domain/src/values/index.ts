@@ -17,14 +17,14 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./AnnotationCitation/index.js";
+export * from "./AnnotationCitation/index.ts";
 /**
  * Patent application number value-object exports.
  *
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ApplicationNumber/index.js";
+export * from "./ApplicationNumber/index.ts";
 /**
  * Canon-citation value-object exports.
  *
@@ -36,7 +36,7 @@ export * from "./ApplicationNumber/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./CanonCitation/index.js";
+export * from "./CanonCitation/index.ts";
 /**
  * Case-group value-object exports.
  *
@@ -48,7 +48,7 @@ export * from "./CanonCitation/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./CaseGroup/index.js";
+export * from "./CaseGroup/index.ts";
 /**
  * Citation value-object exports (the tagged-union `Citation`, its full/short-form
  * unions, and the recursive `Parenthetical` + case/id/supra/short-form members).
@@ -61,7 +61,7 @@ export * from "./CaseGroup/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./Citation/index.js";
+export * from "./Citation/index.ts";
 /**
  * Citation-base value-object exports.
  *
@@ -73,7 +73,7 @@ export * from "./Citation/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./CitationBase/index.js";
+export * from "./CitationBase/index.ts";
 /**
  * Citation-id value-object exports.
  *
@@ -85,7 +85,7 @@ export * from "./CitationBase/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./CitationId/index.js";
+export * from "./CitationId/index.ts";
 /**
  * Citation-signal value-object exports.
  *
@@ -97,7 +97,7 @@ export * from "./CitationId/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./CitationSignal/index.js";
+export * from "./CitationSignal/index.ts";
 /**
  * Citation-type value-object exports.
  *
@@ -109,7 +109,7 @@ export * from "./CitationSignal/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./CitationType/index.js";
+export * from "./CitationType/index.ts";
 /**
  * Citation-warning value-object exports.
  *
@@ -121,7 +121,7 @@ export * from "./CitationType/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./CitationWarning/index.js";
+export * from "./CitationWarning/index.ts";
 /**
  * Component-span value-object exports.
  *
@@ -133,7 +133,7 @@ export * from "./CitationWarning/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ComponentSpan/index.js";
+export * from "./ComponentSpan/index.ts";
 /**
  * Constitutional-citation value-object exports.
  *
@@ -145,7 +145,7 @@ export * from "./ComponentSpan/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ConstitutionalCitation/index.js";
+export * from "./ConstitutionalCitation/index.ts";
 /**
  * Context-options value-object exports.
  *
@@ -157,7 +157,7 @@ export * from "./ConstitutionalCitation/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ContextOptions/index.js";
+export * from "./ContextOptions/index.ts";
 /**
  * Court-inference value-object exports.
  *
@@ -169,7 +169,7 @@ export * from "./ContextOptions/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./CourtInference/index.js";
+export * from "./CourtInference/index.ts";
 /**
  * Docket-citation value-object exports.
  *
@@ -181,7 +181,7 @@ export * from "./CourtInference/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./DocketCitation/index.js";
+export * from "./DocketCitation/index.ts";
 /**
  * Durable-locator value-object exports.
  *
@@ -193,7 +193,7 @@ export * from "./DocketCitation/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./DurableLocator/index.js";
+export * from "./DurableLocator/index.ts";
 /**
  * Durable-locator-options value-object exports.
  *
@@ -205,7 +205,7 @@ export * from "./DurableLocator/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./DurableLocatorOptions/index.js";
+export * from "./DurableLocatorOptions/index.ts";
 /**
  * Federal-register-citation value-object exports.
  *
@@ -217,7 +217,7 @@ export * from "./DurableLocatorOptions/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./FederalRegisterCitation/index.js";
+export * from "./FederalRegisterCitation/index.ts";
 /**
  * Federal-rule-citation value-object exports.
  *
@@ -229,7 +229,7 @@ export * from "./FederalRegisterCitation/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./FederalRuleCitation/index.js";
+export * from "./FederalRuleCitation/index.ts";
 /**
  * Full-citation-type value-object exports.
  *
@@ -241,7 +241,7 @@ export * from "./FederalRuleCitation/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./FullCitationType/index.js";
+export * from "./FullCitationType/index.ts";
 /**
  * History-chain value-object exports.
  *
@@ -253,7 +253,7 @@ export * from "./FullCitationType/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./HistoryChain/index.js";
+export * from "./HistoryChain/index.ts";
 /**
  * History-link value-object exports.
  *
@@ -265,7 +265,7 @@ export * from "./HistoryChain/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./HistoryLink/index.js";
+export * from "./HistoryLink/index.ts";
 /**
  * History-signal value-object exports.
  *
@@ -277,7 +277,7 @@ export * from "./HistoryLink/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./HistorySignal/index.js";
+export * from "./HistorySignal/index.ts";
 /**
  * Journal-citation value-object exports.
  *
@@ -289,14 +289,14 @@ export * from "./HistorySignal/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./JournalCitation/index.js";
+export * from "./JournalCitation/index.ts";
 /**
  * WIPO ST.16 kind code value-object exports.
  *
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./KindCode/index.js";
+export * from "./KindCode/index.ts";
 /**
  * Legislative-material-citation value-object exports.
  *
@@ -308,7 +308,7 @@ export * from "./KindCode/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./LegislativeMaterialCitation/index.js";
+export * from "./LegislativeMaterialCitation/index.ts";
 /**
  * Local-ordinance-citation value-object exports.
  *
@@ -320,7 +320,7 @@ export * from "./LegislativeMaterialCitation/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./LocalOrdinanceCitation/index.js";
+export * from "./LocalOrdinanceCitation/index.ts";
 /**
  * Neutral-citation value-object exports.
  *
@@ -332,14 +332,14 @@ export * from "./LocalOrdinanceCitation/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./NeutralCitation/index.js";
+export * from "./NeutralCitation/index.ts";
 /**
  * WIPO ST.3 office code value-object exports.
  *
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./OfficeCode/index.js";
+export * from "./OfficeCode/index.ts";
 /**
  * Parallel-group value-object exports.
  *
@@ -351,7 +351,7 @@ export * from "./OfficeCode/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ParallelGroup/index.js";
+export * from "./ParallelGroup/index.ts";
 /**
  * Parenthetical-type value-object exports.
  *
@@ -363,35 +363,35 @@ export * from "./ParallelGroup/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ParentheticalType/index.js";
+export * from "./ParentheticalType/index.ts";
 /**
  * Canonical patent document triplet value-object exports.
  *
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./PatentDocumentTriplet/index.js";
+export * from "./PatentDocumentTriplet/index.ts";
 /**
  * Patent metadata value-object exports.
  *
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./PatentMetadata/index.js";
+export * from "./PatentMetadata/index.ts";
 /**
  * WIPO ST.6 patent number value-object exports.
  *
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./PatentNumber/index.js";
+export * from "./PatentNumber/index.ts";
 /**
  * Patent office metadata value-object exports.
  *
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./PatentOffice/index.js";
+export * from "./PatentOffice/index.ts";
 /**
  * Pincite value-object exports.
  *
@@ -403,7 +403,7 @@ export * from "./PatentOffice/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./PinciteInfo/index.js";
+export * from "./PinciteInfo/index.ts";
 /**
  * Public-law-citation value-object exports.
  *
@@ -415,7 +415,7 @@ export * from "./PinciteInfo/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./PublicLawCitation/index.js";
+export * from "./PublicLawCitation/index.ts";
 /**
  * Regulation-citation value-object exports.
  *
@@ -427,7 +427,7 @@ export * from "./PublicLawCitation/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./RegulationCitation/index.js";
+export * from "./RegulationCitation/index.ts";
 /**
  * Resolution-result value-object exports.
  *
@@ -439,7 +439,7 @@ export * from "./RegulationCitation/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ResolutionResult/index.js";
+export * from "./ResolutionResult/index.ts";
 /**
  * Restatement-citation value-object exports.
  *
@@ -451,7 +451,7 @@ export * from "./ResolutionResult/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./RestatementCitation/index.js";
+export * from "./RestatementCitation/index.ts";
 /**
  * Segment value-object exports.
  *
@@ -463,7 +463,7 @@ export * from "./RestatementCitation/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./Segment/index.js";
+export * from "./Segment/index.ts";
 /**
  * Segment map value-object exports.
  *
@@ -475,14 +475,14 @@ export * from "./Segment/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./SegmentMap/index.js";
+export * from "./SegmentMap/index.ts";
 /**
  * Lawyer seniority tier value-object exports.
  *
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./SeniorityTier/index.js";
+export * from "./SeniorityTier/index.ts";
 /**
  * Session-law-citation value-object exports.
  *
@@ -494,7 +494,7 @@ export * from "./SeniorityTier/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./SessionLawCitation/index.js";
+export * from "./SessionLawCitation/index.ts";
 /**
  * Short-form-citation-type value-object exports.
  *
@@ -506,7 +506,7 @@ export * from "./SessionLawCitation/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ShortFormCitationType/index.js";
+export * from "./ShortFormCitationType/index.ts";
 /**
  * Span value-object exports.
  *
@@ -518,7 +518,7 @@ export * from "./ShortFormCitationType/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./Span/index.js";
+export * from "./Span/index.ts";
 /**
  * State-rule-citation value-object exports.
  *
@@ -530,7 +530,7 @@ export * from "./Span/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./StateRuleCitation/index.js";
+export * from "./StateRuleCitation/index.ts";
 /**
  * Statute-citation value-object exports.
  *
@@ -542,7 +542,7 @@ export * from "./StateRuleCitation/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./StatuteCitation/index.js";
+export * from "./StatuteCitation/index.ts";
 /**
  * Statutes-at-large-citation value-object exports.
  *
@@ -554,7 +554,7 @@ export * from "./StatuteCitation/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./StatutesAtLargeCitation/index.js";
+export * from "./StatutesAtLargeCitation/index.ts";
 /**
  * String-citation-group value-object exports.
  *
@@ -566,7 +566,7 @@ export * from "./StatutesAtLargeCitation/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./StringCitationGroup/index.js";
+export * from "./StringCitationGroup/index.ts";
 /**
  * Structured-date value-object exports.
  *
@@ -578,7 +578,7 @@ export * from "./StringCitationGroup/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./StructuredDate/index.js";
+export * from "./StructuredDate/index.ts";
 /**
  * Subsequent-history-entry value-object exports.
  *
@@ -590,7 +590,7 @@ export * from "./StructuredDate/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./SubsequentHistoryEntry/index.js";
+export * from "./SubsequentHistoryEntry/index.ts";
 /**
  * Surrounding-context value-object exports.
  *
@@ -602,7 +602,7 @@ export * from "./SubsequentHistoryEntry/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./SurroundingContext/index.js";
+export * from "./SurroundingContext/index.ts";
 /**
  * Treatise-citation value-object exports.
  *
@@ -614,7 +614,7 @@ export * from "./SurroundingContext/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./TreatiseCitation/index.js";
+export * from "./TreatiseCitation/index.ts";
 /**
  * Treaty-citation value-object exports.
  *
@@ -626,4 +626,4 @@ export * from "./TreatiseCitation/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./TreatyCitation/index.js";
+export * from "./TreatyCitation/index.ts";

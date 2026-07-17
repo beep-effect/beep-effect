@@ -35,15 +35,15 @@ import {
   DEFAULT_JSON_PRETTY_MAX_LENGTH,
   encodeCommandJson,
   renderPrettyCommandJson,
-} from "../../../internal/cli/Json.js";
-import { errorMessage as cliErrorMessage, durationMsSince, timestampIso } from "../../../internal/cli/Timing.js";
-import { DocgenQualityReport } from "./Quality.js";
+} from "../../../internal/cli/Json.ts";
+import { errorMessage as cliErrorMessage, durationMsSince, timestampIso } from "../../../internal/cli/Timing.ts";
+import { DocgenQualityReport } from "./Quality.ts";
 import {
   analyzeDocgenQualityWorkerEval,
   DocgenQualityWorkerEvalProvider,
   DocgenQualityWorkerEvalReport,
   DocgenQualityWorkerEvalScope,
-} from "./QualityWorkerEval.js";
+} from "./QualityWorkerEval.ts";
 import type { Pod, Template } from "@beep/runpod";
 
 const $I = $RepoCliId.create("commands/Docgen/internal/QualityWorkerRunpodEval");

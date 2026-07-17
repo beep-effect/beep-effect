@@ -9,15 +9,15 @@ import { A, Str } from "@beep/utils";
 import { Match, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import { QualityTaskStep } from "../../../internal/process/index.js";
-import { GithubCheckLaneSpec } from "../Quality.schemas.js";
+import { QualityTaskStep } from "../../../internal/process/index.ts";
+import { GithubCheckLaneSpec } from "../Quality.schemas.ts";
 import type {
   FallowQualityFeatureFamily,
   GithubCheckLaneStage,
   GithubCheckMode,
   GithubChecksFallowFeatureMatrix,
   GithubChecksFallowFeatureMatrixRow,
-} from "../Quality.schemas.js";
+} from "../Quality.schemas.ts";
 
 /**
  * Build a `bun run` quality lane step.

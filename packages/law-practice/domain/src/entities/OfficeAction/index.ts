@@ -6,4 +6,4 @@
  * @since 0.0.0
  */
 
-export * from "./OfficeAction.model.js";
+export * from "./OfficeAction.model.ts";

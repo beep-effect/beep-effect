@@ -11,4 +11,4 @@ export {
   type OntologyConfigShape,
   OntologyServerConfig,
   OntologyWorkspaceRootConfig,
-} from "./ServerConfig.js";
+} from "./ServerConfig.ts";

@@ -11,22 +11,22 @@ import { Effect } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as Str from "effect/String";
-import { normalizedTokens } from "../../../internal/cli/Flags.js";
-import { GhComment } from "../../../internal/github/index.js";
-import { YeetCommandError } from "../Yeet.errors.js";
-import { PrCloseoutReport } from "./closeout/Closeout.schemas.js";
-import { closeoutGateStates, gateIssues, reviewThreadIssue } from "./closeout/Gates.js";
-import { closeoutGhOutput, collectPrCloseoutPayload, performCloseoutWriteActions } from "./closeout/GhCollect.js";
+import { normalizedTokens } from "../../../internal/cli/Flags.ts";
+import { GhComment } from "../../../internal/github/index.ts";
+import { YeetCommandError } from "../Yeet.errors.ts";
+import { PrCloseoutReport } from "./closeout/Closeout.schemas.ts";
+import { closeoutGateStates, gateIssues, reviewThreadIssue } from "./closeout/Gates.ts";
+import { closeoutGhOutput, collectPrCloseoutPayload, performCloseoutWriteActions } from "./closeout/GhCollect.ts";
 import {
   greptileAuthoredReviewThreadCount,
   inferGreptileIssueCount,
   isBotComment,
   latestGreptileSummary,
-} from "./closeout/GreptileSignal.js";
-import { closeoutWritePlan } from "./closeout/WritePlan.js";
+} from "./closeout/GreptileSignal.ts";
+import { closeoutWritePlan } from "./closeout/WritePlan.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { RepoRunContext } from "../../../internal/repo-run/index.js";
-import type { PrCloseoutOptions, PrCloseoutWriteAction } from "./closeout/Closeout.schemas.js";
+import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { PrCloseoutOptions, PrCloseoutWriteAction } from "./closeout/Closeout.schemas.ts";
 
 const GREPTILE_RETRIGGER_COMMENT = "@greptileai review" as const;
 
@@ -44,10 +44,10 @@ export {
   PrCloseoutOptions,
   PrCloseoutReport,
   PrCloseoutWriteAction,
-} from "./closeout/Closeout.schemas.js";
-export { closeoutGateStatesForTesting, greptileIssueLimitExceededForTesting } from "./closeout/Gates.js";
-export { inferGreptileIssueCountForTesting, latestGreptileSummaryForTesting } from "./closeout/GreptileSignal.js";
-export { closeoutWritePlanForTesting } from "./closeout/WritePlan.js";
+} from "./closeout/Closeout.schemas.ts";
+export { closeoutGateStatesForTesting, greptileIssueLimitExceededForTesting } from "./closeout/Gates.ts";
+export { inferGreptileIssueCountForTesting, latestGreptileSummaryForTesting } from "./closeout/GreptileSignal.ts";
+export { closeoutWritePlanForTesting } from "./closeout/WritePlan.ts";
 
 /**
  * Inspect current PR review and bot closeout state.

@@ -23,8 +23,8 @@ import { Cause, Clock, Duration, Effect, Match, Metric, Random, Stream } from "e
 import * as S from "effect/Schema";
 import { KeyValueStore } from "effect/unstable/persistence";
 import { AsyncResult, Atom, AtomRegistry, AtomRpc, Reactivity } from "effect/unstable/reactivity";
-import { HttpChatProtocolLive } from "./Chat.layer.js";
-import { ClientObservabilityLive } from "./ClientObservability.js";
+import { HttpChatProtocolLive } from "./Chat.layer.ts";
+import { ClientObservabilityLive } from "./ClientObservability.ts";
 import type { TurnRequestStatus } from "@beep/agents-use-cases/public";
 import type { Layer } from "effect";
 import type { RpcClient, RpcClientError } from "effect/unstable/rpc";
@@ -55,7 +55,7 @@ Atom.runtime.addGlobalLayer(ClientObservabilityLive);
  * @category layers
  * @since 0.0.0
  */
-export { HttpChatProtocolLive } from "./Chat.layer.js";
+export { HttpChatProtocolLive } from "./Chat.layer.ts";
 
 /**
  * Writable transport selector consumed by {@link ChatClient}.

@@ -18,7 +18,7 @@
  * @category models
  * @since 0.0.0
  */
-export * from "./ApprovalGate.model.js";
+export * from "./ApprovalGate.model.ts";
 /**
  * Module exports.
  *
@@ -32,4 +32,4 @@ export * from "./ApprovalGate.model.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ApprovalGate.values.js";
+export * from "./ApprovalGate.values.ts";

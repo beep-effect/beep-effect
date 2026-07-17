@@ -7,7 +7,7 @@
 
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
-import { fcRuns } from "./FastCheckRuns.js";
+import { fcRuns } from "./FastCheckRuns.ts";
 
 /**
  * Assert that a schema-derived arbitrary only emits values accepted by the same schema without transformation.

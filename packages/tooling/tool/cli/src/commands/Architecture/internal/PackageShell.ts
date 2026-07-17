@@ -15,8 +15,8 @@ import {
   ArchitectureSliceRolePlan,
   WriteFileOperation,
   WritePackageJsonOperation,
-} from "../Architecture.schemas.js";
-import { packageNameForRole, pathForRole } from "./RoleTopology.js";
+} from "../Architecture.schemas.ts";
+import { packageNameForRole, pathForRole } from "./RoleTopology.ts";
 import type * as R from "effect/Record";
 
 /**
@@ -299,15 +299,15 @@ const categoryForRole = ArchitecturePackageRole.$match({
 
 const extraExportForRole = ArchitecturePackageRole.$match({
   domain: () =>
-    '\n/**\n * Aggregate namespace exports.\n *\n * @category aggregates\n * @since 0.0.0\n */\nexport * as Aggregates from "./aggregates/index.js";\n/**\n * Entity namespace exports.\n *\n * @category entities\n * @since 0.0.0\n */\nexport * as Entities from "./entities/index.js";\n/**\n * Identity namespace exports.\n *\n * @category entity-ids\n * @since 0.0.0\n */\nexport * as Identity from "./identity/index.js";\n/**\n * Value-object namespace exports.\n *\n * @category value-objects\n * @since 0.0.0\n */\nexport * as Values from "./values/index.js";\n',
+    '\n/**\n * Aggregate namespace exports.\n *\n * @category aggregates\n * @since 0.0.0\n */\nexport * as Aggregates from "./aggregates/index.ts";\n/**\n * Entity namespace exports.\n *\n * @category entities\n * @since 0.0.0\n */\nexport * as Entities from "./entities/index.ts";\n/**\n * Identity namespace exports.\n *\n * @category entity-ids\n * @since 0.0.0\n */\nexport * as Identity from "./identity/index.ts";\n/**\n * Value-object namespace exports.\n *\n * @category value-objects\n * @since 0.0.0\n */\nexport * as Values from "./values/index.ts";\n',
   "use-cases": () =>
-    '\n/**\n * Public use-case exports.\n *\n * @category use-cases\n * @since 0.0.0\n */\nexport * from "./public.js";\n',
+    '\n/**\n * Public use-case exports.\n *\n * @category use-cases\n * @since 0.0.0\n */\nexport * from "./public.ts";\n',
   config: () =>
-    '\n/**\n * Browser-safe public configuration exports.\n *\n * @category configuration\n * @since 0.0.0\n */\nexport * from "./public.js";\n',
+    '\n/**\n * Browser-safe public configuration exports.\n *\n * @category configuration\n * @since 0.0.0\n */\nexport * from "./public.ts";\n',
   server: () =>
-    '\n/**\n * Server layer exports.\n *\n * @category layers\n * @since 0.0.0\n */\nexport * from "./Layer.js";\n',
+    '\n/**\n * Server layer exports.\n *\n * @category layers\n * @since 0.0.0\n */\nexport * from "./Layer.ts";\n',
   tables: () =>
-    '\n/**\n * Table collection exports.\n *\n * @category tables\n * @since 0.0.0\n */\nexport * from "./tables.js";\n',
+    '\n/**\n * Table collection exports.\n *\n * @category tables\n * @since 0.0.0\n */\nexport * from "./tables.ts";\n',
   client: () => "",
   ui: () => "",
 });

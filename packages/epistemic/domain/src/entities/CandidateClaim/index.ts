@@ -18,4 +18,4 @@
  * @category entities
  * @since 0.0.0
  */
-export * from "./CandidateClaim.model.js";
+export * from "./CandidateClaim.model.ts";

@@ -11,13 +11,13 @@ import { A, Text } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, FileSystem, flow } from "effect";
 import { dual } from "effect/Function";
-import { analyzeDocgenQuality, resolveDocgenQualityTargets } from "./Quality.js";
-import { decodeDocgenQualityReportForWorkerEval, qualityWorkerEvalSourcePacketLimit } from "./QualityWorkerEval.js";
+import { analyzeDocgenQuality, resolveDocgenQualityTargets } from "./Quality.ts";
+import { decodeDocgenQualityReportForWorkerEval, qualityWorkerEvalSourcePacketLimit } from "./QualityWorkerEval.ts";
 import {
   assertNoOrphanDocgenConfigPaths,
   discoverDocgenWorkspacePackages,
   resolveDocgenWorkspacePackage,
-} from "./Workspace.js";
+} from "./Workspace.ts";
 
 /**
  * Resolve generation targets from the optional CLI package selector.

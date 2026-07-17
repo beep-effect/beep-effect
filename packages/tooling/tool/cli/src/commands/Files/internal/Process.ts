@@ -45,9 +45,9 @@ import * as O from "@beep/utils/Option";
 import { Console, Effect, FileSystem, flow, HashSet, Match, Order, Path, pipe } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { FilesCommandError, formatPlatformError } from "../Files.errors.js";
-import { FilesConcurrency } from "../Files.progress.js";
-import { ProcessFilesSummary } from "../Files.schemas.js";
+import { FilesCommandError, formatPlatformError } from "../Files.errors.ts";
+import { FilesConcurrency } from "../Files.progress.ts";
+import { ProcessFilesSummary } from "../Files.schemas.ts";
 import type {
   FileProcessingFailureRecord,
   SourceProcessingRecord,
@@ -59,7 +59,7 @@ import type { MimeType } from "@beep/schema/MimeType";
 import type { PosixPath } from "@beep/schema/PosixPath";
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { ProcessFilesOptions } from "../Files.schemas.js";
+import type { ProcessFilesOptions } from "../Files.schemas.ts";
 
 type FilesProcessRequirements =
   | FileSystem.FileSystem

@@ -10,7 +10,7 @@ import { TaggedErrorClass } from "@beep/schema";
 import { Result } from "effect";
 import { dual, pipe } from "effect/Function";
 import * as S from "effect/Schema";
-import * as EntityId from "./EntityId.js";
+import * as EntityId from "./EntityId.ts";
 
 const $I = $SharedDomainId.create("entity/EntityRef");
 const entityTypePattern = /^[A-Z][A-Za-z0-9]*$/u;

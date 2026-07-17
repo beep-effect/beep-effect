@@ -16,12 +16,12 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { DomainError } from "./errors/index.js";
-import { FsUtils } from "./FsUtils.js";
-import { decodePackageJsonEffect, PackageJson, readPackageJsonFile } from "./schemas/PackageJson.js";
+import { DomainError } from "./errors/index.ts";
+import { FsUtils } from "./FsUtils.ts";
+import { decodePackageJsonEffect, PackageJson, readPackageJsonFile } from "./schemas/PackageJson.ts";
 import type { FileSystem } from "effect";
-import type { NoSuchFileError } from "./errors/index.js";
-import type { Workspaces as PackageJsonWorkspaces } from "./schemas/PackageJson.js";
+import type { NoSuchFileError } from "./errors/index.ts";
+import type { Workspaces as PackageJsonWorkspaces } from "./schemas/PackageJson.ts";
 
 const $I = $RepoUtilsId.create("Workspaces");
 

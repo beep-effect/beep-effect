@@ -16,8 +16,8 @@ import { profilePhase } from "@beep/observability";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Console, Context, Effect, FileSystem, HashSet, Layer, Order, Path, pipe, Result } from "effect";
-import { printLines } from "../../internal/cli/Printer.js";
-import { FilesCommandError, failOnExtensionlessFile, formatPlatformError } from "./Files.errors.js";
+import { printLines } from "../../internal/cli/Printer.ts";
+import { FilesCommandError, failOnExtensionlessFile, formatPlatformError } from "./Files.errors.ts";
 import {
   assessImageCandidate,
   byNameAscending,
@@ -31,9 +31,9 @@ import {
   normalizeBareExtension,
   normalizeOutputDimensions,
   targetNameForEntry,
-} from "./Files.media.js";
-import { uniqueArchiveTargetName, uniqueNormalizeTargetName } from "./Files.plan.js";
-import { FilesConcurrency, runFilesProgressForEach } from "./Files.progress.js";
+} from "./Files.media.ts";
+import { uniqueArchiveTargetName, uniqueNormalizeTargetName } from "./Files.plan.ts";
+import { FilesConcurrency, runFilesProgressForEach } from "./Files.progress.ts";
 import {
   archivedEntries,
   countMovedSidecars,
@@ -48,7 +48,7 @@ import {
   renderDetectBordersReportJson,
   renderDetectFacesReportJson,
   writeDetectFacesManifest,
-} from "./Files.render.js";
+} from "./Files.render.ts";
 import {
   ArchivedSidecarEntry,
   ArchivePoorCandidatesEntry,
@@ -84,8 +84,8 @@ import {
   StripMetadataPlan,
   StripMetadataPlanEntry,
   StripMetadataSummary,
-} from "./Files.schemas.js";
-import { analyzeDetectBordersFile, analyzeDetectFacesFile } from "./internal/Analysis.js";
+} from "./Files.schemas.ts";
+import { analyzeDetectBordersFile, analyzeDetectFacesFile } from "./internal/Analysis.ts";
 import {
   applyArchivePoorCandidatesPlan,
   applyCreateCaptionFilesPlan,
@@ -97,9 +97,9 @@ import {
   preflightArchivePoorCandidatesOutputs,
   preflightNormalizeOutputs,
   preflightTargetCollisions,
-} from "./internal/Apply.js";
-import { isUnsafeMetadataVideoExtension, probeImageDimensions, probeMediaDimensions } from "./internal/MediaExec.js";
-import { processFilesImpl } from "./internal/Process.js";
+} from "./internal/Apply.ts";
+import { isUnsafeMetadataVideoExtension, probeImageDimensions, probeMediaDimensions } from "./internal/MediaExec.ts";
+import { processFilesImpl } from "./internal/Process.ts";
 import {
   parseSidecarExtensions,
   validateArchiveDirectories,
@@ -113,7 +113,7 @@ import {
   validateNormalizeDirectories,
   validateNormalizeMaxLongEdge,
   validatePrefix,
-} from "./internal/Validation.js";
+} from "./internal/Validation.ts";
 import type { Terminal } from "effect";
 import type * as Crypto from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
@@ -137,7 +137,7 @@ import type {
   ProcessFilesOptions,
   ProcessFilesSummary,
   SafeFilePrefix,
-} from "./Files.schemas.js";
+} from "./Files.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Files/Files.service");
 
