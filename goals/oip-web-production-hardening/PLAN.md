@@ -68,7 +68,7 @@ pulumi preview -s production --non-interactive --diff
 pulumi up -s production --yes --non-interactive
 bun run goals/oip-web-production-hardening/ops/migrate-oip-state-bucket.ts --delete-source --yes
 bun run goals/oip-web-production-hardening/ops/migrate-oip-state-bucket.ts --dry-run
-curl --cacert "$HOME/.portless/ca.pem" -I https://localhost:1355 -H 'Host: oip-web.localhost:1355'
+curl -sI -H "Host: oip-web.beep.localhost:1355" http://localhost:1355
 ```
 
 ## Closure Rules

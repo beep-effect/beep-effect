@@ -19,8 +19,8 @@ import { dual, thunkTrue } from "@beep/utils";
 
 const { metadata: siteMetadata } = oipSiteContent;
 const twitterHandle = oipTwitterHandle(oipSiteContent);
-const REACT_GRAB_VERSION = "0.1.37";
-const REACT_GRAB_INTEGRITY = "sha384-bu1FPBrtnXa6EIFQzS/zbLFeLLKPK06RmfHZYCTbWTXxXVjiIGvjdMjo/jDi+fVu";
+const REACT_GRAB_VERSION = "0.1.48";
+const REACT_GRAB_INTEGRITY = "sha384-6fIsuvxec6hC2tuREOwkhknBAwJIbXCIAdezU6+IIb/Iy/Ups0sKMh2Vh4O6AcBp";
 const configStringOptionSync = (name: string): O.Option<string> => Effect.runSync(Config.option(Config.string(name)));
 const configStringEqualsSync: {
   (name: string, expected: string): boolean;

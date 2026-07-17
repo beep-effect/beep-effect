@@ -23,8 +23,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { parse } from "jsonc-parser";
-import { Project, SyntaxKind } from "ts-morph";
-import ts from "typescript";
+import { Project, SyntaxKind, ts } from "ts-morph";
 import { describe, expect, it } from "vitest";
 
 const committedPolicyText = O.getOrElse(

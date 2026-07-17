@@ -10,9 +10,9 @@ story supersedes it as the living benchmark.
 
 ```sh
 # dev server (also registered as "graph3d-bench" in .claude/launch.json)
-node_modules/.bin/vite scratchpad/graph-3d-bench --port 5199 --strictPort
+portless graph3d-bench.beep sh -c 'node_modules/.bin/vite scratchpad/graph-3d-bench --host 127.0.0.1 --port "${PORT:-5199}" --strictPort'
 
-# interactive: open http://localhost:5199/?nodes=2500&edges=5000
+# interactive: open http://graph3d-bench.beep.localhost:1355/?nodes=2500&edges=5000
 # (buttons: 20s scripted benchmark / select hub / clear / destroy+double-remount)
 
 # headless with real GPU (system chromium via repo playwright):

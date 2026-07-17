@@ -38,21 +38,27 @@ Use this command for execution-capable sessions:
 
 | Milestone | Branch | Scope | Status |
 | --- | --- | --- | --- |
-| M1 | `feat/dock-capabilities-m1` | Kernel per-panel constraints; adapter tab overflow + drop quadrants; Storybook proofs | in progress |
-| M2 | `feat/ontology-workbench-split` | Zero-behavior region extraction in `@beep/ontology-ui`; Add-Triple atoms relocate; StrictMode-safe tree host | pending |
+| M1 | `feat/dock-capabilities-m1` | Kernel per-panel constraints; adapter tab overflow + drop quadrants; Storybook proofs | merged (PR #429) |
+| M2 | `feat/ontology-workbench-split` | Zero-behavior region extraction in `@beep/ontology-ui`; Add-Triple atoms relocate; StrictMode investigated | landed (this PR) |
 | M3 | `feat/ontology-dock-panels` | Nine panel renderers; Document panel; nav-rail panel menu; core-cluster default layout; snapshot key v2 | pending |
 | M4 | `chore/ontology-migration-qa` | Browser QA loop to green; QA-loop skill graduation; packet closeout | pending |
 
 ## Current Phase
 
-P1 (M1 dock capabilities) — codex drafts kernel + adapter capability code in
-the `ontology-dock-m1` worktree; Fable reviews; live-browser gesture pass
-before review sign-off.
+P3 (M3 shell integration) — next up: nine panel renderers, Document panel,
+nav-rail panel menu, core-cluster default layout, snapshot key v2, in
+`apps/professional-desktop`.
 
 ## Latest Evidence
 
-Packet opened 2026-07-17 from the post-closeout grill
-(predecessor: `goals/dock-substrate-landing`, closed via PR #427).
+M1 merged 2026-07-17 (PR #429: PanelConstraints + solver, tab-overflow
+dropdown, drop quadrants; Greptile 5/5, 25 checks green). M2 lands in this
+PR: nine region components extracted zero-behavior (both ontology suites +
+the chromium renderer-toggle screenshot test pass with zero test edits);
+Add-Triple atoms relocated to `@beep/ontology-client`. StrictMode finding:
+MUI X `useDisposable` detects StrictMode via the fiber's StrictEffects bit —
+no component-shaped wrapper can change that path, so no workaround was
+applied; the residual stands for M3's `SurfaceRetry` disposition.
 
 ## Notes
 

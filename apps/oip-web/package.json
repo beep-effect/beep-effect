@@ -14,8 +14,7 @@
   "scripts": {
     "audit": "bun run --if-present beep:audit",
     "codegen": "echo 'no codegen needed'",
-    "dev": "PORTLESS_HTTPS=1 NEXT_DISABLE_PWA=1 portless oip-web next dev --turbopack",
-    "dev:raw": "NEXT_DISABLE_PWA=1 next dev --turbopack",
+    "dev": "NEXT_DISABLE_PWA=1 portless oip-web.beep next dev --turbopack",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "NEXT_DISABLE_PWA=1 next build --turbopack",
     "build:pwa": "NEXT_DISABLE_PWA=0 next build --webpack",
