@@ -18,7 +18,7 @@ import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import { useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { makeOperation } from "./AdapterState.ts";
 import { boxStyle, compileDrop, positionOf, pressStartsOnButton } from "./DropCompiler.ts";
 import { ContentHost } from "./PanelHost.tsx";
@@ -155,18 +155,16 @@ const Tab = (props: {
   );
 };
 
-// fallow-ignore-next-line complexity
-export const GroupPane = (
+const TabStrip = (
   props: DockviewReactProps & {
     readonly groupId: GroupId;
     readonly state: AdapterState;
-    readonly box?: DockBox | undefined;
-    readonly floating?: boolean | undefined;
+    readonly tabs: TabsNode;
+    readonly floating: boolean;
+    readonly toggleMaximized: () => void;
+    readonly actions: React.ReactNode;
   }
 ) => {
-  const tabsOption = useAtomValue(props.graph.tabsAtom(props.groupId));
-  const boxOption = useAtomValue(props.state.geometry.groupBoxAtom(props.groupId));
-  const workspace = useAtomValue(props.graph.workspaceAtom);
   const submit = useAtomSet(props.graph.operationAtom);
   const overflowAtom = props.state.overflowAtom(props.groupId);
   const overflowOpenAtom = props.state.overflowOpenAtom(props.groupId);
@@ -179,36 +177,16 @@ export const GroupPane = (
   // stale value must not hide tabs before this mount has measured — so
   // hiding is gated on a per-mount freshness flag that measureStrip flips.
   const measuredThisMount = useRef(false);
-  const tabWidths = tabWidthsFor(props.state, props.groupId);
-  if (O.isNone(tabsOption) || (P.isUndefined(props.box) && O.isNone(boxOption))) return null;
-  const tabs = tabsOption.value;
-  const box = props.box ?? O.getOrThrow(boxOption);
+  const overflowRootRef = useRef<HTMLDivElement | null>(null);
+  const tabs = props.tabs;
   const panels = TabsNode.panels(tabs);
-  const hiddenPanels = Bool.match(measuredThisMount.current, {
-    onFalse: A.empty<Panel>,
-    onTrue: () =>
-      A.filter(
-        panels,
-        (panel) =>
-          Bool.not(PanelId.equals(panel.id, tabs.active.id)) &&
-          A.some(overflowed, (panelId) => PanelId.equals(panelId, panel.id))
-      ),
-  });
-  const maximized = DockWorkspace.guards.empty(workspace) ? O.none<GroupId>() : workspace.maximized;
-  const toggleMaximized = (): void =>
-    submit(
-      makeOperation(
-        O.exists(maximized, (groupId) => GroupId.equals(groupId, props.groupId))
-          ? RestoreMaximizedCommand.make()
-          : MaximizeGroupCommand.make({ groupId: props.groupId })
-      )
-    );
   const activateOverflow = (panel: Panel): void => {
     props.graph.registry.set(props.state.focusedGroupAtom, O.some(props.groupId));
     submit(makeOperation(ActivatePanelCommand.make({ panelId: panel.id })));
     setOverflowOpen(false);
   };
   const measureStrip = (node: HTMLDivElement, width: number): void => {
+    const tabWidths = tabWidthsFor(props.state, props.groupId);
     A.forEach(panels, (panel) => {
       const tab = node.querySelector<HTMLElement>(`[data-panel-id='${panel.id}']`);
       if (P.isNotNull(tab)) {
@@ -269,24 +247,63 @@ export const GroupPane = (
     measuredThisMount.current = true;
     if (firstMeasurement || Bool.not(panelIdsEqual(overflowed, nextOverflow))) setOverflowed(nextOverflow);
   };
-  const stripRef = (node: HTMLDivElement | null): (() => void) | undefined => {
+  // Stable ref + latest-closure pattern: the ResizeObserver must survive
+  // re-renders (a per-render callback ref would disconnect/reconnect it on
+  // every render, e.g. each dropdown toggle), while measurements must see the
+  // current panels/atom values — so the stable callback dispatches through a
+  // ref the effect refreshes each render.
+  const measureStripLatest = useRef(measureStrip);
+  useEffect(() => {
+    measureStripLatest.current = measureStrip;
+  });
+  const stripRef = useCallback((node: HTMLDivElement | null): (() => void) | undefined => {
     if (P.isNull(node)) return undefined;
     const observer = new ResizeObserver((entries) =>
-      O.map(A.head(entries), (entry) => measureStrip(node, entry.contentRect.width))
+      O.map(A.head(entries), (entry) => measureStripLatest.current(node, entry.contentRect.width))
     );
     observer.observe(node);
     const initialWidth = node.getBoundingClientRect().width;
-    if (N.isGreaterThan(initialWidth, 0)) measureStrip(node, initialWidth);
+    if (N.isGreaterThan(initialWidth, 0)) measureStripLatest.current(node, initialWidth);
     return () => observer.disconnect();
-  };
-  const strip = tabs.metadata.hideHeader ? null : (
+  }, []);
+  // ARIA menu semantics: an open dropdown dismisses on any pointer press
+  // outside its own subtree and on Escape.
+  useEffect(() => {
+    if (Bool.not(overflowOpen)) return undefined;
+    const press = (event: PointerEvent): void => {
+      const root = overflowRootRef.current;
+      if (P.isNotNull(root) && event.target instanceof Node && root.contains(event.target)) return;
+      setOverflowOpen(false);
+    };
+    const keydown = (event: KeyboardEvent): void => {
+      if (Eq.equals(event.key, "Escape")) setOverflowOpen(false);
+    };
+    document.addEventListener("pointerdown", press);
+    document.addEventListener("keydown", keydown);
+    return () => {
+      document.removeEventListener("pointerdown", press);
+      document.removeEventListener("keydown", keydown);
+    };
+  }, [overflowOpen, setOverflowOpen]);
+  const hiddenPanels = Bool.match(measuredThisMount.current, {
+    onFalse: A.empty<Panel>,
+    onTrue: () =>
+      A.filter(
+        panels,
+        (panel) =>
+          Bool.not(PanelId.equals(panel.id, tabs.active.id)) &&
+          A.some(overflowed, (panelId) => PanelId.equals(panelId, panel.id))
+      ),
+  });
+  return (
     <div
       ref={stripRef}
       role="tablist"
       data-dock-tab-strip=""
       style={{ display: "flex", minWidth: 0 }}
       onDoubleClick={(event) => {
-        if (P.not(Eq.equals(true))(props.floating) && Eq.equals(event.currentTarget, event.target)) toggleMaximized();
+        if (P.not(Eq.equals(true))(props.floating) && Eq.equals(event.currentTarget, event.target))
+          props.toggleMaximized();
       }}
     >
       {A.map(
@@ -307,7 +324,7 @@ export const GroupPane = (
       {A.match(hiddenPanels, {
         onEmpty: () => null,
         onNonEmpty: () => (
-          <div style={{ position: "relative", flex: "0 0 auto" }}>
+          <div ref={overflowRootRef} style={{ position: "relative", flex: "0 0 auto" }}>
             <button
               type="button"
               aria-label={`Show ${A.length(hiddenPanels)} overflowed tabs`}
@@ -338,43 +355,70 @@ export const GroupPane = (
           </div>
         ),
       })}
-      {P.not(Eq.equals(true))(props.floating) && (
-        <div data-dock-actions="" style={{ marginInlineStart: "auto", display: "inline-flex", gap: 2 }}>
-          <button
-            type="button"
-            aria-label={`Float group ${props.groupId}`}
-            onClick={() => {
-              // Cascade against the existing floating stack and cap to a
-              // useful viewport fraction, so a new float never fully occludes
-              // an earlier one's header.
-              const container = props.graph.registry.get(props.state.containerAtom);
-              const step = 32 * (workspace.floating.length % 6);
-              submit(
-                makeOperation(
-                  FloatGroupCommand.make({
-                    groupId: props.groupId,
-                    anchoredBox: TopLeftAnchoredBox.make({
-                      left: box.left + 24 + step,
-                      top: box.top + 24 + step,
-                      width: Math.min(Math.max(360, box.width - 48), Math.max(360, container.width * 0.55)),
-                      height: Math.min(Math.max(240, box.height - 48), Math.max(240, container.height * 0.6)),
-                    }),
-                  })
-                )
-              );
-            }}
-          >
-            Float
-          </button>
-          <button
-            type="button"
-            aria-label={`${O.isSome(maximized) ? "Restore" : "Maximize"} group ${props.groupId}`}
-            onClick={toggleMaximized}
-          >
-            {O.isSome(maximized) ? "Restore" : "Maximize"}
-          </button>
-        </div>
-      )}
+      {props.actions}
+    </div>
+  );
+};
+
+export const GroupPane = (
+  props: DockviewReactProps & {
+    readonly groupId: GroupId;
+    readonly state: AdapterState;
+    readonly box?: DockBox | undefined;
+    readonly floating?: boolean | undefined;
+  }
+) => {
+  const tabsOption = useAtomValue(props.graph.tabsAtom(props.groupId));
+  const boxOption = useAtomValue(props.state.geometry.groupBoxAtom(props.groupId));
+  const workspace = useAtomValue(props.graph.workspaceAtom);
+  const submit = useAtomSet(props.graph.operationAtom);
+  if (O.isNone(tabsOption) || (P.isUndefined(props.box) && O.isNone(boxOption))) return null;
+  const tabs = tabsOption.value;
+  const box = props.box ?? O.getOrThrow(boxOption);
+  const maximized = DockWorkspace.guards.empty(workspace) ? O.none<GroupId>() : workspace.maximized;
+  const toggleMaximized = (): void =>
+    submit(
+      makeOperation(
+        O.exists(maximized, (groupId) => GroupId.equals(groupId, props.groupId))
+          ? RestoreMaximizedCommand.make()
+          : MaximizeGroupCommand.make({ groupId: props.groupId })
+      )
+    );
+  const actions = P.not(Eq.equals(true))(props.floating) && (
+    <div data-dock-actions="" style={{ marginInlineStart: "auto", display: "inline-flex", gap: 2 }}>
+      <button
+        type="button"
+        aria-label={`Float group ${props.groupId}`}
+        onClick={() => {
+          // Cascade against the existing floating stack and cap to a
+          // useful viewport fraction, so a new float never fully occludes
+          // an earlier one's header.
+          const container = props.graph.registry.get(props.state.containerAtom);
+          const step = 32 * (workspace.floating.length % 6);
+          submit(
+            makeOperation(
+              FloatGroupCommand.make({
+                groupId: props.groupId,
+                anchoredBox: TopLeftAnchoredBox.make({
+                  left: box.left + 24 + step,
+                  top: box.top + 24 + step,
+                  width: Math.min(Math.max(360, box.width - 48), Math.max(360, container.width * 0.55)),
+                  height: Math.min(Math.max(240, box.height - 48), Math.max(240, container.height * 0.6)),
+                }),
+              })
+            )
+          );
+        }}
+      >
+        Float
+      </button>
+      <button
+        type="button"
+        aria-label={`${O.isSome(maximized) ? "Restore" : "Maximize"} group ${props.groupId}`}
+        onClick={toggleMaximized}
+      >
+        {O.isSome(maximized) ? "Restore" : "Maximize"}
+      </button>
     </div>
   );
   return (
@@ -389,7 +433,15 @@ export const GroupPane = (
         flexDirection: Eq.equals(tabs.metadata.headerPosition, "bottom") ? "column-reverse" : "column",
       }}
     >
-      {strip}
+      {tabs.metadata.hideHeader ? null : (
+        <TabStrip
+          {...props}
+          tabs={tabs}
+          floating={Eq.equals(props.floating, true)}
+          toggleMaximized={toggleMaximized}
+          actions={actions}
+        />
+      )}
       <ContentHost graph={props.graph} groupId={props.groupId} state={props.state} />
     </section>
   );
