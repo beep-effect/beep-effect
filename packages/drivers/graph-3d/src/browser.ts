@@ -14,4 +14,10 @@
  * @since 0.0.0
  */
 export * from "./Graph3D.renderer.js";
+/**
+ * Node-safe contracts re-exported for browser callers.
+ *
+ * @category projections
+ * @since 0.0.0
+ */
 export * from "./index.js";
