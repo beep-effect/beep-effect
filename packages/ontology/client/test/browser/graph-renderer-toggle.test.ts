@@ -20,9 +20,10 @@ import {
   OntologyGraphProjection,
   OntologyGraphProjectionStats,
 } from "@beep/ontology-use-cases/aggregates/Session";
+import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import { AtomRegistry } from "effect/unstable/reactivity";
-import { describe, expect, it } from "vitest";
 
 const node = (id: number, label: string) =>
   OntologyGraphNode.make({
@@ -94,74 +95,78 @@ const fixtureProjection = () => {
   });
 };
 
-const waitFor = async (predicate: () => boolean, timeoutMs = 20_000): Promise<void> => {
-  const start = performance.now();
-  while (!predicate()) {
-    if (performance.now() - start > timeoutMs) {
-      throw new Error("waitFor timed out");
+const waitFor = (label: string, predicate: () => boolean, timeoutMs = 20_000): Effect.Effect<void> =>
+  Effect.gen(function* () {
+    const start = performance.now();
+    while (!predicate()) {
+      if (performance.now() - start > timeoutMs) {
+        return yield* Effect.die(new Error(`waitFor timed out: ${label}`));
+      }
+      yield* Effect.sleep("100 millis");
     }
-    await new Promise((resolve) => setTimeout(resolve, 100));
-  }
-};
+  });
 
 describe("workbench graph renderer toggle", () => {
-  it("mounts cosmos by default, swaps to 3D and back, and keeps selection flowing", async () => {
-    const registry = AtomRegistry.make();
-    const container = document.createElement("div");
-    container.style.width = "800px";
-    container.style.height = "600px";
-    document.body.append(container);
+  it.live("mounts cosmos by default, swaps to 3D and back, and keeps selection flowing", () =>
+    Effect.gen(function* () {
+      const registry = AtomRegistry.make();
+      const container = document.createElement("div");
+      container.style.width = "800px";
+      container.style.height = "600px";
+      document.body.append(container);
 
-    // Atoms are lazy: values written by the bridge only persist while the atom
-    // is mounted, so the test mounts everything it reads — the same thing the
-    // workbench's useAtomValue subscriptions do.
-    const unsubscribers = [
-      registry.subscribe(ontologyGraphBackendAtom, () => undefined),
-      registry.subscribe(ontologyGraphErrorAtom, () => undefined),
-      registry.subscribe(ontologyGraphRenderBridgeAtom, () => undefined),
-    ];
-    // subscribing mounts lazily; reading forces the bridge body to run
-    registry.get(ontologyGraphRenderBridgeAtom);
+      // Atoms are lazy: values written by the bridge only persist while the
+      // atom is mounted, so the test mounts everything it reads — the same
+      // thing the workbench's useAtomValue subscriptions do.
+      const unsubscribers = [
+        registry.subscribe(ontologyGraphBackendAtom, () => undefined),
+        registry.subscribe(ontologyGraphErrorAtom, () => undefined),
+        registry.subscribe(ontologyGraphRenderBridgeAtom, () => undefined),
+      ];
+      // subscribing mounts lazily; reading forces the bridge body to run
+      registry.get(ontologyGraphRenderBridgeAtom);
 
-    registry.set(ontologyGraphContainerAtom, O.some(container));
-    registry.set(ontologyGraphProjectionAtom, O.some(fixtureProjection()));
+      registry.set(ontologyGraphContainerAtom, O.some(container));
+      registry.set(ontologyGraphProjectionAtom, O.some(fixtureProjection()));
 
-    // cosmos is the default renderer
-    await waitFor(
-      () => container.querySelectorAll("canvas").length > 0 || O.isSome(registry.get(ontologyGraphErrorAtom))
-    );
-    expect(registry.get(ontologyGraphErrorAtom)).toStrictEqual(O.none());
-    await waitFor(() => O.isSome(registry.get(ontologyGraphBackendAtom)));
-    expect(registry.get(ontologyGraphRendererAtom)).toBe("cosmos");
-    const cosmosCanvasCount = container.querySelectorAll("canvas").length;
-    expect(cosmosCanvasCount).toBeGreaterThan(0);
+      // cosmos is the default renderer
+      yield* waitFor(
+        "first canvas or error",
+        () => container.querySelectorAll("canvas").length > 0 || O.isSome(registry.get(ontologyGraphErrorAtom))
+      );
+      expect(registry.get(ontologyGraphErrorAtom)).toStrictEqual(O.none());
+      yield* waitFor("cosmos backend", () => O.isSome(registry.get(ontologyGraphBackendAtom)));
+      expect(registry.get(ontologyGraphRendererAtom)).toBe("cosmos");
+      const cosmosCanvasCount = container.querySelectorAll("canvas").length;
+      expect(cosmosCanvasCount).toBeGreaterThan(0);
 
-    // opt into the 3D renderer: cosmos unmounts (its canvases go away), the
-    // single 3D canvas mounts, and the cosmos backend badge source goes quiet
-    registry.set(ontologyGraphRendererAtom, "graph3d");
-    await waitFor(() => O.isNone(registry.get(ontologyGraphBackendAtom)));
-    await waitFor(() => container.querySelectorAll("canvas").length === 1);
-    expect(O.isNone(registry.get(ontologyGraphErrorAtom))).toBe(true);
+      // opt into the 3D renderer: cosmos unmounts (its canvases go away), the
+      // single 3D canvas mounts, and the cosmos backend badge source goes quiet
+      registry.set(ontologyGraphRendererAtom, "graph3d");
+      yield* waitFor("backend cleared", () => O.isNone(registry.get(ontologyGraphBackendAtom)));
+      yield* waitFor("single 3d canvas", () => container.querySelectorAll("canvas").length === 1);
+      expect(O.isNone(registry.get(ontologyGraphErrorAtom))).toBe(true);
 
-    // selection flows through the bridge into the mounted 3D renderer
-    registry.set(selectedOntologyResourceIriAtom, O.some("https://example.test/Pizza"));
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    expect(O.isNone(registry.get(ontologyGraphErrorAtom))).toBe(true);
+      // selection flows through the bridge into the mounted 3D renderer
+      registry.set(selectedOntologyResourceIriAtom, O.some("https://example.test/Pizza"));
+      yield* Effect.sleep("300 millis");
+      expect(O.isNone(registry.get(ontologyGraphErrorAtom))).toBe(true);
 
-    // a projection update while selected re-applies selection without errors
-    registry.set(ontologyGraphProjectionAtom, O.some(fixtureProjection()));
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    expect(O.isNone(registry.get(ontologyGraphErrorAtom))).toBe(true);
+      // a projection update while selected re-applies selection without errors
+      registry.set(ontologyGraphProjectionAtom, O.some(fixtureProjection()));
+      yield* Effect.sleep("300 millis");
+      expect(O.isNone(registry.get(ontologyGraphErrorAtom))).toBe(true);
 
-    // toggling back restores the cosmos default
-    registry.set(ontologyGraphRendererAtom, "cosmos");
-    await waitFor(() => O.isSome(registry.get(ontologyGraphBackendAtom)));
-    expect(container.querySelectorAll("canvas").length).toBeGreaterThan(0);
-    expect(O.isNone(registry.get(ontologyGraphErrorAtom))).toBe(true);
+      // toggling back restores the cosmos default
+      registry.set(ontologyGraphRendererAtom, "cosmos");
+      yield* waitFor("cosmos restored", () => O.isSome(registry.get(ontologyGraphBackendAtom)));
+      expect(container.querySelectorAll("canvas").length).toBeGreaterThan(0);
+      expect(O.isNone(registry.get(ontologyGraphErrorAtom))).toBe(true);
 
-    for (const unsubscribe of unsubscribers) {
-      unsubscribe();
-    }
-    container.remove();
-  });
+      for (const unsubscribe of unsubscribers) {
+        unsubscribe();
+      }
+      container.remove();
+    })
+  );
 });
