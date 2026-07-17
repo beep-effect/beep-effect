@@ -1272,19 +1272,171 @@ export const cosmosProjectionFromOntology = (projection: OntologyGraphProjection
     ...(projection.labelDetail === "hidden" ? {} : { labels: A.map(projection.nodes, (node) => node.label) }),
   });
 
-const graphAdjacency = (nodeCount: number, links: Float32Array): ReadonlyArray<ReadonlyArray<number>> => {
+const buildGraphAdjacency = (
+  nodeCount: number,
+  links: Float32Array,
+  includesEdge: (source: number, target: number) => boolean
+): Array<Array<number>> => {
   const adjacency = A.makeBy(nodeCount, (): Array<number> => []);
   let edgeOffset = 0;
 
   while (edgeOffset < links.length) {
     const source = links[edgeOffset] ?? -1;
     const target = links[edgeOffset + 1] ?? -1;
-    adjacency[source]?.push(target);
-    adjacency[target]?.push(source);
+    if (includesEdge(source, target)) {
+      adjacency[source]?.push(target);
+      adjacency[target]?.push(source);
+    }
     edgeOffset += 2;
   }
 
-  return A.map(adjacency, flow(A.sort(Order.Number), A.dedupe));
+  return adjacency;
+};
+
+const includesEveryGraphEdge = (_source: number, _target: number): boolean => true;
+
+const graphArrayValue = (values: ArrayLike<number>, index: number, fallback: number): number =>
+  values[index] ?? fallback;
+
+const graphNeighbors = (adjacency: ReadonlyArray<ReadonlyArray<number>>, node: number): ReadonlyArray<number> =>
+  adjacency[node] ?? [];
+
+const visitGraphNeighbor = (
+  node: number,
+  neighbor: number,
+  distances: Int32Array,
+  pathCounts: Float64Array,
+  predecessors: ReadonlyArray<Array<number>>,
+  queue: Array<number>
+): void => {
+  const nodeDistance = graphArrayValue(distances, node, 0);
+  if (graphArrayValue(distances, neighbor, -1) < 0) {
+    distances[neighbor] = nodeDistance + 1;
+    queue.push(neighbor);
+  }
+  if (graphArrayValue(distances, neighbor, -1) === nodeDistance + 1) {
+    pathCounts[neighbor] = graphArrayValue(pathCounts, neighbor, 0) + graphArrayValue(pathCounts, node, 0);
+    predecessors[neighbor]?.push(node);
+  }
+};
+
+const graphShortestPathsFromSource = (
+  source: number,
+  nodeCount: number,
+  adjacency: ReadonlyArray<ReadonlyArray<number>>
+): readonly [ReadonlyArray<ReadonlyArray<number>>, Float64Array<ArrayBuffer>, ReadonlyArray<number>] => {
+  const predecessors = A.makeBy(nodeCount, (): Array<number> => []);
+  const pathCounts = new Float64Array(nodeCount);
+  const distances = new Int32Array(nodeCount);
+  distances.fill(-1);
+  pathCounts[source] = 1;
+  distances[source] = 0;
+
+  const queue: Array<number> = [source];
+  const stack: Array<number> = [];
+  let queueIndex = 0;
+
+  while (queueIndex < queue.length) {
+    const node = graphArrayValue(queue, queueIndex, source);
+    queueIndex += 1;
+    stack.push(node);
+    const neighbors = graphNeighbors(adjacency, node);
+    let neighborIndex = 0;
+
+    while (neighborIndex < neighbors.length) {
+      const neighbor = graphArrayValue(neighbors, neighborIndex, node);
+      visitGraphNeighbor(node, neighbor, distances, pathCounts, predecessors, queue);
+      neighborIndex += 1;
+    }
+  }
+
+  return [predecessors, pathCounts, stack];
+};
+
+const graphDependencyCoefficient = (node: number, pathCounts: Float64Array, dependency: Float64Array): number => {
+  const nodePathCount = graphArrayValue(pathCounts, node, 0);
+  return nodePathCount === 0 ? 0 : (1 + graphArrayValue(dependency, node, 0)) / nodePathCount;
+};
+
+const accumulateGraphPredecessors = (
+  node: number,
+  predecessors: ReadonlyArray<ReadonlyArray<number>>,
+  pathCounts: Float64Array,
+  dependency: Float64Array,
+  coefficient: number
+): void => {
+  const nodePredecessors = graphNeighbors(predecessors, node);
+  let predecessorIndex = 0;
+
+  while (predecessorIndex < nodePredecessors.length) {
+    const predecessor = graphArrayValue(nodePredecessors, predecessorIndex, node);
+    dependency[predecessor] =
+      graphArrayValue(dependency, predecessor, 0) + graphArrayValue(pathCounts, predecessor, 0) * coefficient;
+    predecessorIndex += 1;
+  }
+};
+
+const accumulateGraphDependencyForNode = (
+  source: number,
+  node: number,
+  predecessors: ReadonlyArray<ReadonlyArray<number>>,
+  pathCounts: Float64Array,
+  dependency: Float64Array,
+  centrality: Float64Array
+): void => {
+  const coefficient = graphDependencyCoefficient(node, pathCounts, dependency);
+  accumulateGraphPredecessors(node, predecessors, pathCounts, dependency, coefficient);
+  if (node !== source) {
+    centrality[node] = graphArrayValue(centrality, node, 0) + graphArrayValue(dependency, node, 0);
+  }
+};
+
+const accumulateGraphDependencies = (
+  source: number,
+  nodeCount: number,
+  predecessors: ReadonlyArray<ReadonlyArray<number>>,
+  pathCounts: Float64Array,
+  stack: ReadonlyArray<number>,
+  centrality: Float64Array
+): void => {
+  const dependency = new Float64Array(nodeCount);
+  let stackIndex = stack.length - 1;
+
+  while (stackIndex >= 0) {
+    const node = graphArrayValue(stack, stackIndex, source);
+    accumulateGraphDependencyForNode(source, node, predecessors, pathCounts, dependency, centrality);
+    stackIndex -= 1;
+  }
+};
+
+const maximumGraphCentrality = (centrality: Float64Array): number => {
+  let maximum = 0;
+  let nodeIndex = 0;
+
+  while (nodeIndex < centrality.length) {
+    const value = centrality[nodeIndex] ?? 0;
+    if (value > maximum) {
+      maximum = value;
+    }
+    nodeIndex += 1;
+  }
+
+  return maximum;
+};
+
+const normalizeGraphCentrality = (centrality: Float64Array): Float32Array<ArrayBuffer> => {
+  const normalized = new Float32Array(centrality.length);
+  const maximum = maximumGraphCentrality(centrality);
+
+  if (maximum > 0) {
+    let nodeIndex = 0;
+    while (nodeIndex < centrality.length) {
+      normalized[nodeIndex] = (centrality[nodeIndex] ?? 0) / maximum;
+      nodeIndex += 1;
+    }
+  }
+
+  return normalized;
 };
 
 const graphBetweennessCentrality = (
@@ -1295,82 +1447,12 @@ const graphBetweennessCentrality = (
   let source = 0;
 
   while (source < nodeCount) {
-    const predecessors = A.makeBy(nodeCount, (): Array<number> => []);
-    const pathCounts = new Float64Array(nodeCount);
-    const distances = new Int32Array(nodeCount);
-    distances.fill(-1);
-    pathCounts[source] = 1;
-    distances[source] = 0;
-
-    const queue: Array<number> = [source];
-    const stack: Array<number> = [];
-    let queueIndex = 0;
-
-    while (queueIndex < queue.length) {
-      const node = queue[queueIndex] ?? source;
-      queueIndex += 1;
-      stack.push(node);
-      const neighbors = adjacency[node] ?? [];
-      let neighborIndex = 0;
-
-      while (neighborIndex < neighbors.length) {
-        const neighbor = neighbors[neighborIndex] ?? node;
-        if ((distances[neighbor] ?? -1) < 0) {
-          distances[neighbor] = (distances[node] ?? 0) + 1;
-          queue.push(neighbor);
-        }
-        if ((distances[neighbor] ?? -1) === (distances[node] ?? 0) + 1) {
-          pathCounts[neighbor] = (pathCounts[neighbor] ?? 0) + (pathCounts[node] ?? 0);
-          predecessors[neighbor]?.push(node);
-        }
-        neighborIndex += 1;
-      }
-    }
-
-    const dependency = new Float64Array(nodeCount);
-    let stackIndex = stack.length - 1;
-
-    while (stackIndex >= 0) {
-      const node = stack[stackIndex] ?? source;
-      const nodePathCount = pathCounts[node] ?? 0;
-      const coefficient = nodePathCount === 0 ? 0 : (1 + (dependency[node] ?? 0)) / nodePathCount;
-      const nodePredecessors = predecessors[node] ?? [];
-      let predecessorIndex = 0;
-
-      while (predecessorIndex < nodePredecessors.length) {
-        const predecessor = nodePredecessors[predecessorIndex] ?? node;
-        dependency[predecessor] = (dependency[predecessor] ?? 0) + (pathCounts[predecessor] ?? 0) * coefficient;
-        predecessorIndex += 1;
-      }
-      if (node !== source) {
-        centrality[node] = (centrality[node] ?? 0) + (dependency[node] ?? 0);
-      }
-      stackIndex -= 1;
-    }
-
+    const [predecessors, pathCounts, stack] = graphShortestPathsFromSource(source, nodeCount, adjacency);
+    accumulateGraphDependencies(source, nodeCount, predecessors, pathCounts, stack, centrality);
     source += 1;
   }
 
-  let maximum = 0;
-  let nodeIndex = 0;
-
-  while (nodeIndex < nodeCount) {
-    const value = centrality[nodeIndex] ?? 0;
-    if (value > maximum) {
-      maximum = value;
-    }
-    nodeIndex += 1;
-  }
-
-  const normalized = new Float32Array(nodeCount);
-  if (maximum > 0) {
-    nodeIndex = 0;
-    while (nodeIndex < nodeCount) {
-      normalized[nodeIndex] = (centrality[nodeIndex] ?? 0) / maximum;
-      nodeIndex += 1;
-    }
-  }
-  return normalized;
+  return normalizeGraphCentrality(centrality);
 };
 
 /**
@@ -1381,30 +1463,37 @@ const graphBetweennessCentrality = (
  */
 const communityArteryThreshold = 0.4;
 
-const graphCommunities = (
-  nodeCount: number,
-  links: Float32Array,
-  importance: Float32Array
-): Uint16Array<ArrayBuffer> => {
-  // One-shot Girvan–Newman on the betweenness channel we already compute:
-  // drop artery edges (min endpoint bc above the threshold), then color
-  // connected components. Deterministic; label propagation was rejected —
-  // synchronous updates two-color the tree-heavy ontology graphs and
-  // asynchronous updates flood through bridge nodes.
-  const adjacency: Array<Array<number>> = A.makeBy(nodeCount, (): Array<number> => []);
-  let edgeOffset = 0;
+const includesCommunityEdge = (importance: Float32Array, source: number, target: number): boolean =>
+  Math.min(importance[source] ?? 0, importance[target] ?? 0) <= communityArteryThreshold;
 
-  while (edgeOffset < links.length) {
-    const source = links[edgeOffset] ?? -1;
-    const target = links[edgeOffset + 1] ?? -1;
-    const bridgeScore = Math.min(importance[source] ?? 0, importance[target] ?? 0);
-    if (bridgeScore <= communityArteryThreshold) {
-      adjacency[source]?.push(target);
-      adjacency[target]?.push(source);
+const labelGraphComponent = (
+  seed: number,
+  componentId: number,
+  adjacency: ReadonlyArray<ReadonlyArray<number>>,
+  communities: Uint32Array,
+  queue: Array<number>
+): void => {
+  communities[seed] = componentId;
+  queue.length = 0;
+  queue.push(seed);
+  let queueIndex = 0;
+
+  while (queueIndex < queue.length) {
+    const current = queue[queueIndex] ?? seed;
+    queueIndex += 1;
+    for (const neighbor of adjacency[current] ?? []) {
+      if (communities[neighbor] === 0xffffffff) {
+        communities[neighbor] = componentId;
+        queue.push(neighbor);
+      }
     }
-    edgeOffset += 2;
   }
+};
 
+const labelGraphComponents = (
+  nodeCount: number,
+  adjacency: ReadonlyArray<ReadonlyArray<number>>
+): Uint32Array<ArrayBuffer> => {
   const communities = new Uint32Array(nodeCount).fill(0xffffffff);
   let componentId = 0;
   const queue: Array<number> = [];
@@ -1413,30 +1502,21 @@ const graphCommunities = (
     if (communities[seed] !== 0xffffffff) {
       continue;
     }
-    communities[seed] = componentId;
-    queue.length = 0;
-    queue.push(seed);
-    let queueIndex = 0;
-    while (queueIndex < queue.length) {
-      const current = queue[queueIndex] ?? seed;
-      queueIndex += 1;
-      for (const neighbor of adjacency[current] ?? []) {
-        if (communities[neighbor] === 0xffffffff) {
-          communities[neighbor] = componentId;
-          queue.push(neighbor);
-        }
-      }
-    }
+    labelGraphComponent(seed, componentId, adjacency, communities, queue);
     componentId += 1;
   }
 
-  const ordinals = new Uint16Array(nodeCount);
-  const ordinalByCommunity = new Uint16Array(nodeCount);
-  const seen = new Uint8Array(nodeCount);
+  return communities;
+};
+
+const compressCommunityOrdinals = (communities: Uint32Array): Uint16Array<ArrayBuffer> => {
+  const ordinals = new Uint16Array(communities.length);
+  const ordinalByCommunity = new Uint16Array(communities.length);
+  const seen = new Uint8Array(communities.length);
   let distinctCount = 0;
   let nodeIndex = 0;
 
-  while (nodeIndex < nodeCount) {
+  while (nodeIndex < communities.length) {
     const community = communities[nodeIndex] ?? nodeIndex;
     if ((seen[community] ?? 0) === 0) {
       seen[community] = 1;
@@ -1448,6 +1528,22 @@ const graphCommunities = (
   }
 
   return ordinals;
+};
+
+const graphCommunities = (
+  nodeCount: number,
+  links: Float32Array,
+  importance: Float32Array
+): Uint16Array<ArrayBuffer> => {
+  // One-shot Girvan–Newman on the betweenness channel we already compute:
+  // drop artery edges (min endpoint bc above the threshold), then color
+  // connected components. Deterministic; label propagation was rejected —
+  // synchronous updates two-color the tree-heavy ontology graphs and
+  // asynchronous updates flood through bridge nodes.
+  const adjacency = buildGraphAdjacency(nodeCount, links, (source, target) =>
+    includesCommunityEdge(importance, source, target)
+  );
+  return compressCommunityOrdinals(labelGraphComponents(nodeCount, adjacency));
 };
 
 let graph3dProjectionChannelCache: O.Option<
@@ -1462,7 +1558,10 @@ const graph3dProjectionChannels = (
     O.filter(([revision]) => revision === projection.revision),
     O.match({
       onNone: () => {
-        const adjacency = graphAdjacency(projection.nodeCount, projection.links);
+        const adjacency = pipe(
+          buildGraphAdjacency(projection.nodeCount, projection.links, includesEveryGraphEdge),
+          A.map(flow(A.sort(Order.Number), A.dedupe))
+        );
         const nodeImportance = graphBetweennessCentrality(projection.nodeCount, adjacency);
         const nodeCommunities = graphCommunities(projection.nodeCount, projection.links, nodeImportance);
         const edgeWeights = new Float32Array(projection.edgeCount);

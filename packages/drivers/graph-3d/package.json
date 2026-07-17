@@ -33,6 +33,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./browser": "./src/browser.ts",
+    "./react": "./src/react.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -50,6 +51,7 @@
     "exports": {
       ".": "./dist/index.js",
       "./browser": "./dist/browser.js",
+      "./react": "./dist/react.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }

@@ -87,43 +87,44 @@ export class Graph3DProjection extends S.Class<Graph3DProjection>($I`Graph3DProj
    *
    * @since 0.0.0
    */
-  static readonly hasCoherentBuffers = (projection: Graph3DProjection): boolean => {
-    if (
-      projection.nodeIds.length !== projection.nodeCount ||
-      projection.pointPositions.length !== projection.nodeCount * 3 ||
-      projection.nodeCommunities.length !== projection.nodeCount ||
-      projection.nodeImportance.length !== projection.nodeCount ||
-      projection.links.length !== projection.edgeCount * 2 ||
-      projection.edgeWeights.length !== projection.edgeCount ||
-      (projection.labels !== undefined && projection.labels.length !== projection.nodeCount)
-    ) {
+  static readonly hasCoherentBuffers = (projection: Graph3DProjection): boolean =>
+    hasCoherentBufferLengths(projection) && hasCoherentLinkIndices(projection);
+}
+
+const hasCoherentBufferLengths = (projection: Graph3DProjection): boolean =>
+  projection.nodeIds.length === projection.nodeCount &&
+  projection.pointPositions.length === projection.nodeCount * 3 &&
+  projection.nodeCommunities.length === projection.nodeCount &&
+  projection.nodeImportance.length === projection.nodeCount &&
+  projection.links.length === projection.edgeCount * 2 &&
+  projection.edgeWeights.length === projection.edgeCount &&
+  (projection.labels === undefined || projection.labels.length === projection.nodeCount);
+
+const isCoherentLinkPair = (source: number, target: number, nodeCount: number): boolean =>
+  Number.isInteger(source) &&
+  Number.isInteger(target) &&
+  source >= 0 &&
+  target >= 0 &&
+  source < nodeCount &&
+  target < nodeCount &&
+  source !== target;
+
+const hasCoherentLinkIndices = (projection: Graph3DProjection): boolean => {
+  let edgeIndex = 0;
+
+  while (edgeIndex < projection.edgeCount) {
+    const source = projection.links[edgeIndex * 2] ?? Number.NaN;
+    const target = projection.links[edgeIndex * 2 + 1] ?? Number.NaN;
+
+    if (!isCoherentLinkPair(source, target, projection.nodeCount)) {
       return false;
     }
 
-    let edgeIndex = 0;
+    edgeIndex += 1;
+  }
 
-    while (edgeIndex < projection.edgeCount) {
-      const source = projection.links[edgeIndex * 2] ?? Number.NaN;
-      const target = projection.links[edgeIndex * 2 + 1] ?? Number.NaN;
-
-      if (
-        !Number.isInteger(source) ||
-        !Number.isInteger(target) ||
-        source < 0 ||
-        target < 0 ||
-        source >= projection.nodeCount ||
-        target >= projection.nodeCount ||
-        source === target
-      ) {
-        return false;
-      }
-
-      edgeIndex += 1;
-    }
-
-    return true;
-  };
-}
+  return true;
+};
 
 /**
  * Options for deterministic synthetic 3D graph generation.

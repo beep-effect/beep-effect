@@ -4,6 +4,10 @@ import type { Plugin } from "vite";
 const repoRoot = new URL("../../..", import.meta.url).pathname;
 
 // Lexical 0.46 emits two prod bundles with a pure annotation before `return`.
+// The strip plugin is deliberately copied into each Vite composition root
+// (professional-desktop vite.config.ts is the other); a shared tooling package
+// for a two-site workaround is out of this packet's scope.
+// fallow-ignore-next-line code-duplication
 const lexicalReactProdModule =
   /node_modules[\\/]@lexical[\\/]react[\\/]dist[\\/]Lexical(ContentEditable|ErrorBoundary)\.prod\.mjs(?:\?.*)?$/;
 const misplacedPureAnnotationBeforeReturn = /\/\*#__PURE__\*\/\s*(?=return\b)/g;

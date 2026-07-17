@@ -464,9 +464,14 @@ dpr > 1 fill rate, WebKitGTK's GL stack vs ANGLE, sprite-label draw calls
 | Worker z + force layout + Brandes bc (`Session.visualizer.ts` + protocol) | one file focus | codex `--write`, Fable review |
 | `graph3dProjectionFromOntology` + bridge/toggle atoms + selection transaction | `Session.atoms.ts` | codex `--write`, Fable review |
 | Workbench toggle UI | `Session.workbench.tsx` | Fable |
+| React binding hooks (`react.ts` / `Graph3D.react.ts`, `@beep/graph-3d/react`) | mount + fps hooks shared by the story and the desktop spike | Fable |
 
 Storybook glob (`apps/storybook/.storybook/main.ts`) gains one driver entry
 (D2). Root catalog gains `@types/three` (D1). No other manifest changes.
+
+As-built addendum: the `./react` export was added at closeout when the fallow
+audit's duplication gate flagged the story and spike carrying identical mount
+and fps-sampling wrappers — the shared hook is the dedup, not new scope.
 
 ## §11. Conformance table
 

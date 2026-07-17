@@ -1,14 +1,12 @@
 import { Graph3DProjection, generateSyntheticGraph3DProjection, SyntheticGraph3DOptions } from "@beep/graph-3d";
-import { Graph3DRenderOptions, renderGraph3D } from "@beep/graph-3d/browser";
-import { Effect } from "effect";
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { Graph3DRenderHandle } from "@beep/graph-3d/browser";
+import { useGraph3DFps, useGraph3DHandle } from "@beep/graph-3d/react";
+import { useEffect, useMemo, useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 /**
- * Story-local mount wrapper around the imperative `renderGraph3D` handle. The
+ * Story wrapper over the driver's React hooks (`@beep/graph-3d/react`). The
  * driver itself is framework-free; the ontology client bridge owns mounting in
- * the product, and this wrapper plays that role for Storybook.
+ * the product, and the hooks play that role for Storybook.
  */
 interface Graph3DDemoProps {
   readonly communityCount: number;
@@ -67,10 +65,6 @@ const overlayStyle: React.CSSProperties = {
 };
 
 const Graph3DDemo = ({ nodeCount, edgeCount, communityCount, seed, selectHub, flatten }: Graph3DDemoProps) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [handle, setHandle] = useState<Graph3DRenderHandle | undefined>(undefined);
-  const [error, setError] = useState<string | undefined>(undefined);
-  const [fps, setFps] = useState(0);
   const [picked, setPicked] = useState<number | undefined>(undefined);
 
   const projection = useMemo(
@@ -80,43 +74,8 @@ const Graph3DDemo = ({ nodeCount, edgeCount, communityCount, seed, selectHub, fl
   );
   const flattened = useMemo(() => flattenProjection(projection), [projection]);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (container === null) {
-      return;
-    }
-    let cancelled = false;
-    let mounted: Graph3DRenderHandle | undefined;
-    setError(undefined);
-    void Effect.runPromise(
-      renderGraph3D(
-        container,
-        projection,
-        Graph3DRenderOptions.make({
-          onNodeSelect: (nodeIndex: number | undefined) => setPicked(nodeIndex),
-        })
-      )
-    ).then(
-      (next) => {
-        if (cancelled) {
-          next.destroy();
-          return;
-        }
-        mounted = next;
-        setHandle(next);
-      },
-      (cause: unknown) => {
-        if (!cancelled) {
-          setError(cause instanceof Error ? cause.message : String(cause));
-        }
-      }
-    );
-    return () => {
-      cancelled = true;
-      mounted?.destroy();
-      setHandle(undefined);
-    };
-  }, [projection]);
+  const { containerRef, handle, error } = useGraph3DHandle(projection, setPicked);
+  const fps = useGraph3DFps(handle);
 
   useEffect(() => {
     if (handle === undefined) {
@@ -127,23 +86,6 @@ const Graph3DDemo = ({ nodeCount, edgeCount, communityCount, seed, selectHub, fl
     // the same re-apply contract the ontology bridge follows.
     handle.select(selectHub ? hubIndex(projection) : undefined);
   }, [handle, flatten, flattened, projection, selectHub]);
-
-  useEffect(() => {
-    if (handle === undefined) {
-      return;
-    }
-    let frameId = 0;
-    let lastSample = 0;
-    const tick = (time: number): void => {
-      frameId = requestAnimationFrame(tick);
-      if (time - lastSample >= 500) {
-        lastSample = time;
-        setFps(handle.fps());
-      }
-    };
-    frameId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frameId);
-  }, [handle]);
 
   return (
     <div style={{ position: "relative", width: "100%", height: "80vh", minHeight: 480 }}>

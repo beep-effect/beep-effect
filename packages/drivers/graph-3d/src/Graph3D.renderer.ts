@@ -15,6 +15,7 @@ import { $Graph3dId } from "@beep/identity/packages";
 import { Fn, SchemaUtils } from "@beep/schema";
 import { O, P } from "@beep/utils";
 import { Effect, pipe } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { Graph3DDriverError } from "./Graph3D.errors.js";
 import { Graph3DProjection } from "./Graph3D.projection.js";
@@ -162,6 +163,9 @@ const smoothstep01 = (t: number): number => {
 /** Reference zoom damping: clamp((cameraDistance / 600)^0.65, 0.35, 3). */
 const zoomDamping = (cameraDistance: number): number => Math.min(3, Math.max(0.35, (cameraDistance / 600) ** 0.65));
 
+/** Reference global edge opacity: max(0.10, 0.95 - sqrt(edgeCount) / 100). */
+const globalEdgeOpacityFor = (edgeCount: number): number => Math.max(0.1, 0.95 - Math.sqrt(edgeCount) / 100);
+
 const probeWebGl2 = (): boolean =>
   pipe(
     O.fromUndefinedOr(globalThis.document),
@@ -279,6 +283,13 @@ interface LabelSlot {
   readonly texture: THREE.CanvasTexture;
 }
 
+interface EdgePaintTarget {
+  readonly communities: Uint16Array;
+  readonly edgeAlphas: Float32Array;
+  readonly edgeColors: Float32Array;
+  readonly links: Float32Array;
+}
+
 interface SceneGraph {
   readonly adjacency: ReadonlyArray<ReadonlyArray<number>>;
   readonly center: THREE.Vector3;
@@ -379,33 +390,23 @@ const mountRenderer = (
     slot.texture.needsUpdate = true;
   };
 
-  const buildSceneGraph = (projection: Graph3DProjection): SceneGraph => {
-    const nodeCount = projection.nodeCount;
-    const edgeCount = projection.edgeCount;
-    // Owned copies: the projection is caller data and must stay immutable
-    // across the handle's lifetime.
-    const positions = new Float32Array(projection.pointPositions);
-    const importance = new Float32Array(projection.nodeImportance);
-    const communities = new Uint16Array(projection.nodeCommunities);
-    const links = new Float32Array(projection.links);
-    const edgeWeights = new Float32Array(projection.edgeWeights);
-    const labels = P.isUndefined(projection.labels) ? [] : [...projection.labels];
+  // Community color + alpha rewrite for one edge ribbon, shared by the build
+  // pass and both selection paint paths.
+  const paintEdgeCommunity = (target: EdgePaintTarget, edge: number, alpha: number): void => {
+    const source = target.links[edge * 2]!;
+    tmpColor.setHex(COMMUNITY_PALETTE[target.communities[source]! % COMMUNITY_PALETTE.length]!);
+    target.edgeColors[edge * 3] = tmpColor.r;
+    target.edgeColors[edge * 3 + 1] = tmpColor.g;
+    target.edgeColors[edge * 3 + 2] = tmpColor.b;
+    target.edgeAlphas[edge] = alpha;
+  };
 
-    const adjacency: number[][] = Array.from({ length: nodeCount }, () => []);
-    for (let edge = 0; edge < edgeCount; edge += 1) {
-      const source = links[edge * 2]!;
-      const target = links[edge * 2 + 1]!;
-      adjacency[source]?.push(target);
-      adjacency[target]?.push(source);
-    }
-
-    const importanceOrder = new Uint32Array(nodeCount);
-    for (let index = 0; index < nodeCount; index += 1) {
-      importanceOrder[index] = index;
-    }
-    importanceOrder.sort((left, right) => importance[right]! - importance[left]! || left - right);
-
-    // nodes
+  const buildNodeLayer = (
+    nodeCount: number,
+    positions: Float32Array,
+    importance: Float32Array,
+    communities: Uint16Array
+  ) => {
     const nodeGeometry = new three.InstancedBufferGeometry();
     nodeGeometry.setAttribute(
       "corner",
@@ -438,8 +439,16 @@ const mountRenderer = (
     const nodeMesh = new three.Mesh(nodeGeometry, nodeMaterial);
     nodeMesh.frustumCulled = false;
     scene.add(nodeMesh);
+    return { nodeAlphas, nodeGeometry, nodeMaterial, nodeMesh };
+  };
 
-    // edges
+  const buildEdgeLayer = (
+    edgeCount: number,
+    positions: Float32Array,
+    links: Float32Array,
+    edgeWeights: Float32Array,
+    communities: Uint16Array
+  ) => {
     const segments = config.edgeSegments;
     const templateParams: number[] = [];
     for (let segment = 0; segment <= segments; segment += 1) {
@@ -461,16 +470,8 @@ const mountRenderer = (
     const edgeColors = new Float32Array(edgeCount * 3);
     const edgeAlphas = new Float32Array(edgeCount);
     const edgeWidths = new Float32Array(edgeCount);
-    const globalEdgeOpacity = Math.max(0.1, 0.95 - Math.sqrt(edgeCount) / 100);
-
-    const paintEdgeBase = (edge: number): void => {
-      const source = links[edge * 2]!;
-      tmpColor.setHex(COMMUNITY_PALETTE[communities[source]! % COMMUNITY_PALETTE.length]!);
-      edgeColors[edge * 3] = tmpColor.r;
-      edgeColors[edge * 3 + 1] = tmpColor.g;
-      edgeColors[edge * 3 + 2] = tmpColor.b;
-      edgeAlphas[edge] = (0.5 + 0.5 * edgeWeights[edge]!) * globalEdgeOpacity;
-    };
+    const globalEdgeOpacity = globalEdgeOpacityFor(edgeCount);
+    const paintTarget: EdgePaintTarget = { communities, edgeAlphas, edgeColors, links };
 
     for (let edge = 0; edge < edgeCount; edge += 1) {
       const source = links[edge * 2]!;
@@ -493,7 +494,7 @@ const mountRenderer = (
       p1[edge * 3] = vb.x;
       p1[edge * 3 + 1] = vb.y;
       p1[edge * 3 + 2] = vb.z;
-      paintEdgeBase(edge);
+      paintEdgeCommunity(paintTarget, edge, (0.5 + 0.5 * edgeWeights[edge]!) * globalEdgeOpacity);
       edgeWidths[edge] = config.edgeWidthBase + config.edgeWidthScale * edgeWeights[edge]! ** 1.2;
     }
 
@@ -514,54 +515,93 @@ const mountRenderer = (
     const edgeMesh = new three.Mesh(edgeGeometry, edgeMaterial);
     edgeMesh.frustumCulled = false;
     scene.add(edgeMesh);
+    return { edgeAlphas, edgeColors, edgeGeometry, edgeMaterial, edgeMesh };
+  };
 
-    // labels: fixed sprite pool, textures pre-rasterized for the top slots so
-    // the first frame carries no rasterization spike
-    const labelPool: LabelSlot[] = [];
-    if (labels.length > 0) {
-      for (let index = 0; index < config.labelPoolSize; index += 1) {
-        const canvas = document.createElement("canvas");
-        canvas.width = 512;
-        canvas.height = 128;
-        const texture = new three.CanvasTexture(canvas);
-        texture.colorSpace = three.SRGBColorSpace;
-        const material = new three.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
-        const sprite = new three.Sprite(material);
-        sprite.renderOrder = 1000;
-        sprite.visible = false;
-        scene.add(sprite);
-        const slot: LabelSlot = { sprite, canvas, texture, material, nodeIndex: -1, aspect: 4 };
-        const nodeIndex = importanceOrder[index];
-        if (P.isNotUndefined(nodeIndex) && P.isNotUndefined(labels[nodeIndex])) {
-          slot.nodeIndex = nodeIndex;
-          drawLabelText(slot, labels[nodeIndex]!);
-        }
-        labelPool.push(slot);
-      }
+  // Fixed sprite pool; textures for the top-importance slots are rasterized at
+  // build time so the first frame carries no rasterization spike.
+  const buildLabelPool = (labels: ReadonlyArray<string>, importanceOrder: Uint32Array): Array<LabelSlot> => {
+    const labelPool: Array<LabelSlot> = [];
+    if (labels.length === 0) {
+      return labelPool;
     }
+    for (let index = 0; index < config.labelPoolSize; index += 1) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 128;
+      const texture = new three.CanvasTexture(canvas);
+      texture.colorSpace = three.SRGBColorSpace;
+      const material = new three.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+      const sprite = new three.Sprite(material);
+      sprite.renderOrder = 1000;
+      sprite.visible = false;
+      scene.add(sprite);
+      const slot: LabelSlot = { sprite, canvas, texture, material, nodeIndex: -1, aspect: 4 };
+      const nodeIndex = importanceOrder[index];
+      if (P.isNotUndefined(nodeIndex) && P.isNotUndefined(labels[nodeIndex])) {
+        slot.nodeIndex = nodeIndex;
+        drawLabelText(slot, labels[nodeIndex]!);
+      }
+      labelPool.push(slot);
+    }
+    return labelPool;
+  };
 
-    // camera fit: frame the bounding sphere of the baked layout
+  // Camera fit: frame the bounding sphere of the baked layout.
+  const cameraFraming = (
+    positions: Float32Array,
+    nodeCount: number
+  ): { readonly center: THREE.Vector3; readonly fitDistance: number } => {
     const center = new three.Vector3();
-    let radius = 1;
     for (let index = 0; index < nodeCount; index += 1) {
       center.x += positions[index * 3]!;
       center.y += positions[index * 3 + 1]!;
       center.z += positions[index * 3 + 2]!;
     }
     center.divideScalar(Math.max(1, nodeCount));
+    let radius = 1;
     for (let index = 0; index < nodeCount; index += 1) {
       scratch.fromArray(positions, index * 3);
       radius = Math.max(radius, scratch.distanceTo(center));
     }
     const fitDistance = (radius * 1.2) / Math.tan(((config.cameraFov / 2) * Math.PI) / 180);
+    return { center, fitDistance };
+  };
+
+  const buildSceneGraph = (projection: Graph3DProjection): SceneGraph => {
+    const nodeCount = projection.nodeCount;
+    const edgeCount = projection.edgeCount;
+    // Owned copies: the projection is caller data and must stay immutable
+    // across the handle's lifetime.
+    const positions = new Float32Array(projection.pointPositions);
+    const importance = new Float32Array(projection.nodeImportance);
+    const communities = new Uint16Array(projection.nodeCommunities);
+    const links = new Float32Array(projection.links);
+    const edgeWeights = new Float32Array(projection.edgeWeights);
+    const labels = P.isUndefined(projection.labels) ? [] : [...projection.labels];
+
+    const adjacency = A.makeBy(nodeCount, (): Array<number> => []);
+    for (let edge = 0; edge < edgeCount; edge += 1) {
+      const source = links[edge * 2]!;
+      const target = links[edge * 2 + 1]!;
+      adjacency[source]?.push(target);
+      adjacency[target]?.push(source);
+    }
+
+    const importanceOrder = new Uint32Array(nodeCount);
+    for (let index = 0; index < nodeCount; index += 1) {
+      importanceOrder[index] = index;
+    }
+    importanceOrder.sort((left, right) => importance[right]! - importance[left]! || left - right);
+
+    const nodeLayer = buildNodeLayer(nodeCount, positions, importance, communities);
+    const edgeLayer = buildEdgeLayer(edgeCount, positions, links, edgeWeights, communities);
+    const labelPool = buildLabelPool(labels, importanceOrder);
+    const framing = cameraFraming(positions, nodeCount);
 
     return {
-      nodeGeometry,
-      nodeMaterial,
-      nodeMesh,
-      edgeGeometry,
-      edgeMaterial,
-      edgeMesh,
+      ...nodeLayer,
+      ...edgeLayer,
       labelPool,
       positions,
       importance,
@@ -569,13 +609,10 @@ const mountRenderer = (
       links,
       edgeWeights,
       labels,
-      nodeAlphas,
-      edgeColors,
-      edgeAlphas,
       adjacency,
       importanceOrder,
-      center,
-      fitDistance,
+      center: framing.center,
+      fitDistance: framing.fitDistance,
     };
   };
 
@@ -588,45 +625,48 @@ const mountRenderer = (
     controls.target.copy(sceneGraph.center);
   };
 
+  const paintClearedSelection = (current: SceneGraph): void => {
+    current.nodeAlphas.fill(1);
+    const globalEdgeOpacity = globalEdgeOpacityFor(current.edgeAlphas.length);
+    for (let edge = 0; edge < current.edgeAlphas.length; edge += 1) {
+      paintEdgeCommunity(current, edge, (0.5 + 0.5 * current.edgeWeights[edge]!) * globalEdgeOpacity);
+    }
+  };
+
+  const paintDimmedSelection = (current: SceneGraph, nodeIndex: number): void => {
+    // Uint8 membership mask over node indices: 1 = selected node or neighbor.
+    const neighborhood = new Uint8Array(current.nodeAlphas.length);
+    neighborhood[nodeIndex] = 1;
+    for (const neighbor of current.adjacency[nodeIndex] ?? []) {
+      neighborhood[neighbor] = 1;
+    }
+    for (let index = 0; index < current.nodeAlphas.length; index += 1) {
+      current.nodeAlphas[index] = neighborhood[index] === 1 ? 1 : config.dimmedNodeOpacity;
+    }
+    for (let edge = 0; edge < current.edgeAlphas.length; edge += 1) {
+      const source = current.links[edge * 2]!;
+      const target = current.links[edge * 2 + 1]!;
+      if (source === nodeIndex || target === nodeIndex) {
+        paintEdgeCommunity(current, edge, 1);
+      } else {
+        current.edgeColors[edge * 3] = DIMMED_EDGE_RGB;
+        current.edgeColors[edge * 3 + 1] = DIMMED_EDGE_RGB;
+        current.edgeColors[edge * 3 + 2] = DIMMED_EDGE_RGB;
+        current.edgeAlphas[edge] = config.dimmedEdgeOpacity;
+      }
+    }
+  };
+
   const applySelection = (nodeIndex: number | undefined): void => {
     if (P.isUndefined(sceneGraph)) {
       return;
     }
     selectedIndex = nodeIndex;
     const current = sceneGraph;
-    const edgeCount = current.edgeAlphas.length;
-    const globalEdgeOpacity = Math.max(0.1, 0.95 - Math.sqrt(edgeCount) / 100);
     if (P.isUndefined(nodeIndex)) {
-      current.nodeAlphas.fill(1);
-      for (let edge = 0; edge < edgeCount; edge += 1) {
-        const source = current.links[edge * 2]!;
-        tmpColor.setHex(COMMUNITY_PALETTE[current.communities[source]! % COMMUNITY_PALETTE.length]!);
-        current.edgeColors[edge * 3] = tmpColor.r;
-        current.edgeColors[edge * 3 + 1] = tmpColor.g;
-        current.edgeColors[edge * 3 + 2] = tmpColor.b;
-        current.edgeAlphas[edge] = (0.5 + 0.5 * current.edgeWeights[edge]!) * globalEdgeOpacity;
-      }
+      paintClearedSelection(current);
     } else {
-      const neighborhood = new Set<number>([nodeIndex, ...(current.adjacency[nodeIndex] ?? [])]);
-      for (let index = 0; index < current.nodeAlphas.length; index += 1) {
-        current.nodeAlphas[index] = neighborhood.has(index) ? 1 : config.dimmedNodeOpacity;
-      }
-      for (let edge = 0; edge < edgeCount; edge += 1) {
-        const source = current.links[edge * 2]!;
-        const target = current.links[edge * 2 + 1]!;
-        if (source === nodeIndex || target === nodeIndex) {
-          tmpColor.setHex(COMMUNITY_PALETTE[current.communities[source]! % COMMUNITY_PALETTE.length]!);
-          current.edgeColors[edge * 3] = tmpColor.r;
-          current.edgeColors[edge * 3 + 1] = tmpColor.g;
-          current.edgeColors[edge * 3 + 2] = tmpColor.b;
-          current.edgeAlphas[edge] = 1;
-        } else {
-          current.edgeColors[edge * 3] = DIMMED_EDGE_RGB;
-          current.edgeColors[edge * 3 + 1] = DIMMED_EDGE_RGB;
-          current.edgeColors[edge * 3 + 2] = DIMMED_EDGE_RGB;
-          current.edgeAlphas[edge] = config.dimmedEdgeOpacity;
-        }
-      }
+      paintDimmedSelection(current, nodeIndex);
     }
     (current.nodeGeometry.getAttribute("iAlpha") as THREE.InstancedBufferAttribute).needsUpdate = true;
     (current.edgeGeometry.getAttribute("iColor") as THREE.InstancedBufferAttribute).needsUpdate = true;

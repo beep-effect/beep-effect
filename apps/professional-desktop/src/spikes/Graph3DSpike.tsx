@@ -8,10 +8,8 @@
  * cosmos spike's flag pattern.
  */
 import { generateSyntheticGraph3DProjection, SyntheticGraph3DOptions } from "@beep/graph-3d";
-import { Graph3DRenderOptions, renderGraph3D } from "@beep/graph-3d/browser";
-import { Effect } from "effect";
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { Graph3DRenderHandle } from "@beep/graph-3d/browser";
+import { useGraph3DFps, useGraph3DHandle } from "@beep/graph-3d/react";
+import { useEffect, useMemo, useState } from "react";
 import type { JSX } from "react";
 
 const PRESETS = [
@@ -33,11 +31,7 @@ const heapMb = (): number | undefined => {
 };
 
 export function Graph3DSpike(): JSX.Element {
-  const containerRef = useRef<HTMLDivElement>(null);
   const [presetIndex, setPresetIndex] = useState(1);
-  const [handle, setHandle] = useState<Graph3DRenderHandle | undefined>(undefined);
-  const [error, setError] = useState<string | undefined>(undefined);
-  const [fps, setFps] = useState(0);
   const [stress, setStress] = useState<StressReport | undefined>(undefined);
   const preset = PRESETS[presetIndex] ?? PRESETS[1];
 
@@ -54,52 +48,12 @@ export function Graph3DSpike(): JSX.Element {
     [preset]
   );
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (container === null) {
-      return;
-    }
-    let cancelled = false;
-    let mounted: Graph3DRenderHandle | undefined;
-    setError(undefined);
-    setStress(undefined);
-    void Effect.runPromise(renderGraph3D(container, projection, Graph3DRenderOptions.make({}))).then(
-      (next) => {
-        if (cancelled) {
-          next.destroy();
-          return;
-        }
-        mounted = next;
-        setHandle(next);
-      },
-      (cause: unknown) => {
-        if (!cancelled) {
-          setError(cause instanceof Error ? cause.message : String(cause));
-        }
-      }
-    );
-    return () => {
-      cancelled = true;
-      mounted?.destroy();
-      setHandle(undefined);
-    };
-  }, [projection]);
+  const { containerRef, handle, error } = useGraph3DHandle(projection);
+  const fps = useGraph3DFps(handle);
 
+  // A remount (new handle) invalidates any stress report from the old one.
   useEffect(() => {
-    if (handle === undefined) {
-      return;
-    }
-    let frameId = 0;
-    let lastSample = 0;
-    const tick = (time: number): void => {
-      frameId = requestAnimationFrame(tick);
-      if (time - lastSample >= 500) {
-        lastSample = time;
-        setFps(handle.fps());
-      }
-    };
-    frameId = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frameId);
+    setStress(undefined);
   }, [handle]);
 
   // Stress pass: 20 full projection updates + select/clear rewrites, timed.

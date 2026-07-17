@@ -35,6 +35,7 @@
       "@beep/graph-3d/browser": [
         "../../packages/drivers/graph-3d/src/browser.ts"
       ],
+      "@beep/graph-3d/react": ["../../packages/drivers/graph-3d/src/react.ts"],
       "@beep/lexical-schema": [
         "../../packages/foundation/modeling/lexical/src/index.ts"
       ],

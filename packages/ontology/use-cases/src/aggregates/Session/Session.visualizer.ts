@@ -866,6 +866,196 @@ const CONTAINMENT_RADIUS = 420;
 const spatialCellKey = (x: number, y: number, z: number): string =>
   `${Math.floor(x / FORCE_RANGE)}:${Math.floor(y / FORCE_RANGE)}:${Math.floor(z / FORCE_RANGE)}`;
 
+const graphDegrees = (nodeCount: number, links: Float32Array): Float64Array<ArrayBuffer> => {
+  const degrees = new Float64Array(nodeCount);
+
+  for (let linkIndex = 0; linkIndex < links.length; linkIndex += 2) {
+    degrees[links[linkIndex]] += 1;
+    degrees[links[linkIndex + 1]] += 1;
+  }
+
+  return degrees;
+};
+
+const buildSpatialGrid = (
+  positions: Float64Array,
+  nodeCount: number
+): MutableHashMap.MutableHashMap<string, ReadonlyArray<number>> => {
+  const cells = MutableHashMap.empty<string, ReadonlyArray<number>>();
+
+  for (let index = 0; index < nodeCount; index += 1) {
+    const offset = index * 3;
+    const key = spatialCellKey(positions[offset], positions[offset + 1], positions[offset + 2]);
+    const occupants = pipe(MutableHashMap.get(cells, key), O.getOrElse(A.empty<number>));
+    MutableHashMap.set(cells, key, pipe(occupants, A.append(index)));
+  }
+
+  return cells;
+};
+
+const applyPairRepulsion = (
+  index: number,
+  neighbor: number,
+  alpha: number,
+  positions: Float64Array,
+  forces: Float64Array
+): void => {
+  if (neighbor <= index) {
+    return;
+  }
+
+  const offset = index * 3;
+  const neighborOffset = neighbor * 3;
+  let x = positions[offset] - positions[neighborOffset];
+  let y = positions[offset + 1] - positions[neighborOffset + 1];
+  let z = positions[offset + 2] - positions[neighborOffset + 2];
+  let distanceSquared = x * x + y * y + z * z;
+
+  if (distanceSquared < 0.000_001) {
+    const angle = (index + 1) * (neighbor + 1) * GOLDEN_ANGLE;
+    x = Math.cos(angle);
+    y = Math.sin(angle);
+    z = Math.sin(angle * 1.618_033_988_75);
+    distanceSquared = x * x + y * y + z * z;
+  }
+
+  if (distanceSquared > FORCE_RANGE * FORCE_RANGE) {
+    return;
+  }
+
+  const force = (-MANY_BODY_STRENGTH * alpha) / distanceSquared;
+  forces[offset] += x * force;
+  forces[offset + 1] += y * force;
+  forces[offset + 2] += z * force;
+  forces[neighborOffset] -= x * force;
+  forces[neighborOffset + 1] -= y * force;
+  forces[neighborOffset + 2] -= z * force;
+};
+
+const applyNeighborCellRepulsion = (
+  index: number,
+  alpha: number,
+  positions: Float64Array,
+  forces: Float64Array,
+  cells: MutableHashMap.MutableHashMap<string, ReadonlyArray<number>>
+): void => {
+  const offset = index * 3;
+  const cellX = Math.floor(positions[offset] / FORCE_RANGE);
+  const cellY = Math.floor(positions[offset + 1] / FORCE_RANGE);
+  const cellZ = Math.floor(positions[offset + 2] / FORCE_RANGE);
+
+  for (let deltaX = -1; deltaX <= 1; deltaX += 1) {
+    for (let deltaY = -1; deltaY <= 1; deltaY += 1) {
+      for (let deltaZ = -1; deltaZ <= 1; deltaZ += 1) {
+        const neighbors = pipe(
+          MutableHashMap.get(cells, `${cellX + deltaX}:${cellY + deltaY}:${cellZ + deltaZ}`),
+          O.getOrElse(A.empty<number>)
+        );
+
+        for (const neighbor of neighbors) {
+          applyPairRepulsion(index, neighbor, alpha, positions, forces);
+        }
+      }
+    }
+  }
+};
+
+const applyRepulsionForces = (
+  nodeCount: number,
+  alpha: number,
+  positions: Float64Array,
+  forces: Float64Array,
+  cells: MutableHashMap.MutableHashMap<string, ReadonlyArray<number>>
+): void => {
+  for (let index = 0; index < nodeCount; index += 1) {
+    applyNeighborCellRepulsion(index, alpha, positions, forces, cells);
+  }
+};
+
+const applySpringForces = (
+  alpha: number,
+  positions: Float64Array,
+  forces: Float64Array,
+  degrees: Float64Array,
+  links: Float32Array
+): void => {
+  for (let linkIndex = 0; linkIndex < links.length; linkIndex += 2) {
+    const source = links[linkIndex];
+    const target = links[linkIndex + 1];
+    const sourceOffset = source * 3;
+    const targetOffset = target * 3;
+    const x = positions[targetOffset] - positions[sourceOffset];
+    const y = positions[targetOffset + 1] - positions[sourceOffset + 1];
+    const z = positions[targetOffset + 2] - positions[sourceOffset + 2];
+    const distance = Math.sqrt(x * x + y * y + z * z) || 1;
+    const force = ((distance - LINK_REST_LENGTH) / distance) * LINK_STRENGTH * alpha;
+    const bias = degrees[source] / (degrees[source] + degrees[target]);
+
+    forces[sourceOffset] += x * force * (1 - bias);
+    forces[sourceOffset + 1] += y * force * (1 - bias);
+    forces[sourceOffset + 2] += z * force * (1 - bias);
+    forces[targetOffset] -= x * force * bias;
+    forces[targetOffset + 1] -= y * force * bias;
+    forces[targetOffset + 2] -= z * force * bias;
+  }
+};
+
+const integratePositions = (
+  nodeCount: number,
+  positions: Float64Array,
+  velocities: Float64Array,
+  forces: Float64Array
+): readonly [number, number, number] => {
+  let meanX = 0;
+  let meanY = 0;
+  let meanZ = 0;
+
+  for (let index = 0; index < nodeCount; index += 1) {
+    const offset = index * 3;
+    velocities[offset] = (velocities[offset] + forces[offset]) * VELOCITY_DAMPING;
+    velocities[offset + 1] = (velocities[offset + 1] + forces[offset + 1]) * VELOCITY_DAMPING;
+    velocities[offset + 2] = (velocities[offset + 2] + forces[offset + 2]) * VELOCITY_DAMPING;
+    positions[offset] += velocities[offset];
+    positions[offset + 1] += velocities[offset + 1];
+    positions[offset + 2] += velocities[offset + 2];
+    meanX += positions[offset];
+    meanY += positions[offset + 1];
+    meanZ += positions[offset + 2];
+  }
+
+  meanX /= nodeCount;
+  meanY /= nodeCount;
+  meanZ /= nodeCount;
+  return [meanX, meanY, meanZ];
+};
+
+const centerAndContainPositions = (
+  nodeCount: number,
+  positions: Float64Array,
+  meanX: number,
+  meanY: number,
+  meanZ: number
+): void => {
+  for (let index = 0; index < nodeCount; index += 1) {
+    const offset = index * 3;
+    positions[offset] -= meanX;
+    positions[offset + 1] -= meanY;
+    positions[offset + 2] -= meanZ;
+    const radius = Math.sqrt(
+      positions[offset] * positions[offset] +
+        positions[offset + 1] * positions[offset + 1] +
+        positions[offset + 2] * positions[offset + 2]
+    );
+
+    if (radius > CONTAINMENT_RADIUS) {
+      const factor = 1 - (0.05 * (radius - CONTAINMENT_RADIUS)) / radius;
+      positions[offset] *= factor;
+      positions[offset + 1] *= factor;
+      positions[offset + 2] *= factor;
+    }
+  }
+};
+
 /**
  * Relaxes copied xyz seeds with a deterministic, bounded 3D force simulation.
  *
@@ -882,136 +1072,18 @@ const relaxPositions = (seeds: Float64Array, links: Float32Array): Float64Array 
 
   const velocities = new Float64Array(positions.length);
   const forces = new Float64Array(positions.length);
-  const degrees = new Float64Array(nodeCount);
-
-  for (let linkIndex = 0; linkIndex < links.length; linkIndex += 2) {
-    degrees[links[linkIndex]] += 1;
-    degrees[links[linkIndex + 1]] += 1;
-  }
+  const degrees = graphDegrees(nodeCount, links);
 
   let alpha = 1;
   let tick = 0;
 
   while (alpha >= 0.02 && tick < 60) {
     forces.fill(0);
-    const cells = MutableHashMap.empty<string, ReadonlyArray<number>>();
-
-    for (let index = 0; index < nodeCount; index += 1) {
-      const offset = index * 3;
-      const key = spatialCellKey(positions[offset], positions[offset + 1], positions[offset + 2]);
-      const occupants = pipe(MutableHashMap.get(cells, key), O.getOrElse(A.empty<number>));
-      MutableHashMap.set(cells, key, pipe(occupants, A.append(index)));
-    }
-
-    for (let index = 0; index < nodeCount; index += 1) {
-      const offset = index * 3;
-      const cellX = Math.floor(positions[offset] / FORCE_RANGE);
-      const cellY = Math.floor(positions[offset + 1] / FORCE_RANGE);
-      const cellZ = Math.floor(positions[offset + 2] / FORCE_RANGE);
-
-      for (let deltaX = -1; deltaX <= 1; deltaX += 1) {
-        for (let deltaY = -1; deltaY <= 1; deltaY += 1) {
-          for (let deltaZ = -1; deltaZ <= 1; deltaZ += 1) {
-            const neighbors = pipe(
-              MutableHashMap.get(cells, `${cellX + deltaX}:${cellY + deltaY}:${cellZ + deltaZ}`),
-              O.getOrElse(A.empty<number>)
-            );
-
-            for (const neighbor of neighbors) {
-              if (neighbor <= index) {
-                continue;
-              }
-
-              const neighborOffset = neighbor * 3;
-              let x = positions[offset] - positions[neighborOffset];
-              let y = positions[offset + 1] - positions[neighborOffset + 1];
-              let z = positions[offset + 2] - positions[neighborOffset + 2];
-              let distanceSquared = x * x + y * y + z * z;
-
-              if (distanceSquared < 0.000_001) {
-                const angle = (index + 1) * (neighbor + 1) * GOLDEN_ANGLE;
-                x = Math.cos(angle);
-                y = Math.sin(angle);
-                z = Math.sin(angle * 1.618_033_988_75);
-                distanceSquared = x * x + y * y + z * z;
-              }
-
-              if (distanceSquared > FORCE_RANGE * FORCE_RANGE) {
-                continue;
-              }
-
-              const force = (-MANY_BODY_STRENGTH * alpha) / distanceSquared;
-              forces[offset] += x * force;
-              forces[offset + 1] += y * force;
-              forces[offset + 2] += z * force;
-              forces[neighborOffset] -= x * force;
-              forces[neighborOffset + 1] -= y * force;
-              forces[neighborOffset + 2] -= z * force;
-            }
-          }
-        }
-      }
-    }
-
-    for (let linkIndex = 0; linkIndex < links.length; linkIndex += 2) {
-      const source = links[linkIndex];
-      const target = links[linkIndex + 1];
-      const sourceOffset = source * 3;
-      const targetOffset = target * 3;
-      const x = positions[targetOffset] - positions[sourceOffset];
-      const y = positions[targetOffset + 1] - positions[sourceOffset + 1];
-      const z = positions[targetOffset + 2] - positions[sourceOffset + 2];
-      const distance = Math.sqrt(x * x + y * y + z * z) || 1;
-      const force = ((distance - LINK_REST_LENGTH) / distance) * LINK_STRENGTH * alpha;
-      const bias = degrees[source] / (degrees[source] + degrees[target]);
-
-      forces[sourceOffset] += x * force * (1 - bias);
-      forces[sourceOffset + 1] += y * force * (1 - bias);
-      forces[sourceOffset + 2] += z * force * (1 - bias);
-      forces[targetOffset] -= x * force * bias;
-      forces[targetOffset + 1] -= y * force * bias;
-      forces[targetOffset + 2] -= z * force * bias;
-    }
-
-    let meanX = 0;
-    let meanY = 0;
-    let meanZ = 0;
-
-    for (let index = 0; index < nodeCount; index += 1) {
-      const offset = index * 3;
-      velocities[offset] = (velocities[offset] + forces[offset]) * VELOCITY_DAMPING;
-      velocities[offset + 1] = (velocities[offset + 1] + forces[offset + 1]) * VELOCITY_DAMPING;
-      velocities[offset + 2] = (velocities[offset + 2] + forces[offset + 2]) * VELOCITY_DAMPING;
-      positions[offset] += velocities[offset];
-      positions[offset + 1] += velocities[offset + 1];
-      positions[offset + 2] += velocities[offset + 2];
-      meanX += positions[offset];
-      meanY += positions[offset + 1];
-      meanZ += positions[offset + 2];
-    }
-
-    meanX /= nodeCount;
-    meanY /= nodeCount;
-    meanZ /= nodeCount;
-
-    for (let index = 0; index < nodeCount; index += 1) {
-      const offset = index * 3;
-      positions[offset] -= meanX;
-      positions[offset + 1] -= meanY;
-      positions[offset + 2] -= meanZ;
-      const radius = Math.sqrt(
-        positions[offset] * positions[offset] +
-          positions[offset + 1] * positions[offset + 1] +
-          positions[offset + 2] * positions[offset + 2]
-      );
-
-      if (radius > CONTAINMENT_RADIUS) {
-        const factor = 1 - (0.05 * (radius - CONTAINMENT_RADIUS)) / radius;
-        positions[offset] *= factor;
-        positions[offset + 1] *= factor;
-        positions[offset + 2] *= factor;
-      }
-    }
+    const cells = buildSpatialGrid(positions, nodeCount);
+    applyRepulsionForces(nodeCount, alpha, positions, forces, cells);
+    applySpringForces(alpha, positions, forces, degrees, links);
+    const [meanX, meanY, meanZ] = integratePositions(nodeCount, positions, velocities, forces);
+    centerAndContainPositions(nodeCount, positions, meanX, meanY, meanZ);
 
     alpha *= 0.9;
     tick += 1;
@@ -1020,16 +1092,35 @@ const relaxPositions = (seeds: Float64Array, links: Float32Array): Float64Array 
   return positions;
 };
 
-const projectionFromRelationships = (
-  snapshot: OntologySnapshot,
-  relationships: ReadonlyArray<Relationship>,
-  options: OntologyGraphProjectionOptions,
-  previous: O.Option<OntologyGraphProjection>,
-  changedIris: ReadonlyArray<string>
-): OntologyGraphProjection => {
-  const resources = focusedResources(snapshot, options);
-  const visibleCount = resources.length;
-  const resourcesByIri = resourceByIri(resources);
+const relaxProjectedNodes = (
+  nodes: ReadonlyArray<OntologyGraphNode>,
+  edges: ReadonlyArray<OntologyGraphEdge>,
+  seedPositions3d: Float64Array,
+  links: Float32Array,
+  pointPositions: Float32Array,
+  pointDepths: Float32Array
+): Array<OntologyGraphNode> => {
+  const relaxedPositions =
+    nodes.length <= 10_000 && edges.length <= 30_000 ? relaxPositions(seedPositions3d, links) : seedPositions3d;
+
+  return A.map(nodes, (node, index) => {
+    const x = relaxedPositions[index * 3];
+    const y = relaxedPositions[index * 3 + 1];
+    pointPositions[index * 2] = x;
+    pointPositions[index * 2 + 1] = y;
+    pointDepths[index] = relaxedPositions[index * 3 + 2];
+
+    return OntologyGraphNode.make({
+      ...node,
+      x,
+      y,
+    });
+  });
+};
+
+const countResourceChildren = (
+  resources: ReadonlyArray<OntologyResourceSummary>
+): MutableHashMap.MutableHashMap<string, number> => {
   const childCounts = MutableHashMap.empty<string, number>();
 
   for (const resource of resources) {
@@ -1044,6 +1135,21 @@ const projectionFromRelationships = (
       );
     }
   }
+
+  return childCounts;
+};
+
+const projectionFromRelationships = (
+  snapshot: OntologySnapshot,
+  relationships: ReadonlyArray<Relationship>,
+  options: OntologyGraphProjectionOptions,
+  previous: O.Option<OntologyGraphProjection>,
+  changedIris: ReadonlyArray<string>
+): OntologyGraphProjection => {
+  const resources = focusedResources(snapshot, options);
+  const visibleCount = resources.length;
+  const resourcesByIri = resourceByIri(resources);
+  const childCounts = countResourceChildren(resources);
 
   const membersByNodeIri = MutableHashMap.empty<string, ReadonlyArray<OntologyResourceSummary>>();
   const nodeLabelByIri = MutableHashMap.empty<string, string>();
@@ -1212,22 +1318,7 @@ const projectionFromRelationships = (
     links[index * 2 + 1] = targetIndex;
   }
 
-  const relaxedPositions =
-    nodes.length <= 10_000 && edges.length <= 30_000 ? relaxPositions(seedPositions3d, links) : seedPositions3d;
-
-  nodes = A.map(nodes, (node, index) => {
-    const x = relaxedPositions[index * 3];
-    const y = relaxedPositions[index * 3 + 1];
-    pointPositions[index * 2] = x;
-    pointPositions[index * 2 + 1] = y;
-    pointDepths[index] = relaxedPositions[index * 3 + 2];
-
-    return OntologyGraphNode.make({
-      ...node,
-      x,
-      y,
-    });
-  });
+  nodes = relaxProjectedNodes(nodes, edges, seedPositions3d, links, pointPositions, pointDepths);
 
   const changedNodeIds = pipe(
     changedIris,
