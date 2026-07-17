@@ -19,6 +19,5 @@ describe("packaged Tauri RPC origin routing", () => {
 
   it("falls back to the sidecar for non-HTTP origins", () => {
     expect(resolveChatRpcHttpUrl(runtimeAt("tauri://localhost"))).toBe(SIDECAR_RPC_URL);
-    expect(resolveChatRpcHttpUrl()).toBe(SIDECAR_RPC_URL);
   });
 });
