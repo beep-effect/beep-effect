@@ -14,7 +14,7 @@ import { Float32Arr } from "@beep/schema/Float32Array";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A, O, Str } from "@beep/utils";
-import { MutableHashMap, MutableHashSet, Order, pipe } from "effect";
+import { Effect, MutableHashMap, MutableHashSet, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import {
@@ -382,6 +382,7 @@ export class OntologyGraphProjectionStats extends S.Class<OntologyGraphProjectio
  *   edgeIds: new Uint32Array([]),
  *   edgeKinds: new Uint8Array([]),
  *   pointPositions: new Float32Array([0, 0]),
+ *   pointDepths: new Float32Array([0]),
  *   links: new Float32Array([]),
  *   nodes: [],
  *   edges: [],
@@ -415,6 +416,10 @@ export class OntologyGraphProjection extends S.Class<OntologyGraphProjection>($I
     edgeIds: Uint32Arr,
     edgeKinds: S.Uint8Array,
     pointPositions: Float32Arr,
+    pointDepths: Float32Arr.pipe(S.withConstructorDefault(Effect.sync(() => new Float32Array()))).annotateKey({
+      description:
+        "Worker-populated node depths; the empty constructor default supports legacy hand-built fixtures only.",
+    }),
     links: Float32Arr,
     nodes: S.Array(OntologyGraphNode),
     edges: S.Array(OntologyGraphEdge),
@@ -763,27 +768,44 @@ const classificationForFolded = (members: ReadonlyArray<OntologyResourceSummary>
 
 const pinnedPositionMap = (
   previous: O.Option<OntologyGraphProjection>,
-  options: OntologyGraphProjectionOptions
-): MutableHashMap.MutableHashMap<string, readonly [number, number]> => {
-  const positions = MutableHashMap.empty<string, readonly [number, number]>();
-
-  for (const pinned of options.pinnedNodes) {
-    MutableHashMap.set(positions, pinned.iri, [pinned.x, pinned.y]);
-  }
+  options: OntologyGraphProjectionOptions,
+  nodeIris: ReadonlyArray<string>
+): MutableHashMap.MutableHashMap<string, readonly [number, number, number]> => {
+  const positions = MutableHashMap.empty<string, readonly [number, number, number]>();
+  const currentIndexByIri = MutableHashMap.fromIterable(A.map(nodeIris, (iri, index) => [iri, index]));
 
   pipe(
     previous,
     O.match({
       onNone: () => undefined,
       onSome: (projection) => {
-        for (const node of projection.nodes) {
-          if (!MutableHashMap.has(positions, node.iri)) {
-            MutableHashMap.set(positions, node.iri, [node.x, node.y]);
-          }
+        for (const [previousIndex, node] of projection.nodes.entries()) {
+          const currentIndex = pipe(
+            MutableHashMap.get(currentIndexByIri, node.iri),
+            O.getOrElse(() => previousIndex)
+          );
+          const z =
+            previousIndex < projection.pointDepths.length
+              ? projection.pointDepths[previousIndex]
+              : deterministicDepth(node.iri, currentIndex);
+          MutableHashMap.set(positions, node.iri, [node.x, node.y, z]);
         }
       },
     })
   );
+
+  for (const pinned of options.pinnedNodes) {
+    const currentIndex = pipe(
+      MutableHashMap.get(currentIndexByIri, pinned.iri),
+      O.getOrElse(() => 0)
+    );
+    const z = pipe(
+      MutableHashMap.get(positions, pinned.iri),
+      O.map((position) => position[2]),
+      O.getOrElse(() => deterministicDepth(pinned.iri, currentIndex))
+    );
+    MutableHashMap.set(positions, pinned.iri, [pinned.x, pinned.y, z]);
+  }
 
   return positions;
 };
@@ -818,6 +840,184 @@ const deterministicPosition = (iri: string, index: number): readonly [number, nu
   const angle = index * GOLDEN_ANGLE + ((hash % 64) - 32) / 512;
 
   return [radius * Math.cos(angle), radius * Math.sin(angle)];
+};
+
+/** Deterministic depth seed from a second hash-perturbed golden-angle series. */
+const deterministicDepth = (iri: string, index: number): number => {
+  const hash = hashText(iri);
+  const phase = ((hash % 1_024) / 1_024) * Math.PI * 2;
+
+  return 260 * Math.sin(index * GOLDEN_ANGLE * 1.618_033_988_75 + phase);
+};
+
+const deterministicPosition3d = (iri: string, index: number): readonly [number, number, number] => {
+  const [x, y] = deterministicPosition(iri, index);
+
+  return [x, y, deterministicDepth(iri, index)];
+};
+
+const FORCE_RANGE = 150;
+const MANY_BODY_STRENGTH = -60;
+const LINK_REST_LENGTH = 50;
+const LINK_STRENGTH = 0.1;
+const VELOCITY_DAMPING = 0.6;
+const CONTAINMENT_RADIUS = 420;
+
+const spatialCellKey = (x: number, y: number, z: number): string =>
+  `${Math.floor(x / FORCE_RANGE)}:${Math.floor(y / FORCE_RANGE)}:${Math.floor(z / FORCE_RANGE)}`;
+
+/**
+ * Relaxes copied xyz seeds with a deterministic, bounded 3D force simulation.
+ *
+ * All links use the 50-unit intra-community rest length because this projection
+ * does not carry the community signal required for the reference's 50/150 split.
+ */
+const relaxPositions = (seeds: Float64Array, links: Float32Array): Float64Array => {
+  const positions = new Float64Array(seeds);
+  const nodeCount = positions.length / 3;
+
+  if (nodeCount === 0) {
+    return positions;
+  }
+
+  const velocities = new Float64Array(positions.length);
+  const forces = new Float64Array(positions.length);
+  const degrees = new Float64Array(nodeCount);
+
+  for (let linkIndex = 0; linkIndex < links.length; linkIndex += 2) {
+    degrees[links[linkIndex]] += 1;
+    degrees[links[linkIndex + 1]] += 1;
+  }
+
+  let alpha = 1;
+  let tick = 0;
+
+  while (alpha >= 0.02 && tick < 60) {
+    forces.fill(0);
+    const cells = MutableHashMap.empty<string, ReadonlyArray<number>>();
+
+    for (let index = 0; index < nodeCount; index += 1) {
+      const offset = index * 3;
+      const key = spatialCellKey(positions[offset], positions[offset + 1], positions[offset + 2]);
+      const occupants = pipe(MutableHashMap.get(cells, key), O.getOrElse(A.empty<number>));
+      MutableHashMap.set(cells, key, pipe(occupants, A.append(index)));
+    }
+
+    for (let index = 0; index < nodeCount; index += 1) {
+      const offset = index * 3;
+      const cellX = Math.floor(positions[offset] / FORCE_RANGE);
+      const cellY = Math.floor(positions[offset + 1] / FORCE_RANGE);
+      const cellZ = Math.floor(positions[offset + 2] / FORCE_RANGE);
+
+      for (let deltaX = -1; deltaX <= 1; deltaX += 1) {
+        for (let deltaY = -1; deltaY <= 1; deltaY += 1) {
+          for (let deltaZ = -1; deltaZ <= 1; deltaZ += 1) {
+            const neighbors = pipe(
+              MutableHashMap.get(cells, `${cellX + deltaX}:${cellY + deltaY}:${cellZ + deltaZ}`),
+              O.getOrElse(A.empty<number>)
+            );
+
+            for (const neighbor of neighbors) {
+              if (neighbor <= index) {
+                continue;
+              }
+
+              const neighborOffset = neighbor * 3;
+              let x = positions[offset] - positions[neighborOffset];
+              let y = positions[offset + 1] - positions[neighborOffset + 1];
+              let z = positions[offset + 2] - positions[neighborOffset + 2];
+              let distanceSquared = x * x + y * y + z * z;
+
+              if (distanceSquared < 0.000_001) {
+                const angle = (index + 1) * (neighbor + 1) * GOLDEN_ANGLE;
+                x = Math.cos(angle);
+                y = Math.sin(angle);
+                z = Math.sin(angle * 1.618_033_988_75);
+                distanceSquared = x * x + y * y + z * z;
+              }
+
+              if (distanceSquared > FORCE_RANGE * FORCE_RANGE) {
+                continue;
+              }
+
+              const force = (-MANY_BODY_STRENGTH * alpha) / distanceSquared;
+              forces[offset] += x * force;
+              forces[offset + 1] += y * force;
+              forces[offset + 2] += z * force;
+              forces[neighborOffset] -= x * force;
+              forces[neighborOffset + 1] -= y * force;
+              forces[neighborOffset + 2] -= z * force;
+            }
+          }
+        }
+      }
+    }
+
+    for (let linkIndex = 0; linkIndex < links.length; linkIndex += 2) {
+      const source = links[linkIndex];
+      const target = links[linkIndex + 1];
+      const sourceOffset = source * 3;
+      const targetOffset = target * 3;
+      const x = positions[targetOffset] - positions[sourceOffset];
+      const y = positions[targetOffset + 1] - positions[sourceOffset + 1];
+      const z = positions[targetOffset + 2] - positions[sourceOffset + 2];
+      const distance = Math.sqrt(x * x + y * y + z * z) || 1;
+      const force = ((distance - LINK_REST_LENGTH) / distance) * LINK_STRENGTH * alpha;
+      const bias = degrees[source] / (degrees[source] + degrees[target]);
+
+      forces[sourceOffset] += x * force * (1 - bias);
+      forces[sourceOffset + 1] += y * force * (1 - bias);
+      forces[sourceOffset + 2] += z * force * (1 - bias);
+      forces[targetOffset] -= x * force * bias;
+      forces[targetOffset + 1] -= y * force * bias;
+      forces[targetOffset + 2] -= z * force * bias;
+    }
+
+    let meanX = 0;
+    let meanY = 0;
+    let meanZ = 0;
+
+    for (let index = 0; index < nodeCount; index += 1) {
+      const offset = index * 3;
+      velocities[offset] = (velocities[offset] + forces[offset]) * VELOCITY_DAMPING;
+      velocities[offset + 1] = (velocities[offset + 1] + forces[offset + 1]) * VELOCITY_DAMPING;
+      velocities[offset + 2] = (velocities[offset + 2] + forces[offset + 2]) * VELOCITY_DAMPING;
+      positions[offset] += velocities[offset];
+      positions[offset + 1] += velocities[offset + 1];
+      positions[offset + 2] += velocities[offset + 2];
+      meanX += positions[offset];
+      meanY += positions[offset + 1];
+      meanZ += positions[offset + 2];
+    }
+
+    meanX /= nodeCount;
+    meanY /= nodeCount;
+    meanZ /= nodeCount;
+
+    for (let index = 0; index < nodeCount; index += 1) {
+      const offset = index * 3;
+      positions[offset] -= meanX;
+      positions[offset + 1] -= meanY;
+      positions[offset + 2] -= meanZ;
+      const radius = Math.sqrt(
+        positions[offset] * positions[offset] +
+          positions[offset + 1] * positions[offset + 1] +
+          positions[offset + 2] * positions[offset + 2]
+      );
+
+      if (radius > CONTAINMENT_RADIUS) {
+        const factor = 1 - (0.05 * (radius - CONTAINMENT_RADIUS)) / radius;
+        positions[offset] *= factor;
+        positions[offset + 1] *= factor;
+        positions[offset + 2] *= factor;
+      }
+    }
+
+    alpha *= 0.9;
+    tick += 1;
+  }
+
+  return positions;
 };
 
 const projectionFromRelationships = (
@@ -885,8 +1085,9 @@ const projectionFromRelationships = (
   }
 
   const nodeIris = pipe(MutableHashMap.keys(membersByNodeIri), A.fromIterable, A.sort(Order.String));
-  const positions = pinnedPositionMap(previous, options);
-  const nodes = A.map(nodeIris, (iri, index) => {
+  const positions = pinnedPositionMap(previous, options, nodeIris);
+  const seedDepths = new Float64Array(nodeIris.length);
+  let nodes = A.map(nodeIris, (iri, index) => {
     const members = pipe(MutableHashMap.get(membersByNodeIri, iri), O.getOrElse(emptyResources));
     const first = pipe(
       A.head(members),
@@ -902,10 +1103,11 @@ const projectionFromRelationships = (
         })
       )
     );
-    const [x, y] = pipe(
+    const [x, y, z] = pipe(
       MutableHashMap.get(positions, iri),
-      O.getOrElse(() => deterministicPosition(iri, index))
+      O.getOrElse(() => deterministicPosition3d(iri, index))
     );
+    seedDepths[index] = z;
 
     return OntologyGraphNode.make({
       id: hashText(iri),
@@ -976,6 +1178,8 @@ const projectionFromRelationships = (
   const edgeIds = new Uint32Array(edges.length);
   const edgeKinds = new Uint8Array(edges.length);
   const pointPositions = new Float32Array(nodes.length * 2);
+  const pointDepths = new Float32Array(nodes.length);
+  const seedPositions3d = new Float64Array(nodes.length * 3);
   const links = new Float32Array(edges.length * 2);
 
   for (const [index, node] of nodes.entries()) {
@@ -984,6 +1188,10 @@ const projectionFromRelationships = (
     nodeFlags[index] = node.folded ? 1 : 0;
     pointPositions[index * 2] = node.x;
     pointPositions[index * 2 + 1] = node.y;
+    pointDepths[index] = seedDepths[index];
+    seedPositions3d[index * 3] = node.x;
+    seedPositions3d[index * 3 + 1] = node.y;
+    seedPositions3d[index * 3 + 2] = seedDepths[index];
   }
 
   for (const [index, edge] of edges.entries()) {
@@ -1003,6 +1211,23 @@ const projectionFromRelationships = (
     links[index * 2] = sourceIndex;
     links[index * 2 + 1] = targetIndex;
   }
+
+  const relaxedPositions =
+    nodes.length <= 10_000 && edges.length <= 30_000 ? relaxPositions(seedPositions3d, links) : seedPositions3d;
+
+  nodes = A.map(nodes, (node, index) => {
+    const x = relaxedPositions[index * 3];
+    const y = relaxedPositions[index * 3 + 1];
+    pointPositions[index * 2] = x;
+    pointPositions[index * 2 + 1] = y;
+    pointDepths[index] = relaxedPositions[index * 3 + 2];
+
+    return OntologyGraphNode.make({
+      ...node,
+      x,
+      y,
+    });
+  });
 
   const changedNodeIds = pipe(
     changedIris,
@@ -1033,6 +1258,7 @@ const projectionFromRelationships = (
     edgeIds,
     edgeKinds,
     pointPositions,
+    pointDepths,
     links,
     nodes,
     edges,
@@ -1123,6 +1349,7 @@ export const buildOntologyGraphProjection: {
  *     edgeIds: new Uint32Array([]),
  *     edgeKinds: new Uint8Array([]),
  *     pointPositions: new Float32Array([]),
+ *     pointDepths: new Float32Array([]),
  *     links: new Float32Array([]),
  *     nodes: [],
  *     edges: [],

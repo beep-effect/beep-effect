@@ -7,6 +7,7 @@
 
 import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client";
 import { CosmosGraphProjection, renderCosmosGraph } from "@beep/cosmos";
+import { Graph3DProjection, Graph3DRenderOptions, renderGraph3D } from "@beep/graph-3d/browser";
 import { $OntologyClientId } from "@beep/identity/packages";
 import {
   appendChange,
@@ -50,6 +51,7 @@ import { Cause, Duration, Effect, Fiber, flow, Order, pipe, Result, Semaphore } 
 import * as S from "effect/Schema";
 import { Atom, AtomRpc, Reactivity } from "effect/unstable/reactivity";
 import type { CosmosBackend, CosmosRenderHandle } from "@beep/cosmos";
+import type { Graph3DDriverError, Graph3DRenderHandle } from "@beep/graph-3d/browser";
 import type { SessionChangeDelta } from "@beep/ontology-domain/aggregates/Session";
 import type {
   ExportOntologyProvenanceResult,
@@ -763,6 +765,21 @@ export const ontologySearchQueryAtom = Atom.make("");
 export const selectedOntologyResourceIriAtom = Atom.make<O.Option<string>>(O.none());
 
 /**
+ * Workbench toggle selecting the 2D cosmos or 3D graph renderer.
+ *
+ * @example
+ * ```ts
+ * import { ontologyGraphRendererAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyGraphRendererAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyGraphRendererAtom = Atom.make<"cosmos" | "graph3d">("cosmos");
+
+/**
  * Latest worker graph projection, if one has completed.
  *
  * @example
@@ -1255,16 +1272,267 @@ export const cosmosProjectionFromOntology = (projection: OntologyGraphProjection
     ...(projection.labelDetail === "hidden" ? {} : { labels: A.map(projection.nodes, (node) => node.label) }),
   });
 
+const graphAdjacency = (nodeCount: number, links: Float32Array): ReadonlyArray<ReadonlyArray<number>> => {
+  const adjacency = A.makeBy(nodeCount, (): Array<number> => []);
+  let edgeOffset = 0;
+
+  while (edgeOffset < links.length) {
+    const source = links[edgeOffset] ?? -1;
+    const target = links[edgeOffset + 1] ?? -1;
+    adjacency[source]?.push(target);
+    adjacency[target]?.push(source);
+    edgeOffset += 2;
+  }
+
+  return A.map(adjacency, flow(A.sort(Order.Number), A.dedupe));
+};
+
+const graphBetweennessCentrality = (
+  nodeCount: number,
+  adjacency: ReadonlyArray<ReadonlyArray<number>>
+): Float32Array<ArrayBuffer> => {
+  const centrality = new Float64Array(nodeCount);
+  let source = 0;
+
+  while (source < nodeCount) {
+    const predecessors = A.makeBy(nodeCount, (): Array<number> => []);
+    const pathCounts = new Float64Array(nodeCount);
+    const distances = new Int32Array(nodeCount);
+    distances.fill(-1);
+    pathCounts[source] = 1;
+    distances[source] = 0;
+
+    const queue: Array<number> = [source];
+    const stack: Array<number> = [];
+    let queueIndex = 0;
+
+    while (queueIndex < queue.length) {
+      const node = queue[queueIndex] ?? source;
+      queueIndex += 1;
+      stack.push(node);
+      const neighbors = adjacency[node] ?? [];
+      let neighborIndex = 0;
+
+      while (neighborIndex < neighbors.length) {
+        const neighbor = neighbors[neighborIndex] ?? node;
+        if ((distances[neighbor] ?? -1) < 0) {
+          distances[neighbor] = (distances[node] ?? 0) + 1;
+          queue.push(neighbor);
+        }
+        if ((distances[neighbor] ?? -1) === (distances[node] ?? 0) + 1) {
+          pathCounts[neighbor] = (pathCounts[neighbor] ?? 0) + (pathCounts[node] ?? 0);
+          predecessors[neighbor]?.push(node);
+        }
+        neighborIndex += 1;
+      }
+    }
+
+    const dependency = new Float64Array(nodeCount);
+    let stackIndex = stack.length - 1;
+
+    while (stackIndex >= 0) {
+      const node = stack[stackIndex] ?? source;
+      const nodePathCount = pathCounts[node] ?? 0;
+      const coefficient = nodePathCount === 0 ? 0 : (1 + (dependency[node] ?? 0)) / nodePathCount;
+      const nodePredecessors = predecessors[node] ?? [];
+      let predecessorIndex = 0;
+
+      while (predecessorIndex < nodePredecessors.length) {
+        const predecessor = nodePredecessors[predecessorIndex] ?? node;
+        dependency[predecessor] = (dependency[predecessor] ?? 0) + (pathCounts[predecessor] ?? 0) * coefficient;
+        predecessorIndex += 1;
+      }
+      if (node !== source) {
+        centrality[node] = (centrality[node] ?? 0) + (dependency[node] ?? 0);
+      }
+      stackIndex -= 1;
+    }
+
+    source += 1;
+  }
+
+  let maximum = 0;
+  let nodeIndex = 0;
+
+  while (nodeIndex < nodeCount) {
+    const value = centrality[nodeIndex] ?? 0;
+    if (value > maximum) {
+      maximum = value;
+    }
+    nodeIndex += 1;
+  }
+
+  const normalized = new Float32Array(nodeCount);
+  if (maximum > 0) {
+    nodeIndex = 0;
+    while (nodeIndex < nodeCount) {
+      normalized[nodeIndex] = (centrality[nodeIndex] ?? 0) / maximum;
+      nodeIndex += 1;
+    }
+  }
+  return normalized;
+};
+
+const graphCommunities = (
+  nodeCount: number,
+  adjacency: ReadonlyArray<ReadonlyArray<number>>
+): Uint16Array<ArrayBuffer> => {
+  let communities = new Uint32Array(nodeCount);
+  let nodeIndex = 0;
+
+  while (nodeIndex < nodeCount) {
+    communities[nodeIndex] = nodeIndex;
+    nodeIndex += 1;
+  }
+
+  let iteration = 0;
+  while (iteration < 8) {
+    const next = new Uint32Array(communities);
+    const frequencies = new Uint32Array(nodeCount);
+    nodeIndex = 0;
+
+    while (nodeIndex < nodeCount) {
+      const neighbors = adjacency[nodeIndex] ?? [];
+      if (neighbors.length > 0) {
+        const touchedCommunities: Array<number> = [];
+        let bestCommunity = communities[nodeIndex] ?? nodeIndex;
+        let bestFrequency = 0;
+        let neighborIndex = 0;
+
+        while (neighborIndex < neighbors.length) {
+          const neighbor = neighbors[neighborIndex] ?? nodeIndex;
+          const community = communities[neighbor] ?? neighbor;
+          if ((frequencies[community] ?? 0) === 0) {
+            touchedCommunities.push(community);
+          }
+          const frequency = (frequencies[community] ?? 0) + 1;
+          frequencies[community] = frequency;
+          if (frequency > bestFrequency || (frequency === bestFrequency && community < bestCommunity)) {
+            bestCommunity = community;
+            bestFrequency = frequency;
+          }
+          neighborIndex += 1;
+        }
+        next[nodeIndex] = bestCommunity;
+
+        let touchedIndex = 0;
+        while (touchedIndex < touchedCommunities.length) {
+          frequencies[touchedCommunities[touchedIndex] ?? 0] = 0;
+          touchedIndex += 1;
+        }
+      }
+      nodeIndex += 1;
+    }
+
+    communities = next;
+    iteration += 1;
+  }
+
+  const ordinals = new Uint16Array(nodeCount);
+  const ordinalByCommunity = new Uint16Array(nodeCount);
+  const seen = new Uint8Array(nodeCount);
+  let distinctCount = 0;
+  nodeIndex = 0;
+
+  while (nodeIndex < nodeCount) {
+    const community = communities[nodeIndex] ?? nodeIndex;
+    if ((seen[community] ?? 0) === 0) {
+      seen[community] = 1;
+      ordinalByCommunity[community] = distinctCount % 65_535;
+      distinctCount += 1;
+    }
+    ordinals[nodeIndex] = ordinalByCommunity[community] ?? 0;
+    nodeIndex += 1;
+  }
+
+  return ordinals;
+};
+
+let graph3dProjectionChannelCache: O.Option<
+  readonly [number, Float32Array<ArrayBuffer>, Uint16Array<ArrayBuffer>, Float32Array<ArrayBuffer>]
+> = O.none();
+
+const graph3dProjectionChannels = (
+  projection: OntologyGraphProjection
+): readonly [Float32Array<ArrayBuffer>, Uint16Array<ArrayBuffer>, Float32Array<ArrayBuffer>] =>
+  pipe(
+    graph3dProjectionChannelCache,
+    O.filter(([revision]) => revision === projection.revision),
+    O.match({
+      onNone: () => {
+        const adjacency = graphAdjacency(projection.nodeCount, projection.links);
+        const nodeImportance = graphBetweennessCentrality(projection.nodeCount, adjacency);
+        const nodeCommunities = graphCommunities(projection.nodeCount, adjacency);
+        const edgeWeights = new Float32Array(projection.edgeCount);
+        let edgeIndex = 0;
+
+        while (edgeIndex < projection.edgeCount) {
+          const source = projection.links[edgeIndex * 2] ?? 0;
+          const target = projection.links[edgeIndex * 2 + 1] ?? 0;
+          edgeWeights[edgeIndex] = ((nodeImportance[source] ?? 0) + (nodeImportance[target] ?? 0)) / 2;
+          edgeIndex += 1;
+        }
+
+        graph3dProjectionChannelCache = O.some([projection.revision, nodeImportance, nodeCommunities, edgeWeights]);
+        return [nodeImportance, nodeCommunities, edgeWeights];
+      },
+      onSome: ([, nodeImportance, nodeCommunities, edgeWeights]) => [nodeImportance, nodeCommunities, edgeWeights],
+    })
+  );
+
+/**
+ * Maps an ontology worker projection into the deterministic 3D renderer contract.
+ *
+ * @example
+ * ```ts
+ * import { graph3dProjectionFromOntology } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(typeof graph3dProjectionFromOntology)
+ * ```
+ *
+ * @category adapters
+ * @since 0.0.0
+ */
+export const graph3dProjectionFromOntology = (projection: OntologyGraphProjection): Graph3DProjection => {
+  const pointDepths =
+    P.hasProperty(projection, "pointDepths") && projection.pointDepths instanceof Float32Array
+      ? projection.pointDepths
+      : new Float32Array(0);
+  const pointPositions = new Float32Array(projection.nodeCount * 3);
+  let nodeIndex = 0;
+
+  while (nodeIndex < projection.nodeCount) {
+    pointPositions[nodeIndex * 3] = projection.pointPositions[nodeIndex * 2] ?? 0;
+    pointPositions[nodeIndex * 3 + 1] = projection.pointPositions[nodeIndex * 2 + 1] ?? 0;
+    pointPositions[nodeIndex * 3 + 2] = pointDepths[nodeIndex] ?? 0;
+    nodeIndex += 1;
+  }
+
+  const [nodeImportance, nodeCommunities, edgeWeights] = graph3dProjectionChannels(projection);
+  return Graph3DProjection.make({
+    nodeCount: projection.nodeCount,
+    edgeCount: projection.edgeCount,
+    nodeIds: projection.nodeIds,
+    pointPositions,
+    links: projection.links,
+    nodeCommunities,
+    nodeImportance,
+    edgeWeights,
+    ...(projection.labelDetail === "hidden" ? {} : { labels: A.map(projection.nodes, (node) => node.label) }),
+  });
+};
+
 const renderRequestAtom = Atom.make((get) => ({
   container: get(ontologyGraphContainerAtom),
   projection: get(ontologyGraphProjectionAtom),
+  renderer: get(ontologyGraphRendererAtom),
 }));
 
 const graphRenderFailureMessage = (cause: unknown): string =>
   `The graph could not be drawn: ${cause instanceof Error ? cause.message : String(cause)}`;
 
 /**
- * Side-effect atom that mounts and updates the cosmos viewport.
+ * Side-effect atom that mounts and updates the selected graph viewport.
  *
  * @example
  * ```ts
@@ -1277,15 +1545,44 @@ const graphRenderFailureMessage = (cause: unknown): string =>
  * @since 0.0.0
  */
 export const ontologyGraphRenderBridgeAtom = Atom.make((get) => {
-  let handle: O.Option<CosmosRenderHandle> = O.none();
+  let cosmosHandle: O.Option<CosmosRenderHandle> = O.none();
+  let graph3dHandle: O.Option<Graph3DRenderHandle> = O.none();
+  let graph3dOntologyProjection: O.Option<OntologyGraphProjection> = O.none();
+  let activeRenderer: "cosmos" | "graph3d" = "cosmos";
   let renderToken = 0;
+
+  const selectedNodeIndex = (projection: OntologyGraphProjection, selectedIri: O.Option<string>): number | undefined =>
+    pipe(
+      selectedIri,
+      O.flatMap((iri) =>
+        pipe(
+          projection.nodes,
+          A.findFirstIndex((node) => node.iri === iri)
+        )
+      ),
+      O.getOrUndefined
+    );
+
+  const destroyMountedRenderers = (): void => {
+    pipe(cosmosHandle, O.match({ onNone: () => undefined, onSome: (mounted) => mounted.destroy() }));
+    pipe(graph3dHandle, O.match({ onNone: () => undefined, onSome: (mounted) => mounted.destroy() }));
+    cosmosHandle = O.none();
+    graph3dHandle = O.none();
+    graph3dOntologyProjection = O.none();
+  };
 
   get.subscribe(
     renderRequestAtom,
-    ({ container, projection }) => {
+    ({ container, projection, renderer }) => {
+      if (renderer !== activeRenderer) {
+        renderToken += 1;
+        destroyMountedRenderers();
+        activeRenderer = renderer;
+      }
+
       if (O.isNone(container) || O.isNone(projection)) {
-        pipe(handle, O.match({ onNone: () => undefined, onSome: (mounted) => mounted.destroy() }));
-        handle = O.none();
+        renderToken += 1;
+        destroyMountedRenderers();
         get.set(ontologyGraphBackendAtom, O.none());
         return;
       }
@@ -1294,10 +1591,72 @@ export const ontologyGraphRenderBridgeAtom = Atom.make((get) => {
       // claiming to be broken.
       get.set(ontologyGraphErrorAtom, O.none());
 
+      if (renderer === "graph3d") {
+        get.set(ontologyGraphBackendAtom, O.none());
+        const ontologyProjection = projection.value;
+        const graph3dProjection = graph3dProjectionFromOntology(ontologyProjection);
+        graph3dOntologyProjection = O.some(ontologyProjection);
+
+        pipe(
+          graph3dHandle,
+          O.match({
+            onNone: () => {
+              renderToken += 1;
+              const token = renderToken;
+              const options = Graph3DRenderOptions.make({
+                onNodeSelect: (nodeIndex: number | undefined) => {
+                  get.set(
+                    selectedOntologyResourceIriAtom,
+                    pipe(
+                      graph3dOntologyProjection,
+                      O.flatMap((currentProjection) =>
+                        P.isUndefined(nodeIndex)
+                          ? O.none()
+                          : pipe(
+                              currentProjection.nodes,
+                              A.get(nodeIndex),
+                              O.map((node) => node.iri)
+                            )
+                      )
+                    )
+                  );
+                },
+                onRuntimeError: (error: Graph3DDriverError) => {
+                  get.set(ontologyGraphErrorAtom, O.some(graphRenderFailureMessage(error)));
+                },
+              });
+              void Effect.runPromise(renderGraph3D(container.value, graph3dProjection, options)).then(
+                (mounted) => {
+                  if (token !== renderToken) {
+                    mounted.destroy();
+                    return;
+                  }
+                  graph3dHandle = O.some(mounted);
+                  mounted.select(selectedNodeIndex(ontologyProjection, get(selectedOntologyResourceIriAtom)));
+                },
+                (cause: unknown) => {
+                  if (token === renderToken) {
+                    graph3dHandle = O.none();
+                    graph3dOntologyProjection = O.none();
+                    get.set(ontologyGraphBackendAtom, O.none());
+                    get.set(ontologyGraphErrorAtom, O.some(graphRenderFailureMessage(cause)));
+                  }
+                }
+              );
+            },
+            onSome: (mounted) => {
+              mounted.update(graph3dProjection);
+              mounted.select(selectedNodeIndex(ontologyProjection, get(selectedOntologyResourceIriAtom)));
+            },
+          })
+        );
+        return;
+      }
+
       const cosmosProjection = cosmosProjectionFromOntology(projection.value);
 
       pipe(
-        handle,
+        cosmosHandle,
         O.match({
           onNone: () => {
             renderToken += 1;
@@ -1308,12 +1667,12 @@ export const ontologyGraphRenderBridgeAtom = Atom.make((get) => {
                   mounted.destroy();
                   return;
                 }
-                handle = O.some(mounted);
+                cosmosHandle = O.some(mounted);
                 get.set(ontologyGraphBackendAtom, O.some(mounted.backend));
               },
               (cause: unknown) => {
                 if (token === renderToken) {
-                  handle = O.none();
+                  cosmosHandle = O.none();
                   get.set(ontologyGraphBackendAtom, O.none());
                   // The renderer's failure used to be dropped on the floor: the
                   // backend went back to `none`, the badge read "pending", and the
@@ -1331,9 +1690,30 @@ export const ontologyGraphRenderBridgeAtom = Atom.make((get) => {
     { immediate: true }
   );
 
+  get.subscribe(
+    selectedOntologyResourceIriAtom,
+    (selectedIri) => {
+      pipe(
+        graph3dHandle,
+        O.match({
+          onNone: () => undefined,
+          onSome: (mounted) =>
+            pipe(
+              graph3dOntologyProjection,
+              O.match({
+                onNone: () => mounted.select(undefined),
+                onSome: (projection) => mounted.select(selectedNodeIndex(projection, selectedIri)),
+              })
+            ),
+        })
+      );
+    },
+    { immediate: true }
+  );
+
   get.addFinalizer(() => {
     renderToken += 1;
-    pipe(handle, O.match({ onNone: () => undefined, onSome: (mounted) => mounted.destroy() }));
+    destroyMountedRenderers();
   });
 });
 
