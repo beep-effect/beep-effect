@@ -105,14 +105,20 @@ export const formatJson = (value: unknown): string => {
  * @category formatting
  * @since 0.0.0
  */
-export const normalizeJson = (targetId: string, value: unknown): Effect.Effect<S.Json, SyncDataToTsError> =>
-  pipe(
-    value,
-    encodeUnknownJsonResult,
-    Result.flatMap(decodeJsonTextResult),
-    Effect.fromResult,
-    SyncDataToTsError.mapError(`Failed to normalize canonical JSON for ${targetId}`, targetId)
-  );
+export const normalizeJson: {
+  (value: unknown): (targetId: string) => Effect.Effect<S.Json, SyncDataToTsError>;
+  (targetId: string, value: unknown): Effect.Effect<S.Json, SyncDataToTsError>;
+} = dual(
+  2,
+  (targetId: string, value: unknown): Effect.Effect<S.Json, SyncDataToTsError> =>
+    pipe(
+      value,
+      encodeUnknownJsonResult,
+      Result.flatMap(decodeJsonTextResult),
+      Effect.fromResult,
+      SyncDataToTsError.mapError(`Failed to normalize canonical JSON for ${targetId}`, targetId)
+    )
+);
 
 /**
  * Pretty-print a JSON-compatible value as a TypeScript literal.
