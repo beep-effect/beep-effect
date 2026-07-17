@@ -59,7 +59,6 @@
       "Bash(gh issue create:*)",
       "Bash(gh run rerun:*)",
       "Bash(gh run watch:*)",
-      "Bash(gh api graphql:*)",
       "Bash(gh api repos/*)",
       "Bash(rm -rf .beep/fallow)",
       "Bash(bunx commitlint:*)",
