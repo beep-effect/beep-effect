@@ -2,15 +2,14 @@
 
 ## Status
 
-Status: `pending` (graduated 2026-07-14 from
-`explorations/graph-3d-navigation`; P0 not started)
+Status: `in-progress` (P0 completed 2026-07-16; P1 underway)
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Design gate | pending | Consume `research/`; decide stack + placement + label technique + layout location + interaction model + theming + toggle UX, with a 2.5k benchmark. | `research/DESIGN.md` answers all gate decisions with cited evidence + benchmark. |
-| P1 Generic component | pending | Build the 3D renderer + labels + interactions on synthetic data; Storybook + FPS probe + browser test. | Storybook 2.5k story shows six behaviors; FPS recorded; `@vitest/browser` test green. |
+| P0 Design gate | completed 2026-07-16 | Consume `research/`; decide stack + placement + label technique + layout location + interaction model + theming + toggle UX, with a 2.5k benchmark. | `research/DESIGN.md` answers all gate decisions with cited evidence + benchmark. Done: DESIGN.md v2 (post codex adversarial review, `research/DESIGN-REVIEW.md`); benchmark committed at `scratchpad/graph-3d-bench/`. |
+| P1 Generic component | in-progress | Build the 3D renderer + labels + interactions on synthetic data; Storybook + FPS probe + browser test. | Storybook 2.5k story shows six behaviors; FPS recorded; `@vitest/browser` test green. |
 | P2 Workbench integration | pending | Add z to the projection/worker; parallel 3D bridge + toggle; workbench toggle UI; QA. | Toggle switches cosmos↔3D (cosmos default); selection syncs; cosmos regression empty. |
 | P3 Close | pending | PR to mergeable via yeet; closeout reflection. | Packet status/evidence updated; reflection exists; PR mergeable. |
 

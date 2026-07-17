@@ -39,17 +39,21 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Design gate — not started. Next action: run the design gate (Fable) over
-`research/` and emit `research/DESIGN.md` with a 2.5k-node benchmark, deciding
-stack, placement, label technique, layout location, interaction model, theming,
-and toggle UX.
+P1 Generic component — in progress. P0 design gate completed 2026-07-16:
+[`research/DESIGN.md`](./research/DESIGN.md) (v2, revised against the codex
+adversarial critique in [`research/DESIGN-REVIEW.md`](./research/DESIGN-REVIEW.md))
+decides stack (custom instanced three.js driver, `@beep/graph-3d` with
+`/browser` subpath), placement, projection contract, worker force layout +
+Brandes betweenness, canvas-sprite labels, selection transaction, fixed dark
+grammar, and toggle UX.
 
 ## Latest Evidence
 
-Not started. Research corpus complete and adversarially verified
-(`research/VERIFICATION.md`); graduated from
-[`explorations/graph-3d-navigation`](../../explorations/graph-3d-navigation/README.md)
-on 2026-07-14.
+P0 benchmark (2026-07-16, committed at `scratchpad/graph-3d-bench/`): 2,500
+nodes at 59.3–60.0 avg fps (vsync-capped, headless Chromium, unmasked AMD
+R9700) at both 5,000 and 12,500 edges; pick ≤2.2 ms; full attribute rewrite
+2.5–14 ms; clean destroy + double-remount. Dev-machine result — the WebKitGTK
+run at P2 remains the acceptance gate.
 
 ## Notes
 

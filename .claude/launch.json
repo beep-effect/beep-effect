@@ -7,6 +7,17 @@
       "runtimeArgs": ["run", "--cwd", "apps/oip-web", "dev:raw"],
       "port": 3000,
       "autoPort": true
+    },
+    {
+      "name": "graph3d-bench",
+      "runtimeExecutable": "node_modules/.bin/vite",
+      "runtimeArgs": [
+        "scratchpad/graph-3d-bench",
+        "--port",
+        "5199",
+        "--strictPort"
+      ],
+      "port": 5199
     }
   ]
 }

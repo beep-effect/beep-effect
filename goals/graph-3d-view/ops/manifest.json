@@ -5,7 +5,7 @@
     "title": "Graph 3D View — InfraNodus-style 3D knowledge-graph on our stack",
     "status": "active",
     "created": "2026-07-14",
-    "updated": "2026-07-14",
+    "updated": "2026-07-16",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/graph-3d-view",
@@ -13,7 +13,7 @@
   "mission": "Ship an InfraNodus-style React 3D knowledge-graph renderer (community colors, betweenness-proportional distance-faded labels, curved edges, selection dimming) on the cosmos/ontology stack, integrated into the ontology workbench behind a 2D/3D toggle with cosmos 2D default, at ~2,500 interactive nodes.",
   "executionCapable": true,
   "reflectionRequired": true,
-  "statusNote": "Graduated 2026-07-14 from explorations/graph-3d-navigation; research corpus complete + verified. P0 design gate not yet started (next action). Awaiting a design-gate session.",
+  "statusNote": "P0 design gate completed 2026-07-16: research/DESIGN.md (v2, post codex adversarial review in research/DESIGN-REVIEW.md) decides all seven gate questions with a 2.5k benchmark (scratchpad/graph-3d-bench, 59-60fps vsync-capped at 2,500 nodes / 5,000-12,500 edges). P1 generic component in progress.",
   "provenance": {
     "exploration": "explorations/graph-3d-navigation",
     "graduated": "2026-07-14"
@@ -57,12 +57,12 @@
     {
       "id": "P0",
       "name": "Design gate",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "P1",
       "name": "Generic 3D component",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
