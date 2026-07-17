@@ -1545,7 +1545,9 @@
       ],
       "@beep/pretext": ["./packages/drivers/pretext/src/index.ts"],
       "@beep/pretext/browser": ["./packages/drivers/pretext/src/browser.ts"],
-      "@beep/dock": ["./packages/foundation/ui-system/dock/src/index.ts"]
+      "@beep/dock": ["./packages/foundation/ui-system/dock/src/index.ts"],
+      "@beep/graph-3d": ["./packages/drivers/graph-3d/src/index.ts"],
+      "@beep/graph-3d/browser": ["./packages/drivers/graph-3d/src/browser.ts"]
     }
   }
 }

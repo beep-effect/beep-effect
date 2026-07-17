@@ -137,6 +137,7 @@
     "@types/picomatch": "^4.0.3",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/three": "^0.185.1",
     "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^8.63.0",
     "@typescript-eslint/parser": "^8.63.0",
@@ -503,6 +504,7 @@
     "packages/drivers/pacer",
     "packages/drivers/protobuf",
     "packages/drivers/tailscale",
-    "packages/drivers/pretext"
+    "packages/drivers/pretext",
+    "packages/drivers/graph-3d"
   ]
 }

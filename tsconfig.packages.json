@@ -124,6 +124,9 @@
       "path": "packages/drivers/govinfo"
     },
     {
+      "path": "packages/drivers/graph-3d"
+    },
+    {
       "path": "packages/drivers/hubspot"
     },
     {

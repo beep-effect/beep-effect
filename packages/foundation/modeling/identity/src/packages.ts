@@ -174,7 +174,8 @@ const generatedComposers = $I.compose(
   "doc-text",
   "documents-tables",
   "tailscale",
-  "agents-tables"
+  "agents-tables",
+  "graph-3d"
 );
 
 const composers = {
@@ -1899,6 +1900,22 @@ export const $N3Id: Identity.IdentityComposer<"@beep/n3"> = composers.$N3Id;
  * @category configuration
  */
 export const $PretextId: Identity.IdentityComposer<"@beep/pretext"> = composers.$PretextId;
+
+/**
+ * Identity composer for `@beep/graph-3d`.
+ *
+ * @example
+ * ```typescript
+ * import { $Graph3dId } from "@beep/identity"
+ *
+ * const id = $Graph3dId.make("Graph3D")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $Graph3dId: Identity.IdentityComposer<"@beep/graph-3d"> = composers.$Graph3dId;
 
 /**
  * Identity composer for `@beep/dock`.
