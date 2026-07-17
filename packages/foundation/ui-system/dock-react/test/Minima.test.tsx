@@ -91,11 +91,14 @@ describe("dock title minima", { concurrent: false }, () => {
     })
   );
 
-  it.effect("keeps proportional geometry when fixture capture fails", () =>
+  it.effect("clamps geometry with estimated title minima when capture fails", () =>
     Effect.gen(function* () {
       const graph = yield* mount("wyvern", { titleMinima });
       yield* graph.awaitIdle;
-      yield* Effect.promise(() => waitFor(() => expect(width()).toBe(16)));
+      // Capture failure no longer collapses to unclamped proportional (16px
+      // here): the synchronous estimate holds the floor — "wyvern" is 6 chars
+      // at the 7px estimate with zero default chrome, so 42px.
+      yield* Effect.promise(() => waitFor(() => expect(width()).toBe(42)));
       graph.dispose();
     })
   );

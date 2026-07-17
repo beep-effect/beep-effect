@@ -17,7 +17,7 @@ import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { makeOperation } from "./AdapterState.ts";
-import { boxStyle, compileDrop, positionOf } from "./DropCompiler.ts";
+import { boxStyle, compileDrop, positionOf, pressStartsOnButton } from "./DropCompiler.ts";
 import { ContentHost } from "./PanelHost.tsx";
 import type { DockBox, Panel } from "@beep/dock";
 import type React from "react";
@@ -71,7 +71,7 @@ const Tab = (props: {
       event.preventDefault();
     };
     const down = (event: PointerEvent): void => {
-      if (P.not(Eq.equals(0))(event.button)) return;
+      if (P.not(Eq.equals(0))(event.button) || pressStartsOnButton(event)) return;
       node.setPointerCapture?.(event.pointerId);
       props.graph.registry.set(
         props.state.dragAtom,
@@ -127,6 +127,10 @@ const Tab = (props: {
       <button
         type="button"
         aria-label={`Close ${props.panel.title}`}
+        // Real pointers: without this the tab's drag compiler captures the
+        // pointer on pointerdown and the button's click never fires (jsdom
+        // stubs capture, so only a live browser exposes it).
+        onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => {
           event.stopPropagation();
           close();
@@ -183,25 +187,30 @@ export const GroupPane = (
         />
       ))}
       {P.not(Eq.equals(true))(props.floating) && (
-        <>
+        <div data-dock-actions="" style={{ marginInlineStart: "auto", display: "inline-flex", gap: 2 }}>
           <button
             type="button"
             aria-label={`Float group ${props.groupId}`}
-            onClick={() =>
+            onClick={() => {
+              // Cascade against the existing floating stack and cap to a
+              // useful viewport fraction, so a new float never fully occludes
+              // an earlier one's header.
+              const container = props.graph.registry.get(props.state.containerAtom);
+              const step = 32 * (workspace.floating.length % 6);
               submit(
                 makeOperation(
                   FloatGroupCommand.make({
                     groupId: props.groupId,
                     anchoredBox: TopLeftAnchoredBox.make({
-                      left: box.left + 24,
-                      top: box.top + 24,
-                      width: Math.max(32, box.width - 48),
-                      height: Math.max(32, box.height - 48),
+                      left: box.left + 24 + step,
+                      top: box.top + 24 + step,
+                      width: Math.min(Math.max(360, box.width - 48), Math.max(360, container.width * 0.55)),
+                      height: Math.min(Math.max(240, box.height - 48), Math.max(240, container.height * 0.6)),
                     }),
                   })
                 )
-              )
-            }
+              );
+            }}
           >
             Float
           </button>
@@ -212,7 +221,7 @@ export const GroupPane = (
           >
             {O.isSome(maximized) ? "Restore" : "Maximize"}
           </button>
-        </>
+        </div>
       )}
     </div>
   );

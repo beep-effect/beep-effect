@@ -27,11 +27,24 @@ sequencing). Provenance: `explorations/computable-workspace-geometry`
 | Milestone | Branch | Writer | State |
 |---|---|---|---|
 | M1 `@beep/dock` kernel package | `feat/dock-package` | codex | merged (PR #416) |
-| M2 `@beep/dock-react` + scratchpad retirement | `feat/dock-react-package` | codex | landed (this PR) |
-| M3 desktop dock shell | `feat/desktop-dock-shell` | Fable | pending |
+| M2 `@beep/dock-react` + scratchpad retirement | `feat/dock-react-package` | codex | PR #421 (awaiting merge) |
+| M3 desktop dock shell | `feat/desktop-dock-shell` | Fable | landed (this PR) |
 | M4 QA-to-green + close | (fix lanes as needed) | codex QA | pending |
 
 ## Latest evidence
+
+- 2026-07-17 — M3 landed on `feat/desktop-dock-shell`: the professional-desktop
+  shell is a dock workspace. Hash routing retired; Home/Chat/Ontology/Vault
+  sync are keep-alive panels (`renderMode: "always"`) in one group, chat
+  active by default; nav and Home cards dispatch ActivatePanel/OpenPanel;
+  layout persists via a `DockSnapshotStore` over localStorage
+  (`desktop:dock-workspace:v1`) with debounced saves, boot restore, and
+  poisoned-key fallback to the validated default. Two-registry design: app
+  atoms stay in the root RegistryProvider, dock atoms in the graph registry
+  (`useDockAtom` bridge; panels re-enter the app registry). Dock chrome
+  restyled with app theme tokens. App suite 74/74 green (4 new dock-shell
+  tests incl. keep-alive and snapshot round-trip); vite production build
+  green. Interactive gesture smoke deferred to M4 codex browser QA.
 
 - 2026-07-16 — M2 landed on `feat/dock-react-package`: `@beep/dock-react` at
   `packages/foundation/ui-system/dock-react` (public `DockReact.types.ts` +
@@ -57,6 +70,13 @@ sequencing). Provenance: `explorations/computable-workspace-geometry`
   codex-executed QA loop).
 
 ## Residuals (from scratchpad WHAT-IS-LEFT v2)
+
+- Known upstream (dev-only): mounting the Ontology surface under React
+  StrictMode throws MUI X's `useDisposable failed to detect React StrictMode`
+  internal invariant (their error text requests an upstream report). The
+  shell's nested surface boundaries self-heal it invisibly — confirmed twice
+  in hands-on Chrome QA — and production builds are unaffected (no StrictMode
+  double-invoke). Revisit when MUI X ships a fix; do not weaken StrictMode.
 
 - Adapter polish remains open: drop-indicator polish, a tab-overflow dropdown,
   header action slots, context menus, and dragging a floating pane back to a

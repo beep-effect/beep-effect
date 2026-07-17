@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-07-17T00:41:32.660Z",
+  "generatedAt": "2026-07-17T07:04:32.725Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 119,
     "packagesWithoutPublicSrcSurface": 4,
     "packagesNeedingRemediation": 0,
-    "publicModules": 2022,
-    "publicExports": 16471,
+    "publicModules": 2024,
+    "publicExports": 16482,
     "openModules": 0,
     "openExports": 0,
     "missingExportExamples": 0,
@@ -78490,8 +78490,8 @@
           "exportKind": "const",
           "filePath": "src/DockviewReact.tsx",
           "repoPath": "packages/foundation/ui-system/dock-react/src/DockviewReact.tsx",
-          "line": 143,
-          "anchor": "packages-foundation-ui-system-dock-react-src-dockviewreact-tsx-143-dockviewreact",
+          "line": 132,
+          "anchor": "packages-foundation-ui-system-dock-react-src-dockviewreact-tsx-132-dockviewreact",
           "currentTags": [
             "@remarks",
             "@example",
@@ -78509,15 +78509,16 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export {\n  /** @since 0.0.0 */\n  type DockAtomGraph,\n  /** @since 0.0.0 */\n  DockPanelApi,\n  /** @since 0.0.0 */\n  type DockPanelProps,\n  /** @since 0.0.0 */\n  type DockRenderer,\n  /** @since 0.0.0 */\n  type DockTabProps,\n  /** @since 0.0.0 */\n  type DockTabRenderer,\n  /** @since 0.0.0 */\n  type DockTitleMinimaOptions,\n  /** @since 0.0.0 */\n  type DockviewAdapterApi,\n  /** @since 0.0.0 */\n  type DockviewReactProps,\n} from \"./DockReact.types.ts\";",
+          "symbolName": "export {\n  /**\n   * @category atoms\n   * @since 0.0.0\n   */\n  type DockAtomGraph,\n  /**\n   * @category models\n   * @since 0.0.0\n   */\n  DockPanelApi,\n  /**\n   * @category components\n   * @since 0.0.0\n   */\n  type DockPanelProps,\n  /**\n   * @category components\n   * @since 0.0.0\n   */\n  type DockRenderer,\n  /**\n   * @category components\n   * @since 0.0.0\n   */\n  type DockTabProps,\n  /**\n   * @category components\n   * @since 0.0.0\n   */\n  type DockTabRenderer,\n  /**\n   * @category adapters\n   * @since 0.0.0\n   */\n  type DockTitleMinimaOptions,\n  /**\n   * @category adapters\n   * @since 0.0.0\n   */\n  type DockviewAdapterApi,\n  /**\n   * @category components\n   * @since 0.0.0\n   */\n  type DockviewReactProps,\n} from \"./DockReact.types.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/ui-system/dock-react/src/index.ts",
           "line": 7,
-          "anchor": "packages-foundation-ui-system-dock-react-src-index-ts-7-export-since-0-0-0-type-dockatomgraph-since-0-0-0-dockpanelapi-since-0-0-0-type-dockpanelprops-since-0-0-0-type-dockrenderer-since-0-0-0-type-docktabprops-since-0-0-0-type-docktabrenderer-since-0-0-0-type-docktitleminimaoptions-since-0-0-0-type-dockviewadapterapi-since-0-0-0-type-dockviewreactprops-from-dockreact-types-ts",
+          "anchor": "packages-foundation-ui-system-dock-react-src-index-ts-7-export-category-atoms-since-0-0-0-type-dockatomgraph-category-models-since-0-0-0-dockpanelapi-category-components-since-0-0-0-type-dockpanelprops-category-components-since-0-0-0-type-dockrenderer-category-components-since-0-0-0-type-docktabprops-category-components-since-0-0-0-type-docktabrenderer-category-adapters-since-0-0-0-type-docktitleminimaoptions-category-adapters-since-0-0-0-type-dockviewadapterapi-category-components-since-0-0-0-type-dockviewreactprops-from-dockreact-types-ts",
           "currentTags": [
             "@packageDocumentation",
-            "@since"
+            "@since",
+            "@category"
           ],
           "missingRequiredTags": [],
           "forbiddenTags": [],
@@ -78530,13 +78531,16 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export {\n  /** @since 0.0.0 */\n  DockviewReact,\n} from \"./DockviewReact.tsx\";",
+          "symbolName": "export {\n  /**\n   * @category components\n   * @since 0.0.0\n   */\n  DockviewReact,\n} from \"./DockviewReact.tsx\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/ui-system/dock-react/src/index.ts",
-          "line": 27,
-          "anchor": "packages-foundation-ui-system-dock-react-src-index-ts-27-export-since-0-0-0-dockviewreact-from-dockviewreact-tsx",
-          "currentTags": [],
+          "line": 54,
+          "anchor": "packages-foundation-ui-system-dock-react-src-index-ts-54-export-category-components-since-0-0-0-dockviewreact-from-dockviewreact-tsx",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
           "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
@@ -246531,9 +246535,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 44,
-        "publicModuleCount": 42,
-        "publicExportCount": 90
+        "sourceFileCount": 46,
+        "publicModuleCount": 44,
+        "publicExportCount": 101
       },
       "docgenCoverage": {
         "hasDocgenConfig": false,
@@ -247455,6 +247459,50 @@
           "categoryViolations": [],
           "exportCount": 4,
           "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/workspace/dock.atoms.ts",
+          "repoPath": "apps/professional-desktop/src/workspace/dock.atoms.ts",
+          "line": 1,
+          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 10,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/workspace/useDockAtom.ts",
+          "repoPath": "apps/professional-desktop/src/workspace/useDockAtom.ts",
+          "line": 1,
+          "anchor": "apps-professional-desktop-src-workspace-usedockatom-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
         }
       ],
       "exports": [
@@ -247463,8 +247511,8 @@
           "exportKind": "function",
           "filePath": "src/App.tsx",
           "repoPath": "apps/professional-desktop/src/App.tsx",
-          "line": 256,
-          "anchor": "apps-professional-desktop-src-app-tsx-256-app",
+          "line": 332,
+          "anchor": "apps-professional-desktop-src-app-tsx-332-app",
           "currentTags": [
             "@example",
             "@category",
@@ -249423,6 +249471,248 @@
           "repoPath": "apps/professional-desktop/src/transport/TauriIpcSocket.ts",
           "line": 485,
           "anchor": "apps-professional-desktop-src-transport-tauriipcsocket-ts-485-tauriipcsocketlive",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DESKTOP_SURFACES",
+          "exportKind": "const",
+          "filePath": "src/workspace/dock.atoms.ts",
+          "repoPath": "apps/professional-desktop/src/workspace/dock.atoms.ts",
+          "line": 63,
+          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-63-desktop-surfaces",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DesktopSurface",
+          "exportKind": "type",
+          "filePath": "src/workspace/dock.atoms.ts",
+          "repoPath": "apps/professional-desktop/src/workspace/dock.atoms.ts",
+          "line": 99,
+          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-99-desktopsurface",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DesktopDockGraph",
+          "exportKind": "type",
+          "filePath": "src/workspace/dock.atoms.ts",
+          "repoPath": "apps/professional-desktop/src/workspace/dock.atoms.ts",
+          "line": 115,
+          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-115-desktopdockgraph",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "defaultDesktopWorkspace",
+          "exportKind": "const",
+          "filePath": "src/workspace/dock.atoms.ts",
+          "repoPath": "apps/professional-desktop/src/workspace/dock.atoms.ts",
+          "line": 145,
+          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-145-defaultdesktopworkspace",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DOCK_SNAPSHOT_KEY",
+          "exportKind": "const",
+          "filePath": "src/workspace/dock.atoms.ts",
+          "repoPath": "apps/professional-desktop/src/workspace/dock.atoms.ts",
+          "line": 167,
+          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-167-dock-snapshot-key",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeDesktopDockGraph",
+          "exportKind": "const",
+          "filePath": "src/workspace/dock.atoms.ts",
+          "repoPath": "apps/professional-desktop/src/workspace/dock.atoms.ts",
+          "line": 226,
+          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-226-makedesktopdockgraph",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "desktopDockGraphAtom",
+          "exportKind": "const",
+          "filePath": "src/workspace/dock.atoms.ts",
+          "repoPath": "apps/professional-desktop/src/workspace/dock.atoms.ts",
+          "line": 277,
+          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-277-desktopdockgraphatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "dockPersistenceBindingAtom",
+          "exportKind": "const",
+          "filePath": "src/workspace/dock.atoms.ts",
+          "repoPath": "apps/professional-desktop/src/workspace/dock.atoms.ts",
+          "line": 303,
+          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-303-dockpersistencebindingatom",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "surfaceOperation",
+          "exportKind": "const",
+          "filePath": "src/workspace/dock.atoms.ts",
+          "repoPath": "apps/professional-desktop/src/workspace/dock.atoms.ts",
+          "line": 363,
+          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-363-surfaceoperation",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "isSurfaceActive",
+          "exportKind": "const",
+          "filePath": "src/workspace/dock.atoms.ts",
+          "repoPath": "apps/professional-desktop/src/workspace/dock.atoms.ts",
+          "line": 412,
+          "anchor": "apps-professional-desktop-src-workspace-dock-atoms-ts-412-issurfaceactive",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "useDockAtom",
+          "exportKind": "const",
+          "filePath": "src/workspace/useDockAtom.ts",
+          "repoPath": "apps/professional-desktop/src/workspace/useDockAtom.ts",
+          "line": 36,
+          "anchor": "apps-professional-desktop-src-workspace-usedockatom-ts-36-usedockatom",
           "currentTags": [
             "@example",
             "@category",

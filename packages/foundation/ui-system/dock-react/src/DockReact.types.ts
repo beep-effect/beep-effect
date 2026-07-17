@@ -202,6 +202,10 @@ export type DockviewReactProps = {
   readonly defaultTabComponent?: DockTabRenderer | undefined;
   readonly onReady?: ((event: { readonly api: DockviewAdapterApi }) => void) | undefined;
   readonly options?:
-    | { readonly gap?: number | undefined; readonly titleMinima?: DockTitleMinimaOptions | undefined }
+    | {
+        readonly gap?: number | undefined;
+        readonly minGroupExtent?: number | undefined;
+        readonly titleMinima?: DockTitleMinimaOptions | undefined;
+      }
     | undefined;
 };

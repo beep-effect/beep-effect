@@ -48,6 +48,12 @@ package.
 
 ## Trail
 
+- 2026-07-17: M3 shell landing — `apps/professional-desktop` now boots into a
+  dock workspace: four keep-alive surface panels, localStorage snapshot
+  persistence with boot restore and poisoned-key fallback, hash routing
+  retired. The rendered shell is computable geometry end-to-end; interactive
+  gesture QA moves to M4's browser rounds.
+
 - 2026-07-16: M2 graduation — `@beep/dock-react` landed, the demo was
   rewired to package imports, and scratchpad `dockview` + `dockview-react`
   were retired (residuals moved to the packet README).

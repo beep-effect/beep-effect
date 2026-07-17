@@ -101,11 +101,13 @@ describe("floating dock adapter", { concurrent: false }, () => {
       const graph = yield* mount();
       const first = query(`[data-floating-pane='${floating1Id}']`);
       const second = query(`[data-floating-pane='${floating2Id}']`);
+      // The pane is chrome around the anchored content box: 32px taller for
+      // the drag header, so the kernel geometry inside stays undistorted.
       expect([first.style.left, first.style.top, first.style.width, first.style.height]).toEqual([
         "40px",
         "50px",
         "240px",
-        "160px",
+        "192px",
       ]);
       expect(Number(first.style.zIndex)).toBeLessThan(Number(second.style.zIndex));
       expect(screen.getByTestId("panel-floating-panel-one").closest("[data-floating-pane]")).toBe(first);
