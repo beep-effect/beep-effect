@@ -53,12 +53,12 @@
     {
       "id": "P1",
       "name": "M1: dock capabilities (per-panel constraints, tab overflow, drop quadrants)",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "M2: ontology-ui workbench decomposition (zero-behavior region extraction)",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",

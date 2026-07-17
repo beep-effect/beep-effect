@@ -297,6 +297,89 @@ export type OntologyValidationStatus = typeof OntologyValidationStatus.Type;
 const workbenchState = <A>(initialValue: A) => Atom.keepAlive(Atom.make(initialValue));
 
 /**
+ * Workspace-relative path entered in the ontology document toolbar.
+ *
+ * @remarks Deliberately NOT `workbenchState`/keep-alive, matching its
+ * behavior before relocation from the UI file: this is a form draft, not
+ * session truth (`ontologyPathAtom` holds the open document's path), so it
+ * may reset to the seed default after the idle TTL when the workbench
+ * unmounts. The M3 dock shell keeps panels alive, which retires the
+ * unmount-reset path; revisit lifetimes then if the draft should survive
+ * a panel close.
+ *
+ * @example
+ * ```ts
+ * import { openPathInputAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(openPathInputAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const openPathInputAtom = Atom.make("tmp/ontology-workbench/pizza-tutorial.ttl");
+
+/**
+ * Subject IRI entered in the ontology Add Triple form.
+ *
+ * @example
+ * ```ts
+ * import { subjectInputAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(subjectInputAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const subjectInputAtom = Atom.make("https://example.org/pizza#Pizza");
+
+/**
+ * Predicate IRI entered in the ontology Add Triple form.
+ *
+ * @example
+ * ```ts
+ * import { predicateInputAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(predicateInputAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const predicateInputAtom = Atom.make("http://www.w3.org/2000/01/rdf-schema#label");
+
+/**
+ * Object value entered in the ontology Add Triple form.
+ *
+ * @example
+ * ```ts
+ * import { objectInputAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(objectInputAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const objectInputAtom = Atom.make("Pizza");
+
+/**
+ * Object term kind selected in the ontology Add Triple form.
+ *
+ * @example
+ * ```ts
+ * import { objectKindAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(objectKindAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const objectKindAtom = Atom.make<"iri" | "literal">("literal");
+
+/**
  * Current open ontology session, if any.
  *
  * @example
