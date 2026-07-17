@@ -15,7 +15,7 @@
  */
 
 import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client";
-import { DockWorkspace, PanelId, TabChrome } from "@beep/dock";
+import { DockNode, DockWorkspace, PanelId, TabChrome } from "@beep/dock";
 import { DockviewReact } from "@beep/dock-react";
 import { redactCauseForClient } from "@beep/observability";
 import { HttpOntologyProtocolLive, ontologyProtocolLayerAtom } from "@beep/ontology-client";
@@ -28,7 +28,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
-import { Component, Fragment, useContext, useMemo, useState } from "react";
+import { Component, Fragment, useContext, useMemo, useRef, useState } from "react";
 import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
 import { ThemeToggle } from "./chat/ui/ThemeToggle.tsx";
@@ -150,8 +150,34 @@ const ShellLoading = ({ label }: { readonly label: string }): JSX.Element => (
   </div>
 );
 
-const HomeSurface = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Element => {
+// Navigating to a surface must FOCUS its group as well as activate its tab —
+// a nav click on a surface already active in an unfocused group is otherwise
+// a visual no-op (and "current page" would not follow the click).
+const focusSurfaceGroup = (
+  graph: DesktopDockGraph,
+  api: DockviewAdapterApi | undefined,
+  workspace: DockWorkspace,
+  surface: DesktopSurface
+): void =>
+  O.match(DockWorkspace.findTabsForPanel(workspace, surfacePanelId(surface)), {
+    onNone: () => undefined,
+    onSome: (tabs) => {
+      if (api !== undefined) graph.registry.set(api.atoms.focusedGroup, O.some(tabs.groupId));
+    },
+  });
+
+const HomeSurface = ({
+  graph,
+  apiRef,
+}: {
+  readonly graph: DesktopDockGraph;
+  readonly apiRef: { readonly current: DockviewAdapterApi | undefined };
+}): JSX.Element => {
   const workspace = useDockAtom(graph, graph.workspaceAtom);
+  const open = (surface: DesktopSurface): void => {
+    focusSurfaceGroup(graph, apiRef.current, workspace, surface);
+    graph.registry.set(graph.operationAtom, surfaceOperation(workspace, surface));
+  };
   return (
     <main className="h-full overflow-y-auto p-6">
       <div className="mx-auto max-w-5xl">
@@ -165,7 +191,7 @@ const HomeSurface = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Eleme
             <button
               key={item.surface}
               type="button"
-              onClick={() => graph.registry.set(graph.operationAtom, surfaceOperation(workspace, item.surface))}
+              onClick={() => open(item.surface)}
               className="rounded-lg border bg-card p-4 text-left shadow-sm transition-colors hover:border-primary/50 hover:bg-accent"
             >
               <h2 className="font-semibold">{item.label}</h2>
@@ -262,12 +288,13 @@ class SurfaceBoundary extends Component<
 
 const makeSurfaceRenderers = (
   graph: DesktopDockGraph,
-  appRegistry: AppRegistry
+  appRegistry: AppRegistry,
+  apiRef: { readonly current: DockviewAdapterApi | undefined }
 ): Readonly<Record<DesktopSurface, DockRenderer>> => ({
   home: () => (
     <RegistryContext.Provider value={appRegistry}>
       <SurfaceBoundary label="Home">
-        <HomeSurface graph={graph} />
+        <HomeSurface graph={graph} apiRef={apiRef} />
       </SurfaceBoundary>
     </RegistryContext.Provider>
   ),
@@ -304,6 +331,7 @@ const DesktopShell = ({
   const workspace = useDockAtom(graph, graph.workspaceAtom);
   const appRegistry = useContext(RegistryContext);
   const [dockApi, setDockApi] = useState<DockviewAdapterApi | undefined>(undefined);
+  const dockApiRef = useRef<DockviewAdapterApi | undefined>(undefined);
   const focusedGroup = useFocusedDockGroup(graph, dockApi);
   // One current page: the surface active in the FOCUSED group. Before any
   // focus interaction (or if focus clears) fall back to open-anywhere active.
@@ -318,7 +346,7 @@ const DesktopShell = ({
   // Stable renderer identities: a fresh components map per render would hand
   // React new component types on every workspace change, remounting every
   // panel subtree and destroying the state keep-alive exists to preserve.
-  const surfaceRenderers = useMemo(() => makeSurfaceRenderers(graph, appRegistry), [graph, appRegistry]);
+  const surfaceRenderers = useMemo(() => makeSurfaceRenderers(graph, appRegistry, dockApiRef), [graph, appRegistry]);
   // Debounced snapshot persistence for every workspace change (drag, split,
   // float, activate, close) — the reload-restores-layout half of the contract.
   useAtomMount(dockPersistenceBindingAtom(graph));
@@ -339,7 +367,10 @@ const DesktopShell = ({
               <Button
                 key={item.surface}
                 aria-current={isSurfaceCurrent(item.surface) ? "page" : undefined}
-                onClick={() => graph.registry.set(graph.operationAtom, surfaceOperation(workspace, item.surface))}
+                onClick={() => {
+                  focusSurfaceGroup(graph, dockApi, workspace, item.surface);
+                  graph.registry.set(graph.operationAtom, surfaceOperation(workspace, item.surface));
+                }}
                 size="sm"
                 variant={isSurfaceCurrent(item.surface) ? "secondary" : "ghost"}
               >
@@ -359,13 +390,32 @@ const DesktopShell = ({
                 graph={graph}
                 components={surfaceRenderers}
                 watermarkComponent={DockWatermark}
-                onReady={({ api }) => setDockApi(api)}
+                onReady={({ api }) => {
+                  dockApiRef.current = api;
+                  setDockApi(api);
+                  // Exactly one current page from boot: focus the first group
+                  // after fresh boot AND after snapshot restore.
+                  if (O.isNone(graph.registry.get(api.atoms.focusedGroup))) {
+                    const ws = graph.registry.get(graph.workspaceAtom);
+                    DockWorkspace.match(ws, {
+                      empty: () => undefined,
+                      populated: ({ root }) =>
+                        O.match(A.head(DockNode.tabs(root)), {
+                          onNone: () => undefined,
+                          onSome: (tabs) => graph.registry.set(api.atoms.focusedGroup, O.some(tabs.groupId)),
+                        }),
+                    });
+                  }
+                }}
                 options={{
                   gap: 6,
+                  // Synchronous floor while font capture settles, and strip
+                  // chrome that includes the Float/Maximize action rail.
+                  minGroupExtent: 180,
                   titleMinima: {
                     font: "12px ui-sans-serif, system-ui, sans-serif",
                     lineHeight: 16,
-                    chrome: TabChrome.make({ perTab: 44, strip: 8 }),
+                    chrome: TabChrome.make({ perTab: 44, strip: 128 }),
                   },
                 }}
               />

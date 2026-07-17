@@ -63,14 +63,14 @@ export let commandCounter = 0;
 // retained state per render whenever a host builds captureLayer inline,
 // while omitting the provider entirely would share stale metrics across
 // distinct providers.
-const stateKey = (gap: number, titleMinima: O.Option<DockTitleMinimaOptions>): string =>
+const stateKey = (gap: number, minGroupExtent: number, titleMinima: O.Option<DockTitleMinimaOptions>): string =>
   O.match(titleMinima, {
-    onNone: () => `${gap}`,
+    onNone: () => `${gap}\u0000${minGroupExtent}`,
     onSome: (config) => {
       const captureKey = O.getOrElse(O.fromUndefinedOr(config.captureKey), () => "live");
       const chrome = O.getOrElse(O.fromUndefinedOr(config.chrome), () => TabChrome.make());
 
-      return `${gap}\u0000${config.font}\u0000${config.lineHeight}\u0000${chrome.perTab}\u0000${chrome.strip}\u0000${captureKey}`;
+      return `${gap}\u0000${minGroupExtent}\u0000${config.font}\u0000${config.lineHeight}\u0000${chrome.perTab}\u0000${chrome.strip}\u0000${captureKey}`;
     },
   });
 
@@ -100,6 +100,7 @@ export const makeOperation = (
 export const adapterState = (
   graph: DockAtomGraph,
   gap: number,
+  minGroupExtent: number,
   titleMinima: O.Option<DockTitleMinimaOptions>
 ): AdapterState => {
   // crispen: geometry inputs remain the adapter identity because the derived atoms close over them.
@@ -108,7 +109,7 @@ export const adapterState = (
     states.set(graph, created);
     return created;
   });
-  const key = stateKey(gap, titleMinima);
+  const key = stateKey(gap, minGroupExtent, titleMinima);
   const existing = MutableHashMap.get(byOptions, key);
   if (O.isSome(existing)) return existing.value;
   const containerAtom = Atom.make(DockBox.make()).pipe(Atom.keepAlive);
@@ -163,13 +164,13 @@ export const adapterState = (
       makeDockGeometryAtoms({
         workspaceAtom: projectedWorkspaceAtom,
         containerAtom,
-        options: GeometryOptions.make({ gap }),
+        options: GeometryOptions.make({ gap, minGroupExtent }),
       }),
     onSome: (config) =>
       makeDockGeometryAtoms({
         workspaceAtom: projectedWorkspaceAtom,
         containerAtom,
-        options: GeometryOptions.make({ gap }),
+        options: GeometryOptions.make({ gap, minGroupExtent }),
         minimaAtom: makeTitleMinimaAtom({
           workspaceAtom: graph.workspaceAtom,
           captureLayer: O.getOrElse(O.fromUndefinedOr(config.captureLayer), () => PretextCaptureLive),

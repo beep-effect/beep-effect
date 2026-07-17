@@ -134,8 +134,12 @@ export const DockviewReact = (props: DockviewReactProps) => {
     O.flatMap(O.fromUndefinedOr(props.options), ({ gap }) => O.fromUndefinedOr(gap)),
     () => 0
   );
+  const minGroupExtent = O.getOrElse(
+    O.flatMap(O.fromUndefinedOr(props.options), ({ minGroupExtent }) => O.fromUndefinedOr(minGroupExtent)),
+    () => 0
+  );
   const titleMinima = O.flatMap(O.fromUndefinedOr(props.options), ({ titleMinima }) => O.fromUndefinedOr(titleMinima));
-  const state = adapterState(props.graph, gap, titleMinima);
+  const state = adapterState(props.graph, gap, minGroupExtent, titleMinima);
   return (
     <RegistryContext.Provider value={props.graph.registry}>
       <DockviewRoot {...props} state={state} />
