@@ -300,6 +300,12 @@
         ]
       },
       {
+        "name": "@beep/graph-3d",
+        "patterns": [
+          "packages/drivers/graph-3d/src/**"
+        ]
+      },
+      {
         "name": "@beep/html",
         "patterns": [
           "packages/foundation/modeling/html/src/**"
@@ -1601,6 +1607,23 @@
         ]
       },
       {
+        "from": "@beep/graph-3d",
+        "allow": [
+          "@beep/graph-3d",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/graph-3d",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
         "from": "@beep/html",
         "allow": [
           "@beep/html",
@@ -2326,6 +2349,7 @@
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
           "@beep/file-processing",
+          "@beep/graph-3d",
           "@beep/identity",
           "@beep/lexical-schema",
           "@beep/mcp-kit",
@@ -2363,6 +2387,7 @@
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
           "@beep/file-processing",
+          "@beep/graph-3d",
           "@beep/identity",
           "@beep/lexical-schema",
           "@beep/mcp-kit",
@@ -2725,11 +2750,13 @@
         "from": "@beep/storybook",
         "allow": [
           "@beep/form",
+          "@beep/graph-3d",
           "@beep/storybook",
           "@beep/ui"
         ],
         "allowTypeOnly": [
           "@beep/form",
+          "@beep/graph-3d",
           "@beep/storybook",
           "@beep/ui"
         ]

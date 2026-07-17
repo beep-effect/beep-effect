@@ -814,11 +814,17 @@
       "devDependencies": {
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
+        "@storybook/react-vite": "catalog:",
         "@types/node": "catalog:",
+        "@types/react": "catalog:",
         "@types/three": "catalog:",
         "@vitest/browser": "catalog:",
         "@vitest/browser-playwright": "catalog:",
+        "storybook": "catalog:",
         "vitest": "catalog:",
+      },
+      "peerDependencies": {
+        "react": "^19",
       },
     },
     "packages/drivers/hubspot": {
@@ -1922,6 +1928,7 @@
         "@types/node": "catalog:",
         "@vitest/browser": "catalog:",
         "@vitest/browser-playwright": "catalog:",
+        "gl-bench": "catalog:",
       },
     },
     "packages/ontology/config": {

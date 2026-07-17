@@ -45,7 +45,7 @@ const Uint16Arr = S.instanceOf<globalThis.Uint16ArrayConstructor, globalThis.Uin
  *   nodeCommunities: new Uint16Array([0, 1]),
  *   nodeImportance: new Float32Array([1, 0.25]),
  *   edgeWeights: new Float32Array([1]),
- *   labels: ["kalo", "mira"]
+ *   labels: ["pizza", "topping"]
  * })
  *
  * console.log(projection.pointPositions.length) // 6

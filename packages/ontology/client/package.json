@@ -71,6 +71,7 @@
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "@vitest/browser": "catalog:",
-    "@vitest/browser-playwright": "catalog:"
+    "@vitest/browser-playwright": "catalog:",
+    "gl-bench": "catalog:"
   }
 }

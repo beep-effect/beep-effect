@@ -64,13 +64,19 @@
   "devDependencies": {
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
+    "@storybook/react-vite": "catalog:",
     "@types/node": "catalog:",
+    "@types/react": "catalog:",
     "@types/three": "catalog:",
     "@vitest/browser": "catalog:",
     "@vitest/browser-playwright": "catalog:",
+    "storybook": "catalog:",
     "vitest": "catalog:"
   },
   "beep": {
     "family": "drivers"
+  },
+  "peerDependencies": {
+    "react": "^19"
   }
 }

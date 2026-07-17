@@ -13,8 +13,8 @@
 
 import { $Graph3dId } from "@beep/identity/packages";
 import { Fn, SchemaUtils } from "@beep/schema";
-import { P } from "@beep/utils";
-import { Effect } from "effect";
+import { O, P } from "@beep/utils";
+import { Effect, pipe } from "effect";
 import * as S from "effect/Schema";
 import { Graph3DDriverError } from "./Graph3D.errors.js";
 import { Graph3DProjection } from "./Graph3D.projection.js";
@@ -162,14 +162,15 @@ const smoothstep01 = (t: number): number => {
 /** Reference zoom damping: clamp((cameraDistance / 600)^0.65, 0.35, 3). */
 const zoomDamping = (cameraDistance: number): number => Math.min(3, Math.max(0.35, (cameraDistance / 600) ** 0.65));
 
-const probeWebGl2 = (): boolean => {
-  if (!P.isFunction(globalThis.document?.createElement)) {
-    return false;
-  }
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("webgl2");
-  return P.isNotNull(context);
-};
+const probeWebGl2 = (): boolean =>
+  pipe(
+    O.fromUndefinedOr(globalThis.document),
+    O.map((runtimeDocument) => runtimeDocument.createElement("canvas")),
+    O.match({
+      onNone: () => false,
+      onSome: (canvas) => P.isNotNull(canvas.getContext("webgl2")),
+    })
+  );
 
 /**
  * Mount options: selection callbacks and error surfacing. Selection identity
