@@ -1,3 +1,9 @@
+/**
+ * Record helpers and typed constructors.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import * as R from "effect/Record";
 
 /**
