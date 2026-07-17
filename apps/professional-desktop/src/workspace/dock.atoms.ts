@@ -115,8 +115,20 @@ export type DesktopSurface = (typeof DESKTOP_SURFACES)[number]["surface"];
  */
 export type DesktopDockGraph = DockAtomGraph;
 
-// Panel id for a desktop surface (`surface-<name>`).
-const surfacePanelId = (surface: DesktopSurface): PanelId => PanelId.make(`surface-${surface}`);
+/**
+ * Panel id for a desktop surface (`surface-<name>`).
+ *
+ * @example
+ * ```ts
+ * import { surfacePanelId } from "@/workspace/dock.atoms"
+ *
+ * console.log(surfacePanelId("chat")) // "surface-chat"
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
+ */
+export const surfacePanelId = (surface: DesktopSurface): PanelId => PanelId.make(`surface-${surface}`);
 
 const surfacePanel = (surface: DesktopSurface, title: string): Panel =>
   Panel.make({

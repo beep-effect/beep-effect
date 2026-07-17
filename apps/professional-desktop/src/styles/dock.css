@@ -11,7 +11,7 @@
 
 .desktop-dock section[data-group-id] {
   background: var(--card);
-  border: 1px solid var(--border);
+  border: 1px solid color-mix(in oklch, var(--foreground) 16%, var(--border));
   border-radius: var(--radius, 8px);
   overflow: hidden;
 }
@@ -71,10 +71,16 @@
 
 .desktop-dock [data-sash-id] {
   border-radius: 3px;
+  background: color-mix(in oklch, var(--muted-foreground) 22%, transparent);
+  background-clip: content-box;
+  padding: 2px;
+  transition: background 120ms ease;
 }
 
 .desktop-dock [data-sash-id]:hover {
-  background: color-mix(in oklch, var(--primary) 45%, transparent);
+  background: color-mix(in oklch, var(--primary) 55%, transparent);
+  background-clip: border-box;
+  padding: 0;
 }
 
 .desktop-dock [data-drop-indicator] {
@@ -98,4 +104,51 @@
 .desktop-dock [data-floating-resize] {
   background: color-mix(in oklch, var(--muted-foreground) 35%, transparent);
   border-radius: 3px;
+}
+
+/* Group actions (Float / Maximize / Dock) read as an action rail, not extra
+   tabs: separated right cluster, comfortable hit targets, visible focus. */
+.desktop-dock section[data-group-id] > [role="tablist"] [data-dock-actions] {
+  border-inline-start: 1px solid color-mix(in oklch, var(--foreground) 14%, transparent);
+  padding-inline-start: 6px;
+  margin-inline-start: auto;
+}
+
+.desktop-dock section[data-group-id] > [role="tablist"] [data-dock-actions] button {
+  padding: 3px 8px;
+  min-height: 20px;
+}
+
+.desktop-dock section[data-group-id] > [role="tablist"] button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+/* The floating drag-header carries the Dock affordance; give it chrome. */
+.desktop-dock [data-floating-header] {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 6px;
+  border-bottom: 1px solid color-mix(in oklch, var(--foreground) 14%, transparent);
+}
+
+.desktop-dock [data-floating-header] button {
+  background: transparent;
+  border: 1px solid color-mix(in oklch, var(--foreground) 18%, transparent);
+  border-radius: calc(var(--radius, 8px) - 4px);
+  color: var(--foreground);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 8px;
+}
+
+.desktop-dock [data-floating-header] button:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* Nested surfaces keep a readable floor instead of one-word text columns. */
+.desktop-dock [data-testid="sidebar"] {
+  min-width: 200px;
 }

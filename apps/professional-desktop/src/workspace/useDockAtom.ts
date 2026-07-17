@@ -13,7 +13,10 @@
  * @since 0.0.0
  */
 
+import * as O from "effect/Option";
 import { useSyncExternalStore } from "react";
+import type { GroupId } from "@beep/dock";
+import type { DockviewAdapterApi } from "@beep/dock-react";
 import type { Atom } from "effect/unstable/reactivity";
 import type { DesktopDockGraph } from "./dock.atoms.ts";
 
@@ -38,4 +41,28 @@ export const useDockAtom = <A>(graph: DesktopDockGraph, atom: Atom.Atom<A>): A =
     (onStoreChange) => graph.registry.subscribe(atom, onStoreChange),
     () => graph.registry.get(atom),
     () => graph.registry.get(atom)
+  );
+
+/**
+ * The focused dock group, once the adapter api has arrived via `onReady`.
+ *
+ * The subscription is inert until the api exists, so the hook is safe to call
+ * unconditionally while the adapter boots.
+ *
+ * @example
+ * ```ts
+ * import { useFocusedDockGroup } from "@/workspace/useDockAtom"
+ *
+ * console.log(useFocusedDockGroup.length) // 2
+ * ```
+ *
+ * @category hooks
+ * @since 0.0.0
+ */
+export const useFocusedDockGroup = (graph: DesktopDockGraph, api: DockviewAdapterApi | undefined): O.Option<GroupId> =>
+  useSyncExternalStore(
+    (onStoreChange) =>
+      api === undefined ? () => undefined : graph.registry.subscribe(api.atoms.focusedGroup, onStoreChange),
+    () => (api === undefined ? O.none<GroupId>() : graph.registry.get(api.atoms.focusedGroup)),
+    O.none<GroupId>
   );

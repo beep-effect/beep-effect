@@ -19,6 +19,12 @@ import type { DockviewReactProps } from "../DockReact.types.ts";
 import type { AdapterState } from "./AdapterState.ts";
 import type { FloatingGesture } from "./Gesture.models.ts";
 
+// Chrome around the kernel's anchored content box: the pane is taller than
+// the stored box by the drag-header, and can never shrink below readable.
+const FLOATING_HEADER_HEIGHT = 32;
+const FLOATING_MIN_WIDTH = 240;
+const FLOATING_MIN_HEIGHT = 160;
+
 export const FloatingPane = (
   props: DockviewReactProps & {
     readonly state: AdapterState;
@@ -83,8 +89,8 @@ export const FloatingPane = (
             })
           : DockBox.make({
               ...gesture.value.initialBox,
-              width: Math.max(32, gesture.value.initialBox.width + dx),
-              height: Math.max(32, gesture.value.initialBox.height + dy),
+              width: Math.max(FLOATING_MIN_WIDTH, gesture.value.initialBox.width + dx),
+              height: Math.max(FLOATING_MIN_HEIGHT, gesture.value.initialBox.height + dy),
             });
         props.graph.registry.set(
           props.state.floatingGestureAtom,
@@ -133,7 +139,7 @@ export const FloatingPane = (
   return (
     <div
       data-floating-pane={groupId}
-      style={{ ...boxStyle(member.box), zIndex: props.index + 1 }}
+      style={{ ...boxStyle(member.box), height: member.box.height + FLOATING_HEADER_HEIGHT, zIndex: props.index + 1 }}
       onPointerDown={() =>
         submit(
           makeOperation(
@@ -145,7 +151,11 @@ export const FloatingPane = (
         )
       }
     >
-      <div ref={gestureRef("move")} data-floating-header={groupId} style={{ height: 32, cursor: "move" }}>
+      <div
+        ref={gestureRef("move")}
+        data-floating-header={groupId}
+        style={{ height: FLOATING_HEADER_HEIGHT, cursor: "move" }}
+      >
         <button
           type="button"
           aria-label={`Dock group ${groupId}`}
@@ -175,7 +185,7 @@ export const FloatingPane = (
           floating
           box={DockBox.make({
             left: group.box.left - member.box.left,
-            top: group.box.top - member.box.top,
+            top: group.box.top - member.box.top + FLOATING_HEADER_HEIGHT,
             width: group.box.width,
             height: group.box.height,
           })}

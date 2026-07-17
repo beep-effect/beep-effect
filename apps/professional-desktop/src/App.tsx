@@ -15,7 +15,7 @@
  */
 
 import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client";
-import { TabChrome } from "@beep/dock";
+import { DockWorkspace, PanelId, TabChrome } from "@beep/dock";
 import { DockviewReact } from "@beep/dock-react";
 import { redactCauseForClient } from "@beep/observability";
 import { HttpOntologyProtocolLive, ontologyProtocolLayerAtom } from "@beep/ontology-client";
@@ -28,7 +28,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
-import { useContext, useMemo } from "react";
+import { Component, Fragment, useContext, useMemo, useState } from "react";
 import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
 import { ThemeToggle } from "./chat/ui/ThemeToggle.tsx";
@@ -42,14 +42,16 @@ import { IpcSpikePanel } from "./transport/IpcSpikePanel.tsx";
 import { SidecarTransport } from "./transport/SidecarTransport.ts";
 import {
   DESKTOP_SURFACES,
+  DOCK_SNAPSHOT_KEY,
   desktopDockGraphAtom,
   dockPersistenceBindingAtom,
   isSurfaceActive,
   surfaceOperation,
+  surfacePanelId,
 } from "./workspace/dock.atoms.ts";
-import { useDockAtom } from "./workspace/useDockAtom.ts";
-import type { DockRenderer } from "@beep/dock-react";
-import type { JSX } from "react";
+import { useDockAtom, useFocusedDockGroup } from "./workspace/useDockAtom.ts";
+import type { DockRenderer, DockviewAdapterApi } from "@beep/dock-react";
+import type { JSX, ReactNode } from "react";
 import type { DesktopDockGraph, DesktopSurface } from "./workspace/dock.atoms.ts";
 
 type AppRegistry = DesktopDockGraph["registry"];
@@ -177,6 +179,41 @@ const HomeSurface = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Eleme
   );
 };
 
+// A panel exception must degrade to a recoverable card, never a blank shell:
+// the nav stays mounted and the user can reset the persisted layout.
+class DockStageBoundary extends Component<{ readonly children: ReactNode }, { readonly failed: boolean }> {
+  override state = { failed: false };
+  static getDerivedStateFromError(): { failed: boolean } {
+    return { failed: true };
+  }
+  override render(): ReactNode {
+    if (this.state.failed) {
+      return (
+        <div className="flex h-full items-center justify-center">
+          <div className="max-w-md rounded-md border bg-card p-4 shadow-sm">
+            <h2 className="text-base font-semibold">The workspace hit an error</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              A surface crashed while rendering. Reset the saved layout to recover — your documents and threads are not
+              affected.
+            </p>
+            <button
+              type="button"
+              className="mt-4 rounded-md border bg-accent px-3 py-1.5 text-sm font-medium"
+              onClick={() => {
+                globalThis.localStorage.removeItem(DOCK_SNAPSHOT_KEY);
+                globalThis.location.reload();
+              }}
+            >
+              Reset layout
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 const DockWatermark = (): JSX.Element => (
   <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
     All surfaces are closed — reopen one from the navigation above.
@@ -188,28 +225,71 @@ const DockWatermark = (): JSX.Element => (
 // state (and the protocol-layer bindings that configure them) live in the
 // root RegistryProvider. Without this wrapper each surface would silently
 // instantiate detached copies of its atoms inside the graph registry.
+// A crash in one surface heals with a single fresh remount (dock moves can
+// trip third-party StrictMode bugs, e.g. MUI X useDisposable in the ontology
+// tree). A second consecutive crash stops auto-retrying and offers a button.
+class SurfaceBoundary extends Component<
+  { readonly children: ReactNode; readonly label: string },
+  { readonly failures: number }
+> {
+  override state = { failures: 0 };
+  override componentDidCatch(): void {
+    this.setState((previous) => ({ failures: previous.failures + 1 }));
+  }
+  static getDerivedStateFromError(): null {
+    return null;
+  }
+  override render(): ReactNode {
+    if (this.state.failures > 1) {
+      return (
+        <div className="flex h-full items-center justify-center p-4">
+          <div className="max-w-sm rounded-md border bg-card p-4 text-center shadow-sm">
+            <p className="text-sm text-muted-foreground">The {this.props.label} surface crashed while rendering.</p>
+            <button
+              type="button"
+              className="mt-3 rounded-md border bg-accent px-3 py-1.5 text-sm font-medium"
+              onClick={() => this.setState({ failures: 0 })}
+            >
+              Reload {this.props.label}
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return <Fragment key={this.state.failures}>{this.props.children}</Fragment>;
+  }
+}
+
 const makeSurfaceRenderers = (
   graph: DesktopDockGraph,
   appRegistry: AppRegistry
 ): Readonly<Record<DesktopSurface, DockRenderer>> => ({
   home: () => (
     <RegistryContext.Provider value={appRegistry}>
-      <HomeSurface graph={graph} />
+      <SurfaceBoundary label="Home">
+        <HomeSurface graph={graph} />
+      </SurfaceBoundary>
     </RegistryContext.Provider>
   ),
   chat: () => (
     <RegistryContext.Provider value={appRegistry}>
-      <ChatApp />
+      <SurfaceBoundary label="Chat">
+        <ChatApp />
+      </SurfaceBoundary>
     </RegistryContext.Provider>
   ),
   ontology: () => (
     <RegistryContext.Provider value={appRegistry}>
-      <OntologyWorkbench />
+      <SurfaceBoundary label="Ontology">
+        <OntologyWorkbench />
+      </SurfaceBoundary>
     </RegistryContext.Provider>
   ),
   sync: () => (
     <RegistryContext.Provider value={appRegistry}>
-      <VaultSyncPanel floating={false} />
+      <SurfaceBoundary label="Vault sync">
+        <VaultSyncPanel floating={false} />
+      </SurfaceBoundary>
     </RegistryContext.Provider>
   ),
 });
@@ -223,6 +303,18 @@ const DesktopShell = ({
 }): JSX.Element => {
   const workspace = useDockAtom(graph, graph.workspaceAtom);
   const appRegistry = useContext(RegistryContext);
+  const [dockApi, setDockApi] = useState<DockviewAdapterApi | undefined>(undefined);
+  const focusedGroup = useFocusedDockGroup(graph, dockApi);
+  // One current page: the surface active in the FOCUSED group. Before any
+  // focus interaction (or if focus clears) fall back to open-anywhere active.
+  const isSurfaceCurrent = (surface: DesktopSurface): boolean =>
+    O.match(focusedGroup, {
+      onNone: () => isSurfaceActive(workspace, surface),
+      onSome: (groupId) =>
+        O.exists(DockWorkspace.findTabs(workspace, groupId), (tabs) =>
+          PanelId.equals(tabs.active.id, surfacePanelId(surface))
+        ),
+    });
   // Stable renderer identities: a fresh components map per render would hand
   // React new component types on every workspace change, remounting every
   // panel subtree and destroying the state keep-alive exists to preserve.
@@ -246,10 +338,10 @@ const DesktopShell = ({
             {A.map(DESKTOP_SURFACES, (item) => (
               <Button
                 key={item.surface}
-                aria-current={isSurfaceActive(workspace, item.surface) ? "page" : undefined}
+                aria-current={isSurfaceCurrent(item.surface) ? "page" : undefined}
                 onClick={() => graph.registry.set(graph.operationAtom, surfaceOperation(workspace, item.surface))}
                 size="sm"
-                variant={isSurfaceActive(workspace, item.surface) ? "secondary" : "ghost"}
+                variant={isSurfaceCurrent(item.surface) ? "secondary" : "ghost"}
               >
                 {item.label}
               </Button>
@@ -262,19 +354,22 @@ const DesktopShell = ({
             </div>
           </nav>
           <div className="desktop-dock min-h-0 flex-1">
-            <DockviewReact
-              graph={graph}
-              components={surfaceRenderers}
-              watermarkComponent={DockWatermark}
-              options={{
-                gap: 6,
-                titleMinima: {
-                  font: "12px ui-sans-serif, system-ui, sans-serif",
-                  lineHeight: 16,
-                  chrome: TabChrome.make({ perTab: 44, strip: 8 }),
-                },
-              }}
-            />
+            <DockStageBoundary>
+              <DockviewReact
+                graph={graph}
+                components={surfaceRenderers}
+                watermarkComponent={DockWatermark}
+                onReady={({ api }) => setDockApi(api)}
+                options={{
+                  gap: 6,
+                  titleMinima: {
+                    font: "12px ui-sans-serif, system-ui, sans-serif",
+                    lineHeight: 16,
+                    chrome: TabChrome.make({ perTab: 44, strip: 8 }),
+                  },
+                }}
+              />
+            </DockStageBoundary>
           </div>
         </div>
       </DocumentIntakeTarget>
@@ -292,7 +387,6 @@ const DesktopShell = ({
 const TransportGate = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Element => {
   const transport = useAtomValue(sidecarTransportAtom);
   useAtomMount(protocolLayerBindingAtom);
-
 
   return AsyncResult.match(transport, {
     onInitial: () => (

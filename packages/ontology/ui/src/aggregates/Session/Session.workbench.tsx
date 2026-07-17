@@ -666,8 +666,30 @@ export function OntologyWorkbench(): JSX.Element {
   // correctly and thrown away just as fast, which is why it looked like it had
   // never rendered at all.
   const graphContainerRef = useCallback(
-    (element: HTMLDivElement | null): void => {
-      setGraphContainer(O.fromNullishOr(element));
+    (element: HTMLDivElement | null): (() => void) | undefined => {
+      if (element === null) {
+        setGraphContainer(O.none());
+        return undefined;
+      }
+      // Publish only a MEASURED container: inside a dock panel the element can
+      // mount at zero size (keep-alive panels measure later), and Sigma throws
+      // "Container has no width" when constructed against it. Wait for the
+      // first non-zero measurement instead.
+      if (element.clientWidth > 0 && element.clientHeight > 0) {
+        setGraphContainer(O.some(element));
+        return () => setGraphContainer(O.none());
+      }
+      const observer = new ResizeObserver(() => {
+        if (element.clientWidth > 0 && element.clientHeight > 0) {
+          observer.disconnect();
+          setGraphContainer(O.some(element));
+        }
+      });
+      observer.observe(element);
+      return () => {
+        observer.disconnect();
+        setGraphContainer(O.none());
+      };
     },
     [setGraphContainer]
   );

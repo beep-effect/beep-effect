@@ -183,7 +183,7 @@ export const GroupPane = (
         />
       ))}
       {P.not(Eq.equals(true))(props.floating) && (
-        <>
+        <div data-dock-actions="" style={{ marginInlineStart: "auto", display: "inline-flex", gap: 2 }}>
           <button
             type="button"
             aria-label={`Float group ${props.groupId}`}
@@ -195,8 +195,8 @@ export const GroupPane = (
                     anchoredBox: TopLeftAnchoredBox.make({
                       left: box.left + 24,
                       top: box.top + 24,
-                      width: Math.max(32, box.width - 48),
-                      height: Math.max(32, box.height - 48),
+                      width: Math.max(360, box.width - 48),
+                      height: Math.max(240, box.height - 48),
                     }),
                   })
                 )
@@ -212,7 +212,7 @@ export const GroupPane = (
           >
             {O.isSome(maximized) ? "Restore" : "Maximize"}
           </button>
-        </>
+        </div>
       )}
     </div>
   );
