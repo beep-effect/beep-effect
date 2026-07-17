@@ -41,8 +41,8 @@ const heapMb = (): number | undefined => {
  *
  * @example
  * ```ts
- * // Dev-only spike surface, reached via the app flag rather than direct use:
- * //   http://localhost:5199/?graph3d-spike   (or VITE_GRAPH3D_SPIKE=1)
+ * // Launch the portless-wrapped graph3d-bench entry, then open the spike surface:
+ * //   http://graph3d-bench.beep.localhost:1355/?graph3d-spike   (or VITE_GRAPH3D_SPIKE=1)
  * const flag = new URLSearchParams("?graph3d-spike").has("graph3d-spike")
  *
  * console.log(flag) // true

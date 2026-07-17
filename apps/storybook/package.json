@@ -60,7 +60,9 @@
     "@types/react-dom": "catalog:",
     "@vitest/browser": "catalog:",
     "@vitest/browser-playwright": "catalog:",
+    "bippy": "catalog:",
     "playwright": "catalog:",
+    "react-grab": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
