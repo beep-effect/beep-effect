@@ -5,6 +5,7 @@ arktype
 attw
 biome
 biomejs
+bippy
 bunx
 caniwebview
 changesets
@@ -43,6 +44,7 @@ lmstudio
 mariozechner
 markdownlint
 mdfilters
+memify
 Metadatas
 murf
 offlinetts
@@ -78,6 +80,7 @@ Tabelog
 tailwindcss
 tauri
 Tauri
+TRAC
 tsgo
 tstyche
 turborepo
@@ -94,5 +97,3 @@ wplnls
 Xenova
 yunet
 YuNet
-memify
-TRAC

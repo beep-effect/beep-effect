@@ -4,20 +4,31 @@
     {
       "name": "oip-web",
       "runtimeExecutable": "bun",
-      "runtimeArgs": ["run", "--cwd", "apps/oip-web", "dev:raw"],
-      "port": 3000,
+      "runtimeArgs": ["run", "--cwd", "apps/oip-web", "dev"],
+      "autoPort": true
+    },
+    {
+      "name": "storybook",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "--cwd", "apps/storybook", "storybook"],
+      "autoPort": true
+    },
+    {
+      "name": "professional-desktop",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "--cwd", "apps/professional-desktop", "dev"],
       "autoPort": true
     },
     {
       "name": "graph3d-bench",
-      "runtimeExecutable": "node_modules/.bin/vite",
+      "runtimeExecutable": "portless",
       "runtimeArgs": [
-        "scratchpad/graph-3d-bench",
-        "--port",
-        "5199",
-        "--strictPort"
+        "graph3d-bench.beep",
+        "sh",
+        "-c",
+        "node_modules/.bin/vite scratchpad/graph-3d-bench --host 127.0.0.1 --port \"${PORT:-5199}\" --strictPort"
       ],
-      "port": 5199
+      "autoPort": true
     }
   ]
 }

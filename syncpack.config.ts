@@ -105,6 +105,22 @@ const config = {
       strategy: "versionsByName",
     },
   },
+  updateGroups: [
+    {
+      // Held back from `deps:update`. typescript stays ^6: the catalog
+      // deliberately splits classic typescript (JS compiler API for
+      // typescript-eslint et al.) from @typescript/native (TS7).
+      // fast-xml-validator 1.3+ / detailed-xml-validator 2.2+ pull
+      // @nodable/flexible-xml-parser, which references Buffer at module
+      // scope and breaks every browser bundle.
+      // @effect/tsgo 0.20+ ships new rules (missingPipeableSignature,
+      // schemaOpaqueInstanceMember, syncToSucceed) whose global enforcement
+      // surfaces ~756 violations; adopting it is its own remediation campaign.
+      label: "Held back — do not auto-update (see changeset portless-default-react-grab-storybook)",
+      dependencies: ["typescript", "fast-xml-validator", "detailed-xml-validator", "@effect/tsgo"],
+      isIgnored: true,
+    },
+  ],
   versionGroups: [
     {
       label: "Catalog (Pinned)",
