@@ -22,8 +22,8 @@ The smallest end-to-end turn of the loop described in
    the arithmetic must reproduce the browser's own line counts exactly
    (200px→3, 320px→2, 480px→2). Layout correctness asserted in CI as math.
 
-Run: `bun test scratchpad/computable-layout` (bun-test scratchpad exemption,
-same as `scratchpad/dockview`).
+Run: `bun test scratchpad/computable-layout` (bun-test scratchpad exemption;
+the dock kernel now lives in `@beep/dock`).
 
 ## What this proves / doesn't
 

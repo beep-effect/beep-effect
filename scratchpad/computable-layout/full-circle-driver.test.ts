@@ -21,7 +21,7 @@ import {
   SplitRatio,
   TabsNode,
   TextPanelView,
-} from "../dockview/poc/index.ts";
+} from "@beep/dock";
 
 const metrics = Effect.runSync(chromeLinuxArial16).metrics;
 const sentence = O.getOrThrow(metrics.sentence);

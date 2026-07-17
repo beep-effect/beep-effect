@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-07-15T07:38:05.896Z",
+  "generatedAt": "2026-07-17T00:41:32.660Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -61,12 +61,12 @@
     "status": "resolved"
   },
   "totals": {
-    "packages": 122,
-    "cleanPackages": 118,
+    "packages": 123,
+    "cleanPackages": 119,
     "packagesWithoutPublicSrcSurface": 4,
     "packagesNeedingRemediation": 0,
-    "publicModules": 2019,
-    "publicExports": 16459,
+    "publicModules": 2022,
+    "publicExports": 16471,
     "openModules": 0,
     "openExports": 0,
     "missingExportExamples": 0,
@@ -24080,8 +24080,8 @@
           "exportKind": "const",
           "filePath": "src/Dock.atoms.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.atoms.ts",
-          "line": 50,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-atoms-ts-50-dockatomobservabilitylive",
+          "line": 48,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-atoms-ts-48-dockatomobservabilitylive",
           "currentTags": [
             "@example",
             "@category",
@@ -24102,9 +24102,10 @@
           "exportKind": "const",
           "filePath": "src/Dock.atoms.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.atoms.ts",
-          "line": 150,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-atoms-ts-150-makedockatomswith",
+          "line": 146,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-atoms-ts-146-makedockatomswith",
           "currentTags": [
+            "@remarks",
             "@example",
             "@category",
             "@since"
@@ -24124,8 +24125,8 @@
           "exportKind": "const",
           "filePath": "src/Dock.atoms.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.atoms.ts",
-          "line": 223,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-atoms-ts-223-makedockatoms",
+          "line": 219,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-atoms-ts-219-makedockatoms",
           "currentTags": [
             "@example",
             "@category",
@@ -26433,8 +26434,8 @@
           "exportKind": "type",
           "filePath": "src/Dock.models-tree.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
-          "line": 1440,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-models-tree-ts-1440-dockworkspace",
+          "line": 1441,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-models-tree-ts-1441-dockworkspace",
           "currentTags": [
             "@example",
             "@category",
@@ -26455,8 +26456,8 @@
           "exportKind": "class",
           "filePath": "src/Dock.models-tree.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.models-tree.ts",
-          "line": 1456,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-models-tree-ts-1456-docksnapshot",
+          "line": 1457,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-models-tree-ts-1457-docksnapshot",
           "currentTags": [
             "@example",
             "@category",
@@ -26763,9 +26764,10 @@
           "exportKind": "class",
           "filePath": "src/Dock.placement.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
-          "line": 142,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-placement-ts-142-rootsplitplacement",
+          "line": 146,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-placement-ts-146-rootsplitplacement",
           "currentTags": [
+            "@remarks",
             "@example",
             "@category",
             "@since"
@@ -26785,8 +26787,8 @@
           "exportKind": "class",
           "filePath": "src/Dock.placement.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
-          "line": 169,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-placement-ts-169-groupsplitplacement",
+          "line": 173,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-placement-ts-173-groupsplitplacement",
           "currentTags": [
             "@example",
             "@category",
@@ -26807,8 +26809,8 @@
           "exportKind": "class",
           "filePath": "src/Dock.placement.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
-          "line": 196,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-placement-ts-196-grouprootsplitplacement",
+          "line": 200,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-placement-ts-200-grouprootsplitplacement",
           "currentTags": [
             "@example",
             "@category",
@@ -26829,8 +26831,8 @@
           "exportKind": "const",
           "filePath": "src/Dock.placement.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
-          "line": 224,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-placement-ts-224-dockplacement",
+          "line": 228,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-placement-ts-228-dockplacement",
           "currentTags": [
             "@example",
             "@category",
@@ -26851,8 +26853,8 @@
           "exportKind": "type",
           "filePath": "src/Dock.placement.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
-          "line": 247,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-placement-ts-247-dockplacement",
+          "line": 251,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-placement-ts-251-dockplacement",
           "currentTags": [
             "@example",
             "@category",
@@ -26873,8 +26875,8 @@
           "exportKind": "const",
           "filePath": "src/Dock.placement.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
-          "line": 263,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-placement-ts-263-dockmovetarget",
+          "line": 267,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-placement-ts-267-dockmovetarget",
           "currentTags": [
             "@example",
             "@category",
@@ -26895,8 +26897,8 @@
           "exportKind": "type",
           "filePath": "src/Dock.placement.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
-          "line": 283,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-placement-ts-283-dockmovetarget",
+          "line": 287,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-placement-ts-287-dockmovetarget",
           "currentTags": [
             "@example",
             "@category",
@@ -26917,8 +26919,8 @@
           "exportKind": "const",
           "filePath": "src/Dock.placement.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
-          "line": 299,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-placement-ts-299-dockgroupmovetarget",
+          "line": 303,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-placement-ts-303-dockgroupmovetarget",
           "currentTags": [
             "@example",
             "@category",
@@ -26939,8 +26941,8 @@
           "exportKind": "type",
           "filePath": "src/Dock.placement.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.placement.ts",
-          "line": 319,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-placement-ts-319-dockgroupmovetarget",
+          "line": 323,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-placement-ts-323-dockgroupmovetarget",
           "currentTags": [
             "@example",
             "@category",
@@ -27049,8 +27051,8 @@
           "exportKind": "const",
           "filePath": "src/Dock.protocol.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
-          "line": 146,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-146-dockatomoperationkind",
+          "line": 132,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-132-dockatomoperationkind",
           "currentTags": [
             "@example",
             "@category",
@@ -27071,8 +27073,8 @@
           "exportKind": "type",
           "filePath": "src/Dock.protocol.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
-          "line": 170,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-170-dockatomoperationkind",
+          "line": 156,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-156-dockatomoperationkind",
           "currentTags": [
             "@example",
             "@category",
@@ -27093,8 +27095,8 @@
           "exportKind": "const",
           "filePath": "src/Dock.protocol.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
-          "line": 186,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-186-dockatomoperation",
+          "line": 172,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-172-dockatomoperation",
           "currentTags": [
             "@example",
             "@category",
@@ -27115,8 +27117,8 @@
           "exportKind": "type",
           "filePath": "src/Dock.protocol.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
-          "line": 214,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-214-dockatomoperation",
+          "line": 200,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-200-dockatomoperation",
           "currentTags": [
             "@example",
             "@category",
@@ -27137,8 +27139,8 @@
           "exportKind": "class",
           "filePath": "src/Dock.protocol.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
-          "line": 231,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-231-dockmutationcompleted",
+          "line": 217,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-217-dockmutationcompleted",
           "currentTags": [
             "@example",
             "@category",
@@ -27159,8 +27161,8 @@
           "exportKind": "class",
           "filePath": "src/Dock.protocol.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
-          "line": 255,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-255-docksnapshotsaved",
+          "line": 241,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-241-docksnapshotsaved",
           "currentTags": [
             "@example",
             "@category",
@@ -27181,8 +27183,8 @@
           "exportKind": "const",
           "filePath": "src/Dock.protocol.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
-          "line": 281,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-281-dockatomoperationoutcome",
+          "line": 267,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-267-dockatomoperationoutcome",
           "currentTags": [
             "@example",
             "@category",
@@ -27203,8 +27205,8 @@
           "exportKind": "type",
           "filePath": "src/Dock.protocol.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
-          "line": 304,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-304-dockatomoperationoutcome",
+          "line": 290,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-290-dockatomoperationoutcome",
           "currentTags": [
             "@example",
             "@category",
@@ -27225,8 +27227,8 @@
           "exportKind": "const",
           "filePath": "src/Dock.protocol.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
-          "line": 320,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-320-dockatomsessionerror",
+          "line": 306,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-306-dockatomsessionerror",
           "currentTags": [
             "@example",
             "@category",
@@ -27247,8 +27249,8 @@
           "exportKind": "type",
           "filePath": "src/Dock.protocol.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
-          "line": 346,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-346-dockatomsessionerror",
+          "line": 332,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-332-dockatomsessionerror",
           "currentTags": [
             "@example",
             "@category",
@@ -27269,8 +27271,8 @@
           "exportKind": "class",
           "filePath": "src/Dock.protocol.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
-          "line": 363,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-363-dockatomfeedsuccess",
+          "line": 349,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-349-dockatomfeedsuccess",
           "currentTags": [
             "@example",
             "@category",
@@ -27291,8 +27293,8 @@
           "exportKind": "class",
           "filePath": "src/Dock.protocol.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
-          "line": 390,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-390-dockatomfeedfailure",
+          "line": 376,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-376-dockatomfeedfailure",
           "currentTags": [
             "@example",
             "@category",
@@ -27313,8 +27315,8 @@
           "exportKind": "const",
           "filePath": "src/Dock.protocol.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
-          "line": 417,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-417-dockatomfeedentry",
+          "line": 403,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-403-dockatomfeedentry",
           "currentTags": [
             "@example",
             "@category",
@@ -27335,8 +27337,8 @@
           "exportKind": "type",
           "filePath": "src/Dock.protocol.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Dock.protocol.ts",
-          "line": 438,
-          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-438-dockatomfeedentry",
+          "line": 424,
+          "anchor": "packages-foundation-ui-system-dock-src-dock-protocol-ts-424-dockatomfeedentry",
           "currentTags": [
             "@example",
             "@category",
@@ -27423,9 +27425,10 @@
           "exportKind": "class",
           "filePath": "src/DockEngine.service.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/DockEngine.service.ts",
-          "line": 127,
-          "anchor": "packages-foundation-ui-system-dock-src-dockengine-service-ts-127-dockengine",
+          "line": 125,
+          "anchor": "packages-foundation-ui-system-dock-src-dockengine-service-ts-125-dockengine",
           "currentTags": [
+            "@remarks",
             "@example",
             "@category",
             "@since"
@@ -27445,8 +27448,8 @@
           "exportKind": "const",
           "filePath": "src/DockEngine.service.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/DockEngine.service.ts",
-          "line": 162,
-          "anchor": "packages-foundation-ui-system-dock-src-dockengine-service-ts-162-dockenginelive",
+          "line": 160,
+          "anchor": "packages-foundation-ui-system-dock-src-dockengine-service-ts-160-dockenginelive",
           "currentTags": [
             "@example",
             "@category",
@@ -27467,8 +27470,8 @@
           "exportKind": "interface",
           "filePath": "src/DockEngine.service.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/DockEngine.service.ts",
-          "line": 184,
-          "anchor": "packages-foundation-ui-system-dock-src-dockengine-service-ts-184-docksnapshotstoreshape",
+          "line": 182,
+          "anchor": "packages-foundation-ui-system-dock-src-dockengine-service-ts-182-docksnapshotstoreshape",
           "currentTags": [
             "@example",
             "@category",
@@ -27489,8 +27492,8 @@
           "exportKind": "class",
           "filePath": "src/DockEngine.service.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/DockEngine.service.ts",
-          "line": 208,
-          "anchor": "packages-foundation-ui-system-dock-src-dockengine-service-ts-208-docksnapshotstore",
+          "line": 206,
+          "anchor": "packages-foundation-ui-system-dock-src-dockengine-service-ts-206-docksnapshotstore",
           "currentTags": [
             "@example",
             "@category",
@@ -27511,8 +27514,8 @@
           "exportKind": "const",
           "filePath": "src/DockEngine.service.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/DockEngine.service.ts",
-          "line": 233,
-          "anchor": "packages-foundation-ui-system-dock-src-dockengine-service-ts-233-makedocksnapshotstorememory",
+          "line": 231,
+          "anchor": "packages-foundation-ui-system-dock-src-dockengine-service-ts-231-makedocksnapshotstorememory",
           "currentTags": [
             "@example",
             "@category",
@@ -27533,8 +27536,8 @@
           "exportKind": "const",
           "filePath": "src/DockEngine.service.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/DockEngine.service.ts",
-          "line": 263,
-          "anchor": "packages-foundation-ui-system-dock-src-dockengine-service-ts-263-requiresnapshot",
+          "line": 261,
+          "anchor": "packages-foundation-ui-system-dock-src-dockengine-service-ts-261-requiresnapshot",
           "currentTags": [
             "@example",
             "@category",
@@ -27577,9 +27580,10 @@
           "exportKind": "const",
           "filePath": "src/DockPolicy.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/DockPolicy.ts",
-          "line": 115,
-          "anchor": "packages-foundation-ui-system-dock-src-dockpolicy-ts-115-lockedgroupspolicy",
+          "line": 114,
+          "anchor": "packages-foundation-ui-system-dock-src-dockpolicy-ts-114-lockedgroupspolicy",
           "currentTags": [
+            "@remarks",
             "@example",
             "@category",
             "@since"
@@ -27599,8 +27603,8 @@
           "exportKind": "const",
           "filePath": "src/DockPolicy.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/DockPolicy.ts",
-          "line": 192,
-          "anchor": "packages-foundation-ui-system-dock-src-dockpolicy-ts-192-makepolicydockenginelayer",
+          "line": 191,
+          "anchor": "packages-foundation-ui-system-dock-src-dockpolicy-ts-191-makepolicydockenginelayer",
           "currentTags": [
             "@example",
             "@category",
@@ -27643,9 +27647,10 @@
           "exportKind": "class",
           "filePath": "src/Geometry.models.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Geometry.models.ts",
-          "line": 73,
-          "anchor": "packages-foundation-ui-system-dock-src-geometry-models-ts-73-dockbox",
+          "line": 59,
+          "anchor": "packages-foundation-ui-system-dock-src-geometry-models-ts-59-dockbox",
           "currentTags": [
+            "@remarks",
             "@example",
             "@category",
             "@since"
@@ -27665,8 +27670,8 @@
           "exportKind": "class",
           "filePath": "src/Geometry.models.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Geometry.models.ts",
-          "line": 97,
-          "anchor": "packages-foundation-ui-system-dock-src-geometry-models-ts-97-groupgeometry",
+          "line": 83,
+          "anchor": "packages-foundation-ui-system-dock-src-geometry-models-ts-83-groupgeometry",
           "currentTags": [
             "@example",
             "@category",
@@ -27687,8 +27692,8 @@
           "exportKind": "class",
           "filePath": "src/Geometry.models.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Geometry.models.ts",
-          "line": 116,
-          "anchor": "packages-foundation-ui-system-dock-src-geometry-models-ts-116-sashgeometry",
+          "line": 102,
+          "anchor": "packages-foundation-ui-system-dock-src-geometry-models-ts-102-sashgeometry",
           "currentTags": [
             "@example",
             "@category",
@@ -27709,8 +27714,8 @@
           "exportKind": "class",
           "filePath": "src/Geometry.models.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Geometry.models.ts",
-          "line": 135,
-          "anchor": "packages-foundation-ui-system-dock-src-geometry-models-ts-135-floatinggeometry",
+          "line": 121,
+          "anchor": "packages-foundation-ui-system-dock-src-geometry-models-ts-121-floatinggeometry",
           "currentTags": [
             "@example",
             "@category",
@@ -27731,8 +27736,8 @@
           "exportKind": "class",
           "filePath": "src/Geometry.models.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Geometry.models.ts",
-          "line": 154,
-          "anchor": "packages-foundation-ui-system-dock-src-geometry-models-ts-154-dockgeometry",
+          "line": 140,
+          "anchor": "packages-foundation-ui-system-dock-src-geometry-models-ts-140-dockgeometry",
           "currentTags": [
             "@example",
             "@category",
@@ -27753,8 +27758,8 @@
           "exportKind": "const",
           "filePath": "src/Geometry.models.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Geometry.models.ts",
-          "line": 191,
-          "anchor": "packages-foundation-ui-system-dock-src-geometry-models-ts-191-resolveanchoredbox",
+          "line": 177,
+          "anchor": "packages-foundation-ui-system-dock-src-geometry-models-ts-177-resolveanchoredbox",
           "currentTags": [
             "@example",
             "@category",
@@ -27775,8 +27780,8 @@
           "exportKind": "class",
           "filePath": "src/Geometry.models.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Geometry.models.ts",
-          "line": 230,
-          "anchor": "packages-foundation-ui-system-dock-src-geometry-models-ts-230-geometryoptions",
+          "line": 216,
+          "anchor": "packages-foundation-ui-system-dock-src-geometry-models-ts-216-geometryoptions",
           "currentTags": [
             "@example",
             "@category",
@@ -27797,8 +27802,8 @@
           "exportKind": "type",
           "filePath": "src/Geometry.models.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Geometry.models.ts",
-          "line": 257,
-          "anchor": "packages-foundation-ui-system-dock-src-geometry-models-ts-257-groupminimumlookup",
+          "line": 243,
+          "anchor": "packages-foundation-ui-system-dock-src-geometry-models-ts-243-groupminimumlookup",
           "currentTags": [
             "@example",
             "@category",
@@ -27819,8 +27824,8 @@
           "exportKind": "type",
           "filePath": "src/Geometry.models.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Geometry.models.ts",
-          "line": 273,
-          "anchor": "packages-foundation-ui-system-dock-src-geometry-models-ts-273-groupminimarecord",
+          "line": 259,
+          "anchor": "packages-foundation-ui-system-dock-src-geometry-models-ts-259-groupminimarecord",
           "currentTags": [
             "@example",
             "@category",
@@ -27841,8 +27846,8 @@
           "exportKind": "class",
           "filePath": "src/Minima.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Minima.ts",
-          "line": 62,
-          "anchor": "packages-foundation-ui-system-dock-src-minima-ts-62-tabchrome",
+          "line": 56,
+          "anchor": "packages-foundation-ui-system-dock-src-minima-ts-56-tabchrome",
           "currentTags": [
             "@example",
             "@category",
@@ -27863,8 +27868,8 @@
           "exportKind": "const",
           "filePath": "src/Minima.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Minima.ts",
-          "line": 92,
-          "anchor": "packages-foundation-ui-system-dock-src-minima-ts-92-titlewords",
+          "line": 80,
+          "anchor": "packages-foundation-ui-system-dock-src-minima-ts-80-titlewords",
           "currentTags": [
             "@example",
             "@category",
@@ -27885,9 +27890,10 @@
           "exportKind": "const",
           "filePath": "src/Minima.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Minima.ts",
-          "line": 145,
-          "anchor": "packages-foundation-ui-system-dock-src-minima-ts-145-titleminima",
+          "line": 129,
+          "anchor": "packages-foundation-ui-system-dock-src-minima-ts-129-titleminima",
           "currentTags": [
+            "@remarks",
             "@example",
             "@category",
             "@since"
@@ -27907,8 +27913,8 @@
           "exportKind": "const",
           "filePath": "src/Minima.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Minima.ts",
-          "line": 206,
-          "anchor": "packages-foundation-ui-system-dock-src-minima-ts-206-maketitleminimaatom",
+          "line": 184,
+          "anchor": "packages-foundation-ui-system-dock-src-minima-ts-184-maketitleminimaatom",
           "currentTags": [
             "@example",
             "@category",
@@ -27929,8 +27935,8 @@
           "exportKind": "const",
           "filePath": "src/Recency.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Recency.ts",
-          "line": 45,
-          "anchor": "packages-foundation-ui-system-dock-src-recency-ts-45-touchedgroupsinevents",
+          "line": 39,
+          "anchor": "packages-foundation-ui-system-dock-src-recency-ts-39-touchedgroupsinevents",
           "currentTags": [
             "@example",
             "@category",
@@ -27951,9 +27957,10 @@
           "exportKind": "const",
           "filePath": "src/Recency.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Recency.ts",
-          "line": 88,
-          "anchor": "packages-foundation-ui-system-dock-src-recency-ts-88-touchedgroups",
+          "line": 76,
+          "anchor": "packages-foundation-ui-system-dock-src-recency-ts-76-touchedgroups",
           "currentTags": [
+            "@remarks",
             "@example",
             "@category",
             "@since"
@@ -27973,9 +27980,10 @@
           "exportKind": "const",
           "filePath": "src/Recency.ts",
           "repoPath": "packages/foundation/ui-system/dock/src/Recency.ts",
-          "line": 139,
-          "anchor": "packages-foundation-ui-system-dock-src-recency-ts-139-makemrugroupsatom",
+          "line": 122,
+          "anchor": "packages-foundation-ui-system-dock-src-recency-ts-122-makemrugroupsatom",
           "currentTags": [
+            "@remarks",
             "@example",
             "@category",
             "@since"
@@ -78184,9 +78192,367 @@
       ]
     },
     {
+      "packageName": "@beep/dock-react",
+      "packagePath": "packages/foundation/ui-system/dock-react",
+      "topoOrder": 33,
+      "status": "clean",
+      "sourceCoverage": {
+        "srcDir": "src",
+        "sourceFileCount": 3,
+        "publicModuleCount": 3,
+        "publicExportCount": 12
+      },
+      "docgenCoverage": {
+        "hasDocgenConfig": true,
+        "enforceDescriptions": false,
+        "enforceExamples": false,
+        "enforceVersion": true
+      },
+      "counts": {
+        "openModules": 0,
+        "openExports": 0,
+        "missingExportExamples": 0,
+        "missingExportCategories": 0,
+        "missingExportSince": 0,
+        "missingExportSummaries": 0,
+        "forbiddenTagFindings": 0,
+        "malformedConditionalTagFindings": 0,
+        "exampleImportFindings": 0,
+        "unsafeExampleFindings": 0,
+        "schemaAnnotationFindings": 0
+      },
+      "modules": [
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/DockReact.types.ts",
+          "repoPath": "packages/foundation/ui-system/dock-react/src/DockReact.types.ts",
+          "line": 1,
+          "anchor": "packages-foundation-ui-system-dock-react-src-dockreact-types-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 9,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/DockviewReact.tsx",
+          "repoPath": "packages/foundation/ui-system/dock-react/src/DockviewReact.tsx",
+          "line": 1,
+          "anchor": "packages-foundation-ui-system-dock-react-src-dockviewreact-tsx-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/foundation/ui-system/dock-react/src/index.ts",
+          "line": 1,
+          "anchor": "packages-foundation-ui-system-dock-react-src-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        }
+      ],
+      "exports": [
+        {
+          "symbolName": "DockAtomGraph",
+          "exportKind": "type",
+          "filePath": "src/DockReact.types.ts",
+          "repoPath": "packages/foundation/ui-system/dock-react/src/DockReact.types.ts",
+          "line": 32,
+          "anchor": "packages-foundation-ui-system-dock-react-src-dockreact-types-ts-32-dockatomgraph",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DockPanelApi",
+          "exportKind": "class",
+          "filePath": "src/DockReact.types.ts",
+          "repoPath": "packages/foundation/ui-system/dock-react/src/DockReact.types.ts",
+          "line": 50,
+          "anchor": "packages-foundation-ui-system-dock-react-src-dockreact-types-ts-50-dockpanelapi",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DockPanelProps",
+          "exportKind": "type",
+          "filePath": "src/DockReact.types.ts",
+          "repoPath": "packages/foundation/ui-system/dock-react/src/DockReact.types.ts",
+          "line": 73,
+          "anchor": "packages-foundation-ui-system-dock-react-src-dockreact-types-ts-73-dockpanelprops",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DockTabProps",
+          "exportKind": "type",
+          "filePath": "src/DockReact.types.ts",
+          "repoPath": "packages/foundation/ui-system/dock-react/src/DockReact.types.ts",
+          "line": 93,
+          "anchor": "packages-foundation-ui-system-dock-react-src-dockreact-types-ts-93-docktabprops",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DockRenderer",
+          "exportKind": "type",
+          "filePath": "src/DockReact.types.ts",
+          "repoPath": "packages/foundation/ui-system/dock-react/src/DockReact.types.ts",
+          "line": 109,
+          "anchor": "packages-foundation-ui-system-dock-react-src-dockreact-types-ts-109-dockrenderer",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DockTabRenderer",
+          "exportKind": "type",
+          "filePath": "src/DockReact.types.ts",
+          "repoPath": "packages/foundation/ui-system/dock-react/src/DockReact.types.ts",
+          "line": 125,
+          "anchor": "packages-foundation-ui-system-dock-react-src-dockreact-types-ts-125-docktabrenderer",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DockviewAdapterApi",
+          "exportKind": "type",
+          "filePath": "src/DockReact.types.ts",
+          "repoPath": "packages/foundation/ui-system/dock-react/src/DockReact.types.ts",
+          "line": 141,
+          "anchor": "packages-foundation-ui-system-dock-react-src-dockreact-types-ts-141-dockviewadapterapi",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DockTitleMinimaOptions",
+          "exportKind": "type",
+          "filePath": "src/DockReact.types.ts",
+          "repoPath": "packages/foundation/ui-system/dock-react/src/DockReact.types.ts",
+          "line": 174,
+          "anchor": "packages-foundation-ui-system-dock-react-src-dockreact-types-ts-174-docktitleminimaoptions",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DockviewReactProps",
+          "exportKind": "type",
+          "filePath": "src/DockReact.types.ts",
+          "repoPath": "packages/foundation/ui-system/dock-react/src/DockReact.types.ts",
+          "line": 197,
+          "anchor": "packages-foundation-ui-system-dock-react-src-dockreact-types-ts-197-dockviewreactprops",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DockviewReact",
+          "exportKind": "const",
+          "filePath": "src/DockviewReact.tsx",
+          "repoPath": "packages/foundation/ui-system/dock-react/src/DockviewReact.tsx",
+          "line": 143,
+          "anchor": "packages-foundation-ui-system-dock-react-src-dockviewreact-tsx-143-dockviewreact",
+          "currentTags": [
+            "@remarks",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export {\n  /** @since 0.0.0 */\n  type DockAtomGraph,\n  /** @since 0.0.0 */\n  DockPanelApi,\n  /** @since 0.0.0 */\n  type DockPanelProps,\n  /** @since 0.0.0 */\n  type DockRenderer,\n  /** @since 0.0.0 */\n  type DockTabProps,\n  /** @since 0.0.0 */\n  type DockTabRenderer,\n  /** @since 0.0.0 */\n  type DockTitleMinimaOptions,\n  /** @since 0.0.0 */\n  type DockviewAdapterApi,\n  /** @since 0.0.0 */\n  type DockviewReactProps,\n} from \"./DockReact.types.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/foundation/ui-system/dock-react/src/index.ts",
+          "line": 7,
+          "anchor": "packages-foundation-ui-system-dock-react-src-index-ts-7-export-since-0-0-0-type-dockatomgraph-since-0-0-0-dockpanelapi-since-0-0-0-type-dockpanelprops-since-0-0-0-type-dockrenderer-since-0-0-0-type-docktabprops-since-0-0-0-type-docktabrenderer-since-0-0-0-type-docktitleminimaoptions-since-0-0-0-type-dockviewadapterapi-since-0-0-0-type-dockviewreactprops-from-dockreact-types-ts",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export {\n  /** @since 0.0.0 */\n  DockviewReact,\n} from \"./DockviewReact.tsx\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/foundation/ui-system/dock-react/src/index.ts",
+          "line": 27,
+          "anchor": "packages-foundation-ui-system-dock-react-src-index-ts-27-export-since-0-0-0-dockviewreact-from-dockviewreact-tsx",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        }
+      ]
+    },
+    {
       "packageName": "@beep/lint-rules",
       "packagePath": "packages/tooling/policy-pack/lint-rules",
-      "topoOrder": 33,
+      "topoOrder": 34,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -79092,7 +79458,7 @@
     {
       "packageName": "@beep/ontology-server",
       "packagePath": "packages/ontology/server",
-      "topoOrder": 34,
+      "topoOrder": 35,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -79761,7 +80127,7 @@
     {
       "packageName": "@beep/colors",
       "packagePath": "packages/foundation/capability/colors",
-      "topoOrder": 35,
+      "topoOrder": 36,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -80020,7 +80386,7 @@
     {
       "packageName": "@beep/agents-use-cases",
       "packagePath": "packages/agents/use-cases",
-      "topoOrder": 36,
+      "topoOrder": 37,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -83352,7 +83718,7 @@
     {
       "packageName": "@beep/m365-mcp",
       "packagePath": "packages/drivers/m365-mcp",
-      "topoOrder": 37,
+      "topoOrder": 38,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -83934,7 +84300,7 @@
     {
       "packageName": "@beep/cosmos",
       "packagePath": "packages/drivers/cosmos",
-      "topoOrder": 38,
+      "topoOrder": 39,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -84490,7 +84856,7 @@
     {
       "packageName": "@beep/workspace-server",
       "packagePath": "packages/workspace/server",
-      "topoOrder": 39,
+      "topoOrder": 40,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -85355,7 +85721,7 @@
     {
       "packageName": "@beep/chalk",
       "packagePath": "packages/foundation/capability/chalk",
-      "topoOrder": 40,
+      "topoOrder": 41,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -86182,7 +86548,7 @@
     {
       "packageName": "@beep/uspto",
       "packagePath": "packages/drivers/uspto",
-      "topoOrder": 41,
+      "topoOrder": 42,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -86894,7 +87260,7 @@
     {
       "packageName": "@beep/phoenix",
       "packagePath": "packages/drivers/phoenix",
-      "topoOrder": 42,
+      "topoOrder": 43,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -88134,7 +88500,7 @@
     {
       "packageName": "@beep/test-utils",
       "packagePath": "packages/tooling/test-kit/test-utils",
-      "topoOrder": 43,
+      "topoOrder": 44,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -88764,8 +89130,8 @@
           "exportKind": "const",
           "filePath": "src/SqlTest.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
-          "line": 965,
-          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-965-makepglitetestcontainerresource",
+          "line": 966,
+          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-966-makepglitetestcontainerresource",
           "currentTags": [
             "@param",
             "@returns",
@@ -88788,8 +89154,8 @@
           "exportKind": "const",
           "filePath": "src/SqlTest.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
-          "line": 1251,
-          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1251-bunsqlitetestdriver",
+          "line": 1282,
+          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1282-bunsqlitetestdriver",
           "currentTags": [
             "@example",
             "@category",
@@ -88810,8 +89176,8 @@
           "exportKind": "const",
           "filePath": "src/SqlTest.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
-          "line": 1327,
-          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1327-nodesqlitetestdriver",
+          "line": 1358,
+          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1358-nodesqlitetestdriver",
           "currentTags": [
             "@example",
             "@category",
@@ -88832,8 +89198,8 @@
           "exportKind": "const",
           "filePath": "src/SqlTest.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
-          "line": 1349,
-          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1349-pglitetestcontainerstestdriver",
+          "line": 1380,
+          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1380-pglitetestcontainerstestdriver",
           "currentTags": [
             "@example",
             "@category",
@@ -88854,8 +89220,8 @@
           "exportKind": "const",
           "filePath": "src/SqlTest.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
-          "line": 1423,
-          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1423-pgliteinprocesstestdriver",
+          "line": 1454,
+          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1454-pgliteinprocesstestdriver",
           "currentTags": [
             "@example",
             "@category",
@@ -88876,8 +89242,8 @@
           "exportKind": "const",
           "filePath": "src/SqlTest.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
-          "line": 1445,
-          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1445-pgexternaltestdriver",
+          "line": 1476,
+          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1476-pgexternaltestdriver",
           "currentTags": [
             "@example",
             "@category",
@@ -88898,8 +89264,8 @@
           "exportKind": "const",
           "filePath": "src/SqlTest.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
-          "line": 1536,
-          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1536-makepgliteintegrationgate",
+          "line": 1567,
+          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1567-makepgliteintegrationgate",
           "currentTags": [
             "@param",
             "@returns",
@@ -88922,8 +89288,8 @@
           "exportKind": "const",
           "filePath": "src/SqlTest.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
-          "line": 1603,
-          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1603-makepglitesqltestlayer",
+          "line": 1634,
+          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1634-makepglitesqltestlayer",
           "currentTags": [
             "@param",
             "@returns",
@@ -89051,7 +89417,7 @@
     {
       "packageName": "@beep/types",
       "packagePath": "packages/foundation/primitive/types",
-      "topoOrder": 44,
+      "topoOrder": 45,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -89415,7 +89781,7 @@
     {
       "packageName": "@beep/oip-web",
       "packagePath": "apps/oip-web",
-      "topoOrder": 45,
+      "topoOrder": 46,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -91924,7 +92290,7 @@
     {
       "packageName": "@beep/storybook",
       "packagePath": "apps/storybook",
-      "topoOrder": 46,
+      "topoOrder": 47,
       "status": "no-public-src-surface",
       "sourceCoverage": {
         "srcDir": "src",
@@ -91957,7 +92323,7 @@
     {
       "packageName": "@beep/agents-tables",
       "packagePath": "packages/agents/tables",
-      "topoOrder": 47,
+      "topoOrder": 48,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -92429,7 +92795,7 @@
     {
       "packageName": "@beep/ontology-domain",
       "packagePath": "packages/ontology/domain",
-      "topoOrder": 48,
+      "topoOrder": 49,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -93488,7 +93854,7 @@
     {
       "packageName": "@beep/lexical-schema",
       "packagePath": "packages/foundation/modeling/lexical",
-      "topoOrder": 49,
+      "topoOrder": 50,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -95946,7 +96312,7 @@
     {
       "packageName": "@beep/langextract",
       "packagePath": "packages/foundation/capability/langextract",
-      "topoOrder": 50,
+      "topoOrder": 51,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -96852,7 +97218,7 @@
     {
       "packageName": "@beep/shared-tables",
       "packagePath": "packages/shared/tables",
-      "topoOrder": 51,
+      "topoOrder": 52,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -97421,7 +97787,7 @@
     {
       "packageName": "@beep/scratchpad",
       "packagePath": "scratchpad",
-      "topoOrder": 52,
+      "topoOrder": 53,
       "status": "no-public-src-surface",
       "sourceCoverage": {
         "srcDir": "src",
@@ -97454,7 +97820,7 @@
     {
       "packageName": "@beep/md",
       "packagePath": "packages/foundation/modeling/md",
-      "topoOrder": 53,
+      "topoOrder": 54,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -102261,7 +102627,7 @@
     {
       "packageName": "@beep/tailscale",
       "packagePath": "packages/drivers/tailscale",
-      "topoOrder": 54,
+      "topoOrder": 55,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -103042,7 +103408,7 @@
     {
       "packageName": "@beep/law-practice-use-cases",
       "packagePath": "packages/law-practice/use-cases",
-      "topoOrder": 55,
+      "topoOrder": 56,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -103995,7 +104361,7 @@
     {
       "packageName": "@beep/workspace-domain",
       "packagePath": "packages/workspace/domain",
-      "topoOrder": 56,
+      "topoOrder": 57,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -105983,7 +106349,7 @@
     {
       "packageName": "@beep/semantic-web",
       "packagePath": "packages/foundation/capability/semantic-web",
-      "topoOrder": 57,
+      "topoOrder": 58,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -109231,7 +109597,7 @@
     {
       "packageName": "@beep/utils",
       "packagePath": "packages/foundation/modeling/utils",
-      "topoOrder": 58,
+      "topoOrder": 59,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -114249,7 +114615,7 @@
     {
       "packageName": "@beep/repo-ai-metrics",
       "packagePath": "packages/tooling/library/ai-metrics",
-      "topoOrder": 59,
+      "topoOrder": 60,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -120503,7 +120869,7 @@
     {
       "packageName": "@beep/architecture-lab-tables",
       "packagePath": "packages/architecture-lab/tables",
-      "topoOrder": 60,
+      "topoOrder": 61,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -121146,7 +121512,7 @@
     {
       "packageName": "@beep/tika",
       "packagePath": "packages/drivers/tika",
-      "topoOrder": 61,
+      "topoOrder": 62,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -121615,7 +121981,7 @@
     {
       "packageName": "@beep/libpff",
       "packagePath": "packages/drivers/libpff",
-      "topoOrder": 62,
+      "topoOrder": 63,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -122150,7 +122516,7 @@
     {
       "packageName": "@beep/venice-ai",
       "packagePath": "packages/drivers/venice-ai",
-      "topoOrder": 63,
+      "topoOrder": 64,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -123018,7 +123384,7 @@
     {
       "packageName": "@beep/form",
       "packagePath": "packages/foundation/ui-system/form",
-      "topoOrder": 64,
+      "topoOrder": 65,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -126455,7 +126821,7 @@
     {
       "packageName": "@beep/identity",
       "packagePath": "packages/foundation/modeling/identity",
-      "topoOrder": 65,
+      "topoOrder": 66,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -130778,7 +131144,7 @@
     {
       "packageName": "@beep/drizzle",
       "packagePath": "packages/drivers/drizzle",
-      "topoOrder": 66,
+      "topoOrder": 67,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -131280,7 +131646,7 @@
     {
       "packageName": "@beep/ontology-ui",
       "packagePath": "packages/ontology/ui",
-      "topoOrder": 67,
+      "topoOrder": 68,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -131595,7 +131961,7 @@
     {
       "packageName": "@beep/api-transport",
       "packagePath": "packages/foundation/capability/api-transport",
-      "topoOrder": 68,
+      "topoOrder": 69,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -131847,7 +132213,7 @@
     {
       "packageName": "@beep/box",
       "packagePath": "packages/drivers/box",
-      "topoOrder": 69,
+      "topoOrder": 70,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -233067,7 +233433,7 @@
     {
       "packageName": "@beep/openai-compat",
       "packagePath": "packages/drivers/openai-compat",
-      "topoOrder": 70,
+      "topoOrder": 71,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -234374,7 +234740,7 @@
     {
       "packageName": "@beep/shacl",
       "packagePath": "packages/drivers/shacl",
-      "topoOrder": 71,
+      "topoOrder": 72,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -234603,7 +234969,7 @@
     {
       "packageName": "@beep/documents-server",
       "packagePath": "packages/documents/server",
-      "topoOrder": 72,
+      "topoOrder": 73,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -237456,7 +237822,7 @@
     {
       "packageName": "@beep/nlp-processing",
       "packagePath": "packages/foundation/capability/nlp-processing",
-      "topoOrder": 73,
+      "topoOrder": 74,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -245416,7 +245782,7 @@
     {
       "packageName": "@beep/anthropic",
       "packagePath": "packages/drivers/anthropic",
-      "topoOrder": 74,
+      "topoOrder": 75,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -246161,7 +246527,7 @@
     {
       "packageName": "@beep/professional-desktop",
       "packagePath": "apps/professional-desktop",
-      "topoOrder": 75,
+      "topoOrder": 76,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -249077,7 +249443,7 @@
     {
       "packageName": "@beep/epistemic-domain",
       "packagePath": "packages/epistemic/domain",
-      "topoOrder": 76,
+      "topoOrder": 77,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -250542,7 +250908,7 @@
     {
       "packageName": "@beep/ontology-client",
       "packagePath": "packages/ontology/client",
-      "topoOrder": 77,
+      "topoOrder": 78,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -252047,7 +252413,7 @@
     {
       "packageName": "@beep/architecture-lab-use-cases",
       "packagePath": "packages/architecture-lab/use-cases",
-      "topoOrder": 78,
+      "topoOrder": 79,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -253872,7 +254238,7 @@
     {
       "packageName": "@beep/firecrawl",
       "packagePath": "packages/drivers/firecrawl",
-      "topoOrder": 79,
+      "topoOrder": 80,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -259886,7 +260252,7 @@
     {
       "packageName": "@beep/ecfr",
       "packagePath": "packages/drivers/ecfr",
-      "topoOrder": 80,
+      "topoOrder": 81,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -261539,7 +261905,7 @@
     {
       "packageName": "@beep/oxigraph",
       "packagePath": "packages/drivers/oxigraph",
-      "topoOrder": 81,
+      "topoOrder": 82,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -261768,7 +262134,7 @@
     {
       "packageName": "@beep/acp",
       "packagePath": "packages/drivers/acp",
-      "topoOrder": 82,
+      "topoOrder": 83,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -271036,7 +271402,7 @@
     {
       "packageName": "@beep/nlp",
       "packagePath": "packages/foundation/modeling/nlp",
-      "topoOrder": 83,
+      "topoOrder": 84,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -278496,7 +278862,7 @@
     {
       "packageName": "@beep/infra",
       "packagePath": "infra",
-      "topoOrder": 84,
+      "topoOrder": 85,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -279384,7 +279750,7 @@
     {
       "packageName": "@beep/runpod",
       "packagePath": "packages/drivers/runpod",
-      "topoOrder": 85,
+      "topoOrder": 86,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -283479,7 +283845,7 @@
     {
       "packageName": "@beep/fc-runs",
       "packagePath": "packages/tooling/test-kit/fc-runs",
-      "topoOrder": 86,
+      "topoOrder": 87,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -283672,7 +284038,7 @@
     {
       "packageName": "@beep/repo-utils",
       "packagePath": "packages/tooling/library/repo-utils",
-      "topoOrder": 87,
+      "topoOrder": 88,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -300062,7 +300428,7 @@
     {
       "packageName": "@beep/documents-domain",
       "packagePath": "packages/documents/domain",
-      "topoOrder": 88,
+      "topoOrder": 89,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -302695,7 +303061,7 @@
     {
       "packageName": "@beep/schema",
       "packagePath": "packages/foundation/modeling/schema",
-      "topoOrder": 89,
+      "topoOrder": 90,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -343378,7 +343744,7 @@
     {
       "packageName": "@beep/epistemic-server",
       "packagePath": "packages/epistemic/server",
-      "topoOrder": 90,
+      "topoOrder": 91,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -343522,7 +343888,7 @@
     {
       "packageName": "@beep/rdf",
       "packagePath": "packages/foundation/modeling/rdf",
-      "topoOrder": 91,
+      "topoOrder": 92,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -348526,7 +348892,7 @@
     {
       "packageName": "@beep/onepassword-cli",
       "packagePath": "packages/drivers/onepassword-cli",
-      "topoOrder": 92,
+      "topoOrder": 93,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -348994,7 +349360,7 @@
     {
       "packageName": "@beep/architecture-lab-config",
       "packagePath": "packages/architecture-lab/config",
-      "topoOrder": 93,
+      "topoOrder": 94,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -349676,7 +350042,7 @@
     {
       "packageName": "@beep/govinfo",
       "packagePath": "packages/drivers/govinfo",
-      "topoOrder": 94,
+      "topoOrder": 95,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -352256,7 +352622,7 @@
     {
       "packageName": "@beep/data",
       "packagePath": "packages/foundation/primitive/data",
-      "topoOrder": 95,
+      "topoOrder": 96,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -355711,7 +356077,7 @@
     {
       "packageName": "@beep/xai",
       "packagePath": "packages/drivers/xai",
-      "topoOrder": 96,
+      "topoOrder": 97,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -357436,7 +357802,7 @@
     {
       "packageName": "@beep/architecture-lab-server",
       "packagePath": "packages/architecture-lab/server",
-      "topoOrder": 97,
+      "topoOrder": 98,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -358501,7 +358867,7 @@
     {
       "packageName": "@beep/duckdb",
       "packagePath": "packages/drivers/duckdb",
-      "topoOrder": 98,
+      "topoOrder": 99,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -359292,7 +359658,7 @@
     {
       "packageName": "@beep/ffmpeg",
       "packagePath": "packages/drivers/ffmpeg",
-      "topoOrder": 99,
+      "topoOrder": 100,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -360596,7 +360962,7 @@
     {
       "packageName": "@beep/agents-client",
       "packagePath": "packages/agents/client",
-      "topoOrder": 100,
+      "topoOrder": 101,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -361544,7 +361910,7 @@
     {
       "packageName": "@beep/uspto-mcp",
       "packagePath": "packages/drivers/uspto-mcp",
-      "topoOrder": 101,
+      "topoOrder": 102,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -362381,7 +362747,7 @@
     {
       "packageName": "@beep/architecture-lab-proof",
       "packagePath": "apps/architecture-lab-proof",
-      "topoOrder": 102,
+      "topoOrder": 103,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -362483,7 +362849,7 @@
     {
       "packageName": "@beep/epistemic-use-cases",
       "packagePath": "packages/epistemic/use-cases",
-      "topoOrder": 103,
+      "topoOrder": 104,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -363148,7 +363514,7 @@
     {
       "packageName": "@beep/m365",
       "packagePath": "packages/drivers/m365",
-      "topoOrder": 104,
+      "topoOrder": 105,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -364933,7 +365299,7 @@
     {
       "packageName": "@beep/observability",
       "packagePath": "packages/foundation/capability/observability",
-      "topoOrder": 105,
+      "topoOrder": 106,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -369101,7 +369467,7 @@
     {
       "packageName": "@beep/tsgo-shim",
       "packagePath": "tools/tsgo-shim",
-      "topoOrder": 106,
+      "topoOrder": 107,
       "status": "no-public-src-surface",
       "sourceCoverage": {
         "srcDir": "src",
@@ -369134,7 +369500,7 @@
     {
       "packageName": "@beep/html",
       "packagePath": "packages/foundation/modeling/html",
-      "topoOrder": 107,
+      "topoOrder": 108,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -377082,7 +377448,7 @@
     {
       "packageName": "@beep/n3",
       "packagePath": "packages/drivers/n3",
-      "topoOrder": 108,
+      "topoOrder": 109,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -377420,7 +377786,7 @@
     {
       "packageName": "@beep/ui",
       "packagePath": "packages/foundation/ui-system/ui",
-      "topoOrder": 109,
+      "topoOrder": 110,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -392380,7 +392746,7 @@
     {
       "packageName": "@beep/pandoc-ast",
       "packagePath": "packages/foundation/modeling/pandoc-ast",
-      "topoOrder": 110,
+      "topoOrder": 111,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -395182,7 +395548,7 @@
     {
       "packageName": "@beep/repo-configs",
       "packagePath": "packages/tooling/policy-pack/repo-configs",
-      "topoOrder": 111,
+      "topoOrder": 112,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -398836,7 +399202,7 @@
     {
       "packageName": "@beep/documents-tables",
       "packagePath": "packages/documents/tables",
-      "topoOrder": 112,
+      "topoOrder": 113,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -400064,7 +400430,7 @@
     {
       "packageName": "@beep/wink",
       "packagePath": "packages/drivers/wink",
-      "topoOrder": 113,
+      "topoOrder": 114,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -401946,7 +402312,7 @@
     {
       "packageName": "@beep/postgres",
       "packagePath": "packages/drivers/postgres",
-      "topoOrder": 114,
+      "topoOrder": 115,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -402916,7 +403282,7 @@
     {
       "packageName": "@beep/architecture-lab-domain",
       "packagePath": "packages/architecture-lab/domain",
-      "topoOrder": 115,
+      "topoOrder": 116,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -404408,7 +404774,7 @@
     {
       "packageName": "@beep/pretext",
       "packagePath": "packages/drivers/pretext",
-      "topoOrder": 116,
+      "topoOrder": 117,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -405356,7 +405722,7 @@
     {
       "packageName": "@beep/provenance",
       "packagePath": "packages/foundation/modeling/provenance",
-      "topoOrder": 117,
+      "topoOrder": 118,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -405542,7 +405908,7 @@
     {
       "packageName": "@beep/epistemic-tables",
       "packagePath": "packages/epistemic/tables",
-      "topoOrder": 118,
+      "topoOrder": 119,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -405967,7 +406333,7 @@
     {
       "packageName": "@beep/federal-register",
       "packagePath": "packages/drivers/federal-register",
-      "topoOrder": 119,
+      "topoOrder": 120,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -406048,7 +406414,7 @@
     {
       "packageName": "@beep/doc-text",
       "packagePath": "packages/drivers/doc-text",
-      "topoOrder": 120,
+      "topoOrder": 121,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -406388,7 +406754,7 @@
     {
       "packageName": "@beep/documents-use-cases",
       "packagePath": "packages/documents/use-cases",
-      "topoOrder": 121,
+      "topoOrder": 122,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
@@ -409467,7 +409833,7 @@
     {
       "packageName": "@beep/sanity",
       "packagePath": "packages/drivers/sanity",
-      "topoOrder": 122,
+      "topoOrder": 123,
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",

@@ -17,7 +17,7 @@ import {
   SplitRatio,
   TabsNode,
   TextPanelView,
-} from "../dockview/poc/index.ts";
+} from "@beep/dock";
 import fixture from "./fixture.json";
 import { layoutLineCount, naturalWidth } from "./layout.ts";
 
