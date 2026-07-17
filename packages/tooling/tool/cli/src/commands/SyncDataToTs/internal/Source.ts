@@ -25,7 +25,7 @@ const $I = $RepoCliId.create("commands/SyncDataToTs/internal/Source");
 
 const textDecoder = new TextDecoder();
 const decodeJsonText = S.decodeUnknownEffect(S.UnknownFromJsonString);
-const decodeJsonTextResult = S.decodeUnknownResult(S.UnknownFromJsonString);
+const decodeJsonTextResult = S.decodeUnknownResult(S.fromJsonString(S.Json));
 const decodeXmlText = S.decodeUnknownEffect(XmlTextToUnknown);
 const encodeUnknownJsonResult = S.encodeUnknownResult(S.UnknownFromJsonString);
 const defaultCsvParserOptions = ParserOptions.new();
@@ -99,12 +99,20 @@ export const formatJson = (value: unknown): string => {
 /**
  * Normalize a JSON-compatible value into Effect's canonical JSON model.
  *
+ * @param targetId - The sync target whose canonical payload is being normalized.
  * @param value - A value accepted by the JSON string codec.
  * @returns The plain JSON value produced by encoding and decoding the input.
  * @category formatting
  * @since 0.0.0
  */
-export const normalizeJson = flow(encodeUnknownJsonResult, Result.flatMap(decodeJsonTextResult), Result.getOrThrow);
+export const normalizeJson = (targetId: string, value: unknown): Effect.Effect<S.Json, SyncDataToTsError> =>
+  pipe(
+    value,
+    encodeUnknownJsonResult,
+    Result.flatMap(decodeJsonTextResult),
+    Effect.fromResult,
+    SyncDataToTsError.mapError(`Failed to normalize canonical JSON for ${targetId}`, targetId)
+  );
 
 /**
  * Pretty-print a JSON-compatible value as a TypeScript literal.

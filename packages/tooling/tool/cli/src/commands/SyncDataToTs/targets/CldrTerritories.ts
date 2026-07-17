@@ -551,7 +551,7 @@ const acquireCldrTerritoriesProjection = Effect.fn("SyncDataToTs.CldrTerritories
     sourceMetadata(infoSource.source, { version: release.tag_name }),
     sourceMetadata(namesSource.source, { version: release.tag_name }),
   ];
-  const canonical = normalizeJson({
+  const canonical = yield* normalizeJson(targetId, {
     schemaVersion: "beep-data/cldr-territories/v1",
     metadata: {
       releaseTag: normalized.releaseTag,

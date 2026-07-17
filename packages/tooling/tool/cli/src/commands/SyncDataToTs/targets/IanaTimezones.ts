@@ -308,7 +308,7 @@ const acquireIanaTimezonesProjection = Effect.fn("SyncDataToTs.IanaTimezones.acq
     A.map((name) => new IanaTimezoneEntry(name))
   );
   const metadata = sourceMetadata(source, { version });
-  const canonical = normalizeJson({
+  const canonical = yield* normalizeJson(targetId, {
     schemaVersion: "beep-data/iana-timezones/v1",
     metadata,
     timezonesByName: byName(values),

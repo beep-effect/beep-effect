@@ -325,7 +325,7 @@ const acquireIanaMediaTypesProjection = Effect.fn("SyncDataToTs.IanaMediaTypes.a
   const document = yield* parseXmlSource(targetId, source);
   const { updated, values } = yield* normalizeIanaMediaTypes(document);
   const metadata = sourceMetadata(source, { published: updated });
-  const canonical = normalizeJson({
+  const canonical = yield* normalizeJson(targetId, {
     schemaVersion: "beep-data/iana-media-types/v1",
     metadata,
     mediaTypesByType: byType(values),

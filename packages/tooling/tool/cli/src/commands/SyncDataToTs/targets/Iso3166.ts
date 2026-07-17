@@ -605,7 +605,7 @@ const acquireIso3166Projection = Effect.fn("SyncDataToTs.Iso3166.acquire")(funct
     sourceMetadata(part1.source, { version: "ISO 3166-1" }),
     sourceMetadata(part2.source, { version: "ISO 3166-2" }),
   ];
-  const canonical = normalizeJson({
+  const canonical = yield* normalizeJson(targetId, {
     schemaVersion: "beep-data/iso3166/v1",
     metadata: {
       sourceUrl: ISO3166_SOURCE_URL,

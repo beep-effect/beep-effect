@@ -404,7 +404,7 @@ const acquireIso4217Projection = Effect.fn("SyncDataToTs.Iso4217.acquire")(funct
   const document = yield* parseXmlSource(targetId, source);
   const { published, values } = yield* normalizeIso4217Document(document);
   const metadata = sourceMetadata(source, { published });
-  const canonical = normalizeJson({
+  const canonical = yield* normalizeJson(targetId, {
     schemaVersion: "beep-data/iso4217/v1",
     metadata,
     currenciesByCode: byCode(values),
