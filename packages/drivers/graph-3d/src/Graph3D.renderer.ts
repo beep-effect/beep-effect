@@ -801,16 +801,20 @@ const mountRenderer = (
     : undefined;
   resizeObserver?.observe(container);
 
-  // frame loop + fps sampling from real frame deltas
-  const frameDeltas: number[] = [];
+  // frame loop + fps sampling from real frame deltas, kept in a fixed
+  // circular window so the hot loop never shifts or reallocates
+  const frameDeltas = new Float64Array(120);
+  let frameDeltaHead = 0;
+  let frameDeltaCount = 0;
   let lastFrameTime = 0;
   let frameId = 0;
   const animate = (time: number): void => {
     frameId = globalThis.requestAnimationFrame(animate);
     if (lastFrameTime !== 0) {
-      frameDeltas.push(time - lastFrameTime);
-      if (frameDeltas.length > 120) {
-        frameDeltas.shift();
+      frameDeltas[frameDeltaHead] = time - lastFrameTime;
+      frameDeltaHead = (frameDeltaHead + 1) % frameDeltas.length;
+      if (frameDeltaCount < frameDeltas.length) {
+        frameDeltaCount += 1;
       }
     }
     lastFrameTime = time;
@@ -833,11 +837,14 @@ const mountRenderer = (
   return {
     backend: "three-instanced" as const,
     fps: () => {
-      if (frameDeltas.length === 0) {
+      if (frameDeltaCount === 0) {
         return 0;
       }
-      const total = frameDeltas.reduce((sum, delta) => sum + delta, 0);
-      return (frameDeltas.length * 1_000) / total;
+      let total = 0;
+      for (let index = 0; index < frameDeltaCount; index += 1) {
+        total += frameDeltas[index]!;
+      }
+      return (frameDeltaCount * 1_000) / total;
     },
     update: (projection: Graph3DProjection) => {
       if (destroyed) {

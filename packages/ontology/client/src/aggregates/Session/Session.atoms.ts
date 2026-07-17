@@ -1520,7 +1520,8 @@ const compressCommunityOrdinals = (communities: Uint32Array): Uint16Array<ArrayB
     const community = communities[nodeIndex] ?? nodeIndex;
     if ((seen[community] ?? 0) === 0) {
       seen[community] = 1;
-      ordinalByCommunity[community] = distinctCount % 65_535;
+      // Uint16 holds 0..65_535, so the ordinal wrap is modulo 65_536.
+      ordinalByCommunity[community] = distinctCount % 65_536;
       distinctCount += 1;
     }
     ordinals[nodeIndex] = ordinalByCommunity[community] ?? 0;
