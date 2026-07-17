@@ -1700,12 +1700,12 @@ export const ontologyGraphRenderBridgeAtom = Atom.make((get) => {
         O.match({
           onNone: () => undefined,
           onSome: (mounted) =>
-            pipe(
-              graph3dOntologyProjection,
-              O.match({
-                onNone: () => mounted.select(undefined),
-                onSome: (projection) => mounted.select(selectedNodeIndex(projection, selectedIri)),
-              })
+            mounted.select(
+              pipe(
+                graph3dOntologyProjection,
+                O.map((projection) => selectedNodeIndex(projection, selectedIri)),
+                O.getOrUndefined
+              )
             ),
         })
       );
