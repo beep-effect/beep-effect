@@ -27,7 +27,12 @@ const $I = $Graph3dId.create("Graph3D.errors");
  * @category errors
  * @since 0.0.0
  */
-export const Graph3DDriverErrorReason = LiteralKit(["webglUnavailable", "adapterInvariant", "renderFailed"]).annotate(
+export const Graph3DDriverErrorReason = LiteralKit([
+  "importFailed",
+  "webglUnavailable",
+  "adapterInvariant",
+  "renderFailed",
+]).annotate(
   $I.annote("Graph3DDriverErrorReason", {
     description: "Failure reason emitted by the graph-3d render driver.",
   })

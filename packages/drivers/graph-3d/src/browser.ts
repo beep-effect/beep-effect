@@ -7,4 +7,11 @@
  * @since 0.0.0
  */
 
+/**
+ * Lazy instanced three.js render adapter.
+ *
+ * @category adapters
+ * @since 0.0.0
+ */
+export * from "./Graph3D.renderer.js";
 export * from "./index.js";

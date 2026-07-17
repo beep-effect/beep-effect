@@ -14,3 +14,10 @@
  * @since 0.0.0
  */
 export * from "./Graph3D.errors.js";
+/**
+ * Typed-array 3D graph projections and synthetic graph fixtures.
+ *
+ * @category projections
+ * @since 0.0.0
+ */
+export * from "./Graph3D.projection.js";
