@@ -411,7 +411,7 @@
       "kind": "exported-const-function",
       "status": "exception",
       "owner": "@beep/dock-react",
-      "reason": "Memoized adapter-state factory whose three parameters form the composite identity key (graph, gap, titleMinima); data-last currying is meaningless for a constructor.",
+      "reason": "Memoized adapter-state factory whose four parameters form the composite identity key (graph, gap, minGroupExtent, titleMinima; minGroupExtent joined in dock M1's per-panel constraints); data-last currying is meaningless for a constructor.",
       "issue": "DOCK-REACT-ADAPTER-STATE-FACTORY",
       "line": 139,
       "column": 14,

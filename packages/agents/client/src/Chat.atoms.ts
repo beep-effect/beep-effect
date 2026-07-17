@@ -75,7 +75,7 @@ export const resolveChatRpcServerUrl = (origin: string | undefined): string => {
     origin !== undefined &&
     origin !== WINDOWS_TAURI_HTTP_ORIGIN &&
     origin !== WINDOWS_TAURI_HTTPS_ORIGIN &&
-    (Str.startsWith(origin, "http://") || Str.startsWith(origin, "https://"))
+    (Str.startsWith("http://")(origin) || Str.startsWith("https://")(origin))
   ) {
     return new URL("/rpc", origin).toString();
   }
