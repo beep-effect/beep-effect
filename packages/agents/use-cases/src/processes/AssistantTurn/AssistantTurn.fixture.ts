@@ -14,16 +14,14 @@ import { A } from "@beep/utils";
 import { Layer, Stream } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { AgentTurnKernel } from "./AssistantTurn.kernel.js";
-import type { IndexedBlock, TurnHistoryItem } from "./AssistantTurn.contracts.js";
+import { TurnHistoryItem } from "./AssistantTurn.contracts.ts";
+import { AgentTurnKernel } from "./AssistantTurn.kernel.ts";
+import type { IndexedBlock } from "./AssistantTurn.contracts.ts";
 
 const decodeBlock = S.decodeUnknownSync(AssistantBlock);
 
 const lastUserPrompt = (history: ReadonlyArray<TurnHistoryItem>): O.Option<string> =>
-  O.map(
-    A.findLast(history, (item) => item.role === "user"),
-    (item) => item.text
-  );
+  O.map(A.findLast(history, TurnHistoryItem.guards.user), (item) => item.text);
 
 /**
  * Derive the deterministic scripted block sequence the fixture kernel emits for

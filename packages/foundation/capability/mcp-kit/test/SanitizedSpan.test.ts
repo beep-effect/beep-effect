@@ -47,8 +47,9 @@ const makeRecordingTracer = (): { readonly tracer: Tracer.Tracer; readonly captu
 
 describe("withSanitizedToolSpan", () => {
   layer(FixtureHandlersLive)("with the fixture toolkit mounted", (it) => {
-    it.effect("suppresses raw tool parameters from reaching span attributes", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "suppresses raw tool parameters from reaching span attributes",
+      Effect.fnUntraced(function* () {
         const { captured, tracer } = makeRecordingTracer();
         const toolkit = yield* FixtureToolkit;
 
@@ -68,8 +69,9 @@ describe("withSanitizedToolSpan", () => {
     );
   });
 
-  it.effect("passes non-redacted attributes through unchanged", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "passes non-redacted attributes through unchanged",
+    Effect.fnUntraced(function* () {
       const { captured, tracer } = makeRecordingTracer();
 
       yield* withSanitizedToolSpan(Effect.annotateCurrentSpan("outcome", "ok"), "mcp.tool.call").pipe(

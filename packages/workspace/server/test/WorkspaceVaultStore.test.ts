@@ -37,8 +37,9 @@ describe("@beep/workspace-server WorkspaceVaultStore", () => {
     assertSchemaRoundTrip(Workspace.WorkspaceVaultStoreError);
   });
 
-  it.effect("starts unconfigured and persists the selected vault root", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "starts unconfigured and persists the selected vault root",
+    Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const store = yield* Workspace.WorkspaceVaultStore;
       const workspaceId = yield* S.decodeUnknownEffect(WorkspaceIdentity.WorkspaceId)(1);
@@ -56,11 +57,12 @@ describe("@beep/workspace-server WorkspaceVaultStore", () => {
 
       expect(O.getOrUndefined(configured.vaultRootPath)).toBe(vaultRootPath);
       expect(after).toStrictEqual(configured);
-    }).pipe(provideScopedLayer(WorkspaceVaultStoreTestLayer))
+    }, provideScopedLayer(WorkspaceVaultStoreTestLayer))
   );
 
-  it.effect("rejects a missing vault root before persisting it", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects a missing vault root before persisting it",
+    Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const store = yield* Workspace.WorkspaceVaultStore;
@@ -81,6 +83,6 @@ describe("@beep/workspace-server WorkspaceVaultStore", () => {
         expect(result.failure.reason).toContain("does not exist");
       }
       expect(O.isNone(after.vaultRootPath)).toBe(true);
-    }).pipe(provideScopedLayer(WorkspaceVaultStoreTestLayer))
+    }, provideScopedLayer(WorkspaceVaultStoreTestLayer))
   );
 });

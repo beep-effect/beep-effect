@@ -175,8 +175,9 @@ describe("StreamingToolkit integration", () => {
       )
     );
 
-    it.effect("stream_load_text rejects IPv4-mapped internal URLs", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "stream_load_text rejects IPv4-mapped internal URLs",
+      Effect.fnUntraced(function* () {
         const tk = yield* StreamingToolkit;
         const assertBlocked = Effect.fn("assertBlocked")(function* (location: string) {
           const stream = yield* tk.handle("stream_load_text", { location });

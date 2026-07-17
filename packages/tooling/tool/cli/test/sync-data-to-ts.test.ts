@@ -296,8 +296,9 @@ const csvTarget: SyncDataTarget = {
 };
 
 describe("sync-data-to-ts", { concurrent: false }, () => {
-  it.effect("reports JSON normalization failures through the typed error channel", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "reports JSON normalization failures through the typed error channel",
+    Effect.fnUntraced(function* () {
       const error = yield* Effect.flip(normalizeJson("test-json", { value: 1n }));
 
       expect(error).toMatchObject({

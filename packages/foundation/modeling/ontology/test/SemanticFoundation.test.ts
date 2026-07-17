@@ -36,8 +36,9 @@ const loadWith = Effect.fnUntraced(function* (readFileString: FileSystem.FileSys
 });
 
 layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
-  it.effect("loads the committed seed plus an explicitly VETTED fixture slice", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "loads the committed seed plus an explicitly VETTED fixture slice",
+    Effect.fnUntraced(function* () {
       const manifest = yield* encodeEntry(
         VendorManifestEntry.make({
           format: "jsonld",
@@ -66,30 +67,34 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
     })
   );
 
-  it.effect("fails closed for a missing manifest", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "fails closed for a missing manifest",
+    Effect.fnUntraced(function* () {
       const error = yield* loadWith(FileSystem.makeNoop({}).readFileString).pipe(Effect.flip);
       expect(S.is(TaxonomyManifestReadError)(error)).toBe(true);
     })
   );
 
-  it.effect("fails closed for an unparsable manifest", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "fails closed for an unparsable manifest",
+    Effect.fnUntraced(function* () {
       const error = yield* loadWith(() => Effect.succeed("not-json")).pipe(Effect.flip);
       expect(S.is(TaxonomyManifestParseError)(error)).toBe(true);
     })
   );
 
-  it.effect("fails closed for a manifest row whose path escapes the vendor root", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "fails closed for a manifest row whose path escapes the vendor root",
+    Effect.fnUntraced(function* () {
       const manifest = `{"format":"jsonld","id":"escape","loadStatus":"VETTED","path":"../secrets.jsonld"}`;
       const error = yield* loadWith(() => Effect.succeed(manifest)).pipe(Effect.flip);
       expect(S.is(TaxonomyManifestParseError)(error)).toBe(true);
     })
   );
 
-  it.effect("fails closed for an unvetted slice", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "fails closed for an unvetted slice",
+    Effect.fnUntraced(function* () {
       const manifest = yield* encodeEntry(
         VendorManifestEntry.make({
           format: "jsonld",
@@ -103,8 +108,9 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
     })
   );
 
-  it.effect("fails closed for an unreadable vetted slice", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "fails closed for an unreadable vetted slice",
+    Effect.fnUntraced(function* () {
       const manifest = yield* encodeEntry(
         VendorManifestEntry.make({
           format: "jsonld",
@@ -124,8 +130,9 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
     })
   );
 
-  it.effect("fails closed for an unparsable vetted slice", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "fails closed for an unparsable vetted slice",
+    Effect.fnUntraced(function* () {
       const manifest = yield* encodeEntry(
         VendorManifestEntry.make({
           format: "jsonld",
@@ -144,8 +151,9 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
     })
   );
 
-  it.effect("runs the librarian loop purely over registry data", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "runs the librarian loop purely over registry data",
+    Effect.fnUntraced(function* () {
       const conceptIri = IRIReference.make("https://ns.beep.sh/ontology/semantic-foundation/concept/email-message");
       const output = yield* runLibrarianLoop(
         SemanticFoundationSeed,
@@ -179,8 +187,9 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
     )
   );
 
-  it.effect("rejects traversal segments in librarian input at decode time", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects traversal segments in librarian input at decode time",
+    Effect.fnUntraced(function* () {
       const decoded = yield* Effect.sync(() =>
         S.decodeUnknownResult(LibrarianInput)({
           client: "acme",

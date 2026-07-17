@@ -12,8 +12,9 @@ const provideScopedLayer =
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 describe("OntologyConfigLive", () => {
-  it.effect("resolves the required ontology workspace root", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "resolves the required ontology workspace root",
+    Effect.fnUntraced(function* () {
       const config = yield* OntologyConfig.pipe(
         provideScopedLayer(configLayer({ ONTOLOGY_WORKSPACE_ROOT: "/srv/ontology" }))
       );
@@ -22,8 +23,9 @@ describe("OntologyConfigLive", () => {
     })
   );
 
-  it.effect("keeps missing and empty configuration in the typed failure channel", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "keeps missing and empty configuration in the typed failure channel",
+    Effect.fnUntraced(function* () {
       for (const configuration of [{}, { ONTOLOGY_WORKSPACE_ROOT: "" }]) {
         const exit = yield* Effect.exit(OntologyConfig.pipe(provideScopedLayer(configLayer(configuration))));
 

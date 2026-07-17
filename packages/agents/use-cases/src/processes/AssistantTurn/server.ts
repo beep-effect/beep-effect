@@ -20,4 +20,4 @@
  * @category errors
  * @since 0.0.0
  */
-export * from "./AssistantTurn.repair-errors.js";
+export * from "./AssistantTurn.repair-errors.ts";

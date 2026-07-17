@@ -11,4 +11,4 @@
  * @category aggregates
  * @since 0.0.0
  */
-export * from "./IntakeBatch.model.js";
+export * from "./IntakeBatch.model.ts";

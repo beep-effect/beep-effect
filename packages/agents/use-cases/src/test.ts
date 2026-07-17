@@ -19,4 +19,4 @@
  * @category fixtures
  * @since 0.0.0
  */
-export * from "./proof.js";
+export * from "./proof.ts";

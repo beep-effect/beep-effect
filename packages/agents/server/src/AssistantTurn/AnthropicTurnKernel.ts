@@ -121,7 +121,7 @@ const streamTurn = (history: ReadonlyArray<TurnHistoryItem>): Stream.Stream<Inde
   const parts = LanguageModel.streamText({
     prompt: [
       { role: "system", content: SYSTEM_PROMPT },
-      ...history.map((item) => ({ role: item.role, content: item.text })),
+      ...A.map(history, (item) => ({ role: item.role, content: item.text })),
     ],
     toolkit: RespondToolkit,
     toolChoice: { tool: "respond" },

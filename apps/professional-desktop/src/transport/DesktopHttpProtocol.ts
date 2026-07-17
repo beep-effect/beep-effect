@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 
-import { resolveChatRpcServerUrl } from "@beep/agents-client/Chat.atoms";
+import { resolveChatRpcHttpUrl } from "@beep/agents-client/Chat.layer";
 import { Layer } from "effect";
 import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/unstable/http";
 import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
@@ -14,7 +14,7 @@ import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
 // Packaged-origin detection (Windows `tauri.localhost` included) lives in
 // @beep/agents-client's resolver — one source of truth for the routing rule
 // whose divergence across copies caused the original Windows packaged-RPC bug.
-const SERVER_URL = resolveChatRpcServerUrl(typeof window === "undefined" ? undefined : window.location.origin);
+const SERVER_URL = resolveChatRpcHttpUrl();
 
 /**
  * Build the desktop HTTP RPC protocol, optionally carrying the shell-issued

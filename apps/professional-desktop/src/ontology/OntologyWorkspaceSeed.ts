@@ -32,6 +32,7 @@ import {
   WriteOntologyFileRequest,
 } from "@beep/ontology-use-cases/aggregates/Session";
 import { makeDataset } from "@beep/rdf/Rdf";
+import { Eq, P } from "@beep/utils";
 import { Effect, Layer } from "effect";
 import * as S from "effect/Schema";
 
@@ -74,10 +75,7 @@ export const seedPizzaTutorial = Effect.fn("OntologyWorkspaceSeed.seedPizzaTutor
   // starter fixture, destroying the user's work.
   const absent = yield* fileStore.read(ReadOntologyFileRequest.make({ path })).pipe(
     Effect.as(false),
-    Effect.catchIf(
-      (error) => error.reason === "notFound",
-      () => Effect.succeed(true)
-    )
+    Effect.catchIf(P.Struct({ reason: Eq.equals("notFound") }), () => Effect.succeed(true))
   );
   if (!absent) {
     return;

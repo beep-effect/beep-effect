@@ -17,7 +17,7 @@ import {
   RuntimeRequestKind,
   RuntimeSourceKind,
   RuntimeUsageMode,
-} from "./ProfessionalRuntime.values.js";
+} from "./ProfessionalRuntime.values.ts";
 
 const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalRuntime.contracts");
 const RuntimeOrganizationId = S.NonEmptyString.pipe(

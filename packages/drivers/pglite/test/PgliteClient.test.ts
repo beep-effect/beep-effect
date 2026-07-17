@@ -53,8 +53,9 @@ describe("PgliteClient layer lifecycle", () => {
 });
 
 layer(PgliteTestLayer)("PgliteClient (in-memory)", (it) => {
-  it.effect("executes PostgreSQL-dialect SQL through the generic SqlClient", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "executes PostgreSQL-dialect SQL through the generic SqlClient",
+    Effect.fnUntraced(function* () {
       const sql = (yield* SqlClient.SqlClient).withoutTransforms();
       yield* sql`CREATE TABLE notes (id SERIAL PRIMARY KEY, body TEXT NOT NULL)`;
       yield* sql`INSERT INTO notes (body) VALUES ('hello'), ('world')`;
@@ -64,8 +65,9 @@ layer(PgliteTestLayer)("PgliteClient (in-memory)", (it) => {
     })
   );
 
-  it.effect("aliases the in-process client under the @effect/sql-pg PgClient tag", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "aliases the in-process client under the @effect/sql-pg PgClient tag",
+    Effect.fnUntraced(function* () {
       const pg = yield* Pg.PgClient;
       const pglite = yield* PgliteClient;
 

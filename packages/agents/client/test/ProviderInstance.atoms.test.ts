@@ -56,8 +56,9 @@ const makeRegistry = () =>
   });
 
 describe("@beep/agents-client ProviderInstance atoms", { concurrent: false }, () => {
-  it.effect("reads provider instances through the injected transport", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "reads provider instances through the injected transport",
+    Effect.fnUntraced(function* () {
       listReads = 0;
       probeFailure = O.none();
       const registry = makeRegistry();
@@ -74,8 +75,9 @@ describe("@beep/agents-client ProviderInstance atoms", { concurrent: false }, ()
     })
   );
 
-  it.effect("invalidates the provider-instance list after a probe", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "invalidates the provider-instance list after a probe",
+    Effect.fnUntraced(function* () {
       listReads = 0;
       probeFailure = O.none();
       const registry = makeRegistry();
@@ -94,8 +96,9 @@ describe("@beep/agents-client ProviderInstance atoms", { concurrent: false }, ()
     })
   );
 
-  it.effect("surfaces ProviderUnauthenticated guidance to the caller", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "surfaces ProviderUnauthenticated guidance to the caller",
+    Effect.fnUntraced(function* () {
       const guidance = "Run `codex login` in your terminal, then probe again.";
       const error = ProviderUnauthenticated.make({ providerInstanceId: instance.id, guidance });
       probeFailure = O.some(error);

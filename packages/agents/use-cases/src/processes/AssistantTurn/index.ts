@@ -21,7 +21,7 @@
  * @category protocols
  * @since 0.0.0
  */
-export * from "./AssistantTurn.contracts.js";
+export * from "./AssistantTurn.contracts.ts";
 /**
  * Assistant-turn public errors.
  *
@@ -36,7 +36,7 @@ export * from "./AssistantTurn.contracts.js";
  * @category errors
  * @since 0.0.0
  */
-export * from "./AssistantTurn.errors.js";
+export * from "./AssistantTurn.errors.ts";
 /**
  * Assistant-turn generation kernel port.
  *
@@ -57,4 +57,4 @@ export * from "./AssistantTurn.errors.js";
  * @category services
  * @since 0.0.0
  */
-export * from "./AssistantTurn.kernel.js";
+export * from "./AssistantTurn.kernel.ts";

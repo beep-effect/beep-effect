@@ -84,8 +84,9 @@ describe("internal/ratchet/RatchetDiff diffTotals", () => {
 });
 
 describe("internal/ratchet/RatchetLifecycle enforceRatchet", () => {
-  it.effect("fails with the first present regression's error", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "fails with the first present regression's error",
+    Effect.fnUntraced(function* () {
       const error = new RatchetTestError({ message: "baseline grew" });
       const exit = yield* Effect.exit(
         enforceRatchet({
@@ -105,8 +106,9 @@ describe("internal/ratchet/RatchetLifecycle enforceRatchet", () => {
     })
   );
 
-  it.effect("succeeds and emits the ok line when no regression is present", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "succeeds and emits the ok line when no regression is present",
+    Effect.fnUntraced(function* () {
       const exit = yield* Effect.exit(
         enforceRatchet({
           regressions: [{ present: false, lines: ["skipped"], error: new RatchetTestError({ message: "unused" }) }],

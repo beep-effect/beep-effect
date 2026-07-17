@@ -40,8 +40,9 @@ const isProtobufFloatValue = (value: number) =>
   (globalThis.Number.isFinite(value) && value >= floatMinimum && value <= floatMaximum);
 
 describe("protobuf 32-bit integer scalar schemas", () => {
-  it.effect("accepts unsigned 32-bit protobuf number boundaries", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "accepts unsigned 32-bit protobuf number boundaries",
+    Effect.fnUntraced(function* () {
       const decodeUint32 = S.decodeUnknownEffect(Uint32);
       const decodeFixed32 = S.decodeUnknownEffect(Fixed32);
 
@@ -52,8 +53,9 @@ describe("protobuf 32-bit integer scalar schemas", () => {
     })
   );
 
-  it.effect("accepts signed 32-bit protobuf number boundaries", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "accepts signed 32-bit protobuf number boundaries",
+    Effect.fnUntraced(function* () {
       const decodeSint32 = S.decodeUnknownEffect(Sint32);
       const decodeSfixed32 = S.decodeUnknownEffect(Sfixed32);
 
@@ -64,8 +66,9 @@ describe("protobuf 32-bit integer scalar schemas", () => {
     })
   );
 
-  it.effect("rejects out-of-range, fractional, and non-number 32-bit values", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects out-of-range, fractional, and non-number 32-bit values",
+    Effect.fnUntraced(function* () {
       const decodeUint32 = S.decodeUnknownEffect(Uint32);
       const decodeSint32 = S.decodeUnknownEffect(Sint32);
       const decodeFixed32 = S.decodeUnknownEffect(Fixed32);
@@ -137,8 +140,9 @@ describe("protobuf 32-bit integer scalar schemas", () => {
 });
 
 describe("protobuf floating-point scalar schemas", () => {
-  it.effect("accepts protobuf float and double boundaries", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "accepts protobuf float and double boundaries",
+    Effect.fnUntraced(function* () {
       const decodeFloat = S.decodeUnknownEffect(Float);
       const decodeDouble = S.decodeUnknownEffect(Double);
 
@@ -156,8 +160,9 @@ describe("protobuf floating-point scalar schemas", () => {
     })
   );
 
-  it.effect("rejects overflowing finite float values and non-number floating-point inputs", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects overflowing finite float values and non-number floating-point inputs",
+    Effect.fnUntraced(function* () {
       const decodeFloat = S.decodeUnknownEffect(Float);
       const decodeDouble = S.decodeUnknownEffect(Double);
 
@@ -190,8 +195,9 @@ describe("protobuf floating-point scalar schemas", () => {
 });
 
 describe("protobuf 64-bit integer scalar schemas", () => {
-  it.effect("accepts unsigned 64-bit protobuf bigint boundaries", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "accepts unsigned 64-bit protobuf bigint boundaries",
+    Effect.fnUntraced(function* () {
       const decodeUint64 = S.decodeUnknownEffect(Uint64);
       const decodeFixed64 = S.decodeUnknownEffect(Fixed64);
 
@@ -202,8 +208,9 @@ describe("protobuf 64-bit integer scalar schemas", () => {
     })
   );
 
-  it.effect("accepts protobufjs-compatible unsigned 64-bit input shapes", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "accepts protobufjs-compatible unsigned 64-bit input shapes",
+    Effect.fnUntraced(function* () {
       const decodeUint64 = S.decodeUnknownEffect(Uint64);
       const decodeFixed64 = S.decodeUnknownEffect(Fixed64);
 
@@ -218,8 +225,9 @@ describe("protobuf 64-bit integer scalar schemas", () => {
     })
   );
 
-  it.effect("accepts signed 64-bit protobuf bigint boundaries", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "accepts signed 64-bit protobuf bigint boundaries",
+    Effect.fnUntraced(function* () {
       const decodeSint64 = S.decodeUnknownEffect(Sint64);
       const decodeSfixed64 = S.decodeUnknownEffect(Sfixed64);
 
@@ -230,8 +238,9 @@ describe("protobuf 64-bit integer scalar schemas", () => {
     })
   );
 
-  it.effect("accepts protobufjs-compatible signed 64-bit input shapes", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "accepts protobufjs-compatible signed 64-bit input shapes",
+    Effect.fnUntraced(function* () {
       const decodeSint64 = S.decodeUnknownEffect(Sint64);
       const decodeSfixed64 = S.decodeUnknownEffect(Sfixed64);
 
@@ -246,8 +255,9 @@ describe("protobuf 64-bit integer scalar schemas", () => {
     })
   );
 
-  it.effect("rejects out-of-range and invalid 64-bit values", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects out-of-range and invalid 64-bit values",
+    Effect.fnUntraced(function* () {
       const decodeUint64 = S.decodeUnknownEffect(Uint64);
       const decodeSint64 = S.decodeUnknownEffect(Sint64);
       const decodeFixed64 = S.decodeUnknownEffect(Fixed64);
@@ -273,8 +283,9 @@ describe("protobuf 64-bit integer scalar schemas", () => {
     })
   );
 
-  it.effect("rejects invalid decimal inputs before BigInt conversion", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects invalid decimal inputs before BigInt conversion",
+    Effect.fnUntraced(function* () {
       const decodeUint64 = S.decodeUnknownEffect(Uint64);
       const oversizedDecimal = "184467440737095516150";
       const coerceDecimal = vi.fn(() => "42");
@@ -343,8 +354,9 @@ describe("protobuf 64-bit integer scalar schemas", () => {
 });
 
 describe("protobuf bytes scalar schema", () => {
-  it.effect("accepts Uint8Array bytes values", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "accepts Uint8Array bytes values",
+    Effect.fnUntraced(function* () {
       const decodeBytes = S.decodeUnknownEffect(Bytes);
       const input = new Uint8Array([1, 2, 3]);
       const decoded = yield* decodeBytes(input);
@@ -354,8 +366,9 @@ describe("protobuf bytes scalar schema", () => {
     })
   );
 
-  it.effect("rejects non-Uint8Array bytes values", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects non-Uint8Array bytes values",
+    Effect.fnUntraced(function* () {
       const decodeBytes = S.decodeUnknownEffect(Bytes);
 
       expect(Exit.isFailure(yield* Effect.exit(decodeBytes([1, 2, 3])))).toBe(true);

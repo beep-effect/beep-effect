@@ -236,8 +236,9 @@ describe("EnvConfig readers", () => {
     expect(booleanEnvValue(UNSET, false)).toBe(false);
   });
 
-  it.effect("Effect readers re-read the ambient provider on each call (no module-load capture)", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "Effect readers re-read the ambient provider on each call (no module-load capture)",
+    Effect.fnUntraced(function* () {
       const withProvider = (value: string) =>
         provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ TOKEN: value })))(
           readOptionalConfigString("TOKEN")

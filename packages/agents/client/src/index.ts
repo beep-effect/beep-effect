@@ -26,6 +26,13 @@
  */
 export * from "./Chat.atoms.js";
 /**
+ * Resolve the default browser or desktop-sidecar chat RPC endpoint.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export { resolveChatRpcHttpUrl } from "./Chat.layer.js";
+/**
  * Env-gated client-side OTLP observability layer wired into the atom runtime so
  * the webview's rpc calls carry span context (joined traces).
  *
