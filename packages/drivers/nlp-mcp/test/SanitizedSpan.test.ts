@@ -42,8 +42,9 @@ const fullLayer = Layer.mergeAll(McpServer.McpServer.layer, registrationLayer);
 
 describe("nlp-mcp sanitized dispatch", () => {
   layer(fullLayer)("with NlpToolkit mounted via sanitizedToolkit", (it) => {
-    it.effect("does not leak the raw Tokenize request text onto span attributes", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "does not leak the raw Tokenize request text onto span attributes",
+      Effect.fnUntraced(function* () {
         const { captured, tracer } = makeRecordingTracer();
         const server = yield* McpServer.McpServer;
 

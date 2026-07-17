@@ -115,8 +115,9 @@ describe("@beep/doc-text", () => {
     assertSchemaRoundTrip(DocTextError);
   });
 
-  it.effect("extracts text from a generated PDF text layer", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "extracts text from a generated PDF text layer",
+    Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const bytes = yield* Effect.promise(() => makePdf("PDF fixture text"));
       const result = yield* DocTextFileProcessingEngine.extract(
@@ -129,8 +130,9 @@ describe("@beep/doc-text", () => {
     })
   );
 
-  it.effect("leaves the caller's PDF bytes intact after extraction", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "leaves the caller's PDF bytes intact after extraction",
+    Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const bytes = yield* Effect.promise(() => makePdf("PDF fixture text"));
       const original = new Uint8Array(bytes);
@@ -143,8 +145,9 @@ describe("@beep/doc-text", () => {
     })
   );
 
-  it.effect("extracts text from a generated DOCX", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "extracts text from a generated DOCX",
+    Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const bytes = yield* Effect.promise(() => makeDocx("DOCX fixture text"));
       const result = yield* DocTextFileProcessingEngine.extract(yield* makeOperation(ids, "docx", "docx", bytes));
@@ -154,8 +157,9 @@ describe("@beep/doc-text", () => {
     })
   );
 
-  it.effect("rejects unsupported formats", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects unsupported formats",
+    Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const error = yield* DocTextFileProcessingEngine.extract(
         yield* makeOperation(ids, "txt", "plain-text", new TextEncoder().encode("text"))
@@ -165,8 +169,9 @@ describe("@beep/doc-text", () => {
     })
   );
 
-  it.effect("maps corrupt document bytes to an extraction failure", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "maps corrupt document bytes to an extraction failure",
+    Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const error = yield* DocTextFileProcessingEngine.extract(
         yield* makeOperation(ids, "pdf", "pdf-text-layer", new Uint8Array([0, 1, 2, 3]))
@@ -176,8 +181,9 @@ describe("@beep/doc-text", () => {
     })
   );
 
-  it.effect("rejects an over-cap document before parsing", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects an over-cap document before parsing",
+    Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const error = yield* DocTextFileProcessingEngine.extract(
         yield* makeOperation(ids, "pdf", "pdf-text-layer", new Uint8Array([0, 1]), 1)
@@ -187,8 +193,9 @@ describe("@beep/doc-text", () => {
     })
   );
 
-  it.effect("reports an explicit empty text-layer outcome when OCR would be required", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "reports an explicit empty text-layer outcome when OCR would be required",
+    Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const bytes = yield* Effect.promise(makeEmptyPdf);
       const error = yield* DocTextFileProcessingEngine.extract(

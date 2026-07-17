@@ -27,12 +27,15 @@
 /// <reference path="../assets.d.ts" />
 
 import { fileURLToPath } from "node:url";
+import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause, profilePhase } from "@beep/observability";
 import { makeLayer as makePgliteLayer } from "@beep/pglite";
 import { makeDrizzleLayer } from "@beep/postgres";
+import { TaggedErrorClass } from "@beep/schema";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import { Clock, Config, Data, Effect, FileSystem, Layer, Path } from "effect";
+import { Clock, Config, Effect, FileSystem, Layer, Path } from "effect";
+import * as S from "effect/Schema";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import initdbWasmPath from "../../../../node_modules/@electric-sql/pglite/dist/initdb.wasm" with { type: "file" };
 import pgliteDataPath from "../../../../node_modules/@electric-sql/pglite/dist/pglite.data" with { type: "file" };
@@ -41,6 +44,8 @@ import { migrateOnBoot } from "./Migrations.js";
 import type { PgliteClientOptions } from "@beep/pglite";
 import type { PostgresDrizzle } from "@beep/postgres";
 import type { Context } from "effect";
+
+const $I = $ProfessionalDesktopId.create("runtime/Pglite");
 
 // Bun resolves `type: "file"` imports while compiling the sidecar executable;
 // Vite exposes the same files through `/@fs/` during integration tests.
@@ -86,11 +91,17 @@ const ChatDbIncompatibleRecoveryMessage =
 
 const ViteFileSystemPrefix = "/@fs/";
 
-class IncompatiblePgliteDataDir extends Data.TaggedError("IncompatiblePgliteDataDir")<{
-  readonly cause: unknown;
-  readonly dataDir: string;
-  readonly recovery: string;
-}> {}
+class IncompatiblePgliteDataDir extends TaggedErrorClass<IncompatiblePgliteDataDir>($I`IncompatiblePgliteDataDir`)(
+  "IncompatiblePgliteDataDir",
+  {
+    cause: S.Unknown.annotateKey({ description: "Failure raised while probing the existing PGlite data directory." }),
+    dataDir: S.String.annotateKey({ description: "PGlite data directory that failed the compatibility probe." }),
+    recovery: S.String.annotateKey({ description: "Operator guidance for safely recovering the incompatible data." }),
+  },
+  $I.annote("IncompatiblePgliteDataDir", {
+    description: "An existing PGlite data directory cannot be opened by the bundled in-process runtime.",
+  })
+) {}
 
 const pathExists = (fs: FileSystem.FileSystem, target: string): Effect.Effect<boolean> =>
   fs.exists(target).pipe(Effect.orElseSucceed(() => false));
@@ -160,7 +171,7 @@ const assertCanOpenInProcessPgliteDataDir = Effect.fn("ProfessionalDesktop.Pglit
         ).pipe(
           Effect.andThen(
             Effect.fail(
-              new IncompatiblePgliteDataDir({
+              IncompatiblePgliteDataDir.make({
                 cause,
                 dataDir,
                 recovery: ChatDbIncompatibleRecoveryMessage,

@@ -9,15 +9,15 @@ import { A } from "@beep/utils";
 import { Effect, flow, HashMap, HashSet } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { RuntimeScope } from "./ProfessionalRuntime.contracts.js";
-import { ProfessionalRuntimeValidationError } from "./ProfessionalRuntime.errors.js";
-import { runRuntimeFixture } from "./ProfessionalRuntime.fixtures.js";
-import type { ProposeCandidateOutputSet } from "./ProfessionalRuntime.commands.js";
-import type { CandidateOutputSet, RuntimeEvidenceRef, SdkContextPacket } from "./ProfessionalRuntime.contracts.js";
-import type { RuntimeFixtureInput } from "./ProfessionalRuntime.fixtures.js";
-import type { GetContextPacket } from "./ProfessionalRuntime.queries.js";
-import type { ProfessionalRuntimeSdk } from "./ProfessionalRuntime.service.js";
-import type { RuntimeFixtureScenarioId } from "./ProfessionalRuntime.values.js";
+import { RuntimeScope } from "./ProfessionalRuntime.contracts.ts";
+import { ProfessionalRuntimeValidationError } from "./ProfessionalRuntime.errors.ts";
+import { runRuntimeFixture } from "./ProfessionalRuntime.fixtures.ts";
+import type { ProposeCandidateOutputSet } from "./ProfessionalRuntime.commands.ts";
+import type { CandidateOutputSet, RuntimeEvidenceRef, SdkContextPacket } from "./ProfessionalRuntime.contracts.ts";
+import type { RuntimeFixtureInput } from "./ProfessionalRuntime.fixtures.ts";
+import type { GetContextPacket } from "./ProfessionalRuntime.queries.ts";
+import type { ProfessionalRuntimeSdk } from "./ProfessionalRuntime.service.ts";
+import type { RuntimeFixtureScenarioId } from "./ProfessionalRuntime.values.ts";
 
 const ensure = (condition: boolean, message: string): Effect.Effect<void, ProfessionalRuntimeValidationError> =>
   condition ? Effect.void : ProfessionalRuntimeValidationError.failEffect(message);

@@ -4,8 +4,8 @@
  * Ports the chat client state graph onto the {@link ChatRpcs} wire contract:
  * a thread list, per-thread timeline reads, thread creation, persisted composer
  * drafts, and a streaming assistant turn driver. The atoms are browser-targeted
- * (they read `window.location` and `globalThis.localStorage`) and require a live
- * rpc server to resolve — type-check and lint are the gates here.
+ * (they use `globalThis.localStorage` and a browser-aware default protocol) and
+ * require a live rpc server to resolve — type-check and lint are the gates here.
  *
  * @packageDocumentation
  * @category atoms
@@ -19,15 +19,15 @@ import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { A, O, P, Str } from "@beep/utils";
-import { Cause, Clock, Duration, Effect, Layer, Match, Metric, Random, Stream } from "effect";
+import { Cause, Clock, Duration, Effect, Match, Metric, Random, Stream } from "effect";
 import * as S from "effect/Schema";
-import { FetchHttpClient } from "effect/unstable/http";
 import { KeyValueStore } from "effect/unstable/persistence";
 import { AsyncResult, Atom, AtomRegistry, AtomRpc, Reactivity } from "effect/unstable/reactivity";
-import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
+import { HttpChatProtocolLive } from "./Chat.layer.js";
 import { ClientObservabilityLive } from "./ClientObservability.js";
 import type { TurnRequestStatus } from "@beep/agents-use-cases/public";
-import type { RpcClientError } from "effect/unstable/rpc";
+import type { Layer } from "effect";
+import type { RpcClient, RpcClientError } from "effect/unstable/rpc";
 
 const $I = $AgentsClientId.create("Chat.atoms");
 
@@ -41,22 +41,6 @@ const StreamingTurnReconciliation = LiteralKit(["timeline", "receipt"]).pipe(
 );
 type StreamingTurnReconciliation = typeof StreamingTurnReconciliation.Type;
 
-// Dev (browser or `tauri dev`): the page is served from a real http(s) origin
-// (the dev server), so the rpc URL rides that origin relative to `/rpc` — which
-// keeps the app reachable from any device that can reach the dev server.
-// Packaged Tauri serves from a `tauri://`-style origin, so there is no http
-// server to ride: talk to the sidecar directly. We avoid `import.meta.env`
-// (vite-only, untyped under NodeNext) and key off the live origin instead.
-const SERVER_URL = ((): string => {
-  if (typeof window !== "undefined") {
-    const origin = window.location.origin;
-    if (Str.startsWith(origin, "http://") || Str.startsWith(origin, "https://")) {
-      return new URL("/rpc", origin).toString();
-    }
-  }
-  return "http://127.0.0.1:3939/rpc";
-})();
-
 // Ambient telemetry (logger/tracer/metrics are fiber-runtime concerns, not
 // typed services) rides every atom runtime via the global layer; this is what
 // threads the client span context onto outgoing rpc envelopes so webview spans
@@ -66,26 +50,12 @@ const SERVER_URL = ((): string => {
 Atom.runtime.addGlobalLayer(ClientObservabilityLive);
 
 /**
- * The default HTTP protocol used by browser and non-IPC desktop sessions.
- *
- * The URL is resolved at module load from the active browser origin: dev-server
- * sessions use a relative `/rpc`, while packaged non-IPC desktop sessions fall
- * back to the local sidecar server.
- *
- * @example
- * ```ts
- * import { HttpChatProtocolLive } from "@beep/agents-client"
- * import { Layer } from "effect"
- *
- * console.log(Layer.isLayer(HttpChatProtocolLive)) // true
- * ```
+ * Default HTTP protocol for browser and non-IPC desktop chat sessions.
  *
  * @category layers
  * @since 0.0.0
  */
-export const HttpChatProtocolLive: Layer.Layer<RpcClient.Protocol> = RpcClient.layerProtocolHttp({
-  url: SERVER_URL,
-}).pipe(Layer.provide([RpcSerialization.layerNdjson, FetchHttpClient.layer]));
+export { HttpChatProtocolLive } from "./Chat.layer.js";
 
 /**
  * Writable transport selector consumed by {@link ChatClient}.
@@ -156,7 +126,7 @@ export class ChatClient extends AtomRpc.Service<ChatClient>()("ChatClient", {
 // which only knows its threadId — not its workspaceId — yet still bumps the
 // thread's `lastActivityAt`/title and so must refresh every visible list).
 const THREADS_KEY = "threads" as const;
-const workspaceThreadsKey = (workspaceId: WorkspaceId) => `threads:${workspaceId}`;
+const workspaceThreadsKey = (workspaceId: WorkspaceId) => `${THREADS_KEY}:${workspaceId}`;
 
 /**
  * The thread list for a workspace, refetched whenever a thread or turn mutates.

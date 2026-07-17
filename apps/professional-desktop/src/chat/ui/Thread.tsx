@@ -30,7 +30,7 @@ import {
   unreconciledTurnAtoms,
 } from "@beep/agents-client/Chat.atoms";
 import { Button } from "@beep/ui/components/button";
-import { A, N, O, thunkNull } from "@beep/utils";
+import { A, N, O, P, thunkFalse, thunkNull } from "@beep/utils";
 import { Thread as ThreadProjections } from "@beep/workspace-use-cases/public";
 import { useAtomMount, useAtomSet, useAtomSubscribe, useAtomValue } from "@effect/atom-react";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
@@ -64,7 +64,7 @@ const useThreadScroll = (
   // answer back down again on every single streamed block.
   const scrollToBottom = (): void => {
     const viewport = scrollRef.current;
-    if (viewport !== null && viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight > PINNED_SLACK_PX) {
+    if (P.isNotNull(viewport) && viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight > PINNED_SLACK_PX) {
       return;
     }
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -161,7 +161,7 @@ const TurnRow = ({
 // that an edit forked this point in the thread.
 const turnHasSiblings = (allTurns: ReadonlyArray<TimelineTurn>, turn: TimelineTurn): boolean =>
   O.match(turn.parentTurnId, {
-    onNone: () => false,
+    onNone: thunkFalse,
     onSome: (parentId) => A.filter(allTurns, (t) => O.exists(t.parentTurnId, (p) => p === parentId)).length > 1,
   });
 

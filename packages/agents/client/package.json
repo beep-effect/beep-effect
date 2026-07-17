@@ -34,6 +34,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./Chat.atoms": "./src/Chat.atoms.ts",
+    "./Chat.layer": "./src/Chat.layer.ts",
     "./ClientObservability": "./src/ClientObservability.ts",
     "./ProviderInstance.atoms": "./src/ProviderInstance.atoms.ts",
     "./ProviderInstance.service": "./src/ProviderInstance.service.ts",
@@ -54,6 +55,7 @@
     "exports": {
       ".": "./dist/index.js",
       "./Chat.atoms": "./dist/Chat.atoms.js",
+      "./Chat.layer": "./dist/Chat.layer.js",
       "./ClientObservability": "./dist/ClientObservability.js",
       "./ProviderInstance.atoms": "./dist/ProviderInstance.atoms.js",
       "./ProviderInstance.service": "./dist/ProviderInstance.service.js",

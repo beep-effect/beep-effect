@@ -9,7 +9,7 @@ import { $DocumentsDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
-import { LegalDocumentConceptId, ProjectedVaultPath } from "../../values/Taxonomy/index.js";
+import { LegalDocumentConceptId, ProjectedVaultPath } from "../../values/Taxonomy/index.ts";
 
 const $I = $DocumentsDomainId.create("aggregates/Document/Document.model");
 

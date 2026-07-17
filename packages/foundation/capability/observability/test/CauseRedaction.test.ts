@@ -89,8 +89,9 @@ describe("CauseRedaction", () => {
     })
   );
 
-  it.effect("logs only bounded redacted Cause diagnostics", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "logs only bounded redacted Cause diagnostics",
+    Effect.fnUntraced(function* () {
       const annotations: Array<Record<string, unknown>> = [];
       const logger = Logger.make<unknown, void>((options) => {
         annotations.push({ ...options.fiber.getRef(References.CurrentLogAnnotations) });
@@ -109,8 +110,9 @@ describe("CauseRedaction", () => {
     })
   );
 
-  it.effect("observes a boundary failure without changing its Cause", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "observes a boundary failure without changing its Cause",
+    Effect.fnUntraced(function* () {
       const original = Cause.fail(new Error("boom"));
       const exit = yield* Effect.exit(
         Effect.failCause(original).pipe(

@@ -6,20 +6,12 @@
  * @since 0.0.0
  */
 
+import { resolveChatRpcHttpUrl } from "@beep/agents-client/Chat.layer";
 import { Layer } from "effect";
-import * as Str from "effect/String";
 import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/unstable/http";
 import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
 
-const SERVER_URL = ((): string => {
-  if (typeof window !== "undefined") {
-    const origin = window.location.origin;
-    if (Str.startsWith("http://")(origin) || Str.startsWith("https://")(origin)) {
-      return new URL("/rpc", origin).toString();
-    }
-  }
-  return "http://127.0.0.1:3939/rpc";
-})();
+const SERVER_URL = resolveChatRpcHttpUrl();
 
 /**
  * Build the desktop HTTP RPC protocol, optionally carrying the shell-issued

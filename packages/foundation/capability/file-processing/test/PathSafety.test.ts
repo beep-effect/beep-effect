@@ -15,8 +15,9 @@ const PathSafetyTestLayer = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
 const payload = new TextEncoder().encode("safe payload");
 
 describe("@beep/file-processing PathSafety", () => {
-  it.effect("writes nested bytes atomically and removes temporary artifacts", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "writes nested bytes atomically and removes temporary artifacts",
+    Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-path-safety-" });
@@ -31,11 +32,12 @@ describe("@beep/file-processing PathSafety", () => {
       expect(yield* fs.readDirectory(path.dirname(target))).toEqual(["report.bin"]);
       expect(Result.isFailure(yield* Effect.result(fs.readLink(target)))).toBe(true);
       expect((yield* fs.stat(target)).mode & 0o777).toBe(0o600);
-    }).pipe(provideScopedLayer(PathSafetyTestLayer))
+    }, provideScopedLayer(PathSafetyTestLayer))
   );
 
-  it.effect("rejects the root itself before the first mutating filesystem operation", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects the root itself before the first mutating filesystem operation",
+    Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-path-safety-" });
       const makeDirectoryCalls = yield* Ref.make(0);
@@ -54,11 +56,12 @@ describe("@beep/file-processing PathSafety", () => {
       expect(Result.isFailure(result)).toBe(true);
       expect(yield* Ref.get(makeDirectoryCalls)).toBe(0);
       expect(yield* fs.readDirectory(root)).toEqual([]);
-    }).pipe(provideScopedLayer(PathSafetyTestLayer))
+    }, provideScopedLayer(PathSafetyTestLayer))
   );
 
-  it.effect("refuses a pre-positioned temporary payload symlink even if the temporary directory is compromised", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "refuses a pre-positioned temporary payload symlink even if the temporary directory is compromised",
+    Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-path-safety-" });
@@ -84,11 +87,12 @@ describe("@beep/file-processing PathSafety", () => {
       expect(yield* fs.readFileString(outsideVictim)).toBe("unchanged");
       expect(yield* fs.exists(path.join(root, "result.bin"))).toBe(false);
       expect(yield* fs.exists(compromisedTemporaryDirectory)).toBe(false);
-    }).pipe(provideScopedLayer(PathSafetyTestLayer))
+    }, provideScopedLayer(PathSafetyTestLayer))
   );
 
-  it.effect("removes the temporary directory when promotion fails", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "removes the temporary directory when promotion fails",
+    Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-path-safety-" });
       yield* fs.makeDirectory(`${root}/blocked`);
@@ -99,11 +103,12 @@ describe("@beep/file-processing PathSafety", () => {
 
       expect(Result.isFailure(result)).toBe(true);
       expect(yield* fs.readDirectory(root)).toEqual(["blocked"]);
-    }).pipe(provideScopedLayer(PathSafetyTestLayer))
+    }, provideScopedLayer(PathSafetyTestLayer))
   );
 
-  it.effect("keeps the committed target successful when post-rename cleanup fails", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "keeps the committed target successful when post-rename cleanup fails",
+    Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-path-safety-" });
@@ -129,11 +134,12 @@ describe("@beep/file-processing PathSafety", () => {
       expect(target).toBe(path.join(root, "result.bin"));
       expect(yield* Ref.get(cleanupAttempts)).toBe(1);
       expect(yield* fs.readFileString(target)).toBe("safe payload");
-    }).pipe(provideScopedLayer(PathSafetyTestLayer))
+    }, provideScopedLayer(PathSafetyTestLayer))
   );
 
-  it.effect("surfaces cleanup failure when promotion has not committed", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "surfaces cleanup failure when promotion has not committed",
+    Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-path-safety-" });
       const cleanupAttempts = yield* Ref.make(0);
@@ -159,11 +165,12 @@ describe("@beep/file-processing PathSafety", () => {
       expect(error).toBe(cleanupFailure);
       expect(yield* Ref.get(cleanupAttempts)).toBe(1);
       expect((yield* fs.stat(`${root}/blocked`)).type).toBe("Directory");
-    }).pipe(provideScopedLayer(PathSafetyTestLayer))
+    }, provideScopedLayer(PathSafetyTestLayer))
   );
 
-  it.effect("keeps an already-canonical authority root pinned across a lexical root symlink swap", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "keeps an already-canonical authority root pinned across a lexical root symlink swap",
+    Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const sandbox = yield* fs.makeTempDirectoryScoped({ prefix: "beep-path-safety-" });
@@ -190,11 +197,12 @@ describe("@beep/file-processing PathSafety", () => {
       expect(Result.isFailure(writeResult)).toBe(true);
       expect(yield* fs.readFileString(outsideVictim)).toBe("unchanged");
       expect(yield* fs.readLink(configuredRoot)).toBe(outsideRoot);
-    }).pipe(provideScopedLayer(PathSafetyTestLayer))
+    }, provideScopedLayer(PathSafetyTestLayer))
   );
 
-  it.effect("rejects a non-absolute canonical authority root before resolving or writing a candidate", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects a non-absolute canonical authority root before resolving or writing a candidate",
+    Effect.fnUntraced(function* () {
       const resolveError = yield* resolvePathWithinCanonicalRoot({
         canonicalRoot: "relative-root",
         candidate: "victim.bin",
@@ -207,11 +215,12 @@ describe("@beep/file-processing PathSafety", () => {
 
       expect(resolveError.reason).toBe("canonical-root-not-absolute");
       expect(writeError).toMatchObject({ reason: "canonical-root-not-absolute" });
-    }).pipe(provideScopedLayer(PathSafetyTestLayer))
+    }, provideScopedLayer(PathSafetyTestLayer))
   );
 
-  it.effect("rejects a POSIX symlink escape through an outside sibling containing a literal backslash", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects a POSIX symlink escape through an outside sibling containing a literal backslash",
+    Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
 
@@ -241,6 +250,6 @@ describe("@beep/file-processing PathSafety", () => {
       expect(Result.isFailure(writeResult)).toBe(true);
       expect(yield* fs.readFileString(outsideVictim)).toBe("unchanged");
       expect(yield* fs.readLink(link)).toBe(outsideVictim);
-    }).pipe(provideScopedLayer(PathSafetyTestLayer))
+    }, provideScopedLayer(PathSafetyTestLayer))
   );
 });

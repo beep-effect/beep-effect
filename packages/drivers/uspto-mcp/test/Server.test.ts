@@ -139,8 +139,9 @@ const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
 };
 
 describe("uspto-mcp fixture proofs", () => {
-  it.effect("imports the bin module without launching the stdio server", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "imports the bin module without launching the stdio server",
+    Effect.fnUntraced(function* () {
       const bin = yield* Effect.promise(() => import("@beep/uspto-mcp/bin"));
 
       assert.strictEqual(bin.SERVER_CONFIG.name, "beep-uspto");
@@ -148,8 +149,9 @@ describe("uspto-mcp fixture proofs", () => {
     })
   );
 
-  it.effect("returns the api_key_required envelope when USPTO_API_KEY is absent", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "returns the api_key_required envelope when USPTO_API_KEY is absent",
+    Effect.fnUntraced(function* () {
       const result = yield* callSearch().pipe(provideScopedLayer(buildLayer({}, respondWith(applicationEnvelope))));
 
       assert.isFalse(result.isError);
@@ -161,8 +163,9 @@ describe("uspto-mcp fixture proofs", () => {
     })
   );
 
-  it.effect("returns real @beep/uspto data when USPTO_API_KEY is present", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "returns real @beep/uspto data when USPTO_API_KEY is present",
+    Effect.fnUntraced(function* () {
       const result = yield* callSearch().pipe(
         provideScopedLayer(buildLayer({ USPTO_API_KEY: "fixture-secret" }, respondWith(applicationEnvelope)))
       );
@@ -179,8 +182,9 @@ describe("uspto-mcp fixture proofs", () => {
     })
   );
 
-  it.effect("reshapes a large documentBag response under a configured budget via a named field tier", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "reshapes a large documentBag response under a configured budget via a named field tier",
+    Effect.fnUntraced(function* () {
       const result = yield* callGetDocuments().pipe(
         provideScopedLayer(buildLayer({ USPTO_API_KEY: "fixture-secret" }, respondWith(largeDocumentsEnvelope)))
       );
@@ -203,8 +207,9 @@ describe("uspto-mcp fixture proofs", () => {
 });
 
 describe("uspto-mcp schema parity", () => {
-  it.effect("keeps explicit get-documents parameter wire shape and defaults missing budget in the schema", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "keeps explicit get-documents parameter wire shape and defaults missing budget in the schema",
+    Effect.fnUntraced(function* () {
       const explicitWire = { applicationNumber: "16138242", budgetBytes: 8000 };
       const decoded = yield* S.decodeUnknownEffect(UsptoGetDocumentsParams)(explicitWire);
       const encoded = yield* S.encodeEffect(UsptoGetDocumentsParams)(decoded);
@@ -215,8 +220,9 @@ describe("uspto-mcp schema parity", () => {
     })
   );
 
-  it.effect("keeps failure and projection encoded shapes byte-identical", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "keeps failure and projection encoded shapes byte-identical",
+    Effect.fnUntraced(function* () {
       const failureWire = {
         message: "USPTO get documents failed: transport",
         reason: UsptoToolErrorReason.Enum.transport,

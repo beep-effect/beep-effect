@@ -7,7 +7,7 @@
 import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as R from "effect/Record";
+import * as R from "./Record.ts";
 
 type LazyArg<A> = () => A;
 
@@ -328,6 +328,28 @@ export const thunkEffectSucceedNone = <A = never>(..._: ReadonlyArray<unknown>) 
  * @since 0.0.0
  */
 export const thunkEmptyRecord = <K extends string | symbol = never, V = never>() => R.empty<K, V>();
+
+/**
+ * A thunk that yields a fresh typed empty readonly record.
+ *
+ * @example
+ * ```ts
+ * import { O, R, thunkEmptyReadonlyRecord } from "@beep/utils"
+ *
+ * const value = O.getOrElse(
+ *   O.none<R.ReadonlyRecord<string, number>>(),
+ *   thunkEmptyReadonlyRecord
+ * )
+ * console.log(value) // {}
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const thunkEmptyReadonlyRecord = <K extends string | symbol = never, V = never>(): R.ReadonlyRecord<
+  R.ReadonlyRecord.NonLiteralKey<K>,
+  V
+> => R.emptyReadonly<K, V>();
 
 /**
  * Creates a thunk that yields `Option.some(value)`.

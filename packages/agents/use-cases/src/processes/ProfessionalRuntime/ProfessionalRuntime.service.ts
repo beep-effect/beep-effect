@@ -5,10 +5,10 @@
  * @since 0.0.0
  */
 import type { Effect } from "effect";
-import type { ProposeCandidateOutputSet } from "./ProfessionalRuntime.commands.js";
-import type { CandidateOutputSet, SdkContextPacket } from "./ProfessionalRuntime.contracts.js";
-import type { ProfessionalRuntimeValidationError } from "./ProfessionalRuntime.errors.js";
-import type { GetContextPacket } from "./ProfessionalRuntime.queries.js";
+import type { ProposeCandidateOutputSet } from "./ProfessionalRuntime.commands.ts";
+import type { CandidateOutputSet, SdkContextPacket } from "./ProfessionalRuntime.contracts.ts";
+import type { ProfessionalRuntimeValidationError } from "./ProfessionalRuntime.errors.ts";
+import type { GetContextPacket } from "./ProfessionalRuntime.queries.ts";
 
 /**
  * SDK facade shape exposed to clients and adapters.

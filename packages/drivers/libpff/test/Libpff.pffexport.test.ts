@@ -74,62 +74,82 @@ const fixture = Effect.fn(function* (stubScript: string) {
 });
 
 describe("makePffexportFileProcessingEngine", () => {
-  it.effect("exports children through the pffexport subprocess", () =>
-    Effect.gen(function* () {
-      const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
-      const engine = yield* makePffexportFileProcessingEngine(
-        PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
-      );
+  it.effect(
+    "exports children through the pffexport subprocess",
+    Effect.fnUntraced(
+      function* () {
+        const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
+        );
 
-      const result = yield* engine.exportArchive(operation);
+        const result = yield* engine.exportArchive(operation);
 
-      expect(result.engine).toBe("libpff");
-      expect(result.sourceArtifactId).toBe(operation.source.id);
-      expect(result.children).toHaveLength(3);
-      const relativePaths = result.children.map((child) => child.relativePath);
-      expect(relativePaths).toStrictEqual([...relativePaths].sort());
-      expect(relativePaths.every((value) => value.includes(".export/"))).toBe(true);
-      expect(relativePaths.some((value) => value.endsWith("Attachments/report.pdf"))).toBe(true);
-      expect(result.children.every((child) => child.id.startsWith("artifact:"))).toBe(true);
-      expect(result.children.some((child) => child.sizeBytes === 10)).toBe(true);
-    }).pipe(Effect.scoped, provideTestLayer)
+        expect(result.engine).toBe("libpff");
+        expect(result.sourceArtifactId).toBe(operation.source.id);
+        expect(result.children).toHaveLength(3);
+        const relativePaths = result.children.map((child) => child.relativePath);
+        expect(relativePaths).toStrictEqual([...relativePaths].sort());
+        expect(relativePaths.every((value) => value.includes(".export/"))).toBe(true);
+        expect(relativePaths.some((value) => value.endsWith("Attachments/report.pdf"))).toBe(true);
+        expect(result.children.every((child) => child.id.startsWith("artifact:"))).toBe(true);
+        expect(result.children.some((child) => child.sizeBytes === 10)).toBe(true);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
   );
 
-  it.effect("maps non-zero pffexport exits to archive-export-failed", () =>
-    Effect.gen(function* () {
-      const { exportRoot, operation, stubPath } = yield* fixture(failingStub);
-      const engine = yield* makePffexportFileProcessingEngine(
-        PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
-      );
+  it.effect(
+    "maps non-zero pffexport exits to archive-export-failed",
+    Effect.fnUntraced(
+      function* () {
+        const { exportRoot, operation, stubPath } = yield* fixture(failingStub);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
+        );
 
-      const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
+        const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
 
-      expect(error.reason).toBe("archive-export-failed");
-      expect(error.details).toStrictEqual({ exitCode: "2" });
-    }).pipe(Effect.scoped, provideTestLayer)
+        expect(error.reason).toBe("archive-export-failed");
+        expect(error.details).toStrictEqual({ exitCode: "2" });
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
   );
 
-  it.effect("maps a missing pffexport binary to engine-unavailable", () =>
-    Effect.gen(function* () {
-      const { exportRoot, operation } = yield* fixture(stubPffexport);
-      const engine = yield* makeMissingBinaryEngine(exportRoot);
+  it.effect(
+    "maps a missing pffexport binary to engine-unavailable",
+    Effect.fnUntraced(
+      function* () {
+        const { exportRoot, operation } = yield* fixture(stubPffexport);
+        const engine = yield* makeMissingBinaryEngine(exportRoot);
 
-      const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
+        const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
 
-      expect(error.reason).toBe("engine-unavailable");
-    }).pipe(Effect.scoped, provideTestLayer)
+        expect(error.reason).toBe("engine-unavailable");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
   );
 
-  it.effect("rejects non-pst formats without spawning", () =>
-    Effect.gen(function* () {
-      const { exportRoot, operation } = yield* fixture(stubPffexport);
-      const engine = yield* makeMissingBinaryEngine(exportRoot);
+  it.effect(
+    "rejects non-pst formats without spawning",
+    Effect.fnUntraced(
+      function* () {
+        const { exportRoot, operation } = yield* fixture(stubPffexport);
+        const engine = yield* makeMissingBinaryEngine(exportRoot);
 
-      const error = yield* engine
-        .exportArchive(ExportArchiveOperation.make({ ...operation, format: "docx" }))
-        .pipe(Effect.flip);
+        const error = yield* engine
+          .exportArchive(ExportArchiveOperation.make({ ...operation, format: "docx" }))
+          .pipe(Effect.flip);
 
-      expect(error.reason).toBe("unsupported-file-format");
-    }).pipe(Effect.scoped, provideTestLayer)
+        expect(error.reason).toBe("unsupported-file-format");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
   );
 });

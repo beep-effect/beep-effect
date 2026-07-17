@@ -51,8 +51,9 @@ describe("Logging", () => {
     expect(renderLogBanner("Server Ready", { kind: "startup" })).toBe("Server Ready");
   });
 
-  it.effect("filters logs through the independently composable minimum-level layer", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "filters logs through the independently composable minimum-level layer",
+    Effect.fnUntraced(function* () {
       const levels: Array<string> = [];
       const logger = Logger.make<unknown, void>((options) => {
         levels.push(options.logLevel);

@@ -9,8 +9,9 @@ const identityRegistrationPath = fileURLToPath(
 );
 
 describe("create-package identity template", () => {
-  it.effect("keeps the identity registration template aligned with @beep/identity's generated surface", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "keeps the identity registration template aligned with @beep/identity's generated surface",
+    Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const identityRegistrationSource = yield* fs.readFileString(identityRegistrationPath);
 
@@ -25,6 +26,6 @@ describe("create-package identity template", () => {
       expect(identityRegistrationSource).toContain(
         'sourceFile.getVariableDeclaration("generatedComposers") ?? sourceFile.getVariableDeclarationOrThrow("composers")'
       );
-    }).pipe(provideScopedLayer(NodeServices.layer))
+    }, provideScopedLayer(NodeServices.layer))
   );
 });

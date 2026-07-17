@@ -31,8 +31,9 @@ describe("nlp-mcp tool surface", () => {
 
 describe("nlp-mcp wink-backed handlers", () => {
   layer(WinkNlpToolkitLive)("via the mounted toolkit", (it) => {
-    it.effect("Tokenize resolves through the wink handler layer", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "Tokenize resolves through the wink handler layer",
+      Effect.fnUntraced(function* () {
         const toolkit = yield* NlpToolkit;
         const stream = yield* toolkit.handle("Tokenize", { text: "Hello world." });
         const results = yield* Stream.runCollect(stream);
@@ -42,8 +43,9 @@ describe("nlp-mcp wink-backed handlers", () => {
       })
     );
 
-    it.effect("WordCount resolves through the wink handler layer", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "WordCount resolves through the wink handler layer",
+      Effect.fnUntraced(function* () {
         const toolkit = yield* NlpToolkit;
         const stream = yield* toolkit.handle("WordCount", { text: "Hello brave new world." });
         const results = yield* Stream.runCollect(stream);
@@ -53,8 +55,9 @@ describe("nlp-mcp wink-backed handlers", () => {
       })
     );
 
-    it.effect("Stem resolves through the wink handler layer", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "Stem resolves through the wink handler layer",
+      Effect.fnUntraced(function* () {
         const toolkit = yield* NlpToolkit;
         const stream = yield* toolkit.handle("Stem", { text: "running runners ran" });
         const results = yield* Stream.runCollect(stream);
@@ -64,8 +67,9 @@ describe("nlp-mcp wink-backed handlers", () => {
       })
     );
 
-    it.effect("BagOfWords encodes its nested AiNGram array through the wink handler layer", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "BagOfWords encodes its nested AiNGram array through the wink handler layer",
+      Effect.fnUntraced(function* () {
         const toolkit = yield* NlpToolkit;
         const stream = yield* toolkit.handle("BagOfWords", { text: "the cat sat on the mat" });
         const results = yield* Stream.runCollect(stream);
@@ -75,8 +79,9 @@ describe("nlp-mcp wink-backed handlers", () => {
       })
     );
 
-    it.effect("Analyze encodes its nested AiAnalysis token array through the wink handler layer", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "Analyze encodes its nested AiAnalysis token array through the wink handler layer",
+      Effect.fnUntraced(function* () {
         const toolkit = yield* NlpToolkit;
         const stream = yield* toolkit.handle("Analyze", { text: "The quick brown fox. It was fast." });
         const results = yield* Stream.runCollect(stream);
