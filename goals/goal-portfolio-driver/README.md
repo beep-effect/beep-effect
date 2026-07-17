@@ -42,5 +42,6 @@ PR #409 merged through the gated auto-merge pipeline on 2026-07-14; see
 
 ## Notes
 
-The queue remains intentionally empty and unlocked until P1. `goals/INDEX.md` is lifecycle truth;
-`ops/queue.json` becomes immutable ordering and dependency data after lock.
+The queue locked at P1 (2026-07-14): `ops/queue.json` carries 25 goals as immutable ordering and
+dependency data (grill D1/D2). `goals/INDEX.md` remains lifecycle truth; remaining work is always
+`queue ∩ INDEX.active`, derived fresh each wake.
