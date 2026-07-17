@@ -48,6 +48,12 @@ package.
 
 ## Trail
 
+- 2026-07-17: dock-substrate-landing packet CLOSED (completed-retained). All
+  four milestones merged (#416, #421, #426 + closeout); the desktop shell is
+  a dock workspace with persistent layout, QA'd to zero required findings
+  over six browser rounds. The exploration stays active for Goal 3
+  (graph-3d) and future geometry threads.
+
 - 2026-07-17: M3 shell landing — `apps/professional-desktop` now boots into a
   dock workspace: four keep-alive surface panels, localStorage snapshot
   persistence with boot restore and poisoned-key fallback, hash routing

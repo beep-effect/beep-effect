@@ -1,6 +1,6 @@
 # Dock Substrate Landing
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Graduate the scratchpad dock system — pure schema-first kernel
 (`scratchpad/dockview/poc`) + hook-free React adapter
@@ -27,11 +27,20 @@ sequencing). Provenance: `explorations/computable-workspace-geometry`
 | Milestone | Branch | Writer | State |
 |---|---|---|---|
 | M1 `@beep/dock` kernel package | `feat/dock-package` | codex | merged (PR #416) |
-| M2 `@beep/dock-react` + scratchpad retirement | `feat/dock-react-package` | codex | PR #421 (awaiting merge) |
-| M3 desktop dock shell | `feat/desktop-dock-shell` | Fable | landed (this PR) |
-| M4 QA-to-green + close | (fix lanes as needed) | codex QA | pending |
+| M2 `@beep/dock-react` + scratchpad retirement | `feat/dock-react-package` | codex | merged (PR #421) |
+| M3 desktop dock shell | `feat/desktop-dock-shell` | Fable | merged (PR #426) |
+| M4 QA-to-green + close | `chore/dock-substrate-closeout` | codex QA + Fable | landed (this PR) |
 
 ## Latest evidence
+
+- 2026-07-17 — M4 closed the packet: six-round browser QA loop on PR #426
+  (four codex vision rounds to zero required findings, a caveat-closure
+  round, and a hands-on Chrome round after repairing the codex browser
+  bridge) fixed 4 P0 + 8 P1 + polish across crash resilience, pointer
+  capture click swallows, float cascade/minima, focus semantics, dark-mode
+  hierarchy, and persistence; PR #426 merged with 25/25 checks, 5/5 review,
+  zero threads. Closeout reflection recorded; known upstream MUI X
+  StrictMode residual documented above.
 
 - 2026-07-17 — M3 landed on `feat/desktop-dock-shell`: the professional-desktop
   shell is a dock workspace. Hash routing retired; Home/Chat/Ontology/Vault

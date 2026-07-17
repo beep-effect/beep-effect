@@ -3,13 +3,13 @@
   "initiative": {
     "id": "dock-substrate-landing",
     "title": "Dock Substrate Landing",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-14",
     "updated": "2026-07-17",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/dock-substrate-landing",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Graduate the scratchpad dock system into @beep/dock + @beep/dock-react under foundation/ui-system and land the dock workspace as the root shell of apps/professional-desktop, QA'd to green.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -68,7 +68,7 @@
     {
       "id": "P4",
       "name": "M4: QA-to-green + close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
