@@ -8,9 +8,7 @@
 import { DockBox, DockNode, DockWorkspace } from "@beep/dock";
 import { RegistryContext, useAtomValue } from "@effect/atom-react";
 import * as A from "effect/Array";
-import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import { adapterState } from "./internal/AdapterState.ts";
 import { boxStyle, contains, floatingHit } from "./internal/DropCompiler.ts";
 import { FloatingPane } from "./internal/FloatingPane.tsx";
@@ -55,36 +53,13 @@ const DockviewRoot = (
     populated: ({ root }): ReadonlyArray<TabsNode> => DockNode.tabs(root),
   });
   const Watermark = props.watermarkComponent;
-  const rootRef = (node: HTMLDivElement | null): (() => void) | undefined => {
-    if (P.isNull(node)) return undefined;
-    if (P.not((root: HTMLElement) => props.state.readyRoots.has(root))(node)) {
-      props.state.readyRoots.add(node);
-      props.onReady?.({ api: props.state.api });
-    }
-    const observer = new ResizeObserver((entries) => {
-      const entry = A.head(entries);
-      if (O.isNone(entry) || P.not(P.isTruthy)(node.isConnected) || P.isTruthy(node.hidden)) return;
-      const { width, height } = entry.value.contentRect;
-      const current = props.graph.registry.get(props.state.containerAtom);
-      if (
-        width > 0 &&
-        height > 0 &&
-        (P.not(Eq.equals(width))(current.width) || P.not(Eq.equals(height))(current.height))
-      ) {
-        props.graph.registry.set(
-          props.state.containerAtom,
-          DockBox.make({
-            width,
-            height,
-          })
-        );
-      }
-    });
-    observer.observe(node);
-    return () => observer.disconnect();
-  };
+  props.state.onReadySlot.current = props.onReady;
   return (
-    <div ref={rootRef} data-testid="dockview-react" style={{ position: "relative", width: "100%", height: "100%" }}>
+    <div
+      ref={props.state.rootRef}
+      data-testid="dockview-react"
+      style={{ position: "relative", width: "100%", height: "100%" }}
+    >
       {A.match(groups, {
         onEmpty: () =>
           O.match(O.fromUndefinedOr(Watermark), {

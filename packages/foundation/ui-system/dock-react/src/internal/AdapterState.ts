@@ -18,7 +18,9 @@ import {
 import { PretextCaptureLive } from "@beep/pretext/browser";
 import { MutableHashMap } from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import { Atom } from "effect/unstable/reactivity";
 import type {
   ActivatePanelCommand,
@@ -48,6 +50,8 @@ export type AdapterState = {
   readonly targets: MutableHashMap.MutableHashMap<PanelId, HTMLElement>;
   readonly readyRoots: WeakSet<HTMLElement>;
   readonly api: DockviewAdapterApi;
+  readonly onReadySlot: { current: ((event: { readonly api: DockviewAdapterApi }) => void) | undefined };
+  readonly rootRef: (node: HTMLDivElement | null) => (() => void) | undefined;
 };
 
 // crispen: graph identity and lifetime are host concerns; WeakMap avoids structural hashing and retains no disposed graph.
@@ -175,6 +179,41 @@ export const adapterState = (
         }),
       }),
   });
+  const readyRoots = new WeakSet<HTMLElement>();
+  const onReadySlot: { current: ((event: { readonly api: DockviewAdapterApi }) => void) | undefined } = {
+    current: undefined,
+  };
+  // Stable identity across renders: React 19 only re-runs a ref callback when
+  // its identity changes, so wiring the ResizeObserver here (instead of inline
+  // in the component) keeps one observer per mounted root.
+  const rootRef = (node: HTMLDivElement | null): (() => void) | undefined => {
+    if (P.isNull(node)) return undefined;
+    if (P.not((root: HTMLElement) => readyRoots.has(root))(node)) {
+      readyRoots.add(node);
+      onReadySlot.current?.({ api });
+    }
+    const observer = new ResizeObserver((entries) => {
+      const entry = A.head(entries);
+      if (O.isNone(entry) || P.not(P.isTruthy)(node.isConnected) || P.isTruthy(node.hidden)) return;
+      const { width, height } = entry.value.contentRect;
+      const current = graph.registry.get(containerAtom);
+      if (
+        width > 0 &&
+        height > 0 &&
+        (P.not(Eq.equals(width))(current.width) || P.not(Eq.equals(height))(current.height))
+      ) {
+        graph.registry.set(
+          containerAtom,
+          DockBox.make({
+            width,
+            height,
+          })
+        );
+      }
+    });
+    observer.observe(node);
+    return () => observer.disconnect();
+  };
   const created = {
     containerAtom,
     focusedGroupAtom,
@@ -185,8 +224,10 @@ export const adapterState = (
     floatingOverrideAtom,
     geometry,
     targets: MutableHashMap.empty<PanelId, HTMLElement>(),
-    readyRoots: new WeakSet<HTMLElement>(),
+    readyRoots,
     api,
+    onReadySlot,
+    rootRef,
   };
   MutableHashMap.set(byOptions, key, created);
   return created;

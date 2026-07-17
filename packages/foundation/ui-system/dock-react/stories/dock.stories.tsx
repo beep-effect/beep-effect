@@ -18,10 +18,12 @@ import {
 } from "@beep/dock";
 import { DockviewReact } from "@beep/dock-react";
 import { Effect } from "effect";
+import * as O from "effect/Option";
 import { expect, within } from "storybook/test";
-import type { DockPanelProps, DockRenderer } from "@beep/dock-react";
+import type { DockAtomGraph, DockPanelProps, DockRenderer, DockTabProps } from "@beep/dock-react";
 import "./dock.stories.css";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import type React from "react";
 
 const textPanel = (id: string, title: string, body: string): Panel =>
   Panel.make({ id: PanelId.make(id), title, view: TextPanelView.make({ text: body }) });
@@ -82,11 +84,68 @@ const workspace = PopulatedWorkspace.make({
   ],
 });
 
-const graph = Effect.runSync(makeDockAtoms(workspace));
+const maximizedWorkspace = PopulatedWorkspace.make({
+  root: SplitNode.make({
+    splitId: SplitId.make("story-max-root"),
+    layout: HorizontalSplitLayout.make({
+      leftRatio: SplitRatio.make(5_000),
+      left: TabsNode.make({
+        groupId: GroupId.make("story-max-main"),
+        active: textPanel("story-max-panel", "Focus", "This group is maximized; the neighbor is parked until Restore."),
+      }),
+      right: TabsNode.make({
+        groupId: GroupId.make("story-max-side"),
+        active: textPanel("story-max-side-panel", "Parked", "Hidden while the neighbor holds the maximize."),
+      }),
+    }),
+  }),
+  maximized: O.some(GroupId.make("story-max-main")),
+});
 
-const DockStory = () => (
+const tabsWorkspace = PopulatedWorkspace.make({
+  root: TabsNode.make({
+    groupId: GroupId.make("story-tabs"),
+    active: textPanel("story-tab-alpha", "Alpha", "Custom chrome renders every tab in this strip."),
+    after: [
+      textPanel("story-tab-beta", "Beta", "Second tab under custom chrome."),
+      textPanel("story-tab-gamma", "Gamma", "Third tab under custom chrome."),
+    ],
+  }),
+});
+
+const graphs = {
+  workspace: Effect.runSync(makeDockAtoms(workspace)),
+  empty: Effect.runSync(makeDockAtoms()),
+  maximized: Effect.runSync(makeDockAtoms(maximizedWorkspace)),
+  tabs: Effect.runSync(makeDockAtoms(tabsWorkspace)),
+};
+
+const StoryWatermark = () => (
+  <div className="dock-story-notes">
+    <h2>Empty workspace</h2>
+    <p>No groups are docked. Hosts supply this watermark via `watermarkComponent`.</p>
+  </div>
+);
+
+const ChipTab = (props: DockTabProps) => (
+  <span data-testid={`chip-${props.api.id}`}>
+    ◈ {props.title} <em>#{props.api.id}</em>
+  </span>
+);
+
+const DockStory = (props: {
+  readonly graph: DockAtomGraph;
+  readonly watermark?: React.FunctionComponent | undefined;
+  readonly tab?: React.FunctionComponent<DockTabProps> | undefined;
+}) => (
   <div className="dock-story">
-    <DockviewReact graph={graph} components={components} options={{ gap: 8 }} />
+    <DockviewReact
+      graph={props.graph}
+      components={components}
+      watermarkComponent={props.watermark}
+      defaultTabComponent={props.tab}
+      options={{ gap: 8 }}
+    />
   </div>
 );
 
@@ -110,11 +169,42 @@ type Story = StoryObj<typeof meta>;
 
 /** Docked splits plus one floating pane — the full topology in one frame. */
 export const Workspace: Story = {
+  args: { graph: graphs.workspace },
   play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
     void expect(canvas.getByText("Notes")).toBeVisible();
     void expect(canvas.getByText("Outline")).toBeVisible();
     void expect(canvas.getByText("Terminal")).toBeVisible();
     void expect(canvas.getByText("Scratch")).toBeVisible();
+  },
+};
+
+/** Empty workspace rendering the host-supplied watermark component. */
+export const EmptyWatermark: Story = {
+  args: { graph: graphs.empty, watermark: StoryWatermark },
+  play: ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    void expect(canvas.getByText("Empty workspace")).toBeVisible();
+  },
+};
+
+/** One group holds the maximize; its docked neighbor is parked out of the projection. */
+export const MaximizedGroup: Story = {
+  args: { graph: graphs.maximized },
+  play: ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    void expect(canvas.getByText("Focus")).toBeVisible();
+    void expect(canvas.queryByText("Parked")).toBeNull();
+  },
+};
+
+/** Every tab in the strip renders through the host's `defaultTabComponent`. */
+export const CustomTabs: Story = {
+  args: { graph: graphs.tabs, tab: ChipTab },
+  play: ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    void expect(canvas.getByTestId("chip-story-tab-alpha")).toBeVisible();
+    void expect(canvas.getByTestId("chip-story-tab-beta")).toBeVisible();
+    void expect(canvas.getByTestId("chip-story-tab-gamma")).toBeVisible();
   },
 };
