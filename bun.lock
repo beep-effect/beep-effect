@@ -1691,6 +1691,34 @@
         "vitest": "catalog:",
       },
     },
+    "packages/foundation/ui-system/dock-react": {
+      "name": "@beep/dock-react",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/dock": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/pretext": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@effect/atom-react": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@storybook/react-vite": "catalog:",
+        "@testing-library/react": "catalog:",
+        "@types/node": "catalog:",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
+        "bun-types": "catalog:",
+        "jsdom": "catalog:",
+        "storybook": "catalog:",
+        "vitest": "catalog:",
+      },
+      "peerDependencies": {
+        "react": "^19",
+        "react-dom": "^19",
+      },
+    },
     "packages/foundation/ui-system/editor": {
       "name": "@beep/editor",
       "version": "0.0.0",
@@ -2320,6 +2348,8 @@
       "name": "@beep/scratchpad",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/dock": "workspace:^",
+        "@beep/dock-react": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/md": "workspace:^",
         "@beep/ontology": "workspace:^",
@@ -2778,6 +2808,8 @@
     "@beep/doc-text": ["@beep/doc-text@workspace:packages/drivers/doc-text"],
 
     "@beep/dock": ["@beep/dock@workspace:packages/foundation/ui-system/dock"],
+
+    "@beep/dock-react": ["@beep/dock-react@workspace:packages/foundation/ui-system/dock-react"],
 
     "@beep/documents-domain": ["@beep/documents-domain@workspace:packages/documents/domain"],
 

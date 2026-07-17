@@ -1029,6 +1029,97 @@
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/AdapterState.ts",
+      "qualifiedName": "adapterState",
+      "kind": "exported-const-function",
+      "status": "exception",
+      "owner": "@beep/dock-react",
+      "reason": "Memoized adapter-state factory whose three parameters form the composite identity key (graph, gap, titleMinima); data-last currying is meaningless for a constructor.",
+      "issue": "DOCK-REACT-ADAPTER-STATE-FACTORY",
+      "line": 96,
+      "column": 14,
+      "parameterCount": 3,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/DropCompiler.ts",
+      "qualifiedName": "contains",
+      "kind": "exported-const-function",
+      "status": "exception",
+      "owner": "@beep/dock-react",
+      "reason": "Internal drop-compiler projection with positional geometric arguments; not a pipeline combinator, and a dual wrapper would obscure the geometric call shape.",
+      "issue": "DOCK-REACT-DROP-COMPILER-GEOMETRY",
+      "line": 38,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/DropCompiler.ts",
+      "qualifiedName": "topLeftBox",
+      "kind": "exported-const-function",
+      "status": "exception",
+      "owner": "@beep/dock-react",
+      "reason": "Internal drop-compiler projection with positional geometric arguments; not a pipeline combinator, and a dual wrapper would obscure the geometric call shape.",
+      "issue": "DOCK-REACT-DROP-COMPILER-GEOMETRY",
+      "line": 48,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/DropCompiler.ts",
+      "qualifiedName": "floatingHit",
+      "kind": "exported-const-function",
+      "status": "exception",
+      "owner": "@beep/dock-react",
+      "reason": "Internal drop-compiler projection with positional geometric arguments; not a pipeline combinator, and a dual wrapper would obscure the geometric call shape.",
+      "issue": "DOCK-REACT-DROP-COMPILER-GEOMETRY",
+      "line": 56,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/DropCompiler.ts",
+      "qualifiedName": "compileDrop",
+      "kind": "exported-const-function",
+      "status": "exception",
+      "owner": "@beep/dock-react",
+      "reason": "Internal gesture-to-command compiler taking (state, graph, drag) runtime handles; a dual wrapper would change no call site and the parameters are not data-last pipeline values.",
+      "issue": "DOCK-REACT-DROP-COMPILER-GEOMETRY",
+      "line": 59,
+      "column": 14,
+      "parameterCount": 3,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/DropCompiler.ts",
+      "qualifiedName": "splitExtent",
+      "kind": "exported-const-function",
+      "status": "exception",
+      "owner": "@beep/dock-react",
+      "reason": "Internal drop-compiler projection with positional geometric arguments; not a pipeline combinator, and a dual wrapper would obscure the geometric call shape.",
+      "issue": "DOCK-REACT-DROP-COMPILER-GEOMETRY",
+      "line": 172,
+      "column": 14,
+      "parameterCount": 3,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/ResizeObserverHarness.ts",
+      "qualifiedName": "resize",
+      "kind": "exported-const-function",
+      "status": "exception",
+      "owner": "@beep/dock-react",
+      "reason": "jsdom test-harness dispatcher mirroring the native ResizeObserver contract; (target, width, height) positional numbers are the DOM idiom the harness intentionally mimics.",
+      "issue": "DOCK-REACT-RESIZE-HARNESS-DOM-CONTRACT",
+      "line": 28,
+      "column": 14,
+      "parameterCount": 3,
+      "diagnostics": ["missing-dual", "third-param-not-object-like"]
     }
   ]
 }

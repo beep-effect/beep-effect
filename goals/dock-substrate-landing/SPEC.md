@@ -158,8 +158,11 @@ cleanups; no useState/useEffect/useCallback/useMemo).
 - Rewire `scratchpad/dockview-demo` to package imports; add `@beep/dock` +
   `@beep/dock-react` `workspace:^` deps to `scratchpad/package.json`.
 - Storybook: `stories/dock.stories.tsx` + `tsconfig.stories.json` (editor
-  pattern); capture-free story (no titleMinima); add `@beep/dock-react` to
-  `apps/storybook/package.json`.
+  pattern); capture-free story (no titleMinima). Amended at M2: the story
+  self-resolves from its own package (editor precedent — `storybook` +
+  `@storybook/react-vite` in the package's devDependencies plus a
+  `beep:check:stories` lane); declaring `@beep/dock-react` in
+  `apps/storybook/package.json` is refuted by knip as an unused dependency.
 - Delete `scratchpad/dockview/` and `scratchpad/dockview-react/`; migrate the
   WHAT-IS-LEFT residue list into this packet's README "Residue" section;
   exploration Trail entry.

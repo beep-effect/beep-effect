@@ -26,13 +26,23 @@ sequencing). Provenance: `explorations/computable-workspace-geometry`
 
 | Milestone | Branch | Writer | State |
 |---|---|---|---|
-| M1 `@beep/dock` kernel package | `feat/dock-package` | codex | landed (this PR) |
-| M2 `@beep/dock-react` + scratchpad retirement | `feat/dock-react-package` | codex | pending |
+| M1 `@beep/dock` kernel package | `feat/dock-package` | codex | merged (PR #416) |
+| M2 `@beep/dock-react` + scratchpad retirement | `feat/dock-react-package` | codex | landed (this PR) |
 | M3 desktop dock shell | `feat/desktop-dock-shell` | Fable | pending |
 | M4 QA-to-green + close | (fix lanes as needed) | codex QA | pending |
 
 ## Latest evidence
 
+- 2026-07-16 — M2 landed on `feat/dock-react-package`: `@beep/dock-react` at
+  `packages/foundation/ui-system/dock-react` (public `DockReact.types.ts` +
+  `DockviewReact.tsx` over seven internals incl. the reusable
+  `ResizeObserverHarness`, curated barrel, `$DockReactId` identity, 20 jsdom
+  vitest tests, 10 compiled `@example` blocks, capture-free Storybook story);
+  demo + computable-layout rewired to package imports;
+  `scratchpad/dockview` + `scratchpad/dockview-react` deleted with
+  WHAT-IS-LEFT residuals migrated below; governance recorded (4 schema-first
+  + 7 dual-arity exceptions, 2 native-runtime allowlist entries); full
+  `lint policy` + `beep:preflight` gauntlet green.
 - 2026-07-15 — M1 landed on `feat/dock-package`: `@beep/dock` at
   `packages/foundation/ui-system/dock` (19 public role files + internals,
   curated barrel, `$DockId` identity, 86 vitest tests incl. two
@@ -46,9 +56,21 @@ sequencing). Provenance: `explorations/computable-workspace-geometry`
   four-coarse-panel shell scope; one packet / milestone-per-PR;
   codex-executed QA loop).
 
-## Residue
+## Residuals (from scratchpad WHAT-IS-LEFT v2)
 
-Populated at M2 from `scratchpad/dockview/WHAT-IS-LEFT.md` (adapter drop
-indicators, tab overflow, context menus; kernel popout windows, max
-constraints/LayoutPriority/snap-to-collapse; a11y). Until then the scratchpad
-ledger remains authoritative.
+- Adapter polish remains open: drop-indicator polish, a tab-overflow dropdown,
+  header action slots, context menus, and dragging a floating pane back to a
+  dock target.
+- Feed consumers remain open for announcements, autosave, and undo. Recency
+  and the MRU atom exist, but the host-side activation half still must read the
+  feed-derived MRU order and dispatch the follow-up activation.
+- Popout windows remain open, including blocked/open/close/re-dock lifecycle
+  and iframe or webview state loss during DOM reparenting.
+- Geometry still lacks maximum constraints, `LayoutPriority`, and
+  snap-to-collapse. Minimum constraints and reactive title minima have landed.
+- Edge groups and tab-group chips remain explicit non-goals.
+- Dockview serialized-format compatibility and migrations beyond the v1
+  envelope remain explicit non-goals.
+- Accessibility live-region announcements, keyboard docking and spatial group
+  navigation, touch/pointer dual drag backends, and performance profiling
+  remain unanalyzed; keyboard docking is the leading next gesture compiler.
