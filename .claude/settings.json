@@ -7,9 +7,6 @@
     "compound-engineering@compound-engineering-plugin": true
   },
   "permissions": {
-    "additionalDirectories": [
-      "/home/elpresidank/YeeBois/projects/beep-effect-worktrees"
-    ],
     "allow": [
       "Bash(rg:*)",
       "Bash(fd:*)",
@@ -62,12 +59,12 @@
       "Bash(gh issue create:*)",
       "Bash(gh run rerun:*)",
       "Bash(gh run watch:*)",
-      "Bash(gh api:*)",
+      "Bash(gh api graphql:*)",
+      "Bash(gh api repos/*)",
       "Bash(rm -rf .beep/fallow)",
       "Bash(bunx commitlint:*)",
       "Bash(bun install:*)",
-      "Bash(codex exec:*)",
-      "Bash(node /home/elpresidank/.claude/plugins/cache/openai-codex/codex/1.0.4/scripts/codex-companion.mjs:*)"
+      "Bash(codex exec:*)"
     ],
     "deny": [
       "Bash(git push --force:*)",
@@ -94,6 +91,8 @@
       "Bash(gh api --method DELETE:*)",
       "Bash(gh api -X PATCH:*)",
       "Bash(gh api --method PATCH:*)",
+      "Bash(gh api -X PUT:*)",
+      "Bash(gh api --method PUT:*)",
       "Edit(**/.github/workflows/**)",
       "Write(**/.github/workflows/**)",
       "Edit(**/docs/_internal/**)",
