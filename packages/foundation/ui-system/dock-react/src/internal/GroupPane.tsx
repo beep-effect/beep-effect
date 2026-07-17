@@ -72,6 +72,10 @@ const Tab = (props: {
     };
     const down = (event: PointerEvent): void => {
       if (P.not(Eq.equals(0))(event.button)) return;
+      // Presses on tab chrome (the close button) must not start a drag: the
+      // pointer capture would retarget the release to the tab and swallow the
+      // button's click (native capture beats React-level stopPropagation).
+      if (event.target instanceof Element && P.isNotNull(event.target.closest("button"))) return;
       node.setPointerCapture?.(event.pointerId);
       props.graph.registry.set(
         props.state.dragAtom,
@@ -127,6 +131,10 @@ const Tab = (props: {
       <button
         type="button"
         aria-label={`Close ${props.panel.title}`}
+        // Real pointers: without this the tab's drag compiler captures the
+        // pointer on pointerdown and the button's click never fires (jsdom
+        // stubs capture, so only a live browser exposes it).
+        onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => {
           event.stopPropagation();
           close();
