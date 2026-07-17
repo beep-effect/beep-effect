@@ -499,7 +499,7 @@ jobs:
   jsdoc-ratchet:
     name: JSDoc Ratchet
     runs-on: blacksmith-4vcpu-ubuntu-2404
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
