@@ -251,23 +251,35 @@ const DockWatermark = (): JSX.Element => (
 // state (and the protocol-layer bindings that configure them) live in the
 // root RegistryProvider. Without this wrapper each surface would silently
 // instantiate detached copies of its atoms inside the graph registry.
-// A crash in one surface heals with fresh remounts (dock moves can trip
-// third-party StrictMode bugs, e.g. MUI X useDisposable in the ontology
-// tree, and StrictMode can double-fire the same incident). After the retry
-// budget the card takes over with a manual reload.
-class SurfaceBoundary extends Component<
-  { readonly children: ReactNode; readonly label: string },
-  { readonly failures: number }
-> {
-  override state = { failures: 0 };
-  override componentDidCatch(): void {
-    this.setState((previous) => ({ failures: previous.failures + 1 }));
-  }
+// Surface crash resilience in two nested boundaries. The inner retrier
+// absorbs transient incidents (dock moves can trip third-party StrictMode
+// bugs, e.g. MUI X useDisposable in the ontology tree) by remounting the
+// subtree fresh; React itself bounds consecutive recovery attempts and
+// re-throws past the retrier when a crash persists, which the outer card
+// catches and turns into a manual reload.
+class SurfaceRetry extends Component<{ readonly children: ReactNode }, { readonly attempt: number }> {
+  override state = { attempt: 0 };
   static getDerivedStateFromError(): null {
     return null;
   }
+  override componentDidCatch(): void {
+    this.setState((previous) => ({ attempt: previous.attempt + 1 }));
+  }
   override render(): ReactNode {
-    if (this.state.failures > 2) {
+    return <Fragment key={this.state.attempt}>{this.props.children}</Fragment>;
+  }
+}
+
+class SurfaceCard extends Component<
+  { readonly children: ReactNode; readonly label: string },
+  { readonly failed: boolean }
+> {
+  override state = { failed: false };
+  static getDerivedStateFromError(): { failed: boolean } {
+    return { failed: true };
+  }
+  override render(): ReactNode {
+    if (this.state.failed) {
       return (
         <div className="flex h-full items-center justify-center p-4">
           <div className="max-w-sm rounded-md border bg-card p-4 text-center shadow-sm">
@@ -275,7 +287,7 @@ class SurfaceBoundary extends Component<
             <button
               type="button"
               className="mt-3 rounded-md border bg-accent px-3 py-1.5 text-sm font-medium"
-              onClick={() => this.setState({ failures: 0 })}
+              onClick={() => this.setState({ failed: false })}
             >
               Reload {this.props.label}
             </button>
@@ -283,9 +295,36 @@ class SurfaceBoundary extends Component<
         </div>
       );
     }
-    return <Fragment key={this.state.failures}>{this.props.children}</Fragment>;
+    return this.props.children;
   }
 }
+
+/**
+ * Crash boundary around one dock surface: transient render crashes self-heal
+ * with fresh remounts, persistent ones degrade to a manual-reload card.
+ *
+ * @example
+ * ```tsx
+ * import { SurfaceBoundary } from "@/App"
+ *
+ * const wrapped = <SurfaceBoundary label="Chat"><div /></SurfaceBoundary>
+ * console.log(wrapped.type)
+ * ```
+ *
+ * @category components
+ * @since 0.0.0
+ */
+export const SurfaceBoundary = ({
+  children,
+  label,
+}: {
+  readonly children: ReactNode;
+  readonly label: string;
+}): JSX.Element => (
+  <SurfaceCard label={label}>
+    <SurfaceRetry>{children}</SurfaceRetry>
+  </SurfaceCard>
+);
 
 const makeSurfaceRenderers = (
   graph: DesktopDockGraph,

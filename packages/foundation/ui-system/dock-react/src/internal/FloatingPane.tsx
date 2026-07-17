@@ -109,6 +109,10 @@ export const FloatingPane = (
       };
       const down = (event: PointerEvent): void => {
         if (P.not(Eq.equals(0))(event.button)) return;
+        // Presses on header chrome (the Dock button) must not start a move
+        // gesture: native pointer capture would retarget the release and
+        // swallow the button's click — same class as the tab close fix.
+        if (event.target instanceof Element && P.isNotNull(event.target.closest("button"))) return;
         event.stopPropagation();
         node.setPointerCapture?.(event.pointerId);
         props.graph.registry.set(

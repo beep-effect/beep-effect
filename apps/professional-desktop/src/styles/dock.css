@@ -9,8 +9,12 @@
   box-sizing: border-box;
 }
 
+.desktop-dock {
+  background: color-mix(in oklch, var(--foreground) 3%, var(--background));
+}
+
 .desktop-dock section[data-group-id] {
-  background: var(--card);
+  background: color-mix(in oklch, var(--foreground) 2%, var(--card));
   border: 1px solid color-mix(in oklch, var(--foreground) 16%, var(--border));
   border-radius: var(--radius, 8px);
   overflow: hidden;
@@ -20,7 +24,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  background: var(--muted);
+  background: color-mix(in oklch, var(--foreground) 6%, var(--muted));
   padding: 4px 6px;
   font-size: 12px;
   min-height: 26px;
