@@ -20,6 +20,9 @@
 5a0d07a871d0eb345572b3784c4174da6c6542f5:codex-rs/cli/src/login.rs:generic-api-key:405
 
 # False positives from upstream Effect subtree examples using documented placeholder tokens.
+ee581ca71e2f66faa415ab6e8ad798ef3e477346:packages/effect/HTTPAPI.md:curl-auth-header:1039
+ee581ca71e2f66faa415ab6e8ad798ef3e477346:packages/effect/src/Config.ts:generic-api-key:1253
+ee581ca71e2f66faa415ab6e8ad798ef3e477346:packages/effect/test/unstable/eventlog/EventLogIdentityDerivation.test.ts:generic-api-key:6
 200a511d50cc49cdf97d069cbc1f5001922745fe:packages/effect/HTTPAPI.md:curl-auth-header:1039
 200a511d50cc49cdf97d069cbc1f5001922745fe:packages/effect/src/Config.ts:generic-api-key:1156
 .repos/effect-v4/cookbooks/schedule.md:generic-api-key:21154
