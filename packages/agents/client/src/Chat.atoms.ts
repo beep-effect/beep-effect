@@ -44,18 +44,45 @@ type StreamingTurnReconciliation = typeof StreamingTurnReconciliation.Type;
 // Dev (browser or `tauri dev`): the page is served from a real http(s) origin
 // (the dev server), so the rpc URL rides that origin relative to `/rpc` — which
 // keeps the app reachable from any device that can reach the dev server.
-// Packaged Tauri serves from a `tauri://`-style origin, so there is no http
-// server to ride: talk to the sidecar directly. We avoid `import.meta.env`
-// (vite-only, untyped under NodeNext) and key off the live origin instead.
-const SERVER_URL = ((): string => {
-  if (typeof window !== "undefined") {
-    const origin = window.location.origin;
-    if (Str.startsWith(origin, "http://") || Str.startsWith(origin, "https://")) {
-      return new URL("/rpc", origin).toString();
-    }
+// Packaged Tauri serves from a `tauri://`-style origin on Linux/macOS and an
+// http(s) `tauri.localhost` origin on Windows, so there is no dev server to
+// ride: talk to the sidecar directly. We avoid `import.meta.env` (vite-only,
+// untyped under NodeNext) and key off the live origin instead.
+const SIDECAR_RPC_URL = "http://127.0.0.1:3939/rpc" as const;
+const WINDOWS_TAURI_HTTP_ORIGIN = "http://tauri.localhost" as const;
+const WINDOWS_TAURI_HTTPS_ORIGIN = "https://tauri.localhost" as const;
+
+/**
+ * Resolve the chat RPC endpoint for a browser origin.
+ *
+ * Packaged Tauri origins use the loopback sidecar, including Windows' HTTP(S)
+ * `tauri.localhost` origins. Other HTTP(S) origins are development servers and
+ * keep their origin-relative `/rpc` route.
+ *
+ * @example
+ * ```ts
+ * import { resolveChatRpcServerUrl } from "@beep/agents-client/Chat.atoms"
+ *
+ * console.log(resolveChatRpcServerUrl("http://tauri.localhost"))
+ * // "http://127.0.0.1:3939/rpc"
+ * ```
+ *
+ * @category clients
+ * @since 0.0.0
+ */
+export const resolveChatRpcServerUrl = (origin: string | undefined): string => {
+  if (
+    origin !== undefined &&
+    origin !== WINDOWS_TAURI_HTTP_ORIGIN &&
+    origin !== WINDOWS_TAURI_HTTPS_ORIGIN &&
+    (Str.startsWith(origin, "http://") || Str.startsWith(origin, "https://"))
+  ) {
+    return new URL("/rpc", origin).toString();
   }
-  return "http://127.0.0.1:3939/rpc";
-})();
+  return SIDECAR_RPC_URL;
+};
+
+const SERVER_URL = resolveChatRpcServerUrl(typeof window === "undefined" ? undefined : window.location.origin);
 
 // Ambient telemetry (logger/tracer/metrics are fiber-runtime concerns, not
 // typed services) rides every atom runtime via the global layer; this is what
