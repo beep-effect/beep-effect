@@ -1,0 +1,225 @@
+{
+  "schemaVersion": "portfolio-queue/v1",
+  "orderingSource": "docs/ROADMAP.md @ 2026-07-14 + research/dependency-sweep-{1..4}.md",
+  "locked": true,
+  "lockedAt": "2026-07-14",
+  "decisions": "research/decisions-locked.md",
+  "goals": [
+    {
+      "slug": "harness-otel-adoption",
+      "priority": 1,
+      "lane": "now",
+      "dependsOn": [],
+      "frontend": false,
+      "prUnits": "one final verification + closeout PR",
+      "notes": "small; validates pipeline end-to-end first (D2)"
+    },
+    {
+      "slug": "file-processing-capability",
+      "priority": 2,
+      "lane": "now",
+      "dependsOn": [],
+      "frontend": false,
+      "prUnits": "per-phase PRs (P2-P5)",
+      "notes": "unblocks legal-document-intake"
+    },
+    {
+      "slug": "ai-metrics-stack",
+      "priority": 3,
+      "lane": "now",
+      "dependsOn": [],
+      "frontend": false,
+      "prUnits": "P7f; P6c+P7e closeout; P7c/P7d separately"
+    },
+    {
+      "slug": "semantic-foundation",
+      "priority": 4,
+      "lane": "now",
+      "dependsOn": [],
+      "frontend": false,
+      "prUnits": "milestones separately; ROADMAP scope M1+M4 (M1 merged via PR #409); close with final work"
+    },
+    {
+      "slug": "legal-document-intake",
+      "priority": 5,
+      "lane": "now",
+      "dependsOn": ["file-processing-capability"],
+      "frontend": true,
+      "prUnits": "per-phase PRs (P4-P7)",
+      "notes": "north star; P6 has external dep m365-driver — park that unit if unbuilt"
+    },
+    {
+      "slug": "agentic-professional-runtime",
+      "priority": 6,
+      "lane": "now",
+      "dependsOn": [],
+      "frontend": true,
+      "prUnits": "per-phase PRs (P1, P4); doctrine rung separate"
+    },
+    {
+      "slug": "professional-desktop-adversarial-qa",
+      "priority": 7,
+      "lane": "standing",
+      "dependsOn": [],
+      "frontend": true,
+      "prUnits": "one campaign PR at convergence",
+      "exitCriteria": "two consecutive clean QA rounds"
+    },
+    {
+      "slug": "citation-verified-span-substrate",
+      "priority": 8,
+      "lane": "wave",
+      "dependsOn": [],
+      "frontend": false,
+      "prUnits": "2",
+      "notes": "unblocks citation-extraction-engine + law-doc-structure-oa-slice"
+    },
+    {
+      "slug": "court-reporter-vocabulary",
+      "priority": 9,
+      "lane": "wave",
+      "dependsOn": [],
+      "frontend": false,
+      "prUnits": "2"
+    },
+    {
+      "slug": "effect-v4-workflow-engine-spike",
+      "priority": 10,
+      "lane": "wave",
+      "dependsOn": [],
+      "frontend": false,
+      "prUnits": "3",
+      "notes": "unblocks projection-dispatch-core"
+    },
+    {
+      "slug": "uspto-prosecution-read",
+      "priority": 11,
+      "lane": "wave",
+      "dependsOn": [],
+      "frontend": false,
+      "prUnits": "3",
+      "notes": "unblocks uspto-ptmnfee2-ingest; may need USPTO API credentials — park if unnamed"
+    },
+    {
+      "slug": "citation-extraction-engine",
+      "priority": 12,
+      "lane": "wave",
+      "dependsOn": [
+        "citation-verified-span-substrate",
+        "court-reporter-vocabulary"
+      ],
+      "frontend": false,
+      "prUnits": "2"
+    },
+    {
+      "slug": "law-doc-structure-oa-slice",
+      "priority": 13,
+      "lane": "wave",
+      "dependsOn": ["citation-verified-span-substrate"],
+      "frontend": false,
+      "prUnits": "2"
+    },
+    {
+      "slug": "hybrid-retrieval-fusion-core",
+      "priority": 14,
+      "lane": "wave",
+      "dependsOn": [],
+      "frontend": false,
+      "prUnits": "2"
+    },
+    {
+      "slug": "epistemic-bitemporal-edge-core",
+      "priority": 15,
+      "lane": "wave",
+      "dependsOn": [],
+      "frontend": false,
+      "prUnits": "3"
+    },
+    {
+      "slug": "identity-iri-fold",
+      "priority": 16,
+      "lane": "wave",
+      "dependsOn": [],
+      "frontend": false,
+      "prUnits": "3",
+      "notes": "identity-iri-core dep already satisfied"
+    },
+    {
+      "slug": "ingestion-secret-scrub",
+      "priority": 17,
+      "lane": "wave",
+      "dependsOn": [],
+      "frontend": false,
+      "prUnits": "3"
+    },
+    {
+      "slug": "secure-document-delivery",
+      "priority": 18,
+      "lane": "wave",
+      "dependsOn": [],
+      "frontend": true,
+      "prUnits": "3"
+    },
+    {
+      "slug": "uspto-ptmnfee2-ingest",
+      "priority": 19,
+      "lane": "wave",
+      "dependsOn": ["uspto-prosecution-read"],
+      "frontend": false,
+      "prUnits": "3"
+    },
+    {
+      "slug": "projection-dispatch-core",
+      "priority": 20,
+      "lane": "wave",
+      "dependsOn": ["effect-v4-workflow-engine-spike"],
+      "frontend": true,
+      "prUnits": "3"
+    },
+    {
+      "slug": "law-docketing-patent-spine",
+      "priority": 21,
+      "lane": "wave",
+      "dependsOn": ["law-doc-structure-oa-slice"],
+      "frontend": false,
+      "prUnits": "3",
+      "notes": "circular cite with law-docketing-reliability resolved spine-first (grill); external dep m365-driver for later units; manifest/PLAN phase drift — fix in PACKET_REVIEW"
+    },
+    {
+      "slug": "law-docketing-reliability",
+      "priority": 22,
+      "lane": "wave",
+      "dependsOn": ["law-docketing-patent-spine"],
+      "frontend": false,
+      "prUnits": "3",
+      "notes": "manifest/PLAN phase drift — fix in PACKET_REVIEW"
+    },
+    {
+      "slug": "law-time-capture-spine",
+      "priority": 23,
+      "lane": "wave",
+      "dependsOn": [],
+      "frontend": true,
+      "prUnits": "3",
+      "notes": "manifest/PLAN phase drift — fix in PACKET_REVIEW"
+    },
+    {
+      "slug": "voice-composer-slice",
+      "priority": 24,
+      "lane": "wave",
+      "dependsOn": [],
+      "frontend": true,
+      "prUnits": "2",
+      "notes": "P1 marked blocked in PLAN — PACKET_REVIEW must attribute before dispatch"
+    },
+    {
+      "slug": "gov-legal-mcp",
+      "priority": 25,
+      "lane": "wave",
+      "dependsOn": [],
+      "frontend": false,
+      "prUnits": "3",
+      "notes": "gov-legal-data-driver-codegen dep completed-retained; mcp-kit external — verify at PACKET_REVIEW"
+    }
+  ]
+}
