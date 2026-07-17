@@ -11,6 +11,7 @@ import { ControllableResizeObserver } from "@beep/dock-react/internal/ResizeObse
 // geometry drives it explicitly with `resize()`.
 globalThis.ResizeObserver = ControllableResizeObserver;
 
+// fallow-ignore-next-line code-duplication
 if (typeof window !== "undefined" && typeof window.matchMedia !== "function") {
   window.matchMedia = (query: string): MediaQueryList =>
     ({

@@ -17,7 +17,7 @@ import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { makeOperation } from "./AdapterState.ts";
-import { boxStyle, compileDrop, positionOf } from "./DropCompiler.ts";
+import { boxStyle, compileDrop, positionOf, pressStartsOnButton } from "./DropCompiler.ts";
 import { ContentHost } from "./PanelHost.tsx";
 import type { DockBox, Panel } from "@beep/dock";
 import type React from "react";
@@ -71,11 +71,7 @@ const Tab = (props: {
       event.preventDefault();
     };
     const down = (event: PointerEvent): void => {
-      if (P.not(Eq.equals(0))(event.button)) return;
-      // Presses on tab chrome (the close button) must not start a drag: the
-      // pointer capture would retarget the release to the tab and swallow the
-      // button's click (native capture beats React-level stopPropagation).
-      if (event.target instanceof Element && P.isNotNull(event.target.closest("button"))) return;
+      if (P.not(Eq.equals(0))(event.button) || pressStartsOnButton(event)) return;
       node.setPointerCapture?.(event.pointerId);
       props.graph.registry.set(
         props.state.dragAtom,

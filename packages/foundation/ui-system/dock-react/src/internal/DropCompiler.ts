@@ -16,6 +16,7 @@ import { NonNegativeInt } from "@beep/schema";
 import { Match } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import { commandCounter } from "./AdapterState.ts";
 import type { AnchoredBox, DockBox, DockGeometry, MovePanelCommand, SplitNode } from "@beep/dock";
 import type React from "react";
@@ -35,6 +36,12 @@ export const positionOf = (event: PointerEvent): PointerPosition => ({
   left: event.clientX,
   top: event.clientY,
 });
+// Presses on chrome buttons inside a gesture surface must not start a
+// drag/move: native pointer capture would retarget the release and swallow
+// the button's click (native capture beats React-level stopPropagation).
+export const pressStartsOnButton = (event: PointerEvent): boolean =>
+  event.target instanceof Element && P.isNotNull(event.target.closest("button"));
+
 export const contains = (box: DockBox, point: PointerPosition): boolean =>
   point.left >= box.left &&
   point.left <= box.left + box.width &&

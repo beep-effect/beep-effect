@@ -12,7 +12,7 @@ import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { makeOperation } from "./AdapterState.ts";
-import { boxStyle, freshFloatingSplitId, positionOf, topLeftBox } from "./DropCompiler.ts";
+import { boxStyle, freshFloatingSplitId, positionOf, pressStartsOnButton, topLeftBox } from "./DropCompiler.ts";
 import { GroupPane } from "./GroupPane.tsx";
 import type { AnchoredBox, DockNode } from "@beep/dock";
 import type { DockviewReactProps } from "../DockReact.types.ts";
@@ -108,11 +108,7 @@ export const FloatingPane = (
         );
       };
       const down = (event: PointerEvent): void => {
-        if (P.not(Eq.equals(0))(event.button)) return;
-        // Presses on header chrome (the Dock button) must not start a move
-        // gesture: native pointer capture would retarget the release and
-        // swallow the button's click — same class as the tab close fix.
-        if (event.target instanceof Element && P.isNotNull(event.target.closest("button"))) return;
+        if (P.not(Eq.equals(0))(event.button) || pressStartsOnButton(event)) return;
         event.stopPropagation();
         node.setPointerCapture?.(event.pointerId);
         props.graph.registry.set(
