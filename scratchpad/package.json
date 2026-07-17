@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@beep/dock": "workspace:^",
+    "@beep/dock-react": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/md": "workspace:^",
     "@beep/ontology": "workspace:^",

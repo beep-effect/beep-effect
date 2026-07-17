@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-15",
+  "generatedOn": "2026-07-17",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
@@ -418,6 +418,16 @@
       "status": "exception",
       "owner": "@beep/govinfo",
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/drivers/graph-3d/src/Graph3D.react.ts",
+      "symbol": "useGraph3DHandle",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-null-return",
+      "line": 46,
+      "owner": "@beep/graph-3d",
+      "reason": "React hook boundary: the result carries React's RefObject (null until attached) and the not-yet-mounted handle/error as undefined, matching React ref and state conventions for the Storybook/spike consumers."
     },
     {
       "file": "packages/drivers/hubspot/src/HubSpot.errors.ts",
@@ -1488,6 +1498,38 @@
       "status": "exception",
       "owner": "@beep/utils",
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/DockReact.types.ts",
+      "symbol": "DockPanelProps",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/dock-react",
+      "reason": "React renderer props composing DockviewAdapterApi, a function-bearing runtime handle; the schema-modelable half (DockPanelApi) is already an annotated S.Class."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/DockReact.types.ts",
+      "symbol": "DockviewAdapterApi",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/dock-react",
+      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/DockReact.types.ts",
+      "symbol": "DockviewReactProps",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/dock-react",
+      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/AdapterState.ts",
+      "symbol": "AdapterState",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/dock-react",
+      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
     },
     {
       "file": "packages/foundation/ui-system/dock/src/DockEngine.service.ts",

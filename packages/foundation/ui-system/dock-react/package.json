@@ -1,0 +1,86 @@
+{
+  "name": "@beep/dock-react",
+  "version": "0.0.0",
+  "description": "React adapter for the @beep/dock workspace kernel.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/packages/foundation/ui-system/dock-react",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:beep-effect/beep-effect.git",
+    "directory": "packages/foundation/ui-system/dock-react"
+  },
+  "beep": {
+    "family": "foundation",
+    "kind": "ui-system"
+  },
+  "scripts": {
+    "audit": "bun run --if-present beep:audit",
+    "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
+    "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
+    "beep:build": "tsc -b tsconfig.json && bun run babel",
+    "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests && bun run beep:check:stories",
+    "beep:check:stories": "tsc -p tsconfig.stories.json --noEmit",
+    "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+    "beep:lint": "biome check .",
+    "beep:lint:fix": "biome check . --write",
+    "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
+    "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
+    "build": "bun run beep:build",
+    "check": "bun run beep:check",
+    "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
+    "docgen": "bun run ../../../../packages/tooling/tool/docgen/src/bin.ts",
+    "lint": "bun run beep:lint",
+    "lint:fix": "bun run beep:lint:fix",
+    "test": "bun run beep:test",
+    "test:integration": "bun run beep:test:integration"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./internal/*": "./src/internal/*.ts",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map"
+  ],
+  "sideEffects": [],
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "exports": {
+      ".": "./dist/index.js",
+      "./internal/*": null,
+      "./package.json": "./package.json"
+    }
+  },
+  "dependencies": {
+    "@beep/dock": "workspace:^",
+    "@beep/identity": "workspace:^",
+    "@beep/pretext": "workspace:^",
+    "@beep/schema": "workspace:^",
+    "@effect/atom-react": "catalog:",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "@storybook/react-vite": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "bun-types": "catalog:",
+    "jsdom": "catalog:",
+    "storybook": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "^19",
+    "react-dom": "^19"
+  }
+}

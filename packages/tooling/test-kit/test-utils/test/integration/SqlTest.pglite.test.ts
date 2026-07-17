@@ -188,10 +188,10 @@ describe("PGLite in-process SQL test driver", () => {
 });
 
 // Sequential (overriding the global `sequence.concurrent: true`): every test in this block opens
-// its own connection to the single shared external database. The PGLite wire-protocol server backing
-// the integration lane accepts only one connection at a time, so concurrent tests would terminate
-// each other's connections and hang. The provisioning lane already enforces this with
-// `--concurrency=1` and `BEEP_TEST_DATABASE_MAX_CONNECTIONS=1`.
+// its own connection to the single shared external database. PGLite executes one query at a time;
+// its socket bridge permits a small handler overlap only so a new scope cannot race the prior
+// socket's asynchronous close. The provisioning lane still enforces one-at-a-time test and client
+// concurrency with `--concurrency=1` and `BEEP_TEST_DATABASE_MAX_CONNECTIONS=1`.
 describe("PGLite shared external SQL test driver", { concurrent: false }, () => {
   it.effect(
     "creates, inserts, and queries PostgreSQL tables inside the generated schema",

@@ -6,6 +6,14 @@ export const ALLOWLIST_SNAPSHOT = {
   "entries": [
     {
       "rule": "beep-laws/no-native-runtime",
+      "file": "apps/storybook/vitest.storybook.setup.ts",
+      "kind": "native-error",
+      "reason": "Vitest browser-mode setup guard: throwing in afterAll is the only failure channel before any Effect runtime exists, and vitest surfaces the native Error directly as the test failure.",
+      "owner": "@beep/storybook",
+      "issue": "STORYBOOK-REACT-GRAB-TEST-LEAK-GUARD"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
       "file": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
       "kind": "object-method",
       "reason": "ChangeOperation must keep the tagged-union match statics across a schema pipe; Object.assign merges the piped schema with the base statics and no Effect helper performs a static-preserving schema merge.",
@@ -107,6 +115,22 @@ export const ALLOWLIST_SNAPSHOT = {
       "reason": "Fallow quality parses ISO timestamps from prior tool reports at the CLI boundary to sort and summarize historical quality envelopes.",
       "owner": "@beep/repo-cli",
       "issue": "FALLOW-QUALITY-REPORT-TIMESTAMP-PARSE"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/ui-system/dock-react/src/internal/AdapterState.ts",
+      "kind": "new-map-set",
+      "reason": "Adapter state is keyed by host-owned DockAtomGraph identity and DOM roots; WeakMap/WeakSet weak-key semantics prevent retaining disposed graphs and detached elements, which Effect MutableHashMap cannot provide.",
+      "owner": "@beep/dock-react",
+      "issue": "DOCK-REACT-ADAPTER-WEAK-IDENTITY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/ui-system/dock-react/src/internal/ResizeObserverHarness.ts",
+      "kind": "new-map-set",
+      "reason": "The controllable jsdom harness mirrors the native ResizeObserver contract (observer registry and per-observer Element targets) so tests drive resize callbacks exactly as the DOM would.",
+      "owner": "@beep/dock-react",
+      "issue": "DOCK-REACT-RESIZE-HARNESS-DOM-CONTRACT"
     }
   ],
   "diagnostics": []

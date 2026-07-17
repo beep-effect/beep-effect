@@ -23,7 +23,7 @@ const developmentScriptSources = isDevelopment ? " 'unsafe-eval' https://unpkg.c
 const developmentStyleSources = isDevelopment ? " https://fonts.googleapis.com" : "";
 const developmentFontSources = isDevelopment ? " https://fonts.gstatic.com" : "";
 const developmentConnectSources = isDevelopment
-  ? " http://localhost:* https://*.localhost:* ws: wss: https://react-grab.com https://www.react-grab.com"
+  ? " https://*.localhost:* ws: wss: https://react-grab.com https://www.react-grab.com"
   : "";
 const vercelLiveSource = " https://vercel.live";
 

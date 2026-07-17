@@ -16,6 +16,7 @@ import {
   formatJson,
   formatTsDocCommentValue,
   formatTsLiteral,
+  normalizeJson,
   outputFile,
   parseJsonSource,
   sourceMetadata,
@@ -550,7 +551,7 @@ const acquireCldrTerritoriesProjection = Effect.fn("SyncDataToTs.CldrTerritories
     sourceMetadata(infoSource.source, { version: release.tag_name }),
     sourceMetadata(namesSource.source, { version: release.tag_name }),
   ];
-  const canonical = {
+  const canonical = yield* normalizeJson(targetId, {
     schemaVersion: "beep-data/cldr-territories/v1",
     metadata: {
       releaseTag: normalized.releaseTag,
@@ -560,7 +561,7 @@ const acquireCldrTerritoriesProjection = Effect.fn("SyncDataToTs.CldrTerritories
     },
     territoriesByCode: byCode(normalized.territories),
     continentsByCode: byCode(normalized.continents),
-  } as const;
+  });
 
   return SyncDataTargetProjection.make({
     files: [

@@ -147,6 +147,9 @@
       "path": "../../packages/drivers/doc-text/tsconfig.json"
     },
     {
+      "path": "../../packages/drivers/graph-3d/tsconfig.json"
+    },
+    {
       "path": "../../packages/drivers/pglite/tsconfig.json"
     },
     {
@@ -181,6 +184,12 @@
     },
     {
       "path": "../../packages/foundation/modeling/utils/tsconfig.json"
+    },
+    {
+      "path": "../../packages/foundation/ui-system/dock-react/tsconfig.json"
+    },
+    {
+      "path": "../../packages/foundation/ui-system/dock/tsconfig.json"
     },
     {
       "path": "../../packages/foundation/ui-system/editor/tsconfig.json"

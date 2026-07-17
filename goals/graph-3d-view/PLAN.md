@@ -2,17 +2,16 @@
 
 ## Status
 
-Status: `pending` (graduated 2026-07-14 from
-`explorations/graph-3d-navigation`; P0 not started)
+Status: `completed-retained` (all phases completed 2026-07-16)
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Design gate | pending | Consume `research/`; decide stack + placement + label technique + layout location + interaction model + theming + toggle UX, with a 2.5k benchmark. | `research/DESIGN.md` answers all gate decisions with cited evidence + benchmark. |
-| P1 Generic component | pending | Build the 3D renderer + labels + interactions on synthetic data; Storybook + FPS probe + browser test. | Storybook 2.5k story shows six behaviors; FPS recorded; `@vitest/browser` test green. |
-| P2 Workbench integration | pending | Add z to the projection/worker; parallel 3D bridge + toggle; workbench toggle UI; QA. | Toggle switches cosmos↔3D (cosmos default); selection syncs; cosmos regression empty. |
-| P3 Close | pending | PR to mergeable via yeet; closeout reflection. | Packet status/evidence updated; reflection exists; PR mergeable. |
+| P0 Design gate | completed 2026-07-16 | Consume `research/`; decide stack + placement + label technique + layout location + interaction model + theming + toggle UX, with a 2.5k benchmark. | `research/DESIGN.md` answers all gate decisions with cited evidence + benchmark. Done: DESIGN.md v2 (post codex adversarial review, `research/DESIGN-REVIEW.md`); benchmark committed at `scratchpad/graph-3d-bench/`. |
+| P1 Generic component | completed 2026-07-16 | Build the 3D renderer + labels + interactions on synthetic data; Storybook + FPS probe + browser test. | Done: `@beep/graph-3d` renderer + stories (six behaviors, 60fps probe readout) + `@vitest/browser` suite 5/5 green. |
+| P2 Workbench integration | completed 2026-07-16 | Add z to the projection/worker; parallel 3D bridge + toggle; workbench toggle UI; QA. | Done: worker z + force relaxation; bridge dispatch + selection transaction; toggle UI; browser toggle-integration test green; WebKitGTK 60fps at 2.5k/5k; cosmos diff empty. |
+| P3 Close | completed 2026-07-16 | PR to mergeable via yeet; closeout reflection. | Done: reflection at `history/reflections/2026-07-16-claude.md`; statuses flipped; PR published via yeet in this branch. |
 
 ## Task routing (Actor per task)
 

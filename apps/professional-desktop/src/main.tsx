@@ -1,4 +1,5 @@
 import "./styles/globals.css";
+import "./styles/dock.css";
 import { $ProfessionalDesktopId } from "@beep/identity";
 import { Effect } from "effect";
 import * as S from "effect/Schema";

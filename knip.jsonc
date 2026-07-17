@@ -99,6 +99,12 @@
   // packages/foundation/modeling/lexical/dtslint/Lexical.tst.ts) is a wired `type-test` turbo
   // task, but "**/dtslint/**" is excluded from knip's source graph above, so devDependencies
   // used only there read as unused.
+  // @beep/graph-3d: same story-glob shape as @beep/form — apps/storybook hosts
+  // packages/drivers/graph-3d/stories/** via a .storybook/main.ts glob, invisible to knip's
+  // per-workspace import scan.
+  // @vitest/browser: browser-mode runtime required by `vitest --config vitest.browser.config.ts`
+  // (packages/drivers/graph-3d, packages/ontology/client); configs import only the
+  // @vitest/browser-playwright provider, so the runtime devDependency reads as unused.
   "ignoreDependencies": [
     "@effect/vitest",
     "@effect/language-service",
@@ -126,6 +132,8 @@
     "@lexical/rich-text",
     "lexical",
     "@beep/form",
+    "@beep/graph-3d",
+    "@vitest/browser",
     "emojibase-data",
     "inspeffct",
     // Mirrored from .fallowrc.jsonc (goals/fallow-zero-dead-code): MUI runtime

@@ -1,7 +1,7 @@
 # dockview-demo
 
 Vite dev page hosting the greenfield dock adapter
-(`scratchpad/dockview-react`) against a seeded workspace, with
+(`@beep/dock-react`) against a seeded workspace, with
 `options.titleMinima` wired to live `@beep/pretext` capture — the visual
 smoke target for computable workspace geometry
 (`explorations/computable-workspace-geometry`).
@@ -32,7 +32,7 @@ bunx tsgo -p scratchpad/dockview-demo/tsconfig.json --pretty false
 ```
 
 The page itself is non-gating demo surface; the gating suites live in
-`scratchpad/dockview` (bun test) and `scratchpad/dockview-react` (vitest).
+`@beep/dock` and `@beep/dock-react` package tests.
 
 ## Pages
 

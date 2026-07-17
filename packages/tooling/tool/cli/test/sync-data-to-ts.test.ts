@@ -8,6 +8,7 @@ import {
   ISO3166_PART2_CSV_URL_ENV,
   ISO3166_SOURCE_URL,
   ISO4217_SOURCE_URL,
+  normalizeJson,
   outputFile,
   parseCsvSource,
   SyncDataTargetProjection,
@@ -16,11 +17,11 @@ import {
 } from "@beep/repo-cli/test/SyncDataToTs";
 import { A, O } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
+import { describe, expect, it } from "@effect/vitest";
 import { Cause, ConfigProvider, Effect, Exit, FileSystem, Layer, Path, Runtime } from "effect";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/unstable/http";
-import { describe, expect, it } from "vitest";
 import type { SyncDataTarget } from "@beep/repo-cli/test/SyncDataToTs";
 
 const provideScopedLayer =
@@ -275,10 +276,10 @@ const csvTarget: SyncDataTarget = {
   acquire: Effect.gen(function* () {
     const source = yield* fetchSource("test-csv", "fixture-csv", csvFixtureSourceUrl);
     const rows = yield* parseCsvSource("test-csv", source);
-    const canonical = {
+    const canonical = yield* normalizeJson("test-csv", {
       columns: rows.columns ?? [],
       rows,
-    };
+    });
 
     return SyncDataTargetProjection.make({
       files: [
@@ -295,6 +296,18 @@ const csvTarget: SyncDataTarget = {
 };
 
 describe("sync-data-to-ts", { concurrent: false }, () => {
+  it.effect("reports JSON normalization failures through the typed error channel", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(normalizeJson("test-json", { value: 1n }));
+
+      expect(error).toMatchObject({
+        _tag: "SyncDataToTsError",
+        targetId: "test-json",
+      });
+      expect(error.message).toContain("Failed to normalize canonical JSON for test-json");
+    })
+  );
+
   it("escapes generated JSDoc comment metadata", () => {
     const formatted = formatTsDocCommentValue("2026-01-01 */\nexport const injected = true;");
 

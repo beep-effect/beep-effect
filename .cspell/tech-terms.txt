@@ -69,6 +69,7 @@ DPAPI
 dryrun
 dtos
 dtslint
+EADDRINUSE
 ECONNREFUSED
 EdgiOS
 ellipsized
@@ -128,8 +129,8 @@ journalctl
 jsdocs
 jsonc
 jsxdev
-keccak
 kdialog
+keccak
 Kiota
 Kleisli
 labelledby
@@ -255,6 +256,7 @@ PUNCT
 pxls
 pxlsx
 qjhr
+rasterizes
 rdfc
 RDFC
 rdfjs
@@ -265,6 +267,7 @@ recompiles
 reconstructibility
 redeployments
 replayable
+reprojection
 repros
 retarget
 retargeted
@@ -329,8 +332,8 @@ Toolkits
 topo
 TOTP
 traceid
-traceql
 traceparent
+traceql
 tracestate
 tsbuildinfo
 tsmorph

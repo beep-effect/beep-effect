@@ -48,7 +48,9 @@ three new proofs) → codex review pass → publish.
 ## P4 — M4 QA + close
 
 Repo-wide quality loop to zero required blockers → codex browser QA scenario
-list on the running shell (vite :1420/Tauri) → fix lanes per finding →
+list on the running shell
+(`http://professional-desktop.beep.localhost:1355`/Tauri) → fix lanes per
+finding →
 reflection via `/reflect` → manifest phases complete + lifecycle flip in the
 same PR → INDEX regen → exploration Trail close → workspace-substrate §7
 checkoff.

@@ -48,6 +48,21 @@ package.
 
 ## Trail
 
+- 2026-07-17: dock-substrate-landing packet CLOSED (completed-retained). All
+  four milestones merged (#416, #421, #426 + closeout); the desktop shell is
+  a dock workspace with persistent layout, QA'd to zero required findings
+  over six browser rounds. The exploration stays active for Goal 3
+  (graph-3d) and future geometry threads.
+
+- 2026-07-17: M3 shell landing — `apps/professional-desktop` now boots into a
+  dock workspace: four keep-alive surface panels, localStorage snapshot
+  persistence with boot restore and poisoned-key fallback, hash routing
+  retired. The rendered shell is computable geometry end-to-end; interactive
+  gesture QA moves to M4's browser rounds.
+
+- 2026-07-16: M2 graduation — `@beep/dock-react` landed, the demo was
+  rewired to package imports, and scratchpad `dockview` + `dockview-react`
+  were retired (residuals moved to the packet README).
 - 2026-07-14 (latest: DOCK GRADUATION OPENED, gate released): grill locked
   the landing arc — `@beep/dock` + `@beep/dock-react` under
   `packages/foundation/ui-system/` (purity boundary = package boundary), a
