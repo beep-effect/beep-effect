@@ -167,7 +167,7 @@ describe("floating dock adapter", { concurrent: false }, () => {
     })
   );
 
-  it.effect("floats a docked group, then docks it at the root right", () =>
+  it.effect("floats a docked group, then docks it back where it came from", () =>
     Effect.gen(function* () {
       const graph = yield* mount(false, true);
       fireEvent.click(screen.getByRole("button", { name: `Float group ${dockedId}` }));
@@ -184,7 +184,10 @@ describe("floating dock adapter", { concurrent: false }, () => {
         expect(result.root._tag).toBe("Split");
         expect(result.root._tag === "Split" && result.root.layout.axis).toBe("horizontal");
         if (result.root._tag === "Split" && result.root.layout.axis === "horizontal") {
-          expect(DockNode.panels(result.root.layout.right)[0]?.id).toBe(dockedPanel.id);
+          // The float/dock cycle is a round trip: the group returns to the
+          // side it left (pre-float placement memory, QA finding R1-03) —
+          // not a forced root-right column.
+          expect(DockNode.panels(result.root.layout.left)[0]?.id).toBe(dockedPanel.id);
         }
       }
       graph.dispose();

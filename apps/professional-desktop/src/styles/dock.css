@@ -128,13 +128,36 @@
   outline-offset: 1px;
 }
 
-/* The floating drag-header carries the Dock affordance; give it chrome. */
+/* The floating drag-header carries the Dock affordance; give it chrome:
+   a grip cue and the pane's title make it read as a movable window
+   (QA finding R1-09). */
 .desktop-dock [data-floating-header] {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  gap: 6px;
   padding: 0 6px;
   border-bottom: 1px solid color-mix(in oklch, var(--foreground) 14%, transparent);
+}
+
+.desktop-dock [data-floating-grip] {
+  color: var(--muted-foreground);
+  font-size: 10px;
+  letter-spacing: 1px;
+  cursor: move;
+}
+
+.desktop-dock [data-floating-title] {
+  flex: 1 1 auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktop-dock [data-floating-resize]:hover {
+  background: color-mix(in oklch, var(--primary) 55%, transparent);
 }
 
 .desktop-dock [data-floating-header] button {
@@ -152,9 +175,13 @@
   color: var(--accent-foreground);
 }
 
-/* Nested surfaces keep a readable floor instead of one-word text columns. */
+/* Nested surfaces keep a readable floor instead of one-word text columns,
+   and scroll their own content instead of clipping it when a short group
+   cannot show the whole thread list (QA finding R2-01). */
 .desktop-dock [data-testid="sidebar"] {
   min-width: 200px;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* Close targets stay compact but comfortably clickable. */
@@ -174,4 +201,72 @@
   .desktop-dock [data-testid="sidebar"] {
     display: none;
   }
+}
+
+/* Tab-overflow dropdown (QA R1-04): a real popover surface, not loose text
+   floating over panel content. The adapter emits the trigger with
+   [data-dock-overflow] and the menu as its sibling [role="menu"]. */
+.desktop-dock [data-dock-overflow] {
+  border: 1px solid color-mix(in oklch, var(--foreground) 18%, transparent);
+  border-radius: calc(var(--radius, 8px) - 4px);
+  min-width: 24px;
+  font-weight: 600;
+}
+
+.desktop-dock [data-dock-overflow][aria-expanded="true"] {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.desktop-dock section[data-group-id] > [role="tablist"] [role="menu"] {
+  background: var(--popover, var(--card));
+  color: var(--popover-foreground, var(--foreground));
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius, 8px) - 2px);
+  box-shadow: 0 8px 24px color-mix(in oklch, var(--foreground) 28%, transparent);
+  padding: 4px;
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.desktop-dock section[data-group-id] > [role="tablist"] [role="menu"] [role="menuitem"] {
+  display: block;
+  width: 100%;
+  text-align: start;
+  padding: 5px 8px;
+  font-size: 12px;
+  color: var(--foreground);
+  border-radius: calc(var(--radius, 8px) - 4px);
+}
+
+.desktop-dock section[data-group-id] > [role="tablist"] [role="menu"] [role="menuitem"]:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* Narrow groups compact their chrome instead of clipping it (QA R1-05):
+   the strip wraps its action rail under the tabs before anything becomes
+   unreachable. */
+.desktop-dock section[data-group-id] > [role="tablist"] {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+
+/* Tab legibility (QA R1-11): a high-contrast active indicator beyond the
+   subtle fill, and close glyphs that step back until hovered. */
+.desktop-dock section[data-group-id] > [role="tablist"] [role="tab"][data-active="true"] {
+  box-shadow: inset 0 -2px 0 0 var(--primary);
+  font-weight: 600;
+}
+
+.desktop-dock section[data-group-id] > [role="tablist"] [role="tab"] button {
+  opacity: 0.35;
+}
+
+.desktop-dock section[data-group-id] > [role="tablist"] [role="tab"]:hover button,
+.desktop-dock section[data-group-id] > [role="tablist"] [role="tab"] button:focus-visible,
+.desktop-dock section[data-group-id] > [role="tablist"] [role="tab"][data-active="true"] button {
+  opacity: 1;
 }

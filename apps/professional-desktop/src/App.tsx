@@ -463,6 +463,11 @@ const OntologyMenu = ({
         variant={anyCurrent ? "secondary" : "ghost"}
       >
         Ontology
+        {/* Launcher affordance: this entry opens a panel menu, unlike the
+            plain page buttons beside it (QA finding R1-08). */}
+        <span aria-hidden className="ml-1 text-[10px] opacity-70">
+          ▾
+        </span>
       </Button>
       {open && (
         <div

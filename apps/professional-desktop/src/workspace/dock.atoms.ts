@@ -29,6 +29,7 @@ import {
   makeDockAtomsWith,
   OpenPanelCommand,
   Panel,
+  PanelConstraints,
   PanelId,
   PopulatedWorkspace,
   RendererKey,
@@ -215,6 +216,11 @@ export type DesktopDockGraph = DockAtomGraph;
  */
 export const desktopPanelId = (key: DesktopPanelKey): PanelId => PanelId.make(`surface-${key}`);
 
+// Per-panel minima (the M1 kernel capability): a split or edge insertion can
+// never squeeze a content-heavy panel below readability — QA round 1 showed
+// a full-width row insertion clipping Chat to ~155px (finding R1-06).
+const CONTENT_MIN = PanelConstraints.make({ minWidth: O.some(220), minHeight: O.some(220) });
+
 // The kernel panel for a desktop panel key. Every panel is keep-alive
 // (`renderMode: "always"`): inactive tabs stay mounted so chat streams,
 // ontology session state, and sync progress survive tab switches.
@@ -224,6 +230,7 @@ const desktopPanel = (key: DesktopPanelKey): Panel =>
     title: panelSpec(key).title,
     view: ComponentPanelView.make({ renderer: RendererKey.make(key) }),
     renderMode: "always",
+    constraints: O.some(CONTENT_MIN),
   });
 
 const GROUP_ONTOLOGY_LEFT = GroupId.make("desktop-ontology-left");
