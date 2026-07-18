@@ -34,6 +34,6 @@ describe("codegen command", () => {
         expect(barrel).toContain('export * from "./Model.ts";');
         expect(barrel).toContain('export * from "./View.ts";');
         expect(barrel).not.toContain(".tsx");
-      }).pipe(provideScopedLayer(testLayer))
+      }).pipe(Effect.scoped, provideScopedLayer(testLayer))
     ));
 });
