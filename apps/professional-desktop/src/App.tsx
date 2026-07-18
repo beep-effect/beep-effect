@@ -36,7 +36,7 @@ import {
 import { Button } from "@beep/ui/components/button";
 import { Toaster } from "@beep/ui/components/sonner";
 import { RegistryContext, useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { Effect } from "effect";
+import { Effect, MutableHashMap } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
@@ -395,18 +395,18 @@ const makePanelRenderers = (
 // the app's lifetime. A fresh map per render would hand React new component
 // types on every workspace change, remounting every panel subtree and
 // destroying the state keep-alive exists to preserve. (Keyed by graph alone:
-// the app registry is one per page, like the graph itself.)
-const renderersCache = new WeakMap<DesktopDockGraph, Readonly<Record<DesktopPanelKey, DockRenderer>>>();
+// the app registry is one per page, like the graph itself, so the strong
+// reference lives exactly as long as the page.)
+const renderersCache = MutableHashMap.empty<DesktopDockGraph, Readonly<Record<DesktopPanelKey, DockRenderer>>>();
 const panelRenderersFor = (
   graph: DesktopDockGraph,
   appRegistry: AppRegistry
-): Readonly<Record<DesktopPanelKey, DockRenderer>> => {
-  const cached = renderersCache.get(graph);
-  if (cached !== undefined) return cached;
-  const built = makePanelRenderers(graph, appRegistry);
-  renderersCache.set(graph, built);
-  return built;
-};
+): Readonly<Record<DesktopPanelKey, DockRenderer>> =>
+  O.getOrElse(MutableHashMap.get(renderersCache, graph), () => {
+    const built = makePanelRenderers(graph, appRegistry);
+    MutableHashMap.set(renderersCache, graph, built);
+    return built;
+  });
 
 // atom-first: the menu's open flag is an atom, not useState — shell chrome
 // state lives in the registry like everything else, and no React hook owns
