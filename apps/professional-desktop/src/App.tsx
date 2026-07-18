@@ -35,14 +35,14 @@ import {
 } from "@beep/ontology-ui";
 import { Button } from "@beep/ui/components/button";
 import { Toaster } from "@beep/ui/components/sonner";
-import { RegistryContext, useAtomMount, useAtomValue } from "@effect/atom-react";
+import { RegistryContext, useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
-import { Component, Fragment, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { Component, Fragment, useContext, useMemo, useRef, useState } from "react";
 import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
 import { ThemeToggle } from "./chat/ui/ThemeToggle.tsx";
@@ -392,10 +392,17 @@ const makePanelRenderers = (
   };
 };
 
+// atom-first: the menu's open flag is an atom, not useState — shell chrome
+// state lives in the registry like everything else, and no React hook owns
+// it.
+const ontologyMenuOpenAtom = Atom.make(false).pipe(Atom.keepAlive);
+
 // The nav rail's Ontology entry: expands to the nine-panel menu. An entry
 // click focuses an open panel or opens a closed one beside its cluster
 // siblings; the menu dismisses on outside press and Escape (ARIA menu
-// practices, same pattern as the dock adapter's tab-overflow dropdown).
+// practices). Dismissal listeners live in a callback ref on the menu node —
+// the node exists exactly while the menu is open, so the listeners scope
+// themselves without an effect hook.
 const OntologyMenu = ({
   isCurrent,
   onSelect,
@@ -405,21 +412,20 @@ const OntologyMenu = ({
   readonly onSelect: (key: DesktopPanelKey) => void;
   readonly workspace: DockWorkspace;
 }): JSX.Element => {
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    if (Bool.not(open)) return undefined;
+  const open = useAtomValue(ontologyMenuOpenAtom);
+  const setOpen = useAtomSet(ontologyMenuOpenAtom);
+  const dismissRef = (node: HTMLDivElement | null): (() => void) | undefined => {
+    if (P.isNull(node)) return undefined;
+    // The toggle button lives outside the menu node: presses anywhere inside
+    // the shared root (button included) are the menu's own interactions.
+    const root = node.closest("[data-desktop-ontology-root]") ?? node;
     const press = (event: PointerEvent): void => {
-      const root = rootRef.current;
-      if (P.isNotNull(root) && event.target instanceof Node && root.contains(event.target)) return;
+      if (event.target instanceof Node && root.contains(event.target)) return;
       setOpen(false);
     };
     const keydown = (event: KeyboardEvent): void => {
       if (event.key === "Escape") setOpen(false);
     };
-    // Same 9 lines of document-listener wiring as the dock adapter's
-    // tab-overflow dropdown — parallel by design across the package
-    // boundary rather than a new public hook on @beep/dock-react.
     // fallow-ignore-next-line code-duplication
     document.addEventListener("pointerdown", press);
     document.addEventListener("keydown", keydown);
@@ -427,10 +433,10 @@ const OntologyMenu = ({
       document.removeEventListener("pointerdown", press);
       document.removeEventListener("keydown", keydown);
     };
-  }, [open]);
+  };
   const anyCurrent = A.some(ONTOLOGY_PANELS, (panel) => isCurrent(panel.key));
   return (
-    <div ref={rootRef} className="relative">
+    <div data-desktop-ontology-root="" className="relative">
       <Button
         aria-expanded={open}
         aria-haspopup="menu"
@@ -444,6 +450,7 @@ const OntologyMenu = ({
       </Button>
       {open && (
         <div
+          ref={dismissRef}
           role="menu"
           aria-label="Ontology panels"
           className="absolute left-0 top-full z-50 mt-1 min-w-44 rounded-md border bg-popover p-1 shadow-md"
@@ -567,7 +574,10 @@ const DesktopShell = ({
                           populated: ({ root }) => O.map(A.head(DockNode.tabs(root)), (tabs) => tabs.groupId),
                         })
                     );
-                    O.map(bootGroup, (groupId) => graph.registry.set(api.atoms.focusedGroup, O.some(groupId)));
+                    O.match(bootGroup, {
+                      onNone: () => undefined,
+                      onSome: (groupId) => graph.registry.set(api.atoms.focusedGroup, O.some(groupId)),
+                    });
                   }
                 }}
                 options={{
