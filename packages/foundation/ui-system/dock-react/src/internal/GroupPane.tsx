@@ -20,7 +20,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { useCallback, useEffect, useRef } from "react";
 import { makeOperation } from "./AdapterState.ts";
-import { boxStyle, compileDrop, positionOf, pressStartsOnButton } from "./DropCompiler.ts";
+import { boxStyle, compileDrop, preFloatContextFor, pressStartsOnButton, relativePositionOf } from "./DropCompiler.ts";
 import { ContentHost } from "./PanelHost.tsx";
 import type { DockBox, Panel } from "@beep/dock";
 import type React from "react";
@@ -68,7 +68,7 @@ const Tab = (props: {
           props.state.dragAtom,
           O.some({
             ...current.value,
-            pointer: positionOf(event),
+            pointer: relativePositionOf(props.state, event),
           })
         );
       }
@@ -76,7 +76,7 @@ const Tab = (props: {
     const up = (event: PointerEvent): void => {
       const current = props.graph.registry.get(props.state.dragAtom);
       if (O.isNone(current) || !PanelId.equals(current.value.panelId, props.panel.id)) return;
-      const finalDrag = { ...current.value, pointer: positionOf(event) };
+      const finalDrag = { ...current.value, pointer: relativePositionOf(props.state, event) };
       props.graph.registry.set(props.state.dragAtom, O.none());
       node.releasePointerCapture?.(event.pointerId);
       O.map(compileDrop(props.state, props.graph, finalDrag), (command) => submit(makeOperation(command)));
@@ -90,7 +90,7 @@ const Tab = (props: {
         O.some({
           panelId: props.panel.id,
           fromGroupId: props.groupId,
-          pointer: positionOf(event),
+          pointer: relativePositionOf(props.state, event),
           // fallow-ignore-next-line code-duplication
         })
       );
@@ -390,6 +390,13 @@ export const GroupPane = (
         type="button"
         aria-label={`Float group ${props.groupId}`}
         onClick={() => {
+          // Remember where this group sat so Dock can put it back
+          // (neighbor, side, and split share) instead of forcing a
+          // root-right column — QA finding R1-03.
+          O.match(preFloatContextFor(workspace, props.groupId), {
+            onNone: () => MutableHashMap.remove(props.state.preFloatPlacements, props.groupId),
+            onSome: (context) => MutableHashMap.set(props.state.preFloatPlacements, props.groupId, context),
+          });
           // Cascade against the existing floating stack and cap to a
           // useful viewport fraction, so a new float never fully occludes
           // an earlier one's header.

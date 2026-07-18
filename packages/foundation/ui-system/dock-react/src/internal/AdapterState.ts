@@ -29,6 +29,7 @@ import type {
   ClosePanelCommand,
   DockAtomOperation,
   DockFloatingGroupCommand,
+  DockSide,
   FloatGroupCommand,
   MaximizeGroupCommand,
   MoveFloatingGroupCommand,
@@ -58,6 +59,11 @@ export type AdapterState = {
   readonly api: DockviewAdapterApi;
   readonly onReadySlot: { current: ((event: { readonly api: DockviewAdapterApi }) => void) | undefined };
   readonly rootRef: (node: HTMLDivElement | null) => (() => void) | undefined;
+  readonly rootNode: { current: HTMLElement | null };
+  readonly preFloatPlacements: MutableHashMap.MutableHashMap<
+    GroupId,
+    { readonly referenceGroupId: GroupId; readonly side: DockSide; readonly ratio: number }
+  >;
 };
 
 // crispen: graph identity and lifetime are host concerns; WeakMap avoids structural hashing and retains no disposed graph.
@@ -234,8 +240,10 @@ export const adapterState = (
   // Stable identity across renders: React 19 only re-runs a ref callback when
   // its identity changes, so wiring the ResizeObserver here (instead of inline
   // in the component) keeps one observer per mounted root.
+  const rootNode: { current: HTMLElement | null } = { current: null };
   const rootRef = (node: HTMLDivElement | null): (() => void) | undefined => {
     if (P.isNull(node)) return undefined;
+    rootNode.current = node;
     if (P.not((root: HTMLElement) => readyRoots.has(root))(node)) {
       readyRoots.add(node);
       onReadySlot.current?.({ api });
@@ -279,6 +287,11 @@ export const adapterState = (
     api,
     onReadySlot,
     rootRef,
+    rootNode,
+    preFloatPlacements: MutableHashMap.empty<
+      GroupId,
+      { readonly referenceGroupId: GroupId; readonly side: DockSide; readonly ratio: number }
+    >(),
   };
   MutableHashMap.set(byOptions, key, created);
   return created;

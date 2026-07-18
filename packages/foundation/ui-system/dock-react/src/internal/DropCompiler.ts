@@ -3,6 +3,7 @@ import {
   DockMoveTarget,
   DockNode,
   DockSide,
+  DockWorkspace,
   GroupId,
   MovePanelCommand as MovePanelCommandSchema,
   RootSplitPlacement,
@@ -38,6 +39,18 @@ export const positionOf = (event: PointerEvent): PointerPosition => ({
   left: event.clientX,
   top: event.clientY,
 });
+
+// Drag pointers must live in the dock root's coordinate space: geometry
+// boxes are container-relative (the container box is measured 0-based), so
+// hit-testing raw client coordinates mis-targets every group by the root's
+// viewport offset — invisibly while nothing sits beyond the offset, then a
+// full nav-height off once groups stack vertically (QA finding R1-01).
+export const relativePositionOf = (state: AdapterState, event: PointerEvent): PointerPosition => {
+  const root = state.rootNode.current;
+  if (P.isNull(root)) return positionOf(event);
+  const rect = root.getBoundingClientRect();
+  return { left: event.clientX - rect.left, top: event.clientY - rect.top };
+};
 // Presses on chrome buttons inside a gesture surface must not start a
 // drag/move: native pointer capture would retarget the release and swallow
 // the button's click (native capture beats React-level stopPropagation).
@@ -227,6 +240,60 @@ export const dropPreviewBox = (state: AdapterState, graph: DockAtomGraph, drag: 
       });
     })
   );
+
+const isTabsWithId = (node: DockNode, groupId: GroupId): boolean =>
+  DockNode.match(node, {
+    Tabs: (tabs) => GroupId.equals(tabs.groupId, groupId),
+    Split: () => false,
+  });
+
+const firstTabsGroupId = (node: DockNode): O.Option<GroupId> =>
+  O.map(A.head(DockNode.tabs(node)), (tabs) => tabs.groupId);
+
+const findSplitContext = (node: DockNode, groupId: GroupId): O.Option<PreFloatContext> =>
+  DockNode.match(node, {
+    Tabs: O.none<PreFloatContext>,
+    Split: ({ layout }) => {
+      const [first, second] = SplitLayout.children(layout);
+      const [firstSide, secondSide, ratio] = SplitLayout.match(layout, {
+        horizontal: ({ leftRatio }) => [DockSide.Enum.left, DockSide.Enum.right, leftRatio] as const,
+        vertical: ({ topRatio }) => [DockSide.Enum.top, DockSide.Enum.bottom, topRatio] as const,
+      });
+      if (isTabsWithId(first, groupId)) {
+        return O.map(firstTabsGroupId(second), (referenceGroupId) => ({
+          referenceGroupId,
+          side: firstSide,
+          ratio: Number(ratio),
+        }));
+      }
+      if (isTabsWithId(second, groupId)) {
+        return O.map(firstTabsGroupId(first), (referenceGroupId) => ({
+          referenceGroupId,
+          side: secondSide,
+          ratio: 10_000 - Number(ratio),
+        }));
+      }
+      return O.orElse(findSplitContext(first, groupId), () => findSplitContext(second, groupId));
+    },
+  });
+
+/**
+ * The split context a group occupied before floating: its neighbor, which
+ * side of that neighbor it sat on, and its share of the split. Recorded at
+ * Float time so Dock restores the pane where it came from instead of
+ * forcing a root-right column (QA finding R1-03).
+ */
+interface PreFloatContext {
+  readonly ratio: number;
+  readonly referenceGroupId: GroupId;
+  readonly side: DockSide;
+}
+
+export const preFloatContextFor = (workspace: DockWorkspace, groupId: GroupId): O.Option<PreFloatContext> =>
+  DockWorkspace.match(workspace, {
+    empty: O.none<PreFloatContext>,
+    populated: ({ root }) => findSplitContext(root, groupId),
+  });
 
 export const splitExtent = (graph: DockAtomGraph, state: AdapterState, split: SplitNode): number => {
   const geometry = graph.registry.get(state.geometry.geometryAtom);

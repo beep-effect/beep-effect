@@ -182,7 +182,10 @@ export function OntologySparqlRegion(): JSX.Element {
           onKeyDown={runSparqlFromKeyboard}
         />
         <Button
-          className="w-full"
+          // Disabled must read as inactive, not as broken primary chrome: a
+          // muted chip at full opacity instead of a washed-out green
+          // (QA finding R1-07 — the low-contrast state was the disabled one).
+          className="w-full dark:text-foreground disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100"
           size="sm"
           type="button"
           disabled={!canRunSparql}

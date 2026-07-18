@@ -420,6 +420,32 @@
     },
     {
       "file": "packages/foundation/ui-system/dock-react/src/internal/DropCompiler.ts",
+      "qualifiedName": "relativePositionOf",
+      "kind": "exported-const-function",
+      "status": "exception",
+      "owner": "@beep/dock-react",
+      "reason": "Internal pointer-normalization helper taking the (state, event) runtime handles of the drag pipeline; a dual wrapper would change no call site and the parameters are not data-last pipeline values.",
+      "issue": "DOCK-REACT-DROP-COMPILER-GEOMETRY",
+      "line": 47,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/DropCompiler.ts",
+      "qualifiedName": "preFloatContextFor",
+      "kind": "exported-const-function",
+      "status": "exception",
+      "owner": "@beep/dock-react",
+      "reason": "Internal pre-float placement lookup taking (workspace, groupId) positional arguments in the float/dock pipeline; a dual wrapper would change no call site and the parameters are not data-last pipeline values.",
+      "issue": "DOCK-REACT-DROP-COMPILER-GEOMETRY",
+      "line": 292,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/DropCompiler.ts",
       "qualifiedName": "compileDrop",
       "kind": "exported-const-function",
       "status": "exception",

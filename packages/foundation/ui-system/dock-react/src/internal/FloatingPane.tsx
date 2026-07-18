@@ -2,11 +2,15 @@ import {
   DockBox,
   DockFloatingGroupCommand,
   DockNode as DockNodeOps,
+  DockWorkspace,
   GroupId,
   GroupRootSplitPlacement,
+  GroupSplitPlacement,
   MoveFloatingGroupCommand,
+  SplitRatio,
 } from "@beep/dock";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { MutableHashMap } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
@@ -34,6 +38,7 @@ export const FloatingPane = (
   }
 ) => {
   const geometry = useAtomValue(props.state.geometry.geometryAtom);
+  const workspace = useAtomValue(props.graph.workspaceAtom);
   const submit = useAtomSet(props.graph.operationAtom);
   const memberOption = A.get(geometry.floating, props.index);
   const groupIdOption = O.map(A.head(DockNodeOps.tabs(props.root)), (tabs) => tabs.groupId);
@@ -156,23 +161,43 @@ export const FloatingPane = (
         data-floating-header={groupId}
         style={{ height: FLOATING_HEADER_HEIGHT, cursor: "move" }}
       >
+        <span aria-hidden data-floating-grip="">
+          ⣿
+        </span>
+        <span data-floating-title="">
+          {O.getOrElse(
+            O.map(A.head(DockNodeOps.tabs(props.root)), (tabs) => tabs.active.title),
+            () => ""
+          )}
+        </span>
         <button
           type="button"
           aria-label={`Dock group ${groupId}`}
           onPointerDown={(event) => event.stopPropagation()}
-          onClick={() =>
-            submit(
-              makeOperation(
-                DockFloatingGroupCommand.make({
-                  groupId,
-                  target: GroupRootSplitPlacement.make({
-                    side: "right",
-                    splitId: freshFloatingSplitId(),
-                  }),
-                })
-              )
-            )
-          }
+          onClick={() => {
+            // Restore the pre-float placement (neighbor, side, share) when the
+            // neighbor still exists; only fall back to a root-right column
+            // when the origin is gone — QA finding R1-03.
+            const remembered = O.filter(MutableHashMap.get(props.state.preFloatPlacements, groupId), (context) =>
+              O.isSome(DockWorkspace.findTabs(workspace, context.referenceGroupId))
+            );
+            const target = O.match(remembered, {
+              onNone: () =>
+                GroupRootSplitPlacement.make({
+                  side: "right",
+                  splitId: freshFloatingSplitId(),
+                }),
+              onSome: (context) =>
+                GroupSplitPlacement.make({
+                  referenceGroupId: context.referenceGroupId,
+                  splitId: freshFloatingSplitId(),
+                  side: context.side,
+                  newGroupRatio: SplitRatio.make(Math.min(9_000, Math.max(1_000, Math.round(context.ratio)))),
+                }),
+            });
+            MutableHashMap.remove(props.state.preFloatPlacements, groupId);
+            submit(makeOperation(DockFloatingGroupCommand.make({ groupId, target })));
+          }}
         >
           Dock
         </button>

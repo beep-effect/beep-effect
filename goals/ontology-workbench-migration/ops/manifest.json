@@ -3,13 +3,13 @@
   "initiative": {
     "id": "ontology-workbench-migration",
     "title": "Ontology Workbench Migration",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-17",
     "updated": "2026-07-17",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ontology-workbench-migration",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Migrate the Ontology workbench monolith into nine fine-grained dock panels (workspace-substrate step 4, first surface) and land the four dock capability residuals folded into this packet: per-panel constraints, tab-overflow dropdown, drop-indicator quadrants, StrictMode-safe tree host.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -68,7 +68,7 @@
     {
       "id": "P4",
       "name": "M4: QA-to-green + QA-loop skill + close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
