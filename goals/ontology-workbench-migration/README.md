@@ -40,14 +40,13 @@ Use this command for execution-capable sessions:
 | --- | --- | --- | --- |
 | M1 | `feat/dock-capabilities-m1` | Kernel per-panel constraints; adapter tab overflow + drop quadrants; Storybook proofs | merged (PR #429) |
 | M2 | `feat/ontology-workbench-split` | Zero-behavior region extraction in `@beep/ontology-ui`; Add-Triple atoms relocate; StrictMode investigated | landed (this PR) |
-| M3 | `feat/ontology-dock-panels` | Nine panel renderers; Document panel; nav-rail panel menu; core-cluster default layout; snapshot key v2 | pending |
+| M3 | `feat/ontology-dock-panels` | Nine panel renderers; Document panel; nav-rail panel menu; core-cluster default layout; snapshot key v2 | landed (this PR) |
 | M4 | `chore/ontology-migration-qa` | Browser QA loop to green; QA-loop skill graduation; packet closeout | pending |
 
 ## Current Phase
 
-P3 (M3 shell integration) — next up: nine panel renderers, Document panel,
-nav-rail panel menu, core-cluster default layout, snapshot key v2, in
-`apps/professional-desktop`.
+P4 (M4 QA-to-green + close) — next up: browser QA loop over the migrated
+shell, QA-loop skill graduation, closeout reflection and packet flips.
 
 ## Latest Evidence
 

@@ -1,13 +1,16 @@
 /**
  * Professional Desktop React workbench shell bootstrap.
  *
- * The shell is a dock workspace (`@beep/dock` + `@beep/dock-react`): the four
- * desktop surfaces — Home, Chat ({@link ChatApp}), Ontology, Vault sync — are
- * keep-alive dock panels in one workspace whose layout the user can rearrange
- * and which persists to localStorage. Two atom registries with explicit
- * ownership: application state lives in the root `RegistryProvider`, dock
- * state lives in the graph's private registry — panel content re-enters the
- * app registry, and the shell reads dock atoms through `useDockAtom`.
+ * The shell is a dock workspace (`@beep/dock` + `@beep/dock-react`): twelve
+ * keep-alive dock panels — Home, Chat ({@link ChatApp}), Vault sync, and the
+ * nine ontology workbench regions — in one workspace whose layout the user
+ * can rearrange and which persists to localStorage. The nav rail is the panel
+ * launcher: shell panels are direct buttons and the Ontology entry expands to
+ * its panel menu (focus an open panel, open a closed one). Two atom
+ * registries with explicit ownership: application state lives in the root
+ * `RegistryProvider`, dock state lives in the graph's private registry —
+ * panel content re-enters the app registry, and the shell reads dock atoms
+ * through `useDockAtom`.
  *
  * @packageDocumentation
  * @category components
@@ -19,16 +22,27 @@ import { DockNode, DockWorkspace, PanelId, TabChrome } from "@beep/dock";
 import { DockviewReact } from "@beep/dock-react";
 import { redactCauseForClient } from "@beep/observability";
 import { HttpOntologyProtocolLive, ontologyProtocolLayerAtom } from "@beep/ontology-client";
-import { OntologyWorkbench } from "@beep/ontology-ui";
+import {
+  OntologyChangeLogRegion,
+  OntologyDocumentRegion,
+  OntologyExplorerRegion,
+  OntologyGraphRegion,
+  OntologyInspectorRegion,
+  OntologyMetricsRegion,
+  OntologySourceRegion,
+  OntologySparqlRegion,
+  OntologyValidationRegion,
+} from "@beep/ontology-ui";
 import { Button } from "@beep/ui/components/button";
 import { Toaster } from "@beep/ui/components/sonner";
-import { RegistryContext, useAtomMount, useAtomValue } from "@effect/atom-react";
-import { Effect } from "effect";
+import { RegistryContext, useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { Effect, MutableHashMap } from "effect";
 import * as A from "effect/Array";
+import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
-import { Component, Fragment, useContext, useMemo, useRef, useState } from "react";
+import { Component, Fragment, useContext } from "react";
 import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
 import { ThemeToggle } from "./chat/ui/ThemeToggle.tsx";
@@ -41,18 +55,21 @@ import { IpcChatProtocolLive } from "./transport/IpcChatClient.ts";
 import { IpcSpikePanel } from "./transport/IpcSpikePanel.tsx";
 import { SidecarTransport } from "./transport/SidecarTransport.ts";
 import {
-  DESKTOP_SURFACES,
+  DESKTOP_PANELS,
   DOCK_SNAPSHOT_KEY,
   desktopDockGraphAtom,
+  desktopPanelId,
   dockPersistenceBindingAtom,
-  isSurfaceActive,
-  surfaceOperation,
-  surfacePanelId,
+  isPanelActive,
+  isPanelOpen,
+  ONTOLOGY_PANELS,
+  panelOperation,
 } from "./workspace/dock.atoms.ts";
 import { useDockAtom, useFocusedDockGroup } from "./workspace/useDockAtom.ts";
+import type { GroupId } from "@beep/dock";
 import type { DockRenderer, DockviewAdapterApi } from "@beep/dock-react";
 import type { JSX, ReactNode } from "react";
-import type { DesktopDockGraph, DesktopSurface } from "./workspace/dock.atoms.ts";
+import type { DesktopDockGraph, DesktopPanelKey } from "./workspace/dock.atoms.ts";
 
 type AppRegistry = DesktopDockGraph["registry"];
 
@@ -150,33 +167,53 @@ const ShellLoading = ({ label }: { readonly label: string }): JSX.Element => (
   </div>
 );
 
-// Navigating to a surface must FOCUS its group as well as activate its tab —
-// a nav click on a surface already active in an unfocused group is otherwise
+// Navigating to a panel must FOCUS its group as well as activate its tab —
+// a nav click on a panel already active in an unfocused group is otherwise
 // a visual no-op (and "current page" would not follow the click).
-const focusSurfaceGroup = (
+const focusPanelGroup = (
   graph: DesktopDockGraph,
   api: DockviewAdapterApi | undefined,
   workspace: DockWorkspace,
-  surface: DesktopSurface
+  key: DesktopPanelKey
 ): void =>
-  O.match(DockWorkspace.findTabsForPanel(workspace, surfacePanelId(surface)), {
+  O.match(DockWorkspace.findTabsForPanel(workspace, desktopPanelId(key)), {
     onNone: () => undefined,
     onSome: (tabs) => {
       if (api !== undefined) graph.registry.set(api.atoms.focusedGroup, O.some(tabs.groupId));
     },
   });
 
-const HomeSurface = ({
-  graph,
-  apiRef,
-}: {
-  readonly graph: DesktopDockGraph;
-  readonly apiRef: { readonly current: DockviewAdapterApi | undefined };
-}): JSX.Element => {
+// The Home overview's launch tiles. Ontology's tile targets the Graph panel —
+// the workbench's center of gravity — rather than any single tool panel.
+const HOME_TILES = [
+  {
+    description: "Work with the professional assistant and your saved threads.",
+    key: "chat",
+    label: "Chat",
+  },
+  {
+    description: "Explore and refine the workspace knowledge model.",
+    key: "ontology-graph",
+    label: "Ontology",
+  },
+  {
+    description: "Review provider connectivity, queue health, and conflicts.",
+    key: "sync",
+    label: "Vault sync",
+  },
+] as const;
+
+// atom-first: the adapter api handed to `onReady` lives in an atom in the
+// app registry, not a useState/useRef pair — every reader (shell, Home
+// tiles) sees it reactively through the same registry.
+const dockApiAtom = Atom.make<O.Option<DockviewAdapterApi>>(O.none()).pipe(Atom.keepAlive);
+
+const HomeSurface = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Element => {
   const workspace = useDockAtom(graph, graph.workspaceAtom);
-  const open = (surface: DesktopSurface): void => {
-    focusSurfaceGroup(graph, apiRef.current, workspace, surface);
-    graph.registry.set(graph.operationAtom, surfaceOperation(workspace, surface));
+  const dockApi = useAtomValue(dockApiAtom);
+  const open = (key: DesktopPanelKey): void => {
+    focusPanelGroup(graph, O.getOrUndefined(dockApi), workspace, key);
+    graph.registry.set(graph.operationAtom, panelOperation(workspace, key));
   };
   return (
     <main className="h-full overflow-y-auto p-6">
@@ -187,11 +224,11 @@ const HomeSurface = ({
           Move between assisted research, ontology work, and document synchronization from one place.
         </p>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {A.map(A.drop(DESKTOP_SURFACES, 1), (item) => (
+          {A.map(HOME_TILES, (item) => (
             <button
-              key={item.surface}
+              key={item.key}
               type="button"
-              onClick={() => open(item.surface)}
+              onClick={() => open(item.key)}
               className="rounded-lg border bg-card p-4 text-left shadow-sm transition-colors hover:border-primary/50 hover:bg-accent"
             >
               <h2 className="font-semibold">{item.label}</h2>
@@ -326,40 +363,145 @@ export const SurfaceBoundary = ({
   </SurfaceCard>
 );
 
-const makeSurfaceRenderers = (
+const makePanelRenderers = (
   graph: DesktopDockGraph,
-  appRegistry: AppRegistry,
-  apiRef: { readonly current: DockviewAdapterApi | undefined }
-): Readonly<Record<DesktopSurface, DockRenderer>> => ({
-  home: () => (
+  appRegistry: AppRegistry
+): Readonly<Record<DesktopPanelKey, DockRenderer>> => {
+  const wrap = (label: string, content: ReactNode): JSX.Element => (
     <RegistryContext.Provider value={appRegistry}>
-      <SurfaceBoundary label="Home">
-        <HomeSurface graph={graph} apiRef={apiRef} />
-      </SurfaceBoundary>
+      <SurfaceBoundary label={label}>{content}</SurfaceBoundary>
     </RegistryContext.Provider>
-  ),
-  chat: () => (
-    <RegistryContext.Provider value={appRegistry}>
-      <SurfaceBoundary label="Chat">
-        <ChatApp />
-      </SurfaceBoundary>
-    </RegistryContext.Provider>
-  ),
-  ontology: () => (
-    <RegistryContext.Provider value={appRegistry}>
-      <SurfaceBoundary label="Ontology">
-        <OntologyWorkbench />
-      </SurfaceBoundary>
-    </RegistryContext.Provider>
-  ),
-  sync: () => (
-    <RegistryContext.Provider value={appRegistry}>
-      <SurfaceBoundary label="Vault sync">
-        <VaultSyncPanel floating={false} />
-      </SurfaceBoundary>
-    </RegistryContext.Provider>
-  ),
-});
+  );
+  // Each ontology region reads the same app-registry atoms it read inside
+  // the old monolith, so a region docked anywhere (or floated) stays wired
+  // to the same session.
+  return {
+    home: () => wrap("Home", <HomeSurface graph={graph} />),
+    chat: () => wrap("Chat", <ChatApp />),
+    sync: () => wrap("Vault sync", <VaultSyncPanel floating={false} />),
+    "ontology-explorer": () => wrap("Explorer", <OntologyExplorerRegion />),
+    "ontology-document": () => wrap("Document", <OntologyDocumentRegion />),
+    "ontology-graph": () => wrap("Graph", <OntologyGraphRegion />),
+    "ontology-source": () => wrap("Source", <OntologySourceRegion />),
+    "ontology-inspector": () => wrap("Inspector", <OntologyInspectorRegion />),
+    "ontology-sparql": () => wrap("SPARQL", <OntologySparqlRegion />),
+    "ontology-validation": () => wrap("Validation", <OntologyValidationRegion />),
+    "ontology-changelog": () => wrap("Change Log", <OntologyChangeLogRegion />),
+    "ontology-metrics": () => wrap("Worker Metrics", <OntologyMetricsRegion />),
+  };
+};
+
+// Stable renderer identities without useMemo: one renderer map per graph for
+// the app's lifetime. A fresh map per render would hand React new component
+// types on every workspace change, remounting every panel subtree and
+// destroying the state keep-alive exists to preserve. (Keyed by graph alone:
+// the app registry is one per page, like the graph itself, so the strong
+// reference lives exactly as long as the page.)
+const renderersCache = MutableHashMap.empty<DesktopDockGraph, Readonly<Record<DesktopPanelKey, DockRenderer>>>();
+const panelRenderersFor = (
+  graph: DesktopDockGraph,
+  appRegistry: AppRegistry
+): Readonly<Record<DesktopPanelKey, DockRenderer>> =>
+  O.getOrElse(MutableHashMap.get(renderersCache, graph), () => {
+    const built = makePanelRenderers(graph, appRegistry);
+    MutableHashMap.set(renderersCache, graph, built);
+    return built;
+  });
+
+// atom-first: the menu's open flag is an atom, not useState — shell chrome
+// state lives in the registry like everything else, and no React hook owns
+// it.
+const ontologyMenuOpenAtom = Atom.make(false).pipe(Atom.keepAlive);
+
+// The nav rail's Ontology entry: expands to the nine-panel menu. An entry
+// click focuses an open panel or opens a closed one beside its cluster
+// siblings; the menu dismisses on outside press and Escape (ARIA menu
+// practices). Dismissal listeners live in a callback ref on the menu node —
+// the node exists exactly while the menu is open, so the listeners scope
+// themselves without an effect hook.
+const OntologyMenu = ({
+  isCurrent,
+  onSelect,
+  workspace,
+}: {
+  readonly isCurrent: (key: DesktopPanelKey) => boolean;
+  readonly onSelect: (key: DesktopPanelKey) => void;
+  readonly workspace: DockWorkspace;
+}): JSX.Element => {
+  const open = useAtomValue(ontologyMenuOpenAtom);
+  const setOpen = useAtomSet(ontologyMenuOpenAtom);
+  const dismissRef = (node: HTMLDivElement | null): (() => void) | undefined => {
+    if (P.isNull(node)) return undefined;
+    // The toggle button lives outside the menu node: presses anywhere inside
+    // the shared root (button included) are the menu's own interactions.
+    const root = node.closest("[data-desktop-ontology-root]") ?? node;
+    const press = (event: PointerEvent): void => {
+      if (event.target instanceof Node && root.contains(event.target)) return;
+      setOpen(false);
+    };
+    const keydown = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    // fallow-ignore-next-line code-duplication
+    document.addEventListener("pointerdown", press);
+    document.addEventListener("keydown", keydown);
+    return () => {
+      document.removeEventListener("pointerdown", press);
+      document.removeEventListener("keydown", keydown);
+    };
+  };
+  const anyCurrent = A.some(ONTOLOGY_PANELS, (panel) => isCurrent(panel.key));
+  return (
+    <div data-desktop-ontology-root="" className="relative">
+      <Button
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-current={anyCurrent ? "page" : undefined}
+        data-desktop-ontology-menu=""
+        onClick={() => setOpen(Bool.not(open))}
+        size="sm"
+        variant={anyCurrent ? "secondary" : "ghost"}
+      >
+        Ontology
+      </Button>
+      {open && (
+        <div
+          ref={dismissRef}
+          role="menu"
+          aria-label="Ontology panels"
+          className="absolute left-0 top-full z-50 mt-1 min-w-44 rounded-md border bg-popover p-1 shadow-md"
+        >
+          {A.map(ONTOLOGY_PANELS, (panel) => (
+            <button
+              key={panel.key}
+              type="button"
+              role="menuitem"
+              data-panel-menu-item={panel.key}
+              aria-current={isCurrent(panel.key) ? "page" : undefined}
+              className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
+              onClick={() => {
+                onSelect(panel.key);
+                setOpen(false);
+              }}
+            >
+              <span
+                aria-hidden
+                className={
+                  isPanelOpen(workspace, panel.key)
+                    ? "h-1.5 w-1.5 rounded-full bg-primary"
+                    : "h-1.5 w-1.5 rounded-full border border-muted-foreground/50"
+                }
+              />
+              {panel.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const SHELL_NAV_PANELS = A.filter(DESKTOP_PANELS, (panel) => panel.cluster === "shell");
 
 const DesktopShell = ({
   graph,
@@ -370,23 +512,23 @@ const DesktopShell = ({
 }): JSX.Element => {
   const workspace = useDockAtom(graph, graph.workspaceAtom);
   const appRegistry = useContext(RegistryContext);
-  const [dockApi, setDockApi] = useState<DockviewAdapterApi | undefined>(undefined);
-  const dockApiRef = useRef<DockviewAdapterApi | undefined>(undefined);
+  const dockApi = useAtomValue(dockApiAtom).pipe(O.getOrUndefined);
   const focusedGroup = useFocusedDockGroup(graph, dockApi);
-  // One current page: the surface active in the FOCUSED group. Before any
+  // One current page: the panel active in the FOCUSED group. Before any
   // focus interaction (or if focus clears) fall back to open-anywhere active.
-  const isSurfaceCurrent = (surface: DesktopSurface): boolean =>
+  const isPanelCurrent = (key: DesktopPanelKey): boolean =>
     O.match(focusedGroup, {
-      onNone: () => isSurfaceActive(workspace, surface),
+      onNone: () => isPanelActive(workspace, key),
       onSome: (groupId) =>
         O.exists(DockWorkspace.findTabs(workspace, groupId), (tabs) =>
-          PanelId.equals(tabs.active.id, surfacePanelId(surface))
+          PanelId.equals(tabs.active.id, desktopPanelId(key))
         ),
     });
-  // Stable renderer identities: a fresh components map per render would hand
-  // React new component types on every workspace change, remounting every
-  // panel subtree and destroying the state keep-alive exists to preserve.
-  const surfaceRenderers = useMemo(() => makeSurfaceRenderers(graph, appRegistry, dockApiRef), [graph, appRegistry]);
+  const navigate = (key: DesktopPanelKey): void => {
+    focusPanelGroup(graph, dockApi, workspace, key);
+    graph.registry.set(graph.operationAtom, panelOperation(workspace, key));
+  };
+  const surfaceRenderers = panelRenderersFor(graph, appRegistry);
   // Debounced snapshot persistence for every workspace change (drag, split,
   // float, activate, close) — the reload-restores-layout half of the contract.
   useAtomMount(dockPersistenceBindingAtom(graph));
@@ -403,20 +545,18 @@ const DesktopShell = ({
         <div className="flex h-dvh min-h-0 w-full flex-col overflow-hidden bg-background text-foreground">
           <nav className="flex h-12 shrink-0 items-center gap-1 border-b px-3" aria-label="Desktop pages">
             <span className="mr-3 text-sm font-semibold">BEEP</span>
-            {A.map(DESKTOP_SURFACES, (item) => (
+            {A.map(SHELL_NAV_PANELS, (item) => (
               <Button
-                key={item.surface}
-                aria-current={isSurfaceCurrent(item.surface) ? "page" : undefined}
-                onClick={() => {
-                  focusSurfaceGroup(graph, dockApi, workspace, item.surface);
-                  graph.registry.set(graph.operationAtom, surfaceOperation(workspace, item.surface));
-                }}
+                key={item.key}
+                aria-current={isPanelCurrent(item.key) ? "page" : undefined}
+                onClick={() => navigate(item.key)}
                 size="sm"
-                variant={isSurfaceCurrent(item.surface) ? "secondary" : "ghost"}
+                variant={isPanelCurrent(item.key) ? "secondary" : "ghost"}
               >
                 {item.label}
               </Button>
             ))}
+            <OntologyMenu isCurrent={isPanelCurrent} onSelect={navigate} workspace={workspace} />
             {/* Theming belongs to the shell, not to one surface. It used to live in
                 the chat header, so Home, Ontology and Vault sync had no way to reach
                 it at all. */}
@@ -431,19 +571,23 @@ const DesktopShell = ({
                 components={surfaceRenderers}
                 watermarkComponent={DockWatermark}
                 onReady={({ api }) => {
-                  dockApiRef.current = api;
-                  setDockApi(api);
-                  // Exactly one current page from boot: focus the first group
-                  // after fresh boot AND after snapshot restore.
+                  appRegistry.set(dockApiAtom, O.some(api));
+                  // Exactly one current page from boot: land on Chat's group
+                  // (the default layout's bottom row) when it is open, else
+                  // the first group — after fresh boot AND snapshot restore.
                   if (O.isNone(graph.registry.get(api.atoms.focusedGroup))) {
                     const ws = graph.registry.get(graph.workspaceAtom);
-                    DockWorkspace.match(ws, {
-                      empty: () => undefined,
-                      populated: ({ root }) =>
-                        O.match(A.head(DockNode.tabs(root)), {
-                          onNone: () => undefined,
-                          onSome: (tabs) => graph.registry.set(api.atoms.focusedGroup, O.some(tabs.groupId)),
-                        }),
+                    const bootGroup = O.orElse(
+                      O.map(DockWorkspace.findTabsForPanel(ws, desktopPanelId("chat")), (tabs) => tabs.groupId),
+                      () =>
+                        DockWorkspace.match(ws, {
+                          empty: O.none<GroupId>,
+                          populated: ({ root }) => O.map(A.head(DockNode.tabs(root)), (tabs) => tabs.groupId),
+                        })
+                    );
+                    O.match(bootGroup, {
+                      onNone: () => undefined,
+                      onSome: (groupId) => graph.registry.set(api.atoms.focusedGroup, O.some(groupId)),
                     });
                   }
                 }}
