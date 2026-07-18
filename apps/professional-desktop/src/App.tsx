@@ -42,7 +42,7 @@ import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
-import { Component, Fragment, useContext, useMemo, useRef, useState } from "react";
+import { Component, Fragment, useContext } from "react";
 import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
 import { ThemeToggle } from "./chat/ui/ThemeToggle.tsx";
@@ -203,16 +203,16 @@ const HOME_TILES = [
   },
 ] as const;
 
-const HomeSurface = ({
-  graph,
-  apiRef,
-}: {
-  readonly graph: DesktopDockGraph;
-  readonly apiRef: { readonly current: DockviewAdapterApi | undefined };
-}): JSX.Element => {
+// atom-first: the adapter api handed to `onReady` lives in an atom in the
+// app registry, not a useState/useRef pair — every reader (shell, Home
+// tiles) sees it reactively through the same registry.
+const dockApiAtom = Atom.make<O.Option<DockviewAdapterApi>>(O.none()).pipe(Atom.keepAlive);
+
+const HomeSurface = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Element => {
   const workspace = useDockAtom(graph, graph.workspaceAtom);
+  const dockApi = useAtomValue(dockApiAtom);
   const open = (key: DesktopPanelKey): void => {
-    focusPanelGroup(graph, apiRef.current, workspace, key);
+    focusPanelGroup(graph, O.getOrUndefined(dockApi), workspace, key);
     graph.registry.set(graph.operationAtom, panelOperation(workspace, key));
   };
   return (
@@ -365,8 +365,7 @@ export const SurfaceBoundary = ({
 
 const makePanelRenderers = (
   graph: DesktopDockGraph,
-  appRegistry: AppRegistry,
-  apiRef: { readonly current: DockviewAdapterApi | undefined }
+  appRegistry: AppRegistry
 ): Readonly<Record<DesktopPanelKey, DockRenderer>> => {
   const wrap = (label: string, content: ReactNode): JSX.Element => (
     <RegistryContext.Provider value={appRegistry}>
@@ -377,7 +376,7 @@ const makePanelRenderers = (
   // the old monolith, so a region docked anywhere (or floated) stays wired
   // to the same session.
   return {
-    home: () => wrap("Home", <HomeSurface graph={graph} apiRef={apiRef} />),
+    home: () => wrap("Home", <HomeSurface graph={graph} />),
     chat: () => wrap("Chat", <ChatApp />),
     sync: () => wrap("Vault sync", <VaultSyncPanel floating={false} />),
     "ontology-explorer": () => wrap("Explorer", <OntologyExplorerRegion />),
@@ -390,6 +389,23 @@ const makePanelRenderers = (
     "ontology-changelog": () => wrap("Change Log", <OntologyChangeLogRegion />),
     "ontology-metrics": () => wrap("Worker Metrics", <OntologyMetricsRegion />),
   };
+};
+
+// Stable renderer identities without useMemo: one renderer map per graph for
+// the app's lifetime. A fresh map per render would hand React new component
+// types on every workspace change, remounting every panel subtree and
+// destroying the state keep-alive exists to preserve. (Keyed by graph alone:
+// the app registry is one per page, like the graph itself.)
+const renderersCache = new WeakMap<DesktopDockGraph, Readonly<Record<DesktopPanelKey, DockRenderer>>>();
+const panelRenderersFor = (
+  graph: DesktopDockGraph,
+  appRegistry: AppRegistry
+): Readonly<Record<DesktopPanelKey, DockRenderer>> => {
+  const cached = renderersCache.get(graph);
+  if (cached !== undefined) return cached;
+  const built = makePanelRenderers(graph, appRegistry);
+  renderersCache.set(graph, built);
+  return built;
 };
 
 // atom-first: the menu's open flag is an atom, not useState — shell chrome
@@ -496,8 +512,7 @@ const DesktopShell = ({
 }): JSX.Element => {
   const workspace = useDockAtom(graph, graph.workspaceAtom);
   const appRegistry = useContext(RegistryContext);
-  const [dockApi, setDockApi] = useState<DockviewAdapterApi | undefined>(undefined);
-  const dockApiRef = useRef<DockviewAdapterApi | undefined>(undefined);
+  const dockApi = useAtomValue(dockApiAtom).pipe(O.getOrUndefined);
   const focusedGroup = useFocusedDockGroup(graph, dockApi);
   // One current page: the panel active in the FOCUSED group. Before any
   // focus interaction (or if focus clears) fall back to open-anywhere active.
@@ -513,10 +528,7 @@ const DesktopShell = ({
     focusPanelGroup(graph, dockApi, workspace, key);
     graph.registry.set(graph.operationAtom, panelOperation(workspace, key));
   };
-  // Stable renderer identities: a fresh components map per render would hand
-  // React new component types on every workspace change, remounting every
-  // panel subtree and destroying the state keep-alive exists to preserve.
-  const surfaceRenderers = useMemo(() => makePanelRenderers(graph, appRegistry, dockApiRef), [graph, appRegistry]);
+  const surfaceRenderers = panelRenderersFor(graph, appRegistry);
   // Debounced snapshot persistence for every workspace change (drag, split,
   // float, activate, close) — the reload-restores-layout half of the contract.
   useAtomMount(dockPersistenceBindingAtom(graph));
@@ -559,8 +571,7 @@ const DesktopShell = ({
                 components={surfaceRenderers}
                 watermarkComponent={DockWatermark}
                 onReady={({ api }) => {
-                  dockApiRef.current = api;
-                  setDockApi(api);
+                  appRegistry.set(dockApiAtom, O.some(api));
                   // Exactly one current page from boot: land on Chat's group
                   // (the default layout's bottom row) when it is open, else
                   // the first group — after fresh boot AND snapshot restore.
