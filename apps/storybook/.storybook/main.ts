@@ -26,6 +26,25 @@ const stripMisplacedLexicalPureAnnotations = (): Plugin => ({
   },
 });
 
+// Vite treats an explicit `.ts` suffix as an exact filename, while the repository
+// convention intentionally uses `.ts` specifiers for both `.ts` and `.tsx` sources.
+// fallow-ignore-next-line code-duplication
+const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
+  name: "beep:resolve-uniform-typescript-source-specifiers",
+  enforce: "pre",
+  resolveId(source, importer, options) {
+    if (importer === undefined || !source.startsWith(".") || !source.endsWith(".ts")) {
+      return null;
+    }
+
+    return this.resolve(source, importer, { ...options, skipSelf: true }).then((exactSource) =>
+      exactSource === null
+        ? this.resolve(source.replace(/\.ts$/, ".tsx"), importer, { ...options, skipSelf: true })
+        : exactSource
+    );
+  },
+});
+
 const config: StorybookConfig = {
   framework: "@storybook/react-vite",
   stories: [
@@ -47,7 +66,11 @@ const config: StorybookConfig = {
         ...config.resolve,
         dedupe,
       },
-      plugins: [stripMisplacedLexicalPureAnnotations(), ...(config.plugins ?? [])],
+      plugins: [
+        resolveUniformTypeScriptSourceSpecifiers(),
+        stripMisplacedLexicalPureAnnotations(),
+        ...(config.plugins ?? []),
+      ],
       server: {
         ...config.server,
         fs: {
