@@ -2415,6 +2415,9 @@
       },
     },
   },
+  "patchedDependencies": {
+    "knip@6.27.0": "patches/knip@6.27.0.patch",
+  },
   "overrides": {
     "@effect/platform-node-shared": "catalog:",
     "@opentelemetry/exporter-trace-otlp-proto": "catalog:",

@@ -52,7 +52,7 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
       {
         count: 1,
         source: `import { App } from "./App.js";`,
-        fixedSource: `import { App } from "./App.tsx";`,
+        fixedSource: `import { App } from "./App.ts";`,
         supportingFiles: [["App.tsx", `export const App = null;`]],
       },
       {
@@ -70,6 +70,11 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
           `export const load = () => import("./dynamic.ts");`,
           `export type Local = import('./types.ts').Local;`
         ),
+      },
+      {
+        count: 1,
+        source: String.raw`import value from "./mod\u002ejs";`,
+        fixedSource: String.raw`import value from "./mod\u002ejs";`,
       },
     ],
     valid: [
@@ -92,8 +97,16 @@ export const OXLINT_SOURCES: { readonly [K in OxlintRule]: OxlintRuleSources } =
       },
       {
         count: 0,
-        source: `import value from "./runtime.js";`,
-        supportingFiles: [["runtime.js", `export default "runtime";`]],
+        source: lines(
+          `import value from "./runtime.js";`,
+          `import spaced from "./runtime file.js";`,
+          `import unicode from "./rüntime.js";`
+        ),
+        supportingFiles: [
+          ["runtime.js", `export default "runtime";`],
+          ["runtime file.js", `export default "spaced";`],
+          ["rüntime.js", `export default "unicode";`],
+        ],
       },
     ],
   },

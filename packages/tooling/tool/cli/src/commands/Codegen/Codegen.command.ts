@@ -38,7 +38,7 @@ const $I = $RepoCliId.create("commands/Codegen/Codegen.command");
  */
 const TYPE_SCRIPT_SOURCE_FILE_PATTERN = /^.+\.(ts|tsx)$/;
 const TYPE_SCRIPT_TEST_FILE_PATTERN = /^.+\.(test|spec)\.(ts|tsx)$/;
-const TYPESCRIPT_IMPORT_PATH_PATTERN = /^\.\/.+\.tsx?$/;
+const TYPESCRIPT_IMPORT_PATH_PATTERN = /^\.\/.+\.ts$/;
 
 const TypeScriptSourceFileName = S.String.check(S.isPattern(TYPE_SCRIPT_SOURCE_FILE_PATTERN)).pipe(
   S.brand("TypeScriptSourceFileName"),
@@ -57,7 +57,7 @@ const TypeScriptTestFileName = S.String.check(S.isPattern(TYPE_SCRIPT_TEST_FILE_
 
 const TypeScriptImportPath = S.String.check(S.isPattern(TYPESCRIPT_IMPORT_PATH_PATTERN)).pipe(
   $I.annoteSchema("TypeScriptImportPath", {
-    description: "Relative TypeScript import path with a .ts or .tsx extension.",
+    description: "Relative TypeScript import path using the repository's uniform .ts source specifier.",
   })
 );
 
@@ -65,7 +65,7 @@ const TypeScriptSourceToImportPath = TypeScriptSourceFileName.pipe(
   S.decodeTo(
     TypeScriptImportPath,
     SchemaTransformation.transform({
-      decode: (fileName) => `./${fileName}`,
+      decode: (fileName) => `./${pipe(fileName, Str.replace(/\.tsx?$/, ".ts"))}`,
       encode: (importPath) =>
         Result.getOrThrow(decodeTypeScriptSourceFileNameResult(pipe(importPath, Str.replace(/^\.\/(.*)$/, "$1")))),
     })
@@ -96,11 +96,11 @@ const decodeImportPathResult = S.decodeUnknownResult(TypeScriptSourceToImportPat
 /**
  * Convert a TypeScript filename to its corresponding source import specifier.
  *
- * Preserves the `.ts` or `.tsx` extension and prepends `./` so the result is a
- * valid source-facing relative import path (e.g. `"View.tsx"` becomes `"./View.tsx"`).
+ * Uses the repository's uniform `.ts` source specifier and prepends `./` so the
+ * result is a valid relative import path (e.g. `"View.tsx"` becomes `"./View.ts"`).
  *
  * @param name - The TypeScript filename (may include a sub-path prefix).
- * @returns A relative import specifier with the matching source extension.
+ * @returns A relative import specifier with the uniform `.ts` source extension.
  * @example
  * ```ts
  * console.log("toImportPath")

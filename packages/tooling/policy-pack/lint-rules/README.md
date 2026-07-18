@@ -15,6 +15,9 @@ loads. The package also owns the root oxlint custom plugin for repository-specif
 | `test/harness.ts` | spawns Biome over a fixture and returns plugin diagnostics |
 | `test/rules.test.ts` | data-driven invalid/valid fixture assertions |
 | `test/registry.test.ts` | registry ↔ `rules/` ↔ metadata drift guard |
+| `src/rules/*.ts` | custom oxlint rules for path-aware or precisely fixable policies |
+| `test/oxlint-sources.ts` | inline invalid/valid cases and expected fixed output |
+| `test/oxlint-harness.ts` | runs the custom plugin through the oxlint subprocess |
 | `docs/rule-guidance.md` | authoring conventions + rule table |
 
 ## Verifications
@@ -27,7 +30,10 @@ loads. The package also owns the root oxlint custom plugin for repository-specif
 
 - GritQL is **diagnostics-only**; remediation uses Biome safe-fix, `ts-morph --write`
   codemods, or hand edits.
-- Rules ship advisory (`severity = "warn"`, Biome exits 0) and flip to `"error"`
-  (mandatory, Biome exits 1) once their subsystem is clean.
+- Oxlint owns repository-specific policies that need filesystem context or a precise normal
+  fix. Register new rules in `src/rules/index.ts`, cover diagnostics and fixed output in the
+  oxlint fixtures, and enable them in the root `.oxlintrc.json`.
+- Rules ship advisory (`severity = "warn"`) and flip to `"error"` once their subsystem is
+  clean. Rules introduced with zero violations may be mandatory immediately.
 - See `goals/lint-toolchain-modernization/` for the initiative contract and the
   decisions on which checks stay in `ts-morph`.
