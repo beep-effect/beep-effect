@@ -83,6 +83,7 @@ import {
 } from "./core.ts"
 import * as doNotation from "./doNotation.ts"
 import * as InternalMetric from "./metric.ts"
+import * as InternalRecord from "./record.ts"
 import {
   CurrentConcurrency,
   CurrentErrorReporters,
@@ -512,7 +513,6 @@ export class FiberImpl<A = any, E = any> implements Fiber.Fiber<A, E> {
     this.setContext(context)
     this.id = ++fiberIdStore.id
     this.currentOpCount = 0
-    this.currentLoopCount = 0
     this.interruptible = interruptible
     this._stack = []
     this._observers = []
@@ -520,6 +520,8 @@ export class FiberImpl<A = any, E = any> implements Fiber.Fiber<A, E> {
     this._children = undefined
     this._interruptedCause = undefined
     this._yielded = undefined
+    this._running = false
+    this._deferredInterrupt = false
     this.runtimeMetrics?.recordFiberStart(this.context)
   }
 
@@ -528,14 +530,14 @@ export class FiberImpl<A = any, E = any> implements Fiber.Fiber<A, E> {
   readonly id: number
   interruptible: boolean
   currentOpCount: number
-  currentLoopCount: number
   readonly _stack: Array<Primitive>
   readonly _observers: Array<(exit: Exit.Exit<A, E>) => void>
   _exit: Exit.Exit<A, E> | undefined
-  _currentExit: Exit.Exit<A, E> | undefined
   _children: Set<FiberImpl<any, any>> | undefined
   _interruptedCause: Cause.Cause<never> | undefined
   _yielded: Exit.Exit<any, any> | (() => void) | undefined
+  _running: boolean
+  _deferredInterrupt: boolean
 
   // set in setContext
   context!: Context.Context<never>
@@ -585,7 +587,11 @@ export class FiberImpl<A = any, E = any> implements Fiber.Fiber<A, E> {
       ? causeCombine(this._interruptedCause, cause)
       : cause
     if (this.interruptible) {
-      this.evaluate(failCause(this._interruptedCause) as any)
+      if (this._running) {
+        this._deferredInterrupt = true
+      } else {
+        this.evaluate(failCause(this._interruptedCause) as any)
+      }
     }
   }
   pollUnsafe(): Exit.Exit<A, E> | undefined {
@@ -617,16 +623,24 @@ export class FiberImpl<A = any, E = any> implements Fiber.Fiber<A, E> {
       this._observers[i](exit)
     }
     this._observers.length = 0
+    this._stack.length = 0
+    this._children = undefined
+    this.context = Context.empty()
   }
   runLoop(effect: Primitive): Exit.Exit<A, E> | Yield {
     const prevFiber = (globalThis as any)[currentFiberTypeId]
     ;(globalThis as any)[currentFiberTypeId] = this
+    const prevRunning = this._running
+    this._running = true
     let yielding = false
     let current: Primitive | Yield = effect
     this.currentOpCount = 0
-    const currentLoop = ++this.currentLoopCount
     try {
       while (true) {
+        if (this._deferredInterrupt) {
+          this._deferredInterrupt = false
+          current = failCause(this._interruptedCause!) as any
+        }
         this.currentOpCount++
         if (
           !yielding &&
@@ -640,14 +654,16 @@ export class FiberImpl<A = any, E = any> implements Fiber.Fiber<A, E> {
         current = this.currentTracerContext
           ? this.currentTracerContext(current as any, this)
           : (current as any)[evaluate](this)
-        if (currentLoop !== this.currentLoopCount) {
-          // another effect has taken over the loop,
-          return Yield
-        } else if (current === Yield) {
+        if (current === Yield) {
           const yielded = this._yielded!
           if (ExitTypeId in yielded) {
+            this._deferredInterrupt = false
             this._yielded = undefined
             return yielded
+          } else if (this._deferredInterrupt) {
+            this._yielded = undefined
+            yielded()
+            continue
           }
           return Yield
         }
@@ -658,6 +674,7 @@ export class FiberImpl<A = any, E = any> implements Fiber.Fiber<A, E> {
       }
       return this.runLoop(exitDie(error) as any)
     } finally {
+      this._running = prevRunning
       ;(globalThis as any)[currentFiberTypeId] = prevFiber
     }
   }
@@ -665,6 +682,10 @@ export class FiberImpl<A = any, E = any> implements Fiber.Fiber<A, E> {
     | (Primitive & Record<S, (value: any, fiber: FiberImpl) => Primitive>)
     | undefined
   {
+    if (this._deferredInterrupt) {
+      this._deferredInterrupt = false
+      return deferredInterruptCont
+    }
     while (true) {
       const op = this._stack.pop()
       if (!op) return undefined
@@ -708,6 +729,15 @@ export class FiberImpl<A = any, E = any> implements Fiber.Fiber<A, E> {
   }
 }
 
+const deferredInterruptCont: any = {
+  [contA](_value: unknown, fiber: FiberImpl) {
+    return failCause(fiber._interruptedCause!)
+  },
+  [contE](_cause: unknown, fiber: FiberImpl) {
+    return failCause(fiber._interruptedCause!)
+  }
+}
+
 const fiberMiddleware = {
   interruptChildren: undefined as
     | ((fiber: FiberImpl) => Effect.Effect<void> | undefined)
@@ -717,7 +747,7 @@ const fiberMiddleware = {
 const fiberStackAnnotations = (fiber: Fiber.Fiber<any, any>) => {
   if (!fiber.currentStackFrame) return undefined
   const annotations = new Map<string, unknown>()
-  annotations.set(CauseStackTrace.key, fiber.currentStackFrame)
+  annotations.set(InterruptorStackTrace.key, fiber.currentStackFrame)
   return Context.makeUnsafe(annotations)
 }
 
@@ -812,6 +842,10 @@ export const fiberJoinAll = <A extends Iterable<Fiber.Fiber<any, any>>>(self: A)
         }
       }))
     }
+    return sync(() => {
+      failed = true
+      cancels.forEach((cancel) => cancel())
+    })
   })
 
 /** @internal */
@@ -4232,16 +4266,19 @@ const setInterruptible: (interruptible: boolean) => Primitive = makePrimitive({
 const setInterruptibleTrue = setInterruptible(true)
 const setInterruptibleFalse = setInterruptible(false)
 
+const setFiberInterruptible = (fiber: FiberImpl): Effect.Effect<never> | undefined => {
+  fiber.interruptible = true
+  fiber._stack.push(setInterruptibleFalse)
+  if (fiber._interruptedCause) return failCause(fiber._interruptedCause)
+}
+
 /** @internal */
 export const interruptible = <A, E, R>(
   self: Effect.Effect<A, E, R>
 ): Effect.Effect<A, E, R> =>
   withFiber((fiber) => {
     if (fiber.interruptible) return self
-    fiber.interruptible = true
-    fiber._stack.push(setInterruptibleFalse)
-    if (fiber._interruptedCause) return failCause(fiber._interruptedCause)
-    return self
+    return setFiberInterruptible(fiber) ?? self
   })
 
 /** @internal */
@@ -4269,9 +4306,9 @@ export const interruptibleMask = <A, E, R>(
 ): Effect.Effect<A, E, R> =>
   withFiber((fiber) => {
     if (fiber.interruptible) return f(identity)
-    fiber.interruptible = true
-    fiber._stack.push(setInterruptibleFalse)
-    return f(uninterruptible)
+    const interrupted = setFiberInterruptible(fiber)
+    const effect = f(uninterruptible)
+    return interrupted ?? effect
   })
 
 /** @internal */
@@ -4317,7 +4354,7 @@ export const all = <
         Object.entries(arg),
         ([key, effect]) =>
           map(options?.mode === "result" ? result(effect) : effect, (value) => {
-            out[key] = value
+            InternalRecord.assignProperty(out, key, value)
           }),
         {
           discard: true,
@@ -4351,6 +4388,44 @@ export const partition: {
       forEach(elements, (a, i) => result(f(a, i)), options),
       (results) => Arr.partition(results, identity)
     )
+)
+
+/** @internal */
+export const reduce: {
+  <Z, A, E, R>(
+    zero: LazyArg<Z>,
+    f: (z: Z, a: A, i: number) => Effect.Effect<Z, E, R>
+  ): (elements: Iterable<A>) => Effect.Effect<Z, E, R>
+  <A, Z, E, R>(
+    elements: Iterable<A>,
+    zero: LazyArg<Z>,
+    f: (z: Z, a: A, i: number) => Effect.Effect<Z, E, R>
+  ): Effect.Effect<Z, E, R>
+} = dual(
+  3,
+  <A, Z, E, R>(
+    elements: Iterable<A>,
+    zero: LazyArg<Z>,
+    f: (z: Z, a: A, i: number) => Effect.Effect<Z, E, R>
+  ) => {
+    const arr = Arr.fromIterable(elements)
+    if (arr.length === 0) return sync(zero)
+    return suspend(() => {
+      let index = 0
+      let state = zero()
+      return map(
+        whileLoop({
+          while: () => index < arr.length,
+          body: () => f(state, arr[index], index),
+          step(next) {
+            state = next
+            index++
+          }
+        }),
+        () => state
+      )
+    })
+  }
 )
 
 /** @internal */
@@ -4628,6 +4703,16 @@ const iterateEagerImpl = <S, A, X, E, R, E2>(options: {
     let nextIndex = index
     const exits: Array<Exit.Exit<X, E> | undefined> | undefined = orderedStep ? new Array(end) : undefined
 
+    const failDefect = (error: unknown): Effect.Effect<void, E | E2, R> => {
+      const defect = exitDie(error)
+      terminal = defect
+      done = true
+      interrupted = true
+      return fibers && fibers.size > 0
+        ? flatMap(uninterruptible(fiberInterruptAll(Array.from(fibers))), () => defect)
+        : defect
+    }
+
     const runStep = (item: A, exit: Exit.Exit<X, E>, currentIndex: number): Exit.Exit<void, E | E2> | void => {
       if (!orderedStep) return step(state, item, exit, currentIndex)
       if (terminal) return terminal
@@ -4665,9 +4750,15 @@ const iterateEagerImpl = <S, A, X, E, R, E2>(options: {
         } else if (!parentFiber) {
           return callback((cb) => {
             parentFiber = getCurrentFiber()!
+            fibers = new Set()
             effect = eff
             resume = cb
-            const result = go()
+            let result: Effect.Effect<void, E | E2, R> | undefined
+            try {
+              result = go()
+            } catch (error) {
+              return cb(failDefect(error))
+            }
             if (result) return cb(result)
             return suspend(() => {
               terminal = exitVoid
@@ -4689,43 +4780,46 @@ const iterateEagerImpl = <S, A, X, E, R, E2>(options: {
           }
 
           // Add the fiber to the Set
-          if (fibers) fibers.add(fiber)
-          else fibers = new Set([fiber])
+          fibers!.add(fiber)
 
           const currentIndex = index
           fiber.addObserver((exit) => {
             fibers!.delete(fiber)
-            if (terminal) {
-              if (!interrupted && exit._tag === "Failure") {
-                for (const reason of exit.cause.reasons) {
-                  if (reason._tag === "Interrupt") continue
-                  else if (terminal._tag === "Failure") {
-                    ;(terminal.cause.reasons as Array<any>).push(reason)
-                  } else {
-                    terminal = exitFailCause(causeFromReasons([reason]))
+            try {
+              if (terminal) {
+                if (!interrupted && exit._tag === "Failure") {
+                  for (const reason of exit.cause.reasons) {
+                    if (reason._tag === "Interrupt") continue
+                    else if (terminal._tag === "Failure") {
+                      ;(terminal.cause.reasons as Array<any>).push(reason)
+                    } else {
+                      terminal = exitFailCause(causeFromReasons([reason]))
+                    }
                   }
                 }
+              } else {
+                const result = runStep(item, exit, currentIndex)
+                if (result) {
+                  terminal = result._tag === "Failure"
+                    ? exitFailCause(causeFromReasons(result.cause.reasons.slice()))
+                    : result
+                  go()
+                }
               }
-            } else {
-              const result = runStep(item, exit, currentIndex)
-              if (result) {
-                terminal = result._tag === "Failure"
-                  ? exitFailCause(causeFromReasons(result.cause.reasons.slice()))
-                  : result
-                go()
-              }
-            }
 
-            if (paused) {
-              const eff = go()
-              if (eff) resume!(eff)
-            } else if (done && fibers!.size === 0) {
-              resume!(terminal ?? void_)
+              if (paused) {
+                const eff = go()
+                if (eff) resume!(eff)
+              } else if (done && fibers!.size === 0) {
+                resume!(terminal ?? void_)
+              }
+            } catch (error) {
+              resume!(failDefect(error))
             }
           })
 
           // Check if we have reached the concurrency limit
-          if (fibers.size < concurrency) continue
+          if (fibers!.size < concurrency) continue
           paused = true
           index++
           return
@@ -5144,7 +5238,7 @@ export const awaitAllChildren = <A, E, R>(
   self: Effect.Effect<A, E, R>
 ): Effect.Effect<A, E, R> =>
   withFiber((fiber) => {
-    const initialChildren = fiber._children && Arr.fromIterable(fiber._children)
+    const initialChildren = fiber._children && new Set(fiber._children)
     return onExit(
       self,
       (_) => {
@@ -5154,7 +5248,7 @@ export const awaitAllChildren = <A, E, R>(
         } else if (initialChildren) {
           children = Iterable.filter(
             children,
-            (child: FiberImpl<any, any>) => !initialChildren.includes(child)
+            (child: FiberImpl<any, any>) => !initialChildren.has(child)
           ) as Set<FiberImpl<any, any>>
         }
         return asVoid(fiberAwaitAll(children))
@@ -5367,9 +5461,9 @@ export const runSyncExitWith = <R>(context: Context.Context<R>) => {
   return <A, E>(effect: Effect.Effect<A, E, R>): Exit.Exit<A, E> => {
     if (effectIsExit(effect)) return effect
     const scheduler = new Scheduler.MixedScheduler("sync")
-    const fiber = runFork(effect, { scheduler })
-    fiber.currentDispatcher?.flush()
-    return (fiber as FiberImpl<A, E>)._exit ?? exitDie(new AsyncFiberError(fiber))
+    const fiber = runFork(effect, { scheduler }) as FiberImpl<A, E>
+    fiber._dispatcher?.flush()
+    return fiber._exit ?? exitDie(new AsyncFiberError(fiber))
   }
 }
 
@@ -5792,11 +5886,11 @@ export const annotateSpans: {
     ...args: [Record<string, unknown>] | [key: string, value: unknown]
   ): Effect.Effect<A, E, R> =>
     updateService(effect, TracerSpanAnnotations, (annotations) => {
-      const newAnnotations = { ...annotations }
+      const newAnnotations = args.length === 1 ? { ...annotations, ...args[0] } : { ...annotations }
       if (args.length === 1) {
-        Object.assign(newAnnotations, args[0])
+        return newAnnotations
       } else {
-        newAnnotations[args[0]] = args[1]
+        InternalRecord.assignProperty(newAnnotations, args[0], args[1])
       }
       return newAnnotations
     })
@@ -6067,7 +6161,7 @@ export const annotateLogsScoped: {
     const next = { ...prev }
     for (let i = 0; i < entries.length; i++) {
       const [key, value] = entries[i]
-      next[key] = value
+      InternalRecord.assignProperty(next, key, value)
     }
     fiber.setContext(Context.add(fiber.context, CurrentLogAnnotations, next))
     return scopeAddFinalizerExit(Context.getUnsafe(fiber.context, scopeTag), (_) => {
@@ -6076,8 +6170,8 @@ export const annotateLogsScoped: {
       for (let i = 0; i < entries.length; i++) {
         const [key, value] = entries[i]
         if (current[key] !== value) continue
-        if (key in prev) {
-          next[key] = prev[key]
+        if (Object.hasOwn(prev, key)) {
+          InternalRecord.assignProperty(next, key, prev[key])
         } else {
           delete next[key]
         }
@@ -6421,7 +6515,7 @@ export const tracerLogger = loggerMake<unknown, void>(({ cause, fiber, logLevel,
   if (span === undefined || span._tag === "ExternalSpan") return
   const attributes: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(annotations)) {
-    attributes[key] = value
+    InternalRecord.assignProperty(attributes, key, value)
   }
   attributes["effect.fiberId"] = fiber.id
   attributes["effect.logLevel"] = logLevel.toUpperCase()

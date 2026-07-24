@@ -1,5 +1,164 @@
 # effect
 
+## 4.0.0-beta.101
+
+### Patch Changes
+
+- [#6545](https://github.com/Effect-TS/effect/pull/6545) [`731bea1`](https://github.com/Effect-TS/effect/commit/731bea19416755a904ff5e809413e5922785d0a4) Thanks @tim-smart! - Interrupt and await concurrent traversal workers when mapper or refill callbacks throw.
+
+- [#6545](https://github.com/Effect-TS/effect/pull/6545) [`731bea1`](https://github.com/Effect-TS/effect/commit/731bea19416755a904ff5e809413e5922785d0a4) Thanks @tim-smart! - Preserve current stack frame annotations on terminal root failures.
+
+- [#6545](https://github.com/Effect-TS/effect/pull/6545) [`731bea1`](https://github.com/Effect-TS/effect/commit/731bea19416755a904ff5e809413e5922785d0a4) Thanks @tim-smart! - Store interrupting fiber stack frames separately from interrupted target stack frames.
+
+- [#6545](https://github.com/Effect-TS/effect/pull/6545) [`731bea1`](https://github.com/Effect-TS/effect/commit/731bea19416755a904ff5e809413e5922785d0a4) Thanks @tim-smart! - Avoid allocating a scheduler dispatcher when `runSyncExit` completes without yielding.
+
+- [#6545](https://github.com/Effect-TS/effect/pull/6545) [`731bea1`](https://github.com/Effect-TS/effect/commit/731bea19416755a904ff5e809413e5922785d0a4) Thanks @tim-smart! - Make awaitAllChildren child selection linear in the number of fibers.
+
+- [#6523](https://github.com/Effect-TS/effect/pull/6523) [`b35ed29`](https://github.com/Effect-TS/effect/commit/b35ed2904f01536d303b21f288daf343cf740462) Thanks @gcanti! - Simplify the displayed `Type`, `Encoded`, and `Iso` types of required readonly `Schema.Struct` fields, closes [#6521](https://github.com/Effect-TS/effect/issues/6521).
+
+- [#6514](https://github.com/Effect-TS/effect/pull/6514) [`dd44624`](https://github.com/Effect-TS/effect/commit/dd446245736a0e88c807a02f03c21450bb9340fa) Thanks @tim-smart! - Fix `MutableList.filter` leaving an invalid empty bucket when no values match.
+
+- [#6545](https://github.com/Effect-TS/effect/pull/6545) [`731bea1`](https://github.com/Effect-TS/effect/commit/731bea19416755a904ff5e809413e5922785d0a4) Thanks @tim-smart! - Deliver pending interrupts when interruptibleMask restores fiber interruptibility.
+
+- [#6526](https://github.com/Effect-TS/effect/pull/6526) [`2bae1ac`](https://github.com/Effect-TS/effect/commit/2bae1accce9d3b72cf6d5aefc9b2161af6d88436) Thanks @tim-smart! - Fix `HttpRouter.toWebHandler` middleware inference to exclude request services supplied by the HTTP adapter.
+
+## 4.0.0-beta.100
+
+### Patch Changes
+
+- [#6501](https://github.com/Effect-TS/effect/pull/6501) [`c1288dd`](https://github.com/Effect-TS/effect/commit/c1288dd1a52a2811ab7df57fc4ce236c6be4c745) Thanks @gcanti! - Add a `discriminants` tuple to schemas augmented with `Schema.toTaggedUnion` and reject duplicate discriminant
+  property keys.
+
+- [#6475](https://github.com/Effect-TS/effect/pull/6475) [`2b58a3d`](https://github.com/Effect-TS/effect/commit/2b58a3dab6bc99776dddaf76e27d811e0f47f3d8) Thanks @fubhy! - Normalize cron month and weekday aliases independently of the host locale.
+
+- [#6492](https://github.com/Effect-TS/effect/pull/6492) [`6dc83f2`](https://github.com/Effect-TS/effect/commit/6dc83f26ddf20d48db28cf761dd8f3716e5273fb) Thanks @gcanti! - Preserve nested class construction when applying constructor defaults, closes [#6491](https://github.com/Effect-TS/effect/issues/6491).
+
+- [#6476](https://github.com/Effect-TS/effect/pull/6476) [`c1e2fe0`](https://github.com/Effect-TS/effect/commit/c1e2fe0cf93564f4d919e3998874c3e70b0cf30f) Thanks @fubhy! - Add `Cron` day and weekday intersection semantics in inspection representations.
+
+- [#6474](https://github.com/Effect-TS/effect/pull/6474) [`f3fbae8`](https://github.com/Effect-TS/effect/commit/f3fbae8d7bae0d77cb4f35a1598b26c58e3bf94d) Thanks @fubhy! - Validate `Cron.make` field constraints and treat weekday `7` as Sunday consistently with cron parsing.
+
+- [#6472](https://github.com/Effect-TS/effect/pull/6472) [`e000f80`](https://github.com/Effect-TS/effect/commit/e000f80fd55bcd8edc699fdbf4cd109004f4f754) Thanks @fubhy! - Fix `Cron.prev` day-of-month rollover across shorter months and non-leap years.
+
+- [#6471](https://github.com/Effect-TS/effect/pull/6471) [`f4ee765`](https://github.com/Effect-TS/effect/commit/f4ee7655ee052cf9ba726fd602bb87c89c7c62a9) Thanks @fubhy! - Fix `Cron.prev` weekday wrapping to always return a matching instant before the input.
+
+- [#6477](https://github.com/Effect-TS/effect/pull/6477) [`510b55f`](https://github.com/Effect-TS/effect/commit/510b55f3e21750685dbfd5f476a130c1c5af9dbd) Thanks @fubhy! - Make Cron equality and hashing include the optional timezone consistently.
+
+- [#6433](https://github.com/Effect-TS/effect/pull/6433) [`31d3fc4`](https://github.com/Effect-TS/effect/commit/31d3fc4327c50867bb8d881fa7353aeb03ea2826) Thanks @coyaSONG! - Fix the published declaration for `HttpEffect.appendPreResponseHandlerUnsafe`.
+
+- [#6487](https://github.com/Effect-TS/effect/pull/6487) [`875e618`](https://github.com/Effect-TS/effect/commit/875e618c3764a7b817ac863d0af86924449528f2) Thanks @rvaccone! - Fix doubled `Expected: Expected ...` prefixes in CLI `InvalidValue` error messages, closes [#6312](https://github.com/Effect-TS/effect/issues/6312).
+
+- [#6496](https://github.com/Effect-TS/effect/pull/6496) [`688d46a`](https://github.com/Effect-TS/effect/commit/688d46afd0ef923d983ad3d7385f52f217b28d70) Thanks @tim-smart! - Port `Effect.reduce` from Effect v3.
+
+- [#6480](https://github.com/Effect-TS/effect/pull/6480) [`6ff5023`](https://github.com/Effect-TS/effect/commit/6ff502363b9840a5a5ee0a24bc6cae734ac3a3eb) Thanks @fubhy! - Correct the diagnostic for cron step values above a field's maximum.
+
+- [#6484](https://github.com/Effect-TS/effect/pull/6484) [`c0333e7`](https://github.com/Effect-TS/effect/commit/c0333e7f755f42ddcca7051e029da8b4eed527bf) Thanks @tim-smart! - Fix fiber self-interuption from inside a running operation
+
+- [#6493](https://github.com/Effect-TS/effect/pull/6493) [`06e7e8c`](https://github.com/Effect-TS/effect/commit/06e7e8c66015ee318f871b9d2218dee82df2b108) Thanks @tim-smart! - Make multipart errors respond with an HTTP status based on their reason and ignore them in the error reporter.
+
+- [#6498](https://github.com/Effect-TS/effect/pull/6498) [`eb9b102`](https://github.com/Effect-TS/effect/commit/eb9b10256c8558881b441c2fef833b7037174400) Thanks @thewilkybarkid! - Don’t create a table when it’s not needed
+
+- [#6494](https://github.com/Effect-TS/effect/pull/6494) [`8b155da`](https://github.com/Effect-TS/effect/commit/8b155da06e0740c354ec562957a45ab65eb4573b) Thanks @tim-smart! - only interrupt cache lookup when all awaiters are gone
+
+- [#6495](https://github.com/Effect-TS/effect/pull/6495) [`3a87335`](https://github.com/Effect-TS/effect/commit/3a8733564c5db35271aa20564ed0d344daa2a79f) Thanks @tim-smart! - clean up more references on fiber exit
+
+## 4.0.0-beta.99
+
+### Patch Changes
+
+- [#6397](https://github.com/Effect-TS/effect/pull/6397) [`8ce4795`](https://github.com/Effect-TS/effect/commit/8ce4795ccbaebca4292757db568c005a992546a4) Thanks @IMax153! - Add a scoped `CliConfig` service for customizing the built-in global flags used by CLI command runners.
+
+  For example, provide an explicit list that omits `GlobalFlag.LogLevel` to remove the built-in `--log-level` flag:
+
+  ```ts
+  import { Effect } from "effect";
+  import { CliConfig, Command, GlobalFlag } from "effect/unstable/cli";
+
+  const program = Command.run(command, { version: "1.0.0" }).pipe(
+    Effect.provide(
+      CliConfig.layer({
+        builtIns: [GlobalFlag.Help, GlobalFlag.Version, GlobalFlag.Completions],
+      }),
+    ),
+  );
+  ```
+
+- [#6409](https://github.com/Effect-TS/effect/pull/6409) [`80b539f`](https://github.com/Effect-TS/effect/commit/80b539f8aba68f478c75c35c2b4140c4ffc4fada) Thanks @IMax153! - Reintroduce interactive CLI wizard mode through the `--wizard` flag and `Command.wizard`.
+
+- [#6394](https://github.com/Effect-TS/effect/pull/6394) [`88a54cc`](https://github.com/Effect-TS/effect/commit/88a54cc341006e3ebcb13482c618f62a680ce199) Thanks @lloydrichards! - add a `radius` option to `Graph` search configuration, allowing `dfs`, `bfs`, and `dfsPostOrder` traversals to limit returned nodes by edge distance from the configured start nodes. Traversals can also use `direction: "undirected"` to follow edges in either direction.
+
+- [#6457](https://github.com/Effect-TS/effect/pull/6457) [`e6e6dba`](https://github.com/Effect-TS/effect/commit/e6e6dba6e9d86e7c2ad27dcedf289db76a19697f) Thanks @fubhy! - Improve `Graph.dijkstra` and `Graph.astar` priority queue performance.
+
+- [#6468](https://github.com/Effect-TS/effect/pull/6468) [`bfb203e`](https://github.com/Effect-TS/effect/commit/bfb203e95aa439f731acad37fc3a9a831a190f1c) Thanks @gcanti! - Distribute `HttpApiBuilder` handler requirements per service so request middleware layers can provide them, closes [#6464](https://github.com/Effect-TS/effect/issues/6464).
+
+- [#6389](https://github.com/Effect-TS/effect/pull/6389) [`2e9a34a`](https://github.com/Effect-TS/effect/commit/2e9a34ac2bece4f3a206160480c991e3841dc67a) Thanks @IMax153! - Report an error when a CLI flag, including `--completions`, is provided without its required value.
+
+- [#6359](https://github.com/Effect-TS/effect/pull/6359) [`55d4eb3`](https://github.com/Effect-TS/effect/commit/55d4eb34f2c64d54f6a25a305b5c5438ebd7934e) Thanks @evermake! - - Fix `Command.withSubcommands` collapsing the inferred requirements type to `never` when given more than one subcommand
+  - Export a `Command.Services` utility type to extract the required services from a `Command`
+
+- [#6462](https://github.com/Effect-TS/effect/pull/6462) [`bddb010`](https://github.com/Effect-TS/effect/commit/bddb010eac3d4436cb094edbbee7460c5440c162) Thanks @fubhy! - Fix immutable Graph equality and hashing to include future node and edge identifier allocation.
+
+- [#6425](https://github.com/Effect-TS/effect/pull/6425) [`a328835`](https://github.com/Effect-TS/effect/commit/a328835e50d76bc96648a1c1550456e8c9f81210) Thanks @fubhy! - Fix `Graph.bellmanFord` to detect reachable negative cycles when the source and target are the same node.
+
+- [#6454](https://github.com/Effect-TS/effect/pull/6454) [`5560d05`](https://github.com/Effect-TS/effect/commit/5560d05aa6abdd29466d9c3412cc5e648b0adbde) Thanks @fubhy! - Fix standalone data-last `Graph.getNode` and `Graph.getEdge` inference.
+
+- [#6418](https://github.com/Effect-TS/effect/pull/6418) [`8f6e3ad`](https://github.com/Effect-TS/effect/commit/8f6e3adb185b16e8820b98c509b308086f7ff1af) Thanks @fubhy! - Fix `Graph.mapEdges` and `Graph.filterMapEdges` to preserve `Graph.Edge` instances when transforming edge data.
+
+- [#6426](https://github.com/Effect-TS/effect/pull/6426) [`46997fa`](https://github.com/Effect-TS/effect/commit/46997fa60401f5e3c93daa4b61f7df8e31caaab4) Thanks @fubhy! - Reject `NaN` and `-Infinity` edge weights in Graph shortest-path algorithms.
+
+- [#6461](https://github.com/Effect-TS/effect/pull/6461) [`9e6e12d`](https://github.com/Effect-TS/effect/commit/9e6e12d75c118cd265496f2880490d1f33a5c8bf) Thanks @fubhy! - Fix mutable Graph equality and hashing to use reference identity while preserving structural semantics for immutable graphs.
+
+- [#6456](https://github.com/Effect-TS/effect/pull/6456) [`3394b93`](https://github.com/Effect-TS/effect/commit/3394b93d97d6f24fc38670641d1490289ffca7f1) Thanks @fubhy! - Fix topological walkers silently completing with an incomplete order when a mutable graph becomes cyclic after walker creation.
+
+- [#6460](https://github.com/Effect-TS/effect/pull/6460) [`febeabc`](https://github.com/Effect-TS/effect/commit/febeabc3f7c31094da000a23edeaabfe2ab00a38) Thanks @fubhy! - Restrict `Graph.topo` to directed graphs at the type level while retaining runtime validation for unsafe undirected inputs.
+
+- [#6455](https://github.com/Effect-TS/effect/pull/6455) [`54161c9`](https://github.com/Effect-TS/effect/commit/54161c98f6f3569e0c31842f54e6a257f9421c4c) Thanks @fubhy! - Fix `Graph.Walker` to create a fresh iterable for each direct iteration.
+
+- [#6414](https://github.com/Effect-TS/effect/pull/6414) [`385f7a4`](https://github.com/Effect-TS/effect/commit/385f7a4ee4a7359928597ea56d151dbaf5eb5802) Thanks @fubhy! - Fix `Graph.toGraphViz` to quote DOT graph names and escape labels as literal text.
+
+- [#6438](https://github.com/Effect-TS/effect/pull/6438) [`7eea4d0`](https://github.com/Effect-TS/effect/commit/7eea4d0b73ec554915d7066a71f46326ce2ba45f) Thanks @tim-smart! - Fix one-shot iterable handling in Array.rotate, Iterable.cartesian, and in-memory RunnerStorage acquisition
+
+- [#6371](https://github.com/Effect-TS/effect/pull/6371) [`7543afe`](https://github.com/Effect-TS/effect/commit/7543afea6f4d97d1f1ad876224323838a48daadd) Thanks @polRk! - Tool: preserve the tool kind when cloning provider-defined and dynamic tools.
+
+  `Tool.addDependency`, `setParameters`, `setSuccess`, `setFailure`, `annotate`, and `annotateMerge` previously rebuilt the tool as a user-defined tool, which flipped `Tool.isProviderDefined` to `false`, corrupted the provider `id` (e.g. `anthropic.memory_20250818`), and crashed `Tool.getStrictMode`. These operations now clone the tool while preserving its prototype, `id`, and kind. Provider-defined tools also now carry an empty annotations context so `Tool.getStrictMode`/`annotate` work on them. Closes [#2615](https://github.com/Effect-TS/effect/issues/2615).
+
+- [#6421](https://github.com/Effect-TS/effect/pull/6421) [`44b9cf3`](https://github.com/Effect-TS/effect/commit/44b9cf3d240d726997b4bbcd0ede48e074d3c456) Thanks @fubhy! - Preserve null edge data in Graph.floydWarshall costs.
+
+- [#6438](https://github.com/Effect-TS/effect/pull/6438) [`7eea4d0`](https://github.com/Effect-TS/effect/commit/7eea4d0b73ec554915d7066a71f46326ce2ba45f) Thanks @tim-smart! - ensure one-shot iterables work with Fiber apis
+
+- [#6420](https://github.com/Effect-TS/effect/pull/6420) [`0a8aa6a`](https://github.com/Effect-TS/effect/commit/0a8aa6acb90a72b91c24d17133c950e4cacd8abd) Thanks @fubhy! - Fix `Graph.isAcyclic` to detect cycles formed by parallel undirected edges.
+
+- [#6417](https://github.com/Effect-TS/effect/pull/6417) [`c8d9fcf`](https://github.com/Effect-TS/effect/commit/c8d9fcf7b030f7c474effbab2764ce7aee1c7209) Thanks @fubhy! - Reject `Graph` mutation operations on mutable handles after `Graph.endMutation` finalizes them.
+
+- [#6423](https://github.com/Effect-TS/effect/pull/6423) [`9ca7f9a`](https://github.com/Effect-TS/effect/commit/9ca7f9a69363e4485645966d5a93b8f9597c5206) Thanks @fubhy! - Fix Graph.isGraph narrowing for mutable and undirected graphs.
+
+- [#6459](https://github.com/Effect-TS/effect/pull/6459) [`e7aca89`](https://github.com/Effect-TS/effect/commit/e7aca894bb32fbb785b5830837e6061c415a6015) Thanks @fubhy! - Reject asynchronous `Graph` mutation callbacks and finalize scoped mutable handles when callbacks fail.
+
+- [#6458](https://github.com/Effect-TS/effect/pull/6458) [`55d7560`](https://github.com/Effect-TS/effect/commit/55d75609b8acf8a1b54c1b1c7fbbb65ec741aa3e) Thanks @fubhy! - Fix undirected `Graph` equality and hashing to ignore stored edge endpoint orientation.
+
+- [#6415](https://github.com/Effect-TS/effect/pull/6415) [`f809189`](https://github.com/Effect-TS/effect/commit/f809189ddf6b6011ba43a9901baaa734e315da2a) Thanks @fubhy! - Fix `Graph.Walker` iteration for receiver-sensitive iterables.
+
+- [#6394](https://github.com/Effect-TS/effect/pull/6394) [`88a54cc`](https://github.com/Effect-TS/effect/commit/88a54cc341006e3ebcb13482c618f62a680ce199) Thanks @lloydrichards! - added graph set operations for combining and comparing graphs
+  - `Graph.make` - creates a graph constructor for a dynamically selected graph kind
+  - `Graph.compose` - composition of two graphs, merging nodes by identity
+  - `Graph.intersection` - intersection of two graphs, keeping only common nodes and edges
+  - `Graph.difference` - difference of two graphs, removing edges present in the second graph
+  - `Graph.symmetricDifference` - symmetric difference of two graphs, keeping edges present in exactly one graph
+
+- [#6395](https://github.com/Effect-TS/effect/pull/6395) [`0ebdbe7`](https://github.com/Effect-TS/effect/commit/0ebdbe74463dc84385956d0b1e8c2b79ebab5400) Thanks @Chaoran-Huang! - Fix multipart parser limit violations being silently swallowed
+
+- [#6419](https://github.com/Effect-TS/effect/pull/6419) [`7517d09`](https://github.com/Effect-TS/effect/commit/7517d09f12a0b183a81bd425962c4e280a68b05d) Thanks @fubhy! - Make the public Graph interfaces opaque by hiding internal mutable storage fields from their TypeScript surface.
+
+- [#6390](https://github.com/Effect-TS/effect/pull/6390) [`212493b`](https://github.com/Effect-TS/effect/commit/212493b9a1eb98cd1ef6959c707a2e5784a5ae91) Thanks @alvarosevilla95! - Fix Redis script evaluation so transient `SCRIPT LOAD` failures are retried instead of being cached indefinitely.
+
+- [#6394](https://github.com/Effect-TS/effect/pull/6394) [`88a54cc`](https://github.com/Effect-TS/effect/commit/88a54cc341006e3ebcb13482c618f62a680ce199) Thanks @lloydrichards! - add advanced graph set operations for deriving related graph structures
+  - `Graph.complement` - complement over the existing node set, adding missing edges between distinct nodes
+  - `Graph.neighborhood` - induced subgraph containing nodes within a radius of a node
+  - `Graph.sum` - disjoint union of two graphs without merging equal node data
+
+- [#6430](https://github.com/Effect-TS/effect/pull/6430) [`80ea8cb`](https://github.com/Effect-TS/effect/commit/80ea8cb9222ca73f564c8267ab2f82966fea027a) Thanks @fubhy! - Fix Graph BFS, topological sort, and DFS postorder iterators to skip nodes removed from a MutableGraph without recursive self-calls.
+
+- [#6465](https://github.com/Effect-TS/effect/pull/6465) [`8df19f4`](https://github.com/Effect-TS/effect/commit/8df19f4fe81d90cc33ace88b9a77e5534f82d604) Thanks @gcanti! - Fix `isInt32` to apply custom annotations only to its filter group.
+
 ## 4.0.0-beta.98
 
 ### Patch Changes
