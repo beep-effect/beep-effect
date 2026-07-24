@@ -244,14 +244,57 @@ are the probe surface; the launcher **requires Node (rejects Bun** — it needs
 `node:sqlite`), so the service runtime is Node even though this repo tooling
 is Bun; service install uses a stable package symlink for version retargeting.
 
-## Synthesis
+### 2026-07-24 — adversarial review (oracle pass, codex-executed)
 
-Decision 7 resolves to: **strict declarative full-file ownership under
-`OPENCLAW_NIX_MODE=1` + `OPENCLAW_CONFIG_PATH`**, exactly the mechanism the
-first-party Nix distribution uses in production, with the six conditions
-above absorbed into the design (schema-per-pinned-version, declarative auth
-metadata, upgrade runbook). The managed-subset fallback is fully mapped (the
-dive enumerates the preserve-list) but is now the migration's contingency, not the greenfield plan.
+Full review: [`research/adversarial-review.md`](./research/adversarial-review.md)
+(12 findings, each with clone `file:line` evidence; one explicit HOLDS —
+OAuth refresh is SQLite-locked and not a config-write casualty). The
+findings that materially change the design:
+
+- **CRITICAL:** `OPENCLAW_NIX_MODE=1` is an **in-process policy check**, not
+  filesystem immutability — any process writing the path directly bypasses
+  it. nix-openclaw's real guarantee comes from the read-only store +
+  symlink, which the packet mistook for the env-var check. Strict ownership
+  therefore needs an OS-enforced read-only boundary + independent drift
+  audit/repair, with the guard as one defense layer.
+- **CRITICAL:** SQLite schema migrations run on ordinary open and stamp
+  `user_version`; older binaries then refuse the store — so a failed
+  health check after upgrade can strand a rollback. Upgrades must be a
+  generation state machine (side-by-side install, DB snapshots, atomic
+  switch, deep acceptance, tested restore), not three commands.
+- **MAJOR (design reshape):** the driver cannot honestly duplicate the full
+  upstream config contract (effective schema is plugin-set-dependent; the
+  schema export inserts lossy placeholders past size caps) — `@beep/openclaw`
+  should own a **desired-intent schema + versioned render adapters**, with
+  the candidate binary's plugin-aware `config validate` as the acceptance
+  gate. Skills are **workspace mutations** with their own lockfile, not
+  config fields — the sketch needs one `OpenClawGeneration` object binding
+  package/config/unit/workspace/skills/plugins as a single revision.
+- **MAJOR (ops surfaces):** same-`op://`-ref secret rotation is invisible to
+  content hashes (eager resolution; `secrets reload` is the only refresh);
+  the 1Password service-account token is an unavoidable bootstrap secret
+  needing a recorded exception; `command.local` proves neither drift nor
+  target identity (bind to machine-id + out-of-band audit); "flip only the
+  executor" understates the separate session/privilege contracts of local
+  vs SSH `systemd --user` applies; `/health` + `/ready` are too weak to
+  authorize generation promotion; channel event writebacks need
+  `configWrites: false` rendered per channel and live testing under the
+  guard.
+
+## Synthesis (revised after adversarial review)
+
+Decision 7's verdict is tempered from HOLDS-WITH-CONDITIONS to
+**HOLDS-ONLY-WITH-OS-ENFORCEMENT, prototype-gated**: strict declarative
+full-file ownership remains the greenfield plan, but it is credible only as
+(a) the `OPENCLAW_NIX_MODE=1` + `OPENCLAW_CONFIG_PATH` in-process guard,
+**plus** (b) an OS-enforced read-only config boundary, **plus** (c) an
+independent drift audit/repair loop — and the align stage now carries
+blocking open questions with four disposable prototypes (filesystem
+bypass/drift, non-interactive user-manager apply, same-ref secret
+rotation/reload, upgrade+failed-health rollback across DB schema stamps)
+before decisions 6/7/12/13 are re-closed. The managed-subset fallback (fully
+mapped by the dive) remains the migration's bridge and the fallback if the
+prototypes fail.
 
 ## In-Repo Capability Inventory
 

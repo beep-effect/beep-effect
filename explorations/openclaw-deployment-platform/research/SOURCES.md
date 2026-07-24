@@ -115,6 +115,10 @@ Full table with per-brick usage lives in [`../RESEARCH.md`](../RESEARCH.md)
 
 - Packet: [`../README.md`](../README.md), [`../CAPTURE.md`](../CAPTURE.md),
   [`../DECISIONS.md`](../DECISIONS.md), [`../RESEARCH.md`](../RESEARCH.md)
+- Adversarial review (oracle pass, codex-executed 2026-07-24):
+  [`adversarial-review.md`](./adversarial-review.md) — 12 findings with
+  clone `file:line` evidence; drove the revised RESEARCH.md synthesis and
+  the 8 reopened manifest `openQuestions`
 - Related goal context:
   [`goals/agentic-professional-runtime/docs/sdk-context-packet-contract.md`](../../../goals/agentic-professional-runtime/docs/sdk-context-packet-contract.md)
   (OpenClaw as thin SDK adapter),

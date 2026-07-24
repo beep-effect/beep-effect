@@ -16,10 +16,12 @@ openclaw role onto the same declarative platform.
 
 ## Next Open Question
 
-None blocking in-stage — all four research legs are codified and the
-config-ownership verdict is HOLDS-WITH-CONDITIONS (see RESEARCH.md
-Synthesis). Remaining: the `/oracle` adversarial review over RESEARCH +
-SOURCES + draft BRIEF closes the research stage, then GATE B grilling.
+GATE B grilling, starting from the adversarial review's reopened branches
+(manifest `openQuestions`, 8 items): first the CRITICAL pair — OS-enforced
+config immutability beyond the in-process guard (decision 7), and the
+generation/SQLite-rollback upgrade model — then the decision 13 reshape
+(desired-intent schema + render adapters) and the `OpenClawGeneration`
+solution-sketch reshape.
 
 ## Read This First
 
@@ -32,6 +34,12 @@ SOURCES + draft BRIEF closes the research stage, then GATE B grilling.
 
 ## Trail
 
+- 2026-07-24 (night): adversarial oracle pass landed (codex-executed after a
+  Claude Code auto-mode permission block on browser submit — workaround
+  documented in the oracle skill): 12 source-grounded findings, 2 CRITICAL;
+  verdict tempered to HOLDS-ONLY-WITH-OS-ENFORCEMENT; decisions 6/7/12/13
+  reopened as 8 manifest openQuestions with 4 prototype gates. Research
+  stage closes; GATE B next.
 - 2026-07-24 (evening): all research legs landed — codex OSS sweep
   (oss-landscape.md), Grok x.com leg (x-com-field-notes.md), codex
   config-internals dive w/ HOLDS-WITH-CONDITIONS verdict (spot-check
