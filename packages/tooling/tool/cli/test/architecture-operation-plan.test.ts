@@ -13,6 +13,7 @@ import {
   WriteFileOperation,
   WritePackageJsonOperation,
 } from "@beep/repo-cli/commands/Architecture";
+import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -103,7 +104,12 @@ const dbAdminTopLevelManifestFiles = [
   "tsconfig.drizzle.json",
   "vitest.config.ts",
 ] as const;
-const CommandTestLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
+const CommandTestLayer = Layer.mergeAll(
+  NodeServices.layer,
+  TestConsole.layer,
+  FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)),
+  TSMorphServiceLive.pipe(Layer.provideMerge(NodeServices.layer))
+);
 const runArchitectureCommand = Command.runWith(architectureCommand, {
   version: "0.0.0",
 });

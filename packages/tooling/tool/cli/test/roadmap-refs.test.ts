@@ -1,4 +1,5 @@
 import { lintCommand } from "@beep/repo-cli";
+import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { provideScopedLayer } from "@beep/test-utils";
@@ -20,7 +21,8 @@ const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
   TestConsole.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
+  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
+  TSMorphServiceLive.pipe(Layer.provide(NodeServices.layer))
 );
 
 const writeFixture = Effect.fn("RoadmapRefsTest.writeFixture")(function* (roadmap: string) {

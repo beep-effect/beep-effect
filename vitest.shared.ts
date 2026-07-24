@@ -130,7 +130,10 @@ const rootTsconfigAliases = A.flatMap(
 const config: ViteUserConfig = {
   plugins: [resolveUniformTypeScriptSourceSpecifiers()],
   oxc: {
-    target: "es2020",
+    // The repository's Node 24 and Bun runtimes both execute top-level await.
+    // Keeping Vitest's transform at ESNext avoids Oxc lowering/parsing warnings
+    // for the ESM CLI entrypoints exercised by the coverage lane.
+    target: "esnext",
   },
   optimizeDeps: {
     exclude: ["bun:sqlite"],

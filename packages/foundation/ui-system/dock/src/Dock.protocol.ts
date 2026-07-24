@@ -9,13 +9,7 @@ import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { Tuple } from "effect";
 import * as S from "effect/Schema";
 import { DockCommandEnvelope, RestoreSnapshotRequest } from "./Dock.commands.ts";
-import {
-  DockInputError,
-  DockInvariantViolation,
-  DockPersistenceError,
-  DockSnapshotMissing,
-  DockTransitionError,
-} from "./Dock.errors.ts";
+import { DockInputError, DockPersistenceError, DockSnapshotMissing, DockTransitionError } from "./Dock.errors.ts";
 import { DockMutationOutcome } from "./Dock.outcomes.ts";
 
 const $I = $DockId.create("Dock.protocol");
@@ -306,7 +300,6 @@ export type DockAtomOperationOutcome = typeof DockAtomOperationOutcome.Type;
 export const DockAtomSessionError = S.Union([
   DockTransitionError,
   DockInputError,
-  DockInvariantViolation,
   DockPersistenceError,
   DockSnapshotMissing,
 ]).pipe(

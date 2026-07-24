@@ -1071,6 +1071,8 @@ describe("quality task adapter", () => {
       command: "bunx",
       args: expectedRootTurboArgs("lint:fix", passthroughTasks),
       env: {
+        BEEP_FC_SEED: "20260708",
+        NODE_OPTIONS: "--no-experimental-webstorage",
         VITEST_COVERAGE_RATCHET: "1",
       },
     });
@@ -1086,10 +1088,23 @@ describe("quality task adapter", () => {
       command: "bunx",
       args: expectedRootTurboArgs("coverage", []),
       env: {
+        BEEP_FC_SEED: "20260708",
+        NODE_OPTIONS: "--no-experimental-webstorage",
         VITEST_COVERAGE_RATCHET: "1",
       },
     });
     expect(steps[0]?.env).not.toHaveProperty("VITEST_COVERAGE_REPORT_ONLY");
+  });
+
+  it("preserves existing Node options when disabling experimental Web Storage for coverage", () => {
+    const steps = withEnvVar("NODE_OPTIONS", "--max-old-space-size=4096", () =>
+      rootQualityStepsForTesting("/repo", getInvocation(["coverage"]))
+    );
+
+    expect(steps[0]?.env).toMatchObject({
+      BEEP_FC_SEED: "20260708",
+      NODE_OPTIONS: "--max-old-space-size=4096 --no-experimental-webstorage",
+    });
   });
 
   it("keeps report-only coverage reserved for baseline regeneration", () => {
@@ -1104,6 +1119,8 @@ describe("quality task adapter", () => {
       command: "bunx",
       args: expectedTurboArgs("coverage", ["--concurrency=1"]),
       env: {
+        BEEP_FC_SEED: "20260708",
+        NODE_OPTIONS: "--no-experimental-webstorage",
         VITEST_COVERAGE_RATCHET: "1",
         VITEST_COVERAGE_REPORT_ONLY: "1",
       },
