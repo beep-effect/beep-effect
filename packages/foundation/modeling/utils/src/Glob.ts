@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { fileURLToPath, pathToFileURL } from "node:url";
 import { $UtilsId } from "@beep/identity/packages";
 import { Context, Effect, flow, Layer, Match, Order, pipe } from "effect";
 import * as A from "effect/Array";
@@ -15,6 +14,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import picomatch from "picomatch";
 import { readdirSync, statSync } from "./FileSystem.ts";
+import * as Path from "./Path.ts";
 import { thunk } from "./thunk.ts";
 import type { PlatformError } from "effect";
 
@@ -25,13 +25,14 @@ const $I = $UtilsId.create("Glob");
  *
  * @example
  * ```ts
+ * import * as S from "effect/Schema"
  * import { Pattern } from "@beep/utils/Glob"
  *
- * const schema = Pattern
- * console.log(schema)
+ * const isPattern = S.is(Pattern)
+ * console.log(isPattern(["src/*.ts", "test/*.ts"]))
  * ```
  *
- * @category utilities
+ * @category schemas
  * @since 0.0.0
  */
 export const Pattern = S.Union([S.String, S.Array(S.String)]).pipe(
@@ -59,12 +60,17 @@ export type Pattern = typeof Pattern.Type;
 /**
  * Optional runtime flags for glob scans.
  *
+ * @remarks
+ * Omitted keys remain absent from the encoded form. At runtime they resolve to
+ * relative paths, the current working directory, no dotfiles, no ignores, and
+ * directory-inclusive results.
+ *
  * @example
  * ```ts
  * import { GlobOptions } from "@beep/utils/Glob"
  *
- * const opts = GlobOptions.make({ absolute: true, dot: true })
- * console.log(opts)
+ * const options = GlobOptions.make({ absolute: true, dot: true })
+ * console.log(options.absolute)
  * ```
  *
  * @category models
@@ -98,7 +104,7 @@ class ResolvedGlobOptions extends S.Class<ResolvedGlobOptions>($I`ResolvedGlobOp
     absolute: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     cwd: S.String.pipe(S.withConstructorDefault(Effect.succeed("."))),
     dot: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
-    ignore: Pattern.pipe(S.withConstructorDefault(Effect.sync((): ReadonlyArray<string> => []))),
+    ignore: Pattern.pipe(S.withConstructorDefault(Effect.succeed(A.empty<string>()))),
     nodir: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   },
   $I.annote("ResolvedGlobOptions", {
@@ -106,8 +112,13 @@ class ResolvedGlobOptions extends S.Class<ResolvedGlobOptions>($I`ResolvedGlobOp
   })
 ) {}
 
-const resolveGlobOptions = (options?: undefined | GlobOptions): ResolvedGlobOptions =>
-  ResolvedGlobOptions.make(options ?? {});
+const resolveGlobOptions = (options?: GlobOptions): ResolvedGlobOptions => ResolvedGlobOptions.make(options ?? {});
+
+const GlobErrorCause = S.Defect({ includeStack: true }).pipe(
+  $I.annoteSchema("GlobErrorCause", {
+    description: "A defect captured from an underlying glob implementation.",
+  })
+);
 
 /**
  * Namespace for the encoded form of {@link GlobError}.
@@ -116,8 +127,8 @@ const resolveGlobOptions = (options?: undefined | GlobOptions): ResolvedGlobOpti
  * ```ts
  * import { GlobError } from "@beep/utils/Glob"
  *
- * const pattern = (value: GlobError.Encoded) => value.pattern
- * console.log(pattern)
+ * const encoded: GlobError.Encoded = { _tag: "GlobError", pattern: "src/*.ts" }
+ * console.log(encoded.pattern)
  * ```
  *
  * @category models
@@ -131,8 +142,11 @@ export declare namespace GlobError {
    * ```ts
    * import { GlobError } from "@beep/utils/Glob"
    *
-   * const pattern = (value: GlobError.Encoded) => value.pattern
-   * console.log(pattern)
+   * const encoded: GlobError.Encoded = {
+   *   _tag: "GlobError",
+   *   pattern: ["src/*.ts", "test/*.ts"]
+   * }
+   * console.log(encoded.pattern)
    * ```
    *
    * @category models
@@ -158,7 +172,7 @@ export declare namespace GlobError {
  * console.log(error)
  * ```
  *
- * @category models
+ * @category errors
  * @since 0.0.0
  */
 export class GlobError extends S.TaggedErrorClass<GlobError>($I`GlobError`)(
@@ -167,12 +181,12 @@ export class GlobError extends S.TaggedErrorClass<GlobError>($I`GlobError`)(
     pattern: Pattern.annotateKey({
       description: "Glob pattern being evaluated when matching failed.",
     }),
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).annotateKey({
+    cause: S.OptionFromOptionalKey(GlobErrorCause).annotateKey({
       description: "Optional decoded defect captured from the underlying glob implementation.",
     }),
   },
   $I.annote("GlobError", {
-    description: "An error that occurs during glob pattern matching",
+    description: "An error that occurs during glob pattern matching.",
   })
 ) {
   static readonly new: {
@@ -191,7 +205,7 @@ export class GlobError extends S.TaggedErrorClass<GlobError>($I`GlobError`)(
 
 type GlobErrorCauseInput = GlobError["cause"] | GlobError.Encoded["cause"];
 
-const decodeGlobErrorCause = S.decodeUnknownOption(S.Defect({ includeStack: true }));
+const decodeGlobErrorCause = S.decodeUnknownOption(GlobErrorCause);
 
 const normalizeGlobErrorCause = (cause: GlobErrorCauseInput): GlobError["cause"] =>
   O.isOption(cause) ? cause : decodeGlobErrorCause(cause);
@@ -205,21 +219,21 @@ const normalizeGlobErrorCause = (cause: GlobErrorCauseInput): GlobError["cause"]
  * @example
  * ```ts
  * import { Effect } from "effect"
- * import { Glob } from "@beep/utils/Glob"
+ * import { Glob, layer } from "@beep/utils/Glob"
  *
  * const program = Effect.gen(function* () {
  *   const service = yield* Glob
  *   return yield* service.glob("src/*.ts")
  * })
  *
- * console.log(program)
+ * Effect.runPromise(Effect.provide(program, layer)).then(console.log)
  * ```
  *
  * @category services
  * @since 0.0.0
  */
 export interface Glob {
-  readonly glob: (pattern: Pattern, options?: undefined | GlobOptions) => Effect.Effect<Array<string>, GlobError>;
+  readonly glob: (pattern: Pattern, options?: GlobOptions) => Effect.Effect<Array<string>, GlobError>;
 }
 
 /**
@@ -227,40 +241,26 @@ export interface Glob {
  *
  * @example
  * ```ts
- * import { Glob } from "@beep/utils/Glob"
+ * import { Effect } from "effect"
+ * import { Glob, layer } from "@beep/utils/Glob"
  *
- * const tag = Glob
- * console.log(tag)
+ * const program = Effect.gen(function* () {
+ *   const service = yield* Glob
+ *   return yield* service.glob("src/*.ts")
+ * })
+ *
+ * Effect.runPromise(Effect.provide(program, layer)).then(console.log)
  * ```
  *
  * @category services
  * @since 0.0.0
  */
-export const Glob: Context.Service<Glob, Glob> = Context.Service("@effect/utils/Glob");
+export const Glob: Context.Service<Glob, Glob> = Context.Service($I`Glob`);
 
-type BunGlobScanRoot = {
-  cwd?: string | undefined;
-  dot?: boolean | undefined;
-  onlyFiles?: boolean | undefined;
-};
-
-type BunGlobInstance = {
-  readonly match: (relativePath: string) => boolean;
-  readonly scanSync: (options?: BunGlobScanRoot) => Iterable<string>;
-};
-
-type BunGlobConstructor = new (pattern: string) => BunGlobInstance;
-
-type NodeGlobEntry = {
-  readonly isDirectory: boolean;
-  readonly relativePath: string;
-};
-
+type BunGlobConstructor = typeof Bun.Glob;
+type BunGlobInstance = InstanceType<BunGlobConstructor>;
 type NodeDirent = import("node:fs").Dirent;
-
-type PatternMatcher = (relativePath: string, isDirectory: boolean) => boolean;
-
-const absolutePathPattern = /^(?:[A-Za-z]:[\\/]|\\\\|\/)/;
+type PathMatcher = (relativePath: string) => boolean;
 
 function toGlobError(pattern: Pattern): (cause: unknown) => GlobError {
   return (cause: unknown): GlobError =>
@@ -270,9 +270,6 @@ function toGlobError(pattern: Pattern): (cause: unknown) => GlobError {
     );
 }
 
-const ensureTrailingSeparator = (value: string): string =>
-  Str.endsWith("/")(value) || Str.endsWith("\\")(value) ? value : `${value}/`;
-
 const normalizePathSeparators = (value: string): string => Str.replaceAll("\\", "/")(value);
 
 const hasDotSegment: (value: string) => boolean = flow(
@@ -281,78 +278,44 @@ const hasDotSegment: (value: string) => boolean = flow(
   A.some((segment) => segment.length > 1 && segment !== ".." && Str.startsWith(".")(segment))
 );
 
-function toPatterns(pattern: Pattern): ReadonlyArray<string> {
-  return Match.value(pattern).pipe(
-    Match.when(Str.isString, (singlePattern) => [singlePattern]),
-    Match.orElse((patterns) => patterns)
-  );
-}
+const toPatterns: (pattern: Pattern) => Array<string> = A.ensure;
 
-const toDirectoryUrl = (cwd: string): URL => {
-  const normalizedCwd = ensureTrailingSeparator(cwd);
-
-  if (absolutePathPattern.test(normalizedCwd)) {
-    return pathToFileURL(normalizedCwd);
-  }
-
-  return new URL(normalizedCwd, pathToFileURL(ensureTrailingSeparator(process.cwd())));
-};
-
-const toAbsolutePath =
-  (cwdUrl: URL) =>
-  (relativePath: string): string =>
-    fileURLToPath(new URL(normalizePathSeparators(relativePath), cwdUrl));
-
-const getBunGlobConstructor = (): undefined | BunGlobConstructor =>
-  (
-    globalThis as typeof globalThis & {
-      readonly Bun?: {
-        readonly Glob?: BunGlobConstructor;
-      };
-    }
-  ).Bun?.Glob;
+const getBunGlobConstructor = (): O.Option<BunGlobConstructor> => O.fromUndefinedOr(globalThis.Bun?.Glob);
 
 const compileGlobs = (BunGlob: BunGlobConstructor, patterns: ReadonlyArray<string>): ReadonlyArray<BunGlobInstance> =>
   A.map(patterns, (pattern) => new BunGlob(pattern));
 
-const matchesAny = (globs: ReadonlyArray<BunGlobInstance>, relativePath: string): boolean =>
-  pipe(
-    globs,
-    A.some((glob) => glob.match(relativePath))
-  );
-
-const compileIncludedPatterns: (patterns: ReadonlyArray<string>) => ReadonlyArray<PatternMatcher> = flow(
+const compileIncludedPatterns: (patterns: ReadonlyArray<string>) => ReadonlyArray<PathMatcher> = flow(
   A.map((pattern) => {
     const normalizedPattern = normalizePathSeparators(pattern);
     const matcher = picomatch(normalizedPattern, {
       dot: true,
     });
-    const rootDirectory = Str.endsWith("/**")(normalizedPattern) ? Str.slice(0, -3)(normalizedPattern) : undefined;
+    const rootDirectory = pipe(normalizedPattern, O.liftPredicate(Str.endsWith("/**")), O.map(Str.slice(0, -3)));
 
-    return (relativePath: string, isDirectory: boolean): boolean =>
-      matcher(relativePath) && !(isDirectory && rootDirectory !== undefined && relativePath === rootDirectory);
+    return (relativePath: string): boolean => matcher(relativePath) && !O.contains(rootDirectory, relativePath);
   })
 );
 
-const compileIgnoredPatterns: (patterns: ReadonlyArray<string>) => ReadonlyArray<PatternMatcher> = flow(
+const compileIgnoredPatterns: (patterns: ReadonlyArray<string>) => ReadonlyArray<PathMatcher> = flow(
   A.map((pattern) => {
-    const matcher = picomatch(normalizePathSeparators(pattern), {
+    const normalizedPattern = normalizePathSeparators(pattern);
+    const basePattern = Str.endsWith("/")(normalizedPattern) ? Str.slice(0, -1)(normalizedPattern) : normalizedPattern;
+    const matcher = picomatch(basePattern, {
+      dot: true,
+    });
+    const descendantMatcher = picomatch(`${basePattern}/**`, {
       dot: true,
     });
 
-    return (relativePath: string, isDirectory: boolean): boolean =>
-      matcher(isDirectory ? ensureTrailingSeparator(relativePath) : relativePath);
+    return (relativePath: string): boolean => matcher(relativePath) || descendantMatcher(relativePath);
   })
 );
 
-const matchesCompiledPatterns = (
-  matchers: ReadonlyArray<PatternMatcher>,
-  relativePath: string,
-  isDirectory: boolean
-): boolean =>
+const matchesPatterns = (matchers: ReadonlyArray<PathMatcher>, relativePath: string): boolean =>
   pipe(
     matchers,
-    A.some((matcher) => matcher(relativePath, isDirectory))
+    A.some((matcher) => matcher(relativePath))
   );
 
 const globMetaPattern = /[*?[{(!]/u;
@@ -381,25 +344,34 @@ const scanRootsForPatterns: (patterns: ReadonlyArray<string>) => ReadonlyArray<s
   (roots) => A.filter(roots, (root, index) => !A.some(A.take(roots, index), (parent) => isNestedScanRoot(parent, root)))
 );
 
+const isNotFound = (error: PlatformError.PlatformError): boolean => error.reason._tag === "NotFound";
+
+const optionOnNotFound = <A>(
+  self: Effect.Effect<A, PlatformError.PlatformError>
+): Effect.Effect<O.Option<A>, PlatformError.PlatformError> =>
+  self.pipe(
+    Effect.map(O.some),
+    Effect.catchIf(isNotFound, () => Effect.succeed(O.none()))
+  );
+
 const resolveDirectoryFlag = (
   entry: NodeDirent,
   absolutePath: string
 ): Effect.Effect<O.Option<boolean>, PlatformError.PlatformError> =>
   entry.isSymbolicLink()
     ? Effect.map(
-        Effect.option(statSync(absolutePath)),
+        optionOnNotFound(statSync(absolutePath)),
         O.map((info) => info.type === "Directory")
       )
     : Effect.succeed(O.some(entry.isDirectory()));
 
 const scanDirectory = (
-  cwdUrl: URL,
   absoluteDirectoryPath: string,
   relativeDirectoryPath: string,
-  includeMatchers: ReadonlyArray<PatternMatcher>,
-  ignoreMatchers: ReadonlyArray<PatternMatcher>,
+  includeMatchers: ReadonlyArray<PathMatcher>,
+  ignoreMatchers: ReadonlyArray<PathMatcher>,
   options: ResolvedGlobOptions
-): Effect.Effect<ReadonlyArray<NodeGlobEntry>, PlatformError.PlatformError> =>
+): Effect.Effect<ReadonlyArray<string>, PlatformError.PlatformError> =>
   readdirSync(absoluteDirectoryPath, { withFileTypes: true }).pipe(
     Effect.flatMap((entries) =>
       Effect.forEach(
@@ -408,9 +380,7 @@ const scanDirectory = (
           const relativePath =
             relativeDirectoryPath.length === 0 ? entry.name : `${relativeDirectoryPath}/${entry.name}`;
           const normalizedRelativePath = normalizePathSeparators(relativePath);
-          const absolutePath = absolutePathPattern.test(normalizedRelativePath)
-            ? normalizedRelativePath
-            : fileURLToPath(new URL(normalizedRelativePath, cwdUrl));
+          const absolutePath = Path.resolve(absoluteDirectoryPath, entry.name);
           const isHiddenPath = !options.dot && hasDotSegment(normalizedRelativePath);
 
           if (isHiddenPath) {
@@ -423,14 +393,13 @@ const scanDirectory = (
           }
           const isDirectory = directoryFlag.value;
 
-          if (matchesCompiledPatterns(ignoreMatchers, normalizedRelativePath, isDirectory)) {
+          if (matchesPatterns(ignoreMatchers, normalizedRelativePath)) {
             return [];
           }
 
-          const currentEntry: ReadonlyArray<NodeGlobEntry> =
-            matchesCompiledPatterns(includeMatchers, normalizedRelativePath, isDirectory) &&
-            (isDirectory ? !options.nodir : true)
-              ? [{ isDirectory, relativePath: normalizedRelativePath }]
+          const currentEntry: ReadonlyArray<string> =
+            matchesPatterns(includeMatchers, normalizedRelativePath) && (isDirectory ? !options.nodir : true)
+              ? [normalizedRelativePath]
               : [];
 
           if (!isDirectory || entry.isSymbolicLink()) {
@@ -438,104 +407,111 @@ const scanDirectory = (
           }
 
           const children = yield* scanDirectory(
-            cwdUrl,
             absolutePath,
             normalizedRelativePath,
             includeMatchers,
             ignoreMatchers,
             options
           );
-          return [...currentEntry, ...children];
+          return A.appendAll(currentEntry, children);
         })
       )
     ),
     Effect.map(A.flatten)
   );
 
-const scanWithNodeFs = Effect.fn("scanWithNodeFs")(function* (
+const finalizePaths = (paths: ReadonlyArray<string>, cwd: string, absolute: boolean): Array<string> => {
+  const relativePaths = pipe(paths, A.dedupe, A.sort(Order.String));
+
+  return absolute
+    ? pipe(
+        relativePaths,
+        A.map((relativePath) => Path.resolve(cwd, relativePath))
+      )
+    : relativePaths;
+};
+
+const scanWithNodeFs = Effect.fn("Glob.glob.nodeFallback")(function* (
   pattern: Pattern,
   options: ResolvedGlobOptions,
-  cwdUrl: URL,
-  toAbsolute: (relativePath: string) => string
-): Effect.fn.Return<Array<string>, PlatformError.PlatformError> {
+  cwd: string
+): Effect.fn.Return<Array<string>, GlobError | PlatformError.PlatformError> {
   const patterns = toPatterns(pattern);
-  const includeMatchers = compileIncludedPatterns(patterns);
-  const ignoreMatchers = compileIgnoredPatterns(toPatterns(options.ignore));
+  const matchers = yield* Effect.try({
+    try: () => ({
+      include: compileIncludedPatterns(patterns),
+      ignore: compileIgnoredPatterns(toPatterns(options.ignore)),
+    }),
+    catch: toGlobError(pattern),
+  });
 
   const entriesPerRoot = yield* Effect.forEach(
     scanRootsForPatterns(patterns),
     Effect.fnUntraced(function* (scanRoot: string) {
-      const absoluteScanRoot = Match.value(scanRoot).pipe(
-        Match.when("", () => fileURLToPath(cwdUrl)),
-        Match.when(
-          (value) => absolutePathPattern.test(value),
-          (value) => value
-        ),
-        Match.orElse((value) => fileURLToPath(new URL(value, cwdUrl)))
-      );
+      const absoluteScanRoot = Path.resolve(cwd, scanRoot);
 
-      const rootInfo = yield* Effect.option(statSync(absoluteScanRoot));
+      const rootInfo = yield* optionOnNotFound(statSync(absoluteScanRoot));
       if (O.isNone(rootInfo) || rootInfo.value.type !== "Directory") {
         return [];
       }
 
-      return yield* scanDirectory(cwdUrl, absoluteScanRoot, scanRoot, includeMatchers, ignoreMatchers, options);
+      return yield* scanDirectory(absoluteScanRoot, scanRoot, matchers.include, matchers.ignore, options);
     })
   );
 
-  const relativePaths = pipe(
-    A.flatten(entriesPerRoot),
-    A.map((entry) => entry.relativePath),
-    A.dedupe,
-    A.sort(Order.String)
-  );
-
-  return options.absolute ? pipe(relativePaths, A.map(toAbsolute), (paths) => [...paths]) : [...relativePaths];
+  return finalizePaths(A.flatten(entriesPerRoot), cwd, options.absolute);
 });
 
-const makeGlob = Effect.fn("makeGlob")((pattern: Pattern, options?: undefined | GlobOptions) => {
+const scanWithBunGlob = Effect.fn("Glob.glob.bun")(
+  (
+    BunGlob: BunGlobConstructor,
+    pattern: Pattern,
+    options: ResolvedGlobOptions,
+    cwd: string
+  ): Effect.Effect<Array<string>, GlobError> =>
+    Effect.try({
+      try: (): Array<string> => {
+        const scanOptions: Bun.GlobScanOptions = {
+          cwd,
+          dot: options.dot,
+          onlyFiles: options.nodir,
+        };
+        const includeMatchers = compileIncludedPatterns(toPatterns(pattern));
+        const ignoreMatchers = compileIgnoredPatterns(toPatterns(options.ignore));
+        const relativePaths = pipe(
+          toPatterns(pattern),
+          (patterns) => compileGlobs(BunGlob, patterns),
+          A.flatMap((glob) => A.fromIterable(glob.scanSync(scanOptions))),
+          A.map(normalizePathSeparators),
+          A.filter((candidate) => matchesPatterns(includeMatchers, candidate)),
+          A.filter((candidate) => !matchesPatterns(ignoreMatchers, candidate))
+        );
+
+        return finalizePaths(relativePaths, cwd, options.absolute);
+      },
+      catch: toGlobError(pattern),
+    })
+);
+
+const makeGlob = Effect.fn("Glob.glob")(function* (
+  pattern: Pattern,
+  options?: GlobOptions
+): Effect.fn.Return<Array<string>, GlobError> {
   const resolvedOptions = resolveGlobOptions(options);
-  const cwdUrl = toDirectoryUrl(resolvedOptions.cwd);
-  const toAbsolute = toAbsolutePath(cwdUrl);
-  const BunGlob = getBunGlobConstructor();
-
-  if (BunGlob === undefined) {
-    return Effect.mapError(scanWithNodeFs(pattern, resolvedOptions, cwdUrl, toAbsolute), toGlobError(pattern));
-  }
-
-  return Effect.try({
-    try: (): Array<string> => {
-      const scanOptions: BunGlobScanRoot = {
-        dot: resolvedOptions.dot,
-        onlyFiles: resolvedOptions.nodir,
-      };
-
-      if (options?.cwd !== undefined) {
-        scanOptions.cwd = resolvedOptions.cwd;
-      }
-
-      const ignoreGlobs = compileGlobs(BunGlob, toPatterns(resolvedOptions.ignore));
-      const relativePaths = pipe(
-        toPatterns(pattern),
-        (patterns) => compileGlobs(BunGlob, patterns),
-        A.flatMap((glob) => A.fromIterable(glob.scanSync(scanOptions))),
-        A.map(normalizePathSeparators),
-        A.filter((candidate) => !matchesAny(ignoreGlobs, candidate)),
-        A.dedupe,
-        A.sort(Order.String)
-      );
-
-      return resolvedOptions.absolute
-        ? pipe(relativePaths, A.map(toAbsolute), (paths) => [...paths])
-        : [...relativePaths];
-    },
+  const cwd = yield* Effect.try({
+    try: () => Path.resolve(resolvedOptions.cwd),
     catch: toGlobError(pattern),
+  });
+
+  return yield* O.match(getBunGlobConstructor(), {
+    onNone: () => scanWithNodeFs(pattern, resolvedOptions, cwd).pipe(Effect.mapError(toGlobError(pattern))),
+    onSome: (BunGlob) => scanWithBunGlob(BunGlob, pattern, resolvedOptions, cwd),
   });
 });
 
 /**
  * Live `Layer` providing the {@link Glob} service backed by `Bun.Glob` when
- * available and Node's `fs.globSync` otherwise.
+ * available and a recursive Node filesystem scan with `picomatch` otherwise.
  *
  * @example
  * ```ts
@@ -550,10 +526,10 @@ const makeGlob = Effect.fn("makeGlob")((pattern: Pattern, options?: undefined | 
  *   layer
  * )
  *
- * console.log(program)
+ * Effect.runPromise(program).then(console.log)
  * ```
  *
- * @category utilities
+ * @category layers
  * @since 0.0.0
  */
 export const layer: Layer.Layer<Glob> = Layer.succeed(Glob, {
