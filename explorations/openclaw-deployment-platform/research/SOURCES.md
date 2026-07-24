@@ -36,7 +36,7 @@ citations into the openclaw clone) as they are verified. -->
 
 | Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
 |--------|-------|-----------------|------------------------|-------|-------------|
-| (pending) | config-internals source-dive citations | `openclaw/openclaw` | see `openclaw-config-internals.md` | config ownership | reference |
+| `config-internals` | Config load/write/state mechanics, writer inventory, HOLDS-WITH-CONDITIONS verdict | `openclaw/openclaw` @ `663c4fba` | ~90 `file:line` citations in [`openclaw-config-internals.md`](./openclaw-config-internals.md); 3 load-bearing ones independently re-verified (write-guard call in `src/config/io.write.ts:83`, strict Zod root in `src/config/zod-schema.root-shape.ts:35`, probe map in `src/gateway/server-http.ts:140`) | config ownership | reference (MIT upstream; facts, no vendored code) |
 
 ## 2. Upstream repositories & licenses
 
