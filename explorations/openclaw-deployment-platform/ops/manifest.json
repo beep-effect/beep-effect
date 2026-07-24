@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "openclaw-deployment-platform",
+    "title": "Effect-native OpenClaw Deployment Platform",
+    "status": "active",
+    "stage": "capture",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-24",
+    "updated": "2026-07-24"
+  }
+}
