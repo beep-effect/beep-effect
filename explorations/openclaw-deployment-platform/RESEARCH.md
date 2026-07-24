@@ -81,9 +81,54 @@ should compose these first-party surfaces rather than fight them; the open
 question remains who owns the file between deploys (source-dive gating
 decision 7).
 
+### 2026-07-24 — x.com field leg (Grok x_search)
+
+Full notes with per-post citations:
+[`research/x-com-field-notes.md`](./research/x-com-field-notes.md). Headlines:
+
+- Community config pain **verifies the mission premise**: update-cycle
+  `openclaw.json` breakage is a recurring complaint; agents editing their own
+  config is a named security risk ("if you can write the config, you can
+  disable the camera"); folklore mitigations (git-tracked config, `.last-good`
+  backups, config-set-only agent rules) are exactly what a declarative
+  external owner subsumes.
+- Deploy reality is npm+systemd quickstarts, VPS scripts, Docker, managed
+  platforms; **no meaningful TS-native IaC for OpenClaw on X** — the IaC
+  surface lives on GitHub: first-party `nix-openclaw` (sets
+  `OPENCLAW_NIX_MODE=1` immutable config) and `openclaw-ansible`, an official
+  Pulumi blog (AWS/Hetzner, cloud-init + Tailscale + ESC), community
+  Terraform/Helm/compose repos.
+- Effect-native IaC prior art: **Alchemy** (pure-Effect IaC engine, Apache-2.0,
+  endorsed by Effect's creator) as style reference; Arnaldi's abandoned 2022
+  Effect+Pulumi integration failed on Pulumi's closure serializer — a blocker
+  our command/file-resource shape never touches (proven by `infra/` today).
+
+### 2026-07-24 — source-dive first pass (Fable verification leg)
+
+Direct reads of `~/YeeBois/dev/openclaw` @ `663c4fba` ahead of the codex
+deep-dive (which lands as
+[`research/openclaw-config-internals.md`](./research/openclaw-config-internals.md)):
+
+- **First-party immutable-config mode exists.**
+  `src/config/nix-mode-write-guard.ts` throws
+  `NixModeConfigMutationError` (`OPENCLAW_NIX_MODE_CONFIG_IMMUTABLE`) on every
+  mutating config path when `OPENCLAW_NIX_MODE=1` — the error text itself
+  enumerates the guarded flows: "setup, onboarding, openclaw update, plugin
+  install/update/uninstall/enable, doctor repair/token-generation, config
+  set". `OPENCLAW_CONFIG_PATH` relocates the config file (tested with Nix
+  store paths in `src/config/config.nix-integration-u3-u5-u9.test.ts`).
+  This is the exact mechanism decision 7's full-file ownership needs —
+  maintained upstream because the first-party Nix distribution depends on it.
+- Config subsystem is large (366 files in `src/config/`) and includes
+  `includes.ts`/`includes-scan.ts` (include mechanism), `env-substitution.ts`
+  (env-var substitution with `MissingEnvVarError` — secrets can stay out of
+  the rendered file), `io.audit.ts`, `backup-rotation.ts`,
+  `future-version-guard.ts`, and `runtime-source-projection.ts`
+  ("projectConfigOntoRuntimeSourceSnapshot" — a declared-source vs runtime
+  overlay seam worth mapping precisely).
+
 <!-- Codex OSS/web landscape sweep lands here: research/oss-landscape.md -->
-<!-- Grok x.com field notes land here: research/x-com-field-notes.md -->
-<!-- OpenClaw config-internals source-dive lands here:
+<!-- Codex config-internals deep-dive lands here:
      research/openclaw-config-internals.md -->
 
 ## In-Repo Capability Inventory
