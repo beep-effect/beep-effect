@@ -5,6 +5,8 @@
  * @since 0.0.0
  */
 
+import { HttpMethod } from "@beep/schema";
+import { HttpStatus } from "@beep/schema/HttpStatus";
 import { Config, Context, Effect, Metric, Redacted } from "effect";
 import * as O from "effect/Option";
 import { Headers, HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
@@ -34,8 +36,7 @@ export const DesktopRpcSessionToken = Config.redacted(DESKTOP_RPC_SESSION_TOKEN_
  * @category auth
  * @since 0.0.0
  */
-export const rpcSessionAuthorizationHeader = (token: Redacted.Redacted<string>): string =>
-  `Bearer ${Redacted.value(token)}`;
+export const rpcSessionAuthorizationHeader = (token: Redacted.Redacted): string => `Bearer ${Redacted.value(token)}`;
 
 /**
  * Check whether HTTP headers carry the active desktop RPC session token.
@@ -43,7 +44,7 @@ export const rpcSessionAuthorizationHeader = (token: Redacted.Redacted<string>):
  * @category auth
  * @since 0.0.0
  */
-export const isAuthorizedRpcSessionHeaders = (headers: Headers.Headers, token: Redacted.Redacted<string>): boolean =>
+export const isAuthorizedRpcSessionHeaders = (headers: Headers.Headers, token: Redacted.Redacted): boolean =>
   O.contains(Headers.get(headers, "authorization"), rpcSessionAuthorizationHeader(token));
 
 /**
@@ -56,8 +57,8 @@ export const isAuthorizedRpcSessionHeaders = (headers: Headers.Headers, token: R
 export const isAuthorizedRpcSessionRequest = (
   method: string,
   headers: Headers.Headers,
-  token: Redacted.Redacted<string>
-): boolean => method === "OPTIONS" || isAuthorizedRpcSessionHeaders(headers, token);
+  token: Redacted.Redacted
+): boolean => HttpMethod.Schema.is.OPTIONS(method) || isAuthorizedRpcSessionHeaders(headers, token);
 
 /**
  * HTTP middleware requiring the active desktop RPC session token.
@@ -72,7 +73,7 @@ export const isAuthorizedRpcSessionRequest = (
  * @category auth
  * @since 0.0.0
  */
-export const requireRpcSessionToken = (token: Redacted.Redacted<string>) =>
+export const requireRpcSessionToken = (token: Redacted.Redacted) =>
   HttpMiddleware.make(
     <E, R>(
       effect: Effect.Effect<HttpServerResponse.HttpServerResponse, E, R | HttpServerRequest.HttpServerRequest>
@@ -87,7 +88,11 @@ export const requireRpcSessionToken = (token: Redacted.Redacted<string>) =>
               ? effect
               : Effect.logWarning("desktop RPC session authorization denied").pipe(
                   Effect.annotateLogs({ method: request.method, subsystem: "rpc_auth" }),
-                  Effect.as(HttpServerResponse.text("Unauthorized desktop RPC session.", { status: 401 }))
+                  Effect.as(
+                    HttpServerResponse.text("Unauthorized desktop RPC session.", {
+                      status: HttpStatus.From.Enum.Unauthorized,
+                    })
+                  )
                 )
           ),
           Effect.withSpan("desktop.rpc.authorize", { attributes })
@@ -101,7 +106,5 @@ export const requireRpcSessionToken = (token: Redacted.Redacted<string>) =>
  * @category auth
  * @since 0.0.0
  */
-export const RpcSessionAuthLayer = (
-  token: Redacted.Redacted<string>
-): Layer.Layer<never, never, HttpRouter.HttpRouter> =>
+export const RpcSessionAuthLayer = (token: Redacted.Redacted): Layer.Layer<never, never, HttpRouter.HttpRouter> =>
   HttpRouter.middleware(requireRpcSessionToken(token), { global: true });

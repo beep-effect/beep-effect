@@ -6,12 +6,12 @@
  */
 
 /**
- * export of effect/Function's dual helper for data first + data last strategies
+ * Core `effect/Function` combinators for data flow and argument-order adaptation.
  *
  * @category utilities
  * @since 0.0.0
  */
-export { dual, flow, identity, pipe } from "effect/Function";
+export { dual, flip, flow, identity, pipe } from "effect/Function";
 /**
  * Array utilities extending `effect/Array` with non-empty variants.
  *
