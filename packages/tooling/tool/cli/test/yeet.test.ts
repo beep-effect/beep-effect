@@ -48,6 +48,7 @@ import {
   runYeetFallowFeedbackForTesting,
   safeOriginBranchFromBaseForTesting,
   shouldSkipCommitForReusablePublishForTesting,
+  stageReviewedPublishIntent,
   stashUnstagedWorktreeForTesting,
   summarizePublishPathsForTesting,
   TurboPlanSnapshot,
@@ -58,6 +59,7 @@ import {
   YeetCommandError,
   YeetExecutedStep,
   YeetProofLockStateForTesting,
+  YeetPublishIntent,
   YeetStatusArtifact,
   YeetStatusRemote,
   YeetStatusSnapshot,
@@ -856,6 +858,26 @@ describe("yeet planner", () => {
       )
     ).toEqual(["src/changed.ts", "src/new.ts"]);
   });
+
+  it("restages reviewed ignored paths already in the index", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ filePath, tempContext, tmpDir }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+
+          yield* fs.writeFileString(path.join(tmpDir, ".gitignore"), "tracked.txt\n");
+          yield* runGit(tmpDir, ["add", ".gitignore"]);
+          yield* runGit(tmpDir, ["commit", "-m", "ignore tracked file"]);
+          yield* fs.writeFileString(filePath, "updated\n");
+          yield* runGit(tmpDir, ["add", "--force", "tracked.txt"]);
+
+          yield* stageReviewedPublishIntent(tempContext, YeetPublishIntent.make({ paths: ["tracked.txt"] }), false);
+
+          expect(yield* runGitStatus(tmpDir)).toBe("M  tracked.txt");
+        })
+      )
+    ));
 
   it("decodes Turbo affected query JSON into plan task metadata", () => {
     const tasks = Effect.runSync(

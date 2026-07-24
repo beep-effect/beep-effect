@@ -1059,7 +1059,7 @@ export const stageReviewedPublishIntent = Effect.fn("Yeet.stageReviewedPublishIn
   const existingPaths = yield* collectExistingPublishIntentPaths(context, intent);
   const restagePaths = publishRestagePaths(intent.paths, existingPaths);
   if (!A.isReadonlyArrayEmpty(restagePaths)) {
-    yield* runGitOutput(context.repoRoot, ["add", "--", ...restagePaths]);
+    yield* runGitOutput(context.repoRoot, ["add", "--force", "--", ...restagePaths]);
   }
   yield* validatePublishIntentStillSafe(context, intent, stagedOnly);
 
