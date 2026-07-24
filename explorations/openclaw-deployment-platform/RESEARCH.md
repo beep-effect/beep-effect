@@ -127,7 +127,47 @@ deep-dive (which lands as
   ("projectConfigOntoRuntimeSourceSnapshot" — a declared-source vs runtime
   overlay seam worth mapping precisely).
 
-<!-- Codex OSS/web landscape sweep lands here: research/oss-landscape.md -->
+### 2026-07-24 — OSS/web landscape sweep (codex leg)
+
+Full cited sweep: [`research/oss-landscape.md`](./research/oss-landscape.md).
+Headlines the synthesis relies on:
+
+- **No reusable OpenClaw Pulumi component/provider, Terraform module, or CDK
+  construct exists** — the closest implementation is
+  `pandysp/openclaw-infra` (MIT): Pulumi provisions a Hetzner host, hands off
+  to Ansible, runs the gateway as `systemd --user` behind Tailscale. Reference
+  for ordering/verification, not the target architecture.
+- **`op://` refs can stay in config as data**: OpenClaw documents runtime
+  SecretRef resolution through an `op read` exec provider
+  (docs.openclaw.ai/gateway/1password) — secret values never enter
+  `openclaw.json` or Pulumi state. Exact mechanism to be confirmed by the
+  config-internals dive.
+- **`@pulumi/command` is the right substrate; dynamic providers are not**:
+  Pulumi documents dynamic-provider limits (TS/Python only, no functional
+  `read`, serialized provider functions, no Bun) that disqualify them for
+  this Bun monorepo; a Command-backed `ComponentResource` (atomic
+  content-hash-keyed file writes → `daemon-reload` → enable/restart → health)
+  is the low-risk first slice. `loginctl enable-linger` is the always-on
+  decision to make explicit.
+- **No public Pulumi Automation API + Effect prior art found** — the Effect
+  Schema decode-before-resources boundary we already use in `infra/` is ahead
+  of the field; Pulumi's own `Config.requireObject<T>` explicitly does not
+  validate shape.
+- **Config ownership models articulated** (strict declarative / split
+  ownership via includes / seed-only): upstream's include-aware config writer
+  can update an included file without rewriting the root — the natural
+  split-ownership bridge for the dankserver migration, while greenfield takes
+  strict declarative ownership.
+- Comparable stacks: first-party `nix-openclaw` (Home Manager module,
+  immutable config; AGPL clean-room), `schemalabz/nix-openclaw` (read-only
+  managed workspace vs mutable state dirs), ClawFleet (container fleet,
+  version pinning), upstream Kustomize/Fly/Render surfaces.
+- Sweep gaps worth carrying into the oracle review: no distribution-neutral
+  externally-managed-config mode confirmed beyond `OPENCLAW_NIX_MODE=1`; the
+  complete runtime config-writer matrix is unmapped (config-internals dive
+  covers it); linger/user-manager behavior under non-interactive deploys
+  needs a live prototype.
+
 <!-- Codex config-internals deep-dive lands here:
      research/openclaw-config-internals.md -->
 
