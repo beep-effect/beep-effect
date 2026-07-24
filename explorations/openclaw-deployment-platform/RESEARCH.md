@@ -168,6 +168,39 @@ Headlines the synthesis relies on:
   covers it); linger/user-manager behavior under non-interactive deploys
   needs a live prototype.
 
+### 2026-07-24 — nix-openclaw behavioral study (clean-room; AGPL upstream)
+
+Facts observed from `~/YeeBois/dev/nix-openclaw` @ `5f849be4` (behavioral
+facts only — no code ported; AGPL-3.0 discipline per
+[`research/SOURCES.md`](./research/SOURCES.md)):
+
+- The first-party declarative distro renders the **entire** `openclaw.json`
+  from typed module options (`programs.openclaw.config` /
+  `instances.<name>.config`) into an immutable store file, exposes it at
+  `<stateDir>/openclaw.json`, and runs the gateway with
+  `OPENCLAW_CONFIG_PATH` pointing at it plus `OPENCLAW_NIX_MODE=1` in the
+  service environment (`nix/modules/home-manager/openclaw/config.nix`).
+- Under that mode, `openclaw plugins install/update/uninstall/enable/disable`
+  **fail instead of mutating `~/.openclaw`** (README, "OpenClaw Runtime
+  Plugins") — plugins and skills are wired declaratively by the distro, not
+  imperatively by the CLI. Consequence for us: the v1 proof skill must be
+  installed declaratively (rendered file wiring), not via `clawhub`/`openclaw
+  skills install` at runtime.
+- Mutable state (sessions, memory, logs) stays in the state dir beside the
+  immutable config: "All state lives in `~/.openclaw/`" (README) — i.e. the
+  config-vs-state split is **directory-level cohabitation with a file-level
+  immutability guard**, not separate roots.
+- Their CI validates every rendered config by running the real `openclaw`
+  binary against it in a sandbox (`nix/scripts/check-config-validity.mjs`,
+  `nix/checks/openclaw-config-validity.nix`) — the pattern our stack's
+  preflight should copy: render → `openclaw config validate` (or
+  equivalent) → only then install + restart.
+
+Net: the first-party declarative distro already does full-file ownership in
+production, with the exact env-var mechanism our Pulumi stack can reuse
+verbatim (two env vars on a systemd unit). This is strong evidence toward a
+HOLDS verdict for decision 7, pending the codex writer-matrix confirmation.
+
 <!-- Codex config-internals deep-dive lands here:
      research/openclaw-config-internals.md -->
 
