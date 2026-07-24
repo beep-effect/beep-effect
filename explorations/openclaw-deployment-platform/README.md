@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `capture`
+Stage: `research`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -16,9 +16,10 @@ openclaw role onto the same declarative platform.
 
 ## Next Open Question
 
-None — capture is seeded, the intent interview's decisions are pre-recorded in
-[`DECISIONS.md`](./DECISIONS.md); ready for research (config-ownership
-source-dive is the gating leg).
+Does full-file `openclaw.json` ownership hold at source level? — awaiting
+`research/openclaw-config-internals.md` (codex source-dive of the local clone)
+plus the OSS landscape sweep and x.com field notes; then synthesis + `/oracle`
+adversarial review close the research stage.
 
 ## Read This First
 
@@ -31,6 +32,10 @@ source-dive is the gating leg).
 
 ## Trail
 
+- 2026-07-24 (later): research stage opened — docs-index survey + in-repo
+  capability inventory codified into RESEARCH.md/SOURCES.md; codex landscape
+  sweep, codex config source-dive, and Grok x.com leg dispatched in the
+  background.
 - 2026-07-24: packet opened on `explore/openclaw-deployment-platform`; capture
   seeded from P0 grounding (infra style oracle, doctrine routing, dankserver
   seams); 14 decisions pre-recorded in DECISIONS.md from the completed intent

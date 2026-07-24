@@ -238,7 +238,7 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   prototype proving types/ergonomics before the packaging call
   (all-in-`@beep/identity` vs identity/rdf/ontology split).
 - [`openclaw-deployment-platform`](./openclaw-deployment-platform/README.md) —
-  Effect-native OpenClaw deployment platform (stage `capture`, opened
+  Effect-native OpenClaw deployment platform (stage `research`, opened
   2026-07-24): deploy a professional, legal-focused OpenClaw agent on the
   workstation through a Pulumi + Effect stack (extend `infra/`, new
   `packages/drivers/openclaw`), then migrate dankserver's ~4790-line Ansible
