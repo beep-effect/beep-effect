@@ -16,10 +16,10 @@ openclaw role onto the same declarative platform.
 
 ## Next Open Question
 
-Does full-file `openclaw.json` ownership hold at source level? — awaiting
-`research/openclaw-config-internals.md` (codex source-dive of the local clone)
-plus the OSS landscape sweep and x.com field notes; then synthesis + `/oracle`
-adversarial review close the research stage.
+None blocking in-stage — all four research legs are codified and the
+config-ownership verdict is HOLDS-WITH-CONDITIONS (see RESEARCH.md
+Synthesis). Remaining: the `/oracle` adversarial review over RESEARCH +
+SOURCES + draft BRIEF closes the research stage, then GATE B grilling.
 
 ## Read This First
 
@@ -32,6 +32,11 @@ adversarial review close the research stage.
 
 ## Trail
 
+- 2026-07-24 (evening): all research legs landed — codex OSS sweep
+  (oss-landscape.md), Grok x.com leg (x-com-field-notes.md), codex
+  config-internals dive w/ HOLDS-WITH-CONDITIONS verdict (spot-check
+  verified), nix-openclaw clean-room study; BRIEF skeleton drafted; 7
+  reference repos pinned in SOURCES. Next: /oracle review → GATE B.
 - 2026-07-24 (later): research stage opened — docs-index survey + in-repo
   capability inventory codified into RESEARCH.md/SOURCES.md; codex landscape
   sweep, codex config source-dive, and Grok x.com leg dispatched in the

@@ -82,10 +82,21 @@ declaratively.
 
 ## Rabbit Holes
 
-- **The runtime config-writer matrix.** Which subsystems write
-  `openclaw.json`, and what breaks when the guard refuses them (auth-profile
-  rotation? channel pairing?). The config-internals dive +
-  a live prototype answer this; do not design around guesses.
+- **The runtime config-writer matrix.** Mapped by
+  [`research/openclaw-config-internals.md`](./research/openclaw-config-internals.md):
+  there is no finite runtime-written key list (`config set`, gateway RPC, and
+  migration providers can target arbitrary schema-valid paths) — the bounded
+  thing is the writer-surface inventory. A live prototype must still confirm
+  nothing operationally essential breaks under the guard.
+- **Auth bootstrap under immutable config.** Login/paste flows write secrets
+  to per-agent SQLite AND `auth.profiles`/`auth.order` metadata to config;
+  the guard blocks the config half. The stack must render the non-secret
+  profile metadata declaratively and provision credentials out-of-band — the
+  exact ceremony needs a worked runbook.
+- **Node-not-Bun service runtime.** The launcher rejects Bun (needs
+  `node:sqlite`); the deploy chain must ensure a supported Node
+  (`>=22.22.3 <23`, `>=24.15 <25`, `>=25.9`) for the service even though repo
+  tooling is Bun.
 - **Non-interactive systemd `--user`**: linger, `XDG_RUNTIME_DIR`, DBus
   session availability when Pulumi applies from a shell that isn't the
   desktop session. AIMetrics solved this for SSH; local needs its own check.

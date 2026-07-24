@@ -201,8 +201,57 @@ production, with the exact env-var mechanism our Pulumi stack can reuse
 verbatim (two env vars on a systemd unit). This is strong evidence toward a
 HOLDS verdict for decision 7, pending the codex writer-matrix confirmation.
 
-<!-- Codex config-internals deep-dive lands here:
-     research/openclaw-config-internals.md -->
+### 2026-07-24 — config-internals deep-dive (codex leg) + verdict
+
+Full file:line-cited dive:
+[`research/openclaw-config-internals.md`](./research/openclaw-config-internals.md)
+(spot-check verified by the orchestrating session against the clone: the
+central-writer guard call, the `z.strictObject` root, and the
+`/health|/healthz|/ready|/readyz` probe map all confirmed verbatim).
+
+**VERDICT on decision 7: HOLDS-WITH-CONDITIONS.** Full-file ownership of
+`openclaw.json` works as an explicitly immutable operating mode. The six
+conditions, abridged (full text in the dive):
+
+1. Run gateway + every OpenClaw CLI/plugin process with
+   `OPENCLAW_NIX_MODE=1` — the source-provided guard on the central mutation
+   API (`assertConfigWriteAllowedInCurrentMode` inside the single
+   `writeConfigFileFromContext` writer).
+2. Render the **complete, strictly-valid** schema for the pinned version —
+   the Zod root is strict; unknown keys are fatal at load, not preserved.
+3. Every config-mutating workflow (wizards, `config set`, gateway config RPC,
+   doctor repair, update's doctor pass, plugin/channel lifecycle, extension
+   chat-command writebacks) becomes "change the Pulumi input and redeploy".
+4. Mutable state stays writable and persistent beside the config: shared
+   `state/openclaw.sqlite` (schema v5), per-agent `openclaw-agent.sqlite`
+   (v14) — credentials, device/channel pairing live there, never in the file.
+5. Auth bootstrap is the sharp edge: login/paste flows write secrets to
+   SQLite **and** `auth.profiles`/`auth.order` metadata to config — under the
+   guard the config half fails, so the stack must declaratively render the
+   non-secret profile metadata after credential provisioning.
+6. Pin the OpenClaw version together with the schema; upgrades are
+   re-render + redeploy (doctor migrations are blocked by design), and
+   `future-version-guard` protects against downgrade clobbering via
+   `meta.lastTouchedVersion`.
+
+Other stack-relevant facts: config is JSON5-read / canonical-JSON-written;
+`$include` merges at any depth with confined roots (`OPENCLAW_INCLUDE_ROOTS`)
+— and the mutation layer can write a single owned include directly, which is
+the mechanical basis for the migration's split-ownership bridge;
+`${ENV_NAME}` substitution reaches every string leaf (secrets stay out of the
+rendered file); HTTP `GET /health`+`/ready` on gateway port (default 18789)
+are the probe surface; the launcher **requires Node (rejects Bun** — it needs
+`node:sqlite`), so the service runtime is Node even though this repo tooling
+is Bun; service install uses a stable package symlink for version retargeting.
+
+## Synthesis
+
+Decision 7 resolves to: **strict declarative full-file ownership under
+`OPENCLAW_NIX_MODE=1` + `OPENCLAW_CONFIG_PATH`**, exactly the mechanism the
+first-party Nix distribution uses in production, with the six conditions
+above absorbed into the design (schema-per-pinned-version, declarative auth
+metadata, upgrade runbook). The managed-subset fallback is fully mapped (the
+dive enumerates the preserve-list) but is now the migration's contingency, not the greenfield plan.
 
 ## In-Repo Capability Inventory
 
