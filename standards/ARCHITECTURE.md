@@ -1410,7 +1410,7 @@ import { $IamUseCasesId } from "@beep/identity/packages";
 import { Context, type Effect } from "effect";
 import type * as O from "effect/Option";
 import type { Membership, MembershipId } from "@beep/iam-domain/entities/Membership";
-import type { MembershipRepositoryUnavailable } from "./Membership.errors.js";
+import type { MembershipRepositoryUnavailable } from "./Membership.errors.ts";
 
 const $I = $IamUseCasesId.create("entities/Membership/Membership.ports");
 
@@ -1676,7 +1676,7 @@ import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { AccountId } from "@beep/iam-domain/entities/Account";
 import { OrganizationId } from "@beep/iam-domain/entities/Organization";
-import { MembershipAlreadyRevoked } from "./Membership.errors.js";
+import { MembershipAlreadyRevoked } from "./Membership.errors.ts";
 
 const $I = $IamDomainId.create("entities/Membership/Membership.model");
 
@@ -1772,12 +1772,12 @@ Use-case service defines the contract in product language:
 ````ts
 import { $IamUseCasesId } from "@beep/identity/packages";
 import { Context, type Effect } from "effect";
-import type { RevokeMembershipCommand } from "./Membership.commands.js";
+import type { RevokeMembershipCommand } from "./Membership.commands.ts";
 import type {
   MembershipNotFound,
   MembershipRevocationDenied,
   MembershipRevocationFailed,
-} from "./Membership.errors.js";
+} from "./Membership.errors.ts";
 
 const $I = $IamUseCasesId.create("entities/Membership/Membership.service");
 

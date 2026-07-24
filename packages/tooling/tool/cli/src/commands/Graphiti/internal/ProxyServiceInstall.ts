@@ -9,13 +9,13 @@ import { findRepoRoot, guardLiteralArg } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
 import { Console, Effect, FileSystem, Path, pipe } from "effect";
 import * as S from "effect/Schema";
-import { QualityTaskStep } from "../../../internal/process/index.js";
-import { homeDirectory, proxyServiceConfig } from "../Graphiti.config.js";
-import { GraphitiProxyOpsError } from "../Graphiti.errors.js";
-import { GraphitiProxyServiceInstallOptions, UpstreamMcpUrl } from "../Graphiti.schemas.js";
-import { collectOptionalOutput, collectSuccessfulOutput, runInheritedStep } from "./StepExec.js";
+import { QualityTaskStep } from "../../../internal/process/index.ts";
+import { homeDirectory, proxyServiceConfig } from "../Graphiti.config.ts";
+import { GraphitiProxyOpsError } from "../Graphiti.errors.ts";
+import { GraphitiProxyServiceInstallOptions, UpstreamMcpUrl } from "../Graphiti.schemas.ts";
+import { collectOptionalOutput, collectSuccessfulOutput, runInheritedStep } from "./StepExec.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { GraphitiProxyOpsEnvironment, GraphitiRestoreConfig, ProxyServiceConfig } from "../Graphiti.schemas.js";
+import type { GraphitiProxyOpsEnvironment, GraphitiRestoreConfig, ProxyServiceConfig } from "../Graphiti.schemas.ts";
 
 /**
  * Decide whether the live proxy systemd unit should be reinstalled.

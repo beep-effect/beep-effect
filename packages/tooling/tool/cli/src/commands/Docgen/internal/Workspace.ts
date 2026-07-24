@@ -19,10 +19,10 @@ import { Effect, FileSystem, HashMap, MutableHashSet, Order, Path } from "effect
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { byRelativePathAscending, DocgenConfigDocument, DocgenWorkspacePackage } from "../Docgen.schemas.js";
+import { byRelativePathAscending, DocgenConfigDocument, DocgenWorkspacePackage } from "../Docgen.schemas.ts";
 import type { NoSuchFileError } from "@beep/repo-utils";
 import type { DocgenAliasSource } from "@beep/repo-utils/schemas/DocgenConfig";
-import type { DocgenPackageStatus, ResolveDocgenWorkspacePackageOptions } from "../Docgen.schemas.js";
+import type { DocgenPackageStatus, ResolveDocgenWorkspacePackageOptions } from "../Docgen.schemas.ts";
 
 const DOCGEN_CONFIG_FILENAME = "docgen.json" as const;
 

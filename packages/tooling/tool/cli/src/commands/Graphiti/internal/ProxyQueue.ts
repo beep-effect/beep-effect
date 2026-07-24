@@ -10,15 +10,15 @@ import { Deferred, Duration, Effect, Inspectable, Queue, Ref, Semaphore } from "
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import { HttpClient } from "effect/unstable/http";
-import { isFastMcpRequestBody, readRequestBodyBytes } from "./ProxyBody.js";
-import { settleForwardedResponse } from "./ProxyForwarder.js";
-import { addProxyHeaders, proxyErrorResponse } from "./ProxyResponses.js";
-import { ProxyQueueStats } from "./ProxySchemas.js";
-import { GraphitiProxyQueueService } from "./ProxyServices.js";
+import { isFastMcpRequestBody, readRequestBodyBytes } from "./ProxyBody.ts";
+import { settleForwardedResponse } from "./ProxyForwarder.ts";
+import { addProxyHeaders, proxyErrorResponse } from "./ProxyResponses.ts";
+import { ProxyQueueStats } from "./ProxySchemas.ts";
+import { GraphitiProxyQueueService } from "./ProxyServices.ts";
 import type { Scope } from "effect";
 import type { HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
-import type { GraphitiProxyConfig } from "./ProxyConfig.js";
-import type { GraphitiProxyForwarderService } from "./ProxyServices.js";
+import type { GraphitiProxyConfig } from "./ProxyConfig.ts";
+import type { GraphitiProxyForwarderService } from "./ProxyServices.ts";
 
 type BufferedProxyRequest = {
   readonly bodyBytes: O.Option<Uint8Array>;

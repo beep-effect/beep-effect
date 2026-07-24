@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 
-import * as ProviderInstance from "./entities/ProviderInstance/index.js";
+import * as ProviderInstance from "./entities/ProviderInstance/index.ts";
 
 type DbSchemaShape = {
   readonly providerInstance: typeof ProviderInstance.providerInstanceTable;

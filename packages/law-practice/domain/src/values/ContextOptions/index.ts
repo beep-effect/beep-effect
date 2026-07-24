@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ContextOptions.model.js";
+export * from "./ContextOptions.model.ts";

@@ -6,8 +6,8 @@
  */
 
 import { Layer } from "effect";
-import { OntologyConfig } from "./ServerConfig.js";
-import type { OntologyServerConfig } from "./ServerConfig.js";
+import { OntologyConfig } from "./ServerConfig.ts";
+import type { OntologyServerConfig } from "./ServerConfig.ts";
 
 /**
  * Build a static ontology configuration layer for tests.

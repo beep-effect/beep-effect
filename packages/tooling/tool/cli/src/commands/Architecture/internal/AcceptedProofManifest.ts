@@ -11,7 +11,7 @@ import { A } from "@beep/utils";
 import { pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { ArchitecturePlanStage, ArchitectureSliceRole, ArchitectureWriterKind } from "../Architecture.schemas.js";
+import { ArchitecturePlanStage, ArchitectureSliceRole, ArchitectureWriterKind } from "../Architecture.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Architecture/internal/AcceptedProofManifest");
 

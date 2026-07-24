@@ -11,7 +11,7 @@
 import * as Md from "@beep/md/Md.model";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import { AssistantBlock, AssistantHeadingTag, AssistantListType, InlineNode } from "./AssistantContent.model.js";
+import { AssistantBlock, AssistantHeadingTag, AssistantListType, InlineNode } from "./AssistantContent.model.ts";
 
 /**
  * Lift a single {@link InlineNode} into a `@beep/md` inline node.

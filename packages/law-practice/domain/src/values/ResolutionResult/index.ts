@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ResolutionResult.model.js";
+export * from "./ResolutionResult.model.ts";

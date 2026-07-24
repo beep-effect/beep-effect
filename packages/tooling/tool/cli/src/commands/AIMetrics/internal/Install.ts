@@ -11,4 +11,4 @@ export {
   makeInstallDoctorProgram,
   makeInstallPlanProgram,
   makeInstallPreviewProgram,
-} from "./Programs.js";
+} from "./Programs.ts";

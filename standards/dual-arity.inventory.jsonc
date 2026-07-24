@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-17",
+  "generatedOn": "2026-07-18",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "enforcedRoots": [
     "packages/tooling/tool/cli/src/commands/Laws/DualArity.ts",
@@ -100,7 +100,7 @@
       "owner": "@beep/professional-desktop",
       "reason": "makeChatOperations is a service factory that binds already-acquired ThreadStore/AgentTurnKernel/UsageRecordSink services into an operations record; it has no pipeable data subject, so a data-last/data-first dual is meaningless. It is only ever called data-first once during ChatRpcs layer construction.",
       "issue": "PROFESSIONAL-DESKTOP-CHAT-OPERATIONS-FACTORY",
-      "line": 672,
+      "line": 775,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual"]
@@ -417,6 +417,32 @@
       "column": 14,
       "parameterCount": 4,
       "diagnostics": ["too-many-positional-params"]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/DropCompiler.ts",
+      "qualifiedName": "relativePositionOf",
+      "kind": "exported-const-function",
+      "status": "exception",
+      "owner": "@beep/dock-react",
+      "reason": "Internal pointer-normalization helper taking the (state, event) runtime handles of the drag pipeline; a dual wrapper would change no call site and the parameters are not data-last pipeline values.",
+      "issue": "DOCK-REACT-DROP-COMPILER-GEOMETRY",
+      "line": 47,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/foundation/ui-system/dock-react/src/internal/DropCompiler.ts",
+      "qualifiedName": "preFloatContextFor",
+      "kind": "exported-const-function",
+      "status": "exception",
+      "owner": "@beep/dock-react",
+      "reason": "Internal pre-float placement lookup taking (workspace, groupId) positional arguments in the float/dock pipeline; a dual wrapper would change no call site and the parameters are not data-last pipeline values.",
+      "issue": "DOCK-REACT-DROP-COMPILER-GEOMETRY",
+      "line": 292,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
     },
     {
       "file": "packages/foundation/ui-system/dock-react/src/internal/DropCompiler.ts",

@@ -17,8 +17,8 @@ import { O, P } from "@beep/utils";
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { Graph3DDriverError } from "./Graph3D.errors.js";
-import { Graph3DProjection } from "./Graph3D.projection.js";
+import { Graph3DDriverError } from "./Graph3D.errors.ts";
+import { Graph3DProjection } from "./Graph3D.projection.ts";
 import type * as THREE from "three";
 
 const $I = $Graph3dId.create("Graph3D.renderer");

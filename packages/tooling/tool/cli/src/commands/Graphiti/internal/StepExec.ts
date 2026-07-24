@@ -7,10 +7,10 @@
 
 import { Str, thunkFalse } from "@beep/utils";
 import { Console, Effect, FileSystem } from "effect";
-import { formatCommandLine, QualityTaskStep, runCaptured, runToExit } from "../../../internal/process/index.js";
-import { GraphitiProxyOpsError } from "../Graphiti.errors.js";
+import { formatCommandLine, QualityTaskStep, runCaptured, runToExit } from "../../../internal/process/index.ts";
+import { GraphitiProxyOpsError } from "../Graphiti.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { ProxyEnsureConfig } from "../Graphiti.schemas.js";
+import type { ProxyEnsureConfig } from "../Graphiti.schemas.ts";
 
 /**
  * Render a command and argv exactly as the Graphiti progress messages expect.

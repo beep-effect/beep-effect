@@ -84,16 +84,18 @@ describe("tailscale", () => {
     })
   );
 
-  it.effect("parses MagicDNS names from tailscale status", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "parses MagicDNS names from tailscale status",
+    Effect.fnUntraced(function* () {
       const dnsName = yield* parseTailscaleMagicDnsName(tailscaleStatusJson);
       assert.deepEqual(dnsName, O.some("desktop.tail.ts.net"));
       assert.deepEqual(yield* parseTailscaleMagicDnsName("{}"), O.none());
     })
   );
 
-  it.effect("parses status facts", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "parses status facts",
+    Effect.fnUntraced(function* () {
       const status = yield* parseTailscaleStatus(tailscaleStatusJson);
       assert.deepEqual(
         status,
@@ -105,8 +107,9 @@ describe("tailscale", () => {
     })
   );
 
-  it.effect("preserves status decoding failures without exposing cause text", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "preserves status decoding failures without exposing cause text",
+    Effect.fnUntraced(function* () {
       const error = yield* parseTailscaleStatus("{not-json").pipe(Effect.flip);
 
       assert.instanceOf(error, TailscaleStatusParseError);
@@ -116,8 +119,9 @@ describe("tailscale", () => {
     })
   );
 
-  it.effect("rejects malformed MagicDNS status fields", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects malformed MagicDNS status fields",
+    Effect.fnUntraced(function* () {
       const error = yield* parseTailscaleStatus('{"Self":{"DNSName":42}}').pipe(Effect.flip);
 
       assert.instanceOf(error, TailscaleStatusParseError);
@@ -125,8 +129,9 @@ describe("tailscale", () => {
     })
   );
 
-  it.effect("rejects malformed Tailscale IP status fields", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects malformed Tailscale IP status fields",
+    Effect.fnUntraced(function* () {
       const error = yield* parseTailscaleStatus('{"Self":{"TailscaleIPs":["100.100.100.100",42]}}').pipe(Effect.flip);
 
       assert.instanceOf(error, TailscaleStatusParseError);
@@ -153,8 +158,9 @@ describe("tailscale", () => {
       };
     })
   )("with a successful tailscale status process", (it) => {
-    it.effect("reads tailscale status through the process spawner service", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "reads tailscale status through the process spawner service",
+      Effect.fnUntraced(function* () {
         const status = yield* readTailscaleStatus;
         assert.deepEqual(
           status,
@@ -180,8 +186,9 @@ describe("tailscale", () => {
   );
 
   layer(SpawnFailureLayer)("with a failing tailscale process spawn", (it) => {
-    it.effect("preserves tailscale spawn failures as causes", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "preserves tailscale spawn failures as causes",
+      Effect.fnUntraced(function* () {
         const error = yield* Effect.flip(readTailscaleStatus);
 
         assert.instanceOf(error, TailscaleCommandSpawnError);
@@ -201,8 +208,9 @@ describe("tailscale", () => {
       stderr: "not logged in tskey-auth-secret-token-value",
     }))
   )("with a nonzero tailscale status exit", (it) => {
-    it.effect("keeps nonzero exit diagnostics structured", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "keeps nonzero exit diagnostics structured",
+      Effect.fnUntraced(function* () {
         const error = yield* Effect.flip(readTailscaleStatus);
 
         assert.instanceOf(error, TailscaleCommandExitError);
@@ -229,8 +237,9 @@ describe("tailscale", () => {
   );
 
   layer(StatusTimeoutLayer)("with a non-terminating tailscale status process", (it) => {
-    it.effect("times out tailscale status through TestClock", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "times out tailscale status through TestClock",
+      Effect.fnUntraced(function* () {
         const fiber = yield* Effect.flip(readTailscaleStatus).pipe(Effect.forkScoped);
         yield* Effect.yieldNow;
         yield* TestClock.adjust(TAILSCALE_STATUS_TIMEOUT);
@@ -265,8 +274,9 @@ describe("tailscale", () => {
       stderr: "serve permission denied tskey-auth-secret-token-value",
     }))
   )("with a nonzero tailscale serve exit", (it) => {
-    it.effect("retains tailscale serve exit diagnostics", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "retains tailscale serve exit diagnostics",
+      Effect.fnUntraced(function* () {
         const error = yield* ensureTailscaleServe({ localPort: 13773, servePort: 8443 }).pipe(Effect.flip);
 
         assert.instanceOf(error, TailscaleCommandExitError);
@@ -291,8 +301,9 @@ describe("tailscale", () => {
       return {};
     })
   )("with a successful tailscale serve disable process", (it) => {
-    it.effect("disables tailscale serve through the process spawner service", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "disables tailscale serve through the process spawner service",
+      Effect.fnUntraced(function* () {
         yield* disableTailscaleServe({ servePort: 8443 });
         assert.deepEqual(commands, [{ command: "tailscale", args: ["serve", "--https=8443", "off"] }]);
       })

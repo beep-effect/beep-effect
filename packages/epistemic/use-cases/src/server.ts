@@ -20,7 +20,7 @@
  * @category services
  * @since 0.0.0
  */
-export * as ClaimGate from "./ClaimGate/index.js";
+export * as ClaimGate from "./ClaimGate/index.ts";
 /**
  * Claim lifecycle transition service contract exports.
  *
@@ -35,4 +35,4 @@ export * as ClaimGate from "./ClaimGate/index.js";
  * @category services
  * @since 0.0.0
  */
-export * as ClaimLifecycle from "./ClaimLifecycle/index.js";
+export * as ClaimLifecycle from "./ClaimLifecycle/index.ts";

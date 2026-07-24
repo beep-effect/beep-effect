@@ -11,7 +11,7 @@ import { Context, Layer } from "effect";
 import * as O from "effect/Option";
 import { Atom, AtomRpc } from "effect/unstable/reactivity";
 import { RpcClient } from "effect/unstable/rpc";
-import { chatProtocolLayerAtom } from "./Chat.atoms.js";
+import { chatProtocolLayerAtom } from "./Chat.atoms.ts";
 
 const $I = $AgentsClientId.create("ProviderInstance.service");
 

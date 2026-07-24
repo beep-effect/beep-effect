@@ -14,8 +14,8 @@ import { A } from "@beep/utils";
 import { Layer, Stream } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { AgentTurnKernel } from "./AssistantTurn.kernel.js";
-import type { IndexedBlock, TurnHistoryItem } from "./AssistantTurn.contracts.js";
+import { AgentTurnKernel } from "./AssistantTurn.kernel.ts";
+import type { IndexedBlock, TurnHistoryItem } from "./AssistantTurn.contracts.ts";
 
 const decodeBlock = S.decodeUnknownSync(AssistantBlock);
 

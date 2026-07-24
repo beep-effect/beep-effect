@@ -7,7 +7,7 @@
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
-import { EpistemicFixtureKey } from "../EpistemicFixtureKey/index.js";
+import { EpistemicFixtureKey } from "../EpistemicFixtureKey/index.ts";
 
 const $I = $EpistemicDomainId.create("values/ClaimProjection/ClaimProjectionView.model");
 

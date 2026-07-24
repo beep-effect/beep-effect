@@ -23,7 +23,7 @@ import {
   triggerVaultSyncAtom,
   vaultSyncConflictsAtom,
   vaultSyncStatusAtom,
-} from "./Sync.atoms.js";
+} from "./Sync.atoms.ts";
 import type { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
 import type { VaultSyncStatus } from "@beep/documents-use-cases/public";
 import type { JSX } from "react";

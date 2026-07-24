@@ -20,11 +20,11 @@ export {
   DmsMirrorFixtureNode,
   DmsMirrorFixtureVerb,
   makeDmsMirrorFixture,
-} from "./aggregates/Sync/DmsMirrorFixture.js";
+} from "./aggregates/Sync/DmsMirrorFixture.ts";
 /**
  * Deterministic documents server test layers.
  *
  * @category testing
  * @since 0.0.0
  */
-export { DocumentsServerLive as DocumentsServerTest, DocumentsSyncFixtureLive as DocumentsSyncTest } from "./Layer.js";
+export { DocumentsServerLive as DocumentsServerTest, DocumentsSyncFixtureLive as DocumentsSyncTest } from "./Layer.ts";

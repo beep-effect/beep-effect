@@ -45,8 +45,9 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, n
 };
 
 describe("dispatchWithTierGate", () => {
-  it.effect("refuses fail-closed as a value for an unapproved destructive tool call", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "refuses fail-closed as a value for an unapproved destructive tool call",
+    Effect.fnUntraced(function* () {
       const gate = fromApprovedToolsPolicy({ approvedTools: [] });
       const result = yield* dispatchWithTierGate(
         { tool: writeTool, toolCallId: O.some("call-1") },
@@ -67,27 +68,27 @@ describe("dispatchWithTierGate", () => {
 
   it.effect(
     "dispatches an approved destructive tool call and produces both the handler result and a schema-valid audit record",
-    () =>
-      Effect.gen(function* () {
-        const gate = fromApprovedToolsPolicy({ approvedTools: ["delete_document"] });
-        const result = yield* dispatchWithTierGate(
-          { tool: writeTool, toolCallId: O.none() },
-          Effect.succeed("deleted")
-        ).pipe(Effect.provideService(TierGate, TierGate.of(gate)));
+    Effect.fnUntraced(function* () {
+      const gate = fromApprovedToolsPolicy({ approvedTools: ["delete_document"] });
+      const result = yield* dispatchWithTierGate(
+        { tool: writeTool, toolCallId: O.none() },
+        Effect.succeed("deleted")
+      ).pipe(Effect.provideService(TierGate, TierGate.of(gate)));
 
-        assert.strictEqual(result._tag, "Dispatched");
-        if (result._tag === "Dispatched") {
-          assert.strictEqual(result.value, "deleted");
-          assert.isTrue(TierGateAuditRecord.is(result.audit));
-          assert.strictEqual(result.audit.outcome, "approved");
-          assert.strictEqual(result.audit.tool, "delete_document");
-          assert.isTrue(result.audit.destructive);
-        }
-      })
+      assert.strictEqual(result._tag, "Dispatched");
+      if (result._tag === "Dispatched") {
+        assert.strictEqual(result.value, "deleted");
+        assert.isTrue(TierGateAuditRecord.is(result.audit));
+        assert.strictEqual(result.audit.outcome, "approved");
+        assert.strictEqual(result.audit.tool, "delete_document");
+        assert.isTrue(result.audit.destructive);
+      }
+    })
   );
 
-  it.effect("dispatches a read-only tool call without requiring approval and still audits it", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "dispatches a read-only tool call without requiring approval and still audits it",
+    Effect.fnUntraced(function* () {
       const gate = fromApprovedToolsPolicy({ approvedTools: [] });
       const result = yield* dispatchWithTierGate(
         { tool: readTool, toolCallId: O.none() },
@@ -103,8 +104,9 @@ describe("dispatchWithTierGate", () => {
     })
   );
 
-  it.effect("refuses a non-destructive write without explicit read-only approval", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "refuses a non-destructive write without explicit read-only approval",
+    Effect.fnUntraced(function* () {
       const gate = fromApprovedToolsPolicy({ approvedTools: [] });
       const result = yield* dispatchWithTierGate(
         { tool: nonReadOnlyWriteTool, toolCallId: O.none() },
@@ -122,8 +124,9 @@ describe("dispatchWithTierGate", () => {
     })
   );
 
-  it.effect("refuses an unannotated tool fail-closed as a value, never a throw", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "refuses an unannotated tool fail-closed as a value, never a throw",
+    Effect.fnUntraced(function* () {
       const gate = fromApprovedToolsPolicy({ approvedTools: [] });
       const result = yield* dispatchWithTierGate(
         { tool: unannotatedTool, toolCallId: O.none() },

@@ -7,11 +7,11 @@
  */
 
 import { Effect } from "effect";
-import { ArchitectureLabMigrationTarget } from "./migrations/ArchitectureLab.js";
-import { DocumentsSyncMigrationTarget } from "./migrations/DocumentsSync.js";
-import { EpistemicUsageMigrationTarget } from "./migrations/EpistemicUsage.js";
-import { WorkspaceThreadMigrationTarget } from "./migrations/WorkspaceThread.js";
-import type { DbAdminMigrationTarget } from "./migrations/ArchitectureLab.js";
+import { ArchitectureLabMigrationTarget } from "./migrations/ArchitectureLab.ts";
+import { DocumentsSyncMigrationTarget } from "./migrations/DocumentsSync.ts";
+import { EpistemicUsageMigrationTarget } from "./migrations/EpistemicUsage.ts";
+import { WorkspaceThreadMigrationTarget } from "./migrations/WorkspaceThread.ts";
+import type { DbAdminMigrationTarget } from "./migrations/ArchitectureLab.ts";
 
 /**
  * Architecture lab migration target export.

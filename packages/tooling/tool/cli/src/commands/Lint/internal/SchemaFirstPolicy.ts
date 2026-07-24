@@ -13,7 +13,7 @@ import type {
   SchemaCrispeningFamily,
   SchemaCrispeningPolicyDocument,
   SchemaFirstInventoryEntry,
-} from "../Lint.schemas.js";
+} from "../Lint.schemas.ts";
 
 const DEFAULT_MISSING_ENTRY_REMEDIATION =
   "Run bun run beep lint schema-first --write after reviewing the finding, or migrate the symbol to an annotated schema.";

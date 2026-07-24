@@ -6,11 +6,11 @@
  * @since 0.0.0
  */
 
-export * from "./LegalClient.model.js";
+export * from "./LegalClient.model.ts";
 /**
  * Legal client value-object schemas re-exported for this entity surface.
  *
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./LegalClient.values.js";
+export * from "./LegalClient.values.ts";

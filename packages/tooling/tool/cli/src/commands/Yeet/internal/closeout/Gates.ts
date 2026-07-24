@@ -9,13 +9,13 @@ import { O } from "@beep/utils";
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
 import * as Str from "effect/String";
-import { normalizedTokens } from "../../../../internal/cli/Flags.js";
-import { GhActor, GhComment } from "../../../../internal/github/index.js";
-import { QualityIssue, QualityIssueRouting } from "../../Yeet.schemas.js";
-import { PrCloseoutGateState } from "./Closeout.schemas.js";
-import { authorLogin, botAuthoredReviewThreadCount, botCommentCount } from "./GreptileSignal.js";
-import type { GreptileSummary, PrCloseoutOptions } from "./Closeout.schemas.js";
-import type { GhReviewThread } from "./Gh.schemas.js";
+import { normalizedTokens } from "../../../../internal/cli/Flags.ts";
+import { GhActor, GhComment } from "../../../../internal/github/index.ts";
+import { QualityIssue, QualityIssueRouting } from "../../Yeet.schemas.ts";
+import { PrCloseoutGateState } from "./Closeout.schemas.ts";
+import { authorLogin, botAuthoredReviewThreadCount, botCommentCount } from "./GreptileSignal.ts";
+import type { GreptileSummary, PrCloseoutOptions } from "./Closeout.schemas.ts";
+import type { GhReviewThread } from "./Gh.schemas.ts";
 
 type GreptileSummaryCommentInput = {
   readonly authorLogin: string;

@@ -24,7 +24,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node, Project } from "ts-morph";
-import { NoNativeRuntimeRulesExecutionError } from "./Laws.errors.js";
+import { NoNativeRuntimeRulesExecutionError } from "./Laws.errors.ts";
 import type {
   BinaryExpression,
   CallExpression,

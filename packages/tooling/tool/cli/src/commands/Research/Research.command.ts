@@ -11,10 +11,10 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import { installResearchTimers } from "./internal/Timers.js";
-import { resolveVaultRoot } from "./internal/Vault.js";
-import { ResearchCommandError } from "./Research.errors.js";
-import { printResearchIndex } from "./Research.render.js";
+import { installResearchTimers } from "./internal/Timers.ts";
+import { resolveVaultRoot } from "./internal/Vault.ts";
+import { ResearchCommandError } from "./Research.errors.ts";
+import { printResearchIndex } from "./Research.render.ts";
 import {
   ResearchCaptureOptions,
   ResearchCognifyOptions,
@@ -24,7 +24,7 @@ import {
   ResearchNotionPullOptions,
   ResearchRepoCardOptions,
   ResearchStatusOptions,
-} from "./Research.schemas.js";
+} from "./Research.schemas.ts";
 import {
   captureResearchUrl,
   cognifyResearchCards,
@@ -35,7 +35,7 @@ import {
   siftResearchHistory,
   writeResearchDigest,
   writeResearchRepoCards,
-} from "./Research.service.js";
+} from "./Research.service.ts";
 
 /** @since 0.0.0 */
 const vaultFlag = Flag.directory("vault", { mustExist: true }).pipe(

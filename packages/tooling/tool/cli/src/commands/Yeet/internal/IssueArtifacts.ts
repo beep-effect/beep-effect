@@ -8,17 +8,17 @@
 import { Console, Effect, FileSystem, Path, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import { encodeCommandJson } from "../../../internal/cli/Json.js";
-import { executeRepoPlanStepStreaming } from "../../../internal/repo-run/index.js";
-import { YeetCommandError } from "../Yeet.errors.js";
-import { renderPackageQualityPacketMarkdown } from "../Yeet.render.js";
-import { YeetRunResult } from "../Yeet.schemas.js";
-import { artifactDirForContext, safeArtifactName } from "./ArtifactPaths.js";
-import { executeHeadInstallPreflight, HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.js";
-import { buildQualityIssueIndex, qualityIssuesFromStepResult } from "./QualityIssueIndex.js";
+import { encodeCommandJson } from "../../../internal/cli/Json.ts";
+import { executeRepoPlanStepStreaming } from "../../../internal/repo-run/index.ts";
+import { YeetCommandError } from "../Yeet.errors.ts";
+import { renderPackageQualityPacketMarkdown } from "../Yeet.render.ts";
+import { YeetRunResult } from "../Yeet.schemas.ts";
+import { artifactDirForContext, safeArtifactName } from "./ArtifactPaths.ts";
+import { executeHeadInstallPreflight, HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
+import { buildQualityIssueIndex, qualityIssuesFromStepResult } from "./QualityIssueIndex.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { RepoPlanStep, RepoRunContext, RepoStepRunResult } from "../../../internal/repo-run/index.js";
-import type { PackageQualityReport, QualityIssue, QualityIssueIndex } from "../Yeet.schemas.js";
+import type { RepoPlanStep, RepoRunContext, RepoStepRunResult } from "../../../internal/repo-run/index.ts";
+import type { PackageQualityReport, QualityIssue, QualityIssueIndex } from "../Yeet.schemas.ts";
 
 const commandFailure = (result: RepoStepRunResult, message: string): YeetCommandError =>
   YeetCommandError.make({

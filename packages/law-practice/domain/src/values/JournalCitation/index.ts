@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./JournalCitation.model.js";
+export * from "./JournalCitation.model.ts";

@@ -16,10 +16,10 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { NoSuchFileError } from "../errors/index.js";
-import { jsonStringifyPretty } from "../JsonUtils.js";
+import { NoSuchFileError } from "../errors/index.ts";
+import { jsonStringifyPretty } from "../JsonUtils.ts";
 import type { Exit } from "effect";
-import type { DomainError } from "../errors/index.js";
+import type { DomainError } from "../errors/index.ts";
 
 const $I = $RepoUtilsId.create("schemas/PackageJson");
 

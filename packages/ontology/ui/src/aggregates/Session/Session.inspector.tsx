@@ -29,7 +29,7 @@ import { NativeSelect, NativeSelectOption } from "@beep/ui/components/native-sel
 import { A, O, Str } from "@beep/utils";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Match } from "effect";
-import { iriFieldValid, valueFromEvent } from "./Session.workbench.shared.js";
+import { iriFieldValid, valueFromEvent } from "./Session.workbench.shared.ts";
 import type { OntologyResourceSummary } from "@beep/ontology-use-cases/aggregates/Session";
 import type { JSX } from "react";
 

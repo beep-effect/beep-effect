@@ -10,11 +10,11 @@ import { TSMorphService } from "@beep/repo-utils/TSMorph/index";
 import { A } from "@beep/utils";
 import { Effect, HashMap, MutableHashSet, Path, pipe } from "effect";
 import * as O from "effect/Option";
-import { todayYmd } from "../../internal/cli/Timing.js";
-import { diffMembership } from "../../internal/ratchet/index.js";
-import { DualArityAnalysis } from "./internal/DualArity.analysis.js";
-import { DualArityInventory } from "./internal/DualArity.inventory.js";
-import { DualArityRender } from "./internal/DualArity.render.js";
+import { todayYmd } from "../../internal/cli/Timing.ts";
+import { diffMembership } from "../../internal/ratchet/index.ts";
+import { DualArityAnalysis } from "./internal/DualArity.analysis.ts";
+import { DualArityInventory } from "./internal/DualArity.inventory.ts";
+import { DualArityRender } from "./internal/DualArity.render.ts";
 import {
   DualArityEnforcedRoots,
   DualArityIncludedGlobs,
@@ -25,8 +25,8 @@ import {
   dualArityEntryOrder,
   makeDualArityEntryKey,
   sortDualArityEntries,
-} from "./Laws.schemas.js";
-import type { DualArityRulesOptions } from "./Laws.schemas.js";
+} from "./Laws.schemas.ts";
+import type { DualArityRulesOptions } from "./Laws.schemas.ts";
 
 /**
  * Enforced root paths for strict dual-arity checks.
@@ -230,7 +230,7 @@ export {
   encodeDualArityInventoryDocument,
   makeDualArityEntryKey,
   sortDualArityEntries,
-} from "./Laws.schemas.js";
+} from "./Laws.schemas.ts";
 
 type DualArityScanResult = Readonly<{
   readonly document: DualArityInventoryDocument;

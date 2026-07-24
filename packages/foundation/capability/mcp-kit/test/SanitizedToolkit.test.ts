@@ -82,8 +82,9 @@ const refFullLayer = Layer.mergeAll(McpServer.McpServer.layer, refRegistrationLa
 
 describe("sanitizedToolkit", () => {
   layer(fullLayer)("with the fixture toolkit registered via sanitizedToolkit", (it) => {
-    it.effect("suppresses raw tool parameters from reaching span attributes on real McpServer dispatch", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "suppresses raw tool parameters from reaching span attributes on real McpServer dispatch",
+      Effect.fnUntraced(function* () {
         const { captured, tracer } = makeRecordingTracer();
         const server = yield* McpServer.McpServer;
 
@@ -106,8 +107,9 @@ describe("sanitizedToolkit", () => {
       })
     );
 
-    it.effect("still dispatches successfully and preserves the tool's real result", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "still dispatches successfully and preserves the tool's real result",
+      Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
         const result = yield* server.callTool({ name: "fixture_tool", arguments: { secret: "value" } });
 
@@ -118,8 +120,9 @@ describe("sanitizedToolkit", () => {
       })
     );
 
-    it.effect("keeps typed failures other than api_key_required classified as tool errors", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "keeps typed failures other than api_key_required classified as tool errors",
+      Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
         const result = yield* server.callTool({ name: "expected_failure_tool", arguments: {} });
         const failure = yield* S.decodeUnknownEffect(ExpectedFixtureFailure)(result.structuredContent);
@@ -130,8 +133,9 @@ describe("sanitizedToolkit", () => {
       })
     );
 
-    it.effect("does not expose schema stacks or local paths in boundary error text", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "does not expose schema stacks or local paths in boundary error text",
+      Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
         const result = yield* server.callTool({ name: "fixture_tool", arguments: { secret: 1 } });
         const [first] = result.content;
@@ -147,8 +151,9 @@ describe("sanitizedToolkit", () => {
   });
 
   layer(refFullLayer)("with a named schema parameter toolkit registered via sanitizedToolkit", (it) => {
-    it.effect("adds a top-level object type to ref-backed input schemas for strict MCP clients", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "adds a top-level object type to ref-backed input schemas for strict MCP clients",
+      Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
         const registered = server.tools.find(({ tool }) => tool.name === "ref_tool");
 

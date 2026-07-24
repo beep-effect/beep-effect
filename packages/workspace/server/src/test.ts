@@ -14,7 +14,7 @@ import {
   ThreadEntityInput,
   TurnEntityInput,
 } from "./aggregates/Thread/ThreadStore.repo.internal.ts";
-import { WorkspaceVaultStoreInMemoryLayer } from "./aggregates/Workspace/index.js";
+import { WorkspaceVaultStoreInMemoryLayer } from "./aggregates/Workspace/index.ts";
 
 /**
  * In-memory workspace server layer for tests.

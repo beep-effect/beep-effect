@@ -26,7 +26,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runToExit } from "../process/StepExec.js";
+import { runToExit } from "../process/StepExec.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("internal/cli/EnvConfig");

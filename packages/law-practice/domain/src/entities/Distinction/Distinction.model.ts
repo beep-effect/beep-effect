@@ -10,7 +10,7 @@ import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { ClaimLifecycle } from "@beep/shared-domain/values/ClaimLifecycle";
-import { LawPracticeFixtureKey } from "../LawPracticeEntity.fields.js";
+import { LawPracticeFixtureKey } from "../LawPracticeEntity.fields.ts";
 import { DistinctionDetail } from "./Distinction.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/Distinction/Distinction.model");

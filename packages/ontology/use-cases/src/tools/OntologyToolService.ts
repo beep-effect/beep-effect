@@ -38,7 +38,7 @@ import {
   SaveOntologyFileCommand,
   SessionUseCases,
   searchOntologyResources,
-} from "../aggregates/Session/index.js";
+} from "../aggregates/Session/index.ts";
 import {
   CapabilityMetadataResponse,
   ExportProvenanceResponse,
@@ -58,7 +58,7 @@ import {
   RepairOntologyResponse,
   SnapshotDescribeResponse,
   ValidateOntologyResponse,
-} from "./OntologyToolkit.js";
+} from "./OntologyToolkit.ts";
 import type { OntologyChangeActor, Session, SessionChangeApplication } from "@beep/ontology-domain/aggregates/Session";
 import type {
   CapabilityMetadataRequest,
@@ -71,7 +71,7 @@ import type {
   RepairOntologyRequest,
   SnapshotDescribeRequest,
   ValidateOntologyRequest,
-} from "./OntologyToolkit.js";
+} from "./OntologyToolkit.ts";
 
 const $I = $OntologyUseCasesId.create("tools/OntologyToolService");
 const fingerprintEquivalence = S.toEquivalence(OntologyFingerprint);

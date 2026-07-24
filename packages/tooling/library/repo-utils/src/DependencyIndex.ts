@@ -11,13 +11,13 @@
 import { thunkEffectSucceedNull } from "@beep/utils";
 import { Effect, HashMap, HashSet } from "effect";
 import * as O from "effect/Option";
-import { extractWorkspaceDependencies } from "./Dependencies.js";
-import { DomainError } from "./errors/index.js";
-import { FsUtils } from "./FsUtils.js";
-import { decodePackageJsonEffect } from "./schemas/PackageJson.js";
-import { resolveWorkspaceDirs } from "./Workspaces.js";
-import type { NoSuchFileError } from "./errors/index.js";
-import type { WorkspaceDeps } from "./schemas/WorkspaceDeps.js";
+import { extractWorkspaceDependencies } from "./Dependencies.ts";
+import { DomainError } from "./errors/index.ts";
+import { FsUtils } from "./FsUtils.ts";
+import { decodePackageJsonEffect } from "./schemas/PackageJson.ts";
+import { resolveWorkspaceDirs } from "./Workspaces.ts";
+import type { NoSuchFileError } from "./errors/index.ts";
+import type { WorkspaceDeps } from "./schemas/WorkspaceDeps.ts";
 
 /**
  * The root package identifier used in the returned HashMap.

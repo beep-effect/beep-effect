@@ -13,8 +13,8 @@ import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Console, Effect } from "effect";
 import { Command, Flag } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { aggregateGeneratedDocs } from "../Docgen/internal/Operations.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { aggregateGeneratedDocs } from "../Docgen/internal/Operations.ts";
 
 const packageFlag = Flag.string("package").pipe(
   Flag.withAlias("p"),

@@ -8,11 +8,11 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
-import { RunMode } from "../../internal/cli/RunMode.js";
+import { RunMode } from "../../internal/cli/RunMode.ts";
 import type { Crypto, Effect, JsonPatch } from "effect";
 import type { HttpClient } from "effect/unstable/http";
-import type { RunMode as RunModeValue } from "../../internal/cli/RunMode.js";
-import type { SyncDataToTsError } from "./SyncDataToTs.errors.js";
+import type { RunMode as RunModeValue } from "../../internal/cli/RunMode.ts";
+import type { SyncDataToTsError } from "./SyncDataToTs.errors.ts";
 
 /**
  * Public sync-data-to-ts error exports.
@@ -20,7 +20,7 @@ import type { SyncDataToTsError } from "./SyncDataToTs.errors.js";
  * @category errors
  * @since 0.0.0
  */
-export { SyncDataToTsDriftError, SyncDataToTsError } from "./SyncDataToTs.errors.js";
+export { SyncDataToTsDriftError, SyncDataToTsError } from "./SyncDataToTs.errors.ts";
 
 const $I = $RepoCliId.create("commands/SyncDataToTs/SyncDataToTs.schemas");
 

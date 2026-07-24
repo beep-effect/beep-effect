@@ -6,8 +6,8 @@
  * @since 0.0.0
  */
 
-import * as WorkItem from "./aggregates/WorkItem/index.js";
-import * as Worker from "./entities/Worker/index.js";
+import * as WorkItem from "./aggregates/WorkItem/index.ts";
+import * as Worker from "./entities/Worker/index.ts";
 
 type DbSchemaShape = {
   readonly workItem: typeof WorkItem.workItemTable;

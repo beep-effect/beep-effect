@@ -8,7 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
-import { JsonStringCodec } from "../../../internal/schema/JsonCodec.js";
+import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 
 const $I = $RepoCliId.create("commands/Corpus/internal/RecycleBin.schemas");
 

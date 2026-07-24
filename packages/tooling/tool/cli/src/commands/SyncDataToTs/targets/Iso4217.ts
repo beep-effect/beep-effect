@@ -22,9 +22,9 @@ import {
   outputFile,
   parseXmlSource,
   sourceMetadata,
-} from "../internal/Source.js";
-import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.js";
-import type { SyncDataTarget } from "../SyncDataToTs.schemas.js";
+} from "../internal/Source.ts";
+import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.ts";
+import type { SyncDataTarget } from "../SyncDataToTs.schemas.ts";
 
 const $I = $RepoCliId.create("commands/SyncDataToTs/targets/Iso4217");
 const targetId = "iso4217" as const;

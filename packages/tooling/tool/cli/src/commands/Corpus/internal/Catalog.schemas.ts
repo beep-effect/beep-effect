@@ -8,8 +8,8 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
 import * as S from "effect/Schema";
-import { JsonStringCodec } from "../../../internal/schema/JsonCodec.js";
-import { CorpusCopyMode } from "./Salvage.schemas.js";
+import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
+import { CorpusCopyMode } from "./Salvage.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Corpus/internal/Catalog.schemas");
 

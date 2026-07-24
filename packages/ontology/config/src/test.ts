@@ -12,11 +12,11 @@
  * @category testing
  * @since 0.0.0
  */
-export { OntologyConfig, type OntologyConfigShape, OntologyServerConfig } from "./ServerConfig.js";
+export { OntologyConfig, type OntologyConfigShape, OntologyServerConfig } from "./ServerConfig.ts";
 /**
  * Static ontology configuration layer constructor for tests.
  *
  * @category testing
  * @since 0.0.0
  */
-export { makeOntologyConfigTest } from "./TestLayer.js";
+export { makeOntologyConfigTest } from "./TestLayer.ts";

@@ -198,7 +198,7 @@ export const libValue = "lib";
  * @since 0.0.0
  */
 
-export * from "./lib.js";
+export * from "./lib.ts";
 
 /**
  * Direct helper exported without a compiling example.

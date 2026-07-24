@@ -10,7 +10,7 @@ import { Context } from "effect";
 import type { Effect } from "effect";
 import type * as O from "effect/Option";
 import type { HttpClient, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
-import type { DependencyHealthSnapshot, ProxyQueueStats } from "./ProxySchemas.js";
+import type { DependencyHealthSnapshot, ProxyQueueStats } from "./ProxySchemas.ts";
 
 const $I = $RepoCliId.create("commands/Graphiti/internal/ProxyServices");
 

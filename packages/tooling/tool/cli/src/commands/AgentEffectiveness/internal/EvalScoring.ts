@@ -14,8 +14,8 @@ import {
   AgentEffectivenessEvalScoreBreakdown,
   AgentEffectivenessEvalScoreReport,
   AgentEffectivenessEvalViolation,
-} from "../AgentEffectiveness.schemas.js";
-import type { SkillOptTaskManifest } from "../AgentEffectiveness.schemas.js";
+} from "../AgentEffectiveness.schemas.ts";
+import type { SkillOptTaskManifest } from "../AgentEffectiveness.schemas.ts";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/EvalScoring");
 const SCORE_FORMAT_DIGITS = 6;

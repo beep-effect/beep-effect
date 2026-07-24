@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./NeutralCitation.model.js";
+export * from "./NeutralCitation.model.ts";

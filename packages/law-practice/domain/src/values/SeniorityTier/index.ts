@@ -6,4 +6,4 @@
  * @since 0.0.0
  */
 
-export * from "./SeniorityTier.model.js";
+export * from "./SeniorityTier.model.ts";

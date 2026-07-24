@@ -12,9 +12,9 @@ import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { A, O, Str, thunkFalse } from "@beep/utils";
 import { DateTime, Effect, FileSystem, Order, Path } from "effect";
 import * as S from "effect/Schema";
-import * as Configuration from "./Configuration.js";
-import * as Domain from "./Domain.js";
-import * as InternalVersion from "./internal/version.js";
+import * as Configuration from "./Configuration.ts";
+import * as Domain from "./Domain.ts";
+import * as InternalVersion from "./internal/version.ts";
 
 const $I = $RepoDocgenId.create("ProofManifest");
 

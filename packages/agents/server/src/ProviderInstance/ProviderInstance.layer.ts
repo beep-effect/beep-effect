@@ -15,8 +15,8 @@ import {
 import { AiProviderCli, AiProviderCliHome } from "@beep/ai-provider-cli";
 import { CuidState } from "@beep/schema/Cuid";
 import { Effect, Layer } from "effect";
-import { makeProviderProbe } from "./ProviderInstance.probe.js";
-import { makeProviderInstanceRepository } from "./ProviderInstance.repo.js";
+import { makeProviderProbe } from "./ProviderInstance.probe.ts";
+import { makeProviderInstanceRepository } from "./ProviderInstance.repo.ts";
 
 /**
  * Drizzle repository port layer.

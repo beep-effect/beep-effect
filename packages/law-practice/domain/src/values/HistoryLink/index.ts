@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./HistoryLink.model.js";
+export * from "./HistoryLink.model.ts";

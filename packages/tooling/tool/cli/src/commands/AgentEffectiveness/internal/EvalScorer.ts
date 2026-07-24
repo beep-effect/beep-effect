@@ -11,20 +11,20 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import { Console, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as S from "effect/Schema";
-import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.js";
-import { decodeTaskManifestJson, encodeAgentEffectivenessEvalScoreReportJson } from "../AgentEffectiveness.schemas.js";
-import { evaluateSkillOptCompletion, readSourceSnapshots } from "./EvalFixture.js";
-import { evaluateLaw } from "./EvalLawLanes.js";
-import { recordAgentEffectivenessEvalScore } from "./EvalRecord.js";
-import { EvalScoring } from "./EvalScoring.js";
+import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.ts";
+import { decodeTaskManifestJson, encodeAgentEffectivenessEvalScoreReportJson } from "../AgentEffectiveness.schemas.ts";
+import { evaluateSkillOptCompletion, readSourceSnapshots } from "./EvalFixture.ts";
+import { evaluateLaw } from "./EvalLawLanes.ts";
+import { recordAgentEffectivenessEvalScore } from "./EvalRecord.ts";
+import { EvalScoring } from "./EvalScoring.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { AgentEffectivenessEvalScoreReport } from "../AgentEffectiveness.schemas.js";
+import type { AgentEffectivenessEvalScoreReport } from "../AgentEffectiveness.schemas.ts";
 
-export * from "../AgentEffectiveness.errors.js";
-export * from "../AgentEffectiveness.schemas.js";
-export * from "./EvalFixture.js";
-export * from "./EvalRecord.js";
-export * from "./EvalScoring.js";
+export * from "../AgentEffectiveness.errors.ts";
+export * from "../AgentEffectiveness.schemas.ts";
+export * from "./EvalFixture.ts";
+export * from "./EvalRecord.ts";
+export * from "./EvalScoring.ts";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/EvalScorer");
 

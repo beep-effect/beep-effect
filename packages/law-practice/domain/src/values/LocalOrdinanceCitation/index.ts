@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./LocalOrdinanceCitation.model.js";
+export * from "./LocalOrdinanceCitation.model.ts";

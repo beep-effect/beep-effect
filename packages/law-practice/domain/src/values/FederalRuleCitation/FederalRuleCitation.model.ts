@@ -8,8 +8,8 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationBase } from "../CitationBase/index.js";
-import { FederalRuleComponentSpan } from "../ComponentSpan/index.js";
+import { CitationBase } from "../CitationBase/index.ts";
+import { FederalRuleComponentSpan } from "../ComponentSpan/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/FederalRuleCitation/FederalRuleCitation.model");
 

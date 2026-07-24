@@ -11,11 +11,11 @@
  * @category tables
  * @since 0.0.0
  */
-export * from "./Workspace.converters.js";
+export * from "./Workspace.converters.ts";
 /**
  * Workspace table exports.
  *
  * @category tables
  * @since 0.0.0
  */
-export * from "./Workspace.table.js";
+export * from "./Workspace.table.ts";

@@ -9,9 +9,9 @@ import { O } from "@beep/utils";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
 import * as Str from "effect/String";
-import { GhActor, GhComment } from "../../../../internal/github/index.js";
-import { GreptileSummary } from "./Closeout.schemas.js";
-import type { GhReviewThread } from "./Gh.schemas.js";
+import { GhActor, GhComment } from "../../../../internal/github/index.ts";
+import { GreptileSummary } from "./Closeout.schemas.ts";
+import type { GhReviewThread } from "./Gh.schemas.ts";
 
 /**
  * Return a GitHub actor login with a stable fallback for missing authors.

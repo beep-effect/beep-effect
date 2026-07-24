@@ -11,4 +11,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./Sync.values.js";
+export * from "./Sync.values.ts";

@@ -10,13 +10,13 @@ import { A, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import { Clock, Console, Duration, Effect, FileSystem, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import { QualityTaskStep } from "../../../internal/process/index.js";
-import { proxyEnsureConfig } from "../Graphiti.config.js";
-import { GraphitiProxyOpsError } from "../Graphiti.errors.js";
-import { containerExists, containerHealth, waitForHealthyContainers } from "./ContainerHealth.js";
-import { checkProxyHealth, dockerAvailable, runInheritedStep, shellQuote } from "./StepExec.js";
+import { QualityTaskStep } from "../../../internal/process/index.ts";
+import { proxyEnsureConfig } from "../Graphiti.config.ts";
+import { GraphitiProxyOpsError } from "../Graphiti.errors.ts";
+import { containerExists, containerHealth, waitForHealthyContainers } from "./ContainerHealth.ts";
+import { checkProxyHealth, dockerAvailable, runInheritedStep, shellQuote } from "./StepExec.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { GraphitiProxyOpsEnvironment, ProxyEnsureConfig } from "../Graphiti.schemas.js";
+import type { GraphitiProxyOpsEnvironment, ProxyEnsureConfig } from "../Graphiti.schemas.ts";
 
 const recoverGraphitiStackInternal = Effect.fn("GraphitiProxyOps.recoverGraphitiStackInternal")(function* (
   repoRoot: string,

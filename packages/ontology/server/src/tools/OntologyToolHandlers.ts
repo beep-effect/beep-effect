@@ -23,7 +23,7 @@ import {
 import { CanonicalizationServiceLive } from "@beep/rdf-canonize/adapters/canonicalization";
 import { Effect, Layer } from "effect";
 import * as O from "effect/Option";
-import { SessionServerLayer } from "../aggregates/Session/Session.layer.js";
+import { SessionServerLayer } from "../aggregates/Session/Session.layer.ts";
 import type * as Tool from "effect/unstable/ai/Tool";
 
 /** Thin service-delegating handler layer for the ontology toolkit.

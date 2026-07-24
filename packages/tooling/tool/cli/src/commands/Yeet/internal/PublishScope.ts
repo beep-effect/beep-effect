@@ -14,10 +14,10 @@ import {
   gitPathListFromNulOutput,
   runRepoCommandCapture,
   sortedUniquePaths,
-} from "../../../internal/repo-run/index.js";
-import { YeetCommandError } from "../Yeet.errors.js";
-import { QualityIssue, QualityIssueRouting, YeetPublishIntent } from "../Yeet.schemas.js";
-import { runIdForContext } from "./ArtifactPaths.js";
+} from "../../../internal/repo-run/index.ts";
+import { YeetCommandError } from "../Yeet.errors.ts";
+import { QualityIssue, QualityIssueRouting, YeetPublishIntent } from "../Yeet.schemas.ts";
+import { runIdForContext } from "./ArtifactPaths.ts";
 import {
   collectStagedPublishPaths,
   collectUnstagedTrackedPaths,
@@ -25,13 +25,13 @@ import {
   optionFromNonEmpty,
   runGitOutput,
   runGitPathList,
-} from "./GitExec.js";
-import { writeIssueArtifacts } from "./IssueArtifacts.js";
-import { buildQualityIssueIndex } from "./QualityIssueIndex.js";
-import { YeetBaseFreshness, YeetStashState } from "./Verdict.js";
+} from "./GitExec.ts";
+import { writeIssueArtifacts } from "./IssueArtifacts.ts";
+import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
+import { YeetBaseFreshness, YeetStashState } from "./Verdict.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { RepoRunContext } from "../../../internal/repo-run/index.js";
-import type { YeetRunOptions } from "../Yeet.schemas.js";
+import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { YeetRunOptions } from "../Yeet.schemas.ts";
 
 const zeroGitSha = "0000000000000000000000000000000000000000" as const;
 const protectedPublishBranches: ReadonlyArray<string> = ["main", "master", "HEAD"];

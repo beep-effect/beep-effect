@@ -24,7 +24,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { Effect, HashMap, pipe, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { byIdAscending, makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.js";
+import { byIdAscending, makeEntityStore, nextEntityId, SYSTEM_PRINCIPAL } from "../internal/RepoSupport.ts";
 import type { SyncConflictSeed } from "@beep/documents-use-cases/entities/SyncConflict/server";
 
 const decodeSyncConflict = S.decodeUnknownSync(DomainSyncConflict.SyncConflict);

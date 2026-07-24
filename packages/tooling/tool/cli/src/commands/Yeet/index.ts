@@ -11,7 +11,7 @@
  * @category models
  * @since 0.0.0
  */
-export { YeetRunMode } from "./internal/Planner.js";
+export { YeetRunMode } from "./internal/Planner.ts";
 /**
  * Yeet operator status models.
  *
@@ -29,21 +29,21 @@ export {
   YeetStatusWorktree,
   yeetStatusNextCommandForTesting,
   yeetStatusPathForTesting,
-} from "./internal/Status.js";
+} from "./internal/Status.ts";
 /**
  * Yeet quality feedback and publish command.
  *
  * @category cli-commands
  * @since 0.0.0
  */
-export { yeetCommand } from "./Yeet.command.js";
+export { yeetCommand } from "./Yeet.command.ts";
 /**
  * Public yeet command error.
  *
  * @category errors
  * @since 0.0.0
  */
-export * from "./Yeet.errors.js";
+export * from "./Yeet.errors.ts";
 /**
  * Public yeet run models.
  *
@@ -68,4 +68,4 @@ export {
   YeetPublishIntent,
   YeetRunOptions,
   YeetRunResult,
-} from "./Yeet.schemas.js";
+} from "./Yeet.schemas.ts";

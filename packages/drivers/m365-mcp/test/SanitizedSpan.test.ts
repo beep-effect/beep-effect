@@ -69,8 +69,9 @@ const fullLayer = Layer.mergeAll(McpServer.McpServer.layer, registrationLayer);
 
 describe("m365-mcp sanitized dispatch", () => {
   layer(fullLayer)("with M365Toolkit mounted via sanitizedToolkit", (it) => {
-    it.effect("does not leak the raw m365_get_site request payload onto span attributes", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "does not leak the raw m365_get_site request payload onto span attributes",
+      Effect.fnUntraced(function* () {
         const { captured, tracer } = makeRecordingTracer();
         const server = yield* McpServer.McpServer;
 

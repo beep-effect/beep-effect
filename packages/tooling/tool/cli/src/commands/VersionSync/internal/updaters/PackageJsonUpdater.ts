@@ -7,8 +7,8 @@
 
 import { Effect, FileSystem } from "effect";
 import { dual } from "effect/Function";
-import { applyJsoncModification } from "../../../../internal/cli/Jsonc.js";
-import { VersionSyncError } from "../../VersionSync.schemas.js";
+import { applyJsoncModification } from "../../../../internal/cli/Jsonc.ts";
+import { VersionSyncError } from "../../VersionSync.schemas.ts";
 
 type UpdateCatalogEntryOptions = {
   readonly versionSpecifier: string;

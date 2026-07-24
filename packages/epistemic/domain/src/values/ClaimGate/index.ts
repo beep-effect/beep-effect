@@ -20,4 +20,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ClaimGateResult.model.js";
+export * from "./ClaimGateResult.model.ts";

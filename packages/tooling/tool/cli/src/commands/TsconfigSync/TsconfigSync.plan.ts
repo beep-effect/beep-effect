@@ -39,8 +39,8 @@ import {
   applyJsoncModification as applySharedJsoncModification,
   decodeJsoncTextAs,
   jsonText,
-} from "../../internal/cli/Jsonc.js";
-import { TsconfigSyncFilterError } from "./TsconfigSync.errors.js";
+} from "../../internal/cli/Jsonc.ts";
+import { TsconfigSyncFilterError } from "./TsconfigSync.errors.ts";
 import {
   byPlannedChangeAscending,
   byStringAscending,
@@ -58,7 +58,7 @@ import {
   TsconfigWithPaths,
   TsconfigWithReferences,
   WorkspaceDescriptor,
-} from "./TsconfigSync.schemas.js";
+} from "./TsconfigSync.schemas.ts";
 import type { WorkspaceDeps } from "@beep/repo-utils";
 
 const toPosixPath = normalizePath;

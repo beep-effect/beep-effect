@@ -11,7 +11,7 @@ import * as O from "@beep/utils/Option";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
-import { expectSchemaRoundTrip } from "./schemaParity.js";
+import { expectSchemaRoundTrip } from "./schemaParity.ts";
 
 describe("@beep/infra OipWeb", () => {
   it("applies production-safe defaults for OIP web infrastructure", () => {

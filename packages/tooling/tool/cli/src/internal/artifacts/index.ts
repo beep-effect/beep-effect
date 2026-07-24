@@ -6,5 +6,5 @@
  * @since 0.0.0
  */
 
-export * from "./ArtifactIo.js";
-export * from "./GeneratedFileDrift.js";
+export * from "./ArtifactIo.ts";
+export * from "./GeneratedFileDrift.ts";

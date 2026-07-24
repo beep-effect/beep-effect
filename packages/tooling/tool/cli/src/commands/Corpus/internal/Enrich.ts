@@ -5,4 +5,4 @@
  * @since 0.0.0
  */
 
-export { enrichCorpusImpl } from "./ServicePrograms.js";
+export { enrichCorpusImpl } from "./ServicePrograms.ts";

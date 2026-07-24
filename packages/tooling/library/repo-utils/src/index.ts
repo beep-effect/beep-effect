@@ -18,7 +18,7 @@ export {
    * @since 0.0.0
    */
   extractWorkspaceDependencies,
-} from "./Dependencies.js";
+} from "./Dependencies.ts";
 /**
  * @category utilities
  * @since 0.0.0
@@ -29,7 +29,7 @@ export {
    * @since 0.0.0
    */
   buildRepoDependencyIndex,
-} from "./DependencyIndex.js";
+} from "./DependencyIndex.ts";
 /**
  * @category errors
  * @since 0.0.0
@@ -50,7 +50,7 @@ export {
    * @since 0.0.0
    */
   NoSuchFileError,
-} from "./errors/index.js";
+} from "./errors/index.ts";
 /**
  * Filesystem utility service tag.
  *
@@ -62,7 +62,7 @@ export {
  * @category models
  * @since 0.0.0
  */
-export { FsUtils } from "./FsUtils.js";
+export { FsUtils } from "./FsUtils.ts";
 /**
  * Live layer for the filesystem utility service.
  *
@@ -74,7 +74,7 @@ export { FsUtils } from "./FsUtils.js";
  * @category constructors
  * @since 0.0.0
  */
-export { FsUtilsLive } from "./FsUtils.js";
+export { FsUtilsLive } from "./FsUtils.ts";
 /**
  * Service shape implemented by `FsUtils` providers.
  *
@@ -87,7 +87,7 @@ export { FsUtilsLive } from "./FsUtils.js";
  * @category models
  * @since 0.0.0
  */
-export type { FsUtilsShape } from "./FsUtils.js";
+export type { FsUtilsShape } from "./FsUtils.ts";
 /**
  * Options accepted by filesystem glob helpers.
  *
@@ -100,7 +100,7 @@ export type { FsUtilsShape } from "./FsUtils.js";
  * @category models
  * @since 0.0.0
  */
-export { GlobOptions } from "./FsUtils.js";
+export { GlobOptions } from "./FsUtils.ts";
 /**
  * @category utilities
  * @since 0.0.0
@@ -121,7 +121,7 @@ export {
    * @since 0.0.0
    */
   walkFiles,
-} from "./FsUtils.js";
+} from "./FsUtils.ts";
 /**
  * @category models
  * @since 0.0.0
@@ -137,7 +137,7 @@ export type {
    * @since 0.0.0
    */
   WalkFilesSymlinkGuard,
-} from "./FsUtils.js";
+} from "./FsUtils.ts";
 /**
  * @category utilities
  * @since 0.0.0
@@ -158,7 +158,7 @@ export {
    * @since 0.0.0
    */
   topologicalSort,
-} from "./Graph.js";
+} from "./Graph.ts";
 /**
  * @category serialization
  * @since 0.0.0
@@ -179,7 +179,7 @@ export {
    * @since 0.0.0
    */
   jsonStringifyPretty,
-} from "./JsonUtils.js";
+} from "./JsonUtils.ts";
 /**
  * @category utilities
  * @since 0.0.0
@@ -190,7 +190,7 @@ export {
    * @since 0.0.0
    */
   findRepoRoot,
-} from "./Root.js";
+} from "./Root.ts";
 /**
  * @category utilities
  * @since 0.0.0
@@ -231,7 +231,7 @@ export {
    * @since 0.0.0
    */
   toLiteralArgs,
-} from "./ProcessArgs.js";
+} from "./ProcessArgs.ts";
 /**
  * @category schemas
  * @since 0.0.0
@@ -282,7 +282,7 @@ export {
    * @since 0.0.0
    */
   readPackageJsonFile,
-} from "./schemas/PackageJson.js";
+} from "./schemas/PackageJson.ts";
 /**
  * @category schemas
  * @since 0.0.0
@@ -328,7 +328,7 @@ export {
    * @since 0.0.0
    */
   packageJsonJsonSchema,
-} from "./schemas/PackageJsonTools.js";
+} from "./schemas/PackageJsonTools.ts";
 /**
  * @category schemas
  * @since 0.0.0
@@ -404,7 +404,7 @@ export {
    * @since 0.0.0
    */
   TSNodeConfig,
-} from "./schemas/TSConfig.js";
+} from "./schemas/TSConfig.ts";
 /**
  * @category models
  * @since 0.0.0
@@ -425,12 +425,12 @@ export {
    * @since 0.0.0
    */
   WorkspaceDeps,
-} from "./schemas/WorkspaceDeps.js";
+} from "./schemas/WorkspaceDeps.ts";
 /**
  * @category utilities
  * @since 0.0.0
  */
-export * from "./TSMorph/index.js";
+export * from "./TSMorph/index.ts";
 /**
  * @category utilities
  * @since 0.0.0
@@ -441,12 +441,12 @@ export {
    * @since 0.0.0
    */
   collectTsConfigPaths,
-} from "./TsConfig.js";
+} from "./TsConfig.ts";
 /**
  * @category utilities
  * @since 0.0.0
  */
-export * from "./TypeScript/index.js";
+export * from "./TypeScript/index.ts";
 /**
  * Collect unique NPM dependency names from the workspace graph.
  *
@@ -458,7 +458,7 @@ export * from "./TypeScript/index.js";
  * @category utilities
  * @since 0.0.0
  */
-export { collectUniqueNpmDependencies } from "./UniqueDeps.js";
+export { collectUniqueNpmDependencies } from "./UniqueDeps.ts";
 /**
  * Result model for unique NPM dependency aggregation.
  *
@@ -474,7 +474,7 @@ export { collectUniqueNpmDependencies } from "./UniqueDeps.js";
  * @category models
  * @since 0.0.0
  */
-export { UniqueNpmDeps } from "./UniqueDeps.js";
+export { UniqueNpmDeps } from "./UniqueDeps.ts";
 /**
  * @category utilities
  * @since 0.0.0
@@ -505,4 +505,4 @@ export {
    * @since 0.0.0
    */
   workspaceGlobsFrom,
-} from "./Workspaces.js";
+} from "./Workspaces.ts";

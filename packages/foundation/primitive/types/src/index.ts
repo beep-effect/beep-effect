@@ -36,7 +36,7 @@
  * @category utilities
  * @since 0.0.0
  */
-export type * as TArray from "./TArray.types.js";
+export type * as TArray from "./TArray.types.ts";
 /**
  * String utility types.
  *
@@ -53,7 +53,7 @@ export type * as TArray from "./TArray.types.js";
  * @category utilities
  * @since 0.0.0
  */
-export type * as TString from "./TString.types.js";
+export type * as TString from "./TString.types.ts";
 /**
  * Unsafe type aliases for auditable escape hatches.
  *
@@ -68,7 +68,7 @@ export type * as TString from "./TString.types.js";
  * @category utilities
  * @since 0.0.0
  */
-export type * as TUnsafe from "./TUnsafe.types.js";
+export type * as TUnsafe from "./TUnsafe.types.ts";
 /**
  * General-purpose type utilities.
  *
@@ -85,4 +85,4 @@ export type * as TUnsafe from "./TUnsafe.types.js";
  * @category utilities
  * @since 0.0.0
  */
-export type * as TUtils from "./TUtils.types.js";
+export type * as TUtils from "./TUtils.types.ts";

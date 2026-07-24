@@ -20,8 +20,8 @@ import type {
   PretextMeasurementError,
   PretextMeasurementUnavailableError,
   PretextUnsupportedFontError,
-} from "./Pretext.errors.js";
-import type { FontMetricsSnapshotV1 } from "./Pretext.models.js";
+} from "./Pretext.errors.ts";
+import type { FontMetricsSnapshotV1 } from "./Pretext.models.ts";
 
 const $I = $PretextId.create("PretextCapture.service");
 

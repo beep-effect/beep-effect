@@ -15,15 +15,15 @@ import {
   ArchitectureOperationCheck,
   OperationPlanApplyResult,
   OperationPlanCheckResult,
-} from "./Architecture.schemas.js";
-import { renderPackageJsonOperation } from "./OperationPlanPackageJson.js";
+} from "./Architecture.schemas.ts";
+import { renderPackageJsonOperation } from "./OperationPlanPackageJson.ts";
 import type {
   ArchitectureOperation,
   ArchitectureOperationCheckStatus,
   CanonicalSliceOperationPlan,
   WriteFileOperation,
   WritePackageJsonOperation,
-} from "./Architecture.schemas.js";
+} from "./Architecture.schemas.ts";
 
 type EnsureAbsentPathOperation = Extract<ArchitectureOperation, { readonly kind: "ensure-absent-path" }>;
 type EnsureFileOperation = Extract<ArchitectureOperation, { readonly kind: "ensure-file" }>;

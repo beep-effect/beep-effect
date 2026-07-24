@@ -6,7 +6,7 @@
  */
 
 import { ExtractionCandidate } from "@beep/langextract/Extraction";
-import { OfficeActionExtractionLabel } from "./OfficeActionExtractionLabel.js";
+import { OfficeActionExtractionLabel } from "./OfficeActionExtractionLabel.ts";
 
 /**
  * Fixed candidate set for the office-action review spike mapping tests.

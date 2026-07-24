@@ -11,25 +11,25 @@
  * @category commands
  * @since 0.0.0
  */
-export * from "./Image.command.js";
+export * from "./Image.command.ts";
 /**
  * Typed errors for image and video curation.
  *
  * @category errors
  * @since 0.0.0
  */
-export * from "./Image.errors.js";
+export * from "./Image.errors.ts";
 /**
  * Schema models for image and video curation.
  *
  * @category schemas
  * @since 0.0.0
  */
-export * from "./Image.schemas.js";
+export * from "./Image.schemas.ts";
 /**
  * Service contract for image and video curation.
  *
  * @category services
  * @since 0.0.0
  */
-export * from "./Image.service.js";
+export * from "./Image.service.ts";

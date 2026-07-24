@@ -5,12 +5,12 @@
  * @since 0.0.0
  */
 
-export * from "../internal/cli/CommandErrorFields.js";
-export * from "../internal/cli/Flags.js";
-export * from "../internal/cli/FsGuards.js";
-export * from "../internal/cli/Json.js";
-export * from "../internal/cli/Printer.js";
-export * from "../internal/cli/Progress.js";
-export * from "../internal/cli/RunMode.js";
-export * from "../internal/cli/Timing.js";
-export * from "../internal/cli/UnknownProbe.js";
+export * from "../internal/cli/CommandErrorFields.ts";
+export * from "../internal/cli/Flags.ts";
+export * from "../internal/cli/FsGuards.ts";
+export * from "../internal/cli/Json.ts";
+export * from "../internal/cli/Printer.ts";
+export * from "../internal/cli/Progress.ts";
+export * from "../internal/cli/RunMode.ts";
+export * from "../internal/cli/Timing.ts";
+export * from "../internal/cli/UnknownProbe.ts";

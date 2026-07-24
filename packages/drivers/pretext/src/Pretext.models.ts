@@ -17,7 +17,7 @@ import { A, O, pipe, R, Str } from "@beep/utils";
 import { Effect, Result } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import { PretextSnapshotCodecError } from "./Pretext.errors.js";
+import { PretextSnapshotCodecError } from "./Pretext.errors.ts";
 
 const $I = $PretextId.create("Pretext.models");
 

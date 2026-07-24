@@ -16,8 +16,8 @@ import type {
   ProbeProviderInstanceCommand,
   RemoveProviderInstanceCommand,
   UpdateProviderInstanceCommand,
-} from "./ProviderInstance.commands.js";
-import type { ProviderActionError } from "./ProviderInstance.errors.js";
+} from "./ProviderInstance.commands.ts";
+import type { ProviderActionError } from "./ProviderInstance.errors.ts";
 
 const $I = $AgentsUseCasesId.create("entities/ProviderInstance/ProviderInstance.use-cases");
 

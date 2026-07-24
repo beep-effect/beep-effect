@@ -19,8 +19,8 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Yaml from "yaml";
-import { ResearchCommandError } from "../Research.errors.js";
-import { KnowledgeCardFrontmatter } from "../Research.schemas.js";
+import { ResearchCommandError } from "../Research.errors.ts";
+import { KnowledgeCardFrontmatter } from "../Research.schemas.ts";
 
 /**
  * Environment variable naming the default vault root.

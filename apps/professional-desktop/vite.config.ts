@@ -22,6 +22,25 @@ const stripMisplacedLexicalPureAnnotations = (): Plugin => ({
   },
 });
 
+// Vite treats an explicit `.ts` suffix as an exact filename, while the repository
+// convention intentionally uses `.ts` specifiers for both `.ts` and `.tsx` sources.
+// fallow-ignore-next-line code-duplication
+const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
+  name: "beep:resolve-uniform-typescript-source-specifiers",
+  enforce: "pre",
+  resolveId(source, importer, options) {
+    if (importer === undefined || !source.startsWith(".") || !source.endsWith(".ts")) {
+      return null;
+    }
+
+    return this.resolve(source, importer, { ...options, skipSelf: true }).then((exactSource) =>
+      exactSource === null
+        ? this.resolve(source.replace(/\.ts$/, ".tsx"), importer, { ...options, skipSelf: true })
+        : exactSource
+    );
+  },
+});
+
 const initialVendorChunkGroups = [
   { name: "react-vendor", test: /node_modules[\\/](react|react-dom)[\\/]/, priority: 50 },
   { name: "mui-vendor", test: /node_modules[\\/](@mui|@emotion)[\\/]/, priority: 45 },
@@ -36,7 +55,7 @@ const initialVendorChunkGroups = [
 
 export default defineConfig({
   clearScreen: false,
-  plugins: [stripMisplacedLexicalPureAnnotations(), react()],
+  plugins: [resolveUniformTypeScriptSourceSpecifiers(), stripMisplacedLexicalPureAnnotations(), react()],
   optimizeDeps: {
     // @cosmos.gl/graph imports CJS/UMD deps that need explicit handling:
     // keep cosmos itself un-prebundled, interop-wrap seedrandom, and route

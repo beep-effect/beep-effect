@@ -1551,6 +1551,9 @@
       "@beep/graph-3d/react": ["./packages/drivers/graph-3d/src/react.ts"],
       "@beep/dock-react": [
         "./packages/foundation/ui-system/dock-react/src/index.ts"
+      ],
+      "@beep/agents-client/Chat.layer": [
+        "./packages/agents/client/src/Chat.layer.ts"
       ]
     }
   }

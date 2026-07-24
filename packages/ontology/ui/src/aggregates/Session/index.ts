@@ -9,59 +9,59 @@
  * @category components
  * @since 0.0.0
  */
-export { OntologyChangeLogRegion } from "./Session.changelog.js";
+export { OntologyChangeLogRegion } from "./Session.changelog.ts";
 /**
  * @category components
  * @since 0.0.0
  */
-export { OntologyDocumentRegion } from "./Session.document.js";
+export { OntologyDocumentRegion } from "./Session.document.ts";
 /**
  * @category components
  * @since 0.0.0
  */
-export { OntologyExplorerRegion } from "./Session.explorer.js";
+export { OntologyExplorerRegion } from "./Session.explorer.ts";
 /**
  * @category components
  * @since 0.0.0
  */
-export { OntologyGraphRegion } from "./Session.graph.js";
+export { OntologyGraphRegion } from "./Session.graph.ts";
 /**
  * @category components
  * @since 0.0.0
  */
-export { OntologyInspectorRegion } from "./Session.inspector.js";
+export { OntologyInspectorRegion } from "./Session.inspector.ts";
 /**
  * @category components
  * @since 0.0.0
  */
-export { OntologyMetricsRegion } from "./Session.metrics.js";
+export { OntologyMetricsRegion } from "./Session.metrics.ts";
 /**
  * @category components
  * @since 0.0.0
  */
-export { OntologySourceRegion } from "./Session.source.js";
+export { OntologySourceRegion } from "./Session.source.ts";
 /**
  * @category components
  * @since 0.0.0
  */
-export { OntologySparqlRegion } from "./Session.sparql.js";
+export { OntologySparqlRegion } from "./Session.sparql.ts";
 /**
  * @category components
  * @since 0.0.0
  */
-export { ontologyTreeItemsFor } from "./Session.tree.js";
+export { ontologyTreeItemsFor } from "./Session.tree.ts";
 /**
  * @category components
  * @since 0.0.0
  */
-export { OntologyValidationRegion } from "./Session.validation.js";
-/**
- * @category components
- * @since 0.0.0
- */
-export { OntologyWorkbench } from "./Session.workbench.js";
+export { OntologyValidationRegion } from "./Session.validation.ts";
 /**
  * @category forms
  * @since 0.0.0
  */
-export { iriFieldValid, valueFromEvent } from "./Session.workbench.shared.js";
+export { iriFieldValid, valueFromEvent } from "./Session.workbench.shared.ts";
+/**
+ * @category components
+ * @since 0.0.0
+ */
+export { OntologyWorkbench } from "./Session.workbench.ts";

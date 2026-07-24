@@ -11,8 +11,8 @@ import { Context, Effect, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { isFilingSegment, TaxonomySeed } from "./SemanticFoundation.models.js";
-import { SemanticFoundationSeed } from "./SemanticFoundation.seed.js";
+import { isFilingSegment, TaxonomySeed } from "./SemanticFoundation.models.ts";
+import { SemanticFoundationSeed } from "./SemanticFoundation.seed.ts";
 
 const $I = $OntologyId.create("TaxonomyLoader");
 

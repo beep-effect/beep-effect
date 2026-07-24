@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./SubsequentHistoryEntry.model.js";
+export * from "./SubsequentHistoryEntry.model.ts";

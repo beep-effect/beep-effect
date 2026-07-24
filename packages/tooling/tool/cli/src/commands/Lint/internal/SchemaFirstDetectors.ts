@@ -9,7 +9,7 @@ import { A, Str } from "@beep/utils";
 import { flow, pipe } from "effect";
 import * as O from "effect/Option";
 import { Node, SyntaxKind } from "ts-morph";
-import { SchemaFirstInventoryEntry } from "../Lint.schemas.js";
+import { SchemaFirstInventoryEntry } from "../Lint.schemas.ts";
 import type { TypeElementTypes } from "ts-morph";
 
 const IDENTIFIER_PROPERTY_PATTERN = /^[A-Za-z_$][A-Za-z0-9_$]*$/;

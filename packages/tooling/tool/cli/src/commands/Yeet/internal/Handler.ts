@@ -12,15 +12,15 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { printCommandJson } from "../../../internal/cli/Json.js";
-import { RepoRunContext, sortedUniquePaths } from "../../../internal/repo-run/index.js";
-import { YeetCommandError } from "../Yeet.errors.js";
+import { printCommandJson } from "../../../internal/cli/Json.ts";
+import { RepoRunContext, sortedUniquePaths } from "../../../internal/repo-run/index.ts";
+import { YeetCommandError } from "../Yeet.errors.ts";
 import {
   artifactDirForContext,
   runIdForContext,
   runArtifactPathForContext as runOutputPathForContext,
-} from "./ArtifactPaths.js";
-import { PrCloseoutOptions, runPrCloseout } from "./Closeout.js";
+} from "./ArtifactPaths.ts";
+import { PrCloseoutOptions, runPrCloseout } from "./Closeout.ts";
 import {
   collectStagedPublishPaths,
   collectUnstagedTrackedPaths,
@@ -29,14 +29,14 @@ import {
   currentYeetBranch,
   lockfileChangedSinceBase,
   refreshBaseRef,
-} from "./GitExec.js";
+} from "./GitExec.ts";
 import {
   validateCommitMessage,
   validateMonitorGuards,
   validateRequiredMessage,
   validateStartPrEarlyPrGuard,
-} from "./Guards.js";
-import { HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.js";
+} from "./Guards.ts";
+import { HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
 import {
   emptyPlanResult,
   executeStepWithArtifacts,
@@ -45,20 +45,20 @@ import {
   renderJson,
   writeIssueArtifacts,
   writeTextFile,
-} from "./IssueArtifacts.js";
+} from "./IssueArtifacts.ts";
 import {
   buildYeetRunPlanWithMode,
   emptyTurboPlanSnapshot,
   YeetProofTier,
   YeetRunMode,
   YeetRunPlanModeOptions,
-} from "./Planner.js";
+} from "./Planner.ts";
 import {
   acquireFullProofLock,
   assertReusableVerifiedState,
   releaseProofLock,
   writeVerifiedState,
-} from "./ProofState.js";
+} from "./ProofState.ts";
 import {
   collectPublishIntent,
   enforceBaseFreshness,
@@ -73,18 +73,18 @@ import {
   validatePostCommitProofDidNotChangeWorktree,
   validatePublishBranch,
   warnOnMismatchedPublishUpstream,
-} from "./PublishScope.js";
-import { ensurePullRequest } from "./PullRequest.js";
-import { buildQualityIssueIndex } from "./QualityIssueIndex.js";
-import { collectYeetStatus, renderYeetStatusSummary, writeYeetStatusSnapshot } from "./Status.js";
-import { collectTurboPlanSnapshot } from "./TurboQuery.js";
-import { buildYeetVerdict, YeetExecutedStep } from "./Verdict.js";
+} from "./PublishScope.ts";
+import { ensurePullRequest } from "./PullRequest.ts";
+import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
+import { collectYeetStatus, renderYeetStatusSummary, writeYeetStatusSnapshot } from "./Status.ts";
+import { collectTurboPlanSnapshot } from "./TurboQuery.ts";
+import { buildYeetVerdict, YeetExecutedStep } from "./Verdict.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { RepoPlanStep, RepoRunPlan, RepoStepRunResult } from "../../../internal/repo-run/index.js";
-import type { YeetRunOptions, YeetRunResult } from "../Yeet.schemas.js";
-import type { YeetBaseFreshness, YeetStashState } from "./Verdict.js";
+import type { RepoPlanStep, RepoRunPlan, RepoStepRunResult } from "../../../internal/repo-run/index.ts";
+import type { YeetRunOptions, YeetRunResult } from "../Yeet.schemas.ts";
+import type { YeetBaseFreshness, YeetStashState } from "./Verdict.ts";
 
-export { defaultYeetRunOptions } from "../Yeet.schemas.js";
+export { defaultYeetRunOptions } from "../Yeet.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Handler");
 

@@ -13,10 +13,10 @@
 
 import { Effect } from "effect";
 import { useEffect, useRef, useState } from "react";
-import { Graph3DRenderOptions, renderGraph3D } from "./Graph3D.renderer.js";
+import { Graph3DRenderOptions, renderGraph3D } from "./Graph3D.renderer.ts";
 import type * as React from "react";
-import type { Graph3DProjection } from "./Graph3D.projection.js";
-import type { Graph3DRenderHandle } from "./Graph3D.renderer.js";
+import type { Graph3DProjection } from "./Graph3D.projection.ts";
+import type { Graph3DRenderHandle } from "./Graph3D.renderer.ts";
 
 /**
  * Mounts `renderGraph3D` into a ref'd container and owns the handle

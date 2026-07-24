@@ -19,7 +19,7 @@ import {
   configStringOption,
   isUnresolvedSecretReference,
   turboEnvOverrides,
-} from "../../internal/cli/EnvConfig.js";
+} from "../../internal/cli/EnvConfig.ts";
 import {
   collectText,
   formatCommandLine,
@@ -27,13 +27,13 @@ import {
   qualityStepOutputBound,
   runCaptured,
   runToExit,
-} from "../../internal/process/index.js";
+} from "../../internal/process/index.ts";
 import {
   cleanCoverageRegressionOutputs,
   compareCoverageRegressionBaseline,
   writeCoverageRegressionBaseline,
-} from "./internal/CoverageRegression.js";
-import { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Quality.errors.js";
+} from "./internal/CoverageRegression.ts";
+import { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Quality.errors.ts";
 import {
   decodePackageJsonDocument,
   GithubCheckMode,
@@ -43,15 +43,15 @@ import {
   QualityTaskInvocation,
   QualityTaskName,
   RootAuditMode,
-} from "./Quality.schemas.js";
+} from "./Quality.schemas.ts";
 import type { DomainError, NoSuchFileError } from "@beep/repo-utils";
 import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type { Scope } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { UnexpectedQualityTaskFailure } from "./Quality.errors.js";
-import type { PackageJsonDocument, PackageJsonWorkspacesDocument } from "./Quality.schemas.js";
+import type { UnexpectedQualityTaskFailure } from "./Quality.errors.ts";
+import type { PackageJsonDocument, PackageJsonWorkspacesDocument } from "./Quality.schemas.ts";
 
-export { QualityTaskStep } from "../../internal/process/index.js";
+export { QualityTaskStep } from "../../internal/process/index.ts";
 /**
  * Public quality task error exports.
  *
@@ -63,7 +63,7 @@ export {
   QualityTaskFailed,
   QualityTaskGroupFailed,
   UnexpectedQualityTaskFailure,
-} from "./Quality.errors.js";
+} from "./Quality.errors.ts";
 
 const CHANGED_PATH_DIFF_FILTER = ["A", "C", "M", "R", "T", "U", "X", "B"].join("");
 const LOCAL_BIOME_BIN = "./node_modules/.bin/biome";
@@ -1055,8 +1055,8 @@ const rootRepoLintPolicySteps = (repoRoot: string): ReadonlyArray<QualityTaskSte
   bunxStep(repoRoot, "lint:markdown", ["markdownlint-cli2"]),
   repoCliStep(repoRoot, "lint:circular", ["lint", "circular"]),
   bunxStep(repoRoot, "lint:typos", ["typos"]),
-  // Gate on the mandatory (error) oxlint rule only; --quiet suppresses the large advisory
-  // (warn) backlog so the policy lane stays readable. `bun run lint:oxlint` stays verbose.
+  // Gate on mandatory (error) oxlint rules; --quiet suppresses the large advisory (warn)
+  // backlog so the policy lane stays readable. `bun run lint:oxlint` stays verbose.
   bunxStep(repoRoot, "lint:oxlint", ["oxlint", "--quiet"]),
 ];
 

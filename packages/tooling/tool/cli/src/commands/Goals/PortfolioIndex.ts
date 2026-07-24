@@ -18,10 +18,10 @@ import { Console, Effect, FileSystem, Order } from "effect";
 import { flow } from "effect/Function";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { optionalProp } from "../../internal/cli/OptionRecord.js";
-import { decodeGoalManifest, GoalPhaseStatus, GoalStatus } from "./Goals.schemas.js";
-import { goalManifestPhases, listGoalPackets, parseGoalManifestText, readmeMissionLine } from "./Inventory.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { optionalProp } from "../../internal/cli/OptionRecord.ts";
+import { decodeGoalManifest, GoalPhaseStatus, GoalStatus } from "./Goals.schemas.ts";
+import { goalManifestPhases, listGoalPackets, parseGoalManifestText, readmeMissionLine } from "./Inventory.ts";
 
 const $I = $RepoCliId.create("commands/Goals/PortfolioIndex");
 

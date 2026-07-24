@@ -11,19 +11,19 @@ import * as O from "@beep/utils/Option";
 import { DateTime, Effect, flow, HashMap, Path, pipe } from "effect";
 import * as P from "effect/Predicate";
 import { Node, Project, SyntaxKind } from "ts-morph";
-import { globPatternToRegExp } from "../../../internal/GlobPattern.js";
+import { globPatternToRegExp } from "../../../internal/GlobPattern.ts";
 import {
   byIssueAscending,
   DocgenAnalysisSummary,
   DocgenConfigDocument,
   DocgenExportAnalysis,
   DocgenPackageAnalysis,
-} from "../Docgen.schemas.js";
-import { loadDocgenConfigDocument } from "./Workspace.js";
+} from "../Docgen.schemas.ts";
+import { loadDocgenConfigDocument } from "./Workspace.ts";
 import type { DomainError } from "@beep/repo-utils";
 import type { FileSystem } from "effect";
 import type { ExportDeclaration, JSDoc, SourceFile } from "ts-morph";
-import type { DocgenExportKind, DocgenIssuePriority, DocgenWorkspacePackage } from "../Docgen.schemas.js";
+import type { DocgenExportKind, DocgenIssuePriority, DocgenWorkspacePackage } from "../Docgen.schemas.ts";
 
 const DOCGEN_REQUIRED_TAGS = ["@category", "@example", "@since"] as const;
 

@@ -28,8 +28,9 @@ const invalidDidExamples = [
 ];
 
 describe("Did", () => {
-  it.effect("accepts W3C DID Core syntax examples", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "accepts W3C DID Core syntax examples",
+    Effect.fnUntraced(function* () {
       expect(yield* decodeDid("did:example:123456789abcdefghi")).toBe("did:example:123456789abcdefghi");
       expect(yield* decodeDid("did:plc:ewvi7nxzyoun6zhxrhs64oiz")).toBe("did:plc:ewvi7nxzyoun6zhxrhs64oiz");
       expect(yield* decodeDid("did:web:example.com")).toBe("did:web:example.com");

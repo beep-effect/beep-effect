@@ -13,10 +13,10 @@ import { Effect, flow, Layer, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
-import * as Configuration from "./Configuration.js";
-import * as Core from "./Core.js";
-import * as Domain from "./Domain.js";
-import * as InternalVersion from "./internal/version.js";
+import * as Configuration from "./Configuration.ts";
+import * as Core from "./Core.ts";
+import * as Domain from "./Domain.ts";
+import * as InternalVersion from "./internal/version.ts";
 
 const decodeCompilerOptions = S.decodeUnknownEffect(S.fromJsonString(S.toEncoded(TSConfigCompilerOptions)));
 

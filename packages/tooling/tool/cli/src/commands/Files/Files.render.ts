@@ -9,7 +9,7 @@ import { renderBiomeJson } from "@beep/repo-utils/schemas/BiomeJson";
 import { A } from "@beep/utils";
 import { Console, Effect, FileSystem, Path, pipe } from "effect";
 import * as O from "effect/Option";
-import { FilesCommandError, formatPlatformError } from "./Files.errors.js";
+import { FilesCommandError, formatPlatformError } from "./Files.errors.ts";
 import {
   ArchivePoorCandidatesManifest,
   ArchivePoorCandidatesManifestSummary,
@@ -17,7 +17,7 @@ import {
   encodeDetectBordersReport,
   encodeDetectFacesReport,
   encodeNormalizeManifest,
-} from "./Files.schemas.js";
+} from "./Files.schemas.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type {
   ArchivePoorCandidatesEntry,
@@ -40,7 +40,7 @@ import type {
   NormalizeSkippedEntry,
   RenamePlanEntry,
   StripMetadataPlanEntry,
-} from "./Files.schemas.js";
+} from "./Files.schemas.ts";
 
 /**
  * Render a rename plan entry.

@@ -11,9 +11,9 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { ChildProcess } from "effect/unstable/process";
-import { commandTextForStep, RepoStepRunResult } from "./RepoRun.models.js";
+import { commandTextForStep, RepoStepRunResult } from "./RepoRun.models.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { RepoPlanStep } from "./RepoRun.models.js";
+import type { RepoPlanStep } from "./RepoRun.models.ts";
 
 const MAX_STEP_OUTPUT_CHARS = 512 * 1024;
 const outputTruncatedNotice = `\n[repo-run] output truncated after ${MAX_STEP_OUTPUT_CHARS} characters`;

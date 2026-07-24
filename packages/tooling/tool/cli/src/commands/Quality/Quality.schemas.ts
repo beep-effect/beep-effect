@@ -9,9 +9,9 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
 import * as S from "effect/Schema";
-import { QualityTaskStep } from "../../internal/process/index.js";
-import { GITHUB_CHECK_MODE_VALUES, GithubCheckMode as GithubCheckModeSchema } from "../../internal/repo-run/index.js";
-import type { GithubCheckMode as GithubCheckModeType } from "../../internal/repo-run/index.js";
+import { QualityTaskStep } from "../../internal/process/index.ts";
+import { GITHUB_CHECK_MODE_VALUES, GithubCheckMode as GithubCheckModeSchema } from "../../internal/repo-run/index.ts";
+import type { GithubCheckMode as GithubCheckModeType } from "../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Quality/Quality.schemas");
 

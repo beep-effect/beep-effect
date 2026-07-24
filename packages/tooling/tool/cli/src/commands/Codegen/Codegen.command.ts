@@ -36,11 +36,9 @@ const $I = $RepoCliId.create("commands/Codegen/Codegen.command");
  * @category utilities
  * @since 0.0.0
  */
-const TS_EXTENSIONS = [".ts", ".tsx"] as const;
-
 const TYPE_SCRIPT_SOURCE_FILE_PATTERN = /^.+\.(ts|tsx)$/;
 const TYPE_SCRIPT_TEST_FILE_PATTERN = /^.+\.(test|spec)\.(ts|tsx)$/;
-const JS_IMPORT_PATH_PATTERN = /^\.\/.+\.js$/;
+const TYPESCRIPT_IMPORT_PATH_PATTERN = /^\.\/.+\.ts$/;
 
 const TypeScriptSourceFileName = S.String.check(S.isPattern(TYPE_SCRIPT_SOURCE_FILE_PATTERN)).pipe(
   S.brand("TypeScriptSourceFileName"),
@@ -57,31 +55,23 @@ const TypeScriptTestFileName = S.String.check(S.isPattern(TYPE_SCRIPT_TEST_FILE_
   })
 );
 
-const JSImportPath = S.String.check(S.isPattern(JS_IMPORT_PATH_PATTERN)).pipe(
-  $I.annoteSchema("JSImportPath", {
-    description: "Relative ESM import path with .js extension.",
+const TypeScriptImportPath = S.String.check(S.isPattern(TYPESCRIPT_IMPORT_PATH_PATTERN)).pipe(
+  $I.annoteSchema("TypeScriptImportPath", {
+    description: "Relative TypeScript import path using the repository's uniform .ts source specifier.",
   })
 );
 
-const TypeScriptSourceToJSImportPath = TypeScriptSourceFileName.pipe(
+const TypeScriptSourceToImportPath = TypeScriptSourceFileName.pipe(
   S.decodeTo(
-    JSImportPath,
+    TypeScriptImportPath,
     SchemaTransformation.transform({
-      decode: (fileName) =>
-        pipe(
-          TS_EXTENSIONS,
-          A.findFirst((ext) => Str.endsWith(ext)(fileName)),
-          O.map((ext) => `./${Str.slice(0, -ext.length)(fileName)}.js`),
-          O.getOrElse(() => `./${fileName}`)
-        ),
+      decode: (fileName) => `./${pipe(fileName, Str.replace(/\.tsx?$/, ".ts"))}`,
       encode: (importPath) =>
-        Result.getOrThrow(
-          decodeTypeScriptSourceFileNameResult(pipe(importPath, Str.replace(/^\.\/(.*)\.js$/, "$1.ts")))
-        ),
+        Result.getOrThrow(decodeTypeScriptSourceFileNameResult(pipe(importPath, Str.replace(/^\.\/(.*)$/, "$1")))),
     })
   ),
-  $I.annoteSchema("TypeScriptSourceToJSImportPath", {
-    description: "Schema transformation from a TypeScript module filename to its .js import path.",
+  $I.annoteSchema("TypeScriptSourceToImportPath", {
+    description: "Schema transformation from a TypeScript module filename to its matching source import path.",
   })
 );
 
@@ -101,16 +91,16 @@ const isTypeScriptSourceFileName = S.is(TypeScriptSourceFileName);
 const isTypeScriptTestFileName = S.is(TypeScriptTestFileName);
 const isInternalDirectoryName = S.is(InternalDirectoryName);
 const isRootIndexFileName = S.is(RootIndexFileName);
-const decodeJSImportPathResult = S.decodeUnknownResult(TypeScriptSourceToJSImportPath);
+const decodeImportPathResult = S.decodeUnknownResult(TypeScriptSourceToImportPath);
 
 /**
- * Convert a TypeScript filename to its corresponding `.js` import specifier.
+ * Convert a TypeScript filename to its corresponding source import specifier.
  *
- * Strips the `.ts` or `.tsx` extension and prepends `./` so the result is a
- * valid ESM relative import path (e.g. `"FsUtils.ts"` becomes `"./FsUtils.js"`).
+ * Uses the repository's uniform `.ts` source specifier and prepends `./` so the
+ * result is a valid relative import path (e.g. `"View.tsx"` becomes `"./View.ts"`).
  *
  * @param name - The TypeScript filename (may include a sub-path prefix).
- * @returns A relative import specifier with a `.js` extension.
+ * @returns A relative import specifier with the uniform `.ts` source extension.
  * @example
  * ```ts
  * console.log("toImportPath")
@@ -122,7 +112,7 @@ const toImportPath = (name: string): string => {
   if (!isTypeScriptSourceFileName(name)) {
     return `./${name}`;
   }
-  return Result.getOrThrow(decodeJSImportPathResult(name));
+  return Result.getOrThrow(decodeImportPathResult(name));
 };
 
 /**

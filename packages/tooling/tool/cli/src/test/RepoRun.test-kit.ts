@@ -5,4 +5,4 @@
  * @since 0.0.0
  */
 
-export * from "../internal/repo-run/index.js";
+export * from "../internal/repo-run/index.ts";

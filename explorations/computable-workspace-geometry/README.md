@@ -48,6 +48,8 @@ package.
 
 ## Trail
 
+- 2026-07-17 — First step-4 surface migration closed: `goals/ontology-workbench-migration` (dock capabilities M1, zero-behavior workbench split M2, nine-panel shell M3, four-round QA loop M4) merged via PRs #429/#433/#434 + the closeout PR. The browser QA loop graduated into `.claude/skills/browser-qa-loop`. Exploration remains active for thread-virtualization (Goal 2, gated).
+
 - 2026-07-17: dock-substrate-landing packet CLOSED (completed-retained). All
   four milestones merged (#416, #421, #426 + closeout); the desktop shell is
   a dock workspace with persistent layout, QA'd to zero required findings

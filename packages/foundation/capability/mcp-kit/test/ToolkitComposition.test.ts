@@ -48,8 +48,9 @@ const callHardTool = Effect.gen(function* () {
 
 describe("composeGatedLayers (hard gate)", () => {
   layer(buildComposedLayer({}))("when the credential is absent", (it) => {
-    it.effect("vanishes the hard-gated source from composition", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "vanishes the hard-gated source from composition",
+      Effect.fnUntraced(function* () {
         const result = yield* callHardTool;
         assert.strictEqual(result._tag, "Failure");
       })
@@ -57,8 +58,9 @@ describe("composeGatedLayers (hard gate)", () => {
   });
 
   layer(buildComposedLayer({ MCP_KIT_TEST_HARD_KEY: "fixture-secret" }))("when the credential is present", (it) => {
-    it.effect("mounts the hard-gated source", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "mounts the hard-gated source",
+      Effect.fnUntraced(function* () {
         const result = yield* callHardTool;
         assert.strictEqual(result._tag, "Success");
         if (result._tag === "Success") {

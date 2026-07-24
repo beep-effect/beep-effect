@@ -9,7 +9,7 @@ import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import * as S from "effect/Schema";
-import { ClaimNumber, LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.js";
+import { ClaimNumber, LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.ts";
 
 const $I = $LawPracticeDomainId.create("entities/Claim/Claim.model");
 

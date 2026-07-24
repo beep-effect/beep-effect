@@ -18,9 +18,9 @@ import {
   isStrictObjectLikeType,
   parseNumericLiteral,
   unwrapExpression,
-} from "../../../internal/tsmorph/index.js";
-import { DualArityInventoryEntry } from "../Laws.schemas.js";
-import { DualArityRender } from "./DualArity.render.js";
+} from "../../../internal/tsmorph/index.ts";
+import { DualArityInventoryEntry } from "../Laws.schemas.ts";
+import { DualArityRender } from "./DualArity.render.ts";
 import type {
   CallExpression,
   FunctionDeclaration,
@@ -31,8 +31,8 @@ import type {
   Type,
   VariableDeclaration,
 } from "ts-morph";
-import type { ParameterOwner } from "../../../internal/tsmorph/index.js";
-import type { DualArityDiagnosticKind, DualArityEntryKind } from "../Laws.schemas.js";
+import type { ParameterOwner } from "../../../internal/tsmorph/index.ts";
+import type { DualArityDiagnosticKind, DualArityEntryKind } from "../Laws.schemas.ts";
 
 const NON_PIPEABLE_FIRST_PARAMETER_NAMES = ["message", "options", "config", "status", "severity"] as const;
 const PIPEABLE_PARAMETER_NAME_PATTERN =

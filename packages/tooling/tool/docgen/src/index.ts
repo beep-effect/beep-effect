@@ -9,34 +9,34 @@
  * @category validation
  * @since 0.0.0
  */
-export * as Checker from "./Checker.js";
+export * as Checker from "./Checker.ts";
 /**
  * @category configuration
  * @since 0.0.0
  */
-export * as Configuration from "./Configuration.js";
+export * as Configuration from "./Configuration.ts";
 /**
  * @category workflows
  * @since 0.0.0
  */
-export * as Core from "./Core.js";
+export * as Core from "./Core.ts";
 /**
  * @category models
  * @since 0.0.0
  */
-export * as Domain from "./Domain.js";
+export * as Domain from "./Domain.ts";
 /**
  * @category parsing
  * @since 0.0.0
  */
-export * as Parser from "./Parser.js";
+export * as Parser from "./Parser.ts";
 /**
  * @category formatting
  * @since 0.0.0
  */
-export * as Printer from "./Printer.js";
+export * as Printer from "./Printer.ts";
 /**
  * @category workflows
  * @since 0.0.0
  */
-export * as ProofManifest from "./ProofManifest.js";
+export * as ProofManifest from "./ProofManifest.ts";

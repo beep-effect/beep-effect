@@ -18,7 +18,7 @@
  * @category entities
  * @since 0.0.0
  */
-export * from "./entities/index.js";
+export * from "./entities/index.ts";
 /**
  * Epistemic value model exports.
  *
@@ -34,4 +34,4 @@ export * from "./entities/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./values/index.js";
+export * from "./values/index.ts";

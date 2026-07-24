@@ -7,7 +7,7 @@
  */
 
 import { DbSchema as EpistemicDbSchema } from "@beep/epistemic-tables";
-import { DbAdminMigrationTarget } from "./ArchitectureLab.js";
+import { DbAdminMigrationTarget } from "./ArchitectureLab.ts";
 
 /**
  * Epistemic usage migration target used to prove usage-record persistence.

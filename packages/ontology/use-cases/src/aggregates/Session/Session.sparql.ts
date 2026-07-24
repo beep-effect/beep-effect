@@ -19,7 +19,7 @@ import {
 import { A, O, R, Str } from "@beep/utils";
 import { Context, Effect, Layer, Match, Order, pipe } from "effect";
 import * as S from "effect/Schema";
-import { inferredSessionGraphPartitions, OntologyInferenceResult } from "./Session.reasoner.js";
+import { inferredSessionGraphPartitions, OntologyInferenceResult } from "./Session.reasoner.ts";
 import type { GraphPartition } from "@beep/ontology-domain/aggregates/Session";
 import type { Dataset, PrefixMap, Quad } from "@beep/rdf/Rdf";
 import type { SparqlQueryError } from "@beep/semantic-web/services/sparql-query";

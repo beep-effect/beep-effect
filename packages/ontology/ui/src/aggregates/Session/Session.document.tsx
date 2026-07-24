@@ -36,7 +36,7 @@ import { O, Str } from "@beep/utils";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { pipe } from "effect";
 import * as S from "effect/Schema";
-import { valueFromEvent } from "./Session.workbench.shared.js";
+import { valueFromEvent } from "./Session.workbench.shared.ts";
 import type { JSX } from "react";
 
 const decodePath = (value: string): O.Option<OntologyFilePath> => OntologyFilePath.decodeOption(Str.trim(value));
@@ -119,10 +119,10 @@ export function OntologyDocumentRegion(): JSX.Element {
 
   return (
     <>
-      <div className="flex h-12 shrink-0 items-center gap-2 border-b px-3">
+      <div className="flex min-h-12 shrink-0 flex-wrap items-center gap-2 border-b px-3 py-2">
         <Input
           aria-label="Ontology file path"
-          className="h-8 max-w-[460px] flex-1 font-mono text-xs"
+          className="h-8 min-w-[180px] max-w-[460px] flex-1 font-mono text-xs"
           value={pathInput}
           onChange={(event) => setPathInput(valueFromEvent(event))}
         />

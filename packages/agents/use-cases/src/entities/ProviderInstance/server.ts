@@ -9,16 +9,16 @@
  * @category use-cases
  * @since 0.0.0
  */
-export * from "./index.js";
+export * from "./index.ts";
 /** Persistence and probe ports.
  *
  * @category ports
  * @since 0.0.0
  */
-export * from "./ProviderInstance.repository.js";
+export * from "./ProviderInstance.repository.ts";
 /** Use-case implementation factory.
  *
  * @category use-cases
  * @since 0.0.0
  */
-export * from "./ProviderInstance.service.js";
+export * from "./ProviderInstance.service.ts";

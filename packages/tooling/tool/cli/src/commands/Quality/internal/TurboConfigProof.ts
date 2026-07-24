@@ -14,7 +14,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ChildProcess } from "effect/unstable/process";
-import { collectText } from "../../../internal/process/index.js";
+import { collectText } from "../../../internal/process/index.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/TurboConfigProof");

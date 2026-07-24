@@ -18,4 +18,4 @@
  * @since 0.0.0
  * @category models
  */
-export * from "./User.model.js";
+export * from "./User.model.ts";

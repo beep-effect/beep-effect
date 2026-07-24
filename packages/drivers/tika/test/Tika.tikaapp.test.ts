@@ -97,61 +97,81 @@ describe("makeTikaAppFileProcessingEngine", () => {
       fcRuns(25)
     ));
 
-  it.effect("extracts trimmed text and stringified metadata via tika-app", () =>
-    Effect.gen(function* () {
-      const { operation, stubPath } = yield* fixture(stubJava, "pdf-text-layer");
-      const engine = yield* makeTikaAppFileProcessingEngine(
-        TikaAppEngineConfig.make({ jarPath: "/opt/tika/tika-app.jar", javaPath: stubPath })
-      );
+  it.effect(
+    "extracts trimmed text and stringified metadata via tika-app",
+    Effect.fnUntraced(
+      function* () {
+        const { operation, stubPath } = yield* fixture(stubJava, "pdf-text-layer");
+        const engine = yield* makeTikaAppFileProcessingEngine(
+          TikaAppEngineConfig.make({ jarPath: "/opt/tika/tika-app.jar", javaPath: stubPath })
+        );
 
-      const result = yield* engine.extract(operation);
+        const result = yield* engine.extract(operation);
 
-      expect(result.engine).toBe("apache-tika");
-      expect(result.text).toBe("hello corpus world");
-      expect(result.metadata["Content-Type"]).toBe("application/pdf");
-      expect(result.metadata["dc:title"]).toBe("Probe Title");
-      expect(result.metadata["X-TIKA:Parsed-By"]).toContain("PDFParser");
-      expect(result.metadata["X-TIKA:content"]).toBeUndefined();
-    }).pipe(Effect.scoped, provideTestLayer)
+        expect(result.engine).toBe("apache-tika");
+        expect(result.text).toBe("hello corpus world");
+        expect(result.metadata["Content-Type"]).toBe("application/pdf");
+        expect(result.metadata["dc:title"]).toBe("Probe Title");
+        expect(result.metadata["X-TIKA:Parsed-By"]).toContain("PDFParser");
+        expect(result.metadata["X-TIKA:content"]).toBeUndefined();
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
   );
 
-  it.effect("returns metadata only for image-metadata sources", () =>
-    Effect.gen(function* () {
-      const { operation, stubPath } = yield* fixture(stubJava, "image-metadata");
-      const engine = yield* makeTikaAppFileProcessingEngine(
-        TikaAppEngineConfig.make({ jarPath: "/opt/tika/tika-app.jar", javaPath: stubPath })
-      );
+  it.effect(
+    "returns metadata only for image-metadata sources",
+    Effect.fnUntraced(
+      function* () {
+        const { operation, stubPath } = yield* fixture(stubJava, "image-metadata");
+        const engine = yield* makeTikaAppFileProcessingEngine(
+          TikaAppEngineConfig.make({ jarPath: "/opt/tika/tika-app.jar", javaPath: stubPath })
+        );
 
-      const result = yield* engine.extract(operation);
+        const result = yield* engine.extract(operation);
 
-      expect(result.text).toBeUndefined();
-      expect(result.metadata["Content-Type"]).toBe("application/pdf");
-    }).pipe(Effect.scoped, provideTestLayer)
+        expect(result.text).toBeUndefined();
+        expect(result.metadata["Content-Type"]).toBe("application/pdf");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
   );
 
-  it.effect("maps non-zero tika exits to file-extraction-failed", () =>
-    Effect.gen(function* () {
-      const { operation, stubPath } = yield* fixture(failingStub, "pdf-text-layer");
-      const engine = yield* makeTikaAppFileProcessingEngine(
-        TikaAppEngineConfig.make({ jarPath: "/opt/tika/tika-app.jar", javaPath: stubPath })
-      );
+  it.effect(
+    "maps non-zero tika exits to file-extraction-failed",
+    Effect.fnUntraced(
+      function* () {
+        const { operation, stubPath } = yield* fixture(failingStub, "pdf-text-layer");
+        const engine = yield* makeTikaAppFileProcessingEngine(
+          TikaAppEngineConfig.make({ jarPath: "/opt/tika/tika-app.jar", javaPath: stubPath })
+        );
 
-      const error = yield* engine.extract(operation).pipe(Effect.flip);
+        const error = yield* engine.extract(operation).pipe(Effect.flip);
 
-      expect(error.reason).toBe("file-extraction-failed");
-    }).pipe(Effect.scoped, provideTestLayer)
+        expect(error.reason).toBe("file-extraction-failed");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
   );
 
-  it.effect("maps a missing java binary to engine-unavailable", () =>
-    Effect.gen(function* () {
-      const { operation } = yield* fixture(stubJava, "pdf-text-layer");
-      const engine = yield* makeTikaAppFileProcessingEngine(
-        TikaAppEngineConfig.make({ jarPath: "/opt/tika/tika-app.jar", javaPath: "/nonexistent/java-missing" })
-      );
+  it.effect(
+    "maps a missing java binary to engine-unavailable",
+    Effect.fnUntraced(
+      function* () {
+        const { operation } = yield* fixture(stubJava, "pdf-text-layer");
+        const engine = yield* makeTikaAppFileProcessingEngine(
+          TikaAppEngineConfig.make({ jarPath: "/opt/tika/tika-app.jar", javaPath: "/nonexistent/java-missing" })
+        );
 
-      const error = yield* engine.extract(operation).pipe(Effect.flip);
+        const error = yield* engine.extract(operation).pipe(Effect.flip);
 
-      expect(error.reason).toBe("engine-unavailable");
-    }).pipe(Effect.scoped, provideTestLayer)
+        expect(error.reason).toBe("engine-unavailable");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
   );
 });

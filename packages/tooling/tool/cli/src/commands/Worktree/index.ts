@@ -10,11 +10,11 @@
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./Worktree.command.js";
+export * from "./Worktree.command.ts";
 /**
  * Public worktree command error exports.
  *
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./Worktree.errors.js";
+export * from "./Worktree.errors.ts";

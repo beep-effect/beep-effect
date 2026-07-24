@@ -5,8 +5,8 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Node, SyntaxKind } from "ts-morph";
-import { formatJsonc } from "../../../internal/artifacts/index.js";
-import { createInMemoryTsMorphProject, leadingJsDocText, topFileoverview } from "../../../internal/tsmorph/index.js";
+import { formatJsonc } from "../../../internal/artifacts/index.ts";
+import { createInMemoryTsMorphProject, leadingJsDocText, topFileoverview } from "../../../internal/tsmorph/index.ts";
 import {
   declarationKind,
   defaultRepoRoot,
@@ -25,10 +25,10 @@ import {
   tagsFromComment,
   topoSortPackageNames,
   valuesForTag,
-} from "./QualityArtifactSupport.js";
+} from "./QualityArtifactSupport.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { SourceFile } from "ts-morph";
-import type { WorkspacePackageInfo } from "./QualityArtifactSupport.js";
+import type { WorkspacePackageInfo } from "./QualityArtifactSupport.ts";
 
 const $I = $RepoCliId.create("commands/Quality/internal/JSDocDocumentationInventory");
 

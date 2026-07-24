@@ -10,14 +10,14 @@
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./Lint.command.js";
+export * from "./Lint.command.ts";
 /**
  * Public command module export.
  *
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./Lint.errors.js";
+export * from "./Lint.errors.ts";
 /**
  * Schema-first lint schema-role utilities.
  *

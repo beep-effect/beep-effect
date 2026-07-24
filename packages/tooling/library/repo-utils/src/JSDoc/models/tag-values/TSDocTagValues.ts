@@ -7,7 +7,7 @@
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { empty, nameField, optionalDesc } from "./_fields.js";
+import { empty, nameField, optionalDesc } from "./_fields.ts";
 
 const $I = $RepoUtilsId.create("JSDoc/models/tag-values/TSDocTagValues");
 

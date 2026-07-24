@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -40,25 +40,25 @@ Use this command for execution-capable sessions:
 | --- | --- | --- | --- |
 | M1 | `feat/dock-capabilities-m1` | Kernel per-panel constraints; adapter tab overflow + drop quadrants; Storybook proofs | merged (PR #429) |
 | M2 | `feat/ontology-workbench-split` | Zero-behavior region extraction in `@beep/ontology-ui`; Add-Triple atoms relocate; StrictMode investigated | landed (this PR) |
-| M3 | `feat/ontology-dock-panels` | Nine panel renderers; Document panel; nav-rail panel menu; core-cluster default layout; snapshot key v2 | pending |
-| M4 | `chore/ontology-migration-qa` | Browser QA loop to green; QA-loop skill graduation; packet closeout | pending |
+| M3 | `feat/ontology-dock-panels` | Nine panel renderers; Document panel; nav-rail panel menu; core-cluster default layout; snapshot key v2 | landed (this PR) |
+| M4 | `chore/ontology-migration-qa` | Browser QA loop to green; QA-loop skill graduation; packet closeout | landed (this PR) |
 
 ## Current Phase
 
-P3 (M3 shell integration) — next up: nine panel renderers, Document panel,
-nav-rail panel menu, core-cluster default layout, snapshot key v2, in
-`apps/professional-desktop`.
+Closed — all four milestones merged; packet retained for reference.
 
 ## Latest Evidence
 
-M1 merged 2026-07-17 (PR #429: PanelConstraints + solver, tab-overflow
-dropdown, drop quadrants; Greptile 5/5, 25 checks green). M2 lands in this
-PR: nine region components extracted zero-behavior (both ontology suites +
-the chromium renderer-toggle screenshot test pass with zero test edits);
-Add-Triple atoms relocated to `@beep/ontology-client`. StrictMode finding:
-MUI X `useDisposable` detects StrictMode via the fiber's StrictEffects bit —
-no component-shaped wrapper can change that path, so no workaround was
-applied; the residual stands for M3's `SurfaceRetry` disposition.
+M4 landed 2026-07-17 (this PR): four-round browser QA loop converged
+7 → 2 → 1 → 0 required findings (inventories + screenshots under
+`.beep/qa/round-{1..4}/`, session-local). Real fixes: drop-target pointer
+normalization, pre-float placement memory for reversible float/dock,
+overflow-menu popover chrome, per-panel minima adopted by the app, strip
+wrap + legibility, disabled-state contrast, empty states, launcher chevron,
+floating header chrome, chat sidebar scroll. Two judged findings were
+proven capture artifacts by direct probes. The loop graduated into
+`.claude/skills/browser-qa-loop` with the harness as template. Closeout
+reflection in `history/reflections/2026-07-17-claude.md`.
 
 ## Notes
 

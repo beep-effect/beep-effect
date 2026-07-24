@@ -12,14 +12,14 @@ import { Console, Effect, FileSystem, flow, JsonPointer, Match, Path, pipe, Resu
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { resolveRunMode as resolveSharedRunMode, runModeFlagsConflict } from "../../internal/cli/RunMode.js";
-import { formatJson } from "./internal/Source.js";
-import { SyncDataRunMode, SyncDataToTsDriftError, SyncDataToTsError } from "./SyncDataToTs.schemas.js";
-import { syncDataTargets } from "./targets/index.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { resolveRunMode as resolveSharedRunMode, runModeFlagsConflict } from "../../internal/cli/RunMode.ts";
+import { formatJson } from "./internal/Source.ts";
+import { SyncDataRunMode, SyncDataToTsDriftError, SyncDataToTsError } from "./SyncDataToTs.schemas.ts";
+import { syncDataTargets } from "./targets/index.ts";
 import type { Crypto, JsonPatch } from "effect";
 import type { HttpClient } from "effect/unstable/http";
-import type { SyncDataFileResult, SyncDataTarget, SyncDataTargetResult } from "./SyncDataToTs.schemas.js";
+import type { SyncDataFileResult, SyncDataTarget, SyncDataTargetResult } from "./SyncDataToTs.schemas.ts";
 
 const targetFlag = Flag.string("target").pipe(
   Flag.withAlias("t"),

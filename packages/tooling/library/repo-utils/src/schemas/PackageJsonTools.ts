@@ -14,8 +14,8 @@ import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { DomainError } from "../errors/index.js";
-import { jsonStringifyPretty } from "../JsonUtils.js";
+import { DomainError } from "../errors/index.ts";
+import { jsonStringifyPretty } from "../JsonUtils.ts";
 import {
   Browser,
   decodePackageJsonEffect,
@@ -27,7 +27,7 @@ import {
   PeerDependenciesMeta,
   PublishConfig,
   TypesVersions,
-} from "./PackageJson.js";
+} from "./PackageJson.ts";
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 import type { JsonPatch } from "effect";
 

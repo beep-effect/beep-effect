@@ -25,9 +25,11 @@ import {
   DockSnapshotStore,
   DockWorkspace,
   GroupId,
+  HorizontalSplitLayout,
   makeDockAtomsWith,
   OpenPanelCommand,
   Panel,
+  PanelConstraints,
   PanelId,
   PopulatedWorkspace,
   RendererKey,
@@ -35,9 +37,13 @@ import {
   RestoreSnapshotRequest,
   RootPlacement,
   SaveDockSnapshot,
+  SplitId,
+  SplitNode,
+  SplitRatio,
   TabPlacement,
   TabsNode,
   UserCommandOrigin,
+  VerticalSplitLayout,
 } from "@beep/dock";
 import { Duration, Effect, Layer } from "effect";
 import * as A from "effect/Array";
@@ -49,55 +55,135 @@ import type { DockAtomGraph } from "@beep/dock-react";
 import type { Fiber } from "effect";
 
 /**
- * The four coarse desktop surfaces, each one dock panel.
+ * Every desktop dock panel: the three shell surfaces plus the nine ontology
+ * workbench regions. `cluster` names the default-layout group a panel calls
+ * home — reopening a closed panel targets a group where its cluster siblings
+ * live, so SPARQL lands beside Inspector rather than in a random group.
  *
  * @example
  * ```ts
- * import { DESKTOP_SURFACES } from "@/workspace/dock.atoms"
+ * import { DESKTOP_PANELS } from "@/workspace/dock.atoms"
  *
- * console.log(DESKTOP_SURFACES.length) // 4
+ * console.log(DESKTOP_PANELS.length) // 12
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const DESKTOP_SURFACES = [
-  { description: "Return to the workspace overview.", label: "Home", surface: "home", title: "Home" },
+export const DESKTOP_PANELS = [
+  { cluster: "shell", description: "Return to the workspace overview.", key: "home", label: "Home", title: "Home" },
   {
+    cluster: "shell",
     description: "Work with the professional assistant and your saved threads.",
+    key: "chat",
     label: "Chat",
-    surface: "chat",
     title: "Chat",
   },
   {
-    description: "Explore and refine the workspace knowledge model.",
-    label: "Ontology",
-    surface: "ontology",
-    title: "Ontology",
+    cluster: "shell",
+    description: "Review provider connectivity, queue health, and conflicts.",
+    key: "sync",
+    label: "Vault sync",
+    title: "Vault sync",
   },
   {
-    description: "Review provider connectivity, queue health, and conflicts.",
-    label: "Vault sync",
-    surface: "sync",
-    title: "Vault sync",
+    cluster: "ontology-left",
+    description: "Search and browse the knowledge model tree.",
+    key: "ontology-explorer",
+    label: "Explorer",
+    title: "Explorer",
+  },
+  {
+    cluster: "ontology-left",
+    description: "Open, save, and steer the ontology document.",
+    key: "ontology-document",
+    label: "Document",
+    title: "Document",
+  },
+  {
+    cluster: "ontology-center",
+    description: "Visualize the knowledge model in 2D or 3D.",
+    key: "ontology-graph",
+    label: "Graph",
+    title: "Graph",
+  },
+  {
+    cluster: "ontology-center",
+    description: "Read the ontology's Turtle source.",
+    key: "ontology-source",
+    label: "Source",
+    title: "Source",
+  },
+  {
+    cluster: "ontology-right",
+    description: "Inspect the selected resource and author triples.",
+    key: "ontology-inspector",
+    label: "Inspector",
+    title: "Inspector",
+  },
+  {
+    cluster: "ontology-right",
+    description: "Query the knowledge model with SPARQL.",
+    key: "ontology-sparql",
+    label: "SPARQL",
+    title: "SPARQL",
+  },
+  {
+    cluster: "ontology-right",
+    description: "Validate the model and export reports.",
+    key: "ontology-validation",
+    label: "Validation",
+    title: "Validation",
+  },
+  {
+    cluster: "ontology-right",
+    description: "Review the session's change history.",
+    key: "ontology-changelog",
+    label: "Change Log",
+    title: "Change Log",
+  },
+  {
+    cluster: "ontology-right",
+    description: "Watch graph worker health and throughput.",
+    key: "ontology-metrics",
+    label: "Worker Metrics",
+    title: "Worker Metrics",
   },
 ] as const;
 
 /**
- * One of the four desktop surface names.
+ * One of the twelve desktop panel keys.
  *
  * @example
  * ```ts
- * import type { DesktopSurface } from "@/workspace/dock.atoms"
+ * import type { DesktopPanelKey } from "@/workspace/dock.atoms"
  *
- * const surface: DesktopSurface = "chat"
- * console.log(surface)
+ * const key: DesktopPanelKey = "ontology-graph"
+ * console.log(key)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type DesktopSurface = (typeof DESKTOP_SURFACES)[number]["surface"];
+export type DesktopPanelKey = (typeof DESKTOP_PANELS)[number]["key"];
+
+/**
+ * The panels the nav rail's Ontology menu lists, in default-layout order.
+ *
+ * @example
+ * ```ts
+ * import { ONTOLOGY_PANELS } from "@/workspace/dock.atoms"
+ *
+ * console.log(ONTOLOGY_PANELS.length) // 9
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const ONTOLOGY_PANELS = A.filter(DESKTOP_PANELS, (panel) => panel.cluster !== "shell");
+
+const panelSpec = (key: DesktopPanelKey): (typeof DESKTOP_PANELS)[number] =>
+  O.getOrThrow(A.findFirst(DESKTOP_PANELS, (panel) => panel.key === key));
 
 /**
  * The resolved desktop dock atom graph (kernel session plus derived atoms).
@@ -116,34 +202,48 @@ export type DesktopSurface = (typeof DESKTOP_SURFACES)[number]["surface"];
 export type DesktopDockGraph = DockAtomGraph;
 
 /**
- * Panel id for a desktop surface (`surface-<name>`).
+ * Panel id for a desktop panel (`surface-<key>`).
  *
  * @example
  * ```ts
- * import { surfacePanelId } from "@/workspace/dock.atoms"
+ * import { desktopPanelId } from "@/workspace/dock.atoms"
  *
- * console.log(surfacePanelId("chat")) // "surface-chat"
+ * console.log(desktopPanelId("chat")) // "surface-chat"
  * ```
  *
  * @category combinators
  * @since 0.0.0
  */
-export const surfacePanelId = (surface: DesktopSurface): PanelId => PanelId.make(`surface-${surface}`);
+export const desktopPanelId = (key: DesktopPanelKey): PanelId => PanelId.make(`surface-${key}`);
 
-const surfacePanel = (surface: DesktopSurface, title: string): Panel =>
+// Per-panel minima (the M1 kernel capability): a split or edge insertion can
+// never squeeze a content-heavy panel below readability — QA round 1 showed
+// a full-width row insertion clipping Chat to ~155px (finding R1-06).
+const CONTENT_MIN = PanelConstraints.make({ minWidth: O.some(220), minHeight: O.some(220) });
+
+// The kernel panel for a desktop panel key. Every panel is keep-alive
+// (`renderMode: "always"`): inactive tabs stay mounted so chat streams,
+// ontology session state, and sync progress survive tab switches.
+const desktopPanel = (key: DesktopPanelKey): Panel =>
   Panel.make({
-    id: surfacePanelId(surface),
-    title,
-    view: ComponentPanelView.make({ renderer: RendererKey.make(surface) }),
-    // Keep-alive: surfaces stay mounted while inactive so chat streams,
-    // ontology state, and sync progress survive tab switches.
+    id: desktopPanelId(key),
+    title: panelSpec(key).title,
+    view: ComponentPanelView.make({ renderer: RendererKey.make(key) }),
     renderMode: "always",
+    constraints: O.some(CONTENT_MIN),
   });
 
-const DESKTOP_GROUP_ID = GroupId.make("desktop-main");
+const GROUP_ONTOLOGY_LEFT = GroupId.make("desktop-ontology-left");
+const GROUP_ONTOLOGY_CENTER = GroupId.make("desktop-ontology-center");
+const GROUP_ONTOLOGY_RIGHT = GroupId.make("desktop-ontology-right");
+const GROUP_SHELL = GroupId.make("desktop-shell");
 
 /**
- * The default workspace: one group, four keep-alive surface panels, chat active.
+ * The default workspace, the ontology core cluster over the shell row:
+ * Explorer|Document tabs on the left, Graph|Source center (Graph active),
+ * Inspector|Change Log on the right, and Chat|Home|Sync along the bottom
+ * (Chat active). SPARQL, Validation, and Worker Metrics start closed and
+ * open from the nav rail's Ontology menu.
  *
  * @example
  * ```ts
@@ -156,28 +256,79 @@ const DESKTOP_GROUP_ID = GroupId.make("desktop-main");
  * @since 0.0.0
  */
 export const defaultDesktopWorkspace = PopulatedWorkspace.make({
-  root: TabsNode.make({
-    groupId: DESKTOP_GROUP_ID,
-    before: [surfacePanel("home", "Home")],
-    active: surfacePanel("chat", "Chat"),
-    after: [surfacePanel("ontology", "Ontology"), surfacePanel("sync", "Vault sync")],
+  root: SplitNode.make({
+    splitId: SplitId.make("desktop-rows"),
+    layout: VerticalSplitLayout.make({
+      topRatio: SplitRatio.make(6_600),
+      top: SplitNode.make({
+        splitId: SplitId.make("desktop-ontology-columns"),
+        layout: HorizontalSplitLayout.make({
+          leftRatio: SplitRatio.make(2_200),
+          left: TabsNode.make({
+            groupId: GROUP_ONTOLOGY_LEFT,
+            active: desktopPanel("ontology-explorer"),
+            after: [desktopPanel("ontology-document")],
+          }),
+          right: SplitNode.make({
+            splitId: SplitId.make("desktop-ontology-main"),
+            layout: HorizontalSplitLayout.make({
+              leftRatio: SplitRatio.make(6_400),
+              left: TabsNode.make({
+                groupId: GROUP_ONTOLOGY_CENTER,
+                active: desktopPanel("ontology-graph"),
+                after: [desktopPanel("ontology-source")],
+              }),
+              right: TabsNode.make({
+                groupId: GROUP_ONTOLOGY_RIGHT,
+                active: desktopPanel("ontology-inspector"),
+                after: [desktopPanel("ontology-changelog")],
+              }),
+            }),
+          }),
+        }),
+      }),
+      bottom: TabsNode.make({
+        groupId: GROUP_SHELL,
+        before: [desktopPanel("home")],
+        active: desktopPanel("chat"),
+        after: [desktopPanel("sync")],
+      }),
+    }),
   }),
 });
 
 /**
- * The localStorage key holding the persisted dock snapshot.
+ * The localStorage key holding the persisted dock snapshot. `v2` because the
+ * ontology surface split into nine panels: a `v1` snapshot still decodes but
+ * references the retired `ontology` renderer key, so it would restore a dead
+ * panel — the key bump is the honest invalidation (boot deletes stale keys).
  *
  * @example
  * ```ts
  * import { DOCK_SNAPSHOT_KEY } from "@/workspace/dock.atoms"
  *
- * console.log(DOCK_SNAPSHOT_KEY) // "desktop:dock-workspace:v1"
+ * console.log(DOCK_SNAPSHOT_KEY) // "desktop:dock-workspace:v2"
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const DOCK_SNAPSHOT_KEY = "desktop:dock-workspace:v1";
+export const DOCK_SNAPSHOT_KEY = "desktop:dock-workspace:v2";
+
+/**
+ * Retired snapshot keys removed at boot.
+ *
+ * @example
+ * ```ts
+ * import { LEGACY_DOCK_SNAPSHOT_KEYS } from "@/workspace/dock.atoms"
+ *
+ * console.log(LEGACY_DOCK_SNAPSHOT_KEYS[0]) // "desktop:dock-workspace:v1"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const LEGACY_DOCK_SNAPSHOT_KEYS = ["desktop:dock-workspace:v1"] as const;
 
 const storageFailure = (operation: "load" | "save"): DockPersistenceError =>
   DockPersistenceError.make({ operation, message: "localStorage is unavailable in this environment." });
@@ -230,7 +381,7 @@ const saveOperation = (): DockAtomOperation => SaveDockSnapshot.make({});
  * const panels = await Effect.runPromise(
  *   Effect.map(makeDesktopDockGraph, (graph) => graph.registry.get(graph.panelsAtom).length)
  * )
- * console.log(panels) // 4
+ * console.log(panels) // 9
  * ```
  *
  * @category constructors
@@ -241,6 +392,13 @@ export const makeDesktopDockGraph = Effect.gen(function* () {
     Layer.mergeAll(DockEngineLive, DockSnapshotStoreLocalStorage),
     defaultDesktopWorkspace
   );
+  // Retired-key hygiene: a v1 snapshot decodes but references the retired
+  // coarse `ontology` renderer, so it must never restore — delete stale keys
+  // before looking for the current one (failures never fail the boot).
+  yield* Effect.try({
+    try: () => A.forEach(LEGACY_DOCK_SNAPSHOT_KEYS, (key) => globalThis.localStorage.removeItem(key)),
+    catch: () => storageFailure("save"),
+  }).pipe(Effect.ignore);
   // Storage access is guarded end to end: an unreadable store means "nothing
   // to restore", and a failed poison cleanup must not fail the boot either.
   const persisted = yield* Effect.try({
@@ -345,89 +503,121 @@ const firstGroupId = (root: DockNode): O.Option<GroupId> => O.map(A.head(DockNod
 
 // A root-recovery group id that cannot collide with any live group — the
 // reducer's uniqueness guard is workspace-scoped, so a floating group may
-// still own "desktop-main" while the docked tree is empty.
+// still own "desktop-shell" while the docked tree is empty.
 const recoveryRootGroupId = (workspace: DockWorkspace): GroupId =>
   O.getOrElse(
     A.findFirst(
-      A.map(A.range(0, 64), (n) => (n === 0 ? DESKTOP_GROUP_ID : GroupId.make(`desktop-main-${n}`))),
+      A.map(A.range(0, 64), (n) => (n === 0 ? GROUP_SHELL : GroupId.make(`desktop-shell-${n}`))),
       (candidate) => O.isNone(DockWorkspace.findTabs(workspace, candidate))
     ),
-    // 65 live desktop-main groups would be required to exhaust the probe; the
+    // 65 live desktop-shell groups would be required to exhaust the probe; the
     // kernel then rejects the reopen with group-already-exists, retryably.
-    () => GroupId.make("desktop-main-overflow")
+    () => GroupId.make("desktop-shell-overflow")
   );
 
+// The group a reopened panel should join: the group holding one of its
+// default-layout cluster siblings (SPARQL belongs beside Inspector), falling
+// back to the first docked group when the whole cluster is closed.
+const clusterAnchorGroup = (workspace: DockWorkspace, key: DesktopPanelKey): O.Option<GroupId> => {
+  const cluster = panelSpec(key).cluster;
+  const siblings = A.filter(DESKTOP_PANELS, (panel) => panel.cluster === cluster && panel.key !== key);
+  return O.map(
+    A.head(
+      A.getSomes(A.map(siblings, (panel) => DockWorkspace.findTabsForPanel(workspace, desktopPanelId(panel.key))))
+    ),
+    (tabs) => tabs.groupId
+  );
+};
+
 /**
- * The operation a nav click submits for a surface: activate its panel when it
- * is open anywhere in the workspace, otherwise reopen it (into the first
- * docked group, or as the new root when everything was closed).
+ * The operation a nav or menu click submits for a panel: activate it when it
+ * is open anywhere in the workspace, otherwise open it beside its
+ * default-layout cluster siblings (then the first docked group, then as the
+ * new root when everything was closed).
  *
  * @example
  * ```ts
- * import { defaultDesktopWorkspace, surfaceOperation } from "@/workspace/dock.atoms"
+ * import { defaultDesktopWorkspace, panelOperation } from "@/workspace/dock.atoms"
  *
- * const operation = surfaceOperation(defaultDesktopWorkspace, "ontology")
+ * const operation = panelOperation(defaultDesktopWorkspace, "ontology-sparql")
  * console.log(operation.kind) // "dispatchCommand"
  * ```
  *
  * @category combinators
  * @since 0.0.0
  */
-export const surfaceOperation: {
-  (surface: DesktopSurface): (workspace: DockWorkspace) => DockAtomOperation;
-  (workspace: DockWorkspace, surface: DesktopSurface): DockAtomOperation;
-} = dual(2, (workspace: DockWorkspace, surface: DesktopSurface): DockAtomOperation => {
-  const panelId = surfacePanelId(surface);
-  const title = O.getOrElse(
-    O.map(
-      A.findFirst(DESKTOP_SURFACES, (item) => item.surface === surface),
-      (item) => item.title
-    ),
-    () => surface
-  );
+export const panelOperation: {
+  (key: DesktopPanelKey): (workspace: DockWorkspace) => DockAtomOperation;
+  (workspace: DockWorkspace, key: DesktopPanelKey): DockAtomOperation;
+} = dual(2, (workspace: DockWorkspace, key: DesktopPanelKey): DockAtomOperation => {
+  const panelId = desktopPanelId(key);
   const command = O.match(DockWorkspace.findTabsForPanel(workspace, panelId), {
     onSome: () => ActivatePanelCommand.make({ panelId }),
     onNone: () =>
       OpenPanelCommand.make({
-        panel: surfacePanel(surface, title),
-        placement: DockWorkspace.match(workspace, {
-          empty: () => RootPlacement.make({ groupId: recoveryRootGroupId(workspace) }),
-          populated: ({ root }) =>
-            O.getOrElse(
-              O.map(firstGroupId(root), (groupId) => TabPlacement.make({ groupId })),
-              () => RootPlacement.make({ groupId: recoveryRootGroupId(workspace) })
+        panel: desktopPanel(key),
+        placement: O.getOrElse(
+          O.map(
+            O.orElse(clusterAnchorGroup(workspace, key), () =>
+              DockWorkspace.match(workspace, {
+                empty: O.none<GroupId>,
+                populated: ({ root }) => firstGroupId(root),
+              })
             ),
-        }),
+            (groupId) => TabPlacement.make({ groupId })
+          ),
+          () => RootPlacement.make({ groupId: recoveryRootGroupId(workspace) })
+        ),
       }),
   });
   return DispatchDockCommand.make({
     envelope: DockCommandEnvelope.make({
-      commandId: nextCommandId(`surface-${surface}`),
-      origin: UserCommandOrigin.make({ interactionId: `desktop-nav-${surface}` }),
+      commandId: nextCommandId(`panel-${key}`),
+      origin: UserCommandOrigin.make({ interactionId: `desktop-nav-${key}` }),
       command,
     }),
   });
 });
 
 /**
- * Whether a surface's panel is the active tab of the group containing it.
+ * Whether a panel is the active tab of the group containing it.
  *
  * @example
  * ```ts
- * import { defaultDesktopWorkspace, isSurfaceActive } from "@/workspace/dock.atoms"
+ * import { defaultDesktopWorkspace, isPanelActive } from "@/workspace/dock.atoms"
  *
- * console.log(isSurfaceActive(defaultDesktopWorkspace, "chat")) // true
+ * console.log(isPanelActive(defaultDesktopWorkspace, "chat")) // true
  * ```
  *
  * @category combinators
  * @since 0.0.0
  */
-export const isSurfaceActive: {
-  (surface: DesktopSurface): (workspace: DockWorkspace) => boolean;
-  (workspace: DockWorkspace, surface: DesktopSurface): boolean;
-} = dual(2, (workspace: DockWorkspace, surface: DesktopSurface): boolean => {
-  const panelId = surfacePanelId(surface);
+export const isPanelActive: {
+  (key: DesktopPanelKey): (workspace: DockWorkspace) => boolean;
+  (workspace: DockWorkspace, key: DesktopPanelKey): boolean;
+} = dual(2, (workspace: DockWorkspace, key: DesktopPanelKey): boolean => {
+  const panelId = desktopPanelId(key);
   return O.exists(DockWorkspace.findTabsForPanel(workspace, panelId), (tabs) =>
     PanelId.equals(tabs.active.id, panelId)
   );
 });
+
+/**
+ * Whether a panel is open anywhere in the workspace (docked or floating).
+ *
+ * @example
+ * ```ts
+ * import { defaultDesktopWorkspace, isPanelOpen } from "@/workspace/dock.atoms"
+ *
+ * console.log(isPanelOpen(defaultDesktopWorkspace, "ontology-sparql")) // false
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
+ */
+export const isPanelOpen: {
+  (key: DesktopPanelKey): (workspace: DockWorkspace) => boolean;
+  (workspace: DockWorkspace, key: DesktopPanelKey): boolean;
+} = dual(2, (workspace: DockWorkspace, key: DesktopPanelKey): boolean =>
+  O.isSome(DockWorkspace.findTabsForPanel(workspace, desktopPanelId(key)))
+);

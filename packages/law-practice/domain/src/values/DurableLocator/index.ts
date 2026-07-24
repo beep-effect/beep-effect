@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./DurableLocator.model.js";
+export * from "./DurableLocator.model.ts";

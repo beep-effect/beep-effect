@@ -11,14 +11,14 @@ import { Console, DateTime, Effect, FileSystem, MutableHashMap, Order, Path } fr
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { ResearchCommandError } from "../Research.errors.js";
-import { ResearchCognifySummary } from "../Research.schemas.js";
-import { INSERT_CAPTURE_LOG, runWithResearchDb } from "./Catalog.js";
-import { catalogDbPath } from "./CatalogOps.js";
-import { cogneeAdd, cogneeCognify, cogneeLogin, datasetForSourceType } from "./CogneeClient.js";
-import { postResearchEpisode } from "./GraphitiEpisodes.js";
-import type { ResearchCognifyOptions } from "../Research.schemas.js";
-import type { ResearchCommandServiceRequirements } from "../Research.service.js";
+import { ResearchCommandError } from "../Research.errors.ts";
+import { ResearchCognifySummary } from "../Research.schemas.ts";
+import { INSERT_CAPTURE_LOG, runWithResearchDb } from "./Catalog.ts";
+import { catalogDbPath } from "./CatalogOps.ts";
+import { cogneeAdd, cogneeCognify, cogneeLogin, datasetForSourceType } from "./CogneeClient.ts";
+import { postResearchEpisode } from "./GraphitiEpisodes.ts";
+import type { ResearchCognifyOptions } from "../Research.schemas.ts";
+import type { ResearchCommandServiceRequirements } from "../Research.service.ts";
 
 const $I = $RepoCliId.create("commands/Research/internal/Cognify");
 

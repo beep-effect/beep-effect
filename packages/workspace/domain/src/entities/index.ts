@@ -18,7 +18,7 @@
  * @category entities
  * @since 0.0.0
  */
-export * from "./ApprovalGate/index.js";
+export * from "./ApprovalGate/index.ts";
 /**
  * CandidateDraft entity exports.
  *
@@ -32,7 +32,7 @@ export * from "./ApprovalGate/index.js";
  * @category entities
  * @since 0.0.0
  */
-export * from "./CandidateDraft/index.js";
+export * from "./CandidateDraft/index.ts";
 /**
  * CandidateProject entity exports.
  *
@@ -46,7 +46,7 @@ export * from "./CandidateDraft/index.js";
  * @category entities
  * @since 0.0.0
  */
-export * from "./CandidateProject/index.js";
+export * from "./CandidateProject/index.ts";
 /**
  * CandidateTask entity exports.
  *
@@ -60,7 +60,7 @@ export * from "./CandidateProject/index.js";
  * @category entities
  * @since 0.0.0
  */
-export * from "./CandidateTask/index.js";
+export * from "./CandidateTask/index.ts";
 /**
  * ContextPacket entity exports.
  *
@@ -74,7 +74,7 @@ export * from "./CandidateTask/index.js";
  * @category entities
  * @since 0.0.0
  */
-export * from "./ContextPacket/index.js";
+export * from "./ContextPacket/index.ts";
 /**
  * EmailArtifact entity exports.
  *
@@ -88,7 +88,7 @@ export * from "./ContextPacket/index.js";
  * @category entities
  * @since 0.0.0
  */
-export * from "./EmailArtifact/index.js";
+export * from "./EmailArtifact/index.ts";
 /**
  * Message entity exports.
  *
@@ -102,7 +102,7 @@ export * from "./EmailArtifact/index.js";
  * @category entities
  * @since 0.0.0
  */
-export * from "./Message/index.js";
+export * from "./Message/index.ts";
 /**
  * Thread entity exports.
  *
@@ -116,7 +116,7 @@ export * from "./Message/index.js";
  * @category entities
  * @since 0.0.0
  */
-export * from "./Thread/index.js";
+export * from "./Thread/index.ts";
 /**
  * Turn entity exports.
  *
@@ -130,7 +130,7 @@ export * from "./Thread/index.js";
  * @category entities
  * @since 0.0.0
  */
-export * from "./Turn/index.js";
+export * from "./Turn/index.ts";
 /**
  * Workspace entity exports.
  *
@@ -144,4 +144,4 @@ export * from "./Turn/index.js";
  * @category entities
  * @since 0.0.0
  */
-export * from "./Workspace/index.js";
+export * from "./Workspace/index.ts";

@@ -29,8 +29,9 @@ const withTempDir = <A, E, R>(use: (dir: string) => Effect.Effect<A, E, R>) =>
 const ExampleDocument = S.Struct({ schema_version: S.Literal(1), total: S.Finite });
 
 describe("internal/artifacts/ArtifactIo formatJsonc", () => {
-  it.effect("renders deterministic two-space JSONC ending in a single newline", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "renders deterministic two-space JSONC ending in a single newline",
+    Effect.fnUntraced(function* () {
       const text = yield* formatJsonc({ schema_version: 1, total: 3 });
       expect(text).toBe(`{\n  "schema_version": 1,\n  "total": 3\n}\n`);
     })
@@ -93,8 +94,9 @@ describe("internal/artifacts/ArtifactIo readArtifact / writeArtifact", () => {
 });
 
 describe("internal/artifacts/GeneratedFileDrift", () => {
-  it.effect("rejects the mutually-exclusive --write/--check combination", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects the mutually-exclusive --write/--check combination",
+    Effect.fnUntraced(function* () {
       const conflict = Effect.fail(new ArtifactTestError({ message: "conflict" }));
       const bothExit = yield* assertExclusiveModeFlags({
         write: true,

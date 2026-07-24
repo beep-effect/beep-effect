@@ -19,7 +19,7 @@ import {
   MediaDimensions,
   SortableFile,
   StripMetadataPlanEntry,
-} from "./Files.schemas.js";
+} from "./Files.schemas.ts";
 import type { Path } from "effect";
 import type {
   BorderSide,
@@ -27,7 +27,7 @@ import type {
   NormalizeImageFormat,
   RenamePlanEntry,
   SafeFilePrefix,
-} from "./Files.schemas.js";
+} from "./Files.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Files/Files.plan");
 

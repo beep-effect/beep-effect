@@ -59,8 +59,9 @@ const userTurns = (timeline: Thread.ThreadTimeline): ReadonlyArray<Thread.Timeli
   A.filter(timeline.turns, (turn) => A.some(turn.items, (item) => item.kind === "message" && item.role === "user"));
 
 describe("@beep/professional-desktop chat contract", () => {
-  it.effect("happy path: send streams fixture blocks, persists user+assistant turns, appends one usage record", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "happy path: send streams fixture blocks, persists user+assistant turns, appends one usage record",
+    Effect.fnUntraced(function* () {
       const { operations, usageRef } = yield* makeStack;
       const workspaceId = decodeWorkspaceId(1);
 
@@ -104,11 +105,12 @@ describe("@beep/professional-desktop chat contract", () => {
       expect(completed.type === "Counter" ? completed.state.count : 0).not.toBe(0);
       expect(duration.type).toBe("Histogram");
       expect(duration.type === "Histogram" ? duration.state.count : 0).toBeGreaterThan(0);
-    }).pipe(provideScopedLayer(StackLayer))
+    }, provideScopedLayer(StackLayer))
   );
 
-  it.effect("derives a thread title from the first non-empty user line without overwriting existing titles", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "derives a thread title from the first non-empty user line without overwriting existing titles",
+    Effect.fnUntraced(function* () {
       const { operations } = yield* makeStack;
       const workspaceId = decodeWorkspaceId(1);
       const longTitle = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-title-that-will-be-truncated";
@@ -138,11 +140,12 @@ describe("@beep/professional-desktop chat contract", () => {
         ])
       );
       expect(titles).not.toContain("Replacement title");
-    }).pipe(provideScopedLayer(StackLayer))
+    }, provideScopedLayer(StackLayer))
   );
 
-  it.effect("continues the assistant stream when best-effort title persistence fails", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "continues the assistant stream when best-effort title persistence fails",
+    Effect.fnUntraced(function* () {
       const store = yield* Thread.ThreadStore;
       const kernel = yield* AgentTurnKernel;
       const { ref: usageRef, sink } = yield* makeInMemoryUsageRecordSink;
@@ -165,11 +168,12 @@ describe("@beep/professional-desktop chat contract", () => {
       expect(messageItems(timeline).map((m) => m.role)).toEqual(["user", "assistant"]);
       const usage = yield* Ref.get(usageRef);
       expect(usage).toHaveLength(1);
-    }).pipe(provideScopedLayer(StackLayer))
+    }, provideScopedLayer(StackLayer))
   );
 
-  it.effect("derives a thread title when editing the first user turn from blank content", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "derives a thread title when editing the first user turn from blank content",
+    Effect.fnUntraced(function* () {
       const { operations } = yield* makeStack;
       const workspaceId = decodeWorkspaceId(1);
       const thread = yield* operations.createThread(workspaceId, "New thread");
@@ -182,11 +186,12 @@ describe("@beep/professional-desktop chat contract", () => {
 
       const titles = A.map(yield* operations.listThreads(workspaceId), (item) => item.title);
       expect(titles).toContain("Edited title");
-    }).pipe(provideScopedLayer(StackLayer))
+    }, provideScopedLayer(StackLayer))
   );
 
-  it.effect("updates a derived thread title when editing the first user turn", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "updates a derived thread title when editing the first user turn",
+    Effect.fnUntraced(function* () {
       const { operations } = yield* makeStack;
       const workspaceId = decodeWorkspaceId(1);
       const thread = yield* operations.createThread(workspaceId, "New thread");
@@ -200,11 +205,12 @@ describe("@beep/professional-desktop chat contract", () => {
       const titles = A.map(yield* operations.listThreads(workspaceId), (item) => item.title);
       expect(titles).toContain("Final memo");
       expect(titles).not.toContain("Draft memo");
-    }).pipe(provideScopedLayer(StackLayer))
+    }, provideScopedLayer(StackLayer))
   );
 
-  it.effect("does not derive a thread title when editing a later user turn", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "does not derive a thread title when editing a later user turn",
+    Effect.fnUntraced(function* () {
       const { operations } = yield* makeStack;
       const workspaceId = decodeWorkspaceId(1);
       const thread = yield* operations.createThread(workspaceId, "New thread");
@@ -221,7 +227,7 @@ describe("@beep/professional-desktop chat contract", () => {
       const titles = A.map(yield* operations.listThreads(workspaceId), (item) => item.title);
       expect(titles).toContain("New thread");
       expect(titles).not.toContain("Later edited title");
-    }).pipe(provideScopedLayer(StackLayer))
+    }, provideScopedLayer(StackLayer))
   );
 
   it("projects table cells, youtube embeds, blockquotes, and task lists into turn-history plain text", () => {
@@ -269,8 +275,9 @@ describe("@beep/professional-desktop chat contract", () => {
   // prompt with no answer, so a reload orphaned it and — because the kernel is
   // handed the whole conversation — the next prompt arrived after an unanswered
   // request and the model answered the abandoned one instead.
-  it.effect("cancel records a stopped turn, keeps no partial content, and bills nothing", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "cancel records a stopped turn, keeps no partial content, and bills nothing",
+    Effect.fnUntraced(function* () {
       const { operations, usageRef } = yield* makeStack;
       const workspaceId = decodeWorkspaceId(1);
       const thread = yield* operations.createThread(workspaceId, "Cancel");
@@ -306,11 +313,12 @@ describe("@beep/professional-desktop chat contract", () => {
       // still no usage record on interrupt
       const usage = yield* Ref.get(usageRef);
       expect(usage).toHaveLength(0);
-    }).pipe(provideScopedLayer(StackLayer))
+    }, provideScopedLayer(StackLayer))
   );
 
-  it.effect("reports user_persisted repeatedly when assistant persistence fails after the user append", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "reports user_persisted repeatedly when assistant persistence fails after the user append",
+    Effect.fnUntraced(function* () {
       const store = yield* Thread.ThreadStore;
       const kernel = yield* AgentTurnKernel;
       const { sink } = yield* makeInMemoryUsageRecordSink;
@@ -345,11 +353,12 @@ describe("@beep/professional-desktop chat contract", () => {
       expect(messageItems(timeline).map((item) => item.role)).toEqual(["user"]);
       const captured = yield* Ref.get(histories);
       expect(A.map(captured, (history) => A.map(history, (item) => item.role))).toStrictEqual([["user"]]);
-    }).pipe(provideScopedLayer(StackLayer))
+    }, provideScopedLayer(StackLayer))
   );
 
-  it.effect("reports persisted when interrupted after the assistant append commits", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "reports persisted when interrupted after the assistant append commits",
+    Effect.fnUntraced(function* () {
       const store = yield* Thread.ThreadStore;
       const kernel = yield* AgentTurnKernel;
       const { sink } = yield* makeInMemoryUsageRecordSink;
@@ -382,11 +391,12 @@ describe("@beep/professional-desktop chat contract", () => {
       expect(yield* operations.getTurnRequestStatus("assistant-committed")).toBe("persisted");
       const timeline = yield* operations.getTimeline(thread.id);
       expect(messageItems(timeline).map((item) => item.role)).toEqual(["user", "assistant"]);
-    }).pipe(provideScopedLayer(StackLayer))
+    }, provideScopedLayer(StackLayer))
   );
 
-  it.effect("timeline ordering: a second send appends after the first assistant turn", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "timeline ordering: a second send appends after the first assistant turn",
+    Effect.fnUntraced(function* () {
       const { operations } = yield* makeStack;
       const workspaceId = decodeWorkspaceId(1);
       const thread = yield* operations.createThread(workspaceId, "Ordering");
@@ -400,11 +410,12 @@ describe("@beep/professional-desktop chat contract", () => {
       const items = messageItems(timeline);
       expect(items.map((m) => m.role)).toEqual(["user", "assistant", "user", "assistant"]);
       expect(documentToPlainText(items[2]!.content)).toBe("second");
-    }).pipe(provideScopedLayer(StackLayer))
+    }, provideScopedLayer(StackLayer))
   );
 
-  it.effect("projects role-tagged turn history for the kernel", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "projects role-tagged turn history for the kernel",
+    Effect.fnUntraced(function* () {
       const historyRef = yield* Ref.make<ReadonlyArray<TurnHistoryItemType>>(A.empty());
       const CaptureKernel = Layer.succeed(AgentTurnKernel)({
         streamTurn: (history: ReadonlyArray<TurnHistoryItemType>): Stream.Stream<IndexedBlock> => {
@@ -456,8 +467,9 @@ describe("@beep/professional-desktop chat contract", () => {
   // The kernel here blocks until released, which is what forces the two turns to
   // actually overlap; the assertion is on the history each kernel call is given,
   // because that is where the corruption originates.
-  it.effect("never hands the kernel a history ending in an unanswered prompt", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "never hands the kernel a history ending in an unanswered prompt",
+    Effect.fnUntraced(function* () {
       const store = yield* Thread.ThreadStore;
       const { sink } = yield* makeInMemoryUsageRecordSink;
       const histories = yield* Ref.make<ReadonlyArray<ReadonlyArray<TurnHistoryItemType>>>([]);
@@ -500,11 +512,12 @@ describe("@beep/professional-desktop chat contract", () => {
       expect(secondHistory.map((item) => item.role)).toEqual(["user", "assistant", "user"]);
       // ...and the prompt it is being asked to answer is its own.
       expect(secondHistory[2]!.text).toContain("BRAVO");
-    }).pipe(provideScopedLayer(ThreadStoreTestLayer))
+    }, provideScopedLayer(ThreadStoreTestLayer))
   );
 
-  it.effect("does not credit another window's persisted turn to a queued request interrupted before append", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "does not credit another window's persisted turn to a queued request interrupted before append",
+    Effect.fnUntraced(function* () {
       const store = yield* Thread.ThreadStore;
       const { sink } = yield* makeInMemoryUsageRecordSink;
       const enteredKernel = yield* Deferred.make<void>();
@@ -539,6 +552,6 @@ describe("@beep/professional-desktop chat contract", () => {
       expect(
         timeline.turns.some((turn) => turn.items.some((item) => item.kind === "message" && item.role === "assistant"))
       ).toBe(true);
-    }).pipe(provideScopedLayer(ThreadStoreTestLayer))
+    }, provideScopedLayer(ThreadStoreTestLayer))
   );
 });

@@ -9,8 +9,8 @@ import { A, Str } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import { Node, SyntaxKind } from "ts-morph";
-import { createInMemoryTsMorphProject } from "../../../internal/tsmorph/index.js";
-import { SchemaFirstInventoryEntry } from "../Lint.schemas.js";
+import { createInMemoryTsMorphProject } from "../../../internal/tsmorph/index.ts";
+import { SchemaFirstInventoryEntry } from "../Lint.schemas.ts";
 
 const SCHEMA_CODEC_HELPERS = [
   // Effect-returning codecs.

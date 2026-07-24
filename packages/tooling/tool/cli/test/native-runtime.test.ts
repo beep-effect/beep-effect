@@ -8,7 +8,7 @@ import {
   withTempWorkingDirectory,
   writeDefaultTsconfig,
   writeProjectFile,
-} from "./support/CommandTest.js";
+} from "./support/CommandTest.ts";
 import type { NoNativeRuntimeRulesSummary } from "@beep/repo-cli/test/Laws";
 
 const expectStrictNativeError = (

@@ -18,7 +18,7 @@ import * as command from "@pulumi/command";
 import * as pulumi from "@pulumi/pulumi";
 import { Effect, pipe, Result } from "effect";
 import * as S from "effect/Schema";
-import { optionalPulumiConfigFields, withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.js";
+import { optionalPulumiConfigFields, withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.ts";
 import type { AiMetricsInstallSpec, AiMetricsOtlpEndpointSpec, AiMetricsServiceSpec } from "@beep/repo-ai-metrics";
 
 const $I = $InfraId.create("AIMetrics");

@@ -11,13 +11,13 @@ import { Console, DateTime, Effect, Path } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ResearchCommandError } from "../Research.errors.js";
-import { ResearchDigestSummary } from "../Research.schemas.js";
-import { runWithResearchDb, singleCount } from "./Catalog.js";
-import { catalogDbPath } from "./CatalogOps.js";
-import { VAULT_DIRS, writeCard } from "./Vault.js";
-import type { ResearchDigestOptions } from "../Research.schemas.js";
-import type { ResearchCommandServiceRequirements } from "../Research.service.js";
+import { ResearchCommandError } from "../Research.errors.ts";
+import { ResearchDigestSummary } from "../Research.schemas.ts";
+import { runWithResearchDb, singleCount } from "./Catalog.ts";
+import { catalogDbPath } from "./CatalogOps.ts";
+import { VAULT_DIRS, writeCard } from "./Vault.ts";
+import type { ResearchDigestOptions } from "../Research.schemas.ts";
+import type { ResearchCommandServiceRequirements } from "../Research.service.ts";
 
 const $I = $RepoCliId.create("commands/Research/internal/Digest");
 

@@ -38,10 +38,10 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { FetchHttpClient } from "effect/unstable/http";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { jsonFlag } from "../../internal/cli/Flags.js";
-import { printLines } from "../../internal/cli/Printer.js";
-import { runAgentEffectivenessEvalScoreCommand } from "./internal/EvalScorer.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { jsonFlag } from "../../internal/cli/Flags.ts";
+import { printLines } from "../../internal/cli/Printer.ts";
+import { runAgentEffectivenessEvalScoreCommand } from "./internal/EvalScorer.ts";
 import type {
   AgentEffectivenessAnnotationCheckReport,
   AgentEffectivenessAnnotationPlan,

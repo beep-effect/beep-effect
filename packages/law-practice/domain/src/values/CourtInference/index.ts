@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./CourtInference.model.js";
+export * from "./CourtInference.model.ts";

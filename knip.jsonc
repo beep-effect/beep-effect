@@ -1,5 +1,7 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
+  // Knip 6.27 is patched in package.json so the repository's uniform `.ts` source
+  // specifier can resolve a TSX module, matching TypeScript and the import-extension policy.
   "workspaces": {
     "packages/**": {
       // Library packages publish their whole top-level src surface via `"./*": "./src/*.ts"`,

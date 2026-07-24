@@ -15,7 +15,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ChildProcess } from "effect/unstable/process";
 import { parseDocument } from "yaml";
-import { ChangesetGraphError } from "./Quality.errors.js";
+import { ChangesetGraphError } from "./Quality.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 /**
@@ -24,7 +24,7 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
  * @category errors
  * @since 0.0.0
  */
-export { ChangesetGraphError } from "./Quality.errors.js";
+export { ChangesetGraphError } from "./Quality.errors.ts";
 
 const $I = $RepoCliId.create("commands/Quality/ChangesetGraph");
 

@@ -7,19 +7,19 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { Context, Effect, Layer } from "effect";
-import { captureUrlImpl } from "./internal/Capture.js";
-import { cognifyImpl } from "./internal/Cognify.js";
-import { dailyImpl } from "./internal/Daily.js";
-import { digestImpl } from "./internal/Digest.js";
-import { historySiftImpl } from "./internal/HistorySift.js";
-import { notionPullImpl } from "./internal/NotionPullRun.js";
-import { repoCardImpl } from "./internal/RepoCardRun.js";
-import { statusImpl } from "./internal/Status.js";
-import { resolveVaultRoot } from "./internal/Vault.js";
+import { captureUrlImpl } from "./internal/Capture.ts";
+import { cognifyImpl } from "./internal/Cognify.ts";
+import { dailyImpl } from "./internal/Daily.ts";
+import { digestImpl } from "./internal/Digest.ts";
+import { historySiftImpl } from "./internal/HistorySift.ts";
+import { notionPullImpl } from "./internal/NotionPullRun.ts";
+import { repoCardImpl } from "./internal/RepoCardRun.ts";
+import { statusImpl } from "./internal/Status.ts";
+import { resolveVaultRoot } from "./internal/Vault.ts";
 import type { FileSystem, Path } from "effect";
 import type * as HttpClient from "effect/unstable/http/HttpClient";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { ResearchCommandError } from "./Research.errors.js";
+import type { ResearchCommandError } from "./Research.errors.ts";
 import type {
   ResearchCaptureOptions,
   ResearchCaptureSummary,
@@ -37,7 +37,7 @@ import type {
   ResearchRepoCardSummary,
   ResearchStatusOptions,
   ResearchStatusSummary,
-} from "./Research.schemas.js";
+} from "./Research.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Research/Research.service");
 

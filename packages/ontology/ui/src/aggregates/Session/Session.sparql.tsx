@@ -26,7 +26,7 @@ import { A, O, R, Str } from "@beep/utils";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { pipe } from "effect";
 import * as S from "effect/Schema";
-import { valueFromEvent } from "./Session.workbench.shared.js";
+import { valueFromEvent } from "./Session.workbench.shared.ts";
 import type { RunOntologySparqlResult } from "@beep/ontology-use-cases/aggregates/Session";
 import type { JSX, KeyboardEvent } from "react";
 
@@ -182,7 +182,10 @@ export function OntologySparqlRegion(): JSX.Element {
           onKeyDown={runSparqlFromKeyboard}
         />
         <Button
-          className="w-full"
+          // Disabled must read as inactive, not as broken primary chrome: a
+          // muted chip at full opacity instead of a washed-out green
+          // (QA finding R1-07 — the low-contrast state was the disabled one).
+          className="w-full dark:text-foreground disabled:bg-muted disabled:text-muted-foreground dark:disabled:text-muted-foreground disabled:opacity-100"
           size="sm"
           type="button"
           disabled={!canRunSparql}

@@ -41,7 +41,22 @@
     "syncpack.config.ts",
     "eslint.config.mjs",
     "scripts/changeset-changelog.cjs",
-    "packages/tooling/tool/cli/test/global-cleanup.ts"
+    "packages/tooling/tool/cli/test/global-cleanup.ts",
+    // Fallow 3.6.0 resolves an explicit `.ts` suffix exactly and does not yet
+    // apply TypeScript's `.ts` -> `.tsx` source fallback. Keep the affected TSX
+    // modules reachable without making every TSX file an entry point; the
+    // matching specifiers are documented under ignoreUnresolvedImports below.
+    "packages/foundation/ui-system/ui/src/components/blocks/editor-00/plugins.tsx",
+    "packages/ontology/ui/src/aggregates/Session/Session.changelog.tsx",
+    "packages/ontology/ui/src/aggregates/Session/Session.document.tsx",
+    "packages/ontology/ui/src/aggregates/Session/Session.explorer.tsx",
+    "packages/ontology/ui/src/aggregates/Session/Session.graph.tsx",
+    "packages/ontology/ui/src/aggregates/Session/Session.inspector.tsx",
+    "packages/ontology/ui/src/aggregates/Session/Session.metrics.tsx",
+    "packages/ontology/ui/src/aggregates/Session/Session.source.tsx",
+    "packages/ontology/ui/src/aggregates/Session/Session.sparql.tsx",
+    "packages/ontology/ui/src/aggregates/Session/Session.validation.tsx",
+    "packages/ontology/ui/src/aggregates/Session/Session.workbench.tsx"
   ],
   // Approximates dead-code path suppression; Knip remains authoritative for unmigrated workspace/binary policy.
   "ignorePatterns": [
@@ -67,6 +82,24 @@
     "packages/foundation/modeling/html/src/Html.meta.ts",
     "packages/foundation/modeling/html/scripts/**",
     "packages/foundation/modeling/html/data/**"
+  ],
+  // Exact compatibility list for authored `.ts` specifiers whose source file
+  // is TSX. Do not broaden this to `**/*.ts`: real unresolved imports must keep
+  // failing Fallow. Remove these entries when Fallow supports the TS fallback.
+  "ignoreUnresolvedImports": [
+    "**/content-editable.ts",
+    "**/App.ts",
+    "**/Session.changelog.ts",
+    "**/Session.document.ts",
+    "**/Session.explorer.ts",
+    "**/Session.graph.ts",
+    "**/Session.inspector.ts",
+    "**/Session.metrics.ts",
+    "**/Session.source.ts",
+    "**/Session.sparql.ts",
+    "**/Session.validation.ts",
+    "**/Session.workbench.ts",
+    "**/plugins.ts"
   ],
   "ignoreDependencies": [
     "@effect/vitest",
@@ -191,6 +224,26 @@
     { "file": "apps/*/src/app/*.tsx", "exports": ["instant"] },
     { "file": "apps/*/src/app/**/*.tsx", "exports": ["instant"] }
   ],
+  "health": {
+    "thresholdOverrides": [
+      {
+        "files": [
+          "packages/ontology/ui/src/aggregates/Session/Session.inspector.tsx"
+        ],
+        "functions": ["TripleValidationMessages"],
+        "maxCrap": 73,
+        "reason": "Pre-existing function unchanged by the import-extension migration; Fallow audit attributes its CRAP finding as introduced when the file's import suffix changes."
+      },
+      {
+        "files": [
+          "packages/ontology/ui/src/aggregates/Session/Session.sparql.tsx"
+        ],
+        "functions": ["sparqlResultPreview", "runSparqlFromKeyboard"],
+        "maxCrap": 57,
+        "reason": "Pre-existing functions unchanged by the import-extension migration; Fallow audit attributes their CRAP findings as introduced when the file's import suffix changes."
+      }
+    ]
+  },
   "audit": {
     "gate": "new-only"
   },

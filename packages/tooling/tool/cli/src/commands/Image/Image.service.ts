@@ -15,8 +15,8 @@ import { dual, flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { ImageCommandError } from "./Image.errors.js";
-import { makeExtractFramesEvents } from "./Image.progress.js";
+import { ImageCommandError } from "./Image.errors.ts";
+import { makeExtractFramesEvents } from "./Image.progress.ts";
 import {
   decodeExtractFramesDirOptions,
   decodeExtractFramesOptions,
@@ -25,10 +25,10 @@ import {
   ExtractFramesDirSuccess,
   ExtractFramesDirVideo,
   ExtractFramesOptions,
-} from "./Image.schemas.js";
+} from "./Image.schemas.ts";
 import type { ExtractFramesResult, FFmpegError } from "@beep/ffmpeg";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { ExtractFramesDirOptions } from "./Image.schemas.js";
+import type { ExtractFramesDirOptions } from "./Image.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Image/Image.service");
 

@@ -29,4 +29,4 @@
  * @category testing
  * @since 0.0.0
  */
-export * from "./FastCheckRuns.js";
+export * from "./FastCheckRuns.ts";

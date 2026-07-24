@@ -21,7 +21,7 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./AssistantContent.behavior.js";
+export * from "./AssistantContent.behavior.ts";
 /**
  * AssistantContent schema model exports.
  *
@@ -37,4 +37,4 @@ export * from "./AssistantContent.behavior.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./AssistantContent.model.js";
+export * from "./AssistantContent.model.ts";

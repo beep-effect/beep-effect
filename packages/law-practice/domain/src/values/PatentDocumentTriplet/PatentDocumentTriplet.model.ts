@@ -8,8 +8,8 @@
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { KindCode } from "../KindCode/index.js";
-import { OfficeCode } from "../OfficeCode/index.js";
+import { KindCode } from "../KindCode/index.ts";
+import { OfficeCode } from "../OfficeCode/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/PatentDocumentTriplet/PatentDocumentTriplet");
 const canonicalPatentDocumentNumberPattern =

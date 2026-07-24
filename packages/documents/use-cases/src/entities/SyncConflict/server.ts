@@ -11,4 +11,4 @@
  * @category repositories
  * @since 0.0.0
  */
-export * from "./SyncConflict.repository.js";
+export * from "./SyncConflict.repository.ts";

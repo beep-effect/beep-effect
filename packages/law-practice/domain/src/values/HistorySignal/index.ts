@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./HistorySignal.model.js";
+export * from "./HistorySignal.model.ts";

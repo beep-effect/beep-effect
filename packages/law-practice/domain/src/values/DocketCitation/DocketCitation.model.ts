@@ -9,8 +9,8 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationBase } from "../CitationBase/index.js";
-import { Span } from "../Span/index.js";
+import { CitationBase } from "../CitationBase/index.ts";
+import { Span } from "../Span/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/DocketCitation/DocketCitation.model");
 

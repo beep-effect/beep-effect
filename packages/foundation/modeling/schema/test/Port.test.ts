@@ -13,16 +13,18 @@ describe("Port", () => {
   const decode = S.decodeUnknownEffect(Port);
   const decodeSync = S.decodeUnknownSync(Port);
 
-  it.effect("accepts inclusive transport port boundaries", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "accepts inclusive transport port boundaries",
+    Effect.fnUntraced(function* () {
       expect(yield* decode(portMinimum)).toBe(portMinimum);
       expect(yield* decode(443)).toBe(443);
       expect(yield* decode(portMaximum)).toBe(portMaximum);
     })
   );
 
-  it.effect("rejects reserved port zero and values above the 16-bit port space", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects reserved port zero and values above the 16-bit port space",
+    Effect.fnUntraced(function* () {
       const zero = yield* Effect.exit(decode(0));
       const aboveMaximum = yield* Effect.exit(decode(portMaximum + 1));
 
@@ -31,8 +33,9 @@ describe("Port", () => {
     })
   );
 
-  it.effect("rejects non-integer and non-number inputs", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects non-integer and non-number inputs",
+    Effect.fnUntraced(function* () {
       const fractional = yield* Effect.exit(decode(1.5));
       const string = yield* Effect.exit(decode("443"));
 
@@ -65,8 +68,9 @@ describe("PortFromString", () => {
   const decodeSync = S.decodeUnknownSync(PortFromString);
   const encode = S.encodeEffect(PortFromString);
 
-  it.effect("decodes decimal strings into branded transport ports", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "decodes decimal strings into branded transport ports",
+    Effect.fnUntraced(function* () {
       expect(yield* decode("1")).toBe(portMinimum);
       expect(yield* decode("443")).toBe(443);
       expect(yield* decode("080")).toBe(80);
@@ -74,16 +78,18 @@ describe("PortFromString", () => {
     })
   );
 
-  it.effect("encodes branded transport ports back to decimal strings", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "encodes branded transport ports back to decimal strings",
+    Effect.fnUntraced(function* () {
       const value = yield* S.decodeUnknownEffect(Port)(443);
 
       expect(yield* encode(value)).toBe("443");
     })
   );
 
-  it.effect("rejects malformed and out-of-range port strings", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects malformed and out-of-range port strings",
+    Effect.fnUntraced(function* () {
       const empty = yield* Effect.exit(decode(""));
       const whitespace = yield* Effect.exit(decode(" 443"));
       const hexadecimal = yield* Effect.exit(decode("0x50"));

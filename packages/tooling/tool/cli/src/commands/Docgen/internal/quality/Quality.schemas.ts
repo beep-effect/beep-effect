@@ -10,7 +10,7 @@ import { LiteralKit } from "@beep/schema";
 import { Struct } from "@beep/utils";
 import { Order } from "effect";
 import * as S from "effect/Schema";
-import type { DocgenWorkspacePackage } from "../../Docgen.schemas.js";
+import type { DocgenWorkspacePackage } from "../../Docgen.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Docgen/internal/quality/Quality.schemas");
 

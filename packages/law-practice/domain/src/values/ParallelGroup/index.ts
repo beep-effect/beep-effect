@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ParallelGroup.model.js";
+export * from "./ParallelGroup.model.ts";

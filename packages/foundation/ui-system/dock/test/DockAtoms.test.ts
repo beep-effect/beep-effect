@@ -212,8 +212,9 @@ describe("DockAtoms", () => {
     )
   );
 
-  it.effect("rejects globally invalid initial state before exposing a registry", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects globally invalid initial state before exposing a registry",
+    Effect.fnUntraced(function* () {
       const failure = yield* Effect.flip(makeDockAtoms(duplicatePanelWorkspace));
       expect(failure).toMatchObject({ _tag: "DockInvariantViolation", reason: "duplicate-panel-id" });
     })

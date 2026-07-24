@@ -4,4 +4,4 @@
  * @category tables
  * @since 0.0.0
  */
-export * from "./Organization.table.js";
+export * from "./Organization.table.ts";

@@ -192,8 +192,9 @@ describe("@beep/agents-domain", () => {
     }
   });
 
-  it.effect("keeps agents source code off removed turn subpath imports", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "keeps agents source code off removed turn subpath imports",
+    Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
 
@@ -235,7 +236,7 @@ describe("@beep/agents-domain", () => {
       }
 
       expect(violations).toEqual([]);
-    }).pipe(provideScopedLayer(NodeServices.layer))
+    }, provideScopedLayer(NodeServices.layer))
   );
 
   it("lifts rich assistant blocks into canonical Md nodes", () => {

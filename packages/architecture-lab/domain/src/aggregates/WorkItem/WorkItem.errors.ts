@@ -9,7 +9,7 @@
 import { $ArchitectureLabDomainId } from "@beep/identity/packages";
 import { TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
-import { WorkItemId, WorkItemStatus } from "./WorkItem.values.js";
+import { WorkItemId, WorkItemStatus } from "./WorkItem.values.ts";
 import type { TaggedErrorNewInput } from "@beep/schema";
 
 const $I = $ArchitectureLabDomainId.create("aggregates/WorkItem/WorkItem.errors");

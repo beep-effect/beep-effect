@@ -13,8 +13,8 @@
 import { $AgentsUseCasesId } from "@beep/identity/packages";
 import { Context } from "effect";
 import type * as Stream from "effect/Stream";
-import type { IndexedBlock, TurnHistoryItem } from "./AssistantTurn.contracts.js";
-import type { TurnGenerationError } from "./AssistantTurn.errors.js";
+import type { IndexedBlock, TurnHistoryItem } from "./AssistantTurn.contracts.ts";
+import type { TurnGenerationError } from "./AssistantTurn.errors.ts";
 
 const $I = $AgentsUseCasesId.create("processes/AssistantTurn/AssistantTurn.kernel");
 

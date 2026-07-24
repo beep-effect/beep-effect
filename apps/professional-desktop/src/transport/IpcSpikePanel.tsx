@@ -23,7 +23,7 @@ import { Effect, Stream } from "effect";
 import { Atom, AtomRegistry } from "effect/unstable/reactivity";
 import { RpcClient } from "effect/unstable/rpc";
 import { decodeWorkspaceId, userDocument } from "@/chat/ChatFixtures";
-import { IpcChatProtocolLive } from "./IpcChatClient.js";
+import { IpcChatProtocolLive } from "./IpcChatClient.ts";
 import type { JSX } from "react";
 
 // Runtime that provides the IPC transport (`RpcClient.Protocol`) plus a Scope to

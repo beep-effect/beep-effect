@@ -10,18 +10,18 @@ import { Context, Effect, Layer } from "effect";
 import {
   ensureGraphitiProxy as ensureGraphitiProxyInternal,
   recoverGraphitiStack as recoverGraphitiStackInternal,
-} from "./internal/ProxyEnsure.js";
-import { installGraphitiProxyService as installGraphitiProxyServiceInternal } from "./internal/ProxyServiceInstall.js";
+} from "./internal/ProxyEnsure.ts";
+import { installGraphitiProxyService as installGraphitiProxyServiceInternal } from "./internal/ProxyServiceInstall.ts";
 import {
   restoreGraphitiStack as restoreGraphitiStackInternal,
   verifyGraphitiStack as verifyGraphitiStackInternal,
-} from "./internal/StackRestore.js";
-import type { GraphitiProxyOpsError } from "./Graphiti.errors.js";
+} from "./internal/StackRestore.ts";
+import type { GraphitiProxyOpsError } from "./Graphiti.errors.ts";
 import type {
   GraphitiProxyOpsEnvironment,
   GraphitiProxyServiceInstallOptions,
   GraphitiRestoreOptions,
-} from "./Graphiti.schemas.js";
+} from "./Graphiti.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Graphiti/Graphiti.service");
 

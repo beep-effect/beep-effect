@@ -9,4 +9,4 @@ export {
   makeMirrorBuildProgram,
   makeMirrorStatusProgram,
   makeMirrorSyncProgram,
-} from "./Programs.js";
+} from "./Programs.ts";

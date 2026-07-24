@@ -27,17 +27,17 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { ChildProcess } from "effect/unstable/process";
-import { applyJsoncModification as applySharedJsoncModification } from "../../internal/cli/Jsonc.js";
+import { applyJsoncModification as applySharedJsoncModification } from "../../internal/cli/Jsonc.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
-import { syncTsconfigAtRoot } from "../TsconfigSync/index.js";
+import { syncTsconfigAtRoot } from "../TsconfigSync/index.ts";
 import {
   createFileGenerationPlanService,
   FileGenerationPlanInput,
   PlannedFile,
   PlannedSymlink,
-} from "./FileGenerationPlanService.js";
-import { CreatePackageIdentityRegistration } from "./internal/IdentityRegistration.js";
-import { createTemplateService, TemplateRenderRequest, TemplateSpec } from "./TemplateService.js";
+} from "./FileGenerationPlanService.ts";
+import { CreatePackageIdentityRegistration } from "./internal/IdentityRegistration.ts";
+import { createTemplateService, TemplateRenderRequest, TemplateSpec } from "./TemplateService.ts";
 
 const $I = $RepoCliId.create("commands/CreatePackage/CreatePackage.command");
 const {

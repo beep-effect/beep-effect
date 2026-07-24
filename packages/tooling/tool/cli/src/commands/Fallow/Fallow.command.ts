@@ -14,7 +14,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { ChildProcess } from "effect/unstable/process";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import type { WorkspaceDeps } from "@beep/repo-utils";
 
 const $I = $RepoCliId.create("commands/Fallow/Fallow.command");

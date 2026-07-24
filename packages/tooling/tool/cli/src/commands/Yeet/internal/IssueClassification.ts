@@ -9,8 +9,8 @@ import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import { QualityIssueCategory, QualityIssueRouting } from "../Yeet.schemas.js";
-import type { RepoPlanStep } from "../../../internal/repo-run/index.js";
+import { QualityIssueCategory, QualityIssueRouting } from "../Yeet.schemas.ts";
+import type { RepoPlanStep } from "../../../internal/repo-run/index.ts";
 
 const KNOWN_SUB_LANE_TAIL_CHARS = 16 * 1024;
 

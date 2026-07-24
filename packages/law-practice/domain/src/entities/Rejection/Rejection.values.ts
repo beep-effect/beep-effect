@@ -8,7 +8,7 @@
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.js";
+import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.ts";
 
 const $I = $LawPracticeDomainId.create("entities/Rejection/Rejection.values");
 

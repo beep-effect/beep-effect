@@ -161,13 +161,14 @@ describe("PublicEntityId", () => {
     })
   );
 
-  it.effect("generates public ids with the entity prefix", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "generates public ids with the entity prefix",
+    Effect.fnUntraced(function* () {
       const publicId = yield* PublicEntityId.generate(DocumentId);
 
       expect(DocumentPublicId.is(publicId)).toBe(true);
       expect(publicId.startsWith(`${DocumentId.tableName}_`)).toBe(true);
-    }).pipe(provideScopedLayer(CuidTestLayer))
+    }, provideScopedLayer(CuidTestLayer))
   );
 });
 

@@ -12,8 +12,8 @@ import { A } from "@beep/utils";
 import { Effect, pipe } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { LegalDocumentConceptId, LegalDocumentTaxonomy, VaultFilingContext } from "./Taxonomy.model.js";
-import type { LegalDocumentTaxonomyConcept } from "./Taxonomy.model.js";
+import { LegalDocumentConceptId, LegalDocumentTaxonomy, VaultFilingContext } from "./Taxonomy.model.ts";
+import type { LegalDocumentTaxonomyConcept } from "./Taxonomy.model.ts";
 
 const $I = $DocumentsDomainId.create("values/Taxonomy/Taxonomy.projection");
 

@@ -11,4 +11,4 @@
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./CreatePackage.command.js";
+export * from "./CreatePackage.command.ts";

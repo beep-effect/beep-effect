@@ -17,11 +17,11 @@ import { Console, Effect, FileSystem, Path } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { runGitOutput, runRepoCommandStreamingCapture } from "../../internal/repo-run/index.js";
-import { WorktreeCommandError, WorktreeDirtyError, WorktreeExistsError } from "./Worktree.errors.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { runGitOutput, runRepoCommandStreamingCapture } from "../../internal/repo-run/index.ts";
+import { WorktreeCommandError, WorktreeDirtyError, WorktreeExistsError } from "./Worktree.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.js";
+import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.command");
 

@@ -18,4 +18,4 @@
  * @category models
  * @since 0.0.0
  */
-export * from "./Thread.model.js";
+export * from "./Thread.model.ts";
