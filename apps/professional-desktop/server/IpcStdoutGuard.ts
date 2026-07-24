@@ -1,7 +1,6 @@
-// Run the side-effect-only stdout patch before anything else loads. The prelude's
-// only import is effect/Predicate (a pure leaf module), so importing it here (and
-// first in main.ts) keeps stdout clean before the effect runtime or any sidecar
-// dependency initializes.
+// Run the side-effect-only stdout patch before application and sidecar services
+// load. The IPC stdio integration test proves its functional utility imports do
+// not leak bytes onto the protocol stream before the patch is installed.
 
 import * as BunStdio from "@effect/platform-bun/BunStdio";
 import { Effect, Layer, Sink, Stdio } from "effect";

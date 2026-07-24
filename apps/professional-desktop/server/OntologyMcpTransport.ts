@@ -8,9 +8,8 @@
 import { fromApprovedToolsPolicy, sanitizedToolkit, TierGate } from "@beep/mcp-kit";
 import { OntologyMcpMutationToolsLive, OntologyMcpReadOnlyToolsLive } from "@beep/ontology-server/tools";
 import { OntologyMutationToolkit, OntologyReadOnlyToolkit } from "@beep/ontology-use-cases/tools";
+import { A, O } from "@beep/utils";
 import { Context, Data, Effect, Layer, Metric } from "effect";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import { Headers, HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import { requireRpcSessionToken } from "./RpcSessionAuth.ts";
@@ -65,7 +64,7 @@ const originMiddleware = HttpMiddleware.make((effect) =>
   })
 );
 
-const ontologyMcpSecurityMiddleware = (token: Redacted.Redacted<string>) =>
+const ontologyMcpSecurityMiddleware = (token: Redacted.Redacted) =>
   HttpRouter.middleware(originMiddleware)
     .combine(HttpRouter.middleware(requireRpcSessionToken(token)))
     .combine(
@@ -96,7 +95,7 @@ const ontologyMcpSecurityMiddleware = (token: Redacted.Redacted<string>) =>
  * @since 0.0.0
  */
 export const makeOntologyMcpTransportLayer = (options: {
-  readonly token: Redacted.Redacted<string>;
+  readonly token: Redacted.Redacted;
   readonly mutationsEnabled: boolean;
   readonly approvedMutationTools: ReadonlyArray<string>;
 }) => {

@@ -217,6 +217,20 @@ export * from "./Graph/index.ts";
  */
 export * from "./Html.ts";
 /**
+ * HTTP method schemas and literal-kit helpers.
+ *
+ * @example
+ * ```ts
+ * import { HttpMethod } from "@beep/schema"
+ *
+ * console.log(HttpMethod.Schema.is.OPTIONS("OPTIONS"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * as HttpMethod from "./HttpMethod/index.ts";
+/**
  * @since 0.0.0
  * @category validation
  */
