@@ -22,7 +22,7 @@ import {
   VersionCategoryStatusThunk,
   VersionDriftItem,
   VersionSyncError,
-} from "../../VersionSync.schemas.js";
+} from "../../VersionSync.schemas.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/resolvers/BiomeResolver");
 

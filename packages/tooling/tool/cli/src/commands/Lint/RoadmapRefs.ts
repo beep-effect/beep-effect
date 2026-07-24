@@ -19,10 +19,10 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { makePolicyFindingLogger } from "../../internal/cli/PolicyFindingLogger.js";
-import { decodeGoalManifest, GoalPhaseStatus } from "../Goals/Goals.schemas.js";
-import { goalManifestPhases, parseGoalManifestText } from "../Goals/Inventory.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { makePolicyFindingLogger } from "../../internal/cli/PolicyFindingLogger.ts";
+import { decodeGoalManifest, GoalPhaseStatus } from "../Goals/Goals.schemas.ts";
+import { goalManifestPhases, parseGoalManifestText } from "../Goals/Inventory.ts";
 
 const $I = $RepoCliId.create("commands/Lint/RoadmapRefs");
 

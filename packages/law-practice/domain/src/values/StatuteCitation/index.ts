@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./StatuteCitation.model.js";
+export * from "./StatuteCitation.model.ts";

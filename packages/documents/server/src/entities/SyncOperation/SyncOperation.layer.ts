@@ -8,7 +8,7 @@
 
 import { SyncOperationRepository } from "@beep/documents-use-cases/entities/SyncOperation/server";
 import { Layer } from "effect";
-import { makeDrizzleSyncOperationRepository, makeInMemorySyncOperationRepository } from "./SyncOperation.repo.js";
+import { makeDrizzleSyncOperationRepository, makeInMemorySyncOperationRepository } from "./SyncOperation.repo.ts";
 
 /**
  * In-memory SyncOperation repository layer for deterministic sync tests.

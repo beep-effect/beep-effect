@@ -6,4 +6,4 @@
  * @since 0.0.0
  */
 
-export * from "./PatentDocumentTriplet.model.js";
+export * from "./PatentDocumentTriplet.model.ts";

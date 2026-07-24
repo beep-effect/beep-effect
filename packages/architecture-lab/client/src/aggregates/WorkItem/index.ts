@@ -9,4 +9,4 @@
  * @category clients
  * @since 0.0.0
  */
-export * from "./WorkItem.client.js";
+export * from "./WorkItem.client.ts";

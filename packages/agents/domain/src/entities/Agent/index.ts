@@ -18,7 +18,7 @@
  * @category entities
  * @since 0.0.0
  */
-export * from "./Agent.model.js";
+export * from "./Agent.model.ts";
 /**
  * Agent value-schema exports.
  *
@@ -32,4 +32,4 @@ export * from "./Agent.model.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./Agent.values.js";
+export * from "./Agent.values.ts";

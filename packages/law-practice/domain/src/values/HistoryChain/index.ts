@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./HistoryChain.model.js";
+export * from "./HistoryChain.model.ts";

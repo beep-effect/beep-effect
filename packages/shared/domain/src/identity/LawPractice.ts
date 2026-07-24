@@ -6,7 +6,7 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import * as EntityId from "../entity/EntityId.js";
+import * as EntityId from "../entity/EntityId.ts";
 
 const $I = $LawPracticeDomainId.create("identity/LawPractice");
 const make = EntityId.factory("law_practice", $I);

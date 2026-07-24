@@ -14,10 +14,10 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ChildProcess } from "effect/unstable/process";
 import { parse } from "jsonc-parser";
-import { formatJsonc, renderTruncatedLines, writeArtifact } from "../../../internal/artifacts/index.js";
-import { collectText } from "../../../internal/process/index.js";
-import { diffMembership, enforceRatchet } from "../../../internal/ratchet/index.js";
-import { QualityScriptCommandError } from "../Quality.errors.js";
+import { formatJsonc, renderTruncatedLines, writeArtifact } from "../../../internal/artifacts/index.ts";
+import { collectText } from "../../../internal/process/index.ts";
+import { diffMembership, enforceRatchet } from "../../../internal/ratchet/index.ts";
+import { QualityScriptCommandError } from "../Quality.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ParseError } from "jsonc-parser";
 

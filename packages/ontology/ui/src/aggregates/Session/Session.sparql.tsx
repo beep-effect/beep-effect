@@ -26,7 +26,7 @@ import { A, O, R, Str } from "@beep/utils";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { pipe } from "effect";
 import * as S from "effect/Schema";
-import { valueFromEvent } from "./Session.workbench.shared.js";
+import { valueFromEvent } from "./Session.workbench.shared.ts";
 import type { RunOntologySparqlResult } from "@beep/ontology-use-cases/aggregates/Session";
 import type { JSX, KeyboardEvent } from "react";
 

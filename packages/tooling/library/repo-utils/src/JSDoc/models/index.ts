@@ -11,54 +11,54 @@
  * @category models
  * @since 0.0.0
  */
-export * from "./ApplicableTo.model.js";
+export * from "./ApplicableTo.model.ts";
 /**
  * @category models
  * @since 0.0.0
  */
-export * from "./ASTDerivability.model.js";
+export * from "./ASTDerivability.model.ts";
 /**
  * @category models
  * @since 0.0.0
  */
-export * as CanonicalJSDocSourceMetadata from "./CanonicalJSDocSourceMetadata.model.js";
+export * as CanonicalJSDocSourceMetadata from "./CanonicalJSDocSourceMetadata.model.ts";
 /**
  * @category models
  * @since 0.0.0
  */
-export * from "./HasJSDocApplicableToMapEntry.model.js";
+export * from "./HasJSDocApplicableToMapEntry.model.ts";
 /**
  * @category models
  * @since 0.0.0
  */
-export * from "./JSDocTagAnnotation.model.js";
+export * from "./JSDocTagAnnotation.model.ts";
 /**
  * @category models
  * @since 0.0.0
  */
-export * as JSDocTagDefinition from "./JSDocTagDefinition.model.js";
+export * as JSDocTagDefinition from "./JSDocTagDefinition.model.ts";
 /**
  * @category models
  * @since 0.0.0
  */
-export * from "./Specification.model.js";
+export * from "./Specification.model.ts";
 /**
  * @category models
  * @since 0.0.0
  */
-export * from "./TagKind.model.js";
+export * from "./TagKind.model.ts";
 /**
  * @category models
  * @since 0.0.0
  */
-export * from "./TagParameters.model.js";
+export * from "./TagParameters.model.ts";
 /**
  * @category models
  * @since 0.0.0
  */
-export * from "./TagValue.model.js";
+export * from "./TagValue.model.ts";
 /**
  * @category models
  * @since 0.0.0
  */
-export * from "./TSCategory.model.js";
+export * from "./TSCategory.model.ts";

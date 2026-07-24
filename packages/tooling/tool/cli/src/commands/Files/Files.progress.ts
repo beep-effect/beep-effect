@@ -16,7 +16,7 @@ import {
   progressFraction,
   progressPercent,
   renderProgressBar,
-} from "../../internal/cli/Progress.js";
+} from "../../internal/cli/Progress.ts";
 import type { Chalk } from "@beep/chalk";
 import type { Colors } from "@beep/colors";
 

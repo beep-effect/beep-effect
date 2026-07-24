@@ -21,10 +21,10 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command } from "effect/unstable/cli";
 import { parse } from "jsonc-parser";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { optionalProp } from "../../internal/cli/OptionRecord.js";
-import { makePolicyFindingLogger } from "../../internal/cli/PolicyFindingLogger.js";
-import { GoalStatus } from "../Goals/Goals.schemas.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { optionalProp } from "../../internal/cli/OptionRecord.ts";
+import { makePolicyFindingLogger } from "../../internal/cli/PolicyFindingLogger.ts";
+import { GoalStatus } from "../Goals/Goals.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Lint/ReflectionArtifact");
 

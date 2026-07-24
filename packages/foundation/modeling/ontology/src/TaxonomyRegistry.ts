@@ -12,8 +12,8 @@ import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { DocumentClass, FilingRootKind, FilingSegment } from "./SemanticFoundation.models.js";
-import type { TaxonomyConcept, TaxonomySeed } from "./SemanticFoundation.models.js";
+import { DocumentClass, FilingRootKind, FilingSegment } from "./SemanticFoundation.models.ts";
+import type { TaxonomyConcept, TaxonomySeed } from "./SemanticFoundation.models.ts";
 
 const $I = $OntologyId.create("TaxonomyRegistry");
 const iriEquivalence = S.toEquivalence(IRIReference);

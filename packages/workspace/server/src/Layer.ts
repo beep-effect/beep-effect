@@ -8,7 +8,7 @@
 
 import { Layer } from "effect";
 import { ThreadStoreDrizzleLayer, ThreadStoreInMemoryLayer } from "./aggregates/Thread/index.ts";
-import { WorkspaceVaultStoreDrizzleLayer, WorkspaceVaultStoreInMemoryLayer } from "./aggregates/Workspace/index.js";
+import { WorkspaceVaultStoreDrizzleLayer, WorkspaceVaultStoreInMemoryLayer } from "./aggregates/Workspace/index.ts";
 
 /**
  * Live workspace server layer backed by Drizzle persistence.

@@ -6,7 +6,7 @@
  */
 
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import * as EntityId from "../entity/EntityId.js";
+import * as EntityId from "../entity/EntityId.ts";
 
 const $I = $EpistemicDomainId.create("identity/Epistemic");
 const make = EntityId.factory("epistemic", $I);

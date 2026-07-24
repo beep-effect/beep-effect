@@ -20,9 +20,9 @@ import {
   RepoRunPlan,
   repoProofStepDefinition,
   TurboPlanSnapshot,
-} from "../../../internal/repo-run/index.js";
-import { HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.js";
-import type { RepoRunContext, TurboPlanTask } from "../../../internal/repo-run/index.js";
+} from "../../../internal/repo-run/index.ts";
+import { HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
+import type { RepoRunContext, TurboPlanTask } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Planner");
 

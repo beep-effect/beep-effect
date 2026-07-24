@@ -7,9 +7,9 @@
 
 import { A } from "@beep/utils";
 import { Console, Effect, Path } from "effect";
-import { TsconfigSyncPlan } from "./TsconfigSync.plan.js";
-import { TsconfigSyncModeMatch } from "./TsconfigSync.schemas.js";
-import type { TsconfigSyncChange, TsconfigSyncMode } from "./TsconfigSync.schemas.js";
+import { TsconfigSyncPlan } from "./TsconfigSync.plan.ts";
+import { TsconfigSyncModeMatch } from "./TsconfigSync.schemas.ts";
+import type { TsconfigSyncChange, TsconfigSyncMode } from "./TsconfigSync.schemas.ts";
 
 const { relativeFromRoot } = TsconfigSyncPlan;
 /**

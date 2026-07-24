@@ -15,11 +15,11 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
-import { makeTikaError } from "./Tika.errors.js";
-import { TikaFileProcessingEngine, TikaFileProcessingEngineDescriptor } from "./Tika.service.js";
+import { makeTikaError } from "./Tika.errors.ts";
+import { TikaFileProcessingEngine, TikaFileProcessingEngineDescriptor } from "./Tika.service.ts";
 import type { ExportArchiveOperation, ExtractFileOperation } from "@beep/file-processing/Operation";
 import type { FileProcessingEngineShape } from "@beep/file-processing/Service";
-import type { TikaError } from "./Tika.errors.js";
+import type { TikaError } from "./Tika.errors.ts";
 
 const $I = $TikaId.create("Tika.tikaapp");
 

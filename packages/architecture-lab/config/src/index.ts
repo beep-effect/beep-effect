@@ -44,4 +44,4 @@ export const VERSION = "0.0.0" as const;
  * @category configuration
  * @since 0.0.0
  */
-export { defaultWorkItemPublicConfig, WorkItemPublicConfig } from "./public.js";
+export { defaultWorkItemPublicConfig, WorkItemPublicConfig } from "./public.ts";

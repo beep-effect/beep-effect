@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ShortFormCitationType.model.js";
+export * from "./ShortFormCitationType.model.ts";

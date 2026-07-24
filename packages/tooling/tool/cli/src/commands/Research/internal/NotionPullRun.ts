@@ -10,14 +10,14 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ResearchCommandError } from "../Research.errors.js";
-import { KnowledgeCardFrontmatter, ResearchNotionPullSummary } from "../Research.schemas.js";
-import { catalogDbPath, loadSeenUrls, persistCards } from "./CatalogOps.js";
-import { findDatabaseId, queryPageLinks, querySavedLinks, readLinksFile } from "./NotionPull.js";
-import { normalizeUrl, slugFor, VAULT_DIRS } from "./Vault.js";
-import type { ResearchNotionPullOptions } from "../Research.schemas.js";
-import type { ResearchCommandServiceRequirements } from "../Research.service.js";
-import type { CardPersistRow } from "./CatalogOps.js";
+import { ResearchCommandError } from "../Research.errors.ts";
+import { KnowledgeCardFrontmatter, ResearchNotionPullSummary } from "../Research.schemas.ts";
+import { catalogDbPath, loadSeenUrls, persistCards } from "./CatalogOps.ts";
+import { findDatabaseId, queryPageLinks, querySavedLinks, readLinksFile } from "./NotionPull.ts";
+import { normalizeUrl, slugFor, VAULT_DIRS } from "./Vault.ts";
+import type { ResearchNotionPullOptions } from "../Research.schemas.ts";
+import type { ResearchCommandServiceRequirements } from "../Research.service.ts";
+import type { CardPersistRow } from "./CatalogOps.ts";
 
 const decodeNotionPullSummary = S.decodeUnknownEffect(ResearchNotionPullSummary);
 

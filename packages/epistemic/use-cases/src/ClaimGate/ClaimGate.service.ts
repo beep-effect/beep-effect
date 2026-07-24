@@ -23,7 +23,7 @@ import * as S from "effect/Schema";
 import type * as DomainCandidateClaim from "@beep/epistemic-domain/entities/CandidateClaim";
 import type * as DomainEvidence from "@beep/epistemic-domain/entities/Evidence";
 import type { ShaclValidationResult, ShaclValidationServiceShape } from "@beep/semantic-web/services/shacl-validation";
-import type { ClaimGateShape } from "./ClaimGate.ports.js";
+import type { ClaimGateShape } from "./ClaimGate.ports.ts";
 
 const CLAIM_CLASS_IRI = "https://beep.dev/epistemic/Claim";
 const EVIDENCE_QUOTE_IRI = "https://beep.dev/epistemic/hasEvidenceQuote";

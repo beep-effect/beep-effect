@@ -11,25 +11,25 @@
  * @category adapters
  * @since 0.0.0
  */
-export * from "./DmsMirrorBox.js";
+export * from "./DmsMirrorBox.ts";
 /**
  * Deterministic in-memory DMS mirror fixture exports.
  *
  * @category testing
  * @since 0.0.0
  */
-export * from "./DmsMirrorFixture.js";
+export * from "./DmsMirrorFixture.ts";
 /**
  * Vault sync configuration exports.
  *
  * @category configuration
  * @since 0.0.0
  */
-export * from "./VaultSync.config.js";
+export * from "./VaultSync.config.ts";
 /**
  * Vault sync engine service exports.
  *
  * @category constructors
  * @since 0.0.0
  */
-export * from "./VaultSyncEngine.service.js";
+export * from "./VaultSyncEngine.service.ts";

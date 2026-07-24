@@ -605,6 +605,40 @@ describe("architecture operation plan", () => {
   );
 
   it.effect(
+    "emits TypeScript source specifiers for every package role with an extra export",
+    Effect.fnUntraced(function* () {
+      const roleExports = [
+        ["domain", 'export * as Aggregates from "./aggregates/index.ts";'],
+        ["use-cases", 'export * from "./public.ts";'],
+        ["config", 'export * from "./public.ts";'],
+        ["server", 'export * from "./Layer.ts";'],
+        ["tables", 'export * from "./tables.ts";'],
+      ] as const;
+
+      yield* Effect.forEach(
+        roleExports,
+        Effect.fnUntraced(function* ([role, expectedExport]) {
+          const plan = yield* makeArchitecturePackageOperationPlan({
+            boundedContext: "research-lab",
+            role,
+          });
+          const indexOperation = O.getOrThrow(
+            A.findFirst(
+              plan.operations,
+              (operation): operation is WriteFileOperation =>
+                S.is(WriteFileOperation)(operation) && Str.endsWith("/src/index.ts")(operation.path)
+            )
+          );
+
+          expect(indexOperation.content).toContain(expectedExport);
+          expect(indexOperation.content).not.toContain('.js";');
+        }),
+        { discard: true }
+      );
+    })
+  );
+
+  it.effect(
     "applies a shell-only slice role package twice with a no-op second apply",
     Effect.fnUntraced(function* () {
       const tempRoot = joinPath(tmpdir(), `beep-architecture-package-shell-${yield* Clock.currentTimeMillis}`);
@@ -637,8 +671,8 @@ describe("architecture operation plan", () => {
       expect(parsedPackageJson.exports["./aggregates/*"]).toBe("./src/aggregates/*/index.ts");
       expect(parsedPackageJson.publishConfig?.exports?.["."]).toBe("./dist/index.js");
       expect(parsedPackageJson.publishConfig?.exports?.["./aggregates/*"]).toBe("./dist/aggregates/*/index.js");
-      expect(index).toContain('export * as Aggregates from "./aggregates/index.js";');
-      expect(index).toContain('export * as Values from "./values/index.js";');
+      expect(index).toContain('export * as Aggregates from "./aggregates/index.ts";');
+      expect(index).toContain('export * as Values from "./values/index.ts";');
       expect(check.idempotent).toBe(true);
       expect(secondApply.writtenPaths).toEqual([]);
       expect(secondApply.skippedPaths.length).toBeGreaterThan(0);

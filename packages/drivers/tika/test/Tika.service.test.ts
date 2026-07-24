@@ -125,8 +125,9 @@ describe("@beep/tika", () => {
       fcRuns(25)
     ));
 
-  it.effect("extracts text for a P1 text fixture", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "extracts text for a P1 text fixture",
+    Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const result = yield* TikaFileProcessingEngine.extract(
         ExtractFileOperation.make({
@@ -145,8 +146,9 @@ describe("@beep/tika", () => {
     })
   );
 
-  it.effect("defers DOCX extraction behind an operation-level error", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "defers DOCX extraction behind an operation-level error",
+    Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const error = yield* TikaFileProcessingEngine.extract(
         ExtractFileOperation.make({

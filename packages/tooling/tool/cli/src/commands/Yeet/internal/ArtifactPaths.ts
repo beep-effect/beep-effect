@@ -8,7 +8,7 @@
 import { createHash } from "node:crypto";
 import { Effect, flow, Path } from "effect";
 import * as Str from "effect/String";
-import type { RepoRunContext } from "../../../internal/repo-run/index.js";
+import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 
 /**
  * Convert an arbitrary branch or step name into a stable artifact file segment.

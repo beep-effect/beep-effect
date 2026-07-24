@@ -23,7 +23,7 @@ import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { spikeEntityInput } from "../internal/spikeEntity.ts";
-import { OfficeActionExtractionLabel } from "./OfficeActionExtractionLabel.js";
+import { OfficeActionExtractionLabel } from "./OfficeActionExtractionLabel.ts";
 import type { ClaimGateShape } from "@beep/epistemic-use-cases/ClaimGate";
 import type { ClaimTransitionShape } from "@beep/epistemic-use-cases/ClaimLifecycle";
 import type { FileProcessingServiceShape } from "@beep/file-processing/Service";

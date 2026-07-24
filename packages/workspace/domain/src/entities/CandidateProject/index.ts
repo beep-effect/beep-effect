@@ -18,7 +18,7 @@
  * @category models
  * @since 0.0.0
  */
-export * from "./CandidateProject.model.js";
+export * from "./CandidateProject.model.ts";
 /**
  * Module exports.
  *
@@ -32,4 +32,4 @@ export * from "./CandidateProject.model.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./CandidateProject.values.js";
+export * from "./CandidateProject.values.ts";

@@ -19,7 +19,7 @@
  * @category fixtures
  * @since 0.0.0
  */
-export { FixtureTurnKernel, fixtureBlocksFor } from "./processes/AssistantTurn/AssistantTurn.fixture.js";
+export { FixtureTurnKernel, fixtureBlocksFor } from "./processes/AssistantTurn/AssistantTurn.fixture.ts";
 /**
  * In-memory runtime SDK facade backed by deterministic proof fixtures.
  *
@@ -34,7 +34,7 @@ export { FixtureTurnKernel, fixtureBlocksFor } from "./processes/AssistantTurn/A
  * @category fixtures
  * @since 0.0.0
  */
-export { makeInMemoryProfessionalRuntimeSdk } from "./processes/ProfessionalRuntime/ProfessionalRuntime.fixture-service.js";
+export { makeInMemoryProfessionalRuntimeSdk } from "./processes/ProfessionalRuntime/ProfessionalRuntime.fixture-service.ts";
 /**
  * Runtime fixture schema and deterministic runner used by proof harnesses.
  *
@@ -75,7 +75,7 @@ export { makeInMemoryProfessionalRuntimeSdk } from "./processes/ProfessionalRunt
 export {
   RuntimeFixtureInput,
   runRuntimeFixture,
-} from "./processes/ProfessionalRuntime/ProfessionalRuntime.fixtures.js";
+} from "./processes/ProfessionalRuntime/ProfessionalRuntime.fixtures.ts";
 /**
  * Public runtime SDK contracts reused by proof helpers.
  *
@@ -94,4 +94,4 @@ export {
  * @category use-cases
  * @since 0.0.0
  */
-export * from "./public.js";
+export * from "./public.ts";

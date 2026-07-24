@@ -18,8 +18,8 @@ import * as Str from "effect/String";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { ChildProcess } from "effect/unstable/process";
 import { parseDocument } from "yaml";
-import { collectText } from "../../internal/process/index.js";
-import { fallowCiContractDiagnostics } from "./internal/FallowCiContract.js";
+import { collectText } from "../../internal/process/index.ts";
+import { fallowCiContractDiagnostics } from "./internal/FallowCiContract.ts";
 import {
   FallowAttributionKinds,
   FallowEnvelopeStatus,
@@ -38,10 +38,10 @@ import {
   sameAttributionKind,
   sameEnvelopeStatus,
   sameFeatureFamily,
-} from "./internal/FallowEnvelope.schema.js";
-import { QualityScriptCommandError } from "./Quality.errors.js";
+} from "./internal/FallowEnvelope.schema.ts";
+import { QualityScriptCommandError } from "./Quality.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { FallowFeature, FindingAttributionKind } from "./internal/FallowEnvelope.schema.js";
+import type { FallowFeature, FindingAttributionKind } from "./internal/FallowEnvelope.schema.ts";
 
 const $I = $RepoCliId.create("commands/Quality/FallowQuality");
 
@@ -337,7 +337,7 @@ class FallowSecuritySummaryRawReport extends S.Class<FallowSecuritySummaryRawRep
  * @category testing
  * @since 0.0.0
  */
-export { fallowCiUploadDiagnosticsForTesting } from "./internal/FallowCiContract.js";
+export { fallowCiUploadDiagnosticsForTesting } from "./internal/FallowCiContract.ts";
 
 const FallowSecurityRawReport = S.Union([FallowSecurityDetailedRawReport, FallowSecuritySummaryRawReport]).pipe(
   $I.annoteSchema("FallowSecurityRawReport", {

@@ -18,7 +18,7 @@
  * @category errors
  * @since 0.0.0
  */
-export * from "./IrToLaw.errors.js";
+export * from "./IrToLaw.errors.ts";
 /**
  * IR-to-law port exports.
  *
@@ -32,7 +32,7 @@ export * from "./IrToLaw.errors.js";
  * @category services
  * @since 0.0.0
  */
-export * from "./IrToLaw.ports.js";
+export * from "./IrToLaw.ports.ts";
 /**
  * IR-to-law implementation exports.
  *
@@ -46,4 +46,4 @@ export * from "./IrToLaw.ports.js";
  * @category services
  * @since 0.0.0
  */
-export * from "./IrToLaw.service.js";
+export * from "./IrToLaw.service.ts";

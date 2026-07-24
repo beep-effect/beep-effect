@@ -9,9 +9,9 @@ import { O } from "@beep/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
-import { GhPageInfo, ghOutput } from "../../../../internal/github/index.js";
-import { YeetCommandError } from "../../Yeet.errors.js";
-import { PrCloseoutWriteAction } from "./Closeout.schemas.js";
+import { GhPageInfo, ghOutput } from "../../../../internal/github/index.ts";
+import { YeetCommandError } from "../../Yeet.errors.ts";
+import { PrCloseoutWriteAction } from "./Closeout.schemas.ts";
 import {
   commentsPageQuery,
   decodeGhCommentsDocument,
@@ -25,13 +25,13 @@ import {
   GhReviewThreadConnection,
   reviewsPageQuery,
   reviewThreadsPageQuery,
-} from "./Gh.schemas.js";
-import { REPLY_THREAD_MUTATION, RESOLVE_THREAD_MUTATION } from "./WritePlan.js";
+} from "./Gh.schemas.ts";
+import { REPLY_THREAD_MUTATION, RESOLVE_THREAD_MUTATION } from "./WritePlan.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { GhComment, GhPrView } from "../../../../internal/github/index.js";
-import type { RepoRunContext } from "../../../../internal/repo-run/index.js";
-import type { GhRepoView, GhReview, GhReviewThread } from "./Gh.schemas.js";
-import type { closeoutWritePlan } from "./WritePlan.js";
+import type { GhComment, GhPrView } from "../../../../internal/github/index.ts";
+import type { RepoRunContext } from "../../../../internal/repo-run/index.ts";
+import type { GhRepoView, GhReview, GhReviewThread } from "./Gh.schemas.ts";
+import type { closeoutWritePlan } from "./WritePlan.ts";
 
 type CloseoutWriteIntent = ReturnType<typeof closeoutWritePlan>["intents"][number];
 

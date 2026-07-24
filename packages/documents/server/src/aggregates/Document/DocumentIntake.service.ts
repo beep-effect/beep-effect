@@ -20,14 +20,14 @@ import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as S from "effect/Schema";
-import { FilingDecisionHeuristicLayer } from "./FilingDecisionHeuristic.js";
-import { FilingDecisionLlmLayer } from "./FilingDecisionLlm.js";
+import { FilingDecisionHeuristicLayer } from "./FilingDecisionHeuristic.ts";
+import { FilingDecisionLlmLayer } from "./FilingDecisionLlm.ts";
 import {
   FilingTextExtraction,
   FilingTextExtractionInput,
   FilingTextExtractionLiveLayer,
   FilingTextExtractionNoopLayer,
-} from "./FilingTextExtraction.js";
+} from "./FilingTextExtraction.ts";
 
 const $I = $DocumentsServerId.create("aggregates/Document/DocumentIntake.service");
 

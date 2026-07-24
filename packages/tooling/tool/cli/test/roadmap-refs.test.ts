@@ -11,7 +11,7 @@ import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
 import { describe, expect, it } from "vitest";
-import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.js";
+import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.ts";
 
 const FIXTURE_PATH = "packages/tooling/tool/cli/test/roadmap-refs.fixture.md";
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });

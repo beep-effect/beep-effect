@@ -18,8 +18,8 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ResearchCommandError } from "../Research.errors.js";
-import type { BrowserKind } from "../Research.schemas.js";
+import { ResearchCommandError } from "../Research.errors.ts";
+import type { BrowserKind } from "../Research.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Research/internal/BrowserHistory");
 type BrowserProfileKind = Exclude<BrowserKind, "all">;

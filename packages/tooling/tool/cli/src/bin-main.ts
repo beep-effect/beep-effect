@@ -185,7 +185,7 @@ const runRepoCliMain = <E, A>(effect: import("effect").Effect.Effect<A, E>) =>
 let handledByQualityFastPath = false;
 
 if (canUseQualityTaskFastPath(argv)) {
-  const { parseQualityTaskInvocation, runQualityTask } = await import("./commands/Quality/Tasks.js");
+  const { parseQualityTaskInvocation, runQualityTask } = await import("./commands/Quality/Tasks.ts");
   const qualityTaskInvocation = parseQualityTaskInvocation(argv);
 
   if (O.isSome(qualityTaskInvocation)) {
@@ -209,7 +209,7 @@ let handledByCiFastPath = false;
 if (!handledByQualityFastPath && canUseCiFastPath(argv)) {
   handledByCiFastPath = true;
   const [{ ciCommand }, { Command }] = await Promise.all([
-    import("./commands/Ci/index.js"),
+    import("./commands/Ci/index.ts"),
     import("effect/unstable/cli"),
   ]);
   const CiLayers = Layer.mergeAll(BunChildProcessSpawner.layer).pipe(Layer.provideMerge(BaseLayers));
@@ -233,7 +233,7 @@ if (!handledByQualityFastPath && !handledByCiFastPath) {
   const [{ FsUtilsLive, TSMorphServiceLive }, { Command }, { rootCommand }] = await Promise.all([
     import("@beep/repo-utils"),
     import("effect/unstable/cli"),
-    import("./commands/Root.js"),
+    import("./commands/Root.ts"),
   ]);
   const DerivedLayers = Layer.mergeAll(BunChildProcessSpawner.layer, FsUtilsLive, TSMorphServiceLive).pipe(
     Layer.provideMerge(BaseLayers)

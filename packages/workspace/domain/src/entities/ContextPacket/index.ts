@@ -18,7 +18,7 @@
  * @category models
  * @since 0.0.0
  */
-export * from "./ContextPacket.model.js";
+export * from "./ContextPacket.model.ts";
 /**
  * Module exports.
  *
@@ -32,4 +32,4 @@ export * from "./ContextPacket.model.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ContextPacket.values.js";
+export * from "./ContextPacket.values.ts";

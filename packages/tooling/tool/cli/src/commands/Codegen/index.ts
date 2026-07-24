@@ -11,4 +11,4 @@
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./Codegen.command.js";
+export * from "./Codegen.command.ts";

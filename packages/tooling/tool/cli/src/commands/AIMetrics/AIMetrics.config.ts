@@ -23,4 +23,4 @@ export {
   resolveRawArchiveKey,
   resolveRawArchiveKeySecretRef,
   resolveRepoRoot,
-} from "./internal/Programs.js";
+} from "./internal/Programs.ts";

@@ -24,4 +24,4 @@
  * @category read-models
  * @since 0.0.0
  */
-export * from "./ClaimProjectionView.model.js";
+export * from "./ClaimProjectionView.model.ts";

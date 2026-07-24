@@ -5,4 +5,4 @@
  * @since 0.0.0
  */
 
-export { extractCorpusImpl } from "./ServicePrograms.js";
+export { extractCorpusImpl } from "./ServicePrograms.ts";

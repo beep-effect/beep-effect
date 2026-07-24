@@ -77,7 +77,7 @@ import * as F from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
-import { VaultSyncConfig } from "./VaultSync.config.js";
+import { VaultSyncConfig } from "./VaultSync.config.ts";
 import type { RemoteItemId } from "@beep/documents-domain/values/Sync";
 import type {
   DmsRemoteEvent,

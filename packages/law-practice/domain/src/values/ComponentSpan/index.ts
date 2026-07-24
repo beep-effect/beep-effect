@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ComponentSpan.models.js";
+export * from "./ComponentSpan.models.ts";

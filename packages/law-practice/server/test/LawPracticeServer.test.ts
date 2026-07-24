@@ -72,8 +72,9 @@ describe("@beep/law-practice-server", () => {
   it.layer(makeLawPracticeServerTestLayer(OFFICE_ACTION_MODEL_OUTPUT))(
     "office-action review loop over service-backed extraction",
     (it) => {
-      it.effect("IrToLaw grounds exactly one distinction to its source anchor", () =>
-        Effect.gen(function* () {
+      it.effect(
+        "IrToLaw grounds exactly one distinction to its source anchor",
+        Effect.fnUntraced(function* () {
           const langExtract = yield* LangExtractService;
           const irToLaw = yield* IrToLaw;
           const extractionResult = yield* langExtract.extract(makeExtractionRequest());
@@ -107,8 +108,9 @@ describe("@beep/law-practice-server", () => {
         })
       );
 
-      it.effect("review admits the claim, advancing it to shape_valid", () =>
-        Effect.gen(function* () {
+      it.effect(
+        "review admits the claim, advancing it to shape_valid",
+        Effect.fnUntraced(function* () {
           const review = yield* OfficeActionReview;
           const input = yield* makeOfficeActionReviewInput();
 

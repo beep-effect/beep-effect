@@ -16,8 +16,9 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 describe("@beep/documents-domain taxonomy seed", () => {
-  it.effect("keeps the repo-owned JSON-LD seed aligned with folder projection data", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "keeps the repo-owned JSON-LD seed aligned with folder projection data",
+    Effect.fnUntraced(function* () {
       expect(legalDocumentTaxonomy.concepts).toHaveLength(25);
       expect(legalDocumentTaxonomyJsonLd["@graph"]).toHaveLength(legalDocumentTaxonomy.concepts.length);
 
@@ -38,14 +39,16 @@ describe("@beep/documents-domain taxonomy seed", () => {
     })
   );
 
-  it.effect("projects an intake batch id into the deterministic inbox path", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "projects an intake batch id into the deterministic inbox path",
+    Effect.fnUntraced(function* () {
       expect(yield* projectIntakeInboxPath("Batch 1")).toBe("00-inbox/batch-1");
     })
   );
 
-  it.effect("projects an unfiled document into the deterministic inbox vault path", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "projects an unfiled document into the deterministic inbox vault path",
+    Effect.fnUntraced(function* () {
       const projected = yield* projectInboxDocumentPath(
         ProjectInboxDocumentPathInput.make({
           contentDigest: "0123456789abcdef",

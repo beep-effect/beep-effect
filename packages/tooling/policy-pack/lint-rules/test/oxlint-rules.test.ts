@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import * as A from "effect/Array";
 import { describe, expect, it } from "vitest";
 import { provideScopedLayer } from "./harness.ts";
-import { OXLINT_RULES, runOxlintRule } from "./oxlint-harness.ts";
+import { OXLINT_RULES, runOxlintRule, runOxlintRuleFix } from "./oxlint-harness.ts";
 import { OXLINT_SOURCES } from "./oxlint-sources.ts";
 
 const run = <A2, E>(program: Effect.Effect<A2, E, NodeServices.NodeServices>): Promise<A2> =>
@@ -18,9 +18,19 @@ describe("oxlint rules", () => {
         it(`flags invalid case #${index} (${testCase.count} finding(s))`, () =>
           run(
             Effect.gen(function* () {
-              const findings = yield* runOxlintRule(rule, testCase.source, testCase.filename);
+              const findings = yield* runOxlintRule(rule, testCase.source, testCase.filename, testCase.supportingFiles);
               expect(findings.length).toBe(testCase.count);
               expect(A.every(findings, (finding) => finding.ruleId === rule)).toBe(true);
+
+              if (testCase.fixedSource !== undefined) {
+                const fixedSource = yield* runOxlintRuleFix(
+                  rule,
+                  testCase.source,
+                  testCase.filename,
+                  testCase.supportingFiles
+                );
+                expect(fixedSource).toBe(`${testCase.fixedSource}\n`);
+              }
             })
           ));
       });
@@ -29,7 +39,7 @@ describe("oxlint rules", () => {
         it(`ignores valid case #${index}`, () =>
           run(
             Effect.gen(function* () {
-              const findings = yield* runOxlintRule(rule, testCase.source, testCase.filename);
+              const findings = yield* runOxlintRule(rule, testCase.source, testCase.filename, testCase.supportingFiles);
               expect(findings.length).toBe(0);
             })
           ));

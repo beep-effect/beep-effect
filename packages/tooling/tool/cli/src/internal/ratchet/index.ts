@@ -5,5 +5,5 @@
  * @since 0.0.0
  */
 
-export * from "./RatchetDiff.js";
-export * from "./RatchetLifecycle.js";
+export * from "./RatchetDiff.ts";
+export * from "./RatchetLifecycle.ts";

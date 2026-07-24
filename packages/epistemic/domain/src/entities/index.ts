@@ -18,7 +18,7 @@
  * @category entities
  * @since 0.0.0
  */
-export * from "./Activity/index.js";
+export * from "./Activity/index.ts";
 /**
  * Candidate claim entity exports.
  *
@@ -32,7 +32,7 @@ export * from "./Activity/index.js";
  * @category entities
  * @since 0.0.0
  */
-export * from "./CandidateClaim/index.js";
+export * from "./CandidateClaim/index.ts";
 /**
  * Evidence entity exports.
  *
@@ -46,7 +46,7 @@ export * from "./CandidateClaim/index.js";
  * @category entities
  * @since 0.0.0
  */
-export * from "./Evidence/index.js";
+export * from "./Evidence/index.ts";
 /**
  * Usage record entity exports.
  *
@@ -60,4 +60,4 @@ export * from "./Evidence/index.js";
  * @category entities
  * @since 0.0.0
  */
-export * from "./UsageRecord/index.js";
+export * from "./UsageRecord/index.ts";

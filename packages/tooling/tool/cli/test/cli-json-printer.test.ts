@@ -89,8 +89,9 @@ describe("internal/cli/Printer formatDurationSeconds", () => {
 });
 
 describe("internal/cli/Printer tagged logging", () => {
-  it.effect("prefixes messages with the tag", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "prefixes messages with the tag",
+    Effect.fnUntraced(function* () {
       const lines = yield* collectLines(
         Effect.gen(function* () {
           const log = makeTaggedLogger("ci");
@@ -101,8 +102,9 @@ describe("internal/cli/Printer tagged logging", () => {
     })
   );
 
-  it.effect("logs record entries as [tag] key=value in insertion order", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "logs record entries as [tag] key=value in insertion order",
+    Effect.fnUntraced(function* () {
       const lines = yield* collectLines(logTaggedSummary("schema-first", { live_entries: 3, missing_entries: 0 }));
       expect(lines).toEqual(["[schema-first] live_entries=3", "[schema-first] missing_entries=0"]);
     })

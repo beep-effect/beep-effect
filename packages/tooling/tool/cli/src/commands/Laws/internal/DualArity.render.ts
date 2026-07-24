@@ -7,13 +7,13 @@
 
 import { A } from "@beep/utils";
 import { Console, Effect, Match } from "effect";
-import { DualArityInventoryPath } from "../Laws.schemas.js";
+import { DualArityInventoryPath } from "../Laws.schemas.ts";
 import type {
   DualArityDiagnosticKind,
   DualArityInventoryDocument,
   DualArityInventoryEntry,
   DualArityRulesOptions,
-} from "../Laws.schemas.js";
+} from "../Laws.schemas.ts";
 
 const diagnosticMessage = (diagnostic: DualArityDiagnosticKind): string =>
   Match.value(diagnostic).pipe(

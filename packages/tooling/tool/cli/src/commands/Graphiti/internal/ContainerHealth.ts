@@ -8,11 +8,11 @@
 import { A, Str } from "@beep/utils";
 import { Clock, Console, Duration, Effect } from "effect";
 import { dual } from "effect/Function";
-import { QualityTaskStep } from "../../../internal/process/index.js";
-import { GraphitiProxyOpsError } from "../Graphiti.errors.js";
-import { checkProxyHealthUrl, collectOptionalOutput } from "./StepExec.js";
+import { QualityTaskStep } from "../../../internal/process/index.ts";
+import { GraphitiProxyOpsError } from "../Graphiti.errors.ts";
+import { checkProxyHealthUrl, collectOptionalOutput } from "./StepExec.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { GraphitiRestoreConfig, ProxyEnsureConfig } from "../Graphiti.schemas.js";
+import type { GraphitiRestoreConfig, ProxyEnsureConfig } from "../Graphiti.schemas.ts";
 
 /**
  * Check whether a named Docker container exists for Graphiti recovery.

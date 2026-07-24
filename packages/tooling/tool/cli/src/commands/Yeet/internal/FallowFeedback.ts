@@ -14,20 +14,20 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { csvValues } from "../../../internal/cli/Flags.js";
-import { commandTextForStep, RepoRunPlan } from "../../../internal/repo-run/index.js";
+import { csvValues } from "../../../internal/cli/Flags.ts";
+import { commandTextForStep, RepoRunPlan } from "../../../internal/repo-run/index.ts";
 import {
   FallowFeatureFamily,
   FallowReportEnvelope,
   FindingAttributionKind,
-} from "../../Quality/internal/FallowEnvelope.schema.js";
-import { YeetCommandError } from "../Yeet.errors.js";
-import { buildQualityIssueIndex, QualityIssue, QualityIssueIndex, QualityIssueRouting } from "./QualityIssueIndex.js";
+} from "../../Quality/internal/FallowEnvelope.schema.ts";
+import { YeetCommandError } from "../Yeet.errors.ts";
+import { buildQualityIssueIndex, QualityIssue, QualityIssueIndex, QualityIssueRouting } from "./QualityIssueIndex.ts";
 import type {
   FallowFailureEnvelope,
   FallowReportFinding,
   FallowReportOk,
-} from "../../Quality/internal/FallowEnvelope.schema.js";
+} from "../../Quality/internal/FallowEnvelope.schema.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/FallowFeedback");
 

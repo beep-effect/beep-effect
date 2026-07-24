@@ -46,8 +46,9 @@ const mockSpawnerLayer = (
 
 describe("pickVaultDirectoryOnHost", () => {
   layer(mockSpawnerLayer(() => ({ stdout: "/home/user/vault1\n" })))("with a kdialog selection", (it) => {
-    it.effect("returns the picked path from kdialog stdout", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "returns the picked path from kdialog stdout",
+      Effect.fnUntraced(function* () {
         const selected = yield* pickVaultDirectoryOnHost("/home/user");
         assert.deepStrictEqual(selected, O.some("/home/user/vault1"));
       })
@@ -55,8 +56,9 @@ describe("pickVaultDirectoryOnHost", () => {
   });
 
   layer(mockSpawnerLayer(() => ({ code: 1 })))("with a cancelled dialog", (it) => {
-    it.effect("returns None", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "returns None",
+      Effect.fnUntraced(function* () {
         const selected = yield* pickVaultDirectoryOnHost("/home/user");
         assert.isTrue(O.isNone(selected));
       })
@@ -64,8 +66,9 @@ describe("pickVaultDirectoryOnHost", () => {
   });
 
   layer(mockSpawnerLayer(() => ({ stdout: "  \n" })))("with a clean exit but no selection", (it) => {
-    it.effect("returns None", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "returns None",
+      Effect.fnUntraced(function* () {
         const selected = yield* pickVaultDirectoryOnHost("/home/user");
         assert.isTrue(O.isNone(selected));
       })
@@ -75,8 +78,9 @@ describe("pickVaultDirectoryOnHost", () => {
   layer(mockSpawnerLayer((command) => (command === "kdialog" ? "missing" : { stdout: "/home/user/vault2\n" })))(
     "with kdialog missing and zenity available",
     (it) => {
-      it.effect("falls back to zenity", () =>
-        Effect.gen(function* () {
+      it.effect(
+        "falls back to zenity",
+        Effect.fnUntraced(function* () {
           const selected = yield* pickVaultDirectoryOnHost("/home/user");
           assert.deepStrictEqual(selected, O.some("/home/user/vault2"));
         })
@@ -85,8 +89,9 @@ describe("pickVaultDirectoryOnHost", () => {
   );
 
   layer(mockSpawnerLayer(() => "missing"))("with no picker command available", (it) => {
-    it.effect("fails with a client-safe error", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "fails with a client-safe error",
+      Effect.fnUntraced(function* () {
         const error = yield* pickVaultDirectoryOnHost("/home/user").pipe(Effect.flip);
         assert.strictEqual(error._tag, "VaultDirectoryPickError");
         assert.strictEqual(error.message, "Native folder dialog unavailable on this host.");

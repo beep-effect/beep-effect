@@ -14,16 +14,16 @@ import {
   VersionSyncReport,
   VersionSyncResolution,
   VersionSyncUpdateLocation,
-} from "../../VersionSync.schemas.js";
-import { BiomeSchemaState, buildBiomeReport, resolveBiomeSchema } from "../resolvers/BiomeResolver.js";
-import { BunVersionState, buildBunReport, resolveBunVersions } from "../resolvers/BunResolver.js";
-import { buildDockerReport, DockerImageState, resolveDockerImages } from "../resolvers/DockerResolver.js";
-import { buildEffectReport, EffectCatalogState, resolveEffectCatalog } from "../resolvers/EffectResolver.js";
-import { buildNodeReport, resolveNodeVersions } from "../resolvers/NodeResolver.js";
-import { CategorySelectionService } from "./CategorySelectionService.js";
+} from "../../VersionSync.schemas.ts";
+import { BiomeSchemaState, buildBiomeReport, resolveBiomeSchema } from "../resolvers/BiomeResolver.ts";
+import { BunVersionState, buildBunReport, resolveBunVersions } from "../resolvers/BunResolver.ts";
+import { buildDockerReport, DockerImageState, resolveDockerImages } from "../resolvers/DockerResolver.ts";
+import { buildEffectReport, EffectCatalogState, resolveEffectCatalog } from "../resolvers/EffectResolver.ts";
+import { buildNodeReport, resolveNodeVersions } from "../resolvers/NodeResolver.ts";
+import { CategorySelectionService } from "./CategorySelectionService.ts";
 import type { FileSystem, Path } from "effect";
 import type { HttpClient } from "effect/unstable/http";
-import type { VersionCategoryReport, VersionSyncError, VersionSyncOptions } from "../../VersionSync.schemas.js";
+import type { VersionCategoryReport, VersionSyncError, VersionSyncOptions } from "../../VersionSync.schemas.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/services/ResolverService");
 const versionCategoryStatusEquivalence = S.toEquivalence(VersionCategoryStatus);

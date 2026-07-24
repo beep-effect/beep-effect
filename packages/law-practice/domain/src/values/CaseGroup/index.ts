@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./CaseGroup.model.js";
+export * from "./CaseGroup.model.ts";

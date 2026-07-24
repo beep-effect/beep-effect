@@ -21,11 +21,11 @@ import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { ChildProcess } from "effect/unstable/process";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { QualityTaskStep, runQualityTaskStreamingStepGroup } from "../Quality/Tasks.js";
-import { CiCommandError } from "./Ci.errors.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { QualityTaskStep, runQualityTaskStreamingStepGroup } from "../Quality/Tasks.ts";
+import { CiCommandError } from "./Ci.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { QualityTaskConfigurationError, QualityTaskGroupFailed } from "../Quality/Tasks.js";
+import type { QualityTaskConfigurationError, QualityTaskGroupFailed } from "../Quality/Tasks.ts";
 
 const $I = $RepoCliId.create("commands/Ci/CiLane");
 

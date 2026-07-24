@@ -25,4 +25,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./EvidenceSpan.model.js";
+export * from "./EvidenceSpan.model.ts";

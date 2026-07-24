@@ -26,12 +26,12 @@ export {
   RootAuditMode,
 } from "@beep/repo-cli/commands/Quality/Quality.schemas";
 export * from "@beep/repo-cli/commands/Quality/Tasks";
-export * from "../commands/Quality/internal/CoverageRegression.js";
-export * from "../commands/Quality/internal/FallowEnvelope.schema.js";
-export { githubCheckLanePlan } from "../commands/Quality/internal/GithubChecks.js";
-export * from "../commands/Quality/internal/JSDocDocumentationInventory.js";
-export * from "../commands/Quality/internal/JSDocRatchet.js";
-export * from "../commands/Quality/internal/KnipRatchet.js";
-export * from "../commands/Quality/internal/PackageVerify.js";
-export * from "../commands/Quality/internal/TurboConfigProof.js";
-export * from "../internal/process/index.js";
+export * from "../commands/Quality/internal/CoverageRegression.ts";
+export * from "../commands/Quality/internal/FallowEnvelope.schema.ts";
+export { githubCheckLanePlan } from "../commands/Quality/internal/GithubChecks.ts";
+export * from "../commands/Quality/internal/JSDocDocumentationInventory.ts";
+export * from "../commands/Quality/internal/JSDocRatchet.ts";
+export * from "../commands/Quality/internal/KnipRatchet.ts";
+export * from "../commands/Quality/internal/PackageVerify.ts";
+export * from "../commands/Quality/internal/TurboConfigProof.ts";
+export * from "../internal/process/index.ts";

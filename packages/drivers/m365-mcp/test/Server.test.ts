@@ -246,8 +246,9 @@ describe("M365 MCP server", () => {
   });
 
   layer(M365ToolkitHandlersLive.pipe(Layer.provide(MockM365Layer)))("via the mounted toolkit", (it) => {
-    it.effect("returns driver results through toolkit handlers", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "returns driver results through toolkit handlers",
+      Effect.fnUntraced(function* () {
         const toolkit = yield* M365Toolkit;
         const stream = yield* toolkit.handle("m365_get_site", { siteId: SiteId });
         const first = yield* Stream.runHead(stream);
@@ -260,8 +261,9 @@ describe("M365 MCP server", () => {
     );
   });
 
-  it.effect("serves tool listing and tool calls over stdio", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "serves tool listing and tool calls over stdio",
+    Effect.fnUntraced(function* () {
       const stdout = yield* Ref.make("");
       const stdin = yield* Queue.make<Uint8Array>();
       const stage = yield* Ref.make(0);

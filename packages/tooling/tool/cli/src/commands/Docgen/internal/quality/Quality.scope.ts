@@ -11,17 +11,17 @@ import * as O from "@beep/utils/Option";
 import { Effect, flow, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as Str from "effect/String";
-import { runCaptured } from "../../../../internal/process/StepExec.js";
+import { runCaptured } from "../../../../internal/process/StepExec.ts";
 import {
   assertNoOrphanDocgenConfigPaths,
   discoverDocgenWorkspacePackages,
   resolveDocgenWorkspacePackage,
-} from "../Workspace.js";
-import { byPackagePathAscending } from "./Quality.schemas.js";
+} from "../Workspace.ts";
+import { byPackagePathAscending } from "./Quality.schemas.ts";
 import type * as PlatformError from "effect/PlatformError";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { DocgenWorkspacePackage } from "../../Docgen.schemas.js";
-import type { DocgenQualityScopeMode } from "./Quality.schemas.js";
+import type { DocgenWorkspacePackage } from "../../Docgen.schemas.ts";
+import type { DocgenQualityScopeMode } from "./Quality.schemas.ts";
 
 const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(value);
 

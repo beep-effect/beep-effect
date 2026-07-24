@@ -13,7 +13,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Command } from "effect/unstable/cli";
 import { Node, Project, SyntaxKind } from "ts-morph";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 
 const $I = $RepoCliId.create("commands/Lint/PackageTestImports");
 

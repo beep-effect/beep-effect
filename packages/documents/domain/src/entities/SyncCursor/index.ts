@@ -4,4 +4,4 @@
  * @category entities
  * @since 0.0.0
  */
-export * from "./SyncCursor.model.js";
+export * from "./SyncCursor.model.ts";

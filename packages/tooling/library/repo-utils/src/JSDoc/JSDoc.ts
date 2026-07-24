@@ -7,7 +7,7 @@
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { Match } from "effect";
 import * as S from "effect/Schema";
-import { JSDocTagDefinition } from "./models/index.js";
+import { JSDocTagDefinition } from "./models/index.ts";
 
 /* cspell:ignore defaultvalue doctest noalias nocompile nocollapse nosideeffects noinline inlines */
 

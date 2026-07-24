@@ -14,14 +14,14 @@ import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex, TaggedErrorClass } 
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { Tool, Toolkit } from "effect/unstable/ai";
-import { OntologyFilePath } from "../aggregates/Session/Session.ports.js";
+import { OntologyFilePath } from "../aggregates/Session/Session.ports.ts";
 import {
   OntologyResourceSummary,
   OntologySnapshot,
   OntologyViewMode,
-} from "../aggregates/Session/Session.projections.js";
-import { RunOntologySparqlResult } from "../aggregates/Session/Session.sparql.js";
-import { OntologyRepairProposal, RunOntologyValidationResult } from "../aggregates/Session/Session.validation.js";
+} from "../aggregates/Session/Session.projections.ts";
+import { RunOntologySparqlResult } from "../aggregates/Session/Session.sparql.ts";
+import { OntologyRepairProposal, RunOntologyValidationResult } from "../aggregates/Session/Session.validation.ts";
 
 const $I = $OntologyUseCasesId.create("tools/OntologyToolkit");
 

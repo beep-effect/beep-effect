@@ -13,8 +13,8 @@ import {
   DEFAULT_JSON_PRETTY_MAX_LENGTH,
   encodeCommandJson,
   renderPrettyCommandJson,
-} from "../../../../internal/cli/Json.js";
-import type { DocgenQualityReport, DocgenQualityReview, DocgenQualitySubject } from "./Quality.schemas.js";
+} from "../../../../internal/cli/Json.ts";
+import type { DocgenQualityReport, DocgenQualityReview, DocgenQualitySubject } from "./Quality.schemas.ts";
 
 const renderJson = Effect.fn("DocgenQuality.renderJson")(function* (value: unknown) {
   const encoded = yield* encodeCommandJson(value).pipe(

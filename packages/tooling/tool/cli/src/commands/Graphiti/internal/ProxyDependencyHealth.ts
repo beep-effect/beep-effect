@@ -13,11 +13,11 @@ import {
   DependencyHealthSnapshot,
   decodeContainerHealthState,
   unknownContainerHealthState,
-} from "./ProxySchemas.js";
-import { GraphitiDependencyHealthService } from "./ProxyServices.js";
+} from "./ProxySchemas.ts";
+import { GraphitiDependencyHealthService } from "./ProxyServices.ts";
 import type * as S from "effect/Schema";
-import type { GraphitiProxyConfig } from "./ProxyConfig.js";
-import type { ContainerHealthState } from "./ProxySchemas.js";
+import type { GraphitiProxyConfig } from "./ProxyConfig.ts";
+import type { ContainerHealthState } from "./ProxySchemas.ts";
 
 const unknownDependencySnapshot = () =>
   DependencyHealthSnapshot.make({

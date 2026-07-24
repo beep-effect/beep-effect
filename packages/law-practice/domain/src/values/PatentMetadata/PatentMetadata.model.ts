@@ -14,10 +14,10 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ApplicationNumber } from "../ApplicationNumber/index.js";
-import { KindCode } from "../KindCode/index.js";
-import { OfficeCode } from "../OfficeCode/index.js";
-import { PatentNumber } from "../PatentNumber/index.js";
+import { ApplicationNumber } from "../ApplicationNumber/index.ts";
+import { KindCode } from "../KindCode/index.ts";
+import { OfficeCode } from "../OfficeCode/index.ts";
+import { PatentNumber } from "../PatentNumber/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/PatentMetadata/PatentMetadata");
 

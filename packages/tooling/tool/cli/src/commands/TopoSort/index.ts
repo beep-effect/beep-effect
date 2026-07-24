@@ -11,4 +11,4 @@
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./TopoSort.command.js";
+export * from "./TopoSort.command.ts";

@@ -19,4 +19,4 @@ export {
   sanitizeSegment,
   validatePathSegment,
   writeCorpusStringFile,
-} from "./ServicePrograms.js";
+} from "./ServicePrograms.ts";

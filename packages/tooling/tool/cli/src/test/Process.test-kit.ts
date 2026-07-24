@@ -5,4 +5,4 @@
  * @since 0.0.0
  */
 
-export * from "../internal/process/index.js";
+export * from "../internal/process/index.ts";

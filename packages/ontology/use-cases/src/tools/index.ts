@@ -17,7 +17,7 @@
  * @category tools
  * @since 0.0.0
  */
-export * from "./OntologyToolkit.js";
+export * from "./OntologyToolkit.ts";
 /** Stateless ontology tool service exports.
  * @example
  * ```ts
@@ -27,4 +27,4 @@ export * from "./OntologyToolkit.js";
  * @category services
  * @since 0.0.0
  */
-export * from "./OntologyToolService.js";
+export * from "./OntologyToolService.ts";

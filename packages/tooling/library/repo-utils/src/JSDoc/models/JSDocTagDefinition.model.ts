@@ -10,14 +10,14 @@ import { Effect, Result, SchemaGetter } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 /* cspell:ignore Derivability derivability */
-import { ApplicableTo } from "./ApplicableTo.model.js";
-import { ASTDerivability } from "./ASTDerivability.model.js";
-import "./JSDocTagAnnotation.model.js";
-import { Specification } from "./Specification.model.js";
-import { TagKind } from "./TagKind.model.js";
-import { TagParameters } from "./TagParameters.model.js";
-import { TagValue } from "./TagValue.model.js";
-import type { TagName } from "./TagValue.model.js";
+import { ApplicableTo } from "./ApplicableTo.model.ts";
+import { ASTDerivability } from "./ASTDerivability.model.ts";
+import "./JSDocTagAnnotation.model.ts";
+import { Specification } from "./Specification.model.ts";
+import { TagKind } from "./TagKind.model.ts";
+import { TagParameters } from "./TagParameters.model.ts";
+import { TagValue } from "./TagValue.model.ts";
+import type { TagName } from "./TagValue.model.ts";
 
 const $I = $RepoUtilsId.create("JSDoc/models/JSDocTagDefinition.model");
 

@@ -8,7 +8,7 @@
 
 import { SyncItem } from "@beep/documents-domain/entities/SyncItem";
 import * as S from "effect/Schema";
-import type { syncItemTable } from "./SyncItem.table.js";
+import type { syncItemTable } from "./SyncItem.table.ts";
 
 /**
  * Selected documents SyncItem row.

@@ -10,10 +10,10 @@
  */
 
 import { Command } from "effect/unstable/cli";
-import { printLines } from "../../internal/cli/Printer.js";
-import { goalsDoctorCommand } from "./Doctor.js";
-import { goalsIndexCommand } from "./PortfolioIndex.js";
-import { goalsSetStatusCommand } from "./SetStatus.js";
+import { printLines } from "../../internal/cli/Printer.ts";
+import { goalsDoctorCommand } from "./Doctor.ts";
+import { goalsIndexCommand } from "./PortfolioIndex.ts";
+import { goalsSetStatusCommand } from "./SetStatus.ts";
 
 /**
  * `bun run beep goals` — goal-packet lifecycle command group.

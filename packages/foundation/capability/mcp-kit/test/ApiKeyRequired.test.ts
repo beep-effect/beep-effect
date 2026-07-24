@@ -74,8 +74,9 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, n
 
 describe("api_key_required envelope", () => {
   layer(buildLayer({}))("when the credential is absent", (it) => {
-    it.effect("returns isError:false with the envelope mirrored into content[].text", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "returns isError:false with the envelope mirrored into content[].text",
+      Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
         const result = yield* server.callTool({ arguments: {}, name: "soft_source_tool" });
 
@@ -96,8 +97,9 @@ describe("api_key_required envelope", () => {
   });
 
   layer(buildLayer({ MCP_KIT_TEST_SOFT_KEY: "fixture-secret" }))("when the credential is present", (it) => {
-    it.effect("stays registered and succeeds normally", () =>
-      Effect.gen(function* () {
+    it.effect(
+      "stays registered and succeeds normally",
+      Effect.fnUntraced(function* () {
         const server = yield* McpServer.McpServer;
         const result = yield* server.callTool({ arguments: {}, name: "soft_source_tool" });
 

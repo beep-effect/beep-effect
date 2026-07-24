@@ -8,7 +8,7 @@
 
 import { SyncOperation } from "@beep/documents-domain/entities/SyncOperation";
 import * as S from "effect/Schema";
-import type { syncOperationTable } from "./SyncOperation.table.js";
+import type { syncOperationTable } from "./SyncOperation.table.ts";
 
 /**
  * Selected documents SyncOperation row.

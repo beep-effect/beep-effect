@@ -10,7 +10,7 @@ import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as Agents from "@beep/shared-domain/identity/Agents";
 import * as S from "effect/Schema";
-import { AuthSnapshot, BinaryPath, EnvVars, HomePath, InstanceLabel, ProviderKind } from "./ProviderInstance.values.js";
+import { AuthSnapshot, BinaryPath, EnvVars, HomePath, InstanceLabel, ProviderKind } from "./ProviderInstance.values.ts";
 
 const $I = $AgentsDomainId.create("entities/ProviderInstance/ProviderInstance.model");
 

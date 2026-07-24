@@ -8,15 +8,15 @@
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import { resolveLocalRepoBinary, runRepoCommandCapture } from "../../../internal/repo-run/index.js";
-import { YeetCommandError } from "../Yeet.errors.js";
-import { optionFromNonEmpty } from "./GitExec.js";
-import { commitMessagePathForContext, writeTextFile } from "./IssueArtifacts.js";
-import { validateOpenPullRequest } from "./PullRequest.js";
+import { resolveLocalRepoBinary, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { YeetCommandError } from "../Yeet.errors.ts";
+import { optionFromNonEmpty } from "./GitExec.ts";
+import { commitMessagePathForContext, writeTextFile } from "./IssueArtifacts.ts";
+import { validateOpenPullRequest } from "./PullRequest.ts";
 import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { RepoRunContext } from "../../../internal/repo-run/index.js";
-import type { YeetRunOptions } from "../Yeet.schemas.js";
+import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { YeetRunOptions } from "../Yeet.schemas.ts";
 
 const blockedMonitorBranches: ReadonlyArray<string> = ["main", "master", "HEAD"];
 

@@ -23,7 +23,7 @@
  * @category mapping
  * @since 0.0.0
  */
-export * from "./ProviderInstance.behavior.js";
+export * from "./ProviderInstance.behavior.ts";
 /**
  * ProviderInstance entity schema exports.
  *
@@ -37,7 +37,7 @@ export * from "./ProviderInstance.behavior.js";
  * @category entities
  * @since 0.0.0
  */
-export * from "./ProviderInstance.model.js";
+export * from "./ProviderInstance.model.ts";
 /**
  * ProviderInstance value-schema exports.
  *
@@ -51,4 +51,4 @@ export * from "./ProviderInstance.model.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ProviderInstance.values.js";
+export * from "./ProviderInstance.values.ts";

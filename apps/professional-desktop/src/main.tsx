@@ -5,7 +5,7 @@ import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { App } from "./App.js";
+import { App } from "./App.ts";
 import { ProfessionalAtomProvider } from "./runtime/ProfessionalAtomProvider.tsx";
 import { WorkbenchThemeProvider } from "./theme/WorkbenchThemeProvider.tsx";
 

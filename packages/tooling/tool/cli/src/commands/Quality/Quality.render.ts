@@ -9,9 +9,9 @@ import { jsonStringifyPretty } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import { Console, Effect } from "effect";
 import { dual } from "effect/Function";
-import { printLines } from "../../internal/cli/Printer.js";
-import { QualityScriptCommandError } from "./Quality.errors.js";
-import type { QualityProfileConfig, QualityProfileDetection } from "./Quality.schemas.js";
+import { printLines } from "../../internal/cli/Printer.ts";
+import { QualityScriptCommandError } from "./Quality.errors.ts";
+import type { QualityProfileConfig, QualityProfileDetection } from "./Quality.schemas.ts";
 
 /**
  * Render quality profile configuration as stable `key=value` lines.

@@ -10,4 +10,4 @@ export {
   makeIngestProgram,
   makePrivacyCheckProgram,
   makeSourcesDiscoverProgram,
-} from "./Programs.js";
+} from "./Programs.ts";

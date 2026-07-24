@@ -18,11 +18,11 @@
  * @category configuration
  * @since 0.0.0
  */
-export * from "./migrate.js";
+export * from "./migrate.ts";
 /**
  * Migration target exports.
  *
  * @category configuration
  * @since 0.0.0
  */
-export * from "./targets.js";
+export * from "./targets.ts";

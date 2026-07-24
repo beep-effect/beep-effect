@@ -18,4 +18,4 @@
  * @category entities
  * @since 0.0.0
  */
-export * from "./UsageRecord.model.js";
+export * from "./UsageRecord.model.ts";

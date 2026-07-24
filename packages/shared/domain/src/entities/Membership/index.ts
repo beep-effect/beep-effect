@@ -18,7 +18,7 @@
  * @since 0.0.0
  * @category models
  */
-export * from "./Membership.model.js";
+export * from "./Membership.model.ts";
 /**
  * Membership value schemas.
  *
@@ -32,4 +32,4 @@ export * from "./Membership.model.js";
  * @since 0.0.0
  * @category schemas
  */
-export * from "./Membership.values.js";
+export * from "./Membership.values.ts";

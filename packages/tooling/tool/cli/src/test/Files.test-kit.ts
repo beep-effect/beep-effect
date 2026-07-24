@@ -5,4 +5,4 @@
  * @since 0.0.0
  */
 
-export * from "../commands/Files/index.js";
+export * from "../commands/Files/index.ts";

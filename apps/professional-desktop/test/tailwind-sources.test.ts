@@ -27,8 +27,9 @@ const Manifest = S.Struct({
 const decodeManifest = S.decodeUnknownSync(S.fromJsonString(Manifest));
 
 describe("tailwind source declarations", () => {
-  it.effect("declares an @source for every @beep UI package the app renders", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "declares an @source for every @beep UI package the app renders",
+    Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const manifest = decodeManifest(yield* fs.readFileString("package.json"));
       const globals = yield* fs.readFileString("src/styles/globals.css");
@@ -42,6 +43,6 @@ describe("tailwind source declarations", () => {
       const undeclared = rendered.filter((name) => !globals.includes(uiPackageSources[name] ?? " "));
 
       expect(undeclared).toStrictEqual([]);
-    }).pipe(provideScopedLayer(BunFileSystem.layer))
+    }, provideScopedLayer(BunFileSystem.layer))
   );
 });

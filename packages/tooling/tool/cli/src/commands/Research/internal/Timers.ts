@@ -17,7 +17,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { ChildProcess } from "effect/unstable/process";
-import { ResearchCommandError } from "../Research.errors.js";
+import { ResearchCommandError } from "../Research.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 /**

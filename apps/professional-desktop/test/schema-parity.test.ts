@@ -51,8 +51,9 @@ const assertSchemaEncodeDecodeRoundTrip = <Schema extends S.Codec<unknown>>(
 };
 
 describe("@beep/professional-desktop schema parity", () => {
-  it.effect("preserves transport boundary encoded shapes", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "preserves transport boundary encoded shapes",
+    Effect.fnUntraced(function* () {
       const sidecarTransportWire = { ipc: true };
       const sidecarTransport = yield* S.decodeUnknownEffect(SidecarTransport)(sidecarTransportWire);
       expect(yield* S.encodeUnknownEffect(SidecarTransport)(sidecarTransport)).toStrictEqual(sidecarTransportWire);
@@ -76,8 +77,9 @@ describe("@beep/professional-desktop schema parity", () => {
     })
   );
 
-  it.effect("preserves migration option wire shape and schema-owned default", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "preserves migration option wire shape and schema-owned default",
+    Effect.fnUntraced(function* () {
       const customWire = { migrationsSchema: "chat_runtime" };
       const custom = yield* S.decodeUnknownEffect(ProfessionalDesktopMigrationOptions)(customWire);
       expect(yield* S.encodeUnknownEffect(ProfessionalDesktopMigrationOptions)(custom)).toStrictEqual(customWire);
@@ -87,8 +89,9 @@ describe("@beep/professional-desktop schema parity", () => {
     })
   );
 
-  it.effect("preserves document intake onboarding and drop wire shapes", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "preserves document intake onboarding and drop wire shapes",
+    Effect.fnUntraced(function* () {
       const configure = ConfigureWorkspaceVaultInput.make({
         vaultRootPath: "/tmp/beep-documents-vault",
         workspaceId: DEFAULT_WORKSPACE_ID,
@@ -113,8 +116,9 @@ describe("@beep/professional-desktop schema parity", () => {
     })
   );
 
-  it.effect("constructs dropped-file RPC payloads from raw Uint8Array inputs", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "constructs dropped-file RPC payloads from raw Uint8Array inputs",
+    Effect.fnUntraced(function* () {
       const payload = intakeDroppedFilePayload(
         DroppedDocumentInput.make({
           content: new Uint8Array([1, 2, 3]),
@@ -132,8 +136,9 @@ describe("@beep/professional-desktop schema parity", () => {
     })
   );
 
-  it.effect("surfaces workspace vault configuration failures and allows retry status", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "surfaces workspace vault configuration failures and allows retry status",
+    Effect.fnUntraced(function* () {
       const statuses: Array<string | null> = [];
 
       yield* configureSelectedWorkspaceVault(
@@ -146,8 +151,9 @@ describe("@beep/professional-desktop schema parity", () => {
     })
   );
 
-  it.effect("preserves vault sync wire shapes", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "preserves vault sync wire shapes",
+    Effect.fnUntraced(function* () {
       const workspacePayload = VaultSyncWorkspacePayload.make({ workspaceId: DEFAULT_WORKSPACE_ID });
       expect(yield* S.encodeUnknownEffect(VaultSyncWorkspacePayload)(workspacePayload)).toStrictEqual({
         workspaceId: 1,

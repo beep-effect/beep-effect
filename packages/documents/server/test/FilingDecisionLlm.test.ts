@@ -66,8 +66,9 @@ const decideWith = (response: Effect.Effect<string>) =>
   }).pipe(provideScopedLayer(makeDecisionLayer(response)));
 
 describe("@beep/documents-server FilingDecisionLlm", () => {
-  it.effect("files a taxonomy-valid high-confidence proposal", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "files a taxonomy-valid high-confidence proposal",
+    Effect.fnUntraced(function* () {
       const outcome = yield* decideWith(
         Effect.succeed(
           '{"confidence":0.91,"rationale":"The excerpt describes a complaint.","taxonomyConceptId":"pleadings"}'
@@ -82,8 +83,9 @@ describe("@beep/documents-server FilingDecisionLlm", () => {
     })
   );
 
-  it.effect("routes a below-threshold proposal to the inbox", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "routes a below-threshold proposal to the inbox",
+    Effect.fnUntraced(function* () {
       const outcome = yield* decideWith(
         Effect.succeed('{"confidence":0.42,"rationale":"The evidence is ambiguous.","taxonomyConceptId":"pleadings"}')
       );
@@ -96,8 +98,9 @@ describe("@beep/documents-server FilingDecisionLlm", () => {
     })
   );
 
-  it.effect("routes an unknown concept id to the inbox without inventing a folder", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "routes an unknown concept id to the inbox without inventing a folder",
+    Effect.fnUntraced(function* () {
       const outcome = yield* decideWith(
         Effect.succeed(
           '{"confidence":0.99,"rationale":"The model proposed an unknown class.","taxonomyConceptId":"invented-folder"}'
@@ -112,8 +115,9 @@ describe("@beep/documents-server FilingDecisionLlm", () => {
     })
   );
 
-  it.effect("routes provider failure to the inbox without failing the port", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "routes provider failure to the inbox without failing the port",
+    Effect.fnUntraced(function* () {
       const outcome = yield* decideWith(Effect.die("fixture provider unavailable"));
 
       expect(outcome).toMatchObject({ kind: "inboxed", reason: "llm-unavailable" });
@@ -150,8 +154,9 @@ const IntakeWithFailingExtractionLayer = DocumentIntakeLayer.pipe(
 );
 
 describe("@beep/documents-server FilingTextExtraction", () => {
-  it.effect("materializes the heuristic filing when the optional extraction engine fails", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "materializes the heuristic filing when the optional extraction engine fails",
+    Effect.fnUntraced(function* () {
       const fileSystem = yield* FileSystem.FileSystem;
       const intake = yield* Document.DocumentIntake;
       const vaultRootPath = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-documents-extraction-fail-" });
@@ -168,6 +173,6 @@ describe("@beep/documents-server FilingTextExtraction", () => {
 
       expect(FilingOutcome.guards.filed(document.filing)).toBe(true);
       expect(document.vaultPath.relativePath).toContain("01-pleadings");
-    }).pipe(provideScopedLayer(IntakeWithFailingExtractionLayer))
+    }, provideScopedLayer(IntakeWithFailingExtractionLayer))
   );
 });

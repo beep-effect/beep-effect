@@ -4,4 +4,4 @@
  * @category entities
  * @since 0.0.0
  */
-export * from "./SyncItem.model.js";
+export * from "./SyncItem.model.ts";

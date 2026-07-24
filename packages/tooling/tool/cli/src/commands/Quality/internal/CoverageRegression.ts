@@ -13,12 +13,12 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ChildProcess } from "effect/unstable/process";
-import { formatJsonc, readArtifact, writeArtifact } from "../../../internal/artifacts/index.js";
-import { enforceRatchet } from "../../../internal/ratchet/index.js";
-import { QualityTaskConfigurationError, QualityTaskFailed } from "../Quality.errors.js";
-import { discoverWorkspacePackages, repoRelative } from "./QualityArtifactSupport.js";
+import { formatJsonc, readArtifact, writeArtifact } from "../../../internal/artifacts/index.ts";
+import { enforceRatchet } from "../../../internal/ratchet/index.ts";
+import { QualityTaskConfigurationError, QualityTaskFailed } from "../Quality.errors.ts";
+import { discoverWorkspacePackages, repoRelative } from "./QualityArtifactSupport.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { WorkspacePackageInfo } from "./QualityArtifactSupport.js";
+import type { WorkspacePackageInfo } from "./QualityArtifactSupport.ts";
 
 const $I = $RepoCliId.create("commands/Quality/internal/CoverageRegression");
 

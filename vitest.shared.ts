@@ -5,6 +5,7 @@ import { Config, Effect, pipe } from "effect";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import { parse as parseJsonc } from "jsonc-parser";
+import type { Plugin } from "vite";
 import type { ViteUserConfig } from "vitest/config";
 
 type AliasEntry = {
@@ -15,6 +16,25 @@ type AliasEntry = {
 const projectRootDirectory = new URL("./", import.meta.url);
 const rootTsconfigPath = new URL("./tsconfig.json", import.meta.url).pathname;
 const coverageProvider = "v8";
+
+// Vite treats an explicit `.ts` suffix as an exact filename, while the repository
+// convention intentionally uses `.ts` specifiers for both `.ts` and `.tsx` sources.
+const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
+  name: "beep:resolve-uniform-typescript-source-specifiers",
+  enforce: "pre",
+  resolveId(source, importer, options) {
+    if (importer === undefined || !source.startsWith(".") || !source.endsWith(".ts")) {
+      return null;
+    }
+
+    return this.resolve(source, importer, { ...options, skipSelf: true }).then((exactSource) =>
+      exactSource === null
+        ? this.resolve(source.replace(/\.ts$/, ".tsx"), importer, { ...options, skipSelf: true })
+        : exactSource
+    );
+  },
+});
+
 const configStringOptionSync = (name: string): O.Option<string> => Effect.runSync(Config.option(Config.string(name)));
 const configStringEqualsSync = (name: string, expected: string): boolean =>
   pipe(
@@ -108,6 +128,7 @@ const rootTsconfigAliases = A.flatMap(
 );
 
 const config: ViteUserConfig = {
+  plugins: [resolveUniformTypeScriptSourceSpecifiers()],
   oxc: {
     target: "es2020",
   },

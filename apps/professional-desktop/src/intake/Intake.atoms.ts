@@ -15,7 +15,7 @@ import { SetWorkspaceVaultInput, WorkspaceVaultRpcs } from "@beep/workspace-use-
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { Atom, AtomRpc, Reactivity } from "effect/unstable/reactivity";
-import { VaultDirectoryPickerRpcs } from "./VaultDirectoryPicker.rpc.js";
+import { VaultDirectoryPickerRpcs } from "./VaultDirectoryPicker.rpc.ts";
 
 const $I = $ProfessionalDesktopId.create("intake/Intake.atoms");
 

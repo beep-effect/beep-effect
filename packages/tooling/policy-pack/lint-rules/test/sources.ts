@@ -31,7 +31,7 @@ export const SOURCES: { readonly [K in RuleName]: RuleSource } = {
   "no-empty-named-blocks": {
     invalidCount: 1,
     messageIncludes: "empty named import",
-    invalid: "import {} from './side-effect.js';",
+    invalid: "import {} from './side-effect.ts';",
     valid: ["import { join } from 'node:path';", "export const p = join('a', 'b');"].join("\n"),
   },
   "prefer-array-flat-map": {

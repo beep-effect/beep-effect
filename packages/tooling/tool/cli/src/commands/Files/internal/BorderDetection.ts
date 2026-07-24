@@ -17,8 +17,8 @@ import {
   BorderDetectionTolerance,
   DetectBorderSideMeasurement,
   RgbColor,
-} from "../Files.schemas.js";
-import type { BorderDetectionKind, BorderSide } from "../Files.schemas.js";
+} from "../Files.schemas.ts";
+import type { BorderDetectionKind, BorderSide } from "../Files.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Files/internal/BorderDetection");
 

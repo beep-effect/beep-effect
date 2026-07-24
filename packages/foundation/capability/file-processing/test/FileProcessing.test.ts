@@ -113,14 +113,15 @@ const provideScopedLayer =
 const serviceLayer = makeFileProcessingServiceLayer([TestFileProcessingEngine]).pipe(Layer.provide(BunCrypto.layer));
 
 describe("@beep/file-processing", () => {
-  it.effect("derives child artifact ids distinct from their source artifact", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "derives child artifact ids distinct from their source artifact",
+    Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const childId = yield* deriveArtifactId([ids.artifactId, "children/synthetic-message.txt"]);
 
       expect(childId).not.toBe(ids.artifactId);
       expect(childId.startsWith("artifact:")).toBe(true);
-    }).pipe(provideScopedLayer(BunCrypto.layer))
+    }, provideScopedLayer(BunCrypto.layer))
   );
 
   it("round-trips schema-derived artifact and operation payloads", () =>
@@ -171,8 +172,9 @@ describe("@beep/file-processing", () => {
       fcRuns(50)
     ));
 
-  it.effect("rejects invalid TextSpan offsets at decode", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "rejects invalid TextSpan offsets at decode",
+    Effect.fnUntraced(function* () {
       const negative = yield* Effect.exit(decodeTextSpan({ endOffset: 1, startOffset: -1, text: "bad" }));
       const inverted = yield* Effect.exit(decodeTextSpan({ endOffset: 1, startOffset: 2, text: "bad" }));
 
@@ -235,8 +237,9 @@ describe("@beep/file-processing", () => {
       fcRuns(50)
     ));
 
-  it.effect("extracts synthetic text through the service contract", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "extracts synthetic text through the service contract",
+    Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const result = yield* extractFile(
         ExtractFileOperation.make({
@@ -253,8 +256,9 @@ describe("@beep/file-processing", () => {
     })
   );
 
-  it.effect("processes synthetic text through the service contract", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "processes synthetic text through the service contract",
+    Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const result = yield* processFile(
         ProcessFileOperation.make({
@@ -273,8 +277,9 @@ describe("@beep/file-processing", () => {
     })
   );
 
-  it.effect("exports PST children through process when requested", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "exports PST children through process when requested",
+    Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const result = yield* processFile(
         ProcessFileOperation.make({
@@ -294,8 +299,9 @@ describe("@beep/file-processing", () => {
     })
   );
 
-  it.effect("skips PST child export when it is not requested", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "skips PST child export when it is not requested",
+    Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const result = yield* processFile(
         ProcessFileOperation.make({

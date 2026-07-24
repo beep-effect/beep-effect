@@ -18,4 +18,4 @@
  * @category models
  * @since 0.0.0
  */
-export * from "./Message.model.js";
+export * from "./Message.model.ts";

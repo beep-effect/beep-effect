@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./SurroundingContext.model.js";
+export * from "./SurroundingContext.model.ts";

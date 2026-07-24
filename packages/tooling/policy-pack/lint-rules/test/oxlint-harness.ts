@@ -36,6 +36,7 @@ const pluginEntry = decodeURIComponent(new URL("../src/rules/index.ts", import.m
 export const OXLINT_RULES = [
   "no-opaque-instance-fields",
   "no-inline-schema-compile",
+  "no-js-extension-imports",
   "no-manual-effect-runtime-in-tests",
   "no-global-process-runtime",
   "namespace-node-imports",
@@ -120,6 +121,7 @@ const ruleIdOf = (code: string | undefined): O.Option<string> =>
  * @param rule - The oxlint rule slug to enable.
  * @param source - The fixture source written to the temp file.
  * @param filename - The temp file's relative name/path (default `"fixture.ts"`).
+ * @param supportingFiles - Additional relative files used to exercise path-aware rules.
  * @returns The rule's findings as `{ ruleId, line }` pairs.
  * @category utilities
  * @since 0.1.0
@@ -127,7 +129,8 @@ const ruleIdOf = (code: string | undefined): O.Option<string> =>
 export const runOxlintRule = Effect.fn("oxlintHarness.runOxlintRule")(function* (
   rule: OxlintRule,
   source: string,
-  filename = "fixture.ts"
+  filename = "fixture.ts",
+  supportingFiles: ReadonlyArray<readonly [path: string, source: string]> = []
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -142,6 +145,15 @@ export const runOxlintRule = Effect.fn("oxlintHarness.runOxlintRule")(function* 
         yield* fs.makeDirectory(path.dirname(sourcePath), { recursive: true });
         yield* fs.writeFileString(configPath, `${encodeConfig(ruleConfig(rule))}\n`);
         yield* fs.writeFileString(sourcePath, `${source}\n`);
+        yield* Effect.forEach(
+          supportingFiles,
+          Effect.fnUntraced(function* ([supportingPath, supportingSource]) {
+            const absoluteSupportingPath = path.join(tempDir, supportingPath);
+            yield* fs.makeDirectory(path.dirname(absoluteSupportingPath), { recursive: true });
+            yield* fs.writeFileString(absoluteSupportingPath, `${supportingSource}\n`);
+          }),
+          { discard: true }
+        );
 
         const stdout = yield* Effect.sync(() => {
           // Run from the package root so `bunx oxlint` and the plugin's `@oxlint/plugins` /
@@ -166,6 +178,60 @@ export const runOxlintRule = Effect.fn("oxlintHarness.runOxlintRule")(function* 
               }))
           )
         );
+      }),
+    (tempDir) => fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore)
+  );
+});
+
+/**
+ * Apply one oxlint rule's normal fixes to a fixture and return the resulting source.
+ *
+ * @param rule - The oxlint rule slug to enable.
+ * @param source - The fixture source written to the temporary file.
+ * @param filename - The temporary file's relative name/path.
+ * @param supportingFiles - Additional relative files used to exercise path-aware fixes.
+ * @returns The fixed source, including the harness-added trailing newline.
+ * @category utilities
+ * @since 0.1.0
+ */
+export const runOxlintRuleFix = Effect.fn("oxlintHarness.runOxlintRuleFix")(function* (
+  rule: OxlintRule,
+  source: string,
+  filename = "fixture.ts",
+  supportingFiles: ReadonlyArray<readonly [path: string, source: string]> = []
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+
+  return yield* Effect.acquireUseRelease(
+    fs.makeTempDirectory({ prefix: "beep-oxlint-fix-" }),
+    (tempDir) =>
+      Effect.gen(function* () {
+        const configPath = path.join(tempDir, "oxlintrc.json");
+        const sourcePath = path.join(tempDir, filename);
+
+        yield* fs.makeDirectory(path.dirname(sourcePath), { recursive: true });
+        yield* fs.writeFileString(configPath, `${encodeConfig(ruleConfig(rule))}\n`);
+        yield* fs.writeFileString(sourcePath, `${source}\n`);
+        yield* Effect.forEach(
+          supportingFiles,
+          Effect.fnUntraced(function* ([supportingPath, supportingSource]) {
+            const absoluteSupportingPath = path.join(tempDir, supportingPath);
+            yield* fs.makeDirectory(path.dirname(absoluteSupportingPath), { recursive: true });
+            yield* fs.writeFileString(absoluteSupportingPath, `${supportingSource}\n`);
+          }),
+          { discard: true }
+        );
+
+        yield* Effect.sync(() => {
+          Bun.spawnSync(["bunx", "oxlint", "--fix", `--config=${configPath}`, sourcePath], {
+            cwd: packageRoot,
+            stdout: "ignore",
+            stderr: "pipe",
+          });
+        });
+
+        return yield* fs.readFileString(sourcePath);
       }),
     (tempDir) => fs.remove(tempDir, { recursive: true, force: true }).pipe(Effect.ignore)
   );

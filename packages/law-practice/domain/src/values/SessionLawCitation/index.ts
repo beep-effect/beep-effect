@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./SessionLawCitation.model.js";
+export * from "./SessionLawCitation.model.ts";

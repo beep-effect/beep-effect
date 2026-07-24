@@ -13,8 +13,8 @@ import { Context } from "effect";
 import * as S from "effect/Schema";
 import type * as Agents from "@beep/shared-domain/identity/Agents";
 import type { Effect } from "effect";
-import type { AddProviderInstanceCommand } from "./ProviderInstance.commands.js";
-import type { ProviderInstanceNotFound, ProviderProbeUnavailable } from "./ProviderInstance.errors.js";
+import type { AddProviderInstanceCommand } from "./ProviderInstance.commands.ts";
+import type { ProviderInstanceNotFound, ProviderProbeUnavailable } from "./ProviderInstance.errors.ts";
 
 const $I = $AgentsUseCasesId.create("entities/ProviderInstance/ProviderInstance.repository");
 

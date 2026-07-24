@@ -15,7 +15,7 @@ import { Cause, Duration, Effect, Layer, Number as N, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
-import { FilingDecisionLlmConfig } from "./FilingDecisionLlm.config.js";
+import { FilingDecisionLlmConfig } from "./FilingDecisionLlm.config.ts";
 
 const $I = $DocumentsServerId.create("aggregates/Document/FilingDecisionLlm");
 const FilingDecision = DocumentUseCases.Document.FilingDecision;

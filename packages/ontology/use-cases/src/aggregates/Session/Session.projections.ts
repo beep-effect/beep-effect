@@ -16,10 +16,10 @@ import { A, O, Str } from "@beep/utils";
 import { Effect, MutableHashMap, MutableHashSet, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import { inferredSessionGraphPartitions } from "./Session.reasoner.js";
+import { inferredSessionGraphPartitions } from "./Session.reasoner.ts";
 import type { Session, SessionGraphPartitions } from "@beep/ontology-domain/aggregates/Session";
 import type { Quad } from "@beep/rdf/Rdf";
-import type { OntologyInferenceResult } from "./Session.reasoner.js";
+import type { OntologyInferenceResult } from "./Session.reasoner.ts";
 
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.projections");
 

@@ -149,8 +149,9 @@ describe("@beep/libpff", () => {
     });
   });
 
-  it.effect("maps unavailable libpff runtime to an operation-level deferral", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "maps unavailable libpff runtime to an operation-level deferral",
+    Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const error = yield* LibpffFileProcessingEngine.exportArchive(yield* operation(ids)).pipe(Effect.flip);
 
@@ -158,11 +159,12 @@ describe("@beep/libpff", () => {
         expect(error._tag).toBe("FileProcessingOperationError");
         expect(error.reason).toBe("engine-unavailable");
       });
-    }).pipe(providePlatform)
+    }, providePlatform)
   );
 
-  it.effect("can emit synthetic child artifacts for proof fixtures", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "can emit synthetic child artifacts for proof fixtures",
+    Effect.fnUntraced(function* () {
       const ids = yield* fixtureIds;
       const result = yield* makeLibpffFileProcessingEngine({ syntheticExport: true }).exportArchive(
         yield* operation(ids)
@@ -173,6 +175,6 @@ describe("@beep/libpff", () => {
         expect(result.children[0]?.id).not.toBe(ids.artifactId);
         expect(result.engine).toBe("libpff");
       });
-    }).pipe(providePlatform)
+    }, providePlatform)
   );
 });

@@ -16,8 +16,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { Node, Project, SyntaxKind } from "ts-morph";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { optionalProp } from "../../internal/cli/OptionRecord.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import { literalMemberEquals, makeSchemaFirstOwnerResolver, SchemaFirstIncludedGlobs } from "./SchemaFirst.ts";
 import type {
   CallExpression,

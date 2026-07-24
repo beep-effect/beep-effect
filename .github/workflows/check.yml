@@ -142,9 +142,9 @@ jobs:
 
             if [[ -z "$changed_files" ]]; then
               should_run=false
-            elif ! printf "%s\n" "$changed_files" | grep -Eq '(^apps/|^packages/|^infra/|/docgen\.json$|\.(ts|tsx|mts|cts|md)$)'; then
+            elif ! grep -Eq '(^apps/|^packages/|^infra/|/docgen\.json$|\.(ts|tsx|mts|cts|md)$)' <<< "$changed_files"; then
               should_run=false
-            elif printf "%s\n" "$changed_files" | grep -Eq '(^packages/tooling/tool/docgen/|^packages/tooling/tool/cli/src/commands/Docgen/|^(\.bun-version|bun\.lock|package\.json|turbo\.json|tsconfig(\..*)?\.json)$)'; then
+            elif grep -Eq '(^packages/tooling/tool/docgen/|^packages/tooling/tool/cli/src/commands/Docgen/|^(\.bun-version|bun\.lock|package\.json|turbo\.json|tsconfig(\..*)?\.json)$)' <<< "$changed_files"; then
               docgen_mode=full
             fi
           fi

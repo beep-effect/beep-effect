@@ -11,11 +11,11 @@
  * @category tables
  * @since 0.0.0
  */
-export * from "./SyncOperation.converters.js";
+export * from "./SyncOperation.converters.ts";
 /**
  * SyncOperation table exports.
  *
  * @category tables
  * @since 0.0.0
  */
-export * from "./SyncOperation.table.js";
+export * from "./SyncOperation.table.ts";

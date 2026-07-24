@@ -156,7 +156,7 @@ import { Effect } from "effect"
 import * as S from "effect/Schema"
 import { ActorId } from "@beep/iam-domain/entities/Actor"
 import { OrganizationId } from "@beep/iam-domain/entities/Organization"
-import { MembershipAlreadyRevoked } from "./Membership.errors.js"
+import { MembershipAlreadyRevoked } from "./Membership.errors.ts"
 
 const $I = $IamDomainId.create("entities/Membership/Membership.model")
 
@@ -257,7 +257,7 @@ export class Membership extends Model.Class<Membership>($I`Membership`)(
 `Membership.policy.ts` can own larger pure decisions:
 
 ````ts
-import { type Membership, MembershipRole, MembershipStatus } from "./Membership.model.js"
+import { type Membership, MembershipRole, MembershipStatus } from "./Membership.model.ts"
 
 /**
  * Pure decision rule: whether a membership may be promoted to `owner`.
@@ -276,9 +276,9 @@ export const canPromoteToOwner = (model: Membership): boolean =>
 
 ````ts
 import { Effect } from "effect"
-import { MembershipRoleChangeRejected } from "./Membership.errors.js"
-import { Membership, MembershipRole } from "./Membership.model.js"
-import { canPromoteToOwner } from "./Membership.policy.js"
+import { MembershipRoleChangeRejected } from "./Membership.errors.ts"
+import { Membership, MembershipRole } from "./Membership.model.ts"
+import { canPromoteToOwner } from "./Membership.policy.ts"
 
 /**
  * Pure transition that promotes a membership to the `owner` role when allowed.

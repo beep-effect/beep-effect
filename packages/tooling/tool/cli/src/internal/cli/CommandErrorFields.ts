@@ -18,7 +18,7 @@
 
 import { Console, Effect } from "effect";
 import * as S from "effect/Schema";
-import { failWithReportedExit } from "./ExitCodeError.js";
+import { failWithReportedExit } from "./ExitCodeError.ts";
 
 /**
  * Schema fields shared by repo-cli command-suite error classes.

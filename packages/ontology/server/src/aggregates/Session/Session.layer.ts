@@ -21,7 +21,7 @@ import {
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import { ShaclValidationServiceLive } from "@beep/shacl";
 import { Effect, Layer } from "effect";
-import { makeFileSystemOntologyFileStore } from "./Session.file-store.js";
+import { makeFileSystemOntologyFileStore } from "./Session.file-store.ts";
 import type { N3TurtleCodecError } from "@beep/n3";
 
 const toTurtleCodecError = (error: N3TurtleCodecError): TurtleCodecError =>

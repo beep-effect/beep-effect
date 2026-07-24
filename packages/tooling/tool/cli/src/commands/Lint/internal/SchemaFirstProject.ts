@@ -7,8 +7,8 @@
 
 import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { Effect, Path } from "effect";
-import { createRepoTsMorphProject, createWorkspaceOwnerResolver } from "../../../internal/tsmorph/index.js";
-import { SchemaFirstSourceFileGlobs } from "../Lint.schemas.js";
+import { createRepoTsMorphProject, createWorkspaceOwnerResolver } from "../../../internal/tsmorph/index.ts";
+import { SchemaFirstSourceFileGlobs } from "../Lint.schemas.ts";
 
 /**
  * Create the package-owner resolver used by schema-first repository scans.

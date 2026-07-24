@@ -12,7 +12,7 @@ import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as Shared from "@beep/shared-domain/identity/Shared";
 import * as S from "effect/Schema";
-import * as ArchitectureLab from "../../identity/ArchitectureLab.js";
+import * as ArchitectureLab from "../../identity/ArchitectureLab.ts";
 
 const $I = $ArchitectureLabDomainId.create("entities/Worker/Worker.model");
 

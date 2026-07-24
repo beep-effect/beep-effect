@@ -12,4 +12,4 @@ export {
   loadCatalogDigestRows,
   loadManifestDigestRows,
   loadSalvageDigestIndex,
-} from "./ServicePrograms.js";
+} from "./ServicePrograms.ts";

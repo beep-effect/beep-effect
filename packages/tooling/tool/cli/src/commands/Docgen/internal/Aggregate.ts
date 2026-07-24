@@ -11,15 +11,15 @@ import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, FileSystem, MutableHashSet, Order, Path, pipe } from "effect";
 import * as P from "effect/Predicate";
-import { generateDocsIndexContent } from "../Docgen.render.js";
-import { byDocsOutputPathAscending, DocgenAggregateResult } from "../Docgen.schemas.js";
+import { generateDocsIndexContent } from "../Docgen.render.ts";
+import { byDocsOutputPathAscending, DocgenAggregateResult } from "../Docgen.schemas.ts";
 import {
   assertNoOrphanDocgenConfigPaths,
   discoverDocgenWorkspacePackages,
   resolveDocgenWorkspacePackage,
-} from "./Workspace.js";
+} from "./Workspace.ts";
 import type { FsUtils, NoSuchFileError } from "@beep/repo-utils";
-import type { DocgenWorkspacePackage } from "../Docgen.schemas.js";
+import type { DocgenWorkspacePackage } from "../Docgen.schemas.ts";
 
 const DOCS_MODULES_SEGMENTS = ["docs", "modules"] as const;
 

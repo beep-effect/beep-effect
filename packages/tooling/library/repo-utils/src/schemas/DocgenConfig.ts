@@ -15,7 +15,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { RepoPackageName } from "./PackageJson.js";
+import { RepoPackageName } from "./PackageJson.ts";
 import {
   buildDocgenAliasTargets,
   RootAliasTarget,
@@ -23,8 +23,8 @@ import {
   resolveSubpathExportTarget,
   resolveWildcardExportTarget,
   WildcardAliasTarget,
-} from "./TsconfigAliasTargets.js";
-import type { PackageJson } from "./PackageJson.js";
+} from "./TsconfigAliasTargets.ts";
+import type { PackageJson } from "./PackageJson.ts";
 
 const $I = $RepoUtilsId.create("schemas/DocgenConfig");
 

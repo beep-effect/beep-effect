@@ -11,11 +11,11 @@
  * @since 0.0.0
  * @category errors
  */
-export * from "./N3.errors.js";
+export * from "./N3.errors.ts";
 /**
  * N3 Turtle codec service and layer.
  *
  * @since 0.0.0
  * @category services
  */
-export * from "./N3.service.js";
+export * from "./N3.service.ts";

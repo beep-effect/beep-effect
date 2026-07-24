@@ -60,15 +60,15 @@ import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { hashFileSha256 as sharedHashFileSha256 } from "../../../internal/cli/FsGuards.js";
-import { withDuckDb } from "../../../internal/duckdb/WithDuckDb.js";
+import { hashFileSha256 as sharedHashFileSha256 } from "../../../internal/cli/FsGuards.ts";
+import { withDuckDb } from "../../../internal/duckdb/WithDuckDb.ts";
 import {
   CorpusArchiveMoveDestinationConflictError,
   CorpusArchiveMoveDigestMismatchError,
   CorpusArchiveMoveUncoveredFileError,
   CorpusCommandError,
-} from "../Corpus.errors.js";
-import { classifyRecycleBinName, pairRecycleBinEntries, parseRecycleBinMetadata } from "../Corpus.recyclebin.js";
+} from "../Corpus.errors.ts";
+import { classifyRecycleBinName, pairRecycleBinEntries, parseRecycleBinMetadata } from "../Corpus.recyclebin.ts";
 import {
   CorpusArchiveMoveManifestRecord,
   CorpusArchiveMoveSummary,
@@ -103,7 +103,7 @@ import {
   RecycleBinScanEntry,
   UnmatchedContentRestorationRecord,
   UnmatchedMetadataRestorationRecord,
-} from "../Corpus.schemas.js";
+} from "../Corpus.schemas.ts";
 import type { DuckDbError, DuckDbShape } from "@beep/duckdb";
 import type {
   ArchiveExportProcessFileResult,
@@ -115,7 +115,7 @@ import type { FileFormatFamily, FileProcessingEngineFamily, SelectedStrategy } f
 import type * as Crypto from "effect/Crypto";
 import type * as PlatformError from "effect/PlatformError";
 import type { ChildProcessSpawner } from "effect/unstable/process";
-import type { CorpusArchiveMoveError } from "../Corpus.errors.js";
+import type { CorpusArchiveMoveError } from "../Corpus.errors.ts";
 import type {
   CorpusArchiveMoveOptions,
   CorpusCatalogOptions,
@@ -125,7 +125,7 @@ import type {
   CorpusOrganizeOptions,
   CorpusSalvageOptions,
   CorpusSalvageSourceSpec,
-} from "../Corpus.schemas.js";
+} from "../Corpus.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Corpus/internal/ServicePrograms");
 

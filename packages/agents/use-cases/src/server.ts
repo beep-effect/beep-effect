@@ -17,7 +17,7 @@
  * @category use-cases
  * @since 0.0.0
  */
-export * as ProviderInstance from "./entities/ProviderInstance/server.js";
+export * as ProviderInstance from "./entities/ProviderInstance/server.ts";
 /**
  * Direct server-only provider-instance port and factory exports.
  *
@@ -30,7 +30,7 @@ export * as ProviderInstance from "./entities/ProviderInstance/server.js";
  * @category use-cases
  * @since 0.0.0
  */
-export * from "./entities/ProviderInstance/server.js";
+export * from "./entities/ProviderInstance/server.ts";
 /**
  * Server-only assistant-turn use-case exports.
  *
@@ -45,7 +45,7 @@ export * from "./entities/ProviderInstance/server.js";
  * @category errors
  * @since 0.0.0
  */
-export * as AssistantTurn from "./processes/AssistantTurn/server.js";
+export * as AssistantTurn from "./processes/AssistantTurn/server.ts";
 /**
  * Direct server-only assistant-turn exports.
  *
@@ -60,4 +60,4 @@ export * as AssistantTurn from "./processes/AssistantTurn/server.js";
  * @category errors
  * @since 0.0.0
  */
-export * from "./processes/AssistantTurn/server.js";
+export * from "./processes/AssistantTurn/server.ts";

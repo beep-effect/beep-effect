@@ -9,7 +9,7 @@
 import * as WorkItemUseCaseServer from "@beep/architecture-lab-use-cases/server";
 import { $ArchitectureLabServerId } from "@beep/identity/packages";
 import { Context, Effect, Layer } from "effect";
-import { makeWorkItemRepository } from "./WorkItem.repo.js";
+import { makeWorkItemRepository } from "./WorkItem.repo.ts";
 import type { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-cases/public";
 
 const $I = $ArchitectureLabServerId.create("aggregates/WorkItem/WorkItem.layer");

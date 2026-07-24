@@ -40,7 +40,7 @@ export const infraProjectName = "beep-effect";
  * @category resources
  * @since 0.0.0
  */
-export * from "./AIMetrics.js";
+export * from "./AIMetrics.ts";
 /**
  * OIP web Pulumi orchestration exports.
  *
@@ -54,7 +54,7 @@ export * from "./AIMetrics.js";
  * @category resources
  * @since 0.0.0
  */
-export * from "./OipWeb.js";
+export * from "./OipWeb.ts";
 /**
  * Storybook Pulumi orchestration exports.
  *
@@ -68,7 +68,7 @@ export * from "./OipWeb.js";
  * @category resources
  * @since 0.0.0
  */
-export * from "./Storybook.js";
+export * from "./Storybook.ts";
 /**
  * Shared Vercel provider schemas for infra stacks.
  *
@@ -82,4 +82,4 @@ export * from "./Storybook.js";
  * @category models
  * @since 0.0.0
  */
-export * from "./Vercel.js";
+export * from "./Vercel.ts";

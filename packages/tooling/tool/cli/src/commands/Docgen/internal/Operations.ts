@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 
-export * from "../Docgen.render.js";
-export * from "../Docgen.schemas.js";
-export * from "./Aggregate.js";
-export * from "./JsDocAnalysis.js";
-export * from "./RunDocgen.js";
-export * from "./Workspace.js";
+export * from "../Docgen.render.ts";
+export * from "../Docgen.schemas.ts";
+export * from "./Aggregate.ts";
+export * from "./JsDocAnalysis.ts";
+export * from "./RunDocgen.ts";
+export * from "./Workspace.ts";

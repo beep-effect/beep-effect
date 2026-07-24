@@ -20,7 +20,7 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ClaimGate/index.js";
+export * from "./ClaimGate/index.ts";
 /**
  * Claim lifecycle value exports.
  *
@@ -34,7 +34,7 @@ export * from "./ClaimGate/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./ClaimLifecycle/index.js";
+export * from "./ClaimLifecycle/index.ts";
 /**
  * Claim projection read-model exports.
  *
@@ -55,7 +55,7 @@ export * from "./ClaimLifecycle/index.js";
  * @category read-models
  * @since 0.0.0
  */
-export * from "./ClaimProjection/index.js";
+export * from "./ClaimProjection/index.ts";
 /**
  * Epistemic fixture-key value exports.
  *
@@ -69,7 +69,7 @@ export * from "./ClaimProjection/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./EpistemicFixtureKey/index.js";
+export * from "./EpistemicFixtureKey/index.ts";
 /**
  * Evidence span value exports.
  *
@@ -85,4 +85,4 @@ export * from "./EpistemicFixtureKey/index.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./EvidenceSpan/index.js";
+export * from "./EvidenceSpan/index.ts";

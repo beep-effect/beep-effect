@@ -10,9 +10,9 @@ import * as BunServices from "@effect/platform-bun/BunServices";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import { Effect, Layer } from "effect";
 import { Command } from "effect/unstable/cli";
-import { docgenCommand } from "./CLI.js";
-import * as Domain from "./Domain.js";
-import * as InternalVersion from "./internal/version.js";
+import { docgenCommand } from "./CLI.ts";
+import * as Domain from "./Domain.ts";
+import * as InternalVersion from "./internal/version.ts";
 
 const BaseLayers = Layer.mergeAll(BunServices.layer, Domain.Process.layer);
 

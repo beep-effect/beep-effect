@@ -17,7 +17,7 @@
  * @category use-cases
  * @since 0.0.0
  */
-export * from "./entities/ProviderInstance/index.js";
+export * from "./entities/ProviderInstance/index.ts";
 /**
  * Assistant-turn generation kernel contracts, errors, and port tag.
  *
@@ -33,7 +33,7 @@ export * from "./entities/ProviderInstance/index.js";
  * @category use-cases
  * @since 0.0.0
  */
-export * from "./processes/AssistantTurn/index.js";
+export * from "./processes/AssistantTurn/index.ts";
 /**
  * Chat wire contract: rpc declarations, the `ChatRpcs` group, and the
  * client-safe `ChatActionError` carried on every chat request.
@@ -49,7 +49,7 @@ export * from "./processes/AssistantTurn/index.js";
  * @category protocols
  * @since 0.0.0
  */
-export * from "./processes/Chat/index.js";
+export * from "./processes/Chat/index.ts";
 /**
  * Candidate output command contracts accepted by the runtime SDK.
  *
@@ -65,7 +65,7 @@ export * from "./processes/Chat/index.js";
  * @category commands
  * @since 0.0.0
  */
-export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.commands.js";
+export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.commands.ts";
 /**
  * Client-safe runtime DTO and context packet contracts.
  *
@@ -84,7 +84,7 @@ export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.commands.js";
  * @category protocols
  * @since 0.0.0
  */
-export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.contracts.js";
+export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.contracts.ts";
 /**
  * Client-safe runtime validation errors.
  *
@@ -98,7 +98,7 @@ export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.contracts.js"
  * @category errors
  * @since 0.0.0
  */
-export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.errors.js";
+export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.errors.ts";
 /**
  * Context packet query contracts accepted by the runtime SDK.
  *
@@ -121,7 +121,7 @@ export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.errors.js";
  * @category queries
  * @since 0.0.0
  */
-export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.queries.js";
+export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.queries.ts";
 /**
  * Client-safe runtime literal vocabularies.
  *
@@ -136,7 +136,7 @@ export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.queries.js";
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.values.js";
+export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.values.ts";
 /**
  * Client-safe SDK facade interface.
  *
@@ -152,4 +152,4 @@ export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.values.js";
  * @category services
  * @since 0.0.0
  */
-export type { ProfessionalRuntimeSdk } from "./processes/ProfessionalRuntime/ProfessionalRuntime.service.js";
+export type { ProfessionalRuntimeSdk } from "./processes/ProfessionalRuntime/ProfessionalRuntime.service.ts";

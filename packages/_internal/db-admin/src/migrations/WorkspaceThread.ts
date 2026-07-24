@@ -7,7 +7,7 @@
  */
 
 import { DbSchema as WorkspaceDbSchema } from "@beep/workspace-tables";
-import { DbAdminMigrationTarget } from "./ArchitectureLab.js";
+import { DbAdminMigrationTarget } from "./ArchitectureLab.ts";
 
 /**
  * Workspace thread migration target used to prove conversation persistence.

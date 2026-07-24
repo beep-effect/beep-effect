@@ -13,7 +13,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Command } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 
 const $I = $RepoCliId.create("commands/Lint/SchemaTopology");
 

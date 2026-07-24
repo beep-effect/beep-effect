@@ -27,7 +27,7 @@ import {
   intakeDroppedDocumentAtom,
   pickVaultDirectoryAtom,
   workspaceVaultConfigAtom,
-} from "./Intake.atoms.js";
+} from "./Intake.atoms.ts";
 import type { DragEvent, JSX, ReactNode } from "react";
 
 const $I = $ProfessionalDesktopId.create("intake/DocumentIntakeTarget");

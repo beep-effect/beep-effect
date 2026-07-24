@@ -11,7 +11,7 @@ import { A, Str } from "@beep/utils";
 import { Context, Effect, Layer, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import type * as Parser from "./Parser.js";
+import type * as Parser from "./Parser.ts";
 
 const $I = $RepoDocgenId.create("Domain");
 
@@ -644,7 +644,7 @@ class ExportNewOptions extends S.Class<ExportNewOptions>($I`ExportNewOptions`)(
  *
  * @remarks
  * Namespace export declarations are marked with `isNamespaceExport` so the printer can label
- * `export * as Name from "./module.js"` differently from named export lists.
+ * `export * as Name from "./module.ts"` differently from named export lists.
  * @example
  * ```ts
  * import { Doc, Export, Position } from "@beep/repo-docgen/Domain"

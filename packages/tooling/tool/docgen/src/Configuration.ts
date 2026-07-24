@@ -13,7 +13,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as jsonc from "jsonc-parser";
-import * as Domain from "./Domain.js";
+import * as Domain from "./Domain.ts";
 
 const $I = $RepoDocgenId.create("Configuration");
 

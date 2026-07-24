@@ -12,8 +12,8 @@ import { HashSet } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
-import type { PackageJson } from "./schemas/PackageJson.js";
-import type { DependencyRecord, WorkspaceDeps } from "./schemas/WorkspaceDeps.js";
+import type { PackageJson } from "./schemas/PackageJson.ts";
+import type { DependencyRecord, WorkspaceDeps } from "./schemas/WorkspaceDeps.ts";
 
 /**
  * Classify a single dependency record into workspace and npm buckets.

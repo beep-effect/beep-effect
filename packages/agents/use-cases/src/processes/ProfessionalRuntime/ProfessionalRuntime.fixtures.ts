@@ -9,9 +9,9 @@ import { $AgentsUseCasesId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { CandidateOutputSet } from "./ProfessionalRuntime.contracts.js";
-import { ProfessionalRuntimeValidationError } from "./ProfessionalRuntime.errors.js";
-import { RuntimeFixtureScenarioId } from "./ProfessionalRuntime.values.js";
+import { CandidateOutputSet } from "./ProfessionalRuntime.contracts.ts";
+import { ProfessionalRuntimeValidationError } from "./ProfessionalRuntime.errors.ts";
+import { RuntimeFixtureScenarioId } from "./ProfessionalRuntime.values.ts";
 
 // cspell:words Priya Raman
 

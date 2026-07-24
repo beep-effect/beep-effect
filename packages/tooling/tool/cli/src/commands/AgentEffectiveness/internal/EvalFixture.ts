@@ -13,11 +13,11 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Project } from "ts-morph";
-import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.js";
-import { AgentEffectivenessEvalViolation } from "../AgentEffectiveness.schemas.js";
-import { firstRuleId, roundScore, sortViolations } from "./EvalScoring.js";
-import type { SkillOptTaskManifest } from "../AgentEffectiveness.schemas.js";
-import type { CompletionResult } from "./EvalScoring.js";
+import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.ts";
+import { AgentEffectivenessEvalViolation } from "../AgentEffectiveness.schemas.ts";
+import { firstRuleId, roundScore, sortViolations } from "./EvalScoring.ts";
+import type { SkillOptTaskManifest } from "../AgentEffectiveness.schemas.ts";
+import type { CompletionResult } from "./EvalScoring.ts";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/EvalFixture");
 

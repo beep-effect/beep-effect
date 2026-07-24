@@ -7,7 +7,7 @@
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { LawPracticeText } from "../LawPracticeEntity.fields.js";
+import { LawPracticeText } from "../LawPracticeEntity.fields.ts";
 
 const $I = $LawPracticeDomainId.create("entities/Distinction/Distinction.values");
 

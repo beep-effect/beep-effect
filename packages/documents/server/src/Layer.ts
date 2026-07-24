@@ -8,18 +8,18 @@
 
 import { VaultSyncEngine } from "@beep/documents-use-cases/aggregates/Sync/server";
 import { Layer } from "effect";
-import { DocumentsServerLayer, DocumentsServerLlmLayer } from "./aggregates/Document/index.js";
-import { DmsMirrorFixtureLayer, makeVaultSyncEngine, VaultSyncConfigLayer } from "./aggregates/Sync/index.js";
+import { DocumentsServerLayer, DocumentsServerLlmLayer } from "./aggregates/Document/index.ts";
+import { DmsMirrorFixtureLayer, makeVaultSyncEngine, VaultSyncConfigLayer } from "./aggregates/Sync/index.ts";
 import {
   SyncConflictRepositoryDrizzleLayer,
   SyncConflictRepositoryInMemoryLayer,
-} from "./entities/SyncConflict/index.js";
-import { SyncCursorRepositoryDrizzleLayer, SyncCursorRepositoryInMemoryLayer } from "./entities/SyncCursor/index.js";
-import { SyncItemRepositoryDrizzleLayer, SyncItemRepositoryInMemoryLayer } from "./entities/SyncItem/index.js";
+} from "./entities/SyncConflict/index.ts";
+import { SyncCursorRepositoryDrizzleLayer, SyncCursorRepositoryInMemoryLayer } from "./entities/SyncCursor/index.ts";
+import { SyncItemRepositoryDrizzleLayer, SyncItemRepositoryInMemoryLayer } from "./entities/SyncItem/index.ts";
 import {
   SyncOperationRepositoryDrizzleLayer,
   SyncOperationRepositoryInMemoryLayer,
-} from "./entities/SyncOperation/index.js";
+} from "./entities/SyncOperation/index.ts";
 
 /**
  * Live documents server layer.

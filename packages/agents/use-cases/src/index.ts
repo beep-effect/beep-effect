@@ -20,4 +20,4 @@
  * @category protocols
  * @since 0.0.0
  */
-export * from "./public.js";
+export * from "./public.ts";

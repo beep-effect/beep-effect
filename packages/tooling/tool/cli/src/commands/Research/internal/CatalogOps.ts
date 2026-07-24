@@ -10,10 +10,10 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { DateTime, Effect, FileSystem, MutableHashSet, Path } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { ResearchCommandError } from "../Research.errors.js";
-import { KnowledgeCardFrontmatter } from "../Research.schemas.js";
-import { CATALOG_DB_NAME, INSERT_CAPTURE_LOG, INSERT_SEEN_URL, runWithResearchDb, UPSERT_CARD } from "./Catalog.js";
-import { renderCard, sha256HexOf, VAULT_DIRS, writeCard } from "./Vault.js";
+import { ResearchCommandError } from "../Research.errors.ts";
+import { KnowledgeCardFrontmatter } from "../Research.schemas.ts";
+import { CATALOG_DB_NAME, INSERT_CAPTURE_LOG, INSERT_SEEN_URL, runWithResearchDb, UPSERT_CARD } from "./Catalog.ts";
+import { renderCard, sha256HexOf, VAULT_DIRS, writeCard } from "./Vault.ts";
 
 const $I = $RepoCliId.create("commands/Research/internal/CatalogOps");
 

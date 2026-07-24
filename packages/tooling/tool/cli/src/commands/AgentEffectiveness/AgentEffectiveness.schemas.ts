@@ -10,7 +10,7 @@ import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { JsonStringCodec } from "../../internal/schema/JsonCodec.js";
+import { JsonStringCodec } from "../../internal/schema/JsonCodec.ts";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/AgentEffectiveness.schemas");
 

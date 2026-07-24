@@ -12,16 +12,16 @@ import { Effect, flow } from "effect";
 import * as S from "effect/Schema";
 import * as Rpc from "effect/unstable/rpc/Rpc";
 import * as RpcGroup from "effect/unstable/rpc/RpcGroup";
-import { OntologyFilePath, TurtleDocumentText } from "./Session.ports.js";
-import { OntologySnapshot } from "./Session.projections.js";
-import { InferOntologySessionInput, OntologyInferenceResult } from "./Session.reasoner.js";
-import { RunOntologySparqlInput, RunOntologySparqlResult } from "./Session.sparql.js";
+import { OntologyFilePath, TurtleDocumentText } from "./Session.ports.ts";
+import { OntologySnapshot } from "./Session.projections.ts";
+import { InferOntologySessionInput, OntologyInferenceResult } from "./Session.reasoner.ts";
+import { RunOntologySparqlInput, RunOntologySparqlResult } from "./Session.sparql.ts";
 import {
   ExportOntologyProvenanceCommand,
   ExportOntologyProvenanceResult,
   RunOntologyValidationInput,
   RunOntologyValidationResult,
-} from "./Session.validation.js";
+} from "./Session.validation.ts";
 
 const $I = $OntologyUseCasesId.create("aggregates/Session/Session.rpc");
 

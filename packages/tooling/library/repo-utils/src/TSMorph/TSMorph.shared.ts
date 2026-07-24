@@ -13,7 +13,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { DiagnosticCategory, Node } from "ts-morph";
-import { SymbolKind, symbolCategoryFromKind } from "./TSMorph.model.js";
+import { SymbolKind, symbolCategoryFromKind } from "./TSMorph.model.ts";
 import type {
   ClassDeclaration,
   ConstructorDeclaration,
@@ -26,7 +26,7 @@ import type {
   SetAccessorDeclaration,
   TypeAliasDeclaration,
 } from "ts-morph";
-import type { SourceText, TsMorphDiagnostic, Symbol as TsMorphSymbol } from "./TSMorph.model.js";
+import type { SourceText, TsMorphDiagnostic, Symbol as TsMorphSymbol } from "./TSMorph.model.ts";
 
 const $I = $RepoUtilsId.create("TSMorph/TSMorph.shared");
 

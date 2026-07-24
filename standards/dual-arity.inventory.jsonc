@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-17",
+  "generatedOn": "2026-07-18",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "enforcedRoots": [
     "packages/tooling/tool/cli/src/commands/Laws/DualArity.ts",
@@ -100,7 +100,7 @@
       "owner": "@beep/professional-desktop",
       "reason": "makeChatOperations is a service factory that binds already-acquired ThreadStore/AgentTurnKernel/UsageRecordSink services into an operations record; it has no pipeable data subject, so a data-last/data-first dual is meaningless. It is only ever called data-first once during ChatRpcs layer construction.",
       "issue": "PROFESSIONAL-DESKTOP-CHAT-OPERATIONS-FACTORY",
-      "line": 672,
+      "line": 775,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual"]

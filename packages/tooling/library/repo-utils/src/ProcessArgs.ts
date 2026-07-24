@@ -33,7 +33,7 @@ import { Effect, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { OptionInjectionError } from "./errors/OptionInjectionError.js";
+import { OptionInjectionError } from "./errors/OptionInjectionError.ts";
 
 const $I = $RepoUtilsId.create("ProcessArgs");
 
@@ -43,7 +43,7 @@ const $I = $RepoUtilsId.create("ProcessArgs");
  * @category errors
  * @since 0.0.0
  */
-export { OptionInjectionError } from "./errors/OptionInjectionError.js";
+export { OptionInjectionError } from "./errors/OptionInjectionError.ts";
 
 /**
  * The POSIX end-of-options separator.

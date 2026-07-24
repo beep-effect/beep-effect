@@ -5,4 +5,4 @@
  * @since 0.0.0
  */
 
-export { organizeCorpusImpl } from "./ServicePrograms.js";
+export { organizeCorpusImpl } from "./ServicePrograms.ts";

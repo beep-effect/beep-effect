@@ -8,7 +8,7 @@
 import { $LawPracticeDomainId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CitationBase } from "../CitationBase/index.js";
+import { CitationBase } from "../CitationBase/index.ts";
 
 const $I = $LawPracticeDomainId.create("values/TreatyCitation/TreatyCitation.model");
 

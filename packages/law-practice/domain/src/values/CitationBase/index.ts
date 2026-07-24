@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./CitationBase.model.js";
+export * from "./CitationBase.model.ts";

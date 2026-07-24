@@ -20,7 +20,7 @@
  * @category errors
  * @since 0.0.0
  */
-export * from "./Chat.errors.js";
+export * from "./Chat.errors.ts";
 /**
  * Chat rpc declarations and the `ChatRpcs` group.
  *
@@ -34,4 +34,4 @@ export * from "./Chat.errors.js";
  * @category protocols
  * @since 0.0.0
  */
-export * from "./Chat.rpc.js";
+export * from "./Chat.rpc.ts";

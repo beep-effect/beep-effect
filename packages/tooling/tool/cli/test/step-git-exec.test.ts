@@ -45,15 +45,17 @@ describe("StepExec bounded output fold", () => {
     expect(reduce(truncated, "ghi")).toBe(truncated);
   });
 
-  it.effect("folds a byte stream into bounded text with the truncation notice", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "folds a byte stream into bounded text with the truncation notice",
+    Effect.fnUntraced(function* () {
       const result = yield* collectBoundedText(bound)(Stream.fromIterable([encode("ab"), encode("cdef")]));
       expect(result).toEqual(BoundedOutput.make({ text: "abcd!", truncated: true }));
     })
   );
 
-  it.effect("folds a short byte stream without truncating", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "folds a short byte stream without truncating",
+    Effect.fnUntraced(function* () {
       const result = yield* collectBoundedText(bound)(Stream.fromIterable([encode("hi")]));
       expect(result).toEqual(BoundedOutput.make({ text: "hi", truncated: false }));
     })

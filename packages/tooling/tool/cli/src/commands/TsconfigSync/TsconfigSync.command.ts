@@ -10,10 +10,10 @@ import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Console, Effect, pipe } from "effect";
 import { Command, Flag } from "effect/unstable/cli";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { isCheckModeFlags, isDryRunModeFlags, isWriteModeFlags } from "./TsconfigSync.schemas.js";
-import { syncTsconfigAtRoot } from "./TsconfigSync.service.js";
-import type { TsconfigSyncMode, TsconfigSyncModeFlags } from "./TsconfigSync.schemas.js";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { isCheckModeFlags, isDryRunModeFlags, isWriteModeFlags } from "./TsconfigSync.schemas.ts";
+import { syncTsconfigAtRoot } from "./TsconfigSync.service.ts";
+import type { TsconfigSyncMode, TsconfigSyncModeFlags } from "./TsconfigSync.schemas.ts";
 
 const resolveMode = (check: boolean, dryRun: boolean, write: boolean): TsconfigSyncMode => {
   const flags = [check, dryRun, write] satisfies TsconfigSyncModeFlags;

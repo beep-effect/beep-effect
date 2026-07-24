@@ -17,7 +17,7 @@ import {
 import { A, O, P, R } from "@beep/utils";
 import { Effect, Layer, Match, pipe } from "effect";
 import * as Str from "effect/String";
-import { OxigraphSparqlError } from "./Oxigraph.errors.js";
+import { OxigraphSparqlError } from "./Oxigraph.errors.ts";
 import type { SparqlQueryRequest, SparqlQueryResult } from "@beep/semantic-web/services/sparql-query";
 import type * as Oxigraph from "oxigraph";
 

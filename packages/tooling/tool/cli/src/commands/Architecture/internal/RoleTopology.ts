@@ -10,13 +10,13 @@ import { A, Str, thunk0 } from "@beep/utils";
 import { pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import { ArchitectureSliceRolePlan, defaultArchitecturePlanTarget } from "../Architecture.schemas.js";
+import { ArchitectureSliceRolePlan, defaultArchitecturePlanTarget } from "../Architecture.schemas.ts";
 import type {
   ArchitectureDomainKind,
   ArchitecturePlanStage,
   ArchitecturePlanTarget,
   ArchitectureSliceRole,
-} from "../Architecture.schemas.js";
+} from "../Architecture.schemas.ts";
 
 const defaultPlanTarget = defaultArchitecturePlanTarget;
 

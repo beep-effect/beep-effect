@@ -19,4 +19,4 @@
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./CanonCitation.model.js";
+export * from "./CanonCitation.model.ts";

@@ -193,8 +193,9 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     })
   );
 
-  it.effect("keeps failed prompts non-sendable while receipt evidence is uncertain", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "keeps failed prompts non-sendable while receipt evidence is uncertain",
+    Effect.fnUntraced(function* () {
       const verifyUncertainStatus = Effect.fn("verifyUncertainFailedTurnStatus")(function* (
         statusKind: UncertainStatusKind
       ) {
@@ -321,8 +322,9 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     })
   );
 
-  it.effect("restores a prompt only after polling recovers with explicit non-persistence", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "restores a prompt only after polling recovers with explicit non-persistence",
+    Effect.fnUntraced(function* () {
       const verifyRecoveredStatus = Effect.fn("verifyRecoveredTurnStatus")(function* (
         recoveredStatus: "persisted" | "not_persisted"
       ) {
@@ -373,8 +375,9 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     })
   );
 
-  it.effect("refreshes durable failed turns without restoring their prompts", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "refreshes durable failed turns without restoring their prompts",
+    Effect.fnUntraced(function* () {
       const verifyStatus = Effect.fn("verifyDurableStatus")(function* (status: "persisted" | "user_persisted") {
         const timelineRefreshed = yield* Deferred.make<void>();
         let timelineReads = 0;
@@ -423,8 +426,9 @@ describe("assistant turn reconciliation", { concurrent: false }, () => {
     })
   );
 
-  it.effect("retains failed turns when their durable timeline refresh fails", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "retains failed turns when their durable timeline refresh fails",
+    Effect.fnUntraced(function* () {
       const verifyStatus = Effect.fn("verifyFailedRefreshStatus")(function* (status: "persisted" | "user_persisted") {
         let timelineReads = 0;
         const client = ChatClient.of(((tag: string) => {

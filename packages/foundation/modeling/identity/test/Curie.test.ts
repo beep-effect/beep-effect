@@ -51,8 +51,9 @@ describe("CURIE codec", () => {
     );
   });
 
-  it.effect("decodes and encodes known CURIEs", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "decodes and encodes known CURIEs",
+    Effect.fnUntraced(function* () {
       expect(yield* decodeCurie("skos:prefLabel")).toBe("http://www.w3.org/2004/02/skos/core#prefLabel");
       expect(yield* encodeIri("http://www.w3.org/2004/02/skos/core#prefLabel")).toBe("skos:prefLabel");
     })
@@ -68,15 +69,17 @@ describe("CURIE codec", () => {
     );
   });
 
-  it.effect("fails schema decoding for unknown prefixes and known-prefix unknown terms", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "fails schema decoding for unknown prefixes and known-prefix unknown terms",
+    Effect.fnUntraced(function* () {
       expect((yield* Effect.flip(decodeCurie("nope:term")))._tag).toBe("SchemaError");
       expect((yield* Effect.flip(decodeCurie("skos:nope")))._tag).toBe("SchemaError");
     })
   );
 
-  it.effect("fails schema encoding for unregistered IRIs", () =>
-    Effect.gen(function* () {
+  it.effect(
+    "fails schema encoding for unregistered IRIs",
+    Effect.fnUntraced(function* () {
       expect((yield* Effect.flip(encodeIri("http://www.w3.org/2004/02/skos/core#nope")))._tag).toBe("SchemaError");
     })
   );

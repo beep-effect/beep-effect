@@ -21,7 +21,7 @@ import {
   roundCandidateMetric as roundCandidateMetricImpl,
   selectedCanonicalPathSet as selectedCanonicalPathSetImpl,
   targetNameForEntry as targetNameForEntryImpl,
-} from "./Files.plan.js";
+} from "./Files.plan.ts";
 import {
   renderArchivePoorCandidatesEntry as renderArchivePoorCandidatesEntryImpl,
   renderArchivePoorCandidatesSkippedEntry as renderArchivePoorCandidatesSkippedEntryImpl,
@@ -36,14 +36,14 @@ import {
   renderNormalizeSkippedEntry as renderNormalizeSkippedEntryImpl,
   renderPlanEntry as renderPlanEntryImpl,
   renderStripMetadataPlanEntry as renderStripMetadataPlanEntryImpl,
-} from "./Files.render.js";
-import { decodeRotationNumber, MediaDimensions, SupportedMetadataImageExtension } from "./Files.schemas.js";
+} from "./Files.render.ts";
+import { decodeRotationNumber, MediaDimensions, SupportedMetadataImageExtension } from "./Files.schemas.ts";
 import {
   analyzeSolidBorders as analyzeSolidBordersImpl,
   classifyBorderSides as classifyBorderSidesImpl,
   rgbToHex as rgbToHexImpl,
-} from "./internal/BorderDetection.js";
-import type { FfprobeStream, MediaKind, NormalizeImageFormat, SortableFile } from "./Files.schemas.js";
+} from "./internal/BorderDetection.ts";
+import type { FfprobeStream, MediaKind, NormalizeImageFormat, SortableFile } from "./Files.schemas.ts";
 
 /**
  * Analyze raw image pixels for solid borders.

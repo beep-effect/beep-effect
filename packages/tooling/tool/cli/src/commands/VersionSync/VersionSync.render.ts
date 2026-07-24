@@ -9,13 +9,13 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
 import { Console, Context, Effect, Layer } from "effect";
 import * as O from "effect/Option";
-import { VersionCategoryReport, VersionCategoryStatusMatch, VersionSyncModeMatch } from "./VersionSync.schemas.js";
+import { VersionCategoryReport, VersionCategoryStatusMatch, VersionSyncModeMatch } from "./VersionSync.schemas.ts";
 import type {
   VersionCategoryReport as VersionCategoryReportValue,
   VersionCategoryStatus as VersionCategoryStatusValue,
   VersionSyncMode as VersionSyncModeValue,
   VersionSyncReport,
-} from "./VersionSync.schemas.js";
+} from "./VersionSync.schemas.ts";
 
 const $I = $RepoCliId.create("commands/VersionSync/VersionSync.render");
 

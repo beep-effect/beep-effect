@@ -7,7 +7,7 @@
 
 import { $AgentsUseCasesId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { CandidateOutputSet, RuntimeScope } from "./ProfessionalRuntime.contracts.js";
+import { CandidateOutputSet, RuntimeScope } from "./ProfessionalRuntime.contracts.ts";
 
 const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalRuntime.commands");
 

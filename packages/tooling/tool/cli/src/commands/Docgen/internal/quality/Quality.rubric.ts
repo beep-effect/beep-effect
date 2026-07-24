@@ -10,9 +10,9 @@ import { Match, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
-import { boundedText } from "../../../../internal/cli/Timing.js";
-import { DocgenQualityFinding, DocgenQualityReview } from "./Quality.schemas.js";
-import type { DocgenQualityFindingCode, DocgenQualitySubject, DocgenQualityTier } from "./Quality.schemas.js";
+import { boundedText } from "../../../../internal/cli/Timing.ts";
+import { DocgenQualityFinding, DocgenQualityReview } from "./Quality.schemas.ts";
+import type { DocgenQualityFindingCode, DocgenQualitySubject, DocgenQualityTier } from "./Quality.schemas.ts";
 
 const hasTag = (tags: Record<string, ReadonlyArray<string>>, tagName: string): boolean =>
   R.has(tags, Str.replace(/^@/, "")(tagName));

@@ -10,9 +10,9 @@ import { A } from "@beep/utils";
 import { Effect, HashMap, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import { Node, SyntaxKind } from "ts-morph";
-import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.js";
-import { todayYmd } from "../../../internal/cli/Timing.js";
-import { diffMembership } from "../../../internal/ratchet/index.js";
+import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
+import { todayYmd } from "../../../internal/cli/Timing.ts";
+import { diffMembership } from "../../../internal/ratchet/index.ts";
 import {
   isActiveSchemaFirstRuleAdvisory,
   LiteralKitConstAssertionViolation,
@@ -22,29 +22,29 @@ import {
   SchemaFirstInventoryEntry,
   schemaFirstEntryOrder,
   sortSchemaFirstEntries,
-} from "../Lint.schemas.js";
-import { SchemaFirstRender } from "../SchemaFirst.render.js";
-import { SchemaFirstArbitraryCoverage } from "./SchemaFirstArbitraryCoverage.js";
-import { SchemaFirstDetectors } from "./SchemaFirstDetectors.js";
-import { isSchemaCrispeningPolicyExempt } from "./SchemaFirstPolicy.js";
+} from "../Lint.schemas.ts";
+import { SchemaFirstRender } from "../SchemaFirst.render.ts";
+import { SchemaFirstArbitraryCoverage } from "./SchemaFirstArbitraryCoverage.ts";
+import { SchemaFirstDetectors } from "./SchemaFirstDetectors.ts";
+import { isSchemaCrispeningPolicyExempt } from "./SchemaFirstPolicy.ts";
 import {
   isSchemaFirstExcludedFile,
   makeSchemaFirstOwnerResolver,
   makeSchemaFirstProject,
-} from "./SchemaFirstProject.js";
+} from "./SchemaFirstProject.ts";
 import {
   readCrispeningPolicyDocument,
   readSchemaFirstInventoryDocument,
   writeSchemaFirstInventoryDocument,
-} from "./SchemaFirstStore.js";
+} from "./SchemaFirstStore.ts";
 import type {
   SchemaCrispeningPolicyDocument,
   SchemaFirstEntryKind,
   SchemaFirstEntryStatus,
   SchemaFirstLintOptions,
   SchemaFirstPolicyRuleId,
-} from "../Lint.schemas.js";
-import type { FunctionLikeDeclarationNode } from "./SchemaFirstDetectors.js";
+} from "../Lint.schemas.ts";
+import type { FunctionLikeDeclarationNode } from "./SchemaFirstDetectors.ts";
 
 const isLiteralKitConstAssertionArgument = (argument: Node): boolean =>
   Node.isAsExpression(argument) &&
