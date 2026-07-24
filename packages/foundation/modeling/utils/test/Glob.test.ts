@@ -50,9 +50,13 @@ const acquireFixture: TestEffect<Fixture> = Effect.gen(function* () {
 
   yield* makeDirectory(joinPath(dir, "src", "errors"));
   yield* makeDirectory(joinPath(dir, "src", "nested"));
+  yield* makeDirectory(joinPath(dir, "%2F"));
+  yield* makeDirectory(joinPath(dir, "symbols#%"));
   yield* writeText(joinPath(dir, "src", "index.ts"), "");
   yield* writeText(joinPath(dir, "src", "errors", "problem.ts"), "");
   yield* writeText(joinPath(dir, "src", "nested", "deep.ts"), "");
+  yield* writeText(joinPath(dir, "%2F", "literal.ts"), "");
+  yield* writeText(joinPath(dir, "symbols#%", "literal.ts"), "");
   yield* writeText(joinPath(dir, "README.md"), "");
 
   return {
@@ -191,6 +195,21 @@ describe("@beep/utils Glob", () => {
       })
     ));
 
+  it("resolves an omitted cwd the same as an explicit current directory", () =>
+    runTest(
+      Effect.gen(function* () {
+        const implicitResults = yield* runGlob("package.json");
+        const explicitResults = yield* runGlob("package.json", { cwd: "." });
+        const implicitNodeResults = yield* withBunGlobDisabled(runGlob("package.json"));
+        const explicitNodeResults = yield* withBunGlobDisabled(runGlob("package.json", { cwd: "." }));
+
+        expect(implicitResults).toEqual(["package.json"]);
+        expect(explicitResults).toEqual(implicitResults);
+        expect(implicitNodeResults).toEqual(implicitResults);
+        expect(explicitNodeResults).toEqual(implicitResults);
+      })
+    ));
+
   it("falls back to Node globbing when Bun.Glob is unavailable", () =>
     runTest(
       Effect.gen(function* () {
@@ -217,6 +236,84 @@ describe("@beep/utils Glob", () => {
           (fixture) => fixture.cleanup
         );
         yield* program;
+      })
+    ));
+
+  it("treats percent-encoded and fragment characters as filesystem text across backends", () =>
+    runTest(
+      Effect.gen(function* () {
+        const program = Effect.acquireUseRelease(
+          acquireFixture,
+          (fixture) =>
+            Effect.gen(function* () {
+              const options = {
+                absolute: true,
+                cwd: fixture.dir,
+                nodir: true,
+              };
+              const pattern = ["%2F/*.ts", "symbols*/*.ts"];
+              const bunResults = yield* runGlob(pattern, options);
+              const nodeResults = yield* withBunGlobDisabled(runGlob(pattern, options));
+              const expected = [
+                joinPath(fixture.dir, "%2F", "literal.ts"),
+                joinPath(fixture.dir, "symbols#%", "literal.ts"),
+              ];
+
+              expect(bunResults).toEqual(expected);
+              expect(nodeResults).toEqual(expected);
+            }),
+          (fixture) => fixture.cleanup
+        );
+
+        yield* program;
+      })
+    ));
+
+  it.each(["src/errors", "src/errors/", "src/errors/**"])(
+    "applies the %s directory ignore consistently across backends",
+    (ignore) =>
+      runTest(
+        Effect.gen(function* () {
+          const program = Effect.acquireUseRelease(
+            acquireFixture,
+            (fixture) =>
+              Effect.forEach(
+                [false, true],
+                Effect.fnUntraced(function* (nodir) {
+                  const options = {
+                    cwd: fixture.dir,
+                    ignore,
+                    nodir,
+                  };
+                  const bunResults = yield* runGlob("src/**", options);
+                  const nodeResults = yield* withBunGlobDisabled(runGlob("src/**", options));
+                  const expected = nodir
+                    ? ["src/index.ts", "src/nested/deep.ts"]
+                    : ["src/index.ts", "src/nested", "src/nested/deep.ts"];
+
+                  expect(bunResults).toEqual(expected);
+                  expect(nodeResults).toEqual(expected);
+                })
+              ),
+            (fixture) => fixture.cleanup
+          );
+
+          yield* program;
+        })
+      )
+  );
+
+  it("surfaces non-missing Node filesystem errors as GlobError", () =>
+    runTest(
+      Effect.gen(function* () {
+        const error = yield* withBunGlobDisabled(
+          runGlob("**/*.ts", {
+            cwd: "invalid\0cwd",
+            nodir: true,
+          })
+        ).pipe(Effect.flip);
+
+        expect(S.is(GlobError)(error)).toBe(true);
       })
     ));
 
@@ -253,10 +350,12 @@ describe("@beep/utils Glob", () => {
             makeSymlink(fixture.dir, joinPath(fixture.dir, "src", "linked-root")).pipe(
               Effect.flatMap(
                 Effect.fnUntraced(function* () {
-                  return yield* runGlob("src/**", {
-                    cwd: fixture.dir,
-                    nodir: true,
-                  });
+                  return yield* withBunGlobDisabled(
+                    runGlob("src/**", {
+                      cwd: fixture.dir,
+                      nodir: true,
+                    })
+                  );
                 })
               )
             ),
