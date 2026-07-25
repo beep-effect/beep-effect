@@ -8,7 +8,7 @@
   "scripts": {
     "codegen": "echo 'no codegen needed'",
     "build": "bun run beep:build",
-    "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
+    "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps --compact false",
     "check": "bun run beep:check",
     "test": "bun run beep:test",
     "coverage": "bunx vitest run --coverage",

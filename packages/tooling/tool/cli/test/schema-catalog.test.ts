@@ -1,4 +1,5 @@
 import { generateSchemaCatalogDocument, lintCommand } from "@beep/repo-cli/test/Lint";
+import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
@@ -18,7 +19,8 @@ const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
   TestConsole.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
+  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
+  TSMorphServiceLive.pipe(Layer.provide(NodeServices.layer))
 );
 
 const writeSchemaCatalogFixture = Effect.fn("SchemaCatalogTest.writeFixture")(function* () {

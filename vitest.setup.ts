@@ -20,6 +20,40 @@ import picomatch from "picomatch";
 import * as Toml from "toml";
 import type { ServerResponse } from "node:http";
 
+// Node 26 exposes a configurable experimental `localStorage` getter even when
+// no `--localstorage-file` was supplied. Vitest consequently sees the property
+// as already present and does not install jsdom's working implementation, while
+// reading Node's getter yields `undefined` and emits an ExperimentalWarning.
+// Replace that distinct non-enumerable Node descriptor with an isolated
+// in-memory Web Storage before any browser-facing module evaluates.
+const localStorageDescriptor = Object.getOwnPropertyDescriptor(globalThis, "localStorage");
+if (
+  typeof window !== "undefined" &&
+  typeof globalThis.Bun === "undefined" &&
+  localStorageDescriptor?.get !== undefined &&
+  localStorageDescriptor.enumerable === false
+) {
+  const values = new Map<string, string>();
+  const localStorage: Storage = {
+    get length(): number {
+      return values.size;
+    },
+    clear: (): void => values.clear(),
+    getItem: (key): string | null => values.get(key) ?? null,
+    key: (index): string | null => Array.from(values.keys())[index] ?? null,
+    removeItem: (key): void => {
+      values.delete(key);
+    },
+    setItem: (key, value): void => {
+      values.set(key, String(value));
+    },
+  };
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    value: localStorage,
+  });
+}
+
 addEqualityTesters();
 
 // one-round-loop P1: env-raisable fast-check floor. Inline numRuns

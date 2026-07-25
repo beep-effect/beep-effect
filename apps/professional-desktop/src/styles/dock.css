@@ -48,6 +48,21 @@
   color: var(--accent-foreground);
 }
 
+.desktop-dock [data-floating-header] button {
+  background: transparent;
+  border: 1px solid color-mix(in oklch, var(--foreground) 18%, transparent);
+  border-radius: calc(var(--radius, 8px) - 4px);
+  color: var(--foreground);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 8px;
+}
+
+.desktop-dock [data-floating-header] button:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
 .desktop-dock section[data-group-id] > [role="tablist"] button {
   background: transparent;
   border: none;
@@ -158,21 +173,6 @@
 
 .desktop-dock [data-floating-resize]:hover {
   background: color-mix(in oklch, var(--primary) 55%, transparent);
-}
-
-.desktop-dock [data-floating-header] button {
-  background: transparent;
-  border: 1px solid color-mix(in oklch, var(--foreground) 18%, transparent);
-  border-radius: calc(var(--radius, 8px) - 4px);
-  color: var(--foreground);
-  cursor: pointer;
-  font-size: 11px;
-  padding: 2px 8px;
-}
-
-.desktop-dock [data-floating-header] button:hover {
-  background: var(--accent);
-  color: var(--accent-foreground);
 }
 
 /* Nested surfaces keep a readable floor instead of one-word text columns,

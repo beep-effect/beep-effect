@@ -10,11 +10,11 @@ import { Tuple } from "effect";
 import * as S from "effect/Schema";
 import { DockCommandEnvelope, RestoreSnapshotRequest } from "./Dock.commands.ts";
 import {
+  DockCommandRejected,
   DockInputError,
   DockInvariantViolation,
   DockPersistenceError,
   DockSnapshotMissing,
-  DockTransitionError,
 } from "./Dock.errors.ts";
 import { DockMutationOutcome } from "./Dock.outcomes.ts";
 
@@ -304,9 +304,9 @@ export type DockAtomOperationOutcome = typeof DockAtomOperationOutcome.Type;
  * @since 0.0.0
  */
 export const DockAtomSessionError = S.Union([
-  DockTransitionError,
-  DockInputError,
+  DockCommandRejected,
   DockInvariantViolation,
+  DockInputError,
   DockPersistenceError,
   DockSnapshotMissing,
 ]).pipe(

@@ -3,6 +3,7 @@ import {
   CosmosGraphProjection,
   generateSyntheticOntologyProjection,
   ProbeWebGl2Options,
+  probeWebGl2,
   renderCosmosGraph,
   SyntheticOntologyGraphOptions,
   selectCosmosBackend,
@@ -115,6 +116,20 @@ describe("cosmos driver projection and capability detection", () => {
     })
   );
 
+  it.effect("probes explicit canvases without depending on the host WebGL runtime", () =>
+    Effect.sync(() => {
+      const availableCanvas = {
+        getContext: vi.fn(() => ({})),
+      } as unknown as HTMLCanvasElement;
+      const unavailableCanvas = {
+        getContext: vi.fn(() => null),
+      } as unknown as HTMLCanvasElement;
+
+      expect(probeWebGl2(ProbeWebGl2Options.make({ canvas: O.some(availableCanvas) })).webGl2).toBe(true);
+      expect(probeWebGl2(ProbeWebGl2Options.make({ canvas: O.some(unavailableCanvas) })).webGl2).toBe(false);
+    })
+  );
+
   it.effect(
     "rebuilds the sigma graphology graph from the incoming update projection",
     Effect.fnUntraced(function* () {
@@ -135,18 +150,34 @@ describe("cosmos driver projection and capability detection", () => {
         links: new Float32Array([0, 1, 1, 2]),
       });
       const container = globalThis.document.createElement("div");
-      const handle = yield* renderCosmosGraph(container, initial);
-      const graph = graphologyState.graphs[0];
 
-      expect(graph?.nodeKeys()).toEqual(["n1", "n2"]);
-      expect(graph?.edgeKeys()).toEqual(["e0"]);
+      try {
+        vi.stubGlobal("requestAnimationFrame", undefined);
+        const unframedHandle = yield* renderCosmosGraph(container, initial);
+        unframedHandle.destroy();
 
-      handle.update(next);
+        graphologyState.graphs.length = 0;
+        graphologyState.refreshCount = 0;
+        vi.stubGlobal("requestAnimationFrame", (_callback: FrameRequestCallback) => 1);
+        vi.stubGlobal("cancelAnimationFrame", (_handle: number) => undefined);
 
-      expect(graph?.clearCount()).toBe(1);
-      expect(graph?.nodeKeys()).toEqual(["n10", "n20", "n30"]);
-      expect(graph?.edgeKeys()).toEqual(["e0", "e1"]);
-      expect(graphologyState.refreshCount).toBe(2);
+        const handle = yield* renderCosmosGraph(container, initial);
+        const graph = graphologyState.graphs[0];
+
+        expect(graph?.nodeKeys()).toEqual(["n1", "n2"]);
+        expect(graph?.edgeKeys()).toEqual(["e0"]);
+
+        handle.update(next);
+
+        expect(graph?.clearCount()).toBe(1);
+        expect(graph?.nodeKeys()).toEqual(["n10", "n20", "n30"]);
+        expect(graph?.edgeKeys()).toEqual(["e0", "e1"]);
+        expect(graphologyState.refreshCount).toBe(2);
+
+        handle.destroy();
+      } finally {
+        vi.unstubAllGlobals();
+      }
     })
   );
 });

@@ -44,11 +44,10 @@ export * as NativePgClient from "@effect/sql-pg/PgClient";
  *
  * @example
  * ```ts
- * import type { EffectDrizzlePgConfig, EffectLogger, EffectPgDatabase } from "@beep/postgres/interop"
+ * import type { EffectLogger, EffectPgDatabase } from "@beep/postgres/interop"
  *
- * const config: EffectDrizzlePgConfig = {}
- * const useDatabase = (_database: EffectPgDatabase) => config
- * const useLogger = (_logger: EffectLogger) => config
+ * const useDatabase = (_database: EffectPgDatabase) => "database"
+ * const useLogger = (_logger: EffectLogger) => "logger"
  * console.log(useDatabase)
  * console.log(useLogger)
  * ```
@@ -57,8 +56,25 @@ export * as NativePgClient from "@effect/sql-pg/PgClient";
  * @category interop
  */
 export type {
-  EffectDrizzlePgConfig,
-  EffectDrizzlePgConfig as EffectDrizzleConfig,
   EffectLogger,
   EffectPgDatabase,
 } from "drizzle-orm/effect-postgres";
+/**
+ * Configuration accepted by native Drizzle Effect Postgres databases.
+ *
+ * @example
+ * ```ts
+ * import type { EffectDrizzleConfig, EffectDrizzlePgConfig } from "@beep/postgres/interop"
+ *
+ * const config: EffectDrizzlePgConfig = {}
+ * const legacyName: EffectDrizzleConfig = config
+ * console.log(legacyName)
+ * ```
+ *
+ * @since 0.0.0
+ * @category interop
+ */
+export type {
+  EffectDrizzlePgConfig,
+  EffectDrizzlePgConfig as EffectDrizzleConfig,
+} from "drizzle-orm/pg-core/effect";

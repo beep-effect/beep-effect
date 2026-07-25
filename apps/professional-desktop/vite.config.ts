@@ -41,7 +41,12 @@ const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
   },
 });
 
-const initialVendorChunkGroups = [
+const initialChunkGroups = [
+  {
+    name: "iana-media-types",
+    test: /packages[\\/]foundation[\\/]primitive[\\/]data[\\/]src[\\/]generated[\\/]iana-media-types\.ts$/,
+    priority: 60,
+  },
   { name: "react-vendor", test: /node_modules[\\/](react|react-dom)[\\/]/, priority: 50 },
   { name: "mui-vendor", test: /node_modules[\\/](@mui|@emotion)[\\/]/, priority: 45 },
   { name: "effect-vendor", test: /node_modules[\\/]effect[\\/]/, priority: 40 },
@@ -51,6 +56,7 @@ const initialVendorChunkGroups = [
     test: /node_modules[\\/](sonner|tailwind-merge|clsx|class-variance-authority|@base-ui|@phosphor-icons)[\\/]/,
     priority: 30,
   },
+  { name: "pretext-vendor", test: /node_modules[\\/]@chenglou[\\/]pretext[\\/]/, priority: 25 },
 ];
 
 export default defineConfig({
@@ -67,11 +73,14 @@ export default defineConfig({
     include: ["seedrandom"],
   },
   build: {
-    chunkSizeWarningLimit: 650,
+    // Three.js and Mermaid's generated parser each ship as one irreducible
+    // upstream module. Keep the cap just above those modules while splitting
+    // our generated IANA data out of the application entry chunk below.
+    chunkSizeWarningLimit: 750,
     rolldownOptions: {
       output: {
         codeSplitting: {
-          groups: initialVendorChunkGroups,
+          groups: initialChunkGroups,
         },
       },
     },

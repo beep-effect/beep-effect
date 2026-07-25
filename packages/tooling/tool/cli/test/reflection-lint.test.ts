@@ -1,4 +1,5 @@
 import { lintCommand } from "@beep/repo-cli";
+import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -20,7 +21,11 @@ const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {
   }
 };
 
-const testLayer = Layer.mergeAll(NodeServices.layer, FsUtilsLive.pipe(Layer.provide(NodeServices.layer)));
+const testLayer = Layer.mergeAll(
+  NodeServices.layer,
+  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
+  TSMorphServiceLive.pipe(Layer.provide(NodeServices.layer))
+);
 
 const writeCompletedGoal = Effect.fn("writeCompletedGoal")(function* (slug: string, reflectionRequired?: boolean) {
   const fs = yield* FileSystem.FileSystem;

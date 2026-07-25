@@ -380,7 +380,7 @@ export const addNode: {
     if (O.isSome(node.parentId)) {
       const parentIndex = HashMap.get(effectGraph.nodeIdToIndex, node.parentId.value);
       if (O.isSome(parentIndex)) {
-        Graph.addEdge(mutable, parentIndex.value, nodeIndex, { relation: "child" });
+        Graph.addEdge(mutable, parentIndex.value, nodeIndex, GraphEdge.make({ relation: "child" }));
       }
     }
   });
@@ -663,7 +663,7 @@ export const map: {
           const from = MutableHashMap.get(indexMap, edge.source);
           const to = MutableHashMap.get(indexMap, edge.target);
           if (O.isSome(from) && O.isSome(to)) {
-            Graph.addEdge(mutable, from.value, to.value, { relation: "child" });
+            Graph.addEdge(mutable, from.value, to.value, GraphEdge.make({ relation: "child" }));
           }
         },
       });

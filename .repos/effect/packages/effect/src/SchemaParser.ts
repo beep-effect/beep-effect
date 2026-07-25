@@ -23,14 +23,15 @@ import type * as Schema from "./Schema.ts"
 import * as SchemaAST from "./SchemaAST.ts"
 import * as SchemaIssue from "./SchemaIssue.ts"
 
-const recurDefaults = memoize((ast: SchemaAST.AST): SchemaAST.AST => {
+// Converts a type-side AST into its constructor form by recursively restoring
+// constructor encodings for nested classes and fields with constructor defaults.
+const toConstructorAST = memoize((ast: SchemaAST.AST): SchemaAST.AST => {
   switch (ast._tag) {
     case "Declaration": {
       const getLink = ast.annotations?.[SchemaAST.ClassTypeId]
       if (Predicate.isFunction(getLink)) {
         const link = getLink(ast.typeParameters)
-        const to = recurDefaults(link.to)
-        return SchemaAST.replaceEncoding(ast, to === link.to ? [link] : [new SchemaAST.Link(to, link.transformation)])
+        return SchemaAST.replaceEncoding(ast, [SchemaAST.mapLink(link, toConstructorAST)])
       }
       return ast
     }
@@ -39,12 +40,13 @@ const recurDefaults = memoize((ast: SchemaAST.AST): SchemaAST.AST => {
       return ast.recur((ast) => {
         const defaultValue = ast.context?.defaultValue
         if (defaultValue) {
-          return SchemaAST.replaceEncoding(recurDefaults(ast), defaultValue)
+          const out = toConstructorAST(ast)
+          return SchemaAST.replaceEncoding(out, out.encoding ? [...out.encoding, ...defaultValue] : defaultValue)
         }
-        return recurDefaults(ast)
+        return toConstructorAST(ast)
       })
     case "Suspend":
-      return ast.recur(recurDefaults)
+      return ast.recur(toConstructorAST)
     default:
       return ast
   }
@@ -68,7 +70,7 @@ const recurDefaults = memoize((ast: SchemaAST.AST): SchemaAST.AST => {
  * @since 4.0.0
  */
 export function makeEffect<S extends Schema.Constraint>(schema: S) {
-  const ast = recurDefaults(SchemaAST.toType(schema.ast))
+  const ast = toConstructorAST(SchemaAST.toType(schema.ast))
   const parser = run<S["Type"], never>(ast)
   return (input: S["~type.make.in"], options?: Schema.MakeOptions): Effect.Effect<S["Type"], SchemaIssue.Issue> => {
     return parser(
@@ -1023,11 +1025,6 @@ const recur = memoize(
         return parser(ou, options)
       }
     }
-    const isStructural = SchemaAST.isArrays(ast) || SchemaAST.isObjects(ast) ||
-      (SchemaAST.isDeclaration(ast) && ast.typeParameters.length > 0)
-    const structuralChecks = checks && isStructural ?
-      checks.filter((check) => check.annotations?.[SchemaAST.STRUCTURAL_ANNOTATION_KEY]) :
-      undefined
     return (ou, options) => {
       if (astOptions) {
         options = { ...options, ...astOptions }
@@ -1069,24 +1066,6 @@ const recur = memoize(
         }
 
         if (checks && !options?.disableChecks) {
-          if (options?.errors === "all" && structuralChecks && structuralChecks.length > 0 && Option.isSome(localOu)) {
-            sroa = mapSchemaIssueEffect(sroa, (issue) => {
-              const issues: Array<SchemaIssue.Issue> = []
-              SchemaAST.collectIssues(
-                structuralChecks,
-                localOu.value,
-                issues,
-                ast,
-                options
-              )
-              const out: SchemaIssue.Issue = Arr.isArrayNonEmpty(issues)
-                ? issue._tag === "Composite" && issue.ast === ast
-                  ? new SchemaIssue.Composite(ast, issue.actual, [...issue.issues, ...issues])
-                  : new SchemaIssue.Composite(ast, localOu, [issue, ...issues])
-                : issue
-              return out
-            })
-          }
           sroa = Effect.flatMapEager(sroa, (oa) => {
             if (Option.isSome(oa)) {
               const value = oa.value
