@@ -47,7 +47,7 @@ export const escapeRegexHint =
 export const toHostRegex = (arg: unknown, method: string, node: AstNode, extraFlags = ""): RegExp => {
   // Native parity: an undefined pattern behaves as an empty pattern.
   if (P.isUndefined(arg)) return new RegExp("", extraFlags)
-  if (S.is(CodeModeRegExp)(arg)) return arg.regex
+  if (CodeModeRegExp.is(arg)) return arg.regex
   if (P.isString(arg)) {
     try {
       return new RegExp(arg, extraFlags)

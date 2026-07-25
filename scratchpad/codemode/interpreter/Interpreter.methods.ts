@@ -48,6 +48,7 @@ import {
   invokeNumberStatic
 } from "../stdlib/StdLib.number.ts";
 import {invokeObjectMethod} from "../stdlib/StdLib.object.ts";
+import {arrayMethods} from "../stdlib/StdLib.collections.ts";
 import {
   invokeRegExpMethod,
   invokeRegExpStatic,
@@ -113,11 +114,11 @@ const isSupportedRuntimeCallback = RuntimeReference.isAnyOf([
 ])
 
 export const isSupportedCallback = (value: unknown): value is SupportedCallback =>
-  S.is(RuntimeReference)(value) &&
+  RuntimeReference.is(value) &&
   isSupportedRuntimeCallback(value) &&
   // Callable namespaces dispatch like JS: Array/Object/Date/RegExp construct,
   // new-requiring constructors throw a TypeError. Math/JSON/console stay non-callable.
-  (!S.is(GlobalNamespace)(value) || typeofValue(value) === "function");
+  (!RuntimeReference.guards.GlobalNamespace(value) || typeofValue(value) === "function");
 
 export const invokeIntrinsic = <R>(
   runner: CallbackRunner<R>,
@@ -143,7 +144,7 @@ export const invokeIntrinsic = <R>(
   if (A.isArray(ref.receiver)) {
     return invokeArrayMethod(runner, ref.receiver, ref.name, args, node);
   }
-  if (S.is(CodeModeDate)(ref.receiver)) {
+  if (CodeModeDate.is(ref.receiver)) {
     const target = ref.receiver;
     const argumentCount = dateSetterArgumentCount(ref.name);
     if (O.isNone(argumentCount)) return Effect.succeed(invokeDateMethod(target, ref.name, [], node));
@@ -156,19 +157,19 @@ export const invokeIntrinsic = <R>(
       (values) => invokeDateMethod(target, ref.name, values, node, initialTime),
     );
   }
-  if (S.is(CodeModeRegExp)(ref.receiver)) {
+  if (CodeModeRegExp.is(ref.receiver)) {
     return Effect.succeed(invokeRegExpMethod(ref.receiver, ref.name, args, node));
   }
-  if (S.is(CodeModeMap)(ref.receiver)) {
+  if (CodeModeMap.is(ref.receiver)) {
     return invokeMapMethod(runner, ref.receiver, ref.name, args, node);
   }
-  if (S.is(CodeModeSet)(ref.receiver)) {
+  if (CodeModeSet.is(ref.receiver)) {
     return invokeSetMethod(runner, ref.receiver, ref.name, args, node);
   }
-  if (S.is(CodeModeURL)(ref.receiver)) {
+  if (CodeModeURL.is(ref.receiver)) {
     return Effect.succeed(invokeURLMethod(ref.receiver, ref.name, node));
   }
-  if (S.is(CodeModeURLSearchParams)(ref.receiver)) {
+  if (CodeModeURLSearchParams.is(ref.receiver)) {
     return invokeURLSearchParamsMethod(runner, ref.receiver, ref.name, args, node);
   }
   throw InterpreterRuntimeError.new(`Method '${ref.name}' is not available.`, node);
@@ -234,33 +235,7 @@ const requireDataArgument = (name: string, index: number, arg: unknown, node: As
 };
 
 const DirectStringMethod = LiteralKit(stringMethods.omitOptions(["match", "matchAll"]));
-const DirectArrayMethod = LiteralKit([
-  "includes",
-  "join",
-  "sort",
-  "toSorted",
-  "slice",
-  "concat",
-  "indexOf",
-  "lastIndexOf",
-  "at",
-  "flat",
-  "reverse",
-  "toReversed",
-  "with",
-  "push",
-  "pop",
-  "shift",
-  "unshift",
-  "splice",
-  "toSpliced",
-  "fill",
-  "copyWithin",
-  "keys",
-  "values",
-  "entries",
-]);
-const CallbackArrayMethod = LiteralKit([
+const CallbackArrayMethodOptions = [
   "map",
   "filter",
   "find",
@@ -273,7 +248,13 @@ const CallbackArrayMethod = LiteralKit([
   "reduceRight",
   "flatMap",
   "forEach",
-]);
+ ] as const;
+const CallbackArrayMethod = LiteralKit(
+  arrayMethods.pickOptions(CallbackArrayMethodOptions)
+);
+const DirectArrayMethod = LiteralKit(
+  arrayMethods.omitOptions(CallbackArrayMethodOptions)
+);
 
 const invokeStringMethod = (value: string, name: string, args: Array<unknown>, node: AstNode): unknown => {
   // Coerce arguments like native JS; opaque runtime references still reject.
@@ -282,7 +263,7 @@ const invokeStringMethod = (value: string, name: string, args: Array<unknown>, n
   const optNum = (index: number): number | undefined => (args[index] === undefined ? undefined : num(index));
   const optStr = (index: number): string | undefined => (args[index] === undefined ? undefined : str(index));
   const rejectRegex = (): void => {
-    if (S.is(CodeModeRegExp)(args[0])) {
+    if (CodeModeRegExp.is(args[0])) {
       throw InterpreterRuntimeError.new(
         `String.${name} cannot take a regular expression; use regex.test(string) or String.search instead.`,
         node,
@@ -329,7 +310,7 @@ const invokeStringMethod = (value: string, name: string, args: Array<unknown>, n
         const requestedLimit = optNum(1);
         return requestedLimit !== undefined && requestedLimit >>> 0 === 0 ? [] : [value];
       }
-      if (S.is(CodeModeRegExp)(args[0])) {
+      if (CodeModeRegExp.is(args[0])) {
         return value.split(args[0].regex, optNum(1));
       }
       const requestedLimit = optNum(1);
@@ -348,7 +329,7 @@ const invokeStringMethod = (value: string, name: string, args: Array<unknown>, n
       return value.endsWith(str(0), optNum(1));
   };
   const replace = (all: boolean): string => {
-      if (S.is(CodeModeRegExp)(args[0])) {
+      if (CodeModeRegExp.is(args[0])) {
         const pattern = args[0].regex;
         const replacement = str(1);
         if (all && !pattern.global) {
@@ -400,7 +381,7 @@ const invokeStringMethod = (value: string, name: string, args: Array<unknown>, n
 };
 
 export const arrayStatics = LiteralKit(["isArray", "of", "from"]);
-const DirectArrayStatic = LiteralKit(["isArray", "of"]);
+const DirectArrayStatic = LiteralKit(arrayStatics.omitOptions(["from"]));
 
 const invokeArrayStatic = (name: string, args: Array<unknown>, node: AstNode): unknown => {
   if (!S.is(DirectArrayStatic)(name)) {
@@ -416,7 +397,7 @@ const arrayLikeSource = (source: unknown, node: AstNode): {
   readonly length: number;
   readonly source: object
 } => {
-  if (S.is(CodeModePromise)(source)) {
+  if (CodeModePromise.is(source)) {
     throw InterpreterRuntimeError.new(
       "Array.from received an un-awaited Promise; await it before creating the array.",
       node,
@@ -452,7 +433,7 @@ export const invokeArrayFrom = <R>(
   return Effect.gen(function* () {
     const cursor = yield* runner.syncIterator(source, node);
     if (P.isUndefined(cursor)) {
-      if (S.is(CodeModeGenerator)(source)) {
+      if (CodeModeGenerator.is(source)) {
         throw InterpreterRuntimeError.new("Array.from expects a synchronous iterable or array-like value.", node).as(
           "TypeError",
         );
@@ -539,7 +520,7 @@ const coerceGroupByPropertyKey = <R>(
   if (value === null || typeof value !== "object" || A.isArray(value) || isCodeModeValue(value)) {
     return Effect.succeed(coerceToString(value));
   }
-  if (S.is(CodeModePromise)(value)) return Effect.succeed("[object Promise]");
+  if (CodeModePromise.is(value)) return Effect.succeed("[object Promise]");
   if (isRuntimeReference(value)) {
     throw InterpreterRuntimeError.new("Object.groupBy callback must return a data value.", node, "InvalidDataValue");
   }
@@ -595,7 +576,7 @@ const invokeStringReplacer = <R>(
   };
 
   const pattern = args[0];
-  if (S.is(CodeModeRegExp)(pattern)) {
+  if (CodeModeRegExp.is(pattern)) {
     if (name === "replaceAll" && !pattern.regex.global) {
       throw InterpreterRuntimeError.new(
         `String.replaceAll requires a regular expression with the global (g) flag: write /${pattern.regex.source}/${pattern.regex.flags}g, or use String.replace to replace only the first match.`,
@@ -618,7 +599,7 @@ const invokeStringReplacer = <R>(
       // Error values are branded plain objects; boundedData would strip the brand before coercion.
       output.push(
         value.slice(end, match.offset),
-        S.is(CodeModePromise)(replacement)
+        CodeModePromise.is(replacement)
           ? "[object Promise]"
           : P.isNotUndefined(errorBrandName(replacement))
             ? coerceToString(replacement)
@@ -809,14 +790,14 @@ const copySet = (source: CodeModeSet): CodeModeSet => {
 };
 
 const loadSetRecord = <R>(runner: CallbackRunner<R>, source: unknown, name: string, node: AstNode) => {
-  if (S.is(CodeModeSet)(source)) {
+  if (CodeModeSet.is(source)) {
     return Effect.succeed({
       size: source.set.size,
       has: (item: unknown) => Effect.succeed(source.set.has(item)),
       keys: () => Effect.succeed(source.set.values()),
     });
   }
-  if (S.is(CodeModeMap)(source)) {
+  if (CodeModeMap.is(source)) {
     return Effect.succeed({
       size: source.map.size,
       has: (item: unknown) => Effect.succeed(source.map.has(item)),

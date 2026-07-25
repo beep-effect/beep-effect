@@ -47,6 +47,7 @@ import {
   CodeModeSet,
   CodeModeURL,
   CodeModeURLSearchParams,
+  isCodeModeValue,
 } from "./Codemode.values.ts";
 
 const $I = $ScratchpadId.create("codemode/Codemode.tool-runtime");
@@ -362,7 +363,7 @@ const copyBounded = (
   if (!P.isObject(value)) {
     throw ToolRuntimeError.new("InvalidDataValue", `${label} must contain data only.`);
   }
-  if (S.is(CodeModePromise)(value)) {
+  if (CodeModePromise.is(value)) {
     throw ToolRuntimeError.new(
       "InvalidDataValue",
       `${label} contains an un-awaited Promise; await tool calls before using their results.`
@@ -370,16 +371,7 @@ const copyBounded = (
   }
 
   if (preserveCodeModeValues) {
-    if (
-      S.is(CodeModeDate)(value) ||
-      S.is(CodeModeRegExp)(value) ||
-      S.is(CodeModeMap)(value) ||
-      S.is(CodeModeSet)(value) ||
-      S.is(CodeModeURL)(value) ||
-      S.is(CodeModeURLSearchParams)(value)
-    ) {
-      return value;
-    }
+    if (isCodeModeValue(value)) return value;
     // crispen: native values are decoded immediately into guest semantic
     // adapters; invalid Date and mutable identity must remain observable.
     if (value instanceof Date) return CodeModeDate.new(value.getTime());
@@ -405,18 +397,18 @@ const copyBounded = (
     }
   }
 
-  if (S.is(CodeModeDate)(value)) return isoFromEpochMillis(value.time);
+  if (CodeModeDate.is(value)) return isoFromEpochMillis(value.time);
   if (value instanceof Date) return pipe(DateTime.make(value), O.match({
     onNone: thunkNull,
     onSome: DateTime.formatIso
   }));
-  if (S.is(CodeModeURL)(value)) return value.url.href;
+  if (CodeModeURL.is(value)) return value.url.href;
   if (value instanceof URL) return value.href;
   if (
-    S.is(CodeModeRegExp)(value) ||
-    S.is(CodeModeMap)(value) ||
-    S.is(CodeModeSet)(value) ||
-    S.is(CodeModeURLSearchParams)(value) ||
+    CodeModeRegExp.is(value) ||
+    CodeModeMap.is(value) ||
+    CodeModeSet.is(value) ||
+    CodeModeURLSearchParams.is(value) ||
     value instanceof RegExp ||
     value instanceof Map ||
     value instanceof Set ||
@@ -962,5 +954,3 @@ export const make = <R>(
 
 /** Empty default Toolkit used when no host tools are provided. */
 export const emptyToolkit = Toolkit.empty;
-
-export * as ToolRuntime from "./Codemode.tool-runtime.ts";

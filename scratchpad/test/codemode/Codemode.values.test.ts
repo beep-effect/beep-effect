@@ -1,6 +1,5 @@
 import { assert, describe, it } from "@effect/vitest";
 import { Effect } from "effect";
-import * as S from "effect/Schema";
 import {
   CodeModeDate,
   CodeModeMap,
@@ -22,13 +21,14 @@ describe("CodeMode value schemas", () => {
     const url = CodeModeURL.new(new URL("https://example.com/?value=1"));
     const searchParams = CodeModeURLSearchParams.new(new URLSearchParams("value=1"));
 
-    assert.isTrue(S.is(CodeModePromise)(promise));
-    assert.isTrue(S.is(CodeModeDate)(date));
-    assert.isTrue(S.is(CodeModeRegExp)(regexp));
-    assert.isTrue(S.is(CodeModeMap)(map));
-    assert.isTrue(S.is(CodeModeSet)(set));
-    assert.isTrue(S.is(CodeModeURL)(url));
-    assert.isTrue(S.is(CodeModeURLSearchParams)(searchParams));
+    assert.isTrue(CodeModePromise.is(promise));
+    assert.isTrue(CodeModeDate.is(date));
+    assert.isTrue(CodeModeRegExp.is(regexp));
+    assert.isTrue(CodeModeMap.is(map));
+    assert.isTrue(CodeModeSet.is(set));
+    assert.isTrue(CodeModeURL.is(url));
+    assert.isTrue(CodeModeURLSearchParams.is(searchParams));
+    assert.isFalse(CodeModeDate.is({ time: Number.NaN }));
 
     assert.isFalse(isCodeModeValue(promise));
     assert.isTrue(isCodeModeValue(date));

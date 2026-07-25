@@ -60,46 +60,11 @@ export const mathMethods = LiteralKit([
   "sumPrecise",
 ]);
 
-const DirectMathMethod = LiteralKit([
-  "max",
-  "min",
-  "abs",
-  "acos",
-  "acosh",
-  "asin",
-  "asinh",
-  "atan",
-  "atan2",
-  "atanh",
-  "floor",
-  "ceil",
-  "round",
-  "trunc",
-  "sign",
-  "sqrt",
-  "cbrt",
-  "pow",
-  "hypot",
-  "cos",
-  "cosh",
-  "sin",
-  "sinh",
-  "tan",
-  "tanh",
-  "log",
-  "log2",
-  "log10",
-  "log1p",
-  "exp",
-  "expm1",
-  "f16round",
-  "fround",
-  "clz32",
-  "imul",
-]);
+const DirectMathMethod = LiteralKit(
+  mathMethods.omitOptions(["random", "sumPrecise"])
+);
 
 export const invokeMathMethod = (name: string, args: Array<unknown>, node: AstNode): number => {
-  if (!S.is(mathMethods)(name)) throw InterpreterRuntimeError.new(`Math.${name} is not available.`, node);
   if (!S.is(DirectMathMethod)(name)) throw InterpreterRuntimeError.new(`Math.${name} is not available.`, node);
   // Validate only the arguments the method consumes; like JS, extras are ignored
   // (so built-ins work as callbacks receiving (element, index, array)).

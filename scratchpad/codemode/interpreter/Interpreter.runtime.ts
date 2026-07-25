@@ -20,7 +20,6 @@ import {A, O, P, pipe, thunkFalse} from "@beep/utils";
 import {
   isBlockedMember,
   ToolReference,
-  ToolRuntimeError
 } from "../Codemode.tool-runtime.ts";
 import {
   asNode,
@@ -47,7 +46,7 @@ import {
   GlobalMethodNamespace,
   GlobalNamespace,
   GlobalNamespaceName,
-  type InterpreterFailure,
+  InterpreterFailure,
   InterpreterRuntimeError,
   IntrinsicReference,
   isRecord,
@@ -58,10 +57,10 @@ import {
   OptionalShortCircuit,
   type ProgramNode,
   ProgramThrow,
-  PromiseCapabilityFunction,
   PromiseInstanceMethodReference,
   PromiseMethodReference,
   PromiseNamespace,
+  RuntimeReference,
   SearchFunction,
   StatementBreak,
   StatementContinue,
@@ -205,7 +204,7 @@ const instanceofValue = (lhs: unknown, rhs: unknown, node: AstNode): boolean => 
     );
   };
 
-  if (S.is(ErrorConstructorReference)(rhs)) {
+  if (RuntimeReference.guards.ErrorConstructorReference(rhs)) {
     const brand = errorBrandName(lhs);
     return ErrorConstructorName.$match(rhs.name, {
       Error: () => P.isNotUndefined(brand),
@@ -218,14 +217,14 @@ const instanceofValue = (lhs: unknown, rhs: unknown, node: AstNode): boolean => 
       AggregateError: () => ErrorConstructorName.is.AggregateError(brand),
     });
   }
-  if (S.is(GlobalNamespace)(rhs)) {
+  if (RuntimeReference.guards.GlobalNamespace(rhs)) {
     return GlobalNamespaceName.$match(rhs.name, {
-      Date: () => S.is(CodeModeDate)(lhs),
-      RegExp: () => S.is(CodeModeRegExp)(lhs),
-      Map: () => S.is(CodeModeMap)(lhs),
-      Set: () => S.is(CodeModeSet)(lhs),
-      URL: () => S.is(CodeModeURL)(lhs),
-      URLSearchParams: () => S.is(CodeModeURLSearchParams)(lhs),
+      Date: () => CodeModeDate.is(lhs),
+      RegExp: () => CodeModeRegExp.is(lhs),
+      Map: () => CodeModeMap.is(lhs),
+      Set: () => CodeModeSet.is(lhs),
+      URL: () => CodeModeURL.is(lhs),
+      URLSearchParams: () => CodeModeURLSearchParams.is(lhs),
       Array: () => A.isArray(lhs),
       Object: () => P.isNotNull(lhs) && (P.isObjectKeyword(lhs) || typeofValue(lhs) === "function"),
       Math: unsupported,
@@ -233,8 +232,8 @@ const instanceofValue = (lhs: unknown, rhs: unknown, node: AstNode): boolean => 
       console: unsupported,
     });
   }
-  if (S.is(PromiseNamespace)(rhs)) return S.is(CodeModePromise)(lhs);
-  if (S.is(CoercionFunction)(rhs)) {
+  if (RuntimeReference.guards.PromiseNamespace(rhs)) return CodeModePromise.is(lhs);
+  if (RuntimeReference.guards.CoercionFunction(rhs)) {
     return CoercionFunctionName.$match(rhs.name, {
       Boolean: thunkFalse,
       Number: thunkFalse,
@@ -909,11 +908,11 @@ export class Interpreter<R> {
       ? value[Symbol.iterator]()
       : P.isString(value)
         ? value[Symbol.iterator]()
-        : S.is(CodeModeMap)(value)
+        : CodeModeMap.is(value)
           ? value.map.entries()
-          : S.is(CodeModeSet)(value)
+          : CodeModeSet.is(value)
             ? value.set.values()
-            : S.is(CodeModeURLSearchParams)(value)
+            : CodeModeURLSearchParams.is(value)
               ? value.params.entries()
               : undefined;
     if (iterator !== undefined) {
@@ -943,7 +942,7 @@ export class Interpreter<R> {
     node: AstNode,
     allowAsync = true,
   ): Effect.Effect<O.Option<CustomIterator>, InterpreterFailure, R> {
-    if (S.is(CodeModeGenerator)(value)) {
+    if (CodeModeGenerator.is(value)) {
       if (value.asynchronous && !allowAsync) return Effect.succeed(O.none());
       return Effect.succeed(O.some({
         iterator: value,
@@ -963,7 +962,7 @@ export class Interpreter<R> {
         return O.some({
           iterator: object,
           next:
-            S.is(CodeModeGenerator)(object)
+            CodeModeGenerator.is(object)
               ? GeneratorMethodReference.new(object, "next")
               : self.requireIteratorMethod(object.next, "Iterator next", node),
           asynchronous: asyncMethod !== undefined && asyncMethod !== null,
@@ -1010,7 +1009,7 @@ export class Interpreter<R> {
 
   private closeIterator(iterator: CustomIterator, node: AstNode, awaiting = true): Effect.Effect<void, InterpreterFailure, R> {
     const close =
-      S.is(CodeModeGenerator)(iterator.iterator)
+      CodeModeGenerator.is(iterator.iterator)
         ? GeneratorMethodReference.new(iterator.iterator, "return")
         : iterator.iterator.return;
     if (close === undefined || close === null) return iterator.asynchronous || !awaiting ? Effect.void : Effect.yieldNow;
@@ -1048,7 +1047,7 @@ export class Interpreter<R> {
   }
 
   private requireIterator(value: unknown, node: AstNode): SafeObject | CodeModeGenerator {
-    return S.is(CodeModeGenerator)(value)
+    return CodeModeGenerator.is(value)
       ? value
       : this.requireIteratorObject(value, "Iterator method result", node);
   }
@@ -1059,7 +1058,7 @@ export class Interpreter<R> {
   }
 
   private enumerableKeys(value: unknown): Array<string> | undefined {
-    if (S.is(ToolReference)(value)) {
+    if (ToolReference.is(value)) {
       return [...this.toolKeys(value.path)];
     }
     if (Array.isArray(value)) {
@@ -1204,7 +1203,7 @@ export class Interpreter<R> {
       onFailure: (cause) => {
         if (
           cause.reasons.some(Cause.isInterruptReason) ||
-          S.is(GeneratorReturn)(Cause.squash(cause)) ||
+          InterpreterFailure.guards.GeneratorReturn(Cause.squash(cause)) ||
           P.isUndefined(handler)
         ) {
           return Effect.failCause(cause);
@@ -1587,7 +1586,7 @@ export class Interpreter<R> {
     }
     if (args.length === 1) {
       const arg = args[0];
-      if (S.is(CodeModeDate)(arg)) return Effect.succeed(CodeModeDate.new(arg.time));
+      if (CodeModeDate.is(arg)) return Effect.succeed(CodeModeDate.new(arg.time));
       return Effect.map(this.toDatePrimitive(arg, node), (value) =>
         P.isString(value)
           ? CodeModeDate.new(Date.parse(value))
@@ -1650,7 +1649,7 @@ export class Interpreter<R> {
   private constructRegExp(args: Array<unknown>, node: AstNode): CodeModeRegExp {
     const first = args[0];
     const pattern =
-      S.is(CodeModeRegExp)(first) ? first.regex.source : P.isUndefined(first) ? "" : coerceToString(first);
+      CodeModeRegExp.is(first) ? first.regex.source : P.isUndefined(first) ? "" : coerceToString(first);
     const flagsArg = args[1];
     if (flagsArg !== undefined && typeof flagsArg !== "string") {
       throw InterpreterRuntimeError.new(
@@ -1658,7 +1657,7 @@ export class Interpreter<R> {
         node,
       ).as("SyntaxError");
     }
-    const flags = flagsArg ?? (S.is(CodeModeRegExp)(first) ? first.regex.flags : "");
+    const flags = flagsArg ?? (CodeModeRegExp.is(first) ? first.regex.flags : "");
     try {
       return CodeModeRegExp.new(pattern, flags);
     } catch (error) {
@@ -1741,7 +1740,7 @@ export class Interpreter<R> {
 
   private constructURLSearchParams(init: unknown, node: AstNode): Effect.Effect<CodeModeURLSearchParams, InterpreterFailure, R> {
     if (P.isUndefined(init)) return Effect.succeed(CodeModeURLSearchParams.new(new URLSearchParams()));
-    if (S.is(CodeModeURLSearchParams)(init)) {
+    if (CodeModeURLSearchParams.is(init)) {
       return Effect.succeed(CodeModeURLSearchParams.new(new URLSearchParams(init.params)));
     }
     if (typeof init === "string") return Effect.succeed(CodeModeURLSearchParams.new(new URLSearchParams(init)));
@@ -1834,7 +1833,7 @@ export class Interpreter<R> {
     // Null-prototype data needs explicit primitive coercion; identity and `in` retain raw objects.
     // Dates use their default string hint for addition and loose equality, and epoch time elsewhere.
     const coerceOperand = (operand: unknown): unknown => {
-      if (S.is(CodeModeDate)(operand)) {
+      if (CodeModeDate.is(operand)) {
         return operator === "+" || operator === "==" || operator === "!=" ? coerceToString(operand) : operand.time;
       }
       return operand !== null && typeof operand === "object" ? coerceToString(operand) : operand;
@@ -1907,7 +1906,7 @@ export class Interpreter<R> {
         throw InterpreterRuntimeError.new("Unary operators require data values.", node, "InvalidDataValue");
       }
       const operand =
-        S.is(CodeModeDate)(value)
+        CodeModeDate.is(value)
           ? value.time
           : P.isNotNull(value) && P.isObjectKeyword(value)
             ? coerceToString(value)
@@ -2075,20 +2074,20 @@ export class Interpreter<R> {
   ): Effect.Effect<unknown, InterpreterFailure, R> {
     const self = this;
     return Effect.gen(function* () {
-      if (S.is(ToolReference)(callable)) {
+      if (ToolReference.is(callable)) {
         if (callable.path.length === 0) throw InterpreterRuntimeError.new("The tools root is not callable.", callee);
         return yield* self.createToolCallPromise(callable.path, args);
       }
-      if (S.is(PromiseMethodReference)(callable)) {
+      if (RuntimeReference.guards.PromiseMethodReference(callable)) {
         return yield* invokePromiseMethod(self.runner, self.promises, callable, args, node);
       }
-      if (S.is(PromiseInstanceMethodReference)(callable)) {
+      if (RuntimeReference.guards.PromiseInstanceMethodReference(callable)) {
         return yield* invokePromiseInstanceMethod(self.runner, self.promises, callable, args, node);
       }
-      if (S.is(CodeModeFunction)(callable)) {
+      if (RuntimeReference.guards.CodeModeFunction(callable)) {
         return yield* self.invokeFunction(callable, args);
       }
-      if (S.is(GeneratorMethodReference)(callable)) {
+      if (RuntimeReference.guards.GeneratorMethodReference(callable)) {
         const request = (
           generator: CodeModeGenerator,
           kind: GeneratorRequestKind,
@@ -2106,10 +2105,10 @@ export class Interpreter<R> {
           throw: () => request(callable.generator, "throw"),
         });
       }
-      if (S.is(IntrinsicReference)(callable)) {
+      if (RuntimeReference.guards.IntrinsicReference(callable)) {
         return yield* invokeIntrinsic(self.runner, callable, args, node);
       }
-      if (S.is(GlobalMethodReference)(callable)) {
+      if (RuntimeReference.guards.GlobalMethodReference(callable)) {
         const invokeBounded = (
           reference: GlobalMethodReference,
         ): Effect.Effect<unknown, InterpreterFailure> =>
@@ -2123,7 +2122,7 @@ export class Interpreter<R> {
         return yield* GlobalMethodNamespace.$match(callable.namespace, {
           console: () => Effect.succeed(self.invokeConsole(callable.name, args, node)),
           Object: () => {
-            if (S.is(ToolReference)(args[0])) {
+            if (ToolReference.is(args[0])) {
               return Effect.succeed(self.invokeObjectMethodOnTools(callable.name, args[0], node));
             }
             if (S.is(objectMethodsPreservingIdentity)(callable.name)) {
@@ -2163,19 +2162,19 @@ export class Interpreter<R> {
           String: () => invokeBounded(callable),
         });
       }
-      if (S.is(JsonMethodReference)(callable)) {
+      if (RuntimeReference.guards.JsonMethodReference(callable)) {
         return yield* invokeJsonMethod(self.runner, callable, args, node);
       }
-      if (S.is(CoercionFunction)(callable)) {
+      if (RuntimeReference.guards.CoercionFunction(callable)) {
         return boundedData(invokeCoercion(callable, args, node), `${callable.name} result`);
       }
-      if (S.is(UriFunction)(callable)) {
+      if (RuntimeReference.guards.UriFunction(callable)) {
         return invokeUriFunction(callable, args, node);
       }
-      if (S.is(SearchFunction)(callable)) {
+      if (RuntimeReference.guards.SearchFunction(callable)) {
         return yield* self.invokeSearch(args);
       }
-      if (S.is(ErrorConstructorReference)(callable)) {
+      if (RuntimeReference.guards.ErrorConstructorReference(callable)) {
         const construct = () =>
           Effect.succeed(constructErrorValue(callable.name, args));
 
@@ -2190,7 +2189,7 @@ export class Interpreter<R> {
           AggregateError: () => constructAggregateErrorValue(self.runner, args, node),
         });
       }
-      if (S.is(GlobalNamespace)(callable)) {
+      if (RuntimeReference.guards.GlobalNamespace(callable)) {
         const requiresNew = (name: string): Effect.Effect<never, InterpreterFailure> =>
           Effect.fail(
             InterpreterRuntimeError.new(`Constructor ${name} requires 'new'.`, node).as("TypeError"),
@@ -2217,16 +2216,16 @@ export class Interpreter<R> {
           console: () => notFunction(callable.name),
         });
       }
-      if (S.is(PromiseNamespace)(callable)) {
+      if (RuntimeReference.guards.PromiseNamespace(callable)) {
         throw InterpreterRuntimeError.new("Constructor Promise requires 'new'.", node).as("TypeError");
       }
-      if (S.is(SymbolNamespace)(callable)) {
+      if (RuntimeReference.guards.SymbolNamespace(callable)) {
         throw InterpreterRuntimeError.new(
           "Symbol is not callable; only Symbol.asyncIterator and Symbol.iterator are available.",
           node,
         ).as("TypeError");
       }
-      if (S.is(PromiseCapabilityFunction)(callable)) {
+      if (RuntimeReference.guards.PromiseCapabilityFunction(callable)) {
         callable.settle(args[0]);
         return undefined;
       }
@@ -2409,7 +2408,7 @@ export class Interpreter<R> {
             run.pipe(
               Effect.flatMap((result) => (asynchronous ? invocation.awaitValue(result) : Effect.succeed(result))),
               Effect.catch((error) =>
-                S.is(GeneratorReturn)(error)
+                InterpreterFailure.guards.GeneratorReturn(error)
                   ? asynchronous
                     ? invocation.awaitValue(error.value)
                     : Effect.succeed(error.value)
@@ -2538,9 +2537,9 @@ export class Interpreter<R> {
       if (
         Array.isArray(value) ||
         P.isString(value) ||
-        S.is(CodeModeMap)(value) ||
-        S.is(CodeModeSet)(value) ||
-        S.is(CodeModeURLSearchParams)(value)
+        CodeModeMap.is(value) ||
+        CodeModeSet.is(value) ||
+        CodeModeURLSearchParams.is(value)
       ) {
         const cursor = yield* self.syncIterator(value, node);
         if (P.isUndefined(cursor)) throw InterpreterRuntimeError.new("Built-in iterator is unavailable.", node);
@@ -2552,11 +2551,11 @@ export class Interpreter<R> {
           );
           if (Exit.isSuccess(resumed)) continue;
           const error = Cause.squash(resumed.cause);
-          if (S.is(GeneratorReturn)(error)) {
+          if (InterpreterFailure.guards.GeneratorReturn(error)) {
             yield* cursor.close;
             return yield* Effect.fail(error);
           }
-          if (S.is(ProgramThrow)(error)) {
+          if (InterpreterFailure.guards.ProgramThrow(error)) {
             yield* cursor.close;
             throw InterpreterRuntimeError.new("The delegated iterator does not provide a throw() method.", node).as(
               "TypeError",
@@ -2576,7 +2575,7 @@ export class Interpreter<R> {
         const method =
           kind === "next"
             ? iterator.next
-            : S.is(CodeModeGenerator)(iterator.iterator)
+            : CodeModeGenerator.is(iterator.iterator)
               ? GeneratorMethodReference.new(iterator.iterator, kind)
               : iterator.iterator[kind];
         if (P.isUndefined(method) || P.isNull(method)) {
@@ -2613,10 +2612,13 @@ export class Interpreter<R> {
           continue;
         }
         const error: unknown = Cause.squash(resumed.cause);
-        if (!S.is(GeneratorReturn)(error) && !S.is(ProgramThrow)(error)) {
+        if (
+          !InterpreterFailure.guards.GeneratorReturn(error) &&
+          !InterpreterFailure.guards.ProgramThrow(error)
+        ) {
           return yield* Effect.failCause(resumed.cause);
         }
-        kind = S.is(GeneratorReturn)(error) ? "return" : "throw";
+        kind = InterpreterFailure.guards.GeneratorReturn(error) ? "return" : "throw";
         input = error.value;
       }
     });
@@ -2784,14 +2786,14 @@ export class Interpreter<R> {
           ? getString(propertyNode, "name")
           : self.toPropertyKey(yield* self.evaluateExpression(propertyNode), propertyNode);
 
-      if (S.is(ToolReference)(objectValue)) {
+      if (ToolReference.is(objectValue)) {
         if (!P.isString(key)) {
           throw InterpreterRuntimeError.new("Tool paths must use string property names.", propertyNode);
         }
         return ToolReference.new(A.append(objectValue.path, key));
       }
 
-      if (S.is(PromiseNamespace)(objectValue)) {
+      if (RuntimeReference.guards.PromiseNamespace(objectValue)) {
         if (P.isString(key) && S.is(promiseStatics)(key)) {
           return PromiseMethodReference.new(key);
         }
@@ -2801,13 +2803,13 @@ export class Interpreter<R> {
         );
       }
 
-      if (S.is(SymbolNamespace)(objectValue)) {
+      if (RuntimeReference.guards.SymbolNamespace(objectValue)) {
         if (key === "asyncIterator") return ComputedValue.new(AsyncIteratorSymbol);
         if (key === "iterator") return ComputedValue.new(IteratorSymbol);
         return ComputedValue.new(undefined);
       }
 
-      if (S.is(GlobalNamespace)(objectValue)) {
+      if (RuntimeReference.guards.GlobalNamespace(objectValue)) {
         if (P.isString(key) && isBlockedMember(key)) {
           throw InterpreterRuntimeError.new(`${objectValue.name}.${key} is not available.`, propertyNode);
         }
@@ -2856,7 +2858,7 @@ export class Interpreter<R> {
         return ComputedValue.new(undefined);
       }
 
-      if (S.is(CoercionFunction)(objectValue)) {
+      if (RuntimeReference.guards.CoercionFunction(objectValue)) {
         if (P.isString(key) && isBlockedMember(key)) {
           throw InterpreterRuntimeError.new(`${objectValue.name}.${key} is not available.`, propertyNode);
         }
@@ -2883,11 +2885,11 @@ export class Interpreter<R> {
         });
       }
 
-      if (S.is(CodeModeDate)(objectValue)) {
+      if (CodeModeDate.is(objectValue)) {
         if (P.isString(key) && S.is(dateMethods)(key)) return IntrinsicReference.new(objectValue, key);
         return ComputedValue.new(undefined);
       }
-      if (S.is(CodeModeRegExp)(objectValue)) {
+      if (CodeModeRegExp.is(objectValue)) {
         if (key === "lastIndex") return MemberReference.new(objectValue, key);
         if (P.isString(key) && S.is(regexpProperties)(key)) {
           return ComputedValue.new((objectValue.regex as unknown as Record<string, unknown>)[key]);
@@ -2895,17 +2897,17 @@ export class Interpreter<R> {
         if (P.isString(key) && S.is(regexpMethods)(key)) return IntrinsicReference.new(objectValue, key);
         return ComputedValue.new(undefined);
       }
-      if (S.is(CodeModeMap)(objectValue)) {
+      if (CodeModeMap.is(objectValue)) {
         if (key === "size") return ComputedValue.new(objectValue.map.size);
         if (P.isString(key) && S.is(mapMethods)(key)) return IntrinsicReference.new(objectValue, key);
         return ComputedValue.new(undefined);
       }
-      if (S.is(CodeModeSet)(objectValue)) {
+      if (CodeModeSet.is(objectValue)) {
         if (key === "size") return ComputedValue.new(objectValue.set.size);
         if (P.isString(key) && S.is(setMethods)(key)) return IntrinsicReference.new(objectValue, key);
         return ComputedValue.new(undefined);
       }
-      if (S.is(CodeModeURL)(objectValue)) {
+      if (CodeModeURL.is(objectValue)) {
         if (key === "searchParams") {
           return ComputedValue.new(objectValue.searchParams);
         }
@@ -2915,7 +2917,7 @@ export class Interpreter<R> {
         }
         return ComputedValue.new(undefined);
       }
-      if (S.is(CodeModeURLSearchParams)(objectValue)) {
+      if (CodeModeURLSearchParams.is(objectValue)) {
         if (key === "size") return ComputedValue.new(objectValue.params.size);
         if (P.isString(key) && S.is(UrlSearchParamsMethod)(key)) {
           return IntrinsicReference.new(objectValue, key);
@@ -2924,7 +2926,7 @@ export class Interpreter<R> {
       }
 
       // Reject unknown promise properties so a missing await cannot hide.
-      if (S.is(CodeModePromise)(objectValue)) {
+      if (CodeModePromise.is(objectValue)) {
         if (key === "then" || key === "catch" || key === "finally") {
           return PromiseInstanceMethodReference.new(objectValue, key);
         }
@@ -2935,7 +2937,7 @@ export class Interpreter<R> {
         );
       }
 
-      if (S.is(CodeModeGenerator)(objectValue)) {
+      if (CodeModeGenerator.is(objectValue)) {
         if (key === "next" || key === "return" || key === "throw") {
           return GeneratorMethodReference.new(objectValue, key);
         }
@@ -2985,15 +2987,15 @@ export class Interpreter<R> {
   private readMember(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     return Effect.map(this.getMemberReference(node), (reference) => {
       if (reference === OptionalShortCircuit) return OptionalShortCircuit;
-      if (S.is(ComputedValue)(reference)) return reference.value;
+      if (ComputedValue.is(reference)) return reference.value;
       if (P.isUndefined(reference) || isOpaqueMemberReference(reference)) return reference;
       if (A.isArray(reference.target)) {
         if (reference.key === "length") return reference.target.length;
         if (P.isString(reference.key)) return IntrinsicReference.new(reference.target, reference.key);
         return Reflect.get(reference.target, reference.key);
       }
-      if (S.is(CodeModeRegExp)(reference.target)) return reference.target.lastIndex;
-      if (S.is(CodeModeURL)(reference.target)) {
+      if (CodeModeRegExp.is(reference.target)) return reference.target.lastIndex;
+      if (CodeModeURL.is(reference.target)) {
         return Reflect.get(reference.target.url, reference.key);
       }
       return Reflect.get(reference.target, reference.key);
@@ -3016,14 +3018,14 @@ export class Interpreter<R> {
     return Effect.map(this.getMemberReference(target, "delete"), (reference) => {
       if (reference === OptionalShortCircuit) return true;
       if (
-        S.is(ComputedValue)(reference) ||
+        ComputedValue.is(reference) ||
         P.isUndefined(reference) ||
         isOpaqueMemberReference(reference) ||
-        S.is(CodeModeURL)(reference.target)
+        CodeModeURL.is(reference.target)
       ) {
         throw InterpreterRuntimeError.new("Only data fields may be deleted.", target, "InvalidDataValue");
       }
-      if (S.is(CodeModeRegExp)(reference.target)) {
+      if (CodeModeRegExp.is(reference.target)) {
         return Reflect.deleteProperty(reference.target.regex, reference.key);
       }
       return Reflect.deleteProperty(reference.target, reference.key);
@@ -3044,7 +3046,7 @@ export class Interpreter<R> {
       const reference = yield* self.getMemberReference(node);
       if (
         reference === OptionalShortCircuit ||
-        S.is(ComputedValue)(reference) ||
+        ComputedValue.is(reference) ||
         P.isUndefined(reference) ||
         isOpaqueMemberReference(reference)
       ) {
@@ -3068,10 +3070,10 @@ export class Interpreter<R> {
   }
 
   private readReferenceValue(reference: MemberReference, key: PropertyKey): unknown {
-    if (S.is(CodeModeURL)(reference.target)) {
+    if (CodeModeURL.is(reference.target)) {
       return Reflect.get(reference.target.url, key);
     }
-    if (S.is(CodeModeRegExp)(reference.target)) return reference.target.lastIndex;
+    if (CodeModeRegExp.is(reference.target)) return reference.target.lastIndex;
     return Reflect.get(reference.target, key);
   }
 
@@ -3089,7 +3091,7 @@ export class Interpreter<R> {
       target[key] = next;
       return;
     }
-    if (S.is(CodeModeURL)(reference.target)) {
+    if (CodeModeURL.is(reference.target)) {
       const property = key as string;
       if (!S.is(urlWritableProperties)(property)) {
         throw InterpreterRuntimeError.new(`URL.${property} is read-only.`, node).as("TypeError");
@@ -3099,11 +3101,14 @@ export class Interpreter<R> {
         url[property] = uriArgument(next, `URL.${property} value`);
         return;
       } catch (error) {
-        if (S.is(InterpreterRuntimeError)(error) || S.is(ToolRuntimeError)(error)) throw error;
+        if (
+          InterpreterFailure.guards.InterpreterRuntimeError(error) ||
+          InterpreterFailure.guards.ToolRuntimeError(error)
+        ) throw error;
         throw InterpreterRuntimeError.new(`URL.${property} received an invalid value.`, node).as("TypeError");
       }
     }
-    if (S.is(CodeModeRegExp)(reference.target)) {
+    if (CodeModeRegExp.is(reference.target)) {
       reference.target.lastIndex = next;
       return;
     }
