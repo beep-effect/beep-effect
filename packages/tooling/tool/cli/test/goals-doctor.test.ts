@@ -1,5 +1,6 @@
 import { lintCommand } from "@beep/repo-cli";
 import { classifyGoalDoctorFindings, GoalDoctorFinding, goalsCommand } from "@beep/repo-cli/test/Goals";
+import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
 import { Cause, Effect, Exit, Layer, Runtime } from "effect";
@@ -14,7 +15,9 @@ const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
 
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(NodeServices.layer))
+  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(NodeServices.layer)),
+  FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer)),
+  TSMorphServiceLive.pipe(Layer.provideMerge(NodeServices.layer))
 );
 
 const expectReportedFailure = (exit: Exit.Exit<unknown, unknown>) => {

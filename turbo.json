@@ -142,7 +142,12 @@
     "coverage": {
       "cache": false,
       "dependsOn": ["^build"],
-      "env": ["VITEST_COVERAGE_REPORT_ONLY", "VITEST_COVERAGE_RATCHET"],
+      "env": [
+        "BEEP_FC_SEED",
+        "NODE_OPTIONS",
+        "VITEST_COVERAGE_REPORT_ONLY",
+        "VITEST_COVERAGE_RATCHET"
+      ],
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/vitest.shared.ts",

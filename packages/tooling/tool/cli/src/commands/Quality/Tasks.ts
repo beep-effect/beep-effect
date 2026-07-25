@@ -72,6 +72,8 @@ const LINT_FIX_AGGREGATE_ARGS = ["--full", "--repo"] as const;
 const ROOT_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
+const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
+const COVERAGE_NODE_OPTIONS_ARG = "--no-experimental-webstorage";
 // Full root lint runs the aggregate Turbo graph plus repo policy tools. Keep
 // its group fan-out aligned with the root Turbo cap so hosted main checks do
 // not start multiple CPU/memory-heavy process graphs at once.
@@ -492,13 +494,41 @@ const boundedRootTurboArgs = (args: ReadonlyArray<string>): ReadonlyArray<string
 const includesTurboCoverageTask = (tasks: ReadonlyArray<string>, args: ReadonlyArray<string>): boolean =>
   A.some(tasks, (task) => task === "coverage") || A.some(args, (arg) => arg === "coverage");
 
+const coverageNodeOptions = (): string =>
+  pipe(
+    O.fromUndefinedOr(Bun.env.NODE_OPTIONS),
+    O.map(Str.trim),
+    O.filter(Str.isNonEmpty),
+    O.map((nodeOptions) =>
+      Str.includes(COVERAGE_NODE_OPTIONS_ARG)(nodeOptions) ? nodeOptions : `${nodeOptions} ${COVERAGE_NODE_OPTIONS_ARG}`
+    ),
+    O.getOrElse(() => COVERAGE_NODE_OPTIONS_ARG)
+  );
+
+// Coverage compares instrumentation metrics across runs, so its default seed
+// is reproducible. Callers can override it for additional exploration, while
+// the unseeded nightly property-law sweep remains responsible for breadth.
+const coverageFastCheckSeed = (): string =>
+  pipe(
+    O.fromUndefinedOr(Bun.env.BEEP_FC_SEED),
+    O.map(Str.trim),
+    O.filter(Str.isNonEmpty),
+    O.getOrElse(() => DEFAULT_COVERAGE_FAST_CHECK_SEED)
+  );
+
+const coverageEnvironment = (): Record<string, string> => ({
+  BEEP_FC_SEED: coverageFastCheckSeed(),
+  NODE_OPTIONS: coverageNodeOptions(),
+  VITEST_COVERAGE_RATCHET: "1",
+});
+
 // fallow-ignore-next-line code-duplication
 const turboCoverageEnv = (
   tasks: ReadonlyArray<string>,
   args: ReadonlyArray<string>
 ): Record<string, string> | undefined =>
   // fallow-ignore-next-line code-duplication
-  includesTurboCoverageTask(tasks, args) ? { VITEST_COVERAGE_RATCHET: "1" } : undefined;
+  includesTurboCoverageTask(tasks, args) ? coverageEnvironment() : undefined;
 
 const linesFromText = (text: string): ReadonlyArray<string> =>
   pipe(Str.split(/\r?\n/)(text), A.map(Str.trim), A.filter(Str.isNonEmpty));
@@ -776,7 +806,7 @@ const coverageStep = (cwd: string, options: CoverageTaskOptions) =>
     args: turboRunArgs(["coverage"], options.args),
     cwd,
     env: {
-      VITEST_COVERAGE_RATCHET: "1",
+      ...coverageEnvironment(),
       ...(options.writeBaseline ? { VITEST_COVERAGE_REPORT_ONLY: "1" } : {}),
     },
   });

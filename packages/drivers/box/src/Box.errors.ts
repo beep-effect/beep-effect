@@ -18,10 +18,10 @@ import type { BoxMethodName as BoxMethodNameType } from "./_generated/Box.models
 const $I = $BoxId.create("Box.errors");
 
 // Shared driver codec-statics idiom; drivers are independent and have no in-family home — future foundation capability candidate.
-// fallow-ignore-next-line code-duplication
 const withLiteralKitCodecStatics = <Sch extends S.Top & S.ConstraintDecoder<unknown>>(
   schema: Sch
 ): Sch & {
+  // fallow-ignore-next-line code-duplication
   readonly decodeOption: (input: unknown) => O.Option<Sch["Type"]>;
   readonly fromUnknown: (input: unknown) => Sch["Type"];
 } =>
@@ -227,7 +227,7 @@ export class BoxError extends TaggedErrorClass<BoxError>($I`BoxError`)(
    * @since 0.0.0
    */
   static readonly fromReason = (reason: BoxErrorReason, options: BoxErrorOptionsInput = {}): BoxError => {
-    const input = BoxErrorOptionsInput.make(options);
+    const input = BoxErrorOptionsInput.make({ ...options });
     return BoxError.make({
       reason,
       cause: pipe(O.fromUndefinedOr(input.cause), O.map(causeLabelFromInput)),

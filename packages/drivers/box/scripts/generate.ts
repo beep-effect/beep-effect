@@ -239,17 +239,18 @@ const annotatedGeneratedSchemaExpression = (name: string, description: string, s
 const withGeneratedCodecStatics = (expression: string): string =>
   pipeExpression(expression, "SchemaUtils.withCodecStatics");
 
-const withGeneratedLiteralKitCodecStatics = (expression: string): string =>
-  pipeExpression(expression, "withLiteralKitCodecStatics");
-
 const renderGeneratedSchemaConst = (name: string, description: string, schemaExpression: string): string => {
   if (isLiteralKitExpression(schemaExpression)) {
-    const baseName = `${name}Base`;
-    return `const ${baseName} = ${schemaExpression};
-export const ${name} = ${pipeExpression(
-      withGeneratedLiteralKitCodecStatics(annotatedGeneratedSchemaExpression(name, description, baseName)),
-      `SchemaUtils.withLiteralKitStatics(${baseName})`
-    )}`;
+    return `export const ${name} = ${schemaExpression}.pipe(
+  (schema) =>
+    schema.pipe(
+      $I.annoteSchema(${stringLiteral(name)}, {
+        description: ${stringLiteral(description)}
+      }),
+      withLiteralKitCodecStatics,
+      SchemaUtils.withLiteralKitStatics(schema)
+    )
+)`;
   }
 
   return `export const ${name} = ${withGeneratedCodecStatics(
@@ -1081,9 +1082,12 @@ import * as S from "effect/Schema";
 
 const $I = $BoxId.create("_generated/Box.models.gen");
 
+// Kept local because importing this generic helper makes TypeScript instantiate it
+// against thousands of generated schemas and exceed the compiler's depth limit.
 const withLiteralKitCodecStatics = <Sch extends S.Top & S.ConstraintDecoder<unknown>>(
   schema: Sch
 ): Sch & {
+  // fallow-ignore-next-line code-duplication
   readonly decodeOption: (input: unknown) => import("effect/Option").Option<Sch["Type"]>;
   readonly fromUnknown: (input: unknown) => Sch["Type"];
 } =>
@@ -1209,16 +1213,13 @@ export type BoxSdkDateTime = typeof BoxSdkDateTime.Type;
  * @category schemas
  * @since 0.0.0
  */
-const BoxMethodNameBase = LiteralKit([
+${renderGeneratedSchemaConst(
+  "BoxMethodName",
+  "Generated Box SDK method names wrapped by the Box technical driver.",
+  `LiteralKit([
   ${renderedMethodNames}
-]);
-export const BoxMethodName = BoxMethodNameBase.pipe(
-  $I.annoteSchema("BoxMethodName", {
-    description: "Generated Box SDK method names wrapped by the Box technical driver."
-  }),
-  withLiteralKitCodecStatics,
-  SchemaUtils.withLiteralKitStatics(BoxMethodNameBase)
-);
+])`
+)};
 
 /**
  * Type for {@link BoxMethodName}.

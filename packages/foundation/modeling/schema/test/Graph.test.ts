@@ -128,11 +128,11 @@ describe("DirectedGraph", () => {
     expect(GraphSchema.isGraph(decoded)).toBe(true);
     expect(decoded.type).toBe("directed");
     expect(decoded.mutable).toBe(false);
-    expect(A.fromIterable(decoded.nodes.entries())).toEqual([
+    expect(A.fromIterable(Graph_.entries(Graph_.nodes(decoded)))).toEqual([
       [0, 1],
       [1, 2],
     ]);
-    expect(A.fromIterable(decoded.edges.entries())).toEqual([
+    expect(A.fromIterable(Graph_.entries(Graph_.edges(decoded)))).toEqual([
       [0, new Graph_.Edge({ source: 0, target: 1, data: "a" })],
     ]);
   });
@@ -224,7 +224,9 @@ describe("UndirectedGraph", () => {
 
     expect(decoded.type).toBe("undirected");
     expect(decoded.mutable).toBe(false);
-    expect(A.fromIterable(decoded.edges.entries())).toEqual([[0, new Graph_.Edge({ source: 0, target: 1, data: 1 })]]);
+    expect(A.fromIterable(Graph_.entries(Graph_.edges(decoded)))).toEqual([
+      [0, new Graph_.Edge({ source: 0, target: 1, data: 1 })],
+    ]);
   });
 
   it("validates existing immutable undirected graphs with nested transforms", () => {
@@ -242,7 +244,7 @@ describe("UndirectedGraph", () => {
 
     expect(decoded.type).toBe("undirected");
     expect(decoded.mutable).toBe(false);
-    expect(A.fromIterable(decoded.nodes.entries())).toEqual([
+    expect(A.fromIterable(Graph_.entries(Graph_.nodes(decoded)))).toEqual([
       [0, 1],
       [1, 2],
     ]);
@@ -264,7 +266,7 @@ describe("Graph FromSelf schemas", () => {
 
     expect(decoded.type).toBe("directed");
     expect(decoded.mutable).toBe(false);
-    expect(A.fromIterable(decoded.nodes.entries())).toEqual([
+    expect(A.fromIterable(Graph_.entries(Graph_.nodes(decoded)))).toEqual([
       [0, 1],
       [1, 2],
     ]);
@@ -317,7 +319,7 @@ describe("Graph FromSelf schemas", () => {
 
     expect(decoded.type).toBe("directed");
     expect(decoded.mutable).toBe(true);
-    expect(A.fromIterable(decoded.nodes.entries())).toEqual([
+    expect(A.fromIterable(Graph_.entries(Graph_.nodes(decoded)))).toEqual([
       [0, 1],
       [1, 2],
     ]);
