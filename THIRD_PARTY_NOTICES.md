@@ -19,7 +19,8 @@ Upstream repositories:
   - Pinned release: `v3.2.66`
   - Pinned commit: [`fad63b383b92f9446c223ddc12bf0b6fd1a6b44c`](https://github.com/freelawproject/reporters-db/commit/fad63b383b92f9446c223ddc12bf0b6fd1a6b44c)
   - Affected material: generated reporter records, editions, variations,
-    abbreviations, citation types, regular expressions, and parity fixtures.
+    case-name and state abbreviations, journals, laws, citation types, regular
+    expression fragments, and parity fixtures.
 - eyecite: <https://github.com/freelawproject/eyecite>
   - Pinned commit: [`04d82c032ad5fd0f9ab72a61c87110c46ee8f52e`](https://github.com/freelawproject/eyecite/commit/04d82c032ad5fd0f9ab72a61c87110c46ee8f52e)
   - Affected material: extraction-pipeline behavior, ported/reimplemented

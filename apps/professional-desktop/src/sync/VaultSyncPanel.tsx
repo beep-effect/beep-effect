@@ -34,7 +34,19 @@ const syncFailureMessage = failureMessageOr("Vault sync failed.");
 
 // Sync outcomes are announced in one slot; the kind keeps a success from being
 // painted (and announced) as a failure.
-type ActionMessage = { readonly kind: "error" | "success"; readonly text: string };
+const ActionMessage = S.Union([
+  S.Struct({ kind: S.tag("error"), text: S.String }),
+  S.Struct({ kind: S.tag("success"), text: S.String }),
+]).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("ActionMessage", {
+    description:
+      "Sync outcomes are announced in one slot; the kind keeps a success from being\n" +
+      "painted (and announced) as a failure.",
+  })
+);
+
+type ActionMessage = typeof ActionMessage.Type;
 
 const reviewFailureMessage = failureMessageOr("Marking the conflict reviewed failed.");
 
@@ -214,11 +226,13 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
     void Effect.runPromise(
       Effect.tryPromise({ try: () => triggerSync(DEFAULT_WORKSPACE_ID), catch: syncFailureMessage }).pipe(
         Effect.matchEffect({
-          onFailure: (message) => Effect.sync(() => setActionMessage({ kind: "error", text: message })),
+          onFailure: (message) =>
+            Effect.sync(() => setActionMessage(ActionMessage.cases.error.make({ text: message }))),
           // A successful pass used to clear the message and return the button to
           // its resting state, which is indistinguishable from having done
           // nothing — especially when every count is zero.
-          onSuccess: () => Effect.sync(() => setActionMessage({ kind: "success", text: "Sync complete." })),
+          onSuccess: () =>
+            Effect.sync(() => setActionMessage(ActionMessage.cases.success.make({ text: "Sync complete." }))),
         }),
         Effect.ensuring(Effect.sync(() => setSyncing(false)))
       )
@@ -240,7 +254,8 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
         catch: reviewFailureMessage,
       }).pipe(
         Effect.matchEffect({
-          onFailure: (message) => Effect.sync(() => setActionMessage({ kind: "error", text: message })),
+          onFailure: (message) =>
+            Effect.sync(() => setActionMessage(ActionMessage.cases.error.make({ text: message }))),
           onSuccess: () => Effect.sync(() => setActionMessage(null)),
         }),
         Effect.ensuring(Effect.sync(() => setReviewingId(null)))

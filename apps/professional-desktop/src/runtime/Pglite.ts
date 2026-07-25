@@ -36,6 +36,7 @@ import { TaggedErrorClass } from "@beep/schema";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { Clock, Config, Effect, FileSystem, Layer, Path } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import btreeGistBundlePath from "../../../../node_modules/@electric-sql/pglite/dist/btree_gist.tar.gz" with {
@@ -232,7 +233,7 @@ export const ensureCompatibleChatDbDataDir = Effect.fn("ProfessionalDesktop.Pgli
     }
 
     const entries = yield* fs.readDirectory(dataDir);
-    if (entries.length === 0) {
+    if (A.isArrayEmpty(entries)) {
       return true;
     }
 

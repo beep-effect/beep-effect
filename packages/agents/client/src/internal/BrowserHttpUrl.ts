@@ -6,15 +6,22 @@
  * @since 0.0.0
  */
 
+import { $AgentsClientId } from "@beep/identity";
 import { O, pipe, Str } from "@beep/utils";
 import { Result } from "effect";
 import { dual } from "effect/Function";
+import * as S from "effect/Schema";
 
-type BrowserHttpRuntime = Readonly<{
-  location: Readonly<{
-    origin: string;
-  }>;
-}>;
+const $I = $AgentsClientId.create("internal/BrowserHttpUrl");
+
+class BrowserHttpRuntime extends S.Class<BrowserHttpRuntime>($I`BrowserHttpRuntime`)(
+  {
+    location: S.Struct({ origin: S.String }),
+  },
+  $I.annote("BrowserHttpRuntime", {
+    description: "Browser http runtime.",
+  })
+) {}
 
 interface ResolveBrowserHttpUrl {
   (runtime: BrowserHttpRuntime | undefined, path: `/${string}`): O.Option<string>;

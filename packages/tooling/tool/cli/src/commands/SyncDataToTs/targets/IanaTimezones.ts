@@ -6,9 +6,9 @@
  */
 
 import { A, dual, O, P, Str } from "@beep/utils";
-import { Effect, flow, HashSet, Order, pipe } from "effect";
+import { Effect, flow, Order, pipe } from "effect";
 import * as R from "effect/Record";
-import { Parser } from "tar";
+import { extractArchiveTextEntries } from "../internal/FreeLawProject.ts";
 import {
   fetchSource,
   formatJson,
@@ -18,9 +18,8 @@ import {
   outputFile,
   sourceMetadata,
 } from "../internal/Source.ts";
-import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.ts";
-import type { ReadEntry } from "tar";
-import type { SyncDataTarget } from "../SyncDataToTs.schemas.ts";
+import { SyncDataTargetProjection } from "../SyncDataToTs.schemas.ts";
+import type { SyncDataTarget, SyncDataToTsError } from "../SyncDataToTs.schemas.ts";
 
 const targetId = "iana-timezones" as const;
 const outputPath = "packages/foundation/primitive/data/src/generated/iana-timezones.ts" as const;
@@ -44,7 +43,7 @@ class IanaTimezoneEntry {
 
 type TzdbTextEntries = Readonly<Record<string, string>>;
 
-const TZDB_TEXT_FILES = HashSet.make(
+const TZDB_TEXT_FILES: ReadonlyArray<string> = [
   "africa",
   "antarctica",
   "asia",
@@ -56,63 +55,15 @@ const TZDB_TEXT_FILES = HashSet.make(
   "northamerica",
   "southamerica",
   "version",
-  "zone1970.tab"
-);
+  "zone1970.tab",
+];
 
 const extractTzdbTextEntries = (bytes: Uint8Array): Effect.Effect<TzdbTextEntries, SyncDataToTsError> =>
-  Effect.callback<TzdbTextEntries, SyncDataToTsError>((resume) => {
-    const entries = R.empty<string, string>();
-    let openEntries = 0;
-    let parserEnded = false;
-    let completed = false;
-    const parser = new Parser({
-      strict: true,
-      filter: (path) => HashSet.has(TZDB_TEXT_FILES, path),
-    });
-    const fail = (cause: unknown) => {
-      if (completed) {
-        return;
-      }
-      completed = true;
-      resume(
-        Effect.fail(
-          SyncDataToTsError.make({
-            message: "Failed to parse IANA tzdata archive.",
-            targetId,
-            cause,
-          })
-        )
-      );
-    };
-    const finish = () => {
-      if (completed || !parserEnded || openEntries > 0) {
-        return;
-      }
-      completed = true;
-      resume(Effect.succeed(entries));
-    };
-    const collectEntry = (entry: ReadEntry) => {
-      openEntries += 1;
-      const chunks = A.empty<Buffer>();
-
-      entry.on("data", (chunk: Buffer) => {
-        chunks.push(chunk);
-      });
-      entry.on("error", fail);
-      entry.on("end", () => {
-        entries[entry.path] = Buffer.concat(chunks).toString("utf8");
-        openEntries -= 1;
-        finish();
-      });
-    };
-
-    parser.on("entry", collectEntry);
-    parser.on("error", fail);
-    parser.on("end", () => {
-      parserEnded = true;
-      finish();
-    });
-    parser.end(Buffer.from(bytes));
+  extractArchiveTextEntries({
+    targetId,
+    bytes,
+    pathSuffixes: TZDB_TEXT_FILES,
+    errorMessage: "Failed to parse IANA tzdata archive.",
   });
 
 const extractPatternMatches: {

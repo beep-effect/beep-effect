@@ -1,5 +1,8 @@
 import { syncDataToTsCommand } from "@beep/repo-cli/commands/SyncDataToTs";
 import {
+  assembleCourtsData,
+  assertPinnedArchive,
+  decodeReportersDbSourceData,
   fetchSource,
   formatJson,
   formatTsDocCommentValue,
@@ -11,6 +14,8 @@ import {
   normalizeJson,
   outputFile,
   parseCsvSource,
+  renderUnknownJsonModule,
+  SyncDataFetchedSource,
   SyncDataTargetProjection,
   sourceMetadata,
   syncDataTargets,
@@ -315,6 +320,143 @@ describe("sync-data-to-ts", { concurrent: false }, () => {
     expect(formatted).toBe("2026-01-01 * / export const injected = true;");
     expect(formatted).not.toContain("*/");
     expect(formatted).not.toContain("\n");
+  });
+
+  it.effect(
+    "rejects Free Law Project archives that do not match the pinned digest",
+    Effect.fnUntraced(function* () {
+      const source = SyncDataFetchedSource.make({
+        bytes: new Uint8Array(),
+        id: "fixture-archive",
+        sha256: "actual",
+        text: "",
+        url: "https://example.test/archive.tar.gz",
+      });
+      const error = yield* Effect.flip(
+        assertPinnedArchive({
+          expectedSha256: "expected",
+          source,
+          targetId: "fixture-target",
+        })
+      );
+
+      expect(error).toMatchObject({
+        _tag: "SyncDataToTsError",
+        targetId: "fixture-target",
+      });
+      expect(error.message).toContain("SHA-256 mismatch");
+    })
+  );
+
+  it.effect(
+    "decodes all six reporters-db datasets through target-local schemas",
+    Effect.fnUntraced(function* () {
+      const data = yield* decodeReportersDbSourceData({
+        "/reporters_db/data/case_name_abbreviations.json": `{"Co.":["Company"]}`,
+        "/reporters_db/data/journals.json": `{"Example J.":[{"cite_type":"journal","end":null,"examples":[],"name":"Example Journal","regexes":[],"start":null,"variations":[]}]}`,
+        "/reporters_db/data/laws.json": `{"Example Code":[{"cite_type":"statute","end":null,"examples":[],"jurisdiction":"Example","name":"Example Code","regexes":[],"start":null,"variations":[]}]}`,
+        "/reporters_db/data/regexes.json": `{"full_cite":{"":"$volume $reporter $page"}}`,
+        "/reporters_db/data/reporters.json": `{"Ex.":[{"cite_type":"state","editions":{"Ex.":{"end":null,"start":"2000-01-01"}},"mlz_jurisdiction":[],"name":"Example Reporter","variations":{}}]}`,
+        "/reporters_db/data/state_abbreviations.json": `{"Ex.":"Example"}`,
+      });
+
+      expect(data.caseNameAbbreviations["Co."]).toEqual(["Company"]);
+      expect(data.journals["Example J."]?.[0]?.name).toBe("Example Journal");
+      expect(data.laws["Example Code"]?.[0]?.jurisdiction).toBe("Example");
+      expect(data.regexes).toMatchObject({ full_cite: { "": "$volume $reporter $page" } });
+      expect(data.reporters["Ex."]?.[0]?.editions["Ex."]?.start).toBe("2000-01-01");
+      expect(data.stateAbbreviations["Ex."]).toBe("Example");
+    })
+  );
+
+  it.effect(
+    "assembles courts-db templates and inherits only missing parent fields",
+    Effect.fnUntraced(function* () {
+      const courts = yield* assembleCourtsData(
+        `[
+          {
+            "citation_string": "Parent",
+            "dates": [{ "end": null, "start": "2000-01-01" }],
+            "examples": [],
+            "id": "parent",
+            "level": "gjc",
+            "location": "Example",
+            "name": "Parent Court",
+            "regex": ["Parent"],
+            "system": "state",
+            "type": "trial"
+          },
+          {
+            "citation_string": "",
+            "examples": [],
+            "id": "child",
+            "level": null,
+            "name": "Child Court",
+            "parent": "parent",
+            "regex": ["\${county} \${places} \${1-2} $$ $county"],
+            "system": "state",
+            "type": null
+          }
+        ]`,
+        `{"county":"County"}`,
+        { places: "North\nSouth\n" },
+        `ordinals = [
+          "first",
+          "second",
+        ]`
+      );
+
+      expect(courts[1]).toMatchObject({
+        dates: [{ end: null, start: "2000-01-01" }],
+        location: "Example",
+        type: null,
+        regex: ["County (North|South) ((first)|(second)) $ County"],
+      });
+    })
+  );
+
+  it.effect(
+    "rejects unresolved courts-db template variables",
+    Effect.fnUntraced(function* () {
+      const error = yield* Effect.flip(
+        assembleCourtsData(
+          `[
+            {
+              "citation_string": "",
+              "dates": [{ "end": null, "start": null }],
+              "examples": [],
+              "id": "missing-variable",
+              "level": null,
+              "location": "Example",
+              "name": "Missing Variable",
+              "regex": ["\${missing}"],
+              "system": "state",
+              "type": null
+            }
+          ]`,
+          `{}`,
+          {},
+          `ordinals = [
+            "first",
+          ]`
+        )
+      );
+
+      expect(error.message).toContain("Unresolved template variables");
+    })
+  );
+
+  it("renders internal generated data through Effect Schema", () => {
+    const rendered = renderUnknownJsonModule({
+      exportName: "FixtureData",
+      refreshCommand: "bun run fixture",
+      value: { value: "quoted" },
+    });
+
+    expect(rendered).toContain("S.UnknownFromJsonString");
+    expect(rendered).toContain("Result.getOrThrow");
+    expect(rendered).toContain("export const FixtureData: unknown");
+    expect(rendered).not.toContain("JSON.parse");
   });
 
   it("writes the generated ISO 4217 module in write mode", () =>

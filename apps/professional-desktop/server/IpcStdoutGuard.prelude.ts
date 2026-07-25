@@ -17,7 +17,7 @@
  * file-descriptor writes (for example `fs.writeSync(1, …)`). The sidecar IPC stdio
  * integration test asserts stdout stays a clean frame stream as a regression net.
  */
-import * as P from "effect/Predicate";
+import { A, P, pipe, Str } from "@beep/utils";
 
 // biome-ignore lint/suspicious/noUndeclaredEnvVars: CHAT_TRANSPORT is declared in turbo.json under global.passThroughEnv.
 export const ipcTransport = Bun.env.CHAT_TRANSPORT === "ipc";
@@ -36,8 +36,8 @@ const originalBunWriteUnknown = originalBunWrite as (
 export const protocolStdout = { write: originalStdoutWrite } as const;
 
 const writeConsoleToStderr = (...values: Array<unknown>): void => {
-  const line = values.map(String).join(" ");
-  process.stderr.write(line.length === 0 ? "\n" : `${line}\n`);
+  const line = pipe(values, A.map(String), A.join(" "));
+  process.stderr.write(Str.isEmpty(line) ? "\n" : `${line}\n`);
 };
 
 const writeDirectStdoutToStderr = (
@@ -47,7 +47,7 @@ const writeDirectStdoutToStderr = (
 ): boolean => {
   const done = P.isFunction(encodingOrCallback) ? encodingOrCallback : callback;
   const encoding = P.isString(encodingOrCallback) ? encodingOrCallback : undefined;
-  return encoding === undefined ? process.stderr.write(chunk, done) : process.stderr.write(chunk, encoding, done);
+  return P.isUndefined(encoding) ? process.stderr.write(chunk, done) : process.stderr.write(chunk, encoding, done);
 };
 
 const writeBunStdoutToStderr = ((destination: unknown, input: unknown) =>

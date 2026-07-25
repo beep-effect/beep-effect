@@ -20,6 +20,7 @@ import { ChatRpcs } from "@beep/agents-use-cases/public";
 import { redactCauseForClient } from "@beep/observability";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { Effect, Stream } from "effect";
+import * as A from "effect/Array";
 import { Atom, AtomRegistry } from "effect/unstable/reactivity";
 import { RpcClient } from "effect/unstable/rpc";
 import { decodeWorkspaceId, userDocument } from "@/chat/ChatFixtures";
@@ -118,7 +119,7 @@ export function IpcSpikePanel(): JSX.Element {
         </button>
       </div>
       <div style={{ maxHeight: 180, overflow: "auto" }}>
-        {lines.map((line, index) => (
+        {A.map(lines, (line, index) => (
           <div key={`${index}-${line}`}>{line}</div>
         ))}
       </div>

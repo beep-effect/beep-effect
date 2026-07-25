@@ -12,8 +12,7 @@
  * @category hooks
  * @since 0.0.0
  */
-
-import * as O from "effect/Option";
+import { O, P, thunkUndefined } from "@beep/utils";
 import { useSyncExternalStore } from "react";
 import type { GroupId } from "@beep/dock";
 import type { DockviewAdapterApi } from "@beep/dock-react";
@@ -62,7 +61,7 @@ export const useDockAtom = <A>(graph: DesktopDockGraph, atom: Atom.Atom<A>): A =
 export const useFocusedDockGroup = (graph: DesktopDockGraph, api: DockviewAdapterApi | undefined): O.Option<GroupId> =>
   useSyncExternalStore(
     (onStoreChange) =>
-      api === undefined ? () => undefined : graph.registry.subscribe(api.atoms.focusedGroup, onStoreChange),
-    () => (api === undefined ? O.none<GroupId>() : graph.registry.get(api.atoms.focusedGroup)),
+      P.isUndefined(api) ? thunkUndefined : graph.registry.subscribe(api.atoms.focusedGroup, onStoreChange),
+    () => (P.isUndefined(api) ? O.none<GroupId>() : graph.registry.get(api.atoms.focusedGroup)),
     O.none<GroupId>
   );
