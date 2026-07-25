@@ -1,0 +1,13 @@
+
+ RUN  v4.1.10 /home/elpresidank/YeeBois/projects/beep-effect2/packages/_internal/db-admin
+
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pg.test.ts > EpistemicBitemporalSpike (external Postgres) > resets, migrates the candidate DDL, and the exclusion constraint enforces on real Postgres 29ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pg.test.ts > EpistemicBitemporalSpike (external Postgres) > race A: concurrent supersession is deterministic — loser observes no open head and aborts 258ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pg.test.ts > EpistemicBitemporalSpike (external Postgres) > race B: concurrent creation is deterministic — the second open head is rejected by a backstop 2ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pg.test.ts > EpistemicBitemporalSpike (external Postgres) > race C: a lock-skipping writer inserting an overlapping closed interval is rejected 3ms
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  12:19:08
+   Duration  3.76s (transform 774ms, setup 258ms, import 3.15s, tests 293ms, environment 0ms)
+

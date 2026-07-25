@@ -252,9 +252,13 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/pglite": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@beep/utils": "workspace:^",
+        "@effect/platform-node": "catalog:",
+        "@effect/sql-pg": "catalog:",
         "@effect/vitest": "catalog:",
+        "@electric-sql/pglite": "catalog:",
         "@types/node": "catalog:",
         "drizzle-kit": "catalog:",
       },

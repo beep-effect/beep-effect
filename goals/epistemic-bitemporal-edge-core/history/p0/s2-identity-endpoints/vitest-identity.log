@@ -1,0 +1,18 @@
+
+ RUN  v4.1.10 /home/elpresidank/YeeBois/projects/beep-effect2/packages/_internal/db-admin
+
+ ✓ test/integration/spike/EpistemicBitemporalIdentity.test.ts > EpistemicBitemporalIdentity (logical key digest) > is deterministic for identical identities 1ms
+ ✓ test/integration/spike/EpistemicBitemporalIdentity.test.ts > EpistemicBitemporalIdentity (logical key digest) > collapses both endpoint orderings of a symmetric relation to one key 0ms
+ ✓ test/integration/spike/EpistemicBitemporalIdentity.test.ts > EpistemicBitemporalIdentity (logical key digest) > keeps the two orderings of an asymmetric relation distinct 0ms
+ ✓ test/integration/spike/EpistemicBitemporalIdentity.test.ts > EpistemicBitemporalIdentity (logical key digest) > collapses qualifier insertion-order permutations to one key 0ms
+ ✓ test/integration/spike/EpistemicBitemporalIdentity.test.ts > EpistemicBitemporalIdentity (logical key digest) > partitions distinct qualifier values apart 0ms
+ ✓ test/integration/spike/EpistemicBitemporalIdentity.test.ts > EpistemicBitemporalIdentity (logical key digest) > partitions matter scope apart, including none vs some 0ms
+ ✓ test/integration/spike/EpistemicBitemporalIdentity.test.ts > EpistemicBitemporalIdentity (logical key digest) > partitions evidence scope apart 0ms
+ ✓ test/integration/spike/EpistemicBitemporalIdentity.test.ts > EpistemicBitemporalIdentity (logical key digest) > partitions relations and endpoint kinds apart 0ms
+ ✓ test/integration/spike/EpistemicBitemporalIdentity.test.ts > EpistemicBitemporalIdentity (logical key digest) > never lets a scope value collide with the absent-scope marker 0ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  12:04:43
+   Duration  346ms (transform 123ms, setup 266ms, import 8ms, tests 3ms, environment 0ms)
+
