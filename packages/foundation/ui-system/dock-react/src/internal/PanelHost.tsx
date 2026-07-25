@@ -5,6 +5,7 @@ import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import { createPortal } from "react-dom";
 import type { Panel } from "@beep/dock";
 import type { DockAtomGraph, DockRenderer } from "../DockReact.types.ts";
@@ -28,7 +29,7 @@ const PanelContent = (props: {
   return PanelView.match(panel.view, {
     text: ({ text }) => <div data-testid={`panel-${panel.id}`}>{text}</div>,
     component: ({ input, renderer }) =>
-      O.match(O.fromUndefinedOr(props.components[renderer]), {
+      O.match(R.get(props.components, renderer), {
         onNone: () => <div role="alert">Missing renderer: {renderer}</div>,
         onSome: (Renderer) => <Renderer params={input} api={{ id: panel.id }} containerApi={state.api} />,
       }),

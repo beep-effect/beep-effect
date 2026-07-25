@@ -1522,17 +1522,22 @@ const normalizeGraphCentrality = (centrality: Float64Array): Float32Array<ArrayB
   return normalized;
 };
 
+const graphBetweennessExactNodeLimit = 1_500;
+const graphBetweennessSampleSourceLimit = 512;
+
 const graphBetweennessCentrality = (
   nodeCount: number,
   adjacency: ReadonlyArray<ReadonlyArray<number>>
 ): Float32Array<ArrayBuffer> => {
   const centrality = new Float64Array(nodeCount);
+  const sourceStride =
+    nodeCount > graphBetweennessExactNodeLimit ? Math.ceil(nodeCount / graphBetweennessSampleSourceLimit) : 1;
   let source = 0;
 
   while (source < nodeCount) {
     const [predecessors, pathCounts, stack] = graphShortestPathsFromSource(source, nodeCount, adjacency);
     accumulateGraphDependencies(source, nodeCount, predecessors, pathCounts, stack, centrality);
-    source += 1;
+    source += sourceStride;
   }
 
   return normalizeGraphCentrality(centrality);
