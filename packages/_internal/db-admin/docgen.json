@@ -70,8 +70,6 @@
       "@beep/epistemic-tables/entities/UsageRecord": [
         "../../../packages/epistemic/tables/src/entities/UsageRecord/index.ts"
       ],
-      "@beep/pglite": ["../../../packages/drivers/pglite/src/index.ts"],
-      "@beep/pglite/*": ["../../../packages/drivers/pglite/src/*.ts"],
       "@beep/postgres": ["../../../packages/drivers/postgres/src/index.ts"],
       "@beep/postgres/client": [
         "../../../packages/drivers/postgres/src/PostgresClient.service.ts"

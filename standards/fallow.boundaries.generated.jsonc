@@ -1182,7 +1182,6 @@
           "@beep/db-admin",
           "@beep/documents-tables",
           "@beep/epistemic-tables",
-          "@beep/pglite",
           "@beep/postgres",
           "@beep/test-utils",
           "@beep/utils",
@@ -1193,7 +1192,6 @@
           "@beep/db-admin",
           "@beep/documents-tables",
           "@beep/epistemic-tables",
-          "@beep/pglite",
           "@beep/postgres",
           "@beep/test-utils",
           "@beep/utils",
@@ -2295,6 +2293,7 @@
           "@beep/fc-runs",
           "@beep/identity",
           "@beep/pglite",
+          "@beep/postgres",
           "@beep/schema",
           "@beep/utils"
         ],
@@ -2302,6 +2301,7 @@
           "@beep/fc-runs",
           "@beep/identity",
           "@beep/pglite",
+          "@beep/postgres",
           "@beep/schema",
           "@beep/utils"
         ]

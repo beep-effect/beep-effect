@@ -15,9 +15,6 @@
       "path": "../../documents/tables/tsconfig.json"
     },
     {
-      "path": "../../drivers/pglite/tsconfig.json"
-    },
-    {
       "path": "../../drivers/postgres/tsconfig.json"
     },
     {

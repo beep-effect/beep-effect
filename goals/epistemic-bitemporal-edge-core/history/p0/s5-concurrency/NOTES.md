@@ -28,7 +28,7 @@ fallback only. No last-writer-wins anywhere. No stop condition fired.
   ```
 - Client: `@effect/sql-pg` `PgClient` pool (`maxConnections: 4`); each racing
   transaction runs `sql.withTransaction` on its own fiber → its own pooled connection.
-- Suite: `packages/_internal/db-admin/test/integration/spike/EpistemicBitemporalSpike.pg.test.ts`
+- Suite: `packages/drivers/pglite/test/integration/spike/EpistemicBitemporalSpike.pg.test.ts`
   — 4/4, run log [`vitest-pg-external.log`](./vitest-pg-external.log). Migration +
   extension + constraint-catalog proof on the real server is the suite's first test
   (journal isolated in schema `epistemic_spike_journal`).
@@ -105,7 +105,7 @@ outcomes sequentially (run log
 ```sh
 docker run -d --name beep-spike-pg -e POSTGRES_PASSWORD=postgres \
   -p 55432:5432 pgvector/pgvector:pg17
-cd packages/_internal/db-admin
+cd packages/drivers/pglite
 BEEP_SPIKE_PG_URL=postgres://postgres:postgres@localhost:55432/postgres \
   npx vitest run test/integration/spike/EpistemicBitemporalSpike.pg.test.ts
 docker rm -f beep-spike-pg   # cleanup

@@ -40,7 +40,7 @@ Why the digest is the partition key rather than a multi-column constraint:
   keeps the GiST index small and the constraint readable.
 
 Canonicalization rules (prototyped in
-`packages/_internal/db-admin/test/integration/spike/EpistemicBitemporalIdentity.test.ts`):
+`packages/drivers/pglite/test/integration/spike/EpistemicBitemporalIdentity.test.ts`):
 
 - Fixed component order under a `v1` prefix, joined with `|`.
 - Endpoints encode as `kind:ref`; **symmetric relations normalize endpoint order**
@@ -109,7 +109,7 @@ added when those tables exist. The schema-level rejection of arbitrary endpoints
 ## How to run
 
 ```sh
-cd packages/_internal/db-admin
+cd packages/drivers/pglite
 npx vitest run test/integration/spike/EpistemicBitemporalIdentity.test.ts
 npx vitest run test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts
 ```

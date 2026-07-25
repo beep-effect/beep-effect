@@ -104,10 +104,19 @@ Decision 7) are unchanged and not restated here.
    choreography (DB-side timer, holds the lock); read lane-selector env via a Config
    boot snapshot, never `process.env`.
 9. **Spike disposal:** P1 promotes the fixture DDL into the real generated migration
-   and real tests, then DELETES `test/integration/spike/` and both fixture folders in
-   the same PR. The three db-admin devDependencies added for the spike
-   (`@beep/pglite`, `@electric-sql/pglite`, `@effect/platform-node`) stay if the real
-   integration tests keep using them (expected), else revert.
+   and real tests, then DELETES `packages/drivers/pglite/test/integration/spike/` and
+   both fixture folders in the same PR. The two `@beep/pglite` devDependencies added
+   for the spike (`@beep/postgres`, `@electric-sql/pglite`) revert with it unless the
+   driver's own tests keep using them.
+10. **db-admin `test/` is a generated architecture-proof surface — do not hand-write
+    files there.** The repo-cli `architecture-operation-plan` test sweeps db-admin
+    `src/`, `test/`, `dtslint/`, and `drizzle/` (`isManifestIncludedRelativeFile`) and
+    requires every swept file to be reproduced by the architecture generator; the spike's
+    first placement under db-admin failed CI exactly this way. Consequence for P1: the
+    real epistemic migration + its db-admin proof tests must land through the
+    `bun run beep architecture` codegen/manifest path (three-place registration, item 7),
+    and any hand-authored integration tests belong in the owning slice or driver
+    package, never db-admin.
 
 ## 3. Provenance duties (from S1 — discharge in P1 with the ported material)
 

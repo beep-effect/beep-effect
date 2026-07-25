@@ -88,6 +88,6 @@ reopen` (precedent: `packages/drivers/pglite/test/integration/PgliteClient.persi
 ## How to run
 
 ```sh
-cd packages/_internal/db-admin
+cd packages/drivers/pglite
 npx vitest run test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts
 ```

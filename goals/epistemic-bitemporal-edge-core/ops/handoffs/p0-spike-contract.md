@@ -15,8 +15,8 @@ LOCKED (SPEC Constraints / exploration Decision 7); this phase selects enforceme
   source file. Shared `ClaimLifecycle`, `EntityTable`/`StorageKind`, and `@beep/test-utils` are
   untouched.
 - **Spike code is disposable but committed.** Suite + fixtures live under
-  `packages/_internal/db-admin/test/integration/spike/` and
-  `packages/_internal/db-admin/test/integration/fixtures/epistemic-bitemporal-spike/`, marked
+  `packages/drivers/pglite/test/integration/spike/` and
+  `packages/drivers/pglite/test/integration/fixtures/epistemic-bitemporal-spike/`, marked
   `// P0 SPIKE — disposable; superseded by P1` at file top. P1 either promotes or deletes them;
   the verdict records which.
 - **Pinned inputs** (record exact values in every NOTES.md): `@electric-sql/pglite` 0.5.4

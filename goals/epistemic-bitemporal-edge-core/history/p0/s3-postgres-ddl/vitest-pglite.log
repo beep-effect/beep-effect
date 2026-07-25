@@ -1,31 +1,31 @@
 
- RUN  v4.1.10 /home/elpresidank/YeeBois/projects/beep-effect2/packages/_internal/db-admin
+ RUN  v4.1.10 /home/elpresidank/YeeBois/projects/beep-effect2/packages/drivers/pglite
 
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > btree_gist loads and a gist exclusion constraint rejects overlap by name 923ms
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > candidate DDL applies through the db-admin migrate path and re-running is idempotent 783ms
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > int8range half-open semantics: NULL upper unbounded, adjacency disjoint, tstzrange parity 669ms
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > temporal indexes serve the overlap and as-of predicate shapes 715ms
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > ordered valid-time interval CHECK rejects inverted bounds 748ms
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > ordered transaction-time interval CHECK rejects inverted bounds 702ms
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > unique logical-version identity rejects a duplicate (logical_key, version) 749ms
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > dangling claim endpoint is rejected by the endpoint foreign key 716ms
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > arbitrary endpoint kind is rejected by the bounded-endpoint CHECK 710ms
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > endpoint kind/column mismatch is rejected by the bounded-endpoint CHECK 716ms
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > self-supersession is rejected by CHECK 718ms
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > closed-interval overlap among authoritative versions is rejected by the exclusion constraint 711ms
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > retroactive correction: same validAt, two knownAt values give former and corrected facts 743ms
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > fact-became-false supersession closes valid-time at the invalidating valid_from 730ms
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > late-arriving older fact inserts already-closed without displacing the newer open head 724ms
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > rejected verdict lands as a durable disposition row 747ms
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > no-extension lane: bare DDL applies and the open-head partial unique index rejects by name 720ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > btree_gist loads and a gist exclusion constraint rejects overlap by name 900ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > candidate DDL applies through the db-admin migrate path and re-running is idempotent 751ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > int8range half-open semantics: NULL upper unbounded, adjacency disjoint, tstzrange parity 696ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > temporal indexes serve the overlap and as-of predicate shapes 708ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > ordered valid-time interval CHECK rejects inverted bounds 711ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > ordered transaction-time interval CHECK rejects inverted bounds 748ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > unique logical-version identity rejects a duplicate (logical_key, version) 699ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > dangling claim endpoint is rejected by the endpoint foreign key 722ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > arbitrary endpoint kind is rejected by the bounded-endpoint CHECK 719ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > endpoint kind/column mismatch is rejected by the bounded-endpoint CHECK 733ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > self-supersession is rejected by CHECK 702ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > closed-interval overlap among authoritative versions is rejected by the exclusion constraint 710ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > retroactive correction: same validAt, two knownAt values give former and corrected facts 717ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > fact-became-false supersession closes valid-time at the invalidating valid_from 737ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > late-arriving older fact inserts already-closed without displacing the newer open head 697ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > rejected verdict lands as a durable disposition row 742ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > no-extension lane: bare DDL applies and the open-head partial unique index rejects by name 696ms
  ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > no-extension lane residual: closed-interval overlap is not rejected at DB level 707ms
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > sequential supersession loser: stale expectedVersion closes zero rows and aborts 739ms
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > sequential creation race loser: second open head is rejected by a spike_edge backstop 764ms
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > cycle probe: DB accepts a constructed supersession cycle; recursive CTE detects it 763ms
- ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > restart proof: history, lineage, dispositions, as-of answers, and constraints survive reopen 917ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > sequential supersession loser: stale expectedVersion closes zero rows and aborts 706ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > sequential creation race loser: second open head is rejected by a spike_edge backstop 757ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > cycle probe: DB accepts a constructed supersession cycle; recursive CTE detects it 734ms
+ ✓ test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts > EpistemicBitemporalSpike (PGlite) > restart proof: history, lineage, dispositions, as-of answers, and constraints survive reopen 870ms
 
  Test Files  1 passed (1)
       Tests  22 passed (22)
-   Start at  12:04:22
-   Duration  19.92s (transform 787ms, setup 258ms, import 3.19s, tests 16.41s, environment 0ms)
+   Start at  13:01:26
+   Duration  19.71s (transform 812ms, setup 255ms, import 3.23s, tests 16.17s, environment 0ms)
 

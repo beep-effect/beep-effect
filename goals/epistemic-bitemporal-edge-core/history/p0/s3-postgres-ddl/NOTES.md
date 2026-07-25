@@ -28,7 +28,7 @@ close-valid-time-at-invalidating-`valid_from` semantics. No stop condition fired
 ## The candidate design under test
 
 Archived verbatim as the committed migration fixture:
-`packages/_internal/db-admin/test/integration/fixtures/epistemic-bitemporal-spike/20260725000000_epistemic_bitemporal_spike/migration.sql`
+`packages/drivers/pglite/test/integration/fixtures/epistemic-bitemporal-spike/20260725000000_epistemic_bitemporal_spike/migration.sql`
 (the no-extension variant used by S4 sits beside it under
 `.../epistemic-bitemporal-spike-noext/`).
 
@@ -51,7 +51,7 @@ Archived verbatim as the committed migration fixture:
 
 ## Assertion evidence
 
-Suite: `packages/_internal/db-admin/test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts`
+Suite: `packages/drivers/pglite/test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts`
 — 21/21, run log [`vitest-pglite.log`](./vitest-pglite.log). External-lane counterpart in
 S5's notes. Highlights, keyed to the contract:
 
@@ -141,6 +141,6 @@ the kit cannot express" as a SPEC Exception Ledger entry. Drafted entry text is 
 ## How to run
 
 ```sh
-cd packages/_internal/db-admin
+cd packages/drivers/pglite
 npx vitest run test/integration/spike/EpistemicBitemporalSpike.pglite.test.ts
 ```
