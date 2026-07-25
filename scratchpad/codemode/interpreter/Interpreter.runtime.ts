@@ -24,7 +24,7 @@ import {
 } from "../Codemode.tool-runtime.ts";
 import {
   asNode,
-  type AstNode,
+  AstNode,
   AsyncIteratorSymbol,
   Binding,
   CodeModeFunction,
@@ -43,22 +43,25 @@ import {
   getNode,
   getOptionalNode,
   getString,
+  GlobalMethod,
   GlobalMethodReference,
-  GlobalMethodNamespace,
   GlobalNamespace,
   GlobalNamespaceName,
   InterpreterFailure,
   InterpreterRuntimeError,
+  IntrinsicMethod,
   IntrinsicReference,
   isRecord,
   IteratorSymbol,
   IteratorSymbols,
   JsonMethodReference,
+  JsonMethodName,
   MemberReference,
   OptionalShortCircuit,
   type ProgramNode,
   ProgramThrow,
   PromiseInstanceMethodReference,
+  PromiseMethodName,
   PromiseMethodReference,
   PromiseNamespace,
   RuntimeReference,
@@ -79,7 +82,6 @@ import {
   constructErrorValue
 } from "./Interpreter.errors.ts";
 import {
-  arrayStatics,
   type CallbackRunner,
   invokeArrayFrom,
   invokeGlobalMethod,
@@ -106,19 +108,14 @@ import {
 } from "./Interpreter.references.ts";
 import {ScopeStack} from "./Interpreter.scope.ts";
 import {
-  arrayMethods,
+  AssignmentOperator,
   AppliedBinaryOperator,
   boundedData,
   BinaryOperator,
   coerceToNumber,
   coerceToString,
-  compoundOperators,
   CompoundOperator,
-  ConsoleMethod,
-  dateMethods,
-  dateStatics,
   errorBrandName,
-  errorConstructors,
   escapeRegexHint,
   formatConsoleMessage,
   invokeCoercion,
@@ -126,33 +123,42 @@ import {
   invokeMathSumPrecise,
   invokeObjectFromEntries,
   invokeUriFunction,
-  jsonStatics,
+  LogicalAssignmentOperator,
+  LogicalOperator,
+  mathConstants,
+  numberConstants,
+  objectMethodsPreservingIdentity,
+  regexFailureReason,
+  regexpProperties,
+  UnaryOperator,
+  uriArgument,
+  urlArgument,
+  urlProperties,
+  urlWritableProperties,
+  UpdateOperator,
+  valueConstructors
+} from "../stdlib/index.ts";
+import {
+  arrayMethods,
+  arrayStatics,
+  ConsoleMethod,
+  dateMethods,
+  dateStatics,
   mapMethods,
   mapStatics,
-  mathConstants,
   mathMethods,
-  numberConstants,
   numberMethods,
   numberStatics,
-  objectMethodsPreservingIdentity,
   objectStatics,
-  promiseStatics,
-  regexFailureReason,
   regexpMethods,
-  regexpProperties,
   regexpStatics,
   setMethods,
   stringMethods,
   stringStatics,
-  uriArgument,
-  urlArgument,
   UrlMethod,
-  urlProperties,
   UrlSearchParamsMethod,
   UrlStatic,
-  urlWritableProperties,
-  valueConstructors
-} from "../stdlib/index.ts";
+} from "../Codemode.method-names.ts";
 import {
   CodeModeDate,
   CodeModeMap,
@@ -163,17 +169,6 @@ import {
   CodeModeURLSearchParams,
   isCodeModeValue,
 } from "../Codemode.values.ts";
-
-const globalStaticMembers: Partial<Record<GlobalNamespaceName, S.Top>> = {
-  Object: objectStatics,
-  Math: mathMethods,
-  Array: arrayStatics,
-  console: ConsoleMethod,
-  Date: dateStatics,
-  RegExp: regexpStatics,
-  Map: mapStatics,
-  URL: UrlStatic,
-};
 
 const MAX_ARRAY_LENGTH = 4_294_967_295;
 const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
@@ -351,6 +346,9 @@ const OpaqueMemberReference = S.Union([
 
 type OpaqueMemberReference = typeof OpaqueMemberReference.Type;
 
+const isDestructurableObject = (value: unknown): value is SafeObject | Array<unknown> =>
+  A.isArray(value) || S.is(SafeObjectSchema)(value);
+
 const copyIteratorSymbols = (
   source: object,
   target: object,
@@ -455,7 +453,7 @@ export class Interpreter<R> {
     for (const [name, value] of globals) {
       MutableHashMap.set(globalScope, name, Binding.new(false, value));
     }
-    for (const name of errorConstructors.Options) {
+    for (const name of ErrorConstructorName.Options) {
       MutableHashMap.set(
         globalScope,
         name,
@@ -591,16 +589,16 @@ export class Interpreter<R> {
 
   private hoistFunctions(statements: ReadonlyArray<unknown>): void {
     for (const statementValue of statements) {
-      if (!isRecord(statementValue) || statementValue.type !== "FunctionDeclaration") continue;
-      const node = statementValue as AstNode;
+      if (!AstNode.is(statementValue) || statementValue.type !== "FunctionDeclaration") continue;
+      const node = statementValue;
       this.scopes.declare(getString(getNode(node, "id"), "name"), this.createFunction(node), true, node);
     }
   }
 
   private predeclareLexical(statements: ReadonlyArray<unknown>): void {
     for (const statementValue of statements) {
-      if (!isRecord(statementValue) || statementValue.type !== "VariableDeclaration") continue;
-      const statement = statementValue as AstNode;
+      if (!AstNode.is(statementValue) || statementValue.type !== "VariableDeclaration") continue;
+      const statement = statementValue;
       const kind = getString(statement, "kind");
       if (kind === "var") continue;
       for (const declarationValue of getArray(statement, "declarations")) {
@@ -1342,7 +1340,7 @@ export class Interpreter<R> {
       }
 
       if (pattern.type === "ObjectPattern") {
-        if (P.isNull(value) || !P.isObjectKeyword(value) || isRuntimeReference(value)) {
+        if (!isDestructurableObject(value) || isRuntimeReference(value)) {
           throw InterpreterRuntimeError.new(
             "Object destructuring requires a data object or array value.",
             pattern,
@@ -1356,7 +1354,7 @@ export class Interpreter<R> {
 
           if (property.type === "RestElement") {
             const rest = SafeObjectSchema.make(Object.create(null));
-            for (const [key, item] of Object.entries(value as SafeObject)) {
+            for (const [key, item] of Object.entries(value)) {
               if (!MutableHashSet.has(consumed, key) && !isBlockedMember(key)) Reflect.set(rest, key, item);
             }
             copyIteratorSymbols(value, rest, O.some(consumed));
@@ -1371,7 +1369,7 @@ export class Interpreter<R> {
           MutableHashSet.add(consumed, P.isSymbol(key) ? key : String(key));
           yield* self.declarePattern(
             getNode(property, "value"),
-            self.destructuringPropertyValue(value as SafeObject | Array<unknown>, key),
+            self.destructuringPropertyValue(value, key),
             mutable,
             property,
             initialize,
@@ -1410,7 +1408,7 @@ export class Interpreter<R> {
       }
 
       if (pattern.type === "ObjectPattern") {
-        if (P.isNull(value) || !P.isObjectKeyword(value) || isRuntimeReference(value)) {
+        if (!isDestructurableObject(value) || isRuntimeReference(value)) {
           throw InterpreterRuntimeError.new(
             "Object destructuring requires a data object or array value.",
             pattern,
@@ -1418,7 +1416,7 @@ export class Interpreter<R> {
           );
         }
 
-        const source = value as SafeObject | Array<unknown>;
+        const source = value;
         const consumed = MutableHashSet.empty<PropertyKey>();
         for (const propertyValue of getArray(pattern, "properties")) {
           const property = asNode(propertyValue, "properties");
@@ -1515,7 +1513,11 @@ export class Interpreter<R> {
     if (key === "length") return source.length;
     if (P.isNumber(key)) return source[key];
     if (Object.hasOwn(source, key)) return Reflect.get(source, key);
-    if (P.isString(key) && S.is(arrayMethods)(key)) return IntrinsicReference.new(source, key);
+    if (P.isString(key) && S.is(arrayMethods)(key)) {
+      return IntrinsicReference.new(
+        IntrinsicMethod.cases.Array.make({ receiver: source, name: key })
+      );
+    }
     return undefined;
   }
 
@@ -1598,7 +1600,7 @@ export class Interpreter<R> {
         constructPromise(self.runner, self.promises, args[0], node),
       );
     }
-    if (S.is(errorConstructors)(name)) {
+    if (S.is(ErrorConstructorName)(name)) {
       return Effect.flatMap(this.evaluateCallArguments(argNodes), (args) =>
         name === "AggregateError"
           ? constructAggregateErrorValue(self.runner, args, node)
@@ -1707,16 +1709,17 @@ export class Interpreter<R> {
 
   private toDatePrimitive(value: unknown, node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     if (P.isNull(value) || (!P.isObjectKeyword(value) && typeof value !== "function")) return Effect.succeed(value);
-    const object = value as Record<string, unknown>;
     const self = this;
     return Effect.gen(function* () {
-      if (Object.hasOwn(object, "valueOf") && typeofValue(object.valueOf) === "function") {
-        const result = yield* self.runner.invokeCallable(object.valueOf, [], node);
+      const valueOf = Reflect.get(value, "valueOf");
+      if (Object.hasOwn(value, "valueOf") && typeofValue(valueOf) === "function") {
+        const result = yield* self.runner.invokeCallable(valueOf, [], node);
         if (result === null || (typeof result !== "object" && typeof result !== "function")) return result;
       }
-      if (!Object.hasOwn(object, "toString")) return coerceToString(value);
-      if (typeofValue(object.toString) === "function") {
-        const result = yield* self.runner.invokeCallable(object.toString, [], node);
+      if (!Object.hasOwn(value, "toString")) return coerceToString(value);
+      const toString = Reflect.get(value, "toString");
+      if (typeofValue(toString) === "function") {
+        const result = yield* self.runner.invokeCallable(toString, [], node);
         if (result === null || (typeof result !== "object" && typeof result !== "function")) return result;
       }
       throw InterpreterRuntimeError.new("Cannot convert object to primitive value.", node).as("TypeError");
@@ -1974,33 +1977,34 @@ export class Interpreter<R> {
 
   private evaluateLogicalExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const operator = getString(node, "operator");
+    if (!S.is(LogicalOperator)(operator)) {
+      return Effect.fail(
+        InterpreterRuntimeError.new(`Unsupported logical operator '${operator}'.`, node)
+      );
+    }
     return Effect.flatMap(this.evaluateExpression(getNode(node, "left")), (left) => {
-      if (operator === "&&") return P.isTruthy(left) ? this.evaluateExpression(getNode(node, "right")) : Effect.succeed(left);
-      if (operator === "||") return P.isTruthy(left) ? Effect.succeed(left) : this.evaluateExpression(getNode(node, "right"));
-      if (operator === "??")
-        return left !== null && left !== undefined
-          ? Effect.succeed(left)
-          : this.evaluateExpression(getNode(node, "right"));
-      throw InterpreterRuntimeError.new(`Unsupported logical operator '${operator}'.`, node);
+      const right = () => this.evaluateExpression(getNode(node, "right"));
+      return LogicalOperator.$match(operator, {
+        "&&": () => P.isTruthy(left) ? right() : Effect.succeed(left),
+        "||": () => P.isTruthy(left) ? Effect.succeed(left) : right(),
+        "??": () =>
+          P.isNotNull(left) && P.isNotUndefined(left)
+            ? Effect.succeed(left)
+            : right(),
+      });
     });
   }
 
   private evaluateUnaryExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const operator = getString(node, "operator");
     const argument = getNode(node, "argument");
-    if (operator === "delete") return this.evaluateDeleteExpression(argument);
-    // Undeclared names short-circuit, but declared TDZ bindings must still throw.
-    if (
-      operator === "typeof" &&
-      argument.type === "Identifier" &&
-      O.isNone(this.scopes.resolve(getString(argument, "name")))
-    ) {
-      return Effect.succeed("undefined");
+    if (!S.is(UnaryOperator)(operator)) {
+      return Effect.fail(
+        InterpreterRuntimeError.new(`Unsupported unary operator '${operator}'.`, node)
+      );
     }
-    return Effect.map(this.evaluateExpression(argument), (value) => {
-      if (operator === "typeof") return typeofValue(value);
-      if (operator === "!") return !P.isTruthy(value);
-      if (operator === "void") return undefined;
+    const numeric = (apply: (operand: number) => number): Effect.Effect<unknown, InterpreterFailure, R> =>
+      Effect.map(this.evaluateExpression(argument), (value) => {
       if (containsOpaqueReference(value)) {
         throw InterpreterRuntimeError.new("Unary operators require data values.", node, "InvalidDataValue");
       }
@@ -2010,24 +2014,35 @@ export class Interpreter<R> {
           : P.isNotNull(value) && P.isObjectKeyword(value)
             ? coerceToString(value)
             : value;
-      const result = Match.value(operator).pipe(
-        Match.when("+", () => +(operand as number)),
-        Match.when("-", () => -(operand as number)),
-        Match.when("~", () => ~(operand as number)),
-        Match.orElse(() => {
-          throw InterpreterRuntimeError.new(`Unsupported unary operator '${operator}'.`, node);
-        }),
-      );
-      return boundedData(result, "Unary expression result");
+        return boundedData(apply(coerceToNumber(operand)), "Unary expression result");
+      });
+    return UnaryOperator.$match(operator, {
+      delete: () => this.evaluateDeleteExpression(argument),
+      typeof: () =>
+        // Undeclared names short-circuit, but declared TDZ bindings must still throw.
+        argument.type === "Identifier" &&
+        O.isNone(this.scopes.resolve(getString(argument, "name")))
+          ? Effect.succeed("undefined")
+          : Effect.map(this.evaluateExpression(argument), typeofValue),
+      "!": () => Effect.map(this.evaluateExpression(argument), (value) => !P.isTruthy(value)),
+      void: () => Effect.as(this.evaluateExpression(argument), undefined),
+      "+": () => numeric((operand) => +operand),
+      "-": () => numeric((operand) => -operand),
+      "~": () => numeric((operand) => ~operand),
     });
   }
 
   private evaluateAssignmentExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const left = getNode(node, "left");
     const operator = getString(node, "operator");
+    if (!S.is(AssignmentOperator)(operator)) {
+      return Effect.fail(
+        InterpreterRuntimeError.new(`Unsupported assignment operator '${operator}'.`, node)
+      );
+    }
     const self = this;
     return Effect.gen(function* () {
-      if (operator === "??=" || operator === "||=" || operator === "&&=") {
+      if (S.is(LogicalAssignmentOperator)(operator)) {
         return yield* self.evaluateLogicalAssignment(node, left, operator);
       }
       if (operator === "=" && (left.type === "ObjectPattern" || left.type === "ArrayPattern")) {
@@ -2072,15 +2087,15 @@ export class Interpreter<R> {
   private evaluateLogicalAssignment(
     node: AstNode,
     left: AstNode,
-    operator: string,
+    operator: LogicalAssignmentOperator,
   ): Effect.Effect<unknown, InterpreterFailure, R> {
     const self = this;
     const shouldAssign = (current: unknown): boolean =>
-      operator === "??="
-        ? P.isNull(current) || P.isUndefined(current)
-        : operator === "||="
-          ? !P.isTruthy(current)
-          : P.isTruthy(current);
+      LogicalAssignmentOperator.$match(operator, {
+        "??=": () => P.isNull(current) || P.isUndefined(current),
+        "||=": () => !P.isTruthy(current),
+        "&&=": () => P.isTruthy(current),
+      });
     if (left.type === "Identifier") {
       const name = getString(left, "name");
       return Effect.gen(function* () {
@@ -2108,12 +2123,12 @@ export class Interpreter<R> {
     const operator = getString(node, "operator");
     const argument = getNode(node, "argument");
     const prefix = getBoolean(node, "prefix");
-
-    const increment = operator === "++" ? 1 : operator === "--" ? -1 : undefined;
-
-    if (increment === undefined) {
-      throw InterpreterRuntimeError.new(`Unsupported update operator '${operator}'.`, node);
+    if (!S.is(UpdateOperator.To)(operator)) {
+      return Effect.fail(
+        InterpreterRuntimeError.new(`Unsupported update operator '${operator}'.`, node)
+      );
     }
+    const increment = UpdateOperator.Enum[operator];
 
     // CodeMode numeric coercion, not host Number(): null-prototype data objects would make
     // the host throw during ToPrimitive, and opaque runtime references must reject clearly.
@@ -2216,58 +2231,58 @@ export class Interpreter<R> {
               () =>
                 boundedData(
                   invokeGlobalMethod(reference, args, node),
-                  `${reference.namespace}.${reference.name} result`,
+                  `${reference.method.namespace}.${reference.method.name} result`,
                 ),
               node
             )
           );
 
-        return yield* GlobalMethodNamespace.$match(callable.namespace, {
-          console: () =>
+        return yield* GlobalMethod.match(callable.method, {
+          console: ({ name }) =>
             Effect.fromResult(
-              tryInterpreter(() => self.invokeConsole(callable.name, args, node), node)
+              tryInterpreter(() => self.invokeConsole(name, args, node), node)
             ),
-          Object: () => {
+          Object: ({ name }) => {
             if (ToolReference.is(args[0])) {
               const reference = args[0];
               return Effect.fromResult(
                 tryInterpreter(
-                  () => self.invokeObjectMethodOnTools(callable.name, reference, node),
+                  () => self.invokeObjectMethodOnTools(name, reference, node),
                   node
                 )
               );
             }
-            if (S.is(objectMethodsPreservingIdentity)(callable.name)) {
-              return callable.name === "fromEntries"
+            if (S.is(objectMethodsPreservingIdentity)(name)) {
+              return name === "fromEntries"
                 ? invokeObjectFromEntries(self.runner, args[0], node)
                 : Effect.fromResult(
                     tryInterpreter(() => invokeGlobalMethod(callable, args, node), node)
                   );
             }
-            return callable.name === "groupBy"
+            return name === "groupBy"
               ? invokeGroupBy(self.runner, "Object", args, node)
               : invokeBounded(callable);
           },
-          Math: () => {
-            if (callable.name === "random") return Random.next;
-            return callable.name === "sumPrecise"
+          Math: ({ name }) => {
+            if (name === "random") return Random.next;
+            return name === "sumPrecise"
               ? invokeMathSumPrecise(self.runner, args[0], node)
               : invokeBounded(callable);
           },
-          Array: () => {
-            if (callable.name === "from") return invokeArrayFrom(self.runner, args, node);
-            return callable.name === "of"
+          Array: ({ name }) => {
+            if (name === "from") return invokeArrayFrom(self.runner, args, node);
+            return name === "of"
               ? Effect.fromResult(
                   tryInterpreter(() => invokeGlobalMethod(callable, args, node), node)
                 )
               : invokeBounded(callable);
           },
-          Map: () =>
-            callable.name === "groupBy"
+          Map: ({ name }) =>
+            name === "groupBy"
               ? invokeGroupBy(self.runner, "Map", args, node)
               : invokeBounded(callable),
-          Date: () =>
-            callable.name === "now"
+          Date: ({ name }) =>
+            name === "now"
               ? Effect.map(DateTime.now, DateTime.toEpochMillis)
               : invokeBounded(callable),
           RegExp: () => invokeBounded(callable),
@@ -2372,8 +2387,7 @@ export class Interpreter<R> {
     );
   }
 
-  private invokeConsole(name: string, args: Array<unknown>, node: AstNode): undefined {
-    if (!S.is(ConsoleMethod)(name)) throw InterpreterRuntimeError.new(`console.${name} is not available.`, node);
+  private invokeConsole(name: ConsoleMethod, args: Array<unknown>, _node: AstNode): undefined {
     this.logs.push(formatConsoleMessage(name, args));
     return undefined;
   }
@@ -2755,7 +2769,7 @@ export class Interpreter<R> {
   }
 
   private evaluateObjectExpression(node: AstNode): Effect.Effect<Record<string, unknown>, InterpreterFailure, R> {
-    const objectValue: Record<string, unknown> = Object.create(null) as Record<string, unknown>;
+    const objectValue: Record<string, unknown> = Object.create(null);
     const properties = getArray(node, "properties");
     const self = this;
     return Effect.gen(function* () {
@@ -2875,10 +2889,12 @@ export class Interpreter<R> {
     );
   }
 
-  private applyCompoundAssignment(operator: string, current: unknown, incoming: unknown, node: AstNode): unknown {
-    if (!S.is(compoundOperators)(operator)) {
-      throw InterpreterRuntimeError.new(`Unsupported assignment operator '${operator}'.`, node);
-    }
+  private applyCompoundAssignment(
+    operator: typeof CompoundOperator.Encoded,
+    current: unknown,
+    incoming: unknown,
+    node: AstNode
+  ): unknown {
     return this.applyBinaryOperator(CompoundOperator.Enum[operator], current, incoming, node);
   }
 
@@ -2924,7 +2940,7 @@ export class Interpreter<R> {
       }
 
       if (RuntimeReference.guards.PromiseNamespace(objectValue)) {
-        if (P.isString(key) && S.is(promiseStatics)(key)) {
+        if (P.isString(key) && S.is(PromiseMethodName)(key)) {
           return PromiseMethodReference.new(key);
         }
         throw InterpreterRuntimeError.new(
@@ -2945,32 +2961,47 @@ export class Interpreter<R> {
         }
         if (!P.isString(key)) return ComputedValue.new(undefined);
         const missing = (): ComputedValue => ComputedValue.new(undefined);
-        const staticMember = (
-          namespace: Exclude<GlobalMethodNamespace, "Number" | "String">
-        ): ComputedValue | GlobalMethodReference => {
-          const staticMembers = globalStaticMembers[namespace];
-          return P.isNotUndefined(staticMembers) && S.is(staticMembers)(key)
-            ? GlobalMethodReference.new(namespace, key)
-            : missing();
-        };
 
         return GlobalNamespaceName.$match(objectValue.name, {
           Math: () =>
           S.is(mathConstants)(key)
-              ? ComputedValue.new((Math as unknown as Record<string, number>)[key])
-              : staticMember("Math"),
+              ? ComputedValue.new(Reflect.get(Math, key))
+              : S.is(mathMethods)(key)
+                ? GlobalMethodReference.new(GlobalMethod.cases.Math.make({ name: key }))
+                : missing(),
           JSON: () =>
-            S.is(jsonStatics)(key)
+            S.is(JsonMethodName)(key)
               ? JsonMethodReference.new(key)
               : missing(),
-          Object: () => staticMember("Object"),
-          Array: () => staticMember("Array"),
-          console: () => staticMember("console"),
-          Date: () => staticMember("Date"),
-          RegExp: () => staticMember("RegExp"),
-          Map: () => staticMember("Map"),
+          Object: () =>
+            S.is(objectStatics)(key)
+              ? GlobalMethodReference.new(GlobalMethod.cases.Object.make({ name: key }))
+              : missing(),
+          Array: () =>
+            S.is(arrayStatics)(key)
+              ? GlobalMethodReference.new(GlobalMethod.cases.Array.make({ name: key }))
+              : missing(),
+          console: () =>
+            S.is(ConsoleMethod)(key)
+              ? GlobalMethodReference.new(GlobalMethod.cases.console.make({ name: key }))
+              : missing(),
+          Date: () =>
+            S.is(dateStatics)(key)
+              ? GlobalMethodReference.new(GlobalMethod.cases.Date.make({ name: key }))
+              : missing(),
+          RegExp: () =>
+            S.is(regexpStatics)(key)
+              ? GlobalMethodReference.new(GlobalMethod.cases.RegExp.make({ name: key }))
+              : missing(),
+          Map: () =>
+            S.is(mapStatics)(key)
+              ? GlobalMethodReference.new(GlobalMethod.cases.Map.make({ name: key }))
+              : missing(),
           Set: missing,
-          URL: () => staticMember("URL"),
+          URL: () =>
+            S.is(UrlStatic)(key)
+              ? GlobalMethodReference.new(GlobalMethod.cases.URL.make({ name: key }))
+              : missing(),
           URLSearchParams: missing,
         });
       }
@@ -2979,12 +3010,20 @@ export class Interpreter<R> {
         if (key === "length") return ComputedValue.new(objectValue.length);
         const index = P.isSymbol(key) ? undefined : parseArrayIndex(key);
         if (P.isNotUndefined(index)) return ComputedValue.new(objectValue[index]);
-        if (P.isString(key) && S.is(stringMethods)(key)) return IntrinsicReference.new(objectValue, key);
+        if (P.isString(key) && S.is(stringMethods)(key)) {
+          return IntrinsicReference.new(
+            IntrinsicMethod.cases.String.make({ receiver: objectValue, name: key })
+          );
+        }
         return ComputedValue.new(undefined);
       }
 
       if (P.isNumber(objectValue)) {
-        if (P.isString(key) && S.is(numberMethods)(key)) return IntrinsicReference.new(objectValue, key);
+        if (P.isString(key) && S.is(numberMethods)(key)) {
+          return IntrinsicReference.new(
+            IntrinsicMethod.cases.Number.make({ receiver: objectValue, name: key })
+          );
+        }
         return ComputedValue.new(undefined);
       }
 
@@ -2997,15 +3036,15 @@ export class Interpreter<R> {
         return CoercionFunctionName.$match(objectValue.name, {
           Number: () => {
             if (S.is(numberConstants)(key)) {
-              return ComputedValue.new((Number as unknown as Record<string, number>)[key]);
+              return ComputedValue.new(Reflect.get(Number, key));
             }
             return S.is(numberStatics)(key)
-              ? GlobalMethodReference.new("Number", key)
+              ? GlobalMethodReference.new(GlobalMethod.cases.Number.make({ name: key }))
               : missing();
           },
           String: () =>
             S.is(stringStatics)(key)
-              ? GlobalMethodReference.new("String", key)
+              ? GlobalMethodReference.new(GlobalMethod.cases.String.make({ name: key }))
               : missing(),
           Boolean: missing,
           parseInt: missing,
@@ -3016,32 +3055,52 @@ export class Interpreter<R> {
       }
 
       if (CodeModeDate.is(objectValue)) {
-        if (P.isString(key) && S.is(dateMethods)(key)) return IntrinsicReference.new(objectValue, key);
+        if (P.isString(key) && S.is(dateMethods)(key)) {
+          return IntrinsicReference.new(
+            IntrinsicMethod.cases.Date.make({ receiver: objectValue, name: key })
+          );
+        }
         return ComputedValue.new(undefined);
       }
       if (CodeModeRegExp.is(objectValue)) {
         if (key === "lastIndex") return MemberReference.new(objectValue, key);
         if (P.isString(key) && S.is(regexpProperties)(key)) {
-          return ComputedValue.new((objectValue.regex as unknown as Record<string, unknown>)[key]);
+          return ComputedValue.new(Reflect.get(objectValue.regex, key));
         }
-        if (P.isString(key) && S.is(regexpMethods)(key)) return IntrinsicReference.new(objectValue, key);
+        if (P.isString(key) && S.is(regexpMethods)(key)) {
+          return IntrinsicReference.new(
+            IntrinsicMethod.cases.RegExp.make({ receiver: objectValue, name: key })
+          );
+        }
         return ComputedValue.new(undefined);
       }
       if (CodeModeMap.is(objectValue)) {
         if (key === "size") return ComputedValue.new(objectValue.map.size);
-        if (P.isString(key) && S.is(mapMethods)(key)) return IntrinsicReference.new(objectValue, key);
+        if (P.isString(key) && S.is(mapMethods)(key)) {
+          return IntrinsicReference.new(
+            IntrinsicMethod.cases.Map.make({ receiver: objectValue, name: key })
+          );
+        }
         return ComputedValue.new(undefined);
       }
       if (CodeModeSet.is(objectValue)) {
         if (key === "size") return ComputedValue.new(objectValue.set.size);
-        if (P.isString(key) && S.is(setMethods)(key)) return IntrinsicReference.new(objectValue, key);
+        if (P.isString(key) && S.is(setMethods)(key)) {
+          return IntrinsicReference.new(
+            IntrinsicMethod.cases.Set.make({ receiver: objectValue, name: key })
+          );
+        }
         return ComputedValue.new(undefined);
       }
       if (CodeModeURL.is(objectValue)) {
         if (key === "searchParams") {
           return ComputedValue.new(objectValue.searchParams);
         }
-        if (P.isString(key) && S.is(UrlMethod)(key)) return IntrinsicReference.new(objectValue, key);
+        if (P.isString(key) && S.is(UrlMethod)(key)) {
+          return IntrinsicReference.new(
+            IntrinsicMethod.cases.URL.make({ receiver: objectValue, name: key })
+          );
+        }
         if (P.isString(key) && S.is(urlProperties)(key)) {
           return MemberReference.new(objectValue, key);
         }
@@ -3050,7 +3109,9 @@ export class Interpreter<R> {
       if (CodeModeURLSearchParams.is(objectValue)) {
         if (key === "size") return ComputedValue.new(objectValue.params.size);
         if (P.isString(key) && S.is(UrlSearchParamsMethod)(key)) {
-          return IntrinsicReference.new(objectValue, key);
+          return IntrinsicReference.new(
+            IntrinsicMethod.cases.URLSearchParams.make({ receiver: objectValue, name: key })
+          );
         }
         return ComputedValue.new(undefined);
       }
@@ -3103,14 +3164,17 @@ export class Interpreter<R> {
         const index = P.isSymbol(key) ? undefined : parseArrayIndex(key);
         if (key !== "length" && !(P.isString(key) && S.is(arrayMethods)(key)) && index === undefined) {
           if (P.isString(key) && P.hasProperty(objectValue, key)) {
-            return ComputedValue.new((objectValue as Record<string, unknown> & Array<unknown>)[key]);
+            return ComputedValue.new(Reflect.get(objectValue, key));
           }
           return ComputedValue.new(undefined);
         }
         return MemberReference.new(objectValue, index ?? key);
       }
 
-      return MemberReference.new(objectValue as SafeObject, key);
+      if (!S.is(SafeObjectSchema)(objectValue)) {
+        throw InterpreterRuntimeError.new("Cannot access a property on a non-data object.", objectNode);
+      }
+      return MemberReference.new(objectValue, key);
     });
   }
 
@@ -3121,7 +3185,11 @@ export class Interpreter<R> {
       if (P.isUndefined(reference) || OpaqueMemberReference.is(reference)) return reference;
       if (A.isArray(reference.target)) {
         if (reference.key === "length") return reference.target.length;
-        if (P.isString(reference.key)) return IntrinsicReference.new(reference.target, reference.key);
+        if (P.isString(reference.key) && S.is(arrayMethods)(reference.key)) {
+          return IntrinsicReference.new(
+            IntrinsicMethod.cases.Array.make({ receiver: reference.target, name: reference.key })
+          );
+        }
         return Reflect.get(reference.target, reference.key);
       }
       if (CodeModeRegExp.is(reference.target)) return reference.target.lastIndex;
@@ -3222,27 +3290,28 @@ export class Interpreter<R> {
       return;
     }
     if (CodeModeURL.is(reference.target)) {
-      const property = key as string;
-      if (!S.is(urlWritableProperties)(property)) {
-        throw InterpreterRuntimeError.new(`URL.${property} is read-only.`, node).as("TypeError");
+      if (!P.isString(key) || !S.is(urlWritableProperties)(key)) {
+        throw InterpreterRuntimeError.new(`URL.${String(key)} is read-only.`, node).as("TypeError");
       }
       try {
-        const url = reference.target.url as unknown as Record<string, string>;
-        url[property] = uriArgument(next, `URL.${property} value`);
+        Reflect.set(reference.target.url, key, uriArgument(next, `URL.${key} value`));
         return;
       } catch (error) {
         if (
           InterpreterFailure.guards.InterpreterRuntimeError(error) ||
           InterpreterFailure.guards.ToolRuntimeError(error)
         ) throw error;
-        throw InterpreterRuntimeError.new(`URL.${property} received an invalid value.`, node).as("TypeError");
+        throw InterpreterRuntimeError.new(`URL.${key} received an invalid value.`, node).as("TypeError");
       }
     }
     if (CodeModeRegExp.is(reference.target)) {
       reference.target.lastIndex = next;
       return;
     }
-    const target = reference.target as SafeObject;
+    if (!S.is(SafeObjectSchema)(reference.target)) {
+      throw InterpreterRuntimeError.new("Cannot assign a property on a non-data object.", node);
+    }
+    const target = reference.target;
     rejectCircularInsertion(target, next, "Object assignment result", node);
     Reflect.set(target, key, next);
   }

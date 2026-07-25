@@ -4,13 +4,14 @@ import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
 import {
   DiagnosticKind,
+  ErrorConstructorName,
   type AstNode,
   formatLocation,
   InterpreterFailure,
   InterpreterRuntimeError,
   sourceLocation,
 } from "./Interpreter.model.ts";
-import type { Diagnostic } from "../Codemode.service.ts";
+import type { Diagnostic } from "../Codemode.result.ts";
 import { ToolError } from "../Codemode.tool-error.ts";
 import { copyOut, ToolRuntimeError } from "../Codemode.tool-runtime.ts";
 import { type SyncIteratorRunner } from "./Interpreter.iterator.ts";
@@ -19,7 +20,6 @@ import {
   coerceToString,
   createAggregateErrorValue,
   createErrorValue,
-  errorConstructors,
 } from "../stdlib/index.ts";
 
 const makeDiagnostic = (
@@ -85,12 +85,12 @@ export const caughtErrorValue = (thrown: unknown): unknown => {
   if (InterpreterFailure.guards.InterpreterRuntimeError(thrown)) {
     return createErrorValue(thrown.errorName, thrown.message);
   }
-  const name = P.isError(thrown) && S.is(errorConstructors)(thrown.name) ? thrown.name : "Error";
+  const name = P.isError(thrown) && S.is(ErrorConstructorName)(thrown.name) ? thrown.name : "Error";
   return createErrorValue(name, normalizeError(thrown).message);
 };
 
 /** Constructs one guest Error value. */
-export const constructErrorValue = (name: string, args: ReadonlyArray<unknown>): SafeObject =>
+export const constructErrorValue = (name: ErrorConstructorName, args: ReadonlyArray<unknown>): SafeObject =>
   createErrorValue(name, P.isUndefined(args[0]) ? "" : coerceToString(args[0]));
 
 /** Constructs one guest AggregateError value. */

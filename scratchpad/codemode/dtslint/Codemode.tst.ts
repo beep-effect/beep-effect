@@ -3,12 +3,7 @@ import { MutableHashMap, type Effect } from "effect";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "tstyche";
 import * as CodeMode from "../Codemode.service.ts";
-import {
-  SearchInput,
-  ToolCallEnded,
-  ToolCallStarted,
-  ToolReference,
-} from "../Codemode.tool-runtime.ts";
+import { SearchInput, ToolReference } from "../Codemode.tool-runtime.ts";
 import {
   Binding,
   CoercionFunction,
@@ -16,7 +11,7 @@ import {
   DiagnosticKind,
   ErrorConstructorName,
   ErrorConstructorReference,
-  GlobalMethodNamespace,
+  GlobalMethod,
   GlobalMethodReference,
   GlobalNamespace,
   GlobalNamespaceName,
@@ -51,13 +46,11 @@ describe("CodeMode public types", () => {
   it("preserves positional class constructors", () => {
     const start = SourcePosition.new(1, 0);
     const end = SourcePosition.new(1, 4);
-    const call = ToolCallStarted.new(0, "users.get", { id: "1" });
 
     expect(start).type.toBe<SourcePosition>();
     expect(SourceLocation.new(start, end)).type.toBe<SourceLocation>();
     expect(SearchInput.new("users", "users", 5, 0)).type.toBe<SearchInput>();
     expect(ToolReference.new(["users", "get"])).type.toBe<ToolReference>();
-    expect(ToolCallEnded.new(call, 10, "success")).type.toBe<ToolCallEnded>();
     expect(SearchFunction.new()).type.toBe<SearchFunction>();
     expect(InterpreterRuntimeError.new("boom")).type.toBe<InterpreterRuntimeError>();
     expect(Binding.new(true, 1)).type.toBe<Binding>();
@@ -68,7 +61,9 @@ describe("CodeMode public types", () => {
     expect(CoercionFunction.new("Number")).type.toBe<CoercionFunction>();
     expect(PromiseMethodReference.new("all")).type.toBe<PromiseMethodReference>();
     expect(GlobalNamespace.new("JSON")).type.toBe<GlobalNamespace>();
-    expect(GlobalMethodReference.new("String", "fromCodePoint")).type.toBe<GlobalMethodReference>();
+    expect(
+      GlobalMethodReference.new(GlobalMethod.cases.String.make({ name: "fromCodePoint" }))
+    ).type.toBe<GlobalMethodReference>();
     expect(JsonMethodReference.new("parse")).type.toBe<JsonMethodReference>();
     expect(UriFunction.new("encodeURIComponent")).type.toBe<UriFunction>();
     expect(ErrorConstructorReference.new("TypeError")).type.toBe<ErrorConstructorReference>();
@@ -154,7 +149,11 @@ describe("CodeMode public types", () => {
     ).type.toBe<PromiseMethodName>();
     expect(GlobalNamespaceName.is.JSON(GlobalNamespace.new("JSON").name)).type.toBe<boolean>();
     expect(
-      GlobalMethodNamespace.is.String(GlobalMethodReference.new("String", "fromCodePoint").namespace)
+      GlobalMethod.guards.String(
+        GlobalMethodReference.new(
+          GlobalMethod.cases.String.make({ name: "fromCodePoint" })
+        ).method
+      )
     ).type.toBe<boolean>();
     expect(JsonMethodName.is.parse(JsonMethodReference.new("parse").name)).type.toBe<boolean>();
     expect(

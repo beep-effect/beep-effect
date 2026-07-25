@@ -9,9 +9,9 @@ import { CodeModeURL } from "../Codemode.values.ts"
 import { boundedData, coerceToString } from "./StdLib.value.ts"
 import { Result } from "effect"
 import { LiteralKit } from "@beep/schema"
-import * as S from "effect/Schema"
 import { P, A } from "@beep/utils";
 import {
+  type UrlMethod,
   UrlStatic,
 } from "../Codemode.method-names.ts"
 
@@ -76,8 +76,7 @@ export const invokeUriFunction = (
 export const urlArgument = (value: unknown, label: string): string =>
   CodeModeURL.is(value) ? value.url.href : uriArgument(value, label)
 
-export const invokeURLStatic = (name: string, args: Array<unknown>, node: AstNode): unknown => {
-  if (!S.is(UrlStatic)(name)) throw InterpreterRuntimeError.new(`URL.${name} is not available.`, node)
+export const invokeURLStatic = (name: UrlStatic, args: Array<unknown>, node: AstNode): unknown => {
   if (A.isArrayEmpty(args)) throw InterpreterRuntimeError.new(`URL.${name} requires a URL argument.`, node).as("TypeError")
   const input = urlArgument(args[0], `URL.${name} input`)
   const base =  P.isUndefined(args[1]) ? undefined : urlArgument(args[1], `URL.${name} base`)
@@ -89,7 +88,5 @@ export const invokeURLStatic = (name: string, args: Array<unknown>, node: AstNod
   }
 }
 
-export const invokeURLMethod = (value: CodeModeURL, name: string, node: AstNode): string => {
-  if (name === "toString" || name === "toJSON") return value.url.href
-  throw InterpreterRuntimeError.new(`URL method '${name}' is not available.`, node)
-}
+export const invokeURLMethod = (value: CodeModeURL, _name: UrlMethod, _node: AstNode): string =>
+  value.url.href;

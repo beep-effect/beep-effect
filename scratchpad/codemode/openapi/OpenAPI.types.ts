@@ -12,7 +12,7 @@ import {
   SchemaUtils,
   TaggedErrorClass,
 } from "@beep/schema";
-import { A, O, P, R, pipe } from "@beep/utils";
+import { O, P, R, pipe } from "@beep/utils";
 import {
   HashMap,
   Layer,
@@ -698,18 +698,3 @@ export class FromSpecResult extends S.Class<FromSpecResult>(
   ): FromSpecResult =>
     FromSpecResult.make({ toolkit, handlersLayer, skipped });
 }
-
-/** Copies a readonly string record into the core HashMap representation. */
-export const stringMapFromRecord = (
-  record: Readonly<Record<string, string>>
-): HashMap.HashMap<string, string> =>
-  pipe(record, R.toEntries, HashMap.fromIterable);
-
-/** Copies a core string HashMap to an HTTP boundary record. */
-export const stringMapToRecord = (
-  map: HashMap.HashMap<string, string>
-): Record<string, string> =>
-  pipe(map, HashMap.toEntries, R.fromEntries);
-
-/** Builds an immutable array without exposing native mutable array helpers. */
-export const emptyFields = (): ReadonlyArray<InputField> => A.empty();

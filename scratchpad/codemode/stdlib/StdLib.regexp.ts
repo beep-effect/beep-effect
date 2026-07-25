@@ -7,6 +7,8 @@ import { LiteralKit } from "@beep/schema"
 import { P , R,} from "@beep/utils";
 import * as S from "effect/Schema"
 import {
+  type RegExpMethod,
+  type RegExpStatic,
   regexpMethods,
 } from "../Codemode.method-names.ts"
 
@@ -81,8 +83,7 @@ export const matchToValue = (match: RegExpMatchArray): Array<unknown> => {
   return result
 }
 
-export const invokeRegExpStatic = (name: string, args: Array<unknown>, node: AstNode): string => {
-  if (name !== "escape") throw InterpreterRuntimeError.new(`RegExp.${name} is not available.`, node)
+export const invokeRegExpStatic = (_name: RegExpStatic, args: Array<unknown>, node: AstNode): string => {
   if (!P.isString(args[0])) {
     throw InterpreterRuntimeError.new("RegExp.escape expects a string.", node).as("TypeError")
   }
@@ -91,13 +92,10 @@ export const invokeRegExpStatic = (name: string, args: Array<unknown>, node: Ast
 
 export const invokeRegExpMethod = (
   value: CodeModeRegExp,
-  name: string,
+  name: RegExpMethod,
   args: Array<unknown>,
-  node: AstNode,
+  _node: AstNode,
 ): unknown => {
-  if (!S.is(regexpMethods)(name)) {
-    throw InterpreterRuntimeError.new(`RegExp method '${name}' is not available.`, node)
-  }
   const execute = (returnBoolean: boolean): unknown => {
     const input = coerceToString(args[0])
     const lastIndex = value.lastIndex

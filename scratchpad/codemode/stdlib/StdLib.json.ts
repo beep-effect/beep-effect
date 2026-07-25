@@ -5,7 +5,7 @@ import {
   type AstNode,
   type InterpreterFailure,
   InterpreterRuntimeError,
-  JsonMethodName as JsonMethodNameSchema,
+  JsonMethodName,
   JsonMethodReference,
 } from "../interpreter/Interpreter.model.ts";
 import {typeofValue} from "../interpreter/Interpreter.references.ts";
@@ -22,9 +22,6 @@ import {
   CodeModeURL,
   isCodeModeValue,
 } from "../Codemode.values.ts";
-
-export const jsonStatics = JsonMethodNameSchema;
-export type JsonMethodName = typeof jsonStatics.Type
 
 /**
  * Guest ECMAScript JSON adapter.
@@ -44,7 +41,7 @@ export const invokeJsonMethod = <R>(
     ? JsonMethodReference.new(ref)
     : ref;
 
-  return jsonStatics.$match(reference.name, {
+  return JsonMethodName.$match(reference.name, {
     parse: () => parse(runner, args, node),
     stringify: () => stringify(runner, args, node),
   });

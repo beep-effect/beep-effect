@@ -1,7 +1,6 @@
 import { LiteralKit } from "@beep/schema";
-import { P, A, R } from "@beep/utils"
+import { P, A } from "@beep/utils"
 import { Effect } from "effect"
-import * as S from "effect/Schema"
 import {
   type AstNode,
   AsyncIteratorSymbol,
@@ -15,20 +14,23 @@ import { isBlockedMember } from "../Codemode.tool-runtime.ts"
 import { isCodeModeValue, CodeModePromise } from "../Codemode.values.ts"
 import { boundedData, coerceToString } from "./StdLib.value.ts"
 import { preserveConsumerError, type SyncIteratorRunner } from "../interpreter/Interpreter.iterator.ts"
-import { objectStatics } from "../Codemode.method-names.ts"
+import { type ObjectStatic, objectStatics } from "../Codemode.method-names.ts"
 
-export const objectMethodsPreservingIdentity = LiteralKit(["assign", "values", "entries", "fromEntries"])
+export const objectMethodsPreservingIdentity = LiteralKit(
+  objectStatics.pickOptions(["assign", "values", "entries", "fromEntries"])
+)
 
 export { objectStatics } from "../Codemode.method-names.ts"
 
 const DirectObjectMethod = LiteralKit(
   objectStatics.omitOptions(["fromEntries", "groupBy"])
 )
+type DirectObjectMethod = Exclude<ObjectStatic, "fromEntries" | "groupBy">;
 
-export const invokeObjectMethod = (name: string, args: Array<unknown>, node: AstNode): unknown => {
-  const requireObject = (): Record<string, unknown> => {
+export const invokeObjectMethod = (name: DirectObjectMethod, args: Array<unknown>, node: AstNode): unknown => {
+  const requireObject = (): object => {
     const input = args[0]
-    if (A.isArray(input)) return input as unknown as Record<string, unknown>
+    if (A.isArray(input)) return input
     if (isCodeModeValue(input)) return {}
     if (CodeModePromise.is(input)) {
       throw InterpreterRuntimeError.new(
@@ -44,19 +46,16 @@ export const invokeObjectMethod = (name: string, args: Array<unknown>, node: Ast
     if (P.isNotNull(prototype) && prototype !== Object.prototype) {
       throw InterpreterRuntimeError.new(`Object.${name} expects a data object or array.`, node, "InvalidDataValue")
     }
-    return input as Record<string, unknown>
+    return input
   }
-  const guardedSet = (out: Record<string, unknown>, key: string, item: unknown): void => {
+  const guardedSet = (out: object, key: string, item: unknown): void => {
     if (isBlockedMember(key)) throw InterpreterRuntimeError.new(`Property '${key}' is not available.`, node)
-    out[key] = item
-  }
-  if (!S.is(DirectObjectMethod)(name)) {
-    throw InterpreterRuntimeError.new(`Object.${name} is not available.`, node)
+    Reflect.set(out, key, item)
   }
   return DirectObjectMethod.$match(name, {
-    keys: () => R.keys(requireObject()),
-    values: () => R.values(requireObject()),
-    entries: () => A.map(R.toEntries(requireObject()), ([key, item]) => [key, item]),
+    keys: () => Object.keys(requireObject()),
+    values: () => Object.values(requireObject()),
+    entries: () => A.map(Object.entries(requireObject()), ([key, item]) => [key, item]),
     hasOwn: () =>
       P.hasProperty(
         requireObject(),
@@ -73,7 +72,7 @@ export const invokeObjectMethod = (name: string, args: Array<unknown>, node: Ast
       if (P.isNull(target) || !P.isObjectKeyword(target) || A.isArray(target) || isCodeModeValue(target)) {
         throw InterpreterRuntimeError.new("Object.assign expects a data object target.", node)
       }
-      const out = target as Record<string, unknown>
+      const out = target
       for (const source of args.slice(1)) {
         if (P.isNull(source) || P.isUndefined(source) || isCodeModeValue(source)) continue
         if (!P.isObjectKeyword(source) || A.isArray(source)) {
@@ -118,12 +117,13 @@ export const invokeObjectFromEntries = <R>(
               "TypeError",
             )
           }
-          const entry = step.value as Record<string, unknown>
-          boundedData(entry[0], "Object.fromEntries key")
-          boundedData(entry[1], "Object.fromEntries value")
-          const key = coerceToString(entry[0])
+          const entryKey = Reflect.get(step.value, "0");
+          const entryValue = Reflect.get(step.value, "1");
+          boundedData(entryKey, "Object.fromEntries key")
+          boundedData(entryValue, "Object.fromEntries value")
+          const key = coerceToString(entryKey)
           if (isBlockedMember(key)) throw InterpreterRuntimeError.new(`Property '${key}' is not available.`, node)
-          out[key] = entry[1]
+          out[key] = entryValue
         }),
       )
     }

@@ -1,7 +1,6 @@
 import {LiteralKit} from "@beep/schema";
 import {Effect} from "effect";
 import {A, P} from "@beep/utils";
-import * as S from "effect/Schema";
 import {
   preserveConsumerError,
   type SyncIteratorRunner
@@ -11,7 +10,7 @@ import {
   type InterpreterFailure,
   InterpreterRuntimeError,
 } from "../interpreter/Interpreter.model.ts";
-import { mathMethods } from "../Codemode.method-names.ts";
+import { type MathMethod, mathMethods } from "../Codemode.method-names.ts";
 
 export { mathMethods } from "../Codemode.method-names.ts";
 // Bun exposes ES2026 Math.sumPrecise before TypeScript's standard library types.
@@ -26,9 +25,9 @@ export const mathConstants = LiteralKit(["PI", "E", "LN2", "LN10", "LOG2E", "LOG
 const DirectMathMethod = LiteralKit(
   mathMethods.omitOptions(["random", "sumPrecise"])
 );
+type DirectMathMethod = Exclude<MathMethod, "random" | "sumPrecise">;
 
-export const invokeMathMethod = (name: string, args: Array<unknown>, node: AstNode): number => {
-  if (!S.is(DirectMathMethod)(name)) throw InterpreterRuntimeError.new(`Math.${name} is not available.`, node);
+export const invokeMathMethod = (name: DirectMathMethod, args: Array<unknown>, node: AstNode): number => {
   // Validate only the arguments the method consumes; like JS, extras are ignored
   // (so built-ins work as callbacks receiving (element, index, array)).
   const num = (index: number): number => {

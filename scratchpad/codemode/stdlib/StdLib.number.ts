@@ -7,6 +7,8 @@ import * as S from "effect/Schema";
 import {boundedData, coerceToString} from "./StdLib.value.ts";
 import {P, N} from "@beep/utils";
 import {
+  type NumberMethod,
+  type NumberStatic,
   numberMethods,
   numberStatics,
 } from "../Codemode.method-names.ts";
@@ -27,16 +29,13 @@ export const numberConstants = LiteralKit([
   "NEGATIVE_INFINITY",
 ]);
 
-export const invokeNumberMethod = (value: number, name: string, args: Array<unknown>, node: AstNode): unknown => {
+export const invokeNumberMethod = (value: number, name: NumberMethod, args: Array<unknown>, node: AstNode): unknown => {
   const optNum = (index: number): number | undefined => {
     const arg = args[index];
     if (P.isUndefined(arg)) return undefined;
     if (!P.isNumber(arg)) throw InterpreterRuntimeError.new(`Number.${name} expects a number argument.`, node);
     return arg;
   };
-  if (!S.is(numberMethods)(name)) {
-    throw InterpreterRuntimeError.new(`Number method '${name}' is not available.`, node);
-  }
   const result = numberMethods.$match(name, {
     toFixed: () => value.toFixed(optNum(0)),
     toExponential: () => value.toExponential(optNum(0)),
@@ -56,11 +55,8 @@ export const invokeNumberMethod = (value: number, name: string, args: Array<unkn
   return boundedData(result, `Number.${name} result`);
 };
 
-export const invokeNumberStatic = (name: string, args: Array<unknown>, node: AstNode): unknown => {
+export const invokeNumberStatic = (name: NumberStatic, args: Array<unknown>, node: AstNode): unknown => {
   const value = args[0];
-  if (!S.is(numberStatics)(name)) {
-    throw InterpreterRuntimeError.new(`Number.${name} is not available.`, node);
-  }
   return numberStatics.$match(name, {
     isInteger: () => N.isInteger(value),
     isFinite: () => S.is(S.Finite)(value),

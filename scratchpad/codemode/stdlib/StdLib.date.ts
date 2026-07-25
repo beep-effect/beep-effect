@@ -3,15 +3,15 @@ import { CodeModeDate } from "../Codemode.values.ts"
 import { coerceToNumber, coerceToString } from "./StdLib.value.ts"
 import { LiteralKit } from "@beep/schema"
 import { O } from "@beep/utils"
-import { DateTime, Match } from "effect"
+import { DateTime } from "effect"
 import * as S from "effect/Schema"
 import {
+  type DateMethod,
+  type DateStatic,
+  DateSetterArity,
+  DateSetterName,
   dateMethods,
   dateStatics,
-  fourArgumentDateSetter,
-  oneArgumentDateSetter,
-  threeArgumentDateSetter,
-  twoArgumentDateSetter,
 } from "../Codemode.method-names.ts"
 
 export {
@@ -20,31 +20,24 @@ export {
 } from "../Codemode.method-names.ts"
 
 const DirectDateStatic = LiteralKit(dateStatics.omitOptions(["now"]))
+type DirectDateStatic = Exclude<DateStatic, "now">;
 
-export const invokeDateStatic = (name: string, args: Array<unknown>, node: AstNode): number => {
-  if (!S.is(DirectDateStatic)(name)) {
-    throw InterpreterRuntimeError.new(`Date.${name} is not available.`, node)
-  }
-  // Date.parse / Date.UTC are guest JavaScript semantic adapters. Date.now is
-  // dispatched effectfully by Interpreter through the Clock-backed DateTime.now.
-  return DirectDateStatic.$match(name, {
+// Date.parse / Date.UTC are guest JavaScript semantic adapters. Date.now is
+// dispatched effectfully by Interpreter through the Clock-backed DateTime.now.
+export const invokeDateStatic = (name: DirectDateStatic, args: Array<unknown>, _node: AstNode): number =>
+  DirectDateStatic.$match(name, {
     parse: () => Date.parse(coerceToString(args[0])),
-    UTC: () => Date.UTC(...(args.map((arg) => coerceToNumber(arg)) as Parameters<typeof Date.UTC>)),
-  })
-}
+    UTC: () => Reflect.apply(Date.UTC, Date, args.map(coerceToNumber)),
+  });
 
-export const dateSetterArgumentCount = (name: string): O.Option<number> =>
-  Match.value(name).pipe(
-    Match.when(S.is(oneArgumentDateSetter), () => O.some(1)),
-    Match.when(S.is(twoArgumentDateSetter), () => O.some(2)),
-    Match.when(S.is(threeArgumentDateSetter), () => O.some(3)),
-    Match.when(S.is(fourArgumentDateSetter), () => O.some(4)),
-    Match.orElse(O.none<number>),
-  )
+export const dateSetterArgumentCount = (name: DateMethod): O.Option<1 | 2 | 3 | 4> =>
+  S.is(DateSetterName)(name)
+    ? O.some(DateSetterArity[name])
+    : O.none();
 
 export const invokeDateMethod = (
   value: CodeModeDate,
-  name: string,
+  name: DateMethod,
   args: Array<number>,
   node: AstNode,
   initialTime = value.time,
@@ -59,9 +52,6 @@ export const invokeDateMethod = (
       onSome: DateTime.toDate,
     }),
   )
-  if (!S.is(dateMethods)(name)) {
-    throw InterpreterRuntimeError.new(`Date method '${name}' is not available.`, node)
-  }
   return dateMethods.$match(name, {
     getTime: () => value.time,
     valueOf: () => value.time,
