@@ -18,9 +18,9 @@ Status: `pending`
 
 Before marking the packet closed (`status` → `completed-retained`):
 
-1. Write a closeout reflection via the `/reflect` skill (or copy
-   `_template/history/reflections/_TEMPLATE.md`) to
-   `history/reflections/<YYYY-MM-DD>-<agent>.md`. Critique the repo **tooling**
+1. Write a closeout reflection via the `/reflect` skill (or copy this
+   packet's [`history/reflections/_TEMPLATE.md`](./history/reflections/_TEMPLATE.md))
+   to `history/reflections/<YYYY-MM-DD>-<agent>.md`. Critique the repo **tooling**
    (what worked, what didn't, what was frustrating, what you wished existed), the
    **implementation** (improvement opportunities), and the **goal/prompt** (would
    you revise it to be clearer/easier/more efficient?). Capture TODOs worth
