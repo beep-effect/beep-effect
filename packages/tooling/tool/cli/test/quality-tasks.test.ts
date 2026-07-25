@@ -1107,6 +1107,17 @@ describe("quality task adapter", () => {
     });
   });
 
+  it("honors an explicit fast-check seed for exploratory coverage runs", () => {
+    const steps = withEnvVar("BEEP_FC_SEED", "8675309", () =>
+      rootQualityStepsForTesting("/repo", getInvocation(["coverage"]))
+    );
+
+    expect(steps[0]?.env).toMatchObject({
+      BEEP_FC_SEED: "8675309",
+      NODE_OPTIONS: "--no-experimental-webstorage",
+    });
+  });
+
   it("keeps report-only coverage reserved for baseline regeneration", () => {
     const steps = rootQualityStepsForTesting(
       "/repo",

@@ -859,22 +859,30 @@ describe("yeet planner", () => {
     ).toEqual(["src/changed.ts", "src/new.ts"]);
   });
 
-  it("restages reviewed ignored paths already in the index", () =>
+  it("forces only reviewed ignored paths when restaging the index", () =>
     Effect.runPromise(
       withTrackedFileRepo(({ filePath, tempContext, tmpDir }) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
+          const regularPath = path.join(tmpDir, "regular.txt");
 
+          yield* fs.writeFileString(regularPath, "original\n");
           yield* fs.writeFileString(path.join(tmpDir, ".gitignore"), "tracked.txt\n");
-          yield* runGit(tmpDir, ["add", ".gitignore"]);
+          yield* runGit(tmpDir, ["add", ".gitignore", "regular.txt"]);
           yield* runGit(tmpDir, ["commit", "-m", "ignore tracked file"]);
           yield* fs.writeFileString(filePath, "updated\n");
+          yield* fs.writeFileString(regularPath, "updated\n");
           yield* runGit(tmpDir, ["add", "--force", "tracked.txt"]);
+          yield* runGit(tmpDir, ["add", "regular.txt"]);
 
-          yield* stageReviewedPublishIntent(tempContext, YeetPublishIntent.make({ paths: ["tracked.txt"] }), false);
+          yield* stageReviewedPublishIntent(
+            tempContext,
+            YeetPublishIntent.make({ paths: ["regular.txt", "tracked.txt"] }),
+            false
+          );
 
-          expect(yield* runGitStatus(tmpDir)).toBe("M  tracked.txt");
+          expect(yield* runGitStatus(tmpDir)).toBe("M  regular.txt\nM  tracked.txt");
         })
       )
     ));

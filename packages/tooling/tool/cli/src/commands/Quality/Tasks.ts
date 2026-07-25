@@ -72,7 +72,7 @@ const LINT_FIX_AGGREGATE_ARGS = ["--full", "--repo"] as const;
 const ROOT_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
-const COVERAGE_FAST_CHECK_SEED = "20260708";
+const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
 const COVERAGE_NODE_OPTIONS_ARG = "--no-experimental-webstorage";
 // Full root lint runs the aggregate Turbo graph plus repo policy tools. Keep
 // its group fan-out aligned with the root Turbo cap so hosted main checks do
@@ -505,8 +505,19 @@ const coverageNodeOptions = (): string =>
     O.getOrElse(() => COVERAGE_NODE_OPTIONS_ARG)
   );
 
+// Coverage compares instrumentation metrics across runs, so its default seed
+// is reproducible. Callers can override it for additional exploration, while
+// the unseeded nightly property-law sweep remains responsible for breadth.
+const coverageFastCheckSeed = (): string =>
+  pipe(
+    O.fromUndefinedOr(Bun.env.BEEP_FC_SEED),
+    O.map(Str.trim),
+    O.filter(Str.isNonEmpty),
+    O.getOrElse(() => DEFAULT_COVERAGE_FAST_CHECK_SEED)
+  );
+
 const coverageEnvironment = (): Record<string, string> => ({
-  BEEP_FC_SEED: COVERAGE_FAST_CHECK_SEED,
+  BEEP_FC_SEED: coverageFastCheckSeed(),
   NODE_OPTIONS: coverageNodeOptions(),
   VITEST_COVERAGE_RATCHET: "1",
 });

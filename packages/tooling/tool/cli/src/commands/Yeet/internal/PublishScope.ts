@@ -1059,7 +1059,25 @@ export const stageReviewedPublishIntent = Effect.fn("Yeet.stageReviewedPublishIn
   const existingPaths = yield* collectExistingPublishIntentPaths(context, intent);
   const restagePaths = publishRestagePaths(intent.paths, existingPaths);
   if (!A.isReadonlyArrayEmpty(restagePaths)) {
-    yield* runGitOutput(context.repoRoot, ["add", "--force", "--", ...restagePaths]);
+    const ignoredRestagePaths = yield* runGitPathList(context.repoRoot, [
+      "ls-files",
+      "--cached",
+      "--ignored",
+      "--exclude-standard",
+      "-z",
+      "--",
+      ...restagePaths,
+    ]);
+    const regularRestagePaths = pipe(
+      restagePaths,
+      A.filter((filePath) => !A.contains(ignoredRestagePaths, filePath))
+    );
+    if (!A.isReadonlyArrayEmpty(regularRestagePaths)) {
+      yield* runGitOutput(context.repoRoot, ["add", "--", ...regularRestagePaths]);
+    }
+    if (!A.isReadonlyArrayEmpty(ignoredRestagePaths)) {
+      yield* runGitOutput(context.repoRoot, ["add", "--force", "--", ...ignoredRestagePaths]);
+    }
   }
   yield* validatePublishIntentStillSafe(context, intent, stagedOnly);
 
