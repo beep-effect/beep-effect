@@ -36,7 +36,7 @@ import {
   createAggregateErrorValue,
   createErrorValue,
   errorConstructors,
-} from "../stdlib/StdLib.value.ts";
+} from "../stdlib/index.ts";
 
 const toWireDiagnostic = (model: DiagnosticModel): Diagnostic =>
   pipe(
@@ -140,7 +140,7 @@ export const constructAggregateErrorValue = <R>(
         node
       ).as("TypeError");
     }
-    const errors = A.empty<unknown>();;
+    const errors = A.empty<unknown>();
     while (true) {
       const step = yield* cursor.next;
       if (step.done) {

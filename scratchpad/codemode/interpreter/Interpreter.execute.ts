@@ -27,7 +27,7 @@ export const executeWithLimits = <ToolkitType extends Toolkit.Toolkit<any>>(
   // Allocate execution state inside suspension so reused Effects never share it.
   return Effect.suspend(() => {
     const toolkit = options.toolkit ?? ToolRuntime.emptyToolkit;
-    const logs: Array<string> = []
+    const logs = A.empty<string>()
     const logged = () => (A.isReadonlyArrayNonEmpty(logs) ? { logs: A.copy(logs) } : {})
     // Set only after copy-out so timeouts cannot report invalid values as completed.
     let returned: { value: DataValue; promises: PromiseRuntime<Services<ToolkitType>> } | undefined
@@ -250,7 +250,7 @@ const boundOutput = (result: Result, maxOutputBytes: number): Result => {
   }
 
   const warnings = result.ok ? (result.warnings ?? []) : []
-  const keptWarnings: Array<Diagnostic> = []
+  const keptWarnings = A.empty<Diagnostic>()
   let warningBytes = 0
   for (const warning of warnings) {
     const bytes =
@@ -272,8 +272,8 @@ const boundOutput = (result: Result, maxOutputBytes: number): Result => {
     })
   }
 
-  const logs = result.logs ?? []
-  const kept: Array<string> = []
+  const logs = result.logs ?? A.empty()
+  const kept = A.empty<string>()
   const logBudget = Math.max(0, maxOutputBytes - valueBytes)
   let logBytes = 0
   for (const line of logs) {

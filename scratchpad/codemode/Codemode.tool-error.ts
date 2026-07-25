@@ -7,7 +7,7 @@
 import {$ScratchpadId} from "@beep/identity";
 import * as S from "effect/Schema";
 import {TaggedErrorClass, SchemaUtils} from "@beep/schema";
-import { O } from "@beep/utils";
+import {O} from "@beep/utils";
 
 const $I = $ScratchpadId.create("StdLib.json");
 
@@ -75,5 +75,5 @@ export declare namespace ToolError {
    * @category models
    * @since 0.0.0
    */
-  export interface Encoded {}
+  export type Encoded = typeof ToolError.Encoded
 }

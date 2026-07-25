@@ -1,6 +1,7 @@
 import {
   type AstNode,
   GlobalNamespace,
+  GlobalNamespaceName,
   InterpreterRuntimeError,
   RuntimeReference,
 } from "./Interpreter.model.ts"
@@ -12,7 +13,7 @@ import { A, P, R } from "@beep/utils";
 export const isRuntimeReference = (value: unknown): boolean =>
   S.is(RuntimeReference)(value) ||
   ToolReference.is(value) ||
-  value instanceof CodeModePromise ||
+  S.is(CodeModePromise)(value) ||
   isCodeModeValue(value)
 
 const isFunctionRuntimeReference = RuntimeReference.isAnyOf([
@@ -107,7 +108,7 @@ export const typeofValue = (value: unknown): string => {
   if (S.is(RuntimeReference)(value) && isFunctionRuntimeReference(value)) return "function"
   if (ToolReference.is(value)) return A.isReadonlyArrayNonEmpty(value.path) ? "function" : "object"
   if (S.is(GlobalNamespace)(value)) {
-    return GlobalNamespace.match(value, {
+    return GlobalNamespaceName.$match(value.name, {
       Object: () => "function",
       Array: () => "function",
       Date: () => "function",

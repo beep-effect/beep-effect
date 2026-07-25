@@ -1,6 +1,7 @@
 import {
   type AstNode,
   CoercionFunction,
+  CoercionFunctionName,
   ErrorConstructorName,
   InterpreterRuntimeError,
 } from "../interpreter/Interpreter.model.ts"
@@ -16,6 +17,7 @@ import {
   CodeModeURLSearchParams,
 } from "../Codemode.values.ts"
 import { DateTime } from "effect";
+import * as S from "effect/Schema";
 import { A, P } from "@beep/utils";
 
 export const errorConstructors = ErrorConstructorName
@@ -45,13 +47,13 @@ export const boundedData = (value: unknown, label: string): unknown => copyIn(va
 export const coerceToString = (value: unknown): string => {
   if (P.isNull(value)) return "null"
   if (P.isUndefined(value)) return "undefined"
-  if (value instanceof CodeModeDate)
+  if (S.is(CodeModeDate)(value))
     return Number.isFinite(value.time) ? DateTime.makeUnsafe(value.time).pipe(DateTime.toDate, (d) => d.toISOString()) : "Invalid Date"
-  if (value instanceof CodeModeRegExp) return `/${value.regex.source}/${value.regex.flags}`
-  if (value instanceof CodeModeMap) return "[object Map]"
-  if (value instanceof CodeModeSet) return "[object Set]"
-  if (value instanceof CodeModeURL) return value.url.href
-  if (value instanceof CodeModeURLSearchParams) return value.params.toString()
+  if (S.is(CodeModeRegExp)(value)) return `/${value.regex.source}/${value.regex.flags}`
+  if (S.is(CodeModeMap)(value)) return "[object Map]"
+  if (S.is(CodeModeSet)(value)) return "[object Set]"
+  if (S.is(CodeModeURL)(value)) return value.url.href
+  if (S.is(CodeModeURLSearchParams)(value)) return value.params.toString()
   if (errorBrandName(value) !== undefined) {
     // Match Error.prototype.toString: "name: message", or just one when the other is empty.
     const error = value as { name?: unknown; message?: unknown }
@@ -70,7 +72,7 @@ export const coerceToString = (value: unknown): string => {
 }
 
 export const coerceToNumber = (value: unknown): number => {
-  if (value instanceof CodeModeDate) return value.time
+  if (S.is(CodeModeDate)(value)) return value.time
   if (isCodeModeValue(value)) return Number.NaN
   // Arrays coerce through our own string coercion: host Number(array) joins with host
   // ToPrimitive, which throws on the null-prototype objects the interpreter produces.
@@ -87,7 +89,7 @@ export const invokeCoercion = (ref: CoercionFunction, args: Array<unknown>, node
       ? raw
       : boundedData(raw, `${ref.name} input`)
 
-  return CoercionFunction.match(ref, {
+  return CoercionFunctionName.$match(ref.name, {
     Boolean: () => P.isTruthy(value()),
     // Native Number() is 0, unlike Number(undefined).
     Number: () => withoutArguments ? 0 : coerceToNumber(value()),

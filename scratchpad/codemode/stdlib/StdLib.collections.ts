@@ -1,5 +1,6 @@
 import { LiteralKit } from "@beep/schema"
 import { A } from "@beep/utils"
+import * as S from "effect/Schema"
 import { CodeModeMap, CodeModeSet, CodeModeURLSearchParams } from "../Codemode.values.ts"
 
 export const arrayMethods = LiteralKit([
@@ -66,9 +67,9 @@ export const setMethods = LiteralKit([
 export const spreadItems = (value: unknown): Array<unknown> | undefined => {
   if (A.isArray(value)) return value
   if (typeof value === "string") return A.fromIterable(value)
-  if (value instanceof CodeModeMap) return A.map(A.fromIterable(value.map.entries()), ([key, item]) => [key, item])
-  if (value instanceof CodeModeSet) return A.fromIterable(value.set.values())
-  if (value instanceof CodeModeURLSearchParams) {
+  if (S.is(CodeModeMap)(value)) return A.map(A.fromIterable(value.map.entries()), ([key, item]) => [key, item])
+  if (S.is(CodeModeSet)(value)) return A.fromIterable(value.set.values())
+  if (S.is(CodeModeURLSearchParams)(value)) {
     return A.map(A.fromIterable(value.params.entries()), ([key, item]) => [key, item])
   }
   return undefined
