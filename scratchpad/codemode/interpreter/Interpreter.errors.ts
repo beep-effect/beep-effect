@@ -4,7 +4,6 @@ import { A, O, P, Str, pipe } from "@beep/utils";
 import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
 import {
-  DiagnosticKind,
   ErrorConstructorName,
   type AstNode,
   formatLocation,
@@ -26,68 +25,77 @@ import {
   createErrorValue,
 } from "../stdlib/index.ts";
 
-const makeDiagnosticModel = (
-  kind: DiagnosticKind,
-  message: string,
-  location?: ReturnType<typeof sourceLocation>,
-  suggestions?: ReadonlyArray<string>
-): DiagnosticModel =>
-  DiagnosticModel.new(
-    kind,
-    message,
-    P.isUndefined(location)
-      ? undefined
-      : DiagnosticLocation.make({
-          line: PosInt.make(location.line),
-          column: PosInt.make(location.column),
-        }),
-    suggestions
+const renderUnknown = (
+  value: unknown,
+  property?: "name" | "message"
+): string =>
+  pipe(
+    Result.try(() =>
+      globalThis.String(
+        P.isUndefined(property)
+          ? value
+          : P.isObject(value)
+            ? Reflect.get(value, property)
+            : undefined
+      )
+    ),
+    Result.getOrElse(() => "<unprintable>")
   );
 
 /** Normalizes an interpreter, Toolkit, guest, or host failure. */
-export const normalizeError = (error: unknown): DiagnosticModel => {
-  if (InterpreterFailure.guards.InterpreterRuntimeError(error)) {
-    const node = O.getOrUndefined(error.node);
-    return makeDiagnosticModel(
-      error.kind,
-      `${error.message}${formatLocation(node)}`,
-      P.isUndefined(node?.loc)
-        ? undefined
-        : sourceLocation(node),
-      O.getOrUndefined(error.suggestions)
-    );
-  }
-  if (ToolRuntimeError.is(error)) {
-    return makeDiagnosticModel(
-      error.kind,
-      error.message,
-      undefined,
-      A.isReadonlyArrayNonEmpty(error.suggestions) ? error.suggestions : undefined
-    );
-  }
-  if (ToolError.is(error)) return makeDiagnosticModel("ToolFailure", error.message);
-  if (InterpreterFailure.guards.ProgramThrow(error)) {
-    const value = error.value;
-    const message = containsRuntimeReference(value)
-      ? "a non-data value"
-      : P.isString(value)
-        ? value
-        : P.isObject(value) && P.hasProperty(value, "message") && P.isString(value.message)
-          ? value.message
-          : pipe(
-              S.encodeUnknownResult(S.UnknownFromJsonString)(copyOut(value, "json")),
-              Result.getOrElse(() => globalThis.String(value))
-            );
-    return makeDiagnosticModel("ExecutionFailure", `Uncaught: ${message}`);
-  }
-  if (error instanceof RangeError && pipe(error.message, Str.toLowerCase, Str.includes("call stack"))) {
-    return makeDiagnosticModel("ExecutionFailure", "Execution exceeded the maximum nesting depth.");
-  }
-  if (P.isError(error)) {
-    return makeDiagnosticModel(error.name === "SyntaxError" ? "ParseError" : "ExecutionFailure", error.message);
-  }
-  return makeDiagnosticModel("ExecutionFailure", globalThis.String(error));
-};
+export const normalizeError = (error: unknown): DiagnosticModel =>
+  pipe(
+    Result.try(() => {
+      if (InterpreterFailure.guards.InterpreterRuntimeError(error)) {
+        const node = O.getOrUndefined(error.node);
+        const location = P.isUndefined(node?.loc) ? undefined : sourceLocation(node);
+        return DiagnosticModel.new(
+          error.kind,
+          `${error.message}${formatLocation(node)}`,
+          P.isUndefined(location)
+            ? undefined
+            : DiagnosticLocation.make({
+                line: PosInt.make(location.line),
+                column: PosInt.make(location.column),
+              }),
+          O.getOrUndefined(error.suggestions)
+        );
+      }
+      if (ToolRuntimeError.is(error)) {
+        return DiagnosticModel.new(
+          error.kind,
+          error.message,
+          undefined,
+          A.isReadonlyArrayNonEmpty(error.suggestions) ? error.suggestions : undefined
+        );
+      }
+      if (ToolError.is(error)) return DiagnosticModel.new("ToolFailure", error.message);
+      if (InterpreterFailure.guards.ProgramThrow(error)) {
+        const value = error.value;
+        const message = containsRuntimeReference(value)
+          ? "a non-data value"
+          : P.isString(value)
+            ? value
+            : P.isObject(value) && P.hasProperty(value, "message") && P.isString(value.message)
+              ? value.message
+              : pipe(
+                  S.encodeUnknownResult(S.UnknownFromJsonString)(copyOut(value, "json")),
+                  Result.getOrElse(() => renderUnknown(value))
+                );
+        return DiagnosticModel.new("ExecutionFailure", `Uncaught: ${message}`);
+      }
+      const name = renderUnknown(error, "name");
+      const message = renderUnknown(error, "message");
+      if (error instanceof RangeError && pipe(message, Str.toLowerCase, Str.includes("call stack"))) {
+        return DiagnosticModel.new("ExecutionFailure", "Execution exceeded the maximum nesting depth.");
+      }
+      if (P.isError(error)) {
+        return DiagnosticModel.new(name === "SyntaxError" ? "ParseError" : "ExecutionFailure", message);
+      }
+      return DiagnosticModel.new("ExecutionFailure", renderUnknown(error));
+    }),
+    Result.getOrElse(() => DiagnosticModel.new("ExecutionFailure", renderUnknown(error)))
+  );
 
 /** Converts a host-side failure into the guest Error object representation. */
 export const caughtErrorValue = (thrown: unknown): unknown => {
@@ -95,7 +103,8 @@ export const caughtErrorValue = (thrown: unknown): unknown => {
   if (InterpreterFailure.guards.InterpreterRuntimeError(thrown)) {
     return createErrorValue(thrown.errorName, thrown.message);
   }
-  const name = P.isError(thrown) && S.is(ErrorConstructorName)(thrown.name) ? thrown.name : "Error";
+  const renderedName = renderUnknown(thrown, "name");
+  const name = S.is(ErrorConstructorName)(renderedName) ? renderedName : "Error";
   return createErrorValue(name, normalizeError(thrown).message);
 };
 
