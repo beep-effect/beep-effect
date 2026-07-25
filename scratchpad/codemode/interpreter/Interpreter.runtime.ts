@@ -9,7 +9,8 @@ import {
   MutableHashMap,
   MutableHashSet,
   MutableRef,
-  Random
+  Random,
+  Result,
 } from "effect";
 import * as S from "effect/Schema";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
@@ -1256,23 +1257,28 @@ export class Interpreter<R> {
     const self = this;
 
     const attempted = Effect.matchCauseEffect(this.evaluateStatement(body), {
-      onFailure: (cause) => {
+      onFailure: Effect.fnUntraced(function* (cause) {
+        const failure = Cause.squash(cause);
+        const isGeneratorReturn = pipe(
+          Result.try(() => InterpreterFailure.guards.GeneratorReturn(failure)),
+          Result.getOrElse(thunkFalse)
+        );
         if (
           cause.reasons.some(Cause.isInterruptReason) ||
-          InterpreterFailure.guards.GeneratorReturn(Cause.squash(cause)) ||
+          isGeneratorReturn ||
           P.isUndefined(handler)
         ) {
-          return Effect.failCause(cause);
+          return yield* Effect.failCause(cause);
         }
 
-        const caught = caughtErrorValue(Cause.squash(cause));
+        const caught = caughtErrorValue(failure);
         const parameter = getOptionalNode(handler, "param");
         self.scopes.push();
-        return Effect.gen(function* () {
+        return yield* Effect.gen(function* () {
           if (P.isNotNullish(parameter)) yield* self.declarePattern(parameter, caught, true, handler);
           return yield* self.evaluateStatement(getNode(handler, "body"));
         }).pipe(Effect.ensuring(Effect.sync(() => self.scopes.pop())));
-      },
+      }),
       onSuccess: Effect.succeed,
     });
 

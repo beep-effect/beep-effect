@@ -84,12 +84,12 @@ export const normalizeError = (error: unknown): DiagnosticModel =>
                 );
         return DiagnosticModel.new("ExecutionFailure", `Uncaught: ${message}`);
       }
-      const name = renderUnknown(error, "name");
-      const message = renderUnknown(error, "message");
-      if (error instanceof RangeError && pipe(message, Str.toLowerCase, Str.includes("call stack"))) {
-        return DiagnosticModel.new("ExecutionFailure", "Execution exceeded the maximum nesting depth.");
-      }
       if (P.isError(error)) {
+        const name = renderUnknown(error, "name");
+        const message = renderUnknown(error, "message");
+        if (error instanceof RangeError && pipe(message, Str.toLowerCase, Str.includes("call stack"))) {
+          return DiagnosticModel.new("ExecutionFailure", "Execution exceeded the maximum nesting depth.");
+        }
         return DiagnosticModel.new(name === "SyntaxError" ? "ParseError" : "ExecutionFailure", message);
       }
       return DiagnosticModel.new("ExecutionFailure", renderUnknown(error));
@@ -98,15 +98,19 @@ export const normalizeError = (error: unknown): DiagnosticModel =>
   );
 
 /** Converts a host-side failure into the guest Error object representation. */
-export const caughtErrorValue = (thrown: unknown): unknown => {
-  if (InterpreterFailure.guards.ProgramThrow(thrown)) return thrown.value;
-  if (InterpreterFailure.guards.InterpreterRuntimeError(thrown)) {
-    return createErrorValue(thrown.errorName, thrown.message);
-  }
-  const renderedName = renderUnknown(thrown, "name");
-  const name = S.is(ErrorConstructorName)(renderedName) ? renderedName : "Error";
-  return createErrorValue(name, normalizeError(thrown).message);
-};
+export const caughtErrorValue = (thrown: unknown): unknown =>
+  pipe(
+    Result.try(() => {
+      if (InterpreterFailure.guards.ProgramThrow(thrown)) return thrown.value;
+      if (InterpreterFailure.guards.InterpreterRuntimeError(thrown)) {
+        return createErrorValue(thrown.errorName, thrown.message);
+      }
+      const renderedName = P.isError(thrown) ? renderUnknown(thrown, "name") : "Error";
+      const name = S.is(ErrorConstructorName)(renderedName) ? renderedName : "Error";
+      return createErrorValue(name, normalizeError(thrown).message);
+    }),
+    Result.getOrElse(() => createErrorValue("Error", normalizeError(thrown).message))
+  );
 
 /** Constructs one guest Error value. */
 export const constructErrorValue = (name: ErrorConstructorName, args: ReadonlyArray<unknown>): SafeObject =>
