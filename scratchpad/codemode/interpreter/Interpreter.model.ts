@@ -16,19 +16,9 @@ import {Tuple, Result} from "effect";
 import {A, P, O, R, flow, dual, pipe, Str, Struct} from "@beep/utils";
 import type {TString} from "@beep/types";
 
+export { SafeObject } from "@beep/schema/SafeObject";
 
 const $I = $ScratchpadId.create("interpreter/Interpreter.model");
-
-export const SafeObject = S.Record(S.String, S.Unknown).pipe(
-  SchemaUtils.withStatics((schema) => ({
-    is: S.is(schema),
-  })),
-  $I.annoteSchema("SafeObject", {
-    description: ""
-  })
-);
-
-export type SafeObject = typeof SafeObject.Type;
 
 /**
  * TODO: verify if check constraints are correct given the usecase
