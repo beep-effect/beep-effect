@@ -1,40 +1,13 @@
 import { type AstNode, InterpreterRuntimeError } from "../interpreter/Interpreter.model.ts"
-import { LiteralKit } from "@beep/schema"
 import * as S from "effect/Schema"
+import {
+  stringStatics,
+} from "../Codemode.method-names.ts"
 
-export const stringMethods = LiteralKit([
-  "toLowerCase",
-  "toUpperCase",
-  "trim",
-  "trimStart",
-  "trimEnd",
-  "split",
-  "slice",
-  "substring",
-  "includes",
-  "startsWith",
-  "endsWith",
-  "indexOf",
-  "lastIndexOf",
-  "replace",
-  "replaceAll",
-  "repeat",
-  "padStart",
-  "padEnd",
-  "charAt",
-  "charCodeAt",
-  "codePointAt",
-  "at",
-  "concat",
-  "toString",
-  "match",
-  "matchAll",
-  "search",
-  "localeCompare",
-  "normalize",
-])
-
-export const stringStatics = LiteralKit(["fromCharCode", "fromCodePoint"])
+export {
+  stringMethods,
+  stringStatics,
+} from "../Codemode.method-names.ts"
 
 export const invokeStringStatic = (name: string, args: Array<unknown>, node: AstNode): unknown => {
   const codes = args.map((arg) => {

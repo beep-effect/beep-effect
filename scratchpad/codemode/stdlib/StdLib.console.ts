@@ -5,7 +5,6 @@ import {
 } from "../interpreter/Interpreter.references.ts";
 import {MutableHashSet, pipe} from "effect";
 import * as S from "effect/Schema";
-import {LiteralKit} from "@beep/schema";
 import {A, O, P, R} from "@beep/utils";
 import {copyIn, copyOut} from "../Codemode.tool-runtime.ts";
 import {
@@ -19,9 +18,9 @@ import {
   CodeModeURLSearchParams,
 } from "../Codemode.values.ts";
 import {boundedData, coerceToString} from "./StdLib.value.ts";
+import { ConsoleMethod } from "../Codemode.method-names.ts";
 
-export const ConsoleMethod = LiteralKit(["log", "info", "debug", "warn", "error", "dir", "table"]);
-export type ConsoleMethod = typeof ConsoleMethod.Type;
+export { ConsoleMethod };
 
 const MAX_CONSOLE_DEPTH = 32;
 const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);

@@ -31,13 +31,14 @@ const renderLiteral = (value: unknown): string =>
 export const IdentifierSegment = S.String.check(
   S.isPattern(/^[A-Za-z_$][A-Za-z0-9_$]*$/u)
 ).pipe(
+  SchemaUtils.withCodecStatics,
   $I.annoteSchema("IdentifierSegment", {
     description: "An ECMAScript identifier segment safe to render after a dot.",
   })
 );
 
 /** Guard for {@link IdentifierSegment}. */
-export const identifierSegment = S.is(IdentifierSegment);
+export const identifierSegment = IdentifierSegment.is;
 
 const renderKey = (name: string): string =>
   identifierSegment(name) ? name : renderLiteral(name);

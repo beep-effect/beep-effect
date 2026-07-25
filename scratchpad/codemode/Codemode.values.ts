@@ -50,7 +50,7 @@ const NativeURL = S.instanceOf(URL).pipe(
  * @category runtime
  * @since 0.0.0
  */
-export class CodeModePromise extends S.Class<CodeModePromise>($I`CodeModePromise`)(
+export class CodeModePromise extends S.TaggedClass<CodeModePromise>($I`CodeModePromise`)("CodeModePromise",
   { fiber: CodeModeFiber },
   $I.annote("CodeModePromise", {
     description: "Promise handle owned by one CodeMode execution.",
@@ -72,7 +72,7 @@ export class CodeModePromise extends S.Class<CodeModePromise>($I`CodeModePromise
  * @category runtime
  * @since 0.0.0
  */
-export class CodeModeDate extends S.Class<CodeModeDate>($I`CodeModeDate`)(
+export class CodeModeDate extends S.TaggedClass<CodeModeDate>($I`CodeModeDate`)("CodeModeDate",
   // Invalid JavaScript dates carry NaN and must remain representable.
   // @effect-diagnostics-next-line schemaNumber:off
   { time: S.Number.pipe(S.mutableKey) },
@@ -91,7 +91,7 @@ export class CodeModeDate extends S.Class<CodeModeDate>($I`CodeModeDate`)(
  * @category runtime
  * @since 0.0.0
  */
-export class CodeModeRegExp extends S.Class<CodeModeRegExp>($I`CodeModeRegExp`)(
+export class CodeModeRegExp extends S.TaggedClass<CodeModeRegExp>($I`CodeModeRegExp`)("CodeModeRegExp",
   { regex: NativeRegExp },
   $I.annote("CodeModeRegExp", {
     description: "Mutable JavaScript RegExp value.",
@@ -117,7 +117,7 @@ export class CodeModeRegExp extends S.Class<CodeModeRegExp>($I`CodeModeRegExp`)(
  * @category runtime
  * @since 0.0.0
  */
-export class CodeModeMap extends S.Class<CodeModeMap>($I`CodeModeMap`)(
+export class CodeModeMap extends S.TaggedClass<CodeModeMap>($I`CodeModeMap`)("CodeModeMap",
   { map: NativeMap },
   $I.annote("CodeModeMap", {
     description: "Mutable JavaScript Map value.",
@@ -136,7 +136,7 @@ export class CodeModeMap extends S.Class<CodeModeMap>($I`CodeModeMap`)(
  * @category runtime
  * @since 0.0.0
  */
-export class CodeModeSet extends S.Class<CodeModeSet>($I`CodeModeSet`)(
+export class CodeModeSet extends S.TaggedClass<CodeModeSet>($I`CodeModeSet`)("CodeModeSet",
   { set: NativeSet },
   $I.annote("CodeModeSet", {
     description: "Mutable JavaScript Set value.",
@@ -155,7 +155,7 @@ export class CodeModeSet extends S.Class<CodeModeSet>($I`CodeModeSet`)(
  * @category runtime
  * @since 0.0.0
  */
-export class CodeModeURLSearchParams extends S.Class<CodeModeURLSearchParams>($I`CodeModeURLSearchParams`)(
+export class CodeModeURLSearchParams extends S.TaggedClass<CodeModeURLSearchParams>($I`CodeModeURLSearchParams`)("CodeModeURLSearchParams",
   { params: NativeURLSearchParams },
   $I.annote("CodeModeURLSearchParams", {
     description: "Mutable JavaScript URLSearchParams value.",
@@ -173,7 +173,7 @@ export class CodeModeURLSearchParams extends S.Class<CodeModeURLSearchParams>($I
  * @category runtime
  * @since 0.0.0
  */
-export class CodeModeURL extends S.Class<CodeModeURL>($I`CodeModeURL`)(
+export class CodeModeURL extends S.TaggedClass<CodeModeURL>($I`CodeModeURL`)("CodeModeURL",
   {
     searchParams: CodeModeURLSearchParams,
     url: NativeURL,
@@ -206,6 +206,7 @@ export const CodeModeValue = S.Union([
   CodeModeURL,
   CodeModeURLSearchParams,
 ]).pipe(
+  S.toTaggedUnion("_tag"),
   $I.annoteSchema("CodeModeValue", {
     description: "Mutable guest values backed by native JavaScript state.",
   }),

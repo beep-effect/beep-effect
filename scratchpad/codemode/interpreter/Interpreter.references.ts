@@ -1,18 +1,40 @@
+import { $ScratchpadId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
+import { A, P, R } from "@beep/utils";
+import { MutableHashSet } from "effect";
+import * as S from "effect/Schema";
+import { ToolReference } from "../Codemode.tool-runtime.ts";
+import {
+  CodeModePromise,
+  CodeModeValue,
+  isCodeModeValue,
+} from "../Codemode.values.ts";
 import {
   type AstNode,
   GlobalNamespaceName,
   InterpreterRuntimeError,
   RuntimeReference,
-} from "./Interpreter.model.ts"
-import { ToolReference } from "../Codemode.tool-runtime.ts"
-import { isCodeModeValue, CodeModePromise } from "../Codemode.values.ts"
-import { MutableHashSet } from "effect"
-import { A, P, R } from "@beep/utils";
-export const isRuntimeReference = (value: unknown): boolean =>
-  RuntimeReference.is(value) ||
-  ToolReference.is(value) ||
-  CodeModePromise.is(value) ||
-  isCodeModeValue(value)
+} from "./Interpreter.model.ts";
+
+const $I = $ScratchpadId.create("codemode/interpreter/Interpreter.references");
+
+/** Every identity-bearing value retained by the CodeMode runtime. */
+export const RuntimeReferenceValue = S.Union([
+  RuntimeReference,
+  ToolReference,
+  CodeModePromise,
+  CodeModeValue,
+]).pipe(
+  $I.annoteSchema("RuntimeReferenceValue", {
+    description: "Every schema-owned runtime reference and mutable guest value.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/** Runtime type for {@link RuntimeReferenceValue}. */
+export type RuntimeReferenceValue = typeof RuntimeReferenceValue.Type;
+
+export const isRuntimeReference = RuntimeReferenceValue.is;
 
 const isFunctionRuntimeReference = RuntimeReference.isAnyOf([
   "CodeModeFunction",
@@ -44,7 +66,9 @@ export const containsRuntimeReference = (value: unknown): boolean => {
   const pending: Array<Iterator<unknown>> = [[value].values()]
   const seen = MutableHashSet.empty<object>()
   while (pending.length > 0) {
-    const next = pending.at(-1)!.next()
+    const iterator = pending.at(-1)
+    if (P.isUndefined(iterator)) break
+    const next = iterator.next()
     if (next.done === true) {
       pending.pop()
       continue
@@ -63,7 +87,9 @@ export const containsOpaqueReference = (value: unknown): boolean => {
   const pending: Array<Iterator<unknown>> = [[value].values()]
   const seen = MutableHashSet.empty<object>()
   while (pending.length > 0) {
-    const next = pending.at(-1)!.next()
+    const iterator = pending.at(-1)
+    if (P.isUndefined(iterator)) break
+    const next = iterator.next()
     if (next.done === true) {
       pending.pop()
       continue
@@ -83,7 +109,9 @@ export const rejectCircularInsertion = (container: object, value: unknown, label
   const pending: Array<Iterator<unknown>> = [[value].values()]
   const seen = MutableHashSet.empty<object>()
   while (pending.length > 0) {
-    const next = pending.at(-1)!.next()
+    const iterator = pending.at(-1)
+    if (P.isUndefined(iterator)) break
+    const next = iterator.next()
     if (next.done === true) {
       pending.pop()
       continue

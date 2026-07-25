@@ -5,12 +5,19 @@ import { Effect, Result as Rs } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import {
+  DiagnosticLocation,
   DiagnosticModel,
   ExecutionLimits,
+  Result,
   ResultModel,
+  SuccessModel,
 } from "../../codemode/Codemode.service.ts";
 import { IdentifierSegment, identifierSegment } from "../../codemode/Codemode.tool-schema.ts";
-import { SearchInput } from "../../codemode/Codemode.tool-runtime.ts";
+import {
+  SearchInput,
+  ToolCallEnded,
+  ToolCallStarted,
+} from "../../codemode/Codemode.tool-runtime.ts";
 import {
   Binding,
   CodeModeGenerator,
@@ -24,6 +31,7 @@ import {
   GlobalMethodReference,
   GlobalNamespace,
   GlobalNamespaceName,
+  IntrinsicReference,
   JsonMethodName,
   JsonMethodReference,
   MemberReference,
@@ -166,6 +174,91 @@ describe("CodeMode schema laws", () => {
     assert.strictEqual(Rs.isFailure(decode({ timeoutMs: 1.5 })), true);
     assert.strictEqual(Rs.isFailure(decode({ maxToolCalls: -1 })), true);
     assert.strictEqual(Rs.isFailure(decode({ maxOutputBytes: Number.NaN })), true);
+  });
+
+  it("enforces one-based diagnostics and exhaustive reference pairs", () => {
+    const decodeLocation = S.decodeUnknownResult(DiagnosticLocation);
+    const decodeIntrinsic = S.decodeUnknownResult(IntrinsicReference);
+    const decodeGlobal = S.decodeUnknownResult(GlobalMethodReference);
+
+    assert.strictEqual(Rs.isFailure(decodeLocation({ line: 0, column: 1 })), true);
+    assert.strictEqual(Rs.isFailure(decodeLocation({ line: 1, column: 0 })), true);
+    assert.strictEqual(Rs.isSuccess(decodeLocation({ line: 1, column: 1 })), true);
+    assert.strictEqual(
+      Rs.isFailure(
+        decodeIntrinsic({
+          _tag: "IntrinsicReference",
+          method: {
+            receiverKind: "String",
+            receiver: "value",
+            name: "map",
+          },
+        })
+      ),
+      true
+    );
+    assert.strictEqual(
+      Rs.isFailure(
+        decodeGlobal({
+          _tag: "GlobalMethodReference",
+          method: {
+            namespace: "String",
+            name: "groupBy",
+          },
+        })
+      ),
+      true
+    );
+  });
+
+  it("keeps internal results and tool completions tagged without changing the wire result", () => {
+    const call = ToolCallStarted.new(0, "search", {});
+    const decodeEnded = S.decodeUnknownResult(ToolCallEnded);
+    const decodeWire = S.decodeUnknownResult(Result);
+    const internal = SuccessModel.make({
+      value: "done",
+      warnings: O.none(),
+      logs: O.none(),
+      truncated: O.none(),
+      toolCalls: [],
+    });
+
+    assert.strictEqual(ResultModel.guards.Success(internal), true);
+    assert.strictEqual(
+      Rs.isSuccess(decodeWire({ ok: true, value: "done", toolCalls: [] })),
+      true
+    );
+    assert.strictEqual(
+      Rs.isFailure(
+        decodeEnded({
+          _tag: "failure",
+          index: 0,
+          name: "search",
+          input: {},
+          durationMs: 1,
+        })
+      ),
+      true
+    );
+    assert.strictEqual(
+      Rs.isFailure(
+        decodeEnded({
+          _tag: "success",
+          index: 0,
+          name: "search",
+          input: {},
+          durationMs: 1,
+          message: "impossible",
+        })
+      ),
+      true
+    );
+    assert.strictEqual(ToolCallEnded.new(call, 1, "success")._tag, "success");
+    const failed = ToolCallEnded.new(call, 1, "failure", "boom");
+    assert.strictEqual(failed._tag, "failure");
+    if (failed._tag === "failure") {
+      assert.strictEqual(failed.message, "boom");
+    }
   });
 
   it("keeps numeric execution-limit checks equivalent to positive and non-negative integers", () => {

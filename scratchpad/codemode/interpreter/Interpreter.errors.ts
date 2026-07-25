@@ -55,7 +55,7 @@ export const normalizeError = (error: unknown): Diagnostic => {
       A.isReadonlyArrayNonEmpty(error.suggestions) ? error.suggestions : undefined
     );
   }
-  if (S.is(ToolError)(error)) return makeDiagnostic("ToolFailure", error.message);
+  if (ToolError.is(error)) return makeDiagnostic("ToolFailure", error.message);
   if (InterpreterFailure.guards.ProgramThrow(error)) {
     const value = error.value;
     const message = containsRuntimeReference(value)

@@ -53,6 +53,7 @@ export type JsonSchema = typeof JsonSchema.Type;
 /** Optional OpenAPI operation identifier. */
 export const OperationId = NonEmptyTrimmedStr.pipe(
   S.brand("OpenApiOperationId"),
+  SchemaUtils.withCodecStatics,
   $I.annoteSchema("OperationId", {
     description: "A non-empty OpenAPI operationId.",
   })
@@ -72,6 +73,9 @@ export const HttpMethod = MappedLiteralKit([
   ["patch", "PATCH"],
   ["trace", "TRACE"],
 ]).pipe(
+  SchemaUtils.withStatics((schema) => ({
+    decodeOption: S.decodeUnknownOption(schema),
+  })),
   $I.annoteSchema("HttpMethod", {
     description: "A supported OpenAPI operation method decoded to uppercase HTTP form.",
   })
@@ -84,6 +88,7 @@ export type HttpMethod = typeof HttpMethod.Type;
 export const ApiPath = S.String.check(
   S.isPattern(/^\/.*$/u)
 ).pipe(
+  SchemaUtils.withCodecStatics,
   $I.annoteSchema("ApiPath", {
     description: "An absolute OpenAPI path template.",
   })
@@ -409,6 +414,8 @@ export class Options extends S.Class<Options>($I`Options`)(
     description: "Decoded OpenAPI adapter options with Option and HashMap core values.",
   })
 ) {
+  static readonly decodeEffect = S.decodeUnknownEffect(Options);
+
   static readonly new = (
     spec: Document,
     baseUrl?: string,

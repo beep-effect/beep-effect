@@ -4,11 +4,25 @@ import { Cause, Effect, Result as Rs, Scope } from "effect"
 import * as S from "effect/Schema";
 import type * as Toolkit from "effect/unstable/ai/Toolkit";
 import { DiagnosticCategory, ModuleKind, ScriptTarget, flattenDiagnosticMessageText, transpileModule } from "typescript"
-import type { DataValue, Diagnostic, ExecuteOptions, ExecutionLimits, Result } from "../Codemode.service.ts"
+import {
+  type Diagnostic,
+  type ExecuteOptions,
+  type ExecutionLimits,
+  type Result,
+} from "../Codemode.service.ts"
+import {
+  DataValue,
+  type DataValue as DataValueType,
+} from "../Codemode.data.ts"
 import { copyIn, copyOut, type Services } from "../Codemode.tool-runtime.ts"
 import * as ToolRuntime from "../Codemode.tool-runtime.ts"
 import { normalizeError } from "./Interpreter.errors.ts"
-import { DiagnosticKind, InterpreterRuntimeError, ProgramNode } from "./Interpreter.model.ts"
+import {
+  DiagnosticKind,
+  InterpreterRuntimeError,
+  ProgramNode,
+  tryInterpreter,
+} from "./Interpreter.model.ts"
 import { PromiseRuntime } from "./Interpreter.promises.ts"
 import { Interpreter } from "./Interpreter.runtime.ts"
 
@@ -31,7 +45,7 @@ export const executeWithLimits = <ToolkitType extends Toolkit.Toolkit<any>>(
     const logs = A.empty<string>()
     const logged = () => (A.isReadonlyArrayNonEmpty(logs) ? { logs: A.copy(logs) } : {})
     // Set only after copy-out so timeouts cannot report invalid values as completed.
-    let returned: { value: DataValue; promises: PromiseRuntime<Services<ToolkitType>> } | undefined
+    let returned: { value: DataValueType; promises: PromiseRuntime<Services<ToolkitType>> } | undefined
     let toolRuntime: ToolRuntime.ToolRuntime<Services<ToolkitType>> | undefined
 
     const base = Effect.acquireUseRelease(
@@ -67,7 +81,20 @@ export const executeWithLimits = <ToolkitType extends Toolkit.Toolkit<any>>(
             logs,
           )
           const value = yield* interpreter.run(program)
-          const result = copyOut(copyIn(value, "Execution result"), "nullify") as DataValue
+          const copied = yield* Effect.fromResult(
+            tryInterpreter(
+              () => copyOut(copyIn(value, "Execution result"), "nullify")
+            )
+          )
+          const result = yield* S.decodeUnknownEffect(DataValue)(copied).pipe(
+            Effect.mapError((cause) =>
+              InterpreterRuntimeError.new(
+                `Execution result is not a data value: ${cause.message}`,
+                undefined,
+                DiagnosticKind.Enum.InvalidDataValue
+              )
+            )
+          )
           returned = { value: result, promises }
           const warnings = yield* promises.interrupt()
           const toolCalls = yield* tools.calls;
@@ -232,7 +259,7 @@ const utf8Truncate = (value: string, maxBytes: number): string => {
 const boundOutput = (result: Result, maxOutputBytes: number): Result => {
   let truncated = false
 
-  let value: DataValue = null
+  let value: DataValueType = null
   let valueBytes = 0
   if (result.ok) {
     const serialized = pipe(

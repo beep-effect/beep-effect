@@ -251,7 +251,7 @@ export const invokePromiseMethod = <R>(
               if (Exit.isSuccess(exit)) {
                 outcomes.push(
                   Object.assign(
-                    Object.create(null) as SafeObject,
+                    SafeObject.make(Object.create(null)),
                     { status: "fulfilled", value: exit.value },
                   ),
                 )
@@ -259,7 +259,7 @@ export const invokePromiseMethod = <R>(
               }
               if (Cause.hasInterruptsOnly(exit.cause)) return yield* Effect.failCause(exit.cause)
               outcomes.push(
-                Object.assign(Object.create(null) as SafeObject, {
+                Object.assign(SafeObject.make(Object.create(null)), {
                   status: "rejected",
                   reason: caughtErrorValue(Cause.squash(exit.cause)),
                 }),
@@ -309,7 +309,7 @@ export const invokePromiseMethod = <R>(
                 Effect.fail(ProgramThrow.new(createAggregateErrorValue(reasons, "All promises were rejected"))),
               ),
               Effect.catch((error) =>
-                S.is(PromiseAnyFulfilled)(error) ? Effect.succeed(error.value) : Effect.fail(error),
+                PromiseAnyFulfilled.is(error) ? Effect.succeed(error.value) : Effect.fail(error),
               ),
             ),
           )
@@ -415,6 +415,8 @@ class PromiseAnyFulfilled extends S.TaggedClass<PromiseAnyFulfilled>($I`PromiseA
     description: "Internal short-circuit marker for Promise.any fulfillment.",
   })
 ) {
+  static readonly is = S.is(PromiseAnyFulfilled);
+
   static readonly new = (value: unknown): PromiseAnyFulfilled => PromiseAnyFulfilled.make({ value });
 }
 

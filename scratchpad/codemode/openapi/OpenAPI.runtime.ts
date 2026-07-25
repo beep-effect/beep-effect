@@ -28,7 +28,6 @@ import {
   HttpClientRequest,
   Headers,
   type HttpClientResponse,
-  type HttpMethod,
 } from "effect/unstable/http";
 import { ToolError } from "../Codemode.tool-error.ts";
 import { isRecord, own } from "./OpenAPI.specification.ts";
@@ -277,12 +276,13 @@ const serializeQuery = (
 const buildUrl = (
   plan: Plan,
   input: Readonly<Record<string, unknown>>
-): Result.Result<string, ToolError> =>
-  pipe(
+): Result.Result<string, ToolError> => {
+  const initial: Result.Result<string, ToolError> = Result.succeed(plan.url);
+  return pipe(
     plan.fields,
     A.filter((field) => InputLocation.is.path(field.location)),
     A.reduce(
-      Result.succeed(plan.url) as Result.Result<string, ToolError>,
+      initial,
       (url, field) =>
         pipe(
           url,
@@ -333,6 +333,7 @@ const buildUrl = (
       )
     )
   );
+};
 
 const appendQueryFields = (
   plan: Plan,
@@ -340,15 +341,14 @@ const appendQueryFields = (
 ): Result.Result<
   ReadonlyArray<readonly [string, string]>,
   ToolError
-> =>
-  A.reduce(
+> => {
+  const initial: Result.Result<
+    ReadonlyArray<readonly [string, string]>,
+    ToolError
+  > = Result.succeed(A.empty());
+  return A.reduce(
     plan.fields,
-    Result.succeed(
-      A.empty<readonly [string, string]>()
-    ) as Result.Result<
-      ReadonlyArray<readonly [string, string]>,
-      ToolError
-    >,
+    initial,
     (parameters, field) => {
       if (field.location !== "query") return parameters;
       return pipe(
@@ -371,18 +371,20 @@ const appendQueryFields = (
       );
     }
   );
+};
 
 const applyHeaderFields = (
   plan: Plan,
   input: Readonly<Record<string, unknown>>,
   request: HttpClientRequest.HttpClientRequest
-): Result.Result<HttpClientRequest.HttpClientRequest, ToolError> =>
-  A.reduce(
+): Result.Result<HttpClientRequest.HttpClientRequest, ToolError> => {
+  const initial: Result.Result<
+    HttpClientRequest.HttpClientRequest,
+    ToolError
+  > = Result.succeed(request);
+  return A.reduce(
     plan.fields,
-    Result.succeed(request) as Result.Result<
-      HttpClientRequest.HttpClientRequest,
-      ToolError
-    >,
+    initial,
     (current, field) => {
       if (!InputLocation.is.header(field.location)) return current;
       return pipe(
@@ -409,6 +411,7 @@ const applyHeaderFields = (
       );
     }
   );
+};
 
 const setJsonBody = (
   plan: Plan,
@@ -497,8 +500,7 @@ const buildRequest = (
       return yield* missingParameter(missing.value, "required");
     }
 
-    const method = plan.operation.method as HttpMethod.HttpMethod;
-    const initial = HttpClientRequest.make(method)(url);
+    const initial = HttpClientRequest.make(plan.operation.method)(url);
     const query = yield* Effect.fromResult(
       appendQueryFields(plan, input)
     );
@@ -737,13 +739,12 @@ const applyCredential = (
 
 const applyCredentials = (
   bindings: ReadonlyArray<CredentialBinding>
-): Result.Result<AppliedAuth, ToolError> =>
-  A.reduce(
+): Result.Result<AppliedAuth, ToolError> => {
+  const initial: Result.Result<AppliedAuth, ToolError> =
+    Result.succeed(AppliedAuth.new());
+  return A.reduce(
     bindings,
-    Result.succeed(AppliedAuth.new()) as Result.Result<
-      AppliedAuth,
-      ToolError
-    >,
+    initial,
     (applied, binding) =>
       pipe(
         applied,
@@ -752,6 +753,7 @@ const applyCredentials = (
         )
       )
   );
+};
 
 const resolveAuth = (
   plan: Plan
@@ -866,7 +868,7 @@ const readResponseBody = (
     ),
     Effect.map(decodeResponseBody),
     Effect.catch((cause) => {
-      if (S.is(ToolError)(cause)) return Effect.fail(cause);
+      if (ToolError.is(cause)) return Effect.fail(cause);
       if (
         HttpClientError.isHttpClientError(cause) &&
         P.isTagged("EmptyBodyError")(cause.reason)

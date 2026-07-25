@@ -5,50 +5,20 @@ import { LiteralKit } from "@beep/schema"
 import { O } from "@beep/utils"
 import { DateTime, Match } from "effect"
 import * as S from "effect/Schema"
+import {
+  dateMethods,
+  dateStatics,
+  fourArgumentDateSetter,
+  oneArgumentDateSetter,
+  threeArgumentDateSetter,
+  twoArgumentDateSetter,
+} from "../Codemode.method-names.ts"
 
-const OneArgumentDateSetter = LiteralKit([
-  "setTime",
-  "setMilliseconds",
-  "setUTCMilliseconds",
-  "setDate",
-  "setUTCDate",
-])
-const TwoArgumentDateSetter = LiteralKit(["setSeconds", "setUTCSeconds", "setMonth", "setUTCMonth"])
-const ThreeArgumentDateSetter = LiteralKit(["setMinutes", "setUTCMinutes", "setFullYear", "setUTCFullYear"])
-const FourArgumentDateSetter = LiteralKit(["setHours", "setUTCHours"])
+export {
+  dateMethods,
+  dateStatics,
+} from "../Codemode.method-names.ts"
 
-export const dateMethods = LiteralKit([
-  "getTime",
-  "valueOf",
-  "toISOString",
-  "toJSON",
-  "toString",
-  "toUTCString",
-  "toGMTString",
-  "getFullYear",
-  "getMonth",
-  "getDate",
-  "getDay",
-  "getHours",
-  "getMinutes",
-  "getSeconds",
-  "getMilliseconds",
-  "getUTCFullYear",
-  "getUTCMonth",
-  "getUTCDate",
-  "getUTCDay",
-  "getUTCHours",
-  "getUTCMinutes",
-  "getUTCSeconds",
-  "getUTCMilliseconds",
-  "getTimezoneOffset",
-  ...OneArgumentDateSetter.Options,
-  ...TwoArgumentDateSetter.Options,
-  ...ThreeArgumentDateSetter.Options,
-  ...FourArgumentDateSetter.Options,
-])
-
-export const dateStatics = LiteralKit(["now", "parse", "UTC"])
 const DirectDateStatic = LiteralKit(dateStatics.omitOptions(["now"]))
 
 export const invokeDateStatic = (name: string, args: Array<unknown>, node: AstNode): number => {
@@ -65,10 +35,10 @@ export const invokeDateStatic = (name: string, args: Array<unknown>, node: AstNo
 
 export const dateSetterArgumentCount = (name: string): O.Option<number> =>
   Match.value(name).pipe(
-    Match.when(S.is(OneArgumentDateSetter), () => O.some(1)),
-    Match.when(S.is(TwoArgumentDateSetter), () => O.some(2)),
-    Match.when(S.is(ThreeArgumentDateSetter), () => O.some(3)),
-    Match.when(S.is(FourArgumentDateSetter), () => O.some(4)),
+    Match.when(S.is(oneArgumentDateSetter), () => O.some(1)),
+    Match.when(S.is(twoArgumentDateSetter), () => O.some(2)),
+    Match.when(S.is(threeArgumentDateSetter), () => O.some(3)),
+    Match.when(S.is(fourArgumentDateSetter), () => O.some(4)),
     Match.orElse(O.none<number>),
   )
 

@@ -1,12 +1,19 @@
 import { type AstNode, InterpreterRuntimeError } from "../interpreter/Interpreter.model.ts"
-import { isBlockedMember, type SafeObject } from "../Codemode.tool-runtime.ts"
+import { SafeObject } from "@beep/schema"
+import { isBlockedMember } from "../Codemode.tool-runtime.ts"
 import { CodeModeRegExp } from "../Codemode.values.ts"
 import { coerceToNumber, coerceToString } from "./StdLib.value.ts"
 import { LiteralKit } from "@beep/schema"
 import { P , R,} from "@beep/utils";
 import * as S from "effect/Schema"
+import {
+  regexpMethods,
+} from "../Codemode.method-names.ts"
 
-
+export {
+  regexpMethods,
+  regexpStatics,
+} from "../Codemode.method-names.ts"
 
 type MatchValue = Array<unknown> & {
   index?: number
@@ -17,10 +24,6 @@ type MatchValue = Array<unknown> & {
 type IndicesValue = Array<unknown> & {
   groups?: SafeObject
 }
-
-export const regexpMethods = LiteralKit(["test", "exec", "toString"])
-
-export const regexpStatics = LiteralKit(["escape"])
 
 export const regexpProperties = LiteralKit([
   "source",
@@ -68,7 +71,7 @@ export const matchToValue = (match: RegExpMatchArray): Array<unknown> => {
   const result: MatchValue = Array.from(match, (group) => group)
   if (P.isNotUndefined(match.index)) result.index = match.index
   if (P.isNotUndefined(match.groups)) {
-    const groups: SafeObject = Object.create(null) as SafeObject
+    const groups = SafeObject.make(Object.create(null))
     for (const [key, group] of R.toEntries(match.groups)) {
       if (!isBlockedMember(key)) Reflect.set(groups, key, group)
     }
@@ -125,7 +128,7 @@ const toLength = (value: unknown): number => {
 const indicesToValue = (indices: RegExpIndicesArray): IndicesValue => {
   const result: IndicesValue = Array.from(indices, (range) => (range === undefined ? undefined : [...range]))
   if (P.isNotUndefined(indices.groups)) {
-    const groups: SafeObject = Object.create(null) as SafeObject
+    const groups = SafeObject.make(Object.create(null))
     for (const [key, range] of R.toEntries(indices.groups)) {
       if (!isBlockedMember(key)) {
         Reflect.set(groups, key, P.isUndefined(range) ? undefined : [...range])

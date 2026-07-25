@@ -11,6 +11,9 @@ import {
   type InterpreterFailure,
   InterpreterRuntimeError,
 } from "../interpreter/Interpreter.model.ts";
+import { mathMethods } from "../Codemode.method-names.ts";
+
+export { mathMethods } from "../Codemode.method-names.ts";
 // Bun exposes ES2026 Math.sumPrecise before TypeScript's standard library types.
 declare global {
   interface Math {
@@ -19,46 +22,6 @@ declare global {
 }
 
 export const mathConstants = LiteralKit(["PI", "E", "LN2", "LN10", "LOG2E", "LOG10E", "SQRT2", "SQRT1_2"]);
-
-export const mathMethods = LiteralKit([
-  "random",
-  "max",
-  "min",
-  "abs",
-  "acos",
-  "acosh",
-  "asin",
-  "asinh",
-  "atan",
-  "atan2",
-  "atanh",
-  "floor",
-  "ceil",
-  "round",
-  "trunc",
-  "sign",
-  "sqrt",
-  "cbrt",
-  "pow",
-  "hypot",
-  "cos",
-  "cosh",
-  "sin",
-  "sinh",
-  "tan",
-  "tanh",
-  "log",
-  "log2",
-  "log10",
-  "log1p",
-  "exp",
-  "expm1",
-  "f16round",
-  "fround",
-  "clz32",
-  "imul",
-  "sumPrecise",
-]);
 
 const DirectMathMethod = LiteralKit(
   mathMethods.omitOptions(["random", "sumPrecise"])

@@ -10,7 +10,7 @@ import {
   NonEmptyTrimmedStr,
   NonNegativeInt,
   PosInt,
-  type SafeObject,
+  SafeObject as SafeObjectSchema,
   SchemaUtils,
   TaggedErrorClass,
 } from "@beep/schema";
@@ -100,45 +100,117 @@ export class ToolCallStarted extends S.Class<ToolCallStarted>($I`ToolCallStarted
     ToolCallStarted.make({index: NonNegativeInt.make(index), name, input});
 }
 
-/** Stable terminal state observed by the tool-call hook. */
-export const ToolCallOutcome = LiteralKit(["success", "failure", "interrupted"]).pipe(
-  $I.annoteSchema("ToolCallOutcome", {
-    description: "How an admitted tool call completed.",
-  })
-);
+const endedFields = {
+  index: NonNegativeInt,
+  name: S.String,
+  input: S.Unknown,
+  durationMs: NonNegativeInt,
+};
 
-/** Runtime type for {@link ToolCallOutcome}. */
-export type ToolCallOutcome = typeof ToolCallOutcome.Type;
-
-/** Hook payload emitted after handler execution. */
-export class ToolCallEnded extends S.Class<ToolCallEnded>($I`ToolCallEnded`)(
+/** Successful terminal observation for one admitted tool call. */
+export class ToolCallSucceeded extends S.TaggedClass<ToolCallSucceeded>($I`ToolCallSucceeded`)(
+  "success",
   {
-    index: NonNegativeInt,
-    name: S.String,
-    input: S.Unknown,
-    durationMs: NonNegativeInt,
-    outcome: ToolCallOutcome,
-    message: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    ...endedFields,
+    message: S.optionalKey(S.Never),
   },
-  $I.annote("ToolCallEnded", {
-    description: "Terminal observation for one admitted tool call.",
+  $I.annote("ToolCallSucceeded", {
+    description: "An admitted tool call completed successfully.",
+  })
+) {
+  static readonly new = (
+    call: ToolCallStarted,
+    durationMs: number
+  ): ToolCallSucceeded =>
+    ToolCallSucceeded.make({
+      index: call.index,
+      name: call.name,
+      input: call.input,
+      durationMs: NonNegativeInt.make(durationMs),
+    });
+}
+
+/** Interrupted terminal observation for one admitted tool call. */
+export class ToolCallInterrupted extends S.TaggedClass<ToolCallInterrupted>($I`ToolCallInterrupted`)(
+  "interrupted",
+  {
+    ...endedFields,
+    message: S.optionalKey(S.Never),
+  },
+  $I.annote("ToolCallInterrupted", {
+    description: "An admitted tool call was interrupted.",
+  })
+) {
+  static readonly new = (
+    call: ToolCallStarted,
+    durationMs: number
+  ): ToolCallInterrupted =>
+    ToolCallInterrupted.make({
+      index: call.index,
+      name: call.name,
+      input: call.input,
+      durationMs: NonNegativeInt.make(durationMs),
+    });
+}
+
+/** Failed terminal observation for one admitted tool call. */
+export class ToolCallFailed extends S.TaggedClass<ToolCallFailed>($I`ToolCallFailed`)(
+  "failure",
+  {
+    ...endedFields,
+    message: S.String,
+  },
+  $I.annote("ToolCallFailed", {
+    description: "An admitted tool call failed with a hook-safe message.",
   })
 ) {
   static readonly new = (
     call: ToolCallStarted,
     durationMs: number,
-    outcome: ToolCallOutcome,
-    message?: string
-  ): ToolCallEnded =>
-    ToolCallEnded.make({
+    message: string
+  ): ToolCallFailed =>
+    ToolCallFailed.make({
       index: call.index,
       name: call.name,
       input: call.input,
       durationMs: NonNegativeInt.make(durationMs),
-      outcome,
-      message: O.fromNullishOr(message),
+      message,
     });
 }
+
+/** Exhaustive terminal observation for one admitted tool call. */
+export const ToolCallEnded = S.Union([
+  ToolCallSucceeded,
+  ToolCallInterrupted,
+  ToolCallFailed,
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  SchemaUtils.withStatics(() => ({
+    new: (
+      call: ToolCallStarted,
+      durationMs: number,
+      ...completion:
+        | readonly ["success"]
+        | readonly ["interrupted"]
+        | readonly ["failure", message: string]
+    ): ToolCallEnded => {
+      if (completion[0] === "success") {
+        return ToolCallSucceeded.new(call, durationMs);
+      }
+      if (completion[0] === "interrupted") {
+        return ToolCallInterrupted.new(call, durationMs);
+      }
+      return ToolCallFailed.new(call, durationMs, completion[1]);
+    },
+  })),
+  $I.annoteSchema("ToolCallEnded", {
+    description: "All terminal observations for an admitted tool call.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/** Runtime type for {@link ToolCallEnded}. */
+export type ToolCallEnded = typeof ToolCallEnded.Type;
 
 /** Optional observers for tool execution. */
 export type ToolCallHooks<R = never> = {
@@ -405,16 +477,13 @@ const copyBounded = (
   if (CodeModeURL.is(value)) return value.url.href;
   if (value instanceof URL) return value.href;
   if (
-    CodeModeRegExp.is(value) ||
-    CodeModeMap.is(value) ||
-    CodeModeSet.is(value) ||
-    CodeModeURLSearchParams.is(value) ||
+    isCodeModeValue(value) ||
     value instanceof RegExp ||
     value instanceof Map ||
     value instanceof Set ||
     value instanceof URLSearchParams
   ) {
-    return Struct.fromEntries(A.empty()) as SafeObject;
+    return SafeObjectSchema.make(Struct.fromEntries(A.empty()));
   }
 
   if (HashSet.has(seen, value)) {
@@ -427,16 +496,18 @@ const copyBounded = (
     throw ToolRuntimeError.new("InvalidDataValue", `${label} must contain plain objects only.`);
   }
 
-  return pipe(
-    Struct.entries(value),
-    A.map(([key, item]) => {
-      if (isBlockedMember(key)) {
-        throw ToolRuntimeError.new("InvalidDataValue", `${label} contains blocked property '${key}'.`);
-      }
-      return [key, copyBounded(item, label, depth + 1, nextSeen, preserveCodeModeValues)] as const;
-    }),
-    Struct.fromEntries
-  ) as SafeObject;
+  return SafeObjectSchema.make(
+    pipe(
+      Struct.entries(value),
+      A.map(([key, item]) => {
+        if (isBlockedMember(key)) {
+          throw ToolRuntimeError.new("InvalidDataValue", `${label} contains blocked property '${key}'.`);
+        }
+        return [key, copyBounded(item, label, depth + 1, nextSeen, preserveCodeModeValues)] as const;
+      }),
+      Struct.fromEntries
+    )
+  );
 };
 
 /** Copies a guest value out through JSON-compatible boundary semantics. */
@@ -840,17 +911,17 @@ export const make = <R>(
               if (P.isUndefined(hooks.onToolCallEnd)) return;
               const durationMs = Math.max(0, (yield* Clock.currentTimeMillis) - startedAt);
               if (Exit.isSuccess(exit)) {
-                return yield* hooks.onToolCallEnd(ToolCallEnded.new(call, durationMs, "success"));
+                return yield* hooks.onToolCallEnd(ToolCallSucceeded.new(call, durationMs));
               }
               if (Cause.hasInterruptsOnly(exit.cause)) {
-                return yield* hooks.onToolCallEnd(ToolCallEnded.new(call, durationMs, "interrupted"));
+                return yield* hooks.onToolCallEnd(ToolCallInterrupted.new(call, durationMs));
               }
               const error = Cause.squash(exit.cause);
               const message =
-                ToolRuntimeError.is(error) || S.is(ToolError)(error)
+                ToolRuntimeError.is(error) || ToolError.is(error)
                   ? error.message
                   : "Tool execution failed";
-              return yield* hooks.onToolCallEnd(ToolCallEnded.new(call, durationMs, "failure", message));
+              return yield* hooks.onToolCallEnd(ToolCallFailed.new(call, durationMs, message));
             })
           )
         );
@@ -904,7 +975,16 @@ export const make = <R>(
             "Tool 'search' expects exactly one input object."
           );
         }
-        const external = copyOut(copyIn(args[0], "Arguments for tool 'search'"), "json");
+        const external = yield* Effect.try({
+          try: () => copyOut(copyIn(args[0], "Arguments for tool 'search'"), "json"),
+          catch: (error) =>
+            ToolRuntimeError.is(error)
+              ? error
+              : ToolRuntimeError.new(
+                  "InvalidToolInput",
+                  "Arguments for tool 'search' could not be copied."
+                ),
+        });
         const input = yield* S.decodeUnknownEffect(SearchInput)(external).pipe(
           Effect.mapError((cause) =>
             ToolRuntimeError.new("InvalidToolInput", `Invalid input for tool 'search': ${cause.message}`)
@@ -945,7 +1025,16 @@ export const make = <R>(
               `Tool '${name}' expects exactly one input object.`
             );
           }
-          const input = copyOut(copyIn(args[0], `Arguments for tool '${name}'`), "json");
+          const input = yield* Effect.try({
+            try: () => copyOut(copyIn(args[0], `Arguments for tool '${name}'`), "json"),
+            catch: (error) =>
+              ToolRuntimeError.is(error)
+                ? error
+                : ToolRuntimeError.new(
+                    "InvalidToolInput",
+                    `Arguments for tool '${name}' could not be copied.`
+                  ),
+          });
           yield* Effect.fromResult(resolve(root, path));
           return yield* executeTool(name, input);
         }),

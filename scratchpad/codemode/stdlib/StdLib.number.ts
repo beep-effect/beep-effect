@@ -6,8 +6,15 @@ import {LiteralKit} from "@beep/schema";
 import * as S from "effect/Schema";
 import {boundedData, coerceToString} from "./StdLib.value.ts";
 import {P, N} from "@beep/utils";
+import {
+  numberMethods,
+  numberStatics,
+} from "../Codemode.method-names.ts";
 
-export const numberMethods = LiteralKit(["toFixed", "toPrecision", "toExponential", "toString", "valueOf"]);
+export {
+  numberMethods,
+  numberStatics,
+} from "../Codemode.method-names.ts";
 
 export const numberConstants = LiteralKit([
   "MAX_SAFE_INTEGER",
@@ -19,8 +26,6 @@ export const numberConstants = LiteralKit([
   "POSITIVE_INFINITY",
   "NEGATIVE_INFINITY",
 ]);
-
-export const numberStatics = LiteralKit(["isInteger", "isFinite", "isNaN", "isSafeInteger", "parseInt", "parseFloat"]);
 
 export const invokeNumberMethod = (value: number, name: string, args: Array<unknown>, node: AstNode): unknown => {
   const optNum = (index: number): number | undefined => {
