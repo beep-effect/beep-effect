@@ -84,8 +84,16 @@ fetched 2026-07-24 from https://docs.openclaw.ai/llms.txt):
 - https://docs.openclaw.ai/gateway/local-model-services — on-demand local model services
 - https://docs.openclaw.ai/gateway/opentelemetry — diagnostics-otel plugin
 
-Further external sources arrive with `research/oss-landscape.md` (codex sweep)
-and `research/x-com-field-notes.md` (Grok leg) and are appended here.
+Additional external sources live on disk in:
+
+- [`oss-landscape.md`](./oss-landscape.md) — codex OSS/web sweep: upstream
+  install/deploy docs, `pandysp/openclaw-infra`, `pulumi-command` API docs,
+  dynamic-provider limitations, Automation API docs, Alchemy site,
+  Nexxiot case study, `clawfleet/ClawFleet`, `docker/compose-for-agents`,
+  `loginctl` manual (each with inline URLs).
+- [`x-com-field-notes.md`](./x-com-field-notes.md) — Grok x_search leg:
+  ~30 X post citations (deploy anecdotes, config-pain posts, Effect-IaC
+  prior art) plus web repos surfaced alongside.
 
 ## 4. In-repo capability references
 
