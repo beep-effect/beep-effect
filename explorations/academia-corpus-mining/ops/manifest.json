@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "academia-corpus-mining",
+    "title": "Academia Corpus Mining",
+    "status": "active",
+    "stage": "capture",
+    "openQuestions": [
+      "Which routing-table suggestions (attach / extend / new-exploration) should actually be executed, and in what order?",
+      "Does the prior synthesis's ~240-paper catalogued backlog (especially legal-NLP/extraction ~97) warrant a follow-up mining wave?",
+      "Do any T3 synthesis findings change priorities inside the four target work streams (memory/bitemporal, semantic foundation, retrieval/citation, agent architecture)?"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-25",
+    "updated": "2026-07-25"
+  }
+}

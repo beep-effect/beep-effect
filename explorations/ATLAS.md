@@ -39,6 +39,17 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 ## Explorations
 
 ### Active
+- [`academia-corpus-mining`](./academia-corpus-mining/README.md) —
+  capture-stage mining of 519 Academia.edu PDFs (444 unique titles; June-29
+  agent/memory wave + July-24/25 legal-ontology wave) against four live work
+  streams (memory/bitemporal No-Escape, semantic foundation, retrieval/
+  citation grounding, agent architecture). Adopts the June-29 prior synthesis
+  (72 papers deep-read) as
+  [`research/prior-synthesis-legal-ontologies.md`](./academia-corpus-mining/research/prior-synthesis-legal-ontologies.md);
+  normalized corpus lives externally (`~/YeeBois/research/academia-2026-07/`,
+  public-repo copyright discipline). Pipeline: dedupe → extract → codex T1
+  triage (all) → Sol T2 deep-reads (shortlist) → T3 cluster + master
+  syntheses → routing table for later goal graduation.
 - [`agent-effectiveness-pulse`](./agent-effectiveness-pulse/README.md) — a
   data-driven pulse on repo agent friendliness/effectiveness (stage
   `graduate`, opened 2026-07-14, still active for wave 2): which skills are
