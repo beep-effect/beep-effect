@@ -645,8 +645,8 @@ const attachHelperDescriptors = <T extends object>(schema: T, descriptors: Prope
 
 /**
  * Runtime literal kit type that augments `Schema.Literals` with convenience
- * helpers: `Options`, `Enum`, `is`, `pickOptions`, `omitOptions`, `$match`,
- * `thunk`, and `toTaggedUnion`.
+ * helpers: `Options`, `HashSet`, `Enum`, `is`, `pickOptions`, `omitOptions`,
+ * `$match`, `thunk`, and `toTaggedUnion`.
  *
  * Supports mixed literal types (`string | number | boolean | bigint`) with
  * keys mapped via {@link LiteralToKey}, or via the manual mapping when one is
@@ -657,6 +657,7 @@ const attachHelperDescriptors = <T extends object>(schema: T, descriptors: Prope
  */
 type LiteralKitBase<L extends Literals, M extends EnumMappings<L> | undefined = undefined> = S.Literals<L> & {
   readonly Options: L;
+  readonly HashSet: HashSet.HashSet<L[number]>;
   readonly is: IsGuards<L, M>;
   readonly Enum: EnumType<L, M>;
   readonly pickOptions: <LSubset extends A.NonEmptyReadonlyArray<L[number]>>(subset: LSubset) => LSubset;
@@ -698,6 +699,7 @@ export interface LiteralKit<L extends Literals, M extends EnumMappings<L> | unde
  * @example
  * ```typescript
  * import { LiteralKit } from "@beep/schema";
+ * import * as HashSet from "effect/HashSet";
  * import * as S from "effect/Schema";
  *
  * const Status = LiteralKit([1, 20n, true, false, "hello"]);
@@ -707,6 +709,7 @@ export interface LiteralKit<L extends Literals, M extends EnumMappings<L> | unde
  * Status.Enum.true;          // true
  * Status.is.number1(42);     // false
  * Status.is.hello("hello");  // true
+ * HashSet.has(Status.HashSet, 1); // true
  *
  * const matchResult = Status.$match(Status.Enum.number1, {
  *   number1: () => "one",
@@ -826,6 +829,7 @@ export function LiteralKit<const L extends Literals, const M extends EnumMapping
 
   return attachHelperDescriptors(base, {
     Options: readonlyProperty(literals),
+    HashSet: readonlyProperty(HashSet.fromIterable(literals)),
     is: readonlyProperty(is),
     Enum: readonlyProperty(Enum),
     pickOptions: readonlyProperty(pickOptions),
