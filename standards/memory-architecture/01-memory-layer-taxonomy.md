@@ -35,9 +35,16 @@ This document defines the four memory layers required by the project's agent mem
 - Graphiti's bi-temporal model has the right shape: facts with validity windows, auto-invalidation.
 - BUT: must implement interference management -- this layer WILL degrade if left unmanaged.
 
-**Theorem status:** INSIDE for semantic retrieval, but manageable through:
+**Split (2026-07-25, academia corpus dispatch):** this layer is two stores, not one:
 
-- Aggressive temporal pruning (old sessions drop off).
+- **Exact episodic records** -- append-only, immutable session/event records. OUTSIDE the theorem (exact records, no semantic retrieval); pruned only by explicit retention policy, never to manage interference.
+- **Prunable semantic/session projections** -- consolidated, clustered, compressed views derived from those records. INSIDE the theorem; every pruning, windowing, and compression lever below applies to these projections. They stay rebuildable only while their source records are retained; when retention policy removes source records, dependent projections must expire with them rather than persist as memory whose provenance no longer exists.
+
+"Old sessions drop off" means the projections drop off; the exact records that produced them are governed by retention policy alone. Evidence: the memory-bitemporal cluster of `explorations/academia-corpus-mining` ([`research/t3-memory-bitemporal.md`](../../explorations/academia-corpus-mining/research/t3-memory-bitemporal.md)) and the dispatch note in `goals/epistemic-bitemporal-edge-core/research/`.
+
+**Theorem status:** INSIDE for semantic retrieval (the projection store), but manageable through:
+
+- Aggressive temporal pruning (old session projections drop off; the exact episodic records follow retention policy).
 - Competitor density management (don't let the graph grow unbounded).
 - Compression via clustering (the paper's best Pareto point: ~2,500 clusters).
 
@@ -47,10 +54,11 @@ This document defines the four memory layers required by the project's agent mem
 
 **Concrete implementation:** Graphiti is acceptable HERE (not for long-term) IF:
 
-1. Temporal windows are enforced (sessions older than N days are pruned or compressed).
-2. A consolidation pipeline promotes high-signal facts to Layer 1 (durable).
-3. Competitor density is monitored.
-4. The graph is periodically compressed (clustering).
+1. Graphiti holds only the projection store, never the exact episodic records.
+2. Temporal windows are enforced (projection entries older than N days are pruned or compressed; exact records are governed by retention policy, not interference management).
+3. A consolidation pipeline promotes high-signal facts to Layer 1 (durable).
+4. Competitor density is monitored.
+5. The graph is periodically compressed (clustering).
 
 **Consolidation strategy:** Automated with human-in-the-loop for promotion to Layer 1. OpenClaw's six-signal weighted scoring is a good starting model: relevance (0.30), frequency (0.24), query diversity (0.15), recency (0.15), consolidation (0.10), conceptual richness (0.06).
 
@@ -102,7 +110,7 @@ This document defines the four memory layers required by the project's agent mem
 
 **What gets it right:** TrustGraph's multi-store architecture (graph + vector + row + object stores) with provenance tracing. Graphiti's bi-temporal fact tracking with auto-invalidation. FalkorDB's raw performance for graph+vector hybrid queries.
 
-**Concrete implementation:** BeepGraph is **specced, not shipped** -- see [`../../docs/BEEPGRAPH_ARCHITECTURE.md`](../../docs/BEEPGRAPH_ARCHITECTURE.md) (the spine exemplar is *effect-ontology*, not a raw TrustGraph rewrite; TrustGraph contributes the projection **shell**). The **authority spine** is largely built (`@beep/epistemic-domain`, `@beep/semantic-web` PROV-O + bounded SHACL, `@beep/rdf`); the projection/retrieval shell and the extraction kernel are the net-new work. Port what enables verification and trust scoring.
+**Concrete implementation:** BeepGraph is **specced, not shipped** -- see [`../../docs/BEEPGRAPH_ARCHITECTURE.md`](../../docs/BEEPGRAPH_ARCHITECTURE.md) (the spine exemplar is _effect-ontology_, not a raw TrustGraph rewrite; TrustGraph contributes the projection **shell**). The **authority spine** is largely built (`@beep/epistemic-domain`, `@beep/semantic-web` PROV-O + bounded SHACL, `@beep/rdf`); the projection/retrieval shell and the extraction kernel are the net-new work. Port what enables verification and trust scoring.
 
 **Consolidation strategy:** Automated compression with provenance-based verification. Facts without traceable provenance should decay faster. Trust scores should weight consolidation decisions.
 
@@ -125,8 +133,8 @@ This document defines the four memory layers required by the project's agent mem
 |  INSIDE theorem -- managed degradation            |
 +---------------------------------------------------+
 |  Layer 2: Short-Term (Session/Ephemeral)          |
-|  Episodic log with temporal windowing             |
-|  INSIDE theorem -- aggressive consolidation       |
+|  Exact episodic records -- OUTSIDE (retention)    |
+|  Semantic projections -- INSIDE (consolidation)   |
 +---------------------------------------------------+
 
 Promotion flow: Layer 2 --> (consolidation) --> Layer 1 or Layer 4

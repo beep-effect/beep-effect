@@ -3,7 +3,7 @@
   "exploration": {
     "slug": "academia-corpus-mining",
     "title": "Academia Corpus Mining",
-    "status": "active",
+    "status": "parked",
     "stage": "align",
     "openQuestions": [
       "Deferred (parked revival trigger): run the approved wave-2 mining pass over the June-29 backlog — starting with the 97 legal-NLP/extraction papers — once the 15-route dispatch has fully landed (align decision, 2026-07-25).",

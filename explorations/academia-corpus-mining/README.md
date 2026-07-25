@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `align`
-Status: `active`
+Status: `parked`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -38,6 +38,11 @@ entries in [`DECISIONS.md`](./DECISIONS.md).
 
 ## Trail
 
+- 2026-07-25 (park): binding-doc PR landed the typed-verdict replacement
+  (`docs/product/prose-to-proof.md`, the approval policy) and the
+  memory-layer-taxonomy episodic/projection split — the last dispatched
+  route. Status → `parked`; revival trigger: the approved wave-2 backlog
+  run (97 legal-NLP papers first).
 - 2026-07-25 (align): interview closed nine decisions (see DECISIONS.md
   align entries) — dispatch all 15 high-priority routes as bounded notes +
   2 new capture packets (`agent-execution-sandbox`,
