@@ -461,7 +461,7 @@ function ChartLegendContent({
 }: React.ComponentProps<"div"> & {
   readonly hideIcon?: boolean;
   readonly nameKey?: string;
-  readonly position?: React.ComponentProps<typeof ChartLegend>["position"];
+  readonly position?: RechartsPrimitive.DefaultLegendContentProps["verticalAlign"];
 } & Omit<RechartsPrimitive.DefaultLegendContentProps, "verticalAlign">) {
   const { config } = useChart();
 
