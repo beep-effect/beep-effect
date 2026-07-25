@@ -69,8 +69,10 @@
   },
   "devDependencies": {
     "@beep/fc-runs": "workspace:^",
+    "@beep/postgres": "workspace:^",
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
+    "@electric-sql/pglite": "catalog:",
     "@types/node": "catalog:",
     "drizzle-orm": "catalog:"
   }

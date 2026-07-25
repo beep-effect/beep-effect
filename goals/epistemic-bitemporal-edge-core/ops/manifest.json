@@ -5,13 +5,13 @@
     "title": "Epistemic Bitemporal Edge Core",
     "status": "active",
     "created": "2026-07-14",
-    "updated": "2026-07-14",
+    "updated": "2026-07-25",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/epistemic-bitemporal-edge-core",
   "lifecycle": "active",
   "mission": "Deliver the Postgres bitemporal claim/edge authority with durable disposition, atomic supersession, two-axis history, and restart-safe migration proof.",
-  "statusNote": "P0 hard gate: prove storage, concurrency, provenance, and Postgres/PGlite invariant backstops before schema commitment.",
+  "statusNote": "P0 hard gate CLEARED (2026-07-25, PROCEED): every ratified invariant has Postgres + PGlite proof-lane evidence (history/2026-07-25-p0-verdict.md). P1 implements the vertical slice per ops/handoffs/p0-to-p1-handoff.md.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -51,7 +51,8 @@
     {
       "id": "P0",
       "name": "Storage, concurrency, and provenance spike",
-      "status": "pending"
+      "status": "complete",
+      "exit": "PROCEED verdict at history/2026-07-25-p0-verdict.md: every ratified invariant evidenced in both the production-Postgres and PGlite lanes (full exclusion-constraint parity; named substitutions only where a mechanism cannot cross lanes); P1 decisions recorded in ops/handoffs/p0-to-p1-handoff.md."
     },
     {
       "id": "P1",

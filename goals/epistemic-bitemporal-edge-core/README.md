@@ -32,12 +32,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 storage/concurrency/provenance spike: prove the portable invariant backstop
-before committing the schema or generated migration.
+P1 Implement: build the domain/tables/use-cases/server/migration vertical slice on the
+P0-ratified enforcement design
+([`ops/handoffs/p0-to-p1-handoff.md`](./ops/handoffs/p0-to-p1-handoff.md)).
 
 ## Latest Evidence
 
-Not started.
+P0 hard gate CLEARED — **PROCEED** verdict at
+[`history/2026-07-25-p0-verdict.md`](./history/2026-07-25-p0-verdict.md): full
+exclusion-constraint parity across production Postgres (17.10) and PGlite (18.3 wasm),
+deterministic concurrent supersession on two real connections, restart proof, safe
+identity partition, and a PASS provenance inventory (Graphiti `v0.29.2`, no NOTICE,
+zero mined-location drift). Spike evidence: S1–S6 NOTES under
+[`history/p0/`](./history/p0/).
 
 ## Notes
 

@@ -2293,6 +2293,7 @@
           "@beep/fc-runs",
           "@beep/identity",
           "@beep/pglite",
+          "@beep/postgres",
           "@beep/schema",
           "@beep/utils"
         ],
@@ -2300,6 +2301,7 @@
           "@beep/fc-runs",
           "@beep/identity",
           "@beep/pglite",
+          "@beep/postgres",
           "@beep/schema",
           "@beep/utils"
         ]
