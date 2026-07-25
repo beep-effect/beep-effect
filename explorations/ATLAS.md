@@ -259,6 +259,19 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`openclaw-deployment-platform`](./openclaw-deployment-platform/README.md) —
+  graduated 2026-07-25 (capture→graduate in two days) into
+  [`openclaw-workstation-agent`](../goals/openclaw-workstation-agent/README.md):
+  a legal-focused OpenClaw agent on the workstation as immutable,
+  generation-based Pulumi+Effect infrastructure — `OpenClawGeneration`
+  revisions in a root-owned config root, desired-intent schema + versioned
+  render adapters in a new `@beep/openclaw` driver, op:// refs with one
+  recorded bootstrap-credential exception, Telegram v1; goal P0 is the
+  four-prototype gauntlet that hard-gates implementation. 29 decisions in
+  [`DECISIONS.md`](./openclaw-deployment-platform/DECISIONS.md); research
+  merged as #439, shape/decompose as #440. GATE C struck the dankserver
+  migration entirely — dankserver stays on Ansible; the platform deploys NEW
+  instances only.
 - [`graph-3d-navigation`](./graph-3d-navigation/README.md) — graduated
   2026-07-14 into [`graph-3d-view`](../goals/graph-3d-view/README.md) (generic
   3D graph component → ontology-workbench 2D/3D toggle, cosmos stays default,
