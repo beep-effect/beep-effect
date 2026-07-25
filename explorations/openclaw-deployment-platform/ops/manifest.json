@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "openclaw-deployment-platform",
+    "title": "Effect-native OpenClaw Deployment Platform",
+    "status": "active",
+    "stage": "research",
+    "openQuestions": [
+      "Decision 7 reopened: can strict config ownership be OS-enforced (read-only boundary + independent drift audit) beyond the in-process OPENCLAW_NIX_MODE guard? Gate: filesystem bypass/drift prototype",
+      "Decision 6 refinement: separate workstation vs remote applicators (session/privilege/linger contracts) around shared renderers. Gate: non-interactive systemd --user apply prototype",
+      "Upgrade/rollback: generation state machine with SQLite snapshots vs auto-migrated user_version stamps. Gate: upgrade+failed-health rollback prototype",
+      "Secrets: OP_SERVICE_ACCOUNT_TOKEN bootstrap-credential exception (delivery, rotation, runbook) and same-ref rotation via secrets reload lifecycle. Gate: rotation/reload prototype",
+      "Decision 13 reshape: desired-intent schema + versioned render adapters + candidate-binary config-validate acceptance, instead of duplicating the plugin-dependent upstream contract",
+      "Solution-sketch reshape: introduce one OpenClawGeneration object binding package/config/unit/workspace/skills/plugins; skills are workspace mutations with a lockfile, not config fields",
+      "Channel-under-guard: render configWrites:false for the chosen DM channel and live-test login/pairing/migration writebacks under immutable mode",
+      "Decision 12 revisit (pre-dankserver): local Pulumi state + application state + sole operator workstation form one disaster domain; Command resources cannot reconstruct state via refresh"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-24",
+    "updated": "2026-07-24"
+  }
+}
