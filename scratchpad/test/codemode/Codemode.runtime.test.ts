@@ -199,6 +199,44 @@ describe("CodeMode runtime", () => {
   );
 
   it.effect(
+    "normalizes an unprintable tool-hook defect into a failed Result",
+    Effect.fnUntraced(function* () {
+      const result = yield* CodeMode.execute({
+        code: "return await search({})",
+        onToolCallStart: () => Effect.die(Object.create(null)),
+      });
+
+      assert.strictEqual(result.ok, false);
+      if (result.ok === false) {
+        assert.strictEqual(result.error.kind, "ExecutionFailure");
+        assert.strictEqual(result.error.message, "<unprintable>");
+      }
+    })
+  );
+
+  it.effect(
+    "makes malformed tool-hook Error fields guest-catchable",
+    Effect.fnUntraced(function* () {
+      const malformed = Object.assign(new Error("ignored"), { message: 123 });
+      const result = yield* CodeMode.execute({
+        code: `
+          try {
+            return await search({})
+          } catch (error) {
+            return [error.name, error.message]
+          }
+        `,
+        onToolCallStart: () => Effect.die(malformed),
+      });
+
+      assert.strictEqual(result.ok, true);
+      if (result.ok === true) {
+        assert.deepEqual(result.value, A.make("Error", "123"));
+      }
+    })
+  );
+
+  it.effect(
     "evaluates every finite binary family without operand assertions",
     Effect.fnUntraced(function* () {
       const result = yield* CodeMode.execute({
