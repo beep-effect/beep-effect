@@ -87,7 +87,7 @@ recursively deletes the shared root.
 | 3 | `a3-config-set-doctor.sh` | Each command must refuse through the pinned Nix-mode application guard or an OS denial, or genuinely skip cleanly; the exact active path's config-health hash/bytes remain identical, and all other protected content remains byte-identical after named observation fields are normalized. |
 | 4 | `a4-drift-canary.sh` | Deliberate drift remains at the same hash for one bounded canary interval, followed by an explicit operator-action boundary and restore. |
 | 5 | `a5-writer-surface.sh` | Each writer has a pinned-source trigger and exact completion/skip signature, full root and state inventories, no config mutation, and no handler crash. |
-| 6 | `a5-writer-surface.sh` | Exactly six unique allowed results generate `$SPIKE_P/spike1/compatibility-matrix.md`; blanks, duplicates, unknown rows, and essential `INCOMPATIBLE` rows fail. |
+| 6 | `a5-writer-surface.sh` | Exactly seven unique allowed results generate `$SPIKE_P/spike1/compatibility-matrix.md`; blanks, duplicates, unknown rows, and genuine essential-path `INCOMPATIBLE` rows fail. |
 
 ## Writer triggers and runner notes
 
@@ -120,32 +120,97 @@ recursively deletes the shared root.
   across writers must normalize them to avoid false drift.
 - Login/bootstrap: the unit-private Telegram credential starts the rendered
   channel and an exact JSON Telegram probe must report success.
-- Pairing/first owner: send a fresh DM during the 30-second window. The script
-  proves the selected code was absent from the before-list, binds it to its
-  sender, requires pairing-store persistence and removal of that pending code,
-  then requires exact approval completion. An owner-config OS denial is
-  `INCOMPATIBLE`, never a claimed skip.
-- `defaultTo`: the rendered target is the disposable group `@username`.
-  `message send` forces the pinned `maybePersistResolvedTelegramTarget` path;
-  the script requires its exact caught OS-denial signature. This sends one
-  disposable test message.
-- Reconnect: `channels restart telegram` must complete, and the subsequent
-  exact JSON Telegram record must be connected/running with
+- Pairing/first owner: send a fresh DM during the 300-second bounded poll. The
+  script proves the selected code was absent from the before-list, binds it to
+  its sender, requires pairing-store persistence and removal of that pending
+  code, then requires exact approval completion. No new request because the
+  operator DM was absent is `BLOCKED`; an owner-config OS denial after the
+  writer runs is `INCOMPATIBLE`, never a claimed skip.
+- `defaultTo` declared: the first rendered generation declares the disposable
+  group `@username`. The case sends to that same explicit `@username`, requires
+  the exact successful JSON result and positive
+  `telegram recipient <username> resolved to numeric chat id <id>` debug or
+  journal evidence, then rejects every source-derived target-writeback outcome.
+  The declarative value makes writeback unnecessary, and the config-root
+  inventory must remain byte-identical.
+- `defaultTo` undeclared: a second full-SHA generation deletes only
+  `channels.telegram.defaultTo`, is installed root-owned `0755`/`0644`,
+  atomically selected, and restarted. Sending with the explicit `@username`
+  must emit `telegram recipient <username> resolved to numeric chat id <id>`.
+  The source-derived graceful guard is `skipping Telegram target writeback for
+  <username> because gateway caller is missing operator.admin`; the caught
+  denial prefix is `failed to persist Telegram defaultTo target <username>:`,
+  and a completed write would report `resolved Telegram defaultTo target
+  <username> -> <resolved-target>`.
+  When neither appears, staged source proves the no-write branch because
+  `replaceTelegramDefaultToTargets(...)` gates `replaceConfigFile(...)` and the
+  undeclared config has no matching slot. The exact successful JSON result,
+  byte-identical config-root inventory, and absence of an event-handler crash
+  remain mandatory. The original declared generation is atomically restored
+  and restarted before later cases.
+- Reconnect: the genuine gateway `channels.stop` then `channels.start` RPCs
+  must complete for Telegram's default account, and the subsequent exact JSON
+  Telegram record must be connected/running with
   `restartPending != true`; this is classified as declarative runtime behavior,
   not a config-writer skip.
 - Token swap: the mode `0600` per-unit credential is replaced with a known
   invalid disposable token, the unit is restarted, and the pinned invalid-token
-  handler signature is required. A case-local exit trap always restores the
-  original credential, restarts, and proves the Telegram probe. Restoration
-  failure aborts the script before group migration. The result is declarative
-  external-credential behavior, not a config-writer skip.
-- Group migration: conversion is optional during the 45-second window. If the
-  event occurs, the exact pinned
+  startup signature (`getMe returned 401 from Telegram; source: env token`) is
+  required. A case-local exit trap always restores the original credential,
+  restarts, and proves the Telegram probe. Restoration failure aborts the
+  script before group migration. The result is declarative external-credential
+  behavior, not a config-writer skip.
+- Group migration: a configured `-100...` chat ID proves the disposable chat is
+  already a supergroup, so its one-time migration is `NOT-TRIGGERABLE`. For a
+  basic group, conversion is optional during the 45-second window. If the event
+  occurs, the exact pinned
   `Config writes disabled; skipping group config migration.` outcome is
-  mandatory. No event is the contract-permitted conditional graceful skip.
+  mandatory; no operator conversion in that window is `BLOCKED`.
 
-The harness classifies evidence; the operator makes the gated decision. Any
-essential `INCOMPATIBLE` result re-opens “v1 DM channel is Telegram.”
+The harness classifies evidence; the operator makes the gated decision.
+`HARNESS-ERROR` means the CLI rejected the harness invocation or its evidence
+check failed, `NOT-TRIGGERABLE` means the surface/precondition cannot exist,
+and `BLOCKED` means required operator action was absent. Only a genuine writer
+mutation or handler crash under the guard is `INCOMPATIBLE`; an essential-path
+`INCOMPATIBLE` result re-opens “v1 DM channel is Telegram.”
+
+## Verified CLI forms
+
+Every OpenClaw form used by the harness was checked read-only against the staged
+`openclaw@2026.7.1-2` binary. Preflight captures these help files and requires
+the exact `Usage:` line, preventing parent-help success from proving a
+nonexistent child command.
+
+| Harness form | Verifying staged `--help` line |
+| --- | --- |
+| `openclaw --version` | `Usage: openclaw [options] [command]`; `-V, --version output the version number` |
+| `openclaw gateway` | `Usage: openclaw gateway [options] [command]` |
+| `openclaw config validate` | `Usage: openclaw config validate [options]` |
+| `openclaw config set logging.level debug` | `Usage: openclaw config set [options] [path] [value]` |
+| `openclaw doctor --fix --non-interactive` | `Usage: openclaw doctor [options]`; `--fix Apply recommended repairs`; `--non-interactive Run without prompts` |
+| `openclaw channels status --probe --json` | `Usage: openclaw channels status [options]`; `--probe Probe channel credentials`; `--json Output JSON` |
+| `openclaw pairing list --channel telegram --json` | `Usage: openclaw pairing list [options] [channel]`; `--channel <channel>`; `--json Print JSON` |
+| `openclaw pairing approve telegram <code>` | `Usage: openclaw pairing approve [options] <codeOrChannel> [code]` |
+| declared config: `openclaw --log-level debug message send --channel telegram --target <group-username> --message <text> --json --verbose` | `Usage: openclaw message send [options]`; `-t, --target <dest> Recipient/channel`; `-m, --message <text>`; `--json Output result as JSON`; `--verbose Verbose logging`; root help: `--log-level <level> Global log level override` |
+| undeclared config: `openclaw --log-level debug message send --channel telegram --target <group-username> --message <text> --json --verbose` | `Usage: openclaw message send [options]`; `-t, --target <dest> Recipient/channel`; `-m, --message <text>`; `--json Output result as JSON`; `--verbose Verbose logging`; root help: `--log-level <level> Global log level override` |
+| `openclaw gateway call channels.stop --params <json> --json` | `Usage: openclaw gateway call [options] <method>`; `--params <json> JSON object string for params`; `--json Output JSON` |
+| `openclaw gateway call channels.start --params <json> --json` | `Usage: openclaw gateway call [options] <method>`; `--params <json> JSON object string for params`; `--json Output JSON` |
+
+Staged source separately advertises `channels.start` and `channels.stop` in the
+gateway method registry and validates both with required `channel` plus optional
+`accountId`. The nonexistent `channels restart` form is not used or probed.
+
+## Live-run evidence incorporated
+
+The 2026-07-25 run proved login/bootstrap, reconnect, token swap, and exact
+Telegram sends; pairing was blocked solely by the absent operator DM and group
+migration was not triggerable. The original `defaultTo` send succeeded with
+`handledBy:"plugin"` and `payload.ok:true`, but the harness incorrectly required
+a denial even though the rendered config already declared `defaultTo`. The
+split cases now record that declarative truth separately from the staged
+undeclared writeback probe. The run also proved the startup invalid-token text
+above and the already-migrated chat pair `-5048696755` to `-1004475923698`
+(`@p0_spike1_jul25`).
 
 ## Evidence and safety
 
@@ -182,8 +247,8 @@ never residue proof.
 
 ## Syntax verification
 
-No harness step was executed. Complete final `bash -n` transcript, re-run after
-the 2026-07-25 causal assertion-3 config-health repair:
+No harness step was executed during this repair. Complete final `bash -n`
+transcript, re-run after the 2026-07-25 declared/undeclared `defaultTo` split:
 
 ```text
 $ bash -n .beep/p0-orchestration/spike1/a1-bypass.sh

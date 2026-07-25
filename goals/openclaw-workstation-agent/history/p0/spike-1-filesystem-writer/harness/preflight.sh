@@ -54,13 +54,31 @@ help_probe() {
     >"$S1/help/$name.txt" 2>&1
 }
 help_probe root
+help_probe gateway gateway
 help_probe config-set config set
+help_probe config-validate config validate
 help_probe doctor doctor
 help_probe channels-status channels status
-help_probe channels-restart channels restart
+help_probe gateway-call gateway call
 help_probe pairing-list pairing list
 help_probe pairing-approve pairing approve
 help_probe message-send message send
+
+require_usage() {
+  local file="$1" usage="$2"
+  grep -Fxq "Usage: $usage" "$file" ||
+    { echo "FATAL: exact command path is unsupported: $usage"; exit 69; }
+}
+require_usage "$S1/help/root.txt" 'openclaw [options] [command]'
+require_usage "$S1/help/gateway.txt" 'openclaw gateway [options] [command]'
+require_usage "$S1/help/config-set.txt" 'openclaw config set [options] [path] [value]'
+require_usage "$S1/help/config-validate.txt" 'openclaw config validate [options]'
+require_usage "$S1/help/doctor.txt" 'openclaw doctor [options]'
+require_usage "$S1/help/channels-status.txt" 'openclaw channels status [options]'
+require_usage "$S1/help/gateway-call.txt" 'openclaw gateway call [options] <method>'
+require_usage "$S1/help/pairing-list.txt" 'openclaw pairing list [options] [channel]'
+require_usage "$S1/help/pairing-approve.txt" 'openclaw pairing approve [options] <codeOrChannel> [code]'
+require_usage "$S1/help/message-send.txt" 'openclaw message send [options]'
 
 require_flag() {
   local file="$1" flag="$2"
@@ -71,8 +89,14 @@ require_flag "$S1/help/channels-status.txt" --probe
 require_flag "$S1/help/channels-status.txt" --json
 require_flag "$S1/help/pairing-list.txt" --channel
 require_flag "$S1/help/pairing-list.txt" --json
+require_flag "$S1/help/gateway-call.txt" --params
+require_flag "$S1/help/gateway-call.txt" --json
 require_flag "$S1/help/message-send.txt" --channel
 require_flag "$S1/help/message-send.txt" --message
+require_flag "$S1/help/message-send.txt" --target
+require_flag "$S1/help/message-send.txt" --json
+require_flag "$S1/help/message-send.txt" --verbose
+require_flag "$S1/help/root.txt" --version
 
 grep -Eq '(^|[[:space:]])--fix([=[:space:]]|$)' "$S1/help/doctor.txt" ||
   { echo "FATAL: pinned doctor has no exact --fix repair surface"; exit 69; }
@@ -91,9 +115,16 @@ source_anchor() {
 }
 source_anchor login-bootstrap 'envToken: params\.env\?\.TELEGRAM_BOT_TOKEN'
 source_anchor pairing-first-owner 'Command owner configured.*commands\.ownerAllowFrom was empty'
-source_anchor defaultTo-writeback 'failed to persist Telegram defaultTo target'
-source_anchor reconnect 'restartPending'
-source_anchor token-swap 'Bot token is likely invalid\. Telegram may DELETE the bot'
+source_anchor defaultTo-resolution 'telegram recipient .* resolved to numeric chat id'
+source_anchor defaultTo-skip 'skipping Telegram target writeback for .* because gateway caller is missing'
+source_anchor defaultTo-write-success 'resolved Telegram defaultTo target .* ->'
+source_anchor defaultTo-denial 'failed to persist Telegram defaultTo target'
+source_anchor defaultTo-write-condition 'if \(replaceTelegramDefaultToTargets\(\{'
+source_anchor reconnect-stop '"channels\.stop": async'
+source_anchor reconnect-start '"channels\.start": async'
+source_anchor reconnect-stop-params 'const ChannelsStopParamsSchema'
+source_anchor reconnect-start-params 'const ChannelsStartParamsSchema'
+source_anchor token-swap 'Telegram bot token unauthorized for account'
 source_anchor group-supergroup-migration 'Config writes disabled; skipping group config migration\.'
 source_anchor configWrites-policy 'function resolveChannelConfigWritesShared'
 source_anchor config-set-denial 'await replaceConfigFile'

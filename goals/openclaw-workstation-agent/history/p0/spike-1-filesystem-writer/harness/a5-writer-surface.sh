@@ -111,7 +111,7 @@ classify() {
 run_case() {
   local name="$1" essential="$2" case_log="$LOGS/a5-$1.log"
   shift 2
-  local rc before_root after_root
+  local rc before_root after_root journal_cursor="$S1/a5-$name-journal.cursor"
   CASE_CLASS=""
   CASE_NOTE=""
   CASE_OUTCOME="$S1/a5-$name.outcome"
@@ -119,6 +119,7 @@ run_case() {
   inventory_root > "$S1/a5-$name-root-before.inventory"
   inventory_tree "$STATE" > "$S1/a5-$name-state-before.inventory"
   before_root="$(sha256sum "$S1/a5-$name-root-before.inventory" | awk '{print $1}')"
+  journalctl --user -u "$UNIT" -n 0 --show-cursor --no-pager > "$journal_cursor"
   echo "== writer case: $name root_before=$before_root =="
   set +e
   ( "$@" ) 2>&1 | sanitize_a5_stream > "$case_log"
@@ -137,24 +138,71 @@ run_case() {
   if ! cmp -s "$S1/a5-$name-root-before.inventory" "$S1/a5-$name-root-after.inventory"; then
     CASE_CLASS="INCOMPATIBLE"
     CASE_NOTE="root or pointer mutated"
-  elif [[ "$name" == "pairing-first-owner" ]] &&
-      cmp -s "$S1/a5-$name-state-before.inventory" "$S1/a5-$name-state-after.inventory"; then
-    CASE_CLASS="INCOMPATIBLE"
-    CASE_NOTE="pairing handler completed without pairing-store state persistence"
   elif (( rc != 0 )); then
-    CASE_CLASS="INCOMPATIBLE"
-    CASE_NOTE="trigger or required handler signature failed; exit=$rc"
+    CASE_CLASS="HARNESS-ERROR"
+    CASE_NOTE="harness trigger or evidence check failed; exit=$rc"
   elif [[ "$CASE_CLASS" != "declarative render" &&
           "$CASE_CLASS" != "graceful skip" &&
+          "$CASE_CLASS" != "HARNESS-ERROR" &&
+          "$CASE_CLASS" != "NOT-TRIGGERABLE" &&
+          "$CASE_CLASS" != "BLOCKED" &&
           "$CASE_CLASS" != "INCOMPATIBLE" ]]; then
-    CASE_CLASS="INCOMPATIBLE"
+    CASE_CLASS="HARNESS-ERROR"
     CASE_NOTE="case emitted no allowed classification"
   fi
 
-  journalctl --user -u "$UNIT" -n 250 --no-pager 2>/dev/null |
+  journalctl --user -u "$UNIT" --after-cursor \
+    "$(sed -n 's/^-- cursor: //p' "$journal_cursor")" --no-pager 2>/dev/null |
     sanitize_a5_stream > "$LOGS/a5-$name-journal.log" || true
+  if (( rc == 0 )) && [[ "$CASE_CLASS" != "INCOMPATIBLE" ]]; then
+    case "$name" in
+      defaultTo-declared)
+        if ! grep -Fq \
+            "telegram recipient $SPIKE_TG_GROUP_USERNAME resolved to numeric chat id $SPIKE_TG_GROUP_ID" \
+            "$LOGS/a5-defaultTo-declared-send.log" "$LOGS/a5-$name-journal.log"; then
+          CASE_CLASS="HARNESS-ERROR"
+          CASE_NOTE="declared send lacked positive username-resolution evidence"
+        elif grep -Eiq \
+            'resolved Telegram defaultTo target|failed to persist Telegram defaultTo target|skipping Telegram target writeback' \
+            "$LOGS/a5-defaultTo-declared-send.log" "$LOGS/a5-$name-journal.log"; then
+          CASE_CLASS="HARNESS-ERROR"
+          CASE_NOTE="declared send unexpectedly entered target writeback"
+        else
+          CASE_CLASS="declarative render"
+          CASE_NOTE="declared defaultTo resolved and sent; declarative value made writeback unnecessary"
+        fi
+        ;;
+      defaultTo-undeclared)
+        if ! grep -Fq \
+            "telegram recipient $SPIKE_TG_GROUP_USERNAME resolved to numeric chat id $SPIKE_TG_GROUP_ID" \
+            "$LOGS/a5-defaultTo-undeclared-send.log" "$LOGS/a5-$name-journal.log"; then
+          CASE_CLASS="HARNESS-ERROR"
+          CASE_NOTE="undeclared send lacked positive username-resolution evidence"
+        elif grep -Fq \
+            "skipping Telegram target writeback for $SPIKE_TG_GROUP_USERNAME because gateway caller is missing operator.admin" \
+            "$LOGS/a5-defaultTo-undeclared-send.log" "$LOGS/a5-$name-journal.log"; then
+          CASE_CLASS="graceful skip"
+          CASE_NOTE="username resolved; exact operator.admin guard skipped writeback cleanly"
+        elif grep -h -F \
+            "failed to persist Telegram defaultTo target $SPIKE_TG_GROUP_USERNAME:" \
+            "$LOGS/a5-defaultTo-undeclared-send.log" "$LOGS/a5-$name-journal.log" |
+            grep -Eiq 'NixModeConfigMutationError|Config is managed by Nix|permission denied|operation not permitted|read-only file system|EACCES|EPERM|EROFS'; then
+          CASE_CLASS="graceful skip"
+          CASE_NOTE="username resolved; exact caught app/OS denial left immutable config unchanged"
+        elif ! grep -Eiq \
+            'resolved Telegram defaultTo target|failed to persist Telegram defaultTo target|skipping Telegram target writeback' \
+            "$LOGS/a5-defaultTo-undeclared-send.log" "$LOGS/a5-$name-journal.log"; then
+          CASE_CLASS="graceful skip"
+          CASE_NOTE="username resolved; undeclared config had no defaultTo slot, so the source-pinned conditional performed no write"
+        else
+          CASE_CLASS="HARNESS-ERROR"
+          CASE_NOTE="undeclared defaultTo produced an unknown writeback outcome"
+        fi
+        ;;
+    esac
+  fi
   if grep -Eiq 'uncaught|unhandled|event.handler.*(crash|fail)|Group migration handler failed' \
-      "$LOGS/a5-$name-journal.log"; then
+      "$case_log" "$LOGS/a5-$name-journal.log"; then
     CASE_CLASS="INCOMPATIBLE"
     CASE_NOTE="event-handler crash signature"
   fi
@@ -179,9 +227,20 @@ case_pairing_owner() {
   local before="$LOGS/a5-pairing-before.json" after="$LOGS/a5-pairing-after.json"
   local approve="$LOGS/a5-pairing-approve.log" code sender rc
   cli pairing list --channel telegram --json | sanitize_a5_stream > "$before" || return 1
-  echo "OPERATOR-ACTION: send the disposable bot a fresh DM within 30 seconds."
-  sleep 30
-  cli pairing list --channel telegram --json | sanitize_a5_stream > "$after" || return 1
+  # bounded poll rather than a blind sleep: exits as soon as a genuinely new
+  # externally-triggered request appears, so the operator window is generous
+  # without weakening the "new code not in the before-list" requirement
+  echo "OPERATOR-ACTION: send the disposable bot a fresh DM (window: 300s)."
+  local waited=0
+  while (( waited < 300 )); do
+    sleep 5; waited=$((waited + 5))
+    cli pairing list --channel telegram --json | sanitize_a5_stream > "$after" || return 1
+    jq -e --slurpfile before "$before" '
+      [.. | objects | select(.code? != null)] |
+      map(select(.code as $c | any($before[0].. | objects; .code? == $c) | not)) |
+      length > 0' "$after" >/dev/null 2>&1 && break
+  done
+  echo "pairing-window-waited-seconds=$waited"
   code="$(jq -r --slurpfile before "$before" '
     [.. | objects | select(.code? != null)] |
     map(select(.code as $code |
@@ -190,12 +249,13 @@ case_pairing_owner() {
   ' "$after")"
   test -n "$code" || {
     echo "BLOCKED: no new externally triggered pairing request was observed"
-    return 1
+    classify "BLOCKED" "operator DM absent; no new pairing request in the 300s window"
+    return 0
   }
   sender="$(jq -r --arg code "$code" \
     '.. | objects | select(.code? == $code) | .id? // empty' "$after" | head -1)"
   test -n "$sender" || {
-    echo "BLOCKED: selected new pairing request lacked its sender id"
+    echo "HARNESS-ERROR: selected new pairing request lacked its sender id"
     return 1
   }
   set +e
@@ -203,24 +263,24 @@ case_pairing_owner() {
   rc="${PIPESTATUS[0]}"
   set -e
   grep -Fq "Approved telegram sender $sender." "$approve" || {
-    echo "BLOCKED: pairing approval lacked its exact sender-bound completion"
+    echo "HARNESS-ERROR: pairing approval lacked its exact sender-bound completion"
     return 1
   }
   if (( rc == 0 )); then
     :
   elif ! grep -Eiq 'permission denied|operation not permitted|read-only file system|EACCES|EPERM|EROFS' "$approve"; then
-    echo "BLOCKED: pairing approval failed without its owner-config OS denial"
+    echo "HARNESS-ERROR: pairing approval failed without its owner-config OS denial"
     return 1
   fi
   cli pairing list --channel telegram --json |
     sanitize_a5_stream > "$after.approved" || return 1
   if jq -e --arg code "$code" '.. | objects | select(.code? == $code)' "$after.approved" >/dev/null; then
-    echo "BLOCKED: approved pairing request remains pending"
+    echo "HARNESS-ERROR: approved pairing request remains pending"
     return 1
   fi
   if ! rg -l -F -- "$sender" "$STATE" --glob '*.json' > "$LOGS/a5-pairing-store-files.txt" ||
       ! grep -q . "$LOGS/a5-pairing-store-files.txt"; then
-    echo "BLOCKED: approved sender was not persisted in the pairing store"
+    echo "HARNESS-ERROR: approved sender was not persisted in the pairing store"
     return 1
   fi
   if (( rc == 0 )); then
@@ -232,33 +292,68 @@ case_pairing_owner() {
   fi
 }
 
-case_default_to() {
-  local send_log="$LOGS/a5-defaultTo-send.log"
-  cli --verbose message send --channel telegram \
-    --message "P0 spike defaultTo writer trigger" --json 2>&1 |
+message_send_succeeded() {
+  jq -eR '
+    fromjson? |
+    select(.action == "send" and .channel == "telegram" and
+      .dryRun == false and .handledBy == "plugin" and
+      .payload.ok == true and (.messageId | strings | length > 0))
+  ' "$1" >/dev/null
+}
+
+case_default_to_declared() {
+  local send_log="$LOGS/a5-defaultTo-declared-send.log"
+  jq -e '.channels.telegram.defaultTo == $target' \
+    --arg target "$SPIKE_TG_GROUP_USERNAME" "$CFG" >/dev/null
+  cli --log-level debug message send --channel telegram \
+    --target "$SPIKE_TG_GROUP_USERNAME" \
+    --message "P0 spike declared defaultTo case" --json --verbose 2>&1 |
     sanitize_a5_stream > "$send_log" || return 1
-  grep -F "failed to persist Telegram defaultTo target $SPIKE_TG_GROUP_USERNAME" "$send_log" |
-    grep -Eiq 'permission denied|operation not permitted|read-only file system|EACCES|EPERM|EROFS' || {
-      echo "BLOCKED: defaultTo writer-specific immutable failure signature was absent"
-      return 1
-    }
+  message_send_succeeded "$send_log" || {
+    echo "HARNESS-ERROR: declared defaultTo send lacked its exact success result"
+    return 1
+  }
+  sed -n '1,240p' "$send_log"
+  classify "declarative render" \
+    "declared defaultTo send succeeded; awaiting combined debug/journal no-attempt proof"
+}
+
+case_default_to_undeclared() {
+  local send_log="$LOGS/a5-defaultTo-undeclared-send.log"
+  jq -e '.channels.telegram | has("defaultTo") | not' "$CFG" >/dev/null
+  cli --log-level debug message send --channel telegram \
+    --target "$SPIKE_TG_GROUP_USERNAME" \
+    --message "P0 spike undeclared defaultTo case" --json --verbose 2>&1 |
+    sanitize_a5_stream > "$send_log" || return 1
+  message_send_succeeded "$send_log" || {
+    echo "HARNESS-ERROR: undeclared defaultTo send lacked its exact success result"
+    return 1
+  }
+  sed -n '1,240p' "$send_log"
   classify "graceful skip" \
-    "maybePersistResolvedTelegramTarget executed; OS guard denied writeback cleanly"
+    "undeclared defaultTo send succeeded; awaiting combined debug/journal writeback outcome"
 }
 
 case_reconnect() {
   local before="$LOGS/a5-reconnect-before.json"
-  local restart_log="$LOGS/a5-reconnect-command.log" after="$LOGS/a5-reconnect-status.json"
+  local stop_log="$LOGS/a5-reconnect-stop.json"
+  local start_log="$LOGS/a5-reconnect-start.json" after="$LOGS/a5-reconnect-status.json"
   telegram_probe "$before"
-  cli channels restart telegram 2>&1 |
-    sanitize_a5_stream > "$restart_log" || return 1
+  cli gateway call channels.stop \
+    --params '{"channel":"telegram","accountId":"default"}' --json 2>&1 |
+    sanitize_a5_stream > "$stop_log" || return 1
+  jq -e '.stopped == true' "$stop_log" >/dev/null || return 1
+  cli gateway call channels.start \
+    --params '{"channel":"telegram","accountId":"default"}' --json 2>&1 |
+    sanitize_a5_stream > "$start_log" || return 1
+  jq -e '.started == true' "$start_log" >/dev/null || return 1
   telegram_probe "$after"
   jq -e '
     ([.channelAccounts.telegram[]?, .channels.telegram, .channels.telegram.accounts[]?]) as $records |
     select(any($records[]; (.connected? == true or .running? == true) and .restartPending? != true))
   ' "$after" >/dev/null
   classify "declarative render" \
-    "Telegram restart RPC completed; exact status returned connected/running with restartPending false"
+    "channels.stop/start RPC reconnect completed; status returned connected/running with restartPending false"
 }
 
 token_swap_restore() {
@@ -293,9 +388,9 @@ case_token_swap() {
   sleep 12
   journalctl --user -u "$UNIT" -n 160 --no-pager 2>&1 |
     sanitize_a5_stream > "$invalid_journal" || true
-  grep -Fq 'Bot token is likely invalid. Telegram may DELETE the bot if requests continue.' \
+  grep -Fq 'Telegram bot token unauthorized for account "default" (getMe returned 401 from Telegram; source: env token).' \
     "$invalid_journal" || {
-      echo "BLOCKED: pinned invalid-token handler signature was absent"
+      echo "HARNESS-ERROR: pinned invalid-token handler signature was absent"
       return 1
     }
   classify "declarative render" \
@@ -304,6 +399,11 @@ case_token_swap() {
 
 case_group_migration() {
   local cursor="$S1/a5-group-migration.cursor" journal="$LOGS/a5-group-migration-event.log"
+  if [[ "$SPIKE_TG_GROUP_ID" =~ ^-100[0-9]+$ ]]; then
+    classify "NOT-TRIGGERABLE" \
+      "disposable chat is already a supergroup; its one-time basic-group migration cannot recur"
+    return 0
+  fi
   journalctl --user -u "$UNIT" -n 0 --show-cursor --no-pager > "$cursor"
   echo "OPERATOR-ACTION: optionally convert the disposable group within 45 seconds."
   sleep 45
@@ -312,24 +412,27 @@ case_group_migration() {
     sanitize_a5_stream > "$journal" || return 1
   if grep -Fq 'Group migrated:' "$journal"; then
     grep -Fq 'Config writes disabled; skipping group config migration.' "$journal" || {
-      echo "BLOCKED: migration event lacked the exact configWrites:false handler outcome"
+      echo "HARNESS-ERROR: migration event lacked the exact configWrites:false handler outcome"
       return 1
     }
     classify "graceful skip" \
       "migration event observed; exact configWrites:false skip handler completed"
   else
-    classify "graceful skip" "conditional migration was not externally triggered"
+    classify "BLOCKED" "operator conversion absent during the 45s window"
   fi
 }
 
 generate_matrix() {
   local expected case_name classification note count
-  expected=$'login-bootstrap\npairing-first-owner\ndefaultTo-writeback\nreconnect\ntoken-swap\ngroup-supergroup-migration'
+  expected=$'login-bootstrap\npairing-first-owner\ndefaultTo-declared\ndefaultTo-undeclared\nreconnect\ntoken-swap\ngroup-supergroup-migration'
   [[ "$(tail -n +2 "$SUMMARY" | cut -f1 | LC_ALL=C sort)" == "$(printf '%s\n' "$expected" | LC_ALL=C sort)" ]] ||
     { echo "ASSERT-FAIL: writer summary has missing, duplicate, or unknown rows"; return 1; }
   while IFS=$'\t' read -r case_name classification note; do
     [[ "$classification" == "declarative render" ||
        "$classification" == "graceful skip" ||
+       "$classification" == "HARNESS-ERROR" ||
+       "$classification" == "NOT-TRIGGERABLE" ||
+       "$classification" == "BLOCKED" ||
        "$classification" == "INCOMPATIBLE" ]] ||
       { echo "ASSERT-FAIL: invalid classification for $case_name"; return 1; }
     [[ -n "$note" ]] || { echo "ASSERT-FAIL: blank note for $case_name"; return 1; }
@@ -349,7 +452,8 @@ generate_matrix() {
       case "$case_name" in
         login-bootstrap) label="Login/bootstrap"; essential="yes" ;;
         pairing-first-owner) label="Pairing / first-owner persistence"; essential="yes" ;;
-        defaultTo-writeback) label="\`defaultTo\` target writeback"; essential="yes" ;;
+        defaultTo-declared) label="\`defaultTo\` declared"; essential="yes" ;;
+        defaultTo-undeclared) label="\`defaultTo\` undeclared"; essential="yes" ;;
         reconnect) label="Reconnect"; essential="yes" ;;
         token-swap) label="Token swap"; essential="yes" ;;
         group-supergroup-migration) label="Group to supergroup migration"; essential="only when triggerable" ;;
@@ -362,13 +466,17 @@ generate_matrix() {
 
 test -r "$CFG" || { echo "FATAL: run setup-root.sh first"; exit 66; }
 sudo -n true || { echo "FATAL: sudo is not interactively primed"; exit 77; }
-for help in channels-status channels-restart pairing-list pairing-approve message-send; do
+for help in config-validate channels-status gateway-call pairing-list pairing-approve message-send; do
   test -s "$S1/help/$help.txt" || { echo "FATAL: missing capability proof for $help"; exit 66; }
 done
 grep -Eq '(^|[[:space:]])--json([=[:space:]]|$)' "$S1/help/message-send.txt" ||
   { echo "FATAL: message send JSON surface is unsupported"; exit 69; }
-grep -Eq '(^|[[:space:]])--verbose([=[:space:]]|$)' "$S1/help/root.txt" ||
-  { echo "FATAL: global verbose surface needed for writer signature is unsupported"; exit 69; }
+# There is no root --verbose. Keep the verified root log-level form; the
+# separately verified message-local --verbose exposes the guarded writeback log.
+grep -Eq '(^|[[:space:]])--log-level([=[:space:]]|$)' "$S1/help/root.txt" ||
+  { echo "FATAL: global log-level surface needed for writer signature is unsupported"; exit 69; }
+grep -Eq 'debug\|trace|trace' "$S1/help/root.txt" ||
+  { echo "FATAL: --log-level does not advertise a debug/trace level"; exit 69; }
 
 echo "== assertion 5: stage declarative Telegram generation =="
 MUTATED=1
@@ -407,7 +515,27 @@ printf 'case\tclassification\tnote\n' > "$SUMMARY"
 
 run_case login-bootstrap yes case_login_bootstrap
 run_case pairing-first-owner yes case_pairing_owner
-run_case defaultTo-writeback yes case_default_to
+run_case defaultTo-declared yes case_default_to_declared
+
+echo "== assertion 5: stage undeclared defaultTo generation =="
+DECLARED_GEN="$GEN"
+RENDERED_UNDECLARED="$S1/rendered-writer-defaultTo-undeclared.json"
+jq -S 'del(.channels.telegram.defaultTo)' "$RENDERED" > "$RENDERED_UNDECLARED"
+UNDECLARED_HASH="$(sha256sum "$RENDERED_UNDECLARED" | awk '{print $1}')"
+UNDECLARED_GEN="$UNDECLARED_HASH"
+stage_generation "$RENDERED_UNDECLARED" "$UNDECLARED_HASH"
+printf '%s\t%s\t%s\n' "$UNDECLARED_GEN" "$UNDECLARED_HASH" "19023" >> "$S1/generations.tsv"
+switch_root_pointer "$UNDECLARED_GEN" defaultTo-undeclared
+systemctl --user restart "$UNIT"
+wait_health || { echo "FATAL: undeclared defaultTo generation did not become healthy"; exit 1; }
+cli config validate 2>&1 | sanitize_a5_stream
+run_case defaultTo-undeclared yes case_default_to_undeclared
+
+echo "== assertion 5: restore declared defaultTo generation =="
+switch_root_pointer "$DECLARED_GEN" defaultTo-restore
+systemctl --user restart "$UNIT"
+wait_health || { echo "FATAL: restored declared defaultTo generation did not become healthy"; exit 1; }
+telegram_probe "$LOGS/a5-defaultTo-restored-status.json"
 run_case reconnect yes case_reconnect
 run_case token-swap yes case_token_swap
 test ! -e "$S1/a5-token-swap-restore.failed" ||

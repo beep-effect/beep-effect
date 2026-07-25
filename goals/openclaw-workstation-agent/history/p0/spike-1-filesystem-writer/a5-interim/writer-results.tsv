@@ -1,0 +1,7 @@
+case	classification	note
+login-bootstrap	declarative render	env-token bootstrap plus Telegram probe; configWrites:false rendered
+pairing-first-owner	BLOCKED	operator DM absent; no new pairing request in the 180s window
+defaultTo-writeback	HARNESS-ERROR	harness trigger or evidence check failed; exit=1
+reconnect	declarative render	channels.stop/start RPC reconnect completed; status returned connected/running with restartPending false
+token-swap	declarative render	invalid token handler fired; token remains external in the unit-private credential
+group-supergroup-migration	NOT-TRIGGERABLE	disposable chat is already a supergroup; its one-time basic-group migration cannot recur

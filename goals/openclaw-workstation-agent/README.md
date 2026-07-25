@@ -69,6 +69,15 @@ No implementation phase may run before every contract assertion passes.
   `config_health_entries` drift surface, and cross-writer mode-encoding
   variance).
 
+## Session Handoff
+
+Paused mid-gauntlet on 2026-07-25 — read
+[`ops/handoffs/p0-session-handoff-2026-07-25.md`](./ops/handoffs/p0-session-handoff-2026-07-25.md)
+first: current spike verdicts, the two remaining operator prerequisites, how
+to drive privileged runs (YubiKey-FIDO sudo needs one pty session), the
+applicator design findings, and the nine harness defects that only execution
+revealed.
+
 ## Notes
 
 - Appetite (binding, GATE C 2026-07-25): one focused build cycle, gauntlet

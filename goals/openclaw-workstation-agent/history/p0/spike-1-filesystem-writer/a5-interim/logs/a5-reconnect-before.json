@@ -1,0 +1,158 @@
+{
+  "ts": 1785019266053,
+  "channelOrder": ["telegram"],
+  "channelLabels": {
+    "telegram": "Telegram"
+  },
+  "channelDetailLabels": {
+    "telegram": "Telegram Bot"
+  },
+  "channelSystemImages": {
+    "telegram": "paperplane"
+  },
+  "channelMeta": [
+    {
+      "id": "telegram",
+      "label": "Telegram",
+      "detailLabel": "Telegram Bot",
+      "systemImage": "paperplane"
+    }
+  ],
+  "eventLoop": {
+    "degraded": false,
+    "reasons": [],
+    "intervalMs": 3224,
+    "delayP99Ms": 20.6,
+    "delayMaxMs": 24.4,
+    "utilization": 0.019,
+    "cpuCoreRatio": 0.021
+  },
+  "channels": {
+    "telegram": {
+      "configured": true,
+      "running": true,
+      "lastStartAt": 1785019006082,
+      "lastStopAt": null,
+      "lastError": null,
+      "tokenSource": "env",
+      "probe": {
+        "ok": true,
+        "status": null,
+        "error": null,
+        "elapsedMs": 325,
+        "botInfo": {
+          "id": 8842758525,
+          "is_bot": true,
+          "first_name": "BeepBot",
+          "username": "beep_ip_bot",
+          "can_join_groups": true,
+          "can_read_all_group_messages": false,
+          "can_manage_bots": false,
+          "supports_inline_queries": false,
+          "supports_join_request_queries": false,
+          "can_connect_to_business": false,
+          "has_main_web_app": false,
+          "has_topics_enabled": false,
+          "allows_users_to_create_topics": false
+        },
+        "bot": {
+          "id": 8842758525,
+          "isBot": true,
+          "firstName": "BeepBot",
+          "username": "beep_ip_bot",
+          "canJoinGroups": true,
+          "canReadAllGroupMessages": false,
+          "canManageBots": false,
+          "supportsInlineQueries": false,
+          "canConnectToBusiness": false,
+          "hasMainWebApp": false,
+          "hasTopicsEnabled": false,
+          "allowsUsersToCreateTopics": false
+        }
+      },
+      "lastProbeAt": 1785019266378,
+      "mode": "polling"
+    }
+  },
+  "channelAccounts": {
+    "telegram": [
+      {
+        "accountId": "default",
+        "enabled": true,
+        "configured": true,
+        "running": true,
+        "lastStartAt": 1785019006082,
+        "lastStopAt": null,
+        "lastError": null,
+        "probe": {
+          "ok": true,
+          "status": null,
+          "error": null,
+          "elapsedMs": 325,
+          "botInfo": {
+            "id": 8842758525,
+            "is_bot": true,
+            "first_name": "BeepBot",
+            "username": "beep_ip_bot",
+            "can_join_groups": true,
+            "can_read_all_group_messages": false,
+            "can_manage_bots": false,
+            "supports_inline_queries": false,
+            "supports_join_request_queries": false,
+            "can_connect_to_business": false,
+            "has_main_web_app": false,
+            "has_topics_enabled": false,
+            "allows_users_to_create_topics": false
+          },
+          "bot": {
+            "id": 8842758525,
+            "isBot": true,
+            "firstName": "BeepBot",
+            "username": "beep_ip_bot",
+            "canJoinGroups": true,
+            "canReadAllGroupMessages": false,
+            "canManageBots": false,
+            "supportsInlineQueries": false,
+            "canConnectToBusiness": false,
+            "hasMainWebApp": false,
+            "hasTopicsEnabled": false,
+            "allowsUsersToCreateTopics": false
+          }
+        },
+        "connected": true,
+        "restartPending": false,
+        "reconnectAttempts": 0,
+        "lastConnectedAt": 1785019249675,
+        "lastEventAt": 1785019249675,
+        "lastTransportActivityAt": 1785019249675,
+        "lastInboundAt": null,
+        "lastOutboundAt": 1785019263998,
+        "tokenSource": "env",
+        "tokenStatus": "available",
+        "mode": "polling",
+        "audit": {
+          "ok": true,
+          "checkedGroups": 1,
+          "unresolvedGroups": 0,
+          "hasWildcardUnmentionedGroups": false,
+          "groups": [
+            {
+              "chatId": "-1004475923698",
+              "ok": true,
+              "status": "member",
+              "error": null,
+              "matchKey": "-1004475923698",
+              "matchSource": "id"
+            }
+          ],
+          "elapsedMs": 435
+        },
+        "allowUnmentionedGroups": true,
+        "lastProbeAt": 1785019266378
+      }
+    ]
+  },
+  "channelDefaultAccountId": {
+    "telegram": "default"
+  }
+}
