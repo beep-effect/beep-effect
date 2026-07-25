@@ -25,5 +25,11 @@ still justify a separately shaped governance capability?
 
 ## Trail
 
+- 2026-07-25: received a corpus dispatch note
+  ([`research/2026-07-25-academia-corpus-mining-note.md`](./research/2026-07-25-academia-corpus-mining-note.md))
+  from the `academia-corpus-mining` align dispatch — trajectory envelopes,
+  commitments, principals, performatives, budgets, break predicates, and
+  independent certification as candidate requirements for the future
+  research stage.
 - 2026-07-14: captured the load-bearing design before deletion of the paused
   goal packet; stopped before research or doctrine changes.

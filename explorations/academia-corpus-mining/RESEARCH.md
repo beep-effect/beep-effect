@@ -126,9 +126,15 @@ The canonical table is in the
 [master synthesis](./research/t3-master-synthesis.md#consolidated-routing-table)
 — **36 routes** (10 `attach-to`, 10 `extend`, 16 `new-exploration`;
 15 high / 18 medium / 3 low priority), merged and deduplicated from the
-seven cluster reports. Recorded, not executed (gold-intake precedent). All
-18 distinct external repo paths cited by the table (plus this packet's own
-self-route) were existence-verified on 2026-07-25.
+seven cluster reports. Recorded, not executed, at research stage
+(gold-intake precedent). All 18 distinct external repo paths cited by the
+table (plus this packet's own self-route) were existence-verified on
+2026-07-25. **Align update (2026-07-25):** the 15 high-priority routes were
+approved for dispatch — 11 bounded notes landed at
+`<target>/research/2026-07-25-academia-corpus-mining-note.md` and 2 new
+capture packets opened (`agent-execution-sandbox`,
+`model-artifact-admission`); medium/low routes remain recorded (see
+[`DECISIONS.md`](./DECISIONS.md) align entries).
 
 The 15 high-priority routes in one line each:
 

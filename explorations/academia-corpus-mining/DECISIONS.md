@@ -146,3 +146,161 @@ byte-identical file, so any top-of-file insertion would shift every
 reference. Errata banners live at the entry points instead (packet README
 "Read This First" prior-synthesis item and SOURCES.md §3), and the file
 stays byte-exact.
+
+## 2026-07-25 — align: route execution scope (master Q12)
+
+**Question:** Of the master synthesis's 36 recorded routes (10 attach-to /
+10 extend / 16 new-exploration; 15 high / 18 medium / 3 low priority),
+which actually execute, and in what shape?
+
+**Answer:** Dispatch all 15 high-priority routes in one wave. Extend and
+attach-to routes land as a bounded corpus-derived note at
+`<target>/research/2026-07-25-academia-corpus-mining-note.md` — distilled
+requirements, fixture candidates, cluster-report provenance; evidence
+input for the target's owners, never a SPEC/PLAN amendment. The two
+high-priority new-exploration routes scaffold capture-stage packets
+(`agent-execution-sandbox`, `model-artifact-admission`). The 18 medium and
+3 low routes stay recorded in the master table.
+
+**Rationale:** The intelligence already exists in the cluster reports;
+notes are bounded and traceable, so dispatching the full high tier costs
+little beyond review. "Recorded, not executed" was the research-stage
+posture — align's job is to discharge it for the tier the corpus rated
+highest. Medium/low routes wait for pull from their targets.
+
+## 2026-07-25 — align: prose-to-proof fact language (master Q2)
+
+**Question:** Should `docs/product/prose-to-proof.md` (and the approval
+policy, if it repeats the phrases) replace "becomes a fact" /
+"authoritative runtime truth", or keep those terms with a narrow
+repository-state definition?
+
+**Answer:** Replace. Attorney approval is recorded as a scoped human
+disposition — one of seven independent typed verdicts (shape validity,
+anchor fidelity, semantic stance, source authority/currentness, human
+disposition, action authorization, release) — and none of those verdicts
+converts a contestable proposition into source truth. The edit lands in
+the follow-up binding-doc PR (see the PR-shape decision below).
+
+**Rationale:** The corpus's strongest correction: four clusters converge
+on it independently (legal-norms-reasoning, agent-metacognition-
+neurosymbolic, agent-security-orchestration, retrieval-citation-
+grounding), and the delta section flags the prior synthesis's "admission
+makes the institutional fact obtain" framing as the corrected claim.
+Keep-but-narrow was offered and declined: the word keeps doing epistemic
+work no matter how carefully it is fenced.
+
+## 2026-07-25 — align: first composition over the bitemporal core (master Q4)
+
+**Question:** What composes over the bitemporal edge core first: preferred
+belief views, legal multitemporality, exact-version telemetry, or
+interpretation/closure records?
+
+**Answer:** Preferred belief views. The recorded medium route
+`new-exploration <epistemic-belief-view-revision>` is the designated first
+composition; it stays recorded until the bitemporal core itself lands.
+
+**Rationale:** Most product-shaped payoff (what does the attorney
+currently believe, and why, with inconsistent evidence retained rather
+than destroyed) — and the other three candidates all want a
+preferred-view mechanism underneath them anyway. Multitemporality remains
+next in the legal lane (see the legal-module decision).
+
+## 2026-07-25 — align: backlog wave 2 (master Q13)
+
+**Question:** Does the June-29 ~240-paper catalogued backlog warrant a
+follow-up mining wave?
+
+**Answer:** Yes — approved but deferred. Wave 2 starts with the 97
+legal-NLP/extraction papers, using the same idempotent pipeline, and only
+after this dispatch wave has landed. Recorded as the packet's parked
+revival trigger.
+
+**Rationale:** The master's honest-limits section names the 97-paper
+ingestion edge as the largest remaining source of empirical retrieval and
+extraction evidence — exactly where this corpus is weakest (architectural
+convergence strong, production validation thin). Deferring keeps the
+dispatch wave from stalling behind another multi-hour mining run.
+
+## 2026-07-25 — align: first legal module after M1 (master Q6)
+
+**Question:** Which legal module follows semantic-foundation M1:
+procedure/practice, argumentation/evaluation, legal multitemporality, or
+ontology lifecycle QA?
+
+**Answer:** Argumentation/evaluation (the recorded
+`legal-argumentation-substrate` route is the designated successor; M1
+itself stays a bounded SKOS registry/loader).
+
+**Rationale:** The legal-norms-reasoning cluster's headline: the layer
+after SKOS is qualified legal argumentation — attacks, defeats, and
+accepted conclusions as projections scoped to theory, proof standard,
+procedure, jurisdiction, and time — not "more ontology".
+Multitemporality follows in third position behind belief views.
+
+## 2026-07-25 — align: metacognition deployment (master Q11)
+
+**Question:** External supervisor, integrated scheduler, or both over one
+shared protocol?
+
+**Answer:** Commit only to one typed event/control protocol now: monitors
+emit non-authoritative cues; later observations decide whether an
+intervention worked; no reflection text escapes No-Escape. The
+supervisor-vs-integrated topology question stays open until comparison
+fixtures exist (the recorded low-priority compare route).
+
+**Rationale:** The agent-metacognition-neurosymbolic cluster found no
+decisive evidence for either topology and explicitly proposed direct
+comparison under identical observability, privacy, latency, and recovery
+fixtures. Committing to the protocol is what the downstream routes need;
+committing to a topology today would be evidence-free.
+
+## 2026-07-25 — align: packet fate after dispatch
+
+**Question:** Once the 15-route dispatch lands and wave 2 is deferred,
+what happens to this packet?
+
+**Answer:** Park — stage `align`, status `parked`, flipped in the same PR
+that lands the binding-doc edits (the last dispatch route). Revival
+trigger: the wave-2 backlog run.
+
+**Rationale:** A mining packet's deliverable is routed intelligence, not
+a brief of its own — shape and decompose don't apply. Parking with an
+explicit trigger is honest about that; "graduate" would stretch the
+graduation contract (no goal packet emerges from this packet itself).
+
+## 2026-07-25 — align: dispatch PR shape
+
+**Question:** One PR or several for executing the dispatch wave?
+
+**Answer:** Two. PR A: this align closeout + the 11 additive dispatch
+notes + the 2 new packet scaffolds. PR B (after A merges): the two
+binding-doc edits — `docs/product/prose-to-proof.md` typed-verdict
+replacement and the `standards/memory-architecture/01-memory-layer-
+taxonomy.md` episodic/projection split — plus the park flip.
+
+**Rationale:** The notes are additive research files; the two doc edits
+change binding product/standards prose and deserve their own focused
+review. Three-plus PRs was rejected as pure overhead.
+
+## 2026-07-25 — align: remaining question deferrals
+
+**Question:** The master synthesis queued 13 align questions; the
+decisions above discharge Q2, Q4, Q6, Q11, Q12, and Q13. Where do the
+rest live?
+
+**Answer:** Explicitly deferred into the targets that own them:
+Q1 (canonical verdict names/owners) and Q3 (retention classes) → the
+`epistemic-bitemporal-edge-core` dispatch note; Q5 (lineage identity) →
+the `identity-iri-fold` note; Q7 (stance layer + minimum qualifiers) →
+the `citation-grounding-hallucination-guard` note; Q8 (visual/composite
+evidence timing) → the recorded doc-structure medium routes (not
+dispatched, consistent with the route-scope decision); Q9 (benchmark
+design) → the recorded `office-action-layout-evidence-benchmark` route;
+Q10 (first action-authorization proof) → the `agent-execution-sandbox`
+packet, which inherits it in its manifest.
+
+**Rationale:** Each is a design decision inside its target's scope, not
+this packet's. Align exits with every question either answered above or
+explicitly owned elsewhere — the manifest's openQuestions record exactly
+that.

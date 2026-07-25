@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `research`
+Stage: `align`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -19,11 +19,11 @@ work streams and land the intelligence here for later goal graduation.
 
 ## Next Open Question
 
-Align: which of the master synthesis's 36 recorded routes get executed, and
-in what order? Start from the 13 align-stage questions in
-[`research/t3-master-synthesis.md`](./research/t3-master-synthesis.md) —
-the two sharpest: does `docs/product/prose-to-proof.md` keep its "becomes a
-fact" language, and what is the first composition over the bitemporal core?
+Wave 2 (deferred, parked revival trigger once the dispatch fully lands):
+run the approved second mining pass over the June-29 ~240-paper backlog,
+starting with the 97 legal-NLP/extraction papers. Everything else is
+decided or explicitly deferred into routed targets — see the nine align
+entries in [`DECISIONS.md`](./DECISIONS.md).
 
 ## Read This First
 
@@ -38,6 +38,14 @@ fact" language, and what is the first composition over the bitemporal core?
 
 ## Trail
 
+- 2026-07-25 (align): interview closed nine decisions (see DECISIONS.md
+  align entries) — dispatch all 15 high-priority routes as bounded notes +
+  2 new capture packets (`agent-execution-sandbox`,
+  `model-artifact-admission`); replace prose-to-proof fact language
+  (separate PR); belief views first over the bitemporal core;
+  argumentation first after M1; one metacognition protocol; wave 2 (97
+  legal-NLP papers) approved-deferred; packet parks after dispatch.
+  Stage → `align`; 11 dispatch notes landed in target packets.
 - 2026-07-25 (close): S8 QA gate passed — adversarial codex review
   ([`reviews/2026-07-25-codex-research-qa.md`](./reviews/2026-07-25-codex-research-qa.md))
   verdict FIX-THEN-SHIP: zero Effect-v4/`@beep/*` defects, zero copyright or
