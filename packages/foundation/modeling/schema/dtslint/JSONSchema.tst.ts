@@ -33,11 +33,11 @@ describe("JSONSchema", () => {
   it("SubSchema is the boolean-or-node union on both sides", () => {
     expect<SubSchema.Type>().type.toBe<boolean | Node.Type>();
     expect<SubSchema.Encoded>().type.toBe<boolean | Node.Encoded>();
-    expect<typeof SubSchema.Type>().type.toBeAssignableTo<boolean | Node.Type>();
+    expect<SubSchema>().type.toBeAssignableTo<boolean | Node.Type>();
   });
 
   it("NodeCodec decodes flat records into Node instances", () => {
-    expect<typeof NodeCodec.Type>().type.toBe<Node>();
+    expect<NodeCodec>().type.toBe<Node>();
     expect<typeof NodeCodec.Encoded>().type.toBeAssignableTo<Node.Encoded>();
     const decode = S.decodeUnknownEffect(NodeCodec);
     const encode = S.encodeEffect(NodeCodec);
