@@ -68,23 +68,33 @@ cacheRead 698.3M / 1,139.6M · cacheCreation 34.4M / 48.4M. Window cost
 counter: $812.33 (nominal API-price equivalent; informational only under
 subscription routing).
 
-Reading: bounded steady lanes (opus-4.8, haiku, grok, sol) agree within
-~5–23%; the divergence is concentrated in the heavy long-context lanes
-(fable, opus-5[1m], sonnet). Recorded hypotheses, not conclusions:
+Reading, against a named tolerance (the SPEC criterion names none, so this
+note defines one): a lane is **within tolerance** iff its Prometheus/local
+ratio falls in **0.90–1.10 (±10%)**. Per-lane verdicts: opus-4.8 (0.95),
+haiku (1.04), and grok (0.95) are within tolerance; sol (0.77), sonnet
+(0.76), fable (0.50), opus-5[1m] (0.33), and luna (45.6) are **out of
+tolerance** and are recorded as explicit exceptions — not claimed as
+passing. The divergence concentrates in the heavy long-context lanes.
+Recorded hypotheses for the exceptions, not conclusions:
 
 1. Long-running sessions whose exporter dies mid-session (network hiccup,
    harness restart) stop metering while transcripts keep recording —
-   plausible for multi-hour Fable/1M-context sessions.
+   plausible for multi-hour Fable/1M-context sessions (fable, opus-5[1m],
+   sonnet).
 2. Local-side residual overcount where `message.id` dedupe cannot collapse
-   (retried calls get fresh ids that re-bill cacheRead).
+   (retried calls get fresh ids that re-bill cacheRead) — plausible
+   contributor for sol and sonnet.
 3. The luna reverse-anomaly (metrics ≫ transcripts) is the mirror image:
    background claudex subagent traffic metered natively whose transcripts
    fall outside the scanned window/mtime filters.
 
-Session-count coverage is the strong, verified claim; token totals agree
-within a factor attributable to the above and are directionally consistent
-per lane. Follow-up (non-gating): re-run the per-model comparison on a
-window with no cross-boundary long sessions to isolate hypothesis 1.
+Session-count coverage is the strong, verified claim; token totals meet the
+±10% bound only on the bounded steady lanes, and the five exception lanes
+are carried as recorded gaps with the hypotheses above. Follow-up
+(non-gating): re-run the per-model comparison on a window with no
+cross-boundary long sessions to isolate hypothesis 1; a future re-check
+should treat a bounded-lane breach of ±10% as a real regression, not an
+acceptable gap.
 
 ## Codex — mode coverage and limits
 
@@ -120,16 +130,36 @@ Recorded limits:
 
 - Project `default` traceCount **585,023** (was ~1,300 at P1 rollout on
   2026-07-14) — collector→Phoenix trace fan-out is working at volume.
-- **Privacy**: 560 spans sampled via REST (the most-recent pages; all
-  codex-runtime spans — codex dominates span volume). The complete attribute-key inventory contains
-  **no prompt/response/content keys** — only runtime attrs
-  (`code.file.path`, `thread.id`, `codex.request.reasoning_effort`,
+- **Privacy (codex spans)**: 560 spans sampled via REST (the most-recent
+  pages — codex dominates span volume). The complete attribute-key
+  inventory contains **no prompt/response/content keys** — only runtime
+  attrs (`code.file.path`, `thread.id`, `codex.request.reasoning_effort`,
   `beep.schema_version`, timing counters; longest attribute value 80
-  chars). Claude-side payload privacy rests on the P1 metric-label sample
-  (clean) plus the config-side contract
-  verified live the same day: `~/.claude/settings.json` pins all four
-  `OTEL_LOG_*` content flags to `0` with logs exporter `none`;
-  `~/.codex/config.toml` sets `log_user_prompt = false`.
+  chars). Config side: `~/.codex/config.toml` sets
+  `log_user_prompt = false`.
+- **Privacy (claude spans — direct exported-payload inspection)**: a
+  deeper recent-page scan (2026-07-25 ~11:50Z sample; 36,000 spans paged:
+  33,399 codex / 110 claude / 2,491 other) surfaced **110 Claude Code
+  spans** (`claude_code.tool`, `claude_code.tool.execution`,
+  `claude_code.tool.blocked_on_user`, `claude_code.llm_request`,
+  `claude_code.interaction`, `turn/start`, `thread/resume`). Their
+  complete attribute-key inventory carries **no content keys** — identity
+  and session ids, `gen_ai.*` metadata, token counts, and live `beep.*`
+  attribution (`beep.repo`/`beep.branch`/`beep.goal_slug` observed on
+  claude spans, re-proving slice-1 trace attribution); longest value 64
+  chars (`user.id` hash). The only prompt-adjacent keys are
+  `user_prompt_length` (numeric) and `user_prompt` capped at 10 observed
+  characters — the `<REDACTED>` placeholder envelope, not prompt text —
+  in-band confirmation that `OTEL_LOG_USER_PROMPTS=0` redaction is active
+  in the exported payload itself. Config side: `~/.claude/settings.json`
+  pins all four `OTEL_LOG_*` content flags to `0` with logs exporter
+  `none`. (The sample post-dates the comparison window because recent-page
+  REST is the only workable read path; payload shape is
+  window-independent.)
+- **Privacy (claude metric labels)**: all 1,364 `claude_code_*` series in
+  the window carry 38 label keys, each a short structured value (uuids,
+  model ids, enums; max 64 chars — the `user.id` hash) — the metric
+  surface has no content-capable label.
 - Slice-1 attribution on traces (`repo` + `goal-slug` in Phoenix) was proven
   on real data at P1 (2026-07-14 evidence); in-window attribution is
   re-proven on the metric side (40 attributed sessions incl. live
