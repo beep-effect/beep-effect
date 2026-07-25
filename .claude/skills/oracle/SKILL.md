@@ -34,7 +34,12 @@ Two resolutions:
    `permissions.allow`: `"mcp__claude-in-chrome__computer"`,
    `"mcp__claude-in-chrome__file_upload"`,
    `"mcp__claude-in-chrome__form_input"`. Explicit allow rules skip the
-   classifier; the full ladder then works unattended.
+   classifier; the full ladder then works unattended. Breadth note: the
+   `computer` rule allows ALL keyboard/mouse/screenshot automation in the
+   user's real Chrome, not just paste — permission rules match on the tool,
+   not on individual actions, so there is no narrower rule that unblocks
+   only the paste step. Operators should grant it consciously with that
+   scope in mind (or skip it and accept per-action prompts/manual paste).
 2. **Session workaround (agent, no human needed):** render the bundle to a
    file (`oracle --render -p ... --file ... > <scratchpad>/oracle-bundle.md`)
    and dispatch a `codex:codex-rescue` task (`--effort high`) that reads the

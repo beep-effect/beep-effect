@@ -74,9 +74,12 @@ precisely). The dankserver migration inherits the renderers and flips the
 executor; its bridge option is split ownership via upstream's include
 mechanism if strict mode proves too aggressive for a live install.
 
-The agent itself (v1): legal-professional persona (SOUL.md), strict guardrail
-config (workspace boundary, tool/command allowlists, no client identifiers in
-channel traffic), Control UI + one DM channel, hosted primary model + local
+The agent itself (v1): legal-professional persona (SOUL.md), guardrails at
+two distinct assurance levels — enforceable config (workspace boundary,
+tool/command allowlists, sandbox policy) and **advisory** persona guidance
+("no client identifiers in channel traffic" is prompt text, not a
+confidentiality boundary; no real client data in v1 — per adversarial review
+finding 11) — Control UI + one DM channel, hosted primary model + local
 llama-server provider profile, exactly one benign proof skill installed
 declaratively.
 
