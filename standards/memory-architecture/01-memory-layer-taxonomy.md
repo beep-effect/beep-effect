@@ -52,9 +52,9 @@ This document defines the four memory layers required by the project's agent mem
 
 **What gets it wrong:** Naive Graphiti usage where everything is stored forever and the graph grows without bounds. This is exactly what the user experienced -- degradation at scale.
 
-**Concrete implementation:** Graphiti is acceptable HERE (not for long-term) IF:
+**Concrete implementation:** a Graphiti-style projection store is acceptable HERE (not for long-term) — note Graphiti itself is write-frozen pending decommission after the bitemporal port, so this contract binds its successor store — IF:
 
-1. Graphiti holds only the projection store, never the exact episodic records.
+1. The projection store holds only projections, never the exact episodic records.
 2. Temporal windows are enforced (projection entries older than N days are pruned or compressed; exact records are governed by retention policy, not interference management).
 3. A consolidation pipeline promotes high-signal facts to Layer 1 (durable).
 4. Competitor density is monitored.

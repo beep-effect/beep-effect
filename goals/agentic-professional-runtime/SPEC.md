@@ -204,8 +204,9 @@ active topology and should not be restored wholesale.
 
 The storage model is:
 
-- versioned or immutable entity rows for current runtime truth
-- append-only `Activity` and provenance records for why and how truth changed
+- versioned or immutable entity rows for current runtime-accepted state
+- append-only `Activity` and provenance records for why and how that state
+  changed
 - evidence records that preserve source spans and source artifacts
 - rebuildable read models for graph, search, timeline, inbox, compliance, and
   work queues
