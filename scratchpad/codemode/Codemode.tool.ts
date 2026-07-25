@@ -1,16 +1,14 @@
 /**
- * The scope logic for the `@beep/codemode` interpreter.
+ * `Stdlib`
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 import {$ScratchpadId} from "@beep/identity";
 import * as S from "effect/Schema";
-import {LiteralKit, SchemaUtils, MappedLiteralKit} from "@beep/schema";
-import {P, A, O, Str, R, Struct, pipe, dual} from "@beep/utils";
-import {HashMap, HashSet} from "effect";
+import {LiteralKit} from "@beep/schema";
 
-const $I = $ScratchpadId.create("Interpreter.scope");
+const $I = $ScratchpadId.create("StdLib.json");
 
 /**
  * The `Thing` model.
@@ -108,3 +106,8 @@ export declare namespace ThingClass {
   export interface Encoded {}
 }
 
+
+/** Either a validating Effect Schema or a render-only JSON Schema document. */
+export type SchemaType =
+  | S.Decoder<unknown>
+  // | JSONSchema
