@@ -362,6 +362,7 @@ const restoreOperation = (): DockAtomOperation =>
     request: RestoreSnapshotRequest.make({
       commandId: nextCommandId("restore"),
       origin: ApiCommandOrigin.make({ requestId: "desktop-boot-restore" }),
+      allowedRenderers: O.some(A.map(DESKTOP_PANELS, ({ key }) => RendererKey.make(key))),
     }),
   });
 

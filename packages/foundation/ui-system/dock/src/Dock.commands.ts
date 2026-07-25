@@ -5,11 +5,11 @@
  * @since 0.0.0
  */
 import { $DockId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Tuple } from "effect";
 import * as S from "effect/Schema";
 import { AnchoredBox } from "./AnchoredBox.ts";
-import { CommandId, GroupId, PanelId, SplitId, SplitRatio } from "./Dock.ids.ts";
+import { CommandId, GroupId, PanelId, RendererKey, SplitId, SplitRatio } from "./Dock.ids.ts";
 import { GroupPatch, Panel, PanelPatch } from "./Dock.models.ts";
 import { DockGroupMoveTarget, DockMoveTarget, DockPlacement } from "./Dock.placement.ts";
 
@@ -499,6 +499,44 @@ export class DockCommandEnvelope extends S.Class<DockCommandEnvelope>($I`DockCom
 ) {}
 
 /**
+ * Host renderer keys permitted when restoring component-backed panels.
+ *
+ * @example
+ * ```ts
+ * import { AllowedRenderers, RendererKey } from "@beep/dock"
+ *
+ * const allowed = AllowedRenderers.make([RendererKey.make("editor")])
+ * console.log(allowed.length)
+ * ```
+ *
+ * @category commands
+ * @since 0.0.0
+ */
+export const AllowedRenderers = RendererKey.pipe(
+  S.toType,
+  S.Array,
+  $I.annoteSchema("AllowedRenderers", {
+    description: "Host renderer keys allowed to survive persisted workspace restoration.",
+  })
+);
+
+/**
+ * Runtime type for {@link AllowedRenderers}.
+ *
+ * @example
+ * ```ts
+ * import { AllowedRenderers, RendererKey } from "@beep/dock"
+ *
+ * const allowed: AllowedRenderers = AllowedRenderers.make([RendererKey.make("editor")])
+ * console.log(allowed[0])
+ * ```
+ *
+ * @category commands
+ * @since 0.0.0
+ */
+export type AllowedRenderers = typeof AllowedRenderers.Type;
+
+/**
  * Causal metadata for a validated snapshot installation.
  *
  * @example
@@ -516,6 +554,9 @@ export class RestoreSnapshotRequest extends S.Class<RestoreSnapshotRequest>($I`R
   {
     commandId: CommandId,
     origin: CommandOrigin,
+    allowedRenderers: AllowedRenderers.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional host renderer allowlist; absence preserves every decoded panel.",
+    }),
   },
   $I.annote("RestoreSnapshotRequest", {
     description: "Causal metadata attached to a validated snapshot installation.",

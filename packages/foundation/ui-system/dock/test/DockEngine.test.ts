@@ -1,4 +1,5 @@
 import {
+  ComponentPanelView,
   DockEngine,
   DockEngineLive,
   DockMutationResult,
@@ -12,7 +13,10 @@ import {
   Panel,
   PanelId,
   PopulatedWorkspace,
+  RendererKey,
   ResizeSplitCommand,
+  RestoreSnapshotRequest,
+  RootSplitPlacement,
   SplitLayout,
   SplitNode,
   SplitPlacement,
@@ -195,6 +199,74 @@ describe("DockEngine", () => {
 
         const identical = yield* engine.restore(saved, snapshot, restoreRequest);
         expect(identical.result).toMatchObject({ _tag: "Unchanged", reason: "snapshot-identical", revision: 1 });
+      })
+    );
+
+    it.effect(
+      "strips disallowed restored renderers and prunes empty topology",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const denied = Panel.make({
+          id: PanelId.make("panel-denied"),
+          title: "Denied",
+          view: ComponentPanelView.make({ renderer: RendererKey.make("denied") }),
+        });
+        const allowed = Panel.make({
+          id: PanelId.make("panel-allowed"),
+          title: "Allowed",
+          view: ComponentPanelView.make({ renderer: RendererKey.make("allowed") }),
+        });
+        const restored = PopulatedWorkspace.make({
+          root: SplitNode.make({
+            splitId: splitOne,
+            layout: SplitLayout.cases.horizontal.make({
+              left: TabsNode.make({ groupId: groupOne, active: denied }),
+              right: TabsNode.make({ groupId: groupTwo, active: allowed, after: [panelOne] }),
+            }),
+          }),
+        });
+        const request = RestoreSnapshotRequest.make({
+          commandId: restoreRequest.commandId,
+          origin: restoreRequest.origin,
+          allowedRenderers: O.some([RendererKey.make("allowed")]),
+        });
+        const snapshot = yield* engine.encodeSnapshot(restored);
+        const outcome = yield* requireChanged(yield* engine.restore(DockWorkspace.empty, snapshot, request));
+
+        expect(DockWorkspace.findTabs(outcome.state, groupOne)).toEqual(O.none());
+        expect(A.map(DockWorkspace.panels(outcome.state), (panel) => panel.id)).toEqual([allowed.id, panelOne.id]);
+
+        const deniedOnly = yield* engine.encodeSnapshot(
+          PopulatedWorkspace.make({ root: TabsNode.make({ groupId: groupOne, active: denied }) })
+        );
+        const empty = yield* engine.restore(DockWorkspace.empty, deniedOnly, request);
+        expect(empty.result).toMatchObject({ _tag: "Unchanged", reason: "snapshot-identical" });
+      })
+    );
+
+    it.effect(
+      "rejects root-split moves that remove the final docked panel",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const onePanel = (yield* requireChanged(yield* engine.transition(DockWorkspace.empty, openPanelOne))).state;
+        const rootSplit = envelope(
+          "command-move-final-root-split",
+          MovePanelCommand.make({
+            panelId: panelOne.id,
+            target: RootSplitPlacement.make({
+              side: "right",
+              splitId: splitOne,
+              newGroupId: groupTwo,
+            }),
+          })
+        );
+        const failure = yield* Effect.flip(engine.transition(onePanel, rootSplit));
+        expect(failure).toMatchObject({ reason: "workspace-empty" });
+
+        const twoPanels = (yield* requireChanged(yield* engine.transition(onePanel, openPanelTwo))).state;
+        const moved = yield* requireChanged(yield* engine.transition(twoPanels, rootSplit));
+        expect(DockWorkspace.groupCount(moved.state)).toBe(2);
+        expect((yield* requireRootSplit(moved.state)).splitId).toBe(splitOne);
       })
     );
 

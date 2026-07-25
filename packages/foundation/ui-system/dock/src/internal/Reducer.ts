@@ -37,7 +37,7 @@ import {
   WorkspaceRestoredEvent,
 } from "../Dock.events.ts";
 import { GroupId, PanelId, SplitRatio } from "../Dock.ids.ts";
-import { GroupMetadata, Panel } from "../Dock.models.ts";
+import { GroupMetadata, Panel, PanelView } from "../Dock.models.ts";
 import { DockChanged, DockMutationOutcome, DockMutationResult, DockUnchanged } from "../Dock.outcomes.ts";
 import { DockGroupMoveTarget, DockMoveTarget, DockPlacement } from "../Dock.placement.ts";
 import {
@@ -70,6 +70,7 @@ import type {
 } from "../Dock.commands.ts";
 import type { DockInvariantReason, DockRejectionReason, DockTransitionError } from "../Dock.errors.ts";
 import type { DockEvent } from "../Dock.events.ts";
+import type { RendererKey } from "../Dock.ids.ts";
 import type { DockUnchangedReason } from "../Dock.outcomes.ts";
 
 const changedCommandCount = Metric.counter("dockview_poc_state_changes_total", {
@@ -780,6 +781,76 @@ const installDockedRoot = (state: DockWorkspace, root: DockNode): DockWorkspace 
     populated: ({ revision, maximized, floating }) => PopulatedWorkspace.make({ revision, root, maximized, floating }),
   });
 
+const panelUsesAllowedRenderer = (allowedRenderers: HashSet.HashSet<RendererKey>, panel: Panel): boolean =>
+  PanelView.match(panel.view, {
+    component: ({ renderer }) => HashSet.has(allowedRenderers, renderer),
+    text: () => true,
+  });
+
+const pruneTabsRenderers = (tabs: TabsNode, allowedRenderers: HashSet.HashSet<RendererKey>): O.Option<TabsNode> =>
+  pipe(
+    TabsNode.panels(tabs),
+    A.filter((panel) => panelUsesAllowedRenderer(allowedRenderers, panel)),
+    A.match({
+      onEmpty: O.none,
+      onNonEmpty: (panels) => O.some(TabsNode.fromPanels(tabs.groupId, panels, tabs.active.id, tabs.metadata)),
+    })
+  );
+
+const pruneNodeRenderers = (node: DockNode, allowedRenderers: HashSet.HashSet<RendererKey>): O.Option<DockNode> =>
+  DockNode.match(node, {
+    Tabs: (tabs) => pruneTabsRenderers(tabs, allowedRenderers),
+    Split: (split) => {
+      const [first, second] = SplitLayout.children(split.layout);
+      const nextFirst = pruneNodeRenderers(first, allowedRenderers);
+      const nextSecond = pruneNodeRenderers(second, allowedRenderers);
+      return O.orElse(
+        O.zipWith(nextFirst, nextSecond, (left, right) =>
+          SplitNode.make({
+            splitId: split.splitId,
+            layout: SplitLayout.withChildren(split.layout, left, right),
+          })
+        ),
+        () => O.orElse(nextFirst, () => nextSecond)
+      );
+    },
+  });
+
+const pruneFloatingRenderers = (
+  floating: ReadonlyArray<FloatingMember>,
+  allowedRenderers: HashSet.HashSet<RendererKey>
+): ReadonlyArray<FloatingMember> =>
+  A.flatMap(floating, (member) =>
+    O.match(pruneNodeRenderers(member.root, allowedRenderers), {
+      onNone: A.empty<FloatingMember>,
+      onSome: (root) => A.of(FloatingMember.make({ anchoredBox: member.anchoredBox, root })),
+    })
+  );
+
+const pruneWorkspaceRenderers = (
+  workspace: DockWorkspace,
+  allowedRenderers: ReadonlyArray<RendererKey>
+): DockWorkspace => {
+  const allowed = HashSet.fromIterable(allowedRenderers);
+  return DockWorkspace.match(workspace, {
+    empty: ({ floating, revision }) =>
+      EmptyWorkspace.make({ revision, floating: pruneFloatingRenderers(floating, allowed) }),
+    populated: ({ floating, maximized, revision, root }) => {
+      const nextFloating = pruneFloatingRenderers(floating, allowed);
+      return O.match(pruneNodeRenderers(root, allowed), {
+        onNone: () => EmptyWorkspace.make({ revision, floating: nextFloating }),
+        onSome: (nextRoot) =>
+          PopulatedWorkspace.make({
+            revision,
+            root: nextRoot,
+            maximized: O.filter(maximized, (groupId) => O.isSome(DockNode.findTabs(nextRoot, groupId))),
+            floating: nextFloating,
+          }),
+      });
+    },
+  });
+};
+
 const movePanelForest = Effect.fn("DockReducer.movePanelForest")(function* (
   state: DockWorkspace,
   envelope: DockCommandEnvelope,
@@ -811,6 +882,10 @@ const movePanelForest = Effect.fn("DockReducer.movePanelForest")(function* (
       PanelReorderedEvent.make({ panelId: panel.id, groupId: source.groupId, index: NonNegativeInt.make(index) }),
     ]);
   }
+  const removed = O.match(TabsNode.remove(source, panel.id), {
+    onSome: (tabs) => DockWorkspace.replaceAtGroup(state, source.groupId, tabs),
+    onNone: () => DockWorkspace.removeTabs(state, source.groupId),
+  });
   yield* DockMoveTarget.match(command.target, {
     tab: (target) =>
       Effect.fromOption(DockWorkspace.findTabs(state, target.groupId), () =>
@@ -830,11 +905,16 @@ const movePanelForest = Effect.fn("DockReducer.movePanelForest")(function* (
         return yield* reject(envelope, "group-already-exists", `Group '${target.newGroupId}' already exists.`);
       if (O.isSome(DockWorkspace.findSplit(state, target.splitId)))
         return yield* reject(envelope, "split-already-exists", `Split '${target.splitId}' already exists.`);
+      yield* DockWorkspace.match(removed, {
+        empty: () =>
+          reject(
+            envelope,
+            "workspace-empty",
+            "Root split move requires an existing docked root after removing the source panel."
+          ),
+        populated: thunkEffectVoid,
+      });
     }),
-  });
-  const removed = O.match(TabsNode.remove(source, panel.id), {
-    onSome: (tabs) => DockWorkspace.replaceAtGroup(state, source.groupId, tabs),
-    onNone: () => DockWorkspace.removeTabs(state, source.groupId),
   });
   const [next, toGroupId] = yield* DockMoveTarget.match(command.target, {
     tab: Effect.fnUntraced(function* (target) {
@@ -857,11 +937,18 @@ const movePanelForest = Effect.fn("DockReducer.movePanelForest")(function* (
     }),
     rootSplit: (target) => {
       const inserted = TabsNode.make({ groupId: target.newGroupId, active: panel });
-      const root = DockWorkspace.match(removed, {
-        empty: () => inserted,
-        populated: ({ root }) => SplitNode.fromNodes(root, inserted, target),
+      return DockWorkspace.match(removed, {
+        empty: () =>
+          DockInvariantViolation.make({
+            reason: "topology-corrupted",
+            message: "Validated root split move lost its docked root before application.",
+          }),
+        populated: ({ root }) =>
+          Effect.succeed([
+            installDockedRoot(removed, SplitNode.fromNodes(root, inserted, target)),
+            target.newGroupId,
+          ] as const),
       });
-      return Effect.succeed([installDockedRoot(removed, root), target.newGroupId] as const);
     },
   });
   return yield* changed(state, envelope, (revision) => [
@@ -1116,11 +1203,16 @@ export const restoreDockWorkspace = Effect.fn("DockReducer.restoreDockWorkspace"
 ) {
   yield* validateWorkspace(current);
   yield* validateWorkspace(restored);
-  return yield* Bool.match(DockWorkspace.hasSameContent(current, restored), {
+  const admitted = O.match(request.allowedRenderers, {
+    onNone: () => restored,
+    onSome: (allowedRenderers) => pruneWorkspaceRenderers(restored, allowedRenderers),
+  });
+  yield* validateWorkspace(admitted);
+  return yield* Bool.match(DockWorkspace.hasSameContent(current, admitted), {
     onTrue: () => Effect.succeed(unchanged(current, request, "snapshot-identical")),
     onFalse: () =>
       changed(current, request, (installedRevision) => [
-        DockWorkspace.withRevision(restored, installedRevision),
+        DockWorkspace.withRevision(admitted, installedRevision),
         WorkspaceRestoredEvent.make({
           sourceRevision: restored.revision,
           installedRevision,
