@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `research`
+Stage: `decompose`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -16,12 +16,9 @@ openclaw role onto the same declarative platform.
 
 ## Next Open Question
 
-GATE B grilling, starting from the adversarial review's reopened branches
-(manifest `openQuestions`, 8 items): first the CRITICAL pair — OS-enforced
-config immutability beyond the in-process guard (decision 7), and the
-generation/SQLite-rollback upgrade model — then the decision 13 reshape
-(desired-intent schema + render adapters) and the `OpenClawGeneration`
-solution-sketch reshape.
+GATE C: does the rewritten BRIEF match the picture in the human's head, and
+what is the final appetite? Then graduation of `openclaw-workstation-agent`
+(and the `dankserver-openclaw-migration` candidate) per MAP.md.
 
 ## Read This First
 
@@ -34,6 +31,15 @@ solution-sketch reshape.
 
 ## Trail
 
+- 2026-07-24 (late night): GATE B passed — 8 grilling resolutions recorded in
+  DECISIONS.md (OS-enforced config root, OpenClawGeneration state machine,
+  desired-intent schema + render adapters, applicator contracts + identity
+  binding, secrets bootstrap exception + rotation surface, Telegram,
+  state-backup mitigation, goal-P0 prototype gauntlet); research PR merged
+  as #439 (review nits fixed: orphaned changeset dropped — #437 had
+  independently fixed the .tsx imports); BRIEF rewritten around the locked
+  design; MAP decomposed into two candidates with the gauntlet-first
+  vertical slice. Next: GATE C grilling.
 - 2026-07-24 (night): adversarial oracle pass landed (codex-executed after a
   Claude Code auto-mode permission block on browser submit — workaround
   documented in the oracle skill): 12 source-grounded findings, 2 CRITICAL;
