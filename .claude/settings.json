@@ -93,11 +93,8 @@
       "Bash(gh api -X PUT:*)",
       "Bash(gh api --method PUT:*)",
       "Edit(**/.github/workflows/**)",
-      "Write(**/.github/workflows/**)",
       "Edit(**/docs/_internal/**)",
-      "Write(**/docs/_internal/**)",
-      "Edit(**/.claude/settings.json)",
-      "Write(**/.claude/settings.json)"
+      "Edit(**/.claude/settings.json)"
     ]
   },
   "hooks": {
