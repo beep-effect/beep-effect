@@ -130,3 +130,18 @@ code snippet against Effect v4 as vendored + real `@beep/*` symbols, with
 file:line proof per finding; recommends errata annotations (the synthesis is
 a historical artifact — history is not rewritten). The same Effect-v4/beep-API
 verification lens is folded into the S8 QA gate for all new pipeline outputs.
+
+**Outcome (same day):** user's suspicion confirmed — 56 TypeScript fences
+audited against vendored Effect 4.0.0-beta.101 and live package sources;
+36 defective; 13 distinct findings (7 foundational, 5 significant, 1
+cosmetic). Headline classes: removed `S.filter`/`S.pattern` APIs, incomplete
+`makeSemanticSchemaMetadata` payloads, nonexistent `LawPractice.PartyId`,
+wrong `EntityId` import, a publication gate claimed to exist that does not,
+and a superseded `Ontology.create` roadmap.
+
+**Errata placement deviation:** the audit recommends an in-file dated banner
+near the top of the synthesis. Deviated deliberately: BOTH the audit's 13
+findings and the prior-72 reconstruction cite exact line numbers into the
+byte-identical file, so any top-of-file insertion would shift every
+reference. Errata banners live at the entry points instead (packet README
+"Read This First" item 5 and SOURCES.md §3), and the file stays byte-exact.

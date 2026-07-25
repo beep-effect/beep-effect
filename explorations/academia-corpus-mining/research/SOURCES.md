@@ -61,6 +61,10 @@ check at that packet's boundary.
   [`prior-synthesis-legal-ontologies.md`](./prior-synthesis-legal-ontologies.md)
   — its §10 Part 1 enumerates the 72 previously deep-read papers; its Part 2
   describes a ~240-paper catalogued backlog (bucket counts only, no titles).
+  **Errata:** treat its code snippets as historical only — the adversarial
+  audit ([`../reviews/2026-07-25-codex-prior-synthesis-snippet-audit.md`](../reviews/2026-07-25-codex-prior-synthesis-snippet-audit.md))
+  verified defects in 36/56 TypeScript fences (13 findings, 7 foundational)
+  against vendored Effect 4.0.0-beta.101 and live `@beep/*` sources.
 - Prior-72 reconstruction provenance: the deep-read exclusion list was
   rebuilt from §10 Part 1 (72/72 rows recovered, high confidence) plus 10
   possible-alias entries (medium/low) — details in the external library

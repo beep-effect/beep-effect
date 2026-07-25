@@ -26,13 +26,19 @@ running; packet moves to `research` when RESEARCH.md and cluster reports land.
 2. [`CAPTURE.md`](./CAPTURE.md) - raw dump (stage 0).
 3. [`RESEARCH.md`](./RESEARCH.md) - prior art + capability inventory (stage 1, if present).
 4. [`DECISIONS.md`](./DECISIONS.md) - grilling log (stage 2, if present).
-5. [`research/prior-synthesis-legal-ontologies.md`](./research/prior-synthesis-legal-ontologies.md) - June-29 prior synthesis (72 papers deep-read), adopted as prior-art anchor.
+5. [`research/prior-synthesis-legal-ontologies.md`](./research/prior-synthesis-legal-ontologies.md) - June-29 prior synthesis (72 papers deep-read), adopted as prior-art anchor. **ERRATA WARNING (2026-07-25):** its code snippets are NOT safe to copy — 36 of 56 TypeScript fences carry verified defects (removed Effect-v4 APIs, invented `@beep/*` symbols, a falsely-claimed publication gate). Read [`reviews/2026-07-25-codex-prior-synthesis-snippet-audit.md`](./reviews/2026-07-25-codex-prior-synthesis-snippet-audit.md) first; the file itself stays byte-identical because the audit and the prior-72 reconstruction cite its exact line numbers.
 6. [`BRIEF.md`](./BRIEF.md) - shaped pitch (stage 3, if present).
 7. [`MAP.md`](./MAP.md) - decomposition (stage 4, if present).
 
 ## Trail
 
+- 2026-07-25 (later): snippet audit landed — 36/56 fences defective, 13
+  findings (7 foundational); errata banners added at entry points, synthesis
+  kept byte-identical (see DECISIONS.md). T2 deep-reads running (185 papers,
+  Sol max).
 - 2026-07-25: packet opened; grilling closed 7 decisions (see DECISIONS.md);
-  prior June-29 synthesis adopted into `research/`; external normalized corpus
-  library established at `~/YeeBois/research/academia-2026-07/` (public repo —
-  no copyrighted PDFs/full texts committed here).
+  prior June-29 synthesis adopted into `research/`; S0–S2 + T1 triage
+  complete (443 papers: 185 deep-read / 93 maybe / 165 catalog-only);
+  external normalized corpus library established at
+  `~/YeeBois/research/academia-2026-07/` (public repo — no copyrighted
+  PDFs/full texts committed here).
