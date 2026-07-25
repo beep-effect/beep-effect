@@ -13,8 +13,8 @@ import { Context, Effect, Layer } from "effect";
 import { dual } from "effect/Function";
 import { PostgresError } from "./Postgres.errors.ts";
 import type * as Pg from "@effect/sql-pg/PgClient";
-import type { EffectDrizzlePgConfig } from "drizzle-orm/effect-postgres";
 import type { MigrationConfig, MigrationMeta } from "drizzle-orm/migrator";
+import type { EffectDrizzlePgConfig } from "drizzle-orm/pg-core/effect/utils";
 import type { AnyRelations, EmptyRelations } from "drizzle-orm/relations";
 import type { NativeMigrationError } from "./PostgresInterop.models.ts";
 
