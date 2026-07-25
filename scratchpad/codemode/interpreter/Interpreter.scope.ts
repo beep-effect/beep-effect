@@ -1,110 +1,142 @@
-/**
- * The scope logic for the `@beep/codemode` interpreter.
- *
- * @packageDocumentation
- * @since 0.0.0
- */
-import {$ScratchpadId} from "@beep/identity";
-import * as S from "effect/Schema";
-import {LiteralKit, SchemaUtils, MappedLiteralKit} from "@beep/schema";
-import {P, A, O, Str, R, Struct, pipe, dual} from "@beep/utils";
-import {HashMap, HashSet} from "effect";
+import { A, O, pipe } from "@beep/utils";
+import { MutableHashMap } from "effect";
+import {
+  type AstNode,
+  Binding,
+  InterpreterRuntimeError,
+  type Scope,
+} from "./Interpreter.model.ts";
 
-const $I = $ScratchpadId.create("Interpreter.scope");
+type ResolvedBinding = readonly [scope: Scope, binding: Binding];
 
-/**
- * The `Thing` model.
- *
- * **Example**
- *
- * @example
- * ```ts
- * import { Thing } from "@beep/codemode";
- *
- * const thing: Thing = Thing.make()
- *
- * console.log(thing); // `{}`
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-const Thing = LiteralKit(["thing"]).pipe(
-  $I.annoteSchema("Thing", {
-    description: ""
-  })
-);
+/** Mutable stack of Effect hash maps containing immutable binding models. */
+export class ScopeStack {
+  private scopes: ReadonlyArray<Scope>;
 
-/**
- *
- * Companion runtime type for {@link Thing}
- *
- *
- * **Example **
- *
- * @example
- * ```ts
- * import { Thing } from "@beep/codemode";
- *
- * const thing: Thing = Thing.make()
- *
- * console.log(thing); // `{}`
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type Thing = typeof Thing.Type;
+  constructor(scopes: ReadonlyArray<Scope>) {
+    this.scopes = A.copy(scopes);
+  }
 
+  static readonly new = (scopes: ReadonlyArray<Scope>): ScopeStack =>
+    new ScopeStack(scopes);
 
-/**
- * The `ThingClass` model.
- *
- * **Example**
- *
- * @example
- * ```ts
- * import { ThingClass } from "@beep/codemode";
- *
- * const thing: ThingClass = ThingClass.make()
- *
- * console.log(thing); // `{}`
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class ThingClass extends S.Class<ThingClass>($I`ThingClass`)(
-  {},
-  $I.annote("ThingClass", {
-    description: "The `ThingClass` model"
-  })
-) {
+  reserve(name: string, mutable: boolean, node: AstNode): void {
+    const scope = this.current();
+    if (MutableHashMap.has(scope, name)) {
+      throw InterpreterRuntimeError.new(
+        `Identifier '${name}' has already been declared.`,
+        node
+      );
+    }
+    MutableHashMap.set(scope, name, Binding.new(mutable, undefined, false));
+  }
+
+  initialize(name: string, value: unknown, node: AstNode): void {
+    const scope = this.current();
+    const binding = MutableHashMap.get(scope, name);
+    if (O.isNone(binding) || binding.value.initialized !== false) {
+      throw InterpreterRuntimeError.new(
+        `Identifier '${name}' has not been reserved for initialization.`,
+        node
+      );
+    }
+    MutableHashMap.set(
+      scope,
+      name,
+      Binding.new(binding.value.mutable, value)
+    );
+  }
+
+  declare(name: string, value: unknown, mutable: boolean, node: AstNode): void {
+    const scope = this.current();
+    if (MutableHashMap.has(scope, name)) {
+      throw InterpreterRuntimeError.new(
+        `Identifier '${name}' has already been declared.`,
+        node
+      );
+    }
+    MutableHashMap.set(scope, name, Binding.new(mutable, value));
+  }
+
+  get(name: string, node: AstNode): unknown {
+    const binding = this.resolve(name);
+    if (O.isNone(binding)) {
+      throw InterpreterRuntimeError.new(
+        `Unknown identifier '${name}'.`,
+        node
+      ).as("ReferenceError");
+    }
+    if (binding.value.initialized === false) {
+      throw InterpreterRuntimeError.new(
+        `Cannot access '${name}' before initialization.`,
+        node
+      ).as("ReferenceError");
+    }
+    return binding.value.value;
+  }
+
+  set(name: string, value: unknown, node: AstNode): unknown {
+    const resolved = this.resolveBinding(name);
+    if (O.isNone(resolved)) {
+      throw InterpreterRuntimeError.new(
+        `Unknown identifier '${name}'.`,
+        node
+      ).as("ReferenceError");
+    }
+    const [scope, binding] = resolved.value;
+    if (binding.initialized === false) {
+      throw InterpreterRuntimeError.new(
+        `Cannot access '${name}' before initialization.`,
+        node
+      ).as("ReferenceError");
+    }
+    if (binding.mutable === false) {
+      throw InterpreterRuntimeError.new(
+        `Cannot assign to constant '${name}'.`,
+        node
+      ).as("TypeError");
+    }
+    MutableHashMap.set(scope, name, Binding.new(true, value));
+    return value;
+  }
+
+  resolve(name: string): O.Option<Binding> {
+    return pipe(
+      this.resolveBinding(name),
+      O.map(([, binding]) => binding)
+    );
+  }
+
+  current(): Scope {
+    return pipe(
+      A.last(this.scopes),
+      O.getOrElse(() => {
+        throw InterpreterRuntimeError.new(
+          "Interpreter scope stack is empty."
+        );
+      })
+    );
+  }
+
+  push(scope: Scope = MutableHashMap.empty()): void {
+    this.scopes = A.append(this.scopes, scope);
+  }
+
+  pop(): void {
+    this.scopes = A.dropRight(this.scopes, 1);
+  }
+
+  capture(): ReadonlyArray<Scope> {
+    return A.copy(this.scopes);
+  }
+
+  private resolveBinding(name: string): O.Option<ResolvedBinding> {
+    for (let index = A.length(this.scopes) - 1; index >= 0; index -= 1) {
+      const scope = this.scopes[index];
+      if (O.isNone(O.fromUndefinedOr(scope))) continue;
+      const binding = MutableHashMap.get(scope, name);
+      if (O.isSome(binding)) return O.some([scope, binding.value]);
+    }
+    return O.none();
+  }
 }
-
-/**
- * Companion namespace for {@link ThingClass}
- *
- * @since 0.0.0
- */
-export declare namespace ThingClass {
-  /**
-   * Companion encoded type for {@link ThingClass}
-   *
-   * **Example**
-   *
-   * @example
-   * ```ts
-   * import { ThingClass } from "@beep/codemode";
-   * import * as S from "effect/Schema";
-   * const thingEncoded: ThingClass.Encoded = S.encodeSync(ThingClass)(ThingClass.make());
-   *
-   * console.log(thingEncoded); // `{}`
-   * ```
-   *
-   * @category models
-   * @since 0.0.0
-   */
-  export interface Encoded {}
-}
-

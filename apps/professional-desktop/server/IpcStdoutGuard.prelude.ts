@@ -19,7 +19,7 @@
  * @since 0.0.0
  */
 import { A, O, P, pipe, Str } from "@beep/utils";
-import * as Result from "effect/Result";
+import { Result } from "effect";
 
 /**
  * Whether the sidecar selected stdin/stdout IPC transport.

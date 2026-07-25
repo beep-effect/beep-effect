@@ -1,800 +1,708 @@
 /**
- * Errors for the `@beep/codemode` interpreter.
+ * Schema-owned models used by the OpenAPI-to-Toolkit adapter.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
-import {$ScratchpadId} from "@beep/identity";
-import * as S from "effect/Schema";
+import { $ScratchpadId } from "@beep/identity";
 import {
-  FilePath,
   LiteralKit,
+  MappedLiteralKit,
   NonEmptyTrimmedStr,
-  SchemaUtils
+  SchemaUtils,
+  TaggedErrorClass,
 } from "@beep/schema";
-import {P} from "@beep/utils";
-import type {Effect} from "effect";
+import { A, O, P, R, pipe } from "@beep/utils";
+import {
+  HashMap,
+  Layer,
+  Redacted,
+  SchemaGetter,
+  type Effect,
+} from "effect";
+import * as S from "effect/Schema";
+import type * as Tool from "effect/unstable/ai/Tool";
+import type * as Toolkit from "effect/unstable/ai/Toolkit";
+import type * as HttpClient from "effect/unstable/http/HttpClient";
+import { ToolError } from "../Codemode.tool-error.ts";
 
-const $I = $ScratchpadId.create("OpenAPI.types");
+const $I = $ScratchpadId.create("codemode/openapi/OpenAPI.types");
 
-/**
- * A parsed OpenAPI 3.x document. YAML must be parsed by the host.
- *
- * **Example**
- *
- * @example
- * ```ts
- * import { Document } from "@beep/codemode";
- *
- * const document: Document = Document.make()
- *
- * console.log(document); // `{}`
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-const Document = S.Record(S.String, S.Unknown).pipe(
-  S.brand("Document"),
+/** A raw OpenAPI 3.x object after boundary decoding. */
+export const Document = S.Record(S.String, S.Unknown).pipe(
+  S.brand("OpenApiDocument"),
   $I.annoteSchema("Document", {
-    description: ""
+    description: "A parsed OpenAPI 3.x document. YAML is parsed by the host.",
   })
 );
 
-/**
- *
- * Companion runtime type for {@link Document}
- *
- *
- * **Example **
- *
- * @example
- * ```ts
- * import { Document } from "@beep/codemode";
- *
- * const document: Document = Document.make()
- *
- * console.log(document); // `{}`
- * ```
- *
- * @category models
- * @since 0.0.0
- */
+/** Runtime type for {@link Document}. */
 export type Document = typeof Document.Type;
 
-/**
- * Companion namespace for {@link Document}
- *
- * @since 0.0.0
- */
-export declare namespace Document {
-  /**
-   * Companion encoded type for {@link Document}
-   *
-   * **Example**
-   *
-   * @example
-   * ```ts
-   * import { Document } from "@beep/codemode";
-   * import * as S from "effect/Schema";
-   * const documentEncoded: Document.Encoded = S.encodeSync(Document)(Document.make({}));
-   *
-   * console.log(documentEncoded); // `{}`
-   * ```
-   *
-   * @category models
-   * @since 0.0.0
-   */
-  export type Encoded = typeof Document.Encoded
-}
-
-/**
- * A parsed OpenAPI 3.x document. YAML must be parsed by the host.
- *
- * **Example**
- *
- * @example
- * ```ts
- * import { OperationId } from "@beep/codemode";
- *
- * const operationId: OperationId = OperationId.make("beep-beep")
- *
- * console.log(document); // `{}`
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-const OperationId = NonEmptyTrimmedStr.pipe(
-  S.brand("OperationId"),
-  $I.annoteSchema("OperationId", {
-    description: ""
+/** A normalized JSON Schema object carried by an operation plan. */
+export const JsonSchema = S.Record(S.String, S.Unknown).pipe(
+  S.brand("OpenApiJsonSchema"),
+  $I.annoteSchema("JsonSchema", {
+    description: "A draft-2020-12 JSON Schema object emitted from OpenAPI.",
   })
 );
 
-/**
- *
- * Companion runtime type for {@link OperationId}
- *
- *
- * **Example **
- *
- * @example
- * ```ts
- * import { OperationId } from "@beep/codemode";
- *
- * const operationId: OperationId = OperationId.make()
- *
- * console.log(operationId); // `{}`
- * ```
- *
- * @category models
- * @since 0.0.0
- */
+/** Runtime type for {@link JsonSchema}. */
+export type JsonSchema = typeof JsonSchema.Type;
+
+/** Optional OpenAPI operation identifier. */
+export const OperationId = NonEmptyTrimmedStr.pipe(
+  S.brand("OpenApiOperationId"),
+  $I.annoteSchema("OperationId", {
+    description: "A non-empty OpenAPI operationId.",
+  })
+);
+
+/** Runtime type for {@link OperationId}. */
 export type OperationId = typeof OperationId.Type;
 
-/**
- * Companion namespace for {@link OperationId}
- *
- * @since 0.0.0
- */
-export declare namespace OperationId {
-  /**
-   * Companion encoded type for {@link OperationId}
-   *
-   * **Example**
-   *
-   * @example
-   * ```ts
-   * import { OperationId } from "@beep/codemode";
-   * import * as S from "effect/Schema";
-   * const operationEncoded: OperationId.Encoded = S.encodeSync(OperationId)(OperationId.make({}));
-   *
-   * console.log(operationId); // `{}`
-   * ```
-   *
-   * @category models
-   * @since 0.0.0
-   */
-  export type Encoded = typeof OperationId.Encoded
-}
+/** OpenAPI method spelling transformed to the HTTP spelling used at runtime. */
+export const HttpMethod = MappedLiteralKit([
+  ["get", "GET"],
+  ["put", "PUT"],
+  ["post", "POST"],
+  ["delete", "DELETE"],
+  ["options", "OPTIONS"],
+  ["head", "HEAD"],
+  ["patch", "PATCH"],
+  ["trace", "TRACE"],
+]).pipe(
+  $I.annoteSchema("HttpMethod", {
+    description: "A supported OpenAPI operation method decoded to uppercase HTTP form.",
+  })
+);
 
+/** Runtime type for {@link HttpMethod}. */
+export type HttpMethod = typeof HttpMethod.Type;
 
-/**
- * The operation identity handed to auth resolution and errors.
- *
- * **Example**
- *
- * @example
- * ```ts
- * import { Operation } from "@beep/codemode";
- *
- * const operation: Operation = Operation.make()
- *
- * console.log(operation); // `{}`
- * ```
- *
- * @category models
- * @since 0.0.0
- */
+/** API path template beginning with `/`. */
+export const ApiPath = S.String.check(
+  S.isPattern(/^\/.*$/u)
+).pipe(
+  $I.annoteSchema("ApiPath", {
+    description: "An absolute OpenAPI path template.",
+  })
+);
+
+/** Runtime type for {@link ApiPath}. */
+export type ApiPath = typeof ApiPath.Type;
+
+/** Identity and documentation for one operation. */
 export class Operation extends S.Class<Operation>($I`Operation`)(
   {
-    operationId: OperationId.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
+    operationId: S.OptionFromOptionalKey(OperationId).pipe(
+      SchemaUtils.withNoneDefault
     ),
-    method: NonEmptyTrimmedStr,
-    path: FilePath,
-    summary: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    description: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    method: HttpMethod,
+    path: ApiPath,
+    summary: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault
+    ),
+    description: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault
+    ),
   },
   $I.annote("Operation", {
-    description: "The `Operation` model"
+    description: "The operation identity handed to authentication and errors.",
   })
 ) {
+  static readonly new = (
+    operationId: O.Option<OperationId>,
+    method: HttpMethod,
+    path: ApiPath,
+    summary: O.Option<string>,
+    description: O.Option<string>
+  ): Operation =>
+    Operation.make({ operationId, method, path, summary, description });
 }
 
-/**
- * Companion namespace for {@link Operation}
- *
- * @since 0.0.0
- */
-export declare namespace Operation {
-  /**
-   * Companion encoded type for {@link Operation}
-   *
-   * **Example**
-   *
-   * @example
-   * ```ts
-   * import { Operation } from "@beep/codemode";
-   * import * as S from "effect/Schema";
-   * const operationEncoded: Operation.Encoded = S.encodeSync(Operation)(Operation.make());
-   *
-   * console.log(operationEncoded); // `{}`
-   * ```
-   *
-   * @category models
-   * @since 0.0.0
-   */
-  export interface Encoded {
-  }
+/** OpenAPI apiKey carrier. */
+export class ApiKeyHeader extends S.TaggedClass<ApiKeyHeader>($I`ApiKeyHeader`)(
+  "header",
+  { name: NonEmptyTrimmedStr },
+  $I.annote("ApiKeyHeader", {
+    description: "An API key carried in an HTTP header.",
+  })
+) {
+  static readonly new = (name: string): ApiKeyHeader =>
+    ApiKeyHeader.make({ name: NonEmptyTrimmedStr.make(name) });
 }
 
-/**
- * The `Thing` model.
- *
- * **Example**
- *
- * @example
- * ```ts
- * import { Thing } from "@beep/codemode";
- *
- * const thing: Thing = Thing.make()
- *
- * console.log(thing); // `{}`
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-const Thing = LiteralKit(["thing"]).pipe(
-  $I.annoteSchema("Thing", {
-    description: ""
+/** OpenAPI apiKey carrier. */
+export class ApiKeyQuery extends S.TaggedClass<ApiKeyQuery>($I`ApiKeyQuery`)(
+  "query",
+  { name: NonEmptyTrimmedStr },
+  $I.annote("ApiKeyQuery", {
+    description: "An API key carried in a query parameter.",
+  })
+) {
+  static readonly new = (name: string): ApiKeyQuery =>
+    ApiKeyQuery.make({ name: NonEmptyTrimmedStr.make(name) });
+}
+
+/** OpenAPI apiKey carrier. */
+export class ApiKeyCookie extends S.TaggedClass<ApiKeyCookie>($I`ApiKeyCookie`)(
+  "cookie",
+  { name: NonEmptyTrimmedStr },
+  $I.annote("ApiKeyCookie", {
+    description: "An unsupported cookie-carried API key retained for diagnostics.",
+  })
+) {
+  static readonly new = (name: string): ApiKeyCookie =>
+    ApiKeyCookie.make({ name: NonEmptyTrimmedStr.make(name) });
+}
+
+/** Nested apiKey carrier union. */
+export const ApiKeyCarrier = S.Union([
+  ApiKeyHeader,
+  ApiKeyQuery,
+  ApiKeyCookie,
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("ApiKeyCarrier", {
+    description: "All OpenAPI apiKey carriers.",
   })
 );
 
-/**
- *
- * Companion runtime type for {@link Thing}
- *
- *
- * **Example **
- *
- * @example
- * ```ts
- * import { Thing } from "@beep/codemode";
- *
- * const thing: Thing = Thing.make()
- *
- * console.log(thing); // `{}`
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type Thing = typeof Thing.Type;
+/** Runtime type for {@link ApiKeyCarrier}. */
+export type ApiKeyCarrier = typeof ApiKeyCarrier.Type;
 
-/**
- * TODO: description
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO example
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class SecuritySchemaApiKeyForBase extends S.Class<SecuritySchemaApiKeyForBase>($I`SecuritySchemaApiKeyForBase`)(
-  {
-    name: S.String.annotateKey({
-      description: "todo"
-    })
-  },
-  $I.annote("SecuritySchemaApiKeyForBase", {})
-) {
-}
-
-/**
- * TODO: description
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO example
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class SecuritySchemaApiKeyForHeader extends SecuritySchemaApiKeyForBase.extend<SecuritySchemaApiKeyForHeader>($I`SecuritySchemaApiKeyForHeader`)(
-  {
-    in: S.tag("header")
-  },
-  $I.annote("SecuritySchemaApiKeyForHeader", {
-    description: ""
-  })
-) {
-}
-
-/**
- * TODO: description
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO example
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class SecuritySchemaApiKeyForQuery extends SecuritySchemaApiKeyForBase.extend<SecuritySchemaApiKeyForQuery>($I`SecuritySchemaApiKeyForQuery`)(
-  {
-    in: S.tag("query")
-  },
-  $I.annote("SecuritySchemaApiKeyForQuery", {
-    description: ""
-  })
-) {
-}
-
-/**
- * TODO: description
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO example
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class SecuritySchemaApiKeyForCookie extends SecuritySchemaApiKeyForBase.extend<SecuritySchemaApiKeyForCookie>($I`SecuritySchemaApiKeyForCookie`)(
-  {
-    in: S.tag("query")
-  },
-  $I.annote("SecuritySchemaApiKeyForCookie", {
-    description: ""
-  })
-) {
-}
-
-/**
- * TODO: description
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO example
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const SecuritySchemaApiKeyFor = S.Union(
-  [
-    SecuritySchemaApiKeyForHeader,
-    SecuritySchemaApiKeyForQuery,
-    SecuritySchemaApiKeyForCookie
-  ]
-).pipe(
-  S.toTaggedUnion("in"),
-  $I.annoteSchema("SecuritySchemaApiKeyFor", {
-    description: ""
-  })
-);
-
-/**
- * Companion runtime type for {@link SecuritySchemaApiKeyFor}
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO example
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SecuritySchemaApiKeyFor = typeof SecuritySchemaApiKeyFor.Type;
-
-/**
- * TODO: description
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO example
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class SecuritySchemeApiKey extends S.Class<SecuritySchemeApiKey>($I`SecuritySchemeApiKey`)(
-  {
-    type: S.tag("apiKey"),
-    for: SecuritySchemaApiKeyFor
-  },
+/** OpenAPI apiKey security scheme. */
+export class SecuritySchemeApiKey extends S.TaggedClass<SecuritySchemeApiKey>(
+  $I`SecuritySchemeApiKey`
+)(
+  "apiKey",
+  { carrier: ApiKeyCarrier },
   $I.annote("SecuritySchemeApiKey", {
-    description: ""
+    description: "An OpenAPI apiKey security scheme.",
   })
 ) {
+  static readonly new = (carrier: ApiKeyCarrier): SecuritySchemeApiKey =>
+    SecuritySchemeApiKey.make({ carrier });
 }
 
-/**
- * TODO: description
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO example
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class SecuritySchemeHttp extends S.Class<SecuritySchemeHttp>($I`SecuritySchemeHttp`)(
-  {
-    type: S.tag("http"),
-    scheme: S.String,
-  },
-  $I.annote("SecuritySchemeHttp", {})
+/** OpenAPI HTTP security scheme. */
+export class SecuritySchemeHttp extends S.TaggedClass<SecuritySchemeHttp>(
+  $I`SecuritySchemeHttp`
+)(
+  "http",
+  { scheme: NonEmptyTrimmedStr },
+  $I.annote("SecuritySchemeHttp", {
+    description: "An OpenAPI HTTP authentication scheme.",
+  })
 ) {
+  static readonly new = (scheme: string): SecuritySchemeHttp =>
+    SecuritySchemeHttp.make({ scheme: NonEmptyTrimmedStr.make(scheme) });
 }
 
-/**
- * TODO: description
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO example
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class SecuritySchemeOAuth2 extends S.Class<SecuritySchemeOAuth2>($I`SecuritySchemeOAuth2`)(
-  {
-    type: S.tag("oauth2")
-  },
-  $I.annote("SecuritySchemeOAuth2", {})
+/** OpenAPI OAuth 2 security scheme marker. */
+export class SecuritySchemeOAuth2 extends S.TaggedClass<SecuritySchemeOAuth2>(
+  $I`SecuritySchemeOAuth2`
+)(
+  "oauth2",
+  {},
+  $I.annote("SecuritySchemeOAuth2", {
+    description: "An OpenAPI OAuth 2 security scheme.",
+  })
 ) {
+  static readonly new = (): SecuritySchemeOAuth2 =>
+    SecuritySchemeOAuth2.make({});
 }
 
-/**
- * TODO: description
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO example
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class SecuritySchemeOpenIdConnect extends S.Class<SecuritySchemeOpenIdConnect>($I`SecuritySchemeOpenIdConnect`)(
-  {
-    type: S.tag("openIdConnect")
-  },
-  $I.annote("SecuritySchemeOpenIdConnect", {})
+/** OpenAPI OpenID Connect security scheme marker. */
+export class SecuritySchemeOpenIdConnect extends S.TaggedClass<SecuritySchemeOpenIdConnect>(
+  $I`SecuritySchemeOpenIdConnect`
+)(
+  "openIdConnect",
+  {},
+  $I.annote("SecuritySchemeOpenIdConnect", {
+    description: "An OpenAPI OpenID Connect security scheme.",
+  })
 ) {
+  static readonly new = (): SecuritySchemeOpenIdConnect =>
+    SecuritySchemeOpenIdConnect.make({});
 }
 
-/**
- * TODO: description
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO example
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class SecuritySchemeHeader extends S.Class<SecuritySchemeHeader>($I`SecuritySchemeHeader`)(
-  {
-    type: S.tag("")
-  },
-  $I.annote("SecuritySchemeHeader", {})
-) {
-}
-
-/**
- * A resolved OpenAPI security scheme from `components.securitySchemes`.
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO example
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const SecurityScheme = S.Union(
-  [
-    SecuritySchemeApiKey,
-    SecuritySchemeHttp,
-    SecuritySchemeOAuth2,
-    SecuritySchemeOpenIdConnect
-  ]
-).pipe(
-  S.toTaggedUnion("type"),
+/** Resolved OpenAPI security scheme. */
+export const SecurityScheme = S.Union([
+  SecuritySchemeApiKey,
+  SecuritySchemeHttp,
+  SecuritySchemeOAuth2,
+  SecuritySchemeOpenIdConnect,
+]).pipe(
+  S.toTaggedUnion("_tag"),
   $I.annoteSchema("SecurityScheme", {
-    description: ""
+    description: "A supported OpenAPI security scheme.",
   })
 );
 
-/**
- * Companion runtime type for {@link SecurityScheme}
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO example
- * ```
- *
- * @category models
- * @since 0.0.0
- */
+/** Runtime type for {@link SecurityScheme}. */
 export type SecurityScheme = typeof SecurityScheme.Type;
 
-/**
- * TODO: description
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO example
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class CredentialBearer extends S.Class<CredentialBearer>($I`CredentialBearer`)(
-  {
-    type: S.tag("bearer"),
-    token: S.Redacted(S.String).annotateKey({
-      description: ""
-    })
-  },
+/** Bearer credential. */
+export class CredentialBearer extends S.TaggedClass<CredentialBearer>(
+  $I`CredentialBearer`
+)(
+  "bearer",
+  { token: S.Redacted(S.String) },
   $I.annote("CredentialBearer", {
-    description: ""
+    description: "A bearer token credential.",
   })
 ) {
+  static readonly new = (token: string): CredentialBearer =>
+    CredentialBearer.make({ token: Redacted.make(token) });
 }
 
-
-/**
- * TODO: description
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO example
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class CredentialBasic extends S.Class<CredentialBasic>($I`CredentialBasic`)(
+/** HTTP Basic credential. */
+export class CredentialBasic extends S.TaggedClass<CredentialBasic>(
+  $I`CredentialBasic`
+)(
+  "basic",
   {
-    type: S.tag("basic"),
-    username: S.Redacted(S.String).annotateKey({
-      description: ""
-    }),
-    password: S.Redacted(S.String).annotateKey({
-      description: ""
-    })
+    username: S.Redacted(S.String),
+    password: S.Redacted(S.String),
   },
   $I.annote("CredentialBasic", {
-    description: ""
+    description: "A username and password credential.",
   })
 ) {
+  static readonly new = (username: string, password: string): CredentialBasic =>
+    CredentialBasic.make({
+      username: Redacted.make(username),
+      password: Redacted.make(password),
+    });
 }
 
-/**
- * TODO: description
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO example
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class CredentialApiKey extends S.Class<CredentialApiKey>($I`CredentialApiKey`)(
-  {
-    type: S.tag("apiKey"),
-    value: S.Redacted(S.String).annotateKey({
-      description: ""
-    })
-  },
+/** apiKey credential using the scheme's declared carrier. */
+export class CredentialApiKey extends S.TaggedClass<CredentialApiKey>(
+  $I`CredentialApiKey`
+)(
+  "apiKey",
+  { value: S.Redacted(S.String) },
   $I.annote("CredentialApiKey", {
-    description: ""
+    description: "An API key credential.",
   })
 ) {
+  static readonly new = (value: string): CredentialApiKey =>
+    CredentialApiKey.make({ value: Redacted.make(value) });
 }
 
-/**
- * TODO: description
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO example
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class CredentialHeader extends S.Class<CredentialHeader>($I`CredentialHeader`)(
+/** Explicit nonstandard header credential. */
+export class CredentialHeader extends S.TaggedClass<CredentialHeader>(
+  $I`CredentialHeader`
+)(
+  "header",
   {
-    type: S.tag("header"),
-    name: S.String,
-    value: S.Redacted(S.String).annotateKey({
-      description: ""
-    })
+    name: NonEmptyTrimmedStr,
+    value: S.Redacted(S.String),
   },
   $I.annote("CredentialHeader", {
-    description: ""
+    description: "A credential carried in an explicit header.",
   })
 ) {
+  static readonly new = (name: string, value: string): CredentialHeader =>
+    CredentialHeader.make({
+      name: NonEmptyTrimmedStr.make(name),
+      value: Redacted.make(value),
+    });
 }
 
-/**
- * Credential material returned by a host auth resolver. `apiKey` uses the scheme's carrier;
- * `header` supports nonstandard schemes.
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO example
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const Credential = S.Union(
-  [
-    CredentialBearer,
-    CredentialBasic,
-    CredentialApiKey,
-    CredentialHeader
-  ]
-).pipe(
+/** Credential returned by the host resolver. */
+export const Credential = S.Union([
+  CredentialBearer,
+  CredentialBasic,
+  CredentialApiKey,
+  CredentialHeader,
+]).pipe(
+  S.toTaggedUnion("_tag"),
   $I.annoteSchema("Credential", {
-    description: "todo"
+    description: "Credential material returned by the host auth resolver.",
   })
 );
 
-/**
- * Companion runtime type for {@link Credential}
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO example
- * ```
- *
- * @category models
- * @since 0.0.0
- */
+/** Runtime type for {@link Credential}. */
 export type Credential = typeof Credential.Type;
 
-/**
- * Resolves credentials at call time. `undefined` tries the next OR alternative; failure aborts.
- *
- * **Example**
- * @example
- * ```ts
- * TODO
- * ```
- *
- * @category TODO
- * @since 0.0.0
- */
-export type AuthResolver = (context: {
-  readonly name: string
-  readonly definition: SecurityScheme
-  readonly scopes: ReadonlyArray<string>
-  readonly operation: Operation
-}) => Effect.Effect<Credential | undefined, unknown>
-
-const AuthResolver = S.declare((u: unknown): u is AuthResolver => P.isFunction(u)).pipe(
-  $I.annoteSchema("AuthResolver", {
-    description: "TODO"
-  })
-);
-
-/**
- * TODO: description
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO: example
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class Options extends S.Class<Options>($I`Options`)(
+/** Input to the host credential resolver. */
+export class AuthContext extends S.Class<AuthContext>($I`AuthContext`)(
   {
-    spec: Document.annotateKey({
-      description: "TODO"
-    }),
-    /** Overrides all document, path, and operation `servers`. Required when no applicable absolute server URL exists. */
-    baseUrl: S.URLFromString.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Overrides all document, path, and operation `servers`. Required when no applicable absolute server URL exists."
-      })
-    ),
-    /** Host credential resolution, keyed by security scheme name. */
-    auth: S.Struct({
-      resolve: AuthResolver
-    }).pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Host credential resolution, keyed by security scheme name."
-      })
-    ),
-     /** Static headers on every request. Not model-visible; declared header params may override them, auth always wins. */
-     headers: S.Record(S.String, S.String).pipe(
-       S.OptionFromOptionalKey,
-       SchemaUtils.withNoneDefault,
-       S.annotateKey({
-         description: "Static headers on every request. Not model-visible; declared header params may override them, auth always wins."
-       })
-     )
+    name: NonEmptyTrimmedStr,
+    definition: SecurityScheme,
+    scopes: S.Array(S.String),
+    operation: Operation,
   },
-  $I.annote("Options", {
-    description: ""
+  $I.annote("AuthContext", {
+    description: "One security scheme requested for an operation.",
   })
 ) {
+  static readonly new = (
+    name: string,
+    definition: SecurityScheme,
+    scopes: ReadonlyArray<string>,
+    operation: Operation
+  ): AuthContext =>
+    AuthContext.make({
+      name: NonEmptyTrimmedStr.make(name),
+      definition,
+      scopes,
+      operation,
+    });
 }
 
 /**
- * An operation that could not be represented as a tool, and why.
- *
- * **Example**
- *
- * @example
- * ```ts
- * TODO: example
- * ```
- *
- * @category models
- * @since 0.0.0
+ * Resolves credentials at call time. `Option.none` tries the next OR
+ * alternative; failure aborts the call.
  */
+export type AuthResolver = (
+  context: AuthContext
+) => Effect.Effect<O.Option<Credential>, ToolError>;
+
+const AuthResolverSchema = S.declare(
+  (value: unknown): value is AuthResolver => P.isFunction(value)
+);
+
+/** Host authentication callback configuration. */
+export class AuthConfig extends S.Class<AuthConfig>($I`AuthConfig`)(
+  { resolve: AuthResolverSchema },
+  $I.annote("AuthConfig", {
+    description: "Host-owned credential resolution.",
+  })
+) {
+  static readonly new = (resolve: AuthResolver): AuthConfig =>
+    AuthConfig.make({ resolve });
+}
+
+const StringMap = S.Record(S.String, S.String).pipe(
+  S.decodeTo(S.HashMap(S.String, S.String), {
+    decode: SchemaGetter.transform(
+      (record) => pipe(record, R.toEntries, HashMap.fromIterable)
+    ),
+    encode: SchemaGetter.transform(
+      (map) => pipe(map, HashMap.toEntries, R.fromEntries)
+    ),
+  }),
+  $I.annoteSchema("StringMap", {
+    description: "A record boundary transformed into an Effect HashMap.",
+  })
+);
+
+/** Raw boundary options accepted by `OpenAPI.fromSpec`. */
+export class Options extends S.Class<Options>($I`Options`)(
+  {
+    spec: Document,
+    baseUrl: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault
+    ),
+    auth: S.OptionFromOptionalKey(AuthConfig).pipe(
+      SchemaUtils.withNoneDefault
+    ),
+    headers: StringMap.pipe(
+      SchemaUtils.withKeyDefaults(HashMap.empty<string, string>())
+    ),
+  },
+  $I.annote("Options", {
+    description: "Decoded OpenAPI adapter options with Option and HashMap core values.",
+  })
+) {
+  static readonly new = (
+    spec: Document,
+    baseUrl?: string,
+    auth?: AuthConfig,
+    headers: Readonly<Record<string, string>> = {}
+  ): Options =>
+    Options.make({
+      spec,
+      baseUrl: O.fromNullishOr(baseUrl),
+      auth: O.fromNullishOr(auth),
+      headers: pipe(headers, R.toEntries, HashMap.fromIterable),
+    });
+}
+
+/** An operation omitted from the generated Toolkit. */
 export class Skipped extends S.Class<Skipped>($I`Skipped`)(
   {
-    method: S.String,
-    path: FilePath,
+    method: HttpMethod,
+    path: S.String,
     reason: S.String,
   },
   $I.annote("Skipped", {
-  description: "An operation that could not be represented as a tool, and why."
-})) {}
+    description: "An operation that could not be represented as a tool.",
+  })
+) {
+  static readonly new = (
+    method: HttpMethod,
+    path: string,
+    reason: string
+  ): Skipped => Skipped.make({ method, path, reason });
+}
+
+/** Supported operation input locations. */
+export const InputLocation = LiteralKit([
+  "path",
+  "query",
+  "header",
+  "body",
+]).pipe(
+  $I.annoteSchema("InputLocation", {
+    description: "Where one operation input is serialized.",
+  })
+);
+
+/** Runtime type for {@link InputLocation}. */
+export type InputLocation = typeof InputLocation.Type;
+
+/** Supported OpenAPI serialization styles. */
+export const InputStyle = LiteralKit(["simple", "form", "deepObject"]).pipe(
+  $I.annoteSchema("InputStyle", {
+    description: "Supported OpenAPI parameter serialization styles.",
+  })
+);
+
+/** Runtime type for {@link InputStyle}. */
+export type InputStyle = typeof InputStyle.Type;
+
+/** One normalized operation input. */
+export class InputField extends S.Class<InputField>($I`InputField`)(
+  {
+    inputName: NonEmptyTrimmedStr,
+    name: NonEmptyTrimmedStr,
+    location: InputLocation,
+    required: S.Boolean,
+    schema: JsonSchema,
+    style: S.OptionFromOptionalKey(InputStyle).pipe(
+      SchemaUtils.withNoneDefault
+    ),
+    explode: S.OptionFromOptionalKey(S.Boolean).pipe(
+      SchemaUtils.withNoneDefault
+    ),
+  },
+  $I.annote("InputField", {
+    description: "One normalized parameter or request-body field.",
+  })
+) {
+  static readonly new = (
+    inputName: string,
+    name: string,
+    location: InputLocation,
+    required: boolean,
+    schema: JsonSchema,
+    style: O.Option<InputStyle>,
+    explode: O.Option<boolean>
+  ): InputField =>
+    InputField.make({
+      inputName: NonEmptyTrimmedStr.make(inputName),
+      name: NonEmptyTrimmedStr.make(name),
+      location,
+      required,
+      schema,
+      style,
+      explode,
+    });
+}
+
+/** Request-body projection mode. */
+export const BodyMode = LiteralKit(["object", "value"]).pipe(
+  $I.annoteSchema("BodyMode", {
+    description: "Whether a JSON body is flattened into fields or kept as one value.",
+  })
+);
+
+/** Runtime type for {@link BodyMode}. */
+export type BodyMode = typeof BodyMode.Type;
+
+/** Normalized request-body plan. */
+export class Body extends S.Class<Body>($I`Body`)(
+  {
+    required: S.Boolean,
+    mode: BodyMode,
+    mediaType: NonEmptyTrimmedStr,
+  },
+  $I.annote("Body", {
+    description: "How an operation's JSON request body is assembled.",
+  })
+) {
+  static readonly new = (
+    required: boolean,
+    mode: BodyMode,
+    mediaType: string
+  ): Body =>
+    Body.make({
+      required,
+      mode,
+      mediaType: NonEmptyTrimmedStr.make(mediaType),
+    });
+}
+
+/** Normalized fields and optional body description for an operation. */
+export class OperationInput extends S.Class<OperationInput>(
+  $I`OperationInput`
+)(
+  {
+    fields: S.Array(InputField),
+    body: S.OptionFromOptionalKey(Body).pipe(SchemaUtils.withNoneDefault),
+  },
+  $I.annote("OperationInput", {
+    description: "The normalized model-visible input for one operation.",
+  })
+) {
+  static readonly new = (
+    fields: ReadonlyArray<InputField>,
+    body: O.Option<Body>
+  ): OperationInput => OperationInput.make({ fields, body });
+}
+
+const SecurityScopesMap = S.HashMap(S.String, S.Array(S.String));
+
+/** One AND-composed OpenAPI security requirement. */
+export class SecurityRequirement extends S.Class<SecurityRequirement>(
+  $I`SecurityRequirement`
+)(
+  { schemes: SecurityScopesMap },
+  $I.annote("SecurityRequirement", {
+    description: "One AND group inside OpenAPI's OR security alternatives.",
+  })
+) {
+  static readonly new = (
+    schemes: HashMap.HashMap<string, ReadonlyArray<string>>
+  ): SecurityRequirement => SecurityRequirement.make({ schemes });
+}
+
+const SecuritySchemeMap = S.HashMap(S.String, SecurityScheme);
+
+/** Execution plan captured by one generated tool handler. */
+export class Plan extends S.Class<Plan>($I`Plan`)(
+  {
+    operation: Operation,
+    url: NonEmptyTrimmedStr,
+    fields: S.Array(InputField),
+    body: S.OptionFromOptionalKey(Body).pipe(SchemaUtils.withNoneDefault),
+    security: S.Array(SecurityRequirement),
+    schemes: SecuritySchemeMap,
+    auth: S.OptionFromOptionalKey(AuthConfig).pipe(
+      SchemaUtils.withNoneDefault
+    ),
+    headers: S.HashMap(S.String, S.String),
+  },
+  $I.annote("Plan", {
+    description: "Everything required to invoke one generated OpenAPI tool.",
+  })
+) {
+  static readonly new = (
+    operation: Operation,
+    url: string,
+    fields: ReadonlyArray<InputField>,
+    body: O.Option<Body>,
+    security: ReadonlyArray<SecurityRequirement>,
+    schemes: HashMap.HashMap<string, SecurityScheme>,
+    auth: O.Option<AuthConfig>,
+    headers: HashMap.HashMap<string, string>
+  ): Plan =>
+    Plan.make({
+      operation,
+      url: NonEmptyTrimmedStr.make(url),
+      fields,
+      body,
+      security,
+      schemes,
+      auth,
+      headers,
+    });
+}
+
+/** Authentication material already assigned to HTTP carriers. */
+export class AppliedAuth extends S.Class<AppliedAuth>($I`AppliedAuth`)(
+  {
+    headers: S.HashMap(S.String, S.String),
+    query: S.HashMap(S.String, S.String),
+  },
+  $I.annote("AppliedAuth", {
+    description: "Resolved authentication headers and query parameters.",
+  })
+) {
+  static readonly new = (
+    headers: HashMap.HashMap<string, string> = HashMap.empty(),
+    query: HashMap.HashMap<string, string> = HashMap.empty()
+  ): AppliedAuth => AppliedAuth.make({ headers, query });
+}
+
+/** Invalid `fromSpec` boundary input. */
+export class InvalidOpenApiOptions extends TaggedErrorClass<InvalidOpenApiOptions>(
+  $I`InvalidOpenApiOptions`
+)(
+  "InvalidOpenApiOptions",
+  {
+    message: S.String,
+    cause: S.OptionFromOptionalKey(S.Defect()).pipe(
+      SchemaUtils.withNoneDefault
+    ),
+  },
+  $I.annote("InvalidOpenApiOptions", {
+    description: "The OpenAPI adapter options failed schema decoding.",
+  })
+) {
+  static readonly new = (cause: unknown): InvalidOpenApiOptions =>
+    InvalidOpenApiOptions.make({
+      message: "OpenAPI.fromSpec received invalid options.",
+      cause: O.some(cause),
+    });
+}
+
+/** Dynamic Toolkit shape emitted by the OpenAPI adapter. */
+export type GeneratedToolkit = Toolkit.Toolkit<Record<string, Tool.Any>>;
+
+/** Handler layer emitted alongside {@link GeneratedToolkit}. */
+export type GeneratedHandlersLayer = Layer.Layer<
+  Tool.HandlersFor<Record<string, Tool.Any>>,
+  never,
+  HttpClient.HttpClient
+>;
+
+const GeneratedToolkitSchema = S.declare(
+  (value: unknown): value is GeneratedToolkit =>
+    P.isObjectKeyword(value) && P.hasProperty(value, "tools")
+);
+
+const GeneratedHandlersLayerSchema = S.declare(
+  (value: unknown): value is GeneratedHandlersLayer => Layer.isLayer(value)
+);
+
+/** Result of compiling an OpenAPI document into Effect AI tools. */
+export class FromSpecResult extends S.Class<FromSpecResult>(
+  $I`FromSpecResult`
+)(
+  {
+    toolkit: GeneratedToolkitSchema,
+    handlersLayer: GeneratedHandlersLayerSchema,
+    skipped: S.Array(Skipped),
+  },
+  $I.annote("FromSpecResult", {
+    description: "Generated Toolkit, handler Layer, and omitted operations.",
+  })
+) {
+  static readonly new = (
+    toolkit: GeneratedToolkit,
+    handlersLayer: GeneratedHandlersLayer,
+    skipped: ReadonlyArray<Skipped>
+  ): FromSpecResult =>
+    FromSpecResult.make({ toolkit, handlersLayer, skipped });
+}
+
+/** Copies a readonly string record into the core HashMap representation. */
+export const stringMapFromRecord = (
+  record: Readonly<Record<string, string>>
+): HashMap.HashMap<string, string> =>
+  pipe(record, R.toEntries, HashMap.fromIterable);
+
+/** Copies a core string HashMap to an HTTP boundary record. */
+export const stringMapToRecord = (
+  map: HashMap.HashMap<string, string>
+): Record<string, string> =>
+  pipe(map, HashMap.toEntries, R.fromEntries);
+
+/** Builds an immutable array without exposing native mutable array helpers. */
+export const emptyFields = (): ReadonlyArray<InputField> => A.empty();

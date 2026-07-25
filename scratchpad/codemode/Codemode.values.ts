@@ -1,109 +1,142 @@
-/**
- * `Stdlib`
- *
- * @packageDocumentation
- * @since 0.0.0
- */
-import {$ScratchpadId} from "@beep/identity";
-import * as S from "effect/Schema";
-import {LiteralKit, SchemaUtils, MappedLiteralKit} from "@beep/schema";
-import {P, A, O, Str, R, Struct, pipe, dual} from "@beep/utils";
-import {HashMap, HashSet} from "effect";
-
-const $I = $ScratchpadId.create("StdLib.json");
+import { Equal, type Fiber } from "effect";
+import type { InterpreterFailure } from "./interpreter/Interpreter.model.ts";
 
 /**
- * The `Thing` model.
+ * Promise handle owned by one CodeMode execution.
  *
- * **Example**
- *
- * @example
- * ```ts
- * import { Thing } from "@beep/codemode";
- *
- * const thing: Thing = Thing.make()
- *
- * console.log(thing); // `{}`
- * ```
- *
- * @category models
+ * @category runtime
  * @since 0.0.0
  */
-const Thing = LiteralKit(["thing"]).pipe(
-  $I.annoteSchema("Thing", {
-    description: ""
-  })
-);
+export class CodeModePromise {
+  readonly fiber: Fiber.Fiber<unknown, InterpreterFailure>;
 
-/**
- *
- * Companion runtime type for {@link Thing}
- *
- *
- * **Example **
- *
- * @example
- * ```ts
- * import { Thing } from "@beep/codemode";
- *
- * const thing: Thing = Thing.make()
- *
- * console.log(thing); // `{}`
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type Thing = typeof Thing.Type;
+  constructor(fiber: Fiber.Fiber<unknown, InterpreterFailure>) {
+    this.fiber = fiber;
+  }
 
-
-/**
- * The `ThingClass` model.
- *
- * **Example**
- *
- * @example
- * ```ts
- * import { ThingClass } from "@beep/codemode";
- *
- * const thing: ThingClass = ThingClass.make()
- *
- * console.log(thing); // `{}`
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class ThingClass extends S.Class<ThingClass>($I`ThingClass`)(
-  {},
-  $I.annote("ThingClass", {
-    description: "The `ThingClass` model"
-  })
-) {
+  static readonly new = (
+    fiber: Fiber.Fiber<unknown, InterpreterFailure>
+  ): CodeModePromise =>
+    // Promise handles are mutable runtime identities. Effect hash collections
+    // must not structurally traverse the Fiber stored inside them.
+    Equal.byReferenceUnsafe(new CodeModePromise(fiber));
 }
 
 /**
- * Companion namespace for {@link ThingClass}
+ * Mutable JavaScript Date value represented by epoch milliseconds.
  *
+ * @category runtime
  * @since 0.0.0
  */
-export declare namespace ThingClass {
-  /**
-   * Companion encoded type for {@link ThingClass}
-   *
-   * **Example**
-   *
-   * @example
-   * ```ts
-   * import { ThingClass } from "@beep/codemode";
-   * import * as S from "effect/Schema";
-   * const thingEncoded: ThingClass.Encoded = S.encodeSync(ThingClass)(ThingClass.make());
-   *
-   * console.log(thingEncoded); // `{}`
-   * ```
-   *
-   * @category models
-   * @since 0.0.0
-   */
-  export interface Encoded {}
+export class CodeModeDate {
+  time: number;
+
+  constructor(time: number) {
+    this.time = time;
+  }
+
+  static readonly new = (time: number): CodeModeDate => new CodeModeDate(time);
 }
+
+/**
+ * Mutable JavaScript RegExp value.
+ *
+ * @category runtime
+ * @since 0.0.0
+ */
+export class CodeModeRegExp {
+  readonly regex: RegExp;
+
+  constructor(pattern: string, flags: string) {
+    this.regex = new RegExp(pattern, flags);
+  }
+
+  static readonly new = (pattern: string, flags: string): CodeModeRegExp => new CodeModeRegExp(pattern, flags);
+
+  get lastIndex(): unknown {
+    return Reflect.get(this.regex, "lastIndex");
+  }
+
+  set lastIndex(value: unknown) {
+    Reflect.set(this.regex, "lastIndex", value);
+  }
+}
+
+/**
+ * Mutable JavaScript Map value.
+ *
+ * @category runtime
+ * @since 0.0.0
+ */
+export class CodeModeMap {
+  // crispen: native Map is the guest-language semantic adapter; a HashMap
+  // cannot preserve object identity, SameValueZero, or live mutation.
+  readonly map = new Map<unknown, unknown>();
+
+  static readonly new = (): CodeModeMap => new CodeModeMap();
+}
+
+/**
+ * Mutable JavaScript Set value.
+ *
+ * @category runtime
+ * @since 0.0.0
+ */
+export class CodeModeSet {
+  // crispen: native Set is the guest-language semantic adapter; a HashSet
+  // cannot preserve object identity, SameValueZero, or live mutation.
+  readonly set = new Set<unknown>();
+
+  static readonly new = (): CodeModeSet => new CodeModeSet();
+}
+
+/**
+ * Mutable JavaScript URLSearchParams value.
+ *
+ * @category runtime
+ * @since 0.0.0
+ */
+export class CodeModeURLSearchParams {
+  readonly params: URLSearchParams;
+
+  constructor(params: URLSearchParams) {
+    this.params = params;
+  }
+
+  static readonly new = (params: URLSearchParams): CodeModeURLSearchParams => new CodeModeURLSearchParams(params);
+}
+
+/**
+ * Mutable JavaScript URL value.
+ *
+ * @category runtime
+ * @since 0.0.0
+ */
+export class CodeModeURL {
+  readonly searchParams: CodeModeURLSearchParams;
+  readonly url: URL;
+
+  constructor(url: URL) {
+    this.url = url;
+    this.searchParams = new CodeModeURLSearchParams(url.searchParams);
+  }
+
+  static readonly new = (url: URL): CodeModeURL => new CodeModeURL(url);
+}
+
+/**
+ * Identifies values whose native mutation and identity semantics are part of
+ * the guest JavaScript contract.
+ *
+ * @category guards
+ * @since 0.0.0
+ */
+export const isCodeModeValue = (
+  value: unknown
+): value is CodeModeDate | CodeModeRegExp | CodeModeMap | CodeModeSet | CodeModeURL | CodeModeURLSearchParams =>
+  value instanceof CodeModeDate ||
+  value instanceof CodeModeRegExp ||
+  value instanceof CodeModeMap ||
+  value instanceof CodeModeSet ||
+  value instanceof CodeModeURL ||
+  value instanceof CodeModeURLSearchParams;
