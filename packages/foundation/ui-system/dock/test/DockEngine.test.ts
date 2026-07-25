@@ -8,6 +8,8 @@ import {
   DockSnapshot,
   DockWorkspace,
   EmptyWorkspace,
+  FloatingMember,
+  GroupId,
   MovePanelCommand,
   OpenPanelCommand,
   Panel,
@@ -22,6 +24,7 @@ import {
   SplitPlacement,
   SplitRatio,
   TabsNode,
+  TopLeftAnchoredBox,
 } from "@beep/dock";
 import { NonNegativeInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
@@ -241,6 +244,105 @@ describe("DockEngine", () => {
         );
         const empty = yield* engine.restore(DockWorkspace.empty, deniedOnly, request);
         expect(empty.result).toMatchObject({ _tag: "Unchanged", reason: "snapshot-identical" });
+      })
+    );
+
+    it.effect(
+      "prunes restored docked, floating, and maximized renderer topology",
+      Effect.fnUntraced(function* () {
+        const engine = yield* DockEngine;
+        const allowedRenderer = RendererKey.make("allowed");
+        const deniedRenderer = RendererKey.make("denied");
+        const componentPanel = (id: string, renderer: RendererKey) =>
+          Panel.make({
+            id: PanelId.make(id),
+            title: id,
+            view: ComponentPanelView.make({ renderer }),
+          });
+        const groupFour = GroupId.make("group-four");
+        const groupFive = GroupId.make("group-five");
+        const groupSix = GroupId.make("group-six");
+        const floatingBox = TopLeftAnchoredBox.make({ height: 480, left: 20, top: 12, width: 640 });
+        const restored = PopulatedWorkspace.make({
+          root: SplitNode.make({
+            splitId: splitOne,
+            layout: SplitLayout.cases.horizontal.make({
+              left: TabsNode.make({
+                groupId: groupTwo,
+                active: componentPanel("root-denied", deniedRenderer),
+              }),
+              right: TabsNode.make({
+                groupId: groupThree,
+                active: componentPanel("root-allowed", allowedRenderer),
+              }),
+            }),
+          }),
+          maximized: O.some(groupTwo),
+          floating: [
+            FloatingMember.make({
+              anchoredBox: floatingBox,
+              root: TabsNode.make({
+                groupId: groupFour,
+                active: componentPanel("floating-denied", deniedRenderer),
+              }),
+            }),
+            FloatingMember.make({
+              anchoredBox: floatingBox,
+              root: SplitNode.make({
+                splitId: splitTwo,
+                layout: SplitLayout.cases.vertical.make({
+                  top: TabsNode.make({
+                    groupId: groupFive,
+                    active: componentPanel("floating-partial-denied", deniedRenderer),
+                  }),
+                  bottom: TabsNode.make({
+                    groupId: groupSix,
+                    active: componentPanel("floating-partial-allowed", allowedRenderer),
+                  }),
+                }),
+              }),
+            }),
+          ],
+        });
+        const current = PopulatedWorkspace.make({
+          root: TabsNode.make({ groupId: groupOne, active: panelOne }),
+        });
+        const request = RestoreSnapshotRequest.make({
+          commandId: restoreRequest.commandId,
+          origin: restoreRequest.origin,
+          allowedRenderers: O.some([allowedRenderer]),
+        });
+        const snapshot = yield* engine.encodeSnapshot(restored);
+        const outcome = yield* requireChanged(yield* engine.restore(current, snapshot, request));
+        const installed = yield* DockWorkspace.match(outcome.state, {
+          empty: () => Effect.die("expected populated restored workspace"),
+          populated: (workspace) => Effect.succeed(workspace),
+        });
+        const root = yield* DockNode.match(installed.root, {
+          Tabs: (tabs) => Effect.succeed(tabs),
+          Split: () => Effect.die("expected the surviving docked child to be promoted"),
+        });
+        const floating = O.getOrThrow(A.head(installed.floating));
+        const floatingRoot = yield* DockNode.match(floating.root, {
+          Tabs: (tabs) => Effect.succeed(tabs),
+          Split: () => Effect.die("expected the surviving floating child to be promoted"),
+        });
+
+        expect(root.groupId).toBe(groupThree);
+        expect(installed.maximized).toEqual(O.none());
+        expect(installed.floating).toHaveLength(1);
+        expect(floatingRoot.groupId).toBe(groupSix);
+
+        const deniedOnly = yield* engine.encodeSnapshot(
+          PopulatedWorkspace.make({
+            root: TabsNode.make({
+              groupId: groupTwo,
+              active: componentPanel("only-denied", deniedRenderer),
+            }),
+          })
+        );
+        const emptied = yield* requireChanged(yield* engine.restore(current, deniedOnly, request));
+        expect(emptied.state).toMatchObject({ kind: "empty" });
       })
     );
 

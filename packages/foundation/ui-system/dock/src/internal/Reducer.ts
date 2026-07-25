@@ -10,6 +10,7 @@ import { Effect, HashSet, Metric, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
+import { constant } from "effect/Function";
 import * as O from "effect/Option";
 import { DockCommand } from "../Dock.commands.ts";
 import { DockCommandRejected, DockInvariantViolation } from "../Dock.errors.ts";
@@ -937,12 +938,12 @@ const movePanelForest = Effect.fn("DockReducer.movePanelForest")(function* (
     }),
     rootSplit: (target) => {
       const inserted = TabsNode.make({ groupId: target.newGroupId, active: panel });
+      const lostRoot = DockInvariantViolation.make({
+        reason: "topology-corrupted",
+        message: "Validated root split move lost its docked root before application.",
+      });
       return DockWorkspace.match(removed, {
-        empty: () =>
-          DockInvariantViolation.make({
-            reason: "topology-corrupted",
-            message: "Validated root split move lost its docked root before application.",
-          }),
+        empty: constant(lostRoot),
         populated: ({ root }) =>
           Effect.succeed([
             installDockedRoot(removed, SplitNode.fromNodes(root, inserted, target)),

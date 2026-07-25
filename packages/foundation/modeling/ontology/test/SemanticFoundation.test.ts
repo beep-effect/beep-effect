@@ -193,6 +193,52 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
   );
 
   it.effect(
+    "maps a missing vendor root realpath to a typed slice read error",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const loader = yield* TaxonomyLoader;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-taxonomy-manifest-" });
+      const missingRoot = `${root}/missing-vendor`;
+      const manifest = `${root}/manifest.jsonl`;
+      const entry = yield* encodeEntry(
+        VendorManifestEntry.make({
+          format: "jsonld",
+          id: "missing-root",
+          loadStatus: "VETTED",
+          path: "slice.jsonld",
+        })
+      );
+      yield* fs.writeFileString(manifest, entry);
+
+      const error = yield* loader.load(manifest, missingRoot).pipe(Effect.flip);
+      expect(error).toMatchObject({ _tag: "VendorSliceReadError", id: "missing-root", path: missingRoot });
+    }, provideScopedLayer(BunFileSystem.layer))
+  );
+
+  it.effect(
+    "maps a missing vendor slice realpath to a typed slice read error",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const loader = yield* TaxonomyLoader;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-taxonomy-vendor-" });
+      const missingSlice = `${root}/missing.jsonld`;
+      const manifest = `${root}/manifest.jsonl`;
+      const entry = yield* encodeEntry(
+        VendorManifestEntry.make({
+          format: "jsonld",
+          id: "missing-slice",
+          loadStatus: "VETTED",
+          path: "missing.jsonld",
+        })
+      );
+      yield* fs.writeFileString(manifest, entry);
+
+      const error = yield* loader.load(manifest, root).pipe(Effect.flip);
+      expect(error).toMatchObject({ _tag: "VendorSliceReadError", id: "missing-slice", path: missingSlice });
+    }, provideScopedLayer(BunFileSystem.layer))
+  );
+
+  it.effect(
     "runs the librarian loop purely over registry data",
     Effect.fnUntraced(function* () {
       const conceptIri = IRIReference.make("https://ns.beep.sh/ontology/semantic-foundation/concept/email-message");
