@@ -2,7 +2,8 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained` (closed 2026-07-25; shipped via the
+`docs/harness-otel-adoption-close` PR)
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -34,13 +35,20 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Verify — instrumentation is LIVE (2026-07-14): both harnesses export to
-the dankserver collector; traces land in Phoenix, attributed metrics in
-Prometheus. Remaining: one-day coverage-verification note vs transcripts,
-trace-payload content spot-check, then P3 close.
+Closed. Instrumentation went live 2026-07-14 (both harnesses → dankserver
+collector; traces to Phoenix, attributed metrics to Prometheus). P2/P3
+closed 2026-07-25 with the one-day coverage verification and this packet's
+status flips in the same PR.
 
 ## Latest Evidence
 
+[`history/p2-coverage-verification.md`](./history/p2-coverage-verification.md)
+— one-day native-telemetry vs local-ground-truth comparison (2026-07-25):
+98.5% Claude session coverage by session-id join across all three harness
+modes (native/claudex/claudeg), per-model token comparison against a named
+±10% tolerance, codex execution-mode inventory with recorded metric
+limits, and a clean cross-harness payload privacy inspection (560 codex
+spans, 110 claude spans, full claude metric-label surface).
 [`history/p1-rollout-evidence.md`](./history/p1-rollout-evidence.md) —
 end-to-end live 2026-07-14: dankserver commit 3b22cac, tailnet route :8448,
 attributed metrics verified (`beep_goal_slug="harness-otel-adoption"` on
