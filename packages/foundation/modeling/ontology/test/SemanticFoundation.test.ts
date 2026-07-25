@@ -193,6 +193,43 @@ layer(TaxonomyLoader.layer)("semantic foundation", (it) => {
   );
 
   it.effect(
+    "accepts a canonical Windows vendor root with a trailing separator",
+    Effect.fnUntraced(function* () {
+      const loader = yield* TaxonomyLoader;
+      const canonicalRoot = "C:\\vendor\\";
+      const canonicalSlice = `${canonicalRoot}fixture-slice.jsonld`;
+      const manifest = yield* encodeEntry(
+        VendorManifestEntry.make({
+          format: "jsonld",
+          id: "windows-slice",
+          loadStatus: "VETTED",
+          path: "fixture-slice.jsonld",
+        })
+      );
+      const slice = yield* encodeSeed(
+        TaxonomySeed.make({
+          concepts: [],
+          filingRoots: [],
+          pathTemplateSegments: ["root", "client", "matter", "taxonomy-concept", "document-class", "file-name"],
+          schemeIri: IRIReference.make("https://ns.beep.sh/ontology/semantic-foundation/taxonomy/windows"),
+          title: "Windows vendor slice",
+        })
+      );
+      const loaded = yield* loader.load(manifestPath, vendorRoot).pipe(
+        Effect.provideService(
+          FileSystem.FileSystem,
+          FileSystem.makeNoop({
+            readFileString: (path) => Effect.succeed(path === manifestPath ? manifest : slice),
+            realPath: (path) => Effect.succeed(path === vendorRoot ? canonicalRoot : canonicalSlice),
+          })
+        )
+      );
+
+      expect(loaded.concepts).toHaveLength(SemanticFoundationSeed.concepts.length);
+    })
+  );
+
+  it.effect(
     "maps a missing vendor root realpath to a typed slice read error",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;

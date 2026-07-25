@@ -215,7 +215,10 @@ const readSlice = Effect.fn("TaxonomyLoader.readSlice")(function* (entry: Vendor
       const path = yield* fs
         .realPath(candidatePath)
         .pipe(Effect.mapError(() => VendorSliceReadError.make({ id: entry.id, path: candidatePath })));
-      const rootedPrefix = `${canonicalVendorRoot}/`;
+      const separator = Str.includes("\\")(canonicalVendorRoot) && !Str.includes("/")(canonicalVendorRoot) ? "\\" : "/";
+      const rootedPrefix = Str.endsWith(separator)(canonicalVendorRoot)
+        ? canonicalVendorRoot
+        : `${canonicalVendorRoot}${separator}`;
       if (!Str.startsWith(rootedPrefix)(path)) {
         return yield* VendorSlicePathEscape.make({ id: entry.id, path, vendorRoot: canonicalVendorRoot });
       }
