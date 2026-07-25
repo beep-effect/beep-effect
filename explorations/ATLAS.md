@@ -238,17 +238,21 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   prototype proving types/ergonomics before the packaging call
   (all-in-`@beep/identity` vs identity/rdf/ontology split).
 - [`openclaw-deployment-platform`](./openclaw-deployment-platform/README.md) —
-  Effect-native OpenClaw deployment platform (stage `research`, opened
-  2026-07-24): deploy a professional, legal-focused OpenClaw agent on the
-  workstation through a Pulumi + Effect stack (extend `infra/`, new
-  `packages/drivers/openclaw`), then migrate dankserver's ~4790-line Ansible
-  openclaw role onto what greenfield proves. Enabling substrate for the
-  agentic-professional-runtime direction, firewalled from product work; 14
-  intent-interview decisions pre-recorded in
-  [`DECISIONS.md`](./openclaw-deployment-platform/DECISIONS.md) (full-file
-  config ownership research-gated, `command.local` + target-agnostic
-  renderers, bundle-patch quarantine). Next: research dispatch — the
-  config-ownership source-dive of the local OpenClaw clone is the gating leg.
+  Effect-native OpenClaw deployment platform (stage `decompose`, opened
+  2026-07-24, GATE B passed same day): deploy a professional, legal-focused
+  OpenClaw agent on the workstation through a Pulumi + Effect stack, then
+  migrate dankserver's ~4790-line Ansible openclaw role onto what greenfield
+  proves. Research (merged as #439): four cited legs + config-internals
+  source dive + 12-finding adversarial pass → locked design is
+  `OpenClawGeneration` revisions in a root-owned config root
+  (`OPENCLAW_NIX_MODE` as defense-in-depth only), desired-intent schema +
+  versioned render adapters in a new `@beep/openclaw` driver, shared
+  renderers + explicit applicator contracts, Telegram v1, op:// refs with
+  one recorded bootstrap-credential exception; 22 decisions in
+  [`DECISIONS.md`](./openclaw-deployment-platform/DECISIONS.md).
+  [`MAP.md`](./openclaw-deployment-platform/MAP.md): `openclaw-workstation-agent`
+  (P0 = four-prototype gauntlet) then `dankserver-openclaw-migration`.
+  Next: GATE C grilling → graduation.
 ### Proposed
 
 - (none — `atlas-synthesis` is now an Active packet above; its capability-inventory

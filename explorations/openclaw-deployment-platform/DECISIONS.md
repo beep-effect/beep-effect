@@ -211,3 +211,170 @@ porting them would import the worst of the old control plane into the new
 stack on day one. Rejected: porting patches declaratively (one control plane,
 but version-coupled binary edits as Pulumi resources); full deferral (leaves
 the migration candidate's appetite unshapeable in MAP.md).
+
+<!-- GATE B entries below: resolved 2026-07-24 in the post-adversarial-review
+grilling. Entries marked REVISES supersede the correspondingly named earlier
+entry. Four entries are prototype-gated: the graduated goal's P0 gauntlet
+must confirm them, and a failed prototype re-opens the decision in the goal's
+decision log. -->
+
+## 2026-07-24 — OS-enforced config immutability (REVISES: config ownership)
+
+**Question:** How is strict config ownership enforced at the OS level, given
+the adversarial review proved `OPENCLAW_NIX_MODE=1` is an in-process policy
+check that any direct file write bypasses?
+
+**Answer:** Root-owned, hash-versioned config root —
+`/etc/beep/openclaw/<content-hash>/openclaw.json`, mode 0644 root:root —
+with `OPENCLAW_CONFIG_PATH` pointed at it, `OPENCLAW_NIX_MODE=1` retained as
+defense-in-depth, and an independent drift audit (preflight hash check plus
+recurring canary). The privileged install step joins the existing
+`loginctl enable-linger` bootstrap. Prototype-gated: filesystem bypass/drift
+spike.
+
+**Rationale:** The gateway runs as the user, so user-level permissions cannot
+protect a user-owned file from the user's own processes; nix's real
+guarantee is the read-only store, mirrored here with plain root-owned
+directories. Rejected: guard-plus-drift-repair only (leaves the
+agent-edits-own-config window open between audits); `chattr +i` on the user
+file (fragile toggling, no hash-versioned generations).
+
+## 2026-07-24 — OpenClawGeneration state machine (RESHAPES: solution sketch)
+
+**Question:** What binds package, config, unit, workspace artifacts, skills,
+and plugins into one deployable revision, and how do upgrades avoid the
+SQLite-migration rollback trap?
+
+**Answer:** `OpenClawGeneration` becomes the stack's central concept: one
+hash-versioned revision binding package version, rendered config, systemd
+unit, workspace artifacts (SOUL.md/persona), pinned+integrity-checked
+skills, and plugins. Upgrade is a staged state machine: stage side-by-side →
+validate with the candidate binary → stop gateway → snapshot shared and
+per-agent SQLite (including WAL) → switch one pointer → start → acceptance
+probes → commit or restore. Irreversible DB migrations are pre-classified
+and operator-gated. Prototype-gated: upgrade + failed-health rollback spike.
+
+**Rationale:** SQLite schemas migrate on ordinary open and stamp
+`user_version`; older binaries refuse migrated state, so naive rollback
+strands the deployment. Skills are workspace mutations with their own
+lockfile, not config fields. Rejected: config-only generations (leaves the
+rollback trap at the package boundary); deferring the concept to the goal
+(MAP would sequence work on a falsified sketch).
+
+## 2026-07-24 — desired-intent schema + render adapters (REVISES: driver v1 scope)
+
+**Question:** What schema contract does `@beep/openclaw` own, given the
+effective upstream config contract is plugin-set-dependent and the schema
+export is lossy past size caps?
+
+**Answer:** The driver owns a small, stable desired-intent Effect schema (our
+deployment intent: gateway, agent identity, one channel, providers,
+guardrails, skills) plus a versioned render adapter that emits
+`openclaw.json` for the pinned OpenClaw version. Acceptance is the candidate
+binary's plugin-aware `config validate` plus negative fixtures; CI fails if
+the schema export contains lossy placeholders for extensions we declare.
+Version bumps touch the adapter, not consumers.
+
+**Rationale:** A hand-maintained mirror of upstream's contract can never
+prove coverage and churns with every release; the stack only needs OUR
+intent rendered correctly and validated by the exact pinned binary.
+Rejected: tracking upstream schema as closely as possible (lossy-by-design
+export, permanent treadmill); validate-only with no typed intent (abandons
+schema-first law on our own surface).
+
+## 2026-07-24 — applicator contracts + identity binding (REVISES: workstation deploy shape)
+
+**Question:** How does workstation-vs-remote apply get modeled, given local
+and SSH `systemd --user` applies have different privilege/session contracts
+and `command.local` proves neither drift nor target identity?
+
+**Answer:** Renderers stay 100% shared and pure. Two explicit applicator
+contracts (workstation-local, remote-SSH), each declaring target user/UID,
+runtime directory, bus reachability, linger ownership, and privilege
+boundary. Preflight tests the exact non-interactive context the apply uses
+AND binds the stack to target identity (`/etc/machine-id` + hostname + UID),
+failing before mutation on mismatch. Drift audit runs as a read-only step
+outside Command resources. Prototype-gated: non-interactive user-manager
+apply spike.
+
+**Rationale:** "Flip only the executor" understates real differences: linger
+is privileged, the user manager and `XDG_RUNTIME_DIR`/DBus must exist, and a
+local stack silently no-ops on the wrong machine. Rejected: keeping decision
+6 as-is (rediscovers enumerated failure modes live); SSH-to-self (reverses
+P1 for a loopback dependency without removing the linger/identity work).
+
+## 2026-07-24 — secrets bootstrap exception + rotation surface (EXTENDS: secrets posture)
+
+**Question:** How do we handle (a) the 1Password service-account token that
+cannot itself be an op:// reference and (b) same-reference rotation being
+invisible to config hashes?
+
+**Answer:** A recorded bootstrap exception: a tightly scoped
+`OP_SERVICE_ACCOUNT_TOKEN` delivered as a root-owned systemd credential
+(`LoadCredential`), provisioned out-of-band, never via Pulumi
+inputs/outputs/state, with a rotation and revocation runbook; preflight runs
+`op whoami` in the exact service environment. Rotation becomes an
+operational surface: post-rotation `openclaw secrets reload`,
+degraded-reload alerting, and an authenticated model/channel probe — all in
+the acceptance-probe set. Prototype-gated: same-ref rotation/reload spike.
+
+**Rationale:** OpenClaw resolves SecretRefs eagerly and only `secrets
+reload` refreshes them; content hashes cannot see rotation. Rejected:
+desktop-app integration (fails locked/absent — incompatible with unattended
+boot); porting the `op run` env wrapper as-is (plaintext env for process
+lifetime, restart-only rotation — strictly weaker than native refs).
+
+## 2026-07-24 — v1 DM channel is Telegram (REFINES: channels v1)
+
+**Question:** Which DM channel does v1 declare, now that the channel's
+writeback paths get live-tested under immutable config?
+
+**Answer:** Telegram, with `configWrites: false` rendered so its writeback
+surfaces (supergroup migration, defaultTo target writeback) take their
+graceful skip paths — verified live in the channel-under-guard portion of
+the prototype gauntlet. Discord is a no-go until the dankserver-migration
+goal.
+
+**Rationale:** Single bot-token secret ref, no privileged-intents ceremony,
+and its writeback surfaces are precisely mapped with file:line citations in
+the adversarial review — the skip-path test has known targets. Rejected:
+Discord (higher-unknown writeback surface, heavier setup); deferring to
+build time (leaves the first-slice prototype unspecifiable in MAP).
+
+## 2026-07-24 — state backup mitigation (REVISES: Pulumi state backend)
+
+**Question:** Does the single-disaster-domain problem (local Pulumi state +
+application state + sole operator on one workstation) get mitigated now?
+
+**Answer:** The local passphrase backend stands (consistency with every
+existing stack), and the apply runbook gains an automated encrypted
+off-machine state backup step (state file to dankserver over Tailscale;
+passphrase remains only in 1Password). SQLite generation snapshots leave the
+machine the same way. The remote-backend decision explicitly re-opens at the
+dankserver-migration goal.
+
+**Rationale:** Command-backed resources cannot reconstruct lost state via
+refresh, so backup is cheap insurance against an orphaned deployment.
+Rejected: standing up a remote backend now (reverses a fresh consistency
+decision, adds a service dependency to a workstation-only v1); accepting the
+risk unmitigated.
+
+## 2026-07-24 — prototypes are the goal's P0 gauntlet (CLOSES: research openQuestions)
+
+**Question:** Do the four gating prototypes run inside this exploration
+before shaping, or as phase 0 of the graduated goal?
+
+**Answer:** Goal P0. The four spikes — filesystem bypass/drift,
+non-interactive user-manager apply, same-ref rotation/reload, and
+upgrade-plus-failed-health rollback across SQLite schema stamps — become the
+graduated goal's phase P0 and hard-gate all implementation phases. Each
+GATE B decision above records its gating prototype; a failed prototype
+re-opens that decision in the goal's decision log. The exploration's
+openQuestions close as explicitly-deferred-with-rationale, satisfying the
+graduation definition-of-ready.
+
+**Rationale:** Explorations are docs-only; the goal packet is where code
+(even disposable code) lives, and the spikes get built properly there
+anyway. Rejected: spiking during P4 (blocks shape/decompose for days inside
+a docs surface); splitting only the filesystem spike forward (it is the
+least uncertain of the four).
