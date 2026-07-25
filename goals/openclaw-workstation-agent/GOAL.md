@@ -36,10 +36,10 @@ Scope:
 Workflow:
 
 1. `PLAN.md` phases are sequential and P0 hard-gates everything: run the
-   four-prototype gauntlet first (filesystem bypass/drift, non-interactive
-   user-manager apply, same-ref rotation/reload, upgrade+failed-health
-   rollback across SQLite stamps). A failed spike re-opens its decision in
-   `SPEC.md` Decision Log before any implementation phase runs.
+   four-prototype gauntlet first, per the executable per-spike contract in
+   `ops/handoffs/p0-gauntlet-contract.md` (isolation, assertions, cleanup,
+   evidence). A failed assertion re-opens its decision in `SPEC.md`
+   Decision Log before any implementation phase runs.
 2. Make the smallest change that satisfies `SPEC.md`; schema-first,
    effect-first; the driver must not depend on `shared/*`.
 3. Secrets are `op://` references as data; the single sanctioned exception is

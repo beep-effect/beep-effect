@@ -72,10 +72,15 @@ Binding design decisions (each traces to a dated entry in the exploration's
 [`DECISIONS.md`](../../explorations/openclaw-deployment-platform/DECISIONS.md);
 the four prototype-gated ones are re-openable ONLY via a failed P0 spike):
 
-- **OS-enforced immutability** — root-owned, hash-versioned config root;
-  `OPENCLAW_CONFIG_PATH` points at it; `OPENCLAW_NIX_MODE=1` is
+- **OS-enforced immutability** — hash-versioned config root with exact
+  permissions: config file `0644 root:root`, directories `0755 root:root`,
+  and a root-owned active-generation pointer whose parent is also
+  root-owned; `OPENCLAW_CONFIG_PATH` points at it; `OPENCLAW_NIX_MODE=1` is
   defense-in-depth only; independent drift audit (preflight hash + recurring
-  canary). Prototype-gated.
+  canary; the canary is alert-only in v1 — repair is an operator-driven
+  redeploy, never automatic). P0 must prove the service user cannot write,
+  truncate, replace, rename, or redirect the file or pointer while the
+  privileged applicator can switch generations. Prototype-gated.
 - **OpenClawGeneration state machine** — one hash-versioned revision binds
   package version, rendered config, unit, workspace artifacts, pinned
   skills, plugins. Upgrade: stage → validate with candidate binary → stop →
@@ -85,32 +90,54 @@ the four prototype-gated ones are re-openable ONLY via a failed P0 spike):
 - **Desired-intent schema, not upstream mirror** — the driver owns OUR
   deployment intent; a versioned render adapter targets the pinned OpenClaw
   version; acceptance = the candidate binary's plugin-aware
-  `config validate` + negative fixtures. Renderer emits canonical JSON
-  (upstream reads JSON5, writes canonical JSON; never depend on comments).
+  `config validate` + negative fixtures, AND a CI check that inspects the
+  pinned binary's schema export and fails on lossy/omitted placeholders for
+  any extension surface this deployment declares (channel, provider, plugin,
+  skill). Node version, OpenClaw package, plugin artifacts, adapter version,
+  and fixtures are versioned and tested as one compatibility set. Renderer
+  emits canonical JSON (upstream reads JSON5, writes canonical JSON; never
+  depend on comments).
 - **Applicator contract + identity binding** — renderers stay pure and
   applicator-agnostic; the workstation-local applicator declares user/UID,
   runtime dir, bus reachability, linger ownership, privilege boundary;
   preflight exercises the exact non-interactive `systemd --user` context and
-  binds the stack to `/etc/machine-id` + hostname + UID, failing before
-  mutation on mismatch. Prototype-gated.
+  binds the stack to `/etc/machine-id` + hostname + UID + expected home and
+  runtime paths, failing before mutation on mismatch. The drift audit's
+  inventory is normative and runs outside Command resources on every
+  preview/refresh-equivalent path: active-generation pointer, OpenClaw
+  package version, Node version, unit content, unit enabled/active state,
+  config hash + `config validate` result, and target identity — not just
+  the config file. Prototype-gated.
 - **Secrets** — `op://` references as data everywhere (typed
   `OnePasswordReference`), resolved by OpenClaw's native exec provider at
   runtime; ONE bootstrap exception (see Exception Ledger); rotation is an
-  operational surface (post-rotation `secrets reload`, degraded alerting,
-  authenticated probe). Prototype-gated. Plaintext secrets never appear in
-  tracked files, Pulumi inputs/outputs/state, rendered configs, or Command
-  outputs.
+  operational surface: post-rotation `secrets reload` must leave no stale or
+  cold owner on the revoked value, degraded-reload alerting must fire when
+  resolution breaks, and an authenticated model completion AND channel probe
+  must pass tied to the rotation event (not independently of it).
+  Prototype-gated. Plaintext secrets never appear in tracked files, Pulumi
+  inputs/outputs/state, rendered configs, or Command outputs.
 - **Writer-surface completeness** — there is no finite runtime-written key
   list; the gauntlet + live soak must confirm nothing operationally
-  essential breaks under the guard, especially Telegram's
-  `configWrites: false` skip paths.
+  essential breaks under the guard. The Telegram writer surfaces are tested
+  explicitly (login/bootstrap, pairing/first-owner persistence, `defaultTo`
+  writeback, reconnect, token swap, group→supergroup migration where
+  triggerable), producing a channel/plugin immutable-mode compatibility
+  matrix (writer → declarative render | graceful skip | INCOMPATIBLE); any
+  INCOMPATIBLE essential path re-opens the Telegram decision. See
+  [`ops/handoffs/p0-gauntlet-contract.md`](./ops/handoffs/p0-gauntlet-contract.md).
 - **Auth bootstrap ceremony** — login flows write secrets to SQLite AND
   `auth.profiles` metadata to config; the stack renders non-secret metadata
   declaratively and provisions credentials out-of-band; a worked runbook is
   required before the providers increment.
 - **Upgrade runbook** — doctor migrations are blocked by design; upgrades
   are re-render + generation switch, respecting `meta.lastTouchedVersion`
-  and the future-version guard.
+  and the future-version guard. The SQLite rollback proof is not one-time:
+  EVERY OpenClaw version bump runs a permanent checklist — classify shared
+  and per-agent migrations, exercise candidate startup against cloned state
+  (incl. WAL), force post-migration rejection, restore, and prove the
+  previous binary starts; irreversible migrations require a recorded
+  operator gate and a forward-recovery plan.
 - **Node-not-Bun service runtime** — the launcher rejects Bun (needs
   `node:sqlite`); the generation pins a supported Node even though repo
   tooling is Bun.
@@ -119,12 +146,20 @@ the four prototype-gated ones are re-openable ONLY via a failed P0 spike):
 - **Repo laws** — schema-first domain models, effect-first implementation;
   the driver must NOT depend on `shared/*` (do not repeat the
   `onepassword-cli` → `shared-domain` drift); Pulumi state stays on the
-  local passphrase backend with automated encrypted off-machine backup
-  (dankserver as dumb storage over Tailscale).
-- **Appetite (GATE C)** — one focused build cycle. Sanctioned cuts when
-  threatened: the proof skill, the local-model provider profile. Never cut:
-  immutable posture, generation state machine, typed intent schema. A
-  failed P0 prototype re-opens its decision; it does not extend the budget.
+  local passphrase backend. Off-machine backup covers BOTH classes:
+  encrypted Pulumi state AND encrypted shared/per-agent SQLite generation
+  snapshots (WAL-consistent), shipped to dankserver as dumb storage over
+  Tailscale with evidence of receipt and a worked restore drill — dankserver
+  itself is never modified beyond receiving files.
+- **Appetite (GATE C)** — one focused build cycle, with the gauntlet
+  allocated ~the first fifth; exhausting that allocation is itself a
+  stop-and-reshape condition. Sanctioned cuts when the cycle is threatened:
+  the proof skill, the local-model provider profile — a cut is exercised by
+  recording a dated decision-log entry here, after which the corresponding
+  acceptance criteria, PLAN exit criteria, manifest phase text, and README
+  are updated together. Never cut: immutable posture, generation state
+  machine, typed intent schema. A failed P0 prototype re-opens its decision;
+  it does not extend the budget.
 
 ## Decision Log
 
@@ -136,28 +171,40 @@ P0 prototype re-opens its gated decision here (not in the exploration).
 | Date | Decision | Status |
 | --- | --- | --- |
 | 2026-07-25 | Inherited: all exploration GATE A/B/C resolutions | binding |
+| 2026-07-25 | Post-graduation adversarial review (11 findings) tightened this SPEC, PLAN, and the P0 gauntlet contract; drift canary is alert-only in v1 (repair = operator-driven redeploy, never automatic) | binding |
 
 ## Acceptance Criteria
 
-- [ ] **P0 gauntlet passed** — all four spikes ran on the workstation with
-      recorded evidence in `history/`: (1) filesystem bypass/drift, (2)
-      non-interactive user-manager apply, (3) same-ref rotation/reload, (4)
-      upgrade + failed-health rollback across SQLite schema stamps. Any
-      failure produced a dated decision-log revision before further work.
+- [ ] **P0 gauntlet passed** — every assertion in
+      [`ops/handoffs/p0-gauntlet-contract.md`](./ops/handoffs/p0-gauntlet-contract.md)
+      demonstrated on the workstation with evidence archived under
+      `history/p0/` (four spikes: filesystem bypass/drift + writer surface,
+      non-interactive user-manager apply, same-ref rotation/reload,
+      upgrade + failed-health rollback across SQLite stamps). Any failed
+      assertion produced a dated decision-log revision before further work.
 - [ ] **Driver shipped** — `@beep/openclaw` exports the desired-intent
       schema, a versioned render adapter whose output passes the pinned
-      binary's `config validate` (plus negative fixtures), the CLI wrapper,
-      and the probe set; package passes repo quality gates.
+      binary's `config validate` (plus negative fixtures) with the lossy
+      schema-export CI guard in place, the CLI wrapper, and the probe set;
+      package passes repo quality gates.
 - [ ] **First vertical slice proven** — one minimal generation (gateway +
       Control UI, no channel/skills) deployed via `pulumi up`, healthy on
-      liveness+readiness, drift audit detects a deliberate manual config
-      edit, and a second generation switch with a forced failed-health
-      rollback restores the prior generation.
+      liveness+readiness, and a second generation switch with a forced
+      failed-health rollback restores the prior generation. The drift audit
+      demonstrates detection across its normative inventory — deliberate
+      drift in the generation pointer, package/Node version, unit content,
+      unit enabled/active state, and config file — plus preflight failure on
+      a wrong-identity target; both backup classes (encrypted Pulumi state,
+      encrypted SQLite snapshots) land on dankserver with a restore drill.
 - [ ] **Agent live** — Telegram DM round-trip and Control UI reachable;
       legal persona + guardrails rendered as generation artifacts
       (`configWrites: false`, advisory confidentiality, no real client
-      data); hosted primary + local provider profile; exactly one proof
-      skill installed declaratively.
+      data); the writer compatibility matrix verified against the live
+      channel. Unless cut by a dated decision-log entry (sanctioned
+      appetite cuts): hosted primary + local provider profile, and exactly
+      one benign proof skill installed declaratively — repo-local or
+      pinned, permissively licensed, no network/shell/secret access, no
+      client data, narrowly specified harmless behavior.
 - [ ] **Completion gate** — the work shipped as PR(s) driven to mergeable
       via `/yeet`; closeout reflection exists and
       `bun run beep lint reflection-artifacts` passes.

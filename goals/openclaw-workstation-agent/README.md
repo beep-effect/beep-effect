@@ -42,11 +42,12 @@ GATE C), research legs + adversarial review.
 ## Current Phase
 
 P0 Prototype gauntlet — not started. Next concrete action: run the four
-hard-gating spikes on the workstation (filesystem bypass/drift,
-non-interactive user-manager apply, same-ref rotation/reload,
-upgrade+failed-health rollback across SQLite stamps) and archive evidence
-under `history/`. No implementation phase may run before the gauntlet
-passes.
+hard-gating spikes on the workstation per the executable contract in
+[`ops/handoffs/p0-gauntlet-contract.md`](./ops/handoffs/p0-gauntlet-contract.md)
+(filesystem bypass/drift + writer surface, non-interactive user-manager
+apply, same-ref rotation/reload, upgrade+failed-health rollback across
+SQLite stamps) and archive evidence under `history/p0/`. No implementation
+phase may run before every contract assertion passes.
 
 ## Latest Evidence
 
@@ -54,11 +55,12 @@ Not started.
 
 ## Notes
 
-- Appetite (binding, GATE C 2026-07-25): one focused build cycle. Sanctioned
-  cuts: proof skill, local-model provider profile. Never cut: immutable
+- Appetite (binding, GATE C 2026-07-25): one focused build cycle, gauntlet
+  allocated ~the first fifth. Sanctioned cuts (via dated SPEC decision-log
+  entry): proof skill, local-model provider profile. Never cut: immutable
   posture, generation state machine, typed intent schema.
-- Implementation volume routes to claudex sessions; gate judgment stays with
-  Fable sessions (global routing doctrine).
+- Bulk implementation and gate-review judgment run as separate session
+  roles; the operator's session routing lives outside the repo.
 - Licenses: `nix-openclaw` upstream is AGPL-3.0 — clean-room study only;
   `schemalabz/nix-openclaw` is unlicensed — reference only. See
   `research/SOURCES.md`.

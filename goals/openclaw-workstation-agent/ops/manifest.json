@@ -32,6 +32,7 @@
     "goals/openclaw-workstation-agent/SPEC.md",
     "goals/openclaw-workstation-agent/PLAN.md",
     "goals/openclaw-workstation-agent/GOAL.md",
+    "goals/openclaw-workstation-agent/ops/handoffs/p0-gauntlet-contract.md",
     "goals/openclaw-workstation-agent/research/SOURCES.md",
     "explorations/openclaw-deployment-platform/BRIEF.md",
     "explorations/openclaw-deployment-platform/MAP.md",
@@ -65,7 +66,7 @@
     },
     {
       "id": "P3",
-      "name": "Live agent (Telegram + Control UI + proof skill)",
+      "name": "Live agent (Telegram + Control UI)",
       "status": "pending"
     },
     {
