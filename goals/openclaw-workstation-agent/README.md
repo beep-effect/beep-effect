@@ -41,17 +41,24 @@ GATE C), research legs + adversarial review.
 
 ## Current Phase
 
-P0 Prototype gauntlet — not started. Next concrete action: run the four
-hard-gating spikes on the workstation per the executable contract in
-[`ops/handoffs/p0-gauntlet-contract.md`](./ops/handoffs/p0-gauntlet-contract.md)
-(filesystem bypass/drift + writer surface, non-interactive user-manager
-apply, same-ref rotation/reload, upgrade+failed-health rollback across
-SQLite stamps) and archive evidence under `history/p0/`. No implementation
-phase may run before every contract assertion passes.
+P0 Prototype gauntlet — in progress (2 of 4 spikes passed). Spikes 2 and 4
+are complete with archived evidence under `history/p0/`; spikes 1 and 3 have
+authored harnesses awaiting operator prerequisites (sudo, throwaway Telegram
+bot + disposable test group, scoped 1Password service-account token +
+disposable editable test secret) per the executable contract in
+[`ops/handoffs/p0-gauntlet-contract.md`](./ops/handoffs/p0-gauntlet-contract.md).
+No implementation phase may run before every contract assertion passes.
 
 ## Latest Evidence
 
-Not started.
+- 2026-07-25 — Spike 2 (non-interactive user-manager apply): **PASS**,
+  [`history/p0/spike-2-user-manager/NOTES.md`](./history/p0/spike-2-user-manager/NOTES.md).
+- 2026-07-25 — Spike 4 (upgrade + failed-health rollback across SQLite
+  stamps): **PASS** in the v3 rerun (20 assertions, forward-recovery leg,
+  full pins, zero-residual postflight),
+  [`history/p0/spike-4-upgrade-rollback/NOTES.md`](./history/p0/spike-4-upgrade-rollback/NOTES.md).
+  The interrupted v2 run and its adversarial adjudication are archived
+  alongside as run history.
 
 ## Notes
 
