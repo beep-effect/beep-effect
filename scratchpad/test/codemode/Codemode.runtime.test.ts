@@ -237,6 +237,54 @@ describe("CodeMode runtime", () => {
   );
 
   it.effect(
+    "does not let shaped tool-hook defects spoof native guest errors",
+    Effect.fnUntraced(function* () {
+      const result = yield* CodeMode.execute({
+        code: `
+          try {
+            return await search({})
+          } catch (error) {
+            return error.name
+          }
+        `,
+        onToolCallStart: () => Effect.die({ name: "TypeError", message: "boom" }),
+      });
+
+      assert.strictEqual(result.ok, true);
+      if (result.ok === true) assert.strictEqual(result.value, "Error");
+    })
+  );
+
+  it.effect(
+    "keeps hostile proxy defects inside guest catch",
+    Effect.fnUntraced(function* () {
+      const hostile = new Proxy({}, {
+        get: () => {
+          throw new Error("blocked property read");
+        },
+        getPrototypeOf: () => {
+          throw new Error("blocked prototype read");
+        },
+      });
+      const result = yield* CodeMode.execute({
+        code: `
+          try {
+            return await search({})
+          } catch (error) {
+            return [error.name, error.message]
+          }
+        `,
+        onToolCallStart: () => Effect.die(hostile),
+      });
+
+      assert.strictEqual(result.ok, true);
+      if (result.ok === true) {
+        assert.deepEqual(result.value, A.make("Error", "<unprintable>"));
+      }
+    })
+  );
+
+  it.effect(
     "evaluates every finite binary family without operand assertions",
     Effect.fnUntraced(function* () {
       const result = yield* CodeMode.execute({
