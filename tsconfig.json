@@ -1557,6 +1557,9 @@
       ],
       "@beep/schema/SafeObject": [
         "./packages/foundation/modeling/schema/src/SafeObject/index.ts"
+      ],
+      "@beep/schema/JSONSchema": [
+        "./packages/foundation/modeling/schema/src/JSONSchema/index.ts"
       ]
     }
   }

@@ -254,6 +254,9 @@
       "@beep/schema/Int": [
         "../../../../packages/foundation/modeling/schema/src/Int.ts"
       ],
+      "@beep/schema/JSONSchema": [
+        "../../../../packages/foundation/modeling/schema/src/JSONSchema/index.ts"
+      ],
       "@beep/schema/Json": [
         "../../../../packages/foundation/modeling/schema/src/Json.ts"
       ],

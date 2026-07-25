@@ -11,13 +11,13 @@
     "omitted_fields": ["line", "col", "pos"]
   },
   "check": {
-    "total_findings": 5,
+    "total_findings": 6,
     "binaries": 0,
     "dependencies": 0,
     "devDependencies": 0,
     "enumMembers": 0,
     "exports": 3,
-    "files": 2,
+    "files": 3,
     "namespaceMembers": 0,
     "optionalPeerDependencies": 0,
     "types": 0,
@@ -39,6 +39,11 @@
       "kind": "exports",
       "file": "packages/tooling/tool/cli/src/internal/tsmorph/TypePredicates.ts",
       "name": "isTaggedTemplateSignature"
+    },
+    {
+      "kind": "files",
+      "file": ".agents/skills/browser-qa-loop/resources/qa-capture-template.mjs",
+      "name": ".agents/skills/browser-qa-loop/resources/qa-capture-template.mjs"
     },
     {
       "kind": "files",

@@ -241,6 +241,24 @@ export * from "./Int.ts";
  */
 export * from "./Int64.ts";
 /**
+ * Structured model of JSON Schema draft-2020-12 documents: recursive `Node`
+ * class, lossless wire codec, `boolean | Node` subschema union, document
+ * envelope, and local `$ref` resolvers.
+ *
+ * @example
+ * ```ts
+ * import { JSONSchema } from "@beep/schema"
+ * import * as S from "effect/Schema"
+ *
+ * const node = S.decodeUnknownSync(JSONSchema.NodeCodec)({ type: "object" })
+ * console.log(node)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * as JSONSchema from "./JSONSchema/index.ts";
+/**
  * @since 0.0.0
  * @category validation
  */
