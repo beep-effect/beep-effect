@@ -48,14 +48,14 @@ const formatConsoleValue = (
   if (P.isString(value)) return encodeJson(value);
   if (P.isNumber(value) || P.isBoolean(value)) return String(value);
   if (!P.isObjectKeyword(value)) return String(value);
-  if (S.is(CodeModePromise)(value)) return "[Promise (await it to get its value)]";
-  if (S.is(CodeModeDate)(value)) return coerceToString(value);
-  if (S.is(CodeModeRegExp)(value)) return coerceToString(value);
-  if (S.is(CodeModeURL)(value)) return coerceToString(value);
-  if (S.is(CodeModeURLSearchParams)(value)) return coerceToString(value);
+  if (CodeModePromise.is(value)) return "[Promise (await it to get its value)]";
+  if (CodeModeDate.is(value)) return coerceToString(value);
+  if (CodeModeRegExp.is(value)) return coerceToString(value);
+  if (CodeModeURL.is(value)) return coerceToString(value);
+  if (CodeModeURLSearchParams.is(value)) return coerceToString(value);
   if (depth > MAX_CONSOLE_DEPTH) return "...";
   if (MutableHashSet.has(seen, value)) return "[Circular]";
-  if (S.is(CodeModeMap)(value)) {
+  if (CodeModeMap.is(value)) {
     MutableHashSet.add(seen, value);
     try {
       const entries = pipe(
@@ -68,7 +68,7 @@ const formatConsoleValue = (
       MutableHashSet.remove(seen, value);
     }
   }
-  if (S.is(CodeModeSet)(value)) {
+  if (CodeModeSet.is(value)) {
     MutableHashSet.add(seen, value);
     try {
       return `Set(${value.set.size}) ${formatConsoleValue(A.fromIterable(value.set.values()), seen, depth + 1)}`;

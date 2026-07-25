@@ -7,7 +7,6 @@ import { FastCheck as fc } from "effect/testing";
 import {
   DiagnosticModel,
   ExecutionLimits,
-  ParseErrorDiagnostic,
   ResultModel,
 } from "../../codemode/Codemode.service.ts";
 import { IdentifierSegment, identifierSegment } from "../../codemode/Codemode.tool-schema.ts";
@@ -269,27 +268,12 @@ describe("CodeMode schema laws", () => {
   });
 
   it("encodes diagnostic defaults as a wire-compatible tagged object", () => {
-    const diagnostic = ParseErrorDiagnostic.new("Unexpected token");
+    const diagnostic = DiagnosticModel.new("ParseError", "Unexpected token");
 
-    expect(S.encodeSync(ParseErrorDiagnostic)(diagnostic)).toEqual({
+    expect(S.encodeSync(DiagnosticModel)(diagnostic)).toEqual({
       kind: "ParseError",
       message: "Unexpected token",
     });
-    assert.strictEqual(
-      DiagnosticModel.match(diagnostic, {
-        ParseError: ({ message }) => message,
-        UnsupportedSyntax: ({ message }) => message,
-        UnknownTool: ({ message }) => message,
-        InvalidToolInput: ({ message }) => message,
-        InvalidToolOutput: ({ message }) => message,
-        InvalidDataValue: ({ message }) => message,
-        ToolCallLimitExceeded: ({ message }) => message,
-        TimeoutExceeded: ({ message }) => message,
-        ToolFailure: ({ message }) => message,
-        ExecutionFailure: ({ message }) => message,
-        Truncated: ({ message }) => message,
-      }),
-      "Unexpected token"
-    );
+    assert.strictEqual(diagnostic.message, "Unexpected token");
   });
 });

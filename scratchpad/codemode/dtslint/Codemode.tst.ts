@@ -76,7 +76,7 @@ describe("CodeMode public types", () => {
 
   it("preserves Effect error and requirement channels", () => {
     expect(CodeMode.resolveExecutionLimits()).type.toBe<
-      Effect.Effect<CodeMode.ResolvedExecutionLimits, CodeMode.InvalidExecutionLimits, never>
+      Effect.Effect<CodeMode.ExecutionLimits, CodeMode.InvalidExecutionLimits, never>
     >();
     expect(CodeMode.execute({ code: "return 1" })).type.toBe<
       Effect.Effect<CodeMode.Result, CodeMode.InvalidExecutionLimits, never>

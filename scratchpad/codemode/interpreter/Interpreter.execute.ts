@@ -4,8 +4,9 @@ import { Cause, Effect, Result as Rs, Scope } from "effect"
 import * as S from "effect/Schema";
 import type * as Toolkit from "effect/unstable/ai/Toolkit";
 import { DiagnosticCategory, ModuleKind, ScriptTarget, flattenDiagnosticMessageText, transpileModule } from "typescript"
-import type { DataValue, Diagnostic, ExecuteOptions, ResolvedExecutionLimits, Result } from "../Codemode.service.ts"
-import { copyIn, copyOut, ToolRuntime, type Services } from "../Codemode.tool-runtime.ts"
+import type { DataValue, Diagnostic, ExecuteOptions, ExecutionLimits, Result } from "../Codemode.service.ts"
+import { copyIn, copyOut, type Services } from "../Codemode.tool-runtime.ts"
+import * as ToolRuntime from "../Codemode.tool-runtime.ts"
 import { normalizeError } from "./Interpreter.errors.ts"
 import { DiagnosticKind, InterpreterRuntimeError, ProgramNode } from "./Interpreter.model.ts"
 import { PromiseRuntime } from "./Interpreter.promises.ts"
@@ -13,7 +14,7 @@ import { Interpreter } from "./Interpreter.runtime.ts"
 
 export const executeWithLimits = <ToolkitType extends Toolkit.Toolkit<any>>(
   options: ExecuteOptions<ToolkitType>,
-  limits: ResolvedExecutionLimits,
+  limits: ExecutionLimits,
   preparedIndex?: ReadonlyArray<ToolRuntime.SearchEntry>,
 ): Effect.Effect<Result, never, Services<ToolkitType>> => {
   if (Str.isEmpty(Str.trim(options.code))) {

@@ -17,7 +17,6 @@ import * as S from "effect/Schema";
 import type { Diagnostic } from "../Codemode.service.ts"
 import {
   type AstNode,
-  CodeModeFunction,
   InterpreterFailure,
   InterpreterRuntimeError,
   ProgramThrow,
@@ -26,6 +25,7 @@ import {
   PromiseInstanceMethodReference,
   PromiseMethodName,
   PromiseMethodReference,
+  RuntimeReference,
 } from "./Interpreter.model.ts"
 import { caughtErrorValue, normalizeError } from "./Interpreter.errors.ts"
 import { applyCollectionCallback, isSupportedCallback, type CallbackRunner, type SupportedCallback } from "./Interpreter.methods.ts"
@@ -40,7 +40,7 @@ const failureFromCause = (
   cause: Cause.Cause<InterpreterFailure>
 ): InterpreterFailure => {
   const squashed = Cause.squash(cause);
-  return S.is(InterpreterFailure)(squashed)
+  return InterpreterFailure.is(squashed)
     ? squashed
     : InterpreterRuntimeError.new(normalizeError(squashed).message);
 };
@@ -152,7 +152,7 @@ export const resolvePromiseValue = <R>(
       (identity) => O.exists(MutableRef.get(identity), Eq.equals(value)),
     )
   ) return Effect.fail(selfResolutionError(node))
-  if (S.is(CodeModePromise)(value)) return runner.settlePromise(value)
+  if (CodeModePromise.is(value)) return runner.settlePromise(value)
   if (P.isNull(value) || !P.isObjectKeyword(value) || !P.hasProperty(value, "then")) return Effect.succeed(value)
   const then = SafeObject.make(value).then
   if (typeofValue(then) !== "function") return Effect.succeed(value)
@@ -182,7 +182,7 @@ export const resolvePromise = <R>(
   value: unknown,
   node: AstNode,
 ): Effect.Effect<CodeModePromise, never, R> => {
-  if (S.is(CodeModePromise)(value)) return Effect.succeed(value)
+  if (CodeModePromise.is(value)) return Effect.succeed(value)
   const identity = MutableRef.make<O.Option<CodeModePromise>>(O.none())
   return Effect.map(promises.create(resolvePromiseValue(runner, value, node, O.some(identity))), (promise) => {
     MutableRef.set(identity, O.some(promise))
@@ -371,7 +371,7 @@ export const constructPromise = <R>(
   executor: unknown,
   node: AstNode,
 ): Effect.Effect<CodeModePromise, InterpreterFailure, R> => {
-  if (!S.is(CodeModeFunction)(executor)) {
+  if (!RuntimeReference.guards.CodeModeFunction(executor)) {
     throw InterpreterRuntimeError.new(
       "new Promise(...) expects an executor function (e.g. new Promise((resolve, reject) => { ... })).",
       node,

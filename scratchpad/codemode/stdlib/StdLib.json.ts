@@ -163,20 +163,20 @@ const stringify = <R>(
 };
 
 const toJSONValue = (value: unknown): unknown => {
-  if (S.is(CodeModeDate)(value)) {
+  if (CodeModeDate.is(value)) {
     return S.is(S.Finite)(value.time)
       ? DateTime.makeUnsafe(value.time).pipe(DateTime.formatIso)
       : null;
   }
-  if (S.is(CodeModeURL)(value)) return value.url.href;
+  if (CodeModeURL.is(value)) return value.url.href;
   return value;
 };
 
 const isPlainObject = (value: unknown): value is SafeObject => P.isNotNull(value) &&
   P.isObjectKeyword(value) &&
-  !S.is(CodeModeDate)(value) &&
-  !S.is(CodeModeRegExp)(value) &&
-  !S.is(CodeModeMap)(value) &&
-  !S.is(CodeModeSet)(value) &&
-  !S.is(CodeModeURL)(value) &&
-  !S.is(CodeModeURLSearchParams)(value);
+  !CodeModeDate.is(value) &&
+  !CodeModeRegExp.is(value) &&
+  !CodeModeMap.is(value) &&
+  !CodeModeSet.is(value) &&
+  !CodeModeURL.is(value) &&
+  !CodeModeURLSearchParams.is(value);

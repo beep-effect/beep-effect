@@ -1,4 +1,5 @@
 import { $ScratchpadId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { Equal, Fiber } from "effect";
 import * as S from "effect/Schema";
 import type { InterpreterFailure } from "./interpreter/Interpreter.model.ts";
@@ -55,6 +56,8 @@ export class CodeModePromise extends S.Class<CodeModePromise>($I`CodeModePromise
     description: "Promise handle owned by one CodeMode execution.",
   })
 ) {
+  static readonly is = S.is(CodeModePromise);
+
   static readonly new = (
     fiber: Fiber.Fiber<unknown, InterpreterFailure>
   ): CodeModePromise =>
@@ -77,6 +80,8 @@ export class CodeModeDate extends S.Class<CodeModeDate>($I`CodeModeDate`)(
     description: "Mutable JavaScript Date value represented by epoch milliseconds.",
   })
 ) {
+  static readonly is = S.is(CodeModeDate);
+
   static readonly new = (time: number): CodeModeDate => CodeModeDate.make({ time });
 }
 
@@ -92,6 +97,8 @@ export class CodeModeRegExp extends S.Class<CodeModeRegExp>($I`CodeModeRegExp`)(
     description: "Mutable JavaScript RegExp value.",
   })
 ) {
+  static readonly is = S.is(CodeModeRegExp);
+
   static readonly new = (pattern: string, flags: string): CodeModeRegExp =>
     CodeModeRegExp.make({ regex: new RegExp(pattern, flags) });
 
@@ -116,6 +123,8 @@ export class CodeModeMap extends S.Class<CodeModeMap>($I`CodeModeMap`)(
     description: "Mutable JavaScript Map value.",
   })
 ) {
+  static readonly is = S.is(CodeModeMap);
+
   // crispen: native Map is the guest-language semantic adapter; a HashMap
   // cannot preserve object identity, SameValueZero, or live mutation.
   static readonly new = (): CodeModeMap => CodeModeMap.make({ map: new Map() });
@@ -133,6 +142,8 @@ export class CodeModeSet extends S.Class<CodeModeSet>($I`CodeModeSet`)(
     description: "Mutable JavaScript Set value.",
   })
 ) {
+  static readonly is = S.is(CodeModeSet);
+
   // crispen: native Set is the guest-language semantic adapter; a HashSet
   // cannot preserve object identity, SameValueZero, or live mutation.
   static readonly new = (): CodeModeSet => CodeModeSet.make({ set: new Set() });
@@ -150,6 +161,8 @@ export class CodeModeURLSearchParams extends S.Class<CodeModeURLSearchParams>($I
     description: "Mutable JavaScript URLSearchParams value.",
   })
 ) {
+  static readonly is = S.is(CodeModeURLSearchParams);
+
   static readonly new = (params: URLSearchParams): CodeModeURLSearchParams =>
     CodeModeURLSearchParams.make({ params });
 }
@@ -169,6 +182,8 @@ export class CodeModeURL extends S.Class<CodeModeURL>($I`CodeModeURL`)(
     description: "Mutable JavaScript URL value.",
   })
 ) {
+  static readonly is = S.is(CodeModeURL);
+
   static readonly new = (url: URL): CodeModeURL =>
     CodeModeURL.make({
       searchParams: CodeModeURLSearchParams.new(url.searchParams),
@@ -177,18 +192,28 @@ export class CodeModeURL extends S.Class<CodeModeURL>($I`CodeModeURL`)(
 }
 
 /**
- * Identifies values whose native mutation and identity semantics are part of
- * the guest JavaScript contract.
+ * Values whose native mutation and identity semantics are part of the guest
+ * JavaScript contract.
  *
- * @category guards
+ * @category models
  * @since 0.0.0
  */
-export const isCodeModeValue = (
-  value: unknown
-): value is CodeModeDate | CodeModeRegExp | CodeModeMap | CodeModeSet | CodeModeURL | CodeModeURLSearchParams =>
-  S.is(CodeModeDate)(value) ||
-  S.is(CodeModeRegExp)(value) ||
-  S.is(CodeModeMap)(value) ||
-  S.is(CodeModeSet)(value) ||
-  S.is(CodeModeURL)(value) ||
-  S.is(CodeModeURLSearchParams)(value);
+export const CodeModeValue = S.Union([
+  CodeModeDate,
+  CodeModeRegExp,
+  CodeModeMap,
+  CodeModeSet,
+  CodeModeURL,
+  CodeModeURLSearchParams,
+]).pipe(
+  $I.annoteSchema("CodeModeValue", {
+    description: "Mutable guest values backed by native JavaScript state.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/** Runtime type for {@link CodeModeValue}. */
+export type CodeModeValue = typeof CodeModeValue.Type;
+
+/** Guard for {@link CodeModeValue}. */
+export const isCodeModeValue = CodeModeValue.is;

@@ -353,6 +353,8 @@ export class CodeModeGenerator extends S.TaggedClass<CodeModeGenerator>($I`CodeM
     description: "A guest generator backed by an Effect request function.",
   })
 ) {
+  static readonly is = S.is(CodeModeGenerator);
+
   static readonly new = (
     asynchronous: boolean,
     request: (
@@ -362,10 +364,6 @@ export class CodeModeGenerator extends S.TaggedClass<CodeModeGenerator>($I`CodeM
     ) => Effect.Effect<unknown, InterpreterFailure>
   ): CodeModeGenerator => CodeModeGenerator.make({asynchronous, request});
 }
-
-const CodeModeGeneratorReference = S.declare<CodeModeGenerator>(
-  (u: unknown): u is CodeModeGenerator => S.is(CodeModeGenerator)(u)
-);
 
 /** Operations exposed by a guest generator reference. */
 export const GeneratorMethodKind = LiteralKit([
@@ -386,7 +384,7 @@ export type GeneratorMethodKind = typeof GeneratorMethodKind.Type;
 export class GeneratorMethodReference extends S.TaggedClass<GeneratorMethodReference>($I`GeneratorMethodReference`)(
   "GeneratorMethodReference",
   {
-    generator: CodeModeGeneratorReference,
+    generator: CodeModeGenerator,
     kind: GeneratorMethodKind,
   },
   $I.annote("GeneratorMethodReference", {
@@ -424,6 +422,8 @@ export class ComputedValue extends S.TaggedClass<ComputedValue>($I`ComputedValue
     description: "A computed guest value retained through assignment evaluation.",
   })
 ) {
+  static readonly is = S.is(ComputedValue);
+
   static readonly new = (value: unknown): ComputedValue => ComputedValue.make({value});
 }
 
@@ -750,7 +750,8 @@ export const RuntimeReference = S.Union([
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("RuntimeReference", {
     description: "All schema-owned interpreter references and control wrappers.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /** Runtime type for {@link RuntimeReference}. */
@@ -843,7 +844,8 @@ export const InterpreterFailure = S.Union([
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("InterpreterFailure", {
     description: "Closed recoverable failure channel for guest evaluation and host tool calls.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /** Runtime type for {@link InterpreterFailure}. */

@@ -6,27 +6,11 @@ import {
   DiagnosticKind,
   type AstNode,
   formatLocation,
-  type InterpreterFailure,
+  InterpreterFailure,
   InterpreterRuntimeError,
-  ProgramThrow,
   sourceLocation,
 } from "./Interpreter.model.ts";
-import {
-  DiagnosticModel,
-  DiagnosticLocation,
-  ExecutionFailureDiagnostic,
-  InvalidDataValueDiagnostic,
-  InvalidToolInputDiagnostic,
-  InvalidToolOutputDiagnostic,
-  ParseErrorDiagnostic,
-  TimeoutExceededDiagnostic,
-  ToolCallLimitExceededDiagnostic,
-  ToolFailureDiagnostic,
-  TruncatedDiagnostic,
-  UnknownToolDiagnostic,
-  UnsupportedSyntaxDiagnostic,
-  type Diagnostic,
-} from "../Codemode.service.ts";
+import type { Diagnostic } from "../Codemode.service.ts";
 import { ToolError } from "../Codemode.tool-error.ts";
 import { copyOut, ToolRuntimeError } from "../Codemode.tool-runtime.ts";
 import { type SyncIteratorRunner } from "./Interpreter.iterator.ts";
@@ -38,47 +22,28 @@ import {
   errorConstructors,
 } from "../stdlib/index.ts";
 
-const toWireDiagnostic = (model: DiagnosticModel): Diagnostic =>
-  pipe(
-    S.encodeUnknownResult(DiagnosticModel)(model),
-    Result.getOrElse((): Diagnostic => ({
-      kind: "ExecutionFailure",
-      message: model.message,
-    }))
-  );
-
 const makeDiagnostic = (
   kind: DiagnosticKind,
   message: string,
-  location?: DiagnosticLocation,
+  location?: Diagnostic["location"],
   suggestions?: ReadonlyArray<string>
-): Diagnostic =>
-  toWireDiagnostic(
-    DiagnosticKind.$match(kind, {
-      ParseError: () => ParseErrorDiagnostic.new(message, location, suggestions),
-      UnsupportedSyntax: () => UnsupportedSyntaxDiagnostic.new(message, location, suggestions),
-      UnknownTool: () => UnknownToolDiagnostic.new(message, location, suggestions),
-      InvalidToolInput: () => InvalidToolInputDiagnostic.new(message, location, suggestions),
-      InvalidToolOutput: () => InvalidToolOutputDiagnostic.new(message, location, suggestions),
-      InvalidDataValue: () => InvalidDataValueDiagnostic.new(message, location, suggestions),
-      ToolCallLimitExceeded: () => ToolCallLimitExceededDiagnostic.new(message, location, suggestions),
-      TimeoutExceeded: () => TimeoutExceededDiagnostic.new(message, location, suggestions),
-      ToolFailure: () => ToolFailureDiagnostic.new(message, location, suggestions),
-      ExecutionFailure: () => ExecutionFailureDiagnostic.new(message, location, suggestions),
-      Truncated: () => TruncatedDiagnostic.new(message, location, suggestions),
-    })
-  );
+): Diagnostic => ({
+  kind,
+  message,
+  ...(P.isUndefined(location) ? {} : { location }),
+  ...(P.isUndefined(suggestions) ? {} : { suggestions }),
+});
 
 /** Normalizes an interpreter, Toolkit, guest, or host failure to public data. */
 export const normalizeError = (error: unknown): Diagnostic => {
-  if (S.is(InterpreterRuntimeError)(error)) {
+  if (InterpreterFailure.guards.InterpreterRuntimeError(error)) {
     const node = O.getOrUndefined(error.node);
     return makeDiagnostic(
       error.kind,
       `${error.message}${formatLocation(node)}`,
       P.isUndefined(node?.loc)
         ? undefined
-        : DiagnosticLocation.new(sourceLocation(node).line, sourceLocation(node).column),
+        : sourceLocation(node),
       O.getOrUndefined(error.suggestions)
     );
   }
@@ -91,7 +56,7 @@ export const normalizeError = (error: unknown): Diagnostic => {
     );
   }
   if (S.is(ToolError)(error)) return makeDiagnostic("ToolFailure", error.message);
-  if (S.is(ProgramThrow)(error)) {
+  if (InterpreterFailure.guards.ProgramThrow(error)) {
     const value = error.value;
     const message = containsRuntimeReference(value)
       ? "a non-data value"
@@ -116,8 +81,10 @@ export const normalizeError = (error: unknown): Diagnostic => {
 
 /** Converts a host-side failure into the guest Error object representation. */
 export const caughtErrorValue = (thrown: unknown): unknown => {
-  if (S.is(ProgramThrow)(thrown)) return thrown.value;
-  if (S.is(InterpreterRuntimeError)(thrown)) return createErrorValue(thrown.errorName, thrown.message);
+  if (InterpreterFailure.guards.ProgramThrow(thrown)) return thrown.value;
+  if (InterpreterFailure.guards.InterpreterRuntimeError(thrown)) {
+    return createErrorValue(thrown.errorName, thrown.message);
+  }
   const name = P.isError(thrown) && S.is(errorConstructors)(thrown.name) ? thrown.name : "Error";
   return createErrorValue(name, normalizeError(thrown).message);
 };

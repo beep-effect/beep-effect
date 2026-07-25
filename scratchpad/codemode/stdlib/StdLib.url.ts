@@ -79,7 +79,7 @@ export const invokeUriFunction = (
 }
 
 export const urlArgument = (value: unknown, label: string): string =>
-  S.is(CodeModeURL)(value) ? value.url.href : uriArgument(value, label)
+  CodeModeURL.is(value) ? value.url.href : uriArgument(value, label)
 
 export const invokeURLStatic = (name: string, args: Array<unknown>, node: AstNode): unknown => {
   if (!S.is(UrlStatic)(name)) throw InterpreterRuntimeError.new(`URL.${name} is not available.`, node)

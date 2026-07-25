@@ -27,7 +27,7 @@ export const invokeObjectMethod = (name: string, args: Array<unknown>, node: Ast
     const input = args[0]
     if (A.isArray(input)) return input as unknown as Record<string, unknown>
     if (isCodeModeValue(input)) return {}
-    if (S.is(CodeModePromise)(input)) {
+    if (CodeModePromise.is(input)) {
       throw InterpreterRuntimeError.new(
         `Object.${name} received an un-awaited Promise; await it before inspecting the result.`,
         node,

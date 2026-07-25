@@ -1,3 +1,1 @@
-import { LiteralKit } from "@beep/schema"
-
-export const promiseStatics = LiteralKit(["all", "allSettled", "race", "any", "resolve", "reject"])
+export { PromiseMethodName as promiseStatics } from "../interpreter/Interpreter.model.ts"
