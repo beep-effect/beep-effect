@@ -8,7 +8,7 @@ import { ToolReference } from "../Codemode.tool-runtime.ts"
 import { isCodeModeValue, CodeModePromise } from "../Codemode.values.ts"
 import { MutableHashSet } from "effect"
 import * as S from "effect/Schema"
-import { A, P } from "@beep/utils";
+import { A, P, R } from "@beep/utils";
 export const isRuntimeReference = (value: unknown): boolean =>
   S.is(RuntimeReference)(value) ||
   ToolReference.is(value) ||
@@ -38,7 +38,7 @@ function* childValues(value: object): Generator<unknown> {
     for (let index = 0; index < length; index++) yield value[index]
     return
   }
-  yield* Object.values(value)
+  yield* R.values(value)
 }
 
 export const containsRuntimeReference = (value: unknown): boolean => {
@@ -105,7 +105,7 @@ export const rejectCircularInsertion = (container: object, value: unknown, label
 
 export const typeofValue = (value: unknown): string => {
   if (S.is(RuntimeReference)(value) && isFunctionRuntimeReference(value)) return "function"
-  if (ToolReference.is(value)) return value.path.length > 0 ? "function" : "object"
+  if (ToolReference.is(value)) return A.isReadonlyArrayNonEmpty(value.path) ? "function" : "object"
   if (S.is(GlobalNamespace)(value)) {
     return GlobalNamespace.match(value, {
       Object: () => "function",
