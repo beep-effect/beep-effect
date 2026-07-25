@@ -41,17 +41,22 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 ### Active
 
 - [`academia-corpus-mining`](./academia-corpus-mining/README.md) —
-  research-stage: 443 canonical Academia.edu papers (June-29 agent/memory
-  wave + July-24/25 legal-ontology wave) mined through a tiered pipeline —
-  T1 triage of all 443, 185 Sol-max T2 deep-reads (42 gold / 125 silver /
-  15 bronze / 3 dross), 7 cluster reports + a repo-grounded master
-  synthesis with a 36-route table (attach/extend/new-exploration; recorded,
-  not executed) and 13 align-stage questions. Adopts the June-29 prior
-  synthesis (72 papers deep-read, snippets errata-flagged) as
+  align-stage: 443 canonical Academia.edu papers mined through a tiered
+  pipeline (T1 triage of all 443, 185 Sol-max T2 deep-reads — 42 gold /
+  125 silver / 15 bronze / 3 dross — 7 cluster reports + a repo-grounded
+  master synthesis with a 36-route table and 13 align questions). Align
+  closed nine decisions 2026-07-25: all 15 high-priority routes dispatched
+  as bounded notes into 11 target packets + 2 new capture packets
+  (`agent-execution-sandbox`, `model-artifact-admission`);
+  prose-to-proof's "becomes a fact" language will be replaced with
+  typed-verdict vocabulary (separate binding-doc PR); belief views compose
+  first over the bitemporal core; argumentation follows semantic-foundation
+  M1. Adopts the June-29 prior synthesis (snippets errata-flagged) as
   [`research/prior-synthesis-legal-ontologies.md`](./academia-corpus-mining/research/prior-synthesis-legal-ontologies.md);
   normalized corpus lives externally (`~/YeeBois/research/academia-2026-07/`,
-  public-repo copyright discipline). Next: align — pick which routes
-  execute.
+  public-repo copyright discipline). Parks after the binding-doc PR;
+  revival trigger: wave 2 over the June-29 backlog (97 legal-NLP papers
+  first).
 - [`agent-effectiveness-pulse`](./agent-effectiveness-pulse/README.md) — a
   data-driven pulse on repo agent friendliness/effectiveness (stage
   `graduate`, opened 2026-07-14, still active for wave 2): which skills are
@@ -71,10 +76,21 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   durability landed as `ai-metrics-stack` P7f (v1-blocking, gates P7e).
   Wave-2 candidates (`yeet-verdict-instrumentation`, `repo-replay-evals`)
   gate on wave-1 OTel attributes flowing.
+- [`agent-execution-sandbox`](./agent-execution-sandbox/README.md) —
+  capture-stage: default-deny execution authority for agent-run code —
+  typed sandbox capability grants, resource limits, network policy, and
+  immutable execution records; routed out of `academia-corpus-mining`
+  (align dispatch 2026-07-25). Carries master align Q10: what is the first
+  action-authorization proof.
 - [`agent-governance-control-plane`](./agent-governance-control-plane/README.md) —
   capture-stage preservation of the paused goal’s load-bearing governance
   design: ordered law canon, explicit role authority, gated lifecycle,
   decision-complete artifacts, and expiring exception contracts.
+- [`model-artifact-admission`](./model-artifact-admission/README.md) —
+  capture-stage: bind model qualification to the exact model, adapter,
+  modality, prompt, wrapper, decoding configuration, and artifact digest —
+  no qualification transfer across any substitution; routed out of
+  `academia-corpus-mining` (align dispatch 2026-07-25).
 - [`knowledge-workspace`](./knowledge-workspace/README.md) — capture-stage
   product vision for an immutable event journal projected into a live graph,
   Lexical wiki-link authoring/backlinks, and auditable temporal replay; stale

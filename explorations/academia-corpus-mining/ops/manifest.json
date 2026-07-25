@@ -4,13 +4,10 @@
     "slug": "academia-corpus-mining",
     "title": "Academia Corpus Mining",
     "status": "active",
-    "stage": "research",
+    "stage": "align",
     "openQuestions": [
-      "Which of the 36 routing-table routes (10 attach-to / 10 extend / 16 new-exploration; canonical table in research/t3-master-synthesis.md) should actually be executed, and in what order?",
-      "Should docs/product/prose-to-proof.md and the approval policy replace the 'becomes a fact' / 'authoritative runtime truth' language, or keep those terms with a narrow repository-state meaning? (master synthesis, align question 2)",
-      "What is the first downstream composition over the bitemporal core: preferred belief views, legal multitemporality, exact-version telemetry, or interpretation/closure records? (master synthesis, align question 4)",
-      "Does the June-29 ~240-paper catalogued backlog (especially the 97 legal-NLP/extraction papers) warrant a follow-up mining wave? (master synthesis, align question 13)",
-      "Do the T3 findings change priorities inside the four target work streams — the full 13 align-stage questions live in research/t3-master-synthesis.md 'Open questions for the align stage'?"
+      "Deferred (parked revival trigger): run the approved wave-2 mining pass over the June-29 backlog — starting with the 97 legal-NLP/extraction papers — once the 15-route dispatch has fully landed (align decision, 2026-07-25).",
+      "Deferred to routed targets (align decision, 2026-07-25): master align Q1+Q3 → goals/epistemic-bitemporal-edge-core dispatch note; Q5 → goals/identity-iri-fold note; Q7 → explorations/citation-grounding-hallucination-guard note; Q8+Q9 → recorded doc-structure medium routes; Q10 → explorations/agent-execution-sandbox manifest."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
