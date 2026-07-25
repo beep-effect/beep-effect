@@ -14,10 +14,10 @@ const $I = $SchemaId.create("SafeObject");
  * Brands a string-keyed unknown record as a safe object.
  *
  * @remarks
- * Decoding follows {@link UnknownRecord}: enumerable own string-keyed
- * properties are copied into a new record. The brand is nominal and does not
- * guarantee JSON serialization, a plain-object prototype, or sanitized
- * property names.
+ * Inputs need not use a plain-object prototype. Decoding follows
+ * {@link UnknownRecord} by copying enumerable own string-keyed properties into
+ * a new ordinary object. The brand is nominal and does not guarantee JSON
+ * serialization or sanitize property names.
  *
  * @example
  * ```ts

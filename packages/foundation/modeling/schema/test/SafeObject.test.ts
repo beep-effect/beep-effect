@@ -50,10 +50,10 @@ describe("SafeObject", () => {
     "normalizes record-like objects to their enumerable own properties",
     Effect.fnUntraced(function* () {
       class RecordLike {
-        constructor(readonly label: string) {}
+        readonly label = "ready";
       }
 
-      const input = new RecordLike("ready");
+      const input = new RecordLike();
       const value = yield* decode(input);
 
       expect(value).toEqual({ label: "ready" });
