@@ -378,3 +378,115 @@ graduation definition-of-ready.
 anyway. Rejected: spiking during P4 (blocks shape/decompose for days inside
 a docs surface); splitting only the filesystem spike forward (it is the
 least uncertain of the four).
+
+<!-- GATE C entries below: resolved 2026-07-25 in the graduation grilling.
+One material scope revision (dankserver migration struck) plus the shape
+sign-off, final appetite, and graduation mechanics. -->
+
+## 2026-07-25 — BRIEF confirmed (GATE C shape sign-off)
+
+**Question:** Does the rewritten BRIEF match the picture in the human's head
+— the formal stage-3 exit signal?
+
+**Answer:** Confirmed as-is, amended only by the scope revision recorded
+below (dankserver migration struck). The OpenClawGeneration-centered sketch,
+rabbit holes, and no-gos stand.
+
+**Rationale:** Every element of the shape traces to a dated GATE B entry;
+the two riskiest calls (OS-enforced immutability, advisory-only
+confidentiality) came out of the adversarial review, not optimism.
+
+## 2026-07-25 — appetite: one focused cycle (final)
+
+**Question:** What is the binding appetite for the graduated goal?
+
+**Answer:** One focused build cycle — a contiguous run of implementation
+sessions with this as the primary bet — sequenced gauntlet-first (~the first
+fifth), then driver + generation engine + applicator, then the live agent.
+Sanctioned cuts if the cycle is threatened: the proof skill, the local-model
+provider profile. Never cut: the immutable-config posture, the generation
+state machine, the typed intent schema. A failed P0 prototype re-opens its
+gated decision; it does not extend the budget.
+
+**Rationale:** The expensive uncertainty is spent first and the cuttable
+tail is genuinely cuttable. Rejected: half-cycle gauntlet+slice-only
+(re-bets the live agent separately for no added safety); no hard bound
+(drops circuit-breaker discipline on an enabling-substrate packet that must
+not crowd out product work).
+
+## 2026-07-25 — dankserver migration struck (REVISES: one packet, workstation-first)
+
+**Question:** Does the dankserver migration remain this platform's second
+goal candidate?
+
+**Answer:** No — struck entirely, not deferred. dankserver's Ansible
+openclaw role stays as-is indefinitely; it is evidence of the problem, never
+a target. The platform's identity changes from "greenfield proof, then
+migrate dankserver" to **how new OpenClaw instances get deployed — this
+Linux workstation first**. `dankserver-openclaw-migration` is removed from
+MAP.md; no second goal exists.
+
+**Rationale:** The human clarified intent at GATE C: no desire to migrate
+dankserver at all. Consequences for earlier entries: the migration-goal
+framing in "one packet, workstation-first", the migration-shaping hooks in
+"dankserver bundle patches" (now moot — the remnant simply persists), the
+"Discord no-go until the dankserver-migration goal" clause (now a plain
+no-go), and the "remote-backend decision re-opens at the migration goal"
+clause (now: re-opens only if a future new remote instance materializes)
+are all superseded by this entry.
+
+## 2026-07-25 — graduation scope: openclaw-workstation-agent only
+
+**Question:** Which candidates graduate to `goals/` now?
+
+**Answer:** Exactly one: `goals/openclaw-workstation-agent` (full executable
+template, born `active`). With the migration candidate struck there are no
+residual candidates, so the exploration flips to `graduated` in the same PR.
+
+**Rationale:** The graduation contract's status rule ("graduated, or keep
+active if more candidates remain") resolves cleanly — nothing remains.
+
+## 2026-07-25 — applicator seam survives workstation-only (RE-MOTIVATES: applicator contracts + identity binding)
+
+**Question:** Does the two-applicator-contract seam survive the death of the
+migration that motivated the remote half?
+
+**Answer:** Yes — renderers stay applicator-agnostic behind the explicit
+applicator contract, but only the workstation-local applicator is built.
+The remote-SSH contract survives as a designed seam re-motivated by future
+NEW instances (possibly remote), not by migration.
+
+**Rationale:** The seam is an interface boundary, not speculative code; the
+GATE B preflight/identity-binding design is unchanged. Rejected: collapsing
+to workstation-specific renderers (a future remote instance would refactor
+the seam back in at higher cost).
+
+## 2026-07-25 — state backup target reconfirmed (REAFFIRMS: state backup mitigation)
+
+**Question:** Do encrypted off-machine Pulumi-state backups still ship to
+dankserver, given "dankserver stays as-is"?
+
+**Answer:** Yes — dankserver serves as dumb storage: encrypted state
+archives and SQLite generation snapshots ship to it over Tailscale;
+receiving files touches nothing in its OpenClaw/Ansible stack. The
+remote-backend decision re-opens only if a future new remote instance
+materializes.
+
+**Rationale:** "Stays as-is" means its openclaw layer is never a migration
+target, not that the machine is unusable as a backup destination. Rejected:
+picking a new destination (adds a moving part for no risk reduction);
+local-only v1 (weakens the disaster-recovery story the review flagged).
+
+## 2026-07-25 — no second oracle pass; GATE D closes the mission
+
+**Question:** Run a second adversarial /oracle pass over the graduated SPEC
+before GATE D?
+
+**Answer:** No. The SPEC restates already-reviewed design and today's scope
+change shrinks the surface; the empirical verifier from here is the goal's
+P0 prototype gauntlet. GATE D (final grill after graduation lands) closes
+the mission.
+
+**Rationale:** The first pass already reshaped the design at maximum
+leverage; a second pass would re-litigate reviewed material. Cost was not
+the argument — browser submit is unblocked — redundancy was.

@@ -2,10 +2,14 @@
 
 ## Status
 
-Stage: `decompose`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+Graduated 2026-07-25 into
+[`goals/openclaw-workstation-agent`](../../goals/openclaw-workstation-agent/README.md).
+This packet remains as provenance.
 
 ## Spark
 
@@ -14,11 +18,16 @@ TypeScript-native Pulumi + Effect stack in this repo — then use what the
 greenfield build proves to migrate dankserver's ~4790-line imperative Ansible
 openclaw role onto the same declarative platform.
 
+(GATE C revision, 2026-07-25: the migration half of the spark was struck —
+dankserver stays on Ansible indefinitely; the platform deploys NEW OpenClaw
+instances, workstation first. See DECISIONS.md.)
+
 ## Next Open Question
 
-GATE C: does the rewritten BRIEF match the picture in the human's head, and
-what is the final appetite? Then graduation of `openclaw-workstation-agent`
-(and the `dankserver-openclaw-migration` candidate) per MAP.md.
+None — the packet is closed. Execution lives in
+[`goals/openclaw-workstation-agent`](../../goals/openclaw-workstation-agent/README.md)
+(P0 = the four-prototype gauntlet; a failed spike re-opens its gated decision
+in the goal's decision log, not here).
 
 ## Read This First
 
@@ -31,6 +40,15 @@ what is the final appetite? Then graduation of `openclaw-workstation-agent`
 
 ## Trail
 
+- 2026-07-25: GATE C passed and the packet graduated. Grilling closed 7
+  branches: BRIEF confirmed, appetite locked (one focused cycle), and one
+  material scope revision — the dankserver migration struck entirely
+  (dankserver stays on Ansible; the platform deploys new instances,
+  workstation first). `dankserver-openclaw-migration` removed from MAP; the
+  applicator seam survives workstation-only; dankserver stays the dumb-storage
+  backup target; no second oracle pass. Graduated
+  `goals/openclaw-workstation-agent` (SPEC seeded from BRIEF, P0 = prototype
+  gauntlet, appetite binding); status flipped to `graduated` in the same PR.
 - 2026-07-24 (late night): GATE B passed — 8 grilling resolutions recorded in
   DECISIONS.md (OS-enforced config root, OpenClawGeneration state machine,
   desired-intent schema + render adapters, applicator contracts + identity

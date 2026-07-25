@@ -6,6 +6,12 @@ repo (cited), and what exists inside it (so we compose bricks instead of
 rebuilding them). Date sections; research goes stale.
 -->
 
+> Provenance note (2026-07-25): the dated legs below predate GATE C, which
+> struck the dankserver migration entirely — dankserver stays on Ansible;
+> the platform deploys new OpenClaw instances only. Migration-framed
+> passages are historical context, not the plan of record. See the GATE C
+> entries in [`DECISIONS.md`](./DECISIONS.md).
+
 ## External Landscape
 
 ### 2026-07-24 — OpenClaw operational surface (docs index survey)

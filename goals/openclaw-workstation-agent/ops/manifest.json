@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "openclaw-workstation-agent",
+    "title": "OpenClaw Workstation Agent",
+    "status": "active",
+    "created": "2026-07-25",
+    "updated": "2026-07-25",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/openclaw-workstation-agent",
+  "lifecycle": "active",
+  "mission": "Deploy a legal-focused OpenClaw agent on the workstation as immutable, generation-based, Pulumi+Effect-managed infrastructure — prototype gauntlet first, then driver, then live agent.",
+  "statusNote": "P0 hard gate: the four-prototype gauntlet (filesystem bypass/drift, non-interactive user-manager apply, same-ref rotation/reload, upgrade+failed-health rollback across SQLite stamps) must pass before any implementation phase; a failed spike re-opens its gated decision in the SPEC decision log.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/openclaw-deployment-platform",
+    "graduated": "2026-07-25"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/openclaw-workstation-agent/README.md",
+    "goals/openclaw-workstation-agent/SPEC.md",
+    "goals/openclaw-workstation-agent/PLAN.md",
+    "goals/openclaw-workstation-agent/GOAL.md",
+    "goals/openclaw-workstation-agent/research/SOURCES.md",
+    "explorations/openclaw-deployment-platform/BRIEF.md",
+    "explorations/openclaw-deployment-platform/MAP.md",
+    "explorations/openclaw-deployment-platform/DECISIONS.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/openclaw-workstation-agent/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Prototype gauntlet",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Driver (@beep/openclaw)",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Generation engine + workstation applicator",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Live agent (Telegram + Control UI + proof skill)",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close: Yeet PRs to mergeable + reflection",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/openclaw-workstation-agent/GOAL.md)\" -le 4000",
+    "jq . goals/openclaw-workstation-agent/ops/manifest.json",
+    "rg -n \"openclaw-workstation-agent|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/openclaw-workstation-agent",
+    "git diff --check -- goals/openclaw-workstation-agent",
+    "bun run beep yeet verify",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "A P0 prototype fails and its gated decision is not yet re-resolved in the SPEC decision log.",
+    "The implementation would require plaintext secrets, real client data, or changes to dankserver beyond receiving backup files.",
+    "The implementation would exceed named scope.",
+    "Required source files are missing or materially contradictory.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
