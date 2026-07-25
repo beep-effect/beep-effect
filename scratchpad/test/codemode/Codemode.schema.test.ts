@@ -10,14 +10,11 @@ import {
   ExecutionLimits,
   Result,
   ResultModel,
-  SuccessModel,
+  execute,
+  make,
 } from "../../codemode/Codemode.service.ts";
 import { IdentifierSegment, identifierSegment } from "../../codemode/Codemode.tool-schema.ts";
-import {
-  SearchInput,
-  ToolCallEnded,
-  ToolCallStarted,
-} from "../../codemode/Codemode.tool-runtime.ts";
+import { SearchInput, ToolCallEnded } from "../../codemode/Codemode.tool-runtime.ts";
 import {
   Binding,
   CodeModeGenerator,
@@ -27,7 +24,7 @@ import {
   ErrorConstructorReference,
   GeneratorMethodKind,
   GeneratorMethodReference,
-  GlobalMethodNamespace,
+  GlobalMethod,
   GlobalMethodReference,
   GlobalNamespace,
   GlobalNamespaceName,
@@ -211,23 +208,26 @@ describe("CodeMode schema laws", () => {
     );
   });
 
-  it("keeps internal results and tool completions tagged without changing the wire result", () => {
-    const call = ToolCallStarted.new(0, "search", {});
-    const decodeEnded = S.decodeUnknownResult(ToolCallEnded);
-    const decodeWire = S.decodeUnknownResult(Result);
-    const internal = SuccessModel.make({
-      value: "done",
-      warnings: O.none(),
-      logs: O.none(),
-      truncated: O.none(),
-      toolCalls: [],
-    });
+  it.effect(
+    "encodes both internal result variants at public execution boundaries",
+    Effect.fnUntraced(function* () {
+      const success = yield* execute({ code: 'return "done"' });
+      const runtime = yield* make({});
+      const failure = yield* runtime.execute("");
 
-    assert.strictEqual(ResultModel.guards.Success(internal), true);
-    assert.strictEqual(
-      Rs.isSuccess(decodeWire({ ok: true, value: "done", toolCalls: [] })),
-      true
-    );
+      expect(success).toEqual({ ok: true, value: "done", toolCalls: [] });
+      expect(failure).toEqual({
+        ok: false,
+        error: { kind: "ParseError", message: "Code cannot be empty." },
+        toolCalls: [],
+      });
+      assert.strictEqual(S.is(Result)(success), true);
+      assert.strictEqual(S.is(Result)(failure), true);
+    })
+  );
+
+  it("rejects invalid terminal tool observations", () => {
+    const decodeEnded = S.decodeUnknownResult(ToolCallEnded);
     assert.strictEqual(
       Rs.isFailure(
         decodeEnded({
@@ -253,12 +253,18 @@ describe("CodeMode schema laws", () => {
       ),
       true
     );
-    assert.strictEqual(ToolCallEnded.new(call, 1, "success")._tag, "success");
-    const failed = ToolCallEnded.new(call, 1, "failure", "boom");
-    assert.strictEqual(failed._tag, "failure");
-    if (failed._tag === "failure") {
-      assert.strictEqual(failed.message, "boom");
-    }
+    assert.strictEqual(
+      Rs.isFailure(
+        decodeEnded({
+          _tag: "success",
+          index: 0,
+          name: " ",
+          input: {},
+          durationMs: 1,
+        })
+      ),
+      true
+    );
   });
 
   it("keeps numeric execution-limit checks equivalent to positive and non-negative integers", () => {
@@ -285,7 +291,9 @@ describe("CodeMode schema laws", () => {
     const coercion = CoercionFunction.new("parseInt");
     const promiseMethod = PromiseMethodReference.new("allSettled");
     const globalNamespace = GlobalNamespace.new("JSON");
-    const globalMethod = GlobalMethodReference.new("String", "fromCodePoint");
+    const globalMethod = GlobalMethodReference.new(
+      GlobalMethod.cases.String.make({ name: "fromCodePoint" })
+    );
     const jsonMethod = JsonMethodReference.new("stringify");
     const uriFunction = UriFunction.new("decodeURIComponent");
     const errorConstructor = ErrorConstructorReference.new("AggregateError");
@@ -321,7 +329,7 @@ describe("CodeMode schema laws", () => {
       "allSettled"
     );
     assert.strictEqual(GlobalNamespaceName.is.JSON(globalNamespace.name), true);
-    assert.strictEqual(GlobalMethodNamespace.is.String(globalMethod.namespace), true);
+    assert.strictEqual(GlobalMethod.guards.String(globalMethod.method), true);
     assert.strictEqual(JsonMethodName.is.stringify(jsonMethod.name), true);
     assert.strictEqual(UriFunctionName.is.decodeURIComponent(uriFunction.name), true);
     assert.strictEqual(ErrorConstructorName.is.AggregateError(errorConstructor.name), true);

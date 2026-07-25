@@ -421,7 +421,29 @@ export class GeneratorMethodReference extends S.TaggedClass<GeneratorMethodRefer
   ): GeneratorMethodReference => GeneratorMethodReference.make({generator, kind});
 }
 
-const IntrinsicMethod = S.Union([
+const MutableArray = S.declare(
+  (value: unknown): value is Array<unknown> => A.isArray(value)
+);
+const MutableDate = S.declare(
+  (value: unknown): value is CodeModeDate => CodeModeDate.is(value)
+);
+const MutableRegExp = S.declare(
+  (value: unknown): value is CodeModeRegExp => CodeModeRegExp.is(value)
+);
+const MutableMap = S.declare(
+  (value: unknown): value is CodeModeMap => CodeModeMap.is(value)
+);
+const MutableSet = S.declare(
+  (value: unknown): value is CodeModeSet => CodeModeSet.is(value)
+);
+const MutableURL = S.declare(
+  (value: unknown): value is CodeModeURL => CodeModeURL.is(value)
+);
+const MutableURLSearchParams = S.declare(
+  (value: unknown): value is CodeModeURLSearchParams => CodeModeURLSearchParams.is(value)
+);
+
+export const IntrinsicMethod = S.Union([
   S.Struct({
     receiverKind: S.tag("String"),
     receiver: S.String,
@@ -436,37 +458,37 @@ const IntrinsicMethod = S.Union([
   }),
   S.Struct({
     receiverKind: S.tag("Array"),
-    receiver: S.Array(S.Unknown),
+    receiver: MutableArray,
     name: arrayMethods,
   }),
   S.Struct({
     receiverKind: S.tag("Date"),
-    receiver: CodeModeDate,
+    receiver: MutableDate,
     name: dateMethods,
   }),
   S.Struct({
     receiverKind: S.tag("RegExp"),
-    receiver: CodeModeRegExp,
+    receiver: MutableRegExp,
     name: regexpMethods,
   }),
   S.Struct({
     receiverKind: S.tag("Map"),
-    receiver: CodeModeMap,
+    receiver: MutableMap,
     name: mapMethods,
   }),
   S.Struct({
     receiverKind: S.tag("Set"),
-    receiver: CodeModeSet,
+    receiver: MutableSet,
     name: setMethods,
   }),
   S.Struct({
     receiverKind: S.tag("URL"),
-    receiver: CodeModeURL,
+    receiver: MutableURL,
     name: UrlMethod,
   }),
   S.Struct({
     receiverKind: S.tag("URLSearchParams"),
-    receiver: CodeModeURLSearchParams,
+    receiver: MutableURLSearchParams,
     name: UrlSearchParamsMethod,
   }),
 ]).pipe(
@@ -477,7 +499,7 @@ const IntrinsicMethod = S.Union([
   SchemaUtils.withCodecStatics
 );
 
-type IntrinsicMethod = typeof IntrinsicMethod.Type;
+export type IntrinsicMethod = typeof IntrinsicMethod.Type;
 
 /** Bound intrinsic operation. */
 export class IntrinsicReference extends S.TaggedClass<IntrinsicReference>($I`IntrinsicReference`)(
@@ -489,68 +511,8 @@ export class IntrinsicReference extends S.TaggedClass<IntrinsicReference>($I`Int
     description: "An intrinsic method bound to its guest receiver.",
   })
 ) {
-  static readonly new = (receiver: unknown, name: string): IntrinsicReference => {
-    if (P.isString(receiver) && S.is(stringMethods)(name)) {
-      return IntrinsicReference.make({
-        method: { receiverKind: "String", receiver, name },
-      });
-    }
-    if (P.isNumber(receiver) && S.is(numberMethods)(name)) {
-      return IntrinsicReference.make({
-        method: { receiverKind: "Number", receiver, name },
-      });
-    }
-    if (A.isArray(receiver) && S.is(arrayMethods)(name)) {
-      return IntrinsicReference.make({
-        method: { receiverKind: "Array", receiver, name },
-      });
-    }
-    if (CodeModeDate.is(receiver) && S.is(dateMethods)(name)) {
-      return IntrinsicReference.make({
-        method: { receiverKind: "Date", receiver, name },
-      });
-    }
-    if (CodeModeRegExp.is(receiver) && S.is(regexpMethods)(name)) {
-      return IntrinsicReference.make({
-        method: { receiverKind: "RegExp", receiver, name },
-      });
-    }
-    if (CodeModeMap.is(receiver) && S.is(mapMethods)(name)) {
-      return IntrinsicReference.make({
-        method: { receiverKind: "Map", receiver, name },
-      });
-    }
-    if (CodeModeSet.is(receiver) && S.is(setMethods)(name)) {
-      return IntrinsicReference.make({
-        method: { receiverKind: "Set", receiver, name },
-      });
-    }
-    if (CodeModeURL.is(receiver) && S.is(UrlMethod)(name)) {
-      return IntrinsicReference.make({
-        method: { receiverKind: "URL", receiver, name },
-      });
-    }
-    if (CodeModeURLSearchParams.is(receiver) && S.is(UrlSearchParamsMethod)(name)) {
-      return IntrinsicReference.make({
-        method: { receiverKind: "URLSearchParams", receiver, name },
-      });
-    }
-    return IntrinsicReference.make({
-      method: IntrinsicMethod.fromUnknown({
-        receiverKind: "URLSearchParams",
-        receiver,
-        name,
-      }),
-    });
-  };
-
-  get receiver(): IntrinsicMethod["receiver"] {
-    return this.method.receiver;
-  }
-
-  get name(): IntrinsicMethod["name"] {
-    return this.method.name;
-  }
+  static readonly new = (method: IntrinsicMethod): IntrinsicReference =>
+    IntrinsicReference.make({ method });
 }
 
 /** Marker preserving a computed value through assignment evaluation. */
@@ -687,19 +649,7 @@ export class GlobalNamespace extends S.TaggedClass<GlobalNamespace>($I`GlobalNam
     GlobalNamespace.make({name});
 }
 
-export const GlobalMethodNamespace = LiteralKit([
-  ...GlobalNamespaceName.omitOptions(["JSON", "Set", "URLSearchParams"]),
-  "Number",
-  "String",
-]).pipe(
-  $I.annoteSchema("GlobalMethodNamespace", {
-    description: "Namespace owning a guest global method.",
-  })
-);
-
-export type GlobalMethodNamespace = typeof GlobalMethodNamespace.Type;
-
-const GlobalMethod = S.Union([
+export const GlobalMethod = S.Union([
   S.Struct({ namespace: S.tag("Object"), name: objectStatics }),
   S.Struct({ namespace: S.tag("Math"), name: mathMethods }),
   S.Struct({ namespace: S.tag("Array"), name: arrayStatics }),
@@ -718,7 +668,7 @@ const GlobalMethod = S.Union([
   SchemaUtils.withCodecStatics
 );
 
-type GlobalMethod = typeof GlobalMethod.Type;
+export type GlobalMethod = typeof GlobalMethod.Type;
 
 export class GlobalMethodReference extends S.TaggedClass<GlobalMethodReference>($I`GlobalMethodReference`)(
   "GlobalMethodReference",
@@ -729,21 +679,8 @@ export class GlobalMethodReference extends S.TaggedClass<GlobalMethodReference>(
     description: "A global method bound to its namespace.",
   })
 ) {
-  static readonly new = (
-    namespace: GlobalMethodNamespace,
-    name: string
-  ): GlobalMethodReference =>
-    GlobalMethodReference.make({
-      method: GlobalMethod.fromUnknown({ namespace, name }),
-    });
-
-  get namespace(): GlobalMethod["namespace"] {
-    return this.method.namespace;
-  }
-
-  get name(): GlobalMethod["name"] {
-    return this.method.name;
-  }
+  static readonly new = (method: GlobalMethod): GlobalMethodReference =>
+    GlobalMethodReference.make({ method });
 }
 
 /** JSON method names exposed to guest programs. */

@@ -89,20 +89,24 @@ export class ToolCall extends S.Class<ToolCall>($I`ToolCall`)(
 export class ToolCallStarted extends S.Class<ToolCallStarted>($I`ToolCallStarted`)(
   {
     index: NonNegativeInt,
-    name: S.String,
+    name: NonEmptyTrimmedStr,
     input: S.Unknown,
   },
   $I.annote("ToolCallStarted", {
     description: "Decoded input and index for an admitted tool call.",
   })
 ) {
-  static readonly new = (index: number, name: string, input: unknown): ToolCallStarted =>
-    ToolCallStarted.make({index: NonNegativeInt.make(index), name, input});
+  static readonly new = (index: number, call: ToolCall, input: unknown): ToolCallStarted =>
+    ToolCallStarted.make({
+      index: NonNegativeInt.make(index),
+      name: call.name,
+      input,
+    });
 }
 
 const endedFields = {
   index: NonNegativeInt,
-  name: S.String,
+  name: NonEmptyTrimmedStr,
   input: S.Unknown,
   durationMs: NonNegativeInt,
 };
@@ -185,24 +189,6 @@ export const ToolCallEnded = S.Union([
   ToolCallFailed,
 ]).pipe(
   S.toTaggedUnion("_tag"),
-  SchemaUtils.withStatics(() => ({
-    new: (
-      call: ToolCallStarted,
-      durationMs: number,
-      ...completion:
-        | readonly ["success"]
-        | readonly ["interrupted"]
-        | readonly ["failure", message: string]
-    ): ToolCallEnded => {
-      if (completion[0] === "success") {
-        return ToolCallSucceeded.new(call, durationMs);
-      }
-      if (completion[0] === "interrupted") {
-        return ToolCallInterrupted.new(call, durationMs);
-      }
-      return ToolCallFailed.new(call, durationMs, completion[1]);
-    },
-  })),
   $I.annoteSchema("ToolCallEnded", {
     description: "All terminal observations for an admitted tool call.",
   }),
@@ -826,15 +812,12 @@ const handleDynamic = <R>(
   >;
 
 const normalizeAiError = (name: string, error: AiError.AiError): ToolRuntimeError => {
-  const kind = error.reason._tag === "ToolParameterValidationError"
-    ? "InvalidToolInput"
-    : error.reason._tag === "ToolResultEncodingError" || error.reason._tag === "InvalidToolResultError"
-      ? "InvalidToolOutput"
-      : "InvalidToolOutput";
+  const invalidInput = error.reason._tag === "ToolParameterValidationError";
+  const kind = invalidInput ? "InvalidToolInput" : "InvalidToolOutput";
   return ToolRuntimeError.new(
     kind,
-    `${kind === "InvalidToolInput" ? "Invalid input for" : "Invalid output from"} tool '${name}': ${error.reason.message}`,
-    kind === "InvalidToolInput"
+    `${invalidInput ? "Invalid input for" : "Invalid output from"} tool '${name}': ${error.reason.message}`,
+    invalidInput
       ? ["The signature may have changed. Use search to get the current signature."]
       : A.empty()
   );
@@ -866,7 +849,10 @@ export const make = <R>(
     const root = yield* Effect.fromResult(toolTrie(toolkit));
     const calls = yield* Ref.make<ReadonlyArray<ToolCall>>(A.empty());
 
-    const recordCall = (name: string): Effect.Effect<ToolCallStarted, ToolRuntimeError> =>
+    const admitCall = (
+      name: string,
+      input: unknown
+    ): Effect.Effect<ToolCallStarted, ToolRuntimeError> =>
       Ref.modify(
         calls,
         (
@@ -891,7 +877,7 @@ export const make = <R>(
               onNone: () => {
                 const call = ToolCall.new(name);
                 return [
-                  Result.succeed(ToolCallStarted.new(A.length(current), name, undefined)),
+                  Result.succeed(ToolCallStarted.new(A.length(current), call, input)),
                   [...current, call],
                 ] as const;
               },
@@ -932,8 +918,7 @@ export const make = <R>(
       input: unknown
     ): Effect.Effect<unknown, ToolRuntimeError | ToolError, R> =>
       Effect.gen(function* () {
-        const call = yield* recordCall(name);
-        const started = ToolCallStarted.new(call.index, name, input);
+        const started = yield* admitCall(name, input);
         return yield* observeEnd(
           Effect.gen(function* () {
             if (P.isNotUndefined(hooks.onToolCallStart)) yield* hooks.onToolCallStart(started);
@@ -990,8 +975,7 @@ export const make = <R>(
             ToolRuntimeError.new("InvalidToolInput", `Invalid input for tool 'search': ${cause.message}`)
           )
         );
-        const call = yield* recordCall("search");
-        const started = ToolCallStarted.new(call.index, "search", input);
+        const started = yield* admitCall("search", input);
         return yield* observeEnd(
           Effect.gen(function* () {
             if (P.isNotUndefined(hooks.onToolCallStart)) yield* hooks.onToolCallStart(started);

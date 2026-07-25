@@ -1,4 +1,4 @@
-import {Effect, Match} from "effect";
+import {Effect} from "effect";
 import * as S from "effect/Schema";
 import {O, P, A} from "@beep/utils";
 import {
@@ -7,9 +7,10 @@ import {
   CodeModeGenerator,
   CoercionFunction,
   ErrorConstructorReference,
-  GlobalMethodNamespace,
+  GlobalMethod,
   GlobalMethodReference,
   GlobalNamespace,
+  IntrinsicMethod,
   IntrinsicReference,
   type InterpreterFailure,
   InterpreterRuntimeError,
@@ -29,19 +30,25 @@ import {
 import {isBlockedMember,} from "../Codemode.tool-runtime.ts";
 import {LiteralKit, SafeObject} from "@beep/schema";
 import {
-  CodeModeDate,
   CodeModeMap,
   CodeModePromise,
   CodeModeRegExp,
   CodeModeSet,
-  CodeModeURL,
   CodeModeURLSearchParams,
   isCodeModeValue,
 } from "../Codemode.values.ts";
 import {
+  type ArrayMethod,
+  type ArrayStatic,
+  type MapMethod,
+  type SetMethod,
+  type StringMethod,
   arrayStatics,
   arrayMethods,
+  mapMethods,
+  setMethods,
   stringMethods,
+  UrlSearchParamsMethod,
 } from "../Codemode.method-names.ts";
 import {
   dateSetterArgumentCount,
@@ -130,79 +137,62 @@ export const invokeIntrinsic = <R>(
   ref: IntrinsicReference,
   args: Array<unknown>,
   node: AstNode,
-): Effect.Effect<unknown, InterpreterFailure, R> => {
-  if (typeof ref.receiver === "string") {
-    const target = ref.receiver;
-    if (ref.name === "replace" || ref.name === "replaceAll") {
-      if (isSupportedCallback(args[1])) return invokeStringReplacer(runner, target, ref.name, args, node);
-      if (typeofValue(args[1]) === "function") {
-        return Effect.fail(InterpreterRuntimeError.new(
-          `String.${ref.name} cannot use this callable as a replacer; wrap it in an arrow function, e.g. (match) => tools.ns.tool(match).`,
-          node,
-        ));
+): Effect.Effect<unknown, InterpreterFailure, R> =>
+  IntrinsicMethod.match(ref.method, {
+    String: ({ receiver, name }) => {
+      if (name === "replace" || name === "replaceAll") {
+        if (isSupportedCallback(args[1])) return invokeStringReplacer(runner, receiver, name, args, node);
+        if (typeofValue(args[1]) === "function") {
+          return Effect.fail(InterpreterRuntimeError.new(
+            `String.${name} cannot use this callable as a replacer; wrap it in an arrow function, e.g. (match) => tools.ns.tool(match).`,
+            node,
+          ));
+        }
       }
-    }
-    return Effect.fromResult(
-      tryInterpreter(() => invokeStringMethod(target, ref.name, args, node), node)
-    );
-  }
-  if (P.isNumber(ref.receiver)) {
-    const target = ref.receiver;
-    return Effect.fromResult(
-      tryInterpreter(() => invokeNumberMethod(target, ref.name, args, node), node)
-    );
-  }
-  if (A.isArray(ref.receiver)) {
-    return invokeArrayMethod(runner, ref.receiver, ref.name, args, node);
-  }
-  if (CodeModeDate.is(ref.receiver)) {
-    const target = ref.receiver;
-    const argumentCount = dateSetterArgumentCount(ref.name);
-    if (O.isNone(argumentCount)) {
       return Effect.fromResult(
-        tryInterpreter(() => invokeDateMethod(target, ref.name, [], node), node)
+        tryInterpreter(() => invokeStringMethod(receiver, name, args, node), node)
       );
-    }
-    // Native setters read the current time before argument coercion, whose callbacks may mutate the Date.
-    const initialTime = target.time;
-    return Effect.flatMap(
-      Effect.forEach(args.slice(0, argumentCount.value), (arg) => coerceNumericArgument(runner, arg, node), {
-        concurrency: 1,
-      }),
-      (values) =>
-        Effect.fromResult(
-          tryInterpreter(
-            () => invokeDateMethod(target, ref.name, values, node, initialTime),
-            node
-          )
-        ),
-    );
-  }
-  if (CodeModeRegExp.is(ref.receiver)) {
-    const target = ref.receiver;
-    return Effect.fromResult(
-      tryInterpreter(() => invokeRegExpMethod(target, ref.name, args, node), node)
-    );
-  }
-  if (CodeModeMap.is(ref.receiver)) {
-    return invokeMapMethod(runner, ref.receiver, ref.name, args, node);
-  }
-  if (CodeModeSet.is(ref.receiver)) {
-    return invokeSetMethod(runner, ref.receiver, ref.name, args, node);
-  }
-  if (CodeModeURL.is(ref.receiver)) {
-    const target = ref.receiver;
-    return Effect.fromResult(
-      tryInterpreter(() => invokeURLMethod(target, ref.name, node), node)
-    );
-  }
-  if (CodeModeURLSearchParams.is(ref.receiver)) {
-    return invokeURLSearchParamsMethod(runner, ref.receiver, ref.name, args, node);
-  }
-  return Effect.fail(
-    InterpreterRuntimeError.new(`Method '${ref.name}' is not available.`, node)
-  );
-};
+    },
+    Number: ({ receiver, name }) =>
+      Effect.fromResult(
+        tryInterpreter(() => invokeNumberMethod(receiver, name, args, node), node)
+      ),
+    Array: ({ receiver, name }) => invokeArrayMethod(runner, receiver, name, args, node),
+    Date: ({ receiver, name }) => {
+      const argumentCount = dateSetterArgumentCount(name);
+      if (O.isNone(argumentCount)) {
+        return Effect.fromResult(
+          tryInterpreter(() => invokeDateMethod(receiver, name, [], node), node)
+        );
+      }
+      // Native setters read the current time before argument coercion, whose callbacks may mutate the Date.
+      const initialTime = receiver.time;
+      return Effect.flatMap(
+        Effect.forEach(args.slice(0, argumentCount.value), (arg) => coerceNumericArgument(runner, arg, node), {
+          concurrency: 1,
+        }),
+        (values) =>
+          Effect.fromResult(
+            tryInterpreter(
+              () => invokeDateMethod(receiver, name, values, node, initialTime),
+              node
+            )
+          ),
+      );
+    },
+    RegExp: ({ receiver, name }) =>
+      Effect.fromResult(
+        tryInterpreter(() => invokeRegExpMethod(receiver, name, args, node), node)
+      ),
+    Map: ({ receiver, name }) => invokeMapMethod(runner, receiver, name, args, node),
+    Set: ({ receiver, name }) => invokeSetMethod(runner, receiver, name, args, node),
+    URL: ({ receiver, name }) =>
+      Effect.fromResult(
+        tryInterpreter(() => invokeURLMethod(receiver, name, node), node)
+      ),
+    URLSearchParams: ({ receiver, name }) =>
+      invokeURLSearchParamsMethod(runner, receiver, name, args, node),
+  });
 
 const coerceNumericArgument = <R>(
   runner: CallbackRunner<R>,
@@ -212,17 +202,18 @@ const coerceNumericArgument = <R>(
   if (value === null || typeof value !== "object" || A.isArray(value) || isCodeModeValue(value)) {
     return Effect.succeed(coerceToNumber(value));
   }
-  const object = value as Record<string, unknown>;
   return Effect.gen(function* () {
-    if (Object.hasOwn(object, "valueOf") && typeofValue(object.valueOf) === "function") {
-      const result = yield* runner.invokeCallable(object.valueOf, [], node);
+    const valueOf = Reflect.get(value, "valueOf");
+    if (Object.hasOwn(value, "valueOf") && typeofValue(valueOf) === "function") {
+      const result = yield* runner.invokeCallable(valueOf, [], node);
       if (P.isNull(result) || (!P.isObjectKeyword(result) && !P.isFunction(result))) {
         return coerceToNumber(result);
       }
     }
-    if (!Object.hasOwn(object, "toString")) return coerceToNumber(value);
-    if (typeofValue(object.toString) === "function") {
-      const result = yield* runner.invokeCallable(object.toString, [], node);
+    if (!Object.hasOwn(value, "toString")) return coerceToNumber(value);
+    const toString = Reflect.get(value, "toString");
+    if (typeofValue(toString) === "function") {
+      const result = yield* runner.invokeCallable(toString, [], node);
       if (P.isNull(result) || (!P.isObjectKeyword(result) && !P.isFunction(result))) {
         return coerceToNumber(result);
       }
@@ -236,21 +227,33 @@ export const invokeGlobalMethod = (ref: GlobalMethodReference, args: Array<unkno
     throw InterpreterRuntimeError.new(`${namespace}.${name} is not available.`, node);
   };
 
-  return GlobalMethodNamespace.$match(ref.namespace, {
-    Object: () => invokeObjectMethod(ref.name, args, node),
-    Math: () => invokeMathMethod(ref.name, args, node),
-    Array: () => invokeArrayStatic(ref.name, args, node),
-    Number: () => invokeNumberStatic(ref.name, args, node),
-    String: () => invokeStringStatic(ref.name, args, node),
-    URL: () => invokeURLStatic(ref.name, args, node),
-    Date: () => invokeDateStatic(ref.name, args, node),
-    RegExp: () => invokeRegExpStatic(ref.name, args, node),
-    console: () => unavailable(ref.namespace, ref.name),
-    Map: () => unavailable(ref.namespace, ref.name),
+  return GlobalMethod.match(ref.method, {
+    Object: ({ name }) =>
+      name === "fromEntries" || name === "groupBy"
+        ? unavailable("Object", name)
+        : invokeObjectMethod(name, args, node),
+    Math: ({ name }) =>
+      name === "random" || name === "sumPrecise"
+        ? unavailable("Math", name)
+        : invokeMathMethod(name, args, node),
+    Array: ({ name }) =>
+      name === "from"
+        ? unavailable("Array", name)
+        : invokeArrayStatic(name, args, node),
+    Number: ({ name }) => invokeNumberStatic(name, args, node),
+    String: ({ name }) => invokeStringStatic(name, args, node),
+    URL: ({ name }) => invokeURLStatic(name, args, node),
+    Date: ({ name }) =>
+      name === "now"
+        ? unavailable("Date", name)
+        : invokeDateStatic(name, args, node),
+    RegExp: ({ name }) => invokeRegExpStatic(name, args, node),
+    console: ({ name }) => unavailable("console", name),
+    Map: ({ name }) => unavailable("Map", name),
   });
 };
 
-const requireDataArgument = (name: string, index: number, arg: unknown, node: AstNode): unknown => {
+const requireDataArgument = (name: StringMethod, index: number, arg: unknown, node: AstNode): unknown => {
   if (containsOpaqueReference(arg)) {
     throw InterpreterRuntimeError.new(
       `String.${name} expects argument ${index + 1} to be a data value.`,
@@ -262,6 +265,7 @@ const requireDataArgument = (name: string, index: number, arg: unknown, node: As
 };
 
 const DirectStringMethod = LiteralKit(stringMethods.omitOptions(["match", "matchAll"]));
+type DirectStringMethod = Exclude<StringMethod, "match" | "matchAll">;
 const CallbackArrayMethodOptions = [
   "map",
   "filter",
@@ -282,8 +286,9 @@ const CallbackArrayMethod = LiteralKit(
 const DirectArrayMethod = LiteralKit(
   arrayMethods.omitOptions(CallbackArrayMethodOptions)
 );
+type DirectArrayStatic = Exclude<ArrayStatic, "from">;
 
-const invokeStringMethod = (value: string, name: string, args: Array<unknown>, node: AstNode): unknown => {
+const invokeStringMethod = (value: string, name: StringMethod, args: Array<unknown>, node: AstNode): unknown => {
   // Coerce arguments like native JS; opaque runtime references still reject.
   const str = (index: number): string => coerceToString(requireDataArgument(name, index, args[index], node));
   const num = (index: number): number => coerceToNumber(requireDataArgument(name, index, args[index], node));
@@ -315,9 +320,6 @@ const invokeStringMethod = (value: string, name: string, args: Array<unknown>, n
       );
     }
     return Array.from(value.matchAll(pattern), matchToValue);
-  }
-  if (!S.is(DirectStringMethod)(name)) {
-    throw InterpreterRuntimeError.new(`String method '${name}' is not available.`, node);
   }
   const normalize = (): string => {
       const form = optStr(0);
@@ -410,15 +412,11 @@ const invokeStringMethod = (value: string, name: string, args: Array<unknown>, n
 export { arrayStatics } from "../Codemode.method-names.ts";
 const DirectArrayStatic = LiteralKit(arrayStatics.omitOptions(["from"]));
 
-const invokeArrayStatic = (name: string, args: Array<unknown>, node: AstNode): unknown => {
-  if (!S.is(DirectArrayStatic)(name)) {
-    throw InterpreterRuntimeError.new(`Array.${name} is not available.`, node);
-  }
-  return DirectArrayStatic.$match(name, {
+const invokeArrayStatic = (name: DirectArrayStatic, args: Array<unknown>, _node: AstNode): unknown =>
+  DirectArrayStatic.$match(name, {
     isArray: () => A.isArray(args[0]),
     of: () => [...args],
   });
-};
 
 const arrayLikeSource = (source: unknown, node: AstNode): {
   readonly length: number;
@@ -434,10 +432,16 @@ const arrayLikeSource = (source: unknown, node: AstNode): {
   if (
     source !== null &&
     typeof source === "object" &&
-    (Object.getPrototypeOf(source) === Object.prototype || Object.getPrototypeOf(source) === null) &&
-    typeof (source as { length?: unknown }).length === "number"
+    (Object.getPrototypeOf(source) === Object.prototype || Object.getPrototypeOf(source) === null)
   ) {
-    const length = (source as { length: number }).length;
+    const length = Reflect.get(source, "length");
+    if (!P.isNumber(length)) {
+      throw InterpreterRuntimeError.new(
+        "Array.from expects an array, string, Map, Set, or array-like value.",
+        node,
+        "InvalidDataValue",
+      );
+    }
     const normalized = Number.isNaN(length) || length <= 0 ? 0 : Math.trunc(length);
     if (normalized > 4_294_967_295) {
       throw InterpreterRuntimeError.new("Invalid array length.", node).as("RangeError");
@@ -512,7 +516,8 @@ export const invokeGroupBy = <R>(
         const key = yield* preserveConsumerError(cursor, apply([item, index]));
         const group = result.map.get(key);
         if (group === undefined) result.map.set(key, [item]);
-        else (group as Array<unknown>).push(item);
+        else if (A.isArray(group)) group.push(item);
+        else return yield* Effect.die(new Error("CodeMode Map.groupBy stored a non-array group."));
         index += 1;
       }
     }
@@ -535,7 +540,8 @@ export const invokeGroupBy = <R>(
       }
       const group = result[key];
       if (group === undefined) Reflect.set(result, key, [item]);
-      else (group as Array<unknown>).push(item);
+      else if (A.isArray(group)) group.push(item);
+      else return yield* Effect.die(new Error("CodeMode Object.groupBy stored a non-array group."));
       index += 1;
     }
   });
@@ -553,17 +559,18 @@ const coerceGroupByPropertyKey = <R>(
   if (isRuntimeReference(value)) {
     throw InterpreterRuntimeError.new("Object.groupBy callback must return a data value.", node, "InvalidDataValue");
   }
-  const object = value as Record<string, unknown>;
-  if (!Object.hasOwn(object, "toString")) return Effect.succeed(coerceToString(value));
+  if (!Object.hasOwn(value, "toString")) return Effect.succeed(coerceToString(value));
   return Effect.gen(function* () {
-    if (typeofValue(object.toString) === "function") {
-      const result = yield* runner.invokeCallable(object.toString, [], node);
+    const toString = Reflect.get(value, "toString");
+    if (typeofValue(toString) === "function") {
+      const result = yield* runner.invokeCallable(toString, [], node);
       if (P.isNull(result) || (!P.isObjectKeyword(result) && !P.isFunction(result))) {
         return coerceToString(result);
       }
     }
-    if (Object.hasOwn(object, "valueOf") && typeofValue(object.valueOf) === "function") {
-      const result = yield* runner.invokeCallable(object.valueOf, [], node);
+    const valueOf = Reflect.get(value, "valueOf");
+    if (Object.hasOwn(value, "valueOf") && typeofValue(valueOf) === "function") {
+      const result = yield* runner.invokeCallable(valueOf, [], node);
       if (P.isNull(result) || (!P.isObjectKeyword(result) && !P.isFunction(result))) {
         return coerceToString(result);
       }
@@ -662,154 +669,167 @@ export const applyCollectionCallback = <R>(
 const invokeMapMethod = <R>(
   runner: CallbackRunner<R>,
   target: CodeModeMap,
-  name: string,
+  name: MapMethod,
   args: Array<unknown>,
   node: AstNode,
-): Effect.Effect<unknown, InterpreterFailure, R> =>(Match.value(name).pipe(
-    Match.when("get", () => Effect.succeed(target.map.get(args[0]))),
-    Match.when("has", () => Effect.succeed(target.map.has(args[0]))),
-    Match.when("set", () =>
+): Effect.Effect<unknown, InterpreterFailure, R> =>
+  mapMethods.$match(name, {
+    get: () => Effect.succeed(target.map.get(args[0])),
+    has: () => Effect.succeed(target.map.has(args[0])),
+    set: () =>
       Effect.sync(() => {
         target.map.set(args[0], args[1]);
         return target;
-      })),
-    Match.when("delete", () => Effect.sync(() => target.map.delete(args[0]))),
-    Match.when("clear", () =>
+      }),
+    delete: () => Effect.sync(() => target.map.delete(args[0])),
+    clear: () =>
       Effect.sync(() => {
         target.map.clear();
         return undefined;
-      })),
-    Match.when("keys", () => Effect.sync(() => Array.from(target.map.keys()))),
-    Match.when("values", () => Effect.sync(() => Array.from(target.map.values()))),
-    Match.when("entries", () =>
-      Effect.sync(() => Array.from(target.map.entries(), ([key, item]): Array<unknown> => [key, item]))),
-    Match.when("forEach", () => {
+      }),
+    keys: () => Effect.sync(() => Array.from(target.map.keys())),
+    values: () => Effect.sync(() => Array.from(target.map.values())),
+    entries: () =>
+      Effect.sync(() => Array.from(target.map.entries(), ([key, item]): Array<unknown> => [key, item])),
+    forEach: () => {
       const apply = applyCollectionCallback(runner, args[0], "Map.forEach", node);
       return Effect.gen(function* () {
         for (const [key, item] of Array.from(target.map.entries())) yield* apply([item, key, target]);
         return undefined;
       });
-    }),
-    Match.orElse(() => {
-      throw InterpreterRuntimeError.new(`Map method '${name}' is not available.`, node);
-    }),
-  ));
+    },
+  });
 
 const invokeSetMethod = <R>(
   runner: CallbackRunner<R>,
   target: CodeModeSet,
-  name: string,
+  name: SetMethod,
   args: Array<unknown>,
   node: AstNode,
 ): Effect.Effect<unknown, InterpreterFailure, R> => {
-  const operation = () => invokeSetOperation(runner, target, name, args[0], node);
-  return Match.value(name).pipe(
-    Match.when("has", () => Effect.succeed(target.set.has(args[0]))),
-    Match.when("add", () =>
+  const operation = (operationName: SetOperationMethod) =>
+    invokeSetOperation(runner, target, operationName, args[0], node);
+  return setMethods.$match(name, {
+    has: () => Effect.succeed(target.set.has(args[0])),
+    add: () =>
       Effect.sync(() => {
         target.set.add(args[0]);
         return target;
-      })),
-    Match.when("delete", () => Effect.sync(() => target.set.delete(args[0]))),
-    Match.when("clear", () =>
+      }),
+    delete: () => Effect.sync(() => target.set.delete(args[0])),
+    clear: () =>
       Effect.sync(() => {
         target.set.clear();
         return undefined;
-      })),
-    Match.when("keys", () => Effect.sync(() => Array.from(target.set.values()))),
-    Match.when("values", () => Effect.sync(() => Array.from(target.set.values()))),
-    Match.when("entries", () =>
-      Effect.sync(() => Array.from(target.set.values(), (item): Array<unknown> => [item, item]))),
-    Match.when("forEach", () => {
+      }),
+    keys: () => Effect.sync(() => Array.from(target.set.values())),
+    values: () => Effect.sync(() => Array.from(target.set.values())),
+    entries: () =>
+      Effect.sync(() => Array.from(target.set.values(), (item): Array<unknown> => [item, item])),
+    forEach: () => {
       const apply = applyCollectionCallback(runner, args[0], "Set.forEach", node);
       return Effect.gen(function* () {
         for (const item of Array.from(target.set.values())) yield* apply([item, item, target]);
         return undefined;
       });
-    }),
-    Match.when("union", operation),
-    Match.when("intersection", operation),
-    Match.when("difference", operation),
-    Match.when("symmetricDifference", operation),
-    Match.when("isSubsetOf", operation),
-    Match.when("isSupersetOf", operation),
-    Match.when("isDisjointFrom", operation),
-    Match.orElse(() => {
-      throw InterpreterRuntimeError.new(`Set method '${name}' is not available.`, node);
-    }),
-  );
+    },
+    union: () => operation("union"),
+    intersection: () => operation("intersection"),
+    difference: () => operation("difference"),
+    symmetricDifference: () => operation("symmetricDifference"),
+    isSubsetOf: () => operation("isSubsetOf"),
+    isSupersetOf: () => operation("isSupersetOf"),
+    isDisjointFrom: () => operation("isDisjointFrom"),
+  });
 };
+
+const SetOperationMethod = LiteralKit(
+  setMethods.pickOptions([
+    "union",
+    "intersection",
+    "difference",
+    "symmetricDifference",
+    "isSubsetOf",
+    "isSupersetOf",
+    "isDisjointFrom",
+  ])
+);
+type SetOperationMethod = typeof SetOperationMethod.Type;
 
 const invokeSetOperation = <R>(
   runner: CallbackRunner<R>,
   target: CodeModeSet,
-  name: string,
+  name: SetOperationMethod,
   source: unknown,
   node: AstNode,
 ): Effect.Effect<unknown, InterpreterFailure, R> =>
   Effect.gen(function* () {
     const other = yield* loadSetRecord(runner, source, name, node);
-    if (name === "union") {
-      const result = copySet(target);
-      for (const item of yield* other.keys()) result.set.add(item);
-      return result;
-    }
-    if (name === "intersection") {
-      const result = CodeModeSet.new();
-      if (target.set.size <= other.size) {
+    return yield* SetOperationMethod.$match(name, {
+      union: Effect.fnUntraced(function* () {
+        const result = copySet(target);
+        for (const item of yield* other.keys()) result.set.add(item);
+        return result;
+      }),
+      intersection: Effect.fnUntraced(function* () {
+        const result = CodeModeSet.new();
+        if (target.set.size <= other.size) {
+          for (const item of target.set.values()) {
+            if (yield* other.has(item)) result.set.add(item);
+          }
+          return result;
+        }
+        for (const item of yield* other.keys()) {
+          if (target.set.has(item)) result.set.add(item);
+        }
+        return result;
+      }),
+      difference: Effect.fnUntraced(function* () {
+        const result = copySet(target);
+        if (target.set.size <= other.size) {
+          for (const item of result.set.values()) {
+            if (yield* other.has(item)) result.set.delete(item);
+          }
+          return result;
+        }
+        for (const item of yield* other.keys()) result.set.delete(item);
+        return result;
+      }),
+      symmetricDifference: Effect.fnUntraced(function* () {
+        const result = copySet(target);
+        for (const item of yield* other.keys()) {
+          if (target.set.has(item)) result.set.delete(item);
+          else result.set.add(item);
+        }
+        return result;
+      }),
+      isSubsetOf: Effect.fnUntraced(function* () {
+        if (target.set.size > other.size) return false;
         for (const item of target.set.values()) {
-          if (yield* other.has(item)) result.set.add(item);
+          if (!(yield* other.has(item))) return false;
         }
-        return result;
-      }
-      for (const item of yield* other.keys()) {
-        if (target.set.has(item)) result.set.add(item);
-      }
-      return result;
-    }
-    if (name === "difference") {
-      const result = copySet(target);
-      if (target.set.size <= other.size) {
-        for (const item of result.set.values()) {
-          if (yield* other.has(item)) result.set.delete(item);
+        return true;
+      }),
+      isSupersetOf: Effect.fnUntraced(function* () {
+        if (target.set.size < other.size) return false;
+        for (const item of yield* other.keys()) {
+          if (!target.set.has(item)) return false;
         }
-        return result;
-      }
-      for (const item of yield* other.keys()) result.set.delete(item);
-      return result;
-    }
-    if (name === "symmetricDifference") {
-      const result = copySet(target);
-      for (const item of yield* other.keys()) {
-        if (target.set.has(item)) result.set.delete(item);
-        else result.set.add(item);
-      }
-      return result;
-    }
-    if (name === "isSubsetOf") {
-      if (target.set.size > other.size) return false;
-      for (const item of target.set.values()) {
-        if (!(yield* other.has(item))) return false;
-      }
-      return true;
-    }
-    if (name === "isSupersetOf") {
-      if (target.set.size < other.size) return false;
-      for (const item of yield* other.keys()) {
-        if (!target.set.has(item)) return false;
-      }
-      return true;
-    }
-    if (target.set.size <= other.size) {
-      for (const item of target.set.values()) {
-        if (yield* other.has(item)) return false;
-      }
-      return true;
-    }
-    for (const item of yield* other.keys()) {
-      if (target.set.has(item)) return false;
-    }
-    return true;
+        return true;
+      }),
+      isDisjointFrom: Effect.fnUntraced(function* () {
+        if (target.set.size <= other.size) {
+          for (const item of target.set.values()) {
+            if (yield* other.has(item)) return false;
+          }
+          return true;
+        }
+        for (const item of yield* other.keys()) {
+          if (target.set.has(item)) return false;
+        }
+        return true;
+      }),
+    });
   });
 
 const copySet = (source: CodeModeSet): CodeModeSet => {
@@ -818,7 +838,7 @@ const copySet = (source: CodeModeSet): CodeModeSet => {
   return result;
 };
 
-const loadSetRecord = <R>(runner: CallbackRunner<R>, source: unknown, name: string, node: AstNode) => {
+const loadSetRecord = <R>(runner: CallbackRunner<R>, source: unknown, name: SetOperationMethod, node: AstNode) => {
   if (CodeModeSet.is(source)) {
     return Effect.succeed({
       size: source.set.size,
@@ -836,19 +856,18 @@ const loadSetRecord = <R>(runner: CallbackRunner<R>, source: unknown, name: stri
   if (source === null || typeof source !== "object" || isCodeModeValue(source)) {
     throw InterpreterRuntimeError.new(`Set.${name} expects a Set-like object.`, node).as("TypeError");
   }
-  const object = source as Record<string, unknown>;
   return Effect.gen(function* () {
-    const size = yield* coerceNumericArgument(runner, object.size, node);
+    const size = yield* coerceNumericArgument(runner, Reflect.get(source, "size"), node);
     if (Number.isNaN(size)) {
       throw InterpreterRuntimeError.new(`Set.${name} received a Set-like object with an invalid size.`, node).as(
         "TypeError",
       );
     }
-    if (!isSupportedCallback(object.has) || !isSupportedCallback(object.keys)) {
+    const has = Reflect.get(source, "has");
+    const keys = Reflect.get(source, "keys");
+    if (!isSupportedCallback(has) || !isSupportedCallback(keys)) {
       throw InterpreterRuntimeError.new(`Set.${name} expects callable 'has' and 'keys' methods.`, node).as("TypeError");
     }
-    const has = object.has;
-    const keys = object.keys;
     return {
       size: Math.max(Math.trunc(size), 0),
       has: (item: unknown) => Effect.map(runner.invokeCallable(has, [item], node), Boolean),
@@ -864,7 +883,7 @@ const loadSetRecord = <R>(runner: CallbackRunner<R>, source: unknown, name: stri
 const invokeURLSearchParamsMethod = <R>(
   runner: CallbackRunner<R>,
   target: CodeModeURLSearchParams,
-  name: string,
+  name: UrlSearchParamsMethod,
   args: Array<unknown>,
   node: AstNode,
 ): Effect.Effect<unknown, InterpreterFailure, R> => {
@@ -877,69 +896,66 @@ const invokeURLSearchParamsMethod = <R>(
       ).as("TypeError");
     }
   };
-  return Match.value(name).pipe(
-    Match.when("append", () => {
+  return UrlSearchParamsMethod.$match(name, {
+    append: () => {
       requireArgs(2);
       return Effect.sync(() => {
         target.params.append(arg(0), arg(1));
         return undefined;
       });
-    }),
-    Match.when("delete", () => {
+    },
+    delete: () => {
       requireArgs(1);
       return Effect.sync(() => {
         if (args[1] !== undefined) target.params.delete(arg(0), arg(1));
         else target.params.delete(arg(0));
         return undefined;
       });
-    }),
-    Match.when("get", () => {
+    },
+    get: () => {
       requireArgs(1);
       return Effect.sync(() => target.params.get(arg(0)));
-    }),
-    Match.when("getAll", () => {
+    },
+    getAll: () => {
       requireArgs(1);
       return Effect.sync(() => target.params.getAll(arg(0)));
-    }),
-    Match.when("has", () => {
+    },
+    has: () => {
       requireArgs(1);
       return Effect.sync(() => (args[1] !== undefined ? target.params.has(arg(0), arg(1)) : target.params.has(arg(0))));
-    }),
-    Match.when("set", () => {
+    },
+    set: () => {
       requireArgs(2);
       return Effect.sync(() => {
         target.params.set(arg(0), arg(1));
         return undefined;
       });
-    }),
-    Match.when("sort", () =>
+    },
+    sort: () =>
       Effect.sync(() => {
         target.params.sort();
         return undefined;
-      })),
-    Match.when("keys", () => Effect.sync(() => Array.from(target.params.keys()))),
-    Match.when("values", () => Effect.sync(() => Array.from(target.params.values()))),
-    Match.when("entries", () =>
-      Effect.sync(() => Array.from(target.params.entries(), ([key, value]): Array<unknown> => [key, value]))),
-    Match.when("toString", () => Effect.sync(() => target.params.toString())),
-    Match.when("forEach", () => {
+      }),
+    keys: () => Effect.sync(() => Array.from(target.params.keys())),
+    values: () => Effect.sync(() => Array.from(target.params.values())),
+    entries: () =>
+      Effect.sync(() => Array.from(target.params.entries(), ([key, value]): Array<unknown> => [key, value])),
+    toString: () => Effect.sync(() => target.params.toString()),
+    forEach: () => {
       requireArgs(1);
       const apply = applyCollectionCallback(runner, args[0], "URLSearchParams.forEach", node);
       return Effect.gen(function* () {
         for (const [key, value] of Array.from(target.params.entries())) yield* apply([value, key, target]);
         return undefined;
       });
-    }),
-    Match.orElse(() => {
-      throw InterpreterRuntimeError.new(`URLSearchParams method '${name}' is not available.`, node);
-    }),
-  );
+    },
+  });
 };
 
 const invokeArrayMethod = <R>(
   runner: CallbackRunner<R>,
   target: Array<unknown>,
-  name: string,
+  name: ArrayMethod,
   args: Array<unknown>,
   node: AstNode,
 ): Effect.Effect<unknown, InterpreterFailure, R> => {
@@ -951,12 +967,13 @@ const invokeArrayMethod = <R>(
   };
   if (S.is(DirectArrayMethod)(name)) {
     const join = (): Effect.Effect<string> => {
-      if (args.length > 1 || (args.length === 1 && typeof args[0] !== "string")) {
+      const separator = args.length === 0 ? undefined : args[0];
+      if (args.length > 1 || (!P.isUndefined(separator) && !P.isString(separator))) {
         throw InterpreterRuntimeError.new("Array.join expects zero arguments or one string separator.", node);
       }
-      const input = boundedData(target, "Array.join input") as Array<unknown>;
+      boundedData(target, "Array.join input");
       return Effect.succeed(
-        input.map((item) => coerceToString(item ?? "")).join(args.length === 0 ? "," : (args[0] as string)),
+        target.map((item) => coerceToString(item ?? "")).join(P.isUndefined(separator) ? "," : separator),
       );
     };
     const includes = (): Effect.Effect<boolean> => {
@@ -1065,9 +1082,6 @@ const invokeArrayMethod = <R>(
     });
   }
 
-  if (!S.is(CallbackArrayMethod)(name)) {
-    throw InterpreterRuntimeError.new(`Array method '${name}' is not available.`, node);
-  }
   const apply = applyCollectionCallback(runner, args[0], `Array.${name}`, node);
   // Fix iteration length while reading existing elements live.
   const length = target.length;

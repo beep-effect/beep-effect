@@ -18,9 +18,8 @@ import {
   CodeModeURLSearchParams,
 } from "../Codemode.values.ts"
 import { DateTime } from "effect";
+import * as S from "effect/Schema";
 import { A, P } from "@beep/utils";
-
-export const errorConstructors = ErrorConstructorName
 
 export const valueConstructors = LiteralKit(
   GlobalNamespaceName.pickOptions([
@@ -81,11 +80,33 @@ export const CompoundOperator = MappedLiteralKit([
   [">>>=", ">>>"],
 ])
 
-export const compoundOperators = LiteralKit(CompoundOperator.Options)
+export type CompoundAssignmentOperator = typeof CompoundOperator.Encoded;
+
+export const LogicalOperator = LiteralKit(["&&", "||", "??"]);
+export type LogicalOperator = typeof LogicalOperator.Type;
+
+export const UnaryOperator = LiteralKit(["delete", "typeof", "!", "void", "+", "-", "~"]);
+export type UnaryOperator = typeof UnaryOperator.Type;
+
+export const LogicalAssignmentOperator = LiteralKit(["??=", "||=", "&&="]);
+export type LogicalAssignmentOperator = typeof LogicalAssignmentOperator.Type;
+
+export const AssignmentOperator = LiteralKit([
+  "=",
+  ...CompoundOperator.Options,
+  ...LogicalAssignmentOperator.Options,
+]);
+export type AssignmentOperator = typeof AssignmentOperator.Type;
+
+export const UpdateOperator = MappedLiteralKit([
+  ["++", 1],
+  ["--", -1],
+]);
+export type UpdateOperator = typeof UpdateOperator.Encoded;
 
 const ErrorBrand: unique symbol = Symbol("codemode.error")
 
-export const createErrorValue = (name: string, message: string): SafeObject => {
+export const createErrorValue = (name: ErrorConstructorName, message: string): SafeObject => {
   const value = Object.assign(SafeObject.make(Object.create(null)), { name, message })
   Object.defineProperty(value, ErrorBrand, { value: name })
   return value
@@ -94,10 +115,11 @@ export const createErrorValue = (name: string, message: string): SafeObject => {
 export const createAggregateErrorValue = (errors: Array<unknown>, message: string): SafeObject =>
   Object.assign(createErrorValue("AggregateError", message), { errors })
 
-export const errorBrandName = (value: unknown): string | undefined =>
-  P.isNotNull(value) && P.isObjectKeyword(value)
-    ? ((value as Record<PropertyKey, unknown>)[ErrorBrand] as string | undefined)
-    : undefined
+export const errorBrandName = (value: unknown): ErrorConstructorName | undefined => {
+  if (P.isNull(value) || !P.isObjectKeyword(value)) return undefined;
+  const name = Reflect.get(value, ErrorBrand);
+  return S.is(ErrorConstructorName)(name) ? name : undefined;
+};
 
 export const boundedData = (value: unknown, label: string): unknown => copyIn(value, label, true)
 
@@ -111,11 +133,12 @@ export const coerceToString = (value: unknown): string => {
   if (CodeModeSet.is(value)) return "[object Set]"
   if (CodeModeURL.is(value)) return value.url.href
   if (CodeModeURLSearchParams.is(value)) return value.params.toString()
-  if (errorBrandName(value) !== undefined) {
+  if (P.isNotUndefined(errorBrandName(value)) && P.isNotNull(value) && P.isObjectKeyword(value)) {
     // Match Error.prototype.toString: "name: message", or just one when the other is empty.
-    const error = value as { name?: unknown; message?: unknown }
-    const name = typeof error.name === "string" ? error.name : "Error"
-    const message = typeof error.message === "string" ? error.message : ""
+    const rawName = Reflect.get(value, "name");
+    const rawMessage = Reflect.get(value, "message");
+    const name = P.isString(rawName) ? rawName : "Error"
+    const message = P.isString(rawMessage) ? rawMessage : ""
     if (message === "") return name
     if (name === "") return message
     return `${name}: ${message}`

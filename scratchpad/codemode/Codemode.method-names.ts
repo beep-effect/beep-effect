@@ -45,7 +45,11 @@ export const arrayMethods = LiteralKit([
   "entries",
 ]);
 
+export type ArrayMethod = typeof arrayMethods.Type;
+
 export const arrayStatics = LiteralKit(["isArray", "of", "from"]);
+
+export type ArrayStatic = typeof arrayStatics.Type;
 
 export const mapMethods = LiteralKit([
   "get",
@@ -59,7 +63,11 @@ export const mapMethods = LiteralKit([
   "entries",
 ]);
 
+export type MapMethod = typeof mapMethods.Type;
+
 export const mapStatics = LiteralKit(["groupBy"]);
+
+export type MapStatic = typeof mapStatics.Type;
 
 export const setMethods = LiteralKit([
   "add",
@@ -78,6 +86,8 @@ export const setMethods = LiteralKit([
   "isSupersetOf",
   "isDisjointFrom",
 ]);
+
+export type SetMethod = typeof setMethods.Type;
 
 export const stringMethods = LiteralKit([
   "toLowerCase",
@@ -111,34 +121,49 @@ export const stringMethods = LiteralKit([
   "normalize",
 ]);
 
+export type StringMethod = typeof stringMethods.Type;
+
 export const stringStatics = LiteralKit(["fromCharCode", "fromCodePoint"]);
 
-export const oneArgumentDateSetter = LiteralKit([
+export type StringStatic = typeof stringStatics.Type;
+
+export const DateSetterName = LiteralKit([
   "setTime",
   "setMilliseconds",
   "setUTCMilliseconds",
   "setDate",
   "setUTCDate",
-]);
-
-export const twoArgumentDateSetter = LiteralKit([
   "setSeconds",
   "setUTCSeconds",
   "setMonth",
   "setUTCMonth",
-]);
-
-export const threeArgumentDateSetter = LiteralKit([
   "setMinutes",
   "setUTCMinutes",
   "setFullYear",
   "setUTCFullYear",
-]);
-
-export const fourArgumentDateSetter = LiteralKit([
   "setHours",
   "setUTCHours",
 ]);
+
+export type DateSetterName = typeof DateSetterName.Type;
+
+export const DateSetterArity = Object.freeze({
+  setTime: 1,
+  setMilliseconds: 1,
+  setUTCMilliseconds: 1,
+  setDate: 1,
+  setUTCDate: 1,
+  setSeconds: 2,
+  setUTCSeconds: 2,
+  setMonth: 2,
+  setUTCMonth: 2,
+  setMinutes: 3,
+  setUTCMinutes: 3,
+  setFullYear: 3,
+  setUTCFullYear: 3,
+  setHours: 4,
+  setUTCHours: 4,
+} satisfies Record<DateSetterName, 1 | 2 | 3 | 4>);
 
 export const dateMethods = LiteralKit([
   "getTime",
@@ -165,16 +190,20 @@ export const dateMethods = LiteralKit([
   "getUTCSeconds",
   "getUTCMilliseconds",
   "getTimezoneOffset",
-  ...oneArgumentDateSetter.Options,
-  ...twoArgumentDateSetter.Options,
-  ...threeArgumentDateSetter.Options,
-  ...fourArgumentDateSetter.Options,
+  ...DateSetterName.Options,
 ]);
+
+export type DateMethod = typeof dateMethods.Type;
 
 export const dateStatics = LiteralKit(["now", "parse", "UTC"]);
 
+export type DateStatic = typeof dateStatics.Type;
+
 export const regexpMethods = LiteralKit(["test", "exec", "toString"]);
+export type RegExpMethod = typeof regexpMethods.Type;
+
 export const regexpStatics = LiteralKit(["escape"]);
+export type RegExpStatic = typeof regexpStatics.Type;
 
 export const objectStatics = LiteralKit([
   "keys",
@@ -187,6 +216,8 @@ export const objectStatics = LiteralKit([
   "groupBy",
 ]);
 
+export type ObjectStatic = typeof objectStatics.Type;
+
 export const numberMethods = LiteralKit([
   "toFixed",
   "toPrecision",
@@ -194,6 +225,8 @@ export const numberMethods = LiteralKit([
   "toString",
   "valueOf",
 ]);
+
+export type NumberMethod = typeof numberMethods.Type;
 
 export const numberStatics = LiteralKit([
   "isInteger",
@@ -203,6 +236,8 @@ export const numberStatics = LiteralKit([
   "parseInt",
   "parseFloat",
 ]);
+
+export type NumberStatic = typeof numberStatics.Type;
 
 export const mathMethods = LiteralKit([
   "random",
@@ -244,6 +279,8 @@ export const mathMethods = LiteralKit([
   "sumPrecise",
 ]);
 
+export type MathMethod = typeof mathMethods.Type;
+
 export const ConsoleMethod = LiteralKit([
   "log",
   "info",
@@ -257,7 +294,10 @@ export const ConsoleMethod = LiteralKit([
 export type ConsoleMethod = typeof ConsoleMethod.Type;
 
 export const UrlMethod = LiteralKit(["toString", "toJSON"]);
+export type UrlMethod = typeof UrlMethod.Type;
+
 export const UrlStatic = LiteralKit(["canParse", "parse"]);
+export type UrlStatic = typeof UrlStatic.Type;
 
 export const UrlSearchParamsMethod = LiteralKit([
   "append",
@@ -273,3 +313,5 @@ export const UrlSearchParamsMethod = LiteralKit([
   "entries",
   "toString",
 ]);
+
+export type UrlSearchParamsMethod = typeof UrlSearchParamsMethod.Type;

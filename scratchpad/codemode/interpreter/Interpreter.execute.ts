@@ -4,12 +4,16 @@ import { Cause, Effect, Result as Rs, Scope } from "effect"
 import * as S from "effect/Schema";
 import type * as Toolkit from "effect/unstable/ai/Toolkit";
 import { DiagnosticCategory, ModuleKind, ScriptTarget, flattenDiagnosticMessageText, transpileModule } from "typescript"
-import {
-  type Diagnostic,
-  type ExecuteOptions,
-  type ExecutionLimits,
-  type Result,
+import type {
+  ExecuteOptions,
+  ExecutionLimits,
 } from "../Codemode.service.ts"
+import {
+  DiagnosticModel,
+  FailureModel,
+  ResultModel,
+  SuccessModel,
+} from "../Codemode.result.ts"
 import {
   DataValue,
   type DataValue as DataValueType,
@@ -30,20 +34,24 @@ export const executeWithLimits = <ToolkitType extends Toolkit.Toolkit<any>>(
   options: ExecuteOptions<ToolkitType>,
   limits: ExecutionLimits,
   preparedIndex?: ReadonlyArray<ToolRuntime.SearchEntry>,
-): Effect.Effect<Result, never, Services<ToolkitType>> => {
+): Effect.Effect<ResultModel, never, Services<ToolkitType>> => {
   if (Str.isEmpty(Str.trim(options.code))) {
-    return Effect.succeed({
-      ok: false,
-      error: { kind: "ParseError", message: "Code cannot be empty." },
-      toolCalls: [],
-    })
+    return Effect.succeed(
+      FailureModel.make({
+        error: DiagnosticModel.new("ParseError", "Code cannot be empty."),
+        logs: O.none(),
+        truncated: O.none(),
+        toolCalls: A.empty(),
+      })
+    )
   }
 
   // Allocate execution state inside suspension so reused Effects never share it.
   return Effect.suspend(() => {
     const toolkit = options.toolkit ?? ToolRuntime.emptyToolkit;
     const logs = A.empty<string>()
-    const logged = () => (A.isReadonlyArrayNonEmpty(logs) ? { logs: A.copy(logs) } : {})
+    const logged = () =>
+      A.isReadonlyArrayNonEmpty(logs) ? O.some(A.copy(logs)) : O.none<ReadonlyArray<string>>()
     // Set only after copy-out so timeouts cannot report invalid values as completed.
     let returned: { value: DataValueType; promises: PromiseRuntime<Services<ToolkitType>> } | undefined
     let toolRuntime: ToolRuntime.ToolRuntime<Services<ToolkitType>> | undefined
@@ -98,13 +106,14 @@ export const executeWithLimits = <ToolkitType extends Toolkit.Toolkit<any>>(
           returned = { value: result, promises }
           const warnings = yield* promises.interrupt()
           const toolCalls = yield* tools.calls;
-          return {
-            ok: true,
+          const diagnostics = A.map(warnings, DiagnosticModel.from);
+          return SuccessModel.make({
             value: result,
-            ...(A.isReadonlyArrayNonEmpty(warnings) ? { warnings } : {}),
-            ...logged(),
+            warnings: A.isReadonlyArrayNonEmpty(diagnostics) ? O.some(diagnostics) : O.none(),
+            logs: logged(),
+            truncated: O.none(),
             toolCalls,
-          } satisfies Result
+          })
         }),
       (scope, exit) => Scope.close(scope, exit),
     )
@@ -122,27 +131,30 @@ export const executeWithLimits = <ToolkitType extends Toolkit.Toolkit<any>>(
                     ? A.empty()
                     : yield* toolRuntime.calls;
                   if (P.isUndefined(returned)) {
-                    return {
-                      ok: false,
-                      error: { kind: "TimeoutExceeded", message: `Execution timed out after ${timeoutMs}ms.` },
-                      ...logged(),
+                    return FailureModel.make({
+                      error: DiagnosticModel.new(
+                        "TimeoutExceeded",
+                        `Execution timed out after ${timeoutMs}ms.`
+                      ),
+                      logs: logged(),
+                      truncated: O.none(),
                       toolCalls,
-                    } satisfies Result
+                    })
                   }
                   // Keep the timeout warning first so truncation preserves it.
-                  return {
-                    ok: true,
+                  return SuccessModel.make({
                     value: returned.value,
-                    warnings: [
-                      {
-                        kind: "TimeoutExceeded",
-                        message: `The program returned, but background work was still running at the ${timeoutMs}ms timeout and was interrupted. Await all started promises.`,
-                      },
-                      ...returned.promises.diagnostics(),
-                    ],
-                    ...logged(),
+                    warnings: O.some([
+                      DiagnosticModel.new(
+                        "TimeoutExceeded",
+                        `The program returned, but background work was still running at the ${timeoutMs}ms timeout and was interrupted. Await all started promises.`
+                      ),
+                      ...A.map(returned.promises.diagnostics(), DiagnosticModel.from),
+                    ]),
+                    logs: logged(),
+                    truncated: O.none(),
                     toolCalls,
-                  } satisfies Result
+                  })
                 }),
             }),
           ),
@@ -157,12 +169,12 @@ export const executeWithLimits = <ToolkitType extends Toolkit.Toolkit<any>>(
               const toolCalls = P.isUndefined(toolRuntime)
                 ? A.empty()
                 : yield* toolRuntime.calls;
-              return {
-                ok: false,
-                error: normalizeError(Cause.squash(cause)),
-                ...logged(),
+              return FailureModel.make({
+                error: DiagnosticModel.from(normalizeError(Cause.squash(cause))),
+                logs: logged(),
+                truncated: O.none(),
                 toolCalls,
-              } satisfies Result;
+              });
             }),
       ),
       Effect.map((result) =>
@@ -255,77 +267,82 @@ const utf8Truncate = (value: string, maxBytes: number): string => {
   return text.endsWith("\uFFFD") ? text.slice(0, -1) : text
 }
 
-// Warnings have a separate budget so result data cannot starve diagnostics.
-const boundOutput = (result: Result, maxOutputBytes: number): Result => {
-  let truncated = false
-
-  let value: DataValueType = null
-  let valueBytes = 0
-  if (result.ok) {
-    const serialized = pipe(
-      S.encodeUnknownResult(S.UnknownFromJsonString)(result.value),
-      Rs.getOrElse(() => "null")
-    );
-    const bytes = utf8ByteLength(serialized)
-    if (bytes > maxOutputBytes) {
-      truncated = true
-      value = `${utf8Truncate(serialized, maxOutputBytes)} [result truncated: ${bytes} bytes exceeds the ${maxOutputBytes}-byte output limit; return a smaller value]`
-      valueBytes = maxOutputBytes
-    } else {
-      value = result.value
-      valueBytes = bytes
-    }
-  }
-
-  const warnings = result.ok ? (result.warnings ?? []) : []
-  const keptWarnings = A.empty<Diagnostic>()
-  let warningBytes = 0
-  for (const warning of warnings) {
-    const bytes =
-      utf8ByteLength(
-        pipe(
-          S.encodeUnknownResult(S.UnknownFromJsonString)(warning),
-          Rs.getOrElse(() => "null")
-        )
-      ) + 1
-    if (warningBytes + bytes > maxOutputBytes) break
-    warningBytes += bytes
-    keptWarnings.push(warning)
-  }
-  if (keptWarnings.length < warnings.length) {
-    truncated = true
-    keptWarnings.push({
-      kind: "Truncated",
-      message: `${warnings.length - keptWarnings.length} additional warnings omitted by the output limit.`,
-    })
-  }
-
-  const logs = result.logs ?? A.empty()
+const boundLogs = (logs: ReadonlyArray<string>, maxBytes: number) => {
   const kept = A.empty<string>()
-  const logBudget = Math.max(0, maxOutputBytes - valueBytes)
-  let logBytes = 0
+  let bytes = 0
   for (const line of logs) {
     const lineBytes = utf8ByteLength(line) + 1
-    if (logBytes + lineBytes > logBudget) break
-    logBytes += lineBytes
+    if (bytes + lineBytes > maxBytes) break
+    bytes += lineBytes
     kept.push(line)
   }
-  if (kept.length < logs.length) {
-    truncated = true
-    kept.push(`[logs truncated: showing ${kept.length} of ${logs.length} lines]`)
+  const truncated = A.length(kept) < A.length(logs)
+  if (truncated) {
+    kept.push(`[logs truncated: showing ${A.length(kept)} of ${A.length(logs)} lines]`)
   }
-
-  if (!truncated) return result
-  const warningsPart = keptWarnings.length > 0 ? { warnings: keptWarnings } : {}
-  const logsPart = kept.length > 0 ? { logs: kept } : {}
-  return result.ok
-    ? {
-        ok: true,
-        value,
-        ...warningsPart,
-        ...logsPart,
-        truncated: true,
-        toolCalls: result.toolCalls,
-      }
-    : { ok: false, error: result.error, ...logsPart, truncated: true, toolCalls: result.toolCalls }
+  return { kept, truncated }
 }
+
+// Warnings have a separate budget so result data cannot starve diagnostics.
+const boundOutput = (result: ResultModel, maxOutputBytes: number): ResultModel =>
+  ResultModel.match(result, {
+    Success: (success) => {
+      const serialized = pipe(
+        S.encodeUnknownResult(S.UnknownFromJsonString)(success.value),
+        Rs.getOrElse(() => "null")
+      )
+      const bytes = utf8ByteLength(serialized)
+      const valueTruncated = bytes > maxOutputBytes
+      const value: DataValueType = valueTruncated
+        ? `${utf8Truncate(serialized, maxOutputBytes)} [result truncated: ${bytes} bytes exceeds the ${maxOutputBytes}-byte output limit; return a smaller value]`
+        : success.value
+      const valueBytes = valueTruncated ? maxOutputBytes : bytes
+
+      const warnings = O.getOrElse(success.warnings, A.empty)
+      const keptWarnings = A.empty<DiagnosticModel>()
+      let warningBytes = 0
+      for (const warning of warnings) {
+        const warningJson = pipe(
+          S.encodeUnknownResult(DiagnosticModel)(warning),
+          Rs.flatMap(S.encodeUnknownResult(S.UnknownFromJsonString)),
+          Rs.getOrElse(() => "null")
+        )
+        const warningSize = utf8ByteLength(warningJson) + 1
+        if (warningBytes + warningSize > maxOutputBytes) break
+        warningBytes += warningSize
+        keptWarnings.push(warning)
+      }
+      const warningsTruncated = A.length(keptWarnings) < A.length(warnings)
+      if (warningsTruncated) {
+        keptWarnings.push(
+          DiagnosticModel.new(
+            "Truncated",
+            `${A.length(warnings) - A.length(keptWarnings)} additional warnings omitted by the output limit.`
+          )
+        )
+      }
+
+      const logs = boundLogs(
+        O.getOrElse(success.logs, A.empty),
+        Math.max(0, maxOutputBytes - valueBytes)
+      )
+      if (!valueTruncated && !warningsTruncated && !logs.truncated) return success
+      return SuccessModel.make({
+        value,
+        warnings: A.isReadonlyArrayNonEmpty(keptWarnings) ? O.some(keptWarnings) : O.none(),
+        logs: A.isReadonlyArrayNonEmpty(logs.kept) ? O.some(logs.kept) : O.none(),
+        truncated: O.some(true),
+        toolCalls: success.toolCalls,
+      })
+    },
+    Failure: (failure) => {
+      const logs = boundLogs(O.getOrElse(failure.logs, A.empty), maxOutputBytes)
+      if (!logs.truncated) return failure
+      return FailureModel.make({
+        error: failure.error,
+        logs: A.isReadonlyArrayNonEmpty(logs.kept) ? O.some(logs.kept) : O.none(),
+        truncated: O.some(true),
+        toolCalls: failure.toolCalls,
+      })
+    },
+  })

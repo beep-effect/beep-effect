@@ -14,7 +14,7 @@ import {
   Scope,
 } from "effect"
 import * as S from "effect/Schema";
-import type { Diagnostic } from "../Codemode.service.ts"
+import type { Diagnostic } from "../Codemode.result.ts"
 import {
   type AstNode,
   InterpreterFailure,

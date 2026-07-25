@@ -25,7 +25,7 @@ export { ConsoleMethod };
 const MAX_CONSOLE_DEPTH = 32;
 const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
 
-export const formatConsoleMessage = (name: string, args: Array<unknown>): string => {
+export const formatConsoleMessage = (name: ConsoleMethod, args: Array<unknown>): string => {
   if (ConsoleMethod.is.dir(name)) return A.isArrayEmpty(args) ? "undefined" : formatConsoleArgument(args[0]);
   if (ConsoleMethod.is.table(name)) return formatConsoleTable(args[0], args[1]);
   const prefix = ConsoleMethod.is.warn(name) ? "[warn] " : ConsoleMethod.is.error(name) ? "[error] " : name === "debug" ? "[debug] " : "";
@@ -152,10 +152,9 @@ const consoleTableValues = (
   columns: O.Option<ReadonlyArray<string>>,
 ): Record<string, unknown> => {
   if (P.isNotNull(value) && P.isObjectKeyword(value) && !A.isArray(value) && !isCodeModeValue(value)) {
-    const source = value as Record<string, unknown>;
     return O.match(columns, {
-      onNone: () => R.fromEntries(R.toEntries(source)),
-      onSome: (names) => R.fromEntries(A.map(names, (column) => [column, source[column]])),
+      onNone: () => R.fromEntries(Object.entries(value)),
+      onSome: (names) => R.fromEntries(A.map(names, (column) => [column, Reflect.get(value, column)])),
     });
   }
   return {Value: value};
