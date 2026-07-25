@@ -4,11 +4,13 @@
     "slug": "academia-corpus-mining",
     "title": "Academia Corpus Mining",
     "status": "active",
-    "stage": "capture",
+    "stage": "research",
     "openQuestions": [
-      "Which routing-table suggestions (attach / extend / new-exploration) should actually be executed, and in what order?",
-      "Does the prior synthesis's ~240-paper catalogued backlog (especially legal-NLP/extraction ~97) warrant a follow-up mining wave?",
-      "Do any T3 synthesis findings change priorities inside the four target work streams (memory/bitemporal, semantic foundation, retrieval/citation, agent architecture)?"
+      "Which of the 36 routing-table routes (10 attach-to / 10 extend / 16 new-exploration; canonical table in research/t3-master-synthesis.md) should actually be executed, and in what order?",
+      "Should docs/product/prose-to-proof.md and the approval policy replace the 'becomes a fact' / 'authoritative runtime truth' language, or keep those terms with a narrow repository-state meaning? (master synthesis, align question 2)",
+      "What is the first downstream composition over the bitemporal core: preferred belief views, legal multitemporality, exact-version telemetry, or interpretation/closure records? (master synthesis, align question 4)",
+      "Does the June-29 ~240-paper catalogued backlog (especially the 97 legal-NLP/extraction papers) warrant a follow-up mining wave? (master synthesis, align question 13)",
+      "Do the T3 findings change priorities inside the four target work streams — the full 13 align-stage questions live in research/t3-master-synthesis.md 'Open questions for the align stage'?"
     ],
     "sources": ["research/SOURCES.md"],
     "links": {

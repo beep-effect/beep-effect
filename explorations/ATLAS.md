@@ -39,17 +39,19 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 ## Explorations
 
 ### Active
+
 - [`academia-corpus-mining`](./academia-corpus-mining/README.md) —
-  capture-stage mining of 519 Academia.edu PDFs (444 unique titles; June-29
-  agent/memory wave + July-24/25 legal-ontology wave) against four live work
-  streams (memory/bitemporal No-Escape, semantic foundation, retrieval/
-  citation grounding, agent architecture). Adopts the June-29 prior synthesis
-  (72 papers deep-read) as
+  research-stage: 443 canonical Academia.edu papers (June-29 agent/memory
+  wave + July-24/25 legal-ontology wave) mined through a tiered pipeline —
+  T1 triage of all 443, 185 Sol-max T2 deep-reads (42 gold / 125 silver /
+  15 bronze / 3 dross), 7 cluster reports + a repo-grounded master
+  synthesis with a 36-route table (attach/extend/new-exploration; recorded,
+  not executed) and 13 align-stage questions. Adopts the June-29 prior
+  synthesis (72 papers deep-read, snippets errata-flagged) as
   [`research/prior-synthesis-legal-ontologies.md`](./academia-corpus-mining/research/prior-synthesis-legal-ontologies.md);
   normalized corpus lives externally (`~/YeeBois/research/academia-2026-07/`,
-  public-repo copyright discipline). Pipeline: dedupe → extract → codex T1
-  triage (all) → Sol T2 deep-reads (shortlist) → T3 cluster + master
-  syntheses → routing table for later goal graduation.
+  public-repo copyright discipline). Next: align — pick which routes
+  execute.
 - [`agent-effectiveness-pulse`](./agent-effectiveness-pulse/README.md) — a
   data-driven pulse on repo agent friendliness/effectiveness (stage
   `graduate`, opened 2026-07-14, still active for wave 2): which skills are
@@ -248,6 +250,7 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `goals/ontology-modeling-foundation`), and an effect-only scratchpad
   prototype proving types/ergonomics before the packaging call
   (all-in-`@beep/identity` vs identity/rdf/ontology split).
+
 ### Proposed
 
 - (none — `atlas-synthesis` is now an Active packet above; its capability-inventory

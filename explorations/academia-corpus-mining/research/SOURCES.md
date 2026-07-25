@@ -18,10 +18,12 @@ RULES
 - Register this file in ops/manifest.json `exploration.sources`.
 -->
 
-- **Cluster / origin:** a 519-file Academia.edu recommendation download
-  (`~/Downloads/research-7-24-26`, waves 2026-06-29 and 2026-07-24/25),
-  deduplicated to 443 canonical papers and mined through a tiered
-  triage → deep-read → synthesis pipeline.
+- **Cluster / origin:** an Academia.edu recommendation download of 524
+  paper files — 519 PDFs plus five non-PDF papers
+  (`~/Downloads/research-7-24-26`, waves 2026-06-29 and 2026-07-24/25) —
+  normalized to **443 canonical papers** and mined through a tiered
+  triage → deep-read → synthesis pipeline. (The "444 unique titles" figure
+  in early capture notes was the preliminary filename-title estimate.)
 - **Provenance:** upstream prior synthesis
   [`prior-synthesis-legal-ontologies.md`](./prior-synthesis-legal-ontologies.md)
   (June-29 multi-agent run, 72 papers deep-read); adversarial snippet audit
@@ -31,9 +33,12 @@ RULES
 ## 1. Mined source corpus
 
 The corpus is **papers, not code** — the file-level inventory is
-[`paper-catalog.jsonl`](./paper-catalog.jsonl) (one JSON line per paper:
+[`paper-catalog.jsonl`](./paper-catalog.jsonl): one `catalog-meta` header
+line followed by one JSON line per paper (443 paper rows, 444 lines total;
+filter with `jq 'select(.kind != "catalog-meta")'`). Per-paper fields:
 sha256-derived id, normalized title, download wave, lens, T1
-relevance/verdict, disposition vs the standing library). Full texts and PDFs
+relevance/verdict, disposition vs the standing library, T2 tier where
+deep-read. Full texts and PDFs
 stay OUTSIDE this public repo (copyright):
 `~/YeeBois/research/academia-2026-07/` — see
 [`INVENTORY.md`](./INVENTORY.md) for its layout.
@@ -41,8 +46,11 @@ stay OUTSIDE this public repo (copyright):
 **How these inform this packet:** four mining lenses map the corpus onto live
 repo streams — memory/bitemporal (No-Escape corroboration), legal ontology &
 semantic foundation, retrieval/citation grounding/doc structure, and agent
-architecture. Cluster syntheses land in this directory as `t3-*.md`; the
-routing table in RESEARCH.md records attach/extend suggestions per insight.
+architecture. The seven cluster syntheses live in this directory as
+`t3-*.md`, the repo-grounded master synthesis as
+[`t3-master-synthesis.md`](./t3-master-synthesis.md) (canonical routing
+table + align-stage questions); RESEARCH.md carries the compressed map and
+the high-priority routes.
 
 ## 2. Upstream repositories & licenses
 

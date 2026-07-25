@@ -43,6 +43,19 @@ committed inventory).
 - Paper id = `sha256(file)[0:12]` — stable across reruns, join key for every
   state file and note.
 
+## Pipeline outcomes (T1–T3, 2026-07-25)
+
+- **T1 triage** (codex `gpt-5.6-luna` medium, 37 batches, schema-validated):
+  443/443 papers — 185 deep-read / 93 maybe / 165 catalog-only; 79
+  off-topic by lens.
+- **T2 deep-reads** (codex `gpt-5.6-sol` **max**, 185 jobs, all first- or
+  second-attempt clean, zero quota pauses): 185/185 structured notes; tiers
+  42 gold / 125 silver / 15 bronze / 3 dross; zero quotes over 25 words.
+- **T3 syntheses** (codex `gpt-5.6-sol` **max**, repo cwd read-only, 8 jobs,
+  all attempt 1): 7 cluster reports (25/39/24/10/39/23/25 papers) + master
+  synthesis with a 36-route consolidated routing table and 13 align-stage
+  questions. Committed copies: packet `research/t3-*.md`.
+
 ## Resume semantics
 
 Every stage script is idempotent (valid existing outputs are skipped), so

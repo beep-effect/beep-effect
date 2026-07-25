@@ -144,4 +144,5 @@ near the top of the synthesis. Deviated deliberately: BOTH the audit's 13
 findings and the prior-72 reconstruction cite exact line numbers into the
 byte-identical file, so any top-of-file insertion would shift every
 reference. Errata banners live at the entry points instead (packet README
-"Read This First" item 5 and SOURCES.md §3), and the file stays byte-exact.
+"Read This First" prior-synthesis item and SOURCES.md §3), and the file
+stays byte-exact.

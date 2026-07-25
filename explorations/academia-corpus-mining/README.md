@@ -2,36 +2,54 @@
 
 ## Status
 
-Stage: `capture`
+Stage: `research`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Spark
 
-519 research PDFs (444 unique titles) landed in `~/Downloads/research-7-24-26`
-from Academia.edu interest recommendations — two waves (June 29: LLM agents,
-memory, metacognition, neuro-symbolic, document understanding; July 24–25:
-legal ontologies, AI-and-law). Mine them against the repo's live work streams
-and land the intelligence here for later goal graduation.
+519 research PDFs landed in `~/Downloads/research-7-24-26` from Academia.edu
+interest recommendations — two waves (June 29: LLM agents, memory,
+metacognition, neuro-symbolic, document understanding; July 24–25: legal
+ontologies, AI-and-law). With five non-PDF papers that is 524 files,
+normalized to **443 canonical papers** (the early "444 unique titles" figure
+was the preliminary filename estimate). Mine them against the repo's live
+work streams and land the intelligence here for later goal graduation.
 
 ## Next Open Question
 
-None — corpus pipeline (dedupe → extract → triage → deep-read → synthesis) is
-running; packet moves to `research` when RESEARCH.md and cluster reports land.
+Align: which of the master synthesis's 36 recorded routes get executed, and
+in what order? Start from the 13 align-stage questions in
+[`research/t3-master-synthesis.md`](./research/t3-master-synthesis.md) —
+the two sharpest: does `docs/product/prose-to-proof.md` keep its "becomes a
+fact" language, and what is the first composition over the bitemporal core?
 
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
 2. [`CAPTURE.md`](./CAPTURE.md) - raw dump (stage 0).
-3. [`RESEARCH.md`](./RESEARCH.md) - prior art + capability inventory (stage 1, if present).
-4. [`DECISIONS.md`](./DECISIONS.md) - grilling log (stage 2, if present).
-5. [`research/prior-synthesis-legal-ontologies.md`](./research/prior-synthesis-legal-ontologies.md) - June-29 prior synthesis (72 papers deep-read), adopted as prior-art anchor. **ERRATA WARNING (2026-07-25):** its code snippets are NOT safe to copy — 36 of 56 TypeScript fences carry verified defects (removed Effect-v4 APIs, invented `@beep/*` symbols, a falsely-claimed publication gate). Read [`reviews/2026-07-25-codex-prior-synthesis-snippet-audit.md`](./reviews/2026-07-25-codex-prior-synthesis-snippet-audit.md) first; the file itself stays byte-identical because the audit and the prior-72 reconstruction cite its exact line numbers.
-6. [`BRIEF.md`](./BRIEF.md) - shaped pitch (stage 3, if present).
-7. [`MAP.md`](./MAP.md) - decomposition (stage 4, if present).
+3. [`RESEARCH.md`](./RESEARCH.md) - method, per-cluster findings map, capability inventory, high-priority routes.
+4. [`research/t3-master-synthesis.md`](./research/t3-master-synthesis.md) - repo-grounded master synthesis: ten findings, 36-route table, 13 align questions. Cluster detail in `research/t3-*.md`.
+5. [`DECISIONS.md`](./DECISIONS.md) - grilling log (stage 2, if present).
+6. [`research/prior-synthesis-legal-ontologies.md`](./research/prior-synthesis-legal-ontologies.md) - June-29 prior synthesis (72 papers deep-read), adopted as prior-art anchor. **ERRATA WARNING (2026-07-25):** its code snippets are NOT safe to copy — 36 of 56 TypeScript fences carry verified defects (removed Effect-v4 APIs, invented `@beep/*` symbols, a falsely-claimed publication gate). Read [`reviews/2026-07-25-codex-prior-synthesis-snippet-audit.md`](./reviews/2026-07-25-codex-prior-synthesis-snippet-audit.md) first; the file itself stays byte-identical because the audit and the prior-72 reconstruction cite its exact line numbers.
+7. [`BRIEF.md`](./BRIEF.md) - shaped pitch (stage 3, if present).
+8. [`MAP.md`](./MAP.md) - decomposition (stage 4, if present).
 
 ## Trail
 
+- 2026-07-25 (close): S8 QA gate passed — adversarial codex review
+  ([`reviews/2026-07-25-codex-research-qa.md`](./reviews/2026-07-25-codex-research-qa.md))
+  verdict FIX-THEN-SHIP: zero Effect-v4/`@beep/*` defects, zero copyright or
+  provenance violations, all counts verified exact; 3 documentation-contract
+  findings (corpus-count provenance, catalog header contract, path-count
+  off-by-one) fixed same session.
+- 2026-07-25 (evening): T2 + T3 complete → stage `research`. 185 Sol-max
+  deep-reads (42 gold / 125 silver / 15 bronze / 3 dross, zero quote
+  violations); 7 cluster reports + repo-grounded master synthesis landed in
+  `research/`; RESEARCH.md finished (per-cluster map, 36-route table — 15
+  high-priority); manifest openQuestions rewritten from the master's 13
+  align questions.
 - 2026-07-25 (later): snippet audit landed — 36/56 fences defective, 13
   findings (7 foundational); errata banners added at entry points, synthesis
   kept byte-identical (see DECISIONS.md). T2 deep-reads running (185 papers,
