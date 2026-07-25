@@ -3,10 +3,11 @@ import {
   CoercionFunction,
   CoercionFunctionName,
   ErrorConstructorName,
+  GlobalNamespaceName,
   InterpreterRuntimeError,
 } from "../interpreter/Interpreter.model.ts"
-import { copyIn, type SafeObject } from "../Codemode.tool-runtime.ts"
-import { LiteralKit } from "@beep/schema"
+import { copyIn } from "../Codemode.tool-runtime.ts"
+import { LiteralKit, MappedLiteralKit, SafeObject } from "@beep/schema"
 import {
   isCodeModeValue,
   CodeModeDate,
@@ -21,14 +22,71 @@ import { A, P } from "@beep/utils";
 
 export const errorConstructors = ErrorConstructorName
 
-export const valueConstructors = LiteralKit(["Date", "RegExp", "Map", "Set", "URL", "URLSearchParams"])
+export const valueConstructors = LiteralKit(
+  GlobalNamespaceName.pickOptions([
+    "Date",
+    "RegExp",
+    "Map",
+    "Set",
+    "URL",
+    "URLSearchParams",
+  ])
+)
 
-export const compoundOperators = LiteralKit(["+=", "-=", "*=", "/=", "%=", "**=", "&=", "|=", "^=", "<<=", ">>=", ">>>="])
+export const BinaryOperator = LiteralKit([
+  "+",
+  "-",
+  "*",
+  "/",
+  "%",
+  "**",
+  "==",
+  "!=",
+  "===",
+  "!==",
+  "<",
+  "<=",
+  ">",
+  ">=",
+  "&",
+  "|",
+  "^",
+  "<<",
+  ">>",
+  ">>>",
+  "in",
+  "instanceof",
+])
+
+export type BinaryOperator = typeof BinaryOperator.Type
+
+export const AppliedBinaryOperator = LiteralKit(
+  BinaryOperator.omitOptions(["instanceof"])
+)
+
+export type AppliedBinaryOperator = typeof AppliedBinaryOperator.Type
+
+export const CompoundOperator = MappedLiteralKit([
+  ["+=", "+"],
+  ["-=", "-"],
+  ["*=", "*"],
+  ["/=", "/"],
+  ["%=", "%"],
+  ["**=", "**"],
+  ["&=", "&"],
+  ["|=", "|"],
+  ["^=", "^"],
+  ["<<=", "<<"],
+  [">>=", ">>"],
+  [">>>=", ">>>"],
+])
+
+export const compoundOperators = LiteralKit(CompoundOperator.Options)
 
 const ErrorBrand: unique symbol = Symbol("codemode.error")
 
 export const createErrorValue = (name: string, message: string): SafeObject => {
-  const value = Object.assign(Object.create(null) as SafeObject, { name, message })
+  const value = Object.assign(SafeObject.make(Object.create(null)), { name, message })
   Object.defineProperty(value, ErrorBrand, { value: name })
   return value
 }

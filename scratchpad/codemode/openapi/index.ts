@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { NonEmptyTrimmedStr } from "@beep/schema";
 import { A, O, R, Str, Struct, pipe } from "@beep/utils";
 import {
   Effect,
@@ -93,17 +92,13 @@ export type {
 
 const $I = $ScratchpadId.create("codemode/openapi");
 
-const decodeOptions = S.decodeUnknownEffect(Options);
-const decodeHttpMethod = S.decodeUnknownOption(HttpMethod);
-const decodeApiPath = S.decodeUnknownOption(ApiPath);
-const decodeOperationId = S.decodeUnknownOption(OperationId);
 const UnknownRecord = S.Record(S.String, S.Unknown);
 
 class OperationCandidate extends S.Class<OperationCandidate>(
   $I`OperationCandidate`
 )(
   {
-    sourceMethod: NonEmptyTrimmedStr,
+    sourceMethod: HttpMethod.To,
     method: HttpMethod,
     path: S.String,
     pathItem: UnknownRecord,
@@ -114,14 +109,14 @@ class OperationCandidate extends S.Class<OperationCandidate>(
   })
 ) {
   static readonly new = (
-    sourceMethod: string,
+    sourceMethod: typeof HttpMethod.Encoded,
     method: HttpMethod,
     path: string,
     pathItem: Readonly<Record<string, unknown>>,
     operation: Readonly<Record<string, unknown>>
   ): OperationCandidate =>
     OperationCandidate.make({
-      sourceMethod: NonEmptyTrimmedStr.make(sourceMethod),
+      sourceMethod,
       method,
       path,
       pathItem,
@@ -222,11 +217,11 @@ const candidates = (
         pathValue,
         R.toEntries,
         A.map(([sourceMethod, operationValue]) => {
-          const method = decodeHttpMethod(sourceMethod);
+          const method = HttpMethod.decodeOption(sourceMethod);
           return O.isSome(method) && isRecord(operationValue)
             ? O.some(
                 OperationCandidate.new(
-                  sourceMethod,
+                  HttpMethod.To.Enum[method.value],
                   method.value,
                   path,
                   pathValue,
@@ -245,12 +240,12 @@ const operationFrom = (
   candidate: OperationCandidate
 ): O.Option<Operation> =>
   pipe(
-    decodeApiPath(candidate.path),
+    ApiPath.decodeOption(candidate.path),
     O.map((path) =>
       Operation.new(
         pipe(
           own(candidate.operation, "operationId"),
-          O.flatMap(decodeOperationId)
+          O.flatMap(OperationId.decodeOption)
         ),
         candidate.method,
         path,
@@ -433,7 +428,7 @@ export const fromSpec = (
   options: unknown
 ): Effect.Effect<FromSpecResult, InvalidOpenApiOptions> =>
   pipe(
-    decodeOptions(options),
+    Options.decodeEffect(options),
     Effect.mapError(InvalidOpenApiOptions.new),
     Effect.map((decoded) => {
       const compiled = compile(decoded);

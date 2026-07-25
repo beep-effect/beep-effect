@@ -13,15 +13,40 @@ import {
   TaggedErrorClass
 } from "@beep/schema";
 import {A, N, O, P} from "@beep/utils";
-import {Effect, MutableHashMap} from "effect";
+import {Effect, MutableHashMap, Result} from "effect";
 import * as S from "effect/Schema";
 import type {SafeObject} from "@beep/schema/SafeObject";
 import {ToolError} from "../Codemode.tool-error.ts";
 import {ToolRuntimeError} from "../Codemode.tool-runtime.ts";
 import {
+  arrayMethods,
+  arrayStatics,
+  ConsoleMethod,
+  dateMethods,
+  dateStatics,
+  mapMethods,
+  mapStatics,
+  mathMethods,
+  numberMethods,
+  numberStatics,
+  objectStatics,
+  regexpMethods,
+  regexpStatics,
+  setMethods,
+  stringMethods,
+  stringStatics,
+  UrlMethod,
+  UrlSearchParamsMethod,
+  UrlStatic,
+} from "../Codemode.method-names.ts";
+import {
+  CodeModeDate,
+  CodeModeMap,
   CodeModePromise,
-  type CodeModeRegExp,
-  type CodeModeURL
+  CodeModeRegExp,
+  CodeModeSet,
+  CodeModeURL,
+  CodeModeURLSearchParams,
 } from "../Codemode.values.ts";
 
 const $I = $ScratchpadId.create("codemode/interpreter/Interpreter.model");
@@ -111,7 +136,8 @@ export const AstNode = S.StructWithRest(
 ).pipe(
   $I.annoteSchema("AstNode", {
     description: "An Acorn syntax node with a required type discriminator and optional source location.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -367,9 +393,7 @@ export class CodeModeGenerator extends S.TaggedClass<CodeModeGenerator>($I`CodeM
 
 /** Operations exposed by a guest generator reference. */
 export const GeneratorMethodKind = LiteralKit([
-  "next",
-  "return",
-  "throw",
+  ...GeneratorRequestKind.Options,
   "iterator",
 ]).pipe(
   $I.annoteSchema("GeneratorMethodKind", {
@@ -397,19 +421,136 @@ export class GeneratorMethodReference extends S.TaggedClass<GeneratorMethodRefer
   ): GeneratorMethodReference => GeneratorMethodReference.make({generator, kind});
 }
 
+const IntrinsicMethod = S.Union([
+  S.Struct({
+    receiverKind: S.tag("String"),
+    receiver: S.String,
+    name: stringMethods,
+  }),
+  S.Struct({
+    receiverKind: S.tag("Number"),
+    // Guest JavaScript numbers intentionally include NaN and infinities.
+    // @effect-diagnostics-next-line schemaNumber:off
+    receiver: S.Number,
+    name: numberMethods,
+  }),
+  S.Struct({
+    receiverKind: S.tag("Array"),
+    receiver: S.Array(S.Unknown),
+    name: arrayMethods,
+  }),
+  S.Struct({
+    receiverKind: S.tag("Date"),
+    receiver: CodeModeDate,
+    name: dateMethods,
+  }),
+  S.Struct({
+    receiverKind: S.tag("RegExp"),
+    receiver: CodeModeRegExp,
+    name: regexpMethods,
+  }),
+  S.Struct({
+    receiverKind: S.tag("Map"),
+    receiver: CodeModeMap,
+    name: mapMethods,
+  }),
+  S.Struct({
+    receiverKind: S.tag("Set"),
+    receiver: CodeModeSet,
+    name: setMethods,
+  }),
+  S.Struct({
+    receiverKind: S.tag("URL"),
+    receiver: CodeModeURL,
+    name: UrlMethod,
+  }),
+  S.Struct({
+    receiverKind: S.tag("URLSearchParams"),
+    receiver: CodeModeURLSearchParams,
+    name: UrlSearchParamsMethod,
+  }),
+]).pipe(
+  S.toTaggedUnion("receiverKind"),
+  $I.annoteSchema("IntrinsicMethod", {
+    description: "Every legal receiver and intrinsic method-name combination.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+type IntrinsicMethod = typeof IntrinsicMethod.Type;
+
 /** Bound intrinsic operation. */
 export class IntrinsicReference extends S.TaggedClass<IntrinsicReference>($I`IntrinsicReference`)(
   "IntrinsicReference",
   {
-    receiver: S.Unknown,
-    name: S.String,
+    method: IntrinsicMethod,
   },
   $I.annote("IntrinsicReference", {
     description: "An intrinsic method bound to its guest receiver.",
   })
 ) {
-  static readonly new = (receiver: unknown, name: string): IntrinsicReference =>
-    IntrinsicReference.make({receiver, name});
+  static readonly new = (receiver: unknown, name: string): IntrinsicReference => {
+    if (P.isString(receiver) && S.is(stringMethods)(name)) {
+      return IntrinsicReference.make({
+        method: { receiverKind: "String", receiver, name },
+      });
+    }
+    if (P.isNumber(receiver) && S.is(numberMethods)(name)) {
+      return IntrinsicReference.make({
+        method: { receiverKind: "Number", receiver, name },
+      });
+    }
+    if (A.isArray(receiver) && S.is(arrayMethods)(name)) {
+      return IntrinsicReference.make({
+        method: { receiverKind: "Array", receiver, name },
+      });
+    }
+    if (CodeModeDate.is(receiver) && S.is(dateMethods)(name)) {
+      return IntrinsicReference.make({
+        method: { receiverKind: "Date", receiver, name },
+      });
+    }
+    if (CodeModeRegExp.is(receiver) && S.is(regexpMethods)(name)) {
+      return IntrinsicReference.make({
+        method: { receiverKind: "RegExp", receiver, name },
+      });
+    }
+    if (CodeModeMap.is(receiver) && S.is(mapMethods)(name)) {
+      return IntrinsicReference.make({
+        method: { receiverKind: "Map", receiver, name },
+      });
+    }
+    if (CodeModeSet.is(receiver) && S.is(setMethods)(name)) {
+      return IntrinsicReference.make({
+        method: { receiverKind: "Set", receiver, name },
+      });
+    }
+    if (CodeModeURL.is(receiver) && S.is(UrlMethod)(name)) {
+      return IntrinsicReference.make({
+        method: { receiverKind: "URL", receiver, name },
+      });
+    }
+    if (CodeModeURLSearchParams.is(receiver) && S.is(UrlSearchParamsMethod)(name)) {
+      return IntrinsicReference.make({
+        method: { receiverKind: "URLSearchParams", receiver, name },
+      });
+    }
+    return IntrinsicReference.make({
+      method: IntrinsicMethod.fromUnknown({
+        receiverKind: "URLSearchParams",
+        receiver,
+        name,
+      }),
+    });
+  };
+
+  get receiver(): IntrinsicMethod["receiver"] {
+    return this.method.receiver;
+  }
+
+  get name(): IntrinsicMethod["name"] {
+    return this.method.name;
+  }
 }
 
 /** Marker preserving a computed value through assignment evaluation. */
@@ -547,16 +688,7 @@ export class GlobalNamespace extends S.TaggedClass<GlobalNamespace>($I`GlobalNam
 }
 
 export const GlobalMethodNamespace = LiteralKit([
-  "Object",
-  "Math",
-  "Array",
-  "console",
-  "Date",
-  "RegExp",
-  "Map",
-  "Set",
-  "URL",
-  "URLSearchParams",
+  ...GlobalNamespaceName.omitOptions(["JSON", "Set", "URLSearchParams"]),
   "Number",
   "String",
 ]).pipe(
@@ -567,11 +699,31 @@ export const GlobalMethodNamespace = LiteralKit([
 
 export type GlobalMethodNamespace = typeof GlobalMethodNamespace.Type;
 
+const GlobalMethod = S.Union([
+  S.Struct({ namespace: S.tag("Object"), name: objectStatics }),
+  S.Struct({ namespace: S.tag("Math"), name: mathMethods }),
+  S.Struct({ namespace: S.tag("Array"), name: arrayStatics }),
+  S.Struct({ namespace: S.tag("console"), name: ConsoleMethod }),
+  S.Struct({ namespace: S.tag("Date"), name: dateStatics }),
+  S.Struct({ namespace: S.tag("RegExp"), name: regexpStatics }),
+  S.Struct({ namespace: S.tag("Map"), name: mapStatics }),
+  S.Struct({ namespace: S.tag("URL"), name: UrlStatic }),
+  S.Struct({ namespace: S.tag("Number"), name: numberStatics }),
+  S.Struct({ namespace: S.tag("String"), name: stringStatics }),
+]).pipe(
+  S.toTaggedUnion("namespace"),
+  $I.annoteSchema("GlobalMethod", {
+    description: "Every legal global namespace and static method-name combination.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+type GlobalMethod = typeof GlobalMethod.Type;
+
 export class GlobalMethodReference extends S.TaggedClass<GlobalMethodReference>($I`GlobalMethodReference`)(
   "GlobalMethodReference",
   {
-    namespace: GlobalMethodNamespace,
-    name: S.String,
+    method: GlobalMethod,
   },
   $I.annote("GlobalMethodReference", {
     description: "A global method bound to its namespace.",
@@ -580,7 +732,18 @@ export class GlobalMethodReference extends S.TaggedClass<GlobalMethodReference>(
   static readonly new = (
     namespace: GlobalMethodNamespace,
     name: string
-  ): GlobalMethodReference => GlobalMethodReference.make({namespace, name});
+  ): GlobalMethodReference =>
+    GlobalMethodReference.make({
+      method: GlobalMethod.fromUnknown({ namespace, name }),
+    });
+
+  get namespace(): GlobalMethod["namespace"] {
+    return this.method.namespace;
+  }
+
+  get name(): GlobalMethod["name"] {
+    return this.method.name;
+  }
 }
 
 /** JSON method names exposed to guest programs. */
@@ -796,7 +959,9 @@ export class InterpreterRuntimeError extends TaggedErrorClass<InterpreterRuntime
     node: S.OptionFromOptionalKey(AstNode).pipe(SchemaUtils.withNoneDefault),
     kind: DiagnosticKind.pipe(SchemaUtils.withKeyDefaults(DiagnosticKind.Enum.ExecutionFailure)),
     suggestions: S.Array(S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    errorName: S.String.pipe(SchemaUtils.withKeyDefaults("Error")),
+    errorName: ErrorConstructorName.pipe(
+      SchemaUtils.withKeyDefaults(ErrorConstructorName.Enum.Error)
+    ),
   },
   $I.annote("InterpreterRuntimeError", {
     description: "Typed failure raised while evaluating a guest program.",
@@ -815,7 +980,7 @@ export class InterpreterRuntimeError extends TaggedErrorClass<InterpreterRuntime
       suggestions: O.fromNullishOr(suggestions),
     });
 
-  readonly as = (errorName: string): InterpreterRuntimeError =>
+  readonly as = (errorName: ErrorConstructorName): InterpreterRuntimeError =>
     InterpreterRuntimeError.make({
       message: this.message,
       node: this.node,
@@ -851,6 +1016,22 @@ export const InterpreterFailure = S.Union([
 /** Runtime type for {@link InterpreterFailure}. */
 export type InterpreterFailure = typeof InterpreterFailure.Type;
 
+/** Captures a synchronous interpreter adapter in the closed failure channel. */
+export const tryInterpreter = <Value>(
+  evaluate: () => Value,
+  node?: AstNode
+): Result.Result<Value, InterpreterFailure> =>
+  Result.try({
+    try: evaluate,
+    catch: (error) =>
+      InterpreterFailure.is(error)
+        ? error
+        : InterpreterRuntimeError.new(
+            P.isError(error) ? error.message : globalThis.String(error),
+            node
+          ),
+  });
+
 export const unsupportedSyntax = (kind: string, node: AstNode): InterpreterRuntimeError =>
   InterpreterRuntimeError.new(
     `Syntax '${kind}' is not supported. ${supportedSyntaxMessage}`,
@@ -860,10 +1041,8 @@ export const unsupportedSyntax = (kind: string, node: AstNode): InterpreterRunti
   );
 
 export const isRecord = P.isObject;
-export const isAstNode = S.is(AstNode);
-
 export const asNode = (value: unknown, context: string): AstNode => {
-  if (!isAstNode(value)) {
+  if (!AstNode.is(value)) {
     throw InterpreterRuntimeError.new(`Invalid AST node while reading ${context}.`);
   }
   return value;

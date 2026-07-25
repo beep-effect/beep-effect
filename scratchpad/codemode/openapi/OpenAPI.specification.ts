@@ -46,12 +46,18 @@ import {
 
 const $I = $ScratchpadId.create("codemode/openapi/OpenAPI.specification");
 
-const UnknownRecord = S.Record(S.String, S.Unknown);
-const NonEmptyString = S.NonEmptyString;
+const UnknownRecord = S.Record(S.String, S.Unknown).pipe(
+  SchemaUtils.withCodecStatics
+);
+const NonEmptyString = S.NonEmptyString.pipe(
+  SchemaUtils.withCodecStatics
+);
 const SuccessStatus = S.String.check(S.isPattern(/^2\d\d$/u));
 
 /** Supported parameter locations before request-body fields are introduced. */
-export const ParameterLocation = LiteralKit(["path", "query", "header"]).pipe(
+export const ParameterLocation = LiteralKit(
+  InputLocation.omitOptions(["body"])
+).pipe(
   $I.annoteSchema("ParameterLocation", {
     description: "OpenAPI parameter locations supported by CodeMode.",
   })
@@ -98,10 +104,10 @@ const nestedSchemaMaps = LiteralKit([
 ]);
 
 /** Guard for JSON-style records used by OpenAPI. */
-export const isRecord = S.is(UnknownRecord);
+export const isRecord = UnknownRecord.is;
 
 /** Decodes a non-empty string without scattering nullish checks. */
-export const nonEmptyString = S.decodeUnknownOption(NonEmptyString);
+export const nonEmptyString = NonEmptyString.decodeOption;
 
 /** Own-property lookup for spec-controlled records. */
 export const own = <Value>(
@@ -418,7 +424,7 @@ const normalizeSchema = (
   document: Document,
   value: unknown
 ): Result.Result<JsonSchema, string> => {
-  if (!isRecord(value)) return Result.succeed({} as JsonSchema);
+  if (!isRecord(value)) return Result.succeed(JsonSchema.make({}));
   return pipe(
     Result.try({
       try: () =>
@@ -672,11 +678,13 @@ const operationParameters = (
       O.getOrElse(emptyUnknownArray)
     )
   );
+  const initial: Result.Result<
+    HashMap.HashMap<string, DeclaredParameter>,
+    string
+  > = Result.succeed(HashMap.empty());
   const declared = A.reduce(
     raw,
-    Result.succeed(
-      HashMap.empty<string, DeclaredParameter>()
-    ) as Result.Result<HashMap.HashMap<string, DeclaredParameter>, string>,
+    initial,
     (accumulator, item) =>
       pipe(
         accumulator,

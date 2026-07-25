@@ -15,12 +15,15 @@ import { isBlockedMember } from "../Codemode.tool-runtime.ts"
 import { isCodeModeValue, CodeModePromise } from "../Codemode.values.ts"
 import { boundedData, coerceToString } from "./StdLib.value.ts"
 import { preserveConsumerError, type SyncIteratorRunner } from "../interpreter/Interpreter.iterator.ts"
+import { objectStatics } from "../Codemode.method-names.ts"
 
 export const objectMethodsPreservingIdentity = LiteralKit(["assign", "values", "entries", "fromEntries"])
 
-export const objectStatics = LiteralKit(["keys", "values", "entries", "hasOwn", "is", "assign", "fromEntries", "groupBy"])
+export { objectStatics } from "../Codemode.method-names.ts"
 
-const DirectObjectMethod = LiteralKit(["keys", "values", "entries", "hasOwn", "is", "assign"])
+const DirectObjectMethod = LiteralKit(
+  objectStatics.omitOptions(["fromEntries", "groupBy"])
+)
 
 export const invokeObjectMethod = (name: string, args: Array<unknown>, node: AstNode): unknown => {
   const requireObject = (): Record<string, unknown> => {

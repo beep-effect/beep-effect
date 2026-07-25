@@ -17,6 +17,7 @@ import {
   PromiseCapabilityFunction,
   PromiseNamespace,
   RuntimeReference,
+  tryInterpreter,
   UriFunction,
 } from "./Interpreter.model.ts";
 import {
@@ -38,6 +39,11 @@ import {
   isCodeModeValue,
 } from "../Codemode.values.ts";
 import {
+  arrayStatics,
+  arrayMethods,
+  stringMethods,
+} from "../Codemode.method-names.ts";
+import {
   dateSetterArgumentCount,
   invokeDateMethod,
   invokeDateStatic
@@ -48,14 +54,13 @@ import {
   invokeNumberStatic
 } from "../stdlib/StdLib.number.ts";
 import {invokeObjectMethod} from "../stdlib/StdLib.object.ts";
-import {arrayMethods} from "../stdlib/StdLib.collections.ts";
 import {
   invokeRegExpMethod,
   invokeRegExpStatic,
   matchToValue,
   toHostRegex
 } from "../stdlib/StdLib.regexp.ts";
-import {invokeStringStatic, stringMethods} from "../stdlib/StdLib.string.ts";
+import {invokeStringStatic} from "../stdlib/StdLib.string.ts";
 import {
   invokeURLMethod,
   invokeURLStatic,
@@ -127,19 +132,25 @@ export const invokeIntrinsic = <R>(
   node: AstNode,
 ): Effect.Effect<unknown, InterpreterFailure, R> => {
   if (typeof ref.receiver === "string") {
+    const target = ref.receiver;
     if (ref.name === "replace" || ref.name === "replaceAll") {
-      if (isSupportedCallback(args[1])) return invokeStringReplacer(runner, ref.receiver, ref.name, args, node);
+      if (isSupportedCallback(args[1])) return invokeStringReplacer(runner, target, ref.name, args, node);
       if (typeofValue(args[1]) === "function") {
-        throw InterpreterRuntimeError.new(
+        return Effect.fail(InterpreterRuntimeError.new(
           `String.${ref.name} cannot use this callable as a replacer; wrap it in an arrow function, e.g. (match) => tools.ns.tool(match).`,
           node,
-        );
+        ));
       }
     }
-    return Effect.succeed(invokeStringMethod(ref.receiver, ref.name, args, node));
+    return Effect.fromResult(
+      tryInterpreter(() => invokeStringMethod(target, ref.name, args, node), node)
+    );
   }
   if (P.isNumber(ref.receiver)) {
-    return Effect.succeed(invokeNumberMethod(ref.receiver, ref.name, args, node));
+    const target = ref.receiver;
+    return Effect.fromResult(
+      tryInterpreter(() => invokeNumberMethod(target, ref.name, args, node), node)
+    );
   }
   if (A.isArray(ref.receiver)) {
     return invokeArrayMethod(runner, ref.receiver, ref.name, args, node);
@@ -147,18 +158,31 @@ export const invokeIntrinsic = <R>(
   if (CodeModeDate.is(ref.receiver)) {
     const target = ref.receiver;
     const argumentCount = dateSetterArgumentCount(ref.name);
-    if (O.isNone(argumentCount)) return Effect.succeed(invokeDateMethod(target, ref.name, [], node));
+    if (O.isNone(argumentCount)) {
+      return Effect.fromResult(
+        tryInterpreter(() => invokeDateMethod(target, ref.name, [], node), node)
+      );
+    }
     // Native setters read the current time before argument coercion, whose callbacks may mutate the Date.
     const initialTime = target.time;
-    return Effect.map(
+    return Effect.flatMap(
       Effect.forEach(args.slice(0, argumentCount.value), (arg) => coerceNumericArgument(runner, arg, node), {
         concurrency: 1,
       }),
-      (values) => invokeDateMethod(target, ref.name, values, node, initialTime),
+      (values) =>
+        Effect.fromResult(
+          tryInterpreter(
+            () => invokeDateMethod(target, ref.name, values, node, initialTime),
+            node
+          )
+        ),
     );
   }
   if (CodeModeRegExp.is(ref.receiver)) {
-    return Effect.succeed(invokeRegExpMethod(ref.receiver, ref.name, args, node));
+    const target = ref.receiver;
+    return Effect.fromResult(
+      tryInterpreter(() => invokeRegExpMethod(target, ref.name, args, node), node)
+    );
   }
   if (CodeModeMap.is(ref.receiver)) {
     return invokeMapMethod(runner, ref.receiver, ref.name, args, node);
@@ -167,12 +191,17 @@ export const invokeIntrinsic = <R>(
     return invokeSetMethod(runner, ref.receiver, ref.name, args, node);
   }
   if (CodeModeURL.is(ref.receiver)) {
-    return Effect.succeed(invokeURLMethod(ref.receiver, ref.name, node));
+    const target = ref.receiver;
+    return Effect.fromResult(
+      tryInterpreter(() => invokeURLMethod(target, ref.name, node), node)
+    );
   }
   if (CodeModeURLSearchParams.is(ref.receiver)) {
     return invokeURLSearchParamsMethod(runner, ref.receiver, ref.name, args, node);
   }
-  throw InterpreterRuntimeError.new(`Method '${ref.name}' is not available.`, node);
+  return Effect.fail(
+    InterpreterRuntimeError.new(`Method '${ref.name}' is not available.`, node)
+  );
 };
 
 const coerceNumericArgument = <R>(
@@ -218,8 +247,6 @@ export const invokeGlobalMethod = (ref: GlobalMethodReference, args: Array<unkno
     RegExp: () => invokeRegExpStatic(ref.name, args, node),
     console: () => unavailable(ref.namespace, ref.name),
     Map: () => unavailable(ref.namespace, ref.name),
-    Set: () => unavailable(ref.namespace, ref.name),
-    URLSearchParams: () => unavailable(ref.namespace, ref.name),
   });
 };
 
@@ -380,7 +407,7 @@ const invokeStringMethod = (value: string, name: string, args: Array<unknown>, n
   return boundedData(result, `String.${name} result`);
 };
 
-export const arrayStatics = LiteralKit(["isArray", "of", "from"]);
+export { arrayStatics } from "../Codemode.method-names.ts";
 const DirectArrayStatic = LiteralKit(arrayStatics.omitOptions(["from"]));
 
 const invokeArrayStatic = (name: string, args: Array<unknown>, node: AstNode): unknown => {
@@ -412,7 +439,9 @@ const arrayLikeSource = (source: unknown, node: AstNode): {
   ) {
     const length = (source as { length: number }).length;
     const normalized = Number.isNaN(length) || length <= 0 ? 0 : Math.trunc(length);
-    if (normalized > 4_294_967_295) throw new RangeError("Invalid array length");
+    if (normalized > 4_294_967_295) {
+      throw InterpreterRuntimeError.new("Invalid array length.", node).as("RangeError");
+    }
     return {length: normalized, source};
   }
   throw InterpreterRuntimeError.new(
@@ -488,7 +517,7 @@ export const invokeGroupBy = <R>(
       }
     }
 
-    const result: SafeObject = Object.create(null) as SafeObject;
+    const result = SafeObject.make(Object.create(null));
     let index = 0;
     while (true) {
       const step = yield* cursor.next;
@@ -565,7 +594,7 @@ const invokeStringReplacer = <R>(
       throw InterpreterRuntimeError.new(`String.${name} produced an invalid replacement match.`, node);
     }
     if (hasGroups) {
-      const safeGroups: SafeObject = Object.create(null) as SafeObject;
+      const safeGroups = SafeObject.make(Object.create(null));
       for (const [key, group] of Object.entries(groups)) {
         if (!isBlockedMember(key)) Reflect.set(safeGroups, key, group);
       }

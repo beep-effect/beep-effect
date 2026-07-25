@@ -12,6 +12,7 @@ import {
   Random
 } from "effect";
 import * as S from "effect/Schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import {
   SafeObject as SafeObjectSchema,
   type SafeObject
@@ -68,6 +69,7 @@ import {
   StatementResult,
   StatementReturn,
   SymbolNamespace,
+  tryInterpreter,
   unsupportedSyntax,
   UriFunction,
 } from "./Interpreter.model.ts";
@@ -105,10 +107,13 @@ import {
 import {ScopeStack} from "./Interpreter.scope.ts";
 import {
   arrayMethods,
+  AppliedBinaryOperator,
   boundedData,
+  BinaryOperator,
   coerceToNumber,
   coerceToString,
   compoundOperators,
+  CompoundOperator,
   ConsoleMethod,
   dateMethods,
   dateStatics,
@@ -172,6 +177,50 @@ const globalStaticMembers: Partial<Record<GlobalNamespaceName, S.Top>> = {
 
 const MAX_ARRAY_LENGTH = 4_294_967_295;
 const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
+
+const StatementNodeType = LiteralKit([
+  "ExpressionStatement",
+  "VariableDeclaration",
+  "ReturnStatement",
+  "BlockStatement",
+  "IfStatement",
+  "SwitchStatement",
+  "LabeledStatement",
+  "WhileStatement",
+  "DoWhileStatement",
+  "ForStatement",
+  "ForOfStatement",
+  "ForInStatement",
+  "BreakStatement",
+  "ContinueStatement",
+  "ThrowStatement",
+  "TryStatement",
+  "EmptyStatement",
+  "FunctionDeclaration",
+]);
+
+const ExpressionNodeType = LiteralKit([
+  "ArrowFunctionExpression",
+  "FunctionExpression",
+  "Literal",
+  "Identifier",
+  "BinaryExpression",
+  "LogicalExpression",
+  "UnaryExpression",
+  "AssignmentExpression",
+  "SequenceExpression",
+  "CallExpression",
+  "MemberExpression",
+  "ChainExpression",
+  "ObjectExpression",
+  "ArrayExpression",
+  "TemplateLiteral",
+  "ConditionalExpression",
+  "UpdateExpression",
+  "AwaitExpression",
+  "YieldExpression",
+  "NewExpression",
+]);
 
 const parseArrayIndex = (key: string | number): number | undefined => {
   const property = String(key);
@@ -295,11 +344,12 @@ const OpaqueMemberReference = S.Union([
   GlobalMethodReference,
   JsonMethodReference,
   GeneratorMethodReference,
-]).pipe(S.toTaggedUnion("_tag"));
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  SchemaUtils.withCodecStatics
+);
 
 type OpaqueMemberReference = typeof OpaqueMemberReference.Type;
-
-const isOpaqueMemberReference = S.is(OpaqueMemberReference);
 
 const copyIteratorSymbols = (
   source: object,
@@ -472,6 +522,9 @@ export class Interpreter<R> {
   }
 
   private evaluateStatement(node: AstNode): Effect.Effect<StatementResult, InterpreterFailure, R> {
+    if (!S.is(StatementNodeType)(node.type)) {
+      return Effect.fail(unsupportedSyntax(node.type, node));
+    }
     return Match.value(node.type).pipe(
       Match.when("ExpressionStatement", () =>
         Effect.as(
@@ -501,9 +554,7 @@ export class Interpreter<R> {
       Match.when("TryStatement", () => this.evaluateTryStatement(node)),
       Match.when("EmptyStatement", () => Effect.succeed(StatementNone.new())),
       Match.when("FunctionDeclaration", () => Effect.succeed(StatementNone.new())),
-      Match.orElse(() => {
-        throw unsupportedSyntax(node.type, node);
-      }),
+      Match.exhaustive,
     );
   }
 
@@ -610,7 +661,14 @@ export class Interpreter<R> {
         const start = selected ?? defaultIndex;
         if (P.isUndefined(start)) return StatementNone.new();
         for (let index = start; index < cases.length; index += 1) {
-          for (const statementValue of getArray(cases[index]!, "consequent")) {
+          const matchedCase = cases[index];
+          if (P.isUndefined(matchedCase)) {
+            return yield* InterpreterRuntimeError.new(
+              "Switch case index is outside the decoded case list.",
+              node
+            );
+          }
+          for (const statementValue of getArray(matchedCase, "consequent")) {
             const result = yield* self.evaluateStatement(asNode(statementValue, "consequent"));
             if (StatementResult.guards.Break(result)) {
               if (O.isNone(result.label)) return StatementNone.new();
@@ -1297,7 +1355,7 @@ export class Interpreter<R> {
           const property = asNode(propertyValue, "properties");
 
           if (property.type === "RestElement") {
-            const rest: SafeObject = Object.create(null) as SafeObject;
+            const rest = SafeObjectSchema.make(Object.create(null));
             for (const [key, item] of Object.entries(value as SafeObject)) {
               if (!MutableHashSet.has(consumed, key) && !isBlockedMember(key)) Reflect.set(rest, key, item);
             }
@@ -1365,7 +1423,7 @@ export class Interpreter<R> {
         for (const propertyValue of getArray(pattern, "properties")) {
           const property = asNode(propertyValue, "properties");
           if (property.type === "RestElement") {
-            const rest: SafeObject = Object.create(null) as SafeObject;
+            const rest = SafeObjectSchema.make(Object.create(null));
             for (const [key, item] of Object.entries(source)) {
               if (!MutableHashSet.has(consumed, key) && !isBlockedMember(key)) Reflect.set(rest, key, item);
             }
@@ -1462,20 +1520,35 @@ export class Interpreter<R> {
   }
 
   private evaluateExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
-    if (node.type === "ArrowFunctionExpression" || node.type === "FunctionExpression") {
+    const nodeType = node.type;
+    if (!S.is(ExpressionNodeType)(nodeType)) {
+      return Effect.fail(unsupportedSyntax(nodeType, node));
+    }
+    if (nodeType === "ArrowFunctionExpression" || nodeType === "FunctionExpression") {
       return Effect.sync(() => this.createFunction(node));
     }
-    return Match.value(node.type).pipe(
+    return Match.value(nodeType).pipe(
       Match.when("Literal", () => {
         const regex = node.regex;
         if (isRecord(regex) && P.isString(regex.pattern)) {
-          return Effect.sync(() =>
-            this.constructRegExp([regex.pattern, typeof regex.flags === "string" ? regex.flags : ""], node),
+          return Effect.fromResult(
+            tryInterpreter(
+              () => this.constructRegExp(
+                [regex.pattern, P.isString(regex.flags) ? regex.flags : ""],
+                node
+              ),
+              node
+            )
           );
         }
-        return Effect.sync(() => boundedData(node.value, "Literal"));
+        return Effect.fromResult(
+          tryInterpreter(() => boundedData(node.value, "Literal"), node)
+        );
       }),
-      Match.when("Identifier", () => Effect.sync(() => this.scopes.get(getString(node, "name"), node))),
+      Match.when("Identifier", () =>
+        Effect.fromResult(
+          tryInterpreter(() => this.scopes.get(getString(node, "name"), node), node)
+        )),
       Match.when("BinaryExpression", () => this.evaluateBinaryExpression(node)),
       Match.when("LogicalExpression", () => this.evaluateLogicalExpression(node)),
       Match.when("UnaryExpression", () => this.evaluateUnaryExpression(node)),
@@ -1508,16 +1581,14 @@ export class Interpreter<R> {
         )),
       Match.when("YieldExpression", () => this.evaluateYieldExpression(node)),
       Match.when("NewExpression", () => this.evaluateNewExpression(node)),
-      Match.orElse(() => {
-        throw unsupportedSyntax(node.type, node);
-      }),
+      Match.exhaustive,
     );
   }
 
   private evaluateNewExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const callee = getNode(node, "callee");
     if (callee.type !== "Identifier") {
-      throw unsupportedSyntax("NewExpression", node);
+      return Effect.fail(unsupportedSyntax("NewExpression", node));
     }
     const name = getString(callee, "name");
     const argNodes = getArray(node, "arguments");
@@ -1546,15 +1617,21 @@ export class Interpreter<R> {
         const args = yield* self.evaluateCallArguments(argNodes);
         return yield* valueConstructors.$match(name, {
           Date: () => self.constructDate(args, node),
-          RegExp: () => Effect.sync(() => self.constructRegExp(args, node)),
+          RegExp: () =>
+            Effect.fromResult(
+              tryInterpreter(() => self.constructRegExp(args, node), node)
+            ),
           Map: () => self.constructMap(args[0], node),
           Set: () => self.constructSet(args[0], node),
-          URL: () => Effect.sync(() => self.constructURL(args, node)),
+          URL: () =>
+            Effect.fromResult(
+              tryInterpreter(() => self.constructURL(args, node), node)
+            ),
           URLSearchParams: () => self.constructURLSearchParams(args[0], node),
         });
       });
     }
-    throw unsupportedSyntax("NewExpression", node);
+    return Effect.fail(unsupportedSyntax("NewExpression", node));
   }
 
   private constructArray(args: Array<unknown>, node: AstNode): Array<unknown> {
@@ -1815,6 +1892,11 @@ export class Interpreter<R> {
 
   private evaluateBinaryExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
     const operator = getString(node, "operator");
+    if (!S.is(BinaryOperator)(operator)) {
+      return Effect.fail(
+        InterpreterRuntimeError.new(`Unsupported binary operator '${operator}'.`, node)
+      );
+    }
     const self = this;
     return Effect.gen(function* () {
       const lhs = yield* self.evaluateExpression(getNode(node, "left"));
@@ -1824,7 +1906,12 @@ export class Interpreter<R> {
     });
   }
 
-  private applyBinaryOperator(operator: string, lhs: unknown, rhs: unknown, node: AstNode): unknown {
+  private applyBinaryOperator(
+    operator: AppliedBinaryOperator,
+    lhs: unknown,
+    rhs: unknown,
+    node: AstNode
+  ): unknown {
     if (operator === "===") return lhs === rhs;
     if (operator === "!==") return lhs !== rhs;
     if (containsOpaqueReference(lhs) || containsOpaqueReference(rhs)) {
@@ -1841,36 +1928,48 @@ export class Interpreter<R> {
     const bothObjects = lhs !== null && typeof lhs === "object" && rhs !== null && typeof rhs === "object";
     const l = coerceOperand(lhs);
     const r = coerceOperand(rhs);
-    return Match.value(operator).pipe(
-      Match.when("+", () => (l as string) + (r as string)),
-      Match.when("-", () => (l as number) - (r as number)),
-      Match.when("*", () => (l as number) * (r as number)),
-      Match.when("/", () => (l as number) / (r as number)),
-      Match.when("%", () => (l as number) % (r as number)),
-      Match.when("**", () => (l as number) ** (r as number)),
-      Match.when("==", () => bothObjects ? lhs === rhs : l == r),
-      Match.when("!=", () => bothObjects ? lhs !== rhs : l != r),
-      Match.when("<", () => (l as string) < (r as string)),
-      Match.when("<=", () => (l as string) <= (r as string)),
-      Match.when(">", () => (l as string) > (r as string)),
-      Match.when(">=", () => (l as string) >= (r as string)),
-      Match.when("&", () => (l as number) & (r as number)),
-      Match.when("|", () => (l as number) | (r as number)),
-      Match.when("^", () => (l as number) ^ (r as number)),
-      Match.when("<<", () => (l as number) << (r as number)),
-      Match.when(">>", () => (l as number) >> (r as number)),
-      Match.when(">>>", () => (l as number) >>> (r as number)),
-      Match.when("in", () => {
+    const numericLeft = (): number => coerceToNumber(l);
+    const numericRight = (): number => coerceToNumber(r);
+    const compare = (
+      strings: (left: string, right: string) => boolean,
+      numbers: (left: number, right: number) => boolean
+    ): boolean =>
+      P.isString(l) && P.isString(r)
+        ? strings(l, r)
+        : numbers(numericLeft(), numericRight());
+    return AppliedBinaryOperator.$match(operator, {
+      "+": () =>
+        P.isString(l) || P.isString(r)
+          ? `${coerceToString(l)}${coerceToString(r)}`
+          : numericLeft() + numericRight(),
+      "-": () => numericLeft() - numericRight(),
+      "*": () => numericLeft() * numericRight(),
+      "/": () => numericLeft() / numericRight(),
+      "%": () => numericLeft() % numericRight(),
+      "**": () => numericLeft() ** numericRight(),
+      "==": () => bothObjects ? lhs === rhs : l == r,
+      "!=": () => bothObjects ? lhs !== rhs : l != r,
+      "===": () => lhs === rhs,
+      "!==": () => lhs !== rhs,
+      "<": () => compare((left, right) => left < right, (left, right) => left < right),
+      "<=": () => compare((left, right) => left <= right, (left, right) => left <= right),
+      ">": () => compare((left, right) => left > right, (left, right) => left > right),
+      ">=": () => compare((left, right) => left >= right, (left, right) => left >= right),
+      "&": () => numericLeft() & numericRight(),
+      "|": () => numericLeft() | numericRight(),
+      "^": () => numericLeft() ^ numericRight(),
+      "<<": () => numericLeft() << numericRight(),
+      ">>": () => numericLeft() >> numericRight(),
+      ">>>": () => numericLeft() >>> numericRight(),
+      "in": () => {
         if (rhs === null || typeof rhs !== "object") {
           throw InterpreterRuntimeError.new("The 'in' operator requires a data object on the right-hand side.", node);
         }
         // Never expose properties inherited from host prototypes.
-        return Object.hasOwn(rhs as object, coerceOperand(lhs) as PropertyKey);
-      }),
-      Match.orElse(() => {
-        throw InterpreterRuntimeError.new(`Unsupported binary operator '${operator}'.`, node);
-      }),
-    );
+        const key = P.isSymbol(l) ? l : coerceToString(l);
+        return Object.hasOwn(rhs, key);
+      },
+    });
   }
 
   private evaluateLogicalExpression(node: AstNode): Effect.Effect<unknown, InterpreterFailure, R> {
@@ -2112,23 +2211,38 @@ export class Interpreter<R> {
         const invokeBounded = (
           reference: GlobalMethodReference,
         ): Effect.Effect<unknown, InterpreterFailure> =>
-          Effect.succeed(
-            boundedData(
-              invokeGlobalMethod(reference, args, node),
-              `${reference.namespace}.${reference.name} result`,
-            ),
+          Effect.fromResult(
+            tryInterpreter(
+              () =>
+                boundedData(
+                  invokeGlobalMethod(reference, args, node),
+                  `${reference.namespace}.${reference.name} result`,
+                ),
+              node
+            )
           );
 
         return yield* GlobalMethodNamespace.$match(callable.namespace, {
-          console: () => Effect.succeed(self.invokeConsole(callable.name, args, node)),
+          console: () =>
+            Effect.fromResult(
+              tryInterpreter(() => self.invokeConsole(callable.name, args, node), node)
+            ),
           Object: () => {
             if (ToolReference.is(args[0])) {
-              return Effect.succeed(self.invokeObjectMethodOnTools(callable.name, args[0], node));
+              const reference = args[0];
+              return Effect.fromResult(
+                tryInterpreter(
+                  () => self.invokeObjectMethodOnTools(callable.name, reference, node),
+                  node
+                )
+              );
             }
             if (S.is(objectMethodsPreservingIdentity)(callable.name)) {
               return callable.name === "fromEntries"
                 ? invokeObjectFromEntries(self.runner, args[0], node)
-                : Effect.succeed(invokeGlobalMethod(callable, args, node));
+                : Effect.fromResult(
+                    tryInterpreter(() => invokeGlobalMethod(callable, args, node), node)
+                  );
             }
             return callable.name === "groupBy"
               ? invokeGroupBy(self.runner, "Object", args, node)
@@ -2143,7 +2257,9 @@ export class Interpreter<R> {
           Array: () => {
             if (callable.name === "from") return invokeArrayFrom(self.runner, args, node);
             return callable.name === "of"
-              ? Effect.succeed(invokeGlobalMethod(callable, args, node))
+              ? Effect.fromResult(
+                  tryInterpreter(() => invokeGlobalMethod(callable, args, node), node)
+                )
               : invokeBounded(callable);
           },
           Map: () =>
@@ -2155,9 +2271,7 @@ export class Interpreter<R> {
               ? Effect.map(DateTime.now, DateTime.toEpochMillis)
               : invokeBounded(callable),
           RegExp: () => invokeBounded(callable),
-          Set: () => invokeBounded(callable),
           URL: () => invokeBounded(callable),
-          URLSearchParams: () => invokeBounded(callable),
           Number: () => invokeBounded(callable),
           String: () => invokeBounded(callable),
         });
@@ -2169,7 +2283,7 @@ export class Interpreter<R> {
         return boundedData(invokeCoercion(callable, args, node), `${callable.name} result`);
       }
       if (RuntimeReference.guards.UriFunction(callable)) {
-        return invokeUriFunction(callable, args, node);
+        return yield* Effect.fromResult(invokeUriFunction(callable, args, node));
       }
       if (RuntimeReference.guards.SearchFunction(callable)) {
         return yield* self.invokeSearch(args);
@@ -2206,7 +2320,10 @@ export class Interpreter<R> {
           // ISO instead of the host's locale string: CodeMode date strings are
           // deterministic and must not leak the host timezone.
           Date: () => Effect.map(DateTime.now, DateTime.formatIso),
-          RegExp: () => Effect.sync(() => self.constructRegExp(args, node)),
+          RegExp: () =>
+            Effect.fromResult(
+              tryInterpreter(() => self.constructRegExp(args, node), node)
+            ),
           Map: () => requiresNew(callable.name),
           Set: () => requiresNew(callable.name),
           URL: () => requiresNew(callable.name),
@@ -2238,7 +2355,15 @@ export class Interpreter<R> {
 
   private invokeObjectMethodOnTools(name: string, ref: ToolReference, node: AstNode): unknown {
     if (name === "keys") {
-      return boundedData(this.enumerableKeys(ref)!, "Object.keys result");
+      const keys = this.enumerableKeys(ref);
+      if (P.isUndefined(keys)) {
+        throw InterpreterRuntimeError.new(
+          "Object.keys could not enumerate this runtime reference.",
+          node,
+          "InvalidDataValue"
+        );
+      }
+      return boundedData(keys, "Object.keys result");
     }
     throw InterpreterRuntimeError.new(
       `Object.${name}(...) cannot read tool references: they are not plain data. Use Object.keys(tools) for names, or search({ query }) for signatures.`,
@@ -2479,7 +2604,12 @@ export class Interpreter<R> {
     state.available = O.some(available);
     return Effect.andThen(
       Deferred.await(available),
-      Effect.sync(() => this.dequeueGeneratorRequest(state)!),
+      Effect.suspend(() => {
+        const request = this.dequeueGeneratorRequest(state);
+        return P.isUndefined(request)
+          ? Effect.die(new Error("CodeMode generator queue resumed without a pending request."))
+          : Effect.succeed(request);
+      }),
     );
   }
 
@@ -2749,7 +2879,7 @@ export class Interpreter<R> {
     if (!S.is(compoundOperators)(operator)) {
       throw InterpreterRuntimeError.new(`Unsupported assignment operator '${operator}'.`, node);
     }
-    return this.applyBinaryOperator(operator.slice(0, -1), current, incoming, node);
+    return this.applyBinaryOperator(CompoundOperator.Enum[operator], current, incoming, node);
   }
 
   private getMemberReference(
@@ -2816,7 +2946,7 @@ export class Interpreter<R> {
         if (!P.isString(key)) return ComputedValue.new(undefined);
         const missing = (): ComputedValue => ComputedValue.new(undefined);
         const staticMember = (
-          namespace: Exclude<GlobalNamespaceName, "JSON">
+          namespace: Exclude<GlobalMethodNamespace, "Number" | "String">
         ): ComputedValue | GlobalMethodReference => {
           const staticMembers = globalStaticMembers[namespace];
           return P.isNotUndefined(staticMembers) && S.is(staticMembers)(key)
@@ -2839,9 +2969,9 @@ export class Interpreter<R> {
           Date: () => staticMember("Date"),
           RegExp: () => staticMember("RegExp"),
           Map: () => staticMember("Map"),
-          Set: () => staticMember("Set"),
+          Set: missing,
           URL: () => staticMember("URL"),
-          URLSearchParams: () => staticMember("URLSearchParams"),
+          URLSearchParams: missing,
         });
       }
 
@@ -2988,7 +3118,7 @@ export class Interpreter<R> {
     return Effect.map(this.getMemberReference(node), (reference) => {
       if (reference === OptionalShortCircuit) return OptionalShortCircuit;
       if (ComputedValue.is(reference)) return reference.value;
-      if (P.isUndefined(reference) || isOpaqueMemberReference(reference)) return reference;
+      if (P.isUndefined(reference) || OpaqueMemberReference.is(reference)) return reference;
       if (A.isArray(reference.target)) {
         if (reference.key === "length") return reference.target.length;
         if (P.isString(reference.key)) return IntrinsicReference.new(reference.target, reference.key);
@@ -3020,7 +3150,7 @@ export class Interpreter<R> {
       if (
         ComputedValue.is(reference) ||
         P.isUndefined(reference) ||
-        isOpaqueMemberReference(reference) ||
+        OpaqueMemberReference.is(reference) ||
         CodeModeURL.is(reference.target)
       ) {
         throw InterpreterRuntimeError.new("Only data fields may be deleted.", target, "InvalidDataValue");
@@ -3048,7 +3178,7 @@ export class Interpreter<R> {
         reference === OptionalShortCircuit ||
         ComputedValue.is(reference) ||
         P.isUndefined(reference) ||
-        isOpaqueMemberReference(reference)
+        OpaqueMemberReference.is(reference)
       ) {
         throw InterpreterRuntimeError.new("Only data fields may be assigned.", node);
       }

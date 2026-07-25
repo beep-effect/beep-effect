@@ -161,6 +161,69 @@ describe("CodeMode runtime", () => {
   );
 
   it.effect(
+    "consumes URI Results and keeps malformed URI failures guest-catchable",
+    Effect.fnUntraced(function* () {
+      const result = yield* CodeMode.execute({
+        code: `
+          let malformed
+          try { decodeURIComponent("%") } catch (error) { malformed = error.name }
+          return [encodeURIComponent("a b"), malformed]
+        `,
+      });
+
+      assert.strictEqual(result.ok, true);
+      if (result.ok === true) {
+        assert.deepEqual(result.value, A.make("a%20b", "URIError"));
+      }
+    })
+  );
+
+  it.effect(
+    "keeps JSON and RegExp native failures in the typed guest error channel",
+    Effect.fnUntraced(function* () {
+      const result = yield* CodeMode.execute({
+        code: `
+          let parseError
+          let regexpError
+          try { JSON.parse("{") } catch (error) { parseError = error.name }
+          try { "value".match("[") } catch (error) { regexpError = error.name }
+          return [parseError, regexpError]
+        `,
+      });
+
+      assert.strictEqual(result.ok, true);
+      if (result.ok === true) {
+        assert.deepEqual(result.value, A.make("SyntaxError", "SyntaxError"));
+      }
+    })
+  );
+
+  it.effect(
+    "evaluates every finite binary family without operand assertions",
+    Effect.fnUntraced(function* () {
+      const result = yield* CodeMode.execute({
+        code: `
+          let value = 2
+          value **= 3
+          return [
+            "a" + 1,
+            "10" < "2",
+            "10" < 2,
+            7 >>> 1,
+            "key" in { key: true },
+            value
+          ]
+        `,
+      });
+
+      assert.strictEqual(result.ok, true);
+      if (result.ok === true) {
+        assert.deepEqual(result.value, A.make("a1", true, false, 3, true, 8));
+      }
+    })
+  );
+
+  it.effect(
     "preserves invalid Date recovery without constructing a native host Date",
     Effect.fnUntraced(function* () {
       const result = yield* CodeMode.execute({

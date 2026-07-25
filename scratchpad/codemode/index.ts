@@ -6,11 +6,11 @@
  */
 export * as CodeMode from "./Codemode.service.ts";
 export * as OpenAPI from "./openapi/index.ts";
-export * as Tool from "./Codemode.tool.ts";
+export * as Tool from "effect/unstable/ai/Tool";
 export * as ToolRuntime from "./Codemode.tool-runtime.ts";
-export * as Toolkit from "./Codemode.tools.ts";
+export * as Toolkit from "effect/unstable/ai/Toolkit";
 
-export { ToolError, toolError } from "./Codemode.tool-error.ts";
+export { ToolError } from "./Codemode.tool-error.ts";
 export {
   searchSignature,
   toolExpression,

@@ -11,8 +11,8 @@ import {
   SchemaUtils,
   TaggedErrorClass,
 } from "@beep/schema";
-import { A, O } from "@beep/utils";
-import { Effect } from "effect";
+import { A, O, P } from "@beep/utils";
+import { Effect, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import type * as Toolkit from "effect/unstable/ai/Toolkit";
 import { executeWithLimits } from "./interpreter/Interpreter.execute.ts";
@@ -23,6 +23,9 @@ import {
   type ToolDescription,
 } from "./Codemode.tool-runtime.ts";
 import * as ToolRuntime from "./Codemode.tool-runtime.ts";
+import { DataValue } from "./Codemode.data.ts";
+
+export { DataValue } from "./Codemode.data.ts";
 
 const $I = $ScratchpadId.create("codemode/Codemode.service");
 
@@ -43,17 +46,6 @@ export class ExecutionLimits extends S.Class<ExecutionLimits>($I`ExecutionLimits
   })
 ) {
   static readonly decodeEffect = S.decodeUnknownEffect(ExecutionLimits);
-
-  static readonly new = (
-    timeoutMs?: number,
-    maxToolCalls?: number,
-    maxOutputBytes?: number
-  ): ExecutionLimits =>
-    ExecutionLimits.make({
-      timeoutMs: O.map(O.fromNullishOr(timeoutMs), PosInt.make),
-      maxToolCalls: O.map(O.fromNullishOr(maxToolCalls), NonNegativeInt.make),
-      maxOutputBytes: O.map(O.fromNullishOr(maxOutputBytes), NonNegativeInt.make),
-    });
 }
 
 /**
@@ -79,26 +71,6 @@ export class InvalidExecutionLimits extends TaggedErrorClass<InvalidExecutionLim
     });
 }
 
-/** A JSON value that can cross the confined interpreter boundary. */
-export const DataValue = S.Json.pipe(
-  $I.annoteSchema("DataValue", {
-    description: "A JSON value returned across the CodeMode execution boundary.",
-  })
-);
-
-/** Runtime type for {@link DataValue}. */
-export type DataValue = typeof DataValue.Type;
-
-/** Schema for a host tool input containing CodeMode source. */
-export class Input extends S.Class<Input>($I`Input`)(
-  { code: S.String },
-  $I.annote("Input", {
-    description: "Source for one CodeMode program.",
-  })
-) {
-  static readonly new = (code: string): Input => Input.make({ code });
-}
-
 /**
  * Location attached to a diagnostic.
  *
@@ -107,19 +79,13 @@ export class Input extends S.Class<Input>($I`Input`)(
  */
 export class DiagnosticLocation extends S.Class<DiagnosticLocation>($I`DiagnosticLocation`)(
   {
-    line: NonNegativeInt,
-    column: NonNegativeInt,
+    line: PosInt,
+    column: PosInt,
   },
   $I.annote("DiagnosticLocation", {
     description: "One-based source location in user-provided CodeMode source.",
   })
-) {
-  static readonly new = (line: number, column: number): DiagnosticLocation =>
-    DiagnosticLocation.make({
-      line: NonNegativeInt.make(line),
-      column: NonNegativeInt.make(column),
-    });
-}
+) {}
 
 /**
  * Internal diagnostic model.
@@ -163,11 +129,10 @@ export const Diagnostic = S.toEncoded(DiagnosticModel).pipe(
 export type Diagnostic = typeof Diagnostic.Type;
 
 /** Successful internal result model. */
-export class SuccessModel extends S.Class<SuccessModel>($I`SuccessModel`)(
+export class SuccessModel extends S.TaggedClass<SuccessModel>($I`SuccessModel`)(
+  "Success",
   {
-    ok: S.Literal(true),
     value: DataValue,
-
     warnings: DiagnosticModel.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     logs: S.String.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     truncated: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
@@ -176,28 +141,12 @@ export class SuccessModel extends S.Class<SuccessModel>($I`SuccessModel`)(
   $I.annote("SuccessModel", {
     description: "Successful execution before Option fields are encoded for the wire.",
   })
-) {
-  static readonly new = (
-    value: DataValue,
-    toolCalls: ReadonlyArray<ToolCall>,
-    warnings?: ReadonlyArray<DiagnosticModel>,
-    logs?: ReadonlyArray<string>,
-    truncated?: boolean
-  ): SuccessModel =>
-    SuccessModel.make({
-      ok: true,
-      value,
-      warnings: O.fromNullishOr(warnings),
-      logs: O.fromNullishOr(logs),
-      truncated: O.fromNullishOr(truncated),
-      toolCalls,
-    });
-}
+) {}
 
 /** Failed internal result model. */
-export class FailureModel extends S.Class<FailureModel>($I`FailureModel`)(
+export class FailureModel extends S.TaggedClass<FailureModel>($I`FailureModel`)(
+  "Failure",
   {
-    ok: S.Literal(false),
     error: DiagnosticModel,
     logs: S.String.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     truncated: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
@@ -206,31 +155,79 @@ export class FailureModel extends S.Class<FailureModel>($I`FailureModel`)(
   $I.annote("FailureModel", {
     description: "Failed execution before Option fields are encoded for the wire.",
   })
-) {
-  static readonly new = (
-    error: DiagnosticModel,
-    toolCalls: ReadonlyArray<ToolCall>,
-    logs?: ReadonlyArray<string>,
-    truncated?: boolean
-  ): FailureModel =>
-    FailureModel.make({
-      ok: false,
-      error,
-      logs: O.fromNullishOr(logs),
-      truncated: O.fromNullishOr(truncated),
-      toolCalls,
-    });
-}
+) {}
 
 /** Internal result schema. */
 export const ResultModel = S.Union([SuccessModel, FailureModel]).pipe(
+  S.toTaggedUnion("_tag"),
   $I.annoteSchema("ResultModel", {
     description: "Schema-owned success or failure model.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+const ResultWire = S.Union([
+  S.Struct({
+    ok: S.Literal(true),
+    value: DataValue,
+    warnings: Diagnostic.pipe(S.Array, S.optionalKey),
+    logs: S.String.pipe(S.Array, S.optionalKey),
+    truncated: S.optionalKey(S.Boolean),
+    toolCalls: ToolCall.pipe(S.toEncoded, S.Array),
+  }),
+  S.Struct({
+    ok: S.Literal(false),
+    error: Diagnostic,
+    logs: S.String.pipe(S.Array, S.optionalKey),
+    truncated: S.optionalKey(S.Boolean),
+    toolCalls: ToolCall.pipe(S.toEncoded, S.Array),
+  }),
+]);
+
+const ResultCodec = ResultWire.pipe(
+  S.decodeTo(ResultModel, {
+    decode: SchemaGetter.transform((result) =>
+      result.ok
+        ? {
+            _tag: "Success" as const,
+            value: result.value,
+            ...(P.isUndefined(result.warnings) ? {} : { warnings: result.warnings }),
+            ...(P.isUndefined(result.logs) ? {} : { logs: result.logs }),
+            ...(P.isUndefined(result.truncated) ? {} : { truncated: result.truncated }),
+            toolCalls: result.toolCalls,
+          }
+        : {
+            _tag: "Failure" as const,
+            error: result.error,
+            ...(P.isUndefined(result.logs) ? {} : { logs: result.logs }),
+            ...(P.isUndefined(result.truncated) ? {} : { truncated: result.truncated }),
+            toolCalls: result.toolCalls,
+          }
+    ),
+    encode: SchemaGetter.transform((result) => {
+      if (result._tag === "Success") {
+        return {
+          ok: true,
+          value: result.value,
+          ...(P.isUndefined(result.warnings) ? {} : { warnings: result.warnings }),
+          ...(P.isUndefined(result.logs) ? {} : { logs: result.logs }),
+          ...(P.isUndefined(result.truncated) ? {} : { truncated: result.truncated }),
+          toolCalls: result.toolCalls,
+        };
+      }
+      return {
+        ok: false,
+        error: result.error,
+        ...(P.isUndefined(result.logs) ? {} : { logs: result.logs }),
+        ...(P.isUndefined(result.truncated) ? {} : { truncated: result.truncated }),
+        toolCalls: result.toolCalls,
+      };
+    }),
   })
 );
 
 /** Wire-compatible result schema. */
-export const Result = S.toEncoded(ResultModel).pipe(
+export const Result = S.toEncoded(ResultCodec).pipe(
   $I.annoteSchema("Result", {
     description: "Structured success or diagnostic returned by CodeMode execution.",
   })

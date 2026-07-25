@@ -1,5 +1,6 @@
 import {
   type AstNode,
+  InterpreterFailure,
   InterpreterRuntimeError,
   UriFunction,
   UriFunctionName,
@@ -10,6 +11,15 @@ import { Result } from "effect"
 import { LiteralKit } from "@beep/schema"
 import * as S from "effect/Schema"
 import { P, A } from "@beep/utils";
+import {
+  UrlStatic,
+} from "../Codemode.method-names.ts"
+
+export {
+  UrlMethod,
+  UrlSearchParamsMethod,
+  UrlStatic,
+} from "../Codemode.method-names.ts"
 export const urlProperties = LiteralKit([
   "href",
   "origin",
@@ -24,35 +34,9 @@ export const urlProperties = LiteralKit([
   "hash",
 ])
 
-export const urlWritableProperties = LiteralKit([
-  "href",
-  "protocol",
-  "username",
-  "password",
-  "host",
-  "hostname",
-  "port",
-  "pathname",
-  "search",
-  "hash",
-])
-
-export const UrlMethod = LiteralKit(["toString", "toJSON"])
-export const UrlStatic = LiteralKit(["canParse", "parse"])
-export const UrlSearchParamsMethod = LiteralKit([
-  "append",
-  "delete",
-  "get",
-  "getAll",
-  "has",
-  "set",
-  "sort",
-  "forEach",
-  "keys",
-  "values",
-  "entries",
-  "toString",
-])
+export const urlWritableProperties = LiteralKit(
+  urlProperties.omitOptions(["origin"])
+)
 
 export const uriArgument = (value: unknown, label: string): string => coerceToString(boundedData(value, label))
 
@@ -60,22 +44,33 @@ export const invokeUriFunction = (
   ref: UriFunction,
   args: Array<unknown>,
   node: AstNode
-): Result.Result<string, InterpreterRuntimeError> => {
-  const value = uriArgument(args[0], `${ref.name} input`)
-  return Result.try({
-    try: () =>
-      UriFunctionName.$match(ref.name, {
-        encodeURI: () => encodeURI(value),
-        encodeURIComponent: () => encodeURIComponent(value),
-        decodeURI: () => decodeURI(value),
-        decodeURIComponent: () => decodeURIComponent(value),
-      }),
+): Result.Result<string, InterpreterFailure> => {
+  const value = Result.try({
+    try: () => uriArgument(args[0], `${ref.name} input`),
     catch: (error) =>
-      InterpreterRuntimeError.new(
-        `${ref.name} received malformed URI data: ${error instanceof Error ? error.message : String(error)}`,
-        node,
-      ).as("URIError"),
+      InterpreterFailure.is(error)
+        ? error
+        : InterpreterRuntimeError.new(
+            `${ref.name} input could not be converted to data.`,
+            node
+          ),
   })
+  return Result.flatMap(value, (input) =>
+    Result.try({
+      try: () =>
+        UriFunctionName.$match(ref.name, {
+          encodeURI: () => encodeURI(input),
+          encodeURIComponent: () => encodeURIComponent(input),
+          decodeURI: () => decodeURI(input),
+          decodeURIComponent: () => decodeURIComponent(input),
+        }),
+      catch: (error) =>
+        InterpreterRuntimeError.new(
+          `${ref.name} received malformed URI data: ${error instanceof Error ? error.message : String(error)}`,
+          node,
+        ).as("URIError"),
+    })
+  )
 }
 
 export const urlArgument = (value: unknown, label: string): string =>
