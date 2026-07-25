@@ -106,10 +106,9 @@ export const executeWithLimits = <ToolkitType extends Toolkit.Toolkit<any>>(
           returned = { value: result, promises }
           const warnings = yield* promises.interrupt()
           const toolCalls = yield* tools.calls;
-          const diagnostics = A.map(warnings, DiagnosticModel.from);
           return SuccessModel.make({
             value: result,
-            warnings: A.isReadonlyArrayNonEmpty(diagnostics) ? O.some(diagnostics) : O.none(),
+            warnings: A.isReadonlyArrayNonEmpty(warnings) ? O.some(warnings) : O.none(),
             logs: logged(),
             truncated: O.none(),
             toolCalls,
@@ -149,7 +148,7 @@ export const executeWithLimits = <ToolkitType extends Toolkit.Toolkit<any>>(
                         "TimeoutExceeded",
                         `The program returned, but background work was still running at the ${timeoutMs}ms timeout and was interrupted. Await all started promises.`
                       ),
-                      ...A.map(returned.promises.diagnostics(), DiagnosticModel.from),
+                      ...returned.promises.diagnostics(),
                     ]),
                     logs: logged(),
                     truncated: O.none(),
@@ -170,7 +169,7 @@ export const executeWithLimits = <ToolkitType extends Toolkit.Toolkit<any>>(
                 ? A.empty()
                 : yield* toolRuntime.calls;
               return FailureModel.make({
-                error: DiagnosticModel.from(normalizeError(Cause.squash(cause))),
+                error: normalizeError(Cause.squash(cause)),
                 logs: logged(),
                 truncated: O.none(),
                 toolCalls,

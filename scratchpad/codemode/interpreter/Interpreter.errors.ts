@@ -1,4 +1,5 @@
 import type { SafeObject } from "@beep/schema/SafeObject";
+import { PosInt } from "@beep/schema";
 import { A, O, P, Str, pipe } from "@beep/utils";
 import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
@@ -11,7 +12,10 @@ import {
   InterpreterRuntimeError,
   sourceLocation,
 } from "./Interpreter.model.ts";
-import type { Diagnostic } from "../Codemode.result.ts";
+import {
+  DiagnosticLocation,
+  DiagnosticModel,
+} from "../Codemode.result.ts";
 import { ToolError } from "../Codemode.tool-error.ts";
 import { copyOut, ToolRuntimeError } from "../Codemode.tool-runtime.ts";
 import { type SyncIteratorRunner } from "./Interpreter.iterator.ts";
@@ -22,23 +26,29 @@ import {
   createErrorValue,
 } from "../stdlib/index.ts";
 
-const makeDiagnostic = (
+const makeDiagnosticModel = (
   kind: DiagnosticKind,
   message: string,
-  location?: Diagnostic["location"],
+  location?: ReturnType<typeof sourceLocation>,
   suggestions?: ReadonlyArray<string>
-): Diagnostic => ({
-  kind,
-  message,
-  ...(P.isUndefined(location) ? {} : { location }),
-  ...(P.isUndefined(suggestions) ? {} : { suggestions }),
-});
+): DiagnosticModel =>
+  DiagnosticModel.new(
+    kind,
+    message,
+    P.isUndefined(location)
+      ? undefined
+      : DiagnosticLocation.make({
+          line: PosInt.make(location.line),
+          column: PosInt.make(location.column),
+        }),
+    suggestions
+  );
 
-/** Normalizes an interpreter, Toolkit, guest, or host failure to public data. */
-export const normalizeError = (error: unknown): Diagnostic => {
+/** Normalizes an interpreter, Toolkit, guest, or host failure. */
+export const normalizeError = (error: unknown): DiagnosticModel => {
   if (InterpreterFailure.guards.InterpreterRuntimeError(error)) {
     const node = O.getOrUndefined(error.node);
-    return makeDiagnostic(
+    return makeDiagnosticModel(
       error.kind,
       `${error.message}${formatLocation(node)}`,
       P.isUndefined(node?.loc)
@@ -48,14 +58,14 @@ export const normalizeError = (error: unknown): Diagnostic => {
     );
   }
   if (ToolRuntimeError.is(error)) {
-    return makeDiagnostic(
+    return makeDiagnosticModel(
       error.kind,
       error.message,
       undefined,
       A.isReadonlyArrayNonEmpty(error.suggestions) ? error.suggestions : undefined
     );
   }
-  if (ToolError.is(error)) return makeDiagnostic("ToolFailure", error.message);
+  if (ToolError.is(error)) return makeDiagnosticModel("ToolFailure", error.message);
   if (InterpreterFailure.guards.ProgramThrow(error)) {
     const value = error.value;
     const message = containsRuntimeReference(value)
@@ -68,15 +78,15 @@ export const normalizeError = (error: unknown): Diagnostic => {
               S.encodeUnknownResult(S.UnknownFromJsonString)(copyOut(value, "json")),
               Result.getOrElse(() => globalThis.String(value))
             );
-    return makeDiagnostic("ExecutionFailure", `Uncaught: ${message}`);
+    return makeDiagnosticModel("ExecutionFailure", `Uncaught: ${message}`);
   }
   if (error instanceof RangeError && pipe(error.message, Str.toLowerCase, Str.includes("call stack"))) {
-    return makeDiagnostic("ExecutionFailure", "Execution exceeded the maximum nesting depth.");
+    return makeDiagnosticModel("ExecutionFailure", "Execution exceeded the maximum nesting depth.");
   }
   if (P.isError(error)) {
-    return makeDiagnostic(error.name === "SyntaxError" ? "ParseError" : "ExecutionFailure", error.message);
+    return makeDiagnosticModel(error.name === "SyntaxError" ? "ParseError" : "ExecutionFailure", error.message);
   }
-  return makeDiagnostic("ExecutionFailure", globalThis.String(error));
+  return makeDiagnosticModel("ExecutionFailure", globalThis.String(error));
 };
 
 /** Converts a host-side failure into the guest Error object representation. */

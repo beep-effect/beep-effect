@@ -14,7 +14,7 @@ import {
   Scope,
 } from "effect"
 import * as S from "effect/Schema";
-import type { Diagnostic } from "../Codemode.result.ts"
+import { DiagnosticModel } from "../Codemode.result.ts"
 import {
   type AstNode,
   InterpreterFailure,
@@ -50,7 +50,7 @@ export class PromiseRuntime<R> {
   private readonly active = MutableHashSet.empty<CodeModePromise>()
   private readonly ids = MutableHashMap.empty<CodeModePromise, number>()
   private readonly observed = MutableHashSet.empty<CodeModePromise>()
-  private readonly failures = MutableHashMap.empty<number, Diagnostic>()
+  private readonly failures = MutableHashMap.empty<number, DiagnosticModel>()
   private nextID = 0
   private readonly scope: Scope.Scope;
 
@@ -77,10 +77,10 @@ export class PromiseRuntime<R> {
             return
           }
           const failure = normalizeError(Cause.squash(exit.cause))
-          MutableHashMap.set(this.failures, id, {
+          MutableHashMap.set(this.failures, id, DiagnosticModel.make({
             ...failure,
             message: `Unhandled rejection from an un-awaited promise: ${failure.message}`,
-          })
+          }))
         })
         return promise
       })
@@ -103,14 +103,14 @@ export class PromiseRuntime<R> {
     return Effect.asVoid(Effect.forkIn(effect, this.scope, { startImmediately: true }))
   }
 
-  diagnostics(): Array<Diagnostic> {
+  diagnostics(): Array<DiagnosticModel> {
     return pipe(
       this.failures,
       A.fromIterable,
       A.sort(
         Order.mapInput(
           Order.Number,
-          ([id]: readonly [number, Diagnostic]) => id
+          ([id]: readonly [number, DiagnosticModel]) => id
         )
       ),
       A.map(([, failure]) => failure)
@@ -118,7 +118,7 @@ export class PromiseRuntime<R> {
   }
 
   // Re-check because a straggler can create promises before its interruption lands.
-  interrupt(): Effect.Effect<Array<Diagnostic>> {
+  interrupt(): Effect.Effect<Array<DiagnosticModel>> {
     const self = this
     return Effect.gen(function* () {
       while (MutableHashSet.size(self.active) > 0) {

@@ -50,19 +50,6 @@ export class DiagnosticModel extends S.Class<DiagnosticModel>($I`DiagnosticModel
       location: O.fromNullishOr(location),
       suggestions: O.fromNullishOr(suggestions),
     });
-
-  static readonly from = (diagnostic: Diagnostic): DiagnosticModel =>
-    DiagnosticModel.new(
-      diagnostic.kind,
-      diagnostic.message,
-      P.isUndefined(diagnostic.location)
-        ? undefined
-        : DiagnosticLocation.make({
-            line: PosInt.make(diagnostic.location.line),
-            column: PosInt.make(diagnostic.location.column),
-          }),
-      diagnostic.suggestions
-    );
 }
 
 /** Wire-compatible encoded diagnostic schema. */
