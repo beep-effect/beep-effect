@@ -30,8 +30,6 @@
 import { $ProfessionalDesktopId } from "@beep/identity";
 import { LogRedactedCauseOptions, tapRedactedCause } from "@beep/observability";
 import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
 import { Effect, Layer, Metric, Queue, Ref, Stream } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -242,7 +240,10 @@ const scopedListen = (
 ): Effect.Effect<UnlistenFn, Socket.SocketError, Scope.Scope> =>
   Effect.acquireRelease(
     Effect.tryPromise({
-      try: () => listen<unknown>(event, (received) => Queue.offerUnsafe(queue, toEvent(received.payload))),
+      try: () =>
+        import("@tauri-apps/api/event").then(({ listen }) =>
+          listen<unknown>(event, (received) => Queue.offerUnsafe(queue, toEvent(received.payload)))
+        ),
       catch: toSocketError,
     }),
     (unlisten) => Effect.sync(unlisten)
@@ -337,7 +338,7 @@ const inboundFrames = (onOpen: O.Option<Effect.Effect<void>>): Stream.Stream<Inb
 
         // Listeners are live; tell Rust to replay any frames buffered during boot.
         yield* Effect.tryPromise({
-          try: () => invoke<void>("sidecar_ipc_ready"),
+          try: () => import("@tauri-apps/api/core").then(({ invoke }) => invoke<void>("sidecar_ipc_ready")),
           catch: toSocketError,
         });
 
@@ -358,7 +359,7 @@ const sendFrame = Effect.fn("sendFrame")(function* (frame: string): Effect.fn.Re
   yield* Metric.update(ipcOutboundBytes, Str.length(frame));
   return yield* Effect.gen(function* () {
     const transport = yield* Effect.tryPromise({
-      try: () => invoke<unknown>("sidecar_transport"),
+      try: () => import("@tauri-apps/api/core").then(({ invoke }) => invoke<unknown>("sidecar_transport")),
       catch: (cause) => {
         const causeMessage = unknownToMessage(cause);
         return SidecarSendError.make({ causeMessage, message: `sidecar transport probe failed: ${causeMessage}` });
@@ -377,7 +378,8 @@ const sendFrame = Effect.fn("sendFrame")(function* (frame: string): Effect.fn.Re
     });
 
     yield* Effect.tryPromise({
-      try: () => invoke<void>("sidecar_send", { frame, rpcSessionToken }),
+      try: () =>
+        import("@tauri-apps/api/core").then(({ invoke }) => invoke<void>("sidecar_send", { frame, rpcSessionToken })),
       catch: (cause) => {
         const causeMessage = unknownToMessage(cause);
         return SidecarSendError.make({ causeMessage, message: `sidecar send failed: ${causeMessage}` });

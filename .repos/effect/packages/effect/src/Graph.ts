@@ -320,6 +320,20 @@ export type MutableUndirectedGraph<N, E> = MutableGraph<N, E, "undirected">
 // =============================================================================
 
 /** @internal */
+const edgeEquals = (type: Kind, self: Edge<any>, that: Edge<any>): boolean =>
+  (type === "directed"
+    ? self.source === that.source && self.target === that.target
+    : (self.source === that.source && self.target === that.target) ||
+      (self.source === that.target && self.target === that.source)) &&
+  Equal.equals(self.data, that.data)
+
+/** @internal */
+const edgeHash = (type: Kind, edge: Edge<any>): number =>
+  type === "directed"
+    ? Hash.hash(edge)
+    : Hash.optimize(Hash.hash(edge.data) ^ (Hash.hash(edge.source) + Hash.hash(edge.target)))
+
+/** @internal */
 const ProtoGraph = {
   [TypeId]: {
     _N: (_: never) => _,
@@ -337,6 +351,8 @@ const ProtoGraph = {
       if (
         this.nodes.size !== thatImpl.nodes.size ||
         this.edges.size !== thatImpl.edges.size ||
+        this.nextNodeIndex !== thatImpl.nextNodeIndex ||
+        this.nextEdgeIndex !== thatImpl.nextEdgeIndex ||
         this.type !== thatImpl.type
       ) {
         return false
@@ -357,7 +373,7 @@ const ProtoGraph = {
           return false
         }
         const otherEdge = thatImpl.edges.get(edgeIndex)!
-        if (!Equal.equals(edgeData, otherEdge)) {
+        if (!edgeEquals(this.type, edgeData, otherEdge)) {
           return false
         }
       }
@@ -370,11 +386,13 @@ const ProtoGraph = {
     hash = hash ^ Hash.string(this.type)
     hash = hash ^ Hash.number(this.nodes.size)
     hash = hash ^ Hash.number(this.edges.size)
+    hash = hash ^ Hash.number(this.nextNodeIndex)
+    hash = hash ^ Hash.number(this.nextEdgeIndex)
     for (const [nodeIndex, nodeData] of this.nodes) {
       hash = hash ^ (Hash.hash(nodeIndex) + Hash.hash(nodeData))
     }
     for (const [edgeIndex, edgeData] of this.edges) {
-      hash = hash ^ (Hash.hash(edgeIndex) + Hash.hash(edgeData))
+      hash = hash ^ (Hash.hash(edgeIndex) + edgeHash(this.type, edgeData))
     }
     return hash
   },
@@ -481,7 +499,7 @@ export const isGraph = <N = unknown, E = unknown, T extends Kind = Kind, U = nev
  * @since 4.0.0
  */
 export const make =
-  <T extends Kind>(type: T) => <N, E>(mutate?: (mutable: MutableGraph<N, E, T>) => void): Graph<N, E, T> => {
+  <T extends Kind>(type: T) => <N, E>(mutate?: (mutable: MutableGraph<N, E, T>) => undefined): Graph<N, E, T> => {
     const graph: Mutable<GraphImpl<N, E, T>> = Object.create(ProtoGraph)
     graph.type = type
     graph.nodes = new Map()
@@ -498,9 +516,8 @@ export const make =
     }
 
     graph.mutable = true
-    const mutable = graph as unknown as MutableGraph<N, E, T>
-    mutate(mutable)
-    return endMutation(mutable)
+    const mutable = Equal.byReferenceUnsafe(graph as unknown as MutableGraph<N, E, T>)
+    return mutateScoped(mutable, mutate)
   }
 
 /**
@@ -525,7 +542,7 @@ export const make =
  * @since 3.18.0
  */
 export const directed: <N, E>(
-  mutate?: (mutable: MutableDirectedGraph<N, E>) => void
+  mutate?: (mutable: MutableDirectedGraph<N, E>) => undefined
 ) => DirectedGraph<N, E> = make("directed")
 
 /**
@@ -550,7 +567,7 @@ export const directed: <N, E>(
  * @since 3.18.0
  */
 export const undirected: <N, E>(
-  mutate?: (mutable: MutableUndirectedGraph<N, E>) => void
+  mutate?: (mutable: MutableUndirectedGraph<N, E>) => undefined
 ) => UndirectedGraph<N, E> = make("undirected")
 
 // =============================================================================
@@ -591,7 +608,7 @@ export const beginMutation = <N, E, T extends Kind = "directed">(
   mutable.acyclic = source.acyclic
   mutable.mutable = true
 
-  return mutable as unknown as MutableGraph<N, E, T>
+  return Equal.byReferenceUnsafe(mutable as unknown as MutableGraph<N, E, T>)
 }
 
 /**
@@ -637,6 +654,20 @@ export const endMutation = <N, E, T extends Kind = "directed">(
   return graph as unknown as Graph<N, E, T>
 }
 
+/** @internal */
+const mutateScoped = <N, E, T extends Kind>(
+  mutable: MutableGraph<N, E, T>,
+  f: (mutable: MutableGraph<N, E, T>) => undefined
+): Graph<N, E, T> => {
+  let graph: Graph<N, E, T>
+  try {
+    f(mutable)
+  } finally {
+    graph = endMutation(mutable)
+  }
+  return graph
+}
+
 /**
  * Performs scoped mutations on a graph, automatically managing the mutation lifecycle.
  *
@@ -661,19 +692,18 @@ export const endMutation = <N, E, T extends Kind = "directed">(
  */
 export const mutate: {
   <N, E, T extends Kind = "directed">(
-    f: (mutable: MutableGraph<N, E, T>) => void
+    f: (mutable: MutableGraph<N, E, T>) => undefined
   ): (graph: Graph<N, E, T>) => Graph<N, E, T>
   <N, E, T extends Kind = "directed">(
     graph: Graph<N, E, T>,
-    f: (mutable: MutableGraph<N, E, T>) => void
+    f: (mutable: MutableGraph<N, E, T>) => undefined
   ): Graph<N, E, T>
 } = dual(2, <N, E, T extends Kind = "directed">(
   graph: Graph<N, E, T>,
-  f: (mutable: MutableGraph<N, E, T>) => void
+  f: (mutable: MutableGraph<N, E, T>) => undefined
 ): Graph<N, E, T> => {
   const mutable = beginMutation(graph)
-  f(mutable)
-  return endMutation(mutable)
+  return mutateScoped(mutable, f)
 })
 
 // =============================================================================
@@ -1490,9 +1520,9 @@ export const addNode = <N, E, T extends Kind = "directed">(
  * @since 3.18.0
  */
 export const getNode: {
-  <N, E, T extends Kind = "directed">(
-    nodeIndex: NodeIndex
-  ): (graph: Graph<N, E, T> | MutableGraph<N, E, T>) => Option.Option<N>
+  (nodeIndex: NodeIndex): <N, E, T extends Kind = "directed">(
+    graph: Graph<N, E, T> | MutableGraph<N, E, T>
+  ) => Option.Option<N>
   <N, E, T extends Kind = "directed">(
     graph: Graph<N, E, T> | MutableGraph<N, E, T>,
     nodeIndex: NodeIndex
@@ -2523,9 +2553,9 @@ const removeEdgeInternal = <N, E, T extends Kind = "directed">(
  * @since 3.18.0
  */
 export const getEdge: {
-  <E>(
-    edgeIndex: EdgeIndex
-  ): <N, T extends Kind = "directed">(graph: Graph<N, E, T> | MutableGraph<N, E, T>) => Option.Option<Edge<E>>
+  (edgeIndex: EdgeIndex): <N, E, T extends Kind = "directed">(
+    graph: Graph<N, E, T> | MutableGraph<N, E, T>
+  ) => Option.Option<Edge<E>>
   <N, E, T extends Kind = "directed">(
     graph: Graph<N, E, T> | MutableGraph<N, E, T>,
     edgeIndex: EdgeIndex
@@ -4052,6 +4082,53 @@ export interface PathResult<E> {
   readonly costs: Array<E>
 }
 
+interface MinHeapEntry {
+  readonly node: NodeIndex
+  readonly priority: number
+  readonly sequence: number
+}
+
+const minHeapLessThan = (self: MinHeapEntry, that: MinHeapEntry): boolean =>
+  self.priority < that.priority || (self.priority === that.priority && self.sequence < that.sequence)
+
+const minHeapPush = (heap: Array<MinHeapEntry>, entry: MinHeapEntry): void => {
+  let index = heap.length
+  heap.push(entry)
+  while (index > 0) {
+    const parent = (index - 1) >>> 1
+    if (!minHeapLessThan(entry, heap[parent])) {
+      break
+    }
+    heap[index] = heap[parent]
+    index = parent
+  }
+  heap[index] = entry
+}
+
+const minHeapPop = (heap: Array<MinHeapEntry>): MinHeapEntry | undefined => {
+  const first = heap[0]
+  const last = heap.pop()
+  if (last === undefined || heap.length === 0) {
+    return first
+  }
+  let index = 0
+  while (true) {
+    const left = index * 2 + 1
+    if (left >= heap.length) {
+      break
+    }
+    const right = left + 1
+    const child = right < heap.length && minHeapLessThan(heap[right], heap[left]) ? right : left
+    if (!minHeapLessThan(heap[child], last)) {
+      break
+    }
+    heap[index] = heap[child]
+    index = child
+  }
+  heap[index] = last
+  return first
+}
+
 /**
  * Configuration for finding a shortest path with Dijkstra's algorithm.
  *
@@ -4175,21 +4252,12 @@ export const dijkstra: {
     previous.set(node, null)
   }
 
-  // Simple priority queue using array (can be optimized with proper heap)
-  const priorityQueue: Array<{ node: NodeIndex; distance: number }> = [
-    { node: config.source, distance: 0 }
-  ]
+  const priorityQueue: Array<MinHeapEntry> = []
+  let sequence = 0
+  minHeapPush(priorityQueue, { node: config.source, priority: 0, sequence: sequence++ })
 
   while (priorityQueue.length > 0) {
-    // Find minimum distance node (priority queue extract-min)
-    let minIndex = 0
-    for (let i = 1; i < priorityQueue.length; i++) {
-      if (priorityQueue[i].distance < priorityQueue[minIndex].distance) {
-        minIndex = i
-      }
-    }
-
-    const current = priorityQueue.splice(minIndex, 1)[0]
+    const current = minHeapPop(priorityQueue)!
     const currentNode = current.node
 
     // Skip if already visited (can happen with duplicate entries)
@@ -4226,7 +4294,7 @@ export const dijkstra: {
 
             // Add to priority queue if not visited
             if (!visited.has(neighbor)) {
-              priorityQueue.push({ node: neighbor, distance: newDistance })
+              minHeapPush(priorityQueue, { node: neighbor, priority: newDistance, sequence: sequence++ })
             }
           }
         }
@@ -4596,21 +4664,16 @@ export const astar: {
     fScore.set(config.source, h)
   }
 
-  // Priority queue using f-score (total estimated cost)
-  const openSet: Array<{ node: NodeIndex; fScore: number }> = [
-    { node: config.source, fScore: fScore.get(config.source)! }
-  ]
+  const openSet: Array<MinHeapEntry> = []
+  let sequence = 0
+  minHeapPush(openSet, {
+    node: config.source,
+    priority: fScore.get(config.source)!,
+    sequence: sequence++
+  })
 
   while (openSet.length > 0) {
-    // Find node with lowest f-score
-    let minIndex = 0
-    for (let i = 1; i < openSet.length; i++) {
-      if (openSet[i].fScore < openSet[minIndex].fScore) {
-        minIndex = i
-      }
-    }
-
-    const current = openSet.splice(minIndex, 1)[0]
+    const current = minHeapPop(openSet)!
     const currentNode = current.node
 
     // Skip if already visited
@@ -4655,7 +4718,7 @@ export const astar: {
 
               // Add to open set if not visited
               if (!visited.has(neighbor)) {
-                openSet.push({ node: neighbor, fScore: f })
+                minHeapPush(openSet, { node: neighbor, priority: f, sequence: sequence++ })
               }
             }
           }
@@ -5009,8 +5072,7 @@ export class Walker<T, N> implements Iterable<[T, N]> {
     visit: <U>(f: (index: T, data: N) => U) => Iterable<U>
   ) {
     this.visit = visit
-    const iterable = visit((index, data) => [index, data] as [T, N])
-    this[Symbol.iterator] = () => iterable[Symbol.iterator]()
+    this[Symbol.iterator] = () => visit((index, data) => [index, data] as [T, N])[Symbol.iterator]()
   }
 }
 
@@ -5466,8 +5528,11 @@ export interface TopoConfig {
 export const topo: {
   (
     config?: TopoConfig
-  ): <N, E, T extends Kind = "directed">(graph: Graph<N, E, T> | MutableGraph<N, E, T>) => NodeWalker<N>
-  <N, E, T extends Kind = "directed">(graph: Graph<N, E, T> | MutableGraph<N, E, T>, config?: TopoConfig): NodeWalker<N>
+  ): <N, E>(graph: Graph<N, E, "directed"> | MutableGraph<N, E, "directed">) => NodeWalker<N>
+  <N, E>(
+    graph: Graph<N, E, "directed"> | MutableGraph<N, E, "directed">,
+    config?: TopoConfig
+  ): NodeWalker<N>
 } = dual((args) => isGraph(args[0]), <N, E, T extends Kind = "directed">(
   graph: Graph<N, E, T> | MutableGraph<N, E, T>,
   config: TopoConfig = {}
@@ -5555,6 +5620,10 @@ export const topo: {
             }
             continue
           }
+        }
+
+        if (remaining.size > 0) {
+          throw new GraphError({ message: "Cannot perform topological sort on cyclic graph" })
         }
 
         return { done: true, value: undefined } as const

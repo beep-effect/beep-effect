@@ -1,8 +1,12 @@
-import { Graph, hole, pipe } from "effect"
+import { Graph, hole, type Option, pipe } from "effect"
 import { describe, expect, it } from "tstyche"
 
 declare const directed: Graph.DirectedGraph<string, number>
 declare const undirected: Graph.UndirectedGraph<string, number>
+declare const mutableDirected: Graph.MutableDirectedGraph<string, number>
+declare const mutableUndirected: Graph.MutableUndirectedGraph<string, number>
+declare const unknownKind: Graph.Graph<string, number, Graph.Kind>
+declare const mixedKind: Graph.DirectedGraph<string, number> | Graph.UndirectedGraph<string, number>
 
 interface Node {
   readonly id: string
@@ -36,6 +40,26 @@ describe("Graph", () => {
         expect(mutable).type.toBe<Graph.MutableUndirectedGraph<string, number>>()
       })
     ).type.toBe<Graph.UndirectedGraph<string, number>>()
+
+    expect(Graph.make("directed")<string, number>).type.not.toBeCallableWith(async () => {})
+    expect(Graph.make("undirected")<string, number>).type.not.toBeCallableWith(() => Promise.resolve())
+  })
+
+  it("mutation callbacks must be synchronous", () => {
+    expect(Graph.directed<string, number>).type.not.toBeCallableWith(async () => {})
+    expect(Graph.undirected<string, number>).type.not.toBeCallableWith(() => Promise.resolve())
+    expect(Graph.mutate).type.not.toBeCallableWith(directed, async () => {})
+    expect(Graph.mutate).type.not.toBeCallableWith(async () => {})
+
+    expect(Graph.mutate(directed, (mutable) => {
+      expect(mutable).type.toBe<Graph.MutableDirectedGraph<string, number>>()
+    })).type.toBe<Graph.DirectedGraph<string, number>>()
+    expect(pipe(
+      directed,
+      Graph.mutate((mutable) => {
+        expect(mutable).type.toBe<Graph.MutableDirectedGraph<string, number>>()
+      })
+    )).type.toBe<Graph.DirectedGraph<string, number>>()
   })
 
   it("opaque interface", () => {
@@ -62,6 +86,21 @@ describe("Graph", () => {
     expect(animalGraph).type.not.toBeAssignableTo<Graph.DirectedGraph<Dog, 1>>()
     expect(dogMutableGraph).type.not.toBeAssignableTo<Graph.MutableDirectedGraph<Animal, number>>()
     expect(animalMutableGraph).type.not.toBeAssignableTo<Graph.MutableDirectedGraph<Dog, 1>>()
+  })
+
+  it("standalone data-last getters", () => {
+    const getNode = Graph.getNode(0)
+    const getEdge = Graph.getEdge(0)
+
+    expect(getNode(directed)).type.toBe<Option.Option<string>>()
+    expect(getNode(undirected)).type.toBe<Option.Option<string>>()
+    expect(getNode(Graph.beginMutation(directed))).type.toBe<Option.Option<string>>()
+    expect(getNode(Graph.beginMutation(undirected))).type.toBe<Option.Option<string>>()
+
+    expect(getEdge(directed)).type.toBe<Option.Option<Graph.Edge<number>>>()
+    expect(getEdge(undirected)).type.toBe<Option.Option<Graph.Edge<number>>>()
+    expect(getEdge(Graph.beginMutation(directed))).type.toBe<Option.Option<Graph.Edge<number>>>()
+    expect(getEdge(Graph.beginMutation(undirected))).type.toBe<Option.Option<Graph.Edge<number>>>()
   })
 
   it("guards", () => {
@@ -197,6 +236,31 @@ describe("Graph", () => {
     expect(Graph.dfs(directed, { direction: "undirected", radius: 1 })).type.toBe<Graph.NodeWalker<string>>()
     expect(Graph.bfs(directed, { direction: "undirected", radius: 1 })).type.toBe<Graph.NodeWalker<string>>()
     expect(Graph.dfsPostOrder(directed, { direction: "undirected", radius: 1 })).type.toBe<Graph.NodeWalker<string>>()
+  })
+
+  it("topo", () => {
+    expect(Graph.topo(directed)).type.toBe<Graph.NodeWalker<string>>()
+    expect(Graph.topo(directed, { initials: [0] })).type.toBe<Graph.NodeWalker<string>>()
+    expect(Graph.topo(mutableDirected)).type.toBe<Graph.NodeWalker<string>>()
+
+    expect(pipe(directed, Graph.topo())).type.toBe<Graph.NodeWalker<string>>()
+    expect(pipe(directed, Graph.topo({ initials: [0] }))).type.toBe<Graph.NodeWalker<string>>()
+    expect(pipe(mutableDirected, Graph.topo())).type.toBe<Graph.NodeWalker<string>>()
+
+    // @ts-expect-error! Topological sorting requires a directed graph
+    Graph.topo(undirected)
+    // @ts-expect-error! Topological sorting requires a directed graph
+    Graph.topo(mutableUndirected)
+    // @ts-expect-error! Topological sorting requires a directed graph
+    pipe(undirected, Graph.topo())
+    // @ts-expect-error! Topological sorting requires a directed graph
+    pipe(mutableUndirected, Graph.topo({ initials: [0] }))
+    // @ts-expect-error! The graph kind must first be narrowed to directed
+    Graph.topo(unknownKind)
+
+    if (mixedKind.type === "directed") {
+      expect(Graph.topo(mixedKind)).type.toBe<Graph.NodeWalker<string>>()
+    }
   })
 
   it("sum", () => {

@@ -14,6 +14,7 @@ import { dual } from "effect/Function";
 import { PostgresError } from "./Postgres.errors.ts";
 import type * as Pg from "@effect/sql-pg/PgClient";
 import type { MigrationConfig, MigrationMeta } from "drizzle-orm/migrator";
+import type { EffectDrizzlePgConfig } from "drizzle-orm/pg-core/effect";
 import type { AnyRelations, EmptyRelations } from "drizzle-orm/relations";
 import type { NativeMigrationError } from "./PostgresInterop.models.ts";
 
@@ -66,7 +67,7 @@ export type PostgresDrizzleDatabase<
 export type PostgresDrizzleConfig<
   TSchema extends Record<string, unknown> = Record<string, never>,
   TRelations extends AnyRelations = EmptyRelations,
-> = PgDrizzle.EffectDrizzlePgConfig<NonNullable<TRelations>> & PostgresDrizzleSchemaPhantom<TSchema>;
+> = EffectDrizzlePgConfig<NonNullable<TRelations>> & PostgresDrizzleSchemaPhantom<TSchema>;
 
 /**
  * Service key for a default-typed Postgres-backed Drizzle database.

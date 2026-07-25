@@ -1,4 +1,5 @@
 import { lintCommand } from "@beep/repo-cli";
+import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -15,7 +16,8 @@ const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
   TestConsole.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
+  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
+  TSMorphServiceLive.pipe(Layer.provide(NodeServices.layer))
 );
 
 const writePackage = Effect.fn(function* (packageDir: string, packageName: string) {

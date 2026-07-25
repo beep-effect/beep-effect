@@ -103,8 +103,13 @@ const extractPdf = Effect.fn("DocTextFileProcessingEngine.extractPdf")(function*
   const bytes = yield* sourceBytes(operation);
   const result = yield* Effect.tryPromise({
     // pdfjs transfers the input buffer to its parser, detaching the caller's
-    // view; hand it a copy so the operation's source bytes stay intact.
-    try: () => getDocumentProxy(new Uint8Array(bytes)).then((proxy) => extractText(proxy, { mergePages: true })),
+    // view; hand it a copy so the operation's source bytes stay intact. Keep
+    // recoverable parser warnings inside this driver boundary; extraction
+    // failures are returned through the typed operation error below.
+    try: () =>
+      getDocumentProxy(new Uint8Array(bytes), { verbosity: 0 }).then((proxy) =>
+        extractText(proxy, { mergePages: true })
+      ),
     catch: () => makeDocTextError("extraction"),
   });
 

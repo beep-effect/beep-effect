@@ -62,6 +62,10 @@ const config: StorybookConfig = {
 
     return {
       ...config,
+      build: {
+        ...config.build,
+        chunkSizeWarningLimit: 1_250,
+      },
       resolve: {
         ...config.resolve,
         dedupe,

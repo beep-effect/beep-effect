@@ -6,7 +6,7 @@
  */
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { ContentEditable } from "../../editor/editor-ui/content-editable.ts";
+import { ContentEditable } from "../../editor/editor-ui/content-editable.tsx";
 
 /**
  * Rich-text plugin stack for the editor block.

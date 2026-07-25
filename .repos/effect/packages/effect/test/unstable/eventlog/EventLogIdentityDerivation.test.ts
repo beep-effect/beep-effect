@@ -3,7 +3,7 @@ import { Effect, Redacted } from "effect"
 import type * as EventLog from "effect/unstable/eventlog/EventLog"
 import {
   EncryptionDerivationLabelV1,
-  makeGetIdentityRootSecretMaterial, // gitleaks:allow -- public symbol name
+  makeGetIdentityRootSecretMaterial, // gitleaks:allow
   SigningDerivationLabelV1
 } from "effect/unstable/eventlog/internal/identityRootSecretDerivation"
 

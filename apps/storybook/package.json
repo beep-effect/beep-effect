@@ -25,7 +25,7 @@
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "storybook": "portless storybook.beep sh -c 'storybook dev -p \"${PORT:-6006}\"'",
-    "storybook:build": "storybook build -o storybook-static",
+    "storybook:build": "NODE_OPTIONS=--disable-warning=DEP0205 storybook build -o storybook-static",
     "storybook:start": "portless storybook.beep sh -c 'vite preview --host 0.0.0.0 --port \"${PORT:-6006}\" --outDir storybook-static'",
     "test": "bun run beep:test",
     "test:storybook": "bun run scripts/run-storybook-tests.mjs",
