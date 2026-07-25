@@ -53,7 +53,7 @@
       "id": "P0",
       "name": "Prototype gauntlet",
       "status": "in-progress",
-      "statusNote": "Spikes 2 and 4 PASS with archived evidence (2026-07-25); spikes 1 and 3 harnesses authored, blocked on operator prerequisites (sudo, throwaway Telegram bot + test group, scoped 1Password service-account token + disposable secret)."
+      "statusNote": "Spikes 2 and 4 PASS in full; spike 1 PASSES assertions 1-4 (filesystem bypass, privileged pointer switch, guarded CLI writers, alert-only drift canary) with assertions 5-6 blocked on a disposable Telegram test group; spike 3 harness reviewed and blocked on a scoped 1Password service-account token. All evidence archived under history/p0/ (2026-07-25)."
     },
     {
       "id": "P1",

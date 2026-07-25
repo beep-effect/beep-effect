@@ -41,11 +41,12 @@ GATE C), research legs + adversarial review.
 
 ## Current Phase
 
-P0 Prototype gauntlet — in progress (2 of 4 spikes passed). Spikes 2 and 4
-are complete with archived evidence under `history/p0/`; spikes 1 and 3 have
-authored harnesses awaiting operator prerequisites (sudo, throwaway Telegram
-bot + disposable test group, scoped 1Password service-account token +
-disposable editable test secret) per the executable contract in
+P0 Prototype gauntlet — in progress. Spikes 2 and 4 pass in full; spike 1
+passes 4 of its 6 assertions (filesystem bypass, privileged pointer switch,
+guarded CLI writers, alert-only drift canary) with the Telegram
+writer-surface pair blocked on a disposable test group; spike 3 has a
+reviewed harness blocked on a scoped 1Password service-account token. All
+per the executable contract in
 [`ops/handoffs/p0-gauntlet-contract.md`](./ops/handoffs/p0-gauntlet-contract.md).
 No implementation phase may run before every contract assertion passes.
 
@@ -59,6 +60,14 @@ No implementation phase may run before every contract assertion passes.
   [`history/p0/spike-4-upgrade-rollback/NOTES.md`](./history/p0/spike-4-upgrade-rollback/NOTES.md).
   The interrupted v2 run and its adversarial adjudication are archived
   alongside as run history.
+- 2026-07-25 — Spike 1 (filesystem bypass/drift + writer surface):
+  **INTERIM PASS on assertions 1–4**, assertions 5–6 blocked,
+  [`history/p0/spike-1-filesystem-writer/NOTES.md`](./history/p0/spike-1-filesystem-writer/NOTES.md).
+  Its live-fire section records seven execution-only harness defects that
+  four adversarial review rounds did not catch, plus findings for the
+  applicator design (app-layer refusal as a second defense, the
+  `config_health_entries` drift surface, and cross-writer mode-encoding
+  variance).
 
 ## Notes
 

@@ -1,0 +1,19 @@
+== spike1 setup: preflight and teardown-first ==
+staged_package_tree_sha256=51d6b5621ba5fa284027da40b42975ad88c8ebbc1cb9dce618208c66f447f201
+ASSERT-PASS: user manager contains neither spike secret variable
+== spike1 setup: unit-private credentials ==
+gateway_token_fingerprint=a1e0a702
+== spike1 setup: render canonical generation A ==
+== spike1 setup: privileged install ==
+== spike1 setup: install isolated user unit ==
+unit_fragment=/home/elpresidank/.config/systemd/user/openclaw-spike.service marker=verified
+== spike1 setup: installed-root evidence ==
+config_sha256=fac1c02363b1c8c207378f3519ff52f5fe9bdbff6297b8107306867e24ee4966 generation=fac1c02363b1c8c207378f3519ff52f5fe9bdbff6297b8107306867e24ee4966
+installed_spike_root_sha256=dafc903beb38496f1e335f192da098763fb393494e76f60aeef48946d6668933
+root_hash_recipe=sha256(sorted type/mode/uid:gid/path/link plus sorted file sha256; no inode/mtime)
+drwxr-xr-x 755 root:root /etc/beep/openclaw-spike
+drwxr-xr-x 755 root:root /etc/beep/openclaw-spike/fac1c02363b1c8c207378f3519ff52f5fe9bdbff6297b8107306867e24ee4966
+-rw-r--r-- 644 root:root /etc/beep/openclaw-spike/fac1c02363b1c8c207378f3519ff52f5fe9bdbff6297b8107306867e24ee4966/openclaw.json
+lrwxrwxrwx 777 root:root /etc/beep/openclaw-spike/current
+ASSERT-PASS: user manager contains neither spike secret variable
+SETUP-PASS

@@ -1,0 +1,53 @@
+== cleanup invocation 2026-07-25T17:14:48Z ==
+== cleanup: provenance before any unit mutation ==
+unit_fragment=not-found; no unit mutation needed
+ASSERT-PASS: user manager contains neither spike secret variable
+== cleanup: verified privileged root removal ==
+== cleanup: disposable state and credentials ==
+== cleanup: post-state inventories ==
+CLEANUP-PASS: no same-named loaded unit
+CLEANUP-PASS: zero matching unit files
+CLEANUP-PASS: zero spike roots/generations
+CLEANUP-PASS: absent /home/elpresidank/.cache/beep-p0-spike1.1zm81o/spike1/state
+CLEANUP-PASS: absent /home/elpresidank/.cache/beep-p0-spike1.1zm81o/spike1/isohome
+CLEANUP-PASS: absent /home/elpresidank/.cache/beep-p0-spike1.1zm81o/spike1/workspace
+CLEANUP-PASS: absent /home/elpresidank/.cache/beep-p0-spike1.1zm81o/spike1/a1-user
+CLEANUP-PASS: absent /home/elpresidank/.cache/beep-p0-spike1.1zm81o/spike1/credentials
+CLEANUP-PASS: absent /run/user/1000/credentials/openclaw-spike.service
+CLEANUP-PASS: zero listeners on spike ports
+CLEANUP-PASS: zero cgroup members
+CLEANUP-PASS: zero non-ancestor processes keyed by verified executable or OPENCLAW_STATE_DIR
+CLEANUP-PASS: real ~/.openclaw inventory is byte-identical
+ASSERT-PASS: user manager contains neither spike secret variable
+evidence_retained=/home/elpresidank/.cache/beep-p0-spike1.1zm81o/spike1
+CLEANUP-PASS: exact pre-spike state restored except sanitized evidence
+== cleanup invocation 2026-07-25T17:15:16Z ==
+== cleanup: provenance before any unit mutation ==
+unit_fragment=/home/elpresidank/.config/systemd/user/openclaw-spike.service marker=verified
+control_group=/user.slice/user-1000.slice/user@1000.service/app.slice/openclaw-spike.service
+ActiveState=active
+SubState=running
+MainPID=3987594
+ExecMainPID=3987594
+cgroup_pid=3987594 argv=openclaw-gateway                                                                                   
+ASSERT-PASS: user manager contains neither spike secret variable
+== cleanup: verified privileged root removal ==
+CLEANUP-PASS: verified marked root removed
+== cleanup: disposable state and credentials ==
+== cleanup: post-state inventories ==
+CLEANUP-PASS: no same-named loaded unit
+CLEANUP-PASS: zero matching unit files
+CLEANUP-PASS: zero spike roots/generations
+CLEANUP-PASS: absent /home/elpresidank/.cache/beep-p0-spike1.1zm81o/spike1/state
+CLEANUP-PASS: absent /home/elpresidank/.cache/beep-p0-spike1.1zm81o/spike1/isohome
+CLEANUP-PASS: absent /home/elpresidank/.cache/beep-p0-spike1.1zm81o/spike1/workspace
+CLEANUP-PASS: absent /home/elpresidank/.cache/beep-p0-spike1.1zm81o/spike1/a1-user
+CLEANUP-PASS: absent /home/elpresidank/.cache/beep-p0-spike1.1zm81o/spike1/credentials
+CLEANUP-PASS: absent /run/user/1000/credentials/openclaw-spike.service
+CLEANUP-PASS: zero listeners on spike ports
+CLEANUP-PASS: zero cgroup members
+CLEANUP-PASS: zero non-ancestor processes keyed by verified executable or OPENCLAW_STATE_DIR
+CLEANUP-PASS: real ~/.openclaw inventory is byte-identical
+ASSERT-PASS: user manager contains neither spike secret variable
+evidence_retained=/home/elpresidank/.cache/beep-p0-spike1.1zm81o/spike1
+CLEANUP-PASS: exact pre-spike state restored except sanitized evidence
