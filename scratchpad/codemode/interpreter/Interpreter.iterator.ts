@@ -1,110 +1,21 @@
-/**
- * The iterator for the `@beep/codemode` interpreter module.
- *
- * @packageDocumentation
- * @since 0.0.0
- */
-import {$ScratchpadId} from "@beep/identity";
-import * as S from "effect/Schema";
-import {LiteralKit, SchemaUtils, MappedLiteralKit} from "@beep/schema";
-import {P, A, O, Str, R, Struct, pipe, dual} from "@beep/utils";
-import {HashMap, HashSet} from "effect";
+import { Effect, Exit } from "effect"
+import type { AstNode, InterpreterFailure } from "./Interpreter.model.ts"
 
-const $I = $ScratchpadId.create("Interpreter.iterator");
-
-/**
- * The `Thing` model.
- *
- * **Example**
- *
- * @example
- * ```ts
- * import { Thing } from "@beep/codemode";
- *
- * const thing: Thing = Thing.make()
- *
- * console.log(thing); // `{}`
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-const Thing = LiteralKit(["thing"]).pipe(
-  $I.annoteSchema("Thing", {
-    description: ""
-  })
-);
-
-/**
- *
- * Companion runtime type for {@link Thing}
- *
- *
- * **Example **
- *
- * @example
- * ```ts
- * import { Thing } from "@beep/codemode";
- *
- * const thing: Thing = Thing.make()
- *
- * console.log(thing); // `{}`
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type Thing = typeof Thing.Type;
-
-
-/**
- * The `ThingClass` model.
- *
- * **Example**
- *
- * @example
- * ```ts
- * import { ThingClass } from "@beep/codemode";
- *
- * const thing: ThingClass = ThingClass.make()
- *
- * console.log(thing); // `{}`
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class ThingClass extends S.Class<ThingClass>($I`ThingClass`)(
-  {},
-  $I.annote("ThingClass", {
-    description: "The `ThingClass` model"
-  })
-) {
+export type IteratorCursor<R> = {
+  readonly next: Effect.Effect<{ readonly done: boolean; readonly value: unknown }, InterpreterFailure, R>
+  readonly close: Effect.Effect<void, InterpreterFailure, R>
 }
 
-/**
- * Companion namespace for {@link ThingClass}
- *
- * @since 0.0.0
- */
-export declare namespace ThingClass {
-  /**
-   * Companion encoded type for {@link ThingClass}
-   *
-   * **Example**
-   *
-   * @example
-   * ```ts
-   * import { ThingClass } from "@beep/codemode";
-   * import * as S from "effect/Schema";
-   * const thingEncoded: ThingClass.Encoded = S.encodeSync(ThingClass)(ThingClass.make());
-   *
-   * console.log(thingEncoded); // `{}`
-   * ```
-   *
-   * @category models
-   * @since 0.0.0
-   */
-  export interface Encoded {}
+export type SyncIteratorRunner<R> = {
+  readonly syncIterator: (value: unknown, node: AstNode) => Effect.Effect<IteratorCursor<R> | undefined, InterpreterFailure, R>
 }
 
+export const preserveConsumerError = <A, R>(
+  cursor: IteratorCursor<R>,
+  effect: Effect.Effect<A, InterpreterFailure, R>,
+): Effect.Effect<A, InterpreterFailure, R> =>
+  Effect.flatMap(Effect.exit(effect), (exit) =>
+    Exit.isSuccess(exit)
+      ? Effect.succeed(exit.value)
+      : Effect.andThen(Effect.exit(cursor.close), Effect.failCause(exit.cause)),
+  )

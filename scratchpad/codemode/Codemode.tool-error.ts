@@ -7,8 +7,7 @@
 import {$ScratchpadId} from "@beep/identity";
 import * as S from "effect/Schema";
 import {TaggedErrorClass, SchemaUtils} from "@beep/schema";
-import {P, A, O, Str, R, Struct, pipe, dual} from "@beep/utils";
-import {HashMap, HashSet} from "effect";
+import { O } from "@beep/utils";
 
 const $I = $ScratchpadId.create("StdLib.json");
 
@@ -43,14 +42,15 @@ export class ToolError extends TaggedErrorClass<ToolError>($I`ToolError`)(
   })
 ) {
   /** Creates a tool refusal whose message is safe to include in an execution diagnostic. */
-  static readonly new: {
-    (message: string, cause?: unknown): ToolError,
-    (cause?: unknown): (message: string) => ToolError
-  } = dual(2, (message: string, cause?: unknown): ToolError => ToolError.make({
+  static readonly new = (message: string, cause?: unknown): ToolError => ToolError.make({
     message,
     cause: O.fromNullishOr(cause)
-  }))
+  });
 }
+
+/** Creates a schema-owned tool failure. */
+export const toolError = (message: string, cause?: unknown): ToolError =>
+  ToolError.new(message, cause);
 
 /**
  * Companion namespace for {@link ToolError}

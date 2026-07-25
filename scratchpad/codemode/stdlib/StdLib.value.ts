@@ -1,109 +1,110 @@
-/**
- * `Stdlib`
- *
- * @packageDocumentation
- * @since 0.0.0
- */
-import {$ScratchpadId} from "@beep/identity";
-import * as S from "effect/Schema";
-import {LiteralKit, SchemaUtils, MappedLiteralKit} from "@beep/schema";
-import {P, A, O, Str, R, Struct, pipe, dual} from "@beep/utils";
-import {HashMap, HashSet} from "effect";
+import {
+  type AstNode,
+  CoercionFunction,
+  ErrorConstructorName,
+  InterpreterRuntimeError,
+} from "../interpreter/Interpreter.model.ts"
+import { copyIn, type SafeObject } from "../Codemode.tool-runtime.ts"
+import { LiteralKit } from "@beep/schema"
+import {
+  isCodeModeValue,
+  CodeModeDate,
+  CodeModeMap,
+  CodeModeRegExp,
+  CodeModeSet,
+  CodeModeURL,
+  CodeModeURLSearchParams,
+} from "../Codemode.values.ts"
+import { DateTime } from "effect";
+import { A, P } from "@beep/utils";
 
-const $I = $ScratchpadId.create("StdLib.value");
+export const errorConstructors = ErrorConstructorName
 
-/**
- * The `Thing` model.
- *
- * **Example**
- *
- * @example
- * ```ts
- * import { Thing } from "@beep/codemode";
- *
- * const thing: Thing = Thing.make()
- *
- * console.log(thing); // `{}`
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-const Thing = LiteralKit(["thing"]).pipe(
-  $I.annoteSchema("Thing", {
-    description: ""
-  })
-);
+export const valueConstructors = LiteralKit(["Date", "RegExp", "Map", "Set", "URL", "URLSearchParams"])
 
-/**
- *
- * Companion runtime type for {@link Thing}
- *
- *
- * **Example **
- *
- * @example
- * ```ts
- * import { Thing } from "@beep/codemode";
- *
- * const thing: Thing = Thing.make()
- *
- * console.log(thing); // `{}`
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type Thing = typeof Thing.Type;
+export const compoundOperators = LiteralKit(["+=", "-=", "*=", "/=", "%=", "**=", "&=", "|=", "^=", "<<=", ">>=", ">>>="])
 
+const ErrorBrand: unique symbol = Symbol("codemode.error")
 
-/**
- * The `ThingClass` model.
- *
- * **Example**
- *
- * @example
- * ```ts
- * import { ThingClass } from "@beep/codemode";
- *
- * const thing: ThingClass = ThingClass.make()
- *
- * console.log(thing); // `{}`
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class ThingClass extends S.Class<ThingClass>($I`ThingClass`)(
-  {},
-  $I.annote("ThingClass", {
-    description: "The `ThingClass` model"
-  })
-) {
+export const createErrorValue = (name: string, message: string): SafeObject => {
+  const value = Object.assign(Object.create(null) as SafeObject, { name, message })
+  Object.defineProperty(value, ErrorBrand, { value: name })
+  return value
 }
 
-/**
- * Companion namespace for {@link ThingClass}
- *
- * @since 0.0.0
- */
-export declare namespace ThingClass {
-  /**
-   * Companion encoded type for {@link ThingClass}
-   *
-   * **Example**
-   *
-   * @example
-   * ```ts
-   * import { ThingClass } from "@beep/codemode";
-   * import * as S from "effect/Schema";
-   * const thingEncoded: ThingClass.Encoded = S.encodeSync(ThingClass)(ThingClass.make());
-   *
-   * console.log(thingEncoded); // `{}`
-   * ```
-   *
-   * @category models
-   * @since 0.0.0
-   */
-  export interface Encoded {}
+export const createAggregateErrorValue = (errors: Array<unknown>, message: string): SafeObject =>
+  Object.assign(createErrorValue("AggregateError", message), { errors })
+
+export const errorBrandName = (value: unknown): string | undefined =>
+  P.isNotNull(value) && P.isObjectKeyword(value)
+    ? ((value as Record<PropertyKey, unknown>)[ErrorBrand] as string | undefined)
+    : undefined
+
+export const boundedData = (value: unknown, label: string): unknown => copyIn(value, label, true)
+
+export const coerceToString = (value: unknown): string => {
+  if (P.isNull(value)) return "null"
+  if (P.isUndefined(value)) return "undefined"
+  if (value instanceof CodeModeDate)
+    return Number.isFinite(value.time) ? DateTime.makeUnsafe(value.time).pipe(DateTime.toDate, (d) => d.toISOString()) : "Invalid Date"
+  if (value instanceof CodeModeRegExp) return `/${value.regex.source}/${value.regex.flags}`
+  if (value instanceof CodeModeMap) return "[object Map]"
+  if (value instanceof CodeModeSet) return "[object Set]"
+  if (value instanceof CodeModeURL) return value.url.href
+  if (value instanceof CodeModeURLSearchParams) return value.params.toString()
+  if (errorBrandName(value) !== undefined) {
+    // Match Error.prototype.toString: "name: message", or just one when the other is empty.
+    const error = value as { name?: unknown; message?: unknown }
+    const name = typeof error.name === "string" ? error.name : "Error"
+    const message = typeof error.message === "string" ? error.message : ""
+    if (message === "") return name
+    if (name === "") return message
+    return `${name}: ${message}`
+  }
+  if (P.isObjectKeyword(value)) {
+    return Array.isArray(value)
+      ? value.map((item) => (item === null || item === undefined ? "" : coerceToString(item))).join(",")
+      : "[object Object]"
+  }
+  return String(value)
+}
+
+export const coerceToNumber = (value: unknown): number => {
+  if (value instanceof CodeModeDate) return value.time
+  if (isCodeModeValue(value)) return Number.NaN
+  // Arrays coerce through our own string coercion: host Number(array) joins with host
+  // ToPrimitive, which throws on the null-prototype objects the interpreter produces.
+  if (Array.isArray(value)) return Number(coerceToString(value))
+  return P.isNotNull(value) && P.isObjectKeyword(value) ? Number.NaN : Number(value)
+}
+
+export const invokeCoercion = (ref: CoercionFunction, args: Array<unknown>, node: AstNode): unknown => {
+  const withoutArguments = A.isArrayEmpty(args)
+  const raw = args[0]
+
+  const value = (): unknown =>
+    isCodeModeValue(raw)
+      ? raw
+      : boundedData(raw, `${ref.name} input`)
+
+  return CoercionFunction.match(ref, {
+    Boolean: () => P.isTruthy(value()),
+    // Native Number() is 0, unlike Number(undefined).
+    Number: () => withoutArguments ? 0 : coerceToNumber(value()),
+    // Error values are plain SafeObjects; boundedData would strip their guest brand.
+    String: () =>
+      withoutArguments
+        ? ""
+        : coerceToString(P.isNotUndefined(errorBrandName(raw)) ? raw : value()),
+    isFinite: () => Number.isFinite(coerceToNumber(value())),
+    isNaN: () => Number.isNaN(coerceToNumber(value())),
+    parseInt: () => {
+      const radix = args[1]
+      if (P.isNotUndefined(radix) && !P.isNumber(radix)) {
+        throw InterpreterRuntimeError.new("parseInt expects a numeric radix.", node)
+      }
+      return parseInt(coerceToString(value()), radix)
+    },
+    parseFloat: () => parseFloat(coerceToString(value())),
+  })
 }

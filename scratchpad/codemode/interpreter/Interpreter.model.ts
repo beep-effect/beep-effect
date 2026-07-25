@@ -1,272 +1,1149 @@
 /**
- * The Domain model for the `@beep/codemode` interpreter.
+ * Runtime and boundary models for the confined CodeMode interpreter.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 import {$ScratchpadId} from "@beep/identity";
-import * as S from "effect/Schema";
 import {
+  LiteralKit,
+  MutableHashMapFromSelf,
+  NonNegativeInt,
   SchemaUtils,
-  NonEmptyTrimmedStr,
-  TaggedErrorClass,
-  LiteralKit
+  TaggedErrorClass
 } from "@beep/schema";
-import {Tuple, Result} from "effect";
-import {A, P, O, R, flow, dual, pipe, Str, Struct} from "@beep/utils";
-import type {TString} from "@beep/types";
+import {A, N, O, P, pipe} from "@beep/utils";
+import {Effect, MutableHashMap, Tuple} from "effect";
+import * as S from "effect/Schema";
+import type {SafeObject} from "@beep/schema/SafeObject";
+import {ToolError} from "../Codemode.tool-error.ts";
+import {ToolRuntimeError} from "../Codemode.tool-runtime.ts";
+import {
+  CodeModePromise,
+  type CodeModeRegExp,
+  type CodeModeURL
+} from "../Codemode.values.ts";
 
-export { SafeObject } from "@beep/schema/SafeObject";
-
-const $I = $ScratchpadId.create("interpreter/Interpreter.model");
+const $I = $ScratchpadId.create("codemode/interpreter/Interpreter.model");
 
 /**
- * TODO: verify if check constraints are correct given the usecase
+ * One source coordinate reported by Acorn.
+ *
+ * @category models
+ * @since 0.0.0
  */
 export class SourcePosition extends S.Class<SourcePosition>($I`SourcePosition`)(
   {
-    line: S.Int.check(
-      S.makeFilterGroup(
-        [S.isGreaterThanOrEqualTo(1), S.isFinite()]
-      ),
-    ),
-    column: S.Int.check(
-      S.makeFilterGroup(
-        [S.isGreaterThanOrEqualTo(1), S.isFinite()]
-      ),
-    ),
+    line: NonNegativeInt,
+    column: NonNegativeInt,
   },
   $I.annote("SourcePosition", {
-    description: ""
+    description: "One zero- or one-based parser source coordinate before CodeMode wrapper adjustment.",
   })
 ) {
+  static readonly new = (line: number, column: number): SourcePosition =>
+    SourcePosition.make({
+      line: NonNegativeInt.make(line),
+      column: NonNegativeInt.make(column),
+    });
 }
 
+/**
+ * Source range attached to a parsed node.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class SourceLocation extends S.Class<SourceLocation>($I`SourceLocation`)(
   {
     start: SourcePosition,
-    end: SourcePosition
+    end: SourcePosition,
   },
   $I.annote("SourceLocation", {
-    description: ""
+    description: "Start and end coordinates attached to a parsed JavaScript node.",
   })
 ) {
+  static readonly new = (start: SourcePosition, end: SourcePosition): SourceLocation =>
+    SourceLocation.make({start, end});
 }
 
+const AstNodeType = S.NonEmptyString.check(S.isTrimmed()).pipe(
+  $I.annoteSchema("AstNodeType", {
+    description: "A non-empty trimmed Acorn node discriminator.",
+  })
+);
 
-export const AstNodeValue = S.StructWithRest(
+/**
+ * Recursively decodes values owned by an Acorn node.
+ *
+ * The final `S.Unknown` branch deliberately preserves parser-specific opaque
+ * values (for example the native `RegExp` stored on a regular-expression
+ * literal), while arrays, records, and nested nodes are normalized first.
+ */
+const AstValue: S.Codec<unknown, unknown> = S.suspend(() =>
+  S.Union([
+    AstNode,
+    S.Array(AstValue),
+    S.Record(S.String, AstValue),
+    S.Undefined,
+    S.Null,
+    S.Boolean,
+    S.Finite,
+    S.String,
+    S.Unknown,
+  ])
+);
+
+/**
+ * Open Acorn node boundary. The parser is decoded once before evaluation;
+ * supported-node closure is enforced by the evaluator's exhaustive node
+ * matcher.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AstNode = S.StructWithRest(
   S.Struct({
-    type: NonEmptyTrimmedStr,
-    loc: SourceLocation.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    type: AstNodeType,
+    loc: S.optionalKey(SourceLocation),
   }),
-  [S.Record(NonEmptyTrimmedStr, S.Unknown)]
+  [S.Record(S.String, AstValue)]
 ).pipe(
-  $I.annoteSchema("AstNodeValue", {
-    description: ""
+  $I.annoteSchema("AstNode", {
+    description: "An Acorn syntax node with a required type discriminator and optional source location.",
   })
 );
 
-export type AstNodeValue = typeof AstNodeValue.Type;
+/**
+ * Runtime type for {@link AstNode}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AstNode = typeof AstNode.Type;
 
-export declare namespace AstNodeValue {
-  export interface Encoded {
-    readonly type: typeof NonEmptyTrimmedStr.Encoded,
-    readonly loc?: undefined | typeof SourceLocation.Encoded,
+/**
+ * Parsed program root.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ProgramNode = S.StructWithRest(
+  S.Struct({
+    type: S.tag("Program"),
+    body: S.Array(AstNode),
+    loc: S.optionalKey(SourceLocation),
+  }),
+  [S.Record(S.String, S.Unknown)]
+).pipe(
+  $I.annoteSchema("ProgramNode", {
+    description: "A parsed CodeMode program root containing executable statements.",
+  })
+);
 
-    readonly [key: typeof NonEmptyTrimmedStr.Encoded]: unknown
-  }
-}
+/**
+ * Runtime type for {@link ProgramNode}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ProgramNode = typeof ProgramNode.Type;
 
-export class AstNode extends S.Class<AstNode>($I`AstNode`)(
+/** Immutable lexical binding stored in a mutable scope map. */
+export class Binding extends S.Class<Binding>($I`Binding`)(
   {
-    value: AstNodeValue,
+    mutable: S.Boolean,
+    value: S.Unknown,
+    initialized: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
   },
-  $I.annote("AstNodeClass", {
-    description: ""
+  $I.annote("Binding", {
+    description: "One guest lexical binding; scope updates replace this immutable value.",
   })
 ) {
-  static readonly create = <const TypeTag extends TString.NonEmpty, Fields extends S.Struct.Fields>(
-    typeTag: TypeTag,
-    schemaFields: Fields,
-    // Todo type properly
-    // meta: S.Annotations.Bottom<S.Top, S.Top["~type.parameters"]>
-    meta: {
-      readonly description: string
-    }
-  ) => {
-    S.asserts(S.NonEmptyString, typeTag);
-
-
-    const identifier = `${$I.string()}/${typeTag}`;
-    const SchemaValue = S.StructWithRest(
-      S.Struct(
-        {
-          ...Struct.omit(AstNodeValue.schema.fields, ["type"]),
-          ...schemaFields
-        },
-      ),
-      AstNodeValue.records
-    ).pipe(
-      $I.annoteSchema(`${identifier}Value`, {
-        description: `Node value for ${meta.description}`
-      })
-    );
-
-    class Schema extends S.Class<Schema>(`${identifier}`)(
-      {
-        type: S.tag(typeTag),
-        value: SchemaValue,
-      },
-      $I.annote(identifier,)
-    ) {
-    }
-
-    return {
-      [`${Str.toUpperCase(typeTag)}`]: Schema,
-      [`${Str.toUpperCase(typeTag)}Value`]: SchemaValue,
-    };
-  };
+  static readonly new = (
+    mutable: boolean,
+    value: unknown,
+    initialized = true
+  ): Binding => Binding.make({ mutable, value, initialized });
 }
 
-export declare namespace AstNode {
-  export interface Encoded {
-    readonly value: AstNodeValue.Encoded;
-  }
-}
-
-export const {
-  ProgramNode,
-  ProgramNodeValue,
-} = AstNode.create(
-  "ProgramNode",
-  {
-    body: S.Array(S.suspend((): S.Codec<AstNode, AstNode.Encoded> => AstNode))
-  },
-  {
-    description: "The codemode program node"
-  }
+/** Effect collection used for one lexical scope. */
+export const Scope = MutableHashMapFromSelf({
+  key: S.String,
+  value: Binding,
+}).pipe(
+  $I.annoteSchema("Scope", {
+    description: "Mutable Effect hash map containing immutable guest bindings.",
+  })
 );
 
+/** Runtime type for {@link Scope}. */
+export type Scope = typeof Scope.Type;
 
-export const DiagnosticKind = LiteralKit(
-  [
-    "ParseError",
-    "UnsupportedSyntax",
-    "UnknownTool",
-    "InvalidToolInput",
-    "InvalidToolOutput",
-    "InvalidDataValue",
-    "ToolCallLimitExceeded",
-    "TimeoutExceeded",
-    "ToolFailure",
-    "ExecutionFailure",
-  ]
-).pipe(
+/** Normal statement completion. */
+export class StatementNone extends S.TaggedClass<StatementNone>($I`StatementNone`)(
+  "None",
+  {},
+  $I.annote("StatementNone", {
+    description: "A guest statement completed without transferring control.",
+  })
+) {
+  static readonly new = (): StatementNone => StatementNone.make({});
+}
+
+/** Return completion carrying the guest value. */
+export class StatementReturn extends S.TaggedClass<StatementReturn>($I`StatementReturn`)(
+  "Return",
+  { value: S.Unknown },
+  $I.annote("StatementReturn", {
+    description: "A guest return statement completed with a value.",
+  })
+) {
+  static readonly new = (value: unknown): StatementReturn =>
+    StatementReturn.make({ value });
+}
+
+/** Break completion with an optional label. */
+export class StatementBreak extends S.TaggedClass<StatementBreak>($I`StatementBreak`)(
+  "Break",
+  {
+    label: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault
+    ),
+  },
+  $I.annote("StatementBreak", {
+    description: "A guest break statement transfers control, optionally to a label.",
+  })
+) {
+  static readonly new = (label?: string): StatementBreak =>
+    StatementBreak.make({ label: O.fromNullishOr(label) });
+}
+
+/** Continue completion with an optional label. */
+export class StatementContinue extends S.TaggedClass<StatementContinue>($I`StatementContinue`)(
+  "Continue",
+  {
+    label: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault
+    ),
+  },
+  $I.annote("StatementContinue", {
+    description: "A guest continue statement transfers control, optionally to a label.",
+  })
+) {
+  static readonly new = (label?: string): StatementContinue =>
+    StatementContinue.make({ label: O.fromNullishOr(label) });
+}
+
+/** Schema-owned statement control-flow result. */
+export const StatementResult = S.Union([
+  StatementNone,
+  StatementReturn,
+  StatementBreak,
+  StatementContinue,
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("StatementResult", {
+    description: "All normal and abrupt guest statement completions.",
+  })
+);
+
+/** Runtime type for {@link StatementResult}. */
+export type StatementResult = typeof StatementResult.Type;
+
+type MemberReferenceTarget =
+  | SafeObject
+  | Array<unknown>
+  | CodeModeRegExp
+  | CodeModeURL;
+
+const MemberReferenceTarget = S.declare<MemberReferenceTarget>(
+  (value: unknown): value is MemberReferenceTarget =>
+    A.isArray(value) || P.isObject(value)
+);
+
+/** Mutable property reference inside a guest value. */
+export class MemberReference extends S.Class<MemberReference>($I`MemberReference`)(
+  {
+    target: MemberReferenceTarget,
+    key: S.PropertyKey,
+  },
+  $I.annote("MemberReference", {
+    description: "Identity-preserving reference to a mutable guest property.",
+  })
+) {
+  static readonly new = (
+    target: MemberReferenceTarget,
+    key: PropertyKey
+  ): MemberReference => MemberReference.make({ target, key });
+}
+
+/**
+ * Captured scopes are runtime references, not serialized data. Validate the
+ * collection kind without rebuilding it so closures retain map identity.
+ */
+const CapturedScope = S.declare<Scope>(
+  (value: unknown): value is Scope =>
+    MutableHashMap.isMutableHashMap(value)
+);
+const CapturedScopes = S.Array(CapturedScope);
+
+const GeneratorRequest = S.declare<
+  (
+    kind: GeneratorRequestKind,
+    value: unknown,
+    node: AstNode
+  ) => Effect.Effect<unknown, InterpreterFailure>
+>((value: unknown): value is (
+  kind: GeneratorRequestKind,
+  value: unknown,
+  node: AstNode
+) => Effect.Effect<unknown, InterpreterFailure> => P.isFunction(value));
+
+const SettlePromise = S.declare<(value: unknown) => void>(
+  (value: unknown): value is (value: unknown) => void => P.isFunction(value)
+);
+
+export class CodeModeFunction extends S.TaggedClass<CodeModeFunction>($I`CodeModeFunction`)(
+  "CodeModeFunction",
+  {
+    parameters: S.Array(AstNode),
+    body: AstNode,
+    capturedScopes: CapturedScopes,
+    async: S.Boolean,
+    generator: S.Boolean,
+  },
+  $I.annote("CodeModeFunction", {
+    description: "A guest function with its parsed body and captured lexical scopes.",
+  })
+) {
+  static readonly new = (
+    parameters: ReadonlyArray<AstNode>,
+    body: AstNode,
+    capturedScopes: ReadonlyArray<MutableHashMap.MutableHashMap<string, Binding>>,
+    async: boolean,
+    generator: boolean
+  ): CodeModeFunction => CodeModeFunction.make({
+    parameters,
+    body,
+    capturedScopes,
+    async,
+    generator
+  });
+}
+
+/** Supported generator request operations. */
+export const GeneratorRequestKind = LiteralKit(["next", "return", "throw"]).pipe(
+  $I.annoteSchema("GeneratorRequestKind", {
+    description: "Operation requested from a guest generator.",
+  })
+);
+
+/** Runtime type for {@link GeneratorRequestKind}. */
+export type GeneratorRequestKind = typeof GeneratorRequestKind.Type;
+
+/** Guest generator handle. */
+export class CodeModeGenerator extends S.TaggedClass<CodeModeGenerator>($I`CodeModeGenerator`)(
+  "CodeModeGenerator",
+  {
+    asynchronous: S.Boolean,
+    request: GeneratorRequest,
+  },
+  $I.annote("CodeModeGenerator", {
+    description: "A guest generator backed by an Effect request function.",
+  })
+) {
+  static readonly new = (
+    asynchronous: boolean,
+    request: (
+      kind: GeneratorRequestKind,
+      value: unknown,
+      node: AstNode
+    ) => Effect.Effect<unknown, InterpreterFailure>
+  ): CodeModeGenerator => CodeModeGenerator.make({asynchronous, request});
+}
+
+const CodeModeGeneratorReference = S.declare<CodeModeGenerator>(
+  (u: unknown): u is CodeModeGenerator => S.is(CodeModeGenerator)(u)
+);
+
+/** Operations exposed by a guest generator reference. */
+export const GeneratorMethodKind = LiteralKit([
+  "next",
+  "return",
+  "throw",
+  "iterator",
+]).pipe(
+  $I.annoteSchema("GeneratorMethodKind", {
+    description: "Operation exposed by a bound guest generator method.",
+  })
+);
+
+/** Runtime type for {@link GeneratorMethodKind}. */
+export type GeneratorMethodKind = typeof GeneratorMethodKind.Type;
+
+type GeneratorMethodReferenceMember<Kind extends GeneratorMethodKind> = {
+  readonly _tag: "GeneratorMethodReference";
+  readonly generator: CodeModeGenerator;
+  readonly kind: Kind;
+};
+
+/** Bound method of a guest generator. */
+export const GeneratorMethodReference = GeneratorMethodKind.mapMembers((members) => {
+  const make = <const TKind extends GeneratorMethodKind>(
+    literalSchema: S.Literal<TKind>
+  ) =>
+    S.Class<GeneratorMethodReferenceMember<TKind>>(
+      $I`GeneratorMethodReferenceMember`
+    )({
+      _tag: S.tag("GeneratorMethodReference"),
+      generator: CodeModeGeneratorReference,
+      kind: S.tag(literalSchema.literal),
+    });
+
+  return pipe(
+    members,
+    Tuple.evolve([
+      make,
+      make,
+      make,
+      make,
+    ])
+  );
+}).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("GeneratorMethodReference", {
+    description: "A method reference bound to a guest generator.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    new: (
+      generator: CodeModeGenerator,
+      kind: GeneratorMethodKind
+    ): GeneratorMethodReference =>
+      schema.cases[kind].make({ generator }),
+  }))
+);
+
+export type GeneratorMethodReference = typeof GeneratorMethodReference.Type;
+
+/** Bound intrinsic operation. */
+export class IntrinsicReference extends S.TaggedClass<IntrinsicReference>($I`IntrinsicReference`)(
+  "IntrinsicReference",
+  {
+    receiver: S.Unknown,
+    name: S.String,
+  },
+  $I.annote("IntrinsicReference", {
+    description: "An intrinsic method bound to its guest receiver.",
+  })
+) {
+  static readonly new = (receiver: unknown, name: string): IntrinsicReference =>
+    IntrinsicReference.make({receiver, name});
+}
+
+/** Marker preserving a computed value through assignment evaluation. */
+export class ComputedValue extends S.TaggedClass<ComputedValue>($I`ComputedValue`)(
+  "ComputedValue",
+  {
+    value: S.Unknown,
+  },
+  $I.annote("ComputedValue", {
+    description: "A computed guest value retained through assignment evaluation.",
+  })
+) {
+  static readonly new = (value: unknown): ComputedValue => ComputedValue.make({value});
+}
+
+/** Guest Promise constructor namespace. */
+export class PromiseNamespace extends S.TaggedClass<PromiseNamespace>($I`PromiseNamespace`)(
+  "PromiseNamespace",
+  {},
+  $I.annote("PromiseNamespace", {
+    description: "The guest Promise constructor namespace.",
+  })
+) {
+  static readonly new = (): PromiseNamespace => PromiseNamespace.make({});
+}
+
+/** Guest Symbol namespace. */
+export class SymbolNamespace extends S.TaggedClass<SymbolNamespace>($I`SymbolNamespace`)(
+  "SymbolNamespace",
+  {},
+  $I.annote("SymbolNamespace", {
+    description: "The guest Symbol namespace.",
+  })
+) {
+  static readonly new = (): SymbolNamespace => SymbolNamespace.make({});
+}
+
+export const AsyncIteratorSymbol: unique symbol = Symbol("codemode.async-iterator");
+export const IteratorSymbol: unique symbol = Symbol("codemode.iterator");
+export const IteratorSymbols = [AsyncIteratorSymbol, IteratorSymbol] as const;
+
+/** Supported static Promise methods. */
+export const PromiseMethodName = LiteralKit(["all", "allSettled", "race", "any", "resolve", "reject"]).pipe(
+  $I.annoteSchema("PromiseMethodName", {
+    description: "Static Promise method exposed to guest programs.",
+  })
+);
+
+/** Runtime type for {@link PromiseMethodName}. */
+export type PromiseMethodName = typeof PromiseMethodName.Type;
+
+type NamedReferenceMember<
+  Tag extends string,
+  Name extends string
+> = {
+  readonly _tag: Tag;
+  readonly name: Name;
+};
+
+export const PromiseMethodReference = PromiseMethodName.mapMembers((members) => {
+  const make = <const TName extends PromiseMethodName>(
+    literalSchema: S.Literal<TName>
+  ) =>
+    S.Class<NamedReferenceMember<"PromiseMethodReference", TName>>(
+      $I`PromiseMethodReferenceMember`
+    )({
+      _tag: S.tag("PromiseMethodReference"),
+      name: S.tag(literalSchema.literal),
+    });
+
+  return pipe(
+    members,
+    Tuple.evolve([
+      make,
+      make,
+      make,
+      make,
+      make,
+      make,
+    ])
+  );
+}).pipe(
+  S.toTaggedUnion("name"),
+  $I.annoteSchema("PromiseMethodReference", {
+    description: "A static Promise method exposed to a guest program.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    new: (name: PromiseMethodName): PromiseMethodReference =>
+      schema.cases[name].make({}),
+  }))
+);
+
+export type PromiseMethodReference = typeof PromiseMethodReference.Type;
+
+/** Supported Promise instance methods. */
+export const PromiseInstanceMethodName = LiteralKit(["then", "catch", "finally"]).pipe(
+  $I.annoteSchema("PromiseInstanceMethodName", {
+    description: "Promise instance method exposed to guest programs.",
+  })
+);
+
+export type PromiseInstanceMethodName = typeof PromiseInstanceMethodName.Type;
+
+type PromiseInstanceMethodReferenceMember<
+  Name extends PromiseInstanceMethodName
+> = NamedReferenceMember<"PromiseInstanceMethodReference", Name> & {
+  readonly promise: CodeModePromise;
+};
+
+export const PromiseInstanceMethodReference = PromiseInstanceMethodName.mapMembers((members) => {
+  const make = <const TName extends PromiseInstanceMethodName>(
+    literalSchema: S.Literal<TName>
+  ) =>
+    S.Class<PromiseInstanceMethodReferenceMember<TName>>(
+      $I`PromiseInstanceMethodReferenceMember`
+    )({
+      _tag: S.tag("PromiseInstanceMethodReference"),
+      promise: S.instanceOf(CodeModePromise),
+      name: S.tag(literalSchema.literal),
+    });
+
+  return pipe(
+    members,
+    Tuple.evolve([
+      make,
+      make,
+      make,
+    ])
+  );
+}).pipe(
+  S.toTaggedUnion("name"),
+  $I.annoteSchema("PromiseInstanceMethodReference", {
+    description: "A Promise instance method bound to its guest promise.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    new: (
+      promise: CodeModePromise,
+      name: PromiseInstanceMethodName
+    ): PromiseInstanceMethodReference =>
+      schema.cases[name].make({ promise }),
+  }))
+);
+
+export type PromiseInstanceMethodReference = typeof PromiseInstanceMethodReference.Type;
+
+export class PromiseCapabilityFunction extends S.TaggedClass<PromiseCapabilityFunction>($I`PromiseCapabilityFunction`)(
+  "PromiseCapabilityFunction",
+  {
+    settle: SettlePromise,
+  },
+  $I.annote("PromiseCapabilityFunction", {
+    description: "A guest Promise resolve or reject capability.",
+  })
+) {
+  static readonly new = (settle: (value: unknown) => void): PromiseCapabilityFunction =>
+    PromiseCapabilityFunction.make({settle});
+}
+
+/** Global constructor namespaces exposed by CodeMode. */
+export const GlobalNamespaceName = LiteralKit([
+  "Object",
+  "Math",
+  "JSON",
+  "Array",
+  "console",
+  "Date",
+  "RegExp",
+  "Map",
+  "Set",
+  "URL",
+  "URLSearchParams",
+]).pipe(
+  $I.annoteSchema("GlobalNamespaceName", {
+    description: "Global namespace or constructor available to guest programs.",
+  })
+);
+
+export type GlobalNamespaceName = typeof GlobalNamespaceName.Type;
+
+export const GlobalNamespace = GlobalNamespaceName.mapMembers((members) => {
+  const make = <const TName extends GlobalNamespaceName>(
+    literalSchema: S.Literal<TName>
+  ) =>
+    S.Class<NamedReferenceMember<"GlobalNamespace", TName>>(
+      $I`GlobalNamespaceMember`
+    )({
+      _tag: S.tag("GlobalNamespace"),
+      name: S.tag(literalSchema.literal),
+    });
+
+  return pipe(
+    members,
+    Tuple.evolve([
+      make,
+      make,
+      make,
+      make,
+      make,
+      make,
+      make,
+      make,
+      make,
+      make,
+      make,
+    ])
+  );
+}).pipe(
+  S.toTaggedUnion("name"),
+  $I.annoteSchema("GlobalNamespace", {
+    description: "A constructor or namespace exposed to guest programs.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    new: (name: GlobalNamespaceName): GlobalNamespace =>
+      schema.cases[name].make({}),
+  }))
+);
+
+export type GlobalNamespace = typeof GlobalNamespace.Type;
+
+export const GlobalMethodNamespace = LiteralKit([
+  "Object",
+  "Math",
+  "Array",
+  "console",
+  "Date",
+  "RegExp",
+  "Map",
+  "Set",
+  "URL",
+  "URLSearchParams",
+  "Number",
+  "String",
+]).pipe(
+  $I.annoteSchema("GlobalMethodNamespace", {
+    description: "Namespace owning a guest global method.",
+  })
+);
+
+export type GlobalMethodNamespace = typeof GlobalMethodNamespace.Type;
+
+type GlobalMethodReferenceMember<
+  Namespace extends GlobalMethodNamespace
+> = {
+  readonly _tag: "GlobalMethodReference";
+  readonly namespace: Namespace;
+  readonly name: string;
+};
+
+export const GlobalMethodReference = GlobalMethodNamespace.mapMembers((members) => {
+  const make = <const TNamespace extends GlobalMethodNamespace>(
+    literalSchema: S.Literal<TNamespace>
+  ) =>
+    S.Class<GlobalMethodReferenceMember<TNamespace>>(
+      $I`GlobalMethodReferenceMember`
+    )({
+      _tag: S.tag("GlobalMethodReference"),
+      namespace: S.tag(literalSchema.literal),
+      name: S.String,
+    });
+
+  return pipe(
+    members,
+    Tuple.evolve([
+      make,
+      make,
+      make,
+      make,
+      make,
+      make,
+      make,
+      make,
+      make,
+      make,
+      make,
+      make,
+    ])
+  );
+}).pipe(
+  S.toTaggedUnion("namespace"),
+  $I.annoteSchema("GlobalMethodReference", {
+    description: "A global method bound to its namespace.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    new: (
+      namespace: GlobalMethodNamespace,
+      name: string
+    ): GlobalMethodReference =>
+      schema.cases[namespace].make({ name }),
+  }))
+);
+
+export type GlobalMethodReference = typeof GlobalMethodReference.Type;
+
+/** JSON method names exposed to guest programs. */
+export const JsonMethodName = LiteralKit(["parse", "stringify"]).pipe(
+  $I.annoteSchema("JsonMethodName", {
+    description: "JSON operation exposed to guest programs.",
+  })
+);
+
+export type JsonMethodName = typeof JsonMethodName.Type;
+
+export const JsonMethodReference = JsonMethodName.mapMembers((members) => {
+  const make = <const TName extends JsonMethodName>(
+    literalSchema: S.Literal<TName>
+  ) =>
+    S.Class<NamedReferenceMember<"JsonMethodReference", TName>>(
+      $I`JsonMethodReferenceMember`
+    )({
+      _tag: S.tag("JsonMethodReference"),
+      name: S.tag(literalSchema.literal),
+    });
+
+  return pipe(
+    members,
+    Tuple.evolve([
+      make,
+      make,
+    ])
+  );
+}).pipe(
+  S.toTaggedUnion("name"),
+  $I.annoteSchema("JsonMethodReference", {
+    description: "A JSON method reference exposed to a guest program.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    new: (name: JsonMethodName): JsonMethodReference =>
+      schema.cases[name].make({}),
+  }))
+);
+
+export type JsonMethodReference = typeof JsonMethodReference.Type;
+
+export const CoercionFunctionName = LiteralKit([
+  "Number",
+  "String",
+  "Boolean",
+  "parseInt",
+  "parseFloat",
+  "isFinite",
+  "isNaN",
+]).pipe(
+  $I.annoteSchema("CoercionFunctionName", {
+    description: "A primitive coercion function exposed to guest programs.",
+  })
+);
+
+export type CoercionFunctionName = typeof CoercionFunctionName.Type;
+
+export const CoercionFunction = CoercionFunctionName.mapMembers((members) => {
+  const make = <const TName extends CoercionFunctionName>(
+    literalSchema: S.Literal<TName>
+  ) =>
+    S.Class<NamedReferenceMember<"CoercionFunction", TName>>(
+      $I`CoercionFunctionMember`
+    )({
+      _tag: S.tag("CoercionFunction"),
+      name: S.tag(literalSchema.literal),
+    });
+  return pipe(
+    members,
+    Tuple.evolve([
+      make,
+      make,
+      make,
+      make,
+      make,
+      make,
+      make,
+    ])
+  );
+}).pipe(
+  S.toTaggedUnion("name"),
+  $I.annoteSchema("CoercionFunction", {description: "A guest primitive coercion function."}),
+  SchemaUtils.withStatics((schema) => ({
+    new: (name: CoercionFunctionName): CoercionFunction =>
+      schema.cases[name].make({})
+  }))
+);
+export type CoercionFunction = typeof CoercionFunction.Type;
+
+export const UriFunctionName = LiteralKit([
+  "encodeURI",
+  "encodeURIComponent",
+  "decodeURI",
+  "decodeURIComponent",
+]).pipe(
+  $I.annoteSchema("UriFunctionName", {
+    description: "A URI codec function exposed to guest programs.",
+  })
+);
+
+export type UriFunctionName = typeof UriFunctionName.Type;
+
+export const UriFunction = UriFunctionName.mapMembers((members) => {
+  const make = <const TName extends UriFunctionName>(
+    literalSchema: S.Literal<TName>
+  ) =>
+    S.Class<NamedReferenceMember<"UriFunction", TName>>(
+      $I`UriFunctionMember`
+    )({
+      _tag: S.tag("UriFunction"),
+      name: S.tag(literalSchema.literal),
+    });
+
+  return pipe(
+    members,
+    Tuple.evolve([
+      make,
+      make,
+      make,
+      make,
+    ])
+  );
+}).pipe(
+  S.toTaggedUnion("name"),
+  $I.annoteSchema("UriFunction", {
+    description: "A guest URI codec function.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    new: (name: UriFunctionName): UriFunction =>
+      schema.cases[name].make({}),
+  }))
+);
+
+export type UriFunction = typeof UriFunction.Type;
+
+export class SearchFunction extends S.TaggedClass<SearchFunction>($I`SearchFunction`)(
+  "SearchFunction",
+  {},
+  $I.annote("SearchFunction", {
+    description: "The built-in CodeMode tool-discovery function.",
+  })
+) {
+  static readonly new = (): SearchFunction => SearchFunction.make({});
+}
+
+export class ProgramThrow extends S.TaggedClass<ProgramThrow>($I`ProgramThrow`)(
+  "ProgramThrow",
+  {
+    value: S.Unknown,
+  },
+  $I.annote("ProgramThrow", {
+    description: "A guest-thrown value propagated through the interpreter.",
+  })
+) {
+  static readonly new = (value: unknown): ProgramThrow => ProgramThrow.make({value});
+}
+
+export class GeneratorReturn extends S.TaggedClass<GeneratorReturn>($I`GeneratorReturn`)(
+  "GeneratorReturn",
+  {
+    value: S.Unknown,
+  },
+  $I.annote("GeneratorReturn", {
+    description: "The return value that completes a guest generator.",
+  })
+) {
+  static readonly new = (value: unknown): GeneratorReturn => GeneratorReturn.make({value});
+}
+
+/** Error constructors exposed to guest programs. */
+export const ErrorConstructorName = LiteralKit([
+  "Error",
+  "TypeError",
+  "RangeError",
+  "SyntaxError",
+  "ReferenceError",
+  "EvalError",
+  "URIError",
+  "AggregateError",
+]).pipe(
+  $I.annoteSchema("ErrorConstructorName", {
+    description: "An Error constructor exposed to guest programs.",
+  })
+);
+
+/** Runtime type for {@link ErrorConstructorName}. */
+export type ErrorConstructorName = typeof ErrorConstructorName.Type;
+
+export const ErrorConstructorReference = ErrorConstructorName.mapMembers((members) => {
+  const make = <const TName extends ErrorConstructorName>(
+    literalSchema: S.Literal<TName>
+  ) =>
+    S.Class<NamedReferenceMember<"ErrorConstructorReference", TName>>(
+      $I`ErrorConstructorReferenceMember`
+    )({
+      _tag: S.tag("ErrorConstructorReference"),
+      name: S.tag(literalSchema.literal),
+    });
+
+  return pipe(
+    members,
+    Tuple.evolve([
+      make,
+      make,
+      make,
+      make,
+      make,
+      make,
+      make,
+      make,
+    ])
+  );
+}).pipe(
+  S.toTaggedUnion("name"),
+  $I.annoteSchema("ErrorConstructorReference", {
+    description: "A guest Error constructor reference.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    new: (name: ErrorConstructorName): ErrorConstructorReference =>
+      schema.cases[name].make({}),
+  }))
+);
+
+export type ErrorConstructorReference = typeof ErrorConstructorReference.Type;
+
+/**
+ * Tagged union for all schema-owned runtime references.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const RuntimeReference = S.Union([
+  CodeModeFunction,
+  CodeModeGenerator,
+  GeneratorMethodReference,
+  IntrinsicReference,
+  ComputedValue,
+  PromiseNamespace,
+  SymbolNamespace,
+  PromiseMethodReference,
+  PromiseInstanceMethodReference,
+  PromiseCapabilityFunction,
+  GlobalNamespace,
+  GlobalMethodReference,
+  JsonMethodReference,
+  CoercionFunction,
+  UriFunction,
+  SearchFunction,
+  ProgramThrow,
+  GeneratorReturn,
+  ErrorConstructorReference,
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("RuntimeReference", {
+    description: "All schema-owned interpreter references and control wrappers.",
+  })
+);
+
+/** Runtime type for {@link RuntimeReference}. */
+export type RuntimeReference = typeof RuntimeReference.Type;
+
+/** Stable interpreter diagnostic categories. */
+export const DiagnosticKind = LiteralKit([
+  "ParseError",
+  "UnsupportedSyntax",
+  "UnknownTool",
+  "InvalidToolInput",
+  "InvalidToolOutput",
+  "InvalidDataValue",
+  "ToolCallLimitExceeded",
+  "TimeoutExceeded",
+  "ToolFailure",
+  "ExecutionFailure",
+  "Truncated",
+]).pipe(
   $I.annoteSchema("DiagnosticKind", {
-    description: ""
+    description: "Stable category assigned to an interpreter failure.",
   })
 );
 
 export type DiagnosticKind = typeof DiagnosticKind.Type;
 
-
-export const DiagnosticKindRuntimeErrorValue = DiagnosticKind.mapMembers(
-  (members) => {
-    const make = <const Kind extends DiagnosticKind>(literalSchema: S.Literal<Kind>) => S.Struct({
-      kind: S.tag(literalSchema.literal),
-      node: AstNode.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-      suggestions: S.String.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-      message: S.String,
-      errorName: S.String.pipe(S.mutableKey, SchemaUtils.withKeyDefaults("Error")),
-    });
-
-    return pipe(
-      members,
-      Tuple.evolve(
-        [
-          make,
-          make,
-          make,
-          make,
-          make,
-          make,
-          make,
-          make,
-          make,
-          make,
-        ]
-      )
-    );
-  }
-).pipe(
-  S.toTaggedUnion("kind"),
-  $I.annoteSchema("DiagnosticKindRuntimeErrorValue", {
-    description: ""
-  })
-);
-
-export type DiagnosticKindRuntimeErrorValue = typeof DiagnosticKindRuntimeErrorValue.Type;
-
-export declare namespace DiagnosticKindRuntimeErrorValue {
-  export type Encoded = typeof DiagnosticKindRuntimeErrorValue.Encoded;
-}
+export const OptionalShortCircuit: unique symbol = Symbol("codemode.optional-short-circuit");
 
 export const supportedSyntaxMessage =
   "Supported orchestration syntax: tools.* calls (they return promises - resolve them with await), data literals, destructuring, optional chaining, template literals, conditionals, switch, loops (incl. for...of and for...in over object/array/tools keys), arrow functions, spread, try/catch, array methods (map/filter/find/findIndex/some/every/reduce/flatMap/forEach/sort/slice/concat/indexOf/lastIndexOf/at/flat/reverse/includes/join), string methods (incl. match/matchAll/replace/split with regular expressions), Date/RegExp/Map/Set/URL/URLSearchParams, URI encoding helpers, Object/Math/JSON helpers, captured console.log/warn/error/dir/table, Promise.all/allSettled/race/any/resolve/reject over arrays mixing promises and plain values for parallel tool calls, promise chaining with .then/.catch/.finally, and new Promise((resolve, reject) => ...) construction.";
 
+/**
+ * Typed interpreter failure before it is normalized to a public diagnostic.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
 export class InterpreterRuntimeError extends TaggedErrorClass<InterpreterRuntimeError>($I`InterpreterRuntimeError`)(
   "InterpreterRuntimeError",
   {
-
-    error: DiagnosticKindRuntimeErrorValue
+    message: S.String,
+    node: S.OptionFromOptionalKey(AstNode).pipe(SchemaUtils.withNoneDefault),
+    kind: DiagnosticKind.pipe(SchemaUtils.withKeyDefaults(DiagnosticKind.Enum.ExecutionFailure)),
+    suggestions: S.Array(S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    errorName: S.String.pipe(SchemaUtils.withKeyDefaults("Error")),
   },
   $I.annote("InterpreterRuntimeError", {
-    description: ""
+    description: "Typed failure raised while evaluating a guest program.",
   })
 ) {
-
-  readonly as = (errorName: string): this => {
-    this.error.errorName = errorName;
-    return this
-  }
-
   static readonly new = (
     message: string,
-    node?: undefined | AstNode,
+    node?: AstNode,
     kind: DiagnosticKind = DiagnosticKind.Enum.ExecutionFailure,
     suggestions?: ReadonlyArray<string>
-  ) => InterpreterRuntimeError.make(
-    {
-      error: DiagnosticKindRuntimeErrorValue.make({
-        kind,
-        message,
-        node: O.fromNullishOr(node),
-        suggestions: O.fromNullishOr(suggestions)
-      })
-    }
-  );
+  ): InterpreterRuntimeError =>
+    InterpreterRuntimeError.make({
+      message,
+      node: O.fromNullishOr(node),
+      kind,
+      suggestions: O.fromNullishOr(suggestions),
+    });
 
-  static readonly unsupportedSyntax: {
-    (kind: string, node: AstNode): InterpreterRuntimeError,
-    (node: AstNode): (kind: string) => InterpreterRuntimeError
-  } = dual(2, (kind: string, node: AstNode): InterpreterRuntimeError => InterpreterRuntimeError.new(
-    `Syntax '${kind}' is not supported. ${supportedSyntaxMessage}`,
-    node,
-    "UnsupportedSyntax",
-    [supportedSyntaxMessage],
-  ));
+  readonly as = (errorName: string): InterpreterRuntimeError =>
+    InterpreterRuntimeError.make({
+      message: this.message,
+      node: this.node,
+      kind: this.kind,
+      suggestions: this.suggestions,
+      errorName,
+    });
 }
 
-const optionalShortCircuitSymbol = Symbol("codemode.optional-short-circuit");
-export const OptionalShortCircuit = S.UniqueSymbol(optionalShortCircuitSymbol).pipe(
-  SchemaUtils.withKeyDefaults(optionalShortCircuitSymbol)
+/**
+ * Every recoverable failure propagated by the interpreter.
+ *
+ * Arbitrary guest-thrown values remain data inside {@link ProgramThrow}; the
+ * Effect error channel itself is therefore closed and schema-owned.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const InterpreterFailure = S.Union([
+  InterpreterRuntimeError,
+  ProgramThrow,
+  GeneratorReturn,
+  ToolRuntimeError,
+  ToolError,
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("InterpreterFailure", {
+    description: "Closed recoverable failure channel for guest evaluation and host tool calls.",
+  })
 );
 
-export type OptionalShortCircuit = typeof OptionalShortCircuit.Type;
+/** Runtime type for {@link InterpreterFailure}. */
+export type InterpreterFailure = typeof InterpreterFailure.Type;
 
-const isRecord = P.chainRefinements([P.isObjectKeyword, P.isNotNull]);
+export const unsupportedSyntax = (kind: string, node: AstNode): InterpreterRuntimeError =>
+  InterpreterRuntimeError.new(
+    `Syntax '${kind}' is not supported. ${supportedSyntaxMessage}`,
+    node,
+    DiagnosticKind.Enum.UnsupportedSyntax,
+    [supportedSyntaxMessage]
+  );
 
-export const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null;
+export const isRecord = P.isObject;
+export const isAstNode = S.is(AstNode);
 
-export const asNode = flow((value: unknown, context: string): Result.Result<AstNode, InterpreterRuntimeError> => S.decodeUnknownResult(AstNode)(value), Result.getOrThrowWith());
+export const asNode = (value: unknown, context: string): AstNode => {
+  if (!isAstNode(value)) {
+    throw InterpreterRuntimeError.new(`Invalid AST node while reading ${context}.`);
+  }
+  return value;
+};
+
+export const getArray = (node: AstNode, key: string): Array<unknown> => {
+  const value = node[key];
+  if (!A.isArray(value)) {
+    throw InterpreterRuntimeError.new(`Expected '${key}' to be an array.`, node);
+  }
+  return value;
+};
+
+export const getString = (node: AstNode, key: string): string => {
+  const value = node[key];
+  if (!P.isString(value)) {
+    throw InterpreterRuntimeError.new(`Expected '${key}' to be a string.`, node);
+  }
+  return value;
+};
+
+export const getBoolean = (node: AstNode, key: string): boolean => {
+  const value = node[key];
+  if (!P.isBoolean(value)) {
+    throw InterpreterRuntimeError.new(`Expected '${key}' to be a boolean.`, node);
+  }
+  return value;
+};
+
+export const getOptionalNode = (node: AstNode, key: string): AstNode | undefined => {
+  const value = node[key];
+  return P.isNullish(value) ? undefined : asNode(value, key);
+};
+
+export const getNode = (node: AstNode, key: string): AstNode => asNode(node[key], key);
+
+export const sourceLocation = (node: AstNode): {
+  readonly line: number;
+  readonly column: number
+} => ({
+  line: N.max(1, (node.loc?.start.line ?? 2) - 1),
+  column: N.max(1, (node.loc?.start.column ?? 4) - 3),
+});
+
+export const formatLocation = (node?: AstNode): string => {
+  if (P.isUndefined(node?.loc)) return "";
+  const location = sourceLocation(node);
+  return ` (line ${location.line}, col ${location.column})`;
+};
