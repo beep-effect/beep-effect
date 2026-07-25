@@ -224,6 +224,22 @@ describe("DockviewReact", { concurrent: false }, () => {
     })
   );
 
+  it.effect("treats prototype tab renderer keys as missing", () =>
+    Effect.gen(function* () {
+      const inherited = Panel.make({
+        id: panel1Id,
+        title: "Inherited Tab",
+        view: TextPanelView.make({ text: "first" }),
+        tabComponent: O.some(RendererKey.make("toString")),
+      });
+      const graph = yield* makeGraph(makeWorkspace([inherited]));
+      render(<DockviewReact graph={graph} components={{}} tabComponents={{}} />);
+      sizeRoot();
+      expect((yield* Effect.promise(() => screen.findByRole("tab"))).textContent).toContain("Inherited Tab");
+      graph.dispose();
+    })
+  );
+
   it.effect("survives StrictMode remount cleanup without taking ownership of the graph", () =>
     Effect.gen(function* () {
       const graph = yield* makeGraph();
