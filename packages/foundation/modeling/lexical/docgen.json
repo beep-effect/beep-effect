@@ -349,6 +349,9 @@
       "@beep/schema/RegExp": [
         "../../../../packages/foundation/modeling/schema/src/RegExp.ts"
       ],
+      "@beep/schema/SafeObject": [
+        "../../../../packages/foundation/modeling/schema/src/SafeObject/index.ts"
+      ],
       "@beep/schema/SchemaUtils": [
         "../../../../packages/foundation/modeling/schema/src/SchemaUtils/index.ts"
       ],

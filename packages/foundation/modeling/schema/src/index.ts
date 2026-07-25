@@ -358,6 +358,25 @@ export * from "./Record/index.ts";
  */
 export * from "./RegExp.ts";
 /**
+ * Nominal schema for string-keyed objects with unknown values.
+ *
+ * @example
+ * ```ts
+ * import { SafeObject } from "@beep/schema"
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const value = await Effect.runPromise(
+ *   S.decodeUnknownEffect(SafeObject)({ enabled: true })
+ * )
+ * console.log(value.enabled) // true
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export { SafeObject } from "./SafeObject/index.ts";
+/**
  * @since 0.0.0
  * @category validation
  */

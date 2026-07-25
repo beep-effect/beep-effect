@@ -15690,6 +15690,14 @@
       "description": "A string that can be converted directly to a JavaScript RegExp using new RegExp(value)."
     },
     {
+      "file": "packages/foundation/modeling/schema/src/SafeObject/SafeObject.schema.ts",
+      "symbol": "SafeObject",
+      "kind": "brand",
+      "owner": "@beep/schema",
+      "identity": "SafeObject",
+      "description": "A nominally branded record with string keys and unknown values."
+    },
+    {
       "file": "packages/foundation/modeling/schema/src/SafeRemoteHost.ts",
       "symbol": "BlockedHostError",
       "kind": "tagged-error",
