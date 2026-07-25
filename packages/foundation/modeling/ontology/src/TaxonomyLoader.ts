@@ -164,6 +164,32 @@ export class VendorSliceParseError extends TaggedErrorClass<VendorSliceParseErro
   $I.annote("VendorSliceParseError", { description: "An explicitly vetted vendor taxonomy slice is unparsable." })
 ) {}
 
+/**
+ * Raised when a vetted vendor slice resolves outside its canonical vendor root.
+ *
+ * @example
+ * ```ts
+ * import { VendorSlicePathEscape } from "@beep/ontology/TaxonomyLoader"
+ *
+ * const error = VendorSlicePathEscape.make({
+ *   id: "fixture",
+ *   path: "/outside/fixture.jsonld",
+ *   vendorRoot: "/vendor"
+ * })
+ * console.log(error._tag)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class VendorSlicePathEscape extends TaggedErrorClass<VendorSlicePathEscape>($I`VendorSlicePathEscape`)(
+  "VendorSlicePathEscape",
+  { id: S.NonEmptyString, path: S.NonEmptyString, vendorRoot: S.NonEmptyString },
+  $I.annote("VendorSlicePathEscape", {
+    description: "A vetted vendor taxonomy slice resolved outside its canonical vendor root.",
+  })
+) {}
+
 const decodeManifestEntry = S.decodeUnknownEffect(S.fromJsonString(VendorManifestEntry));
 const decodeTaxonomySeed = S.decodeUnknownEffect(S.fromJsonString(TaxonomySeed));
 
@@ -182,7 +208,20 @@ const readSlice = Effect.fn("TaxonomyLoader.readSlice")(function* (entry: Vendor
     UNVETTED: () => Effect.fail(VendorSliceUnvetted.make({ id: entry.id })),
     VETTED: Effect.fn("TaxonomyLoader.readVettedSlice")(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const path = A.join([vendorRoot, entry.path], "/");
+      const canonicalVendorRoot = yield* fs
+        .realPath(vendorRoot)
+        .pipe(Effect.mapError(() => VendorSliceReadError.make({ id: entry.id, path: vendorRoot })));
+      const candidatePath = A.join([canonicalVendorRoot, entry.path], "/");
+      const path = yield* fs
+        .realPath(candidatePath)
+        .pipe(Effect.mapError(() => VendorSliceReadError.make({ id: entry.id, path: candidatePath })));
+      const separator = Str.includes("\\")(canonicalVendorRoot) && !Str.includes("/")(canonicalVendorRoot) ? "\\" : "/";
+      const rootedPrefix = Str.endsWith(separator)(canonicalVendorRoot)
+        ? canonicalVendorRoot
+        : `${canonicalVendorRoot}${separator}`;
+      if (!Str.startsWith(rootedPrefix)(path)) {
+        return yield* VendorSlicePathEscape.make({ id: entry.id, path, vendorRoot: canonicalVendorRoot });
+      }
       const content = yield* fs
         .readFileString(path)
         .pipe(Effect.mapError(() => VendorSliceReadError.make({ id: entry.id, path })));
@@ -214,7 +253,8 @@ export class TaxonomyLoader extends Context.Service<
       | TaxonomyManifestParseError
       | VendorSliceUnvetted
       | VendorSliceReadError
-      | VendorSliceParseError,
+      | VendorSliceParseError
+      | VendorSlicePathEscape,
       FileSystem.FileSystem
     >;
   }
