@@ -10,6 +10,10 @@ Rewritten post-GATE-B: the solution sketch reflects the adversarial-review
 outcomes recorded in DECISIONS.md (OpenClawGeneration, OS-enforced config
 root, desired-intent schema, applicator contracts, Telegram, secrets
 bootstrap exception, prototype gauntlet).
+
+Amended at GATE C (2026-07-25): the dankserver migration is struck entirely
+— the platform deploys NEW OpenClaw instances, workstation first; appetite
+finalized. See the dated GATE C entries in DECISIONS.md.
 -->
 
 ## Problem
@@ -34,22 +38,24 @@ immutability, a generation concept, and staged upgrades — now locked into
 [`DECISIONS.md`](./DECISIONS.md).
 
 Why now: a new professional, legal-focused agent is wanted on the
-workstation — greenfield ground to prove the declarative platform before
-migrating dankserver's openclaw layer onto it. Enabling substrate for
+workstation, and this platform is how new OpenClaw instances get deployed
+from here on — this Linux workstation first. dankserver's role stays as-is
+indefinitely: it is the evidence of the problem, never a migration target
+(GATE C decision, 2026-07-25). Enabling substrate for
 agentic-professional-runtime (dogfooding + ops learning), firewalled from
 product work.
 
 ## Appetite
 
-Proposed frame for GATE C (the human sets the final budget): **one focused
-build cycle** for the workstation slice, sequenced as prototype gauntlet
-first (~the first fifth of the cycle), then driver + generation engine +
-applicator, then the live agent. The dankserver migration is a separate goal
-with its own budget. If the workstation slice threatens its cycle, cut the
-proof skill or the local-model provider profile — never the immutable-config
-posture, the generation state machine, or the typed intent schema, which are
-the point. A failed P0 prototype does not extend the budget; it re-opens the
-gated decision and re-shapes.
+Locked at GATE C (2026-07-25): **one focused build cycle** for the
+workstation slice — a contiguous run of implementation sessions with this as
+the primary bet — sequenced as prototype gauntlet first (~the first fifth of
+the cycle), then driver + generation engine + applicator, then the live
+agent. If the workstation slice threatens its cycle, cut the proof skill or
+the local-model provider profile — never the immutable-config posture, the
+generation state machine, or the typed intent schema, which are the point. A
+failed P0 prototype does not extend the budget; it re-opens the gated
+decision and re-shapes.
 
 ## Solution Sketch
 
@@ -89,12 +95,13 @@ migrations are pre-classified and operator-gated.
 - AIMetrics-style stack: `S.Class`-decoded `openclaw:*` Pulumi config;
   local passphrase state + automated encrypted off-machine state backup (to
   dankserver over Tailscale).
-- Shared pure renderers (generation content), plus two explicit
-  **applicator contracts**: workstation-local now, remote-SSH at migration —
-  each declaring target user/UID, runtime dir, bus reachability, linger
-  ownership, privilege boundary; preflight exercises the exact
-  non-interactive context and binds the stack to target identity
-  (`/etc/machine-id` + hostname + UID), failing before mutation on mismatch.
+- Shared pure renderers (generation content), plus explicit **applicator
+  contracts**: workstation-local is the only one built; remote-SSH remains a
+  designed seam for future new instances — each declaring target user/UID,
+  runtime dir, bus reachability, linger ownership, privilege boundary;
+  preflight exercises the exact non-interactive context and binds the stack
+  to target identity (`/etc/machine-id` + hostname + UID), failing before
+  mutation on mismatch.
 - Secrets: `op://` references as data everywhere (typed as
   `OnePasswordReference`), resolved by OpenClaw's native exec provider at
   runtime; ONE recorded bootstrap exception — a scoped
@@ -146,15 +153,15 @@ stamps. A failed prototype re-opens its gated decision.
 
 ## No-Gos
 
-- Porting dankserver's OS-level Ansible (base/hardening/storage/monitoring/
-  backups/runner) — Ansible keeps owning OS concerns indefinitely.
+- Migrating dankserver at all (GATE C, 2026-07-25) — its Ansible role
+  (OS layers, openclaw layer, and bundle patches alike) keeps owning that
+  instance indefinitely; this platform deploys new instances only.
 - Voice (cloudflared/Twilio/streaming/ElevenLabs) in the greenfield build.
 - llama-server lifecycle management (it already runs; we only reference it).
 - Gateway HTTP/WS API client in the driver (no consumer yet).
-- dankserver bundle patches — quarantined to a shrinking Ansible remnant.
 - Real legal capabilities (USPTO MCP, docketing, …) — they arrive via the
   SDK-adapter path, not this substrate packet.
-- Discord as the v1 channel (no-go until the migration goal).
+- Discord as the v1 channel.
 - Enforceable outbound DLP — v1 confidentiality is advisory-only, so real
   client data stays out entirely.
 - Plaintext secrets anywhere: tracked files, Pulumi state, rendered configs,
