@@ -136,7 +136,9 @@ describe("JSONSchema", () => {
     it.effect(
       "preserves a hostile __proto__ wire key without prototype pollution",
       Effect.fnUntraced(function* () {
-        const wire: unknown = JSON.parse('{"__proto__": {"polluted": 1}, "x-a": 2}');
+        const wire: unknown = yield* S.decodeUnknownEffect(S.UnknownFromJsonString)(
+          '{"__proto__": {"polluted": 1}, "x-a": 2}'
+        );
         const node = yield* decodeNode(wire);
         expect(Object.getOwnPropertyDescriptor(node.extensions, "__proto__")?.value).toEqual({ polluted: 1 });
         expect(({} as { polluted?: unknown }).polluted).toBeUndefined();
@@ -209,6 +211,112 @@ describe("JSONSchema", () => {
   });
 
   describe("validity of generated documents", () => {
+    type EncodedDoc = Record<string, unknown>;
+
+    const COUNT_KEYWORDS: ReadonlyArray<string> = [
+      "maxContains",
+      "maxItems",
+      "maxLength",
+      "maxProperties",
+      "minContains",
+      "minItems",
+      "minLength",
+      "minProperties",
+    ];
+    const APPLICATOR_LIST_KEYWORDS: ReadonlyArray<string> = ["allOf", "anyOf", "oneOf", "prefixItems"];
+    const SUBSCHEMA_RECORD_KEYWORDS: ReadonlyArray<string> = [
+      "$defs",
+      "dependentSchemas",
+      "patternProperties",
+      "properties",
+    ];
+    const SUBSCHEMA_SINGLE_KEYWORDS: ReadonlyArray<string> = [
+      "additionalProperties",
+      "contains",
+      "contentSchema",
+      "else",
+      "if",
+      "items",
+      "not",
+      "propertyNames",
+      "then",
+      "unevaluatedItems",
+      "unevaluatedProperties",
+    ];
+
+    const compilesAsRegex = (source: string): boolean => {
+      try {
+        new RegExp(source);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    const isUniqueStringArray = (entries: unknown): boolean =>
+      Array.isArray(entries) &&
+      entries.every((entry) => typeof entry === "string") &&
+      new Set(entries).size === entries.length;
+
+    const isAbsentOrCount = (input: unknown): boolean =>
+      input === undefined || (typeof input === "number" && Number.isInteger(input) && input >= 0);
+
+    const numericKeywordsValid = (doc: EncodedDoc): boolean =>
+      (doc.multipleOf === undefined || (typeof doc.multipleOf === "number" && doc.multipleOf > 0)) &&
+      COUNT_KEYWORDS.every((key) => isAbsentOrCount(doc[key]));
+
+    const applicatorArraysValid = (doc: EncodedDoc): boolean =>
+      APPLICATOR_LIST_KEYWORDS.every(
+        (key) => doc[key] === undefined || (Array.isArray(doc[key]) && (doc[key] as Array<unknown>).length > 0)
+      );
+
+    const patternKeywordsValid = (doc: EncodedDoc): boolean =>
+      (doc.pattern === undefined || (typeof doc.pattern === "string" && compilesAsRegex(doc.pattern))) &&
+      (doc.patternProperties === undefined || Object.keys(doc.patternProperties as EncodedDoc).every(compilesAsRegex));
+
+    const requiredKeywordsValid = (doc: EncodedDoc): boolean =>
+      (doc.required === undefined || isUniqueStringArray(doc.required)) &&
+      (doc.dependentRequired === undefined ||
+        Object.values(doc.dependentRequired as EncodedDoc).every(isUniqueStringArray));
+
+    const typeKeywordValid = (doc: EncodedDoc): boolean =>
+      doc.type === undefined ||
+      typeof doc.type === "string" ||
+      (Array.isArray(doc.type) && doc.type.length > 0 && isUniqueStringArray(doc.type));
+
+    const anchorGrammarValid = (doc: EncodedDoc): boolean =>
+      ["$anchor", "$dynamicAnchor"].every(
+        (key) => doc[key] === undefined || /^[A-Za-z_][-A-Za-z0-9._]*$/.test(doc[key] as string)
+      );
+
+    const referenceGrammarValid = (doc: EncodedDoc): boolean =>
+      ["$id", "$ref", "$dynamicRef"].every((key) => doc[key] === undefined || !/\s/.test(doc[key] as string));
+
+    const isAbsentOrSubschemaRecord = (input: unknown): boolean =>
+      input === undefined || Object.values(input as EncodedDoc).every((entry) => isValidEncodedSchema(entry));
+
+    const isAbsentOrSubschemaList = (input: unknown): boolean =>
+      input === undefined || (input as Array<unknown>).every((entry) => isValidEncodedSchema(entry));
+
+    const isAbsentOrSubschema = (input: unknown): boolean => input === undefined || isValidEncodedSchema(input);
+
+    const subschemaPositionsValid = (doc: EncodedDoc): boolean =>
+      SUBSCHEMA_RECORD_KEYWORDS.every((key) => isAbsentOrSubschemaRecord(doc[key])) &&
+      APPLICATOR_LIST_KEYWORDS.every((key) => isAbsentOrSubschemaList(doc[key])) &&
+      SUBSCHEMA_SINGLE_KEYWORDS.every((key) => isAbsentOrSubschema(doc[key]));
+
+    const documentChecks: ReadonlyArray<(doc: EncodedDoc) => boolean> = [
+      (doc) => !("extensions" in doc),
+      numericKeywordsValid,
+      applicatorArraysValid,
+      patternKeywordsValid,
+      requiredKeywordsValid,
+      typeKeywordValid,
+      anchorGrammarValid,
+      referenceGrammarValid,
+      subschemaPositionsValid,
+    ];
+
     const isValidEncodedSchema = (value: unknown): boolean => {
       if (typeof value === "boolean") {
         return true;
@@ -216,85 +324,8 @@ describe("JSONSchema", () => {
       if (value === null || typeof value !== "object" || Array.isArray(value)) {
         return false;
       }
-      const doc = value as Record<string, unknown>;
-      if ("extensions" in doc) {
-        return false;
-      }
-      const compiles = (source: string): boolean => {
-        try {
-          new RegExp(source);
-          return true;
-        } catch {
-          return false;
-        }
-      };
-      const uniqueStrings = (entries: unknown): boolean =>
-        Array.isArray(entries) &&
-        entries.every((entry) => typeof entry === "string") &&
-        new Set(entries).size === entries.length;
-      const checks: ReadonlyArray<boolean> = [
-        doc.multipleOf === undefined || (typeof doc.multipleOf === "number" && doc.multipleOf > 0),
-        ...[
-          "maxContains",
-          "maxItems",
-          "maxLength",
-          "maxProperties",
-          "minContains",
-          "minItems",
-          "minLength",
-          "minProperties",
-        ].map(
-          (key) =>
-            doc[key] === undefined ||
-            (typeof doc[key] === "number" && Number.isInteger(doc[key]) && (doc[key] as number) >= 0)
-        ),
-        ...["allOf", "anyOf", "oneOf", "prefixItems"].map(
-          (key) => doc[key] === undefined || (Array.isArray(doc[key]) && (doc[key] as Array<unknown>).length > 0)
-        ),
-        doc.pattern === undefined || (typeof doc.pattern === "string" && compiles(doc.pattern as string)),
-        doc.patternProperties === undefined ||
-          Object.keys(doc.patternProperties as Record<string, unknown>).every(compiles),
-        doc.required === undefined || uniqueStrings(doc.required),
-        doc.dependentRequired === undefined ||
-          Object.values(doc.dependentRequired as Record<string, unknown>).every(uniqueStrings),
-        doc.type === undefined ||
-          typeof doc.type === "string" ||
-          (Array.isArray(doc.type) && (doc.type as Array<unknown>).length > 0 && uniqueStrings(doc.type)),
-        ...["$anchor", "$dynamicAnchor"].map(
-          (key) => doc[key] === undefined || /^[A-Za-z_][-A-Za-z0-9._]*$/.test(doc[key] as string)
-        ),
-        ...["$id", "$ref", "$dynamicRef"].map((key) => doc[key] === undefined || !/\s/.test(doc[key] as string)),
-      ];
-      if (!checks.every(Boolean)) {
-        return false;
-      }
-      const subschemaAt = (input: unknown): boolean => isValidEncodedSchema(input);
-      const recordOfSubschemas = (input: unknown): boolean =>
-        input === undefined || Object.values(input as Record<string, unknown>).every(subschemaAt);
-      const listOfSubschemas = (input: unknown): boolean =>
-        input === undefined || (input as Array<unknown>).every(subschemaAt);
-      const single = (input: unknown): boolean => input === undefined || subschemaAt(input);
-      return (
-        recordOfSubschemas(doc.$defs) &&
-        recordOfSubschemas(doc.dependentSchemas) &&
-        recordOfSubschemas(doc.patternProperties) &&
-        recordOfSubschemas(doc.properties) &&
-        listOfSubschemas(doc.allOf) &&
-        listOfSubschemas(doc.anyOf) &&
-        listOfSubschemas(doc.oneOf) &&
-        listOfSubschemas(doc.prefixItems) &&
-        single(doc.additionalProperties) &&
-        single(doc.contains) &&
-        single(doc.contentSchema) &&
-        single(doc.else) &&
-        single(doc.if) &&
-        single(doc.items) &&
-        single(doc.not) &&
-        single(doc.propertyNames) &&
-        single(doc.then) &&
-        single(doc.unevaluatedItems) &&
-        single(doc.unevaluatedProperties)
-      );
+      const doc = value as EncodedDoc;
+      return documentChecks.every((check) => check(doc));
     };
 
     it("property: every generated node encodes to a valid draft-2020-12 document", () => {
@@ -342,14 +373,14 @@ describe("JSONSchema", () => {
         age: S.Int,
         email: S.optionalKey(S.String),
         role: S.Literals(["admin", "user"]),
-        score: S.Number.check(S.isBetween({ minimum: 0, maximum: 100 })),
+        score: S.Finite.check(S.isBetween({ minimum: 0, maximum: 100 })),
         tags: S.Array(S.String).check(S.isUnique()),
       }),
-      S.Tuple([S.String, S.Number]),
-      S.Record(S.String, S.Number),
-      S.Record(S.String.check(S.isPattern(/^[a-z]+$/)), S.Number),
+      S.Tuple([S.String, S.Finite]),
+      S.Record(S.String, S.Finite),
+      S.Record(S.String.check(S.isPattern(/^[a-z]+$/)), S.Finite),
       S.NullOr(S.String),
-      S.Union([S.String, S.Number, S.Null]),
+      S.Union([S.String, S.Finite, S.Null]),
       S.String.check(S.isPattern(/^[a-z]+$/)),
       S.String.annotate({ contentMediaType: "text/markdown" }),
       S.Null,
@@ -370,7 +401,7 @@ describe("JSONSchema", () => {
     });
 
     it("decodes generator output for recursive schemas into resolvable references", () => {
-      const document = decodeDocumentSync(S.toJsonSchemaDocument(Tree));
+      const document = Tree.pipe(S.toJsonSchemaDocument, decodeDocumentSync);
       const root = resolveDocumentRef(document);
       expect(O.isSome(root)).toBe(true);
     });
