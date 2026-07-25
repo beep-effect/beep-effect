@@ -12,15 +12,19 @@ import {
 import {
   Binding,
   CoercionFunction,
-  type CoercionFunctionName,
+  CoercionFunctionName,
   DiagnosticKind,
+  ErrorConstructorName,
   ErrorConstructorReference,
+  GlobalMethodNamespace,
   GlobalMethodReference,
   GlobalNamespace,
+  GlobalNamespaceName,
   InterpreterRuntimeError,
   JsonMethodReference,
+  JsonMethodName,
   PromiseMethodReference,
-  type PromiseMethodName,
+  PromiseMethodName,
   RuntimeReference,
   SearchFunction,
   Scope,
@@ -29,6 +33,7 @@ import {
   StatementBreak,
   StatementResult,
   UriFunction,
+  UriFunctionName,
 } from "../interpreter/Interpreter.model.ts";
 import {
   ApiKeyCarrier,
@@ -124,43 +129,39 @@ describe("CodeMode public types", () => {
     const statement: StatementResult = StatementBreak.new();
 
     expect(
-      CoercionFunction.match(coercion, {
-        Boolean: ({ name }) => name,
-        Number: ({ name }) => name,
-        String: ({ name }) => name,
-        isFinite: ({ name }) => name,
-        isNaN: ({ name }) => name,
-        parseInt: ({ name }) => name,
-        parseFloat: ({ name }) => name,
+      CoercionFunctionName.$match(coercion.name, {
+        Boolean: () => coercion.name,
+        Number: () => coercion.name,
+        String: () => coercion.name,
+        isFinite: () => coercion.name,
+        isNaN: () => coercion.name,
+        parseInt: () => coercion.name,
+        parseFloat: () => coercion.name,
       })
     ).type.toBe<CoercionFunctionName>();
     expect(StatementResult.guards.Break(statement)).type.toBe<boolean>();
     const promiseMethod = PromiseMethodReference.new("allSettled");
 
     expect(
-      PromiseMethodReference.match(promiseMethod, {
-        all: ({ name }) => name,
-        allSettled: ({ name }) => name,
-        race: ({ name }) => name,
-        any: ({ name }) => name,
-        resolve: ({ name }) => name,
-        reject: ({ name }) => name,
+      PromiseMethodName.$match(promiseMethod.name, {
+        all: () => promiseMethod.name,
+        allSettled: () => promiseMethod.name,
+        race: () => promiseMethod.name,
+        any: () => promiseMethod.name,
+        resolve: () => promiseMethod.name,
+        reject: () => promiseMethod.name,
       })
     ).type.toBe<PromiseMethodName>();
-    expect(GlobalNamespace.guards.JSON(GlobalNamespace.new("JSON"))).type.toBe<boolean>();
+    expect(GlobalNamespaceName.is.JSON(GlobalNamespace.new("JSON").name)).type.toBe<boolean>();
     expect(
-      GlobalMethodReference.guards.String(
-        GlobalMethodReference.new("String", "fromCodePoint")
-      )
+      GlobalMethodNamespace.is.String(GlobalMethodReference.new("String", "fromCodePoint").namespace)
     ).type.toBe<boolean>();
-    expect(JsonMethodReference.guards.parse(JsonMethodReference.new("parse"))).type.toBe<boolean>();
+    expect(JsonMethodName.is.parse(JsonMethodReference.new("parse").name)).type.toBe<boolean>();
     expect(
-      UriFunction.guards.encodeURIComponent(UriFunction.new("encodeURIComponent"))
+      UriFunctionName.is.encodeURIComponent(UriFunction.new("encodeURIComponent").name)
     ).type.toBe<boolean>();
     expect(
-      ErrorConstructorReference.guards.TypeError(
-        ErrorConstructorReference.new("TypeError")
-      )
+      ErrorConstructorName.is.TypeError(ErrorConstructorReference.new("TypeError").name)
     ).type.toBe<boolean>();
     expect(
       StatementResult.match(statement, {

@@ -10,7 +10,7 @@ import {
   NonEmptyTrimmedStr,
   NonNegativeInt,
 } from "@beep/schema";
-import { A, N, O, P, R, Str, Struct, pipe } from "@beep/utils";
+import { A,thunkEmptyStr,thunkFalse, thunkTrue, N, O, P, R, Str, Struct, pipe } from "@beep/utils";
 import {
   Chunk,
   Effect,
@@ -38,6 +38,7 @@ import {
   AuthContext,
   BodyMode,
   Credential,
+  InputLocation,
   InputStyle,
   type InputField,
   type Plan,
@@ -81,7 +82,7 @@ const mediaTypeBase = (mediaType: string): string =>
     mediaType,
     Str.split(";"),
     A.head,
-    O.getOrElse(() => ""),
+    O.getOrElse(thunkEmptyStr),
     Str.trim,
     Str.toLowerCase
   );
@@ -198,9 +199,9 @@ const serializeQuery = (
       field.style,
       O.exists((style) =>
         InputStyle.$match(style, {
-          deepObject: () => true,
-          form: () => false,
-          simple: () => false,
+          deepObject: thunkTrue,
+          form: thunkFalse,
+          simple: thunkFalse,
         })
       )
     )
@@ -279,7 +280,7 @@ const buildUrl = (
 ): Result.Result<string, ToolError> =>
   pipe(
     plan.fields,
-    A.filter((field) => field.location === "path"),
+    A.filter((field) => InputLocation.is.path(field.location)),
     A.reduce(
       Result.succeed(plan.url) as Result.Result<string, ToolError>,
       (url, field) =>
@@ -289,7 +290,7 @@ const buildUrl = (
             pipe(
               own(input, field.inputName),
               O.match({
-                onNone: () => Result.fail(missingParameter(field, "path")),
+                onNone: () => Result.fail(missingParameter(field, InputLocation.Enum.path)),
                 onSome: (value) =>
                   pipe(
                     serializeSimple(field, value, pathEncoder(field)),
@@ -383,7 +384,7 @@ const applyHeaderFields = (
       ToolError
     >,
     (current, field) => {
-      if (field.location !== "header") return current;
+      if (!InputLocation.is.header(field.location)) return current;
       return pipe(
         current,
         Result.flatMap((value) =>
@@ -439,7 +440,7 @@ const applyBody = (
         value: () =>
           pipe(
             plan.fields,
-            A.findFirst((field) => field.location === "body"),
+            A.findFirst((field) => InputLocation.is.body(field.location)),
             O.flatMap((field) => own(input, field.inputName)),
             O.match({
               onNone: () => Effect.succeed(request),
@@ -456,7 +457,7 @@ const applyBody = (
           const entries = pipe(
             plan.fields,
             A.map((field) =>
-              field.location === "body"
+              InputLocation.is.body(field.location)
                 ? pipe(
                     own(input, field.inputName),
                     O.map(
@@ -489,7 +490,7 @@ const buildRequest = (
       plan.fields,
       (field) =>
         field.required &&
-        field.location !== "path" &&
+        !InputLocation.is.path(field.location) &&
         O.isNone(own(input, field.inputName))
     );
     if (O.isSome(missing)) {
@@ -887,7 +888,7 @@ const errorBodySummary = (value: unknown): string => {
     ? value
     : pipe(
         encodeJson(value),
-        O.getOrElse(() => "")
+        O.getOrElse(thunkEmptyStr)
       );
   if (Str.isEmpty(rendered) || rendered === "null") {
     return "no response body";
@@ -937,7 +938,7 @@ export const invoke = (
     const text = yield* readResponseBody(response, plan);
     const contentType = pipe(
       Headers.get(response.headers, "content-type"),
-      O.getOrElse(() => "")
+      O.getOrElse(thunkEmptyStr)
     );
     const json = isJsonMediaType(contentType);
     const decoded = Str.isEmpty(text)

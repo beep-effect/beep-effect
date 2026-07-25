@@ -2,12 +2,12 @@ import {
   containsOpaqueReference,
   containsRuntimeReference,
   isRuntimeReference,
-} from "../interpreter/index.ts"
-import { MutableHashSet, pipe } from "effect"
-import * as S from "effect/Schema"
-import { LiteralKit } from "@beep/schema"
-import { A, O, P } from "@beep/utils"
-import { copyIn, copyOut } from "../Codemode.tool-runtime.ts"
+} from "../interpreter/Interpreter.references.ts";
+import {MutableHashSet, pipe} from "effect";
+import * as S from "effect/Schema";
+import {LiteralKit} from "@beep/schema";
+import {A, O, P, R} from "@beep/utils";
+import {copyIn, copyOut} from "../Codemode.tool-runtime.ts";
 import {
   isCodeModeValue,
   CodeModeDate,
@@ -17,91 +17,92 @@ import {
   CodeModeSet,
   CodeModeURL,
   CodeModeURLSearchParams,
-} from "../Codemode.values.ts"
-import { boundedData, coerceToString } from "./StdLib.value.ts"
+} from "../Codemode.values.ts";
+import {boundedData, coerceToString} from "./StdLib.value.ts";
 
-export const consoleMethods = LiteralKit(["log", "info", "debug", "warn", "error", "dir", "table"])
+export const ConsoleMethod = LiteralKit(["log", "info", "debug", "warn", "error", "dir", "table"]);
+export type ConsoleMethod = typeof ConsoleMethod.Type;
 
-const MAX_CONSOLE_DEPTH = 32
-const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString)
+const MAX_CONSOLE_DEPTH = 32;
+const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
 
 export const formatConsoleMessage = (name: string, args: Array<unknown>): string => {
-  if (name === "dir") return A.isArrayEmpty(args) ? "undefined" : formatConsoleArgument(args[0])
-  if (name === "table") return formatConsoleTable(args[0], args[1])
-  const prefix = name === "warn" ? "[warn] " : name === "error" ? "[error] " : name === "debug" ? "[debug] " : ""
-  return `${prefix}${pipe(args, A.map(formatConsoleArgument), A.join(" "))}`
-}
+  if (ConsoleMethod.is.dir(name)) return A.isArrayEmpty(args) ? "undefined" : formatConsoleArgument(args[0]);
+  if (ConsoleMethod.is.table(name)) return formatConsoleTable(args[0], args[1]);
+  const prefix = ConsoleMethod.is.warn(name) ? "[warn] " : ConsoleMethod.is.error(name) ? "[error] " : name === "debug" ? "[debug] " : "";
+  return `${prefix}${pipe(args, A.map(formatConsoleArgument), A.join(" "))}`;
+};
 
 const formatConsoleArgument = (value: unknown): string => {
-  if (value === undefined) return "undefined"
-  if (typeof value === "string") return value
-  return formatConsoleValue(value, MutableHashSet.empty(), 0)
-}
+  if (P.isUndefined(value)) return "undefined";
+  if (P.isString(value)) return value;
+  return formatConsoleValue(value, MutableHashSet.empty(), 0);
+};
 
 const formatConsoleValue = (
   value: unknown,
   seen: MutableHashSet.MutableHashSet<object>,
   depth: number,
 ): string => {
-  if (value === null || value === undefined) return "null"
-  if (typeof value === "string") return encodeJson(value)
-  if (typeof value === "number" || typeof value === "boolean") return String(value)
-  if (typeof value !== "object") return String(value)
-  if (value instanceof CodeModePromise) return "[Promise (await it to get its value)]"
-  if (value instanceof CodeModeDate) return coerceToString(value)
-  if (value instanceof CodeModeRegExp) return coerceToString(value)
-  if (value instanceof CodeModeURL) return coerceToString(value)
-  if (value instanceof CodeModeURLSearchParams) return coerceToString(value)
-  if (depth > MAX_CONSOLE_DEPTH) return "..."
-  if (MutableHashSet.has(seen, value)) return "[Circular]"
-  if (value instanceof CodeModeMap) {
-    MutableHashSet.add(seen, value)
+  if (P.isNull(value) || P.isUndefined(value)) return "null";
+  if (P.isString(value)) return encodeJson(value);
+  if (P.isNumber(value) || P.isBoolean(value)) return String(value);
+  if (!P.isObjectKeyword(value)) return String(value);
+  if (S.is(CodeModePromise)(value)) return "[Promise (await it to get its value)]";
+  if (S.is(CodeModeDate)(value)) return coerceToString(value);
+  if (S.is(CodeModeRegExp)(value)) return coerceToString(value);
+  if (S.is(CodeModeURL)(value)) return coerceToString(value);
+  if (S.is(CodeModeURLSearchParams)(value)) return coerceToString(value);
+  if (depth > MAX_CONSOLE_DEPTH) return "...";
+  if (MutableHashSet.has(seen, value)) return "[Circular]";
+  if (S.is(CodeModeMap)(value)) {
+    MutableHashSet.add(seen, value);
     try {
       const entries = pipe(
         value.map.entries(),
         A.fromIterable,
         A.map(([key, item]): Array<unknown> => [key, item]),
-      )
-      return `Map(${value.map.size}) ${formatConsoleValue(entries, seen, depth + 1)}`
+      );
+      return `Map(${value.map.size}) ${formatConsoleValue(entries, seen, depth + 1)}`;
     } finally {
-      MutableHashSet.remove(seen, value)
+      MutableHashSet.remove(seen, value);
     }
   }
-  if (value instanceof CodeModeSet) {
-    MutableHashSet.add(seen, value)
+  if (S.is(CodeModeSet)(value)) {
+    MutableHashSet.add(seen, value);
     try {
-      return `Set(${value.set.size}) ${formatConsoleValue(A.fromIterable(value.set.values()), seen, depth + 1)}`
+      return `Set(${value.set.size}) ${formatConsoleValue(A.fromIterable(value.set.values()), seen, depth + 1)}`;
     } finally {
-      MutableHashSet.remove(seen, value)
+      MutableHashSet.remove(seen, value);
     }
   }
-  if (isRuntimeReference(value)) return "[opaque reference]"
-  MutableHashSet.add(seen, value)
+  if (isRuntimeReference(value)) return "[opaque reference]";
+  MutableHashSet.add(seen, value);
   try {
     if (A.isArray(value)) {
-      return `[${pipe(value, A.map((item) => formatConsoleValue(item, seen, depth + 1)), A.join(","))}]`
+      return `[${pipe(value, A.map((item) => formatConsoleValue(item, seen, depth + 1)), A.join(","))}]`;
     }
     return `{${pipe(
-      Object.entries(value),
+      R.toEntries(value),
       A.map(([key, item]) => `${encodeJson(key)}:${formatConsoleValue(item, seen, depth + 1)}`),
       A.join(","),
-    )}}`
+    )}}`;
   } finally {
-    MutableHashSet.remove(seen, value)
+    MutableHashSet.remove(seen, value);
   }
-}
+};
 
 const formatConsoleTable = (value: unknown, columnsArgument: unknown): string => {
-  if (value === undefined) return "undefined"
-  if (containsOpaqueReference(value)) return "[opaque reference]"
-  const data = boundedData(value, "console.table argument")
-  const columns = consoleTableColumns(columnsArgument)
-  const rows = consoleTableRows(data, columns)
+  if (P.isUndefined(value)) return "undefined";
+  if (containsOpaqueReference(value)) return "[opaque reference]";
+  const data = boundedData(value, "console.table argument");
+  const columns = consoleTableColumns(columnsArgument);
+  const rows = consoleTableRows(data, columns);
   const keys = O.getOrElse(
     columns,
     () => pipe(rows, A.flatMap((row) => Object.keys(row.values)), A.dedupe),
-  )
-  const header = pipe(["(index)", ...keys], A.join("\t"))
+  );
+  const header = pipe(["(index)", ...keys], A.join("\t"));
   return pipe(
     [
       header,
@@ -114,49 +115,55 @@ const formatConsoleTable = (value: unknown, columnsArgument: unknown): string =>
       ),
     ],
     A.join("\n"),
-  )
-}
+  );
+};
 
 const consoleTableColumns = (value: unknown): O.Option<ReadonlyArray<string>> => {
-  if (value === undefined || containsRuntimeReference(value)) return O.none()
-  const columns = copyOut(copyIn(value, "console.table columns"), "nullify")
+  if (P.isUndefined(value) || containsRuntimeReference(value)) return O.none();
+  const columns = copyOut(copyIn(value, "console.table columns"), "nullify");
   return A.isArray(columns)
     ? O.some(A.map(columns, (column) => String(column)))
-    : O.none()
-}
+    : O.none();
+};
 
 const consoleTableRows = (
   data: unknown,
   columns: O.Option<ReadonlyArray<string>>,
-): Array<{ readonly index: string; readonly values: Record<string, unknown> }> => {
+): Array<{
+  readonly index: string;
+  readonly values: Record<string, unknown>
+}> => {
   if (A.isArray(data)) {
-    return A.map(data, (item, index) => ({ index: String(index), values: consoleTableValues(item, columns) }))
+    return A.map(data, (item, index) => ({
+      index: String(index),
+      values: consoleTableValues(item, columns)
+    }));
   }
-  if (data !== null && typeof data === "object" && !isCodeModeValue(data)) {
+  if (P.isNotNull(data) && P.isObjectKeyword(data) && !isCodeModeValue(data)) {
     return A.map(
-      Object.entries(data),
-      ([index, item]) => ({ index, values: consoleTableValues(item, columns) }),
-    )
+      R.toEntries(data),
+      ([index, item]) => ({index, values: consoleTableValues(item, columns)}),
+    );
   }
-  return [{ index: "0", values: { Value: data } }]
-}
+  return [{index: "0", values: {Value: data}}];
+};
 
 const consoleTableValues = (
   value: unknown,
   columns: O.Option<ReadonlyArray<string>>,
 ): Record<string, unknown> => {
   if (P.isNotNull(value) && P.isObjectKeyword(value) && !A.isArray(value) && !isCodeModeValue(value)) {
-    const source = value as Record<string, unknown>
+    const source = value as Record<string, unknown>;
     return O.match(columns, {
-      onNone: () => Object.fromEntries(Object.entries(source)),
-      onSome: (names) => Object.fromEntries(A.map(names, (column) => [column, source[column]])),
-    })
+      onNone: () => R.fromEntries(R.toEntries(source)),
+      onSome: (names) => R.fromEntries(A.map(names, (column) => [column, source[column]])),
+    });
   }
-  return { Value: value }
-}
+  return {Value: value};
+};
 
 const formatConsoleTableCell = (value: unknown): string => {
-  if (value === undefined) return ""
-  if (typeof value === "string") return value
-  return formatConsoleValue(value, MutableHashSet.empty(), 0)
-}
+  if (P.isUndefined(value)) return "";
+  if (P.isString(value)) return value;
+  return formatConsoleValue(value, MutableHashSet.empty(), 0);
+};

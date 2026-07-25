@@ -12,8 +12,8 @@ import {
   SchemaUtils,
   TaggedErrorClass
 } from "@beep/schema";
-import {A, N, O, P, pipe} from "@beep/utils";
-import {Effect, MutableHashMap, Tuple} from "effect";
+import {A, N, O, P} from "@beep/utils";
+import {Effect, MutableHashMap} from "effect";
 import * as S from "effect/Schema";
 import type {SafeObject} from "@beep/schema/SafeObject";
 import {ToolError} from "../Codemode.tool-error.ts";
@@ -382,49 +382,22 @@ export const GeneratorMethodKind = LiteralKit([
 /** Runtime type for {@link GeneratorMethodKind}. */
 export type GeneratorMethodKind = typeof GeneratorMethodKind.Type;
 
-type GeneratorMethodReferenceMember<Kind extends GeneratorMethodKind> = {
-  readonly _tag: "GeneratorMethodReference";
-  readonly generator: CodeModeGenerator;
-  readonly kind: Kind;
-};
-
 /** Bound method of a guest generator. */
-export const GeneratorMethodReference = GeneratorMethodKind.mapMembers((members) => {
-  const make = <const TKind extends GeneratorMethodKind>(
-    literalSchema: S.Literal<TKind>
-  ) =>
-    S.Class<GeneratorMethodReferenceMember<TKind>>(
-      $I`GeneratorMethodReferenceMember`
-    )({
-      _tag: S.tag("GeneratorMethodReference"),
-      generator: CodeModeGeneratorReference,
-      kind: S.tag(literalSchema.literal),
-    });
-
-  return pipe(
-    members,
-    Tuple.evolve([
-      make,
-      make,
-      make,
-      make,
-    ])
-  );
-}).pipe(
-  S.toTaggedUnion("kind"),
-  $I.annoteSchema("GeneratorMethodReference", {
+export class GeneratorMethodReference extends S.TaggedClass<GeneratorMethodReference>($I`GeneratorMethodReference`)(
+  "GeneratorMethodReference",
+  {
+    generator: CodeModeGeneratorReference,
+    kind: GeneratorMethodKind,
+  },
+  $I.annote("GeneratorMethodReference", {
     description: "A method reference bound to a guest generator.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    new: (
-      generator: CodeModeGenerator,
-      kind: GeneratorMethodKind
-    ): GeneratorMethodReference =>
-      schema.cases[kind].make({ generator }),
-  }))
-);
-
-export type GeneratorMethodReference = typeof GeneratorMethodReference.Type;
+  })
+) {
+  static readonly new = (
+    generator: CodeModeGenerator,
+    kind: GeneratorMethodKind
+  ): GeneratorMethodReference => GeneratorMethodReference.make({generator, kind});
+}
 
 /** Bound intrinsic operation. */
 export class IntrinsicReference extends S.TaggedClass<IntrinsicReference>($I`IntrinsicReference`)(
@@ -490,48 +463,16 @@ export const PromiseMethodName = LiteralKit(["all", "allSettled", "race", "any",
 /** Runtime type for {@link PromiseMethodName}. */
 export type PromiseMethodName = typeof PromiseMethodName.Type;
 
-type NamedReferenceMember<
-  Tag extends string,
-  Name extends string
-> = {
-  readonly _tag: Tag;
-  readonly name: Name;
-};
-
-export const PromiseMethodReference = PromiseMethodName.mapMembers((members) => {
-  const make = <const TName extends PromiseMethodName>(
-    literalSchema: S.Literal<TName>
-  ) =>
-    S.Class<NamedReferenceMember<"PromiseMethodReference", TName>>(
-      $I`PromiseMethodReferenceMember`
-    )({
-      _tag: S.tag("PromiseMethodReference"),
-      name: S.tag(literalSchema.literal),
-    });
-
-  return pipe(
-    members,
-    Tuple.evolve([
-      make,
-      make,
-      make,
-      make,
-      make,
-      make,
-    ])
-  );
-}).pipe(
-  S.toTaggedUnion("name"),
-  $I.annoteSchema("PromiseMethodReference", {
+export class PromiseMethodReference extends S.TaggedClass<PromiseMethodReference>($I`PromiseMethodReference`)(
+  "PromiseMethodReference",
+  {name: PromiseMethodName},
+  $I.annote("PromiseMethodReference", {
     description: "A static Promise method exposed to a guest program.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    new: (name: PromiseMethodName): PromiseMethodReference =>
-      schema.cases[name].make({}),
-  }))
-);
-
-export type PromiseMethodReference = typeof PromiseMethodReference.Type;
+  })
+) {
+  static readonly new = (name: PromiseMethodName): PromiseMethodReference =>
+    PromiseMethodReference.make({name});
+}
 
 /** Supported Promise instance methods. */
 export const PromiseInstanceMethodName = LiteralKit(["then", "catch", "finally"]).pipe(
@@ -542,47 +483,23 @@ export const PromiseInstanceMethodName = LiteralKit(["then", "catch", "finally"]
 
 export type PromiseInstanceMethodName = typeof PromiseInstanceMethodName.Type;
 
-type PromiseInstanceMethodReferenceMember<
-  Name extends PromiseInstanceMethodName
-> = NamedReferenceMember<"PromiseInstanceMethodReference", Name> & {
-  readonly promise: CodeModePromise;
-};
-
-export const PromiseInstanceMethodReference = PromiseInstanceMethodName.mapMembers((members) => {
-  const make = <const TName extends PromiseInstanceMethodName>(
-    literalSchema: S.Literal<TName>
-  ) =>
-    S.Class<PromiseInstanceMethodReferenceMember<TName>>(
-      $I`PromiseInstanceMethodReferenceMember`
-    )({
-      _tag: S.tag("PromiseInstanceMethodReference"),
-      promise: S.instanceOf(CodeModePromise),
-      name: S.tag(literalSchema.literal),
-    });
-
-  return pipe(
-    members,
-    Tuple.evolve([
-      make,
-      make,
-      make,
-    ])
-  );
-}).pipe(
-  S.toTaggedUnion("name"),
-  $I.annoteSchema("PromiseInstanceMethodReference", {
+export class PromiseInstanceMethodReference extends S.TaggedClass<PromiseInstanceMethodReference>(
+  $I`PromiseInstanceMethodReference`
+)(
+  "PromiseInstanceMethodReference",
+  {
+    promise: CodeModePromise,
+    name: PromiseInstanceMethodName,
+  },
+  $I.annote("PromiseInstanceMethodReference", {
     description: "A Promise instance method bound to its guest promise.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    new: (
-      promise: CodeModePromise,
-      name: PromiseInstanceMethodName
-    ): PromiseInstanceMethodReference =>
-      schema.cases[name].make({ promise }),
-  }))
-);
-
-export type PromiseInstanceMethodReference = typeof PromiseInstanceMethodReference.Type;
+  })
+) {
+  static readonly new = (
+    promise: CodeModePromise,
+    name: PromiseInstanceMethodName
+  ): PromiseInstanceMethodReference => PromiseInstanceMethodReference.make({promise, name});
+}
 
 export class PromiseCapabilityFunction extends S.TaggedClass<PromiseCapabilityFunction>($I`PromiseCapabilityFunction`)(
   "PromiseCapabilityFunction",
@@ -618,45 +535,16 @@ export const GlobalNamespaceName = LiteralKit([
 
 export type GlobalNamespaceName = typeof GlobalNamespaceName.Type;
 
-export const GlobalNamespace = GlobalNamespaceName.mapMembers((members) => {
-  const make = <const TName extends GlobalNamespaceName>(
-    literalSchema: S.Literal<TName>
-  ) =>
-    S.Class<NamedReferenceMember<"GlobalNamespace", TName>>(
-      $I`GlobalNamespaceMember`
-    )({
-      _tag: S.tag("GlobalNamespace"),
-      name: S.tag(literalSchema.literal),
-    });
-
-  return pipe(
-    members,
-    Tuple.evolve([
-      make,
-      make,
-      make,
-      make,
-      make,
-      make,
-      make,
-      make,
-      make,
-      make,
-      make,
-    ])
-  );
-}).pipe(
-  S.toTaggedUnion("name"),
-  $I.annoteSchema("GlobalNamespace", {
+export class GlobalNamespace extends S.TaggedClass<GlobalNamespace>($I`GlobalNamespace`)(
+  "GlobalNamespace",
+  {name: GlobalNamespaceName},
+  $I.annote("GlobalNamespace", {
     description: "A constructor or namespace exposed to guest programs.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    new: (name: GlobalNamespaceName): GlobalNamespace =>
-      schema.cases[name].make({}),
-  }))
-);
-
-export type GlobalNamespace = typeof GlobalNamespace.Type;
+  })
+) {
+  static readonly new = (name: GlobalNamespaceName): GlobalNamespace =>
+    GlobalNamespace.make({name});
+}
 
 export const GlobalMethodNamespace = LiteralKit([
   "Object",
@@ -679,58 +567,21 @@ export const GlobalMethodNamespace = LiteralKit([
 
 export type GlobalMethodNamespace = typeof GlobalMethodNamespace.Type;
 
-type GlobalMethodReferenceMember<
-  Namespace extends GlobalMethodNamespace
-> = {
-  readonly _tag: "GlobalMethodReference";
-  readonly namespace: Namespace;
-  readonly name: string;
-};
-
-export const GlobalMethodReference = GlobalMethodNamespace.mapMembers((members) => {
-  const make = <const TNamespace extends GlobalMethodNamespace>(
-    literalSchema: S.Literal<TNamespace>
-  ) =>
-    S.Class<GlobalMethodReferenceMember<TNamespace>>(
-      $I`GlobalMethodReferenceMember`
-    )({
-      _tag: S.tag("GlobalMethodReference"),
-      namespace: S.tag(literalSchema.literal),
-      name: S.String,
-    });
-
-  return pipe(
-    members,
-    Tuple.evolve([
-      make,
-      make,
-      make,
-      make,
-      make,
-      make,
-      make,
-      make,
-      make,
-      make,
-      make,
-      make,
-    ])
-  );
-}).pipe(
-  S.toTaggedUnion("namespace"),
-  $I.annoteSchema("GlobalMethodReference", {
+export class GlobalMethodReference extends S.TaggedClass<GlobalMethodReference>($I`GlobalMethodReference`)(
+  "GlobalMethodReference",
+  {
+    namespace: GlobalMethodNamespace,
+    name: S.String,
+  },
+  $I.annote("GlobalMethodReference", {
     description: "A global method bound to its namespace.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    new: (
-      namespace: GlobalMethodNamespace,
-      name: string
-    ): GlobalMethodReference =>
-      schema.cases[namespace].make({ name }),
-  }))
-);
-
-export type GlobalMethodReference = typeof GlobalMethodReference.Type;
+  })
+) {
+  static readonly new = (
+    namespace: GlobalMethodNamespace,
+    name: string
+  ): GlobalMethodReference => GlobalMethodReference.make({namespace, name});
+}
 
 /** JSON method names exposed to guest programs. */
 export const JsonMethodName = LiteralKit(["parse", "stringify"]).pipe(
@@ -741,36 +592,16 @@ export const JsonMethodName = LiteralKit(["parse", "stringify"]).pipe(
 
 export type JsonMethodName = typeof JsonMethodName.Type;
 
-export const JsonMethodReference = JsonMethodName.mapMembers((members) => {
-  const make = <const TName extends JsonMethodName>(
-    literalSchema: S.Literal<TName>
-  ) =>
-    S.Class<NamedReferenceMember<"JsonMethodReference", TName>>(
-      $I`JsonMethodReferenceMember`
-    )({
-      _tag: S.tag("JsonMethodReference"),
-      name: S.tag(literalSchema.literal),
-    });
-
-  return pipe(
-    members,
-    Tuple.evolve([
-      make,
-      make,
-    ])
-  );
-}).pipe(
-  S.toTaggedUnion("name"),
-  $I.annoteSchema("JsonMethodReference", {
+export class JsonMethodReference extends S.TaggedClass<JsonMethodReference>($I`JsonMethodReference`)(
+  "JsonMethodReference",
+  {name: JsonMethodName},
+  $I.annote("JsonMethodReference", {
     description: "A JSON method reference exposed to a guest program.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    new: (name: JsonMethodName): JsonMethodReference =>
-      schema.cases[name].make({}),
-  }))
-);
-
-export type JsonMethodReference = typeof JsonMethodReference.Type;
+  })
+) {
+  static readonly new = (name: JsonMethodName): JsonMethodReference =>
+    JsonMethodReference.make({name});
+}
 
 export const CoercionFunctionName = LiteralKit([
   "Number",
@@ -788,37 +619,16 @@ export const CoercionFunctionName = LiteralKit([
 
 export type CoercionFunctionName = typeof CoercionFunctionName.Type;
 
-export const CoercionFunction = CoercionFunctionName.mapMembers((members) => {
-  const make = <const TName extends CoercionFunctionName>(
-    literalSchema: S.Literal<TName>
-  ) =>
-    S.Class<NamedReferenceMember<"CoercionFunction", TName>>(
-      $I`CoercionFunctionMember`
-    )({
-      _tag: S.tag("CoercionFunction"),
-      name: S.tag(literalSchema.literal),
-    });
-  return pipe(
-    members,
-    Tuple.evolve([
-      make,
-      make,
-      make,
-      make,
-      make,
-      make,
-      make,
-    ])
-  );
-}).pipe(
-  S.toTaggedUnion("name"),
-  $I.annoteSchema("CoercionFunction", {description: "A guest primitive coercion function."}),
-  SchemaUtils.withStatics((schema) => ({
-    new: (name: CoercionFunctionName): CoercionFunction =>
-      schema.cases[name].make({})
-  }))
-);
-export type CoercionFunction = typeof CoercionFunction.Type;
+export class CoercionFunction extends S.TaggedClass<CoercionFunction>($I`CoercionFunction`)(
+  "CoercionFunction",
+  {name: CoercionFunctionName},
+  $I.annote("CoercionFunction", {
+    description: "A guest primitive coercion function.",
+  })
+) {
+  static readonly new = (name: CoercionFunctionName): CoercionFunction =>
+    CoercionFunction.make({name});
+}
 
 export const UriFunctionName = LiteralKit([
   "encodeURI",
@@ -833,38 +643,16 @@ export const UriFunctionName = LiteralKit([
 
 export type UriFunctionName = typeof UriFunctionName.Type;
 
-export const UriFunction = UriFunctionName.mapMembers((members) => {
-  const make = <const TName extends UriFunctionName>(
-    literalSchema: S.Literal<TName>
-  ) =>
-    S.Class<NamedReferenceMember<"UriFunction", TName>>(
-      $I`UriFunctionMember`
-    )({
-      _tag: S.tag("UriFunction"),
-      name: S.tag(literalSchema.literal),
-    });
-
-  return pipe(
-    members,
-    Tuple.evolve([
-      make,
-      make,
-      make,
-      make,
-    ])
-  );
-}).pipe(
-  S.toTaggedUnion("name"),
-  $I.annoteSchema("UriFunction", {
+export class UriFunction extends S.TaggedClass<UriFunction>($I`UriFunction`)(
+  "UriFunction",
+  {name: UriFunctionName},
+  $I.annote("UriFunction", {
     description: "A guest URI codec function.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    new: (name: UriFunctionName): UriFunction =>
-      schema.cases[name].make({}),
-  }))
-);
-
-export type UriFunction = typeof UriFunction.Type;
+  })
+) {
+  static readonly new = (name: UriFunctionName): UriFunction =>
+    UriFunction.make({name});
+}
 
 export class SearchFunction extends S.TaggedClass<SearchFunction>($I`SearchFunction`)(
   "SearchFunction",
@@ -919,42 +707,18 @@ export const ErrorConstructorName = LiteralKit([
 /** Runtime type for {@link ErrorConstructorName}. */
 export type ErrorConstructorName = typeof ErrorConstructorName.Type;
 
-export const ErrorConstructorReference = ErrorConstructorName.mapMembers((members) => {
-  const make = <const TName extends ErrorConstructorName>(
-    literalSchema: S.Literal<TName>
-  ) =>
-    S.Class<NamedReferenceMember<"ErrorConstructorReference", TName>>(
-      $I`ErrorConstructorReferenceMember`
-    )({
-      _tag: S.tag("ErrorConstructorReference"),
-      name: S.tag(literalSchema.literal),
-    });
-
-  return pipe(
-    members,
-    Tuple.evolve([
-      make,
-      make,
-      make,
-      make,
-      make,
-      make,
-      make,
-      make,
-    ])
-  );
-}).pipe(
-  S.toTaggedUnion("name"),
-  $I.annoteSchema("ErrorConstructorReference", {
+export class ErrorConstructorReference extends S.TaggedClass<ErrorConstructorReference>(
+  $I`ErrorConstructorReference`
+)(
+  "ErrorConstructorReference",
+  {name: ErrorConstructorName},
+  $I.annote("ErrorConstructorReference", {
     description: "A guest Error constructor reference.",
-  }),
-  SchemaUtils.withStatics((schema) => ({
-    new: (name: ErrorConstructorName): ErrorConstructorReference =>
-      schema.cases[name].make({}),
-  }))
-);
-
-export type ErrorConstructorReference = typeof ErrorConstructorReference.Type;
+  })
+) {
+  static readonly new = (name: ErrorConstructorName): ErrorConstructorReference =>
+    ErrorConstructorReference.make({name});
+}
 
 /**
  * Tagged union for all schema-owned runtime references.

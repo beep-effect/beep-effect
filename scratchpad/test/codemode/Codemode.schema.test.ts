@@ -16,17 +16,25 @@ import {
   Binding,
   CodeModeGenerator,
   CoercionFunction,
+  CoercionFunctionName,
+  ErrorConstructorName,
   ErrorConstructorReference,
+  GeneratorMethodKind,
   GeneratorMethodReference,
+  GlobalMethodNamespace,
   GlobalMethodReference,
   GlobalNamespace,
+  GlobalNamespaceName,
+  JsonMethodName,
   JsonMethodReference,
   MemberReference,
   PromiseMethodReference,
+  PromiseMethodName,
   Scope,
   StatementBreak,
   StatementResult,
   UriFunction,
+  UriFunctionName,
 } from "../../codemode/interpreter/Interpreter.model.ts";
 import {
   ApiKeyCarrier,
@@ -198,34 +206,34 @@ describe("CodeMode schema laws", () => {
     const member = MemberReference.new(target, 1);
 
     assert.strictEqual(
-      CoercionFunction.match(coercion, {
-        Boolean: ({ name }) => name,
-        Number: ({ name }) => name,
-        String: ({ name }) => name,
-        isFinite: ({ name }) => name,
-        isNaN: ({ name }) => name,
-        parseInt: ({ name }) => name,
-        parseFloat: ({ name }) => name,
+      CoercionFunctionName.$match(coercion.name, {
+        Boolean: () => coercion.name,
+        Number: () => coercion.name,
+        String: () => coercion.name,
+        isFinite: () => coercion.name,
+        isNaN: () => coercion.name,
+        parseInt: () => coercion.name,
+        parseFloat: () => coercion.name,
       }),
       "parseInt"
     );
     assert.strictEqual(
-      PromiseMethodReference.match(promiseMethod, {
-        all: ({ name }) => name,
-        allSettled: ({ name }) => name,
-        race: ({ name }) => name,
-        any: ({ name }) => name,
-        resolve: ({ name }) => name,
-        reject: ({ name }) => name,
+      PromiseMethodName.$match(promiseMethod.name, {
+        all: () => promiseMethod.name,
+        allSettled: () => promiseMethod.name,
+        race: () => promiseMethod.name,
+        any: () => promiseMethod.name,
+        resolve: () => promiseMethod.name,
+        reject: () => promiseMethod.name,
       }),
       "allSettled"
     );
-    assert.strictEqual(GlobalNamespace.guards.JSON(globalNamespace), true);
-    assert.strictEqual(GlobalMethodReference.guards.String(globalMethod), true);
-    assert.strictEqual(JsonMethodReference.guards.stringify(jsonMethod), true);
-    assert.strictEqual(UriFunction.guards.decodeURIComponent(uriFunction), true);
-    assert.strictEqual(ErrorConstructorReference.guards.AggregateError(errorConstructor), true);
-    assert.strictEqual(GeneratorMethodReference.guards.iterator(generatorMethod), true);
+    assert.strictEqual(GlobalNamespaceName.is.JSON(globalNamespace.name), true);
+    assert.strictEqual(GlobalMethodNamespace.is.String(globalMethod.namespace), true);
+    assert.strictEqual(JsonMethodName.is.stringify(jsonMethod.name), true);
+    assert.strictEqual(UriFunctionName.is.decodeURIComponent(uriFunction.name), true);
+    assert.strictEqual(ErrorConstructorName.is.AggregateError(errorConstructor.name), true);
+    assert.strictEqual(GeneratorMethodKind.is.iterator(generatorMethod.kind), true);
     assert.strictEqual(S.is(MemberReference)(member), true);
     assert.strictEqual(member.target, target);
     assert.strictEqual(StatementResult.guards.Break(statement), true);

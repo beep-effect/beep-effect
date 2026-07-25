@@ -1,5 +1,5 @@
 import { LiteralKit } from "@beep/schema";
-import { P, A } from "@beep/utils"
+import { P, A, R } from "@beep/utils"
 import { Effect } from "effect"
 import * as S from "effect/Schema"
 import {
@@ -27,7 +27,7 @@ export const invokeObjectMethod = (name: string, args: Array<unknown>, node: Ast
     const input = args[0]
     if (A.isArray(input)) return input as unknown as Record<string, unknown>
     if (isCodeModeValue(input)) return {}
-    if (input instanceof CodeModePromise) {
+    if (S.is(CodeModePromise)(input)) {
       throw InterpreterRuntimeError.new(
         `Object.${name} received an un-awaited Promise; await it before inspecting the result.`,
         node,
@@ -51,11 +51,11 @@ export const invokeObjectMethod = (name: string, args: Array<unknown>, node: Ast
     throw InterpreterRuntimeError.new(`Object.${name} is not available.`, node)
   }
   return DirectObjectMethod.$match(name, {
-    keys: () => Object.keys(requireObject()),
-    values: () => Object.values(requireObject()),
-    entries: () => Object.entries(requireObject()).map(([key, item]) => [key, item]),
+    keys: () => R.keys(requireObject()),
+    values: () => R.values(requireObject()),
+    entries: () => A.map(R.toEntries(requireObject()), ([key, item]) => [key, item]),
     hasOwn: () =>
-      Object.hasOwn(
+      P.hasProperty(
         requireObject(),
         args[1] === AsyncIteratorSymbol || args[1] === IteratorSymbol ? args[1] : String(args[1]),
       ),
@@ -78,7 +78,7 @@ export const invokeObjectMethod = (name: string, args: Array<unknown>, node: Ast
         }
         for (const [key, item] of Object.entries(source)) guardedSet(out, key, item)
         for (const symbol of IteratorSymbols) {
-          if (Object.hasOwn(source, symbol)) Reflect.set(out, symbol, Reflect.get(source, symbol))
+          if (P.hasProperty(source, symbol)) Reflect.set(out, symbol, Reflect.get(source, symbol))
         }
       }
       return out

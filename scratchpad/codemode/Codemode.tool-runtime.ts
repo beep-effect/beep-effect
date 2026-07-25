@@ -4,17 +4,17 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity";
+import {$ScratchpadId} from "@beep/identity";
 import {
   LiteralKit,
   NonEmptyTrimmedStr,
   NonNegativeInt,
   PosInt,
+  type SafeObject,
   SchemaUtils,
   TaggedErrorClass,
-  type SafeObject,
 } from "@beep/schema";
-import { A, O, P, R, Str, Struct, pipe } from "@beep/utils";
+import {A, O, P, pipe, R, Str, Struct, thunkNull} from "@beep/utils";
 import {
   Cause,
   Clock,
@@ -32,8 +32,13 @@ import * as S from "effect/Schema";
 import * as AiError from "effect/unstable/ai/AiError";
 import * as Tool from "effect/unstable/ai/Tool";
 import * as Toolkit from "effect/unstable/ai/Toolkit";
-import { ToolError } from "./Codemode.tool-error.ts";
-import { identifierSegment, inputProperties, inputTypeScript, outputTypeScript } from "./Codemode.tool-schema.ts";
+import {ToolError} from "./Codemode.tool-error.ts";
+import {
+  identifierSegment,
+  inputProperties,
+  inputTypeScript,
+  outputTypeScript
+} from "./Codemode.tool-schema.ts";
 import {
   CodeModeDate,
   CodeModeMap,
@@ -46,7 +51,7 @@ import {
 
 const $I = $ScratchpadId.create("codemode/Codemode.tool-runtime");
 
-export type { SafeObject } from "@beep/schema/SafeObject";
+export type {SafeObject} from "@beep/schema/SafeObject";
 
 /** Services required to obtain Toolkit handlers and run their streams. */
 export type Services<ToolkitType extends Toolkit.Any> =
@@ -65,18 +70,18 @@ export class ToolDescription extends S.Class<ToolDescription>($I`ToolDescription
   })
 ) {
   static readonly new = (path: string, description: string, signature: string): ToolDescription =>
-    ToolDescription.make({ path, description, signature });
+    ToolDescription.make({path, description, signature});
 }
 
 /** A tool call admitted during one execution. */
 export class ToolCall extends S.Class<ToolCall>($I`ToolCall`)(
-  { name: NonEmptyTrimmedStr },
+  {name: NonEmptyTrimmedStr},
   $I.annote("ToolCall", {
     description: "Canonical name of one admitted tool call.",
   })
 ) {
   static readonly new = (name: string): ToolCall =>
-    ToolCall.make({ name: NonEmptyTrimmedStr.make(name) });
+    ToolCall.make({name: NonEmptyTrimmedStr.make(name)});
 }
 
 /** Hook payload emitted immediately before handler execution. */
@@ -91,7 +96,7 @@ export class ToolCallStarted extends S.Class<ToolCallStarted>($I`ToolCallStarted
   })
 ) {
   static readonly new = (index: number, name: string, input: unknown): ToolCallStarted =>
-    ToolCallStarted.make({ index: NonNegativeInt.make(index), name, input });
+    ToolCallStarted.make({index: NonNegativeInt.make(index), name, input});
 }
 
 /** Stable terminal state observed by the tool-call hook. */
@@ -178,7 +183,7 @@ export class SearchItem extends S.Class<SearchItem>($I`SearchItem`)(
   })
 ) {
   static readonly new = (path: string, description: string, signature: string): SearchItem =>
-    SearchItem.make({ path, description, signature });
+    SearchItem.make({path, description, signature});
 }
 
 /** Built-in discovery response. */
@@ -186,7 +191,7 @@ export class SearchOutput extends S.Class<SearchOutput>($I`SearchOutput`)(
   {
     items: S.Array(SearchItem),
     remaining: NonNegativeInt,
-    next: S.OptionFromNullOr(S.Struct({ offset: NonNegativeInt })).pipe(SchemaUtils.withNoneDefault),
+    next: S.OptionFromNullOr(S.Struct({offset: NonNegativeInt})).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("SearchOutput", {
     description: "Paginated tool-discovery results.",
@@ -202,7 +207,7 @@ export class SearchOutput extends S.Class<SearchOutput>($I`SearchOutput`)(
       remaining: NonNegativeInt.make(remaining),
       next: pipe(
         O.fromNullishOr(nextOffset),
-        O.map((offset) => ({ offset: NonNegativeInt.make(offset) }))
+        O.map((offset) => ({offset: NonNegativeInt.make(offset)}))
       ),
     });
 }
@@ -222,7 +227,7 @@ export class SearchEntry extends S.Class<SearchEntry>($I`SearchEntry`)(
     description: ToolDescription,
     namespace: string,
     searchText: string
-  ): SearchEntry => SearchEntry.make({ description, namespace, searchText });
+  ): SearchEntry => SearchEntry.make({description, namespace, searchText});
 }
 
 /** Prepared immutable discovery data. */
@@ -238,7 +243,7 @@ export class DiscoveryPlan extends S.Class<DiscoveryPlan>($I`DiscoveryPlan`)(
   static readonly new = (
     catalog: ReadonlyArray<ToolDescription>,
     searchIndex: ReadonlyArray<SearchEntry>
-  ): DiscoveryPlan => DiscoveryPlan.make({ catalog, searchIndex });
+  ): DiscoveryPlan => DiscoveryPlan.make({catalog, searchIndex});
 }
 
 /** Boundary copy behavior. */
@@ -254,13 +259,13 @@ export type CopyOutMode = typeof CopyOutMode.Type;
 /** Runtime handle representing a namespace path below `tools`. */
 export class ToolReference extends S.TaggedClass<ToolReference>($I`ToolReference`)(
   "ToolReference",
-  { path: S.Array(S.String) },
+  {path: S.Array(S.String)},
   $I.annote("ToolReference", {
     description: "A path into the current Toolkit namespace tree.",
   })
 ) {
   static readonly is = S.is(ToolReference);
-  static readonly new = (path: ReadonlyArray<string>): ToolReference => ToolReference.make({ path });
+  static readonly new = (path: ReadonlyArray<string>): ToolReference => ToolReference.make({path});
 }
 
 /** Stable ToolRuntime failure categories. */
@@ -296,7 +301,7 @@ export class ToolRuntimeError extends TaggedErrorClass<ToolRuntimeError>($I`Tool
     kind: ToolRuntimeErrorKind,
     message: string,
     suggestions: ReadonlyArray<string> = A.empty()
-  ): ToolRuntimeError => ToolRuntimeError.make({ kind, message, suggestions });
+  ): ToolRuntimeError => ToolRuntimeError.make({kind, message, suggestions});
 }
 
 const MAX_VALUE_DEPTH = 32;
@@ -307,7 +312,7 @@ export const isBlockedMember = (name: string): boolean => HashSet.has(blockedMem
 
 const isoFromEpochMillis = (millis: number): string | null =>
   O.match(DateTime.make(millis), {
-    onNone: () => null,
+    onNone: thunkNull,
     onSome: DateTime.formatIso,
   });
 
@@ -357,7 +362,7 @@ const copyBounded = (
   if (!P.isObject(value)) {
     throw ToolRuntimeError.new("InvalidDataValue", `${label} must contain data only.`);
   }
-  if (value instanceof CodeModePromise) {
+  if (S.is(CodeModePromise)(value)) {
     throw ToolRuntimeError.new(
       "InvalidDataValue",
       `${label} contains an un-awaited Promise; await tool calls before using their results.`
@@ -366,12 +371,12 @@ const copyBounded = (
 
   if (preserveCodeModeValues) {
     if (
-      value instanceof CodeModeDate ||
-      value instanceof CodeModeRegExp ||
-      value instanceof CodeModeMap ||
-      value instanceof CodeModeSet ||
-      value instanceof CodeModeURL ||
-      value instanceof CodeModeURLSearchParams
+      S.is(CodeModeDate)(value) ||
+      S.is(CodeModeRegExp)(value) ||
+      S.is(CodeModeMap)(value) ||
+      S.is(CodeModeSet)(value) ||
+      S.is(CodeModeURL)(value) ||
+      S.is(CodeModeURLSearchParams)(value)
     ) {
       return value;
     }
@@ -400,15 +405,18 @@ const copyBounded = (
     }
   }
 
-  if (value instanceof CodeModeDate) return isoFromEpochMillis(value.time);
-  if (value instanceof Date) return pipe(DateTime.make(value), O.match({ onNone: () => null, onSome: DateTime.formatIso }));
-  if (value instanceof CodeModeURL) return value.url.href;
+  if (S.is(CodeModeDate)(value)) return isoFromEpochMillis(value.time);
+  if (value instanceof Date) return pipe(DateTime.make(value), O.match({
+    onNone: thunkNull,
+    onSome: DateTime.formatIso
+  }));
+  if (S.is(CodeModeURL)(value)) return value.url.href;
   if (value instanceof URL) return value.href;
   if (
-    value instanceof CodeModeRegExp ||
-    value instanceof CodeModeMap ||
-    value instanceof CodeModeSet ||
-    value instanceof CodeModeURLSearchParams ||
+    S.is(CodeModeRegExp)(value) ||
+    S.is(CodeModeMap)(value) ||
+    S.is(CodeModeSet)(value) ||
+    S.is(CodeModeURLSearchParams)(value) ||
     value instanceof RegExp ||
     value instanceof Map ||
     value instanceof Set ||
@@ -441,21 +449,21 @@ const copyBounded = (
 
 /** Copies a guest value out through JSON-compatible boundary semantics. */
 export const copyOut = (value: unknown, mode: CopyOutMode): unknown => {
-  if (P.isUndefined(value) && mode === "nullify") return null;
+  if (P.isUndefined(value) && CopyOutMode.is.nullify(mode)) return null;
   if (P.isNumber(value) && !Number.isFinite(value)) return null;
   if (A.isArray(value)) {
     // Index construction densifies holes, matching JSON-compatible boundary semantics.
     if (A.isArrayEmpty(value)) return A.empty();
     return A.map(A.makeBy(A.length(value), (index) => value[index]), (item) => {
       const copied = copyOut(item, mode);
-      return P.isUndefined(copied) && mode === "json" ? null : copied;
+      return P.isUndefined(copied) && CopyOutMode.is.json(mode) ? null : copied;
     });
   }
   if (P.isObject(value) && !P.isNull(value) && !ToolReference.is(value)) {
     return pipe(
       Struct.entries(value),
       A.map(([key, item]) => [key, copyOut(item, mode)] as const),
-      A.filter(([, item]) => !(P.isUndefined(item) && mode === "json")),
+      A.filter(([, item]) => !(P.isUndefined(item) && CopyOutMode.is.json(mode))),
       Struct.fromEntries
     );
   }
@@ -477,7 +485,7 @@ const canonicalSegments = (path: ReadonlyArray<string>): ReadonlyArray<string> =
 
 const insertTool = (node: ToolNode, segments: ReadonlyArray<string>, tool: Tool.Any): ToolNode => {
   const [head, ...tail] = segments;
-  if (P.isUndefined(head)) return { ...node, tool: O.some(tool) };
+  if (P.isUndefined(head)) return {...node, tool: O.some(tool)};
   if (Str.isEmpty(head)) {
     throw ToolRuntimeError.new("InvalidDataValue", `Tool name '${tool.name}' contains an empty segment.`);
   }
@@ -548,7 +556,7 @@ const flattenTools = (
 ): ReadonlyArray<{ readonly path: string; readonly tool: Tool.Any }> => [
   ...pipe(
     node.tool,
-    O.map((tool) => [{ path: A.join(path, "."), tool }]),
+    O.map((tool) => [{path: A.join(path, "."), tool}]),
     O.getOrElse(A.empty)
   ),
   ...pipe(
@@ -589,7 +597,11 @@ const visibleTools = (root: ToolNode) =>
   pipe(
     flattenTools(root),
     A.sort(byPath),
-    A.map(({ path, tool }) => ({ path, tool, description: describeTool(path, tool) }))
+    A.map(({path, tool}) => ({
+      path,
+      tool,
+      description: describeTool(path, tool)
+    }))
   );
 
 const tokenize = (query: string): ReadonlyArray<string> =>
@@ -619,7 +631,7 @@ const toSearchEntry = (
       [
         path,
         Tool.getDescription(tool) ?? "",
-        ...A.flatMap(inputProperties(tool), ({ name, description }) =>
+        ...A.flatMap(inputProperties(tool), ({name, description}) =>
           pipe(
             description,
             O.match({
@@ -643,8 +655,12 @@ export const prepare = (
     Result.map((root) => {
       const visible = visibleTools(root);
       return DiscoveryPlan.new(
-        A.map(visible, ({ description }) => description),
-        A.map(visible, ({ path, tool, description }) => toSearchEntry(path, tool, description))
+        A.map(visible, ({description}) => description),
+        A.map(visible, ({
+                          path,
+                          tool,
+                          description
+                        }) => toSearchEntry(path, tool, description))
       );
     })
   );
@@ -674,11 +690,11 @@ const search = (
   const exact = Str.isEmpty(pathQuery)
     ? O.none<SearchEntry>()
     : A.findFirst(
-        scoped,
-        (entry) =>
-          entry.description.path === pathQuery ||
-          toolExpression(entry.description.path) === trimmed
-      );
+      scoped,
+      (entry) =>
+        entry.description.path === pathQuery ||
+        toolExpression(entry.description.path) === trimmed
+    );
   const terms = A.map(tokenize(query), termForms);
   const ranked = pipe(
     exact,
@@ -697,9 +713,9 @@ const search = (
               (A.some(forms, (form) => pipe(description, Str.includes(form))) ? 4 : 0) +
               (A.some(forms, (form) => pipe(entry.searchText, Str.includes(form))) ? 2 : 0)
             );
-            return { entry, score };
+            return {entry, score};
           }),
-          A.filter(({ score }) => A.isReadonlyArrayEmpty(terms) || score > 0),
+          A.filter(({score}) => A.isReadonlyArrayEmpty(terms) || score > 0),
           A.sort(
             Order.make<{ readonly entry: SearchEntry; readonly score: number }>(
               (left, right): -1 | 0 | 1 =>
@@ -710,12 +726,12 @@ const search = (
                     : 1
             )
           ),
-          A.map(({ entry }) => entry)
+          A.map(({entry}) => entry)
         ),
     })
   );
   const page = A.take(A.drop(ranked, input.offset), input.limit);
-  const items = A.map(page, ({ description }) =>
+  const items = A.map(page, ({description}) =>
     SearchItem.new(toolExpression(description.path), description.description, description.signature)
   );
   const remaining = Math.max(0, A.length(ranked) - input.offset - A.length(items));
@@ -797,27 +813,27 @@ export const make = <R>(
           ReadonlyArray<ToolCall>,
         ] =>
           pipe(
-          maxToolCalls,
-          O.filter((limit) => A.length(current) >= limit),
-          O.match({
-            onSome: (limit) => [
-              Result.fail(
-                ToolRuntimeError.new(
-                  "ToolCallLimitExceeded",
-                  `Execution exceeded its tool-call limit of ${limit}.`
-                )
-              ),
-              current,
-            ] as const,
-            onNone: () => {
-              const call = ToolCall.new(name);
-              return [
-                Result.succeed(ToolCallStarted.new(A.length(current), name, undefined)),
-                [...current, call],
-              ] as const;
-            },
-          })
-        )
+            maxToolCalls,
+            O.filter((limit) => A.length(current) >= limit),
+            O.match({
+              onSome: (limit) => [
+                Result.fail(
+                  ToolRuntimeError.new(
+                    "ToolCallLimitExceeded",
+                    `Execution exceeded its tool-call limit of ${limit}.`
+                  )
+                ),
+                current,
+              ] as const,
+              onNone: () => {
+                const call = ToolCall.new(name);
+                return [
+                  Result.succeed(ToolCallStarted.new(A.length(current), name, undefined)),
+                  [...current, call],
+                ] as const;
+              },
+            })
+          )
       ).pipe(Effect.flatMap((admission) => Effect.fromResult(admission)));
 
     const observeEnd = <Value, Failure>(

@@ -5,7 +5,7 @@ import {
 import {LiteralKit} from "@beep/schema";
 import * as S from "effect/Schema";
 import {boundedData, coerceToString} from "./StdLib.value.ts";
-import {P} from "@beep/utils";
+import {P, N} from "@beep/utils";
 
 export const numberMethods = LiteralKit(["toFixed", "toPrecision", "toExponential", "toString", "valueOf"]);
 
@@ -57,8 +57,8 @@ export const invokeNumberStatic = (name: string, args: Array<unknown>, node: Ast
     throw InterpreterRuntimeError.new(`Number.${name} is not available.`, node);
   }
   return numberStatics.$match(name, {
-    isInteger: () => Number.isInteger(value),
-    isFinite: () => Number.isFinite(value),
+    isInteger: () => N.isInteger(value),
+    isFinite: () => S.is(S.Finite)(value),
     isNaN: () => Number.isNaN(value),
     isSafeInteger: () => Number.isSafeInteger(value),
     parseInt: () => {

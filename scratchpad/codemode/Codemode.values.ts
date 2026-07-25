@@ -1,5 +1,47 @@
-import { Equal, type Fiber } from "effect";
+import { $ScratchpadId } from "@beep/identity";
+import { Equal, Fiber } from "effect";
+import * as S from "effect/Schema";
 import type { InterpreterFailure } from "./interpreter/Interpreter.model.ts";
+
+const $I = $ScratchpadId.create("codemode/Codemode.values");
+
+const CodeModeFiber = S.declare(
+  (u: unknown): u is Fiber.Fiber<unknown, InterpreterFailure> => Fiber.isFiber(u)
+).pipe(
+  $I.annoteSchema("CodeModeFiber", {
+    description: "Fiber backing one pending CodeMode promise.",
+  })
+);
+
+const NativeRegExp = S.instanceOf(RegExp).pipe(
+  $I.annoteSchema("NativeRegExp", {
+    description: "Native regular expression carrying guest RegExp state.",
+  })
+);
+
+const NativeMap = S.instanceOf(Map).pipe(
+  $I.annoteSchema("NativeMap", {
+    description: "Native map carrying guest Map state.",
+  })
+);
+
+const NativeSet = S.instanceOf(Set).pipe(
+  $I.annoteSchema("NativeSet", {
+    description: "Native set carrying guest Set state.",
+  })
+);
+
+const NativeURLSearchParams = S.instanceOf(URLSearchParams).pipe(
+  $I.annoteSchema("NativeURLSearchParams", {
+    description: "Native URL search parameters carrying guest URLSearchParams state.",
+  })
+);
+
+const NativeURL = S.instanceOf(URL).pipe(
+  $I.annoteSchema("NativeURL", {
+    description: "Native URL carrying guest URL state.",
+  })
+);
 
 /**
  * Promise handle owned by one CodeMode execution.
@@ -7,19 +49,18 @@ import type { InterpreterFailure } from "./interpreter/Interpreter.model.ts";
  * @category runtime
  * @since 0.0.0
  */
-export class CodeModePromise {
-  readonly fiber: Fiber.Fiber<unknown, InterpreterFailure>;
-
-  constructor(fiber: Fiber.Fiber<unknown, InterpreterFailure>) {
-    this.fiber = fiber;
-  }
-
+export class CodeModePromise extends S.Class<CodeModePromise>($I`CodeModePromise`)(
+  { fiber: CodeModeFiber },
+  $I.annote("CodeModePromise", {
+    description: "Promise handle owned by one CodeMode execution.",
+  })
+) {
   static readonly new = (
     fiber: Fiber.Fiber<unknown, InterpreterFailure>
   ): CodeModePromise =>
     // Promise handles are mutable runtime identities. Effect hash collections
     // must not structurally traverse the Fiber stored inside them.
-    Equal.byReferenceUnsafe(new CodeModePromise(fiber));
+    Equal.byReferenceUnsafe(CodeModePromise.make({ fiber }));
 }
 
 /**
@@ -28,14 +69,15 @@ export class CodeModePromise {
  * @category runtime
  * @since 0.0.0
  */
-export class CodeModeDate {
-  time: number;
-
-  constructor(time: number) {
-    this.time = time;
-  }
-
-  static readonly new = (time: number): CodeModeDate => new CodeModeDate(time);
+export class CodeModeDate extends S.Class<CodeModeDate>($I`CodeModeDate`)(
+  // Invalid JavaScript dates carry NaN and must remain representable.
+  // @effect-diagnostics-next-line schemaNumber:off
+  { time: S.Number.pipe(S.mutableKey) },
+  $I.annote("CodeModeDate", {
+    description: "Mutable JavaScript Date value represented by epoch milliseconds.",
+  })
+) {
+  static readonly new = (time: number): CodeModeDate => CodeModeDate.make({ time });
 }
 
 /**
@@ -44,14 +86,14 @@ export class CodeModeDate {
  * @category runtime
  * @since 0.0.0
  */
-export class CodeModeRegExp {
-  readonly regex: RegExp;
-
-  constructor(pattern: string, flags: string) {
-    this.regex = new RegExp(pattern, flags);
-  }
-
-  static readonly new = (pattern: string, flags: string): CodeModeRegExp => new CodeModeRegExp(pattern, flags);
+export class CodeModeRegExp extends S.Class<CodeModeRegExp>($I`CodeModeRegExp`)(
+  { regex: NativeRegExp },
+  $I.annote("CodeModeRegExp", {
+    description: "Mutable JavaScript RegExp value.",
+  })
+) {
+  static readonly new = (pattern: string, flags: string): CodeModeRegExp =>
+    CodeModeRegExp.make({ regex: new RegExp(pattern, flags) });
 
   get lastIndex(): unknown {
     return Reflect.get(this.regex, "lastIndex");
@@ -68,12 +110,15 @@ export class CodeModeRegExp {
  * @category runtime
  * @since 0.0.0
  */
-export class CodeModeMap {
+export class CodeModeMap extends S.Class<CodeModeMap>($I`CodeModeMap`)(
+  { map: NativeMap },
+  $I.annote("CodeModeMap", {
+    description: "Mutable JavaScript Map value.",
+  })
+) {
   // crispen: native Map is the guest-language semantic adapter; a HashMap
   // cannot preserve object identity, SameValueZero, or live mutation.
-  readonly map = new Map<unknown, unknown>();
-
-  static readonly new = (): CodeModeMap => new CodeModeMap();
+  static readonly new = (): CodeModeMap => CodeModeMap.make({ map: new Map() });
 }
 
 /**
@@ -82,12 +127,15 @@ export class CodeModeMap {
  * @category runtime
  * @since 0.0.0
  */
-export class CodeModeSet {
+export class CodeModeSet extends S.Class<CodeModeSet>($I`CodeModeSet`)(
+  { set: NativeSet },
+  $I.annote("CodeModeSet", {
+    description: "Mutable JavaScript Set value.",
+  })
+) {
   // crispen: native Set is the guest-language semantic adapter; a HashSet
   // cannot preserve object identity, SameValueZero, or live mutation.
-  readonly set = new Set<unknown>();
-
-  static readonly new = (): CodeModeSet => new CodeModeSet();
+  static readonly new = (): CodeModeSet => CodeModeSet.make({ set: new Set() });
 }
 
 /**
@@ -96,14 +144,14 @@ export class CodeModeSet {
  * @category runtime
  * @since 0.0.0
  */
-export class CodeModeURLSearchParams {
-  readonly params: URLSearchParams;
-
-  constructor(params: URLSearchParams) {
-    this.params = params;
-  }
-
-  static readonly new = (params: URLSearchParams): CodeModeURLSearchParams => new CodeModeURLSearchParams(params);
+export class CodeModeURLSearchParams extends S.Class<CodeModeURLSearchParams>($I`CodeModeURLSearchParams`)(
+  { params: NativeURLSearchParams },
+  $I.annote("CodeModeURLSearchParams", {
+    description: "Mutable JavaScript URLSearchParams value.",
+  })
+) {
+  static readonly new = (params: URLSearchParams): CodeModeURLSearchParams =>
+    CodeModeURLSearchParams.make({ params });
 }
 
 /**
@@ -112,16 +160,20 @@ export class CodeModeURLSearchParams {
  * @category runtime
  * @since 0.0.0
  */
-export class CodeModeURL {
-  readonly searchParams: CodeModeURLSearchParams;
-  readonly url: URL;
-
-  constructor(url: URL) {
-    this.url = url;
-    this.searchParams = new CodeModeURLSearchParams(url.searchParams);
-  }
-
-  static readonly new = (url: URL): CodeModeURL => new CodeModeURL(url);
+export class CodeModeURL extends S.Class<CodeModeURL>($I`CodeModeURL`)(
+  {
+    searchParams: CodeModeURLSearchParams,
+    url: NativeURL,
+  },
+  $I.annote("CodeModeURL", {
+    description: "Mutable JavaScript URL value.",
+  })
+) {
+  static readonly new = (url: URL): CodeModeURL =>
+    CodeModeURL.make({
+      searchParams: CodeModeURLSearchParams.new(url.searchParams),
+      url,
+    });
 }
 
 /**
@@ -134,9 +186,9 @@ export class CodeModeURL {
 export const isCodeModeValue = (
   value: unknown
 ): value is CodeModeDate | CodeModeRegExp | CodeModeMap | CodeModeSet | CodeModeURL | CodeModeURLSearchParams =>
-  value instanceof CodeModeDate ||
-  value instanceof CodeModeRegExp ||
-  value instanceof CodeModeMap ||
-  value instanceof CodeModeSet ||
-  value instanceof CodeModeURL ||
-  value instanceof CodeModeURLSearchParams;
+  S.is(CodeModeDate)(value) ||
+  S.is(CodeModeRegExp)(value) ||
+  S.is(CodeModeMap)(value) ||
+  S.is(CodeModeSet)(value) ||
+  S.is(CodeModeURL)(value) ||
+  S.is(CodeModeURLSearchParams)(value);

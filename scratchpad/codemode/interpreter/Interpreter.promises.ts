@@ -22,7 +22,9 @@ import {
   InterpreterRuntimeError,
   ProgramThrow,
   PromiseCapabilityFunction,
+  PromiseInstanceMethodName,
   PromiseInstanceMethodReference,
+  PromiseMethodName,
   PromiseMethodReference,
 } from "./Interpreter.model.ts"
 import { caughtErrorValue, normalizeError } from "./Interpreter.errors.ts"
@@ -150,7 +152,7 @@ export const resolvePromiseValue = <R>(
       (identity) => O.exists(MutableRef.get(identity), Eq.equals(value)),
     )
   ) return Effect.fail(selfResolutionError(node))
-  if (value instanceof CodeModePromise) return runner.settlePromise(value)
+  if (S.is(CodeModePromise)(value)) return runner.settlePromise(value)
   if (P.isNull(value) || !P.isObjectKeyword(value) || !P.hasProperty(value, "then")) return Effect.succeed(value)
   const then = SafeObject.make(value).then
   if (typeofValue(then) !== "function") return Effect.succeed(value)
@@ -180,7 +182,7 @@ export const resolvePromise = <R>(
   value: unknown,
   node: AstNode,
 ): Effect.Effect<CodeModePromise, never, R> => {
-  if (value instanceof CodeModePromise) return Effect.succeed(value)
+  if (S.is(CodeModePromise)(value)) return Effect.succeed(value)
   const identity = MutableRef.make<O.Option<CodeModePromise>>(O.none())
   return Effect.map(promises.create(resolvePromiseValue(runner, value, node, O.some(identity))), (promise) => {
     MutableRef.set(identity, O.some(promise))
@@ -224,12 +226,12 @@ export const invokePromiseMethod = <R>(
       }),
     )
 
-  return PromiseMethodReference.match(ref, {
+  return PromiseMethodName.$match(ref.name, {
     resolve: () => resolvePromise(runner, promises, args[0], node),
     reject: () => promises.create(Effect.fail(ProgramThrow.new(args[0]))),
-    all: ({ name }) =>
+    all: () =>
       fromIterable(
-        name,
+        ref.name,
         (items) =>
           settleAfterTurn(
             Effect.all(
@@ -238,9 +240,9 @@ export const invokePromiseMethod = <R>(
             ),
           ),
       ),
-    allSettled: ({ name }) =>
+    allSettled: () =>
       fromIterable(
-        name,
+        ref.name,
         (items) =>
           Effect.gen(function* () {
             const outcomes = A.empty<unknown>()
@@ -267,9 +269,9 @@ export const invokePromiseMethod = <R>(
             return outcomes
           }),
       ),
-    race: ({ name }) =>
+    race: () =>
       fromIterable(
-        name,
+        ref.name,
         (items) =>
           A.isReadonlyArrayEmpty(items)
             ? Effect.fail(
@@ -284,9 +286,9 @@ export const invokePromiseMethod = <R>(
               ),
             ),
       ),
-    any: ({ name }) =>
+    any: () =>
       fromIterable(
-        name,
+        ref.name,
         (items) => {
           const flipped = A.map(items, (item) =>
             Effect.flatMap(
@@ -324,37 +326,37 @@ export const invokePromiseInstanceMethod = <R>(
   node: AstNode,
 ): Effect.Effect<CodeModePromise, never, R> => {
   promises.markObserved(ref.promise)
-  return PromiseInstanceMethodReference.match(ref, {
-    then: ({ promise, name }) => {
-      const method = `Promise.prototype.${name}`
+  return PromiseInstanceMethodName.$match(ref.name, {
+    then: () => {
+      const method = `Promise.prototype.${ref.name}`
       return chainReaction(
         runner,
         promises,
-        promise,
+        ref.promise,
         reactionHandler(args[0], method, node),
         reactionHandler(args[1], method, node),
         method,
         node,
       )
     },
-    catch: ({ promise, name }) => {
-      const method = `Promise.prototype.${name}`
+    catch: () => {
+      const method = `Promise.prototype.${ref.name}`
       return chainReaction(
         runner,
         promises,
-        promise,
+        ref.promise,
         O.none(),
         reactionHandler(args[0], method, node),
         method,
         node,
       )
     },
-    finally: ({ promise, name }) => {
-      const method = `Promise.prototype.${name}`
+    finally: () => {
+      const method = `Promise.prototype.${ref.name}`
       return chainFinally(
         runner,
         promises,
-        promise,
+        ref.promise,
         reactionHandler(args[0], method, node),
         method,
         node,

@@ -3,7 +3,7 @@ import { isBlockedMember, type SafeObject } from "../Codemode.tool-runtime.ts"
 import { CodeModeRegExp } from "../Codemode.values.ts"
 import { coerceToNumber, coerceToString } from "./StdLib.value.ts"
 import { LiteralKit } from "@beep/schema"
-import { P } from "@beep/utils";
+import { P , R,} from "@beep/utils";
 import * as S from "effect/Schema"
 
 
@@ -47,7 +47,7 @@ export const escapeRegexHint =
 export const toHostRegex = (arg: unknown, method: string, node: AstNode, extraFlags = ""): RegExp => {
   // Native parity: an undefined pattern behaves as an empty pattern.
   if (P.isUndefined(arg)) return new RegExp("", extraFlags)
-  if (arg instanceof CodeModeRegExp) return arg.regex
+  if (S.is(CodeModeRegExp)(arg)) return arg.regex
   if (P.isString(arg)) {
     try {
       return new RegExp(arg, extraFlags)
@@ -69,7 +69,7 @@ export const matchToValue = (match: RegExpMatchArray): Array<unknown> => {
   if (P.isNotUndefined(match.index)) result.index = match.index
   if (P.isNotUndefined(match.groups)) {
     const groups: SafeObject = Object.create(null) as SafeObject
-    for (const [key, group] of Object.entries(match.groups)) {
+    for (const [key, group] of R.toEntries(match.groups)) {
       if (!isBlockedMember(key)) Reflect.set(groups, key, group)
     }
     result.groups = groups
@@ -126,9 +126,9 @@ const indicesToValue = (indices: RegExpIndicesArray): IndicesValue => {
   const result: IndicesValue = Array.from(indices, (range) => (range === undefined ? undefined : [...range]))
   if (P.isNotUndefined(indices.groups)) {
     const groups: SafeObject = Object.create(null) as SafeObject
-    for (const [key, range] of Object.entries(indices.groups)) {
+    for (const [key, range] of R.toEntries(indices.groups)) {
       if (!isBlockedMember(key)) {
-        Reflect.set(groups, key, range === undefined ? undefined : [...range])
+        Reflect.set(groups, key, P.isUndefined(range) ? undefined : [...range])
       }
     }
     result.groups = groups

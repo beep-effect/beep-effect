@@ -7,6 +7,7 @@ import {
   CodeModeGenerator,
   CoercionFunction,
   ErrorConstructorReference,
+  GlobalMethodNamespace,
   GlobalMethodReference,
   GlobalNamespace,
   IntrinsicReference,
@@ -142,7 +143,7 @@ export const invokeIntrinsic = <R>(
   if (A.isArray(ref.receiver)) {
     return invokeArrayMethod(runner, ref.receiver, ref.name, args, node);
   }
-  if (ref.receiver instanceof CodeModeDate) {
+  if (S.is(CodeModeDate)(ref.receiver)) {
     const target = ref.receiver;
     const argumentCount = dateSetterArgumentCount(ref.name);
     if (O.isNone(argumentCount)) return Effect.succeed(invokeDateMethod(target, ref.name, [], node));
@@ -155,19 +156,19 @@ export const invokeIntrinsic = <R>(
       (values) => invokeDateMethod(target, ref.name, values, node, initialTime),
     );
   }
-  if (ref.receiver instanceof CodeModeRegExp) {
+  if (S.is(CodeModeRegExp)(ref.receiver)) {
     return Effect.succeed(invokeRegExpMethod(ref.receiver, ref.name, args, node));
   }
-  if (ref.receiver instanceof CodeModeMap) {
+  if (S.is(CodeModeMap)(ref.receiver)) {
     return invokeMapMethod(runner, ref.receiver, ref.name, args, node);
   }
-  if (ref.receiver instanceof CodeModeSet) {
+  if (S.is(CodeModeSet)(ref.receiver)) {
     return invokeSetMethod(runner, ref.receiver, ref.name, args, node);
   }
-  if (ref.receiver instanceof CodeModeURL) {
+  if (S.is(CodeModeURL)(ref.receiver)) {
     return Effect.succeed(invokeURLMethod(ref.receiver, ref.name, node));
   }
-  if (ref.receiver instanceof CodeModeURLSearchParams) {
+  if (S.is(CodeModeURLSearchParams)(ref.receiver)) {
     return invokeURLSearchParamsMethod(runner, ref.receiver, ref.name, args, node);
   }
   throw InterpreterRuntimeError.new(`Method '${ref.name}' is not available.`, node);
@@ -205,19 +206,19 @@ export const invokeGlobalMethod = (ref: GlobalMethodReference, args: Array<unkno
     throw InterpreterRuntimeError.new(`${namespace}.${name} is not available.`, node);
   };
 
-  return GlobalMethodReference.match(ref, {
-    Object: ({ name }) => invokeObjectMethod(name, args, node),
-    Math: ({ name }) => invokeMathMethod(name, args, node),
-    Array: ({ name }) => invokeArrayStatic(name, args, node),
-    Number: ({ name }) => invokeNumberStatic(name, args, node),
-    String: ({ name }) => invokeStringStatic(name, args, node),
-    URL: ({ name }) => invokeURLStatic(name, args, node),
-    Date: ({ name }) => invokeDateStatic(name, args, node),
-    RegExp: ({ name }) => invokeRegExpStatic(name, args, node),
-    console: ({ namespace, name }) => unavailable(namespace, name),
-    Map: ({ namespace, name }) => unavailable(namespace, name),
-    Set: ({ namespace, name }) => unavailable(namespace, name),
-    URLSearchParams: ({ namespace, name }) => unavailable(namespace, name),
+  return GlobalMethodNamespace.$match(ref.namespace, {
+    Object: () => invokeObjectMethod(ref.name, args, node),
+    Math: () => invokeMathMethod(ref.name, args, node),
+    Array: () => invokeArrayStatic(ref.name, args, node),
+    Number: () => invokeNumberStatic(ref.name, args, node),
+    String: () => invokeStringStatic(ref.name, args, node),
+    URL: () => invokeURLStatic(ref.name, args, node),
+    Date: () => invokeDateStatic(ref.name, args, node),
+    RegExp: () => invokeRegExpStatic(ref.name, args, node),
+    console: () => unavailable(ref.namespace, ref.name),
+    Map: () => unavailable(ref.namespace, ref.name),
+    Set: () => unavailable(ref.namespace, ref.name),
+    URLSearchParams: () => unavailable(ref.namespace, ref.name),
   });
 };
 
@@ -281,7 +282,7 @@ const invokeStringMethod = (value: string, name: string, args: Array<unknown>, n
   const optNum = (index: number): number | undefined => (args[index] === undefined ? undefined : num(index));
   const optStr = (index: number): string | undefined => (args[index] === undefined ? undefined : str(index));
   const rejectRegex = (): void => {
-    if (args[0] instanceof CodeModeRegExp) {
+    if (S.is(CodeModeRegExp)(args[0])) {
       throw InterpreterRuntimeError.new(
         `String.${name} cannot take a regular expression; use regex.test(string) or String.search instead.`,
         node,
@@ -328,7 +329,7 @@ const invokeStringMethod = (value: string, name: string, args: Array<unknown>, n
         const requestedLimit = optNum(1);
         return requestedLimit !== undefined && requestedLimit >>> 0 === 0 ? [] : [value];
       }
-      if (args[0] instanceof CodeModeRegExp) {
+      if (S.is(CodeModeRegExp)(args[0])) {
         return value.split(args[0].regex, optNum(1));
       }
       const requestedLimit = optNum(1);
@@ -347,7 +348,7 @@ const invokeStringMethod = (value: string, name: string, args: Array<unknown>, n
       return value.endsWith(str(0), optNum(1));
   };
   const replace = (all: boolean): string => {
-      if (args[0] instanceof CodeModeRegExp) {
+      if (S.is(CodeModeRegExp)(args[0])) {
         const pattern = args[0].regex;
         const replacement = str(1);
         if (all && !pattern.global) {
@@ -415,7 +416,7 @@ const arrayLikeSource = (source: unknown, node: AstNode): {
   readonly length: number;
   readonly source: object
 } => {
-  if (source instanceof CodeModePromise) {
+  if (S.is(CodeModePromise)(source)) {
     throw InterpreterRuntimeError.new(
       "Array.from received an un-awaited Promise; await it before creating the array.",
       node,
@@ -538,7 +539,7 @@ const coerceGroupByPropertyKey = <R>(
   if (value === null || typeof value !== "object" || A.isArray(value) || isCodeModeValue(value)) {
     return Effect.succeed(coerceToString(value));
   }
-  if (value instanceof CodeModePromise) return Effect.succeed("[object Promise]");
+  if (S.is(CodeModePromise)(value)) return Effect.succeed("[object Promise]");
   if (isRuntimeReference(value)) {
     throw InterpreterRuntimeError.new("Object.groupBy callback must return a data value.", node, "InvalidDataValue");
   }
@@ -594,7 +595,7 @@ const invokeStringReplacer = <R>(
   };
 
   const pattern = args[0];
-  if (pattern instanceof CodeModeRegExp) {
+  if (S.is(CodeModeRegExp)(pattern)) {
     if (name === "replaceAll" && !pattern.regex.global) {
       throw InterpreterRuntimeError.new(
         `String.replaceAll requires a regular expression with the global (g) flag: write /${pattern.regex.source}/${pattern.regex.flags}g, or use String.replace to replace only the first match.`,
@@ -617,7 +618,7 @@ const invokeStringReplacer = <R>(
       // Error values are branded plain objects; boundedData would strip the brand before coercion.
       output.push(
         value.slice(end, match.offset),
-        replacement instanceof CodeModePromise
+        S.is(CodeModePromise)(replacement)
           ? "[object Promise]"
           : P.isNotUndefined(errorBrandName(replacement))
             ? coerceToString(replacement)
@@ -808,14 +809,14 @@ const copySet = (source: CodeModeSet): CodeModeSet => {
 };
 
 const loadSetRecord = <R>(runner: CallbackRunner<R>, source: unknown, name: string, node: AstNode) => {
-  if (source instanceof CodeModeSet) {
+  if (S.is(CodeModeSet)(source)) {
     return Effect.succeed({
       size: source.set.size,
       has: (item: unknown) => Effect.succeed(source.set.has(item)),
       keys: () => Effect.succeed(source.set.values()),
     });
   }
-  if (source instanceof CodeModeMap) {
+  if (S.is(CodeModeMap)(source)) {
     return Effect.succeed({
       size: source.map.size,
       has: (item: unknown) => Effect.succeed(source.map.has(item)),

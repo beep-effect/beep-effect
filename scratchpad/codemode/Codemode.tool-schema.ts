@@ -6,7 +6,7 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { JSONSchema, SchemaUtils } from "@beep/schema";
-import { A, O, P, R, Str, pipe } from "@beep/utils";
+import { A, O, P, R, Str, thunkFalse, pipe } from "@beep/utils";
 import { HashSet, JsonPointer, Result } from "effect";
 import type { JsonSchema } from "effect/JsonSchema";
 import * as S from "effect/Schema";
@@ -177,7 +177,7 @@ const isEmptyNode = (node: Node): boolean =>
   pipe(
     S.encodeUnknownResult(JSONSchema.NodeCodec)(node),
     Result.match({
-      onFailure: () => false,
+      onFailure: thunkFalse,
       onSuccess: R.isEmptyReadonlyRecord,
     })
   );
@@ -530,7 +530,6 @@ export class InputProperty extends S.Class<InputProperty>($I`InputProperty`)(
     required: boolean
   ): InputProperty => InputProperty.make({ name, description, required });
 }
-
 type ToolInputDocument = {
   readonly schema: Node;
   readonly definitions: Definitions;

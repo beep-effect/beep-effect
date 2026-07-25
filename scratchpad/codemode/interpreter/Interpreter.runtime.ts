@@ -9,55 +9,59 @@ import {
   MutableHashMap,
   MutableHashSet,
   MutableRef,
-  Random,
+  Random
 } from "effect";
 import * as S from "effect/Schema";
 import {
   SafeObject as SafeObjectSchema,
   type SafeObject
 } from "@beep/schema/SafeObject";
-import {A, O, P, pipe} from "@beep/utils";
+import {A, O, P, pipe, thunkFalse} from "@beep/utils";
 import {
   isBlockedMember,
   ToolReference,
   ToolRuntimeError
 } from "../Codemode.tool-runtime.ts";
 import {
+  asNode,
   type AstNode,
   AsyncIteratorSymbol,
-  asNode,
   Binding,
   CodeModeFunction,
   CodeModeGenerator,
   CoercionFunction,
+  CoercionFunctionName,
   ComputedValue,
+  ErrorConstructorName,
   ErrorConstructorReference,
-  GlobalMethodReference,
-  GlobalNamespace,
+  GeneratorMethodKind,
   GeneratorMethodReference,
+  GeneratorRequestKind,
   GeneratorReturn,
-  type GeneratorRequestKind,
-  type GlobalNamespaceName,
   getArray,
   getBoolean,
   getNode,
   getOptionalNode,
   getString,
-  IntrinsicReference,
+  GlobalMethodReference,
+  GlobalMethodNamespace,
+  GlobalNamespace,
+  GlobalNamespaceName,
   type InterpreterFailure,
   InterpreterRuntimeError,
+  IntrinsicReference,
   isRecord,
   IteratorSymbol,
   IteratorSymbols,
   JsonMethodReference,
   MemberReference,
   OptionalShortCircuit,
+  type ProgramNode,
+  ProgramThrow,
   PromiseCapabilityFunction,
   PromiseInstanceMethodReference,
   PromiseMethodReference,
   PromiseNamespace,
-  ProgramThrow,
-  type ProgramNode,
   SearchFunction,
   StatementBreak,
   StatementContinue,
@@ -102,62 +106,50 @@ import {
 import {ScopeStack} from "./Interpreter.scope.ts";
 import {
   arrayMethods,
-  mapMethods,
-  mapStatics,
-  setMethods
-} from "../stdlib/index.ts";
-import {consoleMethods, formatConsoleMessage} from "../stdlib/index.ts";
-import {dateMethods, dateStatics} from "../stdlib/index.ts";
-import {
-  invokeJsonMethod,
-  jsonStatics,
-} from "../stdlib/index.ts";
-import {
-  invokeMathSumPrecise,
-  mathConstants,
-  mathMethods
-} from "../stdlib/index.ts";
-import {
-  numberConstants,
-  numberMethods,
-  numberStatics
-} from "../stdlib/index.ts";
-import {
-  invokeObjectFromEntries,
-  objectMethodsPreservingIdentity,
-  objectStatics
-} from "../stdlib/index.ts";
-import {promiseStatics} from "../stdlib/index.ts";
-import {
-  escapeRegexHint,
-  regexpMethods,
-  regexpProperties,
-  regexpStatics,
-  regexFailureReason,
-} from "../stdlib/index.ts";
-import {stringMethods, stringStatics} from "../stdlib/index.ts";
-import {
-  urlMethods,
-  urlProperties,
-  urlSearchParamsMethods,
-  urlStatics,
-  urlWritableProperties,
-  invokeUriFunction,
-  uriArgument,
-  urlArgument,
-} from "../stdlib/index.ts";
-import {
   boundedData,
   coerceToNumber,
   coerceToString,
   compoundOperators,
+  ConsoleMethod,
+  dateMethods,
+  dateStatics,
   errorBrandName,
   errorConstructors,
+  escapeRegexHint,
+  formatConsoleMessage,
   invokeCoercion,
-  valueConstructors,
+  invokeJsonMethod,
+  invokeMathSumPrecise,
+  invokeObjectFromEntries,
+  invokeUriFunction,
+  jsonStatics,
+  mapMethods,
+  mapStatics,
+  mathConstants,
+  mathMethods,
+  numberConstants,
+  numberMethods,
+  numberStatics,
+  objectMethodsPreservingIdentity,
+  objectStatics,
+  promiseStatics,
+  regexFailureReason,
+  regexpMethods,
+  regexpProperties,
+  regexpStatics,
+  setMethods,
+  stringMethods,
+  stringStatics,
+  uriArgument,
+  urlArgument,
+  UrlMethod,
+  urlProperties,
+  UrlSearchParamsMethod,
+  UrlStatic,
+  urlWritableProperties,
+  valueConstructors
 } from "../stdlib/index.ts";
 import {
-  isCodeModeValue,
   CodeModeDate,
   CodeModeMap,
   CodeModePromise,
@@ -165,17 +157,18 @@ import {
   CodeModeSet,
   CodeModeURL,
   CodeModeURLSearchParams,
+  isCodeModeValue,
 } from "../Codemode.values.ts";
 
 const globalStaticMembers: Partial<Record<GlobalNamespaceName, S.Top>> = {
   Object: objectStatics,
   Math: mathMethods,
   Array: arrayStatics,
-  console: consoleMethods,
+  console: ConsoleMethod,
   Date: dateStatics,
   RegExp: regexpStatics,
   Map: mapStatics,
-  URL: urlStatics,
+  URL: UrlStatic,
 };
 
 const MAX_ARRAY_LENGTH = 4_294_967_295;
@@ -196,10 +189,10 @@ const calleeDescription = (callee: AstNode): string => {
     const key =
       callee.computed !== true && property.type === "Identifier"
         ? getString(property, "name")
-        : property.type === "Literal" && typeof property.value === "string"
+        : property.type === "Literal" && P.isString(property.value)
           ? property.value
           : undefined;
-    if (object.type === "Identifier" && key !== undefined) return `${getString(object, "name")}.${key}`;
+    if (object.type === "Identifier" && P.isNotUndefined(key)) return `${getString(object, "name")}.${key}`;
   }
   return "The called value";
 };
@@ -214,38 +207,38 @@ const instanceofValue = (lhs: unknown, rhs: unknown, node: AstNode): boolean => 
 
   if (S.is(ErrorConstructorReference)(rhs)) {
     const brand = errorBrandName(lhs);
-    return ErrorConstructorReference.match(rhs, {
+    return ErrorConstructorName.$match(rhs.name, {
       Error: () => P.isNotUndefined(brand),
-      TypeError: () => brand === "TypeError",
-      RangeError: () => brand === "RangeError",
-      SyntaxError: () => brand === "SyntaxError",
-      ReferenceError: () => brand === "ReferenceError",
-      EvalError: () => brand === "EvalError",
-      URIError: () => brand === "URIError",
-      AggregateError: () => brand === "AggregateError",
+      TypeError: () => ErrorConstructorName.is.TypeError(brand),
+      RangeError: () => ErrorConstructorName.is.RangeError(brand),
+      SyntaxError: () => ErrorConstructorName.is.SyntaxError(brand),
+      ReferenceError: () => ErrorConstructorName.is.ReferenceError(brand),
+      EvalError: () => ErrorConstructorName.is.EvalError(brand),
+      URIError: () => ErrorConstructorName.is.URIError(brand),
+      AggregateError: () => ErrorConstructorName.is.AggregateError(brand),
     });
   }
   if (S.is(GlobalNamespace)(rhs)) {
-    return GlobalNamespace.match(rhs, {
-      Date: () => lhs instanceof CodeModeDate,
-      RegExp: () => lhs instanceof CodeModeRegExp,
-      Map: () => lhs instanceof CodeModeMap,
-      Set: () => lhs instanceof CodeModeSet,
-      URL: () => lhs instanceof CodeModeURL,
-      URLSearchParams: () => lhs instanceof CodeModeURLSearchParams,
+    return GlobalNamespaceName.$match(rhs.name, {
+      Date: () => S.is(CodeModeDate)(lhs),
+      RegExp: () => S.is(CodeModeRegExp)(lhs),
+      Map: () => S.is(CodeModeMap)(lhs),
+      Set: () => S.is(CodeModeSet)(lhs),
+      URL: () => S.is(CodeModeURL)(lhs),
+      URLSearchParams: () => S.is(CodeModeURLSearchParams)(lhs),
       Array: () => A.isArray(lhs),
-      Object: () => lhs !== null && (typeof lhs === "object" || typeofValue(lhs) === "function"),
+      Object: () => P.isNotNull(lhs) && (P.isObjectKeyword(lhs) || typeofValue(lhs) === "function"),
       Math: unsupported,
       JSON: unsupported,
       console: unsupported,
     });
   }
-  if (S.is(PromiseNamespace)(rhs)) return lhs instanceof CodeModePromise;
+  if (S.is(PromiseNamespace)(rhs)) return S.is(CodeModePromise)(lhs);
   if (S.is(CoercionFunction)(rhs)) {
-    return CoercionFunction.match(rhs, {
-      Boolean: () => false,
-      Number: () => false,
-      String: () => false,
+    return CoercionFunctionName.$match(rhs.name, {
+      Boolean: thunkFalse,
+      Number: thunkFalse,
+      String: thunkFalse,
       parseInt: unsupported,
       parseFloat: unsupported,
       isFinite: unsupported,
@@ -263,7 +256,7 @@ const collectPatternNames = (pattern: AstNode): Array<string> =>
     Match.when("ArrayPattern", () =>
       A.flatMap(
         getArray(pattern, "elements"),
-        (element) => element === null ? [] : collectPatternNames(asNode(element, "elements")),
+        (element) => P.isNull(element) ? A.empty() : collectPatternNames(asNode(element, "elements")),
       )),
     Match.when("ObjectPattern", () =>
       A.flatMap(getArray(pattern, "properties"), (property) => {
@@ -290,10 +283,10 @@ const loopDeclaration = (left: AstNode, statement: "for...of" | "for...in") => {
 };
 
 type CustomIterator = {
-  iterator: SafeObject | CodeModeGenerator
-  next: unknown
-  asynchronous: boolean
-}
+  readonly iterator: SafeObject | CodeModeGenerator;
+  readonly next: unknown;
+  readonly asynchronous: boolean;
+};
 
 const OpaqueMemberReference = S.Union([
   ToolReference,
@@ -315,7 +308,7 @@ const copyIteratorSymbols = (
   consumed: O.Option<MutableHashSet.MutableHashSet<PropertyKey>> = O.none(),
 ): void => {
   for (const symbol of IteratorSymbols) {
-    if (!O.exists(consumed, (keys) => MutableHashSet.has(keys, symbol)) && Object.hasOwn(source, symbol))
+    if (!O.exists(consumed, (keys) => MutableHashSet.has(keys, symbol)) && P.hasProperty(source, symbol))
       Reflect.set(target, symbol, Reflect.get(source, symbol));
   }
 };
@@ -329,20 +322,20 @@ const escapesLoopLabels = (
   O.exists(label, (name) => !O.exists(labels, (names) => MutableHashSet.has(names, name)));
 
 type GeneratorRequest = {
-  kind: GeneratorRequestKind
-  value: unknown
-  response: Deferred.Deferred<unknown, InterpreterFailure>
-}
+  readonly kind: GeneratorRequestKind;
+  readonly value: unknown;
+  readonly response: Deferred.Deferred<unknown, InterpreterFailure>;
+};
 
 type GeneratorState = {
-  started: boolean
-  completed: boolean
-  draining: boolean
-  active: O.Option<GeneratorRequest>
-  pending: Array<GeneratorRequest>
-  pendingIndex: number
-  available: O.Option<Deferred.Deferred<void>>
-}
+  started: boolean;
+  completed: boolean;
+  draining: boolean;
+  active: O.Option<GeneratorRequest>;
+  pending: Array<GeneratorRequest>;
+  pendingIndex: number;
+  available: O.Option<Deferred.Deferred<void>>;
+};
 
 const promiseResolutionNode: AstNode = {type: "PromiseResolution"};
 
@@ -370,7 +363,7 @@ export class Interpreter<R> {
     invokeSearch: (args: Array<unknown>) => Effect.Effect<unknown, InterpreterFailure, R>,
     toolKeys: (path: ReadonlyArray<string>) => ReadonlyArray<string>,
     promises: PromiseRuntime<R>,
-    logs: Array<string> = [],
+    logs = A.empty<string>(),
   ) {
     const globalScope = MutableHashMap.empty<string, Binding>();
     this.scopes = ScopeStack.new([globalScope]);
@@ -471,7 +464,7 @@ export class Interpreter<R> {
   }
 
   // Fiber exits make settlement idempotent; yielding prevents inline continuation.
-  private settlePromise(promise: CodeModePromise): Effect.Effect<unknown, InterpreterFailure, never> {
+  private settlePromise(promise: CodeModePromise): Effect.Effect<unknown, InterpreterFailure> {
     const promises = this.promises;
     return Effect.suspend(() => {
       promises.markObserved(promise);
@@ -914,13 +907,13 @@ export class Interpreter<R> {
   private syncIterator(value: unknown, node: AstNode) {
     const iterator = A.isArray(value)
       ? value[Symbol.iterator]()
-      : typeof value === "string"
+      : P.isString(value)
         ? value[Symbol.iterator]()
-        : value instanceof CodeModeMap
+        : S.is(CodeModeMap)(value)
           ? value.map.entries()
-          : value instanceof CodeModeSet
+          : S.is(CodeModeSet)(value)
             ? value.set.values()
-            : value instanceof CodeModeURLSearchParams
+            : S.is(CodeModeURLSearchParams)(value)
               ? value.params.entries()
               : undefined;
     if (iterator !== undefined) {
@@ -1136,8 +1129,9 @@ export class Interpreter<R> {
         }
 
         if (StatementResult.guards.Continue(result)) {
-          if (escapesLoopLabels(result.label, labels)) return result;
-          continue;
+          if (escapesLoopLabels(result.label, labels)) {
+            return result;
+          }
         }
       }
 
@@ -1317,7 +1311,7 @@ export class Interpreter<R> {
           if (isBlockedMember(String(key))) {
             throw InterpreterRuntimeError.new(`Property '${String(key)}' is not available.`, property);
           }
-          MutableHashSet.add(consumed, typeof key === "symbol" ? key : String(key));
+          MutableHashSet.add(consumed, P.isSymbol(key) ? key : String(key));
           yield* self.declarePattern(
             getNode(property, "value"),
             self.destructuringPropertyValue(value as SafeObject | Array<unknown>, key),
@@ -1384,7 +1378,7 @@ export class Interpreter<R> {
           if (isBlockedMember(String(key))) {
             throw InterpreterRuntimeError.new(`Property '${String(key)}' is not available.`, property);
           }
-          MutableHashSet.add(consumed, typeof key === "symbol" ? key : String(key));
+          MutableHashSet.add(consumed, P.isSymbol(key) ? key : String(key));
           yield* self.assignPattern(getNode(property, "value"), self.destructuringPropertyValue(source, key), property);
         }
         return;
@@ -1416,7 +1410,7 @@ export class Interpreter<R> {
       let done = false;
       for (const [index, item] of getArray(pattern, "elements").entries()) {
         if (done) {
-          if (item === null) continue;
+          if (P.isNull(item)) continue;
           const element = asNode(item, `elements[${index}]`);
           yield* consume(
             element.type === "RestElement" ? getNode(element, "argument") : element,
@@ -1428,10 +1422,10 @@ export class Interpreter<R> {
         }
         const step = yield* cursor.next;
         done = step.done;
-        if (item === null) continue;
+        if (P.isNull(item)) continue;
         const element = asNode(item, `elements[${index}]`);
         if (element.type === "RestElement") {
-          const rest = A.empty<unknown>();;
+          const rest = A.empty<unknown>();
           if (!step.done) rest.push(step.value);
           while (!done) {
             const next = yield* cursor.next;
@@ -1475,7 +1469,7 @@ export class Interpreter<R> {
     return Match.value(node.type).pipe(
       Match.when("Literal", () => {
         const regex = node.regex;
-        if (isRecord(regex) && typeof regex.pattern === "string") {
+        if (isRecord(regex) && P.isString(regex.pattern)) {
           return Effect.sync(() =>
             this.constructRegExp([regex.pattern, typeof regex.flags === "string" ? regex.flags : ""], node),
           );
@@ -1567,7 +1561,7 @@ export class Interpreter<R> {
   private constructArray(args: Array<unknown>, node: AstNode): Array<unknown> {
     if (args.length !== 1) return [...args];
     const first = args[0];
-    if (typeof first !== "number") return [first];
+    if (!P.isNumber(first)) return [first];
     if (!Number.isInteger(first) || first < 0 || first > 4294967295) {
       throw InterpreterRuntimeError.new("Invalid array length.", node).as("RangeError");
     }
@@ -1593,9 +1587,9 @@ export class Interpreter<R> {
     }
     if (args.length === 1) {
       const arg = args[0];
-      if (arg instanceof CodeModeDate) return Effect.succeed(CodeModeDate.new(arg.time));
+      if (S.is(CodeModeDate)(arg)) return Effect.succeed(CodeModeDate.new(arg.time));
       return Effect.map(this.toDatePrimitive(arg, node), (value) =>
-        typeof value === "string"
+        P.isString(value)
           ? CodeModeDate.new(Date.parse(value))
           : CodeModeDate.new(
             pipe(
@@ -1656,7 +1650,7 @@ export class Interpreter<R> {
   private constructRegExp(args: Array<unknown>, node: AstNode): CodeModeRegExp {
     const first = args[0];
     const pattern =
-      first instanceof CodeModeRegExp ? first.regex.source : P.isUndefined(first) ? "" : coerceToString(first);
+      S.is(CodeModeRegExp)(first) ? first.regex.source : P.isUndefined(first) ? "" : coerceToString(first);
     const flagsArg = args[1];
     if (flagsArg !== undefined && typeof flagsArg !== "string") {
       throw InterpreterRuntimeError.new(
@@ -1664,7 +1658,7 @@ export class Interpreter<R> {
         node,
       ).as("SyntaxError");
     }
-    const flags = flagsArg ?? (first instanceof CodeModeRegExp ? first.regex.flags : "");
+    const flags = flagsArg ?? (S.is(CodeModeRegExp)(first) ? first.regex.flags : "");
     try {
       return CodeModeRegExp.new(pattern, flags);
     } catch (error) {
@@ -1747,7 +1741,7 @@ export class Interpreter<R> {
 
   private constructURLSearchParams(init: unknown, node: AstNode): Effect.Effect<CodeModeURLSearchParams, InterpreterFailure, R> {
     if (P.isUndefined(init)) return Effect.succeed(CodeModeURLSearchParams.new(new URLSearchParams()));
-    if (init instanceof CodeModeURLSearchParams) {
+    if (S.is(CodeModeURLSearchParams)(init)) {
       return Effect.succeed(CodeModeURLSearchParams.new(new URLSearchParams(init.params)));
     }
     if (typeof init === "string") return Effect.succeed(CodeModeURLSearchParams.new(new URLSearchParams(init)));
@@ -1840,7 +1834,7 @@ export class Interpreter<R> {
     // Null-prototype data needs explicit primitive coercion; identity and `in` retain raw objects.
     // Dates use their default string hint for addition and loose equality, and epoch time elsewhere.
     const coerceOperand = (operand: unknown): unknown => {
-      if (operand instanceof CodeModeDate) {
+      if (S.is(CodeModeDate)(operand)) {
         return operator === "+" || operator === "==" || operator === "!=" ? coerceToString(operand) : operand.time;
       }
       return operand !== null && typeof operand === "object" ? coerceToString(operand) : operand;
@@ -1913,7 +1907,7 @@ export class Interpreter<R> {
         throw InterpreterRuntimeError.new("Unary operators require data values.", node, "InvalidDataValue");
       }
       const operand =
-        value instanceof CodeModeDate
+        S.is(CodeModeDate)(value)
           ? value.time
           : P.isNotNull(value) && P.isObjectKeyword(value)
             ? coerceToString(value)
@@ -2105,11 +2099,11 @@ export class Interpreter<R> {
             : requested;
         };
 
-        return yield* GeneratorMethodReference.match(callable, {
-          iterator: ({ generator }) => Effect.succeed(generator),
-          next: ({ generator }) => request(generator, "next"),
-          return: ({ generator }) => request(generator, "return"),
-          throw: ({ generator }) => request(generator, "throw"),
+        return yield* GeneratorMethodKind.$match(callable.kind, {
+          iterator: () => Effect.succeed(callable.generator),
+          next: () => request(callable.generator, "next"),
+          return: () => request(callable.generator, "return"),
+          throw: () => request(callable.generator, "throw"),
         });
       }
       if (S.is(IntrinsicReference)(callable)) {
@@ -2126,47 +2120,47 @@ export class Interpreter<R> {
             ),
           );
 
-        return yield* GlobalMethodReference.match(callable, {
-          console: ({ name }) => Effect.succeed(self.invokeConsole(name, args, node)),
-          Object: (reference) => {
+        return yield* GlobalMethodNamespace.$match(callable.namespace, {
+          console: () => Effect.succeed(self.invokeConsole(callable.name, args, node)),
+          Object: () => {
             if (S.is(ToolReference)(args[0])) {
-              return Effect.succeed(self.invokeObjectMethodOnTools(reference.name, args[0], node));
+              return Effect.succeed(self.invokeObjectMethodOnTools(callable.name, args[0], node));
             }
-            if (S.is(objectMethodsPreservingIdentity)(reference.name)) {
-              return reference.name === "fromEntries"
+            if (S.is(objectMethodsPreservingIdentity)(callable.name)) {
+              return callable.name === "fromEntries"
                 ? invokeObjectFromEntries(self.runner, args[0], node)
-                : Effect.succeed(invokeGlobalMethod(reference, args, node));
+                : Effect.succeed(invokeGlobalMethod(callable, args, node));
             }
-            return reference.name === "groupBy"
+            return callable.name === "groupBy"
               ? invokeGroupBy(self.runner, "Object", args, node)
-              : invokeBounded(reference);
+              : invokeBounded(callable);
           },
-          Math: (reference) => {
-            if (reference.name === "random") return Random.next;
-            return reference.name === "sumPrecise"
+          Math: () => {
+            if (callable.name === "random") return Random.next;
+            return callable.name === "sumPrecise"
               ? invokeMathSumPrecise(self.runner, args[0], node)
-              : invokeBounded(reference);
+              : invokeBounded(callable);
           },
-          Array: (reference) => {
-            if (reference.name === "from") return invokeArrayFrom(self.runner, args, node);
-            return reference.name === "of"
-              ? Effect.succeed(invokeGlobalMethod(reference, args, node))
-              : invokeBounded(reference);
+          Array: () => {
+            if (callable.name === "from") return invokeArrayFrom(self.runner, args, node);
+            return callable.name === "of"
+              ? Effect.succeed(invokeGlobalMethod(callable, args, node))
+              : invokeBounded(callable);
           },
-          Map: (reference) =>
-            reference.name === "groupBy"
+          Map: () =>
+            callable.name === "groupBy"
               ? invokeGroupBy(self.runner, "Map", args, node)
-              : invokeBounded(reference),
-          Date: (reference) =>
-            reference.name === "now"
+              : invokeBounded(callable),
+          Date: () =>
+            callable.name === "now"
               ? Effect.map(DateTime.now, DateTime.toEpochMillis)
-              : invokeBounded(reference),
-          RegExp: invokeBounded,
-          Set: invokeBounded,
-          URL: invokeBounded,
-          URLSearchParams: invokeBounded,
-          Number: invokeBounded,
-          String: invokeBounded,
+              : invokeBounded(callable),
+          RegExp: () => invokeBounded(callable),
+          Set: () => invokeBounded(callable),
+          URL: () => invokeBounded(callable),
+          URLSearchParams: () => invokeBounded(callable),
+          Number: () => invokeBounded(callable),
+          String: () => invokeBounded(callable),
         });
       }
       if (S.is(JsonMethodReference)(callable)) {
@@ -2182,10 +2176,10 @@ export class Interpreter<R> {
         return yield* self.invokeSearch(args);
       }
       if (S.is(ErrorConstructorReference)(callable)) {
-        const construct = ({ name }: ErrorConstructorReference) =>
-          Effect.succeed(constructErrorValue(name, args));
+        const construct = () =>
+          Effect.succeed(constructErrorValue(callable.name, args));
 
-        return yield* ErrorConstructorReference.match(callable, {
+        return yield* ErrorConstructorName.$match(callable.name, {
           Error: construct,
           TypeError: construct,
           RangeError: construct,
@@ -2206,7 +2200,7 @@ export class Interpreter<R> {
             InterpreterRuntimeError.new(`${name} is not a function.`, node).as("TypeError"),
           );
 
-        return yield* GlobalNamespace.match(callable, {
+        return yield* GlobalNamespaceName.$match(callable.name, {
           // Real JS permits calling Array, Object, Date, and RegExp without new.
           Array: () => Effect.succeed(self.constructArray(args, node)),
           Object: () => Effect.succeed(self.constructObject(args, node)),
@@ -2214,13 +2208,13 @@ export class Interpreter<R> {
           // deterministic and must not leak the host timezone.
           Date: () => Effect.map(DateTime.now, DateTime.formatIso),
           RegExp: () => Effect.sync(() => self.constructRegExp(args, node)),
-          Map: ({ name }) => requiresNew(name),
-          Set: ({ name }) => requiresNew(name),
-          URL: ({ name }) => requiresNew(name),
-          URLSearchParams: ({ name }) => requiresNew(name),
-          Math: ({ name }) => notFunction(name),
-          JSON: ({ name }) => notFunction(name),
-          console: ({ name }) => notFunction(name),
+          Map: () => requiresNew(callable.name),
+          Set: () => requiresNew(callable.name),
+          URL: () => requiresNew(callable.name),
+          URLSearchParams: () => requiresNew(callable.name),
+          Math: () => notFunction(callable.name),
+          JSON: () => notFunction(callable.name),
+          console: () => notFunction(callable.name),
         });
       }
       if (S.is(PromiseNamespace)(callable)) {
@@ -2255,7 +2249,7 @@ export class Interpreter<R> {
   }
 
   private invokeConsole(name: string, args: Array<unknown>, node: AstNode): undefined {
-    if (!S.is(consoleMethods)(name)) throw InterpreterRuntimeError.new(`console.${name} is not available.`, node);
+    if (!S.is(ConsoleMethod)(name)) throw InterpreterRuntimeError.new(`console.${name} is not available.`, node);
     this.logs.push(formatConsoleMessage(name, args));
     return undefined;
   }
@@ -2263,7 +2257,7 @@ export class Interpreter<R> {
   private evaluateCallArguments(argNodes: Array<unknown>): Effect.Effect<Array<unknown>, InterpreterFailure, R> {
     const self = this;
     return Effect.gen(function* () {
-      const args = A.empty<unknown>();;
+      const args = A.empty<unknown>();
       for (const [index, arg] of argNodes.entries()) {
         const argNode = asNode(arg, `arguments[${index}]`);
         if (argNode.type === "SpreadElement") {
@@ -2354,7 +2348,7 @@ export class Interpreter<R> {
       completed: false,
       draining: false,
       active: O.none(),
-      pending: [],
+      pending: A.empty(),
       pendingIndex: 0,
       available: O.none(),
     };
@@ -2441,11 +2435,10 @@ export class Interpreter<R> {
       }
       return Deferred.await(request.response);
     };
-    const generator = CodeModeGenerator.new(
+    return CodeModeGenerator.new(
       asynchronous,
       (kind, value, node) => Effect.provide(requestGenerator(kind, value, node), context),
     );
-    return generator;
   }
 
   private completeGeneratorRequests(state: GeneratorState, asynchronous: boolean): Effect.Effect<void, never, R> {
@@ -2454,7 +2447,7 @@ export class Interpreter<R> {
       while (true) {
         const pending = self.dequeueGeneratorRequest(state);
         if (P.isUndefined(pending)) return;
-        if (pending.kind === "throw") {
+        if (GeneratorRequestKind.is.throw(pending.kind)) {
           Deferred.doneUnsafe(pending.response, Exit.fail(ProgramThrow.new(pending.value)));
           continue;
         }
@@ -2472,7 +2465,7 @@ export class Interpreter<R> {
         Deferred.doneUnsafe(
           pending.response,
           Exit.succeed({
-            value: pending.kind === "return" ? pending.value : undefined,
+            value: GeneratorRequestKind.is.return(pending.kind) ? pending.value : undefined,
             done: true
           }),
         );
@@ -2544,10 +2537,10 @@ export class Interpreter<R> {
     return Effect.gen(function* () {
       if (
         Array.isArray(value) ||
-        typeof value === "string" ||
-        value instanceof CodeModeMap ||
-        value instanceof CodeModeSet ||
-        value instanceof CodeModeURLSearchParams
+        P.isString(value) ||
+        S.is(CodeModeMap)(value) ||
+        S.is(CodeModeSet)(value) ||
+        S.is(CodeModeURLSearchParams)(value)
       ) {
         const cursor = yield* self.syncIterator(value, node);
         if (P.isUndefined(cursor)) throw InterpreterRuntimeError.new("Built-in iterator is unavailable.", node);
@@ -2687,12 +2680,12 @@ export class Interpreter<R> {
 
   private evaluateArrayExpression(node: AstNode): Effect.Effect<Array<unknown>, InterpreterFailure, R> {
     const elements = getArray(node, "elements");
-    const values = A.empty<unknown>();;
+    const values = A.empty<unknown>();
 
     const self = this;
     return Effect.gen(function* () {
       for (const elementValue of elements) {
-        if (elementValue === null) {
+        if (P.isNull(elementValue)) {
           // A literal elision is a real hole, like JS: extend length without an own index.
           values.length += 1;
           continue;
@@ -2728,7 +2721,7 @@ export class Interpreter<R> {
         const quasi = asNode(quasis[index], "quasis");
         const rawValue = quasi.value;
 
-        if (!isRecord(rawValue) || typeof rawValue.cooked !== "string") {
+        if (!isRecord(rawValue) || !P.isString(rawValue.cooked)) {
           throw InterpreterRuntimeError.new("Invalid template literal quasi.", quasi);
         }
 
@@ -2783,7 +2776,7 @@ export class Interpreter<R> {
     return Effect.gen(function* () {
       const objectValue = yield* self.evaluateExpression(objectNode);
       if (objectValue === OptionalShortCircuit) return OptionalShortCircuit;
-      if ((objectValue === null || objectValue === undefined) && optional) return OptionalShortCircuit;
+      if ((P.isNull(objectValue) || P.isUndefined(objectValue)) && optional) return OptionalShortCircuit;
 
       const key = computed
         ? self.toPropertyKey(yield* self.evaluateExpression(propertyNode), propertyNode)
@@ -2792,7 +2785,7 @@ export class Interpreter<R> {
           : self.toPropertyKey(yield* self.evaluateExpression(propertyNode), propertyNode);
 
       if (S.is(ToolReference)(objectValue)) {
-        if (typeof key !== "string") {
+        if (!P.isString(key)) {
           throw InterpreterRuntimeError.new("Tool paths must use string property names.", propertyNode);
         }
         return ToolReference.new(A.append(objectValue.path, key));
@@ -2818,7 +2811,7 @@ export class Interpreter<R> {
         if (P.isString(key) && isBlockedMember(key)) {
           throw InterpreterRuntimeError.new(`${objectValue.name}.${key} is not available.`, propertyNode);
         }
-        if (typeof key !== "string") return ComputedValue.new(undefined);
+        if (!P.isString(key)) return ComputedValue.new(undefined);
         const missing = (): ComputedValue => ComputedValue.new(undefined);
         const staticMember = (
           namespace: Exclude<GlobalNamespaceName, "JSON">
@@ -2829,9 +2822,9 @@ export class Interpreter<R> {
             : missing();
         };
 
-        return GlobalNamespace.match(objectValue, {
+        return GlobalNamespaceName.$match(objectValue.name, {
           Math: () =>
-            S.is(mathConstants)(key)
+          S.is(mathConstants)(key)
               ? ComputedValue.new((Math as unknown as Record<string, number>)[key])
               : staticMember("Math"),
           JSON: () =>
@@ -2852,13 +2845,13 @@ export class Interpreter<R> {
 
       if (typeof objectValue === "string") {
         if (key === "length") return ComputedValue.new(objectValue.length);
-        const index = typeof key === "symbol" ? undefined : parseArrayIndex(key);
-        if (index !== undefined) return ComputedValue.new(objectValue[index]);
+        const index = P.isSymbol(key) ? undefined : parseArrayIndex(key);
+        if (P.isNotUndefined(index)) return ComputedValue.new(objectValue[index]);
         if (P.isString(key) && S.is(stringMethods)(key)) return IntrinsicReference.new(objectValue, key);
         return ComputedValue.new(undefined);
       }
 
-      if (typeof objectValue === "number") {
+      if (P.isNumber(objectValue)) {
         if (P.isString(key) && S.is(numberMethods)(key)) return IntrinsicReference.new(objectValue, key);
         return ComputedValue.new(undefined);
       }
@@ -2867,9 +2860,9 @@ export class Interpreter<R> {
         if (P.isString(key) && isBlockedMember(key)) {
           throw InterpreterRuntimeError.new(`${objectValue.name}.${key} is not available.`, propertyNode);
         }
-        if (typeof key !== "string") return ComputedValue.new(undefined);
+        if (!P.isString(key)) return ComputedValue.new(undefined);
         const missing = (): ComputedValue => ComputedValue.new(undefined);
-        return CoercionFunction.match(objectValue, {
+        return CoercionFunctionName.$match(objectValue.name, {
           Number: () => {
             if (S.is(numberConstants)(key)) {
               return ComputedValue.new((Number as unknown as Record<string, number>)[key]);
@@ -2890,11 +2883,11 @@ export class Interpreter<R> {
         });
       }
 
-      if (objectValue instanceof CodeModeDate) {
+      if (S.is(CodeModeDate)(objectValue)) {
         if (P.isString(key) && S.is(dateMethods)(key)) return IntrinsicReference.new(objectValue, key);
         return ComputedValue.new(undefined);
       }
-      if (objectValue instanceof CodeModeRegExp) {
+      if (S.is(CodeModeRegExp)(objectValue)) {
         if (key === "lastIndex") return MemberReference.new(objectValue, key);
         if (P.isString(key) && S.is(regexpProperties)(key)) {
           return ComputedValue.new((objectValue.regex as unknown as Record<string, unknown>)[key]);
@@ -2902,36 +2895,36 @@ export class Interpreter<R> {
         if (P.isString(key) && S.is(regexpMethods)(key)) return IntrinsicReference.new(objectValue, key);
         return ComputedValue.new(undefined);
       }
-      if (objectValue instanceof CodeModeMap) {
+      if (S.is(CodeModeMap)(objectValue)) {
         if (key === "size") return ComputedValue.new(objectValue.map.size);
         if (P.isString(key) && S.is(mapMethods)(key)) return IntrinsicReference.new(objectValue, key);
         return ComputedValue.new(undefined);
       }
-      if (objectValue instanceof CodeModeSet) {
+      if (S.is(CodeModeSet)(objectValue)) {
         if (key === "size") return ComputedValue.new(objectValue.set.size);
         if (P.isString(key) && S.is(setMethods)(key)) return IntrinsicReference.new(objectValue, key);
         return ComputedValue.new(undefined);
       }
-      if (objectValue instanceof CodeModeURL) {
+      if (S.is(CodeModeURL)(objectValue)) {
         if (key === "searchParams") {
           return ComputedValue.new(objectValue.searchParams);
         }
-        if (P.isString(key) && S.is(urlMethods)(key)) return IntrinsicReference.new(objectValue, key);
+        if (P.isString(key) && S.is(UrlMethod)(key)) return IntrinsicReference.new(objectValue, key);
         if (P.isString(key) && S.is(urlProperties)(key)) {
           return MemberReference.new(objectValue, key);
         }
         return ComputedValue.new(undefined);
       }
-      if (objectValue instanceof CodeModeURLSearchParams) {
+      if (S.is(CodeModeURLSearchParams)(objectValue)) {
         if (key === "size") return ComputedValue.new(objectValue.params.size);
-        if (P.isString(key) && S.is(urlSearchParamsMethods)(key)) {
+        if (P.isString(key) && S.is(UrlSearchParamsMethod)(key)) {
           return IntrinsicReference.new(objectValue, key);
         }
         return ComputedValue.new(undefined);
       }
 
       // Reject unknown promise properties so a missing await cannot hide.
-      if (objectValue instanceof CodeModePromise) {
+      if (S.is(CodeModePromise)(objectValue)) {
         if (key === "then" || key === "catch" || key === "finally") {
           return PromiseInstanceMethodReference.new(objectValue, key);
         }
@@ -2963,7 +2956,7 @@ export class Interpreter<R> {
         );
       }
 
-      if (typeof objectValue !== "object" || objectValue === null) {
+      if (!P.isObjectKeyword(objectValue) || P.isNull(objectValue)) {
         throw InterpreterRuntimeError.new("Cannot access a property on a non-object value.", objectNode);
       }
 
@@ -2975,9 +2968,9 @@ export class Interpreter<R> {
         if (operation === "delete") {
           return MemberReference.new(objectValue, key);
         }
-        const index = typeof key === "symbol" ? undefined : parseArrayIndex(key);
+        const index = P.isSymbol(key) ? undefined : parseArrayIndex(key);
         if (key !== "length" && !(P.isString(key) && S.is(arrayMethods)(key)) && index === undefined) {
-          if (P.isString(key) && Object.hasOwn(objectValue, key)) {
+          if (P.isString(key) && P.hasProperty(objectValue, key)) {
             return ComputedValue.new((objectValue as Record<string, unknown> & Array<unknown>)[key]);
           }
           return ComputedValue.new(undefined);
@@ -2993,14 +2986,14 @@ export class Interpreter<R> {
     return Effect.map(this.getMemberReference(node), (reference) => {
       if (reference === OptionalShortCircuit) return OptionalShortCircuit;
       if (S.is(ComputedValue)(reference)) return reference.value;
-      if (reference === undefined || isOpaqueMemberReference(reference)) return reference;
-      if (Array.isArray(reference.target)) {
+      if (P.isUndefined(reference) || isOpaqueMemberReference(reference)) return reference;
+      if (A.isArray(reference.target)) {
         if (reference.key === "length") return reference.target.length;
-        if (typeof reference.key === "string") return IntrinsicReference.new(reference.target, reference.key);
+        if (P.isString(reference.key)) return IntrinsicReference.new(reference.target, reference.key);
         return Reflect.get(reference.target, reference.key);
       }
-      if (reference.target instanceof CodeModeRegExp) return reference.target.lastIndex;
-      if (reference.target instanceof CodeModeURL) {
+      if (S.is(CodeModeRegExp)(reference.target)) return reference.target.lastIndex;
+      if (S.is(CodeModeURL)(reference.target)) {
         return Reflect.get(reference.target.url, reference.key);
       }
       return Reflect.get(reference.target, reference.key);
@@ -3024,13 +3017,13 @@ export class Interpreter<R> {
       if (reference === OptionalShortCircuit) return true;
       if (
         S.is(ComputedValue)(reference) ||
-        reference === undefined ||
+        P.isUndefined(reference) ||
         isOpaqueMemberReference(reference) ||
-        reference.target instanceof CodeModeURL
+        S.is(CodeModeURL)(reference.target)
       ) {
         throw InterpreterRuntimeError.new("Only data fields may be deleted.", target, "InvalidDataValue");
       }
-      if (reference.target instanceof CodeModeRegExp) {
+      if (S.is(CodeModeRegExp)(reference.target)) {
         return Reflect.deleteProperty(reference.target.regex, reference.key);
       }
       return Reflect.deleteProperty(reference.target, reference.key);
@@ -3052,14 +3045,14 @@ export class Interpreter<R> {
       if (
         reference === OptionalShortCircuit ||
         S.is(ComputedValue)(reference) ||
-        reference === undefined ||
+        P.isUndefined(reference) ||
         isOpaqueMemberReference(reference)
       ) {
         throw InterpreterRuntimeError.new("Only data fields may be assigned.", node);
       }
       if (Array.isArray(reference.target)) {
         if (reference.key === "length") throw InterpreterRuntimeError.new("Array length cannot be assigned.", node);
-        if (typeof reference.key === "string" && S.is(arrayMethods)(reference.key)) {
+        if (P.isString(reference.key) && S.is(arrayMethods)(reference.key)) {
           throw InterpreterRuntimeError.new("Array methods cannot be assigned.", node);
         }
       }
@@ -3075,17 +3068,17 @@ export class Interpreter<R> {
   }
 
   private readReferenceValue(reference: MemberReference, key: PropertyKey): unknown {
-    if (reference.target instanceof CodeModeURL) {
+    if (S.is(CodeModeURL)(reference.target)) {
       return Reflect.get(reference.target.url, key);
     }
-    if (reference.target instanceof CodeModeRegExp) return reference.target.lastIndex;
+    if (S.is(CodeModeRegExp)(reference.target)) return reference.target.lastIndex;
     return Reflect.get(reference.target, key);
   }
 
   private assignToReference(reference: MemberReference, key: PropertyKey, next: unknown, node: AstNode): void {
     if (Array.isArray(reference.target)) {
       const target = reference.target;
-      if (typeof key !== "number" || parseArrayIndex(key) === undefined) {
+      if (!P.isNumber(key) || P.isUndefined(parseArrayIndex(key))) {
         throw InterpreterRuntimeError.new(
           "Array assignment index must be a valid array index.",
           node,
@@ -3096,7 +3089,7 @@ export class Interpreter<R> {
       target[key] = next;
       return;
     }
-    if (reference.target instanceof CodeModeURL) {
+    if (S.is(CodeModeURL)(reference.target)) {
       const property = key as string;
       if (!S.is(urlWritableProperties)(property)) {
         throw InterpreterRuntimeError.new(`URL.${property} is read-only.`, node).as("TypeError");
@@ -3110,7 +3103,7 @@ export class Interpreter<R> {
         throw InterpreterRuntimeError.new(`URL.${property} received an invalid value.`, node).as("TypeError");
       }
     }
-    if (reference.target instanceof CodeModeRegExp) {
+    if (S.is(CodeModeRegExp)(reference.target)) {
       reference.target.lastIndex = next;
       return;
     }
@@ -3120,7 +3113,7 @@ export class Interpreter<R> {
   }
 
   private toPropertyKey(value: unknown, node: AstNode): PropertyKey {
-    if (typeof value === "string" || typeof value === "number") {
+    if (P.isString(value) || P.isNumber(value)) {
       return value;
     }
     if (value === AsyncIteratorSymbol || value === IteratorSymbol) return value;

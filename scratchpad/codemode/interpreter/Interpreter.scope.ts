@@ -34,7 +34,7 @@ export class ScopeStack {
   initialize(name: string, value: unknown, node: AstNode): void {
     const scope = this.current();
     const binding = MutableHashMap.get(scope, name);
-    if (O.isNone(binding) || binding.value.initialized !== false) {
+    if (O.isNone(binding) || binding.value.initialized) {
       throw InterpreterRuntimeError.new(
         `Identifier '${name}' has not been reserved for initialization.`,
         node
@@ -66,7 +66,7 @@ export class ScopeStack {
         node
       ).as("ReferenceError");
     }
-    if (binding.value.initialized === false) {
+    if (!binding.value.initialized) {
       throw InterpreterRuntimeError.new(
         `Cannot access '${name}' before initialization.`,
         node
@@ -84,13 +84,13 @@ export class ScopeStack {
       ).as("ReferenceError");
     }
     const [scope, binding] = resolved.value;
-    if (binding.initialized === false) {
+    if (!binding.initialized) {
       throw InterpreterRuntimeError.new(
         `Cannot access '${name}' before initialization.`,
         node
       ).as("ReferenceError");
     }
-    if (binding.mutable === false) {
+    if (!binding.mutable) {
       throw InterpreterRuntimeError.new(
         `Cannot assign to constant '${name}'.`,
         node
