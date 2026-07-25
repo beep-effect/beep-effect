@@ -1,6 +1,6 @@
 import { $ScratchpadId } from "@beep/identity";
-import type { SafeObject } from "@beep/schema/SafeObject";
-import { A, O, P, pipe } from "@beep/utils";
+import  { SafeObject } from "@beep/schema/SafeObject";
+import { A, O, P, pipe, Eq } from "@beep/utils";
 import {
   Cause,
   Deferred,
@@ -147,12 +147,12 @@ export const resolvePromiseValue = <R>(
   if (
     O.exists(
       own,
-      (identity) => O.exists(MutableRef.get(identity), (promise) => value === promise),
+      (identity) => O.exists(MutableRef.get(identity), Eq.equals(value)),
     )
   ) return Effect.fail(selfResolutionError(node))
   if (value instanceof CodeModePromise) return runner.settlePromise(value)
-  if (value === null || typeof value !== "object" || !Object.hasOwn(value, "then")) return Effect.succeed(value)
-  const then = (value as SafeObject).then
+  if (P.isNull(value) || !P.isObjectKeyword(value) || !P.hasProperty(value, "then")) return Effect.succeed(value)
+  const then = SafeObject.make(value).then
   if (typeofValue(then) !== "function") return Effect.succeed(value)
 
   return Effect.gen(function* () {
