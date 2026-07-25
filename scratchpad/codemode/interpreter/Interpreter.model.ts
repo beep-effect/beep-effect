@@ -148,7 +148,7 @@ export const {
 );
 
 
-const DiagnosticKind = LiteralKit(
+export const DiagnosticKind = LiteralKit(
   [
     "ParseError",
     "UnsupportedSyntax",

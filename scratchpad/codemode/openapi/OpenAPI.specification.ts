@@ -1,5 +1,5 @@
 /**
- * The scope logic for the `@beep/codemode` interpreter.
+ * Errors for the `@beep/codemode` interpreter.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -10,7 +10,7 @@ import {LiteralKit, SchemaUtils, MappedLiteralKit} from "@beep/schema";
 import {P, A, O, Str, R, Struct, pipe, dual} from "@beep/utils";
 import {HashMap, HashSet} from "effect";
 
-const $I = $ScratchpadId.create("Interpreter.scope");
+const $I = $ScratchpadId.create("OpenAPI.specification");
 
 /**
  * The `Thing` model.
