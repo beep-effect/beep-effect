@@ -89,7 +89,8 @@ seed matter/client context
 
 This honors the SPEC's non-negotiables: **candidate-only writes**, **evidence by stable span
 ID** (not whole-artifact, not byte offsets), **claim+evidence+provenance+lifecycle as
-authority**, **graph/search as projections**, and **SDK-first**.
+authority** (authoritative about what was asserted, evidenced, and decided — not about the
+propositions' truth), **graph/search as projections**, and **SDK-first**.
 
 ## 6. User stories & acceptance criteria
 
@@ -103,10 +104,11 @@ to the exact text.*
 - AC-2.1 An `artifact-ref` link renders a hover card with the linked artifact (e.g. a figure → CAD locator) (`@beep/lexical-schema`).
 - AC-2.2 The card shows the target's identity and a way to open/trace it.
 
-**US-3 — Approve.** *As Tom, nothing becomes a fact until I sign.*
-- AC-3.1 Candidate claims appear in a review surface with their evidence; none are authoritative pre-approval.
+**US-3 — Approve.** *As Tom, nothing is accepted for use in my matter until I sign — and my signature records my decision, not the claim's truth.*
+- AC-3.1 Candidate claims appear in a review surface with their evidence; none enter accepted state pre-approval.
 - AC-3.2 Approve/reject is recorded as an `Activity` with reviewer + timestamp (`@beep/epistemic-domain`).
 - AC-3.3 Accepted claims persist to local PGlite via `@beep/epistemic-tables` and survive restart.
+- Note: approval is a scoped human disposition — one of seven independent typed verdicts (shape validity, anchor fidelity, semantic stance, source authority/currentness, human disposition, action authorization, release). None of them converts a contestable proposition into source truth; "accepted" is repository state, not epistemic status.
 
 **US-4 — Local & walled.** *As Tom, my client data stays mine.*
 - AC-4.1 With no backup backend configured, zero network egress of document content (verifiable).

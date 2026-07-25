@@ -40,23 +40,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
-- [`academia-corpus-mining`](./academia-corpus-mining/README.md) —
-  align-stage: 443 canonical Academia.edu papers mined through a tiered
-  pipeline (T1 triage of all 443, 185 Sol-max T2 deep-reads — 42 gold /
-  125 silver / 15 bronze / 3 dross — 7 cluster reports + a repo-grounded
-  master synthesis with a 36-route table and 13 align questions). Align
-  closed nine decisions 2026-07-25: all 15 high-priority routes dispatched
-  as bounded notes into 11 target packets + 2 new capture packets
-  (`agent-execution-sandbox`, `model-artifact-admission`);
-  prose-to-proof's "becomes a fact" language will be replaced with
-  typed-verdict vocabulary (separate binding-doc PR); belief views compose
-  first over the bitemporal core; argumentation follows semantic-foundation
-  M1. Adopts the June-29 prior synthesis (snippets errata-flagged) as
-  [`research/prior-synthesis-legal-ontologies.md`](./academia-corpus-mining/research/prior-synthesis-legal-ontologies.md);
-  normalized corpus lives externally (`~/YeeBois/research/academia-2026-07/`,
-  public-repo copyright discipline). Parks after the binding-doc PR;
-  revival trigger: wave 2 over the June-29 backlog (97 legal-NLP papers
-  first).
 - [`agent-effectiveness-pulse`](./agent-effectiveness-pulse/README.md) — a
   data-driven pulse on repo agent friendliness/effectiveness (stage
   `graduate`, opened 2026-07-14, still active for wave 2): which skills are
@@ -274,6 +257,21 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Parked
 
+- [`academia-corpus-mining`](./academia-corpus-mining/README.md) — parked
+  2026-07-25 at align-complete with all 15 high-priority routes dispatched:
+  443 canonical Academia.edu papers mined in tiers (T1 triage of all 443,
+  185 Sol-max T2 deep-reads — 42 gold / 125 silver / 15 bronze / 3 dross —
+  7 cluster reports + a repo-grounded master synthesis with a 36-route
+  table). Nine align decisions landed 2026-07-25: 11 bounded dispatch notes
+  into target packets, 2 new capture packets (`agent-execution-sandbox`,
+  `model-artifact-admission`), prose-to-proof/approval-policy fact language
+  replaced with typed-verdict vocabulary, memory-layer-taxonomy
+  episodic/projection split, belief views first over the bitemporal core,
+  argumentation after semantic-foundation M1. Medium/low routes stay
+  recorded in the master table; the June-29 prior synthesis stays adopted
+  (snippets errata-flagged); the normalized corpus lives externally
+  (`~/YeeBois/research/academia-2026-07/`). Revival trigger: the approved
+  wave-2 backlog run (97 legal-NLP/extraction papers first).
 - [`effect-ontology-harvest`](./effect-ontology-harvest/README.md) — parked
   2026-07-14 at align-complete: harvest-not-port complete with zero goals by
   design; demand gates and reference routes are recorded, and every item must

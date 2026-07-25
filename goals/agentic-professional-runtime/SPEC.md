@@ -42,20 +42,22 @@ not two separate platforms.
   2. Wealth cash request before a payment deadline.
 - Product fixture IDs are readable and stable. Evidence uses stable source span
   IDs, not whole-artifact-only citations or byte offsets.
-- The v1 proof produces candidate runtime truth only:
+- The v1 proof produces candidate records only:
   1. candidate claims;
   2. candidate tasks;
   3. candidate draft artifacts;
   4. attach evidence and provenance;
   5. pending approval gates;
   6. evidence-bounded context packets.
-- Claim plus evidence plus provenance plus lifecycle is the authoritative memory
-  primitive. Search, graph views, retrieval packets, summaries, and MCP outputs
-  are projections.
+- Claim plus evidence plus provenance plus lifecycle is the authoritative record
+  of what was asserted, evidenced, and decided — not of whether the underlying
+  proposition is true. Search, graph views, retrieval packets, summaries, and
+  MCP outputs are projections.
 - The internal Effect/TypeScript SDK is the canonical integration contract.
   MCP, Claude Desktop, OpenClaw, and other clients wrap or consume that contract.
 - Agents may read runtime context and propose candidate writes. Human or policy
-  acceptance promotes candidate records into authoritative state.
+  acceptance records a scoped disposition that makes candidate records eligible
+  for scoped runtime use; it does not make their propositions true.
 - Existing professional systems stay systems of record for their own data. This
   runtime connects to them and records its own claims, tasks, artifacts,
   approvals, activities, and usage.
@@ -202,8 +204,9 @@ active topology and should not be restored wholesale.
 
 The storage model is:
 
-- versioned or immutable entity rows for current runtime truth
-- append-only `Activity` and provenance records for why and how truth changed
+- versioned or immutable entity rows for current runtime-accepted state
+- append-only `Activity` and provenance records for why and how that state
+  changed
 - evidence records that preserve source spans and source artifacts
 - rebuildable read models for graph, search, timeline, inbox, compliance, and
   work queues
