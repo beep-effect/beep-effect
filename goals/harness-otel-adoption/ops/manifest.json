@@ -3,13 +3,13 @@
   "initiative": {
     "id": "harness-otel-adoption",
     "title": "Harness OTel Adoption",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-14",
-    "updated": "2026-07-14",
+    "updated": "2026-07-25",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/harness-otel-adoption",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Native Claude Code + Codex OTLP into dankserver's monitoring collector (traces to Phoenix, metrics to Prometheus/Grafana) with a beep-owned attribution attribute schema; content capture off.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -57,12 +57,12 @@
     {
       "id": "P2",
       "name": "Verify",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable + Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
