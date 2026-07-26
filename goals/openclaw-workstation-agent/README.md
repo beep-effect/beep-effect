@@ -51,7 +51,19 @@ phase may run before every contract assertion passes.
 
 ## Latest Evidence
 
-Not started.
+- 2026-07-26: **Spike 2 (non-interactive user-manager apply) — 3/3 assertions
+  PASS**, no blockers; evidence + harness at
+  [`history/p0/spike-2/NOTES.md`](./history/p0/spike-2/NOTES.md). The gated
+  decision *applicator contracts + identity binding* stands as written.
+  Contract findings for P1: gate preflight on a bus round-trip, not
+  `systemctl --user is-system-running` (returns `degraded` on healthy desktop
+  managers); use `UnitsLoadTimestampMonotonic` as the daemon-reload drift
+  witness; UNIX socket paths cap at 108 bytes under deep content-hashed roots.
+  Recorded residual: the positive lane ran with an active session present —
+  the genuinely session-less linger case is a named P1 follow-up. Spikes 1, 3,
+  and 4 remain gated on operator prerequisites (sudo; scoped 1Password service
+  token; throwaway Telegram bot + group; two adjacent stamped OpenClaw
+  versions).
 
 ## Notes
 
