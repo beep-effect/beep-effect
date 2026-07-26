@@ -38,6 +38,9 @@
       "@beep/ontology-use-cases/server": [
         "../../../packages/ontology/use-cases/src/server.ts"
       ],
+      "@beep/ontology-use-cases/worker": [
+        "../../../packages/ontology/use-cases/src/worker.ts"
+      ],
       "@beep/ontology-use-cases/tools": [
         "../../../packages/ontology/use-cases/src/tools/index.ts"
       ],

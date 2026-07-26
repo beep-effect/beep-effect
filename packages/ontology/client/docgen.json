@@ -49,6 +49,9 @@
         "../../../packages/agents/client/src/ProviderInstance.service.ts"
       ],
       "@beep/cosmos": ["../../../packages/drivers/cosmos/src/index.ts"],
+      "@beep/cosmos/browser": [
+        "../../../packages/drivers/cosmos/src/browser.ts"
+      ],
       "@beep/identity": [
         "../../../packages/foundation/modeling/identity/src/index.ts"
       ],
@@ -57,6 +60,18 @@
       ],
       "@beep/identity/packages": [
         "../../../packages/foundation/modeling/identity/src/packages.ts"
+      ],
+      "@beep/observability": [
+        "../../../packages/foundation/capability/observability/src/index.ts"
+      ],
+      "@beep/observability/experimental/server": [
+        "../../../packages/foundation/capability/observability/src/experimental/server/index.ts"
+      ],
+      "@beep/observability/server": [
+        "../../../packages/foundation/capability/observability/src/server/index.ts"
+      ],
+      "@beep/observability/web": [
+        "../../../packages/foundation/capability/observability/src/web/index.ts"
       ],
       "@beep/ontology-domain": [
         "../../../packages/ontology/domain/src/index.ts"
@@ -75,6 +90,9 @@
       ],
       "@beep/ontology-use-cases/server": [
         "../../../packages/ontology/use-cases/src/server.ts"
+      ],
+      "@beep/ontology-use-cases/worker": [
+        "../../../packages/ontology/use-cases/src/worker.ts"
       ],
       "@beep/ontology-use-cases/tools": [
         "../../../packages/ontology/use-cases/src/tools/index.ts"

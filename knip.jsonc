@@ -8,6 +8,11 @@
       // so treat every src/*.ts as an entry (src/index.ts is already covered by the exports map).
       "entry": ["src/*.ts"]
     },
+    "packages/law-practice/domain": {
+      // Pinned data modules are intentionally package-private and have no public barrel.
+      // Treat them as generated asset entries until the later domain-contract phase imports them.
+      "entry": ["src/internal/generated/free-law-project/*.ts"]
+    },
     "infra": {
       // Pulumi stack entrypoints (src/internal/*-entry.ts) are referenced from Pulumi.yaml,
       // not via TS imports, so knip can't see them — register them as explicit entries.

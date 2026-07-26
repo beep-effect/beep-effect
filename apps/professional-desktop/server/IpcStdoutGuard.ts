@@ -3,6 +3,7 @@
 // first in main.ts) keeps stdout clean before the effect runtime or any sidecar
 // dependency initializes.
 
+import { P } from "@beep/utils";
 import * as BunStdio from "@effect/platform-bun/BunStdio";
 import { Effect, Layer, Sink, Stdio } from "effect";
 import { ipcTransport, protocolStdout } from "./IpcStdoutGuard.prelude.ts";
@@ -14,7 +15,7 @@ export { ipcTransport };
 const writeProtocolStdout = (chunk: string | Uint8Array): Effect.Effect<void> =>
   Effect.callback<void>((resume) => {
     protocolStdout.write(chunk, (error?: Error | null) =>
-      resume(error === undefined || error === null ? Effect.void : Effect.die(error))
+      resume(P.isUndefined(error) || P.isNull(error) ? Effect.void : Effect.die(error))
     );
   });
 

@@ -8,18 +8,27 @@
  * cosmos spike's flag pattern.
  *
  * @packageDocumentation
- * @category spikes
+ * @category components
  * @since 0.0.0
  */
-import { generateSyntheticGraph3DProjection, SyntheticGraph3DOptions } from "@beep/graph-3d";
-import { useGraph3DFps, useGraph3DHandle } from "@beep/graph-3d/react";
+
+import {
+  Graph3DRenderHandle,
+  Graph3DRenderOptions,
+  generateSyntheticGraph3DProjection,
+  renderGraph3D,
+  SyntheticGraph3DOptions,
+} from "@beep/graph-3d/browser";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { NonNegativeInt, PosInt } from "@beep/schema";
-import { A, N, O, pipe, thunkNull, thunkVoid } from "@beep/utils";
-import { useAtomSet, useAtomSubscribe, useAtomValue } from "@effect/atom-react";
-import { Duration } from "effect";
+import { LogRedactedCauseOptions, logRedactedCause, redactCauseForClient } from "@beep/observability";
+import { LiteralKit, NonNegativeInt, PosInt } from "@beep/schema";
+import { A, N, O, pipe, thunkNull } from "@beep/utils";
+import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { Duration, Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
-import { Atom } from "effect/unstable/reactivity";
+import { AsyncResult, Atom } from "effect/unstable/reactivity";
+import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
+import { fpsSampleAtoms } from "./Fps.atoms.ts";
 import type { JSX } from "react";
 
 const $I = $ProfessionalDesktopId.create("spikes/Graph3DSpike");
@@ -66,6 +75,72 @@ class BrowserPerformance extends S.Class<BrowserPerformance>($I`BrowserPerforman
   static readonly decodeOption = S.decodeUnknownOption(BrowserPerformance);
 }
 
+class Graph3DSpikeRendering extends S.Class<Graph3DSpikeRendering>($I`Graph3DSpikeRendering`)(
+  { state: S.tag("rendering") },
+  $I.annote("Graph3DSpikeRendering", {
+    description: "The graph-3d spike renderer is mounting.",
+  })
+) {}
+
+class Graph3DSpikeReady extends S.Class<Graph3DSpikeReady>($I`Graph3DSpikeReady`)(
+  {
+    state: S.tag("ready"),
+    handle: Graph3DRenderHandle,
+  },
+  $I.annote("Graph3DSpikeReady", {
+    description: "The graph-3d spike renderer is mounted and ready.",
+  })
+) {}
+
+class Graph3DSpikeFailed extends S.Class<Graph3DSpikeFailed>($I`Graph3DSpikeFailed`)(
+  {
+    state: S.tag("failed"),
+    message: S.NonEmptyString,
+  },
+  $I.annote("Graph3DSpikeFailed", {
+    description: "The graph-3d spike renderer failed to mount.",
+  })
+) {}
+
+const Graph3DSpikeState = LiteralKit(["rendering", "ready", "failed"]).pipe(
+  $I.annoteSchema("Graph3DSpikeState", {
+    description: "Lifecycle variants for the graph-3d spike renderer.",
+  })
+);
+
+/**
+ * Exhaustive lifecycle state for the graph-3d spike renderer.
+ *
+ * @example
+ * ```ts
+ * import { Graph3DSpikeStatus } from "@/spikes/Graph3DSpike"
+ *
+ * const status = Graph3DSpikeStatus.cases.rendering.make()
+ * console.log(Graph3DSpikeStatus.guards.rendering(status)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const Graph3DSpikeStatus = Graph3DSpikeState.mapMembers(
+  Tuple.evolve([() => Graph3DSpikeRendering, () => Graph3DSpikeReady, () => Graph3DSpikeFailed])
+).pipe(
+  S.toTaggedUnion("state"),
+  $I.annoteSchema("Graph3DSpikeStatus", {
+    description: "Exhaustive lifecycle state for the graph-3d spike renderer.",
+  })
+);
+
+/**
+ * Runtime type for the graph-3d spike lifecycle state.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+type Graph3DSpikeStatus = typeof Graph3DSpikeStatus.Type;
+
+const renderingStatus: Graph3DSpikeStatus = Graph3DSpikeStatus.cases.rendering.make();
+
 const DEFAULT_PRESET = StressPreset.make({
   label: "2.5k / 5k",
   nodeCount: NonNegativeInt.make(2_500),
@@ -104,6 +179,92 @@ const projectionAtom = Atom.readable((get) => {
     })
   );
 });
+const graphContainerAtom = Atom.make<O.Option<HTMLDivElement>>(O.none());
+
+const graphStatusAtom = professionalBrowserRuntime.atom<Graph3DSpikeStatus, never>(
+  (get) =>
+    O.match(get(graphContainerAtom), {
+      onNone: () => Effect.succeed(renderingStatus),
+      onSome: (container) =>
+        renderGraph3D(container, get(projectionAtom), Graph3DRenderOptions.make({})).pipe(
+          Effect.tap((handle) => Effect.addFinalizer(() => Effect.sync(handle.destroy))),
+          Effect.map((handle) => Graph3DSpikeStatus.cases.ready.make({ handle })),
+          Effect.catchCause((cause) =>
+            logRedactedCause(
+              cause,
+              LogRedactedCauseOptions.make({
+                message: "graph-3d spike renderer failed",
+                level: "Error",
+                attributes: { subsystem: "graph3d_spike" },
+              })
+            ).pipe(
+              Effect.as(
+                Graph3DSpikeStatus.cases.failed.make({
+                  message: redactCauseForClient(cause).message,
+                })
+              )
+            )
+          )
+        ),
+    }),
+  { initialValue: renderingStatus }
+);
+
+const graphFpsAtom = Atom.readable((get) => {
+  const status = AsyncResult.value(get(graphStatusAtom)).pipe(O.getOrElse(() => renderingStatus));
+  return Graph3DSpikeStatus.guards.ready(status) ? get(fpsSampleAtoms(status.handle)) : 0;
+});
+
+const setGraphContainerAtom = professionalBrowserRuntime.fn<HTMLDivElement | null>()(
+  Effect.fn("professional_desktop.graph3d_spike.set_container")(function* (container, ctx) {
+    ctx.set(graphContainerAtom, O.fromNullishOr(container));
+  })
+);
+
+const selectStressPresetAtom = professionalBrowserRuntime.fn<StressPreset>()(
+  Effect.fn("professional_desktop.graph3d_spike.select_stress_preset")(function* (preset, ctx) {
+    ctx.set(selectedPresetAtom, preset);
+  })
+);
+
+const clearStressReportBindingAtom = Atom.make((get) => {
+  get.subscribe(projectionAtom, () => get.set(stressReportAtom, O.none()), { immediate: true });
+  return undefined;
+});
+
+const runGraphStressAtom = professionalBrowserRuntime.fn<void>()(
+  Effect.fn("professional_desktop.graph3d_spike.run_stress")(function* (_, ctx) {
+    const status = AsyncResult.value(ctx(graphStatusAtom)).pipe(O.getOrElse(() => renderingStatus));
+    if (!Graph3DSpikeStatus.guards.ready(status)) return;
+    const projection = ctx(projectionAtom);
+    const durations = yield* Effect.sync(() =>
+      A.makeBy(20, (round) => {
+        const start = globalThis.performance.now();
+        status.handle.update(projection);
+        status.handle.select(
+          O.some(round).pipe(
+            O.filter((index) => index % 2 === 0),
+            O.map((index) => index % projection.nodeCount),
+            O.getOrUndefined
+          )
+        );
+        return globalThis.performance.now() - start;
+      })
+    );
+    yield* Effect.sync(() => status.handle.select(undefined));
+    const updates = A.length(durations);
+    ctx.set(
+      stressReportAtom,
+      O.some(
+        StressReport.make({
+          updates: PosInt.make(updates),
+          avgUpdateMs: Duration.millis(N.round(N.sumAll(durations) / updates, 2)),
+          worstUpdateMs: Duration.millis(N.round(A.reduce(durations, 0, N.max), 2)),
+        })
+      )
+    );
+  })
+);
 
 const heapMb = (): O.Option<number> =>
   pipe(
@@ -119,67 +280,39 @@ const heapMb = (): O.Option<number> =>
  *
  * @example
  * ```ts
+ * import { Graph3DSpike } from "@/spikes/Graph3DSpike"
+ *
  * // Launch the portless-wrapped graph3d-bench entry, then open the spike surface:
  * //   http://graph3d-bench.beep.localhost:1355/?graph3d-spike   (or VITE_GRAPH3D_SPIKE=1)
  * const flag = new URLSearchParams("?graph3d-spike").has("graph3d-spike")
  *
- * console.log(flag) // true
+ * console.log(flag && typeof Graph3DSpike === "function") // true
  * ```
  *
- * @category spikes
+ * @category components
  * @since 0.0.0
  */
 export function Graph3DSpike(): JSX.Element {
   const preset = useAtomValue(selectedPresetAtom);
-  const setPreset = useAtomSet(selectedPresetAtom);
+  const selectPreset = useAtomSet(selectStressPresetAtom);
   const stress = useAtomValue(stressReportAtom);
-  const setStress = useAtomSet(stressReportAtom);
-  const projection = useAtomValue(projectionAtom);
-
-  const { containerRef, handle, error } = useGraph3DHandle(projection);
-  const fps = useGraph3DFps(handle);
-  const maybeHandle = O.fromUndefinedOr(handle);
+  const status = AsyncResult.value(useAtomValue(graphStatusAtom)).pipe(O.getOrElse(() => renderingStatus));
+  const setContainer = useAtomSet(setGraphContainerAtom);
+  const runStress = useAtomSet(runGraphStressAtom);
+  const fps = useAtomValue(graphFpsAtom);
+  const maybeHandle = Graph3DSpikeStatus.guards.ready(status) ? O.some(status.handle) : O.none();
   const stats = O.map(maybeHandle, (current) => current.stats());
   const heap = heapMb();
-
-  // A remount (new handle) invalidates any stress report from the old one.
-  useAtomSubscribe(projectionAtom, () => setStress(O.none()), { immediate: true });
-
-  // Stress pass: 20 full projection updates + select/clear rewrites, timed.
-  const runStress = (): void =>
-    O.match(maybeHandle, {
-      onNone: thunkVoid,
-      onSome: (current) => {
-        const durations = A.makeBy(20, (round) => {
-          const start = globalThis.performance.now();
-          current.update(projection);
-          current.select(
-            pipe(
-              O.some(round),
-              O.filter((index) => index % 2 === 0),
-              O.map((index) => index % projection.nodeCount),
-              O.getOrUndefined
-            )
-          );
-          return globalThis.performance.now() - start;
-        });
-        current.select(O.getOrUndefined(O.none<number>()));
-        const updates = A.length(durations);
-        setStress(
-          O.some(
-            StressReport.make({
-              updates: PosInt.make(updates),
-              avgUpdateMs: Duration.millis(N.round(N.sumAll(durations) / updates, 2)),
-              worstUpdateMs: Duration.millis(N.round(A.reduce(durations, 0, N.max), 2)),
-            })
-          )
-        );
-      },
-    });
+  const error = Graph3DSpikeStatus.match(status, {
+    rendering: O.none<string>,
+    ready: O.none<string>,
+    failed: ({ message }) => O.some(message),
+  });
+  useAtomMount(clearStressReportBindingAtom);
 
   return (
     <div className="relative h-screen w-full bg-[#111111] text-[#9ee2e2]">
-      <div ref={containerRef} className="absolute inset-0" data-testid="graph3d-spike-container" />
+      <div ref={setContainer} className="absolute inset-0" data-testid="graph3d-spike-container" />
       <div className="pointer-events-none absolute left-3 top-3 rounded-md bg-black/60 p-3 font-mono text-xs leading-5">
         <div>graph3d spike — {preset.label}</div>
         <div>
@@ -207,7 +340,7 @@ export function Graph3DSpike(): JSX.Element {
             </div>
           ),
         })}
-        {O.match(O.fromUndefinedOr(error), {
+        {O.match(error, {
           onNone: thunkNull,
           onSome: (message) => <div className="text-red-400">error: {message}</div>,
         })}
@@ -218,7 +351,7 @@ export function Graph3DSpike(): JSX.Element {
             key={candidate.label}
             type="button"
             className={`rounded border px-2 py-1 text-xs ${stressPresetEquivalence(candidate, preset) ? "border-cyan-400 text-cyan-300" : "border-slate-600 text-slate-300"}`}
-            onClick={() => setPreset(candidate)}
+            onClick={() => selectPreset(candidate)}
           >
             {candidate.label}
           </button>
@@ -226,7 +359,7 @@ export function Graph3DSpike(): JSX.Element {
         <button
           type="button"
           className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-300"
-          onClick={runStress}
+          onClick={() => runStress(void 0)}
         >
           run stress pass
         </button>

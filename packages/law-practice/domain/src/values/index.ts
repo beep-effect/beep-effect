@@ -231,6 +231,23 @@ export * from "./FederalRegisterCitation/index.ts";
  */
 export * from "./FederalRuleCitation/index.ts";
 /**
+ * Footnote namespace module export.
+ *
+ * **Example**
+ *
+ * @example
+ * ```ts
+ * import { Footnote } from "@beep/law-practice-domain";
+ *
+ * const footnoteMap: Footnote.FootnoteMap =
+ *   Footnote.detectTextFootnotes("Body\n----------\n1. See Smith v. Jones.");
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./Footnote/index.ts";
+/**
  * Full-citation-type value-object exports.
  *
  * @example

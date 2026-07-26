@@ -4,8 +4,8 @@
  *
  * The dock graph owns its own private `AtomRegistry` (the kernel session
  * mounts its atoms there), separate from the app's root `RegistryProvider`.
- * Components outside the dock read dock atoms through `useDockAtom`, and the
- * shell re-provides the app registry to panel content — see `App.tsx`.
+ * Components outside the dock read dock atoms through registry bridges, and
+ * the shell re-provides the app registry to panel content — see `App.tsx`.
  *
  * @packageDocumentation
  * @category atoms
@@ -45,14 +45,15 @@ import {
   UserCommandOrigin,
   VerticalSplitLayout,
 } from "@beep/dock";
-import { Duration, Effect, Layer } from "effect";
+import { Duration, Effect, Layer, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import { AsyncResult, Atom } from "effect/unstable/reactivity";
+import { KeyValueStore } from "effect/unstable/persistence";
+import { AsyncResult, Atom, AtomRegistry } from "effect/unstable/reactivity";
+import { professionalBrowserRuntime, professionalStorageRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import type { DockAtomOperation } from "@beep/dock";
 import type { DockAtomGraph } from "@beep/dock-react";
-import type { Fiber } from "effect";
 
 /**
  * Every desktop dock panel: the three shell surfaces plus the nine ontology
@@ -307,7 +308,8 @@ export const defaultDesktopWorkspace = PopulatedWorkspace.make({
  * ```ts
  * import { DOCK_SNAPSHOT_KEY } from "@/workspace/dock.atoms"
  *
- * console.log(DOCK_SNAPSHOT_KEY) // "desktop:dock-workspace:v2"
+ * globalThis.localStorage.setItem(DOCK_SNAPSHOT_KEY, "saved workspace")
+ * console.log(globalThis.localStorage.getItem(DOCK_SNAPSHOT_KEY)) // "saved workspace"
  * ```
  *
  * @category constants
@@ -330,6 +332,61 @@ export const DOCK_SNAPSHOT_KEY = "desktop:dock-workspace:v2";
  */
 export const LEGACY_DOCK_SNAPSHOT_KEYS = ["desktop:dock-workspace:v1"] as const;
 
+/**
+ * Builds the runtime action that clears the saved layout before executing an
+ * injected reload effect.
+ *
+ * @example
+ * ```tsx
+ * import { makeResetDockSnapshotAtom } from "@/workspace/dock.atoms"
+ * import { useAtomSet } from "@effect/atom-react"
+ * import { Effect } from "effect"
+ *
+ * const resetAtom = makeResetDockSnapshotAtom(Effect.logInfo("reload requested"))
+ *
+ * function ResetButton() {
+ *   const reset = useAtomSet(resetAtom)
+ *   return <button onClick={() => reset()}>Reset</button>
+ * }
+ * ```
+ *
+ * @effects The returned action removes the persisted snapshot through
+ * `KeyValueStore`, then executes the injected reload effect.
+ * @category atoms
+ * @since 0.0.0
+ */
+export const makeResetDockSnapshotAtom = (
+  reload: Effect.Effect<void>
+): Atom.AtomResultFn<void, void, KeyValueStore.KeyValueStoreError> =>
+  professionalStorageRuntime.fn<void>()(
+    Effect.fn("professional_desktop.workspace.reset_snapshot")(function* () {
+      const store = yield* KeyValueStore.KeyValueStore;
+      yield* store.remove(DOCK_SNAPSHOT_KEY);
+      yield* reload;
+    })
+  );
+
+/**
+ * Runtime action that clears the saved dock layout before reloading the shell.
+ *
+ * @example
+ * ```tsx
+ * import { resetDockSnapshotAtom } from "@/workspace/dock.atoms"
+ * import { useAtomSet } from "@effect/atom-react"
+ *
+ * function ResetWorkspaceButton() {
+ *   const reset = useAtomSet(resetDockSnapshotAtom)
+ *   return <button onClick={() => reset()}>Reset workspace</button>
+ * }
+ * ```
+ *
+ * @effects Removes the persisted dock snapshot through the professional storage
+ * runtime, then reloads the browser location.
+ * @category atoms
+ * @since 0.0.0
+ */
+export const resetDockSnapshotAtom = makeResetDockSnapshotAtom(Effect.sync(() => globalThis.location.reload()));
+
 const storageFailure = (operation: "load" | "save"): DockPersistenceError =>
   DockPersistenceError.make({ operation, message: "localStorage is unavailable in this environment." });
 
@@ -351,16 +408,10 @@ const DockSnapshotStoreLocalStorage = Layer.succeed(
   })
 );
 
-let commandCounter = 0;
-const nextCommandId = (name: string): CommandId => {
-  commandCounter += 1;
-  return CommandId.make(`desktop-${name}-${commandCounter}`);
-};
-
 const restoreOperation = (): DockAtomOperation =>
   RestoreDockSnapshot.make({
     request: RestoreSnapshotRequest.make({
-      commandId: nextCommandId("restore"),
+      commandId: CommandId.make("desktop-boot-restore"),
       origin: ApiCommandOrigin.make({ requestId: "desktop-boot-restore" }),
       allowedRenderers: O.some(A.map(DESKTOP_PANELS, ({ key }) => RendererKey.make(key))),
     }),
@@ -377,14 +428,14 @@ const saveOperation = (): DockAtomOperation => SaveDockSnapshot.make({});
  * @example
  * ```ts
  * import { makeDesktopDockGraph } from "@/workspace/dock.atoms"
- * import { Effect } from "effect"
+ * import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime"
  *
- * const panels = await Effect.runPromise(
- *   Effect.map(makeDesktopDockGraph, (graph) => graph.registry.get(graph.panelsAtom).length)
- * )
- * console.log(panels) // 9
+ * const dockGraphAtom = professionalBrowserRuntime.atom(makeDesktopDockGraph)
+ * console.log(typeof dockGraphAtom === "object") // true
  * ```
  *
+ * @effects Allocates a dock atom registry, removes retired localStorage keys,
+ * restores a valid persisted workspace, and clears an invalid snapshot.
  * @category constructors
  * @since 0.0.0
  */
@@ -446,7 +497,7 @@ export const makeDesktopDockGraph = Effect.gen(function* () {
  */
 // Deliberately never disposed: the graph's lifetime IS the page's. Tests that
 // build graphs directly use makeDesktopDockGraph and dispose them explicitly.
-export const desktopDockGraphAtom = Atom.make(makeDesktopDockGraph).pipe(Atom.keepAlive);
+export const desktopDockGraphAtom = professionalBrowserRuntime.atom(makeDesktopDockGraph).pipe(Atom.keepAlive);
 
 // Milliseconds of quiet between workspace changes before a snapshot save.
 const DOCK_SAVE_DEBOUNCE_MS = 400;
@@ -473,31 +524,17 @@ const DOCK_SAVE_DEBOUNCE_MS = 400;
  * @since 0.0.0
  */
 export const dockPersistenceBindingAtom = Atom.family((graph: DesktopDockGraph) =>
-  Atom.make((get) => {
-    // Effect-native debounce: every workspace change interrupts the pending
-    // save fiber and forks a fresh sleep, so drag storms cost one write.
-    // (`Atom.debounce` never fires in effect 4.0.0-beta.97 — proven by test —
-    // so the quiet period is expressed with `Effect.sleep` directly.)
-    let pending: Fiber.Fiber<void> | undefined;
-    const cancel = graph.registry.subscribe(graph.workspaceAtom, () => {
-      pending?.interruptUnsafe();
-      pending = Effect.runFork(
-        Effect.sleep(Duration.millis(DOCK_SAVE_DEBOUNCE_MS)).pipe(
-          Effect.andThen(
-            Effect.sync(() => {
-              pending = undefined;
-              graph.registry.set(graph.operationAtom, saveOperation());
-            })
-          )
-        )
-      );
-    });
-    get.addFinalizer(() => {
-      pending?.interruptUnsafe();
-      cancel();
-    });
-    return undefined;
-  })
+  professionalBrowserRuntime.atom(
+    AtomRegistry.toStream(graph.registry, graph.workspaceAtom).pipe(
+      Stream.drop(1),
+      Stream.debounce(Duration.millis(DOCK_SAVE_DEBOUNCE_MS)),
+      Stream.runForEach(() =>
+        Effect.sync(() => {
+          graph.registry.set(graph.operationAtom, saveOperation());
+        })
+      )
+    )
+  )
 );
 
 const firstGroupId = (root: DockNode): O.Option<GroupId> => O.map(A.head(DockNode.tabs(root)), (tabs) => tabs.groupId);
@@ -573,7 +610,7 @@ export const panelOperation: {
   });
   return DispatchDockCommand.make({
     envelope: DockCommandEnvelope.make({
-      commandId: nextCommandId(`panel-${key}`),
+      commandId: CommandId.make(`desktop-panel-${key}-${workspace.revision}`),
       origin: UserCommandOrigin.make({ interactionId: `desktop-nav-${key}` }),
       command,
     }),

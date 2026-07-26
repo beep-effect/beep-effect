@@ -8,11 +8,13 @@
 import {
   ontologyGraphBackendAtom,
   ontologyGraphContainerAtom,
+  ontologyGraphContainerBindingAtom,
   ontologyGraphErrorAtom,
   ontologyGraphProjectionAtom,
   ontologyGraphRenderBridgeAtom,
   ontologyGraphRendererAtom,
   selectedOntologyResourceIriAtom,
+  setOntologyGraphContainerElementAtom,
 } from "@beep/ontology-client/aggregates/Session";
 import {
   OntologyGraphEdge,
@@ -107,6 +109,39 @@ const waitFor = (label: string, predicate: () => boolean, timeoutMs = 20_000): E
   });
 
 describe("workbench graph renderer toggle", () => {
+  it.live("publishes only measurable containers and clears them when the callback ref releases", () =>
+    Effect.gen(function* () {
+      const registry = AtomRegistry.make();
+      const container = document.createElement("div");
+      container.style.width = "0";
+      container.style.height = "0";
+      document.body.append(container);
+      const releases = [
+        registry.mount(ontologyGraphContainerAtom),
+        registry.mount(ontologyGraphContainerBindingAtom),
+        registry.mount(setOntologyGraphContainerElementAtom),
+      ];
+
+      registry.set(setOntologyGraphContainerElementAtom, container);
+      yield* Effect.sleep("50 millis");
+      expect(registry.get(ontologyGraphContainerAtom)).toStrictEqual(O.none());
+
+      container.style.width = "320px";
+      container.style.height = "180px";
+      yield* waitFor("resized graph container", () => O.isSome(registry.get(ontologyGraphContainerAtom)));
+      expect(registry.get(ontologyGraphContainerAtom)).toStrictEqual(O.some(container));
+
+      registry.set(setOntologyGraphContainerElementAtom, null);
+      yield* waitFor("released graph container", () => O.isNone(registry.get(ontologyGraphContainerAtom)));
+
+      for (const release of releases) {
+        release();
+      }
+      container.remove();
+      registry.dispose();
+    })
+  );
+
   it.live("mounts cosmos by default, swaps to 3D and back, and keeps selection flowing", () =>
     Effect.gen(function* () {
       const registry = AtomRegistry.make();
@@ -122,11 +157,14 @@ describe("workbench graph renderer toggle", () => {
         registry.subscribe(ontologyGraphBackendAtom, () => undefined),
         registry.subscribe(ontologyGraphErrorAtom, () => undefined),
         registry.subscribe(ontologyGraphRenderBridgeAtom, () => undefined),
+        registry.mount(ontologyGraphContainerBindingAtom),
+        registry.mount(setOntologyGraphContainerElementAtom),
       ];
       // subscribing mounts lazily; reading forces the bridge body to run
       registry.get(ontologyGraphRenderBridgeAtom);
 
-      registry.set(ontologyGraphContainerAtom, O.some(container));
+      registry.set(setOntologyGraphContainerElementAtom, container);
+      yield* waitFor("measurable graph container", () => O.isSome(registry.get(ontologyGraphContainerAtom)));
       registry.set(ontologyGraphProjectionAtom, O.some(fixtureProjection()));
 
       // cosmos is the default renderer
@@ -162,6 +200,9 @@ describe("workbench graph renderer toggle", () => {
       yield* waitFor("cosmos restored", () => O.isSome(registry.get(ontologyGraphBackendAtom)));
       expect(container.querySelectorAll("canvas").length).toBeGreaterThan(0);
       expect(O.isNone(registry.get(ontologyGraphErrorAtom))).toBe(true);
+
+      registry.set(setOntologyGraphContainerElementAtom, null);
+      yield* waitFor("released graph container", () => O.isNone(registry.get(ontologyGraphContainerAtom)));
 
       for (const unsubscribe of unsubscribers) {
         unsubscribe();

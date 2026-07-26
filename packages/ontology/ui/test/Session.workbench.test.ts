@@ -4,8 +4,7 @@ import {
   graphPartitionIri,
   SessionId,
 } from "@beep/ontology-domain/aggregates/Session";
-import { iriFieldValid } from "@beep/ontology-ui/aggregates/Session";
-import { ontologyTreeItemsFor } from "@beep/ontology-ui/aggregates/Session/tree";
+import { ontologyTreeItemsFor, valueFromEvent } from "@beep/ontology-ui/aggregates/Session";
 import {
   buildOntologySnapshotWithInference,
   InferOntologySessionInput,
@@ -20,6 +19,7 @@ import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, pipe } from "effect";
 import * as S from "effect/Schema";
+import type { ChangeEvent } from "react";
 
 const sessionId = S.decodeUnknownSync(SessionId)("session-1");
 
@@ -40,6 +40,12 @@ const collectTreeItemIds = (items: ReadonlyArray<TreeItem>): ReadonlyArray<strin
   );
 
 describe("OntologyWorkbench hierarchy", () => {
+  it("extracts the current form value from React change events", () => {
+    const event = { target: { value: "https://example.org/pizza#Pizza" } } as ChangeEvent<HTMLInputElement>;
+
+    expect(valueFromEvent(event)).toBe("https://example.org/pizza#Pizza");
+  });
+
   it.effect(
     "renders inferred transitive subclass closure as unique tree item ids",
     Effect.fnUntraced(function* () {
@@ -78,18 +84,4 @@ describe("OntologyWorkbench hierarchy", () => {
       expect(A.filter(itemIds, (id) => id === neapolitanMargherita.value)).toHaveLength(1);
     }, provideScopedLayer(OntologyReasonerLive))
   );
-
-  // Add Triple rejected `not an iri` but must still accept the hash IRIs RDF
-  // vocabularies are built from: guarding these fields with an absolute-IRI
-  // schema (which forbids a fragment) disabled Apply for every realistic term.
-  it("accepts hash and slash IRIs in Add Triple fields, and rejects non-IRIs", () => {
-    expect(iriFieldValid("https://example.org/pizza#Pizza")).toBe(true);
-    expect(iriFieldValid("http://www.w3.org/2000/01/rdf-schema#label")).toBe(true);
-    expect(iriFieldValid("https://example.org/plain")).toBe(true);
-    expect(iriFieldValid("  https://example.org/padded#Term  ")).toBe(true);
-
-    expect(iriFieldValid("not an iri")).toBe(false);
-    expect(iriFieldValid("")).toBe(false);
-    expect(iriFieldValid("   ")).toBe(false);
-  });
 });

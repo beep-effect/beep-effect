@@ -45,7 +45,7 @@ jobs:
 
       - name: Run focused check verification
         id: focused-check
-        run: bun run check -- --filter=@beep/repo-cli --filter=@beep/data --filter=@beep/schema --filter=@beep/md --filter=@beep/file-processing --filter=@beep/libpff --summarize
+        run: bun run check -- --filter=@beep/repo-cli --filter=@beep/data --filter=@beep/law-practice-domain --filter=@beep/schema --filter=@beep/md --filter=@beep/file-processing --filter=@beep/libpff --summarize
 
       - name: Append Turbo summary (check)
         if: always() && steps.focused-check.outcome != 'skipped'
@@ -54,7 +54,7 @@ jobs:
       - name: Run focused unit verification
         id: focused-test
         if: steps.focused-check.outcome == 'success'
-        run: bun run test -- --unit --filter=@beep/repo-cli --filter=@beep/data --filter=@beep/schema --filter=@beep/md --filter=@beep/file-processing --filter=@beep/libpff --summarize
+        run: bun run test -- --unit --filter=@beep/repo-cli --filter=@beep/data --filter=@beep/law-practice-domain --filter=@beep/schema --filter=@beep/md --filter=@beep/file-processing --filter=@beep/libpff --summarize
 
       - name: Prepare pull request body
         id: pr-body

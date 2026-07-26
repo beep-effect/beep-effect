@@ -6,204 +6,101 @@
  */
 
 "use client";
-import { Document, FilingOutcome } from "@beep/documents-domain/aggregates/Document";
-import { IntakeBatchId } from "@beep/documents-domain/aggregates/IntakeBatch";
-import { slugVaultSegment } from "@beep/documents-domain/values/Taxonomy";
-import { $ProfessionalDesktopId } from "@beep/identity";
+
+import { FilingOutcome } from "@beep/documents-domain/aggregates/Document";
 import { Button } from "@beep/ui/components/button";
 import { A, O } from "@beep/utils";
-import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { Effect } from "effect";
-import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import { AsyncResult } from "effect/unstable/reactivity";
-import { Fragment, useRef, useState } from "react";
-import { failureMessageOr } from "@/lib/failureMessage";
+import { Fragment } from "react";
+import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";
 import {
-  ConfigureWorkspaceVaultInput,
-  configureWorkspaceVaultAtom,
-  DEFAULT_WORKSPACE_ID,
-  DroppedDocumentInput,
-  intakeDroppedDocumentAtom,
-  pickVaultDirectoryAtom,
+  chooseWorkspaceVaultAtoms,
+  clearIntakeResultsAtoms,
+  documentIntakeStateAtoms,
+  IntakeResultEntry,
+  intakeDomEventAtoms,
+  openIntakeFilePickerAtoms,
+  setIntakeFileInputAtoms,
+  VaultSelectionState,
   workspaceVaultConfigAtom,
 } from "./Intake.atoms.ts";
-import type { DragEvent, JSX, ReactNode } from "react";
+import type { JSX, ReactNode } from "react";
+import type { VaultSelectionState as VaultSelectionStateType } from "./Intake.atoms.ts";
 
-const $I = $ProfessionalDesktopId.create("intake/DocumentIntakeTarget");
-const hasTauriRuntime = (): boolean => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
-
-/**
- * The picker could not be opened at all. `null` means the user dismissed the
- * dialog — a normal outcome — so an import, IPC, or permission failure must not
- * be reported the same way: doing so made "Choose folder" look like an inert
- * button with no diagnostic anywhere.
- *
- * @category errors
- * @since 0.0.0
- */
-class VaultPickerUnavailable extends S.Class<VaultPickerUnavailable>($I`VaultPickerUnavailable`)(
-  {
-    message: S.String,
-  },
-  $I.annote("VaultPickerUnavailable", {
-    description: "The native vault directory picker could not be opened.",
-  })
-) {}
-
-// Tauri opens the shell's own native dialog; browser mode asks the sidecar to
-// open its host's native folder dialog over RPC, and only falls back to manual
-// path entry when that surface is unavailable (chat-only HTTP, headless host).
-const pickVaultDirectory = (
-  pickWithSidecar: () => Promise<string | null>
-): Effect.Effect<string | null, VaultPickerUnavailable> =>
-  Effect.suspend(() =>
-    hasTauriRuntime()
-      ? Effect.tryPromise({
-          try: () =>
-            import("@tauri-apps/api/core").then(({ invoke }) => invoke<string | null>("select_vault_directory")),
-          catch: (cause) =>
-            VaultPickerUnavailable.make({ message: `The folder picker could not be opened: ${String(cause)}` }),
-        })
-      : Effect.tryPromise(pickWithSidecar).pipe(
-          Effect.catch(() => Effect.sync(() => window.prompt("Workspace vault path")))
-        )
-  );
-
-/**
- * Largest file the intake path accepts. Content crosses the RPC boundary as
- * base64 (~33% expansion) and is held in memory on both sides while it is
- * extracted and filed, so the bound protects the renderer and the sidecar alike.
- *
- * @category constants
- * @since 0.0.0
- */
-const MAX_INTAKE_FILE_BYTES = 25 * 1024 * 1024;
-
-const formatMegabytes = (bytes: number): string => `${Math.round((bytes / (1024 * 1024)) * 10) / 10} MB`;
-
-/**
- * Why intake refuses a file, decided before a single byte is read.
- *
- * Both bounds are checked ahead of `arrayBuffer()`: the content is otherwise
- * materialized, copied into a `Uint8Array`, base64-expanded (~33% larger) for the
- * RPC, and decoded again server-side.
- *
- * @example
- * ```ts
- * import { intakeRefusal } from "@/intake/DocumentIntakeTarget"
- *
- * console.log(intakeRefusal({ name: "empty.txt", size: 0 }))
- * ```
- *
- * @category predicates
- * @since 0.0.0
- */
-export const intakeRefusal = (file: { readonly name: string; readonly size: number }): O.Option<string> => {
-  if (file.size > MAX_INTAKE_FILE_BYTES) {
-    return O.some(`${formatMegabytes(file.size)} exceeds the ${formatMegabytes(MAX_INTAKE_FILE_BYTES)} intake limit.`);
-  }
-  // An empty file was accepted, classified, and filed: it produced a content-free
-  // object in the vault and a classification rationale invented about nothing at all.
-  // There is no document in zero bytes, and the model should not be asked to pretend
-  // there is.
-  if (file.size === 0) {
-    return O.some("This file is empty, so there is nothing to file.");
-  }
-  return O.none();
-};
-
-const droppedFiles = (event: DragEvent<HTMLElement>): ReadonlyArray<File> => A.fromIterable(event.dataTransfer.files);
-
-const batchIdFor = (files: ReadonlyArray<File>): string =>
-  `batch-${files.length}-${slugVaultSegment(files[0]?.name ?? "drop")}`;
-
-const vaultConfigurationFailureMessage = failureMessageOr("Unable to save workspace vault.");
-
-const intakeFailureMessage = failureMessageOr("Intake failed.");
-
-class IntakeResultEntryDocument extends S.Class<IntakeResultEntryDocument>($I`IntakeResultEntry`)(
-  {
-    kind: S.tag("document"),
-    document: Document,
-  },
-  $I.annote("IntakeResultEntry", {
-    description: "",
-  })
-) {}
-
-class IntakeResultEntryFailure extends S.Class<IntakeResultEntryFailure>($I`IntakeResultEntryFailure`)(
-  {
-    kind: S.tag("failure"),
-    fileName: S.String,
-    message: S.String,
-  },
-  $I.annote("IntakeResultEntry", {
-    description: "",
-  })
-) {}
-
-const IntakeResultEntry = S.Union([IntakeResultEntryDocument, IntakeResultEntryFailure]).pipe(
-  S.toTaggedUnion("kind"),
-  $I.annoteSchema("IntakeResultEntry", {
-    description: "",
-  })
-);
-type IntakeResultEntry = typeof IntakeResultEntry.Type;
+const intakeResultKey = (entry: IntakeResultEntry, index: number): string =>
+  IntakeResultEntry.match(entry, {
+    document: ({ document }) => `${index}-${document.contentDigest}`,
+    failure: ({ fileName }) => `${index}-${fileName}`,
+  });
 
 const intakeResultRow = (entry: IntakeResultEntry): JSX.Element =>
-  entry.kind === "failure" ? (
-    <li className="rounded-sm border border-destructive/40 p-2" data-testid="intake-result-failure">
-      <span className="font-medium">{entry.fileName}</span>
-      <p className="mt-1 text-xs text-destructive">{entry.message}</p>
-    </li>
-  ) : (
-    FilingOutcome.match(entry.document.filing, {
-      filed: (filed) => (
-        <li className="rounded-sm border p-2" data-testid="intake-result-filed">
-          <div className="flex items-center justify-between gap-2">
-            <span className="truncate font-medium">{entry.document.originalFileName}</span>
-            <span className="rounded-sm bg-primary/10 px-1.5 py-0.5 text-xs text-primary">
-              {filed.taxonomyConceptId}
-            </span>
-          </div>
-          <p className="mt-1 break-all text-xs text-muted-foreground">{entry.document.vaultPath.relativePath}</p>
-          <p className="mt-1 text-xs text-muted-foreground">{filed.rationale}</p>
-        </li>
-      ),
-      inboxed: (inboxed) => (
-        <li className="rounded-sm border border-amber-500/40 p-2" data-testid="intake-result-inboxed">
-          <div className="flex items-center justify-between gap-2">
-            <span className="truncate font-medium">{entry.document.originalFileName}</span>
-            <span className="rounded-sm bg-amber-500/10 px-1.5 py-0.5 text-xs text-amber-600">inbox</span>
-          </div>
-          <p className="mt-1 break-all text-xs text-muted-foreground">{entry.document.vaultPath.relativePath}</p>
-          <p className="mt-1 text-xs text-muted-foreground">{inboxed.rationale}</p>
-        </li>
-      ),
-    })
-  );
+  IntakeResultEntry.match(entry, {
+    failure: ({ fileName, message }) => (
+      <li className="rounded-sm border border-destructive/40 p-2" data-testid="intake-result-failure">
+        <span className="font-medium">{fileName}</span>
+        <p className="mt-1 text-xs text-destructive">{message}</p>
+      </li>
+    ),
+    document: ({ document }) =>
+      FilingOutcome.match(document.filing, {
+        filed: (filed) => (
+          <li className="rounded-sm border p-2" data-testid="intake-result-filed">
+            <div className="flex items-center justify-between gap-2">
+              <span className="truncate font-medium">{document.originalFileName}</span>
+              <span className="rounded-sm bg-primary/10 px-1.5 py-0.5 text-xs text-primary">
+                {filed.taxonomyConceptId}
+              </span>
+            </div>
+            <p className="mt-1 break-all text-xs text-muted-foreground">{document.vaultPath.relativePath}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{filed.rationale}</p>
+          </li>
+        ),
+        inboxed: (inboxed) => (
+          <li className="rounded-sm border border-amber-500/40 p-2" data-testid="intake-result-inboxed">
+            <div className="flex items-center justify-between gap-2">
+              <span className="truncate font-medium">{document.originalFileName}</span>
+              <span className="rounded-sm bg-amber-500/10 px-1.5 py-0.5 text-xs text-amber-600">inbox</span>
+            </div>
+            <p className="mt-1 break-all text-xs text-muted-foreground">{document.vaultPath.relativePath}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{inboxed.rationale}</p>
+          </li>
+        ),
+      }),
+  });
 
 const VaultOnboarding = ({
   onChoose,
-  status,
+  selection,
 }: {
   readonly onChoose: () => void;
-  readonly status: string | null;
-}): JSX.Element => (
-  <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
-    <section className="w-full max-w-md rounded-md border bg-card p-5 shadow-sm" data-testid="vault-onboarding">
-      <h1 className="text-lg font-semibold">Choose workspace vault</h1>
-      <p className="mt-2 text-sm text-muted-foreground">Select the local folder where filed documents will land.</p>
-      <div className="mt-4 flex items-center gap-3">
-        <Button type="button" onClick={onChoose} data-testid="vault-choose">
-          Choose folder
-        </Button>
-        {status === null ? null : <span className="text-sm text-muted-foreground">{status}</span>}
-      </div>
-    </section>
-  </div>
-);
+  readonly selection: VaultSelectionStateType;
+}): JSX.Element => {
+  const presentation = VaultSelectionState.match(selection, {
+    idle: () => ({ disabled: false, label: "Choose folder", status: O.none<string>() }),
+    choosing: () => ({ disabled: true, label: "Choosing folder…", status: O.some("Opening folder picker") }),
+    saving: () => ({ disabled: true, label: "Saving…", status: O.some("Saving workspace vault") }),
+    failed: ({ message }) => ({ disabled: false, label: "Choose folder", status: O.some(message) }),
+  });
+
+  return (
+    <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
+      <section className="w-full max-w-md rounded-md border bg-card p-5 shadow-sm" data-testid="vault-onboarding">
+        <h1 className="text-lg font-semibold">Choose workspace vault</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Select the local folder where filed documents will land.</p>
+        <div className="mt-4 flex items-center gap-3">
+          <Button type="button" disabled={presentation.disabled} onClick={onChoose} data-testid="vault-choose">
+            {presentation.label}
+          </Button>
+          {O.match(presentation.status, {
+            onNone: () => null,
+            onSome: (message) => <span className="text-sm text-muted-foreground">{message}</span>,
+          })}
+        </div>
+      </section>
+    </div>
+  );
+};
 
 const IntakeBusyBadge = ({ activeBatches }: { readonly activeBatches: number }): JSX.Element | null =>
   activeBatches === 0 ? null : (
@@ -222,16 +119,12 @@ const IntakeResultsPanel = ({
   readonly onClear: () => void;
   readonly results: ReadonlyArray<IntakeResultEntry>;
 }): JSX.Element | null =>
-  results.length === 0 ? null : (
+  A.isReadonlyArrayEmpty(results) ? null : (
     <div
       className="absolute bottom-4 right-4 z-40 max-h-80 w-96 overflow-y-auto rounded-md border bg-card p-3 text-sm shadow-sm"
       data-testid="intake-results"
     >
       <div className="flex items-center justify-between gap-2">
-        {/* The panel holds refusals as well as successes, so it cannot call itself
-            "Filed documents": a file the app had just refused appeared, correctly red
-            and correctly explained, underneath a heading announcing it as filed. The
-            heading contradicted the row. */}
         <h2 className="font-semibold">Intake results</h2>
         <Button type="button" variant="ghost" size="sm" onClick={onClear} data-testid="intake-results-clear">
           Clear
@@ -239,56 +132,118 @@ const IntakeResultsPanel = ({
       </div>
       <ul className="mt-2 space-y-2">
         {A.map(results, (entry, index) => (
-          <Fragment
-            key={`${index}-${IntakeResultEntry.guards.document(entry) ? entry.document.contentDigest : entry.fileName}`}
-          >
-            {intakeResultRow(entry)}
-          </Fragment>
+          <Fragment key={intakeResultKey(entry, index)}>{intakeResultRow(entry)}</Fragment>
         ))}
       </ul>
     </div>
   );
 
-/**
- * Persist one selected workspace vault path and reflect success/failure in UI status.
- *
- * @example
- * ```ts
- * import { configureSelectedWorkspaceVault } from "@/intake/DocumentIntakeTarget"
- * import { Effect } from "effect"
- *
- * const statuses: Array<string | null> = []
- * Effect.runPromise(configureSelectedWorkspaceVault("/tmp/vault", async () => undefined, (status) => statuses.push(status)))
- * ```
- *
- * @category effects
- * @since 0.0.0
- */
-export const configureSelectedWorkspaceVault = Effect.fn("configureSelectedWorkspaceVault")(function* (
-  selected: string | null,
-  configureVault: (input: ConfigureWorkspaceVaultInput) => Promise<unknown>,
-  setStatus: (status: string | null) => void
-) {
-  if (selected === null || Str.isEmpty(Str.trim(selected))) return;
-  const input = yield* S.decodeUnknownEffect(ConfigureWorkspaceVaultInput)({
-    vaultRootPath: selected,
-    workspaceId: DEFAULT_WORKSPACE_ID,
-  }).pipe(Effect.mapError(() => "Invalid workspace vault path."));
+type VoidIntakeAction = (input: void) => void;
 
-  yield* Effect.sync(() => setStatus("Saving workspace vault"));
-  yield* Effect.tryPromise({
-    try: () => configureVault(input),
-    catch: vaultConfigurationFailureMessage,
-  }).pipe(
-    Effect.matchEffect({
-      onFailure: (message) => Effect.sync(() => setStatus(message)),
-      onSuccess: () => Effect.sync(() => setStatus(null)),
-    })
-  );
-});
+const IntakeDraggingOverlay = ({ visible }: { readonly visible: boolean }): JSX.Element | null =>
+  visible ? (
+    <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center border-2 border-dashed border-primary bg-background/80 text-sm font-medium text-foreground backdrop-blur">
+      Drop documents to file
+    </div>
+  ) : null;
+
+const IntakeFileControls = ({
+  configured,
+  onFileSelection,
+  openFilePicker,
+  setFileInput,
+}: {
+  readonly configured: boolean;
+  readonly onFileSelection: (files: ReadonlyArray<File>) => void;
+  readonly openFilePicker: VoidIntakeAction;
+  readonly setFileInput: (element: HTMLInputElement | null) => void;
+}): JSX.Element | null =>
+  configured ? (
+    <>
+      <input
+        ref={setFileInput}
+        type="file"
+        multiple
+        className="hidden"
+        data-testid="intake-file-input"
+        onChange={(event) => onFileSelection(A.fromIterable(event.target.files ?? []))}
+      />
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="absolute bottom-4 left-4 z-40"
+        data-testid="intake-choose-files"
+        onClick={() => openFilePicker(void 0)}
+      >
+        File documents…
+      </Button>
+    </>
+  ) : null;
+
+const IntakeWorkspaceSurface = ({
+  activeBatches,
+  children,
+  clearResults,
+  configured,
+  isDragging,
+  onDragEnter,
+  onDragLeave,
+  onDragOver,
+  onDrop,
+  onFileSelection,
+  openFilePicker,
+  results,
+  setFileInput,
+}: {
+  readonly activeBatches: number;
+  readonly children: ReactNode;
+  readonly clearResults: VoidIntakeAction;
+  readonly configured: boolean;
+  readonly isDragging: boolean;
+  readonly onDragEnter: (input: { readonly preventDefault: () => void }) => void;
+  readonly onDragLeave: (input: { readonly currentTarget: Node; readonly relatedTarget: EventTarget | null }) => void;
+  readonly onDragOver: (input: { readonly preventDefault: () => void }) => void;
+  readonly onDrop: (input: { readonly files: ReadonlyArray<File>; readonly preventDefault: () => void }) => void;
+  readonly onFileSelection: (files: ReadonlyArray<File>) => void;
+  readonly openFilePicker: VoidIntakeAction;
+  readonly results: ReadonlyArray<IntakeResultEntry>;
+  readonly setFileInput: (element: HTMLInputElement | null) => void;
+}): JSX.Element => (
+  <div
+    className="relative h-screen w-full"
+    onDragEnter={(event) => onDragEnter({ preventDefault: () => event.preventDefault() })}
+    onDragOver={(event) => onDragOver({ preventDefault: () => event.preventDefault() })}
+    onDragLeave={(event) =>
+      onDragLeave({
+        currentTarget: event.currentTarget,
+        relatedTarget: event.relatedTarget,
+      })
+    }
+    onDrop={(event) =>
+      onDrop({
+        files: A.fromIterable(event.dataTransfer.files),
+        preventDefault: () => event.preventDefault(),
+      })
+    }
+    data-testid="document-intake-target"
+  >
+    {children}
+    <IntakeDraggingOverlay visible={isDragging} />
+    <IntakeFileControls
+      configured={configured}
+      onFileSelection={onFileSelection}
+      openFilePicker={openFilePicker}
+      setFileInput={setFileInput}
+    />
+    <IntakeBusyBadge activeBatches={activeBatches} />
+    <IntakeResultsPanel results={results} onClear={() => clearResults(void 0)} />
+  </div>
+);
 
 /**
- * Full-screen drag-and-drop boundary that onboards a workspace vault and intakes dropped documents.
+ * Full-screen boundary that onboards a workspace vault and routes DOM events
+ * into runtime-owned document intake actions.
  *
  * @example
  * ```ts
@@ -302,163 +257,43 @@ export const configureSelectedWorkspaceVault = Effect.fn("configureSelectedWorks
  * @category components
  * @since 0.0.0
  */
-// This existing intake boundary owns the drag, picker, batch, and result UI
-// states. The QA patch adds bounded file selection to those same transitions;
-// decomposing the full surface is a separate atom-migration refactor.
-// fallow-ignore-next-line complexity
 export function DocumentIntakeTarget({ children }: { readonly children: ReactNode }): JSX.Element {
-  const vaultConfig = useAtomValue(workspaceVaultConfigAtom(DEFAULT_WORKSPACE_ID));
-  const configureVault = useAtomSet(configureWorkspaceVaultAtom, { mode: "promise" });
-  const intakeDroppedDocument = useAtomSet(intakeDroppedDocumentAtom, { mode: "promise" });
-  const pickWithSidecar = useAtomSet(pickVaultDirectoryAtom, { mode: "promise" });
-  const [isDragging, setIsDragging] = useState(false);
-  // The one permitted useRef: a DOM handle for the hidden file input.
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [status, setStatus] = useState<string | null>(null);
-  const [activeBatches, setActiveBatches] = useState(0);
-  const [results, setResults] = useState<ReadonlyArray<IntakeResultEntry>>([]);
-
-  useAtomMount(configureWorkspaceVaultAtom);
-  useAtomMount(intakeDroppedDocumentAtom);
-  useAtomMount(pickVaultDirectoryAtom);
+  const vaultConfig = useAtomValue(workspaceVaultConfigAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+  const state = useAtomValue(documentIntakeStateAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+  const chooseVault = useAtomSet(chooseWorkspaceVaultAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+  const clearResults = useAtomSet(clearIntakeResultsAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+  const intakeDomEvents = intakeDomEventAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID);
+  const onDragEnter = useAtomSet(intakeDomEvents.dragEnter);
+  const onDragLeave = useAtomSet(intakeDomEvents.dragLeave);
+  const onDragOver = useAtomSet(intakeDomEvents.dragOver);
+  const onDrop = useAtomSet(intakeDomEvents.drop);
+  const onFileSelection = useAtomSet(intakeDomEvents.fileSelection);
+  const openFilePicker = useAtomSet(openIntakeFilePickerAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+  const setFileInput = useAtomSet(setIntakeFileInputAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
 
   const configured = AsyncResult.isSuccess(vaultConfig) && O.isSome(vaultConfig.value.vaultRootPath);
   const needsOnboarding = AsyncResult.isSuccess(vaultConfig) && O.isNone(vaultConfig.value.vaultRootPath);
 
-  const chooseVault = Effect.gen(function* () {
-    // Dismissing the dialog yields `null` and stays silent (the configure step
-    // treats it as "nothing chosen"); a picker that could not open at all says so.
-    const selected = yield* pickVaultDirectory(() => pickWithSidecar()).pipe(
-      Effect.catch((failure) =>
-        Effect.sync((): string | null => {
-          setStatus(failure.message);
-          return null;
-        })
-      )
-    );
-    yield* configureSelectedWorkspaceVault(selected, configureVault, setStatus);
-  });
-
-  const appendResult = (entry: IntakeResultEntry): void => setResults((current) => [...current, entry]);
-
-  const intakeFiles = Effect.fnUntraced(function* (files: ReadonlyArray<File>) {
-    if (files.length === 0) return;
-    const intakeBatchId = yield* S.decodeUnknownEffect(IntakeBatchId)(batchIdFor(files)).pipe(Effect.orDie);
-    // Each drop is an independent batch; a shared counter keeps the busy
-    // indicator up until the LAST in-flight batch settles.
-    yield* Effect.sync(() => setActiveBatches((count) => count + 1));
-    yield* Effect.forEach(files, (file) => {
-      const fileName = file.name || "document";
-      // Reject before `arrayBuffer()`: the file is otherwise materialized, copied
-      // into a Uint8Array, base64-expanded (~33% larger) for the RPC, and decoded
-      // again server-side. A big enough drop took the renderer or the sidecar down
-      // with no size ever being checked.
-      const refusal = intakeRefusal(file);
-      if (O.isSome(refusal)) {
-        return Effect.sync(() => appendResult(IntakeResultEntryFailure.make({ fileName, message: refusal.value })));
-      }
-      return Effect.tryPromise(() => file.arrayBuffer()).pipe(
-        Effect.map((buffer) => new Uint8Array(buffer)),
-        Effect.flatMap((content) =>
-          Effect.tryPromise(() =>
-            intakeDroppedDocument(
-              DroppedDocumentInput.make({
-                content,
-                intakeBatchId,
-                originalFileName: fileName,
-                workspaceId: DEFAULT_WORKSPACE_ID,
-              })
-            )
-          )
-        ),
-        Effect.matchEffect({
-          onFailure: (cause) =>
-            Effect.sync(() =>
-              appendResult(
-                IntakeResultEntryFailure.make({
-                  fileName,
-                  message: intakeFailureMessage(cause),
-                })
-              )
-            ),
-          onSuccess: (document) =>
-            Effect.sync(() =>
-              appendResult(
-                IntakeResultEntryDocument.make({
-                  document,
-                })
-              )
-            ),
-        })
-      );
-    }).pipe(Effect.ensuring(Effect.sync(() => setActiveBatches((count) => count - 1))));
-  });
-
   if (needsOnboarding) {
-    return <VaultOnboarding onChoose={() => void Effect.runPromise(chooseVault)} status={status} />;
+    return <VaultOnboarding onChoose={() => chooseVault(void 0)} selection={state.vaultSelection} />;
   }
 
   return (
-    <div
-      className="relative h-screen w-full"
-      onDragEnter={(event) => {
-        if (!configured) return;
-        event.preventDefault();
-        setIsDragging(true);
-      }}
-      onDragOver={(event) => {
-        if (!configured) return;
-        event.preventDefault();
-      }}
-      onDragLeave={(event) => {
-        if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
-        setIsDragging(false);
-      }}
-      onDrop={(event) => {
-        if (!configured) return;
-        event.preventDefault();
-        setIsDragging(false);
-        void Effect.runPromise(intakeFiles(droppedFiles(event)));
-      }}
-      data-testid="document-intake-target"
+    <IntakeWorkspaceSurface
+      activeBatches={state.activeBatches}
+      clearResults={clearResults}
+      configured={configured}
+      isDragging={state.isDragging}
+      onDragEnter={onDragEnter}
+      onDragLeave={onDragLeave}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onFileSelection={onFileSelection}
+      openFilePicker={openFilePicker}
+      results={state.results}
+      setFileInput={setFileInput}
     >
       {children}
-      {isDragging ? (
-        <div className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center border-2 border-dashed border-primary bg-background/80 text-sm font-medium text-foreground backdrop-blur">
-          Drop documents to file
-        </div>
-      ) : null}
-      {/* Filing was drag-and-drop only, so the whole intake feature was
-          unreachable by keyboard (and by anything that cannot synthesize a
-          filesystem drag). The picker drives exactly the same intake path. */}
-      {configured ? (
-        <>
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            className="hidden"
-            data-testid="intake-file-input"
-            onChange={(event) => {
-              const selected = A.fromIterable(event.target.files ?? []);
-              event.target.value = "";
-              void Effect.runPromise(intakeFiles(selected));
-            }}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="absolute bottom-4 left-4 z-40"
-            data-testid="intake-choose-files"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            File documents…
-          </Button>
-        </>
-      ) : null}
-      <IntakeBusyBadge activeBatches={activeBatches} />
-      <IntakeResultsPanel results={results} onClear={() => setResults([])} />
-    </div>
+    </IntakeWorkspaceSurface>
   );
 }

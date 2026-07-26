@@ -7,23 +7,39 @@ import {
   VaultSyncWorkspacePayload,
 } from "@beep/documents-use-cases/public";
 import { fcRuns } from "@beep/test-utils";
+import { SetWorkspaceVaultInput } from "@beep/workspace-use-cases/public";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { DerivedThreadTitle } from "@/chat/DerivedThreadTitle";
-import { configureSelectedWorkspaceVault } from "@/intake/DocumentIntakeTarget";
-import {
-  ConfigureWorkspaceVaultInput,
-  DEFAULT_WORKSPACE_ID,
-  DroppedDocumentInput,
-  intakeDroppedFilePayload,
-} from "@/intake/Intake.atoms";
+import { DroppedDocumentInput, intakeDroppedFilePayload } from "@/intake/Intake.atoms";
 import { ProfessionalDesktopMigrationOptions } from "@/runtime/Migrations";
 import { SidecarTransport } from "@/transport/SidecarTransport";
 import { InboundEvent, InboundFrame, SidecarClosedPayload } from "@/transport/TauriIpcSocket";
+import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";
+
+const decodeSidecarTransport = S.decodeUnknownEffect(SidecarTransport);
+const encodeSidecarTransport = S.encodeUnknownEffect(SidecarTransport);
+const encodeInboundFrame = S.encodeUnknownEffect(InboundFrame);
+const decodeInboundEvent = S.decodeUnknownEffect(InboundEvent);
+const encodeInboundEvent = S.encodeUnknownEffect(InboundEvent);
+const encodeSidecarClosedPayload = S.encodeUnknownEffect(SidecarClosedPayload);
+const decodeProfessionalDesktopMigrationOptions = S.decodeUnknownEffect(ProfessionalDesktopMigrationOptions);
+const encodeProfessionalDesktopMigrationOptions = S.encodeUnknownEffect(ProfessionalDesktopMigrationOptions);
+const decodeSetWorkspaceVaultInput = S.decodeUnknownEffect(SetWorkspaceVaultInput);
+const encodeSetWorkspaceVaultInput = S.encodeUnknownEffect(SetWorkspaceVaultInput);
+const decodeIntakeBatchId = S.decodeUnknownEffect(IntakeBatchId);
+const encodeDroppedDocumentInput = S.encodeUnknownEffect(DroppedDocumentInput);
+const encodeIntakeDroppedFilePayload = S.encodeUnknownEffect(IntakeDroppedFilePayload);
+const encodeVaultSyncWorkspacePayload = S.encodeUnknownEffect(VaultSyncWorkspacePayload);
+const decodeMarkVaultSyncConflictReviewedPayload = S.decodeUnknownEffect(MarkVaultSyncConflictReviewedPayload);
+const encodeMarkVaultSyncConflictReviewedPayload = S.encodeUnknownEffect(MarkVaultSyncConflictReviewedPayload);
+const decodeVaultSyncStatus = S.decodeUnknownEffect(VaultSyncStatus);
+const encodeVaultSyncStatus = S.encodeUnknownEffect(VaultSyncStatus);
+const decodeDerivedThreadTitle = S.decodeUnknownOption(DerivedThreadTitle);
 
 const assertSchemaEncodeDecodeRoundTrip = <Schema extends S.Codec<unknown>>(
   schema: Schema,
@@ -32,20 +48,16 @@ const assertSchemaEncodeDecodeRoundTrip = <Schema extends S.Codec<unknown>>(
   }
 ): void => {
   const arbitrary = S.toArbitrary(schema);
-  const encode = S.encodeUnknownEffect(schema);
-  const decode = S.decodeUnknownEffect(schema);
+  const encode = S.encodeResult(schema);
+  const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
 
   fc.assert(
-    fc.property(arbitrary, (value) =>
-      Effect.runSync(
-        Effect.gen(function* () {
-          const encoded = yield* encode(value);
-          const decoded = yield* decode(encoded);
-          return equivalent(decoded, value);
-        })
-      )
-    ),
+    fc.property(arbitrary, (value) => {
+      const encoded = Result.getOrThrow(encode(value));
+      const decoded = Result.getOrThrow(decode(encoded));
+      return equivalent(decoded, value);
+    }),
     fcRuns(options?.numRuns ?? 50)
   );
 };
@@ -55,16 +67,16 @@ describe("@beep/professional-desktop schema parity", () => {
     "preserves transport boundary encoded shapes",
     Effect.fnUntraced(function* () {
       const sidecarTransportWire = { ipc: true };
-      const sidecarTransport = yield* S.decodeUnknownEffect(SidecarTransport)(sidecarTransportWire);
-      expect(yield* S.encodeUnknownEffect(SidecarTransport)(sidecarTransport)).toStrictEqual(sidecarTransportWire);
+      const sidecarTransport = yield* decodeSidecarTransport(sidecarTransportWire);
+      expect(yield* encodeSidecarTransport(sidecarTransport)).toStrictEqual(sidecarTransportWire);
 
       const inboundFrameWire = '{"jsonrpc":"2.0"}\n';
       const inboundFrame = yield* InboundFrame.decodeUnknownEffect(inboundFrameWire);
-      expect(yield* S.encodeUnknownEffect(InboundFrame)(inboundFrame)).toStrictEqual(inboundFrameWire);
+      expect(yield* encodeInboundFrame(inboundFrame)).toStrictEqual(inboundFrameWire);
 
       const inboundEventWire = { _tag: "Rx", payload: inboundFrameWire };
-      const inboundEvent = yield* S.decodeUnknownEffect(InboundEvent)(inboundEventWire);
-      expect(yield* S.encodeUnknownEffect(InboundEvent)(inboundEvent)).toStrictEqual(inboundEventWire);
+      const inboundEvent = yield* decodeInboundEvent(inboundEventWire);
+      expect(yield* encodeInboundEvent(inboundEvent)).toStrictEqual(inboundEventWire);
 
       const closedPayloadWire = {
         code: 0,
@@ -73,7 +85,7 @@ describe("@beep/professional-desktop schema parity", () => {
         signal: null,
       };
       const closedPayload = yield* SidecarClosedPayload.decodeUnknownEffect(closedPayloadWire);
-      expect(yield* S.encodeUnknownEffect(SidecarClosedPayload)(closedPayload)).toStrictEqual(closedPayloadWire);
+      expect(yield* encodeSidecarClosedPayload(closedPayload)).toStrictEqual(closedPayloadWire);
     })
   );
 
@@ -81,8 +93,8 @@ describe("@beep/professional-desktop schema parity", () => {
     "preserves migration option wire shape and schema-owned default",
     Effect.fnUntraced(function* () {
       const customWire = { migrationsSchema: "chat_runtime" };
-      const custom = yield* S.decodeUnknownEffect(ProfessionalDesktopMigrationOptions)(customWire);
-      expect(yield* S.encodeUnknownEffect(ProfessionalDesktopMigrationOptions)(custom)).toStrictEqual(customWire);
+      const custom = yield* decodeProfessionalDesktopMigrationOptions(customWire);
+      expect(yield* encodeProfessionalDesktopMigrationOptions(custom)).toStrictEqual(customWire);
 
       const withDefault = ProfessionalDesktopMigrationOptions.make({});
       expect(withDefault.migrationsSchema).toBe("drizzle");
@@ -92,22 +104,22 @@ describe("@beep/professional-desktop schema parity", () => {
   it.effect(
     "preserves document intake onboarding and drop wire shapes",
     Effect.fnUntraced(function* () {
-      const configure = ConfigureWorkspaceVaultInput.make({
+      const configure = yield* decodeSetWorkspaceVaultInput({
         vaultRootPath: "/tmp/beep-documents-vault",
-        workspaceId: DEFAULT_WORKSPACE_ID,
+        workspaceId: DEFAULT_PROFESSIONAL_WORKSPACE_ID,
       });
-      expect(yield* S.encodeUnknownEffect(ConfigureWorkspaceVaultInput)(configure)).toStrictEqual({
+      expect(yield* encodeSetWorkspaceVaultInput(configure)).toStrictEqual({
         vaultRootPath: "/tmp/beep-documents-vault",
         workspaceId: 1,
       });
 
       const dropped = DroppedDocumentInput.make({
         content: new Uint8Array([1, 2, 3]),
-        intakeBatchId: yield* S.decodeUnknownEffect(IntakeBatchId)("batch-1"),
+        intakeBatchId: yield* decodeIntakeBatchId("batch-1"),
         originalFileName: "Complaint.pdf",
-        workspaceId: DEFAULT_WORKSPACE_ID,
+        workspaceId: DEFAULT_PROFESSIONAL_WORKSPACE_ID,
       });
-      expect(yield* S.encodeUnknownEffect(DroppedDocumentInput)(dropped)).toStrictEqual({
+      expect(yield* encodeDroppedDocumentInput(dropped)).toStrictEqual({
         content: "AQID",
         intakeBatchId: "batch-1",
         originalFileName: "Complaint.pdf",
@@ -122,14 +134,14 @@ describe("@beep/professional-desktop schema parity", () => {
       const payload = intakeDroppedFilePayload(
         DroppedDocumentInput.make({
           content: new Uint8Array([1, 2, 3]),
-          intakeBatchId: yield* S.decodeUnknownEffect(IntakeBatchId)("batch-raw"),
+          intakeBatchId: yield* decodeIntakeBatchId("batch-raw"),
           originalFileName: "Raw.pdf",
-          workspaceId: DEFAULT_WORKSPACE_ID,
+          workspaceId: DEFAULT_PROFESSIONAL_WORKSPACE_ID,
         })
       );
 
       expect(payload.content).toEqual(new Uint8Array([1, 2, 3]));
-      expect(yield* S.encodeUnknownEffect(IntakeDroppedFilePayload)(payload)).toMatchObject({
+      expect(yield* encodeIntakeDroppedFilePayload(payload)).toMatchObject({
         content: "AQID",
         originalFileName: "Raw.pdf",
       });
@@ -137,31 +149,16 @@ describe("@beep/professional-desktop schema parity", () => {
   );
 
   it.effect(
-    "surfaces workspace vault configuration failures and allows retry status",
-    Effect.fnUntraced(function* () {
-      const statuses: Array<string | null> = [];
-
-      yield* configureSelectedWorkspaceVault(
-        "/tmp/rejected-vault",
-        () => Promise.reject({ message: "vault path rejected" }),
-        (status) => statuses.push(status)
-      );
-
-      expect(statuses).toEqual(["Saving workspace vault", "vault path rejected"]);
-    })
-  );
-
-  it.effect(
     "preserves vault sync wire shapes",
     Effect.fnUntraced(function* () {
-      const workspacePayload = VaultSyncWorkspacePayload.make({ workspaceId: DEFAULT_WORKSPACE_ID });
-      expect(yield* S.encodeUnknownEffect(VaultSyncWorkspacePayload)(workspacePayload)).toStrictEqual({
+      const workspacePayload = VaultSyncWorkspacePayload.make({ workspaceId: DEFAULT_PROFESSIONAL_WORKSPACE_ID });
+      expect(yield* encodeVaultSyncWorkspacePayload(workspacePayload)).toStrictEqual({
         workspaceId: 1,
       });
 
       const reviewedWire = { conflictId: 7, workspaceId: 1 };
-      const reviewed = yield* S.decodeUnknownEffect(MarkVaultSyncConflictReviewedPayload)(reviewedWire);
-      expect(yield* S.encodeUnknownEffect(MarkVaultSyncConflictReviewedPayload)(reviewed)).toStrictEqual(reviewedWire);
+      const reviewed = yield* decodeMarkVaultSyncConflictReviewedPayload(reviewedWire);
+      expect(yield* encodeMarkVaultSyncConflictReviewedPayload(reviewed)).toStrictEqual(reviewedWire);
 
       const bootstrapStatusWire = {
         conflictItems: 0,
@@ -175,9 +172,9 @@ describe("@beep/professional-desktop schema parity", () => {
         provider: "box",
         queuedOperations: 0,
       };
-      const bootstrapStatus = yield* S.decodeUnknownEffect(VaultSyncStatus)(bootstrapStatusWire);
+      const bootstrapStatus = yield* decodeVaultSyncStatus(bootstrapStatusWire);
       expect(O.isNone(bootstrapStatus.cursorPosition)).toBe(true);
-      expect(yield* S.encodeUnknownEffect(VaultSyncStatus)(bootstrapStatus)).toStrictEqual(bootstrapStatusWire);
+      expect(yield* encodeVaultSyncStatus(bootstrapStatus)).toStrictEqual(bootstrapStatusWire);
 
       const activeStatusWire = {
         conflictItems: 1,
@@ -191,8 +188,8 @@ describe("@beep/professional-desktop schema parity", () => {
         provider: "box",
         queuedOperations: 5,
       };
-      const activeStatus = yield* S.decodeUnknownEffect(VaultSyncStatus)(activeStatusWire);
-      expect(yield* S.encodeUnknownEffect(VaultSyncStatus)(activeStatus)).toStrictEqual(activeStatusWire);
+      const activeStatus = yield* decodeVaultSyncStatus(activeStatusWire);
+      expect(yield* encodeVaultSyncStatus(activeStatus)).toStrictEqual(activeStatusWire);
     })
   );
 
@@ -204,14 +201,13 @@ describe("@beep/professional-desktop schema parity", () => {
   });
 
   it("normalizes derived titles through the schema", () => {
-    const decodeTitle = S.decodeUnknownOption(DerivedThreadTitle);
     const longTitle = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-title";
 
-    expect(O.getOrUndefined(decodeTitle("  Draft memo  "))).toBe("Draft memo");
-    expect(O.getOrUndefined(decodeTitle(longTitle))).toBe(
+    expect(O.getOrUndefined(decodeDerivedThreadTitle("  Draft memo  "))).toBe("Draft memo");
+    expect(O.getOrUndefined(decodeDerivedThreadTitle(longTitle))).toBe(
       "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-t"
     );
-    expect(O.isNone(decodeTitle("   "))).toBe(true);
+    expect(O.isNone(decodeDerivedThreadTitle("   "))).toBe(true);
   });
 
   it("round-trips schema-derived arbitraries through the absorbed invariants", () => {

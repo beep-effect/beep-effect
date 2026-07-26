@@ -2,14 +2,15 @@
 
 ## Status
 
-Status: `pending`
+Status: `in_progress`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Pinned-source assembly and stable-ID spike | pending | Pin courts-db/reporters-db commits; distinguish templated inputs from rendered releases; render deterministically; prove record/ID counts; exercise tombstone, alias/successor, reused-abbreviation, date-split, drift-report, and compatibility classifications. | Authoritative inputs, checksums, exact counts, artifact-version rules, and fixture outcomes are recorded; root notice pins are filled; contradictions block P1. |
-| P1 Implement | pending | Add the two public sync targets, package-private artifacts/sidecars, stable domain IDs/vocabulary/lookups, lifecycle rules, compatibility API, drift report, and canonical notice metadata. | Public consumers use stable IDs/versioned compatibility surface; raw artifacts remain private; regeneration is deterministic. |
+| P0 Pinned-source assembly | completed 2026-07-25 | Pin courts-db/reporters-db commits; distinguish templated inputs from rendered releases; audit eyecite-js/ts; prove authoritative counts and assembly semantics. | Pins, archive checksums, input mapping, exact counts, and the eyecite audit are recorded. |
+| P1a Ingestion substrate | in progress | Add the two public sync targets, internal artifacts/sidecars, deterministic reporters decode and courts assembly, focused tests, workflow ownership, and notice metadata. | Both targets regenerate with no diff; raw artifacts remain private; focused proof is green. |
+| P1b Public domain contract | pending | Add stable domain IDs/vocabulary/lookups, lifecycle rules, compatibility API, and drift classification. | Public consumers use stable IDs and the versioned compatibility surface without raw imports. |
 | P2 Verify | pending | Run deterministic regeneration/count, lifecycle/drift, compatibility, consumer-contract, package, notice, and repo proof. | Every `SPEC.md` criterion is green or a blocker is archived without weakening identity/provenance. |
 | P3 Close | pending | Drive the PR to mergeable through Yeet, write reflection, archive evidence, and synchronize packet state. | Hosted checks/review are green; reflection and packet evidence are current. |
 
@@ -22,7 +23,10 @@ Status: `pending`
 
 ## Execution Notes
 
-- P0 is a hard gate. Do not infer current counts or pins from historical notes.
+- P0 is complete for ingestion: reporters-db has 1,236 keys / 1,262 records and
+  courts-db assembles 2,809 unique records from the pinned sources.
+- P1a deliberately excludes P1b. Do not expose raw generated files or invent
+  domain APIs while completing ingestion proof.
 - Preserve unrelated worktree changes and keep `SPEC.md` normative.
 - Do not implement resolver behavior, fuzzy ranking, SKOS, or citation extraction.
 - The citation engine's only data boundary is the public compatibility contract.

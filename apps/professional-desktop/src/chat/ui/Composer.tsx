@@ -24,24 +24,25 @@
 "use client";
 
 import {
-  draftAtoms,
   draftRevisionAtoms,
-  EditTurnRequest,
   editTargetAtom,
   reportDecodeFailureAtom,
   runTurnAtom,
-  SendTurnRequest,
   turnActiveAtom,
 } from "@beep/agents-client/Chat.atoms";
 import { ChatComposer, defaultChatSlashItems } from "@beep/editor";
-import { editorStateToDocument } from "@beep/lexical-schema";
-import { renderPlainTextUnsafe } from "@beep/md/Md.render";
 import { Button } from "@beep/ui/components/button";
-import { toast } from "@beep/ui/components/sonner";
 import { A, O, Str } from "@beep/utils";
-import { RegistryContext, useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { useAtomMount, useAtomValue } from "@effect/atom-react";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
-import { useContext } from "react";
+import {
+  composerAttachmentHandlerAtom,
+  composerCancelEditHandlerAtom,
+  composerDraftSeedAtoms,
+  composerSendHandlerAtoms,
+  composerSerializedChangeHandlerAtoms,
+  composerStopHandlerAtom,
+} from "./Composer.atoms.ts";
 import { documentEditorStateAtom } from "./editor-state.atoms.ts";
 import type { EditTarget } from "@beep/agents-client/Chat.atoms";
 import type { MentionOption, MentionSource } from "@beep/editor";
@@ -63,16 +64,6 @@ const contentToLoadFor = (editTarget: O.Option<EditTarget>, draft: O.Option<Md.D
 // v1 mention source — a small app-injected set demonstrating ephemeral `@`
 // mentions. Real entity / prior-art / persona sources land with the knowledge
 // graph; mentions serialize to plain text, so swapping the source is additive.
-/**
- * Longest message the composer will send.
- *
- * There was no bound at all: a 50,000-character paste was accepted, persisted,
- * rendered into the transcript, and sent verbatim to the model. This is a
- * generous ceiling for a chat prompt while keeping a hostile paste out of the
- * thread and off the wire.
- */
-const MAX_MESSAGE_CHARACTERS = 16_000;
-
 const MENTION_CANDIDATES: ReadonlyArray<MentionOption> = [
   { id: "assistant", label: "assistant", hint: "the workspace agent" },
   { id: "workspace", label: "workspace", hint: "the active workspace" },
@@ -99,39 +90,24 @@ const mentionSource: MentionSource = (query) => {
  * @since 0.0.0
  */
 export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Element {
-  // Registry handle so `submit` reads every reactive value (turn activity, latest
-  // state, edit target) FRESH at fire time, and so the draft is read UNTRACKED for
-  // seeding. The foundation seeds the send handler ONCE per mount (stable per
-  // `key`) and the composer does not remount on streaming / draft change, so a
-  // `submit` closed over a render snapshot would go stale — blocking the send, or
-  // double-sending mid-stream.
-  const registry = useContext(RegistryContext);
-  const draftAtom = draftAtoms(threadId);
-  const setDraft = useAtomSet(draftAtom);
   // Edit state is global while the composer is per-thread: an edit target from
   // another thread would otherwise seed this composer and submit that thread's
   // turn id against this one.
   const editTarget = O.filter(useAtomValue(editTargetAtom), (target) => target.threadId === threadId);
-  const setEditTarget = useAtomSet(editTargetAtom);
-  const runTurn = useAtomSet(runTurnAtom);
   const streaming = useAtomValue(turnActiveAtom);
-
-  // The draft is read UNTRACKED: the seed only needs the draft value at (re)mount
-  // time. Subscribing would re-render + re-project on every keystroke even though
-  // the editor (not this component) owns its content after mount and mirrors edits
-  // back into the draft. Reads stay current because every remount trigger (thread
-  // or edit-target switch) re-renders the composer.
-  const draft = registry.get(draftAtom);
-  // Subscribed (unlike the draft itself): a failed turn puts the message back and
-  // bumps this, which remounts the composer so the editor re-seeds from it.
   const draftRevision = useAtomValue(draftRevisionAtoms(threadId));
+  const draft = useAtomValue(composerDraftSeedAtoms(threadId)(draftRevision));
+  const onAttach = useAtomValue(composerAttachmentHandlerAtom);
+  const cancelEdit = useAtomValue(composerCancelEditHandlerAtom);
+  const submit = useAtomValue(composerSendHandlerAtoms(threadId));
+  const onSerializedChange = useAtomValue(composerSerializedChangeHandlerAtoms(threadId));
+  const stop = useAtomValue(composerStopHandlerAtom);
 
   // keep the report + turn fibers subscribed — unobserved fn atoms get
   // interrupted by the registry (POC lesson, ported verbatim). ChatComposer
   // already drops out-of-schema states internally, so onSerializedChange only
   // ever sees valid content; the decode-failure fiber stays mounted as the
   // contracted observability sink for that path.
-  const reportDecodeFailure = useAtomSet(reportDecodeFailureAtom);
   useAtomMount(reportDecodeFailureAtom);
   useAtomMount(runTurnAtom);
 
@@ -147,80 +123,6 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
     onSome: (t) => `edit:${t.turnId}`,
   });
 
-  // mirror unsent content as a draft (only while composing a fresh message;
-  // edit-target content is not persisted as a draft) so it can re-seed the editor
-  // on thread switch.
-  const onSerializedChange = (state: SerializedEditorState): void => {
-    if (isEditing) return;
-    const document = editorStateToDocument(state);
-    const isEmpty = A.isReadonlyArrayEmpty(document.children);
-    setDraft(isEmpty ? O.none() : O.some(document));
-  };
-
-  // Receives the editor's CURRENT serialized state from the foundation send
-  // binding (read live at send time — no mirror to go stale or miss content).
-  // Returns true when a turn was dispatched, so the foundation clears the editor
-  // in place (keeping focus); false on a no-op (streaming or empty). `streaming`
-  // and `editTarget` are read FRESH from the registry because the send handler is
-  // seeded once per mount and a closed-over activity value could double-send.
-  const submit = (state: SerializedEditorState): boolean => {
-    // Every refusal below explains itself. A silently refused send is
-    // indistinguishable from a broken composer: Enter and the Send button simply
-    // stop working, with the draft sitting there and no error anywhere, and the
-    // only way to find out why is to read the source.
-    if (registry.get(turnActiveAtom)) {
-      toast.info("A reply is still streaming — wait for it to finish, or press Stop.");
-      return false;
-    }
-    const content = editorStateToDocument(state);
-    if (A.isReadonlyArrayEmpty(content.children)) {
-      // The send command only fires when the editor holds text, so an empty
-      // projection means the editor→document codec dropped everything the user
-      // wrote. That is a bug, and it used to present as a composer that had
-      // simply stopped working: Enter and Send did nothing, no error, no log,
-      // the draft still sitting there.
-      toast.error("This message could not be prepared for sending. Your draft has been kept.");
-      reportDecodeFailure();
-      return false;
-    }
-    // A message had no upper bound at all: a 50,000-character paste was accepted,
-    // persisted, rendered, and sent verbatim to the model. Refuse it here and
-    // leave the content in the editor so nothing is lost.
-    const length = Str.length(renderPlainTextUnsafe(content));
-    if (length > MAX_MESSAGE_CHARACTERS) {
-      toast.error(
-        `Message is ${length.toLocaleString()} characters — the limit is ${MAX_MESSAGE_CHARACTERS.toLocaleString()}.`
-      );
-      return false;
-    }
-    runTurn(
-      O.match(
-        // Read fresh (the handler is seeded once per mount) and scoped to this
-        // thread; a stale cross-thread target sends a new message instead of
-        // rewriting a turn that does not belong here.
-        O.filter(registry.get(editTargetAtom), (target) => target.threadId === threadId),
-        {
-          onNone: () => SendTurnRequest.make({ threadId, content }),
-          onSome: (t) => EditTurnRequest.make({ threadId, turnId: t.turnId, content }),
-        }
-      )
-    );
-    setDraft(O.none());
-    setEditTarget(O.none());
-    return true;
-  };
-
-  const stop = (): void => runTurn(Atom.Interrupt);
-
-  // Attachment send-on-payload is the gated cross-slice extension (SendTurnRequest
-  // + Anthropic vision); v1 captures and previews but does not transport — the
-  // recorded stubbed-send degrade.
-  const onAttach = (files: ReadonlyArray<File>): void => {
-    toast.info(
-      `Captured ${files.length} attachment${files.length === 1 ? "" : "s"} — sending attachments to the model isn't wired yet.`
-    );
-  };
-
   const composerProps: ThreadComposerProps = {
     onSerializedChange,
     onSend: submit,
@@ -235,7 +137,7 @@ export function Composer({ threadId }: { readonly threadId: ThreadId }): JSX.Ele
       {isEditing ? (
         <div className="mb-2 flex items-center justify-between rounded-md border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-xs text-muted-foreground">
           <span>Editing message — sending will rewrite the thread from this point.</span>
-          <Button variant="ghost" size="sm" onClick={() => setEditTarget(O.none())}>
+          <Button variant="ghost" size="sm" onClick={cancelEdit}>
             Cancel
           </Button>
         </div>

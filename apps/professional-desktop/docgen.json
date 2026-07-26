@@ -1,0 +1,591 @@
+{
+  "$schema": "../../packages/tooling/tool/docgen/schema.json",
+  "exclude": ["src/internal/**/*.ts", "src/internal/**/*.tsx"],
+  "srcLink": "https://github.com/beep-effect/beep-effect/tree/main/apps/professional-desktop/src/",
+  "examplesCompilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "module": "esnext",
+    "target": "es2022",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "rewriteRelativeImportExtensions": true,
+    "allowImportingTsExtensions": true,
+    "moduleDetection": "force",
+    "verbatimModuleSyntax": true,
+    "allowJs": false,
+    "erasableSyntaxOnly": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "exactOptionalPropertyTypes": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "stripInternal": false,
+    "noErrorTruncation": true,
+    "types": ["node", "bun"],
+    "jsx": "react-jsx",
+    "paths": {
+      "@/*": ["../../src/*"],
+      "@beep/professional-desktop": [
+        "../../apps/professional-desktop/src/index.ts"
+      ],
+      "@beep/agents-client": ["../../packages/agents/client/src/index.ts"],
+      "@beep/agents-client/Chat.atoms": [
+        "../../packages/agents/client/src/Chat.atoms.ts"
+      ],
+      "@beep/agents-client/Chat.layer": [
+        "../../packages/agents/client/src/Chat.layer.ts"
+      ],
+      "@beep/agents-client/ClientObservability": [
+        "../../packages/agents/client/src/ClientObservability.ts"
+      ],
+      "@beep/agents-client/ProviderInstance.atoms": [
+        "../../packages/agents/client/src/ProviderInstance.atoms.ts"
+      ],
+      "@beep/agents-client/ProviderInstance.service": [
+        "../../packages/agents/client/src/ProviderInstance.service.ts"
+      ],
+      "@beep/agents-domain": ["../../packages/agents/domain/src/index.ts"],
+      "@beep/agents-domain/entities": [
+        "../../packages/agents/domain/src/entities/index.ts"
+      ],
+      "@beep/agents-domain/entities/Agent": [
+        "../../packages/agents/domain/src/entities/Agent/index.ts"
+      ],
+      "@beep/agents-domain/entities/ProviderInstance": [
+        "../../packages/agents/domain/src/entities/ProviderInstance/index.ts"
+      ],
+      "@beep/agents-domain/entities/Skill": [
+        "../../packages/agents/domain/src/entities/Skill/index.ts"
+      ],
+      "@beep/agents-domain/values": [
+        "../../packages/agents/domain/src/values/index.ts"
+      ],
+      "@beep/agents-domain/values/AssistantContent": [
+        "../../packages/agents/domain/src/values/AssistantContent/index.ts"
+      ],
+      "@beep/agents-server": ["../../packages/agents/server/src/index.ts"],
+      "@beep/agents-server/test": ["../../packages/agents/server/src/test.ts"],
+      "@beep/agents-server/AssistantTurn": [
+        "../../packages/agents/server/src/AssistantTurn/index.ts"
+      ],
+      "@beep/agents-server/ProviderInstance": [
+        "../../packages/agents/server/src/ProviderInstance/index.ts"
+      ],
+      "@beep/agents-server/AnthropicTurnCodec": [
+        "../../packages/agents/server/src/AssistantTurn/AnthropicTurnCodec.ts"
+      ],
+      "@beep/agents-server/AnthropicTurnKernel": [
+        "../../packages/agents/server/src/AssistantTurn/AnthropicTurnKernel.ts"
+      ],
+      "@beep/agents-use-cases": [
+        "../../packages/agents/use-cases/src/index.ts"
+      ],
+      "@beep/agents-use-cases/public": [
+        "../../packages/agents/use-cases/src/public.ts"
+      ],
+      "@beep/agents-use-cases/server": [
+        "../../packages/agents/use-cases/src/server.ts"
+      ],
+      "@beep/agents-use-cases/proof": [
+        "../../packages/agents/use-cases/src/proof.ts"
+      ],
+      "@beep/agents-use-cases/test": [
+        "../../packages/agents/use-cases/src/test.ts"
+      ],
+      "@beep/anthropic": ["../../packages/drivers/anthropic/src/index.ts"],
+      "@beep/cosmos": ["../../packages/drivers/cosmos/src/index.ts"],
+      "@beep/cosmos/browser": ["../../packages/drivers/cosmos/src/browser.ts"],
+      "@beep/doc-text": ["../../packages/drivers/doc-text/src/index.ts"],
+      "@beep/doc-text/*": ["../../packages/drivers/doc-text/src/*.ts"],
+      "@beep/dock": ["../../packages/foundation/ui-system/dock/src/index.ts"],
+      "@beep/dock-react": [
+        "../../packages/foundation/ui-system/dock-react/src/index.ts"
+      ],
+      "@beep/documents-domain": [
+        "../../packages/documents/domain/src/index.ts"
+      ],
+      "@beep/documents-domain/aggregates": [
+        "../../packages/documents/domain/src/aggregates/index.ts"
+      ],
+      "@beep/documents-domain/entities": [
+        "../../packages/documents/domain/src/entities/index.ts"
+      ],
+      "@beep/documents-domain/identity": [
+        "../../packages/documents/domain/src/identity/index.ts"
+      ],
+      "@beep/documents-domain/identity/Documents": [
+        "../../packages/documents/domain/src/identity/Documents.ts"
+      ],
+      "@beep/documents-domain/values": [
+        "../../packages/documents/domain/src/values/index.ts"
+      ],
+      "@beep/documents-server": [
+        "../../packages/documents/server/src/index.ts"
+      ],
+      "@beep/documents-server/layer": [
+        "../../packages/documents/server/src/Layer.ts"
+      ],
+      "@beep/documents-server/test": [
+        "../../packages/documents/server/src/test.ts"
+      ],
+      "@beep/documents-use-cases": [
+        "../../packages/documents/use-cases/src/index.ts"
+      ],
+      "@beep/documents-use-cases/public": [
+        "../../packages/documents/use-cases/src/public.ts"
+      ],
+      "@beep/documents-use-cases/server": [
+        "../../packages/documents/use-cases/src/server.ts"
+      ],
+      "@beep/editor": [
+        "../../packages/foundation/ui-system/editor/src/index.ts"
+      ],
+      "@beep/editor/artifact-ref-node": [
+        "../../packages/foundation/ui-system/editor/src/artifact-ref-node.tsx"
+      ],
+      "@beep/editor/chat": [
+        "../../packages/foundation/ui-system/editor/src/chat/index.ts"
+      ],
+      "@beep/editor/composer": [
+        "../../packages/foundation/ui-system/editor/src/composer.tsx"
+      ],
+      "@beep/editor/mermaid-node": [
+        "../../packages/foundation/ui-system/editor/src/mermaid-node.tsx"
+      ],
+      "@beep/editor/mermaid-view": [
+        "../../packages/foundation/ui-system/editor/src/mermaid-view.tsx"
+      ],
+      "@beep/editor/nodes": [
+        "../../packages/foundation/ui-system/editor/src/nodes.ts"
+      ],
+      "@beep/editor/theme": [
+        "../../packages/foundation/ui-system/editor/src/theme.ts"
+      ],
+      "@beep/editor/viewer": [
+        "../../packages/foundation/ui-system/editor/src/viewer.tsx"
+      ],
+      "@beep/editor/youtube-embed": [
+        "../../packages/foundation/ui-system/editor/src/youtube-embed.tsx"
+      ],
+      "@beep/editor/youtube-node": [
+        "../../packages/foundation/ui-system/editor/src/youtube-node.tsx"
+      ],
+      "@beep/epistemic-domain": [
+        "../../packages/epistemic/domain/src/index.ts"
+      ],
+      "@beep/epistemic-domain/entities": [
+        "../../packages/epistemic/domain/src/entities/index.ts"
+      ],
+      "@beep/epistemic-domain/entities/Activity": [
+        "../../packages/epistemic/domain/src/entities/Activity/index.ts"
+      ],
+      "@beep/epistemic-domain/entities/CandidateClaim": [
+        "../../packages/epistemic/domain/src/entities/CandidateClaim/index.ts"
+      ],
+      "@beep/epistemic-domain/entities/Evidence": [
+        "../../packages/epistemic/domain/src/entities/Evidence/index.ts"
+      ],
+      "@beep/epistemic-domain/entities/UsageRecord": [
+        "../../packages/epistemic/domain/src/entities/UsageRecord/index.ts"
+      ],
+      "@beep/epistemic-domain/values": [
+        "../../packages/epistemic/domain/src/values/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ClaimGate": [
+        "../../packages/epistemic/domain/src/values/ClaimGate/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ClaimLifecycle": [
+        "../../packages/epistemic/domain/src/values/ClaimLifecycle/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ClaimProjection": [
+        "../../packages/epistemic/domain/src/values/ClaimProjection/index.ts"
+      ],
+      "@beep/epistemic-domain/values/EpistemicFixtureKey": [
+        "../../packages/epistemic/domain/src/values/EpistemicFixtureKey/index.ts"
+      ],
+      "@beep/epistemic-domain/values/EvidenceSpan": [
+        "../../packages/epistemic/domain/src/values/EvidenceSpan/index.ts"
+      ],
+      "@beep/epistemic-tables": [
+        "../../packages/epistemic/tables/src/index.ts"
+      ],
+      "@beep/epistemic-tables/entities": [
+        "../../packages/epistemic/tables/src/entities/index.ts"
+      ],
+      "@beep/epistemic-tables/entities/UsageRecord": [
+        "../../packages/epistemic/tables/src/entities/UsageRecord/index.ts"
+      ],
+      "@beep/file-processing": [
+        "../../packages/foundation/capability/file-processing/src/index.ts"
+      ],
+      "@beep/file-processing/*": [
+        "../../packages/foundation/capability/file-processing/src/*.ts"
+      ],
+      "@beep/file-processing/Artifact": [
+        "../../packages/foundation/capability/file-processing/src/Artifact/index.ts"
+      ],
+      "@beep/file-processing/Extraction": [
+        "../../packages/foundation/capability/file-processing/src/Extraction/index.ts"
+      ],
+      "@beep/file-processing/Operation": [
+        "../../packages/foundation/capability/file-processing/src/Operation/index.ts"
+      ],
+      "@beep/file-processing/PathSafety": [
+        "../../packages/foundation/capability/file-processing/src/PathSafety/index.ts"
+      ],
+      "@beep/file-processing/Service": [
+        "../../packages/foundation/capability/file-processing/src/Service/index.ts"
+      ],
+      "@beep/file-processing/Strategy": [
+        "../../packages/foundation/capability/file-processing/src/Strategy/index.ts"
+      ],
+      "@beep/file-processing/test": [
+        "../../packages/foundation/capability/file-processing/src/test.ts"
+      ],
+      "@beep/graph-3d": ["../../packages/drivers/graph-3d/src/index.ts"],
+      "@beep/graph-3d/browser": [
+        "../../packages/drivers/graph-3d/src/browser.ts"
+      ],
+      "@beep/graph-3d/react": ["../../packages/drivers/graph-3d/src/react.ts"],
+      "@beep/identity": [
+        "../../packages/foundation/modeling/identity/src/index.ts"
+      ],
+      "@beep/identity/*": [
+        "../../packages/foundation/modeling/identity/src/*.ts"
+      ],
+      "@beep/identity/packages": [
+        "../../packages/foundation/modeling/identity/src/packages.ts"
+      ],
+      "@beep/lexical-schema": [
+        "../../packages/foundation/modeling/lexical/src/index.ts"
+      ],
+      "@beep/lexical-schema/*": [
+        "../../packages/foundation/modeling/lexical/src/*.ts"
+      ],
+      "@beep/mcp-kit": [
+        "../../packages/foundation/capability/mcp-kit/src/index.ts"
+      ],
+      "@beep/mcp-kit/*": [
+        "../../packages/foundation/capability/mcp-kit/src/*.ts"
+      ],
+      "@beep/md": ["../../packages/foundation/modeling/md/src/index.ts"],
+      "@beep/md/Md": ["../../packages/foundation/modeling/md/src/Md.ts"],
+      "@beep/md/Md.behavior": [
+        "../../packages/foundation/modeling/md/src/Md.behavior.ts"
+      ],
+      "@beep/md/Md.escape": [
+        "../../packages/foundation/modeling/md/src/Md.escape.ts"
+      ],
+      "@beep/md/Md.model": [
+        "../../packages/foundation/modeling/md/src/Md.model.ts"
+      ],
+      "@beep/md/Md.render": [
+        "../../packages/foundation/modeling/md/src/Md.render.ts"
+      ],
+      "@beep/observability": [
+        "../../packages/foundation/capability/observability/src/index.ts"
+      ],
+      "@beep/observability/experimental/server": [
+        "../../packages/foundation/capability/observability/src/experimental/server/index.ts"
+      ],
+      "@beep/observability/server": [
+        "../../packages/foundation/capability/observability/src/server/index.ts"
+      ],
+      "@beep/observability/web": [
+        "../../packages/foundation/capability/observability/src/web/index.ts"
+      ],
+      "@beep/ontology-client": ["../../packages/ontology/client/src/index.ts"],
+      "@beep/ontology-domain": ["../../packages/ontology/domain/src/index.ts"],
+      "@beep/ontology-domain/aggregates": [
+        "../../packages/ontology/domain/src/aggregates/index.ts"
+      ],
+      "@beep/ontology-domain/aggregates/Session": [
+        "../../packages/ontology/domain/src/aggregates/Session/index.ts"
+      ],
+      "@beep/ontology-server": ["../../packages/ontology/server/src/index.ts"],
+      "@beep/ontology-server/layer": [
+        "../../packages/ontology/server/src/Layer.ts"
+      ],
+      "@beep/ontology-server/test": [
+        "../../packages/ontology/server/src/test.ts"
+      ],
+      "@beep/ontology-server/tools": [
+        "../../packages/ontology/server/src/tools/index.ts"
+      ],
+      "@beep/ontology-server/aggregates/Session": [
+        "../../packages/ontology/server/src/aggregates/Session/index.ts"
+      ],
+      "@beep/ontology-ui": ["../../packages/ontology/ui/src/index.ts"],
+      "@beep/ontology-use-cases": [
+        "../../packages/ontology/use-cases/src/index.ts"
+      ],
+      "@beep/ontology-use-cases/public": [
+        "../../packages/ontology/use-cases/src/public.ts"
+      ],
+      "@beep/ontology-use-cases/server": [
+        "../../packages/ontology/use-cases/src/server.ts"
+      ],
+      "@beep/ontology-use-cases/worker": [
+        "../../packages/ontology/use-cases/src/worker.ts"
+      ],
+      "@beep/ontology-use-cases/tools": [
+        "../../packages/ontology/use-cases/src/tools/index.ts"
+      ],
+      "@beep/ontology-use-cases/aggregates/Session": [
+        "../../packages/ontology/use-cases/src/aggregates/Session/index.ts"
+      ],
+      "@beep/ontology-use-cases/aggregates/Session/worker": [
+        "../../packages/ontology/use-cases/src/aggregates/Session/worker.ts"
+      ],
+      "@beep/ontology-use-cases/aggregates/Session/server": [
+        "../../packages/ontology/use-cases/src/aggregates/Session/server.ts"
+      ],
+      "@beep/pglite": ["../../packages/drivers/pglite/src/index.ts"],
+      "@beep/pglite/*": ["../../packages/drivers/pglite/src/*.ts"],
+      "@beep/postgres": ["../../packages/drivers/postgres/src/index.ts"],
+      "@beep/postgres/client": [
+        "../../packages/drivers/postgres/src/PostgresClient.service.ts"
+      ],
+      "@beep/postgres/drizzle": [
+        "../../packages/drivers/postgres/src/PostgresDrizzle.service.ts"
+      ],
+      "@beep/postgres/errors": [
+        "../../packages/drivers/postgres/src/Postgres.errors.ts"
+      ],
+      "@beep/postgres/format": [
+        "../../packages/drivers/postgres/src/PostgresDiagnostics.service.ts"
+      ],
+      "@beep/postgres/interop": [
+        "../../packages/drivers/postgres/src/PostgresInterop.models.ts"
+      ],
+      "@beep/postgres/sqlstate": [
+        "../../packages/drivers/postgres/src/PostgresSqlState.models.ts"
+      ],
+      "@beep/rdf": ["../../packages/foundation/modeling/rdf/src/index.ts"],
+      "@beep/rdf/*": ["../../packages/foundation/modeling/rdf/src/*.ts"],
+      "@beep/shared-domain": ["../../packages/shared/domain/src/index.ts"],
+      "@beep/shared-domain/*": ["../../packages/shared/domain/src/*.ts"],
+      "@beep/shared-domain/aggregates": [
+        "../../packages/shared/domain/src/aggregates.ts"
+      ],
+      "@beep/shared-domain/entities": [
+        "../../packages/shared/domain/src/entities.ts"
+      ],
+      "@beep/shared-domain/entities/Membership": [
+        "../../packages/shared/domain/src/entities/Membership/index.ts"
+      ],
+      "@beep/shared-domain/entities/Organization": [
+        "../../packages/shared/domain/src/entities/Organization/index.ts"
+      ],
+      "@beep/shared-domain/entities/User": [
+        "../../packages/shared/domain/src/entities/User/index.ts"
+      ],
+      "@beep/shared-domain/entity": [
+        "../../packages/shared/domain/src/entity.ts"
+      ],
+      "@beep/shared-domain/entity/BaseEntity": [
+        "../../packages/shared/domain/src/entity/BaseEntity.ts"
+      ],
+      "@beep/shared-domain/entity/EntityId": [
+        "../../packages/shared/domain/src/entity/EntityId.ts"
+      ],
+      "@beep/shared-domain/entity/EntityRef": [
+        "../../packages/shared/domain/src/entity/EntityRef.ts"
+      ],
+      "@beep/shared-domain/entity/PublicEntityId": [
+        "../../packages/shared/domain/src/entity/PublicEntityId.ts"
+      ],
+      "@beep/shared-domain/entity/Principal": [
+        "../../packages/shared/domain/src/entity/Principal.ts"
+      ],
+      "@beep/shared-domain/entity/SourceKind": [
+        "../../packages/shared/domain/src/entity/SourceKind.ts"
+      ],
+      "@beep/shared-domain/entity/primitives": [
+        "../../packages/shared/domain/src/entity/primitives.ts"
+      ],
+      "@beep/shared-domain/identity": [
+        "../../packages/shared/domain/src/identity.ts"
+      ],
+      "@beep/shared-domain/identity/Agents": [
+        "../../packages/shared/domain/src/identity/Agents.ts"
+      ],
+      "@beep/shared-domain/identity/Epistemic": [
+        "../../packages/shared/domain/src/identity/Epistemic.ts"
+      ],
+      "@beep/shared-domain/identity/LawPractice": [
+        "../../packages/shared/domain/src/identity/LawPractice.ts"
+      ],
+      "@beep/shared-domain/identity/Shared": [
+        "../../packages/shared/domain/src/identity/Shared.ts"
+      ],
+      "@beep/shared-domain/identity/Workspace": [
+        "../../packages/shared/domain/src/identity/Workspace.ts"
+      ],
+      "@beep/shared-domain/values": [
+        "../../packages/shared/domain/src/values.ts"
+      ],
+      "@beep/shared-domain/values/ClaimLifecycle": [
+        "../../packages/shared/domain/src/values/ClaimLifecycle/index.ts"
+      ],
+      "@beep/shared-domain/values/LocalDate": [
+        "../../packages/shared/domain/src/values/LocalDate/index.ts"
+      ],
+      "@beep/shared-domain/values/OnePasswordReference": [
+        "../../packages/shared/domain/src/values/OnePasswordReference/index.ts"
+      ],
+      "@beep/test-utils": [
+        "../../packages/tooling/test-kit/test-utils/src/index.ts"
+      ],
+      "@beep/test-utils/*": [
+        "../../packages/tooling/test-kit/test-utils/src/*.ts"
+      ],
+      "@beep/ui": ["../../packages/foundation/ui-system/ui/src/index.ts"],
+      "@beep/ui/themes": [
+        "../../packages/foundation/ui-system/ui/src/themes/index.ts"
+      ],
+      "@beep/ui/themes/theme-provider": [
+        "../../packages/foundation/ui-system/ui/src/themes/theme-provider.tsx"
+      ],
+      "@beep/ui/themes/theme-init-script": [
+        "../../packages/foundation/ui-system/ui/src/themes/theme-init-script.tsx"
+      ],
+      "@beep/ui/styles/globals.css": [
+        "../../packages/foundation/ui-system/ui/src/styles/globals.css"
+      ],
+      "@beep/ui/postcss.config": [
+        "../../packages/foundation/ui-system/ui/postcss.config.mjs"
+      ],
+      "@beep/ui/components/blocks/editor-00/editor": [
+        "../../packages/foundation/ui-system/ui/src/components/blocks/editor-00/editor.tsx"
+      ],
+      "@beep/ui/components/blocks/editor-00/nodes": [
+        "../../packages/foundation/ui-system/ui/src/components/blocks/editor-00/nodes.ts"
+      ],
+      "@beep/ui/components/editor/editor-ui/content-editable": [
+        "../../packages/foundation/ui-system/ui/src/components/editor/editor-ui/content-editable.tsx"
+      ],
+      "@beep/ui/components/editor/themes/editor-theme": [
+        "../../packages/foundation/ui-system/ui/src/components/editor/themes/editor-theme.ts"
+      ],
+      "@beep/utils": ["../../packages/foundation/modeling/utils/src/index.ts"],
+      "@beep/utils/*": ["../../packages/foundation/modeling/utils/src/*.ts"],
+      "@beep/workspace-domain": [
+        "../../packages/workspace/domain/src/index.ts"
+      ],
+      "@beep/workspace-domain/entities": [
+        "../../packages/workspace/domain/src/entities/index.ts"
+      ],
+      "@beep/workspace-domain/entities/ApprovalGate": [
+        "../../packages/workspace/domain/src/entities/ApprovalGate/index.ts"
+      ],
+      "@beep/workspace-domain/entities/CandidateDraft": [
+        "../../packages/workspace/domain/src/entities/CandidateDraft/index.ts"
+      ],
+      "@beep/workspace-domain/entities/CandidateProject": [
+        "../../packages/workspace/domain/src/entities/CandidateProject/index.ts"
+      ],
+      "@beep/workspace-domain/entities/CandidateTask": [
+        "../../packages/workspace/domain/src/entities/CandidateTask/index.ts"
+      ],
+      "@beep/workspace-domain/entities/ContextPacket": [
+        "../../packages/workspace/domain/src/entities/ContextPacket/index.ts"
+      ],
+      "@beep/workspace-domain/entities/EmailArtifact": [
+        "../../packages/workspace/domain/src/entities/EmailArtifact/index.ts"
+      ],
+      "@beep/workspace-domain/entities/Message": [
+        "../../packages/workspace/domain/src/entities/Message/index.ts"
+      ],
+      "@beep/workspace-domain/entities/Thread": [
+        "../../packages/workspace/domain/src/entities/Thread/index.ts"
+      ],
+      "@beep/workspace-domain/entities/Turn": [
+        "../../packages/workspace/domain/src/entities/Turn/index.ts"
+      ],
+      "@beep/workspace-domain/entities/Workspace": [
+        "../../packages/workspace/domain/src/entities/Workspace/index.ts"
+      ],
+      "@beep/workspace-domain/values": [
+        "../../packages/workspace/domain/src/values/index.ts"
+      ],
+      "@beep/workspace-domain/values/ApprovalDecision": [
+        "../../packages/workspace/domain/src/values/ApprovalDecision/index.ts"
+      ],
+      "@beep/workspace-domain/values/CandidateLifecycle": [
+        "../../packages/workspace/domain/src/values/CandidateLifecycle/index.ts"
+      ],
+      "@beep/workspace-server": [
+        "../../packages/workspace/server/src/index.ts"
+      ],
+      "@beep/workspace-server/layer": [
+        "../../packages/workspace/server/src/Layer.ts"
+      ],
+      "@beep/workspace-server/test": [
+        "../../packages/workspace/server/src/test.ts"
+      ],
+      "@beep/workspace-server/aggregates/Thread": [
+        "../../packages/workspace/server/src/aggregates/Thread/index.ts"
+      ],
+      "@beep/workspace-server/aggregates/Workspace": [
+        "../../packages/workspace/server/src/aggregates/Workspace/index.ts"
+      ],
+      "@beep/workspace-use-cases": [
+        "../../packages/workspace/use-cases/src/index.ts"
+      ],
+      "@beep/workspace-use-cases/public": [
+        "../../packages/workspace/use-cases/src/public.ts"
+      ],
+      "@beep/workspace-use-cases/server": [
+        "../../packages/workspace/use-cases/src/server.ts"
+      ],
+      "@beep/workspace-use-cases/aggregates/Thread": [
+        "../../packages/workspace/use-cases/src/aggregates/Thread/index.ts"
+      ],
+      "@beep/workspace-use-cases/aggregates/Thread/server": [
+        "../../packages/workspace/use-cases/src/aggregates/Thread/server.ts"
+      ],
+      "@beep/workspace-use-cases/aggregates/Workspace": [
+        "../../packages/workspace/use-cases/src/aggregates/Workspace/index.ts"
+      ],
+      "@beep/workspace-use-cases/aggregates/Workspace/server": [
+        "../../packages/workspace/use-cases/src/aggregates/Workspace/server.ts"
+      ],
+      "@beep/epistemic-domain/entities/ClaimDisposition": [
+        "../../packages/epistemic/domain/src/entities/ClaimDisposition/index.ts"
+      ],
+      "@beep/epistemic-domain/entities/EdgeVersion": [
+        "../../packages/epistemic/domain/src/entities/EdgeVersion/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ClaimDispositionStatus": [
+        "../../packages/epistemic/domain/src/values/ClaimDispositionStatus/index.ts"
+      ],
+      "@beep/epistemic-domain/values/EdgeEndpoint": [
+        "../../packages/epistemic/domain/src/values/EdgeEndpoint/index.ts"
+      ],
+      "@beep/epistemic-domain/values/EdgeRelation": [
+        "../../packages/epistemic/domain/src/values/EdgeRelation/index.ts"
+      ],
+      "@beep/epistemic-domain/values/LogicalEdgeIdentity": [
+        "../../packages/epistemic/domain/src/values/LogicalEdgeIdentity/index.ts"
+      ],
+      "@beep/epistemic-tables/entities/CandidateClaim": [
+        "../../packages/epistemic/tables/src/entities/CandidateClaim/index.ts"
+      ],
+      "@beep/epistemic-tables/entities/ClaimDisposition": [
+        "../../packages/epistemic/tables/src/entities/ClaimDisposition/index.ts"
+      ],
+      "@beep/epistemic-tables/entities/EdgeVersion": [
+        "../../packages/epistemic/tables/src/entities/EdgeVersion/index.ts"
+      ],
+      "@beep/epistemic-tables/entities/Evidence": [
+        "../../packages/epistemic/tables/src/entities/Evidence/index.ts"
+      ]
+    }
+  }
+}

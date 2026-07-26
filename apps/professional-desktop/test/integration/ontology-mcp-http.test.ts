@@ -1,5 +1,5 @@
 /** @effect-diagnostics nodeBuiltinImport:skip-file */
-import { createServer } from "node:http";
+import * as NodeHttp from "node:http";
 import { ChangeOperation } from "@beep/ontology-domain/aggregates/Session";
 import { OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session";
 import {
@@ -15,13 +15,15 @@ import {
 } from "@beep/ontology-use-cases/tools";
 import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { fcRuns } from "@beep/test-utils";
 import { NodeHttpServer, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Config, ConfigProvider, Effect, FileSystem, Layer, Path, pipe, Redacted, Ref } from "effect";
+import { Config, ConfigProvider, Effect, FileSystem, Layer, Path, pipe, Redacted, Ref, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { FastCheck as fc } from "effect/testing";
 import * as McpSchema from "effect/unstable/ai/McpSchema";
 import { HttpClient, HttpClientRequest, HttpRouter, HttpServer } from "effect/unstable/http";
 import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
@@ -32,9 +34,31 @@ import type { Scope } from "effect";
 
 const token = Redacted.make("ontology-mcp-http-test-token");
 const allowedOrigin = "http://professional-desktop.beep.localhost:1355";
-const useSocketTransport = Effect.runSync(
-  Config.boolean("BEEP_TEST_ONTOLOGY_MCP_SOCKET").pipe(Config.withDefault(false))
-);
+const socketTransportConfig = Config.boolean("BEEP_TEST_ONTOLOGY_MCP_SOCKET").pipe(Config.withDefault(false));
+const decodeOntologyFilePath = S.decodeUnknownEffect(OntologyFilePath);
+const encodeOpenInspectRequest = S.encodeUnknownEffect(OpenInspectRequest);
+const decodeOpenInspectResponse = S.decodeUnknownEffect(OpenInspectResponse);
+const decodeCapabilityMetadataResponse = S.decodeUnknownEffect(CapabilityMetadataResponse);
+const encodeOntologySparqlQueryRequest = S.encodeUnknownEffect(OntologySparqlQueryRequest);
+const decodeOntologySparqlQueryResponse = S.decodeUnknownEffect(OntologySparqlQueryResponse);
+const encodeProposeChangeBatchRequest = S.encodeUnknownEffect(ProposeChangeBatchRequest);
+const decodeProposeChangeBatchResponse = S.decodeUnknownEffect(ProposeChangeBatchResponse);
+const decodeOntologyToolFailure = S.decodeUnknownEffect(OntologyToolFailure);
+
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
+  const encode = S.encodeResult(schema);
+  const decode = S.decodeUnknownResult(schema);
+  const equivalent = S.toEquivalence(schema);
+
+  fc.assert(
+    fc.property(S.toArbitrary(schema), (value) => {
+      const encoded = Result.getOrThrow(encode(value));
+      const decoded = Result.getOrThrow(decode(encoded));
+      return equivalent(decoded, value);
+    }),
+    fcRuns(10)
+  );
+};
 
 const fixtureSource = `@prefix ex: <https://example.test/> .
 ex:alice a ex:Person ; ex:name "Alice" .
@@ -68,7 +92,7 @@ const nodeLoopbackLayer = HttpServer.layerTestClient.pipe(
       Layer.provide(Layer.succeed(FetchHttpClient.RequestInit)({ keepalive: false }))
     )
   ),
-  Layer.provideMerge(NodeHttpServer.layer(createServer, { host: "127.0.0.1", port: 0 }))
+  Layer.provideMerge(NodeHttpServer.layer(NodeHttp.createServer, { host: "127.0.0.1", port: 0 }))
 );
 
 const mcpSessionClientLayer = Layer.effect(
@@ -102,24 +126,26 @@ const mcpSessionClientLayer = Layer.effect(
   })
 );
 
-const mcpClientProtocol = RpcClient.layerProtocolHttp({
-  url: useSocketTransport ? "" : "http://localhost",
-  transformClient: HttpClient.mapRequest((request) =>
-    request.pipe(
-      HttpClientRequest.appendUrl("/mcp"),
-      HttpClientRequest.setHeaders({
-        authorization: rpcSessionAuthorizationHeader(token),
-        origin: allowedOrigin,
-      })
-    )
-  ),
-}).pipe(Layer.provideMerge(RpcSerialization.layerJsonRpc()));
+const makeMcpClientProtocol = (useSocketTransport: boolean) =>
+  RpcClient.layerProtocolHttp({
+    url: useSocketTransport ? "" : "http://localhost",
+    transformClient: HttpClient.mapRequest((request) =>
+      request.pipe(
+        HttpClientRequest.appendUrl("/mcp"),
+        HttpClientRequest.setHeaders({
+          authorization: rpcSessionAuthorizationHeader(token),
+          origin: allowedOrigin,
+        })
+      )
+    ),
+  }).pipe(Layer.provideMerge(RpcSerialization.layerJsonRpc()));
 
 const withHttpServer = <A2, E>(
   options: { readonly mutationsEnabled: boolean; readonly approvedMutationTools: ReadonlyArray<string> },
   run: (
     root: string,
-    ontologyPath: OntologyFilePath
+    ontologyPath: OntologyFilePath,
+    useSocketTransport: boolean
   ) => Effect.Effect<
     A2,
     E,
@@ -132,12 +158,13 @@ const withHttpServer = <A2, E>(
       const path = yield* Path.Path;
       const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "ontology-mcp-http-" });
       yield* fileSystem.writeFileString(path.join(root, "ontology.ttl"), fixtureSource);
-      const ontologyPath = yield* S.decodeUnknownEffect(OntologyFilePath)("ontology.ttl");
+      const ontologyPath = yield* decodeOntologyFilePath("ontology.ttl");
+      const useSocketTransport = yield* socketTransportConfig;
       if (useSocketTransport) {
         const server = transportServer(root, options).pipe(Layer.provideMerge(nodeLoopbackLayer));
         const client = mcpSessionClientLayer.pipe(Layer.provideMerge(server));
-        return yield* run(root, ontologyPath).pipe(
-          provideScopedLayer(mcpClientProtocol.pipe(Layer.provideMerge(client)))
+        return yield* run(root, ontologyPath, useSocketTransport).pipe(
+          provideScopedLayer(makeMcpClientProtocol(useSocketTransport).pipe(Layer.provideMerge(client)))
         );
       }
 
@@ -158,8 +185,8 @@ const withHttpServer = <A2, E>(
       const clientLayer = mcpSessionClientLayer.pipe(
         Layer.provideMerge(FetchHttpClient.layer.pipe(Layer.provide(Layer.succeed(FetchHttpClient.Fetch, customFetch))))
       );
-      return yield* run(root, ontologyPath).pipe(
-        provideScopedLayer(mcpClientProtocol.pipe(Layer.provideMerge(clientLayer)))
+      return yield* run(root, ontologyPath, useSocketTransport).pipe(
+        provideScopedLayer(makeMcpClientProtocol(useSocketTransport).pipe(Layer.provideMerge(clientLayer)))
       );
     }).pipe(provideScopedLayer(NodeServices.layer))
   );
@@ -175,6 +202,7 @@ const makeMcpClient = Effect.fn("OntologyMcpHttpTest.makeClient")(function* () {
 });
 
 const rawInitialize = Effect.fn("OntologyMcpHttpTest.rawInitialize")(function* (
+  useSocketTransport: boolean,
   headers: Readonly<Record<string, string>>
 ) {
   const client = yield* HttpClient.HttpClient;
@@ -200,12 +228,17 @@ const openThroughMcp = Effect.fn("OntologyMcpHttpTest.open")(function* (
   client: Effect.Success<ReturnType<typeof makeMcpClient>>,
   ontologyPath: OntologyFilePath
 ) {
-  const request = yield* S.encodeUnknownEffect(OpenInspectRequest)(OpenInspectRequest.make({ path: ontologyPath }));
+  const request = yield* encodeOpenInspectRequest(OpenInspectRequest.make({ path: ontologyPath }));
   const result = yield* client["tools/call"]({ name: "ontology_open_inspect", arguments: request });
-  return yield* S.decodeUnknownEffect(OpenInspectResponse)(result.structuredContent);
+  return yield* decodeOpenInspectResponse(result.structuredContent);
 });
 
 describe("professional desktop ontology MCP streamable HTTP mount", { concurrent: false, timeout: 120_000 }, () => {
+  it("round-trips MCP request codecs with schema-derived arbitraries", () => {
+    assertSchemaRoundTrip(OpenInspectRequest);
+    assertSchemaRoundTrip(OntologySparqlQueryRequest);
+  });
+
   it.effect(
     "proves initialize, tools/list, and the read-only first slice while mutation registration is disabled",
     () =>
@@ -223,8 +256,8 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
             name: "ontology_capability_metadata",
             arguments: {},
           });
-          const metadata = yield* S.decodeUnknownEffect(CapabilityMetadataResponse)(metadataCall.structuredContent);
-          const queryRequest = yield* S.encodeUnknownEffect(OntologySparqlQueryRequest)(
+          const metadata = yield* decodeCapabilityMetadataResponse(metadataCall.structuredContent);
+          const queryRequest = yield* encodeOntologySparqlQueryRequest(
             OntologySparqlQueryRequest.make({
               path: ontologyPath,
               profile: "select",
@@ -232,7 +265,7 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
             })
           );
           const queryCall = yield* client["tools/call"]({ name: "ontology_sparql_query", arguments: queryRequest });
-          const query = yield* S.decodeUnknownEffect(OntologySparqlQueryResponse)(queryCall.structuredContent);
+          const query = yield* decodeOntologySparqlQueryResponse(queryCall.structuredContent);
 
           expect(metadataCall.isError).toBe(false);
           expect(metadata.budgets.maxQueryResults).toBe(200);
@@ -243,14 +276,14 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
   );
 
   it.effect("rejects untrusted Origins with typed 403 and rejects unauthenticated requests", () =>
-    withHttpServer({ mutationsEnabled: false, approvedMutationTools: [] }, () =>
+    withHttpServer({ mutationsEnabled: false, approvedMutationTools: [] }, (_root, _ontologyPath, useSocketTransport) =>
       Effect.gen(function* () {
-        const forbidden = yield* rawInitialize({
+        const forbidden = yield* rawInitialize(useSocketTransport, {
           authorization: rpcSessionAuthorizationHeader(token),
           origin: "https://attacker.example",
         });
         const forbiddenBody = yield* forbidden.text;
-        const unauthorized = yield* rawInitialize({ origin: allowedOrigin });
+        const unauthorized = yield* rawInitialize(useSocketTransport, { origin: allowedOrigin });
 
         expect(forbidden.status).toBe(403);
         expect(Str.includes("OntologyMcpOriginForbidden")(forbiddenBody)).toBe(true);
@@ -264,7 +297,7 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
       Effect.gen(function* () {
         const client = yield* makeMcpClient();
         const opened = yield* openThroughMcp(client, ontologyPath);
-        const request = yield* S.encodeUnknownEffect(ProposeChangeBatchRequest)(
+        const request = yield* encodeProposeChangeBatchRequest(
           ProposeChangeBatchRequest.make({
             path: ontologyPath,
             expectedFingerprint: opened.fingerprint,
@@ -275,7 +308,7 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
           name: ProposeChangeBatchTool.name,
           arguments: request,
         });
-        const refusal = yield* S.decodeUnknownEffect(OntologyToolFailure)(call.structuredContent);
+        const refusal = yield* decodeOntologyToolFailure(call.structuredContent);
 
         expect(call.isError).toBe(true);
         expect(refusal._tag).toBe("OntologyTierGateRefusal");
@@ -290,7 +323,7 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
         Effect.gen(function* () {
           const client = yield* makeMcpClient();
           const opened = yield* openThroughMcp(client, ontologyPath);
-          const firstRequest = yield* S.encodeUnknownEffect(ProposeChangeBatchRequest)(
+          const firstRequest = yield* encodeProposeChangeBatchRequest(
             ProposeChangeBatchRequest.make({
               path: ontologyPath,
               expectedFingerprint: opened.fingerprint,
@@ -301,14 +334,14 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
             name: ProposeChangeBatchTool.name,
             arguments: firstRequest,
           });
-          const first = yield* S.decodeUnknownEffect(ProposeChangeBatchResponse)(firstCall.structuredContent);
+          const first = yield* decodeProposeChangeBatchResponse(firstCall.structuredContent);
           const fileSystem = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
           const provenance = yield* fileSystem.readFileString(
             path.join(root, `ontology.ttl.${first.currentFingerprint}.prov.ttl`)
           );
 
-          const budgetRequest = yield* S.encodeUnknownEffect(ProposeChangeBatchRequest)(
+          const budgetRequest = yield* encodeProposeChangeBatchRequest(
             ProposeChangeBatchRequest.make({
               path: ontologyPath,
               expectedFingerprint: first.currentFingerprint,
@@ -319,9 +352,9 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
             name: ProposeChangeBatchTool.name,
             arguments: budgetRequest,
           });
-          const budget = yield* S.decodeUnknownEffect(OntologyToolFailure)(budgetCall.structuredContent);
+          const budget = yield* decodeOntologyToolFailure(budgetCall.structuredContent);
 
-          const staleRequest = yield* S.encodeUnknownEffect(ProposeChangeBatchRequest)(
+          const staleRequest = yield* encodeProposeChangeBatchRequest(
             ProposeChangeBatchRequest.make({
               path: ontologyPath,
               expectedFingerprint: opened.fingerprint,
@@ -332,7 +365,7 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
             name: ProposeChangeBatchTool.name,
             arguments: staleRequest,
           });
-          const stale = yield* S.decodeUnknownEffect(OntologyToolFailure)(staleCall.structuredContent);
+          const stale = yield* decodeOntologyToolFailure(staleCall.structuredContent);
 
           expect(firstCall.isError).toBe(false);
           expect(Str.includes("urn:beep:desktop-rpc-session:mcp-client:")(provenance)).toBe(true);

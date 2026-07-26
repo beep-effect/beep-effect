@@ -5,9 +5,17 @@
 Deliver one versioned court-and-reporter identity substrate from pinned
 courts-db and reporters-db commits. Add public `SyncDataToTs` targets that use
 HTTP and SHA-256 only; deterministically render package-private artifacts under
-`@beep/data` `generated/`; and expose stable public IDs, canonical vocabulary,
-lookups, provenance, and a machine-readable artifact compatibility contract
-from law-practice domain values.
+law-practice domain internals; and, in a later increment, expose stable public
+IDs, canonical vocabulary, lookups, provenance, and a machine-readable artifact
+compatibility contract from law-practice domain values.
+
+The 2026-07-25 implementation increment is ingestion substrate only. It includes
+the two targets, pinned archive validation, source-faithful assembly, internal
+generated modules/sidecars, attribution, and focused proof. Public court/reporter
+models, lookups, lifecycle APIs, drift classification, and citation-engine
+integration remain required for the full goal but are not acceptance gates for
+this increment. eyecite-js and eyecite-ts are research inputs only; their custom
+data overlays are not production truth.
 
 Each artifact records source identity, pinned commit, retrieval date, checksum,
 refresh command, record/ID counts, and artifact version. Refresh detects and
@@ -39,7 +47,8 @@ pinned commits, and affected material.
 ## Target Surfaces
 
 - `packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/` for two public targets.
-- `packages/foundation/primitive/data/src/generated/` for package-private artifacts and sidecars.
+- `packages/law-practice/domain/src/internal/generated/free-law-project/` for
+  package-private artifacts and sidecars.
 - `packages/law-practice/domain/src/values/` for IDs, vocabulary, lifecycle/compatibility schemas, and lookups.
 - Root `THIRD_PARTY_NOTICES.md`, focused fixtures/tests, and packet evidence.
 
@@ -51,7 +60,8 @@ pinned commits, and affected material.
    render deterministically, and prove source-record and stable-ID counts. Never
    freeze the artifact schema from stale historical counts.
 3. Raw artifacts remain package-private. Cross-package consumers use named
-   law-practice values/lookups only.
+   law-practice values/lookups only once that later public surface lands.
+   Generated files have no barrel or package export.
 4. Public identities include stable `CourtId` and `ReporterId`. Court vocabulary
    preserves courts-db jurisdiction/system/type/level source-faithfully with
    collision-free names such as `CourtHierarchyLevel`; existing
@@ -77,6 +87,22 @@ pinned commits, and affected material.
     lands and records any ratified pin change in the notice and evidence.
 
 ## Acceptance Criteria
+
+### Current ingestion increment
+
+- [ ] `reporters-db` verifies the pinned archive and emits all six official
+      datasets: case-name abbreviations, journals, laws, regex fragments,
+      reporters, and state abbreviations.
+- [ ] `courts-db` verifies the pinned archive and reproduces upstream ordinal,
+      variable/place, Python-template, escaping, and parent-inheritance
+      semantics for 2,809 unique records.
+- [ ] Generated modules and provenance/count sidecars remain internal to
+      law-practice domain and regenerate byte-identically.
+- [ ] No eyecite-js or eyecite-ts custom overlay becomes production data.
+- [ ] Focused repo-cli and law-practice-domain checks cover the new targets and
+      generated artifacts.
+
+### Full goal completion
 
 - [ ] Both pinned public targets acquire by HTTP, verify SHA-256, and regenerate
       byte-identical artifacts and sidecars on two identical runs.

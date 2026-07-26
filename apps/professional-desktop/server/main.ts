@@ -30,7 +30,7 @@ import "./IpcStdoutGuard.prelude.ts";
 
 import { ChatRpcs } from "@beep/agents-use-cases/public";
 import { DocumentsRpcs, VaultSyncRpcs } from "@beep/documents-use-cases/public";
-import { OntologyRpcs } from "@beep/ontology-use-cases/aggregates/Session";
+import { OntologyRpcs } from "@beep/ontology-use-cases/public";
 import { ExportProvenanceTool, ProposeChangeBatchTool, RepairOntologyTool } from "@beep/ontology-use-cases/tools";
 import { WorkspaceVaultRpcs } from "@beep/workspace-use-cases/public";
 import { BunHttpServer, BunRuntime } from "@effect/platform-bun";

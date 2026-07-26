@@ -31,6 +31,7 @@
   },
   "exports": {
     ".": "./src/index.ts",
+    "./browser": "./src/browser.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -47,6 +48,7 @@
     "provenance": true,
     "exports": {
       ".": "./dist/index.js",
+      "./browser": "./dist/browser.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }
