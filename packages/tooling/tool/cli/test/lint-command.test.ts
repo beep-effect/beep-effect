@@ -1223,15 +1223,16 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
   );
 
   it(
-    "treats an include that reaches only part of the test tree as uncovered",
+    "reports a tail-filtered include that leaves a sibling helper unselected",
     () =>
       Effect.runPromise(
         withTempWorkingDirectory(
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
 
-            // tsconfig.test.json is wired into check, but its include only
-            // reaches test/unit — the sources at test/ stay untypechecked.
+            // `test/**/*.test.ts` selects the test files but not the helper
+            // sitting beside them, so the helper is never typechecked.
             yield* writeTestTypecheckPackage({
               directory: "packages/example",
               name: "@beep/example",
@@ -1242,9 +1243,14 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
               },
               tsconfigs: [
                 { fileName: "tsconfig.json", include: ["src"] },
-                { fileName: "tsconfig.test.json", include: ["src", "test/unit/**"] },
+                { fileName: "tsconfig.test.json", include: ["src", "test/**/*.test.ts"] },
               ],
             });
+            yield* fs.makeDirectory(path.join("packages", "example", "test", "support"), { recursive: true });
+            yield* fs.writeFileString(
+              path.join("packages", "example", "test", "support", "Helper.ts"),
+              "export const helper = 1;\n"
+            );
             yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
 
             const exit = yield* Effect.exit(runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]));
@@ -1259,13 +1265,15 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
   );
 
   it(
-    "accepts an include that reaches the test directory root through a wildcard",
+    "accepts a tail-filtered include when it selects every test source",
     () =>
       Effect.runPromise(
         withTempWorkingDirectory(
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
 
+            // Same glob shape as the case above; here every test source is a
+            // .test.ts file, so nothing is left unselected.
             yield* writeTestTypecheckPackage({
               directory: "packages/example",
               name: "@beep/example",
@@ -1276,7 +1284,7 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
               },
               tsconfigs: [
                 { fileName: "tsconfig.json", include: ["src"] },
-                { fileName: "tsconfig.test.json", include: ["src", "test/**/*"] },
+                { fileName: "tsconfig.test.json", include: ["src", "test/**/*.test.ts"] },
               ],
             });
             yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
@@ -1292,7 +1300,7 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
   );
 
   it(
-    "treats a one-level include as uncovered because nested tests stay unchecked",
+    "reports a one-level include because nested sources stay unselected",
     () =>
       Effect.runPromise(
         withTempWorkingDirectory(
@@ -1313,7 +1321,6 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
                 { fileName: "tsconfig.test.json", include: ["src", "test/*.ts"] },
               ],
             });
-            // A nested test source that `test/*.ts` cannot reach.
             yield* fs.makeDirectory(path.join("packages", "example", "test", "unit"), { recursive: true });
             yield* fs.writeFileString(
               path.join("packages", "example", "test", "unit", "Nested.test.ts"),
@@ -1333,41 +1340,7 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
   );
 
   it(
-    "treats a fixed-depth include as uncovered",
-    () =>
-      Effect.runPromise(
-        withTempWorkingDirectory(
-          Effect.gen(function* () {
-            const fs = yield* FileSystem.FileSystem;
-
-            yield* writeTestTypecheckPackage({
-              directory: "packages/example",
-              name: "@beep/example",
-              scripts: {
-                check: "bun run beep:check",
-                "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
-                "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
-              },
-              tsconfigs: [
-                { fileName: "tsconfig.json", include: ["src"] },
-                { fileName: "tsconfig.test.json", include: ["src", "test/*/*.ts"] },
-              ],
-            });
-            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
-
-            const exit = yield* Effect.exit(runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]));
-
-            const errorLines = yield* TestConsole.errorLines;
-            expectReportedExit(exit);
-            expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [missing-test-tsconfig]");
-          })
-        ).pipe(provideScopedLayer(testLayer))
-      ),
-    15_000
-  );
-
-  it(
-    "accepts a bare test directory include as recursive",
+    "accepts a bare test directory include as a recursive subtree",
     () =>
       Effect.runPromise(
         withTempWorkingDirectory(
@@ -1393,6 +1366,10 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
               path.join("packages", "example", "test", "unit", "Nested.test.ts"),
               "export const nested = 1;\n"
             );
+            yield* fs.writeFileString(
+              path.join("packages", "example", "test", "Helper.ts"),
+              "export const helper = 1;\n"
+            );
             yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
 
             yield* runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]);
@@ -1406,15 +1383,16 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
   );
 
   it(
-    "accepts a recursive include carrying a tail file filter",
+    "honors exclude when deciding which test sources a project selects",
     () =>
       Effect.runPromise(
         withTempWorkingDirectory(
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
 
-            // Documented decision: helpers the filter skips are still
-            // typechecked through the import closure of the matched test files.
+            // `test` would cover everything, but the excluded helper is pulled
+            // back out of the program, so it is left untypechecked.
             yield* writeTestTypecheckPackage({
               directory: "packages/example",
               name: "@beep/example",
@@ -1423,17 +1401,23 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
                 "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
                 "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
               },
-              tsconfigs: [
-                { fileName: "tsconfig.json", include: ["src"] },
-                { fileName: "tsconfig.test.json", include: ["src", "test/**/*.test.ts"] },
-              ],
+              tsconfigs: [{ fileName: "tsconfig.json", include: ["src"] }],
             });
+            yield* fs.writeFileString(
+              path.join("packages", "example", "test", "Helper.ts"),
+              "export const helper = 1;\n"
+            );
+            yield* fs.writeFileString(
+              path.join("packages", "example", "tsconfig.test.json"),
+              `${encodeJson({ include: ["src", "test"], exclude: ["test/Helper.ts"] })}\n`
+            );
             yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
 
-            yield* runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]);
+            const exit = yield* Effect.exit(runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]));
 
-            const logLines = yield* TestConsole.logLines;
-            expect(logLines).toEqual(["[package-test-typecheck] ok: current=0 baseline=0 introduced=0"]);
+            const errorLines = yield* TestConsole.errorLines;
+            expectReportedExit(exit);
+            expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [missing-test-tsconfig]");
           })
         ).pipe(provideScopedLayer(testLayer))
       ),

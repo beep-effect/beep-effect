@@ -9,19 +9,19 @@
   "comparison": "fail-on-growth: every blind-spot package must already be listed in the committed baseline",
   "new_package_handling": "New packages scaffolded with `beep create-package` or `beep architecture` already wire `beep:check:tests` into `beep:check`; keep new packages out of this baseline rather than regenerating it.",
   "notes": {
-    "@beep/repo-cli": "Deferred deliberately: the CLI owns the repo's largest test surface (test/ plus test/support fixtures across every command family), and its test/tsconfig.json narrows include to ./**/*.test.ts, so wiring it into check surfaces a long tail unrelated to this lint. Remediate as its own packet.",
+    "@beep/repo-cli": "Deferred deliberately: the CLI owns the repo's largest test surface. Its test/tsconfig.json narrows include to ./**/*.test.ts, which leaves test/global-cleanup.ts and test/support/CommandTest.ts unselected, so no project it owns covers the whole test tree. Remediate as its own packet.",
     "@beep/acp": "Owns tsconfig.test.json and a beep:check:tests script; only beep:audit runs it. Wiring it into beep:check is a one-line fix.",
     "@beep/venice-ai": "Owns tsconfig.test.json and a beep:check:tests script; only beep:audit runs it. Wiring it into beep:check is a one-line fix.",
     "@beep/provenance": "Owns tsconfig.test.json but declares no beep:check:tests script at all.",
     "@beep/rdf": "Owns tsconfig.test.json but declares no beep:check:tests script at all.",
-    "@beep/infra": "Test project lives at test/tsconfig.json (not tsconfig.test.json); check runs only tsgo -b tsconfig.json.",
-    "@beep/lint-rules": "Test project lives at test/tsconfig.json (not tsconfig.test.json); check runs only tsgo -b tsconfig.json.",
+    "@beep/infra": "Test project lives at test/tsconfig.json (not tsconfig.test.json) and check runs only tsgo -b tsconfig.json; its ./**/*.test.ts include also leaves infra/test/schemaParity.ts unselected.",
+    "@beep/lint-rules": "Test project lives at test/tsconfig.json (not tsconfig.test.json); check runs only tsgo -b tsconfig.json. Its includes do cover the whole test tree, so wiring it into beep:check is the whole fix.",
     "@beep/repo-configs": "Test project lives at test/tsconfig.json (not tsconfig.test.json); check runs only tsgo -b tsconfig.json."
   },
   "check": {
     "total_findings": 71,
-    "missing_test_tsconfig": 63,
-    "unwired_test_tsconfig": 8
+    "missing_test_tsconfig": 65,
+    "unwired_test_tsconfig": 6
   },
   "findings": [
     {
@@ -172,7 +172,7 @@
     {
       "package": "@beep/infra",
       "directory": "infra",
-      "kind": "unwired-test-tsconfig"
+      "kind": "missing-test-tsconfig"
     },
     {
       "package": "@beep/law-practice-domain",
@@ -282,7 +282,7 @@
     {
       "package": "@beep/repo-cli",
       "directory": "packages/tooling/tool/cli",
-      "kind": "unwired-test-tsconfig"
+      "kind": "missing-test-tsconfig"
     },
     {
       "package": "@beep/repo-configs",
