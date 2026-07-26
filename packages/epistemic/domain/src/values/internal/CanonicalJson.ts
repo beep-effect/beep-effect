@@ -11,8 +11,13 @@
  * @since 0.0.0
  */
 import { A, P, R } from "@beep/utils";
+import { Order } from "effect";
 
 const isScalar: P.Predicate<unknown> = P.some([P.isNull, P.isNumber, P.isBoolean, P.isString]);
+
+type CanonicalEntry = readonly [key: string, entry: unknown];
+
+const byKeyAscending = Order.mapInput(Order.String, ([key]: CanonicalEntry) => key);
 
 /**
  * Deterministic canonical JSON over wire-form values: object keys sorted
@@ -29,8 +34,9 @@ export const canonicalJson = (value: unknown): string => {
   if (A.isArray(value)) {
     return `[${value.map(canonicalJson).join(",")}]`;
   }
-  const entries = R.toEntries(value as R.ReadonlyRecord<string, unknown>)
-    .filter(([, entry]) => entry !== undefined)
-    .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0));
+  const defined: ReadonlyArray<CanonicalEntry> = R.toEntries(value as R.ReadonlyRecord<string, unknown>).filter(
+    ([, entry]) => entry !== undefined
+  );
+  const entries = A.sort(defined, byKeyAscending);
   return `{${entries.map(([key, entry]) => `${JSON.stringify(key)}:${canonicalJson(entry)}`).join(",")}}`;
 };
