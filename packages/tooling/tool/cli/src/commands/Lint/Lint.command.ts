@@ -22,6 +22,7 @@ import { runRootLintPolicyTask } from "../Quality/index.ts";
 import { lintIdentityRegistryCommand } from "./IdentityRegistry.ts";
 import { LintCircularAnalysisError, LintFileDiscoveryError } from "./Lint.errors.ts";
 import { lintPackageTestImportsCommand } from "./PackageTestImports.ts";
+import { lintPackageTestTypecheckCommand } from "./PackageTestTypecheck.ts";
 import { lintReflectionArtifactsCommand } from "./ReflectionArtifact.ts";
 import { lintRoadmapRefsCommand } from "./RoadmapRefs.ts";
 import { lintSchemaCatalogCommand } from "./SchemaCatalog.ts";
@@ -585,6 +586,7 @@ export const lintCommand = Command.make("lint", {}, () =>
     "- bun run beep lint goal-packets",
     "- bun run beep lint identity-registry",
     "- bun run beep lint package-test-imports",
+    "- bun run beep lint package-test-typecheck",
     "- bun run beep lint policy",
     "- bun run beep lint reflection-artifacts",
     "- bun run beep lint roadmap-refs",
@@ -601,6 +603,7 @@ export const lintCommand = Command.make("lint", {}, () =>
     lintGoalPacketsCommand,
     lintIdentityRegistryCommand,
     lintPackageTestImportsCommand,
+    lintPackageTestTypecheckCommand,
     lintPolicyCommand,
     lintReflectionArtifactsCommand,
     lintRoadmapRefsCommand,

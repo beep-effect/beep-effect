@@ -13,6 +13,7 @@ const LINT_POLICY_SUBCOMMANDS: ReadonlyArray<string> = [
   "circular",
   "deprecated-apis",
   "package-test-imports",
+  "package-test-typecheck",
   "reflection-artifacts",
   "roadmap-refs",
   "schema-catalog",

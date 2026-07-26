@@ -1073,6 +1073,7 @@ const rootRepoLintPolicySteps = (repoRoot: string): ReadonlyArray<QualityTaskSte
   repoCliStep(repoRoot, "lint:tsgo-rules", ["quality", "tsgo-rules"]),
   repoCliStep(repoRoot, "lint:identity-registry", ["lint", "identity-registry"]),
   repoCliStep(repoRoot, "lint:package-test-imports", ["lint", "package-test-imports"]),
+  repoCliStep(repoRoot, "lint:package-test-typecheck", ["lint", "package-test-typecheck"]),
   repoCliStep(repoRoot, "lint:reflection-artifacts", ["lint", "reflection-artifacts"]),
   repoCliStep(repoRoot, "lint:roadmap-refs", ["lint", "roadmap-refs"]),
   repoCliStep(repoRoot, "goals:doctor", ["goals", "doctor"]),
