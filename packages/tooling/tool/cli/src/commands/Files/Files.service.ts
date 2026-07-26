@@ -98,6 +98,7 @@ import {
   preflightNormalizeOutputs,
   preflightTargetCollisions,
 } from "./internal/Apply.ts";
+import { auditImagesImpl, curateImagesImpl } from "./internal/ImageCuration.ts";
 import { isUnsafeMetadataVideoExtension, probeImageDimensions, probeMediaDimensions } from "./internal/MediaExec.ts";
 import { processFilesImpl } from "./internal/Process.ts";
 import {
@@ -129,6 +130,10 @@ import type {
   DetectFacesEntry,
   DetectFacesOptions,
   DetectFacesSkippedReason,
+  ImageAuditManifest,
+  ImageAuditOptions,
+  ImageCurationOptions,
+  ImageCurationSummary,
   MediaDimensions,
   MediaKind,
   NormalizeImageFormat,
@@ -190,6 +195,12 @@ export interface FilesCommandServiceShape {
   readonly archivePoorCandidates: (
     options: ArchivePoorCandidatesOptions
   ) => Effect.Effect<ArchivePoorCandidatesSummary, FilesCommandError>;
+  /**
+   * Audit direct images without mutating source bytes.
+   *
+   * @since 0.0.0
+   */
+  readonly auditImages: (options: ImageAuditOptions) => Effect.Effect<ImageAuditManifest, FilesCommandError>;
 
   /**
    * Create same-stem caption sidecar files for direct image files.
@@ -206,6 +217,13 @@ export interface FilesCommandServiceShape {
    * @since 0.0.0
    */
   readonly cropBordersFiles: (options: CropBordersOptions) => Effect.Effect<CropBordersSummary, FilesCommandError>;
+
+  /**
+   * Validate a complete decision ledger and materialize canonical PNG derivatives.
+   *
+   * @since 0.0.0
+   */
+  readonly curateImages: (options: ImageCurationOptions) => Effect.Effect<ImageCurationSummary, FilesCommandError>;
 
   /**
    * Detect solid or near-solid borders in direct image files.
@@ -1692,6 +1710,8 @@ const buildStripMetadataPlan = Effect.fn("Files.buildStripMetadataPlan")(functio
  */
 export const printFilesIndex = printLines([
   "Files commands:",
+  "- bun run files audit-images --dir ./raw --model ./face_detection_yunet.onnx --manifest ./audit.json",
+  "- bun run files curate-images --dir ./raw --decisions ./decisions.json --out-dir ./prepared",
   "- bun run files sort-and-rename --prefix image --dir ./tmp",
   "- bun run files sort-and-rename --prefix image --dir ./tmp --with-dimensions",
   "- bun run files strip-metadata --dir ./tmp",
@@ -2416,6 +2436,9 @@ const makeFilesCommandService = Effect.fn("FilesCommandService.make")(function* 
   const runtimeContext = yield* Effect.context<FilesCommandServiceRequirements>();
 
   return FilesCommandService.of({
+    auditImages: Effect.fn("FilesCommandService.auditImages")((options) =>
+      auditImagesImpl(options).pipe(Effect.provide(runtimeContext))
+    ),
     archivePoorCandidates: Effect.fn("FilesCommandService.archivePoorCandidates")((options) =>
       archivePoorCandidatesImpl(options).pipe(Effect.provide(runtimeContext))
     ),
@@ -2424,6 +2447,9 @@ const makeFilesCommandService = Effect.fn("FilesCommandService.make")(function* 
     ),
     cropBordersFiles: Effect.fn("FilesCommandService.cropBordersFiles")((options) =>
       cropBordersFilesImpl(options).pipe(Effect.provide(runtimeContext))
+    ),
+    curateImages: Effect.fn("FilesCommandService.curateImages")((options) =>
+      curateImagesImpl(options).pipe(Effect.provide(runtimeContext))
     ),
     detectBordersFiles: Effect.fn("FilesCommandService.detectBordersFiles")((options) =>
       detectBordersFilesImpl(options).pipe(Effect.provide(runtimeContext))
@@ -2461,6 +2487,27 @@ const makeFilesCommandService = Effect.fn("FilesCommandService.make")(function* 
  */
 export const FilesCommandServiceLive: Layer.Layer<FilesCommandService, never, FilesCommandServiceRequirements> =
   Layer.effect(FilesCommandService, makeFilesCommandService());
+
+/**
+ * Audit direct images and write deterministic review evidence without changing source files.
+ *
+ * @param options - Image audit directory, model, manifest, and overwrite options.
+ * @returns The completed image audit manifest.
+ * @example
+ * ```ts
+ * import { auditImages } from "@beep/repo-cli/commands/Files"
+ *
+ * const example: typeof auditImages = auditImages
+ * ```
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const auditImages = Effect.fn("Files.auditImages")(function* (
+  options: ImageAuditOptions
+): Effect.fn.Return<ImageAuditManifest, FilesCommandError, FilesCommandService> {
+  const files = yield* FilesCommandService;
+  return yield* files.auditImages(options);
+});
 
 /**
  * Archive obvious poor image candidates out of a dataset directory.
@@ -2523,6 +2570,27 @@ export const cropBordersFiles = Effect.fn("Files.cropBordersFiles")(function* (
 ): Effect.fn.Return<CropBordersSummary, FilesCommandError, FilesCommandService> {
   const files = yield* FilesCommandService;
   return yield* files.cropBordersFiles(options);
+});
+
+/**
+ * Validate a complete decision ledger and materialize canonical PNG derivatives.
+ *
+ * @param options - Source, ledger, output, dry-run, and overwrite options.
+ * @returns Summary counts for the curation run.
+ * @example
+ * ```ts
+ * import { curateImages } from "@beep/repo-cli/commands/Files"
+ *
+ * const example: typeof curateImages = curateImages
+ * ```
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const curateImages = Effect.fn("Files.curateImages")(function* (
+  options: ImageCurationOptions
+): Effect.fn.Return<ImageCurationSummary, FilesCommandError, FilesCommandService> {
+  const files = yield* FilesCommandService;
+  return yield* files.curateImages(options);
 });
 
 /**

@@ -14,13 +14,17 @@ import {
   CropBordersOptions,
   DetectBordersOptions,
   DetectFacesOptions,
+  ImageAuditOptions,
+  ImageCurationOptions,
   NormalizeFilesOptions,
   ProcessFilesOptions,
 } from "./Files.schemas.ts";
 import {
   archivePoorCandidates,
+  auditImages,
   createCaptionFiles,
   cropBordersFiles,
+  curateImages,
   detectBordersFiles,
   detectFacesFiles,
   FilesCommandServiceLive,
@@ -63,6 +67,28 @@ const cropBordersDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
 );
 const archiveCandidatesDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
   Flag.withDescription("Directory whose direct image files should be assessed for poor-candidate archival")
+);
+const auditImagesDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+  Flag.withDescription("Directory whose direct image files should be audited without mutation")
+);
+const auditImagesModelFlag = Flag.file("model", { mustExist: true }).pipe(
+  Flag.withDescription("Pinned YuNet-compatible ONNX face detection model")
+);
+const auditImagesManifestFlag = Flag.path("manifest", { pathType: "file" }).pipe(
+  Flag.withDescription("Path to the image audit manifest")
+);
+const curateImagesDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+  Flag.withDescription("Immutable source directory containing direct image files")
+);
+const curateImagesDecisionsFlag = Flag.file("decisions", { mustExist: true }).pipe(
+  Flag.withDescription("Complete hash-pinned image curation decision ledger")
+);
+const curateImagesOutDirFlag = Flag.directory("out-dir").pipe(
+  Flag.withDescription("Output root for canonical, holdout, reserve, archive, and manifest derivatives")
+);
+const curateImagesManifestFlag = Flag.path("manifest", { pathType: "file" }).pipe(
+  Flag.withDescription("Curation manifest output path; defaults to --out-dir/manifests/image-curation-manifest.json"),
+  Flag.optional
 );
 const archiveDirFlag = Flag.directory("archive-dir").pipe(
   Flag.withDescription("Directory that receives archived poor image candidates")
@@ -133,6 +159,15 @@ const createCaptionsDryRunFlag = Flag.boolean("dry-run").pipe(
 );
 const archiveDryRunFlag = Flag.boolean("dry-run").pipe(
   Flag.withDescription("Print the planned poor-candidate archival without moving files")
+);
+const curateImagesDryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDescription("Validate and print every disposition without writing derivatives")
+);
+const auditImagesOverwriteFlag = Flag.boolean("overwrite").pipe(
+  Flag.withDescription("Overwrite an existing regular-file image audit manifest")
+);
+const curateImagesOverwriteFlag = Flag.boolean("overwrite").pipe(
+  Flag.withDescription("Overwrite existing regular-file curation outputs and manifest")
 );
 const captionTextFlag = Flag.string("caption").pipe(
   Flag.withDefault(""),
@@ -220,6 +255,33 @@ const minFaceAreaPctFlag = Flag.float("min-face-area-pct").pipe(
 const faceEdgeMarginPctFlag = Flag.float("edge-margin-pct").pipe(
   Flag.withDefault(2),
   Flag.withDescription("Flag detected faces whose primary face box is within this percent of an image edge")
+);
+
+const filesAuditImagesCommand = Command.make(
+  "audit-images",
+  {
+    dir: auditImagesDirFlag,
+    manifest: auditImagesManifestFlag,
+    minConfidence: minFaceConfidenceFlag,
+    modelPath: auditImagesModelFlag,
+    overwrite: auditImagesOverwriteFlag,
+  },
+  Effect.fn(function* ({ dir, manifest, minConfidence, modelPath, overwrite }) {
+    yield* runFilesProgram(
+      auditImages(
+        ImageAuditOptions.make({
+          dir,
+          manifest,
+          minConfidence,
+          modelPath,
+          overwrite,
+        })
+      )
+    );
+  })
+).pipe(
+  Command.withDescription("Audit image hashes, geometry, metadata presence, faces, and advisory quality"),
+  Command.provide(FilesCommandServiceLive)
 );
 
 const filesCreateCaptionsCommand = Command.make(
@@ -353,6 +415,35 @@ const filesCropBordersCommand = Command.make(
   })
 ).pipe(
   Command.withDescription("Crop solid or near-solid canvas borders from direct image files"),
+  Command.provide(FilesCommandServiceLive)
+);
+
+const filesCurateImagesCommand = Command.make(
+  "curate-images",
+  {
+    decisionsPath: curateImagesDecisionsFlag,
+    dir: curateImagesDirFlag,
+    dryRun: curateImagesDryRunFlag,
+    manifest: curateImagesManifestFlag,
+    outDir: curateImagesOutDirFlag,
+    overwrite: curateImagesOverwriteFlag,
+  },
+  Effect.fn(function* ({ decisionsPath, dir, dryRun, manifest, outDir, overwrite }) {
+    yield* runFilesProgram(
+      curateImages(
+        ImageCurationOptions.make({
+          decisionsPath,
+          dir,
+          dryRun,
+          manifest,
+          outDir,
+          overwrite,
+        })
+      )
+    );
+  })
+).pipe(
+  Command.withDescription("Materialize hash-pinned image decisions as metadata-free canonical PNG derivatives"),
   Command.provide(FilesCommandServiceLive)
 );
 
@@ -505,9 +596,11 @@ const filesStripMetadataCommand = Command.make(
 export const filesCommand = Command.make("files", {}, () => printFilesIndex).pipe(
   Command.withDescription("Dataset file curation commands"),
   Command.withSubcommands([
+    filesAuditImagesCommand,
     filesArchivePoorCandidatesCommand,
     filesCreateCaptionsCommand,
     filesCropBordersCommand,
+    filesCurateImagesCommand,
     filesDetectBordersCommand,
     filesDetectFacesCommand,
     filesNormalizeCommand,
