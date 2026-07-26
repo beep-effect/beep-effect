@@ -2,7 +2,7 @@
   "srcDir": "src",
   "outDir": "docs",
   "$schema": "../../../packages/tooling/tool/docgen/schema.json",
-  "exclude": ["src/internal/**/*.ts"],
+  "exclude": ["src/internal/**/*.ts", "src/values/internal/**/*.ts"],
   "srcLink": "https://github.com/beep-effect/beep-effect/tree/main/packages/epistemic/domain/src/",
   "examplesCompilerOptions": {
     "noEmit": true,
@@ -81,6 +81,18 @@
       ],
       "@beep/epistemic-domain/values/EvidenceSpan": [
         "../../../packages/epistemic/domain/src/values/EvidenceSpan/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ExecutionGrant": [
+        "../../../packages/epistemic/domain/src/values/ExecutionGrant/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ExecutionRecord": [
+        "../../../packages/epistemic/domain/src/values/ExecutionRecord/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ExecutionVerdict": [
+        "../../../packages/epistemic/domain/src/values/ExecutionVerdict/index.ts"
+      ],
+      "@beep/epistemic-domain/values/GrantSet": [
+        "../../../packages/epistemic/domain/src/values/GrantSet/index.ts"
       ],
       "@beep/epistemic-domain/values/LogicalEdgeIdentity": [
         "../../../packages/epistemic/domain/src/values/LogicalEdgeIdentity/index.ts"

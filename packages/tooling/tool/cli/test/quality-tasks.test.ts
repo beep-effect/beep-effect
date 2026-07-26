@@ -939,6 +939,7 @@ describe("quality task adapter", () => {
       "lint:effect-imports",
       "lint:terse-effect",
       "lint:effect-fn",
+      "lint:frozen-grant-set",
       "lint:native-runtime",
       "lint:dual-arity",
       "lint:allowlist",
@@ -970,6 +971,7 @@ describe("quality task adapter", () => {
       "lint:effect-imports",
       "lint:terse-effect",
       "lint:effect-fn",
+      "lint:frozen-grant-set",
       "lint:native-runtime",
       "lint:dual-arity",
       "lint:allowlist",
@@ -1020,7 +1022,7 @@ describe("quality task adapter", () => {
           expect(Exit.isSuccess(exit)).toBe(true);
 
           const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-          expect(logText).toContain("[beep-cli] lint:policy: running 23 step(s) with concurrency 3");
+          expect(logText).toContain("[beep-cli] lint:policy: running 24 step(s) with concurrency 3");
         })
       )
     ));
@@ -1491,7 +1493,7 @@ describe("quality task adapter", () => {
           expect(commandLog).toContain("bunx typos");
 
           const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-          expect(logText).toContain("[beep-cli] lint: running 24 step(s) with concurrency 3");
+          expect(logText).toContain("[beep-cli] lint: running 25 step(s) with concurrency 3");
         })
       )
     ));

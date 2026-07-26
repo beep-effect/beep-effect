@@ -1,0 +1,94 @@
+### LANE P1-positive (2026-07-26T04:38:03Z)
+### COMMAND: setsid -w env -i HOME=/home/elpresidank USER=elpresidank LOGNAME=elpresidank PATH=/usr/bin:/bin SPIKE_TARGET_USER=elpresidank SPIKE_EXPECTED_IDENTITY=/tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect2/24ddf3c1-674e-4ddb-acac-1343f8e844f6/scratchpad/spike-2/expected-identity.json SPIKE_STATE_DIR=/tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect2/24ddf3c1-674e-4ddb-acac-1343f8e844f6/scratchpad/spike-2/throwaway-state bash /tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect2/24ddf3c1-674e-4ddb-acac-1343f8e844f6/scratchpad/spike-2/applicator.sh
+
+
+=== step 0: non-interactive context probe ===
+[04:38:03Z] pid=1458412 ppid=1458404 sid=1458412
+[04:38:03Z] tty(stdin)=not a tty
+[04:38:03Z] no fd is a tty: confirmed
+[04:38:03Z] inherited env var count=10; names: HOME LOGNAME PATH PWD SHLVL SPIKE_EXPECTED_IDENTITY SPIKE_STATE_DIR SPIKE_TARGET_USER USER _ 
+[04:38:03Z] XDG_RUNTIME_DIR inherited? <unset>
+[04:38:03Z] DBUS_SESSION_BUS_ADDRESS inherited? <unset>
+
+=== step 1: resolve target identity from the OS (not from env) ===
+[04:38:03Z] user=elpresidank uid=1000 home=/home/elpresidank
+[04:38:03Z] hostname=DankStation machine_id_sha256=90bdffbb<sha256-redacted>
+
+=== step 2: linger ownership check ===
+[04:38:03Z] loginctl show-user elpresidank --property=Linger --value -> yes
+[04:38:03Z] linger enabled: OK
+
+=== step 3: derive runtime dir and bus address from UID ===
+[04:38:03Z] derived XDG_RUNTIME_DIR=/run/user/1000
+[04:38:03Z] derived DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+
+=== step 4: user bus reachability (read-only probes) ===
+[04:38:04Z] busctl --user --list (rc=0) first 3 lines of 200:
+    | NAME                                                      PID PROCESS         USER        CONNECTION    UNIT              SESSION DESCRIPTION
+    | :1.0                                                    12231 gnome-keyring-d elpresidank :1.0          user@1000.service -       -
+    | :1.10                                                   12667 kwin_wayland    elpresidank :1.10         user@1000.service -       -
+[04:38:04Z] systemctl --user show --property=Version --value (rc=0) -> 261.2-1-arch
+[04:38:04Z] systemctl --user is-system-running -> degraded
+[04:38:04Z] bus reachable, user manager version=261.2-1-arch: OK
+
+=== step 5: identity binding vs expectation ===
+[04:38:04Z] actual identity tuple:
+    | {
+    |   "machine_id_sha256": "90bdffbb<sha256-redacted>",
+    |   "hostname": "DankStation",
+    |   "uid": 1000,
+    |   "user": "elpresidank",
+    |   "home": "/home/elpresidank",
+    |   "runtime_dir": "/run/user/1000",
+    |   "bus_address": "unix:path=/run/user/1000/bus"
+    | }
+[04:38:04Z] expected identity tuple (/tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect2/24ddf3c1-674e-4ddb-acac-1343f8e844f6/scratchpad/spike-2/expected-identity.json):
+    | {
+    |   "bus_address": "unix:path=/run/user/1000/bus",
+    |   "home": "/home/elpresidank",
+    |   "hostname": "DankStation",
+    |   "machine_id_sha256": "90bdffbb<sha256-redacted>",
+    |   "runtime_dir": "/run/user/1000",
+    |   "uid": 1000,
+    |   "user": "elpresidank"
+    | }
+[04:38:04Z] identity tuple matches expectation on all 7 fields: OK
+
+=== PREFLIGHT OK — entering mutation phase ===
+[04:38:04Z] writing unit /home/elpresidank/.config/systemd/user/openclaw-spike.service
+[04:38:04Z] unit content:
+    | [Unit]
+    | Description=OpenClaw P0 Spike 2 placeholder unit (no OpenClaw binary involved)
+    | Documentation=https://example.invalid/openclaw-spike-2
+    | 
+    | [Service]
+    | Type=simple
+    | ExecStart=/usr/bin/sleep infinity
+    | WorkingDirectory=/tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect2/24ddf3c1-674e-4ddb-acac-1343f8e844f6/scratchpad/spike-2/throwaway-state
+    | Environment=OPENCLAW_SPIKE_STATE=/tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect2/24ddf3c1-674e-4ddb-acac-1343f8e844f6/scratchpad/spike-2/throwaway-state
+    | Restart=no
+    | 
+    | [Install]
+    | WantedBy=default.target
+[04:38:04Z] $ systemctl --user daemon-reload (rc=0)
+[04:38:04Z] $ systemctl --user enable openclaw-spike.service (rc=0)
+    | Created symlink '/home/elpresidank/.config/systemd/user/default.target.wants/openclaw-spike.service' → '/home/elpresidank/.config/systemd/user/openclaw-spike.service'.
+[04:38:04Z] $ systemctl --user start openclaw-spike.service (rc=0)
+[04:38:04Z] $ systemctl --user is-active openclaw-spike.service (rc=0)
+    | active
+[04:38:04Z] post-start unit properties:
+    | LoadState=loaded
+    | ActiveState=active
+    | SubState=running
+    | FragmentPath=/home/elpresidank/.config/systemd/user/openclaw-spike.service
+    | UnitFileState=enabled
+    | MainPID=1458977
+[04:38:04Z] $ systemctl --user stop openclaw-spike.service (rc=0)
+[04:38:04Z] post-stop ActiveState: inactive
+[04:38:04Z] $ systemctl --user disable openclaw-spike.service (rc=0)
+    | Removed '/home/elpresidank/.config/systemd/user/default.target.wants/openclaw-spike.service'.
+[04:38:04Z] post-disable UnitFileState: disabled
+
+=== APPLY OK ===
+
+### EXIT CODE: 0

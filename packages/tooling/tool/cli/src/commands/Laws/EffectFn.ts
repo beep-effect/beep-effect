@@ -6,16 +6,16 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
-import { TSMorphService, TsMorphProjectInspectionRequest } from "@beep/repo-utils/TSMorph/index";
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Effect, Order, Path, pipe } from "effect";
+import { Effect, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node, SyntaxKind } from "ts-morph";
-import type { TSMorphServiceError } from "@beep/repo-utils/TSMorph/index";
+import { LAW_SCAN_INCLUDED_GLOBS, runLawScan } from "./internal/LawScan.ts";
+import type { TSMorphService, TSMorphServiceError } from "@beep/repo-utils/TSMorph/index";
+import type { Path } from "effect";
 import type {
   ArrowFunction,
   CallExpression,
@@ -27,16 +27,12 @@ import type {
 
 const $I = $RepoCliId.create("commands/Laws/EffectFn");
 
-const INCLUDED_GLOBS = ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"] as const;
 const EFFECT_FN_RULE_ID = "beep-laws/effect-fn";
 
 const EffectFnRecommendation = LiteralKit(["Effect.fn", "Effect.fnUntraced"]);
 
 type EffectFnRecommendation = typeof EffectFnRecommendation.Type;
 type EffectFnOwner = ArrowFunction | FunctionDeclaration | FunctionExpression | MethodDeclaration;
-type ScannedSourceFile = readonly [file: string, sourceFile: SourceFile];
-
-const decodeProjectInspectionRequest = S.decodeUnknownEffect(TsMorphProjectInspectionRequest);
 
 /**
  * Runtime options for the Effect.fn supplemental law.
@@ -146,8 +142,6 @@ export class EffectFnRulesSummary extends S.Class<EffectFnRulesSummary>($I`Effec
     description: "Summary of repo-local Effect.fn supplemental law results.",
   })
 ) {}
-
-const byScannedSourceFilePathAscending = Order.mapInput(Order.String, ([file]: ScannedSourceFile) => file);
 
 const isEffectFnOwner = (node: Node): node is EffectFnOwner =>
   Node.isArrowFunction(node) ||
@@ -391,65 +385,12 @@ const collectEffectFnDiagnostics = (
 export const runEffectFnRules = Effect.fn("EffectFn.runEffectFnRules")(function* (
   options: EffectFnRulesOptions
 ): Effect.fn.Return<EffectFnRulesSummary, S.SchemaError | TSMorphServiceError, TSMorphService | Path.Path> {
-  const service = yield* TSMorphService;
-  const path = yield* Path.Path;
-
-  const isExcludedFile = (filePath: string): boolean => {
-    const normalized = toPosixPath(filePath);
-    if (A.some(options.excludePaths, (excludePath) => normalized === toPosixPath(excludePath))) {
-      return true;
-    }
-
-    return isExcludedTypeScriptSourcePath(normalized);
-  };
-
-  const request = yield* decodeProjectInspectionRequest({
-    entrypoint: {
-      _tag: "tsconfig",
-      tsConfigPath: "tsconfig.json",
-    },
-    repoRootPath: null,
-    mode: "syntax",
-    referencePolicy: "workspaceOnly",
-    filePaths: A.empty(),
-    sourceFileGlobs: A.fromIterable(INCLUDED_GLOBS),
+  const scan = yield* runLawScan({
+    sourceFileGlobs: LAW_SCAN_INCLUDED_GLOBS,
+    excludePaths: options.excludePaths,
+    strictCheck: options.strictCheck,
+    collect: collectEffectFnDiagnostics,
   });
 
-  return yield* service.inspectProject(request, ({ scope, sourceFiles }) => {
-    let scannedSourceFiles = A.empty<ScannedSourceFile>();
-
-    for (const sourceFile of sourceFiles) {
-      const relativeFilePath = toPosixPath(path.relative(scope.repoRootPath, sourceFile.getFilePath()));
-
-      if (isExcludedFile(relativeFilePath)) {
-        continue;
-      }
-
-      scannedSourceFiles = A.append(scannedSourceFiles, [relativeFilePath, sourceFile] as const);
-    }
-
-    scannedSourceFiles = A.sort(scannedSourceFiles, byScannedSourceFilePathAscending);
-
-    let diagnostics = A.empty<EffectFnDiagnostic>();
-    let affectedFiles = A.empty<string>();
-
-    for (const [relativeFilePath, sourceFile] of scannedSourceFiles) {
-      const fileDiagnostics = collectEffectFnDiagnostics(relativeFilePath, sourceFile);
-      if (A.isReadonlyArrayNonEmpty(fileDiagnostics)) {
-        affectedFiles = A.append(affectedFiles, relativeFilePath);
-        diagnostics = A.appendAll(diagnostics, fileDiagnostics);
-      }
-    }
-
-    const violationCount = A.length(diagnostics);
-
-    return EffectFnRulesSummary.make({
-      scannedFiles: A.length(scannedSourceFiles),
-      touchedFiles: A.length(affectedFiles),
-      violationCount,
-      strictFailure: options.strictCheck && violationCount > 0,
-      affectedFiles,
-      diagnostics,
-    });
-  });
+  return EffectFnRulesSummary.make(scan);
 });

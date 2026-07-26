@@ -131,6 +131,68 @@ export * from "./EpistemicFixtureKey/index.ts";
  */
 export * from "./EvidenceSpan/index.ts";
 /**
+ * Execution grant value exports.
+ *
+ * @example
+ * ```ts
+ * import { SinkClass } from "@beep/epistemic-domain/values"
+ *
+ * console.log(SinkClass.Enum["network-egress"])
+ * ```
+
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./ExecutionGrant/index.ts";
+/**
+ * Execution ledger record value exports.
+ *
+ * @example
+ * ```ts
+ * import { ExecutionSettlement } from "@beep/epistemic-domain/values"
+ *
+ * console.log(ExecutionSettlement.Enum.completed)
+ * ```
+
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./ExecutionRecord/index.ts";
+/**
+ * Execution verdict value exports.
+ *
+ * @example
+ * ```ts
+ * import { DenialReason } from "@beep/epistemic-domain/values"
+ *
+ * console.log(DenialReason.Enum["destination-not-granted"])
+ * ```
+
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./ExecutionVerdict/index.ts";
+/**
+ * Grant set value exports.
+ *
+ * @example
+ * ```ts
+ * import { DraftGrantSet } from "@beep/epistemic-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * const draft = S.decodeUnknownSync(DraftGrantSet)({
+ *   grants: [],
+ *   policyRevision: "1.0.0",
+ *   state: "draft"
+ * })
+ * console.log(draft.state)
+ * ```
+
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./GrantSet/index.ts";
+/**
  * Logical edge identity and digest exports.
  *
  * @example

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-17",
+  "generatedOn": "2026-07-26",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
@@ -2450,6 +2450,22 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/internal/LawScan.ts",
+      "symbol": "LawScanOptions",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Generic over the caller-supplied diagnostic type; the shape is a compile-time contract between a law and the shared scan runner and never crosses a decode boundary, so there is no runtime value to model."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/internal/LawScan.ts",
+      "symbol": "LawScanResult",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Generic over the caller-supplied diagnostic type; each law re-wraps it in its own annotated Summary schema, which is where the decodable contract lives."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
