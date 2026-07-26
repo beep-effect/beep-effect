@@ -24,7 +24,13 @@ const emptyString = () => Str.empty;
 const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
   stream.pipe(Stream.decodeText(), Stream.runFold(emptyString, Str.concat));
 
-const pickWith = Effect.fn("pickWith")(function* (executable: string, args: ReadonlyArray<string>) {
+const pickWith = Effect.fn("professional_desktop.intake.pick_vault_directory_process")(function* (
+  executable: string,
+  args: ReadonlyArray<string>
+) {
+  yield* Effect.annotateCurrentSpan({
+    "professional_desktop.intake.vault_picker.provider": executable,
+  });
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const child = yield* spawner.spawn(ChildProcess.make(executable, args));
   const [stdout, exitCode] = yield* Effect.all([collectText(child.stdout), child.exitCode], {
@@ -48,21 +54,39 @@ const pickWith = Effect.fn("pickWith")(function* (executable: string, args: Read
  * console.log(effect)
  * ```
  *
- * @category effects
+ * @effects Launches a native folder-picker subprocess and records fallback diagnostics.
+ * @category workflows
  * @since 0.0.0
  */
 export const pickVaultDirectoryOnHost = (
   startDirectory: string
 ): Effect.Effect<O.Option<string>, VaultDirectoryPickError, ChildProcessSpawner.ChildProcessSpawner> =>
   pickWith("kdialog", ["--title", dialogTitle, "--getexistingdirectory", startDirectory]).pipe(
-    Effect.catch(() => pickWith("zenity", ["--file-selection", "--directory", `--title=${dialogTitle}`])),
-    Effect.catch((error) =>
+    Effect.catchTag("PlatformError", (error) =>
+      logRedactedCause(
+        Cause.fail(error),
+        LogRedactedCauseOptions.make({
+          message: "primary native vault directory picker unavailable",
+          level: "Warn",
+          attributes: {
+            "professional_desktop.intake.vault_picker.fallback": "zenity",
+            "professional_desktop.intake.vault_picker.provider": "kdialog",
+            "professional_desktop.subsystem": "vault_picker",
+          },
+        })
+      ).pipe(Effect.andThen(pickWith("zenity", ["--file-selection", "--directory", `--title=${dialogTitle}`])))
+    ),
+    Effect.catchTag("PlatformError", (error) =>
       logRedactedCause(
         Cause.fail(error),
         LogRedactedCauseOptions.make({
           message: "native vault directory picker unavailable",
           level: "Warn",
-          attributes: { subsystem: "vault_picker" },
+          attributes: {
+            "professional_desktop.intake.vault_picker.outcome": "failure",
+            "professional_desktop.intake.vault_picker.provider": "zenity",
+            "professional_desktop.subsystem": "vault_picker",
+          },
         })
       ).pipe(Effect.andThen(VaultDirectoryPickError.failEffect("Native folder dialog unavailable on this host.")))
     )
@@ -74,8 +98,9 @@ export const pickVaultDirectoryOnHost = (
  * @example
  * ```ts
  * import { VaultDirectoryPickerHandlersLive } from "@/intake/VaultDirectoryPickerOrchestrator"
+ * import { Layer } from "effect"
  *
- * console.log(VaultDirectoryPickerHandlersLive)
+ * console.log(Layer.isLayer(VaultDirectoryPickerHandlersLive)) // true
  * ```
  *
  * @category layers

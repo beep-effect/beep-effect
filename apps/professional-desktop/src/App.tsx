@@ -6,11 +6,11 @@
  * nine ontology workbench regions — in one workspace whose layout the user
  * can rearrange and which persists to localStorage. The nav rail is the panel
  * launcher: shell panels are direct buttons and the Ontology entry expands to
- * its panel menu (focus an open panel, open a closed one). Two atom
+ * its panel disclosure (focus an open panel, open a closed one). Two atom
  * registries with explicit ownership: application state lives in the root
  * `RegistryProvider`, dock state lives in the graph's private registry —
  * panel content re-enters the app registry, and the shell reads dock atoms
- * through `useDockAtom`.
+ * through registry-bridging atoms.
  *
  * @packageDocumentation
  * @category components
@@ -20,6 +20,7 @@
 import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client";
 import { DockNode, DockWorkspace, PanelId, TabChrome } from "@beep/dock";
 import { DockviewReact } from "@beep/dock-react";
+import { $ProfessionalDesktopId } from "@beep/identity";
 import { redactCauseForClient } from "@beep/observability";
 import { HttpOntologyProtocolLive, ontologyProtocolLayerAtom } from "@beep/ontology-client";
 import {
@@ -33,20 +34,23 @@ import {
   OntologySparqlRegion,
   OntologyValidationRegion,
 } from "@beep/ontology-ui";
+import { LiteralKit } from "@beep/schema";
 import { Button } from "@beep/ui/components/button";
 import { Toaster } from "@beep/ui/components/sonner";
 import { RegistryContext, useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { Effect, MutableHashMap } from "effect";
+import { Effect } from "effect";
 import * as A from "effect/Array";
-import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
-import { Component, Fragment, useContext } from "react";
+import { Component } from "react";
 import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
 import { ThemeToggle } from "./chat/ui/ThemeToggle.tsx";
 import { DocumentIntakeTarget } from "./intake/DocumentIntakeTarget.tsx";
+import { reportedBrowserFailureAtoms } from "./runtime/BrowserFailure.atoms.ts";
+import { professionalAtomRegistryAtom, professionalBrowserRuntime } from "./runtime/ProfessionalAtomRuntime.ts";
 import { CosmosSpike } from "./spikes/CosmosSpike.tsx";
 import { Graph3DSpike } from "./spikes/Graph3DSpike.tsx";
 import { VaultSyncPanel } from "./sync/VaultSyncPanel.tsx";
@@ -56,7 +60,6 @@ import { IpcSpikePanel } from "./transport/IpcSpikePanel.tsx";
 import { SidecarTransport } from "./transport/SidecarTransport.ts";
 import {
   DESKTOP_PANELS,
-  DOCK_SNAPSHOT_KEY,
   desktopDockGraphAtom,
   desktopPanelId,
   dockPersistenceBindingAtom,
@@ -64,14 +67,18 @@ import {
   isPanelOpen,
   ONTOLOGY_PANELS,
   panelOperation,
+  resetDockSnapshotAtom,
 } from "./workspace/dock.atoms.ts";
-import { useDockAtom, useFocusedDockGroup } from "./workspace/useDockAtom.ts";
+import { dockAtomBridge, focusedDockGroupAtom } from "./workspace/dock-react.atoms.ts";
 import type { GroupId } from "@beep/dock";
 import type { DockRenderer, DockviewAdapterApi } from "@beep/dock-react";
 import type { JSX, ReactNode } from "react";
 import type { DesktopDockGraph, DesktopPanelKey } from "./workspace/dock.atoms.ts";
 
+const $I = $ProfessionalDesktopId.create("App");
+
 type AppRegistry = DesktopDockGraph["registry"];
+type BrowserFailureSource = Parameters<typeof reportedBrowserFailureAtoms>[0];
 
 const hasTauriRuntime = (): boolean => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
@@ -115,35 +122,40 @@ const readSidecarTransport = Effect.suspend(() =>
 
 // AsyncResult<SidecarTransport>: Initial = checking, Failure = unavailable,
 // Success = ready. Replaces the useState/useEffect transport probe.
-const sidecarTransportAtom = Atom.make(readSidecarTransport);
+const sidecarTransportAtom = professionalBrowserRuntime.atom(readSidecarTransport);
+
+const BrowserFailureReporter = ({
+  cause,
+  source,
+}: {
+  readonly cause: unknown;
+  readonly source: BrowserFailureSource;
+}): null => {
+  useAtomMount(reportedBrowserFailureAtoms(source)(cause));
+  return null;
+};
 
 // atom-first: when the probe resolves, point the rpc client at the matching
 // protocol layer (IPC in the desktop shell, HTTP in the browser). A mounted
 // binding rather than a useEffect; `chatProtocolLayerAtom` already defaults to
 // HTTP, so the layer is only rewritten once the transport is confirmed.
-const protocolLayerBindingAtom = Atom.make((get) => {
-  const apply = (): void => {
-    const result = get.once(sidecarTransportAtom);
-    if (AsyncResult.isSuccess(result)) {
-      const protocolLayer = result.value.ipc
-        ? IpcChatProtocolLive
-        : O.match(O.fromUndefinedOr(result.value.rpcSessionToken), {
-            onNone: () => HttpChatProtocolLive,
-            onSome: makeDesktopHttpProtocolLive,
-          });
-      get.set(
-        ontologyProtocolLayerAtom,
-        result.value.ipc || O.isSome(O.fromUndefinedOr(result.value.rpcSessionToken))
-          ? protocolLayer
-          : HttpOntologyProtocolLive
-      );
-      get.set(chatProtocolLayerAtom, protocolLayer);
-    }
-  };
-  apply();
-  get.subscribe(sidecarTransportAtom, apply);
-  return undefined;
-});
+const protocolLayerBindingAtom = professionalBrowserRuntime.atom(
+  Effect.fnUntraced(function* (get) {
+    const transport = yield* get.result(sidecarTransportAtom);
+    const sessionToken = O.fromUndefinedOr(transport.rpcSessionToken);
+    const protocolLayer = transport.ipc
+      ? IpcChatProtocolLive
+      : O.match(sessionToken, {
+          onNone: () => HttpChatProtocolLive,
+          onSome: makeDesktopHttpProtocolLive,
+        });
+    get.set(
+      ontologyProtocolLayerAtom,
+      transport.ipc || O.isSome(sessionToken) ? protocolLayer : HttpOntologyProtocolLive
+    );
+    get.set(chatProtocolLayerAtom, protocolLayer);
+  })
+);
 
 const hasIpcSpikeFlag = (): boolean =>
   typeof window !== "undefined" && new URLSearchParams(window.location.search).has("ipc");
@@ -208,13 +220,53 @@ const HOME_TILES = [
 // tiles) sees it reactively through the same registry.
 const dockApiAtom = Atom.make<O.Option<DockviewAdapterApi>>(O.none()).pipe(Atom.keepAlive);
 
+interface DesktopPanelNavigation {
+  readonly api: DockviewAdapterApi | undefined;
+  readonly graph: DesktopDockGraph;
+  readonly key: DesktopPanelKey;
+  readonly workspace: DockWorkspace;
+}
+
+const navigateDesktopPanelAtom = professionalBrowserRuntime.fn<DesktopPanelNavigation>()(
+  Effect.fn("professional_desktop.workspace.navigate_panel")(function* ({ api, graph, key, workspace }) {
+    yield* Effect.sync(() => {
+      focusPanelGroup(graph, api, workspace, key);
+      graph.registry.set(graph.operationAtom, panelOperation(workspace, key));
+    });
+  })
+);
+
+interface InitializeDockApi {
+  readonly api: DockviewAdapterApi;
+  readonly graph: DesktopDockGraph;
+}
+
+const initializeDockApiAtom = professionalBrowserRuntime.fn<InitializeDockApi>()(
+  Effect.fnUntraced(function* ({ api, graph }, ctx) {
+    ctx.set(dockApiAtom, O.some(api));
+    yield* Effect.sync(() => {
+      if (O.isSome(graph.registry.get(api.atoms.focusedGroup))) return;
+      const workspace = graph.registry.get(graph.workspaceAtom);
+      const bootGroup = O.orElse(
+        O.map(DockWorkspace.findTabsForPanel(workspace, desktopPanelId("chat")), (tabs) => tabs.groupId),
+        () =>
+          DockWorkspace.match(workspace, {
+            empty: O.none<GroupId>,
+            populated: ({ root }) => O.map(A.head(DockNode.tabs(root)), (tabs) => tabs.groupId),
+          })
+      );
+      O.match(bootGroup, {
+        onNone: () => undefined,
+        onSome: (groupId) => graph.registry.set(api.atoms.focusedGroup, O.some(groupId)),
+      });
+    });
+  })
+);
+
 const HomeSurface = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Element => {
-  const workspace = useDockAtom(graph, graph.workspaceAtom);
+  const workspace = useAtomValue(dockAtomBridge(graph, graph.workspaceAtom));
   const dockApi = useAtomValue(dockApiAtom);
-  const open = (key: DesktopPanelKey): void => {
-    focusPanelGroup(graph, O.getOrUndefined(dockApi), workspace, key);
-    graph.registry.set(graph.operationAtom, panelOperation(workspace, key));
-  };
+  const navigate = useAtomSet(navigateDesktopPanelAtom);
   return (
     <main className="h-full overflow-y-auto p-6">
       <div className="mx-auto max-w-5xl">
@@ -228,7 +280,14 @@ const HomeSurface = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Eleme
             <button
               key={item.key}
               type="button"
-              onClick={() => open(item.key)}
+              onClick={() =>
+                navigate({
+                  api: O.getOrUndefined(dockApi),
+                  graph,
+                  key: item.key,
+                  workspace,
+                })
+              }
               className="rounded-lg border bg-card p-4 text-left shadow-sm transition-colors hover:border-primary/50 hover:bg-accent"
             >
               <h2 className="font-semibold">{item.label}</h2>
@@ -242,41 +301,6 @@ const HomeSurface = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Eleme
   );
 };
 
-// A panel exception must degrade to a recoverable card, never a blank shell:
-// the nav stays mounted and the user can reset the persisted layout.
-class DockStageBoundary extends Component<{ readonly children: ReactNode }, { readonly failed: boolean }> {
-  override state = { failed: false };
-  static getDerivedStateFromError(): { failed: boolean } {
-    return { failed: true };
-  }
-  override render(): ReactNode {
-    if (this.state.failed) {
-      return (
-        <div className="flex h-full items-center justify-center">
-          <div className="max-w-md rounded-md border bg-card p-4 shadow-sm">
-            <h2 className="text-base font-semibold">The workspace hit an error</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              A surface crashed while rendering. Reset the saved layout to recover — your documents and threads are not
-              affected.
-            </p>
-            <button
-              type="button"
-              className="mt-4 rounded-md border bg-accent px-3 py-1.5 text-sm font-medium"
-              onClick={() => {
-                globalThis.localStorage.removeItem(DOCK_SNAPSHOT_KEY);
-                globalThis.location.reload();
-              }}
-            >
-              Reset layout
-            </button>
-          </div>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
 const DockWatermark = (): JSX.Element => (
   <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
     All surfaces are closed — reopen one from the navigation above.
@@ -288,53 +312,134 @@ const DockWatermark = (): JSX.Element => (
 // state (and the protocol-layer bindings that configure them) live in the
 // root RegistryProvider. Without this wrapper each surface would silently
 // instantiate detached copies of its atoms inside the graph registry.
-// Surface crash resilience in two nested boundaries. The inner retrier
-// absorbs transient incidents (dock moves can trip third-party StrictMode
-// bugs, e.g. MUI X useDisposable in the ontology tree) by remounting the
-// subtree fresh; React itself bounds consecutive recovery attempts and
-// re-throws past the retrier when a crash persists, which the outer card
-// catches and turns into a manual reload.
-class SurfaceRetry extends Component<{ readonly children: ReactNode }, { readonly attempt: number }> {
-  override state = { attempt: 0 };
-  static getDerivedStateFromError(): null {
-    return null;
-  }
-  override componentDidCatch(): void {
-    this.setState((previous) => ({ attempt: previous.attempt + 1 }));
-  }
-  override render(): ReactNode {
-    return <Fragment key={this.state.attempt}>{this.props.children}</Fragment>;
-  }
+// A fixed retry budget absorbs transient third-party render incidents without
+// turning persistent faults into an unbounded remount loop.
+const SURFACE_RETRY_LIMIT = 2;
+
+const SurfaceRecoveryState = LiteralKit(["ready", "retrying", "failed"])
+  .toTaggedUnion("kind")({
+    ready: {},
+    retrying: {
+      attempt: S.Int,
+      cause: S.Unknown,
+    },
+    failed: {
+      cause: S.Unknown,
+    },
+  })
+  .pipe(
+    $I.annoteSchema("SurfaceRecoveryState", {
+      description: "Exhaustive bounded recovery lifecycle for a desktop render boundary.",
+    })
+  );
+
+type SurfaceRecoveryState = typeof SurfaceRecoveryState.Type;
+
+interface RecoveryBoundaryProps {
+  readonly children: ReactNode;
+  readonly label: string;
+  readonly resetWorkspace?: undefined | (() => void);
 }
 
-class SurfaceCard extends Component<
-  { readonly children: ReactNode; readonly label: string },
+class RecoveryAttemptBoundary extends Component<
+  { readonly children: ReactNode; readonly onFailure: (cause: Error) => void },
   { readonly failed: boolean }
 > {
   override state = { failed: false };
-  static getDerivedStateFromError(): { failed: boolean } {
+
+  static getDerivedStateFromError(): { readonly failed: true } {
     return { failed: true };
   }
+
+  override componentDidCatch(error: Error): void {
+    this.props.onFailure(error);
+  }
+
   override render(): ReactNode {
-    if (this.state.failed) {
-      return (
-        <div className="flex h-full items-center justify-center p-4">
-          <div className="max-w-sm rounded-md border bg-card p-4 text-center shadow-sm">
-            <p className="text-sm text-muted-foreground">The {this.props.label} surface crashed while rendering.</p>
-            <button
-              type="button"
-              className="mt-3 rounded-md border bg-accent px-3 py-1.5 text-sm font-medium"
-              onClick={() => this.setState({ failed: false })}
-            >
-              Reload {this.props.label}
-            </button>
-          </div>
-        </div>
-      );
-    }
-    return this.props.children;
+    return this.state.failed ? null : this.props.children;
   }
 }
+
+class RecoveryBoundary extends Component<RecoveryBoundaryProps, SurfaceRecoveryState> {
+  override state: SurfaceRecoveryState = SurfaceRecoveryState.cases.ready.make({});
+
+  private readonly recover = (error: Error): void => {
+    this.setState((state) =>
+      SurfaceRecoveryState.match(state, {
+        ready: () => SurfaceRecoveryState.cases.retrying.make({ attempt: 1, cause: error }),
+        retrying: ({ attempt, cause }) =>
+          attempt < SURFACE_RETRY_LIMIT
+            ? SurfaceRecoveryState.cases.retrying.make({ attempt: attempt + 1, cause })
+            : SurfaceRecoveryState.cases.failed.make({ cause }),
+        failed: () => state,
+      })
+    );
+  };
+
+  private readonly retry = (): void => {
+    this.setState(SurfaceRecoveryState.cases.ready.make({}));
+  };
+
+  override render(): ReactNode {
+    return SurfaceRecoveryState.match(this.state, {
+      ready: () => (
+        <RecoveryAttemptBoundary key={0} onFailure={this.recover}>
+          {this.props.children}
+        </RecoveryAttemptBoundary>
+      ),
+      retrying: ({ attempt }) => (
+        <RecoveryAttemptBoundary key={attempt} onFailure={this.recover}>
+          {this.props.children}
+        </RecoveryAttemptBoundary>
+      ),
+      failed: ({ cause }) => (
+        <>
+          <BrowserFailureReporter cause={cause} source="workspace" />
+          {this.props.resetWorkspace === undefined ? (
+            <div className="flex h-full items-center justify-center p-4">
+              <div className="max-w-sm rounded-md border bg-card p-4 text-center shadow-sm">
+                <p className="text-sm text-muted-foreground">The {this.props.label} surface crashed while rendering.</p>
+                <button
+                  type="button"
+                  className="mt-3 rounded-md border bg-accent px-3 py-1.5 text-sm font-medium"
+                  onClick={this.retry}
+                >
+                  Reload {this.props.label}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex h-full items-center justify-center">
+              <div className="max-w-md rounded-md border bg-card p-4 shadow-sm">
+                <h2 className="text-base font-semibold">The workspace hit an error</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  A surface crashed while rendering. Reset the saved layout to recover — your documents and threads are
+                  not affected.
+                </p>
+                <button
+                  type="button"
+                  className="mt-4 rounded-md border bg-accent px-3 py-1.5 text-sm font-medium"
+                  onClick={this.props.resetWorkspace}
+                >
+                  Reset layout
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      ),
+    });
+  }
+}
+
+const DockStageBoundary = ({ children }: { readonly children: ReactNode }): JSX.Element => {
+  const resetDockSnapshot = useAtomSet(resetDockSnapshotAtom);
+  return (
+    <RecoveryBoundary label="workspace" resetWorkspace={() => resetDockSnapshot(void 0)}>
+      {children}
+    </RecoveryBoundary>
+  );
+};
 
 /**
  * Crash boundary around one dock surface: transient render crashes self-heal
@@ -357,11 +462,7 @@ export const SurfaceBoundary = ({
 }: {
   readonly children: ReactNode;
   readonly label: string;
-}): JSX.Element => (
-  <SurfaceCard label={label}>
-    <SurfaceRetry>{children}</SurfaceRetry>
-  </SurfaceCard>
-);
+}): JSX.Element => <RecoveryBoundary label={label}>{children}</RecoveryBoundary>;
 
 const makePanelRenderers = (
   graph: DesktopDockGraph,
@@ -391,34 +492,69 @@ const makePanelRenderers = (
   };
 };
 
-// Stable renderer identities without useMemo: one renderer map per graph for
-// the app's lifetime. A fresh map per render would hand React new component
-// types on every workspace change, remounting every panel subtree and
-// destroying the state keep-alive exists to preserve. (Keyed by graph alone:
-// the app registry is one per page, like the graph itself, so the strong
-// reference lives exactly as long as the page.)
-const renderersCache = MutableHashMap.empty<DesktopDockGraph, Readonly<Record<DesktopPanelKey, DockRenderer>>>();
-const panelRenderersFor = (
-  graph: DesktopDockGraph,
-  appRegistry: AppRegistry
-): Readonly<Record<DesktopPanelKey, DockRenderer>> =>
-  O.getOrElse(MutableHashMap.get(renderersCache, graph), () => {
-    const built = makePanelRenderers(graph, appRegistry);
-    MutableHashMap.set(renderersCache, graph, built);
-    return built;
-  });
+// The family owns one renderer map per graph. Reading the professional registry
+// inside the atom keeps renderer identity stable without module-global state.
+const panelRendererAtoms = Atom.family((graph: DesktopDockGraph) =>
+  Atom.readable((get) =>
+    AsyncResult.map(get(professionalAtomRegistryAtom), (appRegistry) => makePanelRenderers(graph, appRegistry))
+  )
+);
 
 // atom-first: the menu's open flag is an atom, not useState — shell chrome
 // state lives in the registry like everything else, and no React hook owns
 // it.
 const ontologyMenuOpenAtom = Atom.make(false).pipe(Atom.keepAlive);
+const ontologyMenuElementAtom = Atom.make<O.Option<HTMLDivElement>>(O.none());
+
+const closeOntologyMenuAtom = professionalBrowserRuntime.fn<void>()(
+  Effect.fnUntraced(function* (_, ctx) {
+    ctx.set(ontologyMenuOpenAtom, false);
+  })
+);
+
+const toggleOntologyMenuAtom = professionalBrowserRuntime.fn<void>()(
+  Effect.fnUntraced(function* (_, ctx) {
+    ctx.set(ontologyMenuOpenAtom, !ctx(ontologyMenuOpenAtom));
+  })
+);
+
+const setOntologyMenuElementAtom = professionalBrowserRuntime.fn<HTMLDivElement | null>()(
+  Effect.fnUntraced(function* (element, ctx) {
+    ctx.set(ontologyMenuElementAtom, O.fromNullishOr(element));
+  })
+);
+
+const ontologyMenuDismissBindingAtom = professionalBrowserRuntime.atom((get) =>
+  O.match(get(ontologyMenuElementAtom), {
+    onNone: () => Effect.void,
+    onSome: Effect.fnUntraced(function* (node) {
+      const root = node.closest("[data-desktop-ontology-root]") ?? node;
+      const press = (event: PointerEvent): void => {
+        if (event.target instanceof Node && root.contains(event.target)) return;
+        get.registry.set(closeOntologyMenuAtom, void 0);
+      };
+      const keydown = (event: KeyboardEvent): void => {
+        if (event.key === "Escape") get.registry.set(closeOntologyMenuAtom, void 0);
+      };
+      yield* Effect.sync(() => {
+        document.addEventListener("pointerdown", press);
+        document.addEventListener("keydown", keydown);
+      });
+      yield* Effect.addFinalizer(() =>
+        Effect.sync(() => {
+          document.removeEventListener("pointerdown", press);
+          document.removeEventListener("keydown", keydown);
+        })
+      );
+    }),
+  })
+);
 
 // The nav rail's Ontology entry: expands to the nine-panel menu. An entry
 // click focuses an open panel or opens a closed one beside its cluster
 // siblings; the menu dismisses on outside press and Escape (ARIA menu
-// practices). Dismissal listeners live in a callback ref on the menu node —
-// the node exists exactly while the menu is open, so the listeners scope
-// themselves without an effect hook.
+// practices). The menu element and dismissal listeners are owned by runtime
+// atoms, so opening and closing the menu scopes the listener lifecycle.
 const OntologyMenu = ({
   isCurrent,
   onSelect,
@@ -429,36 +565,19 @@ const OntologyMenu = ({
   readonly workspace: DockWorkspace;
 }): JSX.Element => {
   const open = useAtomValue(ontologyMenuOpenAtom);
-  const setOpen = useAtomSet(ontologyMenuOpenAtom);
-  const dismissRef = (node: HTMLDivElement | null): (() => void) | undefined => {
-    if (P.isNull(node)) return undefined;
-    // The toggle button lives outside the menu node: presses anywhere inside
-    // the shared root (button included) are the menu's own interactions.
-    const root = node.closest("[data-desktop-ontology-root]") ?? node;
-    const press = (event: PointerEvent): void => {
-      if (event.target instanceof Node && root.contains(event.target)) return;
-      setOpen(false);
-    };
-    const keydown = (event: KeyboardEvent): void => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    // fallow-ignore-next-line code-duplication
-    document.addEventListener("pointerdown", press);
-    document.addEventListener("keydown", keydown);
-    return () => {
-      document.removeEventListener("pointerdown", press);
-      document.removeEventListener("keydown", keydown);
-    };
-  };
+  const close = useAtomSet(closeOntologyMenuAtom);
+  const setElement = useAtomSet(setOntologyMenuElementAtom);
+  const toggle = useAtomSet(toggleOntologyMenuAtom);
+  useAtomMount(ontologyMenuDismissBindingAtom);
   const anyCurrent = A.some(ONTOLOGY_PANELS, (panel) => isCurrent(panel.key));
   return (
     <div data-desktop-ontology-root="" className="relative">
       <Button
+        aria-controls="ontology-panel-disclosure"
         aria-expanded={open}
-        aria-haspopup="menu"
         aria-current={anyCurrent ? "page" : undefined}
         data-desktop-ontology-menu=""
-        onClick={() => setOpen(Bool.not(open))}
+        onClick={() => toggle(void 0)}
         size="sm"
         variant={anyCurrent ? "secondary" : "ghost"}
       >
@@ -471,8 +590,9 @@ const OntologyMenu = ({
       </Button>
       {open && (
         <div
-          ref={dismissRef}
-          role="menu"
+          id="ontology-panel-disclosure"
+          ref={setElement}
+          role="group"
           aria-label="Ontology panels"
           className="absolute left-0 top-full z-50 mt-1 min-w-44 rounded-md border bg-popover p-1 shadow-md"
         >
@@ -480,13 +600,12 @@ const OntologyMenu = ({
             <button
               key={panel.key}
               type="button"
-              role="menuitem"
               data-panel-menu-item={panel.key}
               aria-current={isCurrent(panel.key) ? "page" : undefined}
               className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
               onClick={() => {
                 onSelect(panel.key);
-                setOpen(false);
+                close(void 0);
               }}
             >
               <span
@@ -515,10 +634,11 @@ const DesktopShell = ({
   readonly graph: DesktopDockGraph;
   readonly transport: SidecarTransport;
 }): JSX.Element => {
-  const workspace = useDockAtom(graph, graph.workspaceAtom);
-  const appRegistry = useContext(RegistryContext);
+  const workspace = useAtomValue(dockAtomBridge(graph, graph.workspaceAtom));
   const dockApi = useAtomValue(dockApiAtom).pipe(O.getOrUndefined);
-  const focusedGroup = useFocusedDockGroup(graph, dockApi);
+  const initializeDockApi = useAtomSet(initializeDockApiAtom);
+  const navigatePanel = useAtomSet(navigateDesktopPanelAtom);
+  const focusedGroup = useAtomValue(focusedDockGroupAtom(graph)(dockApi));
   // One current page: the panel active in the FOCUSED group. Before any
   // focus interaction (or if focus clears) fall back to open-anywhere active.
   const isPanelCurrent = (key: DesktopPanelKey): boolean =>
@@ -530,10 +650,9 @@ const DesktopShell = ({
         ),
     });
   const navigate = (key: DesktopPanelKey): void => {
-    focusPanelGroup(graph, dockApi, workspace, key);
-    graph.registry.set(graph.operationAtom, panelOperation(workspace, key));
+    navigatePanel({ api: dockApi, graph, key, workspace });
   };
-  const surfaceRenderers = panelRenderersFor(graph, appRegistry);
+  const surfaceRenderers = AsyncResult.getOrThrow(useAtomValue(panelRendererAtoms(graph)));
   // Debounced snapshot persistence for every workspace change (drag, split,
   // float, activate, close) — the reload-restores-layout half of the contract.
   useAtomMount(dockPersistenceBindingAtom(graph));
@@ -575,27 +694,7 @@ const DesktopShell = ({
                 graph={graph}
                 components={surfaceRenderers}
                 watermarkComponent={DockWatermark}
-                onReady={({ api }) => {
-                  appRegistry.set(dockApiAtom, O.some(api));
-                  // Exactly one current page from boot: land on Chat's group
-                  // (the default layout's bottom row) when it is open, else
-                  // the first group — after fresh boot AND snapshot restore.
-                  if (O.isNone(graph.registry.get(api.atoms.focusedGroup))) {
-                    const ws = graph.registry.get(graph.workspaceAtom);
-                    const bootGroup = O.orElse(
-                      O.map(DockWorkspace.findTabsForPanel(ws, desktopPanelId("chat")), (tabs) => tabs.groupId),
-                      () =>
-                        DockWorkspace.match(ws, {
-                          empty: O.none<GroupId>,
-                          populated: ({ root }) => O.map(A.head(DockNode.tabs(root)), (tabs) => tabs.groupId),
-                        })
-                    );
-                    O.match(bootGroup, {
-                      onNone: () => undefined,
-                      onSome: (groupId) => graph.registry.set(api.atoms.focusedGroup, O.some(groupId)),
-                    });
-                  }
-                }}
+                onReady={({ api }) => initializeDockApi({ api, graph })}
                 options={{
                   gap: 6,
                   // Synchronous floor while font capture settles, and strip
@@ -624,13 +723,14 @@ const DesktopShell = ({
 // shell on the probe. One registry for the whole app — a second one would let
 // panels read protocol atoms the bindings never wrote.
 const TransportGate = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Element => {
+  const appRegistry = useAtomValue(professionalAtomRegistryAtom);
   const transport = useAtomValue(sidecarTransportAtom);
   useAtomMount(protocolLayerBindingAtom);
 
-  return AsyncResult.match(transport, {
+  return AsyncResult.match(appRegistry, {
     onInitial: () => (
       <>
-        <ShellLoading label="Connecting desktop transport" />
+        <ShellLoading label="Preparing application state" />
         <ChatTurnErrorToasts />
         <Toaster richColors />
       </>
@@ -639,9 +739,10 @@ const TransportGate = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Ele
       const redacted = redactCauseForClient(failure.cause);
       return (
         <>
+          <BrowserFailureReporter cause={failure.cause} source="app_registry" />
           <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
             <div className="max-w-md rounded-md border bg-card p-4 shadow-sm">
-              <h1 className="text-base font-semibold">Desktop transport unavailable</h1>
+              <h1 className="text-base font-semibold">Application state unavailable</h1>
               <p className="mt-2 text-sm text-muted-foreground">{redacted.message}</p>
               <p className="mt-2 text-xs text-muted-foreground">Diagnostic ID: {redacted.fingerprint}</p>
             </div>
@@ -651,7 +752,34 @@ const TransportGate = ({ graph }: { readonly graph: DesktopDockGraph }): JSX.Ele
         </>
       );
     },
-    onSuccess: (success) => <DesktopShell graph={graph} transport={success.value} />,
+    onSuccess: () =>
+      AsyncResult.match(transport, {
+        onInitial: () => (
+          <>
+            <ShellLoading label="Connecting desktop transport" />
+            <ChatTurnErrorToasts />
+            <Toaster richColors />
+          </>
+        ),
+        onFailure: (failure) => {
+          const redacted = redactCauseForClient(failure.cause);
+          return (
+            <>
+              <BrowserFailureReporter cause={failure.cause} source="desktop_transport" />
+              <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
+                <div className="max-w-md rounded-md border bg-card p-4 shadow-sm">
+                  <h1 className="text-base font-semibold">Desktop transport unavailable</h1>
+                  <p className="mt-2 text-sm text-muted-foreground">{redacted.message}</p>
+                  <p className="mt-2 text-xs text-muted-foreground">Diagnostic ID: {redacted.fingerprint}</p>
+                </div>
+              </div>
+              <ChatTurnErrorToasts />
+              <Toaster richColors />
+            </>
+          );
+        },
+        onSuccess: ({ value: transport }) => <DesktopShell graph={graph} transport={transport} />,
+      }),
   });
 };
 
@@ -687,13 +815,16 @@ export function App(): JSX.Element {
     onFailure: (failure) => {
       const redacted = redactCauseForClient(failure.cause);
       return (
-        <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
-          <div className="max-w-md rounded-md border bg-card p-4 shadow-sm">
-            <h1 className="text-base font-semibold">Workspace unavailable</h1>
-            <p className="mt-2 text-sm text-muted-foreground">{redacted.message}</p>
-            <p className="mt-2 text-xs text-muted-foreground">Diagnostic ID: {redacted.fingerprint}</p>
+        <>
+          <BrowserFailureReporter cause={failure.cause} source="workspace" />
+          <div className="flex h-screen w-full items-center justify-center bg-background text-foreground">
+            <div className="max-w-md rounded-md border bg-card p-4 shadow-sm">
+              <h1 className="text-base font-semibold">Workspace unavailable</h1>
+              <p className="mt-2 text-sm text-muted-foreground">{redacted.message}</p>
+              <p className="mt-2 text-xs text-muted-foreground">Diagnostic ID: {redacted.fingerprint}</p>
+            </div>
           </div>
-        </div>
+        </>
       );
     },
     onSuccess: (success) => <TransportGate graph={success.value} />,

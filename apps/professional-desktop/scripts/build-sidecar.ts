@@ -10,14 +10,15 @@
  * @since 0.0.0
  */
 import { $ } from "bun";
-import { Data } from "effect";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 
-class MissingTargetTripleError extends Data.TaggedError("MissingTargetTripleError")<{
-  readonly message: string;
-}> {}
+class MissingTargetTripleError extends S.TaggedErrorClass<MissingTargetTripleError>()("MissingTargetTripleError", {
+  message: S.String,
+}) {}
 
 const triple = (await $`rustc -vV`.text()).match(/host: (\S+)/)?.[1];
-if (triple === undefined) {
+if (P.isUndefined(triple)) {
   throw new MissingTargetTripleError({
     message: "could not determine the target triple from `rustc -vV`",
   });

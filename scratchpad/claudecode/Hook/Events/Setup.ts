@@ -46,22 +46,14 @@ export const Trigger = LiteralKit(["init", "maintenance"]).pipe(
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * type Example = Hook.Setup.Trigger.Type
+ * type Example = Hook.Setup.Trigger
  * ```
  *
  * @category type-level
  *
  * @since 0.0.0
  */
-export declare namespace Trigger {
-  /**
-   * Decoded runtime type represented by {@link Trigger}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof Trigger.Type;
-}
+export type Trigger = typeof Trigger.Type;
 
 /**
  * Schema for `Input`.

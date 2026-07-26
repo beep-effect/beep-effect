@@ -59,29 +59,30 @@ export const HookEntryType = LiteralKit(["command", "http", "mcp_tool", "prompt"
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.HookEntryType.Encoded) => input
+ * const accept = (input: Settings.HookEntryTypeEncoded) => input
  * console.log(accept)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace HookEntryType {
-  /**
-   * Runtime type represented by {@link HookEntryType}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof HookEntryType.Type;
-  /**
-   * JSON representation accepted by {@link HookEntryType}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Encoded = typeof HookEntryType.Encoded;
-}
+export type HookEntryType = typeof HookEntryType.Type;
+
+/**
+ * JSON representation accepted by {@link HookEntryType}.
+ *
+ * @example
+ * ```ts
+ * import type { Settings } from "effect-claudecode"
+ *
+ * const accept = (input: Settings.HookEntryTypeEncoded) => input
+ * console.log(accept)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type HookEntryTypeEncoded = typeof HookEntryType.Encoded;
 
 /**
  * Shell implementations supported by command hooks.
@@ -109,29 +110,30 @@ export const HookShell = LiteralKit(["bash", "powershell"]).pipe(
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.HookShell.Encoded) => input
+ * const accept = (input: Settings.HookShellEncoded) => input
  * console.log(accept)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace HookShell {
-  /**
-   * Runtime type represented by {@link HookShell}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof HookShell.Type;
-  /**
-   * JSON representation accepted by {@link HookShell}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Encoded = typeof HookShell.Encoded;
-}
+export type HookShell = typeof HookShell.Type;
+
+/**
+ * JSON representation accepted by {@link HookShell}.
+ *
+ * @example
+ * ```ts
+ * import type { Settings } from "effect-claudecode"
+ *
+ * const accept = (input: Settings.HookShellEncoded) => input
+ * console.log(accept)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type HookShellEncoded = typeof HookShell.Encoded;
 
 const commonHookFields = {
   if: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -432,6 +434,18 @@ export declare namespace AgentHookEntry {
  * A single hook entry in settings.json — a discriminated union of the
  * five supported types keyed on `type`.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Settings } from "effect-claudecode"
+ *
+ * const hook = S.decodeSync(Settings.HookEntry)({
+ *   type: "command",
+ *   command: "bun hook.ts"
+ * })
+ * console.log(hook.type)
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -455,29 +469,30 @@ export const HookEntry = S.Union([
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.HookEntry.Encoded) => input
+ * const accept = (input: Settings.HookEntryEncoded) => input
  * console.log(accept)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace HookEntry {
-  /**
-   * Runtime type represented by {@link HookEntry}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof HookEntry.Type;
-  /**
-   * JSON representation accepted by {@link HookEntry}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Encoded = typeof HookEntry.Encoded;
-}
+export type HookEntry = typeof HookEntry.Type;
+
+/**
+ * JSON representation accepted by {@link HookEntry}.
+ *
+ * @example
+ * ```ts
+ * import type { Settings } from "effect-claudecode"
+ *
+ * const accept = (input: Settings.HookEntryEncoded) => input
+ * console.log(accept)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type HookEntryEncoded = typeof HookEntry.Encoded;
 
 // ---------------------------------------------------------------------------
 // Matcher group
@@ -485,6 +500,18 @@ export declare namespace HookEntry {
 
 /**
  * A group of hook entries sharing a common matcher.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Settings } from "effect-claudecode"
+ *
+ * const group = S.decodeSync(Settings.HookMatcherGroup)({
+ *   matcher: "Bash",
+ *   hooks: [{ type: "command", command: "bun hook.ts" }]
+ * })
+ * console.log(group.hooks.length)
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -538,6 +565,17 @@ export declare namespace HookMatcherGroup {
  * The full `hooks` subtree of settings.json — a record keyed by event
  * name, each holding an array of matcher groups.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Settings } from "effect-claudecode"
+ *
+ * const hooks = S.decodeSync(Settings.HooksSection)({
+ *   PreToolUse: [{ matcher: "Bash", hooks: [] }]
+ * })
+ * console.log(hooks.PreToolUse)
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -554,26 +592,27 @@ export const HooksSection = S.Record(S.String, HookMatcherGroup.pipe(S.Array)).p
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.HooksSection.Encoded) => input
+ * const accept = (input: Settings.HooksSectionEncoded) => input
  * console.log(accept)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace HooksSection {
-  /**
-   * Runtime type represented by {@link HooksSection}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof HooksSection.Type;
-  /**
-   * JSON representation accepted by {@link HooksSection}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Encoded = typeof HooksSection.Encoded;
-}
+export type HooksSection = typeof HooksSection.Type;
+
+/**
+ * JSON representation accepted by {@link HooksSection}.
+ *
+ * @example
+ * ```ts
+ * import type { Settings } from "effect-claudecode"
+ *
+ * const accept = (input: Settings.HooksSectionEncoded) => input
+ * console.log(accept)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type HooksSectionEncoded = typeof HooksSection.Encoded;

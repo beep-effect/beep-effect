@@ -399,7 +399,7 @@ const loadOptionalJson = <A>(
   });
 
 /** @internal */
-const serverEndpointKey = (server: McpServerConfig.Type): O.Option<string> => {
+const serverEndpointKey = (server: McpServerConfig): O.Option<string> => {
   if (S.is(StdioMcpServer)(server)) {
     return O.some(`command:${server.command}\u0000${A.join(O.getOrElse(server.args, A.empty<string>), "\u0000")}`);
   }
@@ -408,9 +408,9 @@ const serverEndpointKey = (server: McpServerConfig.Type): O.Option<string> => {
 
 /** @internal */
 const removeEndpointDuplicates = (
-  servers: Readonly<Record<string, McpServerConfig.Type>>,
-  server: McpServerConfig.Type
-): Record<string, McpServerConfig.Type> =>
+  servers: Readonly<Record<string, McpServerConfig>>,
+  server: McpServerConfig
+): Record<string, McpServerConfig> =>
   O.match(serverEndpointKey(server), {
     onNone: () => ({ ...servers }),
     onSome: (endpoint) =>
@@ -424,10 +424,10 @@ const removeEndpointDuplicates = (
 
 /** @internal */
 const mergeServerRecords = (
-  base: Readonly<Record<string, McpServerConfig.Type>>,
-  override: Readonly<Record<string, McpServerConfig.Type>>
-): Record<string, McpServerConfig.Type> => {
-  const initial: Record<string, McpServerConfig.Type> = { ...base };
+  base: Readonly<Record<string, McpServerConfig>>,
+  override: Readonly<Record<string, McpServerConfig>>
+): Record<string, McpServerConfig> => {
+  const initial: Record<string, McpServerConfig> = { ...base };
   return A.reduce(R.toEntries(override), initial, (acc, [name, server]) =>
     R.set(removeEndpointDuplicates(acc, server), name, server)
   );
@@ -454,7 +454,7 @@ const mergeServerRecords = (
  * @since 0.0.0
  */
 export const mergeMcpJsonFiles = (files: ReadonlyArray<McpJsonFile>): McpJsonFile => {
-  const initial: Record<string, McpServerConfig.Type> = {};
+  const initial: Record<string, McpServerConfig> = {};
   return McpJsonFile.make({
     mcpServers: A.reduce(files, initial, (acc, file) => mergeServerRecords(acc, file.mcpServers)),
   });
@@ -462,7 +462,7 @@ export const mergeMcpJsonFiles = (files: ReadonlyArray<McpJsonFile>): McpJsonFil
 
 /** @internal */
 const mcpFileFromServers = (
-  servers: O.Option<Readonly<Record<string, McpServerConfig.Type>>>,
+  servers: O.Option<Readonly<Record<string, McpServerConfig>>>,
   source: string
 ): Effect.Effect<O.Option<McpJsonFile>> =>
   O.match(servers, {
@@ -478,7 +478,7 @@ const optionalJsonField = <A>(key: string, value: O.Option<A>): Readonly<Record<
 const encodeOAuth = S.encodeSync(McpOAuth);
 
 /** @internal */
-const serializeServerForCurrentClaudeCode = (server: McpServerConfig.Type): Readonly<Record<string, unknown>> => {
+const serializeServerForCurrentClaudeCode = (server: McpServerConfig): Readonly<Record<string, unknown>> => {
   if (S.is(StdioMcpServer)(server)) {
     return {
       ...optionalJsonField("type", server.type),

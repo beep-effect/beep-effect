@@ -15,6 +15,7 @@
  * @since 0.0.0
  */
 
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import {
   applyChangeOperationsWithDelta,
   CreateSessionInput,
@@ -30,7 +31,7 @@ import {
   SerializeTurtleRequest,
   TurtleCodec,
   WriteOntologyFileRequest,
-} from "@beep/ontology-use-cases/aggregates/Session";
+} from "@beep/ontology-use-cases/public";
 import { makeDataset } from "@beep/rdf/Rdf";
 import { Eq, P } from "@beep/utils";
 import { Effect, Layer } from "effect";
@@ -43,6 +44,10 @@ import * as S from "effect/Schema";
  * @since 0.0.0
  */
 const PIZZA_TUTORIAL_PATH = "tmp/ontology-workbench/pizza-tutorial.ttl";
+
+const decodeOntologyFilePath = S.decodeUnknownEffect(OntologyFilePath);
+
+const decodeSessionId = S.decodeUnknownEffect(SessionId);
 
 /**
  * Writes the starter document when — and only when — it is absent.
@@ -58,13 +63,14 @@ const PIZZA_TUTORIAL_PATH = "tmp/ontology-workbench/pizza-tutorial.ttl";
  * console.log(Effect.isEffect(seedPizzaTutorial())) // true
  * ```
  *
- * @category effects
+ * @effects Reads and, when absent, writes the starter ontology document.
+ * @category workflows
  * @since 0.0.0
  */
 export const seedPizzaTutorial = Effect.fn("OntologyWorkspaceSeed.seedPizzaTutorial")(function* () {
   const fileStore = yield* OntologyFileStore;
   const codec = yield* TurtleCodec;
-  const path = yield* S.decodeUnknownEffect(OntologyFilePath)(PIZZA_TUTORIAL_PATH);
+  const path = yield* decodeOntologyFilePath(PIZZA_TUTORIAL_PATH);
 
   // An existing document wins: this seeds a starting point, it does not reset the
   // user's workspace on every launch.
@@ -81,7 +87,7 @@ export const seedPizzaTutorial = Effect.fn("OntologyWorkspaceSeed.seedPizzaTutor
     return;
   }
 
-  const id = yield* S.decodeUnknownEffect(SessionId)("pizza-tutorial-seed");
+  const id = yield* decodeSessionId("pizza-tutorial-seed");
   const session = createSession(
     CreateSessionInput.make({
       id,
@@ -107,8 +113,9 @@ export const seedPizzaTutorial = Effect.fn("OntologyWorkspaceSeed.seedPizzaTutor
  * @example
  * ```ts
  * import { OntologyWorkspaceSeedLive } from "@/ontology/OntologyWorkspaceSeed"
+ * import { Layer } from "effect"
  *
- * console.log(OntologyWorkspaceSeedLive)
+ * console.log(Layer.isLayer(OntologyWorkspaceSeedLive)) // true
  * ```
  *
  * @category layers
@@ -118,8 +125,16 @@ export const OntologyWorkspaceSeedLive: Layer.Layer<never, never, OntologyFileSt
   Layer.effectDiscard(
     seedPizzaTutorial().pipe(
       Effect.tapCause((cause) =>
-        Effect.logWarning("ontology workbench starter document could not be seeded", cause).pipe(
-          Effect.annotateLogs({ component: "professional-desktop", path: PIZZA_TUTORIAL_PATH })
+        logRedactedCause(
+          cause,
+          LogRedactedCauseOptions.make({
+            message: "ontology workbench starter document could not be seeded",
+            level: "Warn",
+            attributes: {
+              component: "professional-desktop",
+              path: PIZZA_TUTORIAL_PATH,
+            },
+          })
         )
       ),
       Effect.ignore

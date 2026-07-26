@@ -262,7 +262,7 @@ export const define = <E, R>(config: {
  * type BashHook = Hook.PostToolUse.OnToolConfig<"Bash", never, never>
  * ```
  */
-export type OnToolConfig<T extends Tool.SupportedToolName.Type, E, R> = {
+export type OnToolConfig<T extends Tool.SupportedToolName, E, R> = {
   readonly toolName: T;
   readonly handler: (input: Tool.DecodedPostToolUse<T>) => Effect.Effect<Output, E, R>;
   readonly onMismatch?: (input: Input) => Effect.Effect<Output, E, R>;
@@ -283,7 +283,7 @@ export type OnToolConfig<T extends Tool.SupportedToolName.Type, E, R> = {
  *
  * @since 0.0.0
  */
-export const onTool = <const T extends Tool.SupportedToolName.Type, E, R>(
+export const onTool = <const T extends Tool.SupportedToolName, E, R>(
   config: OnToolConfig<T, E, R>
 ): HookDefinition<Input, Output, E | HookToolDecodeError, R> =>
   define({

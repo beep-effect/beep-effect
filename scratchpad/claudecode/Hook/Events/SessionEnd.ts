@@ -56,22 +56,14 @@ export const ExitReason = LiteralKit([
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * type Example = Hook.SessionEnd.ExitReason.Type
+ * type Example = Hook.SessionEnd.ExitReason
  * ```
  *
  * @category type-level
  *
  * @since 0.0.0
  */
-export declare namespace ExitReason {
-  /**
-   * Decoded runtime type represented by {@link ExitReason}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof ExitReason.Type;
-}
+export type ExitReason = typeof ExitReason.Type;
 
 /**
  * Schema for `Input`.

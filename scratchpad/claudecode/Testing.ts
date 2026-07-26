@@ -725,21 +725,13 @@ export const MockFileSystemOperation = LiteralKit([
  * ```ts
  * import type { Testing } from "effect-claudecode"
  *
- * const operation = "readFile" satisfies Testing.MockFileSystemOperation.Type
+ * const operation = "readFile" satisfies Testing.MockFileSystemOperation
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace MockFileSystemOperation {
-  /**
-   * Decoded mock file-system operation name.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof MockFileSystemOperation.Type;
-}
+export type MockFileSystemOperation = typeof MockFileSystemOperation.Type;
 
 /**
  * Options for the in-memory file system harness.
@@ -757,7 +749,7 @@ export declare namespace MockFileSystemOperation {
  * @since 0.0.0
  */
 export interface MockFileSystemOptions {
-  readonly failOn?: (operation: MockFileSystemOperation.Type, path: string) => boolean;
+  readonly failOn?: (operation: MockFileSystemOperation, path: string) => boolean;
 }
 
 /**
@@ -840,7 +832,7 @@ const ancestorDirectories = (path: string): ReadonlyArray<string> => {
 const toFileMap = (files?: MockFileEntries): Map<string, string> =>
   files === undefined ? new Map() : files instanceof Map ? new Map(files) : new Map(Object.entries(files));
 
-const permissionDeniedError = (path: string, method: MockFileSystemOperation.Type) =>
+const permissionDeniedError = (path: string, method: MockFileSystemOperation) =>
   PlatformError.systemError({
     _tag: "PermissionDenied",
     module: "FileSystem",
@@ -849,7 +841,7 @@ const permissionDeniedError = (path: string, method: MockFileSystemOperation.Typ
     pathOrDescriptor: path,
   });
 
-const notFoundError = (path: string, method: MockFileSystemOperation.Type) =>
+const notFoundError = (path: string, method: MockFileSystemOperation) =>
   PlatformError.systemError({
     _tag: "NotFound",
     module: "FileSystem",
@@ -965,7 +957,7 @@ export const makeMockFileSystem = (files?: MockFileEntries, options?: MockFileSy
   const directories = ensureInitialDirectories(fileMap);
   const shouldFail = options?.failOn ?? (() => false);
 
-  const failIfRequested = (operation: MockFileSystemOperation.Type, path: string) =>
+  const failIfRequested = (operation: MockFileSystemOperation, path: string) =>
     shouldFail(operation, path) ? O.some(permissionDeniedError(path, operation)) : O.none();
 
   const layer = Layer.mergeAll(

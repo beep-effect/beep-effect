@@ -71,21 +71,13 @@ export const LoggerKind = LiteralKit(["default", "pretty", "json", "logFmt", "st
  * ```ts
  * import type { ClaudeRuntime } from "effect-claudecode"
  *
- * const logger = "json" satisfies ClaudeRuntime.LoggerKind.Type
+ * const logger = "json" satisfies ClaudeRuntime.LoggerKind
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace LoggerKind {
-  /**
-   * Decoded logger preset value.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof LoggerKind.Type;
-}
+export type LoggerKind = typeof LoggerKind.Type;
 
 /**
  * Runtime construction options.
@@ -106,7 +98,7 @@ export declare namespace LoggerKind {
 export interface RuntimeOptions<R = never, E = never, EP = never> {
   readonly platformLayer?: Layer.Layer<BaseServices, EP, never>;
   readonly layer?: Layer.Layer<R, E, never>;
-  readonly logger?: LoggerKind.Type;
+  readonly logger?: LoggerKind;
   readonly mergeWithExistingLoggers?: boolean;
   readonly memoMap?: Layer.MemoMap;
 }
@@ -196,7 +188,7 @@ export interface Runtime<R = never, E = never> extends ManagedRuntime.ManagedRun
  */
 export const baseLayer: Layer.Layer<BaseServices> = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 
-const loggerLayer = (kind: LoggerKind.Type, mergeWithExistingLoggers: boolean): Layer.Layer<never> => {
+const loggerLayer = (kind: LoggerKind, mergeWithExistingLoggers: boolean): Layer.Layer<never> => {
   const configured = (logger: Logger.Logger<unknown, void>) =>
     Logger.layer([Logger.tracerLogger, logger], {
       mergeWithExisting: mergeWithExistingLoggers,

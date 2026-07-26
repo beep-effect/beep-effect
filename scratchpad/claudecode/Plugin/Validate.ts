@@ -52,22 +52,14 @@ export const PluginIssueSeverity = LiteralKit(["error", "warning"]).pipe(
  * ```ts
  * import type { Plugin } from "effect-claudecode"
  *
- * const severity: Plugin.PluginIssueSeverity.Type = "warning"
+ * const severity: Plugin.PluginIssueSeverity = "warning"
  * console.log(severity)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace PluginIssueSeverity {
-  /**
-   * Runtime type represented by {@link PluginIssueSeverity}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof PluginIssueSeverity.Type;
-}
+export type PluginIssueSeverity = typeof PluginIssueSeverity.Type;
 
 /**
  * A validation or lint finding for a plugin definition.
@@ -280,7 +272,7 @@ const mcpEquivalence = S.toEquivalence(McpJsonFile);
 
 const issue = (options: {
   readonly code: string;
-  readonly severity: PluginIssueSeverity.Type;
+  readonly severity: PluginIssueSeverity;
   readonly message: string;
   readonly path?: string;
 }): PluginIssue =>
@@ -334,7 +326,7 @@ const matchesSkillSpec = (entryPath: string, spec: O.Option<string | ReadonlyArr
   );
 };
 
-const inlineHooksFromManifest = (definition: PluginDefinition | LoadedPlugin): O.Option<HooksSection.Type> =>
+const inlineHooksFromManifest = (definition: PluginDefinition | LoadedPlugin): O.Option<HooksSection> =>
   O.filter(definition.manifest.hooks, S.is(HooksSection));
 
 const inlineMcpFromManifest = (definition: PluginDefinition | LoadedPlugin): O.Option<McpJsonFile> =>

@@ -94,22 +94,14 @@ export const ComponentPathSpec = S.Union([S.String, S.String.pipe(S.Array)]).pip
  * ```ts
  * import type { Plugin } from "effect-claudecode"
  *
- * const paths: Plugin.ComponentPathSpec.Type = "./commands"
+ * const paths: Plugin.ComponentPathSpec = "./commands"
  * console.log(paths)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace ComponentPathSpec {
-  /**
-   * Runtime type represented by {@link ComponentPathSpec}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof ComponentPathSpec.Type;
-}
+export type ComponentPathSpec = typeof ComponentPathSpec.Type;
 
 /**
  * Hook configuration supplied by path or inline.
@@ -138,22 +130,14 @@ export const HooksSpec = S.Union([S.String, S.String.pipe(S.Array), HooksSection
  * ```ts
  * import type { Plugin } from "effect-claudecode"
  *
- * const hooks: Plugin.HooksSpec.Type = "./hooks/hooks.json"
+ * const hooks: Plugin.HooksSpec = "./hooks/hooks.json"
  * console.log(hooks)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace HooksSpec {
-  /**
-   * Runtime type represented by {@link HooksSpec}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof HooksSpec.Type;
-}
+export type HooksSpec = typeof HooksSpec.Type;
 
 /**
  * MCP or LSP server configuration supplied by path or inline.
@@ -182,22 +166,14 @@ export const ServerConfigSpec = S.Union([S.String, S.String.pipe(S.Array), S.Rec
  * ```ts
  * import type { Plugin } from "effect-claudecode"
  *
- * const servers: Plugin.ServerConfigSpec.Type = "./.mcp.json"
+ * const servers: Plugin.ServerConfigSpec = "./.mcp.json"
  * console.log(servers)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace ServerConfigSpec {
-  /**
-   * Runtime type represented by {@link ServerConfigSpec}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof ServerConfigSpec.Type;
-}
+export type ServerConfigSpec = typeof ServerConfigSpec.Type;
 
 /**
  * Supported user configuration value kinds.
@@ -225,22 +201,14 @@ export const UserConfigType = LiteralKit(["string", "number", "boolean", "direct
  * ```ts
  * import type { Plugin } from "effect-claudecode"
  *
- * const kind: Plugin.UserConfigType.Type = "file"
+ * const kind: Plugin.UserConfigType = "file"
  * console.log(kind)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace UserConfigType {
-  /**
-   * Runtime type represented by {@link UserConfigType}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof UserConfigType.Type;
-}
+export type UserConfigType = typeof UserConfigType.Type;
 
 /**
  * One user-facing plugin configuration entry.
@@ -339,22 +307,14 @@ export const UserConfigRecord = S.Record(S.String, UserConfigEntry).pipe(
  * ```ts
  * import type { Plugin } from "effect-claudecode"
  *
- * const entries: Plugin.UserConfigRecord.Type = {}
+ * const entries: Plugin.UserConfigRecord = {}
  * console.log(entries)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace UserConfigRecord {
-  /**
-   * Runtime type represented by {@link UserConfigRecord}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof UserConfigRecord.Type;
-}
+export type UserConfigRecord = typeof UserConfigRecord.Type;
 
 /**
  * A plugin message-channel specification.
@@ -493,22 +453,14 @@ export const DependencySpec = S.Union([S.String, PluginDependency]).pipe(
  * ```ts
  * import type { Plugin } from "effect-claudecode"
  *
- * const dependency: Plugin.DependencySpec.Type = "base-plugin"
+ * const dependency: Plugin.DependencySpec = "base-plugin"
  * console.log(dependency)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace DependencySpec {
-  /**
-   * Runtime type represented by {@link DependencySpec}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof DependencySpec.Type;
-}
+export type DependencySpec = typeof DependencySpec.Type;
 
 /**
  * Experimental plugin component paths.

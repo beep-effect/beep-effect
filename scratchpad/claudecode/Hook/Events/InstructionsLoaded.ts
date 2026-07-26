@@ -53,22 +53,14 @@ export const MemoryType = LiteralKit(["User", "Project", "Local", "Managed"]).pi
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * type Example = Hook.InstructionsLoaded.MemoryType.Type
+ * type Example = Hook.InstructionsLoaded.MemoryType
  * ```
  *
  * @category type-level
  *
  * @since 0.0.0
  */
-export declare namespace MemoryType {
-  /**
-   * Decoded runtime type represented by {@link MemoryType}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof MemoryType.Type;
-}
+export type MemoryType = typeof MemoryType.Type;
 
 /**
  * Schema for `LoadReason`.
@@ -103,22 +95,14 @@ export const LoadReason = LiteralKit([
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * type Example = Hook.InstructionsLoaded.LoadReason.Type
+ * type Example = Hook.InstructionsLoaded.LoadReason
  * ```
  *
  * @category type-level
  *
  * @since 0.0.0
  */
-export declare namespace LoadReason {
-  /**
-   * Decoded runtime type represented by {@link LoadReason}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof LoadReason.Type;
-}
+export type LoadReason = typeof LoadReason.Type;
 
 /**
  * Schema for `Input`.

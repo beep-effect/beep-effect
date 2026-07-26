@@ -25,6 +25,7 @@ import { OntologyHandlersLive } from "@/ontology/OntologyOrchestrator";
 const sessionId = S.decodeUnknownSync(SessionId)("session-rpc-validation");
 const provPath = S.decodeUnknownSync(OntologyFilePath)("tmp/session-rpc-validation.prov.ttl");
 const datasetPath = S.decodeUnknownSync(OntologyFilePath)("tmp/session-rpc-validation.dataset.ttl");
+const decodeRunOntologyValidationResult = S.decodeUnknownEffect(RunOntologyValidationResult);
 
 describe("@beep/professional-desktop ontology sidecar registration", () => {
   it.effect(
@@ -39,7 +40,7 @@ describe("@beep/professional-desktop ontology sidecar registration", () => {
           baseDataset: makeDataset([makeQuad(material, RDF_TYPE, OWL_CLASS), makeQuad(metal, RDF_TYPE, OWL_CLASS)]),
         })
       );
-      const validationResult = yield* S.decodeUnknownEffect(RunOntologyValidationResult)({
+      const validationResult = yield* decodeRunOntologyValidationResult({
         validation: {
           conforms: false,
           violations: [

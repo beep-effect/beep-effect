@@ -66,7 +66,7 @@ export interface PluginScan {
   readonly skillPaths: ReadonlyArray<string>;
   readonly outputStylePaths: ReadonlyArray<string>;
   readonly hooksPaths: ReadonlyArray<string>;
-  readonly inlineHooksConfig: O.Option<HooksSection.Type>;
+  readonly inlineHooksConfig: O.Option<HooksSection>;
   readonly mcpPaths: ReadonlyArray<string>;
   readonly inlineMcpConfig: O.Option<McpJsonFile>;
   readonly lspPaths: ReadonlyArray<string>;
@@ -167,7 +167,7 @@ const readStringFile = (path: string): Effect.Effect<string, PluginLoadError, Fi
     )
   );
 
-const readHooksFile = (path: string): Effect.Effect<HooksSection.Type, PluginLoadError, FileSystem.FileSystem> =>
+const readHooksFile = (path: string): Effect.Effect<HooksSection, PluginLoadError, FileSystem.FileSystem> =>
   readStringFile(path).pipe(
     Effect.flatMap((content) =>
       S.decodeUnknownEffect(HooksFileJson)(content).pipe(
@@ -389,7 +389,7 @@ const expandJsonFilePathSpec = (options: {
 const isPathSpec = (input: unknown): input is string | ReadonlyArray<string> =>
   P.isString(input) || (A.isArray(input) && A.every(input, P.isString));
 
-const inlineHooksConfigFromManifest = (manifest: O.Option<PluginManifest>): O.Option<HooksSection.Type> =>
+const inlineHooksConfigFromManifest = (manifest: O.Option<PluginManifest>): O.Option<HooksSection> =>
   O.flatMap(manifest, ({ hooks }) => O.filter(hooks, S.is(HooksSection)));
 
 const inlineMcpSpecFromManifest = (manifest: O.Option<PluginManifest>): O.Option<R.ReadonlyRecord<string, unknown>> =>
@@ -467,7 +467,7 @@ const toPluginConfig = (input: {
   readonly agents: ReadonlyArray<PluginAgentEntry>;
   readonly skills: ReadonlyArray<PluginSkillEntry>;
   readonly outputStyles: ReadonlyArray<PluginOutputStyleEntry>;
-  readonly hooksConfig: O.Option<HooksSection.Type>;
+  readonly hooksConfig: O.Option<HooksSection>;
   readonly mcpConfig: O.Option<McpJsonFile>;
 }) => ({
   manifest: input.manifest,
@@ -567,7 +567,7 @@ const loadOutputStyleEntries = (
     );
   });
 
-const mergeHooksConfigs = (configs: ReadonlyArray<HooksSection.Type>): HooksSection.Type => {
+const mergeHooksConfigs = (configs: ReadonlyArray<HooksSection>): HooksSection => {
   const merged: Record<string, Array<unknown>> = {};
   for (const config of configs) {
     for (const [eventName, groups] of R.toEntries(config)) {
@@ -763,7 +763,7 @@ export const load = Effect.fn("Plugin.load")(function* (
     onSome: (config) => Effect.succeed(O.some(config)),
     onNone: () =>
       A.isReadonlyArrayEmpty(scanned.hooksPaths)
-        ? Effect.succeed(O.none<HooksSection.Type>())
+        ? Effect.succeed(O.none<HooksSection>())
         : Effect.forEach(scanned.hooksPaths, readHooksFile, {
             concurrency: 1,
           }).pipe(Effect.map((configs) => O.some(mergeHooksConfigs(configs)))),

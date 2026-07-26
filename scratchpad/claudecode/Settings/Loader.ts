@@ -127,7 +127,7 @@ const readDirectoryIfExists = (
 const decodeSettingsSource = (
   path: string,
   content: string
-): Effect.Effect<SettingsRaw.Type, SettingsParseError | SettingsDecodeError> =>
+): Effect.Effect<SettingsRaw, SettingsParseError | SettingsDecodeError> =>
   Effect.gen(function* () {
     const parsed = yield* S.decodeUnknownEffect(S.UnknownFromJsonString)(content).pipe(
       Effect.mapError((cause) => SettingsParseError.make({ path, cause }))
@@ -159,10 +159,10 @@ const mergeSettingsValue = (base: unknown, override: unknown): unknown => {
   return override;
 };
 
-const mergeSettingsRaw = (base: SettingsRaw.Type, override: SettingsRaw.Type): SettingsRaw.Type =>
+const mergeSettingsRaw = (base: SettingsRaw, override: SettingsRaw): SettingsRaw =>
   R.union(base, override, mergeSettingsValue);
 
-const materializeSettings = (raw: SettingsRaw.Type): Effect.Effect<SettingsFile, SettingsDecodeError> =>
+const materializeSettings = (raw: SettingsRaw): Effect.Effect<SettingsFile, SettingsDecodeError> =>
   S.decodeUnknownEffect(SettingsFile)(raw).pipe(
     Effect.mapError((cause) => SettingsDecodeError.make({ path: "<merged settings>", cause })),
     Effect.map((settings) =>
@@ -296,12 +296,12 @@ const loadWithOptions = Effect.fn("Settings.load")(function* (cwd: string, optio
     sources,
     (source) =>
       O.match(source.content, {
-        onNone: () => Effect.succeed(O.none<SettingsRaw.Type>()),
+        onNone: () => Effect.succeed(O.none<SettingsRaw>()),
         onSome: (content) => decodeSettingsSource(source.path, content).pipe(Effect.map(O.some)),
       }),
     { concurrency: 1 }
   );
-  const raw = A.reduce(decoded, {} as SettingsRaw.Type, (accumulator, source) =>
+  const raw = A.reduce(decoded, {} as SettingsRaw, (accumulator, source) =>
     O.match(source, {
       onNone: () => accumulator,
       onSome: (value) => mergeSettingsRaw(accumulator, value),

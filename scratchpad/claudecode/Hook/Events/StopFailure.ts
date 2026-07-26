@@ -58,22 +58,14 @@ export const ErrorType = LiteralKit([
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * type Example = Hook.StopFailure.ErrorType.Type
+ * type Example = Hook.StopFailure.ErrorType
  * ```
  *
  * @category type-level
  *
  * @since 0.0.0
  */
-export declare namespace ErrorType {
-  /**
-   * Decoded runtime type represented by {@link ErrorType}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof ErrorType.Type;
-}
+export type ErrorType = typeof ErrorType.Type;
 
 /**
  * Schema for `Input`.

@@ -56,8 +56,6 @@
     }
   },
   "dependencies": {
-    "@beep/editor": "workspace:^",
-    "@beep/lexical-schema": "workspace:^",
     "@beep/ontology-client": "workspace:^",
     "@beep/ontology-domain": "workspace:^",
     "@beep/ontology-use-cases": "workspace:^",

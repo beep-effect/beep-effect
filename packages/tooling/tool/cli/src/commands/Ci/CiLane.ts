@@ -747,6 +747,16 @@ export const ciLaneStepsForTesting: {
           ],
           cwd: repoRoot,
         }),
+        // The desktop migration bundle is generated from
+        // packages/_internal/db-admin/drizzle, which the app has no dependency
+        // edge to; this lane runs unaffected-gated so db-admin-only migration
+        // PRs still prove bundle freshness.
+        QualityTaskStep.make({
+          label: "ci:codegen:desktop-migration-bundle",
+          command: "bun",
+          args: ["run", "--cwd", "apps/professional-desktop", "codegen:check"],
+          cwd: repoRoot,
+        }),
       ],
       commitlint: () =>
         options.last

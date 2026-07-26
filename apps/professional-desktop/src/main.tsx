@@ -1,12 +1,16 @@
+// @effect-diagnostics strictEffectProvide:skip-file
 import "./styles/globals.css";
 import "./styles/dock.css";
 import { $ProfessionalDesktopId } from "@beep/identity";
+import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App.tsx";
 import { ProfessionalAtomProvider } from "./runtime/ProfessionalAtomProvider.tsx";
+import { ProfessionalStorageLive } from "./runtime/ProfessionalAtomRuntime.ts";
+import { migrateWorkbenchThemeMode } from "./theme/Theme.atoms.ts";
 import { WorkbenchThemeProvider } from "./theme/WorkbenchThemeProvider.tsx";
 
 // biome-ignore lint/suspicious/noUndeclaredEnvVars: Vite injects DEV on import.meta.env.
@@ -32,37 +36,72 @@ class RendererObservabilityConfig extends S.Class<RendererObservabilityConfig>($
   })
 ) {}
 
+const decodeRendererObservabilityConfig = S.decodeUnknownEffect(RendererObservabilityConfig);
+
 const setRuntimeString = (key: string, value: string | undefined): void => {
   if (value !== undefined && value.length > 0) Reflect.set(globalThis, key, value);
 };
 
-const loadRendererObservabilityConfig = Effect.fnUntraced(function* () {
-  if (!("__TAURI_INTERNALS__" in globalThis)) return;
+const loadRendererObservabilityConfig = Effect.fn("professional_desktop.bootstrap.load_renderer_observability_config")(
+  function* () {
+    if (!("__TAURI_INTERNALS__" in globalThis)) return;
 
-  const { invoke } = yield* Effect.tryPromise(() => import("@tauri-apps/api/core"));
-  const wire = yield* Effect.tryPromise(() => invoke("renderer_observability_config"));
-  const config = yield* S.decodeUnknownEffect(RendererObservabilityConfig)(wire);
-  setRuntimeString("__BEEP_BUILD_COMMIT__", config.buildCommit);
-  setRuntimeString("__BEEP_DEPLOYMENT_ENVIRONMENT__", config.deploymentEnvironment);
-  setRuntimeString("__BEEP_LAUNCH_ID__", config.launchId);
-  setRuntimeString("__BEEP_LOG_LEVEL__", config.logLevel);
-  setRuntimeString("__BEEP_OTLP_URL__", config.otlpUrl);
-  setRuntimeString("__BEEP_QA_SESSION_ID__", config.qaSessionId);
-});
+    const { invoke } = yield* Effect.tryPromise(() => import("@tauri-apps/api/core"));
+    const wire = yield* Effect.tryPromise(() => invoke("renderer_observability_config"));
+    const config = yield* decodeRendererObservabilityConfig(wire);
+    setRuntimeString("__BEEP_BUILD_COMMIT__", config.buildCommit);
+    setRuntimeString("__BEEP_DEPLOYMENT_ENVIRONMENT__", config.deploymentEnvironment);
+    setRuntimeString("__BEEP_LAUNCH_ID__", config.launchId);
+    setRuntimeString("__BEEP_LOG_LEVEL__", config.logLevel);
+    setRuntimeString("__BEEP_OTLP_URL__", config.otlpUrl);
+    setRuntimeString("__BEEP_QA_SESSION_ID__", config.qaSessionId);
+  }
+);
 
-const render = Effect.fnUntraced(function* () {
-  yield* loadRendererObservabilityConfig().pipe(Effect.catchCause(Effect.logWarning));
+const render = Effect.fn("professional_desktop.bootstrap.render")(function* () {
+  yield* loadRendererObservabilityConfig().pipe(
+    Effect.catchCause((cause) =>
+      logRedactedCause(
+        cause,
+        LogRedactedCauseOptions.make({
+          message: "professional desktop renderer observability bootstrap failed",
+          level: "Warn",
+          attributes: {
+            "professional_desktop.bootstrap.phase": "renderer_observability",
+            "professional_desktop.subsystem": "bootstrap",
+          },
+        })
+      )
+    ),
+    Effect.withSpan("professional_desktop.bootstrap.renderer_observability")
+  );
+  yield* migrateWorkbenchThemeMode().pipe(
+    Effect.catchCause((cause) =>
+      logRedactedCause(
+        cause,
+        LogRedactedCauseOptions.make({
+          message: "professional desktop theme preference migration failed",
+          level: "Warn",
+          attributes: {
+            "professional_desktop.bootstrap.phase": "theme_preference_migration",
+            "professional_desktop.subsystem": "bootstrap",
+          },
+        })
+      )
+    ),
+    Effect.withSpan("professional_desktop.bootstrap.theme_preference_migration")
+  );
   if (root === null) return;
 
   createRoot(root).render(
     <StrictMode>
-      <WorkbenchThemeProvider>
-        <ProfessionalAtomProvider>
+      <ProfessionalAtomProvider>
+        <WorkbenchThemeProvider>
           <App />
-        </ProfessionalAtomProvider>
-      </WorkbenchThemeProvider>
+        </WorkbenchThemeProvider>
+      </ProfessionalAtomProvider>
     </StrictMode>
   );
 });
 
-Effect.runFork(render());
+Effect.runFork(render().pipe(Effect.provide(ProfessionalStorageLive)));

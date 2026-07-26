@@ -46,22 +46,14 @@ export const SubagentColor = LiteralKit(["red", "blue", "green", "yellow", "purp
  * ```ts
  * import type { Frontmatter } from "effect-claudecode"
  *
- * const color: Frontmatter.SubagentColor.Type = "purple"
+ * const color: Frontmatter.SubagentColor = "purple"
  * console.log(color)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export declare namespace SubagentColor {
-  /**
-   * Runtime type represented by {@link SubagentColor}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof SubagentColor.Type;
-}
+export type SubagentColor = typeof SubagentColor.Type;
 
 /**
  * Runtime model for the YAML frontmatter of a Claude Code subagent file.

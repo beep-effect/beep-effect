@@ -2107,6 +2107,7 @@
           "@beep/agents-client",
           "@beep/cosmos",
           "@beep/identity",
+          "@beep/observability",
           "@beep/ontology-client",
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
@@ -2118,6 +2119,7 @@
           "@beep/agents-client",
           "@beep/cosmos",
           "@beep/identity",
+          "@beep/observability",
           "@beep/ontology-client",
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
@@ -2186,8 +2188,6 @@
       {
         "from": "@beep/ontology-ui",
         "allow": [
-          "@beep/editor",
-          "@beep/lexical-schema",
           "@beep/ontology-client",
           "@beep/ontology-domain",
           "@beep/ontology-ui",
@@ -2197,8 +2197,6 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
-          "@beep/editor",
-          "@beep/lexical-schema",
           "@beep/ontology-client",
           "@beep/ontology-domain",
           "@beep/ontology-ui",

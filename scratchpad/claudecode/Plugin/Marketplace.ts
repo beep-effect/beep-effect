@@ -299,22 +299,14 @@ export const MarketplacePluginSourceSpec = S.Union([S.String, StructuredPluginSo
  * ```ts
  * import type { Plugin } from "effect-claudecode"
  *
- * const source: Plugin.MarketplacePluginSourceSpec.Type = "./plugins/example"
+ * const source: Plugin.MarketplacePluginSourceSpec = "./plugins/example"
  * console.log(source)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace MarketplacePluginSourceSpec {
-  /**
-   * Runtime type represented by {@link MarketplacePluginSourceSpec}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof MarketplacePluginSourceSpec.Type;
-}
+export type MarketplacePluginSourceSpec = typeof MarketplacePluginSourceSpec.Type;
 
 /**
  * One plugin entry in a marketplace catalog.

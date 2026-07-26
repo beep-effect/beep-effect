@@ -156,22 +156,14 @@ export const HttpMcpTransport = LiteralKit(["http", "streamable-http"]).pipe(
  * ```ts
  * import type { Mcp } from "effect-claudecode"
  *
- * const transport: Mcp.HttpMcpTransport.Type = "http"
+ * const transport: Mcp.HttpMcpTransport = "http"
  * console.log(transport)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace HttpMcpTransport {
-  /**
-   * Runtime type represented by {@link HttpMcpTransport}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof HttpMcpTransport.Type;
-}
+export type HttpMcpTransport = typeof HttpMcpTransport.Type;
 
 const remoteFields = {
   url: S.String,
@@ -327,18 +319,10 @@ export const McpServerConfig = S.Union([StdioMcpServer, HttpMcpServer, WsMcpServ
  * ```ts
  * import type { Mcp } from "effect-claudecode"
  *
- * type Server = Mcp.McpServerConfig.Type
+ * type Server = Mcp.McpServerConfig
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace McpServerConfig {
-  /**
-   * Runtime type represented by {@link McpServerConfig}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof McpServerConfig.Type;
-}
+export type McpServerConfig = typeof McpServerConfig.Type;

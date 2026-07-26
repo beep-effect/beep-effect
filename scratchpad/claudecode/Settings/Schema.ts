@@ -55,29 +55,30 @@ export const PermissionMode = LiteralKit([
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.PermissionMode.Encoded) => input
+ * const accept = (input: Settings.PermissionModeEncoded) => input
  * console.log(accept)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace PermissionMode {
-  /**
-   * Runtime type represented by {@link PermissionMode}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof PermissionMode.Type;
-  /**
-   * JSON representation accepted by {@link PermissionMode}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Encoded = typeof PermissionMode.Encoded;
-}
+export type PermissionMode = typeof PermissionMode.Type;
+
+/**
+ * JSON representation accepted by {@link PermissionMode}.
+ *
+ * @example
+ * ```ts
+ * import type { Settings } from "effect-claudecode"
+ *
+ * const accept = (input: Settings.PermissionModeEncoded) => input
+ * console.log(accept)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PermissionModeEncoded = typeof PermissionMode.Encoded;
 
 /**
  * Persisted reasoning-effort levels.
@@ -105,29 +106,30 @@ export const EffortLevel = LiteralKit(["low", "medium", "high", "xhigh"]).pipe(
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.EffortLevel.Encoded) => input
+ * const accept = (input: Settings.EffortLevelEncoded) => input
  * console.log(accept)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace EffortLevel {
-  /**
-   * Runtime type represented by {@link EffortLevel}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof EffortLevel.Type;
-  /**
-   * JSON representation accepted by {@link EffortLevel}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Encoded = typeof EffortLevel.Encoded;
-}
+export type EffortLevel = typeof EffortLevel.Type;
+
+/**
+ * JSON representation accepted by {@link EffortLevel}.
+ *
+ * @example
+ * ```ts
+ * import type { Settings } from "effect-claudecode"
+ *
+ * const accept = (input: Settings.EffortLevelEncoded) => input
+ * console.log(accept)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EffortLevelEncoded = typeof EffortLevel.Encoded;
 
 const AskUserQuestionTimeout = LiteralKit(["60s", "5m", "10m", "never"]).pipe(
   $I.annoteSchema("AskUserQuestionTimeout", {
@@ -802,29 +804,30 @@ export const McpServerPolicyMatcher = S.Union([
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.McpServerPolicyMatcher.Encoded) => input
+ * const accept = (input: Settings.McpServerPolicyMatcherEncoded) => input
  * console.log(accept)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace McpServerPolicyMatcher {
-  /**
-   * Runtime type represented by {@link McpServerPolicyMatcher}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof McpServerPolicyMatcher.Type;
-  /**
-   * JSON representation accepted by {@link McpServerPolicyMatcher}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Encoded = typeof McpServerPolicyMatcher.Encoded;
-}
+export type McpServerPolicyMatcher = typeof McpServerPolicyMatcher.Type;
+
+/**
+ * JSON representation accepted by {@link McpServerPolicyMatcher}.
+ *
+ * @example
+ * ```ts
+ * import type { Settings } from "effect-claudecode"
+ *
+ * const accept = (input: Settings.McpServerPolicyMatcherEncoded) => input
+ * console.log(accept)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type McpServerPolicyMatcherEncoded = typeof McpServerPolicyMatcher.Encoded;
 
 // ---------------------------------------------------------------------------
 // Plugin marketplaces
@@ -1151,29 +1154,30 @@ export const MarketplaceSourceSpec = S.Union([
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.MarketplaceSourceSpec.Encoded) => input
+ * const accept = (input: Settings.MarketplaceSourceSpecEncoded) => input
  * console.log(accept)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace MarketplaceSourceSpec {
-  /**
-   * Runtime type represented by {@link MarketplaceSourceSpec}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof MarketplaceSourceSpec.Type;
-  /**
-   * JSON representation accepted by {@link MarketplaceSourceSpec}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Encoded = typeof MarketplaceSourceSpec.Encoded;
-}
+export type MarketplaceSourceSpec = typeof MarketplaceSourceSpec.Type;
+
+/**
+ * JSON representation accepted by {@link MarketplaceSourceSpec}.
+ *
+ * @example
+ * ```ts
+ * import type { Settings } from "effect-claudecode"
+ *
+ * const accept = (input: Settings.MarketplaceSourceSpecEncoded) => input
+ * console.log(accept)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type MarketplaceSourceSpecEncoded = typeof MarketplaceSourceSpec.Encoded;
 
 /**
  * Named marketplace configuration.
@@ -1338,29 +1342,30 @@ export const MarketplacePolicySourceSpec = S.Union([
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.MarketplacePolicySourceSpec.Encoded) => input
+ * const accept = (input: Settings.MarketplacePolicySourceSpecEncoded) => input
  * console.log(accept)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace MarketplacePolicySourceSpec {
-  /**
-   * Runtime type represented by {@link MarketplacePolicySourceSpec}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof MarketplacePolicySourceSpec.Type;
-  /**
-   * JSON representation accepted by {@link MarketplacePolicySourceSpec}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Encoded = typeof MarketplacePolicySourceSpec.Encoded;
-}
+export type MarketplacePolicySourceSpec = typeof MarketplacePolicySourceSpec.Type;
+
+/**
+ * JSON representation accepted by {@link MarketplacePolicySourceSpec}.
+ *
+ * @example
+ * ```ts
+ * import type { Settings } from "effect-claudecode"
+ *
+ * const accept = (input: Settings.MarketplacePolicySourceSpecEncoded) => input
+ * console.log(accept)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type MarketplacePolicySourceSpecEncoded = typeof MarketplacePolicySourceSpec.Encoded;
 
 // ---------------------------------------------------------------------------
 // Other structured settings
@@ -1642,29 +1647,30 @@ export const SettingsRaw = S.Record(S.String, S.Unknown).pipe(
  * ```ts
  * import type { Settings } from "effect-claudecode"
  *
- * const accept = (input: Settings.SettingsRaw.Encoded) => input
+ * const accept = (input: Settings.SettingsRawEncoded) => input
  * console.log(accept)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace SettingsRaw {
-  /**
-   * Runtime type represented by {@link SettingsRaw}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof SettingsRaw.Type;
-  /**
-   * JSON representation accepted by {@link SettingsRaw}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Encoded = typeof SettingsRaw.Encoded;
-}
+export type SettingsRaw = typeof SettingsRaw.Type;
+
+/**
+ * JSON representation accepted by {@link SettingsRaw}.
+ *
+ * @example
+ * ```ts
+ * import type { Settings } from "effect-claudecode"
+ *
+ * const accept = (input: Settings.SettingsRawEncoded) => input
+ * console.log(accept)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SettingsRawEncoded = typeof SettingsRaw.Encoded;
 
 const ForceLoginOrganization = S.Union([S.String, S.String.pipe(S.Array)]).pipe(
   $I.annoteSchema("ForceLoginOrganization", {

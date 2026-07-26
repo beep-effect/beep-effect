@@ -14,9 +14,18 @@ import * as S from "effect/Schema";
 
 const $I = $AgentsClientId.create("internal/BrowserHttpUrl");
 
+class BrowserHttpLocation extends S.Class<BrowserHttpLocation>($I`BrowserHttpLocation`)(
+  {
+    origin: S.String,
+  },
+  $I.annote("BrowserHttpLocation", {
+    description: "Browser location fields required for HTTP URL resolution.",
+  })
+) {}
+
 class BrowserHttpRuntime extends S.Class<BrowserHttpRuntime>($I`BrowserHttpRuntime`)(
   {
-    location: S.Struct({ origin: S.String }),
+    location: BrowserHttpLocation,
   },
   $I.annote("BrowserHttpRuntime", {
     description: "Browser http runtime.",

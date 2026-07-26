@@ -2,6 +2,15 @@
 
 - Internal migration aggregation package for repo-owned database proof targets.
 - Import slice table schemas into db-admin for migration generation only; production apps must not depend on `_internal/db-admin`.
+- Migration authoring is drizzle-kit driven since the `20260725222615_baseline`
+  snapshot: schema changes go through `bun run generate -- --name <slug>`
+  (hand-written SQL through `generate:custom` — snapshot-less folders are
+  invisible to drizzle-kit's chain). `migrations:check` in `beep:check` fails
+  on schema-vs-migration drift. Every table must be re-exported FLAT from
+  `src/schema.ts` (drizzle-kit scans one export level deep). Treat drizzle
+  catalog bumps as toolchain changes: rerun `migrations:check` and the desktop
+  `codegen:check` immediately. After landing a migration, re-sync the desktop
+  bundle: `bun run --cwd apps/professional-desktop codegen`.
 - Use current `@beep/postgres`, `@beep/drizzle`, and `@beep/test-utils` primitives for live database proof work.
 - Treat older Effect v3 db-admin packages as capability references, not topology templates.
 

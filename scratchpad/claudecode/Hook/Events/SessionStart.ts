@@ -58,22 +58,14 @@ export const Source = LiteralKit(["startup", "resume", "clear", "compact"]).pipe
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * type Example = Hook.SessionStart.Source.Type
+ * type Example = Hook.SessionStart.Source
  * ```
  *
  * @category type-level
  *
  * @since 0.0.0
  */
-export declare namespace Source {
-  /**
-   * Decoded runtime type represented by {@link Source}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof Source.Type;
-}
+export type Source = typeof Source.Type;
 
 /**
  * Schema for `Input`.

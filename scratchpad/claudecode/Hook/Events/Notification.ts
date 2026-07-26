@@ -57,22 +57,14 @@ export const NotificationType = LiteralKit([
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * type Example = Hook.Notification.NotificationType.Type
+ * type Example = Hook.Notification.NotificationType
  * ```
  *
  * @category type-level
  *
  * @since 0.0.0
  */
-export declare namespace NotificationType {
-  /**
-   * Decoded runtime type represented by {@link NotificationType}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof NotificationType.Type;
-}
+export type NotificationType = typeof NotificationType.Type;
 
 /**
  * Schema for `Input`.

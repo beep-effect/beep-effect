@@ -58,22 +58,14 @@ export const FileChangedEvent = LiteralKit(["change", "add", "unlink"]).pipe(
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * type Example = Hook.FileChanged.FileChangedEvent.Type
+ * type Example = Hook.FileChanged.FileChangedEvent
  * ```
  *
  * @category type-level
  *
  * @since 0.0.0
  */
-export declare namespace FileChangedEvent {
-  /**
-   * Decoded runtime type represented by {@link FileChangedEvent}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof FileChangedEvent.Type;
-}
+export type FileChangedEvent = typeof FileChangedEvent.Type;
 
 /**
  * Schema for `Input`.

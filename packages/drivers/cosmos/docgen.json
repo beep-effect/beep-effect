@@ -34,6 +34,9 @@
     "jsx": "react-jsx",
     "paths": {
       "@beep/cosmos": ["../../../packages/drivers/cosmos/src/index.ts"],
+      "@beep/cosmos/browser": [
+        "../../../packages/drivers/cosmos/src/browser.ts"
+      ],
       "@beep/identity": [
         "../../../packages/foundation/modeling/identity/src/index.ts"
       ],

@@ -48,7 +48,7 @@ import {
   SubagentFrontmatter,
 } from "../Frontmatter.ts";
 import { McpJsonFile, toClaudeCodeJson } from "../Mcp.ts";
-import { HooksSection } from "../Settings/HooksSection.ts";
+import { HooksSection, type HooksSectionEncoded } from "../Settings/HooksSection.ts";
 import {
   isJsonFilePath,
   isMarkdownFilePath,
@@ -271,7 +271,7 @@ export interface PluginConfig {
   readonly agents?: ReadonlyArray<PluginAgentEntry>;
   readonly skills?: ReadonlyArray<PluginSkillEntry>;
   readonly outputStyles?: ReadonlyArray<PluginOutputStyleEntry>;
-  readonly hooksConfig?: HooksSection.Type | HooksSection.Encoded;
+  readonly hooksConfig?: HooksSection | HooksSectionEncoded;
   readonly mcpConfig?: McpJsonFile | McpJsonFile.Encoded;
 }
 
@@ -298,7 +298,7 @@ export interface PluginDefinition {
   readonly agents: ReadonlyArray<PluginAgentEntry>;
   readonly skills: ReadonlyArray<PluginSkillEntry>;
   readonly outputStyles: ReadonlyArray<PluginOutputStyleEntry>;
-  readonly hooksConfig: O.Option<HooksSection.Type>;
+  readonly hooksConfig: O.Option<HooksSection>;
   readonly mcpConfig: O.Option<McpJsonFile>;
 }
 
@@ -415,9 +415,7 @@ export const outputStyle = (config: PluginOutputStyleConfig): PluginOutputStyleE
   };
 };
 
-const normalizeHooksConfig = (
-  hooksConfig: HooksSection.Type | HooksSection.Encoded | undefined
-): O.Option<HooksSection.Type> =>
+const normalizeHooksConfig = (hooksConfig: HooksSection | HooksSectionEncoded | undefined): O.Option<HooksSection> =>
   hooksConfig === undefined
     ? O.none()
     : S.is(HooksSection)(hooksConfig)

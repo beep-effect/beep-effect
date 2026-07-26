@@ -39,22 +39,14 @@ export const StringOrStringArray = S.Union([S.String, S.Array(S.String)]).pipe(
  * ```ts
  * import type { Frontmatter } from "effect-claudecode"
  *
- * const tools: Frontmatter.StringOrStringArray.Type = ["Read", "Write"]
+ * const tools: Frontmatter.StringOrStringArray = ["Read", "Write"]
  * console.log(tools)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export declare namespace StringOrStringArray {
-  /**
-   * Runtime type represented by {@link StringOrStringArray}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof StringOrStringArray.Type;
-}
+export type StringOrStringArray = typeof StringOrStringArray.Type;
 
 /**
  * Reasoning-effort levels accepted by skill, command, and subagent frontmatter.
@@ -82,22 +74,14 @@ export const EffortLevel = LiteralKit(["low", "medium", "high", "xhigh", "max"])
  * ```ts
  * import type { Frontmatter } from "effect-claudecode"
  *
- * const effort: Frontmatter.EffortLevel.Type = "high"
+ * const effort: Frontmatter.EffortLevel = "high"
  * console.log(effort)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export declare namespace EffortLevel {
-  /**
-   * Runtime type represented by {@link EffortLevel}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof EffortLevel.Type;
-}
+export type EffortLevel = typeof EffortLevel.Type;
 
 /**
  * Shell names accepted by skill and legacy command frontmatter.
@@ -125,22 +109,14 @@ export const FrontmatterShell = LiteralKit(["bash", "powershell"]).pipe(
  * ```ts
  * import type { Frontmatter } from "effect-claudecode"
  *
- * const shell: Frontmatter.FrontmatterShell.Type = "powershell"
+ * const shell: Frontmatter.FrontmatterShell = "powershell"
  * console.log(shell)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export declare namespace FrontmatterShell {
-  /**
-   * Runtime type represented by {@link FrontmatterShell}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof FrontmatterShell.Type;
-}
+export type FrontmatterShell = typeof FrontmatterShell.Type;
 
 /**
  * Runtime model for the YAML frontmatter of a Claude Code `SKILL.md` file.

@@ -155,29 +155,30 @@ export const HookInput = S.Union([
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * type Example = Hook.HookInput.Type
+ * type Example = Hook.HookInput
  * ```
  *
  * @category utilities
  *
  * @since 0.0.0
  */
-export declare namespace HookInput {
-  /**
-   * Decoded runtime type represented by {@link HookInput}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof HookInput.Type;
-  /**
-   * Wire-encoded representation of {@link HookInput}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Encoded = typeof HookInput.Encoded;
-}
+export type HookInput = typeof HookInput.Type;
+
+/**
+ * JSON representation accepted by {@link HookInput}.
+ *
+ * @example
+ * ```ts
+ * import type { Hook } from "effect-claudecode"
+ *
+ * const accept = (input: Hook.HookInputEncoded) => input
+ * console.log(accept)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type HookInputEncoded = typeof HookInput.Encoded;
 
 /**
  * Every hook event name currently supported by the library.
@@ -192,4 +193,4 @@ export declare namespace HookInput {
  * type Example = Hook.HookEventName
  * ```
  */
-export type HookEventName = HookInput.Type["hook_event_name"];
+export type HookEventName = HookInput["hook_event_name"];

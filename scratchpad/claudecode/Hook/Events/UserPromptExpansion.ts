@@ -45,22 +45,14 @@ export const ExpansionType = LiteralKit(["slash_command", "mcp_prompt"]).pipe(
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * type Example = Hook.UserPromptExpansion.ExpansionType.Type
+ * type Example = Hook.UserPromptExpansion.ExpansionType
  * ```
  *
  * @category type-level
  *
  * @since 0.0.0
  */
-export declare namespace ExpansionType {
-  /**
-   * Decoded runtime type represented by {@link ExpansionType}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof ExpansionType.Type;
-}
+export type ExpansionType = typeof ExpansionType.Type;
 
 /**
  * Schema for `Input`.

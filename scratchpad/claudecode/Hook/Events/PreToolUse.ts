@@ -83,22 +83,14 @@ export const PermissionDecision = LiteralKit(["allow", "deny", "ask", "defer"]).
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * type Example = Hook.PreToolUse.PermissionDecision.Type
+ * type Example = Hook.PreToolUse.PermissionDecision
  * ```
  *
  * @category type-level
  *
  * @since 0.0.0
  */
-export declare namespace PermissionDecision {
-  /**
-   * Decoded runtime type represented by {@link PermissionDecision}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof PermissionDecision.Type;
-}
+export type PermissionDecision = typeof PermissionDecision.Type;
 
 /**
  * `hookSpecificOutput` payload for a PreToolUse hook. This is where the
@@ -313,14 +305,13 @@ export const allowWithUpdatedInput = (updatedInput: Readonly<Record<string, unkn
  * import * as Effect from 'effect/Effect'
  * import { Hook } from 'effect-claudecode'
  *
- * const hook = Hook.PreToolUse.define({
- *   handler: (input) => Effect.gen(function* () {
- *     if (input.tool_name !== 'Bash') return Hook.PreToolUse.passthrough()
- *     const cmd = (input.tool_input as { command?: string }).command ?? ''
- *     return cmd.includes('rm -rf /')
+ * const hook = Hook.PreToolUse.onTool({
+ *   toolName: "Bash",
+ *   handler: ({ tool }) => Effect.succeed(
+ *     tool.command.includes("rm -rf /")
  *       ? Hook.PreToolUse.deny('destructive')
  *       : Hook.PreToolUse.passthrough()
- *   })
+ *   )
  * })
  *
  * Hook.runMain(hook)
@@ -349,7 +340,7 @@ export const define = <E, R>(config: {
  * type BashHook = Hook.PreToolUse.OnToolConfig<"Bash", never, never>
  * ```
  */
-export type OnToolConfig<T extends Tool.SupportedToolName.Type, E, R> = {
+export type OnToolConfig<T extends Tool.SupportedToolName, E, R> = {
   readonly toolName: T;
   readonly handler: (input: Tool.DecodedPreToolUse<T>) => Effect.Effect<Output, E, R>;
   readonly onMismatch?: (input: Input) => Effect.Effect<Output, E, R>;
@@ -370,7 +361,7 @@ export type OnToolConfig<T extends Tool.SupportedToolName.Type, E, R> = {
  *
  * @since 0.0.0
  */
-export const onTool = <const T extends Tool.SupportedToolName.Type, E, R>(
+export const onTool = <const T extends Tool.SupportedToolName, E, R>(
   config: OnToolConfig<T, E, R>
 ): HookDefinition<Input, Output, E | HookToolDecodeError, R> =>
   define({

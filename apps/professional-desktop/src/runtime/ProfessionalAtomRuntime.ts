@@ -7,12 +7,15 @@
 
 "use client";
 
+import { ClientObservabilityLive } from "@beep/agents-client";
 import { Layer } from "effect";
-import { Atom } from "effect/unstable/reactivity";
+import { KeyValueStore } from "effect/unstable/persistence";
+import { Atom, AtomRegistry } from "effect/unstable/reactivity";
 
 const professionalAtomRuntimeFactory = Atom.context({
   memoMap: Layer.makeMemoMapUnsafe(),
 });
+professionalAtomRuntimeFactory.addGlobalLayer(ClientObservabilityLive);
 
 /**
  * Browser runtime mounted by the Professional Desktop Atom provider.
@@ -21,10 +24,61 @@ const professionalAtomRuntimeFactory = Atom.context({
  * ```ts
  * import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime"
  *
- * console.log(professionalBrowserRuntime)
+ * console.log(typeof professionalBrowserRuntime.fn === "function") // true
  * ```
  *
- * @category runtime
+ * @category atoms
  * @since 0.0.0
  */
 export const professionalBrowserRuntime = professionalAtomRuntimeFactory(Layer.empty);
+
+/**
+ * Browser-local persistence service shared by the runtime and bootstrap
+ * migrations that must complete before persisted atoms mount.
+ *
+ * @example
+ * ```ts
+ * import { ProfessionalStorageLive } from "@/runtime/ProfessionalAtomRuntime"
+ * import { Layer } from "effect"
+ *
+ * console.log(Layer.isLayer(ProfessionalStorageLive)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const ProfessionalStorageLive = KeyValueStore.layerStorage(() => globalThis.localStorage);
+
+/**
+ * Shared browser-storage runtime for app-owned persisted atoms.
+ *
+ * @example
+ * ```ts
+ * import { professionalStorageRuntime } from "@/runtime/ProfessionalAtomRuntime"
+ *
+ * console.log(typeof professionalStorageRuntime.fn === "function") // true
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const professionalStorageRuntime = professionalAtomRuntimeFactory(ProfessionalStorageLive);
+
+/**
+ * The active application registry, exposed through the browser Atom runtime.
+ *
+ * Dock renderers temporarily enter a private dock registry, so the shell passes
+ * this registry back to portaled application surfaces without reading React
+ * context directly.
+ *
+ * @example
+ * ```ts
+ * import { professionalAtomRegistryAtom } from "@/runtime/ProfessionalAtomRuntime"
+ *
+ * console.log(typeof professionalAtomRegistryAtom === "object") // true
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const professionalAtomRegistryAtom = professionalBrowserRuntime.atom(AtomRegistry.AtomRegistry);

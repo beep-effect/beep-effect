@@ -55,21 +55,13 @@ export const ConfigSource = LiteralKit([
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * const source: Hook.ConfigChange.ConfigSource.Type = "project_settings"
+ * const source: Hook.ConfigChange.ConfigSource = "project_settings"
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export declare namespace ConfigSource {
-  /**
-   * Decoded runtime type represented by {@link ConfigSource}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof ConfigSource.Type;
-}
+export type ConfigSource = typeof ConfigSource.Type;
 
 /**
  * Schema for `Input`.

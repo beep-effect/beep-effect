@@ -11,12 +11,14 @@
  * @since 0.0.0
  */
 
+import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { N } from "@beep/utils";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { KeyValueStore } from "effect/unstable/persistence";
 import { Atom } from "effect/unstable/reactivity";
+import { professionalStorageRuntime } from "@/runtime/ProfessionalAtomRuntime";
 
-const layoutRuntime = Atom.runtime(KeyValueStore.layerStorage(() => globalThis.localStorage));
+const $I = $ProfessionalDesktopId.create("chat/ui/layout.atoms");
 
 /**
  * Minimum percentage of the chat surface the sidebar may occupy.
@@ -25,7 +27,7 @@ const layoutRuntime = Atom.runtime(KeyValueStore.layerStorage(() => globalThis.l
  * ```ts
  * import { SIDEBAR_MIN_PERCENT } from "@/chat/ui/layout.atoms"
  *
- * console.log(SIDEBAR_MIN_PERCENT) // 14
+ * console.log(`${SIDEBAR_MIN_PERCENT}%`) // "14%"
  * ```
  *
  * @category constants
@@ -40,7 +42,7 @@ export const SIDEBAR_MIN_PERCENT = 14;
  * ```ts
  * import { SIDEBAR_MAX_PERCENT } from "@/chat/ui/layout.atoms"
  *
- * console.log(SIDEBAR_MAX_PERCENT) // 40
+ * console.log(`${SIDEBAR_MAX_PERCENT}%`) // "40%"
  * ```
  *
  * @category constants
@@ -55,13 +57,51 @@ export const SIDEBAR_MAX_PERCENT = 40;
  * ```ts
  * import { SIDEBAR_DEFAULT_PERCENT } from "@/chat/ui/layout.atoms"
  *
- * console.log(SIDEBAR_DEFAULT_PERCENT) // 20
+ * console.log(`${SIDEBAR_DEFAULT_PERCENT}%`) // "20%"
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
 export const SIDEBAR_DEFAULT_PERCENT = 20;
+
+/**
+ * Valid persisted width for the thread sidebar.
+ *
+ * @example
+ * ```ts
+ * import { SidebarPercent } from "@/chat/ui/layout.atoms"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(SidebarPercent)(20)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const SidebarPercent = S.Finite.check(
+  S.isBetween({ minimum: SIDEBAR_MIN_PERCENT, maximum: SIDEBAR_MAX_PERCENT })
+).pipe(
+  $I.annoteSchema("SidebarPercent", {
+    description: "A sidebar percentage within the range enforced by the resizable panel.",
+  })
+);
+
+/**
+ * Runtime type for {@link SidebarPercent}.
+ *
+ * @example
+ * ```ts
+ * import type { SidebarPercent } from "@/chat/ui/layout.atoms"
+ *
+ * const percent: SidebarPercent = 20
+ * console.log(percent)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+type SidebarPercent = typeof SidebarPercent.Type;
 
 /**
  * The sidebar's share of the chat surface, as a percentage.
@@ -81,11 +121,44 @@ export const SIDEBAR_DEFAULT_PERCENT = 20;
  * @since 0.0.0
  */
 export const sidebarPercentAtom = Atom.kvs({
-  runtime: layoutRuntime,
+  runtime: professionalStorageRuntime,
   key: "chat:sidebar-percent",
-  schema: S.Finite,
+  schema: SidebarPercent,
   defaultValue: () => SIDEBAR_DEFAULT_PERCENT,
 });
+
+class SidebarLayoutChanged extends S.Class<SidebarLayoutChanged>($I`SidebarLayoutChanged`)(
+  {
+    layout: S.Record(S.String, S.Finite),
+    isUserInteraction: S.Boolean,
+  },
+  $I.annote("SidebarLayoutChanged", {
+    description: "A completed resizable-panel layout accepted by the persisted layout action.",
+  })
+) {}
+
+/**
+ * Runtime action that persists the sidebar width after a user finishes
+ * resizing the panel group.
+ *
+ * @example
+ * ```ts
+ * import { persistSidebarLayoutAtom } from "@/chat/ui/layout.atoms"
+ *
+ * console.log(typeof persistSidebarLayoutAtom === "object") // true
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const persistSidebarLayoutAtom = professionalStorageRuntime.fn<SidebarLayoutChanged>()(
+  Effect.fnUntraced(function* (change, ctx) {
+    const sidebarPercent = change.layout["sidebar-pane"];
+    if (change.isUserInteraction && sidebarPercent !== undefined) {
+      ctx.set(sidebarPercentAtom, clampSidebarPercent(sidebarPercent));
+    }
+  })
+);
 
 /**
  * Clamp a stored width back into the range the panes actually allow.

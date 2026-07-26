@@ -67,10 +67,10 @@ import {
   SyncOperationSeed,
 } from "@beep/documents-use-cases/entities/SyncOperation/server";
 import { $DocumentsServerId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
-import { Effect, FileSystem, HashMap, identity, Order, Path, pipe, Ref, Result, Semaphore, Tuple } from "effect";
+import { Effect, FileSystem, HashMap, identity, Order, Path, pipe, Ref, Result, Semaphore } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as F from "effect/Function";
@@ -265,13 +265,6 @@ const unknownItemConflictKind = (eventType: DmsEventType): DomainSyncConflict.Sy
  * as `created` or `edited`); `moved` and `renamed` map one-to-one.
  */
 const EchoClass = LiteralKit(["content", "moved", "renamed"]).pipe(
-  SchemaUtils.withStatics(() => ({
-    makePushRecordSchema: <TClass extends EchoClass>(echoClassLiteral: S.Literal<TClass>) =>
-      S.Struct({
-        echoClass: S.tag(echoClassLiteral.literal),
-        remoteId: RemoteItemId,
-      }),
-  })),
   $I.annoteSchema("EchoClass", {
     description:
       "Echo equivalence class linking push verbs to the provider event types they\nemit: `content` covers create/upload/version pushes (providers report them\nas `created` or `edited`); `moved` and `renamed` map one-to-one.",
@@ -302,16 +295,51 @@ const echoClassForEvent = (eventType: DmsEventType): O.Option<EchoClass> =>
  * One successful push recorded during the current pass; polled events consume
  * these to suppress the provider echoing our own verbs.
  */
-const PushRecord = EchoClass.mapMembers(
-  Tuple.evolve([EchoClass.makePushRecordSchema, EchoClass.makePushRecordSchema, EchoClass.makePushRecordSchema])
-).pipe(
+class ContentPushRecord extends S.Class<ContentPushRecord>($I`ContentPushRecord`)(
+  {
+    echoClass: S.tag("content"),
+    remoteId: RemoteItemId,
+  },
+  $I.annote("ContentPushRecord", {
+    description: "A successful content push awaiting its provider echo.",
+  })
+) {}
+
+class MovedPushRecord extends S.Class<MovedPushRecord>($I`MovedPushRecord`)(
+  {
+    echoClass: S.tag("moved"),
+    remoteId: RemoteItemId,
+  },
+  $I.annote("MovedPushRecord", {
+    description: "A successful move awaiting its provider echo.",
+  })
+) {}
+
+class RenamedPushRecord extends S.Class<RenamedPushRecord>($I`RenamedPushRecord`)(
+  {
+    echoClass: S.tag("renamed"),
+    remoteId: RemoteItemId,
+  },
+  $I.annote("RenamedPushRecord", {
+    description: "A successful rename awaiting its provider echo.",
+  })
+) {}
+
+const PushRecord = S.Union([ContentPushRecord, MovedPushRecord, RenamedPushRecord]).pipe(
   S.toTaggedUnion("echoClass"),
   $I.annoteSchema("PushRecord", {
     description:
-      "One successful push recorded during the current pass; polled events consum these to suppress the provider echoing our own verbs",
+      "One successful push recorded during the current pass; polled events consume these to suppress the provider echoing our own verbs",
   })
 );
 type PushRecord = typeof PushRecord.Type;
+
+const makePushRecord = (echoClass: EchoClass, remoteId: RemoteItemId): PushRecord =>
+  EchoClass.$match(echoClass, {
+    content: () => ContentPushRecord.make({ remoteId }),
+    moved: () => MovedPushRecord.make({ remoteId }),
+    renamed: () => RenamedPushRecord.make({ remoteId }),
+  });
 
 const strictFieldMatches = <Value>(field: O.Option<Value>, current: O.Option<Value>): boolean =>
   O.match(field, {
@@ -1008,13 +1036,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     );
     yield* Ref.update(itemsByIdRef, HashMap.set(updated.id, updated));
     yield* Ref.update(pushRecordsRef, (records) =>
-      A.append(
-        records,
-        PushRecord.make({
-          echoClass: echoClassForOperation(operation.operationType),
-          remoteId: remote.remoteId,
-        })
-      )
+      A.append(records, makePushRecord(echoClassForOperation(operation.operationType), remote.remoteId))
     );
   });
 

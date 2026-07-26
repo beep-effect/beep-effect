@@ -36,11 +36,11 @@ const $I = $ScratchpadId.create("claudecode/Hook/Bus");
  * ```
  */
 export interface Interface {
-  readonly publish: (event: Events.HookInput.Type) => Effect.Effect<void>;
-  readonly events: Stream.Stream<Events.HookInput.Type>;
+  readonly publish: (event: Events.HookInput) => Effect.Effect<void>;
+  readonly events: Stream.Stream<Events.HookInput>;
   readonly stream: <T extends Events.HookEventName>(
     eventName: T
-  ) => Stream.Stream<Extract<Events.HookInput.Type, { readonly hook_event_name: T }>>;
+  ) => Stream.Stream<Extract<Events.HookInput, { readonly hook_event_name: T }>>;
 }
 
 /**
@@ -59,15 +59,15 @@ export interface Interface {
 export class Service extends Context.Service<Service, Interface>()($I`Service`) {}
 
 const make = Effect.gen(function* () {
-  const pubsub = yield* PubSub.unbounded<Events.HookInput.Type>();
+  const pubsub = yield* PubSub.unbounded<Events.HookInput>();
   yield* Effect.addFinalizer(() => PubSub.shutdown(pubsub));
 
   const events = Stream.fromPubSub(pubsub);
-  const publish = Effect.fn("Hook.Bus.publish")((event: Events.HookInput.Type) => PubSub.publish(pubsub, event));
+  const publish = Effect.fn("Hook.Bus.publish")((event: Events.HookInput) => PubSub.publish(pubsub, event));
   const stream = <T extends Events.HookEventName>(eventName: T) =>
     events.pipe(
       Stream.filter(
-        (event): event is Extract<Events.HookInput.Type, { readonly hook_event_name: T }> =>
+        (event): event is Extract<Events.HookInput, { readonly hook_event_name: T }> =>
           event.hook_event_name === eventName
       )
     );
@@ -123,6 +123,6 @@ export const bus: Effect.Effect<Interface, never, Service> = Effect.service(Serv
  * ```
  */
 export const publish = Effect.fn("Hook.Bus.publishEvent")(
-  (event: Events.HookInput.Type): Effect.Effect<void, never, Service> =>
+  (event: Events.HookInput): Effect.Effect<void, never, Service> =>
     Effect.flatMap(bus, (hookBus) => hookBus.publish(event))
 );

@@ -6,9 +6,11 @@
  */
 "use client";
 
-import { AppThemeProvider, createAppTheme, ThemeMode } from "@beep/ui/themes";
-import type { ThemeOptions } from "@beep/ui/themes";
-import type { ReactNode } from "react";
+import { AppThemeProvider, createAppTheme } from "@beep/ui/themes";
+import { useAtomValue } from "@effect/atom-react";
+import { workbenchThemeModeAtom } from "./Theme.atoms.ts";
+import type { ThemeMode, ThemeOptions } from "@beep/ui/themes";
+import type { ComponentProps, ReactNode } from "react";
 
 // Green-workbench MUI color schemes layered over the shared `@beep/ui` base.
 // Dark is the near-black "workbench" surface (trustgraph aesthetic); light is
@@ -59,6 +61,28 @@ const greenWorkbenchThemeOptions = {
 // provider (not public API).
 const workbenchTheme = createAppTheme(greenWorkbenchThemeOptions);
 
+type ThemeStorageManager = NonNullable<ComponentProps<typeof AppThemeProvider>["storageManager"]>;
+
+const noop = (): void => undefined;
+
+// MUI owns CSS-variable application, while the Atom store remains the sole
+// preference owner. Replacing this adapter when the Atom mode changes causes
+// MUI's existing subscription effect to update its internal color-scheme state
+// without remounting the provider subtree.
+const atomThemeStorageManager =
+  (mode: ThemeMode): ThemeStorageManager =>
+  ({ key }) => {
+    const ownsMode = key === "mui-mode";
+    return {
+      get: (defaultValue) => (ownsMode ? mode : defaultValue),
+      set: noop,
+      subscribe: (notify) => {
+        if (ownsMode) notify(mode);
+        return noop;
+      },
+    };
+  };
+
 /**
  * Provides the green-workbench theme while reusing the shared `@beep/ui` theme
  * base. Defaults to the OS light/dark preference (`system`).
@@ -75,8 +99,10 @@ const workbenchTheme = createAppTheme(greenWorkbenchThemeOptions);
  * @since 0.0.0
  */
 export function WorkbenchThemeProvider({ children }: { readonly children: ReactNode }) {
+  const mode = useAtomValue(workbenchThemeModeAtom);
+
   return (
-    <AppThemeProvider defaultMode={ThemeMode.Enum.system} theme={workbenchTheme}>
+    <AppThemeProvider defaultMode={mode} storageManager={atomThemeStorageManager(mode)} theme={workbenchTheme}>
       {children}
     </AppThemeProvider>
   );

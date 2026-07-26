@@ -227,6 +227,7 @@ export {
   type HookEventName,
   // Unions
   HookInput,
+  type HookInputEncoded,
   InstructionsLoaded,
   // Tier 1
   MessageDisplay,

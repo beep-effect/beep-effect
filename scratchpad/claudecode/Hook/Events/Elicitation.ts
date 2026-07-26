@@ -48,22 +48,14 @@ export const Action = LiteralKit(["accept", "decline", "cancel"]).pipe(
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * type Example = Hook.Elicitation.Action.Type
+ * type Example = Hook.Elicitation.Action
  * ```
  *
  * @category type-level
  *
  * @since 0.0.0
  */
-export declare namespace Action {
-  /**
-   * Decoded runtime type represented by {@link Action}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof Action.Type;
-}
+export type Action = typeof Action.Type;
 
 /**
  * Schema for `Mode`.
@@ -92,22 +84,14 @@ export const Mode = LiteralKit(["form", "url"]).pipe(
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * type Example = Hook.Elicitation.Mode.Type
+ * type Example = Hook.Elicitation.Mode
  * ```
  *
  * @category type-level
  *
  * @since 0.0.0
  */
-export declare namespace Mode {
-  /**
-   * Decoded runtime type represented by {@link Mode}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof Mode.Type;
-}
+export type Mode = typeof Mode.Type;
 
 /**
  * Schema for `Input`.

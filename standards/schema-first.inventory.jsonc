@@ -22,16 +22,6 @@
       "reason": "Effect service contract containing repository functions; persisted ProviderInstance values and command payloads are modeled by schemas at the boundary."
     },
     {
-      "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 135,
-      "owner": "@beep/professional-desktop",
-      "reason": "Golden HTTP protocol regression coverage: schemas decode real MCP structuredContent; arbitrary schema laws belong to the schema-owning packages."
-    },
-    {
       "file": "apps/professional-desktop/test/ontology-sidecar-registration.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",

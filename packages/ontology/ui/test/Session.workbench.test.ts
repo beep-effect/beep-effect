@@ -4,7 +4,6 @@ import {
   graphPartitionIri,
   SessionId,
 } from "@beep/ontology-domain/aggregates/Session";
-import { iriFieldValid } from "@beep/ontology-ui/aggregates/Session";
 import { ontologyTreeItemsFor } from "@beep/ontology-ui/aggregates/Session/tree";
 import {
   buildOntologySnapshotWithInference,
@@ -78,18 +77,4 @@ describe("OntologyWorkbench hierarchy", () => {
       expect(A.filter(itemIds, (id) => id === neapolitanMargherita.value)).toHaveLength(1);
     }, provideScopedLayer(OntologyReasonerLive))
   );
-
-  // Add Triple rejected `not an iri` but must still accept the hash IRIs RDF
-  // vocabularies are built from: guarding these fields with an absolute-IRI
-  // schema (which forbids a fragment) disabled Apply for every realistic term.
-  it("accepts hash and slash IRIs in Add Triple fields, and rejects non-IRIs", () => {
-    expect(iriFieldValid("https://example.org/pizza#Pizza")).toBe(true);
-    expect(iriFieldValid("http://www.w3.org/2000/01/rdf-schema#label")).toBe(true);
-    expect(iriFieldValid("https://example.org/plain")).toBe(true);
-    expect(iriFieldValid("  https://example.org/padded#Term  ")).toBe(true);
-
-    expect(iriFieldValid("not an iri")).toBe(false);
-    expect(iriFieldValid("")).toBe(false);
-    expect(iriFieldValid("   ")).toBe(false);
-  });
 });

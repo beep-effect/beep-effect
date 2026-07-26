@@ -254,22 +254,14 @@ export const PermissionUpdate = S.Union([RulePermissionUpdate, ModePermissionUpd
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * type Example = Hook.PermissionRequest.PermissionUpdate.Type
+ * type Example = Hook.PermissionRequest.PermissionUpdate
  * ```
  *
  * @category type-level
  *
  * @since 0.0.0
  */
-export declare namespace PermissionUpdate {
-  /**
-   * Decoded runtime type represented by {@link PermissionUpdate}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof PermissionUpdate.Type;
-}
+export type PermissionUpdate = typeof PermissionUpdate.Type;
 
 const PermissionUpdates = PermissionUpdate.pipe(
   S.Array,
@@ -377,7 +369,7 @@ export class Output extends S.Class<Output>($I`PermissionRequestOutput`)(
  */
 export const allow = (options?: {
   readonly updatedInput?: Readonly<Record<string, unknown>>;
-  readonly updatedPermissions?: ReadonlyArray<PermissionUpdate.Type>;
+  readonly updatedPermissions?: ReadonlyArray<PermissionUpdate>;
 }): Output =>
   Output.make({
     hookSpecificOutput: O.some(

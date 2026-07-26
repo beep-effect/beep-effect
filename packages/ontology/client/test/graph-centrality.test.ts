@@ -50,6 +50,17 @@ const pathProjection = (nodeCount: number, revision: number): OntologyGraphProje
 };
 
 describe("3d graph centrality budget", () => {
+  it("does not reuse channels for unrelated projections with the same revision", () => {
+    const first = graph3dProjectionFromOntology(pathProjection(4, 1));
+    const second = graph3dProjectionFromOntology(pathProjection(7, 1));
+
+    expect(first.nodeImportance).toHaveLength(4);
+    expect(first.edgeWeights).toHaveLength(3);
+    expect(second.nodeImportance).toHaveLength(7);
+    expect(second.nodeCommunities).toHaveLength(7);
+    expect(second.edgeWeights).toHaveLength(6);
+  });
+
   it("stays exact at the cutover and samples deterministically above it", () => {
     const exactNodeCount = 1_500;
     const exact = graph3dProjectionFromOntology(pathProjection(exactNodeCount, 10_001));

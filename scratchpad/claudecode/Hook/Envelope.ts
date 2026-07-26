@@ -28,7 +28,7 @@ const $I = $ScratchpadId.create("claudecode/Hook/Envelope");
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * const level: Hook.EffortLevel.Type = "high"
+ * const level: Hook.EffortLevel = "high"
  * ```
  */
 export const EffortLevel = LiteralKit(["low", "medium", "high", "xhigh", "max"]).pipe(
@@ -44,22 +44,14 @@ export const EffortLevel = LiteralKit(["low", "medium", "high", "xhigh", "max"])
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * type Example = Hook.EffortLevel.Type
+ * type Example = Hook.EffortLevel
  * ```
  *
  * @category type-level
  *
  * @since 0.0.0
  */
-export declare namespace EffortLevel {
-  /**
-   * Decoded runtime type represented by {@link EffortLevel}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof EffortLevel.Type;
-}
+export type EffortLevel = typeof EffortLevel.Type;
 
 /**
  * Schema for `HookPermissionMode`.
@@ -95,22 +87,14 @@ export const HookPermissionMode = LiteralKit([
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * type Example = Hook.HookPermissionMode.Type
+ * type Example = Hook.HookPermissionMode
  * ```
  *
  * @category type-level
  *
  * @since 0.0.0
  */
-export declare namespace HookPermissionMode {
-  /**
-   * Decoded runtime type represented by {@link HookPermissionMode}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof HookPermissionMode.Type;
-}
+export type HookPermissionMode = typeof HookPermissionMode.Type;
 
 /**
  * Schema for `HookEffort`.

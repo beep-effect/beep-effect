@@ -90,10 +90,7 @@ const isDefaultComponentSpec = (key: ComponentKey, spec: string): boolean =>
 const isDefaultConfigSpec = (key: ConfigKey, spec: string): boolean =>
   normalizeManifestPath(spec) === canonicalConfigPaths[key];
 
-const normalizedComponentSpec = (
-  spec: O.Option<ComponentPathSpec.Type>,
-  key: ComponentKey
-): O.Option<ComponentPathSpec.Type> => {
+const normalizedComponentSpec = (spec: O.Option<ComponentPathSpec>, key: ComponentKey): O.Option<ComponentPathSpec> => {
   if (O.isNone(spec)) {
     return O.none();
   }
@@ -108,12 +105,12 @@ const normalizedComponentSpec = (
 };
 
 const keepOrDefaultComponentSpec = (
-  spec: O.Option<ComponentPathSpec.Type>,
+  spec: O.Option<ComponentPathSpec>,
   hasEntries: boolean,
   key: ComponentKey
-): O.Option<ComponentPathSpec.Type> => (hasEntries ? normalizedComponentSpec(spec, key) : O.none());
+): O.Option<ComponentPathSpec> => (hasEntries ? normalizedComponentSpec(spec, key) : O.none());
 
-const normalizeServerSpec = (spec: O.Option<ServerConfigSpec.Type>, key: ConfigKey): O.Option<ServerConfigSpec.Type> =>
+const normalizeServerSpec = (spec: O.Option<ServerConfigSpec>, key: ConfigKey): O.Option<ServerConfigSpec> =>
   O.match(spec, {
     onNone: () => O.none(),
     onSome: (specValue) => {
@@ -130,7 +127,7 @@ const normalizeServerSpec = (spec: O.Option<ServerConfigSpec.Type>, key: ConfigK
     },
   });
 
-const normalizeHooksPathSpec = (specValue: string | ReadonlyArray<string>): O.Option<HooksSpec.Type> => {
+const normalizeHooksPathSpec = (specValue: string | ReadonlyArray<string>): O.Option<HooksSpec> => {
   if (typeof specValue === "string") {
     return isDefaultConfigSpec("hooks", specValue) ? O.none() : O.some(toManifestPath(specValue));
   }
@@ -140,7 +137,7 @@ const normalizeHooksPathSpec = (specValue: string | ReadonlyArray<string>): O.Op
   return O.some(normalizePathSpecForManifest(specValue));
 };
 
-const keepOrDefaultHooksSpec = (spec: O.Option<HooksSpec.Type>, hasConfig: boolean): O.Option<HooksSpec.Type> =>
+const keepOrDefaultHooksSpec = (spec: O.Option<HooksSpec>, hasConfig: boolean): O.Option<HooksSpec> =>
   O.match(spec, {
     onNone: () => O.none(),
     onSome: (specValue) => {
@@ -158,10 +155,10 @@ const keepOrDefaultHooksSpec = (spec: O.Option<HooksSpec.Type>, hasConfig: boole
   });
 
 const keepOrDefaultServerSpec = (
-  spec: O.Option<ServerConfigSpec.Type>,
+  spec: O.Option<ServerConfigSpec>,
   hasConfig: boolean,
   key: ConfigKey
-): O.Option<ServerConfigSpec.Type> =>
+): O.Option<ServerConfigSpec> =>
   O.match(spec, {
     onNone: () => O.none(),
     onSome: (specValue) => {
@@ -179,17 +176,17 @@ const keepOrDefaultServerSpec = (
   });
 
 const normalizedExperimentalPathSpec = (
-  spec: O.Option<ComponentPathSpec.Type>,
+  spec: O.Option<ComponentPathSpec>,
   fallback: string
-): O.Option<ComponentPathSpec.Type> =>
+): O.Option<ComponentPathSpec> =>
   O.flatMap(spec, (specValue) => {
     if (typeof specValue === "string") {
       return normalizeManifestPath(specValue) === fallback
-        ? O.none<ComponentPathSpec.Type>()
+        ? O.none<ComponentPathSpec>()
         : O.some(toManifestPath(specValue));
     }
     if (specValue.length === 1 && normalizeManifestPath(specValue[0] ?? "") === fallback) {
-      return O.none<ComponentPathSpec.Type>();
+      return O.none<ComponentPathSpec>();
     }
     return O.some(normalizePathSpecForManifest(specValue));
   });

@@ -1590,6 +1590,10 @@
       ],
       "@beep/epistemic-use-cases/EdgeAuthority": [
         "./packages/epistemic/use-cases/src/EdgeAuthority/index.ts"
+      ],
+      "@beep/cosmos/browser": ["./packages/drivers/cosmos/src/browser.ts"],
+      "@beep/ontology-use-cases/worker": [
+        "./packages/ontology/use-cases/src/worker.ts"
       ]
     }
   }

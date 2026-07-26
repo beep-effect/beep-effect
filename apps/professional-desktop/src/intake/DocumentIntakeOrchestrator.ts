@@ -24,14 +24,14 @@ const observeIntakeOperation = Effect.fnUntraced(function* <A, E, R>(
   effect: Effect.Effect<A, E, R>
 ): Effect.fn.Return<A, E, R> {
   return yield* observeWorkflow(effect, {
-    name: `documents.intake.${operation}`,
-    attributes: { operation },
+    name: `professional_desktop.intake.${operation}`,
+    attributes: { "professional_desktop.intake.operation": operation },
     started: intakeStarted,
     completed: intakeCompleted,
     failed: intakeFailed,
     interrupted: intakeInterrupted,
     duration: intakeDuration,
-  }).pipe(Effect.withSpan(`documents.intake.${operation}`));
+  }).pipe(Effect.withSpan(`professional_desktop.intake.${operation}`));
 });
 
 /**
@@ -54,7 +54,10 @@ const toWorkspaceVaultActionError = (context: string) =>
       LogRedactedCauseOptions.make({
         message: "workspace vault action dropped internal failure",
         level: "Warn",
-        attributes: { context, subsystem: "workspace_vault" },
+        attributes: {
+          "professional_desktop.subsystem": "workspace_vault",
+          "professional_desktop.workspace_vault.context": context,
+        },
       })
     );
     return yield* WorkspaceVaultActionError.failEffect(context);
@@ -67,7 +70,10 @@ const toDocumentIntakeActionError = (context: string) =>
       LogRedactedCauseOptions.make({
         message: "document intake action dropped internal failure",
         level: "Warn",
-        attributes: { context, subsystem: "document_intake" },
+        attributes: {
+          "professional_desktop.intake.context": context,
+          "professional_desktop.subsystem": "document_intake",
+        },
       })
     );
     return yield* DocumentIntakeActionError.failEffect(context);
@@ -79,8 +85,9 @@ const toDocumentIntakeActionError = (context: string) =>
  * @example
  * ```ts
  * import { WorkspaceVaultHandlersLive } from "@/intake/DocumentIntakeOrchestrator"
+ * import { Layer } from "effect"
  *
- * console.log(WorkspaceVaultHandlersLive)
+ * console.log(Layer.isLayer(WorkspaceVaultHandlersLive)) // true
  * ```
  *
  * @category layers
@@ -110,8 +117,9 @@ export const WorkspaceVaultHandlersLive = WorkspaceVaultRpcs.toLayer(
  * @example
  * ```ts
  * import { DocumentIntakeHandlersLive } from "@/intake/DocumentIntakeOrchestrator"
+ * import { Layer } from "effect"
  *
- * console.log(DocumentIntakeHandlersLive)
+ * console.log(Layer.isLayer(DocumentIntakeHandlersLive)) // true
  * ```
  *
  * @category layers
@@ -122,7 +130,7 @@ export const DocumentIntakeHandlersLive = DocumentsRpcs.toLayer(
     const workspaceVaultStore = yield* WorkspaceUseCases.Workspace.WorkspaceVaultStore;
     const documentIntake = yield* DocumentUseCases.Document.DocumentIntake;
     return DocumentsRpcs.of({
-      IntakeDroppedFile: Effect.fn("IntakeDroppedFile")(function* (payload) {
+      IntakeDroppedFile: Effect.fn("professional_desktop.intake.intake_dropped_file")(function* (payload) {
         return yield* observeIntakeOperation(
           "dropped_file",
           Effect.gen(function* () {

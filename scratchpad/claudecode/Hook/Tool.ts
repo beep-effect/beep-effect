@@ -288,22 +288,14 @@ export const GrepOutputMode = LiteralKit(["content", "files_with_matches", "coun
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * type Example = Hook.Tool.GrepOutputMode.Type
+ * type Example = Hook.Tool.GrepOutputMode
  * ```
  *
  * @category type-level
  *
  * @since 0.0.0
  */
-export declare namespace GrepOutputMode {
-  /**
-   * Decoded runtime type represented by {@link GrepOutputMode}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof GrepOutputMode.Type;
-}
+export type GrepOutputMode = typeof GrepOutputMode.Type;
 
 /**
  * Typed `tool_input` payload for the `Grep` tool.
@@ -846,22 +838,14 @@ export const SupportedToolName = LiteralKit([
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
- * type Example = Hook.Tool.SupportedToolName.Type
+ * type Example = Hook.Tool.SupportedToolName
  * ```
  *
  * @category type-level
  *
  * @since 0.0.0
  */
-export declare namespace SupportedToolName {
-  /**
-   * Decoded runtime type represented by {@link SupportedToolName}.
-   *
-   * @category type-level
-   * @since 0.0.0
-   */
-  export type Type = typeof SupportedToolName.Type;
-}
+export type SupportedToolName = typeof SupportedToolName.Type;
 
 interface PreToolTypeMap {
   readonly Bash: BashToolInput;
@@ -925,7 +909,7 @@ interface PostToolTypeMap {
 }
 
 const preToolAdapters: {
-  readonly [K in SupportedToolName.Type]: PreToolAdapter<K, PreToolTypeMap[K]>;
+  readonly [K in SupportedToolName]: PreToolAdapter<K, PreToolTypeMap[K]>;
 } = {
   Bash: BashAdapter,
   Read: ReadAdapter,
@@ -941,11 +925,7 @@ const preToolAdapters: {
 };
 
 const postToolAdapters: {
-  readonly [K in SupportedToolName.Type]: PostToolAdapter<
-    K,
-    PostToolTypeMap[K]["tool"],
-    PostToolTypeMap[K]["response"]
-  >;
+  readonly [K in SupportedToolName]: PostToolAdapter<K, PostToolTypeMap[K]["tool"], PostToolTypeMap[K]["response"]>;
 } = {
   Bash: BashAdapter,
   Read: ReadAdapter,
@@ -991,7 +971,7 @@ export type DecodedPreToolUseWith<TTool> = {
  * type DecodedBash = Hook.Tool.DecodedPreToolUse<"Bash">
  * ```
  */
-export type DecodedPreToolUse<T extends SupportedToolName.Type> = DecodedPreToolUseWith<PreToolTypeMap[T]>;
+export type DecodedPreToolUse<T extends SupportedToolName> = DecodedPreToolUseWith<PreToolTypeMap[T]>;
 
 /**
  * Decoded typed view over a `PostToolUse` payload.
@@ -1028,7 +1008,7 @@ export type DecodedPostToolUseWith<TTool, TResponse> = {
  * type DecodedBash = Hook.Tool.DecodedPostToolUse<"Bash">
  * ```
  */
-export type DecodedPostToolUse<T extends SupportedToolName.Type> = DecodedPostToolUseWith<
+export type DecodedPostToolUse<T extends SupportedToolName> = DecodedPostToolUseWith<
   PostToolTypeMap[T]["tool"],
   PostToolTypeMap[T]["response"]
 >;
@@ -1162,7 +1142,7 @@ export const decodePostToolUseWith = Effect.fn("Hook.Tool.decodePostToolUseWith"
  * ```
  */
 export const decodePreToolUse = Effect.fn("Hook.Tool.decodePreToolUse")(
-  <T extends SupportedToolName.Type>(
+  <T extends SupportedToolName>(
     toolName: T,
     input: PreToolUse.Input
   ): Effect.Effect<DecodedPreToolUse<T>, HookToolDecodeError> => decodePreToolUseWith(preToolAdapters[toolName], input)
@@ -1182,7 +1162,7 @@ export const decodePreToolUse = Effect.fn("Hook.Tool.decodePreToolUse")(
  * ```
  */
 export const decodePostToolUse = Effect.fn("Hook.Tool.decodePostToolUse")(
-  <T extends SupportedToolName.Type>(
+  <T extends SupportedToolName>(
     toolName: T,
     input: PostToolUse.Input
   ): Effect.Effect<DecodedPostToolUse<T>, HookToolDecodeError> =>

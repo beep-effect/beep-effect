@@ -7,8 +7,9 @@
  * `@beep/pglite`, then layers the repo's
  * {@link PostgresDrizzle} composition on top so every sidecar repository (the
  * Drizzle ThreadStore, the Drizzle usage-record sink) runs against the same
- * embedded database the integration tests prove. The sidecar's bundled Drizzle
- * migrations are applied on boot before the data directory is marked compatible.
+ * embedded database the integration tests prove. The sidecar's generated
+ * migration bundle is applied in-memory on boot before the data directory is
+ * marked compatible.
  *
  * Operational note: `CHAT_DB_PATH` is owned by this sidecar build's bundled
  * PGlite runtime. Existing unmarked PGlite-looking directories are opened with
@@ -27,7 +28,7 @@
 /// <reference path="../assets.d.ts" />
 
 import { tmpdir } from "node:os";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import * as NodeURL from "node:url";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause, profilePhase } from "@beep/observability";
 import { makeLayer as makePgliteLayer } from "@beep/pglite";
@@ -66,14 +67,14 @@ const $I = $ProfessionalDesktopId.create("runtime/Pglite");
  * @since 0.0.0
  */
 const ChatDbDataDir = Config.string("CHAT_DB_PATH").pipe(
-  Config.withDefault(fileURLToPath(new URL("../../../../.beep/professional-desktop/chat-db", import.meta.url)))
+  Config.withDefault(NodeURL.fileURLToPath(new URL("../../../../.beep/professional-desktop/chat-db", import.meta.url)))
 );
 
 /**
  * Marker written into data directories already opened by the in-process
  * desktop PGlite runtime.
  *
- * The `v1` suffix is part of the on-disk compatibility contract for the
+ * The `v<N>` suffix is part of the on-disk compatibility contract for the
  * embedded `@beep/pglite` / `@electric-sql/pglite` line. Bump the marker
  * whenever that storage compatibility contract changes.
  *
@@ -81,7 +82,7 @@ const ChatDbDataDir = Config.string("CHAT_DB_PATH").pipe(
  * ```ts
  * import { ChatDbCompatibilityMarker } from "@/runtime/Pglite"
  *
- * console.log(ChatDbCompatibilityMarker) // ".beep-pglite-inprocess-v2"
+ * console.log(ChatDbCompatibilityMarker.startsWith(".beep-pglite")) // true
  * ```
  *
  * @category configuration
@@ -133,12 +134,14 @@ const writeCompatibilityMarker = Effect.fn("ProfessionalDesktop.Pglite.writeComp
  * @example
  * ```ts
  * import { markCompatibleChatDbDataDir } from "@/runtime/Pglite"
+ * import { Effect } from "effect"
  *
  * const program = markCompatibleChatDbDataDir("/tmp/example-chat-db")
- * console.log(program)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
- * @category runtime
+ * @effects Creates the data directory and writes its compatibility marker.
+ * @category resource-management
  * @since 0.0.0
  */
 export const markCompatibleChatDbDataDir = Effect.fn("ProfessionalDesktop.Pglite.markCompatibleChatDbDataDir")(
@@ -206,12 +209,14 @@ const assertCanOpenInProcessPgliteDataDir = Effect.fn("ProfessionalDesktop.Pglit
  * @example
  * ```ts
  * import { ensureCompatibleChatDbDataDir } from "@/runtime/Pglite"
+ * import { Effect } from "effect"
  *
  * const program = ensureCompatibleChatDbDataDir("/tmp/example-chat-db")
- * console.log(program)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
- * @category runtime
+ * @effects Inspects and may create or quarantine a PGlite data directory.
+ * @category resource-management
  * @since 0.0.0
  */
 export const ensureCompatibleChatDbDataDir = Effect.fn("ProfessionalDesktop.Pglite.ensureCompatibleChatDbDataDir")(
@@ -311,7 +316,7 @@ const materializeBtreeGistBundle = Effect.gen(function* () {
   if (!alreadyMaterialized) {
     yield* Effect.promise(() => Bun.write(target, bytes));
   }
-  return pathToFileURL(target);
+  return NodeURL.pathToFileURL(target);
 });
 
 /**
@@ -342,7 +347,9 @@ export const makeBundledPgliteLayer = (options: PgliteClientOptions = {}) =>
     )
   );
 
-const MigrationPlatformLive = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
+// Platform layers serve only the data-dir compatibility probe/marker below;
+// migrations apply in-memory and no longer touch the filesystem.
+const DataDirPlatformLive = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
 
 /**
  * Live {@link PostgresDrizzle} layer over a file-backed in-process PGlite
@@ -353,8 +360,9 @@ const MigrationPlatformLive = Layer.mergeAll(BunFileSystem.layer, BunPath.layer)
  * @example
  * ```ts
  * import { PgliteDrizzleLive } from "@/runtime/Pglite"
+ * import { Layer } from "effect"
  *
- * console.log(PgliteDrizzleLive)
+ * console.log(Layer.isLayer(PgliteDrizzleLive)) // true
  * ```
  *
  * @category layers
@@ -373,4 +381,4 @@ export const PgliteDrizzleLive: Layer.Layer<PostgresDrizzle> = Layer.unwrap(
       Layer.provide(makeBundledPgliteLayer({ dataDir }))
     );
   })
-).pipe(Layer.provide(MigrationPlatformLive), Layer.orDie);
+).pipe(Layer.provide(DataDirPlatformLive), Layer.orDie);
