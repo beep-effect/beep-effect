@@ -2416,9 +2416,11 @@
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
+        "@effect/platform-node-shared": "catalog:",
         "effect": "catalog:",
         "lexical": "catalog:",
         "n3": "catalog:",
+        "yaml": "catalog:",
       },
       "devDependencies": {
         "@effect/vitest": "catalog:",
