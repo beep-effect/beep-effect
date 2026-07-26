@@ -1022,7 +1022,11 @@ describe("quality task adapter", () => {
           expect(Exit.isSuccess(exit)).toBe(true);
 
           const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-          expect(logText).toContain("[beep-cli] lint:policy: running 24 step(s) with concurrency 3");
+          // Derived from the same plan the runtime executes: a lint policy step
+          // added on another branch must not break this assertion when the two
+          // land together in a merge.
+          const policyStepCount = A.length(rootLintPolicyStepsForTesting(tmpDir));
+          expect(logText).toContain(`[beep-cli] lint:policy: running ${policyStepCount} step(s) with concurrency 3`);
         })
       )
     ));
@@ -1493,7 +1497,11 @@ describe("quality task adapter", () => {
           expect(commandLog).toContain("bunx typos");
 
           const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
-          expect(logText).toContain("[beep-cli] lint: running 25 step(s) with concurrency 3");
+          // Derived from the same plan the runtime executes (aggregate lane plus
+          // every policy step), so a lint step added on another branch does not
+          // break this assertion when the two land together in a merge.
+          const lintStepCount = A.length(rootQualityStepsForTesting(process.cwd(), getInvocation(["lint"])));
+          expect(logText).toContain(`[beep-cli] lint: running ${lintStepCount} step(s) with concurrency 3`);
         })
       )
     ));

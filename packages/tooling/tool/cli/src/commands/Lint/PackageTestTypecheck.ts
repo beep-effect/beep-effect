@@ -50,7 +50,14 @@ const testDirectoryName = "test";
 const testFixtureSegment = "/test/fixtures/";
 const testSourcePattern = /\.(?:cts|mts|ts|tsx)$/u;
 const wildcardPattern = /[*?]/u;
-const scriptReferencePattern = /\bbun\s+run\s+(?:--if-present\s+)?([\w:.-]+)/gu;
+// `bun run [flags] <script>`. Flags between `run` and the script name are
+// skipped so delegation is still followed through `--silent`, `--if-present`,
+// `--filter=<pkg>`, `--bun`, and friends. `--cwd`/`--config`/`--env-file` take
+// their value as a separate token, so those are consumed as a pair before the
+// generic single-token flag alternative can mistake the value for the script.
+// (`bun run-script` is not used anywhere in this repo, so it is not accepted.)
+const scriptReferencePattern =
+  /\bbun\s+run\s+(?:(?:--(?:cwd|config|env-file)\s+\S+|--?[\w-]+(?:=\S+)?)\s+)*([\w:.-]+)/gu;
 const projectFlagPattern = /(?:^|\s)(?:-p|--project|-b|--build)(?:=|\s+)([^\s]+)/gu;
 const typescriptProgramPattern = /\b(?:tsgo|tsc)\b/u;
 const commandSeparatorPattern = /&&|\|\||;|\|/u;
@@ -276,19 +283,19 @@ const literalGlobPrefix = (glob: string): string =>
     A.join("/")
   );
 
-// Whether a resolved tsconfig `include` glob reaches a package's test
-// directory. A directory include ("." or "test") covers everything beneath it,
-// and a wildcard include covers the directory when its literal prefix is an
-// ancestor; both paths are absolute so a config nested under test/ is judged
-// correctly.
+// Whether a resolved tsconfig `include` glob reaches the ROOT of a package's
+// test directory. `test`, `test/**/*`, `.`, and `**/*` all qualify: their
+// literal prefix is the directory itself or an ancestor of it.
+//
+// A glob that only reaches a proper subtree (`test/unit/**`) does NOT qualify.
+// Typechecking part of a package's tests is not the same as typechecking its
+// tests, and treating it as coverage would hide exactly the blind spot this
+// lint exists to find. Both paths are absolute, so a config nested under
+// `test/` is judged correctly.
 const includeGlobCoversDirectory = (input: { readonly glob: string; readonly directory: string }): boolean => {
   const prefix = literalGlobPrefix(input.glob);
 
-  return (
-    prefix === input.directory ||
-    Str.startsWith(`${prefix}/`)(input.directory) ||
-    Str.startsWith(`${input.directory}/`)(prefix)
-  );
+  return prefix === input.directory || Str.startsWith(`${prefix}/`)(input.directory);
 };
 
 // Flatten a package script with every script it transitively invokes through

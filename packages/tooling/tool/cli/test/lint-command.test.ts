@@ -1223,6 +1223,110 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
   );
 
   it(
+    "treats an include that reaches only part of the test tree as uncovered",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+
+            // tsconfig.test.json is wired into check, but its include only
+            // reaches test/unit — the sources at test/ stay untypechecked.
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: {
+                check: "bun run beep:check",
+                "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+                "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+              },
+              tsconfigs: [
+                { fileName: "tsconfig.json", include: ["src"] },
+                { fileName: "tsconfig.test.json", include: ["src", "test/unit/**"] },
+              ],
+            });
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            const exit = yield* Effect.exit(runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]));
+
+            const errorLines = yield* TestConsole.errorLines;
+            expectReportedExit(exit);
+            expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [missing-test-tsconfig]");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "accepts an include that reaches the test directory root through a wildcard",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: {
+                check: "bun run beep:check",
+                "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+                "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+              },
+              tsconfigs: [
+                { fileName: "tsconfig.json", include: ["src"] },
+                { fileName: "tsconfig.test.json", include: ["src", "test/**/*"] },
+              ],
+            });
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            yield* runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]);
+
+            const logLines = yield* TestConsole.logLines;
+            expect(logLines).toEqual(["[package-test-typecheck] ok: current=0 baseline=0 introduced=0"]);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "follows check-script delegation through bun run flags",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+
+            // --silent, --filter=<pkg>, and the two-token --cwd <path> form all
+            // sit between `bun run` and the script name.
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: {
+                check: "bun run --silent beep:check",
+                "beep:check": "tsgo -b tsconfig.json && bun run --cwd . --filter=@beep/example beep:check:tests",
+                "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+              },
+              tsconfigs: [
+                { fileName: "tsconfig.json", include: ["src"] },
+                { fileName: "tsconfig.test.json", include: ["src", "test"] },
+              ],
+            });
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            yield* runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]);
+
+            const logLines = yield* TestConsole.logLines;
+            expect(logLines).toEqual(["[package-test-typecheck] ok: current=0 baseline=0 introduced=0"]);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
     "preserves hand-authored notes when rewriting the baseline",
     () =>
       Effect.runPromise(
