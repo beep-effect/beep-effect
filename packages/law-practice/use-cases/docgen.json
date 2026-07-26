@@ -682,6 +682,9 @@
       ],
       "@beep/test-utils/*": [
         "../../../packages/tooling/test-kit/test-utils/src/*.ts"
+      ],
+      "@beep/epistemic-use-cases/ExecutionLedger": [
+        "../../../packages/epistemic/use-cases/src/ExecutionLedger/index.ts"
       ]
     }
   }

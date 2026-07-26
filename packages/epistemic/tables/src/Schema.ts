@@ -6,12 +6,15 @@
  */
 
 import { CandidateClaim, ClaimDisposition, EdgeVersion, Evidence, UsageRecord } from "./entities/index.ts";
+import { ExecutionRecord } from "./values/index.ts";
 
 type DbSchemaShape = {
   readonly candidateClaim: typeof CandidateClaim.Table;
   readonly claimDisposition: typeof ClaimDisposition.Table;
   readonly edgeVersion: typeof EdgeVersion.Table;
   readonly evidence: typeof Evidence.Table;
+  readonly executionDecision: typeof ExecutionRecord.executionDecisionTable;
+  readonly executionOutcome: typeof ExecutionRecord.executionOutcomeTable;
   readonly usageRecord: typeof UsageRecord.Table;
 };
 
@@ -33,6 +36,8 @@ export const DbSchema: DbSchemaShape = {
   claimDisposition: ClaimDisposition.Table,
   edgeVersion: EdgeVersion.Table,
   evidence: Evidence.Table,
+  executionDecision: ExecutionRecord.executionDecisionTable,
+  executionOutcome: ExecutionRecord.executionOutcomeTable,
   usageRecord: UsageRecord.Table,
 };
 

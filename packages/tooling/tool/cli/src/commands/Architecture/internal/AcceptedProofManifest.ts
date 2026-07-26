@@ -792,6 +792,12 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "db-admin",
     stage: "persistence",
+    path: "packages/_internal/db-admin/src/migrations/EpistemicExecutionLedger.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
     path: "packages/_internal/db-admin/src/migrations/DocumentsSync.ts",
     writer: "template",
   }),
@@ -840,6 +846,12 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "db-admin",
     stage: "persistence",
+    path: "packages/_internal/db-admin/drizzle/20260726210000_epistemic_execution_ledger/migration.sql",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
     path: "packages/_internal/db-admin/drizzle/20260725222615_baseline/migration.sql",
     writer: "template",
   }),
@@ -877,6 +889,12 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
     role: "db-admin",
     stage: "persistence",
     path: "packages/_internal/db-admin/test/integration/EpistemicEdgeMigration.pglite.test.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/test/integration/EpistemicExecutionLedgerMigration.pglite.test.ts",
     writer: "template",
   }),
   AcceptedProofFile.make({

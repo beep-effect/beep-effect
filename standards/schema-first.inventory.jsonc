@@ -672,6 +672,14 @@
       "reason": "Effect service contract containing repository functions; the RecordEdgeFact, SupersedeEdgeFact, and EdgeAsOfQuery payloads it accepts and the EdgeVersion it returns are all schemas."
     },
     {
+      "file": "packages/epistemic/use-cases/src/ExecutionLedger/ExecutionLedger.ports.ts",
+      "symbol": "ExecutionLedgerShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/epistemic-use-cases",
+      "reason": "Effect service contract containing repository functions; the ExecutionDecisionRecord and ExecutionOutcomeRecord payloads it accepts and returns are all schemas, mirroring the EdgeAuthorityRepositoryShape exception."
+    },
+    {
       "file": "packages/foundation/capability/api-transport/src/Transport.ts",
       "symbol": "ApiTransport",
       "kind": "exported-interface",

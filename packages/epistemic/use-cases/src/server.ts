@@ -66,3 +66,18 @@ export * as ClaimLifecycle from "./ClaimLifecycle/index.ts";
  * @since 0.0.0
  */
 export * as EdgeAuthority from "./EdgeAuthority/index.ts";
+/**
+ * Execution ledger error and repository port exports.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import * as ExecutionLedger from "@beep/epistemic-use-cases/ExecutionLedger"
+ *
+ * strictEqual(typeof ExecutionLedger.ExecutionLedger, "function")
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export * as ExecutionLedger from "./ExecutionLedger/index.ts";

@@ -134,6 +134,12 @@
       ],
       "@beep/workspace-tables/entities/Workspace": [
         "../../../packages/workspace/tables/src/entities/Workspace/index.ts"
+      ],
+      "@beep/epistemic-tables/values": [
+        "../../../packages/epistemic/tables/src/values/index.ts"
+      ],
+      "@beep/epistemic-tables/values/ExecutionRecord": [
+        "../../../packages/epistemic/tables/src/values/ExecutionRecord/index.ts"
       ]
     }
   }

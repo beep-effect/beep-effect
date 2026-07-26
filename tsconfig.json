@@ -1620,7 +1620,21 @@
       "@beep/epistemic-config/server": [
         "./packages/epistemic/config/src/server.ts"
       ],
-      "@beep/epistemic-config/test": ["./packages/epistemic/config/src/test.ts"]
+      "@beep/epistemic-config/test": [
+        "./packages/epistemic/config/src/test.ts"
+      ],
+      "@beep/epistemic-server/ExecutionLedger": [
+        "./packages/epistemic/server/src/ExecutionLedger/index.ts"
+      ],
+      "@beep/epistemic-tables/values": [
+        "./packages/epistemic/tables/src/values/index.ts"
+      ],
+      "@beep/epistemic-tables/values/ExecutionRecord": [
+        "./packages/epistemic/tables/src/values/ExecutionRecord/index.ts"
+      ],
+      "@beep/epistemic-use-cases/ExecutionLedger": [
+        "./packages/epistemic/use-cases/src/ExecutionLedger/index.ts"
+      ]
     }
   }
 }

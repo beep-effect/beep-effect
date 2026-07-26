@@ -11,6 +11,7 @@ import type * as ClaimDispositionTables from "@beep/epistemic-tables/entities/Cl
 import type * as EdgeVersionTables from "@beep/epistemic-tables/entities/EdgeVersion";
 import type * as EvidenceTables from "@beep/epistemic-tables/entities/Evidence";
 import type * as UsageRecordTables from "@beep/epistemic-tables/entities/UsageRecord";
+import type * as ExecutionRecordTables from "@beep/epistemic-tables/values/ExecutionRecord";
 
 describe("EpistemicTables types", () => {
   it("exports the DbSchema type from the package entrypoint", () => {
@@ -19,8 +20,25 @@ describe("EpistemicTables types", () => {
       readonly claimDisposition: typeof ClaimDispositionTables.Table;
       readonly edgeVersion: typeof EdgeVersionTables.Table;
       readonly evidence: typeof EvidenceTables.Table;
+      readonly executionDecision: typeof ExecutionRecordTables.executionDecisionTable;
+      readonly executionOutcome: typeof ExecutionRecordTables.executionOutcomeTable;
       readonly usageRecord: typeof UsageRecordTables.Table;
     }>();
+  });
+
+  it("keeps the execution ledger tables raw and name-pinned", () => {
+    // These tables are deliberately NOT EntityTable projections: an insert-only
+    // ledger carries no BaseEntity mutability columns, so there is no
+    // `.definition` to assert against — the drizzle inference itself is the
+    // contract.
+    expect<typeof ExecutionRecordTables.EXECUTION_DECISION_TABLE_NAME>().type.toBe<"epistemic_execution_decision">();
+    expect<typeof ExecutionRecordTables.EXECUTION_OUTCOME_TABLE_NAME>().type.toBe<"epistemic_execution_outcome">();
+    expect<ExecutionRecordTables.ExecutionDecisionRow["prevHash"]>().type.toBe<string | null>();
+    expect<ExecutionRecordTables.ExecutionDecisionRow["verdict"]>().type.toBe<"allowed" | "denied">();
+    expect<ExecutionRecordTables.ExecutionDecisionRow["seq"]>().type.toBe<number>();
+    expect<ExecutionRecordTables.ExecutionOutcomeRow["settlement"]>().type.toBe<
+      "completed" | "failed" | "interrupted"
+    >();
   });
 
   it("preserves UsageRecord table and descriptor metadata literals", () => {

@@ -11,6 +11,14 @@
   catalog bumps as toolchain changes: rerun `migrations:check` and the desktop
   `codegen:check` immediately. After landing a migration, re-sync the desktop
   bundle: `bun run --cwd apps/professional-desktop codegen`.
+- plpgsql in migration SQL is legal but splitter-constrained: the
+  `LegacyStatementBoundary` splitter is not dollar-quote-aware, so a function
+  body must never contain `;` + newline followed by one of its 12 boundary
+  keywords (ALTER/BEGIN/COMMENT/CREATE/DELETE/DROP/GRANT/INSERT/REVOKE/SET/
+  TRUNCATE/UPDATE/WITH — note `BEGIN` is one). A single-`RAISE` guard body is
+  safe (precedent: `20260726210000_epistemic_execution_ledger`); a body that
+  issues INSERT/UPDATE statements would be split mid-function and fail loudly
+  at migration time. Extend the splitter before writing such a body.
 - Use current `@beep/postgres`, `@beep/drizzle`, and `@beep/test-utils` primitives for live database proof work.
 - Treat older Effect v3 db-admin packages as capability references, not topology templates.
 

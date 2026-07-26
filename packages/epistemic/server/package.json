@@ -35,6 +35,7 @@
     "./layer": "./src/Layer.ts",
     "./ClaimDisposition": "./src/ClaimDisposition/index.ts",
     "./EdgeAuthority": "./src/EdgeAuthority/index.ts",
+    "./ExecutionLedger": "./src/ExecutionLedger/index.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
