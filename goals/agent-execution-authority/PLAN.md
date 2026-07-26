@@ -74,6 +74,19 @@ Placement follows `03-driver-boundaries.md:151-153`: port in
 product repository in app code — that is known drift, recorded but not fixed
 here.
 
+**Open fork to settle at PR 3 (noted 2026-07-26):** every table in
+`packages/epistemic` goes through `EntityTable.pgTableFrom(BaseEntity model)` —
+no raw `pgTable` exists in the slice, and the WorkItem raw-table precedent lives
+in architecture-lab, not here. But `BaseEntity` bakes in
+`rowVersion`/`updatedAt`/`updatedByPrincipal`, i.e. update vocabulary the
+insert-only ledger must not have (decision 4 rejected mutable `BaseEntity` rows
+explicitly). Options: (a) raw `pgTable` mapping the PR 1 record schemas —
+foreign to the slice's table idiom but honest about immutability; (b)
+`EntityTable.pgTableFrom` + triggers blocking UPDATE anyway — idiomatic but
+ships three dead mutability columns on a row that must never mutate. Decide
+deliberately at PR 3; the PR 1 record schemas are deliberately plain values so
+either projection works.
+
 *Proves:* `.pglite.test.ts`, `{ concurrent: false }` — append N, verify, tamper
 via raw SQL and assert verification fails **at the tampered index**, assert the
 trigger rejects a direct UPDATE and DELETE.
@@ -157,16 +170,34 @@ acceptance suite from `SPEC.md`.
 
 ## Migration Registration Is Four Places
 
-Missing the fourth is exactly how the bitemporal spike failed CI.
+Verified against the merged bitemporal precedent (#452, `d117ecf26d`), which is
+the concrete example to mirror:
 
-1. The migration SQL.
-2. The target module **and** `packages/_internal/db-admin/src/targets.ts` — whose
-   two `@example` docblocks (`:55`, `:81`) print the expected name list and are
-   **executed** by docgen, so a stale list fails the build.
-3. `bun run --cwd apps/professional-desktop codegen` for the bundled
-   `Migrations.ts`, drift-gated by `codegen:check`.
-4. An entry per new file in
-   `packages/tooling/tool/cli/src/commands/Architecture/internal/AcceptedProofManifest.ts`.
+1. The raw SQL:
+   `packages/_internal/db-admin/drizzle/<timestamp>_epistemic_execution_ledger/migration.sql`
+   (precedent: `20260726000000_epistemic_bitemporal_edge/migration.sql`).
+2. The target module (precedent:
+   `packages/_internal/db-admin/src/migrations/EpistemicEdge.ts:32-47`,
+   `DbAdminMigrationTarget.make({ name, schemaName, tables, drizzleSchema })`).
+3. The registry `packages/_internal/db-admin/src/targets.ts` — import,
+   re-export, and `DbAdminMigrationTargets` array entry — whose two `@example`
+   docblocks (`:55`, `:81`) print the expected name list and are **executed**
+   by docgen, so a stale list fails the build.
+4. The desktop runtime bundle `apps/professional-desktop/src/runtime/Migrations.ts`
+   via `bun run --cwd apps/professional-desktop codegen`, drift-gated by
+   `codegen:check` — the sidecar embeds the SQL at boot so production never
+   depends on `_internal/db-admin`.
+
+Plus the migration proof test (precedent:
+`packages/_internal/db-admin/test/integration/EpistemicEdgeMigration.pglite.test.ts`),
+which pins the **exact constraint-name list** — load-bearing because the
+repository layer maps constraint violations by name, never by message prose.
+
+*(Correction 2026-07-26: an earlier version of this section listed
+`AcceptedProofManifest.ts` as the fourth place. That manifest gates only the
+architecture-lab proof corpus — `roleBasePath` resolves exclusively to
+architecture-lab/db-admin proof roles — and new epistemic files never register
+there.)*
 
 ## Effect v4 Notes
 

@@ -370,6 +370,42 @@
       "diagnostics": ["missing-dual"]
     },
     {
+      "file": "packages/epistemic/domain/src/values/ExecutionRecord/ExecutionRecord.model.ts",
+      "qualifiedName": "verifyOutcomeBinding",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/epistemic-domain",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 697,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/GrantSet/GrantSet.model.ts",
+      "qualifiedName": "addGrant",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/epistemic-domain",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 280,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/GrantSet/GrantSet.model.ts",
+      "qualifiedName": "evaluateExecutionRequest",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/epistemic-domain",
+      "reason": "Public helper APIs may not expose more than 3 positional parameters.",
+      "line": 444,
+      "column": 14,
+      "parameterCount": 4,
+      "diagnostics": ["too-many-positional-params"]
+    },
+    {
       "file": "packages/foundation/modeling/rdf/src/Rdf.ts",
       "qualifiedName": "Literal.decodeUnknownResult",
       "kind": "static-function-property",
@@ -1079,6 +1115,18 @@
       "owner": "@beep/repo-cli",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
       "line": 113,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/internal/LawScan.ts",
+      "qualifiedName": "isExcludedLawScanPath",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/repo-cli",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 43,
       "column": 14,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]

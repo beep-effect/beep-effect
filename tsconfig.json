@@ -1596,6 +1596,18 @@
       ],
       "@beep/epistemic-use-cases/EdgeAuthority": [
         "./packages/epistemic/use-cases/src/EdgeAuthority/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ExecutionGrant": [
+        "./packages/epistemic/domain/src/values/ExecutionGrant/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ExecutionRecord": [
+        "./packages/epistemic/domain/src/values/ExecutionRecord/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ExecutionVerdict": [
+        "./packages/epistemic/domain/src/values/ExecutionVerdict/index.ts"
+      ],
+      "@beep/epistemic-domain/values/GrantSet": [
+        "./packages/epistemic/domain/src/values/GrantSet/index.ts"
       ]
     }
   }

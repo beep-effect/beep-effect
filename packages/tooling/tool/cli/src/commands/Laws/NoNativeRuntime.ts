@@ -15,7 +15,7 @@ import {
   isNoNativeRuntimeErrorFile,
   isNoNativeRuntimeExtraCheckHotspot,
 } from "@beep/repo-configs/eslint/NoNativeRuntimeHotspots";
-import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
+import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect, HashSet, Inspectable, Match, Order, Path, pipe } from "effect";
@@ -24,6 +24,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node, Project } from "ts-morph";
+import { isExcludedLawScanPath } from "./internal/LawScan.ts";
 import { NoNativeRuntimeRulesExecutionError } from "./Laws.errors.ts";
 import type {
   BinaryExpression,
@@ -558,13 +559,7 @@ export const runNoNativeRuntimeRules = Effect.fn("runNoNativeRuntimeRules")(func
   );
   let usedAllowlistKeys = HashSet.empty<string>();
 
-  const isExcludedFile = (filePath: string): boolean => {
-    const normalized = toPosixPath(filePath);
-    if (A.some(options.excludePaths, (excludePath) => normalized === toPosixPath(excludePath))) {
-      return true;
-    }
-    return isExcludedTypeScriptSourcePath(normalized);
-  };
+  const isExcludedFile = (filePath: string): boolean => isExcludedLawScanPath(options.excludePaths, filePath);
 
   const project = new Project({
     tsConfigFilePath: path.join(cwd, "tsconfig.json"),
