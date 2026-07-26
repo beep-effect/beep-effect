@@ -121,7 +121,7 @@ export type CardVia = typeof CardVia.Type;
  * YAML frontmatter carried by every knowledge card in the vault.
  *
  * The `id` is stable for the card's lifetime and doubles as the Cognee
- * document id and Graphiti episode reference.
+ * document id.
  *
  * @example
  * ```ts
