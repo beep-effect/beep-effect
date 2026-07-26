@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `in-progress` (P0 and P1 complete, P2 verification running)
+Status: `completed-retained` (closed 2026-07-25; PR #452 merged as `d117ecf26d`)
 
 ## Phases
 
@@ -11,7 +11,7 @@ Status: `in-progress` (P0 and P1 complete, P2 verification running)
 | P0 Storage/concurrency/provenance spike | complete | Prove the storage design and attribution boundary before schema commitment. | PROCEED verdict recorded at [`history/2026-07-25-p0-verdict.md`](./history/2026-07-25-p0-verdict.md): every ratified invariant evidenced in both lanes (spike contract [`ops/handoffs/p0-spike-contract.md`](./ops/handoffs/p0-spike-contract.md), S1–S6 NOTES under `history/p0/`); P1 decisions in [`ops/handoffs/p0-to-p1-handoff.md`](./ops/handoffs/p0-to-p1-handoff.md). |
 | P1 Implement | complete | Build the domain, tables, ports, repository, and migration vertical slice. | Landed per [`history/2026-07-25-p1-implementation.md`](./history/2026-07-25-p1-implementation.md): durable disposition (`resolveClaimGateOutcome` closes the rejected no-op), atomic close-and-insert supersession with typed conflict mapping, canonical asOf reads, epistemic-edge migration registered three-place + manifest, provenance duties discharged, spike deleted. |
 | P2 Verify | complete | Prove two-axis history, races, and recovery. | Green: focused suites (two-axis, races on real Postgres 4/4 ×6 runs, restart proof), and `bun run beep yeet verify` outcome SUCCESS (evidence in [`history/2026-07-25-p1-implementation.md`](./history/2026-07-25-p1-implementation.md) § P2). |
-| P3 Close | in-progress | Reflect, publish through Yeet, monitor, and record readiness/retirement trigger. | Reflection passes lint and the PR is mergeable. |
+| P3 Close | complete | Reflect, publish through Yeet, monitor, and record readiness/retirement trigger. | Closed 2026-07-25: reflection at [`history/reflections/2026-07-25-claude.md`](./history/reflections/2026-07-25-claude.md) passed `beep lint reflection-artifacts`; PR #452 merged (`d117ecf26d`); Graphiti retirement recorded in `standards/memory-architecture/04-decision-log.md`. |
 
 ## P0 — Storage, Concurrency, and Provenance Spike
 

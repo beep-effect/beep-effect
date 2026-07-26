@@ -20,7 +20,6 @@ import { docsCommand } from "./Docs/index.ts";
 import { fallowCommand } from "./Fallow/index.ts";
 import { filesCommand } from "./Files/index.ts";
 import { goalsCommand } from "./Goals/index.ts";
-import { graphitiCommand } from "./Graphiti/index.ts";
 import { imageCommand } from "./Image/index.ts";
 import { lawsCommand } from "./Laws/index.ts";
 import { lintCommand } from "./Lint/index.ts";
@@ -67,7 +66,6 @@ export const rootCommand = Command.make("beep-cli").pipe(
     lintCommand,
     lawsCommand,
     qualityCommand,
-    graphitiCommand,
     researchCommand,
     createPackageCommand,
     codegenCommand,

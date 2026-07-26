@@ -294,6 +294,39 @@ breaking the rest of the repo. It is the test-time enforcement of the
 optionality promise made by `01-hexagonal-vertical-slices.md` and
 `05-layer-composition.md`.
 
+## Opt-In Real-Postgres Race Lanes
+
+PGlite proves behavior; it cannot prove concurrency. It is effectively
+single-connection, so lock contention, `SELECT ... FOR UPDATE` loser paths, and
+constraint-check ordering under real parallel transactions never occur there.
+A repository whose contract includes concurrent-writer behavior (supersession,
+head-close races, unique-head backstops) needs an **opt-in real-Postgres race
+lane** alongside its PGlite suite:
+
+- **Dedicated env var, not shared config.** The lane keys on its own
+  `BEEP_<SLICE>_PG_URL` (e.g. `BEEP_EPISTEMIC_PG_URL`) and the whole suite
+  no-ops with a logged skip when it is unset. CI runs it only where a real
+  server is provisioned; local runs stay green without one.
+- **Config boot snapshot.** Read the URL once through a `Config` snapshot at
+  layer boot — never `process.env` inside test bodies (see Anti-Patterns).
+- **Two repository instances.** Build two independent client/repository stacks
+  over the same database so the race is between real connections, not two
+  fibers sharing one pool slot.
+- **`pg_sleep` choreography, not `Effect.sleep`.** Inside `layer()` testers the
+  `TestClock` swallows `Effect.sleep`, so fiber interleaving never happens on
+  wall time. Hold locks across a window with `SELECT pg_sleep(...)` inside the
+  transaction you want to lose the race.
+- **Expect mapped conflicts, not raw driver errors.** The race lane exists to
+  prove constraint-to-typed-error mapping under contention — including
+  constraints that only fire on real Postgres because its check ordering
+  differs from PGlite (a btree unique can fire before a partial or exclusion
+  index that PGlite reports first).
+
+The reference implementation is
+`packages/epistemic/server/test/integration/EdgeAuthority.pg.test.ts` (races
+4/4 across repeated runs; found a real constraint-ordering gap PGlite could
+not see).
+
 ## Anti-Patterns
 
 | Smell                                                      | Diagnostic                                                                                                                |

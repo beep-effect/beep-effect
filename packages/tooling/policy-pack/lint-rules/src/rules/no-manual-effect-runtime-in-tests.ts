@@ -117,7 +117,6 @@ const LEGACY_BASELINE = HashMap.fromIterable<string, number>([
   ["packages/tooling/tool/cli/test/effect-imports.test.ts", 2],
   ["packages/tooling/tool/cli/test/files-command.test.ts", 74],
   ["packages/tooling/tool/cli/test/foundation-topology.test.ts", 2],
-  ["packages/tooling/tool/cli/test/graphiti-proxy-security.test.ts", 2],
   ["packages/tooling/tool/cli/test/image-command.test.ts", 7],
   ["packages/tooling/tool/cli/test/lint-command.test.ts", 27],
   ["packages/tooling/tool/cli/test/native-runtime.test.ts", 5],

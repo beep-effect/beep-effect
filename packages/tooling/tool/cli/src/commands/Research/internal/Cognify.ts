@@ -16,7 +16,6 @@ import { ResearchCognifySummary } from "../Research.schemas.ts";
 import { INSERT_CAPTURE_LOG, runWithResearchDb } from "./Catalog.ts";
 import { catalogDbPath } from "./CatalogOps.ts";
 import { cogneeAdd, cogneeCognify, cogneeLogin, datasetForSourceType } from "./CogneeClient.ts";
-import { postResearchEpisode } from "./GraphitiEpisodes.ts";
 import type { ResearchCognifyOptions } from "../Research.schemas.ts";
 import type { ResearchCommandServiceRequirements } from "../Research.service.ts";
 
@@ -148,10 +147,6 @@ export const cognifyImpl = Effect.fn("Research.cognifyImpl")(function* (
     }
   );
 
-  yield* postResearchEpisode(
-    "research cognify",
-    `Pushed ${cardsPushed} knowledge cards into Cognee datasets ${A.join(datasets, ", ")} at ${now}.`
-  );
   yield* Console.log(
     `research cognify: pushed=${cardsPushed} datasets=${A.join(datasets, ", ")} (cognify running in background).`
   );

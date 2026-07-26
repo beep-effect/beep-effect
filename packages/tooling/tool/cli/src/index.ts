@@ -163,21 +163,6 @@ export {
   filesCommand,
 } from "./commands/Files/index.ts";
 /**
- * Graphiti operational command group.
- *
- * @category cli-commands
- * @since 0.0.0
- */
-export {
-  /**
-   * Graphiti operational command group.
-   *
-   * @category cli-commands
-   * @since 0.0.0
-   */
-  graphitiCommand,
-} from "./commands/Graphiti/index.ts";
-/**
  * Image and video curation command group.
  *
  * @category cli-commands
