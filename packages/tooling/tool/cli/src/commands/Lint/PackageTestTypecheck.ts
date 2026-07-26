@@ -15,6 +15,14 @@
  *   `tsconfig.test.json`), but the package's `check` script never runs it, so
  *   only `beep:audit` or the repo-wide lane would notice a test-side error.
  *
+ * A project counts as covering a package's tests only when its `include` reaches
+ * the test directory root AND reaches every depth beneath it, matching
+ * tsconfig's real glob semantics. Partial reach in either dimension is reported:
+ * a subtree include (`test/unit` and below) misses the rest of the tree, and a
+ * depth-limited glob (`test/*.ts`) misses every nested directory. A tail file
+ * filter (`test/**\/*.test.ts`) does count as coverage — helpers it skips are
+ * still typechecked through the import closure of the files it matches.
+ *
  * Enforcement is a fail-on-growth ratchet against
  * `standards/test-typecheck.blindspot-baseline.jsonc`: packages already in the
  * baseline stay green, newly blind packages fail the gate. Packages scaffolded
@@ -50,6 +58,7 @@ const testDirectoryName = "test";
 const testFixtureSegment = "/test/fixtures/";
 const testSourcePattern = /\.(?:cts|mts|ts|tsx)$/u;
 const wildcardPattern = /[*?]/u;
+const recursiveGlobSegment = "**";
 // `bun run [flags] <script>`. Flags between `run` and the script name are
 // skipped so delegation is still followed through `--silent`, `--if-present`,
 // `--filter=<pkg>`, `--bun`, and friends. `--cwd`/`--config`/`--env-file` take
@@ -283,19 +292,61 @@ const literalGlobPrefix = (glob: string): string =>
     A.join("/")
   );
 
-// Whether a resolved tsconfig `include` glob reaches the ROOT of a package's
-// test directory. `test`, `test/**/*`, `.`, and `**/*` all qualify: their
-// literal prefix is the directory itself or an ancestor of it.
+// Whether a resolved `include` glob reaches every depth of the tree it matches.
 //
-// A glob that only reaches a proper subtree (`test/unit/**`) does NOT qualify.
-// Typechecking part of a package's tests is not the same as typechecking its
-// tests, and treating it as coverage would hide exactly the blind spot this
-// lint exists to find. Both paths are absolute, so a config nested under
-// `test/` is judged correctly.
+// Verified against this repo's tsgo rather than inferred from the docs, because
+// the trailing-`**` case is counter-intuitive. Files were placed at three depths
+// under `test/`; this is which ones each include actually typechecked:
+//
+//   test              every depth   (a bare directory path is recursive)
+//   .                 every depth
+//   **/*              every depth
+//   test/**/*         every depth
+//   test/**/*.ts      every depth   (a tail file filter still reaches all depths)
+//   test/*.ts         one level only
+//   test/*/*.ts       exactly one directory down
+//   test/**           NOTHING       (a trailing `**` matches no files at all)
+//
+// So a wildcard glob reaches every depth exactly when `**` is its second-to-last
+// segment; a glob with no wildcard at all is a directory include and is
+// recursive by tsconfig's rules.
+const globReachesEveryDepth = (glob: string): boolean => {
+  if (!wildcardPattern.test(glob)) {
+    return true;
+  }
+
+  const segments = Str.split("/")(glob);
+
+  return pipe(
+    A.get(segments, A.length(segments) - 2),
+    O.match({ onNone: thunkFalse, onSome: (segment) => segment === recursiveGlobSegment })
+  );
+};
+
+// Whether a resolved tsconfig `include` glob covers a package's test directory:
+// it must reach the directory ROOT (its literal prefix is the directory itself
+// or an ancestor) AND reach every depth beneath it.
+//
+// Both halves matter, and each rejects a different way of being partial. A
+// subtree include (`test/unit` and below) fails the first; a depth-limited glob
+// (`test/*.ts`) fails the second even though its literal prefix is the test root
+// itself. Either way the package keeps test sources no project typechecks, which is
+// exactly the blind spot this lint exists to find.
+//
+// A tail file filter DOES count as coverage even though it skips, say,
+// `test/support/Helper.ts`. Such helpers are typechecked anyway: they are
+// reachable through imports from the matched test files, and tsc typechecks the
+// import closure of every included file. A helper no test imports is
+// unreferenced code, not a blind spot. A depth-limited glob has no equivalent
+// escape hatch — nothing imports a test file, so test files it misses are never
+// typechecked by anything.
+//
+// Both paths are absolute, so a config nested under `test/` is judged correctly.
 const includeGlobCoversDirectory = (input: { readonly glob: string; readonly directory: string }): boolean => {
   const prefix = literalGlobPrefix(input.glob);
+  const reachesRoot = prefix === input.directory || Str.startsWith(`${prefix}/`)(input.directory);
 
-  return prefix === input.directory || Str.startsWith(`${prefix}/`)(input.directory);
+  return reachesRoot && globReachesEveryDepth(input.glob);
 };
 
 // Flatten a package script with every script it transitively invokes through

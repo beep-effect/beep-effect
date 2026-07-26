@@ -1292,6 +1292,155 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
   );
 
   it(
+    "treats a one-level include as uncovered because nested tests stay unchecked",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: {
+                check: "bun run beep:check",
+                "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+                "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+              },
+              tsconfigs: [
+                { fileName: "tsconfig.json", include: ["src"] },
+                { fileName: "tsconfig.test.json", include: ["src", "test/*.ts"] },
+              ],
+            });
+            // A nested test source that `test/*.ts` cannot reach.
+            yield* fs.makeDirectory(path.join("packages", "example", "test", "unit"), { recursive: true });
+            yield* fs.writeFileString(
+              path.join("packages", "example", "test", "unit", "Nested.test.ts"),
+              "export const nested = 1;\n"
+            );
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            const exit = yield* Effect.exit(runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]));
+
+            const errorLines = yield* TestConsole.errorLines;
+            expectReportedExit(exit);
+            expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [missing-test-tsconfig]");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "treats a fixed-depth include as uncovered",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: {
+                check: "bun run beep:check",
+                "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+                "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+              },
+              tsconfigs: [
+                { fileName: "tsconfig.json", include: ["src"] },
+                { fileName: "tsconfig.test.json", include: ["src", "test/*/*.ts"] },
+              ],
+            });
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            const exit = yield* Effect.exit(runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]));
+
+            const errorLines = yield* TestConsole.errorLines;
+            expectReportedExit(exit);
+            expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [missing-test-tsconfig]");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "accepts a bare test directory include as recursive",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: {
+                check: "bun run beep:check",
+                "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+                "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+              },
+              tsconfigs: [
+                { fileName: "tsconfig.json", include: ["src"] },
+                { fileName: "tsconfig.test.json", include: ["src", "test"] },
+              ],
+            });
+            yield* fs.makeDirectory(path.join("packages", "example", "test", "unit"), { recursive: true });
+            yield* fs.writeFileString(
+              path.join("packages", "example", "test", "unit", "Nested.test.ts"),
+              "export const nested = 1;\n"
+            );
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            yield* runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]);
+
+            const logLines = yield* TestConsole.logLines;
+            expect(logLines).toEqual(["[package-test-typecheck] ok: current=0 baseline=0 introduced=0"]);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "accepts a recursive include carrying a tail file filter",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+
+            // Documented decision: helpers the filter skips are still
+            // typechecked through the import closure of the matched test files.
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: {
+                check: "bun run beep:check",
+                "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+                "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+              },
+              tsconfigs: [
+                { fileName: "tsconfig.json", include: ["src"] },
+                { fileName: "tsconfig.test.json", include: ["src", "test/**/*.test.ts"] },
+              ],
+            });
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            yield* runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]);
+
+            const logLines = yield* TestConsole.logLines;
+            expect(logLines).toEqual(["[package-test-typecheck] ok: current=0 baseline=0 introduced=0"]);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
     "follows check-script delegation through bun run flags",
     () =>
       Effect.runPromise(
