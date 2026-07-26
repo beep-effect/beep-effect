@@ -7,19 +7,20 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity";
+import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { flow } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Duration from "effect/Duration";
+import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import type { FastCheck } from "effect/testing";
 
-const $I = $ScratchpadId.create("effect-ontology/Domain/Shacl");
+const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Shacl");
 
 const ShaclResultTerm = S.NonEmptyString.annotate({
   toArbitrary: () => (fc) => fc.string({ minLength: 1, maxLength: 256 }),
@@ -47,7 +48,7 @@ const ShaclResultMessage = S.NonEmptyString.annotate({
  *
  * @example
  * ```ts
- * import { ShaclViolationSeverity } from "./Shacl.ts"
+ * import { ShaclViolationSeverity } from "@effect-ontology/Schema/Shacl.ts"
  *
  * console.log(ShaclViolationSeverity.is.Warning("Warning")) // true
  * console.log(ShaclViolationSeverity.is.Warning("Violation")) // false
@@ -72,7 +73,7 @@ export const ShaclViolationSeverity = LiteralKit(["Violation", "Warning", "Info"
  *
  * @example
  * ```ts
- * import type { ShaclViolationSeverity } from "./Shacl.ts"
+ * import type { ShaclViolationSeverity } from "@effect-ontology/Schema/Shacl.ts"
  *
  * const severity: ShaclViolationSeverity = "Info"
  * console.log(severity) // "Info"
@@ -133,7 +134,7 @@ const ShaclViolationDefinition = ShaclViolationSeverity.mapMembers(
  *
  * @example
  * ```ts
- * import { ShaclViolation } from "./Shacl.ts"
+ * import { ShaclViolation } from "@effect-ontology/Schema/Shacl.ts"
  *
  * const result = ShaclViolation.cases.Violation.make({
  *   focusNode: "https://example.com/alice",
@@ -167,7 +168,7 @@ export const ShaclViolation = ShaclViolationDefinition.pipe(
  * import {
  *   ShaclViolation,
  *   type ShaclViolation as ShaclViolationValue
- * } from "./Shacl.ts"
+ * } from "@effect-ontology/Schema/Shacl.ts"
  *
  * const result: ShaclViolationValue = ShaclViolation.cases.Info.make({
  *   focusNode: "https://example.com/alice",
@@ -296,7 +297,7 @@ const ShaclValidationReportDefinition = ShaclValidationReportFields.check(ShaclR
  * @example
  * ```ts
  * import * as S from "effect/Schema"
- * import { ShaclValidationReport } from "./Shacl.ts"
+ * import { ShaclValidationReport } from "@effect-ontology/Schema/Shacl.ts"
  *
  * const report = S.decodeUnknownResult(ShaclValidationReport)({
  *   conforms: true,
@@ -330,7 +331,7 @@ export const ShaclValidationReport = ShaclValidationReportDefinition.annotate({
  *
  * @example
  * ```ts
- * import type { ShaclValidationReport } from "./Shacl.ts"
+ * import type { ShaclValidationReport } from "@effect-ontology/Schema/Shacl.ts"
  *
  * const summary: Pick<ShaclValidationReport, "conforms"> = { conforms: true }
  * console.log(summary.conforms) // true
@@ -374,17 +375,19 @@ class ValidationPolicyFields extends S.Class<ValidationPolicyFields>($I`Validati
  * `logOnly` takes precedence over both failure flags. When it is false,
  * `failOnWarning` extends failure behavior to Warning-level results while
  * `failOnViolation` controls Violation-level results. Info-level results never
- * fail a workflow under this policy.
+ * fail a workflow under this policy. The schema-owned `shouldFail` static
+ * evaluates this policy without changing standards-level report conformance.
  *
  * @example
  * ```ts
- * import { ValidationPolicy } from "./Shacl.ts"
+ * import { ValidationPolicy } from "@effect-ontology/Schema/Shacl.ts"
  *
- * const strict = ValidationPolicy.make({ failOnWarning: true })
+ * const strict = ValidationPolicy.fromUnknown({ failOnWarning: true })
  *
  * console.log(strict.failOnViolation) // true
  * console.log(strict.failOnWarning) // true
  * console.log(strict.logOnly) // false
+ * console.log(ValidationPolicy.shouldFail(strict, [])) // false
  * ```
  *
  * @category policies
@@ -403,7 +406,18 @@ export const ValidationPolicy = ValidationPolicyFields.annotate({
   $I.annoteSchema("ValidationPolicy", {
     description: "Workflow policy for failing on SHACL Violation or Warning results, with an overriding log-only mode.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics,
+  SchemaUtils.withStatics((schema) => ({
+    shouldFail: dual(2, (policy: typeof schema.Type, results: ReadonlyArray<ShaclViolation>): boolean =>
+      Bool.and(
+        Bool.not(policy.logOnly),
+        Bool.or(
+          Bool.and(policy.failOnViolation, A.some(results, ShaclViolation.guards.Violation)),
+          Bool.and(policy.failOnWarning, A.some(results, ShaclViolation.guards.Warning))
+        )
+      )
+    ),
+  }))
 );
 
 /**
@@ -411,9 +425,9 @@ export const ValidationPolicy = ValidationPolicyFields.annotate({
  *
  * @example
  * ```ts
- * import { ValidationPolicy, type ValidationPolicy as ValidationPolicyValue } from "./Shacl.ts"
+ * import { ValidationPolicy, type ValidationPolicy as ValidationPolicyValue } from "@effect-ontology/Schema/Shacl.ts"
  *
- * const policy: ValidationPolicyValue = ValidationPolicy.make({ logOnly: true })
+ * const policy: ValidationPolicyValue = ValidationPolicy.fromUnknown({ logOnly: true })
  * console.log(policy.logOnly) // true
  * ```
  *

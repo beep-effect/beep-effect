@@ -8,8 +8,11 @@
  * @since 0.0.0
  * @packageDocumentation
  */
-import { $ScratchpadId } from "@beep/identity";
-import { Sha256Hex } from "@beep/schema";
+import { $ScratchpadId } from "@beep/identity/packages";
+import type { NonNegativeInt } from "@beep/schema";
+import { HttpsUrl as CanonicalHttpsUrl, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { identity, Match } from "effect";
+import type * as Brand from "effect/Brand";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -17,21 +20,74 @@ import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Identity");
 
-const contentHashPattern = /^[0-9a-f]{16}$/;
+const legacyContentHashPrefixPattern = /^[0-9a-f]{16}$/;
 const gcsBucketNamePattern = /^[a-z0-9][a-z0-9._-]{1,61}[a-z0-9]$/;
-const gcsIpv4AddressPattern =
-  /^(?:(?:25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])$/;
+const gcsIpv4AddressPattern = /^(?:(?:25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1?[0-9]?[0-9])$/;
 const gcsObjectNamePattern = /^(?!\.{1,2}$)(?!\.well-known\/acme-challenge\/)(?!.*[\r\n])[\s\S]+$/u;
+type BrandedGcsBucket = string & Brand.Brand<"GcsBucket">;
+type BrandedGcsObject = string & Brand.Brand<"GcsObject">;
+type BrandedGcsUri = `gs://${string}/${string}` & Brand.Brand<"GcsUri">;
+
+const SecureHttpUrlFromSelf = S.declare((input: unknown): input is CanonicalHttpsUrl =>
+  S.is(CanonicalHttpsUrl)(input)
+).annotate({
+  toArbitrary: () => (fc) =>
+    fc.uuid().map((id) => S.decodeUnknownSync(CanonicalHttpsUrl)(`https://example.test/resource/${id}`)),
+});
+
+/**
+ * Validated absolute HTTPS resource location.
+ *
+ * @remarks
+ * Canonical URL parsing and protocol enforcement remain owned by
+ * `@beep/schema`. The declaration layer contributes a constructive arbitrary
+ * so schemas that embed remote locations remain property-test ready.
+ *
+ * @example
+ * ```ts
+ * import { SecureHttpUrl } from "@effect-ontology/Identity.ts"
+ *
+ * const url = SecureHttpUrl.fromUnknown("https://example.org/report.pdf")
+ * console.log(SecureHttpUrl.is(url)) // true
+ * ```
+ *
+ * @invariant Is an absolute URL whose protocol is exactly `https:`.
+ * @category identifiers
+ * @since 0.0.0
+ */
+export const SecureHttpUrl = CanonicalHttpsUrl.pipe(
+  S.decodeTo(SecureHttpUrlFromSelf),
+  $I.annoteSchema("SecureHttpUrl", {
+    description: "Canonical absolute HTTPS URL with a transparent property-testing generator.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime value decoded by {@link SecureHttpUrl}.
+ *
+ * @example
+ * ```ts
+ * import {
+ *   SecureHttpUrl,
+ *   type SecureHttpUrl as SecureHttpUrlValue
+ * } from "@effect-ontology/Identity.ts"
+ *
+ * const url: SecureHttpUrlValue =
+ *   SecureHttpUrl.fromUnknown("https://example.org/report.pdf")
+ * console.log(url)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SecureHttpUrl = typeof SecureHttpUrl.Type;
 
 const utf8Encoder = new TextEncoder();
 const isNotGcsIpv4Address = P.not((value: string) => gcsIpv4AddressPattern.test(value));
 const isNotGcsReservedPrefix = P.not(Str.startsWith("goog"));
 const isNotGcsReservedSpelling = P.every([P.not(Str.includes("google")), P.not(Str.includes("g00gle"))]);
-const isGcsBucketArbitraryCandidate = P.every([
-  isNotGcsIpv4Address,
-  isNotGcsReservedPrefix,
-  isNotGcsReservedSpelling,
-]);
+const isGcsBucketArbitraryCandidate = P.every([isNotGcsIpv4Address, isNotGcsReservedPrefix, isNotGcsReservedSpelling]);
 
 const GcsBucketChecks = S.makeFilterGroup(
   [
@@ -65,8 +121,7 @@ const GcsBucketChecks = S.makeFilterGroup(
   {
     identifier: $I`GcsBucketChecks`,
     title: "GCS Bucket Name",
-    description:
-      "Locally decidable Google Cloud Storage bucket-name checks for the portable 3-63 character form.",
+    description: "Locally decidable Google Cloud Storage bucket-name checks for the portable 3-63 character form.",
   }
 );
 
@@ -106,60 +161,117 @@ const GcsObjectName = S.String.check(
   );
 
 /**
- * Branded 16-character lowercase hexadecimal prefix of a SHA-256 digest.
+ * Legacy 16-character prefix of a SHA-256 digest.
  *
  * @remarks
- * A 16-character prefix carries 64 bits of the original digest. It is suitable
- * for compact cache or version fingerprints where collision handling exists,
- * but it must not replace a full digest for security-sensitive identity or
- * long-lived content addressing.
+ * The upstream module treated this 64-bit prefix as content identity. The v4
+ * experiment accepts it only at explicit ingress boundaries and never expands
+ * it back into a full digest.
  *
  * @example
  * ```ts
- * import * as S from "effect/Schema"
- * import { ContentHash } from "./Models.ts"
+ * import { LegacyContentHashPrefix } from "@effect-ontology/Identity.ts"
  *
- * const result = S.decodeUnknownResult(ContentHash)("e3b0c44298fc1c14")
- * console.log(result._tag) // "Success"
+ * const prefix = LegacyContentHashPrefix.make("e3b0c44298fc1c14")
+ * console.log(prefix.length) // 16
  * ```
  *
  * @invariant Exactly 16 lowercase ASCII hexadecimal characters.
- * @category validation
+ * @category interop
  * @since 0.0.0
  */
-export const ContentHash = S.String.check(
-  S.isPattern(contentHashPattern, {
-    identifier: $I`ContentHashPatternCheck`,
-    title: "Content Hash Prefix",
-    description: "A 16-character lowercase hexadecimal prefix of a SHA-256 digest.",
-    message: "Content hash must contain exactly 16 lowercase hexadecimal characters.",
+export const LegacyContentHashPrefix = S.String.check(
+  S.isPattern(legacyContentHashPrefixPattern, {
+    identifier: $I`LegacyContentHashPrefixPatternCheck`,
+    title: "Legacy Content Hash Prefix",
+    description: "A legacy 16-character lowercase hexadecimal prefix of a SHA-256 digest.",
+    message: "Legacy content hash prefix must contain exactly 16 lowercase hexadecimal characters.",
   })
 )
   .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(contentHashPattern),
+    toArbitrary: () => (fc) => fc.stringMatching(legacyContentHashPrefixPattern),
   })
   .pipe(
-    S.brand("ContentHash"),
-    $I.annoteSchema("ContentHash", {
+    S.brand("LegacyContentHashPrefix"),
+    $I.annoteSchema("LegacyContentHashPrefix", {
       description:
-        "Compact content fingerprint containing the first 16 lowercase hexadecimal characters of a SHA-256 digest.",
-      documentation:
-        "This schema validates the representation of a 64-bit truncated digest; it does not provide the collision resistance of a full SHA-256 digest.",
-    })
+        "Ingress-only legacy fingerprint containing the first 16 lowercase hexadecimal characters of a SHA-256 digest.",
+      documentation: "This value is collision-sensitive and is not canonical content identity.",
+    }),
+    SchemaUtils.withCodecStatics
   );
 
 /**
- * Runtime value type decoded by {@link ContentHash}. {@inheritDoc ContentHash}
+ * Runtime value decoded by {@link LegacyContentHashPrefix}.
  *
  * @example
  * ```ts
- * import { ContentHash, type ContentHash as ContentHashValue } from "./Models.ts"
+ * import {
+ *   LegacyContentHashPrefix,
+ *   type LegacyContentHashPrefix as LegacyPrefix
+ * } from "@effect-ontology/Identity.ts"
  *
- * const hash: ContentHashValue = ContentHash.make("e3b0c44298fc1c14")
- * console.log(hash.length) // 16
+ * const prefix: LegacyPrefix = LegacyContentHashPrefix.make("e3b0c44298fc1c14")
+ * console.log(LegacyContentHashPrefix.is(prefix)) // true
  * ```
  *
- * @category value-objects
+ * @category type-level
+ * @since 0.0.0
+ */
+export type LegacyContentHashPrefix = typeof LegacyContentHashPrefix.Type;
+
+/**
+ * Canonical full SHA-256 content identity.
+ *
+ * @remarks
+ * Content identity is deliberately independent from semantic identifiers and
+ * storage locations. Use {@link LegacyContentHashPrefix} only for upstream
+ * compatibility.
+ *
+ * @example
+ * ```ts
+ * import { ContentHash } from "@effect-ontology/Identity.ts"
+ *
+ * const hash = ContentHash.make(
+ *   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ * )
+ * console.log(ContentHash.prefix(hash)) // "e3b0c44298fc1c14"
+ * console.log(ContentHash.idFragment(hash)) // "e3b0c44298fc"
+ * ```
+ *
+ * @invariant Exactly 64 lowercase hexadecimal characters representing a
+ * complete SHA-256 digest.
+ * @category identifiers
+ * @since 0.0.0
+ */
+export const ContentHash = Sha256Hex.annotate({
+  toArbitrary: () => () => S.toArbitrary(Sha256Hex),
+}).pipe(
+  S.brand("ContentHash"),
+  $I.annoteSchema("ContentHash", {
+    description: "Canonical content identity represented by a complete lowercase SHA-256 digest.",
+  }),
+  SchemaUtils.withCodecStatics,
+  SchemaUtils.withStatics((schema) => ({
+    prefix: (hash: typeof schema.Type): LegacyContentHashPrefix => LegacyContentHashPrefix.make(Str.takeLeft(16)(hash)),
+    idFragment: (hash: typeof schema.Type): string => Str.takeLeft(12)(hash),
+  }))
+);
+
+/**
+ * Runtime value decoded by {@link ContentHash}.
+ *
+ * @example
+ * ```ts
+ * import { ContentHash, type ContentHash as ContentHashValue } from "@effect-ontology/Identity.ts"
+ *
+ * const hash: ContentHashValue = ContentHash.make(
+ *   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ * )
+ * console.log(hash.length) // 64
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
  */
 export type ContentHash = typeof ContentHash.Type;
@@ -177,7 +289,7 @@ export type ContentHash = typeof ContentHash.Type;
  * @example
  * ```ts
  * import * as S from "effect/Schema"
- * import { IdempotencyKey } from "./Models.ts"
+ * import { IdempotencyKey } from "@effect-ontology/Identity.ts"
  *
  * const result = S.decodeUnknownResult(IdempotencyKey)(
  *   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -198,7 +310,8 @@ export const IdempotencyKey = Sha256Hex.annotate({
       "Canonical full-length SHA-256 digest used as an idempotency key after hashing a stable operation description.",
     documentation:
       "The schema validates digest shape only; uniqueness depends on the canonical operation data supplied to the hash.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -206,7 +319,7 @@ export const IdempotencyKey = Sha256Hex.annotate({
  *
  * @example
  * ```ts
- * import { IdempotencyKey, type IdempotencyKey as IdempotencyKeyValue } from "./Models.ts"
+ * import { IdempotencyKey, type IdempotencyKey as IdempotencyKeyValue } from "@effect-ontology/Identity.ts"
  *
  * const key: IdempotencyKeyValue = IdempotencyKey.make(
  *   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -234,14 +347,11 @@ export type IdempotencyKey = typeof IdempotencyKey.Type;
  *
  * @example
  * ```ts
- * import * as S from "effect/Schema"
- * import { GcsBucket } from "./Models.ts"
+ * import { GcsBucket } from "@effect-ontology/Identity.ts"
  *
- * const isGcsBucket = S.is(GcsBucket)
- *
- * console.log(isGcsBucket("beep-ontology-state")) // true
- * console.log(isGcsBucket("192.168.5.4")) // false
- * console.log(isGcsBucket("goog-ontology-state")) // false
+ * console.log(GcsBucket.is("beep-ontology-state")) // true
+ * console.log(GcsBucket.is("192.168.5.4")) // false
+ * console.log(GcsBucket.is("goog-ontology-state")) // false
  * ```
  *
  * @invariant Contains 3-63 permitted characters, begins and ends with an
@@ -250,28 +360,55 @@ export type IdempotencyKey = typeof IdempotencyKey.Type;
  * @category validation
  * @since 0.0.0
  */
-export const GcsBucket = S.String.check(GcsBucketChecks)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(gcsBucketNamePattern).filter(isGcsBucketArbitraryCandidate),
-  })
-  .pipe(
-    S.brand("GcsBucket"),
-    $I.annoteSchema("GcsBucket", {
-      description:
-        "Portable 3-63 character Google Cloud Storage bucket name excluding IPv4 addresses and explicitly documented Google-reserved forms.",
-      documentation:
-        "Provider-side availability and Google's broader close-misspelling policy must still be checked when creating the bucket.",
-    })
-  );
+const GcsBucketEncoded = S.String.check(GcsBucketChecks).pipe(S.brand("GcsBucket"));
+
+const GcsBucketFromSelf = S.declare((input): input is BrandedGcsBucket => S.is(GcsBucketEncoded)(input)).annotate({
+  toArbitrary: () => (fc) =>
+    fc
+      .stringMatching(gcsBucketNamePattern)
+      .filter(isGcsBucketArbitraryCandidate)
+      .map((value): BrandedGcsBucket => value as BrandedGcsBucket),
+});
+
+/**
+ * Portable Google Cloud Storage bucket name.
+ *
+ * @remarks
+ * Enforces every locally decidable provider rule while leaving global
+ * availability and provider-maintained close-spelling checks to the GCS API.
+ *
+ * @example
+ * ```ts
+ * import { GcsBucket } from "@effect-ontology/Identity.ts"
+ *
+ * const bucket = GcsBucket.fromUnknown("beep-ontology-state")
+ * console.log(GcsBucket.is(bucket)) // true
+ * ```
+ *
+ * @invariant Uses 3-63 permitted lowercase characters, has alphanumeric
+ * boundaries, and is neither an IPv4 address nor a documented reserved form.
+ * @category validation
+ * @since 0.0.0
+ */
+export const GcsBucket = GcsBucketEncoded.pipe(
+  S.decodeTo(GcsBucketFromSelf),
+  $I.annoteSchema("GcsBucket", {
+    description:
+      "Portable 3-63 character Google Cloud Storage bucket name excluding IPv4 addresses and explicitly documented Google-reserved forms.",
+    documentation:
+      "Provider-side availability and Google's broader close-misspelling policy must still be checked when creating the bucket.",
+  }),
+  SchemaUtils.withCodecStatics
+);
 
 /**
  * Runtime value type decoded by {@link GcsBucket}. {@inheritDoc GcsBucket}
  *
  * @example
  * ```ts
- * import { GcsBucket, type GcsBucket as GcsBucketValue } from "./Models.ts"
+ * import { GcsBucket, type GcsBucket as GcsBucketValue } from "@effect-ontology/Identity.ts"
  *
- * const bucket: GcsBucketValue = GcsBucket.make("beep-ontology-state")
+ * const bucket: GcsBucketValue = GcsBucket.fromUnknown("beep-ontology-state")
  * console.log(bucket) // "beep-ontology-state"
  * ```
  *
@@ -292,7 +429,7 @@ export type GcsBucket = typeof GcsBucket.Type;
  * @example
  * ```ts
  * import * as S from "effect/Schema"
- * import { GcsUri } from "./Models.ts"
+ * import { GcsUri } from "@effect-ontology/Identity.ts"
  *
  * const result = S.decodeUnknownResult(GcsUri)(
  *   "gs://beep-ontology-state/snapshots/ontology-v1.ttl"
@@ -306,19 +443,58 @@ export type GcsBucket = typeof GcsBucket.Type;
  * @category validation
  * @since 0.0.0
  */
-export const GcsUri = S.TemplateLiteral(["gs://", GcsBucket, "/", GcsObjectName]).pipe(
-  S.annotate({
-    toArbitrary: () => (fc) =>
-      fc
-        .tuple(S.toArbitrary(GcsBucket), S.toArbitrary(GcsObjectName))
-        .map(([bucket, objectName]): `gs://${string}/${string}` => `gs://${bucket}/${objectName}`),
-  }),
-  S.brand("GcsUri"),
+const GcsUriEncoded = S.TemplateLiteral(["gs://", GcsBucket, "/", GcsObjectName]).pipe(S.brand("GcsUri"));
+
+const GcsUriFromSelf = S.declare((input): input is BrandedGcsUri => S.is(GcsUriEncoded)(input)).annotate({
+  toArbitrary: () => (fc) =>
+    fc
+      .tuple(S.toArbitrary(GcsBucket), S.toArbitrary(GcsObjectName))
+      .map(([bucket, objectName]): BrandedGcsUri => `gs://${bucket}/${objectName}` as BrandedGcsUri),
+});
+
+/**
+ * Validated Google Cloud Storage URI.
+ *
+ * @remarks
+ * Both the bucket and object components are decoded by their own schemas;
+ * existence, permissions, and namespace configuration remain provider checks.
+ *
+ * @example
+ * ```ts
+ * import { GcsUri } from "@effect-ontology/Identity.ts"
+ *
+ * const uri = GcsUri.fromUnknown(
+ *   "gs://beep-ontology-state/snapshots/ontology-v1.ttl"
+ * )
+ * console.log(GcsUri.is(uri)) // true
+ * ```
+ *
+ * @invariant Uses `gs://<bucket>/<object>` with validated, non-empty
+ * components.
+ * @category validation
+ * @since 0.0.0
+ */
+export const GcsUri = GcsUriEncoded.pipe(
+  S.decodeTo(GcsUriFromSelf),
   $I.annoteSchema("GcsUri", {
     description:
       "Google Cloud Storage URI composed from a validated bucket name and a non-empty flat-namespace object name.",
     documentation:
       "The schema validates URI components locally; bucket existence, permissions, and hierarchical-namespace configuration require GCS.",
+  }),
+  SchemaUtils.withCodecStatics,
+  SchemaUtils.withStatics((schema) => {
+    const fromParts = dual(2, (bucket: GcsBucket, objectPath: GcsObject) =>
+      schema.fromUnknown(`gs://${bucket}/${objectPath}`)
+    );
+    const resolve = dual(2, (storagePath: typeof schema.Type | GcsObject, bucket: GcsBucket) =>
+      Match.value(storagePath).pipe(
+        Match.when(schema.is, identity),
+        Match.orElse((objectPath) => fromParts(bucket, objectPath))
+      )
+    );
+
+    return { fromParts, resolve };
   })
 );
 
@@ -327,9 +503,9 @@ export const GcsUri = S.TemplateLiteral(["gs://", GcsBucket, "/", GcsObjectName]
  *
  * @example
  * ```ts
- * import { GcsUri, type GcsUri as GcsUriValue } from "./Models.ts"
+ * import { GcsUri, type GcsUri as GcsUriValue } from "@effect-ontology/Identity.ts"
  *
- * const uri: GcsUriValue = GcsUri.make(
+ * const uri: GcsUriValue = GcsUri.fromUnknown(
  *   "gs://beep-ontology-state/snapshots/ontology-v1.ttl"
  * )
  * console.log(uri)
@@ -341,7 +517,7 @@ export const GcsUri = S.TemplateLiteral(["gs://", GcsBucket, "/", GcsObjectName]
 export type GcsUri = typeof GcsUri.Type;
 
 const gcsObjectPathPattern = /^[^/](?:[\s\S]*[^/])?$/u;
-const gcsObjectArbitraryPattern = /^[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*$/;
+const gcsObjectArbitraryPattern = /^[A-Za-z0-9][A-Za-z0-9._-]{0,31}(?:\/[A-Za-z0-9][A-Za-z0-9._-]{0,31})*$/;
 const namespacePattern = /^[a-z][a-z0-9-]*$/;
 const ontologyNamePattern = /^[a-z][a-z0-9_-]*$/;
 const documentIdPattern = /^doc-[0-9a-f]{12}$/;
@@ -381,13 +557,11 @@ const GcsObjectChecks = S.makeFilterGroup(
  *
  * @example
  * ```ts
- * import * as S from "effect/Schema"
- * import { GcsObject } from "./Models.ts"
+ * import { GcsObject } from "@effect-ontology/Identity.ts"
  *
- * const isGcsObject = S.is(GcsObject)
- * console.log(isGcsObject("snapshots/ontology-v1.ttl")) // true
- * console.log(isGcsObject("/snapshots/ontology-v1.ttl")) // false
- * console.log(isGcsObject("a")) // true
+ * console.log(GcsObject.is("snapshots/ontology-v1.ttl")) // true
+ * console.log(GcsObject.is("/snapshots/ontology-v1.ttl")) // false
+ * console.log(GcsObject.is("a")) // true
  * ```
  *
  * @invariant Is a provider-valid GCS object name with no leading, trailing, or
@@ -395,28 +569,52 @@ const GcsObjectChecks = S.makeFilterGroup(
  * @category validation
  * @since 0.0.0
  */
-export const GcsObject = GcsObjectName.check(GcsObjectChecks)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(gcsObjectArbitraryPattern),
-  })
-  .pipe(
-    S.brand("GcsObject"),
-    $I.annoteSchema("GcsObject", {
-      description:
-        "Canonical slash-separated GCS object path derived from the provider-valid object-name schema.",
-      documentation:
-        "Leading, trailing, and consecutive slashes are rejected to prevent multiple textual forms of one application path.",
-    })
-  );
+const GcsObjectEncoded = GcsObjectName.check(GcsObjectChecks).pipe(S.brand("GcsObject"));
+
+const GcsObjectFromSelf = S.declare((input): input is BrandedGcsObject => S.is(GcsObjectEncoded)(input)).annotate({
+  toArbitrary: () => (fc) =>
+    fc.stringMatching(gcsObjectArbitraryPattern).map((value): BrandedGcsObject => value as BrandedGcsObject),
+});
+
+/**
+ * Canonical slash-separated GCS object path.
+ *
+ * @remarks
+ * Retains provider-valid object names while removing leading, trailing, and
+ * consecutive slashes so each application path has one textual form.
+ *
+ * @example
+ * ```ts
+ * import { GcsObject } from "@effect-ontology/Identity.ts"
+ *
+ * const object = GcsObject.fromUnknown("snapshots/ontology-v1.ttl")
+ * console.log(GcsObject.is(object)) // true
+ * ```
+ *
+ * @invariant Is provider-valid and contains no empty slash-delimited segment.
+ * @category validation
+ * @since 0.0.0
+ */
+export const GcsObject = GcsObjectEncoded.pipe(
+  S.decodeTo(GcsObjectFromSelf),
+  $I.annoteSchema("GcsObject", {
+    description: "Canonical slash-separated GCS object path derived from the provider-valid object-name schema.",
+    documentation:
+      "Leading, trailing, and consecutive slashes are rejected to prevent multiple textual forms of one application path.",
+  }),
+  SchemaUtils.withCodecStatics
+);
 
 /**
  * Runtime value type decoded by {@link GcsObject}. {@inheritDoc GcsObject}
  *
  * @example
  * ```ts
- * import { GcsObject, type GcsObject as GcsObjectValue } from "./Models.ts"
+ * import { GcsObject, type GcsObject as GcsObjectValue } from "@effect-ontology/Identity.ts"
  *
- * const objectPath: GcsObjectValue = GcsObject.make("snapshots/ontology-v1.ttl")
+ * const objectPath: GcsObjectValue = GcsObject.fromUnknown(
+ *   "snapshots/ontology-v1.ttl"
+ * )
  * console.log(objectPath)
  * ```
  *
@@ -430,12 +628,10 @@ export type GcsObject = typeof GcsObject.Type;
  *
  * @example
  * ```ts
- * import * as S from "effect/Schema"
- * import { Namespace } from "./Models.ts"
+ * import { Namespace } from "@effect-ontology/Identity.ts"
  *
- * const isNamespace = S.is(Namespace)
- * console.log(isNamespace("legal-ontology")) // true
- * console.log(isNamespace("LegalOntology")) // false
+ * console.log(Namespace.is("legal-ontology")) // true
+ * console.log(Namespace.is("LegalOntology")) // false
  * ```
  *
  * @invariant Begins with a lowercase ASCII letter and otherwise contains only
@@ -461,7 +657,8 @@ export const Namespace = S.String.check(
     $I.annoteSchema("Namespace", {
       description:
         "Lowercase ontology namespace identifier beginning with a letter and containing letters, digits, or hyphens.",
-    })
+    }),
+    SchemaUtils.withCodecStatics
   );
 
 /**
@@ -469,7 +666,7 @@ export const Namespace = S.String.check(
  *
  * @example
  * ```ts
- * import { Namespace, type Namespace as NamespaceValue } from "./Models.ts"
+ * import { Namespace, type Namespace as NamespaceValue } from "@effect-ontology/Identity.ts"
  *
  * const namespace: NamespaceValue = Namespace.make("legal-ontology")
  * console.log(namespace)
@@ -485,12 +682,10 @@ export type Namespace = typeof Namespace.Type;
  *
  * @example
  * ```ts
- * import * as S from "effect/Schema"
- * import { OntologyName } from "./Models.ts"
+ * import { OntologyName } from "@effect-ontology/Identity.ts"
  *
- * const isOntologyName = S.is(OntologyName)
- * console.log(isOntologyName("patent_claims-v2")) // true
- * console.log(isOntologyName("PatentClaims")) // false
+ * console.log(OntologyName.is("patent_claims-v2")) // true
+ * console.log(OntologyName.is("PatentClaims")) // false
  * ```
  *
  * @invariant Begins with a lowercase ASCII letter and otherwise contains only
@@ -516,7 +711,8 @@ export const OntologyName = S.String.check(
     $I.annoteSchema("OntologyName", {
       description:
         "Lowercase ontology name beginning with a letter and containing letters, digits, hyphens, or underscores.",
-    })
+    }),
+    SchemaUtils.withCodecStatics
   );
 
 /**
@@ -524,7 +720,7 @@ export const OntologyName = S.String.check(
  *
  * @example
  * ```ts
- * import { OntologyName, type OntologyName as OntologyNameValue } from "./Models.ts"
+ * import { OntologyName, type OntologyName as OntologyNameValue } from "@effect-ontology/Identity.ts"
  *
  * const name: OntologyNameValue = OntologyName.make("patent_claims-v2")
  * console.log(name)
@@ -541,21 +737,21 @@ export type OntologyName = typeof OntologyName.Type;
  * @remarks
  * The component schemas remain the source of truth: namespace and ontology
  * naming rules come from {@link Namespace} and {@link OntologyName}, while the
- * version fingerprint uses the 64-bit truncated {@link ContentHash}.
+ * version fingerprint uses the complete {@link ContentHash}.
  *
  * @example
  * ```ts
  * import * as S from "effect/Schema"
- * import { OntologyVersion } from "./Models.ts"
+ * import { OntologyVersion } from "@effect-ontology/Identity.ts"
  *
  * const result = S.decodeUnknownResult(OntologyVersion)(
- *   "legal/patent_claims@deadbeefdeadbeef"
+ *   "legal/patent_claims@e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * )
  * console.log(result._tag) // "Success"
  * ```
  *
- * @invariant Contains a valid namespace, ontology name, and 16-character
- * content-hash prefix separated as `namespace/name@hash`.
+ * @invariant Contains a valid namespace, ontology name, and complete SHA-256
+ * content identity separated as `namespace/name@hash`.
  * @category validation
  * @since 0.0.0
  */
@@ -569,10 +765,13 @@ export const OntologyVersion = S.TemplateLiteral([Namespace, "/", OntologyName, 
   S.brand("OntologyVersion"),
   $I.annoteSchema("OntologyVersion", {
     description:
-      "Ontology version identifier composed from a namespace, ontology name, and truncated SHA-256 content fingerprint.",
-    documentation:
-      "The 16-character content fingerprint is collision-sensitive and should not replace a full digest where collision resistance is required.",
-  })
+      "Ontology version identifier composed from a namespace, ontology name, and complete SHA-256 content identity.",
+  }),
+  SchemaUtils.withCodecStatics,
+  SchemaUtils.withStatics((schema) => ({
+    fromParts: (namespace: Namespace, name: OntologyName, hash: ContentHash): typeof schema.Type =>
+      schema.make(`${namespace}/${name}@${hash}`),
+  }))
 );
 
 /**
@@ -580,10 +779,10 @@ export const OntologyVersion = S.TemplateLiteral([Namespace, "/", OntologyName, 
  *
  * @example
  * ```ts
- * import { OntologyVersion, type OntologyVersion as OntologyVersionValue } from "./Models.ts"
+ * import { OntologyVersion, type OntologyVersion as OntologyVersionValue } from "@effect-ontology/Identity.ts"
  *
  * const version: OntologyVersionValue = OntologyVersion.make(
- *   "legal/patent_claims@deadbeefdeadbeef"
+ *   "legal/patent_claims@e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
  * )
  * console.log(version)
  * ```
@@ -603,12 +802,10 @@ export type OntologyVersion = typeof OntologyVersion.Type;
  *
  * @example
  * ```ts
- * import * as S from "effect/Schema"
- * import { DocumentId } from "./Models.ts"
+ * import { DocumentId } from "@effect-ontology/Identity.ts"
  *
- * const isDocumentId = S.is(DocumentId)
- * console.log(isDocumentId("doc-deadbeefcafe")) // true
- * console.log(isDocumentId("doc-DEADBEEFCAFE")) // false
+ * console.log(DocumentId.is("doc-deadbeefcafe")) // true
+ * console.log(DocumentId.is("doc-DEADBEEFCAFE")) // false
  * ```
  *
  * @invariant Uses the `doc-` prefix followed by exactly 12 lowercase
@@ -633,7 +830,11 @@ export const DocumentId = S.String.check(
       description: "Deterministic document identifier derived from the first 12 characters of a content hash.",
       documentation:
         "The 48-bit truncated suffix is compact but collision-sensitive; consumers must define collision handling.",
-    })
+    }),
+    SchemaUtils.withCodecStatics,
+    SchemaUtils.withStatics((schema) => ({
+      fromContentHash: (hash: ContentHash): typeof schema.Type => schema.make(`doc-${Str.takeLeft(12)(hash)}`),
+    }))
   );
 
 /**
@@ -641,7 +842,7 @@ export const DocumentId = S.String.check(
  *
  * @example
  * ```ts
- * import { DocumentId, type DocumentId as DocumentIdValue } from "./Models.ts"
+ * import { DocumentId, type DocumentId as DocumentIdValue } from "@effect-ontology/Identity.ts"
  *
  * const id: DocumentIdValue = DocumentId.make("doc-deadbeefcafe")
  * console.log(id)
@@ -653,33 +854,14 @@ export const DocumentId = S.String.check(
 export type DocumentId = typeof DocumentId.Type;
 
 /**
- * Derives a deterministic {@link DocumentId} from a validated content hash.
- *
- * @example
- * ```ts
- * import { ContentHash, documentIdFromHash } from "./Models.ts"
- *
- * const id = documentIdFromHash(ContentHash.make("deadbeefcafe1234"))
- * console.log(id) // "doc-deadbeefcafe"
- * ```
- *
- * @category constructors
- * @since 0.0.0
- */
-export const documentIdFromHash = (hash: ContentHash): DocumentId =>
-  DocumentId.make(`doc-${Str.takeLeft(12)(hash)}`);
-
-/**
  * Branded chunk identifier combining a document identifier and canonical index.
  *
  * @example
  * ```ts
- * import * as S from "effect/Schema"
- * import { ChunkId } from "./Models.ts"
+ * import { ChunkId } from "@effect-ontology/Identity.ts"
  *
- * const isChunkId = S.is(ChunkId)
- * console.log(isChunkId("doc-deadbeefcafe-chunk-0")) // true
- * console.log(isChunkId("doc-deadbeefcafe-chunk-01")) // false
+ * console.log(ChunkId.is("doc-deadbeefcafe-chunk-0")) // true
+ * console.log(ChunkId.is("doc-deadbeefcafe-chunk-01")) // false
  * ```
  *
  * @invariant Uses a valid document identifier followed by `-chunk-` and a
@@ -691,10 +873,8 @@ export const ChunkId = S.String.check(
   S.isPattern(chunkIdPattern, {
     identifier: $I`ChunkIdPatternCheck`,
     title: "Chunk Identifier",
-    description:
-      "A document-derived chunk identifier with a canonical non-negative decimal chunk index.",
-    message:
-      "Chunk ID must use doc-<12-lowercase-hex>-chunk-<canonical-non-negative-index> form.",
+    description: "A document-derived chunk identifier with a canonical non-negative decimal chunk index.",
+    message: "Chunk ID must use doc-<12-lowercase-hex>-chunk-<canonical-non-negative-index> form.",
   })
 )
   .annotate({
@@ -705,7 +885,13 @@ export const ChunkId = S.String.check(
     $I.annoteSchema("ChunkId", {
       description:
         "Deterministic chunk identifier combining a 12-character document fingerprint and canonical chunk index.",
-    })
+    }),
+    SchemaUtils.withCodecStatics,
+    SchemaUtils.withStatics((schema) => ({
+      fromDocument: dual(2, (documentId: DocumentId, index: NonNegativeInt): typeof schema.Type =>
+        schema.make(`${documentId}-chunk-${index}`)
+      ),
+    }))
   );
 
 /**
@@ -713,7 +899,7 @@ export const ChunkId = S.String.check(
  *
  * @example
  * ```ts
- * import { ChunkId, type ChunkId as ChunkIdValue } from "./Models.ts"
+ * import { ChunkId, type ChunkId as ChunkIdValue } from "@effect-ontology/Identity.ts"
  *
  * const id: ChunkIdValue = ChunkId.make("doc-deadbeefcafe-chunk-0")
  * console.log(id)
@@ -733,7 +919,7 @@ export type ChunkId = typeof ChunkId.Type;
  *
  * @example
  * ```ts
- * import { ExtractionRunId } from "./Models.ts"
+ * import { ExtractionRunId } from "@effect-ontology/Identity.ts"
  *
  * const runId = ExtractionRunId.make("doc-deadbeefcafe")
  * console.log(runId)
@@ -747,7 +933,8 @@ export const ExtractionRunId = DocumentId.annotate({
 }).pipe(
   $I.annoteSchema("ExtractionRunId", {
     description: "Document identifier reused as the correlation identifier for its extraction run.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -755,7 +942,7 @@ export const ExtractionRunId = DocumentId.annotate({
  *
  * @example
  * ```ts
- * import { ExtractionRunId, type ExtractionRunId as ExtractionRunIdValue } from "./Models.ts"
+ * import { ExtractionRunId, type ExtractionRunId as ExtractionRunIdValue } from "@effect-ontology/Identity.ts"
  *
  * const runId: ExtractionRunIdValue = ExtractionRunId.make("doc-deadbeefcafe")
  * console.log(runId)
@@ -771,12 +958,10 @@ export type ExtractionRunId = typeof ExtractionRunId.Type;
  *
  * @example
  * ```ts
- * import * as S from "effect/Schema"
- * import { BatchId } from "./Models.ts"
+ * import { BatchId } from "@effect-ontology/Identity.ts"
  *
- * const isBatchId = S.is(BatchId)
- * console.log(isBatchId("batch-deadbeefcafe")) // true
- * console.log(isBatchId("batch-short")) // false
+ * console.log(BatchId.is("batch-deadbeefcafe")) // true
+ * console.log(BatchId.is("batch-short")) // false
  * ```
  *
  * @invariant Uses the `batch-` prefix followed by exactly 12 lowercase
@@ -801,7 +986,11 @@ export const BatchId = S.String.check(
       description: "Deterministic batch identifier represented by a batch- prefix and 12-character fingerprint.",
       documentation:
         "The 48-bit truncated suffix is compact but collision-sensitive; consumers must define collision handling.",
-    })
+    }),
+    SchemaUtils.withCodecStatics,
+    SchemaUtils.withStatics((schema) => ({
+      fromContentHash: (hash: ContentHash): typeof schema.Type => schema.make(`batch-${Str.takeLeft(12)(hash)}`),
+    }))
   );
 
 /**
@@ -809,7 +998,7 @@ export const BatchId = S.String.check(
  *
  * @example
  * ```ts
- * import { BatchId, type BatchId as BatchIdValue } from "./Models.ts"
+ * import { BatchId, type BatchId as BatchIdValue } from "@effect-ontology/Identity.ts"
  *
  * const id: BatchIdValue = BatchId.make("batch-deadbeefcafe")
  * console.log(id)
@@ -819,59 +1008,3 @@ export const BatchId = S.String.check(
  * @since 0.0.0
  */
 export type BatchId = typeof BatchId.Type;
-
-/**
- * Constructs a {@link GcsUri} from validated bucket and canonical object path.
- *
- * @example
- * ```ts
- * import { GcsBucket, GcsObject, toGcsUri } from "./Models.ts"
- *
- * const uri = toGcsUri(
- *   GcsBucket.make("beep-ontology-state"),
- *   GcsObject.make("snapshots/ontology-v1.ttl")
- * )
- * console.log(uri) // "gs://beep-ontology-state/snapshots/ontology-v1.ttl"
- * ```
- *
- * @category constructors
- * @since 0.0.0
- */
-export const toGcsUri: {
-  (objectPath: GcsObject): (bucket: GcsBucket) => GcsUri;
-  (bucket: GcsBucket, objectPath: GcsObject): GcsUri;
-} = dual(2, (bucket: GcsBucket, objectPath: GcsObject): GcsUri =>
-  GcsUri.make(`gs://${bucket}/${objectPath}`)
-);
-
-const isGcsUri = S.is(GcsUri);
-
-/**
- * Resolves a validated GCS object path or existing URI to a {@link GcsUri}.
- *
- * @remarks
- * Existing URIs are returned unchanged. Canonical object paths are combined
- * with the supplied bucket. Raw external strings must be decoded with
- * {@link GcsUri} or {@link GcsObject} before calling this helper.
- *
- * @example
- * ```ts
- * import { GcsBucket, GcsObject, GcsUri, resolveToGcsUri } from "./Models.ts"
- *
- * const bucket = GcsBucket.make("beep-ontology-state")
- * const existing = GcsUri.make("gs://other-bucket/snapshots/v1.ttl")
- * const objectPath = GcsObject.make("snapshots/v2.ttl")
- *
- * console.log(resolveToGcsUri(existing, bucket)) // existing URI
- * console.log(resolveToGcsUri(objectPath, bucket)) // URI in beep-ontology-state
- * ```
- *
- * @category normalization
- * @since 0.0.0
- */
-export const resolveToGcsUri: {
-  (bucket: GcsBucket): (storagePath: GcsUri | GcsObject) => GcsUri;
-  (storagePath: GcsUri | GcsObject, bucket: GcsBucket): GcsUri;
-} = dual(2, (storagePath: GcsUri | GcsObject, bucket: GcsBucket): GcsUri =>
-  isGcsUri(storagePath) ? storagePath : toGcsUri(bucket, storagePath)
-);

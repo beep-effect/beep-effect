@@ -2428,6 +2428,7 @@
         "@beep/md": "workspace:^",
         "@beep/ontology": "workspace:^",
         "@beep/pretext": "workspace:^",
+        "@beep/rdf": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
