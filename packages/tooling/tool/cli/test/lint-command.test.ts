@@ -2,6 +2,7 @@ import { lintCommand } from "@beep/repo-cli";
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { provideScopedLayer } from "@beep/test-utils";
+import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as S from "effect/Schema";
@@ -1035,5 +1036,219 @@ describe("package test import lint command", { concurrent: false }, () => {
         ).pipe(provideScopedLayer(testLayer))
       ),
     5_000
+  );
+});
+
+const BASELINE_FILE = "baseline.jsonc";
+
+const blindSpotBaselineText = (input: {
+  readonly findings: ReadonlyArray<{
+    readonly package: string;
+    readonly directory: string;
+    readonly kind: string;
+  }>;
+  readonly notes?: Readonly<Record<string, string>>;
+}): string =>
+  `${encodeJson({
+    schema_version: 1,
+    command: "bun run beep lint package-test-typecheck",
+    regeneration_command: "bun run beep lint package-test-typecheck --write-baseline",
+    comparison: "fail-on-growth: every blind-spot package must already be listed in the committed baseline",
+    new_package_handling: "New packages are compliant by construction.",
+    notes: input.notes ?? {},
+    check: {
+      total_findings: A.length(input.findings),
+      missing_test_tsconfig: A.length(A.filter(input.findings, (f) => f.kind === "missing-test-tsconfig")),
+      unwired_test_tsconfig: A.length(A.filter(input.findings, (f) => f.kind === "unwired-test-tsconfig")),
+    },
+    findings: input.findings,
+  })}\n`;
+
+const writeTestTypecheckPackage = Effect.fn("writeTestTypecheckPackage")(function* (input: {
+  readonly directory: string;
+  readonly name: string;
+  readonly scripts: Readonly<Record<string, string>>;
+  readonly tsconfigs: ReadonlyArray<{ readonly fileName: string; readonly include: ReadonlyArray<string> }>;
+}) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+
+  yield* fs.makeDirectory(path.join(input.directory, "src"), { recursive: true });
+  yield* fs.makeDirectory(path.join(input.directory, "test"), { recursive: true });
+  yield* fs.writeFileString(
+    path.join(input.directory, "package.json"),
+    `${encodeJson({ name: input.name, version: "0.0.0", type: "module", scripts: input.scripts })}\n`
+  );
+  yield* fs.writeFileString(path.join(input.directory, "src", "index.ts"), "export const example = 1;\n");
+  yield* fs.writeFileString(
+    path.join(input.directory, "test", "Example.test.ts"),
+    'import { example } from "@beep/example";\nvoid example;\n'
+  );
+
+  yield* Effect.forEach(
+    input.tsconfigs,
+    Effect.fnUntraced(function* (config) {
+      yield* fs.writeFileString(
+        path.join(input.directory, config.fileName),
+        `${encodeJson({ include: config.include })}\n`
+      );
+    })
+  );
+});
+
+describe("package test-typecheck lint command", { concurrent: false }, () => {
+  it(
+    "reports a package whose check script never typechecks its test sources",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: { check: "bun run beep:check", "beep:check": "tsgo -b tsconfig.json" },
+              tsconfigs: [{ fileName: "tsconfig.json", include: ["src"] }],
+            });
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            const exit = yield* Effect.exit(runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]));
+
+            const errorLines = yield* TestConsole.errorLines;
+            expectReportedExit(exit);
+            expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [missing-test-tsconfig]");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "accepts a package whose check script transitively runs a test-covering project",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: {
+                check: "bun run beep:check",
+                "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+                "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+              },
+              tsconfigs: [
+                { fileName: "tsconfig.json", include: ["src"] },
+                { fileName: "tsconfig.test.json", include: ["src", "test"] },
+              ],
+            });
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            yield* runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]);
+
+            const logLines = yield* TestConsole.logLines;
+            expect(logLines).toEqual(["[package-test-typecheck] ok: current=0 baseline=0 introduced=0"]);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "reports a test-covering project the check script never runs",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: {
+                check: "bun run beep:check",
+                "beep:check": "tsgo -b tsconfig.json",
+                "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+              },
+              tsconfigs: [
+                { fileName: "tsconfig.json", include: ["src"] },
+                { fileName: "tsconfig.test.json", include: ["src", "test"] },
+              ],
+            });
+            yield* fs.writeFileString(BASELINE_FILE, blindSpotBaselineText({ findings: [] }));
+
+            const exit = yield* Effect.exit(runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]));
+
+            const errorLines = yield* TestConsole.errorLines;
+            expectReportedExit(exit);
+            expect(errorLines.join("\n")).toContain("  - @beep/example (packages/example) [unwired-test-tsconfig]");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "treats a baselined blind spot as green",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: { check: "bun run beep:check", "beep:check": "tsgo -b tsconfig.json" },
+              tsconfigs: [{ fileName: "tsconfig.json", include: ["src"] }],
+            });
+            yield* fs.writeFileString(
+              BASELINE_FILE,
+              blindSpotBaselineText({
+                findings: [{ package: "@beep/example", directory: "packages/example", kind: "missing-test-tsconfig" }],
+              })
+            );
+
+            yield* runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE]);
+
+            const logLines = yield* TestConsole.logLines;
+            expect(logLines).toEqual(["[package-test-typecheck] ok: current=1 baseline=1 introduced=0"]);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
+  );
+
+  it(
+    "preserves hand-authored notes when rewriting the baseline",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+
+            yield* writeTestTypecheckPackage({
+              directory: "packages/example",
+              name: "@beep/example",
+              scripts: { check: "bun run beep:check", "beep:check": "tsgo -b tsconfig.json" },
+              tsconfigs: [{ fileName: "tsconfig.json", include: ["src"] }],
+            });
+            yield* fs.writeFileString(
+              BASELINE_FILE,
+              blindSpotBaselineText({ findings: [], notes: { "@beep/example": "Deferred deliberately." } })
+            );
+
+            yield* runLintCommand(["package-test-typecheck", "--baseline", BASELINE_FILE, "--write-baseline"]);
+
+            const rewritten = yield* fs.readFileString(BASELINE_FILE);
+            expect(rewritten).toContain('"@beep/example": "Deferred deliberately."');
+            expect(rewritten).toContain('"kind": "missing-test-tsconfig"');
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    15_000
   );
 });
