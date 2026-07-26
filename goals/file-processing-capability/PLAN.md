@@ -117,7 +117,11 @@ Stop Conditions:
 
 ## P2: Tika Driver
 
-Status: pending
+Status: complete (2026-07-26) — Tika Server HTTP engine (`Tika.server.ts`) with
+typed config (`BEEP_TIKA_*`), shared response/error-translation role files,
+`output-budget` reason, stubbed-HTTP proof across all 12 declared families, and
+an opt-in `BEEP_TEST_TIKA_URL` live lane. Live doc/docx binary calibration is
+deferred to P5 per the P2 design contract.
 
 Goal: Complete `@beep/tika` as the broad extraction driver for corpus-core text
 and metadata after the P1 vertical proof exists.

@@ -5,7 +5,7 @@
     "title": "File Processing Capability",
     "status": "active",
     "created": "2026-06-02",
-    "updated": "2026-07-14",
+    "updated": "2026-07-26",
     "packetAnchorDocument": "SPEC.md"
   },
   "mission": "Define and implement a product-neutral schema-first file processing capability with driver-backed extraction and repo CLI proof.",
@@ -267,8 +267,8 @@
     {
       "id": "P2",
       "name": "Tika Driver Completion",
-      "status": "pending",
-      "exitCriteriaSummary": "@beep/tika implements broad extraction and metadata capabilities for all non-PST V1 formats, including HTML."
+      "status": "complete",
+      "exitCriteriaSummary": "@beep/tika implements broad extraction and metadata capabilities for all non-PST V1 formats, including HTML; Tika Server HTTP engine, shared error translation, and stubbed-HTTP proof landed 2026-07-26 (live doc/docx calibration deferred to P5 per the P2 design contract)."
     },
     {
       "id": "P3",
