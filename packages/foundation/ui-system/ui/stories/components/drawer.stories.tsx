@@ -96,10 +96,12 @@ export const Default: Story = {
     const canvas = within(canvasElement);
     const trigger = canvas.getByRole("button", { name: "Open drawer" });
     expect(trigger).toBeVisible();
-    return userEvent.click(trigger).then(() => {
-      expect(screen.getByText("Edit profile")).toBeVisible();
-      expect(args.onOpenChange).toHaveBeenCalled();
-    });
+    return userEvent.click(trigger).then(() =>
+      waitFor(() => {
+        expect(screen.getByText("Edit profile")).toBeVisible();
+        expect(args.onOpenChange).toHaveBeenCalled();
+      })
+    );
   },
 };
 
@@ -129,10 +131,7 @@ export const DefaultOpen: Story = {
       </DrawerContent>
     </Drawer>
   ),
-  play: () => {
-    expect(screen.getByText("Welcome aboard")).toBeVisible();
-    return Promise.resolve();
-  },
+  play: () => waitFor(() => expect(screen.getByText("Welcome aboard")).toBeVisible()),
 };
 
 /**
@@ -162,9 +161,9 @@ export const RightSide: Story = {
   ),
   play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    return userEvent.click(canvas.getByRole("button", { name: "Open panel" })).then(() => {
-      expect(screen.getByText("Filters")).toBeVisible();
-    });
+    return userEvent
+      .click(canvas.getByRole("button", { name: "Open panel" }))
+      .then(() => waitFor(() => expect(screen.getByText("Filters")).toBeVisible()));
   },
 };
 
@@ -249,10 +248,8 @@ export const Closing: Story = {
     const canvas = within(canvasElement);
     return userEvent
       .click(canvas.getByRole("button", { name: "Open drawer" }))
-      .then(() => {
-        expect(screen.getByText("Session expiring")).toBeVisible();
-        return userEvent.click(screen.getByRole("button", { name: "Cancel" }));
-      })
+      .then(() => waitFor(() => expect(screen.getByText("Session expiring")).toBeVisible()))
+      .then(() => userEvent.click(screen.getByRole("button", { name: "Cancel" })))
       .then(() =>
         waitFor(() => {
           expect(screen.queryByText("Session expiring")).toBeNull();
@@ -293,9 +290,9 @@ export const Destructive: Story = {
   ),
   play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    return userEvent.click(canvas.getByRole("button", { name: "Delete account" })).then(() => {
-      expect(screen.getByRole("button", { name: "Delete" })).toBeVisible();
-    });
+    return userEvent
+      .click(canvas.getByRole("button", { name: "Delete account" }))
+      .then(() => waitFor(() => expect(screen.getByRole("button", { name: "Delete" })).toBeVisible()));
   },
 };
 
@@ -329,11 +326,11 @@ export const NonDismissible: Story = {
     const canvas = within(canvasElement);
     return userEvent
       .click(canvas.getByRole("button", { name: "Open drawer" }))
+      .then(() => waitFor(() => expect(screen.getByText("Action required")).toBeVisible()))
+      .then(() => userEvent.keyboard("{Escape}"))
       .then(() => {
-        expect(screen.getByText("Action required")).toBeVisible();
-        return userEvent.keyboard("{Escape}");
-      })
-      .then(() => {
+        // Asserted synchronously on purpose: the drawer must NOT close, so a
+        // retrying waitFor would mask a drawer that closes and reopens.
         expect(screen.getByText("Action required")).toBeVisible();
       });
   },

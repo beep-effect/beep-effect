@@ -1066,6 +1066,7 @@ const rootRepoLintPolicySteps = (repoRoot: string): ReadonlyArray<QualityTaskSte
   repoCliStep(repoRoot, "lint:effect-imports", ["laws", "effect-imports", "--check"]),
   repoCliStep(repoRoot, "lint:terse-effect", ["laws", "terse-effect", "--check"]),
   repoCliStep(repoRoot, "lint:effect-fn", ["laws", "effect-fn", "--check"]),
+  repoCliStep(repoRoot, "lint:frozen-grant-set", ["laws", "frozen-grant-set", "--check"]),
   repoCliStep(repoRoot, "lint:native-runtime", ["laws", "native-runtime", "--check"]),
   repoCliStep(repoRoot, "lint:dual-arity", ["laws", "dual-arity", "--check"]),
   repoCliStep(repoRoot, "lint:allowlist", ["laws", "allowlist-check"]),

@@ -1,6 +1,6 @@
 import { Form, makeFormOptions, useAppForm } from "@beep/form";
 import * as S from "effect/Schema";
-import { expect, screen, userEvent, within } from "storybook/test";
+import { expect, screen, userEvent, waitFor, within } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const Schema = S.Struct({ emoji: S.String });
@@ -32,8 +32,8 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    return userEvent.click(canvas.getByRole("button", { name: /select emoji/i })).then(() => {
-      expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument();
-    });
+    return userEvent
+      .click(canvas.getByRole("button", { name: /select emoji/i }))
+      .then(() => waitFor(() => expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument()));
   },
 };

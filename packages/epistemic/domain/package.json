@@ -46,7 +46,13 @@
     "./values/EdgeRelation": "./src/values/EdgeRelation/index.ts",
     "./values/EpistemicFixtureKey": "./src/values/EpistemicFixtureKey/index.ts",
     "./values/EvidenceSpan": "./src/values/EvidenceSpan/index.ts",
+    "./values/ExecutionGrant": "./src/values/ExecutionGrant/index.ts",
+    "./values/ExecutionRecord": "./src/values/ExecutionRecord/index.ts",
+    "./values/ExecutionVerdict": "./src/values/ExecutionVerdict/index.ts",
+    "./values/GrantSet": "./src/values/GrantSet/index.ts",
     "./values/LogicalEdgeIdentity": "./src/values/LogicalEdgeIdentity/index.ts",
+    "./internal/*": null,
+    "./values/internal/*": null,
     "./package.json": "./package.json"
   },
   "files": [
