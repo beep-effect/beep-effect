@@ -150,6 +150,23 @@ describe("TikaServerEngineConfig", () => {
     expect(Result.isFailure(withFragment)).toBe(true);
     expect(Result.isSuccess(S.decodeUnknownResult(TikaServerEngineConfig)({ baseUrl: TIKA_SERVER_URL }))).toBe(true);
   });
+
+  it("accepts http and https base URLs", () => {
+    expect(decode(TikaServerEngineConfig, { baseUrl: "http://tika.internal:9998" }).baseUrl).toBe(
+      "http://tika.internal:9998"
+    );
+    expect(decode(TikaServerEngineConfig, { baseUrl: "https://tika.internal/api" }).baseUrl).toBe(
+      "https://tika.internal/api"
+    );
+  });
+
+  it("rejects base URLs that are not http or https", () => {
+    // "A:/" is the counterexample the round-trip property surfaced: stripping
+    // its trailing slash changed the URL's identity because it is opaque.
+    for (const baseUrl of ["ftp://tika.internal", "file:///tmp/tika", "A:/"]) {
+      expect(Result.isFailure(S.decodeUnknownResult(TikaServerEngineConfig)({ baseUrl }))).toBe(true);
+    }
+  });
 });
 
 describe("makeTikaServerFileProcessingEngine", () => {

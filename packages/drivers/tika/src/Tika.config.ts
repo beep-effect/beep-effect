@@ -7,7 +7,7 @@
 
 import { $TikaId } from "@beep/identity";
 import { PosInt, SchemaUtils, URLStr } from "@beep/schema";
-import { Str } from "@beep/utils";
+import { A, Str } from "@beep/utils";
 import { SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 
@@ -15,16 +15,30 @@ const $I = $TikaId.create("Tika.config");
 
 const defaultTimeoutMillis = 120_000;
 const trailingSlashPattern = /\/+$/u;
+const httpProtocols = ["http:", "https:"];
 
 const carriesQueryOrFragment = (url: string): boolean => {
   const parsed = new URL(url);
   return Str.isNonEmpty(parsed.search) || Str.isNonEmpty(parsed.hash);
 };
 
+const hasHttpProtocol = (url: string): boolean => A.contains(httpProtocols, new URL(url).protocol);
+
 // Endpoint paths are appended verbatim (`${baseUrl}/rmeta/text`), so a trailing
 // slash would yield `//rmeta/text` and a query or fragment would swallow the
 // endpoint path entirely. Normalize the former, reject the latter.
+//
+// The scheme is restricted to http(s) because Tika Server is reached over HTTP
+// (SPEC "Tika Server over HTTP"); it also keeps trailing-slash stripping
+// identity-preserving, which is not true of opaque URLs such as `A:/`.
 const TikaServerBaseUrl = URLStr.pipe(
+  S.check(
+    S.makeFilter((url: string) => (hasHttpProtocol(url) ? true : "must use the http or https scheme"), {
+      identifier: $I`TikaServerBaseUrlProtocolCheck`,
+      title: "Tika Server Base URL Protocol",
+      description: "Checks that the Tika Server base URL uses the http or https scheme.",
+    })
+  ),
   S.check(
     S.makeFilter((url: string) => (carriesQueryOrFragment(url) ? "must not carry a query string or fragment" : true), {
       identifier: $I`TikaServerBaseUrlEndpointCheck`,
@@ -35,6 +49,25 @@ const TikaServerBaseUrl = URLStr.pipe(
   S.decode({
     decode: SchemaGetter.transform((url: URLStr) => URLStr.make(Str.replace(trailingSlashPattern, "")(url))),
     encode: SchemaGetter.passthrough(),
+  }),
+  $I.annoteSchema("TikaServerBaseUrl", {
+    description: "Tika Server base URL: http(s) only, no trailing slash, no query string, and no fragment.",
+    // Generated from components so every value is already normalized. Filtering
+    // URLStr's arbitrary would reject nearly everything it produces.
+    toArbitrary: () => (fc) =>
+      fc
+        .tuple(
+          fc.constantFrom("http", "https"),
+          fc.stringMatching(/^[a-z][a-z0-9-]{0,15}(?:\.[a-z][a-z0-9-]{0,15}){0,2}$/),
+          fc.oneof(
+            fc.constant(""),
+            fc.integer({ min: 1, max: 65_535 }).map((port) => `:${port}`)
+          ),
+          fc
+            .array(fc.stringMatching(/^[a-z0-9][a-z0-9-]{0,10}$/), { maxLength: 3 })
+            .map((segments) => (A.isReadonlyArrayEmpty(segments) ? "" : `/${A.join(segments, "/")}`))
+        )
+        .map(([scheme, host, port, path]) => URLStr.make(`${scheme}://${host}${port}${path}`)),
   })
 );
 
