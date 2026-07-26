@@ -3,6 +3,7 @@ import {
   assembleCourtsData,
   assertPinnedArchive,
   decodeReportersDbSourceData,
+  extractArchiveTextEntries,
   fetchSource,
   formatJson,
   formatTsDocCommentValue,
@@ -27,6 +28,7 @@ import { Cause, ConfigProvider, Effect, Exit, FileSystem, Layer, Path, Runtime }
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/unstable/http";
+import { create as createTar } from "tar";
 import type { SyncDataTarget } from "@beep/repo-cli/test/SyncDataToTs";
 
 const provideScopedLayer =
@@ -44,6 +46,16 @@ const csvCanonicalOutputPath = "packages/foundation/primitive/data/src/generated
 const csvFixtureSourceUrl = "https://example.com/test.csv" as const;
 const iso3166Part1FixtureSourceUrl = "https://private.example.test/iso3166-1.csv" as const;
 const iso3166Part2FixtureSourceUrl = "https://private.example.test/iso3166-2.csv" as const;
+
+const makeFixtureTar = Effect.fn("SyncDataToTsTest.makeFixtureTar")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-sync-data-tar-" });
+  const archivePath = path.join(root, "fixture.tar");
+  yield* fs.writeFileString(path.join(root, "fixture.txt"), "fixture");
+  yield* Effect.sync(() => createTar({ cwd: root, file: archivePath, sync: true }, ["fixture.txt"]));
+  return yield* fs.readFile(archivePath);
+});
 
 const expectReportedExit = (exit: Exit.Exit<unknown, unknown>, exitCode = 1) => {
   expect(Exit.isFailure(exit)).toBe(true);
@@ -346,6 +358,55 @@ describe("sync-data-to-ts", { concurrent: false }, () => {
       });
       expect(error.message).toContain("SHA-256 mismatch");
     })
+  );
+
+  it.effect(
+    "accepts Free Law Project archives that match the pinned digest",
+    Effect.fnUntraced(function* () {
+      const source = SyncDataFetchedSource.make({
+        bytes: new Uint8Array(),
+        id: "fixture-archive",
+        sha256: "expected",
+        text: "",
+        url: "https://example.test/archive.tar.gz",
+      });
+
+      expect(
+        yield* assertPinnedArchive({
+          expectedSha256: "expected",
+          source,
+          targetId: "fixture-target",
+        })
+      ).toBe(source);
+    })
+  );
+
+  it.effect(
+    "extracts an empty selection from a tar archive",
+    Effect.fnUntraced(function* () {
+      const bytes = yield* makeFixtureTar();
+      const entries = yield* extractArchiveTextEntries({
+        bytes,
+        pathSuffixes: [],
+        targetId: "fixture-target",
+      });
+
+      expect(entries).toEqual({});
+    }, provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect(
+    "reports required entries missing from a tar archive",
+    Effect.fnUntraced(function* () {
+      const bytes = yield* makeFixtureTar();
+      const error = yield* extractArchiveTextEntries({
+        bytes,
+        pathSuffixes: ["/missing.txt"],
+        targetId: "fixture-target",
+      }).pipe(Effect.flip);
+
+      expect(error.message).toContain("Archive is missing required entries: /missing.txt.");
+    }, provideScopedLayer(NodeServices.layer))
   );
 
   it.effect(

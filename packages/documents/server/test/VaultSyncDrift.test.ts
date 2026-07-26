@@ -247,4 +247,25 @@ describe("@beep/documents-server VaultSyncEngine drift detection", () => {
       expect(positions).toEqual([O.none(), O.some(storedCursor.streamPosition)]);
     }, provideScopedLayer(SyncDriftTestLayer))
   );
+
+  it.effect(
+    "records a remote poll failure on the durable cursor without failing the sync pass",
+    Effect.fnUntraced(function* () {
+      const cursorRepository = yield* SyncCursorRepository;
+      const handle = yield* DmsMirrorFixtureHandle;
+      const root = yield* makeVaultRoot();
+      const engine = yield* makeVaultSyncEngine();
+
+      yield* engine.syncOnce(syncInput(root));
+      yield* handle.failNext("pollEvents", false);
+      yield* engine.syncOnce(syncInput(root));
+
+      const cursor = yield* cursorRepository
+        .find(FindSyncCursorInput.make({ provider: "box", workspaceId }))
+        .pipe(Effect.flatMap(Effect.fromOption));
+
+      expect(cursor.status).toBe("error");
+      expect(cursor.lastError).toEqual(O.some("fixture injected pollEvents failure"));
+    }, provideScopedLayer(SyncDriftTestLayer))
+  );
 });

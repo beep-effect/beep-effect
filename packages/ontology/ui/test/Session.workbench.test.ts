@@ -4,7 +4,7 @@ import {
   graphPartitionIri,
   SessionId,
 } from "@beep/ontology-domain/aggregates/Session";
-import { ontologyTreeItemsFor } from "@beep/ontology-ui/aggregates/Session/tree";
+import { ontologyTreeItemsFor, valueFromEvent } from "@beep/ontology-ui/aggregates/Session";
 import {
   buildOntologySnapshotWithInference,
   InferOntologySessionInput,
@@ -19,6 +19,7 @@ import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, pipe } from "effect";
 import * as S from "effect/Schema";
+import type { ChangeEvent } from "react";
 
 const sessionId = S.decodeUnknownSync(SessionId)("session-1");
 
@@ -39,6 +40,12 @@ const collectTreeItemIds = (items: ReadonlyArray<TreeItem>): ReadonlyArray<strin
   );
 
 describe("OntologyWorkbench hierarchy", () => {
+  it("extracts the current form value from React change events", () => {
+    const event = { target: { value: "https://example.org/pizza#Pizza" } } as ChangeEvent<HTMLInputElement>;
+
+    expect(valueFromEvent(event)).toBe("https://example.org/pizza#Pizza");
+  });
+
   it.effect(
     "renders inferred transitive subclass closure as unique tree item ids",
     Effect.fnUntraced(function* () {
