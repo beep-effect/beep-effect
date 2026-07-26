@@ -1,4 +1,13 @@
 #!/usr/bin/bash
+# ARCHIVED SPIKE EVIDENCE — inert guard added at commit time (2026-07-26).
+# This prototype produced the transcripts in NOTES.md and is retained as-run
+# below this guard. It is NOT the applicator and must not be executed: review
+# identified two defects (unchecked identity parse; no mid-apply rollback)
+# that are recorded as P1 applicator-contract requirements in the packet
+# README rather than patched into the historical record.
+echo "archived spike evidence: refusing to run; see NOTES.md and the packet README" >&2
+exit 64
+# ---------------------------------------------------------------------------
 # OpenClaw P0 Spike 2 — model of the workstation-local applicator.
 #
 # Models the SPEC "applicator contract + identity binding" decision:

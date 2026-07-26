@@ -472,3 +472,13 @@ a stable machine-identity digest is both a fingerprinting surface and a
 secret-scanner entropy trigger. The deliberately zeroed digest used by the
 negative identity lane is retained verbatim. Unredacted evidence remains in the
 operator-local backup (`~/.local/share/beep-spike-evidence/spike-2/`).
+
+## Inert-guard note (added at commit time)
+
+Review flagged that the committed harness is executable while carrying two
+known prototype defects (unchecked identity parse; no mid-apply rollback —
+both recorded as P1 applicator-contract requirements in the packet README).
+`applicator.sh` therefore carries a commit-time inert guard: it prints a
+refusal and exits 64 before any run-produced line executes. The body below the
+guard is byte-identical to the script that produced these transcripts; the
+unguarded original remains in the operator-local backup.
