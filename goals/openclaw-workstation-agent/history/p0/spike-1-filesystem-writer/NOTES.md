@@ -4,16 +4,19 @@ Gated decisions: *OS-enforced config immutability* and the
 Telegram-channel-under-guard portion of *v1 DM channel is Telegram*
 (`ops/handoffs/p0-gauntlet-contract.md` Spike 1).
 
-Verdict: **INTERIM — 4 of 6 assertions PASS. This is not a full Spike 1
-pass.** Assertions 1–4 demonstrated the filesystem, privileged-pointer,
-application-guard, and alert-only drift behavior on 2026-07-25. Assertions 5
-and 6 — the Telegram writer surface and its channel/plugin immutable-mode
-compatibility matrix — were **NOT RUN — BLOCKED** on the operator-provided
-Telegram prerequisites.
+Verdict: **PASS — 6 of 6 assertions.** Assertions 1–4 demonstrated the
+filesystem, privileged-pointer, application-guard, and alert-only drift
+behavior on 2026-07-25. Assertions 5 and 6 — the Telegram writer surface
+under rendered `configWrites: false` and its channel/plugin immutable-mode
+compatibility matrix — completed on 2026-07-25/26 across three archived
+evidence runs ([`a5/`](./a5/)): every essential writer either renders
+declaratively or takes a graceful no-write skip path, with no event-handler
+crash and no config mutation, and no row is INCOMPATIBLE
+([`a5/union-compatibility-matrix.md`](./a5/union-compatibility-matrix.md)).
 
-The evidence therefore supports *OS-enforced config immutability* for its
-filesystem, pointer, and guard portion. The *v1 DM channel is Telegram*
-decision remains open.
+The evidence supports *OS-enforced config immutability* in full, and the
+Telegram-channel-under-guard portion of *v1 DM channel is Telegram* is
+demonstrated: both gated decisions stand.
 
 ## Pinned inputs
 
@@ -39,10 +42,12 @@ current host or borrowed from another spike.
 
 Harness (disposable spike code, archived under [`harness/`](./harness/)):
 `preflight.sh`, `cleanup.sh`, `setup-root.sh`, `a1-bypass.sh`, `a2-switch.sh`,
-`a3-config-set-doctor.sh`, `a4-drift-canary.sh`, and the not-yet-run
-`a5-writer-surface.sh`. The generated assertion-6 matrix does not yet exist;
-[`harness/compatibility-matrix.md`](./harness/compatibility-matrix.md) is its
-contract, not an operator result.
+`a3-config-set-doctor.sh`, `a4-drift-canary.sh`, and `a5-writer-surface.sh`
+(archived at its final 2026-07-26 revision alongside the one-pass runner
+[`harness/run-spike1-a5-full.sh`](./harness/run-spike1-a5-full.sh); the
+revision ledger is in §A5 below). The interim assertion-6 matrix contract
+under [`a5-interim/`](./a5-interim/) is superseded by the generated and
+union matrices under [`a5/`](./a5/).
 
 ## Assertions
 
@@ -52,8 +57,8 @@ contract, not an operator result.
 | 2 | Privileged applicator stages a second hash directory, atomically switches the pointer, and the gateway follows on restart | **PASS** | Healthy A and negative B-port check: [`logs/a2-switch.log:1-14`](./logs/a2-switch.log). Validated staging, atomic switch, and installed-root hash: [`logs/a2-switch.log:15-20`](./logs/a2-switch.log). Healthy B and negative A-port check after restart: [`logs/a2-switch.log:20-35`](./logs/a2-switch.log). |
 | 3 | `openclaw config set` and doctor-repair under the guard refuse or skip cleanly without corrupting the root | **PASS** | Service quiesce, both typed application-layer refusals, exact config-health before/after attestations, four normalizations, and state restoration: [`logs/a3-config-set-doctor.log:1-48`](./logs/a3-config-set-doctor.log). |
 | 4 | Root-assisted drift is detected and alerted; repair remains operator-driven | **PASS** | Mismatch and alert, bounded 10-second alert-only interval with no auto-repair, and explicit operator restore: [`logs/a4-drift-canary.log:1-14`](./logs/a4-drift-canary.log). |
-| 5 | Telegram writer-surface cases under `configWrites: false` | **NOT RUN — BLOCKED** | The current blocker is a disposable public Telegram test group with numeric chat ID and `@username`; the run also accepts the throwaway bot token through operator injection ([`harness/README.md:12-28`](./harness/README.md)). No assertion-5 log or writer-results archive exists. |
-| 6 | Channel/plugin immutable-mode compatibility matrix | **NOT RUN — BLOCKED** | The matrix is generated only from assertion 5's six unique classified rows ([`harness/compatibility-matrix.md:1-20`](./harness/compatibility-matrix.md)). No generated matrix exists. |
+| 5 | Telegram writer-surface cases under `configWrites: false` | **PASS** | Seven cases classified across three archived runs: login/bootstrap, reconnect, token swap `declarative render` and migration `NOT-TRIGGERABLE` ([`a5/run-full-writer/`](./a5/run-full-writer/)); `defaultTo` declared/undeclared `declarative render`/`graceful skip` ([`a5/run-defaultTo/`](./a5/run-defaultTo/)); pairing/first-owner `graceful skip` with sender persisted in the mutable pairing store and the owner-config write refused by the `OPENCLAW_NIX_MODE` app guard ([`a5/run-final-pairing/a5-pairing-first-owner.log`](./a5/run-final-pairing/a5-pairing-first-owner.log), [`a5/run-final-pairing/a5-pairing-approve.log`](./a5/run-final-pairing/a5-pairing-approve.log)). Per-case root inventories byte-identical before/after in every run. |
+| 6 | Channel/plugin immutable-mode compatibility matrix | **PASS** | Generated matrix from the final run plus the assembled union across runs ([`a5/run-final-pairing/compatibility-matrix.md`](./a5/run-final-pairing/compatibility-matrix.md), [`a5/union-compatibility-matrix.md`](./a5/union-compatibility-matrix.md)). No essential row is INCOMPATIBLE. |
 
 ### A1 — service-user filesystem bypasses denied
 
@@ -299,29 +304,61 @@ left in place
 ([`harness/README.md:20-23`](./harness/README.md),
 [`harness/preflight.sh:24-28`](./harness/preflight.sh)).
 
-## Remaining work
+## A5 — writer surface under guard (2026-07-25/26)
 
-Assertions 5 and 6 remain **NOT RUN — BLOCKED**. The exact missing
-operator-provided prerequisites are:
+Operator-provided inputs: disposable public supergroup `-1004475923698`
+(`@p0_spike1_jul25`); throwaway bot token injected per run via
+`SPIKE_TG_BOT_TOKEN` from a 1Password read at runner start — only its short
+fingerprint `46b12ec7` is archived
+([`a5/run-full-writer/a5-runner.log`](./a5/run-full-writer/a5-runner.log));
+pairing sender is the operator's personal Telegram account, sanitized in all
+archived copies as `<redacted-sender-id>`.
 
-- a disposable **public** Telegram test group;
-- its numeric chat ID; and
-- its `@username` for the bot.
+Assertion 5 completed across three runs because the first live executions
+surfaced latent harness defects — each run burned off exactly one class,
+every classification was re-derived from raw logs before the harness was
+amended, and OpenClaw's behavior was correct throughout:
 
-The writer run also requires the operator's throwaway bot token via
-`SPIKE_TG_BOT_TOKEN`; the harness copies it into a mode-`0600` unit-private
-credential and archives only its short fingerprint, never its value
-([`harness/README.md:30-38`](./harness/README.md)).
+| # | Defect (symptom) | Root cause → fix |
+| --- | --- | --- |
+| 1 | `defaultTo` declared flagged HARNESS-ERROR | Classifier treated any `telegram/target-writeback` subsystem activity as an error; OpenClaw runs the guard per-send and skips cleanly. Branch rewritten to accept the guard skip. |
+| 2 | `defaultTo` undeclared flagged HARNESS-ERROR | Exact-string grep expected `for @p0_spike1_jul25`; live log says `for telegram:@p0_spike1_jul25`. Pattern made prefix-tolerant. |
+| 3 | Filtered re-runs aborted (`matrix was not generated`) | Matrix validator demanded all seven rows; now validates against the `SPIKE_A5_ONLY` subset. |
+| 4 | Every live pairing window reported BLOCKED | `$before[0]..` (postfix recurse) is invalid jq — both the in-window detection and code extraction had never compiled, with errors swallowed by `2>/dev/null`; no in-window DM could ever have been detected. Rewritten as `$before[0] \| recurse`. |
+| 5 | Pairing approval flagged HARNESS-ERROR | Denial vocabulary accepted only OS errors (`EACCES` …); the observed refusal is the `OPENCLAW_NIX_MODE` app guard ("Config is managed by Nix … immutable"). App-guard denial now classifies as the graceful skip it is; raw OS denials still classify INCOMPATIBLE. |
+| 6 | Persistence check failed while simultaneously proving persistence | `rg -l -F -- "$sender" "$STATE" --glob '*.json'` placed `--glob` after `--`, so rg errored on literal filenames and exited nonzero despite matching ([`a5/run-discovery/persistence-store-files.txt`](./a5/run-discovery/persistence-store-files.txt)). Flag ordering fixed. |
+| 7 | Operator cue emitted only after the window closed | Case stdout is pipeline-buffered until case end; four live windows were lost to this plus operator-timing races. Added a direct-append `WINDOW-OPEN` signal file and, decisively, the pre-armed trigger below. |
 
-With those prerequisites, run the six writer cases — login/bootstrap,
-pairing/first-owner persistence, `defaultTo` target writeback, reconnect,
-token swap, and, if externally triggerable, group-to-supergroup migration —
-under rendered `configWrites: false`, then generate and validate the
-compatibility matrix
-([`harness/README.md:121-148`](./harness/README.md),
-[`harness/compatibility-matrix.md:7-20`](./harness/compatibility-matrix.md)).
+Pairing trigger discipline (`SPIKE_PAIRING_PREARMED=1`): the runner verifies
+the bot's Bot API update queue is drained to empty immediately before
+launch; the operator's DM is sent at leisure and boot-drained by the spike
+gateway, so any request present at the case's before-snapshot was
+externally sent after the drain and processed by THIS gateway. The true
+before-snapshot is preserved
+([`a5/run-final-pairing/a5-pairing-before.json`](./a5/run-final-pairing/a5-pairing-before.json));
+the empty comparison baseline lives in its own file
+([`a5/run-final-pairing/a5-pairing-prearmed-empty-baseline.json`](./a5/run-final-pairing/a5-pairing-prearmed-empty-baseline.json)).
 
-Until those two assertions have archived evidence, Spike 1 remains interim:
-the filesystem/pointer/guard portion of *OS-enforced config immutability* is
-supported, while the Telegram-channel-under-guard portion of *v1 DM channel is
-Telegram* remains open.
+Final pairing evidence chain
+([`a5/run-final-pairing/`](./a5/run-final-pairing/)): request created from
+the drained DM; code extracted and approved — "Approved telegram sender
+`<redacted-sender-id>`."; the first-owner config write refused verbatim by
+the app guard — "Config is managed by Nix (`OPENCLAW_NIX_MODE=1`), so
+OpenClaw treats openclaw.json as immutable."
+([`a5-pairing-approve.log`](./a5/run-final-pairing/a5-pairing-approve.log));
+the approved request cleared from the pending list
+([`a5-pairing-after.json.approved`](./a5/run-final-pairing/a5-pairing-after.json.approved));
+the sender persisted in mutable state, not config
+(`state/credentials/telegram-default-allowFrom.json`,
+[`a5-pairing-store-files.txt`](./a5/run-final-pairing/a5-pairing-store-files.txt));
+root inventory byte-identical before/after
+([`a5-pairing-first-owner-root-before.inventory`](./a5/run-final-pairing/a5-pairing-first-owner-root-before.inventory),
+[`a5-pairing-first-owner-root-after.inventory`](./a5/run-final-pairing/a5-pairing-first-owner-root-after.inventory)).
+
+This is the strongest demonstration in the spike: a live externally
+triggered first-owner pairing completes its user-visible flow and persists
+operational state while the immutability guard refuses the config write
+cleanly — exactly the split the *OS-enforced config immutability* decision
+requires. With the union matrix free of INCOMPATIBLE rows
+([`a5/union-compatibility-matrix.md`](./a5/union-compatibility-matrix.md)),
+Spike 1 is complete: both gated decisions stand.

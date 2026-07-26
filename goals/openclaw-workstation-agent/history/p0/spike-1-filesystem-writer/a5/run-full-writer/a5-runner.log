@@ -1,0 +1,83 @@
+== assertion 5: stage declarative Telegram generation ==
+telegram_token_fingerprint=46b12ec7
+writer_generation=d0716498dbb207b1efd6ce31759557f28a82423378b623dc4035ba22d09b6fb0 config_sha256=d0716498dbb207b1efd6ce31759557f28a82423378b623dc4035ba22d09b6fb0 installed_spike_root_sha256=b6c2ccd6cf93a74d3105d1d36bedf43ab3bd3ce915f85ff373e0b4a999cf0067
+Config valid: /etc/beep/openclaw-spike/current/openclaw.json
+== writer case: login-bootstrap root_before=713f87f0e26d42c5f9de88c1122fda599319c04d66914416dc688b97a2c20d58 ==
+CASE-RESULT: login-bootstrap => declarative render (env-token bootstrap plus Telegram probe; configWrites:false rendered)
+writer_case=login-bootstrap exit=0 root_before=713f87f0e26d42c5f9de88c1122fda599319c04d66914416dc688b97a2c20d58 root_after=713f87f0e26d42c5f9de88c1122fda599319c04d66914416dc688b97a2c20d58
+== writer case: pairing-first-owner root_before=713f87f0e26d42c5f9de88c1122fda599319c04d66914416dc688b97a2c20d58 ==
+OPERATOR-ACTION: send the disposable bot a fresh DM (window: 300s).
+pairing-window-waited-seconds=300
+jq: error: syntax error, unexpected .., expecting ';' or ')' at <top-level>, line 4, column 21:
+          any($before[0].. | objects; .code? == $code) | not
+                        ^^
+jq: 1 compile error
+BLOCKED: no new externally triggered pairing request was observed
+CASE-RESULT: pairing-first-owner => BLOCKED (operator DM absent; no new pairing request in the 300s window)
+writer_case=pairing-first-owner exit=0 root_before=713f87f0e26d42c5f9de88c1122fda599319c04d66914416dc688b97a2c20d58 root_after=713f87f0e26d42c5f9de88c1122fda599319c04d66914416dc688b97a2c20d58
+== writer case: defaultTo-declared root_before=713f87f0e26d42c5f9de88c1122fda599319c04d66914416dc688b97a2c20d58 ==
+{
+  "action": "send",
+  "channel": "telegram",
+  "dryRun": false,
+  "handledBy": "plugin",
+  "messageId": "9",
+  "payload": {
+    "ok": true,
+    "messageId": "9"
+  }
+}
+defaultTo_evidence_sink=CLI stdout path=/home/elpresidank/.cache/beep-p0-spike1a5.r8AgBy/spike1/logs/a5-defaultTo-declared-send.log searched=yes
+defaultTo_evidence_sink=CLI stdout found=none
+defaultTo_evidence_sink=state log path=/home/elpresidank/.cache/beep-p0-spike1a5.r8AgBy/spike1/state/log/openclaw.log (case byte range) searched=yes
+defaultTo_evidence_sink=state log found={"0":"{\"subsystem\":\"telegram/target-writeback\"}","1":"skipping Telegram target writeback for telegram:@p0_spike1_jul25 because gateway caller is missing operator.admin","_meta":{"runtime":"node","runtimeVersion":"24.16.0","hostname":"DankStation","name":"{\"subsystem\":\"telegram/target-writeback\"}","parentNames":["openclaw"],"date":"2026-07-26T02:26:27.605Z","logLevelId":4,"logLevelName":"WARN","path":{"fullFilePath":"file:///home/elpresidank/.cache/beep-p0-stage/openclaw-2026.7.1-2/node_modules/openclaw/dist/subsystem-C3fiUGN1.js:180:14","fileName":"subsystem-C3fiUGN1.js","fileNameWithLine":"subsystem-C3fiUGN1.js:180","fileColumn":"14","fileLine":"180","filePath":".cache/beep-p0-stage/openclaw-2026.7.1-2/node_modules/openclaw/dist/subsystem-C3fiUGN1.js","filePathWithLine":".cache/beep-p0-stage/openclaw-2026.7.1-2/node_modules/openclaw/dist/subsystem-C3fiUGN1.js:180","method":"logToFile"}},"time":"2026-07-25T21:26:27.605-05:00","hostname":"DankStation","message":"skipping Telegram target writeback for telegram:@p0_spike1_jul25 because gateway caller is missing operator.admin","traceId":"4b804544a8bbbe9810b2f586ab6978fb","spanId":"bd2e3f6efb4e7b3c","traceFlags":"01"}
+defaultTo_evidence_sink=unit journal path=/home/elpresidank/.cache/beep-p0-spike1a5.r8AgBy/spike1/logs/a5-defaultTo-declared-journal.log searched=yes
+defaultTo_evidence_sink=unit journal found=Jul 25 21:26:27 DankStation unit-entrypoint.sh[2095721]: 2026-07-25T21:26:27.606-05:00 [telegram] skipping Telegram target writeback for telegram:@p0_spike1_jul25 because gateway caller is missing operator.admin
+CASE-RESULT: defaultTo-declared => HARNESS-ERROR (declared send unexpectedly entered target writeback)
+writer_case=defaultTo-declared exit=0 root_before=713f87f0e26d42c5f9de88c1122fda599319c04d66914416dc688b97a2c20d58 root_after=713f87f0e26d42c5f9de88c1122fda599319c04d66914416dc688b97a2c20d58
+== assertion 5: stage undeclared defaultTo generation ==
+Config valid: /etc/beep/openclaw-spike/current/openclaw.json
+== writer case: defaultTo-undeclared root_before=ec4b04198f1c8c044effc59a008a35bc476ad9da1f626898499f1e9ca3a3bf38 ==
+{
+  "action": "send",
+  "channel": "telegram",
+  "dryRun": false,
+  "handledBy": "plugin",
+  "messageId": "10",
+  "payload": {
+    "ok": true,
+    "messageId": "10"
+  }
+}
+defaultTo_evidence_sink=CLI stdout path=/home/elpresidank/.cache/beep-p0-spike1a5.r8AgBy/spike1/logs/a5-defaultTo-undeclared-send.log searched=yes
+defaultTo_evidence_sink=CLI stdout found=none
+defaultTo_evidence_sink=state log path=/home/elpresidank/.cache/beep-p0-spike1a5.r8AgBy/spike1/state/log/openclaw.log (case byte range) searched=yes
+defaultTo_evidence_sink=state log found={"0":"{\"subsystem\":\"telegram/target-writeback\"}","1":"skipping Telegram target writeback for telegram:@p0_spike1_jul25 because gateway caller is missing operator.admin","_meta":{"runtime":"node","runtimeVersion":"24.16.0","hostname":"DankStation","name":"{\"subsystem\":\"telegram/target-writeback\"}","parentNames":["openclaw"],"date":"2026-07-26T02:26:35.536Z","logLevelId":4,"logLevelName":"WARN","path":{"fullFilePath":"file:///home/elpresidank/.cache/beep-p0-stage/openclaw-2026.7.1-2/node_modules/openclaw/dist/subsystem-C3fiUGN1.js:180:14","fileName":"subsystem-C3fiUGN1.js","fileNameWithLine":"subsystem-C3fiUGN1.js:180","fileColumn":"14","fileLine":"180","filePath":".cache/beep-p0-stage/openclaw-2026.7.1-2/node_modules/openclaw/dist/subsystem-C3fiUGN1.js","filePathWithLine":".cache/beep-p0-stage/openclaw-2026.7.1-2/node_modules/openclaw/dist/subsystem-C3fiUGN1.js:180","method":"logToFile"}},"time":"2026-07-25T21:26:35.536-05:00","hostname":"DankStation","message":"skipping Telegram target writeback for telegram:@p0_spike1_jul25 because gateway caller is missing operator.admin","traceId":"e13f5f5ce0088a54db7ca1c18508ef31","spanId":"4c48f6914a0509a2","traceFlags":"01"}
+defaultTo_evidence_sink=unit journal path=/home/elpresidank/.cache/beep-p0-spike1a5.r8AgBy/spike1/logs/a5-defaultTo-undeclared-journal.log searched=yes
+defaultTo_evidence_sink=unit journal found=Jul 25 21:26:35 DankStation unit-entrypoint.sh[2394468]: 2026-07-25T21:26:35.537-05:00 [telegram] skipping Telegram target writeback for telegram:@p0_spike1_jul25 because gateway caller is missing operator.admin
+CASE-RESULT: defaultTo-undeclared => HARNESS-ERROR (undeclared defaultTo produced an unknown writeback outcome)
+writer_case=defaultTo-undeclared exit=0 root_before=ec4b04198f1c8c044effc59a008a35bc476ad9da1f626898499f1e9ca3a3bf38 root_after=ec4b04198f1c8c044effc59a008a35bc476ad9da1f626898499f1e9ca3a3bf38
+== assertion 5: restore declared defaultTo generation ==
+== writer case: reconnect root_before=c7731528554fae7e2387bf490450ff65b54add1009dd60f5291b687034fa1c28 ==
+CASE-RESULT: reconnect => declarative render (channels.stop/start RPC reconnect completed; status returned connected/running with restartPending false)
+writer_case=reconnect exit=0 root_before=c7731528554fae7e2387bf490450ff65b54add1009dd60f5291b687034fa1c28 root_after=c7731528554fae7e2387bf490450ff65b54add1009dd60f5291b687034fa1c28
+== writer case: token-swap root_before=c7731528554fae7e2387bf490450ff65b54add1009dd60f5291b687034fa1c28 ==
+CASE-RESULT: token-swap => declarative render (invalid token handler fired; token remains external in the unit-private credential)
+writer_case=token-swap exit=0 root_before=c7731528554fae7e2387bf490450ff65b54add1009dd60f5291b687034fa1c28 root_after=c7731528554fae7e2387bf490450ff65b54add1009dd60f5291b687034fa1c28
+== writer case: group-supergroup-migration root_before=c7731528554fae7e2387bf490450ff65b54add1009dd60f5291b687034fa1c28 ==
+CASE-RESULT: group-supergroup-migration => NOT-TRIGGERABLE (disposable chat is already a supergroup; its one-time basic-group migration cannot recur)
+writer_case=group-supergroup-migration exit=0 root_before=c7731528554fae7e2387bf490450ff65b54add1009dd60f5291b687034fa1c28 root_after=c7731528554fae7e2387bf490450ff65b54add1009dd60f5291b687034fa1c28
+== assertion 6: generate and validate compatibility matrix ==
+# Spike 1 immutable-mode compatibility matrix
+
+| Writer surface | Result | Evidence | Log | Operationally essential? |
+| --- | --- | --- | --- | --- |
+| Login/bootstrap | declarative render | env-token bootstrap plus Telegram probe; configWrites:false rendered | `a5-login-bootstrap.log` | yes |
+| Pairing / first-owner persistence | BLOCKED | operator DM absent; no new pairing request in the 300s window | `a5-pairing-first-owner.log` | yes |
+| `defaultTo` declared | HARNESS-ERROR | declared send unexpectedly entered target writeback | `a5-defaultTo-declared.log` | yes |
+| `defaultTo` undeclared | HARNESS-ERROR | undeclared defaultTo produced an unknown writeback outcome | `a5-defaultTo-undeclared.log` | yes |
+| Reconnect | declarative render | channels.stop/start RPC reconnect completed; status returned connected/running with restartPending false | `a5-reconnect.log` | yes |
+| Token swap | declarative render | invalid token handler fired; token remains external in the unit-private credential | `a5-token-swap.log` | yes |
+| Group to supergroup migration | NOT-TRIGGERABLE | disposable chat is already a supergroup; its one-time basic-group migration cannot recur | `a5-group-supergroup-migration.log` | only when triggerable |
+ASSERT-PASS: user manager contains neither spike secret variable
+A5-PASS
