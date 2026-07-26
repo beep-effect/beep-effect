@@ -234,6 +234,12 @@
         ]
       },
       {
+        "name": "@beep/epistemic-config",
+        "patterns": [
+          "packages/epistemic/config/src/**"
+        ]
+      },
+      {
         "name": "@beep/epistemic-domain",
         "patterns": [
           "packages/epistemic/domain/src/**"
@@ -1438,6 +1444,19 @@
         ]
       },
       {
+        "from": "@beep/epistemic-config",
+        "allow": [
+          "@beep/epistemic-config",
+          "@beep/epistemic-domain",
+          "@beep/identity"
+        ],
+        "allowTypeOnly": [
+          "@beep/epistemic-config",
+          "@beep/epistemic-domain",
+          "@beep/identity"
+        ]
+      },
+      {
         "from": "@beep/epistemic-domain",
         "allow": [
           "@beep/epistemic-domain",
@@ -2397,6 +2416,7 @@
           "@beep/md",
           "@beep/observability",
           "@beep/ontology-client",
+          "@beep/ontology-config",
           "@beep/ontology-domain",
           "@beep/ontology-server",
           "@beep/ontology-ui",
@@ -2437,6 +2457,7 @@
           "@beep/md",
           "@beep/observability",
           "@beep/ontology-client",
+          "@beep/ontology-config",
           "@beep/ontology-domain",
           "@beep/ontology-server",
           "@beep/ontology-ui",

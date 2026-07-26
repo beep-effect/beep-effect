@@ -1606,7 +1606,21 @@
       ],
       "@beep/epistemic-domain/values/GrantSet": [
         "./packages/epistemic/domain/src/values/GrantSet/index.ts"
-      ]
+      ],
+      "@beep/epistemic-config": ["./packages/epistemic/config/src/index.ts"],
+      "@beep/epistemic-config/layer": [
+        "./packages/epistemic/config/src/layer.ts"
+      ],
+      "@beep/epistemic-config/public": [
+        "./packages/epistemic/config/src/public.ts"
+      ],
+      "@beep/epistemic-config/secrets": [
+        "./packages/epistemic/config/src/secrets.ts"
+      ],
+      "@beep/epistemic-config/server": [
+        "./packages/epistemic/config/src/server.ts"
+      ],
+      "@beep/epistemic-config/test": ["./packages/epistemic/config/src/test.ts"]
     }
   }
 }

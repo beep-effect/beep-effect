@@ -1,5 +1,6 @@
 /** @effect-diagnostics nodeBuiltinImport:skip-file */
 import * as NodeHttp from "node:http";
+import { OntologyMcpConfigLive } from "@beep/ontology-config/layer";
 import { ChangeOperation } from "@beep/ontology-domain/aggregates/Session";
 import { OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session";
 import {
@@ -65,19 +66,38 @@ ex:alice a ex:Person ; ex:name "Alice" .
 ex:bob a ex:Person ; ex:name "Bob" .
 `;
 
+type TransportOptions = {
+  readonly mutationsEnabled: boolean;
+  readonly approvedMutationTools: ReadonlyArray<string>;
+};
+
 const initializeBody =
   '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ontology-mcp-http-test","version":"0.0.0"}}}';
 
-const transportServer = (
-  root: string,
-  options: { readonly mutationsEnabled: boolean; readonly approvedMutationTools: ReadonlyArray<string> }
-) => {
-  const routes = makeOntologyMcpTransportLayer({ token, ...options }).pipe(
-    Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ ONTOLOGY_WORKSPACE_ROOT: root }))),
-    Layer.provide(NodeServices.layer),
-    Layer.orDie,
-    Layer.provide(HttpRouter.layer)
+// `mutationsEnabled` now travels the real config path (ConfigProvider ->
+// OntologyMcpConfigLive -> Layer.unwrap) rather than being handed to the
+// transport as a literal, so these tests exercise the wiring main.ts uses.
+// `approvedMutationTools` stays an explicit argument: registering the mutation
+// tools while approving none of them is the fail-closed proof, and it is a
+// state no environment variable can produce.
+const transportConfigProvider = (root: string, options: TransportOptions) =>
+  ConfigProvider.layer(
+    ConfigProvider.fromUnknown({
+      ONTOLOGY_MCP_MUTATIONS_ENABLED: options.mutationsEnabled ? "true" : "false",
+      ONTOLOGY_WORKSPACE_ROOT: root,
+    })
   );
+
+const transportLayer = (root: string, options: TransportOptions) =>
+  makeOntologyMcpTransportLayer({ token, approvedMutationTools: options.approvedMutationTools }).pipe(
+    Layer.provide(OntologyMcpConfigLive),
+    Layer.provide(transportConfigProvider(root, options)),
+    Layer.provide(NodeServices.layer),
+    Layer.orDie
+  );
+
+const transportServer = (root: string, options: TransportOptions) => {
+  const routes = transportLayer(root, options).pipe(Layer.provide(HttpRouter.layer));
   return routes.pipe(Layer.provide(HttpRouter.serve(routes, { disableListenLog: true, disableLogger: true })));
 };
 
@@ -141,7 +161,7 @@ const makeMcpClientProtocol = (useSocketTransport: boolean) =>
   }).pipe(Layer.provideMerge(RpcSerialization.layerJsonRpc()));
 
 const withHttpServer = <A2, E>(
-  options: { readonly mutationsEnabled: boolean; readonly approvedMutationTools: ReadonlyArray<string> },
+  options: TransportOptions,
   run: (
     root: string,
     ontologyPath: OntologyFilePath,
@@ -168,11 +188,7 @@ const withHttpServer = <A2, E>(
         );
       }
 
-      const routes = makeOntologyMcpTransportLayer({ token, ...options }).pipe(
-        Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ ONTOLOGY_WORKSPACE_ROOT: root }))),
-        Layer.provide(NodeServices.layer),
-        Layer.orDie
-      );
+      const routes = transportLayer(root, options);
       const { dispose, handler } = HttpRouter.toWebHandler(routes, { disableLogger: true });
       yield* Effect.addFinalizer(() => Effect.promise(dispose));
       function customFetch(

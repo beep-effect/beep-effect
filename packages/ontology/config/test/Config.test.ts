@@ -1,5 +1,5 @@
-import { OntologyConfigLive } from "@beep/ontology-config/layer";
-import { OntologyConfig } from "@beep/ontology-config/server";
+import { OntologyConfigLive, OntologyMcpConfigLive } from "@beep/ontology-config/layer";
+import { OntologyConfig, OntologyMcpConfig } from "@beep/ontology-config/server";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, ConfigProvider, Effect, Exit, Layer } from "effect";
 
@@ -34,6 +34,48 @@ describe("OntologyConfigLive", () => {
           expect(Cause.hasFails(exit.cause)).toBe(true);
           expect(Cause.hasDies(exit.cause)).toBe(false);
         }
+      }
+    })
+  );
+});
+
+const mcpConfigLayer = (configuration: Readonly<Record<string, string>>) =>
+  OntologyMcpConfigLive.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(configuration))));
+
+describe("OntologyMcpConfigLive", () => {
+  it.effect(
+    "leaves mutation registration off when unset",
+    Effect.fnUntraced(function* () {
+      const config = yield* OntologyMcpConfig.pipe(provideScopedLayer(mcpConfigLayer({})));
+
+      expect(config.mutationsEnabled).toBe(false);
+    })
+  );
+
+  it.effect(
+    "enables mutation registration when explicitly set",
+    Effect.fnUntraced(function* () {
+      const config = yield* OntologyMcpConfig.pipe(
+        provideScopedLayer(mcpConfigLayer({ ONTOLOGY_MCP_MUTATIONS_ENABLED: "true" }))
+      );
+
+      expect(config.mutationsEnabled).toBe(true);
+    })
+  );
+
+  it.effect(
+    "keeps a malformed flag in the typed failure channel rather than defaulting to off",
+    Effect.fnUntraced(function* () {
+      // Silently reading a typo as `false` would be safe but dishonest: the
+      // operator asked for something and got no signal that it was ignored.
+      const exit = yield* Effect.exit(
+        OntologyMcpConfig.pipe(provideScopedLayer(mcpConfigLayer({ ONTOLOGY_MCP_MUTATIONS_ENABLED: "maybe" })))
+      );
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      if (Exit.isFailure(exit)) {
+        expect(Cause.hasFails(exit.cause)).toBe(true);
+        expect(Cause.hasDies(exit.cause)).toBe(false);
       }
     })
   );

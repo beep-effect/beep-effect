@@ -62,6 +62,7 @@
     "@beep/md": "workspace:^",
     "@beep/observability": "workspace:^",
     "@beep/ontology-client": "workspace:^",
+    "@beep/ontology-config": "workspace:^",
     "@beep/ontology-domain": "workspace:^",
     "@beep/ontology-server": "workspace:^",
     "@beep/ontology-ui": "workspace:^",
