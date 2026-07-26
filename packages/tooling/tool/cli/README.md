@@ -476,20 +476,6 @@ bun run beep ci append-turbo-summary
 bun run beep ci append-turbo-summary .turbo/runs/latest.json
 ```
 
-### `graphiti`
-
-Run and manage the local Graphiti MCP queue proxy.
-
-```bash
-bun run beep graphiti proxy
-bun run beep graphiti proxy ensure
-bun run beep graphiti proxy service install
-bun run beep graphiti restore --dry-run
-bun run beep graphiti restore
-bun run beep graphiti verify
-bun run beep graphiti recover --dry-run
-```
-
 ### `codex`
 
 Launch Codex helper workflows from repo-owned prompts.

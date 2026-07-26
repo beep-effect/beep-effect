@@ -2,10 +2,10 @@
  * Shared environment and config-provider readers for the repo CLI.
  *
  * Several command groups read optional configuration through Effect's
- * `Config`/`ConfigProvider` and fall back to defaults, and two of them
- * (Quality's internal config and Graphiti's proxy ops) carried verbatim copies
- * of the same synchronous readers. This module owns those readers, the turbo
- * env/token policy, and the 1Password `op run` local-env wrapper once.
+ * `Config`/`ConfigProvider` and fall back to defaults, and more than one of them
+ * carried verbatim copies of the same synchronous readers. This module owns
+ * those readers, the turbo env/token policy, and the 1Password `op run`
+ * local-env wrapper once.
  *
  * All readers evaluate the environment lazily at call time (they are plain
  * functions that read through the ambient `ConfigProvider` when invoked), never

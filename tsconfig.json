@@ -593,9 +593,6 @@
       "@beep/repo-cli/commands/Files": [
         "./packages/tooling/tool/cli/src/commands/Files/index.ts"
       ],
-      "@beep/repo-cli/commands/Graphiti": [
-        "./packages/tooling/tool/cli/src/commands/Graphiti/index.ts"
-      ],
       "@beep/repo-cli/commands/Image": [
         "./packages/tooling/tool/cli/src/commands/Image/index.ts"
       ],
@@ -634,9 +631,6 @@
       ],
       "@beep/repo-cli/test/Docgen": [
         "./packages/tooling/tool/cli/src/test/Docgen.test-kit.ts"
-      ],
-      "@beep/repo-cli/test/Graphiti": [
-        "./packages/tooling/tool/cli/src/test/Graphiti.test-kit.ts"
       ],
       "@beep/repo-cli/test/Laws": [
         "./packages/tooling/tool/cli/src/test/Laws.test-kit.ts"
