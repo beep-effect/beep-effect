@@ -1,0 +1,18 @@
+### CLEANUP 2026-07-26T04:39:56Z
+--- 1. stop/disable if present ---
+stop rc=0
+disable rc=0
+--- 2. remove unit file ---
+removed '/home/elpresidank/.config/systemd/user/openclaw-spike.service'
+--- 3. daemon-reload ---
+daemon-reload rc=0
+reset-failed done
+--- 4. throwaway state + decoy ---
+removed directory './throwaway-state'
+removed '/tmp/oc-spike2-decoy/bus'
+removed directory '/tmp/oc-spike2-decoy'
+killed socat 1484725
+no socat processes remain
+--- 5. restore linger to recorded initial state (no) ---
+INITIAL_LINGER=no
+disable-linger rc=0
