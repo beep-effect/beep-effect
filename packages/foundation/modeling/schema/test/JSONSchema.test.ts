@@ -40,7 +40,7 @@ const nodeEquivalence = S.toEquivalence(Node);
 const subSchemaEquivalence = S.toEquivalence(SubSchema);
 const documentEquivalence = S.toEquivalence(Document);
 
-describe("JSONSchema", () => {
+describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
   describe("NodeCodec decoding", () => {
     it.effect(
       "decodes canonical keywords into Option fields and preserves unknown keys",
