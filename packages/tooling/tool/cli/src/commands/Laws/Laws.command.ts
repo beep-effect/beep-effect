@@ -16,6 +16,7 @@ import { AllowlistCheckOptions, reportAllowlistCheckSummary, runAllowlistCheck }
 import { DualArityRulesOptions, runDualArityRules } from "./DualArity.ts";
 import { EffectFnRulesOptions, runEffectFnRules } from "./EffectFn.ts";
 import { EffectImportRulesOptions, runEffectImportRules } from "./EffectImports.ts";
+import { FrozenGrantSetRulesOptions, runFrozenGrantSetRules } from "./FrozenGrantSet.ts";
 import { NoNativeRuntimeRulesOptions, runNoNativeRuntimeRules } from "./NoNativeRuntime.ts";
 import { runTerseEffectRules, TerseEffectRulesOptions } from "./TerseEffect.ts";
 
@@ -122,6 +123,29 @@ class EffectFnCommandOptions extends S.Class<EffectFnCommandOptions>($I`EffectFn
   },
   $I.annote("EffectFnCommandOptions", {
     description: "CLI options for the Effect.fn supplemental law.",
+  })
+) {}
+
+/**
+ * CLI options for the FrozenGrantSet construction law.
+ *
+ * @example
+ * ```ts
+ * console.log("FrozenGrantSetCommandOptions")
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+class FrozenGrantSetCommandOptions extends S.Class<FrozenGrantSetCommandOptions>($I`FrozenGrantSetCommandOptions`)(
+  {
+    check: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefault(Effect.succeed(false))
+    ),
+    exclude: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefault(Effect.succeed(""))),
+  },
+  $I.annote("FrozenGrantSetCommandOptions", {
+    description: "CLI options for the FrozenGrantSet construction law.",
   })
 ) {}
 
@@ -367,6 +391,53 @@ const lawsEffectFnCommand = Command.make(
 ).pipe(Command.withDescription("Check reusable Effect.gen-returning functions use Effect.fn or Effect.fnUntraced"));
 
 /**
+ * CLI command for the FrozenGrantSet construction law.
+ *
+ * @example
+ * ```ts
+ * console.log("lawsFrozenGrantSetCommand")
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+const lawsFrozenGrantSetCommand = Command.make(
+  "frozen-grant-set",
+  {
+    check: Flag.boolean("check").pipe(
+      Flag.withDescription("Fail when FrozenGrantSet.make is called outside its defining module")
+    ),
+    exclude: Flag.string("exclude").pipe(
+      Flag.withDescription("Comma-separated list of file paths to exclude"),
+      Flag.withDefault("")
+    ),
+  },
+  Effect.fn(function* ({ check, exclude }) {
+    const options = FrozenGrantSetCommandOptions.make({ check, exclude });
+    const summary = yield* runFrozenGrantSetRules(
+      FrozenGrantSetRulesOptions.make({
+        strictCheck: options.check,
+        excludePaths: parseExcludePaths(options.exclude),
+      })
+    );
+
+    yield* Console.log(`[effect-governance-frozen-grant-set] mode=${options.check ? "check" : "report"}`);
+    yield* Console.log(`[effect-governance-frozen-grant-set] scanned_files=${summary.scannedFiles}`);
+    yield* Console.log(`[effect-governance-frozen-grant-set] touched_files=${summary.touchedFiles}`);
+    yield* Console.log(`[effect-governance-frozen-grant-set] violations=${summary.violationCount}`);
+
+    for (const diagnostic of summary.diagnostics) {
+      yield* Console.log(
+        `- ${diagnostic.file}:${diagnostic.line}:${diagnostic.column} [${diagnostic.ruleId}] ${diagnostic.message}`
+      );
+    }
+
+    if (summary.strictFailure) {
+      return yield* failWithReportedExit("effect-governance-frozen-grant-set: check failed.");
+    }
+  })
+).pipe(Command.withDescription("Check FrozenGrantSet.make stays inside its defining module"));
+
+/**
  * CLI command for repo-local native runtime governance checks.
  *
  * @example
@@ -463,6 +534,7 @@ export const lawsCommand = Command.make("laws", {}, () =>
     "- bun run beep laws dual-arity --check",
     "- bun run beep laws dual-arity --write",
     "- bun run beep laws effect-fn --check",
+    "- bun run beep laws frozen-grant-set --check",
     "- bun run beep laws terse-effect --check",
     "- bun run beep laws terse-effect --write",
     "- bun run beep laws allowlist-check",
@@ -474,6 +546,7 @@ export const lawsCommand = Command.make("laws", {}, () =>
     lawsNativeRuntimeCommand,
     lawsDualArityCommand,
     lawsEffectFnCommand,
+    lawsFrozenGrantSetCommand,
     lawsTerseEffectCommand,
     lawsAllowlistCheckCommand,
   ])

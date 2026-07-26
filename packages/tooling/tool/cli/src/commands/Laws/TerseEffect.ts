@@ -6,13 +6,14 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
+import { toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { A, thunkEmptyStr } from "@beep/utils";
 import { Effect, HashMap, Inspectable, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
+import { isExcludedLawScanPath } from "./internal/LawScan.ts";
 import { TerseEffectRulesPersistenceError } from "./Laws.errors.ts";
 import type { ArrowFunction, CallExpression, FunctionDeclaration, ObjectLiteralExpression } from "ts-morph";
 
@@ -571,11 +572,7 @@ const isExplicitDualOverloadCandidate = (functionDeclaration: FunctionDeclaratio
 export const runTerseEffectRules = Effect.fn(function* (options: TerseEffectRulesOptions) {
   const path = yield* Path.Path;
 
-  const isExcludedFile = (filePath: string): boolean => {
-    const normalized = toPosixPath(filePath);
-    if (A.some(options.excludePaths, (excludePath) => normalized === toPosixPath(excludePath))) return true;
-    return isExcludedTypeScriptSourcePath(normalized);
-  };
+  const isExcludedFile = (filePath: string): boolean => isExcludedLawScanPath(options.excludePaths, filePath);
 
   const project = new Project({
     tsConfigFilePath: path.join(process.cwd(), "tsconfig.json"),
