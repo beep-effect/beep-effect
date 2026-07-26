@@ -58,7 +58,13 @@ phase may run before every contract assertion passes.
   Contract findings for P1: gate preflight on a bus round-trip, not
   `systemctl --user is-system-running` (returns `degraded` on healthy desktop
   managers); use `UnitsLoadTimestampMonotonic` as the daemon-reload drift
-  witness; UNIX socket paths cap at 108 bytes under deep content-hashed roots.
+  witness; UNIX socket paths cap at 108 bytes under deep content-hashed roots;
+  preflight must fail closed when the expected-identity file is unreadable or
+  malformed (unchecked parse must never yield an empty-mismatch pass); a
+  mid-apply failure after preflight must roll back already-written unit state
+  rather than exit with a partial apply (both spotted by review on the
+  archived spike harness — the prototype script is retained as-run, these land
+  in the real applicator).
   Recorded residual: the positive lane ran with an active session present —
   the genuinely session-less linger case is a named P1 follow-up. Spikes 1, 3,
   and 4 remain gated on operator prerequisites (sudo; scoped 1Password service
