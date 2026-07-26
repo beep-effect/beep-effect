@@ -98,4 +98,27 @@ describe("LogicalEdgeIdentity (logical key digest)", () => {
     expect(Result.isSuccess(decodeEndpoint({ claimId: 1, kind: "claim" }))).toBe(true);
     expect(Result.isFailure(decodeEndpoint({ claimId: 1, kind: "banana" }))).toBe(true);
   });
+
+  it("keeps qualifier delimiter characters from merging two identities", () => {
+    // Without escaping, both encode the qualifier tail as `a=1,b=2`.
+    const smuggled = keyOf({ qualifiers: { a: "1,b=2" } });
+    const distinct = keyOf({ qualifiers: { a: "1", b: "2" } });
+
+    expect(smuggled).not.toEqual(distinct);
+  });
+
+  it("keeps the component delimiter in a scope from forging encoding structure", () => {
+    // A literal pipe must never read as a component boundary, and the escaped
+    // form of one value must never collide with a value that already looks
+    // escaped (`%` escapes first, so `a|b` and `a%7Cb` stay distinct).
+    expect(encodeLogicalEdgeIdentity(decodeIdentity({ ...base, matterScope: "a|b" }))).toContain("some:a%7Cb");
+    expect(keyOf({ matterScope: "a|b" })).not.toEqual(keyOf({ matterScope: "a%7Cb" }));
+  });
+
+  it("keeps a free-form endpoint ref from injecting the component delimiter", () => {
+    const piped = decodeIdentity({ ...base, target: { entityRef: "ref|claim:9", kind: "entity" } });
+
+    expect(encodeLogicalEdgeIdentity(piped)).toContain("entity:ref%7Cclaim:9");
+    expect(logicalEdgeKey(piped)).not.toEqual(keyOf({ target: { entityRef: "ref%7Cclaim:9", kind: "entity" } }));
+  });
 });
