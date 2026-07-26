@@ -1392,7 +1392,7 @@ describe("package test-typecheck lint command", { concurrent: false }, () => {
             const path = yield* Path.Path;
 
             // `test` would cover everything, but the excluded helper is pulled
-            // back out of the program, so it is left untypechecked.
+            // back out of the program, so no project typechecks it.
             yield* writeTestTypecheckPackage({
               directory: "packages/example",
               name: "@beep/example",

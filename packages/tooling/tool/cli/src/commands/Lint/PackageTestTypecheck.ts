@@ -525,7 +525,7 @@ const packageLocalReferenceConfigs = Effect.fn("PackageTestTypecheck.packageLoca
   );
 });
 
-// Test sources left untypechecked after running every given project (and every
+// Test sources left with no typechecking project after running every given project (and every
 // in-package project they reference). Empty means the set of projects covers
 // the package's tests; the returned files are the evidence when it does not.
 //
