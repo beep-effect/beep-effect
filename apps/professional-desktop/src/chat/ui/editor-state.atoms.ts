@@ -2,7 +2,7 @@
  * Shared document → serialized-editor-state projection atom.
  *
  * Projects an `@beep/md` {@link Md.Document} into a `@beep/lexical-schema`
- * serialized editor state through a single `Atom.runtime` family (no
+ * serialized editor state through the shared professional Atom runtime (no
  * `Effect.runSyncExit` in component code per the repo atom-first law). The codec
  * is pure, so the backing effect resolves synchronously on first read — the
  * `AsyncResult` is `Success` immediately, with a codec failure surfacing as an
@@ -16,11 +16,9 @@
 "use client";
 
 import { documentToEditorState } from "@beep/lexical-schema";
-import { Layer } from "effect";
 import { Atom } from "effect/unstable/reactivity";
+import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import type * as Md from "@beep/md/Md.model";
-
-const editorStateRuntime = Atom.runtime(Layer.empty);
 
 /**
  * Per-document serialized-editor-state projection, keyed by the `Md.Document`.
@@ -36,5 +34,5 @@ const editorStateRuntime = Atom.runtime(Layer.empty);
  * @since 0.0.0
  */
 export const documentEditorStateAtom = Atom.family((content: Md.Document) =>
-  editorStateRuntime.atom(documentToEditorState(content))
+  professionalBrowserRuntime.atom(documentToEditorState(content))
 );

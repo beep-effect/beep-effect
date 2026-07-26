@@ -25,6 +25,12 @@ Scope:
   citation extraction, KG nodes, sync-engine redesign, public raw files,
   runtime refresh, unrelated packages, and `goals/INDEX.md`.
 
+Current delivery boundary (2026-07-25): implement and verify the pinned
+ingestion substrate only. The artifacts live under
+`packages/law-practice/domain/src/internal/generated/`; public stable IDs,
+lookups, lifecycle/compatibility schemas, and parser integration remain later
+phases of this active goal. Do not import eyecite-js or eyecite-ts overlays.
+
 Workflow:
 
 1. Inspect the exploration, live sync target family, domain values, and worktree.
@@ -33,8 +39,9 @@ Workflow:
    test every ratified stable-ID/compatibility transition.
 3. Verify the scaffolded commit pins in `THIRD_PARTY_NOTICES.md`; record any
    ratified change before derived material lands.
-4. Implement the smallest schema-first/Effect-first public targets and domain
-   compatibility surface satisfying `SPEC.md`; keep raw artifacts private.
+4. Implement the smallest schema-first/Effect-first increment satisfying the
+   active phase; keep raw artifacts private and do not pull later public domain
+   work into the ingestion increment.
 5. Prove a second identical generation has no diff and every upstream change is
    reported, never silently applied.
 6. Prove the citation engine can use version/stable IDs without raw imports.

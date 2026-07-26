@@ -5,6 +5,7 @@ import {
   makeDrizzle,
   makeDrizzleLayer,
   migrate,
+  migrateBundle,
   NativePgClient,
   PgErrorCode,
   PostgresClient,
@@ -16,6 +17,7 @@ import { describe, expect, it } from "tstyche";
 import type {
   EffectDrizzlePgConfig,
   EffectPgDatabase,
+  MigrationBundleEntry,
   PgErrorCode as PgErrorCodeType,
   PgErrorName as PgErrorNameType,
   PostgresClientValue,
@@ -26,6 +28,7 @@ import type { Effect, Layer } from "effect";
 
 declare const client: PostgresClientValue;
 declare const db: PostgresDrizzleDatabase;
+declare const bundleEntries: ReadonlyArray<MigrationBundleEntry>;
 
 describe("@beep/postgres", () => {
   it("exports SQLSTATE models", () => {
@@ -59,6 +62,10 @@ describe("@beep/postgres", () => {
     expect(makeDrizzle()).type.toBe<Effect.Effect<PostgresDrizzleDatabase, PostgresError, PostgresClientValue>>();
     expect(makeDrizzleLayer()).type.toBe<Layer.Layer<PostgresDrizzle, PostgresError, PostgresClientValue>>();
     expect(migrate(db, { migrationsFolder: "./drizzle" })).type.toBe<Effect.Effect<undefined, PostgresError>>();
+    expect(migrateBundle(db, { migrations: bundleEntries })).type.toBe<Effect.Effect<undefined, PostgresError>>();
+    expect(migrateBundle({ migrations: bundleEntries, migrationsSchema: "drizzle" })(db)).type.toBe<
+      Effect.Effect<undefined, PostgresError>
+    >();
   });
 
   it("exports native interop namespaces", () => {

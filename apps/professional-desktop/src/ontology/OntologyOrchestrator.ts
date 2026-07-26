@@ -22,13 +22,13 @@ import {
   SaveOntologyFileCommand,
   SerializeOntologySessionCommand,
   SessionUseCases,
-} from "@beep/ontology-use-cases/aggregates/Session";
+} from "@beep/ontology-use-cases/public";
 import { Cause, Effect, Metric } from "effect";
 import type {
   ApplyOntologyBatchCommand,
   OntologyFilePath,
   OpenOntologyDocumentResult as OpenOntologyDocumentResultType,
-} from "@beep/ontology-use-cases/aggregates/Session";
+} from "@beep/ontology-use-cases/public";
 
 const ontologyStarted = Metric.counter("desktop_ontology_operations_started_total", { incremental: true });
 const ontologyCompleted = Metric.counter("desktop_ontology_operations_completed_total", { incremental: true });
@@ -195,8 +195,9 @@ const makeOntologyHandlers = (operations: OntologyOperations) =>
  * @example
  * ```ts
  * import { OntologyHandlersLive } from "@/ontology/OntologyOrchestrator"
+ * import { Layer } from "effect"
  *
- * console.log(OntologyHandlersLive)
+ * console.log(Layer.isLayer(OntologyHandlersLive)) // true
  * ```
  *
  * @category layers

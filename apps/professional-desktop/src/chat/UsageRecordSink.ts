@@ -3,20 +3,22 @@
  *
  * The {@link UsageRecordSink} is the append-only boundary the chat
  * orchestration handler writes a finalized turn's {@link UsageRecord} to. The
- * real implementation (a later increment) persists into PGlite-backed
- * `usage_record` storage through the app sidecar; this increment ships only the
- * deterministic in-memory implementation that the app-level contract test
- * inspects.
+ * production implementation persists into PGlite-backed `usage_record`
+ * storage through the app sidecar; the deterministic in-memory implementation
+ * remains available to app-level contract tests.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import * as UsageRecordTable from "@beep/epistemic-tables/entities/UsageRecord";
+import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { PostgresDrizzle } from "@beep/postgres";
 import { Context, Effect, Layer, Metric, Ref } from "effect";
 import type { UsageRecord } from "@beep/epistemic-domain";
+
+const $I = $ProfessionalDesktopId.create("chat/UsageRecordSink");
 
 const usagePersistenceFailures = Metric.counter("agents_usage_persistence_failures_total", { incremental: true });
 
@@ -60,9 +62,7 @@ export interface UsageRecordSinkShape {
  * @category services
  * @since 0.0.0
  */
-export class UsageRecordSink extends Context.Service<UsageRecordSink, UsageRecordSinkShape>()(
-  "@beep/professional-desktop/chat/UsageRecordSink"
-) {}
+export class UsageRecordSink extends Context.Service<UsageRecordSink, UsageRecordSinkShape>()($I`UsageRecordSink`) {}
 
 /**
  * Build the in-memory sink and its backing {@link Ref} in one effect. The
@@ -81,6 +81,7 @@ export class UsageRecordSink extends Context.Service<UsageRecordSink, UsageRecor
  * })
  * ```
  *
+ * @effects Allocates a mutable in-memory Ref for usage records.
  * @category constructors
  * @since 0.0.0
  */
@@ -98,9 +99,8 @@ export const makeInMemoryUsageRecordSink: Effect.Effect<{
 /**
  * In-memory {@link UsageRecordSink} layer backed by a shared {@link Ref}.
  *
- * TODO(live sidecar): replace with a PGlite-backed sink that encodes the
- * {@link UsageRecord} and persists it into the `usage_record` table once the
- * usage-record migration and the PGlite-socket runtime land.
+ * Production composition uses {@link UsageRecordSinkDrizzle}; this layer is the
+ * deterministic fixture for isolated contract and smoke tests.
  *
  * @example
  * ```ts
@@ -178,8 +178,9 @@ const makeDrizzleUsageRecordSink: Effect.Effect<UsageRecordSinkShape, never, Pos
  * @example
  * ```ts
  * import { UsageRecordSinkDrizzle } from "@/chat/UsageRecordSink"
+ * import { Layer } from "effect"
  *
- * console.log(UsageRecordSinkDrizzle)
+ * console.log(Layer.isLayer(UsageRecordSinkDrizzle)) // true
  * ```
  *
  * @category layers

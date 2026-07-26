@@ -809,11 +809,39 @@ export const mergeManagedDocgenConfig: {
       R.get("examplesCompilerOptions"),
       O.filter(isReadonlyUnknownRecord)
     );
+    const existingExamplesPaths = pipe(
+      existingExamplesCompilerOptions,
+      O.flatMap(flow(R.get("paths"), O.filter(isReadonlyUnknownRecord))),
+      O.getOrElse(() => R.empty<string, unknown>())
+    );
+    const canonicalExamplesPaths = pipe(
+      O.fromUndefinedOr(canonicalJson.examplesCompilerOptions.paths),
+      O.filter(isReadonlyUnknownRecord),
+      O.getOrElse(() => R.empty<string, unknown>())
+    );
+    const existingCustomSrcLink = pipe(
+      existing,
+      R.get("srcDir"),
+      O.filter(P.isString),
+      O.filter(P.not(Eq.equals("src"))),
+      O.flatMap(() => pipe(existing, R.get("srcLink"), O.filter(P.isString)))
+    );
     const mergedExamplesCompilerOptions = pipe(
       existingExamplesCompilerOptions,
       O.map((options) => ({
         ...options,
         ...canonicalJson.examplesCompilerOptions,
+        paths: {
+          ...existingExamplesPaths,
+          ...canonicalExamplesPaths,
+        },
+        ...pipe(
+          options,
+          R.get("module"),
+          O.filter(P.isString),
+          O.map((module) => ({ module })),
+          O.getOrElse(() => ({}))
+        ),
         ...pipe(
           options,
           R.get("types"),
@@ -827,7 +855,7 @@ export const mergeManagedDocgenConfig: {
     const merged = {
       ...existing,
       $schema: canonicalJson.$schema,
-      srcLink: canonicalJson.srcLink,
+      srcLink: O.getOrElse(existingCustomSrcLink, () => canonicalJson.srcLink),
       examplesCompilerOptions: mergedExamplesCompilerOptions,
     };
 

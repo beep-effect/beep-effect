@@ -36,8 +36,9 @@ const failDisconnected = () => disconnected;
  * @example
  * ```ts
  * import { DmsMirrorDisconnectedLayer } from "@/sync/DmsMirrorDisconnected"
+ * import { Layer } from "effect"
  *
- * console.log(DmsMirrorDisconnectedLayer)
+ * console.log(Layer.isLayer(DmsMirrorDisconnectedLayer)) // true
  * ```
  *
  * @category layers
@@ -61,8 +62,9 @@ export const DmsMirrorDisconnectedLayer: Layer.Layer<DmsMirror> = Layer.succeed(
  * @example
  * ```ts
  * import { DmsMirrorAvailabilityDisconnectedLayer } from "@/sync/DmsMirrorDisconnected"
+ * import { Layer } from "effect"
  *
- * console.log(DmsMirrorAvailabilityDisconnectedLayer)
+ * console.log(Layer.isLayer(DmsMirrorAvailabilityDisconnectedLayer)) // true
  * ```
  *
  * @category layers

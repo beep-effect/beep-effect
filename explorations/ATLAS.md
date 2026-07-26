@@ -68,6 +68,15 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   modality, prompt, wrapper, decoding configuration, and artifact digest —
   no qualification transfer across any substitution; routed out of
   `academia-corpus-mining` (align dispatch 2026-07-25).
+- [`epistemic-belief-view-revision`](./epistemic-belief-view-revision/README.md) —
+  capture-stage: a recoverable, replayable projection that selects one working
+  assertion per logical lineage (or abstains) under a named policy, revised by
+  new versions with causal ancestry rather than by mutating evidence. Routed out
+  of `academia-corpus-mining` (align dispatch 2026-07-25, master Q4: the first
+  composition over the bitemporal core) once
+  [`epistemic-bitemporal-edge-core`](../goals/epistemic-bitemporal-edge-core/README.md)
+  landed. Carries master align Q1 (verdict-family naming) and Q3 (retention
+  classes for prunable projections).
 - [`knowledge-workspace`](./knowledge-workspace/README.md) — capture-stage
   product vision for an immutable event journal projected into a live graph,
   Lexical wiki-link authoring/backlinks, and auditable temporal replay; stale
@@ -188,10 +197,15 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `@beep/api-transport` supersede the original helper-bundle premise.
   **Queued (P2/P3, research-complete):**
   [`agent-memory-tiers-bitemporal-edges`](./agent-memory-tiers-bitemporal-edges/README.md)
-  (stage `graduate`, still active for triage/retention lanes): graduated
+  (stage `graduate`, still active for the retention lane): graduated
   [`epistemic-bitemporal-edge-core`](../goals/epistemic-bitemporal-edge-core/README.md),
   the `@beep/epistemic-tables` port milestone whose landing triggers write-frozen
-  operator Graphiti retirement without making product tables its backend,
+  operator Graphiti retirement without making product tables its backend —
+  closed `completed-retained` 2026-07-25, which cleared the order-2 gate and
+  graduated
+  [`epistemic-contradiction-triage`](../goals/epistemic-contradiction-triage/README.md)
+  the same day (approval-gated `CONTRADICTS` candidates; Deferred spike B is its
+  P0 hard gate). Retention/tier projections remain the only queued lane,
   [`deterministic-doc-structure-extraction`](./deterministic-doc-structure-extraction/README.md)
   (stage `graduate`, still active for queued families/streaming/calibration):
   graduated [`law-doc-structure-oa-slice`](../goals/law-doc-structure-oa-slice/README.md)

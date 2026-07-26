@@ -593,9 +593,6 @@
       "@beep/repo-cli/commands/Files": [
         "./packages/tooling/tool/cli/src/commands/Files/index.ts"
       ],
-      "@beep/repo-cli/commands/Graphiti": [
-        "./packages/tooling/tool/cli/src/commands/Graphiti/index.ts"
-      ],
       "@beep/repo-cli/commands/Image": [
         "./packages/tooling/tool/cli/src/commands/Image/index.ts"
       ],
@@ -634,9 +631,6 @@
       ],
       "@beep/repo-cli/test/Docgen": [
         "./packages/tooling/tool/cli/src/test/Docgen.test-kit.ts"
-      ],
-      "@beep/repo-cli/test/Graphiti": [
-        "./packages/tooling/tool/cli/src/test/Graphiti.test-kit.ts"
       ],
       "@beep/repo-cli/test/Laws": [
         "./packages/tooling/tool/cli/src/test/Laws.test-kit.ts"
@@ -1596,6 +1590,10 @@
       ],
       "@beep/epistemic-use-cases/EdgeAuthority": [
         "./packages/epistemic/use-cases/src/EdgeAuthority/index.ts"
+      ],
+      "@beep/cosmos/browser": ["./packages/drivers/cosmos/src/browser.ts"],
+      "@beep/ontology-use-cases/worker": [
+        "./packages/ontology/use-cases/src/worker.ts"
       ],
       "@beep/epistemic-domain/values/ExecutionGrant": [
         "./packages/epistemic/domain/src/values/ExecutionGrant/index.ts"

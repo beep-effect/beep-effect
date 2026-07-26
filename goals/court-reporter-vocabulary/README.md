@@ -31,13 +31,17 @@ contract for law-practice consumers.
 
 ## Current Phase
 
-P0 Source assembly and stable-ID spike: pin both upstream commits, distinguish
-templated inputs from rendered releases, prove deterministic rendering and
-counts, and exercise lifecycle/compatibility changes before freezing schemas.
+P1a ingestion substrate: the pinned-source audit is complete and the active
+increment adds both sync targets, internal generated artifacts, source assembly,
+attribution, and deterministic proof. P1b public stable IDs, lookups, lifecycle,
+compatibility, and citation-consumer integration remains pending.
 
 ## Latest Evidence
 
-Not started.
+Pinned inputs and counts are recorded in
+[`research/EYECITE_DATA_AUDIT.md`](./research/EYECITE_DATA_AUDIT.md) and
+[`research/SOURCES.md`](./research/SOURCES.md). The ingestion increment does not
+close the full goal.
 
 ## Notes
 

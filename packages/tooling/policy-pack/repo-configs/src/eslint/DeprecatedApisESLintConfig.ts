@@ -97,6 +97,7 @@ export const DeprecatedApisESLintConfig: DeprecatedApisESLintConfigShape = [
             "apps/*/dtslint/*.tsx",
             "apps/*/scripts/*.ts",
             "packages/_internal/*/drizzle.config.ts",
+            "packages/_internal/*/scripts/*.ts",
             "packages/drivers/*/scripts/*.ts",
             "packages/drivers/*/test/fixtures/*.ts",
             // graph-3d driver stories are Storybook-glob-loaded roots typed by

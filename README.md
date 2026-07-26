@@ -178,10 +178,6 @@ bun run docgen:local
 # Quality, security, and effect-law checks
 bun run beep quality repo-exports-catalog --check
 bun run beep codex quality-review-fix-loop "close the current initiative"
-
-# Graphiti memory helpers
-bun run graphiti:proxy
-bun run graphiti:proxy:ensure
 ```
 
 Full reference (all commands, flags, and schemas): [`packages/tooling/tool/cli/README.md`](packages/tooling/tool/cli/README.md)

@@ -77,7 +77,7 @@ if (!shouldRunPgliteIntegration) {
           const store = yield* Thread.ThreadStore;
           const kernel = yield* AgentTurnKernel;
           const usage = yield* UsageRecordSink;
-          const ops = makeChatOperations(store, kernel, usage);
+          const ops = yield* makeChatOperations(store, kernel, usage);
 
           const workspaceId = decodeWorkspaceId(2);
           const thread = yield* ops.createThread(workspaceId, "Persisted matter");

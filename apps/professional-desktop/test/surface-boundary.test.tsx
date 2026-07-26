@@ -1,17 +1,22 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup, fireEvent, render, within } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { RegistryProvider } from "@effect/atom-react";
+import { it } from "@effect/vitest";
+import { cleanup, fireEvent, render, waitFor, within } from "@testing-library/react";
+import { Effect, Logger, References } from "effect";
+import { afterEach, describe, expect, vi } from "vitest";
 import { SurfaceBoundary } from "@/App";
+import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 
 // A child that throws for its first `limit` renders, then renders healthy —
 // the deterministic stand-in for a surface tripped by a transient crash
 // (e.g. the upstream MUI X StrictMode disposable bug during dock moves).
-const makeCrashingChild = (limit: number) => {
+const makeCrashingChild = (limit: number, message = "surface boom", onRender: () => void = () => undefined) => {
   const state = { count: 0 };
   const CrashingChild = (): React.JSX.Element => {
+    onRender();
     if (state.count < limit) {
       state.count += 1;
-      throw new Error("surface boom");
+      throw new Error(message);
     }
     return <div data-testid="healed">healed</div>;
   };
@@ -44,7 +49,8 @@ describe("SurfaceBoundary", { concurrent: false }, () => {
 
   it("stops retrying after the budget and offers a manual reload", () => {
     vi.spyOn(console, "error").mockImplementation(() => undefined);
-    const AlwaysCrashing = makeCrashingChild(Number.POSITIVE_INFINITY);
+    const onRender = vi.fn();
+    const AlwaysCrashing = makeCrashingChild(Number.POSITIVE_INFINITY, "surface boom", onRender);
     const { container } = render(
       <SurfaceBoundary label="Ontology">
         <AlwaysCrashing />
@@ -54,12 +60,45 @@ describe("SurfaceBoundary", { concurrent: false }, () => {
 
     expect(screen.getByText(/The Ontology surface crashed while rendering/)).toBeInTheDocument();
     const reload = screen.getByRole("button", { name: "Reload Ontology" });
+    const rendersBeforeReload = onRender.mock.calls.length;
+    // React may replay the first failed concurrent render once before handing
+    // it to the boundary; the application itself performs only two remounts.
+    expect(rendersBeforeReload).toBeLessThanOrEqual(8);
 
     // Reload restarts the cycle; a still-crashing surface lands back on the
     // card instead of looping forever.
     fireEvent.click(reload);
     expect(screen.getByRole("button", { name: "Reload Ontology" })).toBeInTheDocument();
+    expect(onRender.mock.calls.length - rendersBeforeReload).toBeLessThanOrEqual(8);
   });
+
+  it.effect(
+    "reports one sanitized cause after bounded retries are exhausted",
+    Effect.fnUntraced(function* () {
+      vi.spyOn(console, "error").mockImplementation(() => undefined);
+      const annotations: Array<Record<string, unknown>> = [];
+      const logger = Logger.make<unknown, void>((options) => {
+        annotations.push({ ...options.fiber.getRef(References.CurrentLogAnnotations) });
+      });
+      const AlwaysCrashing = makeCrashingChild(
+        Number.POSITIVE_INFINITY,
+        "token=private-value at /home/operator/workspace"
+      );
+      const { container } = render(
+        <RegistryProvider initialValues={[[professionalBrowserRuntime.layer, Logger.layer([logger])]]}>
+          <SurfaceBoundary label="Ontology">
+            <AlwaysCrashing />
+          </SurfaceBoundary>
+        </RegistryProvider>
+      );
+
+      expect(within(container).getByRole("button", { name: "Reload Ontology" })).toBeInTheDocument();
+      yield* Effect.tryPromise(() => waitFor(() => expect(annotations).toHaveLength(1)));
+      expect(annotations[0]?.["professional_desktop.renderer.source"]).toBe("workspace");
+      expect(annotations[0]?.cause_message).not.toContain("private-value");
+      expect(annotations[0]?.cause_detail).not.toContain("/home/operator");
+    })
+  );
 
   it("renders healthy children transparently", () => {
     const { container } = render(

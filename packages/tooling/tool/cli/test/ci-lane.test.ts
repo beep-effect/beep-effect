@@ -138,17 +138,18 @@ describe("ciLaneStepsForTesting", () => {
     ]);
   });
 
-  it("builds the codegen drift lane as generate-then-diff", () => {
+  it("builds the codegen drift lane as generate-then-diff-then-bundle-check", () => {
     const steps = ciLaneStepsForTesting(REPO_ROOT, "codegen", baseOptions);
-    expect(A.map(steps, (step) => step.command)).toEqual(["bun", "git"]);
-    const drift = lastOf(steps);
-    expect([...drift.args]).toEqual([
+    expect(A.map(steps, (step) => step.command)).toEqual(["bun", "git", "bun"]);
+    expect(steps[1]?.args).toEqual([
       "diff",
       "--exit-code",
       "--",
       "packages/drivers/ecfr/src/_generated",
       "packages/drivers/ecfr/openapi.json",
     ]);
+    const bundleCheck = lastOf(steps);
+    expect([...bundleCheck.args]).toEqual(["run", "--cwd", "apps/professional-desktop", "codegen:check"]);
   });
 
   it("builds commitlint range and last shapes", () => {

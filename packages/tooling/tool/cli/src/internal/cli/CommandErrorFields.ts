@@ -2,7 +2,7 @@
  * Shared schema fields and reporting helper for repo-cli command-suite errors.
  *
  * @remarks
- * The `<Group>CommandError` classes in Worktree, Yeet, Graphiti, Quality, and
+ * The `<Group>CommandError` classes in Worktree, Yeet, Quality, and
  * their siblings all carry the same `message` + optional
  * `command` / `exitCode` / `cause` shape and the same
  * `Runtime.errorExitCode` default. {@link commandErrorFields} lets a group

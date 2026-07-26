@@ -32,9 +32,26 @@ import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { Document, P, Text } from "@beep/md/Md.model";
 import { renderPlainTextUnsafe } from "@beep/md/Md.render";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
+import { LiteralKit } from "@beep/schema";
 import { MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Thread } from "@beep/workspace-use-cases/server";
-import { Cause, Clock, Duration, Effect, Exit, HashMap, Metric, Order, pipe, Ref, Semaphore, Stream } from "effect";
+import {
+  Cause,
+  Clock,
+  Context,
+  Duration,
+  Effect,
+  Exit,
+  HashMap,
+  Layer,
+  Metric,
+  Order,
+  pipe,
+  Ref,
+  Semaphore,
+  Stream,
+  Tuple,
+} from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -69,17 +86,19 @@ const $I = $ProfessionalDesktopId.create("chat/ChatOrchestrator");
  */
 export const documentToPlainText = (document: Document.Type): string => renderPlainTextUnsafe(document);
 
-const UNTITLED_THREAD_TITLE = "New thread" as const;
+const UNTITLED_THREAD_TITLE = "New thread";
 
 // What an unfinished assistant turn says. Appended after whatever had streamed,
 // so a stopped answer reads as a truncated answer that was stopped, and an empty
 // one still records that the request was made and abandoned.
-const STOPPED_NOTE = "(stopped)" as const;
-const FAILED_NOTE = "(failed)" as const;
+const STOPPED_NOTE = "(stopped)";
+const FAILED_NOTE = "(failed)";
+const CHAT_TURN_FAILED_MESSAGE = "The assistant could not complete this response.";
 const terminalNoteDocument = (text: string): Document.Type =>
   Document.make({ children: [P.make({ children: [Text.make({ value: text })] })] });
 
 const decodeDerivedThreadTitle = S.decodeUnknownOption(DerivedThreadTitle);
+const isChatActionError = S.is(ChatActionError);
 const decodeDerivedThreadTitleLine = (line: string): O.Option<string> => decodeDerivedThreadTitle(line);
 
 const deriveThreadTitle = (document: Document.Type): O.Option<string> =>
@@ -218,9 +237,8 @@ const decodeUsageAppend = S.decodeUnknownSync(TurnFinalizationUsageAppend);
  * synthesized activity/usage ids stand in for the not-yet-wired request
  * principal, matching the in-memory ThreadStore's system stand-in.
  *
- * TODO(live sidecar): carry real provider/model/token/latency from the kernel
- * turn-meta and a real request principal/activity once the Anthropic kernel and
- * the sidecar request context land.
+ * The current kernel contract streams content only, so this record intentionally
+ * carries no provider token accounting or request-principal metadata.
  */
 const fixtureUsageRecord = appendTurnFinalizationUsageRecord(
   decodeUsageAppend({
@@ -289,6 +307,7 @@ const streamAndPersist = (
   store: Thread.ThreadStore["Service"],
   kernel: AgentTurnKernel["Service"],
   usage: UsageRecordSink["Service"],
+  coordinator: ChatCoordinator["Service"],
   threadId: WorkspaceIdentity.ThreadId,
   kind: "send" | "edit",
   requestId: string,
@@ -356,6 +375,7 @@ const streamAndPersist = (
                 Effect.catch(toChatActionError("SendMessage.persistAssistant")),
                 Effect.andThen(
                   setTurnRequestStatus(
+                    coordinator,
                     requestId,
                     TurnRequestReceipts.cases.persisted.make({ generation: requestGeneration })
                   )
@@ -486,7 +506,7 @@ const streamAndPersist = (
           // error; the persist ChatActionError passes through unchanged (std-09).
           Stream.mapError(
             (error: TurnGenerationError | ChatActionError): ChatActionError =>
-              S.is(ChatActionError)(error) ? error : ChatActionError.new(error.message)
+              isChatActionError(error) ? error : ChatActionError.new(CHAT_TURN_FAILED_MESSAGE)
           ),
           Stream.onExit((exit) =>
             Exit.hasInterrupts(exit)
@@ -573,8 +593,6 @@ const titleGuardForEditedTurn = (
  * is not the one it is answering. The permit is held for the life of the stream,
  * so a concurrent send waits rather than racing.
  */
-const threadTurnLocks = Ref.makeUnsafe(HashMap.empty<WorkspaceIdentity.ThreadId, Semaphore.Semaphore>());
-
 const TurnRequestReceiptFields = { generation: S.Int };
 
 class PendingTurnRequestReceipt extends S.Class<PendingTurnRequestReceipt>($I`PendingTurnRequestReceipt`)(
@@ -616,13 +634,27 @@ class NotPersistedTurnRequestReceipt extends S.Class<NotPersistedTurnRequestRece
   })
 ) {}
 
-const TurnRequestReceipts = S.Union([
-  PendingTurnRequestReceipt,
-  AcceptedTurnRequestReceipt,
-  PersistedTurnRequestReceipt,
-  UserPersistedTurnRequestReceipt,
-  NotPersistedTurnRequestReceipt,
+const TurnRequestReceiptStatus = LiteralKit([
+  "pending",
+  "accepted",
+  "persisted",
+  "user_persisted",
+  "not_persisted",
 ]).pipe(
+  $I.annoteSchema("TurnRequestReceiptStatus", {
+    description: "Lifecycle variants for generation-scoped chat persistence receipts.",
+  })
+);
+
+const TurnRequestReceipts = TurnRequestReceiptStatus.mapMembers(
+  Tuple.evolve([
+    () => PendingTurnRequestReceipt,
+    () => AcceptedTurnRequestReceipt,
+    () => PersistedTurnRequestReceipt,
+    () => UserPersistedTurnRequestReceipt,
+    () => NotPersistedTurnRequestReceipt,
+  ])
+).pipe(
   $I.annoteSchema("TurnRequestReceipts", {
     description: "Generation-scoped persistence receipts for chat turn requests.",
   }),
@@ -630,120 +662,227 @@ const TurnRequestReceipts = S.Union([
 );
 
 type TurnRequestReceipt = typeof TurnRequestReceipts.Type;
-const turnRequestStatuses = Ref.makeUnsafe(HashMap.empty<string, TurnRequestReceipt>());
-const TURN_REQUEST_STATUS_TTL = Duration.minutes(5);
-let internalRequestSequence = 0;
-let requestReceiptGeneration = 0;
-const nextInternalRequestId = (): string => `internal:${internalRequestSequence++}`;
+type TurnRequestQueryStatus = typeof TurnRequestReceiptStatus.Type | "unknown";
+const TURN_REQUEST_STATUS_TTL_MILLIS = Duration.toMillis(Duration.minutes(5));
 
-const setTurnRequestStatus = (requestId: string, receipt: TurnRequestReceipt) =>
-  Ref.update(turnRequestStatuses, (statuses) =>
+class TrackedTurnRequestReceipt extends S.Class<TrackedTurnRequestReceipt>($I`TrackedTurnRequestReceipt`)(
+  {
+    receipt: TurnRequestReceipts,
+    expiresAt: S.Option(S.Int),
+  },
+  $I.annote("TrackedTurnRequestReceipt", {
+    description: "A chat turn request receipt and its optional terminal-state expiry time.",
+  })
+) {}
+
+type ThreadTurnLockEntry = {
+  readonly semaphore: Semaphore.Semaphore;
+  readonly users: number;
+};
+
+type ChatCoordinatorShape = {
+  readonly threadTurnLocks: Ref.Ref<HashMap.HashMap<WorkspaceIdentity.ThreadId, ThreadTurnLockEntry>>;
+  readonly turnRequestStatuses: Ref.Ref<HashMap.HashMap<string, TrackedTurnRequestReceipt>>;
+  readonly internalRequestSequence: Ref.Ref<number>;
+  readonly requestReceiptGeneration: Ref.Ref<number>;
+};
+
+class ChatCoordinator extends Context.Service<ChatCoordinator, ChatCoordinatorShape>()($I`ChatCoordinator`) {}
+
+const makeChatCoordinator = Effect.gen(function* () {
+  const threadTurnLocks = yield* Ref.make(HashMap.empty<WorkspaceIdentity.ThreadId, ThreadTurnLockEntry>());
+  const turnRequestStatuses = yield* Ref.make(HashMap.empty<string, TrackedTurnRequestReceipt>());
+  const internalRequestSequence = yield* Ref.make(0);
+  const requestReceiptGeneration = yield* Ref.make(0);
+  return ChatCoordinator.of({
+    threadTurnLocks,
+    turnRequestStatuses,
+    internalRequestSequence,
+    requestReceiptGeneration,
+  });
+});
+
+const ChatCoordinatorLive = Layer.effect(ChatCoordinator, makeChatCoordinator);
+
+const nextInternalRequestId = (coordinator: ChatCoordinator["Service"]) =>
+  Ref.getAndUpdate(coordinator.internalRequestSequence, (sequence) => sequence + 1).pipe(
+    Effect.map((sequence) => `internal:${sequence}`)
+  );
+
+const nextRequestReceiptGeneration = (coordinator: ChatCoordinator["Service"]) =>
+  Ref.getAndUpdate(coordinator.requestReceiptGeneration, (generation) => generation + 1);
+
+const setTurnRequestStatus = (
+  coordinator: ChatCoordinator["Service"],
+  requestId: string,
+  receipt: TurnRequestReceipt
+) =>
+  Ref.update(coordinator.turnRequestStatuses, (statuses) =>
     pipe(
       HashMap.get(statuses, requestId),
-      O.filter((current) => current.generation === receipt.generation),
+      O.filter((current) => current.receipt.generation === receipt.generation),
       O.match({
         onNone: () => statuses,
-        onSome: () => HashMap.set(statuses, requestId, receipt),
+        onSome: () =>
+          HashMap.set(
+            statuses,
+            requestId,
+            TrackedTurnRequestReceipt.make({
+              receipt,
+              expiresAt: O.none(),
+            })
+          ),
       })
     )
   );
 
-const getTurnRequestStatus = (requestId: string) =>
-  Ref.get(turnRequestStatuses).pipe(
-    Effect.map(HashMap.get(requestId)),
-    Effect.map(
-      O.match({
-        onNone: () => "unknown" as const,
-        onSome: (receipt) => receipt.status,
-      })
+const getTurnRequestStatus = (coordinator: ChatCoordinator["Service"], requestId: string) =>
+  Clock.currentTimeMillis.pipe(
+    Effect.flatMap((now) =>
+      Ref.modify(coordinator.turnRequestStatuses, (statuses) =>
+        O.match(HashMap.get(statuses, requestId), {
+          onNone: (): readonly [TurnRequestQueryStatus, typeof statuses] => ["unknown", statuses],
+          onSome: (tracked): readonly [TurnRequestQueryStatus, typeof statuses] =>
+            O.exists(tracked.expiresAt, (expiresAt) => expiresAt <= now)
+              ? ["unknown", HashMap.remove(statuses, requestId)]
+              : [tracked.receipt.status, statuses],
+        })
+      )
     ),
     Effect.withSpan("agents.chat.get_turn_request_status")
   );
 
-const expireTurnRequestStatus = (requestId: string, terminalReceipt: TurnRequestReceipt) =>
-  Ref.update(turnRequestStatuses, (statuses) =>
-    pipe(
-      HashMap.get(statuses, requestId),
-      O.filter(
-        (current) =>
-          current.generation === terminalReceipt.generation &&
-          TurnRequestReceipts.isAnyOf([terminalReceipt.status])(current)
-      ),
-      O.match({
-        onNone: () => statuses,
-        onSome: () => HashMap.remove(statuses, requestId),
-      })
-    )
-  ).pipe(Effect.delay(TURN_REQUEST_STATUS_TTL), Effect.forkDetach, Effect.asVoid);
-
-const finalizeTurnRequestStatus = (requestId: string, generation: number) =>
-  Ref.modify(
-    turnRequestStatuses,
-    (statuses): readonly [O.Option<TurnRequestReceipt>, HashMap.HashMap<string, TurnRequestReceipt>] =>
-      O.match(HashMap.get(statuses, requestId), {
-        onNone: () => [O.none(), statuses],
-        onSome: (receipt) => {
-          if (receipt.generation !== generation) return [O.none(), statuses];
-          const terminalReceipt = TurnRequestReceipts.match(receipt, {
-            pending: ({ generation }) => TurnRequestReceipts.cases.not_persisted.make({ generation }),
-            accepted: ({ generation }) => TurnRequestReceipts.cases.user_persisted.make({ generation }),
-            persisted: (receipt) => receipt,
-            user_persisted: (receipt) => receipt,
-            not_persisted: (receipt) => receipt,
-          });
-          return [O.some(terminalReceipt), HashMap.set(statuses, requestId, terminalReceipt)];
-        },
-      })
-  ).pipe(
-    Effect.flatMap(
-      O.match({
-        onNone: () => Effect.void,
-        onSome: (receipt) => expireTurnRequestStatus(requestId, receipt),
-      })
+const finalizeTurnRequestStatus = (coordinator: ChatCoordinator["Service"], requestId: string, generation: number) =>
+  Clock.currentTimeMillis.pipe(
+    Effect.flatMap((now) =>
+      Ref.update(coordinator.turnRequestStatuses, (statuses) =>
+        O.match(HashMap.get(statuses, requestId), {
+          onNone: () => statuses,
+          onSome: (tracked) => {
+            if (tracked.receipt.generation !== generation) return statuses;
+            const terminalReceipt = TurnRequestReceipts.match(tracked.receipt, {
+              pending: ({ generation }) => TurnRequestReceipts.cases.not_persisted.make({ generation }),
+              accepted: ({ generation }) => TurnRequestReceipts.cases.user_persisted.make({ generation }),
+              persisted: (receipt) => receipt,
+              user_persisted: (receipt) => receipt,
+              not_persisted: (receipt) => receipt,
+            });
+            return HashMap.set(
+              statuses,
+              requestId,
+              TrackedTurnRequestReceipt.make({
+                receipt: terminalReceipt,
+                expiresAt: O.some(now + TURN_REQUEST_STATUS_TTL_MILLIS),
+              })
+            );
+          },
+        })
+      )
     )
   );
 
 const trackTurnRequest = <A, E>(
+  coordinator: ChatCoordinator["Service"],
   requestId: string,
   generation: number,
   stream: Stream.Stream<A, E>
 ): Stream.Stream<A, E> => {
   const pendingReceipt = TurnRequestReceipts.cases.pending.make({ generation });
   return Stream.unwrap(
-    Ref.update(turnRequestStatuses, (statuses) => HashMap.set(statuses, requestId, pendingReceipt)).pipe(
+    Clock.currentTimeMillis.pipe(
+      Effect.flatMap((now) =>
+        Ref.update(coordinator.turnRequestStatuses, (statuses) =>
+          HashMap.set(
+            HashMap.filter(statuses, (tracked) => !O.exists(tracked.expiresAt, (expiresAt) => expiresAt <= now)),
+            requestId,
+            TrackedTurnRequestReceipt.make({
+              receipt: pendingReceipt,
+              expiresAt: O.none(),
+            })
+          )
+        )
+      ),
       Effect.as(stream)
     )
-  ).pipe(Stream.ensuring(finalizeTurnRequestStatus(requestId, generation)));
+  ).pipe(Stream.ensuring(finalizeTurnRequestStatus(coordinator, requestId, generation)));
 };
 
-const threadTurnLock = Effect.fn("chat.threadTurnLock")(function* (threadId: WorkspaceIdentity.ThreadId) {
-  return yield* Ref.modify(threadTurnLocks, (locks) =>
-    pipe(
-      HashMap.get(locks, threadId),
-      O.match({
-        onSome: (
-          existing
-        ): readonly [Semaphore.Semaphore, HashMap.HashMap<WorkspaceIdentity.ThreadId, Semaphore.Semaphore>] => [
-          existing,
-          locks,
-        ],
-        onNone: (): readonly [
-          Semaphore.Semaphore,
-          HashMap.HashMap<WorkspaceIdentity.ThreadId, Semaphore.Semaphore>,
-        ] => {
-          const created = Semaphore.makeUnsafe(1);
-          return [created, HashMap.set(locks, threadId, created)];
-        },
-      })
-    )
+const acquireThreadTurnLock = Effect.fn("agents.chat.acquire_thread_turn_lock")(function* (
+  coordinator: ChatCoordinator["Service"],
+  threadId: WorkspaceIdentity.ThreadId
+) {
+  return yield* Ref.modify(coordinator.threadTurnLocks, (locks) =>
+    O.match(HashMap.get(locks, threadId), {
+      onSome: (entry): readonly [Semaphore.Semaphore, typeof locks] => [
+        entry.semaphore,
+        HashMap.set(locks, threadId, { ...entry, users: entry.users + 1 }),
+      ],
+      onNone: (): readonly [Semaphore.Semaphore, typeof locks] => {
+        const semaphore = Semaphore.makeUnsafe(1);
+        return [semaphore, HashMap.set(locks, threadId, { semaphore, users: 1 })];
+      },
+    })
   );
 });
 
-const holdThreadTurnPermit = Effect.fn("chat.holdThreadTurnPermit")(function* (threadId: WorkspaceIdentity.ThreadId) {
-  const lock = yield* threadTurnLock(threadId);
+const releaseThreadTurnLock = (
+  coordinator: ChatCoordinator["Service"],
+  threadId: WorkspaceIdentity.ThreadId,
+  semaphore: Semaphore.Semaphore
+) =>
+  Ref.update(coordinator.threadTurnLocks, (locks) =>
+    O.match(HashMap.get(locks, threadId), {
+      onNone: () => locks,
+      onSome: (entry) =>
+        entry.semaphore !== semaphore
+          ? locks
+          : entry.users === 1
+            ? HashMap.remove(locks, threadId)
+            : HashMap.set(locks, threadId, { ...entry, users: entry.users - 1 }),
+    })
+  );
+
+const holdThreadTurnPermit = Effect.fn("agents.chat.hold_thread_turn_permit")(function* (
+  coordinator: ChatCoordinator["Service"],
+  threadId: WorkspaceIdentity.ThreadId
+) {
+  yield* Effect.acquireRelease(
+    acquireThreadTurnLock(coordinator, threadId).pipe(
+      Effect.tap((semaphore) =>
+        semaphore.take(1).pipe(Effect.onInterrupt(() => releaseThreadTurnLock(coordinator, threadId, semaphore)))
+      )
+    ),
+    (semaphore) => semaphore.release(1).pipe(Effect.andThen(releaseThreadTurnLock(coordinator, threadId, semaphore)))
+  );
   // Released when the stream's scope closes — completion, failure, or stop.
-  yield* Effect.acquireRelease(lock.take(1), () => lock.release(1));
 });
+
+const trackedThreadTurn = (
+  coordinator: ChatCoordinator["Service"],
+  threadId: WorkspaceIdentity.ThreadId,
+  requestId: string | undefined,
+  makeStream: (
+    resolvedRequestId: string,
+    requestGeneration: number
+  ) => Effect.Effect<Stream.Stream<AssistantBlock, ChatActionError>, ChatActionError>
+): Stream.Stream<AssistantBlock, ChatActionError> =>
+  Stream.unwrap(
+    Effect.gen(function* () {
+      const resolvedRequestId = requestId ?? (yield* nextInternalRequestId(coordinator));
+      const requestGeneration = yield* nextRequestReceiptGeneration(coordinator);
+      return trackTurnRequest(
+        coordinator,
+        resolvedRequestId,
+        requestGeneration,
+        Stream.unwrap(
+          Effect.gen(function* () {
+            yield* holdThreadTurnPermit(coordinator, threadId);
+            return yield* makeStream(resolvedRequestId, requestGeneration);
+          })
+        )
+      );
+    })
+  );
 
 /**
  * The chat orchestration operations over already-acquired services. Each
@@ -765,17 +904,18 @@ const holdThreadTurnPermit = Effect.fn("chat.holdThreadTurnPermit")(function* (t
  *   const store = yield* Thread.ThreadStore
  *   const kernel = yield* AgentTurnKernel
  *   const usage = yield* UsageRecordSink
- *   return makeChatOperations(store, kernel, usage)
+ *   return yield* makeChatOperations(store, kernel, usage)
  * })
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const makeChatOperations = (
+const makeChatOperationsWith = (
   store: Thread.ThreadStore["Service"],
   kernel: AgentTurnKernel["Service"],
-  usage: UsageRecordSink["Service"]
+  usage: UsageRecordSink["Service"],
+  coordinator: ChatCoordinator["Service"]
 ) => ({
   listThreads: (workspaceId: WorkspaceIdentity.WorkspaceId) =>
     store
@@ -792,94 +932,138 @@ export const makeChatOperations = (
       .timeline(threadId)
       .pipe(Effect.catch(toChatActionError("GetTimeline")), Effect.withSpan("agents.chat.get_timeline")),
 
-  getTurnRequestStatus,
+  getTurnRequestStatus: (requestId: string) => getTurnRequestStatus(coordinator, requestId),
 
   sendMessage: (
     threadId: WorkspaceIdentity.ThreadId,
     content: Document.Type,
-    requestId: string = nextInternalRequestId()
-  ): Stream.Stream<AssistantBlock, ChatActionError> => {
-    const requestGeneration = requestReceiptGeneration++;
-    return trackTurnRequest(
+    requestId?: string
+  ): Stream.Stream<AssistantBlock, ChatActionError> =>
+    trackedThreadTurn(
+      coordinator,
+      threadId,
       requestId,
-      requestGeneration,
-      Stream.unwrap(
-        Effect.gen(function* () {
-          yield* holdThreadTurnPermit(threadId);
-          yield* repairOrphanedUserTurn(store, threadId);
-          yield* Effect.uninterruptible(
-            store
-              .appendTurn({
-                threadId,
-                parentTurnId: O.none(),
-                role: "user",
-                content,
-              })
-              .pipe(
-                Effect.catch(toChatActionError("SendMessage")),
-                Effect.andThen(
-                  setTurnRequestStatus(
-                    requestId,
-                    TurnRequestReceipts.cases.accepted.make({ generation: requestGeneration })
-                  )
+      Effect.fnUntraced(function* (resolvedRequestId, requestGeneration) {
+        yield* repairOrphanedUserTurn(store, threadId);
+        yield* Effect.uninterruptible(
+          store
+            .appendTurn({
+              threadId,
+              parentTurnId: O.none(),
+              role: "user",
+              content,
+            })
+            .pipe(
+              Effect.catch(toChatActionError("SendMessage")),
+              Effect.andThen(
+                setTurnRequestStatus(
+                  coordinator,
+                  resolvedRequestId,
+                  TurnRequestReceipts.cases.accepted.make({ generation: requestGeneration })
                 )
               )
-          );
-          yield* setTitleFromFirstUserMessage(store, threadId, content);
-          return streamAndPersist(store, kernel, usage, threadId, "send", requestId, requestGeneration);
-        })
-      )
-    ).pipe(Stream.withSpan("agents.chat.send_message"));
-  },
+            )
+        );
+        yield* setTitleFromFirstUserMessage(store, threadId, content);
+        return streamAndPersist(
+          store,
+          kernel,
+          usage,
+          coordinator,
+          threadId,
+          "send",
+          resolvedRequestId,
+          requestGeneration
+        );
+      })
+    ).pipe(Stream.withSpan("agents.chat.send_message")),
 
   editMessage: (
     threadId: WorkspaceIdentity.ThreadId,
     turnId: WorkspaceIdentity.TurnId,
     content: Document.Type,
-    requestId: string = nextInternalRequestId()
-  ): Stream.Stream<AssistantBlock, ChatActionError> => {
-    const requestGeneration = requestReceiptGeneration++;
-    return trackTurnRequest(
+    requestId?: string
+  ): Stream.Stream<AssistantBlock, ChatActionError> =>
+    trackedThreadTurn(
+      coordinator,
+      threadId,
       requestId,
-      requestGeneration,
-      Stream.unwrap(
-        Effect.gen(function* () {
-          yield* holdThreadTurnPermit(threadId);
-          const titleGuard = yield* titleGuardForEditedTurn(store, threadId, turnId);
-          yield* Effect.uninterruptible(
-            store
-              .appendTurn({
-                threadId,
-                parentTurnId: O.some(turnId),
-                role: "user",
-                content,
-              })
-              .pipe(
-                Effect.catch(toChatActionError("EditMessage")),
-                Effect.andThen(
-                  setTurnRequestStatus(
-                    requestId,
-                    TurnRequestReceipts.cases.accepted.make({ generation: requestGeneration })
-                  )
+      Effect.fnUntraced(function* (resolvedRequestId, requestGeneration) {
+        const titleGuard = yield* titleGuardForEditedTurn(store, threadId, turnId);
+        yield* Effect.uninterruptible(
+          store
+            .appendTurn({
+              threadId,
+              parentTurnId: O.some(turnId),
+              role: "user",
+              content,
+            })
+            .pipe(
+              Effect.catch(toChatActionError("EditMessage")),
+              Effect.andThen(
+                setTurnRequestStatus(
+                  coordinator,
+                  resolvedRequestId,
+                  TurnRequestReceipts.cases.accepted.make({ generation: requestGeneration })
                 )
               )
-          );
-          yield* pipe(
-            titleGuard,
-            O.map((emptyTitle) => setTitleFromFirstUserMessage(store, threadId, content, emptyTitle)),
-            O.getOrElse(() => Effect.void)
-          );
-          return streamAndPersist(store, kernel, usage, threadId, "edit", requestId, requestGeneration);
-        })
-      )
-    ).pipe(Stream.withSpan("agents.chat.edit_message"));
-  },
+            )
+        );
+        yield* pipe(
+          titleGuard,
+          O.map((emptyTitle) => setTitleFromFirstUserMessage(store, threadId, content, emptyTitle)),
+          O.getOrElse(() => Effect.void)
+        );
+        return streamAndPersist(
+          store,
+          kernel,
+          usage,
+          coordinator,
+          threadId,
+          "edit",
+          resolvedRequestId,
+          requestGeneration
+        );
+      })
+    ).pipe(Stream.withSpan("agents.chat.edit_message")),
+});
+
+/**
+ * Construct an isolated set of chat orchestration operations over
+ * already-acquired services.
+ *
+ * @example
+ * ```ts
+ * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
+ * import { Thread } from "@beep/workspace-use-cases/server"
+ * import { Effect } from "effect"
+ * import { makeChatOperations } from "@/chat/ChatOrchestrator"
+ * import { UsageRecordSink } from "@/chat/UsageRecordSink"
+ *
+ * const program = Effect.gen(function* () {
+ *   const store = yield* Thread.ThreadStore
+ *   const kernel = yield* AgentTurnKernel
+ *   const usage = yield* UsageRecordSink
+ *   return yield* makeChatOperations(store, kernel, usage)
+ * })
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makeChatOperations = Effect.fn("agents.chat.make_operations")(function* (
+  store: Thread.ThreadStore["Service"],
+  kernel: AgentTurnKernel["Service"],
+  usage: UsageRecordSink["Service"]
+) {
+  const coordinator = yield* makeChatCoordinator;
+  return makeChatOperationsWith(store, kernel, usage, coordinator);
 });
 
 /**
  * Runtime type for the chat orchestration operations.
  */
-type ChatOperations = ReturnType<typeof makeChatOperations>;
+type ChatOperations = ReturnType<typeof makeChatOperationsWith>;
 
 // ---------------------------------------------------------------------------
 // Handlers
@@ -910,8 +1094,9 @@ const makeChatHandlers = (operations: ChatOperations) =>
  * @example
  * ```ts
  * import { ChatHandlersLive } from "@/chat/ChatOrchestrator"
+ * import { Layer } from "effect"
  *
- * console.log(ChatHandlersLive)
+ * console.log(Layer.isLayer(ChatHandlersLive)) // true
  * ```
  *
  * @category layers
@@ -922,6 +1107,7 @@ export const ChatHandlersLive = ChatRpcs.toLayer(
     const store = yield* Thread.ThreadStore;
     const kernel = yield* AgentTurnKernel;
     const usage = yield* UsageRecordSink;
-    return makeChatHandlers(makeChatOperations(store, kernel, usage));
+    const coordinator = yield* ChatCoordinator;
+    return makeChatHandlers(makeChatOperationsWith(store, kernel, usage, coordinator));
   })
-);
+).pipe(Layer.provide(ChatCoordinatorLive));

@@ -38,15 +38,6 @@ const FOCUS_RUNTIME_FILES = HashSet.fromIterable([
   "packages/tooling/tool/cli/src/commands/Laws/index.ts",
   "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
   "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyConfig.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyServices.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyResponses.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyBody.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyDependencyHealth.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyForwarder.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyQueue.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyRuntime.ts",
 ]);
 const ALLOWED_NON_PASCAL_FILENAMES = HashSet.fromIterable(["index", "bin"]);
 const DEPRECATED_API_LINT_CACHE_LOCATION = "node_modules/.cache/eslint-deprecated-apis/.eslintcache";

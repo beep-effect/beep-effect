@@ -59,7 +59,7 @@ export { OntologyValidationRegion } from "./Session.validation.tsx";
  * @category forms
  * @since 0.0.0
  */
-export { iriFieldValid, valueFromEvent } from "./Session.workbench.shared.ts";
+export { valueFromEvent } from "./Session.workbench.shared.ts";
 /**
  * @category components
  * @since 0.0.0

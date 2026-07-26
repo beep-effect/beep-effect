@@ -39,6 +39,16 @@ The scaffold pins courts-db `v0.10.27` at
 records checksums, retrieval dates, and source/ID counts. Historical counts in
 the exploration are explicitly non-authoritative.
 
+Verified 2026-07-25:
+
+| Source | Archive SHA-256 | Authoritative emitted counts |
+| --- | --- | --- |
+| courts-db `f353e5…` | `6c0e4fc800a8ebdb7d539960fd08b8373b219623694723af36378df229f369fa` | 2,809 assembled records / 2,809 unique IDs / 28 place inputs |
+| reporters-db `fad63b…` | `11d6aee9b5927fbf29d92fbce6e502c712d3c7acd0a3ed736293d7100b1386f2` | 1,236 reporter keys / 1,262 records; 797 journal keys / 798 records; 371 law keys / 373 records; 189 case-name keys / 239 expansions; 7 regex families; 50 state abbreviations |
+
+The local eyecite implementations were audited as secondary research, not data
+authority. See [`EYECITE_DATA_AUDIT.md`](./EYECITE_DATA_AUDIT.md).
+
 ## 3. External sources
 
 - [courts-db repository](https://github.com/freelawproject/courts-db),
@@ -58,7 +68,7 @@ Full claim trails live in the exploration's five `research/*.md` dossiers.
 | Capability | Path | Disposition |
 | --- | --- | --- |
 | `SyncDataTarget` registry/schemas | `packages/tooling/tool/cli/src/commands/SyncDataToTs/` | reuse; two targets NET-NEW |
-| Generated artifact family | `packages/foundation/primitive/data/src/generated/` | reuse private zone; artifacts NET-NEW |
+| Generated artifact family | `packages/law-practice/domain/src/internal/generated/free-law-project/` | private law-practice zone; artifacts NET-NEW |
 | `EntityId.factory` | `packages/shared/domain/src/entity/EntityId.ts` | reuse for stable IDs |
 | `LiteralKit` | `packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts` | reuse for canonical closed domains |
 | Citation consumers | `packages/law-practice/domain/src/values/Citation/` | downstream consumer; compatibility integration NET-NEW |

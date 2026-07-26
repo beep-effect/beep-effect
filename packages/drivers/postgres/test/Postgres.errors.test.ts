@@ -5,7 +5,10 @@ import {
   formatSql,
   getPgErrorAliases,
   getPgErrorName,
+  MigrationBundleConfig,
+  MigrationBundleEntry,
   migrate,
+  migrateBundle,
   NativePgClient,
   PgErrorCanonicalNameByCode,
   PgErrorCode,
@@ -544,6 +547,32 @@ describe("Postgres Drizzle migrations", () => {
       expect(error).toBeInstanceOf(PostgresError);
       expect(error.operation).toBe("migrate");
       expect(O.getOrThrow(error.message)).toContain("ENOENT");
+    })
+  );
+
+  it.effect(
+    "validates and prepares in-memory migration bundles before native execution",
+    Effect.fnUntraced(function* () {
+      const config = MigrationBundleConfig.make({
+        migrations: [
+          MigrationBundleEntry.make({
+            name: "20260512000000_create_example",
+            sql: "CREATE TABLE example (id TEXT PRIMARY KEY);\n",
+          }),
+        ],
+        migrationsSchema: "drizzle",
+        migrationsTable: "__drizzle_migrations",
+      });
+      const execute = () => Effect.void;
+      const session = {
+        execute,
+        objects: () => Effect.succeed([]),
+        transaction: (run: (tx: { readonly execute: typeof execute }) => Effect.Effect<unknown>) => run({ execute }),
+      };
+      const result = yield* migrateBundle({ session } as unknown as PostgresDrizzleDatabase, config);
+
+      expectRoundTrip(MigrationBundleConfig, config);
+      expect(result).toBeUndefined();
     })
   );
 });

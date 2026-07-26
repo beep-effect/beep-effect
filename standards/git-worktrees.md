@@ -259,9 +259,29 @@ For an existing duplicate clone:
 - `flake.nix` now derives its Bun cache name from the active worktree root, so each worktree gets its own cache namespace.
 - `.idea`, `.turbo`, `.sst`, `.beep`, and `node_modules` are intentionally
   local to each worktree.
-- The Graphiti proxy is machine-global enough that you can keep using the same helper commands across worktrees:
-  - `bun run graphiti:proxy`
-  - `bun run graphiti:proxy:ensure`
+## Shared Multi-Agent Worktrees
+
+When several agents (or an agent team) write into the **same** worktree
+concurrently, the working directory and index are shared mutable state. Rules:
+
+- **Never `git stash` in a shared multi-agent worktree.** Stash sweeps *every*
+  writer's uncommitted work into one stash entry, silently pulling other
+  lanes' in-flight edits out from under them; a later `stash pop` then
+  reapplies them onto a tree that has moved, producing conflicts or quiet
+  duplication. If you personally need a clean tree, that is the signal to move
+  your lane to its own worktree instead. (Yeet's `--staged-only` marked-stash
+  flow is the one sanctioned exception — it is serialized inside a single
+  publish operation, not a lane parking mechanism.)
+- Same discipline for other whole-tree mutations while lanes are active:
+  `git checkout -- .`, `git reset --hard`, and branch switches affect every
+  writer, not just you.
+- Serialize same-file writers up front (disjoint file sets per lane); if two
+  lanes must touch one file, hand the file to one lane and have the other send
+  a follow-up message.
+
+Evidence: 2026-07-25 `epistemic-bitemporal-edge-core` closeout reflection
+(five-lane execution; the stash hazard is finding #3 in
+`goals/epistemic-bitemporal-edge-core/history/reflections/2026-07-25-claude.md`).
 
 ## Official References
 

@@ -19,10 +19,10 @@ extending the epistemic slice rather than an in-place edit of the closed gate.
 
 ## Next Open Question
 
-Two gates remain queued: contradiction triage stays behind the graduated
-[`epistemic-bitemporal-edge-core`](../../goals/epistemic-bitemporal-edge-core/README.md),
-and retention/tier projections stay behind real-usage calibration and an
-independent shape pass.
+One gate remains queued: retention/tier projections stay behind real-usage
+calibration and an independent shape pass. Contradiction triage cleared its gate
+when the core landed and graduated 2026-07-25 into
+[`goals/epistemic-contradiction-triage`](../../goals/epistemic-contradiction-triage/README.md).
 
 ## Read This First
 
@@ -44,6 +44,7 @@ see [`explorations/_gold-intake`](../_gold-intake/).
 
 ## Trail
 
+- 2026-07-25: order-2 gate cleared — `epistemic-bitemporal-edge-core` closed `completed-retained`, so contradiction triage graduated into [`goals/epistemic-contradiction-triage`](../../goals/epistemic-contradiction-triage/README.md) with Deferred spike B as its P0 hard gate. MAP row marked GRADUATED, manifest `links.goals` extended. Retention/tier projections remain the only queued lane.
 - 2026-07-14: shape gate ratified as drafted; graduated only `epistemic-bitemporal-edge-core`, with contradiction triage queued behind the core and retention queued behind real-usage calibration; no product prose page created.
 - 2026-07-14: align gate closed; seven decisions plus the controlling product-memory scope recorded LOCKED, two spikes deferred to goal P0s, and the packet advanced to shape with BRIEF/MAP drafts awaiting sign-off.
 - 2026-07-11: 2026-07-08 memory-stack research input recorded in DECISIONS.md (Q1/Q2/Q4/Q6 strengthened, forks stay open); packet's bitemporal port is now the gate for graphiti-memory decommission.
