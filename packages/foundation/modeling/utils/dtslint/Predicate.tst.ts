@@ -53,3 +53,26 @@ describe("chainRefinements", () => {
     expect(P.chainRefinements<unknown>()).type.not.toBeCallableWith([]);
   });
 });
+
+describe("isInstanceOfAny", () => {
+  class Cat {}
+  class Dog {}
+
+  it("narrows to the union of the provided instance types", () => {
+    const isPet = P.isInstanceOfAny(Cat, Dog);
+
+    expect(isPet).type.toBe<P.Refinement<unknown, Cat | Dog>>();
+  });
+
+  it("supports native generic constructors", () => {
+    const isCollection = P.isInstanceOfAny(RegExp, Map, Set, URLSearchParams);
+
+    expect(isCollection).type.toBe<
+      P.Refinement<unknown, RegExp | Map<unknown, unknown> | Set<unknown> | URLSearchParams>
+    >();
+  });
+
+  it("requires at least one constructor", () => {
+    expect(P.isInstanceOfAny).type.not.toBeCallableWith();
+  });
+});

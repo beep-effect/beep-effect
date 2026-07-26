@@ -47,6 +47,17 @@ describe("Predicate utilities", () => {
     expect(calls).toBe(1);
   });
 
+  it("refines instances accepted by any constructor", () => {
+    class Cat {}
+    class Dog {}
+
+    const isPet = P.isInstanceOfAny(Cat, Dog);
+
+    expect(isPet(new Cat())).toBe(true);
+    expect(isPet(new Dog())).toBe(true);
+    expect(isPet({})).toBe(false);
+  });
+
   it("checks required properties in data-first and data-last forms", () => {
     expect(P.hasProperties({ foo: 1, bar: 2 }, ["foo", "bar"] as const)).toBe(true);
     expect(P.hasProperties("foo", "bar")({ foo: 1, bar: 2 })).toBe(true);

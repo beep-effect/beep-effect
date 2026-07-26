@@ -15698,6 +15698,14 @@
       "description": "A nominally branded record with string keys and unknown values."
     },
     {
+      "file": "packages/foundation/modeling/schema/src/SafeObject/SafeObject.schema.ts",
+      "symbol": "SafeObjectFromObjectKeyword",
+      "kind": "codec",
+      "owner": "@beep/schema",
+      "identity": "SafeObjectFromObjectKeyword",
+      "description": "Normalizes any JavaScript object-keyword value into a nominally branded string-keyed record."
+    },
+    {
       "file": "packages/foundation/modeling/schema/src/SafeRemoteHost.ts",
       "symbol": "BlockedHostError",
       "kind": "tagged-error",

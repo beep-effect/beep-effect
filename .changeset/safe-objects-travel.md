@@ -2,5 +2,5 @@
 "@beep/schema": minor
 ---
 
-Add the nominal `SafeObject` record schema with canonical exports,
-documentation, and property-based runtime and type tests.
+Add the nominal `SafeObject` record schema and its object-keyword normalization
+codec with canonical exports, documentation, and runtime and type tests.

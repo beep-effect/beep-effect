@@ -114,6 +114,7 @@ type ChainRefinementBuilder<Start> = {
 };
 
 type RuntimeRefinement = { bivarianceHack(self: unknown): boolean }["bivarianceHack"];
+type AnyConstructor = abstract new (...args: never[]) => object;
 
 const makeChainRefinement =
   (refinements: ReadonlyArray<RuntimeRefinement>) =>
@@ -335,6 +336,38 @@ export function chainRefinements<Start>(): ChainRefinementBuilder<Start>;
 export function chainRefinements(refinements?: ReadonlyArray<RuntimeRefinement>): unknown {
   return refinements === undefined ? makeChainRefinement : makeChainRefinement(refinements);
 }
+
+/**
+ * Creates a refinement that succeeds when a value is an instance of any
+ * provided constructor.
+ *
+ * Evaluation short-circuits on the first matching constructor, and the refined
+ * output is the union of all provided instance types.
+ *
+ * @example
+ * ```ts
+ * import { P } from "@beep/utils";
+ *
+ * class Cat {}
+ * class Dog {}
+ *
+ * const isPet = P.isInstanceOfAny(Cat, Dog);
+ * const candidate: unknown = new Cat();
+ *
+ * if (isPet(candidate)) {
+ *   console.log(candidate);
+ * }
+ * ```
+ *
+ * @category refinements
+ * @since 0.0.0
+ */
+export const isInstanceOfAny =
+  <const Constructors extends A.NonEmptyReadonlyArray<AnyConstructor>>(
+    ...constructors: Constructors
+  ): P.Refinement<unknown, InstanceType<Constructors[number]>> =>
+  (self): self is InstanceType<Constructors[number]> =>
+    A.some(constructors, (constructor) => self instanceof constructor);
 
 /**
  * Returns a predicate that succeeds when an unknown value is an object with all
