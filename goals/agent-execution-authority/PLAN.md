@@ -4,9 +4,10 @@
 
 Status: `in-progress`
 
-PRs 1 and 2 have landed. PR 1 (#458) shipped the grant and record schemas plus
-the `frozen-grant-set` law; PR 2 shipped `@beep/epistemic-config`, the
-`OntologyMcpConfig` split, and the MCP entrypoint cleanup. PR 3 is next.
+PRs 1–3 have landed. PR 1 (#458) shipped the grant and record schemas plus
+the `frozen-grant-set` law; PR 2 (#463) shipped `@beep/epistemic-config`, the
+`OntologyMcpConfig` split, and the MCP entrypoint cleanup; PR 3 shipped the
+append-only ledger tables, migration, port, and Drizzle adapter. PR 4 is next.
 
 ## Phases
 
@@ -78,18 +79,19 @@ Placement follows `03-driver-boundaries.md:151-153`: port in
 product repository in app code — that is known drift, recorded but not fixed
 here.
 
-**Open fork to settle at PR 3 (noted 2026-07-26):** every table in
-`packages/epistemic` goes through `EntityTable.pgTableFrom(BaseEntity model)` —
-no raw `pgTable` exists in the slice, and the WorkItem raw-table precedent lives
-in architecture-lab, not here. But `BaseEntity` bakes in
-`rowVersion`/`updatedAt`/`updatedByPrincipal`, i.e. update vocabulary the
-insert-only ledger must not have (decision 4 rejected mutable `BaseEntity` rows
-explicitly). Options: (a) raw `pgTable` mapping the PR 1 record schemas —
-foreign to the slice's table idiom but honest about immutability; (b)
-`EntityTable.pgTableFrom` + triggers blocking UPDATE anyway — idiomatic but
-ships three dead mutability columns on a row that must never mutate. Decide
-deliberately at PR 3; the PR 1 record schemas are deliberately plain values so
-either projection works.
+**Fork resolved at PR 3 (2026-07-26): raw `pgTable`.** The SPEC's Persistence
+section was already normative ("Non-`BaseEntity` rows", WorkItem precedent
+named) and decision 4 rejected mutable rows explicitly; option (b) would have
+shipped `row_version`/`updated_at`/`updated_by_principal` as schema lies on rows
+that must never mutate, purely for idiom consistency. A third option surfaced
+during exploration — `EntitySchema.ClassFactory` without `BaseEntity` fed to
+`pgTableFrom`, keeping `.definition` metadata with zero forced columns — and was
+rejected because it has zero product usage anywhere (proven only by a JSDoc
+example), and a one-way door is the wrong place to pioneer machinery. The
+no-payload descriptor walk adapts to drizzle column metadata (exact column set +
+no jsonb/json/bytea + bounded literals), proving the identical property. The PR 1
+record schemas are their own row codecs: encoded form is already the flat wire
+projection, so the converters are `S.encode`/`S.decode` and nothing else.
 
 *Proves:* `.pglite.test.ts`, `{ concurrent: false }` — append N, verify, tamper
 via raw SQL and assert verification fails **at the tampered index**, assert the

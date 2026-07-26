@@ -197,7 +197,13 @@
         "../../../packages/tooling/test-kit/test-utils/src/*.ts"
       ],
       "@beep/tika": ["../../../packages/drivers/tika/src/index.ts"],
-      "@beep/tika/*": ["../../../packages/drivers/tika/src/*.ts"]
+      "@beep/tika/*": ["../../../packages/drivers/tika/src/*.ts"],
+      "@beep/epistemic-server/ExecutionLedger": [
+        "../../../packages/epistemic/server/src/ExecutionLedger/index.ts"
+      ],
+      "@beep/epistemic-use-cases/ExecutionLedger": [
+        "../../../packages/epistemic/use-cases/src/ExecutionLedger/index.ts"
+      ]
     }
   }
 }

@@ -122,6 +122,12 @@
       ],
       "@beep/test-utils/*": [
         "../../../packages/tooling/test-kit/test-utils/src/*.ts"
+      ],
+      "@beep/epistemic-tables/values": [
+        "../../../packages/epistemic/tables/src/values/index.ts"
+      ],
+      "@beep/epistemic-tables/values/ExecutionRecord": [
+        "../../../packages/epistemic/tables/src/values/ExecutionRecord/index.ts"
       ]
     }
   }

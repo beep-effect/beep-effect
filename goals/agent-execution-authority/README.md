@@ -37,16 +37,25 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-**P1 Implement.** PRs 1 and 2 have landed. Next concrete action: PR 3 — the
-ledger tables, migration, port, Drizzle adapter, and chain verifier. Settle the
-open fork recorded at `PLAN.md` first: raw `pgTable` versus
-`EntityTable.pgTableFrom`, since `BaseEntity` bakes in `rowVersion`,
-`updatedAt`, and `updatedByPrincipal`, none of which an insert-only ledger may
-carry.
+**P1 Implement.** PRs 1–3 have landed. Next concrete action: PR 4 — add
+`recordOutcome` to `TierGateShape` in `@beep/mcp-kit` (called by
+`dispatchWithTierGate` via `Effect.onExit`, taking a bounded settlement literal,
+never an `Exit`) and `EgressDenied` in `@beep/api-transport`. Mind that docgen
+executes `TierGate.ts`'s `@example` blocks, which construct `TierGateShape`
+values and must gain the new method.
 
 ## Latest Evidence
 
-- **PR 2** (2026-07-26) — `@beep/epistemic-config` owns the destination
+- **PR 3** (2026-07-26) — the append-only ledger: raw-`pgTable` decision/outcome
+  tables (fork resolved against `BaseEntity` — its mutability columns would be
+  schema lies), the repo's first plpgsql triggers authored inside the splitter's
+  boundary-keyword rule and proven through real `migrate()`, the
+  `ExecutionLedger` port and Drizzle adapter with constraint-name error mapping,
+  and the tamper proof: after `DROP TRIGGER` and a raw-SQL mutation of the
+  mid-chain row, `verifyExecutionDecisionChain` reports `chain-broken` at index
+  1 exactly. The derived unknown-outcome predicate is proven blind to ordinary
+  denials.
+- **PR 2** (#463, 2026-07-26) — `@beep/epistemic-config` owns the destination
   allowlist and pinned policy revision; audience is resolved from the
   destination rather than configured. `ONTOLOGY_MCP_MUTATIONS_ENABLED` moved to
   a new `OntologyMcpConfig` service and off the entrypoint's module-top-level

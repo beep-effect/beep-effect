@@ -32,7 +32,9 @@ import { ShaclValidationService } from "@beep/semantic-web/services/shacl-valida
 import { Effect, Layer } from "effect";
 import { ClaimDispositionRepositoryDrizzle, ClaimDispositionRepositoryInMemory } from "./ClaimDisposition/index.ts";
 import { EdgeAuthorityRepositoryDrizzle } from "./EdgeAuthority/index.ts";
+import { ExecutionLedgerDrizzle } from "./ExecutionLedger/index.ts";
 import type { EdgeAuthorityRepository } from "@beep/epistemic-use-cases/EdgeAuthority";
+import type { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";
 import type { PostgresDrizzle } from "@beep/postgres";
 
 const ClaimGateLayer = Layer.effect(
@@ -77,7 +79,8 @@ export const EpistemicServerLive: Layer.Layer<
 
 /**
  * Drizzle-backed epistemic server layer: the live surface plus the bitemporal
- * edge authority, with dispositions persisted rather than held in memory.
+ * edge authority and the append-only execution ledger, with dispositions
+ * persisted rather than held in memory.
  *
  * @example
  * ```ts
@@ -90,7 +93,12 @@ export const EpistemicServerLive: Layer.Layer<
  * @since 0.0.0
  */
 export const EpistemicServerDrizzleLive: Layer.Layer<
-  ClaimDispositionRepository | ClaimGate | ClaimGateOutcomeResolver | ClaimTransition | EdgeAuthorityRepository,
+  | ClaimDispositionRepository
+  | ClaimGate
+  | ClaimGateOutcomeResolver
+  | ClaimTransition
+  | EdgeAuthorityRepository
+  | ExecutionLedger,
   never,
   PostgresDrizzle
 > = Layer.mergeAll(
@@ -98,6 +106,7 @@ export const EpistemicServerDrizzleLive: Layer.Layer<
   ClaimTransitionLayer,
   ClaimDispositionRepositoryDrizzle,
   EdgeAuthorityRepositoryDrizzle,
+  ExecutionLedgerDrizzle,
   ClaimGateOutcomeResolverLayer.pipe(
     Layer.provide(Layer.merge(ClaimTransitionLayer, ClaimDispositionRepositoryDrizzle))
   )

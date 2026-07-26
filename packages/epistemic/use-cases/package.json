@@ -38,6 +38,7 @@
     "./ClaimLifecycle": "./src/ClaimLifecycle/index.ts",
     "./ClaimProjection": "./src/ClaimProjection/index.ts",
     "./EdgeAuthority": "./src/EdgeAuthority/index.ts",
+    "./ExecutionLedger": "./src/ExecutionLedger/index.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
