@@ -43,8 +43,8 @@ export const $I = $SchemaId.create("JSONSchema");
  * import { CanonicalKeyword } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const keyword = S.decodeUnknownSync(CanonicalKeyword)("properties")
- * console.log(keyword)
+ * const keyword = S.decodeUnknownResult(CanonicalKeyword)("properties")
+ * console.log(keyword._tag)
  * ```
  *
  * @category models
@@ -154,8 +154,8 @@ export const isCanonicalKeyword = S.is(CanonicalKeyword);
  * import { TypeName } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const name = S.decodeUnknownSync(TypeName)("string")
- * console.log(name)
+ * const name = S.decodeUnknownResult(TypeName)("string")
+ * console.log(name._tag)
  * ```
  *
  * @category models
@@ -200,8 +200,8 @@ const TypeNameListUniqueCheck = S.isUnique({
  * import { TypeNameList } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const names = S.decodeUnknownSync(TypeNameList)(["string", "null"])
- * console.log(names.length)
+ * const names = S.decodeUnknownResult(TypeNameList)(["string", "null"])
+ * console.log(names._tag)
  * ```
  *
  * @category models
@@ -240,9 +240,9 @@ export type TypeNameList = typeof TypeNameList.Type;
  * import { Types } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const single = S.decodeUnknownSync(Types)("object")
- * const many = S.decodeUnknownSync(Types)(["string", "null"])
- * console.log(single, many)
+ * const single = S.decodeUnknownResult(Types)("object")
+ * const many = S.decodeUnknownResult(Types)(["string", "null"])
+ * console.log(single._tag, many._tag)
  * ```
  *
  * @category models
@@ -287,8 +287,8 @@ const NonNegativeCountCheck = S.isGreaterThanOrEqualTo(0, {
  * import { NonNegativeCount } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const count = S.decodeUnknownSync(NonNegativeCount)(3)
- * console.log(count)
+ * const count = S.decodeUnknownResult(NonNegativeCount)(3)
+ * console.log(count._tag)
  * ```
  *
  * @category models
@@ -333,8 +333,8 @@ const PositiveNumberCheck = S.isGreaterThan(0, {
  * import { PositiveNumber } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const step = S.decodeUnknownSync(PositiveNumber)(0.5)
- * console.log(step)
+ * const step = S.decodeUnknownResult(PositiveNumber)(0.5)
+ * console.log(step._tag)
  * ```
  *
  * @category models
@@ -409,7 +409,7 @@ const RegexCompilesCheck = S.makeFilter<string>(
  *   (record) => R.keys(record).every(compiles) || "keys must be valid ECMA-262 regular expressions"
  * )
  * const PatternProperties = S.Record(S.String, S.Unknown).check(RegexKeys)
- * console.log(S.decodeUnknownSync(PatternProperties)({ "^[a-z]+$": true }))
+ * console.log(S.decodeUnknownResult(PatternProperties)({ "^[a-z]+$": true })._tag)
  * ```
  *
  * @internal
@@ -449,8 +449,8 @@ const safeRegexSources = [
  * import { RegexPatternString } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const pattern = S.decodeUnknownSync(RegexPatternString)("^[a-z]+$")
- * console.log(pattern)
+ * const pattern = S.decodeUnknownResult(RegexPatternString)("^[a-z]+$")
+ * console.log(pattern._tag)
  * ```
  *
  * @category models
@@ -497,8 +497,8 @@ const AnchorNameCheck = S.isPattern(anchorNamePattern, {
  * import { AnchorName } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const anchor = S.decodeUnknownSync(AnchorName)("node")
- * console.log(anchor)
+ * const anchor = S.decodeUnknownResult(AnchorName)("node")
+ * console.log(anchor._tag)
  * ```
  *
  * @category models
@@ -530,23 +530,23 @@ export type AnchorName = typeof AnchorName.Type;
 const UriReferenceCheck = S.isPattern(/^\S*$/, {
   identifier: $I`UriReferenceCheck`,
   title: "URI-Reference",
-  description:
-    "Pragmatic URI-Reference syntax gate for `$id`, `$ref`, and `$dynamicRef`: rejects whitespace, which no RFC 3986 URI-Reference may contain.",
+  description: "Pragmatic URI-Reference syntax gate: rejects whitespace, which no RFC 3986 URI-Reference may contain.",
   message: "must be a URI-Reference (whitespace is not allowed)",
 });
 
 /**
- * A pragmatic URI-Reference string for `$id`, `$ref`, and `$dynamicRef`.
- * Full RFC 3986 grammar validation is deliberately out of scope; the check
- * rejects whitespace, which no URI-Reference may contain.
+ * A pragmatic URI-Reference string for `$ref`, `$dynamicRef`, and other
+ * reference-valued keywords. Full RFC 3986 grammar validation is deliberately
+ * out of scope; the check rejects whitespace, which no URI-Reference may
+ * contain. `$id` additionally uses {@link IdUriReferenceString}.
  *
  * @example
  * ```ts
  * import { UriReferenceString } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const ref = S.decodeUnknownSync(UriReferenceString)("#/$defs/User")
- * console.log(ref)
+ * const ref = S.decodeUnknownResult(UriReferenceString)("#/$defs/User")
+ * console.log(ref._tag)
  * ```
  *
  * @category models
@@ -584,6 +584,54 @@ export const UriReferenceString = S.String.check(UriReferenceCheck).pipe(
  */
 export type UriReferenceString = typeof UriReferenceString.Type;
 
+const IdUriReferenceCheck = S.isPattern(/^[^#]*#?$/, {
+  identifier: $I`IdUriReferenceCheck`,
+  title: "$id URI-Reference",
+  description: "Draft-2020-12 `$id` URI-Reference without a non-empty fragment.",
+  message: "must not contain a non-empty fragment",
+});
+
+/**
+ * A draft-2020-12 `$id` URI-Reference. It retains the pragmatic whitespace
+ * validation of {@link UriReferenceString} and rejects non-empty fragments;
+ * a trailing empty `#` remains backward-compatible.
+ *
+ * @example
+ * ```ts
+ * import { IdUriReferenceString } from "@beep/schema/JSONSchema"
+ * import * as S from "effect/Schema"
+ *
+ * const id = S.decodeUnknownResult(IdUriReferenceString)("https://example.com/schema#")
+ * console.log(id._tag)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const IdUriReferenceString = UriReferenceString.check(IdUriReferenceCheck).pipe(
+  $I.annoteSchema("IdUriReferenceString", {
+    description: "Draft-2020-12 `$id` URI-Reference without a non-empty fragment.",
+    toArbitrary: () => (fc) =>
+      fc.constantFrom("", "#", "schema.json", "https://example.com/schema.json", "urn:example:schema"),
+  })
+);
+
+/**
+ * Type for {@link IdUriReferenceString}.
+ *
+ * @example
+ * ```ts
+ * import type { IdUriReferenceString } from "@beep/schema/JSONSchema"
+ *
+ * const id: IdUriReferenceString = "https://example.com/schema.json"
+ * console.log(id)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type IdUriReferenceString = typeof IdUriReferenceString.Type;
+
 const NotCanonicalKeywordCheck = S.makeFilter<string>(
   (value) => (isCanonicalKeyword(value) ? "must not shadow a canonical JSON Schema keyword" : true),
   {
@@ -604,8 +652,8 @@ const NotCanonicalKeywordCheck = S.makeFilter<string>(
  * import { ExtensionKey } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const key = S.decodeUnknownSync(ExtensionKey)("x-vendor")
- * console.log(key)
+ * const key = S.decodeUnknownResult(ExtensionKey)("x-vendor")
+ * console.log(key._tag)
  * ```
  *
  * @category models
@@ -644,8 +692,8 @@ export type ExtensionKey = typeof ExtensionKey.Type;
  * import { JsonValue } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const value = S.decodeUnknownSync(JsonValue)({ nested: [1, "two", null] })
- * console.log(value)
+ * const value = S.decodeUnknownResult(JsonValue)({ nested: [1, "two", null] })
+ * console.log(value._tag)
  * ```
  *
  * @category models
@@ -702,8 +750,8 @@ const ExtensionsBagKeysCheck = S.makeFilter<{ readonly [key: string]: unknown }>
  * import { ExtensionsBag } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const bag = S.decodeUnknownSync(ExtensionsBag)({ "x-vendor": 42 })
- * console.log(bag["x-vendor"])
+ * const bag = S.decodeUnknownResult(ExtensionsBag)({ "x-vendor": 42 })
+ * console.log(bag._tag)
  * ```
  *
  * @category models

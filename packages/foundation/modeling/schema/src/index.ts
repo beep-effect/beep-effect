@@ -250,8 +250,8 @@ export * from "./Int64.ts";
  * import { JSONSchema } from "@beep/schema"
  * import * as S from "effect/Schema"
  *
- * const node = S.decodeUnknownSync(JSONSchema.NodeCodec)({ type: "object" })
- * console.log(node)
+ * const node = S.decodeUnknownResult(JSONSchema.NodeCodec)({ type: "object" })
+ * console.log(node._tag)
  * ```
  *
  * @category schemas

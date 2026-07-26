@@ -24,6 +24,7 @@ import {
   $I,
   AnchorName,
   ExtensionsBag,
+  IdUriReferenceString,
   isCanonicalKeyword,
   JsonValue,
   NonNegativeCount,
@@ -85,9 +86,9 @@ const nodeToArbitrary: () => (fc: typeof FastCheck) => FastCheck.Arbitrary<Node.
  * import { SubSchema } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const accepting = S.decodeUnknownSync(SubSchema)(true)
- * const typed = S.decodeUnknownSync(SubSchema)({ type: "string" })
- * console.log(accepting, typed)
+ * const accepting = S.decodeUnknownResult(SubSchema)(true)
+ * const typed = S.decodeUnknownResult(SubSchema)({ type: "string" })
+ * console.log(accepting._tag, typed._tag)
  * ```
  *
  * @category models
@@ -181,7 +182,7 @@ export class Node extends S.Class<Node>($I`Node`)(
     $defs: optionalKeyword(SubSchemaRecord, "Locally defined reusable subschemas, referenceable via $ref."),
     $dynamicAnchor: optionalKeyword(AnchorName, "Dynamic anchor name resolvable by $dynamicRef at evaluation time."),
     $dynamicRef: optionalKeyword(UriReferenceString, "Dynamically resolved reference cooperating with $dynamicAnchor."),
-    $id: optionalKeyword(UriReferenceString, "Base URI identifier for this schema resource."),
+    $id: optionalKeyword(IdUriReferenceString, "Base URI identifier for this schema resource."),
     $ref: optionalKeyword(
       UriReferenceString,
       "Reference to another schema by URI-Reference; draft-2020-12 permits sibling keywords."
@@ -280,8 +281,8 @@ export class Node extends S.Class<Node>($I`Node`)(
  * import * as S from "effect/Schema"
  *
  * const wire: Node.Encoded = { type: "object", "x-vendor": 1 }
- * const node: Node.Type = S.decodeUnknownSync(NodeCodec)(wire)
- * console.log(node.extensions["x-vendor"])
+ * const node = S.decodeUnknownResult(NodeCodec)(wire)
+ * console.log(node._tag)
  * ```
  *
  * @category models
@@ -405,8 +406,8 @@ const mergeWire = ({ extensions, ...known }: { readonly [k: string]: unknown }):
  * import { NodeCodec } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const node = S.decodeUnknownSync(NodeCodec)({ type: "object", "x-vendor": 1 })
- * console.log(node.extensions["x-vendor"])
+ * const node = S.decodeUnknownResult(NodeCodec)({ type: "object", "x-vendor": 1 })
+ * console.log(node._tag)
  * ```
  *
  * @category codecs
@@ -432,8 +433,8 @@ export const NodeCodec = S.Record(S.String, S.Unknown).pipe(
  * import { NodeCodec } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const node: NodeCodec = S.decodeUnknownSync(NodeCodec)({ type: "object" })
- * console.log(node.extensions)
+ * const node = S.decodeUnknownResult(NodeCodec)({ type: "object" })
+ * console.log(node._tag)
  * ```
  *
  * @category models
@@ -452,12 +453,12 @@ export type NodeCodec = typeof NodeCodec.Type;
  * import { Document } from "@beep/schema/JSONSchema"
  * import * as S from "effect/Schema"
  *
- * const document = S.decodeUnknownSync(Document)({
+ * const document = S.decodeUnknownResult(Document)({
  *   dialect: "draft-2020-12",
  *   schema: { $ref: "#/$defs/User" },
  *   definitions: { User: { type: "object" } },
  * })
- * console.log(document.dialect)
+ * console.log(document._tag)
  * ```
  *
  * @category models
@@ -496,8 +497,8 @@ export class Document extends S.Class<Document>($I`Document`)(
  * import * as S from "effect/Schema"
  *
  * const wire: Document.Encoded = { schema: { type: "object" } }
- * const decoded: Document.Type = S.decodeUnknownSync(Document)(wire)
- * console.log(decoded.dialect)
+ * const decoded = S.decodeUnknownResult(Document)(wire)
+ * console.log(decoded._tag)
  * ```
  *
  * @category models
@@ -578,11 +579,11 @@ export const resolveLocalRef: {
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * const node = S.decodeUnknownSync(NodeCodec)({
+ * const node = S.decodeUnknownOption(NodeCodec)({
  *   $ref: "#/$defs/User",
  *   $defs: { User: { type: "object" } },
  * })
- * console.log(O.isSome(resolveNodeRef(node)))
+ * console.log(O.exists(node, (value) => O.isSome(resolveNodeRef(value))))
  * ```
  *
  * @category getters
@@ -605,12 +606,12 @@ export const resolveNodeRef = (node: Node.Type): O.Option<SubSchema.Type> =>
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * const document = S.decodeUnknownSync(Document)({
+ * const document = S.decodeUnknownOption(Document)({
  *   dialect: "draft-2020-12",
  *   schema: { $ref: "#/$defs/User" },
  *   definitions: { User: { type: "object" } },
  * })
- * console.log(O.isSome(resolveDocumentRef(document)))
+ * console.log(O.exists(document, (value) => O.isSome(resolveDocumentRef(value))))
  * ```
  *
  * @category getters

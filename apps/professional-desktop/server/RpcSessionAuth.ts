@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { HttpMethod } from "@beep/schema";
+import * as HttpMethod from "@beep/schema/HttpMethod";
 import { HttpStatus } from "@beep/schema/HttpStatus";
 import { Config, Context, Effect, Metric, Redacted } from "effect";
 import * as O from "effect/Option";

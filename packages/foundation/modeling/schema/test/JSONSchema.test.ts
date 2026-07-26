@@ -4,6 +4,7 @@ import {
   Document,
   ExtensionKey,
   ExtensionsBag,
+  IdUriReferenceString,
   isCanonicalKeyword,
   Node,
   NodeCodec,
@@ -21,17 +22,24 @@ import {
 } from "@beep/schema/JSONSchema";
 import { assertSchemaArbitraryDecodesToSelf, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit } from "effect";
+import { Effect, Exit, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { FastCheck as fc } from "effect/testing";
 
 const decodeNode = S.decodeUnknownEffect(NodeCodec);
-const decodeNodeSync = S.decodeUnknownSync(NodeCodec);
-const encodeNodeSync = S.encodeSync(NodeCodec);
-const decodeDocumentSync = S.decodeUnknownSync(Document);
-const encodeDocumentSync = S.encodeSync(Document);
+const encodeNode = S.encodeEffect(NodeCodec);
+const decodeDocument = S.decodeUnknownEffect(Document);
+const encodeDocument = S.encodeEffect(Document);
+const decodeNodeResult = S.decodeUnknownResult(NodeCodec);
+const encodeNodeResult = S.encodeResult(NodeCodec);
+const decodeDocumentResult = S.decodeUnknownResult(Document);
+const encodeDocumentResult = S.encodeResult(Document);
+const decodeSubSchemaResult = S.decodeUnknownResult(SubSchema);
+const encodeSubSchemaResult = S.encodeResult(SubSchema);
+const decodeJsonResult = S.decodeUnknownResult(S.UnknownFromJsonString);
+const encodeJsonResult = S.encodeUnknownResult(S.UnknownFromJsonString);
 
 const NodeArbitrary = S.toArbitrary(Node);
 const SubSchemaArbitrary = S.toArbitrary(SubSchema);
@@ -39,6 +47,36 @@ const DocumentArbitrary = S.toArbitrary(Document);
 const nodeEquivalence = S.toEquivalence(Node);
 const subSchemaEquivalence = S.toEquivalence(SubSchema);
 const documentEquivalence = S.toEquivalence(Document);
+
+const nodeRoundTrips = (node: Node.Type): boolean =>
+  Result.match(Result.flatMap(encodeNodeResult(node), decodeNodeResult), {
+    onFailure: () => false,
+    onSuccess: (decoded) => nodeEquivalence(decoded, node),
+  });
+
+const subSchemaRoundTrips = (schema: SubSchema.Type): boolean =>
+  Result.match(Result.flatMap(encodeSubSchemaResult(schema), decodeSubSchemaResult), {
+    onFailure: () => false,
+    onSuccess: (decoded) => subSchemaEquivalence(decoded, schema),
+  });
+
+const documentRoundTrips = (document: Document.Type): boolean =>
+  Result.match(Result.flatMap(encodeDocumentResult(document), decodeDocumentResult), {
+    onFailure: () => false,
+    onSuccess: (decoded) => documentEquivalence(decoded, document),
+  });
+
+const nodeJsonRoundTrips = (node: Node.Type): boolean =>
+  Result.match(
+    Result.flatMap(
+      Result.flatMap(Result.flatMap(encodeNodeResult(node), encodeJsonResult), decodeJsonResult),
+      decodeNodeResult
+    ),
+    {
+      onFailure: () => false,
+      onSuccess: (decoded) => nodeEquivalence(decoded, node),
+    }
+  );
 
 describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
   describe("NodeCodec decoding", () => {
@@ -111,6 +149,10 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
         expect(yield* rejects({ pattern: "[unclosed" })).toBe(true);
         expect(yield* rejects({ patternProperties: { "[bad": true } })).toBe(true);
         expect(yield* rejects({ $ref: "has whitespace" })).toBe(true);
+        expect(yield* rejects({ $id: "#fragment" })).toBe(true);
+        expect(yield* rejects({ $id: "https://example.com/schema#fragment" })).toBe(true);
+        expect(yield* rejects({ $id: "#" })).toBe(false);
+        expect(yield* rejects({ $id: "https://example.com/schema" })).toBe(false);
         expect(yield* rejects({ required: ["a", "a"] })).toBe(true);
         expect(yield* rejects({ dependentRequired: { a: ["b", "b"] } })).toBe(true);
         expect(yield* rejects({ type: [] })).toBe(true);
@@ -142,7 +184,7 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
         const node = yield* decodeNode(wire);
         expect(Object.getOwnPropertyDescriptor(node.extensions, "__proto__")?.value).toEqual({ polluted: 1 });
         expect(({} as { polluted?: unknown }).polluted).toBeUndefined();
-        const back = encodeNodeSync(node);
+        const back = yield* encodeNode(node);
         expect(Object.getOwnPropertyDescriptor(back, "__proto__")?.value).toEqual({ polluted: 1 });
         expect(Object.keys(back).sort()).toEqual(["__proto__", "x-a"]);
         expect(({} as { polluted?: unknown }).polluted).toBeUndefined();
@@ -151,62 +193,51 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
   });
 
   describe("wire round-trips", () => {
-    it("restores hand-written documents exactly", () => {
-      const wires: ReadonlyArray<Record<string, unknown>> = [
-        { type: "object", properties: { a: { type: "string" } }, required: ["a"], "x-k": 1 },
-        { items: false, prefixItems: [{ type: "number" }], minItems: 1 },
-        { if: { type: "string" }, then: { minLength: 1 }, else: { not: {} } },
-        { extensions: { nested: true }, type: "null" },
-        { $defs: { A: true }, $ref: "#/$defs/A", $comment: "self-contained" },
-        { enum: [1, "two", null, { three: [3] }], const: { deep: [true] } },
-        { pattern: "\\p" },
-        {},
-      ];
-      for (const wire of wires) {
-        expect(encodeNodeSync(decodeNodeSync(wire))).toEqual(wire);
-      }
-    });
+    it.effect(
+      "restores hand-written documents exactly",
+      Effect.fnUntraced(function* () {
+        const wires: ReadonlyArray<Record<string, unknown>> = [
+          { type: "object", properties: { a: { type: "string" } }, required: ["a"], "x-k": 1 },
+          { items: false, prefixItems: [{ type: "number" }], minItems: 1 },
+          { if: { type: "string" }, then: { minLength: 1 }, else: { not: {} } },
+          { extensions: { nested: true }, type: "null" },
+          { $defs: { A: true }, $ref: "#/$defs/A", $comment: "self-contained" },
+          { enum: [1, "two", null, { three: [3] }], const: { deep: [true] } },
+          { pattern: "\\p" },
+          {},
+        ];
+        for (const wire of wires) {
+          const decoded = yield* decodeNode(wire);
+          expect(yield* encodeNode(decoded)).toEqual(wire);
+        }
+      })
+    );
 
-    it("defaults make() to empty options and an empty extensions bag", () => {
-      const node = Node.make({});
-      expect(O.isNone(node.type)).toBe(true);
-      expect(O.isNone(node.$ref)).toBe(true);
-      expect(node.extensions).toEqual({});
-      expect(encodeNodeSync(node)).toEqual({});
-    });
+    it.effect(
+      "defaults make() to empty options and an empty extensions bag",
+      Effect.fnUntraced(function* () {
+        const node = Node.make({});
+        expect(O.isNone(node.type)).toBe(true);
+        expect(O.isNone(node.$ref)).toBe(true);
+        expect(node.extensions).toEqual({});
+        expect(yield* encodeNode(node)).toEqual({});
+      })
+    );
 
     it("property: encode then decode returns an equivalent node", () => {
-      fc.assert(
-        fc.property(NodeArbitrary, (node) => nodeEquivalence(decodeNodeSync(encodeNodeSync(node)), node)),
-        fcRuns(100)
-      );
+      fc.assert(fc.property(NodeArbitrary, nodeRoundTrips), fcRuns(100));
     });
 
     it("property: SubSchema round-trips booleans and nodes", () => {
-      const encode = S.encodeSync(SubSchema);
-      const decode = S.decodeUnknownSync(SubSchema);
-      fc.assert(
-        fc.property(SubSchemaArbitrary, (value) => subSchemaEquivalence(decode(encode(value)), value)),
-        fcRuns(100)
-      );
+      fc.assert(fc.property(SubSchemaArbitrary, subSchemaRoundTrips), fcRuns(100));
     });
 
     it("property: Document round-trips through its envelope", () => {
-      fc.assert(
-        fc.property(DocumentArbitrary, (document) =>
-          documentEquivalence(decodeDocumentSync(encodeDocumentSync(document)), document)
-        ),
-        fcRuns(50)
-      );
+      fc.assert(fc.property(DocumentArbitrary, documentRoundTrips), fcRuns(50));
     });
 
     it("property: nodes survive a JSON string boundary", () => {
-      fc.assert(
-        fc.property(NodeArbitrary, (node) =>
-          nodeEquivalence(decodeNodeSync(JSON.parse(JSON.stringify(encodeNodeSync(node)))), node)
-        ),
-        fcRuns(100)
-      );
+      fc.assert(fc.property(NodeArbitrary, nodeJsonRoundTrips), fcRuns(100));
     });
   });
 
@@ -290,7 +321,8 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
       );
 
     const referenceGrammarValid = (doc: EncodedDoc): boolean =>
-      ["$id", "$ref", "$dynamicRef"].every((key) => doc[key] === undefined || !/\s/.test(doc[key] as string));
+      ["$ref", "$dynamicRef"].every((key) => doc[key] === undefined || !/\s/.test(doc[key] as string)) &&
+      (doc.$id === undefined || (!/\s/.test(doc.$id as string) && /^[^#]*#?$/.test(doc.$id as string)));
 
     const isAbsentOrSubschemaRecord = (input: unknown): boolean =>
       input === undefined || Object.values(input as EncodedDoc).every((entry) => isValidEncodedSchema(entry));
@@ -330,7 +362,12 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
 
     it("property: every generated node encodes to a valid draft-2020-12 document", () => {
       fc.assert(
-        fc.property(NodeArbitrary, (node) => isValidEncodedSchema(encodeNodeSync(node))),
+        fc.property(NodeArbitrary, (node) =>
+          Result.match(encodeNodeResult(node), {
+            onFailure: () => false,
+            onSuccess: isValidEncodedSchema,
+          })
+        ),
         fcRuns(100)
       );
     });
@@ -340,6 +377,7 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
         AnchorName,
         ExtensionKey,
         ExtensionsBag,
+        IdUriReferenceString,
         NonNegativeCount,
         PositiveNumber,
         RegexPatternString,
@@ -388,23 +426,29 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
       Tree,
     ];
 
-    it("round-trips S.toJsonSchemaDocument output for a representative battery", () => {
-      for (const schema of battery) {
-        const document = S.toJsonSchemaDocument(schema);
-        const decoded = decodeDocumentSync(document);
-        expect(encodeDocumentSync(decoded)).toEqual({
-          dialect: document.dialect,
-          schema: document.schema,
-          definitions: document.definitions,
-        });
-      }
-    });
+    it.effect(
+      "round-trips S.toJsonSchemaDocument output for a representative battery",
+      Effect.fnUntraced(function* () {
+        for (const schema of battery) {
+          const document = S.toJsonSchemaDocument(schema);
+          const decoded = yield* decodeDocument(document);
+          expect(yield* encodeDocument(decoded)).toEqual({
+            dialect: document.dialect,
+            schema: document.schema,
+            definitions: document.definitions,
+          });
+        }
+      })
+    );
 
-    it("decodes generator output for recursive schemas into resolvable references", () => {
-      const document = Tree.pipe(S.toJsonSchemaDocument, decodeDocumentSync);
-      const root = resolveDocumentRef(document);
-      expect(O.isSome(root)).toBe(true);
-    });
+    it.effect(
+      "decodes generator output for recursive schemas into resolvable references",
+      Effect.fnUntraced(function* () {
+        const document = yield* Tree.pipe(S.toJsonSchemaDocument, decodeDocument);
+        const root = resolveDocumentRef(document);
+        expect(O.isSome(root)).toBe(true);
+      })
+    );
   });
 
   describe("resolvers", () => {
@@ -420,24 +464,34 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
       expect(O.isNone(resolveLocalRef("https://example.com/schema.json", defs))).toBe(true);
     });
 
-    it("resolveNodeRef follows a node's own $ref into its sibling $defs", () => {
-      const hit = decodeNodeSync({ $ref: "#/$defs/User", $defs: { User: { type: "object" } } });
-      const target = O.getOrThrow(resolveNodeRef(hit));
-      expect(typeof target === "boolean" ? target : O.getOrThrow(target.type)).toBe("object");
-      expect(O.isNone(resolveNodeRef(decodeNodeSync({ $ref: "#/$defs/User" })))).toBe(true);
-      expect(O.isNone(resolveNodeRef(decodeNodeSync({ $defs: { User: {} } })))).toBe(true);
-    });
+    it.effect(
+      "resolveNodeRef follows a node's own $ref into its sibling $defs",
+      Effect.fnUntraced(function* () {
+        const hit = yield* decodeNode({ $ref: "#/$defs/User", $defs: { User: { type: "object" } } });
+        const target = O.getOrThrow(resolveNodeRef(hit));
+        expect(typeof target === "boolean" ? target : O.getOrThrow(target.type)).toBe("object");
+        expect(O.isNone(resolveNodeRef(yield* decodeNode({ $ref: "#/$defs/User" })))).toBe(true);
+        expect(O.isNone(resolveNodeRef(yield* decodeNode({ $defs: { User: {} } })))).toBe(true);
+      })
+    );
 
-    it("resolveDocumentRef resolves the top-level reference", () => {
-      const document = decodeDocumentSync({
-        dialect: "draft-2020-12",
-        schema: { $ref: "#/$defs/User" },
-        definitions: { User: { type: "object" } },
-      });
-      expect(O.isSome(resolveDocumentRef(document))).toBe(true);
-      const bare = decodeDocumentSync({ dialect: "draft-2020-12", schema: { type: "null" }, definitions: {} });
-      expect(O.isNone(resolveDocumentRef(bare))).toBe(true);
-    });
+    it.effect(
+      "resolveDocumentRef resolves the top-level reference",
+      Effect.fnUntraced(function* () {
+        const document = yield* decodeDocument({
+          dialect: "draft-2020-12",
+          schema: { $ref: "#/$defs/User" },
+          definitions: { User: { type: "object" } },
+        });
+        expect(O.isSome(resolveDocumentRef(document))).toBe(true);
+        const bare = yield* decodeDocument({
+          dialect: "draft-2020-12",
+          schema: { type: "null" },
+          definitions: {},
+        });
+        expect(O.isNone(resolveDocumentRef(bare))).toBe(true);
+      })
+    );
   });
 
   describe("vocabulary drift guard", () => {
