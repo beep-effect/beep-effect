@@ -6,6 +6,62 @@
  */
 
 /**
+ * CandidateClaim table metadata namespace.
+ *
+ * @example
+ * ```ts
+ * import { CandidateClaim } from "@beep/epistemic-tables/entities"
+ *
+ * console.log(CandidateClaim.Table.definition.tableName)
+ * ```
+ *
+ * @category tables
+ * @since 0.0.0
+ */
+export * as CandidateClaim from "./CandidateClaim/index.ts";
+/**
+ * ClaimDisposition table metadata namespace.
+ *
+ * @example
+ * ```ts
+ * import { ClaimDisposition } from "@beep/epistemic-tables/entities"
+ *
+ * console.log(ClaimDisposition.Table.definition.tableName)
+ * ```
+ *
+ * @category tables
+ * @since 0.0.0
+ */
+export * as ClaimDisposition from "./ClaimDisposition/index.ts";
+/**
+ * EdgeVersion table metadata namespace.
+ *
+ * @example
+ * ```ts
+ * import { EdgeVersion } from "@beep/epistemic-tables/entities"
+ *
+ * console.log(EdgeVersion.Table.definition.tableName)
+ * ```
+ *
+ * @category tables
+ * @since 0.0.0
+ */
+export * as EdgeVersion from "./EdgeVersion/index.ts";
+/**
+ * Evidence table metadata namespace.
+ *
+ * @example
+ * ```ts
+ * import { Evidence } from "@beep/epistemic-tables/entities"
+ *
+ * console.log(Evidence.Table.definition.tableName)
+ * ```
+ *
+ * @category tables
+ * @since 0.0.0
+ */
+export * as Evidence from "./Evidence/index.ts";
+/**
  * UsageRecord table metadata namespace.
  *
  * @example

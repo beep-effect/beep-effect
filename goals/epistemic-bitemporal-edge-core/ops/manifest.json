@@ -3,15 +3,15 @@
   "initiative": {
     "id": "epistemic-bitemporal-edge-core",
     "title": "Epistemic Bitemporal Edge Core",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-14",
     "updated": "2026-07-25",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/epistemic-bitemporal-edge-core",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Deliver the Postgres bitemporal claim/edge authority with durable disposition, atomic supersession, two-axis history, and restart-safe migration proof.",
-  "statusNote": "P0 hard gate CLEARED (2026-07-25, PROCEED): every ratified invariant has Postgres + PGlite proof-lane evidence (history/2026-07-25-p0-verdict.md). P1 implements the vertical slice per ops/handoffs/p0-to-p1-handoff.md.",
+  "statusNote": "CLOSED 2026-07-25 (completed-retained): P0 spike PROCEED, P1 vertical slice landed, P2 yeet verify SUCCESS with real-Postgres race determinism and restart proof, P3 reflection + Graphiti retirement record in the closing PR (history/2026-07-25-p1-implementation.md).",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -57,17 +57,20 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete",
+      "exit": "Vertical slice landed per history/2026-07-25-p1-implementation.md: domain/tables/use-cases/server/db-admin on the P0-ratified design; durable disposition; atomic supersession; provenance discharged; spike deleted."
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete",
+      "exit": "Focused suites green (two-axis, real-Postgres races 4/4 across six runs, restart proof) and bun run beep yeet verify outcome SUCCESS (history/2026-07-25-p1-implementation.md \u00a7 P2)."
     },
     {
       "id": "P3",
       "name": "Close: Yeet PR to mergeable",
-      "status": "pending"
+      "status": "complete",
+      "exit": "Reflection history/reflections/2026-07-25-claude.md passes lint (blocking_findings=0); retirement doctrine record landed; PR published and driven to mergeable via Yeet (completion gate)."
     }
   ],
   "verificationCommands": [

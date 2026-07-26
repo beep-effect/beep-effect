@@ -46,25 +46,6 @@
       "@beep/identity/packages": [
         "../../../packages/foundation/modeling/identity/src/packages.ts"
       ],
-      "@beep/postgres": ["../../../packages/drivers/postgres/src/index.ts"],
-      "@beep/postgres/client": [
-        "../../../packages/drivers/postgres/src/PostgresClient.service.ts"
-      ],
-      "@beep/postgres/drizzle": [
-        "../../../packages/drivers/postgres/src/PostgresDrizzle.service.ts"
-      ],
-      "@beep/postgres/errors": [
-        "../../../packages/drivers/postgres/src/Postgres.errors.ts"
-      ],
-      "@beep/postgres/format": [
-        "../../../packages/drivers/postgres/src/PostgresDiagnostics.service.ts"
-      ],
-      "@beep/postgres/interop": [
-        "../../../packages/drivers/postgres/src/PostgresInterop.models.ts"
-      ],
-      "@beep/postgres/sqlstate": [
-        "../../../packages/drivers/postgres/src/PostgresSqlState.models.ts"
-      ],
       "@beep/schema": [
         "../../../packages/foundation/modeling/schema/src/index.ts"
       ],

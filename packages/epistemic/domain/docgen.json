@@ -43,6 +43,12 @@
       "@beep/epistemic-domain/entities/CandidateClaim": [
         "../../../packages/epistemic/domain/src/entities/CandidateClaim/index.ts"
       ],
+      "@beep/epistemic-domain/entities/ClaimDisposition": [
+        "../../../packages/epistemic/domain/src/entities/ClaimDisposition/index.ts"
+      ],
+      "@beep/epistemic-domain/entities/EdgeVersion": [
+        "../../../packages/epistemic/domain/src/entities/EdgeVersion/index.ts"
+      ],
       "@beep/epistemic-domain/entities/Evidence": [
         "../../../packages/epistemic/domain/src/entities/Evidence/index.ts"
       ],
@@ -51,6 +57,9 @@
       ],
       "@beep/epistemic-domain/values": [
         "../../../packages/epistemic/domain/src/values/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ClaimDispositionStatus": [
+        "../../../packages/epistemic/domain/src/values/ClaimDispositionStatus/index.ts"
       ],
       "@beep/epistemic-domain/values/ClaimGate": [
         "../../../packages/epistemic/domain/src/values/ClaimGate/index.ts"
@@ -61,11 +70,20 @@
       "@beep/epistemic-domain/values/ClaimProjection": [
         "../../../packages/epistemic/domain/src/values/ClaimProjection/index.ts"
       ],
+      "@beep/epistemic-domain/values/EdgeEndpoint": [
+        "../../../packages/epistemic/domain/src/values/EdgeEndpoint/index.ts"
+      ],
+      "@beep/epistemic-domain/values/EdgeRelation": [
+        "../../../packages/epistemic/domain/src/values/EdgeRelation/index.ts"
+      ],
       "@beep/epistemic-domain/values/EpistemicFixtureKey": [
         "../../../packages/epistemic/domain/src/values/EpistemicFixtureKey/index.ts"
       ],
       "@beep/epistemic-domain/values/EvidenceSpan": [
         "../../../packages/epistemic/domain/src/values/EvidenceSpan/index.ts"
+      ],
+      "@beep/epistemic-domain/values/LogicalEdgeIdentity": [
+        "../../../packages/epistemic/domain/src/values/LogicalEdgeIdentity/index.ts"
       ],
       "@beep/identity": [
         "../../../packages/foundation/modeling/identity/src/index.ts"
@@ -557,7 +575,11 @@
       ],
       "@beep/test-utils/*": [
         "../../../packages/tooling/test-kit/test-utils/src/*.ts"
-      ]
+      ],
+      "@beep/utils": [
+        "../../../packages/foundation/modeling/utils/src/index.ts"
+      ],
+      "@beep/utils/*": ["../../../packages/foundation/modeling/utils/src/*.ts"]
     }
   }
 }

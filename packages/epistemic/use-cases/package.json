@@ -15,7 +15,8 @@
     "audit": "bun run --if-present beep:audit",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "tsc -b tsconfig.json",
-    "beep:check": "tsgo -b tsconfig.json",
+    "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+    "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run",
@@ -32,9 +33,11 @@
     ".": "./src/index.ts",
     "./public": "./src/public.ts",
     "./server": "./src/server.ts",
+    "./ClaimDisposition": "./src/ClaimDisposition/index.ts",
     "./ClaimGate": "./src/ClaimGate/index.ts",
     "./ClaimLifecycle": "./src/ClaimLifecycle/index.ts",
     "./ClaimProjection": "./src/ClaimProjection/index.ts",
+    "./EdgeAuthority": "./src/EdgeAuthority/index.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -49,12 +52,15 @@
   "dependencies": {
     "@beep/epistemic-domain": "workspace:^",
     "@beep/identity": "workspace:^",
+    "@beep/schema": "workspace:^",
     "@beep/semantic-web": "workspace:^",
+    "@beep/shared-domain": "workspace:^",
     "effect": "catalog:"
   },
   "devDependencies": {
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "bun-types": "catalog:"
   }
 }

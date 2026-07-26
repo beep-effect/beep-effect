@@ -3,8 +3,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 1,
-  "generated_at": "2026-07-24T17:07:23.327Z",
-  "git_sha": "b3fdce0fc776f9d0e6f5e91cf91c033d5123d81d",
+  "generated_at": "2026-07-26T00:51:33.966Z",
+  "git_sha": "57c475f724b8404407829b538097d668b64b1a5b",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "packages": {
@@ -17,10 +17,10 @@
     },
     "@beep/agents-client": {
       "path": "packages/agents/client",
-      "lines": 87.6,
-      "statements": 86.4,
+      "lines": 87.87,
+      "statements": 86.69,
       "branches": 67.69,
-      "functions": 77.41
+      "functions": 78.02
     },
     "@beep/agents-domain": {
       "path": "packages/agents/domain",
@@ -143,10 +143,10 @@
     },
     "@beep/chalk": {
       "path": "packages/foundation/capability/chalk",
-      "lines": 89.86,
-      "statements": 89.63,
-      "branches": 71.79,
-      "functions": 75.12
+      "lines": 94.03,
+      "statements": 93.66,
+      "branches": 82.05,
+      "functions": 85.78
     },
     "@beep/colors": {
       "path": "packages/foundation/capability/colors",
@@ -157,10 +157,10 @@
     },
     "@beep/cosmos": {
       "path": "packages/drivers/cosmos",
-      "lines": 51.72,
-      "statements": 50,
-      "branches": 24,
-      "functions": 34.42
+      "lines": 53.44,
+      "statements": 51.63,
+      "branches": 25.33,
+      "functions": 39.34
     },
     "@beep/courtlistener": {
       "path": "packages/drivers/courtlistener",
@@ -178,8 +178,8 @@
     },
     "@beep/db-admin": {
       "path": "packages/_internal/db-admin",
-      "lines": 83.33,
-      "statements": 85.71,
+      "lines": 84,
+      "statements": 86.2,
       "branches": 100,
       "functions": 80
     },
@@ -199,17 +199,17 @@
     },
     "@beep/dock": {
       "path": "packages/foundation/ui-system/dock",
-      "lines": 91.88,
-      "statements": 91.99,
-      "branches": 82.67,
-      "functions": 87.96
+      "lines": 92.15,
+      "statements": 92.25,
+      "branches": 83.46,
+      "functions": 88.38
     },
     "@beep/dock-react": {
       "path": "packages/foundation/ui-system/dock-react",
-      "lines": 92.4,
-      "statements": 88.78,
+      "lines": 92.57,
+      "statements": 89.09,
       "branches": 74.75,
-      "functions": 83.85
+      "functions": 84.64
     },
     "@beep/documents-domain": {
       "path": "packages/documents/domain",
@@ -276,17 +276,17 @@
     },
     "@beep/epistemic-domain": {
       "path": "packages/epistemic/domain",
-      "lines": 91.66,
-      "statements": 88,
+      "lines": 75.25,
+      "statements": 69.44,
       "branches": 100,
-      "functions": 75
+      "functions": 34.04
     },
     "@beep/epistemic-server": {
       "path": "packages/epistemic/server",
-      "lines": 80,
-      "statements": 80,
-      "branches": 100,
-      "functions": 100
+      "lines": 33.04,
+      "statements": 31.93,
+      "branches": 0,
+      "functions": 5.45
     },
     "@beep/epistemic-tables": {
       "path": "packages/epistemic/tables",
@@ -297,10 +297,10 @@
     },
     "@beep/epistemic-use-cases": {
       "path": "packages/epistemic/use-cases",
-      "lines": 97.29,
-      "statements": 97.56,
+      "lines": 90.36,
+      "statements": 90.9,
       "branches": 100,
-      "functions": 100
+      "functions": 97.36
     },
     "@beep/face-detection": {
       "path": "packages/drivers/face-detection",
@@ -514,17 +514,17 @@
     },
     "@beep/ontology": {
       "path": "packages/foundation/modeling/ontology",
-      "lines": 97.1,
-      "statements": 97.26,
+      "lines": 97.4,
+      "statements": 97.53,
       "branches": 100,
-      "functions": 92
+      "functions": 92.59
     },
     "@beep/ontology-client": {
       "path": "packages/ontology/client",
-      "lines": 40.55,
-      "statements": 39.66,
-      "branches": 18.79,
-      "functions": 26.84
+      "lines": 61.36,
+      "statements": 60.22,
+      "branches": 51.85,
+      "functions": 40
     },
     "@beep/ontology-config": {
       "path": "packages/ontology/config",
@@ -619,10 +619,10 @@
     },
     "@beep/professional-desktop": {
       "path": "apps/professional-desktop",
-      "lines": 55.04,
-      "statements": 53.63,
-      "branches": 46.13,
-      "functions": 44.94
+      "lines": 54.7,
+      "statements": 53.27,
+      "branches": 45.49,
+      "functions": 44.77
     },
     "@beep/protobuf": {
       "path": "packages/drivers/protobuf",
@@ -661,10 +661,10 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 65.84,
-      "statements": 65.63,
-      "branches": 50.85,
-      "functions": 57.27
+      "lines": 65.95,
+      "statements": 65.74,
+      "branches": 50.95,
+      "functions": 57.36
     },
     "@beep/repo-configs": {
       "path": "packages/tooling/policy-pack/repo-configs",
@@ -717,7 +717,7 @@
     },
     "@beep/shared-domain": {
       "path": "packages/shared/domain",
-      "lines": 99.64,
+      "lines": 99.65,
       "statements": 99.67,
       "branches": 97.43,
       "functions": 100
@@ -738,9 +738,9 @@
     },
     "@beep/test-utils": {
       "path": "packages/tooling/test-kit/test-utils",
-      "lines": 65.87,
-      "statements": 65.66,
-      "branches": 54.54,
+      "lines": 65.98,
+      "statements": 65.78,
+      "branches": 54.38,
       "functions": 46.66
     },
     "@beep/tika": {
