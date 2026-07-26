@@ -2726,6 +2726,7 @@
           "@beep/md",
           "@beep/ontology",
           "@beep/pretext",
+          "@beep/rdf",
           "@beep/schema",
           "@beep/scratchpad",
           "@beep/utils"
@@ -2737,6 +2738,7 @@
           "@beep/md",
           "@beep/ontology",
           "@beep/pretext",
+          "@beep/rdf",
           "@beep/schema",
           "@beep/scratchpad",
           "@beep/utils"
