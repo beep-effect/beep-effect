@@ -78,9 +78,13 @@ run_client secrets reload --json \
 broken_rc=$?
 set -e
 [[ "$broken_rc" -ne 0 ]] || fail "broken-reference reload unexpectedly succeeded"
-grep -qiE 'resolve|1password|field|not found|does not exist' \
+# verified 2026-07-26 in diag-repro: the resolution-failure detail NEVER
+# reaches CLI stdout — the CLI reports only the reload-failure surface
+# ("secrets.reload failed" / "Gateway did not respond"); the resolution
+# signature lands in the gateway log and is asserted below on the alert sink
+grep -qiE 'secrets\.reload failed|Gateway did not respond' \
   "$LOGS/a2-failed-reload.log" ||
-  fail "failed reload lacks a secret-resolution failure signature"
+  fail "failed reload lacks the gateway-side reload-failure surface"
 
 {
   tail -c "+$((gateway_before + 1))" "$gateway_log" 2>/dev/null || true
@@ -88,6 +92,9 @@ grep -qiE 'resolve|1password|field|not found|does not exist' \
   journalctl --user -u "$SPIKE3_UNIT" --since "$since" --no-pager \
     2>/dev/null || true
 } >"$LOGS/a2-failed-reload-alert.log"
+grep -qiE 'SECRETS_RELOADER_DEGRADED|SecretProviderResolutionError' \
+  "$LOGS/a2-failed-reload-alert.log" ||
+  fail "degraded-reload alert lacks the secret-resolution failure signature"
 grep -qi 'secrets.reload failed' "$LOGS/a2-failed-reload-alert.log" ||
   fail "degraded-reload alert signal missing from gateway logs/journal"
 printf 'ASSERT-PASS: broken reference caused causal reload failure and alert\n'

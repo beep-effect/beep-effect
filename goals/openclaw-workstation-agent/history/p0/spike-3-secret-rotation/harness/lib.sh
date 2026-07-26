@@ -117,8 +117,16 @@ spike3_assert_scratch_ownership() {
     "$marker_nonce" == "$archived_nonce" ]] ||
     spike3_fail "scratch ownership nonce is missing or mismatched"
   while IFS= read -r -d '' path; do
-    [[ ! -L "$path" ]] ||
-      spike3_fail "symlink found in Spike 3 scratch: $path"
+    if [[ -L "$path" ]]; then
+      # the gateway legitimately links state/plugin-skills/* into the staged
+      # package (observed live 2026-07-26); allow exactly that shape and
+      # refuse every other symlink
+      link_target=$(readlink -f -- "$path" 2>/dev/null) || link_target=""
+      [[ "$path" == "$SPIKE3_DIR"/state/plugin-skills/* &&
+         "$link_target" == "$HOME"/.cache/beep-p0-stage/* ]] ||
+        spike3_fail "symlink found in Spike 3 scratch: $path"
+      continue
+    fi
     IFS=: read -r uid links kind < <(stat -c '%u:%h:%F' -- "$path")
     [[ "$uid" == "$expected_uid" ]] ||
       spike3_fail "foreign-owned Spike 3 scratch entry: $path"

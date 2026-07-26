@@ -1,0 +1,126 @@
+credential-parent path=/etc owner=0 gid=0 mode=755
+credential-parent path=/etc/beep owner=0 gid=0 mode=755
+credential-parent path=/etc/beep/openclaw-spike owner=0 gid=0 mode=755
+credential path=/etc/beep/openclaw-spike/op-service-account-token owner=0 group=elpresidank mode=0440
+credential parents=/etc,/etc/beep,/etc/beep/openclaw-spike canonical=yes writable-by-group-or-world=no
+credential service-user-readable=yes private-group-extra-members=none
+client-config-created path=/home/elpresidank/.cache/beep-p0-spike3.5R0T7w/spike3/a1-old-client.json mode=600
+
+=== establish old-snapshot cold owner ===
+cold-owner-connected=acp socket-inode=158350763 old-sha256-prefix=59df7cc1
+
+=== operator rotation at unchanged reference ===
+ROTATE-NOW: replace the disposable field in the 1Password UI; do not use an argv-valued op edit.
+polling unchanged reference=op://beep-p0-spike3/spike3-rotating/password timeout-seconds=300
+client-config-created path=/home/elpresidank/.cache/beep-p0-spike3.5R0T7w/spike3/a1-new-client.json mode=600
+before sha256-prefix=59df7cc1 length=32
+after  sha256-prefix=3b6cd0d9 length=32 reference-unchanged=yes
+
+=== reload through old authenticated snapshot ===
+first-reload-exit=1 disconnect-on-generation-change-allowed=yes
+
+=== clean current-snapshot degradation check ===
+cold-owner-disconnected=yes client-terminated=yes socket-inode-absent=158350763
+
+=== old value rejected and new value accepted ===
+
+=== evidence secret scan ===
+log-scan label=old-gateway sha256-prefix=59df7cc1 plaintext=absent token-shapes=absent
+log-scan label=new-gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=old-gateway sha256-prefix=59df7cc1 plaintext=absent token-shapes=absent
+log-scan label=new-gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=old-gateway sha256-prefix=59df7cc1 plaintext=absent token-shapes=absent
+log-scan label=new-gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=old-gateway sha256-prefix=59df7cc1 plaintext=absent token-shapes=absent
+log-scan label=new-gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=old-gateway sha256-prefix=59df7cc1 plaintext=absent token-shapes=absent
+log-scan label=new-gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=old-gateway sha256-prefix=59df7cc1 plaintext=absent token-shapes=absent
+log-scan label=new-gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=old-gateway sha256-prefix=59df7cc1 plaintext=absent token-shapes=absent
+log-scan label=new-gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=old-gateway sha256-prefix=59df7cc1 plaintext=absent token-shapes=absent
+log-scan label=new-gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=old-gateway sha256-prefix=59df7cc1 plaintext=absent token-shapes=absent
+log-scan label=new-gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=old-gateway sha256-prefix=59df7cc1 plaintext=absent token-shapes=absent
+log-scan label=new-gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=old-gateway sha256-prefix=59df7cc1 plaintext=absent token-shapes=absent
+log-scan label=new-gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=old-gateway sha256-prefix=59df7cc1 plaintext=absent token-shapes=absent
+log-scan label=new-gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=old-gateway sha256-prefix=59df7cc1 plaintext=absent token-shapes=absent
+log-scan label=new-gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=old-gateway sha256-prefix=59df7cc1 plaintext=absent token-shapes=absent
+log-scan label=new-gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=old-gateway sha256-prefix=59df7cc1 plaintext=absent token-shapes=absent
+log-scan label=new-gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+ASSERT-PASS: current snapshot clean; cold owner disconnected; old auth rejected; new auth accepted
+
+=== chain assertion 3 to this rotation event ===
+tied-event old-sha256-prefix=59df7cc1 new-sha256-prefix=3b6cd0d9 reload-epoch=1785100796
+
+=== authenticated model completion after tied reload ===
+ASSERT-FAIL: completion failed the pinned gateway payload schema
+client-config-removing path=/home/elpresidank/.cache/beep-p0-spike3.5R0T7w/spike3/a1-old-client.json mode=600
+client-config-removed path=/home/elpresidank/.cache/beep-p0-spike3.5R0T7w/spike3/a1-old-client.json mode=600
+client-config-removing path=/home/elpresidank/.cache/beep-p0-spike3.5R0T7w/spike3/a1-new-client.json mode=600
+client-config-removed path=/home/elpresidank/.cache/beep-p0-spike3.5R0T7w/spike3/a1-new-client.json mode=600
+log-scan label=old-gateway sha256-prefix=59df7cc1 plaintext=absent token-shapes=absent
+log-scan label=new-gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+restoring verified setup after failed a1 assertion
+
+=== exact credential metadata and service-user readability ===
+credential-parent path=/etc owner=0 gid=0 mode=755
+credential-parent path=/etc/beep owner=0 gid=0 mode=755
+credential-parent path=/etc/beep/openclaw-spike owner=0 gid=0 mode=755
+credential path=/etc/beep/openclaw-spike/op-service-account-token owner=0 group=elpresidank mode=0440
+credential parents=/etc,/etc/beep,/etc/beep/openclaw-spike canonical=yes writable-by-group-or-world=no
+credential service-user-readable=yes private-group-extra-members=none
+
+=== teardown-first ===
+
+=== render runtime helpers ===
+
+=== render declarative config ===
+Telegram reference absent; assertion 3 will be BLOCKED
+
+=== validate before privileged install ===
+staged-package-sha256=4034a491f5fb31b20b8f16fe29a88e1782be4b70f4aeed0df43c09ce24b147a5 unchanged=yes
+Config valid: /home/elpresidank/.cache/beep-p0-spike3.5R0T7w/spike3/render/openclaw.json
+
+=== install root-owned content-addressed generation ===
+
+=== validate through the root-owned active pointer ===
+staged-package-sha256=4034a491f5fb31b20b8f16fe29a88e1782be4b70f4aeed0df43c09ce24b147a5 unchanged=yes
+Config valid: /etc/beep/openclaw-spike/current/openclaw.json
+
+=== install dedicated user unit ===
+staged-package-sha256=4034a491f5fb31b20b8f16fe29a88e1782be4b70f4aeed0df43c09ce24b147a5 unchanged=yes
+
+=== exact service-environment preflight ===
+
+=== installed-root provenance ===
+config-sha256=d15fefa6405d808dc79c2dbcf41769f28e61958848d0da286f3acb3415999555
+spike-root-sha256=38de3e637f11eec58bea8c2fe661c97500eb6d45c1342082e4ab2101be93f145
+
+=== last-resort secret scan ===
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+SETUP-PASS unit=openclaw-spike.service port=19031 config=/etc/beep/openclaw-spike/current/openclaw.json
+setup-restored-after-a1-failure=yes

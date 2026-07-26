@@ -206,10 +206,19 @@ base=$(jq -n \
           baseUrl: "http://127.0.0.1:11434",
           apiKey: "ollama-local",
           api: "ollama",
+          # gemma3:4b rejects tool payloads, and ollama defaults to a
+          # 4096-token context that starves the reply (verified 2026-07-26:
+          # in=4095 out=1 stopReason=length). num_ctx must be pushed to the
+          # provider and mirrored in contextTokens for the client-side guard.
+          params: {num_ctx: 32768},
+          contextTokens: 32768,
           models: [{id: "gemma3:4b", name: "gemma3:4b", input: ["text"]}]
         }
       }
     },
+    # the probe only needs an authenticated completion; denying tools keeps
+    # a tool-less local model from failing the provider schema check
+    tools: {deny: ["*"]},
     logging: {file: $logfile}
   }')
 if [[ -n "$TG_REF" ]]; then

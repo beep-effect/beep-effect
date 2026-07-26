@@ -160,17 +160,30 @@ while ((SECONDS < deadline)); do
       "$LOGS/a1-old-token-cold-owner-frame.json"
     cold_response_ready=1
   fi
-  for fd in /proc/"$cold_pid"/fd/*; do
-    [[ -L "$fd" ]] || continue
-    target=$(readlink -- "$fd") || continue
-    [[ "$target" =~ ^socket:\[([0-9]+)\]$ ]] || continue
-    inode=${BASH_REMATCH[1]}
-    if awk -v inode="$inode" \
-      '$3 == "0100007F:4A57" && $4 == "01" && $10 == inode { found=1 }
-       END { exit !found }' /proc/net/tcp /proc/net/tcp6; then
-      cold_socket_inode=$inode
-      break
-    fi
+  # the ACP CLI holds its gateway WS in a CHILD process (verified 2026-07-26
+  # in diag-repro: tree='parent child', socket ESTABLISHED on the child and
+  # persistent), so scan the whole process tree, not just $cold_pid's fds
+  cold_tree="$cold_pid"
+  for _pass in 1 2; do
+    for tp in $cold_tree; do
+      for tc in $(cat /proc/"$tp"/task/*/children 2>/dev/null); do
+        case " $cold_tree " in *" $tc "*) ;; *) cold_tree="$cold_tree $tc" ;; esac
+      done
+    done
+  done
+  for tp in $cold_tree; do
+    for fd in /proc/"$tp"/fd/*; do
+      [[ -L "$fd" ]] || continue
+      target=$(readlink -- "$fd") || continue
+      [[ "$target" =~ ^socket:\[([0-9]+)\]$ ]] || continue
+      inode=${BASH_REMATCH[1]}
+      if awk -v inode="$inode" -v lp="0100007F:$(printf '%04X' "$SPIKE3_PORT")" \
+        '$3 == lp && $4 == "01" && $10 == inode { found=1 }
+         END { exit !found }' /proc/net/tcp /proc/net/tcp6; then
+        cold_socket_inode=$inode
+        break 2
+      fi
+    done
   done
   if [[ "$cold_response_ready" -eq 1 && -n "$cold_socket_inode" ]]; then
     break

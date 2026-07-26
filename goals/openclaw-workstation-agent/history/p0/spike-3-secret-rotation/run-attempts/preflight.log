@@ -1,0 +1,35 @@
+
+=== no-secret capability surfaces ===
+logs-help.txt --follow
+logs-help.txt --url
+acp-help.txt --url
+secrets-reload-help.txt --url
+secrets-reload-help.txt --json
+gateway-call-help.txt --url
+gateway-call-help.txt --json
+agent-help.txt --agent
+agent-help.txt --session-key
+agent-help.txt --message
+agent-help.txt --thinking
+agent-help.txt --timeout
+agent-help.txt --json
+channels-status-help.txt --channel
+channels-status-help.txt --probe
+channels-status-help.txt --timeout
+channels-status-help.txt --json
+
+=== non-argv authentication source proof ===
+OPENCLAW_GATEWAY_TOKEN environment auth found in staged CLI source
+agent embedded-fallback marker found in staged CLI source
+ACP persistent client and gateway-backed session/list found in staged source
+
+=== pinned immutable inputs ===
+npm notice
+npm notice New major version of npm available! 11.13.0 -> 12.0.1
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.0.1
+npm notice To update run: npm install -g npm@12.0.1
+npm notice
+versions and package provenance archived
+
+=== pre-setup isolation inventory ===
+PREFLIGHT-PASS: no privileged, 1Password, unit, or Telegram mutation performed

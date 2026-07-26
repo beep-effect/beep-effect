@@ -1,0 +1,65 @@
+credential-parent path=/etc owner=0 gid=0 mode=755
+credential-parent path=/etc/beep owner=0 gid=0 mode=755
+credential-parent path=/etc/beep/openclaw-spike owner=0 gid=0 mode=755
+credential path=/etc/beep/openclaw-spike/op-service-account-token owner=0 group=elpresidank mode=0440
+credential parents=/etc,/etc/beep,/etc/beep/openclaw-spike canonical=yes writable-by-group-or-world=no
+credential service-user-readable=yes private-group-extra-members=none
+client-config-created path=/home/elpresidank/.cache/beep-p0-spike3.5R0T7w/spike3/a2-client.json mode=600
+
+=== activate nonexistent-field resolver target ===
+ASSERT-PASS: broken reference caused causal reload failure and alert
+
+=== restore exact reference and prove clean reload ===
+ASSERT-PASS: exact op:// reference restored and current
+
+=== evidence secret scan ===
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+client-config-removing path=/home/elpresidank/.cache/beep-p0-spike3.5R0T7w/spike3/a2-client.json mode=600
+client-config-removed path=/home/elpresidank/.cache/beep-p0-spike3.5R0T7w/spike3/a2-client.json mode=600
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent

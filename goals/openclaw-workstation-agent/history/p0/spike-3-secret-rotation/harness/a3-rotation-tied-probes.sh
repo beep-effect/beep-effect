@@ -55,11 +55,12 @@ run_authenticated agent --agent spike3 \
   2>"$LOGS/a3-model.stderr.log" ||
   fail "authenticated model completion command failed"
 jq -e '
-  (.meta.transport? // .result.meta.transport?) as $transport |
   (.result.payloads? // []) as $payloads |
   select(
     .status == "ok" and
-    ($transport | type == "string" and length > 0 and . != "embedded") and
+    ((.runId? // "") | type == "string" and length > 0) and
+    ((.result.meta.stopReason? // "") == "stop") and
+    (.result.meta | has("aborted") and .aborted == false) and
     all($payloads[]; .isError? != true) and
     any($payloads[];
       .isError? != true and
@@ -70,11 +71,23 @@ jq -e '
   ) |
   {
     status,
-    transport: $transport,
+    runId,
+    provider: .result.meta.agentMeta.provider,
+    model: .result.meta.agentMeta.model,
     payloads: $payloads
   }
 ' "$LOGS/a3-model.json" >"$LOGS/a3-model-selected.json" ||
   fail "completion failed the pinned gateway payload schema"
+# This OpenClaw build emits no `transport` field (its executionTrace.runner is
+# always "embedded" — the agent runs inside the GATEWAY process). Prove
+# gateway-served transport from the gateway's own WS response line for this
+# exact runId instead of a field that does not exist (verified 2026-07-26).
+model_run_id=$(jq -r '.runId' "$LOGS/a3-model.json")
+[[ -n "$model_run_id" && "$model_run_id" != "null" ]] ||
+  fail "completion response carried no runId to bind to gateway transport"
+grep -qaE "res .* agent .*runId=$model_run_id" "$LOGS/gateway.log" ||
+  fail "completion was not served over the authenticated gateway socket"
+printf 'gateway-served-completion runId=%s\n' "$model_run_id"
 printf 'ASSERT-PASS: authenticated gateway model completion succeeded after tied reload\n'
 
 section "Telegram live probe after the same reload"
