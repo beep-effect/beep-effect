@@ -55,6 +55,9 @@ const emlBoundaryHexLength = 40;
 // hard-fails when a tree it wants to create already exists.
 const allTargetTreeSuffixes: ReadonlyArray<string> = [".export", ".orphans", ".recovered"];
 
+// Held for the duration of one export as the atomic per-target mutex.
+const PFFEXPORT_CLAIM_SUFFIX = ".claim";
+
 const outlookHeadersFileName = "OutlookHeaders.txt";
 const internetHeadersFileName = "InternetHeaders.txt";
 const itemMetadataFileNames: ReadonlyArray<string> = [
@@ -808,19 +811,39 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     );
   });
 
-  const exportArchiveImpl = Effect.fn("LibpffPffexportEngine.exportArchiveImpl")(function* (
-    operation: ExportArchiveOperation
+  // Atomic target ownership: two concurrent exports of the same
+  // content-addressed source derive identical target paths (duplicate PSTs
+  // are common in real corpora), and an exists-check alone leaves a window
+  // where both pass before either writes. A non-recursive mkdir is the
+  // atomic claim; the `replace` policy may steal a stale claim left by a
+  // crashed run once.
+  const acquireExportClaim = Effect.fn("Libpff.pffexport.acquireExportClaim")(function* (
+    claimPath: string
+  ): Effect.fn.Return<void, LibpffError> {
+    const acquired = O.isSome(yield* fs.makeDirectory(claimPath).pipe(Effect.option));
+    if (acquired) {
+      return;
+    }
+    if (PffexportExistingExportPolicy.is.fail(config.existingExportPolicy)) {
+      return yield* makeLibpffError("config", { cause: "export target is claimed by another export" });
+    }
+    yield* fs
+      .remove(claimPath, { recursive: true })
+      .pipe(Effect.mapError(() => makeLibpffError("config", { cause: "stale export claim removal failed" })));
+    yield* fs
+      .makeDirectory(claimPath)
+      .pipe(Effect.mapError(() => makeLibpffError("config", { cause: "export target is claimed by another export" })));
+  });
+
+  const performExport = Effect.fn("LibpffPffexportEngine.performExport")(function* (
+    operation: ExportArchiveOperation,
+    targetBase: string,
+    messagesJsonlName: string,
+    messagesJsonlPath: string
   ): Effect.fn.Return<ArchiveExportResult, LibpffError, Crypto.Crypto> {
     const sourcePath = operation.source.locator.value;
-    const targetBase = path.join(config.exportRoot, operation.source.id);
-    const messagesJsonlName = `${operation.source.id}${PFFEXPORT_MESSAGES_SUFFIX}`;
-    const messagesJsonlPath = path.join(config.exportRoot, messagesJsonlName);
     const treeSuffixes = targetTreeSuffixesFor(exportMode);
     const treeRootNames = A.map(treeSuffixes, (suffix) => `${operation.source.id}${suffix}`);
-
-    yield* fs
-      .makeDirectory(config.exportRoot, { recursive: true })
-      .pipe(Effect.mapError(() => makeLibpffError("config", { cause: "export root could not be created" })));
 
     yield* enforceExistingExportPolicy(targetBase, messagesJsonlPath);
     yield* runPffexportWithTimeout(sourcePath, targetBase);
@@ -879,6 +902,24 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       sourceArtifactId: operation.source.id,
       warnings,
     });
+  });
+
+  const exportArchiveImpl = Effect.fn("LibpffPffexportEngine.exportArchiveImpl")(function* (
+    operation: ExportArchiveOperation
+  ): Effect.fn.Return<ArchiveExportResult, LibpffError, Crypto.Crypto> {
+    const targetBase = path.join(config.exportRoot, operation.source.id);
+    const claimPath = `${targetBase}${PFFEXPORT_CLAIM_SUFFIX}`;
+    const messagesJsonlName = `${operation.source.id}${PFFEXPORT_MESSAGES_SUFFIX}`;
+    const messagesJsonlPath = path.join(config.exportRoot, messagesJsonlName);
+
+    yield* fs
+      .makeDirectory(config.exportRoot, { recursive: true })
+      .pipe(Effect.mapError(() => makeLibpffError("config", { cause: "export root could not be created" })));
+
+    yield* acquireExportClaim(claimPath);
+    return yield* performExport(operation, targetBase, messagesJsonlName, messagesJsonlPath).pipe(
+      Effect.ensuring(fs.remove(claimPath, { recursive: true }).pipe(Effect.ignore))
+    );
   });
 
   const engine: FileProcessingEngineShape = {

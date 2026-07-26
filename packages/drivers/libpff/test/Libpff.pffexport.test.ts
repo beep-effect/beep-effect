@@ -392,7 +392,28 @@ describe("makePffexportFileProcessingEngine", () => {
   );
 
   it.effect(
-    "replaces stale export outputs when the replace policy is configured",
+    "fails while another export claims the same target under the default policy",
+    Effect.fnUntraced(
+      function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { exportRoot, operation, stubPath } = yield* fixture(stubPffexport);
+        yield* fs.makeDirectory(path.join(exportRoot, `${operation.source.id}.claim`), { recursive: true });
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
+        );
+
+        const error = yield* engine.exportArchive(operation).pipe(Effect.flip);
+
+        expect(error.reason).toBe("archive-export-failed");
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "replaces stale export outputs and steals a stale claim when configured",
     Effect.fnUntraced(
       function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -402,6 +423,7 @@ describe("makePffexportFileProcessingEngine", () => {
         yield* fs.makeDirectory(staleTree, { recursive: true });
         yield* fs.writeFileString(path.join(staleTree, "stale-junk.txt"), "stale");
         yield* fs.makeDirectory(path.join(exportRoot, `${operation.source.id}.recovered`), { recursive: true });
+        yield* fs.makeDirectory(path.join(exportRoot, `${operation.source.id}.claim`), { recursive: true });
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({ existingExportPolicy: "replace", exportRoot, pffexportPath: stubPath })
         );
@@ -410,6 +432,7 @@ describe("makePffexportFileProcessingEngine", () => {
 
         expect(result.children.length).toBeGreaterThan(0);
         expect(result.children.some((child) => child.relativePath.includes("stale-junk"))).toBe(false);
+        expect(yield* fs.exists(path.join(exportRoot, `${operation.source.id}.claim`))).toBe(false);
       },
       Effect.scoped,
       provideTestLayer

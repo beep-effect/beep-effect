@@ -249,6 +249,17 @@ ran against the implementation diff. Resolutions:
   budget boundary, and `X-Beep-Libpff-Client-Submit-Time` synthesis
   assertions.
 
+## Review resolutions (v4 — hosted PR review)
+
+- Greptile P1 "non-atomic export target ownership": concurrent exports of the
+  same content-addressed source (duplicate PSTs are common in real corpora)
+  could both pass the existing-output check before either wrote. Resolved with
+  an atomic per-target claim (`<target>.claim` via non-recursive mkdir) held
+  for the duration of the export and always released; the `fail` policy
+  refuses a claimed target with a typed config error, and the `replace` policy
+  may steal a stale claim left by a crashed run once. Covered by
+  claimed-target and stale-claim-steal tests.
+
 ## Out of scope (unchanged)
 
 No OCR, no Box, no extraction capability on the libpff engine (still
