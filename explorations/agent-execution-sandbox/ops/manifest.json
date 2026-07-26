@@ -3,17 +3,12 @@
   "exploration": {
     "slug": "agent-execution-sandbox",
     "title": "Agent Execution Sandbox",
-    "status": "active",
-    "stage": "capture",
-    "openQuestions": [
-      "master align Q10: Which comes first as the action-authorization proof: privileged read plus outbound sink, browser-to-terminal execution, citation-derived legal action, or model-generated code?",
-      "What exact authority grant and revocation model should govern tools, resources, credentials, delegation, and outbound sinks?",
-      "Which execution data must remain exact and immutable, and which secret-bearing data must be redacted, transient, or retention-limited?",
-      "Where are the ownership seams among governance policy, host isolation, credential brokering, execution records, and independent certification?"
-    ],
-    "sources": [],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/agent-execution-authority"],
       "docs": [],
       "supersededBy": null
     },

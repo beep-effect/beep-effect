@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "agent-execution-authority",
+    "title": "Agent Execution Authority",
+    "status": "active",
+    "created": "2026-07-25",
+    "updated": "2026-07-25",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/agent-execution-authority",
+  "lifecycle": "active",
+  "mission": "Default-deny authority boundary over the MCP agent surface, with a hash-chained append-only record of every decision and outcome.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/agent-execution-sandbox",
+    "graduated": "2026-07-25"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/agent-execution-authority/README.md",
+    "goals/agent-execution-authority/SPEC.md",
+    "goals/agent-execution-authority/PLAN.md",
+    "goals/agent-execution-authority/GOAL.md",
+    "goals/agent-execution-authority/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/agent-execution-authority/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "bun run beep yeet verify",
+    "bun run --cwd apps/professional-desktop codegen:check",
+    "test \"$(wc -m < goals/agent-execution-authority/GOAL.md)\" -le 4000",
+    "jq . goals/agent-execution-authority/ops/manifest.json",
+    "rg -n \"agent-execution-authority|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/agent-execution-authority",
+    "git diff --check -- goals/agent-execution-authority",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation.",
+    "PR 6 cannot demonstrate a request issued from inside a real tool handler reaching the policy fetch; the 2026-07-25 spike proved the Fetch override only for a directly-provided effect, not through a running server whose handler context is captured at layer build.",
+    "PR 6 adds an agent-controllable outbound POST of workspace content; re-read that scope deliberately before landing rather than inheriting it as settled."
+  ]
+}
