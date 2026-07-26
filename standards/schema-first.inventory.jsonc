@@ -530,6 +530,16 @@
       "reason": "Type alias contains non-schema signals such as function members or runtime handles."
     },
     {
+      "file": "packages/drivers/tika/test/integration/Tika.server.live.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 40,
+      "owner": "@beep/tika",
+      "reason": "Opt-in live Tika Server lane that no-ops unless BEEP_TEST_TIKA_URL is set; the codecs decode the operator-supplied base URL and generated fixture paths as boundary validation against a real server, not schema-behavior coverage. Schema-derived arbitrary round-trips for TikaServerEngineConfig live in packages/drivers/tika/test/Tika.server.test.ts."
+    },
+    {
       "file": "packages/drivers/uspto-mcp/src/UsptoDocumentTiers.ts",
       "symbol": "usptoDocumentFieldTiers",
       "kind": "object-struct-schema",
