@@ -175,7 +175,8 @@ const generatedComposers = $I.compose(
   "documents-tables",
   "tailscale",
   "agents-tables",
-  "graph-3d"
+  "graph-3d",
+  "epistemic-config"
 );
 
 const composers = {
@@ -2172,3 +2173,19 @@ export const $TailscaleId: Identity.IdentityComposer<"@beep/tailscale"> = compos
  * @category configuration
  */
 export const $AgentsTablesId: Identity.IdentityComposer<"@beep/agents-tables"> = composers.$AgentsTablesId;
+
+/**
+ * Identity composer for `@beep/epistemic-config`.
+ *
+ * @example
+ * ```typescript
+ * import { $EpistemicConfigId } from "@beep/identity"
+ *
+ * const id = $EpistemicConfigId.make("EpistemicConfig")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $EpistemicConfigId: Identity.IdentityComposer<"@beep/epistemic-config"> = composers.$EpistemicConfigId;

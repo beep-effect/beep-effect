@@ -452,6 +452,7 @@
     "packages/agents/client",
     "packages/agents/server",
     "packages/agents/tables",
+    "packages/epistemic/config",
     "packages/epistemic/domain",
     "packages/epistemic/tables",
     "packages/epistemic/use-cases",

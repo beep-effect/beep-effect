@@ -138,6 +138,7 @@
         "@beep/md": "workspace:^",
         "@beep/observability": "workspace:^",
         "@beep/ontology-client": "workspace:^",
+        "@beep/ontology-config": "workspace:^",
         "@beep/ontology-domain": "workspace:^",
         "@beep/ontology-server": "workspace:^",
         "@beep/ontology-ui": "workspace:^",
@@ -1284,6 +1285,20 @@
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "@types/ws": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
+    "packages/epistemic/config": {
+      "name": "@beep/epistemic-config",
+      "version": "0.0.2",
+      "dependencies": {
+        "@beep/epistemic-domain": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
         "bun-types": "catalog:",
       },
     },
@@ -2923,6 +2938,8 @@
     "@beep/ecfr": ["@beep/ecfr@workspace:packages/drivers/ecfr"],
 
     "@beep/editor": ["@beep/editor@workspace:packages/foundation/ui-system/editor"],
+
+    "@beep/epistemic-config": ["@beep/epistemic-config@workspace:packages/epistemic/config"],
 
     "@beep/epistemic-domain": ["@beep/epistemic-domain@workspace:packages/epistemic/domain"],
 

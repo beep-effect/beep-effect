@@ -201,6 +201,9 @@
       "path": "../../packages/ontology/client/tsconfig.json"
     },
     {
+      "path": "../../packages/ontology/config/tsconfig.json"
+    },
+    {
       "path": "../../packages/ontology/domain/tsconfig.json"
     },
     {

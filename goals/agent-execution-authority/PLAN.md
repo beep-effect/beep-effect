@@ -2,14 +2,18 @@
 
 ## Status
 
-Status: `pending`
+Status: `in-progress`
+
+PRs 1 and 2 have landed. PR 1 (#458) shipped the grant and record schemas plus
+the `frozen-grant-set` law; PR 2 shipped `@beep/epistemic-config`, the
+`OntologyMcpConfig` split, and the MCP entrypoint cleanup. PR 3 is next.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Confirm the source hierarchy and re-verify the two spike findings still hold against current `main`. | Required facts and blockers recorded; both mechanisms re-confirmed or the discrepancy reported. |
-| P1 Implement | pending | Land PRs 1–7 in order, each independently mergeable. | `SPEC.md` acceptance criteria met. |
+| P0 Research | complete | Confirm the source hierarchy and re-verify the two spike findings still hold against current `main`. | Required facts and blockers recorded; both mechanisms re-confirmed or the discrepancy reported. |
+| P1 Implement | in-progress | Land PRs 1–7 in order, each independently mergeable. | `SPEC.md` acceptance criteria met. |
 | P2 Verify | pending | `bun run beep yeet verify` plus the acceptance suite. | Verification green or blockers documented. |
 | P3 Yeet: PR to mergeable | pending | Drive each PR to mergeable through `bun run beep yeet publish`. | Hosted required checks green. |
 | P4 Close | pending | Closeout reflection and packet-status flip. | Reflection exists; `bun run beep lint reflection-artifacts` passes. |

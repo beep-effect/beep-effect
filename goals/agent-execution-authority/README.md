@@ -37,17 +37,30 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-**P0 Research.** Next concrete action: re-verify the two 2026-07-25 spike
-findings against current `main` — that `Layer.succeed(FetchHttpClient.Fetch)`
-reaches through drivers sealing their own transport, and that plpgsql
-`BEFORE UPDATE`/`BEFORE DELETE` triggers work in PGlite. Then start PR 1.
+**P1 Implement.** PRs 1 and 2 have landed. Next concrete action: PR 3 — the
+ledger tables, migration, port, Drizzle adapter, and chain verifier. Settle the
+open fork recorded at `PLAN.md` first: raw `pgTable` versus
+`EntityTable.pgTableFrom`, since `BaseEntity` bakes in `rowVersion`,
+`updatedAt`, and `updatedByPrincipal`, none of which an insert-only ledger may
+carry.
 
 ## Latest Evidence
 
-Not started. The spike that de-risked this packet was run and deleted on
-2026-07-25; its findings are recorded in
-[`explorations/agent-execution-sandbox/README.md`](../../explorations/agent-execution-sandbox/README.md)
-under "Proven Mechanisms."
+- **PR 2** (2026-07-26) — `@beep/epistemic-config` owns the destination
+  allowlist and pinned policy revision; audience is resolved from the
+  destination rather than configured. `ONTOLOGY_MCP_MUTATIONS_ENABLED` moved to
+  a new `OntologyMcpConfig` service and off the entrypoint's module-top-level
+  `Effect.runSync`. The deterministic frozen grant-set fixture PR 7 depends on
+  ships here with a digest-stability assertion. Proven non-vacuous: breaking
+  the config key in `ontology-mcp-http.test.ts` fails two tests with
+  `Tool 'ontology_propose_change_batch' not found`.
+- **PR 1** (#458, 2026-07-26) — grant, verdict, grant-set, and record schemas in
+  `epistemic/domain`, plus the `frozen-grant-set` law banning `FrozenGrantSet.make`
+  outside its defining module.
+- The spike that de-risked this packet was run and deleted on 2026-07-25; its
+  findings are recorded in
+  [`explorations/agent-execution-sandbox/README.md`](../../explorations/agent-execution-sandbox/README.md)
+  under "Proven Mechanisms."
 
 ## Notes
 

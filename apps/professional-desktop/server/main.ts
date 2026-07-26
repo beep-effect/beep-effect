@@ -30,8 +30,9 @@ import "./IpcStdoutGuard.prelude.ts";
 
 import { ChatRpcs } from "@beep/agents-use-cases/public";
 import { DocumentsRpcs, VaultSyncRpcs } from "@beep/documents-use-cases/public";
+import { OntologyMcpConfigLive } from "@beep/ontology-config/layer";
+import { OntologyMcpMutationsEnabledConfig } from "@beep/ontology-config/server";
 import { OntologyRpcs } from "@beep/ontology-use-cases/public";
-import { ExportProvenanceTool, ProposeChangeBatchTool, RepairOntologyTool } from "@beep/ontology-use-cases/tools";
 import { WorkspaceVaultRpcs } from "@beep/workspace-use-cases/public";
 import { BunHttpServer, BunRuntime } from "@effect/platform-bun";
 import { Config, Effect, Layer, Logger } from "effect";
@@ -50,12 +51,6 @@ import type { DesktopStartupError } from "@/runtime/Layer";
 // port). Configurable via CHAT_SIDECAR_PORT for tests/dev that need a free port.
 const PORT = Effect.runSync(Config.port("CHAT_SIDECAR_PORT").pipe(Config.withDefault(3939)));
 const RPC_SESSION_TOKEN = Effect.runSync(DesktopRpcSessionToken);
-const ONTOLOGY_MCP_MUTATIONS_ENABLED = Effect.runSync(
-  Config.boolean("ONTOLOGY_MCP_MUTATIONS_ENABLED").pipe(Config.withDefault(false))
-);
-const APPROVED_ONTOLOGY_MUTATION_TOOLS = ONTOLOGY_MCP_MUTATIONS_ENABLED
-  ? [ProposeChangeBatchTool.name, RepairOntologyTool.name, ExportProvenanceTool.name]
-  : [];
 
 const DesktopRpcs = ChatRpcs.merge(
   WorkspaceVaultRpcs,
@@ -103,11 +98,10 @@ const httpMain = (): Layer.Layer<never, DesktopStartupError> => {
   const OntologyMcp = O.match(RPC_SESSION_TOKEN, {
     onNone: () => Layer.empty,
     onSome: (token: Redacted.Redacted<string>) =>
-      makeOntologyMcpTransportLayer({
-        token,
-        mutationsEnabled: ONTOLOGY_MCP_MUTATIONS_ENABLED,
-        approvedMutationTools: APPROVED_ONTOLOGY_MUTATION_TOOLS,
-      }).pipe(Layer.provide(HttpRouter.layer)),
+      makeOntologyMcpTransportLayer({ token }).pipe(
+        Layer.provide(OntologyMcpConfigLive),
+        Layer.provide(HttpRouter.layer)
+      ),
   });
   const App = Layer.mergeAll(Protocol, RpcPreflight, Auth, OntologyMcp);
   return RpcServerLive.pipe(
@@ -135,10 +129,14 @@ const ipcMain = (): Layer.Layer<never, DesktopStartupError> =>
 const Main = (ipcTransport ? ipcMain() : httpMain()).pipe(
   Layer.tap(
     Effect.fnUntraced(function* () {
+      // Read the declaration rather than the OntologyMcpConfig service: the IPC
+      // branch never mounts the MCP transport, so requiring the service here
+      // would infect a transport that has no ontology MCP surface at all.
+      const ontologyMcpMutationsEnabled = yield* OntologyMcpMutationsEnabledConfig;
       yield* Effect.logInfo("professional desktop sidecar ready").pipe(
         Effect.annotateLogs({
           auth_enabled: O.isSome(RPC_SESSION_TOKEN),
-          ontology_mcp_mutations_enabled: ONTOLOGY_MCP_MUTATIONS_ENABLED,
+          ontology_mcp_mutations_enabled: ontologyMcpMutationsEnabled,
           port: PORT,
           transport: ipcTransport ? "ipc" : "http",
         })

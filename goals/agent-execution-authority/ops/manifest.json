@@ -5,7 +5,7 @@
     "title": "Agent Execution Authority",
     "status": "active",
     "created": "2026-07-25",
-    "updated": "2026-07-25",
+    "updated": "2026-07-26",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agent-execution-authority",
@@ -47,12 +47,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
