@@ -1,0 +1,9 @@
+{
+  "machine_id_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "hostname": "DankStation",
+  "uid": 1000,
+  "user": "elpresidank",
+  "home": "/home/elpresidank",
+  "runtime_dir": "/run/user/1000",
+  "bus_address": "unix:path=/run/user/1000/bus"
+}

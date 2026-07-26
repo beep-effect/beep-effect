@@ -60,10 +60,12 @@ export const Default: Story = {
     const canvas = within(canvasElement);
     const trigger = canvas.getByRole("button", { name: "Pick a date" });
     expect(trigger).toBeVisible();
-    return userEvent
-      .click(trigger)
-      .then(() => screen.findByRole("grid"))
-      .then((grid) => waitFor(() => expect(grid).toBeVisible()));
+    return userEvent.click(trigger).then(() => {
+      const popover = within(document.body);
+      return waitFor(() => {
+        expect(popover.getByRole("grid")).toBeVisible();
+      });
+    });
   },
 };
 
