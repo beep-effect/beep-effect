@@ -2,16 +2,16 @@
 
 ## Status
 
-Status: `in-progress` (P0 complete, P1 next)
+Status: `in-progress` (P0 and P1 complete, P2 verification running)
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Storage/concurrency/provenance spike | complete | Prove the storage design and attribution boundary before schema commitment. | PROCEED verdict recorded at [`history/2026-07-25-p0-verdict.md`](./history/2026-07-25-p0-verdict.md): every ratified invariant evidenced in both lanes (spike contract [`ops/handoffs/p0-spike-contract.md`](./ops/handoffs/p0-spike-contract.md), S1–S6 NOTES under `history/p0/`); P1 decisions in [`ops/handoffs/p0-to-p1-handoff.md`](./ops/handoffs/p0-to-p1-handoff.md). |
-| P1 Implement | pending | Build the domain, tables, ports, repository, and migration vertical slice. | Durable disposition, atomic supersession, and as-of behavior are implemented. |
-| P2 Verify | pending | Prove two-axis history, races, and recovery. | Focused tests, restart/migration proof, and repo verification are green. |
-| P3 Close | pending | Reflect, publish through Yeet, monitor, and record readiness/retirement trigger. | Reflection passes lint and the PR is mergeable. |
+| P1 Implement | complete | Build the domain, tables, ports, repository, and migration vertical slice. | Landed per [`history/2026-07-25-p1-implementation.md`](./history/2026-07-25-p1-implementation.md): durable disposition (`resolveClaimGateOutcome` closes the rejected no-op), atomic close-and-insert supersession with typed conflict mapping, canonical asOf reads, epistemic-edge migration registered three-place + manifest, provenance duties discharged, spike deleted. |
+| P2 Verify | complete | Prove two-axis history, races, and recovery. | Green: focused suites (two-axis, races on real Postgres 4/4 ×6 runs, restart proof), and `bun run beep yeet verify` outcome SUCCESS (evidence in [`history/2026-07-25-p1-implementation.md`](./history/2026-07-25-p1-implementation.md) § P2). |
+| P3 Close | in-progress | Reflect, publish through Yeet, monitor, and record readiness/retirement trigger. | Reflection passes lint and the PR is mergeable. |
 
 ## P0 — Storage, Concurrency, and Provenance Spike
 

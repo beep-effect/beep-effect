@@ -430,6 +430,8 @@ describe("SqlTest", () => {
     expect(emptyGate.shouldUseTestcontainers).toBe(false);
     expect(emptyGate.makePgliteLayer()).toBeDefined();
     expect(emptyGate.makePgliteLayer({ migrate: Effect.void })).toBeDefined();
+    expect(emptyGate.makePgliteLayer(undefined, { extensions: {} })).toBeDefined();
+    expect(emptyGate.makePgliteLayer({ migrate: Effect.void }, { extensions: {} })).toBeDefined();
 
     const externalGate = makePgliteIntegrationGate({
       databaseDriver: undefined,

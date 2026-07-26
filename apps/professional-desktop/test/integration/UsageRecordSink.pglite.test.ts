@@ -5,6 +5,7 @@ import { makePgliteIntegrationGate, makePgliteSqlTestLayer } from "@beep/test-ut
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect, layer } from "@effect/vitest";
+import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -12,7 +13,11 @@ import { UsageRecordSink, UsageRecordSinkDrizzle } from "@/chat/UsageRecordSink"
 import { migrateOnBoot } from "@/runtime/Migrations";
 
 const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis } = makePgliteIntegrationGate();
-const makeInProcessPgliteLayer = () => Layer.fresh(makePgliteSqlTestLayer({ mode: "in-process" }));
+// The bundled migrations issue `CREATE EXTENSION btree_gist`, so the test
+// database has to register the bundled extension exactly as the sidecar's
+// `makeBundledPgliteLayer` does.
+const makeInProcessPgliteLayer = () =>
+  Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
 const decodeUsageAppend = S.decodeUnknownSync(TurnFinalizationUsageAppend);
 

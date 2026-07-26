@@ -121,4 +121,4 @@ back-links, not copied doctrine.
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| None | N/A | N/A | N/A | N/A |
+| Raw-SQL constraint ownership | `@beep/epistemic-tables` edge/disposition tables | epistemic slice | `EntityTable.pgTableFrom` and drizzle-orm 1.0.0-rc.4 cannot express CHECK/FK/EXCLUDE/partial-index constraints; the hand-authored db-admin migration owns them and table metadata is knowingly lossy for these backstops. | Remove when the persist-descriptor vocabulary (or drizzle) can express exclusion and composite constraints and the migration is regenerated from metadata. |

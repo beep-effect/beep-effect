@@ -17,6 +17,7 @@ import * as Reactivity from "effect/unstable/reactivity/Reactivity";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import { ConnectionError, SqlError } from "effect/unstable/sql/SqlError";
 import type * as PgClient from "@effect/sql-pg/PgClient";
+import type { PgliteClientConfig } from "@effect/sql-pglite/PgliteClient";
 import type * as NodeSqliteClient from "@effect/sql-sqlite-node/SqliteClient";
 import type { GenericContainer, StartedTestContainer } from "testcontainers";
 
@@ -394,6 +395,30 @@ export class PgExternalTestDriverConfig extends S.Class<PgExternalTestDriverConf
 export type PgExternalTestDriverConfigInput = Partial<PgExternalTestDriverConfig> | undefined;
 
 /**
+ * Constructor input accepted by the in-process PGLite SQL test driver.
+ *
+ * `extensions` is forwarded verbatim to `PgliteClient.layer`, letting
+ * integration suites register bundled PGlite extensions (for example
+ * `@electric-sql/pglite/contrib/btree_gist`) before migrations that issue
+ * `CREATE EXTENSION` run against the in-process database.
+ *
+ * @example
+ * ```ts
+ * import type { PgliteInProcessTestDriverConfigInput } from "@beep/test-utils/SqlTest"
+ *
+ * const value: PgliteInProcessTestDriverConfigInput = {}
+ * console.log(value?.extensions)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type PgliteInProcessTestDriverConfigInput =
+  | {
+      readonly extensions?: PgliteClientConfig.Create["extensions"];
+    }
+  | undefined;
+
+/**
  * Mode selector for the public PGLite SQL test layer helper.
  *
  * @example
@@ -442,6 +467,7 @@ export type PgliteSqlTestLayerMode = typeof PgliteSqlTestLayerMode.Type;
 export interface PgliteSqlTestLayerOptions<MigrateError = never, SeedError = never> {
   readonly external?: PgExternalTestDriverConfigInput;
   readonly hooks?: SqlTestHooks<MigrateError, SeedError>;
+  readonly inProcess?: PgliteInProcessTestDriverConfigInput;
   readonly mode?: PgliteSqlTestLayerMode;
   readonly testcontainers?: PgliteTestcontainersTestDriverConfigInput;
 }
@@ -1379,7 +1405,7 @@ export const PgliteTestcontainersTestDriver: SqlTestDriver<
 };
 
 const buildPgliteInProcessLayer = Effect.fn("SqlTest.PgliteInProcessTestDriver.build")(
-  function* () {
+  function* (config: PgliteInProcessTestDriverConfigInput) {
     const PgliteClient = yield* loadPgliteClientModule;
     const Pg = yield* loadPgClientModule("pglite-inprocess");
     const { path, tempDir } = yield* makeNodeTempDirectory(
@@ -1388,10 +1414,17 @@ const buildPgliteInProcessLayer = Effect.fn("SqlTest.PgliteInProcessTestDriver.b
       "Failed to create a temporary in-process PGLite test directory."
     );
     const dataDir = path.join(tempDir, "pgdata");
+    const extensions = config?.extensions;
 
     return Layer.effectContext(
       Effect.gen(function* () {
-        const pgliteContext = yield* Layer.build(PgliteClient.layer({ dataDir, relaxedDurability: true })).pipe(
+        const pgliteContext = yield* Layer.build(
+          PgliteClient.layer(
+            extensions === undefined
+              ? { dataDir, relaxedDurability: true }
+              : { dataDir, extensions, relaxedDurability: true }
+          )
+        ).pipe(
           Effect.mapError((cause) =>
             toHarnessError(
               "pglite-inprocess",
@@ -1443,11 +1476,11 @@ const buildPgliteInProcessLayer = Effect.fn("SqlTest.PgliteInProcessTestDriver.b
  * @since 0.0.0
  */
 export const PgliteInProcessTestDriver: SqlTestDriver<
-  void,
+  PgliteInProcessTestDriverConfigInput,
   PgClient.PgClient | SqlClient.SqlClient | TestDatabaseInfo,
   SqlClient.SqlClient
 > = {
-  makeLayer: () => Layer.unwrap(buildPgliteInProcessLayer()),
+  makeLayer: (config) => Layer.unwrap(buildPgliteInProcessLayer(config)),
   name: "pglite-inprocess",
   sqlClient: SqlClient.SqlClient,
 };
@@ -1574,7 +1607,13 @@ export const makePgliteIntegrationGate = (env?: PgliteIntegrationGateEnv) => {
 
   // Generic per call so `makePgliteLayer({ migrate })` infers the hook error
   // types (e.g. SqlError) instead of fixing them to `never` at gate creation.
-  const makePgliteLayer = <MigrateError = never, SeedError = never>(hooks?: SqlTestHooks<MigrateError, SeedError>) => {
+  // `inProcess` (e.g. bundled PGlite extensions) only applies to the in-process
+  // driver; the external and testcontainers lanes own their server-side
+  // extension surface.
+  const makePgliteLayer = <MigrateError = never, SeedError = never>(
+    hooks?: SqlTestHooks<MigrateError, SeedError>,
+    inProcess?: PgliteInProcessTestDriverConfigInput
+  ) => {
     if (O.isSome(sharedConnectionUri)) {
       const connectionUri = sharedConnectionUri.value;
       return hooks === undefined
@@ -1589,8 +1628,8 @@ export const makePgliteIntegrationGate = (env?: PgliteIntegrationGateEnv) => {
     }
 
     return hooks === undefined
-      ? Layer.fresh(makePgliteSqlTestLayer({ mode: "in-process" }))
-      : Layer.fresh(makePgliteSqlTestLayer({ hooks, mode: "in-process" }));
+      ? Layer.fresh(makePgliteSqlTestLayer({ inProcess, mode: "in-process" }))
+      : Layer.fresh(makePgliteSqlTestLayer({ hooks, inProcess, mode: "in-process" }));
   };
 
   return {
@@ -1638,6 +1677,6 @@ export const makePgliteSqlTestLayer = <MigrateError = never, SeedError = never>(
         return makeConfiguredSqlTestLayer(PgliteTestcontainersTestDriver, options.testcontainers, options.hooks);
       }
 
-      return makeConfiguredSqlTestLayer(PgliteInProcessTestDriver, undefined, options.hooks);
+      return makeConfiguredSqlTestLayer(PgliteInProcessTestDriver, options.inProcess, options.hooks);
     })
   );

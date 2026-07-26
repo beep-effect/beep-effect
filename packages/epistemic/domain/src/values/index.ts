@@ -6,6 +6,20 @@
  */
 
 /**
+ * Claim disposition status value exports.
+ *
+ * @example
+ * ```ts
+ * import { ClaimDispositionStatus } from "@beep/epistemic-domain/values"
+ *
+ * console.log(ClaimDispositionStatus.Enum.rejected)
+ * ```
+
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./ClaimDispositionStatus/index.ts";
+/**
  * Claim gate verdict value exports.
  *
  * @example
@@ -57,6 +71,36 @@ export * from "./ClaimLifecycle/index.ts";
  */
 export * from "./ClaimProjection/index.ts";
 /**
+ * Edge endpoint value exports.
+ *
+ * @example
+ * ```ts
+ * import { EdgeEndpoint } from "@beep/epistemic-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * const endpoint = S.decodeUnknownSync(EdgeEndpoint)({ kind: "claim", claimId: 1 })
+ * console.log(endpoint.kind)
+ * ```
+
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./EdgeEndpoint/index.ts";
+/**
+ * Edge relation vocabulary exports.
+ *
+ * @example
+ * ```ts
+ * import { EdgeRelation } from "@beep/epistemic-domain/values"
+ *
+ * console.log(EdgeRelation.Enum.supports)
+ * ```
+
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./EdgeRelation/index.ts";
+/**
  * Epistemic fixture-key value exports.
  *
  * @example
@@ -86,3 +130,27 @@ export * from "./EpistemicFixtureKey/index.ts";
  * @since 0.0.0
  */
 export * from "./EvidenceSpan/index.ts";
+/**
+ * Logical edge identity and digest exports.
+ *
+ * @example
+ * ```ts
+ * import { LogicalEdgeIdentity, logicalEdgeKey } from "@beep/epistemic-domain/values"
+ * import * as S from "effect/Schema"
+ *
+ * const identity = S.decodeUnknownSync(LogicalEdgeIdentity)({
+ *   evidenceScope: null,
+ *   matterScope: null,
+ *   orgScope: "1",
+ *   qualifiers: {},
+ *   relation: "supports",
+ *   source: { kind: "claim", claimId: 1 },
+ *   target: { kind: "claim", claimId: 2 }
+ * })
+ * console.log(logicalEdgeKey(identity).length)
+ * ```
+
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./LogicalEdgeIdentity/index.ts";

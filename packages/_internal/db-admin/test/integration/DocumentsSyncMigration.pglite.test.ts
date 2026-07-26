@@ -6,15 +6,28 @@ import { fromSyncCursorRow, toSyncCursorInsert } from "@beep/documents-tables/en
 import { fromSyncItemRow, toSyncItemInsert } from "@beep/documents-tables/entities/SyncItem";
 import { fromSyncOperationRow, toSyncOperationInsert } from "@beep/documents-tables/entities/SyncOperation";
 import { makeDrizzle, migrate } from "@beep/postgres";
-import { baseEntityFixtureInput, makePgliteIntegrationGate, TestDatabaseInfo } from "@beep/test-utils";
+import {
+  baseEntityFixtureInput,
+  makePgliteIntegrationGate,
+  makePgliteSqlTestLayer,
+  TestDatabaseInfo,
+} from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, layer } from "@effect/vitest";
-import { Effect, pipe } from "effect";
+import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
+import { Effect, Layer, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-const { shouldRunPgliteIntegration, makePgliteLayer } = makePgliteIntegrationGate();
+const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();
 const migrationsFolder = fileURLToPath(new URL("../../drizzle", import.meta.url));
+
+// The drizzle folder now contains `CREATE EXTENSION btree_gist`, which the
+// shared external pglite-socket lane cannot load. Migration proofs are
+// extension-dependent, so they are pinned to the in-process driver with the
+// bundled extension registered rather than gate-selected.
+const makeMigrationProofLayer = () =>
+  Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
 const decodeSyncItem = S.decodeUnknownEffect(DocumentsDbSchema.syncItem.entitySchema);
 const decodeSyncOperation = S.decodeUnknownEffect(DocumentsDbSchema.syncOperation.entitySchema);
@@ -43,7 +56,7 @@ if (!shouldRunPgliteIntegration) {
   describe.skip("db-admin documents-sync migration PgLite integration", () => {});
 } else {
   describe.concurrent("db-admin documents-sync migration PgLite integration", () => {
-    layer(makePgliteLayer(), { timeout: "2 minutes" })((it) => {
+    layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
       it.effect(
         "runs the documents-sync migration target SQL",
         Effect.fnUntraced(function* () {
