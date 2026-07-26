@@ -162,3 +162,79 @@ export const UsageRecordId = make("usage_record", {
  * @since 0.0.0
  */
 export type UsageRecordId = typeof UsageRecordId.Type;
+
+/**
+ * Bitemporal epistemic edge version entity identifier.
+ *
+ * @example
+ * ```ts
+ * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
+ *
+ * console.log(Epistemic.EdgeVersionId.entityType)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export const EdgeVersionId = make("edge_version", {
+  description: "Identifier for a bitemporal epistemic edge version entity.",
+});
+
+/**
+ * Runtime type for {@link EdgeVersionId}.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
+ * import * as S from "effect/Schema"
+ *
+ * const program = Effect.gen(function* () {
+ *   const id: Epistemic.EdgeVersionId = yield* S.decodeUnknownEffect(Epistemic.EdgeVersionId)(1)
+ *   return id
+ * })
+ * console.log(program)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export type EdgeVersionId = typeof EdgeVersionId.Type;
+
+/**
+ * Durable claim disposition entity identifier.
+ *
+ * @example
+ * ```ts
+ * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
+ *
+ * console.log(Epistemic.ClaimDispositionId.entityType)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export const ClaimDispositionId = make("claim_disposition", {
+  description: "Identifier for a durable claim disposition entity.",
+});
+
+/**
+ * Runtime type for {@link ClaimDispositionId}.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
+ * import * as S from "effect/Schema"
+ *
+ * const program = Effect.gen(function* () {
+ *   const id: Epistemic.ClaimDispositionId = yield* S.decodeUnknownEffect(Epistemic.ClaimDispositionId)(1)
+ *   return id
+ * })
+ * console.log(program)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export type ClaimDispositionId = typeof ClaimDispositionId.Type;

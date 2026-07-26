@@ -5,7 +5,7 @@ import shared from "../../vitest.shared.ts";
 export default mergeConfig(
   shared,
   defineConfig({
-    assetsInclude: ["**/*.data", "**/*.wasm"],
+    assetsInclude: ["**/*.data", "**/*.wasm", "**/*.tar.gz"],
     resolve: {
       alias: {
         "@": fileURLToPath(new URL("./src", import.meta.url)),

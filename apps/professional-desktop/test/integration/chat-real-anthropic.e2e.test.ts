@@ -27,6 +27,7 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect, it, layer } from "@effect/vitest";
+import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -42,7 +43,11 @@ import type * as Md from "@beep/md/Md.model";
 const realAnthropicChatTimeoutMillis = 300_000;
 const shouldRunRealAnthropic = Bun.env.BEEP_TEST_REAL_ANTHROPIC_CHAT === "1";
 const anthropicApiKeyEnv = "AI_ANTHROPIC_API_KEY";
-const makeInProcessPgliteLayer = () => Layer.fresh(makePgliteSqlTestLayer({ mode: "in-process" }));
+// The bundled migrations issue `CREATE EXTENSION btree_gist`, so the test
+// database has to register the bundled extension exactly as the sidecar's
+// `makeBundledPgliteLayer` does.
+const makeInProcessPgliteLayer = () =>
+  Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
 const prompt = [
   "Return exactly these three rich blocks and no prose:",

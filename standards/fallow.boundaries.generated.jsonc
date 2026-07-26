@@ -1445,7 +1445,8 @@
           "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/epistemic-domain",
@@ -1453,7 +1454,8 @@
           "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
@@ -1461,16 +1463,28 @@
         "allow": [
           "@beep/epistemic-domain",
           "@beep/epistemic-server",
+          "@beep/epistemic-tables",
           "@beep/epistemic-use-cases",
+          "@beep/pglite",
+          "@beep/postgres",
+          "@beep/schema",
           "@beep/semantic-web",
-          "@beep/test-utils"
+          "@beep/shared-domain",
+          "@beep/test-utils",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/epistemic-domain",
           "@beep/epistemic-server",
+          "@beep/epistemic-tables",
           "@beep/epistemic-use-cases",
+          "@beep/pglite",
+          "@beep/postgres",
+          "@beep/schema",
           "@beep/semantic-web",
-          "@beep/test-utils"
+          "@beep/shared-domain",
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
@@ -1494,14 +1508,18 @@
           "@beep/epistemic-domain",
           "@beep/epistemic-use-cases",
           "@beep/identity",
+          "@beep/schema",
           "@beep/semantic-web",
+          "@beep/shared-domain",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/epistemic-domain",
           "@beep/epistemic-use-cases",
           "@beep/identity",
+          "@beep/schema",
           "@beep/semantic-web",
+          "@beep/shared-domain",
           "@beep/test-utils"
         ]
       },
@@ -2293,7 +2311,6 @@
           "@beep/fc-runs",
           "@beep/identity",
           "@beep/pglite",
-          "@beep/postgres",
           "@beep/schema",
           "@beep/utils"
         ],
@@ -2301,7 +2318,6 @@
           "@beep/fc-runs",
           "@beep/identity",
           "@beep/pglite",
-          "@beep/postgres",
           "@beep/schema",
           "@beep/utils"
         ]

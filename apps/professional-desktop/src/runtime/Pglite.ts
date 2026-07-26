@@ -26,7 +26,8 @@
  */
 /// <reference path="../assets.d.ts" />
 
-import { fileURLToPath } from "node:url";
+import { tmpdir } from "node:os";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause, profilePhase } from "@beep/observability";
 import { makeLayer as makePgliteLayer } from "@beep/pglite";
@@ -37,6 +38,9 @@ import * as BunPath from "@effect/platform-bun/BunPath";
 import { Clock, Config, Effect, FileSystem, Layer, Path } from "effect";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
+import btreeGistBundlePath from "../../../../node_modules/@electric-sql/pglite/dist/btree_gist.tar.gz" with {
+  type: "file",
+};
 import initdbWasmPath from "../../../../node_modules/@electric-sql/pglite/dist/initdb.wasm" with { type: "file" };
 import pgliteDataPath from "../../../../node_modules/@electric-sql/pglite/dist/pglite.data" with { type: "file" };
 import pgliteWasmPath from "../../../../node_modules/@electric-sql/pglite/dist/pglite.wasm" with { type: "file" };
@@ -283,8 +287,35 @@ const PgliteBinaryAssets = Effect.all([compileWasmFile(pgliteWasmPath), compileW
   profilePhase({ phase: "professional_desktop.pglite.compile_binary_assets" })
 );
 
+// The bundled migrations issue `CREATE EXTENSION btree_gist` (the epistemic
+// bitemporal edge exclusion constraint), so the extension has to be registered
+// on every PGlite instance this app opens — the compatibility probe as much as
+// the live database. Caller-supplied extensions merge on top rather than
+// replace.
+//
+// The bundle rides a `type: "file"` asset import rather than the
+// `@electric-sql/pglite/contrib/btree_gist` export: that export resolves its
+// tarball relative to its own module URL, which does not exist inside the
+// compiled sidecar's single-file executable. PGlite's extension loader reads
+// `file://` bundles through node:fs, which cannot open the executable's
+// embedded `$bunfs` assets either, so the bytes are materialized once per boot
+// into a real content-named temp file (`Bun.hash` over the bundle bytes) and
+// PGlite is handed that URL. Re-boots and concurrent sidecars converge on the
+// same content-addressed path, so an existing complete copy is reused as-is.
+const materializeBtreeGistBundle = Effect.gen(function* () {
+  const bytes = yield* Effect.promise(() => Bun.file(toBunFileSystemPath(btreeGistBundlePath)).arrayBuffer());
+  const target = `${tmpdir()}/beep-professional-desktop-btree-gist-${Bun.hash(bytes).toString(16)}.tar.gz`;
+  const existing = Bun.file(target);
+  const alreadyMaterialized = (yield* Effect.promise(() => existing.exists())) && existing.size === bytes.byteLength;
+  if (!alreadyMaterialized) {
+    yield* Effect.promise(() => Bun.write(target, bytes));
+  }
+  return pathToFileURL(target);
+});
+
 /**
- * Build a PGlite layer with the desktop sidecar's bundled binary assets.
+ * Build a PGlite layer with the desktop sidecar's bundled binary assets and
+ * bundled extensions.
  *
  * @example
  * ```ts
@@ -298,7 +329,17 @@ const PgliteBinaryAssets = Effect.all([compileWasmFile(pgliteWasmPath), compileW
  * @since 0.0.0
  */
 export const makeBundledPgliteLayer = (options: PgliteClientOptions = {}) =>
-  Layer.unwrap(Effect.map(PgliteBinaryAssets, (assets) => makePgliteLayer({ ...options, ...assets })));
+  Layer.unwrap(
+    Effect.map(
+      Effect.all([PgliteBinaryAssets, materializeBtreeGistBundle], { concurrency: "unbounded" }),
+      ([assets, btreeGistBundleUrl]) =>
+        makePgliteLayer({
+          ...options,
+          ...assets,
+          extensions: { btree_gist: btreeGistBundleUrl, ...options.extensions },
+        })
+    )
+  );
 
 const MigrationPlatformLive = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
 

@@ -22,6 +22,20 @@
 export const VERSION = "0.0.0" as const;
 
 /**
+ * Claim disposition server adapter exports.
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export * from "./ClaimDisposition/index.ts";
+/**
+ * Edge authority server adapter exports.
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export * from "./EdgeAuthority/index.ts";
+/**
  * Epistemic server layer exports.
  *
  * @category layers

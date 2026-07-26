@@ -1,20 +1,28 @@
 import { fileURLToPath } from "node:url";
 import { makeDrizzle, migrate } from "@beep/postgres";
-import { makePgliteIntegrationGate, TestDatabaseInfo } from "@beep/test-utils";
+import { makePgliteIntegrationGate, makePgliteSqlTestLayer, TestDatabaseInfo } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, layer } from "@effect/vitest";
-import { Effect, pipe } from "effect";
+import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
+import { Effect, Layer, pipe } from "effect";
 import * as O from "effect/Option";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 
-const { shouldRunPgliteIntegration, makePgliteLayer } = makePgliteIntegrationGate();
+const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();
 const migrationsFolder = fileURLToPath(new URL("../../drizzle", import.meta.url));
+
+// The drizzle folder now contains `CREATE EXTENSION btree_gist`, which the
+// shared external pglite-socket lane cannot load. Migration proofs are
+// extension-dependent, so they are pinned to the in-process driver with the
+// bundled extension registered rather than gate-selected.
+const makeMigrationProofLayer = () =>
+  Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
 if (!shouldRunPgliteIntegration) {
   describe.skip("db-admin architecture-lab migration PgLite integration", () => {});
 } else {
   describe.concurrent("db-admin architecture-lab migration PgLite integration", () => {
-    layer(makePgliteLayer(), { timeout: "2 minutes" })((it) => {
+    layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
       it.effect(
         "runs the architecture-lab migration target SQL",
         Effect.fnUntraced(function* () {

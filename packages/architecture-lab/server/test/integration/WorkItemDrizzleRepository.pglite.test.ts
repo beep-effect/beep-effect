@@ -6,20 +6,24 @@ import * as WorkPriority from "@beep/architecture-lab-domain/values/WorkPriority
 import { makeDrizzleWorkItemRepository } from "@beep/architecture-lab-server/aggregates/WorkItem";
 import { makeDrizzleWorkerRepository } from "@beep/architecture-lab-server/entities/Worker";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
-import { fcRuns, makePgliteIntegrationGate, TestDatabaseInfo } from "@beep/test-utils";
+import { fcRuns, makePgliteIntegrationGate, makePgliteSqlTestLayer, TestDatabaseInfo } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it, layer } from "@effect/vitest";
+import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const {
-  shouldRunPgliteIntegration,
-  pgliteIntegrationTimeoutMillis: PgliteIntegrationTimeout,
-  makePgliteLayer,
-} = makePgliteIntegrationGate();
+const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis: PgliteIntegrationTimeout } =
+  makePgliteIntegrationGate();
 const migrationsFolder = fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));
+
+// The db-admin drizzle folder now contains `CREATE EXTENSION btree_gist`, which
+// the shared external pglite-socket lane cannot load, so suites that apply it
+// are pinned to the in-process driver with the bundled extension registered.
+const makeMigrationCapableLayer = () =>
+  Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 const decodeWorkItemId = S.decodeUnknownEffect(DomainWorkItem.WorkItemId);
 const decodeWorkItemTitle = S.decodeUnknownEffect(DomainWorkItem.WorkItemTitle);
 const decodeWorkerId = S.decodeUnknownEffect(DomainWorker.WorkerId);
@@ -44,7 +48,7 @@ const migrateArchitectureLab = Effect.fnUntraced(function* () {
 });
 
 const WorkItemDrizzleRepositoryLayer = Layer.mergeAll(ArchitectureLabConfigTest, makeDrizzleLayer()).pipe(
-  Layer.provideMerge(makePgliteLayer())
+  Layer.provideMerge(makeMigrationCapableLayer())
 );
 
 it("round-trips schema-derived repository identity values through domain schemas", () =>

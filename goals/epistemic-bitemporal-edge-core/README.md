@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -32,19 +32,21 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement: build the domain/tables/use-cases/server/migration vertical slice on the
-P0-ratified enforcement design
-([`ops/handoffs/p0-to-p1-handoff.md`](./ops/handoffs/p0-to-p1-handoff.md)).
+Closed (completed-retained). Reflection:
+[`history/reflections/2026-07-25-claude.md`](./history/reflections/2026-07-25-claude.md).
 
 ## Latest Evidence
 
-P0 hard gate CLEARED — **PROCEED** verdict at
-[`history/2026-07-25-p0-verdict.md`](./history/2026-07-25-p0-verdict.md): full
-exclusion-constraint parity across production Postgres (17.10) and PGlite (18.3 wasm),
-deterministic concurrent supersession on two real connections, restart proof, safe
-identity partition, and a PASS provenance inventory (Graphiti `v0.29.2`, no NOTICE,
-zero mined-location drift). Spike evidence: S1–S6 NOTES under
-[`history/p0/`](./history/p0/).
+P1 vertical slice LANDED —
+[`history/2026-07-25-p1-implementation.md`](./history/2026-07-25-p1-implementation.md):
+domain/tables/use-cases/server/db-admin implemented exactly on the P0-ratified
+design; durable rejected disposition via `resolveClaimGateOutcome`; atomic
+close-and-insert supersession with deterministic real-Postgres races (4/4, six
+consecutive runs) and a ratified creation-race mapping refinement; restart
+proof off one persistent dataDir; Graphiti Apache-2.0 duties discharged and the
+retirement doctrine trigger recorded; spike suites/fixtures deleted with all
+touchpoints reverted. P0 verdict remains at
+[`history/2026-07-25-p0-verdict.md`](./history/2026-07-25-p0-verdict.md).
 
 ## Notes
 

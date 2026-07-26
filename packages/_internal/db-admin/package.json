@@ -38,6 +38,7 @@
     "@beep/test-utils": "workspace:^",
     "@beep/utils": "workspace:^",
     "@effect/vitest": "catalog:",
+    "@electric-sql/pglite": "catalog:",
     "@types/node": "catalog:",
     "drizzle-kit": "catalog:"
   },
