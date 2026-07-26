@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { RegistryProvider } from "@effect/atom-react";
 import { it } from "@effect/vitest";
-import { cleanup, render, waitFor, within } from "@testing-library/react";
+import { cleanup, render, within } from "@testing-library/react";
 import { Effect } from "effect";
 import { afterEach, describe, expect, vi } from "vitest";
 import { CosmosSpike } from "@/spikes/CosmosSpike";
@@ -29,7 +29,9 @@ describe("Cosmos spike runtime failure", () => {
       );
       const screen = within(container);
 
-      yield* Effect.tryPromise(() => waitFor(() => expect(screen.getByText("failed")).toBeInTheDocument()));
+      expect(
+        yield* Effect.promise(() => screen.findByText("failed", undefined, { timeout: 5_000 }))
+      ).toBeInTheDocument();
       expect(container.textContent).not.toContain("cosmos-worker-secret");
       expect(container.textContent).not.toContain("/home/operator");
     })
