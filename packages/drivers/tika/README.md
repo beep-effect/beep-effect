@@ -42,9 +42,9 @@ refuse extraction with a typed `unsupported-file-format` error in V1.
 
 | Variable | Purpose | Default |
 | --- | --- | --- |
-| `BEEP_TIKA_BASE_URL` | Tika Server base URL | `http://localhost:9998` |
+| `BEEP_TIKA_BASE_URL` | Tika Server base URL (trailing slashes stripped; query/fragment rejected) | `http://localhost:9998` |
 | `BEEP_TIKA_TIMEOUT_MILLIS` | Per-file extraction timeout | `120000` |
-| `BEEP_TIKA_MAX_OUTPUT_BYTES` | Ceiling on materialized text | unbounded |
+| `BEEP_TIKA_MAX_OUTPUT_BYTES` | Ceiling on the whole response body, metadata included | unbounded |
 | `BEEP_TEST_TIKA_URL` | Opt-in live test lane target | unset (lane skips) |
 
 Only `makeTikaServerFileProcessingEngineFromEnv` reads the `BEEP_TIKA_*` keys;

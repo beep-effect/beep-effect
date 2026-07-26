@@ -7,11 +7,36 @@
 
 import { $TikaId } from "@beep/identity";
 import { PosInt, SchemaUtils, URLStr } from "@beep/schema";
+import { Str } from "@beep/utils";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 
 const $I = $TikaId.create("Tika.config");
 
 const defaultTimeoutMillis = 120_000;
+const trailingSlashPattern = /\/+$/u;
+
+const carriesQueryOrFragment = (url: string): boolean => {
+  const parsed = new URL(url);
+  return Str.isNonEmpty(parsed.search) || Str.isNonEmpty(parsed.hash);
+};
+
+// Endpoint paths are appended verbatim (`${baseUrl}/rmeta/text`), so a trailing
+// slash would yield `//rmeta/text` and a query or fragment would swallow the
+// endpoint path entirely. Normalize the former, reject the latter.
+const TikaServerBaseUrl = URLStr.pipe(
+  S.check(
+    S.makeFilter((url: string) => (carriesQueryOrFragment(url) ? "must not carry a query string or fragment" : true), {
+      identifier: $I`TikaServerBaseUrlEndpointCheck`,
+      title: "Tika Server Base URL",
+      description: "Checks that the Tika Server base URL carries no query string or fragment.",
+    })
+  ),
+  S.decode({
+    decode: SchemaGetter.transform((url: URLStr) => URLStr.make(Str.replace(trailingSlashPattern, "")(url))),
+    encode: SchemaGetter.passthrough(),
+  })
+);
 
 /**
  * Engine name reported by every Tika engine descriptor and operation error.
@@ -94,8 +119,9 @@ export const BEEP_TIKA_MAX_OUTPUT_BYTES_ENV = "BEEP_TIKA_MAX_OUTPUT_BYTES";
 /**
  * Configuration for the Tika Server HTTP engine.
  *
- * `maxOutputBytes` is the driver-level ceiling on materialized extraction
- * text; an absent value means unbounded, and a per-operation
+ * `maxOutputBytes` is the driver-level ceiling on the Tika Server response
+ * body — JSON envelope, metadata, and extracted text together — enforced while
+ * the body streams. An absent value means unbounded, and a per-operation
  * `maxMaterializedBytes` narrows it further.
  *
  * @example
@@ -111,13 +137,15 @@ export const BEEP_TIKA_MAX_OUTPUT_BYTES_ENV = "BEEP_TIKA_MAX_OUTPUT_BYTES";
  */
 export class TikaServerEngineConfig extends S.Class<TikaServerEngineConfig>($I`TikaServerEngineConfig`)(
   {
-    baseUrl: URLStr.pipe(SchemaUtils.withKeyDefaults(URLStr.make(TIKA_SERVER_URL))).annotateKey({
-      description: "Base URL of the Tika Server instance serving /version and /rmeta/text.",
+    baseUrl: TikaServerBaseUrl.pipe(SchemaUtils.withKeyDefaults(URLStr.make(TIKA_SERVER_URL))).annotateKey({
+      description:
+        "Base URL of the Tika Server instance serving /version and /rmeta/text; trailing slashes are stripped and query strings or fragments are rejected.",
     }),
     maxOutputBytes: S.OptionFromOptionalKey(PosInt).pipe(
       SchemaUtils.withNoneDefault,
       S.annotateKey({
-        description: "Driver-level ceiling on materialized extraction text in bytes; absent means unbounded.",
+        description:
+          "Driver-level ceiling in bytes on the whole Tika Server response body, metadata included; absent means unbounded.",
       })
     ),
     timeoutMillis: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(defaultTimeoutMillis))).annotateKey({

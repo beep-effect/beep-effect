@@ -14,7 +14,7 @@ import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
 import { NonNegativeInt } from "@beep/schema";
 import { A, O } from "@beep/utils";
-import { Config, Effect, FileSystem, flow, Order, pipe } from "effect";
+import { Config, Effect, FileSystem, flow, Order, pipe, Stream } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as HttpClient from "effect/unstable/http/HttpClient";
@@ -79,15 +79,34 @@ const effectiveOutputBudget = (configBudget: O.Option<number>, operationBudget: 
     })
   );
 
-const enforceOutputBudget = (text: string, budget: O.Option<number>): Effect.Effect<string, TikaError> =>
+const unreadableBody = () => makeTikaError("response-decoding", { cause: "tika server response body was unreadable" });
+
+// Enforces the budget against the RAW response body while it streams, so an
+// oversized response fails before it is materialized or parsed. The budget
+// therefore covers the whole `/rmeta/text` document — JSON envelope, metadata,
+// and extracted text alike — not just the text Tika extracted. Peak memory is
+// bounded by the budget plus one transport chunk.
+const readBoundedBody = (
+  response: HttpClientResponse.HttpClientResponse,
+  budget: O.Option<number>
+): Effect.Effect<string, TikaError> =>
   O.match(budget, {
-    onNone: () => Effect.succeed(text),
-    onSome: (limit) => {
-      const byteLength = textEncoder.encode(text).length;
-      return byteLength > limit
-        ? Effect.fail(makeTikaError("output-budget", { cause: `${byteLength} bytes exceeds budget ${limit}` }))
-        : Effect.succeed(text);
-    },
+    onNone: () => response.text.pipe(Effect.mapError(unreadableBody)),
+    onSome: (limit) =>
+      response.stream.pipe(
+        Stream.mapError(unreadableBody),
+        Stream.mapAccumEffect(
+          () => 0,
+          (total, chunk: Uint8Array) => {
+            const seen = total + chunk.length;
+            return seen > limit
+              ? Effect.fail(makeTikaError("output-budget", { cause: `${seen} bytes exceeds budget ${limit}` }))
+              : Effect.succeed([seen, [chunk]] as const);
+          }
+        ),
+        Stream.decodeText(),
+        Stream.mkString
+      ),
   });
 
 const operationFailure = (
@@ -208,8 +227,9 @@ export const makeTikaServerFileProcessingEngine = Effect.fn("Tika.makeTikaServer
       return yield* makeTikaError("response-status", { statusCode: NonNegativeInt.make(response.status) });
     }
 
-    return yield* response.text.pipe(
-      Effect.mapError(() => makeTikaError("response-decoding", { cause: "tika server response body was unreadable" }))
+    return yield* readBoundedBody(
+      response,
+      effectiveOutputBudget(config.maxOutputBytes, O.fromUndefinedOr(operation.maxMaterializedBytes))
     );
   });
 
@@ -221,12 +241,7 @@ export const makeTikaServerFileProcessingEngine = Effect.fn("Tika.makeTikaServer
       Effect.timeoutOrElse({ duration: timeout, orElse: () => Effect.fail(makeTikaError("timeout")) })
     );
     const record = yield* decodeTikaResponseRecord(payload);
-    const budget = effectiveOutputBudget(config.maxOutputBytes, O.fromUndefinedOr(operation.maxMaterializedBytes));
-    const content = operation.format === "image-metadata" ? O.none<string>() : readTikaContentText(record);
-    const text = yield* O.match(content, {
-      onNone: () => Effect.succeedNone,
-      onSome: (value) => Effect.map(enforceOutputBudget(value, budget), O.some),
-    });
+    const text = operation.format === "image-metadata" ? O.none<string>() : readTikaContentText(record);
 
     return ExtractionResult.make({
       engine: TIKA_ENGINE_NAME,

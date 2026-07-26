@@ -9,6 +9,7 @@ import {
   TIKA_SERVER_URL,
   TikaServerEngineConfig,
 } from "@beep/tika";
+import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Layer, Option as O, Result } from "effect";
@@ -60,6 +61,25 @@ const stub =
   (rmeta: Respond, version: Respond = okVersion): Respond =>
   (request) =>
     Str.endsWith("/version")(request.url) ? version(request) : rmeta(request);
+
+const capturedUrls: Array<string> = [];
+
+const capturing =
+  (urls: Array<string>, respond: Respond): Respond =>
+  (request) => {
+    urls.push(request.url);
+    return respond(request);
+  };
+
+// A tiny extracted text wrapped in oversized metadata: under the old
+// text-only budget this passed, so it pins the metadata-bypass regression.
+const metadataHeavyPayload = JSON.stringify([
+  {
+    "Content-Type": "text/plain",
+    "dc:description": Str.repeat(4_000)("x"),
+    "X-TIKA:content": "hi",
+  },
+]);
 
 const testLayer = (respond: Respond) =>
   Layer.merge(
@@ -113,6 +133,23 @@ describe("TikaServerEngineConfig", () => {
       }),
       fcRuns(25)
     ));
+
+  it("strips trailing slashes from the base URL", () => {
+    expect(decode(TikaServerEngineConfig, { baseUrl: "http://localhost:9998/" }).baseUrl).toBe(TIKA_SERVER_URL);
+    expect(decode(TikaServerEngineConfig, { baseUrl: "http://localhost:9998///" }).baseUrl).toBe(TIKA_SERVER_URL);
+    expect(decode(TikaServerEngineConfig, { baseUrl: "https://tika.internal/api/" }).baseUrl).toBe(
+      "https://tika.internal/api"
+    );
+  });
+
+  it("rejects a base URL carrying a query string or fragment", () => {
+    const withQuery = S.decodeUnknownResult(TikaServerEngineConfig)({ baseUrl: "http://localhost:9998/?token=x" });
+    const withFragment = S.decodeUnknownResult(TikaServerEngineConfig)({ baseUrl: "http://localhost:9998/#frag" });
+
+    expect(Result.isFailure(withQuery)).toBe(true);
+    expect(Result.isFailure(withFragment)).toBe(true);
+    expect(Result.isSuccess(S.decodeUnknownResult(TikaServerEngineConfig)({ baseUrl: TIKA_SERVER_URL }))).toBe(true);
+  });
 });
 
 describe("makeTikaServerFileProcessingEngine", () => {
@@ -289,6 +326,61 @@ describe("makeTikaServerFileProcessingEngine output budgets", () => {
       },
       Effect.scoped,
       provideStub(stub(rmetaFor("plain-text")))
+    )
+  );
+
+  it.effect(
+    "counts response metadata against the budget, not just extracted text",
+    Effect.fnUntraced(
+      function* () {
+        const engine = yield* makeTikaServerFileProcessingEngine(
+          TikaServerEngineConfig.make({ maxOutputBytes: O.some(PosInt.make(1_024)) })
+        );
+        const error = yield* engine.extract(yield* makeExtractOperationFixture("plain-text")).pipe(Effect.flip);
+
+        expect(error._tag).toBe("FileProcessingOperationError");
+        expect(error.reason).toBe("output-limit-exceeded");
+      },
+      Effect.scoped,
+      provideStub(stub(() => Effect.succeed(jsonResponse(metadataHeavyPayload))))
+    )
+  );
+
+  it.effect(
+    "enforces the budget before parsing the response body",
+    Effect.fnUntraced(
+      function* () {
+        const engine = yield* makeTikaServerFileProcessingEngine(
+          TikaServerEngineConfig.make({ maxOutputBytes: O.some(PosInt.make(64)) })
+        );
+        const error = yield* engine.extract(yield* makeExtractOperationFixture("plain-text")).pipe(Effect.flip);
+
+        // The body is oversized AND unparseable; the budget must win, which
+        // only happens if the check runs before JSON decoding.
+        expect(error.reason).toBe("output-limit-exceeded");
+      },
+      Effect.scoped,
+      provideStub(stub(() => Effect.succeed(jsonResponse(Str.repeat(4_000)("x")))))
+    )
+  );
+});
+
+describe("makeTikaServerFileProcessingEngine request shape", () => {
+  it.effect(
+    "targets exactly <baseUrl>/rmeta/text when the base URL has a trailing slash",
+    Effect.fnUntraced(
+      function* () {
+        const engine = yield* makeTikaServerFileProcessingEngine(
+          decode(TikaServerEngineConfig, { baseUrl: "http://localhost:9998/" })
+        );
+        yield* engine.extract(yield* makeExtractOperationFixture("plain-text"));
+
+        expect(capturedUrls).toContain(`${TIKA_SERVER_URL}/version`);
+        expect(capturedUrls).toContain(`${TIKA_SERVER_URL}/rmeta/text`);
+        expect(A.some(capturedUrls, Str.includes("//rmeta"))).toBe(false);
+      },
+      Effect.scoped,
+      provideStub(capturing(capturedUrls, stub(rmetaFor("plain-text"))))
     )
   );
 });
