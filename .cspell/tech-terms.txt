@@ -75,6 +75,7 @@ dtslint
 EADDRINUSE
 ECONNREFUSED
 EdgiOS
+EDRM
 ellipsized
 encodeds
 Endo

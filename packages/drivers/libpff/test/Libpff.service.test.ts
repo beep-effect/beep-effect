@@ -12,6 +12,7 @@ import {
   LibpffFileProcessingEngineOptions,
   makeLibpffFileProcessingEngine,
   PffexportEngineConfig,
+  PffexportMessageRecord,
 } from "@beep/libpff";
 import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
@@ -27,6 +28,7 @@ const ExportArchiveOperationArbitrary = S.toArbitrary(ExportArchiveOperation);
 const PffexportEngineConfigArbitrary = S.toArbitrary(PffexportEngineConfig);
 const LibpffFileProcessingEngineOptionsArbitrary = S.toArbitrary(LibpffFileProcessingEngineOptions);
 const LibpffErrorArbitrary = S.toArbitrary(LibpffError);
+const PffexportMessageRecordArbitrary = S.toArbitrary(PffexportMessageRecord);
 const encodeSourceArtifact = S.encodeEffect(SourceArtifact);
 const decodeSourceArtifact = S.decodeUnknownEffect(SourceArtifact);
 const encodeExportArchiveOperation = S.encodeEffect(ExportArchiveOperation);
@@ -37,6 +39,8 @@ const encodeLibpffFileProcessingEngineOptions = S.encodeEffect(LibpffFileProcess
 const decodeLibpffFileProcessingEngineOptions = S.decodeUnknownEffect(LibpffFileProcessingEngineOptions);
 const encodeLibpffError = S.encodeEffect(LibpffError);
 const decodeLibpffError = S.decodeUnknownEffect(LibpffError);
+const encodePffexportMessageRecord = S.encodeEffect(PffexportMessageRecord);
+const decodePffexportMessageRecord = S.decodeUnknownEffect(PffexportMessageRecord);
 const providePlatform = provideScopedLayer(NodeServices.layer);
 
 const fixtureIds = Effect.all({
@@ -106,7 +110,8 @@ describe("@beep/libpff", () => {
         PffexportEngineConfigArbitrary,
         LibpffFileProcessingEngineOptionsArbitrary,
         LibpffErrorArbitrary,
-        (config, options, error) => {
+        PffexportMessageRecordArbitrary,
+        (config, options, error, record) => {
           const encodedConfig = Effect.runSync(encodePffexportEngineConfig(config));
           const decodedConfig = Effect.runSync(decodePffexportEngineConfig(encodedConfig));
           expect(Effect.runSync(encodePffexportEngineConfig(decodedConfig))).toEqual(encodedConfig);
@@ -118,6 +123,10 @@ describe("@beep/libpff", () => {
           const encodedError = Effect.runSync(encodeLibpffError(error));
           const decodedError = Effect.runSync(decodeLibpffError(encodedError));
           expect(Effect.runSync(encodeLibpffError(decodedError))).toEqual(encodedError);
+
+          const encodedRecord = Effect.runSync(encodePffexportMessageRecord(record));
+          const decodedRecord = Effect.runSync(decodePffexportMessageRecord(encodedRecord));
+          expect(Effect.runSync(encodePffexportMessageRecord(decodedRecord))).toEqual(encodedRecord);
         }
       ),
       fcRuns(25)
@@ -132,6 +141,7 @@ describe("@beep/libpff", () => {
     });
 
     expect(Effect.runSync(encodePffexportEngineConfig(config))).toStrictEqual({
+      existingExportPolicy: "fail",
       exportFormat: "text",
       exportMode: "items",
       exportRoot: "/tmp/pst-out",

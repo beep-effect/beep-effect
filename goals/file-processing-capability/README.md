@@ -2,8 +2,9 @@
 
 ## Status
 
-Active — P1 minimum vertical proof and P2 Tika Server driver complete;
-P3/P4/P5 libpff, CLI-calibration, and handoff phases remain pending.
+Active — P1 minimum vertical proof, P2 Tika Server driver, and P3 libpff
+PST-export driver complete; P4/P5 CLI-calibration and handoff phases remain
+pending.
 
 Packet hardening completed on 2026-06-02. The P1 implementation landed through
 the law-practice office-action branch and merged to `main` in PR #262 on
@@ -58,6 +59,19 @@ format-specific engines. Drivers implement declared operation capabilities.
 
 ## Latest Evidence
 
+- 2026-07-26: P3 complete — `@beep/libpff` completed the pffexport engine:
+  `-V` engine-version capture (verified `20260608` against the live local
+  binary), mode-derived target-tree walking
+  (`.export`/`.orphans`/`.recovered`), deterministic per-item `Message.eml`
+  assembly with MIME-structural header stripping,
+  `<artifact-id>.messages.jsonl` metadata records (`PffexportMessageRecord`)
+  preserving folder/message/body/attachment relationships, the
+  `existingExportPolicy` output-directory policy, a shared
+  `Libpff.error-translation.ts` role file (signal-killed pffexport now maps to
+  `archive-export-failed`), cumulative EML materialization budgeting, and a
+  stubbed deterministic suite plus the opt-in `BEEP_TEST_LIBPFF_PST` live
+  lane. Design contract with two adversarial-review rounds:
+  `research/p3-libpff-design.md`.
 - 2026-07-26: P2 complete — `@beep/tika` gained the default Tika Server HTTP
   engine (`makeTikaServerFileProcessingEngine`), typed `TikaServerEngineConfig`
   (`BEEP_TIKA_BASE_URL` / `BEEP_TIKA_TIMEOUT_MILLIS` / `BEEP_TIKA_MAX_OUTPUT_BYTES`),
@@ -78,9 +92,11 @@ format-specific engines. Drivers implement declared operation capabilities.
   child-artifact export proof.
 - `beep files process` writes the schema-encoded manifest tree for generated
   fixtures.
-- The P1 proof is a minimum vertical slice. Broad Tika coverage across every
-  non-PST V1 family, real/public PST export coverage, and optional corpus
-  profiling remain later phases.
+- The P1 proof is a minimum vertical slice; P2 broadened Tika across the
+  non-PST V1 families and P3 deepened pffexport PST export. Real-PST proof
+  runs through the opt-in `BEEP_TEST_LIBPFF_PST` live lane (documented public
+  sample: EDRM Enron); CLI manifest calibration and optional corpus profiling
+  remain P4/P5.
 - 2026-06-29: gold-intake research note added at
   `research/gold-intake-ocr-pdf-diagnostics.md` (see for OCR-need gating,
   layout-aware PDF extraction, MIME/encoding/mojibake repair, and input-quality
@@ -127,6 +143,6 @@ Out of scope:
 P1 is complete when the foundation capability has at least two real consumers,
 driver-backed proof paths, and CLI manifest output. That proof is now present.
 
-The remaining completion standard is P2/P3/P4/P5: finish broad non-PST Tika
-coverage, deepen libpff PST export, calibrate CLI output against generated and
-operator-local corpus inputs, and record final handoff evidence.
+The remaining completion standard is P4/P5: calibrate CLI output against
+generated and operator-local corpus inputs, and record final handoff
+evidence.
