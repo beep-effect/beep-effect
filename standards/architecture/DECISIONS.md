@@ -1092,12 +1092,67 @@ family keeps the promotion story and dependency ceilings legible. This
 resolves the known gap that ui-system had no vocabulary for headless kernels
 and no lawful measurement edge.
 
+## 2026-07-25: Foundation-Mediated Port Inversion Is A Legal Cross-Slice Mechanism
+
+- **Status:** Active
+
+Decision:
+
+A slice may implement a `foundation`-owned port that another slice consumes,
+without either slice importing the other. This is a third legal cross-slice
+mechanism alongside emitted events and the future `shared/use-cases` contract
+package.
+
+It is admitted only when **all** of the following hold:
+
+1. The port carries no product semantics — its types name no slice's language.
+2. The port lives in `foundation/*` and satisfies that family's own admission
+   rules.
+3. Both slices import only `foundation`, never each other.
+4. The implementing slice's Layer is bound to the consuming slice at an
+   application entrypoint, per `ARCHITECTURE.md` app-entrypoint composition.
+5. Neither slice names the other in code, package manifests, or project
+   references.
+
+The implementing and consuming packages each record the coupling in their
+package README, naming the producer/consumer pair and the binding site. The
+README record is the durable proof of the specific coupling; this entry is the
+general rule.
+
+If any condition fails, the coupling is a slice-boundary breach and must go
+through events or contract promotion instead.
+
+Rationale:
+
+`10-cross-slice-coordination.md` governs cross-slice *product* coordination —
+one slice's process invoking another's language — and names two mechanisms.
+Neither describes the case where a slice supplies a policy decision for another
+slice's surface through a product-neutral technical port. The first real
+instance is the agent-execution-authority work: `ontology/server` consumes
+`@beep/mcp-kit`'s `TierGate`, `epistemic/server` implements it, and the desktop
+entrypoint binds them. `ontology` cannot learn that `epistemic` exists, and
+`epistemic` cannot learn that `ontology` does.
+
+This was already legal under the existing dependency rules — slice `server`
+packages may import `foundation/capability`, and app-entrypoint composition is
+explicitly blessed. But a reviewer applying `10`'s two-mechanism list reasonably
+reads it as a breach, so the mechanism needed a name. The pattern will recur for
+any slice-owned policy applied to another slice's surface.
+
+Events were rejected as the general answer, not merely as this instance's
+answer: a gate that must fail closed *before* an action runs is synchronous by
+nature, and an emitted event cannot express "and do not proceed." Forcing this
+shape through events would either lose the fail-closed property or reinvent
+synchronous request/response over an event log. Recording the rule now is
+cheaper than reversing it later, since a ban would require rewriting every such
+binding.
+
 ## Known Unknowns
 
 Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:
 
 - **Testing strategy.** Doc `08-testing.md` codifies slice-isolation testing, port stubs via `Layer.mock`, fixture ownership, and contract tests between use-cases and server adapters. The doctrine has not yet been load-tested against a real refactor; first contact with a non-trivial slice may surface gaps in the fixture-ownership and contract-test rules.
-- **Cross-slice coordination.** Doc `10-cross-slice-coordination.md` codifies workflow / saga / process-manager governance, future event contracts in `shared/use-cases`, and the God Process Manager anti-pattern. The open question is how the rules hold up the first time a real workflow needs to span three or more slices with partial-failure semantics.
+- **Cross-slice coordination.** Doc `10-cross-slice-coordination.md` codifies workflow / saga / process-manager governance, future event contracts in `shared/use-cases`, and the God Process Manager anti-pattern. A third mechanism — foundation-mediated port inversion — was ratified 2026-07-25 (see the entry above) for synchronous, product-neutral policy ports that events cannot express. The open question is how the rules hold up the first time a real workflow needs to span three or more slices with partial-failure semantics.
 - **Evolution and deprecation.** Doc `11-evolution-and-deprecation.md` codifies slice retirement, future `shared/use-cases` versioning, port deprecation, and feature-flag lifetime. The deprecation-window durations and the five-step retirement procedure are unproven; the first real slice retirement will tell us whether the windows are realistic and whether the DECISIONS-entry requirement creates useful pressure or just paperwork.
 - **Observability conventions.** Doc `12-observability.md` codifies span naming, attribute conventions, the logging-vs-tracing-vs-Console split, and slice boundaries as span boundaries. The open question is whether the span/attribute namespacing survives contact with a real distributed trace across three or more slices, and whether the conventions need adjustment once a tracer backend is wired up end-to-end.
 - **Error translation across boundaries.** Doc `09-errors-across-boundaries.md` codifies who translates, where translation lives, and the canonical translator function shape. The fixture proves port-to-action translation; the doctrine has not yet been exercised against a real driver-to-port adapter path. The first non-trivial adapter will tell us whether the translator placement rules are precise enough or need a worked example per boundary kind.

@@ -59,12 +59,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   durability landed as `ai-metrics-stack` P7f (v1-blocking, gates P7e).
   Wave-2 candidates (`yeet-verdict-instrumentation`, `repo-replay-evals`)
   gate on wave-1 OTel attributes flowing.
-- [`agent-execution-sandbox`](./agent-execution-sandbox/README.md) —
-  capture-stage: default-deny execution authority for agent-run code —
-  typed sandbox capability grants, resource limits, network policy, and
-  immutable execution records; routed out of `academia-corpus-mining`
-  (align dispatch 2026-07-25). Carries master align Q10: what is the first
-  action-authorization proof.
 - [`agent-governance-control-plane`](./agent-governance-control-plane/README.md) —
   capture-stage preservation of the paused goal’s load-bearing governance
   design: ordered law canon, explicit role authority, gated lifecycle,
@@ -173,7 +167,9 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   (Q1–Q7 resolved; [`mcp-kit`](../goals/mcp-kit/README.md),
   [`uspto-mcp`](../goals/uspto-mcp/README.md), and
   [`mcp-host-retrofit`](../goals/mcp-host-retrofit/README.md) completed-retained;
-  write-wall gate remains for a named genuinely write-capable host),
+  **closed `graduated` 2026-07-25** — the write wall was absorbed into
+  [`agent-execution-authority`](../goals/agent-execution-authority/README.md)
+  as its MCP sink class),
   [`citation-grounding-hallucination-guard`](./citation-grounding-hallucination-guard/README.md)
   (stage `graduate`, still active while two lanes remain): graduated
   [`citation-verified-span-substrate`](../goals/citation-verified-span-substrate/README.md)
@@ -287,6 +283,28 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`agent-execution-sandbox`](./agent-execution-sandbox/README.md) — graduated
+  2026-07-25 (capture→graduate in one day) into
+  [`agent-execution-authority`](../goals/agent-execution-authority/README.md):
+  a default-deny authority boundary over the MCP agent surface with a
+  hash-chained append-only record of every decision and outcome. Routed out of
+  `academia-corpus-mining`. 14 decisions in
+  [`DECISIONS.md`](./agent-execution-sandbox/DECISIONS.md) — align 1–6 (first
+  fixture = privileged read + outbound sink, absorbing
+  `mcp-auth-gated-registration`'s `mcp-write-wall`; schema-native in-process
+  grants; tamper-evident-only ledger; grant schema in `epistemic/domain`) and
+  shape 7–14 from a doctrine grilling pass that overturned the original
+  enforcement design: `foundation` may not import a slice, so the evaluator
+  became a slice-side implementation of `mcp-kit`'s **existing** `TierGate`
+  port rather than a generalization of it. Scoping to the MCP branch alone
+  collapsed the build to one composition root and eliminated the
+  telemetry-recursion hazard. Both mechanisms proven by spike
+  (`FetchHttpClient.Fetch` override reaches sealed drivers; plpgsql triggers
+  work in PGlite) — though the `Fetch` half is proven only for a
+  directly-provided effect, and the goal carries a blocking check for the
+  server-dispatched case. Three dependent candidates stay named in
+  [`MAP.md`](./agent-execution-sandbox/MAP.md) (chat egress, host isolation,
+  record anchoring), each blocked on a fact that does not exist yet.
 - [`openclaw-deployment-platform`](./openclaw-deployment-platform/README.md) —
   graduated 2026-07-25 (capture→graduate in two days) into
   [`openclaw-workstation-agent`](../goals/openclaw-workstation-agent/README.md):
