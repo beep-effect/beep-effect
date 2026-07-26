@@ -167,3 +167,52 @@ logs, `writer-results.tsv`, `compatibility-matrix.md`, and the inventories
 carry the same evidence. Proper fix for a later session: add a narrow
 gitleaks allowlist scoped to `goals/**/history/p0/**` for
 `root_(before|after)=[a-f0-9]{64}`, then restore the file.
+
+## Session 2 addendum (same day, after account switch)
+
+Progress:
+
+- **Spike 1 assertion 5** now classifies four writer surfaces as
+  `declarative render` (login/bootstrap, reconnect via the real
+  `channels.stop`/`channels.start` RPCs, token swap) plus a
+  `NOT-TRIGGERABLE` migration, and generates the assertion 6 matrix. Every
+  case leaves the config root byte-identical. `A5-PASS` fires because no
+  essential writer is INCOMPATIBLE — but note the verdict is only as strong
+  as the two cases still unresolved below.
+- **`defaultTo`** needed two fixes, both from live evidence: the success
+  predicate used `jq -eR` (per-line) against a pretty-printed multi-line JSON
+  document so it never matched; and it then demanded a resolution log line
+  that the taken path cannot emit — the response carries
+  `handledBy: "plugin"` (the gateway handled the send) while the pinned string
+  lives in the CLI-local resolution path, is `--verbose`-gated, and writes to
+  the log file rather than stdout or the journal. Predicates are now based on
+  delivered-message evidence, and every pinned string must document its source
+  file, guard condition, and output sink.
+- **Spike 3 cold owner** — investigated and resolved with a real answer:
+  `logs --follow` re-polls `logs.tail` per fetch (`dist/logs-cli-*.js`), and
+  `gateway call --expect-final` / `agent` are finite calls, so none can prove
+  a persistent authenticated connection. **`openclaw acp`** ("Run an ACP
+  bridge backed by the Gateway") is the surface that does, and the harness now
+  uses it. The old first-frame predicate was never proof: a normal gateway
+  `logs.tail` response can carry `sourceKind:"file"` without `localFallback`.
+- **Mutual exclusion** between spikes 1 and 3 is now recorded in the gauntlet
+  contract (shared `/etc/beep/openclaw-spike` root and unit name).
+- Harness improvement: the pairing window is now `SPIKE_PAIRING_WINDOW`
+  (default 600s) so a validation run can iterate quickly without weakening
+  the authoritative run.
+
+Blocked on operator presence (all three are momentary, not long tasks):
+
+1. **1Password must be unlocked** when a run starts — `op read` failed mid-run
+   with "authorization prompt dismissed", which aborts the a5 cycle.
+2. **The pairing DM.** Four windows have now expired (180/300/600/20s).
+   Sending early does NOT work: the gateway drains queued Telegram updates at
+   boot, so a pre-sent DM lands in the "before" snapshot and cannot prove an
+   external trigger. It must arrive while the case polls. Best flow: operator
+   says ready, run starts, operator sends the DM immediately.
+3. **A fresh spike-3 service-account token**, piped straight into
+   `/etc/beep/openclaw-spike/op-service-account-token` (cleanup consumes it
+   every cycle by design).
+
+Nothing else blocks P0. Once those three land, spike 1 and spike 3 close, the
+final NOTES get written, and P0 goes to a mergeable PR via `/yeet`.

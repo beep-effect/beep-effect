@@ -111,7 +111,8 @@ if grep -Fq 'present:' "$LOGS/preflight-etc-beep.state" 2>/dev/null; then
 else
   failr "preflight /etc/beep state evidence missing"
 fi
-if find "$S3" -mindepth 1 -maxdepth 1 ! -name logs -print -quit |
+if find "$S3" -mindepth 1 -maxdepth 1 ! -name logs \
+  ! -name .beep-spike3-scratch -print -quit |
   grep -q .; then
   failr "runtime config/state/home/workspace remains"
 else

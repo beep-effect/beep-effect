@@ -128,26 +128,44 @@ recursively deletes the shared root.
   writer runs is `INCOMPATIBLE`, never a claimed skip.
 - `defaultTo` declared: the first rendered generation declares the disposable
   group `@username`. The case sends to that same explicit `@username`, requires
-  the exact successful JSON result and positive
-  `telegram recipient <username> resolved to numeric chat id <id>` debug or
-  journal evidence, then rejects every source-derived target-writeback outcome.
-  The declarative value makes writeback unnecessary, and the config-root
-  inventory must remain byte-identical.
+  `payload.ok:true`, a non-empty `messageId`, and a present non-empty
+  `handledBy` in the whole-document JSON result, then rejects every
+  source-derived target-writeback outcome across CLI stdout, the case byte
+  range of `$STATE/log/openclaw.log`, and the unit journal. The declarative
+  value makes writeback unnecessary, and the config-root inventory must remain
+  byte-identical.
 - `defaultTo` undeclared: a second full-SHA generation deletes only
   `channels.telegram.defaultTo`, is installed root-owned `0755`/`0644`,
   atomically selected, and restarted. Sending with the explicit `@username`
-  must emit `telegram recipient <username> resolved to numeric chat id <id>`.
+  requires the same delivered-message JSON proof.
   The source-derived graceful guard is `skipping Telegram target writeback for
   <username> because gateway caller is missing operator.admin`; the caught
   denial prefix is `failed to persist Telegram defaultTo target <username>:`,
   and a completed write would report `resolved Telegram defaultTo target
   <username> -> <resolved-target>`.
-  When neither appears, staged source proves the no-write branch because
-  `replaceTelegramDefaultToTargets(...)` gates `replaceConfigFile(...)` and the
-  undeclared config has no matching slot. The exact successful JSON result,
-  byte-identical config-root inventory, and absence of an event-handler crash
-  remain mandatory. The original declared generation is atomically restored
-  and restarted before later cases.
+  When neither skip nor denial appears in CLI stdout, the case byte range of
+  `$STATE/log/openclaw.log`, or the unit journal, the byte-identical root proves
+  that writeback silently did not occur and the result is still `graceful
+  skip`. An actual root mutation or event-handler crash alone is
+  `INCOMPATIBLE`; an unexpected writeback signature with no mutation is a
+  harness evidence error. Each case logs every searched sink and its matching
+  lines or `found=none`. The original declared generation is atomically
+  restored and restarted before later cases.
+
+### Pinned `defaultTo` source evidence
+
+All strings below were re-derived with `rg` from the staged
+`openclaw@2026.7.1-2` `dist/` tree:
+
+| String / field | Staged source and guard | Expected sink |
+| --- | --- | --- |
+| `handledBy: "plugin"` | `dist/message-action-runner-BnKuX7pN.js`; returned only after the gateway plugin action reports that it handled the send. | CLI JSON stdout. Its presence means the gateway plugin, not the CLI-local Telegram sender, handled this invocation. |
+| `telegram recipient <username> resolved to numeric chat id <id>` | `dist/send-BgA996pw.js`; inside `resolveChatId(...)`, after `getChat(...)` returns a numeric ID, and gated by `params.verbose`. | `sendLogger` (`telegram/send`), therefore the configured `$STATE/log/openclaw.log` when this local path runs; it is not JSON stdout. It is optional here because `handledBy:"plugin"` proves this CLI-local path did not run. |
+| `skipping Telegram target writeback for <username> because gateway caller is missing operator.admin` | `dist/send-BgA996pw.js`; emitted when neither `gatewayClientScopes` contains `operator.admin` nor `trustedInternalWriteback` is true. Not verbose-gated. | `writebackLogger` (`telegram/target-writeback`), searched in the configured state log and unit journal as well as captured CLI output. |
+| `resolved Telegram defaultTo target <username> -> <resolved-target>` | `dist/send-BgA996pw.js`; emitted only when `replaceTelegramDefaultToTargets(...)` returns true, after `replaceConfigFile(...)` completes, and gated by `params.verbose`. | `writebackLogger`; searched in all three sinks. |
+| `failed to persist Telegram defaultTo target <username>:` | `dist/send-BgA996pw.js`; emitted by the caught config-read/replace error path and gated by `params.verbose`. | `writebackLogger`; searched in all three sinks. |
+| `NixModeConfigMutationError` / `Config is managed by Nix (...)` | `dist/nix-mode-write-guard-B42VmySw.js`; `assertConfigWriteAllowedInCurrentMode(...)` throws the named error only when `resolveIsNixMode(...)` is true. `dist/config-DbyjySSE.js` calls that guard before `replaceConfigFile(...)` writes. Not verbose-gated. | Included in the caught error text after the verbose-gated failure prefix; searched in all three sinks. |
+| `replaceTelegramDefaultToTargets(...)` | `dist/send-BgA996pw.js`; `replaceConfigFile(...)` is called only when the replacement function returns true. An undeclared generation with no matching `defaultTo` leaves it false. | No line is emitted for the false branch; byte-identical root inventory is the proof. |
 - Reconnect: the genuine gateway `channels.stop` then `channels.start` RPCs
   must complete for Telegram's default account, and the subsequent exact JSON
   Telegram record must be connected/running with
@@ -248,7 +266,7 @@ never residue proof.
 ## Syntax verification
 
 No harness step was executed during this repair. Complete final `bash -n`
-transcript, re-run after the 2026-07-25 declared/undeclared `defaultTo` split:
+transcript, re-run after the 2026-07-25 taken-path `defaultTo` evidence repair:
 
 ```text
 $ bash -n .beep/p0-orchestration/spike1/a1-bypass.sh

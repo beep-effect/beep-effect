@@ -20,15 +20,17 @@ resolver stdout. The named client-config exception below is scratch-only.
 The rotated secret is `gateway.auth.token`. The root-owned config contains the
 unchanged `op://` reference as an exec `SecretRef`. OpenClaw resolves it into
 the running snapshot. The harness establishes an authenticated cold owner with
-a PID-held established loopback socket and authenticated first log frame, asks
-the operator to replace the disposable field in the 1Password UI, and polls the
-same reference until its eight-character SHA-256 prefix changes.
+the staged ACP bridge, a PID-held established loopback socket, and a pinned
+gateway-backed `session/list` response, asks the operator to replace the
+disposable field in the 1Password UI, and polls the same reference until its
+eight-character SHA-256 prefix changes.
 The harness never performs a plaintext-valued `op item edit`.
 
 The reload proof then requires all of the following:
 
 - a clean current reload with `ok=true` and `warningCount=0`;
-- disconnection of the client authenticated before rotation;
+- eviction of the pre-rotation client's recorded socket inode, followed by
+  termination of that exact now-disconnected client PID;
 - an authentication-specific rejection of the old value;
 - a successful health call with the new value;
 - a model completion and Telegram live probe tied by nonce and timestamp to
@@ -39,13 +41,57 @@ gateway with the rotated gateway token and rejects embedded fallback. The
 Telegram bot token must be a second operator-created disposable `op://`
 field. Neither token is passed as a CLI option.
 
+### Real OpenClaw client behavior
+
+The original cold owner used `openclaw logs --follow --json`. That cannot prove
+R3-M1 in `openclaw@2026.7.1-2`. Its first frame can be
+`{"type":"meta","file":".../state/log/openclaw.log","sourceKind":"file",...}`,
+but this identifies the Gateway's log-file source, not a persistent client
+socket. The staged source says:
+
+- `dist/logs-cli-Cypyb837.js:68-78` calls `logs.tail` once per fetch;
+- `dist/logs-cli-Cypyb837.js:539-540` sleeps and repeats for `--follow`;
+- `dist/call-Bj6Erfmh.js:575-582` waits for one request result and then stops
+  the client.
+
+`localFallback` is a real field, but only marks the explicit local fallback
+paths (`dist/logs-cli-Cypyb837.js:83-105`). A normal Gateway `logs.tail`
+response can still have `sourceKind:"file"` with no `localFallback:true`, so
+the former first-frame predicate did not prove a long-lived WebSocket.
+
+The other candidate surfaces do not fit this noninteractive owner proof:
+`gateway call --expect-final` says “Wait for final response (agent)” and the
+`agent` help says “Run an agent turn via the Gateway”; both are finite calls.
+The TUI is persistent, but is a terminal UI whose source exits on stdin/stdout
+terminal loss.
+
+`openclaw acp` is the usable surface. Its help says “Run an ACP bridge backed
+by the Gateway.” The staged implementation:
+
+- constructs one `GatewayClient` (`dist/acp-cli-BXc5GttU.js:3019-3028`);
+- treats `onHelloOk` as Gateway readiness (`:3036-3038`);
+- keeps that client while serving ACP over stdio (`:3075-3106`);
+- implements ACP `session/list` with
+  `this.gateway.request("sessions.list", ...)` (`:2095-2125`).
+
+`a1` therefore keeps ACP stdin open and pins both its first `initialize`
+response and its successful gateway-backed `session/list` response. The ACP
+stdio server is not constructed until authenticated `onHelloOk`, and
+`session/list` supplies the direct RPC proof. The harness then proves the exact
+ACP PID owns an ESTABLISHED loopback socket to port `19031`. After reload it
+first requires the recorded inode to disappear, then terminates the
+disconnected ACP bridge and requires that exact PID to be gone. This
+empirically proves the no-stale-cold-owner contract on this version.
+
 ### Named exception: ephemeral client token configs
 
-The staged `openclaw@2026.7.1-2` commands used here have no `--token-file`
-option. With a CLI `--url` override they also reject
+The reload and probe commands used here have no `--token-file` option. With a
+CLI `--url` override they also reject
 `OPENCLAW_GATEWAY_TOKEN` and configured credentials unless the token itself is
-passed in argv. To preserve C-1, `a1` and `a2` instead derive isolated client
-configs under `$SPIKE_P/spike3/` with `gateway.mode=remote`,
+passed in argv. ACP does expose `--token-file`, but `a1` already needs the same
+old-token config for the later reload and rejection calls. To preserve C-1,
+`a1` and `a2` derive isolated client configs under `$SPIKE_P/spike3/` with
+`gateway.mode=remote`,
 `gateway.remote.url`, and `gateway.remote.token`, then omit `--url`.
 
 This is the deliberate exception to “no secret values in files.” Each file is
@@ -87,8 +133,10 @@ bash .beep/p0-orchestration/spike3/preflight.sh
 ```
 
 This archives every help surface and separately proves every required flag:
-`logs --follow/--url`, reload `--url/--json`, gateway-call `--url/--json`,
-all agent arguments, and all channel-probe arguments. It also requires
+`logs --follow/--url`, ACP `--url`, reload `--url/--json`, gateway-call
+`--url/--json`, all agent arguments, and all channel-probe arguments. It also
+requires source evidence for the persistent ACP `GatewayClient` and its
+gateway-backed `session/list`, plus
 source evidence that the staged CLI supports `OPENCLAW_GATEWAY_TOKEN`
 environment authentication. The live commands do not rely on that general
 support because a CLI `--url` override suppresses it. Missing capability is
@@ -164,8 +212,14 @@ reference for up to 300 seconds; override only with a positive
 `SPIKE_ROTATION_TIMEOUT_SECONDS`.
 
 `a1` invokes `a3-rotation-tied-probes.sh` itself. Direct invocation is refused.
-Run cleanup after any blocked or failed assertion. Setup also installs an
-EXIT/INT/TERM failure trap that calls cleanup.
+On failure after its setup checks pass, `a1` terminates transient clients,
+shreds client configs, scans evidence, and reruns `setup.sh` to restore a
+verified current-token setup. `a2` removes its broken-reference marker and
+shreds its client config without tearing setup down. The assertions can
+therefore be rerun independently. Run cleanup when abandoning a blocked or
+failed cycle. Setup itself retains its
+EXIT/INT/TERM failure trap because a partial provisioning failure is not a
+runnable setup.
 
 ## Root and credential safety
 
@@ -199,7 +253,8 @@ Evidence is under `$SPIKE_P/spike3/logs/`:
 - `setup.log`, `service-preflight.log`, `gateway.log`, the creation-time
   privileged-path manifest, and the deterministic complete installed-root
   traversal/hash whose bootstrap credential digest is explicitly redacted;
-- `a1-rotate.log`, cold-owner socket/first-frame/reload/old-auth/new-auth logs,
+- `a1-rotate.log`, ACP cold-owner socket/session-list/reload/old-auth/new-auth
+  logs,
   and tied `a3` model/Telegram raw and selected-object evidence;
 - `a2-broken-ref.log`, causal failed-reload output, alert excerpt, and clean
   restored-reload output;
@@ -233,8 +288,8 @@ and the run fails; it is never retained as evidence.
   that wrapper would expose the assignment in its argv.
 - A reload authorized by the old snapshot may disconnect before returning.
   Its exit code is captured explicitly; PASS still requires the clean
-  new-snapshot reload, stale-owner disconnection, old-auth rejection
-  signature, and new-auth health signature.
+  new-snapshot reload, removal of the stale ACP socket inode, termination of
+  its exact PID, old-auth rejection signature, and new-auth health signature.
 - The broken-reference marker changes only resolver behavior for one reload.
   PASS requires a nonzero reload, a secret-resolution failure signature, the
   exact `secrets.reload failed` alert, and a clean reload after marker removal.
@@ -244,12 +299,16 @@ and the run fails; it is never retained as evidence.
   for real `~/.openclaw`. Process observers exclude the current PID and its
   complete ancestor chain; residue requires the verified unit cgroup, exact
   `OPENCLAW_STATE_DIR`, port ownership, or the staged OpenClaw argv plus its
-  exact Node executable.
+  exact Node executable. Unreadable root-owned `/proc/<pid>/environ` entries
+  are silently skipped while the cgroup, listener, executable, and argv
+  residue checks remain active. The final scratch check deliberately preserves
+  only `logs/` and the provenance marker.
 
 ## Syntax verification
 
 No harness step was executed. This is the complete 2026-07-25 syntax-only
-verification command and output transcript:
+verification command and output transcript. Every command produced empty
+stdout/stderr; exit statuses are shown:
 
 ```text
 $ bash -n .beep/p0-orchestration/spike3/a1-rotate-same-ref.sh

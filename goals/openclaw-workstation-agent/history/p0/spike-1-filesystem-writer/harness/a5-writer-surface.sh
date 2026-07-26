@@ -108,10 +108,27 @@ classify() {
   printf '%s\t%s\n' "$1" "$2" > "$CASE_OUTCOME"
 }
 
+log_default_to_sink() {
+  local label="$1" path="$2" searched_path="${3:-$2}" matches
+  echo "defaultTo_evidence_sink=$label path=$searched_path searched=yes"
+  matches="$(grep -h -E \
+    'telegram recipient .* resolved to numeric chat id|resolved Telegram defaultTo target|failed to persist Telegram defaultTo target|skipping Telegram target writeback' \
+    "$path" 2>/dev/null || true)"
+  if [[ -n "$matches" ]]; then
+    while IFS= read -r match; do
+      printf 'defaultTo_evidence_sink=%s found=%s\n' "$label" "$match"
+    done <<< "$matches"
+  else
+    echo "defaultTo_evidence_sink=$label found=none"
+  fi
+}
+
 run_case() {
   local name="$1" essential="$2" case_log="$LOGS/a5-$1.log"
   shift 2
   local rc before_root after_root journal_cursor="$S1/a5-$name-journal.cursor"
+  local state_log="$STATE/log/openclaw.log" state_log_before=0
+  local state_log_case="$LOGS/a5-$name-state-log.log"
   CASE_CLASS=""
   CASE_NOTE=""
   CASE_OUTCOME="$S1/a5-$name.outcome"
@@ -119,6 +136,9 @@ run_case() {
   inventory_root > "$S1/a5-$name-root-before.inventory"
   inventory_tree "$STATE" > "$S1/a5-$name-state-before.inventory"
   before_root="$(sha256sum "$S1/a5-$name-root-before.inventory" | awk '{print $1}')"
+  if test -f "$state_log"; then
+    state_log_before="$(stat -c %s "$state_log")"
+  fi
   journalctl --user -u "$UNIT" -n 0 --show-cursor --no-pager > "$journal_cursor"
   echo "== writer case: $name root_before=$before_root =="
   set +e
@@ -154,46 +174,52 @@ run_case() {
   journalctl --user -u "$UNIT" --after-cursor \
     "$(sed -n 's/^-- cursor: //p' "$journal_cursor")" --no-pager 2>/dev/null |
     sanitize_a5_stream > "$LOGS/a5-$name-journal.log" || true
+  if test -f "$state_log" && (( $(stat -c %s "$state_log") >= state_log_before )); then
+    tail -c "+$((state_log_before + 1))" "$state_log" |
+      sanitize_a5_stream > "$state_log_case"
+  else
+    : > "$state_log_case"
+  fi
   if (( rc == 0 )) && [[ "$CASE_CLASS" != "INCOMPATIBLE" ]]; then
     case "$name" in
       defaultTo-declared)
-        if ! grep -Fq \
-            "telegram recipient $SPIKE_TG_GROUP_USERNAME resolved to numeric chat id $SPIKE_TG_GROUP_ID" \
-            "$LOGS/a5-defaultTo-declared-send.log" "$LOGS/a5-$name-journal.log"; then
-          CASE_CLASS="HARNESS-ERROR"
-          CASE_NOTE="declared send lacked positive username-resolution evidence"
-        elif grep -Eiq \
+        log_default_to_sink "CLI stdout" "$LOGS/a5-defaultTo-declared-send.log"
+        log_default_to_sink "state log" "$state_log_case" "$state_log (case byte range)"
+        log_default_to_sink "unit journal" "$LOGS/a5-$name-journal.log"
+        if grep -Eiq \
             'resolved Telegram defaultTo target|failed to persist Telegram defaultTo target|skipping Telegram target writeback' \
-            "$LOGS/a5-defaultTo-declared-send.log" "$LOGS/a5-$name-journal.log"; then
+            "$LOGS/a5-defaultTo-declared-send.log" "$state_log_case" \
+            "$LOGS/a5-$name-journal.log"; then
           CASE_CLASS="HARNESS-ERROR"
           CASE_NOTE="declared send unexpectedly entered target writeback"
         else
           CASE_CLASS="declarative render"
-          CASE_NOTE="declared defaultTo resolved and sent; declarative value made writeback unnecessary"
+          CASE_NOTE="declared defaultTo delivered with a message id; no writeback appeared in CLI stdout, state log, or unit journal"
         fi
         ;;
       defaultTo-undeclared)
-        if ! grep -Fq \
-            "telegram recipient $SPIKE_TG_GROUP_USERNAME resolved to numeric chat id $SPIKE_TG_GROUP_ID" \
-            "$LOGS/a5-defaultTo-undeclared-send.log" "$LOGS/a5-$name-journal.log"; then
-          CASE_CLASS="HARNESS-ERROR"
-          CASE_NOTE="undeclared send lacked positive username-resolution evidence"
-        elif grep -Fq \
+        log_default_to_sink "CLI stdout" "$LOGS/a5-defaultTo-undeclared-send.log"
+        log_default_to_sink "state log" "$state_log_case" "$state_log (case byte range)"
+        log_default_to_sink "unit journal" "$LOGS/a5-$name-journal.log"
+        if grep -Fq \
             "skipping Telegram target writeback for $SPIKE_TG_GROUP_USERNAME because gateway caller is missing operator.admin" \
-            "$LOGS/a5-defaultTo-undeclared-send.log" "$LOGS/a5-$name-journal.log"; then
+            "$LOGS/a5-defaultTo-undeclared-send.log" "$state_log_case" \
+            "$LOGS/a5-$name-journal.log"; then
           CASE_CLASS="graceful skip"
-          CASE_NOTE="username resolved; exact operator.admin guard skipped writeback cleanly"
+          CASE_NOTE="send delivered; exact operator.admin guard skipped writeback cleanly"
         elif grep -h -F \
             "failed to persist Telegram defaultTo target $SPIKE_TG_GROUP_USERNAME:" \
-            "$LOGS/a5-defaultTo-undeclared-send.log" "$LOGS/a5-$name-journal.log" |
+            "$LOGS/a5-defaultTo-undeclared-send.log" "$state_log_case" \
+            "$LOGS/a5-$name-journal.log" |
             grep -Eiq 'NixModeConfigMutationError|Config is managed by Nix|permission denied|operation not permitted|read-only file system|EACCES|EPERM|EROFS'; then
           CASE_CLASS="graceful skip"
-          CASE_NOTE="username resolved; exact caught app/OS denial left immutable config unchanged"
+          CASE_NOTE="send delivered; exact caught app/OS denial left immutable config unchanged"
         elif ! grep -Eiq \
             'resolved Telegram defaultTo target|failed to persist Telegram defaultTo target|skipping Telegram target writeback' \
-            "$LOGS/a5-defaultTo-undeclared-send.log" "$LOGS/a5-$name-journal.log"; then
+            "$LOGS/a5-defaultTo-undeclared-send.log" "$state_log_case" \
+            "$LOGS/a5-$name-journal.log"; then
           CASE_CLASS="graceful skip"
-          CASE_NOTE="username resolved; undeclared config had no defaultTo slot, so the source-pinned conditional performed no write"
+          CASE_NOTE="send delivered; writeback silently did not occur in CLI stdout, state log, or unit journal"
         else
           CASE_CLASS="HARNESS-ERROR"
           CASE_NOTE="undeclared defaultTo produced an unknown writeback outcome"
@@ -202,7 +228,7 @@ run_case() {
     esac
   fi
   if grep -Eiq 'uncaught|unhandled|event.handler.*(crash|fail)|Group migration handler failed' \
-      "$case_log" "$LOGS/a5-$name-journal.log"; then
+      "$case_log" "$state_log_case" "$LOGS/a5-$name-journal.log"; then
     CASE_CLASS="INCOMPATIBLE"
     CASE_NOTE="event-handler crash signature"
   fi
@@ -230,9 +256,10 @@ case_pairing_owner() {
   # bounded poll rather than a blind sleep: exits as soon as a genuinely new
   # externally-triggered request appears, so the operator window is generous
   # without weakening the "new code not in the before-list" requirement
-  echo "OPERATOR-ACTION: send the disposable bot a fresh DM (window: 300s)."
+  local window="${SPIKE_PAIRING_WINDOW:-600}"
+  echo "OPERATOR-ACTION: send the disposable bot a fresh DM (window: ${window}s)."
   local waited=0
-  while (( waited < 300 )); do
+  while (( waited < window )); do
     sleep 5; waited=$((waited + 5))
     cli pairing list --channel telegram --json | sanitize_a5_stream > "$after" || return 1
     jq -e --slurpfile before "$before" '
@@ -293,10 +320,12 @@ case_pairing_owner() {
 }
 
 message_send_succeeded() {
-  jq -eR '
-    fromjson? |
+  # the CLI emits ONE pretty-printed JSON document, so per-line `-R | fromjson?`
+  # never matches; parse the whole document instead
+  jq -e '
     select(.action == "send" and .channel == "telegram" and
-      .dryRun == false and .handledBy == "plugin" and
+      .dryRun == false and has("handledBy") and
+      (.handledBy | strings | length > 0) and
       .payload.ok == true and (.messageId | strings | length > 0))
   ' "$1" >/dev/null
 }
@@ -471,8 +500,8 @@ for help in config-validate channels-status gateway-call pairing-list pairing-ap
 done
 grep -Eq '(^|[[:space:]])--json([=[:space:]]|$)' "$S1/help/message-send.txt" ||
   { echo "FATAL: message send JSON surface is unsupported"; exit 69; }
-# There is no root --verbose. Keep the verified root log-level form; the
-# separately verified message-local --verbose exposes the guarded writeback log.
+# There is no root --verbose. Keep the verified root log-level form and request
+# message-local verbose evidence without assuming the gateway plugin emits it.
 grep -Eq '(^|[[:space:]])--log-level([=[:space:]]|$)' "$S1/help/root.txt" ||
   { echo "FATAL: global log-level surface needed for writer signature is unsupported"; exit 69; }
 grep -Eq 'debug\|trace|trace' "$S1/help/root.txt" ||

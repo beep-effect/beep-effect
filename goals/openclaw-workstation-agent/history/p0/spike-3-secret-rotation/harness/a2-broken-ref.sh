@@ -39,9 +39,6 @@ on_exit() {
       "$S3/state/log/openclaw.log") || rc=1
   fi
   unset OP_SERVICE_ACCOUNT_TOKEN op_token current_value
-  if [[ "$rc" -ne 0 ]]; then
-    SPIKE_P=$SPIKE3_P bash "$HARNESS/cleanup.sh" || true
-  fi
   exit "$rc"
 }
 trap on_exit EXIT

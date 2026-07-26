@@ -67,6 +67,7 @@ spike3_assert_config_path "$S3/preflight-openclaw.json"
 
 section "no-secret capability surfaces"
 capture_help logs-help "${HELP_ENV[@]}" "$OC" logs --help
+capture_help acp-help "${HELP_ENV[@]}" "$OC" acp --help
 capture_help secrets-reload-help "${HELP_ENV[@]}" "$OC" secrets reload --help
 capture_help gateway-call-help "${HELP_ENV[@]}" "$OC" gateway call --help
 capture_help agent-help "${HELP_ENV[@]}" "$OC" agent --help
@@ -74,6 +75,7 @@ capture_help channels-status-help "${HELP_ENV[@]}" "$OC" channels status --help
 
 require_flag "$CAPS/logs-help.txt" --follow
 require_flag "$CAPS/logs-help.txt" --url
+require_flag "$CAPS/acp-help.txt" --url
 require_flag "$CAPS/secrets-reload-help.txt" --url
 require_flag "$CAPS/secrets-reload-help.txt" --json
 require_flag "$CAPS/gateway-call-help.txt" --url
@@ -101,6 +103,17 @@ rg -l --glob '*.js' 'fallbackFrom: "gateway"' "$PACKAGE/dist" \
 [[ -s "$CAPS/agent-gateway-fallback-source.txt" ]] ||
   fail "cannot prove the staged agent CLI marks embedded fallback"
 printf 'agent embedded-fallback marker found in staged CLI source\n'
+rg -l --glob 'acp-cli-*.js' \
+  'const gateway = new GatewayClient' "$PACKAGE/dist" \
+  >"$CAPS/acp-persistent-gateway-client-source.txt"
+[[ -s "$CAPS/acp-persistent-gateway-client-source.txt" ]] ||
+  fail "cannot prove the staged ACP bridge owns a persistent Gateway client"
+rg -l --glob 'acp-cli-*.js' \
+  'this\.gateway\.request\("sessions\.list"' "$PACKAGE/dist" \
+  >"$CAPS/acp-sessions-list-rpc-source.txt"
+[[ -s "$CAPS/acp-sessions-list-rpc-source.txt" ]] ||
+  fail "cannot prove ACP session/list is backed by a Gateway RPC"
+printf 'ACP persistent client and gateway-backed session/list found in staged source\n'
 
 section "pinned immutable inputs"
 registry_json=$(npm --cache "$S3/npm-cache" view \

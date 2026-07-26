@@ -1,2 +1,1 @@
-Jul 25 17:36:56 DankStation unit-entrypoint.sh[2796944]: 2026-07-25T17:36:56.141-05:00 [gateway] agent runtime plugins pre-warmed in 30ms
-Jul 25 17:39:44 DankStation unit-entrypoint.sh[2796944]: 2026-07-25T17:39:44.389-05:00 [agent/embedded] incomplete turn detected: runId=73189688-241e-4c56-9a30-2601d903f4ac sessionId=9d99d905-1262-4a3f-9dce-943aefcaded3 provider=ollama/gemma3:4b stopReason=length hasLastAssistant=yes hasCurrentAttemptAssistant=yes payloads=1 tools=0 replaySafe=yes compactions=0 reasoningRetries=0/2 emptyRetries=0/1 missingAssistantRetries=0/1 — surfacing error to user
+Jul 25 19:07:45 DankStation unit-entrypoint.sh[340860]: 2026-07-25T19:07:45.503-05:00 [gateway] agent runtime plugins pre-warmed in 42ms

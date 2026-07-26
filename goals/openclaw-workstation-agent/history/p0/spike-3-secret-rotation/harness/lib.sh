@@ -242,10 +242,10 @@ spike3_matching_pids() {
         printf '%s\n' "$pid"
         continue 2
       fi
-    done < <(tr '\0' '\n' <"$proc_dir/environ" 2>/dev/null || true)
+    done < <(tr '\0' '\n' 2>/dev/null <"$proc_dir/environ" || true)
     exe=$(readlink -f -- "$proc_dir/exe" 2>/dev/null || true)
     if [[ "$exe" == "$(realpath -e -- "$node")" ]] &&
-      tr '\0' '\n' <"$proc_dir/cmdline" 2>/dev/null | grep -Fxq -- "$oc"; then
+      tr '\0' '\n' 2>/dev/null <"$proc_dir/cmdline" | grep -Fxq -- "$oc"; then
       printf '%s\n' "$pid"
     fi
   done

@@ -1,5 +1,5 @@
 {
-  "ts": 1785019266053,
+  "ts": 1785025295602,
   "channelOrder": ["telegram"],
   "channelLabels": {
     "telegram": "Telegram"
@@ -21,17 +21,17 @@
   "eventLoop": {
     "degraded": false,
     "reasons": [],
-    "intervalMs": 3224,
-    "delayP99Ms": 20.6,
-    "delayMaxMs": 24.4,
-    "utilization": 0.019,
-    "cpuCoreRatio": 0.021
+    "intervalMs": 2469,
+    "delayP99Ms": 20.8,
+    "delayMaxMs": 21,
+    "utilization": 0.031,
+    "cpuCoreRatio": 0.098
   },
   "channels": {
     "telegram": {
       "configured": true,
       "running": true,
-      "lastStartAt": 1785019006082,
+      "lastStartAt": 1785025290802,
       "lastStopAt": null,
       "lastError": null,
       "tokenSource": "env",
@@ -39,7 +39,7 @@
         "ok": true,
         "status": null,
         "error": null,
-        "elapsedMs": 325,
+        "elapsedMs": 108,
         "botInfo": {
           "id": 8842758525,
           "is_bot": true,
@@ -70,7 +70,7 @@
           "allowsUsersToCreateTopics": false
         }
       },
-      "lastProbeAt": 1785019266378,
+      "lastProbeAt": 1785025295710,
       "mode": "polling"
     }
   },
@@ -81,14 +81,14 @@
         "enabled": true,
         "configured": true,
         "running": true,
-        "lastStartAt": 1785019006082,
+        "lastStartAt": 1785025290802,
         "lastStopAt": null,
         "lastError": null,
         "probe": {
           "ok": true,
           "status": null,
           "error": null,
-          "elapsedMs": 325,
+          "elapsedMs": 108,
           "botInfo": {
             "id": 8842758525,
             "is_bot": true,
@@ -119,14 +119,11 @@
             "allowsUsersToCreateTopics": false
           }
         },
-        "connected": true,
+        "connected": false,
         "restartPending": false,
         "reconnectAttempts": 0,
-        "lastConnectedAt": 1785019249675,
-        "lastEventAt": 1785019249675,
-        "lastTransportActivityAt": 1785019249675,
         "lastInboundAt": null,
-        "lastOutboundAt": 1785019263998,
+        "lastOutboundAt": null,
         "tokenSource": "env",
         "tokenStatus": "available",
         "mode": "polling",
@@ -145,10 +142,10 @@
               "matchSource": "id"
             }
           ],
-          "elapsedMs": 435
+          "elapsedMs": 441
         },
         "allowUnmentionedGroups": true,
-        "lastProbeAt": 1785019266378
+        "lastProbeAt": 1785025295710
       }
     ]
   },

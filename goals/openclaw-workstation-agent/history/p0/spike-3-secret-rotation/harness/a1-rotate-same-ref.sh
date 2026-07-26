@@ -18,6 +18,8 @@ HOME_DIR=$S3/home
 STATE=$S3/state
 OLD_CLIENT_CONFIG=$S3/a1-old-client.json
 NEW_CLIENT_CONFIG=$S3/a1-new-client.json
+ACP_INPUT=$S3/a1-old-token-cold-owner.stdin
+setup_verified=0
 
 fail() { spike3_fail "ASSERT-FAIL: $*"; }
 fp() { printf %s "$1" | sha256sum | cut -c1-8; }
@@ -34,6 +36,10 @@ on_exit() {
     kill "$cold_pid" 2>/dev/null || true
     wait "$cold_pid" 2>/dev/null || true
   fi
+  if [[ -n ${cold_input_fd:-} ]]; then
+    exec {cold_input_fd}>&-
+  fi
+  rm -f -- "$ACP_INPUT"
   spike3_remove_client_config "$OLD_CLIENT_CONFIG" || rc=1
   spike3_remove_client_config "$NEW_CLIENT_CONFIG" || rc=1
   if [[ -n ${old_value:-} ]]; then
@@ -52,8 +58,14 @@ on_exit() {
       "$S3/state/log/openclaw.log") || rc=1
   fi
   unset OP_SERVICE_ACCOUNT_TOKEN op_token old_value new_value observed
-  if [[ "$rc" -ne 0 ]]; then
-    SPIKE_P=$SPIKE3_P bash "$HARNESS/cleanup.sh" || true
+  if [[ "$rc" -ne 0 && "$setup_verified" -eq 1 ]]; then
+    printf 'restoring verified setup after failed a1 assertion\n'
+    if SPIKE_P=$SPIKE3_P bash "$HARNESS/setup.sh"; then
+      printf 'setup-restored-after-a1-failure=yes\n'
+    else
+      printf 'ASSERT-FAIL: setup restoration after a1 failure failed\n' >&2
+      rc=1
+    fi
   fi
   exit "$rc"
 }
@@ -71,6 +83,7 @@ spike3_require_ref "$OP_REF"
 spike3_assert_credential
 systemctl --user is-active --quiet "$SPIKE3_UNIT" ||
   fail "gateway unit is not active"
+setup_verified=1
 
 spike3_assert_scratch_ownership
 mkdir -p "$LOGS"
@@ -85,18 +98,68 @@ old_fp=$(fp "$old_value")
 spike3_write_client_config "$CONFIG" "$OLD_CLIENT_CONFIG" "$URL" "$old_value"
 
 section "establish old-snapshot cold owner"
+[[ ! -e "$ACP_INPUT" && ! -L "$ACP_INPUT" ]] ||
+  fail "cold-owner ACP input path already exists"
+mkfifo -m 0600 "$ACP_INPUT"
+exec {cold_input_fd}<>"$ACP_INPUT"
 (
   spike3_assert_config_path "$OLD_CLIENT_CONFIG"
   exec env -i PATH="$NODE_DIR:/usr/bin:/bin" HOME="$HOME_DIR" \
     OPENCLAW_CONFIG_PATH="$OLD_CLIENT_CONFIG" OPENCLAW_STATE_DIR="$STATE" \
-    "$OC" logs --follow --json
-) >"$LOGS/a1-old-token-cold-owner.log" 2>&1 &
+    "$OC" acp
+) <"$ACP_INPUT" >"$LOGS/a1-old-token-cold-owner.log" \
+  2>"$LOGS/a1-old-token-cold-owner.stderr.log" &
 cold_pid=$!
+jq -cn '{
+  jsonrpc: "2.0",
+  id: 1,
+  method: "initialize",
+  params: {
+    protocolVersion: 1,
+    clientCapabilities: {
+      fs: {readTextFile: false, writeTextFile: false},
+      terminal: false
+    },
+    clientInfo: {name: "beep-spike3", version: "1"}
+  }
+}' >&"$cold_input_fd"
+jq -cn --arg cwd "$S3/workspace" '{
+  jsonrpc: "2.0",
+  id: 2,
+  method: "session/list",
+  params: {cwd: $cwd}
+}' >&"$cold_input_fd"
 cold_socket_inode=
+cold_response_ready=0
 deadline=$((SECONDS + 10))
 while ((SECONDS < deadline)); do
   kill -0 "$cold_pid" 2>/dev/null ||
     fail "old-token cold-owner client did not remain connected"
+  if jq -e -s '
+    . as $frames |
+    ($frames | map(select(
+      .jsonrpc == "2.0" and
+      .id == 1 and
+      .result.protocolVersion == 1 and
+      (.result.agentCapabilities | type == "object") and
+      (.result.authMethods | type == "array") and
+      (.error? == null)
+    ))) as $first |
+    ($frames | map(select(
+      .jsonrpc == "2.0" and
+      .id == 2 and
+      (.result | type == "object") and
+      (.result.sessions | type == "array") and
+      (.error? == null)
+    ))) as $gateway |
+    select(($first | length) == 1 and ($gateway | length) == 1) |
+    {firstResponse: $first[0], gatewayBackedResponse: $gateway[0]}
+  ' "$LOGS/a1-old-token-cold-owner.log" \
+    >"$LOGS/a1-old-token-cold-owner-frame.json.new" 2>/dev/null; then
+    mv -f -- "$LOGS/a1-old-token-cold-owner-frame.json.new" \
+      "$LOGS/a1-old-token-cold-owner-frame.json"
+    cold_response_ready=1
+  fi
   for fd in /proc/"$cold_pid"/fd/*; do
     [[ -L "$fd" ]] || continue
     target=$(readlink -- "$fd") || continue
@@ -106,28 +169,22 @@ while ((SECONDS < deadline)); do
       '$3 == "0100007F:4A57" && $4 == "01" && $10 == inode { found=1 }
        END { exit !found }' /proc/net/tcp /proc/net/tcp6; then
       cold_socket_inode=$inode
-      break 2
+      break
     fi
   done
+  if [[ "$cold_response_ready" -eq 1 && -n "$cold_socket_inode" ]]; then
+    break
+  fi
   sleep 1
 done
+rm -f -- "$LOGS/a1-old-token-cold-owner-frame.json.new"
 [[ -n "$cold_socket_inode" ]] ||
   fail "old-token cold-owner lacks an established loopback gateway socket"
-jq -e -s --arg file "$S3/state/log/openclaw.log" '
-  select(
-    length > 0 and
-    .[0].type == "meta" and
-    .[0].sourceKind == "file" and
-    .[0].file == $file and
-    (.[0].localFallback? != true)
-  ) |
-  .[0]
-' "$LOGS/a1-old-token-cold-owner.log" \
-  >"$LOGS/a1-old-token-cold-owner-frame.json" ||
-  fail "old-token cold-owner lacks an authenticated first log frame"
+[[ "$cold_response_ready" -eq 1 ]] ||
+  fail "old-token cold-owner lacks pinned ACP first/gateway-backed responses"
 kill -0 "$cold_pid" 2>/dev/null ||
   fail "old-token cold-owner exited after connection proof"
-printf 'cold-owner-connected=yes socket-inode=%s old-sha256-prefix=%s\n' \
+printf 'cold-owner-connected=acp socket-inode=%s old-sha256-prefix=%s\n' \
   "$cold_socket_inode" "$old_fp"
 
 section "operator rotation at unchanged reference"
@@ -173,19 +230,25 @@ jq -e '(.ok == true) and (.warningCount == 0)' \
   "$LOGS/a1-current-reload.log" >/dev/null ||
   fail "current reload did not prove ok=true and warningCount=0"
 for _ in {1..10}; do
-  [[ -d /proc/"$cold_pid" ]] || break
+  if ! awk -v inode="$cold_socket_inode" \
+    '$10 == inode { found=1 } END { exit !found }' \
+    /proc/net/tcp /proc/net/tcp6; then
+    break
+  fi
   sleep 1
 done
-if [[ -d /proc/"$cold_pid" ]]; then
-  fail "pre-rotation old-token client remained connected"
-fi
-wait "$cold_pid" 2>/dev/null || true
 awk -v inode="$cold_socket_inode" \
   '$10 == inode { found=1 } END { exit !found }' \
   /proc/net/tcp /proc/net/tcp6 &&
   fail "pre-rotation old-token socket inode remains present"
+exec {cold_input_fd}>&-
+unset cold_input_fd
+kill "$cold_pid" 2>/dev/null || true
+wait "$cold_pid" 2>/dev/null || true
+[[ ! -d /proc/"$cold_pid" ]] ||
+  fail "disconnected pre-rotation client PID remains"
 unset cold_pid
-printf 'cold-owner-disconnected=yes socket-inode-absent=%s\n' \
+printf 'cold-owner-disconnected=yes client-terminated=yes socket-inode-absent=%s\n' \
   "$cold_socket_inode"
 
 section "old value rejected and new value accepted"

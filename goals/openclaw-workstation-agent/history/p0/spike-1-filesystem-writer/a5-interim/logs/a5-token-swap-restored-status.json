@@ -1,5 +1,5 @@
 {
-  "ts": 1785019290290,
+  "ts": 1785025319722,
   "channelOrder": ["telegram"],
   "channelLabels": {
     "telegram": "Telegram"
@@ -21,17 +21,17 @@
   "eventLoop": {
     "degraded": false,
     "reasons": [],
-    "intervalMs": 2770,
-    "delayP99Ms": 37.3,
-    "delayMaxMs": 168.7,
-    "utilization": 0.241,
-    "cpuCoreRatio": 0.477
+    "intervalMs": 2816,
+    "delayP99Ms": 39.7,
+    "delayMaxMs": 164,
+    "utilization": 0.23,
+    "cpuCoreRatio": 0.466
   },
   "channels": {
     "telegram": {
       "configured": true,
       "running": true,
-      "lastStartAt": 1785019287870,
+      "lastStartAt": 1785025317246,
       "lastStopAt": null,
       "lastError": null,
       "tokenSource": "env",
@@ -39,7 +39,7 @@
         "ok": true,
         "status": null,
         "error": null,
-        "elapsedMs": 111,
+        "elapsedMs": 113,
         "botInfo": {
           "id": 8842758525,
           "is_bot": true,
@@ -70,7 +70,7 @@
           "allowsUsersToCreateTopics": false
         }
       },
-      "lastProbeAt": 1785019290401,
+      "lastProbeAt": 1785025319835,
       "mode": "polling"
     }
   },
@@ -81,14 +81,14 @@
         "enabled": true,
         "configured": true,
         "running": true,
-        "lastStartAt": 1785019287870,
+        "lastStartAt": 1785025317246,
         "lastStopAt": null,
         "lastError": null,
         "probe": {
           "ok": true,
           "status": null,
           "error": null,
-          "elapsedMs": 111,
+          "elapsedMs": 113,
           "botInfo": {
             "id": 8842758525,
             "is_bot": true,
@@ -142,10 +142,10 @@
               "matchSource": "id"
             }
           ],
-          "elapsedMs": 438
+          "elapsedMs": 561
         },
         "allowUnmentionedGroups": true,
-        "lastProbeAt": 1785019290401
+        "lastProbeAt": 1785025319835
       }
     ]
   },
