@@ -1,4 +1,4 @@
-import { PosInt } from "@beep/schema";
+import { PosInt, URLStr } from "@beep/schema";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import {
   BEEP_TIKA_BASE_URL_ENV,
@@ -158,6 +158,18 @@ describe("TikaServerEngineConfig", () => {
     expect(decode(TikaServerEngineConfig, { baseUrl: "https://tika.internal/api" }).baseUrl).toBe(
       "https://tika.internal/api"
     );
+  });
+
+  it("rejects a non-normalized base URL passed straight to the constructor", () => {
+    // `make` runs type-side checks but not decode transformations, so without
+    // the trailing-slash check it would silently yield `//rmeta/text`.
+    expect(() => TikaServerEngineConfig.make({ baseUrl: URLStr.make("http://localhost:9998/") })).toThrow();
+    expect(() => TikaServerEngineConfig.make({ baseUrl: URLStr.make("http://localhost:9998///") })).toThrow();
+  });
+
+  it("accepts an already-normalized base URL through the constructor", () => {
+    expect(TikaServerEngineConfig.make({ baseUrl: URLStr.make(TIKA_SERVER_URL) }).baseUrl).toBe(TIKA_SERVER_URL);
+    expect(TikaServerEngineConfig.make({}).baseUrl).toBe(TIKA_SERVER_URL);
   });
 
   it("rejects base URLs that are not http or https", () => {

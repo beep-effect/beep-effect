@@ -50,6 +50,17 @@ const TikaServerBaseUrl = URLStr.pipe(
     decode: SchemaGetter.transform((url: URLStr) => URLStr.make(Str.replace(trailingSlashPattern, "")(url))),
     encode: SchemaGetter.passthrough(),
   }),
+  // Piped after the transform so it guards the decoded value: decoding strips
+  // the slash and then satisfies this, while `TikaServerEngineConfig.make` —
+  // which runs type-side checks but not transformations — is rejected outright
+  // instead of silently producing `//rmeta/text`.
+  S.check(
+    S.makeFilter((url: string) => (trailingSlashPattern.test(url) ? "must not end with a trailing slash" : true), {
+      identifier: $I`TikaServerBaseUrlTrailingSlashCheck`,
+      title: "Tika Server Base URL Trailing Slash",
+      description: "Checks that the normalized Tika Server base URL carries no trailing slash.",
+    })
+  ),
   $I.annoteSchema("TikaServerBaseUrl", {
     description: "Tika Server base URL: http(s) only, no trailing slash, no query string, and no fragment.",
     // Generated from components so every value is already normalized. Filtering
