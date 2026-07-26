@@ -8,8 +8,8 @@
 import { $TikaId } from "@beep/identity";
 import { PosInt, SchemaUtils, URLStr } from "@beep/schema";
 import { Str } from "@beep/utils";
+import { SchemaGetter } from "effect";
 import * as S from "effect/Schema";
-import * as SchemaGetter from "effect/SchemaGetter";
 
 const $I = $TikaId.create("Tika.config");
 
