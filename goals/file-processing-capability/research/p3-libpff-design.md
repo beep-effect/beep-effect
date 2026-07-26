@@ -255,10 +255,13 @@ ran against the implementation diff. Resolutions:
   same content-addressed source (duplicate PSTs are common in real corpora)
   could both pass the existing-output check before either wrote. Resolved with
   an atomic per-target claim (`<target>.claim` via non-recursive mkdir) held
-  for the duration of the export and always released; the `fail` policy
-  refuses a claimed target with a typed config error, and the `replace` policy
-  may steal a stale claim left by a crashed run once. Covered by
-  claimed-target and stale-claim-steal tests.
+  for the duration of the export and always released.
+- Greptile P1 follow-on "replace steals active claims": the driver cannot
+  distinguish a live concurrent export's claim from a crashed run's leftover,
+  so a present claim refuses with a typed config error under **every**
+  policy — `replace` replaces stale outputs, never claims. Crashed-run
+  recovery is an explicit operator action (remove the `.claim` path or use a
+  fresh export root). Covered by claimed-target tests for both policies.
 
 ## Out of scope (unchanged)
 

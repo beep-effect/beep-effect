@@ -815,24 +815,18 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
   // content-addressed source derive identical target paths (duplicate PSTs
   // are common in real corpora), and an exists-check alone leaves a window
   // where both pass before either writes. A non-recursive mkdir is the
-  // atomic claim; the `replace` policy may steal a stale claim left by a
-  // crashed run once.
+  // atomic claim, held for the run and always released. A present claim
+  // refuses under EVERY policy — the driver cannot distinguish a live
+  // concurrent export from a crashed run's leftover, so `replace` never
+  // steals; recovering a crashed run means removing the `.claim` path (or
+  // choosing a fresh export root) explicitly.
   const acquireExportClaim = Effect.fn("Libpff.pffexport.acquireExportClaim")(function* (
     claimPath: string
   ): Effect.fn.Return<void, LibpffError> {
     const acquired = O.isSome(yield* fs.makeDirectory(claimPath).pipe(Effect.option));
-    if (acquired) {
-      return;
-    }
-    if (PffexportExistingExportPolicy.is.fail(config.existingExportPolicy)) {
+    if (!acquired) {
       return yield* makeLibpffError("config", { cause: "export target is claimed by another export" });
     }
-    yield* fs
-      .remove(claimPath, { recursive: true })
-      .pipe(Effect.mapError(() => makeLibpffError("config", { cause: "stale export claim removal failed" })));
-    yield* fs
-      .makeDirectory(claimPath)
-      .pipe(Effect.mapError(() => makeLibpffError("config", { cause: "export target is claimed by another export" })));
   });
 
   const performExport = Effect.fn("LibpffPffexportEngine.performExport")(function* (
