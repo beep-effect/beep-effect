@@ -2,8 +2,8 @@
 
 ## Status
 
-Active — P1 minimum vertical proof complete; P2/P3/P4/P5 driver, corpus, and
-handoff phases remain pending.
+Active — P1 minimum vertical proof and P2 Tika Server driver complete;
+P3/P4/P5 libpff, CLI-calibration, and handoff phases remain pending.
 
 Packet hardening completed on 2026-06-02. The P1 implementation landed through
 the law-practice office-action branch and merged to `main` in PR #262 on
@@ -58,6 +58,14 @@ format-specific engines. Drivers implement declared operation capabilities.
 
 ## Latest Evidence
 
+- 2026-07-26: P2 complete — `@beep/tika` gained the default Tika Server HTTP
+  engine (`makeTikaServerFileProcessingEngine`), typed `TikaServerEngineConfig`
+  (`BEEP_TIKA_BASE_URL` / `BEEP_TIKA_TIMEOUT_MILLIS` / `BEEP_TIKA_MAX_OUTPUT_BYTES`),
+  shared `Tika.response.ts` / `Tika.error-translation.ts` role files, the
+  `output-budget` error reason, engine-version capture via `GET /version`, a
+  stubbed-HTTP behavior suite over all 12 declared families, and an opt-in
+  `BEEP_TEST_TIKA_URL` live integration lane. The design contract pinned
+  live doc/docx calibration to P5.
 - `@beep/file-processing` exists at
   `packages/foundation/capability/file-processing` with runtime-neutral
   artifact, operation, extraction, strategy, service, path-safety, fixture, and
