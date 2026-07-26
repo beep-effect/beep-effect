@@ -143,10 +143,10 @@
     },
     "@beep/chalk": {
       "path": "packages/foundation/capability/chalk",
-      "lines": 94.23,
-      "statements": 93.85,
+      "lines": 94.03,
+      "statements": 93.66,
       "branches": 82.05,
-      "functions": 86.29
+      "functions": 85.78
     },
     "@beep/colors": {
       "path": "packages/foundation/capability/colors",
@@ -663,7 +663,7 @@
       "path": "packages/tooling/tool/cli",
       "lines": 65.95,
       "statements": 65.74,
-      "branches": 50.98,
+      "branches": 50.95,
       "functions": 57.36
     },
     "@beep/repo-configs": {
