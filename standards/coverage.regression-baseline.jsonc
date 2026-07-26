@@ -17,8 +17,8 @@
     },
     "@beep/agents-client": {
       "path": "packages/agents/client",
-      "lines": 87.93,
-      "statements": 86.74,
+      "lines": 87.87,
+      "statements": 86.69,
       "branches": 67.69,
       "functions": 78.02
     },
@@ -143,10 +143,10 @@
     },
     "@beep/chalk": {
       "path": "packages/foundation/capability/chalk",
-      "lines": 94.23,
-      "statements": 93.85,
+      "lines": 94.03,
+      "statements": 93.66,
       "branches": 82.05,
-      "functions": 86.29
+      "functions": 85.78
     },
     "@beep/colors": {
       "path": "packages/foundation/capability/colors",
@@ -220,10 +220,10 @@
     },
     "@beep/documents-server": {
       "path": "packages/documents/server",
-      "lines": 84.11,
-      "statements": 84.17,
+      "lines": 83.74,
+      "statements": 83.81,
       "branches": 74.52,
-      "functions": 77.82
+      "functions": 77.22
     },
     "@beep/documents-tables": {
       "path": "packages/documents/tables",
@@ -388,8 +388,8 @@
     },
     "@beep/identity": {
       "path": "packages/foundation/modeling/identity",
-      "lines": 94.63,
-      "statements": 94.55,
+      "lines": 94.62,
+      "statements": 94.54,
       "branches": 87.21,
       "functions": 85.27
     },
@@ -402,10 +402,10 @@
     },
     "@beep/law-practice-domain": {
       "path": "packages/law-practice/domain",
-      "lines": 51.59,
-      "statements": 51.1,
-      "branches": 40,
-      "functions": 7.58
+      "lines": 48.67,
+      "statements": 48.44,
+      "branches": 0,
+      "functions": 4.96
     },
     "@beep/law-practice-server": {
       "path": "packages/law-practice/server",
@@ -528,10 +528,10 @@
     },
     "@beep/ontology-client": {
       "path": "packages/ontology/client",
-      "lines": 66.78,
-      "statements": 65.37,
-      "branches": 55.48,
-      "functions": 48.8
+      "lines": 61.36,
+      "statements": 60.22,
+      "branches": 51.85,
+      "functions": 40
     },
     "@beep/ontology-config": {
       "path": "packages/ontology/config",
@@ -556,10 +556,10 @@
     },
     "@beep/ontology-ui": {
       "path": "packages/ontology/ui",
-      "lines": 21.85,
-      "statements": 21.23,
-      "branches": 6.42,
-      "functions": 12.8
+      "lines": 20.64,
+      "statements": 20.23,
+      "branches": 4.63,
+      "functions": 11.85
     },
     "@beep/ontology-use-cases": {
       "path": "packages/ontology/use-cases",
@@ -612,10 +612,10 @@
     },
     "@beep/postgres": {
       "path": "packages/drivers/postgres",
-      "lines": 86.08,
-      "statements": 85.92,
-      "branches": 70.5,
-      "functions": 82.39
+      "lines": 84.1,
+      "statements": 83.79,
+      "branches": 69.78,
+      "functions": 78.41
     },
     "@beep/pretext": {
       "path": "packages/drivers/pretext",
@@ -626,10 +626,10 @@
     },
     "@beep/professional-desktop": {
       "path": "apps/professional-desktop",
-      "lines": 65.49,
-      "statements": 64.14,
-      "branches": 54.5,
-      "functions": 56.41
+      "lines": 54.7,
+      "statements": 53.27,
+      "branches": 45.49,
+      "functions": 44.77
     },
     "@beep/protobuf": {
       "path": "packages/drivers/protobuf",
@@ -668,10 +668,10 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 67.77,
-      "statements": 67.57,
-      "branches": 52.02,
-      "functions": 59.09
+      "lines": 65.95,
+      "statements": 65.74,
+      "branches": 50.95,
+      "functions": 57.36
     },
     "@beep/repo-configs": {
       "path": "packages/tooling/policy-pack/repo-configs",
@@ -689,10 +689,10 @@
     },
     "@beep/repo-utils": {
       "path": "packages/tooling/library/repo-utils",
-      "lines": 73.65,
-      "statements": 73.03,
-      "branches": 51.93,
-      "functions": 53
+      "lines": 70.55,
+      "statements": 69.91,
+      "branches": 51.29,
+      "functions": 51.01
     },
     "@beep/runpod": {
       "path": "packages/drivers/runpod",
@@ -752,10 +752,10 @@
     },
     "@beep/tika": {
       "path": "packages/drivers/tika",
-      "lines": 87.22,
-      "statements": 86.88,
-      "branches": 71.92,
-      "functions": 83.07
+      "lines": 75.28,
+      "statements": 76.08,
+      "branches": 58.06,
+      "functions": 63.63
     },
     "@beep/types": {
       "path": "packages/foundation/primitive/types",
