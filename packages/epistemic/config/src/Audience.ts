@@ -49,7 +49,7 @@ const hostOf = (destination: string): string => {
  * // "external-network"
  * ```
  *
- * @category resolvers
+ * @category utilities
  * @since 0.0.0
  */
 export const resolveSinkAudience = (destination: SinkDestination): SinkAudience =>
