@@ -13,11 +13,12 @@ import {
   TierGate,
   TierGateAuditRecord,
   TierGatePolicy,
+  TierGateSettlement,
   TierGateVerdict,
 } from "@beep/mcp-kit";
 import { fcRuns } from "@beep/test-utils";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Fiber, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -144,6 +145,87 @@ describe("dispatchWithTierGate", () => {
   );
 });
 
+describe("recordOutcome settlement", () => {
+  // A gate that evaluates via the policy but records settlements into a Ref,
+  // so the tests observe exactly what dispatchWithTierGate reports.
+  const recordingGate = Effect.fnUntraced(function* (approvedTools: ReadonlyArray<string>) {
+    const recorded = yield* Ref.make<ReadonlyArray<{ readonly tool: string; readonly settlement: string }>>([]);
+    const policyGate = fromApprovedToolsPolicy({ approvedTools });
+    const gate = TierGate.of({
+      evaluate: policyGate.evaluate,
+      recordOutcome: Effect.fn("TierGateTest.recordOutcome")(function* (request, settlement) {
+        yield* Ref.update(recorded, (entries) => [...entries, { settlement, tool: request.tool.name }]);
+      }),
+    });
+    return { gate, recorded };
+  });
+
+  it.effect(
+    "reports completed after an approved dispatch succeeds",
+    Effect.fnUntraced(function* () {
+      const { gate, recorded } = yield* recordingGate(["delete_document"]);
+      const result = yield* dispatchWithTierGate(
+        { tool: writeTool, toolCallId: O.none() },
+        Effect.succeed("deleted")
+      ).pipe(Effect.provideService(TierGate, gate));
+
+      assert.strictEqual(result._tag, "Dispatched");
+      assert.deepStrictEqual(yield* Ref.get(recorded), [{ settlement: "completed", tool: "delete_document" }]);
+    })
+  );
+
+  it.effect(
+    "reports failed after an approved dispatch fails, without widening the error channel",
+    Effect.fnUntraced(function* () {
+      const { gate, recorded } = yield* recordingGate(["delete_document"]);
+      const failure = yield* dispatchWithTierGate(
+        { tool: writeTool, toolCallId: O.none() },
+        Effect.fail("boom" as const)
+      ).pipe(Effect.provideService(TierGate, gate), Effect.flip);
+
+      assert.strictEqual(failure, "boom");
+      assert.deepStrictEqual(yield* Ref.get(recorded), [{ settlement: "failed", tool: "delete_document" }]);
+    })
+  );
+
+  it.effect(
+    "reports interrupted when an approved dispatch is interrupted",
+    Effect.fnUntraced(function* () {
+      const { gate, recorded } = yield* recordingGate(["delete_document"]);
+      const fiber = yield* dispatchWithTierGate({ tool: writeTool, toolCallId: O.none() }, Effect.never).pipe(
+        Effect.provideService(TierGate, gate),
+        Effect.forkChild
+      );
+      yield* Effect.yieldNow;
+      yield* Fiber.interrupt(fiber);
+
+      assert.deepStrictEqual(yield* Ref.get(recorded), [{ settlement: "interrupted", tool: "delete_document" }]);
+    })
+  );
+
+  it.effect(
+    "reports no settlement for a refused dispatch — there was no execution to settle",
+    Effect.fnUntraced(function* () {
+      const { gate, recorded } = yield* recordingGate([]);
+      const result = yield* dispatchWithTierGate(
+        { tool: writeTool, toolCallId: O.none() },
+        Effect.succeed("this handler must never run")
+      ).pipe(Effect.provideService(TierGate, gate));
+
+      assert.strictEqual(result._tag, "Refused");
+      assert.deepStrictEqual(yield* Ref.get(recorded), []);
+    })
+  );
+
+  it.effect(
+    "fromApprovedToolsPolicy keeps no settlement record",
+    Effect.fnUntraced(function* () {
+      const gate = fromApprovedToolsPolicy({ approvedTools: ["delete_document"] });
+      yield* gate.recordOutcome({ tool: writeTool, toolCallId: O.none() }, "completed");
+    })
+  );
+});
+
 describe("tier-gate schema parity laws", () => {
   it("round-trips TierGateAuditRecord with schema-owned toolCallId absence", () => {
     const audit = TierGateAuditRecord.make({
@@ -169,6 +251,7 @@ describe("tier-gate schema parity laws", () => {
   });
 
   it("round-trips TierGateVerdict and TierGatePolicy from their production schemas", () => {
+    assertSchemaRoundTrip(TierGateSettlement);
     assertSchemaRoundTrip(TierGateVerdict);
     assertSchemaRoundTrip(TierGatePolicy);
   });

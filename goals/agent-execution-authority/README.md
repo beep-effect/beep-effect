@@ -37,16 +37,30 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-**P1 Implement.** PRs 1–3 have landed. Next concrete action: PR 4 — add
-`recordOutcome` to `TierGateShape` in `@beep/mcp-kit` (called by
-`dispatchWithTierGate` via `Effect.onExit`, taking a bounded settlement literal,
-never an `Exit`) and `EgressDenied` in `@beep/api-transport`. Mind that docgen
-executes `TierGate.ts`'s `@example` blocks, which construct `TierGateShape`
-values and must gain the new method.
+**P1 Implement.** PRs 1–4 have landed. Next concrete action: PR 5 —
+`GovernedTierGateLive` in `epistemic/server` implementing `TierGateShape`
+(evaluate against the session-frozen grant set with write-ahead ledger
+decisions; `recordOutcome` persisting the bounded settlement), plus the run
+store keyed by `clientId`, swapped in at
+`apps/professional-desktop/server/OntologyMcpTransport.ts` in place of
+`fromApprovedToolsPolicy`. Provide `PgliteDrizzleLive` and the epistemic config
+into the MCP branch; write-ahead fail-closed lands here — no decision row, no
+action. Map `TierGateSettlement` (mcp-kit) onto `ExecutionSettlement`
+(epistemic/domain) in the evaluator; the literals are deliberately identical.
 
 ## Latest Evidence
 
-- **PR 3** (2026-07-26) — the append-only ledger: raw-`pgTable` decision/outcome
+- **PR 4** (2026-07-27) — the two foundation additions. `TierGateShape` gains
+  `recordOutcome`; `dispatchWithTierGate` reports settlements via
+  `Effect.onExit` as the bounded `TierGateSettlement` literal (v4 note: the
+  interrupt-only check is `Cause.hasInterruptsOnly`, not `isInterruptedOnly`).
+  The error channel stays exactly the wrapped effect's, proven by a test that
+  flips a failed dispatch. Refused dispatches report no settlement, proven.
+  `EgressDenied` lands in `@beep/api-transport` as a field-free
+  `TaggedErrorClass` (the package gained its first `@beep/schema` dependency:
+  package.json + tsconfig reference + regenerated docgen paths + fallow
+  boundaries). Consumer records added to both READMEs.
+- **PR 3** (#467, 2026-07-26) — the append-only ledger: raw-`pgTable` decision/outcome
   tables (fork resolved against `BaseEntity` — its mutability columns would be
   schema lies), the repo's first plpgsql triggers authored inside the splitter's
   boundary-keyword rule and proven through real `migrate()`, the
