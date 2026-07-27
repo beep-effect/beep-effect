@@ -92,8 +92,11 @@ without an EML), and is written inside the item directory:
   sanitizer).
 - No attachments: single-part message, `Content-Type` from the body variant
   (`text/plain; charset=utf-8` / `text/html; charset=utf-8` /
-  `application/rtf`), `Content-Transfer-Encoding: 8bit`, body verbatim. A
-  headers-only item (InternetHeaders.txt, no body) yields an empty
+  `application/rtf`), `Content-Transfer-Encoding: 8bit`, body verbatim —
+  unless any physical body line exceeds RFC 5322's 998-octet limit, in which
+  case the whole part is emitted as base64, losslessly (see the v5 addendum).
+  The same conditional rule governs the body part of the multipart branch
+  below. A headers-only item (InternetHeaders.txt, no body) yields an empty
   `text/plain` body part.
 - Attachments present: `multipart/mixed`; part 1 is the body (as above), one
   part per attachment ordered by relative path, base64,
@@ -270,6 +273,32 @@ ran against the implementation diff. Resolutions:
   acquisition discriminates `AlreadyExists` from other platform failures, so a
   permission or filesystem error reports "export claim could not be created"
   instead of falsely blaming a concurrent export.
+
+## Addendum (v5 — body content-transfer-encoding decision, 2026-07-27)
+
+Decided via a three-lens adversarial panel with a cross-examining judge on
+2026-07-27.
+
+- Decision: conditional base64. A body part stays `8bit` verbatim unless any
+  physical line (split on `/\r?\n/`; a lone CR is content and counts toward
+  its line's octets) exceeds RFC 5322's 998-octet limit, in which case the
+  whole part is emitted as base64 — 76-column wrapped, same helper as the
+  attachment path — losslessly: decoding restores the exact body string.
+- Quoted-printable rejected: text-mode QP normalizes bare LF to CRLF on
+  decode — a byte mutation; binary-mode QP forfeits the readability that
+  would justify QP while demanding a novel hand-rolled encoder; no QP encoder
+  exists in the repo.
+- Unconditional base64 and do-nothing rejected: unconditional encoding is
+  fixture churn for nothing (the overwhelmingly common short-line bodies are
+  already compliant), and the header-waiver precedent does not transfer to
+  bodies because a content-transfer-encoding is losslessly reversible while
+  folding is not.
+- Residual waivers: remaining `8bit` parts may carry bare-LF line endings —
+  pre-existing, deliberately not normalized. "Byte-lossless" is relative to
+  the UTF-8-decoded body string (post U+FFFD replacement); the raw body file
+  remains the authoritative byte copy beside the EML. The ~33% growth of
+  encoded parts reaches `maxMaterializedBytes` sooner, but the raw-bytes
+  lower-bound pre-skip stays valid since base64 only expands.
 
 ## Out of scope (unchanged)
 

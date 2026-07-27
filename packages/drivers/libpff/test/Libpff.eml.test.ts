@@ -1,4 +1,5 @@
 import {
+  assembleEml,
   foldHeaderLine,
   rfc5322DateFromOutlookTimestamp,
   stripMimeStructuralHeaders,
@@ -6,6 +7,7 @@ import {
 } from "@beep/libpff";
 import { O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import { Encoding, Result } from "effect";
 
 const octets = (value: string): number => new TextEncoder().encode(value).length;
 
@@ -139,6 +141,120 @@ describe("stripMimeStructuralHeaders", () => {
     const block = "Subject: hi\r\nContent-Type: multipart/mixed;\r\n boundary=x\r\nFrom: a@b.c\r\n";
 
     expect(stripMimeStructuralHeaders(block)).toBe("Subject: hi\r\nFrom: a@b.c");
+  });
+});
+
+describe("assembleEml", () => {
+  const boundary = "=_beep-test-boundary";
+
+  const singlePart = (content: string, contentType = "text/plain; charset=utf-8"): string =>
+    assembleEml({
+      attachments: [],
+      body: O.some({ content, contentType }),
+      boundary,
+      headerBlock: "Subject: hi",
+    });
+
+  // Strips the RFC 2045 76-column wrapping and decodes the payload back to
+  // the body string the part was assembled from.
+  const decodeBase64Payload = (payload: string): string =>
+    Result.getOrElse(Encoding.decodeBase64String(payload.split("\r\n").join("")), () => "");
+
+  const singlePartPayload = (eml: string): string => eml.slice(eml.indexOf("\r\n\r\n") + 4);
+
+  it("keeps a short body 8bit and byte-identical", () => {
+    expect(singlePart("hello")).toBe(
+      [
+        "Subject: hi",
+        "MIME-Version: 1.0",
+        "Content-Type: text/plain; charset=utf-8",
+        "Content-Transfer-Encoding: 8bit",
+        "",
+        "hello",
+      ].join("\r\n")
+    );
+  });
+
+  it("flips a single 999-octet line to wrapped base64 that round-trips", () => {
+    const content = "a".repeat(999);
+    const eml = singlePart(content);
+
+    expect(eml).toContain("Content-Transfer-Encoding: base64");
+    const payload = singlePartPayload(eml);
+    expect(payload.split("\r\n").every((line) => line.length <= 76)).toBe(true);
+    expect(decodeBase64Payload(payload)).toBe(content);
+  });
+
+  it("keeps a body line of exactly 998 octets 8bit", () => {
+    const content = "a".repeat(998);
+    const eml = singlePart(content);
+
+    expect(eml).toContain("Content-Transfer-Encoding: 8bit");
+    expect(eml).not.toContain("Content-Transfer-Encoding: base64");
+    expect(singlePartPayload(eml)).toBe(content);
+  });
+
+  it("measures octets rather than characters", () => {
+    // Each euro sign is three octets, so 333 of them cross the limit while
+    // the character count stays far below it.
+    const content = "€".repeat(333);
+    const eml = singlePart(content);
+
+    expect(content.length).toBe(333);
+    expect(octets(content)).toBe(999);
+    expect(eml).toContain("Content-Transfer-Encoding: base64");
+    expect(decodeBase64Payload(singlePartPayload(eml))).toBe(content);
+  });
+
+  it("preserves mixed line endings byte for byte through base64", () => {
+    const content = `a\r\nb\n${"x".repeat(999)}`;
+    const eml = singlePart(content);
+
+    expect(eml).toContain("Content-Transfer-Encoding: base64");
+    expect(decodeBase64Payload(singlePartPayload(eml))).toBe(content);
+  });
+
+  it("counts a lone CR toward its physical line", () => {
+    // No recognized line break splits this, so it is one 1001-octet physical
+    // line: the bare CR is content, not a terminator.
+    const content = `${"c".repeat(500)}\r${"d".repeat(500)}`;
+    const eml = singlePart(content);
+
+    expect(eml).toContain("Content-Transfer-Encoding: base64");
+    expect(decodeBase64Payload(singlePartPayload(eml))).toBe(content);
+  });
+
+  it("encodes a long multipart body while leaving the attachment part and boundaries unchanged", () => {
+    const content = `<p>${"x".repeat(1200)}</p>`;
+    const eml = assembleEml({
+      attachments: [{ bytes: new TextEncoder().encode("pdfbytes"), fileName: "report.pdf" }],
+      body: O.some({ content, contentType: "text/html; charset=utf-8" }),
+      boundary,
+      headerBlock: "Subject: hi",
+    });
+
+    expect(eml).toContain(`Content-Type: multipart/mixed; boundary="${boundary}"`);
+    expect(eml).toContain("Content-Type: text/html; charset=utf-8\r\nContent-Transfer-Encoding: base64");
+    expect(eml).toContain('Content-Type: application/octet-stream; name="report.pdf"');
+    expect(eml).toContain('Content-Disposition: attachment; filename="report.pdf"');
+    expect(eml).toContain("cGRmYnl0ZXM=");
+    expect(eml.endsWith(`--${boundary}--`)).toBe(true);
+
+    const bodySection = eml.split(`\r\n--${boundary}\r\n`)[1] ?? "";
+    expect(decodeBase64Payload(bodySection.slice(bodySection.indexOf("\r\n\r\n") + 4))).toBe(content);
+  });
+
+  it("keeps a missing body 8bit with an empty part", () => {
+    expect(assembleEml({ attachments: [], body: O.none(), boundary, headerBlock: "Subject: hi" })).toBe(
+      [
+        "Subject: hi",
+        "MIME-Version: 1.0",
+        "Content-Type: text/plain; charset=utf-8",
+        "Content-Transfer-Encoding: 8bit",
+        "",
+        "",
+      ].join("\r\n")
+    );
   });
 });
 

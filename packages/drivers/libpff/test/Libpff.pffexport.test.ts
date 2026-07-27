@@ -13,7 +13,7 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Effect, Encoding, FileSystem, Layer, Path, Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
@@ -55,6 +55,24 @@ for base in $bases; do
   printf 'Subject:\\tRe: hello\\nSender name:\\tGrace Hopper\\nSender email address:\\tgrace@example.com\\n' > "$sent/OutlookHeaders.txt"
   printf 'sent body' > "$sent/Message.txt"
 done
+exit 0
+`;
+
+// One item whose only body is a single physical HTML line over the RFC 5322
+// 998-octet limit; the assembled EML must re-encode that part as base64.
+const overlongBodyStub = `#!/usr/bin/env bash
+${stubVersionBanner}
+target=""
+prev=""
+for arg in "$@"; do
+  if [ "$prev" = "-t" ]; then target="$arg"; fi
+  prev="$arg"
+done
+item="$target.export/Top of Personal Folders/Inbox/Message00001"
+mkdir -p "$item"
+printf 'Subject:\\toverlong body\\n' > "$item/OutlookHeaders.txt"
+long=$(printf 'x%.0s' $(seq 1 1200))
+printf '<p>%s</p>' "$long" > "$item/Message.html"
 exit 0
 `;
 
@@ -258,6 +276,37 @@ describe("makePffexportFileProcessingEngine", () => {
         expect(result.children.some((child) => child.relativePath.includes(".export/"))).toBe(true);
         expect(result.children.some((child) => child.relativePath.includes(".orphans/"))).toBe(true);
         expect(result.children.some((child) => child.relativePath.includes(".recovered/"))).toBe(true);
+      },
+      Effect.scoped,
+      provideTestLayer
+    )
+  );
+
+  it.effect(
+    "re-encodes an over-long body line as base64 in the assembled EML",
+    Effect.fnUntraced(
+      function* () {
+        const { exportRoot, operation, stubPath } = yield* fixture(overlongBodyStub);
+        const engine = yield* makePffexportFileProcessingEngine(
+          PffexportEngineConfig.make({ exportRoot, pffexportPath: stubPath })
+        );
+
+        const result = yield* engine.exportArchive(operation);
+
+        expect(result.children.some((child) => child.relativePath.endsWith("/Message.eml"))).toBe(true);
+
+        const eml = yield* readExported(
+          exportRoot,
+          `${operation.source.id}.export/Top of Personal Folders/Inbox/Message00001/Message.eml`
+        );
+        expect(eml).toContain("Content-Type: text/html; charset=utf-8");
+        expect(eml).toContain("Content-Transfer-Encoding: base64");
+
+        const payload = eml.slice(eml.indexOf("\r\n\r\n") + 4);
+        expect(payload.split("\r\n").every((line) => line.length <= 76)).toBe(true);
+        expect(Result.getOrElse(Encoding.decodeBase64String(payload.split("\r\n").join("")), () => "")).toBe(
+          `<p>${"x".repeat(1200)}</p>`
+        );
       },
       Effect.scoped,
       provideTestLayer
