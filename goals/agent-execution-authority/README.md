@@ -53,6 +53,22 @@ for `network-egress` destinations come from `EpistemicConfig.destinationAllowlis
 — extend the `GovernedTierGateOptions` grant blueprint at the composition root
 rather than teaching `epistemic/server` any ontology names.
 
+**Head start on the blocking check, from working inside `SanitizedSpan.ts`
+during PR 5.** `registerSanitizedToolkit` captures `const services = yield*
+Effect.context<never>()` at **layer build**, and each dispatch runs
+`Effect.provideContext(requestServices)` where `requestServices = Context.add(
+services, CurrentMcpCaller, …)`. Because `provideContext` *replaces* the fiber
+context rather than merging into it, this predicts a sharp rule PR 6 must
+verify rather than assume: the policy `Fetch` reaches handlers **iff** it is
+provided into the layer graph that builds the toolkit (e.g. another
+`Layer.provide` on the transport layer in `main.ts`), and does **not** reach
+them if it is provided only around the HTTP server or per-request, since that
+context is discarded at dispatch. PR 5 proved the analogous read works — the
+`mcp-session-id` header had to be read *before* `provideContext`, and the
+session-chaining test passes because of it. Test the `Fetch` case explicitly;
+a passing egress test with the reference in the wrong place would be proving
+the default `globalThis.fetch`, not the policy one.
+
 ## Latest Evidence
 
 - **PR 5** (2026-07-27) — enforcement begins. `GovernedTierGateLive` in
