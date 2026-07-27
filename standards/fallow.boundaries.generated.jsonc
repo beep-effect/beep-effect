@@ -1863,14 +1863,16 @@
           "@beep/identity",
           "@beep/libpff",
           "@beep/schema",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/file-processing",
           "@beep/identity",
           "@beep/libpff",
           "@beep/schema",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {

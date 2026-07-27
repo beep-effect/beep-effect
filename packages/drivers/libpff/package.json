@@ -63,6 +63,7 @@
     "@beep/file-processing": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/utils": "workspace:^",
     "effect": "catalog:"
   },
   "devDependencies": {

@@ -153,7 +153,16 @@ Required Checks:
 
 ## P3: libpff Driver
 
-Status: pending
+Status: complete (2026-07-26) — the pffexport engine gained `-V` version
+capture, mode-derived target-tree walking (`.export`/`.orphans`/`.recovered`),
+deterministic per-item `Message.eml` assembly (verbatim InternetHeaders with
+MIME-structural stripping, synthesized Outlook headers otherwise),
+`<artifact-id>.messages.jsonl` records (`PffexportMessageRecord`) preserving
+folder/message/body/attachment relationships, an `existingExportPolicy`
+output-directory policy, a shared `Libpff.error-translation.ts` role file, and
+stub-based deterministic coverage plus an opt-in `BEEP_TEST_LIBPFF_PST` live
+lane. Design contract and adversarial-review resolutions:
+`research/p3-libpff-design.md`.
 
 Goal: Implement `@beep/libpff` as the PST export driver.
 
@@ -171,11 +180,11 @@ Implementation Steps:
 
 Exit Criteria:
 
-- [ ] libpff driver reports engine name and version.
-- [ ] PST export writes child EML artifacts and JSONL metadata records.
-- [ ] Exported children are represented through `@beep/file-processing`
+- [x] libpff driver reports engine name and version.
+- [x] PST export writes child EML artifacts and JSONL metadata records.
+- [x] Exported children are represented through `@beep/file-processing`
   artifact schemas.
-- [ ] Driver failures do not escape the operation contract as process errors.
+- [x] Driver failures do not escape the operation contract as process errors.
 
 Required Checks:
 
