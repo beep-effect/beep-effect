@@ -984,6 +984,21 @@
         "@types/node": "catalog:",
       },
     },
+    "packages/drivers/openclaw": {
+      "name": "@beep/openclaw",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+      },
+    },
     "packages/drivers/oxigraph": {
       "name": "@beep/oxigraph",
       "version": "0.0.0",
@@ -3034,6 +3049,8 @@
     "@beep/ontology-use-cases": ["@beep/ontology-use-cases@workspace:packages/ontology/use-cases"],
 
     "@beep/openai-compat": ["@beep/openai-compat@workspace:packages/drivers/openai-compat"],
+
+    "@beep/openclaw": ["@beep/openclaw@workspace:packages/drivers/openclaw"],
 
     "@beep/oxigraph": ["@beep/oxigraph@workspace:packages/drivers/oxigraph"],
 

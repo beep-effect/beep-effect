@@ -176,7 +176,8 @@ const generatedComposers = $I.compose(
   "tailscale",
   "agents-tables",
   "graph-3d",
-  "epistemic-config"
+  "epistemic-config",
+  "openclaw"
 );
 
 const composers = {
@@ -2189,3 +2190,19 @@ export const $AgentsTablesId: Identity.IdentityComposer<"@beep/agents-tables"> =
  * @category configuration
  */
 export const $EpistemicConfigId: Identity.IdentityComposer<"@beep/epistemic-config"> = composers.$EpistemicConfigId;
+
+/**
+ * Identity composer for `@beep/openclaw`.
+ *
+ * @example
+ * ```typescript
+ * import { $OpenclawId } from "@beep/identity"
+ *
+ * const id = $OpenclawId.make("Openclaw")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $OpenclawId: Identity.IdentityComposer<"@beep/openclaw"> = composers.$OpenclawId;

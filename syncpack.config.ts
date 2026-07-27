@@ -99,6 +99,7 @@ const config = {
     "packages/drivers/tailscale/package.json",
     "packages/drivers/pretext/package.json",
     "packages/drivers/graph-3d/package.json",
+    "packages/drivers/openclaw/package.json",
   ],
   customTypes: {
     catalog: {
