@@ -111,6 +111,24 @@
         "typescript": "catalog:",
       },
     },
+    "apps/practice-kg-mcp": {
+      "name": "@beep/practice-kg-mcp",
+      "version": "0.0.0",
+      "bin": {
+        "practice-kg-build": "./src/build.ts",
+      },
+      "dependencies": {
+        "@beep/law-practice-server": "workspace:^",
+        "@beep/pglite": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@effect/platform-bun": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+      },
+    },
     "apps/professional-desktop": {
       "name": "@beep/professional-desktop",
       "version": "0.0.3",
@@ -1328,6 +1346,7 @@
       "name": "@beep/epistemic-server",
       "version": "0.0.2",
       "dependencies": {
+        "@beep/api-transport": "workspace:^",
         "@beep/epistemic-config": "workspace:^",
         "@beep/epistemic-domain": "workspace:^",
         "@beep/epistemic-tables": "workspace:^",
@@ -1951,18 +1970,40 @@
       "name": "@beep/law-practice-server",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/duckdb": "workspace:^",
         "@beep/epistemic-server": "workspace:^",
         "@beep/epistemic-use-cases": "workspace:^",
         "@beep/file-processing": "workspace:^",
+        "@beep/identity": "workspace:^",
         "@beep/langextract": "workspace:^",
         "@beep/law-practice-domain": "workspace:^",
+        "@beep/law-practice-tables": "workspace:^",
         "@beep/law-practice-use-cases": "workspace:^",
+        "@beep/libpff": "workspace:^",
+        "@beep/schema": "workspace:^",
         "@beep/tika": "workspace:^",
+        "@beep/utils": "workspace:^",
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/pglite": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
+        "@effect/platform-node": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "drizzle-orm": "catalog:",
+      },
+    },
+    "packages/law-practice/tables": {
+      "name": "@beep/law-practice-tables",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/law-practice-domain": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "drizzle-orm": "catalog:",
+      },
+      "devDependencies": {
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
       },
@@ -2042,6 +2083,7 @@
       "name": "@beep/ontology-server",
       "version": "0.0.2",
       "dependencies": {
+        "@beep/api-transport": "workspace:^",
         "@beep/file-processing": "workspace:^",
         "@beep/mcp-kit": "workspace:^",
         "@beep/n3": "workspace:^",
@@ -2989,6 +3031,8 @@
 
     "@beep/law-practice-server": ["@beep/law-practice-server@workspace:packages/law-practice/server"],
 
+    "@beep/law-practice-tables": ["@beep/law-practice-tables@workspace:packages/law-practice/tables"],
+
     "@beep/law-practice-use-cases": ["@beep/law-practice-use-cases@workspace:packages/law-practice/use-cases"],
 
     "@beep/lexical-schema": ["@beep/lexical-schema@workspace:packages/foundation/modeling/lexical"],
@@ -3046,6 +3090,8 @@
     "@beep/phoenix": ["@beep/phoenix@workspace:packages/drivers/phoenix"],
 
     "@beep/postgres": ["@beep/postgres@workspace:packages/drivers/postgres"],
+
+    "@beep/practice-kg-mcp": ["@beep/practice-kg-mcp@workspace:apps/practice-kg-mcp"],
 
     "@beep/pretext": ["@beep/pretext@workspace:packages/drivers/pretext"],
 

@@ -18,6 +18,7 @@
     "packages/epistemic/domain/dtslint/**/*.tst.*",
     "packages/epistemic/tables/dtslint/**/*.tst.*",
     "packages/law-practice/domain/dtslint/**/*.tst.*",
+    "packages/law-practice/tables/dtslint/**/*.tst.*",
     "packages/documents/domain/dtslint/**/*.tst.*",
     "packages/documents/use-cases/dtslint/**/*.tst.*",
     "packages/documents/server/dtslint/**/*.tst.*",

@@ -308,6 +308,20 @@ export * from "./HistorySignal/index.ts";
  */
 export * from "./JournalCitation/index.ts";
 /**
+ * Practice knowledge-graph edge-predicate exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./KgEdgePredicate/index.ts";
+/**
+ * Practice knowledge-graph node-kind exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./KgNodeKind/index.ts";
+/**
  * WIPO ST.16 kind code value-object exports.
  *
  * @category value-objects
