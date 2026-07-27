@@ -12,8 +12,10 @@
  * @since 0.0.0
  */
 import { $SchemaId } from "@beep/identity/packages";
+import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { LiteralKit } from "../LiteralKit/index.ts";
 
 /**
@@ -437,7 +439,7 @@ const safeRegexSources = [
   "^x-",
   "a|b",
   "^\\d+(\\.\\d+)?$",
-] as const;
+];
 
 /**
  * A string that compiles as an ECMA-262 regular expression — the value space
@@ -527,18 +529,30 @@ export const AnchorName = S.String.check(AnchorNameCheck).pipe(
  */
 export type AnchorName = typeof AnchorName.Type;
 
-const UriReferenceCheck = S.isPattern(/^\S*$/, {
-  identifier: $I`UriReferenceCheck`,
-  title: "URI-Reference",
-  description: "Pragmatic URI-Reference syntax gate: rejects whitespace, which no RFC 3986 URI-Reference may contain.",
-  message: "must be a URI-Reference (whitespace is not allowed)",
-});
+const uriReferenceBase = "https://json-schema.invalid/";
+const uriReferenceAsciiPattern = /^[\x21-\x7e]*$/;
+const uriReferenceForbiddenPattern = /[<>"{}|\\^`]/;
+const malformedPercentEncodingPattern = /%(?![0-9A-Fa-f]{2})/;
+
+const UriReferenceCheck = S.makeFilter<string>(
+  (value) =>
+    uriReferenceAsciiPattern.test(value) &&
+    !uriReferenceForbiddenPattern.test(value) &&
+    !malformedPercentEncodingPattern.test(value) &&
+    URL.canParse(value, uriReferenceBase),
+  {
+    identifier: $I`UriReferenceCheck`,
+    title: "URI-Reference",
+    description: "RFC 3986 URI-Reference syntax with valid ASCII characters, percent encoding, and structure.",
+    message: "must be a valid RFC 3986 URI-Reference",
+  }
+);
 
 /**
- * A pragmatic URI-Reference string for `$ref`, `$dynamicRef`, and other
- * reference-valued keywords. Full RFC 3986 grammar validation is deliberately
- * out of scope; the check rejects whitespace, which no URI-Reference may
- * contain. `$id` additionally uses {@link IdUriReferenceString}.
+ * An RFC 3986 URI-Reference string for `$ref`, `$dynamicRef`, and other
+ * reference-valued keywords. Relative references are valid; malformed
+ * structure, invalid characters, and invalid percent encoding are rejected.
+ * `$id` additionally uses {@link IdUriReferenceString}.
  *
  * @example
  * ```ts
@@ -554,7 +568,7 @@ const UriReferenceCheck = S.isPattern(/^\S*$/, {
  */
 export const UriReferenceString = S.String.check(UriReferenceCheck).pipe(
   $I.annoteSchema("UriReferenceString", {
-    description: "URI-Reference (pragmatic validation: no whitespace).",
+    description: "RFC 3986 URI-Reference.",
     toArbitrary: () => (fc) =>
       fc.constantFrom(
         "#/$defs/User",
@@ -583,6 +597,72 @@ export const UriReferenceString = S.String.check(UriReferenceCheck).pipe(
  * @since 0.0.0
  */
 export type UriReferenceString = typeof UriReferenceString.Type;
+
+const decodeAbsoluteUri = S.decodeUnknownOption(S.URLFromString);
+const unreservedUriCharacterPattern = /^[A-Za-z0-9\-._~]$/;
+
+const normalizePercentEncoding = (value: string): string =>
+  value.replace(/%[0-9A-Fa-f]{2}/g, (token) => {
+    const decoded = String.fromCharCode(Number.parseInt(Str.slice(1)(token), 16));
+    return unreservedUriCharacterPattern.test(decoded) ? decoded : Str.toUpperCase(token);
+  });
+
+const AbsoluteUriCheck = S.makeFilter<string>(
+  (value) =>
+    O.match(decodeAbsoluteUri(value), {
+      onNone: () => false,
+      onSome: (uri) => normalizePercentEncoding(uri.href) === value,
+    }),
+  {
+    identifier: $I`AbsoluteUriCheck`,
+    title: "Normalized absolute URI",
+    description: "Normalized absolute RFC 3986 URI with a scheme.",
+    message: "must be a valid normalized absolute URI",
+  }
+);
+
+/**
+ * A normalized absolute URI string for dialect and vocabulary identifiers.
+ *
+ * @example
+ * ```ts
+ * import { AbsoluteUriString } from "@beep/schema/JSONSchema"
+ * import * as S from "effect/Schema"
+ *
+ * const uri = S.decodeUnknownResult(AbsoluteUriString)("https://json-schema.org/draft/2020-12/schema")
+ * console.log(uri._tag)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AbsoluteUriString = UriReferenceString.check(AbsoluteUriCheck).pipe(
+  $I.annoteSchema("AbsoluteUriString", {
+    description: "Normalized absolute RFC 3986 URI.",
+    toArbitrary: () => (fc) =>
+      fc.constantFrom(
+        "https://json-schema.org/draft/2020-12/schema",
+        "https://json-schema.org/draft/2020-12/vocab/core",
+        "urn:example:vocabulary"
+      ),
+  })
+);
+
+/**
+ * Type for {@link AbsoluteUriString}.
+ *
+ * @example
+ * ```ts
+ * import type { AbsoluteUriString } from "@beep/schema/JSONSchema"
+ *
+ * const uri: AbsoluteUriString = "https://json-schema.org/draft/2020-12/schema"
+ * console.log(uri)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AbsoluteUriString = typeof AbsoluteUriString.Type;
 
 const IdUriReferenceCheck = S.isPattern(/^[^#]*#?$/, {
   identifier: $I`IdUriReferenceCheck`,
@@ -702,7 +782,7 @@ export type ExtensionKey = typeof ExtensionKey.Type;
 export const JsonValue = S.Json.pipe(
   $I.annoteSchema("JsonValue", {
     description: "Any JSON value (depth-bounded generation).",
-    toArbitrary: () => (fc) => fc.jsonValue({ maxDepth: 2 }).map((value) => value as (typeof S.Json)["Type"]),
+    toArbitrary: () => (fc) => fc.jsonValue({ maxDepth: 2 }).map(S.decodeUnknownOption(S.Json)).map(O.getOrNull),
   })
 );
 

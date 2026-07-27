@@ -22,6 +22,7 @@ import * as Str from "effect/String";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import {
   $I,
+  AbsoluteUriString,
   AnchorName,
   ExtensionsBag,
   IdUriReferenceString,
@@ -154,6 +155,36 @@ const SubSchemaRecord = S.Record(S.String, SubSchema);
 
 const SubSchemaList = S.NonEmptyArray(SubSchema);
 
+const isAbsoluteUriString = S.is(AbsoluteUriString);
+
+const VocabularyKeysCheck = S.makeFilter<{ readonly [key: string]: boolean }>(
+  (record) => R.keys(record).every(isAbsoluteUriString),
+  {
+    identifier: $I`VocabularyKeysCheck`,
+    title: "Vocabulary URI keys",
+    description: "Draft-2020-12 `$vocabulary` property names must be absolute URIs.",
+    message: "vocabulary keys must be valid absolute URIs",
+  }
+);
+
+const Vocabulary = S.Record(S.String, S.Boolean)
+  .check(VocabularyKeysCheck)
+  .pipe(
+    $I.annoteSchema("Vocabulary", {
+      description: "Draft-2020-12 vocabulary declarations keyed by absolute URI.",
+      toArbitrary: () => (fc) =>
+        fc.dictionary(
+          fc.constantFrom(
+            "https://json-schema.org/draft/2020-12/vocab/core",
+            "https://json-schema.org/draft/2020-12/vocab/applicator",
+            "urn:example:vocabulary"
+          ),
+          fc.boolean(),
+          { maxKeys: 3 }
+        ),
+    })
+  );
+
 /**
  * A JSON Schema draft-2020-12 node: one class, every keyword an
  * Option-wrapped optional field. Keyword co-occurrence is unrestricted (the
@@ -187,11 +218,8 @@ export class Node extends S.Class<Node>($I`Node`)(
       UriReferenceString,
       "Reference to another schema by URI-Reference; draft-2020-12 permits sibling keywords."
     ),
-    $schema: optionalKeyword(S.String, "Dialect meta-schema URI this schema conforms to."),
-    $vocabulary: optionalKeyword(
-      S.Record(S.String, S.Boolean),
-      "Vocabulary availability declarations (meta-schemas only)."
-    ),
+    $schema: optionalKeyword(AbsoluteUriString, "Dialect meta-schema URI this schema conforms to."),
+    $vocabulary: optionalKeyword(Vocabulary, "Vocabulary availability declarations (meta-schemas only)."),
     additionalProperties: optionalKeyword(
       SubSchema,
       "Schema for properties not matched by properties or patternProperties."
@@ -371,7 +399,12 @@ export declare namespace Node {
   }
 }
 
-const partitionWire = (record: { readonly [k: string]: unknown }): { readonly [k: string]: unknown } => {
+interface PartitionedWire {
+  readonly extensions?: { readonly [k: string]: unknown };
+  readonly [k: string]: unknown;
+}
+
+const partitionWire = (record: { readonly [k: string]: unknown }): PartitionedWire => {
   // crispen: kept native and imperative — this is a trust boundary. Building
   // with plain objects (as effect's Record helpers do) hits the
   // Object.prototype "__proto__" setter, silently dropping that wire key and
@@ -391,9 +424,9 @@ const partitionWire = (record: { readonly [k: string]: unknown }): { readonly [k
   return { ...known, extensions: { ...extensions } };
 };
 
-const mergeWire = ({ extensions, ...known }: { readonly [k: string]: unknown }): { readonly [k: string]: unknown } => ({
+const mergeWire = ({ extensions = {}, ...known }: PartitionedWire): { readonly [k: string]: unknown } => ({
   ...known,
-  ...(extensions as { readonly [k: string]: unknown }),
+  ...extensions,
 });
 
 /**
@@ -528,11 +561,15 @@ export declare namespace Document {
   }
 }
 
-const localDefsRefPrefix = "#/$defs/";
+const localDefsPointerPrefix = "/$defs/";
 
 const decodePointerSegment = F.flow(Str.replace(/~1/g, "/"), Str.replace(/~0/g, "~"));
 
 const isSingleSegment = (segment: string): boolean => Str.isNonEmpty(segment) && !Str.includes("/")(segment);
+
+const hasValidPointerEscapes = (segment: string): boolean => !/~(?![01])/.test(segment);
+
+const decodeUriFragment = O.liftThrowable(decodeURIComponent);
 
 /**
  * Resolves a local single-hop `#/$defs/<key>` reference against a definitions
@@ -560,9 +597,13 @@ export const resolveLocalRef: {
   <Value>(ref: string, definitions: { readonly [key: string]: Value }): O.Option<Value> =>
     F.pipe(
       O.some(ref),
-      O.filter(Str.startsWith(localDefsRefPrefix)),
-      O.map(Str.slice(localDefsRefPrefix.length)),
+      O.filter(Str.startsWith("#")),
+      O.map(Str.slice(1)),
+      O.flatMap(decodeUriFragment),
+      O.filter(Str.startsWith(localDefsPointerPrefix)),
+      O.map(Str.slice(localDefsPointerPrefix.length)),
       O.filter(isSingleSegment),
+      O.filter(hasValidPointerEscapes),
       O.map(decodePointerSegment),
       O.flatMap((key) => R.get(definitions, key))
     )

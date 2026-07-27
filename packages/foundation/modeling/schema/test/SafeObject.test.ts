@@ -1,7 +1,7 @@
 import { fcRuns } from "@beep/fc-runs";
 import { SafeObject, SafeObjectFromObjectKeyword } from "@beep/schema/SafeObject";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Exit } from "effect";
+import { Cause, Effect, Exit } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
@@ -124,6 +124,32 @@ describe("SafeObjectFromObjectKeyword", () => {
       expect(yield* decode(encoded)).toEqual(value);
     })
   );
+
+  it("returns typed schema failures when property enumeration throws", () => {
+    const throwingGetter = Object.defineProperty({}, "value", {
+      enumerable: true,
+      get: () => {
+        throw new Error("getter failed");
+      },
+    });
+    const throwingProxy = new Proxy(
+      {},
+      {
+        ownKeys: () => {
+          throw new Error("ownKeys failed");
+        },
+      }
+    );
+
+    for (const input of [throwingGetter, throwingProxy]) {
+      expect(() => decode(input)).not.toThrow();
+      const exit = Effect.runSync(Effect.exit(decode(input)));
+      expect(Exit.isFailure(exit)).toBe(true);
+      if (Exit.isFailure(exit)) {
+        expect(Cause.hasFails(exit.cause)).toBe(true);
+      }
+    }
+  });
 
   it("derives arbitrary safe objects that round-trip", () => {
     fc.assert(

@@ -40,6 +40,7 @@ export {
  * @since 0.0.0
  */
 export {
+  AbsoluteUriString,
   AnchorName,
   CanonicalKeyword,
   ExtensionKey,

@@ -1,4 +1,5 @@
 import {
+  AbsoluteUriString,
   AnchorName,
   CanonicalKeyword,
   Document,
@@ -40,6 +41,9 @@ const decodeSubSchemaResult = S.decodeUnknownResult(SubSchema);
 const encodeSubSchemaResult = S.encodeResult(SubSchema);
 const decodeJsonResult = S.decodeUnknownResult(S.UnknownFromJsonString);
 const encodeJsonResult = S.encodeUnknownResult(S.UnknownFromJsonString);
+const isAbsoluteUriString = S.is(AbsoluteUriString);
+const isIdUriReferenceString = S.is(IdUriReferenceString);
+const isUriReferenceString = S.is(UriReferenceString);
 
 const NodeArbitrary = S.toArbitrary(Node);
 const SubSchemaArbitrary = S.toArbitrary(SubSchema);
@@ -149,10 +153,31 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
         expect(yield* rejects({ pattern: "[unclosed" })).toBe(true);
         expect(yield* rejects({ patternProperties: { "[bad": true } })).toBe(true);
         expect(yield* rejects({ $ref: "has whitespace" })).toBe(true);
+        expect(yield* rejects({ $ref: "http://[bad" })).toBe(true);
+        expect(yield* rejects({ $dynamicRef: "%" })).toBe(true);
         expect(yield* rejects({ $id: "#fragment" })).toBe(true);
         expect(yield* rejects({ $id: "https://example.com/schema#fragment" })).toBe(true);
+        expect(yield* rejects({ $id: "http://[bad" })).toBe(true);
         expect(yield* rejects({ $id: "#" })).toBe(false);
+        expect(yield* rejects({ $id: "schema.json" })).toBe(false);
         expect(yield* rejects({ $id: "https://example.com/schema" })).toBe(false);
+        expect(yield* rejects({ $ref: "other.json#/$defs/T" })).toBe(false);
+        expect(yield* rejects({ $schema: "meta/schema" })).toBe(true);
+        expect(yield* rejects({ $schema: "http://[bad" })).toBe(true);
+        expect(yield* rejects({ $schema: "HTTPS://JSON-SCHEMA.ORG/draft/2020-12/schema" })).toBe(true);
+        expect(yield* rejects({ $schema: "https://json-schema.org/draft/2020-12/%73chema" })).toBe(true);
+        expect(yield* rejects({ $schema: "https://json-schema.org/draft/2020-12/schema" })).toBe(false);
+        expect(yield* rejects({ $vocabulary: { relative: true } })).toBe(true);
+        expect(
+          yield* rejects({
+            $vocabulary: { "https://json-schema.org/draft/2020-12/vocab/%63ore": true },
+          })
+        ).toBe(true);
+        expect(
+          yield* rejects({
+            $vocabulary: { "https://json-schema.org/draft/2020-12/vocab/core": true },
+          })
+        ).toBe(false);
         expect(yield* rejects({ required: ["a", "a"] })).toBe(true);
         expect(yield* rejects({ dependentRequired: { a: ["b", "b"] } })).toBe(true);
         expect(yield* rejects({ type: [] })).toBe(true);
@@ -321,8 +346,10 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
       );
 
     const referenceGrammarValid = (doc: EncodedDoc): boolean =>
-      ["$ref", "$dynamicRef"].every((key) => doc[key] === undefined || !/\s/.test(doc[key] as string)) &&
-      (doc.$id === undefined || (!/\s/.test(doc.$id as string) && /^[^#]*#?$/.test(doc.$id as string)));
+      ["$ref", "$dynamicRef"].every((key) => doc[key] === undefined || isUriReferenceString(doc[key])) &&
+      (doc.$id === undefined || isIdUriReferenceString(doc.$id)) &&
+      (doc.$schema === undefined || isAbsoluteUriString(doc.$schema)) &&
+      (doc.$vocabulary === undefined || Object.keys(doc.$vocabulary as EncodedDoc).every(isAbsoluteUriString));
 
     const isAbsentOrSubschemaRecord = (input: unknown): boolean =>
       input === undefined || Object.values(input as EncodedDoc).every((entry) => isValidEncodedSchema(entry));
@@ -374,6 +401,7 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
 
     it("property: leaf schemas generate values that decode to themselves", () => {
       for (const leaf of [
+        AbsoluteUriString,
         AnchorName,
         ExtensionKey,
         ExtensionsBag,
@@ -453,14 +481,28 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
 
   describe("resolvers", () => {
     it("resolveLocalRef handles hits, escapes, and misses", () => {
-      const defs = { User: { kind: "user" }, "a/b": { kind: "slash" }, "til~de": { kind: "tilde" } };
+      const defs = {
+        User: { kind: "user" },
+        "a b": { kind: "space" },
+        "a/b": { kind: "slash" },
+        café: { kind: "utf8" },
+        "til~de": { kind: "tilde" },
+        "100%": { kind: "percent" },
+      };
       expect(O.getOrThrow(resolveLocalRef("#/$defs/User", defs))).toEqual({ kind: "user" });
+      expect(O.getOrThrow(resolveLocalRef("#/$defs/a%20b", defs))).toEqual({ kind: "space" });
+      expect(O.getOrThrow(resolveLocalRef("#/%24defs/a%20b", defs))).toEqual({ kind: "space" });
       expect(O.getOrThrow(resolveLocalRef("#/$defs/a~1b", defs))).toEqual({ kind: "slash" });
+      expect(O.getOrThrow(resolveLocalRef("#/$defs/caf%C3%A9", defs))).toEqual({ kind: "utf8" });
       expect(O.getOrThrow(resolveLocalRef("#/$defs/til~0de", defs))).toEqual({ kind: "tilde" });
+      expect(O.getOrThrow(resolveLocalRef("#/$defs/100%25", defs))).toEqual({ kind: "percent" });
       expect(O.isNone(resolveLocalRef("#/$defs/Missing", defs))).toBe(true);
       expect(O.isNone(resolveLocalRef("#/definitions/User", defs))).toBe(true);
       expect(O.isNone(resolveLocalRef("#/$defs/a/b", defs))).toBe(true);
+      expect(O.isNone(resolveLocalRef("#/$defs/a%2Fb", defs))).toBe(true);
       expect(O.isNone(resolveLocalRef("#/$defs/", defs))).toBe(true);
+      expect(O.isNone(resolveLocalRef("#/$defs/bad~2escape", defs))).toBe(true);
+      expect(O.isNone(resolveLocalRef("#/$defs/%", defs))).toBe(true);
       expect(O.isNone(resolveLocalRef("https://example.com/schema.json", defs))).toBe(true);
     });
 

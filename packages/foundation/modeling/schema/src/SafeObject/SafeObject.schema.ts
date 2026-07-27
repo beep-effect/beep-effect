@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 import { $SchemaId } from "@beep/identity/packages";
-import { SchemaTransformation } from "effect";
-import { identity } from "effect/Function";
+import { Effect, SchemaIssue, SchemaTransformation } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { UnknownRecord } from "../Record/index.ts";
 
@@ -89,9 +89,16 @@ export type SafeObject = typeof SafeObject.Type;
 export const SafeObjectFromObjectKeyword = S.ObjectKeyword.pipe(
   S.decodeTo(
     SafeObject,
-    SchemaTransformation.transform({
-      decode: (input) => ({ ...input }),
-      encode: identity,
+    SchemaTransformation.transformOrFail({
+      decode: (input) =>
+        Effect.try({
+          try: () => ({ ...input }),
+          catch: () =>
+            new SchemaIssue.InvalidValue(O.none(), {
+              message: "Could not read enumerable own properties from object",
+            }),
+        }),
+      encode: Effect.succeed,
     })
   ),
   $I.annoteSchema("SafeObjectFromObjectKeyword", {
