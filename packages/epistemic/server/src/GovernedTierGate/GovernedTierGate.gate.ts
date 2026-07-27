@@ -77,7 +77,7 @@ import * as S from "effect/Schema";
 import * as AiTool from "effect/unstable/ai/Tool";
 import type { DecisionRecordHash, ExecutionDecisionRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
 import type { FrozenGrantSet } from "@beep/epistemic-domain/values/GrantSet";
-import type { TierGateSettlement, ToolCallRequest } from "@beep/mcp-kit";
+import type { McpCallerIdentity, TierGateSettlement, ToolCallRequest } from "@beep/mcp-kit";
 
 const $I = $EpistemicServerId.create("GovernedTierGate/GovernedTierGate.gate");
 
@@ -179,6 +179,24 @@ const grantPrincipal = SystemPrincipal.make({ component: "Runtime", kind: "Syste
 
 const destructiveOf = (tool: AiTool.Any): boolean =>
   Context.getOrElse(tool.annotations, AiTool.Destructive, () => true);
+
+// A run is the MCP session. `clientId` cannot key it: the HTTP protocol mints
+// a fresh one per request, so keying on it would open a new run per dispatch
+// and reduce every chain to a single genesis row. `sessionId` is the
+// transport's session identifier; transports that issue none (stdio) fall back
+// to the client id, where the connection is the session.
+const runIdOf = (caller: McpCallerIdentity): string =>
+  O.match(caller.sessionId, {
+    onNone: () => `client:${caller.clientId}`,
+    onSome: (sessionId) => `session:${sessionId}`,
+  });
+
+// `dispatchWithTierGate` calls `evaluate` and then, via `Effect.onExit`,
+// `recordOutcome` on the same fiber, so the fiber identifies one dispatch
+// exactly. Correlation keyed by anything coarser (the operation, say) binds
+// the wrong settlement to the wrong decision as soon as two dispatches of one
+// operation overlap and finish out of order.
+const currentDispatchId: Effect.Effect<number> = Effect.withFiber((fiber) => Effect.succeed(fiber.id));
 
 /**
  * Build the governed tier gate service.
@@ -324,16 +342,8 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
       // is still fail-closed and still audited.
       return yield* refuse(request, DenialReason.Enum["no-grant-in-scope"], now);
     }
-    // The run is the MCP session. `clientId` cannot key it: the HTTP protocol
-    // mints a fresh one per request, so keying on it would open a new run per
-    // dispatch and reduce every chain to a single genesis row. `sessionId` is
-    // the transport's session identifier; transports that issue none (stdio)
-    // fall back to the client id, where the connection is the session.
-    const runId = O.match(caller.value.sessionId, {
-      onNone: () => `client:${caller.value.clientId}`,
-      onSome: (sessionId) => `session:${sessionId}`,
-    });
-    const dispatchId = yield* Effect.withFiber((fiber) => Effect.succeed(fiber.id));
+    const runId = runIdOf(caller.value);
+    const dispatchId = yield* currentDispatchId;
     return yield* lock.withPermit(
       Effect.gen(function* () {
         const state = yield* resolveRun(runId, now);
@@ -384,9 +394,9 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
           )
         );
         if (!appended) {
-          // No record, no action: an unwritable decision refuses the dispatch
-          // regardless of what the evaluator concluded, and the run state does
-          // not advance, so the next dispatch reuses this sequence slot.
+          // No record, no action: a decision that cannot be written refuses the
+          // dispatch regardless of what the evaluator concluded, and the run
+          // state does not advance, so the next dispatch reuses this slot.
           return yield* refuse(request, DenialReason.Enum["ledger-unavailable"], now);
         }
         return yield* ExecutionVerdict.match(verdict, {
@@ -457,31 +467,27 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
         Effect.annotateLogs({ subsystem: "epistemic_governed_tier_gate", tool: request.tool.name })
       );
     }
-    const runId = O.match(caller.value.sessionId, {
-      onNone: () => `client:${caller.value.clientId}`,
-      onSome: (sessionId) => `session:${sessionId}`,
-    });
-    // `dispatchWithTierGate` calls `evaluate` and then, via `Effect.onExit`,
-    // `recordOutcome` on the same fiber, so the fiber identifies the dispatch
-    // exactly. A queue keyed by anything coarser (the operation, say) binds
-    // the wrong settlement to the wrong decision as soon as two dispatches of
-    // one operation overlap and finish out of order.
-    const dispatchId = yield* Effect.withFiber((fiber) => Effect.succeed(fiber.id));
-    const droppedSettlement = (detail: string) =>
-      Effect.logDebug(`governed tier gate dropped a settlement with no ${detail}`).pipe(
-        Effect.annotateLogs({ subsystem: "epistemic_governed_tier_gate", tool: request.tool.name })
-      );
+    const runId = runIdOf(caller.value);
+    const dispatchId = yield* currentDispatchId;
     yield* lock.withPermit(
       Effect.gen(function* () {
         const map = yield* Ref.get(runs);
-        yield* O.match(HashMap.get(map, runId), {
-          onNone: () => droppedSettlement("run"),
-          onSome: (state) =>
-            O.match(HashMap.get(state.pendingOutcomes, dispatchId), {
-              onNone: () => droppedSettlement("pending decision"),
-              onSome: (decisionHash) =>
-                settlePending({ decisionHash, dispatchId, now, request, runId, runKey: state.runKey, settlement }),
-            }),
+        // Both misses mean the same thing — nothing to settle against. No run
+        // for this session, or no decision pending for this dispatch (already
+        // settled, or the state was lost).
+        const pending = O.flatMap(HashMap.get(map, runId), (state) =>
+          O.map(HashMap.get(state.pendingOutcomes, dispatchId), (decisionHash) => ({
+            decisionHash,
+            runKey: state.runKey,
+          }))
+        );
+        yield* O.match(pending, {
+          onNone: () =>
+            Effect.logDebug("governed tier gate dropped a settlement with no pending decision").pipe(
+              Effect.annotateLogs({ subsystem: "epistemic_governed_tier_gate", tool: request.tool.name })
+            ),
+          onSome: ({ decisionHash, runKey }) =>
+            settlePending({ decisionHash, dispatchId, now, request, runId, runKey, settlement }),
         });
       })
     );
