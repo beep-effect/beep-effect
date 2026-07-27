@@ -27,14 +27,6 @@
     "stripInternal": false,
     "noErrorTruncation": true,
     "types": [],
-    "jsx": "react-jsx",
-    "paths": {
-      "@beep/types": [
-        "../../../../packages/foundation/primitive/types/src/index.ts"
-      ],
-      "@beep/types/*": [
-        "../../../../packages/foundation/primitive/types/src/*.ts"
-      ]
-    }
+    "jsx": "react-jsx"
   }
 }

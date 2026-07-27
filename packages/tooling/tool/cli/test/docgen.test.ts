@@ -532,7 +532,7 @@ export const ProofFixture = 1;
       )
     ));
 
-  it("builds repo-standard init config with own and dependency path mappings", () =>
+  it("builds repo-standard init config without example path mappings", () =>
     Effect.runPromise(
       withTempRepo(
         Effect.gen(function* () {
@@ -585,14 +585,14 @@ export const ProofFixture = 1;
           expect(target).toBeDefined();
 
           const config = yield* createDocgenConfigDocument(target!, tmpDir);
-          const paths = config.examplesCompilerOptions;
+          const compilerOptions = config.examplesCompilerOptions;
 
           expect(config.$schema).toBe("../../../../packages/tooling/tool/docgen/schema.json");
           expect(config.exclude).toEqual(["src/internal/**/*.ts"]);
           expect(config.srcLink).toBe(
             "https://github.com/beep-effect/beep-effect/tree/main/packages/foundation/modeling/identity/src/"
           );
-          expect(paths).toEqual({
+          expect(compilerOptions).toEqual({
             noEmit: true,
             strict: true,
             skipLibCheck: true,
@@ -618,18 +618,12 @@ export const ProofFixture = 1;
             noErrorTruncation: true,
             types: [],
             jsx: "react-jsx",
-            paths: {
-              "@beep/identity": ["../../../../packages/foundation/modeling/identity/src/index.ts"],
-              "@beep/identity/*": ["../../../../packages/foundation/modeling/identity/src/*.ts"],
-              "@beep/schema": ["../../../../packages/foundation/modeling/schema/src/index.ts"],
-              "@beep/schema/*": ["../../../../packages/foundation/modeling/schema/src/*.ts"],
-            },
           });
         })
       )
     ));
 
-  it("builds docgen path mappings from non-standard source exports", () =>
+  it("builds paths-free init config regardless of source export shape", () =>
     Effect.runPromise(
       withTempRepo(
         Effect.gen(function* () {
@@ -683,14 +677,11 @@ export const ProofFixture = 1;
 
           const config = yield* createDocgenConfigDocument(target!, tmpDir);
 
+          expect(config.$schema).toBe("../../../packages/tooling/tool/docgen/schema.json");
           expect(config.examplesCompilerOptions).toMatchObject({
-            paths: {
-              "@beep/example-server": ["../../../packages/example/server/src/internal/index.ts"],
-              "@beep/example-server/*": ["../../../packages/example/server/src/internal/*.ts"],
-              "@beep/schema": ["../../../packages/foundation/modeling/schema/src/index.ts"],
-              "@beep/schema/*": ["../../../packages/foundation/modeling/schema/src/*.ts"],
-            },
+            moduleResolution: "bundler",
           });
+          expect(config.examplesCompilerOptions).not.toHaveProperty("paths");
         })
       )
     ));
@@ -4211,19 +4202,12 @@ export const ValidExport = packageDocAnchor;
 
           const docgenText = yield* fs.readFileString(docgenPath);
           const docgenConfig = decodeUnknownJson(docgenText) as {
-            readonly examplesCompilerOptions?: {
-              readonly paths?: Record<string, ReadonlyArray<string>>;
-            };
+            readonly examplesCompilerOptions?: Record<string, unknown>;
           };
 
           expect(docgenText).toContain('"exclude": ["src/internal/**/*.ts"],');
           expect(docgenText).toContain('"lib": ["ESNext", "DOM", "DOM.Iterable"],');
-          expect(docgenConfig.examplesCompilerOptions?.paths?.["@beep/schema"]).toEqual([
-            "../../../../packages/foundation/modeling/schema/src/index.ts",
-          ]);
-          expect(docgenConfig.examplesCompilerOptions?.paths?.["@beep/schema/*"]).toEqual([
-            "../../../../packages/foundation/modeling/schema/src/*.ts",
-          ]);
+          expect(docgenConfig.examplesCompilerOptions).not.toHaveProperty("paths");
           expect(process.exitCode ?? 0).toBe(0);
         })
       )

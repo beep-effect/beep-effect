@@ -27,10 +27,6 @@
     "stripInternal": false,
     "noErrorTruncation": true,
     "types": [],
-    "jsx": "react-jsx",
-    "paths": {
-      "@beep/dol": ["../../../packages/drivers/dol/src/index.ts"],
-      "@beep/dol/*": ["../../../packages/drivers/dol/src/*.ts"]
-    }
+    "jsx": "react-jsx"
   }
 }

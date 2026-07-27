@@ -27,20 +27,6 @@
     "stripInternal": false,
     "noErrorTruncation": true,
     "types": [],
-    "jsx": "react-jsx",
-    "paths": {
-      "@beep/data": [
-        "../../../../packages/foundation/primitive/data/src/index.ts"
-      ],
-      "@beep/data/*": [
-        "../../../../packages/foundation/primitive/data/src/*.ts"
-      ],
-      "@beep/utils": [
-        "../../../../packages/foundation/modeling/utils/src/index.ts"
-      ],
-      "@beep/utils/*": [
-        "../../../../packages/foundation/modeling/utils/src/*.ts"
-      ]
-    }
+    "jsx": "react-jsx"
   }
 }
