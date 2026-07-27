@@ -13,9 +13,8 @@
 
 import { $OpenclawId } from "@beep/identity";
 import { collectProcessOutput } from "@beep/utils/Stream";
-import { Context, Duration, Effect, Layer, pipe } from "effect";
+import { Context, Duration, Effect, Layer, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
-import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
