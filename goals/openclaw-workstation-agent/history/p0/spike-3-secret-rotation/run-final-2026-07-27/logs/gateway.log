@@ -1,0 +1,49 @@
+SERVICE-ENV-OP-WHOAMI-PASS
+2026-07-27T03:08:52.507-05:00 [gateway] loading configuration…
+2026-07-27T03:08:52.526-05:00 [gateway] resolving authentication…
+2026-07-27T03:08:52.533-05:00 [gateway] starting...
+2026-07-27T03:08:52.688-05:00 [gateway] auto-enabled plugins for this runtime without writing config:
+- ollama/gemma3:4b model configured, enabled automatically.
+2026-07-27T03:08:53.914-05:00 [secrets] [SECRETS_GATEWAY_AUTH_SURFACE] gateway.auth.token is active. gateway.auth.mode is "token".
+2026-07-27T03:08:53.992-05:00 [gateway] starting HTTP server...
+2026-07-27T03:08:54.026-05:00 [health-monitor] started (interval: 300s, startup-grace: 60s, channel-connect-grace: 120s)
+2026-07-27T03:08:54.300-05:00 [gateway] agent model: ollama/gemma3:4b (thinking=medium, fast=off)
+2026-07-27T03:08:54.300-05:00 [gateway] http server listening (9 plugins: browser, canvas, device-pair, file-transfer, memory-core, ollama, phone-control, talk-voice, telegram; 1.7s)
+2026-07-27T03:08:54.301-05:00 [gateway] log file: /home/elpresidank/.cache/beep-p0-spike3.WkQp2E/spike3/state/log/openclaw.log
+2026-07-27T03:08:54.320-05:00 [gateway] starting channels and sidecars...
+2026-07-27T03:08:54.362-05:00 [gateway] ready
+2026-07-27T03:08:54.369-05:00 [heartbeat] started
+2026-07-27T03:08:54.386-05:00 [reload] config watcher error; re-creating watcher (attempt 1/3 in 500ms): Error: ENOSPC: System limit for number of file watchers reached, watch '/etc/beep/openclaw-spike/current/openclaw.json'
+2026-07-27T03:08:54.396-05:00 [gateway] failed to promote config last-known-good backup: Error: EACCES: permission denied, open '/etc/beep/openclaw-spike/current/openclaw.json.last-good'
+2026-07-27T03:08:54.681-05:00 [telegram] [default] starting provider (@beep_ip_bot)
+2026-07-27T03:08:54.824-05:00 [telegram] menu text exceeded the conservative 5700-character payload budget; shortening descriptions to keep 70 commands visible.
+2026-07-27T03:08:54.887-05:00 [reload] config watcher error; re-creating watcher (attempt 2/3 in 2000ms): Error: ENOSPC: System limit for number of file watchers reached, watch '/etc/beep/openclaw-spike/current/openclaw.json'
+2026-07-27T03:08:55.155-05:00 [telegram] [diag] isolated polling ingress started spool=/home/elpresidank/.cache/beep-p0-spike3.WkQp2E/spike3/state/telegram/ingress-spool-default
+2026-07-27T03:08:55.920-05:00 [gateway] device pairing auto-approved device=beb4ede2ce86b21a26818faf641c9a51bfe738efc16f95f597e8841f63a0291f role=operator
+2026-07-27T03:08:56.889-05:00 [reload] config watcher error; re-creating watcher (attempt 3/3 in 5000ms): Error: ENOSPC: System limit for number of file watchers reached, watch '/etc/beep/openclaw-spike/current/openclaw.json'
+2026-07-27T03:09:01.376-05:00 [secrets] [SECRETS_GATEWAY_AUTH_SURFACE] gateway.auth.token is active. gateway.auth.mode is "token".
+2026-07-27T03:09:01.378-05:00 [ws] ⇄ res ✓ secrets.reload 807ms conn=c6a93398…7a91 id=7c6da8d2…96b7
+2026-07-27T03:09:01.890-05:00 [reload] config watcher native retries exhausted; degrading to polling mode: Error: ENOSPC: System limit for number of file watchers reached, watch '/etc/beep/openclaw-spike/current/openclaw.json'
+2026-07-27T03:09:02.387-05:00 [ws] unauthorized conn=31b4e57b-38cc-49a5-a583-65f8680b34d6 peer=127.0.0.1:60642->127.0.0.1:19031 remote=127.0.0.1 client=ACP cli vacp role=operator scopes=1 auth=token device=yes platform=linux instance=n/a host=127.0.0.1:19031 origin=n/a ua=n/a reason=token_mismatch
+2026-07-27T03:09:02.405-05:00 [ws] closed before connect conn=31b4e57b-38cc-49a5-a583-65f8680b34d6 peer=127.0.0.1:60642->127.0.0.1:19031 remote=127.0.0.1 fwd=n/a origin=n/a host=127.0.0.1:19031 ua=n/a code=1008 reason=connect failed phase=auth_credentials_received
+2026-07-27T03:09:02.876-05:00 [secrets] [SECRETS_GATEWAY_AUTH_SURFACE] gateway.auth.token is active. gateway.auth.mode is "token".
+2026-07-27T03:09:02.877-05:00 [ws] ⇄ res ✓ secrets.reload 784ms conn=6ab82d4d…53d1 id=864a5482…744b
+2026-07-27T03:09:04.393-05:00 [gateway] agent runtime plugins pre-warmed in 32ms
+2026-07-27T03:09:04.671-05:00 [ws] unauthorized conn=48c356b7-d71a-4534-b4d0-ef25a1d55eba peer=127.0.0.1:60658->127.0.0.1:19031 remote=127.0.0.1 client=cli cli v2026.7.1-2 role=operator scopes=0 auth=token device=no platform=linux instance=3d7163cc-d2ec-4801-b6a1-65541131d219 host=127.0.0.1:19031 origin=n/a ua=n/a reason=token_mismatch
+2026-07-27T03:09:04.687-05:00 [ws] closed before connect conn=48c356b7-d71a-4534-b4d0-ef25a1d55eba peer=127.0.0.1:60658->127.0.0.1:19031 remote=127.0.0.1 fwd=n/a origin=n/a host=127.0.0.1:19031 ua=n/a code=1008 reason=connect failed phase=auth_credentials_received
+2026-07-27T03:09:08.614-05:00 [agents/tool-policy] tool policy removed 25 tool(s) via tools.deny: agents_list, apply_patch, create_goal, cron, edit, exec, gateway, get_goal, message, nodes, process, read, session_status, sessions_history, sessions_list, sessions_send, sessions_spawn, sessions_yield, skill_workshop, subagents, tts, update_goal, web_fetch, web_search, write; matched *
+2026-07-27T03:09:26.864-05:00 SPIKE3_MODEL_OK
+2026-07-27T03:09:26.866-05:00 [agents/agent-command] [agent] run 15a60d83-cfba-45fe-841b-cb9f2dd3a3ae ended with stopReason=stop
+2026-07-27T03:09:29.445-05:00 [ws] ⇄ res ✓ channels.status 794ms conn=cca03301…0ab0 id=18df723e…f820
+2026-07-27T03:09:31.801-05:00 [secrets] [SECRETS_RELOADER_DEGRADED] SecretProviderResolutionError: Exec provider "op_telegram" exited with code 1.
+2026-07-27T03:09:31.804-05:00 [gateway] secrets.reload failed: Exec provider "op_telegram" exited with code 1.
+2026-07-27T03:09:31.805-05:00 [ws] ⇄ res ✗ secrets.reload 755ms errorCode=UNAVAILABLE errorMessage=secrets.reload failed conn=5a81af37…ea47 id=f7d832e1…46ea
+2026-07-27T03:09:33.271-05:00 [secrets] [SECRETS_GATEWAY_AUTH_SURFACE] gateway.auth.token is active. gateway.auth.mode is "token".
+2026-07-27T03:09:33.272-05:00 [secrets] [SECRETS_RELOADER_RECOVERED] Secret resolution recovered; runtime remained on last-known-good during the outage.
+2026-07-27T03:09:33.273-05:00 [ws] ⇄ res ✓ secrets.reload 760ms conn=63ac09bb…c338 id=907196a6…589b
+2026-07-27T03:09:33.530-05:00 [gateway] signal SIGTERM received
+2026-07-27T03:09:33.532-05:00 [gateway] received SIGTERM; shutting down
+2026-07-27T03:09:33.546-05:00 [shutdown] started: gateway stopping
+2026-07-27T03:09:33.687-05:00 [shutdown] channel/telegram: channels.telegram.botToken: unresolved SecretRef "exec:op_telegram:value". Resolve this command against an active gateway runtime snapshot before reading it.
+2026-07-27T03:09:33.696-05:00 [gmail-watcher] gmail watcher stopped
+2026-07-27T03:09:33.699-05:00 [shutdown] completed in 153ms with warnings: channel/telegram

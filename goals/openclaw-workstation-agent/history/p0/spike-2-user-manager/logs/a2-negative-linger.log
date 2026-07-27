@@ -1,0 +1,11 @@
+=== spike-2 pinned inputs ===
+2026-07-25T08:44:54Z
+systemd 261 (261.2-1-arch)
+GNU bash, version 5.3.15(1)-release (x86_64-pc-linux-gnu)
+jq-1.8.2
+pre-state: Linger=no; unit-file-present=no
+
+=== A2 negative: linger disabled -> preflight fails BEFORE mutation (non-interactive: env -i + setsid, no TTY) ===
+== context: tty=not a tty sid=2387730 env-keys=HOME,LOGNAME,PATH,PWD,SHLVL,USER,_,
+PREFLIGHT-FAIL: linger not enabled for elpresidank (Linger=no)
+apply exit: 78

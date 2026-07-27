@@ -1,0 +1,46 @@
+d	700	1000:1000	49961809	./state	
+d	700	1000:1000	49961825	./identity	
+d	700	1000:1000	49961875	./credentials	
+d	700	1000:1000	50021293	./agents/spike/agent	
+d	700	1000:1000	50021295	./agents/spike/agent/plugins	
+d	700	1000:1000	50021296	./agents/spike/agent/plugins/ollama	
+d	755	1000:1000	49961800	.	
+d	755	1000:1000	49961801	./log	
+d	755	1000:1000	49961829	./plugin-skills	
+d	755	1000:1000	50021279	./workspace-attestations	
+d	755	1000:1000	50021281	./agents	
+d	755	1000:1000	50021282	./agents/spike	
+d	755	1000:1000	50021283	./agents/spike/sessions	
+d	755	1000:1000	50021305	./agents/spike/sessions/skills-prompts	
+d	755	1000:1000	50021306	./agents/spike/sessions/skills-prompts/sha256	
+d	755	1000:1000	50021307	./agents/spike/sessions/skills-prompts/sha256/17	
+f	600	1000:1000	49961810	./state/openclaw.sqlite	
+f	600	1000:1000	49961812	./state/openclaw.sqlite-wal	
+f	600	1000:1000	49961813	./state/openclaw.sqlite-shm	
+f	600	1000:1000	49961822	./log/openclaw.log	
+f	600	1000:1000	49961826	./identity/device.json	
+f	600	1000:1000	49961876	./credentials/telegram-pairing.json	
+f	600	1000:1000	50021280	./workspace-attestations/73c4ea29bd751e450de8d21f50958db2a550b46dd5a0ad4f961987a28288e791.attested	
+f	600	1000:1000	50021294	./agents/spike/agent/models.json	
+f	600	1000:1000	50021297	./agents/spike/agent/plugins/ollama/catalog.json	
+f	600	1000:1000	50021308	./agents/spike/sessions/skills-prompts/sha256/17/175d1a60d4c1f0cdac42a89fe0baca646f2e3a4d9927542530e58df5aa1a98ad.txt	
+f	600	1000:1000	50021310	./agents/spike/sessions/9d99d905-1262-4a3f-9dce-943aefcaded3.trajectory-path.json	
+f	600	1000:1000	50021356	./agents/spike/sessions/9d99d905-1262-4a3f-9dce-943aefcaded3.trajectory.jsonl	
+f	600	1000:1000	50021422	./agents/spike/sessions/sessions.json	
+f	644	1000:1000	50021353	./agents/spike/sessions/9d99d905-1262-4a3f-9dce-943aefcaded3.jsonl	
+l	777	1000:1000	49961830	./plugin-skills/browser-automation	/home/elpresidank/.cache/beep-p0-stage/openclaw-2026.7.1-2/node_modules/openclaw/dist/extensions/browser/skills/browser-automation
+l	777	1000:1000	49961831	./plugin-skills/canvas	/home/elpresidank/.cache/beep-p0-stage/openclaw-2026.7.1-2/node_modules/openclaw/dist/extensions/canvas/skills/canvas
+f6a60ffe718b445a923e5d870ff3b23ced2a8e42ef7322a0494c48c788e66e10  ./agents/spike/agent/models.json
+56ea3736be869074c2991b6b39e413296d7f076b7c041b62c392f17f65c9f20a  ./agents/spike/agent/plugins/ollama/catalog.json
+48106e662ceb4f0a4b0c9945971b39ea63c11d94d0e2a48d6c151af6e41d6db9  ./agents/spike/sessions/9d99d905-1262-4a3f-9dce-943aefcaded3.jsonl
+26374b873beec79b9c56a3facc554a8e424ab73d40246b90c58d9dc306f7bcf7  ./agents/spike/sessions/9d99d905-1262-4a3f-9dce-943aefcaded3.trajectory-path.json
+0c38fe0b9f7e056d3ee9b59fb389e809d6ade98a798de267154314fe4beb7300  ./agents/spike/sessions/9d99d905-1262-4a3f-9dce-943aefcaded3.trajectory.jsonl
+7704391f992d194fa74cc37840a6e38d140fda4943f1646b8de520a3392a0511  ./agents/spike/sessions/sessions.json
+175d1a60d4c1f0cdac42a89fe0baca646f2e3a4d9927542530e58df5aa1a98ad  ./agents/spike/sessions/skills-prompts/sha256/17/175d1a60d4c1f0cdac42a89fe0baca646f2e3a4d9927542530e58df5aa1a98ad.txt
+0acc80db40f45b5e408387c3f710ffacff957b9f5e170667a07c7f29f1b6d1fc  ./credentials/telegram-pairing.json
+c86e17b0677c5111c663f73ace448b07e562304ab6f44ff50e0ee74f95c797a1  ./identity/device.json
+8bdc564cc99ae02b0554288ec0b5b0a5f93d08b2fe08c731e0780bb2333edaa1  ./log/openclaw.log
+40cf07c52bfaa52b334ef341456f970787f6dc701ffe18ad3c572cb5056dbd70  ./state/openclaw.sqlite
+7f59b403ce31a7b56e8aa9ffd09cedf12471ebe2bd75d9b19405bea5a45140b7  ./state/openclaw.sqlite-shm
+c4ec3423baab6872fc42e11c22d3737081c2170c2972c245cc97eb048bd474c1  ./state/openclaw.sqlite-wal
+f881e9fb93b0e70099941fda88a038fe66668de34f62873bfb3bd800433fcb1a  ./workspace-attestations/73c4ea29bd751e450de8d21f50958db2a550b46dd5a0ad4f961987a28288e791.attested

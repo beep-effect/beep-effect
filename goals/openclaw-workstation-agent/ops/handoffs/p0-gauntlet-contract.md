@@ -30,6 +30,13 @@ later phase runs.
 - **Timebox.** The gauntlet has ~the first fifth of the cycle (GATE C
   appetite). Exhausting it is itself a stop-and-reshape condition — a failed
   spike re-opens its decision; it does not extend the budget.
+- **Mutual exclusion (learned 2026-07-25).** Spikes 1 and 3 both own
+  `/etc/beep/openclaw-spike` and the `openclaw-spike.service` unit name, so
+  they can never run concurrently or interleaved: each preflight refuses a
+  root it did not mark, and each cleanup removes the shared root. Run one
+  spike's full cycle to completion (including cleanup) before starting the
+  other. Spike 3 additionally consumes its one-time bootstrap credential on
+  cleanup, so it must run as a single uninterrupted pass per installed token.
 
 ## Spike 1 — filesystem bypass/drift + writer surface under guard
 

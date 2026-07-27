@@ -1,0 +1,22 @@
+--- /home/elpresidank/.cache/beep-p0-spike1a5.AnSlho/spike1/a5-pairing-first-owner-state-before.inventory	2026-07-26 14:09:40.551774838 -0500
++++ /home/elpresidank/.cache/beep-p0-spike1a5.AnSlho/spike1/a5-pairing-first-owner-state-after.inventory	2026-07-26 14:09:46.065988883 -0500
+@@ -9,12 +9,14 @@
+ f	600	1000:1000	51791803	./state/openclaw.sqlite-shm	
+ f	600	1000:1000	51791805	./log/openclaw.log	
+ f	600	1000:1000	51791807	./identity/device.json	
+-f	600	1000:1000	51791817	./credentials/telegram-pairing.json	
++f	600	1000:1000	51791829	./credentials/telegram-pairing.json	
++f	600	1000:1000	51791832	./credentials/telegram-default-allowFrom.json	
+ l	777	1000:1000	51791809	./plugin-skills/browser-automation	/home/elpresidank/.cache/beep-p0-stage/openclaw-2026.7.1-2/node_modules/openclaw/dist/extensions/browser/skills/browser-automation
+ l	777	1000:1000	51791810	./plugin-skills/canvas	/home/elpresidank/.cache/beep-p0-stage/openclaw-2026.7.1-2/node_modules/openclaw/dist/extensions/canvas/skills/canvas
+-6523117af301c798f9d8754bf09c8acc107ac3ad8015b909f509dab2df3da38c  ./credentials/telegram-pairing.json
++ebbc89e33e77f3acf0d9ca72b89835b38d18a0ae7d361a84c2c119e2b6bcb221  ./credentials/telegram-default-allowFrom.json
++0acc80db40f45b5e408387c3f710ffacff957b9f5e170667a07c7f29f1b6d1fc  ./credentials/telegram-pairing.json
+ 81f31582dbde4022ed116db83bd50d7309df1d89944fc11af85441e6d6ba5cfd  ./identity/device.json
+-ebca9a22a65aa3b843dd0bfe8507afa2b1d91e44da4964a4a7d46b5b1c6c1fd9  ./log/openclaw.log
++b85bf4b9512086e5a1e4b7e72790090bb7ad96c2bd2cdc21c75b0e57991b70e1  ./log/openclaw.log
+ 40cf07c52bfaa52b334ef341456f970787f6dc701ffe18ad3c572cb5056dbd70  ./state/openclaw.sqlite
+-de8346873985aa61933d6b15303a5e283fb09dfbaa4225fef0814ba7260891f0  ./state/openclaw.sqlite-shm
+-1afd032e7907b819d0335201919f858f9f0d094032b73d489a6451618ebdf0b5  ./state/openclaw.sqlite-wal
++5cc5d3b39273ca0693fcf4358b6cbea528af244a831b8c86ec5e0d39171bea1a  ./state/openclaw.sqlite-shm
++c416fc8f1a4f252518bd4a27486572c22fe9fec5808cc3a42f8a91571081d4bb  ./state/openclaw.sqlite-wal

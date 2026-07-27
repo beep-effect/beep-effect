@@ -1,0 +1,14 @@
+== assertion 4: baseline ==
+generation=f982971e6a9a6c1eff90b9d877440efa8cb8b27b4bddd10e82c92e5a1b1b4cf7 expected_sha256=f982971e6a9a6c1eff90b9d877440efa8cb8b27b4bddd10e82c92e5a1b1b4cf7
+== assertion 4: root-assisted deliberate edit ==
+actual_sha256=315652d9feaf9eecf321c5b858bfddc5a7328cf3e1767ac66dd8bb67335cf02d
+ALERT: OPENCLAW_CONFIG_DRIFT generation=f982971e6a9a6c1eff90b9d877440efa8cb8b27b4bddd10e82c92e5a1b1b4cf7 expected=f982971e6a9a6c1eff90b9d877440efa8cb8b27b4bddd10e82c92e5a1b1b4cf7 actual=315652d9feaf9eecf321c5b858bfddc5a7328cf3e1767ac66dd8bb67335cf02d
+ASSERT-PASS: drift canary detected the mismatch
+== assertion 4: bounded alert-only observation interval ==
+canary_interval_seconds=10
+ASSERT-PASS: drifted hash remained byte-identical for one bounded canary interval
+== assertion 4: explicit operator-driven restore ==
+OPERATOR-ACTION-BOUNDARY: alert acknowledged; operator now performs redeploy/restore
+-rw-r--r-- 644 root:root /etc/beep/openclaw-spike/f982971e6a9a6c1eff90b9d877440efa8cb8b27b4bddd10e82c92e5a1b1b4cf7/openclaw.json
+ASSERT-PASS: operator restore returned the active config to its recorded hash
+A4-PASS

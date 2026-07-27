@@ -1,0 +1,21 @@
+2026-07-25T08:54:12.040-05:00 [gateway] loading configuration…
+2026-07-25T08:54:12.061-05:00 [gateway] resolving authentication…
+2026-07-25T08:54:12.068-05:00 [gateway] starting...
+2026-07-25T08:54:12.128-05:00 [gateway] auth token was missing. Generated a runtime token for this startup without changing config; restart will generate a different token. Persist one with `openclaw config set gateway.auth.mode token` and `openclaw config set gateway.auth.token <token>`.
+2026-07-25T08:54:12.183-05:00 [gateway] starting HTTP server...
+2026-07-25T08:54:12.195-05:00 [health-monitor] started (interval: 300s, startup-grace: 60s, channel-connect-grace: 120s)
+2026-07-25T08:54:12.300-05:00 [gateway] agent model: openai/gpt-5.5 (thinking=medium, fast=off)
+2026-07-25T08:54:12.301-05:00 [gateway] http server listening (7 plugins: browser, canvas, device-pair, file-transfer, memory-core, phone-control, talk-voice; 0.2s)
+2026-07-25T08:54:12.301-05:00 [gateway] log file: /home/elpresidank/.cache/beep-p0-spike4.FmtrDN/spike4/ctrl-openclaw.log
+2026-07-25T08:54:12.303-05:00 [gateway] starting channels and sidecars...
+2026-07-25T08:54:12.330-05:00 [gateway] ready
+2026-07-25T08:54:12.376-05:00 [heartbeat] started
+2026-07-25T08:54:17.931-05:00 [gateway] provider auth state pre-warmed in 557ms eventLoopMax=10.5ms
+2026-07-25T08:54:22.356-05:00 [gateway] agent runtime plugins pre-warmed in 26ms
+2026-07-25T08:54:25.444-05:00 [gateway] signal SIGTERM received
+2026-07-25T08:54:25.445-05:00 [gateway] received SIGTERM; shutting down
+2026-07-25T08:54:25.464-05:00 [shutdown] started: gateway stopping
+2026-07-25T08:54:25.529-05:00 [gmail-watcher] gmail watcher stopped
+2026-07-25T08:54:25.531-05:00 [shutdown] completed cleanly in 67ms
+2026-07-25T08:54:25.597-05:00 [gateway] signal SIGTERM received
+2026-07-25T08:54:25.598-05:00 [gateway] received SIGTERM during shutdown; ignoring
