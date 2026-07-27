@@ -40,7 +40,18 @@ const outlookClientSubmitTimeKey = "Client submit time";
 const headerLineOctetLimit = 998;
 const outlookTimestampPattern = /^([A-Za-z]{3}) (\d{1,2}), (\d{4}) (\d{2}):(\d{2}):(\d{2})(?:\.\d+)? UTC$/;
 const monthAbbreviations = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const monthLengths = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 const textEncoder = new TextEncoder();
+
+const isLeapYear = (year: number): boolean => (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+
+// The pattern only constrains digit counts, so "Nov 99, 2020 25:61:61 UTC"
+// matches it. Calendar and clock ranges are checked separately.
+const daysInMonth = (month: string, year: number): number =>
+  A.findFirstIndex(monthAbbreviations, Str.equivalence(month)).pipe(
+    O.map((index) => (index === 1 && isLeapYear(year) ? 29 : O.getOrElse(A.get(monthLengths, index), () => 0))),
+    O.getOrElse(() => 0)
+  );
 
 /**
  * File name of the EML artifact assembled inside each exported item directory.
@@ -76,54 +87,27 @@ const headerName = (line: string): O.Option<string> => {
 
 const octetLength = (value: string): number => textEncoder.encode(value).length;
 
-// Splits a single word that is itself over the limit; only reachable when a run
-// of 998+ octets carries no fold point at all. Iterating the string yields whole
-// code points, so astral characters are never cut in half. The budget leaves
-// room for the leading space a continuation line carries.
-const hardSplit = (word: string): ReadonlyArray<string> =>
-  A.reduce(A.fromIterable(word), A.empty<string>(), (chunks, character) =>
-    A.matchRight(chunks, {
-      onEmpty: () => A.of(character),
-      onNonEmpty: (init, last) =>
-        octetLength(`${last}${character}`) >= headerLineOctetLimit
-          ? A.append(chunks, character)
-          : A.append(init, `${last}${character}`),
-    })
-  );
-
-// A fold point that sits on an original space is lossless: the space becomes the
-// continuation indent and unfolding puts it back. A fold inside a word has no
-// such space to reuse, so `separated` records which pieces may be rejoined with
-// a space and which must be butted together.
-interface HeaderPiece {
-  readonly separated: boolean;
-  readonly text: string;
-}
-
-const headerPieces = (line: string): ReadonlyArray<HeaderPiece> =>
-  A.flatMap(Str.split(" ")(line), (word, wordIndex) =>
-    A.map(hardSplit(word), (text, chunkIndex) => ({ separated: wordIndex > 0 && chunkIndex === 0, text }))
-  );
-
 /**
  * Fold one physical header line to RFC 5322's 998-octet line limit.
  *
  * Verbatim transport headers can carry lines over the limit (DKIM signatures,
  * long `Received` chains), and flattening a folded Outlook value into a single
- * line manufactures them. Folding breaks at space boundaries and indents each
- * continuation with a single space, reusing the original space as that indent
- * so unfolding restores the text byte for byte. A line that already fits is
- * returned untouched, so header blocks that arrived correctly folded stay as
+ * line manufactures them. Folding breaks only at existing spaces and indents
+ * each continuation with a single space, reusing the original space as that
+ * indent so unfolding restores the text byte for byte. A line that already fits
+ * is returned untouched, so header blocks that arrived correctly folded stay as
  * they are.
  *
  * @remarks
- * A run of 998+ octets containing no space cannot be folded losslessly — there
- * is no space to promote to an indent — so it is hard-split by code point and
- * the continuation indent is a space that was not in the source. That trade is
- * deliberate: the alternative is emitting a line no RFC 5322 parser accepts.
+ * An unbroken run of 998+ octets — a message-id, a DKIM `b=` tag — has no space
+ * to promote to an indent, so it is emitted intact and over-long rather than
+ * split. For an archival exporter, preserving the original header value byte
+ * for byte outranks the line-length limit: a spec-violating long line is
+ * recoverable by any consumer, whereas a token mutated by inserted continuation
+ * whitespace (which survives unfolding) is not.
  *
  * @param line - One physical header line.
- * @returns The line when it fits, otherwise its folded continuation lines.
+ * @returns The line when it fits or cannot be folded losslessly, otherwise its folded continuation lines.
  * @example
  * ```ts
  * import { foldHeaderLine } from "@beep/libpff"
@@ -142,16 +126,15 @@ const headerPieces = (line: string): ReadonlyArray<HeaderPiece> =>
 export const foldHeaderLine = (line: string): ReadonlyArray<string> =>
   octetLength(line) <= headerLineOctetLimit
     ? A.of(line)
-    : A.reduce(headerPieces(line), A.empty<string>(), (folded, piece) =>
+    : A.reduce(Str.split(" ")(line), A.empty<string>(), (folded, word) =>
         A.matchRight(folded, {
-          onEmpty: () => A.of(piece.text),
-          onNonEmpty: (init, last) => {
-            const joined = piece.separated ? `${last} ${piece.text}` : `${last}${piece.text}`;
-
-            return octetLength(joined) > headerLineOctetLimit
-              ? A.append(folded, ` ${piece.text}`)
-              : A.append(init, joined);
-          },
+          onEmpty: () => A.of(word),
+          onNonEmpty: (init, last) =>
+            // Breaking here promotes this word's own leading space to the
+            // continuation indent, so unfolding puts it back unchanged.
+            octetLength(`${last} ${word}`) > headerLineOctetLimit
+              ? A.append(folded, ` ${word}`)
+              : A.append(init, `${last} ${word}`),
         })
       );
 
@@ -161,11 +144,14 @@ export const foldHeaderLine = (line: string): ReadonlyArray<string> =>
  * pffexport renders MAPI times as `Nov 26, 2020 22:18:29.446000000 UTC`. The
  * sub-second precision and the `UTC` suffix are dropped in favor of a `+0000`
  * offset, and the optional day-of-week is omitted so no calendar arithmetic is
- * needed. Anything that does not match yields `None`, which drops the `Date`
- * header rather than emitting a malformed one.
+ * needed. Calendar and clock components are range-checked — including the
+ * February length for the given year — so an impossible timestamp such as
+ * `Nov 99, 2020 25:61:61 UTC` yields `None`. Anything that does not parse or
+ * does not validate drops the `Date` header rather than emitting a malformed
+ * one.
  *
  * @param value - Timestamp text taken from an `OutlookHeaders.txt` field.
- * @returns The RFC 5322 rendering when the timestamp is recognized.
+ * @returns The RFC 5322 rendering when the timestamp is recognized and in range.
  * @example
  * ```ts
  * import { rfc5322DateFromOutlookTimestamp } from "@beep/libpff"
@@ -174,6 +160,7 @@ export const foldHeaderLine = (line: string): ReadonlyArray<string> =>
  * console.log(
  *   O.getOrElse(rfc5322DateFromOutlookTimestamp("Nov 26, 2020 22:18:29.446000000 UTC"), () => "")
  * ) // "26 Nov 2020 22:18:29 +0000"
+ * console.log(O.isNone(rfc5322DateFromOutlookTimestamp("Feb 29, 2021 00:00:00 UTC"))) // true
  * ```
  *
  * @category utilities
@@ -190,6 +177,14 @@ export const rfc5322DateFromOutlookTimestamp = (value: string): O.Option<string>
         second: A.get(groups, 6),
         year: A.get(groups, 3),
       })
+    ),
+    O.filter(
+      ({ day, hour, minute, month, second, year }) =>
+        Number(hour) <= 23 &&
+        Number(minute) <= 59 &&
+        Number(second) <= 59 &&
+        Number(day) >= 1 &&
+        Number(day) <= daysInMonth(month, Number(year))
     ),
     O.map(({ day, hour, minute, month, second, year }) => `${day} ${month} ${year} ${hour}:${minute}:${second} +0000`)
   );

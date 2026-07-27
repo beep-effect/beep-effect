@@ -28,26 +28,48 @@ describe("foldHeaderLine", () => {
     expect(folded.join("")).toBe(original);
   });
 
-  it("hard-splits a run that carries no fold point of its own", () => {
-    const original = `X-Blob: ${"a".repeat(3000)}`;
+  it("passes through a line with no fold point at all", () => {
+    // Nothing to promote to a continuation indent. Splitting would insert
+    // whitespace that survives unfolding and corrupt the value, so the
+    // over-long line is emitted exactly as it arrived.
+    const original = "a".repeat(3000);
+
+    expect(foldHeaderLine(original)).toStrictEqual([original]);
+  });
+
+  it("keeps an unbreakable value whole while still folding at the one real space", () => {
+    const token = "a".repeat(3000);
+    const original = `X-Blob: ${token}`;
     const folded = foldHeaderLine(original);
 
-    expect(folded.length).toBeGreaterThan(2);
-    expect(folded.every((line) => octets(line) <= 998)).toBe(true);
-    // A space-less run has no space to promote to an indent, so folding it
-    // inserts one. No content is lost or duplicated, which is the invariant
-    // that still holds.
-    expect(folded.join("").replaceAll(" ", "")).toBe(original.replaceAll(" ", ""));
+    // The space after the field name is a legitimate fold point, so it is used;
+    // the value itself is never cut.
+    expect(folded).toStrictEqual(["X-Blob:", ` ${token}`]);
+    expect(folded.join("")).toBe(original);
+  });
+
+  it("folds up to the unbreakable run and leaves that run whole", () => {
+    const token = "b".repeat(1500);
+    const original = `X-Mixed: ${"word ".repeat(300)}${token}`;
+    const folded = foldHeaderLine(original);
+
+    expect(folded.length).toBeGreaterThan(1);
+    // Every foldable line respects the limit; only the unbreakable token is over.
+    expect(folded.filter((line) => octets(line) > 998)).toHaveLength(1);
+    expect(folded.some((line) => line.includes(token))).toBe(true);
+    // Still byte-for-byte reversible, because every break sat on a real space.
+    expect(folded.join("")).toBe(original);
   });
 
   it("measures octets rather than characters", () => {
     // Each euro sign is three octets, so 400 of them exceed the limit while the
-    // character count alone would not.
-    const original = `Subject: ${"€".repeat(400)}`;
+    // character count alone would not. Spaces give it somewhere to fold.
+    const original = `Subject: ${"€ ".repeat(400)}`;
 
     expect(original.length).toBeLessThan(998);
     expect(octets(original)).toBeGreaterThan(998);
     expect(foldHeaderLine(original).length).toBeGreaterThan(1);
+    expect(foldHeaderLine(original).every((line) => octets(line) <= 998)).toBe(true);
   });
 });
 
@@ -65,6 +87,41 @@ describe("rfc5322DateFromOutlookTimestamp", () => {
     for (const value of ["Foo 26, 2020 22:18:29 UTC", "26 Nov 2020 22:18:29 +0000", "Nov 26, 2020 22:18 UTC", ""]) {
       expect(O.isNone(rfc5322DateFromOutlookTimestamp(value))).toBe(true);
     }
+  });
+
+  it("declines out-of-range calendar and clock components", () => {
+    // The pattern only constrains digit counts, so these all match it.
+    for (const value of [
+      "Nov 99, 2020 25:61:61.000000000 UTC",
+      "Nov 26, 2020 24:00:00.000000000 UTC",
+      "Nov 26, 2020 22:60:00.000000000 UTC",
+      "Nov 26, 2020 22:18:60.000000000 UTC",
+      "Nov 00, 2020 22:18:29.000000000 UTC",
+      "Nov 31, 2020 22:18:29.000000000 UTC",
+    ]) {
+      expect(O.isNone(rfc5322DateFromOutlookTimestamp(value))).toBe(true);
+    }
+  });
+
+  it("applies the right February length for the year", () => {
+    expect(O.isNone(rfc5322DateFromOutlookTimestamp("Feb 29, 2021 00:00:00.000000000 UTC"))).toBe(true);
+    expect(O.getOrElse(rfc5322DateFromOutlookTimestamp("Feb 29, 2020 00:00:00.000000000 UTC"), () => "")).toBe(
+      "29 Feb 2020 00:00:00 +0000"
+    );
+    // Century rule: 1900 is not a leap year, 2000 is.
+    expect(O.isNone(rfc5322DateFromOutlookTimestamp("Feb 29, 1900 00:00:00.000000000 UTC"))).toBe(true);
+    expect(O.getOrElse(rfc5322DateFromOutlookTimestamp("Feb 29, 2000 00:00:00.000000000 UTC"), () => "")).toBe(
+      "29 Feb 2000 00:00:00 +0000"
+    );
+  });
+
+  it("accepts the valid upper bounds", () => {
+    expect(O.getOrElse(rfc5322DateFromOutlookTimestamp("Nov 26, 2020 23:59:59.000000000 UTC"), () => "")).toBe(
+      "26 Nov 2020 23:59:59 +0000"
+    );
+    expect(O.getOrElse(rfc5322DateFromOutlookTimestamp("Dec 31, 2020 23:59:59.000000000 UTC"), () => "")).toBe(
+      "31 Dec 2020 23:59:59 +0000"
+    );
   });
 });
 

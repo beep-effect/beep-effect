@@ -111,18 +111,27 @@ describe("@beep/libpff live pffexport", () => {
           const record = yield* decodeMessageRecord(jsonl.trimEnd().split("\n")[0]);
           expect(record.messagePath.length).toBeGreaterThan(0);
 
-          // Every assembled header block must be RFC 5322-shaped: no physical
+          // Every assembled header block must be RFC 5322-shaped: no foldable
           // line over the 998-octet limit, and a real Date header wherever
-          // pffexport gave us a parseable client-submit time. Body lines are
-          // deliberately not asserted — an over-long body line needs a
+          // pffexport gave us a parseable client-submit time.
+          //
+          // Two deliberate exemptions keep this from becoming a false alarm on
+          // a future fixture. A header line with no space has no fold point to
+          // promote to a continuation indent, so the driver emits it intact
+          // rather than mutating the value — those lines are skipped here.
+          // Body lines are not checked at all: an over-long body line needs a
           // different content-transfer-encoding, not folding, which would
           // corrupt the content.
           const encoder = new TextEncoder();
+          const foldable = (line: string): boolean => line.includes(" ");
           let datedEmlCount = 0;
           for (const child of emlChildren) {
             const eml = yield* fs.readFileString(path.join(exportRoot, child.relativePath));
             const headerBlock = eml.slice(0, eml.indexOf("\r\n\r\n"));
-            expect(headerBlock.split("\r\n").every((line) => encoder.encode(line).length <= 998)).toBe(true);
+            const overLong = headerBlock
+              .split("\r\n")
+              .filter((line) => foldable(line) && encoder.encode(line).length > 998);
+            expect(overLong).toStrictEqual([]);
             expect(headerBlock).not.toContain("X-Beep-Libpff-Client-Submit-Time");
             if (headerBlock.includes("\r\nDate: ") || headerBlock.startsWith("Date: ")) {
               datedEmlCount += 1;
