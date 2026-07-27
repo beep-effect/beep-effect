@@ -169,7 +169,15 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
         expect(yield* rejects({ $ref: "other.json#/$defs/T" })).toBe(false);
         expect(yield* rejects({ $ref: "foo:bar" })).toBe(false);
         expect(yield* rejects({ $ref: "//[::1]/schema" })).toBe(false);
+        expect(yield* rejects({ $ref: "//[::]/" })).toBe(false);
+        expect(yield* rejects({ $ref: "//user:pass@example.com:8080/a:b" })).toBe(false);
         expect(yield* rejects({ $ref: "?q=x/y?z" })).toBe(false);
+        expect(yield* rejects({ $ref: "//[::gg]/" })).toBe(true);
+        expect(yield* rejects({ $ref: "//[::1:]/" })).toBe(true);
+        expect(yield* rejects({ $ref: "//[0000:a::ffff:1:a:]/" })).toBe(true);
+        expect(yield* rejects({ $ref: "//host:not-a-port/" })).toBe(true);
+        expect(yield* rejects({ $ref: "//user@@host/" })).toBe(true);
+        expect(yield* rejects({ $ref: "relative%ZZ" })).toBe(true);
         expect(yield* rejects({ $schema: "meta/schema" })).toBe(true);
         expect(yield* rejects({ $schema: "http://[bad" })).toBe(true);
         expect(yield* rejects({ $schema: "https://example.com/[x]" })).toBe(true);

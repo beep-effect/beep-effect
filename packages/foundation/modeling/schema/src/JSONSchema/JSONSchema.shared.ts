@@ -12,7 +12,6 @@
  * @since 0.0.0
  */
 import { $SchemaId } from "@beep/identity/packages";
-import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -530,70 +529,115 @@ export const AnchorName = S.String.check(AnchorNameCheck).pipe(
  */
 export type AnchorName = typeof AnchorName.Type;
 
-const uriPctEncodedPatternSource = "%[0-9A-Fa-f]{2}";
-const uriUnreservedPatternSource = "[A-Za-z0-9._~-]";
-const uriSubDelimiterPatternSource = "[!$&'()*+,;=]";
-const uriPathCharacterPatternSource = `(?:${uriUnreservedPatternSource}|${uriPctEncodedPatternSource}|${uriSubDelimiterPatternSource}|[:@])`;
-const uriDecOctetPatternSource = "(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])";
-const uriIpv4AddressPatternSource = `${uriDecOctetPatternSource}(?:\\.${uriDecOctetPatternSource}){3}`;
-const uriH16PatternSource = "[0-9A-Fa-f]{1,4}";
-const uriLs32PatternSource = `(?:${uriH16PatternSource}:${uriH16PatternSource}|${uriIpv4AddressPatternSource})`;
-const uriIpv6AddressPatternSource =
-  `(?:` +
-  `(?:${uriH16PatternSource}:){6}${uriLs32PatternSource}|` +
-  `::(?:${uriH16PatternSource}:){5}${uriLs32PatternSource}|` +
-  `(?:${uriH16PatternSource})?::(?:${uriH16PatternSource}:){4}${uriLs32PatternSource}|` +
-  `(?:(?:${uriH16PatternSource}:){0,1}${uriH16PatternSource})?::` +
-  `(?:${uriH16PatternSource}:){3}${uriLs32PatternSource}|` +
-  `(?:(?:${uriH16PatternSource}:){0,2}${uriH16PatternSource})?::` +
-  `(?:${uriH16PatternSource}:){2}${uriLs32PatternSource}|` +
-  `(?:(?:${uriH16PatternSource}:){0,3}${uriH16PatternSource})?::` +
-  `${uriH16PatternSource}:${uriLs32PatternSource}|` +
-  `(?:(?:${uriH16PatternSource}:){0,4}${uriH16PatternSource})?::${uriLs32PatternSource}|` +
-  `(?:(?:${uriH16PatternSource}:){0,5}${uriH16PatternSource})?::${uriH16PatternSource}|` +
-  `(?:(?:${uriH16PatternSource}:){0,6}${uriH16PatternSource})?::` +
-  `)`;
-const uriIpvFuturePatternSource = `[Vv][0-9A-Fa-f]+\\.(?:${uriUnreservedPatternSource}|${uriSubDelimiterPatternSource}|:)+`;
-const uriIpLiteralPatternSource = `\\[(?:${uriIpv6AddressPatternSource}|${uriIpvFuturePatternSource})\\]`;
-const uriUserInfoPatternSource = `(?:${uriUnreservedPatternSource}|${uriPctEncodedPatternSource}|${uriSubDelimiterPatternSource}|:)*`;
-const uriRegNamePatternSource = `(?:${uriUnreservedPatternSource}|${uriPctEncodedPatternSource}|${uriSubDelimiterPatternSource})*`;
-const uriAuthorityPatternSource =
-  `(?:${uriUserInfoPatternSource}@)?` +
-  `(?:${uriIpLiteralPatternSource}|${uriIpv4AddressPatternSource}|${uriRegNamePatternSource})` +
-  "(?::[0-9]*)?";
-const uriSegmentPatternSource = `${uriPathCharacterPatternSource}*`;
-const uriNonEmptySegmentPatternSource = `${uriPathCharacterPatternSource}+`;
-const uriNonEmptyNoSchemeSegmentPatternSource = `(?:${uriUnreservedPatternSource}|${uriPctEncodedPatternSource}|${uriSubDelimiterPatternSource}|@)+`;
-const uriPathAbemptyPatternSource = `(?:/${uriSegmentPatternSource})*`;
-const uriPathAbsolutePatternSource = `/(?:${uriNonEmptySegmentPatternSource}(?:/${uriSegmentPatternSource})*)?`;
-const uriPathRootlessPatternSource = `${uriNonEmptySegmentPatternSource}(?:/${uriSegmentPatternSource})*`;
-const uriPathNoSchemePatternSource = `${uriNonEmptyNoSchemeSegmentPatternSource}(?:/${uriSegmentPatternSource})*`;
-const uriQueryOrFragmentPatternSource = `(?:${uriPathCharacterPatternSource}|[/?])*`;
-const uriSchemePatternSource = "[A-Za-z][A-Za-z0-9+.-]*";
-const uriHierarchyPartPatternSource =
-  `(?://${uriAuthorityPatternSource}${uriPathAbemptyPatternSource}|` +
-  `${uriPathAbsolutePatternSource}|${uriPathRootlessPatternSource}|)`;
-const uriRelativePartPatternSource =
-  `(?://${uriAuthorityPatternSource}${uriPathAbemptyPatternSource}|` +
-  `${uriPathAbsolutePatternSource}|${uriPathNoSchemePatternSource}|)`;
-const uriPatternSource =
-  `${uriSchemePatternSource}:${uriHierarchyPartPatternSource}` +
-  `(?:\\?${uriQueryOrFragmentPatternSource})?(?:#${uriQueryOrFragmentPatternSource})?`;
-const uriRelativeRefPatternSource =
-  `${uriRelativePartPatternSource}` +
-  `(?:\\?${uriQueryOrFragmentPatternSource})?(?:#${uriQueryOrFragmentPatternSource})?`;
-const uriReferencePattern = new RegExp(`^(?:${uriPatternSource}|${uriRelativeRefPatternSource})$`, "u");
-const absoluteUriPattern = new RegExp(
-  `^(${uriSchemePatternSource}):(?:` +
-    `//(?:${uriUserInfoPatternSource}@)?` +
-    `(${uriIpLiteralPatternSource}|${uriIpv4AddressPatternSource}|${uriRegNamePatternSource})` +
-    `(?::[0-9]*)?(${uriPathAbemptyPatternSource})|` +
-    `(${uriPathAbsolutePatternSource})|(${uriPathRootlessPatternSource})|` +
-    `)(?:\\?${uriQueryOrFragmentPatternSource})?(?:#${uriQueryOrFragmentPatternSource})?$`,
-  "u"
-);
+const uriReferenceStructurePattern =
+  /^(?:([A-Za-z][A-Za-z0-9+.-]*):)?(?:\/\/([^/?#]*))?([^?#]*)(?:\?([^#]*))?(?:#(.*))?$/u;
+const uriReferenceAsciiPattern = /^[\x21-\x7e]*$/u;
+const malformedPercentEncodingPattern = /%(?![0-9A-Fa-f]{2})/u;
+const uriPathPattern = /^[A-Za-z0-9._~!$&'()*+,;=:@%/-]*$/u;
+const uriQueryOrFragmentPattern = /^[A-Za-z0-9._~!$&'()*+,;=:@%/?-]*$/u;
+const uriUserInfoPattern = /^[A-Za-z0-9._~!$&'()*+,;=:%-]*$/u;
+const uriRegNamePattern = /^[A-Za-z0-9._~!$&'()*+,;=%-]*$/u;
+const uriPortPattern = /^[0-9]*$/u;
+const uriIpvFuturePattern = /^[Vv][0-9A-Fa-f]+\.[A-Za-z0-9._~!$&'()*+,;=:-]+$/u;
 
-const UriReferenceCheck = S.makeFilter<string>((value) => uriReferencePattern.test(value), {
+type UriReferenceParts = {
+  readonly host: string | undefined;
+  readonly path: string;
+  readonly scheme: string | undefined;
+};
+
+const hasValidUriPortSuffix = (suffix: string): boolean =>
+  suffix === "" || (Str.startsWith(":")(suffix) && uriPortPattern.test(Str.slice(1)(suffix)));
+
+const isValidIpLiteral = (literal: string): boolean =>
+  uriIpvFuturePattern.test(literal) ||
+  ((!Str.endsWith(":")(literal) || Str.endsWith("::")(literal)) && URL.canParse(`http://[${literal}]/`));
+
+const parseBracketedUriHost = (hostAndPort: string): O.Option<string> => {
+  const literalEnd = hostAndPort.indexOf("]");
+  if (literalEnd === -1) {
+    return O.none();
+  }
+
+  const literal = Str.slice(1, literalEnd)(hostAndPort);
+  const portSuffix = Str.slice(literalEnd + 1)(hostAndPort);
+  return hasValidUriPortSuffix(portSuffix) && isValidIpLiteral(literal) ? O.some(literal) : O.none();
+};
+
+const parseRegNameUriHost = (hostAndPort: string): O.Option<string> => {
+  const portSeparator = hostAndPort.lastIndexOf(":");
+  const host = portSeparator === -1 ? hostAndPort : Str.slice(0, portSeparator)(hostAndPort);
+  const port = portSeparator === -1 ? "" : Str.slice(portSeparator + 1)(hostAndPort);
+  return uriRegNamePattern.test(host) && !Str.includes(":")(host) && uriPortPattern.test(port)
+    ? O.some(host)
+    : O.none();
+};
+
+const parseUriAuthorityHost = (authority: string): O.Option<string> => {
+  const userInfoSeparator = authority.lastIndexOf("@");
+  const userInfo = userInfoSeparator === -1 ? undefined : Str.slice(0, userInfoSeparator)(authority);
+  if (userInfo !== undefined && !uriUserInfoPattern.test(userInfo)) {
+    return O.none();
+  }
+
+  const hostAndPort = userInfoSeparator === -1 ? authority : Str.slice(userInfoSeparator + 1)(authority);
+  return Str.startsWith("[")(hostAndPort) ? parseBracketedUriHost(hostAndPort) : parseRegNameUriHost(hostAndPort);
+};
+
+const hasValidUriReferenceEncoding = (value: string): boolean =>
+  uriReferenceAsciiPattern.test(value) && !malformedPercentEncodingPattern.test(value);
+
+const hasValidUriComponents = (path: string, query: string | undefined, fragment: string | undefined): boolean =>
+  uriPathPattern.test(path) &&
+  (query === undefined || uriQueryOrFragmentPattern.test(query)) &&
+  (fragment === undefined || uriQueryOrFragmentPattern.test(fragment));
+
+const hasValidRelativeFirstSegment = (
+  scheme: string | undefined,
+  authority: string | undefined,
+  path: string
+): boolean => {
+  if (scheme !== undefined || authority !== undefined || Str.startsWith("/")(path)) {
+    return true;
+  }
+
+  const firstSegmentEnd = path.indexOf("/");
+  const firstSegment = firstSegmentEnd === -1 ? path : Str.slice(0, firstSegmentEnd)(path);
+  return !Str.includes(":")(firstSegment);
+};
+
+const parseUriReference = (value: string): UriReferenceParts | undefined => {
+  if (!hasValidUriReferenceEncoding(value)) {
+    return undefined;
+  }
+
+  const match = uriReferenceStructurePattern.exec(value);
+  if (match === null) {
+    return undefined;
+  }
+
+  const scheme = match[1];
+  const authority = match[2];
+  const path = match[3] ?? "";
+  const query = match[4];
+  const fragment = match[5];
+  if (!hasValidUriComponents(path, query, fragment)) {
+    return undefined;
+  }
+
+  const host = authority === undefined ? O.none<string>() : parseUriAuthorityHost(authority);
+  if (authority !== undefined && O.isNone(host)) {
+    return undefined;
+  }
+
+  if (!hasValidRelativeFirstSegment(scheme, authority, path)) {
+    return undefined;
+  }
+
+  return { host: O.getOrUndefined(host), path, scheme };
+};
+
+const UriReferenceCheck = S.makeFilter<string>((value) => parseUriReference(value) !== undefined, {
   identifier: $I`UriReferenceCheck`,
   title: "URI-Reference",
   description: "RFC 3986 URI-Reference syntax with valid ASCII characters, percent encoding, and structure.",
@@ -662,24 +706,21 @@ const normalizePercentEncoding = (value: string): string =>
 const normalizeUriHostCase = (value: string): string =>
   value.replace(/%[0-9A-F]{2}|./g, (token) => (Str.startsWith("%")(token) ? token : Str.toLowerCase(token)));
 
-const normalizedAbsoluteUriPath = (match: RegExpExecArray): string => match[3] ?? match[4] ?? match[5] ?? "";
-
 const isNormalizedUriHost = (host: string | undefined): boolean =>
   host === undefined || host === normalizeUriHostCase(host);
 
 const isNormalizedAbsoluteUri = (value: string): boolean => {
-  const match = absoluteUriPattern.exec(value);
-  if (match === null) {
+  const parts = parseUriReference(value);
+  if (parts?.scheme === undefined) {
     return false;
   }
 
-  const scheme = match[1] ?? "";
-  return Bool.every([
-    scheme === Str.toLowerCase(scheme),
-    isNormalizedUriHost(match[2]),
-    normalizePercentEncoding(value) === value,
-    !uriDotSegmentPattern.test(normalizedAbsoluteUriPath(match)),
-  ]);
+  return (
+    parts.scheme === Str.toLowerCase(parts.scheme) &&
+    isNormalizedUriHost(parts.host) &&
+    normalizePercentEncoding(value) === value &&
+    !uriDotSegmentPattern.test(parts.path)
+  );
 };
 
 const AbsoluteUriCheck = S.makeFilter<string>(isNormalizedAbsoluteUri, {
