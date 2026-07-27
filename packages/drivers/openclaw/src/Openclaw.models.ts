@@ -269,7 +269,7 @@ export class OpenclawVersionInfo extends S.Class<OpenclawVersionInfo>($I`Opencla
    * console.log(O.isNone(OpenclawVersionInfo.fromVersionOutput("command not found"))) // true
    * ```
    *
-   * @category parsers
+   * @category parsing
    * @since 0.0.0
    */
   static readonly fromVersionOutput = (output: string): O.Option<OpenclawVersionInfo> => {

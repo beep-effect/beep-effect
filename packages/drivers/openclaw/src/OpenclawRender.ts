@@ -377,7 +377,7 @@ export class RenderedOpenclawConfig extends S.Class<RenderedOpenclawConfig>($I`R
  * console.log(rendered.contentHash.length) // 64
  * ```
  *
- * @category rendering
+ * @category serialization
  * @since 0.0.0
  */
 export const renderOpenclawConfig = (intent: OpenclawDeploymentIntent): RenderedOpenclawConfig => {
@@ -434,7 +434,7 @@ export const renderOpenclawConfig = (intent: OpenclawDeploymentIntent): Rendered
  * console.log(surfaces) // []
  * ```
  *
- * @category rendering
+ * @category utilities
  * @since 0.0.0
  */
 export const declaredExtensionSurfaces = (intent: OpenclawDeploymentIntent): ReadonlyArray<string> =>

@@ -25,7 +25,7 @@ import type { OpenclawProcessRequest } from "../Openclaw.models.ts";
  * console.log(typeof spawnProcessResult) // "function"
  * ```
  *
- * @category runners
+ * @category utilities
  * @since 0.0.0
  */
 export const spawnProcessResult = (input: {

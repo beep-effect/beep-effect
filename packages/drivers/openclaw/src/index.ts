@@ -50,7 +50,7 @@ export * from "./OpenclawProbe.service.ts";
 /**
  * Public OpenClaw render adapter exports.
  *
- * @category rendering
+ * @category serialization
  * @since 0.0.0
  */
 export * from "./OpenclawRender.ts";
