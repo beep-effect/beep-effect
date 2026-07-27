@@ -11,7 +11,7 @@
  * @category utilities
  * @since 0.0.0
  */
-export { dual, flip, flow, identity, pipe } from "effect/Function";
+export { dual, flow, identity, pipe } from "effect/Function";
 /**
  * Array utilities extending `effect/Array` with non-empty variants.
  *
