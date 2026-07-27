@@ -141,16 +141,17 @@ resolution against the SSD copy; every tool must degrade gracefully to
 merge-back ever. `bundle.manifest.json.bundleVersion` is surfaced by a
 `kg_provenance` call with no args (server/status info).
 
-## 5. CLI shape — `beep corpus graph`
+## 5. Build entrypoint shape
 
-Follows the verified Corpus family conventions (`Command.make` +
-`Flag.directory("corpus-root", { mustExist: true })`, options schema class in
-`internal/Graph.schemas.ts` (`CorpusGraphOptions.make`), implementation in
-`internal/Graph.ts`, registered in `Corpus.command.ts`, summary written to
-`catalog/reports/graph-summary.json`):
+> Amended 2026-07-27 per SPEC D-9 (architecture-guardian ruling): the build
+> lane is NOT a repo-cli verb — repo-cli imports zero slice packages (tooling
+> ceiling). The flags below move verbatim to `apps/practice-kg-mcp/src/build.ts`
+> (thin flag-parse + layer wiring); the projection logic lives in
+> `law-practice/server` `PracticeKg.projections.ts`, which writes the summary
+> to `catalog/reports/graph-summary.json`.
 
 ```
-beep corpus graph
+bun run apps/practice-kg-mcp/src/build.ts
   --corpus-root <dir>          # existing corpusRootFlag
   --bundle-out <dir>           # default <corpus-root>/staging/practice-kg-bundle
   --include-refresh            # fold staging/extract-2026-07-refresh in (default: false, recorded either way)
