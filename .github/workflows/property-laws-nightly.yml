@@ -60,7 +60,12 @@ jobs:
             exit 1
           fi
 
-          bun run beep ci lane property --runs "${BEEP_PROPERTY_RUNS}" --summarize
+          BEEP_PROPERTY_SEED="$((GITHUB_RUN_ID % 2147483647))"
+          echo "BEEP_FC_SEED=${BEEP_PROPERTY_SEED}"
+          bun run beep ci lane property \
+            --runs "${BEEP_PROPERTY_RUNS}" \
+            --seed "${BEEP_PROPERTY_SEED}" \
+            --summarize
 
       - name: Append Turbo summary
         if: always()

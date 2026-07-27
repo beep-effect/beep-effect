@@ -39,6 +39,27 @@ const quad = makeQuad(
 );
 const dataset = makeDataset([quad]);
 
+const schemaRoundTripCases: ReadonlyArray<
+  readonly [string, S.Top & S.ConstraintDecoder<unknown> & S.ConstraintEncoder<unknown>]
+> = [
+  ["OpenOntologyFileCommand", OpenOntologyFileCommand],
+  ["OpenOntologyDocumentResult", OpenOntologyDocumentResult],
+  ["SaveOntologyDocumentResult", SaveOntologyDocumentResult],
+  ["PreviewOntologyTurtleResult", PreviewOntologyTurtleResult],
+  ["ApplyOntologyBatchCommand", ApplyOntologyBatchCommand],
+  ["ApplyOntologyBatchResult", ApplyOntologyBatchResult],
+  ["OntologyRepairProposal", OntologyRepairProposal],
+  ["RunOntologyValidationInput", RunOntologyValidationInput],
+  ["RunOntologyValidationResult", RunOntologyValidationResult],
+  ["ExportOntologyProvenanceCommand", ExportOntologyProvenanceCommand],
+  ["ExportOntologyProvenanceResult", ExportOntologyProvenanceResult],
+  ["OntologyActionError", OntologyActionError],
+  ["OntologySnapshot", OntologySnapshot],
+  ["WorkerCommand", WorkerCommand],
+  ["WorkerResult", WorkerResult],
+  ["TurtleCodecError", TurtleCodecError],
+];
+
 const assertRoundTrips = <Schema extends S.Top & S.ConstraintDecoder<unknown> & S.ConstraintEncoder<unknown>>(
   schema: Schema
 ): void => {
@@ -53,23 +74,8 @@ const assertRoundTrips = <Schema extends S.Top & S.ConstraintDecoder<unknown> & 
 };
 
 describe("@beep/ontology-use-cases schema parity", () => {
-  it("round-trips schema-derived command and worker samples", () => {
-    assertRoundTrips(OpenOntologyFileCommand);
-    assertRoundTrips(OpenOntologyDocumentResult);
-    assertRoundTrips(SaveOntologyDocumentResult);
-    assertRoundTrips(PreviewOntologyTurtleResult);
-    assertRoundTrips(ApplyOntologyBatchCommand);
-    assertRoundTrips(ApplyOntologyBatchResult);
-    assertRoundTrips(OntologyRepairProposal);
-    assertRoundTrips(RunOntologyValidationInput);
-    assertRoundTrips(RunOntologyValidationResult);
-    assertRoundTrips(ExportOntologyProvenanceCommand);
-    assertRoundTrips(ExportOntologyProvenanceResult);
-    assertRoundTrips(OntologyActionError);
-    assertRoundTrips(OntologySnapshot);
-    assertRoundTrips(WorkerCommand);
-    assertRoundTrips(WorkerResult);
-    assertRoundTrips(TurtleCodecError);
+  it.each(schemaRoundTripCases)("round-trips schema-derived %s samples", (_name, schema) => {
+    assertRoundTrips(schema);
   });
 
   it("preserves command and worker protocol encoded wire shapes", () => {
