@@ -1,0 +1,24 @@
+{
+  "agents": {
+    "entries": {
+      "negative": {
+        "model": {
+          "primary": "ollama/gemma3:4b"
+        },
+        "name": "Negative Fixture",
+        "workspace": "/beep-openclaw-placeholder/workspace"
+      }
+    }
+  },
+  "gateway": {
+    "bind": "loopback",
+    "mode": "local",
+    "port": 19043,
+    "reload": {
+      "mode": "off"
+    }
+  },
+  "logging": {
+    "file": "/beep-openclaw-placeholder/state/log/openclaw.log"
+  }
+}
