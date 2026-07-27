@@ -110,9 +110,28 @@ const ensurePinnedBinaryStaged = Effect.gen(function* () {
   return binaryPath;
 });
 
-/** Pinned Node bin dir: explicit override, then mise Node 24, then PATH node. */
-const resolveNodeBinDirectory = Effect.gen(function* () {
+/**
+ * True when `<directory>/node` is a real Node executable rather than Bun's
+ * `node` shim. Under `bunx --bun vitest` the shim shadows real Node on PATH,
+ * and the pinned binary refuses Bun (`node:sqlite`), so each candidate is
+ * probed: Bun's shim reports `process.versions.bun`, real Node does not.
+ */
+const isRealNodeDirectory = Effect.fnUntraced(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const candidate = path.join(directory, "node");
+  const exists = yield* fs.exists(candidate);
+  if (!exists) {
+    return false;
+  }
+  const [stdout, , exitCode] = yield* runCapturedProcess(
+    ambientProcess(candidate, ["-p", 'process.versions.bun ? "bun" : process.version'])
+  ).pipe(Effect.orElseSucceed(() => ["", "", 1] as const));
+  return exitCode === 0 && pipe(Str.trim(stdout), Str.startsWith("v"));
+});
+
+/** Pinned Node bin dir: explicit override, then mise Node 24, then the first PATH entry with a real (non-Bun) node. */
+const resolveNodeBinDirectory = Effect.gen(function* () {
   const path = yield* Path.Path;
   const override = yield* Config.option(Config.string("BEEP_OPENCLAW_IT_NODE_BIN"));
   if (O.isSome(override)) {
@@ -120,12 +139,21 @@ const resolveNodeBinDirectory = Effect.gen(function* () {
   }
   const home = yield* Config.string("HOME");
   const miseNodeBin = path.join(home, ".local", "share", "mise", "installs", "node", "24", "bin");
-  const hasMiseNode = yield* fs.exists(miseNodeBin);
-  if (hasMiseNode) {
+  if (yield* isRealNodeDirectory(miseNodeBin)) {
     return O.some(miseNodeBin);
   }
-  const [stdout, , exitCode] = yield* runCapturedProcess(ambientProcess("sh", ["-c", "command -v node"]));
-  return exitCode === 0 ? pipe(Str.trim(stdout), O.liftPredicate(Str.isNonEmpty), O.map(path.dirname)) : O.none();
+  const pathEntries = pipe(
+    yield* Config.option(Config.string("PATH")),
+    O.map((value) => Str.split(value, ":")),
+    O.getOrElse(() => [] as ReadonlyArray<string>)
+  );
+  for (const entry of pathEntries) {
+    const directory = Str.trim(entry);
+    if (Str.isNonEmpty(directory) && (yield* isRealNodeDirectory(directory))) {
+      return O.some(directory);
+    }
+  }
+  return O.none();
 });
 
 const makeWorkbench = Effect.gen(function* () {
@@ -133,6 +161,13 @@ const makeWorkbench = Effect.gen(function* () {
   const path = yield* Path.Path;
   const binaryPath = yield* ensurePinnedBinaryStaged;
   const nodeBinDir = yield* resolveNodeBinDirectory;
+  if (O.isNone(nodeBinDir)) {
+    return yield* Effect.die(
+      new Error(
+        "No real Node runtime found via BEEP_OPENCLAW_IT_NODE_BIN, mise Node 24, or PATH; the pinned OpenClaw binary requires Node and refuses Bun's node shim."
+      )
+    );
+  }
   const rootDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-openclaw-it-" });
   const configDir = path.join(rootDir, "configs");
   const homeDir = path.join(rootDir, "home");
