@@ -2326,6 +2326,197 @@ describe("files command", { concurrent: false }, () => {
       )
     ));
 
+  it("allocates distinct derivative paths for byte-identical image sources", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const datasetDir = yield* makeDatasetDir(tmpDir);
+          const firstPath = path.join(datasetDir, "first.jpg");
+          const secondPath = path.join(datasetDir, "second.jpg");
+          const decisionsPath = path.join(tmpDir, "decisions.json");
+          const outDir = path.join(tmpDir, "prepared");
+
+          yield* writeJpegWithExif(firstPath, 32, 32);
+          yield* fs.writeFile(secondPath, yield* fs.readFile(firstPath));
+          const sourceHash = yield* sha256FileRef(firstPath);
+          const decisionText = yield* encodeImageCurationDecisionDocument(
+            ImageCurationDecisionDocument.make({
+              decisions: [
+                {
+                  disposition: "active-core",
+                  reasons: ["preferred-duplicate"],
+                  sourceName: "first.jpg",
+                  sourceSha256: sourceHash,
+                },
+                {
+                  disposition: "active-core",
+                  reasons: ["preserved-duplicate"],
+                  sourceName: "second.jpg",
+                  sourceSha256: sourceHash,
+                },
+              ],
+              schemaVersion: "beep.files.image-curation-decisions.v1",
+              sourceDirectory: datasetDir,
+            })
+          );
+          yield* fs.writeFileString(decisionsPath, decisionText);
+
+          yield* runFilesCommand([
+            "curate-images",
+            "--dir",
+            datasetDir,
+            "--decisions",
+            decisionsPath,
+            "--out-dir",
+            outDir,
+          ]);
+
+          const manifestPath = path.join(outDir, "manifests", "image-curation-manifest.json");
+          const manifest = yield* decodeImageCurationManifest(yield* fs.readFileString(manifestPath));
+          const hashPrefix = sourceHash.slice("sha256:".length, "sha256:".length + 20);
+          expect(manifest.entries.map((entry) => entry.outputName)).toEqual([
+            `twv1_${hashPrefix}.png`,
+            `twv1_${hashPrefix}_2.png`,
+          ]);
+          expect(manifest.entries[0]?.outputPath).not.toBe(manifest.entries[1]?.outputPath);
+          expect(yield* fs.exists(manifest.entries[0]?.outputPath ?? "")).toBe(true);
+          expect(yield* fs.exists(manifest.entries[1]?.outputPath ?? "")).toBe(true);
+        })
+      )
+    ));
+
+  it("refuses curation manifests that overlap protected inputs or generated derivatives", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const datasetDir = yield* makeDatasetDir(tmpDir);
+          const sourcePath = path.join(datasetDir, "source.jpg");
+          const decisionsPath = path.join(tmpDir, "decisions.json");
+          const outDir = path.join(tmpDir, "prepared");
+
+          yield* writeJpegWithExif(sourcePath, 32, 32);
+          const sourceHash = yield* sha256FileRef(sourcePath);
+          const decisionText = yield* encodeImageCurationDecisionDocument(
+            ImageCurationDecisionDocument.make({
+              decisions: [
+                {
+                  disposition: "active-core",
+                  reasons: ["clean-current-identity"],
+                  sourceName: "source.jpg",
+                  sourceSha256: sourceHash,
+                },
+              ],
+              schemaVersion: "beep.files.image-curation-decisions.v1",
+              sourceDirectory: datasetDir,
+            })
+          );
+          yield* fs.writeFileString(decisionsPath, decisionText);
+          const baseArgs = [
+            "curate-images",
+            "--dir",
+            datasetDir,
+            "--decisions",
+            decisionsPath,
+            "--out-dir",
+            outDir,
+            "--overwrite",
+            "--manifest",
+          ];
+
+          const sourceManifestError = yield* expectFilesCommandFailure([...baseArgs, sourcePath]);
+          expect(sourceManifestError).toContain("must not be written inside source directory");
+          expect(yield* sha256FileRef(sourcePath)).toBe(sourceHash);
+
+          const decisionManifestError = yield* expectFilesCommandFailure([...baseArgs, decisionsPath]);
+          expect(decisionManifestError).toContain("must not overwrite decision ledger");
+          expect(yield* fs.readFileString(decisionsPath)).toBe(decisionText);
+
+          const outputPath = path.join(
+            outDir,
+            "canonical",
+            "active",
+            "core",
+            `twv1_${sourceHash.slice("sha256:".length, "sha256:".length + 20)}.png`
+          );
+          const derivativeManifestError = yield* expectFilesCommandFailure([...baseArgs, outputPath]);
+          expect(derivativeManifestError).toContain("must not overlap generated derivative");
+          expect(yield* fs.exists(outDir)).toBe(false);
+        })
+      )
+    ));
+
+  it("keeps prior outputs intact when a later curation source cannot be materialized", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const datasetDir = yield* makeDatasetDir(tmpDir);
+          const validPath = path.join(datasetDir, "a-valid.jpg");
+          const brokenPath = path.join(datasetDir, "z-broken.jpg");
+          const decisionsPath = path.join(tmpDir, "decisions.json");
+          const outDir = path.join(tmpDir, "prepared");
+          const manifestPath = path.join(outDir, "manifests", "image-curation-manifest.json");
+
+          yield* writeJpegWithExif(validPath, 32, 32);
+          yield* fs.writeFileString(brokenPath, "not-an-image");
+          const validHash = yield* sha256FileRef(validPath);
+          const decisionText = yield* encodeImageCurationDecisionDocument(
+            ImageCurationDecisionDocument.make({
+              decisions: [
+                {
+                  disposition: "active-core",
+                  reasons: ["clean-current-identity"],
+                  sourceName: "a-valid.jpg",
+                  sourceSha256: validHash,
+                },
+                {
+                  disposition: "archive-technical-quality",
+                  reasons: ["broken-decoder-input"],
+                  sourceName: "z-broken.jpg",
+                  sourceSha256: yield* sha256FileRef(brokenPath),
+                },
+              ],
+              schemaVersion: "beep.files.image-curation-decisions.v1",
+              sourceDirectory: datasetDir,
+            })
+          );
+          yield* fs.writeFileString(decisionsPath, decisionText);
+
+          const existingOutputPath = path.join(
+            outDir,
+            "canonical",
+            "active",
+            "core",
+            `twv1_${validHash.slice("sha256:".length, "sha256:".length + 20)}.png`
+          );
+          yield* fs.makeDirectory(path.dirname(existingOutputPath), { recursive: true });
+          yield* fs.makeDirectory(path.dirname(manifestPath), { recursive: true });
+          yield* fs.writeFileString(existingOutputPath, "previous-output");
+          yield* fs.writeFileString(manifestPath, "previous-manifest");
+
+          const output = yield* expectFilesCommandFailure([
+            "curate-images",
+            "--dir",
+            datasetDir,
+            "--decisions",
+            decisionsPath,
+            "--out-dir",
+            outDir,
+            "--overwrite",
+          ]);
+
+          expect(output).toContain("Failed to inspect canonical PNG source");
+          expect(yield* fs.readFileString(existingOutputPath)).toBe("previous-output");
+          expect(yield* fs.readFileString(manifestPath)).toBe("previous-manifest");
+        })
+      )
+    ));
+
   it("refuses incomplete or source-drifted image curation ledgers", () =>
     Effect.runPromise(
       withTempDirectory((tmpDir) =>

@@ -130,6 +130,21 @@ interface MaterializedPng extends OrientedImageDimensions {
   readonly size: number;
 }
 
+interface StagedCurationEntry {
+  readonly entry: PreparedCurationEntry;
+  readonly manifestEntry: ImageCurationManifestEntry;
+  readonly stagedPath: string;
+}
+
+interface CurationCommitRecord {
+  backedUp: boolean;
+  readonly backupPath: string;
+  committed: boolean;
+  readonly description: string;
+  readonly stagedPath: string;
+  readonly targetPath: string;
+}
+
 interface OptionalManifestDecisionFields {
   crop?: ImageCurationCrop;
   duplicateClusterId?: string;
@@ -178,6 +193,15 @@ const isDirectSafeName = (path: Pick<ImagePathOperations, "basename">, value: st
   !value.includes("/") &&
   !value.includes("\\") &&
   !value.includes("\0");
+
+const pathsOverlap = (
+  path: Pick<ImagePathOperations, "isAbsolute" | "relative">,
+  left: string,
+  right: string
+): boolean => {
+  const relative = path.relative(left, right);
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+};
 
 const collectAuditSources = Effect.fn("Files.collectImageAuditSources")(function* (
   directory: string
@@ -649,6 +673,18 @@ const candidateSessionClusters = (entries: ReadonlyArray<ImageAuditEntry>): Read
     );
 };
 
+const renderJsonContent = Effect.fn("Files.renderImageCurationJson")(function* (
+  value: unknown,
+  description: string
+): Effect.fn.Return<string, FilesCommandError> {
+  return pipe(
+    yield* encodeUnknownJson(value).pipe(
+      Effect.mapError((cause) => FilesCommandError.new(cause, `Failed to encode ${description}`))
+    ),
+    Str.concat("\n")
+  );
+});
+
 const writeJsonAtomically = Effect.fn("Files.writeImageCurationJsonAtomically")(function* (
   filePath: string,
   value: unknown,
@@ -690,12 +726,7 @@ const writeJsonAtomically = Effect.fn("Files.writeImageCurationJsonAtomically")(
       .pipe(Effect.mapError((cause) => formatPlatformError(`Failed to stage ${description}`, parent, { cause }))),
     Effect.fnUntraced(function* (tempDir) {
       const tempPath = path.join(tempDir, path.basename(resolved));
-      const content = pipe(
-        yield* encodeUnknownJson(value).pipe(
-          Effect.mapError((cause) => FilesCommandError.new(cause, `Failed to encode ${description}`))
-        ),
-        Str.concat("\n")
-      );
+      const content = yield* renderJsonContent(value, description);
       yield* fs
         .writeFileString(tempPath, content)
         .pipe(
@@ -732,11 +763,22 @@ export const auditImagesImpl = Effect.fn("FilesCommandService.auditImages")(func
   const path = yield* Path.Path;
   const sources = yield* collectAuditSources(options.dir);
   const manifestPath = path.resolve(options.manifest);
+  const modelPath = path.resolve(options.modelPath);
+  if (pathsOverlap(path, sources.canonicalDirectory, manifestPath)) {
+    return yield* FilesCommandError.make({
+      message: `Image audit manifest must not be written inside source directory "${sources.canonicalDirectory}".`,
+    });
+  }
+  if (manifestPath === modelPath) {
+    return yield* FilesCommandError.make({
+      message: `Image audit manifest must not overwrite face model "${modelPath}".`,
+    });
+  }
   let entries = A.empty<ImageAuditEntry>();
   let skipped = sources.skipped;
 
   yield* withDetector(
-    FaceDetectionModelConfig.make({ modelPath: path.resolve(options.modelPath) }),
+    FaceDetectionModelConfig.make({ modelPath }),
     Effect.fnUntraced(function* (detector) {
       for (const source of sources.files) {
         const result = yield* Effect.all(
@@ -811,7 +853,7 @@ export const auditImagesImpl = Effect.fn("FilesCommandService.auditImages")(func
     duplicateClusters: duplicates,
     entries,
     manifestPath,
-    modelPath: path.resolve(options.modelPath),
+    modelPath,
     schemaVersion: "beep.files.image-audit.v1",
     sessionClusters: sessions,
     similarityPairs,
@@ -842,15 +884,6 @@ const dispositionDirectories = {
 } as const satisfies Readonly<Record<ImageCurationDisposition, string>>;
 
 const dispositionDirectory = (disposition: ImageCurationDisposition): string => dispositionDirectories[disposition];
-
-const pathsOverlap = (
-  path: Pick<ImagePathOperations, "isAbsolute" | "relative">,
-  left: string,
-  right: string
-): boolean => {
-  const relative = path.relative(left, right);
-  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
-};
 
 const requireCleanCurationSources = Effect.fn("Files.requireCleanCurationSources")(function* (
   sources: AuditSourceCollection
@@ -886,7 +919,8 @@ const readDecisionDocument = Effect.fn("Files.readImageCurationDecisionDocument"
 const validateCurationRoots = Effect.fn("Files.validateImageCurationRoots")(function* (
   options: ImageCurationOptions,
   sources: AuditSourceCollection,
-  decisions: ImageCurationDecisionDocument
+  decisions: ImageCurationDecisionDocument,
+  decisionDocumentPath: string
 ): Effect.fn.Return<{ readonly manifestPath: string; readonly outputDirectory: string }, FilesCommandError, Path.Path> {
   const path = yield* Path.Path;
   const recordedSourceDirectory = path.resolve(decisions.sourceDirectory);
@@ -907,13 +941,30 @@ const validateCurationRoots = Effect.fn("Files.validateImageCurationRoots")(func
   }
 
   const defaultManifestPath = path.join(outputDirectory, "manifests", "image-curation-manifest.json");
+  const manifestPath = path.resolve(
+    pipe(
+      options.manifest,
+      O.getOrElse(() => defaultManifestPath)
+    )
+  );
+  if (pathsOverlap(path, sources.canonicalDirectory, manifestPath)) {
+    return yield* FilesCommandError.make({
+      message: `Image curation manifest must not be written inside source directory "${sources.canonicalDirectory}".`,
+    });
+  }
+  if (manifestPath === decisionDocumentPath) {
+    return yield* FilesCommandError.make({
+      message: `Image curation manifest must not overwrite decision ledger "${decisionDocumentPath}".`,
+    });
+  }
+  if (pathsOverlap(path, manifestPath, outputDirectory)) {
+    return yield* FilesCommandError.make({
+      message: `Image curation manifest path must not contain output directory "${outputDirectory}".`,
+    });
+  }
+
   return {
-    manifestPath: path.resolve(
-      pipe(
-        options.manifest,
-        O.getOrElse(() => defaultManifestPath)
-      )
-    ),
+    manifestPath,
     outputDirectory,
   };
 });
@@ -990,16 +1041,23 @@ const collisionSafeOutputName = (
   const hex = hash.slice("sha256:".length);
   let prefixLength = 20;
   let outputName = `twv1_${hex.slice(0, prefixLength)}.png`;
-  while (
-    pipe(
-      MutableHashMap.get(usedNames, outputName),
-      O.exists((existingHash) => existingHash !== hash)
-    )
-  ) {
-    prefixLength += 1;
-    outputName = `twv1_${hex.slice(0, prefixLength)}.png`;
+  while (true) {
+    const existingHash = MutableHashMap.get(usedNames, outputName);
+    if (O.isNone(existingHash)) return outputName;
+    if (existingHash.value !== hash) {
+      prefixLength += 1;
+      outputName = `twv1_${hex.slice(0, prefixLength)}.png`;
+      continue;
+    }
+
+    let duplicateIndex = 2;
+    let duplicateName = `twv1_${hex.slice(0, prefixLength)}_${duplicateIndex}.png`;
+    while (MutableHashMap.has(usedNames, duplicateName)) {
+      duplicateIndex += 1;
+      duplicateName = `twv1_${hex.slice(0, prefixLength)}_${duplicateIndex}.png`;
+    }
+    return duplicateName;
   }
-  return outputName;
 };
 
 const allocateCurationOutputNames = (
@@ -1029,6 +1087,30 @@ const prepareCurationEntries = (
     };
   });
 
+const requireSafeCurationDestinations = Effect.fn("Files.requireSafeImageCurationDestinations")(function* (
+  path: Pick<ImagePathOperations, "isAbsolute" | "relative">,
+  manifestPath: string,
+  entries: ReadonlyArray<PreparedCurationEntry>
+): Effect.fn.Return<void, FilesCommandError> {
+  const outputPaths = MutableHashSet.empty<string>();
+  for (const entry of entries) {
+    if (MutableHashSet.has(outputPaths, entry.outputPath)) {
+      return yield* FilesCommandError.make({
+        message: `Duplicate image curation output path: "${entry.outputPath}"`,
+      });
+    }
+    MutableHashSet.add(outputPaths, entry.outputPath);
+
+    const manifestOverlapsOutput =
+      pathsOverlap(path, manifestPath, entry.outputPath) || pathsOverlap(path, entry.outputPath, manifestPath);
+    if (manifestOverlapsOutput) {
+      return yield* FilesCommandError.make({
+        message: `Image curation manifest must not overlap generated derivative "${entry.outputPath}".`,
+      });
+    }
+  }
+});
+
 const validateDecisionLedger = Effect.fn("Files.validateImageCurationDecisionLedger")(function* (
   options: ImageCurationOptions
 ): Effect.fn.Return<ValidatedDecisionLedger, FilesCommandError, FileSystem.FileSystem | Path.Path | Crypto.Crypto> {
@@ -1037,11 +1119,12 @@ const validateDecisionLedger = Effect.fn("Files.validateImageCurationDecisionLed
   yield* requireCleanCurationSources(sources);
   const decisionDocumentPath = path.resolve(options.decisionsPath);
   const decisions = yield* readDecisionDocument(decisionDocumentPath);
-  const roots = yield* validateCurationRoots(options, sources, decisions);
+  const roots = yield* validateCurationRoots(options, sources, decisions, decisionDocumentPath);
   const decisionsByName = yield* indexCurationDecisions(decisions.decisions);
   yield* requireExactDecisionCoverage(sources.files, decisions.decisions, decisionsByName);
   const validatedSources = yield* validateSourceDecisionHashes(sources.files, decisionsByName);
   const prepared = prepareCurationEntries(path, roots.outputDirectory, allocateCurationOutputNames(validatedSources));
+  yield* requireSafeCurationDestinations(path, roots.manifestPath, prepared);
 
   return {
     decisions,
@@ -1176,6 +1259,109 @@ const curationSummary = (
     reserveCount: A.length(A.filter(decisions, (decision) => decision.disposition === "reserve-near-duplicate")),
   });
 
+const inspectCurationDestination = Effect.fn("Files.inspectImageCurationDestination")(function* (
+  targetPath: string,
+  overwrite: boolean,
+  description: string
+): Effect.fn.Return<boolean, FilesCommandError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const exists = yield* fs
+    .exists(targetPath)
+    .pipe(Effect.mapError((cause) => formatPlatformError(`Failed to inspect ${description}`, targetPath, { cause })));
+  if (!exists) return false;
+  if (!overwrite) {
+    return yield* FilesCommandError.make({
+      message: `Refusing to overwrite existing ${description}: "${targetPath}"`,
+    });
+  }
+
+  const stat = yield* fs
+    .stat(targetPath)
+    .pipe(Effect.mapError((cause) => formatPlatformError(`Failed to stat ${description}`, targetPath, { cause })));
+  if (stat.type !== "File") {
+    return yield* FilesCommandError.make({
+      message: `Refusing to overwrite non-file ${description}: "${targetPath}"`,
+    });
+  }
+  return true;
+});
+
+const preflightCurationDestinations = Effect.fn("Files.preflightImageCurationDestinations")(function* (
+  validated: ValidatedDecisionLedger,
+  overwrite: boolean
+): Effect.fn.Return<void, FilesCommandError, FileSystem.FileSystem> {
+  for (const entry of validated.prepared) {
+    yield* inspectCurationDestination(entry.outputPath, overwrite, "curation output");
+  }
+  yield* inspectCurationDestination(validated.manifestPath, overwrite, "image curation manifest");
+});
+
+const rollbackCurationCommit = Effect.fn("Files.rollbackImageCurationCommit")(function* (
+  records: ReadonlyArray<CurationCommitRecord>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  for (let index = records.length - 1; index >= 0; index -= 1) {
+    const record = records[index];
+    if (record === undefined) continue;
+    if (record.committed) {
+      yield* fs.remove(record.targetPath, { force: true }).pipe(Effect.ignore);
+      record.committed = false;
+    }
+    if (record.backedUp) {
+      yield* fs.rename(record.backupPath, record.targetPath).pipe(Effect.ignore);
+      record.backedUp = false;
+    }
+  }
+});
+
+const commitCurationFiles = Effect.fn("Files.commitImageCurationFiles")(function* (
+  records: ReadonlyArray<CurationCommitRecord>,
+  overwrite: boolean
+): Effect.fn.Return<void, FilesCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+
+  yield* Effect.onError(
+    Effect.gen(function* () {
+      for (const record of records) {
+        const parent = path.dirname(record.targetPath);
+        yield* fs
+          .makeDirectory(parent, { recursive: true })
+          .pipe(
+            Effect.mapError((cause) =>
+              formatPlatformError(`Failed to create ${record.description} directory`, parent, { cause })
+            )
+          );
+      }
+
+      for (const record of records) {
+        const exists = yield* inspectCurationDestination(record.targetPath, overwrite, record.description);
+        if (!exists) continue;
+        yield* fs
+          .rename(record.targetPath, record.backupPath)
+          .pipe(
+            Effect.mapError((cause) =>
+              formatPlatformError(`Failed to back up existing ${record.description}`, record.targetPath, { cause })
+            )
+          );
+        record.backedUp = true;
+      }
+
+      for (const record of records) {
+        yield* fs
+          .rename(record.stagedPath, record.targetPath)
+          .pipe(
+            Effect.mapError((cause) =>
+              formatPlatformError(`Failed to commit ${record.description}`, record.targetPath, { cause })
+            )
+          );
+        record.committed = true;
+      }
+    }),
+    () => rollbackCurationCommit(records)
+  );
+});
+
 /**
  * Validate a complete decision ledger and materialize metadata-free PNG derivatives.
  *
@@ -1204,45 +1390,7 @@ export const curateImagesImpl = Effect.fn("FilesCommandService.curateImages")(fu
     return dryRunSummary;
   }
 
-  for (const entry of validated.prepared) {
-    const exists = yield* fs
-      .exists(entry.outputPath)
-      .pipe(
-        Effect.mapError((cause) =>
-          formatPlatformError("Failed to inspect curation output", entry.outputPath, { cause })
-        )
-      );
-    if (exists && !options.overwrite) {
-      return yield* FilesCommandError.make({
-        message: `Refusing to overwrite existing curation output: "${entry.outputPath}"`,
-      });
-    }
-    if (exists) {
-      const stat = yield* fs
-        .stat(entry.outputPath)
-        .pipe(
-          Effect.mapError((cause) => formatPlatformError("Failed to stat curation output", entry.outputPath, { cause }))
-        );
-      if (stat.type !== "File") {
-        return yield* FilesCommandError.make({
-          message: `Refusing to overwrite non-file curation output: "${entry.outputPath}"`,
-        });
-      }
-    }
-  }
-
-  const manifestExists = yield* fs
-    .exists(validated.manifestPath)
-    .pipe(
-      Effect.mapError((cause) =>
-        formatPlatformError("Failed to inspect image curation manifest", validated.manifestPath, { cause })
-      )
-    );
-  if (manifestExists && !options.overwrite) {
-    return yield* FilesCommandError.make({
-      message: `Refusing to overwrite existing image curation manifest: "${validated.manifestPath}"`,
-    });
-  }
+  yield* preflightCurationDestinations(validated, options.overwrite);
 
   yield* fs
     .makeDirectory(validated.outputDirectory, { recursive: true })
@@ -1251,8 +1399,16 @@ export const curateImagesImpl = Effect.fn("FilesCommandService.curateImages")(fu
         formatPlatformError("Failed to create image curation output directory", validated.outputDirectory, { cause })
       )
     );
+  const manifestParent = path.dirname(validated.manifestPath);
+  yield* fs
+    .makeDirectory(manifestParent, { recursive: true })
+    .pipe(
+      Effect.mapError((cause) =>
+        formatPlatformError("Failed to create image curation manifest directory", manifestParent, { cause })
+      )
+    );
 
-  const manifestEntries = yield* Effect.acquireUseRelease(
+  const summary = yield* Effect.acquireUseRelease(
     fs
       .makeTempDirectory({ directory: validated.outputDirectory, prefix: ".beep-files-curate-images-" })
       .pipe(
@@ -1261,50 +1417,88 @@ export const curateImagesImpl = Effect.fn("FilesCommandService.curateImages")(fu
         )
       ),
     Effect.fnUntraced(function* (tempDirectory) {
-      let completed = A.empty<ImageCurationManifestEntry>();
+      let staged = A.empty<StagedCurationEntry>();
       let index = 0;
       for (const entry of validated.prepared) {
-        const tempPath = path.join(tempDirectory, `${`${index}`.padStart(4, "0")}-${entry.outputName}`);
-        const output = yield* materializeCanonicalPng(entry, tempPath);
-        const outputSha256 = yield* fileSha256(tempPath);
-        const destinationDirectory = path.dirname(entry.outputPath);
-        yield* fs
-          .makeDirectory(destinationDirectory, { recursive: true })
-          .pipe(
-            Effect.mapError((cause) =>
-              formatPlatformError("Failed to create curation destination directory", destinationDirectory, { cause })
-            )
-          );
-        if (options.overwrite) yield* fs.remove(entry.outputPath, { force: true }).pipe(Effect.ignore);
-        yield* fs
-          .rename(tempPath, entry.outputPath)
-          .pipe(
-            Effect.mapError((cause) =>
-              formatPlatformError("Failed to commit canonical curation output", entry.outputPath, { cause })
-            )
-          );
-        completed = A.append(completed, makeCurationManifestEntry(entry, output, outputSha256));
+        const stagedPath = path.join(tempDirectory, `${`${index}`.padStart(4, "0")}-${entry.outputName}`);
+        const output = yield* materializeCanonicalPng(entry, stagedPath);
+        const outputSha256 = yield* fileSha256(stagedPath);
+        staged = A.append(staged, {
+          entry,
+          manifestEntry: makeCurationManifestEntry(entry, output, outputSha256),
+          stagedPath,
+        });
         index += 1;
       }
-      return completed;
+
+      const nextSummary = curationSummary(validated.decisions.decisions, false, A.length(staged));
+      const manifest = ImageCurationManifest.make({
+        decisionDocumentPath: path.resolve(options.decisionsPath),
+        entries: staged.map((entry) => entry.manifestEntry),
+        manifestPath: validated.manifestPath,
+        outputDirectory: validated.outputDirectory,
+        schemaVersion: "beep.files.image-curation.v1",
+        sourceDirectory: validated.sourceDirectory,
+        summary: nextSummary,
+      });
+      const encoded = yield* encodeImageCurationManifest(manifest).pipe(
+        Effect.mapError((cause) => FilesCommandError.new(cause, "Failed to encode image curation manifest"))
+      );
+      const manifestContent = yield* renderJsonContent(encoded, "image curation manifest");
+
+      return yield* Effect.acquireUseRelease(
+        fs.makeTempDirectory({ directory: manifestParent, prefix: ".beep-files-curate-images-manifest-" }).pipe(
+          Effect.mapError((cause) =>
+            formatPlatformError("Failed to create image curation manifest staging directory", manifestParent, {
+              cause,
+            })
+          )
+        ),
+        Effect.fnUntraced(function* (manifestTempDirectory) {
+          const stagedManifestPath = path.join(manifestTempDirectory, "image-curation-manifest.json");
+          yield* fs
+            .writeFileString(stagedManifestPath, manifestContent)
+            .pipe(
+              Effect.mapError((cause) =>
+                formatPlatformError("Failed to write staged image curation manifest", stagedManifestPath, { cause })
+              )
+            );
+
+          let records = A.empty<CurationCommitRecord>();
+          for (let recordIndex = 0; recordIndex < staged.length; recordIndex += 1) {
+            const stagedEntry = staged[recordIndex];
+            if (stagedEntry === undefined) continue;
+            records = A.append(records, {
+              backedUp: false,
+              backupPath: path.join(
+                tempDirectory,
+                `backup-${`${recordIndex}`.padStart(4, "0")}-${stagedEntry.entry.outputName}`
+              ),
+              committed: false,
+              description: "curation output",
+              stagedPath: stagedEntry.stagedPath,
+              targetPath: stagedEntry.entry.outputPath,
+            });
+          }
+          records = A.append(records, {
+            backedUp: false,
+            backupPath: path.join(manifestTempDirectory, "previous-image-curation-manifest"),
+            committed: false,
+            description: "image curation manifest",
+            stagedPath: stagedManifestPath,
+            targetPath: validated.manifestPath,
+          });
+
+          yield* commitCurationFiles(records, options.overwrite);
+          return nextSummary;
+        }),
+        (manifestTempDirectory) =>
+          fs.remove(manifestTempDirectory, { recursive: true, force: true }).pipe(Effect.ignore)
+      );
     }),
     (tempDirectory) => fs.remove(tempDirectory, { recursive: true, force: true }).pipe(Effect.ignore)
   );
 
-  const summary = curationSummary(validated.decisions.decisions, false, A.length(manifestEntries));
-  const manifest = ImageCurationManifest.make({
-    decisionDocumentPath: path.resolve(options.decisionsPath),
-    entries: manifestEntries,
-    manifestPath: validated.manifestPath,
-    outputDirectory: validated.outputDirectory,
-    schemaVersion: "beep.files.image-curation.v1",
-    sourceDirectory: validated.sourceDirectory,
-    summary,
-  });
-  const encoded = yield* encodeImageCurationManifest(manifest).pipe(
-    Effect.mapError((cause) => FilesCommandError.new(cause, "Failed to encode image curation manifest"))
-  );
-  yield* writeJsonAtomically(validated.manifestPath, encoded, options.overwrite, "image curation manifest");
   yield* Console.log(
     `files curate-images: materialized ${summary.materializedCount} metadata-free PNG derivative(s) and wrote "${validated.manifestPath}".`
   );
