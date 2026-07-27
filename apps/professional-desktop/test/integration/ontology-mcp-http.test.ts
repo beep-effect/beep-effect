@@ -1,5 +1,8 @@
 /** @effect-diagnostics nodeBuiltinImport:skip-file */
 import * as NodeHttp from "node:http";
+import { EpistemicConfigTest } from "@beep/epistemic-config/test";
+import { verifyExecutionDecisionChain, verifyOutcomeBinding } from "@beep/epistemic-domain/values/ExecutionRecord";
+import { ExecutionLedger, ExecutionLedgerUnavailable } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { OntologyMcpConfigLive } from "@beep/ontology-config/layer";
 import { ChangeOperation } from "@beep/ontology-domain/aggregates/Session";
 import { OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session";
@@ -31,6 +34,7 @@ import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
 import { makeOntologyMcpTransportLayer } from "../../server/OntologyMcpTransport.ts";
 import { rpcSessionAuthorizationHeader } from "../../server/RpcSessionAuth.ts";
+import type { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
 import type { Scope } from "effect";
 
 const token = Redacted.make("ontology-mcp-http-test-token");
@@ -69,7 +73,56 @@ ex:bob a ex:Person ; ex:name "Bob" .
 type TransportOptions = {
   readonly mutationsEnabled: boolean;
   readonly approvedMutationTools: ReadonlyArray<string>;
+  readonly ledger?: Layer.Layer<ExecutionLedger> | undefined;
 };
+
+interface LedgerProbe {
+  readonly decisions: Ref.Ref<ReadonlyArray<ExecutionDecisionRecord>>;
+  readonly failWrites: Ref.Ref<boolean>;
+  readonly layer: Layer.Layer<ExecutionLedger>;
+  readonly outcomes: Ref.Ref<ReadonlyArray<ExecutionOutcomeRecord>>;
+}
+
+// A test-local execution-ledger stub: the ledger's real guarantees are the
+// database's (proven in the epistemic pglite suites); here the stub observes
+// what the governed gate writes through the real MCP server and injects
+// decision-write failures for the fail-closed proof.
+const makeLedgerProbe = Effect.fnUntraced(function* () {
+  const decisions = yield* Ref.make<ReadonlyArray<ExecutionDecisionRecord>>([]);
+  const outcomes = yield* Ref.make<ReadonlyArray<ExecutionOutcomeRecord>>([]);
+  const failWrites = yield* Ref.make(false);
+  const shape = ExecutionLedger.of({
+    appendDecision: Effect.fn("OntologyMcpHttpTest.appendDecision")(function* (record) {
+      if (yield* Ref.get(failWrites)) {
+        return yield* ExecutionLedgerUnavailable.during("appendDecision", "injected ledger failure");
+      }
+      yield* Ref.update(decisions, A.append(record));
+    }),
+    appendOutcome: Effect.fn("OntologyMcpHttpTest.appendOutcome")(function* (record) {
+      if (yield* Ref.get(failWrites)) {
+        return yield* ExecutionLedgerUnavailable.during("appendOutcome", "injected ledger failure");
+      }
+      yield* Ref.update(outcomes, A.append(record));
+    }),
+    readDecisions: Effect.fn("OntologyMcpHttpTest.readDecisions")(function* (runKey) {
+      return A.filter(yield* Ref.get(decisions), (record) => record.runKey === runKey);
+    }),
+    readOutcomes: Effect.fn("OntologyMcpHttpTest.readOutcomes")(function* (runKey) {
+      return A.filter(yield* Ref.get(outcomes), (record) => record.runKey === runKey);
+    }),
+    readUnsettledAllowed: Effect.fn("OntologyMcpHttpTest.readUnsettledAllowed")(function* (runKey) {
+      const settled = A.map(yield* Ref.get(outcomes), (record) => record.decisionHash);
+      return A.filter(
+        yield* Ref.get(decisions),
+        (record) => record.runKey === runKey && record.verdict === "allowed" && !A.contains(settled, record.hash)
+      );
+    }),
+  });
+  return { decisions, failWrites, layer: Layer.succeed(ExecutionLedger, shape), outcomes } satisfies LedgerProbe;
+});
+
+// Tests that make no ledger assertions still need one for the governed gate.
+const silentLedgerLayer = Layer.unwrap(Effect.map(makeLedgerProbe(), (probe) => probe.layer));
 
 const initializeBody =
   '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ontology-mcp-http-test","version":"0.0.0"}}}';
@@ -91,6 +144,8 @@ const transportConfigProvider = (root: string, options: TransportOptions) =>
 const transportLayer = (root: string, options: TransportOptions) =>
   makeOntologyMcpTransportLayer({ token, approvedMutationTools: options.approvedMutationTools }).pipe(
     Layer.provide(OntologyMcpConfigLive),
+    Layer.provide(options.ledger ?? silentLedgerLayer),
+    Layer.provide(EpistemicConfigTest),
     Layer.provide(transportConfigProvider(root, options)),
     Layer.provide(NodeServices.layer),
     Layer.orDie
@@ -309,27 +364,122 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
   );
 
   it.effect("fails mutation closed through TierGate when no tool approval resolves", () =>
-    withHttpServer({ mutationsEnabled: true, approvedMutationTools: [] }, (_root, ontologyPath) =>
-      Effect.gen(function* () {
-        const client = yield* makeMcpClient();
-        const opened = yield* openThroughMcp(client, ontologyPath);
-        const request = yield* encodeProposeChangeBatchRequest(
-          ProposeChangeBatchRequest.make({
-            path: ontologyPath,
-            expectedFingerprint: opened.fingerprint,
-            operations: [addName("carol", "Carol")],
-          })
-        );
-        const call = yield* client["tools/call"]({
-          name: ProposeChangeBatchTool.name,
-          arguments: request,
-        });
-        const refusal = yield* decodeOntologyToolFailure(call.structuredContent);
+    Effect.gen(function* () {
+      const probe = yield* makeLedgerProbe();
+      yield* withHttpServer(
+        { mutationsEnabled: true, approvedMutationTools: [], ledger: probe.layer },
+        (_root, ontologyPath) =>
+          Effect.gen(function* () {
+            const client = yield* makeMcpClient();
+            const opened = yield* openThroughMcp(client, ontologyPath);
+            const request = yield* encodeProposeChangeBatchRequest(
+              ProposeChangeBatchRequest.make({
+                path: ontologyPath,
+                expectedFingerprint: opened.fingerprint,
+                operations: [addName("carol", "Carol")],
+              })
+            );
+            const call = yield* client["tools/call"]({
+              name: ProposeChangeBatchTool.name,
+              arguments: request,
+            });
+            const refusal = yield* decodeOntologyToolFailure(call.structuredContent);
 
-        expect(call.isError).toBe(true);
-        expect(refusal._tag).toBe("OntologyTierGateRefusal");
-      })
-    )
+            expect(call.isError).toBe(true);
+            expect(refusal._tag).toBe("OntologyTierGateRefusal");
+          })
+      );
+      // A refused dispatch produces exactly one ledger row — the denied
+      // decision. There was no execution to settle, so no outcome row exists.
+      const decisions = yield* Ref.get(probe.decisions);
+      expect(decisions).toHaveLength(1);
+      expect(decisions[0]!.verdict).toBe("denied");
+      expect(decisions[0]!.verdict === "denied" && decisions[0]!.reason).toBe("operation-not-granted");
+      expect(yield* Ref.get(probe.outcomes)).toHaveLength(0);
+    })
+  );
+
+  it.effect("writes a write-ahead decision and a settlement for an approved mutation dispatch", () =>
+    Effect.gen(function* () {
+      const probe = yield* makeLedgerProbe();
+      yield* withHttpServer(
+        { mutationsEnabled: true, approvedMutationTools: [ProposeChangeBatchTool.name], ledger: probe.layer },
+        (_root, ontologyPath) =>
+          Effect.gen(function* () {
+            const client = yield* makeMcpClient();
+            const opened = yield* openThroughMcp(client, ontologyPath);
+            const request = yield* encodeProposeChangeBatchRequest(
+              ProposeChangeBatchRequest.make({
+                path: ontologyPath,
+                expectedFingerprint: opened.fingerprint,
+                operations: [addName("carol", "Carol")],
+              })
+            );
+            const call = yield* client["tools/call"]({
+              name: ProposeChangeBatchTool.name,
+              arguments: request,
+            });
+            expect(call.isError).toBe(false);
+          })
+      );
+      // Exactly two rows for one allowed dispatch through the real MCP
+      // server: the write-ahead decision and its completed settlement. The
+      // read-only open/inspect call is ungated and writes nothing.
+      const decisions = yield* Ref.get(probe.decisions);
+      const outcomes = yield* Ref.get(probe.outcomes);
+      expect(decisions).toHaveLength(1);
+      const decision = decisions[0]!;
+      expect(decision.verdict).toBe("allowed");
+      expect(decision.sinkClass).toBe("mcp-write");
+      expect(decision.audience).toBe("local-workspace");
+      expect(verifyExecutionDecisionChain(decisions, decision.runKey).result).toBe("chain-intact");
+      expect(outcomes).toHaveLength(1);
+      expect(outcomes[0]!.settlement).toBe("completed");
+      expect(verifyOutcomeBinding(outcomes[0]!, decision)).toBe(true);
+    })
+  );
+
+  it.effect("refuses the mutation and leaves the workspace unchanged when the decision write fails", () =>
+    Effect.gen(function* () {
+      const probe = yield* makeLedgerProbe();
+      yield* Ref.set(probe.failWrites, true);
+      yield* withHttpServer(
+        { mutationsEnabled: true, approvedMutationTools: [ProposeChangeBatchTool.name], ledger: probe.layer },
+        (root, ontologyPath) =>
+          Effect.gen(function* () {
+            const client = yield* makeMcpClient();
+            const opened = yield* openThroughMcp(client, ontologyPath);
+            const fileSystem = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const before = yield* fileSystem.readFileString(path.join(root, "ontology.ttl"));
+            const request = yield* encodeProposeChangeBatchRequest(
+              ProposeChangeBatchRequest.make({
+                path: ontologyPath,
+                expectedFingerprint: opened.fingerprint,
+                operations: [addName("carol", "Carol")],
+              })
+            );
+            const call = yield* client["tools/call"]({
+              name: ProposeChangeBatchTool.name,
+              arguments: request,
+            });
+            const refusal = yield* decodeOntologyToolFailure(call.structuredContent);
+
+            // The operation is granted, but the write-ahead decision could
+            // not be written: no record, no action. The refusal reaching the
+            // agent is reason-free — the same typed envelope as any refusal.
+            expect(call.isError).toBe(true);
+            expect(refusal._tag).toBe("OntologyTierGateRefusal");
+
+            const after = yield* fileSystem.readFileString(path.join(root, "ontology.ttl"));
+            expect(after).toBe(before);
+            // No provenance sidecar was produced either: the mutation never ran.
+            expect(yield* fileSystem.readDirectory(root)).toEqual(["ontology.ttl"]);
+          })
+      );
+      expect(yield* Ref.get(probe.decisions)).toHaveLength(0);
+      expect(yield* Ref.get(probe.outcomes)).toHaveLength(0);
+    })
   );
 
   it.effect("records the authenticated MCP caller and surfaces budget and CAS failures as typed tool errors", () =>

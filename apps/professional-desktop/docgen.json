@@ -619,6 +619,69 @@
       ],
       "@beep/epistemic-tables/values/ExecutionRecord": [
         "../../packages/epistemic/tables/src/values/ExecutionRecord/index.ts"
+      ],
+      "@beep/epistemic-config": [
+        "../../packages/epistemic/config/src/index.ts"
+      ],
+      "@beep/epistemic-config/public": [
+        "../../packages/epistemic/config/src/public.ts"
+      ],
+      "@beep/epistemic-config/server": [
+        "../../packages/epistemic/config/src/server.ts"
+      ],
+      "@beep/epistemic-config/secrets": [
+        "../../packages/epistemic/config/src/secrets.ts"
+      ],
+      "@beep/epistemic-config/layer": [
+        "../../packages/epistemic/config/src/layer.ts"
+      ],
+      "@beep/epistemic-config/test": [
+        "../../packages/epistemic/config/src/test.ts"
+      ],
+      "@beep/epistemic-server": [
+        "../../packages/epistemic/server/src/index.ts"
+      ],
+      "@beep/epistemic-server/layer": [
+        "../../packages/epistemic/server/src/Layer.ts"
+      ],
+      "@beep/epistemic-server/ClaimDisposition": [
+        "../../packages/epistemic/server/src/ClaimDisposition/index.ts"
+      ],
+      "@beep/epistemic-server/EdgeAuthority": [
+        "../../packages/epistemic/server/src/EdgeAuthority/index.ts"
+      ],
+      "@beep/epistemic-server/ExecutionLedger": [
+        "../../packages/epistemic/server/src/ExecutionLedger/index.ts"
+      ],
+      "@beep/epistemic-server/GovernedTierGate": [
+        "../../packages/epistemic/server/src/GovernedTierGate/index.ts"
+      ],
+      "@beep/epistemic-use-cases": [
+        "../../packages/epistemic/use-cases/src/index.ts"
+      ],
+      "@beep/epistemic-use-cases/public": [
+        "../../packages/epistemic/use-cases/src/public.ts"
+      ],
+      "@beep/epistemic-use-cases/server": [
+        "../../packages/epistemic/use-cases/src/server.ts"
+      ],
+      "@beep/epistemic-use-cases/ClaimDisposition": [
+        "../../packages/epistemic/use-cases/src/ClaimDisposition/index.ts"
+      ],
+      "@beep/epistemic-use-cases/ClaimGate": [
+        "../../packages/epistemic/use-cases/src/ClaimGate/index.ts"
+      ],
+      "@beep/epistemic-use-cases/ClaimLifecycle": [
+        "../../packages/epistemic/use-cases/src/ClaimLifecycle/index.ts"
+      ],
+      "@beep/epistemic-use-cases/ClaimProjection": [
+        "../../packages/epistemic/use-cases/src/ClaimProjection/index.ts"
+      ],
+      "@beep/epistemic-use-cases/EdgeAuthority": [
+        "../../packages/epistemic/use-cases/src/EdgeAuthority/index.ts"
+      ],
+      "@beep/epistemic-use-cases/ExecutionLedger": [
+        "../../packages/epistemic/use-cases/src/ExecutionLedger/index.ts"
       ]
     }
   }

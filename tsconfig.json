@@ -1640,6 +1640,9 @@
       ],
       "@beep/epistemic-use-cases/ExecutionLedger": [
         "./packages/epistemic/use-cases/src/ExecutionLedger/index.ts"
+      ],
+      "@beep/epistemic-server/GovernedTierGate": [
+        "./packages/epistemic/server/src/GovernedTierGate/index.ts"
       ]
     }
   }

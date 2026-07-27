@@ -37,19 +37,45 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-**P1 Implement.** PRs 1–4 have landed. Next concrete action: PR 5 —
-`GovernedTierGateLive` in `epistemic/server` implementing `TierGateShape`
-(evaluate against the session-frozen grant set with write-ahead ledger
-decisions; `recordOutcome` persisting the bounded settlement), plus the run
-store keyed by `clientId`, swapped in at
-`apps/professional-desktop/server/OntologyMcpTransport.ts` in place of
-`fromApprovedToolsPolicy`. Provide `PgliteDrizzleLive` and the epistemic config
-into the MCP branch; write-ahead fail-closed lands here — no decision row, no
-action. Map `TierGateSettlement` (mcp-kit) onto `ExecutionSettlement`
-(epistemic/domain) in the evaluator; the literals are deliberately identical.
+**P1 Implement.** PRs 1–5 have landed. Next concrete action: PR 6 — the policy
+`Fetch` and `ontology_publish_provenance`. **Re-read the PR 6 scope in
+`PLAN.md` and the SPEC stop conditions before starting**: it ships an
+agent-controllable outbound POST of workspace content to justify its own
+control, the tool registers only when the destination allowlist is non-empty,
+and it carries a blocking check — a request issued from *inside a real tool
+handler* must demonstrably reach the policy fetch (the spike only proved a
+directly-provided effect). The handler must require `HttpClient.HttpClient`
+and never self-provide it; the policy fetch writes its own typed refusal to
+the ledger and rejects with `EgressDenied` (already landed in
+`@beep/api-transport`); the ontology handler matches the cause and returns a
+typed refusal through its existing `failureMode: "return"` envelope. Grants
+for `network-egress` destinations come from `EpistemicConfig.destinationAllowlist`
+— extend the `GovernedTierGateOptions` grant blueprint at the composition root
+rather than teaching `epistemic/server` any ontology names.
 
 ## Latest Evidence
 
+- **PR 5** (2026-07-27) — enforcement begins. `GovernedTierGateLive` in
+  `epistemic/server` implements `TierGateShape`: `evaluate` freezes a
+  per-session grant set on the session's first dispatch (run keyed by
+  `clientId` via `CurrentMcpCaller`, a `Context.Reference` readable without
+  widening `R`), evaluates with the PR 1 evaluator, and appends the sealed
+  decision row *before* returning — a failed append refuses with
+  `ledger-unavailable` and the run state does not advance. `recordOutcome`
+  correlates settlements to decisions through a per-run FIFO keyed by
+  operation digest (the shape has no correlation id and `toolCallId` is always
+  none at the ontology call site). Swapped in at `OntologyMcpTransport.ts` in
+  place of `fromApprovedToolsPolicy`; `main.ts` provides `ExecutionLedgerDrizzle`
+  + `EpistemicConfigLive` + the memoized `PgliteDrizzleLive` into the MCP
+  branch. Proven at three levels: unit (write-ahead ordering, chain integrity,
+  FIFO settlement, fail-closed injection), pglite (real constraints, real
+  `DROP TABLE` refusal, the wrapped effect reading its own decision row
+  mid-dispatch), and end-to-end through the real MCP HTTP server (two rows per
+  allowed dispatch, one per refusal, injected decision-write failure leaving
+  the workspace byte-identical with zero rows). For `mcp-write` sinks the
+  boundary classifies audience by construction — the URL-parsing resolver
+  would misclassify the workspace destination. Eviction is expiry-based, a
+  recorded deviation (see `PLAN.md`).
 - **PR 4** (2026-07-27) — the two foundation additions. `TierGateShape` gains
   `recordOutcome`; `dispatchWithTierGate` reports settlements via
   `Effect.onExit` as the bounded `TierGateSettlement` literal (v4 note: the

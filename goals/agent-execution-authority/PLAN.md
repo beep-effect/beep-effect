@@ -4,12 +4,20 @@
 
 Status: `in-progress`
 
-PRs 1–4 have landed. PR 1 (#458) shipped the grant and record schemas plus
+PRs 1–5 have landed. PR 1 (#458) shipped the grant and record schemas plus
 the `frozen-grant-set` law; PR 2 (#463) shipped `@beep/epistemic-config`, the
 `OntologyMcpConfig` split, and the MCP entrypoint cleanup; PR 3 (#467) shipped
 the append-only ledger tables, migration, port, and Drizzle adapter; PR 4
-shipped `recordOutcome`/`TierGateSettlement` on the tier gate and
-`EgressDenied` in `@beep/api-transport`. PR 5 is next.
+(#471) shipped `recordOutcome`/`TierGateSettlement` on the tier gate and
+`EgressDenied` in `@beep/api-transport`; PR 5 shipped `GovernedTierGateLive`
+with the run store, swapped in at the MCP transport. PR 6 is next.
+
+**PR 5 deviation, recorded:** run eviction is expiry-based (swept on run
+creation), not wired to the client lifecycle as this plan projected —
+`clientId` arrives value-only through `CurrentMcpCaller`, so the gate has no
+seam onto the client's scope without new `mcp-kit` surface. A run past its
+grants' shared expiry can only deny, so the sweep is behavior-preserving; a
+lifecycle hook stays a candidate for the chat-egress widening.
 
 ## Phases
 

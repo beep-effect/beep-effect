@@ -5,7 +5,15 @@
  * @since 0.0.0
  */
 
-import { fromApprovedToolsPolicy, sanitizedToolkit, TierGate } from "@beep/mcp-kit";
+import {
+  ExecutionSink,
+  GrantOperation,
+  GrantPurpose,
+  GrantResource,
+  SinkDestination,
+} from "@beep/epistemic-domain/values/ExecutionGrant";
+import { GovernedTierGateLive } from "@beep/epistemic-server/GovernedTierGate";
+import { sanitizedToolkit } from "@beep/mcp-kit";
 import { OntologyMcpConfig } from "@beep/ontology-config/server";
 import { OntologyMcpMutationToolsLive, OntologyMcpReadOnlyToolsLive } from "@beep/ontology-server/tools";
 import {
@@ -16,7 +24,7 @@ import {
   RepairOntologyTool,
 } from "@beep/ontology-use-cases/tools";
 import { A, O } from "@beep/utils";
-import { Context, Data, Effect, Layer, Metric } from "effect";
+import { Context, Data, Duration, Effect, Layer, Metric } from "effect";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import { Headers, HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import { requireRpcSessionToken } from "./RpcSessionAuth.ts";
@@ -86,7 +94,7 @@ const ontologyMcpSecurityMiddleware = (token: Redacted.Redacted) =>
     );
 
 /** Ontology mutation tools eligible to dispatch once registration is enabled.
- * @remarks Registration and approval are separate gates; this list is the approval half and is inert while mutations stay unregistered.
+ * @remarks Registration and approval are separate gates; this list is the approval half and is inert while mutations stay unregistered. It becomes the granted operations of each MCP session's frozen grant set.
  * @category constants
  * @since 0.0.0
  */
@@ -96,9 +104,23 @@ const approvedOntologyMutationTools: ReadonlyArray<string> = [
   ExportProvenanceTool.name,
 ];
 
+// Every governed ontology mutation writes the local workspace; the sink triple
+// is a composition-root fact, so the boundary classifies its audience by
+// construction (the URL-parsing resolver is for network-egress destinations).
+// The raw destination never reaches the ledger — records carry its digest.
+const ontologyWorkspaceSink = ExecutionSink.make({
+  audience: "local-workspace",
+  destination: SinkDestination.make("workspace://ontology"),
+  sinkClass: "mcp-write",
+});
+
+// Generous against any interactive session length; a session's frozen grants
+// expire together and an expired run can only deny.
+const ontologySessionGrantTtl = Duration.hours(12);
+
 /** Build the `/mcp` route layer with read-only registration independent of mutation enablement.
- * @remarks Mutation registration is decided by `OntologyMcpConfig` inside `Layer.unwrap`, so the layer-shape branch stays where the layer is built; every mutation still dispatches through TierGate.
- * @remarks `approvedMutationTools` exists so a test can register the mutation tools while approving none of them, which is the only way to prove that registration is not authorization. Production never passes it.
+ * @remarks Mutation registration is decided by `OntologyMcpConfig` inside `Layer.unwrap`, so the layer-shape branch stays where the layer is built; every mutation dispatches through the governed TierGate, which freezes a per-session grant set and writes a write-ahead ledger decision before any effect runs. The returned layer therefore requires `ExecutionLedger` and `EpistemicConfig`; the entrypoint provides the Drizzle ledger over the shared PGlite, and a test may inject a failing ledger to prove the fail-closed refusal.
+ * @remarks `approvedMutationTools` exists so a test can register the mutation tools while granting none of them, which is the only way to prove that registration is not authorization. Production never passes it.
  * @example
  * ```ts
  * import { Layer, Redacted } from "effect"
@@ -121,7 +143,15 @@ export const makeOntologyMcpTransportLayer = (options: {
   const readOnly = sanitizedToolkit(OntologyReadOnlyToolkit).pipe(Layer.provide(OntologyMcpReadOnlyToolsLive));
   const mutations = sanitizedToolkit(OntologyMutationToolkit).pipe(
     Layer.provide(OntologyMcpMutationToolsLive),
-    Layer.provide(Layer.succeed(TierGate)(TierGate.of(fromApprovedToolsPolicy({ approvedTools }))))
+    Layer.provide(
+      GovernedTierGateLive({
+        grantTtl: ontologySessionGrantTtl,
+        operations: A.map(approvedTools, (tool) => GrantOperation.make(tool)),
+        purpose: GrantPurpose.make("ontology-workspace-mutation"),
+        resource: GrantResource.make("ontology-workspace"),
+        sink: ontologyWorkspaceSink,
+      })
+    )
   );
   const preflight = HttpRouter.add("OPTIONS", "/mcp", HttpServerResponse.empty({ status: 204 })).pipe(
     Layer.provide(security.layer)
