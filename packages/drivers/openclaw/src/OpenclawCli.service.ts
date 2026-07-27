@@ -14,7 +14,6 @@
 
 import { $OpenclawId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { collectProcessOutput } from "@beep/utils/Stream";
 import { Context, Duration, Effect, flow, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -22,7 +21,8 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import { ChildProcessSpawner } from "effect/unstable/process";
+import { spawnProcessResult } from "./internal/spawn.ts";
 import {
   hermeticOpenclawEnv,
   OPENCLAW_CHANNEL_PROBE_TIMEOUT,
@@ -33,12 +33,7 @@ import {
   OPENCLAW_VALIDATE_TIMEOUT,
   OPENCLAW_VERSION_TIMEOUT,
 } from "./Openclaw.config.ts";
-import {
-  OpenclawCommandExitError,
-  OpenclawCommandSpawnError,
-  OpenclawCommandTimeoutError,
-  OpenclawOutputParseError,
-} from "./Openclaw.errors.ts";
+import { OpenclawCommandExitError, OpenclawCommandTimeoutError, OpenclawOutputParseError } from "./Openclaw.errors.ts";
 import {
   OpenclawAgentTurn,
   OpenclawChannelAccountStatus,
@@ -49,14 +44,18 @@ import {
   OpenclawDoctorReport,
   OpenclawGatewayHealth,
   OpenclawProcessRequest,
-  OpenclawProcessResult,
   OpenclawSecretsReloadDegraded,
   OpenclawSecretsReloaded,
   OpenclawSecretsReloadOutput,
   OpenclawVersionInfo,
 } from "./Openclaw.models.ts";
 import type { OpenclawCliError } from "./Openclaw.errors.ts";
-import type { OpenclawConfigValidation, OpenclawInvocationContext, OpenclawSecretsReload } from "./Openclaw.models.ts";
+import type {
+  OpenclawConfigValidation,
+  OpenclawInvocationContext,
+  OpenclawProcessResult,
+  OpenclawSecretsReload,
+} from "./Openclaw.models.ts";
 
 const $I = $OpenclawId.create("OpenclawCli.service");
 
@@ -456,33 +455,8 @@ const subcommandLabel = (request: OpenclawProcessRequest): string =>
 const runHermetic = (
   spawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
   request: OpenclawProcessRequest
-): Effect.Effect<OpenclawProcessResult, OpenclawCliError> => {
-  const command = ChildProcess.make(request.executable, A.fromIterable(request.args), {
-    env: request.env,
-    extendEnv: false,
-    stdin: "ignore",
-    stderr: "pipe",
-    stdout: "pipe",
-  });
-
-  return Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* spawner.spawn(command);
-      const [stdout, stderr, exitCode] = yield* collectProcessOutput(handle);
-
-      return OpenclawProcessResult.make({ exitCode, stderr, stdout });
-    })
-  ).pipe(
-    Effect.mapError((cause) =>
-      OpenclawCommandSpawnError.make({
-        argumentCount: A.length(request.args),
-        cause,
-        executable: request.executable,
-        subcommand: subcommandLabel(request),
-      })
-    )
-  );
-};
+): Effect.Effect<OpenclawProcessResult, OpenclawCliError> =>
+  spawnProcessResult(spawner, request, { extendEnv: false, subcommand: subcommandLabel(request) });
 
 const makeService = (runner: OpenclawCliRunner): OpenclawCliShape => {
   const execute = Effect.fnUntraced(function* (

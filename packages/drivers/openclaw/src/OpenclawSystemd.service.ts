@@ -12,22 +12,18 @@
  */
 
 import { $OpenclawId } from "@beep/identity";
-import { collectProcessOutput } from "@beep/utils/Stream";
 import { Context, Duration, Effect, Layer, Number as N, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
-import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import { ChildProcessSpawner } from "effect/unstable/process";
+import { spawnProcessResult } from "./internal/spawn.ts";
 import { OPENCLAW_SYSTEMCTL_TIMEOUT } from "./Openclaw.config.ts";
-import {
-  OpenclawCommandExitError,
-  OpenclawCommandSpawnError,
-  OpenclawCommandTimeoutError,
-  OpenclawOutputParseError,
-} from "./Openclaw.errors.ts";
-import { OpenclawProcessRequest, OpenclawProcessResult, OpenclawSystemdUnitState } from "./Openclaw.models.ts";
+import { OpenclawCommandExitError, OpenclawCommandTimeoutError, OpenclawOutputParseError } from "./Openclaw.errors.ts";
+import { OpenclawProcessRequest, OpenclawSystemdUnitState } from "./Openclaw.models.ts";
 import type { OpenclawCliError } from "./Openclaw.errors.ts";
+import type { OpenclawProcessResult } from "./Openclaw.models.ts";
 import type { OpenclawCliRunner } from "./OpenclawCli.service.ts";
 
 const $I = $OpenclawId.create("OpenclawSystemd.service");
@@ -93,40 +89,18 @@ interface OpenclawSystemdShape {
   readonly stop: (unit: string) => Effect.Effect<void, OpenclawCliError>;
 }
 
+const verbLabel = (request: OpenclawProcessRequest): string =>
+  pipe(
+    A.get(request.args, 1),
+    O.orElse(() => A.head(request.args)),
+    O.getOrElse(() => request.executable)
+  );
+
 const runInherited = (
   spawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
   request: OpenclawProcessRequest
-): Effect.Effect<OpenclawProcessResult, OpenclawCliError> => {
-  const command = ChildProcess.make(request.executable, A.fromIterable(request.args), {
-    env: request.env,
-    extendEnv: true,
-    stdin: "ignore",
-    stderr: "pipe",
-    stdout: "pipe",
-  });
-
-  return Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* spawner.spawn(command);
-      const [stdout, stderr, exitCode] = yield* collectProcessOutput(handle);
-
-      return OpenclawProcessResult.make({ exitCode, stderr, stdout });
-    })
-  ).pipe(
-    Effect.mapError((cause) =>
-      OpenclawCommandSpawnError.make({
-        argumentCount: A.length(request.args),
-        cause,
-        executable: request.executable,
-        subcommand: pipe(
-          A.get(request.args, 1),
-          O.orElse(() => A.head(request.args)),
-          O.getOrElse(() => request.executable)
-        ),
-      })
-    )
-  );
-};
+): Effect.Effect<OpenclawProcessResult, OpenclawCliError> =>
+  spawnProcessResult(spawner, request, { extendEnv: true, subcommand: verbLabel(request) });
 
 const makeService = (executable: string, runner: OpenclawCliRunner): OpenclawSystemdShape => {
   const timeoutMs = Duration.toMillis(OPENCLAW_SYSTEMCTL_TIMEOUT);

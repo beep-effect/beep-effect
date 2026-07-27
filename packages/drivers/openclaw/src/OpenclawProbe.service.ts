@@ -42,6 +42,25 @@ const probeEndpoint = Effect.fnUntraced(function* (input: {
   });
 });
 
+interface OpenclawEndpointProbeInput {
+  readonly host?: string | undefined;
+  readonly path?: string | undefined;
+  readonly port: number;
+  readonly timeout?: Duration.Input | undefined;
+}
+
+const makeEndpointProbe = (spanName: string, defaultPath: string) =>
+  Effect.fn(spanName)(function* (
+    input: OpenclawEndpointProbeInput
+  ): Effect.fn.Return<OpenclawHttpProbe, never, HttpClient.HttpClient> {
+    return yield* probeEndpoint({
+      host: input.host ?? defaultProbeHost,
+      path: input.path ?? defaultPath,
+      port: input.port,
+      timeout: input.timeout ?? OPENCLAW_HTTP_PROBE_TIMEOUT,
+    });
+  });
+
 /**
  * Probe the OpenClaw gateway liveness endpoint over loopback HTTP.
  *
@@ -57,19 +76,7 @@ const probeEndpoint = Effect.fnUntraced(function* (input: {
  * @category clients
  * @since 0.0.0
  */
-export const probeOpenclawLiveness = Effect.fn("Openclaw.probeLiveness")(function* (input: {
-  readonly host?: string | undefined;
-  readonly path?: string | undefined;
-  readonly port: number;
-  readonly timeout?: Duration.Input | undefined;
-}): Effect.fn.Return<OpenclawHttpProbe, never, HttpClient.HttpClient> {
-  return yield* probeEndpoint({
-    host: input.host ?? defaultProbeHost,
-    path: input.path ?? "/health",
-    port: input.port,
-    timeout: input.timeout ?? OPENCLAW_HTTP_PROBE_TIMEOUT,
-  });
-});
+export const probeOpenclawLiveness = makeEndpointProbe("Openclaw.probeLiveness", "/health");
 
 /**
  * Probe the OpenClaw gateway readiness endpoint over loopback HTTP.
@@ -89,16 +96,4 @@ export const probeOpenclawLiveness = Effect.fn("Openclaw.probeLiveness")(functio
  * @category clients
  * @since 0.0.0
  */
-export const probeOpenclawReadiness = Effect.fn("Openclaw.probeReadiness")(function* (input: {
-  readonly host?: string | undefined;
-  readonly path?: string | undefined;
-  readonly port: number;
-  readonly timeout?: Duration.Input | undefined;
-}): Effect.fn.Return<OpenclawHttpProbe, never, HttpClient.HttpClient> {
-  return yield* probeEndpoint({
-    host: input.host ?? defaultProbeHost,
-    path: input.path ?? "/ready",
-    port: input.port,
-    timeout: input.timeout ?? OPENCLAW_HTTP_PROBE_TIMEOUT,
-  });
-});
+export const probeOpenclawReadiness = makeEndpointProbe("Openclaw.probeReadiness", "/ready");
