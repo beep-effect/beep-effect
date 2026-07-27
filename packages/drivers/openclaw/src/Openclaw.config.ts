@@ -13,8 +13,10 @@ import type { OpenclawInvocationContext } from "./Openclaw.models.ts";
 
 const HERMETIC_BASE_PATH = "/usr/bin:/bin";
 
-const optionalEnvEntry = (name: string, value: O.Option<string>): Record<string, string> =>
-  R.getSomes({ [name]: value });
+const optionalEnvEntry = (name: string, value: O.Option<string>): Record<string, string> => {
+  const entry: Record<string, O.Option<string>> = { [name]: value };
+  return R.getSomes(entry);
+};
 
 /**
  * Maximum time allowed for `openclaw --version`.
