@@ -37,40 +37,84 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-**P1 Implement.** PRs 1–5 have landed. Next concrete action: PR 6 — the policy
-`Fetch` and `ontology_publish_provenance`. **Re-read the PR 6 scope in
-`PLAN.md` and the SPEC stop conditions before starting**: it ships an
-agent-controllable outbound POST of workspace content to justify its own
-control, the tool registers only when the destination allowlist is non-empty,
-and it carries a blocking check — a request issued from *inside a real tool
-handler* must demonstrably reach the policy fetch (the spike only proved a
-directly-provided effect). The handler must require `HttpClient.HttpClient`
-and never self-provide it; the policy fetch writes its own typed refusal to
-the ledger and rejects with `EgressDenied` (already landed in
-`@beep/api-transport`); the ontology handler matches the cause and returns a
-typed refusal through its existing `failureMode: "return"` envelope. Grants
-for `network-egress` destinations come from `EpistemicConfig.destinationAllowlist`
-— extend the `GovernedTierGateOptions` grant blueprint at the composition root
-rather than teaching `epistemic/server` any ontology names.
+**P1 Implement.** PRs 1–6 have landed. Next concrete action: PR 7 — the
+composed fixture acceptance test. On one MCP session: tool 1 reads workspace
+content carrying an injected instruction, tool 2 attempts an outbound POST to
+the injected destination, and the authority frozen at session open denies it.
+Plus the full acceptance suite from `SPEC.md`.
 
-**Head start on the blocking check, from working inside `SanitizedSpan.ts`
-during PR 5.** `registerSanitizedToolkit` captures `const services = yield*
-Effect.context<never>()` at **layer build**, and each dispatch runs
-`Effect.provideContext(requestServices)` where `requestServices = Context.add(
-services, CurrentMcpCaller, …)`. Because `provideContext` *replaces* the fiber
-context rather than merging into it, this predicts a sharp rule PR 6 must
-verify rather than assume: the policy `Fetch` reaches handlers **iff** it is
-provided into the layer graph that builds the toolkit (e.g. another
-`Layer.provide` on the transport layer in `main.ts`), and does **not** reach
-them if it is provided only around the HTTP server or per-request, since that
-context is discarded at dispatch. PR 5 proved the analogous read works — the
-`mcp-session-id` header had to be read *before* `provideContext`, and the
-session-chaining test passes because of it. Test the `Fetch` case explicitly;
-a passing egress test with the reference in the wrong place would be proving
-the default `globalThis.fetch`, not the policy one.
+**What PR 7 inherits, and the one thing it must not assume.** The denial in
+that scenario comes from the *egress* boundary, not the tier gate: the gate
+grants `ontology_publish_provenance` as an operation, and the destination is
+refused by `GovernedEgress` because it is not on the allowlist. So the fixture
+must assert on **two** decision rows from **two** runs — the session's chain and
+the egress boundary's own chain — not one. `history/pr6-fetch-reach-spike.md`
+records why they cannot be one chain: `Fetch` is a plain promise-returning
+function with no fiber, so the egress boundary cannot see `CurrentMcpCaller`
+and cannot know which session provoked a request. Correlation is by time.
+Closing that gap is a real follow-up, and inventing a session from ambient
+state would reintroduce exactly the cross-dispatch misattribution PR 5's fiber
+correlation exists to prevent.
 
 ## Latest Evidence
 
+- **PR 6** (2026-07-27) — the egress boundary and the tool it exists to govern.
+  `GovernedEgressLive` installs a `FetchHttpClient.Fetch` that resolves a
+  requested URL to the allowlist entry covering it, writes a write-ahead
+  decision row, and rejects a denied destination with the reason-free
+  `EgressDenied`. `ontology_publish_provenance` registers only when the
+  allowlist is non-empty, takes `HttpClient.HttpClient` as a layer requirement
+  and never self-provides it, and translates a denial into the same refusal an
+  operation denial produces.
+
+  **The blocking check passed, and it falsified the prediction this packet
+  carried.** Full evidence in
+  [`history/pr6-fetch-reach-spike.md`](./history/pr6-fetch-reach-spike.md):
+  - `Effect.provideContext` **merges**, it does not replace. The claim that it
+    replaces was wrong, and the `SanitizedSpan.ts` comment asserting it is
+    corrected in this PR. The PR 5 code it justified was already correct.
+  - The override reaches handlers in *every* placement tested, including
+    per-request. In the recommended placement the handler's own context does
+    not contain `Fetch` at all — `HttpClient.layerMergedContext` merges the
+    client layer's build context at execute time, so the override rides with
+    the client rather than the handler.
+  - The real hazard is the inverse: request-time context takes **precedence**,
+    so a per-request `Fetch` silently displaces the composition-root one. That
+    invariant is recorded on `GovernedEgress.layer.ts`.
+
+  Two properties the tests pin. Registration is not authorization for this
+  branch either — the publish gate draws its grant from the same approval list,
+  so a test can register the tool and grant nothing. And a destination denial is
+  byte-identical to an operation denial; the guidance string is restated in the
+  ontology slice because slices cannot import each other, and the app test is
+  what holds the two in sync.
+
+  **Two majors an adversarial review caught before this landed, each now a
+  test or a comment that explains itself:**
+  - *The governed `Fetch` escaped its own branch.* `FetchHttpClient.layer` is a
+    module-level object and layer builds are memoized by object identity across
+    one graph, so the "governed" client was the same instance `AnthropicLive`
+    and the OTLP exporter resolve. Whichever built first won for all of them —
+    at this entrypoint the governed one, meaning every `api.anthropic.com`
+    request would have been refused with `EgressDenied` and written a spurious
+    denied row into this boundary's hash chain, with the allowlist non-empty
+    being the only trigger. `Layer.fresh` is the fix; nothing type-checks it,
+    because a `Reference` layer's output is `never`.
+  - *Allowed rows named the allowlist entry, not the request.* Coverage
+    deliberately ignores the query string, and the record reused the covering
+    entry — so a publish to `.../publish?payload=<privileged text>` produced a
+    row byte-identical to a benign one while the query went out over the wire
+    intact. The record now digests the full requested form (query and fragment
+    included); coverage still ignores it, so a query can neither buy nor lose
+    authority.
+
+  Also pinned: the chain stays dense under concurrent authorizations, which is
+  not free — every `fetch` authorizes on its own detached fiber, so only the
+  boundary's semaphore serializes the ledger append and the chain advance.
+
+  **Known gap, recorded not hidden:** egress decision rows are not correlated to
+  an MCP session, for the structural reason above. An auditor joins them to
+  session rows by time.
 - **PR 5** (2026-07-27) — enforcement begins. `GovernedTierGateLive` in
   `epistemic/server` implements `TierGateShape`: `evaluate` freezes a
   per-session grant set on the session's first dispatch, evaluates with the
@@ -153,14 +197,17 @@ High-signal constraints that do not belong in the normative spec:
 - **This is not a sandbox.** It buys the policy plane and its records. Host
   isolation is a separate candidate packet, and a green suite here must never be
   described as "the sandbox exists."
-- **Two spike findings are load-bearing and one is only half-proven.** The
-  `Fetch` override was verified for a *directly-provided* effect, not through a
-  server whose handler context is captured at layer build
-  (`SanitizedSpan.ts:226`). PR 6 carries a blocking check for this.
-- **PR 6 ships an exfiltration primitive to justify its own control.**
-  `ontology_publish_provenance` is default-off and allowlist-gated, which is what
-  makes it defensible — but re-read that scope deliberately rather than
-  inheriting it.
+- **Both spike findings are now proven through a running server.** The `Fetch`
+  override was re-verified end-to-end in PR 6, and the mechanism turned out not
+  to be the one predicted — see
+  [`history/pr6-fetch-reach-spike.md`](./history/pr6-fetch-reach-spike.md).
+- **The exfiltration primitive is live from PR 6 on.**
+  `ontology_publish_provenance` is default-off (empty allowlist ⇒ unregistered)
+  and its destination is allowlist-gated, which is what makes it defensible.
+  Anyone widening `EPISTEMIC_EGRESS_DESTINATION_ALLOWLIST` is authorizing an
+  agent-chosen POST of workspace content to that origin and everything beneath
+  it, in a product that holds privileged material. Treat allowlist edits as a
+  security review, not configuration.
 - **The `audience` axis is half-degenerate in v1.** Only `external-network` is
   genuinely exercised; every governed MCP write is a local workspace file. Do not
   claim the axis is validated.

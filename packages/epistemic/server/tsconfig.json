@@ -27,6 +27,9 @@
       "path": "../use-cases/tsconfig.json"
     },
     {
+      "path": "../../foundation/capability/api-transport/tsconfig.json"
+    },
+    {
       "path": "../../foundation/capability/mcp-kit/tsconfig.json"
     },
     {

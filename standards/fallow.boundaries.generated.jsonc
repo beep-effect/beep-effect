@@ -1482,6 +1482,7 @@
       {
         "from": "@beep/epistemic-server",
         "allow": [
+          "@beep/api-transport",
           "@beep/epistemic-config",
           "@beep/epistemic-domain",
           "@beep/epistemic-server",
@@ -1497,6 +1498,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/api-transport",
           "@beep/epistemic-config",
           "@beep/epistemic-domain",
           "@beep/epistemic-server",
@@ -2186,6 +2188,7 @@
       {
         "from": "@beep/ontology-server",
         "allow": [
+          "@beep/api-transport",
           "@beep/file-processing",
           "@beep/mcp-kit",
           "@beep/n3",
@@ -2199,6 +2202,7 @@
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
+          "@beep/api-transport",
           "@beep/file-processing",
           "@beep/mcp-kit",
           "@beep/n3",
