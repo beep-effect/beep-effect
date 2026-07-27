@@ -4,9 +4,10 @@
   // specifier can resolve a TSX module, matching TypeScript and the import-extension policy.
   "workspaces": {
     "packages/**": {
-      // Library packages publish their whole top-level src surface via `"./*": "./src/*.ts"`,
-      // so treat every src/*.ts as an entry (src/index.ts is already covered by the exports map).
-      "entry": ["src/*.ts"]
+      // Library packages publish their whole top-level src surface via a wildcard export —
+      // flat-uniform `"./*": "./src/*.ts"` or dir-uniform `"./*": "./src/*/index.ts"` — so
+      // treat both module shapes as entries (src/index.ts is already covered by the exports map).
+      "entry": ["src/*.ts", "src/*/index.ts"]
     },
     "packages/law-practice/domain": {
       // Pinned data modules are intentionally package-private and have no public barrel.

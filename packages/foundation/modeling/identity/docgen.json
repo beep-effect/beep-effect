@@ -27,23 +27,6 @@
     "stripInternal": false,
     "noErrorTruncation": true,
     "types": [],
-    "jsx": "react-jsx",
-    "paths": {
-      "@beep/identity": [
-        "../../../../packages/foundation/modeling/identity/src/index.ts"
-      ],
-      "@beep/identity/*": [
-        "../../../../packages/foundation/modeling/identity/src/*.ts"
-      ],
-      "@beep/identity/packages": [
-        "../../../../packages/foundation/modeling/identity/src/packages.ts"
-      ],
-      "@beep/types": [
-        "../../../../packages/foundation/primitive/types/src/index.ts"
-      ],
-      "@beep/types/*": [
-        "../../../../packages/foundation/primitive/types/src/*.ts"
-      ]
-    }
+    "jsx": "react-jsx"
   }
 }
