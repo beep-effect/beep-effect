@@ -2,9 +2,9 @@
 
 ## Status
 
-Active — P1 minimum vertical proof, P2 Tika Server driver, and P3 libpff
-PST-export driver complete; P4/P5 CLI-calibration and handoff phases remain
-pending.
+Active — P1 minimum vertical proof, P2 Tika Server driver, P3 libpff
+PST-export driver, and P4 real-engine CLI proof complete; only the P5 handoff
+phase remains pending.
 
 Packet hardening completed on 2026-06-02. The P1 implementation landed through
 the law-practice office-action branch and merged to `main` in PR #262 on
@@ -59,6 +59,20 @@ format-specific engines. Drivers implement declared operation capabilities.
 
 ## Latest Evidence
 
+- 2026-07-27: P4 complete — `beep files process` composes the real driver
+  engines: Tika App (`--tika-jar`/`--java`), Tika Server (`--tika-url` or
+  `BEEP_TIKA_*` env, SPEC default), and pffexport (`--pffexport`), constructed
+  lazily per family and forced ahead of dispatch so configuration failures
+  exit 2 (SPEC exit policy, via `Runtime.errorExitCode`) before any engine
+  side effect. Duplicate byte-identical inputs dedupe to one representative
+  per content digest with deterministic skip records; real pffexport child
+  references are rebased onto the output root; PST/EML/JSONL children flow
+  into `children/<artifact-id>/artifacts.jsonl`. Seven hermetic stub-engine
+  test lanes (real-stub happy path, dedupe ordering, unreachable-Tika and
+  missing-pffexport failure translation, config exit hint, engine-family env
+  isolation, budget-exhausted PST pin) plus the existing `--engine test`
+  lanes; 71 files-command tests green. Design contract with two
+  adversarial-review rounds: `research/p4-files-process-design.md`.
 - 2026-07-26: P3 complete — `@beep/libpff` completed the pffexport engine:
   `-V` engine-version capture (verified `20260608` against the live local
   binary), mode-derived target-tree walking

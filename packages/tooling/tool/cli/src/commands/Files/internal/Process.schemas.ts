@@ -58,9 +58,13 @@ export class ProcessFilesOptions extends S.Class<ProcessFilesOptions>($I`Process
     exportChildren: S.Boolean,
     failurePolicy: ProcessFilesFailurePolicy,
     input: S.String,
+    javaPath: S.optionalKey(S.String),
     maxMaterializedBytes: S.optionalKey(S.Finite),
     outDir: S.String,
     overwrite: S.Boolean,
+    pffexportPath: S.optionalKey(S.String),
+    tikaJarPath: S.optionalKey(S.String),
+    tikaUrl: S.optionalKey(S.String),
   },
   $I.annote("ProcessFilesOptions", {
     description: "Validated options used by files process.",
