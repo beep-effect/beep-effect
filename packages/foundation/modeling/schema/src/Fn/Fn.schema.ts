@@ -183,7 +183,12 @@ type FnNoArgInput<Input extends S.Top> = [Input["Type"]] extends [never]
  * @category models
  */
 export interface FnSchemaNoArg<Input extends NoArgInputSchema, Output extends S.Top, Error extends S.Top>
-  extends S.Codec<FnRuntime<Input, Output>, FnRuntime<Input, Output>> {
+  extends S.declareConstructor<
+    FnRuntime<Input, Output>,
+    FnRuntime<Input, Output>,
+    readonly [Input, Output, Error],
+    FnIso<Input, Output>
+  > {
   readonly errorSchema: Error;
   readonly implement: (handler: () => Output["Type"]) => FnEffectWrapperNoArg<Output, SchemaIssue.Issue, never>;
   readonly implementEffect: FnImplementEffectNoArg<Output, Error>;
@@ -216,7 +221,12 @@ export interface FnSchemaNoArg<Input extends NoArgInputSchema, Output extends S.
  * @category models
  */
 export interface FnSchemaUnary<Input extends S.Top, Output extends S.Top, Error extends S.Top>
-  extends S.Codec<FnRuntime<Input, Output>, FnRuntime<Input, Output>> {
+  extends S.declareConstructor<
+    FnRuntime<Input, Output>,
+    FnRuntime<Input, Output>,
+    readonly [Input, Output, Error],
+    FnIso<Input, Output>
+  > {
   readonly errorSchema: Error;
   readonly implement: (
     handler: FnType<Input["Type"], Output["Type"]>

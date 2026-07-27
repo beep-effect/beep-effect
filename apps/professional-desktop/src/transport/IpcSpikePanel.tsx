@@ -17,19 +17,21 @@
 "use client";
 
 import { ChatRpcs } from "@beep/agents-use-cases/public";
-import { redactCauseForClient } from "@beep/observability";
+import { LogRedactedCauseOptions, logRedactedCause, redactCauseForClient } from "@beep/observability";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
-import { Effect, Stream } from "effect";
+import { Effect, Ref, Stream } from "effect";
+import * as A from "effect/Array";
 import { Atom, AtomRegistry } from "effect/unstable/reactivity";
 import { RpcClient } from "effect/unstable/rpc";
 import { decodeWorkspaceId, userDocument } from "@/chat/ChatFixtures";
+import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import { IpcChatProtocolLive } from "./IpcChatClient.ts";
 import type { JSX } from "react";
 
 // Runtime that provides the IPC transport (`RpcClient.Protocol`) plus a Scope to
 // the spike effect. The runtime owns the socket lifecycle and the fiber driving
 // each run, replacing the component-local `Layer.build` + `Effect.runFork`.
-const ipcSpikeRuntime = Atom.runtime(IpcChatProtocolLive);
+const ipcSpikeRuntime = professionalBrowserRuntime.factory(IpcChatProtocolLive);
 
 // Streamed log buffer (client state, replaces `useState`). The run effect writes
 // lines as they arrive via `ctx.set`; "Cancel"/re-run reset it through the
@@ -41,31 +43,61 @@ const linesAtom = Atom.make<ReadonlyArray<string>>([]);
 // errors and interrupts are surfaced to the log buffer (a `stopped: …` line) via
 // `catchCause` rather than bubbling out of the atom.
 const runSpikeAtom = ipcSpikeRuntime.fn<void>()(
-  Effect.fnUntraced(function* () {
+  Effect.fn("professional_desktop.ipc.run_spike")(function* () {
     const registry = yield* AtomRegistry.AtomRegistry;
     // The fn node is interrupted on re-run/Cancel before this fiber unwinds, so
     // its `ctx` may already be disposed; go through the registry-backed setter,
     // which outlives the node, to append/reset log lines.
-    const log = (line: string): void => registry.set(linesAtom, [...registry.get(linesAtom), line]);
-    registry.set(linesAtom, []);
+    const log = Effect.fnUntraced(function* (line: string) {
+      registry.set(linesAtom, [...registry.get(linesAtom), line]);
+    });
+    yield* Effect.sync(() => {
+      registry.set(linesAtom, []);
+    });
     yield* Effect.gen(function* () {
       const client = yield* RpcClient.make(ChatRpcs);
       const workspaceId = decodeWorkspaceId(1);
+      yield* Effect.annotateCurrentSpan({
+        "professional_desktop.ipc.workspace_id": workspaceId,
+      });
       const thread = yield* client.CreateThread({ workspaceId, title: "ipc spike" });
-      log(`thread created over ipc: ${thread.id}`);
-      let blocks = 0;
+      yield* log(`thread created over ipc: ${thread.id}`);
+      const blocks = yield* Ref.make(0);
+      const logStreamBlock = Effect.fnUntraced(function* () {
+        const blockCount = yield* Ref.updateAndGet(blocks, (count) => count + 1);
+        yield* log(`streamed block ${blockCount}`);
+      });
       yield* client
         .SendMessage({ threadId: thread.id, content: userDocument("hello over tauri ipc"), requestId: "ipc-spike" })
-        .pipe(
-          Stream.runForEach(() =>
-            Effect.sync(() => {
-              blocks += 1;
-              log(`streamed block ${blocks}`);
+        .pipe(Stream.runForEach(logStreamBlock));
+      yield* Ref.get(blocks).pipe(
+        Effect.flatMap((blockCount) => log(`stream complete (${blockCount} block(s)) — no /rpc, no :3939`))
+      );
+      yield* Effect.annotateCurrentSpan({
+        "professional_desktop.ipc.outcome": "succeeded",
+      });
+    }).pipe(
+      Effect.catchCause((cause) =>
+        logRedactedCause(
+          cause,
+          LogRedactedCauseOptions.make({
+            message: "professional desktop ipc spike stopped",
+            level: "Warn",
+            attributes: {
+              "professional_desktop.ipc.outcome": "stopped",
+              subsystem: "ipc_spike",
+            },
+          })
+        ).pipe(
+          Effect.andThen(
+            Effect.annotateCurrentSpan({
+              "professional_desktop.ipc.outcome": "stopped",
             })
-          )
-        );
-      log(`stream complete (${blocks} block(s)) — no /rpc, no :3939`);
-    }).pipe(Effect.catchCause((cause) => Effect.sync(() => log(`stopped: ${redactCauseForClient(cause).message}`))));
+          ),
+          Effect.andThen(log(`stopped: ${redactCauseForClient(cause).message}`))
+        )
+      )
+    );
   })
 );
 
@@ -86,11 +118,6 @@ const runSpikeAtom = ipcSpikeRuntime.fn<void>()(
 export function IpcSpikePanel(): JSX.Element {
   const lines = useAtomValue(linesAtom);
   const runSpike = useAtomSet(runSpikeAtom);
-  // Re-run interrupts any in-flight run before forking a new one (the fn node
-  // guards re-entry), so we never orphan a fiber or interleave its log lines.
-  const run = (): void => runSpike();
-  // Cancel interrupts the in-flight run; `onInterrupt`/`catchCause` log the stop.
-  const cancel = (): void => runSpike(Atom.Interrupt);
 
   return (
     <div
@@ -110,15 +137,15 @@ export function IpcSpikePanel(): JSX.Element {
     >
       <strong>IPC transport spike</strong>
       <div style={{ display: "flex", gap: 8, margin: "8px 0" }}>
-        <button type="button" onClick={run}>
+        <button type="button" onClick={() => runSpike(void 0)}>
           Send over IPC
         </button>
-        <button type="button" onClick={cancel}>
+        <button type="button" onClick={() => runSpike(Atom.Interrupt)}>
           Cancel
         </button>
       </div>
       <div style={{ maxHeight: 180, overflow: "auto" }}>
-        {lines.map((line, index) => (
+        {A.map(lines, (line, index) => (
           <div key={`${index}-${line}`}>{line}</div>
         ))}
       </div>

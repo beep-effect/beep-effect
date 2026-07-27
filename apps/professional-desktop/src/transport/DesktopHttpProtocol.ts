@@ -2,7 +2,7 @@
  * Desktop HTTP RPC protocol wiring.
  *
  * @packageDocumentation
- * @category transport
+ * @category protocols
  * @since 0.0.0
  */
 
@@ -23,9 +23,10 @@ const SERVER_URL = resolveChatRpcHttpUrl();
  * @example
  * ```ts
  * import { makeDesktopHttpProtocolLive } from "@/transport/DesktopHttpProtocol"
+ * import { Layer } from "effect"
  *
  * const layer = makeDesktopHttpProtocolLive("session-token")
- * console.log(layer)
+ * console.log(Layer.isLayer(layer)) // true
  * ```
  *
  * @category layers

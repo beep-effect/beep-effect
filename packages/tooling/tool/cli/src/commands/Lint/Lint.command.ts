@@ -22,6 +22,7 @@ import { runRootLintPolicyTask } from "../Quality/index.ts";
 import { lintIdentityRegistryCommand } from "./IdentityRegistry.ts";
 import { LintCircularAnalysisError, LintFileDiscoveryError } from "./Lint.errors.ts";
 import { lintPackageTestImportsCommand } from "./PackageTestImports.ts";
+import { lintPackageTestTypecheckCommand } from "./PackageTestTypecheck.ts";
 import { lintReflectionArtifactsCommand } from "./ReflectionArtifact.ts";
 import { lintRoadmapRefsCommand } from "./RoadmapRefs.ts";
 import { lintSchemaCatalogCommand } from "./SchemaCatalog.ts";
@@ -38,15 +39,6 @@ const FOCUS_RUNTIME_FILES = HashSet.fromIterable([
   "packages/tooling/tool/cli/src/commands/Laws/index.ts",
   "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
   "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyConfig.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyServices.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyResponses.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyBody.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyDependencyHealth.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyForwarder.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyQueue.ts",
-  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyRuntime.ts",
 ]);
 const ALLOWED_NON_PASCAL_FILENAMES = HashSet.fromIterable(["index", "bin"]);
 const DEPRECATED_API_LINT_CACHE_LOCATION = "node_modules/.cache/eslint-deprecated-apis/.eslintcache";
@@ -594,6 +586,7 @@ export const lintCommand = Command.make("lint", {}, () =>
     "- bun run beep lint goal-packets",
     "- bun run beep lint identity-registry",
     "- bun run beep lint package-test-imports",
+    "- bun run beep lint package-test-typecheck",
     "- bun run beep lint policy",
     "- bun run beep lint reflection-artifacts",
     "- bun run beep lint roadmap-refs",
@@ -610,6 +603,7 @@ export const lintCommand = Command.make("lint", {}, () =>
     lintGoalPacketsCommand,
     lintIdentityRegistryCommand,
     lintPackageTestImportsCommand,
+    lintPackageTestTypecheckCommand,
     lintPolicyCommand,
     lintReflectionArtifactsCommand,
     lintRoadmapRefsCommand,

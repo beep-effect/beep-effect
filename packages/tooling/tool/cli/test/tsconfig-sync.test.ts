@@ -469,20 +469,22 @@ describe("tsconfig-sync", () => {
               $schema: "../../../../packages/tooling/tool/docgen/schema.json",
               exclude: ["src/**/*.spec.ts"],
               enforceDescriptions: true,
+              srcDir: "claudecode",
               srcLink:
-                "https://github.com/beep-effect/beep-effect/tree/main/packages/foundation/modeling/identity/src/",
+                "https://github.com/beep-effect/beep-effect/tree/main/packages/foundation/modeling/identity/claudecode/",
               examplesCompilerOptions: {
                 noEmit: true,
                 strict: true,
                 skipLibCheck: true,
                 moduleResolution: "bundler",
-                module: "es2022",
+                module: "esnext",
                 target: "es2022",
                 lib: ["ESNext", "DOM", "DOM.Iterable"],
                 rewriteRelativeImportExtensions: true,
                 allowImportingTsExtensions: true,
                 paths: {
                   "@beep/identity": ["../../../../packages/foundation/modeling/identity/src/index.ts"],
+                  "effect-claudecode": ["../../claudecode/index.ts"],
                 },
               },
             },
@@ -503,7 +505,11 @@ describe("tsconfig-sync", () => {
           expect(syncedIdentityDocgen).toMatchObject({
             exclude: ["src/**/*.spec.ts"],
             enforceDescriptions: true,
+            srcDir: "claudecode",
+            srcLink:
+              "https://github.com/beep-effect/beep-effect/tree/main/packages/foundation/modeling/identity/claudecode/",
             examplesCompilerOptions: {
+              module: "esnext",
               moduleDetection: "force",
               verbatimModuleSyntax: true,
               allowJs: false,
@@ -525,6 +531,7 @@ describe("tsconfig-sync", () => {
                 "@beep/identity/*": ["../../../../packages/foundation/modeling/identity/src/*.ts"],
                 "@beep/schema": ["../../../../packages/foundation/modeling/schema/src/index.ts"],
                 "@beep/schema/*": ["../../../../packages/foundation/modeling/schema/src/*.ts"],
+                "effect-claudecode": ["../../claudecode/index.ts"],
               },
             },
           });

@@ -2,16 +2,16 @@
 
 ## Status
 
-Status: `pending`
+Status: `completed-retained` (closed 2026-07-25; PR #452 merged as `d117ecf26d`)
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Storage/concurrency/provenance spike | pending | Prove the storage design and attribution boundary before schema commitment. | Every ratified invariant has an evidenced Postgres and PGlite proof-lane backstop, or the stop rule fires. |
-| P1 Implement | pending | Build the domain, tables, ports, repository, and migration vertical slice. | Durable disposition, atomic supersession, and as-of behavior are implemented. |
-| P2 Verify | pending | Prove two-axis history, races, and recovery. | Focused tests, restart/migration proof, and repo verification are green. |
-| P3 Close | pending | Reflect, publish through Yeet, monitor, and record readiness/retirement trigger. | Reflection passes lint and the PR is mergeable. |
+| P0 Storage/concurrency/provenance spike | complete | Prove the storage design and attribution boundary before schema commitment. | PROCEED verdict recorded at [`history/2026-07-25-p0-verdict.md`](./history/2026-07-25-p0-verdict.md): every ratified invariant evidenced in both lanes (spike contract [`ops/handoffs/p0-spike-contract.md`](./ops/handoffs/p0-spike-contract.md), S1–S6 NOTES under `history/p0/`); P1 decisions in [`ops/handoffs/p0-to-p1-handoff.md`](./ops/handoffs/p0-to-p1-handoff.md). |
+| P1 Implement | complete | Build the domain, tables, ports, repository, and migration vertical slice. | Landed per [`history/2026-07-25-p1-implementation.md`](./history/2026-07-25-p1-implementation.md): durable disposition (`resolveClaimGateOutcome` closes the rejected no-op), atomic close-and-insert supersession with typed conflict mapping, canonical asOf reads, epistemic-edge migration registered three-place + manifest, provenance duties discharged, spike deleted. |
+| P2 Verify | complete | Prove two-axis history, races, and recovery. | Green: focused suites (two-axis, races on real Postgres 4/4 ×6 runs, restart proof), and `bun run beep yeet verify` outcome SUCCESS (evidence in [`history/2026-07-25-p1-implementation.md`](./history/2026-07-25-p1-implementation.md) § P2). |
+| P3 Close | complete | Reflect, publish through Yeet, monitor, and record readiness/retirement trigger. | Closed 2026-07-25: reflection at [`history/reflections/2026-07-25-claude.md`](./history/reflections/2026-07-25-claude.md) passed `beep lint reflection-artifacts`; PR #452 merged (`d117ecf26d`); Graphiti retirement recorded in `standards/memory-architecture/04-decision-log.md`. |
 
 ## P0 — Storage, Concurrency, and Provenance Spike
 
@@ -40,6 +40,12 @@ production Postgres and the PGlite proof lane, stop and reshape the storage
 backstop before P1.
 
 ## P1 — Implement
+
+P0 resolved the storage choices; implement exactly the design in
+[`ops/handoffs/p0-to-p1-handoff.md`](./ops/handoffs/p0-to-p1-handoff.md) (BIGINT-millis
+axes + expression `int8range`, digest `logical_key` partition, per-kind endpoint columns,
+btree_gist EXCLUDE + open-head L2 backstop, FOR UPDATE + expectedVersion supersession,
+raw-SQL constraint ownership with the drafted Exception Ledger entry).
 
 - Add the schema-first epistemic domain entity/value objects, bounded endpoint
   union, logical identity, lineage, review state, `ClaimDisposition`, and typed

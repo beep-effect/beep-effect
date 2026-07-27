@@ -1,10 +1,11 @@
 /**
  * db-admin migration application against a live Postgres-backed Drizzle database.
  *
- * Owns the location of the repo's drizzle-kit migrations so consumers (the
- * desktop chat sidecar, integration harnesses) apply them through a single
- * exported entry point instead of reaching into `db-admin/drizzle` with fragile
- * relative paths.
+ * Owns the location of the repo's drizzle migrations so integration harnesses
+ * apply them through a single exported entry point instead of reaching into
+ * `db-admin/drizzle` with fragile relative paths. The desktop chat sidecar does
+ * NOT depend on this package: `apps/professional-desktop/scripts/sync-migration-bundle.ts`
+ * copies the SQL into a generated data module the compiled sidecar embeds.
  *
  * @packageDocumentation
  * @category configuration

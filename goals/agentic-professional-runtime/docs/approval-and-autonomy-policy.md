@@ -4,7 +4,7 @@
 
 The first runtime proof must be useful without pretending agents are licensed
 professionals. This document defines the v1 policy boundary between candidate
-agent work and authoritative runtime truth.
+agent work and runtime-accepted state.
 
 ## V1 Default
 
@@ -28,8 +28,14 @@ The initial lifecycle vocabulary is:
 - `revision_requested`
 - `superseded`
 
-`accepted` state means the runtime records the item as authoritative runtime
-truth. It does not mean an external system of record has accepted it.
+`accepted` state records a scoped human disposition: the item becomes eligible
+for scoped runtime use under this policy. It does not make the underlying
+proposition true, it does not by itself place the item in any preferred
+working view, and it does not mean an external system of record has accepted
+it. Acceptance records the human-disposition verdict — one of seven
+independent typed verdicts (shape validity, anchor fidelity, semantic stance,
+source authority/currentness, human disposition, action authorization,
+release); none implies another.
 
 ## Approval Gate Requirements
 
@@ -78,5 +84,5 @@ Rejected or revised candidate work remains useful evidence. The runtime should
 preserve the activity trail instead of deleting the candidate output silently.
 
 Future package tests should prove that rejected candidates do not appear in
-current authoritative views while still appearing in audit, activity, or review
+current accepted views while still appearing in audit, activity, or review
 history.

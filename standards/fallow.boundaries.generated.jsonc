@@ -234,6 +234,12 @@
         ]
       },
       {
+        "name": "@beep/epistemic-config",
+        "patterns": [
+          "packages/epistemic/config/src/**"
+        ]
+      },
+      {
         "name": "@beep/epistemic-domain",
         "patterns": [
           "packages/epistemic/domain/src/**"
@@ -933,12 +939,14 @@
         "allow": [
           "@beep/api-transport",
           "@beep/identity",
+          "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/api-transport",
           "@beep/identity",
+          "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1438,6 +1446,19 @@
         ]
       },
       {
+        "from": "@beep/epistemic-config",
+        "allow": [
+          "@beep/epistemic-config",
+          "@beep/epistemic-domain",
+          "@beep/identity"
+        ],
+        "allowTypeOnly": [
+          "@beep/epistemic-config",
+          "@beep/epistemic-domain",
+          "@beep/identity"
+        ]
+      },
+      {
         "from": "@beep/epistemic-domain",
         "allow": [
           "@beep/epistemic-domain",
@@ -1445,7 +1466,8 @@
           "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/epistemic-domain",
@@ -1453,7 +1475,8 @@
           "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
@@ -1461,16 +1484,28 @@
         "allow": [
           "@beep/epistemic-domain",
           "@beep/epistemic-server",
+          "@beep/epistemic-tables",
           "@beep/epistemic-use-cases",
+          "@beep/pglite",
+          "@beep/postgres",
+          "@beep/schema",
           "@beep/semantic-web",
-          "@beep/test-utils"
+          "@beep/shared-domain",
+          "@beep/test-utils",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/epistemic-domain",
           "@beep/epistemic-server",
+          "@beep/epistemic-tables",
           "@beep/epistemic-use-cases",
+          "@beep/pglite",
+          "@beep/postgres",
+          "@beep/schema",
           "@beep/semantic-web",
-          "@beep/test-utils"
+          "@beep/shared-domain",
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
@@ -1494,14 +1529,18 @@
           "@beep/epistemic-domain",
           "@beep/epistemic-use-cases",
           "@beep/identity",
+          "@beep/schema",
           "@beep/semantic-web",
+          "@beep/shared-domain",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/epistemic-domain",
           "@beep/epistemic-use-cases",
           "@beep/identity",
+          "@beep/schema",
           "@beep/semantic-web",
+          "@beep/shared-domain",
           "@beep/test-utils"
         ]
       },
@@ -1826,14 +1865,16 @@
           "@beep/identity",
           "@beep/libpff",
           "@beep/schema",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/file-processing",
           "@beep/identity",
           "@beep/libpff",
           "@beep/schema",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
@@ -2089,6 +2130,7 @@
           "@beep/agents-client",
           "@beep/cosmos",
           "@beep/identity",
+          "@beep/observability",
           "@beep/ontology-client",
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
@@ -2100,6 +2142,7 @@
           "@beep/agents-client",
           "@beep/cosmos",
           "@beep/identity",
+          "@beep/observability",
           "@beep/ontology-client",
           "@beep/ontology-domain",
           "@beep/ontology-use-cases",
@@ -2168,8 +2211,6 @@
       {
         "from": "@beep/ontology-ui",
         "allow": [
-          "@beep/editor",
-          "@beep/lexical-schema",
           "@beep/ontology-client",
           "@beep/ontology-domain",
           "@beep/ontology-ui",
@@ -2179,8 +2220,6 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
-          "@beep/editor",
-          "@beep/lexical-schema",
           "@beep/ontology-client",
           "@beep/ontology-domain",
           "@beep/ontology-ui",
@@ -2381,6 +2420,7 @@
           "@beep/md",
           "@beep/observability",
           "@beep/ontology-client",
+          "@beep/ontology-config",
           "@beep/ontology-domain",
           "@beep/ontology-server",
           "@beep/ontology-ui",
@@ -2421,6 +2461,7 @@
           "@beep/md",
           "@beep/observability",
           "@beep/ontology-client",
+          "@beep/ontology-config",
           "@beep/ontology-domain",
           "@beep/ontology-server",
           "@beep/ontology-ui",
@@ -2689,6 +2730,7 @@
           "@beep/md",
           "@beep/ontology",
           "@beep/pretext",
+          "@beep/rdf",
           "@beep/schema",
           "@beep/scratchpad",
           "@beep/utils"
@@ -2700,6 +2742,7 @@
           "@beep/md",
           "@beep/ontology",
           "@beep/pretext",
+          "@beep/rdf",
           "@beep/schema",
           "@beep/scratchpad",
           "@beep/utils"

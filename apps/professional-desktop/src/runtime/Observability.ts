@@ -107,8 +107,9 @@ const ObservabilityConfigLive: Layer.Layer<never> = Layer.unwrap(
  * @example
  * ```ts
  * import { ObservabilityLive } from "@/runtime/Observability"
+ * import { Layer } from "effect"
  *
- * console.log(ObservabilityLive)
+ * console.log(Layer.isLayer(ObservabilityLive)) // true
  * ```
  *
  * @category layers

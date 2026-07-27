@@ -28,11 +28,12 @@ import {
   SyncOperationRepositoryConflict,
   SyncOperationSeed,
 } from "@beep/documents-use-cases/entities/SyncOperation/server";
-import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
+import { makeDrizzle, makeDrizzleLayer, migrate, NativePgClient } from "@beep/postgres";
 import { NonNegativeInt } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { fcRuns, makePgliteIntegrationGate, TestDatabaseInfo } from "@beep/test-utils";
+import { fcRuns, makePgliteIntegrationGate, makePgliteSqlTestLayer, TestDatabaseInfo } from "@beep/test-utils";
 import { describe, expect, it, layer } from "@effect/vitest";
+import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -40,7 +41,13 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const migrationsFolder = fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));
-const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis, makePgliteLayer } = makePgliteIntegrationGate();
+const { shouldRunPgliteIntegration, pgliteIntegrationTimeoutMillis } = makePgliteIntegrationGate();
+
+// The db-admin drizzle folder now contains `CREATE EXTENSION btree_gist`, which
+// the shared external pglite-socket lane cannot load, so suites that apply it
+// are pinned to the in-process driver with the bundled extension registered.
+const makeMigrationCapableLayer = () =>
+  Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const arbitrary = S.toArbitrary(schema);
@@ -111,7 +118,7 @@ const migrateDocumentsSync = Effect.fnUntraced(function* () {
   yield* migrate(db, { migrationsFolder, migrationsSchema });
 });
 
-const SyncRepositoriesDrizzleLayer = makeDrizzleLayer().pipe(Layer.provideMerge(makePgliteLayer()));
+const SyncRepositoriesDrizzleLayer = makeDrizzleLayer().pipe(Layer.provideMerge(makeMigrationCapableLayer()));
 
 describe("Documents sync repository seeds", () => {
   it("round-trips schema-derived repository seeds", () => {
@@ -269,7 +276,10 @@ if (!shouldRunPgliteIntegration) {
 
       // Keep this test LAST: on implicit-transaction pglite hosts the failed
       // duplicate statement aborts the shared session's transaction chain, so
-      // no other suite statement may follow it.
+      // no other suite statement may follow it except the closing ROLLBACK,
+      // which is legal in the aborted state and quiesces the wire protocol
+      // before teardown (a stray completion otherwise races the pg client's
+      // shutdown as an unhandled "unexpected commandComplete" error).
       it.effect(
         "rejects duplicate idempotency keys at the database boundary",
         Effect.fnUntraced(function* () {
@@ -281,6 +291,9 @@ if (!shouldRunPgliteIntegration) {
 
           expect(SyncOperationRepositoryConflict.is(duplicate)).toBe(true);
           expect(duplicate._tag).toBe("SyncOperationRepositoryConflict");
+
+          const client = yield* NativePgClient.PgClient;
+          yield* Effect.ignore(client.unsafe("ROLLBACK"));
         }),
         pgliteIntegrationTimeoutMillis
       );

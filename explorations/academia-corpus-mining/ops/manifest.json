@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "academia-corpus-mining",
+    "title": "Academia Corpus Mining",
+    "status": "parked",
+    "stage": "align",
+    "openQuestions": [
+      "Deferred (parked revival trigger): run the approved wave-2 mining pass over the June-29 backlog — starting with the 97 legal-NLP/extraction papers — once the 15-route dispatch has fully landed (align decision, 2026-07-25).",
+      "Deferred to routed targets (align decision, 2026-07-25): master align Q1+Q3 → goals/epistemic-bitemporal-edge-core dispatch note; Q5 → goals/identity-iri-fold note; Q7 → explorations/citation-grounding-hallucination-guard note; Q8+Q9 → recorded doc-structure medium routes; Q10 → explorations/agent-execution-sandbox manifest."
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-25",
+    "updated": "2026-07-25"
+  }
+}

@@ -9,6 +9,7 @@ import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client
 import { CosmosGraphProjection, renderCosmosGraph } from "@beep/cosmos";
 import { Graph3DProjection, Graph3DRenderOptions, renderGraph3D } from "@beep/graph-3d/browser";
 import { $OntologyClientId } from "@beep/identity/packages";
+import { LogRedactedCauseOptions, logRedactedCause, redactCauseForClient } from "@beep/observability";
 import {
   appendChange,
   ChangeOperation,
@@ -33,6 +34,7 @@ import {
   OntologyGraphGesture,
   OntologyGraphProjectionOptions,
   OntologyMetrics,
+  OntologyResourceSummary,
   OntologyRpcs,
   OntologySnapshot,
   ontologySparqlExamples,
@@ -44,10 +46,12 @@ import {
   WorkerCommand,
   WorkerResult,
 } from "@beep/ontology-use-cases/aggregates/Session";
-import { serializeQuad } from "@beep/rdf/Rdf";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { IRI } from "@beep/rdf/Iri";
+import { makeLiteral, makeNamedNode, makeQuad, serializeQuad } from "@beep/rdf/Rdf";
+import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
-import { Cause, Duration, Effect, Fiber, flow, Order, pipe, Result, Semaphore } from "effect";
+import { Cause, Duration, Effect, flow, Layer, Order, pipe, Result, Semaphore } from "effect";
 import * as S from "effect/Schema";
 import { Atom, AtomRpc, Reactivity } from "effect/unstable/reactivity";
 import type { CosmosBackend, CosmosRenderHandle } from "@beep/cosmos";
@@ -64,7 +68,6 @@ import type {
   RunOntologySparqlResult,
   RunOntologyValidationResult,
 } from "@beep/ontology-use-cases/aggregates/Session";
-import type { Layer } from "effect";
 import type { RpcClient } from "effect/unstable/rpc";
 
 const $I = $OntologyClientId.create("aggregates/Session/Session.atoms");
@@ -116,6 +119,8 @@ export class OntologyClient extends AtomRpc.Service<OntologyClient>()("OntologyC
   group: OntologyRpcs,
   protocol: (get) => get(ontologyProtocolLayerAtom),
 }) {}
+
+const ontologyBrowserRuntime = OntologyClient.runtime.factory(Layer.empty);
 
 const SESSION_KEY = "ontology-session" as const;
 const SOURCE_KEY = "ontology-source" as const;
@@ -257,6 +262,140 @@ export class ApplyOntologyGraphGestureInput extends S.Class<ApplyOntologyGraphGe
   })
 ) {}
 
+/**
+ * Inspector-facing resource read model re-exported through the client boundary.
+ *
+ * @example
+ * ```ts
+ * import { OntologyInspectorResource } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(OntologyInspectorResource.fields.iri)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const OntologyInspectorResource = OntologyResourceSummary;
+
+/**
+ * Runtime type for {@link OntologyInspectorResource}.
+ *
+ * @example
+ * ```ts
+ * import type { OntologyInspectorResource } from "@beep/ontology-client/aggregates/Session"
+ *
+ * const resourceIri = (resource: OntologyInspectorResource) => resource.iri
+ * console.log(resourceIri)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type OntologyInspectorResource = typeof OntologyInspectorResource.Type;
+
+/**
+ * RDF object term variants supported by the inspector form.
+ *
+ * @example
+ * ```ts
+ * import { OntologyInspectorObjectKind } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(OntologyInspectorObjectKind.is.iri("iri")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const OntologyInspectorObjectKind = LiteralKit(["iri", "literal"]).pipe(
+  $I.annoteSchema("OntologyInspectorObjectKind", {
+    description: "RDF object term variants accepted by the ontology inspector.",
+  })
+);
+
+/**
+ * Runtime type for {@link OntologyInspectorObjectKind}.
+ *
+ * @example
+ * ```ts
+ * import type { OntologyInspectorObjectKind } from "@beep/ontology-client/aggregates/Session"
+ *
+ * const kind: OntologyInspectorObjectKind = "literal"
+ * console.log(kind)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type OntologyInspectorObjectKind = typeof OntologyInspectorObjectKind.Type;
+
+/**
+ * User intents emitted by inspector controls.
+ *
+ * @example
+ * ```ts
+ * import { OntologyInspectorAction } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(OntologyInspectorAction.is.addTriple("addTriple")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const OntologyInspectorAction = LiteralKit(["addTriple", "connect", "delete", "expand", "instantiate"]).pipe(
+  $I.annoteSchema("OntologyInspectorAction", {
+    description: "Exhaustive inspector intents converted into ontology commands by the client runtime.",
+  })
+);
+
+/**
+ * Runtime type for {@link OntologyInspectorAction}.
+ *
+ * @example
+ * ```ts
+ * import type { OntologyInspectorAction } from "@beep/ontology-client/aggregates/Session"
+ *
+ * const action: OntologyInspectorAction = "expand"
+ * console.log(action)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type OntologyInspectorAction = typeof OntologyInspectorAction.Type;
+
+/**
+ * Validated display state for the inspector triple form.
+ *
+ * @example
+ * ```ts
+ * import { OntologyInspectorFormState } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(OntologyInspectorFormState.fields.subject)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class OntologyInspectorFormState extends S.Class<OntologyInspectorFormState>($I`OntologyInspectorFormState`)(
+  {
+    object: S.String,
+    objectKind: OntologyInspectorObjectKind,
+    predicate: S.String,
+    subject: S.String,
+    objectValid: S.Boolean,
+    predicateValid: S.Boolean,
+    subjectValid: S.Boolean,
+    canApplyTriple: S.Boolean,
+    canApplyGraphGesture: S.Boolean,
+    showObjectError: S.Boolean,
+    showPredicateError: S.Boolean,
+    showSubjectError: S.Boolean,
+  },
+  $I.annote("OntologyInspectorFormState", {
+    description: "Inspector draft values and schema-derived validation flags rendered by the UI.",
+  })
+) {}
+
 const OntologyValidationStatus = LiteralKit(["idle", "running", "blocked", "failed", "complete"]);
 /**
  * Current lifecycle state for ontology validation workbench actions.
@@ -365,6 +504,41 @@ export const predicateInputAtom = Atom.make("http://www.w3.org/2000/01/rdf-schem
 export const objectInputAtom = Atom.make("Pizza");
 
 /**
+ * Inspector draft fields whose writes are owned by runtime actions.
+ *
+ * @example
+ * ```ts
+ * import { OntologyInspectorInputField } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(OntologyInspectorInputField.is.subject("subject")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const OntologyInspectorInputField = LiteralKit(["subject", "predicate", "object"]).pipe(
+  $I.annoteSchema("OntologyInspectorInputField", {
+    description: "Inspector draft fields updated by the ontology client runtime.",
+  })
+);
+
+/**
+ * Runtime type for {@link OntologyInspectorInputField}.
+ *
+ * @example
+ * ```ts
+ * import type { OntologyInspectorInputField } from "@beep/ontology-client/aggregates/Session"
+ *
+ * const field: OntologyInspectorInputField = "predicate"
+ * console.log(field)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type OntologyInspectorInputField = typeof OntologyInspectorInputField.Type;
+
+/**
  * Object term kind selected in the ontology Add Triple form.
  *
  * @example
@@ -377,7 +551,105 @@ export const objectInputAtom = Atom.make("Pizza");
  * @category atoms
  * @since 0.0.0
  */
-export const objectKindAtom = Atom.make<"iri" | "literal">("literal");
+export const objectKindAtom = Atom.make<OntologyInspectorObjectKind>("literal");
+
+const decodeOntologyInspectorIri = flow(Str.trim, S.decodeUnknownOption(IRI));
+
+/**
+ * Schema-derived inspector form values and validation flags.
+ *
+ * @example
+ * ```ts
+ * import { ontologyInspectorFormStateAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(ontologyInspectorFormStateAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyInspectorFormStateAtom = Atom.make((get) => {
+  const object = get(objectInputAtom);
+  const objectKind = get(objectKindAtom);
+  const predicate = get(predicateInputAtom);
+  const subject = get(subjectInputAtom);
+  const subjectValid = O.isSome(decodeOntologyInspectorIri(subject));
+  const predicateValid = O.isSome(decodeOntologyInspectorIri(predicate));
+  const showSubjectError = Str.isNonEmpty(Str.trim(subject)) && !subjectValid;
+  const showPredicateError = Str.isNonEmpty(Str.trim(predicate)) && !predicateValid;
+  const objectValid = OntologyInspectorObjectKind.$match(objectKind, {
+    iri: () => O.isSome(decodeOntologyInspectorIri(object)),
+    literal: () => Str.isNonEmpty(Str.trim(object)),
+  });
+  const showObjectError =
+    OntologyInspectorObjectKind.is.iri(objectKind) && Str.isNonEmpty(Str.trim(object)) && !objectValid;
+  const canApplyTriple = O.isSome(get(ontologySessionAtom)) && subjectValid && predicateValid && objectValid;
+
+  return OntologyInspectorFormState.make({
+    object,
+    objectKind,
+    predicate,
+    subject,
+    objectValid,
+    predicateValid,
+    subjectValid,
+    canApplyTriple,
+    canApplyGraphGesture: canApplyTriple && OntologyInspectorObjectKind.is.iri(objectKind),
+    showObjectError,
+    showPredicateError,
+    showSubjectError,
+  });
+});
+
+/**
+ * Runtime action family for inspector text-field updates.
+ *
+ * @example
+ * ```ts
+ * import { setOntologyInspectorInputAtoms } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(setOntologyInspectorInputAtoms("subject"))
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const setOntologyInspectorInputAtoms = Atom.family((field: OntologyInspectorInputField) =>
+  ontologyBrowserRuntime.fn<string>()(
+    Effect.fnUntraced(function* (value, ctx) {
+      OntologyInspectorInputField.$match(field, {
+        object: () => ctx.set(objectInputAtom, value),
+        predicate: () => ctx.set(predicateInputAtom, value),
+        subject: () => ctx.set(subjectInputAtom, value),
+      });
+    })
+  )
+);
+
+const decodeOntologyInspectorObjectKind = S.decodeUnknownOption(OntologyInspectorObjectKind);
+
+/**
+ * Runtime setter that accepts a DOM select value and retains only supported
+ * inspector object kinds.
+ *
+ * @example
+ * ```ts
+ * import { setOntologyInspectorObjectKindAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(setOntologyInspectorObjectKindAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const setOntologyInspectorObjectKindAtom = ontologyBrowserRuntime.fn<string>()(
+  Effect.fnUntraced(function* (value, ctx) {
+    O.match(decodeOntologyInspectorObjectKind(value), {
+      onNone: () => undefined,
+      onSome: (kind) => ctx.set(objectKindAtom, kind),
+    });
+  })
+);
 
 /**
  * Current open ontology session, if any.
@@ -608,18 +880,30 @@ const resetOntologyValidation = (ctx: Atom.FnContext): void => {
  * The full cause still goes to the log, where the detail is useful and the reader is
  * a developer.
  */
+const isOntologyActionError = S.is(OntologyActionError);
+
 const actionFailureMessage = (label: string, cause: Cause.Cause<unknown>): string =>
   pipe(
     Cause.findErrorOption(cause),
-    O.filter((error) => P.hasProperty(error, "message") && P.isString(error.message)),
-    O.map((error) => String((error as { readonly message: string }).message)),
+    O.filter(isOntologyActionError),
+    O.map((error) => error.message),
     O.filter(Str.isNonEmpty),
-    O.getOrElse(() => `${label} failed. See the log for details.`)
+    O.getOrElse(() => `${label} failed. ${redactCauseForClient(cause).message}`)
   );
 
-const reportFailure = (label: string, cause: Cause.Cause<unknown>): void => {
-  Effect.runFork(Effect.logError(`${label} failed`, cause));
-};
+const reportFailure = Effect.fnUntraced(function* (label: string, cause: Cause.Cause<unknown>) {
+  yield* logRedactedCause(
+    cause,
+    LogRedactedCauseOptions.make({
+      message: `${label} failed`,
+      level: "Error",
+      attributes: {
+        "ontology.action": label,
+        subsystem: "ontology_client",
+      },
+    })
+  );
+});
 
 const validationFailureMessage = (label: string, cause: Cause.Cause<unknown>): string =>
   actionFailureMessage(label, cause);
@@ -848,6 +1132,41 @@ export const ontologySearchQueryAtom = Atom.make("");
 export const selectedOntologyResourceIriAtom = Atom.make<O.Option<string>>(O.none());
 
 /**
+ * Supported ontology graph renderers.
+ *
+ * @example
+ * ```ts
+ * import { OntologyGraphRenderer } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(OntologyGraphRenderer.is.cosmos("cosmos")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const OntologyGraphRenderer = LiteralKit(["cosmos", "graph3d"]).pipe(
+  $I.annoteSchema("OntologyGraphRenderer", {
+    description: "Graph renderer selected by the ontology workbench.",
+  })
+);
+
+/**
+ * Runtime type for {@link OntologyGraphRenderer}.
+ *
+ * @example
+ * ```ts
+ * import type { OntologyGraphRenderer } from "@beep/ontology-client/aggregates/Session"
+ *
+ * const renderer: OntologyGraphRenderer = "graph3d"
+ * console.log(renderer)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type OntologyGraphRenderer = typeof OntologyGraphRenderer.Type;
+
+/**
  * Workbench toggle selecting the 2D cosmos or 3D graph renderer.
  *
  * @example
@@ -860,7 +1179,26 @@ export const selectedOntologyResourceIriAtom = Atom.make<O.Option<string>>(O.non
  * @category atoms
  * @since 0.0.0
  */
-export const ontologyGraphRendererAtom = Atom.make<"cosmos" | "graph3d">("cosmos");
+export const ontologyGraphRendererAtom = Atom.make<OntologyGraphRenderer>("cosmos");
+
+/**
+ * Runtime action that maps the graph toggle to its renderer state.
+ *
+ * @example
+ * ```ts
+ * import { setOntologyGraphRendererAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(setOntologyGraphRendererAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const setOntologyGraphRendererAtom = ontologyBrowserRuntime.fn<boolean>()(
+  Effect.fnUntraced(function* (enabled, ctx) {
+    ctx.set(ontologyGraphRendererAtom, enabled ? "graph3d" : "cosmos");
+  })
+);
 
 /**
  * Latest worker graph projection, if one has completed.
@@ -906,6 +1244,72 @@ export const ontologyGraphDeltaAtom = Atom.make<O.Option<SessionChangeDelta>>(O.
  * @since 0.0.0
  */
 export const ontologyGraphContainerAtom = Atom.make<O.Option<HTMLElement>>(O.none());
+
+const ontologyGraphContainerElementAtom = Atom.make<O.Option<HTMLElement>>(O.none());
+
+/**
+ * Runtime action used as the graph container's React callback ref.
+ *
+ * @example
+ * ```tsx
+ * import { setOntologyGraphContainerElementAtom } from "@beep/ontology-client/aggregates/Session"
+ * import { useAtomSet } from "@effect/atom-react"
+ *
+ * const setContainer = useAtomSet(setOntologyGraphContainerElementAtom)
+ * console.log(typeof setContainer)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const setOntologyGraphContainerElementAtom = ontologyBrowserRuntime.fn<HTMLElement | null>()(
+  Effect.fnUntraced(function* (element, ctx) {
+    ctx.set(ontologyGraphContainerElementAtom, O.fromNullishOr(element));
+  })
+);
+
+/**
+ * Mounted lifecycle that publishes a measurable graph container and releases
+ * its `ResizeObserver` when the element changes or the graph UI unmounts.
+ *
+ * @example
+ * ```tsx
+ * import { ontologyGraphContainerBindingAtom } from "@beep/ontology-client/aggregates/Session"
+ * import { useAtomMount } from "@effect/atom-react"
+ *
+ * useAtomMount(ontologyGraphContainerBindingAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const ontologyGraphContainerBindingAtom = ontologyBrowserRuntime.atom((get) =>
+  O.match(get(ontologyGraphContainerElementAtom), {
+    onNone: () => Effect.sync(() => get.set(ontologyGraphContainerAtom, O.none())),
+    onSome: (element) =>
+      Effect.acquireRelease(
+        Effect.sync(() => {
+          const publishIfReady = (): boolean => {
+            if (element.clientWidth <= 0 || element.clientHeight <= 0) return false;
+            get.set(ontologyGraphContainerAtom, O.some(element));
+            return true;
+          };
+          if (publishIfReady()) return O.none<ResizeObserver>();
+
+          const observer = new ResizeObserver(() => {
+            if (publishIfReady()) observer.disconnect();
+          });
+          observer.observe(element);
+          return O.some(observer);
+        }),
+        (observer) =>
+          Effect.sync(() => {
+            O.getOrUndefined(observer)?.disconnect();
+            get.set(ontologyGraphContainerAtom, O.none());
+          })
+      ),
+  })
+);
 
 /**
  * Current visualizer backend selected by capability detection.
@@ -1129,19 +1533,25 @@ const graphRequestAtom = Atom.make((get) => ({
   delta: get(ontologyGraphDeltaAtom),
 }));
 
-const graphWorkerErrorMessage = (event: ErrorEvent): string =>
-  Str.isNonEmpty(event.message) ? event.message : "Ontology graph worker failed.";
-
-const graphWorkerMessageError = (event: MessageEvent<unknown>): string =>
-  P.hasProperty(event, "type") && event.type === "messageerror"
-    ? "Ontology graph worker message failed to deserialize."
-    : "Ontology graph worker failed.";
-
 const GRAPH_WORKER_UNAVAILABLE_MESSAGE = "Graph projection is unavailable: this environment has no web worker.";
 
 const GRAPH_WORKER_UNREADABLE_RESULT_MESSAGE = "The graph worker returned a result this app could not read.";
 
+const GRAPH_WORKER_MESSAGE_ERROR = "Ontology graph worker message failed to deserialize.";
+
 const GRAPH_WORKER_TIMEOUT_MESSAGE = "The graph worker did not respond. The diagram could not be drawn.";
+
+class OntologyGraphWorkerTimeoutError extends TaggedErrorClass<OntologyGraphWorkerTimeoutError>(
+  $I`OntologyGraphWorkerTimeoutError`
+)(
+  "OntologyGraphWorkerTimeoutError",
+  {
+    message: S.NonEmptyString,
+  },
+  $I.annote("OntologyGraphWorkerTimeoutError", {
+    description: "The ontology graph projection worker exceeded its response deadline.",
+  })
+) {}
 
 /**
  * How long a projection may take before the worker is treated as dead.
@@ -1152,6 +1562,70 @@ const GRAPH_WORKER_TIMEOUT_MESSAGE = "The graph worker did not respond. The diag
  * shape this very bug took. A silence this long is a failure, and it now says so.
  */
 const GRAPH_WORKER_TIMEOUT = Duration.seconds(20);
+
+type GraphWorkerWatchdog = () => void;
+type GraphWorkerFailure = readonly [cause: unknown, clientMessage: O.Option<string>];
+type GraphWorkerBoundary = readonly [run: () => void, onFailure: (cause: unknown) => void];
+type GraphWorkerRequest<A> = readonly [sequence: number, request: O.Option<A>];
+
+const graphWorkerWatchdogRequestAtom = Atom.make<GraphWorkerRequest<GraphWorkerWatchdog>>([0, O.none()]);
+const graphWorkerFailureRequestAtom = Atom.make<GraphWorkerRequest<GraphWorkerFailure>>([0, O.none()]);
+const graphWorkerBoundaryRequestAtom = Atom.make<GraphWorkerRequest<GraphWorkerBoundary>>([0, O.none()]);
+
+const ontologyGraphWorkerWatchdogAtom = ontologyBrowserRuntime.atom((get) =>
+  O.match(get(graphWorkerWatchdogRequestAtom)[1], {
+    onNone: () => Effect.void,
+    onSome: (onTimeout) => Effect.sleep(GRAPH_WORKER_TIMEOUT).pipe(Effect.andThen(Effect.sync(onTimeout))),
+  })
+);
+
+const reportGraphWorkerFailureAtom = ontologyBrowserRuntime.atom((get) =>
+  O.match(get(graphWorkerFailureRequestAtom)[1], {
+    onNone: () => Effect.void,
+    onSome: ([cause, clientMessage]) =>
+      Effect.sync(() =>
+        get.set(
+          ontologyGraphErrorAtom,
+          O.some(
+            O.getOrElse(clientMessage, () => `The ontology graph worker failed: ${redactCauseForClient(cause).message}`)
+          )
+        )
+      ).pipe(
+        Effect.andThen(
+          logRedactedCause(
+            cause,
+            LogRedactedCauseOptions.make({
+              message: "ontology graph worker failed",
+              level: "Error",
+              attributes: {
+                subsystem: "ontology_graph_worker",
+              },
+            })
+          )
+        )
+      ),
+  })
+);
+
+const runGraphWorkerBoundaryAtom = ontologyBrowserRuntime.atom((get) =>
+  O.match(get(graphWorkerBoundaryRequestAtom)[1], {
+    onNone: () => Effect.void,
+    onSome: ([run, onFailure]) =>
+      Effect.sync(() =>
+        Result.try({
+          try: run,
+          catch: (cause) => cause,
+        })
+      ).pipe(
+        Effect.flatMap(
+          Result.match({
+            onFailure: (cause) => Effect.sync(() => onFailure(cause)),
+            onSuccess: () => Effect.void,
+          })
+        )
+      ),
+  })
+);
 
 /**
  * Side-effect atom that owns the visualizer projection worker.
@@ -1180,14 +1654,12 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
   let previousProjection: O.Option<OntologyGraphProjection> = O.none();
   let lastProjectionRequest: O.Option<WorkerCommand> = O.none();
   let requeuedAfterFailure = false;
-  let watchdog: O.Option<Fiber.Fiber<void>> = O.none();
+  get.mount(ontologyGraphWorkerWatchdogAtom);
+  get.mount(reportGraphWorkerFailureAtom);
+  get.mount(runGraphWorkerBoundaryAtom);
 
   const disarmWatchdog = (): void => {
-    pipe(
-      watchdog,
-      O.match({ onNone: () => undefined, onSome: (fiber) => void Effect.runFork(Fiber.interrupt(fiber)) })
-    );
-    watchdog = O.none();
+    get.set(graphWorkerWatchdogRequestAtom, [get.registry.get(graphWorkerWatchdogRequestAtom)[0] + 1, O.none()]);
   };
 
   // Armed on every request, disarmed by any answer. A worker that never replies
@@ -1195,11 +1667,15 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
   // forever and says nothing — which is precisely how this bug hid.
   const armWatchdog = (): void => {
     disarmWatchdog();
-    watchdog = O.some(
-      Effect.runFork(
-        Effect.sleep(GRAPH_WORKER_TIMEOUT).pipe(Effect.map(() => failWorker(GRAPH_WORKER_TIMEOUT_MESSAGE)))
-      )
-    );
+    get.set(graphWorkerWatchdogRequestAtom, [
+      get.registry.get(graphWorkerWatchdogRequestAtom)[0] + 1,
+      O.some(() =>
+        failWorkerCause(
+          OntologyGraphWorkerTimeoutError.make({ message: GRAPH_WORKER_TIMEOUT_MESSAGE }),
+          O.some(GRAPH_WORKER_TIMEOUT_MESSAGE)
+        )
+      ),
+    ]);
   };
 
   const terminateWorker = (): void => {
@@ -1207,15 +1683,22 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
     worker = O.none();
   };
 
-  const failWorker = (message: string): void => {
+  const resetFailedWorker = (): void => {
     disarmWatchdog();
     previousProjection = O.none();
     get.set(ontologyGraphProjectionAtom, O.none());
     get.set(ontologyGraphDeltaAtom, O.none());
     get.set(ontologyGraphBackendAtom, O.none());
-    get.set(ontologyGraphErrorAtom, O.some(message));
     terminateWorker();
     requeueLastProjectionRequest();
+  };
+
+  const failWorkerCause = (cause: unknown, clientMessage: O.Option<string> = O.none()): void => {
+    resetFailedWorker();
+    get.set(graphWorkerFailureRequestAtom, [
+      get.registry.get(graphWorkerFailureRequestAtom)[0] + 1,
+      O.some<GraphWorkerFailure>([cause, clientMessage]),
+    ]);
   };
 
   const makeWorker = (): Worker => {
@@ -1226,7 +1709,7 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
       disarmWatchdog();
       const received = decodeWorkerResult(event.data);
       if (!Result.isSuccess(received)) {
-        failWorker(GRAPH_WORKER_UNREADABLE_RESULT_MESSAGE);
+        failWorkerCause(received.failure, O.some(GRAPH_WORKER_UNREADABLE_RESULT_MESSAGE));
         return;
       }
       WorkerResult.match(received.success, {
@@ -1249,10 +1732,15 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
     });
     nextWorker.addEventListener("error", (event) => {
       event.preventDefault();
-      failWorker(graphWorkerErrorMessage(event));
+      failWorkerCause(
+        pipe(
+          O.fromNullishOr(event.error),
+          O.getOrElse(() => event.message)
+        )
+      );
     });
     nextWorker.addEventListener("messageerror", (event) => {
-      failWorker(graphWorkerMessageError(event));
+      failWorkerCause(event, O.some(GRAPH_WORKER_MESSAGE_ERROR));
     });
     return nextWorker;
   };
@@ -1267,6 +1755,13 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
       })
     );
 
+  const dispatchWorkerCommand = (command: WorkerCommand): void => {
+    get.set(graphWorkerBoundaryRequestAtom, [
+      get.registry.get(graphWorkerBoundaryRequestAtom)[0] + 1,
+      O.some<GraphWorkerBoundary>([() => currentWorker().postMessage(encodeWorkerCommand(command)), failWorkerCause]),
+    ]);
+  };
+
   const requeueLastProjectionRequest = (): void => {
     if (requeuedAfterFailure) {
       return;
@@ -1278,7 +1773,7 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
         onSome: (command) => {
           requeuedAfterFailure = true;
           armWatchdog();
-          currentWorker().postMessage(encodeWorkerCommand(command));
+          dispatchWorkerCommand(command);
         },
       })
     );
@@ -1287,7 +1782,6 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
   get.subscribe(
     graphRequestAtom,
     ({ snapshot, options, delta }) => {
-      const activeWorker = currentWorker();
       const command = pipe(
         previousProjection,
         O.flatMap((previous) =>
@@ -1316,7 +1810,7 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
       requeuedAfterFailure = false;
       get.set(ontologyGraphErrorAtom, O.none());
       armWatchdog();
-      activeWorker.postMessage(encodeWorkerCommand(command));
+      dispatchWorkerCommand(command);
       get.set(ontologyGraphDeltaAtom, O.none());
     },
     { immediate: true }
@@ -1324,6 +1818,8 @@ export const ontologyGraphWorkerBridgeAtom = Atom.make((get) => {
 
   get.addFinalizer(() => {
     disarmWatchdog();
+    get.set(graphWorkerBoundaryRequestAtom, [get.registry.get(graphWorkerBoundaryRequestAtom)[0] + 1, O.none()]);
+    get.set(graphWorkerFailureRequestAtom, [get.registry.get(graphWorkerFailureRequestAtom)[0] + 1, O.none()]);
     terminateWorker();
   });
 });
@@ -1522,17 +2018,22 @@ const normalizeGraphCentrality = (centrality: Float64Array): Float32Array<ArrayB
   return normalized;
 };
 
+const graphBetweennessExactNodeLimit = 1_500;
+const graphBetweennessSampleSourceLimit = 512;
+
 const graphBetweennessCentrality = (
   nodeCount: number,
   adjacency: ReadonlyArray<ReadonlyArray<number>>
 ): Float32Array<ArrayBuffer> => {
   const centrality = new Float64Array(nodeCount);
+  const sourceStride =
+    nodeCount > graphBetweennessExactNodeLimit ? Math.ceil(nodeCount / graphBetweennessSampleSourceLimit) : 1;
   let source = 0;
 
   while (source < nodeCount) {
     const [predecessors, pathCounts, stack] = graphShortestPathsFromSource(source, nodeCount, adjacency);
     accumulateGraphDependencies(source, nodeCount, predecessors, pathCounts, stack, centrality);
-    source += 1;
+    source += sourceStride;
   }
 
   return normalizeGraphCentrality(centrality);
@@ -1631,7 +2132,7 @@ const graphCommunities = (
 };
 
 let graph3dProjectionChannelCache: O.Option<
-  readonly [number, Float32Array<ArrayBuffer>, Uint16Array<ArrayBuffer>, Float32Array<ArrayBuffer>]
+  readonly [OntologyGraphProjection, Float32Array<ArrayBuffer>, Uint16Array<ArrayBuffer>, Float32Array<ArrayBuffer>]
 > = O.none();
 
 const graph3dProjectionChannels = (
@@ -1639,7 +2140,7 @@ const graph3dProjectionChannels = (
 ): readonly [Float32Array<ArrayBuffer>, Uint16Array<ArrayBuffer>, Float32Array<ArrayBuffer>] =>
   pipe(
     graph3dProjectionChannelCache,
-    O.filter(([revision]) => revision === projection.revision),
+    O.filter(([cachedProjection]) => cachedProjection === projection),
     O.match({
       onNone: () => {
         const adjacency = pipe(
@@ -1658,7 +2159,7 @@ const graph3dProjectionChannels = (
           edgeIndex += 1;
         }
 
-        graph3dProjectionChannelCache = O.some([projection.revision, nodeImportance, nodeCommunities, edgeWeights]);
+        graph3dProjectionChannelCache = O.some([projection, nodeImportance, nodeCommunities, edgeWeights]);
         return [nodeImportance, nodeCommunities, edgeWeights];
       },
       onSome: ([, nodeImportance, nodeCommunities, edgeWeights]) => [nodeImportance, nodeCommunities, edgeWeights],
@@ -1714,7 +2215,193 @@ const renderRequestAtom = Atom.make((get) => ({
 }));
 
 const graphRenderFailureMessage = (cause: unknown): string =>
-  `The graph could not be drawn: ${cause instanceof Error ? cause.message : String(cause)}`;
+  `The graph could not be drawn: ${redactCauseForClient(cause).message}`;
+
+const reportGraphRenderFailure = Effect.fn("ontology.graph.report_render_failure")(function* (cause: unknown) {
+  yield* logRedactedCause(
+    cause,
+    LogRedactedCauseOptions.make({
+      message: "ontology graph renderer failed",
+      level: "Error",
+      attributes: {
+        subsystem: "ontology_graph",
+      },
+    })
+  );
+});
+
+const cosmosGraphRenderHandleAtom = Atom.make<O.Option<CosmosRenderHandle>>(O.none());
+const graph3dGraphRenderHandleAtom = Atom.make<O.Option<Graph3DRenderHandle>>(O.none());
+const graph3dOntologyProjectionAtom = Atom.make<O.Option<OntologyGraphProjection>>(O.none());
+const activeGraphRendererAtom = Atom.make<Atom.Type<typeof ontologyGraphRendererAtom>>("cosmos");
+
+const reportGraphRuntimeFailureAtom = ontologyBrowserRuntime.fn<unknown>()(
+  Effect.fnUntraced(function* (cause, ctx) {
+    ctx.set(ontologyGraphErrorAtom, O.some(graphRenderFailureMessage(cause)));
+    yield* reportGraphRenderFailure(cause);
+  })
+);
+
+const selectedGraphNodeIndex = (
+  projection: OntologyGraphProjection,
+  selectedIri: O.Option<string>
+): number | undefined =>
+  pipe(
+    selectedIri,
+    O.flatMap((iri) =>
+      pipe(
+        projection.nodes,
+        A.findFirstIndex((node) => node.iri === iri)
+      )
+    ),
+    O.getOrUndefined
+  );
+
+const destroyOntologyGraphRenderers = Effect.fnUntraced(function* (ctx: Atom.FnContext) {
+  yield* Effect.sync(() => {
+    pipe(
+      ctx.registry.get(cosmosGraphRenderHandleAtom),
+      O.match({ onNone: () => undefined, onSome: (mounted) => mounted.destroy() })
+    );
+    pipe(
+      ctx.registry.get(graph3dGraphRenderHandleAtom),
+      O.match({ onNone: () => undefined, onSome: (mounted) => mounted.destroy() })
+    );
+  });
+  ctx.set(cosmosGraphRenderHandleAtom, O.none());
+  ctx.set(graph3dGraphRenderHandleAtom, O.none());
+  ctx.set(graph3dOntologyProjectionAtom, O.none());
+});
+
+const applyOntologyGraphRenderRequestAtom = ontologyBrowserRuntime.fn<Atom.Type<typeof renderRequestAtom>>()(
+  Effect.fn("ontology.graph.apply_render_request")(function* (request, ctx) {
+    if (request.renderer !== ctx.registry.get(activeGraphRendererAtom)) {
+      yield* destroyOntologyGraphRenderers(ctx);
+      ctx.set(activeGraphRendererAtom, request.renderer);
+    }
+
+    if (O.isNone(request.container) || O.isNone(request.projection)) {
+      yield* destroyOntologyGraphRenderers(ctx);
+      ctx.set(ontologyGraphBackendAtom, O.none());
+      return;
+    }
+
+    // A fresh attempt clears the last failure, so a recovered graph stops
+    // claiming to be broken.
+    ctx.set(ontologyGraphErrorAtom, O.none());
+    const container = request.container.value;
+    const projection = request.projection.value;
+
+    if (request.renderer === "graph3d") {
+      ctx.set(ontologyGraphBackendAtom, O.none());
+      const ontologyProjection = projection;
+      const graph3dProjection = graph3dProjectionFromOntology(ontologyProjection);
+      ctx.set(graph3dOntologyProjectionAtom, O.some(ontologyProjection));
+
+      yield* O.match(ctx.registry.get(graph3dGraphRenderHandleAtom), {
+        onNone: () => {
+          const options = Graph3DRenderOptions.make({
+            onNodeSelect: (nodeIndex: number | undefined) => {
+              ctx.set(
+                selectedOntologyResourceIriAtom,
+                pipe(
+                  ctx.registry.get(graph3dOntologyProjectionAtom),
+                  O.flatMap((currentProjection) =>
+                    P.isUndefined(nodeIndex)
+                      ? O.none()
+                      : pipe(
+                          currentProjection.nodes,
+                          A.get(nodeIndex),
+                          O.map((node) => node.iri)
+                        )
+                  )
+                )
+              );
+            },
+            onRuntimeError: (error: Graph3DDriverError) => {
+              ctx.registry.set(reportGraphRuntimeFailureAtom, error);
+            },
+          });
+
+          return pipe(
+            renderGraph3D(container, graph3dProjection, options),
+            Effect.matchCauseEffect({
+              onFailure: (cause) =>
+                Cause.hasInterruptsOnly(cause)
+                  ? Effect.interrupt
+                  : Effect.gen(function* () {
+                      if (ctx.registry.get(renderRequestAtom) !== request) return;
+                      ctx.set(graph3dGraphRenderHandleAtom, O.none());
+                      ctx.set(graph3dOntologyProjectionAtom, O.none());
+                      ctx.set(ontologyGraphBackendAtom, O.none());
+                      const failure = Cause.squash(cause);
+                      ctx.set(ontologyGraphErrorAtom, O.some(graphRenderFailureMessage(failure)));
+                      yield* reportGraphRenderFailure(cause);
+                    }),
+              onSuccess: (mounted) =>
+                Effect.sync(() => {
+                  if (ctx.registry.get(renderRequestAtom) !== request) {
+                    mounted.destroy();
+                    return;
+                  }
+                  ctx.set(graph3dGraphRenderHandleAtom, O.some(mounted));
+                  mounted.select(
+                    selectedGraphNodeIndex(ontologyProjection, ctx.registry.get(selectedOntologyResourceIriAtom))
+                  );
+                }),
+            })
+          );
+        },
+        onSome: (mounted) =>
+          Effect.sync(() => {
+            mounted.update(graph3dProjection);
+            mounted.select(
+              selectedGraphNodeIndex(ontologyProjection, ctx.registry.get(selectedOntologyResourceIriAtom))
+            );
+          }),
+      });
+      return;
+    }
+
+    const cosmosProjection = cosmosProjectionFromOntology(projection);
+    yield* O.match(ctx.registry.get(cosmosGraphRenderHandleAtom), {
+      onNone: () =>
+        pipe(
+          renderCosmosGraph(container, cosmosProjection),
+          Effect.matchCauseEffect({
+            onFailure: (cause) =>
+              Cause.hasInterruptsOnly(cause)
+                ? Effect.interrupt
+                : Effect.gen(function* () {
+                    if (ctx.registry.get(renderRequestAtom) !== request) return;
+                    ctx.set(cosmosGraphRenderHandleAtom, O.none());
+                    ctx.set(ontologyGraphBackendAtom, O.none());
+                    const failure = Cause.squash(cause);
+                    ctx.set(ontologyGraphErrorAtom, O.some(graphRenderFailureMessage(failure)));
+                    yield* reportGraphRenderFailure(cause);
+                  }),
+            onSuccess: (mounted) =>
+              Effect.sync(() => {
+                if (ctx.registry.get(renderRequestAtom) !== request) {
+                  mounted.destroy();
+                  return;
+                }
+                ctx.set(cosmosGraphRenderHandleAtom, O.some(mounted));
+                ctx.set(ontologyGraphBackendAtom, O.some(mounted.backend));
+              }),
+          })
+        ),
+      onSome: (mounted) => Effect.sync(() => mounted.update(cosmosProjection)),
+    });
+  })
+);
+
+const disposeOntologyGraphRenderersAtom = ontologyBrowserRuntime.fn<void>()(
+  Effect.fnUntraced(function* (_, ctx) {
+    yield* destroyOntologyGraphRenderers(ctx);
+    ctx.set(ontologyGraphBackendAtom, O.none());
+  })
+);
 
 /**
  * Side-effect atom that mounts and updates the selected graph viewport.
@@ -1730,163 +2417,30 @@ const graphRenderFailureMessage = (cause: unknown): string =>
  * @since 0.0.0
  */
 export const ontologyGraphRenderBridgeAtom = Atom.make((get) => {
-  let cosmosHandle: O.Option<CosmosRenderHandle> = O.none();
-  let graph3dHandle: O.Option<Graph3DRenderHandle> = O.none();
-  let graph3dOntologyProjection: O.Option<OntologyGraphProjection> = O.none();
-  let activeRenderer: "cosmos" | "graph3d" = "cosmos";
-  let renderToken = 0;
+  get.mount(cosmosGraphRenderHandleAtom);
+  get.mount(graph3dGraphRenderHandleAtom);
+  get.mount(graph3dOntologyProjectionAtom);
+  get.mount(activeGraphRendererAtom);
+  get.mount(applyOntologyGraphRenderRequestAtom);
+  get.mount(disposeOntologyGraphRenderersAtom);
+  get.mount(reportGraphRuntimeFailureAtom);
 
-  const selectedNodeIndex = (projection: OntologyGraphProjection, selectedIri: O.Option<string>): number | undefined =>
-    pipe(
-      selectedIri,
-      O.flatMap((iri) =>
-        pipe(
-          projection.nodes,
-          A.findFirstIndex((node) => node.iri === iri)
-        )
-      ),
-      O.getOrUndefined
-    );
-
-  const destroyMountedRenderers = (): void => {
-    pipe(cosmosHandle, O.match({ onNone: () => undefined, onSome: (mounted) => mounted.destroy() }));
-    pipe(graph3dHandle, O.match({ onNone: () => undefined, onSome: (mounted) => mounted.destroy() }));
-    cosmosHandle = O.none();
-    graph3dHandle = O.none();
-    graph3dOntologyProjection = O.none();
-  };
-
-  get.subscribe(
-    renderRequestAtom,
-    ({ container, projection, renderer }) => {
-      if (renderer !== activeRenderer) {
-        renderToken += 1;
-        destroyMountedRenderers();
-        activeRenderer = renderer;
-      }
-
-      if (O.isNone(container) || O.isNone(projection)) {
-        renderToken += 1;
-        destroyMountedRenderers();
-        get.set(ontologyGraphBackendAtom, O.none());
-        return;
-      }
-
-      // A fresh attempt clears the last failure, so a recovered graph stops
-      // claiming to be broken.
-      get.set(ontologyGraphErrorAtom, O.none());
-
-      if (renderer === "graph3d") {
-        get.set(ontologyGraphBackendAtom, O.none());
-        const ontologyProjection = projection.value;
-        const graph3dProjection = graph3dProjectionFromOntology(ontologyProjection);
-        graph3dOntologyProjection = O.some(ontologyProjection);
-
-        pipe(
-          graph3dHandle,
-          O.match({
-            onNone: () => {
-              renderToken += 1;
-              const token = renderToken;
-              const options = Graph3DRenderOptions.make({
-                onNodeSelect: (nodeIndex: number | undefined) => {
-                  get.set(
-                    selectedOntologyResourceIriAtom,
-                    pipe(
-                      graph3dOntologyProjection,
-                      O.flatMap((currentProjection) =>
-                        P.isUndefined(nodeIndex)
-                          ? O.none()
-                          : pipe(
-                              currentProjection.nodes,
-                              A.get(nodeIndex),
-                              O.map((node) => node.iri)
-                            )
-                      )
-                    )
-                  );
-                },
-                onRuntimeError: (error: Graph3DDriverError) => {
-                  get.set(ontologyGraphErrorAtom, O.some(graphRenderFailureMessage(error)));
-                },
-              });
-              void Effect.runPromise(renderGraph3D(container.value, graph3dProjection, options)).then(
-                (mounted) => {
-                  if (token !== renderToken) {
-                    mounted.destroy();
-                    return;
-                  }
-                  graph3dHandle = O.some(mounted);
-                  mounted.select(selectedNodeIndex(ontologyProjection, get(selectedOntologyResourceIriAtom)));
-                },
-                (cause: unknown) => {
-                  if (token === renderToken) {
-                    graph3dHandle = O.none();
-                    graph3dOntologyProjection = O.none();
-                    get.set(ontologyGraphBackendAtom, O.none());
-                    get.set(ontologyGraphErrorAtom, O.some(graphRenderFailureMessage(cause)));
-                  }
-                }
-              );
-            },
-            onSome: (mounted) => {
-              mounted.update(graph3dProjection);
-              mounted.select(selectedNodeIndex(ontologyProjection, get(selectedOntologyResourceIriAtom)));
-            },
-          })
-        );
-        return;
-      }
-
-      const cosmosProjection = cosmosProjectionFromOntology(projection.value);
-
-      pipe(
-        cosmosHandle,
-        O.match({
-          onNone: () => {
-            renderToken += 1;
-            const token = renderToken;
-            void Effect.runPromise(renderCosmosGraph(container.value, cosmosProjection)).then(
-              (mounted) => {
-                if (token !== renderToken) {
-                  mounted.destroy();
-                  return;
-                }
-                cosmosHandle = O.some(mounted);
-                get.set(ontologyGraphBackendAtom, O.some(mounted.backend));
-              },
-              (cause: unknown) => {
-                if (token === renderToken) {
-                  cosmosHandle = O.none();
-                  get.set(ontologyGraphBackendAtom, O.none());
-                  // The renderer's failure used to be dropped on the floor: the
-                  // backend went back to `none`, the badge read "pending", and the
-                  // reason — a lost WebGL context, a container with no size — was
-                  // never spoken. A graph that cannot be drawn has to say so.
-                  get.set(ontologyGraphErrorAtom, O.some(graphRenderFailureMessage(cause)));
-                }
-              }
-            );
-          },
-          onSome: (mounted) => mounted.update(cosmosProjection),
-        })
-      );
-    },
-    { immediate: true }
-  );
+  get.subscribe(renderRequestAtom, (request) => get.set(applyOntologyGraphRenderRequestAtom, request), {
+    immediate: true,
+  });
 
   get.subscribe(
     selectedOntologyResourceIriAtom,
     (selectedIri) => {
       pipe(
-        graph3dHandle,
+        get.registry.get(graph3dGraphRenderHandleAtom),
         O.match({
           onNone: () => undefined,
           onSome: (mounted) =>
             mounted.select(
               pipe(
-                graph3dOntologyProjection,
-                O.map((projection) => selectedNodeIndex(projection, selectedIri)),
+                get.registry.get(graph3dOntologyProjectionAtom),
+                O.map((projection) => selectedGraphNodeIndex(projection, selectedIri)),
                 O.getOrUndefined
               )
             ),
@@ -1897,8 +2451,8 @@ export const ontologyGraphRenderBridgeAtom = Atom.make((get) => {
   );
 
   get.addFinalizer(() => {
-    renderToken += 1;
-    destroyMountedRenderers();
+    get.set(applyOntologyGraphRenderRequestAtom, Atom.Interrupt);
+    get.set(disposeOntologyGraphRenderersAtom, undefined);
   });
 });
 
@@ -2036,9 +2590,9 @@ export const runOntologySparqlAtom = OntologyClient.runtime.fn<void>()(
       ctx.set(ontologySparqlResultAtom, O.some(result));
       ctx.set(ontologySparqlErrorAtom, O.none());
     }).pipe(
-      Effect.tapCause((cause) =>
-        Effect.sync(() => {
-          reportFailure("SPARQL", cause);
+      Effect.catchCause(
+        Effect.fnUntraced(function* (cause) {
+          yield* reportFailure("SPARQL", cause);
           ctx.set(ontologySparqlErrorAtom, O.some(actionFailureMessage("The query", cause)));
         })
       )
@@ -2101,7 +2655,12 @@ export const runOntologyValidationAtom = OntologyClient.runtime.fn<void>()(
         ctx.set(ontologyValidationResultAtom, O.some(result));
         ctx.set(ontologyValidationErrorAtom, O.none());
       }),
-      Effect.catchCause((cause) => Effect.sync(() => setValidationFailure(ctx, "Validation", cause)))
+      Effect.catchCause(
+        Effect.fnUntraced(function* (cause) {
+          yield* reportFailure("Validation", cause);
+          setValidationFailure(ctx, "Validation", cause);
+        })
+      )
     );
   })
 );
@@ -2158,10 +2717,10 @@ export const applyOntologyRepairAtom = OntologyClient.runtime.fn<OntologyRepairP
       }).pipe(
         // A failure after the batch landed leaves the ontology repaired but
         // unvalidated; say so instead of failing silently.
-        Effect.tapCause((cause) =>
-          Effect.sync(() => {
+        Effect.catchCause(
+          Effect.fnUntraced(function* (cause) {
             ctx.set(ontologyValidationStatusAtom, "failed");
-            reportFailure("Validation", cause);
+            yield* reportFailure("Validation", cause);
             ctx.set(ontologyValidationErrorAtom, O.some(actionFailureMessage("Validation", cause)));
           })
         )
@@ -2206,7 +2765,12 @@ export const exportOntologyProvenanceAtom = OntologyClient.runtime.fn<void>()(
         ctx.set(ontologyProvenanceExportAtom, O.some(exported));
         ctx.set(ontologyValidationErrorAtom, O.none());
       }),
-      Effect.catchCause((cause) => Effect.sync(() => setValidationFailure(ctx, "Export", cause)))
+      Effect.catchCause(
+        Effect.fnUntraced(function* (cause) {
+          yield* reportFailure("Export", cause);
+          setValidationFailure(ctx, "Export", cause);
+        })
+      )
     );
   })
 );
@@ -2256,9 +2820,9 @@ export const openOntologyDocumentAtom = OntologyClient.runtime.fn<OpenOntologyDo
       .pipe(
         // Without this, a rejected path or unreadable file made Open a no-op:
         // the RPC failed, nothing rendered, and the workbench sat at "No file open".
-        Effect.tapCause((cause) =>
-          Effect.sync(() => {
-            reportFailure("Ontology document", cause);
+        Effect.catchCause(
+          Effect.fnUntraced(function* (cause) {
+            yield* reportFailure("Ontology document", cause);
             ctx.set(ontologyDocumentErrorAtom, O.some(actionFailureMessage("The document", cause)));
           })
         )
@@ -2300,9 +2864,9 @@ export const saveOntologyDocumentAtom = OntologyClient.runtime.fn<SaveOntologyDo
         })
       )
       .pipe(
-        Effect.tapCause((cause) =>
-          Effect.sync(() => {
-            reportFailure("Ontology document", cause);
+        Effect.catchCause(
+          Effect.fnUntraced(function* (cause) {
+            yield* reportFailure("Ontology document", cause);
             ctx.set(ontologyDocumentErrorAtom, O.some(actionFailureMessage("The document", cause)));
           })
         )
@@ -2332,9 +2896,9 @@ export const previewOntologyTurtleAtom = OntologyClient.runtime.fn<void>()(
       ctx.set(ontologyDocumentErrorAtom, O.none());
       ctx.set(ontologySourceAtom, preview.source);
     }).pipe(
-      Effect.tapCause((cause) =>
-        Effect.sync(() => {
-          reportFailure("Ontology document", cause);
+      Effect.catchCause(
+        Effect.fnUntraced(function* (cause) {
+          yield* reportFailure("Ontology document", cause);
           ctx.set(ontologyDocumentErrorAtom, O.some(actionFailureMessage("The document", cause)));
         })
       )
@@ -2421,6 +2985,100 @@ export const applyOntologyGraphGestureAtom = OntologyClient.runtime.fn<ApplyOnto
         }
       })
     );
+  })
+);
+
+/**
+ * Converts one inspector UI intent into schema-owned batch or graph-gesture
+ * input after normalizing and validating the current draft.
+ *
+ * @example
+ * ```ts
+ * import { applyOntologyInspectorActionAtom } from "@beep/ontology-client/aggregates/Session"
+ *
+ * console.log(applyOntologyInspectorActionAtom)
+ * ```
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
+export const applyOntologyInspectorActionAtom = OntologyClient.runtime.fn<OntologyInspectorAction>()(
+  Effect.fn("applyOntologyInspectorAction")(function* (action, ctx) {
+    const form = ctx(ontologyInspectorFormStateAtom);
+    const permitted = OntologyInspectorAction.$match(action, {
+      addTriple: () => form.canApplyTriple,
+      connect: () => form.canApplyGraphGesture,
+      delete: () => form.canApplyGraphGesture,
+      expand: () => form.canApplyGraphGesture,
+      instantiate: () => form.canApplyGraphGesture,
+    });
+    if (!permitted) return;
+
+    const subjectIri = decodeOntologyInspectorIri(form.subject);
+    const predicateIri = decodeOntologyInspectorIri(form.predicate);
+    const objectIri = decodeOntologyInspectorIri(form.object);
+
+    const applyEdgeGesture = Effect.fnUntraced(function* (kind: "connect" | "delete" | "expand") {
+      yield* O.match(O.all({ sourceIri: subjectIri, predicateIri, targetIri: objectIri }), {
+        onNone: () => Effect.void,
+        onSome: ({ sourceIri, predicateIri, targetIri }) =>
+          ctx.setResult(
+            applyOntologyGraphGestureAtom,
+            ApplyOntologyGraphGestureInput.make({
+              gesture: OntologyGraphGesture.cases[kind].make({ sourceIri, predicateIri, targetIri }),
+            })
+          ),
+      });
+    });
+
+    yield* OntologyInspectorAction.$match(action, {
+      addTriple: () =>
+        O.match(
+          O.all({
+            subject: O.map(subjectIri, makeNamedNode),
+            predicate: O.map(predicateIri, makeNamedNode),
+            object: OntologyInspectorObjectKind.$match(form.objectKind, {
+              iri: () => O.map(objectIri, makeNamedNode),
+              literal: () =>
+                pipe(
+                  Str.trim(form.object),
+                  O.liftPredicate(Str.isNonEmpty),
+                  O.map(() => makeLiteral(form.object, XSD_STRING.value))
+                ),
+            }),
+          }),
+          {
+            onNone: () => Effect.void,
+            onSome: ({ subject, predicate, object }) =>
+              ctx.setResult(
+                applyOntologyBatchAtom,
+                ApplyOntologyBatchInput.make({
+                  operations: [
+                    ChangeOperation.make({
+                      kind: "addQuad",
+                      partition: "asserted",
+                      quad: makeQuad(subject, predicate, object),
+                    }),
+                  ],
+                })
+              ),
+          }
+        ),
+      connect: () => applyEdgeGesture("connect"),
+      delete: () => applyEdgeGesture("delete"),
+      expand: () => applyEdgeGesture("expand"),
+      instantiate: () =>
+        O.match(O.all({ classIri: subjectIri, instanceIri: objectIri }), {
+          onNone: () => Effect.void,
+          onSome: ({ classIri, instanceIri }) =>
+            ctx.setResult(
+              applyOntologyGraphGestureAtom,
+              ApplyOntologyGraphGestureInput.make({
+                gesture: OntologyGraphGesture.cases.instantiate.make({ classIri, instanceIri }),
+              })
+            ),
+        }),
+    });
   })
 );
 

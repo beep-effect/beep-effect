@@ -205,6 +205,9 @@
       "path": "packages/drivers/xai"
     },
     {
+      "path": "packages/epistemic/config"
+    },
+    {
       "path": "packages/epistemic/domain"
     },
     {

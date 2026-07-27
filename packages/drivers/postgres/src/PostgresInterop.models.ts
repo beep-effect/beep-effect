@@ -40,7 +40,7 @@ export type NativeMigrationError = EffectDrizzleQueryError | MigratorInitError |
  */
 export * as NativePgClient from "@effect/sql-pg/PgClient";
 /**
- * Native Drizzle Effect Postgres database types.
+ * Native Drizzle Effect Postgres database and logger types.
  *
  * @example
  * ```ts
@@ -55,12 +55,9 @@ export * as NativePgClient from "@effect/sql-pg/PgClient";
  * @since 0.0.0
  * @category interop
  */
-export type {
-  EffectLogger,
-  EffectPgDatabase,
-} from "drizzle-orm/effect-postgres";
+export type { EffectLogger, EffectPgDatabase } from "drizzle-orm/effect-postgres";
 /**
- * Configuration accepted by native Drizzle Effect Postgres databases.
+ * Native Drizzle Effect Postgres configuration types.
  *
  * @example
  * ```ts
@@ -77,4 +74,4 @@ export type {
 export type {
   EffectDrizzlePgConfig,
   EffectDrizzlePgConfig as EffectDrizzleConfig,
-} from "drizzle-orm/pg-core/effect";
+} from "drizzle-orm/pg-core/effect/utils";

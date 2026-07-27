@@ -8,19 +8,20 @@
  */
 import { assistantContentToDocument } from "@beep/agents-domain/values/AssistantContent";
 import { FixtureTurnKernel, fixtureBlocksFor } from "@beep/agents-use-cases/proof";
-import { AgentTurnKernel, IndexedBlock, TurnHistoryItem } from "@beep/agents-use-cases/public";
+import { AgentTurnKernel, IndexedBlock, TurnGenerationError, TurnHistoryItem } from "@beep/agents-use-cases/public";
 import * as Md from "@beep/md/Md.model";
 import { renderPlainTextUnsafe } from "@beep/md/Md.render";
 import { assertSchemaArbitraryDecodesToSelf, provideScopedLayer } from "@beep/test-utils";
 import { ThreadStoreInMemoryLayer } from "@beep/workspace-server/aggregates/Thread";
 import { Thread } from "@beep/workspace-use-cases/server";
 import { describe, expect, it } from "@effect/vitest";
-import { Deferred, Effect, Fiber, Layer, Metric, Ref, Stream } from "effect";
+import { Deferred, Duration, Effect, Fiber, Layer, Metric, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import * as Crypto from "effect/Crypto";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { TestClock } from "effect/testing";
 import { decodeWorkspaceId, userDocument, userParagraphDocument } from "@/chat/ChatFixtures";
 import { documentToPlainText, makeChatOperations } from "@/chat/ChatOrchestrator";
 import { makeInMemoryUsageRecordSink } from "@/chat/UsageRecordSink";
@@ -31,7 +32,7 @@ const makeStack = Effect.gen(function* () {
   const store = yield* Thread.ThreadStore;
   const kernel = yield* AgentTurnKernel;
   const { ref, sink } = yield* makeInMemoryUsageRecordSink;
-  return { operations: makeChatOperations(store, kernel, sink), usageRef: ref };
+  return { operations: yield* makeChatOperations(store, kernel, sink), usageRef: ref };
 });
 
 const TestCryptoLayer = Layer.succeed(
@@ -43,6 +44,8 @@ const TestCryptoLayer = Layer.succeed(
 );
 const ThreadStoreTestLayer = ThreadStoreInMemoryLayer.pipe(Layer.provide(TestCryptoLayer));
 const StackLayer = Layer.merge(ThreadStoreTestLayer, FixtureTurnKernel);
+const encodeTurnHistoryItem = S.encodeUnknownEffect(TurnHistoryItem);
+const decodeTurnHistoryItem = S.decodeUnknownEffect(TurnHistoryItem);
 
 type MessageItem = { readonly role: Thread.TimelineMessageItem["role"]; readonly content: Md.Document.Type };
 
@@ -155,7 +158,7 @@ describe("@beep/professional-desktop chat contract", () => {
           return yield* Thread.ThreadStoreUnavailable.make({ reason: "title unavailable" });
         }),
       });
-      const operations = makeChatOperations(titleFailingStore, kernel, sink);
+      const operations = yield* makeChatOperations(titleFailingStore, kernel, sink);
       const workspaceId = decodeWorkspaceId(1);
       const thread = yield* operations.createThread(workspaceId, "New thread");
       const content = userDocument("Best effort title");
@@ -317,6 +320,31 @@ describe("@beep/professional-desktop chat contract", () => {
   );
 
   it.effect(
+    "does not expose provider failure details through the chat action error",
+    Effect.fnUntraced(function* () {
+      const store = yield* Thread.ThreadStore;
+      const { sink } = yield* makeInMemoryUsageRecordSink;
+      const kernel = AgentTurnKernel.of({
+        streamTurn: () =>
+          Stream.fail(
+            TurnGenerationError.make({
+              message: "provider token=private-value failed at /home/operator/credentials",
+            })
+          ),
+      });
+      const operations = yield* makeChatOperations(store, kernel, sink);
+      const thread = yield* operations.createThread(decodeWorkspaceId(1), "Redacted failure");
+      const error = yield* Stream.runDrain(operations.sendMessage(thread.id, userDocument("fail safely"))).pipe(
+        Effect.flip
+      );
+
+      expect(error.message).toBe("The assistant could not complete this response.");
+      expect(error.message).not.toContain("private-value");
+      expect(error.message).not.toContain("/home/operator");
+    }, provideScopedLayer(ThreadStoreTestLayer))
+  );
+
+  it.effect(
     "reports user_persisted repeatedly when assistant persistence fails after the user append",
     Effect.fnUntraced(function* () {
       const store = yield* Thread.ThreadStore;
@@ -337,7 +365,7 @@ describe("@beep/professional-desktop chat contract", () => {
             : store.appendTurn(input)
         ),
       });
-      const operations = makeChatOperations(assistantFailingStore, capturingKernel, sink);
+      const operations = yield* makeChatOperations(assistantFailingStore, capturingKernel, sink);
       const thread = yield* operations.createThread(decodeWorkspaceId(1), "Persistence failure");
 
       yield* Stream.runDrain(
@@ -375,7 +403,7 @@ describe("@beep/professional-desktop chat contract", () => {
             : store.appendTurn(input)
         ),
       });
-      const operations = makeChatOperations(gatedStore, kernel, sink);
+      const operations = yield* makeChatOperations(gatedStore, kernel, sink);
       const thread = yield* operations.createThread(decodeWorkspaceId(1), "Committed assistant");
       const send = yield* Effect.forkChild(
         Stream.runDrain(operations.sendMessage(thread.id, userDocument("Keep the answer"), "assistant-committed"))
@@ -437,8 +465,6 @@ describe("@beep/professional-desktop chat contract", () => {
       const firstAssistantText = documentToPlainText(
         assistantContentToDocument(fixtureBlocksFor([{ role: "user", text: "first" }]))
       );
-      const encodeTurnHistoryItem = S.encodeUnknownEffect(TurnHistoryItem);
-      const decodeTurnHistoryItem = S.decodeUnknownEffect(TurnHistoryItem);
       const wireHistory = yield* Effect.forEach(history, (item) => encodeTurnHistoryItem(item));
       const decodedHistory = yield* Effect.forEach(wireHistory, (item) => decodeTurnHistoryItem(item));
 
@@ -486,7 +512,7 @@ describe("@beep/professional-desktop chat contract", () => {
           ),
       });
 
-      const operations = makeChatOperations(store, gatedKernel, sink);
+      const operations = yield* makeChatOperations(store, gatedKernel, sink);
       const workspaceId = decodeWorkspaceId(1);
       const thread = yield* operations.createThread(workspaceId, "Concurrent");
 
@@ -531,7 +557,7 @@ describe("@beep/professional-desktop chat contract", () => {
             )
           ),
       });
-      const operations = makeChatOperations(store, kernel, sink);
+      const operations = yield* makeChatOperations(store, kernel, sink);
       const thread = yield* operations.createThread(decodeWorkspaceId(1), "Two windows");
       const first = yield* Effect.forkChild(
         Stream.runDrain(operations.sendMessage(thread.id, userDocument("ALPHA"), "window-a"))
@@ -553,5 +579,37 @@ describe("@beep/professional-desktop chat contract", () => {
         timeline.turns.some((turn) => turn.items.some((item) => item.kind === "message" && item.role === "assistant"))
       ).toBe(true);
     }, provideScopedLayer(ThreadStoreTestLayer))
+  );
+
+  it.effect(
+    "isolates request receipts between independently constructed operation sets",
+    Effect.fnUntraced(function* () {
+      const store = yield* Thread.ThreadStore;
+      const kernel = yield* AgentTurnKernel;
+      const { sink } = yield* makeInMemoryUsageRecordSink;
+      const first = yield* makeChatOperations(store, kernel, sink);
+      const second = yield* makeChatOperations(store, kernel, sink);
+      const thread = yield* first.createThread(decodeWorkspaceId(1), "Isolated coordinators");
+
+      yield* Stream.runDrain(first.sendMessage(thread.id, userDocument("ALPHA"), "isolated-request"));
+
+      expect(yield* first.getTurnRequestStatus("isolated-request")).toBe("persisted");
+      expect(yield* second.getTurnRequestStatus("isolated-request")).toBe("unknown");
+    }, provideScopedLayer(StackLayer))
+  );
+
+  it.effect(
+    "expires terminal request receipts without detached cleanup fibers",
+    Effect.fnUntraced(function* () {
+      const { operations } = yield* makeStack;
+      const thread = yield* operations.createThread(decodeWorkspaceId(1), "Receipt expiry");
+
+      yield* Stream.runDrain(operations.sendMessage(thread.id, userDocument("ALPHA"), "expiring-request"));
+      expect(yield* operations.getTurnRequestStatus("expiring-request")).toBe("persisted");
+
+      yield* TestClock.adjust(Duration.minutes(5));
+
+      expect(yield* operations.getTurnRequestStatus("expiring-request")).toBe("unknown");
+    }, provideScopedLayer(StackLayer))
   );
 });

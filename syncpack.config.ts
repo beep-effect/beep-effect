@@ -25,6 +25,7 @@ const config = {
     "packages/agents/client/package.json",
     "packages/agents/server/package.json",
     "packages/agents/tables/package.json",
+    "packages/epistemic/config/package.json",
     "packages/epistemic/domain/package.json",
     "packages/epistemic/tables/package.json",
     "packages/epistemic/use-cases/package.json",

@@ -38,6 +38,23 @@ export {
   sortSchemaFirstEntries,
 } from "./Lint.schemas.ts";
 /**
+ * Package test-typecheck blind-spot lint utilities.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export {
+  collectTestTypecheckBlindSpots,
+  defaultTestTypecheckBaselinePath,
+  lintPackageTestTypecheckCommand,
+  PackageTestTypecheckOptions,
+  runPackageTestTypecheckLint,
+  TestTypecheckBlindSpot,
+  TestTypecheckBlindSpotBaseline,
+  TestTypecheckBlindSpotKind,
+  TestTypecheckBlindSpotSummary,
+} from "./PackageTestTypecheck.ts";
+/**
  * Schema catalog generation utilities.
  *
  * @category cli-commands

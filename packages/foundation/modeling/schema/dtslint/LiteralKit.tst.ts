@@ -1,10 +1,12 @@
 import { $RepoCliId, $SchemaId } from "@beep/identity";
 import { LiteralKit, LiteralNotInSetError } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils/index";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "tstyche";
 import type { IdentityString } from "@beep/identity";
 import type { LiteralToKey } from "@beep/schema/LiteralKit";
 import type { A } from "@beep/utils";
+import type * as HashSet from "effect/HashSet";
 import type { LiteralValue } from "effect/SchemaAST";
 
 describe("LiteralToKey", () => {
@@ -34,6 +36,15 @@ describe("LiteralKit", () => {
 
   it("preserves the literal tuple on Options", () => {
     expect<typeof Status.Options>().type.toBe<readonly [1, 20n, true, false, "hello"]>();
+  });
+
+  it("types HashSet from the literal union and preserves it across rebuilds", () => {
+    const Annotated = Status.annotate({ title: "Annotated status" });
+    const Reattached = S.Literals(Status.Options).pipe(SchemaUtils.withLiteralKitStatics(Status));
+
+    expect(Status.HashSet).type.toBe<HashSet.HashSet<1 | 20n | true | false | "hello">>();
+    expect(Annotated.HashSet).type.toBe<HashSet.HashSet<1 | 20n | true | false | "hello">>();
+    expect(Reattached.HashSet).type.toBe<HashSet.HashSet<1 | 20n | true | false | "hello">>();
   });
 
   it("builds Enum members keyed by LiteralToKey", () => {

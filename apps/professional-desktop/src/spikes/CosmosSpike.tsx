@@ -6,34 +6,70 @@
  * @since 0.0.0
  */
 
-import { ClientObservabilityLive } from "@beep/agents-client";
-import { CosmosBackend, CosmosGraphProjection, CosmosRenderHandle, renderCosmosGraph } from "@beep/cosmos";
+import { CosmosBackend, CosmosGraphProjection, CosmosRenderHandle, renderCosmosGraph } from "@beep/cosmos/browser";
 import { $ProfessionalDesktopId } from "@beep/identity";
-import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
+import { LogRedactedCauseOptions, logRedactedCause, redactCauseForClient } from "@beep/observability";
+import { Fn, LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { Button } from "@beep/ui/components/button";
 import { O, P, pipe, thunkNull } from "@beep/utils";
-import { useAtomSet, useAtomValue } from "@effect/atom-react";
+import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as BrowserWorker from "@effect/platform-browser/BrowserWorker";
-import { Cause, Clock, Duration, Effect, Layer, Match } from "effect";
+import { Clock, Duration, Effect, Layer, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import * as RpcClient from "effect/unstable/rpc/RpcClient";
-import { CosmosSpikeRpcs } from "./CosmosSpike.rpc.ts";
+import { reportedBrowserFailureAtoms } from "@/runtime/BrowserFailure.atoms";
+import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
+import { CosmosSpikeRpcs, SyntheticProjectionCount, SyntheticProjectionNodeCount } from "./CosmosSpike.rpc.ts";
+import { fpsSampleAtoms } from "./Fps.atoms.ts";
 import type { JSX } from "react";
 
 const $I = $ProfessionalDesktopId.create("spikes/CosmosSpike");
 
-class SpikeProbeContract extends S.Class<SpikeProbeContract>($I`SpikeProbeContract`)(
+class CosmosWorkerInitializationError extends TaggedErrorClass<CosmosWorkerInitializationError>(
+  $I`CosmosWorkerInitializationError`
+)(
+  "CosmosWorkerInitializationError",
+  {
+    cause: S.Unknown,
+    message: S.NonEmptyString,
+  },
+  $I.annote("CosmosWorkerInitializationError", {
+    description: "The Cosmos spike projection worker could not be initialized.",
+  })
+) {}
+
+/**
+ * Headless probe contract exposed by a mounted Cosmos spike.
+ *
+ * @example
+ * ```ts
+ * import { CosmosSpikeProbeContract } from "@/spikes/CosmosSpike"
+ *
+ * const probe = CosmosSpikeProbeContract.make({
+ *   backend: "cosmos",
+ *   elementCount: 1_000,
+ *   fps: () => 60,
+ *   projectedEdgeCount: 500,
+ *   projectedNodeCount: 500
+ * })
+ * console.log(probe.backend) // "cosmos"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CosmosSpikeProbeContract extends S.Class<CosmosSpikeProbeContract>($I`CosmosSpikeProbeContract`)(
   {
     backend: CosmosBackend,
-    elementCount: S.Finite,
+    elementCount: SyntheticProjectionNodeCount,
     foldLevel: S.tag("L3"),
     fps: Fn({ output: S.Finite }),
-    projectedEdgeCount: S.Finite,
-    projectedNodeCount: S.Finite,
+    projectedEdgeCount: SyntheticProjectionCount,
+    projectedNodeCount: SyntheticProjectionNodeCount,
   },
-  $I.annote("SpikeProbeContract", {
+  $I.annote("CosmosSpikeProbeContract", {
     description: "Headless probe contract exposed by the mounted Cosmos spike.",
   })
 ) {}
@@ -45,56 +81,102 @@ const SpikeSizeLabel = LiteralKit(["1k", "10k", "100k"]).pipe(
 );
 type SpikeSizeLabel = typeof SpikeSizeLabel.Type;
 
-class SpikeSize extends S.Class<SpikeSize>($I`SpikeSize`)(
+/**
+ * Synthetic graph dimensions for one Cosmos spike preset.
+ *
+ * @example
+ * ```ts
+ * import { CosmosSpikeSize } from "@/spikes/CosmosSpike"
+ *
+ * const size = CosmosSpikeSize.make({
+ *   edgeCount: 500,
+ *   elementCount: 1_000,
+ *   label: "1k",
+ *   nodeCount: 500
+ * })
+ * console.log(size.elementCount) // 1000
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CosmosSpikeSize extends S.Class<CosmosSpikeSize>($I`CosmosSpikeSize`)(
   {
-    edgeCount: S.Finite,
-    elementCount: S.Finite,
+    edgeCount: SyntheticProjectionCount,
+    elementCount: SyntheticProjectionNodeCount,
     label: SpikeSizeLabel,
-    nodeCount: S.Finite,
+    nodeCount: SyntheticProjectionNodeCount,
   },
-  $I.annote("SpikeSize", {
+  $I.annote("CosmosSpikeSize", {
     description: "Node and edge counts for a synthetic Cosmos spike preset.",
   })
 ) {}
 
-class SpikeStatusFailed extends S.Class<SpikeStatusFailed>($I`SpikeStatusFailed`)(
+class CosmosSpikeStatusFailed extends S.Class<CosmosSpikeStatusFailed>($I`CosmosSpikeStatusFailed`)(
   {
     state: S.tag("failed"),
-    message: S.String,
+    message: S.NonEmptyString,
   },
-  $I.annote("SpikeStatusFailed", {
+  $I.annote("CosmosSpikeStatusFailed", {
     description: "Cosmos spike state after worker or renderer failure.",
   })
 ) {}
 
-class SpikeStatusReady extends S.Class<SpikeStatusReady>($I`SpikeStatusReady`)(
+class CosmosSpikeStatusReady extends S.Class<CosmosSpikeStatusReady>($I`CosmosSpikeStatusReady`)(
   {
     state: S.tag("ready"),
     backend: CosmosBackend,
     handle: CosmosRenderHandle,
     setupDuration: S.Duration,
   },
-  $I.annote("SpikeStatusReady", {
+  $I.annote("CosmosSpikeStatusReady", {
     description: "Cosmos spike state with an active renderer handle.",
   })
 ) {}
 
-class SpikeStatusRendering extends S.Class<SpikeStatusRendering>($I`SpikeStatusRendering`)(
+class CosmosSpikeStatusRendering extends S.Class<CosmosSpikeStatusRendering>($I`CosmosSpikeStatusRendering`)(
   { state: S.tag("rendering") },
-  $I.annote("SpikeStatusRendering", {
+  $I.annote("CosmosSpikeStatusRendering", {
     description: "Cosmos spike state while projection and renderer setup are in flight.",
   })
 ) {}
 
-const SpikeStatus = S.Union([SpikeStatusFailed, SpikeStatusReady, SpikeStatusRendering]).pipe(
+const CosmosSpikeState = LiteralKit(["rendering", "ready", "failed"]).pipe(
+  $I.annoteSchema("CosmosSpikeState", {
+    description: "Lifecycle variants for the Cosmos spike renderer.",
+  })
+);
+
+/**
+ * Exhaustive lifecycle state for the Cosmos spike renderer.
+ *
+ * @example
+ * ```ts
+ * import { CosmosSpikeStatus } from "@/spikes/CosmosSpike"
+ *
+ * const status = CosmosSpikeStatus.cases.rendering.make()
+ * console.log(CosmosSpikeStatus.guards.rendering(status)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CosmosSpikeStatus = CosmosSpikeState.mapMembers(
+  Tuple.evolve([() => CosmosSpikeStatusRendering, () => CosmosSpikeStatusReady, () => CosmosSpikeStatusFailed])
+).pipe(
   S.toTaggedUnion("state"),
-  $I.annoteSchema("SpikeStatus", {
+  $I.annoteSchema("CosmosSpikeStatus", {
     description: "Exhaustive lifecycle state for the Cosmos spike.",
   })
 );
-type SpikeStatus = typeof SpikeStatus.Type;
-const isSpikeStatusFailed = S.is(SpikeStatusFailed);
-const isSpikeStatusReady = S.is(SpikeStatusReady);
+
+/**
+ * Runtime type for {@link CosmosSpikeStatus}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+type CosmosSpikeStatus = typeof CosmosSpikeStatus.Type;
 
 const SpikeContainer = S.OptionFromNullishOr(S.instanceOf(HTMLDivElement)).pipe(
   SchemaUtils.withNoneDefault,
@@ -110,24 +192,25 @@ const InitialSpikeSizeLabel = SpikeSizeLabel.pipe(
   })
 );
 
-const spikeSizeFor = (label: SpikeSizeLabel): SpikeSize =>
+const spikeSizeFor = (label: SpikeSizeLabel): CosmosSpikeSize =>
   SpikeSizeLabel.$match(label, {
-    "1k": () => SpikeSize.make({ label: "1k", elementCount: 1_000, nodeCount: 500, edgeCount: 500 }),
-    "10k": () => SpikeSize.make({ label: "10k", elementCount: 10_000, nodeCount: 5_000, edgeCount: 5_000 }),
-    "100k": () => SpikeSize.make({ label: "100k", elementCount: 100_000, nodeCount: 50_000, edgeCount: 50_000 }),
+    "1k": () => CosmosSpikeSize.make({ label: "1k", elementCount: 1_000, nodeCount: 500, edgeCount: 500 }),
+    "10k": () => CosmosSpikeSize.make({ label: "10k", elementCount: 10_000, nodeCount: 5_000, edgeCount: 5_000 }),
+    "100k": () => CosmosSpikeSize.make({ label: "100k", elementCount: 100_000, nodeCount: 50_000, edgeCount: 50_000 }),
   });
 
 const spikeSizes = A.map(SpikeSizeLabel.Options, spikeSizeFor);
+const spikeSizeEquivalence = S.toEquivalence(CosmosSpikeSize);
 const initialSpikeSize = pipe(
   S.decodeUnknownOption(InitialSpikeSizeLabel)(import.meta.env.VITE_COSMOS_SPIKE_SIZE),
   O.map(spikeSizeFor),
   O.getOrElse(() => spikeSizeFor(SpikeSizeLabel.Enum["1k"]))
 );
-const renderingStatus: SpikeStatus = SpikeStatusRendering.make({});
+const renderingStatus: CosmosSpikeStatus = CosmosSpikeStatus.cases.rendering.make();
 
 declare global {
   interface Window {
-    __COSMOS_SPIKE__?: SpikeProbeContract;
+    __COSMOS_SPIKE__?: CosmosSpikeProbeContract;
   }
 }
 
@@ -141,14 +224,14 @@ const clearSpikeContract = (): void => {
 
 const setProjectedSpikeContract = (
   handle: CosmosRenderHandle,
-  elementCount: number,
-  projectedNodeCount: number,
-  projectedEdgeCount: number
+  elementCount: SyntheticProjectionNodeCount,
+  projectedNodeCount: SyntheticProjectionNodeCount,
+  projectedEdgeCount: SyntheticProjectionCount
 ): void => {
   const runtimeWindow = globalThis.window;
 
   if (!P.isUndefined(runtimeWindow)) {
-    runtimeWindow.__COSMOS_SPIKE__ = SpikeProbeContract.make({
+    runtimeWindow.__COSMOS_SPIKE__ = CosmosSpikeProbeContract.make({
       backend: handle.backend,
       fps: handle.fps,
       elementCount,
@@ -160,20 +243,41 @@ const setProjectedSpikeContract = (
 
 const CosmosWorkerLive = Layer.unwrap(
   Effect.acquireRelease(
-    Effect.sync(() => new Worker(new URL("./CosmosSpike.worker.ts", import.meta.url), { type: "module" })),
+    Effect.try({
+      try: () => new Worker(new URL("./CosmosSpike.worker.ts", import.meta.url), { type: "module" }),
+      catch: (cause) =>
+        CosmosWorkerInitializationError.make({
+          cause,
+          message: "The graph projection worker could not be initialized.",
+        }),
+    }),
     (worker) => Effect.sync(() => worker.terminate())
   ).pipe(Effect.map((worker) => BrowserWorker.layer(() => worker)))
 );
 
 const CosmosRpcProtocolLive = RpcClient.layerProtocolWorker({ size: 1 }).pipe(Layer.provide(CosmosWorkerLive));
-const cosmosSpikeFactory = Atom.context({ memoMap: Layer.makeMemoMapUnsafe() });
-cosmosSpikeFactory.addGlobalLayer(ClientObservabilityLive);
-const cosmosSpikeRuntime = cosmosSpikeFactory(CosmosRpcProtocolLive);
+const cosmosSpikeRuntime = professionalBrowserRuntime.factory(CosmosRpcProtocolLive);
+const decodeSpikeContainer = S.decodeUnknownOption(SpikeContainer);
 
 const sizeAtom = Atom.make(initialSpikeSize);
 const containerAtom = Atom.make<O.Option<HTMLDivElement>>(O.none());
 
-const renderSpike = Effect.fn("CosmosSpike.render")(function* (container: HTMLDivElement, size: SpikeSize) {
+const selectCosmosSpikeSizeAtom = professionalBrowserRuntime.fn<CosmosSpikeSize>()(
+  Effect.fn("professional_desktop.cosmos_spike.select_size")(function* (size, ctx) {
+    ctx.set(sizeAtom, size);
+  })
+);
+
+const setCosmosSpikeContainerAtom = professionalBrowserRuntime.fn<HTMLDivElement | null>()(
+  Effect.fn("professional_desktop.cosmos_spike.set_container")(function* (element, ctx) {
+    ctx.set(containerAtom, pipe(decodeSpikeContainer(element), O.flatten));
+  })
+);
+
+const renderSpike = Effect.fn("professional_desktop.cosmos_spike.render")(function* (
+  container: HTMLDivElement,
+  size: CosmosSpikeSize
+) {
   const client = yield* RpcClient.make(CosmosSpikeRpcs);
   const startedAt = yield* Clock.currentTimeNanos;
   const response = yield* client.ProjectSyntheticGraph({
@@ -210,24 +314,35 @@ const renderSpike = Effect.fn("CosmosSpike.render")(function* (container: HTMLDi
     )
   );
 
-  return SpikeStatusReady.make({
+  return CosmosSpikeStatus.cases.ready.make({
     backend: handle.backend,
     handle,
     setupDuration: Duration.nanos(finishedAt - startedAt),
   });
 });
 
-const statusAtom = cosmosSpikeRuntime.atom<SpikeStatus, never>(
+const statusAtom = cosmosSpikeRuntime.atom<CosmosSpikeStatus, never>(
   (get) =>
     O.match(get(containerAtom), {
       onNone: () => Effect.succeed(renderingStatus),
       onSome: (container) =>
         renderSpike(container, get(sizeAtom)).pipe(
           Effect.catchCause((cause) =>
-            Effect.sync(() => {
-              clearSpikeContract();
-              return SpikeStatusFailed.make({ message: Cause.pretty(cause) });
-            })
+            logRedactedCause(
+              cause,
+              LogRedactedCauseOptions.make({
+                message: "cosmos spike renderer failed",
+                level: "Error",
+                attributes: { subsystem: "cosmos_spike" },
+              })
+            ).pipe(
+              Effect.andThen(
+                Effect.sync(() => {
+                  clearSpikeContract();
+                  return CosmosSpikeStatus.cases.failed.make({ message: redactCauseForClient(cause).message });
+                })
+              )
+            )
           )
         ),
     }),
@@ -235,49 +350,43 @@ const statusAtom = cosmosSpikeRuntime.atom<SpikeStatus, never>(
 );
 
 const fpsAtom = Atom.readable((get) => {
-  const status = pipe(
-    AsyncResult.value(get(statusAtom)),
-    O.getOrElse(() => renderingStatus)
-  );
-
-  if (!isSpikeStatusReady(status) || !P.isFunction(globalThis.requestAnimationFrame)) {
-    return 0;
-  }
-
-  const frame = { active: true, id: 0 };
-  const tick = (): void => {
-    get.setSelf(status.handle.fps());
-    if (frame.active) {
-      frame.id = globalThis.requestAnimationFrame(tick);
-    }
-  };
-
-  frame.id = globalThis.requestAnimationFrame(tick);
-  get.addFinalizer(() => {
-    frame.active = false;
-    if (P.isFunction(globalThis.cancelAnimationFrame)) {
-      globalThis.cancelAnimationFrame(frame.id);
-    }
+  const status = AsyncResult.match(get(statusAtom), {
+    onInitial: () => renderingStatus,
+    onFailure: ({ cause }) =>
+      CosmosSpikeStatus.cases.failed.make({
+        message: redactCauseForClient(cause).message,
+      }),
+    onSuccess: ({ value }) => value,
   });
 
-  return 0;
+  return CosmosSpikeStatus.guards.ready(status) ? get(fpsSampleAtoms(status.handle)) : 0;
 });
 
-const backendLabelFor = Match.type<SpikeStatus>().pipe(
-  Match.when(isSpikeStatusFailed, () => "failed"),
-  Match.when(isSpikeStatusReady, (status) => status.backend),
-  Match.orElse(() => "rendering")
-);
+const backendLabelFor = (status: CosmosSpikeStatus): string =>
+  CosmosSpikeStatus.match(status, {
+    rendering: () => "rendering",
+    ready: ({ backend }) => backend,
+    failed: () => "failed",
+  });
 
-const setupLabelFor = Match.type<SpikeStatus>().pipe(
-  Match.when(isSpikeStatusReady, (status) => `${Duration.toMillis(status.setupDuration).toFixed(1)} ms`),
-  Match.orElse(() => "pending")
-);
+const setupLabelFor = (status: CosmosSpikeStatus): string =>
+  CosmosSpikeStatus.match(status, {
+    rendering: () => "pending",
+    ready: ({ setupDuration }) => `${Duration.toMillis(setupDuration).toFixed(1)} ms`,
+    failed: () => "pending",
+  });
 
-const failureMessageFor = Match.type<SpikeStatus>().pipe(
-  Match.when(isSpikeStatusFailed, (status) => O.some(status.message)),
-  Match.orElse(O.none<string>)
-);
+const failureMessageFor = (status: CosmosSpikeStatus): O.Option<string> =>
+  CosmosSpikeStatus.match(status, {
+    rendering: O.none<string>,
+    ready: O.none<string>,
+    failed: ({ message }) => O.some(message),
+  });
+
+const CosmosRuntimeFailureReporter = ({ cause }: { readonly cause: unknown }): null => {
+  useAtomMount(reportedBrowserFailureAtoms("cosmos_spike")(cause));
+  return null;
+};
 
 /**
  * Dev-only cosmos.gl and WebKitGTK viability spike screen.
@@ -294,17 +403,27 @@ const failureMessageFor = Match.type<SpikeStatus>().pipe(
  */
 export function CosmosSpike(): JSX.Element {
   const size = useAtomValue(sizeAtom);
-  const setSize = useAtomSet(sizeAtom);
-  const setContainer = useAtomSet(containerAtom);
-  const status = pipe(
-    AsyncResult.value(useAtomValue(statusAtom)),
-    O.getOrElse(() => renderingStatus)
-  );
+  const setSize = useAtomSet(selectCosmosSpikeSizeAtom);
+  const setContainer = useAtomSet(setCosmosSpikeContainerAtom);
+  const statusResult = useAtomValue(statusAtom);
+  const runtimeFailure = AsyncResult.cause(statusResult);
+  const status = AsyncResult.match(statusResult, {
+    onInitial: () => renderingStatus,
+    onFailure: ({ cause }) =>
+      CosmosSpikeStatus.cases.failed.make({
+        message: redactCauseForClient(cause).message,
+      }),
+    onSuccess: ({ value }) => value,
+  });
   const fps = useAtomValue(fpsAtom);
   const failureMessage = failureMessageFor(status);
 
   return (
     <div className="flex h-screen min-h-0 w-full flex-col bg-background text-foreground">
+      {O.match(runtimeFailure, {
+        onNone: thunkNull,
+        onSome: (cause) => <CosmosRuntimeFailureReporter cause={cause} />,
+      })}
       <div className="flex h-12 shrink-0 items-center justify-between gap-3 border-b px-3">
         <div className="flex min-w-0 items-center gap-2">
           <div className="truncate text-sm font-semibold">Cosmos WebKitGTK Spike</div>
@@ -318,7 +437,7 @@ export function CosmosSpike(): JSX.Element {
               key={candidate.elementCount}
               size="sm"
               type="button"
-              variant={candidate.elementCount === size.elementCount ? "default" : "outline"}
+              variant={spikeSizeEquivalence(candidate, size) ? "default" : "outline"}
               onClick={() => setSize(candidate)}
             >
               {candidate.label}
@@ -344,15 +463,12 @@ export function CosmosSpike(): JSX.Element {
         </div>
         <div className="flex flex-col justify-center px-3">
           <span className="text-xs text-muted-foreground">FPS</span>
-          <span className="font-mono">{isSpikeStatusReady(status) ? fps.toFixed(1) : "0.0"}</span>
+          <span className="font-mono">{CosmosSpikeStatus.guards.ready(status) ? fps.toFixed(1) : "0.0"}</span>
         </div>
       </div>
 
       <div className="relative min-h-0 flex-1">
-        <div
-          ref={(container) => setContainer(pipe(S.decodeUnknownOption(SpikeContainer)(container), O.flatten))}
-          className="h-full w-full bg-background"
-        />
+        <div ref={setContainer} className="h-full w-full bg-background" />
         {O.match(failureMessage, {
           onNone: thunkNull,
           onSome: (message) => (

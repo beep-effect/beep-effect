@@ -51,7 +51,24 @@ unblocked.
 
 ## Latest Evidence
 
-- 2026-07-25 — Spike 2 (non-interactive user-manager apply): **PASS**,
+- 2026-07-26: **Spike 2 (non-interactive user-manager apply) — 3/3 assertions
+  PASS**, no blockers; evidence + harness at
+  [`history/p0/spike-2/NOTES.md`](./history/p0/spike-2/NOTES.md). The gated
+  decision *applicator contracts + identity binding* stands as written.
+  Contract findings for P1: gate preflight on a bus round-trip, not
+  `systemctl --user is-system-running` (returns `degraded` on healthy desktop
+  managers); use `UnitsLoadTimestampMonotonic` as the daemon-reload drift
+  witness; UNIX socket paths cap at 108 bytes under deep content-hashed roots;
+  preflight must fail closed when the expected-identity file is unreadable or
+  malformed (unchecked parse must never yield an empty-mismatch pass); a
+  mid-apply failure after preflight must roll back already-written unit state
+  rather than exit with a partial apply (both spotted by review on the
+  archived spike harness — the prototype script is retained as-run, these land
+  in the real applicator).
+  Recorded residual: the positive lane ran with an active session present —
+  the genuinely session-less linger case is a named P1 follow-up.
+  An earlier independent spike-2 run from this branch (same 3/3 verdict, its own
+  harness and logs) is retained at
   [`history/p0/spike-2-user-manager/NOTES.md`](./history/p0/spike-2-user-manager/NOTES.md).
 - 2026-07-25 — Spike 4 (upgrade + failed-health rollback across SQLite
   stamps): **PASS** in the v3 rerun (20 assertions, forward-recovery leg,

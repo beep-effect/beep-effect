@@ -7,8 +7,9 @@
  * `@beep/pglite`, then layers the repo's
  * {@link PostgresDrizzle} composition on top so every sidecar repository (the
  * Drizzle ThreadStore, the Drizzle usage-record sink) runs against the same
- * embedded database the integration tests prove. The sidecar's bundled Drizzle
- * migrations are applied on boot before the data directory is marked compatible.
+ * embedded database the integration tests prove. The sidecar's generated
+ * migration bundle is applied in-memory on boot before the data directory is
+ * marked compatible.
  *
  * Operational note: `CHAT_DB_PATH` is owned by this sidecar build's bundled
  * PGlite runtime. Existing unmarked PGlite-looking directories are opened with
@@ -26,7 +27,8 @@
  */
 /// <reference path="../assets.d.ts" />
 
-import { fileURLToPath } from "node:url";
+import { tmpdir } from "node:os";
+import * as NodeURL from "node:url";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause, profilePhase } from "@beep/observability";
 import { makeLayer as makePgliteLayer } from "@beep/pglite";
@@ -35,8 +37,12 @@ import { TaggedErrorClass } from "@beep/schema";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { Clock, Config, Effect, FileSystem, Layer, Path } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
+import btreeGistBundlePath from "../../../../node_modules/@electric-sql/pglite/dist/btree_gist.tar.gz" with {
+  type: "file",
+};
 import initdbWasmPath from "../../../../node_modules/@electric-sql/pglite/dist/initdb.wasm" with { type: "file" };
 import pgliteDataPath from "../../../../node_modules/@electric-sql/pglite/dist/pglite.data" with { type: "file" };
 import pgliteWasmPath from "../../../../node_modules/@electric-sql/pglite/dist/pglite.wasm" with { type: "file" };
@@ -61,14 +67,14 @@ const $I = $ProfessionalDesktopId.create("runtime/Pglite");
  * @since 0.0.0
  */
 const ChatDbDataDir = Config.string("CHAT_DB_PATH").pipe(
-  Config.withDefault(fileURLToPath(new URL("../../../../.beep/professional-desktop/chat-db", import.meta.url)))
+  Config.withDefault(NodeURL.fileURLToPath(new URL("../../../../.beep/professional-desktop/chat-db", import.meta.url)))
 );
 
 /**
  * Marker written into data directories already opened by the in-process
  * desktop PGlite runtime.
  *
- * The `v1` suffix is part of the on-disk compatibility contract for the
+ * The `v<N>` suffix is part of the on-disk compatibility contract for the
  * embedded `@beep/pglite` / `@electric-sql/pglite` line. Bump the marker
  * whenever that storage compatibility contract changes.
  *
@@ -76,7 +82,7 @@ const ChatDbDataDir = Config.string("CHAT_DB_PATH").pipe(
  * ```ts
  * import { ChatDbCompatibilityMarker } from "@/runtime/Pglite"
  *
- * console.log(ChatDbCompatibilityMarker) // ".beep-pglite-inprocess-v2"
+ * console.log(ChatDbCompatibilityMarker.startsWith(".beep-pglite")) // true
  * ```
  *
  * @category configuration
@@ -128,12 +134,14 @@ const writeCompatibilityMarker = Effect.fn("ProfessionalDesktop.Pglite.writeComp
  * @example
  * ```ts
  * import { markCompatibleChatDbDataDir } from "@/runtime/Pglite"
+ * import { Effect } from "effect"
  *
  * const program = markCompatibleChatDbDataDir("/tmp/example-chat-db")
- * console.log(program)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
- * @category runtime
+ * @effects Creates the data directory and writes its compatibility marker.
+ * @category resource-management
  * @since 0.0.0
  */
 export const markCompatibleChatDbDataDir = Effect.fn("ProfessionalDesktop.Pglite.markCompatibleChatDbDataDir")(
@@ -201,12 +209,14 @@ const assertCanOpenInProcessPgliteDataDir = Effect.fn("ProfessionalDesktop.Pglit
  * @example
  * ```ts
  * import { ensureCompatibleChatDbDataDir } from "@/runtime/Pglite"
+ * import { Effect } from "effect"
  *
  * const program = ensureCompatibleChatDbDataDir("/tmp/example-chat-db")
- * console.log(program)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  *
- * @category runtime
+ * @effects Inspects and may create or quarantine a PGlite data directory.
+ * @category resource-management
  * @since 0.0.0
  */
 export const ensureCompatibleChatDbDataDir = Effect.fn("ProfessionalDesktop.Pglite.ensureCompatibleChatDbDataDir")(
@@ -228,7 +238,7 @@ export const ensureCompatibleChatDbDataDir = Effect.fn("ProfessionalDesktop.Pgli
     }
 
     const entries = yield* fs.readDirectory(dataDir);
-    if (entries.length === 0) {
+    if (A.isArrayEmpty(entries)) {
       return true;
     }
 
@@ -283,8 +293,35 @@ const PgliteBinaryAssets = Effect.all([compileWasmFile(pgliteWasmPath), compileW
   profilePhase({ phase: "professional_desktop.pglite.compile_binary_assets" })
 );
 
+// The bundled migrations issue `CREATE EXTENSION btree_gist` (the epistemic
+// bitemporal edge exclusion constraint), so the extension has to be registered
+// on every PGlite instance this app opens — the compatibility probe as much as
+// the live database. Caller-supplied extensions merge on top rather than
+// replace.
+//
+// The bundle rides a `type: "file"` asset import rather than the
+// `@electric-sql/pglite/contrib/btree_gist` export: that export resolves its
+// tarball relative to its own module URL, which does not exist inside the
+// compiled sidecar's single-file executable. PGlite's extension loader reads
+// `file://` bundles through node:fs, which cannot open the executable's
+// embedded `$bunfs` assets either, so the bytes are materialized once per boot
+// into a real content-named temp file (`Bun.hash` over the bundle bytes) and
+// PGlite is handed that URL. Re-boots and concurrent sidecars converge on the
+// same content-addressed path, so an existing complete copy is reused as-is.
+const materializeBtreeGistBundle = Effect.gen(function* () {
+  const bytes = yield* Effect.promise(() => Bun.file(toBunFileSystemPath(btreeGistBundlePath)).arrayBuffer());
+  const target = `${tmpdir()}/beep-professional-desktop-btree-gist-${Bun.hash(bytes).toString(16)}.tar.gz`;
+  const existing = Bun.file(target);
+  const alreadyMaterialized = (yield* Effect.promise(() => existing.exists())) && existing.size === bytes.byteLength;
+  if (!alreadyMaterialized) {
+    yield* Effect.promise(() => Bun.write(target, bytes));
+  }
+  return NodeURL.pathToFileURL(target);
+});
+
 /**
- * Build a PGlite layer with the desktop sidecar's bundled binary assets.
+ * Build a PGlite layer with the desktop sidecar's bundled binary assets and
+ * bundled extensions.
  *
  * @example
  * ```ts
@@ -298,9 +335,21 @@ const PgliteBinaryAssets = Effect.all([compileWasmFile(pgliteWasmPath), compileW
  * @since 0.0.0
  */
 export const makeBundledPgliteLayer = (options: PgliteClientOptions = {}) =>
-  Layer.unwrap(Effect.map(PgliteBinaryAssets, (assets) => makePgliteLayer({ ...options, ...assets })));
+  Layer.unwrap(
+    Effect.map(
+      Effect.all([PgliteBinaryAssets, materializeBtreeGistBundle], { concurrency: "unbounded" }),
+      ([assets, btreeGistBundleUrl]) =>
+        makePgliteLayer({
+          ...options,
+          ...assets,
+          extensions: { btree_gist: btreeGistBundleUrl, ...options.extensions },
+        })
+    )
+  );
 
-const MigrationPlatformLive = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
+// Platform layers serve only the data-dir compatibility probe/marker below;
+// migrations apply in-memory and no longer touch the filesystem.
+const DataDirPlatformLive = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
 
 /**
  * Live {@link PostgresDrizzle} layer over a file-backed in-process PGlite
@@ -311,8 +360,9 @@ const MigrationPlatformLive = Layer.mergeAll(BunFileSystem.layer, BunPath.layer)
  * @example
  * ```ts
  * import { PgliteDrizzleLive } from "@/runtime/Pglite"
+ * import { Layer } from "effect"
  *
- * console.log(PgliteDrizzleLive)
+ * console.log(Layer.isLayer(PgliteDrizzleLive)) // true
  * ```
  *
  * @category layers
@@ -331,4 +381,4 @@ export const PgliteDrizzleLive: Layer.Layer<PostgresDrizzle> = Layer.unwrap(
       Layer.provide(makeBundledPgliteLayer({ dataDir }))
     );
   })
-).pipe(Layer.provide(MigrationPlatformLive), Layer.orDie);
+).pipe(Layer.provide(DataDirPlatformLive), Layer.orDie);

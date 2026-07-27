@@ -14,6 +14,7 @@ const $I = $TikaId.create("Tika.errors");
 const TikaErrorReasonBase = LiteralKit([
   "config",
   "engine-unavailable",
+  "output-budget",
   "response-decoding",
   "response-status",
   "timeout",

@@ -61,6 +61,12 @@
       "@beep/epistemic-domain/entities/CandidateClaim": [
         "../../../packages/epistemic/domain/src/entities/CandidateClaim/index.ts"
       ],
+      "@beep/epistemic-domain/entities/ClaimDisposition": [
+        "../../../packages/epistemic/domain/src/entities/ClaimDisposition/index.ts"
+      ],
+      "@beep/epistemic-domain/entities/EdgeVersion": [
+        "../../../packages/epistemic/domain/src/entities/EdgeVersion/index.ts"
+      ],
       "@beep/epistemic-domain/entities/Evidence": [
         "../../../packages/epistemic/domain/src/entities/Evidence/index.ts"
       ],
@@ -69,6 +75,9 @@
       ],
       "@beep/epistemic-domain/values": [
         "../../../packages/epistemic/domain/src/values/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ClaimDispositionStatus": [
+        "../../../packages/epistemic/domain/src/values/ClaimDispositionStatus/index.ts"
       ],
       "@beep/epistemic-domain/values/ClaimGate": [
         "../../../packages/epistemic/domain/src/values/ClaimGate/index.ts"
@@ -79,11 +88,32 @@
       "@beep/epistemic-domain/values/ClaimProjection": [
         "../../../packages/epistemic/domain/src/values/ClaimProjection/index.ts"
       ],
+      "@beep/epistemic-domain/values/EdgeEndpoint": [
+        "../../../packages/epistemic/domain/src/values/EdgeEndpoint/index.ts"
+      ],
+      "@beep/epistemic-domain/values/EdgeRelation": [
+        "../../../packages/epistemic/domain/src/values/EdgeRelation/index.ts"
+      ],
       "@beep/epistemic-domain/values/EpistemicFixtureKey": [
         "../../../packages/epistemic/domain/src/values/EpistemicFixtureKey/index.ts"
       ],
       "@beep/epistemic-domain/values/EvidenceSpan": [
         "../../../packages/epistemic/domain/src/values/EvidenceSpan/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ExecutionGrant": [
+        "../../../packages/epistemic/domain/src/values/ExecutionGrant/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ExecutionRecord": [
+        "../../../packages/epistemic/domain/src/values/ExecutionRecord/index.ts"
+      ],
+      "@beep/epistemic-domain/values/ExecutionVerdict": [
+        "../../../packages/epistemic/domain/src/values/ExecutionVerdict/index.ts"
+      ],
+      "@beep/epistemic-domain/values/GrantSet": [
+        "../../../packages/epistemic/domain/src/values/GrantSet/index.ts"
+      ],
+      "@beep/epistemic-domain/values/LogicalEdgeIdentity": [
+        "../../../packages/epistemic/domain/src/values/LogicalEdgeIdentity/index.ts"
       ],
       "@beep/epistemic-use-cases": [
         "../../../packages/epistemic/use-cases/src/index.ts"
@@ -94,6 +124,9 @@
       "@beep/epistemic-use-cases/server": [
         "../../../packages/epistemic/use-cases/src/server.ts"
       ],
+      "@beep/epistemic-use-cases/ClaimDisposition": [
+        "../../../packages/epistemic/use-cases/src/ClaimDisposition/index.ts"
+      ],
       "@beep/epistemic-use-cases/ClaimGate": [
         "../../../packages/epistemic/use-cases/src/ClaimGate/index.ts"
       ],
@@ -102,6 +135,9 @@
       ],
       "@beep/epistemic-use-cases/ClaimProjection": [
         "../../../packages/epistemic/use-cases/src/ClaimProjection/index.ts"
+      ],
+      "@beep/epistemic-use-cases/EdgeAuthority": [
+        "../../../packages/epistemic/use-cases/src/EdgeAuthority/index.ts"
       ],
       "@beep/file-processing": [
         "../../../packages/foundation/capability/file-processing/src/index.ts"
@@ -446,6 +482,9 @@
       "@beep/schema/Int": [
         "../../../packages/foundation/modeling/schema/src/Int.ts"
       ],
+      "@beep/schema/JSONSchema": [
+        "../../../packages/foundation/modeling/schema/src/JSONSchema/index.ts"
+      ],
       "@beep/schema/Json": [
         "../../../packages/foundation/modeling/schema/src/Json.ts"
       ],
@@ -532,6 +571,9 @@
       ],
       "@beep/schema/RegExp": [
         "../../../packages/foundation/modeling/schema/src/RegExp.ts"
+      ],
+      "@beep/schema/SafeObject": [
+        "../../../packages/foundation/modeling/schema/src/SafeObject/index.ts"
       ],
       "@beep/schema/SchemaUtils": [
         "../../../packages/foundation/modeling/schema/src/SchemaUtils/index.ts"
@@ -646,6 +688,9 @@
       ],
       "@beep/test-utils/*": [
         "../../../packages/tooling/test-kit/test-utils/src/*.ts"
+      ],
+      "@beep/epistemic-use-cases/ExecutionLedger": [
+        "../../../packages/epistemic/use-cases/src/ExecutionLedger/index.ts"
       ]
     }
   }

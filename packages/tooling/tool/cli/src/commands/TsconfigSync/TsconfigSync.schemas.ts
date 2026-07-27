@@ -251,7 +251,6 @@ const repoCliPackageName = "@beep/repo-cli" as const;
 const repoCliSourceOnlyTestKitAliases = [
   ["@beep/repo-cli/test/CreatePackage", "src/test/CreatePackage.test-kit.ts"],
   ["@beep/repo-cli/test/Docgen", "src/test/Docgen.test-kit.ts"],
-  ["@beep/repo-cli/test/Graphiti", "src/test/Graphiti.test-kit.ts"],
   ["@beep/repo-cli/test/Laws", "src/test/Laws.test-kit.ts"],
   ["@beep/repo-cli/test/Quality", "src/test/Quality.test-kit.ts"],
   ["@beep/repo-cli/test/SyncDataToTs", "src/test/SyncDataToTs.test-kit.ts"],

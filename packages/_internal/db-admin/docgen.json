@@ -67,6 +67,18 @@
       "@beep/epistemic-tables/entities": [
         "../../../packages/epistemic/tables/src/entities/index.ts"
       ],
+      "@beep/epistemic-tables/entities/CandidateClaim": [
+        "../../../packages/epistemic/tables/src/entities/CandidateClaim/index.ts"
+      ],
+      "@beep/epistemic-tables/entities/ClaimDisposition": [
+        "../../../packages/epistemic/tables/src/entities/ClaimDisposition/index.ts"
+      ],
+      "@beep/epistemic-tables/entities/EdgeVersion": [
+        "../../../packages/epistemic/tables/src/entities/EdgeVersion/index.ts"
+      ],
+      "@beep/epistemic-tables/entities/Evidence": [
+        "../../../packages/epistemic/tables/src/entities/Evidence/index.ts"
+      ],
       "@beep/epistemic-tables/entities/UsageRecord": [
         "../../../packages/epistemic/tables/src/entities/UsageRecord/index.ts"
       ],
@@ -122,6 +134,12 @@
       ],
       "@beep/workspace-tables/entities/Workspace": [
         "../../../packages/workspace/tables/src/entities/Workspace/index.ts"
+      ],
+      "@beep/epistemic-tables/values": [
+        "../../../packages/epistemic/tables/src/values/index.ts"
+      ],
+      "@beep/epistemic-tables/values/ExecutionRecord": [
+        "../../../packages/epistemic/tables/src/values/ExecutionRecord/index.ts"
       ]
     }
   }

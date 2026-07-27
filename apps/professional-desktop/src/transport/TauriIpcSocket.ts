@@ -23,7 +23,7 @@
  * browser-safe (see `standards/architecture/03-driver-boundaries.md`).
  *
  * @packageDocumentation
- * @category transport
+ * @category protocols
  * @since 0.0.0
  */
 
@@ -73,14 +73,13 @@ const SidecarEvent = {
  *
  * @example
  * ```ts
- * import { Effect } from "effect"
  * import { InboundFrame } from "@/transport/TauriIpcSocket"
+ * import * as S from "effect/Schema"
  *
- * const frame = Effect.runSync(InboundFrame.decodeUnknownEffect("{\"jsonrpc\":\"2.0\"}\n"))
- * console.log(frame.length > 0) // true
+ * console.log(S.is(InboundFrame)("{\"jsonrpc\":\"2.0\"}\n")) // true
  * ```
  *
- * @category transport
+ * @category schemas
  * @since 0.0.0
  */
 export const InboundFrame = S.NonEmptyString.pipe(
@@ -107,22 +106,14 @@ const SidecarClosedKind = LiteralKit(["error", "terminated", "event-stream-close
  *
  * @example
  * ```ts
- * import { Effect } from "effect"
  * import * as O from "effect/Option"
  * import { SidecarClosedPayload } from "@/transport/TauriIpcSocket"
  *
- * const payload = Effect.runSync(
- *   SidecarClosedPayload.decodeUnknownEffect({
- *     code: 0,
- *     kind: "terminated",
- *     message: null,
- *     signal: null,
- *   })
- * )
+ * const payload = SidecarClosedPayload.make({ kind: "terminated" })
  * console.log(O.isNone(payload.message)) // true
  * ```
  *
- * @category transport
+ * @category models
  * @since 0.0.0
  */
 export class SidecarClosedPayload extends S.Class<SidecarClosedPayload>($I`SidecarClosedPayload`)(
@@ -212,7 +203,7 @@ const toSidecarSendError = (cause: unknown): SidecarSendError => {
  * console.log(event._tag) // "Rx"
  * ```
  *
- * @category transport
+ * @category models
  * @since 0.0.0
  */
 export const InboundEvent = S.TaggedUnion({
@@ -477,8 +468,9 @@ const makeSocket: Effect.Effect<Socket.Socket> = Effect.sync(() =>
  * @example
  * ```ts
  * import { TauriIpcSocketLive } from "@/transport/TauriIpcSocket"
+ * import { Layer } from "effect"
  *
- * console.log(TauriIpcSocketLive)
+ * console.log(Layer.isLayer(TauriIpcSocketLive)) // true
  * ```
  *
  * @category layers

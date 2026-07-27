@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -32,12 +32,21 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 storage/concurrency/provenance spike: prove the portable invariant backstop
-before committing the schema or generated migration.
+Closed (completed-retained). Reflection:
+[`history/reflections/2026-07-25-claude.md`](./history/reflections/2026-07-25-claude.md).
 
 ## Latest Evidence
 
-Not started.
+P1 vertical slice LANDED —
+[`history/2026-07-25-p1-implementation.md`](./history/2026-07-25-p1-implementation.md):
+domain/tables/use-cases/server/db-admin implemented exactly on the P0-ratified
+design; durable rejected disposition via `resolveClaimGateOutcome`; atomic
+close-and-insert supersession with deterministic real-Postgres races (4/4, six
+consecutive runs) and a ratified creation-race mapping refinement; restart
+proof off one persistent dataDir; Graphiti Apache-2.0 duties discharged and the
+retirement doctrine trigger recorded; spike suites/fixtures deleted with all
+touchpoints reverted. P0 verdict remains at
+[`history/2026-07-25-p0-verdict.md`](./history/2026-07-25-p0-verdict.md).
 
 ## Notes
 

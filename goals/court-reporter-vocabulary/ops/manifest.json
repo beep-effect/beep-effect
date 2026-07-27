@@ -5,13 +5,13 @@
     "title": "Court Reporter Vocabulary",
     "status": "active",
     "created": "2026-07-14",
-    "updated": "2026-07-14",
+    "updated": "2026-07-25",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/court-reporter-vocabulary",
   "lifecycle": "active",
   "mission": "Deliver deterministic versioned courts-db and reporters-db artifacts with stable public IDs, lifecycle-safe drift, and a machine-readable compatibility contract.",
-  "statusNote": "P0 hard gate: pin authoritative source assembly, prove deterministic rendering and record/ID counts, and exercise stable-ID compatibility fixtures.",
+  "statusNote": "P1a in progress: implement and verify pinned reporters-db and courts-db ingestion under law-practice internals; public domain compatibility remains P1b.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -38,7 +38,7 @@
     "explorations/court-vocabulary-resolver/MAP.md",
     "explorations/court-vocabulary-resolver/DECISIONS.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/SOURCES.md", "research/EYECITE_DATA_AUDIT.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -51,10 +51,14 @@
   "phases": [
     {
       "id": "P0",
-      "name": "Pinned-source assembly and stable-ID spike",
-      "status": "pending"
+      "name": "Pinned-source assembly",
+      "status": "complete"
     },
-    { "id": "P1", "name": "Implement", "status": "pending" },
+    {
+      "id": "P1",
+      "name": "Ingestion substrate and public domain contract",
+      "status": "in-progress"
+    },
     { "id": "P2", "name": "Verify", "status": "pending" },
     { "id": "P3", "name": "Close: Yeet PR to mergeable", "status": "pending" }
   ],

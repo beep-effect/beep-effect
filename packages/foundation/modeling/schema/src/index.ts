@@ -217,6 +217,20 @@ export * from "./Graph/index.ts";
  */
 export * from "./Html.ts";
 /**
+ * HTTP method schemas and literal-kit helpers.
+ *
+ * @example
+ * ```ts
+ * import { HttpMethod } from "@beep/schema"
+ *
+ * console.log(HttpMethod.Schema.is.OPTIONS("OPTIONS"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * as HttpMethod from "./HttpMethod/index.ts";
+/**
  * @since 0.0.0
  * @category validation
  */
@@ -226,6 +240,24 @@ export * from "./Int.ts";
  * @category validation
  */
 export * from "./Int64.ts";
+/**
+ * Structured model of JSON Schema draft-2020-12 documents: recursive `Node`
+ * class, lossless wire codec, `boolean | Node` subschema union, document
+ * envelope, and local `$ref` resolvers.
+ *
+ * @example
+ * ```ts
+ * import { JSONSchema } from "@beep/schema"
+ * import * as S from "effect/Schema"
+ *
+ * const node = S.decodeUnknownResult(JSONSchema.NodeCodec)({ type: "object" })
+ * console.log(node._tag)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * as JSONSchema from "./JSONSchema/index.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -343,6 +375,25 @@ export * from "./Record/index.ts";
  * @category validation
  */
 export * from "./RegExp.ts";
+/**
+ * Nominal safe-object schema and object-keyword normalization codec.
+ *
+ * @example
+ * ```ts
+ * import { SafeObject } from "@beep/schema"
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const value = await Effect.runPromise(
+ *   S.decodeUnknownEffect(SafeObject)({ enabled: true })
+ * )
+ * console.log(value.enabled) // true
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export { SafeObject, SafeObjectFromObjectKeyword } from "./SafeObject/index.ts";
 /**
  * @since 0.0.0
  * @category validation

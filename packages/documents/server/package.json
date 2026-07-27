@@ -80,6 +80,7 @@
     "@beep/test-utils": "workspace:^",
     "@effect/platform-bun": "catalog:",
     "@effect/vitest": "catalog:",
+    "@electric-sql/pglite": "catalog:",
     "@types/node": "catalog:",
     "bun-types": "catalog:"
   }

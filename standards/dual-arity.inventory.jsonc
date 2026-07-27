@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-25",
+  "generatedOn": "2026-07-27",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "enforcedRoots": [
     "packages/tooling/tool/cli/src/commands/Laws/DualArity.ts",
@@ -75,7 +75,7 @@
       "status": "candidate",
       "owner": "@beep/professional-desktop",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 46,
+      "line": 47,
       "column": 14,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -87,20 +87,7 @@
       "status": "candidate",
       "owner": "@beep/professional-desktop",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 56,
-      "column": 14,
-      "parameterCount": 3,
-      "diagnostics": ["missing-dual"]
-    },
-    {
-      "file": "apps/professional-desktop/src/chat/ChatOrchestrator.ts",
-      "qualifiedName": "makeChatOperations",
-      "kind": "exported-const-function",
-      "status": "exception",
-      "owner": "@beep/professional-desktop",
-      "reason": "makeChatOperations is a service factory that binds already-acquired ThreadStore/AgentTurnKernel/UsageRecordSink services into an operations record; it has no pipeable data subject, so a data-last/data-first dual is meaningless. It is only ever called data-first once during ChatRpcs layer construction.",
-      "issue": "PROFESSIONAL-DESKTOP-CHAT-OPERATIONS-FACTORY",
-      "line": 775,
+      "line": 57,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual"]
@@ -124,7 +111,7 @@
       "status": "candidate",
       "owner": "@beep/professional-desktop",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 141,
+      "line": 132,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -368,6 +355,42 @@
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/ExecutionRecord/ExecutionRecord.model.ts",
+      "qualifiedName": "verifyOutcomeBinding",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/epistemic-domain",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 697,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/GrantSet/GrantSet.model.ts",
+      "qualifiedName": "addGrant",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/epistemic-domain",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 280,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/epistemic/domain/src/values/GrantSet/GrantSet.model.ts",
+      "qualifiedName": "evaluateExecutionRequest",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/epistemic-domain",
+      "reason": "Public helper APIs may not expose more than 3 positional parameters.",
+      "line": 444,
+      "column": 14,
+      "parameterCount": 4,
+      "diagnostics": ["too-many-positional-params"]
     },
     {
       "file": "packages/foundation/modeling/rdf/src/Rdf.ts",
@@ -970,7 +993,7 @@
       "status": "candidate",
       "owner": "@beep/test-utils",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 376,
+      "line": 377,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -982,7 +1005,7 @@
       "status": "candidate",
       "owner": "@beep/test-utils",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 297,
+      "line": 298,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -1079,6 +1102,18 @@
       "owner": "@beep/repo-cli",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
       "line": 113,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/internal/LawScan.ts",
+      "qualifiedName": "isExcludedLawScanPath",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/repo-cli",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 43,
       "column": 14,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]

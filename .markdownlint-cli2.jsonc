@@ -35,6 +35,9 @@
     "specs/**",
     "**/AGENTS.md",
     "**/CLAUDE.md",
+    // adopted historical artifact (June-29 generated synthesis) — reformatting
+    // would destroy provenance and break audit line references
+    "explorations/academia-corpus-mining/research/prior-synthesis-legal-ontologies.md",
     "QA*.md",
     "QA_*.md"
   ]

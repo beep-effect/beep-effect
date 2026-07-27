@@ -89,7 +89,8 @@ Ship reliable code with effect-first and schema-first patterns.
 ## Agent Memory
 
 - Cognee is the durable always-on dev-memory; file memory (`CLAUDE.md` /
-  `MEMORY.md`) remains Layer 1; `graphiti-memory` is write-frozen.
+  `MEMORY.md`) remains Layer 1; `graphiti-memory` is retired (bitemporal port
+  landed — see the 2026-07-25 memory-architecture decision-log entry).
 - See `standards/memory-architecture/` for all memory decisions and operational
   detail.
 - If memory is unavailable in-session, fall back to repo-local docs, code

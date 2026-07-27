@@ -34,6 +34,34 @@ export * from "./Activity/index.ts";
  */
 export * from "./CandidateClaim/index.ts";
 /**
+ * Claim disposition entity exports.
+ *
+ * @example
+ * ```ts
+ * import { ClaimDisposition } from "@beep/epistemic-domain/entities"
+ *
+ * console.log(ClaimDisposition.definition.entityId.tableName)
+ * ```
+
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./ClaimDisposition/index.ts";
+/**
+ * Bitemporal edge version entity exports.
+ *
+ * @example
+ * ```ts
+ * import { EdgeVersion } from "@beep/epistemic-domain/entities"
+ *
+ * console.log(EdgeVersion.definition.entityId.tableName)
+ * ```
+
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./EdgeVersion/index.ts";
+/**
  * Evidence entity exports.
  *
  * @example

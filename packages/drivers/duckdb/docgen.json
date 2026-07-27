@@ -247,6 +247,9 @@
       "@beep/schema/Int": [
         "../../../packages/foundation/modeling/schema/src/Int.ts"
       ],
+      "@beep/schema/JSONSchema": [
+        "../../../packages/foundation/modeling/schema/src/JSONSchema/index.ts"
+      ],
       "@beep/schema/Json": [
         "../../../packages/foundation/modeling/schema/src/Json.ts"
       ],
@@ -333,6 +336,9 @@
       ],
       "@beep/schema/RegExp": [
         "../../../packages/foundation/modeling/schema/src/RegExp.ts"
+      ],
+      "@beep/schema/SafeObject": [
+        "../../../packages/foundation/modeling/schema/src/SafeObject/index.ts"
       ],
       "@beep/schema/SchemaUtils": [
         "../../../packages/foundation/modeling/schema/src/SchemaUtils/index.ts"

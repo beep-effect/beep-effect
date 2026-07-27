@@ -1,40 +1,31 @@
 ---
 name: mcp-graphiti-memory
-description: "DEPRECATED (2026-07-08 memory decision): Graphiti is write-frozen, read-only for historical context until the epistemic-tables bitemporal port lands. Use only for read workflows: startup checks, fact search, handshake diagnosis. New durable memory goes to Cognee."
+description: "RETIRED (2026-07-25): the graphiti-memory service is decommissioned and its repo surfaces are removed. Do not start, install, or call it. Kept only as a historical pointer to standards/memory-architecture/04-decision-log.md. Durable dev-memory lives in Cognee."
 ---
 
-# MCP Graphiti Memory
+# MCP Graphiti Memory (retired)
 
-> **DEPRECATED** — per `standards/memory-architecture/04-decision-log.md`
-> (2026-07-08): graphiti-memory is write-frozen and read-available only until
-> the `@beep/epistemic-tables` bitemporal port lands. Do not log new episodes;
-> use Cognee for durable dev-memory.
+> **RETIRED 2026-07-25** — per `standards/memory-architecture/04-decision-log.md`.
+> The `@beep/epistemic-tables` bitemporal port landed (PR #452) and superseded
+> this service. Do not start it, do not install it, do not call its MCP tools.
+> Route all durable dev-memory to Cognee.
 
-## Use When
-- You need READ-ONLY historical lookup of pre-freeze Graphiti memory.
-- You see Graphiti MCP startup or handshake failures.
+This file is retained as a historical pointer only. There is no supported
+workflow here — not reads, not writes, not diagnostics.
 
-Never select this skill for memory WRITEBACK: the write path is frozen
-(2026-07-08 decision). Route new durable memory to Cognee
-(`cognee-memory:cognee-remember`).
+## What Replaced It
 
-## Quick Smoke
-1. Call `mcp__graphiti-memory__get_status`.
-2. Call `mcp__graphiti-memory__search_memory_facts` with `group_ids: "[\"beep_dev\"]"` when the wrapper exposes `group_ids` as a string. If the tool accepts native arrays, `["beep_dev"]` is also valid.
+Bitemporal edge storage now lives in `@beep/epistemic-*` (see
+`goals/epistemic-bitemporal-edge-core/`). Durable agent memory goes to Cognee.
 
-## Representative Calls
-- Read status: `get_status`.
-- Recall facts: `search_memory_facts`.
-- Save findings: FROZEN — do not call `add_memory`; use Cognee instead.
+## Removed Surfaces
 
-## Common Failures
-- `group_ids` type error.
-- HTTP endpoint mismatch for `/mcp`.
-- Handshake closes before `initialize` completes.
+The 2026-07-25 retirement removed the `beep graphiti` CLI command group, the
+`graphiti:*` root package scripts, the `GRAPHITI_*` environment plumbing, and
+the research pipeline's episode posting. Nothing in this checkout starts or
+talks to a Graphiti service.
 
-## Fix Patterns
-- The server expects `group_ids` to decode to a list. Never pass the plain string `"beep_dev"`.
-- If the MCP tool schema exposes `group_ids` as `string`, pass the JSON array literal string `"[\"beep_dev\"]"`.
-- If the MCP tool schema exposes `group_ids` as an array, pass `["beep_dev"]`.
-- Confirm URL is `http://localhost:8000/mcp`.
-- Retest with a lightweight call (`get_status`) before deeper calls.
+## If You Landed Here From An Old Reference
+
+Read `standards/memory-architecture/04-decision-log.md` for the decision trail,
+then use Cognee for the memory operation you were about to perform.

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "agent-execution-sandbox",
+    "title": "Agent Execution Sandbox",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/agent-execution-authority"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-25",
+    "updated": "2026-07-25"
+  }
+}

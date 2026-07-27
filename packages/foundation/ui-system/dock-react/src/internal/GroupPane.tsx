@@ -18,6 +18,7 @@ import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import { useCallback, useEffect, useRef } from "react";
 import { makeOperation } from "./AdapterState.ts";
 import { boxStyle, compileDrop, preFloatContextFor, pressStartsOnButton, relativePositionOf } from "./DropCompiler.ts";
@@ -108,7 +109,7 @@ const Tab = (props: {
   };
   const Renderer = O.getOrElse(
     O.flatMap(props.panel.tabComponent, (key) =>
-      O.flatMap(O.fromUndefinedOr(props.tabComponents), (components) => O.fromUndefinedOr(components[key]))
+      O.flatMap(O.fromUndefinedOr(props.tabComponents), (components) => R.get(components, key))
     ),
     () => props.defaultTabComponent
   );

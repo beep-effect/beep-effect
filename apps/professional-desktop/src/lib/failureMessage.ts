@@ -23,7 +23,7 @@ import * as P from "effect/Predicate";
  * console.log(orDefault({})) // "Something went wrong."
  * ```
  *
- * @category utils
+ * @category utilities
  * @since 0.0.0
  */
 export const failureMessageOr =

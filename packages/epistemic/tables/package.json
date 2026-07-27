@@ -16,7 +16,8 @@
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
     "beep:build": "tsc -b tsconfig.json && bun run babel",
-    "beep:check": "tsgo -b tsconfig.json",
+    "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+    "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
@@ -34,7 +35,13 @@
   "exports": {
     ".": "./src/index.ts",
     "./entities": "./src/entities/index.ts",
+    "./entities/CandidateClaim": "./src/entities/CandidateClaim/index.ts",
+    "./entities/ClaimDisposition": "./src/entities/ClaimDisposition/index.ts",
+    "./entities/EdgeVersion": "./src/entities/EdgeVersion/index.ts",
+    "./entities/Evidence": "./src/entities/Evidence/index.ts",
     "./entities/UsageRecord": "./src/entities/UsageRecord/index.ts",
+    "./values": "./src/values/index.ts",
+    "./values/ExecutionRecord": "./src/values/ExecutionRecord/index.ts",
     "./package.json": "./package.json"
   },
   "files": [
@@ -51,7 +58,13 @@
     "exports": {
       ".": "./dist/index.js",
       "./entities": "./dist/entities/index.js",
+      "./entities/CandidateClaim": "./dist/entities/CandidateClaim/index.js",
+      "./entities/ClaimDisposition": "./dist/entities/ClaimDisposition/index.js",
+      "./entities/EdgeVersion": "./dist/entities/EdgeVersion/index.js",
+      "./entities/Evidence": "./dist/entities/Evidence/index.js",
       "./entities/UsageRecord": "./dist/entities/UsageRecord/index.js",
+      "./values": "./dist/values/index.js",
+      "./values/ExecutionRecord": "./dist/values/ExecutionRecord/index.js",
       "./package.json": "./package.json"
     }
   },

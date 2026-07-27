@@ -1,0 +1,33 @@
+### LANE N2b-dead-bus (2026-07-26T04:39:22Z)
+### COMMAND: setsid -w env -i HOME=/home/elpresidank USER=elpresidank LOGNAME=elpresidank PATH=/usr/bin:/bin SPIKE_TARGET_USER=elpresidank SPIKE_EXPECTED_IDENTITY=/tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect2/24ddf3c1-674e-4ddb-acac-1343f8e844f6/scratchpad/spike-2/expected-identity.json SPIKE_STATE_DIR=/tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect2/24ddf3c1-674e-4ddb-acac-1343f8e844f6/scratchpad/spike-2/throwaway-state SPIKE_RUNTIME_DIR_OVERRIDE=/tmp/oc-spike2-decoy bash /tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect2/24ddf3c1-674e-4ddb-acac-1343f8e844f6/scratchpad/spike-2/applicator.sh
+
+
+=== step 0: non-interactive context probe ===
+[04:39:22Z] pid=1485677 ppid=1485669 sid=1485677
+[04:39:22Z] tty(stdin)=not a tty
+[04:39:22Z] no fd is a tty: confirmed
+[04:39:22Z] inherited env var count=11; names: HOME LOGNAME PATH PWD SHLVL SPIKE_EXPECTED_IDENTITY SPIKE_RUNTIME_DIR_OVERRIDE SPIKE_STATE_DIR SPIKE_TARGET_USER USER _ 
+[04:39:22Z] XDG_RUNTIME_DIR inherited? <unset>
+[04:39:22Z] DBUS_SESSION_BUS_ADDRESS inherited? <unset>
+
+=== step 1: resolve target identity from the OS (not from env) ===
+[04:39:22Z] user=elpresidank uid=1000 home=/home/elpresidank
+[04:39:22Z] hostname=DankStation machine_id_sha256=90bdffbb<sha256-redacted>
+
+=== step 2: linger ownership check ===
+[04:39:22Z] loginctl show-user elpresidank --property=Linger --value -> yes
+[04:39:22Z] linger enabled: OK
+
+=== step 3: derive runtime dir and bus address from UID ===
+[04:39:22Z] NOTE: runtime dir overridden to /tmp/oc-spike2-decoy (negative-lane injection)
+[04:39:22Z] derived XDG_RUNTIME_DIR=/tmp/oc-spike2-decoy
+[04:39:22Z] derived DBUS_SESSION_BUS_ADDRESS=unix:path=/tmp/oc-spike2-decoy/bus
+
+=== step 4: user bus reachability (read-only probes) ===
+[04:39:22Z] busctl --user --list (rc=1) first 3 lines of 1:
+    | Failed to list names: Transport endpoint is not connected
+[04:39:22Z] systemctl --user show --property=Version --value (rc=1) -> Failed to connect to user scope bus via local transport: No such file or directory
+
+FAIL(20): PREFLIGHT_FAIL_BUS: user manager for uid=1000 not reachable over unix:path=/tmp/oc-spike2-decoy/bus (busctl rc=1, systemctl rc=1). No mutation performed.
+
+### EXIT CODE: 20

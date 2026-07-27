@@ -12,13 +12,13 @@ import type { LiteralKit as LiteralKitSchema } from "../LiteralKit/index.ts";
 
 type LiteralKitStatics<L extends A.NonEmptyReadonlyArray<SchemaAST.LiteralValue>> = Pick<
   LiteralKitSchema<L>,
-  "Options" | "is" | "Enum" | "pickOptions" | "omitOptions" | "$match" | "thunk" | "toTaggedUnion"
+  "Options" | "HashSet" | "is" | "Enum" | "pickOptions" | "omitOptions" | "$match" | "thunk" | "toTaggedUnion"
 >;
 
 /**
  * `LiteralKit` augments the underlying schema object with runtime helpers like
- * `Enum`, `Options`, and `pickOptions`. Schema annotations rebuild the schema,
- * so those helpers need to be copied back onto the annotated value.
+ * `Enum`, `Options`, `HashSet`, and `pickOptions`. Schema annotations rebuild
+ * the schema, so those helpers need to be copied back onto the annotated value.
  *
  * @example
  * ```ts
@@ -40,6 +40,7 @@ export const withLiteralKitStatics = <const L extends A.NonEmptyReadonlyArray<Sc
   withStatics(
     (): LiteralKitStatics<L> => ({
       Options: literalKit.Options,
+      HashSet: literalKit.HashSet,
       is: literalKit.is,
       Enum: literalKit.Enum,
       pickOptions: literalKit.pickOptions,

@@ -38,6 +38,9 @@
       "@beep/ontology-use-cases/server": [
         "../../../packages/ontology/use-cases/src/server.ts"
       ],
+      "@beep/ontology-use-cases/worker": [
+        "../../../packages/ontology/use-cases/src/worker.ts"
+      ],
       "@beep/ontology-use-cases/tools": [
         "../../../packages/ontology/use-cases/src/tools/index.ts"
       ],
@@ -280,6 +283,9 @@
       "@beep/schema/Int": [
         "../../../packages/foundation/modeling/schema/src/Int.ts"
       ],
+      "@beep/schema/JSONSchema": [
+        "../../../packages/foundation/modeling/schema/src/JSONSchema/index.ts"
+      ],
       "@beep/schema/Json": [
         "../../../packages/foundation/modeling/schema/src/Json.ts"
       ],
@@ -366,6 +372,9 @@
       ],
       "@beep/schema/RegExp": [
         "../../../packages/foundation/modeling/schema/src/RegExp.ts"
+      ],
+      "@beep/schema/SafeObject": [
+        "../../../packages/foundation/modeling/schema/src/SafeObject/index.ts"
       ],
       "@beep/schema/SchemaUtils": [
         "../../../packages/foundation/modeling/schema/src/SchemaUtils/index.ts"

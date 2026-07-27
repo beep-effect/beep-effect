@@ -7,56 +7,31 @@
 
 "use client";
 
-import { MarkVaultSyncConflictReviewedPayload } from "@beep/documents-use-cases/public";
-import { $ProfessionalDesktopId } from "@beep/identity";
 import { Button } from "@beep/ui/components/button";
 import { A, O } from "@beep/utils";
 import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
-import { Effect } from "effect";
-import * as S from "effect/Schema";
 import { AsyncResult } from "effect/unstable/reactivity";
-import { useState } from "react";
-import { DEFAULT_WORKSPACE_ID } from "@/intake/Intake.atoms";
-import { failureMessageOr } from "@/lib/failureMessage";
+import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";
 import {
-  markVaultSyncConflictReviewedAtom,
-  triggerVaultSyncAtom,
+  VaultSyncCommand,
+  VaultSyncPanelState,
+  vaultSyncCommandAtoms,
   vaultSyncConflictsAtom,
+  vaultSyncPanelStateAtoms,
   vaultSyncStatusAtom,
 } from "./Sync.atoms.ts";
 import type { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
 import type { VaultSyncStatus } from "@beep/documents-use-cases/public";
 import type { JSX } from "react";
 
-const $I = $ProfessionalDesktopId.create("sync/VaultSyncPanel");
-
-const syncFailureMessage = failureMessageOr("Vault sync failed.");
-
-// Sync outcomes are announced in one slot; the kind keeps a success from being
-// painted (and announced) as a failure.
-type ActionMessage = { readonly kind: "error" | "success"; readonly text: string };
-
-const reviewFailureMessage = failureMessageOr("Marking the conflict reviewed failed.");
-
-class StatusCountEntry extends S.Class<StatusCountEntry>($I`StatusCountEntry`)(
-  {
-    key: S.String,
-    label: S.String,
-    value: S.Finite,
-  },
-  $I.annote("StatusCountEntry", {
-    description: "",
-  })
-) {}
-
-const statusCounts = (status: VaultSyncStatus): ReadonlyArray<StatusCountEntry> => [
-  StatusCountEntry.make({ key: "pending", label: "Pending", value: status.pendingItems }),
-  StatusCountEntry.make({ key: "current", label: "Current", value: status.currentItems }),
-  StatusCountEntry.make({ key: "error", label: "Errors", value: status.errorItems }),
-  StatusCountEntry.make({ key: "conflict", label: "Conflicts", value: status.conflictItems }),
-  StatusCountEntry.make({ key: "queued-ops", label: "Queued ops", value: status.queuedOperations }),
-  StatusCountEntry.make({ key: "failed-ops", label: "Failed ops", value: status.failedOperations }),
-  StatusCountEntry.make({ key: "open-conflicts", label: "Open conflicts", value: status.openConflicts }),
+const statusCounts = (status: VaultSyncStatus) => [
+  { key: "pending", label: "Pending", value: status.pendingItems },
+  { key: "current", label: "Current", value: status.currentItems },
+  { key: "error", label: "Errors", value: status.errorItems },
+  { key: "conflict", label: "Conflicts", value: status.conflictItems },
+  { key: "queued-ops", label: "Queued ops", value: status.queuedOperations },
+  { key: "failed-ops", label: "Failed ops", value: status.failedOperations },
+  { key: "open-conflicts", label: "Open conflicts", value: status.openConflicts },
 ];
 
 const ConnectionBadge = ({ connected }: { readonly connected: boolean }): JSX.Element => (
@@ -111,16 +86,33 @@ const VaultSyncStatusView = ({
     ),
   });
 
+const VaultSyncActionStatus = ({ state }: { readonly state: VaultSyncPanelState }): JSX.Element | null =>
+  VaultSyncPanelState.match(state, {
+    idle: () => null,
+    syncing: () => null,
+    reviewing: () => null,
+    succeeded: ({ message }) => (
+      <span className="text-xs text-muted-foreground" role="status" data-testid="vault-sync-complete">
+        {message}
+      </span>
+    ),
+    failed: ({ message }) => (
+      <span className="text-xs text-destructive" role="status" data-testid="vault-sync-error">
+        {message}
+      </span>
+    ),
+  });
+
 const VaultSyncConflictsList = ({
   conflicts,
   onRetry,
   onReview,
-  reviewingId,
+  busy,
 }: {
+  readonly busy: boolean;
   readonly conflicts: AsyncResult.AsyncResult<ReadonlyArray<SyncConflict>, unknown>;
   readonly onRetry: () => void;
   readonly onReview: (conflict: SyncConflict) => void;
-  readonly reviewingId: SyncConflict["id"] | null;
 }): JSX.Element | null => {
   // A failed conflict query used to render as `null` — exactly like "no
   // conflicts" — so an operator could be told everything was clean while the
@@ -137,7 +129,7 @@ const VaultSyncConflictsList = ({
       </div>
     );
   }
-  return AsyncResult.isSuccess(conflicts) && conflicts.value.length > 0 ? (
+  return AsyncResult.isSuccess(conflicts) && A.isReadonlyArrayNonEmpty(conflicts.value) ? (
     <ul className="mt-3 space-y-2" data-testid="vault-sync-conflicts">
       {A.map(conflicts.value, (conflict) => (
         <li
@@ -152,7 +144,7 @@ const VaultSyncConflictsList = ({
               variant="ghost"
               size="sm"
               onClick={() => onReview(conflict)}
-              disabled={reviewingId !== null}
+              disabled={busy}
               data-testid="vault-sync-conflict-review"
             >
               Mark reviewed
@@ -190,63 +182,17 @@ const VaultSyncConflictsList = ({
  * @category components
  * @since 0.0.0
  */
-// This existing panel coordinates status, sync, and conflict-review states in
-// one operator surface. The QA patch only makes each outcome visible; splitting
-// its state machine belongs with the broader atom migration.
-// fallow-ignore-next-line complexity
 export function VaultSyncPanel({ floating = true }: { readonly floating?: boolean }): JSX.Element {
-  const status = useAtomValue(vaultSyncStatusAtom(DEFAULT_WORKSPACE_ID));
-  // Nothing else invalidates a failed status, so the panel has to be able to ask again.
-  const refreshStatus = useAtomRefresh(vaultSyncStatusAtom(DEFAULT_WORKSPACE_ID));
-  const refreshConflicts = useAtomRefresh(vaultSyncConflictsAtom(DEFAULT_WORKSPACE_ID));
-  const conflicts = useAtomValue(vaultSyncConflictsAtom(DEFAULT_WORKSPACE_ID));
-  const triggerSync = useAtomSet(triggerVaultSyncAtom, { mode: "promise" });
-  const markReviewed = useAtomSet(markVaultSyncConflictReviewedAtom, { mode: "promise" });
-  const [syncing, setSyncing] = useState(false);
-  const [reviewingId, setReviewingId] = useState<SyncConflict["id"] | null>(null);
-  const [actionMessage, setActionMessage] = useState<ActionMessage | null>(null);
+  const status = useAtomValue(vaultSyncStatusAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+  const refreshStatus = useAtomRefresh(vaultSyncStatusAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+  const refreshConflicts = useAtomRefresh(vaultSyncConflictsAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+  const conflicts = useAtomValue(vaultSyncConflictsAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+  const panelState = useAtomValue(vaultSyncPanelStateAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+  const runCommand = useAtomSet(vaultSyncCommandAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
 
   const connected = AsyncResult.isSuccess(status) && status.value.connected;
-
-  const runSync = (): void => {
-    setSyncing(true);
-    setActionMessage(null);
-    void Effect.runPromise(
-      Effect.tryPromise({ try: () => triggerSync(DEFAULT_WORKSPACE_ID), catch: syncFailureMessage }).pipe(
-        Effect.matchEffect({
-          onFailure: (message) => Effect.sync(() => setActionMessage({ kind: "error", text: message })),
-          // A successful pass used to clear the message and return the button to
-          // its resting state, which is indistinguishable from having done
-          // nothing — especially when every count is zero.
-          onSuccess: () => Effect.sync(() => setActionMessage({ kind: "success", text: "Sync complete." })),
-        }),
-        Effect.ensuring(Effect.sync(() => setSyncing(false)))
-      )
-    );
-  };
-
-  const reviewConflict = (conflict: SyncConflict): void => {
-    setReviewingId(conflict.id);
-    setActionMessage(null);
-    void Effect.runPromise(
-      Effect.tryPromise({
-        try: () =>
-          markReviewed(
-            MarkVaultSyncConflictReviewedPayload.make({
-              conflictId: conflict.id,
-              workspaceId: DEFAULT_WORKSPACE_ID,
-            })
-          ),
-        catch: reviewFailureMessage,
-      }).pipe(
-        Effect.matchEffect({
-          onFailure: (message) => Effect.sync(() => setActionMessage({ kind: "error", text: message })),
-          onSuccess: () => Effect.sync(() => setActionMessage(null)),
-        }),
-        Effect.ensuring(Effect.sync(() => setReviewingId(null)))
-      )
-    );
-  };
+  const syncing = VaultSyncPanelState.guards.syncing(panelState);
+  const busy = syncing || VaultSyncPanelState.guards.reviewing(panelState);
 
   return (
     <section
@@ -280,27 +226,25 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
         <Button
           type="button"
           size="sm"
-          onClick={runSync}
-          disabled={syncing || !connected}
+          onClick={() => runCommand(VaultSyncCommand.cases.trigger.make())}
+          disabled={busy || !connected}
           data-testid="vault-sync-trigger"
         >
           {syncing ? "Syncing" : "Sync now"}
         </Button>
-        {actionMessage === null ? null : (
-          <span
-            className={actionMessage.kind === "error" ? "text-xs text-destructive" : "text-xs text-muted-foreground"}
-            role="status"
-            data-testid={actionMessage.kind === "error" ? "vault-sync-error" : "vault-sync-complete"}
-          >
-            {actionMessage.text}
-          </span>
-        )}
+        <VaultSyncActionStatus state={panelState} />
       </div>
       <VaultSyncConflictsList
+        busy={busy}
         conflicts={conflicts}
         onRetry={refreshConflicts}
-        onReview={reviewConflict}
-        reviewingId={reviewingId}
+        onReview={(conflict) =>
+          runCommand(
+            VaultSyncCommand.cases.review.make({
+              conflictId: conflict.id,
+            })
+          )
+        }
       />
     </section>
   );

@@ -14,6 +14,7 @@
     "packages/agents/client/dtslint/**/*.tst.*",
     "packages/agents/server/dtslint/**/*.tst.*",
     "packages/agents/tables/dtslint/**/*.tst.*",
+    "packages/epistemic/config/dtslint/**/*.tst.*",
     "packages/epistemic/domain/dtslint/**/*.tst.*",
     "packages/epistemic/tables/dtslint/**/*.tst.*",
     "packages/law-practice/domain/dtslint/**/*.tst.*",
