@@ -826,10 +826,15 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
   const acquireExportClaim = Effect.fn("Libpff.pffexport.acquireExportClaim")(function* (
     claimPath: string
   ): Effect.fn.Return<void, LibpffError> {
-    const acquired = O.isSome(yield* fs.makeDirectory(claimPath).pipe(Effect.option));
-    if (!acquired) {
-      return yield* makeLibpffError("config", { cause: "export target is claimed by another export" });
-    }
+    yield* fs
+      .makeDirectory(claimPath)
+      .pipe(
+        Effect.mapError((error) =>
+          error.reason._tag === "AlreadyExists"
+            ? makeLibpffError("config", { cause: "export target is claimed by another export" })
+            : makeLibpffError("config", { cause: "export claim could not be created" })
+        )
+      );
   });
 
   const performExport = Effect.fn("LibpffPffexportEngine.performExport")(function* (

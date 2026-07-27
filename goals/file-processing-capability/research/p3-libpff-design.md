@@ -266,6 +266,10 @@ ran against the implementation diff. Resolutions:
   now releases the claim explicitly and surfaces a failed release as a result
   warning; the `ensuring` backstop stays silent only for failure paths, which
   already carry their own error.
+- Greptile P1 follow-on "claim errors masquerade as ownership": claim
+  acquisition discriminates `AlreadyExists` from other platform failures, so a
+  permission or filesystem error reports "export claim could not be created"
+  instead of falsely blaming a concurrent export.
 
 ## Out of scope (unchanged)
 
