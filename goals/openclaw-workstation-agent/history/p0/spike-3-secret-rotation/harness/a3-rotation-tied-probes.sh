@@ -85,7 +85,13 @@ jq -e '
 model_run_id=$(jq -r '.runId' "$LOGS/a3-model.json")
 [[ -n "$model_run_id" && "$model_run_id" != "null" ]] ||
   fail "completion response carried no runId to bind to gateway transport"
-grep -qaE "res .* agent .*runId=$model_run_id" "$LOGS/gateway.log" ||
+# Two acceptable proofs, because the `[ws] ⇄ res ✓ agent` acknowledgement is
+# emitted nondeterministically (present 2026-07-26 run 3, absent run 6 for an
+# otherwise identical successful completion). Either line appearing in the
+# GATEWAY's own log file proves the gateway process ran the turn — a locally
+# executed (`--local`) turn never reaches this file at all.
+grep -qaE "res .* agent .*runId=$model_run_id|\[agent\] run $model_run_id ended with stopReason=" \
+  "$LOGS/gateway.log" ||
   fail "completion was not served over the authenticated gateway socket"
 printf 'gateway-served-completion runId=%s\n' "$model_run_id"
 printf 'ASSERT-PASS: authenticated gateway model completion succeeded after tied reload\n'

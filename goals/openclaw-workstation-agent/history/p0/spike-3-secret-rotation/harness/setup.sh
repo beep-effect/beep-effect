@@ -121,7 +121,27 @@ ref=${2:?missing op reference}
 if [[ -e ${SPIKE3_DIR:?}/break-reference ]]; then
   ref="${ref}_spike3_nonexistent"
 fi
-exec "$op_bin" read "$ref" --no-newline
+# Retry only transient 1Password server faults (5xx). A deliberately broken
+# reference must still fail fast and on its first attempt, so anything that
+# is not a 5xx returns immediately (verified 2026-07-27: a transient
+# "Server: (500)" aborted an otherwise-good cycle and consumed its
+# bootstrap credential).
+attempt=0
+while :; do
+  if value=$("$op_bin" read "$ref" --no-newline 2>/tmp/op-resolver.$$.err); then
+    rm -f "/tmp/op-resolver.$$.err"
+    printf '%s' "$value"
+    exit 0
+  fi
+  err=$(cat "/tmp/op-resolver.$$.err" 2>/dev/null)
+  attempt=$((attempt + 1))
+  if (( attempt >= 3 )) || ! grep -qE 'Server: \(5[0-9][0-9]\)' <<<"$err"; then
+    rm -f "/tmp/op-resolver.$$.err"
+    printf '%s\n' "$err" >&2
+    exit 1
+  fi
+  sleep $((attempt * 2))
+done
 EOF
 chmod 0700 "$S3/op-resolver.sh"
 

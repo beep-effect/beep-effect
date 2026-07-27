@@ -1,9 +1,3 @@
-credential-parent path=/etc owner=0 gid=0 mode=755
-credential-parent path=/etc/beep owner=0 gid=0 mode=755
-credential-parent path=/etc/beep/openclaw-spike owner=0 gid=0 mode=755
-credential path=/etc/beep/openclaw-spike/op-service-account-token owner=0 group=elpresidank mode=0440
-credential parents=/etc,/etc/beep,/etc/beep/openclaw-spike canonical=yes writable-by-group-or-world=no
-credential service-user-readable=yes private-group-extra-members=none
 client-config-created path=/home/elpresidank/.cache/beep-p0-spike3.WkQp2E/spike3/a1-old-client.json mode=600
 
 === establish old-snapshot cold owner ===

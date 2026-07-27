@@ -19,6 +19,12 @@ sudo -n rmdir "$ROOT" 2>/dev/null || { sudo -n find "$ROOT" -mindepth 1 | head -
 
 export SPIKE_P="$(mktemp -d /home/elpresidank/.cache/beep-p0-spike3.XXXXXX)"
 export SPIKE_OP_REF='op://beep-p0-spike3/spike3-rotating/password'
+# assertion 3 requires BOTH a model completion and a Telegram probe tied to
+# the rotation event; without these two the a3 leg reports ASSERT-BLOCKED
+# bot-token COPY inside the disposable vault, so the spike service account
+# never needs read scope on the real BEEP_SECRETS vault
+export SPIKE_TG_OP_REF='op://beep-p0-spike3/spike3-telegram/password'
+export SPIKE_TG_GROUP_ID='-1004475923698'
 echo "SPIKE_P=$SPIKE_P" | tee "$OUT/SPIKE_P.txt"
 cd "$H" || exit 1
 
