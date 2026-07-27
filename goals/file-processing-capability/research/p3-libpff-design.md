@@ -262,6 +262,10 @@ ran against the implementation diff. Resolutions:
   policy — `replace` replaces stale outputs, never claims. Crashed-run
   recovery is an explicit operator action (remove the `.claim` path or use a
   fresh export root). Covered by claimed-target tests for both policies.
+- Greptile P1 follow-on "claim cleanup failures are hidden": the success path
+  now releases the claim explicitly and surfaces a failed release as a result
+  warning; the `ensuring` backstop stays silent only for failure paths, which
+  already carry their own error.
 
 ## Out of scope (unchanged)
 

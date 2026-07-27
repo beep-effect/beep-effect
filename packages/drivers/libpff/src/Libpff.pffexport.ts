@@ -424,6 +424,9 @@ const itemRecordSkippedWarning = "Skipped one exported item record with a non-po
 const emlNameCollisionWarning =
   "Skipped EML assembly for one exported item because the export tree already contains Message.eml.";
 
+const claimReleaseFailedWarning =
+  "Failed to release the export target claim; remove the stale .claim path before re-exporting this source.";
+
 /**
  * Create the real pffexport-backed file-processing engine.
  *
@@ -832,6 +835,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
   const performExport = Effect.fn("LibpffPffexportEngine.performExport")(function* (
     operation: ExportArchiveOperation,
     targetBase: string,
+    claimPath: string,
     messagesJsonlName: string,
     messagesJsonlPath: string
   ): Effect.fn.Return<ArchiveExportResult, LibpffError, Crypto.Crypto> {
@@ -889,6 +893,14 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       warnings.push("pffexport produced no exported children for this archive.");
     }
 
+    // Release on the success path surfaces a stuck claim as result data; the
+    // caller's `ensuring` backstop stays silent because failure paths already
+    // carry their own error.
+    const claimReleased = O.isSome(yield* fs.remove(claimPath, { recursive: true }).pipe(Effect.option));
+    if (!claimReleased) {
+      warnings.push(claimReleaseFailedWarning);
+    }
+
     return ArchiveExportResult.make({
       children: A.sort(children, byReferencePath),
       engine: LibpffFileProcessingEngineDescriptor.name,
@@ -911,7 +923,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       .pipe(Effect.mapError(() => makeLibpffError("config", { cause: "export root could not be created" })));
 
     yield* acquireExportClaim(claimPath);
-    return yield* performExport(operation, targetBase, messagesJsonlName, messagesJsonlPath).pipe(
+    return yield* performExport(operation, targetBase, claimPath, messagesJsonlName, messagesJsonlPath).pipe(
       Effect.ensuring(fs.remove(claimPath, { recursive: true }).pipe(Effect.ignore))
     );
   });
