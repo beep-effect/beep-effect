@@ -5,13 +5,13 @@
     "title": "OpenClaw Workstation Agent",
     "status": "active",
     "created": "2026-07-25",
-    "updated": "2026-07-25",
+    "updated": "2026-07-27",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/openclaw-workstation-agent",
   "lifecycle": "active",
-  "mission": "Deploy a legal-focused OpenClaw agent on the workstation as immutable, generation-based, Pulumi+Effect-managed infrastructure — prototype gauntlet first, then driver, then live agent.",
-  "statusNote": "P0 hard gate: the four-prototype gauntlet (filesystem bypass/drift, non-interactive user-manager apply, same-ref rotation/reload, upgrade+failed-health rollback across SQLite stamps) must pass before any implementation phase; a failed spike re-opens its gated decision in the SPEC decision log.",
+  "mission": "Deploy a legal-focused OpenClaw agent on the workstation as immutable, generation-based, Pulumi+Effect-managed infrastructure \u2014 prototype gauntlet first, then driver, then live agent.",
+  "statusNote": "P0 hard gate CLEARED 2026-07-27: all four gauntlet spikes pass every contract assertion with archived evidence under history/p0/, and no gated decision was re-opened. P1 (driver) is unblocked.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -52,13 +52,14 @@
     {
       "id": "P0",
       "name": "Prototype gauntlet",
-      "status": "in-progress",
-      "statusNote": "PAUSED 2026-07-25 mid-gauntlet — see ops/handoffs/p0-session-handoff-2026-07-25.md. Spikes 2 and 4 PASS in full; spike 1 PASSES assertions 1-4 (filesystem bypass, privileged pointer switch, guarded CLI writers, alert-only drift canary) with assertions 5-6 blocked on a disposable Telegram test group; spike 3 harness reviewed and blocked on a scoped 1Password service-account token. All evidence archived under history/p0/ (2026-07-25)."
+      "status": "complete",
+      "statusNote": "COMPLETE 2026-07-27. All four spikes pass every contract assertion: spike 1 (6/6, writer matrix with no INCOMPATIBLE row), spike 2 (3/3), spike 3 (3/3, rotation/degraded-reload/tied probes), spike 4 (3/3). No gated decision re-opened. Evidence under history/p0/."
     },
     {
       "id": "P1",
       "name": "Driver (@beep/openclaw)",
-      "status": "pending"
+      "status": "pending",
+      "statusNote": "UNBLOCKED 2026-07-27: the P0 hard gate cleared with all four spikes passing. Next phase to start."
     },
     {
       "id": "P2",
