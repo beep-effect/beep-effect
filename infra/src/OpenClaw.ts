@@ -36,7 +36,11 @@ import * as command from "@pulumi/command";
 import * as pulumi from "@pulumi/pulumi";
 import { Effect, pipe, Result } from "effect";
 import * as S from "effect/Schema";
-import { optionalPulumiConfigFields, withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.ts";
+import {
+  optionalPulumiConfigFields,
+  pulumiConfigSchemaIssueError,
+  withPulumiConfigDecodeEffect,
+} from "./internal/PulumiConfigSchema.ts";
 
 const $I = $InfraId.create("OpenClaw");
 
@@ -111,10 +115,7 @@ const PosixUid = S.Int.check(PosixUidRange).pipe(
   })
 );
 
-const schemaIssueToPulumiConfigError =
-  (key: string, value: string) =>
-  (cause: S.SchemaError): pulumi.RunError =>
-    new pulumi.RunError(`Invalid openclaw:${key} Pulumi config value "${value}": ${cause.message}`);
+const schemaIssueToPulumiConfigError = pulumiConfigSchemaIssueError("openclaw");
 
 const decodeOpenclawTargetVersion = S.decodeUnknownResult(OpenclawTargetVersion);
 const decodeOpenclawSecretReference = S.decodeUnknownResult(OpenclawSecretReference);
@@ -421,43 +422,42 @@ export class OpenClawDeploymentConfig extends S.Class<OpenClawDeploymentConfig>(
   $I.annote("OpenClawDeploymentConfig", {
     description: "Deployment inputs the OpenClaw stack renders into a deployment intent.",
   })
-) {
-  /**
-   * Build the driver deployment intent this config describes.
-   *
-   * @example
-   * ```ts
-   * import { OpenClawDeploymentConfig } from "@beep/infra"
-   *
-   * console.log(OpenClawDeploymentConfig.make({}).toIntent().gateway.port) // 19031
-   * ```
-   *
-   * @category constructors
-   * @since 0.0.0
-   */
-  public toIntent(): OpenclawDeploymentIntent {
-    return OpenclawDeploymentIntent.make({
-      agent: OpenclawAgentIntent.make({
-        id: this.agentId,
-        model: this.agentModel,
-        name: this.agentName,
-        workspace: this.agentWorkspace,
-      }),
-      gateway: OpenclawGatewayIntent.make({
-        authTokenRef: this.gatewayAuthTokenRef,
-        port: this.gatewayPort,
-      }),
-      logging: OpenclawLoggingIntent.make({ filePath: this.logFilePath }),
-      openclawVersion: this.openclawVersion,
-      providers: [],
-      secretsResolver: OpenclawSecretsResolverIntent.make({
-        commandPath: this.resolverCommandPath,
-        opBinaryPath: this.resolverOpBinaryPath,
-        trustedDir: this.resolverTrustedDir,
-      }),
-    });
-  }
-}
+) {}
+
+/**
+ * Build the driver deployment intent a deployment config describes.
+ *
+ * @example
+ * ```ts
+ * import { makeOpenClawDeploymentIntent, OpenClawDeploymentConfig } from "@beep/infra"
+ *
+ * console.log(makeOpenClawDeploymentIntent(OpenClawDeploymentConfig.make({})).gateway.port) // 19031
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makeOpenClawDeploymentIntent = (deployment: OpenClawDeploymentConfig): OpenclawDeploymentIntent =>
+  OpenclawDeploymentIntent.make({
+    agent: OpenclawAgentIntent.make({
+      id: deployment.agentId,
+      model: deployment.agentModel,
+      name: deployment.agentName,
+      workspace: deployment.agentWorkspace,
+    }),
+    gateway: OpenclawGatewayIntent.make({
+      authTokenRef: deployment.gatewayAuthTokenRef,
+      port: deployment.gatewayPort,
+    }),
+    logging: OpenclawLoggingIntent.make({ filePath: deployment.logFilePath }),
+    openclawVersion: deployment.openclawVersion,
+    providers: [],
+    secretsResolver: OpenclawSecretsResolverIntent.make({
+      commandPath: deployment.resolverCommandPath,
+      opBinaryPath: deployment.resolverOpBinaryPath,
+      trustedDir: deployment.resolverTrustedDir,
+    }),
+  });
 
 /**
  * Backup shipping inputs for encrypted generation snapshots.
@@ -607,6 +607,14 @@ const scriptPreamble = (generation: OpenClawGeneration): ReadonlyArray<string> =
   `export DBUS_SESSION_BUS_ADDRESS=${shellQuote(`unix:path=${generation.runtimeDir}/bus`)}`,
 ];
 
+const switchScriptBindings = (generation: OpenClawGeneration): ReadonlyArray<string> => [
+  `unit=${shellQuote(generation.unitName)}`,
+  `pointer=${shellQuote(pointerPath(generation))}`,
+  `snapshot=${shellQuote(snapshotDir(generation))}`,
+  `state_dir=${shellQuote(generation.stateDir)}`,
+  `previous_pointer_file=${shellQuote(`${generation.configRoot}/${previousPointerFileName}`)}`,
+];
+
 const identityAssertionLines = (input: {
   readonly actual: string;
   readonly expected: string;
@@ -702,7 +710,7 @@ const renderGenerationManifest = (generation: OpenClawGeneration): string =>
  * @since 0.0.0
  */
 export const makeOpenClawGeneration = (args: OpenClawStackArgs): OpenClawGeneration => {
-  const rendered = renderOpenclawConfig(args.deployment.toIntent());
+  const rendered = renderOpenclawConfig(makeOpenClawDeploymentIntent(args.deployment));
 
   return OpenClawGeneration.make({
     canonicalJson: rendered.canonicalJson,
@@ -1140,12 +1148,8 @@ export const renderOpenClawStageScript = (generation: OpenClawGeneration): strin
 export const renderOpenClawApplyScript = (generation: OpenClawGeneration): string =>
   bashScript([
     ...scriptPreamble(generation),
-    `unit=${shellQuote(generation.unitName)}`,
-    `pointer=${shellQuote(pointerPath(generation))}`,
-    `snapshot=${shellQuote(snapshotDir(generation))}`,
-    `state_dir=${shellQuote(generation.stateDir)}`,
+    ...switchScriptBindings(generation),
     `state_db=${shellQuote(stateDatabasePath(generation))}`,
-    `previous_pointer_file=${shellQuote(`${generation.configRoot}/${previousPointerFileName}`)}`,
     `recorded_stamp=${shellQuote(`${generationDir(generation)}/${stateUserVersionFileName}`)}`,
     "state_user_version() {",
     '  [ -f "${state_db}" ] || { printf 0; return 0; }',
@@ -1259,11 +1263,7 @@ export const renderOpenClawApplyScript = (generation: OpenClawGeneration): strin
 export const renderOpenClawRollbackScript = (generation: OpenClawGeneration): string =>
   bashScript([
     ...scriptPreamble(generation),
-    `unit=${shellQuote(generation.unitName)}`,
-    `pointer=${shellQuote(pointerPath(generation))}`,
-    `snapshot=${shellQuote(snapshotDir(generation))}`,
-    `state_dir=${shellQuote(generation.stateDir)}`,
-    `previous_pointer_file=${shellQuote(`${generation.configRoot}/${previousPointerFileName}`)}`,
+    ...switchScriptBindings(generation),
     '[ -d "${snapshot}" ] || { printf \'ROLLBACK-FAIL: no snapshot at %s\\n\' "${snapshot}" >&2; exit 66; }',
     '[ -f "${previous_pointer_file}" ] || { printf \'ROLLBACK-FAIL: no recorded previous pointer at %s\\n\' "${previous_pointer_file}" >&2; exit 66; }',
     'previous_pointer="$(tr -d \'[:space:]\' < "${previous_pointer_file}")"',

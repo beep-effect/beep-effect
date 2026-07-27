@@ -1745,6 +1745,7 @@
         "allow": [
           "@beep/identity",
           "@beep/infra",
+          "@beep/openclaw",
           "@beep/repo-ai-metrics",
           "@beep/schema",
           "@beep/test-utils",
@@ -1753,6 +1754,7 @@
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/infra",
+          "@beep/openclaw",
           "@beep/repo-ai-metrics",
           "@beep/schema",
           "@beep/test-utils",

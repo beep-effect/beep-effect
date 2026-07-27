@@ -81,6 +81,7 @@ ellipsized
 encodeds
 Endo
 ENOTFOUND
+esac
 esbuild
 evals
 Exif
