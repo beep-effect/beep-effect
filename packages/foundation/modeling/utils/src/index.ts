@@ -6,7 +6,7 @@
  */
 
 /**
- * export of effect/Function's dual helper for data first + data last strategies
+ * Core `effect/Function` combinators for data flow and argument-order adaptation.
  *
  * @category utilities
  * @since 0.0.0

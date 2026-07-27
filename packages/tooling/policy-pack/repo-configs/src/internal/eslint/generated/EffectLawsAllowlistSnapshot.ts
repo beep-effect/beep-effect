@@ -6,6 +6,14 @@ export const ALLOWLIST_SNAPSHOT = {
   "entries": [
     {
       "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/schema/src/JSONSchema/JSONSchema.schema.ts",
+      "kind": "object-method",
+      "reason": "partitionWire is a wire trust boundary: effect's Record helpers build results with plain objects, so an own \"__proto__\" key from JSON.parse hits the Object.prototype setter, silently dropping the key and transiently installing attacker-controlled JSON as a prototype. Null-prototype accumulators via Object.create(null) + Object.entries iteration preserve hostile keys losslessly; property-tested by the __proto__ regression in test/JSONSchema.test.ts.",
+      "owner": "@beep/schema",
+      "issue": "JSONSCHEMA-PARTITION-PROTO-POLLUTION-GUARD"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
       "file": "apps/storybook/vitest.storybook.setup.ts",
       "kind": "native-error",
       "reason": "Vitest browser-mode setup guard: throwing in afterAll is the only failure channel before any Effect runtime exists, and vitest surfaces the native Error directly as the test failure.",

@@ -1549,6 +1549,12 @@
       "@beep/agents-client/Chat.layer": [
         "./packages/agents/client/src/Chat.layer.ts"
       ],
+      "@beep/schema/SafeObject": [
+        "./packages/foundation/modeling/schema/src/SafeObject/index.ts"
+      ],
+      "@beep/schema/JSONSchema": [
+        "./packages/foundation/modeling/schema/src/JSONSchema/index.ts"
+      ],
       "@beep/epistemic-domain/entities/ClaimDisposition": [
         "./packages/epistemic/domain/src/entities/ClaimDisposition/index.ts"
       ],

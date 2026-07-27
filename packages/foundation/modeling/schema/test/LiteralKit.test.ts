@@ -7,7 +7,10 @@ import {
   LiteralKitKeyCollisionError,
   LiteralNotInSetError,
 } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils/index";
 import { describe, expect, it } from "@effect/vitest";
+import * as Eq from "effect/Equal";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
@@ -21,6 +24,19 @@ describe("LiteralKit", () => {
 
   it("exposes Options with the original literal tuple", () => {
     expect(Status.Options).toEqual([1, 20n, true, false, "hello"]);
+  });
+
+  it("exposes an Effect HashSet derived from Options", () => {
+    expect(HashSet.isHashSet(Status.HashSet)).toBe(true);
+    expect(Eq.equals(Status.HashSet, HashSet.fromIterable(Status.Options))).toBe(true);
+  });
+
+  it("preserves HashSet through annotation and static reattachment", () => {
+    const Annotated = Status.annotate({ title: "Annotated status" });
+    const Reattached = S.Literals(Status.Options).pipe(SchemaUtils.withLiteralKitStatics(Status));
+
+    expect(Annotated.HashSet).toBe(Status.HashSet);
+    expect(Reattached.HashSet).toBe(Status.HashSet);
   });
 
   it("round-trips schema-derived literal samples", () => {
@@ -61,11 +77,15 @@ describe("LiteralKit", () => {
 
   it("defines helper properties as readonly and non-configurable", () => {
     const enumDescriptor = Object.getOwnPropertyDescriptor(Status, "Enum");
+    const hashSetDescriptor = Object.getOwnPropertyDescriptor(Status, "HashSet");
     const matchDescriptor = Object.getOwnPropertyDescriptor(Status, "$match");
 
     expect(enumDescriptor?.enumerable).toBe(true);
     expect(enumDescriptor?.writable).toBe(false);
     expect(enumDescriptor?.configurable).toBe(false);
+    expect(hashSetDescriptor?.enumerable).toBe(true);
+    expect(hashSetDescriptor?.writable).toBe(false);
+    expect(hashSetDescriptor?.configurable).toBe(false);
     expect(matchDescriptor?.writable).toBe(false);
     expect(matchDescriptor?.configurable).toBe(false);
   });

@@ -23,9 +23,9 @@
  * @since 0.0.0
  */
 
-// Guard IPC stdout before ANY other module loads. The prelude has zero non-stdlib
-// imports, so this side-effect import patches stdout before the effect runtime or
-// sidecar dependencies can run their module initializers.
+// Guard IPC stdout before application and sidecar service modules load. The
+// prelude's functional utility imports are covered by the IPC stdio integration
+// test, which proves startup emits only protocol frames on stdout.
 import "./IpcStdoutGuard.prelude.ts";
 
 import { ChatRpcs } from "@beep/agents-use-cases/public";
