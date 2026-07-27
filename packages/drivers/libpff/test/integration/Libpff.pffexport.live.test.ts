@@ -23,8 +23,8 @@ const BEEP_TEST_LIBPFF_PST_ENV = "BEEP_TEST_LIBPFF_PST";
 // Snapshot the opt-in lane key once, treating absent and blank values as "not
 // configured" so the whole suite no-ops instead of exporting a phantom PST.
 // Operators can point this at any real PST — the documented public sample is
-// an EDRM Enron PST file (https://edrm.net/resources/data-sets/edrm-enron-email-data-set/);
-// no PST binary is committed to this public repository.
+// Apache Tika's testPST.pst, pinned by commit URL and sha256 in the package
+// README; no PST binary is committed to this public repository.
 const livePstPath = Config.string(BEEP_TEST_LIBPFF_PST_ENV).pipe(Config.option, Effect.map(O.filter(Str.isNonEmpty)));
 
 const provideLive = provideScopedLayer(NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(NodeServices.layer)));
@@ -105,10 +105,30 @@ describe("@beep/libpff live pffexport", () => {
         const jsonlName = `${operation.source.id}${PFFEXPORT_MESSAGES_SUFFIX}`;
         const hasItems = result.children.some((child) => child.relativePath === jsonlName);
         if (hasItems) {
-          expect(result.children.some((child) => child.relativePath.endsWith("/Message.eml"))).toBe(true);
+          const emlChildren = result.children.filter((child) => child.relativePath.endsWith("/Message.eml"));
+          expect(emlChildren.length).toBeGreaterThan(0);
           const jsonl = yield* fs.readFileString(path.join(exportRoot, jsonlName));
           const record = yield* decodeMessageRecord(jsonl.trimEnd().split("\n")[0]);
           expect(record.messagePath.length).toBeGreaterThan(0);
+
+          // Every assembled header block must be RFC 5322-shaped: no physical
+          // line over the 998-octet limit, and a real Date header wherever
+          // pffexport gave us a parseable client-submit time. Body lines are
+          // deliberately not asserted — an over-long body line needs a
+          // different content-transfer-encoding, not folding, which would
+          // corrupt the content.
+          const encoder = new TextEncoder();
+          let datedEmlCount = 0;
+          for (const child of emlChildren) {
+            const eml = yield* fs.readFileString(path.join(exportRoot, child.relativePath));
+            const headerBlock = eml.slice(0, eml.indexOf("\r\n\r\n"));
+            expect(headerBlock.split("\r\n").every((line) => encoder.encode(line).length <= 998)).toBe(true);
+            expect(headerBlock).not.toContain("X-Beep-Libpff-Client-Submit-Time");
+            if (headerBlock.includes("\r\nDate: ") || headerBlock.startsWith("Date: ")) {
+              datedEmlCount += 1;
+            }
+          }
+          expect(datedEmlCount).toBeGreaterThan(0);
         }
       },
       Effect.scoped,

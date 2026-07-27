@@ -64,7 +64,7 @@
     {
       "id": "pst-fixture",
       "question": "What real or public PST fixture should prove libpff export beyond the synthetic P1 child-artifact path?",
-      "default": "Resolved in P3: stub-based deterministic fixtures cover the driver logic; the opt-in BEEP_TEST_LIBPFF_PST live lane (documented public sample: EDRM Enron) covers real PSTs. No PST binary is committed."
+      "default": "Resolved in P3: stub-based deterministic fixtures cover the driver logic; the opt-in BEEP_TEST_LIBPFF_PST live lane (documented public sample: Apache Tika testPST.pst, Apache-2.0, pinned by commit URL and sha256 in packages/drivers/libpff/README.md) covers real PSTs. No PST binary is committed."
     },
     {
       "id": "node-entrypoint",

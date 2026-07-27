@@ -37,6 +37,11 @@ const outlookSenderNameKey = "Sender name";
 const outlookSenderEmailKey = "Sender email address";
 const outlookClientSubmitTimeKey = "Client submit time";
 
+const headerLineOctetLimit = 998;
+const outlookTimestampPattern = /^([A-Za-z]{3}) (\d{1,2}), (\d{4}) (\d{2}):(\d{2}):(\d{2})(?:\.\d+)? UTC$/;
+const monthAbbreviations = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const textEncoder = new TextEncoder();
+
 /**
  * File name of the EML artifact assembled inside each exported item directory.
  *
@@ -69,12 +74,134 @@ const headerName = (line: string): O.Option<string> => {
   return separator > 0 ? O.some(Str.toLowerCase(Str.trim(line.slice(0, separator)))) : O.none();
 };
 
+const octetLength = (value: string): number => textEncoder.encode(value).length;
+
+// Splits a single word that is itself over the limit; only reachable when a run
+// of 998+ octets carries no fold point at all. Iterating the string yields whole
+// code points, so astral characters are never cut in half. The budget leaves
+// room for the leading space a continuation line carries.
+const hardSplit = (word: string): ReadonlyArray<string> =>
+  A.reduce(A.fromIterable(word), A.empty<string>(), (chunks, character) =>
+    A.matchRight(chunks, {
+      onEmpty: () => A.of(character),
+      onNonEmpty: (init, last) =>
+        octetLength(`${last}${character}`) >= headerLineOctetLimit
+          ? A.append(chunks, character)
+          : A.append(init, `${last}${character}`),
+    })
+  );
+
+// A fold point that sits on an original space is lossless: the space becomes the
+// continuation indent and unfolding puts it back. A fold inside a word has no
+// such space to reuse, so `separated` records which pieces may be rejoined with
+// a space and which must be butted together.
+interface HeaderPiece {
+  readonly separated: boolean;
+  readonly text: string;
+}
+
+const headerPieces = (line: string): ReadonlyArray<HeaderPiece> =>
+  A.flatMap(Str.split(" ")(line), (word, wordIndex) =>
+    A.map(hardSplit(word), (text, chunkIndex) => ({ separated: wordIndex > 0 && chunkIndex === 0, text }))
+  );
+
+/**
+ * Fold one physical header line to RFC 5322's 998-octet line limit.
+ *
+ * Verbatim transport headers can carry lines over the limit (DKIM signatures,
+ * long `Received` chains), and flattening a folded Outlook value into a single
+ * line manufactures them. Folding breaks at space boundaries and indents each
+ * continuation with a single space, reusing the original space as that indent
+ * so unfolding restores the text byte for byte. A line that already fits is
+ * returned untouched, so header blocks that arrived correctly folded stay as
+ * they are.
+ *
+ * @remarks
+ * A run of 998+ octets containing no space cannot be folded losslessly — there
+ * is no space to promote to an indent — so it is hard-split by code point and
+ * the continuation indent is a space that was not in the source. That trade is
+ * deliberate: the alternative is emitting a line no RFC 5322 parser accepts.
+ *
+ * @param line - One physical header line.
+ * @returns The line when it fits, otherwise its folded continuation lines.
+ * @example
+ * ```ts
+ * import { foldHeaderLine } from "@beep/libpff"
+ *
+ * console.log(foldHeaderLine("Subject: short")) // [ "Subject: short" ]
+ *
+ * const long = `X-Long: ${"token ".repeat(400)}`
+ * const folded = foldHeaderLine(long)
+ * console.log(folded.length > 1) // true
+ * console.log(folded.join("") === long) // true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const foldHeaderLine = (line: string): ReadonlyArray<string> =>
+  octetLength(line) <= headerLineOctetLimit
+    ? A.of(line)
+    : A.reduce(headerPieces(line), A.empty<string>(), (folded, piece) =>
+        A.matchRight(folded, {
+          onEmpty: () => A.of(piece.text),
+          onNonEmpty: (init, last) => {
+            const joined = piece.separated ? `${last} ${piece.text}` : `${last}${piece.text}`;
+
+            return octetLength(joined) > headerLineOctetLimit
+              ? A.append(folded, ` ${piece.text}`)
+              : A.append(init, joined);
+          },
+        })
+      );
+
+/**
+ * Convert a pffexport timestamp into an RFC 5322 date.
+ *
+ * pffexport renders MAPI times as `Nov 26, 2020 22:18:29.446000000 UTC`. The
+ * sub-second precision and the `UTC` suffix are dropped in favor of a `+0000`
+ * offset, and the optional day-of-week is omitted so no calendar arithmetic is
+ * needed. Anything that does not match yields `None`, which drops the `Date`
+ * header rather than emitting a malformed one.
+ *
+ * @param value - Timestamp text taken from an `OutlookHeaders.txt` field.
+ * @returns The RFC 5322 rendering when the timestamp is recognized.
+ * @example
+ * ```ts
+ * import { rfc5322DateFromOutlookTimestamp } from "@beep/libpff"
+ * import { O } from "@beep/utils"
+ *
+ * console.log(
+ *   O.getOrElse(rfc5322DateFromOutlookTimestamp("Nov 26, 2020 22:18:29.446000000 UTC"), () => "")
+ * ) // "26 Nov 2020 22:18:29 +0000"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const rfc5322DateFromOutlookTimestamp = (value: string): O.Option<string> =>
+  Str.match(outlookTimestampPattern)(Str.trim(value)).pipe(
+    O.flatMap((groups) =>
+      O.all({
+        day: A.get(groups, 2),
+        hour: A.get(groups, 4),
+        minute: A.get(groups, 5),
+        month: A.get(groups, 1).pipe(O.filter((month) => A.contains(monthAbbreviations, month))),
+        second: A.get(groups, 6),
+        year: A.get(groups, 3),
+      })
+    ),
+    O.map(({ day, hour, minute, month, second, year }) => `${day} ${month} ${year} ${hour}:${minute}:${second} +0000`)
+  );
+
 /**
  * Normalize a verbatim transport-header block for reuse in an assembled EML.
  *
  * The block is truncated at its first blank line (the RFC 5322 header
  * terminator), MIME-structural headers and their folded continuation lines
- * are removed, and line endings are normalized to CRLF.
+ * are removed, line endings are normalized to CRLF, and any physical line over
+ * the 998-octet limit is folded. Lines that already fit are passed through
+ * unchanged, so a block that arrived correctly folded is preserved as-is.
  *
  * @example
  * ```ts
@@ -100,7 +227,7 @@ export const stripMimeStructuralHeaders = (headerBlock: string): string => {
 
     if (continuationPattern.test(line)) {
       if (!dropping) {
-        kept.push(line);
+        kept.push(...foldHeaderLine(line));
       }
       continue;
     }
@@ -111,7 +238,7 @@ export const stripMimeStructuralHeaders = (headerBlock: string): string => {
     });
 
     if (!dropping) {
-      kept.push(line);
+      kept.push(...foldHeaderLine(line));
     }
   }
 
@@ -157,22 +284,26 @@ export const parseOutlookHeaders = (text: string): Record<string, string> => {
 /**
  * Synthesize a minimal EML header block from parsed Outlook headers.
  *
- * Emits `From:` (only when a sender email address is present), `Subject:`,
- * and `X-Beep-Libpff-Client-Submit-Time:` carrying the verbatim submit-time
- * string. `Date:`/`To:`/`Cc:` synthesis is an explicit P3 waiver — the
- * verbatim values remain available in the JSONL record headers and the
- * exported metadata children.
+ * Emits `From:` (only when a sender email address is present), `Subject:`, and
+ * `Date:` parsed from the Outlook client-submit time. A submit time that does
+ * not parse is omitted rather than emitted malformed; its verbatim value stays
+ * available in the JSONL record headers, as do `To:`/`Cc:`, whose synthesis
+ * remains an explicit P3 waiver. Every emitted line is folded to the
+ * 998-octet limit, which matters here because flattening a folded Outlook
+ * value produces a single long line.
  *
  * @example
  * ```ts
  * import { synthesizeEmlHeaderBlock } from "@beep/libpff"
  *
  * const block = synthesizeEmlHeaderBlock({
+ *   "Client submit time": "Nov 26, 2020 22:18:29.446000000 UTC",
  *   "Sender email address": "ada@example.com",
  *   "Sender name": "Ada Lovelace",
  *   "Subject": "Quarterly report"
  * })
  * console.log(block.startsWith("From: \"Ada Lovelace\" <ada@example.com>")) // true
+ * console.log(block.includes("Date: 26 Nov 2020 22:18:29 +0000")) // true
  * ```
  *
  * @category utilities
@@ -203,15 +334,16 @@ export const synthesizeEmlHeaderBlock = (headers: Readonly<Record<string, string
     lines.push(`Subject: ${subject.value}`);
   }
 
-  const submitTime = O.fromUndefinedOr(headers[outlookClientSubmitTimeKey]).pipe(
+  const date = O.fromUndefinedOr(headers[outlookClientSubmitTimeKey]).pipe(
     O.map(sanitizeHeaderValue),
-    O.filter(Str.isNonEmpty)
+    O.filter(Str.isNonEmpty),
+    O.flatMap(rfc5322DateFromOutlookTimestamp)
   );
-  if (O.isSome(submitTime)) {
-    lines.push(`X-Beep-Libpff-Client-Submit-Time: ${submitTime.value}`);
+  if (O.isSome(date)) {
+    lines.push(`Date: ${date.value}`);
   }
 
-  return A.join(lines, CRLF);
+  return A.join(A.flatMap(lines, foldHeaderLine), CRLF);
 };
 
 interface EmlBodyPart {
