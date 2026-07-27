@@ -7,16 +7,14 @@
 
 import { Duration } from "effect";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import { OpenclawCompatibilitySet } from "./Openclaw.models.ts";
 import type { OpenclawInvocationContext } from "./Openclaw.models.ts";
 
 const HERMETIC_BASE_PATH = "/usr/bin:/bin";
 
 const optionalEnvEntry = (name: string, value: O.Option<string>): Record<string, string> =>
-  O.match(value, {
-    onNone: () => ({}),
-    onSome: (resolved) => ({ [name]: resolved }),
-  });
+  R.getSomes({ [name]: value });
 
 /**
  * Maximum time allowed for `openclaw --version`.
