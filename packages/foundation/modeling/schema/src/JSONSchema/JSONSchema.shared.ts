@@ -12,6 +12,7 @@
  * @since 0.0.0
  */
 import { $SchemaId } from "@beep/identity/packages";
+import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -529,24 +530,75 @@ export const AnchorName = S.String.check(AnchorNameCheck).pipe(
  */
 export type AnchorName = typeof AnchorName.Type;
 
-const uriReferenceBase = "https://json-schema.invalid/";
-const uriReferenceAsciiPattern = /^[\x21-\x7e]*$/;
-const uriReferenceForbiddenPattern = /[<>"{}|\\^`]/;
-const malformedPercentEncodingPattern = /%(?![0-9A-Fa-f]{2})/;
-
-const UriReferenceCheck = S.makeFilter<string>(
-  (value) =>
-    uriReferenceAsciiPattern.test(value) &&
-    !uriReferenceForbiddenPattern.test(value) &&
-    !malformedPercentEncodingPattern.test(value) &&
-    URL.canParse(value, uriReferenceBase),
-  {
-    identifier: $I`UriReferenceCheck`,
-    title: "URI-Reference",
-    description: "RFC 3986 URI-Reference syntax with valid ASCII characters, percent encoding, and structure.",
-    message: "must be a valid RFC 3986 URI-Reference",
-  }
+const uriPctEncodedPatternSource = "%[0-9A-Fa-f]{2}";
+const uriUnreservedPatternSource = "[A-Za-z0-9._~-]";
+const uriSubDelimiterPatternSource = "[!$&'()*+,;=]";
+const uriPathCharacterPatternSource = `(?:${uriUnreservedPatternSource}|${uriPctEncodedPatternSource}|${uriSubDelimiterPatternSource}|[:@])`;
+const uriDecOctetPatternSource = "(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])";
+const uriIpv4AddressPatternSource = `${uriDecOctetPatternSource}(?:\\.${uriDecOctetPatternSource}){3}`;
+const uriH16PatternSource = "[0-9A-Fa-f]{1,4}";
+const uriLs32PatternSource = `(?:${uriH16PatternSource}:${uriH16PatternSource}|${uriIpv4AddressPatternSource})`;
+const uriIpv6AddressPatternSource =
+  `(?:` +
+  `(?:${uriH16PatternSource}:){6}${uriLs32PatternSource}|` +
+  `::(?:${uriH16PatternSource}:){5}${uriLs32PatternSource}|` +
+  `(?:${uriH16PatternSource})?::(?:${uriH16PatternSource}:){4}${uriLs32PatternSource}|` +
+  `(?:(?:${uriH16PatternSource}:){0,1}${uriH16PatternSource})?::` +
+  `(?:${uriH16PatternSource}:){3}${uriLs32PatternSource}|` +
+  `(?:(?:${uriH16PatternSource}:){0,2}${uriH16PatternSource})?::` +
+  `(?:${uriH16PatternSource}:){2}${uriLs32PatternSource}|` +
+  `(?:(?:${uriH16PatternSource}:){0,3}${uriH16PatternSource})?::` +
+  `${uriH16PatternSource}:${uriLs32PatternSource}|` +
+  `(?:(?:${uriH16PatternSource}:){0,4}${uriH16PatternSource})?::${uriLs32PatternSource}|` +
+  `(?:(?:${uriH16PatternSource}:){0,5}${uriH16PatternSource})?::${uriH16PatternSource}|` +
+  `(?:(?:${uriH16PatternSource}:){0,6}${uriH16PatternSource})?::` +
+  `)`;
+const uriIpvFuturePatternSource = `[Vv][0-9A-Fa-f]+\\.(?:${uriUnreservedPatternSource}|${uriSubDelimiterPatternSource}|:)+`;
+const uriIpLiteralPatternSource = `\\[(?:${uriIpv6AddressPatternSource}|${uriIpvFuturePatternSource})\\]`;
+const uriUserInfoPatternSource = `(?:${uriUnreservedPatternSource}|${uriPctEncodedPatternSource}|${uriSubDelimiterPatternSource}|:)*`;
+const uriRegNamePatternSource = `(?:${uriUnreservedPatternSource}|${uriPctEncodedPatternSource}|${uriSubDelimiterPatternSource})*`;
+const uriAuthorityPatternSource =
+  `(?:${uriUserInfoPatternSource}@)?` +
+  `(?:${uriIpLiteralPatternSource}|${uriIpv4AddressPatternSource}|${uriRegNamePatternSource})` +
+  "(?::[0-9]*)?";
+const uriSegmentPatternSource = `${uriPathCharacterPatternSource}*`;
+const uriNonEmptySegmentPatternSource = `${uriPathCharacterPatternSource}+`;
+const uriNonEmptyNoSchemeSegmentPatternSource = `(?:${uriUnreservedPatternSource}|${uriPctEncodedPatternSource}|${uriSubDelimiterPatternSource}|@)+`;
+const uriPathAbemptyPatternSource = `(?:/${uriSegmentPatternSource})*`;
+const uriPathAbsolutePatternSource = `/(?:${uriNonEmptySegmentPatternSource}(?:/${uriSegmentPatternSource})*)?`;
+const uriPathRootlessPatternSource = `${uriNonEmptySegmentPatternSource}(?:/${uriSegmentPatternSource})*`;
+const uriPathNoSchemePatternSource = `${uriNonEmptyNoSchemeSegmentPatternSource}(?:/${uriSegmentPatternSource})*`;
+const uriQueryOrFragmentPatternSource = `(?:${uriPathCharacterPatternSource}|[/?])*`;
+const uriSchemePatternSource = "[A-Za-z][A-Za-z0-9+.-]*";
+const uriHierarchyPartPatternSource =
+  `(?://${uriAuthorityPatternSource}${uriPathAbemptyPatternSource}|` +
+  `${uriPathAbsolutePatternSource}|${uriPathRootlessPatternSource}|)`;
+const uriRelativePartPatternSource =
+  `(?://${uriAuthorityPatternSource}${uriPathAbemptyPatternSource}|` +
+  `${uriPathAbsolutePatternSource}|${uriPathNoSchemePatternSource}|)`;
+const uriPatternSource =
+  `${uriSchemePatternSource}:${uriHierarchyPartPatternSource}` +
+  `(?:\\?${uriQueryOrFragmentPatternSource})?(?:#${uriQueryOrFragmentPatternSource})?`;
+const uriRelativeRefPatternSource =
+  `${uriRelativePartPatternSource}` +
+  `(?:\\?${uriQueryOrFragmentPatternSource})?(?:#${uriQueryOrFragmentPatternSource})?`;
+const uriReferencePattern = new RegExp(`^(?:${uriPatternSource}|${uriRelativeRefPatternSource})$`, "u");
+const absoluteUriPattern = new RegExp(
+  `^(${uriSchemePatternSource}):(?:` +
+    `//(?:${uriUserInfoPatternSource}@)?` +
+    `(${uriIpLiteralPatternSource}|${uriIpv4AddressPatternSource}|${uriRegNamePatternSource})` +
+    `(?::[0-9]*)?(${uriPathAbemptyPatternSource})|` +
+    `(${uriPathAbsolutePatternSource})|(${uriPathRootlessPatternSource})|` +
+    `)(?:\\?${uriQueryOrFragmentPatternSource})?(?:#${uriQueryOrFragmentPatternSource})?$`,
+  "u"
 );
+
+const UriReferenceCheck = S.makeFilter<string>((value) => uriReferencePattern.test(value), {
+  identifier: $I`UriReferenceCheck`,
+  title: "URI-Reference",
+  description: "RFC 3986 URI-Reference syntax with valid ASCII characters, percent encoding, and structure.",
+  message: "must be a valid RFC 3986 URI-Reference",
+});
 
 /**
  * An RFC 3986 URI-Reference string for `$ref`, `$dynamicRef`, and other
@@ -598,8 +650,8 @@ export const UriReferenceString = S.String.check(UriReferenceCheck).pipe(
  */
 export type UriReferenceString = typeof UriReferenceString.Type;
 
-const decodeAbsoluteUri = S.decodeUnknownOption(S.URLFromString);
 const unreservedUriCharacterPattern = /^[A-Za-z0-9\-._~]$/;
+const uriDotSegmentPattern = /(?:^|\/)\.{1,2}(?:\/|$)/;
 
 const normalizePercentEncoding = (value: string): string =>
   value.replace(/%[0-9A-Fa-f]{2}/g, (token) => {
@@ -607,19 +659,35 @@ const normalizePercentEncoding = (value: string): string =>
     return unreservedUriCharacterPattern.test(decoded) ? decoded : Str.toUpperCase(token);
   });
 
-const AbsoluteUriCheck = S.makeFilter<string>(
-  (value) =>
-    O.match(decodeAbsoluteUri(value), {
-      onNone: () => false,
-      onSome: (uri) => normalizePercentEncoding(uri.href) === value,
-    }),
-  {
-    identifier: $I`AbsoluteUriCheck`,
-    title: "Normalized absolute URI",
-    description: "Normalized absolute RFC 3986 URI with a scheme.",
-    message: "must be a valid normalized absolute URI",
+const normalizeUriHostCase = (value: string): string =>
+  value.replace(/%[0-9A-F]{2}|./g, (token) => (Str.startsWith("%")(token) ? token : Str.toLowerCase(token)));
+
+const normalizedAbsoluteUriPath = (match: RegExpExecArray): string => match[3] ?? match[4] ?? match[5] ?? "";
+
+const isNormalizedUriHost = (host: string | undefined): boolean =>
+  host === undefined || host === normalizeUriHostCase(host);
+
+const isNormalizedAbsoluteUri = (value: string): boolean => {
+  const match = absoluteUriPattern.exec(value);
+  if (match === null) {
+    return false;
   }
-);
+
+  const scheme = match[1] ?? "";
+  return Bool.every([
+    scheme === Str.toLowerCase(scheme),
+    isNormalizedUriHost(match[2]),
+    normalizePercentEncoding(value) === value,
+    !uriDotSegmentPattern.test(normalizedAbsoluteUriPath(match)),
+  ]);
+};
+
+const AbsoluteUriCheck = S.makeFilter<string>(isNormalizedAbsoluteUri, {
+  identifier: $I`AbsoluteUriCheck`,
+  title: "Normalized absolute URI",
+  description: "Normalized absolute RFC 3986 URI with a scheme.",
+  message: "must be a valid normalized absolute URI",
+});
 
 /**
  * A normalized absolute URI string for dialect and vocabulary identifiers.
@@ -672,9 +740,9 @@ const IdUriReferenceCheck = S.isPattern(/^[^#]*#?$/, {
 });
 
 /**
- * A draft-2020-12 `$id` URI-Reference. It retains the pragmatic whitespace
- * validation of {@link UriReferenceString} and rejects non-empty fragments;
- * a trailing empty `#` remains backward-compatible.
+ * A draft-2020-12 `$id` URI-Reference. It inherits the RFC 3986 validation of
+ * {@link UriReferenceString} and additionally rejects non-empty fragments; a
+ * trailing empty `#` remains backward-compatible.
  *
  * @example
  * ```ts

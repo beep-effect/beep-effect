@@ -154,20 +154,34 @@ describe("JSONSchema", { concurrent: false, timeout: 300_000 }, () => {
         expect(yield* rejects({ patternProperties: { "[bad": true } })).toBe(true);
         expect(yield* rejects({ $ref: "has whitespace" })).toBe(true);
         expect(yield* rejects({ $ref: "http://[bad" })).toBe(true);
+        expect(yield* rejects({ $ref: "1:foo" })).toBe(true);
+        expect(yield* rejects({ $ref: "a[b" })).toBe(true);
+        expect(yield* rejects({ $ref: "?q=[x]" })).toBe(true);
+        expect(yield* rejects({ $ref: "#foo#bar" })).toBe(true);
         expect(yield* rejects({ $dynamicRef: "%" })).toBe(true);
         expect(yield* rejects({ $id: "#fragment" })).toBe(true);
         expect(yield* rejects({ $id: "https://example.com/schema#fragment" })).toBe(true);
         expect(yield* rejects({ $id: "http://[bad" })).toBe(true);
+        expect(yield* rejects({ $id: "schema[1].json" })).toBe(true);
         expect(yield* rejects({ $id: "#" })).toBe(false);
         expect(yield* rejects({ $id: "schema.json" })).toBe(false);
         expect(yield* rejects({ $id: "https://example.com/schema" })).toBe(false);
         expect(yield* rejects({ $ref: "other.json#/$defs/T" })).toBe(false);
+        expect(yield* rejects({ $ref: "foo:bar" })).toBe(false);
+        expect(yield* rejects({ $ref: "//[::1]/schema" })).toBe(false);
+        expect(yield* rejects({ $ref: "?q=x/y?z" })).toBe(false);
         expect(yield* rejects({ $schema: "meta/schema" })).toBe(true);
         expect(yield* rejects({ $schema: "http://[bad" })).toBe(true);
+        expect(yield* rejects({ $schema: "https://example.com/[x]" })).toBe(true);
         expect(yield* rejects({ $schema: "HTTPS://JSON-SCHEMA.ORG/draft/2020-12/schema" })).toBe(true);
         expect(yield* rejects({ $schema: "https://json-schema.org/draft/2020-12/%73chema" })).toBe(true);
+        expect(yield* rejects({ $schema: "foo://example.com/a/../schema" })).toBe(true);
         expect(yield* rejects({ $schema: "https://json-schema.org/draft/2020-12/schema" })).toBe(false);
+        expect(yield* rejects({ $schema: "foo://[v1.a]/" })).toBe(false);
+        expect(yield* rejects({ $schema: "foo://" })).toBe(false);
         expect(yield* rejects({ $vocabulary: { relative: true } })).toBe(true);
+        expect(yield* rejects({ $vocabulary: { "foo://EXAMPLE.com/path": true } })).toBe(true);
+        expect(yield* rejects({ $vocabulary: { "foo://example.com/path": true } })).toBe(false);
         expect(
           yield* rejects({
             $vocabulary: { "https://json-schema.org/draft/2020-12/vocab/%63ore": true },
