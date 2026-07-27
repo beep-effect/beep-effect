@@ -1,0 +1,6 @@
+Jul 25 19:21:36 DankStation unit-entrypoint.sh[451301]: 2026-07-25T19:21:36.154-05:00 [ws] ⇄ res ✓ channels.status 550ms conn=732f636d…ae61 id=d8050a15…cbce
+Jul 25 19:21:39 DankStation unit-entrypoint.sh[451301]: 2026-07-25T19:21:39.814-05:00 [telegram] [default] starting provider (@beep_ip_bot)
+Jul 25 19:21:39 DankStation unit-entrypoint.sh[451301]: 2026-07-25T19:21:39.839-05:00 [telegram] menu text exceeded the conservative 5700-character payload budget; shortening descriptions to keep 70 commands visible.
+Jul 25 19:21:40 DankStation unit-entrypoint.sh[451301]: 2026-07-25T19:21:40.162-05:00 [telegram] [diag] isolated polling ingress started spool=/home/elpresidank/.cache/beep-p0-spike1a5.ZUoCqx/spike1/state/telegram/ingress-spool-default
+Jul 25 19:21:40 DankStation unit-entrypoint.sh[451301]: 2026-07-25T19:21:40.860-05:00 [gateway] agent runtime plugins pre-warmed in 34ms
+Jul 25 19:21:42 DankStation unit-entrypoint.sh[451301]: 2026-07-25T19:21:42.059-05:00 [ws] ⇄ res ✓ channels.status 548ms conn=06156ed6…06bc id=407bc361…b17a

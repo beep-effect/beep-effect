@@ -1,0 +1,11 @@
+{
+  "action": "send",
+  "channel": "telegram",
+  "dryRun": false,
+  "handledBy": "plugin",
+  "messageId": "8",
+  "payload": {
+    "ok": true,
+    "messageId": "8"
+  }
+}

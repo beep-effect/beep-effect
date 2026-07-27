@@ -1,0 +1,9 @@
+=== linger enable (applicator privilege step; polkit allows self-linger for active session) ===
+enable-linger exit: 0
+Linger=yes
+
+=== A3 identity binding: mutated expected machine-id -> preflight fails BEFORE mutation ===
+== context: tty=not a tty sid=2389712 env-keys=HOME,LOGNAME,PATH,PWD,SHLVL,USER,_,
+PREFLIGHT-FAIL: machine-id mismatch: expected deadbeefdeadbeefdeadbeefdeadbeef, target is 0bffc9bc5a6b48928f1ab4794df5244b
+apply exit: 78
+unit-file-present=no

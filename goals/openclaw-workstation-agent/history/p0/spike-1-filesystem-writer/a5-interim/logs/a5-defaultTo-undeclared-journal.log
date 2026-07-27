@@ -1,0 +1,3 @@
+Jul 25 19:21:27 DankStation unit-entrypoint.sh[450329]: 2026-07-25T19:21:27.188-05:00 [telegram] skipping Telegram target writeback for telegram:@p0_spike1_jul25 because gateway caller is missing operator.admin
+Jul 25 19:21:27 DankStation unit-entrypoint.sh[450329]: 2026-07-25T19:21:27.861-05:00 [telegram] outbound send ok accountId=default chatId=-1004475923698 messageId=8 operation=sendMessage deliveryKind=text chunkCount=1
+Jul 25 19:21:27 DankStation unit-entrypoint.sh[450329]: 2026-07-25T19:21:27.863-05:00 [ws] ⇄ res ✓ message.action 1059ms channel=telegram conn=dfdfe382…d833 id=01e6560d…21a4
