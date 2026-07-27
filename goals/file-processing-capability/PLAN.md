@@ -236,18 +236,23 @@ Required Checks:
 
 ## P5: Quality And Handoff
 
-Status: pending
+Status: complete (2026-07-27) — live doc/docx Tika calibration landed in the
+opt-in `BEEP_TEST_TIKA_URL` lane (runtime-generated OLE2 `.doc` and OOXML
+`.docx` fixtures; 11/11 live tests against Apache Tika 3.3.1), the real-PST
+end-to-end `beep files process` proof covered every V1 family, evidence and
+handoff notes landed under `history/outputs/`, and the packet flipped to
+completed-retained with its closeout reflection in the same PR.
 
 Goal: Close the capability with verification evidence and implementation notes
 that future product packets can consume.
 
 Exit Criteria:
 
-- [ ] Package-level `check`, `test`, `lint`, and docgen pass for all new
+- [x] Package-level `check`, `test`, `lint`, and docgen pass for all new
   packages.
-- [ ] Relevant root quality lane passes or any unrelated failure is classified.
-- [ ] Generated fixtures and manifest outputs are documented.
-- [ ] `goals/file-processing-capability/history/outputs/` records final
+- [x] Relevant root quality lane passes or any unrelated failure is classified.
+- [x] Generated fixtures and manifest outputs are documented.
+- [x] `goals/file-processing-capability/history/outputs/` records final
   implementation notes and verification evidence.
 
 Required Checks:
