@@ -9,9 +9,12 @@
  * rejects every negative fixture, and the `config schema` export contains no
  * lossy placeholders for the extension surfaces the golden intent declares.
  *
- * Runs only in the `test:integration` lane (requires network + a local
- * Node 24 toolchain). Temp workbench directories are scoped and removed; the
- * staged npm cache is retained across runs.
+ * Runs only in the `test:integration` lane (requires network). A usable Node
+ * runtime is resolved from BEEP_OPENCLAW_IT_NODE_BIN, mise Node 24, or PATH
+ * (skipping Bun's node shim and engine-unsupported hosts), falling back to
+ * staging the compatibility set's pinned Node from nodejs.org into the same
+ * cache. Temp workbench directories are scoped and removed; the staged npm
+ * and Node caches are retained across runs.
  */
 import { fileURLToPath } from "node:url";
 import { OPENCLAW_COMPATIBILITY_SET } from "@beep/openclaw/Openclaw.config";
@@ -86,14 +89,19 @@ const ambientProcess = (executable: string, args: ReadonlyArray<string>): ChildP
     stdout: "pipe",
   });
 
+const resolveCacheRoot = Effect.gen(function* () {
+  const path = yield* Path.Path;
+  const home = yield* Config.string("HOME");
+  return O.getOrElse(yield* Config.option(Config.string("BEEP_OPENCLAW_IT_CACHE")), () =>
+    path.join(home, ".cache", "beep-openclaw-driver")
+  );
+});
+
 /** Stage the pinned npm package once; reuse the cache when already staged. */
 const ensurePinnedBinaryStaged = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const home = yield* Config.string("HOME");
-  const cacheRoot = O.getOrElse(yield* Config.option(Config.string("BEEP_OPENCLAW_IT_CACHE")), () =>
-    path.join(home, ".cache", "beep-openclaw-driver")
-  );
+  const cacheRoot = yield* resolveCacheRoot;
   const stagePrefix = path.join(cacheRoot, `openclaw-${compatibility.openclawVersion}`);
   const binaryPath = path.join(stagePrefix, "node_modules", ".bin", "openclaw");
   const alreadyStaged = yield* fs.exists(binaryPath);
@@ -111,12 +119,35 @@ const ensurePinnedBinaryStaged = Effect.gen(function* () {
 });
 
 /**
- * True when `<directory>/node` is a real Node executable rather than Bun's
- * `node` shim. Under `bunx --bun vitest` the shim shadows real Node on PATH,
- * and the pinned binary refuses Bun (`node:sqlite`), so each candidate is
- * probed: Bun's shim reports `process.versions.bun`, real Node does not.
+ * True when the reported Node version satisfies the pinned binary's engine
+ * ranges: `>=22.22.3 <23`, `>=24.15.0 <25`, or `>=25.9.0`.
  */
-const isRealNodeDirectory = Effect.fnUntraced(function* (directory: string) {
+const isSupportedNodeVersion = (version: string): boolean => {
+  const parts = pipe(version, Str.trim, Str.replace("v", ""), (bare) => Str.split(bare, "."));
+  const major = Number(parts[0] ?? Number.NaN);
+  const minor = Number(parts[1] ?? Number.NaN);
+  const patch = Number(parts[2] ?? Number.NaN);
+  if (Number.isNaN(major) || Number.isNaN(minor) || Number.isNaN(patch)) {
+    return false;
+  }
+  if (major === 22) {
+    return minor > 22 || (minor === 22 && patch >= 3);
+  }
+  if (major === 24) {
+    return minor >= 15;
+  }
+  return major > 25 || (major === 25 && minor >= 9);
+};
+
+/**
+ * True when `<directory>/node` is a real, engine-supported Node executable.
+ * Under `bunx --bun vitest`, Bun's `node` shim shadows real Node on PATH and
+ * the pinned binary refuses Bun (`node:sqlite`), so each candidate is probed:
+ * Bun's shim reports `process.versions.bun`, real Node does not. Hosts may
+ * also carry a real Node below the engine floor (e.g. v24.13.0), so the
+ * probed version must satisfy the pinned engine ranges too.
+ */
+const isUsableNodeDirectory = Effect.fnUntraced(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const candidate = path.join(directory, "node");
@@ -127,10 +158,45 @@ const isRealNodeDirectory = Effect.fnUntraced(function* (directory: string) {
   const [stdout, , exitCode] = yield* runCapturedProcess(
     ambientProcess(candidate, ["-p", 'process.versions.bun ? "bun" : process.version'])
   ).pipe(Effect.orElseSucceed(() => ["", "", 1] as const));
-  return exitCode === 0 && pipe(Str.trim(stdout), Str.startsWith("v"));
+  const report = Str.trim(stdout);
+  return exitCode === 0 && pipe(report, Str.startsWith("v")) && isSupportedNodeVersion(report);
 });
 
-/** Pinned Node bin dir: explicit override, then mise Node 24, then the first PATH entry with a real (non-Bun) node. */
+/**
+ * Stage the compatibility set's pinned Node from nodejs.org into the cache
+ * when the host offers no usable runtime; reuse the extraction across runs.
+ */
+const ensurePinnedNodeStaged = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const cacheRoot = yield* resolveCacheRoot;
+  const arch = process.arch === "arm64" ? "arm64" : "x64";
+  const distribution = `node-v${compatibility.nodeVersion}-${process.platform}-${arch}`;
+  const stageDir = path.join(cacheRoot, "node", `v${compatibility.nodeVersion}`);
+  const binDir = path.join(stageDir, distribution, "bin");
+  if (yield* isUsableNodeDirectory(binDir)) {
+    return binDir;
+  }
+  yield* fs.makeDirectory(stageDir, { recursive: true });
+  const url = `https://nodejs.org/dist/v${compatibility.nodeVersion}/${distribution}.tar.gz`;
+  const [stdout, stderr, exitCode] = yield* runCapturedProcess(
+    ambientProcess("sh", ["-c", `curl -fsSL '${url}' | tar -xz -C '${stageDir}'`])
+  );
+  if (exitCode !== 0) {
+    return yield* Effect.die(
+      new Error(`staging pinned Node from ${url} exited with ${exitCode}: ${Str.trim(stderr)} ${Str.trim(stdout)}`)
+    );
+  }
+  if (!(yield* isUsableNodeDirectory(binDir))) {
+    return yield* Effect.die(new Error(`staged Node at ${binDir} failed the runtime probe`));
+  }
+  return binDir;
+});
+
+/**
+ * Pinned Node bin dir: explicit override, then mise Node 24, then the first
+ * PATH entry with a real supported node, then a staged pinned Node download.
+ */
 const resolveNodeBinDirectory = Effect.gen(function* () {
   const path = yield* Path.Path;
   const override = yield* Config.option(Config.string("BEEP_OPENCLAW_IT_NODE_BIN"));
@@ -139,7 +205,7 @@ const resolveNodeBinDirectory = Effect.gen(function* () {
   }
   const home = yield* Config.string("HOME");
   const miseNodeBin = path.join(home, ".local", "share", "mise", "installs", "node", "24", "bin");
-  if (yield* isRealNodeDirectory(miseNodeBin)) {
+  if (yield* isUsableNodeDirectory(miseNodeBin)) {
     return O.some(miseNodeBin);
   }
   const pathEntries = pipe(
@@ -149,11 +215,11 @@ const resolveNodeBinDirectory = Effect.gen(function* () {
   );
   for (const entry of pathEntries) {
     const directory = Str.trim(entry);
-    if (Str.isNonEmpty(directory) && (yield* isRealNodeDirectory(directory))) {
+    if (Str.isNonEmpty(directory) && (yield* isUsableNodeDirectory(directory))) {
       return O.some(directory);
     }
   }
-  return O.none();
+  return O.some(yield* ensurePinnedNodeStaged);
 });
 
 const makeWorkbench = Effect.gen(function* () {
@@ -161,13 +227,6 @@ const makeWorkbench = Effect.gen(function* () {
   const path = yield* Path.Path;
   const binaryPath = yield* ensurePinnedBinaryStaged;
   const nodeBinDir = yield* resolveNodeBinDirectory;
-  if (O.isNone(nodeBinDir)) {
-    return yield* Effect.die(
-      new Error(
-        "No real Node runtime found via BEEP_OPENCLAW_IT_NODE_BIN, mise Node 24, or PATH; the pinned OpenClaw binary requires Node and refuses Bun's node shim."
-      )
-    );
-  }
   const rootDir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-openclaw-it-" });
   const configDir = path.join(rootDir, "configs");
   const homeDir = path.join(rootDir, "home");
