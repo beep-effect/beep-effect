@@ -456,7 +456,7 @@ const runHermetic = (
   spawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
   request: OpenclawProcessRequest
 ): Effect.Effect<OpenclawProcessResult, OpenclawCliError> =>
-  spawnProcessResult(spawner, request, { extendEnv: false, subcommand: subcommandLabel(request) });
+  spawnProcessResult({ extendEnv: false, request, spawner, subcommand: subcommandLabel(request) });
 
 const makeService = (runner: OpenclawCliRunner): OpenclawCliShape => {
   const execute = Effect.fnUntraced(function* (

@@ -100,7 +100,7 @@ const runInherited = (
   spawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
   request: OpenclawProcessRequest
 ): Effect.Effect<OpenclawProcessResult, OpenclawCliError> =>
-  spawnProcessResult(spawner, request, { extendEnv: true, subcommand: verbLabel(request) });
+  spawnProcessResult({ extendEnv: true, request, spawner, subcommand: verbLabel(request) });
 
 const makeService = (executable: string, runner: OpenclawCliRunner): OpenclawSystemdShape => {
   const timeoutMs = Duration.toMillis(OPENCLAW_SYSTEMCTL_TIMEOUT);

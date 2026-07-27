@@ -28,14 +28,16 @@ import type { OpenclawProcessRequest } from "../Openclaw.models.ts";
  * @category runners
  * @since 0.0.0
  */
-export const spawnProcessResult = (
-  spawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
-  request: OpenclawProcessRequest,
-  options: { readonly extendEnv: boolean; readonly subcommand: string }
-): Effect.Effect<OpenclawProcessResult, OpenclawCommandSpawnError> => {
+export const spawnProcessResult = (input: {
+  readonly extendEnv: boolean;
+  readonly request: OpenclawProcessRequest;
+  readonly spawner: ChildProcessSpawner.ChildProcessSpawner["Service"];
+  readonly subcommand: string;
+}): Effect.Effect<OpenclawProcessResult, OpenclawCommandSpawnError> => {
+  const { extendEnv, request, spawner, subcommand } = input;
   const command = ChildProcess.make(request.executable, A.fromIterable(request.args), {
     env: request.env,
-    extendEnv: options.extendEnv,
+    extendEnv,
     stdin: "ignore",
     stderr: "pipe",
     stdout: "pipe",
@@ -54,7 +56,7 @@ export const spawnProcessResult = (
         argumentCount: A.length(request.args),
         cause,
         executable: request.executable,
-        subcommand: options.subcommand,
+        subcommand,
       })
     )
   );
