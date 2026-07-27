@@ -2,9 +2,18 @@
 
 ## Status
 
-Active — P1 minimum vertical proof, P2 Tika Server driver, P3 libpff
-PST-export driver, and P4 real-engine CLI proof complete; only the P5 handoff
-phase remains pending.
+Completed-retained (closed 2026-07-27) — all five phases complete: P1 minimum
+vertical proof, P2 Tika Server driver, P3 libpff PST-export driver, P4
+real-engine CLI proof, and P5 quality and handoff. Latest evidence: live
+doc/docx Tika calibration (11/11 live tests against Apache Tika 3.3.1,
+runtime-generated OLE2 `.doc` / OOXML `.docx` fixtures), real-PST end-to-end
+`beep files process` proof across every V1 family, and the conditional base64
+EML body-encoding fix (PR #478). Handoff notes:
+[history/outputs/p5-implementation-notes.md](./history/outputs/p5-implementation-notes.md);
+verification evidence:
+[history/outputs/p5-verification-evidence.md](./history/outputs/p5-verification-evidence.md);
+closeout reflection:
+[history/reflections/2026-07-27-claude.md](./history/reflections/2026-07-27-claude.md).
 
 Packet hardening completed on 2026-06-02. The P1 implementation landed through
 the law-practice office-action branch and merged to `main` in PR #262 on

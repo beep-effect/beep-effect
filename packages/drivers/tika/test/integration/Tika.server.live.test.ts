@@ -17,6 +17,8 @@ import {
   livePlainText,
   liveRtf,
   liveXhtml,
+  makeLiveDoc,
+  makeLiveDocx,
   makeLivePdf,
   makeLivePng,
 } from "./live-fixtures.ts";
@@ -84,6 +86,10 @@ const textFixtures: ReadonlyArray<{
   { bytes: liveHtml, extension: "html", format: "html" },
   { bytes: liveXhtml, extension: "xhtml", format: "xhtml" },
   { bytes: liveRtf, extension: "rtf", format: "rtf" },
+  // Word extraction failures are silent (HTTP 200, empty text), so the
+  // liveMarker toContain assertion below is the load-bearing check.
+  { bytes: makeLiveDoc(), extension: "doc", format: "doc" },
+  { bytes: makeLiveDocx(), extension: "docx", format: "docx" },
 ];
 
 describe("@beep/tika live Tika Server", () => {
