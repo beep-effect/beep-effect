@@ -2222,6 +2222,38 @@
       "reason": "Dependency-injection container of Effect service shapes (FileProcessingService/ClaimGate/IrToLaw/ClaimTransition); a wiring bundle of function-bearing services, not serializable data."
     },
     {
+      "file": "packages/law-practice/use-cases/src/PracticeKg.tools.ts",
+      "symbol": "practiceKgDocumentFieldTiers",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-use-cases",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/PracticeKg.tools.ts",
+      "symbol": "practiceKgEmailFieldTiers",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-use-cases",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/PracticeKg.tools.ts",
+      "symbol": "practiceKgFamilyFieldTiers",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-use-cases",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/PracticeKg.tools.ts",
+      "symbol": "practiceKgGraphFieldTiers",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-use-cases",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
       "file": "packages/ontology/server/test/OntologyTools.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",

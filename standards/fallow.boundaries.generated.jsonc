@@ -1819,6 +1819,7 @@
           "@beep/law-practice-tables",
           "@beep/law-practice-use-cases",
           "@beep/libpff",
+          "@beep/mcp-kit",
           "@beep/pglite",
           "@beep/schema",
           "@beep/test-utils",
@@ -1837,6 +1838,7 @@
           "@beep/law-practice-tables",
           "@beep/law-practice-use-cases",
           "@beep/libpff",
+          "@beep/mcp-kit",
           "@beep/pglite",
           "@beep/schema",
           "@beep/test-utils",
@@ -1867,6 +1869,7 @@
           "@beep/langextract",
           "@beep/law-practice-domain",
           "@beep/law-practice-use-cases",
+          "@beep/mcp-kit",
           "@beep/nlp",
           "@beep/schema",
           "@beep/test-utils"
@@ -1879,6 +1882,7 @@
           "@beep/langextract",
           "@beep/law-practice-domain",
           "@beep/law-practice-use-cases",
+          "@beep/mcp-kit",
           "@beep/nlp",
           "@beep/schema",
           "@beep/test-utils"
@@ -2427,16 +2431,22 @@
       {
         "from": "@beep/practice-kg-mcp",
         "allow": [
+          "@beep/duckdb",
+          "@beep/identity",
           "@beep/law-practice-server",
           "@beep/pglite",
           "@beep/practice-kg-mcp",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/duckdb",
+          "@beep/identity",
           "@beep/law-practice-server",
           "@beep/pglite",
           "@beep/practice-kg-mcp",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/utils"
         ]
       },
       {

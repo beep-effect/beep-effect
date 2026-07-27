@@ -127,6 +127,7 @@ injective
 injectivity
 inlines
 INTJ
+ILIKE
 isinstance
 isready
 Jaccard
@@ -138,6 +139,7 @@ kdialog
 keccak
 Kiota
 Kleisli
+knip
 labelledby
 lede
 Lemmatization
