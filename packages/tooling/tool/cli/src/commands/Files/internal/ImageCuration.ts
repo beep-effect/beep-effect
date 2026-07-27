@@ -203,6 +203,39 @@ const pathsOverlap = (
   return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
 };
 
+const canonicalizeImageTargetPath = Effect.fn("Files.canonicalizeImageTargetPath")(function* (
+  targetPath: string,
+  description: string
+): Effect.fn.Return<string, FilesCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const resolvedTarget = path.resolve(targetPath);
+  let candidate = resolvedTarget;
+
+  while (true) {
+    const exists = yield* fs
+      .exists(candidate)
+      .pipe(Effect.mapError((cause) => formatPlatformError(`Failed to inspect ${description}`, candidate, { cause })));
+    if (exists) {
+      const canonicalCandidate = yield* fs
+        .realPath(candidate)
+        .pipe(
+          Effect.mapError((cause) => formatPlatformError(`Failed to resolve ${description}`, candidate, { cause }))
+        );
+      const relativeSuffix = path.relative(candidate, resolvedTarget);
+      return relativeSuffix === "" ? canonicalCandidate : path.resolve(canonicalCandidate, relativeSuffix);
+    }
+
+    const parent = path.dirname(candidate);
+    if (parent === candidate) {
+      return yield* FilesCommandError.make({
+        message: `Failed to find an existing ancestor for ${description} "${resolvedTarget}".`,
+      });
+    }
+    candidate = parent;
+  }
+});
+
 const collectAuditSources = Effect.fn("Files.collectImageAuditSources")(function* (
   directory: string
 ): Effect.fn.Return<AuditSourceCollection, FilesCommandError, FileSystem.FileSystem | Path.Path> {
@@ -762,8 +795,8 @@ export const auditImagesImpl = Effect.fn("FilesCommandService.auditImages")(func
 
   const path = yield* Path.Path;
   const sources = yield* collectAuditSources(options.dir);
-  const manifestPath = path.resolve(options.manifest);
-  const modelPath = path.resolve(options.modelPath);
+  const manifestPath = yield* canonicalizeImageTargetPath(options.manifest, "image audit manifest path");
+  const modelPath = yield* canonicalizeImageTargetPath(options.modelPath, "image audit face model path");
   if (pathsOverlap(path, sources.canonicalDirectory, manifestPath)) {
     return yield* FilesCommandError.make({
       message: `Image audit manifest must not be written inside source directory "${sources.canonicalDirectory}".`,
@@ -921,16 +954,23 @@ const validateCurationRoots = Effect.fn("Files.validateImageCurationRoots")(func
   sources: AuditSourceCollection,
   decisions: ImageCurationDecisionDocument,
   decisionDocumentPath: string
-): Effect.fn.Return<{ readonly manifestPath: string; readonly outputDirectory: string }, FilesCommandError, Path.Path> {
+): Effect.fn.Return<
+  { readonly manifestPath: string; readonly outputDirectory: string },
+  FilesCommandError,
+  FileSystem.FileSystem | Path.Path
+> {
   const path = yield* Path.Path;
-  const recordedSourceDirectory = path.resolve(decisions.sourceDirectory);
+  const recordedSourceDirectory = yield* canonicalizeImageTargetPath(
+    decisions.sourceDirectory,
+    "decision ledger source directory"
+  );
   if (recordedSourceDirectory !== sources.canonicalDirectory) {
     return yield* FilesCommandError.make({
       message: `Decision ledger sourceDirectory "${recordedSourceDirectory}" does not match "${sources.canonicalDirectory}".`,
     });
   }
 
-  const outputDirectory = path.resolve(options.outDir);
+  const outputDirectory = yield* canonicalizeImageTargetPath(options.outDir, "image curation output directory");
   const outputOverlapsSource =
     pathsOverlap(path, sources.canonicalDirectory, outputDirectory) ||
     pathsOverlap(path, outputDirectory, sources.canonicalDirectory);
@@ -941,11 +981,12 @@ const validateCurationRoots = Effect.fn("Files.validateImageCurationRoots")(func
   }
 
   const defaultManifestPath = path.join(outputDirectory, "manifests", "image-curation-manifest.json");
-  const manifestPath = path.resolve(
+  const manifestPath = yield* canonicalizeImageTargetPath(
     pipe(
       options.manifest,
       O.getOrElse(() => defaultManifestPath)
-    )
+    ),
+    "image curation manifest path"
   );
   if (pathsOverlap(path, sources.canonicalDirectory, manifestPath)) {
     return yield* FilesCommandError.make({
@@ -1087,19 +1128,49 @@ const prepareCurationEntries = (
     };
   });
 
+const canonicalizePreparedCurationEntries = Effect.fn("Files.canonicalizePreparedImageCurationEntries")(function* (
+  entries: ReadonlyArray<PreparedCurationEntry>
+): Effect.fn.Return<ReadonlyArray<PreparedCurationEntry>, FilesCommandError, FileSystem.FileSystem | Path.Path> {
+  let canonicalEntries = A.empty<PreparedCurationEntry>();
+  for (const entry of entries) {
+    const outputPath = yield* canonicalizeImageTargetPath(
+      entry.outputPath,
+      `image curation derivative path for "${entry.source.name}"`
+    );
+    canonicalEntries = A.append(canonicalEntries, { ...entry, outputPath });
+  }
+  return canonicalEntries;
+});
+
 const requireSafeCurationDestinations = Effect.fn("Files.requireSafeImageCurationDestinations")(function* (
   path: Pick<ImagePathOperations, "isAbsolute" | "relative">,
   manifestPath: string,
+  decisionDocumentPath: string,
+  outputDirectory: string,
   entries: ReadonlyArray<PreparedCurationEntry>
 ): Effect.fn.Return<void, FilesCommandError> {
   const outputPaths = MutableHashSet.empty<string>();
   for (const entry of entries) {
+    if (!pathsOverlap(path, outputDirectory, entry.outputPath)) {
+      return yield* FilesCommandError.make({
+        message: `Image curation derivative must remain inside output directory "${outputDirectory}": "${entry.outputPath}".`,
+      });
+    }
     if (MutableHashSet.has(outputPaths, entry.outputPath)) {
       return yield* FilesCommandError.make({
         message: `Duplicate image curation output path: "${entry.outputPath}"`,
       });
     }
     MutableHashSet.add(outputPaths, entry.outputPath);
+
+    const outputOverlapsDecision =
+      pathsOverlap(path, decisionDocumentPath, entry.outputPath) ||
+      pathsOverlap(path, entry.outputPath, decisionDocumentPath);
+    if (outputOverlapsDecision) {
+      return yield* FilesCommandError.make({
+        message: `Image curation derivative must not overlap decision ledger "${decisionDocumentPath}".`,
+      });
+    }
 
     const manifestOverlapsOutput =
       pathsOverlap(path, manifestPath, entry.outputPath) || pathsOverlap(path, entry.outputPath, manifestPath);
@@ -1117,14 +1188,25 @@ const validateDecisionLedger = Effect.fn("Files.validateImageCurationDecisionLed
   const path = yield* Path.Path;
   const sources = yield* collectAuditSources(options.dir);
   yield* requireCleanCurationSources(sources);
-  const decisionDocumentPath = path.resolve(options.decisionsPath);
+  const decisionDocumentPath = yield* canonicalizeImageTargetPath(
+    options.decisionsPath,
+    "image curation decision ledger path"
+  );
   const decisions = yield* readDecisionDocument(decisionDocumentPath);
   const roots = yield* validateCurationRoots(options, sources, decisions, decisionDocumentPath);
   const decisionsByName = yield* indexCurationDecisions(decisions.decisions);
   yield* requireExactDecisionCoverage(sources.files, decisions.decisions, decisionsByName);
   const validatedSources = yield* validateSourceDecisionHashes(sources.files, decisionsByName);
-  const prepared = prepareCurationEntries(path, roots.outputDirectory, allocateCurationOutputNames(validatedSources));
-  yield* requireSafeCurationDestinations(path, roots.manifestPath, prepared);
+  const prepared = yield* canonicalizePreparedCurationEntries(
+    prepareCurationEntries(path, roots.outputDirectory, allocateCurationOutputNames(validatedSources))
+  );
+  yield* requireSafeCurationDestinations(
+    path,
+    roots.manifestPath,
+    decisionDocumentPath,
+    roots.outputDirectory,
+    prepared
+  );
 
   return {
     decisions,

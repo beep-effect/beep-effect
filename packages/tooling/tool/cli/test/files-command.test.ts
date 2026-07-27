@@ -2387,6 +2387,44 @@ describe("files command", { concurrent: false }, () => {
       )
     ));
 
+  it("refuses audit manifests that reach protected files through filesystem aliases", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const datasetDir = yield* makeDatasetDir(tmpDir);
+          const sourcePath = path.join(datasetDir, "source.jpg");
+          const modelDir = path.join(tmpDir, "model");
+          const modelPath = path.join(modelDir, "face-detection.onnx");
+          const sourceAlias = path.join(tmpDir, "source-alias");
+          const modelAlias = path.join(tmpDir, "model-alias");
+
+          yield* writeJpegWithExif(sourcePath, 32, 32);
+          const sourceHash = yield* sha256FileRef(sourcePath);
+          yield* fs.makeDirectory(modelDir, { recursive: true });
+          yield* fs.writeFileString(modelPath, "not a real model");
+          yield* fs.symlink(datasetDir, sourceAlias);
+          yield* fs.symlink(modelDir, modelAlias);
+          const baseArgs = ["audit-images", "--dir", datasetDir, "--model", modelPath, "--overwrite", "--manifest"];
+
+          const sourceAliasError = yield* expectFilesCommandFailure([
+            ...baseArgs,
+            path.join(sourceAlias, "audit.json"),
+          ]);
+          expect(sourceAliasError).toContain("must not be written inside source directory");
+          expect(yield* sha256FileRef(sourcePath)).toBe(sourceHash);
+
+          const modelAliasError = yield* expectFilesCommandFailure([
+            ...baseArgs,
+            path.join(modelAlias, "face-detection.onnx"),
+          ]);
+          expect(modelAliasError).toContain("must not overwrite face model");
+          expect(yield* fs.readFileString(modelPath)).toBe("not a real model");
+        })
+      )
+    ));
+
   it("refuses curation manifests that overlap protected inputs or generated derivatives", () =>
     Effect.runPromise(
       withTempDirectory((tmpDir) =>
@@ -2445,6 +2483,98 @@ describe("files command", { concurrent: false }, () => {
           const derivativeManifestError = yield* expectFilesCommandFailure([...baseArgs, outputPath]);
           expect(derivativeManifestError).toContain("must not overlap generated derivative");
           expect(yield* fs.exists(outDir)).toBe(false);
+        })
+      )
+    ));
+
+  it("refuses filesystem aliases that escape protected curation roots", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const datasetDir = yield* makeDatasetDir(tmpDir);
+          const sourcePath = path.join(datasetDir, "source.jpg");
+          const ledgerDir = path.join(tmpDir, "ledger");
+          const decisionsPath = path.join(ledgerDir, "decisions.json");
+          const sourceAlias = path.join(tmpDir, "source-alias");
+          const ledgerAlias = path.join(tmpDir, "ledger-alias");
+          const outputAlias = path.join(tmpDir, "output-alias");
+          const outDir = path.join(tmpDir, "prepared");
+
+          yield* writeJpegWithExif(sourcePath, 32, 32);
+          const sourceHash = yield* sha256FileRef(sourcePath);
+          const decisionText = yield* encodeImageCurationDecisionDocument(
+            ImageCurationDecisionDocument.make({
+              decisions: [
+                {
+                  disposition: "active-core",
+                  reasons: ["clean-current-identity"],
+                  sourceName: "source.jpg",
+                  sourceSha256: sourceHash,
+                },
+              ],
+              schemaVersion: "beep.files.image-curation-decisions.v1",
+              sourceDirectory: datasetDir,
+            })
+          );
+          yield* fs.makeDirectory(ledgerDir, { recursive: true });
+          yield* fs.writeFileString(decisionsPath, decisionText);
+          yield* fs.symlink(datasetDir, sourceAlias);
+          yield* fs.symlink(ledgerDir, ledgerAlias);
+          yield* fs.symlink(datasetDir, outputAlias);
+
+          const baseArgs = [
+            "curate-images",
+            "--dir",
+            datasetDir,
+            "--decisions",
+            decisionsPath,
+            "--out-dir",
+            outDir,
+            "--overwrite",
+            "--manifest",
+          ];
+          const sourceAliasError = yield* expectFilesCommandFailure([
+            ...baseArgs,
+            path.join(sourceAlias, "manifest.json"),
+          ]);
+          expect(sourceAliasError).toContain("must not be written inside source directory");
+
+          const ledgerAliasError = yield* expectFilesCommandFailure([
+            ...baseArgs,
+            path.join(ledgerAlias, "decisions.json"),
+          ]);
+          expect(ledgerAliasError).toContain("must not overwrite decision ledger");
+          expect(yield* fs.readFileString(decisionsPath)).toBe(decisionText);
+
+          const outputAliasError = yield* expectFilesCommandFailure([
+            "curate-images",
+            "--dir",
+            datasetDir,
+            "--decisions",
+            decisionsPath,
+            "--out-dir",
+            outputAlias,
+            "--dry-run",
+          ]);
+          expect(outputAliasError).toContain("output directory must not overlap source directory");
+
+          const derivativeParent = path.join(outDir, "canonical", "active");
+          yield* fs.makeDirectory(derivativeParent, { recursive: true });
+          yield* fs.symlink(datasetDir, path.join(derivativeParent, "core"));
+          const derivativeAliasError = yield* expectFilesCommandFailure([
+            "curate-images",
+            "--dir",
+            datasetDir,
+            "--decisions",
+            decisionsPath,
+            "--out-dir",
+            outDir,
+            "--dry-run",
+          ]);
+          expect(derivativeAliasError).toContain("derivative must remain inside output directory");
+          expect(yield* sha256FileRef(sourcePath)).toBe(sourceHash);
         })
       )
     ));
