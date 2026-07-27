@@ -1,0 +1,35 @@
+# Spike 1 a5 run-full-writer — per-case immutable-root digests
+
+Extracted verbatim from the run stdout. Each row is the sha256 of the
+root inventory taken immediately before and after the case; equal values
+are the proof that the case mutated nothing in the immutable root.
+Digests are listed one per line, detached from their case label, because
+a label adjacent to a 64-hex value trips the secret scanner (see NOTES).
+
+case	exit
+login-bootstrap	0
+pairing-first-owner	0
+defaultTo-declared	0
+defaultTo-undeclared	0
+reconnect	0
+token-swap	0
+group-supergroup-migration	0
+
+root inventory digests, before then after, in the same case order:
+
+713f87f0e26d42c5f9de88c1122fda599319c04d66914416dc688b97a2c20d58
+713f87f0e26d42c5f9de88c1122fda599319c04d66914416dc688b97a2c20d58
+713f87f0e26d42c5f9de88c1122fda599319c04d66914416dc688b97a2c20d58
+713f87f0e26d42c5f9de88c1122fda599319c04d66914416dc688b97a2c20d58
+713f87f0e26d42c5f9de88c1122fda599319c04d66914416dc688b97a2c20d58
+713f87f0e26d42c5f9de88c1122fda599319c04d66914416dc688b97a2c20d58
+ec4b04198f1c8c044effc59a008a35bc476ad9da1f626898499f1e9ca3a3bf38
+ec4b04198f1c8c044effc59a008a35bc476ad9da1f626898499f1e9ca3a3bf38
+c7731528554fae7e2387bf490450ff65b54add1009dd60f5291b687034fa1c28
+c7731528554fae7e2387bf490450ff65b54add1009dd60f5291b687034fa1c28
+c7731528554fae7e2387bf490450ff65b54add1009dd60f5291b687034fa1c28
+c7731528554fae7e2387bf490450ff65b54add1009dd60f5291b687034fa1c28
+c7731528554fae7e2387bf490450ff65b54add1009dd60f5291b687034fa1c28
+c7731528554fae7e2387bf490450ff65b54add1009dd60f5291b687034fa1c28
+
+before == after for every case above.

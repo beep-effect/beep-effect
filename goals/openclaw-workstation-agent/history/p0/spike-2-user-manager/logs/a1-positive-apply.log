@@ -1,0 +1,13 @@
+=== A1 positive: linger active, full non-interactive apply (daemon-reload/enable/start/stop) ===
+== context: tty=not a tty sid=2391009 env-keys=HOME,LOGNAME,PATH,PWD,SHLVL,USER,_,
+PREFLIGHT-OK machine=0bffc9bc5a6b48928f1ab4794df5244b host=DankStation uid=1000 home=/home/elpresidank runtime=/run/user/1000 linger=yes manager=degraded tty=not a tty
+== unit installed: /home/elpresidank/.config/systemd/user/openclaw-spike.service
+== daemon-reload OK
+Created symlink '/home/elpresidank/.config/systemd/user/default.target.wants/openclaw-spike.service' → '/home/elpresidank/.config/systemd/user/openclaw-spike.service'.
+== enable OK
+== start OK
+== is-active: active
+== stop OK
+== is-active after stop: inactive
+APPLY-OK
+apply exit: 0

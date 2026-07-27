@@ -1,0 +1,78 @@
+
+=== exact credential metadata and service-user readability ===
+credential-parent path=/etc owner=0 gid=0 mode=755
+credential-parent path=/etc/beep owner=0 gid=0 mode=755
+credential-parent path=/etc/beep/openclaw-spike owner=0 gid=0 mode=755
+credential path=/etc/beep/openclaw-spike/op-service-account-token owner=0 group=elpresidank mode=0440
+credential parents=/etc,/etc/beep,/etc/beep/openclaw-spike canonical=yes writable-by-group-or-world=no
+credential service-user-readable=yes private-group-extra-members=none
+
+=== teardown-first ===
+
+=== render runtime helpers ===
+
+=== render declarative config ===
+Telegram reference absent; assertion 3 will be BLOCKED
+
+=== validate before privileged install ===
+staged-package-sha256=4034a491f5fb31b20b8f16fe29a88e1782be4b70f4aeed0df43c09ce24b147a5 unchanged=yes
+Config valid: /home/elpresidank/.cache/beep-p0-spike3.5R0T7w/spike3/render/openclaw.json
+
+=== install root-owned content-addressed generation ===
+
+=== validate through the root-owned active pointer ===
+staged-package-sha256=4034a491f5fb31b20b8f16fe29a88e1782be4b70f4aeed0df43c09ce24b147a5 unchanged=yes
+Config valid: /etc/beep/openclaw-spike/current/openclaw.json
+
+=== install dedicated user unit ===
+staged-package-sha256=4034a491f5fb31b20b8f16fe29a88e1782be4b70f4aeed0df43c09ce24b147a5 unchanged=yes
+
+=== exact service-environment preflight ===
+
+=== installed-root provenance ===
+config-sha256=d15fefa6405d808dc79c2dbcf41769f28e61958848d0da286f3acb3415999555
+spike-root-sha256=38de3e637f11eec58bea8c2fe661c97500eb6d45c1342082e4ab2101be93f145
+
+=== last-resort secret scan ===
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=59df7cc1 plaintext=absent token-shapes=absent
+SETUP-PASS unit=openclaw-spike.service port=19031 config=/etc/beep/openclaw-spike/current/openclaw.json
+
+=== exact credential metadata and service-user readability ===
+credential-parent path=/etc owner=0 gid=0 mode=755
+credential-parent path=/etc/beep owner=0 gid=0 mode=755
+credential-parent path=/etc/beep/openclaw-spike owner=0 gid=0 mode=755
+credential path=/etc/beep/openclaw-spike/op-service-account-token owner=0 group=elpresidank mode=0440
+credential parents=/etc,/etc/beep,/etc/beep/openclaw-spike canonical=yes writable-by-group-or-world=no
+credential service-user-readable=yes private-group-extra-members=none
+
+=== teardown-first ===
+
+=== render runtime helpers ===
+
+=== render declarative config ===
+Telegram reference absent; assertion 3 will be BLOCKED
+
+=== validate before privileged install ===
+staged-package-sha256=4034a491f5fb31b20b8f16fe29a88e1782be4b70f4aeed0df43c09ce24b147a5 unchanged=yes
+Config valid: /home/elpresidank/.cache/beep-p0-spike3.5R0T7w/spike3/render/openclaw.json
+
+=== install root-owned content-addressed generation ===
+
+=== validate through the root-owned active pointer ===
+staged-package-sha256=4034a491f5fb31b20b8f16fe29a88e1782be4b70f4aeed0df43c09ce24b147a5 unchanged=yes
+Config valid: /etc/beep/openclaw-spike/current/openclaw.json
+
+=== install dedicated user unit ===
+staged-package-sha256=4034a491f5fb31b20b8f16fe29a88e1782be4b70f4aeed0df43c09ce24b147a5 unchanged=yes
+
+=== exact service-environment preflight ===
+
+=== installed-root provenance ===
+config-sha256=d15fefa6405d808dc79c2dbcf41769f28e61958848d0da286f3acb3415999555
+spike-root-sha256=38de3e637f11eec58bea8c2fe661c97500eb6d45c1342082e4ab2101be93f145
+
+=== last-resort secret scan ===
+log-scan label=service-account sha256-prefix=c5b52aea plaintext=absent token-shapes=absent
+log-scan label=gateway sha256-prefix=3b6cd0d9 plaintext=absent token-shapes=absent
+SETUP-PASS unit=openclaw-spike.service port=19031 config=/etc/beep/openclaw-spike/current/openclaw.json

@@ -127,6 +127,7 @@
       "env": [
         "AI_VENICE_API_KEY",
         "BEEP_TEST_*",
+        "BEEP_TIKA_*",
         "CLOUD_BOX_TOKEN",
         "FIRECRAWL_API_KEY"
       ],
@@ -189,6 +190,7 @@
         "LIVEBLOCKS_*",
         "RESEND_*",
         "BEEP_TEST_*",
+        "BEEP_TIKA_*",
         "CI"
       ],
       "outputs": [

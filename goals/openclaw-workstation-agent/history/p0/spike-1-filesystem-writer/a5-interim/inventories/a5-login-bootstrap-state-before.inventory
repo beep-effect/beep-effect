@@ -1,0 +1,17 @@
+d	700	1000:1000	49961809	./state	
+d	700	1000:1000	49961825	./identity	
+d	755	1000:1000	49961800	.	
+d	755	1000:1000	49961801	./log	
+d	755	1000:1000	49961829	./plugin-skills	
+f	600	1000:1000	49961810	./state/openclaw.sqlite	
+f	600	1000:1000	49961812	./state/openclaw.sqlite-wal	
+f	600	1000:1000	49961813	./state/openclaw.sqlite-shm	
+f	600	1000:1000	49961822	./log/openclaw.log	
+f	600	1000:1000	49961826	./identity/device.json	
+l	777	1000:1000	49961830	./plugin-skills/browser-automation	/home/elpresidank/.cache/beep-p0-stage/openclaw-2026.7.1-2/node_modules/openclaw/dist/extensions/browser/skills/browser-automation
+l	777	1000:1000	49961831	./plugin-skills/canvas	/home/elpresidank/.cache/beep-p0-stage/openclaw-2026.7.1-2/node_modules/openclaw/dist/extensions/canvas/skills/canvas
+c86e17b0677c5111c663f73ace448b07e562304ab6f44ff50e0ee74f95c797a1  ./identity/device.json
+3914bbfa95a96d56ef3068dd9d6cc4edf4c337ad78f7f4bcd910b73e5c879535  ./log/openclaw.log
+40cf07c52bfaa52b334ef341456f970787f6dc701ffe18ad3c572cb5056dbd70  ./state/openclaw.sqlite
+49fc34202d359e246efd4f83f0a03d38255ce5e38d93bce42dea226cd4fdad8c  ./state/openclaw.sqlite-shm
+9356d7fba598fa1377f0d46a3ea35174e1ac5725857ec8d003b0889586535461  ./state/openclaw.sqlite-wal

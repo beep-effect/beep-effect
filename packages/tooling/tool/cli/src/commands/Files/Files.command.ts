@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 
+import * as O from "@beep/utils/Option";
 import { Effect } from "effect";
-import * as O from "effect/Option";
 import { Command, Flag } from "effect/unstable/cli";
 import {
   ArchivePoorCandidatesOptions,
@@ -196,6 +196,22 @@ const archiveOverwriteFlag = Flag.boolean("overwrite").pipe(
 );
 const processOverwriteFlag = Flag.boolean("overwrite").pipe(
   Flag.withDescription("Overwrite an existing files process output directory")
+);
+const processTikaJarFlag = Flag.file("tika-jar", { mustExist: true }).pipe(
+  Flag.withDescription("Apache tika-app jar; selects the Tika App engine for non-PST extraction"),
+  Flag.optional
+);
+const processJavaFlag = Flag.string("java").pipe(
+  Flag.withDescription("java binary used to run the tika-app jar"),
+  Flag.optional
+);
+const processTikaUrlFlag = Flag.string("tika-url").pipe(
+  Flag.withDescription("Tika Server base URL; defaults to the BEEP_TIKA_* environment configuration"),
+  Flag.optional
+);
+const processPffexportFlag = Flag.string("pffexport").pipe(
+  Flag.withDescription("pffexport binary used for PST archive export"),
+  Flag.optional
 );
 const createCaptionsOverwriteFlag = Flag.boolean("overwrite").pipe(
   Flag.withDescription("Overwrite existing caption sidecar files")
@@ -524,11 +540,27 @@ const filesProcessCommand = Command.make(
     exportChildren: processExportChildrenFlag,
     failurePolicy: processFailurePolicyFlag,
     input: processInputFlag,
+    java: processJavaFlag,
     maxMaterializedBytes: maxMaterializedBytesFlag,
     outDir: processOutDirFlag,
     overwrite: processOverwriteFlag,
+    pffexport: processPffexportFlag,
+    tikaJar: processTikaJarFlag,
+    tikaUrl: processTikaUrlFlag,
   },
-  Effect.fn(function* ({ engine, exportChildren, failurePolicy, input, maxMaterializedBytes, outDir, overwrite }) {
+  Effect.fn(function* ({
+    engine,
+    exportChildren,
+    failurePolicy,
+    input,
+    java,
+    maxMaterializedBytes,
+    outDir,
+    overwrite,
+    pffexport,
+    tikaJar,
+    tikaUrl,
+  }) {
     yield* runFilesProgram(
       processFiles(
         ProcessFilesOptions.make({
@@ -539,12 +571,20 @@ const filesProcessCommand = Command.make(
           outDir,
           overwrite,
           ...(O.isNone(maxMaterializedBytes) ? {} : { maxMaterializedBytes: maxMaterializedBytes.value }),
+          ...O.getSomesStruct({
+            javaPath: java,
+            pffexportPath: pffexport,
+            tikaJarPath: tikaJar,
+            tikaUrl,
+          }),
         })
       )
     );
   })
 ).pipe(
-  Command.withDescription("Process files into the V1 file-processing proof manifest tree"),
+  Command.withDescription(
+    "Process files into the V1 file-processing proof manifest tree; point --input at generated fixtures or an operator-local corpus (coverage.json is the coverage profile)"
+  ),
   Command.provide(FilesCommandServiceLive)
 );
 
