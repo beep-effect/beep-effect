@@ -1,6 +1,7 @@
 /**
- * @beep/openclaw
+ * OpenClaw deployment driver package.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 

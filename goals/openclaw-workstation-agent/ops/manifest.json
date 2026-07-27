@@ -11,7 +11,7 @@
   "packetPath": "goals/openclaw-workstation-agent",
   "lifecycle": "active",
   "mission": "Deploy a legal-focused OpenClaw agent on the workstation as immutable, generation-based, Pulumi+Effect-managed infrastructure \u2014 prototype gauntlet first, then driver, then live agent.",
-  "statusNote": "P0 hard gate CLEARED 2026-07-27: all four gauntlet spikes pass every contract assertion with archived evidence under history/p0/, and no gated decision was re-opened. P1 (driver) is unblocked.",
+  "statusNote": "P1 driver COMPLETE 2026-07-27: @beep/openclaw green under repo gates with real-pinned-binary acceptance (validate + negative fixtures + lossy schema-export guard). P0 gauntlet cleared the same week (all four spikes pass). P2 (generation engine + applicator) is unblocked.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -58,13 +58,14 @@
     {
       "id": "P1",
       "name": "Driver (@beep/openclaw)",
-      "status": "pending",
-      "statusNote": "UNBLOCKED 2026-07-27: the P0 hard gate cleared with all four spikes passing. Next phase to start."
+      "status": "complete",
+      "statusNote": "COMPLETE 2026-07-27. packages/drivers/openclaw ships the desired-intent schema, the versioned render adapter pinned to openclaw@2026.7.1-2, the CLI wrapper (version, read-only doctor, config validate, config schema, secrets reload, gateway health, channels status, agent turn), the systemctl --user wrapper, and HTTP probes. Integration lane proves the real pinned binary accepts the rendered golden intent, rejects four negative fixtures, and exports no lossy placeholder for declared extension surfaces. Landed via the goals/openclaw-p1-driver PR."
     },
     {
       "id": "P2",
       "name": "Generation engine + workstation applicator",
-      "status": "pending"
+      "status": "pending",
+      "statusNote": "UNBLOCKED 2026-07-27: P1 driver complete. Next phase to start."
     },
     {
       "id": "P3",

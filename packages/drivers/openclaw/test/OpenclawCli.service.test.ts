@@ -11,12 +11,14 @@ import {
   OpenclawSecretsReload,
 } from "@beep/openclaw/Openclaw.models";
 import { OpenclawCli } from "@beep/openclaw/OpenclawCli.service";
-import { describe, expect, layer } from "@effect/vitest";
+import { fcRuns } from "@beep/test-utils";
+import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import type { OpenclawProcessRequest } from "@beep/openclaw/Openclaw.models";
 import type { OpenclawCliRunner } from "@beep/openclaw/OpenclawCli.service";
 
@@ -420,6 +422,31 @@ describe("@beep/openclaw OpenclawCli service", () => {
           expect(error.subcommand).toBe("--version");
         }
       })
+    );
+  });
+
+  it("round-trips the schema-derived CLI result unions asserted above", () => {
+    const validationEquivalence = S.toEquivalence(OpenclawConfigValidation);
+    const reloadEquivalence = S.toEquivalence(OpenclawSecretsReload);
+    fc.assert(
+      fc.property(
+        S.toArbitrary(OpenclawConfigValidation),
+        S.toArbitrary(OpenclawSecretsReload),
+        (validation, reload) => {
+          const validationWire = Result.getOrThrow(S.encodeResult(OpenclawConfigValidation)(validation));
+          const reloadWire = Result.getOrThrow(S.encodeResult(OpenclawSecretsReload)(reload));
+          expect(
+            validationEquivalence(
+              Result.getOrThrow(S.decodeUnknownResult(OpenclawConfigValidation)(validationWire)),
+              validation
+            )
+          ).toBe(true);
+          expect(
+            reloadEquivalence(Result.getOrThrow(S.decodeUnknownResult(OpenclawSecretsReload)(reloadWire)), reload)
+          ).toBe(true);
+        }
+      ),
+      fcRuns(50)
     );
   });
 });

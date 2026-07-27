@@ -41,16 +41,32 @@ GATE C), research legs + adversarial review.
 
 ## Current Phase
 
-P0 Prototype gauntlet — **complete. All four spikes pass every contract
-assertion** ([`ops/handoffs/p0-gauntlet-contract.md`](./ops/handoffs/p0-gauntlet-contract.md)):
+P1 Driver — **complete.** `@beep/openclaw` ships the desired-intent schema,
+the versioned render adapter pinned to `openclaw@2026.7.1-2` (canonical
+JSON, sha256 content hash, adapter invariants), the CLI process wrapper
+(version, read-only doctor, `config validate`, `config schema`,
+`secrets reload`, gateway health, channels status, agent turn), the
+`systemctl --user` wrapper, and never-fail HTTP probes. The integration
+lane drives the real pinned binary: rendered golden intent validates, four
+negative fixtures fail validation, and the lossy schema-export guard finds
+no placeholder for any declared extension surface. P2 (generation engine +
+applicator) is next.
+
+P0 Prototype gauntlet — complete. All four spikes pass every contract
+assertion ([`ops/handoffs/p0-gauntlet-contract.md`](./ops/handoffs/p0-gauntlet-contract.md)):
 spike 1 (6/6), spike 2 (3/3), spike 3 (3/3), spike 4 (3/3). No gated decision
-was re-opened — OS-enforced config immutability, the applicator contract and
-identity binding, the secrets bootstrap exception and rotation surface, and
-the OpenClawGeneration state machine all stand as decided. P1 (driver) is
-unblocked.
+was re-opened.
 
 ## Latest Evidence
 
+- 2026-07-27 — P1 driver (`packages/drivers/openclaw`): package green under
+  repo gates — 50/50 unit tests, 4/4 integration tests against the real
+  pinned `openclaw@2026.7.1-2` binary (`config validate` accepts the
+  renderer's output as rendered; negative fixtures rejected; schema-export
+  guard clean), docgen with 101 compiling examples. Evidence-side fixture
+  correction recorded in the acceptance test: `allowSymlinkCommand` was
+  retired upstream only after the pin, so the strict-boundary negative
+  fixture uses an unknown exec-provider key instead.
 - 2026-07-26: **Spike 2 (non-interactive user-manager apply) — 3/3 assertions
   PASS**, no blockers; evidence + harness at
   [`history/p0/spike-2/NOTES.md`](./history/p0/spike-2/NOTES.md). The gated
@@ -99,8 +115,13 @@ unblocked.
 
 ## Session Handoff
 
-Gauntlet closed 2026-07-27; the next session starts P1 (driver). The
-mid-gauntlet handoff
+P1 (driver) closed 2026-07-27 on the same day as the gauntlet; the next
+session starts P2 (generation engine + workstation applicator), consuming
+`@beep/openclaw` for render, validate, service control, and probes. The
+spike-2 contract findings in Latest Evidence (bus round-trip preflight,
+`UnitsLoadTimestampMonotonic`, 108-byte socket cap, fail-closed identity
+parse, mid-apply rollback, session-less linger follow-up) land in the real
+applicator. The mid-gauntlet handoff
 [`ops/handoffs/p0-session-handoff-2026-07-25.md`](./ops/handoffs/p0-session-handoff-2026-07-25.md)
 is retained as run history — its operator prerequisites are satisfied, but its
 privileged-run mechanics still apply (YubiKey-FIDO sudo needs a single armed
