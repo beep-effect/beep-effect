@@ -86,5 +86,6 @@
     "The same blocker repeats after reasonable investigation.",
     "PR 6 cannot demonstrate a request issued from inside a real tool handler reaching the policy fetch; the 2026-07-25 spike proved the Fetch override only for a directly-provided effect, not through a running server whose handler context is captured at layer build.",
     "PR 6 adds an agent-controllable outbound POST of workspace content; re-read that scope deliberately before landing rather than inheriting it as settled."
-  ]
+  ],
+  "updated": "2026-07-27"
 }

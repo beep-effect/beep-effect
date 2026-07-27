@@ -205,7 +205,7 @@ Back-links, not copies.
 | 7 | The evaluator implements `mcp-kit`'s existing `TierGate` port from `epistemic/server` |
 | 8 | `recordOutcome` joins `TierGateShape` so the outcome is written in the same call frame |
 | 9 | Slice 1 governs the MCP branch only |
-| 10 | A run is an MCP session, keyed by `clientId` |
+| 10 | A run is an MCP session, keyed by the transport's session id (see note) |
 | 11 | Policy config lives in a new `epistemic/config` |
 | 12 | `ontology_publish_provenance` ships as a real tool, default-off |
 | 13 | A denial reaches the agent reason-free |
@@ -215,6 +215,14 @@ Back-links, not copies.
 keeps its existing `gatedMutation` mapping (`OntologyToolHandlers.ts:86-95`), the
 refusal stays *inside* the tool's declared `failure` union — it is not produced
 at the transport boundary as decision 6 predicted.
+
+**Decision 10's key was corrected in PR 5.** The decision named `clientId`, but
+`RpcServer`'s HTTP protocol mints that per request, so it identifies one
+protocol exchange rather than one session; keying a run on it opens a new run
+per dispatch. The run keys on the transport's session identifier — the
+`mcp-session-id` header, surfaced as `McpCallerIdentity.sessionId` — falling
+back to `clientId` on transports that issue none (stdio), where the connection
+is the session. The decision's substance is unchanged: a run is an MCP session.
 
 ## Acceptance Criteria
 

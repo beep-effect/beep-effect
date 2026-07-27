@@ -1706,7 +1706,10 @@
       ],
       "@beep/ui/hooks/*": ["./packages/foundation/ui-system/ui/src/hooks/*"],
       "@beep/ui/lib/*": ["./packages/foundation/ui-system/ui/src/lib/*"],
-      "@beep/ui/themes/*": ["./packages/foundation/ui-system/ui/src/themes/*"]
+      "@beep/ui/themes/*": ["./packages/foundation/ui-system/ui/src/themes/*"],
+      "@beep/epistemic-server/GovernedTierGate": [
+        "./packages/epistemic/server/src/GovernedTierGate/index.ts"
+      ]
     }
   }
 }

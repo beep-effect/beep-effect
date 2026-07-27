@@ -4,12 +4,38 @@
 
 Status: `in-progress`
 
-PRs 1–4 have landed. PR 1 (#458) shipped the grant and record schemas plus
+PRs 1–5 have landed. PR 1 (#458) shipped the grant and record schemas plus
 the `frozen-grant-set` law; PR 2 (#463) shipped `@beep/epistemic-config`, the
 `OntologyMcpConfig` split, and the MCP entrypoint cleanup; PR 3 (#467) shipped
 the append-only ledger tables, migration, port, and Drizzle adapter; PR 4
-shipped `recordOutcome`/`TierGateSettlement` on the tier gate and
-`EgressDenied` in `@beep/api-transport`. PR 5 is next.
+(#471) shipped `recordOutcome`/`TierGateSettlement` on the tier gate and
+`EgressDenied` in `@beep/api-transport`; PR 5 shipped `GovernedTierGateLive`
+with the run store, swapped in at the MCP transport. PR 6 is next.
+
+**PR 5 corrections to this plan, recorded.** Two instructions below were wrong
+and are superseded by what landed:
+
+1. *"Run store keyed by `clientId`"* — and SPEC decision 10's identical
+   wording — is not implementable over HTTP: `RpcServer`'s HTTP protocol mints
+   `clientId` per request, so it names one protocol exchange, not one session.
+   Keying on it opened a new run per dispatch and reduced every chain to a
+   lone genesis row. The run keys on the transport's session identifier
+   instead — `mcp-session-id`, surfaced through a new
+   `McpCallerIdentity.sessionId` read in `sanitizedToolkit` before the handler
+   context is replaced. Decision 10's intent (a run is an MCP session) stands;
+   only the named mechanism changed. Transports issuing no session id (stdio)
+   fall back to `clientId`, where the connection is the session.
+2. *"Wire eviction to the client lifecycle"* — no such seam exists, and the
+   expiry-based sweep written first was worse than none: evicting an expired
+   run let that same session re-freeze fresh grants on its next dispatch, so
+   the TTL bounded nothing. Runs are now never evicted, which is what makes
+   `grant-expired` permanent for the session that earned it. Growth is one
+   small entry per MCP session. A lifecycle-bound release stays a candidate
+   for the chat-egress widening and needs new `mcp-kit` surface.
+
+A third correction is not a plan deviation but a doctrine one: per-reason
+refusal guidance was reaching the agent through `OntologyTierGateRefusal`,
+against decision 13. Every governed refusal now carries one constant string.
 
 ## Phases
 

@@ -43,6 +43,13 @@ export * from "./EdgeAuthority/index.ts";
  */
 export * from "./ExecutionLedger/index.ts";
 /**
+ * Governed tier gate exports.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./GovernedTierGate/index.ts";
+/**
  * Epistemic server layer exports.
  *
  * @category layers

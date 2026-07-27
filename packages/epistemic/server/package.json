@@ -36,6 +36,7 @@
     "./ClaimDisposition": "./src/ClaimDisposition/index.ts",
     "./EdgeAuthority": "./src/EdgeAuthority/index.ts",
     "./ExecutionLedger": "./src/ExecutionLedger/index.ts",
+    "./GovernedTierGate": "./src/GovernedTierGate/index.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -48,9 +49,11 @@
   ],
   "sideEffects": [],
   "dependencies": {
+    "@beep/epistemic-config": "workspace:^",
     "@beep/epistemic-domain": "workspace:^",
     "@beep/epistemic-tables": "workspace:^",
     "@beep/epistemic-use-cases": "workspace:^",
+    "@beep/mcp-kit": "workspace:^",
     "@beep/postgres": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/semantic-web": "workspace:^",
