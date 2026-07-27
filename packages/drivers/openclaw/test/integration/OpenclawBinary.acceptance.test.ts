@@ -35,6 +35,7 @@ import { collectProcessOutput } from "@beep/utils/Stream";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, layer } from "@effect/vitest";
 import { Config, Context, Effect, Layer, pipe } from "effect";
+import * as A from "effect/Array";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -118,25 +119,37 @@ const ensurePinnedBinaryStaged = Effect.gen(function* () {
   return binaryPath;
 });
 
+type VersionTriple = readonly [number, number, number];
+
+const versionTriple = (version: string): VersionTriple => {
+  const parts = pipe(version, Str.trim, Str.replace("v", ""), (bare) => Str.split(bare, "."));
+  return [Number(parts[0] ?? Number.NaN), Number(parts[1] ?? Number.NaN), Number(parts[2] ?? Number.NaN)];
+};
+
+const tripleAtLeast = (candidate: VersionTriple, floor: VersionTriple): boolean =>
+  candidate[0] !== floor[0]
+    ? candidate[0] > floor[0]
+    : candidate[1] !== floor[1]
+      ? candidate[1] > floor[1]
+      : candidate[2] >= floor[2];
+
+/** The pinned binary's engine ranges as [inclusive floor, exclusive major ceiling]. */
+const supportedNodeRanges: ReadonlyArray<readonly [VersionTriple, number]> = [
+  [[22, 22, 3], 23],
+  [[24, 15, 0], 25],
+  [[25, 9, 0], Number.POSITIVE_INFINITY],
+];
+
 /**
  * True when the reported Node version satisfies the pinned binary's engine
  * ranges: `>=22.22.3 <23`, `>=24.15.0 <25`, or `>=25.9.0`.
  */
 const isSupportedNodeVersion = (version: string): boolean => {
-  const parts = pipe(version, Str.trim, Str.replace("v", ""), (bare) => Str.split(bare, "."));
-  const major = Number(parts[0] ?? Number.NaN);
-  const minor = Number(parts[1] ?? Number.NaN);
-  const patch = Number(parts[2] ?? Number.NaN);
-  if (Number.isNaN(major) || Number.isNaN(minor) || Number.isNaN(patch)) {
-    return false;
-  }
-  if (major === 22) {
-    return minor > 22 || (minor === 22 && patch >= 3);
-  }
-  if (major === 24) {
-    return minor >= 15;
-  }
-  return major > 25 || (major === 25 && minor >= 9);
+  const candidate = versionTriple(version);
+  return (
+    !Number.isNaN(candidate[0] + candidate[1] + candidate[2]) &&
+    A.some(supportedNodeRanges, ([floor, ceiling]) => tripleAtLeast(candidate, floor) && candidate[0] < ceiling)
+  );
 };
 
 /**
