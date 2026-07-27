@@ -23,7 +23,7 @@
 
 import { $McpKitId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Context, Data, DateTime, Effect } from "effect";
+import { Cause, Context, Data, DateTime, Effect, Exit } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -35,6 +35,48 @@ import type * as P from "effect/Predicate";
 const $I = $McpKitId.create("TierGate");
 
 const TierGateOutcomeTag = LiteralKit(["approved", "refused"]);
+
+/**
+ * Bounded settlement of an approved dispatch after its wrapped effect ran:
+ * `completed`, `failed`, or `interrupted`. Deliberately a closed literal
+ * domain rather than an `Exit` — a settlement can never carry a failure
+ * payload, so nothing the wrapped effect produced can leak into whatever
+ * record a gate implementation keeps.
+ *
+ * @example
+ * ```ts
+ * import { TierGateSettlement } from "@beep/mcp-kit"
+ *
+ * const settlement = TierGateSettlement.Enum.completed
+ * console.log(TierGateSettlement.is.completed(settlement))
+ * // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const TierGateSettlement = LiteralKit(["completed", "failed", "interrupted"]).pipe(
+  $I.annoteSchema("TierGateSettlement", {
+    description: "Bounded settlement of an approved dispatch: completed, failed, or interrupted.",
+  })
+);
+
+/**
+ * Runtime type for {@link TierGateSettlement}.
+ *
+ * @example
+ * ```ts
+ * import type { TierGateSettlement } from "@beep/mcp-kit"
+ *
+ * const settlement: TierGateSettlement = "interrupted"
+ * console.log(settlement)
+ * // "interrupted"
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TierGateSettlement = typeof TierGateSettlement.Type;
 
 /**
  * Outcome discriminant carried by {@link TierGateAuditRecord}, mirroring
@@ -233,6 +275,14 @@ export interface ToolCallRequest {
  * ({@link TierGateVerdict}), never an error — mirrors the `ClaimGate` total-
  * engine pattern.
  *
+ * `recordOutcome` is the settlement half: {@link dispatchWithTierGate} calls
+ * it in the same call frame once an approved dispatch's wrapped effect has
+ * settled, with a bounded {@link TierGateSettlement} rather than an `Exit`, so
+ * no failure payload can reach a gate implementation by construction. A
+ * refused dispatch never settles — the wrapped effect never ran. Both methods
+ * are total: an outcome write must never fail the dispatch, because the
+ * effect has already happened.
+ *
  * @example
  * ```ts
  * import { strictEqual } from "node:assert"
@@ -251,10 +301,11 @@ export interface ToolCallRequest {
  * })
  *
  * const shape: TierGateShape = {
- *   evaluate: () => Effect.succeed(TierGateVerdict.make({ verdict: "approved", audit: approvedAudit }))
+ *   evaluate: () => Effect.succeed(TierGateVerdict.make({ verdict: "approved", audit: approvedAudit })),
+ *   recordOutcome: () => Effect.void
  * }
  *
- * strictEqual(typeof shape.evaluate, "function")
+ * strictEqual(typeof shape.recordOutcome, "function")
  * ```
  *
  * @category services
@@ -262,6 +313,7 @@ export interface ToolCallRequest {
  */
 export interface TierGateShape {
   readonly evaluate: (request: ToolCallRequest) => Effect.Effect<TierGateVerdict>;
+  readonly recordOutcome: (request: ToolCallRequest, settlement: TierGateSettlement) => Effect.Effect<void>;
 }
 
 /**
@@ -290,7 +342,10 @@ export interface TierGateShape {
  *   }).pipe(
  *     Effect.provideService(
  *       TierGate,
- *       TierGate.of({ evaluate: () => Effect.succeed(TierGateVerdict.make({ verdict: "approved", audit: approvedAudit })) })
+ *       TierGate.of({
+ *         evaluate: () => Effect.succeed(TierGateVerdict.make({ verdict: "approved", audit: approvedAudit })),
+ *         recordOutcome: () => Effect.void
+ *       })
  *     )
  *   )
  * )
@@ -367,7 +422,9 @@ const auditReason = (approved: boolean, destructive: boolean, readOnly: boolean)
  * `Tool.Readonly: true` and `Tool.Destructive: false`. Destructive tools,
  * unannotated tools, and non-read-only writes pass only when explicitly named
  * in `policy.approvedTools`. Every call produces a
- * {@link TierGateAuditRecord}, approved or refused (Q7).
+ * {@link TierGateAuditRecord}, approved or refused (Q7). This policy gate
+ * keeps no post-execution record, so its `recordOutcome` is a no-op; a
+ * ledger-backed gate implements it for real.
  *
  * @example
  * ```ts
@@ -405,6 +462,7 @@ export const fromApprovedToolsPolicy = (policy: TierGatePolicy): TierGateShape =
         ? TierGateVerdict.make({ verdict: "approved", audit })
         : TierGateVerdict.make({ verdict: "refused", audit });
     }),
+  recordOutcome: () => Effect.void,
 });
 
 /**
@@ -473,13 +531,28 @@ interface TierGateDispatchResultDefinition extends Data.TaggedEnum.WithGenerics<
  */
 export const TierGateDispatchResult = Data.taggedEnum<TierGateDispatchResultDefinition>();
 
+// Collapses an Exit onto the bounded settlement domain. Success is completed;
+// a cause that is interrupts and nothing else is interrupted; every other
+// failure — typed or defect — is failed. The Exit itself never crosses this
+// boundary, so no failure payload can reach a gate implementation.
+const settlementOf = <A, E>(exit: Exit.Exit<A, E>): TierGateSettlement => {
+  if (Exit.isSuccess(exit)) {
+    return TierGateSettlement.Enum.completed;
+  }
+  return Cause.hasInterruptsOnly(exit.cause) ? TierGateSettlement.Enum.interrupted : TierGateSettlement.Enum.failed;
+};
+
 /**
  * Wraps a `tools/call` dispatch effect with the tier gate. Evaluates the
  * gate first; on `refused`, the wrapped effect never runs and the refusal
  * (with its audit record) is returned as a value. On `approved`, the wrapped
- * effect runs and both its result and the approval's audit record are
- * returned as a value. The gate's own evaluation never fails; the wrapper's
- * error channel is exactly the wrapped effect's error channel.
+ * effect runs, its settlement is reported to the gate's `recordOutcome` in
+ * the same call frame (as a bounded {@link TierGateSettlement}, never an
+ * `Exit`), and both its result and the approval's audit record are returned
+ * as a value. A refused dispatch reports no settlement — there was no
+ * execution to settle. The gate's own evaluation never fails and
+ * `recordOutcome` is total, so the wrapper's error channel is exactly the
+ * wrapped effect's error channel.
  *
  * @example
  * ```ts
@@ -511,7 +584,11 @@ export const dispatchWithTierGate = Effect.fn("dispatchWithTierGate")(function* 
   const gate = yield* TierGate;
   const verdict = yield* gate.evaluate(request);
   return yield* TierGateVerdict.match(verdict, {
-    approved: ({ audit }) => Effect.map(onApproved, (value) => TierGateDispatchResult.Dispatched({ value, audit })),
+    approved: ({ audit }) =>
+      onApproved.pipe(
+        Effect.onExit((exit) => gate.recordOutcome(request, settlementOf(exit))),
+        Effect.map((value) => TierGateDispatchResult.Dispatched({ value, audit }))
+      ),
     refused: ({ audit }) => Effect.succeed(TierGateDispatchResult.Refused({ audit })),
   });
 });

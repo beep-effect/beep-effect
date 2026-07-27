@@ -4,10 +4,12 @@
 
 Status: `in-progress`
 
-PRs 1–3 have landed. PR 1 (#458) shipped the grant and record schemas plus
+PRs 1–4 have landed. PR 1 (#458) shipped the grant and record schemas plus
 the `frozen-grant-set` law; PR 2 (#463) shipped `@beep/epistemic-config`, the
-`OntologyMcpConfig` split, and the MCP entrypoint cleanup; PR 3 shipped the
-append-only ledger tables, migration, port, and Drizzle adapter. PR 4 is next.
+`OntologyMcpConfig` split, and the MCP entrypoint cleanup; PR 3 (#467) shipped
+the append-only ledger tables, migration, port, and Drizzle adapter; PR 4
+shipped `recordOutcome`/`TierGateSettlement` on the tier gate and
+`EgressDenied` in `@beep/api-transport`. PR 5 is next.
 
 ## Phases
 

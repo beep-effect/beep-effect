@@ -10,7 +10,7 @@ drifts from the manifests, and merge conflicts are resolved by regenerating.
 
 | Packet | Title | Phases | Updated | Mission |
 | --- | --- | --- | --- | --- |
-| [agent-execution-authority](./agent-execution-authority/README.md) | Agent Execution Authority | 1/5 | 2026-07-26 | Default-deny authority boundary over the MCP agent surface, with a hash-chained append-only record of every decision an… |
+| [agent-execution-authority](./agent-execution-authority/README.md) | Agent Execution Authority | 1/5 | 2026-07-27 | Default-deny authority boundary over the MCP agent surface, with a hash-chained append-only record of every decision an… |
 | [agentic-professional-runtime](./agentic-professional-runtime/README.md) | Agentic Professional Runtime | 3/5 | 2026-07-14 | Define the local-first agentic professional-services runtime that beep-effect will prove through two real product slice… |
 | [ai-metrics-stack](./ai-metrics-stack/README.md) | AI Metrics Stack | 6/8 | 2026-07-14 | — |
 | [citation-extraction-engine](./citation-extraction-engine/README.md) | Citation Extraction Engine | 0/4 | 2026-07-14 | Port the eyecite extraction pipeline into Effect over existing law-practice citation values with pinned parity, exact s… |

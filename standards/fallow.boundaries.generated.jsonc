@@ -939,12 +939,14 @@
         "allow": [
           "@beep/api-transport",
           "@beep/identity",
+          "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/api-transport",
           "@beep/identity",
+          "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
         ]
