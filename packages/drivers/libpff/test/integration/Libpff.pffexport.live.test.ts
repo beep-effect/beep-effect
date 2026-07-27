@@ -111,26 +111,26 @@ describe("@beep/libpff live pffexport", () => {
           const record = yield* decodeMessageRecord(jsonl.trimEnd().split("\n")[0]);
           expect(record.messagePath.length).toBeGreaterThan(0);
 
-          // Every assembled header block must be RFC 5322-shaped: no foldable
-          // line over the 998-octet limit, and a real Date header wherever
+          // Every assembled EML must be RFC 5322-shaped: no foldable line
+          // over the 998-octet limit anywhere in the message — headers fold,
+          // and a body part with a longer physical line is re-encoded as
+          // base64 rather than folded — plus a real Date header wherever
           // pffexport gave us a parseable client-submit time.
           //
-          // Two deliberate exemptions keep this from becoming a false alarm on
-          // a future fixture. A header line with no space has no fold point to
-          // promote to a continuation indent, so the driver emits it intact
-          // rather than mutating the value — those lines are skipped here.
-          // Body lines are not checked at all: an over-long body line needs a
-          // different content-transfer-encoding, not folding, which would
-          // corrupt the content.
+          // One deliberate exemption keeps this from becoming a false alarm
+          // on a future fixture. A header line with no space has no fold
+          // point to promote to a continuation indent, so the driver emits it
+          // intact rather than mutating the value — those lines are skipped
+          // here. Lines split on /\r?\n/, not "\r\n": remaining 8bit bodies
+          // may legally carry bare-LF endings, and splitting only on CRLF
+          // would glue their lines into false over-long positives.
           const encoder = new TextEncoder();
           const foldable = (line: string): boolean => line.includes(" ");
           let datedEmlCount = 0;
           for (const child of emlChildren) {
             const eml = yield* fs.readFileString(path.join(exportRoot, child.relativePath));
             const headerBlock = eml.slice(0, eml.indexOf("\r\n\r\n"));
-            const overLong = headerBlock
-              .split("\r\n")
-              .filter((line) => foldable(line) && encoder.encode(line).length > 998);
+            const overLong = eml.split(/\r?\n/).filter((line) => foldable(line) && encoder.encode(line).length > 998);
             expect(overLong).toStrictEqual([]);
             expect(headerBlock).not.toContain("X-Beep-Libpff-Client-Submit-Time");
             if (headerBlock.includes("\r\nDate: ") || headerBlock.startsWith("Date: ")) {

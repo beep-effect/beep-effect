@@ -37,6 +37,8 @@ const outlookSenderNameKey = "Sender name";
 const outlookSenderEmailKey = "Sender email address";
 const outlookClientSubmitTimeKey = "Client submit time";
 
+// RFC 5322's 998-octet physical-line limit. It governs headers and bodies
+// alike: header lines fold against it, body parts switch encoding against it.
 const headerLineOctetLimit = 998;
 const outlookTimestampPattern = /^([A-Za-z]{3}) (\d{1,2}), (\d{4}) (\d{2}):(\d{2}):(\d{2})(?:\.\d+)? UTC$/;
 const monthAbbreviations = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -360,6 +362,23 @@ interface EmlAssemblyInput {
 
 const emptyBody: EmlBodyPart = { content: "", contentType: "text/plain; charset=utf-8" };
 
+// A body part obeys the same 998-octet physical-line limit as headers, but
+// folding would corrupt content, so a part with any over-long line switches
+// to base64 (losslessly — decoding restores the exact body string) while
+// every other part stays verbatim 8bit. Splitting on the line-break pattern
+// leaves a lone CR inside its line, where it counts toward the octet length:
+// a deliberate safe over-trigger for the one break style RFC 5322 does not
+// recognize.
+const bodySectionLines = (body: EmlBodyPart): ReadonlyArray<string> =>
+  A.some(body.content.split(lineBreakPattern), (line) => octetLength(line) > headerLineOctetLimit)
+    ? [
+        `Content-Type: ${body.contentType}`,
+        "Content-Transfer-Encoding: base64",
+        "",
+        foldBase64Lines(Encoding.encodeBase64(body.content)),
+      ]
+    : [`Content-Type: ${body.contentType}`, "Content-Transfer-Encoding: 8bit", "", body.content];
+
 /**
  * Assemble a deterministic EML document from pre-read message parts.
  *
@@ -367,6 +386,17 @@ const emptyBody: EmlBodyPart = { content: "", contentType: "text/plain; charset=
  * type; with attachments it becomes `multipart/mixed` with the body as the
  * first part and one base64 part per attachment. A missing body yields an
  * empty `text/plain` part. Output is byte-stable given identical inputs.
+ *
+ * @remarks
+ * Body parts follow RFC 5322's 998-octet physical-line limit: a part whose
+ * lines all fit is emitted verbatim as 8bit, while a part with any longer
+ * line is emitted as base64. That switch is a cliff — a one-octet difference
+ * flips the whole part between encodings, so output stays deterministic per
+ * input but near-identical messages can diff dissimilarly. Base64 here is
+ * lossless relative to the decoded body string (the raw file's bytes after
+ * UTF-8 decoding with U+FFFD replacement): decoding the part restores that
+ * string exactly, while the raw body file beside the EML remains the
+ * authoritative byte-for-byte artifact.
  *
  * @example
  * ```ts
@@ -390,17 +420,7 @@ export const assembleEml = (input: EmlAssemblyInput): string => {
   const headerLines = Str.isNonEmpty(input.headerBlock) ? [input.headerBlock] : [];
 
   if (A.isReadonlyArrayEmpty(input.attachments)) {
-    return A.join(
-      [
-        ...headerLines,
-        "MIME-Version: 1.0",
-        `Content-Type: ${body.contentType}`,
-        "Content-Transfer-Encoding: 8bit",
-        "",
-        body.content,
-      ],
-      CRLF
-    );
+    return A.join([...headerLines, "MIME-Version: 1.0", ...bodySectionLines(body)], CRLF);
   }
 
   const sections: Array<string> = [
@@ -409,10 +429,7 @@ export const assembleEml = (input: EmlAssemblyInput): string => {
     `Content-Type: multipart/mixed; boundary="${input.boundary}"`,
     "",
     `--${input.boundary}`,
-    `Content-Type: ${body.contentType}`,
-    "Content-Transfer-Encoding: 8bit",
-    "",
-    body.content,
+    ...bodySectionLines(body),
   ];
 
   for (const attachment of input.attachments) {
