@@ -56,6 +56,20 @@ export * from "./AIMetrics.ts";
  */
 export * from "./OipWeb.ts";
 /**
+ * OpenClaw workstation Pulumi orchestration exports.
+ *
+ * @example
+ * ```ts
+ * import { OpenClawStack } from "@beep/infra"
+ *
+ * console.log(OpenClawStack)
+ * ```
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export * from "./OpenClaw.ts";
+/**
  * Storybook Pulumi orchestration exports.
  *
  * @example

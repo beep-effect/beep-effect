@@ -226,6 +226,7 @@
       "version": "0.0.4",
       "dependencies": {
         "@beep/identity": "workspace:^",
+        "@beep/openclaw": "workspace:^",
         "@beep/repo-ai-metrics": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
