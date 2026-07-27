@@ -41,6 +41,18 @@ GATE C), research legs + adversarial review.
 
 ## Current Phase
 
+P2 Generation engine + applicator — **in progress: code surface landed**
+(`infra/src/OpenClaw.ts` + `infra/openclaw` project on
+`goals/openclaw-p2-generation`): pure generation renderers, the staged
+upgrade applicator (stopped-state WAL snapshot → atomic pointer switch →
+bounded health wait → restore-on-failure, `user_version` downgrade guard),
+fail-closed identity-binding preflight with armed-sudo assertion, alert-only
+drift audit, and the encrypted receipt-verified dankserver backup-ship leg.
+Remaining P2 exit criteria are operator-gated: the `pulumi up` vertical
+slice, second-generation switch with forced rollback, live drift demo, and
+backups + restore drill (armed sudo pty per
+[`ops/handoffs/p0-session-handoff-2026-07-25.md`](./ops/handoffs/p0-session-handoff-2026-07-25.md)).
+
 P1 Driver — **complete.** `@beep/openclaw` ships the desired-intent schema,
 the versioned render adapter pinned to `openclaw@2026.7.1-2` (canonical
 JSON, sha256 content hash, adapter invariants), the CLI process wrapper
