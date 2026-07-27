@@ -12,7 +12,7 @@ import {
   GrantResource,
   SinkDestination,
 } from "@beep/epistemic-domain/values/ExecutionGrant";
-import { GovernedTierGateLive } from "@beep/epistemic-server/GovernedTierGate";
+import { GovernedTierGateLive, GovernedTierGateOptions } from "@beep/epistemic-server/GovernedTierGate";
 import { sanitizedToolkit } from "@beep/mcp-kit";
 import { OntologyMcpConfig } from "@beep/ontology-config/server";
 import { OntologyMcpMutationToolsLive, OntologyMcpReadOnlyToolsLive } from "@beep/ontology-server/tools";
@@ -144,13 +144,15 @@ export const makeOntologyMcpTransportLayer = (options: {
   const mutations = sanitizedToolkit(OntologyMutationToolkit).pipe(
     Layer.provide(OntologyMcpMutationToolsLive),
     Layer.provide(
-      GovernedTierGateLive({
-        grantTtl: ontologySessionGrantTtl,
-        operations: A.map(approvedTools, (tool) => GrantOperation.make(tool)),
-        purpose: GrantPurpose.make("ontology-workspace-mutation"),
-        resource: GrantResource.make("ontology-workspace"),
-        sink: ontologyWorkspaceSink,
-      })
+      GovernedTierGateLive(
+        GovernedTierGateOptions.make({
+          grantTtl: ontologySessionGrantTtl,
+          operations: A.map(approvedTools, (tool) => GrantOperation.make(tool)),
+          purpose: GrantPurpose.make("ontology-workspace-mutation"),
+          resource: GrantResource.make("ontology-workspace"),
+          sink: ontologyWorkspaceSink,
+        })
+      )
     )
   );
   const preflight = HttpRouter.add("OPTIONS", "/mcp", HttpServerResponse.empty({ status: 204 })).pipe(

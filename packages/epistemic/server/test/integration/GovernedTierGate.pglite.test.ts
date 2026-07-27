@@ -13,7 +13,7 @@ import {
   verifyExecutionDecisionChain,
   verifyOutcomeBinding,
 } from "@beep/epistemic-domain/values/ExecutionRecord";
-import { makeGovernedTierGate } from "@beep/epistemic-server/GovernedTierGate";
+import { GovernedTierGateOptions, makeGovernedTierGate } from "@beep/epistemic-server/GovernedTierGate";
 import { EpistemicServerDrizzleLive } from "@beep/epistemic-server/layer";
 import { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { CurrentMcpCaller, dispatchWithTierGate, McpCallerIdentity, TierGate } from "@beep/mcp-kit";
@@ -26,7 +26,6 @@ import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Duration, Effect, Layer, pipe, Ref } from "effect";
 import { Tool } from "effect/unstable/ai";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
-import type { GovernedTierGateOptions } from "@beep/epistemic-server/GovernedTierGate";
 import type { TierGateShape } from "@beep/mcp-kit";
 
 const migrationsFolder = fileURLToPath(new URL("../../../../_internal/db-admin/drizzle", import.meta.url));
@@ -53,7 +52,7 @@ const migrateLedger = Effect.fnUntraced(function* () {
   yield* migrate(db, { migrationsFolder, migrationsSchema });
 });
 
-const gateOptions: GovernedTierGateOptions = {
+const gateOptions = GovernedTierGateOptions.make({
   grantTtl: Duration.hours(12),
   operations: [GrantOperation.make("ontology_propose_change_batch")],
   purpose: GrantPurpose.make("ontology-workspace-mutation"),
@@ -63,25 +62,29 @@ const gateOptions: GovernedTierGateOptions = {
     destination: SinkDestination.make("workspace://ontology"),
     sinkClass: "mcp-write",
   }),
-};
+});
 
 const grantedTool = Tool.make("ontology_propose_change_batch");
 const ungrantedTool = Tool.make("ontology_unlisted_mutation");
 
-const callerOf = (clientId: number) => O.some(McpCallerIdentity.make({ clientId: NonNegativeInt.make(clientId) }));
+// The session id keys the run; clientId varies per request in production, so
+// the harness pins the session and lets the client id drift.
+const callerOf = (sessionId: string, clientId = 1) =>
+  O.some(McpCallerIdentity.make({ clientId: NonNegativeInt.make(clientId), sessionId: O.some(sessionId) }));
 
 const makeGate = () =>
   makeGovernedTierGate(gateOptions).pipe(Effect.provideService(EpistemicConfig, testEpistemicConfig));
 
 const dispatchAs = <A2, E, R>(
   gate: TierGateShape,
-  clientId: number,
+  session: string,
   tool: Tool.Any,
-  onApproved: Effect.Effect<A2, E, R>
+  onApproved: Effect.Effect<A2, E, R>,
+  clientId = 1
 ) =>
   dispatchWithTierGate({ tool, toolCallId: O.none() }, onApproved).pipe(
     Effect.provideService(TierGate, gate),
-    Effect.provideService(CurrentMcpCaller, callerOf(clientId))
+    Effect.provideService(CurrentMcpCaller, callerOf(session, clientId))
   );
 
 const rawSql = Effect.map(Effect.service(SqlClient.SqlClient), (client) => client.withoutTransforms());
@@ -131,7 +134,7 @@ if (!shouldRunPgliteIntegration) {
           // readable — the only new row in the table.
           const result = yield* dispatchAs(
             gate,
-            1,
+            "s-1",
             grantedTool,
             Effect.flatMap(countDecisions(), (count) => Ref.set(observedDuringEffect, count - decisionsBefore))
           );
@@ -163,7 +166,7 @@ if (!shouldRunPgliteIntegration) {
           const runKeysBefore = yield* readRunKeys();
           const ran = yield* Ref.make(false);
 
-          const result = yield* dispatchAs(gate, 2, ungrantedTool, Ref.set(ran, true));
+          const result = yield* dispatchAs(gate, "s-2", ungrantedTool, Ref.set(ran, true));
 
           expect(result._tag).toBe("Refused");
           expect(yield* Ref.get(ran)).toBe(false);
@@ -190,9 +193,11 @@ if (!shouldRunPgliteIntegration) {
           const gate = yield* makeGate();
           const runKeysBefore = yield* readRunKeys();
 
-          yield* dispatchAs(gate, 3, grantedTool, Effect.void);
-          yield* dispatchAs(gate, 3, ungrantedTool, Effect.void);
-          yield* dispatchAs(gate, 3, grantedTool, Effect.void);
+          // Three different client ids on ONE session — exactly what the HTTP
+          // protocol produces, since it mints a clientId per request.
+          yield* dispatchAs(gate, "s-3", grantedTool, Effect.void, 11);
+          yield* dispatchAs(gate, "s-3", ungrantedTool, Effect.void, 12);
+          yield* dispatchAs(gate, "s-3", grantedTool, Effect.void, 13);
 
           const runKey = yield* newRunKeySince(runKeysBefore);
           const decisions = yield* ledger.readDecisions(runKey);
@@ -221,7 +226,7 @@ if (!shouldRunPgliteIntegration) {
           yield* sql`DROP TABLE epistemic_execution_outcome`;
           yield* sql`DROP TABLE epistemic_execution_decision`;
 
-          const result = yield* dispatchAs(gate, 4, grantedTool, Ref.set(ran, true));
+          const result = yield* dispatchAs(gate, "s-4", grantedTool, Ref.set(ran, true));
 
           expect(result._tag).toBe("Refused");
           expect(yield* Ref.get(ran)).toBe(false);

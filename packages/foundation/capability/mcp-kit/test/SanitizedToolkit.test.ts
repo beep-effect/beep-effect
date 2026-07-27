@@ -8,10 +8,11 @@
  *
  * @since 0.0.0
  */
-import { sanitizedToolkit } from "@beep/mcp-kit";
+import { CurrentMcpCaller, sanitizedToolkit } from "@beep/mcp-kit";
 import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import { assert, describe, layer } from "@effect/vitest";
 import { Effect, Layer } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Tracer from "effect/Tracer";
 import { Tool, Toolkit } from "effect/unstable/ai";
@@ -42,10 +43,23 @@ const RefTool = Tool.make("ref_tool", {
   success: S.String,
 });
 
-const FixtureToolkit = Toolkit.make(FixtureTool, ExpectedFailureTool);
+const CallerTool = Tool.make("caller_tool", { success: S.String });
+
+const FixtureToolkit = Toolkit.make(FixtureTool, ExpectedFailureTool, CallerTool);
+
+// Written by `caller_tool`'s handler so a test can observe what the sanitized
+// dispatch put on `CurrentMcpCaller`; seeded with a value no dispatch produces
+// so an unrun handler cannot pass the assertion.
+let observedSessionId: O.Option<string> = O.some("unobserved");
+
 const RefToolkit = Toolkit.make(RefTool);
 
 const FixtureHandlersLive = FixtureToolkit.toLayer({
+  caller_tool: Effect.fn("SanitizedToolkitTest.callerTool")(function* () {
+    const caller = yield* CurrentMcpCaller;
+    observedSessionId = O.flatMap(caller, (identity) => identity.sessionId);
+    return "ok";
+  }),
   expected_failure_tool: () => Effect.fail(ExpectedFixtureFailure.make({ message: "expected refusal" })),
   fixture_tool: (params: { readonly secret: string }) => Effect.succeed(`ok:${params.secret}`),
 });
@@ -146,6 +160,21 @@ describe("sanitizedToolkit", () => {
           (first as { readonly text: string }).text,
           "Tool call failed before producing a structured result."
         );
+      })
+    );
+
+    it.effect(
+      "reports no session id when the dispatch carries no HTTP request",
+      Effect.fnUntraced(function* () {
+        const server = yield* McpServer.McpServer;
+        yield* server.callTool({ name: "caller_tool", arguments: {} });
+
+        // The session id comes from the `mcp-session-id` request header, so a
+        // dispatch with no HTTP request in scope — a direct `callTool`, or a
+        // stdio transport, where the connection itself is the session —
+        // reports `None` rather than inventing one. Consumers that key
+        // per-session state fall back to the client id there.
+        assert.isTrue(O.isNone(observedSessionId));
       })
     );
   });

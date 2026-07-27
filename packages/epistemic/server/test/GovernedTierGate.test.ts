@@ -14,22 +14,26 @@ import {
   verifyExecutionDecisionChain,
   verifyOutcomeBinding,
 } from "@beep/epistemic-domain/values/ExecutionRecord";
-import { denialGuidance } from "@beep/epistemic-domain/values/ExecutionVerdict";
-import { makeGovernedTierGate } from "@beep/epistemic-server/GovernedTierGate";
+import { DenialReason } from "@beep/epistemic-domain/values/ExecutionVerdict";
+import {
+  GovernedTierGateOptions,
+  makeGovernedTierGate,
+  refusalGuidance,
+} from "@beep/epistemic-server/GovernedTierGate";
 import { ExecutionLedger, ExecutionLedgerUnavailable } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { CurrentMcpCaller, dispatchWithTierGate, McpCallerIdentity, TierGate, TierGateSettlement } from "@beep/mcp-kit";
 import { NonNegativeInt } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Duration, Effect, Ref } from "effect";
+import { Deferred, Duration, Effect, Fiber, pipe, Ref } from "effect";
+import * as Str from "effect/String";
 import { Tool } from "effect/unstable/ai";
 import type { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
-import type { GovernedTierGateOptions } from "@beep/epistemic-server/GovernedTierGate";
 import type { TierGateShape } from "@beep/mcp-kit";
 
 const workspaceDestination = SinkDestination.make("workspace://ontology");
 
-const gateOptions: GovernedTierGateOptions = {
+const gateOptions = GovernedTierGateOptions.make({
   grantTtl: Duration.hours(12),
   operations: [GrantOperation.make("ontology_propose_change_batch")],
   purpose: GrantPurpose.make("ontology-workspace-mutation"),
@@ -39,12 +43,15 @@ const gateOptions: GovernedTierGateOptions = {
     destination: workspaceDestination,
     sinkClass: "mcp-write",
   }),
-};
+});
 
 const grantedTool = Tool.make("ontology_propose_change_batch");
 const ungrantedTool = Tool.make("ontology_unlisted_mutation");
 
-const callerOf = (clientId: number) => O.some(McpCallerIdentity.make({ clientId: NonNegativeInt.make(clientId) }));
+// Real dispatches carry a session id; clientId varies per HTTP request, so a
+// helper that pins the session while varying the client mirrors production.
+const callerOf = (sessionId: string, clientId = 1) =>
+  O.some(McpCallerIdentity.make({ clientId: NonNegativeInt.make(clientId), sessionId: O.some(sessionId) }));
 
 interface Harness {
   readonly decisions: Ref.Ref<ReadonlyArray<ExecutionDecisionRecord>>;
@@ -101,13 +108,14 @@ const makeHarness = Effect.fnUntraced(function* (options?: {
 
 const dispatchAs = <A2, E, R>(
   harness: Harness,
-  clientId: number,
+  session: string,
   tool: Tool.Any,
-  onApproved: Effect.Effect<A2, E, R>
+  onApproved: Effect.Effect<A2, E, R>,
+  clientId = 1
 ) =>
   dispatchWithTierGate({ tool, toolCallId: O.none() }, onApproved).pipe(
     Effect.provideService(TierGate, harness.gate),
-    Effect.provideService(CurrentMcpCaller, callerOf(clientId))
+    Effect.provideService(CurrentMcpCaller, callerOf(session, clientId))
   );
 
 describe("GovernedTierGate", () => {
@@ -122,7 +130,7 @@ describe("GovernedTierGate", () => {
     "writes the allowed decision ahead of the effect and settles it after",
     Effect.fnUntraced(function* () {
       const harness = yield* makeHarness();
-      const result = yield* dispatchAs(harness, 1, grantedTool, Ref.update(harness.events, A.append("effect")));
+      const result = yield* dispatchAs(harness, "s-1", grantedTool, Ref.update(harness.events, A.append("effect")));
 
       expect(result._tag).toBe("Dispatched");
       if (result._tag === "Dispatched") {
@@ -154,9 +162,9 @@ describe("GovernedTierGate", () => {
     "chains consecutive decisions of one session into one verified run",
     Effect.fnUntraced(function* () {
       const harness = yield* makeHarness();
-      yield* dispatchAs(harness, 1, grantedTool, Effect.void);
-      yield* dispatchAs(harness, 1, ungrantedTool, Effect.void);
-      yield* dispatchAs(harness, 1, grantedTool, Effect.void);
+      yield* dispatchAs(harness, "s-1", grantedTool, Effect.void);
+      yield* dispatchAs(harness, "s-1", ungrantedTool, Effect.void);
+      yield* dispatchAs(harness, "s-1", grantedTool, Effect.void);
 
       const decisions = yield* Ref.get(harness.decisions);
       expect(A.map(decisions, (record) => record.seq)).toEqual([0, 1, 2]);
@@ -176,12 +184,9 @@ describe("GovernedTierGate", () => {
     "refuses an ungranted operation as a value and records the denied decision",
     Effect.fnUntraced(function* () {
       const harness = yield* makeHarness();
-      const result = yield* dispatchAs(harness, 1, ungrantedTool, Ref.update(harness.events, A.append("effect")));
+      const result = yield* dispatchAs(harness, "s-1", ungrantedTool, Ref.update(harness.events, A.append("effect")));
 
       expect(result._tag).toBe("Refused");
-      if (result._tag === "Refused") {
-        expect(result.audit.reason).toBe(denialGuidance["operation-not-granted"]);
-      }
       // Exactly one ledger event — the denied decision. The wrapped effect
       // never ran and no outcome is written or expected.
       expect(yield* Ref.get(harness.events)).toEqual(["decision"]);
@@ -196,12 +201,9 @@ describe("GovernedTierGate", () => {
     "refuses fail-closed when the write-ahead decision cannot be written",
     Effect.fnUntraced(function* () {
       const harness = yield* makeHarness({ failDecisions: true });
-      const result = yield* dispatchAs(harness, 1, grantedTool, Ref.update(harness.events, A.append("effect")));
+      const result = yield* dispatchAs(harness, "s-1", grantedTool, Ref.update(harness.events, A.append("effect")));
 
       expect(result._tag).toBe("Refused");
-      if (result._tag === "Refused") {
-        expect(result.audit.reason).toBe(denialGuidance["ledger-unavailable"]);
-      }
       // No record, no action: the effect never ran and nothing was persisted.
       expect(yield* Ref.get(harness.events)).toEqual([]);
       expect(yield* Ref.get(harness.decisions)).toHaveLength(0);
@@ -220,9 +222,6 @@ describe("GovernedTierGate", () => {
       ).pipe(Effect.provideService(TierGate, harness.gate));
 
       expect(result._tag).toBe("Refused");
-      if (result._tag === "Refused") {
-        expect(result.audit.reason).toBe(denialGuidance["no-grant-in-scope"]);
-      }
       expect(yield* Ref.get(harness.events)).toEqual([]);
     })
   );
@@ -231,7 +230,7 @@ describe("GovernedTierGate", () => {
     "persists a failed settlement without altering the dispatch error channel",
     Effect.fnUntraced(function* () {
       const harness = yield* makeHarness();
-      const failure = yield* dispatchAs(harness, 1, grantedTool, Effect.fail("boom" as const)).pipe(Effect.flip);
+      const failure = yield* dispatchAs(harness, "s-1", grantedTool, Effect.fail("boom" as const)).pipe(Effect.flip);
 
       expect(failure).toBe("boom");
       const outcomes = yield* Ref.get(harness.outcomes);
@@ -249,8 +248,8 @@ describe("GovernedTierGate", () => {
     "freezes distinct runs for distinct clients",
     Effect.fnUntraced(function* () {
       const harness = yield* makeHarness();
-      yield* dispatchAs(harness, 1, grantedTool, Effect.void);
-      yield* dispatchAs(harness, 2, grantedTool, Effect.void);
+      yield* dispatchAs(harness, "s-1", grantedTool, Effect.void);
+      yield* dispatchAs(harness, "s-2", grantedTool, Effect.void);
 
       const decisions = yield* Ref.get(harness.decisions);
       expect(decisions).toHaveLength(2);
@@ -263,7 +262,7 @@ describe("GovernedTierGate", () => {
     "swallows a failed outcome write so the dispatch result stands",
     Effect.fnUntraced(function* () {
       const harness = yield* makeHarness({ failOutcomes: true });
-      const result = yield* dispatchAs(harness, 1, grantedTool, Effect.succeed("done"));
+      const result = yield* dispatchAs(harness, "s-1", grantedTool, Effect.succeed("done"));
 
       expect(result._tag).toBe("Dispatched");
       // The decision persisted, the outcome write failed and was dropped —
@@ -274,26 +273,90 @@ describe("GovernedTierGate", () => {
   );
 
   it.effect(
-    "dequeues overlapping settlements of one operation in decision order",
+    "binds each settlement to its own dispatch when same-tool dispatches overlap",
     Effect.fnUntraced(function* () {
       const harness = yield* makeHarness();
-      const request = { tool: grantedTool, toolCallId: O.none<string>() };
-      const asCaller = Effect.provideService(CurrentMcpCaller, callerOf(1));
+      const slow = yield* Deferred.make<void>();
+      const fast = yield* Deferred.make<void>();
 
-      // Two write-ahead decisions before either settlement: the overlap an
-      // interleaved client could produce.
-      yield* harness.gate.evaluate(request).pipe(asCaller);
-      yield* harness.gate.evaluate(request).pipe(asCaller);
-      yield* harness.gate.recordOutcome(request, "completed").pipe(asCaller);
-      yield* harness.gate.recordOutcome(request, "failed").pipe(asCaller);
+      // Two concurrent dispatches of ONE tool on ONE session, finishing in the
+      // reverse of their decision order. Correlation is by dispatch fiber, so
+      // each settlement must bind to its own decision rather than to whichever
+      // decision was written first.
+      const first = yield* Effect.forkChild(dispatchAs(harness, "s-1", grantedTool, Deferred.await(slow)));
+      yield* Effect.yieldNow;
+      const second = yield* Effect.forkChild(
+        dispatchAs(
+          harness,
+          "s-1",
+          grantedTool,
+          Deferred.await(fast).pipe(Effect.andThen(Effect.fail("second" as const)))
+        )
+      );
+      yield* Effect.yieldNow;
 
       const decisions = yield* Ref.get(harness.decisions);
+      expect(decisions).toHaveLength(2);
+
+      // The SECOND decision settles first, and fails.
+      yield* Deferred.succeed(fast, undefined);
+      yield* Fiber.await(second);
+      yield* Deferred.succeed(slow, undefined);
+      yield* Fiber.await(first);
+
       const outcomes = yield* Ref.get(harness.outcomes);
       expect(outcomes).toHaveLength(2);
-      expect(outcomes[0]!.decisionHash).toBe(decisions[0]!.hash);
-      expect(outcomes[0]!.settlement).toBe("completed");
-      expect(outcomes[1]!.decisionHash).toBe(decisions[1]!.hash);
-      expect(outcomes[1]!.settlement).toBe("failed");
+      const settlementOf = (hash: string) =>
+        pipe(
+          A.findFirst(outcomes, (record) => record.decisionHash === hash),
+          O.map((record) => record.settlement),
+          O.getOrElse(() => "missing")
+        );
+      expect(settlementOf(decisions[0]!.hash)).toBe("completed");
+      expect(settlementOf(decisions[1]!.hash)).toBe("failed");
+    })
+  );
+
+  it.effect(
+    "keys the run on the session, not on the per-request client id",
+    Effect.fnUntraced(function* () {
+      const harness = yield* makeHarness();
+      // One MCP session, three dispatches, three different client ids — which
+      // is what the HTTP protocol actually produces (a fresh clientId per
+      // request). All three must chain into ONE run.
+      yield* dispatchAs(harness, "s-1", grantedTool, Effect.void, 7);
+      yield* dispatchAs(harness, "s-1", grantedTool, Effect.void, 8);
+      yield* dispatchAs(harness, "s-1", grantedTool, Effect.void, 9);
+
+      const decisions = yield* Ref.get(harness.decisions);
+      expect(A.map(decisions, (record) => record.seq)).toEqual([0, 1, 2]);
+      expect(A.every(decisions, (record) => record.runKey === decisions[0]!.runKey)).toBe(true);
+      expect(verifyExecutionDecisionChain(decisions, decisions[0]!.runKey).result).toBe("chain-intact");
+    })
+  );
+
+  it.effect(
+    "never returns a differential refusal reason to the caller",
+    Effect.fnUntraced(function* () {
+      const harness = yield* makeHarness();
+      const ungranted = yield* dispatchAs(harness, "s-1", ungrantedTool, Effect.void);
+      const callerLess = yield* dispatchWithTierGate({ tool: grantedTool, toolCallId: O.none() }, Effect.void).pipe(
+        Effect.provideService(TierGate, harness.gate)
+      );
+      const outage = yield* makeHarness({ failDecisions: true }).pipe(
+        Effect.flatMap((failing) => dispatchAs(failing, "s-1", grantedTool, Effect.void))
+      );
+
+      // Three refusals with three different bounded reasons — an ordinary
+      // policy denial, no session in scope, and a ledger outage — are
+      // indistinguishable to the caller. Differential text would let an agent
+      // enumerate the grant set and detect an infrastructure outage.
+      const reasons = A.map([ungranted, callerLess, outage], (result) =>
+        result._tag === "Refused" ? result.audit.reason : "dispatched"
+      );
+      expect(reasons).toEqual([refusalGuidance, refusalGuidance, refusalGuidance]);
+      // And the constant carries none of the bounded vocabulary.
+      expect(A.some(DenialReason.Options, (reason) => Str.includes(reason)(refusalGuidance))).toBe(false);
     })
   );
 });

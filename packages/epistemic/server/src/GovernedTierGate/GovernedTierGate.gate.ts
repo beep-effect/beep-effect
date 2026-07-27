@@ -15,19 +15,27 @@
  *   decision row exists. A failed decision write refuses the dispatch —
  *   no record, no action — with the bounded `ledger-unavailable` reason.
  * - **Session-frozen authority.** A run is one MCP session, keyed by the
- *   transport-assigned `clientId` read from `CurrentMcpCaller`. The grant set
- *   is built from session-static inputs only (composition-root options plus
+ *   transport-assigned session identifier read from `CurrentMcpCaller` — not
+ *   by `clientId`, which the HTTP protocol mints per request and which would
+ *   therefore open a new run per dispatch. The grant set is built from
+ *   session-static inputs only (composition-root options plus
  *   `EpistemicConfig`) and frozen on the session's first dispatch; nothing an
  *   agent reads mid-session can widen it.
- * - **Refusal is a value.** Both gate methods are total. The bounded denial
- *   reason goes to the ledger and the server log; the audit record carries a
- *   constant guidance string per reason, never interpolated with request
- *   data, and the agent-facing refusal is reason-free.
+ * - **Refusal is a value, and it is reason-free.** Both gate methods are
+ *   total. Every refusal carries the same constant audit reason whatever the
+ *   bounded denial reason was: differential refusal text lets an agent
+ *   enumerate the grant set and distinguish a policy denial from an
+ *   infrastructure outage. The bounded reason goes to the ledger row and the
+ *   server log, neither of which the agent can read.
  *
- * Run eviction is expiry-based rather than lifecycle-hooked: `clientId`
- * arrives value-only through `CurrentMcpCaller`, so the gate has no seam onto
- * the client's scope. A run whose grants have all expired can only deny, so
- * sweeping it on the next run creation is behavior-preserving.
+ * Runs are never evicted, and that is deliberate. Evicting an expired run
+ * would let the next dispatch of that same session freeze fresh grants, so
+ * the grant TTL would bound nothing — retaining the expired run is what makes
+ * `grant-expired` permanent for the session that earned it. The store grows
+ * by one small entry per MCP session; a session exists only after an
+ * `initialize` that already cleared the origin allowlist and the per-launch
+ * bearer token. Releasing entries at end of session needs a client-lifecycle
+ * seam `mcp-kit` does not expose today.
  *
  * @packageDocumentation
  * @category services
@@ -35,7 +43,14 @@
  */
 
 import { EpistemicConfig } from "@beep/epistemic-config/server";
-import { ExecutionGrant, GrantBudget, GrantOperation } from "@beep/epistemic-domain/values/ExecutionGrant";
+import {
+  ExecutionGrant,
+  ExecutionSink,
+  GrantBudget,
+  GrantOperation,
+  GrantPurpose,
+  GrantResource,
+} from "@beep/epistemic-domain/values/ExecutionGrant";
 import {
   destinationDigestOf,
   digestForLedger,
@@ -44,19 +59,27 @@ import {
   sealExecutionDecision,
   sealExecutionOutcome,
 } from "@beep/epistemic-domain/values/ExecutionRecord";
-import { denialGuidance, ExecutionRequest, ExecutionVerdict } from "@beep/epistemic-domain/values/ExecutionVerdict";
+import {
+  DenialReason,
+  denialGuidance,
+  ExecutionRequest,
+  ExecutionVerdict,
+} from "@beep/epistemic-domain/values/ExecutionVerdict";
 import { DraftGrantSet, evaluateExecutionRequest, freezeGrantSet } from "@beep/epistemic-domain/values/GrantSet";
 import { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";
+import { $EpistemicServerId } from "@beep/identity/packages";
 import { CurrentMcpCaller, TierGate, TierGateAuditRecord, TierGateVerdict } from "@beep/mcp-kit";
 import { NonNegativeInt } from "@beep/schema";
 import { SystemPrincipal } from "@beep/shared-domain/entity/Principal";
 import { A, O } from "@beep/utils";
 import { Context, DateTime, Duration, Effect, HashMap, Ref, Semaphore } from "effect";
+import * as S from "effect/Schema";
 import * as AiTool from "effect/unstable/ai/Tool";
-import type { ExecutionSink, GrantPurpose, GrantResource } from "@beep/epistemic-domain/values/ExecutionGrant";
 import type { DecisionRecordHash, ExecutionDecisionRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
 import type { FrozenGrantSet } from "@beep/epistemic-domain/values/GrantSet";
 import type { TierGateSettlement, ToolCallRequest } from "@beep/mcp-kit";
+
+const $I = $EpistemicServerId.create("GovernedTierGate/GovernedTierGate.gate");
 
 /**
  * Session-static inputs the composition root supplies to the governed gate.
@@ -71,11 +94,11 @@ import type { TierGateSettlement, ToolCallRequest } from "@beep/mcp-kit";
  *
  * @example
  * ```ts
- * import type { GovernedTierGateOptions } from "@beep/epistemic-server/GovernedTierGate"
+ * import { GovernedTierGateOptions } from "@beep/epistemic-server/GovernedTierGate"
  * import { ExecutionSink, GrantOperation, GrantPurpose, GrantResource, SinkDestination } from "@beep/epistemic-domain/values/ExecutionGrant"
  * import { Duration } from "effect"
  *
- * const options: GovernedTierGateOptions = {
+ * const options = GovernedTierGateOptions.make({
  *   grantTtl: Duration.hours(12),
  *   operations: [GrantOperation.make("ontology_propose_change_batch")],
  *   purpose: GrantPurpose.make("ontology-workspace-mutation"),
@@ -85,7 +108,7 @@ import type { TierGateSettlement, ToolCallRequest } from "@beep/mcp-kit";
  *     destination: SinkDestination.make("workspace://ontology"),
  *     sinkClass: "mcp-write"
  *   })
- * }
+ * })
  * console.log(options.operations.length)
  * // 1
  * ```
@@ -93,17 +116,29 @@ import type { TierGateSettlement, ToolCallRequest } from "@beep/mcp-kit";
  * @category models
  * @since 0.0.0
  */
-export interface GovernedTierGateOptions {
-  /** Lifetime of a session's frozen grants, measured from the freeze. */
-  readonly grantTtl: Duration.Duration;
-  /** Tool operations granted against the sink; exact match, no wildcard. */
-  readonly operations: ReadonlyArray<GrantOperation>;
-  /** Purpose recorded on every session grant. */
-  readonly purpose: GrantPurpose;
-  /** Resource selector recorded on every session grant. */
-  readonly resource: GrantResource;
-  /** Governed sink every gated dispatch in this branch targets. */
-  readonly sink: ExecutionSink;
+export class GovernedTierGateOptions extends S.Class<GovernedTierGateOptions>($I`GovernedTierGateOptions`)(
+  {
+    grantTtl: S.Duration.annotateKey({
+      description: "Lifetime of a session's frozen grants, measured from the freeze.",
+    }),
+    operations: S.Array(GrantOperation).annotateKey({
+      description: "Tool operations granted against the sink; exact match, no wildcard.",
+    }),
+    purpose: GrantPurpose.annotateKey({
+      description: "Purpose recorded on every session grant.",
+    }),
+    resource: GrantResource.annotateKey({
+      description: "Resource selector recorded on every session grant.",
+    }),
+    sink: ExecutionSink.annotateKey({
+      description: "Governed sink every gated dispatch in this branch targets.",
+    }),
+  },
+  $I.annote("GovernedTierGateOptions", {
+    description: "Session-static inputs the composition root supplies to the governed tier gate.",
+  })
+) {
+  static readonly is = S.is(GovernedTierGateOptions);
 }
 
 interface RunState {
@@ -111,19 +146,39 @@ interface RunState {
   readonly frozen: FrozenGrantSet;
   readonly lastHash: O.Option<DecisionRecordHash>;
   readonly nextSeq: number;
-  readonly pendingOutcomes: HashMap.HashMap<string, ReadonlyArray<DecisionRecordHash>>;
+  readonly pendingOutcomes: HashMap.HashMap<number, DecisionRecordHash>;
   readonly runKey: ExecutionRunKey;
 }
 
 const approvedGuidance = "Approved by a grant in the session's frozen grant set.";
 
+/**
+ * The one guidance string every governed refusal carries, whatever the bounded
+ * denial reason was.
+ *
+ * A denial reaches the agent reason-free: differential refusal text is a
+ * grant-set enumeration oracle, and it also tells an agent whether it hit a
+ * policy denial or an infrastructure outage. The bounded reason goes to the
+ * ledger row and the server log, neither of which the agent can read. Exported
+ * so a test can assert that refusals are indistinguishable.
+ *
+ * @example
+ * ```ts
+ * import { refusalGuidance } from "@beep/epistemic-server/GovernedTierGate"
+ *
+ * console.log(refusalGuidance)
+ * // "This action is not authorized for this session."
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const refusalGuidance = "This action is not authorized for this session.";
+
 const grantPrincipal = SystemPrincipal.make({ component: "Runtime", kind: "System" });
 
 const destructiveOf = (tool: AiTool.Any): boolean =>
   Context.getOrElse(tool.annotations, AiTool.Destructive, () => true);
-
-const pendingFor = (state: RunState, operationDigest: string): ReadonlyArray<DecisionRecordHash> =>
-  O.getOrElse(HashMap.get(state.pendingOutcomes, operationDigest), A.empty<DecisionRecordHash>);
 
 /**
  * Build the governed tier gate service.
@@ -135,11 +190,11 @@ const pendingFor = (state: RunState, operationDigest: string): ReadonlyArray<Dec
  *
  * @example
  * ```ts
- * import { makeGovernedTierGate } from "@beep/epistemic-server/GovernedTierGate"
+ * import { GovernedTierGateOptions, makeGovernedTierGate } from "@beep/epistemic-server/GovernedTierGate"
  * import { ExecutionSink, GrantOperation, GrantPurpose, GrantResource, SinkDestination } from "@beep/epistemic-domain/values/ExecutionGrant"
  * import { Duration, Effect } from "effect"
  *
- * const gate = makeGovernedTierGate({
+ * const gate = makeGovernedTierGate(GovernedTierGateOptions.make({
  *   grantTtl: Duration.hours(12),
  *   operations: [GrantOperation.make("ontology_propose_change_batch")],
  *   purpose: GrantPurpose.make("ontology-workspace-mutation"),
@@ -149,7 +204,7 @@ const pendingFor = (state: RunState, operationDigest: string): ReadonlyArray<Dec
  *     destination: SinkDestination.make("workspace://ontology"),
  *     sinkClass: "mcp-write"
  *   })
- * })
+ * }))
  * console.log(Effect.isEffect(gate))
  * // true
  * ```
@@ -162,14 +217,14 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
 ) {
   const config = yield* EpistemicConfig;
   const ledger = yield* ExecutionLedger;
-  const runs = yield* Ref.make(HashMap.empty<number, RunState>());
+  const runs = yield* Ref.make(HashMap.empty<string, RunState>());
   // One lock serializes run creation and ledger appends so chain sequencing
   // stays dense per run. Global rather than per-run: the desktop surface has
   // one interactive caller, and a coarser critical section cannot deadlock —
   // the wrapped effect always runs outside it.
   const lock = yield* Semaphore.make(1);
 
-  const freezeRunFor = (clientId: number, now: DateTime.Utc): RunState => {
+  const freezeRunFor = (runId: string, now: DateTime.Utc): RunState => {
     const expiresAt = DateTime.add(now, { milliseconds: Duration.toMillis(options.grantTtl) });
     const grants = A.map(options.operations, (operation) =>
       ExecutionGrant.make({
@@ -184,12 +239,11 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
       })
     );
     const frozen = freezeGrantSet(DraftGrantSet.make({ grants, policyRevision: config.policyRevision }), now);
-    // Deterministic per (clientId, freeze instant): a session freezes at most
-    // one run, and a successor run for the same client can only exist after
-    // expiry sweeping, so the pair cannot recur. A collision would surface as
-    // a chain primary-key violation, which refuses fail-closed rather than
-    // corrupting the chain.
-    const runKey = ExecutionRunKey.make(digestForLedger(`epistemic-run/${clientId}/${DateTime.toEpochMillis(now)}`));
+    // Deterministic per (run id, freeze instant). The run id is the transport's
+    // session identifier, which never recurs, so the pair cannot repeat. A
+    // collision would surface as a chain primary-key violation, which refuses
+    // fail-closed rather than corrupting the chain.
+    const runKey = ExecutionRunKey.make(digestForLedger(`epistemic-run/${runId}/${DateTime.toEpochMillis(now)}`));
     return {
       expiresAtMillis: DateTime.toEpochMillis(expiresAt),
       frozen,
@@ -200,38 +254,35 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
     };
   };
 
-  const resolveRun = (clientId: number, now: DateTime.Utc): Effect.Effect<RunState> =>
+  // Runs are never evicted. Eviction plus re-freeze would hand an expired
+  // session brand-new authority on its next dispatch, turning the grant TTL
+  // into a delay rather than a bound; retaining the expired run is what makes
+  // `grant-expired` permanent for the session that earned it. Growth is one
+  // small entry per MCP session — sessions are minted only by an `initialize`
+  // that already passed the origin allowlist and the per-launch bearer token.
+  const resolveRun = (runId: string, now: DateTime.Utc): Effect.Effect<RunState> =>
     Ref.modify(runs, (map) =>
-      O.match(HashMap.get(map, clientId), {
+      O.match(HashMap.get(map, runId), {
         onNone: () => {
-          const created = freezeRunFor(clientId, now);
-          // A run past its grants' expiry can only deny, so sweeping it here
-          // is behavior-preserving; see the module doc for why eviction is
-          // expiry-based rather than lifecycle-hooked.
-          const nowMillis = DateTime.toEpochMillis(now);
-          const swept = HashMap.filter(map, (state) => state.expiresAtMillis > nowMillis);
-          return [created, HashMap.set(swept, clientId, created)] as const;
+          const created = freezeRunFor(runId, now);
+          return [created, HashMap.set(map, runId, created)] as const;
         },
         onSome: (state) => [state, map] as const,
       })
     );
 
-  const commitDecision = (clientId: number, record: ExecutionDecisionRecord): Effect.Effect<void> =>
+  const commitDecision = (runId: string, dispatchId: number, record: ExecutionDecisionRecord): Effect.Effect<void> =>
     Ref.update(runs, (map) =>
-      O.match(HashMap.get(map, clientId), {
+      O.match(HashMap.get(map, runId), {
         onNone: () => map,
         onSome: (state) =>
-          HashMap.set(map, clientId, {
+          HashMap.set(map, runId, {
             ...state,
             lastHash: O.some(record.hash),
             nextSeq: state.nextSeq + 1,
             pendingOutcomes:
               record.verdict === "allowed"
-                ? HashMap.set(
-                    state.pendingOutcomes,
-                    record.operationDigest,
-                    A.append(pendingFor(state, record.operationDigest), record.hash)
-                  )
+                ? HashMap.set(state.pendingOutcomes, dispatchId, record.hash)
                 : state.pendingOutcomes,
           }),
       })
@@ -252,8 +303,18 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
       toolCallId: request.toolCallId,
     });
 
-  const refused = (request: ToolCallRequest, reason: string, now: DateTime.Utc): TierGateVerdict =>
-    TierGateVerdict.make({ audit: auditFor(request, "refused", reason, now), verdict: "refused" });
+  // The bounded reason names the log line and nothing else: every refusal the
+  // agent sees carries the same constant guidance.
+  const refuse = (request: ToolCallRequest, reason: DenialReason, now: DateTime.Utc): Effect.Effect<TierGateVerdict> =>
+    Effect.logWarning("governed tier gate refused a dispatch").pipe(
+      Effect.annotateLogs({
+        guidance: denialGuidance[reason],
+        reason,
+        subsystem: "epistemic_governed_tier_gate",
+        tool: request.tool.name,
+      }),
+      Effect.as(TierGateVerdict.make({ audit: auditFor(request, "refused", refusalGuidance, now), verdict: "refused" }))
+    );
 
   const evaluate = Effect.fn("Epistemic.GovernedTierGate.evaluate")(function* (request: ToolCallRequest) {
     const caller = yield* CurrentMcpCaller;
@@ -261,19 +322,21 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
     if (O.isNone(caller)) {
       // No MCP session means no run, hence no chain to append to; the refusal
       // is still fail-closed and still audited.
-      yield* Effect.logWarning("governed tier gate refused a caller-less dispatch").pipe(
-        Effect.annotateLogs({
-          reason: "no-grant-in-scope",
-          subsystem: "epistemic_governed_tier_gate",
-          tool: request.tool.name,
-        })
-      );
-      return refused(request, denialGuidance["no-grant-in-scope"], now);
+      return yield* refuse(request, DenialReason.Enum["no-grant-in-scope"], now);
     }
-    const clientId = caller.value.clientId;
+    // The run is the MCP session. `clientId` cannot key it: the HTTP protocol
+    // mints a fresh one per request, so keying on it would open a new run per
+    // dispatch and reduce every chain to a single genesis row. `sessionId` is
+    // the transport's session identifier; transports that issue none (stdio)
+    // fall back to the client id, where the connection is the session.
+    const runId = O.match(caller.value.sessionId, {
+      onNone: () => `client:${caller.value.clientId}`,
+      onSome: (sessionId) => `session:${sessionId}`,
+    });
+    const dispatchId = yield* Effect.withFiber((fiber) => Effect.succeed(fiber.id));
     return yield* lock.withPermit(
       Effect.gen(function* () {
-        const state = yield* resolveRun(clientId, now);
+        const state = yield* resolveRun(runId, now);
         const executionRequest = ExecutionRequest.make({
           destination: options.sink.destination,
           operation: GrantOperation.make(request.tool.name),
@@ -310,7 +373,7 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
         // dispatch of the run into a chain-key refusal.
         const appended = yield* Effect.uninterruptible(
           ledger.appendDecision(record).pipe(
-            Effect.andThen(commitDecision(clientId, record)),
+            Effect.andThen(commitDecision(runId, dispatchId, record)),
             Effect.as(true),
             Effect.catchCause((cause) =>
               Effect.logError("governed tier gate could not write the write-ahead decision").pipe(
@@ -324,24 +387,28 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
           // No record, no action: an unwritable decision refuses the dispatch
           // regardless of what the evaluator concluded, and the run state does
           // not advance, so the next dispatch reuses this sequence slot.
-          return refused(request, denialGuidance["ledger-unavailable"], now);
+          return yield* refuse(request, DenialReason.Enum["ledger-unavailable"], now);
         }
-        return ExecutionVerdict.match(verdict, {
+        return yield* ExecutionVerdict.match(verdict, {
           allowed: () =>
-            TierGateVerdict.make({ audit: auditFor(request, "approved", approvedGuidance, now), verdict: "approved" }),
-          denied: ({ reason }) => refused(request, denialGuidance[reason], now),
+            Effect.succeed(
+              TierGateVerdict.make({
+                audit: auditFor(request, "approved", approvedGuidance, now),
+                verdict: "approved",
+              })
+            ),
+          denied: ({ reason }) => refuse(request, reason, now),
         });
       })
     );
   });
 
   const settlePending = Effect.fn("Epistemic.GovernedTierGate.settlePending")(function* (input: {
-    readonly clientId: number;
     readonly decisionHash: DecisionRecordHash;
+    readonly dispatchId: number;
     readonly now: DateTime.Utc;
-    readonly operationDigest: string;
     readonly request: ToolCallRequest;
-    readonly rest: ReadonlyArray<DecisionRecordHash>;
+    readonly runId: string;
     readonly runKey: ExecutionRunKey;
     readonly settlement: TierGateSettlement;
   }) {
@@ -350,15 +417,12 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
     // visibly unsettled in the derived unknown-outcome view rather than
     // queued forever.
     yield* Ref.update(runs, (map) =>
-      O.match(HashMap.get(map, input.clientId), {
+      O.match(HashMap.get(map, input.runId), {
         onNone: () => map,
         onSome: (state) =>
-          HashMap.set(map, input.clientId, {
+          HashMap.set(map, input.runId, {
             ...state,
-            pendingOutcomes:
-              input.rest.length === 0
-                ? HashMap.remove(state.pendingOutcomes, input.operationDigest)
-                : HashMap.set(state.pendingOutcomes, input.operationDigest, input.rest),
+            pendingOutcomes: HashMap.remove(state.pendingOutcomes, input.dispatchId),
           }),
       })
     );
@@ -393,7 +457,16 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
         Effect.annotateLogs({ subsystem: "epistemic_governed_tier_gate", tool: request.tool.name })
       );
     }
-    const clientId = caller.value.clientId;
+    const runId = O.match(caller.value.sessionId, {
+      onNone: () => `client:${caller.value.clientId}`,
+      onSome: (sessionId) => `session:${sessionId}`,
+    });
+    // `dispatchWithTierGate` calls `evaluate` and then, via `Effect.onExit`,
+    // `recordOutcome` on the same fiber, so the fiber identifies the dispatch
+    // exactly. A queue keyed by anything coarser (the operation, say) binds
+    // the wrong settlement to the wrong decision as soon as two dispatches of
+    // one operation overlap and finish out of order.
+    const dispatchId = yield* Effect.withFiber((fiber) => Effect.succeed(fiber.id));
     const droppedSettlement = (detail: string) =>
       Effect.logDebug(`governed tier gate dropped a settlement with no ${detail}`).pipe(
         Effect.annotateLogs({ subsystem: "epistemic_governed_tier_gate", tool: request.tool.name })
@@ -401,26 +474,14 @@ export const makeGovernedTierGate = Effect.fn("Epistemic.GovernedTierGate.make")
     yield* lock.withPermit(
       Effect.gen(function* () {
         const map = yield* Ref.get(runs);
-        yield* O.match(HashMap.get(map, clientId), {
+        yield* O.match(HashMap.get(map, runId), {
           onNone: () => droppedSettlement("run"),
-          onSome: (state) => {
-            const operationDigest = operationDigestOf(GrantOperation.make(request.tool.name));
-            const pending = pendingFor(state, operationDigest);
-            return O.match(A.head(pending), {
+          onSome: (state) =>
+            O.match(HashMap.get(state.pendingOutcomes, dispatchId), {
               onNone: () => droppedSettlement("pending decision"),
               onSome: (decisionHash) =>
-                settlePending({
-                  clientId,
-                  decisionHash,
-                  now,
-                  operationDigest,
-                  request,
-                  rest: A.drop(pending, 1),
-                  runKey: state.runKey,
-                  settlement,
-                }),
-            });
-          },
+                settlePending({ decisionHash, dispatchId, now, request, runId, runKey: state.runKey, settlement }),
+            }),
         });
       })
     );

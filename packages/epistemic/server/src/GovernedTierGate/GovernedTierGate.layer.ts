@@ -26,11 +26,11 @@ import type { GovernedTierGateOptions } from "./GovernedTierGate.gate.ts";
  *
  * @example
  * ```ts
- * import { GovernedTierGateLive } from "@beep/epistemic-server/GovernedTierGate"
+ * import { GovernedTierGateLive, GovernedTierGateOptions } from "@beep/epistemic-server/GovernedTierGate"
  * import { ExecutionSink, GrantOperation, GrantPurpose, GrantResource, SinkDestination } from "@beep/epistemic-domain/values/ExecutionGrant"
  * import { Duration, Layer } from "effect"
  *
- * const gate = GovernedTierGateLive({
+ * const gate = GovernedTierGateLive(GovernedTierGateOptions.make({
  *   grantTtl: Duration.hours(12),
  *   operations: [GrantOperation.make("ontology_propose_change_batch")],
  *   purpose: GrantPurpose.make("ontology-workspace-mutation"),
@@ -40,7 +40,7 @@ import type { GovernedTierGateOptions } from "./GovernedTierGate.gate.ts";
  *     destination: SinkDestination.make("workspace://ontology"),
  *     sinkClass: "mcp-write"
  *   })
- * })
+ * }))
  * console.log(Layer.isLayer(gate))
  * // true
  * ```

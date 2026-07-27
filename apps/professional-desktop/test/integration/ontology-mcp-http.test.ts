@@ -399,7 +399,7 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
     })
   );
 
-  it.effect("writes a write-ahead decision and a settlement for an approved mutation dispatch", () =>
+  it.effect("chains two approved mutations of one MCP session into one governed run", () =>
     Effect.gen(function* () {
       const probe = yield* makeLedgerProbe();
       yield* withHttpServer(
@@ -408,34 +408,53 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
           Effect.gen(function* () {
             const client = yield* makeMcpClient();
             const opened = yield* openThroughMcp(client, ontologyPath);
-            const request = yield* encodeProposeChangeBatchRequest(
+            const firstRequest = yield* encodeProposeChangeBatchRequest(
               ProposeChangeBatchRequest.make({
                 path: ontologyPath,
                 expectedFingerprint: opened.fingerprint,
                 operations: [addName("carol", "Carol")],
               })
             );
-            const call = yield* client["tools/call"]({
+            const firstCall = yield* client["tools/call"]({
               name: ProposeChangeBatchTool.name,
-              arguments: request,
+              arguments: firstRequest,
             });
-            expect(call.isError).toBe(false);
+            const first = yield* decodeProposeChangeBatchResponse(firstCall.structuredContent);
+            const secondRequest = yield* encodeProposeChangeBatchRequest(
+              ProposeChangeBatchRequest.make({
+                path: ontologyPath,
+                expectedFingerprint: first.currentFingerprint,
+                operations: [addName("dave", "Dave")],
+              })
+            );
+            const secondCall = yield* client["tools/call"]({
+              name: ProposeChangeBatchTool.name,
+              arguments: secondRequest,
+            });
+            expect(firstCall.isError).toBe(false);
+            expect(secondCall.isError).toBe(false);
           })
       );
-      // Exactly two rows for one allowed dispatch through the real MCP
-      // server: the write-ahead decision and its completed settlement. The
-      // read-only open/inspect call is ungated and writes nothing.
+      // Two rows per allowed dispatch — a write-ahead decision and its
+      // settlement — and both dispatches belong to ONE run. That last part is
+      // the session-keying proof: the HTTP protocol mints a fresh clientId per
+      // request, so a gate keyed on clientId would produce two runs, each a
+      // lone genesis row, and this chain assertion would fail. The read-only
+      // open/inspect call is ungated and writes nothing.
       const decisions = yield* Ref.get(probe.decisions);
       const outcomes = yield* Ref.get(probe.outcomes);
-      expect(decisions).toHaveLength(1);
-      const decision = decisions[0]!;
-      expect(decision.verdict).toBe("allowed");
-      expect(decision.sinkClass).toBe("mcp-write");
-      expect(decision.audience).toBe("local-workspace");
-      expect(verifyExecutionDecisionChain(decisions, decision.runKey).result).toBe("chain-intact");
-      expect(outcomes).toHaveLength(1);
-      expect(outcomes[0]!.settlement).toBe("completed");
-      expect(verifyOutcomeBinding(outcomes[0]!, decision)).toBe(true);
+      expect(decisions).toHaveLength(2);
+      const runKey = decisions[0]!.runKey;
+      expect(decisions[1]!.runKey).toBe(runKey);
+      expect(A.map(decisions, (record) => record.seq)).toEqual([0, 1]);
+      expect(A.map(decisions, (record) => record.verdict)).toEqual(["allowed", "allowed"]);
+      expect(decisions[0]!.sinkClass).toBe("mcp-write");
+      expect(decisions[0]!.audience).toBe("local-workspace");
+      expect(verifyExecutionDecisionChain(decisions, runKey).result).toBe("chain-intact");
+      expect(outcomes).toHaveLength(2);
+      expect(A.map(outcomes, (record) => record.settlement)).toEqual(["completed", "completed"]);
+      expect(verifyOutcomeBinding(outcomes[0]!, decisions[0]!)).toBe(true);
+      expect(verifyOutcomeBinding(outcomes[1]!, decisions[1]!)).toBe(true);
     })
   );
 

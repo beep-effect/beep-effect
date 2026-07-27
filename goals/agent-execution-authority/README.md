@@ -57,25 +57,44 @@ rather than teaching `epistemic/server` any ontology names.
 
 - **PR 5** (2026-07-27) — enforcement begins. `GovernedTierGateLive` in
   `epistemic/server` implements `TierGateShape`: `evaluate` freezes a
-  per-session grant set on the session's first dispatch (run keyed by
-  `clientId` via `CurrentMcpCaller`, a `Context.Reference` readable without
-  widening `R`), evaluates with the PR 1 evaluator, and appends the sealed
-  decision row *before* returning — a failed append refuses with
-  `ledger-unavailable` and the run state does not advance. `recordOutcome`
-  correlates settlements to decisions through a per-run FIFO keyed by
-  operation digest (the shape has no correlation id and `toolCallId` is always
-  none at the ontology call site). Swapped in at `OntologyMcpTransport.ts` in
-  place of `fromApprovedToolsPolicy`; `main.ts` provides `ExecutionLedgerDrizzle`
-  + `EpistemicConfigLive` + the memoized `PgliteDrizzleLive` into the MCP
-  branch. Proven at three levels: unit (write-ahead ordering, chain integrity,
-  FIFO settlement, fail-closed injection), pglite (real constraints, real
-  `DROP TABLE` refusal, the wrapped effect reading its own decision row
-  mid-dispatch), and end-to-end through the real MCP HTTP server (two rows per
-  allowed dispatch, one per refusal, injected decision-write failure leaving
-  the workspace byte-identical with zero rows). For `mcp-write` sinks the
-  boundary classifies audience by construction — the URL-parsing resolver
-  would misclassify the workspace destination. Eviction is expiry-based, a
-  recorded deviation (see `PLAN.md`).
+  per-session grant set on the session's first dispatch, evaluates with the
+  PR 1 evaluator, and appends the sealed decision row *before* returning — a
+  failed append refuses with `ledger-unavailable` and the run state does not
+  advance. Swapped in at `OntologyMcpTransport.ts` in place of
+  `fromApprovedToolsPolicy`; `main.ts` provides `ExecutionLedgerDrizzle` +
+  `EpistemicConfigLive` + the memoized `PgliteDrizzleLive` into the MCP branch.
+  For `mcp-write` sinks the boundary classifies audience by construction — the
+  URL-parsing resolver would misclassify the workspace destination.
+
+  **Three defects an adversarial review caught before this landed, each now a
+  test:**
+  - *`clientId` is not a session.* The HTTP protocol mints it per request
+    (`RpcServer` `clientId++` inside the per-request effect), so keying the run
+    on it — as decision 10 and the first implementation both said — opened a
+    new run per dispatch and reduced every chain to a lone genesis row.
+    `McpCallerIdentity` gained `sessionId` (the `mcp-session-id` header, read
+    in `sanitizedToolkit` before the context is replaced; `None` on stdio,
+    where the connection is the session) and the run keys on that. The app test
+    now runs two mutations on one MCP session and asserts one `runKey` with
+    `seq [0, 1]` — which fails under `clientId` keying.
+  - *Denial reasons reached the agent.* Per-reason guidance flowed from the
+    audit record through `OntologyTierGateRefusal.guidance` into the tool
+    result, so an agent could enumerate the grant set by probing and could tell
+    a policy denial from a ledger outage — exactly what decision 13 forbids.
+    Every refusal now carries one constant string; a test dispatches three
+    refusals with three different bounded reasons and asserts they are
+    byte-identical.
+  - *Settlements could bind to the wrong decision.* The FIFO keyed by operation
+    digest misattributed outcomes when two dispatches of one tool overlapped
+    and finished out of order. Correlation is now the dispatch fiber — the
+    same fiber runs `evaluate` and, via `Effect.onExit`, `recordOutcome` — and
+    a test forces the reversed-completion interleaving.
+
+  Also corrected: runs are never evicted. Sweeping an expired run let the next
+  dispatch of that same session freeze fresh grants, so the TTL bounded
+  nothing; retaining it is what makes `grant-expired` permanent. Growth is one
+  small entry per session, and a session exists only after an `initialize` that
+  cleared the origin allowlist and the bearer token.
 - **PR 4** (2026-07-27) — the two foundation additions. `TierGateShape` gains
   `recordOutcome`; `dispatchWithTierGate` reports settlements via
   `Effect.onExit` as the bounded `TierGateSettlement` literal (v4 note: the
