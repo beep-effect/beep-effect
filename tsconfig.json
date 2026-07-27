@@ -1709,7 +1709,9 @@
       "@beep/ui/themes/*": ["./packages/foundation/ui-system/ui/src/themes/*"],
       "@beep/epistemic-server/GovernedTierGate": [
         "./packages/epistemic/server/src/GovernedTierGate/index.ts"
-      ]
+      ],
+      "@beep/openclaw": ["./packages/drivers/openclaw/src/index.ts"],
+      "@beep/openclaw/*": ["./packages/drivers/openclaw/src/*"]
     }
   }
 }

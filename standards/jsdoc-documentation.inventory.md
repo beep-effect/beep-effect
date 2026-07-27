@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-27T15:55:14.218Z
+Generated: 2026-07-27T18:54:35.412Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 123 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 0 |
-| publicModules | 2204 |
-| publicExports | 17917 |
+| publicModules | 2207 |
+| publicExports | 17922 |
 | openModules | 0 |
 | openExports | 0 |
 | missingExportExamples | 0 |
@@ -130,10 +130,10 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 87 | `@beep/infra` | `infra` | clean | 5 | 34 | 0 | 0 |
 | 88 | `@beep/runpod` | `packages/drivers/runpod` | clean | 6 | 179 | 0 | 0 |
 | 89 | `@beep/fc-runs` | `packages/tooling/test-kit/fc-runs` | clean | 2 | 5 | 0 | 0 |
-| 90 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | clean | 63 | 677 | 0 | 0 |
+| 90 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | clean | 63 | 675 | 0 | 0 |
 | 91 | `@beep/documents-domain` | `packages/documents/domain` | clean | 24 | 96 | 0 | 0 |
 | 92 | `@beep/schema` | `packages/foundation/modeling/schema` | clean | 258 | 1659 | 0 | 0 |
-| 93 | `@beep/epistemic-server` | `packages/epistemic/server` | clean | 11 | 21 | 0 | 0 |
+| 93 | `@beep/epistemic-server` | `packages/epistemic/server` | clean | 14 | 28 | 0 | 0 |
 | 94 | `@beep/rdf` | `packages/foundation/modeling/rdf` | clean | 17 | 208 | 0 | 0 |
 | 95 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
 | 96 | `@beep/architecture-lab-config` | `packages/architecture-lab/config` | clean | 9 | 21 | 0 | 0 |

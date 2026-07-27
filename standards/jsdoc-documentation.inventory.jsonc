@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-07-27T15:55:14.218Z",
+  "generatedAt": "2026-07-27T18:54:35.412Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 123,
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 0,
-    "publicModules": 2204,
-    "publicExports": 17917,
+    "publicModules": 2207,
+    "publicExports": 17922,
     "openModules": 0,
     "openExports": 0,
     "missingExportExamples": 0,
@@ -8909,9 +8909,10 @@
           "exportKind": "class",
           "filePath": "src/McpCaller.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/McpCaller.ts",
-          "line": 27,
-          "anchor": "packages-foundation-capability-mcp-kit-src-mcpcaller-ts-27-mcpcalleridentity",
+          "line": 36,
+          "anchor": "packages-foundation-capability-mcp-kit-src-mcpcaller-ts-36-mcpcalleridentity",
           "currentTags": [
+            "@remarks",
             "@example",
             "@category",
             "@since"
@@ -8931,8 +8932,8 @@
           "exportKind": "const",
           "filePath": "src/McpCaller.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/McpCaller.ts",
-          "line": 44,
-          "anchor": "packages-foundation-capability-mcp-kit-src-mcpcaller-ts-44-currentmcpcaller",
+          "line": 61,
+          "anchor": "packages-foundation-capability-mcp-kit-src-mcpcaller-ts-61-currentmcpcaller",
           "currentTags": [
             "@example",
             "@category",
@@ -8953,8 +8954,8 @@
           "exportKind": "const",
           "filePath": "src/SanitizedSpan.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
-          "line": 54,
-          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-54-defaultsanitizedspankeys",
+          "line": 56,
+          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-56-defaultsanitizedspankeys",
           "currentTags": [
             "@example",
             "@category",
@@ -8975,8 +8976,8 @@
           "exportKind": "const",
           "filePath": "src/SanitizedSpan.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
-          "line": 78,
-          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-78-sanitizetracerattributes",
+          "line": 80,
+          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-80-sanitizetracerattributes",
           "currentTags": [
             "@example",
             "@category",
@@ -8997,8 +8998,8 @@
           "exportKind": "const",
           "filePath": "src/SanitizedSpan.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
-          "line": 166,
-          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-166-withsanitizedtoolspan",
+          "line": 168,
+          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-168-withsanitizedtoolspan",
           "currentTags": [
             "@example",
             "@category",
@@ -9019,8 +9020,8 @@
           "exportKind": "const",
           "filePath": "src/SanitizedSpan.ts",
           "repoPath": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
-          "line": 343,
-          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-343-sanitizedtoolkit",
+          "line": 361,
+          "anchor": "packages-foundation-capability-mcp-kit-src-sanitizedspan-ts-361-sanitizedtoolkit",
           "currentTags": [
             "@example",
             "@category",
@@ -42565,8 +42566,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PackageTestImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PackageTestImports.ts",
-          "line": 325,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-packagetestimports-ts-325-lintpackagetestimportscommand",
+          "line": 332,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-packagetestimports-ts-332-lintpackagetestimportscommand",
           "currentTags": [
             "@example",
             "@category",
@@ -47725,8 +47726,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.plan.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.plan.ts",
-          "line": 1129,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-plan-ts-1129-tsconfigsyncplan",
+          "line": 1168,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-plan-ts-1168-tsconfigsyncplan",
           "currentTags": [
             "@example",
             "@category",
@@ -48499,8 +48500,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 911,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-911-jsonobject",
+          "line": 907,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-907-jsonobject",
           "currentTags": [
             "@example",
             "@category",
@@ -48521,8 +48522,8 @@
           "exportKind": "type",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 930,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-930-jsonobject",
+          "line": 926,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-926-jsonobject",
           "currentTags": [
             "@example",
             "@category",
@@ -48543,8 +48544,8 @@
           "exportKind": "class",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 964,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-964-tsconfigwithreferences",
+          "line": 960,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-960-tsconfigwithreferences",
           "currentTags": [
             "@example",
             "@category",
@@ -48565,8 +48566,8 @@
           "exportKind": "class",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 987,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-987-tsconfigwithpaths",
+          "line": 983,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-983-tsconfigwithpaths",
           "currentTags": [
             "@example",
             "@category",
@@ -48587,8 +48588,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1018,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1018-byworkspacerelativedirascending",
+          "line": 1013,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1013-byworkspacerelativedirascending",
           "currentTags": [
             "@example",
             "@category",
@@ -48609,8 +48610,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1041,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1041-byplannedchangefileascending",
+          "line": 1036,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1036-byplannedchangefileascending",
           "currentTags": [
             "@example",
             "@category",
@@ -48631,8 +48632,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1064,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1064-byplannedchangesectionascending",
+          "line": 1059,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1059-byplannedchangesectionascending",
           "currentTags": [
             "@example",
             "@category",
@@ -48653,8 +48654,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1087,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1087-byplannedchangeascending",
+          "line": 1082,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1082-byplannedchangeascending",
           "currentTags": [
             "@example",
             "@category",
@@ -48675,8 +48676,8 @@
           "exportKind": "const",
           "filePath": "src/commands/TsconfigSync/TsconfigSync.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
-          "line": 1101,
-          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1101-tsconfigsyncschemainternals",
+          "line": 1096,
+          "anchor": "packages-tooling-tool-cli-src-commands-tsconfigsync-tsconfigsync-schemas-ts-1096-tsconfigsyncschemainternals",
           "currentTags": [
             "@example",
             "@category",
@@ -90734,8 +90735,8 @@
           "exportKind": "type",
           "filePath": "src/OpenclawCli.service.ts",
           "repoPath": "packages/drivers/openclaw/src/OpenclawCli.service.ts",
-          "line": 400,
-          "anchor": "packages-drivers-openclaw-src-openclawcli-service-ts-400-openclawclirunner",
+          "line": 399,
+          "anchor": "packages-drivers-openclaw-src-openclawcli-service-ts-399-openclawclirunner",
           "currentTags": [
             "@example",
             "@category",
@@ -90756,8 +90757,8 @@
           "exportKind": "class",
           "filePath": "src/OpenclawCli.service.ts",
           "repoPath": "packages/drivers/openclaw/src/OpenclawCli.service.ts",
-          "line": 726,
-          "anchor": "packages-drivers-openclaw-src-openclawcli-service-ts-726-openclawcli",
+          "line": 700,
+          "anchor": "packages-drivers-openclaw-src-openclawcli-service-ts-700-openclawcli",
           "currentTags": [
             "@remarks",
             "@example",
@@ -91594,8 +91595,8 @@
           "exportKind": "const",
           "filePath": "src/OpenclawProbe.service.ts",
           "repoPath": "packages/drivers/openclaw/src/OpenclawProbe.service.ts",
-          "line": 60,
-          "anchor": "packages-drivers-openclaw-src-openclawprobe-service-ts-60-probeopenclawliveness",
+          "line": 79,
+          "anchor": "packages-drivers-openclaw-src-openclawprobe-service-ts-79-probeopenclawliveness",
           "currentTags": [
             "@example",
             "@effects",
@@ -91617,8 +91618,8 @@
           "exportKind": "const",
           "filePath": "src/OpenclawProbe.service.ts",
           "repoPath": "packages/drivers/openclaw/src/OpenclawProbe.service.ts",
-          "line": 92,
-          "anchor": "packages-drivers-openclaw-src-openclawprobe-service-ts-92-probeopenclawreadiness",
+          "line": 99,
+          "anchor": "packages-drivers-openclaw-src-openclawprobe-service-ts-99-probeopenclawreadiness",
           "currentTags": [
             "@example",
             "@effects",
@@ -91772,8 +91773,8 @@
           "exportKind": "class",
           "filePath": "src/OpenclawSystemd.service.ts",
           "repoPath": "packages/drivers/openclaw/src/OpenclawSystemd.service.ts",
-          "line": 250,
-          "anchor": "packages-drivers-openclaw-src-openclawsystemd-service-ts-250-openclawsystemd",
+          "line": 223,
+          "anchor": "packages-drivers-openclaw-src-openclawsystemd-service-ts-223-openclawsystemd",
           "currentTags": [
             "@remarks",
             "@example",
@@ -145112,8 +145113,8 @@
           "exportKind": "const",
           "filePath": "src/Libpff.eml.ts",
           "repoPath": "packages/drivers/libpff/src/Libpff.eml.ts",
-          "line": 69,
-          "anchor": "packages-drivers-libpff-src-libpff-eml-ts-69-pffexport-eml-file-name",
+          "line": 71,
+          "anchor": "packages-drivers-libpff-src-libpff-eml-ts-71-pffexport-eml-file-name",
           "currentTags": [
             "@example",
             "@category",
@@ -145134,8 +145135,8 @@
           "exportKind": "const",
           "filePath": "src/Libpff.eml.ts",
           "repoPath": "packages/drivers/libpff/src/Libpff.eml.ts",
-          "line": 126,
-          "anchor": "packages-drivers-libpff-src-libpff-eml-ts-126-foldheaderline",
+          "line": 128,
+          "anchor": "packages-drivers-libpff-src-libpff-eml-ts-128-foldheaderline",
           "currentTags": [
             "@remarks",
             "@param",
@@ -145159,8 +145160,8 @@
           "exportKind": "const",
           "filePath": "src/Libpff.eml.ts",
           "repoPath": "packages/drivers/libpff/src/Libpff.eml.ts",
-          "line": 169,
-          "anchor": "packages-drivers-libpff-src-libpff-eml-ts-169-rfc5322datefromoutlooktimestamp",
+          "line": 171,
+          "anchor": "packages-drivers-libpff-src-libpff-eml-ts-171-rfc5322datefromoutlooktimestamp",
           "currentTags": [
             "@param",
             "@returns",
@@ -145183,8 +145184,8 @@
           "exportKind": "const",
           "filePath": "src/Libpff.eml.ts",
           "repoPath": "packages/drivers/libpff/src/Libpff.eml.ts",
-          "line": 214,
-          "anchor": "packages-drivers-libpff-src-libpff-eml-ts-214-stripmimestructuralheaders",
+          "line": 216,
+          "anchor": "packages-drivers-libpff-src-libpff-eml-ts-216-stripmimestructuralheaders",
           "currentTags": [
             "@example",
             "@category",
@@ -145205,8 +145206,8 @@
           "exportKind": "const",
           "filePath": "src/Libpff.eml.ts",
           "repoPath": "packages/drivers/libpff/src/Libpff.eml.ts",
-          "line": 261,
-          "anchor": "packages-drivers-libpff-src-libpff-eml-ts-261-parseoutlookheaders",
+          "line": 263,
+          "anchor": "packages-drivers-libpff-src-libpff-eml-ts-263-parseoutlookheaders",
           "currentTags": [
             "@example",
             "@category",
@@ -145227,8 +145228,8 @@
           "exportKind": "const",
           "filePath": "src/Libpff.eml.ts",
           "repoPath": "packages/drivers/libpff/src/Libpff.eml.ts",
-          "line": 307,
-          "anchor": "packages-drivers-libpff-src-libpff-eml-ts-307-synthesizeemlheaderblock",
+          "line": 309,
+          "anchor": "packages-drivers-libpff-src-libpff-eml-ts-309-synthesizeemlheaderblock",
           "currentTags": [
             "@example",
             "@category",
@@ -145249,9 +145250,10 @@
           "exportKind": "const",
           "filePath": "src/Libpff.eml.ts",
           "repoPath": "packages/drivers/libpff/src/Libpff.eml.ts",
-          "line": 388,
-          "anchor": "packages-drivers-libpff-src-libpff-eml-ts-388-assembleeml",
+          "line": 418,
+          "anchor": "packages-drivers-libpff-src-libpff-eml-ts-418-assembleeml",
           "currentTags": [
+            "@remarks",
             "@example",
             "@category",
             "@since"
@@ -314417,7 +314419,7 @@
         "srcDir": "src",
         "sourceFileCount": 63,
         "publicModuleCount": 63,
-        "publicExportCount": 677
+        "publicExportCount": 675
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -315608,7 +315610,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 13,
+          "exportCount": 10,
           "remediationStatus": "resolved"
         },
         {
@@ -315713,7 +315715,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 10,
+          "exportCount": 11,
           "remediationStatus": "resolved"
         },
         {
@@ -327817,32 +327819,10 @@
           "exportKind": "const",
           "filePath": "src/schemas/DocgenConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
-          "line": 75,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-75-default-docgen-exclude",
+          "line": 40,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-40-default-docgen-exclude",
           "currentTags": [
             "@remarks",
-            "@example",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "DocgenAliasSource",
-          "exportKind": "class",
-          "filePath": "src/schemas/DocgenConfig.ts",
-          "repoPath": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
-          "line": 94,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-94-docgenaliassource",
-          "currentTags": [
             "@example",
             "@category",
             "@since"
@@ -327862,8 +327842,8 @@
           "exportKind": "class",
           "filePath": "src/schemas/DocgenConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
-          "line": 135,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-135-canonicaldocgenconfiginput",
+          "line": 59,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-59-canonicaldocgenconfiginput",
           "currentTags": [
             "@example",
             "@category",
@@ -327884,8 +327864,8 @@
           "exportKind": "class",
           "filePath": "src/schemas/DocgenConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
-          "line": 204,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-204-canonicaldocgenexamplescompileroptions",
+          "line": 121,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-121-canonicaldocgenexamplescompileroptions",
           "currentTags": [
             "@remarks",
             "@example",
@@ -327907,8 +327887,8 @@
           "exportKind": "class",
           "filePath": "src/schemas/DocgenConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
-          "line": 288,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-288-canonicaldocgenconfig",
+          "line": 203,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-203-canonicaldocgenconfig",
           "currentTags": [
             "@example",
             "@category",
@@ -327929,8 +327909,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/DocgenConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
-          "line": 351,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-351-todocgenexamplescompileroptionsjson",
+          "line": 265,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-265-todocgenexamplescompileroptionsjson",
           "currentTags": [
             "@param",
             "@returns",
@@ -327953,8 +327933,8 @@
           "exportKind": "class",
           "filePath": "src/schemas/DocgenConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
-          "line": 403,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-403-canonicaldocgenconfigjsonshape",
+          "line": 313,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-313-canonicaldocgenconfigjsonshape",
           "currentTags": [
             "@example",
             "@category",
@@ -327975,8 +327955,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/DocgenConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
-          "line": 429,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-429-canonicaldocgenconfigjson",
+          "line": 339,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-339-canonicaldocgenconfigjson",
           "currentTags": [
             "@example",
             "@category",
@@ -327997,59 +327977,11 @@
           "exportKind": "const",
           "filePath": "src/schemas/DocgenConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
-          "line": 483,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-483-tocanonicaldocgenconfigjson",
+          "line": 392,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-392-tocanonicaldocgenconfigjson",
           "currentTags": [
             "@param",
             "@returns",
-            "@example",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "collectDocgenWorkspaceDependencyNames",
-          "exportKind": "const",
-          "filePath": "src/schemas/DocgenConfig.ts",
-          "repoPath": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
-          "line": 516,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-516-collectdocgenworkspacedependencynames",
-          "currentTags": [
-            "@param",
-            "@returns",
-            "@remarks",
-            "@example",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "buildDocgenAliasSource",
-          "exportKind": "const",
-          "filePath": "src/schemas/DocgenConfig.ts",
-          "repoPath": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
-          "line": 557,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-557-builddocgenaliassource",
-          "currentTags": [
-            "@remarks",
             "@example",
             "@category",
             "@since"
@@ -328069,8 +328001,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/DocgenConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
-          "line": 697,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-697-createcanonicaldocgenconfig",
+          "line": 433,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-433-createcanonicaldocgenconfig",
           "currentTags": [
             "@remarks",
             "@effects",
@@ -328093,8 +328025,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/DocgenConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
-          "line": 800,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-800-mergemanageddocgenconfig",
+          "line": 531,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-docgenconfig-ts-531-mergemanageddocgenconfig",
           "currentTags": [
             "@example",
             "@category",
@@ -330243,8 +330175,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/TsconfigAliasTargets.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TsconfigAliasTargets.ts",
-          "line": 40,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-40-rootaliastarget",
+          "line": 36,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-36-rootaliastarget",
           "currentTags": [
             "@example",
             "@category",
@@ -330265,8 +330197,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/TsconfigAliasTargets.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TsconfigAliasTargets.ts",
-          "line": 59,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-59-rootaliastarget",
+          "line": 55,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-55-rootaliastarget",
           "currentTags": [
             "@example",
             "@category",
@@ -330287,8 +330219,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/TsconfigAliasTargets.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TsconfigAliasTargets.ts",
-          "line": 73,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-73-wildcardaliastarget",
+          "line": 69,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-69-wildcardaliastarget",
           "currentTags": [
             "@example",
             "@category",
@@ -330309,8 +330241,8 @@
           "exportKind": "type",
           "filePath": "src/schemas/TsconfigAliasTargets.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TsconfigAliasTargets.ts",
-          "line": 92,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-92-wildcardaliastarget",
+          "line": 88,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-88-wildcardaliastarget",
           "currentTags": [
             "@example",
             "@category",
@@ -330331,8 +330263,8 @@
           "exportKind": "class",
           "filePath": "src/schemas/TsconfigAliasTargets.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TsconfigAliasTargets.ts",
-          "line": 109,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-109-canonicalaliastargets",
+          "line": 105,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-105-canonicalaliastargets",
           "currentTags": [
             "@example",
             "@category",
@@ -330353,8 +330285,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/TsconfigAliasTargets.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TsconfigAliasTargets.ts",
-          "line": 178,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-178-resolverootexporttarget",
+          "line": 174,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-174-resolverootexporttarget",
           "currentTags": [
             "@param",
             "@returns",
@@ -330378,8 +330310,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/TsconfigAliasTargets.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TsconfigAliasTargets.ts",
-          "line": 207,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-207-resolvesubpathexporttarget",
+          "line": 203,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-203-resolvesubpathexporttarget",
           "currentTags": [
             "@example",
             "@category",
@@ -330400,8 +330332,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/TsconfigAliasTargets.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TsconfigAliasTargets.ts",
-          "line": 233,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-233-resolvewildcardexporttarget",
+          "line": 229,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-229-resolvewildcardexporttarget",
           "currentTags": [
             "@param",
             "@returns",
@@ -330424,8 +330356,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/TsconfigAliasTargets.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TsconfigAliasTargets.ts",
-          "line": 253,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-253-buildcanonicalaliastargets",
+          "line": 249,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-249-buildcanonicalaliastargets",
           "currentTags": [
             "@remarks",
             "@example",
@@ -330443,13 +330375,38 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "buildDocgenAliasTargets",
+          "symbolName": "deriveWildcardAliasTargetFromExport",
           "exportKind": "const",
           "filePath": "src/schemas/TsconfigAliasTargets.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TsconfigAliasTargets.ts",
-          "line": 310,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-310-builddocgenaliastargets",
+          "line": 288,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-288-derivewildcardaliastargetfromexport",
           "currentTags": [
+            "@remarks",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "isFileStemWildcardExportTarget",
+          "exportKind": "const",
+          "filePath": "src/schemas/TsconfigAliasTargets.ts",
+          "repoPath": "packages/tooling/library/repo-utils/src/schemas/TsconfigAliasTargets.ts",
+          "line": 321,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfigaliastargets-ts-321-isfilestemwildcardexporttarget",
+          "currentTags": [
+            "@param",
+            "@returns",
             "@remarks",
             "@example",
             "@category",
@@ -375440,9 +375397,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 11,
-        "publicModuleCount": 11,
-        "publicExportCount": 21
+        "sourceFileCount": 14,
+        "publicModuleCount": 14,
+        "publicExportCount": 28
       },
       "docgenCoverage": {
         "hasDocgenConfig": false,
@@ -375661,6 +375618,71 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/GovernedTierGate/GovernedTierGate.gate.ts",
+          "repoPath": "packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.gate.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-server-src-governedtiergate-governedtiergate-gate-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 3,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/GovernedTierGate/GovernedTierGate.layer.ts",
+          "repoPath": "packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.layer.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-server-src-governedtiergate-governedtiergate-layer-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/GovernedTierGate/index.ts",
+          "repoPath": "packages/epistemic/server/src/GovernedTierGate/index.ts",
+          "line": 1,
+          "anchor": "packages-epistemic-server-src-governedtiergate-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/Layer.ts",
           "repoPath": "packages/epistemic/server/src/Layer.ts",
           "line": 1,
@@ -375700,7 +375722,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 5,
+          "exportCount": 6,
           "remediationStatus": "resolved"
         }
       ],
@@ -376015,6 +376037,134 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "GovernedTierGateOptions",
+          "exportKind": "class",
+          "filePath": "src/GovernedTierGate/GovernedTierGate.gate.ts",
+          "repoPath": "packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.gate.ts",
+          "line": 119,
+          "anchor": "packages-epistemic-server-src-governedtiergate-governedtiergate-gate-ts-119-governedtiergateoptions",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "refusalGuidance",
+          "exportKind": "const",
+          "filePath": "src/GovernedTierGate/GovernedTierGate.gate.ts",
+          "repoPath": "packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.gate.ts",
+          "line": 176,
+          "anchor": "packages-epistemic-server-src-governedtiergate-governedtiergate-gate-ts-176-refusalguidance",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeGovernedTierGate",
+          "exportKind": "const",
+          "filePath": "src/GovernedTierGate/GovernedTierGate.gate.ts",
+          "repoPath": "packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.gate.ts",
+          "line": 233,
+          "anchor": "packages-epistemic-server-src-governedtiergate-governedtiergate-gate-ts-233-makegovernedtiergate",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "GovernedTierGateLive",
+          "exportKind": "const",
+          "filePath": "src/GovernedTierGate/GovernedTierGate.layer.ts",
+          "repoPath": "packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.layer.ts",
+          "line": 51,
+          "anchor": "packages-epistemic-server-src-governedtiergate-governedtiergate-layer-ts-51-governedtiergatelive",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./GovernedTierGate.gate.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/GovernedTierGate/index.ts",
+          "repoPath": "packages/epistemic/server/src/GovernedTierGate/index.ts",
+          "line": 13,
+          "anchor": "packages-epistemic-server-src-governedtiergate-index-ts-13-export-from-governedtiergate-gate-ts",
+          "currentTags": [
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./GovernedTierGate.layer.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/GovernedTierGate/index.ts",
+          "repoPath": "packages/epistemic/server/src/GovernedTierGate/index.ts",
+          "line": 19,
+          "anchor": "packages-epistemic-server-src-governedtiergate-index-ts-19-export-from-governedtiergate-layer-ts",
+          "currentTags": [
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "EpistemicServerLive",
           "exportKind": "const",
           "filePath": "src/Layer.ts",
@@ -376122,12 +376272,33 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./Layer.ts\";",
+          "symbolName": "export * from \"./GovernedTierGate/index.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/epistemic/server/src/index.ts",
           "line": 51,
-          "anchor": "packages-epistemic-server-src-index-ts-51-export-from-layer-ts",
+          "anchor": "packages-epistemic-server-src-index-ts-51-export-from-governedtiergate-index-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./Layer.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/epistemic/server/src/index.ts",
+          "line": 58,
+          "anchor": "packages-epistemic-server-src-index-ts-58-export-from-layer-ts",
           "currentTags": [
             "@category",
             "@since"
