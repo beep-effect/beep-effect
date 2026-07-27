@@ -6,25 +6,35 @@
  * @since 0.0.0
  */
 
+import { EgressDenied } from "@beep/api-transport";
 import { CurrentMcpCaller, dispatchWithTierGate, TierGate, TierGateDispatchResult } from "@beep/mcp-kit";
 import { OntologyChangeActor } from "@beep/ontology-domain/aggregates/Session";
+import { OntologyFileStore, ReadOntologyFileRequest } from "@beep/ontology-use-cases/aggregates/Session";
 import {
   ExportProvenanceTool,
   OntologyActorIdentityRefusal,
   OntologyMutationToolkit,
+  OntologyPublishToolkit,
   OntologyReadOnlyToolkit,
   OntologyTierGateRefusal,
+  OntologyToolExecutionError,
   OntologyToolkit,
   OntologyToolService,
   OntologyToolServiceLive,
   ProposeChangeBatchTool,
+  PublishProvenanceResponse,
+  PublishProvenanceTool,
   RepairOntologyTool,
 } from "@beep/ontology-use-cases/tools";
 import { CanonicalizationServiceLive } from "@beep/rdf-canonize/adapters/canonicalization";
+import { NonNegativeInt } from "@beep/schema";
 import { Effect, Layer } from "effect";
 import * as O from "effect/Option";
+import { HttpClient, HttpClientRequest } from "effect/unstable/http";
 import { SessionServerLayer } from "../aggregates/Session/Session.layer.ts";
+import type { PublishProvenanceRequest } from "@beep/ontology-use-cases/tools";
 import type * as Tool from "effect/unstable/ai/Tool";
+import type * as HttpClientError from "effect/unstable/http/HttpClientError";
 
 /** Thin service-delegating handler layer for the ontology toolkit.
  * @example
@@ -79,7 +89,7 @@ const authenticatedMcpActor = Effect.fn("Ontology.Tools.authenticatedMcpActor")(
 });
 
 const gatedMutation = Effect.fn("Ontology.Tools.gatedMutation")(function* <A, E, R>(
-  tool: typeof ProposeChangeBatchTool | typeof RepairOntologyTool | typeof ExportProvenanceTool,
+  tool: Tool.Any,
   effect: Effect.Effect<A, E, R>
 ) {
   const dispatch = yield* dispatchWithTierGate({ tool, toolCallId: O.none() }, effect);
@@ -149,6 +159,72 @@ export const OntologyMcpMutationHandlersLive = OntologyMutationToolkit.toLayer(
   })
 );
 
+// Byte-identical to what `gatedMutation` produces from a refused dispatch, so
+// a destination denial and an operation denial are indistinguishable to the
+// agent that receives them. It has to be restated rather than imported: the
+// gate lives in another slice, and slices do not import each other. The
+// composition-root test is what holds the two in sync, because only the app
+// sees both sides.
+const egressRefusalGuidance = "This action is not authorized for this session. Resolve the mutation tier and retry.";
+
+// The governed egress boundary rejects with `EgressDenied`, which `HttpClient`
+// surfaces as a `TransportError` carrying it as the cause. Everything else is
+// an ordinary transport failure and stays distinguishable — only the denial is
+// flattened into the refusal envelope.
+const publicationFailure = (error: HttpClientError.HttpClientError) =>
+  error.reason._tag === "TransportError" && EgressDenied.is(error.reason.cause)
+    ? OntologyTierGateRefusal.make({ guidance: egressRefusalGuidance, recoverable: true })
+    : OntologyToolExecutionError.make({
+        operation: "publish-provenance",
+        message: "The provenance sidecar could not be published.",
+        recoverable: true,
+      });
+
+/** Governed provenance publication handlers, registered only when egress is allowlisted.
+ * @remarks Takes `HttpClient.HttpClient` as a layer requirement and never
+ * builds its own: a self-provided client would resolve its own `Fetch` and
+ * escape the governed egress boundary entirely.
+ * @example
+ * ```ts
+ * import { OntologyMcpPublishHandlersLive } from "@beep/ontology-server/tools"
+ * console.log(OntologyMcpPublishHandlersLive)
+ * ```
+ * @category handlers
+ * @since 0.0.0
+ */
+export const OntologyMcpPublishHandlersLive = OntologyPublishToolkit.toLayer(
+  Effect.gen(function* () {
+    const fileStore = yield* OntologyFileStore;
+    const client = yield* HttpClient.HttpClient;
+    const gate = yield* TierGate;
+    const publish = Effect.fn("Ontology.Tools.publishProvenance")(function* (request: PublishProvenanceRequest) {
+      const file = yield* fileStore.read(ReadOntologyFileRequest.make({ path: request.provPath })).pipe(
+        Effect.mapError(() =>
+          OntologyToolExecutionError.make({
+            operation: "publish-provenance",
+            message: "The provenance sidecar could not be read.",
+            recoverable: true,
+          })
+        )
+      );
+      const response = yield* client
+        .execute(
+          HttpClientRequest.post(request.destination).pipe(HttpClientRequest.bodyText(file.source, "text/turtle"))
+        )
+        .pipe(Effect.mapError(publicationFailure));
+      return PublishProvenanceResponse.make({
+        provPath: request.provPath,
+        publishedBytes: NonNegativeInt.make(file.source.length),
+        status: NonNegativeInt.make(response.status),
+      });
+    });
+    return OntologyPublishToolkit.of({
+      ontology_publish_provenance: (request) =>
+        gatedMutation(PublishProvenanceTool, publish(request)).pipe(Effect.provideService(TierGate, gate)),
+    });
+  })
+);
+
 const OntologyToolServiceServerLive = OntologyToolServiceLive.pipe(
   Layer.provideMerge(SessionServerLayer),
   Layer.provide(CanonicalizationServiceLive)
@@ -188,5 +264,20 @@ export const OntologyMcpReadOnlyToolsLive = OntologyMcpReadOnlyHandlersLive.pipe
  * @since 0.0.0
  */
 export const OntologyMcpMutationToolsLive = OntologyMcpMutationHandlersLive.pipe(
+  Layer.provideMerge(OntologyToolServiceServerLive)
+);
+
+/** Fully wired governed provenance publication handlers over the real engine stack.
+ * @remarks `HttpClient.HttpClient` stays an open requirement so the composition
+ * root supplies the client whose graph carries the governed egress `Fetch`.
+ * @example
+ * ```ts
+ * import { OntologyMcpPublishToolsLive } from "@beep/ontology-server/tools"
+ * console.log(OntologyMcpPublishToolsLive)
+ * ```
+ * @category layers
+ * @since 0.0.0
+ */
+export const OntologyMcpPublishToolsLive = OntologyMcpPublishHandlersLive.pipe(
   Layer.provideMerge(OntologyToolServiceServerLive)
 );

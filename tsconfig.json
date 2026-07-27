@@ -1709,6 +1709,9 @@
       "@beep/ui/themes/*": ["./packages/foundation/ui-system/ui/src/themes/*"],
       "@beep/epistemic-server/GovernedTierGate": [
         "./packages/epistemic/server/src/GovernedTierGate/index.ts"
+      ],
+      "@beep/epistemic-server/GovernedEgress": [
+        "./packages/epistemic/server/src/GovernedEgress/index.ts"
       ]
     }
   }

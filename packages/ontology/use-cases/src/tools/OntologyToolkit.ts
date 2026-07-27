@@ -592,6 +592,45 @@ export class ExportProvenanceResponse extends S.Class<ExportProvenanceResponse>(
   $I.annote("ExportProvenanceResponse", { description: "Written ontology provenance sidecar locations." })
 ) {}
 
+/** Provenance publication request.
+ * @remarks `destination` is supplied by the caller, which is what makes this
+ * tool an egress primitive rather than a workspace one. Nothing here validates
+ * it: the governed egress boundary owns that decision, so a destination the
+ * operator never allowlisted is refused no matter what an agent asks for.
+ * @example
+ * ```ts
+ * import { PublishProvenanceRequest } from "@beep/ontology-use-cases/tools"
+ * console.log(PublishProvenanceRequest)
+ * ```
+ * @category tool-schemas
+ * @since 0.0.0
+ */
+export class PublishProvenanceRequest extends S.Class<PublishProvenanceRequest>($I`PublishProvenanceRequest`)(
+  {
+    provPath: OntologyFilePath,
+    destination: S.NonEmptyString.annotateKey({
+      description: "Absolute URL to publish to; authorized by the governed egress allowlist, never by this schema.",
+    }),
+  },
+  $I.annote("PublishProvenanceRequest", {
+    description: "Publish an existing provenance sidecar to a governed egress destination.",
+  })
+) {}
+
+/** Provenance publication response.
+ * @example
+ * ```ts
+ * import { PublishProvenanceResponse } from "@beep/ontology-use-cases/tools"
+ * console.log(PublishProvenanceResponse)
+ * ```
+ * @category tool-schemas
+ * @since 0.0.0
+ */
+export class PublishProvenanceResponse extends S.Class<PublishProvenanceResponse>($I`PublishProvenanceResponse`)(
+  { provPath: OntologyFilePath, publishedBytes: NonNegativeInt, status: NonNegativeInt },
+  $I.annote("PublishProvenanceResponse", { description: "Result of a governed provenance publication." })
+) {}
+
 /** Capability metadata request.
  * @example
  * ```ts
@@ -781,6 +820,27 @@ export const ExportProvenanceTool = makeTool(
   ExportProvenanceResponse,
   true
 );
+/** Provenance publication tool declaration.
+ * @remarks Registered only when the governed egress allowlist is non-empty —
+ * the tool and its control ship together, and an empty allowlist means the tool
+ * does not appear in `tools/list` at all. Its outbound request must travel the
+ * ambient `HttpClient`, never a self-provided one, or the governed egress
+ * `Fetch` will not apply to it.
+ * @example
+ * ```ts
+ * import { PublishProvenanceTool } from "@beep/ontology-use-cases/tools"
+ * console.log(PublishProvenanceTool.name)
+ * ```
+ * @category tools
+ * @since 0.0.0
+ */
+export const PublishProvenanceTool = makeTool(
+  "ontology_publish_provenance",
+  "Publish an existing provenance sidecar to an authorized external destination.",
+  PublishProvenanceRequest,
+  PublishProvenanceResponse,
+  true
+);
 /** Capability metadata tool declaration.
  * @example
  * ```ts
@@ -847,6 +907,21 @@ export const OntologyReadOnlyToolkit = Toolkit.make(
  * @since 0.0.0
  */
 export const OntologyMutationToolkit = Toolkit.make(ProposeChangeBatchTool, RepairOntologyTool, ExportProvenanceTool);
+
+/** Egress toolkit registered only when the governed destination allowlist is non-empty.
+ * @remarks Separate from {@link OntologyMutationToolkit} because it is gated on
+ * a different condition: mutation registration turns on workspace writes, while
+ * this turns on outbound publication, and an operator may want the first
+ * without the second.
+ * @example
+ * ```ts
+ * import { OntologyPublishToolkit } from "@beep/ontology-use-cases/tools"
+ * console.log(Object.keys(OntologyPublishToolkit.tools).includes("ontology_publish_provenance"))
+ * ```
+ * @category tools
+ * @since 0.0.0
+ */
+export const OntologyPublishToolkit = Toolkit.make(PublishProvenanceTool);
 
 /** Type for {@link OntologyToolkit}.
  * @example
