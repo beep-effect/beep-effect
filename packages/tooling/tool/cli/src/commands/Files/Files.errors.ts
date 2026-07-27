@@ -8,7 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
-import { Effect } from "effect";
+import { Effect, Runtime } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
@@ -41,11 +41,18 @@ export class FilesCommandError extends TaggedErrorClass<FilesCommandError>($I`Fi
   {
     message: S.String,
     cause: S.optionalKey(S.Defect({ includeStack: true })),
+    exitCode: S.optionalKey(S.Literals([1, 2])).annotateKey({
+      description:
+        "Process exit-code hint per the file-processing SPEC: 2 for configuration/engine-discovery failures, 1 (default) otherwise.",
+    }),
   },
   $I.annote("FilesCommandError", {
     description: "A failure raised while preparing or applying a file curation operation.",
   })
 ) {
+  /** Process exit code reported when this error reaches the runtime boundary. */
+  override readonly [Runtime.errorExitCode] = this.exitCode ?? 1;
+
   /**
    * Construct a file command error from an original cause and message.
    *

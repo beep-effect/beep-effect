@@ -117,6 +117,7 @@ import {
 } from "./internal/Validation.ts";
 import type { Terminal } from "effect";
 import type * as Crypto from "effect/Crypto";
+import type * as HttpClient from "effect/unstable/http/HttpClient";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type {
   ArchivePoorCandidatesOptions,
@@ -151,7 +152,8 @@ type FilesCommandServiceRequirements =
   | Path.Path
   | Terminal.Terminal
   | ChildProcessSpawner.ChildProcessSpawner
-  | Crypto.Crypto;
+  | Crypto.Crypto
+  | HttpClient.HttpClient;
 
 interface DetectBordersCollectedEntries {
   readonly files: ReadonlyArray<SortableFile>;

@@ -31,6 +31,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
+import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 
@@ -42,6 +43,7 @@ const provideScopedLayer =
 const testLayer = Layer.mergeAll(
   NodeServices.layer,
   TestConsole.layer,
+  FetchHttpClient.layer,
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(NodeServices.layer))
 );
 const runFilesCommand = Command.runWith(filesCommand, { version: "0.0.0" });
@@ -132,6 +134,37 @@ const makeDatasetDir = Effect.fn("FilesTest.makeDatasetDir")(function* (tmpDir: 
 const writeSizedFile = Effect.fn("FilesTest.writeSizedFile")(function* (filePath: string, size: number, fill: string) {
   const fs = yield* FileSystem.FileSystem;
   yield* fs.writeFileString(filePath, pipe(fill, Str.repeat(size)));
+});
+
+// Hermetic stand-ins for the real engines (corpus-test pattern): the java stub
+// prints a tika-app JSON response, and the pffexport stub materializes a
+// one-message export tree the libpff driver assembles EML/JSONL from.
+const stubProcessJava = `#!/usr/bin/env bash
+printf '%s' '[{"Content-Type":"text/plain","X-TIKA:content":"\\n  stub text body\\n"}]'
+`;
+
+const stubProcessPffexport = `#!/usr/bin/env bash
+if [ "$1" = "-V" ]; then printf 'pffexport 20260608\\n'; exit 0; fi
+target=""
+prev=""
+for arg in "$@"; do
+  if [ "$prev" = "-t" ]; then target="$arg"; fi
+  prev="$arg"
+done
+source="\${@: -1}"
+[ -f "$source" ] || exit 2
+item="$target.export/Inbox/Message00001"
+mkdir -p "$item/Attachments"
+printf 'Subject:\\tproof message\\nSender name:\\tAda\\nSender email address:\\tada@example.com\\n' > "$item/OutlookHeaders.txt"
+printf 'proof body' > "$item/Message.txt"
+printf 'pdfbytes' > "$item/Attachments/report.pdf"
+exit 0
+`;
+
+const writeProcessStub = Effect.fn("FilesTest.writeProcessStub")(function* (script: string, stubPath: string) {
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.writeFileString(stubPath, script);
+  yield* fs.chmod(stubPath, 0o755);
 });
 
 const writeSvgFile = Effect.fn("FilesTest.writeSvgFile")(function* (
@@ -652,6 +685,8 @@ describe("files command", { concurrent: false }, () => {
             "--export-children",
             "--failure-policy",
             "continue",
+            "--tika-url",
+            "http://127.0.0.1:1",
           ]);
 
           const sourceRecords = yield* Effect.forEach(
@@ -685,6 +720,428 @@ describe("files command", { concurrent: false }, () => {
           expect(yield* fs.exists(path.join(outDir, "children", `${pstRecord.artifactId}`, "artifacts.jsonl"))).toBe(
             false
           );
+        })
+      )
+    ));
+
+  it("processes fixtures through the real stub engines and rebases child paths onto the output root", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const datasetDir = yield* makeDatasetDir(tmpDir);
+          const outDir = path.join(tmpDir, "proof");
+          const javaStubPath = path.join(tmpDir, "java-stub");
+          const pffexportStubPath = path.join(tmpDir, "pffexport-stub");
+          const inertJarPath = path.join(tmpDir, "inert-tika.jar");
+
+          yield* writeProcessStub(stubProcessJava, javaStubPath);
+          yield* writeProcessStub(stubProcessPffexport, pffexportStubPath);
+          yield* fs.writeFileString(inertJarPath, "inert");
+          yield* fs.writeFileString(path.join(datasetDir, "note.txt"), "hello proof");
+          yield* fs.writeFileString(path.join(datasetDir, "table.xls"), "not extracted");
+          yield* fs.writeFileString(path.join(datasetDir, "mailbox.pst"), "not a real pst");
+
+          yield* runFilesCommand([
+            "process",
+            "--input",
+            datasetDir,
+            "--out-dir",
+            outDir,
+            "--engine",
+            "auto",
+            "--export-children",
+            "--failure-policy",
+            "continue",
+            "--java",
+            javaStubPath,
+            "--tika-jar",
+            inertJarPath,
+            "--pffexport",
+            pffexportStubPath,
+          ]);
+
+          const runManifest = yield* decodeProcessRunManifest(yield* fs.readFileString(path.join(outDir, "run.json")));
+          const coverage = yield* decodeFileProcessingCoverageSummary(
+            yield* fs.readFileString(path.join(outDir, "coverage.json"))
+          );
+          const sourceRecords = yield* Effect.forEach(
+            pipe(
+              yield* fs.readFileString(path.join(outDir, "sources.jsonl")),
+              Str.split("\n"),
+              A.filter((line) => line.length > 0)
+            ),
+            decodeSourceProcessingRecordLine
+          );
+          const textRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "note.txt"));
+          const pstRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "mailbox.pst"));
+          const xlsRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "table.xls"));
+          const childRecords = yield* Effect.forEach(
+            pipe(
+              yield* fs.readFileString(path.join(outDir, "children", `${pstRecord.artifactId}`, "artifacts.jsonl")),
+              Str.split("\n"),
+              A.filter((line) => line.length > 0)
+            ),
+            decodeChildArtifactRecordLine
+          );
+
+          expect(runManifest.manifestVersion).toBe("beep.file-processing.run.v1");
+          expect(coverage.sourceCount).toBe(3);
+          expect(coverage.succeededCount).toBe(2);
+          expect(coverage.skippedCount).toBe(1);
+          expect(textRecord.status).toBe("succeeded");
+          if (textRecord.status !== "succeeded") {
+            throw new Error("Expected note.txt to succeed through the tika-app stub engine.");
+          }
+          expect(yield* fs.readFileString(path.join(outDir, textRecord.textPath ?? ""))).toBe("stub text body");
+          expect(pstRecord.status).toBe("succeeded");
+          expect(xlsRecord.status).toBe("skipped");
+          expect(childRecords.length).toBeGreaterThan(0);
+          expect(childRecords.every((record) => record.child.relativePath.startsWith("children/"))).toBe(true);
+          expect(childRecords.some((record) => record.child.relativePath.endsWith("/Message.eml"))).toBe(true);
+          expect(childRecords.some((record) => record.child.relativePath.endsWith(".messages.jsonl"))).toBe(true);
+          for (const record of childRecords) {
+            expect(yield* fs.exists(path.join(outDir, record.child.relativePath))).toBe(true);
+          }
+        })
+      )
+    ));
+
+  it("dedupes byte-identical sources to one representative per digest", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const datasetDir = yield* makeDatasetDir(tmpDir);
+          const outDir = path.join(tmpDir, "proof");
+
+          yield* fs.writeFileString(path.join(datasetDir, "a.pst"), "pst");
+          yield* fs.writeFileString(path.join(datasetDir, "b.pst"), "pst");
+          yield* fs.writeFileString(path.join(datasetDir, "copy.txt"), "hello proof");
+          yield* fs.writeFileString(path.join(datasetDir, "note.txt"), "hello proof");
+
+          yield* runFilesCommand([
+            "process",
+            "--input",
+            datasetDir,
+            "--out-dir",
+            outDir,
+            "--engine",
+            "test",
+            "--export-children",
+            "--failure-policy",
+            "continue",
+          ]);
+
+          const sourceRecords = yield* Effect.forEach(
+            pipe(
+              yield* fs.readFileString(path.join(outDir, "sources.jsonl")),
+              Str.split("\n"),
+              A.filter((line) => line.length > 0)
+            ),
+            decodeSourceProcessingRecordLine
+          );
+          const failureRecords = yield* Effect.forEach(
+            pipe(
+              yield* fs.readFileString(path.join(outDir, "failures.jsonl")),
+              Str.split("\n"),
+              A.filter((line) => line.length > 0)
+            ),
+            decodeFileProcessingFailureRecordLine
+          );
+          const representativePst = O.getOrThrow(
+            A.findFirst(sourceRecords, (record) => record.relativePath === "a.pst")
+          );
+          const duplicatePst = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "b.pst"));
+          const representativeText = O.getOrThrow(
+            A.findFirst(sourceRecords, (record) => record.relativePath === "copy.txt")
+          );
+          const duplicateText = O.getOrThrow(
+            A.findFirst(sourceRecords, (record) => record.relativePath === "note.txt")
+          );
+          const duplicateFailure = O.getOrThrow(
+            A.findFirst(failureRecords, (record) => record.relativePath === "b.pst")
+          );
+
+          expect(A.map(sourceRecords, (record) => record.relativePath)).toEqual([
+            "a.pst",
+            "b.pst",
+            "copy.txt",
+            "note.txt",
+          ]);
+          expect(representativePst.status).toBe("succeeded");
+          expect(duplicatePst.status).toBe("skipped");
+          if (duplicatePst.status !== "skipped") {
+            throw new Error("Expected the duplicate PST to be skipped.");
+          }
+          expect(duplicatePst.skipReason).toBe("operation-not-required");
+          expect(representativeText.status).toBe("succeeded");
+          expect(duplicateText.status).toBe("skipped");
+          expect(duplicateFailure.message).toContain('Duplicate content of "a.pst"');
+        })
+      )
+    ));
+
+  it("translates an unreachable Tika Server into skipped engine-unavailable records", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const datasetDir = yield* makeDatasetDir(tmpDir);
+          const outDir = path.join(tmpDir, "proof");
+
+          yield* fs.writeFileString(path.join(datasetDir, "note.txt"), "hello proof");
+
+          // Proxy env would reroute the loopback request and turn the
+          // deterministic connection refusal into a proxy response; clear it
+          // for the duration of the run.
+          const proxyKeys = ["HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"];
+          const previousProxies = A.map(proxyKeys, (key) => [key, Bun.env[key]] as const);
+          for (const key of proxyKeys) {
+            delete Bun.env[key];
+          }
+
+          yield* runFilesCommand([
+            "process",
+            "--input",
+            datasetDir,
+            "--out-dir",
+            outDir,
+            "--engine",
+            "tika",
+            "--failure-policy",
+            "continue",
+            "--tika-url",
+            "http://127.0.0.1:1",
+          ]).pipe(
+            Effect.ensuring(
+              Effect.sync(() => {
+                for (const [key, value] of previousProxies) {
+                  if (value === undefined) {
+                    delete Bun.env[key];
+                  } else {
+                    Bun.env[key] = value;
+                  }
+                }
+              })
+            )
+          );
+
+          const sourceRecords = yield* Effect.forEach(
+            pipe(
+              yield* fs.readFileString(path.join(outDir, "sources.jsonl")),
+              Str.split("\n"),
+              A.filter((line) => line.length > 0)
+            ),
+            decodeSourceProcessingRecordLine
+          );
+          const failureRecords = yield* Effect.forEach(
+            pipe(
+              yield* fs.readFileString(path.join(outDir, "failures.jsonl")),
+              Str.split("\n"),
+              A.filter((line) => line.length > 0)
+            ),
+            decodeFileProcessingFailureRecordLine
+          );
+          const textRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "note.txt"));
+          const textFailure = O.getOrThrow(A.findFirst(failureRecords, (record) => record.relativePath === "note.txt"));
+
+          expect(textRecord.status).toBe("skipped");
+          if (textRecord.status !== "skipped") {
+            throw new Error("Expected note.txt to be skipped against an unreachable Tika Server.");
+          }
+          expect(textRecord.skipReason).toBe("engine-unavailable");
+          expect(textFailure.reason).toBe("engine-unavailable");
+        })
+      )
+    ));
+
+  it("translates a missing pffexport binary into skipped engine-unavailable records", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const datasetDir = yield* makeDatasetDir(tmpDir);
+          const outDir = path.join(tmpDir, "proof");
+
+          yield* fs.writeFileString(path.join(datasetDir, "mailbox.pst"), "not a real pst");
+
+          yield* runFilesCommand([
+            "process",
+            "--input",
+            datasetDir,
+            "--out-dir",
+            outDir,
+            "--engine",
+            "libpff",
+            "--export-children",
+            "--failure-policy",
+            "continue",
+            "--pffexport",
+            "/nonexistent/pffexport-missing",
+          ]);
+
+          const sourceRecords = yield* Effect.forEach(
+            pipe(
+              yield* fs.readFileString(path.join(outDir, "sources.jsonl")),
+              Str.split("\n"),
+              A.filter((line) => line.length > 0)
+            ),
+            decodeSourceProcessingRecordLine
+          );
+          const pstRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "mailbox.pst"));
+
+          expect(pstRecord.status).toBe("skipped");
+          if (pstRecord.status !== "skipped") {
+            throw new Error("Expected mailbox.pst to be skipped for a missing pffexport binary.");
+          }
+          expect(pstRecord.skipReason).toBe("engine-unavailable");
+        })
+      )
+    ));
+
+  it("fails with a configuration exit-code hint when --tika-url is invalid", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const datasetDir = yield* makeDatasetDir(tmpDir);
+          const outDir = path.join(tmpDir, "proof");
+
+          yield* fs.writeFileString(path.join(datasetDir, "note.txt"), "hello proof");
+
+          const exit = yield* Effect.exit(
+            processFiles(
+              ProcessFilesOptions.make({
+                engine: "tika",
+                exportChildren: false,
+                failurePolicy: "continue",
+                input: datasetDir,
+                outDir,
+                overwrite: false,
+                tikaUrl: "not a url",
+              })
+            ).pipe(provideScopedLayer(FilesCommandServiceLive))
+          );
+
+          expect(Exit.isFailure(exit)).toBe(true);
+          if (Exit.isFailure(exit)) {
+            const error = Cause.squash(exit.cause);
+            expect(P.hasProperty(error, "exitCode") && error.exitCode === 2).toBe(true);
+            expect(P.hasProperty(error, "message") && P.isString(error.message) && error.message).toContain(
+              "Invalid --tika-url"
+            );
+          }
+          expect(yield* fs.exists(path.join(outDir, "run.json"))).toBe(false);
+        })
+      )
+    ));
+
+  it("ignores malformed BEEP_TIKA_* environment when only the pffexport engine runs", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const datasetDir = yield* makeDatasetDir(tmpDir);
+          const outDir = path.join(tmpDir, "proof");
+          const pffexportStubPath = path.join(tmpDir, "pffexport-stub");
+
+          yield* writeProcessStub(stubProcessPffexport, pffexportStubPath);
+          yield* fs.writeFileString(path.join(datasetDir, "mailbox.pst"), "not a real pst");
+
+          yield* withEnvVar(
+            "BEEP_TIKA_TIMEOUT_MILLIS",
+            "not-a-number",
+            runFilesCommand([
+              "process",
+              "--input",
+              datasetDir,
+              "--out-dir",
+              outDir,
+              "--engine",
+              "libpff",
+              "--export-children",
+              "--failure-policy",
+              "fail-on-error",
+              "--pffexport",
+              pffexportStubPath,
+            ])
+          );
+
+          const sourceRecords = yield* Effect.forEach(
+            pipe(
+              yield* fs.readFileString(path.join(outDir, "sources.jsonl")),
+              Str.split("\n"),
+              A.filter((line) => line.length > 0)
+            ),
+            decodeSourceProcessingRecordLine
+          );
+          const pstRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "mailbox.pst"));
+
+          expect(pstRecord.status).toBe("succeeded");
+        })
+      )
+    ));
+
+  it("pins the budget-exhausted PST outcome: succeeded without EML children plus engine warnings", () =>
+    Effect.runPromise(
+      withTempDirectory((tmpDir) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const datasetDir = yield* makeDatasetDir(tmpDir);
+          const outDir = path.join(tmpDir, "proof");
+          const pffexportStubPath = path.join(tmpDir, "pffexport-stub");
+
+          yield* writeProcessStub(stubProcessPffexport, pffexportStubPath);
+          yield* fs.writeFileString(path.join(datasetDir, "mailbox.pst"), "not a real pst");
+
+          yield* runFilesCommand([
+            "process",
+            "--input",
+            datasetDir,
+            "--out-dir",
+            outDir,
+            "--engine",
+            "libpff",
+            "--export-children",
+            "--failure-policy",
+            "continue",
+            "--max-materialized-bytes",
+            "1",
+            "--pffexport",
+            pffexportStubPath,
+          ]);
+
+          const sourceRecords = yield* Effect.forEach(
+            pipe(
+              yield* fs.readFileString(path.join(outDir, "sources.jsonl")),
+              Str.split("\n"),
+              A.filter((line) => line.length > 0)
+            ),
+            decodeSourceProcessingRecordLine
+          );
+          const pstRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "mailbox.pst"));
+          const childRecords = yield* Effect.forEach(
+            pipe(
+              yield* fs.readFileString(path.join(outDir, "children", `${pstRecord.artifactId}`, "artifacts.jsonl")),
+              Str.split("\n"),
+              A.filter((line) => line.length > 0)
+            ),
+            decodeChildArtifactRecordLine
+          );
+          const logLines = A.filter(yield* TestConsole.logLines, isString);
+
+          expect(pstRecord.status).toBe("succeeded");
+          expect(childRecords.some((record) => record.child.relativePath.endsWith("/Message.eml"))).toBe(false);
+          expect(childRecords.some((record) => record.child.relativePath.endsWith(".messages.jsonl"))).toBe(true);
+          expect(logLines.some((line) => line.includes("engine warning(s)"))).toBe(true);
         })
       )
     ));

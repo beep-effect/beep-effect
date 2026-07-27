@@ -194,7 +194,15 @@ Required Checks:
 
 ## P4: Repo CLI Proof
 
-Status: pending
+Status: complete (2026-07-27) — `beep files process` now composes the real
+driver engines (Tika App via `--tika-jar`/`--java`, Tika Server via
+`--tika-url` or `BEEP_TIKA_*` env, pffexport via `--pffexport`) with lazy
+memoized per-family construction hoisted ahead of dispatch, content-digest
+dedupe of duplicate inputs, output-root-rebased child references, SPEC 0/1/2
+exit codes through `Runtime.errorExitCode`, memory-light per-representative
+source materialization, and seven hermetic stub-engine test lanes. Design
+contract with two adversarial-review rounds:
+`research/p4-files-process-design.md`.
 
 Goal: Add `beep files process` under the existing repo CLI files command group
 and prove manifest-tree output.
@@ -215,10 +223,10 @@ Implementation Steps:
 
 Exit Criteria:
 
-- [ ] `beep files process` runs against generated fixtures.
-- [ ] CLI output validates through `@beep/file-processing` schemas.
-- [ ] CLI records successful, skipped, and failed records deterministically.
-- [ ] CLI tests prove failure translation and output tree shape.
+- [x] `beep files process` runs against generated fixtures.
+- [x] CLI output validates through `@beep/file-processing` schemas.
+- [x] CLI records successful, skipped, and failed records deterministically.
+- [x] CLI tests prove failure translation and output tree shape.
 
 Required Checks:
 
