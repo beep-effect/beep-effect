@@ -366,19 +366,64 @@ describe("tsconfig-sync", () => {
 
           const syncedDocgen = yield* readJsonFile(path.join(rootDir, "packages", "example-use-cases", "docgen.json"));
           expect(syncedDocgen).toMatchObject({
+            exclude: ["src/internal/**/*.ts"],
             examplesCompilerOptions: {
-              paths: {
-                "@beep/example-use-cases": ["../../packages/example-use-cases/src/index.ts"],
-                "@beep/example-use-cases/public": ["../../packages/example-use-cases/src/public.ts"],
-                "@beep/example-use-cases/server": ["../../packages/example-use-cases/src/server.ts"],
-                "@beep/example-use-cases/test": ["../../packages/example-use-cases/src/test.ts"],
-              },
+              moduleResolution: "bundler",
             },
           });
           expect(
-            (syncedDocgen as { readonly examplesCompilerOptions?: { readonly paths?: Record<string, unknown> } })
-              .examplesCompilerOptions?.paths
-          ).not.toHaveProperty("@beep/example-use-cases/*");
+            (syncedDocgen as { readonly examplesCompilerOptions?: Record<string, unknown> }).examplesCompilerOptions
+          ).not.toHaveProperty("paths");
+        })
+      )
+    ));
+
+  it("emits scoped aliases only for file-stem scoped wildcard exports", () =>
+    Effect.runPromise(
+      withTempRepo(
+        Effect.gen(function* () {
+          const path = yield* Path.Path;
+          const rootDir = process.cwd();
+
+          yield* bootstrapRootConfig(rootDir, {
+            workspaces: ["packages/example-slices"],
+            references: ["packages/example-slices"],
+            paths: {
+              "@beep/example-slices": ["./packages/example-slices/src/index.ts"],
+            },
+            testFileMatch: ["packages/example-slices/dtslint/**/*.tst.*"],
+            syncpackSources: ["package.json", "packages/example-slices/package.json"],
+          });
+          yield* bootstrapWorkspace(rootDir, {
+            relativeDir: "packages/example-slices",
+            packageName: "@beep/example-slices",
+            exports: {
+              ".": "./src/index.ts",
+              "./flat/*": "./src/flat/*.ts",
+              "./aggregates/*": "./src/aggregates/*/index.ts",
+              "./aggregates/*/server": "./src/aggregates/*/server.ts",
+              "./internal/*": null,
+              "./package.json": "./package.json",
+            },
+          });
+
+          yield* syncTsconfigAtRoot(rootDir, {
+            mode: "sync",
+            filter: undefined,
+            verbose: false,
+          });
+
+          const paths = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+          expect(paths.compilerOptions.paths).toMatchObject({
+            "@beep/example-slices/flat/*": ["./packages/example-slices/src/flat/*"],
+          });
+          // Directory-shaped scoped wildcards must not become aliases: an
+          // unconditional alias rewrite would shadow the mid-star
+          // `./aggregates/*/server` export that only package-exports
+          // resolution can serve.
+          expect(paths.compilerOptions.paths).not.toHaveProperty("@beep/example-slices/aggregates/*");
+          expect(paths.compilerOptions.paths).not.toHaveProperty("@beep/example-slices/aggregates/*/server");
+          expect(paths.compilerOptions.paths).not.toHaveProperty("@beep/example-slices/internal/*");
         })
       )
     ));
@@ -527,14 +572,17 @@ describe("tsconfig-sync", () => {
               types: [],
               jsx: "react-jsx",
               paths: {
-                "@beep/identity": ["../../../../packages/foundation/modeling/identity/src/index.ts"],
-                "@beep/identity/*": ["../../../../packages/foundation/modeling/identity/src/*.ts"],
-                "@beep/schema": ["../../../../packages/foundation/modeling/schema/src/index.ts"],
-                "@beep/schema/*": ["../../../../packages/foundation/modeling/schema/src/*.ts"],
                 "effect-claudecode": ["../../claudecode/index.ts"],
               },
             },
           });
+          expect(
+            (
+              syncedIdentityDocgen as {
+                readonly examplesCompilerOptions?: { readonly paths?: Record<string, unknown> };
+              }
+            ).examplesCompilerOptions?.paths
+          ).not.toHaveProperty("@beep/identity");
         })
       )
     ));
@@ -671,14 +719,12 @@ describe("tsconfig-sync", () => {
                 noErrorTruncation: true,
                 types: [],
                 jsx: "react-jsx",
-                paths: {
-                  "@beep/example-protocol": ["../../../packages/example/protocol/src/index.ts"],
-                  "@beep/example-protocol/*": ["../../../packages/example/protocol/src/*.ts"],
-                  "@beep/schema": ["../../../packages/foundation/modeling/schema/src/index.ts"],
-                  "@beep/schema/*": ["../../../packages/foundation/modeling/schema/src/*.ts"],
-                },
               },
             });
+            expect(
+              (syncedProtocolDocgen as { readonly examplesCompilerOptions?: Record<string, unknown> })
+                .examplesCompilerOptions
+            ).not.toHaveProperty("paths");
           })
         )
       ),
@@ -794,19 +840,12 @@ describe("tsconfig-sync", () => {
 
             const syncedText = yield* fs.readFileString(docgenPath);
             const syncedDocgen = decodeUnknownJson(syncedText) as {
-              readonly examplesCompilerOptions?: {
-                readonly paths?: Record<string, ReadonlyArray<string>>;
-              };
+              readonly examplesCompilerOptions?: Record<string, unknown>;
             };
 
             expect(syncedText).toContain('"exclude": ["src/internal/**/*.ts"],');
             expect(syncedText).toContain('"lib": ["ESNext", "DOM", "DOM.Iterable"],');
-            expect(syncedDocgen.examplesCompilerOptions?.paths?.["@beep/example-docgen"]).toEqual([
-              "../../../../packages/foundation/modeling/example-docgen/src/index.ts",
-            ]);
-            expect(syncedDocgen.examplesCompilerOptions?.paths?.["@beep/example-docgen/*"]).toEqual([
-              "../../../../packages/foundation/modeling/example-docgen/src/*.ts",
-            ]);
+            expect(syncedDocgen.examplesCompilerOptions).not.toHaveProperty("paths");
           })
         )
       ),

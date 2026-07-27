@@ -30,6 +30,8 @@ import "./IpcStdoutGuard.prelude.ts";
 
 import { ChatRpcs } from "@beep/agents-use-cases/public";
 import { DocumentsRpcs, VaultSyncRpcs } from "@beep/documents-use-cases/public";
+import { EpistemicConfigLive } from "@beep/epistemic-config/layer";
+import { ExecutionLedgerDrizzle } from "@beep/epistemic-server/ExecutionLedger";
 import { OntologyMcpConfigLive } from "@beep/ontology-config/layer";
 import { OntologyMcpMutationsEnabledConfig } from "@beep/ontology-config/server";
 import { OntologyRpcs } from "@beep/ontology-use-cases/public";
@@ -41,6 +43,7 @@ import { HttpMiddleware, HttpRouter, HttpServerResponse } from "effect/unstable/
 import { RpcSerialization, RpcServer } from "effect/unstable/rpc";
 import { VaultDirectoryPickerRpcs } from "@/intake/VaultDirectoryPicker.rpc";
 import { RuntimeLive } from "@/runtime/Layer";
+import { PgliteDrizzleLive } from "@/runtime/Pglite";
 import { ipcTransport, SidecarStdioLive } from "./IpcStdoutGuard.ts";
 import { makeOntologyMcpTransportLayer } from "./OntologyMcpTransport.ts";
 import { DesktopRpcSessionToken, RpcSessionAuthLayer } from "./RpcSessionAuth.ts";
@@ -100,6 +103,12 @@ const httpMain = (): Layer.Layer<never, DesktopStartupError> => {
     onSome: (token: Redacted.Redacted<string>) =>
       makeOntologyMcpTransportLayer({ token }).pipe(
         Layer.provide(OntologyMcpConfigLive),
+        Layer.provide(ExecutionLedgerDrizzle),
+        Layer.provide(EpistemicConfigLive),
+        // The same module-level const RuntimeLive provides: layer memoization
+        // builds one PGlite instance shared by the rpc handlers and the
+        // governed MCP gate's execution ledger.
+        Layer.provide(PgliteDrizzleLive),
         Layer.provide(HttpRouter.layer)
       ),
   });

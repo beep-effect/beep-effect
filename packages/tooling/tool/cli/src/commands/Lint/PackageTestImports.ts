@@ -85,8 +85,15 @@ const isRelativeModuleSpecifier = (specifier: string): boolean =>
 const isPackageTestFilePath = (relativePath: string): boolean =>
   packageTestFilePattern.test(relativePath) && !packageSourceOwnedTestPattern.test(relativePath);
 
-const toRootImportAlias = (source: PackageSourceRoot, sourceSubpath: string): string =>
-  sourceSubpath === Str.empty || sourceSubpath === "index" ? source.name : `${source.name}/${sourceSubpath}`;
+// Directory modules resolve as `@beep/pkg/Foo`, never `@beep/pkg/Foo/index` —
+// dir-uniform wildcard exports (`./src/*` + `/index.ts`) cannot serve the
+// `/index` spelling, so suggestions always strip the trailing segment.
+const toRootImportAlias = (source: PackageSourceRoot, sourceSubpath: string): string => {
+  const normalizedSubpath = Str.replace(/\/index$/u, Str.empty)(sourceSubpath);
+  return normalizedSubpath === Str.empty || normalizedSubpath === "index"
+    ? source.name
+    : `${source.name}/${normalizedSubpath}`;
+};
 
 const isInsideSourceRoot = (sourceRoot: string, targetPath: string): boolean =>
   targetPath === sourceRoot || Str.startsWith(`${sourceRoot}/`)(targetPath);

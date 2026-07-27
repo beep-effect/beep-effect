@@ -35,14 +35,11 @@ const canonical = CanonicalDocgenConfig.make({
     noErrorTruncation: true,
     types: [],
     jsx: "react-jsx",
-    paths: {
-      "@beep/example": ["./packages/example/src/index.ts"],
-    },
   }),
 });
 
 describe("mergeManagedDocgenConfig", () => {
-  it("preserves custom compiler settings and lets canonical paths win collisions", () => {
+  it("preserves custom compiler settings, prunes managed path mappings, and keeps custom aliases", () => {
     const merged = mergeManagedDocgenConfig(
       {
         examplesCompilerOptions: {
@@ -63,7 +60,6 @@ describe("mergeManagedDocgenConfig", () => {
       examplesCompilerOptions: {
         module: "preserve",
         paths: {
-          "@beep/example": ["./packages/example/src/index.ts"],
           "@custom/*": ["./custom/*"],
         },
         types: ["node"],
@@ -71,6 +67,25 @@ describe("mergeManagedDocgenConfig", () => {
       exclude: ["src/internal/**/*.ts"],
       srcLink: "https://example.test/custom-source/",
     });
+    expect(
+      (merged as { readonly examplesCompilerOptions?: { readonly paths?: Record<string, unknown> } })
+        .examplesCompilerOptions?.paths
+    ).not.toHaveProperty("@beep/example");
+  });
+
+  it("drops the paths key entirely when only managed aliases exist", () => {
+    const merged = mergeManagedDocgenConfig(
+      {
+        examplesCompilerOptions: {
+          paths: {
+            "@beep/example": ["./stale.ts"],
+          },
+        },
+      },
+      canonical
+    );
+
+    expect(merged.examplesCompilerOptions).not.toHaveProperty("paths");
   });
 
   it("uses managed defaults for a standard source directory", () => {
@@ -85,13 +100,11 @@ describe("mergeManagedDocgenConfig", () => {
     expect(merged).toMatchObject({
       examplesCompilerOptions: {
         module: "es2022",
-        paths: {
-          "@beep/example": ["./packages/example/src/index.ts"],
-        },
         types: [],
       },
       exclude: ["src/internal/**/*.ts"],
       srcLink: canonical.srcLink,
     });
+    expect(merged.examplesCompilerOptions).not.toHaveProperty("paths");
   });
 });

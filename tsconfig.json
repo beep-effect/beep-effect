@@ -1640,6 +1640,75 @@
       ],
       "@beep/epistemic-use-cases/ExecutionLedger": [
         "./packages/epistemic/use-cases/src/ExecutionLedger/index.ts"
+      ],
+      "@beep/chalk/internal/*": [
+        "./packages/foundation/capability/chalk/src/internal/*"
+      ],
+      "@beep/dock-react/internal/*": [
+        "./packages/foundation/ui-system/dock-react/src/internal/*"
+      ],
+      "@beep/dock/internal/*": [
+        "./packages/foundation/ui-system/dock/src/internal/*"
+      ],
+      "@beep/form/components/*": [
+        "./packages/foundation/ui-system/form/src/components/*"
+      ],
+      "@beep/form/core/*": ["./packages/foundation/ui-system/form/src/core/*"],
+      "@beep/form/fields/*": [
+        "./packages/foundation/ui-system/form/src/fields/*"
+      ],
+      "@beep/form/hooks/*": [
+        "./packages/foundation/ui-system/form/src/hooks/*"
+      ],
+      "@beep/nlp-processing/Backend/*": [
+        "./packages/foundation/capability/nlp-processing/src/Backend/*"
+      ],
+      "@beep/nlp-processing/Core/*": [
+        "./packages/foundation/capability/nlp-processing/src/Core/*"
+      ],
+      "@beep/nlp-processing/Graph/*": [
+        "./packages/foundation/capability/nlp-processing/src/Graph/*"
+      ],
+      "@beep/nlp-processing/Graph/GraphOperations/*": [
+        "./packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/*"
+      ],
+      "@beep/nlp-processing/Tools/*": [
+        "./packages/foundation/capability/nlp-processing/src/Tools/*"
+      ],
+      "@beep/nlp/Algebra/*": [
+        "./packages/foundation/modeling/nlp/src/Algebra/*"
+      ],
+      "@beep/nlp/Core/*": ["./packages/foundation/modeling/nlp/src/Core/*"],
+      "@beep/nlp/Graph/*": ["./packages/foundation/modeling/nlp/src/Graph/*"],
+      "@beep/nlp/Handoff/*": [
+        "./packages/foundation/modeling/nlp/src/Handoff/*"
+      ],
+      "@beep/nlp/Ontology/*": [
+        "./packages/foundation/modeling/nlp/src/Ontology/*"
+      ],
+      "@beep/nlp/Operations/*": [
+        "./packages/foundation/modeling/nlp/src/Operations/*"
+      ],
+      "@beep/repo-cli/commands/*": [
+        "./packages/tooling/tool/cli/src/commands/*"
+      ],
+      "@beep/repo-configs/internal/*": [
+        "./packages/tooling/policy-pack/repo-configs/src/internal/*"
+      ],
+      "@beep/schema/SchemaUtils/*": [
+        "./packages/foundation/modeling/schema/src/SchemaUtils/*"
+      ],
+      "@beep/ui/components/*": [
+        "./packages/foundation/ui-system/ui/src/components/*"
+      ],
+      "@beep/ui/components/ui/*": [
+        "./packages/foundation/ui-system/ui/src/components/ui/*"
+      ],
+      "@beep/ui/hooks/*": ["./packages/foundation/ui-system/ui/src/hooks/*"],
+      "@beep/ui/lib/*": ["./packages/foundation/ui-system/ui/src/lib/*"],
+      "@beep/ui/themes/*": ["./packages/foundation/ui-system/ui/src/themes/*"],
+      "@beep/epistemic-server/GovernedTierGate": [
+        "./packages/epistemic/server/src/GovernedTierGate/index.ts"
       ]
     }
   }

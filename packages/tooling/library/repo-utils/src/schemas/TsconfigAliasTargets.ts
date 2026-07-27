@@ -19,11 +19,7 @@ const $I = $RepoUtilsId.create("schemas/TsconfigAliasTargets");
 const EXPORT_CONDITION_PRIORITY = ["types", "import", "default", "require", "node", "bun", "browser"] as const;
 const rootAliasTargetPattern = /^\.\/(?!.*\*).+/u;
 const wildcardAliasTargetPattern = /^\.\/.*\*.*$/u;
-
-type BuildDocgenAliasTargetsOptions = {
-  readonly rootExportTarget: string;
-  readonly wildcardExportTarget?: string | undefined;
-};
+const wildcardFileStemPattern = /(?:^|\/)\*\.tsx?$/u;
 
 /**
  * Root alias target emitted into tsconfig/docgen path mappings.
@@ -268,57 +264,59 @@ export const buildCanonicalAliasTargets: {
   });
 });
 
-const deriveDocgenWildcardTarget = (rootExportTarget: string): string => {
-  const normalizedRootExportTarget = Str.replace(/^\.\//, "")(rootExportTarget);
-  const lastSlash = pipe(
-    normalizedRootExportTarget,
-    Str.lastIndexOf("/"),
-    O.getOrElse(() => -1)
-  );
-
-  if (lastSlash < 0) {
-    return Str.endsWith(".ts")(normalizedRootExportTarget) ? "*.ts" : "*";
-  }
-
-  const parentDir = pipe(normalizedRootExportTarget, Str.slice(0, lastSlash));
-  return Str.endsWith(".ts")(normalizedRootExportTarget) ? `${parentDir}/*.ts` : `${parentDir}/*`;
-};
-
 /**
- * Build source-root and source-wildcard alias targets for docgen example resolution.
- *
- * Unlike root tsconfig aliases, docgen aliases should mirror source exports directly
- * so example imports resolve to concrete `*.ts` files.
+ * Derive a tsconfig wildcard alias target from a package wildcard export target.
  *
  * @remarks
- * When the package manifest has no explicit wildcard export, the wildcard is
- * inferred from the root export's containing directory. This keeps docgen
- * examples compiling against source files without changing the published
- * package's actual export surface.
+ * Wildcard export targets whose `*` is a file stem (`./src/*.ts`,
+ * `./src/components/*.tsx`) map to extensionless alias targets so TypeScript
+ * extension substitution resolves them (`./<pkg>/src/*`). Every other shape —
+ * most importantly the dir-uniform `./src/*` + `/index.ts` — passes through
+ * verbatim, because an extensionless alias cannot resolve directory modules
+ * under nodenext resolution.
  * @example
  * ```ts
- * import { buildDocgenAliasTargets } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
- * const targets = buildDocgenAliasTargets("packages/example", {
- *   rootExportTarget: "./src/index.ts",
- *   wildcardExportTarget: "./src/*.ts"
- * })
- * console.log(targets.wildcardAliasTarget) // "./packages/example/src/*.ts"
+ * import { deriveWildcardAliasTargetFromExport } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
+ * const flat = deriveWildcardAliasTargetFromExport("packages/example", "./src/*.ts")
+ * const dir = deriveWildcardAliasTargetFromExport("packages/example", "./src/*" + "/index.ts")
+ * console.log(flat) // "./packages/example/src/*"
+ * console.log(dir.endsWith("index.ts")) // true
  * ```
  * @category models
  * @since 0.0.0
  */
-export const buildDocgenAliasTargets: {
-  (packagePath: string, options: BuildDocgenAliasTargetsOptions): CanonicalAliasTargets;
-  (options: BuildDocgenAliasTargetsOptions): (packagePath: string) => CanonicalAliasTargets;
-} = dual(2, (packagePath: string, options: BuildDocgenAliasTargetsOptions): CanonicalAliasTargets => {
-  const normalizedRootExportTarget = Str.replace(/^\.\//, "")(options.rootExportTarget);
-  const normalizedWildcardExportTarget = Str.replace(
-    /^\.\//,
-    ""
-  )(options.wildcardExportTarget ?? deriveDocgenWildcardTarget(options.rootExportTarget));
+export const deriveWildcardAliasTargetFromExport: {
+  (packagePath: string, wildcardExportTarget: string): WildcardAliasTarget;
+  (wildcardExportTarget: string): (packagePath: string) => WildcardAliasTarget;
+} = dual(2, (packagePath: string, wildcardExportTarget: string): WildcardAliasTarget => {
+  const normalizedWildcardExportTarget = Str.replace(/^\.\//, "")(wildcardExportTarget);
+  const aliasWildcardTarget = wildcardFileStemPattern.test(normalizedWildcardExportTarget)
+    ? Str.replace(/\.tsx?$/u, "")(normalizedWildcardExportTarget)
+    : normalizedWildcardExportTarget;
 
-  return CanonicalAliasTargets.make({
-    rootAliasTarget: `./${packagePath}/${normalizedRootExportTarget}`,
-    wildcardAliasTarget: `./${packagePath}/${normalizedWildcardExportTarget}`,
-  });
+  return `./${packagePath}/${aliasWildcardTarget}`;
 });
+
+/**
+ * Whether a wildcard export target uses its `*` as a file stem.
+ *
+ * @param exportTarget - Wildcard export target path from a package `exports` field.
+ * @returns `true` when the target's `*` names a `.ts`/`.tsx` file stem.
+ * @remarks
+ * File-stem targets (`./src/SchemaUtils/*.ts`, `./src/components/*.tsx`) are
+ * the shapes that need dedicated scoped aliases. Directory-shaped scoped
+ * targets (`./src/aggregates/*` + `/index.ts`) must NOT get aliases: an alias
+ * pattern rewrites unconditionally, so it would shadow sibling mid-star export
+ * keys such as `./aggregates/*` + `/server` that only the package export map
+ * can resolve.
+ * @example
+ * ```ts
+ * import { isFileStemWildcardExportTarget } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
+ * console.log(isFileStemWildcardExportTarget("./src/SchemaUtils/*.ts")) // true
+ * console.log(isFileStemWildcardExportTarget("./src/aggregates/*" + "/index.ts")) // false
+ * ```
+ * @category validation
+ * @since 0.0.0
+ */
+export const isFileStemWildcardExportTarget = (exportTarget: string): boolean =>
+  wildcardFileStemPattern.test(Str.replace(/^\.\//, "")(exportTarget));

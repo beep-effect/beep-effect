@@ -156,10 +156,19 @@
       "path": "../../packages/drivers/postgres/tsconfig.json"
     },
     {
+      "path": "../../packages/epistemic/config/tsconfig.json"
+    },
+    {
       "path": "../../packages/epistemic/domain/tsconfig.json"
     },
     {
+      "path": "../../packages/epistemic/server/tsconfig.json"
+    },
+    {
       "path": "../../packages/epistemic/tables/tsconfig.json"
+    },
+    {
+      "path": "../../packages/epistemic/use-cases/tsconfig.json"
     },
     {
       "path": "../../packages/foundation/capability/file-processing/tsconfig.json"

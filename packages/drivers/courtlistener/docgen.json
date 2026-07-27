@@ -27,14 +27,6 @@
     "stripInternal": false,
     "noErrorTruncation": true,
     "types": [],
-    "jsx": "react-jsx",
-    "paths": {
-      "@beep/courtlistener": [
-        "../../../packages/drivers/courtlistener/src/index.ts"
-      ],
-      "@beep/courtlistener/*": [
-        "../../../packages/drivers/courtlistener/src/*.ts"
-      ]
-    }
+    "jsx": "react-jsx"
   }
 }

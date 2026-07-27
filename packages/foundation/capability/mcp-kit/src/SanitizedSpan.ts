@@ -28,9 +28,11 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { CallToolResult, McpServerClient, Tool as WireTool } from "effect/unstable/ai/McpSchema";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import * as AiTool from "effect/unstable/ai/Tool";
+import { Headers, HttpServerRequest } from "effect/unstable/http";
 import { ApiKeyRequiredFailure } from "./ApiKeyRequired.ts";
 import { CurrentMcpCaller, McpCallerIdentity } from "./McpCaller.ts";
 import type * as Tracer from "effect/Tracer";
@@ -190,6 +192,11 @@ export const withSanitizedToolSpan: {
 
 type JsonObject = Readonly<Record<string, unknown>>;
 
+// The session header upstream mints at `initialize` and echoes on every later
+// request of the same MCP session (`McpServer.ts` `mcpSessionIdHeader`), which
+// upstream keeps private.
+const mcpSessionIdHeader = "mcp-session-id";
+
 const localDefsRefPrefix = "#/$defs/";
 const toolBoundaryFailureText = "Tool call failed before producing a structured result.";
 const isApiKeyRequiredFailure = S.is(ApiKeyRequiredFailure);
@@ -252,10 +259,21 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
       // name at runtime, so no narrower parameter type is available here.
       handle: Effect.fn("McpKit.handle")(function* (payload) {
         const client = yield* Effect.serviceOption(McpServerClient);
+        // Read the session header before `provideContext` below replaces the
+        // context with the layer-build services: `HttpServerRequest` is in
+        // the request fiber here and gone inside the handler. `clientId` is
+        // minted per request by the HTTP protocol, so this header is the only
+        // stable per-session key a dispatch can see.
+        const httpRequest = yield* Effect.serviceOption(HttpServerRequest.HttpServerRequest);
+        const sessionId = O.flatMap(httpRequest, (request) =>
+          O.filter(Headers.get(request.headers, mcpSessionIdHeader), Str.isNonEmpty)
+        );
         const requestServices = Context.add(
           services,
           CurrentMcpCaller,
-          O.map(client, (current) => McpCallerIdentity.make({ clientId: NonNegativeInt.make(current.clientId) }))
+          O.map(client, (current) =>
+            McpCallerIdentity.make({ clientId: NonNegativeInt.make(current.clientId), sessionId })
+          )
         );
         return yield* withSanitizedToolSpan(built.handle(tool.name, payload), `mcp.tool.call.${tool.name}`).pipe(
           Stream.unwrap,
