@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-26",
+  "generatedOn": "2026-07-27",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
@@ -478,6 +478,16 @@
       "status": "exception",
       "owner": "@beep/openai-compat",
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/drivers/openclaw/test/OpenclawCli.service.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 153,
+      "owner": "@beep/openclaw",
+      "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
     },
     {
       "file": "packages/drivers/phoenix/src/Phoenix.service.ts",
