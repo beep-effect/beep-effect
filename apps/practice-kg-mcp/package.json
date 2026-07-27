@@ -27,12 +27,16 @@
     "test": "bun run beep:test"
   },
   "bin": {
-    "practice-kg-build": "./src/build.ts"
+    "practice-kg-build": "./src/build.ts",
+    "practice-kg-mcp": "./src/bin.ts"
   },
   "dependencies": {
+    "@beep/duckdb": "workspace:^",
+    "@beep/identity": "workspace:^",
     "@beep/law-practice-server": "workspace:^",
     "@beep/pglite": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/utils": "workspace:^",
     "@effect/platform-bun": "catalog:",
     "effect": "catalog:"
   },

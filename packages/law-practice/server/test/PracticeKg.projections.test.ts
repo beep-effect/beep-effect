@@ -1,6 +1,15 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
-import { buildPracticeKgBundle, PracticeKgOptions, PracticeKgProjectionsLive } from "@beep/law-practice-server";
+import {
+  buildPracticeKgBundle,
+  PracticeKgBundle,
+  PracticeKgBundleContext,
+  PracticeKgBundleManifest,
+  PracticeKgOptions,
+  PracticeKgProjectionsLive,
+  PracticeKgToolkitLayer,
+} from "@beep/law-practice-server";
 import { DbSchema } from "@beep/law-practice-tables";
+import { PracticeKgCandidateClaimsResult, PracticeKgToolResult } from "@beep/law-practice-use-cases/server";
 import * as Pglite from "@beep/pglite";
 import { NonNegativeInt } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
@@ -14,6 +23,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
+import * as McpServer from "effect/unstable/ai/McpServer";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 
 class FixtureSourceRow extends S.Class<FixtureSourceRow>("FixtureSourceRow")({
@@ -43,11 +53,24 @@ class ColumnRow extends S.Class<ColumnRow>("ColumnRow")({
   columnName: S.String,
 }) {}
 
+class ToolTextContent extends S.Class<ToolTextContent>("PracticeKgToolTextContent")({
+  text: S.String,
+  type: S.Literal("text"),
+}) {}
+
+class ToolTextResult extends S.Class<ToolTextResult>("PracticeKgToolTextResult")({
+  content: S.NonEmptyArray(ToolTextContent),
+}) {}
+
 const encodeFixtureSource = S.encodeUnknownEffect(S.fromJsonString(FixtureSourceRow));
 const decodeDumpLines = S.decodeUnknownEffect(S.Array(DumpLine));
 const decodeCountRows = S.decodeUnknownEffect(S.NonEmptyArray(CountRow));
 const decodeIriRows = S.decodeUnknownEffect(S.Array(IriRow));
 const decodeColumnRows = S.decodeUnknownEffect(S.Array(ColumnRow));
+const decodeManifestJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgBundleManifest));
+const decodeToolTextResult = S.decodeUnknownEffect(ToolTextResult);
+const decodeToolResultJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgToolResult));
+const decodeCandidateClaimsJson = S.decodeUnknownEffect(S.fromJsonString(PracticeKgCandidateClaimsResult));
 const declaredColumnNames = (columns: Readonly<Record<string, { readonly name: string }>>): ReadonlyArray<string> =>
   A.sort(
     A.map(R.values(columns), (column) => column.name),
@@ -294,6 +317,16 @@ const runBuild = Effect.fn("runBuild")(function* (options: PracticeKgOptions, bu
   );
 });
 
+const callToolText = Effect.fn("PracticeKgTest.callToolText")(function* (
+  name: string,
+  args: Readonly<Record<string, unknown>>
+) {
+  const server = yield* McpServer.McpServer;
+  const result = yield* server.callTool({ name, arguments: args });
+  const decoded = yield* decodeToolTextResult(result);
+  return A.headNonEmpty(decoded.content).text;
+});
+
 describe("practice KG projections", () => {
   it("generates schema-valid fixture source rows", () => {
     fc.assert(
@@ -362,6 +395,64 @@ describe("practice KG projections", () => {
           "https://ns.beep.sh/practice-kg/document/sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
         ]);
       }).pipe(provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(firstOut, "kg.pglite") })));
+    }, provideTestLayer),
+    { timeout: 120_000 }
+  );
+
+  it.effect(
+    "serves all nine tools from the synthetic fixture bundle and degrades oversized results",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const corpusRoot = yield* makeFixtureCorpus();
+      const bundleOut = path.join(corpusRoot, "bundle-host");
+      yield* runBuild(graphOptions(corpusRoot, bundleOut), bundleOut);
+      const manifest = yield* fs
+        .readFileString(path.join(bundleOut, "bundle.manifest.json"))
+        .pipe(Effect.flatMap(decodeManifestJson));
+      const bundleContext = PracticeKgBundleContext.make({ bundleDir: bundleOut, corpusRoot, manifest });
+      const resources = Layer.mergeAll(
+        Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") }),
+        DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: path.join(bundleOut, "practice.duckdb") })),
+        Layer.succeed(PracticeKgBundle, PracticeKgBundle.of(bundleContext))
+      );
+      const host = Layer.mergeAll(McpServer.McpServer.layer, PracticeKgToolkitLayer).pipe(Layer.provide(resources));
+
+      yield* Effect.gen(function* () {
+        const liveCalls = [
+          ["kg_clients", {}],
+          ["kg_docket_family", { family: "20001" }],
+          ["kg_application_lookup", { patent_number: "12345678" }],
+          ["kg_find", { query: "20001" }],
+          ["corpus_search_text", { query: "alpha" }],
+          ["corpus_get_document", { digest: fixtureDigests.docket }],
+          ["email_search", { query: "fixture" }],
+          ["kg_provenance", {}],
+        ] as const;
+        const results = yield* Effect.forEach(liveCalls, ([name, args]) =>
+          callToolText(name, args).pipe(Effect.flatMap(decodeToolResultJson))
+        );
+        expect(A.length(results)).toBe(8);
+        A.forEach(results, (result) => {
+          expect(result.bundle_version).toBe(manifest.bundleVersion);
+          expect(result.epistemic_status).toBe("derived-from-official-records");
+        });
+        expect(O.getOrUndefined(A.get(results, 6))?.note).toContain("archive-level confidence");
+
+        const candidate = yield* callToolText("kg_candidate_claims", { family: "20001" }).pipe(
+          Effect.flatMap(decodeCandidateClaimsJson)
+        );
+        expect(candidate.available).toBe(false);
+        expect(candidate.bundle_version).toBe(manifest.bundleVersion);
+        expect(candidate.reason).toBe("claims batch not yet loaded");
+
+        const degraded = yield* callToolText("kg_docket_family", {
+          budgetBytes: 90,
+          family: "20001",
+        }).pipe(Effect.flatMap(decodeToolResultJson));
+        expect(degraded.tier).toBe("minimal");
+        expect(degraded.truncated).toBe(true);
+      }).pipe(provideScopedLayer(host));
     }, provideTestLayer),
     { timeout: 120_000 }
   );
