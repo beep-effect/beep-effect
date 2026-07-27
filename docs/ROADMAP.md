@@ -1,7 +1,10 @@
 # Roadmap
 
-Freshness: 2026-07-14. Reconciled after the goals portfolio consolidation
-(PR #401) and agent-effectiveness-pulse wave 1 (PR #400); priorities unchanged.
+Freshness: 2026-07-27. Amended for the first-user delivery decision: the
+[`practice-kg-mcp`](../goals/practice-kg-mcp/README.md) packet is Lane 1's
+live front for the week (details under Lane 1); prior reconciliation was
+2026-07-14 after the goals portfolio consolidation (PR #401) and
+agent-effectiveness-pulse wave 1 (PR #400).
 This file supersedes the *frame* of
 [`docs/mirror/2026-07-08-roadmap.md`](./mirror/2026-07-08-roadmap.md) (which
 remains a dated personal snapshot). Where the two disagree, this file wins.
@@ -50,17 +53,38 @@ program lanes. Priority stays owned by this file; lifecycle stays owned by
 
 ### Lane 1 — Product
 
+**Live front (this week):**
+[`practice-kg-mcp`](../goals/practice-kg-mcp/README.md) — the first-user
+delivery cut (decision 2026-07-27): a read-only, local-first stdio MCP server
+over a portable data bundle (deterministic docket-family spine + OA candidate
+claims + email edges + corpus full-text) into Tom's Claude Desktop, .mcpb
+packaged, phases P0–P5 each their own PR. It owns the knowledge-graph scope
+orphaned by the deleted `ip-law-knowledge-graph` packet and executes intake
+P4's *outcome* (KG rows with span provenance, per intake D6) as a P4-lite,
+deferring the librarian/critic/SHACL loop to intake P4-proper. The MCP surface
+is thesis, not shim: Claude Desktop is client #1; Word/Outlook/cron/background
+agents are the same consumer.
+
+**Resumes after handoff:**
 [`legal-document-intake`](../goals/legal-document-intake/README.md), portal
 phases P4–P6 in PLAN order, each phase its own PR under the yeet completion
 gate (P7 Close follows as packet closeout, outside the portal path):
 
-1. **P4 Extraction → KG loop** — the live front: grounded candidates through
+1. **P4 Extraction → KG loop** — grounded candidates through
    the ClaimGate; KG rows are schema-first Postgres/PGlite tables per intake
    decision D6 (graph DB deferred behind the port; benchmarks reopen it, not
-   preference).
+   preference). Tom's captured real questions (practice-kg-mcp P5 handoff)
+   become P4/P5 requirements.
 2. **P5 Retrieval + viewer** — NL query → span-highlighted document. Gate
    for the NEXT horizon.
 3. **P6 M365 write + dual DMS.**
+
+**Queued behind handoff (Phase 2, per practice-kg-mcp SPEC D-7):** a starter
+stack distribution packet (revives
+[`stack-installer`](../explorations/stack-installer/)) — generic .mcpb bundles
++ FOLIO MCP wiring + curated, license-cleared skills pack for the firms
+currently in conversation; per-firm KG onboarding is a separate later packet
+gated on first-user dogfood evidence.
 
 P3 Box sync shipped in PR #386; the live-Box/OAuth deferral is recorded in
 the intake packet as a tracked exception. The
