@@ -5134,12 +5134,28 @@
       "description": "Redacted technical error reasons emitted by the libpff driver."
     },
     {
+      "file": "packages/drivers/libpff/src/Libpff.messages.ts",
+      "symbol": "PffexportMessageRecord",
+      "kind": "schema-class",
+      "owner": "@beep/libpff",
+      "identity": "PffexportMessageRecord",
+      "description": "JSONL-safe pffexport item record preserving folder, message, body, EML, and attachment relationships."
+    },
+    {
       "file": "packages/drivers/libpff/src/Libpff.pffexport.ts",
       "symbol": "PffexportEngineConfig",
       "kind": "schema-class",
       "owner": "@beep/libpff",
       "identity": "PffexportEngineConfig",
-      "description": "Configuration for the real pffexport subprocess engine: target export root, binary path, mode, format, and optional per-archive timeout."
+      "description": "Configuration for the real pffexport subprocess engine: target export root, binary path, mode, format, existing-export policy, and optional per-archive timeout."
+    },
+    {
+      "file": "packages/drivers/libpff/src/Libpff.pffexport.ts",
+      "symbol": "PffexportExistingExportPolicy",
+      "kind": "literal-kit",
+      "owner": "@beep/libpff",
+      "identity": "PffexportExistingExportPolicy",
+      "description": "Output-directory policy when a prior export tree or messages JSONL already exists: fail with a typed config error or replace the stale outputs."
     },
     {
       "file": "packages/drivers/libpff/src/Libpff.pffexport.ts",
@@ -8298,6 +8314,14 @@
       "description": "The execution ledger could not serve the request."
     },
     {
+      "file": "packages/foundation/capability/api-transport/src/EgressDenied.ts",
+      "symbol": "EgressDenied",
+      "kind": "tagged-error",
+      "owner": "@beep/api-transport",
+      "identity": "EgressDenied",
+      "description": "A governed egress boundary refused the request's destination; deliberately reason-free."
+    },
+    {
       "file": "packages/foundation/capability/api-transport/src/Transport.ts",
       "symbol": "RateLimitSnapshot",
       "kind": "schema-class",
@@ -8968,6 +8992,14 @@
       "owner": "@beep/mcp-kit",
       "identity": "TierGatePolicy",
       "description": "Policy consulted by fromApprovedToolsPolicy: tool names explicitly approved to dispatch."
+    },
+    {
+      "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+      "symbol": "TierGateSettlement",
+      "kind": "literal-kit",
+      "owner": "@beep/mcp-kit",
+      "identity": "TierGateSettlement",
+      "description": "Bounded settlement of an approved dispatch: completed, failed, or interrupted."
     },
     {
       "file": "packages/foundation/capability/mcp-kit/src/ToolAnnotations.ts",
@@ -26377,6 +26409,168 @@
       "owner": "@beep/repo-cli",
       "identity": "DetectFacesSummary",
       "description": "Summary counts returned by files detect-faces."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "ImageAuditCluster",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageAuditCluster",
+      "description": "A deterministic candidate cluster that requires visual confirmation."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "ImageAuditEntry",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageAuditEntry",
+      "description": "Hashes, geometry, metadata presence, face scale, and advisory quality data for one source image."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "ImageAuditFaceMetrics",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageAuditFaceMetrics",
+      "description": "Detected face count and primary-face scale measurements used only for review."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "ImageAuditManifest",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageAuditManifest",
+      "description": "Deterministic image audit evidence; all scores and clusters are advisory."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "ImageAuditMetadataPresence",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageAuditMetadataPresence",
+      "description": "Privacy-preserving metadata presence and orientation facts for a source image."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "ImageAuditOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageAuditOptions",
+      "description": "Validated inputs for a read-only image identity and quality audit."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "ImageAuditQualityMetrics",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageAuditQualityMetrics",
+      "description": "Advisory luminance, clipping, color, entropy, and edge-energy measurements."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "ImageAuditSimilarityPair",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageAuditSimilarityPair",
+      "description": "A candidate near-duplicate pair and its advisory perceptual and color distances."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "ImageAuditSkippedEntry",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageAuditSkippedEntry",
+      "description": "A non-image, unsafe, or unreadable direct source entry skipped by the audit."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "ImageAuditSummary",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageAuditSummary",
+      "description": "Machine-readable counts for a completed image audit."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageAudit.schemas.ts",
+      "symbol": "decodeImageAuditManifestJson",
+      "kind": "codec",
+      "owner": "@beep/repo-cli"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "symbol": "ImageCurationCrop",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageCurationCrop",
+      "description": "A reviewed natural crop expressed in pixels after EXIF orientation is applied."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "symbol": "ImageCurationDecision",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageCurationDecision",
+      "description": "A human-reviewable source decision pinned to exact source bytes."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "symbol": "ImageCurationDecisionDocument",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageCurationDecisionDocument",
+      "description": "A complete one-decision-per-source ledger for deterministic image curation."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "symbol": "ImageCurationDisposition",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageCurationDisposition",
+      "description": "Closed set of canonical, holdout, reserve, and archive destinations."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "symbol": "ImageCurationManifest",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageCurationManifest",
+      "description": "Complete provenance map for canonical PNG derivatives and all archived or reserved derivatives."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "symbol": "ImageCurationManifestEntry",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageCurationManifestEntry",
+      "description": "Verified mapping from immutable source bytes to a metadata-free orientation-corrected PNG."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "symbol": "ImageCurationOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageCurationOptions",
+      "description": "Validated source, ledger, output, dry-run, and overwrite inputs for image curation."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "symbol": "ImageCurationSummary",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageCurationSummary",
+      "description": "Counts by final disposition for a ledger validation or materialization run."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "symbol": "decodeImageCurationDecisionDocumentJson",
+      "kind": "codec",
+      "owner": "@beep/repo-cli"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ImageCuration.schemas.ts",
+      "symbol": "decodeImageCurationManifestJson",
+      "kind": "codec",
+      "owner": "@beep/repo-cli"
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Files/internal/Media.schemas.ts",
