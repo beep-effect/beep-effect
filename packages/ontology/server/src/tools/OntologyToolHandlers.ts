@@ -180,6 +180,46 @@ const publicationFailure = (error: HttpClientError.HttpClientError) =>
         recoverable: true,
       });
 
+/** Publish a provenance sidecar to a caller-named destination through the ambient client.
+ * @remarks Exported as a standalone effect, not buried in the handler closure,
+ * so the error translation below can be proven directly: which failures become
+ * an indistinguishable refusal and which stay a distinguishable execution error
+ * is a security property, not an implementation detail.
+ * @remarks Requires `HttpClient.HttpClient` from its caller and never builds
+ * one: a self-provided client would resolve its own `Fetch` and escape the
+ * governed egress boundary entirely.
+ * @example
+ * ```ts
+ * import { publishProvenance } from "@beep/ontology-server/tools"
+ * console.log(typeof publishProvenance)
+ * ```
+ * @category handlers
+ * @since 0.0.0
+ */
+export const publishProvenance = Effect.fn("Ontology.Tools.publishProvenance")(function* (
+  request: PublishProvenanceRequest
+) {
+  const fileStore = yield* OntologyFileStore;
+  const client = yield* HttpClient.HttpClient;
+  const file = yield* fileStore.read(ReadOntologyFileRequest.make({ path: request.provPath })).pipe(
+    Effect.mapError(() =>
+      OntologyToolExecutionError.make({
+        operation: "publish-provenance",
+        message: "The provenance sidecar could not be read.",
+        recoverable: true,
+      })
+    )
+  );
+  const response = yield* client
+    .execute(HttpClientRequest.post(request.destination).pipe(HttpClientRequest.bodyText(file.source, "text/turtle")))
+    .pipe(Effect.mapError(publicationFailure));
+  return PublishProvenanceResponse.make({
+    provPath: request.provPath,
+    publishedBytes: NonNegativeInt.make(file.source.length),
+    status: NonNegativeInt.make(response.status),
+  });
+});
+
 /** Governed provenance publication handlers, registered only when egress is allowlisted.
  * @remarks Takes `HttpClient.HttpClient` as a layer requirement and never
  * builds its own: a self-provided client would resolve its own `Fetch` and
@@ -197,30 +237,13 @@ export const OntologyMcpPublishHandlersLive = OntologyPublishToolkit.toLayer(
     const fileStore = yield* OntologyFileStore;
     const client = yield* HttpClient.HttpClient;
     const gate = yield* TierGate;
-    const publish = Effect.fn("Ontology.Tools.publishProvenance")(function* (request: PublishProvenanceRequest) {
-      const file = yield* fileStore.read(ReadOntologyFileRequest.make({ path: request.provPath })).pipe(
-        Effect.mapError(() =>
-          OntologyToolExecutionError.make({
-            operation: "publish-provenance",
-            message: "The provenance sidecar could not be read.",
-            recoverable: true,
-          })
-        )
-      );
-      const response = yield* client
-        .execute(
-          HttpClientRequest.post(request.destination).pipe(HttpClientRequest.bodyText(file.source, "text/turtle"))
-        )
-        .pipe(Effect.mapError(publicationFailure));
-      return PublishProvenanceResponse.make({
-        provPath: request.provPath,
-        publishedBytes: NonNegativeInt.make(file.source.length),
-        status: NonNegativeInt.make(response.status),
-      });
-    });
     return OntologyPublishToolkit.of({
       ontology_publish_provenance: (request) =>
-        gatedMutation(PublishProvenanceTool, publish(request)).pipe(Effect.provideService(TierGate, gate)),
+        gatedMutation(PublishProvenanceTool, publishProvenance(request)).pipe(
+          Effect.provideService(TierGate, gate),
+          Effect.provideService(OntologyFileStore, fileStore),
+          Effect.provideService(HttpClient.HttpClient, client)
+        ),
     });
   })
 );
