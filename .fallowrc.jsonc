@@ -6,6 +6,7 @@
   // reachable instead of invisible (goals/fallow-zero-dead-code).
   "entry": [
     "packages/**/src/*.ts",
+    "packages/**/src/*/index.ts",
     "infra/src/internal/*-entry.ts",
     "apps/*/src/main.tsx",
     "apps/*/src/index.ts",

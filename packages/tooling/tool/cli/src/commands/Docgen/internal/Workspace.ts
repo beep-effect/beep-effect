@@ -5,11 +5,9 @@
  * @since 0.0.0
  */
 
-import { DomainError, decodePackageJsonEffect, FsUtils, findRepoRoot, resolveWorkspaceDirs } from "@beep/repo-utils";
+import { DomainError, FsUtils, findRepoRoot, resolveWorkspaceDirs } from "@beep/repo-utils";
 import {
-  buildDocgenAliasSource,
   CanonicalDocgenConfigInput,
-  collectDocgenWorkspaceDependencyNames,
   createCanonicalDocgenConfig,
   toCanonicalDocgenConfigJson,
 } from "@beep/repo-utils/schemas/DocgenConfig";
@@ -21,7 +19,6 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { byRelativePathAscending, DocgenConfigDocument, DocgenWorkspacePackage } from "../Docgen.schemas.ts";
 import type { NoSuchFileError } from "@beep/repo-utils";
-import type { DocgenAliasSource } from "@beep/repo-utils/schemas/DocgenConfig";
 import type { DocgenPackageStatus, ResolveDocgenWorkspacePackageOptions } from "../Docgen.schemas.ts";
 
 const DOCGEN_CONFIG_FILENAME = "docgen.json" as const;
@@ -57,33 +54,6 @@ const readUnknownJsonFile = Effect.fn("DocgenOperations.readUnknownJsonFile")(fu
     Effect.mapError(DomainError.newCause(`Invalid JSON in "${filePath}"`))
   );
   return parsed;
-});
-
-const readPackageJson = Effect.fn("DocgenOperations.readPackageJson")(function* (absolutePackagePath: string) {
-  const path = yield* Path.Path;
-  const packageJsonPath = path.join(absolutePackagePath, "package.json");
-  const parsed = yield* readUnknownJsonFile(packageJsonPath);
-  return yield* decodePackageJsonEffect(parsed).pipe(
-    Effect.mapError(DomainError.newCause(`Invalid package.json at "${packageJsonPath}"`))
-  );
-});
-
-const loadWorkspaceDocgenAliasSources = Effect.fn("DocgenOperations.loadWorkspaceDocgenAliasSources")(function* (
-  rootDir: string
-) {
-  const path = yield* Path.Path;
-  const workspaceDirs = yield* resolveWorkspaceDirs(rootDir);
-  const aliasSources = A.empty<DocgenAliasSource>();
-
-  for (const [packageName, absolutePath] of workspaceDirs) {
-    const packageJson = yield* readPackageJson(absolutePath);
-    A.appendInPlace(
-      aliasSources,
-      buildDocgenAliasSource(packageName, normalizeSlashes(path.relative(rootDir, absolutePath)), packageJson)
-    );
-  }
-
-  return aliasSources;
 });
 
 const formatOrphanDocgenConfigMessage = (paths: ReadonlyArray<string>): string =>
@@ -290,16 +260,12 @@ export const createDocgenConfigDocument: {
 } = dual(
   2,
   Effect.fn("DocgenOperations.createDocgenConfigDocument")(function* (targetPackage, rootDir) {
-    const packageJson = yield* readPackageJson(targetPackage.absolutePath);
-    const workspaceAliasSources = yield* loadWorkspaceDocgenAliasSources(rootDir);
     const canonicalConfig = yield* createCanonicalDocgenConfig(
       CanonicalDocgenConfigInput.make({
         rootDir,
         packageAbsolutePath: targetPackage.absolutePath,
         packageRelativePath: targetPackage.relativePath,
         packageName: targetPackage.name,
-        directWorkspaceDependencies: [...collectDocgenWorkspaceDependencyNames(packageJson)],
-        workspaceAliasSources,
       })
     );
     const canonicalConfigJson = toCanonicalDocgenConfigJson(canonicalConfig);
