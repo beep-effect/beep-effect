@@ -26,6 +26,9 @@
       "path": "../packages/foundation/modeling/ontology/tsconfig.json"
     },
     {
+      "path": "../packages/foundation/modeling/rdf/tsconfig.json"
+    },
+    {
       "path": "../packages/foundation/modeling/schema/tsconfig.json"
     },
     {
@@ -45,9 +48,6 @@
     },
     {
       "path": "../packages/foundation/capability/nlp-processing/tsconfig.json"
-    },
-    {
-      "path": "../packages/foundation/modeling/rdf/tsconfig.json"
     },
     {
       "path": "../packages/foundation/capability/semantic-web/tsconfig.json"
