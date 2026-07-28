@@ -36,6 +36,7 @@
     "./ClaimDisposition": "./src/ClaimDisposition/index.ts",
     "./EdgeAuthority": "./src/EdgeAuthority/index.ts",
     "./ExecutionLedger": "./src/ExecutionLedger/index.ts",
+    "./GovernedEgress": "./src/GovernedEgress/index.ts",
     "./GovernedTierGate": "./src/GovernedTierGate/index.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
@@ -49,6 +50,7 @@
   ],
   "sideEffects": [],
   "dependencies": {
+    "@beep/api-transport": "workspace:^",
     "@beep/epistemic-config": "workspace:^",
     "@beep/epistemic-domain": "workspace:^",
     "@beep/epistemic-tables": "workspace:^",

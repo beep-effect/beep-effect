@@ -10,7 +10,31 @@ the `frozen-grant-set` law; PR 2 (#463) shipped `@beep/epistemic-config`, the
 the append-only ledger tables, migration, port, and Drizzle adapter; PR 4
 (#471) shipped `recordOutcome`/`TierGateSettlement` on the tier gate and
 `EgressDenied` in `@beep/api-transport`; PR 5 shipped `GovernedTierGateLive`
-with the run store, swapped in at the MCP transport. PR 6 is next.
+with the run store, swapped in at the MCP transport; PR 6 shipped the governed
+egress `Fetch` and `ontology_publish_provenance`. PR 7 is next.
+
+**PR 6 corrections to this plan, recorded.** The blocking check passed, and
+measuring it falsified the mechanism this plan and the README assumed:
+
+1. *"`provideContext` replaces the fiber context"* is false — it merges
+   (`updateContext(self, Context.merge(context))`), with the provided context
+   winning on key collisions and request-only services surviving. The policy
+   `Fetch` therefore reaches handlers in every placement tested, not only when
+   provided into the toolkit's graph.
+2. *The recommended placement works for a different reason than stated.*
+   `HttpClient.layerMergedContext` captures the client layer's own build
+   context and merges it at execute time, so the override rides with the
+   `HttpClient` and reaches handlers whose context never contains `Fetch`.
+3. *The hazard is inverted.* Request-time context takes **precedence**, so a
+   per-request `Fetch` displaces the composition-root one. No middleware or
+   request-scoped layer in a governed transport may provide that reference.
+4. *"The policy fetch writes its own typed refusal to the ledger"* is
+   implemented, but it cannot write into the **session's** chain: `Fetch` is a
+   plain promise-returning function with no fiber, so it cannot read
+   `CurrentMcpCaller`. Egress decisions are chained into their own run and
+   correlate to session rows by time.
+
+Evidence: [`history/pr6-fetch-reach-spike.md`](./history/pr6-fetch-reach-spike.md).
 
 **PR 5 corrections to this plan, recorded.** Two instructions below were wrong
 and are superseded by what landed:

@@ -21,6 +21,9 @@
       "path": "../../foundation/capability/langextract/tsconfig.json"
     },
     {
+      "path": "../../foundation/capability/mcp-kit/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/identity/tsconfig.json"
     },
     {

@@ -177,6 +177,8 @@ const generatedComposers = $I.compose(
   "agents-tables",
   "graph-3d",
   "epistemic-config",
+  "law-practice-tables",
+  "practice-kg-mcp",
   "openclaw"
 );
 
@@ -2190,6 +2192,39 @@ export const $AgentsTablesId: Identity.IdentityComposer<"@beep/agents-tables"> =
  * @category configuration
  */
 export const $EpistemicConfigId: Identity.IdentityComposer<"@beep/epistemic-config"> = composers.$EpistemicConfigId;
+
+/**
+ * Identity composer for `@beep/law-practice-tables`.
+ *
+ * @example
+ * ```typescript
+ * import { $LawPracticeTablesId } from "@beep/identity"
+ *
+ * const id = $LawPracticeTablesId.make("LawPracticeTables")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $LawPracticeTablesId: Identity.IdentityComposer<"@beep/law-practice-tables"> =
+  composers.$LawPracticeTablesId;
+
+/**
+ * Identity composer for `@beep/practice-kg-mcp`.
+ *
+ * @example
+ * ```typescript
+ * import { $PracticeKgMcpId } from "@beep/identity"
+ *
+ * const id = $PracticeKgMcpId.make("PracticeKgMcp")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $PracticeKgMcpId: Identity.IdentityComposer<"@beep/practice-kg-mcp"> = composers.$PracticeKgMcpId;
 
 /**
  * Identity composer for `@beep/openclaw`.

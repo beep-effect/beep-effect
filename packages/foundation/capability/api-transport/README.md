@@ -34,8 +34,8 @@ as shared transport *vocabulary*, not as an enforcement seam.
 
 | Party | Package | Role |
 | --- | --- | --- |
-| Producer | `packages/epistemic/server` (`agent-execution-authority` PR 6, in progress) | The governed policy `fetch` rejects a non-allowlisted destination with `EgressDenied` after writing its own typed refusal to the execution ledger. |
-| Consumer | `packages/ontology/server` (`agent-execution-authority` PR 6, in progress) | The `ontology_publish_provenance` handler matches `EgressDenied` inside the transport failure cause and returns a typed refusal through its existing `failureMode: "return"` envelope. |
+| Producer | `packages/epistemic/server` (**landed**, `agent-execution-authority` PR 6) | `GovernedEgressLive` installs a `FetchHttpClient.Fetch` that rejects a non-allowlisted destination with `EgressDenied` after appending its own write-ahead decision row to the execution ledger. |
+| Consumer | `packages/ontology/server` (**landed**, `agent-execution-authority` PR 6) | The `ontology_publish_provenance` handler matches `EgressDenied` inside the `TransportError` cause and returns a typed refusal through its existing `failureMode: "return"` envelope — byte-identical to a tier-gate refusal, so a destination denial cannot be told apart from an operation denial. |
 
 Neither side names the other; the binding happens at the app entrypoint
 (`apps/professional-desktop/server/OntologyMcpTransport.ts`), which provides
