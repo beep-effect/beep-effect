@@ -11,7 +11,7 @@
   "packetPath": "goals/openclaw-workstation-agent",
   "lifecycle": "active",
   "mission": "Deploy a legal-focused OpenClaw agent on the workstation as immutable, generation-based, Pulumi+Effect-managed infrastructure \u2014 prototype gauntlet first, then driver, then live agent.",
-  "statusNote": "P1 driver COMPLETE 2026-07-27: @beep/openclaw green under repo gates with real-pinned-binary acceptance (validate + negative fixtures + lossy schema-export guard). P0 gauntlet cleared the same week (all four spikes pass). P2 (generation engine + applicator) is unblocked.",
+  "statusNote": "P2 code surface LANDED 2026-07-27 (generation engine, applicator, drift audit, backup-ship in infra/); its live workstation proofs are operator-gated (armed sudo pty + Tailscale). P1 driver complete (PR #482 mergeable); P0 gauntlet complete.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -64,8 +64,8 @@
     {
       "id": "P2",
       "name": "Generation engine + workstation applicator",
-      "status": "pending",
-      "statusNote": "UNBLOCKED 2026-07-27: P1 driver complete. Next phase to start."
+      "status": "in-progress",
+      "statusNote": "IN PROGRESS 2026-07-27: code surface landed via goals/openclaw-p2-generation (infra/src/OpenClaw.ts + infra/openclaw project — renderers, staged-upgrade applicator with snapshot/rollback and downgrade guard, fail-closed identity preflight, alert-only drift audit, encrypted dankserver backup-ship). Remaining exit criteria are operator-gated: pulumi up vertical slice on the workstation (armed sudo pty), second-generation switch with forced rollback, live drift-audit demo, and backups + restore drill landing on dankserver."
     },
     {
       "id": "P3",

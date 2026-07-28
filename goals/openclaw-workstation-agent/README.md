@@ -41,6 +41,18 @@ GATE C), research legs + adversarial review.
 
 ## Current Phase
 
+P2 Generation engine + applicator — **in progress: code surface landed**
+(`infra/src/OpenClaw.ts` + `infra/openclaw` project on
+`goals/openclaw-p2-generation`): pure generation renderers, the staged
+upgrade applicator (stopped-state WAL snapshot → atomic pointer switch →
+bounded health wait → restore-on-failure, `user_version` downgrade guard),
+fail-closed identity-binding preflight with armed-sudo assertion, alert-only
+drift audit, and the encrypted receipt-verified dankserver backup-ship leg.
+Remaining P2 exit criteria are operator-gated: the `pulumi up` vertical
+slice, second-generation switch with forced rollback, live drift demo, and
+backups + restore drill (armed sudo pty per
+[`ops/handoffs/p0-session-handoff-2026-07-25.md`](./ops/handoffs/p0-session-handoff-2026-07-25.md)).
+
 P1 Driver — **complete.** `@beep/openclaw` ships the desired-intent schema,
 the versioned render adapter pinned to `openclaw@2026.7.1-2` (canonical
 JSON, sha256 content hash, adapter invariants), the CLI process wrapper
@@ -115,13 +127,13 @@ was re-opened.
 
 ## Session Handoff
 
-P1 (driver) closed 2026-07-27 on the same day as the gauntlet; the next
-session starts P2 (generation engine + workstation applicator), consuming
-`@beep/openclaw` for render, validate, service control, and probes. The
-spike-2 contract findings in Latest Evidence (bus round-trip preflight,
-`UnitsLoadTimestampMonotonic`, 108-byte socket cap, fail-closed identity
-parse, mid-apply rollback, session-less linger follow-up) land in the real
-applicator. The mid-gauntlet handoff
+P2's code surface landed 2026-07-27 (same day as P1 and the gauntlet
+close); the spike-2 contract findings are encoded in the applicator's
+preflight/apply scripts. The remaining P2 exit criteria are operator-gated
+and fully scripted in
+[`ops/handoffs/p2-slice-proof-runbook.md`](./ops/handoffs/p2-slice-proof-runbook.md)
+(merge PR #482 first, then the P2 PR, then the armed-pty `pulumi up`
+sequence). The mid-gauntlet handoff
 [`ops/handoffs/p0-session-handoff-2026-07-25.md`](./ops/handoffs/p0-session-handoff-2026-07-25.md)
 is retained as run history — its operator prerequisites are satisfied, but its
 privileged-run mechanics still apply (YubiKey-FIDO sudo needs a single armed
