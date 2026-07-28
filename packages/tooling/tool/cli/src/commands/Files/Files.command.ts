@@ -14,6 +14,7 @@ import {
   CropBordersOptions,
   DetectBordersOptions,
   DetectFacesOptions,
+  FlattenMediaOptions,
   ImageAuditOptions,
   ImageCurationOptions,
   NormalizeFilesOptions,
@@ -28,6 +29,7 @@ import {
   detectBordersFiles,
   detectFacesFiles,
   FilesCommandServiceLive,
+  flattenMediaFiles,
   normalizeFiles,
   printFilesIndex,
   processFiles,
@@ -43,6 +45,9 @@ const runFilesProgram = <A>(
 
 const sortDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
   Flag.withDescription("Directory whose direct regular files should be sorted and renamed")
+);
+const flattenMediaDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+  Flag.withDescription("Directory recursively searched for image and video files to move")
 );
 const stripDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
   Flag.withDescription("Directory whose direct image and video files should have metadata stripped")
@@ -96,6 +101,9 @@ const archiveDirFlag = Flag.directory("archive-dir").pipe(
 const normalizeOutDirFlag = Flag.directory("out-dir").pipe(
   Flag.withDescription("Output directory for normalized image files")
 );
+const flattenMediaOutDirFlag = Flag.directory("out-dir").pipe(
+  Flag.withDescription("Flat output directory for moved image and video files")
+);
 const processInputFlag = Flag.path("input", { mustExist: true, pathType: "either" }).pipe(
   Flag.withDescription("File or directory to process into a V1 proof manifest")
 );
@@ -147,6 +155,9 @@ const prefixFlag = Flag.string("prefix").pipe(
 );
 const sortDryRunFlag = Flag.boolean("dry-run").pipe(
   Flag.withDescription("Print the planned renames without touching files")
+);
+const flattenMediaDryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDescription("Print the planned moves without touching files")
 );
 const stripDryRunFlag = Flag.boolean("dry-run").pipe(
   Flag.withDescription("Print the planned metadata rewrites without touching files")
@@ -604,6 +615,21 @@ const filesSortAndRenameCommand = Command.make(
   Command.provide(FilesCommandServiceLive)
 );
 
+const filesFlattenMediaCommand = Command.make(
+  "flatten-media",
+  {
+    dir: flattenMediaDirFlag,
+    dryRun: flattenMediaDryRunFlag,
+    outDir: flattenMediaOutDirFlag,
+  },
+  Effect.fn(function* ({ dir, dryRun, outDir }) {
+    yield* runFilesProgram(flattenMediaFiles(FlattenMediaOptions.make({ dir, dryRun, outDir })));
+  })
+).pipe(
+  Command.withDescription("Recursively move image and video files into a flat directory"),
+  Command.provide(FilesCommandServiceLive)
+);
+
 const filesStripMetadataCommand = Command.make(
   "strip-metadata",
   {
@@ -643,6 +669,7 @@ export const filesCommand = Command.make("files", {}, () => printFilesIndex).pip
     filesCurateImagesCommand,
     filesDetectBordersCommand,
     filesDetectFacesCommand,
+    filesFlattenMediaCommand,
     filesNormalizeCommand,
     filesProcessCommand,
     filesSortAndRenameCommand,

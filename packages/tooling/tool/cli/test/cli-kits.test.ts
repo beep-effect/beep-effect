@@ -144,6 +144,9 @@ describe("internal/cli/FsGuards", () => {
 
     const dataLast = allocateUniqueName(".webp", HashSet.make("photo.webp"))("photo");
     expect(dataLast.targetName).toBe("photo_01.webp");
+
+    const caseCollided = allocateUniqueName("PHOTO", ".WEBP", HashSet.make("photo.webp", "Photo_01.webp"));
+    expect(caseCollided.targetName).toBe("PHOTO_02.WEBP");
   });
 
   it("validatePathSegment works data-first and data-last", () => {
