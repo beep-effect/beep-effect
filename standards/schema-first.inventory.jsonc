@@ -40,6 +40,46 @@
       "reason": "Type alias contains non-schema signals such as function members or runtime handles."
     },
     {
+      "file": "infra/src/OpenClaw.ts",
+      "symbol": "renderOpenClawBackupShipScript",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-fn-schema",
+      "line": 1518,
+      "owner": "@beep/infra",
+      "reason": "Exported function \"renderOpenClawBackupShipScript\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+    },
+    {
+      "file": "infra/src/OpenClaw.ts",
+      "symbol": "renderOpenClawDriftAuditScript",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-fn-schema",
+      "line": 1404,
+      "owner": "@beep/infra",
+      "reason": "Exported function \"renderOpenClawDriftAuditScript\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+    },
+    {
+      "file": "infra/src/OpenClaw.ts",
+      "symbol": "renderOpenClawPreflightScript",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-fn-schema",
+      "line": 968,
+      "owner": "@beep/infra",
+      "reason": "Exported function \"renderOpenClawPreflightScript\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+    },
+    {
+      "file": "infra/src/OpenClaw.ts",
+      "symbol": "renderOpenClawProbeScript",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-fn-schema",
+      "line": 1444,
+      "owner": "@beep/infra",
+      "reason": "Exported function \"renderOpenClawProbeScript\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+    },
+    {
       "file": "packages/_internal/db-admin/test/integration/DocumentsSyncMigration.pglite.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
