@@ -725,7 +725,7 @@ export const makeOntologyErrorClass = <const Tag extends string, const Fields ex
         terminal: from.terminal?.map(makeInstance),
       }),
   });
-  const ServiceFreeErrorClass = ErrorClass as typeof ErrorClass & S.ConstraintDecoder<Self, never>;
+  const ServiceFreeErrorClass = ErrorClass as typeof ErrorClass & S.ConstraintDecoder<Self>;
   return SchemaUtils.withStatics(ErrorClass, () => ({
     is: S.is(ErrorClass),
     fromUnknown: S.decodeUnknownSync(ServiceFreeErrorClass),

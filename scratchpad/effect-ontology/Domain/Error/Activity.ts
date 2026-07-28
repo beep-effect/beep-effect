@@ -9,14 +9,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
-import { SchemaUtils } from "@beep/schema";
+import {$ScratchpadId} from "@beep/identity/packages";
+import {SchemaUtils} from "@beep/schema";
 import * as Inspectable from "effect/Inspectable";
 import * as Match from "effect/Match";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { ErrorMessage, Milliseconds, OptionalErrorMessage } from "./Base.ts";
+import {dual, O, P} from "@beep/utils";
+import {ErrorMessage, Milliseconds, OptionalErrorMessage} from "./Base.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Activity");
 
@@ -311,8 +310,8 @@ export const ActivityGenericError = ActivityGenericErrorDefinition.annotate({
  */
 export type ActivityGenericError = typeof ActivityGenericError.Type;
 
-const messageFromUnknown = (input: unknown): ErrorMessage =>
-  Match.value(input).pipe(
+const messageFromUnknown =
+  Match.type<unknown>().pipe(
     Match.when(P.isError, (error) =>
       Match.value(error.message).pipe(
         Match.when(ErrorMessage.is, (message) => message),
@@ -322,11 +321,11 @@ const messageFromUnknown = (input: unknown): ErrorMessage =>
     Match.orElse((value) => ErrorMessage.make(Inspectable.toStringUnknown(value, 0)))
   );
 
-const causeFromUnknown = (input: unknown): O.Option<ErrorMessage> =>
-  Match.value(input).pipe(
-    Match.when(P.isError, (error) => O.fromNullishOr(error.cause).pipe(O.map(messageFromUnknown))),
-    Match.orElse(() => O.none<ErrorMessage>())
-  );
+const causeFromUnknown = Match.type<unknown>().pipe(
+  Match.withReturnType<O.Option<ErrorMessage>>(),
+  Match.when(P.isError, (error) => O.fromNullishOr(error.cause).pipe(O.map(messageFromUnknown))),
+  Match.orElse(() => O.none<ErrorMessage>())
+);
 
 const makeGeneric = (input: unknown): ActivityGenericError =>
   ActivityGenericError.make({
@@ -347,12 +346,16 @@ const makeServiceFailure = (
     retryable,
   });
 
-const makeNotFound = (resourceType: string, resourceId: string): ActivityNotFoundError =>
+const makeNotFound: {
+  (resourceType: string, resourceId: string): ActivityNotFoundError,
+  (resourceId: string): (resourceType: string) => ActivityNotFoundError
+} = dual(2, (resourceType: string, resourceId: string): ActivityNotFoundError =>
   ActivityNotFoundError.make({
     resourceType,
     resourceId,
     message: `${resourceType} not found: ${resourceId}`,
-  });
+  })
+);
 
 const ActivityErrorDefinition = S.Union([
   ActivityTimeoutError,
