@@ -7,7 +7,11 @@ import {
   GrantResource,
   SinkDestination,
 } from "@beep/epistemic-domain/values/ExecutionGrant";
-import { destinationDigestOf, verifyExecutionDecisionChain } from "@beep/epistemic-domain/values/ExecutionRecord";
+import {
+  destinationDigestOf,
+  verifyExecutionDecisionChain,
+  verifyOutcomeBinding,
+} from "@beep/epistemic-domain/values/ExecutionRecord";
 import { GovernedEgressOptions, makeGovernedEgressFetch } from "@beep/epistemic-server/GovernedEgress";
 import { ExecutionLedger, ExecutionLedgerUnavailable } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { A } from "@beep/utils";
@@ -30,6 +34,7 @@ interface Harness {
   readonly attempted: ReadonlyArray<string>;
   readonly decisions: Ref.Ref<ReadonlyArray<ExecutionDecisionRecord>>;
   readonly fetch: typeof globalThis.fetch;
+  readonly outcomes: Ref.Ref<ReadonlyArray<ExecutionOutcomeRecord>>;
   readonly redirectModes: ReadonlyArray<string>;
 }
 
@@ -40,8 +45,11 @@ const makeHarness = Effect.fnUntraced(function* (options?: {
   readonly config?: EpistemicServerConfig;
   readonly contendAppends?: boolean;
   readonly failDecisions?: boolean;
+  readonly failFetch?: boolean;
+  readonly failOutcomes?: boolean;
 }) {
   const decisions = yield* Ref.make<ReadonlyArray<ExecutionDecisionRecord>>([]);
+  const outcomes = yield* Ref.make<ReadonlyArray<ExecutionOutcomeRecord>>([]);
   const attempted: Array<string> = [];
   const stub = ExecutionLedger.of({
     appendDecision: Effect.fn("GovernedEgressTest.appendDecision")(function* (record) {
@@ -57,12 +65,17 @@ const makeHarness = Effect.fnUntraced(function* (options?: {
       }
       yield* Ref.update(decisions, A.append(record));
     }),
-    appendOutcome: Effect.fn("GovernedEgressTest.appendOutcome")(function* () {}),
+    appendOutcome: Effect.fn("GovernedEgressTest.appendOutcome")(function* (record) {
+      if (options?.failOutcomes === true) {
+        return yield* ExecutionLedgerUnavailable.during("appendOutcome", "injected outcome failure");
+      }
+      yield* Ref.update(outcomes, A.append(record));
+    }),
     readDecisions: Effect.fn("GovernedEgressTest.readDecisions")(function* (runKey) {
       return A.filter(yield* Ref.get(decisions), (record) => record.runKey === runKey);
     }),
-    readOutcomes: Effect.fn("GovernedEgressTest.readOutcomes")(function* () {
-      return [] as ReadonlyArray<ExecutionOutcomeRecord>;
+    readOutcomes: Effect.fn("GovernedEgressTest.readOutcomes")(function* (runKey) {
+      return A.filter(yield* Ref.get(outcomes), (record) => record.runKey === runKey);
     }),
     readUnsettledAllowed: Effect.fn("GovernedEgressTest.readUnsettledAllowed")(function* () {
       return [] as ReadonlyArray<ExecutionDecisionRecord>;
@@ -75,13 +88,15 @@ const makeHarness = Effect.fnUntraced(function* (options?: {
   const baseFetch = ((input: RequestInfo | URL, requestInit?: RequestInit) => {
     attempted.push(String(input));
     redirectModes.push(String(requestInit?.redirect));
-    return Promise.resolve(new Response("delivered", { status: 200 }));
+    return options?.failFetch === true
+      ? Promise.reject({ _tag: "InjectedFetchFailure" })
+      : Promise.resolve(new Response("delivered", { status: 200 }));
   }) as typeof globalThis.fetch;
   const fetch = yield* makeGovernedEgressFetch(egressOptions, baseFetch).pipe(
     Effect.provideService(ExecutionLedger, stub),
     Effect.provideService(EpistemicConfig, options?.config ?? testEpistemicConfig)
   );
-  return { attempted, decisions, fetch, redirectModes } satisfies Harness;
+  return { attempted, decisions, fetch, outcomes, redirectModes } satisfies Harness;
 });
 
 const emptyAllowlistConfig = EpistemicServerConfig.make({
@@ -122,9 +137,40 @@ describe("GovernedEgress", () => {
       // The record names what was actually requested, not the allowlist entry
       // that covered it.
       expect(decisions[0]!.destinationDigest).toBe(destinationDigestOf(SinkDestination.make(allowedUrl)));
+      const outcomes = yield* Ref.get(harness.outcomes);
+      expect(outcomes).toHaveLength(1);
+      expect(outcomes[0]!.settlement).toBe("completed");
+      expect(verifyOutcomeBinding(outcomes[0]!, decisions[0]!)).toBe(true);
       // Redirects are not followed: authorizing the first hop would otherwise
       // authorize wherever that hop chose to send the request next.
       expect(harness.redirectModes).toEqual(["error"]);
+    })
+  );
+
+  it.effect("records a failed outcome when the base fetch rejects", () =>
+    Effect.gen(function* () {
+      const harness = yield* makeHarness({ failFetch: true });
+      const result = yield* attemptEgress(harness, allowedUrl);
+
+      expect(result.rejected).toBe(true);
+      const decisions = yield* Ref.get(harness.decisions);
+      const outcomes = yield* Ref.get(harness.outcomes);
+      expect(decisions).toHaveLength(1);
+      expect(outcomes).toHaveLength(1);
+      expect(outcomes[0]!.settlement).toBe("failed");
+      expect(verifyOutcomeBinding(outcomes[0]!, decisions[0]!)).toBe(true);
+    })
+  );
+
+  it.effect("does not fail a successful request when the outcome write fails", () =>
+    Effect.gen(function* () {
+      const harness = yield* makeHarness({ failOutcomes: true });
+      const response = yield* Effect.promise(() => harness.fetch(allowedUrl, { method: "POST" }));
+
+      expect(response.status).toBe(200);
+      expect(harness.attempted).toEqual([allowedUrl]);
+      expect(yield* Ref.get(harness.decisions)).toHaveLength(1);
+      expect(yield* Ref.get(harness.outcomes)).toHaveLength(0);
     })
   );
 
@@ -137,6 +183,7 @@ describe("GovernedEgress", () => {
       expect(decisions).toHaveLength(1);
       expect(decisions[0]!.verdict).toBe("denied");
       expect(decisions[0]!.verdict === "denied" && decisions[0]!.reason).toBe("operation-not-granted");
+      expect(yield* Ref.get(harness.outcomes)).toHaveLength(0);
     })
   );
 

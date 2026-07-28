@@ -2,16 +2,17 @@
 
 ## Status
 
-Status: `in-progress`
+Status: `complete`
 
-PRs 1–5 have landed. PR 1 (#458) shipped the grant and record schemas plus
+All seven PRs have landed. PR 1 (#458) shipped the grant and record schemas plus
 the `frozen-grant-set` law; PR 2 (#463) shipped `@beep/epistemic-config`, the
 `OntologyMcpConfig` split, and the MCP entrypoint cleanup; PR 3 (#467) shipped
 the append-only ledger tables, migration, port, and Drizzle adapter; PR 4
 (#471) shipped `recordOutcome`/`TierGateSettlement` on the tier gate and
-`EgressDenied` in `@beep/api-transport`; PR 5 shipped `GovernedTierGateLive`
-with the run store, swapped in at the MCP transport; PR 6 shipped the governed
-egress `Fetch` and `ontology_publish_provenance`. PR 7 is next.
+`EgressDenied` in `@beep/api-transport`; PR 5 (#481) shipped `GovernedTierGateLive`
+with the run store, swapped in at the MCP transport; PR 6 (#485) shipped the governed
+egress `Fetch` and `ontology_publish_provenance`; PR 7 shipped the composed
+fixture acceptance suite and this packet's closeout.
 
 **PR 6 corrections to this plan, recorded.** The blocking check passed, and
 measuring it falsified the mechanism this plan and the README assumed:
@@ -66,10 +67,10 @@ against decision 13. Every governed refusal now carries one constant string.
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Confirm the source hierarchy and re-verify the two spike findings still hold against current `main`. | Required facts and blockers recorded; both mechanisms re-confirmed or the discrepancy reported. |
-| P1 Implement | in-progress | Land PRs 1–7 in order, each independently mergeable. | `SPEC.md` acceptance criteria met. |
-| P2 Verify | pending | `bun run beep yeet verify` plus the acceptance suite. | Verification green or blockers documented. |
-| P3 Yeet: PR to mergeable | pending | Drive each PR to mergeable through `bun run beep yeet publish`. | Hosted required checks green. |
-| P4 Close | pending | Closeout reflection and packet-status flip. | Reflection exists; `bun run beep lint reflection-artifacts` passes. |
+| P1 Implement | complete | Land PRs 1–7 in order, each independently mergeable. | `SPEC.md` acceptance criteria met. |
+| P2 Verify | complete | `bun run beep yeet verify` plus the acceptance suite. | Verification green or blockers documented. |
+| P3 Yeet: PR to mergeable | complete | Drive each PR to mergeable through `bun run beep yeet publish`. | Hosted required checks green. |
+| P4 Close | complete | Closeout reflection and packet-status flip. | Reflection exists; `bun run beep lint reflection-artifacts` passes. |
 
 ## Build Sequence
 
@@ -225,6 +226,50 @@ stop and report.
 injected instruction, tool 2 attempts an outbound POST to the injected
 destination, and the grant set frozen at session open denies it. Plus the full
 acceptance suite from `SPEC.md`.
+
+**What landed, and one thing this section got wrong.** The suite is
+`apps/professional-desktop/test/integration/execution-authority.pglite.test.ts`,
+`{ concurrent: false }`, against the real Drizzle ledger over PGlite rather than
+a probe — the canary property is only honestly provable against rows that were
+actually serialized into Postgres. The MCP HTTP bootstrap moved to
+`test/integration/support/ontology-mcp-harness.ts` so both app suites share one
+server.
+
+The wrong part is "the grant set frozen at session open denies it." The frozen
+grant set *allows* the operation — the gate's question is whether this session
+may invoke `ontology_publish_provenance`, and it may. The **egress boundary**
+denies the destination. So the fixture asserts on two chains from two runs, and
+a version of it that asserted only the session's chain would pass for the wrong
+reason.
+
+The suite proves only what the per-PR suites did not: the composed fixture, the
+payload proof, and the per-path cost bound. Everything else in `SPEC.md`'s
+acceptance list is discharged by an existing test, and the README now carries the
+criterion-to-proof map naming which one. Re-proving PR 3's tamper test and PR 5's
+row-count tests at app level would have duplicated coverage and added the slowest
+job in the app package.
+
+The cost bound is asserted structurally, in before/after row-count deltas rather
+than wall time — a timing assertion would join the repo's known CI timeout flake
+class and fail for reasons unrelated to the property, and absolute totals would
+lie under an in-process retry. It covers **both** paths, because they do not cost
+the same: a tier-only dispatch moves the ledger by 2 rows (decision, outcome),
+while an allowed publish moves it by 4, since governed egress writes and settles
+its own decision. An earlier draft asserted only the tier-only figure and stated it as the
+general bound, which understated the packet's own target path.
+
+**An adversarial review rejected the first draft of this suite on four counts,
+all upheld.** The most serious: the canary test passed for the wrong reason — a
+nullable `payload TEXT` column added to the migration would have serialized as
+`payload: null` through `SELECT *` and survived, because the descriptor test in
+`epistemic/tables` inspects the Drizzle projection rather than the physical table.
+The suite now pins the exact column set from `information_schema.columns`, which
+is the assertion that actually discharges the no-payload guarantee. The review
+also caught that the harness extraction had silently replaced
+`NodeHttpServer.layer(…, { host: "127.0.0.1", port: 0 })` with `layerTest`, whose
+implementation passes only `{ port: 0 }` — binding all interfaces and exposing a
+socket-mode MCP server guarded solely by a source-visible fixed token, shipped
+under the words "pure move."
 
 ## Migration Registration Is Four Places
 
