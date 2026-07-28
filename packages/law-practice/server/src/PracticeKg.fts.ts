@@ -42,11 +42,12 @@ CREATE TABLE documents (
   size_bytes BIGINT NOT NULL,
   mtime_iso VARCHAR NOT NULL,
   run_label VARCHAR NOT NULL,
-  provenance_ref VARCHAR NOT NULL
+  provenance_ref VARCHAR NOT NULL,
+  source_origin_chain VARCHAR NOT NULL
 )`;
 
 const insertDocument = `
-INSERT INTO documents VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`;
+INSERT INTO documents VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`;
 
 const createEmptyDocumentTextTable = `
 CREATE TABLE document_text (
@@ -263,6 +264,7 @@ export const buildDuckDb = Effect.fn("PracticeKg.buildDuckDb")(function* (
       row.mtimeIso,
       row.runLabel,
       row.digest,
+      row.sourceOriginChain,
     ]);
     yield* db.run(
       A.length(sourceSpecs) === 0 ? createEmptyDocumentTextTable : buildDocumentTextSql(sourceSpecs, maxTextBytes)

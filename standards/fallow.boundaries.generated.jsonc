@@ -1809,7 +1809,9 @@
         "from": "@beep/law-practice-server",
         "allow": [
           "@beep/duckdb",
+          "@beep/epistemic-domain",
           "@beep/epistemic-server",
+          "@beep/epistemic-tables",
           "@beep/epistemic-use-cases",
           "@beep/file-processing",
           "@beep/identity",
@@ -1828,7 +1830,9 @@
         ],
         "allowTypeOnly": [
           "@beep/duckdb",
+          "@beep/epistemic-domain",
           "@beep/epistemic-server",
+          "@beep/epistemic-tables",
           "@beep/epistemic-use-cases",
           "@beep/file-processing",
           "@beep/identity",
@@ -2431,6 +2435,7 @@
       {
         "from": "@beep/practice-kg-mcp",
         "allow": [
+          "@beep/anthropic",
           "@beep/duckdb",
           "@beep/identity",
           "@beep/law-practice-server",
@@ -2440,6 +2445,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/anthropic",
           "@beep/duckdb",
           "@beep/identity",
           "@beep/law-practice-server",

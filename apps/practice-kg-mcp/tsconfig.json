@@ -9,6 +9,9 @@
   },
   "references": [
     {
+      "path": "../../packages/drivers/anthropic/tsconfig.json"
+    },
+    {
       "path": "../../packages/drivers/duckdb/tsconfig.json"
     },
     {

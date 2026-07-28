@@ -7,11 +7,21 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import {
+  PracticeKgCandidateClaimToolRow,
+  PracticeKgDocumentToolRow,
+  PracticeKgEmailToolRow,
+  PracticeKgFamilyToolRow,
+  PracticeKgGraphToolRow,
+} from "@beep/law-practice-use-cases/server";
 import { Effect, flow, Layer } from "effect";
+import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { DuckDbConnectionOptions } from "@beep/duckdb";
+import type { Path } from "effect";
 
 const $I = $LawPracticeServerId.create("PracticeKg.rows");
 
@@ -42,6 +52,7 @@ const $I = $LawPracticeServerId.create("PracticeKg.rows");
  *   runLabel: "base",
  *   sizeBytes: 18342,
  *   sourceLabel: "acme-archive",
+ *   sourceOriginChain: "base:acme-archive:raw/acme/OA_20190402.pdf",
  *   sourceRelativePath: "raw/acme/OA_20190402.pdf"
  * })
  *
@@ -61,6 +72,7 @@ export class PracticeKgCatalogRow extends S.Class<PracticeKgCatalogRow>($I`Pract
     effectiveName: S.String,
     mtimeIso: S.String,
     organizedRelativePath: S.NullOr(S.String),
+    sourceOriginChain: S.String,
     runLabel: S.String,
     sizeBytes: S.Finite,
     sourceLabel: S.String,
@@ -122,32 +134,11 @@ export class PracticeKgEnrichmentRow extends S.Class<PracticeKgEnrichmentRow>($I
 /**
  * Provide a scoped layer around an effect, closing the scope when it ends.
  *
- * @remarks
- * Unlike `Effect.provide`, the layer is built per call and torn down as soon as
- * the wrapped effect settles, so a resource such as a database connection does
- * not outlive the one operation that needed it. The scope is internal — the
- * result carries no `Scope` requirement for the caller to discharge.
- *
- * @example
- * ```ts
- * import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb"
- * import { Effect } from "effect"
- * import { provideScopedLayer } from "../../src/PracticeKg.rows.ts"
- *
- * const program = Effect.gen(function* () {
- *   const db = yield* DuckDb
- *   return yield* db.query("SELECT 1 AS one")
- * }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: ":memory:" }))))
- *
- * Effect.runPromise(program).then((rows) => console.log(rows.length)) // 1
- * ```
- *
- * @param layer - Layer built once per invocation and released when the effect settles.
- *
- * @category layers
- * @since 0.0.0
+ * Module-private on purpose: `@beep/test-utils` exports the canonical copy for
+ * tests, and server source cannot import tooling — this stays the one
+ * production-side copy, consumed only by {@link withDuckDb}.
  */
-export const provideScopedLayer =
+const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R0>(effect: Effect.Effect<A, E, R0>): Effect.Effect<A, E | E2, RIn | Exclude<R0, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
@@ -208,3 +199,185 @@ export const withDuckDb = (options: DuckDbConnectionOptions) => provideScopedLay
  */
 export const stripPrefix = (prefix: string) =>
   flow(O.liftPredicate(Str.startsWith(prefix)), O.map(Str.slice(Str.length(prefix))));
+
+/**
+ * Decode graph-tool query rows.
+ *
+ * @example
+ * ```ts
+ * import { decodePracticeKgGraphRows } from "@beep/law-practice-server"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(decodePracticeKgGraphRows([]))) // true
+ * ```
+ * @since 0.0.0
+ * @category codecs
+ */
+export const decodePracticeKgGraphRows = S.decodeUnknownEffect(S.Array(PracticeKgGraphToolRow));
+/**
+ * Decode docket-family query rows.
+ *
+ * @example
+ * ```ts
+ * import { decodePracticeKgFamilyRows } from "@beep/law-practice-server"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(decodePracticeKgFamilyRows([]))) // true
+ * ```
+ * @since 0.0.0
+ * @category codecs
+ */
+export const decodePracticeKgFamilyRows = S.decodeUnknownEffect(S.Array(PracticeKgFamilyToolRow));
+/**
+ * Decode corpus-document query rows.
+ *
+ * @example
+ * ```ts
+ * import { decodePracticeKgDocumentRows } from "@beep/law-practice-server"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(decodePracticeKgDocumentRows([]))) // true
+ * ```
+ * @since 0.0.0
+ * @category codecs
+ */
+export const decodePracticeKgDocumentRows = S.decodeUnknownEffect(S.Array(PracticeKgDocumentToolRow));
+/**
+ * Decode email-header query rows.
+ *
+ * @example
+ * ```ts
+ * import { decodePracticeKgEmailRows } from "@beep/law-practice-server"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(decodePracticeKgEmailRows([]))) // true
+ * ```
+ * @since 0.0.0
+ * @category codecs
+ */
+export const decodePracticeKgEmailRows = S.decodeUnknownEffect(S.Array(PracticeKgEmailToolRow));
+/**
+ * Decode grounded candidate-claim query rows.
+ *
+ * @example
+ * ```ts
+ * import { decodePracticeKgCandidateClaimRows } from "@beep/law-practice-server"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(decodePracticeKgCandidateClaimRows([]))) // true
+ * ```
+ * @since 0.0.0
+ * @category codecs
+ */
+export const decodePracticeKgCandidateClaimRows = S.decodeUnknownEffect(S.Array(PracticeKgCandidateClaimToolRow));
+
+/**
+ * Convert a graph row to the generic record accepted by the field-tier projector.
+ *
+ * @example
+ * ```ts
+ * import { graphToolRecord } from "@beep/law-practice-server"
+ *
+ * console.log(typeof graphToolRecord) // "function"
+ * ```
+ * @category mappers
+ * @since 0.0.0
+ */
+export const graphToolRecord = (row: PracticeKgGraphToolRow): Record<string, unknown> => ({ ...row });
+
+/**
+ * Convert a family row to the generic record accepted by the field-tier projector.
+ *
+ * @example
+ * ```ts
+ * import { familyToolRecord } from "@beep/law-practice-server"
+ *
+ * console.log(typeof familyToolRecord) // "function"
+ * ```
+ * @category mappers
+ * @since 0.0.0
+ */
+export const familyToolRecord = (row: PracticeKgFamilyToolRow): Record<string, unknown> => ({ ...row });
+
+/**
+ * Convert a document row to the generic record accepted by the field-tier projector.
+ *
+ * @example
+ * ```ts
+ * import { documentToolRecord } from "@beep/law-practice-server"
+ *
+ * console.log(typeof documentToolRecord) // "function"
+ * ```
+ * @category mappers
+ * @since 0.0.0
+ */
+export const documentToolRecord = (row: PracticeKgDocumentToolRow): Record<string, unknown> => ({ ...row });
+
+/**
+ * Convert an email row to the generic record accepted by the field-tier projector.
+ *
+ * @example
+ * ```ts
+ * import { emailToolRecord } from "@beep/law-practice-server"
+ *
+ * console.log(typeof emailToolRecord) // "function"
+ * ```
+ * @category mappers
+ * @since 0.0.0
+ */
+export const emailToolRecord = (row: PracticeKgEmailToolRow): Record<string, unknown> => ({ ...row });
+
+/**
+ * Convert a candidate-claim row to the generic record accepted by the field-tier projector.
+ *
+ * @example
+ * ```ts
+ * import { candidateClaimToolRecord } from "@beep/law-practice-server"
+ *
+ * console.log(typeof candidateClaimToolRecord) // "function"
+ * ```
+ * @category mappers
+ * @since 0.0.0
+ */
+export const candidateClaimToolRecord = (row: PracticeKgCandidateClaimToolRow): Record<string, unknown> => ({ ...row });
+
+/**
+ * Resolve optional external-corpus pointers with the platform path service.
+ *
+ * @example
+ * ```ts
+ * import { addPracticeKgCorpusPointers } from "@beep/law-practice-server"
+ *
+ * console.log(typeof addPracticeKgCorpusPointers) // "function"
+ * ```
+ * @category mappers
+ * @since 0.0.0
+ */
+export const addPracticeKgCorpusPointers: {
+  (
+    corpusRoot: string | undefined,
+    path: Path.Path
+  ): (rows: ReadonlyArray<PracticeKgDocumentToolRow>) => ReadonlyArray<PracticeKgDocumentToolRow>;
+  (
+    rows: ReadonlyArray<PracticeKgDocumentToolRow>,
+    corpusRoot: string | undefined,
+    path: Path.Path
+  ): ReadonlyArray<PracticeKgDocumentToolRow>;
+} = dual(
+  3,
+  (
+    rows: ReadonlyArray<PracticeKgDocumentToolRow>,
+    corpusRoot: string | undefined,
+    path: Path.Path
+  ): ReadonlyArray<PracticeKgDocumentToolRow> =>
+    A.map(rows, (row) => {
+      const pointer = O.all({
+        relative: O.fromNullOr(row.sourceRelativePath),
+        root: O.fromUndefinedOr(corpusRoot),
+      }).pipe(
+        O.map(({ relative, root }) => path.join(root, relative)),
+        O.getOrNull
+      );
+      return PracticeKgDocumentToolRow.make({ ...row, pointer });
+    })
+);

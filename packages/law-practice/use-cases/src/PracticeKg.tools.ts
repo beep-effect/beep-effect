@@ -18,7 +18,7 @@ import {
 } from "@beep/mcp-kit";
 import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { Tool, Toolkit } from "effect/unstable/ai";
+import { Tool } from "effect/unstable/ai";
 
 const $I = $LawPracticeUseCasesId.create("PracticeKg.tools");
 const defaultBudgetBytes = PosInt.make(8000);
@@ -185,13 +185,13 @@ export class PracticeKgToolResult extends S.Class<PracticeKgToolResult>($I`Pract
 ) {}
 
 /**
- * Typed empty response returned until the PR-4 candidate-claims batch exists.
+ * Typed empty response returned when a bundle has no claims batch.
  *
  * @example
  * ```ts
- * import { PracticeKgCandidateClaimsResult } from "@beep/law-practice-use-cases/server"
+ * import { PracticeKgCandidateClaimsNotLoadedResult } from "@beep/law-practice-use-cases/server"
  *
- * const result = PracticeKgCandidateClaimsResult.make({
+ * const result = PracticeKgCandidateClaimsNotLoadedResult.make({
  *   available: false,
  *   bundle_version: "2026-07-27-01",
  *   epistemic_status: "candidate-unreviewed",
@@ -203,8 +203,8 @@ export class PracticeKgToolResult extends S.Class<PracticeKgToolResult>($I`Pract
  * @category models
  * @since 0.0.0
  */
-export class PracticeKgCandidateClaimsResult extends S.Class<PracticeKgCandidateClaimsResult>(
-  $I`PracticeKgCandidateClaimsResult`
+export class PracticeKgCandidateClaimsNotLoadedResult extends S.Class<PracticeKgCandidateClaimsNotLoadedResult>(
+  $I`PracticeKgCandidateClaimsNotLoadedResult`
 )(
   {
     available: S.Literal(false),
@@ -212,8 +212,203 @@ export class PracticeKgCandidateClaimsResult extends S.Class<PracticeKgCandidate
     epistemic_status: S.Literal("candidate-unreviewed"),
     reason: S.Literal("claims batch not yet loaded"),
   },
-  $I.annote("PracticeKgCandidateClaimsResult", {
+  $I.annote("PracticeKgCandidateClaimsNotLoadedResult", {
     description: "Manifest-labelled empty result used before candidate claims are loaded.",
+  })
+) {}
+
+/**
+ * Candidate-claims response: either a budgeted loaded result or the typed
+ * not-loaded state used by bundles built before the claims batch.
+ *
+ * @example
+ * ```ts
+ * import { PracticeKgCandidateClaimsNotLoadedResult, PracticeKgCandidateClaimsResult } from "@beep/law-practice-use-cases/server"
+ *
+ * const result = PracticeKgCandidateClaimsNotLoadedResult.make({
+ *   available: false,
+ *   bundle_version: "2026-07-27-01",
+ *   epistemic_status: "candidate-unreviewed",
+ *   reason: "claims batch not yet loaded"
+ * })
+ * console.log(PracticeKgCandidateClaimsResult.is(result)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const PracticeKgCandidateClaimsResult = S.Union([
+  PracticeKgCandidateClaimsNotLoadedResult,
+  PracticeKgToolResult,
+]).pipe(
+  $I.annoteSchema("PracticeKgCandidateClaimsResult", {
+    description: "Loaded candidate-claim rows or a typed not-loaded bundle state.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime type for {@link PracticeKgCandidateClaimsResult}.
+ *
+ * @example
+ * ```ts
+ * import type { PracticeKgCandidateClaimsResult } from "@beep/law-practice-use-cases/server"
+ *
+ * const read = (result: PracticeKgCandidateClaimsResult) => result.bundle_version
+ * console.log(typeof read) // "function"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PracticeKgCandidateClaimsResult = typeof PracticeKgCandidateClaimsResult.Type;
+
+/**
+ * PGlite graph row shared by decoding and field-tier projection.
+ *
+ * @example
+ * ```ts
+ * import { PracticeKgGraphToolRow } from "@beep/law-practice-use-cases/server"
+ *
+ * console.log(PracticeKgGraphToolRow.fields.naturalKey)
+ * ```
+ *
+ * @category tool-schemas
+ * @since 0.0.0
+ */
+export class PracticeKgGraphToolRow extends S.Class<PracticeKgGraphToolRow>($I`PracticeKgGraphToolRow`)(
+  {
+    client: S.NullOr(S.String),
+    count: S.NullOr(S.Finite),
+    docketFamily: S.NullOr(S.String),
+    epistemicStatus: S.String,
+    iri: S.String,
+    kind: S.String,
+    label: S.String,
+    naturalKey: S.String,
+    provenanceKind: S.String,
+    provenanceRef: S.String,
+  },
+  $I.annote("PracticeKgGraphToolRow", { description: "Decoded graph row exposed through practice KG tools." })
+) {}
+
+/**
+ * Docket-family aggregate row shared by decoding and field-tier projection.
+ *
+ * @example
+ * ```ts
+ * import { PracticeKgFamilyToolRow } from "@beep/law-practice-use-cases/server"
+ *
+ * console.log(PracticeKgFamilyToolRow.fields.family)
+ * ```
+ *
+ * @category tool-schemas
+ * @since 0.0.0
+ */
+export class PracticeKgFamilyToolRow extends S.Class<PracticeKgFamilyToolRow>($I`PracticeKgFamilyToolRow`)(
+  {
+    application: S.NullOr(S.String),
+    applicationCount: S.Finite,
+    docket: S.NullOr(S.String),
+    docketCount: S.Finite,
+    documentCount: S.Finite,
+    documentDigest: S.NullOr(S.String),
+    documentLabel: S.NullOr(S.String),
+    family: S.String,
+    patent: S.NullOr(S.String),
+  },
+  $I.annote("PracticeKgFamilyToolRow", { description: "Decoded docket-family aggregate tool row." })
+) {}
+
+/**
+ * Corpus document row shared by decoding and field-tier projection.
+ *
+ * @example
+ * ```ts
+ * import { PracticeKgDocumentToolRow } from "@beep/law-practice-use-cases/server"
+ *
+ * console.log(PracticeKgDocumentToolRow.fields.digest)
+ * ```
+ *
+ * @category tool-schemas
+ * @since 0.0.0
+ */
+export class PracticeKgDocumentToolRow extends S.Class<PracticeKgDocumentToolRow>($I`PracticeKgDocumentToolRow`)(
+  {
+    digest: S.String,
+    docket: S.NullOr(S.String),
+    family: S.NullOr(S.String),
+    organizedPath: S.NullOr(S.String),
+    pointer: S.NullOr(S.String),
+    score: S.NullOr(S.Finite),
+    snippet: S.NullOr(S.String),
+    sourceOriginChain: S.NullOr(S.String),
+    sourceRelativePath: S.NullOr(S.String),
+    text: S.NullOr(S.String),
+    truncated: S.NullOr(S.Boolean),
+  },
+  $I.annote("PracticeKgDocumentToolRow", { description: "Decoded corpus document tool row." })
+) {}
+
+/**
+ * Email header row shared by decoding and field-tier projection.
+ *
+ * @example
+ * ```ts
+ * import { PracticeKgEmailToolRow } from "@beep/law-practice-use-cases/server"
+ *
+ * console.log(PracticeKgEmailToolRow.fields.subject)
+ * ```
+ *
+ * @category tool-schemas
+ * @since 0.0.0
+ */
+export class PracticeKgEmailToolRow extends S.Class<PracticeKgEmailToolRow>($I`PracticeKgEmailToolRow`)(
+  {
+    archiveDigest: S.String,
+    conversationTopic: S.NullOr(S.String),
+    deliveryIso: S.NullOr(S.String),
+    folderPath: S.String,
+    messageRelPath: S.String,
+    recipients: S.String,
+    senderEmail: S.NullOr(S.String),
+    senderName: S.NullOr(S.String),
+    subject: S.String,
+    submitIso: S.NullOr(S.String),
+  },
+  $I.annote("PracticeKgEmailToolRow", { description: "Decoded header-only email tool row." })
+) {}
+
+/**
+ * Candidate claim with one resolvable evidence span.
+ *
+ * @example
+ * ```ts
+ * import { PracticeKgCandidateClaimToolRow } from "@beep/law-practice-use-cases/server"
+ *
+ * console.log(PracticeKgCandidateClaimToolRow.fields.label)
+ * ```
+ *
+ * @category tool-schemas
+ * @since 0.0.0
+ */
+export class PracticeKgCandidateClaimToolRow extends S.Class<PracticeKgCandidateClaimToolRow>(
+  $I`PracticeKgCandidateClaimToolRow`
+)(
+  {
+    activityOperation: S.String,
+    claimText: S.String,
+    digest: S.String,
+    docket: S.String,
+    endChar: NonNegativeInt,
+    evidenceQuote: S.String,
+    family: S.String,
+    label: S.Literal("candidate — unreviewed"),
+    sourceFile: S.String,
+    startChar: NonNegativeInt,
+  },
+  $I.annote("PracticeKgCandidateClaimToolRow", {
+    description: "Candidate claim row carrying its docket join, extraction activity, and evidence span.",
   })
 ) {}
 
@@ -232,31 +427,22 @@ export class PracticeKgCandidateClaimsResult extends S.Class<PracticeKgCandidate
  */
 export const practiceKgGraphFieldTiers = defineFieldTiers({
   minimal: S.Struct({
-    count: S.NullOr(S.Finite),
-    kind: S.String,
-    label: S.String,
-    naturalKey: S.String,
+    count: PracticeKgGraphToolRow.fields.count,
+    kind: PracticeKgGraphToolRow.fields.kind,
+    label: PracticeKgGraphToolRow.fields.label,
+    naturalKey: PracticeKgGraphToolRow.fields.naturalKey,
   }),
   balanced: S.Struct({
-    client: S.NullOr(S.String),
-    count: S.NullOr(S.Finite),
-    docketFamily: S.NullOr(S.String),
-    iri: S.String,
-    kind: S.String,
-    label: S.String,
-    naturalKey: S.String,
+    client: PracticeKgGraphToolRow.fields.client,
+    count: PracticeKgGraphToolRow.fields.count,
+    docketFamily: PracticeKgGraphToolRow.fields.docketFamily,
+    iri: PracticeKgGraphToolRow.fields.iri,
+    kind: PracticeKgGraphToolRow.fields.kind,
+    label: PracticeKgGraphToolRow.fields.label,
+    naturalKey: PracticeKgGraphToolRow.fields.naturalKey,
   }),
   complete: S.Struct({
-    client: S.NullOr(S.String),
-    count: S.NullOr(S.Finite),
-    docketFamily: S.NullOr(S.String),
-    epistemicStatus: S.String,
-    iri: S.String,
-    kind: S.String,
-    label: S.String,
-    naturalKey: S.String,
-    provenanceKind: S.String,
-    provenanceRef: S.String,
+    ...PracticeKgGraphToolRow.fields,
   }),
 });
 
@@ -275,29 +461,21 @@ export const practiceKgGraphFieldTiers = defineFieldTiers({
  */
 export const practiceKgFamilyFieldTiers = defineFieldTiers({
   minimal: S.Struct({
-    applicationCount: S.Finite,
-    docketCount: S.Finite,
-    documentCount: S.Finite,
-    family: S.String,
+    applicationCount: PracticeKgFamilyToolRow.fields.applicationCount,
+    docketCount: PracticeKgFamilyToolRow.fields.docketCount,
+    documentCount: PracticeKgFamilyToolRow.fields.documentCount,
+    family: PracticeKgFamilyToolRow.fields.family,
   }),
   balanced: S.Struct({
-    applicationCount: S.Finite,
-    docket: S.NullOr(S.String),
-    docketCount: S.Finite,
-    documentCount: S.Finite,
-    family: S.String,
-    patent: S.NullOr(S.String),
+    applicationCount: PracticeKgFamilyToolRow.fields.applicationCount,
+    docket: PracticeKgFamilyToolRow.fields.docket,
+    docketCount: PracticeKgFamilyToolRow.fields.docketCount,
+    documentCount: PracticeKgFamilyToolRow.fields.documentCount,
+    family: PracticeKgFamilyToolRow.fields.family,
+    patent: PracticeKgFamilyToolRow.fields.patent,
   }),
   complete: S.Struct({
-    application: S.NullOr(S.String),
-    applicationCount: S.Finite,
-    docket: S.NullOr(S.String),
-    docketCount: S.Finite,
-    documentDigest: S.NullOr(S.String),
-    documentLabel: S.NullOr(S.String),
-    documentCount: S.Finite,
-    family: S.String,
-    patent: S.NullOr(S.String),
+    ...PracticeKgFamilyToolRow.fields,
   }),
 });
 
@@ -316,30 +494,21 @@ export const practiceKgFamilyFieldTiers = defineFieldTiers({
  */
 export const practiceKgDocumentFieldTiers = defineFieldTiers({
   minimal: S.Struct({
-    digest: S.String,
-    organizedPath: S.NullOr(S.String),
-    pointer: S.NullOr(S.String),
+    digest: PracticeKgDocumentToolRow.fields.digest,
+    organizedPath: PracticeKgDocumentToolRow.fields.organizedPath,
+    pointer: PracticeKgDocumentToolRow.fields.pointer,
   }),
   balanced: S.Struct({
-    digest: S.String,
-    docket: S.NullOr(S.String),
-    family: S.NullOr(S.String),
-    organizedPath: S.NullOr(S.String),
-    pointer: S.NullOr(S.String),
-    score: S.NullOr(S.Finite),
-    snippet: S.NullOr(S.String),
+    digest: PracticeKgDocumentToolRow.fields.digest,
+    docket: PracticeKgDocumentToolRow.fields.docket,
+    family: PracticeKgDocumentToolRow.fields.family,
+    organizedPath: PracticeKgDocumentToolRow.fields.organizedPath,
+    pointer: PracticeKgDocumentToolRow.fields.pointer,
+    score: PracticeKgDocumentToolRow.fields.score,
+    snippet: PracticeKgDocumentToolRow.fields.snippet,
   }),
   complete: S.Struct({
-    digest: S.String,
-    docket: S.NullOr(S.String),
-    family: S.NullOr(S.String),
-    organizedPath: S.NullOr(S.String),
-    pointer: S.NullOr(S.String),
-    score: S.NullOr(S.Finite),
-    snippet: S.NullOr(S.String),
-    sourceRelativePath: S.NullOr(S.String),
-    text: S.NullOr(S.String),
-    truncated: S.NullOr(S.Boolean),
+    ...PracticeKgDocumentToolRow.fields,
   }),
 });
 
@@ -358,30 +527,70 @@ export const practiceKgDocumentFieldTiers = defineFieldTiers({
  */
 export const practiceKgEmailFieldTiers = defineFieldTiers({
   minimal: S.Struct({
-    archiveDigest: S.String,
-    messageRelPath: S.String,
-    subject: S.String,
+    archiveDigest: PracticeKgEmailToolRow.fields.archiveDigest,
+    messageRelPath: PracticeKgEmailToolRow.fields.messageRelPath,
+    subject: PracticeKgEmailToolRow.fields.subject,
   }),
   balanced: S.Struct({
-    archiveDigest: S.String,
-    messageRelPath: S.String,
-    recipients: S.String,
-    senderEmail: S.NullOr(S.String),
-    subject: S.String,
-    submitIso: S.NullOr(S.String),
+    archiveDigest: PracticeKgEmailToolRow.fields.archiveDigest,
+    messageRelPath: PracticeKgEmailToolRow.fields.messageRelPath,
+    recipients: PracticeKgEmailToolRow.fields.recipients,
+    senderEmail: PracticeKgEmailToolRow.fields.senderEmail,
+    subject: PracticeKgEmailToolRow.fields.subject,
+    submitIso: PracticeKgEmailToolRow.fields.submitIso,
   }),
   complete: S.Struct({
-    archiveDigest: S.String,
-    conversationTopic: S.NullOr(S.String),
-    deliveryIso: S.NullOr(S.String),
-    folderPath: S.String,
-    messageRelPath: S.String,
-    recipients: S.String,
-    senderEmail: S.NullOr(S.String),
-    senderName: S.NullOr(S.String),
-    subject: S.String,
-    submitIso: S.NullOr(S.String),
+    ...PracticeKgEmailToolRow.fields,
   }),
+});
+
+class PracticeKgCandidateClaimMinimalRow extends S.Class<PracticeKgCandidateClaimMinimalRow>(
+  $I`PracticeKgCandidateClaimMinimalRow`
+)(
+  {
+    claimText: PracticeKgCandidateClaimToolRow.fields.claimText,
+    docket: PracticeKgCandidateClaimToolRow.fields.docket,
+    label: PracticeKgCandidateClaimToolRow.fields.label,
+    sourceFile: PracticeKgCandidateClaimToolRow.fields.sourceFile,
+  },
+  $I.annote("PracticeKgCandidateClaimMinimalRow", {
+    description: "Minimal grounded candidate-claim projection.",
+  })
+) {}
+
+class PracticeKgCandidateClaimBalancedRow extends S.Class<PracticeKgCandidateClaimBalancedRow>(
+  $I`PracticeKgCandidateClaimBalancedRow`
+)(
+  {
+    claimText: PracticeKgCandidateClaimToolRow.fields.claimText,
+    digest: PracticeKgCandidateClaimToolRow.fields.digest,
+    docket: PracticeKgCandidateClaimToolRow.fields.docket,
+    evidenceQuote: PracticeKgCandidateClaimToolRow.fields.evidenceQuote,
+    family: PracticeKgCandidateClaimToolRow.fields.family,
+    label: PracticeKgCandidateClaimToolRow.fields.label,
+  },
+  $I.annote("PracticeKgCandidateClaimBalancedRow", {
+    description: "Balanced grounded candidate-claim projection.",
+  })
+) {}
+
+/**
+ * Progressive fields for grounded candidate claim rows.
+ *
+ * @example
+ * ```ts
+ * import { practiceKgCandidateClaimFieldTiers } from "@beep/law-practice-use-cases/server"
+ *
+ * console.log(Object.keys(practiceKgCandidateClaimFieldTiers.complete.fields).includes("evidenceQuote"))
+ * ```
+ *
+ * @category tool-schemas
+ * @since 0.0.0
+ */
+export const practiceKgCandidateClaimFieldTiers = defineFieldTiers({
+  minimal: S.Struct(PracticeKgCandidateClaimMinimalRow.fields),
+  balanced: S.Struct(PracticeKgCandidateClaimBalancedRow.fields),
+  complete: S.Struct(PracticeKgCandidateClaimToolRow.fields),
 });
 
 /*
@@ -547,7 +756,7 @@ export const EmailSearchTool = readTool(
 );
 
 /**
- * Declares the future candidate-claims lookup with a typed not-loaded result.
+ * Declares candidate-claims lookup with a typed fallback for older bundles.
  *
  * @example
  * ```ts
@@ -560,7 +769,7 @@ export const EmailSearchTool = readTool(
  */
 export const KgCandidateClaimsTool = readTool(
   "kg_candidate_claims",
-  "Return candidate claims when the claims batch is loaded; this bundle currently reports a typed empty result.",
+  "Return candidate — unreviewed claims with resolvable evidence spans, or a typed not-loaded result for older bundles.",
   CandidateClaimsParams,
   PracticeKgCandidateClaimsResult
 );
@@ -596,31 +805,3 @@ export const KgProvenanceTool = readTool(
  * @category tools
  * @since 0.0.0
  */
-export const PracticeKgToolkit = Toolkit.make(
-  KgClientsTool,
-  KgDocketFamilyTool,
-  KgApplicationLookupTool,
-  KgFindTool,
-  CorpusSearchTextTool,
-  CorpusGetDocumentTool,
-  EmailSearchTool,
-  KgCandidateClaimsTool,
-  KgProvenanceTool
-);
-
-/**
- * Type of {@link PracticeKgToolkit}.
- *
- * @example
- * ```ts
- * import { PracticeKgToolkit } from "@beep/law-practice-use-cases/server"
- * import type { PracticeKgToolkit as PracticeKgToolkitType } from "@beep/law-practice-use-cases/server"
- *
- * const toolkit: PracticeKgToolkitType = PracticeKgToolkit
- * console.log(Object.keys(toolkit.tools).length)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type PracticeKgToolkit = typeof PracticeKgToolkit;

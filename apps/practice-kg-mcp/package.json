@@ -28,9 +28,11 @@
   },
   "bin": {
     "practice-kg-build": "./src/build.ts",
+    "practice-kg-claims": "./src/claims.ts",
     "practice-kg-mcp": "./src/bin.ts"
   },
   "dependencies": {
+    "@beep/anthropic": "workspace:^",
     "@beep/duckdb": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/law-practice-server": "workspace:^",

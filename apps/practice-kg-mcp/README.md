@@ -21,6 +21,21 @@ bun run apps/practice-kg-mcp/src/build.ts \
 The bundle is self-contained and disposable: replace the folder as a unit when
 a newer bundle is delivered. Corpus content and PII never enter this repo.
 
+## Candidate claims batch
+
+The workstation-only claims command resolves the Anthropic model and redacted
+API key from `AI_ANTHROPIC_MODEL` and `AI_ANTHROPIC_API_KEY`. Remote extraction
+must be explicitly enabled for this write batch:
+
+```bash
+BEEP_LANGEXTRACT_ALLOW_REMOTE=true \
+bun run apps/practice-kg-mcp/src/claims.ts \
+  --inputs /path/to/staging/oppold-demo-inputs \
+  --bundle-out /path/to/bundle
+```
+
+Tests inject a deterministic fake `LanguageModel` and never use this live layer.
+
 ## Distribution
 
 Ships as an MCP Bundle (.mcpb) with a bun-compiled Windows binary plus DuckDB

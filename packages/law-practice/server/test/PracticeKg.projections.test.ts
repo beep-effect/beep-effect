@@ -1,30 +1,43 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
+import { Table as CandidateClaimTable } from "@beep/epistemic-tables/entities/CandidateClaim";
+import { Table as EvidenceTable } from "@beep/epistemic-tables/entities/Evidence";
 import {
   buildPracticeKgBundle,
+  LawPracticeServerLive,
   PracticeKgBundle,
   PracticeKgBundleContext,
   PracticeKgBundleManifest,
+  PracticeKgClaimsOptions,
   PracticeKgOptions,
   PracticeKgProjectionsLive,
+  PracticeKgQueries,
   PracticeKgToolkitLayer,
+  runPracticeKgClaimsBatch,
 } from "@beep/law-practice-server";
 import { DbSchema } from "@beep/law-practice-tables";
-import { PracticeKgCandidateClaimsResult, PracticeKgToolResult } from "@beep/law-practice-use-cases/server";
+import {
+  PracticeKgCandidateClaimsNotLoadedResult,
+  PracticeKgCandidateClaimsResult,
+  PracticeKgToolResult,
+} from "@beep/law-practice-use-cases/server";
 import * as Pglite from "@beep/pglite";
 import { NonNegativeInt } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
-import { Config, Effect, FileSystem, Layer, Order, Path } from "effect";
+import { Config, ConfigProvider, Effect, FileSystem, Layer, Order, Path, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
+import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import * as McpServer from "effect/unstable/ai/McpServer";
+import * as Response from "effect/unstable/ai/Response";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
+import { OFFICE_ACTION_FIXTURE } from "./fixture.ts";
 
 class FixtureSourceRow extends S.Class<FixtureSourceRow>("FixtureSourceRow")({
   artifactId: S.String,
@@ -76,6 +89,23 @@ const declaredColumnNames = (columns: Readonly<Record<string, { readonly name: s
     A.map(R.values(columns), (column) => column.name),
     Order.String
   );
+
+const fixtureModelOutput = `{"extractions":[{"label":"office_action","text":"Office Action"},{"label":"claim","text":"A widget comprising a lid and a base."},{"label":"rejection_reference","text":"Smith"},{"label":"distinction","text":"a hinge coupling the lid to the base"}]}`;
+const fixtureUsage = Response.Usage.make({
+  inputTokens: { cacheRead: undefined, cacheWrite: undefined, total: 0, uncached: 0 },
+  outputTokens: { reasoning: undefined, text: 0, total: 0 },
+});
+const fixtureLanguageModel = Layer.effect(
+  LanguageModel.LanguageModel,
+  LanguageModel.make({
+    generateText: () =>
+      Effect.succeed([
+        Response.makePart("text", { text: fixtureModelOutput }),
+        Response.makePart("finish", { reason: "stop", response: undefined, usage: fixtureUsage }),
+      ]),
+    streamText: () => Stream.empty,
+  })
+);
 
 const testLayer = NodeServices.layer;
 const provideTestLayer = provideScopedLayer(testLayer);
@@ -438,13 +468,23 @@ describe("practice KG projections", () => {
           expect(result.epistemic_status).toBe("derived-from-official-records");
         });
         expect(O.getOrUndefined(A.get(results, 6))?.note).toContain("archive-level confidence");
+        const digestProvenance = yield* callToolText("kg_provenance", { digest: fixtureDigests.docket }).pipe(
+          Effect.flatMap(decodeToolResultJson)
+        );
+        const provenanceRow = R.fromEntries(
+          A.zip(digestProvenance.data.columns, O.getOrThrow(A.head(digestProvenance.data.rows)))
+        );
+        expect(provenanceRow.sourceOriginChain).toContain("base:fixture-source:alpha-response.txt");
 
         const candidate = yield* callToolText("kg_candidate_claims", { family: "20001" }).pipe(
           Effect.flatMap(decodeCandidateClaimsJson)
         );
-        expect(candidate.available).toBe(false);
-        expect(candidate.bundle_version).toBe(manifest.bundleVersion);
-        expect(candidate.reason).toBe("claims batch not yet loaded");
+        expect(S.is(PracticeKgCandidateClaimsNotLoadedResult)(candidate)).toBe(true);
+        if (S.is(PracticeKgCandidateClaimsNotLoadedResult)(candidate)) {
+          expect(candidate.available).toBe(false);
+          expect(candidate.bundle_version).toBe(manifest.bundleVersion);
+          expect(candidate.reason).toBe("claims batch not yet loaded");
+        }
 
         const degraded = yield* callToolText("kg_docket_family", {
           budgetBytes: 90,
@@ -484,6 +524,82 @@ describe("practice KG projections", () => {
             })
         );
       }).pipe(provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") })));
+    }, provideTestLayer),
+    { timeout: 120_000 }
+  );
+
+  it.effect(
+    "extracts, persists, and serves span-resolvable candidate claims with fixture model output",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const corpusRoot = yield* makeFixtureCorpus();
+      const bundleOut = path.join(corpusRoot, "bundle-claims");
+      const inputs = path.join(corpusRoot, "claims-inputs");
+      yield* runBuild(graphOptions(corpusRoot, bundleOut), bundleOut);
+      yield* fs.makeDirectory(inputs, { recursive: true });
+      yield* fs.writeFileString(path.join(inputs, "20001US01-office-action.txt"), OFFICE_ACTION_FIXTURE);
+
+      const claimsLayer = Layer.mergeAll(
+        LawPracticeServerLive,
+        Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") })
+      ).pipe(
+        Layer.provide(fixtureLanguageModel),
+        Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_LANGEXTRACT_ALLOW_REMOTE: "true" })))
+      );
+      const summary = yield* runPracticeKgClaimsBatch(PracticeKgClaimsOptions.make({ bundleOut, inputs })).pipe(
+        provideScopedLayer(claimsLayer)
+      );
+      expect(summary.claims).toBe(1);
+      const rerunSummary = yield* runPracticeKgClaimsBatch(PracticeKgClaimsOptions.make({ bundleOut, inputs })).pipe(
+        provideScopedLayer(claimsLayer)
+      );
+      expect(rerunSummary.claims).toBe(1);
+      const persistedRows = yield* Effect.gen(function* () {
+        const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+        yield* Effect.forEach(
+          [
+            ["epistemic_candidate_claim", declaredColumnNames(getColumns(CandidateClaimTable))],
+            ["epistemic_evidence", declaredColumnNames(getColumns(EvidenceTable))],
+          ] as const,
+          ([tableName, declared]) =>
+            Effect.gen(function* () {
+              const columnRows = yield* sql
+                .unsafe(
+                  `SELECT column_name AS "columnName" FROM information_schema.columns WHERE table_name = $1 ORDER BY column_name`,
+                  [tableName]
+                )
+                .pipe(Effect.flatMap(decodeColumnRows));
+              expect(A.map(columnRows, (row) => row.columnName)).toStrictEqual(declared);
+            })
+        );
+        return yield* sql.unsafe(PracticeKgQueries.candidateClaims, ["20001US01", null, null]);
+      }).pipe(provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") })));
+      expect(A.length(persistedRows)).toBe(1);
+
+      const manifest = yield* fs
+        .readFileString(path.join(bundleOut, "bundle.manifest.json"))
+        .pipe(Effect.flatMap(decodeManifestJson));
+      const bundleContext = PracticeKgBundleContext.make({ bundleDir: bundleOut, corpusRoot, manifest });
+      const resources = Layer.mergeAll(
+        Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") }),
+        DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: path.join(bundleOut, "practice.duckdb") })),
+        Layer.succeed(PracticeKgBundle, PracticeKgBundle.of(bundleContext))
+      );
+      const host = Layer.mergeAll(McpServer.McpServer.layer, PracticeKgToolkitLayer).pipe(Layer.provide(resources));
+      const result = yield* callToolText("kg_candidate_claims", { docket: "20001US01" }).pipe(
+        Effect.flatMap(decodeToolResultJson),
+        provideScopedLayer(host)
+      );
+      expect(result.epistemic_status).toBe("candidate-unreviewed");
+      expect(result.total).toBe(1);
+      const row = R.fromEntries(A.zip(result.data.columns, O.getOrThrow(A.head(result.data.rows))));
+      expect(row.label).toBe("candidate — unreviewed");
+      expect(row.claimText).toBe("A widget comprising a lid and a base.");
+      expect(row.evidenceQuote).toBe("A Hinge Coupling The Lid To The Base");
+      expect(row.sourceFile).toBe("20001US01-office-action.txt");
+      expect(OFFICE_ACTION_FIXTURE.slice(Number(row.startChar), Number(row.endChar))).toBe(row.evidenceQuote);
+      expect(row.activityOperation).toContain("operation:");
     }, provideTestLayer),
     { timeout: 120_000 }
   );

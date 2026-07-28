@@ -75,6 +75,7 @@ SELECT
   CAST(COALESCE(s.size_bytes, 0) AS DOUBLE) AS "sizeBytes",
   COALESCE(s.mtime_iso, '1970-01-01T00:00:00.000Z') AS "mtimeIso",
   COALESCE(s.run_label, 'base') AS "runLabel"
+  ,COALESCE(s.source_origin_chain, o.source_relative_path) AS "sourceOriginChain"
 FROM corpus_organized o
 LEFT JOIN (
   SELECT
@@ -82,6 +83,7 @@ LEFT JOIN (
     ARG_MIN(size_bytes, run_label || ':' || source_label || ':' || relative_path) AS size_bytes,
     ARG_MIN(mtime_iso, run_label || ':' || source_label || ':' || relative_path) AS mtime_iso,
     ARG_MIN(run_label, run_label || ':' || source_label || ':' || relative_path) AS run_label
+    ,STRING_AGG(run_label || ':' || source_label || ':' || relative_path, ' <- ' ORDER BY run_label, source_label, relative_path) AS source_origin_chain
   FROM corpus_source_files
   GROUP BY digest
 ) s USING (digest)
@@ -102,6 +104,7 @@ SELECT
   CAST(refresh.size_bytes AS DOUBLE) AS "sizeBytes",
   refresh.mtime_iso AS "mtimeIso",
   refresh.run_label AS "runLabel"
+  ,refresh.run_label || ':' || refresh.source_label || ':' || refresh.relative_path AS "sourceOriginChain"
 FROM (
   SELECT *,
     ROW_NUMBER() OVER (
