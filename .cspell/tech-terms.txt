@@ -63,6 +63,7 @@ credentialless
 ctype
 CUSIP
 cutover
+DBUS
 Decoratable
 Deque
 describedby
@@ -273,6 +274,7 @@ RDFJS
 rdfjs
 rdfs
 RDFS
+readyz
 recompiles
 reconstructibility
 redeployments

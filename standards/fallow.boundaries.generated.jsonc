@@ -504,6 +504,12 @@
         ]
       },
       {
+        "name": "@beep/openclaw",
+        "patterns": [
+          "packages/drivers/openclaw/src/**"
+        ]
+      },
+      {
         "name": "@beep/oxigraph",
         "patterns": [
           "packages/drivers/oxigraph/src/**"
@@ -2321,6 +2327,23 @@
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/openai-compat",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/openclaw",
+        "allow": [
+          "@beep/identity",
+          "@beep/openclaw",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/openclaw",
           "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"

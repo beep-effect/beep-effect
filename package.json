@@ -527,6 +527,7 @@
     "packages/drivers/protobuf",
     "packages/drivers/tailscale",
     "packages/drivers/pretext",
-    "packages/drivers/graph-3d"
+    "packages/drivers/graph-3d",
+    "packages/drivers/openclaw"
   ]
 }

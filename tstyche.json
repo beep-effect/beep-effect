@@ -78,6 +78,7 @@
     "packages/drivers/protobuf/dtslint/**/*.tst.*",
     "packages/drivers/tailscale/dtslint/**/*.tst.*",
     "packages/drivers/pretext/dtslint/**/*.tst.*",
+    "packages/drivers/openclaw/dtslint/**/*.tst.*",
     "packages/foundation/modeling/html/dtslint/**/*.tst.*",
     "packages/foundation/modeling/identity/dtslint/**/*.tst.*",
     "packages/foundation/modeling/lexical/dtslint/**/*.tst.*",

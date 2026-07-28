@@ -154,6 +154,9 @@
       "path": "packages/drivers/openai-compat"
     },
     {
+      "path": "packages/drivers/openclaw"
+    },
+    {
       "path": "packages/drivers/oxigraph"
     },
     {

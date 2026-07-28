@@ -1721,7 +1721,9 @@
       ],
       "@beep/law-practice-tables/entities": [
         "./packages/law-practice/tables/src/entities/index.ts"
-      ]
+      ],
+      "@beep/openclaw": ["./packages/drivers/openclaw/src/index.ts"],
+      "@beep/openclaw/*": ["./packages/drivers/openclaw/src/*"]
     }
   }
 }
