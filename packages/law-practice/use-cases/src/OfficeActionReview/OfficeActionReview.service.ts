@@ -24,6 +24,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { spikeEntityInput } from "../internal/spikeEntity.ts";
 import { OfficeActionExtractionLabel } from "./OfficeActionExtractionLabel.ts";
+import { OfficeActionCandidateExtraction } from "./OfficeActionReview.ports.ts";
 import type { ClaimGateShape } from "@beep/epistemic-use-cases/ClaimGate";
 import type { ClaimTransitionShape } from "@beep/epistemic-use-cases/ClaimLifecycle";
 import type { FileProcessingServiceShape } from "@beep/file-processing/Service";
@@ -71,17 +72,20 @@ export const officeActionExtractionTargets: LangExtractRequest["targets"] = [
   }),
 ];
 
-const candidateClaimOf = (law: LawEntities): CandidateClaim =>
+const candidateClaimOf = (law: LawEntities, entitySeed: number): CandidateClaim =>
   decodeCandidateClaim({
-    ...spikeEntityInput("EpistemicCandidateClaim", 1),
+    ...spikeEntityInput("EpistemicCandidateClaim", entitySeed * 10),
     fixtureKey: law.distinction.fixtureKey,
     lifecycle: "candidate",
-    snapshot: {},
+    snapshot: {
+      claimText: law.claim.text,
+      distinction: law.distinction.anchor.quote,
+    },
   });
 
-const evidenceOf = (law: LawEntities): Evidence =>
+const evidenceOf = (law: LawEntities, entitySeed: number): Evidence =>
   decodeEvidence({
-    ...spikeEntityInput("EpistemicEvidence", 2),
+    ...spikeEntityInput("EpistemicEvidence", entitySeed * 10 + 1),
     artifactFixtureKey: law.officeAction.fixtureKey,
     span: {
       confidence: 0.9,
@@ -232,8 +236,10 @@ export interface OfficeActionReviewDeps {
  * @category constructors
  * @since 0.0.0
  */
-export const makeOfficeActionReview = (deps: OfficeActionReviewDeps): OfficeActionReviewShape => ({
-  review: Effect.fn("law_practice.office_action.review")(function* (input) {
+export const makeOfficeActionReview = (deps: OfficeActionReviewDeps): OfficeActionReviewShape => {
+  const extractCandidate = Effect.fn("law_practice.office_action.extract_candidate")(function* (
+    input: OfficeActionReviewInput
+  ) {
     const processed = yield* deps.fileProcessing.process(
       ProcessFileOperation.make({
         exportChildren: false,
@@ -245,22 +251,28 @@ export const makeOfficeActionReview = (deps: OfficeActionReviewDeps): OfficeActi
     );
     const sourceText = yield* sourceTextFrom(processed);
     const extractionResult = yield* deps.langExtract.extract(extractionRequestFrom(input, sourceText));
-
-    // Map the grounded extractions into law entities.
     const law = yield* deps.irToLaw.toLaw(extractionResult.extractions);
 
-    // Build the epistemic candidate claim + evidence from the distinction.
-    const candidate = candidateClaimOf(law);
-    const evidence = evidenceOf(law);
+    return OfficeActionCandidateExtraction.make({
+      candidate: candidateClaimOf(law, input.entitySeed),
+      evidence: evidenceOf(law, input.entitySeed),
+    });
+  });
 
-    // Gate the claim: a well-formed span admits it.
-    const verdict = yield* deps.gate.evaluate(candidate, [evidence]);
+  return {
+    extractCandidate,
+    review: Effect.fn("law_practice.office_action.review")(function* (input) {
+      const { candidate, evidence } = yield* extractCandidate(input);
 
-    // Advance the lifecycle. candidate -> shape_valid is always legal, so the
-    // impossible ClaimInvalidTransition is a defect (orDie) and E stays never.
-    const advanced = yield* deps.transition.advance(candidate, verdict).pipe(Effect.orDie);
+      // Gate the claim: a well-formed span admits it.
+      const verdict = yield* deps.gate.evaluate(candidate, [evidence]);
 
-    // Fold the single-claim authority into the deterministic projection.
-    return projectClaims([advanced]);
-  }),
-});
+      // Advance the lifecycle. candidate -> shape_valid is always legal, so the
+      // impossible ClaimInvalidTransition is a defect (orDie) and E stays never.
+      const advanced = yield* deps.transition.advance(candidate, verdict).pipe(Effect.orDie);
+
+      // Fold the single-claim authority into the deterministic projection.
+      return projectClaims([advanced]);
+    }),
+  };
+};

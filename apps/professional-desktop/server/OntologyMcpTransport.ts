@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { EpistemicConfig } from "@beep/epistemic-config/server";
 import {
   ExecutionSink,
   GrantOperation,
@@ -12,21 +13,29 @@ import {
   GrantResource,
   SinkDestination,
 } from "@beep/epistemic-domain/values/ExecutionGrant";
+import { GovernedEgressLive, GovernedEgressOptions } from "@beep/epistemic-server/GovernedEgress";
 import { GovernedTierGateLive, GovernedTierGateOptions } from "@beep/epistemic-server/GovernedTierGate";
 import { sanitizedToolkit } from "@beep/mcp-kit";
 import { OntologyMcpConfig } from "@beep/ontology-config/server";
-import { OntologyMcpMutationToolsLive, OntologyMcpReadOnlyToolsLive } from "@beep/ontology-server/tools";
+import {
+  OntologyMcpMutationToolsLive,
+  OntologyMcpPublishToolsLive,
+  OntologyMcpReadOnlyToolsLive,
+} from "@beep/ontology-server/tools";
 import {
   ExportProvenanceTool,
   OntologyMutationToolkit,
+  OntologyPublishToolkit,
   OntologyReadOnlyToolkit,
   ProposeChangeBatchTool,
+  PublishProvenanceTool,
   RepairOntologyTool,
 } from "@beep/ontology-use-cases/tools";
 import { A, O } from "@beep/utils";
 import { Context, Data, Duration, Effect, Layer, Metric } from "effect";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import { Headers, HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
+import * as FetchHttpClient from "effect/unstable/http/FetchHttpClient";
 import { requireRpcSessionToken } from "./RpcSessionAuth.ts";
 import type { Redacted } from "effect";
 
@@ -102,6 +111,7 @@ const approvedOntologyMutationTools: ReadonlyArray<string> = [
   ProposeChangeBatchTool.name,
   RepairOntologyTool.name,
   ExportProvenanceTool.name,
+  PublishProvenanceTool.name,
 ];
 
 // Every governed ontology mutation writes the local workspace; the sink triple
@@ -112,6 +122,19 @@ const ontologyWorkspaceSink = ExecutionSink.make({
   audience: "local-workspace",
   destination: SinkDestination.make("workspace://ontology"),
   sinkClass: "mcp-write",
+});
+
+// The publication branch's sink names the *class* of egress, not a URL, and
+// that is deliberate: `ToolCallRequest` carries no parameters, so the gate
+// cannot see which destination a dispatch intends. The split is therefore
+// explicit — the gate decides whether this session may publish at all, the
+// governed egress `Fetch` decides which destination a request may reach, and
+// each writes its own decision row. Reading one row without the other tells
+// half the story.
+const ontologyEgressSink = ExecutionSink.make({
+  audience: "external-network",
+  destination: SinkDestination.make("network://governed-egress"),
+  sinkClass: "network-egress",
 });
 
 // Generous against any interactive session length; a session's frozen grants
@@ -134,6 +157,7 @@ const ontologySessionGrantTtl = Duration.hours(12);
 export const makeOntologyMcpTransportLayer = (options: {
   readonly token: Redacted.Redacted;
   readonly approvedMutationTools?: ReadonlyArray<string> | undefined;
+  readonly egressFetch?: typeof globalThis.fetch | undefined;
 }) => {
   const approvedTools = options.approvedMutationTools ?? approvedOntologyMutationTools;
   const security = ontologyMcpSecurityMiddleware(options.token);
@@ -147,7 +171,13 @@ export const makeOntologyMcpTransportLayer = (options: {
       GovernedTierGateLive(
         GovernedTierGateOptions.make({
           grantTtl: ontologySessionGrantTtl,
-          operations: A.map(approvedTools, (tool) => GrantOperation.make(tool)),
+          // Publication is governed by its own branch against a network sink;
+          // granting it here as well would be a second, unintended authority
+          // for it against the workspace sink.
+          operations: A.map(
+            A.filter(approvedTools, (tool) => tool !== PublishProvenanceTool.name),
+            (tool) => GrantOperation.make(tool)
+          ),
           purpose: GrantPurpose.make("ontology-workspace-mutation"),
           resource: GrantResource.make("ontology-workspace"),
           sink: ontologyWorkspaceSink,
@@ -155,11 +185,69 @@ export const makeOntologyMcpTransportLayer = (options: {
       )
     )
   );
+  // Placement is load-bearing and is not type-checked: `Fetch` is a Reference,
+  // so a missing override silently resolves to the platform fetch instead of
+  // failing to compile. It goes into the graph that builds THIS client, which
+  // is the client the publication handler receives.
+  // `Layer.fresh` is load-bearing, not tidiness. `FetchHttpClient.layer` is a
+  // module-level object and layer builds are memoized by object identity across
+  // one graph, so without a fresh copy this governed client is the *same*
+  // instance the sidecar's other consumers resolve — `AnthropicLive`
+  // (`Anthropic.service.ts`) and `ObservabilityLive`'s OTLP exporter
+  // (`runtime/Observability.ts`) both provide into this very layer. Whichever
+  // builds first wins for all of them: the governed default-deny fetch would be
+  // applied to every Anthropic and OTLP request, failing them with
+  // `EgressDenied` and writing spurious denied rows into this boundary's
+  // hash chain. Nothing type-checks this — `Fetch` is a Reference, so the
+  // layer's output is `never`.
+  const governedHttpClient = Layer.fresh(FetchHttpClient.layer).pipe(
+    Layer.provide(
+      GovernedEgressLive(
+        GovernedEgressOptions.make({
+          grantTtl: ontologySessionGrantTtl,
+          operation: GrantOperation.make("http-egress"),
+          purpose: GrantPurpose.make("ontology-provenance-publication"),
+          resource: GrantResource.make("ontology-workspace"),
+        }),
+        options.egressFetch
+      )
+    )
+  );
+  const publish = sanitizedToolkit(OntologyPublishToolkit).pipe(
+    Layer.provide(OntologyMcpPublishToolsLive),
+    Layer.provide(governedHttpClient),
+    Layer.provide(
+      GovernedTierGateLive(
+        GovernedTierGateOptions.make({
+          grantTtl: ontologySessionGrantTtl,
+          // Drawn from the same approval list as the workspace branch, so
+          // "registration is not authorization" holds here too: a test can
+          // register the publication tool while granting nothing, and every
+          // dispatch is refused before any destination is even considered.
+          operations: A.map(
+            A.filter(approvedTools, (tool) => tool === PublishProvenanceTool.name),
+            (tool) => GrantOperation.make(tool)
+          ),
+          purpose: GrantPurpose.make("ontology-provenance-publication"),
+          resource: GrantResource.make("ontology-workspace"),
+          sink: ontologyEgressSink,
+        })
+      )
+    )
+  );
   const preflight = HttpRouter.add("OPTIONS", "/mcp", HttpServerResponse.empty({ status: 204 })).pipe(
     Layer.provide(security.layer)
   );
+  // The publication tool is registered only when an operator has named at least
+  // one destination. An empty allowlist is the default, so the tool does not
+  // exist on a stock install — the sink and its control ship together.
   const registration = Layer.unwrap(
-    Effect.map(OntologyMcpConfig, (config) => (config.mutationsEnabled ? Layer.merge(readOnly, mutations) : readOnly))
+    Effect.gen(function* () {
+      const mcpConfig = yield* OntologyMcpConfig;
+      const epistemic = yield* EpistemicConfig;
+      const governed = mcpConfig.mutationsEnabled ? Layer.merge(readOnly, mutations) : readOnly;
+      return epistemic.destinationAllowlist.length === 0 ? governed : Layer.merge(governed, publish);
+    })
   );
   const mcp = registration.pipe(Layer.provide(server));
 

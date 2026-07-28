@@ -53,6 +53,7 @@
     "@beep/identity": "workspace:^",
     "@beep/langextract": "workspace:^",
     "@beep/law-practice-domain": "workspace:^",
+    "@beep/mcp-kit": "workspace:^",
     "@beep/nlp": "workspace:^",
     "@beep/schema": "workspace:^",
     "effect": "catalog:"

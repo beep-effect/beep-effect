@@ -84,8 +84,8 @@
     "The implementation would exceed named scope.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation.",
-    "PR 6 cannot demonstrate a request issued from inside a real tool handler reaching the policy fetch; the 2026-07-25 spike proved the Fetch override only for a directly-provided effect, not through a running server whose handler context is captured at layer build.",
-    "PR 6 adds an agent-controllable outbound POST of workspace content; re-read that scope deliberately before landing rather than inheriting it as settled."
+    "DISCHARGED 2026-07-27 (PR 6): the policy Fetch reaches a request issued from inside a real dispatched MCP tool handler, measured with a falsification control; see history/pr6-fetch-reach-spike.md. The surviving invariant is that no middleware or request-scoped layer in a transport mounting governed tools may provide FetchHttpClient.Fetch, because request-time context takes precedence over the composition root.",
+    "Widening EPISTEMIC_EGRESS_DESTINATION_ALLOWLIST authorizes an agent-chosen POST of workspace content to that origin and everything beneath it; treat allowlist edits as security review, not configuration."
   ],
   "updated": "2026-07-27"
 }

@@ -62,6 +62,7 @@
     }
   },
   "dependencies": {
+    "@beep/api-transport": "workspace:^",
     "@beep/file-processing": "workspace:^",
     "@beep/mcp-kit": "workspace:^",
     "@beep/n3": "workspace:^",

@@ -360,6 +360,12 @@
         ]
       },
       {
+        "name": "@beep/law-practice-tables",
+        "patterns": [
+          "packages/law-practice/tables/src/**"
+        ]
+      },
+      {
         "name": "@beep/law-practice-use-cases",
         "patterns": [
           "packages/law-practice/use-cases/src/**"
@@ -537,6 +543,12 @@
         "name": "@beep/postgres",
         "patterns": [
           "packages/drivers/postgres/src/**"
+        ]
+      },
+      {
+        "name": "@beep/practice-kg-mcp",
+        "patterns": [
+          "apps/practice-kg-mcp/src/**"
         ]
       },
       {
@@ -1488,6 +1500,7 @@
       {
         "from": "@beep/epistemic-server",
         "allow": [
+          "@beep/api-transport",
           "@beep/epistemic-config",
           "@beep/epistemic-domain",
           "@beep/epistemic-server",
@@ -1503,6 +1516,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/api-transport",
           "@beep/epistemic-config",
           "@beep/epistemic-domain",
           "@beep/epistemic-server",
@@ -1800,26 +1814,59 @@
       {
         "from": "@beep/law-practice-server",
         "allow": [
+          "@beep/duckdb",
+          "@beep/epistemic-domain",
           "@beep/epistemic-server",
+          "@beep/epistemic-tables",
           "@beep/epistemic-use-cases",
           "@beep/file-processing",
+          "@beep/identity",
           "@beep/langextract",
           "@beep/law-practice-domain",
           "@beep/law-practice-server",
+          "@beep/law-practice-tables",
           "@beep/law-practice-use-cases",
+          "@beep/libpff",
+          "@beep/mcp-kit",
+          "@beep/pglite",
+          "@beep/schema",
           "@beep/test-utils",
-          "@beep/tika"
+          "@beep/tika",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/duckdb",
+          "@beep/epistemic-domain",
           "@beep/epistemic-server",
+          "@beep/epistemic-tables",
           "@beep/epistemic-use-cases",
           "@beep/file-processing",
+          "@beep/identity",
           "@beep/langextract",
           "@beep/law-practice-domain",
           "@beep/law-practice-server",
+          "@beep/law-practice-tables",
           "@beep/law-practice-use-cases",
+          "@beep/libpff",
+          "@beep/mcp-kit",
+          "@beep/pglite",
+          "@beep/schema",
           "@beep/test-utils",
-          "@beep/tika"
+          "@beep/tika",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/law-practice-tables",
+        "allow": [
+          "@beep/law-practice-domain",
+          "@beep/law-practice-tables",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/law-practice-domain",
+          "@beep/law-practice-tables",
+          "@beep/schema"
         ]
       },
       {
@@ -1832,6 +1879,7 @@
           "@beep/langextract",
           "@beep/law-practice-domain",
           "@beep/law-practice-use-cases",
+          "@beep/mcp-kit",
           "@beep/nlp",
           "@beep/schema",
           "@beep/test-utils"
@@ -1844,6 +1892,7 @@
           "@beep/langextract",
           "@beep/law-practice-domain",
           "@beep/law-practice-use-cases",
+          "@beep/mcp-kit",
           "@beep/nlp",
           "@beep/schema",
           "@beep/test-utils"
@@ -2192,6 +2241,7 @@
       {
         "from": "@beep/ontology-server",
         "allow": [
+          "@beep/api-transport",
           "@beep/file-processing",
           "@beep/mcp-kit",
           "@beep/n3",
@@ -2205,6 +2255,7 @@
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
+          "@beep/api-transport",
           "@beep/file-processing",
           "@beep/mcp-kit",
           "@beep/n3",
@@ -2401,6 +2452,29 @@
           "@beep/postgres",
           "@beep/schema",
           "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/practice-kg-mcp",
+        "allow": [
+          "@beep/anthropic",
+          "@beep/duckdb",
+          "@beep/identity",
+          "@beep/law-practice-server",
+          "@beep/pglite",
+          "@beep/practice-kg-mcp",
+          "@beep/schema",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/anthropic",
+          "@beep/duckdb",
+          "@beep/identity",
+          "@beep/law-practice-server",
+          "@beep/pglite",
+          "@beep/practice-kg-mcp",
+          "@beep/schema",
           "@beep/utils"
         ]
       },

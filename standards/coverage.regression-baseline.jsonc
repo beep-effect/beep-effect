@@ -409,17 +409,24 @@
     },
     "@beep/law-practice-server": {
       "path": "packages/law-practice/server",
-      "lines": 91.66,
-      "statements": 91.66,
+      "lines": 94.98,
+      "statements": 94.32,
+      "branches": 76.74,
+      "functions": 85.47
+    },
+    "@beep/law-practice-tables": {
+      "path": "packages/law-practice/tables",
+      "lines": 100,
+      "statements": 100,
       "branches": 100,
       "functions": 100
     },
     "@beep/law-practice-use-cases": {
       "path": "packages/law-practice/use-cases",
-      "lines": 48.27,
-      "statements": 46.66,
+      "lines": 57.65,
+      "statements": 56.63,
       "branches": 0,
-      "functions": 3.7
+      "functions": 6.89
     },
     "@beep/lexical-schema": {
       "path": "packages/foundation/modeling/lexical",

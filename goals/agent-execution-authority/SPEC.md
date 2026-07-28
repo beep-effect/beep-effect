@@ -274,12 +274,16 @@ checked by the full lane.
 - Verification requires credentials, cost, destructive side effects, or policy
   approval not named in this spec.
 - The same blocker repeats after reasonable investigation.
-- **The policy `Fetch` override does not reach handlers dispatched through the
-  running MCP server.** The 2026-07-25 spike proved the mechanism for a
-  directly-provided effect, not through a server whose handler context is
-  captured at layer build (`SanitizedSpan.ts:226`). If PR 6 cannot demonstrate a
-  request from inside a real tool handler hitting the policy fetch, stop and
-  report — the egress half of this packet rests on it.
+- ~~**The policy `Fetch` override does not reach handlers dispatched through the
+  running MCP server.**~~ **Discharged 2026-07-27** by measurement through the
+  real `sanitizedToolkit` + `McpServer.layerHttp` stack, with a control proving
+  the harness could detect the un-overridden case. Evidence and the corrected
+  mechanism:
+  [`history/pr6-fetch-reach-spike.md`](./history/pr6-fetch-reach-spike.md). The
+  override reaches handlers in every placement tested; the surviving hazard is
+  the reverse of the one anticipated — a `Fetch` provided *per request* takes
+  precedence over the composition-root one, so nothing in a transport that
+  mounts governed tools may provide that reference per request.
 - **PR 6 adds an agent-controllable outbound POST of workspace content** to a
   product holding privileged material. Re-read that scope deliberately before
   landing it; do not inherit it as settled.

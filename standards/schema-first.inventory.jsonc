@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-27",
+  "generatedOn": "2026-07-28",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
@@ -525,7 +525,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 40,
+      "line": 42,
       "owner": "@beep/tika",
       "reason": "Opt-in live Tika Server lane that no-ops unless BEEP_TEST_TIKA_URL is set; the codecs decode the operator-supplied base URL and generated fixture paths as boundary validation against a real server, not schema-behavior coverage. Schema-derived arbitrary round-trips for TikaServerEngineConfig live in packages/drivers/tika/test/Tika.server.test.ts."
     },
@@ -2220,6 +2220,46 @@
       "status": "exception",
       "owner": "@beep/law-practice-use-cases",
       "reason": "Dependency-injection container of Effect service shapes (FileProcessingService/ClaimGate/IrToLaw/ClaimTransition); a wiring bundle of function-bearing services, not serializable data."
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/PracticeKg.tools.ts",
+      "symbol": "practiceKgCandidateClaimFieldTiers",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-use-cases",
+      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/PracticeKg.tools.ts",
+      "symbol": "practiceKgDocumentFieldTiers",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-use-cases",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/PracticeKg.tools.ts",
+      "symbol": "practiceKgEmailFieldTiers",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-use-cases",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/PracticeKg.tools.ts",
+      "symbol": "practiceKgFamilyFieldTiers",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-use-cases",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/PracticeKg.tools.ts",
+      "symbol": "practiceKgGraphFieldTiers",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/law-practice-use-cases",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
     },
     {
       "file": "packages/ontology/server/test/OntologyTools.test.ts",
