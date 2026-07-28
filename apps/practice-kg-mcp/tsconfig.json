@@ -9,16 +9,22 @@
   },
   "references": [
     {
+      "path": "../../packages/drivers/duckdb/tsconfig.json"
+    },
+    {
       "path": "../../packages/drivers/pglite/tsconfig.json"
+    },
+    {
+      "path": "../../packages/foundation/modeling/identity/tsconfig.json"
     },
     {
       "path": "../../packages/foundation/modeling/schema/tsconfig.json"
     },
     {
-      "path": "../../packages/law-practice/server/tsconfig.json"
+      "path": "../../packages/foundation/modeling/utils/tsconfig.json"
     },
     {
-      "path": "../../packages/drivers/duckdb/tsconfig.json"
+      "path": "../../packages/law-practice/server/tsconfig.json"
     }
   ]
 }

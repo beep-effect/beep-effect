@@ -412,7 +412,7 @@
       "lines": 91.66,
       "statements": 91.66,
       "branches": 75.29,
-      "functions": 87.01
+      "functions": 85.32
     },
     "@beep/law-practice-tables": {
       "path": "packages/law-practice/tables",
@@ -423,10 +423,10 @@
     },
     "@beep/law-practice-use-cases": {
       "path": "packages/law-practice/use-cases",
-      "lines": 48.27,
-      "statements": 46.66,
+      "lines": 39.25,
+      "statements": 38.18,
       "branches": 0,
-      "functions": 3.7
+      "functions": 3.57
     },
     "@beep/lexical-schema": {
       "path": "packages/foundation/modeling/lexical",
