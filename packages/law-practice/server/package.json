@@ -42,19 +42,28 @@
   ],
   "sideEffects": [],
   "dependencies": {
+    "@beep/duckdb": "workspace:^",
     "@beep/epistemic-server": "workspace:^",
     "@beep/epistemic-use-cases": "workspace:^",
     "@beep/file-processing": "workspace:^",
+    "@beep/identity": "workspace:^",
     "@beep/langextract": "workspace:^",
     "@beep/law-practice-domain": "workspace:^",
+    "@beep/law-practice-tables": "workspace:^",
     "@beep/law-practice-use-cases": "workspace:^",
+    "@beep/libpff": "workspace:^",
+    "@beep/schema": "workspace:^",
     "@beep/tika": "workspace:^",
+    "@beep/utils": "workspace:^",
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/pglite": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/platform-bun": "catalog:",
+    "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "drizzle-orm": "catalog:"
   }
 }

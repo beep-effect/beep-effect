@@ -1712,6 +1712,15 @@
       ],
       "@beep/epistemic-server/GovernedEgress": [
         "./packages/epistemic/server/src/GovernedEgress/index.ts"
+      ],
+      "@beep/law-practice-tables": [
+        "./packages/law-practice/tables/src/index.ts"
+      ],
+      "@beep/law-practice-tables/tables": [
+        "./packages/law-practice/tables/src/Tables.ts"
+      ],
+      "@beep/law-practice-tables/entities": [
+        "./packages/law-practice/tables/src/entities/index.ts"
       ]
     }
   }

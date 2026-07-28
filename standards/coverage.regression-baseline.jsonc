@@ -411,6 +411,13 @@
       "path": "packages/law-practice/server",
       "lines": 91.66,
       "statements": 91.66,
+      "branches": 75.29,
+      "functions": 87.01
+    },
+    "@beep/law-practice-tables": {
+      "path": "packages/law-practice/tables",
+      "lines": 100,
+      "statements": 100,
       "branches": 100,
       "functions": 100
     },

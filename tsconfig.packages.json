@@ -13,6 +13,9 @@
       "path": "apps/oip-web"
     },
     {
+      "path": "apps/practice-kg-mcp"
+    },
+    {
       "path": "apps/professional-desktop"
     },
     {
@@ -305,6 +308,9 @@
     },
     {
       "path": "packages/law-practice/server"
+    },
+    {
+      "path": "packages/law-practice/tables"
     },
     {
       "path": "packages/law-practice/use-cases"

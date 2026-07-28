@@ -9,6 +9,15 @@
   },
   "references": [
     {
+      "path": "../../drivers/duckdb/tsconfig.json"
+    },
+    {
+      "path": "../../drivers/libpff/tsconfig.json"
+    },
+    {
+      "path": "../../drivers/pglite/tsconfig.json"
+    },
+    {
       "path": "../../drivers/tika/tsconfig.json"
     },
     {
@@ -24,16 +33,25 @@
       "path": "../../foundation/capability/langextract/tsconfig.json"
     },
     {
+      "path": "../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/utils/tsconfig.json"
+    },
+    {
       "path": "../domain/tsconfig.json"
+    },
+    {
+      "path": "../tables/tsconfig.json"
     },
     {
       "path": "../use-cases/tsconfig.json"
     },
     {
       "path": "../../tooling/test-kit/test-utils/tsconfig.json"
-    },
-    {
-      "path": "../../foundation/modeling/identity/tsconfig.json"
     }
   ]
 }
