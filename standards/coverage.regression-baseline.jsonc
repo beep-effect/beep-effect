@@ -414,6 +414,13 @@
       "branches": 100,
       "functions": 100
     },
+    "@beep/law-practice-tables": {
+      "path": "packages/law-practice/tables",
+      "lines": 100,
+      "statements": 100,
+      "branches": 100,
+      "functions": 100
+    },
     "@beep/law-practice-use-cases": {
       "path": "packages/law-practice/use-cases",
       "lines": 48.27,
