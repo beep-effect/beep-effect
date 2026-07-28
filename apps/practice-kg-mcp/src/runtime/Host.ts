@@ -114,13 +114,17 @@ export const loadPracticeKgBundleContext = Effect.fn("PracticeKgHost.loadBundle"
  * @category layers
  * @since 0.0.0
  */
-export const makePracticeKgHostLayer = (context: PracticeKgBundleContext) => {
-  const resources = Layer.mergeAll(
-    makePracticeKgPgliteLayer(`${context.bundleDir}/kg.pglite`),
-    makePracticeKgDuckDbLayer(`${context.bundleDir}/practice.duckdb`),
-    Layer.succeed(PracticeKgBundle, PracticeKgBundle.of(context))
+export const makePracticeKgHostLayer = (context: PracticeKgBundleContext) =>
+  Layer.unwrap(
+    Effect.gen(function* () {
+      const path = yield* Path.Path;
+      const resources = Layer.mergeAll(
+        makePracticeKgPgliteLayer(path.join(context.bundleDir, "kg.pglite")),
+        makePracticeKgDuckDbLayer(path.join(context.bundleDir, "practice.duckdb")),
+        Layer.succeed(PracticeKgBundle, PracticeKgBundle.of(context))
+      );
+      return makePracticeKgServerLayer(
+        PracticeKgMcpServerConfig.make({ name: "beep-practice-kg", version: "0.0.0" })
+      ).pipe(Layer.provide(resources));
+    })
   );
-  return makePracticeKgServerLayer(PracticeKgMcpServerConfig.make({ name: "beep-practice-kg", version: "0.0.0" })).pipe(
-    Layer.provide(resources)
-  );
-};

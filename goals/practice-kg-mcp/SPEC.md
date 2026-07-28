@@ -88,4 +88,8 @@ engines (D6 stands — benchmarks reopen it, not preference).
 
 ## Exception ledger
 
-(Empty. Record dated exceptions here; clearing conditions required.)
+- 2026-07-27 — `@beep/law-practice-server` imports
+  `@beep/epistemic-tables` so the OA claims batch can persist grounded candidate
+  claims and evidence directly into the bundle PGlite epistemic substrate.
+  Revisit and clear this coupling when legal-document-intake P4-proper lands
+  `ClaimGate` persistence.

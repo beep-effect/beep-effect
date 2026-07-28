@@ -13,9 +13,10 @@ import * as S from "effect/Schema";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import { PracticeKgToolkitHandlersLive } from "./PracticeKg.tool-handlers.ts";
 import type { DuckDb } from "@beep/duckdb";
+import type { Path } from "effect";
 import type { Stdio } from "effect/Stdio";
 import type { SqlClient } from "effect/unstable/sql/SqlClient";
-import type { PracticeKgBundle } from "./PracticeKg.tool-handlers.ts";
+import type { PracticeKgBundle } from "./PracticeKg.host.ts";
 
 const $I = $LawPracticeServerId.create("Tools");
 
@@ -102,7 +103,7 @@ export const PracticeKgToolkitLayer = composeGatedLayers(
  */
 export const makePracticeKgServerLayer = (
   config: PracticeKgMcpServerConfig
-): Layer.Layer<never, never, DuckDb | PracticeKgBundle | SqlClient | Stdio> =>
+): Layer.Layer<never, never, DuckDb | Path.Path | PracticeKgBundle | SqlClient | Stdio> =>
   PracticeKgToolkitLayer.pipe(
     Layer.provide(McpServer.layerStdio({ name: config.name, version: config.version })),
     Layer.orDie

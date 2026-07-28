@@ -18,6 +18,10 @@ provides `EpistemicServerLive` at the merge boundary. The cross-slice
 the spike SPEC Exception Ledger + `DECISIONS.md`); the law-practice DOMAIN tier
 stays clean.
 
+Claims-batch persistence temporarily imports `@beep/epistemic-tables` to write
+the bundle PGlite substrate; revisit when intake P4-proper lands `ClaimGate`
+persistence.
+
 The review loop now invokes the provider-neutral LangExtract service; tests keep
 deterministic fake model output. Entity id/audit fields still come from a spike
 shim rather than a real id generator / `Clock` / request context.

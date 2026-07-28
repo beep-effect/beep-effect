@@ -21,7 +21,13 @@
       "path": "../../drivers/tika/tsconfig.json"
     },
     {
+      "path": "../../epistemic/domain/tsconfig.json"
+    },
+    {
       "path": "../../epistemic/server/tsconfig.json"
+    },
+    {
+      "path": "../../epistemic/tables/tsconfig.json"
     },
     {
       "path": "../../epistemic/use-cases/tsconfig.json"

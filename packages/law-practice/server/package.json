@@ -43,7 +43,9 @@
   "sideEffects": [],
   "dependencies": {
     "@beep/duckdb": "workspace:^",
+    "@beep/epistemic-domain": "workspace:^",
     "@beep/epistemic-server": "workspace:^",
+    "@beep/epistemic-tables": "workspace:^",
     "@beep/epistemic-use-cases": "workspace:^",
     "@beep/file-processing": "workspace:^",
     "@beep/identity": "workspace:^",
