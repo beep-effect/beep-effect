@@ -34,6 +34,13 @@ export * from "./internal/CreateCaptions.schemas.ts";
  */
 export * from "./internal/DetectFaces.schemas.ts";
 /**
+ * Recursive media flattening option and summary schemas.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "./internal/FlattenMedia.schemas.ts";
+/**
  * Read-only image audit schemas.
  *
  * @category schemas
