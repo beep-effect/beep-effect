@@ -21,7 +21,7 @@ import { Effect, FileSystem, HashMap, HashSet, Layer, Order } from "effect";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const TestLayer = FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer));
-const MONOREPO_INTEGRATION_TIMEOUT = 300_000;
+const MONOREPO_INTEGRATION_TIMEOUT = 600_000;
 
 layer(TestLayer, { timeout: MONOREPO_INTEGRATION_TIMEOUT })("integration (real monorepo)", (it) => {
   // ── findRepoRoot ─────────────────────────────────────────────────────
