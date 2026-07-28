@@ -128,6 +128,7 @@
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
+        "@electric-sql/pglite": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
