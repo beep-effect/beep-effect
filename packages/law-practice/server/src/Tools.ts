@@ -18,6 +18,24 @@ import type { Stdio } from "effect/Stdio";
 import type { SqlClient } from "effect/unstable/sql/SqlClient";
 import type { PracticeKgBundle } from "./PracticeKg.host.ts";
 
+/**
+ * Canonical read-only practice KG toolkit, re-exported so packaging and smoke
+ * lanes derive tool names from the served surface instead of hand-copied
+ * lists.
+ *
+ * @example
+ * ```ts
+ * import { PracticeKgToolkit } from "@beep/law-practice-server"
+ * import * as R from "effect/Record"
+ *
+ * console.log(R.keys(PracticeKgToolkit.tools).length) // 9
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export { PracticeKgToolkit } from "@beep/law-practice-use-cases/server";
+
 const $I = $LawPracticeServerId.create("Tools");
 
 /**

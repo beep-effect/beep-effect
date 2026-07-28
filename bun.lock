@@ -116,9 +116,11 @@
       "version": "0.0.0",
       "bin": {
         "practice-kg-build": "./src/build.ts",
+        "practice-kg-claims": "./src/claims.ts",
         "practice-kg-mcp": "./src/bin.ts",
       },
       "dependencies": {
+        "@beep/anthropic": "workspace:^",
         "@beep/duckdb": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/law-practice-server": "workspace:^",
@@ -126,6 +128,7 @@
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
         "@effect/platform-bun": "catalog:",
+        "@electric-sql/pglite": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -1975,7 +1978,9 @@
       "version": "0.0.0",
       "dependencies": {
         "@beep/duckdb": "workspace:^",
+        "@beep/epistemic-domain": "workspace:^",
         "@beep/epistemic-server": "workspace:^",
+        "@beep/epistemic-tables": "workspace:^",
         "@beep/epistemic-use-cases": "workspace:^",
         "@beep/file-processing": "workspace:^",
         "@beep/identity": "workspace:^",
