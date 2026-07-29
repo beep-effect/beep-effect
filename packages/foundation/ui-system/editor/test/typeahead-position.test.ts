@@ -1,4 +1,4 @@
-import { shouldOpenUpward, typeaheadMenuPosition } from "@beep/editor/chat";
+import { shouldOpenUpward, typeaheadMenuPosition } from "@beep/editor/chat/typeahead";
 import { describe, expect, it } from "vitest";
 
 describe("shouldOpenUpward", () => {

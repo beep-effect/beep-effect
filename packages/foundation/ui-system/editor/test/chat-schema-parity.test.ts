@@ -1,13 +1,19 @@
 import {
+  AttachmentFailure,
   AttachmentInvalidMimeType,
+  AttachmentPortFailed,
   AttachmentRejection,
   AttachmentTooLarge,
-  ComposerFeatures,
   ImageAttachmentMimeType,
+} from "@beep/editor/chat/attachment-model";
+import {
+  ComposerFeatures,
   MentionOption,
+  MentionOptions,
   SendOn,
   SlashItem,
-} from "@beep/editor/chat";
+  SlashItems,
+} from "@beep/editor/chat/config";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as Equal from "effect/Equal";
@@ -25,6 +31,9 @@ describe("@beep/editor schema crispening parity", () => {
       filename: "payload.bin",
       mimeType: "",
     });
+    const portFailure = AttachmentPortFailed.make({
+      message: "Files could not be attached.",
+    });
     const features = ComposerFeatures.make({ toolbar: false });
 
     expect(S.encodeSync(AttachmentRejection)(tooLarge)).toEqual({
@@ -37,6 +46,10 @@ describe("@beep/editor schema crispening parity", () => {
       _tag: "AttachmentInvalidMimeType",
       filename: "payload.bin",
       mimeType: "",
+    });
+    expect(S.encodeSync(AttachmentFailure)(portFailure)).toEqual({
+      _tag: "AttachmentPortFailed",
+      message: "Files could not be attached.",
     });
     expect(S.encodeSync(ComposerFeatures)(features)).toEqual({
       toolbar: false,
@@ -91,5 +104,43 @@ describe("@beep/editor schema crispening parity", () => {
       )
     ).toBe(true);
     expect(Result.isFailure(S.decodeUnknownResult(MentionOption)({ id: "", label: "Ada" }))).toBe(true);
+    expect(
+      Result.isFailure(
+        S.decodeUnknownResult(SlashItems)([
+          { key: "paragraph", label: "Paragraph", onSelect: () => undefined },
+          { key: "", label: "Broken", onSelect: () => undefined },
+        ])
+      )
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        S.decodeUnknownResult(MentionOptions)([
+          { id: "ada", label: "Ada" },
+          { id: "", label: "Broken" },
+        ])
+      )
+    ).toBe(true);
+  });
+
+  it("rejects duplicate collection identities at their exact field paths", () => {
+    const duplicateSlashItems = S.decodeUnknownResult(SlashItems)([
+      { key: "same", label: "First", onSelect: () => undefined },
+      { key: "same", label: "Second", onSelect: () => undefined },
+    ]);
+    const duplicateMentions = S.decodeUnknownResult(MentionOptions)([
+      { id: "same", label: "First" },
+      { id: "same", label: "Second" },
+    ]);
+
+    expect(Result.isFailure(duplicateSlashItems)).toBe(true);
+    expect(Result.isFailure(duplicateMentions)).toBe(true);
+    if (Result.isFailure(duplicateSlashItems)) {
+      expect(String(duplicateSlashItems.failure)).toContain('at [1]["key"]');
+      expect(String(duplicateSlashItems.failure)).toContain("Duplicate slash-command key");
+    }
+    if (Result.isFailure(duplicateMentions)) {
+      expect(String(duplicateMentions.failure)).toContain('at [1]["id"]');
+      expect(String(duplicateMentions.failure)).toContain("Duplicate mention-option id");
+    }
   });
 });

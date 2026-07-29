@@ -29,7 +29,7 @@ import { characterCountAtom, sendKeyBindingAtom } from "./atoms.ts";
  *
  * @example
  * ```tsx
- * import { SendPlugin } from "@beep/editor/chat"
+ * import { SendPlugin } from "@beep/editor/chat/send"
  *
  * function EnterToSend() {
  *   return <SendPlugin />
@@ -52,7 +52,7 @@ export function SendPlugin(): null {
  *
  * @example
  * ```tsx
- * import { useCharacterCount } from "@beep/editor/chat"
+ * import { useCharacterCount } from "@beep/editor/chat/send"
  *
  * function CharacterCounter() {
  *   const count = useCharacterCount()

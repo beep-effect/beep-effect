@@ -10,7 +10,7 @@
  */
 
 import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
-import { Document } from "@beep/md/Md.model";
+import { SafeDocument } from "@beep/md/Md.safe";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Thread } from "@beep/workspace-domain";
 import { Thread as ThreadUseCases } from "@beep/workspace-use-cases/public";
@@ -176,7 +176,7 @@ export const GetTurnRequestStatusRpc = Rpc.make("GetTurnRequestStatus", {
  * @since 0.0.0
  */
 export const SendMessageRpc = Rpc.make("SendMessage", {
-  payload: { threadId: WorkspaceIdentity.ThreadId, content: Document, requestId: S.NonEmptyString },
+  payload: { threadId: WorkspaceIdentity.ThreadId, content: SafeDocument, requestId: S.NonEmptyString },
   success: AssistantBlock,
   error: ChatActionError,
   stream: true,
@@ -210,7 +210,7 @@ export const EditMessageRpc = Rpc.make("EditMessage", {
   payload: {
     threadId: WorkspaceIdentity.ThreadId,
     turnId: WorkspaceIdentity.TurnId,
-    content: Document,
+    content: SafeDocument,
     requestId: S.NonEmptyString,
   },
   success: AssistantBlock,

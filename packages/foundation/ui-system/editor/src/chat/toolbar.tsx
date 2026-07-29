@@ -1,7 +1,7 @@
 /**
  * The fixed formatting toolbar mounted above the editable surface: text marks
  * (bold/italic/underline/strikethrough/inline-code), list blocks (bulleted/
- * numbered/check), quote, code block, and link. Button pressed-state mirrors the
+ * numbered/check), quote, and code block. Button pressed-state mirrors the
  * current selection so the bar stays in sync as the caret moves.
  *
  * Per the repo atom-first law the selection-mirroring registration is a
@@ -22,23 +22,20 @@ import { Toggle } from "@beep/ui/components/toggle";
 import { cn } from "@beep/ui/lib/utils";
 import { useAtomValue } from "@effect/atom-react";
 import { $createCodeNode, $isCodeNode } from "@lexical/code";
-import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
 import {
   $isListNode,
   INSERT_CHECK_LIST_COMMAND,
   INSERT_ORDERED_LIST_COMMAND,
   INSERT_UNORDERED_LIST_COMMAND,
-  ListNode,
   REMOVE_LIST_COMMAND,
 } from "@lexical/list";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { $createQuoteNode, $isHeadingNode, $isQuoteNode } from "@lexical/rich-text";
 import { $setBlocksType } from "@lexical/selection";
-import { $findMatchingParent, $getNearestNodeOfType } from "@lexical/utils";
+import { $isTableCellNode } from "@lexical/table";
 import {
   CodeBlockIcon,
   CodeIcon,
-  LinkIcon,
   ListBulletsIcon,
   ListChecksIcon,
   ListNumbersIcon,
@@ -57,12 +54,25 @@ import {
   FORMAT_TEXT_COMMAND,
   SELECTION_CHANGE_COMMAND,
 } from "lexical";
-import type { ElementNode, LexicalEditor, TextFormatType } from "lexical";
+import type { ElementNode, LexicalEditor, LexicalNode, TextFormatType } from "lexical";
 import type { JSX, ReactNode } from "react";
 
 const $I = $EditorId.create("chat/toolbar");
 
-const BlockType = LiteralKit([
+/**
+ * Schema for the block families represented by the fixed toolbar.
+ *
+ * @example
+ * ```ts
+ * import { BlockType } from "@beep/editor/chat/toolbar"
+ *
+ * console.log(BlockType.is.code("code")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const BlockType = LiteralKit([
   "paragraph",
   "h1",
   "h2",
@@ -81,14 +91,19 @@ const BlockType = LiteralKit([
   })
 );
 
-type BlockType = typeof BlockType.Type;
+/**
+ * Block family represented by the fixed toolbar.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type BlockType = typeof BlockType.Type;
 
 interface SelectionState {
   readonly blockType: BlockType;
   readonly bold: boolean;
   readonly code: boolean;
   readonly italic: boolean;
-  readonly link: boolean;
   readonly strikethrough: boolean;
   readonly underline: boolean;
 }
@@ -99,7 +114,6 @@ const INITIAL_STATE: SelectionState = {
   underline: false,
   strikethrough: false,
   code: false,
-  link: false,
   blockType: "paragraph",
 };
 
@@ -117,27 +131,39 @@ const blockTypeFromListType = (listType: "number" | "bullet" | "check"): BlockTy
 // quick presses both saw the pre-toggle type and *created* a second block
 // instead of toggling back — nesting a code block inside a quote while both
 // buttons still reported unpressed.
-const $selectionBlockType = (): BlockType => {
+/**
+ * Classifies the nearest supported block ancestor of the live range
+ * selection, stopping at a table-cell boundary.
+ *
+ * Must run inside a Lexical read/update scope. Exported so custom toolbars and
+ * selection-focused tests share the exact same classification semantics.
+ *
+ * @example
+ * ```ts
+ * import { $selectionBlockType } from "@beep/editor/chat/toolbar"
+ * import { createEditor } from "lexical"
+ *
+ * const editor = createEditor()
+ * console.log(editor.getEditorState().read($selectionBlockType)) // "paragraph"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const $selectionBlockType = (): BlockType => {
   const selection = $getSelection();
   if (!$isRangeSelection(selection)) return "paragraph";
-  const anchorNode = selection.anchor.getNode();
-  const element = anchorNode.getKey() === "root" ? anchorNode : (anchorNode.getTopLevelElement() ?? anchorNode);
+  let node: LexicalNode | null = selection.anchor.getNode();
 
-  if ($isListNode(element)) {
-    return blockTypeFromListType(element.getListType());
-  }
-  const parentList = $getNearestNodeOfType(anchorNode, ListNode);
-  if (parentList !== null) {
-    return blockTypeFromListType(parentList.getListType());
-  }
-  if ($isHeadingNode(element)) {
-    return element.getTag();
-  }
-  if ($isQuoteNode(element)) {
-    return "quote";
-  }
-  if ($isCodeNode(element)) {
-    return "code";
+  while (node !== null && node.getKey() !== "root") {
+    if ($isListNode(node)) return blockTypeFromListType(node.getListType());
+    if ($isHeadingNode(node)) return node.getTag();
+    if ($isQuoteNode(node)) return "quote";
+    if ($isCodeNode(node)) return "code";
+    // A table cell is the local block boundary. Do not climb to the table's
+    // top-level node: classify the nearest supported block inside this cell.
+    if ($isTableCellNode(node)) return "paragraph";
+    node = node.getParent();
   }
   return "paragraph";
 };
@@ -148,15 +174,12 @@ const $selectionBlockType = (): BlockType => {
 const computeSelectionState = (): SelectionState => {
   const selection = $getSelection();
   if (!$isRangeSelection(selection)) return INITIAL_STATE;
-  const anchorNode = selection.anchor.getNode();
-  const linkParent = $findMatchingParent(anchorNode, $isLinkNode);
   return {
     bold: selection.hasFormat("bold"),
     italic: selection.hasFormat("italic"),
     underline: selection.hasFormat("underline"),
     strikethrough: selection.hasFormat("strikethrough"),
     code: selection.hasFormat("code"),
-    link: linkParent !== null,
     blockType: $selectionBlockType(),
   };
 };
@@ -219,8 +242,8 @@ interface ToolbarButtonProps {
   readonly onClick: () => void;
 }
 
-// One-shot / block actions (lists, quote, code block, link). Canonical ghost
-// icon button; when the block/link is active we mirror the toggle's pressed
+// One-shot / block actions (lists, quote, code block). Canonical ghost
+// icon button; when the block is active we mirror the toggle's pressed
 // styling so the active state reads identically across the bar.
 function ToolbarButton({ active = false, label, onClick, children }: ToolbarButtonProps): JSX.Element {
   return (
@@ -248,7 +271,7 @@ function ToolbarDivider(): JSX.Element {
  *
  * @example
  * ```tsx
- * import { FixedToolbarPlugin } from "@beep/editor/chat"
+ * import { FixedToolbarPlugin } from "@beep/editor/chat/toolbar"
  *
  * function ComposerToolbar() {
  *   return <FixedToolbarPlugin />
@@ -342,13 +365,6 @@ export function FixedToolbarPlugin(): JSX.Element {
         onClick={() => setBlock("code", () => $createCodeNode())}
       >
         <CodeBlockIcon />
-      </ToolbarButton>
-      <ToolbarButton
-        active={state.link}
-        label="Link"
-        onClick={() => editor.dispatchCommand(TOGGLE_LINK_COMMAND, state.link ? null : "https://")}
-      >
-        <LinkIcon />
       </ToolbarButton>
     </div>
   );

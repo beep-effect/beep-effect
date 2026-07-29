@@ -47,7 +47,7 @@ const heading = (editor: LexicalEditor, tag: HeadingTagType): void => setBlock(e
  *
  * @example
  * ```ts
- * import { defaultChatSlashItems } from "@beep/editor/chat"
+ * import { defaultChatSlashItems } from "@beep/editor/chat/slash-items"
  *
  * console.log(defaultChatSlashItems.length > 0) // true
  * ```

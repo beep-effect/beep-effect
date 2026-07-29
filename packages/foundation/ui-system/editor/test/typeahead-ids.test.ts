@@ -1,5 +1,5 @@
-import { editorNodes } from "@beep/editor";
-import { typeaheadOptionId } from "@beep/editor/chat";
+import { typeaheadOptionId } from "@beep/editor/chat/atoms";
+import { editorNodes } from "@beep/editor/nodes";
 import { describe, expect, it } from "@effect/vitest";
 import { createHeadlessEditor } from "@lexical/headless";
 

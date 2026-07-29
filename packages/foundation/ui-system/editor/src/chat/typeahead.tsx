@@ -19,7 +19,7 @@
  */
 
 import { cn } from "@beep/ui/lib/utils";
-import { A } from "@beep/utils";
+import { A, O } from "@beep/utils";
 import { RegistryContext, useAtom, useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import {
@@ -27,6 +27,7 @@ import {
   MenuOption,
   useBasicTypeaheadTriggerMatch,
 } from "@lexical/react/LexicalTypeaheadMenuPlugin";
+import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
 import { $createTextNode, $getSelection, $isRangeSelection } from "lexical";
 import { useContext } from "react";
@@ -38,6 +39,7 @@ import {
   typeaheadMenuMarker,
   typeaheadOptionId,
 } from "./atoms.ts";
+import { MentionOptions } from "./config.ts";
 import type { MenuRenderFn } from "@lexical/react/LexicalTypeaheadMenuPlugin";
 import type { LexicalEditor } from "lexical";
 import type { ReactNode, RefObject } from "react";
@@ -141,7 +143,7 @@ const MENU_VIEWPORT_GAP_PX = 4;
  *
  * @example
  * ```ts
- * import { shouldOpenUpward } from "@beep/editor/chat"
+ * import { shouldOpenUpward } from "@beep/editor/chat/typeahead"
  *
  * console.log(shouldOpenUpward({ caretTop: 700, caretBottom: 720, viewportHeight: 800 })) // true
  * ```
@@ -168,7 +170,7 @@ export const shouldOpenUpward = ({
  *
  * @example
  * ```ts
- * import { typeaheadMenuPosition } from "@beep/editor/chat"
+ * import { typeaheadMenuPosition } from "@beep/editor/chat/typeahead"
  *
  * const position = typeaheadMenuPosition({
  *   caret: { bottom: 720, left: 40, top: 700 },
@@ -317,6 +319,7 @@ function MentionUnavailableNotice({
   }
   return createPortal(
     <div
+      {...typeaheadMenuMarker(editor)}
       style={typeaheadMenuPosition({
         caret,
         viewportHeight: window.innerHeight,
@@ -342,7 +345,8 @@ interface SlashPluginProps {
  *
  * @example
  * ```tsx
- * import { SlashPlugin, defaultChatSlashItems } from "@beep/editor/chat"
+ * import { SlashPlugin } from "@beep/editor/chat/typeahead"
+ * import { defaultChatSlashItems } from "@beep/editor/chat/slash-items"
  *
  * function SlashCommands() {
  *   return <SlashPlugin items={defaultChatSlashItems} />
@@ -420,7 +424,8 @@ interface MentionPluginProps {
  *
  * @example
  * ```tsx
- * import { MentionOption, MentionPlugin } from "@beep/editor/chat"
+ * import { MentionPlugin } from "@beep/editor/chat/typeahead"
+ * import { MentionOption } from "@beep/editor/chat/config"
  *
  * function PeopleMentions() {
  *   return (
@@ -460,8 +465,16 @@ export function MentionPlugin({ source }: MentionPluginProps): ReactNode {
       .then((results) => {
         // Drop a stale response: only the most-recent request wins.
         if (isLatest()) {
-          setFailed(false);
-          setOptions(A.map(results, (option) => new MentionMenuOption(option)));
+          O.match(S.decodeUnknownOption(MentionOptions)(results), {
+            onNone: () => {
+              setFailed(true);
+              setOptions([]);
+            },
+            onSome: (decoded) => {
+              setFailed(false);
+              setOptions(A.map(decoded, (option) => new MentionMenuOption(option)));
+            },
+          });
         }
       })
       .catch(() => {
@@ -575,7 +588,7 @@ const comboboxAriaAtom = Atom.family((editor: LexicalEditor) =>
  *
  * @example
  * ```tsx
- * import { ComboboxAriaPlugin } from "@beep/editor/chat"
+ * import { ComboboxAriaPlugin } from "@beep/editor/chat/typeahead"
  *
  * function TypeaheadAccessibility() {
  *   return <ComboboxAriaPlugin />

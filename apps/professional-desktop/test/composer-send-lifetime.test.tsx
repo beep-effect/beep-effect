@@ -1,4 +1,4 @@
-import { ChatComposer } from "@beep/editor/chat";
+import { ChatComposer } from "@beep/editor/chat/chat-composer";
 import { documentToEditorState } from "@beep/lexical-schema";
 import * as MdModel from "@beep/md/Md.model";
 import { RegistryProvider } from "@effect/atom-react";
