@@ -6,7 +6,8 @@
  */
 
 import { $PandocAstId } from "@beep/identity";
-import { A, dual, flow, O, P, Struct } from "@beep/utils";
+import { CauseTaggedError, SchemaUtils } from "@beep/schema";
+import { A, dual, flow, O, Struct } from "@beep/utils";
 import { Effect, Match, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import {
@@ -22,6 +23,12 @@ import {
   LineBreak,
   Link,
   Math,
+  MetaBlocks,
+  MetaBool,
+  MetaInlines,
+  MetaList,
+  MetaMap,
+  MetaString,
   Note,
   OrderedList,
   PandocApiVersion,
@@ -31,8 +38,9 @@ import {
   PandocListNumberDelimiter,
   PandocListNumberStyle,
   PandocMathType,
-  PandocMeta,
+  PandocTablePayload,
   PandocTarget,
+  PandocUnknownConstructorWire,
   Para,
   Plain,
   SoftBreak,
@@ -44,8 +52,11 @@ import {
   Table,
   UnknownBlock,
   UnknownInline,
+  UnknownMeta,
 } from "./Pandoc.model.ts";
-import type { PandocBlock, PandocInline } from "./Pandoc.model.ts";
+import { JsonPath } from "./Pandoc.report.ts";
+import type { PandocBlock, PandocInline, PandocMeta, PandocMetaValue } from "./Pandoc.model.ts";
+import type { JsonPath as JsonPathType } from "./Pandoc.report.ts";
 
 const $I = $PandocAstId.create("Pandoc.codec");
 
@@ -63,19 +74,12 @@ const $I = $PandocAstId.create("Pandoc.codec");
  * @category models
  * @since 0.0.0
  */
-export class PandocConstructorWire extends S.Class<PandocConstructorWire>($I`PandocConstructorWire`)(
-  {
-    c: S.optionalKey(S.Unknown).annotateKey({
-      description: "Optional Pandoc constructor payload.",
-    }),
-    t: S.String.annotateKey({
-      description: "Pandoc constructor tag.",
-    }),
-  },
-  $I.annote("PandocConstructorWire", {
-    description: "Generic Pandoc constructor wire shape.",
-  })
-) {}
+export const PandocConstructorWire = PandocUnknownConstructorWire.pipe(
+  $I.annoteSchema("PandocConstructorWire", {
+    description: "Generic exact Pandoc constructor wire shape.",
+  }),
+  SchemaUtils.withCodecStatics
+);
 
 /**
  * Companion namespace for {@link PandocConstructorWire}.
@@ -84,27 +88,14 @@ export class PandocConstructorWire extends S.Class<PandocConstructorWire>($I`Pan
  * ```ts
  * import { PandocConstructorWire } from "@beep/pandoc-ast/Pandoc.codec"
  *
- * const wire: PandocConstructorWire.Type = PandocConstructorWire.make({ t: "Space" })
+ * const wire: PandocConstructorWire = PandocConstructorWire.make({ t: "Space" })
  * console.log(wire.t) // "Space"
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export declare namespace PandocConstructorWire {
-  /**
-   * @since 0.0.0
-   */
-  export interface Type {
-    readonly c?: unknown;
-    readonly t: string;
-  }
-
-  /**
-   * @since 0.0.0
-   */
-  export interface Encoded extends Type {}
-}
+export type PandocConstructorWire = typeof PandocConstructorWire.Type;
 
 /**
  * Pandoc JSON document wire shape.
@@ -126,10 +117,10 @@ export class PandocJsonWire extends S.Class<PandocJsonWire>($I`PandocJsonWire`)(
     "pandoc-api-version": PandocApiVersion.annotateKey({
       description: "Pandoc API version tuple.",
     }),
-    blocks: S.Array(S.Unknown).annotateKey({
+    blocks: S.Array(S.Json).annotateKey({
       description: "Pandoc block constructor array.",
     }),
-    meta: PandocMeta.annotateKey({
+    meta: S.Record(S.String, S.Json).annotateKey({
       description: "Pandoc metadata map.",
     }),
   },
@@ -161,8 +152,8 @@ export declare namespace PandocJsonWire {
    * @since 0.0.0
    */
   export interface Type {
-    readonly blocks: ReadonlyArray<unknown>;
-    readonly meta: PandocMeta;
+    readonly blocks: ReadonlyArray<S.Json>;
+    readonly meta: Readonly<Record<string, S.Json>>;
     readonly "pandoc-api-version": PandocApiVersion;
   }
 
@@ -214,6 +205,141 @@ export const PandocJsonFromString = S.fromJsonString(PandocJsonWire).pipe(
  */
 export type PandocJsonFromString = typeof PandocJsonFromString.Type;
 
+const PandocJsonObject = S.Record(S.String, S.Json);
+const PandocJsonObjectFromString = S.fromJsonString(PandocJsonObject);
+
+/**
+ * Typed failure raised by strict or lossless Pandoc JSON decoding.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { decodePandocJsonStrict } from "@beep/pandoc-ast/Pandoc.codec"
+ *
+ * const handled = decodePandocJsonStrict(null).pipe(
+ *   Effect.catchTag("PandocDecodeError", (error) => Effect.succeed(error.message))
+ * )
+ * Effect.runPromise(handled).then(console.log)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class PandocDecodeError extends CauseTaggedError<PandocDecodeError>($I`PandocDecodeError`)(
+  "PandocDecodeError",
+  $I.annote("PandocDecodeError", {
+    description: "Typed failure raised when a Pandoc semantic or lossless JSON payload cannot be decoded.",
+  })
+) {}
+
+/**
+ * A diagnostic produced while inspecting a lossless Pandoc document.
+ *
+ * @example
+ * ```ts
+ * import { PandocLosslessIssue } from "@beep/pandoc-ast/Pandoc.codec"
+ *
+ * const issue = PandocLosslessIssue.make({
+ *   constructor: "Para",
+ *   context: "block",
+ *   message: "Malformed block.",
+ *   path: ["blocks", 0],
+ * })
+ * console.log(issue.pointer) // "/blocks/0"
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export class PandocLosslessIssue extends S.Class<PandocLosslessIssue>($I`PandocLosslessIssue`)(
+  {
+    constructor: S.String,
+    context: S.Literals(["block", "inline", "meta"]),
+    message: S.NonEmptyString,
+    path: JsonPath,
+  },
+  $I.annote("PandocLosslessIssue", {
+    description: "Diagnostic produced while inspecting a lossless Pandoc document.",
+  })
+) {
+  get pointer(): string {
+    return JsonPath.toPointer(this.path);
+  }
+}
+
+/**
+ * Exact raw top-level block in a lossless document.
+ *
+ * @example
+ * ```ts
+ * import { PandocLosslessBlock } from "@beep/pandoc-ast/Pandoc.codec"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(PandocLosslessBlock)({ c: [], t: "FutureBlock" })) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PandocLosslessBlock = S.Json.pipe(
+  $I.annoteSchema("PandocLosslessBlock", {
+    description: "Exact raw top-level Pandoc block retained by lossless decoding.",
+  })
+);
+
+/**
+ * Runtime type for {@link PandocLosslessBlock}.
+ *
+ * @example
+ * ```ts
+ * import type { PandocLosslessBlock } from "@beep/pandoc-ast/Pandoc.codec"
+ *
+ * const block: PandocLosslessBlock = { c: "hello", t: "Str" }
+ * console.log(block)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type PandocLosslessBlock = typeof PandocLosslessBlock.Type;
+
+/**
+ * Lossless Pandoc envelope with exact raw views and recursive diagnostics.
+ *
+ * @remarks
+ * {@link wire} remains the single source used by lossless encoding. The
+ * block and metadata views remain exact raw JSON and are never replaced by
+ * synthetic semantic nodes.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { decodePandocJsonLossless } from "@beep/pandoc-ast/Pandoc.codec"
+ *
+ * const program = decodePandocJsonLossless({
+ *   "pandoc-api-version": [1, 23, 1],
+ *   blocks: [],
+ *   meta: {},
+ * })
+ * Effect.runPromise(program).then((document) => console.log(document.blocks.length))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PandocLosslessDocument extends S.Class<PandocLosslessDocument>($I`PandocLosslessDocument`)(
+  {
+    apiVersion: PandocApiVersion,
+    blocks: S.Array(PandocLosslessBlock),
+    issues: S.Array(PandocLosslessIssue),
+    meta: S.Record(S.String, S.Json),
+    wire: PandocJsonObject,
+  },
+  $I.annote("PandocLosslessDocument", {
+    description: "Lossless Pandoc envelope with exact raw views and recursive compatibility diagnostics.",
+  })
+) {}
+
 const AttrWire = S.Tuple([S.String, S.Array(S.String), S.Array(PandocKeyValue)]);
 const TargetWire = S.Tuple([S.String, S.String]);
 const HeaderPayloadWire = S.Tuple([S.Int, AttrWire, S.Array(S.Unknown)]);
@@ -223,18 +349,7 @@ const LinkPayloadWire = S.Tuple([AttrWire, S.Array(S.Unknown), TargetWire]);
 const NotePayloadWire = S.Array(S.Unknown);
 const MathPayloadWire = S.Tuple([PandocConstructorWire, S.String]);
 const OrderedListPayloadWire = S.Tuple([S.Tuple([S.Int, S.Unknown, S.Unknown]), S.Unknown]);
-const TableCaptionWithShortWire = S.Tuple([S.Array(S.Unknown).pipe(S.NullOr), S.Array(S.Unknown)]);
-const TableCaptionWire = S.Union([TableCaptionWithShortWire, S.Array(S.Unknown), PandocConstructorWire]);
-const TableHeadOrFootWire = S.Union([S.Tuple([AttrWire, S.Array(S.Unknown)]), S.Array(S.Unknown)]);
-const TablePayloadWire = S.Tuple([
-  AttrWire,
-  TableCaptionWire,
-  S.Array(S.Unknown),
-  TableHeadOrFootWire,
-  S.Array(S.Unknown),
-  TableHeadOrFootWire,
-]);
-
+const BlockItemsWire = S.Unknown.pipe(S.Array, S.Array);
 type AttrWireValue = Readonly<[string, ReadonlyArray<string>, ReadonlyArray<PandocKeyValue>]>;
 type TargetWireValue = Readonly<[string, string]>;
 
@@ -271,6 +386,9 @@ const decodeConstructor = S.decodeUnknownEffect(PandocConstructorWire);
 const decodeWire = S.decodeUnknownEffect(PandocJsonWire);
 const decodeWireFromString = S.decodeUnknownEffect(PandocJsonFromString);
 const encodeWireToString = S.encodeEffect(PandocJsonFromString);
+const decodeJsonObject = S.decodeUnknownEffect(PandocJsonObject);
+const decodeJsonObjectFromString = S.decodeUnknownEffect(PandocJsonObjectFromString);
+const encodeJsonObjectToString = S.encodeEffect(PandocJsonObjectFromString);
 const decodeString = S.decodeUnknownEffect(S.String);
 const decodeAttrWire = S.decodeUnknownEffect(PandocAttrFromWire);
 const decodeTargetWire = S.decodeUnknownEffect(PandocTargetFromWire);
@@ -282,11 +400,15 @@ const decodeLinkPayloadWire = S.decodeUnknownEffect(LinkPayloadWire);
 const decodeNotePayloadWire = S.decodeUnknownEffect(NotePayloadWire);
 const decodeMathPayloadWire = S.decodeUnknownEffect(MathPayloadWire);
 const decodeOrderedListPayloadWire = S.decodeUnknownEffect(OrderedListPayloadWire);
-const decodeTablePayloadWire = S.decodeUnknownEffect(TablePayloadWire);
-const decodeTableCaptionWithShortWire = S.decodeUnknownEffect(TableCaptionWithShortWire);
+const decodeBlockItemsWire = S.decodeUnknownEffect(BlockItemsWire);
+const decodeTablePayloadWire = S.decodeUnknownEffect(PandocTablePayload);
 const decodeListNumberStyle = S.decodeUnknownEffect(PandocListNumberStyle);
 const decodeListNumberDelimiter = S.decodeUnknownEffect(PandocListNumberDelimiter);
 const decodeMathType = S.decodeUnknownOption(PandocMathType);
+const decodeBoolean = S.decodeUnknownEffect(S.Boolean);
+const decodeJsonArray = S.decodeUnknownEffect(S.Array(S.Json));
+const decodeJsonRecord = S.decodeUnknownEffect(S.Record(S.String, S.Json));
+const decodeAbsentPayload = S.decodeUnknownEffect(S.Undefined);
 
 const decodeAndTakeT = flow(decodeConstructor, Effect.map(Struct.get("t")));
 
@@ -307,109 +429,14 @@ const decodeBlockList = flow(
   Effect.flatMap((values) => Effect.forEach(values, decodeBlock))
 );
 
-const unknownInline: {
-  (constructor: string, payload: unknown): UnknownInline;
-  (payload: unknown): (constructor: string) => UnknownInline;
-} = dual(
-  2,
-  (constructor: string, payload: unknown): UnknownInline =>
-    UnknownInline.make({
-      constructor,
-      payload,
-    })
-);
+const unknownInline = (wire: PandocConstructorWire): UnknownInline => UnknownInline.make({ wire });
 
-const unknownBlock: {
-  (constructor: string, payload: unknown): UnknownBlock;
-  (payload: unknown): (constructor: string) => UnknownBlock;
-} = dual(
-  2,
-  (constructor: string, payload: unknown): UnknownBlock =>
-    UnknownBlock.make({
-      constructor,
-      payload,
-    })
-);
+const unknownBlock = (wire: PandocConstructorWire): UnknownBlock => UnknownBlock.make({ wire });
 
-const decodeBlockListOrUnknown = flow(
-  decodeUnknownArray,
-  Effect.flatMap((values) => Effect.forEach(values, decodeBlock))
-);
-
-const decodeBlockItemOrUnknown = (input: unknown): Effect.Effect<ReadonlyArray<PandocBlock.Type>> => {
-  const malformed = [unknownBlock("MalformedListItem", input)];
-  return decodeUnknownArray(input).pipe(
-    Effect.matchEffect({
-      onFailure: () => Effect.succeed(malformed),
-      onSuccess: (values) => Effect.forEach(values, decodeBlock).pipe(Effect.orElseSucceed(() => malformed)),
-    })
-  );
-};
-
-const decodeBlockItemsOrUnknown = (
+const decodeBlockItems = (
   input: unknown
-): Effect.Effect<ReadonlyArray<ReadonlyArray<PandocBlock.Type>>, S.SchemaError> => {
-  const malformed = () => Effect.succeed([[unknownBlock("MalformedListItem", input)]]);
-
-  return decodeUnknownArray(input).pipe(
-    Effect.matchEffect({
-      onFailure: malformed,
-      onSuccess: (items) => Effect.forEach(items, decodeBlockItemOrUnknown),
-    })
-  );
-};
-
-const captionInlinesFromBlock: (block: PandocBlock.Type) => ReadonlyArray<PandocInline.Type> =
-  Match.type<PandocBlock.Type>().pipe(
-    Match.tagsExhaustive({
-      plain: (block) => block.children,
-      para: (block) => block.children,
-      header: (block) => block.children,
-      blockquote: (block) => A.flatMap(block.children, captionInlinesFromBlock),
-      codeblock: (block) => A.of(Str.make({ text: block.text })),
-      bulletlist: (block) => A.flatMap(A.flatten(block.items), captionInlinesFromBlock),
-      orderedlist: (block) => A.flatMap(A.flatten(block.items), captionInlinesFromBlock),
-      horizontalrule: A.emptyReadonly<never>,
-      div: (block) => A.flatMap(block.children, captionInlinesFromBlock),
-      table: (block) => block.caption,
-      unknownBlock: A.emptyReadonly<never>,
-    })
-  );
-
-const captionInlinesFromBlocks = (blocks: ReadonlyArray<PandocBlock.Type>): ReadonlyArray<PandocInline.Type> =>
-  A.flatMap(blocks, captionInlinesFromBlock);
-
-const captionFromBlocksWire = (input: unknown): Effect.Effect<ReadonlyArray<PandocInline.Type>, S.SchemaError> =>
-  Effect.map(decodeBlockList(input), captionInlinesFromBlocks);
-
-const captionFromLegacyWire = (input: unknown): Effect.Effect<ReadonlyArray<PandocInline.Type>, S.SchemaError> =>
-  decodeTableCaptionWithShortWire(input).pipe(
-    Effect.matchEffect({
-      onFailure: () => captionFromBlocksWire(input),
-      onSuccess: ([shortCaptionWire, longCaptionWire]) =>
-        Effect.flatMap(
-          // crispen: shortCaption stays `array | null` (not S.OptionFromNullOr) — decodeTablePayloadWire
-          // re-feeds this decoded tuple back through captionFromWire, so Option-ifying the wire schema
-          // would break that re-decode. Absorb once the double-decode is removed.
-          P.isNull(shortCaptionWire) ? Effect.succeed([]) : decodeInlines(shortCaptionWire),
-          (shortCaption) =>
-            Effect.map(captionFromBlocksWire(longCaptionWire), (longCaption) =>
-              A.length(shortCaption) > 0 ? shortCaption : longCaption
-            )
-        ),
-    })
-  );
-
-const captionFromWire = (input: unknown): Effect.Effect<ReadonlyArray<PandocInline.Type>, S.SchemaError> =>
-  decodeConstructor(input).pipe(
-    Effect.matchEffect({
-      onFailure: () => captionFromLegacyWire(input),
-      onSuccess: (wire) => (wire.t === "TableCaption" ? captionFromLegacyWire(wire.c) : captionFromLegacyWire(input)),
-    })
-  );
-
-const captionFromWireOrEmpty = (input: unknown): Effect.Effect<ReadonlyArray<PandocInline.Type>> =>
-  captionFromWire(input).pipe(Effect.orElseSucceed(A.emptyReadonly));
+): Effect.Effect<ReadonlyArray<ReadonlyArray<PandocBlock.Type>>, S.SchemaError> =>
+  Effect.flatMap(decodeUnknownArray(input), (items) => Effect.forEach(items, (item) => decodeBlockList(item)));
 
 const decodeChildInline = (
   input: unknown,
@@ -479,30 +506,26 @@ const decodeAttributedInlineChildren: {
     )
 );
 
-const decodeMathInline = (payload: unknown): Effect.Effect<PandocInline.Type, S.SchemaError> =>
-  decodeMathPayloadWire(payload).pipe(
-    Effect.matchEffect({
-      onFailure: () => Effect.succeed(unknownInline("Math", payload)),
-      onSuccess: ([mathTypeWire, text]) =>
-        O.match(decodeMathType(mathTypeWire.t), {
-          onNone: () => Effect.succeed(unknownInline("Math", payload)),
-          onSome: PandocMathType.$match({
-            DisplayMath: (mathType) =>
-              Effect.succeed(
-                Math.make({
-                  mathType,
-                  text,
-                })
-              ),
-            InlineMath: (mathType) =>
-              Effect.succeed(
-                Math.make({
-                  mathType,
-                  text,
-                })
-              ),
-          }),
-        }),
+const decodeMathInline = (wire: PandocConstructorWire): Effect.Effect<PandocInline.Type, S.SchemaError> =>
+  Effect.flatMap(decodeMathPayloadWire(wire.c), ([mathTypeWire, text]) =>
+    O.match(decodeMathType(mathTypeWire.t), {
+      onNone: () => Effect.succeed(unknownInline(wire)),
+      onSome: PandocMathType.$match({
+        DisplayMath: (mathType) =>
+          Effect.succeed(
+            Math.make({
+              mathType,
+              text,
+            })
+          ),
+        InlineMath: (mathType) =>
+          Effect.succeed(
+            Math.make({
+              mathType,
+              text,
+            })
+          ),
+      }),
     })
   );
 
@@ -510,9 +533,9 @@ const decodeInline = (input: unknown): Effect.Effect<PandocInline.Type, S.Schema
   Effect.flatMap(decodeConstructor(input), (wire) =>
     Match.value(wire.t).pipe(
       Match.when("Str", () => Effect.map(decodeString(wire.c), (text) => Str.make({ text }))),
-      Match.when("Space", () => Effect.succeed(Space.make())),
-      Match.when("SoftBreak", () => Effect.succeed(SoftBreak.make())),
-      Match.when("LineBreak", () => Effect.succeed(LineBreak.make())),
+      Match.when("Space", () => Effect.as(decodeAbsentPayload(wire.c), Space.make())),
+      Match.when("SoftBreak", () => Effect.as(decodeAbsentPayload(wire.c), SoftBreak.make())),
+      Match.when("LineBreak", () => Effect.as(decodeAbsentPayload(wire.c), LineBreak.make())),
       Match.when("Emph", () => decodeChildInline(wire.c, (children) => Emph.make({ children }))),
       Match.when("Strong", () => decodeChildInline(wire.c, (children) => Strong.make({ children }))),
       Match.when("Strikeout", () => decodeChildInline(wire.c, (children) => Strikeout.make({ children }))),
@@ -551,12 +574,10 @@ const decodeInline = (input: unknown): Effect.Effect<PandocInline.Type, S.Schema
         )
       ),
       Match.when("Note", () =>
-        Effect.map(Effect.flatMap(decodeNotePayloadWire(wire.c), decodeBlockListOrUnknown), (blocks) =>
-          Note.make({ blocks })
-        )
+        Effect.map(Effect.flatMap(decodeNotePayloadWire(wire.c), decodeBlockList), (blocks) => Note.make({ blocks }))
       ),
-      Match.when("Math", () => decodeMathInline(wire.c)),
-      Match.orElse(() => Effect.succeed(unknownInline(wire.t, wire.c)))
+      Match.when("Math", () => decodeMathInline(wire)),
+      Match.orElse(() => Effect.succeed(unknownInline(wire)))
     )
   );
 
@@ -571,41 +592,23 @@ const decodeAttributedBlockChildren = (
   );
 
 const decodeOrderedListBlock = (payload: unknown): Effect.Effect<PandocBlock.Type, S.SchemaError> =>
-  decodeOrderedListPayloadWire(payload).pipe(
-    Effect.matchEffect({
-      onFailure: () => Effect.succeed(unknownBlock("OrderedList", payload)),
-      onSuccess: ([[start, style, delimiter], itemWire]) =>
-        Effect.flatMap(listNumberStyleFromWire(style), (styleValue) =>
-          Effect.flatMap(listNumberDelimiterFromWire(delimiter), (delimiterValue) =>
-            Effect.map(decodeBlockItemsOrUnknown(itemWire), (items) =>
-              OrderedList.make({
-                delimiter: delimiterValue,
-                items,
-                start,
-                style: styleValue,
-              })
-            )
-          )
-        ).pipe(Effect.orElseSucceed(() => unknownBlock("OrderedList", payload))),
-    })
+  Effect.flatMap(decodeOrderedListPayloadWire(payload), ([[start, style, delimiter], itemWire]) =>
+    Effect.flatMap(listNumberStyleFromWire(style), (styleValue) =>
+      Effect.flatMap(listNumberDelimiterFromWire(delimiter), (delimiterValue) =>
+        Effect.map(decodeBlockItems(itemWire), (items) =>
+          OrderedList.make({
+            delimiter: delimiterValue,
+            items,
+            start,
+            style: styleValue,
+          })
+        )
+      )
+    )
   );
 
 const decodeTableBlock = (payload: unknown): Effect.Effect<PandocBlock.Type, S.SchemaError> =>
-  decodeTablePayloadWire(payload).pipe(
-    Effect.matchEffect({
-      onFailure: () => Effect.succeed(unknownBlock("Table", payload)),
-      onSuccess: ([attrWire, captionWire]) =>
-        Effect.flatMap(attrFromWire(attrWire), (attr) =>
-          Effect.map(captionFromWireOrEmpty(captionWire), (caption) =>
-            Table.make({
-              attr,
-              caption,
-              payload,
-            })
-          )
-        ),
-    })
-  );
+  Effect.map(decodeTablePayloadWire(payload), (decoded) => Table.make({ payload: decoded }));
 
 const decodeBlock = (input: unknown): Effect.Effect<PandocBlock.Type, S.SchemaError> =>
   Effect.flatMap(decodeConstructor(input), (wire) =>
@@ -636,11 +639,9 @@ const decodeBlock = (input: unknown): Effect.Effect<PandocBlock.Type, S.SchemaEr
           )
         )
       ),
-      Match.when("BulletList", () =>
-        Effect.map(decodeBlockItemsOrUnknown(wire.c), (items) => BulletList.make({ items }))
-      ),
+      Match.when("BulletList", () => Effect.map(decodeBlockItems(wire.c), (items) => BulletList.make({ items }))),
       Match.when("OrderedList", () => decodeOrderedListBlock(wire.c)),
-      Match.when("HorizontalRule", () => Effect.succeed(HorizontalRule.make({}))),
+      Match.when("HorizontalRule", () => Effect.as(decodeAbsentPayload(wire.c), HorizontalRule.make({}))),
       Match.when("Div", () =>
         decodeAttributedBlockChildren(wire.c, (attr, children) =>
           Div.make({
@@ -650,7 +651,44 @@ const decodeBlock = (input: unknown): Effect.Effect<PandocBlock.Type, S.SchemaEr
         )
       ),
       Match.when("Table", () => decodeTableBlock(wire.c)),
-      Match.orElse(() => Effect.succeed(unknownBlock(wire.t, wire.c)))
+      Match.orElse(() => Effect.succeed(unknownBlock(wire)))
+    )
+  );
+
+function decodeMetaValue(input: unknown): Effect.Effect<PandocMetaValue, S.SchemaError> {
+  return Effect.flatMap(decodeConstructor(input), (wire) =>
+    Match.value(wire.t).pipe(
+      Match.when("MetaBool", () => Effect.map(decodeBoolean(wire.c), (value) => MetaBool.make({ value }))),
+      Match.when("MetaString", () => Effect.map(decodeString(wire.c), (value) => MetaString.make({ value }))),
+      Match.when("MetaInlines", () => Effect.map(decodeInlines(wire.c), (children) => MetaInlines.make({ children }))),
+      Match.when("MetaBlocks", () => Effect.map(decodeBlockList(wire.c), (children) => MetaBlocks.make({ children }))),
+      Match.when("MetaList", () =>
+        Effect.flatMap(decodeJsonArray(wire.c), (values) =>
+          Effect.map(Effect.forEach(values, decodeMetaValue), (decoded) => MetaList.make({ values: decoded }))
+        )
+      ),
+      Match.when("MetaMap", () =>
+        Effect.flatMap(decodeJsonRecord(wire.c), (entries) =>
+          Effect.map(
+            Effect.forEach(Struct.entries(entries), ([key, value]) =>
+              Effect.map(decodeMetaValue(value), (decoded) => [key, decoded] as const)
+            ),
+            (decoded) => MetaMap.make({ entries: Struct.fromEntries(decoded) })
+          )
+        )
+      ),
+      Match.orElse(() => Effect.succeed(UnknownMeta.make({ wire })))
+    )
+  );
+}
+
+const decodeMeta = (input: unknown): Effect.Effect<PandocMeta, S.SchemaError> =>
+  Effect.flatMap(decodeJsonRecord(input), (meta) =>
+    Effect.map(
+      Effect.forEach(Struct.entries(meta), ([key, value]) =>
+        Effect.map(decodeMetaValue(value), (decoded) => [key, decoded] as const)
+      ),
+      Struct.fromEntries
     )
   );
 
@@ -658,16 +696,16 @@ const encodeAttr = pandocAttrToWire;
 
 const encodeTarget = pandocTargetToWire;
 
-const encodeInlines = (inlines: ReadonlyArray<PandocInline.Type>): ReadonlyArray<unknown> =>
+const encodeInlines = (inlines: ReadonlyArray<PandocInline.Type>): ReadonlyArray<S.Json> =>
   A.map(inlines, encodeInline);
 
-const encodeBlocks = (blocks: ReadonlyArray<PandocBlock.Type>): ReadonlyArray<unknown> => A.map(blocks, encodeBlock);
+const encodeBlocks = (blocks: ReadonlyArray<PandocBlock.Type>): ReadonlyArray<S.Json> => A.map(blocks, encodeBlock);
 
 const encodeBlockItems = (
   items: ReadonlyArray<ReadonlyArray<PandocBlock.Type>>
-): ReadonlyArray<ReadonlyArray<unknown>> => A.map(items, encodeBlocks);
+): ReadonlyArray<ReadonlyArray<S.Json>> => A.map(items, encodeBlocks);
 
-const encodeInline = Match.type<PandocInline.Type>().pipe(
+const encodeInline: (inline: PandocInline.Type) => S.Json = Match.type<PandocInline.Type>().pipe(
   Match.tagsExhaustive({
     str: (inline) => ({
       c: inline.text,
@@ -712,14 +750,11 @@ const encodeInline = Match.type<PandocInline.Type>().pipe(
       c: [{ t: inline.mathType }, inline.text],
       t: "Math",
     }),
-    unknownInline: (inline) => ({
-      c: inline.payload,
-      t: inline.constructor,
-    }),
+    unknownInline: (inline) => inline.wire,
   })
 );
 
-const encodeBlock = Match.type<PandocBlock.Type>().pipe(
+const encodeBlock: (block: PandocBlock.Type) => S.Json = Match.type<PandocBlock.Type>().pipe(
   Match.tagsExhaustive({
     plain: (block) => ({
       c: encodeInlines(block.children),
@@ -758,12 +793,29 @@ const encodeBlock = Match.type<PandocBlock.Type>().pipe(
       c: block.payload,
       t: "Table",
     }),
-    unknownBlock: (block) => ({
-      c: block.payload,
-      t: block.constructor,
-    }),
+    unknownBlock: (block) => block.wire,
   })
 );
+
+const encodeMetaValue: (value: PandocMetaValue) => S.Json = Match.type<PandocMetaValue>().pipe(
+  Match.tagsExhaustive({
+    metaBool: (value) => ({ c: value.value, t: "MetaBool" }),
+    metaString: (value) => ({ c: value.value, t: "MetaString" }),
+    metaInlines: (value) => ({ c: encodeInlines(value.children), t: "MetaInlines" }),
+    metaBlocks: (value) => ({ c: encodeBlocks(value.children), t: "MetaBlocks" }),
+    metaList: (value) => ({ c: A.map(value.values, encodeMetaValue), t: "MetaList" }),
+    metaMap: (value) => ({
+      c: Struct.fromEntries(
+        A.map(Struct.entries(value.entries), ([key, entry]) => [key, encodeMetaValue(entry)] as const)
+      ),
+      t: "MetaMap",
+    }),
+    unknownMeta: (value) => value.wire,
+  })
+);
+
+const encodeMeta = (meta: PandocMeta): Readonly<Record<string, S.Json>> =>
+  Struct.fromEntries(A.map(Struct.entries(meta), ([key, value]) => [key, encodeMetaValue(value)] as const));
 
 /**
  * Decodes a Pandoc JSON object into the internal schema-first document model.
@@ -780,18 +832,65 @@ const encodeBlock = Match.type<PandocBlock.Type>().pipe(
  * @category codecs
  * @since 0.0.0
  */
-export const decodePandocJson = flow(
-  decodeWire,
-  Effect.flatMap((wire) =>
+const documentFromWire = (wire: PandocJsonWire): Effect.Effect<PandocDocument, S.SchemaError> =>
+  Effect.flatMap(decodeMeta(wire.meta), (meta) =>
     Effect.map(decodeBlockList(wire.blocks), (blocks) =>
       PandocDocument.make({
         apiVersion: wire["pandoc-api-version"],
         blocks,
-        meta: wire.meta,
+        meta,
       })
     )
-  )
-);
+  );
+
+const decodePandocJsonInternal = flow(decodeWire, Effect.flatMap(documentFromWire));
+const decodePandocJsonStringInternal = flow(decodeWireFromString, Effect.flatMap(documentFromWire));
+
+/**
+ * Strictly decodes a Pandoc JSON object into the semantic document model.
+ *
+ * @remarks
+ * Malformed payloads for known constructors fail with
+ * {@link PandocDecodeError}. Future constructor names remain explicit
+ * `Unknown*` semantic nodes.
+ *
+ * @example
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { decodePandocJsonStrict } from "@beep/pandoc-ast/Pandoc.codec"
+ *
+ * const document = Effect.runSync(
+ *   decodePandocJsonStrict({ "pandoc-api-version": [1, 23, 1], meta: {}, blocks: [] })
+ * )
+ * console.log(document.blocks.length) // 0
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const decodePandocJsonStrict = (input: unknown): Effect.Effect<PandocDocument, PandocDecodeError> =>
+  decodePandocJsonInternal(input).pipe(PandocDecodeError.mapError("Pandoc JSON failed strict semantic decoding."));
+
+/**
+ * Backward-compatible alias for {@link decodePandocJsonStrict}.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { decodePandocJson } from "@beep/pandoc-ast/Pandoc.codec"
+ *
+ * const program = decodePandocJson({
+ *   "pandoc-api-version": [1, 23, 1],
+ *   blocks: [],
+ *   meta: {},
+ * })
+ * Effect.runPromise(program).then((document) => console.log(document.blocks.length))
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const decodePandocJson = decodePandocJsonStrict;
 
 /**
  * Decodes a Pandoc JSON string into the internal schema-first document model.
@@ -808,7 +907,295 @@ export const decodePandocJson = flow(
  * @category codecs
  * @since 0.0.0
  */
-export const decodePandocJsonString = flow(decodeWireFromString, Effect.flatMap(decodePandocJson));
+export const decodePandocJsonStringStrict = (input: unknown): Effect.Effect<PandocDocument, PandocDecodeError> =>
+  decodePandocJsonStringInternal(input).pipe(
+    PandocDecodeError.mapError("Pandoc JSON string failed strict semantic decoding.")
+  );
+
+/**
+ * Backward-compatible alias for {@link decodePandocJsonStringStrict}.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { decodePandocJsonString } from "@beep/pandoc-ast/Pandoc.codec"
+ *
+ * const program =
+ *   decodePandocJsonString(`{"pandoc-api-version":[1,23,1],"meta":{},"blocks":[]}`)
+ * Effect.runPromise(program).then((document) => console.log(document.blocks.length))
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const decodePandocJsonString = decodePandocJsonStringStrict;
+
+type LosslessContext = "block" | "inline" | "meta";
+type LosslessInspection = Effect.Effect<ReadonlyArray<PandocLosslessIssue>>;
+
+const appendPath = (path: JsonPathType, ...segments: ReadonlyArray<string | number>): JsonPathType => [
+  ...path,
+  ...segments,
+];
+
+const malformedConstructorIssue = (
+  context: LosslessContext,
+  constructor: string,
+  path: JsonPathType,
+  cause: unknown
+): PandocLosslessIssue =>
+  PandocLosslessIssue.make({
+    constructor,
+    context,
+    message: `Malformed ${constructor} ${context} constructor: ${String(cause)}`,
+    path,
+  });
+
+const inspectDecoded = <Value>(
+  decoded: Effect.Effect<Value, S.SchemaError>,
+  context: LosslessContext,
+  constructor: string,
+  path: JsonPathType,
+  onSuccess: (value: Value) => LosslessInspection = () => Effect.succeed([])
+): LosslessInspection =>
+  decoded.pipe(
+    Effect.matchEffect({
+      onFailure: (error) => Effect.succeed([malformedConstructorIssue(context, constructor, path, error)]),
+      onSuccess,
+    })
+  );
+
+const inspectChildren = (
+  values: ReadonlyArray<unknown>,
+  path: JsonPathType,
+  inspect: (value: unknown, path: JsonPathType) => LosslessInspection
+): LosslessInspection =>
+  Effect.map(
+    Effect.forEach(values, (value, index) => inspect(value, appendPath(path, index))),
+    A.flatten
+  );
+
+const inspectInlineArray = (
+  input: unknown,
+  path: JsonPathType,
+  constructor: string,
+  constructorPath: JsonPathType,
+  context: LosslessContext = "inline"
+): LosslessInspection =>
+  inspectDecoded(decodeUnknownArray(input), context, constructor, constructorPath, (values) =>
+    inspectChildren(values, path, inspectInline)
+  );
+
+const inspectBlockArray = (
+  input: unknown,
+  path: JsonPathType,
+  context: LosslessContext,
+  constructor: string,
+  constructorPath: JsonPathType
+): LosslessInspection =>
+  inspectDecoded(decodeUnknownArray(input), context, constructor, constructorPath, (values) =>
+    inspectChildren(values, path, inspectBlock)
+  );
+
+const inspectBlockItems = (
+  input: unknown,
+  path: JsonPathType,
+  constructor: string,
+  constructorPath: JsonPathType
+): LosslessInspection =>
+  inspectDecoded(decodeBlockItemsWire(input), "block", constructor, constructorPath, (items) =>
+    Effect.map(
+      Effect.forEach(items, (item, itemIndex) => inspectChildren(item, appendPath(path, itemIndex), inspectBlock)),
+      A.flatten
+    )
+  );
+
+function inspectInline(input: unknown, path: JsonPathType): LosslessInspection {
+  return decodeConstructor(input).pipe(
+    Effect.matchEffect({
+      onFailure: (error) => Effect.succeed([malformedConstructorIssue("inline", "Unknown", path, error)]),
+      onSuccess: (wire) =>
+        Match.value(wire.t).pipe(
+          Match.when("Str", () => inspectDecoded(decodeString(wire.c), "inline", wire.t, path)),
+          Match.when("Space", () => inspectDecoded(decodeAbsentPayload(wire.c), "inline", wire.t, path)),
+          Match.when("SoftBreak", () => inspectDecoded(decodeAbsentPayload(wire.c), "inline", wire.t, path)),
+          Match.when("LineBreak", () => inspectDecoded(decodeAbsentPayload(wire.c), "inline", wire.t, path)),
+          Match.when("Emph", () => inspectInlineArray(wire.c, appendPath(path, "c"), wire.t, path)),
+          Match.when("Strong", () => inspectInlineArray(wire.c, appendPath(path, "c"), wire.t, path)),
+          Match.when("Strikeout", () => inspectInlineArray(wire.c, appendPath(path, "c"), wire.t, path)),
+          Match.when("Code", () => inspectDecoded(decodeCodePayloadWire(wire.c), "inline", wire.t, path)),
+          Match.when("Link", () =>
+            inspectDecoded(decodeLinkPayloadWire(wire.c), "inline", wire.t, path, ([, children]) =>
+              inspectChildren(children, appendPath(path, "c", 1), inspectInline)
+            )
+          ),
+          Match.when("Image", () =>
+            inspectDecoded(decodeLinkPayloadWire(wire.c), "inline", wire.t, path, ([, children]) =>
+              inspectChildren(children, appendPath(path, "c", 1), inspectInline)
+            )
+          ),
+          Match.when("Span", () =>
+            inspectDecoded(decodeDivPayloadWire(wire.c), "inline", wire.t, path, ([, children]) =>
+              inspectChildren(children, appendPath(path, "c", 1), inspectInline)
+            )
+          ),
+          Match.when("Note", () => inspectBlockArray(wire.c, appendPath(path, "c"), "inline", wire.t, path)),
+          Match.when("Math", () => inspectDecoded(decodeMathPayloadWire(wire.c), "inline", wire.t, path)),
+          Match.orElse(() => Effect.succeed([]))
+        ),
+    })
+  );
+}
+
+const inspectOrderedList = (payload: unknown, path: JsonPathType): LosslessInspection =>
+  inspectDecoded(decodeOrderedListPayloadWire(payload), "block", "OrderedList", path, ([[, style, delimiter], items]) =>
+    inspectDecoded(listNumberStyleFromWire(style), "block", "OrderedList", path, () =>
+      inspectDecoded(listNumberDelimiterFromWire(delimiter), "block", "OrderedList", path, () =>
+        inspectBlockItems(items, appendPath(path, "c", 1), "OrderedList", path)
+      )
+    )
+  );
+
+function inspectBlock(input: unknown, path: JsonPathType): LosslessInspection {
+  return decodeConstructor(input).pipe(
+    Effect.matchEffect({
+      onFailure: (error) => Effect.succeed([malformedConstructorIssue("block", "Unknown", path, error)]),
+      onSuccess: (wire) =>
+        Match.value(wire.t).pipe(
+          Match.when("Plain", () => inspectInlineArray(wire.c, appendPath(path, "c"), wire.t, path, "block")),
+          Match.when("Para", () => inspectInlineArray(wire.c, appendPath(path, "c"), wire.t, path, "block")),
+          Match.when("Header", () =>
+            inspectDecoded(decodeHeaderPayloadWire(wire.c), "block", wire.t, path, ([, , children]) =>
+              inspectChildren(children, appendPath(path, "c", 2), inspectInline)
+            )
+          ),
+          Match.when("BlockQuote", () => inspectBlockArray(wire.c, appendPath(path, "c"), "block", wire.t, path)),
+          Match.when("CodeBlock", () => inspectDecoded(decodeCodePayloadWire(wire.c), "block", wire.t, path)),
+          Match.when("BulletList", () => inspectBlockItems(wire.c, appendPath(path, "c"), wire.t, path)),
+          Match.when("OrderedList", () => inspectOrderedList(wire.c, path)),
+          Match.when("HorizontalRule", () => inspectDecoded(decodeAbsentPayload(wire.c), "block", wire.t, path)),
+          Match.when("Div", () =>
+            inspectDecoded(decodeDivPayloadWire(wire.c), "block", wire.t, path, ([, children]) =>
+              inspectChildren(children, appendPath(path, "c", 1), inspectBlock)
+            )
+          ),
+          Match.when("Table", () => inspectDecoded(decodeTablePayloadWire(wire.c), "block", wire.t, path)),
+          Match.orElse(() => Effect.succeed([]))
+        ),
+    })
+  );
+}
+
+function inspectMetaValue(input: unknown, path: JsonPathType): LosslessInspection {
+  return decodeConstructor(input).pipe(
+    Effect.matchEffect({
+      onFailure: (error) => Effect.succeed([malformedConstructorIssue("meta", "Unknown", path, error)]),
+      onSuccess: (wire) =>
+        Match.value(wire.t).pipe(
+          Match.when("MetaBool", () => inspectDecoded(decodeBoolean(wire.c), "meta", wire.t, path)),
+          Match.when("MetaString", () => inspectDecoded(decodeString(wire.c), "meta", wire.t, path)),
+          Match.when("MetaInlines", () => inspectInlineArray(wire.c, appendPath(path, "c"), wire.t, path, "meta")),
+          Match.when("MetaBlocks", () => inspectBlockArray(wire.c, appendPath(path, "c"), "meta", wire.t, path)),
+          Match.when("MetaList", () =>
+            inspectDecoded(decodeJsonArray(wire.c), "meta", wire.t, path, (values) =>
+              inspectChildren(values, appendPath(path, "c"), inspectMetaValue)
+            )
+          ),
+          Match.when("MetaMap", () =>
+            inspectDecoded(decodeJsonRecord(wire.c), "meta", wire.t, path, (entries) =>
+              Effect.map(
+                Effect.forEach(Struct.entries(entries), ([key, value]) =>
+                  inspectMetaValue(value, appendPath(path, "c", key))
+                ),
+                A.flatten
+              )
+            )
+          ),
+          Match.orElse(() => Effect.succeed([]))
+        ),
+    })
+  );
+}
+
+const inspectMeta = (meta: Readonly<Record<string, S.Json>>): LosslessInspection =>
+  Effect.map(
+    Effect.forEach(Struct.entries(meta), ([key, value]) => inspectMetaValue(value, ["meta", key])),
+    A.flatten
+  );
+
+const decodePandocJsonLosslessInternal = (input: unknown): Effect.Effect<PandocLosslessDocument, S.SchemaError> =>
+  Effect.flatMap(decodeJsonObject(input), (rawWire) =>
+    Effect.flatMap(decodeWire(rawWire), (wire) =>
+      Effect.flatMap(
+        Effect.map(
+          Effect.forEach(wire.blocks, (block, index) => inspectBlock(block, ["blocks", index])),
+          A.flatten
+        ),
+        (blockIssues) =>
+          Effect.map(inspectMeta(wire.meta), (metaIssues) =>
+            PandocLosslessDocument.make({
+              apiVersion: wire["pandoc-api-version"],
+              blocks: wire.blocks,
+              issues: [...blockIssues, ...metaIssues],
+              meta: wire.meta,
+              wire: rawWire,
+            })
+          )
+      )
+    )
+  );
+
+/**
+ * Decodes Pandoc JSON while preserving the complete JSON tree exactly.
+ *
+ * @remarks
+ * Known malformed constructors stay unchanged in the retained wire and produce
+ * path-located issues at the nearest complete constructor boundary; no
+ * synthetic semantic node replaces them. {@link encodePandocJsonLossless}
+ * always emits the original wire.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { decodePandocJsonLossless } from "@beep/pandoc-ast/Pandoc.codec"
+ *
+ * const program = decodePandocJsonLossless({
+ *   "pandoc-api-version": [1, 23, 1],
+ *   blocks: [],
+ *   meta: {},
+ * })
+ * Effect.runPromise(program).then((document) => console.log(document.issues.length))
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const decodePandocJsonLossless = (input: unknown): Effect.Effect<PandocLosslessDocument, PandocDecodeError> =>
+  decodePandocJsonLosslessInternal(input).pipe(PandocDecodeError.mapError("Pandoc JSON failed lossless decoding."));
+
+/**
+ * Decodes a Pandoc JSON string into the exact lossless envelope.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { decodePandocJsonStringLossless } from "@beep/pandoc-ast/Pandoc.codec"
+ *
+ * const program =
+ *   decodePandocJsonStringLossless(`{"pandoc-api-version":[1,23,1],"meta":{},"blocks":[]}`)
+ * Effect.runPromise(program).then((document) => console.log(document.blocks.length))
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const decodePandocJsonStringLossless = (
+  input: unknown
+): Effect.Effect<PandocLosslessDocument, PandocDecodeError> =>
+  decodeJsonObjectFromString(input).pipe(
+    Effect.flatMap(decodePandocJsonLosslessInternal),
+    PandocDecodeError.mapError("Pandoc JSON string failed lossless decoding.")
+  );
 
 /**
  * Encodes an internal Pandoc document model to Pandoc JSON object form.
@@ -831,7 +1218,7 @@ export const encodePandocJson = (document: PandocDocument.Type): Effect.Effect<P
     PandocJsonWire.make({
       "pandoc-api-version": document.apiVersion,
       blocks: encodeBlocks(document.blocks),
-      meta: document.meta,
+      meta: encodeMeta(document.meta),
     })
   );
 
@@ -852,3 +1239,51 @@ export const encodePandocJson = (document: PandocDocument.Type): Effect.Effect<P
  * @since 0.0.0
  */
 export const encodePandocJsonString = flow(encodePandocJson, Effect.flatMap(encodeWireToString));
+
+/**
+ * Returns the exact JSON object retained by a lossless decode.
+ *
+ * @example
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { decodePandocJsonLossless, encodePandocJsonLossless } from "@beep/pandoc-ast/Pandoc.codec"
+ *
+ * const input = { "pandoc-api-version": [1, 23, 1], meta: {}, blocks: [], future: true }
+ * const output = Effect.runSync(
+ *   decodePandocJsonLossless(input).pipe(Effect.flatMap(encodePandocJsonLossless))
+ * )
+ * console.log(output.future) // true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const encodePandocJsonLossless = (
+  document: PandocLosslessDocument
+): Effect.Effect<Readonly<Record<string, S.Json>>> => Effect.succeed(document.wire);
+
+/**
+ * Encodes the exact JSON object retained by a lossless decode to text.
+ *
+ * @example
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import {
+ *   decodePandocJsonLossless,
+ *   encodePandocJsonStringLossless,
+ * } from "@beep/pandoc-ast/Pandoc.codec"
+ *
+ * const output = Effect.runSync(
+ *   decodePandocJsonLossless({
+ *     "pandoc-api-version": [1, 23, 1],
+ *     meta: {},
+ *     blocks: [],
+ *   }).pipe(Effect.flatMap(encodePandocJsonStringLossless))
+ * )
+ * console.log(output.includes("pandoc-api-version")) // true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const encodePandocJsonStringLossless = flow(encodePandocJsonLossless, Effect.flatMap(encodeJsonObjectToString));

@@ -1,6 +1,6 @@
 import * as Md from "@beep/md/Md.model";
 import { decodePandocJson, decodePandocJsonString } from "@beep/pandoc-ast/Pandoc.codec";
-import { documentToPandoc, pandocToDocument } from "@beep/pandoc-ast/Pandoc.mapping";
+import { documentToPandoc, PandocMappingError, pandocToDocument } from "@beep/pandoc-ast/Pandoc.mapping";
 import * as Pandoc from "@beep/pandoc-ast/Pandoc.model";
 import {
   JsonPath,
@@ -241,6 +241,11 @@ describe("Pandoc.mapping", () => {
         expect(issue.pointer).toBe(JsonPath.toPointer(path));
         expect(issue.pointer).toBe(jsonPointerFromPath(path));
         expect(issue.severity).toBe("unsupported");
+        expect(S.encodeSync(PandocMappingIssue)(issue)).not.toHaveProperty("pointer");
+
+        const report = PandocCompatibilityReport.fromIssues([issue]);
+        expect(report.profile).toBe("gap");
+        expect(S.encodeSync(PandocCompatibilityReport)(report)).not.toHaveProperty("profile");
       }),
       fcRuns(50)
     ));
@@ -411,6 +416,30 @@ describe("Pandoc.mapping", () => {
       })
     ));
 
+  it("returns typed mapping failures for forged runtime inputs", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const invalidPandoc = {
+          _tag: "pandocDocument",
+          apiVersion: [1, 23, 1],
+          blocks: [{ _tag: "para", children: [{ _tag: "str", text: 42 }] }],
+          meta: {},
+        } as unknown as Pandoc.PandocDocument;
+        const invalidMd = {
+          _tag: "document",
+          children: [{ _tag: "p", children: [{ _tag: "text", value: 42 }] }],
+        } as unknown as Md.Document;
+
+        const pandocError = yield* Effect.flip(pandocToDocument(invalidPandoc));
+        const mdError = yield* Effect.flip(documentToPandoc(invalidMd));
+
+        expect(pandocError).toBeInstanceOf(PandocMappingError);
+        expect(pandocError._tag).toBe("PandocMappingError");
+        expect(mdError).toBeInstanceOf(PandocMappingError);
+        expect(mdError._tag).toBe("PandocMappingError");
+      })
+    ));
+
   it("preserves inline structure inside list items in both mapping directions", () =>
     Effect.runPromise(
       Effect.gen(function* () {
@@ -574,6 +603,35 @@ describe("Pandoc.mapping", () => {
         expect(A.map(result.report.issues, (entry) => entry.construct)).toEqual(
           expect.arrayContaining(["Header", "CodeBlock", "OrderedList"])
         );
+      })
+    ));
+
+  it("reports document metadata and invalid sole code languages at their exact pointers", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const pandoc = yield* decodePandocJson({
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [
+            {
+              c: [["", ["ts bad"], []], "const value = 1"],
+              t: "CodeBlock",
+            },
+          ],
+          meta: {
+            title: { c: "Document", t: "MetaString" },
+          },
+        });
+        const result = yield* pandocToDocument(pandoc);
+        const code = result.document.children[0];
+
+        expect(result.report.issues.map((entry) => [entry.construct, entry.pointer])).toEqual([
+          ["CodeBlock", "/blocks/0"],
+          ["Meta", "/meta"],
+        ]);
+        expect(code?._tag).toBe("pre");
+        if (code?._tag === "pre") {
+          expect(code.language).toEqual(O.none());
+        }
       })
     ));
 

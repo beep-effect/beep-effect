@@ -1,29 +1,90 @@
 # @beep/pandoc-ast
 
-Schema-first Pandoc JSON AST mirror and compatibility adapters.
+Schema-first Pandoc JSON AST mirror, strict and lossless wire codecs, and
+compatibility adapters for `@beep/md`.
 
 ## Scope
 
 `@beep/pandoc-ast` is a pure modeling package. It does not shell out to
-`pandoc`, manage DOCX files, or make document-AST product decisions. The first
-slice mirrors enough Pandoc JSON to evaluate md-core round-trip compatibility
-and to report common DOCX-origin gaps, including custom style wrappers, notes,
-math, tables, raw Markdown/HTML, and task-list state.
+`pandoc`, manage DOCX files, or make document-AST product decisions. It mirrors
+enough Pandoc JSON to evaluate `@beep/md` round-trip compatibility and report
+common DOCX-origin gaps, including custom style wrappers, notes, math, tables,
+raw Markdown/HTML, and task-list state.
+
+The package exposes two intentionally different decode profiles:
+
+- `decodePandocJsonStrict` and `decodePandocJsonStringStrict` require every
+  recognized constructor to have a valid payload. A future constructor name is
+  represented by `UnknownBlock`, `UnknownInline`, or `UnknownMeta`, while a
+  malformed known constructor fails with the typed `PandocDecodeError`.
+- `decodePandocJsonLossless` and `decodePandocJsonStringLossless` retain the
+  complete JSON tree exactly. Known malformed constructors remain unchanged in
+  that raw tree and produce structured issues at the nearest constructor path;
+  no synthetic semantic node replaces them. The lossless encoders re-emit the
+  retained wire exactly, including future top-level fields.
+
+The shorter `decodePandocJson` and `decodePandocJsonString` names remain aliases
+of their strict counterparts.
+
+The matching semantic encoders, `encodePandocJson` and
+`encodePandocJsonString`, accept a typed `PandocDocument` and emit its canonical
+supported wire form. They do not claim exact retention of unknown top-level
+fields; use `encodePandocJsonLossless` or `encodePandocJsonStringLossless` on a
+lossless decode when exact wire identity is required.
+
+`pandocToDocument` and `documentToPandoc` return their compatibility reports in
+the success channel and expose the typed `PandocMappingError` when a schema
+projection cannot be completed.
 
 ## Usage
 
 ```ts
 import * as Effect from "effect/Effect"
-import { decodePandocJsonString, pandocToDocument } from "@beep/pandoc-ast"
+import { decodePandocJsonStringStrict, pandocToDocument } from "@beep/pandoc-ast"
 
 const result = Effect.runSync(
-  decodePandocJsonString(`{"pandoc-api-version":[1,23,1],"meta":{},"blocks":[]}`).pipe(
+  decodePandocJsonStringStrict(`{"pandoc-api-version":[1,23,1],"meta":{},"blocks":[]}`).pipe(
     Effect.flatMap(pandocToDocument)
   )
 )
 
 console.log(result.report.profile)
 ```
+
+Use the lossless profile when accepting content produced by a newer Pandoc
+version or when exact re-emission matters:
+
+```ts
+import * as Effect from "effect/Effect"
+import {
+  decodePandocJsonStringLossless,
+  encodePandocJsonStringLossless,
+} from "@beep/pandoc-ast"
+
+const input =
+  `{"pandoc-api-version":[1,23,1],"meta":{},"blocks":[{"t":"FutureBlock","c":{"v":1}}],"future":true}`
+
+const output = Effect.runSync(
+  decodePandocJsonStringLossless(input).pipe(
+    Effect.flatMap(encodePandocJsonStringLossless)
+  )
+)
+
+console.log(JSON.parse(output).future) // true
+```
+
+## Model invariants
+
+- Metadata is recursive and schema-backed: `MetaBool`, `MetaString`,
+  `MetaInlines`, `MetaBlocks`, `MetaList`, `MetaMap`, and `UnknownMeta`.
+- A `Table` stores one validated six-field `PandocTablePayload`. Its `attr` and
+  best-effort `caption` are derived views, so encoded tables cannot contain
+  competing copies of the same information.
+- Compatibility issue pointers and report profiles are derived from their
+  canonical path and issue collections.
+- `PandocAttr`, `PandocTarget`, and `PandocDocument` provide safe constructor
+  defaults. `DEFAULT_PANDOC_API_VERSION` is available when an explicit Pandoc
+  API-version tuple is needed.
 
 ## Fixtures
 

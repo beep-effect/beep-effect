@@ -12,7 +12,8 @@
  * ```ts
  * import { VERSION } from "@beep/pandoc-ast"
  *
- * console.log(VERSION)
+ * const packageVersion: "0.0.0" = VERSION
+ * console.log(packageVersion) // "0.0.0"
  * ```
  *
  * @category constants
