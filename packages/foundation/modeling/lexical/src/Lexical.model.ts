@@ -18,9 +18,9 @@
 // cspell:word youtu
 import { $LexicalSchemaId } from "@beep/identity/packages";
 import * as Md from "@beep/md/Md.model";
-import { LiteralKit, MappedLiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { CauseTaggedError, LiteralKit, MappedLiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
-import { Effect, SchemaGetter } from "effect";
+import { Effect, Result, SchemaGetter } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { legacyYouTubeVideoId, sanitizeInlineStyle, sanitizeStyleValue, sanitizeUrl } from "./Lexical.normalize.ts";
@@ -182,7 +182,7 @@ export type TextFormatBit = typeof TextFormatBit.Type;
  * ```ts
  * import { TEXT_FORMAT_MASK_ALL } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(TEXT_FORMAT_MASK_ALL) // 2047
+ * console.log((TEXT_FORMAT_MASK_ALL & 1) === 1) // true
  * ```
  *
  * @category constants
@@ -339,7 +339,7 @@ export type TextDetailBit = typeof TextDetailBit.Type;
  * ```ts
  * import { TEXT_DETAIL_MASK_ALL } from "@beep/lexical-schema/Lexical.model"
  *
- * console.log(TEXT_DETAIL_MASK_ALL) // 3
+ * console.log((TEXT_DETAIL_MASK_ALL & 1) === 1) // true
  * ```
  *
  * @category constants
@@ -798,6 +798,15 @@ export const ListTag = LiteralKit(["ul", "ol"]).pipe(
  */
 export type ListTag = typeof ListTag.Type;
 
+const SafeInlineStyleType = S.String.check(
+  S.makeFilter((value) => value === sanitizeInlineStyle(value), {
+    identifier: $I`SafeInlineStyleFixedPointCheck`,
+    title: "Safe Inline Style",
+    description: "A canonical inline CSS declaration list accepted unchanged by the Lexical sanitizer.",
+    message: "Expected an inline style already normalized by the Lexical safe-style policy.",
+  })
+);
+
 /**
  * Serialized Lexical inline CSS, sanitized at the schema boundary on both
  * decode and encode so that neither persisted untrusted state nor re-encoded
@@ -815,8 +824,8 @@ export type ListTag = typeof ListTag.Type;
  * @category validation
  * @since 0.0.0
  */
-export const SafeInlineStyle: S.decodeTo<S.toType<S.String>, S.String> = S.String.pipe(
-  S.decode({
+export const SafeInlineStyle = S.String.pipe(
+  S.decodeTo(SafeInlineStyleType, {
     decode: SchemaGetter.transform(sanitizeInlineStyle),
     encode: SchemaGetter.transform(sanitizeInlineStyle),
   }),
@@ -847,6 +856,15 @@ export const SafeInlineStyle: S.decodeTo<S.toType<S.String>, S.String> = S.Strin
  */
 export type SafeInlineStyle = typeof SafeInlineStyle.Type;
 
+const SafeStyleValueType = S.String.check(
+  S.makeFilter((value) => value === sanitizeStyleValue(value), {
+    identifier: $I`SafeStyleValueFixedPointCheck`,
+    title: "Safe Style Value",
+    description: "A canonical single CSS value accepted unchanged by the Lexical sanitizer.",
+    message: "Expected a CSS value already normalized by the Lexical safe-style policy.",
+  })
+);
+
 /**
  * Serialized Lexical single CSS value (table cell `backgroundColor` /
  * `verticalAlign`) sanitized at the schema boundary so the bare-value sink
@@ -864,8 +882,8 @@ export type SafeInlineStyle = typeof SafeInlineStyle.Type;
  * @category validation
  * @since 0.0.0
  */
-export const SafeStyleValue: S.decodeTo<S.toType<S.String>, S.String> = S.String.pipe(
-  S.decode({
+export const SafeStyleValue = S.String.pipe(
+  S.decodeTo(SafeStyleValueType, {
     decode: SchemaGetter.transform(sanitizeStyleValue),
     encode: SchemaGetter.transform(sanitizeStyleValue),
   }),
@@ -894,6 +912,15 @@ export const SafeStyleValue: S.decodeTo<S.toType<S.String>, S.String> = S.String
  */
 export type SafeStyleValue = typeof SafeStyleValue.Type;
 
+const SafeUrlType = S.String.check(
+  S.makeFilter((value) => value === sanitizeUrl(value), {
+    identifier: $I`SafeUrlFixedPointCheck`,
+    title: "Safe URL",
+    description: "A canonical browser URL destination accepted unchanged by the shared Md URL policy.",
+    message: "Expected a URL already normalized by the shared browser-safe URL policy.",
+  })
+);
+
 /**
  * Serialized Lexical link URL sanitized at the schema boundary before an
  * untrusted editor state reaches an anchor `href` sink.
@@ -910,8 +937,8 @@ export type SafeStyleValue = typeof SafeStyleValue.Type;
  * @category validation
  * @since 0.0.0
  */
-export const SafeUrl: S.decodeTo<S.toType<S.String>, S.String> = S.String.pipe(
-  S.decode({
+export const SafeUrl = S.String.pipe(
+  S.decodeTo(SafeUrlType, {
     decode: SchemaGetter.transform(sanitizeUrl),
     encode: SchemaGetter.transform(sanitizeUrl),
   }),
@@ -1728,7 +1755,15 @@ export class ListItemNode extends ElementNode.extend<ListItemNode>($I`ListItemNo
     value: LexicalListItemValue.annotateKey({ description: "Ordinal value within the list." }),
   },
   $I.annote("ListItemNode", { description: "A serialized Lexical list-item element node." })
-) {}
+) {
+  /**
+   * Type guard narrowing an arbitrary Lexical node to a list-item node.
+   *
+   * @category guards
+   * @since 0.0.0
+   */
+  static readonly is = S.is(ListItemNode);
+}
 
 /**
  * Companion namespace for {@link ListItemNode}.
@@ -2181,7 +2216,7 @@ export declare namespace TableCellNode {
   export interface Encoded extends ElementNode.Encoded {
     readonly backgroundColor?: string | null | undefined;
     readonly colSpan?: number | undefined;
-    readonly headerState: number;
+    readonly headerState: TableCellHeaderState;
     readonly rowSpan?: number | undefined;
     readonly type: "tablecell";
     readonly verticalAlign?: string | undefined;
@@ -2470,6 +2505,64 @@ export declare namespace LexicalNode {
     | TableCellNode.Encoded;
 }
 
+const StrictRootChildType = LiteralKit([
+  "paragraph",
+  "heading",
+  "quote",
+  "list",
+  "code",
+  "table",
+  "artifact-ref",
+  "youtube",
+]);
+const StrictInlineChildType = LiteralKit(["text", "tab", "linebreak", "link"]);
+const StrictLeafInlineChildType = LiteralKit(StrictInlineChildType.omitOptions(["link"]));
+const StrictListItemChildType = LiteralKit(["text", "tab", "linebreak", "link", "list"]);
+
+const isStrictRootChildType = S.is(StrictRootChildType);
+const isStrictInlineChildType = S.is(StrictInlineChildType);
+const isStrictLeafInlineChildType = S.is(StrictLeafInlineChildType);
+const isStrictListItemChildType = S.is(StrictListItemChildType);
+
+function hasStrictNodeChildren(node: LexicalNode.Type): boolean {
+  return strictNodeChildren(node);
+}
+
+const strictNodeChildren: (node: LexicalNode.Type) => boolean = LexicalNode.match({
+  text: () => true,
+  tab: () => true,
+  linebreak: () => true,
+  "artifact-ref": () => true,
+  youtube: () => true,
+  root: (node) => A.every(node.children, (child) => isStrictRootChildType(child.type) && hasStrictNodeChildren(child)),
+  paragraph: (node) =>
+    A.every(node.children, (child) => isStrictInlineChildType(child.type) && hasStrictNodeChildren(child)),
+  heading: (node) =>
+    A.every(node.children, (child) => isStrictInlineChildType(child.type) && hasStrictNodeChildren(child)),
+  quote: (node) =>
+    A.every(node.children, (child) => isStrictInlineChildType(child.type) && hasStrictNodeChildren(child)),
+  link: (node) =>
+    A.every(node.children, (child) => isStrictLeafInlineChildType(child.type) && hasStrictNodeChildren(child)),
+  code: (node) =>
+    A.every(node.children, (child) => isStrictLeafInlineChildType(child.type) && hasStrictNodeChildren(child)),
+  list: (node) => A.every(node.children, (child) => child.type === "listitem" && hasStrictNodeChildren(child)),
+  listitem: (node) =>
+    A.every(node.children, (child) => isStrictListItemChildType(child.type) && hasStrictNodeChildren(child)),
+  table: (node) => A.every(node.children, (child) => child.type === "tablerow" && hasStrictNodeChildren(child)),
+  tablerow: (node) => A.every(node.children, (child) => child.type === "tablecell" && hasStrictNodeChildren(child)),
+  tablecell: (node) =>
+    A.every(node.children, (child) => isStrictRootChildType(child.type) && hasStrictNodeChildren(child)),
+});
+
+const StrictRootNode = RootNode.check(
+  S.makeFilter(hasStrictNodeChildren, {
+    identifier: $I`StrictRootNodeTreeCheck`,
+    title: "Strict Root Node",
+    description: "A serialized Lexical root whose recursive child topology follows the supported v1 grammar.",
+    message: "Expected every Lexical node to appear under a compatible v1 parent.",
+  })
+);
+
 /**
  * Mirrors `SerializedEditorState`.
  *
@@ -2491,7 +2584,7 @@ export declare namespace LexicalNode {
  */
 export class SerializedEditorState extends S.Class<SerializedEditorState>($I`SerializedEditorState`)(
   {
-    root: RootNode.annotateKey({ description: "The document root node." }),
+    root: StrictRootNode.annotateKey({ description: "The strict v1 document root node." }),
   },
   $I.annote("SerializedEditorState", { description: "The serialized Lexical editor state envelope." })
 ) {
@@ -2556,6 +2649,420 @@ export declare namespace SerializedEditorState {
     readonly root: RootNode.Encoded;
   }
 }
+
+/**
+ * Semantic editor-state schema with the supported v1 Lexical child grammar.
+ *
+ * @remarks
+ * This is a readability alias for {@link SerializedEditorState}; the
+ * established editor-state schema itself enforces strict topology.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ * import { StrictSerializedEditorState } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const program = S.decodeUnknownEffect(StrictSerializedEditorState)({
+ *   root: { type: "root", version: 1, children: [], direction: null, format: "", indent: 0 },
+ * })
+ * Effect.runPromise(program).then((state) => console.log(state.root.type))
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const StrictSerializedEditorState = SerializedEditorState;
+
+/**
+ * JSON-only wire node that retains unknown node types, versions, and fields.
+ *
+ * @remarks
+ * This is a persistence and migration shape, not a render-safe semantic node.
+ * Decode through {@link decodeEditorStateStrict} before using values in editor
+ * behavior or DOM adapters.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ * import { LexicalNodeWire } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const program = S.decodeUnknownEffect(LexicalNodeWire)({
+ *   type: "future-node", version: 7, pluginData: { enabled: true },
+ * })
+ * Effect.runPromise(program).then((node) => console.log(node.type))
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
+export const LexicalNodeWire = S.StructWithRest(
+  S.Struct({
+    children: S.optionalKey(S.Json),
+    type: S.String,
+    version: S.Int,
+  }),
+  [S.Record(S.String, S.Json)]
+).pipe(
+  $I.annoteSchema("LexicalNodeWire", {
+    description: "JSON-only Lexical node wire preserving unknown types, versions, and fields exactly.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime type for {@link LexicalNodeWire}.
+ *
+ * @example
+ * ```ts
+ * import type { LexicalNodeWire } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: LexicalNodeWire = { type: "future-node", version: 2 }
+ * console.log(node.type)
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
+export type LexicalNodeWire = typeof LexicalNodeWire.Type;
+
+/**
+ * Companion opaque JSON types for {@link LexicalNodeWire}.
+ *
+ * @example
+ * ```ts
+ * import type { LexicalNodeWire } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const children: LexicalNodeWire.Type["children"] = { futureShape: true }
+ * console.log(children)
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
+export declare namespace LexicalNodeWire {
+  /**
+   * Decoded opaque wire node.
+   *
+   * @category serialization
+   * @since 0.0.0
+   */
+  export interface Type {
+    readonly children?: S.Json;
+    readonly type: string;
+    readonly version: number;
+  }
+
+  /**
+   * Encoded opaque wire node.
+   *
+   * @category serialization
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly children?: S.Json;
+    readonly type: string;
+    readonly version: number;
+  }
+}
+
+/**
+ * Lossless JSON-only editor-state envelope.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ * import { SerializedEditorStateWire } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const program = S.decodeUnknownEffect(SerializedEditorStateWire)({
+ *   root: { type: "root", version: 3, children: [], plugin: "future" },
+ *   editorExtension: { enabled: true },
+ * })
+ * Effect.runPromise(program).then((state) => console.log(state.root.version))
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
+export const SerializedEditorStateWire = S.StructWithRest(
+  S.Struct({
+    root: S.StructWithRest(
+      S.Struct({
+        children: S.Array(LexicalNodeWire),
+        type: S.Literal("root"),
+        version: S.Int,
+      }),
+      [S.Record(S.String, S.Json)]
+    ),
+  }),
+  [S.Record(S.String, S.Json)]
+).pipe(
+  $I.annoteSchema("SerializedEditorStateWire", {
+    description: "Lossless JSON-only editor-state envelope retaining top-level and recursive extension fields.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime type for {@link SerializedEditorStateWire}.
+ *
+ * @example
+ * ```ts
+ * import type { SerializedEditorStateWire } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const state: SerializedEditorStateWire = { root: { type: "root", version: 1, children: [] } }
+ * console.log(state.root.type)
+ * ```
+ *
+ * @category serialization
+ * @since 0.0.0
+ */
+export type SerializedEditorStateWire = typeof SerializedEditorStateWire.Type;
+
+/**
+ * Lossless editor-state wire codec over a JSON string.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ * import { EditorStateWireFromJson } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const program = S.decodeUnknownEffect(EditorStateWireFromJson)(
+ *   '{"root":{"type":"root","version":2,"children":[],"future":true}}'
+ * )
+ * Effect.runPromise(program).then((state) => console.log(state.root.version))
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const EditorStateWireFromJson = S.fromJsonString(SerializedEditorStateWire).pipe(
+  $I.annoteSchema("EditorStateWireFromJson", {
+    description: "Lossless Lexical editor-state wire codec over its JSON string form.",
+  })
+);
+
+/**
+ * Typed failure raised by strict or lossless editor-state decoding.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { decodeEditorStateStrict } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const handled = decodeEditorStateStrict({ root: null }).pipe(
+ *   Effect.catchTag("LexicalDecodeError", (error) => Effect.succeed(error.message))
+ * )
+ * Effect.runPromise(handled).then(console.log)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class LexicalDecodeError extends CauseTaggedError<LexicalDecodeError>($I`LexicalDecodeError`)(
+  "LexicalDecodeError",
+  $I.annote("LexicalDecodeError", {
+    description: "Typed failure raised when a Lexical semantic or wire payload cannot be decoded.",
+  })
+) {}
+
+/**
+ * Reason a lossless wire payload cannot be used as a strict semantic state.
+ *
+ * @example
+ * ```ts
+ * import { LexicalCompatibilityIssue } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const issue = LexicalCompatibilityIssue.make({ message: "Unknown node type." })
+ * console.log(issue.code)
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export class LexicalCompatibilityIssue extends S.Class<LexicalCompatibilityIssue>($I`LexicalCompatibilityIssue`)(
+  {
+    code: S.Literal("strict-schema-mismatch").pipe(
+      SchemaUtils.withConstantDefault("strict-schema-mismatch"),
+      S.annotateKey({ description: "Stable compatibility issue code." })
+    ),
+    message: S.NonEmptyString.annotateKey({
+      description: "Strict semantic decode failure rendered for diagnostics.",
+    }),
+  },
+  $I.annote("LexicalCompatibilityIssue", {
+    description: "Reason a lossless Lexical wire payload cannot be used as a strict semantic editor state.",
+  })
+) {}
+
+/**
+ * Compatibility inspection retaining lossless wire alongside an optional
+ * strict semantic state.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { analyzeEditorStateCompatibility } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const program = analyzeEditorStateCompatibility({
+ *   root: { type: "root", version: 1, children: [] },
+ * })
+ * Effect.runPromise(program).then((result) => console.log(result.isCompatible))
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export class LexicalCompatibilityResult extends S.Class<LexicalCompatibilityResult>($I`LexicalCompatibilityResult`)(
+  {
+    issues: S.Array(LexicalCompatibilityIssue).annotateKey({
+      description: "Strict semantic compatibility failures; empty when state is available.",
+    }),
+    state: S.Option(SerializedEditorState).annotateKey({
+      description: "Strict semantic state when the lossless wire matches the supported v1 grammar.",
+    }),
+    wire: SerializedEditorStateWire.annotateKey({
+      description: "Lossless wire retained regardless of strict semantic compatibility.",
+    }),
+  },
+  $I.annote("LexicalCompatibilityResult", {
+    description: "Lossless Lexical wire plus an optional strict semantic state and compatibility diagnostics.",
+  })
+) {
+  /**
+   * Whether the wire can be consumed through the strict semantic model.
+   *
+   * @example
+   * ```ts
+   * import * as O from "effect/Option"
+   * import { LexicalCompatibilityResult } from "@beep/lexical-schema/Lexical.model"
+   *
+   * const result = LexicalCompatibilityResult.make({
+   *   issues: [],
+   *   state: O.none(),
+   *   wire: { root: { type: "root", version: 1, children: [] } },
+   * })
+   * console.log(result.isCompatible) // false
+   * ```
+   *
+   * @category getters
+   * @since 0.0.0
+   */
+  get isCompatible(): boolean {
+    return O.isSome(this.state);
+  }
+}
+
+const decodeStrictEditorState = S.decodeUnknownEffect(StrictSerializedEditorState);
+const decodeLosslessEditorState = S.decodeUnknownEffect(SerializedEditorStateWire);
+const inspectStrictEditorState = S.decodeUnknownResult(StrictSerializedEditorState);
+
+/**
+ * Decodes an unknown payload into the supported strict semantic editor state.
+ *
+ * @remarks
+ * Excess fields are errors. Use {@link decodeEditorStateLossless} when unknown
+ * extension data must be retained for migration or read-only fallback.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { decodeEditorStateStrict } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const program = decodeEditorStateStrict({
+ *   root: { type: "root", version: 1, children: [], direction: null, format: "", indent: 0 },
+ * })
+ * Effect.runPromise(program).then((state) => console.log(state.root.type))
+ * ```
+ *
+ * @category decoding
+ * @since 0.0.0
+ */
+export const decodeEditorStateStrict = (input: unknown): Effect.Effect<SerializedEditorState, LexicalDecodeError> =>
+  decodeStrictEditorState(input, { onExcessProperty: "error" }).pipe(
+    LexicalDecodeError.mapError("Lexical editor state failed strict semantic decoding.")
+  );
+
+/**
+ * Decodes an unknown payload into the JSON-only lossless wire model.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { decodeEditorStateLossless } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const program = decodeEditorStateLossless({
+ *   root: { type: "root", version: 9, children: [], future: true },
+ * })
+ * Effect.runPromise(program).then((state) => console.log(state.root.version))
+ * ```
+ *
+ * @category decoding
+ * @since 0.0.0
+ */
+export const decodeEditorStateLossless = (
+  input: unknown
+): Effect.Effect<SerializedEditorStateWire, LexicalDecodeError> =>
+  decodeLosslessEditorState(input).pipe(
+    LexicalDecodeError.mapError("Lexical editor state failed lossless JSON-wire decoding.")
+  );
+
+/**
+ * Retains lossless wire and reports whether strict semantic decoding succeeds.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { analyzeEditorStateCompatibility } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const program = analyzeEditorStateCompatibility({
+ *   root: { type: "root", version: 2, children: [], future: true },
+ * })
+ * Effect.runPromise(program).then((result) => console.log(result.issues.length))
+ * ```
+ *
+ * @category decoding
+ * @since 0.0.0
+ */
+export const analyzeEditorStateCompatibility = (
+  input: unknown
+): Effect.Effect<LexicalCompatibilityResult, LexicalDecodeError> =>
+  decodeEditorStateLossless(input).pipe(
+    Effect.map((wire) =>
+      Result.match(inspectStrictEditorState(wire, { onExcessProperty: "error" }), {
+        onFailure: (error) =>
+          LexicalCompatibilityResult.make({
+            issues: [LexicalCompatibilityIssue.make({ message: String(error) })],
+            state: O.none(),
+            wire,
+          }),
+        onSuccess: (state) => LexicalCompatibilityResult.make({ issues: [], state: O.some(state), wire }),
+      })
+    )
+  );
+
+/**
+ * Backward-compatible alias for {@link analyzeEditorStateCompatibility}.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { decodeEditorStateCompatibility } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const program = decodeEditorStateCompatibility({
+ *   root: { children: [], type: "root", version: 1 },
+ * })
+ * Effect.runPromise(program).then((result) => console.log(result.isCompatible))
+ * ```
+ *
+ * @deprecated Prefer {@link analyzeEditorStateCompatibility}.
+ * @category decoding
+ * @since 0.0.0
+ */
+export const decodeEditorStateCompatibility = analyzeEditorStateCompatibility;
 
 /**
  * The same envelope, but encoding directly to/from a JSON string (for

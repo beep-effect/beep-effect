@@ -6,7 +6,8 @@ import {
   segmentInlineRuns,
 } from "@beep/md/Md.behavior";
 import {
-  BrowserSafeUrlPolicy,
+  AllowListUrlPolicySpec,
+  BrowserSafeUrlPolicySpec,
   escapeHtmlUrlAttribute,
   escapeHtmlUrlAttributeWithPolicy,
   escapeMarkdownDestination,
@@ -18,10 +19,12 @@ import {
   prefixLines,
   renderFencedCode,
   renderInlineCode,
-  StrictWebUrlPolicy,
+  StrictWebUrlPolicySpec,
   sanitizeUrlDestination,
   sanitizeUrlDestinationWithPolicy,
+  UrlPolicySpec,
 } from "@beep/md/Md.escape";
+import { renderSafeHtml, safeHtmlValue } from "@beep/md/Md.html";
 import { Block, CodeFenceLanguage, Document, Inline, Pre, Table, TableCell, TableRow, Text } from "@beep/md/Md.model";
 import {
   DocumentToHtmlFragment,
@@ -47,6 +50,7 @@ import {
   renderWith,
   renderWithUnsafe,
 } from "@beep/md/Md.render";
+import { decodeSafeDocument, documentSafetyIssues, refineSafeDocument, SafeDocument } from "@beep/md/Md.safe";
 import { HtmlFragment, Markdown } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -54,12 +58,14 @@ import { Cause, Effect, Exit, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import { micromark } from "micromark";
 import type { EffectRenderAdapter, PureRenderAdapter, RenderError } from "@beep/md/Md.render";
 import type { JsonObject } from "@beep/schema";
 
 const InlineArbitrary = S.toArbitrary(Inline);
 const BlockArbitrary = S.toArbitrary(Block);
 const DocumentArbitrary = S.toArbitrary(Document);
+const SafeDocumentArbitrary = S.toArbitrary(SafeDocument);
 
 const markdownHtmlDoc = (): Document => Md.make([Md.h1("Hello"), Md.p("World")]);
 const encodeJsonResult = S.encodeUnknownResult(S.UnknownFromJsonString);
@@ -161,6 +167,85 @@ https://www.youtube.com/watch?v=dQw4w9WgXcQ
     expect(Result.getOrThrow(Md.render(markdown))).toBe(rendered);
     expect(Md.renderUnsafe(markdown)).toBe(rendered);
   });
+
+  it("projects SafeDocument directly through the conformant safe-HTML pipeline", () => {
+    const document = Result.getOrThrow(
+      refineSafeDocument(
+        Md.make([
+          Md.p(["Hello ", Md.strong("world")]),
+          Md.p(Md.a("https://example.com/docs", "Docs")),
+          Md.taskList([Md.taskItem("Done", { checked: true }), Md.taskItem("Todo")]),
+          Md.table(
+            [
+              ["Name", "Value"],
+              ["Safety", Md.code("schema-first")],
+            ],
+            { headerRow: true }
+          ),
+          Result.getOrThrow(Md.youtube("dQw4w9WgXcQ")),
+        ])
+      )
+    );
+
+    expect(safeHtmlValue(renderSafeHtml(document))).toBe(
+      '<p>Hello <strong>world</strong></p><p><a href="https://example.com/docs">Docs</a></p>' +
+        "<ul><li>☒ Done</li><li>☐ Todo</li></ul>" +
+        "<table><thead><tr><th>Name</th><th>Value</th></tr></thead>" +
+        "<tbody><tr><td>Safety</td><td><code>schema-first</code></td></tr></tbody></table>" +
+        '<p><a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">Watch on YouTube</a></p>'
+    );
+  });
+
+  it("normalizes nested Markdown links into conformant non-interactive descendants", () => {
+    const document = Result.getOrThrow(
+      refineSafeDocument(
+        Md.make([Md.p(Md.a("https://example.com/outer", ["Outer ", Md.a("https://example.com/inner", "Inner")]))])
+      )
+    );
+
+    expect(safeHtmlValue(renderSafeHtml(document))).toBe(
+      '<p><a href="https://example.com/outer">Outer <span>Inner</span></a></p>'
+    );
+  });
+
+  it("keeps active HTML constructs outside the SafeDocument to SafeHtml path", () => {
+    const unsafe = Md.make([
+      Md.p(Md.rawHtml('<img src=x onerror="alert(1)">')),
+      Md.p(Md.a("javascript:alert(1)", "unsafe")),
+    ]);
+
+    expect(Result.isFailure(refineSafeDocument(unsafe))).toBe(true);
+  });
+
+  it("rejects values that cannot complete the total SafeDocument to SafeHtml projection", () => {
+    const incompatible = [
+      Md.make([Md.embed("link", " ")]),
+      Md.make([Md.p("a\u0000b")]),
+      Md.make([Md.p(Md.img("/logo.png", "\uD800"))]),
+    ];
+
+    for (const document of incompatible) {
+      expect(Result.isFailure(refineSafeDocument(document))).toBe(true);
+    }
+  });
+
+  it("does not reject frontmatter that the safe HTML projection never reads", () => {
+    const document = Md.make([Md.p("Visible")], {
+      frontmatter: { note: "ignored\u0000metadata" },
+    });
+    const safe = refineSafeDocument(document);
+
+    expect(Result.isSuccess(safe)).toBe(true);
+    expect(() => renderSafeHtml(Result.getOrThrow(safe))).not.toThrow();
+  });
+
+  it("renders every schema-derived SafeDocument without failing", () =>
+    fc.assert(
+      fc.property(SafeDocumentArbitrary, (document) => {
+        expect(() => renderSafeHtml(document)).not.toThrow();
+      }),
+      fcRuns(100)
+    ));
 
   it.effect(
     "builds and validates schema-first AST nodes",
@@ -423,8 +508,8 @@ ${Md.h3("Inside")}
     expect(renderPlainTextInline(Md.del("Del"))).toBe("Del");
     expect(renderPlainTextInline(Md.code("code"))).toBe("code");
     expect(renderPlainTextInline(Md.a("https://example.com", [Md.text("Example"), Md.code("1")]))).toBe("Example1");
-    expect(renderPlainTextInline(Md.img("/img.png", "Alt"))).toBe("");
-    expect(renderPlainTextInline(Md.br)).toBe("");
+    expect(renderPlainTextInline(Md.img("/img.png", "Alt"))).toBe("Alt");
+    expect(renderPlainTextInline(Md.br)).toBe("\n");
     expect(renderPlainTextInline(Md.inlineMath("a+b"))).toBe("a+b");
     expect(renderPlainTextInline(Md.footnoteRef("note"))).toBe("note");
 
@@ -470,7 +555,7 @@ ${Md.h3("Inside")}
 
     expect(blocks.map(renderPlainTextBlock)).toEqual([
       "Heading",
-      "ParagraphText",
+      "Paragraph\nText",
       "Quoted\nNested",
       "const x = 1",
       "Inline\nBlock",
@@ -552,24 +637,70 @@ Demo video`);
     );
 
     expect(sanitizeUrlDestination("file:///tmp/a")).toBe("file:///tmp/a");
-    expect(sanitizeUrlDestinationWithPolicy("file:///tmp/a", BrowserSafeUrlPolicy)).toBe("#");
-    expect(sanitizeUrlDestinationWithPolicy("artifact:abc", BrowserSafeUrlPolicy)).toBe("artifact:abc");
-    expect(sanitizeUrlDestinationWithPolicy("artifact:abc", StrictWebUrlPolicy)).toBe("#");
-    expect(sanitizeUrlDestinationWithPolicy("//example.com", BrowserSafeUrlPolicy)).toBe("#");
-    expect(sanitizeUrlDestinationWithPolicy("\\relative", BrowserSafeUrlPolicy)).toBe("#");
-    expect(escapeMarkdownDestinationWithPolicy("file:///tmp/a", BrowserSafeUrlPolicy)).toBe("#");
-    expect(escapeHtmlUrlAttributeWithPolicy("artifact:abc", StrictWebUrlPolicy)).toBe("#");
+    expect(sanitizeUrlDestinationWithPolicy("file:///tmp/a", BrowserSafeUrlPolicySpec)).toBe("#");
+    expect(sanitizeUrlDestinationWithPolicy("artifact:abc", BrowserSafeUrlPolicySpec)).toBe("artifact:abc");
+    expect(sanitizeUrlDestinationWithPolicy("artifact:abc", StrictWebUrlPolicySpec)).toBe("#");
+    expect(sanitizeUrlDestinationWithPolicy("//example.com", BrowserSafeUrlPolicySpec)).toBe("#");
+    expect(sanitizeUrlDestinationWithPolicy("/\n/example.com", BrowserSafeUrlPolicySpec)).toBe("#");
+    expect(sanitizeUrlDestinationWithPolicy("/\r/example.com", BrowserSafeUrlPolicySpec)).toBe("#");
+    expect(sanitizeUrlDestinationWithPolicy("/\t/example.com", BrowserSafeUrlPolicySpec)).toBe("#");
+    expect(sanitizeUrlDestinationWithPolicy("\\relative", BrowserSafeUrlPolicySpec)).toBe("#");
+    expect(sanitizeUrlDestinationWithPolicy("&sol;&sol;example.com", BrowserSafeUrlPolicySpec)).toBe("#");
+    expect(sanitizeUrlDestinationWithPolicy("&bsol;relative", BrowserSafeUrlPolicySpec)).toBe("#");
+    expect(sanitizeUrlDestinationWithPolicy("file&#58;//tmp/a", BrowserSafeUrlPolicySpec)).toBe("#");
+    expect(sanitizeUrlDestinationWithPolicy("%66%69%6c%65%3a///tmp/a", BrowserSafeUrlPolicySpec)).toBe("#");
+    expect(sanitizeUrlDestinationWithPolicy("fi\nle:///tmp/a", BrowserSafeUrlPolicySpec)).toBe("#");
+    expect(escapeMarkdownDestinationWithPolicy("file:///tmp/a", BrowserSafeUrlPolicySpec)).toBe("#");
+    expect(escapeHtmlUrlAttributeWithPolicy("artifact:abc", StrictWebUrlPolicySpec)).toBe("#");
     expect(escapeHtmlUrlAttribute("file:///tmp/a")).toBe("#");
 
-    const markdownAdapter = makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicy });
+    const markdownAdapter = makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicySpec });
     expect(Result.getOrThrow(renderWith(markdownAdapter, Md.make([Md.p(Md.a("file:///tmp/a", "File"))])))).toBe(
       "[File](#)"
     );
+    const namedSlashMarkdown = Result.getOrThrow(
+      renderWith(markdownAdapter, Md.make([Md.p(Md.a("&sol;&sol;evil.test", "External"))]))
+    );
+    expect(namedSlashMarkdown).toBe("[External](#)");
+    expect(micromark(namedSlashMarkdown)).toBe('<p><a href="#">External</a></p>');
+    const controlSeparatedSlashMarkdown = Result.getOrThrow(
+      renderWith(markdownAdapter, Md.make([Md.p(Md.a("/\n/evil.test", "External"))]))
+    );
+    expect(controlSeparatedSlashMarkdown).toBe("[External](#)");
+    expect(micromark(controlSeparatedSlashMarkdown)).toBe('<p><a href="#">External</a></p>');
 
-    const htmlAdapter = makeHtmlFragmentAdapter({ urlPolicy: StrictWebUrlPolicy });
+    const htmlAdapter = makeHtmlFragmentAdapter({ urlPolicy: StrictWebUrlPolicySpec });
     expect(Result.getOrThrow(renderWith(htmlAdapter, Md.make([Md.p(Md.a("artifact:abc", "Artifact"))])))).toBe(
       '<p><a href="#">Artifact</a></p>'
     );
+
+    const telOnly = AllowListUrlPolicySpec.make({
+      schemes: ["tel:"],
+      allowRelative: false,
+      allowProtocolRelative: false,
+      allowBackslashRelative: false,
+    });
+    const recursivelyNested = Md.make([
+      Md.blockquote([
+        Md.ul([Md.li([Md.p([Md.a("tel:+15551234567", "Call"), Md.text(" "), Md.a("https://example.com", "Web")])])]),
+      ]),
+    ]);
+    expect(renderWithUnsafe(makeMarkdownAdapter({ urlPolicy: telOnly }), recursivelyNested)).toBe(
+      "> - [Call](tel:+15551234567) [Web](#)"
+    );
+    expect(renderWithUnsafe(makeHtmlFragmentAdapter({ urlPolicy: telOnly }), recursivelyNested)).toBe(
+      '<blockquote><ul><li><p><a href="tel:+15551234567">Call</a> <a href="#">Web</a></p></li></ul></blockquote>'
+    );
+
+    expect(
+      S.decodeUnknownSync(UrlPolicySpec)({
+        _tag: "AllowList",
+        schemes: [" HTTPS: "],
+        allowRelative: false,
+        allowProtocolRelative: false,
+        allowBackslashRelative: false,
+      }).schemes
+    ).toEqual(["https:"]);
 
     const markedInspiredEvasions = [
       "java\u0000script:alert(1)",
@@ -578,9 +709,54 @@ Demo video`);
     ];
     for (const destination of markedInspiredEvasions) {
       expect(sanitizeUrlDestination(destination)).toBe("#");
-      expect(sanitizeUrlDestinationWithPolicy(destination, BrowserSafeUrlPolicy)).toBe("#");
+      expect(sanitizeUrlDestinationWithPolicy(destination, BrowserSafeUrlPolicySpec)).toBe("#");
     }
   });
+
+  it("refines user-authored documents without changing their encoded wire", () => {
+    const document = Md.make([Md.p([Md.a("https://example.com", "Safe"), Md.img("/logo.png", "Logo")])]);
+    const safe = Result.getOrThrow(refineSafeDocument(document));
+
+    expect(documentSafetyIssues(document)).toEqual([]);
+    expect(Result.getOrThrow(S.encodeResult(SafeDocument)(safe))).toEqual(
+      Result.getOrThrow(S.encodeResult(Document)(document))
+    );
+
+    const hostile = Md.make([
+      Md.p([
+        Md.rawHtml("<script>alert(1)</script>"),
+        Md.a("http://example.com", "Insecure"),
+        Md.img("//example.com/tracker.png", "Tracker"),
+      ]),
+    ]);
+    expect(Result.isFailure(decodeSafeDocument(Result.getOrThrow(S.encodeResult(Document)(hostile))))).toBe(true);
+    expect(documentSafetyIssues(hostile)).toMatchObject([
+      { _tag: "RawNode", path: ["children", 0, "children", 0], nodeTag: "rawHtml" },
+      {
+        _tag: "UnsafeUrl",
+        path: ["children", 0, "children", 1, "href"],
+        nodeTag: "a",
+        destinationKind: "link",
+      },
+      {
+        _tag: "UnsafeUrl",
+        path: ["children", 0, "children", 2, "src"],
+        nodeTag: "img",
+        destinationKind: "image",
+      },
+    ]);
+  });
+
+  it("keeps canonical URL-policy sanitization at a fixed point", () =>
+    fc.assert(
+      fc.property(fc.string(), (destination) => {
+        const once = sanitizeUrlDestinationWithPolicy(destination, BrowserSafeUrlPolicySpec);
+        const twice = sanitizeUrlDestinationWithPolicy(once, BrowserSafeUrlPolicySpec);
+
+        expect(twice).toBe(once);
+      }),
+      fcRuns(100)
+    ));
 
   it("renders later table rows when the first row has no cells", () => {
     const table = Table.make({

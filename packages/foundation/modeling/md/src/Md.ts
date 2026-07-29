@@ -12,6 +12,7 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { renderSafeHtml, safeHtmlValue } from "./Md.html.ts";
 import {
   Admonition,
   A as ANode,
@@ -65,9 +66,24 @@ import {
   renderWith,
   renderWithUnsafe,
 } from "./Md.render.ts";
+import {
+  decodeSafeDocument,
+  decodeSafeDocumentEffect,
+  decodeSafeDocumentUnsafe,
+  documentSafetyIssues,
+  refineSafeDocument,
+} from "./Md.safe.ts";
 import type { JsonObject } from "@beep/schema";
 import type { Result } from "effect";
-import type { AdmonitionKind, Block, EmbedKind, Inline, ListItemChild, TableAlignment } from "./Md.model.ts";
+import type {
+  AdmonitionKind,
+  Block,
+  EmbedKind,
+  Inline,
+  ListItemChild,
+  TableAlignment,
+  TaskListItemSpec,
+} from "./Md.model.ts";
 
 /**
  * Inline constructor input accepted by text-oriented builders.
@@ -268,6 +284,9 @@ export type ListItemInput = ListItemContent | Li;
 
 /**
  * Input accepted by task list constructors.
+ *
+ * @deprecated Prefer the tagged {@link TaskListItemSpec} input with
+ * {@link taskListFromItems}. This union remains for shorthand compatibility.
  *
  * @example
  * ```ts
@@ -906,11 +925,32 @@ export const taskItem = (children: ListItemContent, options: { readonly checked?
  * console.log(node._tag) // "taskList"
  * ```
  *
+ * @deprecated Prefer {@link taskListFromItems}; this shorthand accepts
+ * ambiguous strings and object shapes for compatibility.
  * @category constructors
  * @since 0.0.0
  */
 export const taskList = (children: ReadonlyArray<TaskListItemInput>): TaskList =>
   TaskList.make({ children: A.map(children, asTaskItem) });
+
+/**
+ * Creates a GFM task list from canonical tagged task items.
+ *
+ * @example
+ * ```ts
+ * import { Md } from "@beep/md"
+ *
+ * const node = Md.taskListFromItems([
+ *   Md.taskItem("Done", { checked: true }),
+ *   Md.taskItem("Todo"),
+ * ])
+ * console.log(node.children.length) // 2
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const taskListFromItems = (children: ReadonlyArray<TaskListItemSpec>): TaskList => TaskList.make({ children });
 
 /**
  * Creates a block quote container.
@@ -1127,6 +1167,7 @@ export const youtube = (videoId: string): Result.Result<YouTube, S.SchemaError> 
  * console.log(program)
  * ```
  *
+ * @effects Decodes the supplied identifier and reports validation failures in the Effect error channel.
  * @category constructors
  * @since 0.0.0
  */
@@ -1215,7 +1256,11 @@ export const Md = {
   blockquote,
   br,
   code,
+  decodeSafeDocument,
+  decodeSafeDocumentEffect,
+  decodeSafeDocumentUnsafe,
   del,
+  documentSafetyIssues,
   embed,
   em,
   footnoteDef,
@@ -1239,6 +1284,7 @@ export const Md = {
   pre,
   rawHtml,
   rawMarkdown,
+  refineSafeDocument,
   render,
   renderEffectWith,
   renderEffectWithUnsafe,
@@ -1246,15 +1292,18 @@ export const Md = {
   renderHtmlUnsafe,
   renderPlainText,
   renderPlainTextUnsafe,
+  renderSafeHtml,
   renderUnsafe,
   renderWith,
   renderWithUnsafe,
   strong,
+  safeHtmlValue,
   table,
   tableCell,
   tableRow,
   taskItem,
   taskList,
+  taskListFromItems,
   text,
   ul,
   youtube,

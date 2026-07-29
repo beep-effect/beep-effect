@@ -13,14 +13,21 @@ codecs over the canonical `@beep/md` AST.
   downstream logic matches Options instead of null-checking. The encoded side
   keeps the exact Lexical wire shape (round-trip fidelity is non-negotiable;
   see `test/Lexical.model.test.ts`).
+- **Strict and lossless boundaries are separate.** Strict decoding rejects
+  unknown fields and invalid child topology before editor/runtime use;
+  lossless decoding retains JSON-only future nodes and extension fields for
+  persistence and migration.
+- **URLs and inline styles are safe fixed points.** Decode normalizes untrusted
+  input through the canonical `@beep/md` browser URL policy and the package CSS
+  allowlist; semantic node constructors reject values that bypass normalization.
 
 ## v1 node scope
 
 md-core: `paragraph`, `heading`, `code`, `list`/`listitem`, `quote`, `link`,
 `text`/`tab`/`linebreak` (+ inline marks via the text format bitmask), plus
-the package-owned `artifact-ref` block. Mention and slash-command are composer
-affordances, not persisted blocks. Tables, attachments, and proposal blocks
-are named follow-ons.
+`table`/`tablerow`/`tablecell`, `youtube`, and the package-owned `artifact-ref`
+block. Mention and slash-command are composer affordances, not persisted
+blocks. Attachments and proposal blocks are named follow-ons.
 
 ## Lossiness profile (locked)
 
@@ -36,7 +43,10 @@ The codec profile was locked after running the Md ↔ Lexical lossiness check
 | `Pre` (`value`, `language`) | `code` (text/tab/linebreak lines) |
 | `Ul` / `Ol` | `list` (`bullet`/`ul`, `number`/`ol`) |
 | `TaskList`/`TaskItem` | `list` (`check`) + `listitem.checked` |
+| Nested lists | nested `list` children inside `listitem` |
 | `BlockQuote` with a single `P` | `quote` |
+| `Table` / `TableRow` / `TableCell` with default alignment | `table` / `tablerow` / `tablecell` |
+| `YouTube` | `youtube` |
 | `Strong` / `Em` / `Del` / `Code` (inline) | text format bits 1 / 2 / 4 / 16 |
 | `A` | `link` |
 | `Br` | `linebreak` |
@@ -48,32 +58,43 @@ The codec profile was locked after running the Md ↔ Lexical lossiness check
   the bitmask is orderless, so `Em(Strong(x))` round-trips as `Strong(Em(x))`.
 - `BlockQuote` with multiple blocks flattens to one linebreak-separated
   paragraph inside the quote.
+- Markdown table column alignment is dropped because the Lexical v1 table wire
+  has no column-alignment field; the structural table then round-trips.
 
 ### Dropped on Lexical → Md (no markdown equivalent)
 
 - Element alignment (`format` token), `indent`, `direction`.
+- Lexical-only link `rel` and `target` attributes.
 - Text format bits without an Md mark: underline (8), subscript (32),
   superscript (64), highlight (128), casing bits.
 - Inline styles (`style`, `textStyle`), `textFormat`, `detail`, `mode`,
   NodeState (`$`).
-- Nested lists flatten into the parent list level (Md list items hold inline
-  content only).
 
 ### Degraded on Md → Lexical (documented, deterministic)
 
+- `Document.frontmatter` is outside the editor wire and must be retained by the
+  owning persistence adapter when editor content is rebuilt.
 - `RawMarkdown` / `RawHtml` → plain text runs.
-- `Img` → `link` (alt text as the link text, so the destination survives).
+- `InlineMath` → formula text; `FootnoteReference` → literal `[^identifier]`
+  text.
+- `Img` → `link` (alt text, destination, and optional title survive).
 - `Hr` → a literal `---` paragraph.
 - Bare `Li` outside a list → paragraph.
+- `MathBlock`, `FootnoteDefinition`, `Admonition`, and `Embed` → plain-text
+  paragraphs using their canonical Markdown plain-text projection.
 
 ## Modules
 
 - `Lexical.model` — vocabularies, node classes, the `LexicalNode` tagged
-  union, the `SerializedEditorState` envelope, `EditorStateFromJson`, and
-  plain-text projection.
+  union, strict semantic and lossless wire editor-state schemas, typed decode
+  APIs, and JSON codecs.
+- `Lexical.behavior` — pure plain-text projections over strict semantic nodes
+  and editor states.
 - `Lexical.codec` — `documentToEditorState` / `blockToLexical` (Md → Lexical,
   validating `Effect`s) and `editorStateToDocument` / `nodeToBlocks`
   (Lexical → Md, pure).
+- `Lexical.normalize` — canonical URL, inline-style, style-value, and legacy
+  YouTube-id normalization used by the semantic schemas.
 
 ## Usage
 
@@ -81,12 +102,23 @@ The codec profile was locked after running the Md ↔ Lexical lossiness check
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { Document, P, Text } from "@beep/md/Md.model";
-import { SerializedEditorState, documentToEditorState } from "@beep/lexical-schema";
+import {
+  SerializedEditorState,
+  analyzeEditorStateCompatibility,
+  documentToEditorState,
+} from "@beep/lexical-schema";
 
 const document = Document.make({ children: [P.make({ children: [Text.make({ value: "Hello" })] })] });
 const state = Effect.runSync(documentToEditorState(document));
 const wire = S.encodeSync(SerializedEditorState)(state); // exact Lexical wire shape
+const inspected = Effect.runSync(analyzeEditorStateCompatibility(wire));
+console.log(inspected.isCompatible); // true
 ```
+
+Use `decodeEditorStateStrict` before behavior or DOM rendering. Use
+`decodeEditorStateLossless` when a persistence or migration boundary must
+retain unknown future JSON fields, and `analyzeEditorStateCompatibility` when a
+caller needs both the retained wire and an optional strict semantic state.
 
 ## Development
 

@@ -15,19 +15,21 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { renderPlainTextBlocks, segmentInlineRuns } from "./Md.behavior.ts";
 import {
-  BrowserSafeUrlPolicy,
-  CompatUrlPolicy,
+  BrowserSafeUrlPolicySpec,
+  CompatibilityUrlPolicySpec,
   escapeHtmlUrlAttribute,
+  escapeHtmlUrlAttributeWithPolicy,
   escapeMarkdownDestinationWithPolicy,
   escapeMarkdownText,
   joinBlocks,
+  normalizeUrlPolicy,
   prefixLines,
   renderFencedCode,
   renderInlineCode,
-  sanitizeUrlDestinationWithPolicy,
-  UrlPolicy,
+  UrlPolicyInput,
 } from "./Md.escape.ts";
 import { Document as DocumentSchema, HeadingLevel, Inline as InlineSchema, TableCell, TableRow } from "./Md.model.ts";
+import type { UrlPolicySpec } from "./Md.escape.ts";
 import type {
   Block,
   Document,
@@ -239,8 +241,11 @@ const renderMarkdownTitle: (title: O.Option<string>) => string = flow(
   O.getOrElse(thunkEmptyStr)
 );
 
-const renderMarkdownDestinationWithTitle = (destination: string, title: O.Option<string>, policy: UrlPolicy): string =>
-  `${escapeMarkdownDestinationWithPolicy(destination, policy)}${renderMarkdownTitle(title)}`;
+const renderMarkdownDestinationWithTitle = (
+  destination: string,
+  title: O.Option<string>,
+  policy: UrlPolicyInput
+): string => `${escapeMarkdownDestinationWithPolicy(destination, policy)}${renderMarkdownTitle(title)}`;
 
 const tableAlignmentAt = (align: ReadonlyArray<TableAlignment>, index: number): TableAlignment =>
   pipe(
@@ -406,7 +411,7 @@ const renderMarkdownEmbed = (block: {
   readonly description: O.Option<string>;
 }): string => {
   const title = embedTitle(block);
-  const destination = renderMarkdownDestinationWithTitle(block.src, block.title, CompatUrlPolicy);
+  const destination = renderMarkdownDestinationWithTitle(block.src, block.title, CompatibilityUrlPolicySpec);
   const rendered = Match.value(block.kind).pipe(
     Match.when("image", () => `![${escapeMarkdownText(title)}](${destination})`),
     Match.orElse(() => `[${escapeMarkdownText(title)}](${destination})`)
@@ -514,7 +519,7 @@ const renderHtmlDocumentUnsafe = (document: Document): HtmlFragment => renderHtm
 const makeMarkdownInlineMatcher = (
   renderInlines: (children: ReadonlyArray<Inline>) => string,
   renderRawMarkdown: (node: { readonly value: string }) => string,
-  urlPolicy: UrlPolicy
+  urlPolicy: UrlPolicyInput
 ) =>
   Match.type<Inline>().pipe(
     Match.tagsExhaustive({
@@ -538,13 +543,13 @@ const makeMarkdownInlineMatcher = (
 const renderMarkdownInlineMatcher = makeMarkdownInlineMatcher(
   renderMarkdownInlines,
   ({ value }) => value,
-  CompatUrlPolicy
+  CompatibilityUrlPolicySpec
 );
 
 const renderMarkdownInlineForLinkLabelMatcher = makeMarkdownInlineMatcher(
   renderMarkdownLinkLabelInlines,
   ({ value }) => escapeMarkdownText(value),
-  CompatUrlPolicy
+  CompatibilityUrlPolicySpec
 );
 
 function renderMarkdownInlineForLinkLabel(inline: Inline): string {
@@ -928,7 +933,7 @@ export const renderEffectWith: {
  * import { UrlRenderOptions } from "@beep/md/Md.render"
  *
  * const options = UrlRenderOptions.make({ urlPolicy: BrowserSafeUrlPolicy })
- * console.log(options.urlPolicy?.allowedProtocols.includes("https:")) // true
+ * console.log(options.urlPolicy !== undefined) // true
  * ```
  *
  * @category models
@@ -936,8 +941,8 @@ export const renderEffectWith: {
  */
 export class UrlRenderOptions extends S.Class<UrlRenderOptions>($I`UrlRenderOptions`)(
   {
-    urlPolicy: S.optionalKey(UrlPolicy).annotateKey({
-      description: "URL policy applied to URL-bearing AST fields before rendering.",
+    urlPolicy: S.optionalKey(UrlPolicyInput).annotateKey({
+      description: "Canonical URL policy, or a deprecated legacy policy adapter, applied during recursive rendering.",
     }),
   },
   $I.annote("UrlRenderOptions", {
@@ -945,95 +950,308 @@ export class UrlRenderOptions extends S.Class<UrlRenderOptions>($I`UrlRenderOpti
   })
 ) {}
 
-const renderPolicy = (options: UrlRenderOptions, fallback: UrlPolicy): UrlPolicy =>
+const renderPolicy = (options: UrlRenderOptions, fallback: UrlPolicyInput): UrlPolicySpec =>
   pipe(
     O.fromUndefinedOr(options.urlPolicy),
-    O.getOrElse(() => fallback)
+    O.getOrElse(() => fallback),
+    normalizeUrlPolicy
   );
 
-const makeSanitizeInlineUrlsMatcher = (policy: UrlPolicy): ((inline: Inline) => Inline) =>
-  Match.type<Inline>().pipe(
+const renderMarkdownInlinesWithPolicy = (
+  policy: UrlPolicySpec,
+  children: ReadonlyArray<Inline>,
+  linkLabel = false
+): string =>
+  pipe(
+    children,
+    A.map((inline) => renderMarkdownInlineWithPolicy(policy, inline, linkLabel)),
+    joinEmpty
+  );
+
+const renderMarkdownInlineWithPolicy = (policy: UrlPolicySpec, inline: Inline, linkLabel = false): string =>
+  Match.value(inline).pipe(
     Match.tagsExhaustive({
-      text: (node) => node,
-      rawMarkdown: (node) => node,
-      rawHtml: (node) => node,
-      strong: (node) => ({ ...node, children: A.map(node.children, sanitizeInlineUrls(policy)) }),
-      em: (node) => ({ ...node, children: A.map(node.children, sanitizeInlineUrls(policy)) }),
-      del: (node) => ({ ...node, children: A.map(node.children, sanitizeInlineUrls(policy)) }),
-      code: (node) => node,
-      a: (node) => ({
-        ...node,
-        href: sanitizeUrlDestinationWithPolicy(node.href, policy),
-        children: A.map(node.children, sanitizeInlineUrls(policy)),
-      }),
-      img: (node) => ({ ...node, src: sanitizeUrlDestinationWithPolicy(node.src, policy) }),
-      br: (node) => node,
-      inlineMath: (node) => node,
-      footnoteReference: (node) => node,
+      text: ({ value }) => escapeMarkdownText(value),
+      rawMarkdown: ({ value }) => (linkLabel ? escapeMarkdownText(value) : value),
+      rawHtml: renderEscapedRawHtmlAsMarkdown,
+      strong: ({ children }) => `**${renderMarkdownInlinesWithPolicy(policy, children, linkLabel)}**`,
+      em: ({ children }) => `*${renderMarkdownInlinesWithPolicy(policy, children, linkLabel)}*`,
+      del: ({ children }) => `~~${renderMarkdownInlinesWithPolicy(policy, children, linkLabel)}~~`,
+      code: ({ value }) => renderInlineCode(value),
+      a: ({ href, children, title }) =>
+        `[${renderMarkdownInlinesWithPolicy(policy, children, true)}](${renderMarkdownDestinationWithTitle(href, title, policy)})`,
+      img: ({ src, alt, title }) =>
+        `![${escapeMarkdownText(alt)}](${renderMarkdownDestinationWithTitle(src, title, policy)})`,
+      br: () => "<br/>",
+      inlineMath: ({ value }) => `$${escapeInlineMath(value)}$`,
+      footnoteReference: ({ identifier }) => `[^${identifier}]`,
     })
   );
 
-const sanitizeInlineUrls =
-  (policy: UrlPolicy): ((inline: Inline) => Inline) =>
-  (inline) =>
-    makeSanitizeInlineUrlsMatcher(policy)(inline);
+const renderHtmlInlinesWithPolicy = (policy: UrlPolicySpec, children: ReadonlyArray<Inline>): string =>
+  pipe(
+    children,
+    A.map((inline) => renderHtmlInlineWithPolicy(policy, inline)),
+    joinEmpty
+  );
 
-const sanitizeListItemChildUrls =
-  (policy: UrlPolicy): ((child: ListItemChild) => ListItemChild) =>
-  (child) =>
-    InlineSchema.is(child) ? sanitizeInlineUrls(policy)(child) : sanitizeBlockUrls(policy)(child);
-
-const sanitizeListItemUrls =
-  (policy: UrlPolicy): ((item: Li) => Li) =>
-  (item) => ({ ...item, children: A.map(item.children, sanitizeListItemChildUrls(policy)) });
-
-const sanitizeTaskItemUrls =
-  (policy: UrlPolicy): ((item: TaskItem) => TaskItem) =>
-  (item) => ({ ...item, children: A.map(item.children, sanitizeListItemChildUrls(policy)) });
-
-const sanitizeTableUrls = (policy: UrlPolicy, table: Table): Table => ({
-  ...table,
-  children: A.map(table.children, (row) => ({
-    ...row,
-    children: A.map(row.children, (cell) => ({ ...cell, children: A.map(cell.children, sanitizeInlineUrls(policy)) })),
-  })),
-});
-
-const makeSanitizeBlockUrlsMatcher = (policy: UrlPolicy): ((block: Block) => Block) =>
-  Match.type<Block>().pipe(
+const renderHtmlInlineWithPolicy = (policy: UrlPolicySpec, inline: Inline): string =>
+  Match.value(inline).pipe(
     Match.tagsExhaustive({
-      heading: (node) => ({ ...node, children: A.map(node.children, sanitizeInlineUrls(policy)) }),
-      p: (node) => ({ ...node, children: A.map(node.children, sanitizeInlineUrls(policy)) }),
-      blockquote: (node) => ({ ...node, children: A.map(node.children, sanitizeBlockUrls(policy)) }),
-      pre: (node) => node,
-      ul: (node) => ({ ...node, children: A.map(node.children, sanitizeListItemUrls(policy)) }),
-      ol: (node) => ({ ...node, children: A.map(node.children, sanitizeListItemUrls(policy)) }),
-      taskList: (node) => ({ ...node, children: A.map(node.children, sanitizeTaskItemUrls(policy)) }),
-      table: (node) => sanitizeTableUrls(policy, node),
-      youtube: (node) => node,
-      mathBlock: (node) => node,
-      footnoteDefinition: (node) => ({ ...node, children: A.map(node.children, sanitizeBlockUrls(policy)) }),
-      admonition: (node) => ({ ...node, children: A.map(node.children, sanitizeBlockUrls(policy)) }),
-      embed: (node) => ({ ...node, src: sanitizeUrlDestinationWithPolicy(node.src, policy) }),
-      hr: (node) => node,
+      text: ({ value }) => Html.escapeHtml(value),
+      rawMarkdown: ({ value }) => Html.escapeHtml(value),
+      rawHtml: renderEscapedRawHtmlAsHtml,
+      strong: ({ children }) => `<strong>${renderHtmlInlinesWithPolicy(policy, children)}</strong>`,
+      em: ({ children }) => `<em>${renderHtmlInlinesWithPolicy(policy, children)}</em>`,
+      del: ({ children }) => `<del>${renderHtmlInlinesWithPolicy(policy, children)}</del>`,
+      code: ({ value }) => `<code>${Html.escapeHtml(value)}</code>`,
+      a: ({ href, children, title }) =>
+        `<a href="${escapeHtmlUrlAttributeWithPolicy(href, policy)}"${renderHtmlOptionalAttribute("title", title)}>${renderHtmlInlinesWithPolicy(policy, children)}</a>`,
+      img: ({ src, alt, title }) =>
+        `<img src="${escapeHtmlUrlAttributeWithPolicy(src, policy)}" alt="${Html.escapeHtml(alt)}"${renderHtmlOptionalAttribute("title", title)} />`,
+      br: () => "<br />",
+      inlineMath: ({ value }) => `<span class="math math-inline">${Html.escapeHtml(value)}</span>`,
+      footnoteReference: ({ identifier }) =>
+        `<sup id="fnref-${Html.escapeHtml(identifier)}"><a href="#fn-${Html.escapeHtml(identifier)}">${Html.escapeHtml(identifier)}</a></sup>`,
     })
   );
 
-const sanitizeBlockUrls =
-  (policy: UrlPolicy): ((block: Block) => Block) =>
-  (block) =>
-    makeSanitizeBlockUrlsMatcher(policy)(block);
+const renderMarkdownListItemChildrenWithPolicy = (
+  policy: UrlPolicySpec,
+  children: ReadonlyArray<ListItemChild>
+): string =>
+  pipe(
+    segmentInlineRuns(children, {
+      isInline: InlineSchema.is,
+      renderInlineRun: (inlines) => renderMarkdownInlinesWithPolicy(policy, inlines),
+      renderBlock: (block: Block) => renderMarkdownBlockWithPolicy(policy, block),
+    }),
+    A.join("\n")
+  );
 
-const sanitizeDocumentUrls = (policy: UrlPolicy, document: Document): Document => ({
-  ...document,
-  children: A.map(document.children, sanitizeBlockUrls(policy)),
-});
+const renderHtmlListItemChildrenWithPolicy = (policy: UrlPolicySpec, children: ReadonlyArray<ListItemChild>): string =>
+  pipe(
+    segmentInlineRuns(children, {
+      isInline: InlineSchema.is,
+      renderInlineRun: (inlines) => renderHtmlInlinesWithPolicy(policy, inlines),
+      renderBlock: (block: Block) => renderHtmlBlockWithPolicy(policy, block),
+    }),
+    joinEmpty
+  );
 
-const renderMarkdownDocumentWithPolicy = (policy: UrlPolicy, document: Document): Markdown =>
-  renderMarkdownDocumentUnsafe(sanitizeDocumentUrls(policy, document));
+const renderMarkdownTableWithPolicy = (policy: UrlPolicySpec, block: Table): string => {
+  const columns = tableColumnCount(block.children);
+  if (columns === 0) {
+    return "";
+  }
 
-const renderHtmlDocumentWithPolicy = (policy: UrlPolicy, document: Document): HtmlFragment =>
-  renderHtmlDocumentUnsafe(sanitizeDocumentUrls(policy, document));
+  const renderCell = (cell: TableCell): string =>
+    pipe(
+      renderMarkdownInlinesWithPolicy(policy, cell.children),
+      Str.replace(/\|/g, "\\|"),
+      Str.replace(lineSeparatorGlobalPattern, "<br/>")
+    );
+  const renderRow = (row: TableRow): string =>
+    pipe(row.children, A.map(renderCell), A.join(" | "), renderMarkdownTableFence);
+  const paddedRows = A.map(block.children, padTableRow(columns));
+
+  if (block.headerRow) {
+    return pipe(paddedRows, A.map(renderRow), ([header, ...body]) =>
+      A.join([header, renderMarkdownTableSeparator(columns, block.align), ...body], "\n")
+    );
+  }
+
+  const emptyHeader = renderRow(
+    TableRow.make({
+      children: A.makeBy(columns, () => TableCell.make({ children: [] })),
+    })
+  );
+
+  return pipe(paddedRows, A.map(renderRow), (rows) =>
+    A.join([emptyHeader, renderMarkdownTableSeparator(columns, block.align), ...rows], "\n")
+  );
+};
+
+const renderHtmlTableWithPolicy = (policy: UrlPolicySpec, block: Table): string => {
+  const renderRow =
+    (tag: "td" | "th") =>
+    (row: TableRow): string =>
+      `<tr>${pipe(
+        row.children,
+        A.map((cell, index) => {
+          const align = tableAlignmentAt(block.align, index);
+          const style = align === "none" ? "" : ` style="text-align:${align}"`;
+          return `<${tag}${style}>${renderHtmlInlinesWithPolicy(policy, cell.children)}</${tag}>`;
+        }),
+        joinEmpty
+      )}</tr>`;
+
+  if (block.headerRow) {
+    const header = pipe(block.children, A.head, O.map(renderRow("th")));
+    const body = pipe(block.children, A.drop(1), A.map(renderRow("td")), joinEmpty);
+
+    return `<table>${pipe(
+      header,
+      O.map((row) => `<thead>${row}</thead>`),
+      O.getOrElse(thunkEmptyStr)
+    )}<tbody>${body}</tbody></table>`;
+  }
+
+  return `<table><tbody>${pipe(block.children, A.map(renderRow("td")), joinEmpty)}</tbody></table>`;
+};
+
+const renderMarkdownBlockWithPolicy = (policy: UrlPolicySpec, block: Block): string =>
+  Match.value(block).pipe(
+    Match.tagsExhaustive({
+      heading: ({ children, level }) =>
+        `${pipe("#", Str.repeat(level))} ${renderMarkdownInlinesWithPolicy(policy, children)}`,
+      p: ({ children }) => renderMarkdownInlinesWithPolicy(policy, children),
+      blockquote: ({ children }) => prefixLines(renderMarkdownBlocksWithPolicy(policy, children), "> "),
+      pre: ({ language, value }) => renderFencedCode(value, languageToMarkdown(language)),
+      ul: ({ children }) =>
+        pipe(
+          children,
+          A.map((item) =>
+            renderMarkdownMarkedItem("- ", renderMarkdownListItemChildrenWithPolicy(policy, item.children))
+          ),
+          A.join("\n")
+        ),
+      ol: ({ children, start }) =>
+        pipe(
+          children,
+          A.map((item, index) =>
+            renderMarkdownMarkedItem(
+              `${index + start}. `,
+              renderMarkdownListItemChildrenWithPolicy(policy, item.children)
+            )
+          ),
+          A.join("\n")
+        ),
+      taskList: ({ children }) =>
+        pipe(
+          children,
+          A.map((item) =>
+            renderMarkdownMarkedItem(
+              `- [${item.checked ? "x" : " "}] `,
+              renderMarkdownListItemChildrenWithPolicy(policy, item.children)
+            )
+          ),
+          A.join("\n")
+        ),
+      table: (table) => renderMarkdownTableWithPolicy(policy, table),
+      youtube: ({ videoId }) => youtubeWatchUrl(videoId),
+      mathBlock: renderMarkdownMathBlock,
+      footnoteDefinition: ({ children, identifier }) => {
+        const body = renderMarkdownBlocksWithPolicy(policy, children);
+        return Str.isEmpty(body) ? `[^${identifier}]:` : `[^${identifier}]: ${indentContinuationLines(body, "    ")}`;
+      },
+      admonition: ({ children, kind, title }) => {
+        const renderedTitle = pipe(
+          title,
+          O.map((value) => ` ${escapeMarkdownText(value)}`),
+          O.getOrElse(thunkEmptyStr)
+        );
+        const header = `> [!${Str.toUpperCase(kind)}]${renderedTitle}`;
+        const body = renderMarkdownBlocksWithPolicy(policy, children);
+        return Str.isEmpty(body) ? header : `${header}\n${prefixLines(body, "> ")}`;
+      },
+      embed: ({ description, kind, src, title }) => {
+        const label = pipe(
+          title,
+          O.getOrElse(() => src)
+        );
+        const destination = renderMarkdownDestinationWithTitle(src, title, policy);
+        const rendered =
+          kind === "image"
+            ? `![${escapeMarkdownText(label)}](${destination})`
+            : `[${escapeMarkdownText(label)}](${destination})`;
+        return `${rendered}${embedDescriptionMarkdown(description)}`;
+      },
+      hr: () => "---",
+    })
+  );
+
+const renderMarkdownBlocksWithPolicy = (policy: UrlPolicySpec, blocks: ReadonlyArray<Block>): Markdown =>
+  pipe(
+    blocks,
+    A.map((block) => renderMarkdownBlockWithPolicy(policy, block)),
+    joinBlocks
+  );
+
+const renderHtmlBlockWithPolicy = (policy: UrlPolicySpec, block: Block): string =>
+  Match.value(block).pipe(
+    Match.tagsExhaustive({
+      heading: ({ children, level }) => {
+        const tag = S.is(HeadingLevel)(level) ? `h${level}` : "h6";
+        return `<${tag}>${renderHtmlInlinesWithPolicy(policy, children)}</${tag}>`;
+      },
+      p: ({ children }) => `<p>${renderHtmlInlinesWithPolicy(policy, children)}</p>`,
+      blockquote: ({ children }) => `<blockquote>${renderHtmlBlocksWithPolicy(policy, children)}</blockquote>`,
+      pre: ({ language, value }) => `<pre><code${languageToHtmlClass(language)}>${Html.escapeHtml(value)}</code></pre>`,
+      ul: ({ children }) =>
+        `<ul>${pipe(
+          children,
+          A.map((item) => `<li>${renderHtmlListItemChildrenWithPolicy(policy, item.children)}</li>`),
+          joinEmpty
+        )}</ul>`,
+      ol: ({ children, start }) =>
+        `<ol${start === 1 ? "" : ` start="${start}"`}>${pipe(
+          children,
+          A.map((item) => `<li>${renderHtmlListItemChildrenWithPolicy(policy, item.children)}</li>`),
+          joinEmpty
+        )}</ol>`,
+      taskList: ({ children }) =>
+        `<ul class="contains-task-list">${pipe(
+          children,
+          A.map((item) => {
+            const checked = item.checked ? " checked" : "";
+            return `<li><input type="checkbox" disabled${checked} /> ${renderHtmlListItemChildrenWithPolicy(policy, item.children)}</li>`;
+          }),
+          joinEmpty
+        )}</ul>`,
+      table: (table) => renderHtmlTableWithPolicy(policy, table),
+      youtube: ({ videoId }) =>
+        `<iframe src="${escapeHtmlUrlAttributeWithPolicy(youtubeEmbedUrl(videoId), policy)}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`,
+      mathBlock: ({ value }) => `<div class="math math-display">${Html.escapeHtml(value)}</div>`,
+      footnoteDefinition: ({ children, identifier }) =>
+        `<section id="fn-${Html.escapeHtml(identifier)}" class="footnote-definition"><sup>${Html.escapeHtml(identifier)}</sup>${renderHtmlBlocksWithPolicy(policy, children)}</section>`,
+      admonition: ({ children, kind, title }) => {
+        const renderedTitle = pipe(
+          title,
+          O.map((value) => `<p class="admonition-title">${Html.escapeHtml(value)}</p>`),
+          O.getOrElse(thunkEmptyStr)
+        );
+        return `<aside class="admonition admonition-${Html.escapeHtml(kind)}">${renderedTitle}${renderHtmlBlocksWithPolicy(policy, children)}</aside>`;
+      },
+      embed: ({ description, kind, src, title }) => {
+        const caption = pipe(
+          description,
+          O.map((value) => `<figcaption>${Html.escapeHtml(value)}</figcaption>`),
+          O.getOrElse(thunkEmptyStr)
+        );
+        const label = pipe(
+          title,
+          O.getOrElse(() => src)
+        );
+        return `<figure data-embed-kind="${Html.escapeHtml(kind)}"><a href="${escapeHtmlUrlAttributeWithPolicy(src, policy)}">${Html.escapeHtml(label)}</a>${caption}</figure>`;
+      },
+      hr: () => "<hr />",
+    })
+  );
+
+const renderHtmlBlocksWithPolicy = (policy: UrlPolicySpec, blocks: ReadonlyArray<Block>): HtmlFragment =>
+  pipe(
+    blocks,
+    A.map((block) => renderHtmlBlockWithPolicy(policy, block)),
+    A.join("\n"),
+    HtmlFragment.make
+  );
+
+const renderMarkdownDocumentWithPolicy = (policy: UrlPolicySpec, document: Document): Markdown =>
+  joinBlocks([renderJsonFrontmatter(document.frontmatter), renderMarkdownBlocksWithPolicy(policy, document.children)]);
+
+const renderHtmlDocumentWithPolicy = (policy: UrlPolicySpec, document: Document): HtmlFragment =>
+  renderHtmlBlocksWithPolicy(policy, document.children);
 
 /**
  * Creates a Markdown render adapter with an optional URL sink policy.
@@ -1052,7 +1270,7 @@ const renderHtmlDocumentWithPolicy = (policy: UrlPolicy, document: Document): Ht
  * @since 0.0.0
  */
 export const makeMarkdownAdapter = (options: UrlRenderOptions = {}): PureRenderAdapter<Markdown> => {
-  const urlPolicy = renderPolicy(options, CompatUrlPolicy);
+  const urlPolicy = renderPolicy(options, CompatibilityUrlPolicySpec);
 
   return {
     name: "markdown",
@@ -1077,7 +1295,7 @@ export const makeMarkdownAdapter = (options: UrlRenderOptions = {}): PureRenderA
  * @since 0.0.0
  */
 export const makeHtmlFragmentAdapter = (options: UrlRenderOptions = {}): PureRenderAdapter<HtmlFragment> => {
-  const urlPolicy = renderPolicy(options, BrowserSafeUrlPolicy);
+  const urlPolicy = renderPolicy(options, BrowserSafeUrlPolicySpec);
 
   return {
     name: "html-fragment",
@@ -1263,6 +1481,8 @@ const encodeUnsupported =
  * console.log(Effect.runSync(program)) // "# Hello"
  * ```
  *
+ * @deprecated Prefer {@link render} or {@link renderUnsafe}. The schema is
+ * intentionally one-way and cannot encode rendered output back into an AST.
  * @category validation
  * @since 0.0.0
  */
@@ -1306,6 +1526,8 @@ export type DocumentToMarkdown = typeof DocumentToMarkdown.Type;
  * console.log(Effect.runSync(program)) // "<p>Hello</p>"
  * ```
  *
+ * @deprecated Prefer {@link renderHtml} or {@link renderHtmlUnsafe}. The schema
+ * is intentionally one-way and cannot encode rendered output back into an AST.
  * @category validation
  * @since 0.0.0
  */
@@ -1333,6 +1555,8 @@ export const DocumentToHtmlFragment = DocumentSchema.pipe(
  * console.log(Effect.runSync(program)) // "Hello"
  * ```
  *
+ * @deprecated Prefer {@link renderPlainText} or {@link renderPlainTextUnsafe}.
+ * The schema is intentionally one-way and cannot encode text back into an AST.
  * @category validation
  * @since 0.0.0
  */

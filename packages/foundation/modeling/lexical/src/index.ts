@@ -13,7 +13,8 @@
  * ```ts
  * import { VERSION } from "@beep/lexical-schema"
  *
- * console.log(VERSION) // "0.0.0"
+ * const packageVersion: "0.0.0" = VERSION
+ * console.log(packageVersion) // "0.0.0"
  * ```
  *
  * @since 0.0.0
@@ -36,7 +37,7 @@ export const VERSION = "0.0.0" as const;
  * @since 0.0.0
  * @category getters
  */
-export * from "./Lexical.behavior.ts";
+export { editorStateToPlainText, nodeToPlainText } from "./Lexical.behavior.ts";
 /**
  * Md ↔ Lexical codecs over the canonical `@beep/md` AST.
  *
@@ -50,7 +51,14 @@ export * from "./Lexical.behavior.ts";
  * @since 0.0.0
  * @category combinators
  */
-export * from "./Lexical.codec.ts";
+export {
+  ARTIFACT_URI_PREFIX,
+  ArtifactUri,
+  blockToLexical,
+  documentToEditorState,
+  editorStateToDocument,
+  nodeToBlocks,
+} from "./Lexical.codec.ts";
 /**
  * Schema-first models of Lexical's serialized editor state.
  *
@@ -66,4 +74,63 @@ export * from "./Lexical.codec.ts";
  * @since 0.0.0
  * @category models
  */
-export * from "./Lexical.model.ts";
+export {
+  ArtifactRefId,
+  ArtifactRefNode,
+  analyzeEditorStateCompatibility,
+  BaseNode,
+  CodeNode,
+  Direction,
+  decodeEditorStateCompatibility,
+  decodeEditorStateLossless,
+  decodeEditorStateStrict,
+  EditorStateFromJson,
+  EditorStateWireFromJson,
+  ElementFormat,
+  ElementNode,
+  HeadingNode,
+  HeadingTag,
+  hasTextFormat,
+  LexicalCompatibilityIssue,
+  LexicalCompatibilityResult,
+  LexicalDecodeError,
+  LexicalIndentDepth,
+  LexicalNode,
+  LexicalNodeVersion,
+  LexicalNodeWire,
+  LineBreakNode,
+  LinkNode,
+  ListItemNode,
+  ListNode,
+  ListTag,
+  ListType,
+  ParagraphNode,
+  QuoteNode,
+  RootNode,
+  SafeInlineStyle,
+  SafeStyleValue,
+  SafeUrl,
+  SerializedEditorState,
+  SerializedEditorStateWire,
+  StrictSerializedEditorState,
+  TableCellHeaderState,
+  TableCellNode,
+  TableCellSpan,
+  TableDimension,
+  TableNode,
+  TableRowNode,
+  TabNode,
+  TEXT_DETAIL_MASK_ALL,
+  TEXT_FORMAT_MASK_ALL,
+  TextBase,
+  TextDetailBit,
+  TextDetailBits,
+  TextDetailMask,
+  TextFormatBit,
+  TextFormatBits,
+  TextFormatMask,
+  TextMode,
+  TextNode,
+  withTextFormat,
+  YouTubeNode,
+} from "./Lexical.model.ts";
