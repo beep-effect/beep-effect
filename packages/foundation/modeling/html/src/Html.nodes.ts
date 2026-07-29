@@ -13,7 +13,9 @@
 import { $HtmlId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $HtmlId.create("Html.nodes");
 
@@ -66,6 +68,89 @@ export declare namespace Text {
 }
 
 /**
+ * Comment data that can be represented without changing its parsed value.
+ *
+ * @example
+ * ```ts
+ * import { HtmlCommentData } from "@beep/html/Html.nodes"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HtmlCommentData)("note")) // true
+ * console.log(S.is(HtmlCommentData)("-->")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HtmlCommentData = S.String.check(
+  S.makeFilterGroup(
+    [
+      S.makeFilter(P.not(Str.startsWith(">")), {
+        identifier: $I`HtmlCommentDataLeadingCloseCheck`,
+        title: "HTML Comment Leading Close",
+        description: "Rejects comment data beginning with `>`.",
+        message: "Comment data must not begin with >",
+      }),
+      S.makeFilter(P.not(Str.startsWith("->")), {
+        identifier: $I`HtmlCommentDataLeadingArrowCheck`,
+        title: "HTML Comment Leading Arrow",
+        description: "Rejects comment data beginning with `->`.",
+        message: "Comment data must not begin with ->",
+      }),
+      S.makeFilter(P.not(Str.includes("<!--")), {
+        identifier: $I`HtmlCommentDataOpenDelimiterCheck`,
+        title: "HTML Comment Open Delimiter",
+        description: "Rejects nested HTML comment opening delimiters.",
+        message: "Comment data must not contain <!--",
+      }),
+      S.makeFilter(P.not(Str.includes("-->")), {
+        identifier: $I`HtmlCommentDataCloseDelimiterCheck`,
+        title: "HTML Comment Close Delimiter",
+        description: "Rejects HTML comment closing delimiters.",
+        message: "Comment data must not contain -->",
+      }),
+      S.makeFilter(P.not(Str.includes("--!>")), {
+        identifier: $I`HtmlCommentDataBangCloseDelimiterCheck`,
+        title: "HTML Comment Bang Close Delimiter",
+        description: "Rejects HTML comment bang-closing delimiters.",
+        message: "Comment data must not contain --!>",
+      }),
+      S.makeFilter(P.not(Str.endsWith("<!-")), {
+        identifier: $I`HtmlCommentDataTrailingOpenCheck`,
+        title: "HTML Comment Trailing Open",
+        description: "Rejects comment data ending with `<!-`.",
+        message: "Comment data must not end with <!-",
+      }),
+    ],
+    {
+      identifier: $I`HtmlCommentDataChecks`,
+      title: "HTML Comment Data",
+      description: "Checks the HTML comment-data grammar needed for lossless serialization.",
+    }
+  )
+).pipe(
+  $I.annoteSchema("HtmlCommentData", {
+    description: "HTML comment text that serializes without delimiter ambiguity.",
+  })
+);
+
+/**
+ * Decoded type of {@link HtmlCommentData}.
+ *
+ * @example
+ * ```ts
+ * import type { HtmlCommentData } from "@beep/html/Html.nodes"
+ *
+ * const value: HtmlCommentData = "note"
+ * console.log(value)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type HtmlCommentData = typeof HtmlCommentData.Type;
+
+/**
  * An HTML comment node (`<!-- ... -->`).
  *
  * @example
@@ -82,7 +167,7 @@ export declare namespace Text {
 export class Comment extends S.TaggedClass<Comment>($I`Comment`)(
   "#comment",
   {
-    value: S.String.annotateKey({ description: "Comment text (without the delimiters)." }),
+    value: HtmlCommentData.annotateKey({ description: "Comment text (without the delimiters)." }),
   },
   $I.annote("Comment", { description: "An HTML comment node." })
 ) {
