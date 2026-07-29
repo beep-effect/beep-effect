@@ -12,36 +12,49 @@
  * @since 0.0.0
  */
 import { $HtmlId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { GlobalAttributes } from "./Html.attributes.ts";
+import {
+  AutocompleteAttribute,
+  BooleanAttribute,
+  ForeignAttributeName,
+  ForeignElementName,
+  GlobalAttributes,
+  HtmlNonNegativeInteger,
+  HtmlPositiveInteger,
+  makeSpaceSeparatedTokenList,
+} from "./Html.attributes.ts";
 import { Comment, Doctype, Text } from "./Html.nodes.ts";
 import type * as O from "effect/Option";
 import type { GlobalAttributesEncoded, GlobalAttributesType } from "./Html.attributes.ts";
 
 const $I = $HtmlId.create("Html.model");
 
-/** Union members carrying a literal `_tag` (the shape `toTaggedUnion` requires). */
-type Tagged = S.Top & { readonly Type: { readonly _tag: PropertyKey } };
+type Tagged = { readonly _tag: PropertyKey };
+type TaggedSchema<A extends Tagged, E extends Tagged> = S.Codec<A, E> & {
+  readonly Type: A;
+  readonly Encoded: E;
+};
+type TaggedMembers<A extends Tagged, E extends Tagged> = readonly [
+  TaggedSchema<A, E>,
+  ...ReadonlyArray<TaggedSchema<A, E>>,
+];
 
 /**
- * Build a `_tag`-discriminated union at runtime via `S.toTaggedUnion`, typed
- * explicitly. `toTaggedUnion`'s type-level discriminant map does not scale to the
- * ~150 HTML node kinds (TS2589), so members are erased to a `ReadonlyArray` and
- * the result is cast to its declared codec type — the runtime is the real tagged
- * union.
+ * Build a large `_tag`-discriminated union without erasing member Type or
+ * Encoded information.
  *
  * @category models
  * @since 0.0.0
  */
-const taggedUnion = <A, E>(id: string, description: string, members: ReadonlyArray<S.Top>): S.Codec<A, E> =>
-  S.Union(members as ReadonlyArray<Tagged>).pipe(
-    S.toTaggedUnion("_tag"),
-    $I.annoteSchema(id, { description })
-  ) as unknown as S.Codec<A, E>;
+const taggedUnion = <A extends Tagged, E extends Tagged>(
+  id: string,
+  description: string,
+  members: TaggedMembers<A, E>
+) => S.Union(members).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema(id, { description }), S.revealCodec);
 
 /**
- * Recursive list of HTML AST child nodes (any {@link HtmlNode}).
+ * Recursive list of nodes that may occur as element or fragment children.
  *
  * @example
  * ```ts
@@ -54,7 +67,7 @@ const taggedUnion = <A, E>(id: string, description: string, members: ReadonlyArr
  * @category models
  * @since 0.0.0
  */
-export const HtmlChildren = S.Array(S.suspend((): S.Codec<HtmlNode.Type, HtmlNode.Encoded> => HtmlNode)).pipe(
+export const HtmlChildren = S.Array(S.suspend((): S.Codec<HtmlChild.Type, HtmlChild.Encoded> => HtmlChild)).pipe(
   $I.annoteSchema("HtmlChildren", { description: "Recursive list of HTML AST child nodes." })
 );
 /**
@@ -88,9 +101,9 @@ export type HtmlChildren = typeof HtmlChildren.Type;
  */
 export declare namespace HtmlChildren {
   /** @since 0.0.0 */
-  export type Type = ReadonlyArray<HtmlNode.Type>;
+  export type Type = ReadonlyArray<HtmlChild.Type>;
   /** @since 0.0.0 */
-  export type Encoded = ReadonlyArray<HtmlNode.Encoded>;
+  export type Encoded = ReadonlyArray<HtmlChild.Encoded>;
 }
 
 /**
@@ -134,14 +147,14 @@ export declare namespace Fragment {
 }
 
 /**
- * A document root node.
+ * An HTML document root with an optional doctype and child nodes.
  *
  * @example
  * ```ts
  * import { Document } from "@beep/html/Html.model"
  *
- * const node = Document.make({ children: [] })
- * console.log(node._tag) // "#document"
+ * const document = Document.make({ children: [] })
+ * console.log(document._tag) // "#document"
  * ```
  *
  * @category models
@@ -149,18 +162,22 @@ export declare namespace Fragment {
  */
 export class Document extends S.TaggedClass<Document>($I`Document`)(
   "#document",
-  { children: HtmlChildren },
-  $I.annote("Document", { description: "A document root node." })
+  {
+    doctype: S.OptionFromOptionalKey(Doctype).pipe(SchemaUtils.withNoneDefault),
+    children: HtmlChildren,
+  },
+  $I.annote("Document", { description: "An HTML document root." })
 ) {}
+
 /**
  * Companion namespace for {@link Document}.
  *
  * @example
  * ```ts
- * import { Document } from "@beep/html/Html.model"
+ * import type { Document } from "@beep/html/Html.model"
  *
- * const encoded: Document.Encoded = { _tag: "#document", children: [] }
- * console.log(encoded._tag) // "#document"
+ * const document: Document.Encoded = { _tag: "#document", children: [] }
+ * console.log(document._tag) // "#document"
  * ```
  *
  * @category models
@@ -168,9 +185,117 @@ export class Document extends S.TaggedClass<Document>($I`Document`)(
  */
 export declare namespace Document {
   /** @since 0.0.0 */
-  export type Type = { readonly _tag: "#document"; readonly children: HtmlChildren.Type };
+  export type Type = {
+    readonly _tag: "#document";
+    readonly doctype: O.Option<Doctype.Type>;
+    readonly children: HtmlChildren.Type;
+  };
   /** @since 0.0.0 */
-  export type Encoded = { readonly _tag: "#document"; readonly children: HtmlChildren.Encoded };
+  export type Encoded = {
+    readonly _tag: "#document";
+    readonly doctype?: Doctype.Encoded;
+    readonly children: HtmlChildren.Encoded;
+  };
+}
+
+/**
+ * Namespace of a foreign-content element embedded in HTML.
+ *
+ * @example
+ * ```ts
+ * import { ForeignNamespace } from "@beep/html/Html.model"
+ *
+ * console.log(ForeignNamespace.is.svg("svg")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ForeignNamespace = LiteralKit(["svg", "mathml"]).pipe(
+  $I.annoteSchema("ForeignNamespace", { description: "SVG or MathML foreign-content namespace." })
+);
+
+/**
+ * Decoded type of {@link ForeignNamespace}.
+ *
+ * @example
+ * ```ts
+ * import type { ForeignNamespace } from "@beep/html/Html.model"
+ *
+ * const namespace: ForeignNamespace = "svg"
+ * console.log(namespace)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ForeignNamespace = typeof ForeignNamespace.Type;
+
+/**
+ * An opaque SVG or MathML element carried inside the HTML AST.
+ *
+ * @remarks
+ * This package validates the foreign node's serializable shape but does not
+ * model the complete SVG or MathML vocabularies.
+ *
+ * @example
+ * ```ts
+ * import { ForeignElement } from "@beep/html/Html.model"
+ *
+ * const svg = ForeignElement.make({ namespace: "svg", name: "svg", children: [] })
+ * console.log(svg.name) // "svg"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ForeignElement extends S.TaggedClass<ForeignElement>($I`ForeignElement`)(
+  "#foreign",
+  {
+    namespace: ForeignNamespace,
+    name: ForeignElementName,
+    attributes: S.OptionFromOptionalKey(S.Record(ForeignAttributeName, S.String)).pipe(SchemaUtils.withNoneDefault),
+    children: HtmlChildren,
+  },
+  $I.annote("ForeignElement", { description: "Opaque SVG or MathML element embedded in HTML." })
+) {}
+
+/**
+ * Companion namespace for {@link ForeignElement}.
+ *
+ * @example
+ * ```ts
+ * import type { ForeignElement } from "@beep/html/Html.model"
+ *
+ * const svg: ForeignElement.Encoded = {
+ *   _tag: "#foreign",
+ *   namespace: "svg",
+ *   name: "svg",
+ *   children: []
+ * }
+ * console.log(svg.name) // "svg"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace ForeignElement {
+  /** @since 0.0.0 */
+  export type Type = {
+    readonly _tag: "#foreign";
+    readonly namespace: ForeignNamespace;
+    readonly name: string;
+    readonly attributes: O.Option<Readonly<Record<string, string>>>;
+    readonly children: HtmlChildren.Type;
+  };
+  /** @since 0.0.0 */
+  export type Encoded = {
+    readonly _tag: "#foreign";
+    readonly namespace: ForeignNamespace;
+    readonly name: string;
+    readonly attributes?: Readonly<Record<string, string>>;
+    readonly children: HtmlChildren.Encoded;
+  };
 }
 
 /**
@@ -201,7 +326,7 @@ export class A extends S.TaggedClass<A>($I`A`)(
     ping: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     referrerpolicy: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     rel: S.OptionFromOptionalKey(
-      S.Literals([
+      makeSpaceSeparatedTokenList([
         "alternate",
         "author",
         "bookmark",
@@ -256,24 +381,7 @@ export declare namespace A {
     readonly name: O.Option<string>;
     readonly ping: O.Option<string>;
     readonly referrerpolicy: O.Option<string>;
-    readonly rel: O.Option<
-      | "alternate"
-      | "author"
-      | "bookmark"
-      | "external"
-      | "help"
-      | "license"
-      | "nofollow"
-      | "noopener"
-      | "noreferrer"
-      | "opener"
-      | "privacy-policy"
-      | "search"
-      | "tag"
-      | "terms-of-service"
-      | "next"
-      | "prev"
-    >;
+    readonly rel: O.Option<string>;
     readonly rev: O.Option<string>;
     readonly shape: O.Option<string>;
     readonly target: O.Option<string>;
@@ -293,23 +401,7 @@ export declare namespace A {
     readonly name?: string;
     readonly ping?: string;
     readonly referrerpolicy?: string;
-    readonly rel?:
-      | "alternate"
-      | "author"
-      | "bookmark"
-      | "external"
-      | "help"
-      | "license"
-      | "nofollow"
-      | "noopener"
-      | "noreferrer"
-      | "opener"
-      | "privacy-policy"
-      | "search"
-      | "tag"
-      | "terms-of-service"
-      | "next"
-      | "prev";
+    readonly rel?: string;
     readonly rev?: string;
     readonly shape?: string;
     readonly target?: string;
@@ -542,7 +634,7 @@ export class Area extends S.TaggedClass<Area>($I`Area`)(
     ping: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     referrerpolicy: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     rel: S.OptionFromOptionalKey(
-      S.Literals([
+      makeSpaceSeparatedTokenList([
         "alternate",
         "author",
         "bookmark",
@@ -595,24 +687,7 @@ export declare namespace Area {
     readonly nohref: O.Option<string>;
     readonly ping: O.Option<string>;
     readonly referrerpolicy: O.Option<string>;
-    readonly rel: O.Option<
-      | "alternate"
-      | "author"
-      | "bookmark"
-      | "external"
-      | "help"
-      | "license"
-      | "nofollow"
-      | "noopener"
-      | "noreferrer"
-      | "opener"
-      | "privacy-policy"
-      | "search"
-      | "tag"
-      | "terms-of-service"
-      | "next"
-      | "prev"
-    >;
+    readonly rel: O.Option<string>;
     readonly shape: O.Option<"circle state" | "default state" | "polygon state" | "rectangle state">;
     readonly target: O.Option<string>;
     readonly type: O.Option<string>;
@@ -628,23 +703,7 @@ export declare namespace Area {
     readonly nohref?: string;
     readonly ping?: string;
     readonly referrerpolicy?: string;
-    readonly rel?:
-      | "alternate"
-      | "author"
-      | "bookmark"
-      | "external"
-      | "help"
-      | "license"
-      | "nofollow"
-      | "noopener"
-      | "noreferrer"
-      | "opener"
-      | "privacy-policy"
-      | "search"
-      | "tag"
-      | "terms-of-service"
-      | "next"
-      | "prev";
+    readonly rel?: string;
     readonly shape?: "circle state" | "default state" | "polygon state" | "rectangle state";
     readonly target?: string;
     readonly type?: string;
@@ -767,14 +826,14 @@ export class Audio extends S.TaggedClass<Audio>($I`Audio`)(
   "audio",
   {
     ...GlobalAttributes,
-    autoplay: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    controls: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    autoplay: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    controls: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     crossorigin: S.OptionFromOptionalKey(S.Literals(["anonymous", "use-credentials"])).pipe(
       SchemaUtils.withNoneDefault
     ),
     loading: S.OptionFromOptionalKey(S.Literals(["lazy", "eager"])).pipe(SchemaUtils.withNoneDefault),
-    loop: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    muted: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    loop: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    muted: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     preload: S.OptionFromOptionalKey(S.Literals(["auto", "none", "metadata"])).pipe(SchemaUtils.withNoneDefault),
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
@@ -799,12 +858,12 @@ export declare namespace Audio {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "audio";
-    readonly autoplay: O.Option<boolean | "">;
-    readonly controls: O.Option<boolean | "">;
+    readonly autoplay: O.Option<true | "">;
+    readonly controls: O.Option<true | "">;
     readonly crossorigin: O.Option<"anonymous" | "use-credentials">;
     readonly loading: O.Option<"lazy" | "eager">;
-    readonly loop: O.Option<boolean | "">;
-    readonly muted: O.Option<boolean | "">;
+    readonly loop: O.Option<true | "">;
+    readonly muted: O.Option<true | "">;
     readonly preload: O.Option<"auto" | "none" | "metadata">;
     readonly src: O.Option<string>;
     readonly children: HtmlChildren.Type;
@@ -812,12 +871,12 @@ export declare namespace Audio {
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "audio";
-    readonly autoplay?: boolean | "";
-    readonly controls?: boolean | "";
+    readonly autoplay?: true | "";
+    readonly controls?: true | "";
     readonly crossorigin?: "anonymous" | "use-credentials";
     readonly loading?: "lazy" | "eager";
-    readonly loop?: boolean | "";
-    readonly muted?: boolean | "";
+    readonly loop?: true | "";
+    readonly muted?: true | "";
     readonly preload?: "auto" | "none" | "metadata";
     readonly src?: string;
     readonly children: HtmlChildren.Encoded;
@@ -1415,77 +1474,10 @@ export class Button extends S.TaggedClass<Button>($I`Button`)(
   {
     ...GlobalAttributes,
     action: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    autocomplete: S.OptionFromOptionalKey(
-      S.Literals([
-        "section-",
-        "shipping",
-        "billing",
-        "home",
-        "work",
-        "mobile",
-        "fax",
-        "pager",
-        "off",
-        "on",
-        "name",
-        "honorific-prefix",
-        "given-name",
-        "additional-name",
-        "family-name",
-        "honorific-suffix",
-        "nickname",
-        "organization-title",
-        "username",
-        "new-password",
-        "current-password",
-        "one-time-code",
-        "organization",
-        "street-address",
-        "address-line1",
-        "address-line2",
-        "address-line3",
-        "address-level4",
-        "address-level3",
-        "address-level2",
-        "address-level1",
-        "country",
-        "country-name",
-        "postal-code",
-        "cc-name",
-        "cc-given-name",
-        "cc-additional-name",
-        "cc-family-name",
-        "cc-number",
-        "cc-exp",
-        "cc-exp-month",
-        "cc-exp-year",
-        "cc-csc",
-        "cc-type",
-        "transaction-currency",
-        "transaction-amount",
-        "language",
-        "bday",
-        "bday-day",
-        "bday-month",
-        "bday-year",
-        "sex",
-        "url",
-        "photo",
-        "tel",
-        "tel-country-code",
-        "tel-national",
-        "tel-area-code",
-        "tel-local",
-        "tel-local-prefix",
-        "tel-local-suffix",
-        "tel-extension",
-        "email",
-        "impp",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
     command: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     commandfor: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     enctype: S.OptionFromOptionalKey(
       S.Literals(["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"])
     ).pipe(SchemaUtils.withNoneDefault),
@@ -1493,11 +1485,11 @@ export class Button extends S.TaggedClass<Button>($I`Button`)(
     formaction: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     formenctype: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     formmethod: S.OptionFromOptionalKey(S.Literals(["get", "post", "dialog"])).pipe(SchemaUtils.withNoneDefault),
-    formnovalidate: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    formnovalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     formtarget: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     method: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    novalidate: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    novalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     target: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(S.Literals(["submit", "reset", "button"])).pipe(SchemaUtils.withNoneDefault),
     value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -1524,85 +1516,20 @@ export declare namespace Button {
   export type Type = GlobalAttributesType & {
     readonly _tag: "button";
     readonly action: O.Option<string>;
-    readonly autocomplete: O.Option<
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp"
-    >;
+    readonly autocomplete: O.Option<string>;
     readonly command: O.Option<string>;
     readonly commandfor: O.Option<string>;
-    readonly disabled: O.Option<boolean | "">;
+    readonly disabled: O.Option<true | "">;
     readonly enctype: O.Option<"application/x-www-form-urlencoded" | "multipart/form-data" | "text/plain">;
     readonly form: O.Option<string>;
     readonly formaction: O.Option<string>;
     readonly formenctype: O.Option<string>;
     readonly formmethod: O.Option<"get" | "post" | "dialog">;
-    readonly formnovalidate: O.Option<boolean | "">;
+    readonly formnovalidate: O.Option<true | "">;
     readonly formtarget: O.Option<string>;
     readonly method: O.Option<string>;
     readonly name: O.Option<string>;
-    readonly novalidate: O.Option<boolean | "">;
+    readonly novalidate: O.Option<true | "">;
     readonly target: O.Option<string>;
     readonly type: O.Option<"submit" | "reset" | "button">;
     readonly value: O.Option<string>;
@@ -1612,84 +1539,20 @@ export declare namespace Button {
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "button";
     readonly action?: string;
-    readonly autocomplete?:
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp";
+    readonly autocomplete?: string;
     readonly command?: string;
     readonly commandfor?: string;
-    readonly disabled?: boolean | "";
+    readonly disabled?: true | "";
     readonly enctype?: "application/x-www-form-urlencoded" | "multipart/form-data" | "text/plain";
     readonly form?: string;
     readonly formaction?: string;
     readonly formenctype?: string;
     readonly formmethod?: "get" | "post" | "dialog";
-    readonly formnovalidate?: boolean | "";
+    readonly formnovalidate?: true | "";
     readonly formtarget?: string;
     readonly method?: string;
     readonly name?: string;
-    readonly novalidate?: boolean | "";
+    readonly novalidate?: true | "";
     readonly target?: string;
     readonly type?: "submit" | "reset" | "button";
     readonly value?: string;
@@ -1715,8 +1578,8 @@ export class Canvas extends S.TaggedClass<Canvas>($I`Canvas`)(
   "canvas",
   {
     ...GlobalAttributes,
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Canvas", { description: "The <canvas> element." })
@@ -1972,9 +1835,9 @@ export class Col extends S.TaggedClass<Col>($I`Col`)(
     align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     char: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     charoff: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    span: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    span: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
     valign: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("Col", { description: "The <col> element." })
 ) {}
@@ -2033,7 +1896,7 @@ export class Colgroup extends S.TaggedClass<Colgroup>($I`Colgroup`)(
   "colgroup",
   {
     ...GlobalAttributes,
-    span: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    span: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Colgroup", { description: "The <colgroup> element." })
@@ -2291,7 +2154,7 @@ export class Details extends S.TaggedClass<Details>($I`Details`)(
   {
     ...GlobalAttributes,
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    open: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    open: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Details", { description: "The <details> element." })
@@ -2315,14 +2178,14 @@ export declare namespace Details {
   export type Type = GlobalAttributesType & {
     readonly _tag: "details";
     readonly name: O.Option<string>;
-    readonly open: O.Option<boolean | "">;
+    readonly open: O.Option<true | "">;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "details";
     readonly name?: string;
-    readonly open?: boolean | "";
+    readonly open?: true | "";
     readonly children: HtmlChildren.Encoded;
   };
 }
@@ -2395,7 +2258,7 @@ export class Dialog extends S.TaggedClass<Dialog>($I`Dialog`)(
   {
     ...GlobalAttributes,
     closedby: S.OptionFromOptionalKey(S.Literals(["any", "closerequest", "none"])).pipe(SchemaUtils.withNoneDefault),
-    open: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    open: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Dialog", { description: "The <dialog> element." })
@@ -2419,14 +2282,14 @@ export declare namespace Dialog {
   export type Type = GlobalAttributesType & {
     readonly _tag: "dialog";
     readonly closedby: O.Option<"any" | "closerequest" | "none">;
-    readonly open: O.Option<boolean | "">;
+    readonly open: O.Option<true | "">;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "dialog";
     readonly closedby?: "any" | "closerequest" | "none";
-    readonly open?: boolean | "";
+    readonly open?: true | "";
     readonly children: HtmlChildren.Encoded;
   };
 }
@@ -2550,7 +2413,7 @@ export class Dl extends S.TaggedClass<Dl>($I`Dl`)(
   "dl",
   {
     ...GlobalAttributes,
-    compact: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    compact: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Dl", { description: "The <dl> element." })
@@ -2573,13 +2436,13 @@ export declare namespace Dl {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "dl";
-    readonly compact: O.Option<boolean | "">;
+    readonly compact: O.Option<true | "">;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "dl";
-    readonly compact?: boolean | "";
+    readonly compact?: true | "";
     readonly children: HtmlChildren.Encoded;
   };
 }
@@ -2701,13 +2564,13 @@ export class Embed extends S.TaggedClass<Embed>($I`Embed`)(
   {
     ...GlobalAttributes,
     align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     hspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     vspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("Embed", { description: "The <embed> element." })
 ) {}
@@ -2770,75 +2633,8 @@ export class Fieldset extends S.TaggedClass<Fieldset>($I`Fieldset`)(
   "fieldset",
   {
     ...GlobalAttributes,
-    autocomplete: S.OptionFromOptionalKey(
-      S.Literals([
-        "section-",
-        "shipping",
-        "billing",
-        "home",
-        "work",
-        "mobile",
-        "fax",
-        "pager",
-        "off",
-        "on",
-        "name",
-        "honorific-prefix",
-        "given-name",
-        "additional-name",
-        "family-name",
-        "honorific-suffix",
-        "nickname",
-        "organization-title",
-        "username",
-        "new-password",
-        "current-password",
-        "one-time-code",
-        "organization",
-        "street-address",
-        "address-line1",
-        "address-line2",
-        "address-line3",
-        "address-level4",
-        "address-level3",
-        "address-level2",
-        "address-level1",
-        "country",
-        "country-name",
-        "postal-code",
-        "cc-name",
-        "cc-given-name",
-        "cc-additional-name",
-        "cc-family-name",
-        "cc-number",
-        "cc-exp",
-        "cc-exp-month",
-        "cc-exp-year",
-        "cc-csc",
-        "cc-type",
-        "transaction-currency",
-        "transaction-amount",
-        "language",
-        "bday",
-        "bday-day",
-        "bday-month",
-        "bday-year",
-        "sex",
-        "url",
-        "photo",
-        "tel",
-        "tel-country-code",
-        "tel-national",
-        "tel-area-code",
-        "tel-local",
-        "tel-local-prefix",
-        "tel-local-suffix",
-        "tel-extension",
-        "email",
-        "impp",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
@@ -2863,73 +2659,8 @@ export declare namespace Fieldset {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "fieldset";
-    readonly autocomplete: O.Option<
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp"
-    >;
-    readonly disabled: O.Option<boolean | "">;
+    readonly autocomplete: O.Option<string>;
+    readonly disabled: O.Option<true | "">;
     readonly form: O.Option<string>;
     readonly name: O.Option<string>;
     readonly children: HtmlChildren.Type;
@@ -2937,72 +2668,8 @@ export declare namespace Fieldset {
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "fieldset";
-    readonly autocomplete?:
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp";
-    readonly disabled?: boolean | "";
+    readonly autocomplete?: string;
+    readonly disabled?: true | "";
     readonly form?: string;
     readonly name?: string;
     readonly children: HtmlChildren.Encoded;
@@ -3226,20 +2893,20 @@ export class Form extends S.TaggedClass<Form>($I`Form`)(
     accept: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     "accept-charset": S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     action: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    autocomplete: S.OptionFromOptionalKey(S.Literals(["on", "off"])).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
     enctype: S.OptionFromOptionalKey(
       S.Literals(["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"])
     ).pipe(SchemaUtils.withNoneDefault),
     formaction: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     formenctype: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     formmethod: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    formnovalidate: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    formnovalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     formtarget: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     method: S.OptionFromOptionalKey(S.Literals(["get", "post", "dialog"])).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    novalidate: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    novalidate: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     rel: S.OptionFromOptionalKey(
-      S.Literals([
+      makeSpaceSeparatedTokenList([
         "external",
         "help",
         "license",
@@ -3278,19 +2945,17 @@ export declare namespace Form {
     readonly accept: O.Option<string>;
     readonly "accept-charset": O.Option<string>;
     readonly action: O.Option<string>;
-    readonly autocomplete: O.Option<"on" | "off">;
+    readonly autocomplete: O.Option<string>;
     readonly enctype: O.Option<"application/x-www-form-urlencoded" | "multipart/form-data" | "text/plain">;
     readonly formaction: O.Option<string>;
     readonly formenctype: O.Option<string>;
     readonly formmethod: O.Option<string>;
-    readonly formnovalidate: O.Option<boolean | "">;
+    readonly formnovalidate: O.Option<true | "">;
     readonly formtarget: O.Option<string>;
     readonly method: O.Option<"get" | "post" | "dialog">;
     readonly name: O.Option<string>;
-    readonly novalidate: O.Option<boolean | "">;
-    readonly rel: O.Option<
-      "external" | "help" | "license" | "nofollow" | "noopener" | "noreferrer" | "opener" | "search" | "next" | "prev"
-    >;
+    readonly novalidate: O.Option<true | "">;
+    readonly rel: O.Option<string>;
     readonly target: O.Option<string>;
     readonly children: HtmlChildren.Type;
   };
@@ -3300,27 +2965,17 @@ export declare namespace Form {
     readonly accept?: string;
     readonly "accept-charset"?: string;
     readonly action?: string;
-    readonly autocomplete?: "on" | "off";
+    readonly autocomplete?: string;
     readonly enctype?: "application/x-www-form-urlencoded" | "multipart/form-data" | "text/plain";
     readonly formaction?: string;
     readonly formenctype?: string;
     readonly formmethod?: string;
-    readonly formnovalidate?: boolean | "";
+    readonly formnovalidate?: true | "";
     readonly formtarget?: string;
     readonly method?: "get" | "post" | "dialog";
     readonly name?: string;
-    readonly novalidate?: boolean | "";
-    readonly rel?:
-      | "external"
-      | "help"
-      | "license"
-      | "nofollow"
-      | "noopener"
-      | "noreferrer"
-      | "opener"
-      | "search"
-      | "next"
-      | "prev";
+    readonly novalidate?: true | "";
+    readonly rel?: string;
     readonly target?: string;
     readonly children: HtmlChildren.Encoded;
   };
@@ -3903,9 +3558,9 @@ export class Hr extends S.TaggedClass<Hr>($I`Hr`)(
     ...GlobalAttributes,
     align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     color: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    noshade: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    size: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    noshade: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    size: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("Hr", { description: "The <hr> element." })
 ) {}
@@ -3929,7 +3584,7 @@ export declare namespace Hr {
     readonly _tag: "hr";
     readonly align: O.Option<string>;
     readonly color: O.Option<string>;
-    readonly noshade: O.Option<boolean | "">;
+    readonly noshade: O.Option<true | "">;
     readonly size: O.Option<number>;
     readonly width: O.Option<number>;
   };
@@ -3938,7 +3593,7 @@ export declare namespace Hr {
     readonly _tag: "hr";
     readonly align?: string;
     readonly color?: string;
-    readonly noshade?: boolean | "";
+    readonly noshade?: true | "";
     readonly size?: number;
     readonly width?: number;
   };
@@ -4055,7 +3710,7 @@ export declare namespace I {
  * ```ts
  * import { Iframe } from "@beep/html/Html.model"
  *
- * const node = Iframe.make({ children: [] })
+ * const node = Iframe.make({ content: "" })
  * console.log(node._tag) // "iframe"
  * ```
  *
@@ -4068,11 +3723,11 @@ export class Iframe extends S.TaggedClass<Iframe>($I`Iframe`)(
     ...GlobalAttributes,
     align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     allow: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    allowfullscreen: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    allowfullscreen: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     allowtransparency: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     frameborder: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     framespacing: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     hspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     loading: S.OptionFromOptionalKey(S.Literals(["lazy", "eager"])).pipe(SchemaUtils.withNoneDefault),
     longdesc: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -4081,7 +3736,7 @@ export class Iframe extends S.TaggedClass<Iframe>($I`Iframe`)(
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     referrerpolicy: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     sandbox: S.OptionFromOptionalKey(
-      S.Literals([
+      makeSpaceSeparatedTokenList([
         "allow-popups",
         "allow-top-navigation",
         "allow-top-navigation-by-user-activation",
@@ -4101,8 +3756,8 @@ export class Iframe extends S.TaggedClass<Iframe>($I`Iframe`)(
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     srcdoc: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     vspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    children: HtmlChildren,
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    content: S.String,
   },
   $I.annote("Iframe", { description: "The <iframe> element." })
 ) {}
@@ -4113,7 +3768,7 @@ export class Iframe extends S.TaggedClass<Iframe>($I`Iframe`)(
  * ```ts
  * import { Iframe } from "@beep/html/Html.model"
  *
- * const encoded: Iframe.Encoded = { _tag: "iframe", children: [] }
+ * const encoded: Iframe.Encoded = { _tag: "iframe", content: "" }
  * console.log(encoded._tag) // "iframe"
  * ```
  *
@@ -4126,7 +3781,7 @@ export declare namespace Iframe {
     readonly _tag: "iframe";
     readonly align: O.Option<string>;
     readonly allow: O.Option<string>;
-    readonly allowfullscreen: O.Option<boolean | "">;
+    readonly allowfullscreen: O.Option<true | "">;
     readonly allowtransparency: O.Option<string>;
     readonly frameborder: O.Option<string>;
     readonly framespacing: O.Option<string>;
@@ -4138,34 +3793,20 @@ export declare namespace Iframe {
     readonly marginwidth: O.Option<string>;
     readonly name: O.Option<string>;
     readonly referrerpolicy: O.Option<string>;
-    readonly sandbox: O.Option<
-      | "allow-popups"
-      | "allow-top-navigation"
-      | "allow-top-navigation-by-user-activation"
-      | "allow-same-origin"
-      | "allow-forms"
-      | "allow-pointer-lock"
-      | "allow-scripts"
-      | "allow-popups-to-escape-sandbox"
-      | "allow-modals"
-      | "allow-orientation-lock"
-      | "allow-presentation"
-      | "allow-downloads"
-      | "allow-top-navigation-to-custom-protocols"
-    >;
+    readonly sandbox: O.Option<string>;
     readonly scrolling: O.Option<string>;
     readonly src: O.Option<string>;
     readonly srcdoc: O.Option<string>;
     readonly vspace: O.Option<string>;
     readonly width: O.Option<number>;
-    readonly children: HtmlChildren.Type;
+    readonly content: string;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "iframe";
     readonly align?: string;
     readonly allow?: string;
-    readonly allowfullscreen?: boolean | "";
+    readonly allowfullscreen?: true | "";
     readonly allowtransparency?: string;
     readonly frameborder?: string;
     readonly framespacing?: string;
@@ -4177,26 +3818,13 @@ export declare namespace Iframe {
     readonly marginwidth?: string;
     readonly name?: string;
     readonly referrerpolicy?: string;
-    readonly sandbox?:
-      | "allow-popups"
-      | "allow-top-navigation"
-      | "allow-top-navigation-by-user-activation"
-      | "allow-same-origin"
-      | "allow-forms"
-      | "allow-pointer-lock"
-      | "allow-scripts"
-      | "allow-popups-to-escape-sandbox"
-      | "allow-modals"
-      | "allow-orientation-lock"
-      | "allow-presentation"
-      | "allow-downloads"
-      | "allow-top-navigation-to-custom-protocols";
+    readonly sandbox?: string;
     readonly scrolling?: string;
     readonly src?: string;
     readonly srcdoc?: string;
     readonly vspace?: string;
     readonly width?: number;
-    readonly children: HtmlChildren.Encoded;
+    readonly content: string;
   };
 }
 
@@ -4221,15 +3849,15 @@ export class Img extends S.TaggedClass<Img>($I`Img`)(
     align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     alt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     border: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    controls: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    controls: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     crossorigin: S.OptionFromOptionalKey(S.Literals(["anonymous", "use-credentials"])).pipe(
       SchemaUtils.withNoneDefault
     ),
     decoding: S.OptionFromOptionalKey(S.Literals(["sync", "async", "auto"])).pipe(SchemaUtils.withNoneDefault),
     fetchpriority: S.OptionFromOptionalKey(S.Literals(["high", "low", "auto"])).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     hspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    ismap: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    ismap: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     loading: S.OptionFromOptionalKey(S.Literals(["lazy", "eager"])).pipe(SchemaUtils.withNoneDefault),
     longdesc: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     lowsrc: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -4240,7 +3868,7 @@ export class Img extends S.TaggedClass<Img>($I`Img`)(
     srcset: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     usemap: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     vspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("Img", { description: "The <img> element." })
 ) {}
@@ -4265,13 +3893,13 @@ export declare namespace Img {
     readonly align: O.Option<string>;
     readonly alt: O.Option<string>;
     readonly border: O.Option<string>;
-    readonly controls: O.Option<boolean | "">;
+    readonly controls: O.Option<true | "">;
     readonly crossorigin: O.Option<"anonymous" | "use-credentials">;
     readonly decoding: O.Option<"sync" | "async" | "auto">;
     readonly fetchpriority: O.Option<"high" | "low" | "auto">;
     readonly height: O.Option<number>;
     readonly hspace: O.Option<string>;
-    readonly ismap: O.Option<boolean | "">;
+    readonly ismap: O.Option<true | "">;
     readonly loading: O.Option<"lazy" | "eager">;
     readonly longdesc: O.Option<string>;
     readonly lowsrc: O.Option<string>;
@@ -4290,13 +3918,13 @@ export declare namespace Img {
     readonly align?: string;
     readonly alt?: string;
     readonly border?: string;
-    readonly controls?: boolean | "";
+    readonly controls?: true | "";
     readonly crossorigin?: "anonymous" | "use-credentials";
     readonly decoding?: "sync" | "async" | "auto";
     readonly fetchpriority?: "high" | "low" | "auto";
     readonly height?: number;
     readonly hspace?: string;
-    readonly ismap?: boolean | "";
+    readonly ismap?: true | "";
     readonly loading?: "lazy" | "eager";
     readonly longdesc?: string;
     readonly lowsrc?: string;
@@ -4331,96 +3959,29 @@ export class Input extends S.TaggedClass<Input>($I`Input`)(
     ...GlobalAttributes,
     accept: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    alpha: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    alpha: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     alt: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    autocomplete: S.OptionFromOptionalKey(
-      S.Literals([
-        "section-",
-        "shipping",
-        "billing",
-        "home",
-        "work",
-        "mobile",
-        "fax",
-        "pager",
-        "off",
-        "on",
-        "name",
-        "honorific-prefix",
-        "given-name",
-        "additional-name",
-        "family-name",
-        "honorific-suffix",
-        "nickname",
-        "organization-title",
-        "username",
-        "new-password",
-        "current-password",
-        "one-time-code",
-        "organization",
-        "street-address",
-        "address-line1",
-        "address-line2",
-        "address-line3",
-        "address-level4",
-        "address-level3",
-        "address-level2",
-        "address-level1",
-        "country",
-        "country-name",
-        "postal-code",
-        "cc-name",
-        "cc-given-name",
-        "cc-additional-name",
-        "cc-family-name",
-        "cc-number",
-        "cc-exp",
-        "cc-exp-month",
-        "cc-exp-year",
-        "cc-csc",
-        "cc-type",
-        "transaction-currency",
-        "transaction-amount",
-        "language",
-        "bday",
-        "bday-day",
-        "bday-month",
-        "bday-year",
-        "sex",
-        "url",
-        "photo",
-        "tel",
-        "tel-country-code",
-        "tel-national",
-        "tel-area-code",
-        "tel-local",
-        "tel-local-prefix",
-        "tel-local-suffix",
-        "tel-extension",
-        "email",
-        "impp",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
     border: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    checked: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    checked: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     colorspace: S.OptionFromOptionalKey(S.Literals(["limited-srgb", "display-p3"])).pipe(SchemaUtils.withNoneDefault),
     dirname: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     hspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    ismap: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    ismap: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     list: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     max: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    maxlength: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    maxlength: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     min: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    minlength: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    multiple: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    minlength: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    multiple: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     pattern: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     placeholder: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    readonly: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    required: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    size: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    readonly: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    required: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    size: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     step: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(
@@ -4475,93 +4036,28 @@ export declare namespace Input {
     readonly _tag: "input";
     readonly accept: O.Option<string>;
     readonly align: O.Option<string>;
-    readonly alpha: O.Option<boolean | "">;
+    readonly alpha: O.Option<true | "">;
     readonly alt: O.Option<string>;
-    readonly autocomplete: O.Option<
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp"
-    >;
+    readonly autocomplete: O.Option<string>;
     readonly border: O.Option<string>;
-    readonly checked: O.Option<boolean | "">;
+    readonly checked: O.Option<true | "">;
     readonly colorspace: O.Option<"limited-srgb" | "display-p3">;
     readonly dirname: O.Option<string>;
-    readonly disabled: O.Option<boolean | "">;
+    readonly disabled: O.Option<true | "">;
     readonly form: O.Option<string>;
     readonly hspace: O.Option<string>;
-    readonly ismap: O.Option<boolean | "">;
+    readonly ismap: O.Option<true | "">;
     readonly list: O.Option<string>;
     readonly max: O.Option<string>;
     readonly maxlength: O.Option<number>;
     readonly min: O.Option<string>;
     readonly minlength: O.Option<number>;
-    readonly multiple: O.Option<boolean | "">;
+    readonly multiple: O.Option<true | "">;
     readonly name: O.Option<string>;
     readonly pattern: O.Option<string>;
     readonly placeholder: O.Option<string>;
-    readonly readonly: O.Option<boolean | "">;
-    readonly required: O.Option<boolean | "">;
+    readonly readonly: O.Option<true | "">;
+    readonly required: O.Option<true | "">;
     readonly size: O.Option<number>;
     readonly src: O.Option<string>;
     readonly step: O.Option<string>;
@@ -4598,92 +4094,28 @@ export declare namespace Input {
     readonly _tag: "input";
     readonly accept?: string;
     readonly align?: string;
-    readonly alpha?: boolean | "";
+    readonly alpha?: true | "";
     readonly alt?: string;
-    readonly autocomplete?:
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp";
+    readonly autocomplete?: string;
     readonly border?: string;
-    readonly checked?: boolean | "";
+    readonly checked?: true | "";
     readonly colorspace?: "limited-srgb" | "display-p3";
     readonly dirname?: string;
-    readonly disabled?: boolean | "";
+    readonly disabled?: true | "";
     readonly form?: string;
     readonly hspace?: string;
-    readonly ismap?: boolean | "";
+    readonly ismap?: true | "";
     readonly list?: string;
     readonly max?: string;
     readonly maxlength?: number;
     readonly min?: string;
     readonly minlength?: number;
-    readonly multiple?: boolean | "";
+    readonly multiple?: true | "";
     readonly name?: string;
     readonly pattern?: string;
     readonly placeholder?: string;
-    readonly readonly?: boolean | "";
-    readonly required?: boolean | "";
+    readonly readonly?: true | "";
+    readonly required?: true | "";
     readonly size?: number;
     readonly src?: string;
     readonly step?: string;
@@ -5035,7 +4467,7 @@ export class Li extends S.TaggedClass<Li>($I`Li`)(
   {
     ...GlobalAttributes,
     type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    value: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Li", { description: "The <li> element." })
@@ -5059,14 +4491,14 @@ export declare namespace Li {
   export type Type = GlobalAttributesType & {
     readonly _tag: "li";
     readonly type: O.Option<string>;
-    readonly value: O.Option<string>;
+    readonly value: O.Option<number>;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "li";
     readonly type?: string;
-    readonly value?: string;
+    readonly value?: number;
     readonly children: HtmlChildren.Encoded;
   };
 }
@@ -5096,7 +4528,7 @@ export class Link extends S.TaggedClass<Link>($I`Link`)(
     crossorigin: S.OptionFromOptionalKey(S.Literals(["anonymous", "use-credentials"])).pipe(
       SchemaUtils.withNoneDefault
     ),
-    disabled: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     fetchpriority: S.OptionFromOptionalKey(S.Literals(["high", "low", "auto"])).pipe(SchemaUtils.withNoneDefault),
     href: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     hreflang: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -5107,7 +4539,7 @@ export class Link extends S.TaggedClass<Link>($I`Link`)(
     methods: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     referrerpolicy: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     rel: S.OptionFromOptionalKey(
-      S.Literals([
+      makeSpaceSeparatedTokenList([
         "alternate",
         "author",
         "canonical",
@@ -5161,7 +4593,7 @@ export declare namespace Link {
     readonly charset: O.Option<string>;
     readonly color: O.Option<string>;
     readonly crossorigin: O.Option<"anonymous" | "use-credentials">;
-    readonly disabled: O.Option<boolean | "">;
+    readonly disabled: O.Option<true | "">;
     readonly fetchpriority: O.Option<"high" | "low" | "auto">;
     readonly href: O.Option<string>;
     readonly hreflang: O.Option<string>;
@@ -5171,28 +4603,7 @@ export declare namespace Link {
     readonly media: O.Option<string>;
     readonly methods: O.Option<string>;
     readonly referrerpolicy: O.Option<string>;
-    readonly rel: O.Option<
-      | "alternate"
-      | "author"
-      | "canonical"
-      | "dns-prefetch"
-      | "expect"
-      | "help"
-      | "icon"
-      | "license"
-      | "manifest"
-      | "modulepreload"
-      | "pingback"
-      | "preconnect"
-      | "prefetch"
-      | "preload"
-      | "privacy-policy"
-      | "search"
-      | "stylesheet"
-      | "terms-of-service"
-      | "next"
-      | "prev"
-    >;
+    readonly rel: O.Option<string>;
     readonly rev: O.Option<string>;
     readonly sizes: O.Option<string>;
     readonly target: O.Option<string>;
@@ -5207,7 +4618,7 @@ export declare namespace Link {
     readonly charset?: string;
     readonly color?: string;
     readonly crossorigin?: "anonymous" | "use-credentials";
-    readonly disabled?: boolean | "";
+    readonly disabled?: true | "";
     readonly fetchpriority?: "high" | "low" | "auto";
     readonly href?: string;
     readonly hreflang?: string;
@@ -5217,27 +4628,7 @@ export declare namespace Link {
     readonly media?: string;
     readonly methods?: string;
     readonly referrerpolicy?: string;
-    readonly rel?:
-      | "alternate"
-      | "author"
-      | "canonical"
-      | "dns-prefetch"
-      | "expect"
-      | "help"
-      | "icon"
-      | "license"
-      | "manifest"
-      | "modulepreload"
-      | "pingback"
-      | "preconnect"
-      | "prefetch"
-      | "preload"
-      | "privacy-policy"
-      | "search"
-      | "stylesheet"
-      | "terms-of-service"
-      | "next"
-      | "prev";
+    readonly rel?: string;
     readonly rev?: string;
     readonly sizes?: string;
     readonly target?: string;
@@ -5253,7 +4644,7 @@ export declare namespace Link {
  * ```ts
  * import { Listing } from "@beep/html/Html.model"
  *
- * const node = Listing.make({ content: "" })
+ * const node = Listing.make({ children: [] })
  * console.log(node._tag) // "listing"
  * ```
  *
@@ -5264,7 +4655,7 @@ export class Listing extends S.TaggedClass<Listing>($I`Listing`)(
   "listing",
   {
     ...GlobalAttributes,
-    content: S.String,
+    children: HtmlChildren,
   },
   $I.annote("Listing", { description: "The <listing> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
@@ -5275,7 +4666,7 @@ export class Listing extends S.TaggedClass<Listing>($I`Listing`)(
  * ```ts
  * import { Listing } from "@beep/html/Html.model"
  *
- * const encoded: Listing.Encoded = { _tag: "listing", content: "" }
+ * const encoded: Listing.Encoded = { _tag: "listing", children: [] }
  * console.log(encoded._tag) // "listing"
  * ```
  *
@@ -5286,12 +4677,12 @@ export declare namespace Listing {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "listing";
-    readonly content: string;
+    readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "listing";
-    readonly content: string;
+    readonly children: HtmlChildren.Encoded;
   };
 }
 
@@ -5465,8 +4856,8 @@ export class Marquee extends S.TaggedClass<Marquee>($I`Marquee`)(
     ...GlobalAttributes,
     behavior: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     direction: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    loop: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    truespeed: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    loop: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    truespeed: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Marquee", { description: "The <marquee> element. Obsolete / non-conforming (WHATWG §16.2)." })
@@ -5491,8 +4882,8 @@ export declare namespace Marquee {
     readonly _tag: "marquee";
     readonly behavior: O.Option<string>;
     readonly direction: O.Option<string>;
-    readonly loop: O.Option<boolean | "">;
-    readonly truespeed: O.Option<boolean | "">;
+    readonly loop: O.Option<true | "">;
+    readonly truespeed: O.Option<true | "">;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
@@ -5500,8 +4891,8 @@ export declare namespace Marquee {
     readonly _tag: "marquee";
     readonly behavior?: string;
     readonly direction?: string;
-    readonly loop?: boolean | "";
-    readonly truespeed?: boolean | "";
+    readonly loop?: true | "";
+    readonly truespeed?: true | "";
     readonly children: HtmlChildren.Encoded;
   };
 }
@@ -5524,7 +4915,7 @@ export class Menu extends S.TaggedClass<Menu>($I`Menu`)(
   "menu",
   {
     ...GlobalAttributes,
-    compact: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    compact: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
@@ -5549,7 +4940,7 @@ export declare namespace Menu {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "menu";
-    readonly compact: O.Option<boolean | "">;
+    readonly compact: O.Option<true | "">;
     readonly label: O.Option<string>;
     readonly type: O.Option<string>;
     readonly children: HtmlChildren.Type;
@@ -5557,7 +4948,7 @@ export declare namespace Menu {
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "menu";
-    readonly compact?: boolean | "";
+    readonly compact?: true | "";
     readonly label?: string;
     readonly type?: string;
     readonly children: HtmlChildren.Encoded;
@@ -5997,7 +5388,7 @@ export declare namespace Nobr {
  * ```ts
  * import { Noembed } from "@beep/html/Html.model"
  *
- * const node = Noembed.make({ children: [] })
+ * const node = Noembed.make({ content: "" })
  * console.log(node._tag) // "noembed"
  * ```
  *
@@ -6008,7 +5399,7 @@ export class Noembed extends S.TaggedClass<Noembed>($I`Noembed`)(
   "noembed",
   {
     ...GlobalAttributes,
-    children: HtmlChildren,
+    content: S.String,
   },
   $I.annote("Noembed", { description: "The <noembed> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
@@ -6019,7 +5410,7 @@ export class Noembed extends S.TaggedClass<Noembed>($I`Noembed`)(
  * ```ts
  * import { Noembed } from "@beep/html/Html.model"
  *
- * const encoded: Noembed.Encoded = { _tag: "noembed", children: [] }
+ * const encoded: Noembed.Encoded = { _tag: "noembed", content: "" }
  * console.log(encoded._tag) // "noembed"
  * ```
  *
@@ -6030,12 +5421,12 @@ export declare namespace Noembed {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "noembed";
-    readonly children: HtmlChildren.Type;
+    readonly content: string;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "noembed";
-    readonly children: HtmlChildren.Encoded;
+    readonly content: string;
   };
 }
 
@@ -6046,7 +5437,7 @@ export declare namespace Noembed {
  * ```ts
  * import { Noframes } from "@beep/html/Html.model"
  *
- * const node = Noframes.make({ children: [] })
+ * const node = Noframes.make({ content: "" })
  * console.log(node._tag) // "noframes"
  * ```
  *
@@ -6057,7 +5448,7 @@ export class Noframes extends S.TaggedClass<Noframes>($I`Noframes`)(
   "noframes",
   {
     ...GlobalAttributes,
-    children: HtmlChildren,
+    content: S.String,
   },
   $I.annote("Noframes", { description: "The <noframes> element. Obsolete / non-conforming (WHATWG §16.2)." })
 ) {}
@@ -6068,7 +5459,7 @@ export class Noframes extends S.TaggedClass<Noframes>($I`Noframes`)(
  * ```ts
  * import { Noframes } from "@beep/html/Html.model"
  *
- * const encoded: Noframes.Encoded = { _tag: "noframes", children: [] }
+ * const encoded: Noframes.Encoded = { _tag: "noframes", content: "" }
  * console.log(encoded._tag) // "noframes"
  * ```
  *
@@ -6079,12 +5470,12 @@ export declare namespace Noframes {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "noframes";
-    readonly children: HtmlChildren.Type;
+    readonly content: string;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "noframes";
-    readonly children: HtmlChildren.Encoded;
+    readonly content: string;
   };
 }
 
@@ -6157,84 +5548,17 @@ export class ObjectElement extends S.TaggedClass<ObjectElement>($I`ObjectElement
     ...GlobalAttributes,
     align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     archive: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    autocomplete: S.OptionFromOptionalKey(
-      S.Literals([
-        "section-",
-        "shipping",
-        "billing",
-        "home",
-        "work",
-        "mobile",
-        "fax",
-        "pager",
-        "off",
-        "on",
-        "name",
-        "honorific-prefix",
-        "given-name",
-        "additional-name",
-        "family-name",
-        "honorific-suffix",
-        "nickname",
-        "organization-title",
-        "username",
-        "new-password",
-        "current-password",
-        "one-time-code",
-        "organization",
-        "street-address",
-        "address-line1",
-        "address-line2",
-        "address-line3",
-        "address-level4",
-        "address-level3",
-        "address-level2",
-        "address-level1",
-        "country",
-        "country-name",
-        "postal-code",
-        "cc-name",
-        "cc-given-name",
-        "cc-additional-name",
-        "cc-family-name",
-        "cc-number",
-        "cc-exp",
-        "cc-exp-month",
-        "cc-exp-year",
-        "cc-csc",
-        "cc-type",
-        "transaction-currency",
-        "transaction-amount",
-        "language",
-        "bday",
-        "bday-day",
-        "bday-month",
-        "bday-year",
-        "sex",
-        "url",
-        "photo",
-        "tel",
-        "tel-country-code",
-        "tel-national",
-        "tel-area-code",
-        "tel-local",
-        "tel-local-prefix",
-        "tel-local-suffix",
-        "tel-extension",
-        "email",
-        "impp",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
     border: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     classid: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     code: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     codebase: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     codetype: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     data: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    declare: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    declare: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     hspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     standby: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -6242,7 +5566,7 @@ export class ObjectElement extends S.TaggedClass<ObjectElement>($I`ObjectElement
     typemustmatch: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     usemap: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     vspace: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("ObjectElement", { description: "The <object> element." })
@@ -6267,80 +5591,15 @@ export declare namespace ObjectElement {
     readonly _tag: "object";
     readonly align: O.Option<string>;
     readonly archive: O.Option<string>;
-    readonly autocomplete: O.Option<
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp"
-    >;
+    readonly autocomplete: O.Option<string>;
     readonly border: O.Option<string>;
     readonly classid: O.Option<string>;
     readonly code: O.Option<string>;
     readonly codebase: O.Option<string>;
     readonly codetype: O.Option<string>;
     readonly data: O.Option<string>;
-    readonly declare: O.Option<boolean | "">;
-    readonly disabled: O.Option<boolean | "">;
+    readonly declare: O.Option<true | "">;
+    readonly disabled: O.Option<true | "">;
     readonly form: O.Option<string>;
     readonly height: O.Option<number>;
     readonly hspace: O.Option<string>;
@@ -6358,79 +5617,15 @@ export declare namespace ObjectElement {
     readonly _tag: "object";
     readonly align?: string;
     readonly archive?: string;
-    readonly autocomplete?:
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp";
+    readonly autocomplete?: string;
     readonly border?: string;
     readonly classid?: string;
     readonly code?: string;
     readonly codebase?: string;
     readonly codetype?: string;
     readonly data?: string;
-    readonly declare?: boolean | "";
-    readonly disabled?: boolean | "";
+    readonly declare?: true | "";
+    readonly disabled?: true | "";
     readonly form?: string;
     readonly height?: number;
     readonly hspace?: string;
@@ -6463,8 +5658,8 @@ export class Ol extends S.TaggedClass<Ol>($I`Ol`)(
   "ol",
   {
     ...GlobalAttributes,
-    compact: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    reversed: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    compact: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    reversed: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     start: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(S.Literals(["1", "a", "A", "i", "I"])).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
@@ -6489,8 +5684,8 @@ export declare namespace Ol {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "ol";
-    readonly compact: O.Option<boolean | "">;
-    readonly reversed: O.Option<boolean | "">;
+    readonly compact: O.Option<true | "">;
+    readonly reversed: O.Option<true | "">;
     readonly start: O.Option<number>;
     readonly type: O.Option<"1" | "a" | "A" | "i" | "I">;
     readonly children: HtmlChildren.Type;
@@ -6498,8 +5693,8 @@ export declare namespace Ol {
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "ol";
-    readonly compact?: boolean | "";
-    readonly reversed?: boolean | "";
+    readonly compact?: true | "";
+    readonly reversed?: true | "";
     readonly start?: number;
     readonly type?: "1" | "a" | "A" | "i" | "I";
     readonly children: HtmlChildren.Encoded;
@@ -6524,7 +5719,7 @@ export class Optgroup extends S.TaggedClass<Optgroup>($I`Optgroup`)(
   "optgroup",
   {
     ...GlobalAttributes,
-    disabled: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
@@ -6548,14 +5743,14 @@ export declare namespace Optgroup {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "optgroup";
-    readonly disabled: O.Option<boolean | "">;
+    readonly disabled: O.Option<true | "">;
     readonly label: O.Option<string>;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "optgroup";
-    readonly disabled?: boolean | "";
+    readonly disabled?: true | "";
     readonly label?: string;
     readonly children: HtmlChildren.Encoded;
   };
@@ -6579,10 +5774,10 @@ export class Option extends S.TaggedClass<Option>($I`Option`)(
   "option",
   {
     ...GlobalAttributes,
-    disabled: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     label: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    selected: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    selected: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
@@ -6606,20 +5801,20 @@ export declare namespace Option {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "option";
-    readonly disabled: O.Option<boolean | "">;
+    readonly disabled: O.Option<true | "">;
     readonly label: O.Option<string>;
     readonly name: O.Option<string>;
-    readonly selected: O.Option<boolean | "">;
+    readonly selected: O.Option<true | "">;
     readonly value: O.Option<string>;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "option";
-    readonly disabled?: boolean | "";
+    readonly disabled?: true | "";
     readonly label?: string;
     readonly name?: string;
-    readonly selected?: boolean | "";
+    readonly selected?: true | "";
     readonly value?: string;
     readonly children: HtmlChildren.Encoded;
   };
@@ -6643,75 +5838,8 @@ export class Output extends S.TaggedClass<Output>($I`Output`)(
   "output",
   {
     ...GlobalAttributes,
-    autocomplete: S.OptionFromOptionalKey(
-      S.Literals([
-        "section-",
-        "shipping",
-        "billing",
-        "home",
-        "work",
-        "mobile",
-        "fax",
-        "pager",
-        "off",
-        "on",
-        "name",
-        "honorific-prefix",
-        "given-name",
-        "additional-name",
-        "family-name",
-        "honorific-suffix",
-        "nickname",
-        "organization-title",
-        "username",
-        "new-password",
-        "current-password",
-        "one-time-code",
-        "organization",
-        "street-address",
-        "address-line1",
-        "address-line2",
-        "address-line3",
-        "address-level4",
-        "address-level3",
-        "address-level2",
-        "address-level1",
-        "country",
-        "country-name",
-        "postal-code",
-        "cc-name",
-        "cc-given-name",
-        "cc-additional-name",
-        "cc-family-name",
-        "cc-number",
-        "cc-exp",
-        "cc-exp-month",
-        "cc-exp-year",
-        "cc-csc",
-        "cc-type",
-        "transaction-currency",
-        "transaction-amount",
-        "language",
-        "bday",
-        "bday-day",
-        "bday-month",
-        "bday-year",
-        "sex",
-        "url",
-        "photo",
-        "tel",
-        "tel-country-code",
-        "tel-national",
-        "tel-area-code",
-        "tel-local",
-        "tel-local-prefix",
-        "tel-local-suffix",
-        "tel-extension",
-        "email",
-        "impp",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     for: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -6737,73 +5865,8 @@ export declare namespace Output {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "output";
-    readonly autocomplete: O.Option<
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp"
-    >;
-    readonly disabled: O.Option<boolean | "">;
+    readonly autocomplete: O.Option<string>;
+    readonly disabled: O.Option<true | "">;
     readonly for: O.Option<string>;
     readonly form: O.Option<string>;
     readonly name: O.Option<string>;
@@ -6812,72 +5875,8 @@ export declare namespace Output {
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "output";
-    readonly autocomplete?:
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp";
-    readonly disabled?: boolean | "";
+    readonly autocomplete?: string;
+    readonly disabled?: true | "";
     readonly for?: string;
     readonly form?: string;
     readonly name?: string;
@@ -7099,7 +6098,7 @@ export class Pre extends S.TaggedClass<Pre>($I`Pre`)(
   "pre",
   {
     ...GlobalAttributes,
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Pre", { description: "The <pre> element." })
@@ -7601,19 +6600,19 @@ export class Script extends S.TaggedClass<Script>($I`Script`)(
   "script",
   {
     ...GlobalAttributes,
-    async: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    async: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     blocking: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     charset: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     crossorigin: S.OptionFromOptionalKey(S.Literals(["anonymous", "use-credentials"])).pipe(
       SchemaUtils.withNoneDefault
     ),
-    defer: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    defer: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     event: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     fetchpriority: S.OptionFromOptionalKey(S.Literals(["high", "low", "auto"])).pipe(SchemaUtils.withNoneDefault),
     for: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     integrity: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     language: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    nomodule: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    nomodule: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     referrerpolicy: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -7639,17 +6638,17 @@ export declare namespace Script {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "script";
-    readonly async: O.Option<boolean | "">;
+    readonly async: O.Option<true | "">;
     readonly blocking: O.Option<string>;
     readonly charset: O.Option<string>;
     readonly crossorigin: O.Option<"anonymous" | "use-credentials">;
-    readonly defer: O.Option<boolean | "">;
+    readonly defer: O.Option<true | "">;
     readonly event: O.Option<string>;
     readonly fetchpriority: O.Option<"high" | "low" | "auto">;
     readonly for: O.Option<string>;
     readonly integrity: O.Option<string>;
     readonly language: O.Option<string>;
-    readonly nomodule: O.Option<boolean | "">;
+    readonly nomodule: O.Option<true | "">;
     readonly referrerpolicy: O.Option<string>;
     readonly src: O.Option<string>;
     readonly type: O.Option<string>;
@@ -7658,17 +6657,17 @@ export declare namespace Script {
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "script";
-    readonly async?: boolean | "";
+    readonly async?: true | "";
     readonly blocking?: string;
     readonly charset?: string;
     readonly crossorigin?: "anonymous" | "use-credentials";
-    readonly defer?: boolean | "";
+    readonly defer?: true | "";
     readonly event?: string;
     readonly fetchpriority?: "high" | "low" | "auto";
     readonly for?: string;
     readonly integrity?: string;
     readonly language?: string;
-    readonly nomodule?: boolean | "";
+    readonly nomodule?: true | "";
     readonly referrerpolicy?: string;
     readonly src?: string;
     readonly type?: string;
@@ -7792,80 +6791,13 @@ export class Select extends S.TaggedClass<Select>($I`Select`)(
   "select",
   {
     ...GlobalAttributes,
-    autocomplete: S.OptionFromOptionalKey(
-      S.Literals([
-        "section-",
-        "shipping",
-        "billing",
-        "home",
-        "work",
-        "mobile",
-        "fax",
-        "pager",
-        "off",
-        "on",
-        "name",
-        "honorific-prefix",
-        "given-name",
-        "additional-name",
-        "family-name",
-        "honorific-suffix",
-        "nickname",
-        "organization-title",
-        "username",
-        "new-password",
-        "current-password",
-        "one-time-code",
-        "organization",
-        "street-address",
-        "address-line1",
-        "address-line2",
-        "address-line3",
-        "address-level4",
-        "address-level3",
-        "address-level2",
-        "address-level1",
-        "country",
-        "country-name",
-        "postal-code",
-        "cc-name",
-        "cc-given-name",
-        "cc-additional-name",
-        "cc-family-name",
-        "cc-number",
-        "cc-exp",
-        "cc-exp-month",
-        "cc-exp-year",
-        "cc-csc",
-        "cc-type",
-        "transaction-currency",
-        "transaction-amount",
-        "language",
-        "bday",
-        "bday-day",
-        "bday-month",
-        "bday-year",
-        "sex",
-        "url",
-        "photo",
-        "tel",
-        "tel-country-code",
-        "tel-national",
-        "tel-area-code",
-        "tel-local",
-        "tel-local-prefix",
-        "tel-local-suffix",
-        "tel-extension",
-        "email",
-        "impp",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    multiple: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    multiple: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    required: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    size: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    required: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    size: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Select", { description: "The <select> element." })
@@ -7888,153 +6820,24 @@ export declare namespace Select {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "select";
-    readonly autocomplete: O.Option<
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp"
-    >;
-    readonly disabled: O.Option<boolean | "">;
+    readonly autocomplete: O.Option<string>;
+    readonly disabled: O.Option<true | "">;
     readonly form: O.Option<string>;
-    readonly multiple: O.Option<boolean | "">;
+    readonly multiple: O.Option<true | "">;
     readonly name: O.Option<string>;
-    readonly required: O.Option<boolean | "">;
+    readonly required: O.Option<true | "">;
     readonly size: O.Option<number>;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "select";
-    readonly autocomplete?:
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp";
-    readonly disabled?: boolean | "";
+    readonly autocomplete?: string;
+    readonly disabled?: true | "";
     readonly form?: string;
-    readonly multiple?: boolean | "";
+    readonly multiple?: true | "";
     readonly name?: string;
-    readonly required?: boolean | "";
+    readonly required?: true | "";
     readonly size?: number;
     readonly children: HtmlChildren.Encoded;
   };
@@ -8208,13 +7011,13 @@ export class Source extends S.TaggedClass<Source>($I`Source`)(
   "source",
   {
     ...GlobalAttributes,
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     media: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     sizes: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     srcset: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("Source", { description: "The <source> element." })
 ) {}
@@ -8681,10 +7484,10 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
     cellspacing: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     datapagesize: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     frame: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     rules: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     summary: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Table", { description: "The <table> element." })
@@ -8761,7 +7564,7 @@ export class Tbody extends S.TaggedClass<Tbody>($I`Tbody`)(
     align: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     char: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     charoff: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     valign: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
@@ -8828,14 +7631,18 @@ export class Td extends S.TaggedClass<Td>($I`Td`)(
     bgcolor: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     char: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     charoff: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    colspan: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    colspan: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: 1, maximum: 1000 }))).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     headers: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    nowrap: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    rowspan: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    nowrap: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    rowspan: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: 0, maximum: 65534 }))).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     scope: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     valign: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Td", { description: "The <td> element." })
@@ -8867,7 +7674,7 @@ export declare namespace Td {
     readonly colspan: O.Option<number>;
     readonly headers: O.Option<string>;
     readonly height: O.Option<number>;
-    readonly nowrap: O.Option<boolean | "">;
+    readonly nowrap: O.Option<true | "">;
     readonly rowspan: O.Option<number>;
     readonly scope: O.Option<string>;
     readonly valign: O.Option<string>;
@@ -8886,7 +7693,7 @@ export declare namespace Td {
     readonly colspan?: number;
     readonly headers?: string;
     readonly height?: number;
-    readonly nowrap?: boolean | "";
+    readonly nowrap?: true | "";
     readonly rowspan?: number;
     readonly scope?: string;
     readonly valign?: string;
@@ -8913,15 +7720,11 @@ export class Template extends S.TaggedClass<Template>($I`Template`)(
   "template",
   {
     ...GlobalAttributes,
-    shadowrootclonable: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    shadowrootclonable: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     shadowrootcustomelementregistry: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    shadowrootdelegatesfocus: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(
-      SchemaUtils.withNoneDefault
-    ),
+    shadowrootdelegatesfocus: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     shadowrootmode: S.OptionFromOptionalKey(S.Literals(["open", "closed"])).pipe(SchemaUtils.withNoneDefault),
-    shadowrootserializable: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(
-      SchemaUtils.withNoneDefault
-    ),
+    shadowrootserializable: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     shadowrootslotassignment: S.OptionFromOptionalKey(S.Literals(["named", "manual"])).pipe(
       SchemaUtils.withNoneDefault
     ),
@@ -8947,22 +7750,22 @@ export declare namespace Template {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "template";
-    readonly shadowrootclonable: O.Option<boolean | "">;
+    readonly shadowrootclonable: O.Option<true | "">;
     readonly shadowrootcustomelementregistry: O.Option<string>;
-    readonly shadowrootdelegatesfocus: O.Option<boolean | "">;
+    readonly shadowrootdelegatesfocus: O.Option<true | "">;
     readonly shadowrootmode: O.Option<"open" | "closed">;
-    readonly shadowrootserializable: O.Option<boolean | "">;
+    readonly shadowrootserializable: O.Option<true | "">;
     readonly shadowrootslotassignment: O.Option<"named" | "manual">;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "template";
-    readonly shadowrootclonable?: boolean | "";
+    readonly shadowrootclonable?: true | "";
     readonly shadowrootcustomelementregistry?: string;
-    readonly shadowrootdelegatesfocus?: boolean | "";
+    readonly shadowrootdelegatesfocus?: true | "";
     readonly shadowrootmode?: "open" | "closed";
-    readonly shadowrootserializable?: boolean | "";
+    readonly shadowrootserializable?: true | "";
     readonly shadowrootslotassignment?: "named" | "manual";
     readonly children: HtmlChildren.Encoded;
   };
@@ -8986,85 +7789,18 @@ export class Textarea extends S.TaggedClass<Textarea>($I`Textarea`)(
   "textarea",
   {
     ...GlobalAttributes,
-    autocomplete: S.OptionFromOptionalKey(
-      S.Literals([
-        "section-",
-        "shipping",
-        "billing",
-        "home",
-        "work",
-        "mobile",
-        "fax",
-        "pager",
-        "off",
-        "on",
-        "name",
-        "honorific-prefix",
-        "given-name",
-        "additional-name",
-        "family-name",
-        "honorific-suffix",
-        "nickname",
-        "organization-title",
-        "username",
-        "new-password",
-        "current-password",
-        "one-time-code",
-        "organization",
-        "street-address",
-        "address-line1",
-        "address-line2",
-        "address-line3",
-        "address-level4",
-        "address-level3",
-        "address-level2",
-        "address-level1",
-        "country",
-        "country-name",
-        "postal-code",
-        "cc-name",
-        "cc-given-name",
-        "cc-additional-name",
-        "cc-family-name",
-        "cc-number",
-        "cc-exp",
-        "cc-exp-month",
-        "cc-exp-year",
-        "cc-csc",
-        "cc-type",
-        "transaction-currency",
-        "transaction-amount",
-        "language",
-        "bday",
-        "bday-day",
-        "bday-month",
-        "bday-year",
-        "sex",
-        "url",
-        "photo",
-        "tel",
-        "tel-country-code",
-        "tel-national",
-        "tel-area-code",
-        "tel-local",
-        "tel-local-prefix",
-        "tel-local-suffix",
-        "tel-extension",
-        "email",
-        "impp",
-      ])
-    ).pipe(SchemaUtils.withNoneDefault),
-    cols: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    autocomplete: S.OptionFromOptionalKey(AutocompleteAttribute).pipe(SchemaUtils.withNoneDefault),
+    cols: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
     dirname: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    disabled: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    disabled: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     form: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    maxlength: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    minlength: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    maxlength: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    minlength: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     placeholder: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    readonly: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    required: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    rows: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    readonly: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    required: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    rows: S.OptionFromOptionalKey(HtmlPositiveInteger).pipe(SchemaUtils.withNoneDefault),
     wrap: S.OptionFromOptionalKey(S.Literals(["soft", "hard"])).pipe(SchemaUtils.withNoneDefault),
     content: S.String,
   },
@@ -9088,82 +7824,17 @@ export declare namespace Textarea {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "textarea";
-    readonly autocomplete: O.Option<
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp"
-    >;
+    readonly autocomplete: O.Option<string>;
     readonly cols: O.Option<number>;
     readonly dirname: O.Option<string>;
-    readonly disabled: O.Option<boolean | "">;
+    readonly disabled: O.Option<true | "">;
     readonly form: O.Option<string>;
     readonly maxlength: O.Option<number>;
     readonly minlength: O.Option<number>;
     readonly name: O.Option<string>;
     readonly placeholder: O.Option<string>;
-    readonly readonly: O.Option<boolean | "">;
-    readonly required: O.Option<boolean | "">;
+    readonly readonly: O.Option<true | "">;
+    readonly required: O.Option<true | "">;
     readonly rows: O.Option<number>;
     readonly wrap: O.Option<"soft" | "hard">;
     readonly content: string;
@@ -9171,81 +7842,17 @@ export declare namespace Textarea {
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "textarea";
-    readonly autocomplete?:
-      | "section-"
-      | "shipping"
-      | "billing"
-      | "home"
-      | "work"
-      | "mobile"
-      | "fax"
-      | "pager"
-      | "off"
-      | "on"
-      | "name"
-      | "honorific-prefix"
-      | "given-name"
-      | "additional-name"
-      | "family-name"
-      | "honorific-suffix"
-      | "nickname"
-      | "organization-title"
-      | "username"
-      | "new-password"
-      | "current-password"
-      | "one-time-code"
-      | "organization"
-      | "street-address"
-      | "address-line1"
-      | "address-line2"
-      | "address-line3"
-      | "address-level4"
-      | "address-level3"
-      | "address-level2"
-      | "address-level1"
-      | "country"
-      | "country-name"
-      | "postal-code"
-      | "cc-name"
-      | "cc-given-name"
-      | "cc-additional-name"
-      | "cc-family-name"
-      | "cc-number"
-      | "cc-exp"
-      | "cc-exp-month"
-      | "cc-exp-year"
-      | "cc-csc"
-      | "cc-type"
-      | "transaction-currency"
-      | "transaction-amount"
-      | "language"
-      | "bday"
-      | "bday-day"
-      | "bday-month"
-      | "bday-year"
-      | "sex"
-      | "url"
-      | "photo"
-      | "tel"
-      | "tel-country-code"
-      | "tel-national"
-      | "tel-area-code"
-      | "tel-local"
-      | "tel-local-prefix"
-      | "tel-local-suffix"
-      | "tel-extension"
-      | "email"
-      | "impp";
+    readonly autocomplete?: string;
     readonly cols?: number;
     readonly dirname?: string;
-    readonly disabled?: boolean | "";
+    readonly disabled?: true | "";
     readonly form?: string;
     readonly maxlength?: number;
     readonly minlength?: number;
     readonly name?: string;
     readonly placeholder?: string;
-    readonly readonly?: boolean | "";
-    readonly required?: boolean | "";
+    readonly readonly?: true | "";
+    readonly required?: true | "";
     readonly rows?: number;
     readonly wrap?: "soft" | "hard";
     readonly content: string;
@@ -9325,16 +7932,20 @@ export class Th extends S.TaggedClass<Th>($I`Th`)(
     bgcolor: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     char: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     charoff: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    colspan: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    colspan: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: 1, maximum: 1000 }))).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     headers: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-    nowrap: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    rowspan: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
+    nowrap: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    rowspan: S.OptionFromOptionalKey(S.Int.check(S.isBetween({ minimum: 0, maximum: 65534 }))).pipe(
+      SchemaUtils.withNoneDefault
+    ),
     scope: S.OptionFromOptionalKey(S.Literals(["row", "col", "rowgroup", "colgroup"])).pipe(
       SchemaUtils.withNoneDefault
     ),
     valign: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Th", { description: "The <th> element." })
@@ -9366,7 +7977,7 @@ export declare namespace Th {
     readonly colspan: O.Option<number>;
     readonly headers: O.Option<string>;
     readonly height: O.Option<number>;
-    readonly nowrap: O.Option<boolean | "">;
+    readonly nowrap: O.Option<true | "">;
     readonly rowspan: O.Option<number>;
     readonly scope: O.Option<"row" | "col" | "rowgroup" | "colgroup">;
     readonly valign: O.Option<string>;
@@ -9385,7 +7996,7 @@ export declare namespace Th {
     readonly colspan?: number;
     readonly headers?: string;
     readonly height?: number;
-    readonly nowrap?: boolean | "";
+    readonly nowrap?: true | "";
     readonly rowspan?: number;
     readonly scope?: "row" | "col" | "rowgroup" | "colgroup";
     readonly valign?: string;
@@ -9566,7 +8177,7 @@ export class Tr extends S.TaggedClass<Tr>($I`Tr`)(
     bgcolor: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     char: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     charoff: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     valign: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
@@ -9629,7 +8240,7 @@ export class Track extends S.TaggedClass<Track>($I`Track`)(
   "track",
   {
     ...GlobalAttributes,
-    default: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    default: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     kind: S.OptionFromOptionalKey(S.Literals(["subtitles", "captions", "descriptions", "chapters", "metadata"])).pipe(
       SchemaUtils.withNoneDefault
     ),
@@ -9657,7 +8268,7 @@ export declare namespace Track {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "track";
-    readonly default: O.Option<boolean | "">;
+    readonly default: O.Option<true | "">;
     readonly kind: O.Option<"subtitles" | "captions" | "descriptions" | "chapters" | "metadata">;
     readonly label: O.Option<string>;
     readonly src: O.Option<string>;
@@ -9666,7 +8277,7 @@ export declare namespace Track {
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "track";
-    readonly default?: boolean | "";
+    readonly default?: true | "";
     readonly kind?: "subtitles" | "captions" | "descriptions" | "chapters" | "metadata";
     readonly label?: string;
     readonly src?: string;
@@ -9790,7 +8401,7 @@ export class Ul extends S.TaggedClass<Ul>($I`Ul`)(
   "ul",
   {
     ...GlobalAttributes,
-    compact: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    compact: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
@@ -9814,14 +8425,14 @@ export declare namespace Ul {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "ul";
-    readonly compact: O.Option<boolean | "">;
+    readonly compact: O.Option<true | "">;
     readonly type: O.Option<string>;
     readonly children: HtmlChildren.Type;
   };
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "ul";
-    readonly compact?: boolean | "";
+    readonly compact?: true | "";
     readonly type?: string;
     readonly children: HtmlChildren.Encoded;
   };
@@ -9894,20 +8505,20 @@ export class Video extends S.TaggedClass<Video>($I`Video`)(
   "video",
   {
     ...GlobalAttributes,
-    autoplay: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    controls: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    autoplay: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    controls: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     crossorigin: S.OptionFromOptionalKey(S.Literals(["anonymous", "use-credentials"])).pipe(
       SchemaUtils.withNoneDefault
     ),
-    height: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     loading: S.OptionFromOptionalKey(S.Literals(["lazy", "eager"])).pipe(SchemaUtils.withNoneDefault),
-    loop: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    muted: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
-    playsinline: S.OptionFromOptionalKey(S.Union([S.Boolean, S.Literal("")])).pipe(SchemaUtils.withNoneDefault),
+    loop: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    muted: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+    playsinline: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
     poster: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     preload: S.OptionFromOptionalKey(S.Literals(["auto", "none", "metadata"])).pipe(SchemaUtils.withNoneDefault),
     src: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    width: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(HtmlNonNegativeInteger).pipe(SchemaUtils.withNoneDefault),
     children: HtmlChildren,
   },
   $I.annote("Video", { description: "The <video> element." })
@@ -9930,14 +8541,14 @@ export declare namespace Video {
   /** @since 0.0.0 */
   export type Type = GlobalAttributesType & {
     readonly _tag: "video";
-    readonly autoplay: O.Option<boolean | "">;
-    readonly controls: O.Option<boolean | "">;
+    readonly autoplay: O.Option<true | "">;
+    readonly controls: O.Option<true | "">;
     readonly crossorigin: O.Option<"anonymous" | "use-credentials">;
     readonly height: O.Option<number>;
     readonly loading: O.Option<"lazy" | "eager">;
-    readonly loop: O.Option<boolean | "">;
-    readonly muted: O.Option<boolean | "">;
-    readonly playsinline: O.Option<boolean | "">;
+    readonly loop: O.Option<true | "">;
+    readonly muted: O.Option<true | "">;
+    readonly playsinline: O.Option<true | "">;
     readonly poster: O.Option<string>;
     readonly preload: O.Option<"auto" | "none" | "metadata">;
     readonly src: O.Option<string>;
@@ -9947,14 +8558,14 @@ export declare namespace Video {
   /** @since 0.0.0 */
   export type Encoded = GlobalAttributesEncoded & {
     readonly _tag: "video";
-    readonly autoplay?: boolean | "";
-    readonly controls?: boolean | "";
+    readonly autoplay?: true | "";
+    readonly controls?: true | "";
     readonly crossorigin?: "anonymous" | "use-credentials";
     readonly height?: number;
     readonly loading?: "lazy" | "eager";
-    readonly loop?: boolean | "";
-    readonly muted?: boolean | "";
-    readonly playsinline?: boolean | "";
+    readonly loop?: true | "";
+    readonly muted?: true | "";
+    readonly playsinline?: true | "";
     readonly poster?: string;
     readonly preload?: "auto" | "none" | "metadata";
     readonly src?: string;
@@ -10059,8 +8670,969 @@ export declare namespace Xmp {
 }
 
 /**
+ * Discriminated union of nodes valid as element or fragment children.
+ *
+ * @example
+ * ```ts
+ * import { HtmlChild } from "@beep/html/Html.model"
+ * import { Text } from "@beep/html/Html.nodes"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HtmlChild)(Text.make({ value: "hello" }))) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlChild = taggedUnion<HtmlChild.Type, HtmlChild.Encoded>(
+  "HtmlChild",
+  "Nodes valid as element or fragment children.",
+  [
+    A,
+    Abbr,
+    Acronym,
+    Address,
+    Applet,
+    Area,
+    Article,
+    Aside,
+    Audio,
+    B,
+    Base,
+    Basefont,
+    Bdi,
+    Bdo,
+    Bgsound,
+    Big,
+    Blink,
+    Blockquote,
+    Body,
+    Br,
+    Button,
+    Canvas,
+    Caption,
+    Center,
+    Cite,
+    Code,
+    Col,
+    Colgroup,
+    Data,
+    Datalist,
+    Dd,
+    Del,
+    Details,
+    Dfn,
+    Dialog,
+    DirElement,
+    Div,
+    Dl,
+    Dt,
+    Em,
+    Embed,
+    Fieldset,
+    Figcaption,
+    Figure,
+    Font,
+    Footer,
+    Form,
+    Frame,
+    Frameset,
+    H1,
+    H2,
+    H3,
+    H4,
+    H5,
+    H6,
+    Head,
+    Header,
+    Hgroup,
+    Hr,
+    Html,
+    I,
+    Iframe,
+    Img,
+    Input,
+    Ins,
+    Isindex,
+    Kbd,
+    Keygen,
+    Label,
+    Legend,
+    Li,
+    Link,
+    Listing,
+    Main,
+    MapElement,
+    Mark,
+    Marquee,
+    Menu,
+    Menuitem,
+    Meta,
+    Meter,
+    Multicol,
+    Nav,
+    Nextid,
+    Nobr,
+    Noembed,
+    Noframes,
+    Noscript,
+    ObjectElement,
+    Ol,
+    Optgroup,
+    Option,
+    Output,
+    P,
+    Param,
+    Picture,
+    Plaintext,
+    Pre,
+    Progress,
+    Q,
+    Rb,
+    Rp,
+    Rt,
+    Rtc,
+    Ruby,
+    SElement,
+    Samp,
+    Script,
+    Search,
+    Section,
+    Select,
+    Selectedcontent,
+    Slot,
+    Small,
+    Source,
+    Spacer,
+    Span,
+    Strike,
+    Strong,
+    Style,
+    Sub,
+    Summary,
+    Sup,
+    Table,
+    Tbody,
+    Td,
+    Template,
+    Textarea,
+    Tfoot,
+    Th,
+    Thead,
+    Time,
+    Title,
+    Tr,
+    Track,
+    Tt,
+    U,
+    Ul,
+    Var,
+    Video,
+    Wbr,
+    Xmp,
+    ForeignElement,
+    Text,
+    Comment,
+  ]
+);
+
+/**
+ * Companion namespace for {@link HtmlChild}.
+ *
+ * @example
+ * ```ts
+ * import type { HtmlChild } from "@beep/html/Html.model"
+ *
+ * const child: HtmlChild.Encoded = { _tag: "#text", value: "hello" }
+ * console.log(child._tag) // "#text"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace HtmlChild {
+  /** @since 0.0.0 */
+  export type Type =
+    | A.Type
+    | Abbr.Type
+    | Acronym.Type
+    | Address.Type
+    | Applet.Type
+    | Area.Type
+    | Article.Type
+    | Aside.Type
+    | Audio.Type
+    | B.Type
+    | Base.Type
+    | Basefont.Type
+    | Bdi.Type
+    | Bdo.Type
+    | Bgsound.Type
+    | Big.Type
+    | Blink.Type
+    | Blockquote.Type
+    | Body.Type
+    | Br.Type
+    | Button.Type
+    | Canvas.Type
+    | Caption.Type
+    | Center.Type
+    | Cite.Type
+    | Code.Type
+    | Col.Type
+    | Colgroup.Type
+    | Data.Type
+    | Datalist.Type
+    | Dd.Type
+    | Del.Type
+    | Details.Type
+    | Dfn.Type
+    | Dialog.Type
+    | DirElement.Type
+    | Div.Type
+    | Dl.Type
+    | Dt.Type
+    | Em.Type
+    | Embed.Type
+    | Fieldset.Type
+    | Figcaption.Type
+    | Figure.Type
+    | Font.Type
+    | Footer.Type
+    | Form.Type
+    | Frame.Type
+    | Frameset.Type
+    | H1.Type
+    | H2.Type
+    | H3.Type
+    | H4.Type
+    | H5.Type
+    | H6.Type
+    | Head.Type
+    | Header.Type
+    | Hgroup.Type
+    | Hr.Type
+    | Html.Type
+    | I.Type
+    | Iframe.Type
+    | Img.Type
+    | Input.Type
+    | Ins.Type
+    | Isindex.Type
+    | Kbd.Type
+    | Keygen.Type
+    | Label.Type
+    | Legend.Type
+    | Li.Type
+    | Link.Type
+    | Listing.Type
+    | Main.Type
+    | MapElement.Type
+    | Mark.Type
+    | Marquee.Type
+    | Menu.Type
+    | Menuitem.Type
+    | Meta.Type
+    | Meter.Type
+    | Multicol.Type
+    | Nav.Type
+    | Nextid.Type
+    | Nobr.Type
+    | Noembed.Type
+    | Noframes.Type
+    | Noscript.Type
+    | ObjectElement.Type
+    | Ol.Type
+    | Optgroup.Type
+    | Option.Type
+    | Output.Type
+    | P.Type
+    | Param.Type
+    | Picture.Type
+    | Plaintext.Type
+    | Pre.Type
+    | Progress.Type
+    | Q.Type
+    | Rb.Type
+    | Rp.Type
+    | Rt.Type
+    | Rtc.Type
+    | Ruby.Type
+    | SElement.Type
+    | Samp.Type
+    | Script.Type
+    | Search.Type
+    | Section.Type
+    | Select.Type
+    | Selectedcontent.Type
+    | Slot.Type
+    | Small.Type
+    | Source.Type
+    | Spacer.Type
+    | Span.Type
+    | Strike.Type
+    | Strong.Type
+    | Style.Type
+    | Sub.Type
+    | Summary.Type
+    | Sup.Type
+    | Table.Type
+    | Tbody.Type
+    | Td.Type
+    | Template.Type
+    | Textarea.Type
+    | Tfoot.Type
+    | Th.Type
+    | Thead.Type
+    | Time.Type
+    | Title.Type
+    | Tr.Type
+    | Track.Type
+    | Tt.Type
+    | U.Type
+    | Ul.Type
+    | Var.Type
+    | Video.Type
+    | Wbr.Type
+    | Xmp.Type
+    | ForeignElement.Type
+    | Text.Type
+    | Comment.Type;
+  /** @since 0.0.0 */
+  export type Encoded =
+    | A.Encoded
+    | Abbr.Encoded
+    | Acronym.Encoded
+    | Address.Encoded
+    | Applet.Encoded
+    | Area.Encoded
+    | Article.Encoded
+    | Aside.Encoded
+    | Audio.Encoded
+    | B.Encoded
+    | Base.Encoded
+    | Basefont.Encoded
+    | Bdi.Encoded
+    | Bdo.Encoded
+    | Bgsound.Encoded
+    | Big.Encoded
+    | Blink.Encoded
+    | Blockquote.Encoded
+    | Body.Encoded
+    | Br.Encoded
+    | Button.Encoded
+    | Canvas.Encoded
+    | Caption.Encoded
+    | Center.Encoded
+    | Cite.Encoded
+    | Code.Encoded
+    | Col.Encoded
+    | Colgroup.Encoded
+    | Data.Encoded
+    | Datalist.Encoded
+    | Dd.Encoded
+    | Del.Encoded
+    | Details.Encoded
+    | Dfn.Encoded
+    | Dialog.Encoded
+    | DirElement.Encoded
+    | Div.Encoded
+    | Dl.Encoded
+    | Dt.Encoded
+    | Em.Encoded
+    | Embed.Encoded
+    | Fieldset.Encoded
+    | Figcaption.Encoded
+    | Figure.Encoded
+    | Font.Encoded
+    | Footer.Encoded
+    | Form.Encoded
+    | Frame.Encoded
+    | Frameset.Encoded
+    | H1.Encoded
+    | H2.Encoded
+    | H3.Encoded
+    | H4.Encoded
+    | H5.Encoded
+    | H6.Encoded
+    | Head.Encoded
+    | Header.Encoded
+    | Hgroup.Encoded
+    | Hr.Encoded
+    | Html.Encoded
+    | I.Encoded
+    | Iframe.Encoded
+    | Img.Encoded
+    | Input.Encoded
+    | Ins.Encoded
+    | Isindex.Encoded
+    | Kbd.Encoded
+    | Keygen.Encoded
+    | Label.Encoded
+    | Legend.Encoded
+    | Li.Encoded
+    | Link.Encoded
+    | Listing.Encoded
+    | Main.Encoded
+    | MapElement.Encoded
+    | Mark.Encoded
+    | Marquee.Encoded
+    | Menu.Encoded
+    | Menuitem.Encoded
+    | Meta.Encoded
+    | Meter.Encoded
+    | Multicol.Encoded
+    | Nav.Encoded
+    | Nextid.Encoded
+    | Nobr.Encoded
+    | Noembed.Encoded
+    | Noframes.Encoded
+    | Noscript.Encoded
+    | ObjectElement.Encoded
+    | Ol.Encoded
+    | Optgroup.Encoded
+    | Option.Encoded
+    | Output.Encoded
+    | P.Encoded
+    | Param.Encoded
+    | Picture.Encoded
+    | Plaintext.Encoded
+    | Pre.Encoded
+    | Progress.Encoded
+    | Q.Encoded
+    | Rb.Encoded
+    | Rp.Encoded
+    | Rt.Encoded
+    | Rtc.Encoded
+    | Ruby.Encoded
+    | SElement.Encoded
+    | Samp.Encoded
+    | Script.Encoded
+    | Search.Encoded
+    | Section.Encoded
+    | Select.Encoded
+    | Selectedcontent.Encoded
+    | Slot.Encoded
+    | Small.Encoded
+    | Source.Encoded
+    | Spacer.Encoded
+    | Span.Encoded
+    | Strike.Encoded
+    | Strong.Encoded
+    | Style.Encoded
+    | Sub.Encoded
+    | Summary.Encoded
+    | Sup.Encoded
+    | Table.Encoded
+    | Tbody.Encoded
+    | Td.Encoded
+    | Template.Encoded
+    | Textarea.Encoded
+    | Tfoot.Encoded
+    | Th.Encoded
+    | Thead.Encoded
+    | Time.Encoded
+    | Title.Encoded
+    | Tr.Encoded
+    | Track.Encoded
+    | Tt.Encoded
+    | U.Encoded
+    | Ul.Encoded
+    | Var.Encoded
+    | Video.Encoded
+    | Wbr.Encoded
+    | Xmp.Encoded
+    | ForeignElement.Encoded
+    | Text.Encoded
+    | Comment.Encoded;
+}
+
+/**
+ * Discriminated union of serializable HTML roots.
+ *
+ * @example
+ * ```ts
+ * import { Fragment, HtmlRoot } from "@beep/html/Html.model"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HtmlRoot)(Fragment.make({ children: [] }))) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlRoot = taggedUnion<HtmlRoot.Type, HtmlRoot.Encoded>(
+  "HtmlRoot",
+  "HTML document, fragment, element, or child-node root.",
+  [
+    A,
+    Abbr,
+    Acronym,
+    Address,
+    Applet,
+    Area,
+    Article,
+    Aside,
+    Audio,
+    B,
+    Base,
+    Basefont,
+    Bdi,
+    Bdo,
+    Bgsound,
+    Big,
+    Blink,
+    Blockquote,
+    Body,
+    Br,
+    Button,
+    Canvas,
+    Caption,
+    Center,
+    Cite,
+    Code,
+    Col,
+    Colgroup,
+    Data,
+    Datalist,
+    Dd,
+    Del,
+    Details,
+    Dfn,
+    Dialog,
+    DirElement,
+    Div,
+    Dl,
+    Dt,
+    Em,
+    Embed,
+    Fieldset,
+    Figcaption,
+    Figure,
+    Font,
+    Footer,
+    Form,
+    Frame,
+    Frameset,
+    H1,
+    H2,
+    H3,
+    H4,
+    H5,
+    H6,
+    Head,
+    Header,
+    Hgroup,
+    Hr,
+    Html,
+    I,
+    Iframe,
+    Img,
+    Input,
+    Ins,
+    Isindex,
+    Kbd,
+    Keygen,
+    Label,
+    Legend,
+    Li,
+    Link,
+    Listing,
+    Main,
+    MapElement,
+    Mark,
+    Marquee,
+    Menu,
+    Menuitem,
+    Meta,
+    Meter,
+    Multicol,
+    Nav,
+    Nextid,
+    Nobr,
+    Noembed,
+    Noframes,
+    Noscript,
+    ObjectElement,
+    Ol,
+    Optgroup,
+    Option,
+    Output,
+    P,
+    Param,
+    Picture,
+    Plaintext,
+    Pre,
+    Progress,
+    Q,
+    Rb,
+    Rp,
+    Rt,
+    Rtc,
+    Ruby,
+    SElement,
+    Samp,
+    Script,
+    Search,
+    Section,
+    Select,
+    Selectedcontent,
+    Slot,
+    Small,
+    Source,
+    Spacer,
+    Span,
+    Strike,
+    Strong,
+    Style,
+    Sub,
+    Summary,
+    Sup,
+    Table,
+    Tbody,
+    Td,
+    Template,
+    Textarea,
+    Tfoot,
+    Th,
+    Thead,
+    Time,
+    Title,
+    Tr,
+    Track,
+    Tt,
+    U,
+    Ul,
+    Var,
+    Video,
+    Wbr,
+    Xmp,
+    ForeignElement,
+    Text,
+    Comment,
+    Document,
+    Fragment,
+  ]
+);
+
+/**
+ * Companion namespace for {@link HtmlRoot}.
+ *
+ * @example
+ * ```ts
+ * import type { HtmlRoot } from "@beep/html/Html.model"
+ *
+ * const root: HtmlRoot.Encoded = { _tag: "#fragment", children: [] }
+ * console.log(root._tag) // "#fragment"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace HtmlRoot {
+  /** @since 0.0.0 */
+  export type Type =
+    | A.Type
+    | Abbr.Type
+    | Acronym.Type
+    | Address.Type
+    | Applet.Type
+    | Area.Type
+    | Article.Type
+    | Aside.Type
+    | Audio.Type
+    | B.Type
+    | Base.Type
+    | Basefont.Type
+    | Bdi.Type
+    | Bdo.Type
+    | Bgsound.Type
+    | Big.Type
+    | Blink.Type
+    | Blockquote.Type
+    | Body.Type
+    | Br.Type
+    | Button.Type
+    | Canvas.Type
+    | Caption.Type
+    | Center.Type
+    | Cite.Type
+    | Code.Type
+    | Col.Type
+    | Colgroup.Type
+    | Data.Type
+    | Datalist.Type
+    | Dd.Type
+    | Del.Type
+    | Details.Type
+    | Dfn.Type
+    | Dialog.Type
+    | DirElement.Type
+    | Div.Type
+    | Dl.Type
+    | Dt.Type
+    | Em.Type
+    | Embed.Type
+    | Fieldset.Type
+    | Figcaption.Type
+    | Figure.Type
+    | Font.Type
+    | Footer.Type
+    | Form.Type
+    | Frame.Type
+    | Frameset.Type
+    | H1.Type
+    | H2.Type
+    | H3.Type
+    | H4.Type
+    | H5.Type
+    | H6.Type
+    | Head.Type
+    | Header.Type
+    | Hgroup.Type
+    | Hr.Type
+    | Html.Type
+    | I.Type
+    | Iframe.Type
+    | Img.Type
+    | Input.Type
+    | Ins.Type
+    | Isindex.Type
+    | Kbd.Type
+    | Keygen.Type
+    | Label.Type
+    | Legend.Type
+    | Li.Type
+    | Link.Type
+    | Listing.Type
+    | Main.Type
+    | MapElement.Type
+    | Mark.Type
+    | Marquee.Type
+    | Menu.Type
+    | Menuitem.Type
+    | Meta.Type
+    | Meter.Type
+    | Multicol.Type
+    | Nav.Type
+    | Nextid.Type
+    | Nobr.Type
+    | Noembed.Type
+    | Noframes.Type
+    | Noscript.Type
+    | ObjectElement.Type
+    | Ol.Type
+    | Optgroup.Type
+    | Option.Type
+    | Output.Type
+    | P.Type
+    | Param.Type
+    | Picture.Type
+    | Plaintext.Type
+    | Pre.Type
+    | Progress.Type
+    | Q.Type
+    | Rb.Type
+    | Rp.Type
+    | Rt.Type
+    | Rtc.Type
+    | Ruby.Type
+    | SElement.Type
+    | Samp.Type
+    | Script.Type
+    | Search.Type
+    | Section.Type
+    | Select.Type
+    | Selectedcontent.Type
+    | Slot.Type
+    | Small.Type
+    | Source.Type
+    | Spacer.Type
+    | Span.Type
+    | Strike.Type
+    | Strong.Type
+    | Style.Type
+    | Sub.Type
+    | Summary.Type
+    | Sup.Type
+    | Table.Type
+    | Tbody.Type
+    | Td.Type
+    | Template.Type
+    | Textarea.Type
+    | Tfoot.Type
+    | Th.Type
+    | Thead.Type
+    | Time.Type
+    | Title.Type
+    | Tr.Type
+    | Track.Type
+    | Tt.Type
+    | U.Type
+    | Ul.Type
+    | Var.Type
+    | Video.Type
+    | Wbr.Type
+    | Xmp.Type
+    | ForeignElement.Type
+    | Text.Type
+    | Comment.Type
+    | Document.Type
+    | Fragment.Type;
+  /** @since 0.0.0 */
+  export type Encoded =
+    | A.Encoded
+    | Abbr.Encoded
+    | Acronym.Encoded
+    | Address.Encoded
+    | Applet.Encoded
+    | Area.Encoded
+    | Article.Encoded
+    | Aside.Encoded
+    | Audio.Encoded
+    | B.Encoded
+    | Base.Encoded
+    | Basefont.Encoded
+    | Bdi.Encoded
+    | Bdo.Encoded
+    | Bgsound.Encoded
+    | Big.Encoded
+    | Blink.Encoded
+    | Blockquote.Encoded
+    | Body.Encoded
+    | Br.Encoded
+    | Button.Encoded
+    | Canvas.Encoded
+    | Caption.Encoded
+    | Center.Encoded
+    | Cite.Encoded
+    | Code.Encoded
+    | Col.Encoded
+    | Colgroup.Encoded
+    | Data.Encoded
+    | Datalist.Encoded
+    | Dd.Encoded
+    | Del.Encoded
+    | Details.Encoded
+    | Dfn.Encoded
+    | Dialog.Encoded
+    | DirElement.Encoded
+    | Div.Encoded
+    | Dl.Encoded
+    | Dt.Encoded
+    | Em.Encoded
+    | Embed.Encoded
+    | Fieldset.Encoded
+    | Figcaption.Encoded
+    | Figure.Encoded
+    | Font.Encoded
+    | Footer.Encoded
+    | Form.Encoded
+    | Frame.Encoded
+    | Frameset.Encoded
+    | H1.Encoded
+    | H2.Encoded
+    | H3.Encoded
+    | H4.Encoded
+    | H5.Encoded
+    | H6.Encoded
+    | Head.Encoded
+    | Header.Encoded
+    | Hgroup.Encoded
+    | Hr.Encoded
+    | Html.Encoded
+    | I.Encoded
+    | Iframe.Encoded
+    | Img.Encoded
+    | Input.Encoded
+    | Ins.Encoded
+    | Isindex.Encoded
+    | Kbd.Encoded
+    | Keygen.Encoded
+    | Label.Encoded
+    | Legend.Encoded
+    | Li.Encoded
+    | Link.Encoded
+    | Listing.Encoded
+    | Main.Encoded
+    | MapElement.Encoded
+    | Mark.Encoded
+    | Marquee.Encoded
+    | Menu.Encoded
+    | Menuitem.Encoded
+    | Meta.Encoded
+    | Meter.Encoded
+    | Multicol.Encoded
+    | Nav.Encoded
+    | Nextid.Encoded
+    | Nobr.Encoded
+    | Noembed.Encoded
+    | Noframes.Encoded
+    | Noscript.Encoded
+    | ObjectElement.Encoded
+    | Ol.Encoded
+    | Optgroup.Encoded
+    | Option.Encoded
+    | Output.Encoded
+    | P.Encoded
+    | Param.Encoded
+    | Picture.Encoded
+    | Plaintext.Encoded
+    | Pre.Encoded
+    | Progress.Encoded
+    | Q.Encoded
+    | Rb.Encoded
+    | Rp.Encoded
+    | Rt.Encoded
+    | Rtc.Encoded
+    | Ruby.Encoded
+    | SElement.Encoded
+    | Samp.Encoded
+    | Script.Encoded
+    | Search.Encoded
+    | Section.Encoded
+    | Select.Encoded
+    | Selectedcontent.Encoded
+    | Slot.Encoded
+    | Small.Encoded
+    | Source.Encoded
+    | Spacer.Encoded
+    | Span.Encoded
+    | Strike.Encoded
+    | Strong.Encoded
+    | Style.Encoded
+    | Sub.Encoded
+    | Summary.Encoded
+    | Sup.Encoded
+    | Table.Encoded
+    | Tbody.Encoded
+    | Td.Encoded
+    | Template.Encoded
+    | Textarea.Encoded
+    | Tfoot.Encoded
+    | Th.Encoded
+    | Thead.Encoded
+    | Time.Encoded
+    | Title.Encoded
+    | Tr.Encoded
+    | Track.Encoded
+    | Tt.Encoded
+    | U.Encoded
+    | Ul.Encoded
+    | Var.Encoded
+    | Video.Encoded
+    | Wbr.Encoded
+    | Xmp.Encoded
+    | ForeignElement.Encoded
+    | Text.Encoded
+    | Comment.Encoded
+    | Document.Encoded
+    | Fragment.Encoded;
+}
+
+/**
  * Discriminated union of every HTML AST node — all 142 elements plus the
- * text, comment, doctype, document, and fragment node kinds — keyed on `_tag`.
+ * text, comment, foreign, doctype, document, and fragment node kinds.
  *
  * @example
  * ```ts
@@ -10219,11 +9791,12 @@ export const HtmlNode = taggedUnion<HtmlNode.Type, HtmlNode.Encoded>(
     Video,
     Wbr,
     Xmp,
+    ForeignElement,
     Text,
     Comment,
-    Doctype,
     Document,
     Fragment,
+    Doctype,
   ]
 );
 /**
@@ -10386,11 +9959,12 @@ export declare namespace HtmlNode {
     | Video.Type
     | Wbr.Type
     | Xmp.Type
+    | ForeignElement.Type
     | Text.Type
     | Comment.Type
-    | Doctype.Type
     | Document.Type
-    | Fragment.Type;
+    | Fragment.Type
+    | Doctype.Type;
   /** @since 0.0.0 */
   export type Encoded =
     | A.Encoded
@@ -10535,11 +10109,12 @@ export declare namespace HtmlNode {
     | Video.Encoded
     | Wbr.Encoded
     | Xmp.Encoded
+    | ForeignElement.Encoded
     | Text.Encoded
     | Comment.Encoded
-    | Doctype.Encoded
     | Document.Encoded
-    | Fragment.Encoded;
+    | Fragment.Encoded
+    | Doctype.Encoded;
 }
 
 /**
