@@ -26,7 +26,7 @@ Now look outside software. An IP attorney runs a practice across Word, Excel, Au
 
 Two substrates make up a workspace, and in this codebase both are already, or are becoming, schema:
 
-- **Content: blocks.** [`@beep/md`](../../packages/foundation/modeling/md) and [`@beep/lexical-schema`](../../packages/foundation/modeling/lexical) model rich documents as typed, serializable trees — Notion-like blocks where the file is canonical and the editor is a projection.
+- **Content: blocks.** [`@beep/md`](../../packages/foundation/modeling/md) is the canonical typed document tree. [`@beep/lexical-schema`](../../packages/foundation/modeling/lexical) separates a lossless compatibility wire from the strict grammar the editor may execute, so the file stays canonical and the editor stays a projection.
 - **Space: docks.** The dock kernel models the spatial arrangement — tab groups, splits, floating panes, maximize — as a schema-decoded tree with invalid states removed by construction: a split always has exactly two children, a group is a non-empty zipper, ratios are exact basis points that cannot drift.
 
 The consequence is the thesis. When both substrates are schema, a workspace stops being an accident of what happens to be mounted in the DOM and becomes a **value**: persistable (a versioned `DockSnapshot` envelope), restorable (decode, validate, install), diffable and versionable (it is just data), and composable (a working set is a value you can name, save, and hand to someone — or something — else).

@@ -50,12 +50,11 @@ Source: <https://pandoc.org/releases.html>
 Repo graph note, 2026-06-15: graph-based repo search was attempted for this
 packet but was low-signal. It surfaced existing Lexical round-trip tests and
 exploration manifest structure rather than a useful DOCX capability graph. The
-inventory below is therefore grounded in package READMEs/specs plus the repo
-export catalog: `goals/rich-text-foundation/SPEC.md`,
+inventory below is therefore grounded in live source/barrel searches plus
+package READMEs and specs: `goals/rich-text-foundation/SPEC.md`,
 `packages/foundation/modeling/lexical/README.md`,
 `packages/foundation/modeling/md/README.md`,
-`goals/file-processing-capability/SPEC.md`, and
-`standards/repo-exports.catalog.md`.
+and `goals/file-processing-capability/SPEC.md`.
 
 ### `@beep/md`
 
@@ -65,15 +64,14 @@ Existing role: Effect-native portable document AST and renderer. The rich-text
 foundation packet established it as the canonical portable document model for
 the current chat/editor spine.
 
-Relevant nodes already in the export catalog/source include paragraph,
+Relevant nodes in the live source and public barrels include paragraph,
 headings, inline text, emphasis, strong, delete, code, links, images, lists,
-block quotes, preformatted code, horizontal rule, raw markdown/html, and the
-document envelope.
+block quotes, preformatted code, horizontal rule, tables, raw markdown/html,
+and the document envelope.
 
-Catalog evidence: `standards/repo-exports.catalog.md` lists the
-`@beep/md/Md.model` document, block, inline, paragraph, heading, list, link,
-image, and text models, plus `@beep/md/Md.render` Markdown/HTML render
-adapters.
+Live evidence: `@beep/md/Md.model` exports document, block, inline, paragraph,
+heading, list, link, image, table, and text models; `@beep/md/Md.render`
+exports the Markdown, HTML, and plain-text render adapters.
 
 Gap for this exploration: current `@beep/md` is markdown-shaped, not a full
 DOCX/Pandoc mirror. The compatibility matrix must decide which Pandoc nodes map
@@ -84,10 +82,11 @@ losslessly, which degrade, and which force a future AST decision.
 Path: `packages/foundation/modeling/lexical`
 
 Existing role: schema-first models of Lexical serialized editor state with
-Md/Lexical codecs. Its README locks the current v1 scope to md-core nodes plus
-`artifact-ref`, with tables, attachments, and proposal blocks named follow-ons.
+Md/Lexical codecs. Its README locks the current v1 scope to md-core nodes,
+tables, `youtube`, and `artifact-ref`; attachments and proposal blocks remain
+named follow-ons.
 
-Catalog/README evidence: `@beep/lexical-schema` exports
+Live-source/README evidence: `@beep/lexical-schema` exports
 `SerializedEditorState`, `EditorStateFromJson`, `documentToEditorState`,
 `editorStateToDocument`, and plain-text projection helpers; the README locks
 the current md-core scope and lossiness profile.
@@ -100,7 +99,7 @@ adequate before involving editor state.
 
 Path: `packages/foundation/ui-system/editor`
 
-Existing role: React editor/viewer kit over Lexical 0.45 and the schema-first
+Existing role: React editor/viewer kit over Lexical 0.48 and the schema-first
 rich-text pipeline.
 
 Gap for this exploration: UI is deliberately out of scope. The editor becomes
