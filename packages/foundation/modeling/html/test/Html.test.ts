@@ -1,21 +1,19 @@
 import {
   BooleanAttribute,
   Comment,
-  Div,
   Doctype,
   ELEMENT_META,
   GlobalAttributesStruct,
+  Html,
   HtmlElementMeta,
+  HtmlFragment,
   HtmlNode,
-  Input,
-  Marquee,
-  Script,
-  Span,
   Text,
 } from "@beep/html";
+import { Div, Input, Marquee, Script, Span } from "@beep/html/Html.model";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Result } from "effect";
+import { Effect, Result } from "effect";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -42,6 +40,15 @@ const expectRoundTrip = <C extends S.Codec<unknown, unknown>>(schema: C, value: 
 };
 
 describe("HtmlNode AST — structure & nodes", () => {
+  it("exposes staged conformance and safe-policy facades", () => {
+    const root = HtmlFragment.make({ children: [] });
+    expect(Html.Conformant.issues(root)).toStrictEqual([]);
+
+    const conformant = Effect.runSync(Html.Conformant.decode(root));
+    expect(Html.Safe.issues(conformant)).toStrictEqual([]);
+    expect(() => Effect.runSync(Html.Safe.decode(conformant))).not.toThrow();
+  });
+
   it("decodes and re-encodes a nested tree (JSON identity)", () => {
     const json = {
       _tag: "div",
@@ -157,21 +164,27 @@ describe("HtmlNode AST — schema laws", () => {
       )
     ).toStrictEqual({ _tag: "input", alt: "Search", src: "x.png", type: "text" });
     expect(
-      S.encodeSync(HtmlElementMeta)({
-        tag: "a",
-        interface: "HTMLAnchorElement",
-        conformance: "conforming",
-        void: false,
-        rawText: false,
-        categories: ["flow", "phrasing"],
-      })
+      S.encodeSync(HtmlElementMeta)(
+        HtmlElementMeta.make({
+          tag: "a",
+          interface: "HTMLAnchorElement",
+          conformance: "conforming",
+          void: false,
+          rawText: false,
+          textMode: "normal",
+          categories: ["flow", "phrasing"],
+          children: ["transparent"],
+        })
+      )
     ).toStrictEqual({
       tag: "a",
       interface: "HTMLAnchorElement",
       conformance: "conforming",
       void: false,
       rawText: false,
+      textMode: "normal",
       categories: ["flow", "phrasing"],
+      children: ["transparent"],
     });
   });
 
@@ -214,8 +227,8 @@ describe("ELEMENT_META", () => {
   });
 
   it("includes obsolete elements as non-conforming", () => {
-    for (const tag of ["marquee", "font", "frame", "frameset", "center", "big", "blink", "applet"]) {
-      expect(ELEMENT_META[tag]?.conformance).toBe("non-conforming");
+    for (const tag of ["marquee", "font", "frame", "frameset", "center", "big", "blink", "applet"] as const) {
+      expect(ELEMENT_META[tag].conformance).toBe("non-conforming");
     }
   });
 });

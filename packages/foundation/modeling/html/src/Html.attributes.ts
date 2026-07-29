@@ -20,7 +20,10 @@
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
+import { pipe, SchemaTransformation } from "effect";
+import { identity } from "effect/Function";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $HtmlId.create("Html.attributes");
 
@@ -432,9 +435,11 @@ export const PopoverTargetAction = LiteralKit(["toggle", "show", "hide"]).pipe(
  */
 export type PopoverTargetAction = typeof PopoverTargetAction.Type;
 /**
- * An HTML boolean attribute value. The attribute's presence means `true`; the
- * spec permits both `true`/`false` and the empty-string presence form (`""`,
- * e.g. `disabled=""`) on the wire, so both are accepted.
+ * An HTML boolean attribute presence value.
+ *
+ * HTML boolean attributes are true by presence. The literal `false` is not a
+ * false value in HTML source (`disabled="false"` still disables), so this
+ * schema deliberately accepts only `true` and the empty presence form.
  *
  * @example
  * ```ts
@@ -447,8 +452,8 @@ export type PopoverTargetAction = typeof PopoverTargetAction.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const BooleanAttribute = S.Union([S.Boolean, S.Literal("")]).pipe(
-  $I.annoteSchema("BooleanAttribute", { description: "HTML boolean attribute (true/false or empty-string presence)." }),
+export const BooleanAttribute = S.Literals([true, ""]).pipe(
+  $I.annoteSchema("BooleanAttribute", { description: "HTML boolean attribute presence (`true` or empty string)." }),
   SchemaUtils.withCodecStatics
 );
 /**
@@ -467,12 +472,323 @@ export const BooleanAttribute = S.Union([S.Boolean, S.Literal("")]).pipe(
  */
 export type BooleanAttribute = typeof BooleanAttribute.Type;
 
+/**
+ * An HTML non-negative integer microsyntax.
+ *
+ * @example
+ * ```ts
+ * import { HtmlNonNegativeInteger } from "@beep/html/Html.attributes"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HtmlNonNegativeInteger)(0)) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HtmlNonNegativeInteger = S.Int.check(
+  S.isGreaterThanOrEqualTo(0, {
+    identifier: $I`HtmlNonNegativeIntegerCheck`,
+    title: "HTML Non-Negative Integer",
+    description: "Checks the HTML non-negative integer microsyntax.",
+    message: "Expected a non-negative integer",
+  })
+).pipe(
+  $I.annoteSchema("HtmlNonNegativeInteger", {
+    description: "Integer accepted by the HTML non-negative integer microsyntax.",
+  })
+);
+
+/**
+ * Decoded type of {@link HtmlNonNegativeInteger}.
+ *
+ * @example
+ * ```ts
+ * import type { HtmlNonNegativeInteger } from "@beep/html/Html.attributes"
+ *
+ * const value: HtmlNonNegativeInteger = 0
+ * console.log(value)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type HtmlNonNegativeInteger = typeof HtmlNonNegativeInteger.Type;
+
+/**
+ * An HTML positive integer microsyntax.
+ *
+ * @example
+ * ```ts
+ * import { HtmlPositiveInteger } from "@beep/html/Html.attributes"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HtmlPositiveInteger)(1)) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HtmlPositiveInteger = S.Int.check(
+  S.isGreaterThan(0, {
+    identifier: $I`HtmlPositiveIntegerCheck`,
+    title: "HTML Positive Integer",
+    description: "Checks the HTML positive integer microsyntax.",
+    message: "Expected a positive integer",
+  })
+).pipe(
+  $I.annoteSchema("HtmlPositiveInteger", {
+    description: "Integer accepted by the HTML positive integer microsyntax.",
+  })
+);
+
+/**
+ * Decoded type of {@link HtmlPositiveInteger}.
+ *
+ * @example
+ * ```ts
+ * import type { HtmlPositiveInteger } from "@beep/html/Html.attributes"
+ *
+ * const value: HtmlPositiveInteger = 1
+ * console.log(value)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type HtmlPositiveInteger = typeof HtmlPositiveInteger.Type;
+
+/**
+ * Builds a schema for a space-separated list of known HTML tokens.
+ *
+ * Empty text is accepted because attributes such as `sandbox=""` have
+ * meaningful presence semantics. Unknown and duplicate tokens are rejected.
+ *
+ * @example
+ * ```ts
+ * import { makeSpaceSeparatedTokenList } from "@beep/html/Html.attributes"
+ * import * as S from "effect/Schema"
+ *
+ * const Rel = makeSpaceSeparatedTokenList(["noopener", "noreferrer"])
+ * console.log(S.is(Rel)("noopener noreferrer")) // true
+ * ```
+ *
+ * @category factories
+ * @since 0.0.0
+ */
+export const makeSpaceSeparatedTokenList = <const Tokens extends readonly [string, ...ReadonlyArray<string>]>(
+  allowed: Tokens
+) => {
+  const allowedTokens = A.map(allowed, Str.toLowerCase);
+  const tokenize = (value: string): ReadonlyArray<string> =>
+    pipe(value, Str.trim, Str.split(/\s+/u), A.filter(Str.isNonEmpty), A.map(Str.toLowerCase));
+  const normalize = (value: string): string => {
+    const inputTokens = tokenize(value);
+    return pipe(
+      allowedTokens,
+      A.filter((token) => A.contains(inputTokens, token)),
+      A.join(" ")
+    );
+  };
+  const isAllowed = (value: string): boolean =>
+    pipe(
+      value,
+      tokenize,
+      (tokens) =>
+        A.every(tokens, (token) => A.contains(allowedTokens, token)) && A.dedupe(tokens).length === tokens.length
+    );
+
+  const Input = S.String.check(
+    S.makeFilter(isAllowed, {
+      identifier: $I`SpaceSeparatedTokenListCheck`,
+      title: "Space-Separated HTML Token List",
+      description: "Checks a whitespace-separated list against an explicit token domain.",
+      message: "Expected a space-separated list of unique permitted tokens",
+    })
+  );
+  const Canonical = S.String.check(
+    S.makeFilter((value) => value === normalize(value), {
+      identifier: $I`CanonicalSpaceSeparatedTokenListCheck`,
+      title: "Canonical Space-Separated HTML Token List",
+      description: "Checks lowercase tokens in registry order with one separating space.",
+      message: "Expected canonical token order and spacing",
+    })
+  );
+
+  return Input.pipe(
+    S.decodeTo(
+      Canonical,
+      SchemaTransformation.transform({
+        decode: normalize,
+        encode: identity,
+      })
+    )
+  );
+};
+
+const autocompleteAttributePattern =
+  /^(?:on|off|(?:(?:section-[^\s]+)\s+)?(?:(?:shipping|billing)\s+)?(?:(?:home|work|mobile|fax|pager)\s+)?(?:name|honorific-prefix|given-name|additional-name|family-name|honorific-suffix|nickname|username|new-password|current-password|one-time-code|organization-title|organization|street-address|address-line1|address-line2|address-line3|address-level4|address-level3|address-level2|address-level1|country|country-name|postal-code|cc-name|cc-given-name|cc-additional-name|cc-family-name|cc-number|cc-exp|cc-exp-month|cc-exp-year|cc-csc|cc-type|transaction-currency|transaction-amount|language|bday|bday-day|bday-month|bday-year|sex|url|photo|tel|tel-country-code|tel-national|tel-area-code|tel-local|tel-local-prefix|tel-local-suffix|tel-extension|email|impp)(?:\s+webauthn)?)$/u;
+
+const normalizeAutocompleteAttribute = (value: string): string =>
+  pipe(value, Str.trim, Str.split(/\s+/u), A.map(Str.toLowerCase), A.join(" "));
+
+const AutocompleteAttributeInput = S.String.check(
+  S.makeFilter((value) => autocompleteAttributePattern.test(normalizeAutocompleteAttribute(value)), {
+    identifier: $I`AutocompleteAttributeInputCheck`,
+    title: "HTML Autocomplete Attribute Input",
+    description: "Checks the ordered token-list grammar of the HTML autocomplete attribute.",
+    message: "Expected a valid autocomplete token sequence",
+  })
+);
+
+const CanonicalAutocompleteAttribute = S.String.check(
+  S.makeFilter((value) => value === normalizeAutocompleteAttribute(value) && autocompleteAttributePattern.test(value), {
+    identifier: $I`CanonicalAutocompleteAttributeCheck`,
+    title: "Canonical HTML Autocomplete Attribute",
+    description: "Checks lowercase autocomplete tokens separated by one space.",
+    message: "Expected a canonical autocomplete token sequence",
+  })
+);
+
+/**
+ * Ordered token-list microsyntax used by the HTML `autocomplete` attribute.
+ *
+ * Decoding canonicalizes ASCII case and whitespace. Direct construction
+ * accepts only the lowercase, single-space fixed point.
+ *
+ * @example
+ * ```ts
+ * import { AutocompleteAttribute } from "@beep/html/Html.attributes"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownSync(AutocompleteAttribute)("SHIPPING  Email")) // "shipping email"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AutocompleteAttribute = AutocompleteAttributeInput.pipe(
+  S.decodeTo(
+    CanonicalAutocompleteAttribute,
+    SchemaTransformation.transform({
+      decode: normalizeAutocompleteAttribute,
+      encode: identity,
+    })
+  ),
+  $I.annoteSchema("AutocompleteAttribute", {
+    description: "Canonical ordered token-list value accepted by the HTML autocomplete attribute.",
+  })
+);
+
+/**
+ * Decoded type of {@link AutocompleteAttribute}.
+ *
+ * @example
+ * ```ts
+ * import type { AutocompleteAttribute } from "@beep/html/Html.attributes"
+ *
+ * const value: AutocompleteAttribute = "email"
+ * console.log(value)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type AutocompleteAttribute = typeof AutocompleteAttribute.Type;
+
+/**
+ * Name of an SVG or MathML foreign element represented inside the HTML AST.
+ *
+ * @example
+ * ```ts
+ * import { ForeignElementName } from "@beep/html/Html.attributes"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ForeignElementName)("svg:path")) // true
+ * console.log(S.is(ForeignElementName)('path onload="x"')) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ForeignElementName = S.String.check(
+  S.isPattern(/^(?:(?:svg|mathml):)?[_\p{L}][\p{L}\p{N}_.-]*$/u, {
+    identifier: $I`ForeignElementNameCheck`,
+    title: "Foreign Element Name",
+    description: "Checks a serializable SVG or MathML element name.",
+    message: "Expected a valid foreign element name",
+  })
+).pipe(
+  $I.annoteSchema("ForeignElementName", {
+    description: "Serializable SVG or MathML element name.",
+  })
+);
+
+/**
+ * Decoded type of {@link ForeignElementName}.
+ *
+ * @example
+ * ```ts
+ * import type { ForeignElementName } from "@beep/html/Html.attributes"
+ *
+ * const name: ForeignElementName = "path"
+ * console.log(name)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type ForeignElementName = typeof ForeignElementName.Type;
+
+/**
+ * Name of an attribute on an SVG or MathML foreign element.
+ *
+ * @example
+ * ```ts
+ * import { ForeignAttributeName } from "@beep/html/Html.attributes"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ForeignAttributeName)("viewBox")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ForeignAttributeName = S.String.check(
+  S.isPattern(/^(?:xmlns|(?:(?:xlink|xml|xmlns):)?[_\p{L}][\p{L}\p{N}_.-]*)$/u, {
+    identifier: $I`ForeignAttributeNameCheck`,
+    title: "Foreign Attribute Name",
+    description: "Checks a serializable SVG or MathML attribute name.",
+    message: "Expected a valid foreign attribute name",
+  })
+).pipe(
+  $I.annoteSchema("ForeignAttributeName", {
+    description: "Serializable SVG or MathML attribute name.",
+  })
+);
+
+/**
+ * Decoded type of {@link ForeignAttributeName}.
+ *
+ * @example
+ * ```ts
+ * import type { ForeignAttributeName } from "@beep/html/Html.attributes"
+ *
+ * const name: ForeignAttributeName = "viewBox"
+ * console.log(name)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type ForeignAttributeName = typeof ForeignAttributeName.Type;
+
 // -----------------------------------------------------------------------------
 // field bundles
 // -----------------------------------------------------------------------------
 
-const Str = S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault);
-type Str = typeof Str;
+const OptionalString = S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault);
+type OptionalString = typeof OptionalString;
 
 /**
  * The WHATWG global attributes (`dom.html#global-attributes`), value-typed.
@@ -490,42 +806,81 @@ type Str = typeof Str;
  * @since 0.0.0
  */
 export const StandardGlobalAttributes = {
-  accesskey: Str,
+  accesskey: OptionalString,
   autocapitalize: S.OptionFromOptionalKey(AutoCapitalize).pipe(SchemaUtils.withNoneDefault),
   autocorrect: S.OptionFromOptionalKey(AutoCorrect).pipe(SchemaUtils.withNoneDefault),
   autofocus: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-  class: Str,
+  class: OptionalString,
   contenteditable: S.OptionFromOptionalKey(ContentEditable).pipe(SchemaUtils.withNoneDefault),
   dir: S.OptionFromOptionalKey(Dir).pipe(SchemaUtils.withNoneDefault),
   draggable: S.OptionFromOptionalKey(Draggable).pipe(SchemaUtils.withNoneDefault),
   enterkeyhint: S.OptionFromOptionalKey(EnterKeyHint).pipe(SchemaUtils.withNoneDefault),
-  exportparts: Str,
+  exportparts: OptionalString,
   headingoffset: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-  headingreset: Str,
+  headingreset: OptionalString,
   hidden: S.OptionFromOptionalKey(Hidden).pipe(SchemaUtils.withNoneDefault),
-  id: Str,
+  id: OptionalString,
   inert: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
   inputmode: S.OptionFromOptionalKey(InputMode).pipe(SchemaUtils.withNoneDefault),
-  is: Str,
-  itemid: Str,
-  itemprop: Str,
-  itemref: Str,
+  is: OptionalString,
+  itemid: OptionalString,
+  itemprop: OptionalString,
+  itemref: OptionalString,
   itemscope: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
-  itemtype: Str,
-  lang: Str,
-  nonce: Str,
-  part: Str,
+  itemtype: OptionalString,
+  lang: OptionalString,
+  nonce: OptionalString,
+  part: OptionalString,
   popover: S.OptionFromOptionalKey(Popover).pipe(SchemaUtils.withNoneDefault),
-  popovertarget: Str,
+  popovertarget: OptionalString,
   popovertargetaction: S.OptionFromOptionalKey(PopoverTargetAction).pipe(SchemaUtils.withNoneDefault),
-  slot: Str,
+  slot: OptionalString,
   spellcheck: S.OptionFromOptionalKey(SpellCheck).pipe(SchemaUtils.withNoneDefault),
-  style: Str,
+  style: OptionalString,
   tabindex: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
-  title: Str,
+  title: OptionalString,
   translate: S.OptionFromOptionalKey(Translate).pipe(SchemaUtils.withNoneDefault),
   writingsuggestions: S.OptionFromOptionalKey(WritingSuggestions).pipe(SchemaUtils.withNoneDefault),
 } as const;
+
+/**
+ * Key inside the AST's `dataset` attribute bag.
+ *
+ * The key is appended to `data-` by the serializer, so characters that could
+ * terminate or split an HTML attribute name are rejected at the schema edge.
+ *
+ * @example
+ * ```ts
+ * import { DatasetKey } from "@beep/html/Html.attributes"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(DatasetKey)("testid")) // true
+ * console.log(S.is(DatasetKey)('x" onclick')) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const DatasetKey = S.String.check(
+  S.isPattern(/^[A-Za-z_][A-Za-z0-9_.:-]*$/u, {
+    identifier: $I`DatasetKeyCheck`,
+    title: "HTML Dataset Key",
+    description: "Checks a key that can be safely serialized after the `data-` prefix.",
+    message: "Expected a serializable data-* attribute key",
+  })
+).pipe(
+  $I.annoteSchema("DatasetKey", {
+    description: "Serializable key in the AST dataset bag.",
+  })
+);
+
+/**
+ * Decoded type of {@link DatasetKey}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type DatasetKey = typeof DatasetKey.Type;
 
 /**
  * `data-*` custom data attributes, represented as the `dataset` record bag
@@ -544,7 +899,7 @@ export const StandardGlobalAttributes = {
  * @since 0.0.0
  */
 export const DatasetAttribute = {
-  dataset: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(SchemaUtils.withNoneDefault),
+  dataset: S.OptionFromOptionalKey(S.Record(DatasetKey, S.String)).pipe(SchemaUtils.withNoneDefault),
 } as const;
 
 const ariaAttributeNames = [
@@ -620,9 +975,9 @@ const ariaAttributeNames = [
  * @since 0.0.0
  */
 export const AriaAttributes = {
-  role: Str,
-  ...(Struct.fromEntries(A.map(ariaAttributeNames, (n) => [n, Str] as const)) as {
-    readonly [K in (typeof ariaAttributeNames)[number]]: Str;
+  role: OptionalString,
+  ...(Struct.fromEntries(A.map(ariaAttributeNames, (n) => [n, OptionalString] as const)) as {
+    readonly [K in (typeof ariaAttributeNames)[number]]: OptionalString;
   }),
 } as const;
 
@@ -717,8 +1072,10 @@ const eventHandlerNames = [
  * @category schemas
  * @since 0.0.0
  */
-export const EventHandlerAttributes = Struct.fromEntries(A.map(eventHandlerNames, (n) => [n, Str] as const)) as {
-  readonly [K in (typeof eventHandlerNames)[number]]: Str;
+export const EventHandlerAttributes = Struct.fromEntries(
+  A.map(eventHandlerNames, (n) => [n, OptionalString] as const)
+) as {
+  readonly [K in (typeof eventHandlerNames)[number]]: OptionalString;
 };
 
 /**
