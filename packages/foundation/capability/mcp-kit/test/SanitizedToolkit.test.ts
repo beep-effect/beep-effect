@@ -256,7 +256,7 @@ describe("sanitizedToolkit", () => {
         assert.isDefined(registered);
         const inputSchema = registered?.tool.inputSchema as { readonly $ref?: unknown; readonly type?: unknown };
         assert.strictEqual(inputSchema.type, "object");
-        assert.strictEqual(inputSchema.$ref, "#/$defs/RefParameters");
+        assert.strictEqual(inputSchema.$ref, "#/$defs/RefParametersJsonEncoding");
       })
     );
   });
