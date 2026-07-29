@@ -16,8 +16,10 @@ import { GovernedEgressOptions, makeGovernedEgressFetch } from "@beep/epistemic-
 import { ExecutionLedger, ExecutionLedgerUnavailable } from "@beep/epistemic-use-cases/ExecutionLedger";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Duration, Effect, Ref } from "effect";
+import { Deferred, Duration, Effect, Ref } from "effect";
+import { TestClock } from "effect/testing";
 import type { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
+import type { ExecutionLedgerShape } from "@beep/epistemic-use-cases/ExecutionLedger";
 
 const egressOptions = GovernedEgressOptions.make({
   grantTtl: Duration.hours(12),
@@ -34,6 +36,8 @@ interface Harness {
   readonly attempted: ReadonlyArray<string>;
   readonly decisions: Ref.Ref<ReadonlyArray<ExecutionDecisionRecord>>;
   readonly fetch: typeof globalThis.fetch;
+  readonly ledger: ExecutionLedgerShape;
+  readonly outcomeAppendStarted: Deferred.Deferred<void>;
   readonly outcomes: Ref.Ref<ReadonlyArray<ExecutionOutcomeRecord>>;
   readonly redirectModes: ReadonlyArray<string>;
 }
@@ -47,9 +51,13 @@ const makeHarness = Effect.fnUntraced(function* (options?: {
   readonly failDecisions?: boolean;
   readonly failFetch?: boolean;
   readonly failOutcomes?: boolean;
+  readonly stallFirstOutcome?: boolean;
+  readonly throwFetch?: boolean;
 }) {
   const decisions = yield* Ref.make<ReadonlyArray<ExecutionDecisionRecord>>([]);
   const outcomes = yield* Ref.make<ReadonlyArray<ExecutionOutcomeRecord>>([]);
+  const outcomeAppendCount = yield* Ref.make(0);
+  const outcomeAppendStarted = yield* Deferred.make<void>();
   const attempted: Array<string> = [];
   const stub = ExecutionLedger.of({
     appendDecision: Effect.fn("GovernedEgressTest.appendDecision")(function* (record) {
@@ -66,6 +74,11 @@ const makeHarness = Effect.fnUntraced(function* (options?: {
       yield* Ref.update(decisions, A.append(record));
     }),
     appendOutcome: Effect.fn("GovernedEgressTest.appendOutcome")(function* (record) {
+      const appendIndex = yield* Ref.getAndUpdate(outcomeAppendCount, (count) => count + 1);
+      if (options?.stallFirstOutcome === true && appendIndex === 0) {
+        yield* Deferred.succeed(outcomeAppendStarted, undefined);
+        return yield* Effect.never;
+      }
       if (options?.failOutcomes === true) {
         return yield* ExecutionLedgerUnavailable.during("appendOutcome", "injected outcome failure");
       }
@@ -78,7 +91,13 @@ const makeHarness = Effect.fnUntraced(function* (options?: {
       return A.filter(yield* Ref.get(outcomes), (record) => record.runKey === runKey);
     }),
     readUnsettledAllowed: Effect.fn("GovernedEgressTest.readUnsettledAllowed")(function* () {
-      return [] as ReadonlyArray<ExecutionDecisionRecord>;
+      const decisionRows = yield* Ref.get(decisions);
+      const outcomeRows = yield* Ref.get(outcomes);
+      return A.filter(
+        decisionRows,
+        (decision) =>
+          decision.verdict === "allowed" && !A.some(outcomeRows, (outcome) => outcome.decisionHash === decision.hash)
+      );
     }),
   });
   // The base fetch records what the boundary let through and never reaches the
@@ -88,6 +107,9 @@ const makeHarness = Effect.fnUntraced(function* (options?: {
   const baseFetch = ((input: RequestInfo | URL, requestInit?: RequestInit) => {
     attempted.push(String(input));
     redirectModes.push(String(requestInit?.redirect));
+    if (options?.throwFetch === true) {
+      throw { _tag: "InjectedSynchronousFetchFailure" };
+    }
     return options?.failFetch === true
       ? Promise.reject({ _tag: "InjectedFetchFailure" })
       : Promise.resolve(new Response("delivered", { status: 200 }));
@@ -96,7 +118,15 @@ const makeHarness = Effect.fnUntraced(function* (options?: {
     Effect.provideService(ExecutionLedger, stub),
     Effect.provideService(EpistemicConfig, options?.config ?? testEpistemicConfig)
   );
-  return { attempted, decisions, fetch, outcomes, redirectModes } satisfies Harness;
+  return {
+    attempted,
+    decisions,
+    fetch,
+    ledger: stub,
+    outcomeAppendStarted,
+    outcomes,
+    redirectModes,
+  } satisfies Harness;
 });
 
 const emptyAllowlistConfig = EpistemicServerConfig.make({
@@ -162,6 +192,22 @@ describe("GovernedEgress", () => {
     })
   );
 
+  it.effect("records a failed outcome when the base fetch throws synchronously", () =>
+    Effect.gen(function* () {
+      const harness = yield* makeHarness({ throwFetch: true });
+      const result = yield* attemptEgress(harness, allowedUrl);
+
+      expect(result.rejected).toBe(true);
+      const decisions = yield* Ref.get(harness.decisions);
+      const outcomes = yield* Ref.get(harness.outcomes);
+      expect(decisions).toHaveLength(1);
+      expect(outcomes).toHaveLength(1);
+      expect(outcomes[0]!.settlement).toBe("failed");
+      expect(verifyOutcomeBinding(outcomes[0]!, decisions[0]!)).toBe(true);
+      expect(yield* harness.ledger.readUnsettledAllowed(decisions[0]!.runKey)).toHaveLength(0);
+    })
+  );
+
   it.effect("does not fail a successful request when the outcome write fails", () =>
     Effect.gen(function* () {
       const harness = yield* makeHarness({ failOutcomes: true });
@@ -171,6 +217,21 @@ describe("GovernedEgress", () => {
       expect(harness.attempted).toEqual([allowedUrl]);
       expect(yield* Ref.get(harness.decisions)).toHaveLength(1);
       expect(yield* Ref.get(harness.outcomes)).toHaveLength(0);
+    })
+  );
+
+  it.effect("returns successful responses and keeps authorizing when an outcome write stalls", () =>
+    Effect.gen(function* () {
+      const harness = yield* makeHarness({ stallFirstOutcome: true });
+      const firstResponse = harness.fetch(allowedUrl, { method: "POST" });
+      yield* Deferred.await(harness.outcomeAppendStarted);
+
+      const secondResponse = yield* Effect.promise(() => harness.fetch(allowedUrl, { method: "POST" }));
+      expect(secondResponse.status).toBe(200);
+      expect(yield* Ref.get(harness.decisions)).toHaveLength(2);
+
+      yield* TestClock.adjust(Duration.seconds(1));
+      expect((yield* Effect.promise(() => firstResponse)).status).toBe(200);
     })
   );
 

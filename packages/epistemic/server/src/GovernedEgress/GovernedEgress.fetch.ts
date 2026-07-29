@@ -73,6 +73,19 @@ import * as Str from "effect/String";
 import type { DecisionRecordHash } from "@beep/epistemic-domain/values/ExecutionRecord";
 
 const $I = $EpistemicServerId.create("GovernedEgress/GovernedEgress.fetch");
+// The settlement write happens *after* the request has already gone out, so it
+// can never fail the fetch — but an unbounded one would hold the caller's
+// response hostage to a stalled ledger. This bound is what makes "best effort"
+// literally true. It is deliberately generous: a measured PGlite write-ahead
+// append is ~2ms, so a second is roughly 500x headroom and a timeout here means
+// the ledger is genuinely unwell rather than merely busy.
+//
+// The cost of exceeding it is real and is why it is not tighter: the decision
+// stays allowed-with-no-outcome, which `readUnsettledAllowed` reports as
+// "decided, outcome unknown". That is the honest answer — the request did go
+// out and we cannot say how it ended — and the dropped write is logged at
+// warning with its cause.
+const outcomeAppendTimeout = Duration.seconds(1);
 
 /**
  * Session-static inputs the composition root supplies to the governed egress
@@ -330,18 +343,15 @@ export const makeGovernedEgressFetch = Effect.fn("Epistemic.GovernedEgress.make"
   ) {
     const recordedAt = yield* DateTime.now;
     const outcome = sealExecutionOutcome({ decisionHash, recordedAt, runKey, settlement });
-    yield* lock.withPermit(
-      Effect.uninterruptible(
-        ledger.appendOutcome(outcome).pipe(
-          Effect.catchCause((cause) =>
-            Effect.logWarning("governed egress could not write a settlement outcome").pipe(
-              Effect.annotateLogs({
-                cause,
-                settlement,
-                subsystem: "epistemic_governed_egress",
-              })
-            )
-          )
+    yield* ledger.appendOutcome(outcome).pipe(
+      Effect.timeout(outcomeAppendTimeout),
+      Effect.catchCause((cause) =>
+        Effect.logWarning("governed egress could not write a settlement outcome").pipe(
+          Effect.annotateLogs({
+            cause,
+            settlement,
+            subsystem: "epistemic_governed_egress",
+          })
         )
       )
     );
@@ -374,14 +384,16 @@ export const makeGovernedEgressFetch = Effect.fn("Epistemic.GovernedEgress.make"
       O.match({
         onNone: () => Promise.reject(EgressDenied.make({})),
         onSome: (decisionHash) =>
-          platformFetch(input, { ...init, redirect: "error" }).then(
-            (response) =>
-              runInContext(recordOutcome(decisionHash, ExecutionSettlement.Enum.completed)).then(() => response),
-            (cause: unknown) =>
-              runInContext(recordOutcome(decisionHash, ExecutionSettlement.Enum.failed)).then(() =>
-                Promise.reject(cause)
-              )
-          ),
+          Promise.resolve()
+            .then(() => platformFetch(input, { ...init, redirect: "error" }))
+            .then(
+              (response) =>
+                runInContext(recordOutcome(decisionHash, ExecutionSettlement.Enum.completed)).then(() => response),
+              (cause: unknown) =>
+                runInContext(recordOutcome(decisionHash, ExecutionSettlement.Enum.failed)).then(() =>
+                  Promise.reject(cause)
+                )
+            ),
       })
     );
 
