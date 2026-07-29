@@ -82,6 +82,7 @@
     "@effect/platform-browser": "catalog:",
     "@effect/platform-bun": "catalog:",
     "@effect/platform-node": "catalog:",
+    "@lexical/react": "catalog:",
     "@tauri-apps/api": "catalog:",
     "@tauri-apps/plugin-opener": "catalog:",
     "effect": "catalog:",

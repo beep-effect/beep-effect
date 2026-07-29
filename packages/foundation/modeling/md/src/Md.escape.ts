@@ -57,27 +57,7 @@ const UnsafeUrlProtocolDestination = S.String.check(
   SchemaUtils.withCodecStatics
 );
 
-/**
- * Legacy URL destination policy for a rendering sink.
- *
- * An empty `allowedProtocols` list preserves compatibility behavior: active
- * script/data protocols are blocked, but other absolute protocols pass through.
- *
- * @deprecated Prefer the schema-owned {@link UrlPolicySpec}. This class remains
- * as a compatibility adapter for existing call sites.
- *
- * @example
- * ```ts
- * import { UrlPolicy } from "@beep/md/Md.escape"
- *
- * const policy = UrlPolicy.make({ allowedProtocols: ["https:"], allowRelative: false })
- * console.log(policy.allowedProtocols[0]) // "https:"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class UrlPolicy extends S.Class<UrlPolicy>($I`UrlPolicy`)(
+class LegacyUrlPolicy extends S.Class<LegacyUrlPolicy>($I`UrlPolicy`)(
   {
     allowedProtocols: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>()).annotateKey({
       description: "Lowercase URL protocols accepted by this sink. Empty means compatibility mode.",
@@ -96,6 +76,47 @@ export class UrlPolicy extends S.Class<UrlPolicy>($I`UrlPolicy`)(
     description: "URL destination policy for a rendering sink.",
   })
 ) {}
+
+/**
+ * Legacy URL destination policy constructor for a rendering sink.
+ *
+ * An empty `allowedProtocols` list preserves compatibility behavior: active
+ * script/data protocols are blocked, but other absolute protocols pass through.
+ *
+ * @example
+ * ```ts
+ * import { UrlPolicy } from "@beep/md/Md.escape"
+ *
+ * const policy = UrlPolicy.make({ allowedProtocols: ["https:"], allowRelative: false })
+ * console.log(policy.allowedProtocols[0]) // "https:"
+ * ```
+ *
+ * @deprecated Prefer the schema-owned {@link UrlPolicySpec}. This constructor
+ * remains as a compatibility adapter for existing call sites.
+ * @category models
+ * @since 0.0.0
+ */
+export const UrlPolicy = LegacyUrlPolicy;
+
+/**
+ * Instance type constructed by the deprecated {@link UrlPolicy} adapter.
+ *
+ * @example
+ * ```ts
+ * import { UrlPolicy } from "@beep/md/Md.escape"
+ * import type { UrlPolicy as UrlPolicyType } from "@beep/md/Md.escape"
+ *
+ * const policy: UrlPolicyType = UrlPolicy.make({})
+ * console.log(policy.allowRelative) // true
+ * ```
+ *
+ * @deprecated Prefer the schema-owned {@link UrlPolicySpec} type.
+ * @category models
+ * @since 0.0.0
+ */
+export type UrlPolicy = LegacyUrlPolicy;
+
+const LegacyUrlPolicySchema = LegacyUrlPolicy;
 
 const NormalizedUrlScheme = S.Trim.pipe(
   S.decode(SchemaTransformation.toLowerCase()),
@@ -323,7 +344,7 @@ export const UserContentImageUrlPolicySpec = AllowListUrlPolicySpec.make({
  * @category models
  * @since 0.0.0
  */
-export const UrlPolicyInput = S.Union([UrlPolicySpec, UrlPolicy]).pipe(
+export const UrlPolicyInput = S.Union([UrlPolicySpec, LegacyUrlPolicySchema]).pipe(
   $I.annoteSchema("UrlPolicyInput", {
     description: "Canonical URL policy or deprecated legacy adapter.",
   }),
@@ -361,7 +382,7 @@ export type UrlPolicyInput = typeof UrlPolicyInput.Type;
  * @category utilities
  * @since 0.0.0
  */
-export const CompatUrlPolicy = UrlPolicy.make({});
+export const CompatUrlPolicy = LegacyUrlPolicySchema.make({});
 
 /**
  * Browser anchor/image URL policy for HTML sinks.
@@ -377,7 +398,7 @@ export const CompatUrlPolicy = UrlPolicy.make({});
  * @category utilities
  * @since 0.0.0
  */
-export const BrowserSafeUrlPolicy = UrlPolicy.make({
+export const BrowserSafeUrlPolicy = LegacyUrlPolicySchema.make({
   allowedProtocols: ["http:", "https:", "mailto:", "tel:", "artifact:"],
   allowProtocolRelative: false,
   allowBackslashRelative: false,
@@ -397,7 +418,7 @@ export const BrowserSafeUrlPolicy = UrlPolicy.make({
  * @category utilities
  * @since 0.0.0
  */
-export const StrictWebUrlPolicy = UrlPolicy.make({
+export const StrictWebUrlPolicy = LegacyUrlPolicySchema.make({
   allowedProtocols: ["http:", "https:", "mailto:"],
   allowProtocolRelative: false,
   allowBackslashRelative: false,
@@ -755,7 +776,7 @@ export const sanitizeUrlDestinationWithPolicy: {
  * @category utilities
  * @since 0.0.0
  */
-export const sanitizeUrlDestination = sanitizeUrlDestinationWithPolicy(CompatUrlPolicy);
+export const sanitizeUrlDestination = sanitizeUrlDestinationWithPolicy(CompatibilityUrlPolicySpec);
 
 /**
  * Escapes Markdown link or image destination delimiters.
@@ -793,7 +814,7 @@ export const escapeMarkdownDestinationWithPolicy: {
  * @since 0.0.0
  */
 export const escapeMarkdownDestination = flow(
-  sanitizeUrlDestinationWithPolicy(CompatUrlPolicy),
+  sanitizeUrlDestinationWithPolicy(CompatibilityUrlPolicySpec),
   encodeUrlDestination,
   Str.replace(/[\\()]/g, "\\$&")
 );
@@ -832,7 +853,7 @@ export const escapeHtmlUrlAttributeWithPolicy: {
  * @since 0.0.0
  */
 export const escapeHtmlUrlAttribute = flow(
-  sanitizeUrlDestinationWithPolicy(BrowserSafeUrlPolicy),
+  sanitizeUrlDestinationWithPolicy(BrowserSafeUrlPolicySpec),
   encodeUrlDestination,
   Html.escapeHtml
 );

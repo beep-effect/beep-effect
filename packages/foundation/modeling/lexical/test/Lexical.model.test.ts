@@ -11,6 +11,7 @@ import {
   RootNode,
   SafeUrl,
   SerializedEditorState,
+  SerializedEditorStateWire,
   TextDetailMask,
   TextFormatBits,
   TextFormatMask,
@@ -23,10 +24,12 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import type { SerializedTableCellNode } from "@lexical/table";
 
 const NodeArbitrary = S.toArbitrary(LexicalNode);
 const SafeUrlArbitrary = S.toArbitrary(SafeUrl);
 const StateArbitrary = S.toArbitrary(SerializedEditorState);
+const WireStateArbitrary = S.toArbitrary(SerializedEditorStateWire);
 
 const element = {
   version: 1,
@@ -225,7 +228,12 @@ describe("Lexical.model", () => {
     if (header?.type !== "tablerow") {
       expect.fail("Expected decoded table header row");
     }
-    expect(header.children[0]).toMatchObject({ headerState: 1 });
+    const firstHeaderCell = header.children[0];
+    if (firstHeaderCell?.type !== "tablecell") {
+      expect.fail("Expected decoded table header cell");
+    }
+    const lexicalHeaderState: SerializedTableCellNode["headerState"] = firstHeaderCell.headerState;
+    expect(lexicalHeaderState).toBe(1);
     expect(header.children[1]).toMatchObject({ headerState: 1 });
     expect(state.root.children[6]).toMatchObject({
       children: [{ checked: O.some(true) }, { checked: O.none() }],
@@ -308,6 +316,7 @@ describe("Lexical.model", () => {
           {
             type: "future-node",
             version: 3,
+            $: { "future-state": { enabled: true, revision: 2 } },
             pluginPayload: { enabled: true, values: [1, 2, 3] },
           },
         ],
@@ -326,6 +335,17 @@ describe("Lexical.model", () => {
     expect(compatibility.issues).toHaveLength(1);
     expect(Effect.runSyncExit(decodeEditorStateStrict(future))._tag).toBe("Failure");
   });
+
+  it("round-trips arbitrary open wire states without losing extension fields", () =>
+    fc.assert(
+      fc.property(WireStateArbitrary, (wire) => {
+        const decoded = Effect.runSync(decodeEditorStateLossless(wire));
+
+        expect(decoded).toEqual(wire);
+        expect(Effect.runSync(S.encodeEffect(SerializedEditorStateWire)(decoded))).toEqual(wire);
+      }),
+      fcRuns(50)
+    ));
 
   it("preserves opaque future children fields without imposing semantic child grammar", () => {
     const future = {

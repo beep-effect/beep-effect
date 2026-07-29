@@ -18,7 +18,12 @@ const meta = {
   title: "Editor/ChatComposer",
   component: ChatComposer,
   tags: ["autodocs"],
-  args: { onSerializedChange: fn(), onSend: fn(), placeholder: "Message…", mentionSource: sampleMentionSource },
+  args: {
+    onSerializedChange: fn(),
+    mountConfig: { onSend: fn() },
+    placeholder: "Message…",
+    mentionSource: sampleMentionSource,
+  },
   parameters: {
     layout: "padded",
     docs: {
@@ -49,7 +54,9 @@ export const Default: Story = {
 /** Every feature disabled — reduces to the minimal editable surface + send. */
 export const MinimalSubset: Story = {
   args: {
-    features: { toolbar: false, slash: false, mentions: false, attachments: false, characterCount: false },
+    mountConfig: {
+      features: { toolbar: false, slash: false, mentions: false, attachments: false, characterCount: false },
+    },
   },
   play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -93,7 +100,7 @@ export const EmptyEnterIsNoOp: Story = {
     void expect(editable).not.toBeNull();
     (editable as HTMLElement).focus();
     return userEvent.keyboard("{Enter}").then(() => {
-      void expect(args.onSend).not.toHaveBeenCalled();
+      void expect(args.mountConfig?.onSend).not.toHaveBeenCalled();
     });
   },
 };

@@ -282,6 +282,18 @@ export type ListItemContentBuilder<Node> = {
  */
 export type ListItemInput = ListItemContent | Li;
 
+type TaskListCompatibilityInput =
+  | string
+  | TaskItem
+  | {
+      readonly text: string;
+      readonly checked?: boolean;
+    }
+  | {
+      readonly children: ListItemContent;
+      readonly checked?: boolean;
+    };
+
 /**
  * Input accepted by task list constructors.
  *
@@ -299,17 +311,7 @@ export type ListItemInput = ListItemContent | Li;
  * @category models
  * @since 0.0.0
  */
-export type TaskListItemInput =
-  | string
-  | TaskItem
-  | {
-      readonly text: string;
-      readonly checked?: boolean;
-    }
-  | {
-      readonly children: ListItemContent;
-      readonly checked?: boolean;
-    };
+export type TaskListItemInput = TaskListCompatibilityInput;
 
 /**
  * Input accepted by table cell constructors.
@@ -517,7 +519,7 @@ const makeListItemContentBuilder = <Node>(
 
 const asListItem = (input: ListItemInput): Li => (Li.is(input) ? input : li(input));
 
-const asTaskItem = (input: TaskListItemInput): TaskItem =>
+const asTaskItem = (input: TaskListCompatibilityInput): TaskItem =>
   Match.value(input).pipe(
     Match.when(TaskItem.is, (item) => item),
     Match.when(P.isString, (value) => taskItem(value)),
@@ -914,6 +916,9 @@ export const taskItem = (children: ListItemContent, options: { readonly checked?
     ...(P.isBoolean(options.checked) ? { checked: options.checked } : {}),
   });
 
+const taskListCompatibility = (children: ReadonlyArray<TaskListCompatibilityInput>): TaskList =>
+  TaskList.make({ children: A.map(children, asTaskItem) });
+
 /**
  * Creates a GFM task list block.
  *
@@ -930,8 +935,7 @@ export const taskItem = (children: ListItemContent, options: { readonly checked?
  * @category constructors
  * @since 0.0.0
  */
-export const taskList = (children: ReadonlyArray<TaskListItemInput>): TaskList =>
-  TaskList.make({ children: A.map(children, asTaskItem) });
+export const taskList = taskListCompatibility;
 
 /**
  * Creates a GFM task list from canonical tagged task items.
@@ -1302,7 +1306,7 @@ export const Md = {
   tableCell,
   tableRow,
   taskItem,
-  taskList,
+  taskList: taskListCompatibility,
   taskListFromItems,
   text,
   ul,

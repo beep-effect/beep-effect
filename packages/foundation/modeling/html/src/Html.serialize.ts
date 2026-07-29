@@ -12,7 +12,7 @@
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
-import { Effect, Match, Order, pipe, Result } from "effect";
+import { Effect, flow, Match, Order, pipe, Result } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -59,6 +59,19 @@ export const UntrustedHtml = S.String.pipe(
 /**
  * Decoded type of {@link UntrustedHtml}.
  *
+ * @example
+ * ```ts
+ * import { UntrustedHtml } from "@beep/html/Html.serialize"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(UntrustedHtml)("<p>hello</p>")
+ * if (Result.isSuccess(decoded)) {
+ *   const html: UntrustedHtml = decoded.success
+ *   console.log(html)
+ * }
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -104,6 +117,27 @@ export const SafeHtml = S.declare(isSafeHtmlValue).pipe(
 /**
  * Decoded type of {@link SafeHtml}.
  *
+ * @example
+ * ```ts
+ * import {
+ *   conform,
+ *   enforceSafeHtml,
+ *   Fragment,
+ *   safeHtmlValue,
+ *   serializeSafe
+ * } from "@beep/html"
+ * import type { SafeHtml } from "@beep/html/Html.serialize"
+ * import { Effect } from "effect"
+ *
+ * const html: SafeHtml = Effect.runSync(
+ *   conform(Fragment.make({ children: [] })).pipe(
+ *     Effect.flatMap(enforceSafeHtml),
+ *     Effect.flatMap(serializeSafe)
+ *   )
+ * )
+ * console.log(safeHtmlValue(html)) // ""
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -138,6 +172,19 @@ export const HtmlSerializeRule = LiteralKit([
 
 /**
  * Decoded type of {@link HtmlSerializeRule}.
+ *
+ * @example
+ * ```ts
+ * import { HtmlSerializeRule } from "@beep/html/Html.serialize"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(HtmlSerializeRule)("rawTextEndTag")
+ * if (Result.isSuccess(decoded)) {
+ *   const rule: HtmlSerializeRule = decoded.success
+ *   console.log(rule) // "rawTextEndTag"
+ * }
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -187,17 +234,18 @@ const runtimeChildren = (node: RuntimeNode): ReadonlyArray<RuntimeNode> =>
 const isStructuralElementField = (tag: HtmlTag, name: string): boolean =>
   name === "_tag" || name === "children" || (name === "content" && ELEMENT_META[tag].textMode !== "normal");
 
-const escapeText = (value: string): string =>
-  pipe(value, Str.replaceAll("&", "&amp;"), Str.replaceAll("<", "&lt;"), Str.replaceAll(">", "&gt;"));
+const escapeText: (value: string) => string = flow(
+  Str.replaceAll("&", "&amp;"),
+  Str.replaceAll("<", "&lt;"),
+  Str.replaceAll(">", "&gt;")
+);
 
-const escapeAttribute = (value: string): string =>
-  pipe(
-    value,
-    Str.replaceAll("&", "&amp;"),
-    Str.replaceAll('"', "&quot;"),
-    Str.replaceAll("<", "&lt;"),
-    Str.replaceAll(">", "&gt;")
-  );
+const escapeAttribute: (value: string) => string = flow(
+  Str.replaceAll("&", "&amp;"),
+  Str.replaceAll('"', "&quot;"),
+  Str.replaceAll("<", "&lt;"),
+  Str.replaceAll(">", "&gt;")
+);
 
 const makeError = (path: ReadonlyArray<string>, rule: HtmlSerializeRule, message: string): HtmlSerializeError =>
   HtmlSerializeError.make({ path, rule, message });
@@ -437,6 +485,9 @@ const serializeRoot = Effect.fn("Html.serializeRoot")(function* (root: HtmlRoot.
  * console.log(untrustedHtmlValue(html)) // ""
  * ```
  *
+ * @effects Fails with {@link HtmlSerializeError} when the modeled root
+ * contains a value that cannot be emitted safely in its HTML serialization
+ * context.
  * @category serialization
  * @since 0.0.0
  */
@@ -457,6 +508,9 @@ export const serialize: (root: HtmlRoot.Type) => Effect.Effect<UntrustedHtml, Ht
  * console.log(untrustedHtmlValue(html)) // ""
  * ```
  *
+ * @effects Reads the module-issued conformance proof and fails with
+ * {@link HtmlSerializeError} when contextual serialization rejects a modeled
+ * value.
  * @category serialization
  * @since 0.0.0
  */
@@ -502,6 +556,9 @@ const revalidateSafeHtmlAst = (value: SafeHtmlAst): Effect.Effect<HtmlRoot.Type,
  * console.log(safeHtmlValue(html)) // ""
  * ```
  *
+ * @effects Revalidates conformance and safe-output policy before
+ * serialization, failing with {@link HtmlSerializeError} for an invalid proof
+ * or rejected modeled value.
  * @category serialization
  * @since 0.0.0
  */
@@ -558,5 +615,5 @@ export const safeHtmlValue = (value: SafeHtml): string =>
   pipe(
     safeHtmlStrings.get(value),
     O.fromUndefinedOr,
-    O.getOrThrowWith(() => new Error("Invalid SafeHtml issuer proof"))
+    O.getOrThrowWith(() => makeError([], "invalidProof", "Invalid SafeHtml issuer proof"))
   );

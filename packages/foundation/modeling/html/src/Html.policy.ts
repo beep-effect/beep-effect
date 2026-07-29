@@ -81,27 +81,12 @@ export const SafeHtmlAttributes = {
  * @category schemas
  * @since 0.0.0
  */
-export const SafeHtmlAttributesStruct = S.Struct(SafeHtmlAttributes).pipe(
-  $I.annoteSchema("SafeHtmlAttributesStruct", {
+export class SafeHtmlAttributesStruct extends S.Class<SafeHtmlAttributesStruct>($I`SafeHtmlAttributesStruct`)(
+  SafeHtmlAttributes,
+  $I.annote("SafeHtmlAttributesStruct", {
     description: "Global HTML attributes accepted by the conservative safe-output policy.",
   })
-);
-
-/**
- * Decoded type of {@link SafeHtmlAttributesStruct}.
- *
- * @example
- * ```ts
- * import { SafeHtmlAttributesStruct } from "@beep/html/Html.policy"
- *
- * const attributes: SafeHtmlAttributesStruct = SafeHtmlAttributesStruct.make({})
- * console.log(Object.keys(attributes).length) // 0
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type SafeHtmlAttributesStruct = typeof SafeHtmlAttributesStruct.Type;
+) {}
 
 /**
  * Elements accepted by the conservative safe-HTML policy.
@@ -315,6 +300,19 @@ export const SafeImageUrlAttribute = S.String.check(
 /**
  * Decoded type of {@link SafeImageUrlAttribute}.
  *
+ * @example
+ * ```ts
+ * import { SafeImageUrlAttribute } from "@beep/html/Html.policy"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(SafeImageUrlAttribute)("https://example.com/logo.png")
+ * if (Result.isSuccess(decoded)) {
+ *   const src: SafeImageUrlAttribute = decoded.success
+ *   console.log(src)
+ * }
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -348,6 +346,19 @@ export const HtmlPolicyRule = LiteralKit([
 
 /**
  * Decoded type of {@link HtmlPolicyRule}.
+ *
+ * @example
+ * ```ts
+ * import { HtmlPolicyRule } from "@beep/html/Html.policy"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(HtmlPolicyRule)("unsafeUrl")
+ * if (Result.isSuccess(decoded)) {
+ *   const rule: HtmlPolicyRule = decoded.success
+ *   console.log(rule) // "unsafeUrl"
+ * }
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -456,6 +467,18 @@ export const SafeHtmlAst = S.declare(isSafeHtmlAstValue).pipe(
 
 /**
  * Decoded type of {@link SafeHtmlAst}.
+ *
+ * @example
+ * ```ts
+ * import { conform, enforceSafeHtml, Fragment } from "@beep/html"
+ * import type { SafeHtmlAst } from "@beep/html/Html.policy"
+ * import { Effect } from "effect"
+ *
+ * const proof: SafeHtmlAst = Effect.runSync(
+ *   conform(Fragment.make({ children: [] })).pipe(Effect.flatMap(enforceSafeHtml))
+ * )
+ * console.log(Object.isFrozen(proof)) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -710,6 +733,9 @@ export const inspectSafeHtml = (value: ConformantHtml): ReadonlyArray<HtmlPolicy
  * )
  * ```
  *
+ * @effects Fails with {@link HtmlPolicyError} when the conformant tree
+ * violates the deny-by-default safe-output policy; otherwise issues an opaque
+ * module-provenance proof.
  * @category validation
  * @since 0.0.0
  */
@@ -743,7 +769,11 @@ export const safeHtmlAstConformant = (value: SafeHtmlAst): ConformantHtml =>
   pipe(
     safeHtmlAstConformantValues.get(value),
     O.fromUndefinedOr,
-    O.getOrThrowWith(() => new Error("Invalid SafeHtmlAst issuer proof"))
+    O.getOrThrowWith(() =>
+      HtmlPolicyError.make({
+        issues: [makeIssue([], "encodingFailure", "Invalid SafeHtmlAst issuer proof")],
+      })
+    )
   );
 
 /**

@@ -19,7 +19,7 @@ import { $EditorId } from "@beep/identity";
 import { DOMReactNode } from "@beep/schema/DomReactNode";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A, P } from "@beep/utils";
-import { Effect, Result } from "effect";
+import { Effect, MutableHashSet, Result } from "effect";
 import * as S from "effect/Schema";
 import type { SerializedEditorState } from "@beep/lexical-schema";
 import type { LexicalEditor } from "lexical";
@@ -187,15 +187,15 @@ export class SlashItem extends S.Class<SlashItem>($I`SlashItem`)(
 
 const uniqueSlashItemKeys = S.makeFilter<ReadonlyArray<SlashItem>>(
   (items) => {
-    const seen = new Set<string>();
+    const seen = MutableHashSet.empty<string>();
     return A.filterMap(items, (item, index) => {
-      if (seen.has(item.key)) {
+      if (MutableHashSet.has(seen, item.key)) {
         return Result.succeed({
           path: [index, "key"],
           issue: `Duplicate slash-command key ${JSON.stringify(item.key)}.`,
         });
       }
-      seen.add(item.key);
+      MutableHashSet.add(seen, item.key);
       return Result.fail(undefined);
     });
   },
@@ -282,15 +282,15 @@ export class MentionOption extends S.Class<MentionOption>($I`MentionOption`)(
 
 const uniqueMentionOptionIds = S.makeFilter<ReadonlyArray<MentionOption>>(
   (options) => {
-    const seen = new Set<string>();
+    const seen = MutableHashSet.empty<string>();
     return A.filterMap(options, (option, index) => {
-      if (seen.has(option.id)) {
+      if (MutableHashSet.has(seen, option.id)) {
         return Result.succeed({
           path: [index, "id"],
           issue: `Duplicate mention-option id ${JSON.stringify(option.id)}.`,
         });
       }
-      seen.add(option.id);
+      MutableHashSet.add(seen, option.id);
       return Result.fail(undefined);
     });
   },

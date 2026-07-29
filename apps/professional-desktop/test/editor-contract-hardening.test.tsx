@@ -1,6 +1,7 @@
 import { draftAtoms } from "@beep/agents-client/Chat.atoms";
 import { isTypeaheadMenuVisible, TYPEAHEAD_MENU_ATTRIBUTE } from "@beep/editor/chat/atoms";
 import { ChatComposer } from "@beep/editor/chat/chat-composer";
+import { ComposerFeatures } from "@beep/editor/chat/config";
 import { EditorWireComposer } from "@beep/editor/composer";
 import { decodeEditorStateForRuntime } from "@beep/editor/runtime";
 import { EditorCompatibilityViewer, EditorViewer } from "@beep/editor/viewer";
@@ -18,6 +19,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { Deferred, Effect, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import { $createParagraphNode, $createTextNode, $getRoot, createEditor } from "lexical";
 import { afterEach, beforeEach, describe, expect, vi } from "vitest";
 import { Composer, ComposerSafetyWarning } from "@/chat/ui/Composer";
@@ -96,14 +98,12 @@ afterEach(() => {
 });
 
 describe("editor contract hardening", { concurrent: false }, () => {
-  it("gives mountConfig field precedence and keeps the seeded feature set immutable", () => {
-    const view = render(
-      <ChatComposer features={{ attachments: false }} mountConfig={{ features: { attachments: true } }} />
-    );
+  it("keeps the seeded mountConfig feature set immutable", () => {
+    const view = render(<ChatComposer mountConfig={{ features: { attachments: true } }} />);
 
     expect(screen.getByRole("button", { name: "Attach files" })).toBeInTheDocument();
 
-    view.rerender(<ChatComposer features={{ attachments: true }} mountConfig={{ features: { attachments: false } }} />);
+    view.rerender(<ChatComposer mountConfig={{ features: { attachments: false } }} />);
 
     // Mount config is intentionally uncontrolled. Changing it without changing
     // the component key must not split plugin visibility from the seeded atoms.
@@ -437,6 +437,16 @@ describe("editor contract hardening", { concurrent: false }, () => {
     ).toBe(true);
   });
 
+  it("round-trips generated composer feature configurations through the production schema", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(ComposerFeatures), (features) => {
+        const encoded = S.encodeSync(ComposerFeatures)(features);
+        expect(S.decodeUnknownSync(ComposerFeatures)(encoded)).toEqual(features);
+        expect(["enter", "modifierEnter"]).toContain(features.sendOn);
+      })
+    );
+  });
+
   it("shows incompatible future wire as escaped read-only text", () => {
     const result = LexicalCompatibilityResult.make({
       issues: [],
@@ -633,8 +643,10 @@ describe("editor contract hardening", { concurrent: false }, () => {
       const lexicalState = yield* documentToEditorState(legacy);
       expect(editorStateToDocument(lexicalState)).not.toEqual(normalized);
       expect(composerDocumentForSend(legacy, lexicalState, O.some(normalized))).toBe(normalized);
+      expect(composerDocumentForSend(lexicalState, O.some(normalized))(legacy)).toBe(normalized);
       expect(composerDocumentForSend(legacy, lexicalState, O.none()).frontmatter).toEqual(legacy.frontmatter);
       expect(composerDocumentFromEditorState(legacy, lexicalState).frontmatter).toEqual(legacy.frontmatter);
+      expect(composerDocumentFromEditorState(lexicalState)(legacy).frontmatter).toEqual(legacy.frontmatter);
 
       const createObjectUrl = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:normalization-attachment");
       const revokeObjectUrl = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => undefined);

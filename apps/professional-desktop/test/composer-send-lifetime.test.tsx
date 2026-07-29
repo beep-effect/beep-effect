@@ -39,7 +39,7 @@ describe("chat composer send lifetime", { concurrent: false }, () => {
       const onSend = vi.fn(() => true);
       const { container, unmount } = render(
         <RegistryProvider defaultIdleTTL={IDLE_TTL_MS}>
-          <ChatComposer initialState={initialState} onSend={onSend} />
+          <ChatComposer initialState={initialState} mountConfig={{ onSend }} />
         </RegistryProvider>
       );
       const screen = within(container);

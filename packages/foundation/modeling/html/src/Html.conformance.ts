@@ -23,33 +23,24 @@ const $I = $HtmlId.create("Html.conformance");
 const isHtmlTag = S.is(HtmlTag);
 const isString = S.is(S.String);
 
-type HtmlChildView = {
-  readonly _tag: string;
-  readonly children?: ReadonlyArray<HtmlChildView>;
-  readonly name?: unknown;
-  readonly namespace?: string;
-  readonly value?: unknown;
-  readonly alt?: unknown;
-  readonly href?: unknown;
-  readonly src?: unknown;
-  readonly srcset?: unknown;
-  readonly target?: unknown;
-  readonly type?: unknown;
-};
-
-const HtmlChildView: S.Codec<HtmlChildView> = S.Struct({
-  _tag: S.String,
-  children: S.Array(S.suspend((): S.Codec<HtmlChildView> => HtmlChildView)).pipe(S.optionalKey),
-  name: S.Unknown.pipe(S.optionalKey),
-  namespace: S.String.pipe(S.optionalKey),
-  value: S.Unknown.pipe(S.optionalKey),
-  alt: S.Unknown.pipe(S.optionalKey),
-  href: S.Unknown.pipe(S.optionalKey),
-  src: S.Unknown.pipe(S.optionalKey),
-  srcset: S.Unknown.pipe(S.optionalKey),
-  target: S.Unknown.pipe(S.optionalKey),
-  type: S.Unknown.pipe(S.optionalKey),
-});
+class HtmlChildView extends S.Class<HtmlChildView>($I`HtmlChildView`)(
+  {
+    _tag: S.String,
+    children: S.Array(S.suspend((): S.Codec<HtmlChildView> => HtmlChildView)).pipe(S.optionalKey),
+    name: S.Unknown.pipe(S.optionalKey),
+    namespace: S.String.pipe(S.optionalKey),
+    value: S.Unknown.pipe(S.optionalKey),
+    alt: S.Unknown.pipe(S.optionalKey),
+    href: S.Unknown.pipe(S.optionalKey),
+    src: S.Unknown.pipe(S.optionalKey),
+    srcset: S.Unknown.pipe(S.optionalKey),
+    target: S.Unknown.pipe(S.optionalKey),
+    type: S.Unknown.pipe(S.optionalKey),
+  },
+  $I.annote("HtmlChildView", {
+    description: "Internal recursive structural view used by HTML conformance inspection.",
+  })
+) {}
 
 type HtmlRootView = HtmlChildView & {
   readonly doctype?: O.Option<Doctype.Type>;
@@ -245,6 +236,11 @@ export type ConformantHtmlNode = ConformantHtml;
 const makeIssue = (path: ReadonlyArray<string>, rule: HtmlConformanceRule, message: string): HtmlConformanceIssue =>
   HtmlConformanceIssue.make({ path, rule, message });
 
+const makeConformanceError = (message: string): HtmlConformanceError =>
+  HtmlConformanceError.make({
+    issues: [makeIssue([], "encodingFailure", message)],
+  });
+
 const freezeTree = <A>(value: A): A => {
   const visited = new WeakSet<object>();
   const visit = (current: unknown): void => {
@@ -260,15 +256,7 @@ const freezeTree = <A>(value: A): A => {
 };
 
 const snapshotFailure = (): HtmlConformanceError =>
-  HtmlConformanceError.make({
-    issues: [
-      makeIssue(
-        [],
-        "encodingFailure",
-        "The HTML root could not be copied into a detached schema-valid conformance snapshot"
-      ),
-    ],
-  });
+  makeConformanceError("The HTML root could not be copied into a detached schema-valid conformance snapshot");
 
 const snapshotRoot = (root: HtmlRoot.Type): Effect.Effect<HtmlRoot.Type, HtmlConformanceError> =>
   Result.match(S.encodeResult(HtmlRoot)(root), {
@@ -393,7 +381,7 @@ const tableChildSequencePattern = new RegExp(
   pipe(
     ELEMENT_META.table.childSequencePattern,
     O.fromUndefinedOr,
-    O.getOrThrowWith(() => new Error("Generated <table> metadata requires a child-sequence pattern"))
+    O.getOrThrowWith(() => makeConformanceError("Generated <table> metadata requires a child-sequence pattern"))
   ),
   "u"
 );
@@ -648,11 +636,7 @@ export const inspectConformance = (root: HtmlRoot.Type): ReadonlyArray<HtmlConfo
   const view: HtmlRootView = root;
   return Match.value(view._tag).pipe(
     Match.when("#document", (): ReadonlyArray<HtmlConformanceIssue> => {
-      const doctype = pipe(
-        view.doctype,
-        O.fromUndefinedOr,
-        O.getOrElse(() => O.none<Doctype.Type>())
-      );
+      const doctype = pipe(view.doctype, O.fromUndefinedOr, O.getOrElse(O.none));
       const children = childrenOf(view);
       const doctypeIssues = O.match(doctype, {
         onNone: () => [makeIssue(["doctype"], "documentDoctype", "A conformant document requires <!doctype html>")],
@@ -694,6 +678,9 @@ export const inspectConformance = (root: HtmlRoot.Type): ReadonlyArray<HtmlConfo
  * )
  * ```
  *
+ * @effects Detaches and freezes the supplied tree, then fails with
+ * {@link HtmlConformanceError} when its structure violates the generated HTML
+ * content model.
  * @category validation
  * @since 0.0.0
  */
@@ -726,5 +713,5 @@ export const conformantRoot = (value: ConformantHtml): HtmlRoot.Type =>
   pipe(
     conformantRoots.get(value),
     O.fromUndefinedOr,
-    O.getOrThrowWith(() => new Error("Invalid ConformantHtml issuer proof"))
+    O.getOrThrowWith(() => makeConformanceError("Invalid ConformantHtml issuer proof"))
   );

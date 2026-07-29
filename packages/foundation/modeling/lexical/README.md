@@ -17,6 +17,11 @@ codecs over the canonical `@beep/md` AST.
   unknown fields and invalid child topology before editor/runtime use;
   lossless decoding retains JSON-only future nodes and extension fields for
   persistence and migration.
+- **The lossless wire schemas intentionally use `StructWithRest`.** Effect
+  schema classes accept closed `Struct` fields, so a class migration would
+  discard arbitrary envelope, root, node, version, and `"$"` NodeState data.
+  Exact unknown-field identity takes precedence over class-shaped semantics at
+  this persistence boundary.
 - **URLs and inline styles are safe fixed points.** Decode normalizes untrusted
   input through the canonical `@beep/md` browser URL policy and the package CSS
   allowlist; semantic node constructors reject values that bypass normalization.

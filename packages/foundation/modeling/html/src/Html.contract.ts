@@ -76,6 +76,20 @@ export const HtmlDocumentChild = S.Union([HtmlElement, Comment]).pipe(
 /**
  * Decoded type of {@link HtmlDocumentChild}.
  *
+ * @example
+ * ```ts
+ * import { HtmlDocumentChild } from "@beep/html/Html.contract"
+ * import { Comment } from "@beep/html/Html.nodes"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(HtmlDocumentChild)(Comment.make({ value: "note" }))
+ * if (Result.isSuccess(decoded)) {
+ *   const child: HtmlDocumentChild = decoded.success
+ *   console.log(child._tag) // "#comment"
+ * }
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

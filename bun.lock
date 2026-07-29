@@ -183,6 +183,7 @@
         "@effect/platform-browser": "catalog:",
         "@effect/platform-bun": "catalog:",
         "@effect/platform-node": "catalog:",
+        "@lexical/react": "catalog:",
         "@tauri-apps/api": "catalog:",
         "@tauri-apps/plugin-opener": "catalog:",
         "effect": "catalog:",
@@ -1641,6 +1642,7 @@
       "name": "@beep/md",
       "version": "0.0.2",
       "dependencies": {
+        "@beep/html": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
@@ -1650,6 +1652,7 @@
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "micromark": "catalog:",
       },
     },
     "packages/foundation/modeling/nlp": {

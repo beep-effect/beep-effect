@@ -20,7 +20,7 @@
 import { $HtmlId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
-import { pipe, SchemaTransformation } from "effect";
+import { flow, pipe, SchemaTransformation } from "effect";
 import { identity } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -580,8 +580,12 @@ export const makeSpaceSeparatedTokenList = <const Tokens extends readonly [strin
   allowed: Tokens
 ) => {
   const allowedTokens = A.map(allowed, Str.toLowerCase);
-  const tokenize = (value: string): ReadonlyArray<string> =>
-    pipe(value, Str.trim, Str.split(/\s+/u), A.filter(Str.isNonEmpty), A.map(Str.toLowerCase));
+  const tokenize: (value: string) => ReadonlyArray<string> = flow(
+    Str.trim,
+    Str.split(/\s+/u),
+    A.filter(Str.isNonEmpty),
+    A.map(Str.toLowerCase)
+  );
   const normalize = (value: string): string => {
     const inputTokens = tokenize(value);
     return pipe(
@@ -590,13 +594,11 @@ export const makeSpaceSeparatedTokenList = <const Tokens extends readonly [strin
       A.join(" ")
     );
   };
-  const isAllowed = (value: string): boolean =>
-    pipe(
-      value,
-      tokenize,
-      (tokens) =>
-        A.every(tokens, (token) => A.contains(allowedTokens, token)) && A.dedupe(tokens).length === tokens.length
-    );
+  const isAllowed: (value: string) => boolean = flow(
+    tokenize,
+    (tokens) =>
+      A.every(tokens, (token) => A.contains(allowedTokens, token)) && A.dedupe(tokens).length === tokens.length
+  );
 
   const Input = S.String.check(
     S.makeFilter(isAllowed, {
@@ -629,8 +631,12 @@ export const makeSpaceSeparatedTokenList = <const Tokens extends readonly [strin
 const autocompleteAttributePattern =
   /^(?:on|off|(?:(?:section-[^\s]+)\s+)?(?:(?:shipping|billing)\s+)?(?:(?:home|work|mobile|fax|pager)\s+)?(?:name|honorific-prefix|given-name|additional-name|family-name|honorific-suffix|nickname|username|new-password|current-password|one-time-code|organization-title|organization|street-address|address-line1|address-line2|address-line3|address-level4|address-level3|address-level2|address-level1|country|country-name|postal-code|cc-name|cc-given-name|cc-additional-name|cc-family-name|cc-number|cc-exp|cc-exp-month|cc-exp-year|cc-csc|cc-type|transaction-currency|transaction-amount|language|bday|bday-day|bday-month|bday-year|sex|url|photo|tel|tel-country-code|tel-national|tel-area-code|tel-local|tel-local-prefix|tel-local-suffix|tel-extension|email|impp)(?:\s+webauthn)?)$/u;
 
-const normalizeAutocompleteAttribute = (value: string): string =>
-  pipe(value, Str.trim, Str.split(/\s+/u), A.map(Str.toLowerCase), A.join(" "));
+const normalizeAutocompleteAttribute: (value: string) => string = flow(
+  Str.trim,
+  Str.split(/\s+/u),
+  A.map(Str.toLowerCase),
+  A.join(" ")
+);
 
 const AutocompleteAttributeInput = S.String.check(
   S.makeFilter((value) => autocompleteAttributePattern.test(normalizeAutocompleteAttribute(value)), {
@@ -876,6 +882,19 @@ export const DatasetKey = S.String.check(
 
 /**
  * Decoded type of {@link DatasetKey}.
+ *
+ * @example
+ * ```ts
+ * import { DatasetKey } from "@beep/html/Html.attributes"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownResult(DatasetKey)("testid")
+ * if (Result.isSuccess(decoded)) {
+ *   const key: DatasetKey = decoded.success
+ *   console.log(key) // "testid"
+ * }
+ * ```
  *
  * @category models
  * @since 0.0.0

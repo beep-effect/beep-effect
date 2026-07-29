@@ -88,6 +88,14 @@ export const YouTubeWatchUrl = S.String.check(canonicalYouTubeWatchUrl).pipe(
 /**
  * Type for {@link YouTubeWatchUrl}.
  *
+ * @example
+ * ```ts
+ * import type { YouTubeWatchUrl } from "@beep/editor/youtube-embed"
+ *
+ * const watchUrl: YouTubeWatchUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+ * console.log(watchUrl) // "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

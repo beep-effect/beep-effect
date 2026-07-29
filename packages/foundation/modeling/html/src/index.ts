@@ -58,16 +58,16 @@ const decodeSafe: (value: ConformantHtml) => Effect.Effect<SafeHtmlAst, HtmlPoli
  * @category validation
  * @since 0.0.0
  */
-export const Html = Object.freeze({
-  Conformant: Object.freeze({
+export const Html = {
+  Conformant: {
     decode: decodeConformant,
     issues: inspectConformance,
-  }),
-  Safe: Object.freeze({
+  },
+  Safe: {
     decode: decodeSafe,
     issues: inspectSafeHtml,
-  }),
-});
+  },
+} as const;
 
 /**
  * Package version.

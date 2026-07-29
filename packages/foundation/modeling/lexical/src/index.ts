@@ -6,6 +6,8 @@
  * @since 0.0.0
  */
 
+import { analyzeEditorStateCompatibility as compatibilityDecoder } from "./Lexical.model.ts";
+
 /**
  * Package version.
  *
@@ -81,7 +83,6 @@ export {
   BaseNode,
   CodeNode,
   Direction,
-  decodeEditorStateCompatibility,
   decodeEditorStateLossless,
   decodeEditorStateStrict,
   EditorStateFromJson,
@@ -134,3 +135,22 @@ export {
   withTextFormat,
   YouTubeNode,
 } from "./Lexical.model.ts";
+
+/**
+ * Backward-compatible root alias for `analyzeEditorStateCompatibility`.
+ *
+ * @example
+ * ```ts
+ * import { decodeEditorStateCompatibility } from "@beep/lexical-schema"
+ *
+ * const program = decodeEditorStateCompatibility({
+ *   root: { children: [], type: "root", version: 1 },
+ * })
+ * console.log(program !== undefined) // true
+ * ```
+ *
+ * @deprecated Prefer {@link analyzeEditorStateCompatibility}.
+ * @category decoding
+ * @since 0.0.0
+ */
+export const decodeEditorStateCompatibility = compatibilityDecoder;

@@ -14,6 +14,54 @@ export const ALLOWLIST_SNAPSHOT = {
     },
     {
       "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "kind": "new-map-set",
+      "reason": "Conformance proofs need weak identity semantics in two places: private issuer membership and proof-to-detached-root storage must not retain validated trees, while recursive snapshot traversal needs cycle detection without retaining previously inspected ASTs. Effect collections provide neither weak keys nor weak membership.",
+      "owner": "@beep/html",
+      "issue": "HTML-CONFORMANCE-WEAK-IDENTITY-PROOFS"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "kind": "object-method",
+      "reason": "Conformance proofs are closure-issued, null-prototype, frozen tokens, and validated trees are frozen detached snapshots. Object.create(null) prevents inherited or prototype-forged proof state; Object.freeze prevents token mutation and post-validation tree mutation between proof issuance and serialization.",
+      "owner": "@beep/html",
+      "issue": "HTML-CONFORMANCE-IMMUTABLE-PROOF-TOKENS"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/html/src/Html.policy.ts",
+      "kind": "new-map-set",
+      "reason": "SafeHtmlAst provenance uses private weak issuer membership and weak proof-to-conformant-value storage so callers cannot forge safe values and the module does not strongly retain every accepted document. Effect collections do not provide weak identity semantics.",
+      "owner": "@beep/html",
+      "issue": "HTML-SAFE-AST-WEAK-IDENTITY-PROOFS"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/html/src/Html.policy.ts",
+      "kind": "object-method",
+      "reason": "SafeHtmlAst proofs are closure-issued, null-prototype, frozen tokens. Object.create(null) removes inherited and prototype-forged state, while Object.freeze makes the module-issued provenance token immutable after issuance.",
+      "owner": "@beep/html",
+      "issue": "HTML-SAFE-AST-IMMUTABLE-PROOF-TOKENS"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/html/src/Html.serialize.ts",
+      "kind": "new-map-set",
+      "reason": "The opaque SafeHtml sink marker uses private weak issuer membership and weak proof-to-string storage so arbitrary strings cannot be forged as safe and issued values do not become a process-lifetime string registry. Effect collections do not provide weak identity semantics.",
+      "owner": "@beep/html",
+      "issue": "HTML-SAFE-STRING-WEAK-IDENTITY-PROOFS"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/html/src/Html.serialize.ts",
+      "kind": "object-method",
+      "reason": "SafeHtml sink proofs are closure-issued, null-prototype, frozen tokens. Object.create(null) prevents inherited and prototype-forged proof state, while Object.freeze makes the module-issued token immutable before it crosses into an explicit sink adapter.",
+      "owner": "@beep/html",
+      "issue": "HTML-SAFE-STRING-IMMUTABLE-PROOF-TOKENS"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
       "file": "apps/storybook/vitest.storybook.setup.ts",
       "kind": "native-error",
       "reason": "Vitest browser-mode setup guard: throwing in afterAll is the only failure channel before any Effect runtime exists, and vitest surfaces the native Error directly as the test failure.",

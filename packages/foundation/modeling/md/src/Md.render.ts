@@ -1510,7 +1510,7 @@ export const DocumentToMarkdown = DocumentSchema.pipe(
  * @category models
  * @since 0.0.0
  */
-export type DocumentToMarkdown = typeof DocumentToMarkdown.Type;
+export type DocumentToMarkdown = Markdown;
 
 /**
  * Schema transformation from a document AST to a branded HTML fragment.
@@ -1584,7 +1584,7 @@ export const DocumentToPlainText = DocumentSchema.pipe(
  * @category models
  * @since 0.0.0
  */
-export type DocumentToPlainText = typeof DocumentToPlainText.Type;
+export type DocumentToPlainText = string;
 
 /**
  * Type for {@link DocumentToHtmlFragment}.
@@ -1600,4 +1600,4 @@ export type DocumentToPlainText = typeof DocumentToPlainText.Type;
  * @category models
  * @since 0.0.0
  */
-export type DocumentToHtmlFragment = typeof DocumentToHtmlFragment.Type;
+export type DocumentToHtmlFragment = HtmlFragment;
