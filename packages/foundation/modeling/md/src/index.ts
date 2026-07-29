@@ -12,7 +12,8 @@
  * ```ts
  * import { VERSION } from "@beep/md"
  *
- * console.log(VERSION) // "0.0.2"
+ * const version: "0.0.2" = VERSION
+ * console.log(version)
  * ```
  *
  * @since 0.0.0
@@ -50,6 +51,22 @@ export * from "./Md.behavior.ts";
  */
 export * from "./Md.escape.ts";
 /**
+ * Direct safe-HTML AST projection and opaque safe-output rendering.
+ *
+ * @example
+ * ```ts
+ * import { Md, renderSafeHtml, safeHtmlValue } from "@beep/md"
+ * import { Result } from "effect"
+ *
+ * const document = Result.getOrThrow(Md.refineSafeDocument(Md.make([Md.p("Hello")])))
+ * console.log(safeHtmlValue(renderSafeHtml(document))) // "<p>Hello</p>"
+ * ```
+ *
+ * @since 0.0.0
+ * @category serialization
+ */
+export * from "./Md.html.ts";
+/**
  * Schema-first Markdown AST models.
  *
  * @example
@@ -77,6 +94,21 @@ export * from "./Md.model.ts";
  * @category formatting
  */
 export * from "./Md.render.ts";
+/**
+ * Branded user-content trust-boundary refinements and structured safety issues.
+ *
+ * @example
+ * ```ts
+ * import { Md, refineSafeDocument } from "@beep/md"
+ * import { Result } from "effect"
+ *
+ * console.log(Result.isSuccess(refineSafeDocument(Md.make([Md.p("Hello")])))) // true
+ * ```
+ *
+ * @since 0.0.0
+ * @category validation
+ */
+export * from "./Md.safe.ts";
 /**
  * Public Markdown builder namespace and constructor helpers.
  *

@@ -35,6 +35,7 @@ import {
   ParagraphNode,
   QuoteNode,
   RootNode,
+  SafeUrl,
   SerializedEditorState,
   TableCellNode,
   TableNode,
@@ -58,7 +59,7 @@ const $I = $LexicalSchemaId.create("Lexical.codec");
  * ```ts
  * import { ARTIFACT_URI_PREFIX } from "@beep/lexical-schema/Lexical.codec"
  *
- * console.log(ARTIFACT_URI_PREFIX) // "artifact://"
+ * console.log(`${ARTIFACT_URI_PREFIX}artifact-123`) // "artifact://artifact-123"
  * ```
  *
  * @category constants
@@ -114,6 +115,7 @@ const emptyTextDetail = TextDetailMask.make(0);
 const firstOrdinal = PosInt.make(1);
 const noTableCellHeader = 0 satisfies TableCellHeaderState;
 const rowTableCellHeader = 1 satisfies TableCellHeaderState;
+const decodeSafeUrl = S.decodeUnknownEffect(SafeUrl);
 
 // Reversible map between the Lexical heading `tag` ("h1".."h6") and the Md
 // `Heading.level` (1..6): `From.Enum` resolves a tag to its level, `To.Enum`
@@ -231,12 +233,16 @@ const inlineToLexical = (
       code: (node) => Effect.map(textLeaf(node.value, withTextFormat(format, TextFormatBits.code)), A.of<LexicalNode>),
       a: (node) =>
         Effect.flatMap(inlinesToLexical(node.children, format), (children) =>
-          Effect.map(LinkNode.makeEffect({ url: node.href, children }), A.of<LexicalNode>)
+          Effect.flatMap(decodeSafeUrl(node.href), (url) =>
+            Effect.map(LinkNode.makeEffect({ url, children, title: node.title }), A.of<LexicalNode>)
+          )
         ),
       // Images degrade to links so the destination survives (README).
       img: (node) =>
         Effect.flatMap(textLeaf(node.alt, format), (alt) =>
-          Effect.map(LinkNode.makeEffect({ url: node.src, children: [alt] }), A.of<LexicalNode>)
+          Effect.flatMap(decodeSafeUrl(node.src), (url) =>
+            Effect.map(LinkNode.makeEffect({ url, children: [alt], title: node.title }), A.of<LexicalNode>)
+          )
         ),
       br: () => Effect.map(lineBreak(), A.of<LexicalNode>),
       inlineMath: (node) => Effect.map(textLeaf(node.value, format), A.of<LexicalNode>),
@@ -264,9 +270,16 @@ const listItemsToLexical = (
 const listItemChildrenToLexical = (
   children: ReadonlyArray<Md.ListItemChild>
 ): Effect.Effect<ReadonlyArray<LexicalNode>, S.SchemaError> =>
-  A.every(children, Md.Inline.is)
-    ? inlinesToLexical(A.filter(children, Md.Inline.is), emptyTextFormat)
-    : Effect.map(textLeaf(mdListItemChildrenText(children), emptyTextFormat), A.of<LexicalNode>);
+  Effect.map(
+    Effect.forEach(children, (child) =>
+      Md.Inline.is(child)
+        ? inlineToLexical(child, emptyTextFormat)
+        : P.isTagged("ul")(child) || P.isTagged("ol")(child) || P.isTagged("taskList")(child)
+          ? Effect.map(blockToLexical(child), A.of<LexicalNode>)
+          : Effect.map(textLeaf(mdBlockText(child), emptyTextFormat), A.of<LexicalNode>)
+    ),
+    A.flatten
+  );
 
 const quoteChildToInlines = (block: Md.Block): Effect.Effect<ReadonlyArray<LexicalNode>, S.SchemaError> =>
   P.isTagged("p")(block)
@@ -442,7 +455,7 @@ const inlineNodeToMd: (node: LexicalNode) => Md.Inline = LexicalNode.match({
     ),
   tab: () => Md.Text.make({ value: "\t" }),
   linebreak: () => Md.Br.make(),
-  link: (node) => Md.A.make({ href: node.url, children: textRunToInlines(node.children) }),
+  link: (node) => Md.A.make({ href: node.url, children: textRunToInlines(node.children), title: node.title }),
   "artifact-ref": (node) =>
     Md.A.make({
       href: ArtifactUri.fromUnknown(`${ARTIFACT_URI_PREFIX}${node.artifactId}`),
@@ -482,51 +495,32 @@ const codeChildText: (node: LexicalNode) => string = LexicalNode.match({
   tablecell: nodeToPlainText,
 });
 
-type CollectedListItem = {
-  readonly checked: O.Option<boolean>;
-  readonly inlines: ReadonlyArray<Md.Inline>;
-};
+const listItemChildrenToMd = (children: ReadonlyArray<LexicalNode>): ReadonlyArray<Md.ListItemChild> =>
+  A.map(children, (child) => (ListNode.is(child) ? listToBlock(child) : inlineNodeToMd(child)));
 
-// Nested lists flatten into the parent list level (README "Lossiness
-// profile") — `@beep/md` list items hold inline content only.
-const collectListItems = (list: ListNode): ReadonlyArray<CollectedListItem> =>
-  A.flatMap(list.children, (child) =>
-    child.type === "listitem"
-      ? A.match(A.filter(child.children, ListNode.is), {
-          onEmpty: (): ReadonlyArray<CollectedListItem> => [
-            { checked: child.checked, inlines: textRunToInlines(child.children) },
-          ],
-          onNonEmpty: (nested) =>
-            A.appendAll(
-              A.match(
-                A.filter(child.children, (node) => !ListNode.is(node)),
-                {
-                  onEmpty: A.empty<CollectedListItem>,
-                  onNonEmpty: (own) => [{ checked: child.checked, inlines: textRunToInlines(own) }],
-                }
-              ),
-              A.flatMap(nested, collectListItems)
-            ),
-        })
-      : ListNode.is(child)
-        ? collectListItems(child)
-        : [{ checked: O.none<boolean>(), inlines: [inlineNodeToMd(child)] }]
-  );
-
-const listToBlock = (node: ListNode): Md.Block => {
-  const items = collectListItems(node);
+function listToBlock(node: ListNode): Md.Block {
+  const items = A.filter(node.children, ListItemNode.is);
   return ListType.$match(node.listType, {
     check: () =>
       Md.TaskList.make({
         children: A.map(items, (item) =>
-          Md.TaskItem.make({ ...O.getSomesStruct({ checked: item.checked }), children: item.inlines })
+          Md.TaskItem.make({
+            ...O.getSomesStruct({ checked: item.checked }),
+            children: listItemChildrenToMd(item.children),
+          })
         ),
       }),
     number: () =>
-      Md.Ol.make({ children: A.map(items, (item) => Md.Li.make({ children: item.inlines })), start: node.start }),
-    bullet: () => Md.Ul.make({ children: A.map(items, (item) => Md.Li.make({ children: item.inlines })) }),
+      Md.Ol.make({
+        children: A.map(items, (item) => Md.Li.make({ children: listItemChildrenToMd(item.children) })),
+        start: node.start,
+      }),
+    bullet: () =>
+      Md.Ul.make({
+        children: A.map(items, (item) => Md.Li.make({ children: listItemChildrenToMd(item.children) })),
+      }),
   });
-};
+}
 
 const tableChildToInlines = (node: LexicalNode): ReadonlyArray<Md.Inline> =>
   node.type === "paragraph" ? textRunToInlines(node.children) : [Md.Text.make({ value: nodeToPlainText(node) })];

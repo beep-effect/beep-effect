@@ -1,17 +1,25 @@
 import {
+  analyzeEditorStateCompatibility,
+  decodeEditorStateLossless,
+  decodeEditorStateStrict,
   EditorStateFromJson,
   editorStateToPlainText,
   hasTextFormat,
   LexicalNode,
+  LinkNode,
   nodeToPlainText,
+  RootNode,
   SafeUrl,
   SerializedEditorState,
+  TextDetailMask,
   TextFormatBits,
   TextFormatMask,
+  TextNode,
 } from "@beep/lexical-schema";
 import { sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -250,6 +258,9 @@ describe("Lexical.model", () => {
   it("sanitizes link URLs at the schema boundary and keeps safe URLs fixed", () => {
     expect(S.decodeUnknownSync(SafeUrl)("javascript:alert(1)")).toBe("#");
     expect(S.decodeUnknownSync(SafeUrl)("file:///tmp/beep.txt")).toBe("#");
+    expect(S.decodeUnknownSync(SafeUrl)("/\n/evil.example/path")).toBe("#");
+    expect(S.decodeUnknownSync(SafeUrl)("/\r/evil.example/path")).toBe("#");
+    expect(S.decodeUnknownSync(SafeUrl)("/\t/evil.example/path")).toBe("#");
     expect(S.decodeUnknownSync(SafeUrl)("https://example.com/docs")).toBe("https://example.com/docs");
     expect(S.decodeUnknownSync(SafeUrl)("docs/page")).toBe("docs/page");
     expect(S.encodeSync(SafeUrl)(S.decodeUnknownSync(SafeUrl)("data:text/html,<script>x</script>"))).toBe("#");
@@ -261,6 +272,94 @@ describe("Lexical.model", () => {
       }),
       fcRuns(50)
     );
+  });
+
+  it("rejects unsafe values passed directly to semantic node constructors", () => {
+    expect(() => LinkNode.make({ children: [], url: "javascript:alert(1)" })).toThrow();
+    expect(() => LinkNode.make({ children: [], url: "/\n/evil.example/path" })).toThrow();
+    expect(() =>
+      TextNode.make({
+        detail: TextDetailMask.make(0),
+        format: TextFormatMask.make(0),
+        mode: "normal",
+        style: "position:fixed;inset:0",
+        text: "unsafe",
+      })
+    ).toThrow();
+
+    expect(LinkNode.make({ children: [], url: "#" }).url).toBe("#");
+    expect(
+      TextNode.make({
+        detail: TextDetailMask.make(0),
+        format: TextFormatMask.make(0),
+        mode: "normal",
+        style: "color: red",
+        text: "safe",
+      }).style
+    ).toBe("color: red");
+  });
+
+  it("preserves future JSON wire extensions and reports strict incompatibility", () => {
+    const future = {
+      root: {
+        type: "root",
+        version: 7,
+        children: [
+          {
+            type: "future-node",
+            version: 3,
+            pluginPayload: { enabled: true, values: [1, 2, 3] },
+          },
+        ],
+        futureRootField: "retained",
+      },
+      editorExtension: { revision: 9 },
+    };
+
+    const wire = Effect.runSync(decodeEditorStateLossless(future));
+    expect(wire).toEqual(future);
+
+    const compatibility = Effect.runSync(analyzeEditorStateCompatibility(future));
+    expect(compatibility.wire).toEqual(future);
+    expect(compatibility.isCompatible).toBe(false);
+    expect(O.isNone(compatibility.state)).toBe(true);
+    expect(compatibility.issues).toHaveLength(1);
+    expect(Effect.runSyncExit(decodeEditorStateStrict(future))._tag).toBe("Failure");
+  });
+
+  it("preserves opaque future children fields without imposing semantic child grammar", () => {
+    const future = {
+      root: {
+        type: "root",
+        version: 7,
+        children: [
+          {
+            type: "future-node",
+            version: 3,
+            children: { extensionOwnedShape: ["not", "lexical", "nodes"] },
+          },
+        ],
+      },
+    };
+
+    expect(Effect.runSync(decodeEditorStateLossless(future))).toEqual(future);
+    expect(Effect.runSyncExit(decodeEditorStateStrict(future))._tag).toBe("Failure");
+  });
+
+  it("enforces the strict v1 child grammar on the established semantic schema", () => {
+    const misplacedText = {
+      root: {
+        ...element,
+        type: "root",
+        children: [text("not a block")],
+      },
+    };
+
+    const misplacedRoot = S.decodeUnknownSync(RootNode)(misplacedText.root);
+    expect(() => SerializedEditorState.make({ root: misplacedRoot })).toThrow();
+    expect(() => S.decodeUnknownSync(SerializedEditorState)(misplacedText)).toThrow();
+    expect(Effect.runSync(decodeEditorStateLossless(misplacedText))).toEqual(misplacedText);
+    expect(Effect.runSyncExit(decodeEditorStateStrict(misplacedText))._tag).toBe("Failure");
   });
 
   it("rejects impossible serialized formatting and structural values", () => {

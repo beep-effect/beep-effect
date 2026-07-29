@@ -8,6 +8,7 @@ import {
   SerializedEditorState,
 } from "@beep/lexical-schema";
 import * as MdModel from "@beep/md/Md.model";
+import { PosInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -32,7 +33,11 @@ describe("Lexical.codec", () => {
         MdModel.P.make({
           children: [
             mdText("Read "),
-            MdModel.A.make({ href: "https://example.com", children: [mdText("the docs")] }),
+            MdModel.A.make({
+              href: "https://example.com",
+              children: [mdText("the docs")],
+              title: O.some("Documentation"),
+            }),
             MdModel.Br.make({}),
             MdModel.Strong.make({ children: [MdModel.Em.make({ children: [mdText("carefully")] })] }),
             MdModel.Del.make({ children: [mdText("or not")] }),
@@ -72,6 +77,66 @@ describe("Lexical.codec", () => {
     });
 
     expect(roundTrip(document)).toEqual(document);
+  });
+
+  it("preserves the complete user-content link domain through the editor codec", () => {
+    const hrefs = ["#section", "/docs", "https://example.com", "mailto:user@example.com", "tel:+15551234567"];
+
+    for (const href of hrefs) {
+      const document = MdModel.Document.make({
+        children: [MdModel.P.make({ children: [MdModel.A.make({ href, children: [mdText(href)] })] })],
+      });
+
+      expect(roundTrip(document)).toEqual(document);
+    }
+  });
+
+  it("converges control-separated protocol-relative links to a harmless fragment", () => {
+    const hostile = MdModel.Document.make({
+      children: [
+        MdModel.P.make({
+          children: [MdModel.A.make({ href: "/\n/evil.example/path", children: [mdText("External")] })],
+        }),
+      ],
+    });
+    const converged = MdModel.Document.make({
+      children: [
+        MdModel.P.make({
+          children: [MdModel.A.make({ href: "#", children: [mdText("External")] })],
+        }),
+      ],
+    });
+
+    expect(roundTrip(hostile)).toEqual(converged);
+    expect(roundTrip(converged)).toEqual(converged);
+  });
+
+  it("converges Markdown table alignment to the structural Lexical table profile", () => {
+    const row = MdModel.TableRow.make({
+      children: [
+        MdModel.TableCell.make({ children: [mdText("Left")] }),
+        MdModel.TableCell.make({ children: [mdText("Right")] }),
+      ],
+    });
+    const aligned = MdModel.Document.make({
+      children: [MdModel.Table.make({ align: ["center", "right"], children: [row], headerRow: true })],
+    });
+    const structural = MdModel.Document.make({
+      children: [MdModel.Table.make({ children: [row], headerRow: true })],
+    });
+
+    expect(roundTrip(aligned)).toEqual(structural);
+    expect(roundTrip(structural)).toEqual(structural);
+  });
+
+  it("leaves document frontmatter to the owning persistence adapter", () => {
+    const children = [MdModel.P.make({ children: [mdText("Body")] })];
+    const withFrontmatter = MdModel.Document.make({
+      children,
+      frontmatter: O.some({ title: "Retain me" }),
+    });
+
+    expect(roundTrip(withFrontmatter)).toEqual(MdModel.Document.make({ children }));
   });
 
   it("round-trips artifact-ref blocks through the artifact:// link form", () => {
@@ -206,7 +271,7 @@ describe("Lexical.codec", () => {
     );
   });
 
-  it("flattens nested Lexical lists into one Md list level per the lossiness profile", () => {
+  it("preserves nested lists through Lexical and Md projections", () => {
     const state = S.decodeUnknownSync(SerializedEditorState)({
       root: {
         type: "root",
@@ -267,9 +332,37 @@ describe("Lexical.codec", () => {
 
     expect(editorStateToDocument(state).children).toEqual([
       MdModel.Ul.make({
-        children: [MdModel.Li.make({ children: [mdText("parent")] }), MdModel.Li.make({ children: [mdText("child")] })],
+        children: [
+          MdModel.Li.make({
+            children: [
+              mdText("parent"),
+              MdModel.Ul.make({
+                children: [MdModel.Li.make({ children: [mdText("child")] })],
+              }),
+            ],
+          }),
+        ],
       }),
     ]);
+
+    const nestedDocument = MdModel.Document.make({
+      children: [
+        MdModel.Ol.make({
+          start: PosInt.make(3),
+          children: [
+            MdModel.Li.make({
+              children: [
+                mdText("parent"),
+                MdModel.Ul.make({
+                  children: [MdModel.Li.make({ children: [mdText("child")] })],
+                }),
+              ],
+            }),
+          ],
+        }),
+      ],
+    });
+    expect(roundTrip(nestedDocument)).toEqual(nestedDocument);
   });
 
   it("degrades out-of-profile Md nodes deterministically", () => {
@@ -278,10 +371,24 @@ describe("Lexical.codec", () => {
     expect(nodeToBlocks(hr)).toEqual([MdModel.P.make({ children: [mdText("---")] })]);
 
     const image = Effect.runSync(
-      blockToLexical(MdModel.P.make({ children: [MdModel.Img.make({ src: "https://example.com/x.png", alt: "x" })] }))
+      blockToLexical(
+        MdModel.P.make({
+          children: [
+            MdModel.Img.make({
+              src: "https://example.com/x.png",
+              alt: "x",
+              title: O.some("Image title"),
+            }),
+          ],
+        })
+      )
     );
     if (image.type === "paragraph") {
-      expect(image.children[0]?.type).toBe("link");
+      const link = image.children[0];
+      expect(link?.type).toBe("link");
+      if (link?.type === "link") {
+        expect(link.title).toEqual(O.some("Image title"));
+      }
     }
 
     const raw = Effect.runSync(

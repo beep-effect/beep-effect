@@ -1808,6 +1808,47 @@ export declare namespace TaskItem {
 }
 
 /**
+ * Canonical schema-derived task-list constructor input.
+ *
+ * Unlike the deprecated shorthand union accepted by `Md.taskList`, every value
+ * carries the `taskItem` discriminator and fully normalized child nodes.
+ *
+ * @example
+ * ```ts
+ * import { TaskItem, TaskListItemSpec, Text } from "@beep/md/Md.model"
+ *
+ * const item = TaskItem.make({ children: [Text.make({ value: "Todo" })] })
+ * console.log(TaskListItemSpec.is(item)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const TaskListItemSpec = TaskItem.pipe(
+  $I.annoteSchema("TaskListItemSpec", {
+    description: "Canonical tagged task-list item accepted by unambiguous builders.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Type for {@link TaskListItemSpec}.
+ *
+ * @example
+ * ```ts
+ * import { TaskItem, Text } from "@beep/md/Md.model"
+ * import type { TaskListItemSpec } from "@beep/md/Md.model"
+ *
+ * const item: TaskListItemSpec = TaskItem.make({ children: [Text.make({ value: "Todo" })] })
+ * console.log(item._tag) // "taskItem"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TaskListItemSpec = typeof TaskListItemSpec.Type;
+
+/**
  * Task item children used by GFM task list blocks.
  *
  * @example

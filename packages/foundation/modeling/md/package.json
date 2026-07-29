@@ -30,8 +30,10 @@
     "./Md": "./src/Md.ts",
     "./Md.behavior": "./src/Md.behavior.ts",
     "./Md.escape": "./src/Md.escape.ts",
+    "./Md.html": "./src/Md.html.ts",
     "./Md.model": "./src/Md.model.ts",
     "./Md.render": "./src/Md.render.ts",
+    "./Md.safe": "./src/Md.safe.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -51,13 +53,16 @@
       "./Md": "./dist/Md.js",
       "./Md.behavior": "./dist/Md.behavior.js",
       "./Md.escape": "./dist/Md.escape.js",
+      "./Md.html": "./dist/Md.html.js",
       "./Md.model": "./dist/Md.model.js",
       "./Md.render": "./dist/Md.render.js",
+      "./Md.safe": "./dist/Md.safe.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }
   },
   "dependencies": {
+    "@beep/html": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
@@ -66,7 +71,8 @@
   "devDependencies": {
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "micromark": "catalog:"
   },
   "beep": {
     "family": "foundation",

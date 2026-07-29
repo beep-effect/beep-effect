@@ -9,6 +9,9 @@
   },
   "references": [
     {
+      "path": "../html/tsconfig.json"
+    },
+    {
       "path": "../identity/tsconfig.json"
     },
     {

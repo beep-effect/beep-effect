@@ -1,6 +1,6 @@
 /**
  * Type-conformance tests pinning `@beep/lexical-schema` encoded shapes to
- * `lexical` 0.45 serialized types. `lexical` and friends are devDependencies
+ * `lexical` 0.48 serialized types. `lexical` and friends are devDependencies
  * used type-only here — the package has zero runtime `lexical` imports.
  *
  * `children` is omitted from element-node comparisons: lexical types the
@@ -10,6 +10,7 @@
  * widens most discriminants to `string`.
  */
 
+import { analyzeEditorStateCompatibility } from "@beep/lexical-schema";
 import { describe, expect, it } from "tstyche";
 import type {
   ArtifactRefNode,
@@ -19,6 +20,7 @@ import type {
   HeadingNode,
   HeadingTag,
   LexicalNode,
+  LexicalNodeWire,
   LineBreakNode,
   LinkNode,
   ListItemNode,
@@ -29,6 +31,10 @@ import type {
   QuoteNode,
   RootNode,
   SerializedEditorState,
+  TableCellHeaderState,
+  TableCellNode,
+  TableNode,
+  TableRowNode,
   TabNode,
   TextMode,
   TextNode,
@@ -42,6 +48,7 @@ import type {
   SerializedListNode,
 } from "@lexical/list";
 import type { HeadingTagType, SerializedHeadingNode, SerializedQuoteNode } from "@lexical/rich-text";
+import type { SerializedTableCellNode, SerializedTableNode, SerializedTableRowNode } from "@lexical/table";
 import type {
   ElementFormatType,
   SerializedEditorState as LexicalSerializedEditorState,
@@ -58,13 +65,14 @@ import type {
 type SansChildren<T> = Omit<T, "children">;
 type SansChildrenAndType<T> = Omit<T, "children" | "type">;
 
-describe("@beep/lexical-schema ↔ lexical 0.45", () => {
+describe("@beep/lexical-schema ↔ lexical 0.48", () => {
   it("pins the shared token vocabularies", () => {
     expect<ElementFormat>().type.toBe<ElementFormatType>();
     expect<TextMode>().type.toBe<TextModeType>();
     expect<HeadingTag>().type.toBe<HeadingTagType>();
     expect<ListType>().type.toBe<LexicalListType>();
     expect<ListTag>().type.toBe<ListNodeTagType>();
+    expect<TableCellHeaderState>().type.toBeAssignableTo<SerializedTableCellNode["headerState"]>();
     expect<Direction | null>().type.toBe<SerializedElementNode["direction"]>();
   });
 
@@ -97,10 +105,41 @@ describe("@beep/lexical-schema ↔ lexical 0.45", () => {
     expect<SansChildrenAndType<SerializedListNode>>().type.toBeAssignableTo<SansChildrenAndType<ListNode.Encoded>>();
 
     expect<SansChildrenAndType<SerializedLinkNode>>().type.toBeAssignableTo<SansChildrenAndType<LinkNode.Encoded>>();
+
+    expect<
+      Omit<TableNode.Encoded, "children" | "colWidths" | "frozenColumnCount" | "frozenRowCount" | "rowStriping">
+    >().type.toBeAssignableTo<
+      Omit<SerializedTableNode, "children" | "colWidths" | "frozenColumnCount" | "frozenRowCount" | "rowStriping">
+    >();
+    expect<SansChildrenAndType<SerializedTableNode>>().type.toBeAssignableTo<SansChildrenAndType<TableNode.Encoded>>();
+
+    expect<Omit<TableRowNode.Encoded, "children" | "height">>().type.toBeAssignableTo<
+      Omit<SerializedTableRowNode, "children" | "height">
+    >();
+    expect<SansChildrenAndType<SerializedTableRowNode>>().type.toBeAssignableTo<
+      SansChildrenAndType<TableRowNode.Encoded>
+    >();
+
+    expect<
+      Omit<TableCellNode.Encoded, "backgroundColor" | "children" | "colSpan" | "rowSpan" | "verticalAlign" | "width">
+    >().type.toBeAssignableTo<
+      Omit<SerializedTableCellNode, "backgroundColor" | "children" | "colSpan" | "rowSpan" | "verticalAlign" | "width">
+    >();
+    expect<
+      Omit<
+        SerializedTableCellNode,
+        "backgroundColor" | "children" | "colSpan" | "headerState" | "rowSpan" | "type" | "verticalAlign" | "width"
+      >
+    >().type.toBeAssignableTo<
+      Omit<
+        TableCellNode.Encoded,
+        "backgroundColor" | "children" | "colSpan" | "headerState" | "rowSpan" | "type" | "verticalAlign" | "width"
+      >
+    >();
   });
 
-  it("pins element nodes where lexical 0.45 narrows or widens optionality", () => {
-    // Lexical 0.45 narrows paragraph textFormat/textStyle to required; the
+  it("pins element nodes where lexical 0.48 narrows or widens optionality", () => {
+    // Lexical 0.48 narrows paragraph textFormat/textStyle to required; the
     // schema keeps the SerializedElementNode optionality for durability
     // across lexical releases, so they are omitted on this direction only.
     expect<Omit<ParagraphNode.Encoded, "children" | "textFormat" | "textStyle">>().type.toBeAssignableTo<
@@ -136,6 +175,8 @@ describe("@beep/lexical-schema ↔ lexical 0.45", () => {
   });
 
   it("pins the editor state envelope", () => {
+    expect(analyzeEditorStateCompatibility).type.toBeAssignableTo<(input: unknown) => unknown>();
+    expect<LexicalNodeWire["children"]>().type.toBe<import("effect/Schema").Json | undefined>();
     expect<SerializedEditorState.Encoded["root"]["type"]>().type.toBe<"root">();
     expect<SansChildren<SerializedEditorState.Encoded["root"]>>().type.toBeAssignableTo<
       SansChildren<LexicalSerializedEditorState["root"]>
