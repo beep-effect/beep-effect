@@ -14,6 +14,180 @@ import * as S from "effect/Schema";
 const $I = $HtmlId.create("Html.meta");
 
 /**
+ * Exact generated HTML element-tag domain.
+ *
+ * @example
+ * ```ts
+ * import { HtmlTag } from "@beep/html/Html.meta"
+ *
+ * console.log(HtmlTag.is.div("div")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlTag = LiteralKit([
+  "a",
+  "abbr",
+  "acronym",
+  "address",
+  "applet",
+  "area",
+  "article",
+  "aside",
+  "audio",
+  "b",
+  "base",
+  "basefont",
+  "bdi",
+  "bdo",
+  "bgsound",
+  "big",
+  "blink",
+  "blockquote",
+  "body",
+  "br",
+  "button",
+  "canvas",
+  "caption",
+  "center",
+  "cite",
+  "code",
+  "col",
+  "colgroup",
+  "data",
+  "datalist",
+  "dd",
+  "del",
+  "details",
+  "dfn",
+  "dialog",
+  "dir",
+  "div",
+  "dl",
+  "dt",
+  "em",
+  "embed",
+  "fieldset",
+  "figcaption",
+  "figure",
+  "font",
+  "footer",
+  "form",
+  "frame",
+  "frameset",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "head",
+  "header",
+  "hgroup",
+  "hr",
+  "html",
+  "i",
+  "iframe",
+  "img",
+  "input",
+  "ins",
+  "isindex",
+  "kbd",
+  "keygen",
+  "label",
+  "legend",
+  "li",
+  "link",
+  "listing",
+  "main",
+  "map",
+  "mark",
+  "marquee",
+  "menu",
+  "menuitem",
+  "meta",
+  "meter",
+  "multicol",
+  "nav",
+  "nextid",
+  "nobr",
+  "noembed",
+  "noframes",
+  "noscript",
+  "object",
+  "ol",
+  "optgroup",
+  "option",
+  "output",
+  "p",
+  "param",
+  "picture",
+  "plaintext",
+  "pre",
+  "progress",
+  "q",
+  "rb",
+  "rp",
+  "rt",
+  "rtc",
+  "ruby",
+  "s",
+  "samp",
+  "script",
+  "search",
+  "section",
+  "select",
+  "selectedcontent",
+  "slot",
+  "small",
+  "source",
+  "spacer",
+  "span",
+  "strike",
+  "strong",
+  "style",
+  "sub",
+  "summary",
+  "sup",
+  "table",
+  "tbody",
+  "td",
+  "template",
+  "textarea",
+  "tfoot",
+  "th",
+  "thead",
+  "time",
+  "title",
+  "tr",
+  "track",
+  "tt",
+  "u",
+  "ul",
+  "var",
+  "video",
+  "wbr",
+  "xmp",
+]).pipe($I.annoteSchema("HtmlTag", { description: "Exact generated HTML element-tag domain." }));
+
+/**
+ * Decoded HTML element tag.
+ *
+ * @example
+ * ```ts
+ * import type { HtmlTag } from "@beep/html/Html.meta"
+ *
+ * const tag: HtmlTag = "div"
+ * console.log(tag)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlTag = typeof HtmlTag.Type;
+
+/**
  * Advisory content-category values emitted by the WHATWG element index.
  *
  * @example
@@ -60,6 +234,183 @@ export const HtmlCategory = LiteralKit([
 export type HtmlCategory = typeof HtmlCategory.Type;
 
 /**
+ * Content-model tokens emitted by the pinned WHATWG element index.
+ *
+ * @example
+ * ```ts
+ * import { HtmlContentToken } from "@beep/html/Html.meta"
+ *
+ * console.log(HtmlContentToken.is.flow("flow")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlContentToken = LiteralKit([
+  "area",
+  "body",
+  "button",
+  "caption",
+  "col",
+  "colgroup",
+  "data",
+  "dd",
+  "div",
+  "dt",
+  "empty",
+  "figcaption",
+  "flow",
+  "flow select element inner content elements",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "head",
+  "heading content",
+  "legend",
+  "li",
+  "metadata content",
+  "one img",
+  "optgroup element inner content elements",
+  "option",
+  "option element inner content elements",
+  "or script documentation",
+  "p",
+  "phrasing",
+  "rp",
+  "rt",
+  "script",
+  "script-supporting elements",
+  "select element inner content elements",
+  "source",
+  "summary",
+  "tbody",
+  "td",
+  "template",
+  "text",
+  "tfoot",
+  "th",
+  "thead",
+  "tr",
+  "track",
+  "transparent",
+  "varies",
+]).pipe($I.annoteSchema("HtmlContentToken", { description: "Pinned HTML content-model token." }));
+
+/**
+ * Decoded HTML content-model token.
+ *
+ * @example
+ * ```ts
+ * import type { HtmlContentToken } from "@beep/html/Html.meta"
+ *
+ * const token: HtmlContentToken = "flow"
+ * console.log(token)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlContentToken = typeof HtmlContentToken.Type;
+
+/**
+ * Text parsing and serialization mode of an HTML element.
+ *
+ * @example
+ * ```ts
+ * import { HtmlTextMode } from "@beep/html/Html.meta"
+ *
+ * console.log(HtmlTextMode.is.rcdata("rcdata")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlTextMode = LiteralKit(["normal", "raw-text", "rcdata", "plaintext"]).pipe(
+  $I.annoteSchema("HtmlTextMode", { description: "HTML text parsing and serialization mode." })
+);
+
+/**
+ * Decoded HTML text mode.
+ *
+ * @example
+ * ```ts
+ * import type { HtmlTextMode } from "@beep/html/Html.meta"
+ *
+ * const mode: HtmlTextMode = "normal"
+ * console.log(mode)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlTextMode = typeof HtmlTextMode.Type;
+
+/**
+ * Authoritative generated domain of HTML boolean attribute names.
+ *
+ * @example
+ * ```ts
+ * import { HtmlBooleanAttributeName } from "@beep/html/Html.meta"
+ *
+ * console.log(HtmlBooleanAttributeName.is.disabled("disabled")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlBooleanAttributeName = LiteralKit([
+  "allowfullscreen",
+  "alpha",
+  "async",
+  "autoplay",
+  "checked",
+  "compact",
+  "controls",
+  "declare",
+  "default",
+  "defer",
+  "disabled",
+  "formnovalidate",
+  "ismap",
+  "loop",
+  "multiple",
+  "muted",
+  "nomodule",
+  "noresize",
+  "noshade",
+  "novalidate",
+  "nowrap",
+  "open",
+  "playsinline",
+  "pubdate",
+  "readonly",
+  "required",
+  "reversed",
+  "scoped",
+  "seamless",
+  "selected",
+  "shadowrootclonable",
+  "shadowrootdelegatesfocus",
+  "shadowrootserializable",
+  "truespeed",
+]).pipe(
+  $I.annoteSchema("HtmlBooleanAttributeName", {
+    description: "Authoritative HTML boolean attribute-name domain used by generation and serialization.",
+  })
+);
+
+/**
+ * Decoded HTML boolean attribute name.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlBooleanAttributeName = typeof HtmlBooleanAttributeName.Type;
+
+/**
  * Schema describing one HTML element kind's metadata.
  *
  * @example
@@ -80,37 +431,20 @@ export type HtmlCategory = typeof HtmlCategory.Type;
  * @category models
  * @since 0.0.0
  */
-export const HtmlElementMeta = S.Struct({
-  tag: S.String,
-  interface: S.String,
-  conformance: S.Literals(["conforming", "non-conforming"]),
-  void: S.Boolean,
-  rawText: S.Boolean,
-  categories: S.Array(HtmlCategory),
-}).pipe($I.annoteSchema("HtmlElementMeta", { description: "Metadata describing one HTML element kind." }));
-
-/**
- * Decoded type of {@link HtmlElementMeta}.
- *
- * @example
- * ```ts
- * import type { HtmlElementMeta } from "@beep/html/Html.meta"
- *
- * const meta: HtmlElementMeta = {
- *   tag: "div",
- *   interface: "HTMLDivElement",
- *   conformance: "conforming",
- *   void: false,
- *   rawText: false,
- *   categories: ["flow"]
- * }
- * console.log(meta.tag) // "div"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type HtmlElementMeta = typeof HtmlElementMeta.Type;
+export class HtmlElementMeta extends S.Class<HtmlElementMeta>($I`HtmlElementMeta`)(
+  {
+    tag: HtmlTag,
+    interface: S.NonEmptyString,
+    conformance: S.Literals(["conforming", "non-conforming"]),
+    void: S.Boolean,
+    rawText: S.Boolean,
+    textMode: HtmlTextMode,
+    categories: S.Array(HtmlCategory),
+    children: S.Array(HtmlContentToken),
+    childSequencePattern: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("HtmlElementMeta", { description: "Metadata describing one HTML element kind." })
+) {}
 
 /**
  * Metadata for every generated HTML element, keyed by tag name.
@@ -125,14 +459,16 @@ export type HtmlElementMeta = typeof HtmlElementMeta.Type;
  * @category models
  * @since 0.0.0
  */
-export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
+export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
   a: {
     tag: "a",
     interface: "HTMLAnchorElement",
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "interactive", "palpable"],
+    children: ["transparent"],
   },
   abbr: {
     tag: "abbr",
@@ -140,7 +476,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   acronym: {
     tag: "acronym",
@@ -148,7 +486,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   address: {
     tag: "address",
@@ -156,7 +496,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "palpable"],
+    children: ["flow"],
   },
   applet: {
     tag: "applet",
@@ -164,7 +506,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   area: {
     tag: "area",
@@ -172,7 +516,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing"],
+    children: ["empty"],
   },
   article: {
     tag: "article",
@@ -180,7 +526,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "sectioning", "palpable"],
+    children: ["flow"],
   },
   aside: {
     tag: "aside",
@@ -188,7 +536,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "sectioning", "palpable"],
+    children: ["flow"],
   },
   audio: {
     tag: "audio",
@@ -196,7 +546,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "embedded", "interactive", "palpable"],
+    children: ["source", "track", "transparent"],
   },
   b: {
     tag: "b",
@@ -204,7 +556,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   base: {
     tag: "base",
@@ -212,7 +566,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: ["metadata"],
+    children: ["empty"],
   },
   basefont: {
     tag: "basefont",
@@ -220,7 +576,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   bdi: {
     tag: "bdi",
@@ -228,7 +586,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   bdo: {
     tag: "bdo",
@@ -236,7 +596,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   bgsound: {
     tag: "bgsound",
@@ -244,7 +606,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   big: {
     tag: "big",
@@ -252,7 +616,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   blink: {
     tag: "blink",
@@ -260,7 +626,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   blockquote: {
     tag: "blockquote",
@@ -268,7 +636,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "palpable"],
+    children: ["flow"],
   },
   body: {
     tag: "body",
@@ -276,7 +646,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: ["flow"],
   },
   br: {
     tag: "br",
@@ -284,7 +656,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing"],
+    children: ["empty"],
   },
   button: {
     tag: "button",
@@ -292,6 +666,7 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [
       "flow",
       "phrasing",
@@ -302,6 +677,7 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
       "form-associated",
       "palpable",
     ],
+    children: ["phrasing"],
   },
   canvas: {
     tag: "canvas",
@@ -309,7 +685,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "embedded", "palpable"],
+    children: ["transparent"],
   },
   caption: {
     tag: "caption",
@@ -317,7 +695,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: ["flow"],
   },
   center: {
     tag: "center",
@@ -325,7 +705,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   cite: {
     tag: "cite",
@@ -333,7 +715,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   code: {
     tag: "code",
@@ -341,7 +725,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   col: {
     tag: "col",
@@ -349,7 +735,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: ["empty"],
   },
   colgroup: {
     tag: "colgroup",
@@ -357,7 +745,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: ["col", "template"],
   },
   data: {
     tag: "data",
@@ -365,7 +755,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   datalist: {
     tag: "datalist",
@@ -373,16 +765,29 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing"],
+    children: ["phrasing", "option", "script-supporting elements"],
   },
-  dd: { tag: "dd", interface: "HTMLElement", conformance: "conforming", void: false, rawText: false, categories: [] },
+  dd: {
+    tag: "dd",
+    interface: "HTMLElement",
+    conformance: "conforming",
+    void: false,
+    rawText: false,
+    textMode: "normal",
+    categories: [],
+    children: ["flow"],
+  },
   del: {
     tag: "del",
     interface: "HTMLModElement",
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["transparent"],
   },
   details: {
     tag: "details",
@@ -390,7 +795,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "interactive", "palpable"],
+    children: ["summary", "flow"],
   },
   dfn: {
     tag: "dfn",
@@ -398,7 +805,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   dialog: {
     tag: "dialog",
@@ -406,7 +815,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow"],
+    children: ["flow"],
   },
   dir: {
     tag: "dir",
@@ -414,7 +825,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   div: {
     tag: "div",
@@ -422,7 +835,13 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "palpable"],
+    children: [
+      "flow select element inner content elements",
+      "optgroup element inner content elements",
+      "option element inner content elements",
+    ],
   },
   dl: {
     tag: "dl",
@@ -430,16 +849,29 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "palpable"],
+    children: ["dt", "dd", "div", "script-supporting elements"],
   },
-  dt: { tag: "dt", interface: "HTMLElement", conformance: "conforming", void: false, rawText: false, categories: [] },
+  dt: {
+    tag: "dt",
+    interface: "HTMLElement",
+    conformance: "conforming",
+    void: false,
+    rawText: false,
+    textMode: "normal",
+    categories: [],
+    children: ["flow"],
+  },
   em: {
     tag: "em",
     interface: "HTMLElement",
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   embed: {
     tag: "embed",
@@ -447,7 +879,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "embedded", "interactive", "palpable"],
+    children: ["empty"],
   },
   fieldset: {
     tag: "fieldset",
@@ -455,7 +889,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "listed", "form-associated", "palpable"],
+    children: ["legend", "flow"],
   },
   figcaption: {
     tag: "figcaption",
@@ -463,7 +899,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: ["flow"],
   },
   figure: {
     tag: "figure",
@@ -471,7 +909,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "palpable"],
+    children: ["figcaption", "flow"],
   },
   font: {
     tag: "font",
@@ -479,7 +919,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   footer: {
     tag: "footer",
@@ -487,7 +929,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "palpable"],
+    children: ["flow"],
   },
   form: {
     tag: "form",
@@ -495,7 +939,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "palpable"],
+    children: ["flow"],
   },
   frame: {
     tag: "frame",
@@ -503,7 +949,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   frameset: {
     tag: "frameset",
@@ -511,7 +959,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   h1: {
     tag: "h1",
@@ -519,7 +969,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "heading", "palpable"],
+    children: ["phrasing"],
   },
   h2: {
     tag: "h2",
@@ -527,7 +979,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "heading", "palpable"],
+    children: ["phrasing"],
   },
   h3: {
     tag: "h3",
@@ -535,7 +989,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "heading", "palpable"],
+    children: ["phrasing"],
   },
   h4: {
     tag: "h4",
@@ -543,7 +999,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "heading", "palpable"],
+    children: ["phrasing"],
   },
   h5: {
     tag: "h5",
@@ -551,7 +1009,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "heading", "palpable"],
+    children: ["phrasing"],
   },
   h6: {
     tag: "h6",
@@ -559,7 +1019,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "heading", "palpable"],
+    children: ["phrasing"],
   },
   head: {
     tag: "head",
@@ -567,7 +1029,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: ["metadata content"],
   },
   header: {
     tag: "header",
@@ -575,7 +1039,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "palpable"],
+    children: ["flow"],
   },
   hgroup: {
     tag: "hgroup",
@@ -583,7 +1049,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "palpable"],
+    children: ["h1", "h2", "h3", "h4", "h5", "h6", "p", "script-supporting elements"],
   },
   hr: {
     tag: "hr",
@@ -591,7 +1059,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: ["flow"],
+    children: ["empty"],
   },
   html: {
     tag: "html",
@@ -599,7 +1069,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: ["head", "body"],
   },
   i: {
     tag: "i",
@@ -607,15 +1079,19 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   iframe: {
     tag: "iframe",
     interface: "HTMLIFrameElement",
     conformance: "conforming",
     void: false,
-    rawText: false,
+    rawText: true,
+    textMode: "raw-text",
     categories: ["flow", "phrasing", "embedded", "interactive", "palpable"],
+    children: ["empty"],
   },
   img: {
     tag: "img",
@@ -623,7 +1099,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "embedded", "interactive", "form-associated", "palpable"],
+    children: ["empty"],
   },
   input: {
     tag: "input",
@@ -631,6 +1109,7 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: [
       "flow",
       "phrasing",
@@ -642,6 +1121,7 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
       "form-associated",
       "palpable",
     ],
+    children: ["empty"],
   },
   ins: {
     tag: "ins",
@@ -649,7 +1129,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["transparent"],
   },
   isindex: {
     tag: "isindex",
@@ -657,7 +1139,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   kbd: {
     tag: "kbd",
@@ -665,7 +1149,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   keygen: {
     tag: "keygen",
@@ -673,7 +1159,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   label: {
     tag: "label",
@@ -681,7 +1169,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "interactive", "palpable"],
+    children: ["phrasing"],
   },
   legend: {
     tag: "legend",
@@ -689,24 +1179,39 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: ["phrasing", "heading content"],
   },
-  li: { tag: "li", interface: "HTMLLIElement", conformance: "conforming", void: false, rawText: false, categories: [] },
+  li: {
+    tag: "li",
+    interface: "HTMLLIElement",
+    conformance: "conforming",
+    void: false,
+    rawText: false,
+    textMode: "normal",
+    categories: [],
+    children: ["flow"],
+  },
   link: {
     tag: "link",
     interface: "HTMLLinkElement",
     conformance: "conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: ["metadata", "flow", "phrasing"],
+    children: ["empty"],
   },
   listing: {
     tag: "listing",
     interface: "HTMLPreElement",
     conformance: "non-conforming",
     void: false,
-    rawText: true,
+    rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   main: {
     tag: "main",
@@ -714,7 +1219,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "palpable"],
+    children: ["flow"],
   },
   map: {
     tag: "map",
@@ -722,7 +1229,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["transparent", "area"],
   },
   mark: {
     tag: "mark",
@@ -730,7 +1239,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   marquee: {
     tag: "marquee",
@@ -738,7 +1249,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   menu: {
     tag: "menu",
@@ -746,7 +1259,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "palpable"],
+    children: ["li", "script-supporting elements"],
   },
   menuitem: {
     tag: "menuitem",
@@ -754,7 +1269,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   meta: {
     tag: "meta",
@@ -762,7 +1279,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: ["metadata", "flow", "phrasing"],
+    children: ["empty"],
   },
   meter: {
     tag: "meter",
@@ -770,7 +1289,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "labelable", "palpable"],
+    children: ["phrasing"],
   },
   multicol: {
     tag: "multicol",
@@ -778,7 +1299,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   nav: {
     tag: "nav",
@@ -786,7 +1309,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "sectioning", "palpable"],
+    children: ["flow"],
   },
   nextid: {
     tag: "nextid",
@@ -794,7 +1319,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   nobr: {
     tag: "nobr",
@@ -802,23 +1329,29 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   noembed: {
     tag: "noembed",
     interface: "HTMLElement",
     conformance: "non-conforming",
     void: false,
-    rawText: false,
+    rawText: true,
+    textMode: "raw-text",
     categories: [],
+    children: [],
   },
   noframes: {
     tag: "noframes",
     interface: "HTMLElement",
     conformance: "non-conforming",
     void: false,
-    rawText: false,
+    rawText: true,
+    textMode: "raw-text",
     categories: [],
+    children: [],
   },
   noscript: {
     tag: "noscript",
@@ -826,7 +1359,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["metadata", "flow", "phrasing"],
+    children: ["varies"],
   },
   object: {
     tag: "object",
@@ -834,7 +1369,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "embedded", "interactive", "listed", "form-associated", "palpable"],
+    children: ["transparent"],
   },
   ol: {
     tag: "ol",
@@ -842,7 +1379,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "palpable"],
+    children: ["li", "script-supporting elements"],
   },
   optgroup: {
     tag: "optgroup",
@@ -850,7 +1389,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: ["optgroup element inner content elements", "legend"],
   },
   option: {
     tag: "option",
@@ -858,7 +1399,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: ["text", "option element inner content elements"],
   },
   output: {
     tag: "output",
@@ -866,7 +1409,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "listed", "labelable", "resettable", "form-associated", "palpable"],
+    children: ["phrasing"],
   },
   p: {
     tag: "p",
@@ -874,7 +1419,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "palpable"],
+    children: ["phrasing"],
   },
   param: {
     tag: "param",
@@ -882,7 +1429,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   picture: {
     tag: "picture",
@@ -890,15 +1439,19 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "embedded", "palpable"],
+    children: ["source", "one img", "script-supporting elements"],
   },
   plaintext: {
     tag: "plaintext",
     interface: "HTMLElement",
     conformance: "non-conforming",
     void: false,
-    rawText: true,
+    rawText: false,
+    textMode: "plaintext",
     categories: [],
+    children: [],
   },
   pre: {
     tag: "pre",
@@ -906,7 +1459,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "palpable"],
+    children: ["phrasing"],
   },
   progress: {
     tag: "progress",
@@ -914,7 +1469,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "labelable", "palpable"],
+    children: ["phrasing"],
   },
   q: {
     tag: "q",
@@ -922,7 +1479,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   rb: {
     tag: "rb",
@@ -930,17 +1489,39 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
-  rp: { tag: "rp", interface: "HTMLElement", conformance: "conforming", void: false, rawText: false, categories: [] },
-  rt: { tag: "rt", interface: "HTMLElement", conformance: "conforming", void: false, rawText: false, categories: [] },
+  rp: {
+    tag: "rp",
+    interface: "HTMLElement",
+    conformance: "conforming",
+    void: false,
+    rawText: false,
+    textMode: "normal",
+    categories: [],
+    children: ["text"],
+  },
+  rt: {
+    tag: "rt",
+    interface: "HTMLElement",
+    conformance: "conforming",
+    void: false,
+    rawText: false,
+    textMode: "normal",
+    categories: [],
+    children: ["phrasing"],
+  },
   rtc: {
     tag: "rtc",
     interface: "HTMLElement",
     conformance: "non-conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   ruby: {
     tag: "ruby",
@@ -948,7 +1529,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing", "rt", "rp"],
   },
   s: {
     tag: "s",
@@ -956,7 +1539,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   samp: {
     tag: "samp",
@@ -964,7 +1549,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   script: {
     tag: "script",
@@ -972,7 +1559,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: true,
+    textMode: "raw-text",
     categories: ["metadata", "flow", "phrasing", "script-supporting"],
+    children: ["script", "data", "or script documentation"],
   },
   search: {
     tag: "search",
@@ -980,7 +1569,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "palpable"],
+    children: ["flow"],
   },
   section: {
     tag: "section",
@@ -988,7 +1579,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "sectioning", "palpable"],
+    children: ["flow"],
   },
   select: {
     tag: "select",
@@ -996,6 +1589,7 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [
       "flow",
       "phrasing",
@@ -1007,6 +1601,7 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
       "form-associated",
       "palpable",
     ],
+    children: ["select element inner content elements", "button"],
   },
   selectedcontent: {
     tag: "selectedcontent",
@@ -1014,7 +1609,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: ["empty"],
   },
   slot: {
     tag: "slot",
@@ -1022,7 +1619,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing"],
+    children: ["transparent"],
   },
   small: {
     tag: "small",
@@ -1030,7 +1629,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   source: {
     tag: "source",
@@ -1038,7 +1639,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: ["empty"],
   },
   spacer: {
     tag: "spacer",
@@ -1046,7 +1649,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   span: {
     tag: "span",
@@ -1054,7 +1659,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   strike: {
     tag: "strike",
@@ -1062,7 +1669,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   strong: {
     tag: "strong",
@@ -1070,7 +1679,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   style: {
     tag: "style",
@@ -1078,7 +1689,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: true,
+    textMode: "raw-text",
     categories: ["metadata"],
+    children: ["text"],
   },
   sub: {
     tag: "sub",
@@ -1086,7 +1699,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   summary: {
     tag: "summary",
@@ -1094,7 +1709,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: ["phrasing", "heading content"],
   },
   sup: {
     tag: "sup",
@@ -1102,7 +1719,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   table: {
     tag: "table",
@@ -1110,7 +1729,10 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "palpable"],
+    children: ["caption", "colgroup", "thead", "tbody", "tfoot", "tr", "script-supporting elements"],
+    childSequencePattern: "^(?:caption,)?(?:colgroup,)*(?:thead,)?(?:(?:tbody,)*|(?:tr,)+)(?:tfoot,)?$",
   },
   tbody: {
     tag: "tbody",
@@ -1118,7 +1740,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: ["tr", "script-supporting elements"],
   },
   td: {
     tag: "td",
@@ -1126,7 +1750,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: ["flow"],
   },
   template: {
     tag: "template",
@@ -1134,14 +1760,17 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["metadata", "flow", "phrasing", "script-supporting"],
+    children: ["empty"],
   },
   textarea: {
     tag: "textarea",
     interface: "HTMLTextAreaElement",
     conformance: "conforming",
     void: false,
-    rawText: true,
+    rawText: false,
+    textMode: "rcdata",
     categories: [
       "flow",
       "phrasing",
@@ -1153,6 +1782,7 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
       "form-associated",
       "palpable",
     ],
+    children: ["text"],
   },
   tfoot: {
     tag: "tfoot",
@@ -1160,7 +1790,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: ["tr", "script-supporting elements"],
   },
   th: {
     tag: "th",
@@ -1168,7 +1800,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["interactive"],
+    children: ["flow"],
   },
   thead: {
     tag: "thead",
@@ -1176,7 +1810,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: ["tr", "script-supporting elements"],
   },
   time: {
     tag: "time",
@@ -1184,15 +1820,19 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   title: {
     tag: "title",
     interface: "HTMLTitleElement",
     conformance: "conforming",
     void: false,
-    rawText: true,
+    rawText: false,
+    textMode: "rcdata",
     categories: ["metadata"],
+    children: ["text"],
   },
   tr: {
     tag: "tr",
@@ -1200,7 +1840,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: ["th", "td", "script-supporting elements"],
   },
   track: {
     tag: "track",
@@ -1208,7 +1850,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: ["empty"],
   },
   tt: {
     tag: "tt",
@@ -1216,7 +1860,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: [],
+    children: [],
   },
   u: {
     tag: "u",
@@ -1224,7 +1870,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   ul: {
     tag: "ul",
@@ -1232,7 +1880,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "palpable"],
+    children: ["li", "script-supporting elements"],
   },
   var: {
     tag: "var",
@@ -1240,7 +1890,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "palpable"],
+    children: ["phrasing"],
   },
   video: {
     tag: "video",
@@ -1248,7 +1900,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: false,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing", "embedded", "interactive", "palpable"],
+    children: ["source", "track", "transparent"],
   },
   wbr: {
     tag: "wbr",
@@ -1256,7 +1910,9 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "conforming",
     void: true,
     rawText: false,
+    textMode: "normal",
     categories: ["flow", "phrasing"],
+    children: ["empty"],
   },
   xmp: {
     tag: "xmp",
@@ -1264,6 +1920,8 @@ export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
     conformance: "non-conforming",
     void: false,
     rawText: true,
+    textMode: "raw-text",
     categories: [],
+    children: [],
   },
-} as const;
+};

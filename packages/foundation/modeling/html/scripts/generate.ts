@@ -119,7 +119,8 @@ const CATEGORIES: ReadonlyArray<readonly [string, string]> = [
   ["ScriptSupporting", "script-supporting"],
 ];
 
-type Kind = "void" | "rawText" | "normal";
+type Kind = "void" | "text" | "normal";
+type TextMode = "normal" | "raw-text" | "rcdata" | "plaintext";
 
 interface AttributeSpec {
   readonly encoded: string;
@@ -129,6 +130,8 @@ interface AttributeSpec {
 
 interface El {
   readonly categories: ReadonlyArray<string>;
+  readonly children: ReadonlyArray<string>;
+  readonly childSequencePattern: string | undefined;
   readonly cls: string;
   readonly encoded: string;
   readonly iface: string;
@@ -136,6 +139,7 @@ interface El {
   readonly obsolete: boolean;
   readonly runtime: string;
   readonly tag: string;
+  readonly textMode: TextMode;
   readonly type: string;
 }
 
@@ -161,15 +165,27 @@ class WebrefElement extends S.Class<WebrefElement>($I`WebrefElement`)(
 class ContentModelEntry extends S.Class<ContentModelEntry>($I`ContentModelEntry`)(
   {
     categories: S.Array(S.String).pipe(S.optionalKey),
+    children: S.Array(S.String).pipe(S.optionalKey),
   },
   $I.annote("ContentModelEntry", { description: "WHATWG content-model metadata for one element." })
 ) {}
 
 class Classification extends S.Class<Classification>($I`Classification`)(
   {
+    autocompleteAttributes: S.Array(S.String),
     booleanAttributes: S.Array(S.String),
-    numericAttributes: S.Array(S.String),
+    boundedIntegerAttributes: S.Record(S.String, S.Tuple([S.Int, S.Int])),
+    childSequencePatterns: S.Record(S.String, S.String),
+    integerAttributes: S.Array(S.String),
+    nonNegativeIntegerAttributes: S.Array(S.String),
+    normal: S.Array(S.String),
+    emptyContentModelElements: S.Array(S.String),
+    plaintext: S.Array(S.String),
+    positiveIntegerAttributes: S.Array(S.String),
     rawText: S.Array(S.String),
+    rcData: S.Array(S.String),
+    spaceSeparatedTokenAttributes: S.Array(S.String),
+    stringAttributes: S.Array(S.String),
     void: S.Array(S.String),
   },
   $I.annote("Classification", { description: "Pinned HTML attribute and element classifications." })
@@ -250,22 +266,93 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
   for (const e of elementsData) MutableHashMap.set(interfaceByName, e.name, e.interface);
 
   const globalKeys = MutableHashSet.fromIterable<string>(R.keys(GlobalAttributes));
+  const autocompleteAttrs = MutableHashSet.fromIterable(classification.autocompleteAttributes);
   const booleanAttrs = MutableHashSet.fromIterable(classification.booleanAttributes);
-  const numericAttrs = MutableHashSet.fromIterable(classification.numericAttributes);
+  const integerAttrs = MutableHashSet.fromIterable(classification.integerAttributes);
+  const nonNegativeIntegerAttrs = MutableHashSet.fromIterable(classification.nonNegativeIntegerAttributes);
+  const positiveIntegerAttrs = MutableHashSet.fromIterable(classification.positiveIntegerAttributes);
+  const spaceSeparatedTokenAttrs = MutableHashSet.fromIterable(classification.spaceSeparatedTokenAttributes);
+  const stringAttrs = MutableHashSet.fromIterable(classification.stringAttributes);
   const voidEls = MutableHashSet.fromIterable(classification.void);
   const rawTextEls = MutableHashSet.fromIterable(classification.rawText);
+  const rcDataEls = MutableHashSet.fromIterable(classification.rcData);
+  const plaintextEls = MutableHashSet.fromIterable(classification.plaintext);
+  const normalEls = MutableHashSet.fromIterable(classification.normal);
+  const emptyContentModelEls = MutableHashSet.fromIterable(classification.emptyContentModelElements);
+  const isClassifiedAs = (
+    classificationSet: MutableHashSet.MutableHashSet<string>,
+    element: string,
+    attribute: string
+  ): boolean =>
+    MutableHashSet.has(classificationSet, `${element}/${attribute}`) ||
+    MutableHashSet.has(classificationSet, attribute);
+
+  const elementClassifications = [voidEls, rawTextEls, rcDataEls, plaintextEls, normalEls];
+  for (const tag of elementNames) {
+    const matches = elementClassifications.filter((classificationSet) =>
+      MutableHashSet.has(classificationSet, tag)
+    ).length;
+    if (matches !== 1) {
+      throw new Error(`HTML generator requires exactly one element classification for <${tag}>; found ${matches}`);
+    }
+    const hasPinnedContentModel = contentModel[tag] !== undefined;
+    const hasExplicitEmptyContentModel = MutableHashSet.has(emptyContentModelEls, tag);
+    if (hasPinnedContentModel === hasExplicitEmptyContentModel) {
+      throw new Error(
+        `HTML generator requires exactly one content-model source for <${tag}> (pinned or explicit empty override)`
+      );
+    }
+  }
+
+  for (const [classificationName, classificationSet] of [
+    ["void", voidEls],
+    ["rawText", rawTextEls],
+    ["rcData", rcDataEls],
+    ["plaintext", plaintextEls],
+    ["normal", normalEls],
+    ["emptyContentModelElements", emptyContentModelEls],
+  ] as const) {
+    for (const tag of classificationSet) {
+      if (!MutableHashSet.has(elementNameSet, tag)) {
+        throw new Error(`HTML generator ${classificationName} classification names unknown element <${tag}>`);
+      }
+    }
+  }
+  for (const [tag, pattern] of R.toEntries(classification.childSequencePatterns)) {
+    if (!MutableHashSet.has(elementNameSet, tag)) {
+      throw new Error(`HTML generator child-sequence pattern names unknown element <${tag}>`);
+    }
+    try {
+      new RegExp(pattern, "u");
+    } catch {
+      throw new Error(`HTML generator child-sequence pattern for <${tag}> is not a valid Unicode regexp`);
+    }
+  }
 
   const valueSchema = (el: string, attr: string): AttributeSpec => {
-    // HTML boolean attributes accept true/false and the empty-string presence
-    // form (`disabled=""`); mirror the hand-authored `BooleanAttribute` overlay.
-    if (MutableHashSet.has(booleanAttrs, attr)) {
+    if (isClassifiedAs(booleanAttrs, el, attr)) {
       return {
-        runtime: optionalRuntime('S.Union([S.Boolean, S.Literal("")])'),
-        type: 'O.Option<boolean | "">',
-        encoded: 'boolean | ""',
+        runtime: optionalRuntime("BooleanAttribute"),
+        type: 'O.Option<true | "">',
+        encoded: 'true | ""',
+      };
+    }
+    if (isClassifiedAs(autocompleteAttrs, el, attr)) {
+      return {
+        runtime: optionalRuntime("AutocompleteAttribute"),
+        type: "O.Option<string>",
+        encoded: "string",
       };
     }
     const valsOption = MutableHashMap.get(enumValues, `${el}/${attr}`);
+    if (isClassifiedAs(spaceSeparatedTokenAttrs, el, attr) && O.isSome(valsOption) && valsOption.value.length > 0) {
+      const uniq = [...MutableHashSet.fromIterable(valsOption.value)];
+      return {
+        runtime: optionalRuntime(`makeSpaceSeparatedTokenList(${JSON.stringify(uniq)})`),
+        type: "O.Option<string>",
+        encoded: "string",
+      };
+    }
     if (O.isSome(valsOption) && valsOption.value.length > 0) {
       const uniq = [...MutableHashSet.fromIterable(valsOption.value)];
       const schema =
@@ -277,18 +364,43 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
         encoded: union,
       };
     }
-    if (MutableHashSet.has(numericAttrs, attr)) {
+    const bounded = classification.boundedIntegerAttributes[attr];
+    if (bounded !== undefined) {
+      return {
+        runtime: optionalRuntime(`S.Int.check(S.isBetween({ minimum: ${bounded[0]}, maximum: ${bounded[1]} }))`),
+        type: "O.Option<number>",
+        encoded: "number",
+      };
+    }
+    if (isClassifiedAs(positiveIntegerAttrs, el, attr)) {
+      return {
+        runtime: optionalRuntime("HtmlPositiveInteger"),
+        type: "O.Option<number>",
+        encoded: "number",
+      };
+    }
+    if (isClassifiedAs(nonNegativeIntegerAttrs, el, attr)) {
+      return {
+        runtime: optionalRuntime("HtmlNonNegativeInteger"),
+        type: "O.Option<number>",
+        encoded: "number",
+      };
+    }
+    if (isClassifiedAs(integerAttrs, el, attr)) {
       return {
         runtime: optionalRuntime("S.Int"),
         type: "O.Option<number>",
         encoded: "number",
       };
     }
-    return {
-      runtime: optionalRuntime("S.String"),
-      type: "O.Option<string>",
-      encoded: "string",
-    };
+    if (isClassifiedAs(stringAttrs, el, attr)) {
+      return {
+        runtime: optionalRuntime("S.String"),
+        type: "O.Option<string>",
+        encoded: "string",
+      };
+    }
+    throw new Error(`HTML generator has no attribute classification for ${el}/${attr}`);
   };
 
   // Generated runtime field body + TS type bodies for an element's specific
@@ -317,9 +429,18 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     const obsolete = isObsolete(d);
     const kind: Kind = MutableHashSet.has(voidEls, tag)
       ? "void"
-      : MutableHashSet.has(rawTextEls, tag)
-        ? "rawText"
+      : MutableHashSet.has(rawTextEls, tag) ||
+          MutableHashSet.has(rcDataEls, tag) ||
+          MutableHashSet.has(plaintextEls, tag)
+        ? "text"
         : "normal";
+    const textMode: TextMode = MutableHashSet.has(plaintextEls, tag)
+      ? "plaintext"
+      : MutableHashSet.has(rcDataEls, tag)
+        ? "rcdata"
+        : MutableHashSet.has(rawTextEls, tag)
+          ? "raw-text"
+          : "normal";
     const { encoded, runtime, type } = specificBodies(tag);
     return {
       tag,
@@ -329,30 +450,33 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       kind,
       iface: interfaceOf(tag, obsolete),
       categories: contentModel[tag]?.categories ?? [],
+      children: contentModel[tag]?.children ?? [],
+      childSequencePattern: classification.childSequencePatterns[tag],
       runtime,
+      textMode,
       type,
     };
   });
 
   const childField = (kind: Kind): string =>
-    kind === "void" ? "" : kind === "rawText" ? "    content: S.String," : "    children: HtmlChildren,";
+    kind === "void" ? "" : kind === "text" ? "    content: S.String," : "    children: HtmlChildren,";
 
   const childTypeField = (kind: Kind, encoded: boolean): string =>
     kind === "void"
       ? ""
-      : kind === "rawText"
+      : kind === "text"
         ? "    readonly content: string;"
         : `    readonly children: HtmlChildren.${encoded ? "Encoded" : "Type"};`;
 
   // `.make()` call argument body for a class example, driven by element `kind`.
   const exampleArgs = (kind: Kind): string =>
-    kind === "void" ? "{}" : kind === "rawText" ? '{ content: "" }' : "{ children: [] }";
+    kind === "void" ? "{}" : kind === "text" ? '{ content: "" }' : "{ children: [] }";
 
   // `Encoded`-literal body for a companion-namespace example, driven by element `kind`.
   const exampleEncoded = (tag: string, kind: Kind): string =>
     kind === "void"
       ? `{ _tag: "${tag}" }`
-      : kind === "rawText"
+      : kind === "text"
         ? `{ _tag: "${tag}", content: "" }`
         : `{ _tag: "${tag}", children: [] }`;
 
@@ -457,7 +581,163 @@ export declare namespace ${cls} {
   export type Encoded = { readonly _tag: "${tag}"; readonly children: HtmlChildren.Encoded };
 }`;
 
-  const unionMembers = [...els.map((e) => e.cls), "Text", "Comment", "Doctype", "Document", "Fragment"];
+  const documentNode = `/**
+ * An HTML document root with an optional doctype and child nodes.
+ *
+ * @example
+ * \`\`\`ts
+ * import { Document } from "@beep/html/Html.model"
+ *
+ * const document = Document.make({ children: [] })
+ * console.log(document._tag) // "#document"
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class Document extends S.TaggedClass<Document>($I\`Document\`)(
+  "#document",
+  {
+    doctype: S.OptionFromOptionalKey(Doctype).pipe(SchemaUtils.withNoneDefault),
+    children: HtmlChildren,
+  },
+  $I.annote("Document", { description: "An HTML document root." })
+) {}
+
+/**
+ * Companion namespace for {@link Document}.
+ *
+ * @example
+ * \`\`\`ts
+ * import type { Document } from "@beep/html/Html.model"
+ *
+ * const document: Document.Encoded = { _tag: "#document", children: [] }
+ * console.log(document._tag) // "#document"
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace Document {
+  /** @since 0.0.0 */
+  export type Type = {
+    readonly _tag: "#document";
+    readonly doctype: O.Option<Doctype.Type>;
+    readonly children: HtmlChildren.Type;
+  };
+  /** @since 0.0.0 */
+  export type Encoded = {
+    readonly _tag: "#document";
+    readonly doctype?: Doctype.Encoded;
+    readonly children: HtmlChildren.Encoded;
+  };
+}`;
+
+  const foreignNode = `/**
+ * Namespace of a foreign-content element embedded in HTML.
+ *
+ * @example
+ * \`\`\`ts
+ * import { ForeignNamespace } from "@beep/html/Html.model"
+ *
+ * console.log(ForeignNamespace.is.svg("svg")) // true
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ForeignNamespace = LiteralKit(["svg", "mathml"]).pipe(
+  $I.annoteSchema("ForeignNamespace", { description: "SVG or MathML foreign-content namespace." })
+);
+
+/**
+ * Decoded type of {@link ForeignNamespace}.
+ *
+ * @example
+ * \`\`\`ts
+ * import type { ForeignNamespace } from "@beep/html/Html.model"
+ *
+ * const namespace: ForeignNamespace = "svg"
+ * console.log(namespace)
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ForeignNamespace = typeof ForeignNamespace.Type;
+
+/**
+ * An opaque SVG or MathML element carried inside the HTML AST.
+ *
+ * @remarks
+ * This package validates the foreign node's serializable shape but does not
+ * model the complete SVG or MathML vocabularies.
+ *
+ * @example
+ * \`\`\`ts
+ * import { ForeignElement } from "@beep/html/Html.model"
+ *
+ * const svg = ForeignElement.make({ namespace: "svg", name: "svg", children: [] })
+ * console.log(svg.name) // "svg"
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ForeignElement extends S.TaggedClass<ForeignElement>($I\`ForeignElement\`)(
+  "#foreign",
+  {
+    namespace: ForeignNamespace,
+    name: ForeignElementName,
+    attributes: S.OptionFromOptionalKey(S.Record(ForeignAttributeName, S.String)).pipe(
+      SchemaUtils.withNoneDefault
+    ),
+    children: HtmlChildren,
+  },
+  $I.annote("ForeignElement", { description: "Opaque SVG or MathML element embedded in HTML." })
+) {}
+
+/**
+ * Companion namespace for {@link ForeignElement}.
+ *
+ * @example
+ * \`\`\`ts
+ * import type { ForeignElement } from "@beep/html/Html.model"
+ *
+ * const svg: ForeignElement.Encoded = {
+ *   _tag: "#foreign",
+ *   namespace: "svg",
+ *   name: "svg",
+ *   children: []
+ * }
+ * console.log(svg.name) // "svg"
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace ForeignElement {
+  /** @since 0.0.0 */
+  export type Type = {
+    readonly _tag: "#foreign";
+    readonly namespace: ForeignNamespace;
+    readonly name: string;
+    readonly attributes: O.Option<Readonly<Record<string, string>>>;
+    readonly children: HtmlChildren.Type;
+  };
+  /** @since 0.0.0 */
+  export type Encoded = {
+    readonly _tag: "#foreign";
+    readonly namespace: ForeignNamespace;
+    readonly name: string;
+    readonly attributes?: Readonly<Record<string, string>>;
+    readonly children: HtmlChildren.Encoded;
+  };
+}`;
+
+  const childMembers = [...els.map((e) => e.cls), "ForeignElement", "Text", "Comment"];
+  const rootMembers = [...childMembers, "Document", "Fragment"];
+  const unionMembers = [...rootMembers, "Doctype"];
 
   const categoryUnion = (name: string, cat: string): string => {
     const matching = els.filter((e) => e.categories.includes(cat));
@@ -502,36 +782,54 @@ export const ${name} = taggedUnion<${types}, ${encodeds}>(
  * @since 0.0.0
  */
 import { $HtmlId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { GlobalAttributes } from "./Html.attributes.ts";
+import {
+  AutocompleteAttribute,
+  BooleanAttribute,
+  ForeignAttributeName,
+  ForeignElementName,
+  GlobalAttributes,
+  HtmlNonNegativeInteger,
+  HtmlPositiveInteger,
+  makeSpaceSeparatedTokenList,
+} from "./Html.attributes.ts";
 import { Comment, Doctype, Text } from "./Html.nodes.ts";
 import type { GlobalAttributesEncoded, GlobalAttributesType } from "./Html.attributes.ts";
 import type * as O from "effect/Option";
 
 const $I = $HtmlId.create("Html.model");
 
-/** Union members carrying a literal \`_tag\` (the shape \`toTaggedUnion\` requires). */
-type Tagged = S.Top & { readonly Type: { readonly _tag: PropertyKey } };
+type Tagged = { readonly _tag: PropertyKey };
+type TaggedSchema<A extends Tagged, E extends Tagged> = S.Codec<A, E> & {
+  readonly Type: A;
+  readonly Encoded: E;
+};
+type TaggedMembers<A extends Tagged, E extends Tagged> = readonly [
+  TaggedSchema<A, E>,
+  ...ReadonlyArray<TaggedSchema<A, E>>,
+];
 
 /**
- * Build a \`_tag\`-discriminated union at runtime via \`S.toTaggedUnion\`, typed
- * explicitly. \`toTaggedUnion\`'s type-level discriminant map does not scale to the
- * ~150 HTML node kinds (TS2589), so members are erased to a \`ReadonlyArray\` and
- * the result is cast to its declared codec type — the runtime is the real tagged
- * union.
+ * Build a large \`_tag\`-discriminated union without erasing member Type or
+ * Encoded information.
  *
  * @category models
  * @since 0.0.0
  */
-const taggedUnion = <A, E>(id: string, description: string, members: ReadonlyArray<S.Top>): S.Codec<A, E> =>
-  S.Union(members as ReadonlyArray<Tagged>).pipe(
+const taggedUnion = <A extends Tagged, E extends Tagged>(
+  id: string,
+  description: string,
+  members: TaggedMembers<A, E>
+) =>
+  S.Union(members).pipe(
     S.toTaggedUnion("_tag"),
-    $I.annoteSchema(id, { description })
-  ) as unknown as S.Codec<A, E>;
+    $I.annoteSchema(id, { description }),
+    S.revealCodec
+  );
 
 /**
- * Recursive list of HTML AST child nodes (any {@link HtmlNode}).
+ * Recursive list of nodes that may occur as element or fragment children.
  *
  * @example
  * \`\`\`ts
@@ -544,7 +842,7 @@ const taggedUnion = <A, E>(id: string, description: string, members: ReadonlyArr
  * @category models
  * @since 0.0.0
  */
-export const HtmlChildren = S.Array(S.suspend((): S.Codec<HtmlNode.Type, HtmlNode.Encoded> => HtmlNode)).pipe(
+export const HtmlChildren = S.Array(S.suspend((): S.Codec<HtmlChild.Type, HtmlChild.Encoded> => HtmlChild)).pipe(
   $I.annoteSchema("HtmlChildren", { description: "Recursive list of HTML AST child nodes." })
 );
 /**
@@ -578,14 +876,101 @@ export type HtmlChildren = typeof HtmlChildren.Type;
  */
 export declare namespace HtmlChildren {
   /** @since 0.0.0 */
-  export type Type = ReadonlyArray<HtmlNode.Type>;
+  export type Type = ReadonlyArray<HtmlChild.Type>;
   /** @since 0.0.0 */
-  export type Encoded = ReadonlyArray<HtmlNode.Encoded>;
+  export type Encoded = ReadonlyArray<HtmlChild.Encoded>;
 }`;
 
   const unionBlock = `/**
+ * Discriminated union of nodes valid as element or fragment children.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HtmlChild } from "@beep/html/Html.model"
+ * import { Text } from "@beep/html/Html.nodes"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HtmlChild)(Text.make({ value: "hello" }))) // true
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlChild = taggedUnion<HtmlChild.Type, HtmlChild.Encoded>(
+  "HtmlChild",
+  "Nodes valid as element or fragment children.",
+  [${childMembers.join(", ")}]
+);
+
+/**
+ * Companion namespace for {@link HtmlChild}.
+ *
+ * @example
+ * \`\`\`ts
+ * import type { HtmlChild } from "@beep/html/Html.model"
+ *
+ * const child: HtmlChild.Encoded = { _tag: "#text", value: "hello" }
+ * console.log(child._tag) // "#text"
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace HtmlChild {
+  /** @since 0.0.0 */
+  export type Type =
+${childMembers.map((m) => `    | ${m}.Type`).join("\n")};
+  /** @since 0.0.0 */
+  export type Encoded =
+${childMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
+}
+
+/**
+ * Discriminated union of serializable HTML roots.
+ *
+ * @example
+ * \`\`\`ts
+ * import { Fragment, HtmlRoot } from "@beep/html/Html.model"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HtmlRoot)(Fragment.make({ children: [] }))) // true
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlRoot = taggedUnion<HtmlRoot.Type, HtmlRoot.Encoded>(
+  "HtmlRoot",
+  "HTML document, fragment, element, or child-node root.",
+  [${rootMembers.join(", ")}]
+);
+
+/**
+ * Companion namespace for {@link HtmlRoot}.
+ *
+ * @example
+ * \`\`\`ts
+ * import type { HtmlRoot } from "@beep/html/Html.model"
+ *
+ * const root: HtmlRoot.Encoded = { _tag: "#fragment", children: [] }
+ * console.log(root._tag) // "#fragment"
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace HtmlRoot {
+  /** @since 0.0.0 */
+  export type Type =
+${rootMembers.map((m) => `    | ${m}.Type`).join("\n")};
+  /** @since 0.0.0 */
+  export type Encoded =
+${rootMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
+}
+
+/**
  * Discriminated union of every HTML AST node — all ${els.length} elements plus the
- * text, comment, doctype, document, and fragment node kinds — keyed on \`_tag\`.
+ * text, comment, foreign, doctype, document, and fragment node kinds.
  *
  * @example
  * \`\`\`ts
@@ -630,7 +1015,8 @@ ${unionMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
   const model = [
     header,
     containerNode("Fragment", "#fragment", "A document fragment node (a detached group of children)."),
-    containerNode("Document", "#document", "A document root node."),
+    documentNode,
+    foreignNode,
     ...els.map(elementBlock),
     unionBlock,
     ...CATEGORIES.map(([n, c]) => categoryUnion(n, c)).filter((s) => s !== ""),
@@ -639,13 +1025,20 @@ ${unionMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
   const metaEntries = els
     .map((e) => {
       const conformance = e.obsolete ? "non-conforming" : "conforming";
-      return `  "${e.tag}": { tag: "${e.tag}", interface: "${e.iface}", conformance: "${conformance}", void: ${e.kind === "void"}, rawText: ${e.kind === "rawText"}, categories: ${JSON.stringify(e.categories)} },`;
+      const childSequencePattern =
+        e.childSequencePattern === undefined ? "" : ` childSequencePattern: ${JSON.stringify(e.childSequencePattern)},`;
+      return `  "${e.tag}": { tag: "${e.tag}", interface: "${e.iface}", conformance: "${conformance}", void: ${e.kind === "void"}, rawText: ${e.textMode === "raw-text"}, textMode: "${e.textMode}", categories: ${JSON.stringify(e.categories)}, children: ${JSON.stringify(e.children)},${childSequencePattern} },`;
     })
     .join("\n");
 
+  const tagValues = JSON.stringify(els.map((element) => element.tag));
   const categoryValues = JSON.stringify(
     [...MutableHashSet.fromIterable(els.flatMap((element) => element.categories))].sort()
   );
+  const contentTokenValues = JSON.stringify(
+    [...MutableHashSet.fromIterable(els.flatMap((element) => element.children))].sort()
+  );
+  const booleanAttributeValues = JSON.stringify([...booleanAttrs].sort());
 
   const meta = `/**
  * GENERATED FILE — do not edit by hand. Run \`bun run generate\`.
@@ -661,6 +1054,39 @@ import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $HtmlId.create("Html.meta");
+
+/**
+ * Exact generated HTML element-tag domain.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HtmlTag } from "@beep/html/Html.meta"
+ *
+ * console.log(HtmlTag.is.div("div")) // true
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlTag = LiteralKit(${tagValues}).pipe(
+  $I.annoteSchema("HtmlTag", { description: "Exact generated HTML element-tag domain." })
+);
+
+/**
+ * Decoded HTML element tag.
+ *
+ * @example
+ * \`\`\`ts
+ * import type { HtmlTag } from "@beep/html/Html.meta"
+ *
+ * const tag: HtmlTag = "div"
+ * console.log(tag)
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlTag = typeof HtmlTag.Type;
 
 /**
  * Advisory content-category values emitted by the WHATWG element index.
@@ -696,6 +1122,99 @@ export const HtmlCategory = LiteralKit(${categoryValues}).pipe(
 export type HtmlCategory = typeof HtmlCategory.Type;
 
 /**
+ * Content-model tokens emitted by the pinned WHATWG element index.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HtmlContentToken } from "@beep/html/Html.meta"
+ *
+ * console.log(HtmlContentToken.is.flow("flow")) // true
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlContentToken = LiteralKit(${contentTokenValues}).pipe(
+  $I.annoteSchema("HtmlContentToken", { description: "Pinned HTML content-model token." })
+);
+
+/**
+ * Decoded HTML content-model token.
+ *
+ * @example
+ * \`\`\`ts
+ * import type { HtmlContentToken } from "@beep/html/Html.meta"
+ *
+ * const token: HtmlContentToken = "flow"
+ * console.log(token)
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlContentToken = typeof HtmlContentToken.Type;
+
+/**
+ * Text parsing and serialization mode of an HTML element.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HtmlTextMode } from "@beep/html/Html.meta"
+ *
+ * console.log(HtmlTextMode.is.rcdata("rcdata")) // true
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlTextMode = LiteralKit(["normal", "raw-text", "rcdata", "plaintext"]).pipe(
+  $I.annoteSchema("HtmlTextMode", { description: "HTML text parsing and serialization mode." })
+);
+
+/**
+ * Decoded HTML text mode.
+ *
+ * @example
+ * \`\`\`ts
+ * import type { HtmlTextMode } from "@beep/html/Html.meta"
+ *
+ * const mode: HtmlTextMode = "normal"
+ * console.log(mode)
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlTextMode = typeof HtmlTextMode.Type;
+
+/**
+ * Authoritative generated domain of HTML boolean attribute names.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HtmlBooleanAttributeName } from "@beep/html/Html.meta"
+ *
+ * console.log(HtmlBooleanAttributeName.is.disabled("disabled")) // true
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlBooleanAttributeName = LiteralKit(${booleanAttributeValues}).pipe(
+  $I.annoteSchema("HtmlBooleanAttributeName", {
+    description: "Authoritative HTML boolean attribute-name domain used by generation and serialization.",
+  })
+);
+
+/**
+ * Decoded HTML boolean attribute name.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlBooleanAttributeName = typeof HtmlBooleanAttributeName.Type;
+
+/**
  * Schema describing one HTML element kind's metadata.
  *
  * @example
@@ -716,37 +1235,20 @@ export type HtmlCategory = typeof HtmlCategory.Type;
  * @category models
  * @since 0.0.0
  */
-export const HtmlElementMeta = S.Struct({
-  tag: S.String,
-  interface: S.String,
-  conformance: S.Literals(["conforming", "non-conforming"]),
-  void: S.Boolean,
-  rawText: S.Boolean,
-  categories: S.Array(HtmlCategory),
-}).pipe($I.annoteSchema("HtmlElementMeta", { description: "Metadata describing one HTML element kind." }));
-
-/**
- * Decoded type of {@link HtmlElementMeta}.
- *
- * @example
- * \`\`\`ts
- * import type { HtmlElementMeta } from "@beep/html/Html.meta"
- *
- * const meta: HtmlElementMeta = {
- *   tag: "div",
- *   interface: "HTMLDivElement",
- *   conformance: "conforming",
- *   void: false,
- *   rawText: false,
- *   categories: ["flow"]
- * }
- * console.log(meta.tag) // "div"
- * \`\`\`
- *
- * @category models
- * @since 0.0.0
- */
-export type HtmlElementMeta = typeof HtmlElementMeta.Type;
+export class HtmlElementMeta extends S.Class<HtmlElementMeta>($I\`HtmlElementMeta\`)(
+  {
+    tag: HtmlTag,
+    interface: S.NonEmptyString,
+    conformance: S.Literals(["conforming", "non-conforming"]),
+    void: S.Boolean,
+    rawText: S.Boolean,
+    textMode: HtmlTextMode,
+    categories: S.Array(HtmlCategory),
+    children: S.Array(HtmlContentToken),
+    childSequencePattern: S.String.pipe(S.optionalKey),
+  },
+  $I.annote("HtmlElementMeta", { description: "Metadata describing one HTML element kind." })
+) {}
 
 /**
  * Metadata for every generated HTML element, keyed by tag name.
@@ -761,9 +1263,9 @@ export type HtmlElementMeta = typeof HtmlElementMeta.Type;
  * @category models
  * @since 0.0.0
  */
-export const ELEMENT_META: { readonly [tag: string]: HtmlElementMeta } = {
+export const ELEMENT_META: Readonly<Record<HtmlTag, HtmlElementMeta>> = {
 ${metaEntries}
-} as const;
+};
 `;
 
   const conforming = els.filter((e) => !e.obsolete).length;
@@ -802,7 +1304,7 @@ const program = Effect.gen(function* () {
   yield* fs.writeFileString(path.join(srcDir, "Html.meta.ts"), meta);
 
   yield* Effect.log(
-    `generated ${total} elements (${conforming} conforming, ${total - conforming} obsolete) + 5 node kinds -> src/Html.model.ts, src/Html.meta.ts`
+    `generated ${total} elements (${conforming} conforming, ${total - conforming} obsolete) + 6 node kinds -> src/Html.model.ts, src/Html.meta.ts`
   );
 });
 
